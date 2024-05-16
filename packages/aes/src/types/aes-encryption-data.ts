@@ -9,8 +9,10 @@ export type AesEncryptionData = {
   format: BufferFormat;
   initialisationVector: Buffer;
   integrityHash: ShaAlgorithm | undefined;
+  iterations: number | undefined;
   keyId: Buffer | undefined;
   publicEncryptionJwk: PublicEncryptionJwk | undefined;
   publicEncryptionKey: Buffer | undefined;
+  salt: Buffer | undefined;
   version: number;
 };

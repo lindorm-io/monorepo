@@ -1,4 +1,4 @@
-import { EcJwk } from "@lindorm/kryptos";
+import { KryptosJwk } from "@lindorm/kryptos";
 
 export type AesEncryption =
   | "aes-128-cbc"
@@ -16,6 +16,6 @@ export type AesEncryptionKeyAlgorithm =
   | "RSA-OAEP-512"
   | "RSA-PRIVATE-KEY";
 
-export type PublicEncryptionJwk = Pick<EcJwk, "crv" | "kty" | "x" | "y">;
+export type PublicEncryptionJwk = Pick<KryptosJwk, "crv" | "kty" | "x" | "y">;
 
 export type AesSecret = Buffer | string;

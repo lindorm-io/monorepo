@@ -1,7 +1,12 @@
-import { EcCurve } from "@lindorm/kryptos";
+import { KryptosCurve } from "@lindorm/kryptos";
 import { BufferFormat, ShaAlgorithm } from "@lindorm/types";
 import { AesError } from "../../errors";
-import { AesEncryption, AesEncryptionData, AesEncryptionKeyAlgorithm } from "../../types";
+import {
+  AesEncryption,
+  AesEncryptionData,
+  AesEncryptionKeyAlgorithm,
+  AesStringValues,
+} from "../../types";
 
 const regex = /(?<key>[a-z]+)=(?<value>.+)/g;
 
@@ -24,22 +29,40 @@ export const _decodeAesString = (data: string): AesEncryptionData => {
     values[match.groups.key] = match.groups.value;
   }
 
-  const { cek, crv: curve, eka, f, ih, iv, kid, tag, v, x, y, kty: keyType } = values;
-  const crv = curve as EcCurve;
+  const {
+    v,
+    f,
+    cek,
+    crv: curve,
+    eka,
+    ih,
+    it,
+    iv,
+    kid,
+    kty: keyType,
+    s,
+    tag,
+    x,
+    y,
+  } = values as unknown as AesStringValues;
+
+  const crv = curve as KryptosCurve;
   const format = f as BufferFormat;
   const kty = keyType as "EC";
 
   return {
-    encryption: algorithm,
+    version: parseInt(v, 10),
+    format,
     authTag: tag ? Buffer.from(tag, format) : undefined,
     content: Buffer.from(content, format),
+    encryption: algorithm,
     encryptionKeyAlgorithm: eka as AesEncryptionKeyAlgorithm,
-    format,
-    integrityHash: ih as ShaAlgorithm,
     initialisationVector: Buffer.from(iv, format),
+    integrityHash: ih as ShaAlgorithm,
+    iterations: it ? parseInt(it, 10) : undefined,
     keyId: kid ? Buffer.from(kid, format) : undefined,
-    publicEncryptionJwk: crv && x && y && kty ? { crv, x, y, kty } : undefined,
+    publicEncryptionJwk: crv && x && kty ? { crv, x, y, kty } : undefined,
     publicEncryptionKey: cek ? Buffer.from(cek, format) : undefined,
-    version: parseInt(v, 10),
+    salt: s ? Buffer.from(s, format) : undefined,
   };
 };

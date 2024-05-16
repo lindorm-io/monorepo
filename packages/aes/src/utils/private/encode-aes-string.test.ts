@@ -3,13 +3,14 @@ import { _encodeAesString } from "./encode-aes-string";
 describe("encodeAesString", () => {
   test("should resolve string", () => {
     const string = _encodeAesString({
-      encryption: "aes-256-gcm",
       authTag: Buffer.from("authTag"),
       content: Buffer.from("encryption"),
-      format: "base64url",
-      integrityHash: "SHA256",
-      initialisationVector: Buffer.from("initialisationVector"),
+      encryption: "aes-256-gcm",
       encryptionKeyAlgorithm: "RSA-OAEP-256",
+      format: "base64url",
+      initialisationVector: Buffer.from("initialisationVector"),
+      integrityHash: "SHA256",
+      iterations: 100000,
       keyId: Buffer.from("keyId"),
       publicEncryptionJwk: {
         crv: "P-521",
@@ -18,6 +19,7 @@ describe("encodeAesString", () => {
         kty: "EC",
       },
       publicEncryptionKey: Buffer.from("publicEncryptionKey"),
+      salt: Buffer.from("salt"),
       version: 1,
     });
 
@@ -30,6 +32,7 @@ describe("encodeAesString", () => {
     expect(string).toContain("crv=P-521");
     expect(string).toContain("eka=RSA-OAEP-256");
     expect(string).toContain("ih=SHA256");
+    expect(string).toContain("it=100000");
     expect(string).toContain("iv=aW5pdGlhbGlzYXRpb25WZWN0b3I");
     expect(string).toContain("kid=a2V5SWQ");
     expect(string).toContain("tag=YXV0aFRhZw");
@@ -39,6 +42,7 @@ describe("encodeAesString", () => {
     expect(string).toContain(
       "y=ATdzYQHx4ZS1DJYb27bRy+NouEm53Jmpdk0Z00B1PIZcRwBEoYVPUQAmYsEt18MX1nLDdwKXV2dONaytvbkdRIMH",
     );
+    expect(string).toContain("s=c2FsdA");
 
     expect(string).toContain("$ZW5jcnlwdGlvbg$");
   });

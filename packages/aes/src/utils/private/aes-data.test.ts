@@ -1,6 +1,7 @@
 import { Kryptos } from "@lindorm/kryptos";
 import { randomBytes } from "crypto";
 import { TEST_EC_KEY, TEST_OCT_KEY, TEST_RSA_KEY } from "../../__fixtures__/keys";
+import { LATEST_AES_VERSION } from "../../constants";
 import { _decryptAesData, _encryptAesData } from "./aes-data";
 
 describe("aes-data", () => {
@@ -21,10 +22,12 @@ describe("aes-data", () => {
       format: "base64url",
       initialisationVector: expect.any(Buffer),
       integrityHash: undefined,
+      iterations: 100000,
       keyId: expect.any(Buffer),
       publicEncryptionJwk: undefined,
       publicEncryptionKey: undefined,
-      version: 6,
+      salt: expect.any(Buffer),
+      version: LATEST_AES_VERSION,
     });
   });
 

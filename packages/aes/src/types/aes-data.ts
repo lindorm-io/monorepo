@@ -16,7 +16,9 @@ export type DecryptAesDataOptions = {
   encryption: AesEncryption;
   initialisationVector: Buffer;
   integrityHash?: ShaAlgorithm;
+  iterations?: number;
   kryptos: Kryptos;
   publicEncryptionJwk?: PublicEncryptionJwk;
   publicEncryptionKey?: Buffer;
+  salt?: Buffer;
 };

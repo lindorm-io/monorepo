@@ -20,10 +20,11 @@ export const _encryptAesData = (options: EncryptAesDataOptions): AesEncryptionDa
     kryptos,
   } = options;
 
-  const { encryptionKey, publicEncryptionJwk, publicEncryptionKey } = _getEncryptionKeys({
-    encryption,
-    kryptos,
-  });
+  const { encryptionKey, iterations, publicEncryptionJwk, publicEncryptionKey, salt } =
+    _getEncryptionKeys({
+      encryption,
+      kryptos,
+    });
 
   const initialisationVector = _getInitialisationVector(encryption);
   const cipher = createCipheriv(encryption, encryptionKey, initialisationVector);
@@ -40,16 +41,18 @@ export const _encryptAesData = (options: EncryptAesDataOptions): AesEncryptionDa
   });
 
   return {
-    encryption,
     authTag,
     content,
+    encryption,
+    encryptionKeyAlgorithm: kryptos.algorithm as AesEncryptionKeyAlgorithm,
     format,
     initialisationVector,
     integrityHash,
+    iterations,
     keyId: kryptos.id ? Buffer.from(kryptos.id, format) : undefined,
-    encryptionKeyAlgorithm: kryptos.algorithm as AesEncryptionKeyAlgorithm,
     publicEncryptionJwk,
     publicEncryptionKey,
+    salt,
     version: LATEST_AES_VERSION,
   };
 };
@@ -61,16 +64,20 @@ export const _decryptAesData = (options: DecryptAesDataOptions): string => {
     encryption,
     initialisationVector,
     integrityHash,
+    iterations,
     kryptos,
     publicEncryptionJwk,
     publicEncryptionKey,
+    salt,
   } = options;
 
   const decryptionKey = _getDecryptionKey({
     encryption,
+    iterations,
     kryptos,
     publicEncryptionJwk,
     publicEncryptionKey,
+    salt,
   });
 
   const decipher = createDecipheriv(encryption, decryptionKey, initialisationVector);

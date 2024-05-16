@@ -1,5 +1,6 @@
 import { Kryptos } from "@lindorm/kryptos";
 import { randomBytes } from "crypto";
+import { LATEST_AES_VERSION } from "../constants";
 import { AesError } from "../errors";
 import { AesKit } from "./AesKit";
 
@@ -30,10 +31,12 @@ describe("AesKit", () => {
       format: "base64url",
       initialisationVector: expect.any(Buffer),
       integrityHash: "SHA256",
+      iterations: 100000,
       keyId: expect.any(Buffer),
       publicEncryptionJwk: undefined,
       publicEncryptionKey: undefined,
-      version: 6,
+      salt: expect.any(Buffer),
+      version: LATEST_AES_VERSION,
     });
   });
 

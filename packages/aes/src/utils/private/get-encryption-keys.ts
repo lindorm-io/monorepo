@@ -12,8 +12,10 @@ type Options = {
 
 type EncryptionKeys = {
   encryptionKey: Buffer;
+  iterations?: number;
   publicEncryptionJwk?: PublicEncryptionJwk;
   publicEncryptionKey?: Buffer;
+  salt?: Buffer;
 };
 
 export const _getEncryptionKeys = ({ encryption, kryptos }: Options): EncryptionKeys => {

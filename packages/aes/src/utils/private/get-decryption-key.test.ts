@@ -51,6 +51,8 @@ describe("getDecryptionKey", () => {
     expect(
       _getDecryptionKey({
         encryption: "aes-256-gcm",
+        iterations: 100000,
+        salt: Buffer.from("salt"),
         kryptos: TEST_OCT_KEY,
       }),
     ).toEqual("getOctDecryptionKey");

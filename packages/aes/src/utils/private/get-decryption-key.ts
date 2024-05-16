@@ -7,16 +7,20 @@ import { _getRsaDecryptionKey } from "./rsa/get-rsa-keys";
 
 type Options = {
   encryption: AesEncryption;
+  iterations?: number;
   kryptos: Kryptos;
   publicEncryptionJwk?: PublicEncryptionJwk;
   publicEncryptionKey?: Buffer;
+  salt?: Buffer;
 };
 
 export const _getDecryptionKey = ({
   encryption,
+  iterations,
   kryptos,
   publicEncryptionJwk,
   publicEncryptionKey,
+  salt,
 }: Options): Buffer => {
   switch (kryptos.type) {
     case "EC":
@@ -36,7 +40,12 @@ export const _getDecryptionKey = ({
       return _getRsaDecryptionKey({ publicEncryptionKey, kryptos });
 
     case "oct":
-      return _getOctDecryptionKey({ encryption, kryptos });
+      if (!iterations || !salt) {
+        throw new AesError("Unable to decrypt AES cipher without iterations and salt", {
+          debug: { iterations, salt },
+        });
+      }
+      return _getOctDecryptionKey({ encryption, iterations, kryptos, salt });
 
     default:
       throw new AesError("Unexpected encryption key type", {
