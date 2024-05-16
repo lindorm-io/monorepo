@@ -7,7 +7,7 @@ import {
 } from "../../types";
 import { _getEcSigAlgorithm } from "./ec/algorithm";
 import { _getOctSigAlgorithm } from "./oct/algorithm";
-import { _getOkpSigAlgorithm } from "./okp/algorithm";
+import { _getOkpEncAlgorithm, _getOkpSigAlgorithm } from "./okp/algorithm";
 import { _getRsaEncAlgorithm, _getRsaSigAlgorithm } from "./rsa/algorithm";
 
 const _getEncAlgorithm = (options: GenerateKryptosOptions): JweAlgorithm => {
@@ -19,7 +19,7 @@ const _getEncAlgorithm = (options: GenerateKryptosOptions): JweAlgorithm => {
       return "dir";
 
     case "OKP":
-      throw new KryptosError("OKP keys cannot be used for encryption");
+      return _getOkpEncAlgorithm(options);
 
     case "RSA":
       return _getRsaEncAlgorithm(options);

@@ -49,12 +49,3 @@ export type EcPem = {
   type: "EC";
   use: KryptosUse;
 };
-
-export type EcRaw = {
-  algorithm: EcAlgorithm;
-  curve: EcCurve;
-  privateKey?: Buffer;
-  publicKey: Buffer;
-  type: "EC";
-  use: KryptosUse;
-};

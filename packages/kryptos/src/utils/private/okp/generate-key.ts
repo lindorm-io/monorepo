@@ -1,16 +1,13 @@
-import { generateKeyPair as _generateKeyPair } from "crypto";
-import { promisify } from "util";
+import { generateKeyPairSync } from "crypto";
 import { OkpGenerate } from "../../../types";
-
-const generateKeyPair = promisify(_generateKeyPair);
 
 type Result = {
   privateKey: Buffer;
   publicKey: Buffer;
 };
 
-export const _generateOkpKey = async (options: OkpGenerate): Promise<Result> => {
-  const { privateKey, publicKey } = await generateKeyPair(
+export const _generateOkpKey = (options: OkpGenerate): Result => {
+  const { privateKey, publicKey } = generateKeyPairSync(
     options.curve.toLowerCase() as any,
     {
       privateKeyEncoding: { format: "der", type: "pkcs8" },

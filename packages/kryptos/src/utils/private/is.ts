@@ -4,9 +4,8 @@ import {
   KryptosFromDer,
   KryptosFromJwk,
   KryptosFromPem,
-  KryptosFromRaw,
 } from "../../types";
-import { _isEcB64, _isEcDer, _isEcJwk, _isEcPem, _isEcRaw } from "./ec/is";
+import { _isEcB64, _isEcDer, _isEcJwk, _isEcPem } from "./ec/is";
 import { _isOctB64, _isOctDer, _isOctJwk, _isOctPem } from "./oct/is";
 import { _isOkpB64, _isOkpDer, _isOkpJwk, _isOkpPem } from "./okp/is";
 import { _isRsaB64, _isRsaDer, _isRsaJwk, _isRsaPem } from "./rsa/is";
@@ -89,18 +88,6 @@ export const _isPem = (options: KryptosFrom): options is KryptosFromPem => {
 
     case "RSA":
       return _isRsaPem(typed);
-
-    default:
-      return false;
-  }
-};
-
-export const _isRaw = (options: KryptosFrom): options is KryptosFromRaw => {
-  const typed = options as KryptosFromRaw;
-
-  switch (typed.type) {
-    case "EC":
-      return _isEcRaw(typed);
 
     default:
       return false;

@@ -1,16 +1,13 @@
-import { generateKeyPair as _generateKeyPair } from "crypto";
-import { promisify } from "util";
+import { generateKeyPairSync } from "crypto";
 import { EcGenerate } from "../../../types";
-
-const generateKeyPair = promisify(_generateKeyPair);
 
 type Result = {
   privateKey: Buffer;
   publicKey: Buffer;
 };
 
-export const _generateEcKey = async (options: EcGenerate): Promise<Result> => {
-  const { privateKey, publicKey } = await generateKeyPair("ec", {
+export const _generateEcKey = (options: EcGenerate): Result => {
+  const { privateKey, publicKey } = generateKeyPairSync("ec", {
     namedCurve: options.curve,
     privateKeyEncoding: { format: "der", type: "pkcs8" },
     publicKeyEncoding: { format: "der", type: "spki" },

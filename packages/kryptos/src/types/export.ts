@@ -45,13 +45,4 @@ export type KryptosPem = {
   use: KryptosUse;
 };
 
-export type KryptosRaw = {
-  algorithm: KryptosAlgorithm;
-  curve?: KryptosCurve;
-  privateKey?: Buffer;
-  publicKey: Buffer;
-  type: KryptosType;
-  use: KryptosUse;
-};
-
-export type KryptosKey = KryptosB64 | KryptosDer | KryptosJwk | KryptosPem | KryptosRaw;
+export type KryptosKey = KryptosB64 | KryptosDer | KryptosJwk | KryptosPem;

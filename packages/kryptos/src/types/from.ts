@@ -15,11 +15,8 @@ export type KryptosFromJwk = UnknownJwk & Partial<KryptosJwk>;
 
 export type KryptosFromPem = Std & KryptosPem;
 
-export type KryptosFromRaw = Std & KryptosDer;
-
 export type KryptosFrom =
   | KryptosFromB64
   | KryptosFromDer
   | KryptosFromJwk
-  | KryptosFromPem
-  | KryptosFromRaw;
+  | KryptosFromPem;

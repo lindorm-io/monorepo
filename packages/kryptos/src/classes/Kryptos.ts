@@ -19,7 +19,6 @@ import {
   KryptosFromDer,
   KryptosFromJwk,
   KryptosFromPem,
-  KryptosFromRaw,
   KryptosJwk,
   KryptosKey,
   KryptosKeys,
@@ -28,7 +27,6 @@ import {
   KryptosOperation,
   KryptosOptions,
   KryptosPem,
-  KryptosRaw,
   KryptosType,
   KryptosUse,
   LindormJwk,
@@ -48,15 +46,13 @@ import { _exportToB64 } from "../utils/private/export/export-b64";
 import { _exportToDer } from "../utils/private/export/export-der";
 import { _exportToJwk } from "../utils/private/export/export-jwk";
 import { _exportToPem } from "../utils/private/export/export-pem";
-import { _exportToRaw } from "../utils/private/export/export-raw";
 import { _createDerFromB64 } from "../utils/private/from/der-from-b64";
 import { _createDerFromDer } from "../utils/private/from/der-from-der";
 import { _createDerFromJwk } from "../utils/private/from/der-from-jwt";
 import { _createDerFromPem } from "../utils/private/from/der-from-pem";
-import { _createDerFromRaw } from "../utils/private/from/der-from-raw";
 import { _generateKey } from "../utils/private/generate";
 import { _getAlgorithm } from "../utils/private/get-algorithm";
-import { _isB64, _isDer, _isJwk, _isPem, _isRaw } from "../utils/private/is";
+import { _isB64, _isDer, _isJwk, _isPem } from "../utils/private/is";
 import { _isOctDer } from "../utils/private/oct/is";
 import { _parseJwkOptions, _parseStdOptions } from "../utils/private/parse-options";
 import { _modulusSize } from "../utils/private/rsa/modulus-size";
@@ -289,7 +285,6 @@ export class Kryptos implements IKryptos {
   public export<K extends KryptosDer>(format: "der"): K;
   public export<K extends KryptosJwk>(format: "jwk"): K;
   public export<K extends KryptosPem>(format: "pem"): K;
-  public export<K extends KryptosRaw>(format: "raw"): K;
   public export(format: KryptosFormat): KryptosKey {
     switch (format) {
       case "b64":
@@ -333,16 +328,6 @@ export class Kryptos implements IKryptos {
           use: this.use,
         });
 
-      case "raw":
-        return _exportToRaw({
-          algorithm: this.algorithm,
-          curve: this.curve,
-          privateKey: this._privateKey,
-          publicKey: this._publicKey,
-          type: this.type,
-          use: this.use,
-        });
-
       default:
         throw new KryptosError(`Invalid key format: ${format}`);
     }
@@ -375,8 +360,8 @@ export class Kryptos implements IKryptos {
 
   // public static
 
-  public static async generate(options: GenerateKryptosOptions): Promise<Kryptos> {
-    const keys = await _generateKey(options);
+  public static generate(options: GenerateKryptosOptions): Kryptos {
+    const keys = _generateKey(options);
 
     return new Kryptos({
       algorithm: _getAlgorithm(options),
@@ -389,7 +374,6 @@ export class Kryptos implements IKryptos {
   public static from(format: "der", der: KryptosFromDer): Kryptos;
   public static from(format: "jwk", jwk: KryptosFromJwk): Kryptos;
   public static from(format: "pem", pem: KryptosFromPem): Kryptos;
-  public static from(format: "raw", raw: KryptosFromRaw): Kryptos;
   public static from(format: KryptosFormat, arg: KryptosFrom): Kryptos {
     switch (format) {
       case "b64":
@@ -408,10 +392,6 @@ export class Kryptos implements IKryptos {
         if (!_isPem(arg)) throw new KryptosError("Invalid key format");
         return new Kryptos({ ..._parseStdOptions(arg), ..._createDerFromPem(arg) });
 
-      case "raw":
-        if (!_isRaw(arg)) throw new KryptosError("Invalid key format");
-        return new Kryptos({ ..._parseStdOptions(arg), ..._createDerFromRaw(arg) });
-
       default:
         throw new KryptosError("Invalid key format");
     }
@@ -422,7 +402,6 @@ export class Kryptos implements IKryptos {
     if (_isDer(options)) return Kryptos.from("der", options);
     if (_isJwk(options)) return Kryptos.from("jwk", options);
     if (_isPem(options)) return Kryptos.from("pem", options);
-    if (_isRaw(options)) return Kryptos.from("raw", options);
 
     throw new KryptosError("Invalid key format");
   }

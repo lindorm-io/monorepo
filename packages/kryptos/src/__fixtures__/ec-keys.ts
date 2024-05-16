@@ -1,4 +1,4 @@
-import { EcB64, EcJwk, EcPem, EcRaw } from "../types";
+import { EcB64, EcJwk, EcPem } from "../types";
 
 export const TEST_EC_KEY_B64: EcB64 = {
   algorithm: "ES512",
@@ -41,20 +41,5 @@ export const TEST_EC_KEY_PEM: EcPem = {
     "sjXr4cBoh8th9PW9rLEbQe4dfyHvvV30Sdf+/B4LV9wwd62bNgMpPmF5e9UTgmZE\n" +
     "QGygbB2Th7u8NIPlFVE=\n" +
     "-----END PUBLIC KEY-----\n",
-  use: "sig",
-};
-
-export const TEST_EC_KEY_RAW: EcRaw = {
-  algorithm: "ES512",
-  curve: "P-521",
-  type: "EC",
-  privateKey: Buffer.from(
-    "00c89158dcb7ee8ba413ddaf69ab22cfc837cc0dd35d14236fbb76456390131bf5884044eb4a2582575b23a3e120534c654fc2dd6b9bdfba73e1fa5a896d16448323",
-    "hex",
-  ),
-  publicKey: Buffer.from(
-    "04007cd4063ff95e1f17bd821bddde896f055f518f7584fc9a2eaf4877421476b789273435bc30d7293b65dfecdf202bf4a48ac9c43194fa66903ad341fa51a60c8c4300f49820da39721f3acca92dafedf273d5545ded424c822f75394ba9979bf44f57a87f56a5aa6da830e760adb0044e99d71dd09a4d140bdeb5abfb4bc01387366337",
-    "hex",
-  ),
   use: "sig",
 };

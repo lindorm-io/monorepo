@@ -13,7 +13,7 @@ MockDate.set(MockedDate.toISOString());
 describe("Kryptos (OKP)", () => {
   describe("create", () => {
     test("should generate", async () => {
-      const key = await Kryptos.generate({ type: "OKP", use: "sig", curve: "Ed25519" });
+      const key = Kryptos.generate({ type: "OKP", use: "sig", curve: "Ed25519" });
 
       expect(Kryptos.isEc(key)).toBe(false);
       expect(Kryptos.isOct(key)).toBe(false);
@@ -80,14 +80,14 @@ describe("Kryptos (OKP)", () => {
 
   describe("clone", () => {
     test("should clone", async () => {
-      const key = await Kryptos.generate({ type: "OKP", use: "sig", curve: "Ed25519" });
+      const key = Kryptos.generate({ type: "OKP", use: "sig", curve: "Ed25519" });
       const clone = key.clone();
       expect(clone).toEqual(key);
       expect(key.export("pem")).toEqual(clone.export("pem"));
     });
 
     test("should clone with new ID", async () => {
-      const key = await Kryptos.generate({ type: "OKP", use: "sig", curve: "Ed25519" });
+      const key = Kryptos.generate({ type: "OKP", use: "sig", curve: "Ed25519" });
 
       expect(key.clone({ algorithm: "HS384" })).toEqual(
         expect.objectContaining({
@@ -100,7 +100,7 @@ describe("Kryptos (OKP)", () => {
 
   describe("metadata", () => {
     test("should export metadata", async () => {
-      const key = await Kryptos.generate({
+      const key = Kryptos.generate({
         curve: "Ed25519",
         expiresAt: new Date("2025-01-01T00:00:00.000Z"),
         issuer: "https://test.lindorm.io/",
@@ -137,7 +137,7 @@ describe("Kryptos (OKP)", () => {
 
   describe("jwks", () => {
     test("should export private key to jwk", async () => {
-      const key = await Kryptos.generate({
+      const key = Kryptos.generate({
         curve: "Ed25519",
         expiresAt: new Date("2025-01-01T00:00:00.000Z"),
         issuer: "https://test.lindorm.io/",
@@ -169,7 +169,7 @@ describe("Kryptos (OKP)", () => {
     });
 
     test("should export public key to jwk", async () => {
-      const key = await Kryptos.generate({
+      const key = Kryptos.generate({
         curve: "Ed25519",
         expiresAt: new Date("2025-01-01T00:00:00.000Z"),
         issuer: "https://test.lindorm.io/",

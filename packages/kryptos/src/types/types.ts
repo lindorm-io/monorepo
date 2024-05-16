@@ -8,7 +8,7 @@ export type KryptosCurve = EcCurve | OkpCurve;
 
 export type KryptosExportMode = "private" | "public";
 
-export type KryptosFormat = "b64" | "der" | "jwk" | "pem" | "raw";
+export type KryptosFormat = "b64" | "der" | "jwk" | "pem";
 
 export type KryptosOperation =
   | "decrypt"

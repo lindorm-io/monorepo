@@ -22,7 +22,7 @@ type Result =
   | Omit<OkpDer, "algorithm" | "type" | "use">
   | Omit<RsaDer, "algorithm" | "type" | "use">;
 
-export const _generateKey = async (options: Options): Promise<Result> => {
+export const _generateKey = (options: Options): Result => {
   switch (options.type) {
     case "EC":
       return _generateEcKey(options);

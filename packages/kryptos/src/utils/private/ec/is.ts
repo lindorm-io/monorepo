@@ -1,5 +1,5 @@
 import { isBuffer, isString } from "@lindorm/is";
-import { EcB64, EcDer, EcJwk, EcPem, EcRaw, KryptosCurve } from "../../../types";
+import { EcB64, EcDer, EcJwk, EcPem, KryptosCurve } from "../../../types";
 import {
   _IsBufferFormatOptions,
   _IsJwkFormatOptions,
@@ -52,15 +52,6 @@ export const _isEcPem = (options: _IsStringFormatOptions): options is EcPem => {
 
   if (options.publicKey && !options.publicKey.startsWith("-----BEGIN PUBLIC KEY-----"))
     return false;
-
-  return true;
-};
-
-export const _isEcRaw = (options: _IsBufferFormatOptions): options is EcRaw => {
-  if (options.type !== "EC") return false;
-  if (!options.curve || !CURVES.includes(options.curve)) return false;
-
-  if (!isBuffer(options.privateKey) && !isBuffer(options.publicKey)) return false;
 
   return true;
 };

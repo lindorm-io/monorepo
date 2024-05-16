@@ -3,7 +3,6 @@ import {
   TEST_EC_KEY_B64,
   TEST_EC_KEY_JWK,
   TEST_EC_KEY_PEM,
-  TEST_EC_KEY_RAW,
 } from "../__fixtures__/ec-keys";
 import { EcB64, EcDer } from "../types";
 import { Kryptos } from "./Kryptos";
@@ -14,7 +13,7 @@ MockDate.set(MockedDate.toISOString());
 describe("Kryptos", () => {
   describe("create", () => {
     test("should generate EC", async () => {
-      const key = await Kryptos.generate({ type: "EC", use: "sig", curve: "P-521" });
+      const key = Kryptos.generate({ type: "EC", use: "sig", curve: "P-521" });
 
       expect(Kryptos.isEc(key)).toBe(true);
       expect(Kryptos.isOct(key)).toBe(false);
@@ -82,14 +81,14 @@ describe("Kryptos", () => {
 
   describe("clone", () => {
     test("should clone", async () => {
-      const key = await Kryptos.generate({ type: "EC", use: "sig", curve: "P-521" });
+      const key = Kryptos.generate({ type: "EC", use: "sig", curve: "P-521" });
       const clone = key.clone();
       expect(clone).toEqual(key);
       expect(key.export("pem")).toEqual(clone.export("pem"));
     });
 
     test("should clone with new ID", async () => {
-      const key = await Kryptos.generate({ type: "EC", use: "sig", curve: "P-521" });
+      const key = Kryptos.generate({ type: "EC", use: "sig", curve: "P-521" });
 
       expect(key.clone({ use: "enc" })).toEqual(
         expect.objectContaining({
@@ -103,7 +102,7 @@ describe("Kryptos", () => {
 
   describe("metadata", () => {
     test("should export metadata", async () => {
-      const key = await Kryptos.generate({
+      const key = Kryptos.generate({
         curve: "P-521",
         expiresAt: new Date("2025-01-01T00:00:00.000Z"),
         issuer: "https://test.lindorm.io/",
@@ -140,7 +139,7 @@ describe("Kryptos", () => {
 
   describe("jwks", () => {
     test("should export private key to jwk", async () => {
-      const key = await Kryptos.generate({
+      const key = Kryptos.generate({
         curve: "P-521",
         expiresAt: new Date("2025-01-01T00:00:00.000Z"),
         issuer: "https://test.lindorm.io/",
@@ -173,7 +172,7 @@ describe("Kryptos", () => {
     });
 
     test("should export public key to jwk", async () => {
-      const key = await Kryptos.generate({
+      const key = Kryptos.generate({
         curve: "P-521",
         expiresAt: new Date("2025-01-01T00:00:00.000Z"),
         issuer: "https://test.lindorm.io/",
@@ -305,70 +304,6 @@ describe("Kryptos", () => {
       });
 
       expect(key.export("pem")).toEqual(TEST_EC_KEY_PEM);
-    });
-
-    test("should create from existing RAW key", async () => {
-      const key = Kryptos.from("raw", TEST_EC_KEY_RAW);
-
-      expect(key.export("b64")).toEqual({
-        algorithm: "ES512",
-        curve: "P-521",
-        privateKey: expect.any(String),
-        publicKey: expect.any(String),
-        type: "EC",
-        use: "sig",
-      });
-
-      expect(key.export("der")).toEqual({
-        algorithm: "ES512",
-        curve: "P-521",
-        privateKey: expect.any(Buffer),
-        publicKey: expect.any(Buffer),
-        type: "EC",
-        use: "sig",
-      });
-
-      expect(key.export("jwk")).toEqual({
-        alg: "ES512",
-        crv: "P-521",
-        d: expect.any(String),
-        kty: "EC",
-        x: expect.any(String),
-        y: expect.any(String),
-        use: "sig",
-      });
-
-      expect(key.export("pem")).toEqual({
-        algorithm: "ES512",
-        curve: "P-521",
-        privateKey: expect.any(String),
-        publicKey: expect.any(String),
-        type: "EC",
-        use: "sig",
-      });
-
-      expect(key.export("raw")).toEqual({
-        algorithm: "ES512",
-        curve: "P-521",
-        privateKey: expect.any(Buffer),
-        publicKey: expect.any(Buffer),
-        type: "EC",
-        use: "sig",
-      });
-
-      const raw = key.export("raw");
-
-      expect({
-        curve: "P-521",
-        privateKey: raw.privateKey!.toString("hex"),
-        publicKey: raw.publicKey!.toString("hex"),
-        type: "EC",
-      }).toEqual({
-        curve: "P-521",
-        privateKey: TEST_EC_KEY_RAW.privateKey!.toString("hex"),
-        publicKey: TEST_EC_KEY_RAW.publicKey!.toString("hex"),
-        type: "EC",
-      });
     });
   });
 

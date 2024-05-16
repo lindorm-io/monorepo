@@ -6,7 +6,7 @@ type Result = {
   publicKey: Buffer;
 };
 
-export const _generateOctKey = async (options: OctGenerate): Promise<Result> => ({
+export const _generateOctKey = (options: OctGenerate): Result => ({
   privateKey: randomBytes(options.size),
   publicKey: Buffer.alloc(0),
 });

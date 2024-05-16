@@ -13,7 +13,7 @@ MockDate.set(MockedDate.toISOString());
 describe("Kryptos (RSA)", () => {
   describe("create", () => {
     test("should generate", async () => {
-      const key = await Kryptos.generate({ type: "RSA", use: "sig", size: 2 });
+      const key = Kryptos.generate({ type: "RSA", use: "sig", size: 2 });
 
       expect(Kryptos.isEc(key)).toBe(false);
       expect(Kryptos.isOct(key)).toBe(false);
@@ -82,14 +82,14 @@ describe("Kryptos (RSA)", () => {
 
   describe("clone", () => {
     test("should clone", async () => {
-      const key = await Kryptos.generate({ type: "RSA", use: "sig", size: 2 });
+      const key = Kryptos.generate({ type: "RSA", use: "sig", size: 2 });
       const clone = key.clone();
       expect(clone).toEqual(key);
       expect(key.export("pem")).toEqual(clone.export("pem"));
     });
 
     test("should clone with new ID", async () => {
-      const key = await Kryptos.generate({ type: "RSA", use: "sig", size: 2 });
+      const key = Kryptos.generate({ type: "RSA", use: "sig", size: 2 });
 
       expect(key.clone({ use: "enc" })).toEqual(
         expect.objectContaining({
@@ -103,7 +103,7 @@ describe("Kryptos (RSA)", () => {
 
   describe("metadata", () => {
     test("should export metadata as json or jwk", async () => {
-      const key = await Kryptos.generate({
+      const key = Kryptos.generate({
         expiresAt: new Date("2025-01-01T00:00:00.000Z"),
         issuer: "https://test.lindorm.io/",
         jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
@@ -163,7 +163,7 @@ describe("Kryptos (RSA)", () => {
 
   describe("jwks", () => {
     test("should export private key to jwk", async () => {
-      const key = await Kryptos.generate({
+      const key = Kryptos.generate({
         expiresAt: new Date("2025-01-01T00:00:00.000Z"),
         issuer: "https://test.lindorm.io/",
         jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
@@ -200,7 +200,7 @@ describe("Kryptos (RSA)", () => {
     });
 
     test("should export public key to jwk", async () => {
-      const key = await Kryptos.generate({
+      const key = Kryptos.generate({
         expiresAt: new Date("2025-01-01T00:00:00.000Z"),
         issuer: "https://test.lindorm.io/",
         jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
