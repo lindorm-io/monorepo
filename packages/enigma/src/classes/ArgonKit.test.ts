@@ -128,7 +128,7 @@ describe("ArgonKit", () => {
     });
 
     test("should reject on wrong secret", async () => {
-      const kryptos = await Kryptos.generate({ type: "oct", use: "sig", size: 64 });
+      const kryptos = Kryptos.generate({ type: "oct", use: "sig", size: 64 });
       const kit2 = new ArgonKit({ kryptos });
 
       await expect(kit2.verify("string", hash)).resolves.toBe(false);
