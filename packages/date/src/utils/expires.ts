@@ -5,7 +5,7 @@ import { expiresAt } from "./expires-at";
 type Result = {
   expiresAt: Date;
   expiresIn: number;
-  expiresUnix: number;
+  expiresOn: number;
   from: Date;
   fromUnix: number;
 };
@@ -13,13 +13,13 @@ type Result = {
 export const expires = (expiry: Expiry, from: Date = new Date()): Result => {
   const fromUnix = getUnixTime(from);
   const date = expiresAt(expiry);
-  const expiresUnix = getUnixTime(date);
-  const expiresIn = expiresUnix - fromUnix;
+  const expiresOn = getUnixTime(date);
+  const expiresIn = expiresOn - fromUnix;
 
   return {
     expiresAt: date,
     expiresIn,
-    expiresUnix,
+    expiresOn,
     from,
     fromUnix,
   };

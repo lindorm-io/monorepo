@@ -5,7 +5,7 @@ import { expiresAt } from "./expires-at";
 export const expiresIn = (expiry: Expiry, from: Date = new Date()): number => {
   const unix = getUnixTime(from);
   const date = expiresAt(expiry, from);
-  const expiresUnix = getUnixTime(date);
+  const expiresOn = getUnixTime(date);
 
-  return expiresUnix - unix;
+  return expiresOn - unix;
 };
