@@ -9,7 +9,6 @@ export type AesStringValues = {
   crv: KryptosCurve | undefined; // epk curve
   eka: AesEncryptionKeyAlgorithm | undefined; // encryption key algorithm
   ih: ShaAlgorithm | undefined; // auth tag integrity hash
-  it: string | undefined; // kdf iterations
   iv: string; // initialisation vector
   kid: string | undefined; // key id
   kty: KryptosType | undefined; // key type

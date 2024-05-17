@@ -5,8 +5,8 @@ import { AesEncryption } from "./types";
 export type GetAuthTagOptions = {
   cipher: Cipher | CipherGCM;
   content: Buffer;
+  contentEncryptionKey: Buffer;
   encryption: AesEncryption;
-  encryptionKey: Buffer;
   initialisationVector: Buffer;
   integrityHash?: ShaAlgorithm;
 };
@@ -14,8 +14,8 @@ export type GetAuthTagOptions = {
 export type SetAuthTagOptions = {
   authTag?: Buffer;
   content: Buffer;
+  contentEncryptionKey: Buffer;
   decipher: Decipher | DecipherGCM;
-  decryptionKey: Buffer;
   encryption: AesEncryption;
   initialisationVector: Buffer;
   integrityHash?: ShaAlgorithm;
@@ -23,7 +23,7 @@ export type SetAuthTagOptions = {
 
 export type CreateHmacAuthTag = {
   content: Buffer;
-  encryptionKey: Buffer;
+  contentEncryptionKey: Buffer;
   initialisationVector: Buffer;
   integrityHash: ShaAlgorithm;
 };

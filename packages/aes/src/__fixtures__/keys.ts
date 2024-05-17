@@ -1,4 +1,10 @@
-import { Kryptos } from "@lindorm/kryptos";
+import {
+  IKryptosEc,
+  IKryptosOct,
+  IKryptosOkp,
+  IKryptosRsa,
+  Kryptos,
+} from "@lindorm/kryptos";
 
 export const TEST_EC_KEY = Kryptos.from("b64", {
   algorithm: "ECDH-ES",
@@ -9,7 +15,7 @@ export const TEST_EC_KEY = Kryptos.from("b64", {
     "MIGbMBAGByqGSM49AgEGBSuBBAAjA4GGAAQAjdjyFaUU3X1y5jcZIPAZNpuZ3ramLDVti3n4ZJa9o3yYlVCVAz6GaBn2mxsxxILCoz9h0Wz7BCP7TQ98eDfVVtEACA9lGF2uxjdIsx1iBUXY1WLkeftI8sBbXfqPzdjzna75VfMbpnVSvk4kjxCHXyqC_yLtHuyCk7CbI_lJhPKwyZ8",
   type: "EC",
   use: "enc",
-});
+}) as IKryptosEc;
 
 export const TEST_OCT_KEY = Kryptos.from("b64", {
   algorithm: "dir",
@@ -18,7 +24,7 @@ export const TEST_OCT_KEY = Kryptos.from("b64", {
   publicKey: "",
   type: "oct",
   use: "enc",
-});
+}) as IKryptosOct;
 
 export const TEST_OKP_KEY = Kryptos.from("b64", {
   algorithm: "ECDH-ES",
@@ -27,7 +33,7 @@ export const TEST_OKP_KEY = Kryptos.from("b64", {
   publicKey: "MCowBQYDK2VuAyEAahY7DQXMXDRj-i9-ssIfCkaEYe_UYtRq9Z6HqJBKMWc",
   type: "OKP",
   use: "enc",
-});
+}) as IKryptosOkp;
 
 export const TEST_RSA_KEY = Kryptos.from("b64", {
   algorithm: "RS512",
@@ -37,4 +43,4 @@ export const TEST_RSA_KEY = Kryptos.from("b64", {
     "MIICCgKCAgEA7cxLHoxaHdYU8EX2ij5m42XIQYWBUxKMOfVbV2OX0nNHEdojXfRfONvrAHwsvRqcdN44yv1E1be18qs5HRB67D3qLeRjXcjegdjWvQj66IFVZIxQHNJ-LXDbAYs7gez8RYbBObnDzfrqy9vIPZet1tbqvlxv9aTR38x3ORJ4Y6Ym9StbKOUIo7BLIvoc1M5uNUIEnFKKZhbmVR423-F50w_E0618KExZgeur_8cMsSWZxyl0oeSI-rIodjfVJbshT1yy98zKRj-mMnyPKgHQARr9SwDA5Xlt9L2fVZ72xgwaPOBUgFoDTPQsqQ3Rkj7nYUSqwQVEL0-oH2K7U3OeGeKyIQMNzRdSfYMw3gSc5dtwqX64oK33lN2jzTKa0clSZjqJ4jzUL1YrXMddF07dMQqjN2mGjeZVy5LaO4B58Y5l-kO01KdwA-_LcDhkNgbKiZMZVtNPlVkR3nCvInt5cqPOqMOcLW3oA1wmh7zauWqorklpSSs75zw8ETtzATSJv8h7kUG9Bl1QQgdBkGqKb4ZG-r5Bj6pwJrHVmgPSMowP8P9G13iQLFdKX714A3DMKDc03TJvs2yVK81YUCtO5aRdwb0q0YcFqn9BHI3cmO-kOhXquMakPQ3zW_FBSnIeBhJMObCQOmYEuZxrifMcCQTY7j5jsP962e7ZPn53STcCAwEAAQ",
   type: "RSA",
   use: "sig",
-});
+}) as IKryptosRsa;

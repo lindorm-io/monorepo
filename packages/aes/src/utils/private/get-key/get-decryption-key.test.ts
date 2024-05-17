@@ -3,25 +3,28 @@ import {
   TEST_OCT_KEY,
   TEST_OKP_KEY,
   TEST_RSA_KEY,
-} from "../../__fixtures__/keys";
-import { AesError } from "../../errors";
-import { _getDiffieHellmanDecryptionKey } from "./encryption-keys/shared-secret";
+} from "../../../__fixtures__/keys";
+import { _getEcDecryptionKey } from "../key-types/get-ec-keys";
+import { _getOctDecryptionKey } from "../key-types/get-oct-keys";
+import { _getOkpDecryptionKey } from "../key-types/get-okp-keys";
+import { _getRsaDecryptionKey } from "../key-types/get-rsa-keys";
 import { _getDecryptionKey } from "./get-decryption-key";
-import { _getOctDecryptionKey } from "./oct/get-oct-keys";
-import { _getRsaDecryptionKey } from "./rsa/get-rsa-keys";
 
-jest.mock("./encryption-keys/shared-secret");
-jest.mock("./oct/get-oct-keys");
-jest.mock("./rsa/get-rsa-keys");
+jest.mock("../key-types/get-ec-keys");
+jest.mock("../key-types/get-oct-keys");
+jest.mock("../key-types/get-okp-keys");
+jest.mock("../key-types/get-rsa-keys");
 
-const getDiffieHellmanDecryptionKey = _getDiffieHellmanDecryptionKey as jest.Mock;
+const getEcDecryptionKey = _getEcDecryptionKey as jest.Mock;
 const getOctDecryptionKey = _getOctDecryptionKey as jest.Mock;
+const getOkpDecryptionKey = _getOkpDecryptionKey as jest.Mock;
 const getRsaDecryptionKey = _getRsaDecryptionKey as jest.Mock;
 
 describe("getDecryptionKey", () => {
   beforeEach(() => {
-    getDiffieHellmanDecryptionKey.mockReturnValue("getDiffieHellmanDecryptionKey");
+    getEcDecryptionKey.mockReturnValue("getEcDecryptionKey");
     getOctDecryptionKey.mockReturnValue("getOctDecryptionKey");
+    getOkpDecryptionKey.mockReturnValue("getOkpDecryptionKey");
     getRsaDecryptionKey.mockReturnValue("getRsaDecryptionKey");
   });
 
@@ -35,22 +38,17 @@ describe("getDecryptionKey", () => {
         publicEncryptionJwk: { crv: "P-521", x: "x", y: "y", kty: "EC" },
         salt: Buffer.from("salt"),
       }),
-    ).toEqual("getDiffieHellmanDecryptionKey");
-
-    expect(getDiffieHellmanDecryptionKey).toHaveBeenCalled();
+    ).toEqual("getEcDecryptionKey");
   });
 
   test("should resolve decryption key with OCT key", () => {
     expect(
       _getDecryptionKey({
         encryption: "aes-256-gcm",
-        iterations: 100000,
         salt: Buffer.from("salt"),
         kryptos: TEST_OCT_KEY,
       }),
     ).toEqual("getOctDecryptionKey");
-
-    expect(getOctDecryptionKey).toHaveBeenCalled();
   });
 
   test("should resolve decryption key with OKP key", () => {
@@ -61,9 +59,7 @@ describe("getDecryptionKey", () => {
         publicEncryptionJwk: { crv: "P-521", x: "x", y: "y", kty: "EC" },
         salt: Buffer.from("salt"),
       }),
-    ).toEqual("getDiffieHellmanDecryptionKey");
-
-    expect(getDiffieHellmanDecryptionKey).toHaveBeenCalled();
+    ).toEqual("getOkpDecryptionKey");
   });
 
   test("should resolve decryption key with RSA key", () => {
@@ -74,25 +70,5 @@ describe("getDecryptionKey", () => {
         kryptos: TEST_RSA_KEY,
       }),
     ).toEqual("getRsaDecryptionKey");
-
-    expect(getRsaDecryptionKey).toHaveBeenCalled();
-  });
-
-  test("should throw when encryption key algorithm is missing", () => {
-    expect(() =>
-      _getDecryptionKey({
-        encryption: "aes-256-gcm",
-        kryptos: TEST_RSA_KEY,
-      }),
-    ).toThrow(AesError);
-  });
-
-  test("should throw when public encryption key is missing", () => {
-    expect(() =>
-      _getDecryptionKey({
-        encryption: "aes-256-gcm",
-        kryptos: TEST_RSA_KEY,
-      }),
-    ).toThrow(AesError);
   });
 });

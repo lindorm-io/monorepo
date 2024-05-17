@@ -1,14 +1,14 @@
 import { createHmac } from "crypto";
-import { AesError } from "../../errors";
-import { CreateHmacAuthTag, VerifyHmacAuthTag } from "../../types/auth-tag";
+import { AesError } from "../../../errors";
+import { CreateHmacAuthTag, VerifyHmacAuthTag } from "../../../types/auth-tag";
 
 export const createHmacAuthTag = ({
   content,
-  encryptionKey,
+  contentEncryptionKey,
   initialisationVector,
   integrityHash = "SHA256",
 }: CreateHmacAuthTag): Buffer => {
-  const hmac = createHmac(integrityHash, encryptionKey);
+  const hmac = createHmac(integrityHash, contentEncryptionKey);
 
   hmac.update(initialisationVector);
   hmac.update(content);
@@ -19,13 +19,13 @@ export const createHmacAuthTag = ({
 export const verifyHmacAuthTag = ({
   authTag,
   content,
-  encryptionKey,
+  contentEncryptionKey,
   initialisationVector,
   integrityHash,
 }: VerifyHmacAuthTag): void => {
   const generated = createHmacAuthTag({
     content,
-    encryptionKey,
+    contentEncryptionKey,
     initialisationVector,
     integrityHash,
   });

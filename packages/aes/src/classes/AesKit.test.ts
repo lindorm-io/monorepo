@@ -31,7 +31,6 @@ describe("AesKit", () => {
       format: "base64url",
       initialisationVector: expect.any(Buffer),
       integrityHash: "SHA256",
-      iterations: 100000,
       keyId: expect.any(Buffer),
       publicEncryptionJwk: undefined,
       publicEncryptionKey: undefined,

@@ -1,0 +1,60 @@
+import { TEST_EC_KEY, TEST_OKP_KEY } from "../../../__fixtures__/keys";
+import {
+  _getDiffieHellmanDecryptionKey,
+  _getDiffieHellmanEncryptionKey,
+} from "./diffie-hellman";
+
+describe("diffieHellman", () => {
+  test("should return encryption keys with EC", () => {
+    const result = _getDiffieHellmanEncryptionKey({
+      encryption: "aes-256-gcm",
+      kryptos: TEST_EC_KEY,
+    });
+
+    expect(result).toEqual({
+      contentEncryptionKey: expect.any(Buffer),
+      publicEncryptionJwk: {
+        crv: "P-521",
+        kty: "EC",
+        x: expect.any(String),
+        y: expect.any(String),
+      },
+      salt: expect.any(Buffer),
+    });
+
+    expect(
+      _getDiffieHellmanDecryptionKey({
+        encryption: "aes-256-gcm",
+        publicEncryptionJwk: result.publicEncryptionJwk,
+        kryptos: TEST_EC_KEY,
+        salt: result.salt,
+      }),
+    ).toEqual(result.contentEncryptionKey);
+  });
+
+  test("should return encryption keys with OKP", () => {
+    const result = _getDiffieHellmanEncryptionKey({
+      encryption: "aes-256-gcm",
+      kryptos: TEST_OKP_KEY,
+    });
+
+    expect(result).toEqual({
+      contentEncryptionKey: expect.any(Buffer),
+      publicEncryptionJwk: {
+        crv: "X25519",
+        kty: "OKP",
+        x: expect.any(String),
+      },
+      salt: expect.any(Buffer),
+    });
+
+    expect(
+      _getDiffieHellmanDecryptionKey({
+        encryption: "aes-256-gcm",
+        publicEncryptionJwk: result.publicEncryptionJwk,
+        kryptos: TEST_OKP_KEY,
+        salt: result.salt,
+      }),
+    ).toEqual(result.contentEncryptionKey);
+  });
+});

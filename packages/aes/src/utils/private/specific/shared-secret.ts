@@ -1,28 +1,19 @@
-import { Kryptos } from "@lindorm/kryptos";
+import { IKryptos, Kryptos } from "@lindorm/kryptos";
 import { createPrivateKey, createPublicKey, diffieHellman } from "crypto";
 import { AesError } from "../../../errors";
-import { AesEncryption, PublicEncryptionJwk } from "../../../types";
-import { _createKeyDerivation } from "./create-key-derivation";
+import { PublicEncryptionJwk } from "../../../types";
 
-type EncryptOptions = {
-  encryption: AesEncryption;
-  kryptos: Kryptos;
-};
-
-type EncryptResult = {
-  encryptionKey: Buffer;
+type GenerateResult = {
   publicEncryptionJwk: PublicEncryptionJwk;
-  salt: Buffer;
+  sharedSecret: Buffer;
 };
 
-type DecryptOptions = {
-  encryption: AesEncryption;
-  kryptos: Kryptos;
+type CalculateSharedSecretOptions = {
+  kryptos: IKryptos;
   publicEncryptionJwk: PublicEncryptionJwk;
-  salt: Buffer;
 };
 
-const _generateKryptos = (kryptos: Kryptos): Kryptos => {
+const _generateKryptos = (kryptos: IKryptos): IKryptos => {
   if (Kryptos.isEc(kryptos)) {
     return Kryptos.generate({ type: kryptos.type, use: "enc", curve: kryptos.curve });
   }
@@ -34,17 +25,18 @@ const _generateKryptos = (kryptos: Kryptos): Kryptos => {
   throw new AesError("Invalid kryptos type");
 };
 
-export const _getDiffieHellmanEncryptionKey = ({
-  encryption,
-  kryptos,
-}: EncryptOptions): EncryptResult => {
+export const _generateSharedSecret = (kryptos: IKryptos): GenerateResult => {
   const pek = _generateKryptos(kryptos);
   const der = kryptos.export("der");
   const sender = pek.export("der");
 
+  if (!sender.privateKey) {
+    throw new AesError("Sender private key is missing");
+  }
+
   const sharedSecret = diffieHellman({
     privateKey: createPrivateKey({
-      key: sender.privateKey!,
+      key: sender.privateKey,
       format: "der",
       type: "pkcs8",
     }),
@@ -55,33 +47,29 @@ export const _getDiffieHellmanEncryptionKey = ({
     }),
   });
 
-  const { encryptionKey, salt } = _createKeyDerivation({
-    encryption,
-    initialKeyMaterial: sharedSecret,
-  });
-
   const { crv, kty, x, y } = pek.export("jwk");
 
   return {
-    encryptionKey,
     publicEncryptionJwk: { crv, kty, x, y },
-    salt,
+    sharedSecret,
   };
 };
 
-export const _getDiffieHellmanDecryptionKey = ({
-  encryption,
+export const _calculateSharedSecret = ({
   kryptos,
   publicEncryptionJwk,
-  salt,
-}: DecryptOptions): Buffer => {
+}: CalculateSharedSecretOptions): Buffer => {
   const pek = Kryptos.from("jwk", { alg: "ECDH-ES", use: "enc", ...publicEncryptionJwk });
   const der = kryptos.export("der");
   const receiver = pek.export("der");
 
-  const sharedSecret = diffieHellman({
+  if (!der.privateKey) {
+    throw new AesError("Kryptos private key is missing");
+  }
+
+  return diffieHellman({
     privateKey: createPrivateKey({
-      key: der.privateKey!,
+      key: der.privateKey,
       format: "der",
       type: "pkcs8",
     }),
@@ -91,12 +79,4 @@ export const _getDiffieHellmanDecryptionKey = ({
       type: "spki",
     }),
   });
-
-  const { encryptionKey } = _createKeyDerivation({
-    encryption,
-    initialKeyMaterial: sharedSecret,
-    salt,
-  });
-
-  return encryptionKey;
 };

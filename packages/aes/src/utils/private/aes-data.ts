@@ -6,10 +6,10 @@ import {
   DecryptAesDataOptions,
   EncryptAesDataOptions,
 } from "../../types";
-import { _getAuthTag, _setAuthTag } from "./auth-tag";
-import { _getDecryptionKey } from "./get-decryption-key";
-import { _getEncryptionKeys } from "./get-encryption-keys";
-import { _getInitialisationVector } from "./get-initialisation-vector";
+import { _getAuthTag, _setAuthTag } from "./aes-data/auth-tag";
+import { _getInitialisationVector } from "./aes-data/get-initialisation-vector";
+import { _getDecryptionKey } from "./get-key/get-decryption-key";
+import { _getEncryptionKey } from "./get-key/get-encryption-key";
 
 export const _encryptAesData = (options: EncryptAesDataOptions): AesEncryptionData => {
   const {
@@ -20,22 +20,22 @@ export const _encryptAesData = (options: EncryptAesDataOptions): AesEncryptionDa
     kryptos,
   } = options;
 
-  const { encryptionKey, iterations, publicEncryptionJwk, publicEncryptionKey, salt } =
-    _getEncryptionKeys({
+  const { contentEncryptionKey, publicEncryptionJwk, publicEncryptionKey, salt } =
+    _getEncryptionKey({
       encryption,
       kryptos,
     });
 
   const initialisationVector = _getInitialisationVector(encryption);
-  const cipher = createCipheriv(encryption, encryptionKey, initialisationVector);
+  const cipher = createCipheriv(encryption, contentEncryptionKey, initialisationVector);
   const buffer = Buffer.isBuffer(data) ? data : Buffer.from(data);
   const content = Buffer.concat([cipher.update(buffer), cipher.final()]);
 
   const authTag = _getAuthTag({
-    encryption,
     cipher,
     content,
-    encryptionKey,
+    contentEncryptionKey,
+    encryption,
     initialisationVector,
     integrityHash,
   });
@@ -48,7 +48,6 @@ export const _encryptAesData = (options: EncryptAesDataOptions): AesEncryptionDa
     format,
     initialisationVector,
     integrityHash,
-    iterations,
     keyId: kryptos.id ? Buffer.from(kryptos.id, format) : undefined,
     publicEncryptionJwk,
     publicEncryptionKey,
@@ -64,30 +63,32 @@ export const _decryptAesData = (options: DecryptAesDataOptions): string => {
     encryption,
     initialisationVector,
     integrityHash,
-    iterations,
     kryptos,
     publicEncryptionJwk,
     publicEncryptionKey,
     salt,
   } = options;
 
-  const decryptionKey = _getDecryptionKey({
+  const contentEncryptionKey = _getDecryptionKey({
     encryption,
-    iterations,
     kryptos,
     publicEncryptionJwk,
     publicEncryptionKey,
     salt,
   });
 
-  const decipher = createDecipheriv(encryption, decryptionKey, initialisationVector);
+  const decipher = createDecipheriv(
+    encryption,
+    contentEncryptionKey,
+    initialisationVector,
+  );
 
   _setAuthTag({
-    encryption,
     authTag,
     content,
+    contentEncryptionKey,
     decipher,
-    decryptionKey,
+    encryption,
     initialisationVector,
     integrityHash,
   });

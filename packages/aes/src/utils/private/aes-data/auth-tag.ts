@@ -1,17 +1,17 @@
 import { CipherGCM, DecipherGCM } from "crypto";
-import { AesError } from "../../errors";
-import { GetAuthTagOptions, SetAuthTagOptions } from "../../types/auth-tag";
+import { AesError } from "../../../errors";
+import { GetAuthTagOptions, SetAuthTagOptions } from "../../../types/auth-tag";
 import { createHmacAuthTag, verifyHmacAuthTag } from "./auth-tag-hmac";
 
 export const _getAuthTag = ({
-  encryption: algorithm,
+  encryption,
   cipher,
   content,
-  encryptionKey,
+  contentEncryptionKey,
   initialisationVector,
   integrityHash,
 }: GetAuthTagOptions): Buffer | undefined => {
-  switch (algorithm) {
+  switch (encryption) {
     case "aes-128-cbc":
     case "aes-192-cbc":
     case "aes-256-cbc":
@@ -20,7 +20,7 @@ export const _getAuthTag = ({
       }
       return createHmacAuthTag({
         content,
-        encryptionKey,
+        contentEncryptionKey,
         initialisationVector,
         integrityHash,
       });
@@ -36,15 +36,15 @@ export const _getAuthTag = ({
 };
 
 export const _setAuthTag = ({
-  encryption: algorithm,
   authTag,
   content,
+  contentEncryptionKey,
   decipher,
-  decryptionKey,
+  encryption,
   initialisationVector,
   integrityHash,
 }: SetAuthTagOptions): void => {
-  switch (algorithm) {
+  switch (encryption) {
     case "aes-128-cbc":
     case "aes-192-cbc":
     case "aes-256-cbc":
@@ -54,7 +54,7 @@ export const _setAuthTag = ({
       verifyHmacAuthTag({
         authTag,
         content,
-        encryptionKey: decryptionKey,
+        contentEncryptionKey,
         initialisationVector,
         integrityHash,
       });
