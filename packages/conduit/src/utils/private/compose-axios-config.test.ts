@@ -48,9 +48,7 @@ describe("composeAxiosConfig", () => {
       data: {
         body: "body",
       },
-      headers: {
-        header: "header",
-      },
+      headers: { "Content-Type": "application/json", header: "header" },
       timeout: 250,
       url: "https://osprey.no:3000/test/path/hello/there/kenobi?may=the&force=be&with=you",
       withCredentials: true,

@@ -22,15 +22,28 @@ export const _composeAxiosData = async (ctx: ConduitContext): Promise<Result> =>
 
     form.append(ctx.req.filename ?? "file", ctx.req.stream);
 
-    return { data: form, headers: form.getHeaders() };
+    return {
+      data: form,
+      headers: form.getHeaders(),
+    };
   }
 
   if (ctx.req.form) {
-    return { data: ctx.req.form, headers: {} };
+    return {
+      data: ctx.req.form,
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+    };
   }
 
   if (ctx.req.body && Object.keys(ctx.req.body).length) {
-    return { data: ctx.req.body, headers: {} };
+    return {
+      data: ctx.req.body,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
   }
 
   return { data: {}, headers: {} };

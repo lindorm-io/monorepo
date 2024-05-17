@@ -67,9 +67,7 @@ describe("composeFetchConfig", () => {
       }),
       init: {
         body: '{"body":"body"}',
-        headers: {
-          header: "header",
-        },
+        headers: { "Content-Type": "application/json", header: "header" },
         cache: "force-cache",
         credentials: "omit",
         integrity: "integrity",
