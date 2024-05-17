@@ -19,6 +19,9 @@ describe("Kryptos (oct)", () => {
       expect(Kryptos.isOkp(key)).toBe(false);
       expect(Kryptos.isRsa(key)).toBe(false);
 
+      expect(key.hasPrivateKey).toEqual(true);
+      expect(key.hasPublicKey).toEqual(false);
+
       expect(key.export("b64")).toEqual({
         algorithm: "HS512",
         privateKey: expect.any(String),

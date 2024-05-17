@@ -20,6 +20,9 @@ describe("Kryptos (OKP)", () => {
       expect(Kryptos.isOkp(key)).toBe(true);
       expect(Kryptos.isRsa(key)).toBe(false);
 
+      expect(key.hasPrivateKey).toEqual(true);
+      expect(key.hasPublicKey).toEqual(true);
+
       expect(key.export("b64")).toEqual({
         algorithm: "EdDSA",
         curve: "Ed25519",

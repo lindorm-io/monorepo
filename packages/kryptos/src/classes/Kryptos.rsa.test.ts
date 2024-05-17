@@ -20,6 +20,9 @@ describe("Kryptos (RSA)", () => {
       expect(Kryptos.isOkp(key)).toBe(false);
       expect(Kryptos.isRsa(key)).toBe(true);
 
+      expect(key.hasPrivateKey).toEqual(true);
+      expect(key.hasPublicKey).toEqual(true);
+
       expect(key.export("b64")).toEqual({
         algorithm: "RS256",
         privateKey: expect.any(String),
