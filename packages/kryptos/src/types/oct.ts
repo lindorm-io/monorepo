@@ -2,7 +2,7 @@ import { KryptosUse } from "./types";
 
 export type OctSigAlgorithm = "HS256" | "HS384" | "HS512";
 
-export type OctEncAlgorithm = "dir";
+export type OctEncAlgorithm = "dir" | "A128KW" | "A192KW" | "A256KW";
 
 export type OctAlgorithm = OctSigAlgorithm | OctEncAlgorithm;
 

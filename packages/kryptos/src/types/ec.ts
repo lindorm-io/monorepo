@@ -2,7 +2,11 @@ import { KryptosUse } from "./types";
 
 export type EcSigAlgorithm = "ES256" | "ES384" | "ES512";
 
-export type EcEncAlgorithm = "ECDH-ES";
+export type EcEncAlgorithm =
+  | "ECDH-ES"
+  | "ECDH-ES+A128KW"
+  | "ECDH-ES+A192KW"
+  | "ECDH-ES+A256KW";
 
 export type EcAlgorithm = EcEncAlgorithm | EcSigAlgorithm;
 
