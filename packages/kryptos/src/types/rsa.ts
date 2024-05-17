@@ -6,8 +6,7 @@ export type RsaEncAlgorithm =
   | "RSA-OAEP"
   | "RSA-OAEP-256"
   | "RSA-OAEP-384"
-  | "RSA-OAEP-512"
-  | "RSA-PRIVATE-KEY";
+  | "RSA-OAEP-512";
 
 export type RsaAlgorithm = RsaEncAlgorithm | RsaSigAlgorithm;
 
