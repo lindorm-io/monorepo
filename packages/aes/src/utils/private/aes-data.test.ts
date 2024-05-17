@@ -183,18 +183,6 @@ describe("aes-data", () => {
   });
 
   describe("rsa", () => {
-    test("should encrypt and decrypt with RSA-PRIVATE-KEY", () => {
-      const key = TEST_RSA_KEY.clone({ algorithm: "RSA-PRIVATE-KEY" });
-      const encryption = _encryptAesData({
-        data,
-        kryptos: key,
-      });
-
-      expect(encryption.encryption).toBe("aes-256-gcm");
-      expect(encryption.encryptionKeyAlgorithm).toBe("RSA-PRIVATE-KEY");
-      expect(_decryptAesData({ ...encryption, kryptos: key })).toBe(data);
-    });
-
     test("should encrypt and decrypt with RSA-OAEP", () => {
       const key = TEST_RSA_KEY.clone({ algorithm: "RSA-OAEP" });
       const encryption = _encryptAesData({

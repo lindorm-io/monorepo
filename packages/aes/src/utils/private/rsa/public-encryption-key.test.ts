@@ -1,27 +1,11 @@
 import { TEST_RSA_KEY } from "../../../__fixtures__/keys";
-import { _createPublicEncryptionKey, _decryptPublicEncryptionKey } from "./public-encryption-key";
+import {
+  _createPublicEncryptionKey,
+  _decryptPublicEncryptionKey,
+} from "./public-encryption-key";
 
 describe("public-encryption-key", () => {
   const encryptionKey = Buffer.from("encryption-key");
-
-  test("should encrypt encryption key with RSA-PRIVATE-KEY", () => {
-    const kryptos = TEST_RSA_KEY.clone({ algorithm: "RSA-PRIVATE-KEY" });
-
-    const publicEncryptionKey = _createPublicEncryptionKey({
-      encryptionKey,
-      kryptos,
-    });
-
-    expect(publicEncryptionKey).toEqual(expect.any(Buffer));
-
-    const decrypted = _decryptPublicEncryptionKey({
-      publicEncryptionKey,
-      kryptos,
-    });
-
-    expect(decrypted).toEqual(expect.any(Buffer));
-    expect(decrypted).toEqual(encryptionKey);
-  });
 
   test("should encrypt encryption key with RSA-OAEP", () => {
     const kryptos = TEST_RSA_KEY.clone({ algorithm: "RSA-OAEP" });
