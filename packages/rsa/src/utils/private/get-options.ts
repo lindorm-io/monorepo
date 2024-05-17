@@ -1,6 +1,9 @@
 import { IKryptosRsa } from "@lindorm/kryptos";
+import { RSA_PKCS1_PSS_PADDING } from "constants";
 import { SignPrivateKeyInput, VerifyPublicKeyInput } from "crypto";
 import { RsaError } from "../../errors";
+
+const RSA_PKCS1_SALT_LENGTH = 32 as const;
 
 export const _getSignKey = (kryptos: IKryptosRsa): SignPrivateKeyInput | string => {
   const { privateKey } = kryptos.export("pem");
@@ -12,8 +15,8 @@ export const _getSignKey = (kryptos: IKryptosRsa): SignPrivateKeyInput | string 
   if (kryptos.algorithm.startsWith("PS")) {
     return {
       key: privateKey,
-      padding: 1,
-      saltLength: 32,
+      padding: RSA_PKCS1_PSS_PADDING,
+      saltLength: RSA_PKCS1_SALT_LENGTH,
     };
   }
 
@@ -34,8 +37,8 @@ export const _getVerifyKey = (kryptos: IKryptosRsa): VerifyPublicKeyInput | stri
   if (kryptos.algorithm.startsWith("PS")) {
     return {
       key: publicKey,
-      padding: 1,
-      saltLength: 32,
+      padding: RSA_PKCS1_PSS_PADDING,
+      saltLength: RSA_PKCS1_SALT_LENGTH,
     };
   }
 
