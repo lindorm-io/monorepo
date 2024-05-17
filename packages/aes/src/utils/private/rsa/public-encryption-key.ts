@@ -35,10 +35,6 @@ export const _createPublicEncryptionKey = ({
 
   const { publicKey } = kryptos.export("pem");
 
-  if (!publicKey) {
-    throw new AesError("Unable to encrypt AES without public key");
-  }
-
   return publicEncrypt(
     {
       key: publicKey,
