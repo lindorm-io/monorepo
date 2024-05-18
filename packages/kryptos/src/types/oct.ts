@@ -1,17 +1,26 @@
 import { KryptosUse } from "./types";
 
-export type OctSigAlgorithm = "HS256" | "HS384" | "HS512";
-
 export type OctEncAlgorithm = "dir" | "A128KW" | "A192KW" | "A256KW";
 
-export type OctAlgorithm = OctSigAlgorithm | OctEncAlgorithm;
+export type OctSigAlgorithm = "HS256" | "HS384" | "HS512";
 
-export type OctSize = 64 | 128 | 256;
+export type OctAlgorithm = OctEncAlgorithm | OctSigAlgorithm;
 
-export type OctGenerate = {
-  size: OctSize;
+export type OctSize = 64 | 96 | 128;
+
+export type OctGenerateEnc = {
+  algorithm: OctEncAlgorithm;
   type: "oct";
+  use: "enc";
 };
+
+export type OctGenerateSig = {
+  algorithm: OctSigAlgorithm;
+  type: "oct";
+  use: "sig";
+};
+
+export type OctGenerate = OctGenerateEnc | OctGenerateSig;
 
 export type OctB64 = {
   algorithm: OctAlgorithm;

@@ -1,4 +1,3 @@
-import { KryptosClone } from "./clone";
 import { EcAlgorithm, EcB64, EcCurve, EcDer, EcJwk, EcPem } from "./ec";
 import { KryptosB64, KryptosDer, KryptosJwk, KryptosPem } from "./export";
 import { LindormJwk } from "./jwk";
@@ -6,11 +5,12 @@ import { KryptosAttributes, KryptosMetadata } from "./kryptos";
 import { OctAlgorithm, OctB64, OctDer, OctJwk, OctPem } from "./oct";
 import { OkpAlgorithm, OkpB64, OkpCurve, OkpDer, OkpJwk, OkpPem } from "./okp";
 import { RsaAlgorithm, RsaB64, RsaDer, RsaJwk, RsaPem } from "./rsa";
+import { KryptosExportMode } from "./types";
 
 export interface IKryptos extends KryptosAttributes, KryptosMetadata {
   toJSON(): KryptosAttributes & KryptosMetadata;
-  clone(options: KryptosClone): IKryptos;
-  toJWK(): LindormJwk;
+  clone(): IKryptos;
+  toJWK(mode?: KryptosExportMode): LindormJwk;
 
   export(format: "b64"): KryptosB64;
   export(format: "der"): KryptosDer;

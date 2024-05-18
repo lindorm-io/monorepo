@@ -4,12 +4,14 @@ import { removeUndefined } from "@lindorm/utils";
 import { randomUUID } from "crypto";
 import { KryptosError } from "../errors";
 import {
-  EcCurve,
+  GenerateEcOptions,
   GenerateKryptosOptions,
+  GenerateOctOptions,
+  GenerateOkpOptions,
+  GenerateRsaOptions,
   KryptosAlgorithm,
   KryptosAttributes,
   KryptosB64,
-  KryptosClone,
   KryptosCurve,
   KryptosDer,
   KryptosExportMode,
@@ -30,10 +32,7 @@ import {
   KryptosType,
   KryptosUse,
   LindormJwk,
-  OctSize,
-  OkpCurve,
   RsaModulus,
-  RsaSize,
 } from "../types";
 import {
   IKryptos,
@@ -51,7 +50,6 @@ import { _createDerFromDer } from "../utils/private/from/der-from-der";
 import { _createDerFromJwk } from "../utils/private/from/der-from-jwt";
 import { _createDerFromPem } from "../utils/private/from/der-from-pem";
 import { _generateKey } from "../utils/private/generate";
-import { _getAlgorithm } from "../utils/private/get-algorithm";
 import { _isB64, _isDer, _isJwk, _isPem } from "../utils/private/is";
 import { _isOctDer } from "../utils/private/oct/is";
 import { _parseJwkOptions, _parseStdOptions } from "../utils/private/parse-options";
@@ -237,13 +235,15 @@ export class Kryptos implements IKryptos {
   // to json
 
   public toJSON(): KryptosAttributes & KryptosMetadata {
-    return removeUndefined({
+    return removeUndefined<KryptosAttributes & KryptosMetadata>({
       id: this.id,
       algorithm: this.algorithm,
       createdAt: this.createdAt,
       curve: this.curve,
       expiresAt: this.expiresAt,
       expiresIn: this.expiresIn,
+      hasPrivateKey: this.hasPrivateKey,
+      hasPublicKey: this.hasPublicKey,
       isActive: this.isActive,
       isExpired: this.isExpired,
       isExternal: this.isExternal,
@@ -262,20 +262,9 @@ export class Kryptos implements IKryptos {
 
   // public methods
 
-  public clone(options: KryptosClone = {}): Kryptos {
-    const id = Object.keys(options).length ? randomUUID() : this.id;
-    const algorithm =
-      options.use && !options.algorithm
-        ? this.calculateAlgorithm(options.use)
-        : options.algorithm
-          ? options.algorithm
-          : this.algorithm;
-
+  public clone(): Kryptos {
     return new Kryptos({
       ...this.toJSON(),
-      ...options,
-      id,
-      algorithm,
       privateKey: this._privateKey,
       publicKey: this._publicKey,
     });
@@ -360,14 +349,12 @@ export class Kryptos implements IKryptos {
 
   // public static
 
-  public static generate(options: GenerateKryptosOptions): Kryptos {
-    const keys = _generateKey(options);
-
-    return new Kryptos({
-      algorithm: _getAlgorithm(options),
-      ...options,
-      ...keys,
-    });
+  public static generate(options: GenerateEcOptions): IKryptosEc;
+  public static generate(options: GenerateOctOptions): IKryptosOct;
+  public static generate(options: GenerateOkpOptions): IKryptosOkp;
+  public static generate(options: GenerateRsaOptions): IKryptosRsa;
+  public static generate(options: GenerateKryptosOptions): IKryptos {
+    return new Kryptos({ ...options, ..._generateKey(options) });
   }
 
   public static from(format: "b64", b64: KryptosFromB64): Kryptos;
@@ -428,43 +415,6 @@ export class Kryptos implements IKryptos {
     return (
       kryptos instanceof Kryptos && kryptos.type === "RSA" && kryptos.curve === undefined
     );
-  }
-
-  // private
-
-  private calculateAlgorithm(use: KryptosUse): KryptosAlgorithm {
-    switch (this.type) {
-      case "EC":
-        return _getAlgorithm({
-          curve: this.curve as EcCurve,
-          type: this.type,
-          use,
-        });
-
-      case "oct":
-        return _getAlgorithm({
-          type: this.type,
-          size: this._privateKey!.length as OctSize,
-          use,
-        });
-
-      case "OKP":
-        return _getAlgorithm({
-          curve: this.curve as OkpCurve,
-          type: this.type,
-          use,
-        });
-
-      case "RSA":
-        return _getAlgorithm({
-          type: this.type,
-          size: (this.modulus! / 1024) as RsaSize,
-          use,
-        });
-
-      default:
-        throw new KryptosError("Invalid key type");
-    }
   }
 
   private generateKeys(options: KryptosOptions): KryptosKeys {

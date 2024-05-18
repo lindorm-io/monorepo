@@ -12,7 +12,7 @@ MockDate.set(MockedDate.toISOString());
 describe("Kryptos (oct)", () => {
   describe("create", () => {
     test("should generate", async () => {
-      const key = Kryptos.generate({ type: "oct", use: "sig", size: 256 });
+      const key = Kryptos.generate({ algorithm: "HS512", type: "oct", use: "sig" });
 
       expect(Kryptos.isEc(key)).toBe(false);
       expect(Kryptos.isOct(key)).toBe(true);
@@ -57,35 +57,23 @@ describe("Kryptos (oct)", () => {
 
   describe("clone", () => {
     test("should clone", async () => {
-      const key = Kryptos.generate({ type: "oct", use: "sig", size: 256 });
+      const key = Kryptos.generate({ algorithm: "HS256", type: "oct", use: "sig" });
       const clone = key.clone();
       expect(clone).toEqual(key);
       expect(key.export("pem")).toEqual(clone.export("pem"));
-    });
-
-    test("should clone with new ID", async () => {
-      const key = Kryptos.generate({ type: "oct", use: "sig", size: 256 });
-
-      expect(key.clone({ use: "enc" })).toEqual(
-        expect.objectContaining({
-          id: expect.not.stringMatching(key.id),
-          algorithm: "dir",
-          use: "enc",
-        }),
-      );
     });
   });
 
   describe("metadata", () => {
     test("should export metadata", async () => {
       const key = Kryptos.generate({
+        algorithm: "dir",
         expiresAt: new Date("2025-01-01T00:00:00.000Z"),
         issuer: "https://test.lindorm.io/",
         jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
         notBefore: new Date("2024-01-01T08:00:00.000Z"),
         operations: ["encrypt", "decrypt"],
         ownerId: "2c3d8e05-b382-5b31-898c-2d1f6009f5c1",
-        size: 64,
         type: "oct",
         use: "enc",
       });
@@ -96,6 +84,8 @@ describe("Kryptos (oct)", () => {
         createdAt: new Date("2024-01-01T08:00:00.000Z"),
         expiresAt: new Date("2025-01-01T00:00:00.000Z"),
         expiresIn: 31593600,
+        hasPrivateKey: true,
+        hasPublicKey: false,
         isActive: true,
         isExpired: false,
         isExternal: false,
@@ -115,13 +105,13 @@ describe("Kryptos (oct)", () => {
   describe("jwks", () => {
     test("should export private key to jwk", async () => {
       const key = Kryptos.generate({
+        algorithm: "dir",
         expiresAt: new Date("2025-01-01T00:00:00.000Z"),
         issuer: "https://test.lindorm.io/",
         jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
         notBefore: new Date("2024-01-01T08:00:00.000Z"),
         operations: ["encrypt", "decrypt"],
         ownerId: "2c3d8e05-b382-5b31-898c-2d1f6009f5c1",
-        size: 64,
         type: "oct",
         use: "enc",
       });
@@ -145,13 +135,13 @@ describe("Kryptos (oct)", () => {
 
     test("should export public key to jwk", async () => {
       const key = Kryptos.generate({
+        algorithm: "dir",
         expiresAt: new Date("2025-01-01T00:00:00.000Z"),
         issuer: "https://test.lindorm.io/",
         jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
         notBefore: new Date("2024-01-01T08:00:00.000Z"),
         operations: ["encrypt", "decrypt"],
         ownerId: "2c3d8e05-b382-5b31-898c-2d1f6009f5c1",
-        size: 64,
         type: "oct",
         use: "enc",
       });

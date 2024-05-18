@@ -12,10 +12,21 @@ export type EcAlgorithm = EcEncAlgorithm | EcSigAlgorithm;
 
 export type EcCurve = "P-256" | "P-384" | "P-521";
 
-export type EcGenerate = {
-  curve: EcCurve;
+export type EcGenerateEnc = {
+  algorithm: EcEncAlgorithm;
+  curve?: EcCurve;
   type: "EC";
+  use: "enc";
 };
+
+export type EcGenerateSig = {
+  algorithm: EcSigAlgorithm;
+  curve?: EcCurve;
+  type: "EC";
+  use: "sig";
+};
+
+export type EcGenerate = EcGenerateEnc | EcGenerateSig;
 
 export type EcB64 = {
   algorithm: EcAlgorithm;

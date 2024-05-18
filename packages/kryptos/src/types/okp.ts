@@ -1,17 +1,32 @@
 import { KryptosUse } from "./types";
 
-export type OkpSigAlgorithm = "EdDSA";
-
 export type OkpEncAlgorithm = "ECDH-ES";
 
-export type OkpAlgorithm = OkpSigAlgorithm | OkpEncAlgorithm;
+export type OkpSigAlgorithm = "EdDSA";
 
-export type OkpCurve = "Ed25519" | "Ed448" | "X25519" | "X448";
+export type OkpAlgorithm = OkpEncAlgorithm | OkpSigAlgorithm;
 
-export type OkpGenerate = {
-  curve: OkpCurve;
+export type OkpEncCurve = "X25519" | "X448";
+
+export type OkpSigCurve = "Ed25519" | "Ed448";
+
+export type OkpCurve = OkpEncCurve | OkpSigCurve;
+
+export type OkpGenerateEnc = {
+  algorithm: OkpEncAlgorithm;
+  curve: OkpEncCurve;
   type: "OKP";
+  use: "enc";
 };
+
+export type OkpGenerateSig = {
+  algorithm: OkpSigAlgorithm;
+  curve: OkpSigCurve;
+  type: "OKP";
+  use: "sig";
+};
+
+export type OkpGenerate = OkpGenerateEnc | OkpGenerateSig;
 
 export type OkpB64 = {
   algorithm: OkpAlgorithm;

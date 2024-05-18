@@ -13,13 +13,14 @@ MockDate.set(MockedDate.toISOString());
 describe("Kryptos (RSA)", () => {
   describe("create", () => {
     test("should generate", async () => {
-      const key = Kryptos.generate({ type: "RSA", use: "sig", size: 2 });
+      const key = Kryptos.generate({ algorithm: "RS256", type: "RSA", use: "sig" });
 
       expect(Kryptos.isEc(key)).toBe(false);
       expect(Kryptos.isOct(key)).toBe(false);
       expect(Kryptos.isOkp(key)).toBe(false);
       expect(Kryptos.isRsa(key)).toBe(true);
 
+      expect(key.modulus).toEqual(2048);
       expect(key.hasPrivateKey).toEqual(true);
       expect(key.hasPublicKey).toEqual(true);
 
@@ -85,35 +86,23 @@ describe("Kryptos (RSA)", () => {
 
   describe("clone", () => {
     test("should clone", async () => {
-      const key = Kryptos.generate({ type: "RSA", use: "sig", size: 2 });
+      const key = Kryptos.generate({ algorithm: "RS256", type: "RSA", use: "sig" });
       const clone = key.clone();
       expect(clone).toEqual(key);
       expect(key.export("pem")).toEqual(clone.export("pem"));
-    });
-
-    test("should clone with new ID", async () => {
-      const key = Kryptos.generate({ type: "RSA", use: "sig", size: 2 });
-
-      expect(key.clone({ use: "enc" })).toEqual(
-        expect.objectContaining({
-          id: expect.not.stringMatching(key.id),
-          algorithm: "RSA-OAEP-256",
-          use: "enc",
-        }),
-      );
     });
   });
 
   describe("metadata", () => {
     test("should export metadata as json or jwk", async () => {
       const key = Kryptos.generate({
+        algorithm: "RSA-OAEP-256",
         expiresAt: new Date("2025-01-01T00:00:00.000Z"),
         issuer: "https://test.lindorm.io/",
         jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
         notBefore: new Date("2024-01-01T08:00:00.000Z"),
         operations: ["encrypt", "decrypt"],
         ownerId: "2c3d8e05-b382-5b31-898c-2d1f6009f5c1",
-        size: 2,
         type: "RSA",
         use: "enc",
       });
@@ -124,11 +113,13 @@ describe("Kryptos (RSA)", () => {
         createdAt: new Date("2024-01-01T08:00:00.000Z"),
         expiresAt: new Date("2025-01-01T00:00:00.000Z"),
         expiresIn: 31593600,
+        hasPrivateKey: true,
+        hasPublicKey: true,
         isActive: true,
         isExpired: false,
         isExternal: false,
-        isUsable: true,
         issuer: "https://test.lindorm.io/",
+        isUsable: true,
         jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
         modulus: 2048,
         notBefore: new Date("2024-01-01T08:00:00.000Z"),
@@ -167,13 +158,13 @@ describe("Kryptos (RSA)", () => {
   describe("jwks", () => {
     test("should export private key to jwk", async () => {
       const key = Kryptos.generate({
+        algorithm: "RSA-OAEP-256",
         expiresAt: new Date("2025-01-01T00:00:00.000Z"),
         issuer: "https://test.lindorm.io/",
         jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
         notBefore: new Date("2024-01-01T08:00:00.000Z"),
         operations: ["encrypt", "decrypt"],
         ownerId: "2c3d8e05-b382-5b31-898c-2d1f6009f5c1",
-        size: 2,
         type: "RSA",
         use: "enc",
       });
@@ -204,13 +195,13 @@ describe("Kryptos (RSA)", () => {
 
     test("should export public key to jwk", async () => {
       const key = Kryptos.generate({
+        algorithm: "RSA-OAEP-256",
         expiresAt: new Date("2025-01-01T00:00:00.000Z"),
         issuer: "https://test.lindorm.io/",
         jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
         notBefore: new Date("2024-01-01T08:00:00.000Z"),
         operations: ["encrypt", "decrypt"],
         ownerId: "2c3d8e05-b382-5b31-898c-2d1f6009f5c1",
-        size: 2,
         type: "RSA",
         use: "enc",
       });

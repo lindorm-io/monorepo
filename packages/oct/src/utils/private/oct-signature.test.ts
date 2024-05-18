@@ -1,4 +1,4 @@
-import { IKryptosOct } from "@lindorm/kryptos";
+import { Kryptos } from "@lindorm/kryptos";
 import { randomBytes } from "crypto";
 import { TEST_OCT_KEY } from "../../__fixtures__/keys";
 import { OctError } from "../../errors";
@@ -19,17 +19,32 @@ describe("signature", () => {
 
   describe("algorithms", () => {
     test("should create signature with HS256", () => {
-      const kryptos = TEST_OCT_KEY.clone({ algorithm: "HS256" }) as IKryptosOct;
+      const kryptos = Kryptos.generate({
+        algorithm: "HS256",
+        type: "oct",
+        use: "sig",
+      });
+
       expect(_createOctSignature({ kryptos, data, format })).toEqual(expect.any(String));
     });
 
     test("should create signature with HS384", () => {
-      const kryptos = TEST_OCT_KEY.clone({ algorithm: "HS384" }) as IKryptosOct;
+      const kryptos = Kryptos.generate({
+        algorithm: "HS384",
+        type: "oct",
+        use: "sig",
+      });
+
       expect(_createOctSignature({ kryptos, data, format })).toEqual(expect.any(String));
     });
 
     test("should create signature with HS512", () => {
-      const kryptos = TEST_OCT_KEY.clone({ algorithm: "HS512" }) as IKryptosOct;
+      const kryptos = Kryptos.generate({
+        algorithm: "HS512",
+        type: "oct",
+        use: "sig",
+      });
+
       expect(_createOctSignature({ kryptos, data, format })).toEqual(expect.any(String));
     });
   });

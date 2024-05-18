@@ -13,7 +13,7 @@ MockDate.set(MockedDate.toISOString());
 describe("Kryptos", () => {
   describe("create", () => {
     test("should generate EC", async () => {
-      const key = Kryptos.generate({ type: "EC", use: "sig", curve: "P-521" });
+      const key = Kryptos.generate({ algorithm: "ES512", type: "EC", use: "sig" });
 
       expect(Kryptos.isEc(key)).toBe(true);
       expect(Kryptos.isOct(key)).toBe(false);
@@ -84,29 +84,17 @@ describe("Kryptos", () => {
 
   describe("clone", () => {
     test("should clone", async () => {
-      const key = Kryptos.generate({ type: "EC", use: "sig", curve: "P-521" });
+      const key = Kryptos.generate({ algorithm: "ES512", type: "EC", use: "sig" });
       const clone = key.clone();
       expect(clone).toEqual(key);
       expect(key.export("pem")).toEqual(clone.export("pem"));
-    });
-
-    test("should clone with new ID", async () => {
-      const key = Kryptos.generate({ type: "EC", use: "sig", curve: "P-521" });
-
-      expect(key.clone({ use: "enc" })).toEqual(
-        expect.objectContaining({
-          id: expect.not.stringMatching(key.id),
-          algorithm: "ECDH-ES",
-          use: "enc",
-        }),
-      );
     });
   });
 
   describe("metadata", () => {
     test("should export metadata", async () => {
       const key = Kryptos.generate({
-        curve: "P-521",
+        algorithm: "ECDH-ES+A256KW",
         expiresAt: new Date("2025-01-01T00:00:00.000Z"),
         issuer: "https://test.lindorm.io/",
         jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
@@ -119,11 +107,13 @@ describe("Kryptos", () => {
 
       expect(key.toJSON()).toEqual({
         id: expect.any(String),
-        algorithm: "ECDH-ES",
+        algorithm: "ECDH-ES+A256KW",
         createdAt: new Date("2024-01-01T08:00:00.000Z"),
         curve: "P-521",
         expiresAt: new Date("2025-01-01T00:00:00.000Z"),
         expiresIn: 31593600,
+        hasPrivateKey: true,
+        hasPublicKey: true,
         isActive: true,
         isExpired: false,
         isExternal: false,
@@ -143,7 +133,7 @@ describe("Kryptos", () => {
   describe("jwks", () => {
     test("should export private key to jwk", async () => {
       const key = Kryptos.generate({
-        curve: "P-521",
+        algorithm: "ECDH-ES+A256KW",
         expiresAt: new Date("2025-01-01T00:00:00.000Z"),
         issuer: "https://test.lindorm.io/",
         jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
@@ -155,7 +145,7 @@ describe("Kryptos", () => {
       });
 
       expect(key.toJWK("private")).toEqual({
-        alg: "ECDH-ES",
+        alg: "ECDH-ES+A256KW",
         crv: "P-521",
         d: expect.any(String),
         exp: 1735689600,
@@ -176,7 +166,7 @@ describe("Kryptos", () => {
 
     test("should export public key to jwk", async () => {
       const key = Kryptos.generate({
-        curve: "P-521",
+        algorithm: "ECDH-ES+A256KW",
         expiresAt: new Date("2025-01-01T00:00:00.000Z"),
         issuer: "https://test.lindorm.io/",
         jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
@@ -188,7 +178,7 @@ describe("Kryptos", () => {
       });
 
       expect(key.toJWK("public")).toEqual({
-        alg: "ECDH-ES",
+        alg: "ECDH-ES+A256KW",
         crv: "P-521",
         exp: 1735689600,
         iat: 1704096000,

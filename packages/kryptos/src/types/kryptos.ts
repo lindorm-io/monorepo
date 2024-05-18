@@ -30,6 +30,8 @@ export type KryptosAttributes = {
 
 export type KryptosMetadata = {
   expiresIn: number;
+  hasPrivateKey: boolean;
+  hasPublicKey: boolean;
   isActive: boolean;
   isExpired: boolean;
   isUsable: boolean;
@@ -62,7 +64,7 @@ export type KryptosOptions = StdOptions & KryptosKeys;
 
 type StdGenerate = Pick<
   StdOptions,
-  "expiresAt" | "issuer" | "jwksUri" | "notBefore" | "operations" | "ownerId" | "use"
+  "expiresAt" | "issuer" | "jwksUri" | "notBefore" | "operations" | "ownerId"
 >;
 
 export type GenerateEcOptions = StdGenerate & EcGenerate;

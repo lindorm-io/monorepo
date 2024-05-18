@@ -1,3 +1,4 @@
+import { Kryptos } from "@lindorm/kryptos";
 import { TEST_OCT_KEY } from "../../../__fixtures__/keys";
 import { _getOctDecryptionKey, _getOctEncryptionKey } from "./get-oct-keys";
 
@@ -22,7 +23,11 @@ describe("get-oct-keys", () => {
   });
 
   test("should return oct encryption key with key wrap", () => {
-    const kryptos = TEST_OCT_KEY.clone({ algorithm: "A128KW" });
+    const kryptos = Kryptos.generate({
+      algorithm: "A128KW",
+      type: "oct",
+      use: "enc",
+    });
 
     const result = _getOctEncryptionKey({ encryption: "aes-128-gcm", kryptos });
 

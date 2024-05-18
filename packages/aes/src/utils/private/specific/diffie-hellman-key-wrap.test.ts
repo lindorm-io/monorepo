@@ -1,4 +1,4 @@
-import { TEST_EC_KEY } from "../../../__fixtures__/keys";
+import { Kryptos } from "@lindorm/kryptos";
 import {
   _getDiffieHellmanKeyWrapDecryptionKey,
   _getDiffieHellmanKeyWrapEncryptionKey,
@@ -6,7 +6,11 @@ import {
 
 describe("diffieHellman", () => {
   test("should return encryption keys with ECDH-ES+A128KW", () => {
-    const kryptos = TEST_EC_KEY.clone({ algorithm: "ECDH-ES+A128KW" });
+    const kryptos = Kryptos.generate({
+      algorithm: "ECDH-ES+A128KW",
+      type: "EC",
+      use: "enc",
+    });
 
     const result = _getDiffieHellmanKeyWrapEncryptionKey({
       encryption: "aes-128-gcm",
@@ -16,7 +20,7 @@ describe("diffieHellman", () => {
     expect(result).toEqual({
       contentEncryptionKey: expect.any(Buffer),
       publicEncryptionJwk: {
-        crv: "P-521",
+        crv: "P-256",
         kty: "EC",
         x: expect.any(String),
         y: expect.any(String),
@@ -37,7 +41,11 @@ describe("diffieHellman", () => {
   });
 
   test("should return encryption keys with ECDH-ES+A192KW", () => {
-    const kryptos = TEST_EC_KEY.clone({ algorithm: "ECDH-ES+A192KW" });
+    const kryptos = Kryptos.generate({
+      algorithm: "ECDH-ES+A192KW",
+      type: "EC",
+      use: "enc",
+    });
 
     const result = _getDiffieHellmanKeyWrapEncryptionKey({
       encryption: "aes-192-gcm",
@@ -47,7 +55,7 @@ describe("diffieHellman", () => {
     expect(result).toEqual({
       contentEncryptionKey: expect.any(Buffer),
       publicEncryptionJwk: {
-        crv: "P-521",
+        crv: "P-384",
         kty: "EC",
         x: expect.any(String),
         y: expect.any(String),
@@ -68,7 +76,11 @@ describe("diffieHellman", () => {
   });
 
   test("should return encryption keys with ECDH-ES+A256KW", () => {
-    const kryptos = TEST_EC_KEY.clone({ algorithm: "ECDH-ES+A256KW" });
+    const kryptos = Kryptos.generate({
+      algorithm: "ECDH-ES+A256KW",
+      type: "EC",
+      use: "enc",
+    });
 
     const result = _getDiffieHellmanKeyWrapEncryptionKey({
       encryption: "aes-256-gcm",

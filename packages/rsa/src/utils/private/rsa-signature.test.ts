@@ -1,4 +1,4 @@
-import { IKryptosRsa } from "@lindorm/kryptos";
+import { Kryptos } from "@lindorm/kryptos";
 import { randomBytes } from "crypto";
 import { TEST_RSA_KEY } from "../../__fixtures__/keys";
 import { RsaError } from "../../errors";
@@ -19,32 +19,62 @@ describe("rsa-signature", () => {
 
   describe("algorithms", () => {
     test("should create signature with RS256", () => {
-      const kryptos = TEST_RSA_KEY.clone({ algorithm: "RS256" }) as IKryptosRsa;
+      const kryptos = Kryptos.generate({
+        algorithm: "RS256",
+        type: "RSA",
+        use: "sig",
+      });
+
       expect(_createRsaSignature({ kryptos, data, format })).toEqual(expect.any(String));
     });
 
     test("should create signature with RS384", () => {
-      const kryptos = TEST_RSA_KEY.clone({ algorithm: "RS384" }) as IKryptosRsa;
+      const kryptos = Kryptos.generate({
+        algorithm: "RS384",
+        type: "RSA",
+        use: "sig",
+      });
+
       expect(_createRsaSignature({ kryptos, data, format })).toEqual(expect.any(String));
     });
 
     test("should create signature with RS512", () => {
-      const kryptos = TEST_RSA_KEY.clone({ algorithm: "RS512" }) as IKryptosRsa;
+      const kryptos = Kryptos.generate({
+        algorithm: "RS512",
+        type: "RSA",
+        use: "sig",
+      });
+
       expect(_createRsaSignature({ kryptos, data, format })).toEqual(expect.any(String));
     });
 
     test("should create signature with PS256", () => {
-      const kryptos = TEST_RSA_KEY.clone({ algorithm: "PS256" }) as IKryptosRsa;
+      const kryptos = Kryptos.generate({
+        algorithm: "PS256",
+        type: "RSA",
+        use: "sig",
+      });
+
       expect(_createRsaSignature({ kryptos, data, format })).toEqual(expect.any(String));
     });
 
     test("should create signature with PS384", () => {
-      const kryptos = TEST_RSA_KEY.clone({ algorithm: "PS384" }) as IKryptosRsa;
+      const kryptos = Kryptos.generate({
+        algorithm: "PS384",
+        type: "RSA",
+        use: "sig",
+      });
+
       expect(_createRsaSignature({ kryptos, data, format })).toEqual(expect.any(String));
     });
 
     test("should create signature with PS512", () => {
-      const kryptos = TEST_RSA_KEY.clone({ algorithm: "PS512" }) as IKryptosRsa;
+      const kryptos = Kryptos.generate({
+        algorithm: "PS512",
+        type: "RSA",
+        use: "sig",
+      });
+
       expect(_createRsaSignature({ kryptos, data, format })).toEqual(expect.any(String));
     });
   });

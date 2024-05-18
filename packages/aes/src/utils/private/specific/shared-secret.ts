@@ -14,15 +14,16 @@ type CalculateSharedSecretOptions = {
 };
 
 const _generateKryptos = (kryptos: IKryptos): IKryptos => {
-  if (Kryptos.isEc(kryptos)) {
-    return Kryptos.generate({ type: kryptos.type, use: "enc", curve: kryptos.curve });
+  if (!Kryptos.isEc(kryptos) && !Kryptos.isOkp(kryptos)) {
+    throw new AesError("Invalid kryptos type");
   }
 
-  if (Kryptos.isOkp(kryptos)) {
-    return Kryptos.generate({ type: kryptos.type, use: "enc", curve: kryptos.curve });
-  }
-
-  throw new AesError("Invalid kryptos type");
+  return Kryptos.generate({
+    algorithm: kryptos.algorithm,
+    curve: kryptos.curve,
+    type: kryptos.type,
+    use: "enc",
+  } as any);
 };
 
 export const _generateSharedSecret = (kryptos: IKryptos): GenerateResult => {

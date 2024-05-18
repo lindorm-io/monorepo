@@ -1,5 +1,4 @@
 export * from "./algorithm";
-export * from "./clone";
 export * from "./ec";
 export * from "./export";
 export * from "./from";

@@ -13,7 +13,12 @@ MockDate.set(MockedDate.toISOString());
 describe("Kryptos (OKP)", () => {
   describe("create", () => {
     test("should generate", async () => {
-      const key = Kryptos.generate({ type: "OKP", use: "sig", curve: "Ed25519" });
+      const key = Kryptos.generate({
+        algorithm: "EdDSA",
+        curve: "Ed25519",
+        type: "OKP",
+        use: "sig",
+      });
 
       expect(Kryptos.isEc(key)).toBe(false);
       expect(Kryptos.isOct(key)).toBe(false);
@@ -83,27 +88,22 @@ describe("Kryptos (OKP)", () => {
 
   describe("clone", () => {
     test("should clone", async () => {
-      const key = Kryptos.generate({ type: "OKP", use: "sig", curve: "Ed25519" });
+      const key = Kryptos.generate({
+        algorithm: "EdDSA",
+        curve: "Ed25519",
+        type: "OKP",
+        use: "sig",
+      });
       const clone = key.clone();
       expect(clone).toEqual(key);
       expect(key.export("pem")).toEqual(clone.export("pem"));
-    });
-
-    test("should clone with new ID", async () => {
-      const key = Kryptos.generate({ type: "OKP", use: "sig", curve: "Ed25519" });
-
-      expect(key.clone({ algorithm: "HS384" })).toEqual(
-        expect.objectContaining({
-          id: expect.not.stringMatching(key.id),
-          algorithm: "HS384",
-        }),
-      );
     });
   });
 
   describe("metadata", () => {
     test("should export metadata", async () => {
       const key = Kryptos.generate({
+        algorithm: "EdDSA",
         curve: "Ed25519",
         expiresAt: new Date("2025-01-01T00:00:00.000Z"),
         issuer: "https://test.lindorm.io/",
@@ -122,11 +122,13 @@ describe("Kryptos (OKP)", () => {
         curve: "Ed25519",
         expiresAt: new Date("2025-01-01T00:00:00.000Z"),
         expiresIn: 31593600,
+        hasPrivateKey: true,
+        hasPublicKey: true,
         isActive: true,
         isExpired: false,
         isExternal: false,
-        isUsable: true,
         issuer: "https://test.lindorm.io/",
+        isUsable: true,
         jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
         notBefore: new Date("2024-01-01T08:00:00.000Z"),
         operations: ["encrypt", "decrypt"],
@@ -141,6 +143,7 @@ describe("Kryptos (OKP)", () => {
   describe("jwks", () => {
     test("should export private key to jwk", async () => {
       const key = Kryptos.generate({
+        algorithm: "EdDSA",
         curve: "Ed25519",
         expiresAt: new Date("2025-01-01T00:00:00.000Z"),
         issuer: "https://test.lindorm.io/",
@@ -173,6 +176,7 @@ describe("Kryptos (OKP)", () => {
 
     test("should export public key to jwk", async () => {
       const key = Kryptos.generate({
+        algorithm: "EdDSA",
         curve: "Ed25519",
         expiresAt: new Date("2025-01-01T00:00:00.000Z"),
         issuer: "https://test.lindorm.io/",
