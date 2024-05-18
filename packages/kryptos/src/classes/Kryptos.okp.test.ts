@@ -28,6 +28,8 @@ describe("Kryptos (OKP)", () => {
       expect(key.hasPrivateKey).toEqual(true);
       expect(key.hasPublicKey).toEqual(true);
 
+      expect(key.operations).toEqual(["sign", "verify"]);
+
       expect(key.export("b64")).toEqual({
         algorithm: "EdDSA",
         curve: "Ed25519",
@@ -63,6 +65,17 @@ describe("Kryptos (OKP)", () => {
         type: "OKP",
         use: "sig",
       });
+    });
+
+    test("should generate encryption key", async () => {
+      const key = Kryptos.generate({
+        algorithm: "ECDH-ES",
+        curve: "X448",
+        type: "OKP",
+        use: "enc",
+      });
+
+      expect(key.operations).toEqual(["encrypt", "decrypt"]);
     });
 
     test("should be able to recover public key from private key buffer", async () => {

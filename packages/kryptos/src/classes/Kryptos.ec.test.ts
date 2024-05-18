@@ -12,7 +12,7 @@ MockDate.set(MockedDate.toISOString());
 
 describe("Kryptos", () => {
   describe("create", () => {
-    test("should generate EC", async () => {
+    test("should generate", async () => {
       const key = Kryptos.generate({ algorithm: "ES512", type: "EC", use: "sig" });
 
       expect(Kryptos.isEc(key)).toBe(true);
@@ -22,6 +22,8 @@ describe("Kryptos", () => {
 
       expect(key.hasPrivateKey).toEqual(true);
       expect(key.hasPublicKey).toEqual(true);
+
+      expect(key.operations).toEqual(["sign", "verify"]);
 
       expect(key.export("b64")).toEqual({
         algorithm: "ES512",
@@ -59,6 +61,16 @@ describe("Kryptos", () => {
         type: "EC",
         use: "sig",
       });
+    });
+
+    test("should generate encryption key", async () => {
+      const key = Kryptos.generate({
+        algorithm: "ECDH-ES+A192KW",
+        type: "EC",
+        use: "enc",
+      });
+
+      expect(key.operations).toEqual(["encrypt", "decrypt"]);
     });
 
     test("should be able to recover public key from private key buffer", async () => {

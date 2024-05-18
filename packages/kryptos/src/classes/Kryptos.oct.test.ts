@@ -22,6 +22,8 @@ describe("Kryptos (oct)", () => {
       expect(key.hasPrivateKey).toEqual(true);
       expect(key.hasPublicKey).toEqual(false);
 
+      expect(key.operations).toEqual(["sign", "verify"]);
+
       expect(key.export("b64")).toEqual({
         algorithm: "HS512",
         privateKey: expect.any(String),
@@ -52,6 +54,16 @@ describe("Kryptos (oct)", () => {
         type: "oct",
         use: "sig",
       });
+    });
+
+    test("should generate encryption key", async () => {
+      const key = Kryptos.generate({
+        algorithm: "A192KW",
+        type: "oct",
+        use: "enc",
+      });
+
+      expect(key.operations).toEqual(["encrypt", "decrypt"]);
     });
   });
 

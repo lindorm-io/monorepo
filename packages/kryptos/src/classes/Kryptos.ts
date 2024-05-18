@@ -51,6 +51,7 @@ import { _createDerFromJwk } from "../utils/private/from/der-from-jwt";
 import { _createDerFromPem } from "../utils/private/from/der-from-pem";
 import { _generateKey } from "../utils/private/generate";
 import { _isB64, _isDer, _isJwk, _isPem } from "../utils/private/is";
+import { _calculateKeyOps } from "../utils/private/key-ops";
 import { _isOctDer } from "../utils/private/oct/is";
 import { _parseJwkOptions, _parseStdOptions } from "../utils/private/parse-options";
 import { _modulusSize } from "../utils/private/rsa/modulus-size";
@@ -354,7 +355,11 @@ export class Kryptos implements IKryptos {
   public static generate(options: GenerateOkpOptions): IKryptosOkp;
   public static generate(options: GenerateRsaOptions): IKryptosRsa;
   public static generate(options: GenerateKryptosOptions): IKryptos {
-    return new Kryptos({ ...options, ..._generateKey(options) });
+    return new Kryptos({
+      operations: _calculateKeyOps(options.use),
+      ...options,
+      ..._generateKey(options),
+    });
   }
 
   public static from(format: "b64", b64: KryptosFromB64): Kryptos;
