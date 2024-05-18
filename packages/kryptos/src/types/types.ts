@@ -1,8 +1,8 @@
-import { JweAlgorithm, JwtAlgorithm } from "./algorithm";
+import { KryptosEncAlgorithm, KryptosSigAlgorithm } from "./algorithm";
 import { EcCurve } from "./ec";
 import { OkpCurve } from "./okp";
 
-export type KryptosAlgorithm = JwtAlgorithm | JweAlgorithm;
+export type KryptosAlgorithm = KryptosSigAlgorithm | KryptosEncAlgorithm;
 
 export type KryptosCurve = EcCurve | OkpCurve;
 

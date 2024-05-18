@@ -3,19 +3,13 @@ import { OctEncAlgorithm, OctSigAlgorithm } from "./oct";
 import { OkpEncAlgorithm, OkpSigAlgorithm } from "./okp";
 import { RsaEncAlgorithm, RsaSigAlgorithm } from "./rsa";
 
-export type JweAlgorithm =
+export type KryptosEncAlgorithm =
   | EcEncAlgorithm
   | OctEncAlgorithm
   | OkpEncAlgorithm
   | RsaEncAlgorithm;
 
-export type JwsAlgorithm =
-  | EcSigAlgorithm
-  | OctSigAlgorithm
-  | OkpSigAlgorithm
-  | RsaSigAlgorithm;
-
-export type JwtAlgorithm =
+export type KryptosSigAlgorithm =
   | EcSigAlgorithm
   | OctSigAlgorithm
   | OkpSigAlgorithm
