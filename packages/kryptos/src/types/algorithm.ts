@@ -9,6 +9,12 @@ export type JweAlgorithm =
   | OkpEncAlgorithm
   | RsaEncAlgorithm;
 
+export type JwsAlgorithm =
+  | EcSigAlgorithm
+  | OctSigAlgorithm
+  | OkpSigAlgorithm
+  | RsaSigAlgorithm;
+
 export type JwtAlgorithm =
   | EcSigAlgorithm
   | OctSigAlgorithm
