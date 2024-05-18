@@ -1,5 +1,5 @@
 import { Kryptos } from "@lindorm/kryptos";
-import { TEST_OCT_KEY } from "../__fixtures__/keys";
+import { TEST_OCT_KEY_SIG } from "../__fixtures__/keys";
 import { ArgonError } from "../errors";
 import { ArgonKit } from "./ArgonKit";
 
@@ -107,7 +107,7 @@ describe("ArgonKit", () => {
 
   describe("with secret", () => {
     beforeEach(async () => {
-      kit = new ArgonKit({ kryptos: TEST_OCT_KEY });
+      kit = new ArgonKit({ kryptos: TEST_OCT_KEY_SIG });
       hash = await kit.hash("string");
     });
 

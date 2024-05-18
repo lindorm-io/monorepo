@@ -1,9 +1,9 @@
-import { Kryptos } from "@lindorm/kryptos";
+import { IKryptos, IKryptosOct } from "@lindorm/kryptos";
 
 export type CreateArgonHashOptions = {
   data: string;
   hashLength?: number;
-  kryptos?: Kryptos;
+  kryptos?: IKryptosOct;
   memoryCost?: number;
   parallelism?: number;
   timeCost?: number;
@@ -12,12 +12,12 @@ export type CreateArgonHashOptions = {
 export type VerifyArgonHashOptions = {
   data: string;
   hash: string;
-  kryptos?: Kryptos;
+  kryptos?: IKryptosOct;
 };
 
 export type ArgonKitOptions = {
   hashLength?: number;
-  kryptos?: Kryptos;
+  kryptos?: IKryptos;
   memoryCost?: number;
   parallelism?: number;
   timeCost?: number;

@@ -1,5 +1,5 @@
 import { Environment } from "@lindorm/enums";
-import { Logger } from "@lindorm/logger";
+import { ILogger } from "@lindorm/logger";
 import { Middleware } from "@lindorm/middleware";
 import { RetryOptions } from "@lindorm/retry";
 import { ConduitUsing } from "../enums";
@@ -15,7 +15,7 @@ export type ConduitContext<
   RequestQuery = Record<string, any>,
 > = {
   app: AppContext;
-  logger?: Logger;
+  logger?: ILogger;
   req: RequestContext<RequestBody, RequestParams, RequestQuery>;
   res: ConduitResponse<ResponseData>;
 };
@@ -33,7 +33,7 @@ export type ConduitOptions = {
   config?: ConfigOptions;
   environment?: Environment;
   headers?: Record<string, any>;
-  logger?: Logger;
+  logger?: ILogger;
   middleware?: Array<ConduitMiddleware>;
   retryCallback?: RetryCallback;
   retryOptions?: RetryOptions;

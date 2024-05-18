@@ -1,5 +1,5 @@
 import MockDate from "mockdate";
-import { Logger } from "../types";
+import { ILogger } from "../types";
 import { LindormLogger } from "./LindormLogger";
 
 MockDate.set("2024-01-01T10:00:00.000Z");
@@ -16,7 +16,7 @@ jest.mock("winston", () => ({
 }));
 
 describe("LindormLogger", () => {
-  let logger: Logger;
+  let logger: ILogger;
 
   beforeEach(() => {
     logger = new LindormLogger();
@@ -89,7 +89,10 @@ describe("LindormLogger", () => {
     logger.filter("password");
     logger.filter("path1.path2.secret", () => "******");
 
-    logger.info("message", { path1: { path2: { secret: "secret" } }, password: "password" });
+    logger.info("message", {
+      path1: { path2: { secret: "secret" } },
+      password: "password",
+    });
 
     expect(log).toHaveBeenCalledWith({
       context: [],

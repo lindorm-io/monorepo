@@ -1,8 +1,13 @@
 import { isObject, isString } from "@lindorm/is";
-import { Kryptos } from "@lindorm/kryptos";
+import { IKryptos } from "@lindorm/kryptos";
 import { BufferFormat, ShaAlgorithm } from "@lindorm/types";
 import { AesError } from "../errors";
-import { AesEncryption, AesEncryptionData, AesKitOptions, DecryptAesDataOptions } from "../types";
+import {
+  AesEncryption,
+  AesEncryptionData,
+  AesKitOptions,
+  DecryptAesDataOptions,
+} from "../types";
 import {
   _assertAesCipher,
   _decryptAesCipher,
@@ -15,7 +20,7 @@ export class AesKit {
   private readonly encryption: AesEncryption;
   private readonly format: BufferFormat;
   private readonly integrityHash: ShaAlgorithm;
-  private readonly kryptos: Kryptos;
+  private readonly kryptos: IKryptos;
 
   public constructor(options: AesKitOptions) {
     this.encryption = options.encryption || "aes-256-gcm";
@@ -26,7 +31,10 @@ export class AesKit {
 
   public encrypt(cipher: string, mode?: "cipher"): string;
   public encrypt(data: string, mode: "object"): AesEncryptionData;
-  public encrypt(arg: string, mode: "cipher" | "object" = "cipher"): string | AesEncryptionData {
+  public encrypt(
+    arg: string,
+    mode: "cipher" | "object" = "cipher",
+  ): string | AesEncryptionData {
     switch (mode) {
       case "cipher":
         return _encryptAesCipher({

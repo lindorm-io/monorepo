@@ -1,14 +1,10 @@
-import { Kryptos } from "@lindorm/kryptos";
+import { IKryptosOct } from "@lindorm/kryptos";
 import { hash, verify } from "argon2";
 import { ArgonError } from "../../errors";
 import { CreateArgonHashOptions, VerifyArgonHashOptions } from "../../types";
 
-const _getSecret = (kryptos?: Kryptos): Buffer | undefined => {
+const _getSecret = (kryptos?: IKryptosOct): Buffer | undefined => {
   if (!kryptos) return;
-
-  if (!Kryptos.isOct(kryptos)) {
-    throw new ArgonError("Invalid Kryptos");
-  }
 
   const { privateKey } = kryptos.export("der");
 
@@ -48,7 +44,9 @@ export const _verifyArgonHash = async ({
   return await verify(hash, data, secret ? { secret } : undefined);
 };
 
-export const _assertArgonHash = async (options: VerifyArgonHashOptions): Promise<void> => {
+export const _assertArgonHash = async (
+  options: VerifyArgonHashOptions,
+): Promise<void> => {
   if (await _verifyArgonHash(options)) return;
   throw new ArgonError("Invalid Argon hash");
 };

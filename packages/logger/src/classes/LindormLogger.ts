@@ -5,16 +5,16 @@ import winston, { Logger as WinstonLogger } from "winston";
 import { LogLevel } from "../enums";
 import {
   FilterRecord,
+  ILogger,
   LindormLoggerOptions,
   LogContext,
   LogDetails,
   LogSession,
-  Logger,
 } from "../types";
 import { _FromLogger, _Log } from "../types/private";
 import { _defaultFilterCallback, _readableFormat } from "../utils/private";
 
-export class LindormLogger implements Logger {
+export class LindormLogger implements ILogger {
   private readonly _filters: FilterRecord;
   private readonly _winston: WinstonLogger;
 
@@ -52,10 +52,10 @@ export class LindormLogger implements Logger {
 
   // utility
 
-  public child(): Logger;
-  public child(context: LogContext): Logger;
-  public child(session: LogSession): Logger;
-  public child(arg1?: LogContext | LogSession, arg2?: LogSession): Logger {
+  public child(): ILogger;
+  public child(context: LogContext): ILogger;
+  public child(session: LogSession): ILogger;
+  public child(arg1?: LogContext | LogSession, arg2?: LogSession): ILogger {
     const context = isArray(arg1) ? arg1 : [];
     const session = isObject(arg1) ? arg1 : isObject(arg2) ? arg2 : {};
 
@@ -113,7 +113,8 @@ export class LindormLogger implements Logger {
   private _getFilteredDetails(details: LogDetails): LogDetails {
     if (!isObject(details)) return details ?? undefined;
     if (!Object.keys(this._filters).length) return details;
-    if (isError((details as any)?.error) && isArray((details as any)?.stack)) return details;
+    if (isError((details as any)?.error) && isArray((details as any)?.stack))
+      return details;
 
     try {
       const data = structuredClone(details);
@@ -165,7 +166,7 @@ export class LindormLogger implements Logger {
     });
   }
 
-  private _fromLogger(context: Array<string>, session: Dict): Logger {
+  private _fromLogger(context: Array<string>, session: Dict): ILogger {
     return new LindormLogger({
       _mode: "from_logger",
       context: structuredClone(this._context.concat(context)),

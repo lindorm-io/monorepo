@@ -1,4 +1,4 @@
-import { Kryptos } from "@lindorm/kryptos";
+import { IKryptos, Kryptos } from "@lindorm/kryptos";
 import { randomBytes } from "crypto";
 import { TEST_EC_KEY, TEST_OCT_KEY, TEST_RSA_KEY } from "../../__fixtures__/keys";
 import { LATEST_AES_VERSION } from "../../constants";
@@ -6,7 +6,7 @@ import { _decryptAesData, _encryptAesData } from "./aes-data";
 
 describe("aes-data", () => {
   let data: string;
-  let kryptos: Kryptos;
+  let kryptos: IKryptos;
 
   beforeEach(async () => {
     data = randomBytes(32).toString("hex");

@@ -1,6 +1,6 @@
 import { ChangeCase } from "@lindorm/case";
 import { isArray, isString } from "@lindorm/is";
-import { Logger } from "@lindorm/logger";
+import { ILogger } from "@lindorm/logger";
 import { Conduit } from "../../classes";
 import { ConduitUsing } from "../../enums";
 import {
@@ -39,7 +39,7 @@ type Cache = Array<CacheItem>;
 
 export type ConduitClientCredentialsMiddlewareFactory = (
   options?: Options,
-  logger?: Logger,
+  logger?: ILogger,
 ) => Promise<ConduitMiddleware>;
 
 const DEFAULT = "_@DEFAULT" as const;
@@ -52,7 +52,7 @@ export const createConduitClientCredentialsMiddleware = (
 
   return async function conduitClientCredentialsMiddleware(
     options?: Options,
-    logger?: Logger,
+    logger?: ILogger,
   ): Promise<ConduitMiddleware> {
     const { audience = DEFAULT, scope = [] } = options ?? {};
 

@@ -1,11 +1,15 @@
 import { HttpMethod } from "@lindorm/enums";
-import { Logger } from "@lindorm/logger";
+import { ILogger } from "@lindorm/logger";
 import { composeMiddleware } from "@lindorm/middleware";
 import { RetryConfig } from "@lindorm/retry";
 import { Dict } from "@lindorm/types";
 import { extractSearchParams, getPlainUrl, getValidUrl } from "@lindorm/url";
 import { v4 as uuid } from "uuid";
-import { _CONDUIT_RESPONSE, _RETRY_CONFIG, _TIMEOUT } from "../constants/private/defaults";
+import {
+  _CONDUIT_RESPONSE,
+  _RETRY_CONFIG,
+  _TIMEOUT,
+} from "../constants/private/defaults";
 import { ConduitUsing } from "../enums";
 import { _axiosRequestHandler } from "../middleware/private/axios-request-handler";
 import { _defaultHeaders } from "../middleware/private/default-headers";
@@ -32,7 +36,7 @@ export class Conduit {
   private readonly config: ConfigContext;
   private readonly context: AppContext;
   private readonly headers: Record<string, string>;
-  private readonly logger: Logger | undefined;
+  private readonly logger: ILogger | undefined;
   private readonly middleware: Array<ConduitMiddleware>;
   private readonly retryCallback: RetryCallback;
   private readonly retryConfig: RetryConfig;
@@ -186,7 +190,8 @@ export class Conduit {
     RequestParams = Dict,
     RequestQuery = Dict,
   >(
-    options: MethodOptions & RequestOptions<ResponseData, RequestBody, RequestParams, RequestQuery>,
+    options: MethodOptions &
+      RequestOptions<ResponseData, RequestBody, RequestParams, RequestQuery>,
   ): Promise<ConduitResponse<ResponseData>> {
     const { method, path, url, ...rest } = options;
     const pathOrUrl = url ?? path;
@@ -258,7 +263,12 @@ export class Conduit {
       url,
     };
 
-    const context: ConduitContext<ResponseData, RequestBody, RequestParams, RequestQuery> = {
+    const context: ConduitContext<
+      ResponseData,
+      RequestBody,
+      RequestParams,
+      RequestQuery
+    > = {
       app: this.context,
       logger: this.logger,
       req,

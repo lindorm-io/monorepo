@@ -1,11 +1,11 @@
-import { Logger } from "@lindorm/logger";
+import { ILogger } from "@lindorm/logger";
 import { RetryOptions } from "@lindorm/retry";
 
 export type WorkerContext = {
   latestError: Date | null;
   latestSuccess: Date | null;
   latestTry: Date | null;
-  logger: Logger;
+  logger: ILogger;
   seq: number;
 };
 
@@ -15,6 +15,6 @@ export type LindormWorkerOptions = {
   alias: string;
   callback: WorkerCallback;
   interval: number;
-  logger: Logger;
+  logger: ILogger;
   retry?: RetryOptions;
 };

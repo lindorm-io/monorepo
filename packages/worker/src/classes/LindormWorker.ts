@@ -1,4 +1,4 @@
-import { Logger } from "@lindorm/logger";
+import { ILogger } from "@lindorm/logger";
 import { RetryConfig, calculateRetry } from "@lindorm/retry";
 import { sleep } from "@lindorm/utils";
 import { EventEmitter } from "events";
@@ -10,7 +10,7 @@ export class LindormWorker {
   private readonly _callback: WorkerCallback;
   private readonly _emitter: EventEmitter;
   private readonly _interval: number;
-  private readonly _logger: Logger;
+  private readonly _logger: ILogger;
   private readonly _retry: RetryConfig;
 
   private _executing: boolean;
@@ -64,7 +64,10 @@ export class LindormWorker {
 
   public on(evt: LindormWorkerEvent.Start, listener: () => void): void;
   public on(evt: LindormWorkerEvent.Stop, listener: () => void): void;
-  public on(evt: LindormWorkerEvent.Success, listener: (result: string | undefined) => void): void;
+  public on(
+    evt: LindormWorkerEvent.Success,
+    listener: (result: string | undefined) => void,
+  ): void;
   public on(evt: LindormWorkerEvent.Error, listener: (error: Error) => void): void;
   public on(evt: LindormWorkerEvent, listener: (...args: any[]) => void): void {
     this._emitter.on(evt, listener);
@@ -129,7 +132,9 @@ export class LindormWorker {
         this._latestError = new Date();
 
         if (attempt <= this._retry.maxAttempts) {
-          sleep(calculateRetry(attempt, this._retry)).then(() => this.execute(attempt + 1));
+          sleep(calculateRetry(attempt, this._retry)).then(() =>
+            this.execute(attempt + 1),
+          );
         } else {
           this._emitter.emit(LindormWorkerEvent.Error, err);
 

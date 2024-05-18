@@ -1,4 +1,4 @@
-import { TEST_OCT_KEY } from "../__fixtures__/keys";
+import { TEST_OCT_KEY_ENC, TEST_OCT_KEY_SIG } from "../__fixtures__/keys";
 import { EnigmaError } from "../errors";
 import { EnigmaKit } from "./EnigmaKit";
 
@@ -8,8 +8,8 @@ describe("EnigmaKit", () => {
 
   beforeEach(async () => {
     kit = new EnigmaKit({
-      aes: { kryptos: TEST_OCT_KEY },
-      oct: { kryptos: TEST_OCT_KEY },
+      aes: { kryptos: TEST_OCT_KEY_ENC },
+      oct: { kryptos: TEST_OCT_KEY_SIG },
     });
     hash = await kit.hash("string");
   });

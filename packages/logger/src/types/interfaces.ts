@@ -1,11 +1,11 @@
 import { Dict } from "@lindorm/types";
 import { FilterCallback, LogContext, LogSession } from "./types";
 
-export interface Logger {
-  child(): Logger;
-  child(context: LogContext): Logger;
-  child(session: LogSession): Logger;
-  child(context: LogContext, session: LogSession): Logger;
+export interface ILogger {
+  child(): ILogger;
+  child(context: LogContext): ILogger;
+  child(session: LogSession): ILogger;
+  child(context: LogContext, session: LogSession): ILogger;
 
   context(context: LogContext): void;
   filter(path: string, callback?: FilterCallback): void;
