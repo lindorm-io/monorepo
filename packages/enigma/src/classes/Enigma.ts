@@ -1,15 +1,15 @@
 import { AesKit } from "@lindorm/aes";
 import { OctKit } from "@lindorm/oct";
 import { EnigmaError } from "../errors";
-import { EnigmaKitOptions } from "../types";
+import { EnigmaOptions } from "../types";
 import { ArgonKit } from "./ArgonKit";
 
-export class EnigmaKit {
+export class Enigma {
   private aes: AesKit;
   private argon: ArgonKit;
   private oct: OctKit;
 
-  public constructor(options: EnigmaKitOptions) {
+  public constructor(options: EnigmaOptions) {
     this.aes = new AesKit(options.aes);
     this.argon = new ArgonKit(options.argon);
     this.oct = new OctKit(options.oct);

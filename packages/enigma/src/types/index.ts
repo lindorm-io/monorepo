@@ -1,2 +1,2 @@
 export * from "./argon-kit";
-export * from "./enigma-kit";
+export * from "./enigma";
