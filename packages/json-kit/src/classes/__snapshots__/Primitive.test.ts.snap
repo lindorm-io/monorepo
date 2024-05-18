@@ -1,0 +1,436 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Primitive array should resolve expected data 1`] = `
+[
+  {
+    "five": {
+      "eight": 0,
+      "eleven": 0,
+      "nine": "true",
+      "seven": "1",
+      "six": "a",
+      "ten": [],
+    },
+    "four": "12345",
+    "one": [
+      "true",
+      "2020-01-01T08:00:00.000Z",
+      "12345",
+      "string",
+      {
+        "fifteen": "2020-01-01T08:00:00.000Z",
+        "fourteen": "false",
+        "seventeen": "str",
+        "sixteen": "123",
+        "thirteen": [
+          "true",
+          "123",
+          "arr",
+          0,
+          0,
+        ],
+      },
+    ],
+    "three": "2020-01-01T08:00:00.000Z",
+    "twelve": "string",
+    "two": "true",
+  },
+  {
+    "five": {
+      "eight": 0,
+      "eleven": 0,
+      "nine": "true",
+      "seven": "1",
+      "six": "a",
+      "ten": [],
+    },
+    "four": "12345",
+    "one": [
+      "true",
+      "2020-01-01T08:00:00.000Z",
+      "12345",
+      "string",
+      {
+        "fifteen": "2020-01-01T08:00:00.000Z",
+        "fourteen": "false",
+        "seventeen": "str",
+        "sixteen": "123",
+        "thirteen": [
+          "true",
+          "123",
+          "arr",
+          0,
+          0,
+        ],
+      },
+    ],
+    "three": "2020-01-01T08:00:00.000Z",
+    "twelve": "string",
+    "two": "true",
+  },
+]
+`;
+
+exports[`Primitive array should resolve expected json 1`] = `
+[
+  {
+    "five": {
+      "eight": null,
+      "eleven": undefined,
+      "nine": true,
+      "seven": 1,
+      "six": "a",
+      "ten": [],
+    },
+    "four": 12345,
+    "one": [
+      true,
+      2020-01-01T08:00:00.000Z,
+      12345,
+      "string",
+      {
+        "fifteen": 2020-01-01T08:00:00.000Z,
+        "fourteen": false,
+        "seventeen": "str",
+        "sixteen": 123,
+        "thirteen": [
+          true,
+          123,
+          "arr",
+          null,
+          undefined,
+        ],
+      },
+    ],
+    "three": 2020-01-01T08:00:00.000Z,
+    "twelve": "string",
+    "two": true,
+  },
+  {
+    "five": {
+      "eight": null,
+      "eleven": undefined,
+      "nine": true,
+      "seven": 1,
+      "six": "a",
+      "ten": [],
+    },
+    "four": 12345,
+    "one": [
+      true,
+      2020-01-01T08:00:00.000Z,
+      12345,
+      "string",
+      {
+        "fifteen": 2020-01-01T08:00:00.000Z,
+        "fourteen": false,
+        "seventeen": "str",
+        "sixteen": 123,
+        "thirteen": [
+          true,
+          123,
+          "arr",
+          null,
+          undefined,
+        ],
+      },
+    ],
+    "three": 2020-01-01T08:00:00.000Z,
+    "twelve": "string",
+    "two": true,
+  },
+]
+`;
+
+exports[`Primitive array should resolve expected meta 1`] = `
+[
+  {
+    "five": {
+      "eight": "L",
+      "eleven": "U",
+      "nine": "B",
+      "seven": "N",
+      "six": "S",
+      "ten": [],
+    },
+    "four": "N",
+    "one": [
+      "B",
+      "D",
+      "N",
+      "S",
+      {
+        "fifteen": "D",
+        "fourteen": "B",
+        "seventeen": "S",
+        "sixteen": "N",
+        "thirteen": [
+          "B",
+          "N",
+          "S",
+          "L",
+          "U",
+        ],
+      },
+    ],
+    "three": "D",
+    "twelve": "S",
+    "two": "B",
+  },
+  {
+    "five": {
+      "eight": "L",
+      "eleven": "U",
+      "nine": "B",
+      "seven": "N",
+      "six": "S",
+      "ten": [],
+    },
+    "four": "N",
+    "one": [
+      "B",
+      "D",
+      "N",
+      "S",
+      {
+        "fifteen": "D",
+        "fourteen": "B",
+        "seventeen": "S",
+        "sixteen": "N",
+        "thirteen": [
+          "B",
+          "N",
+          "S",
+          "L",
+          "U",
+        ],
+      },
+    ],
+    "three": "D",
+    "twelve": "S",
+    "two": "B",
+  },
+]
+`;
+
+exports[`Primitive array should resolve expected string 1`] = `"{"json":[{"one":["true","2020-01-01T08:00:00.000Z","12345","string",{"thirteen":["true","123","arr",0,0],"fourteen":"false","fifteen":"2020-01-01T08:00:00.000Z","sixteen":"123","seventeen":"str"}],"two":"true","three":"2020-01-01T08:00:00.000Z","four":"12345","five":{"six":"a","seven":"1","eight":0,"nine":"true","ten":[],"eleven":0},"twelve":"string"},{"one":["true","2020-01-01T08:00:00.000Z","12345","string",{"thirteen":["true","123","arr",0,0],"fourteen":"false","fifteen":"2020-01-01T08:00:00.000Z","sixteen":"123","seventeen":"str"}],"two":"true","three":"2020-01-01T08:00:00.000Z","four":"12345","five":{"six":"a","seven":"1","eight":0,"nine":"true","ten":[],"eleven":0},"twelve":"string"}],"meta":[{"one":["B","D","N","S",{"thirteen":["B","N","S","L","U"],"fourteen":"B","fifteen":"D","sixteen":"N","seventeen":"S"}],"two":"B","three":"D","four":"N","five":{"six":"S","seven":"N","eight":"L","nine":"B","ten":[],"eleven":"U"},"twelve":"S"},{"one":["B","D","N","S",{"thirteen":["B","N","S","L","U"],"fourteen":"B","fifteen":"D","sixteen":"N","seventeen":"S"}],"two":"B","three":"D","four":"N","five":{"six":"S","seven":"N","eight":"L","nine":"B","ten":[],"eleven":"U"},"twelve":"S"}]}"`;
+
+exports[`Primitive dict should resolve expected data 1`] = `
+{
+  "five": {
+    "eight": 0,
+    "eleven": 0,
+    "nine": "true",
+    "seven": "1",
+    "six": "a",
+    "ten": [],
+  },
+  "four": "12345",
+  "one": [
+    "true",
+    "2020-01-01T08:00:00.000Z",
+    "12345",
+    "string",
+    {
+      "fifteen": "2020-01-01T08:00:00.000Z",
+      "fourteen": "false",
+      "seventeen": "str",
+      "sixteen": "123",
+      "thirteen": [
+        "true",
+        "123",
+        "arr",
+        0,
+        0,
+      ],
+    },
+  ],
+  "three": "2020-01-01T08:00:00.000Z",
+  "twelve": "string",
+  "two": "true",
+}
+`;
+
+exports[`Primitive dict should resolve expected json 1`] = `
+{
+  "five": {
+    "eight": null,
+    "eleven": undefined,
+    "nine": true,
+    "seven": 1,
+    "six": "a",
+    "ten": [],
+  },
+  "four": 12345,
+  "one": [
+    true,
+    2020-01-01T08:00:00.000Z,
+    12345,
+    "string",
+    {
+      "fifteen": 2020-01-01T08:00:00.000Z,
+      "fourteen": false,
+      "seventeen": "str",
+      "sixteen": 123,
+      "thirteen": [
+        true,
+        123,
+        "arr",
+        null,
+        undefined,
+      ],
+    },
+  ],
+  "three": 2020-01-01T08:00:00.000Z,
+  "twelve": "string",
+  "two": true,
+}
+`;
+
+exports[`Primitive dict should resolve expected meta 1`] = `
+{
+  "five": {
+    "eight": "L",
+    "eleven": "U",
+    "nine": "B",
+    "seven": "N",
+    "six": "S",
+    "ten": [],
+  },
+  "four": "N",
+  "one": [
+    "B",
+    "D",
+    "N",
+    "S",
+    {
+      "fifteen": "D",
+      "fourteen": "B",
+      "seventeen": "S",
+      "sixteen": "N",
+      "thirteen": [
+        "B",
+        "N",
+        "S",
+        "L",
+        "U",
+      ],
+    },
+  ],
+  "three": "D",
+  "twelve": "S",
+  "two": "B",
+}
+`;
+
+exports[`Primitive dict should resolve expected string 1`] = `"{"json":{"one":["true","2020-01-01T08:00:00.000Z","12345","string",{"thirteen":["true","123","arr",0,0],"fourteen":"false","fifteen":"2020-01-01T08:00:00.000Z","sixteen":"123","seventeen":"str"}],"two":"true","three":"2020-01-01T08:00:00.000Z","four":"12345","five":{"six":"a","seven":"1","eight":0,"nine":"true","ten":[],"eleven":0},"twelve":"string"},"meta":{"one":["B","D","N","S",{"thirteen":["B","N","S","L","U"],"fourteen":"B","fifteen":"D","sixteen":"N","seventeen":"S"}],"two":"B","three":"D","four":"N","five":{"six":"S","seven":"N","eight":"L","nine":"B","ten":[],"eleven":"U"},"twelve":"S"}}"`;
+
+exports[`Primitive string should resolve expected data 1`] = `
+{
+  "five": {
+    "eight": 0,
+    "eleven": 0,
+    "nine": "true",
+    "seven": "1",
+    "six": "a",
+    "ten": [],
+  },
+  "four": "12345",
+  "one": [
+    "true",
+    "2020-01-01T08:00:00.000Z",
+    "12345",
+    "string",
+    {
+      "fifteen": "2020-01-01T08:00:00.000Z",
+      "fourteen": "false",
+      "seventeen": "str",
+      "sixteen": "123",
+      "thirteen": [
+        "true",
+        "123",
+        "arr",
+        0,
+        0,
+      ],
+    },
+  ],
+  "three": "2020-01-01T08:00:00.000Z",
+  "twelve": "string",
+  "two": "true",
+}
+`;
+
+exports[`Primitive string should resolve expected json 1`] = `
+{
+  "five": {
+    "eight": null,
+    "eleven": undefined,
+    "nine": true,
+    "seven": 1,
+    "six": "a",
+    "ten": [],
+  },
+  "four": 12345,
+  "one": [
+    true,
+    2020-01-01T08:00:00.000Z,
+    12345,
+    "string",
+    {
+      "fifteen": 2020-01-01T08:00:00.000Z,
+      "fourteen": false,
+      "seventeen": "str",
+      "sixteen": 123,
+      "thirteen": [
+        true,
+        123,
+        "arr",
+        null,
+        undefined,
+      ],
+    },
+  ],
+  "three": 2020-01-01T08:00:00.000Z,
+  "twelve": "string",
+  "two": true,
+}
+`;
+
+exports[`Primitive string should resolve expected meta 1`] = `
+{
+  "five": {
+    "eight": "L",
+    "eleven": "U",
+    "nine": "B",
+    "seven": "N",
+    "six": "S",
+    "ten": [],
+  },
+  "four": "N",
+  "one": [
+    "B",
+    "D",
+    "N",
+    "S",
+    {
+      "fifteen": "D",
+      "fourteen": "B",
+      "seventeen": "S",
+      "sixteen": "N",
+      "thirteen": [
+        "B",
+        "N",
+        "S",
+        "L",
+        "U",
+      ],
+    },
+  ],
+  "three": "D",
+  "twelve": "S",
+  "two": "B",
+}
+`;
+
+exports[`Primitive string should resolve expected string 1`] = `"{"json":{"one":["true","2020-01-01T08:00:00.000Z","12345","string",{"thirteen":["true","123","arr",0,0],"fourteen":"false","fifteen":"2020-01-01T08:00:00.000Z","sixteen":"123","seventeen":"str"}],"two":"true","three":"2020-01-01T08:00:00.000Z","four":"12345","five":{"six":"a","seven":"1","eight":0,"nine":"true","ten":[],"eleven":0},"twelve":"string"},"meta":{"one":["B","D","N","S",{"thirteen":["B","N","S","L","U"],"fourteen":"B","fifteen":"D","sixteen":"N","seventeen":"S"}],"two":"B","three":"D","four":"N","five":{"six":"S","seven":"N","eight":"L","nine":"B","ten":[],"eleven":"U"},"twelve":"S"}}"`;

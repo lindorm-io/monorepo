@@ -1,0 +1,39 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`JsonKit should create a primitive string from json data 1`] = `"{"json":{"one":["true","2020-01-01T08:00:00.000Z","12345","string",{"thirteen":["true","123","arr",0,0],"fourteen":"false","fifteen":"2020-01-01T08:00:00.000Z","sixteen":"123","seventeen":"str"}],"two":"true","three":"2020-01-01T08:00:00.000Z","four":"12345","five":{"six":"a","seven":"1","eight":0,"nine":"true","ten":[],"eleven":0},"twelve":"string"},"meta":{"one":["B","D","N","S",{"thirteen":["B","N","S","L","U"],"fourteen":"B","fifteen":"D","sixteen":"N","seventeen":"S"}],"two":"B","three":"D","four":"N","five":{"six":"S","seven":"N","eight":"L","nine":"B","ten":[],"eleven":"U"},"twelve":"S"}}"`;
+
+exports[`JsonKit should parse a primitive string to json data 1`] = `
+{
+  "five": {
+    "eight": null,
+    "eleven": undefined,
+    "nine": true,
+    "seven": 1,
+    "six": "a",
+    "ten": [],
+  },
+  "four": 12345,
+  "one": [
+    true,
+    2020-01-01T08:00:00.000Z,
+    12345,
+    "string",
+    {
+      "fifteen": 2020-01-01T08:00:00.000Z,
+      "fourteen": false,
+      "seventeen": "str",
+      "sixteen": 123,
+      "thirteen": [
+        true,
+        123,
+        "arr",
+        null,
+        undefined,
+      ],
+    },
+  ],
+  "three": 2020-01-01T08:00:00.000Z,
+  "twelve": "string",
+  "two": true,
+}
+`;
