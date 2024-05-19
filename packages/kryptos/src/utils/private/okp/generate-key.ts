@@ -1,19 +1,19 @@
 import { generateKeyPairSync } from "crypto";
-import { OkpGenerate } from "../../../types";
+import { OkpCurve, OkpGenerate } from "../../../types";
 
 type Result = {
+  curve: OkpCurve;
   privateKey: Buffer;
   publicKey: Buffer;
 };
 
 export const _generateOkpKey = (options: OkpGenerate): Result => {
-  const { privateKey, publicKey } = generateKeyPairSync(
-    options.curve.toLowerCase() as any,
-    {
-      privateKeyEncoding: { format: "der", type: "pkcs8" },
-      publicKeyEncoding: { format: "der", type: "spki" },
-    },
-  );
+  const curve = options.curve;
 
-  return { privateKey, publicKey };
+  const { privateKey, publicKey } = generateKeyPairSync(curve.toLowerCase() as any, {
+    privateKeyEncoding: { format: "der", type: "pkcs8" },
+    publicKeyEncoding: { format: "der", type: "spki" },
+  });
+
+  return { curve, privateKey, publicKey };
 };

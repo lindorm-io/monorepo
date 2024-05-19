@@ -1,4 +1,5 @@
 import { Optional } from "@lindorm/types";
+import { KryptosEncryption } from "./encryption";
 import { KryptosAlgorithm, KryptosOperation, KryptosType, KryptosUse } from "./types";
 
 export type JwkMetadata = {
@@ -10,6 +11,7 @@ export type JwkMetadata = {
 };
 
 export type LindormJwkMetadata = {
+  enc?: KryptosEncryption;
   exp?: number;
   iat: number;
   iss?: string;

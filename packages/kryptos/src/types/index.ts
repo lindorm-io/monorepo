@@ -1,5 +1,6 @@
 export * from "./algorithm";
 export * from "./ec";
+export * from "./encryption";
 export * from "./export";
 export * from "./from";
 export * from "./interfaces";

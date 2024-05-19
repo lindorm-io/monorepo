@@ -24,6 +24,42 @@ describe("Kryptos", () => {
       expect(key.hasPublicKey).toEqual(true);
 
       expect(key.operations).toEqual(["sign", "verify"]);
+    });
+
+    test("should generate encryption key", async () => {
+      const key = Kryptos.generate({
+        algorithm: "ECDH-ES+A192KW",
+        type: "EC",
+        use: "enc",
+      });
+
+      expect(key.operations).toEqual(["encrypt", "decrypt"]);
+    });
+
+    test("should be able to recover public key from private key buffer", async () => {
+      const key = Kryptos.make(TEST_EC_KEY_B64);
+      const der = key.export("der") as EcDer;
+
+      const { publicKey, ...without } = der;
+      const test = Kryptos.make(without as any);
+
+      expect(key.export("b64")).toEqual(test.export("b64"));
+    });
+
+    test("should be able to recover public key from private key base64", async () => {
+      const key = Kryptos.make(TEST_EC_KEY_B64);
+      const b64 = key.export("b64") as EcB64;
+
+      const { publicKey, ...without } = b64;
+      const test = Kryptos.make(without as any);
+
+      expect(key.export("b64")).toEqual(test.export("b64"));
+    });
+  });
+
+  describe("export", () => {
+    test("should export", async () => {
+      const key = Kryptos.generate({ algorithm: "ES512", type: "EC", use: "sig" });
 
       expect(key.export("b64")).toEqual({
         algorithm: "ES512",
@@ -62,36 +98,6 @@ describe("Kryptos", () => {
         use: "sig",
       });
     });
-
-    test("should generate encryption key", async () => {
-      const key = Kryptos.generate({
-        algorithm: "ECDH-ES+A192KW",
-        type: "EC",
-        use: "enc",
-      });
-
-      expect(key.operations).toEqual(["encrypt", "decrypt"]);
-    });
-
-    test("should be able to recover public key from private key buffer", async () => {
-      const key = Kryptos.make(TEST_EC_KEY_B64);
-      const der = key.export("der") as EcDer;
-
-      const { publicKey, ...without } = der;
-      const test = Kryptos.make(without as any);
-
-      expect(key.export("b64")).toEqual(test.export("b64"));
-    });
-
-    test("should be able to recover public key from private key base64", async () => {
-      const key = Kryptos.make(TEST_EC_KEY_B64);
-      const b64 = key.export("b64") as EcB64;
-
-      const { publicKey, ...without } = b64;
-      const test = Kryptos.make(without as any);
-
-      expect(key.export("b64")).toEqual(test.export("b64"));
-    });
   });
 
   describe("clone", () => {
@@ -105,21 +111,27 @@ describe("Kryptos", () => {
 
   describe("metadata", () => {
     test("should export metadata", async () => {
-      const key = Kryptos.generate({
-        algorithm: "ECDH-ES+A256KW",
-        expiresAt: new Date("2025-01-01T00:00:00.000Z"),
-        issuer: "https://test.lindorm.io/",
-        jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
-        notBefore: new Date("2024-01-01T08:00:00.000Z"),
-        operations: ["encrypt", "decrypt"],
-        ownerId: "2c3d8e05-b382-5b31-898c-2d1f6009f5c1",
-        type: "EC",
-        use: "enc",
-      });
+      const key = Kryptos.generate(
+        {
+          algorithm: "ECDH-ES+A256KW",
+          type: "EC",
+          use: "enc",
+        },
+        {
+          encryption: "A192CBC-HS384",
+          expiresAt: new Date("2025-01-01T00:00:00.000Z"),
+          issuer: "https://test.lindorm.io/",
+          jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
+          notBefore: new Date("2024-01-01T08:00:00.000Z"),
+          operations: ["encrypt", "decrypt"],
+          ownerId: "2c3d8e05-b382-5b31-898c-2d1f6009f5c1",
+        },
+      );
 
       expect(key.toJSON()).toEqual({
         id: expect.any(String),
         algorithm: "ECDH-ES+A256KW",
+        encryption: "A192CBC-HS384",
         createdAt: new Date("2024-01-01T08:00:00.000Z"),
         curve: "P-521",
         expiresAt: new Date("2025-01-01T00:00:00.000Z"),
@@ -144,22 +156,28 @@ describe("Kryptos", () => {
 
   describe("jwks", () => {
     test("should export private key to jwk", async () => {
-      const key = Kryptos.generate({
-        algorithm: "ECDH-ES+A256KW",
-        expiresAt: new Date("2025-01-01T00:00:00.000Z"),
-        issuer: "https://test.lindorm.io/",
-        jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
-        notBefore: new Date("2024-01-01T08:00:00.000Z"),
-        operations: ["encrypt", "decrypt"],
-        ownerId: "2c3d8e05-b382-5b31-898c-2d1f6009f5c1",
-        type: "EC",
-        use: "enc",
-      });
+      const key = Kryptos.generate(
+        {
+          algorithm: "ECDH-ES+A256KW",
+          type: "EC",
+          use: "enc",
+        },
+        {
+          encryption: "A192CBC-HS384",
+          expiresAt: new Date("2025-01-01T00:00:00.000Z"),
+          issuer: "https://test.lindorm.io/",
+          jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
+          notBefore: new Date("2024-01-01T08:00:00.000Z"),
+          operations: ["encrypt", "decrypt"],
+          ownerId: "2c3d8e05-b382-5b31-898c-2d1f6009f5c1",
+        },
+      );
 
       expect(key.toJWK("private")).toEqual({
         alg: "ECDH-ES+A256KW",
         crv: "P-521",
         d: expect.any(String),
+        enc: "A192CBC-HS384",
         exp: 1735689600,
         iat: 1704096000,
         iss: "https://test.lindorm.io/",
@@ -177,17 +195,21 @@ describe("Kryptos", () => {
     });
 
     test("should export public key to jwk", async () => {
-      const key = Kryptos.generate({
-        algorithm: "ECDH-ES+A256KW",
-        expiresAt: new Date("2025-01-01T00:00:00.000Z"),
-        issuer: "https://test.lindorm.io/",
-        jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
-        notBefore: new Date("2024-01-01T08:00:00.000Z"),
-        operations: ["encrypt", "decrypt"],
-        ownerId: "2c3d8e05-b382-5b31-898c-2d1f6009f5c1",
-        type: "EC",
-        use: "enc",
-      });
+      const key = Kryptos.generate(
+        {
+          algorithm: "ECDH-ES+A256KW",
+          type: "EC",
+          use: "enc",
+        },
+        {
+          expiresAt: new Date("2025-01-01T00:00:00.000Z"),
+          issuer: "https://test.lindorm.io/",
+          jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
+          notBefore: new Date("2024-01-01T08:00:00.000Z"),
+          operations: ["encrypt", "decrypt"],
+          ownerId: "2c3d8e05-b382-5b31-898c-2d1f6009f5c1",
+        },
+      );
 
       expect(key.toJWK("public")).toEqual({
         alg: "ECDH-ES+A256KW",

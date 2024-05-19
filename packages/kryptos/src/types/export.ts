@@ -1,8 +1,10 @@
+import { KryptosEncryption } from "./encryption";
 import { KryptosAlgorithm, KryptosCurve, KryptosType, KryptosUse } from "./types";
 
 export type KryptosB64 = {
   algorithm: KryptosAlgorithm;
   curve?: KryptosCurve;
+  encryption?: KryptosEncryption;
   privateKey?: string;
   publicKey: string;
   type: KryptosType;
@@ -12,6 +14,7 @@ export type KryptosB64 = {
 export type KryptosDer = {
   algorithm: KryptosAlgorithm;
   curve?: KryptosCurve;
+  encryption?: KryptosEncryption;
   privateKey?: Buffer;
   publicKey: Buffer;
   type: KryptosType;
@@ -20,6 +23,7 @@ export type KryptosDer = {
 
 export type KryptosJwk = {
   alg: KryptosAlgorithm;
+  enc?: KryptosEncryption;
   crv?: KryptosCurve;
   d?: string;
   dp?: string;
@@ -39,6 +43,7 @@ export type KryptosJwk = {
 export type KryptosPem = {
   algorithm: KryptosAlgorithm;
   curve?: KryptosCurve;
+  encryption?: KryptosEncryption;
   privateKey?: string;
   publicKey: string;
   type: KryptosType;

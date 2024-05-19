@@ -1,15 +1,38 @@
+import { AesKeyLength } from "@lindorm/types";
+import { KryptosEncryption } from "./encryption";
 import { KryptosUse } from "./types";
 
-export type OctEncAlgorithm = "dir" | "A128KW" | "A192KW" | "A256KW";
+export type OctEncDirAlgorithm = "dir";
+
+export type OctEncStdAlgorithm =
+  | "A128KW"
+  | "A192KW"
+  | "A256KW"
+  | "PBES2-HS256+A128KW"
+  | "PBES2-HS384+A192KW"
+  | "PBES2-HS512+A256KW";
+
+export type OctEncAlgorithm = OctEncDirAlgorithm | OctEncStdAlgorithm;
 
 export type OctSigAlgorithm = "HS256" | "HS384" | "HS512";
 
 export type OctAlgorithm = OctEncAlgorithm | OctSigAlgorithm;
 
-export type OctSize = 64 | 96 | 128;
+export type OctDirSize = AesKeyLength;
 
-export type OctGenerateEnc = {
-  algorithm: OctEncAlgorithm;
+export type OctStdSize = 64 | 96 | 128;
+
+export type OctSize = OctDirSize | OctStdSize;
+
+export type OctDirGenerateEnc = {
+  algorithm: OctEncDirAlgorithm;
+  encryption: KryptosEncryption;
+  type: "oct";
+  use: "enc";
+};
+
+export type OctStdGenerateEnc = {
+  algorithm: OctEncStdAlgorithm;
   type: "oct";
   use: "enc";
 };
@@ -20,7 +43,7 @@ export type OctGenerateSig = {
   use: "sig";
 };
 
-export type OctGenerate = OctGenerateEnc | OctGenerateSig;
+export type OctGenerate = OctDirGenerateEnc | OctStdGenerateEnc | OctGenerateSig;
 
 export type OctB64 = {
   algorithm: OctAlgorithm;

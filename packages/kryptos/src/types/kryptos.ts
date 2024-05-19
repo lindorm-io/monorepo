@@ -1,5 +1,6 @@
 import { Optional } from "@lindorm/types";
 import { EcGenerate } from "./ec";
+import { KryptosEncryption } from "./encryption";
 import { OctGenerate } from "./oct";
 import { OkpGenerate } from "./okp";
 import { RsaGenerate, RsaModulus } from "./rsa";
@@ -16,6 +17,7 @@ export type KryptosAttributes = {
   algorithm: KryptosAlgorithm;
   createdAt: Date;
   curve: KryptosCurve | undefined;
+  encryption: KryptosEncryption | undefined;
   expiresAt: Date;
   isExternal: boolean;
   issuer: string | undefined;
@@ -45,6 +47,7 @@ type StdOptions = Optional<
   | "id"
   | "createdAt"
   | "curve"
+  | "encryption"
   | "expiresAt"
   | "isExternal"
   | "issuer"
@@ -62,21 +65,15 @@ export type KryptosKeys = {
 
 export type KryptosOptions = StdOptions & KryptosKeys;
 
-type StdGenerate = Pick<
+export type GenerateKryptosConfig = EcGenerate | OctGenerate | OkpGenerate | RsaGenerate;
+
+export type GenerateKryptosOptions = Pick<
   StdOptions,
-  "expiresAt" | "issuer" | "jwksUri" | "notBefore" | "operations" | "ownerId"
+  | "encryption"
+  | "expiresAt"
+  | "issuer"
+  | "jwksUri"
+  | "notBefore"
+  | "operations"
+  | "ownerId"
 >;
-
-export type GenerateEcOptions = StdGenerate & EcGenerate;
-
-export type GenerateOctOptions = StdGenerate & OctGenerate;
-
-export type GenerateOkpOptions = StdGenerate & OkpGenerate;
-
-export type GenerateRsaOptions = StdGenerate & RsaGenerate;
-
-export type GenerateKryptosOptions =
-  | GenerateEcOptions
-  | GenerateOctOptions
-  | GenerateOkpOptions
-  | GenerateRsaOptions;

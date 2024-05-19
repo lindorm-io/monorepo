@@ -4,16 +4,15 @@ import { removeUndefined } from "@lindorm/utils";
 import { randomUUID } from "crypto";
 import { KryptosError } from "../errors";
 import {
-  GenerateEcOptions,
+  EcGenerate,
+  GenerateKryptosConfig,
   GenerateKryptosOptions,
-  GenerateOctOptions,
-  GenerateOkpOptions,
-  GenerateRsaOptions,
   KryptosAlgorithm,
   KryptosAttributes,
   KryptosB64,
   KryptosCurve,
   KryptosDer,
+  KryptosEncryption,
   KryptosExportMode,
   KryptosFormat,
   KryptosFrom,
@@ -32,6 +31,9 @@ import {
   KryptosType,
   KryptosUse,
   LindormJwk,
+  OctGenerate,
+  OkpGenerate,
+  RsaGenerate,
   RsaModulus,
 } from "../types";
 import {
@@ -66,6 +68,7 @@ export class Kryptos implements IKryptos {
   private readonly _type: KryptosType;
 
   private _algorithm: KryptosAlgorithm;
+  private _encryption: KryptosEncryption | undefined;
   private _expiresAt: Date;
   private _issuer: string | undefined;
   private _jwksUri: string | undefined;
@@ -80,6 +83,7 @@ export class Kryptos implements IKryptos {
     this._algorithm = options.algorithm;
     this._createdAt = options.createdAt ?? new Date();
     this._curve = options.curve;
+    this._encryption = options.encryption;
     this._expiresAt = options.expiresAt ?? addDays(new Date(), 180);
     this._isExternal = options.isExternal ?? false;
     this._issuer = options.issuer;
@@ -129,6 +133,15 @@ export class Kryptos implements IKryptos {
 
   public get curve(): KryptosCurve | undefined {
     return this._curve;
+  }
+
+  public get encryption(): KryptosEncryption | undefined {
+    return this._encryption;
+  }
+
+  public set encryption(encryption: KryptosEncryption) {
+    this._encryption = encryption;
+    this._updatedAt = new Date();
   }
 
   public get expiresAt(): Date {
@@ -241,6 +254,7 @@ export class Kryptos implements IKryptos {
       algorithm: this.algorithm,
       createdAt: this.createdAt,
       curve: this.curve,
+      encryption: this.encryption,
       expiresAt: this.expiresAt,
       expiresIn: this.expiresIn,
       hasPrivateKey: this.hasPrivateKey,
@@ -334,7 +348,8 @@ export class Kryptos implements IKryptos {
       use: this.use,
     });
 
-    return {
+    return removeUndefined({
+      enc: this.encryption,
       exp: this.expiresAt ? getUnixTime(this.expiresAt) : undefined,
       iat: getUnixTime(this.createdAt),
       iss: this.issuer,
@@ -345,20 +360,36 @@ export class Kryptos implements IKryptos {
       owner_id: this.ownerId ?? undefined,
       uat: getUnixTime(this.updatedAt),
       ...keys,
-    };
+    });
   }
 
   // public static
 
-  public static generate(options: GenerateEcOptions): IKryptosEc;
-  public static generate(options: GenerateOctOptions): IKryptosOct;
-  public static generate(options: GenerateOkpOptions): IKryptosOkp;
-  public static generate(options: GenerateRsaOptions): IKryptosRsa;
-  public static generate(options: GenerateKryptosOptions): IKryptos {
+  public static generate(
+    config: EcGenerate,
+    options?: GenerateKryptosOptions,
+  ): IKryptosEc;
+  public static generate(
+    config: OctGenerate,
+    options?: GenerateKryptosOptions,
+  ): IKryptosOct;
+  public static generate(
+    config: OkpGenerate,
+    options?: GenerateKryptosOptions,
+  ): IKryptosOkp;
+  public static generate(
+    config: RsaGenerate,
+    options?: GenerateKryptosOptions,
+  ): IKryptosRsa;
+  public static generate(
+    config: GenerateKryptosConfig,
+    options: GenerateKryptosOptions = {},
+  ): IKryptos {
     return new Kryptos({
-      operations: _calculateKeyOps(options.use),
+      operations: _calculateKeyOps(config.use),
       ...options,
-      ..._generateKey(options),
+      ...config,
+      ..._generateKey(config),
     });
   }
 
