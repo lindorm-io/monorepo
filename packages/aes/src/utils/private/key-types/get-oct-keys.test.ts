@@ -10,16 +10,16 @@ describe("get-oct-keys", () => {
 
     expect(result).toEqual({
       contentEncryptionKey: expect.any(Buffer),
-      salt: expect.any(Buffer),
+      hkdfSalt: expect.any(Buffer),
     });
 
     expect(
       _getOctDecryptionKey({
         encryption: "aes-256-gcm",
         kryptos,
-        salt: result.salt,
+        hkdfSalt: result.hkdfSalt,
       }),
-    ).toEqual(result.contentEncryptionKey);
+    ).toEqual({ contentEncryptionKey: result.contentEncryptionKey });
   });
 
   test("should return oct encryption key with key wrap", () => {
@@ -34,7 +34,7 @@ describe("get-oct-keys", () => {
     expect(result).toEqual({
       contentEncryptionKey: expect.any(Buffer),
       publicEncryptionKey: expect.any(Buffer),
-      salt: expect.any(Buffer),
+      hkdfSalt: expect.any(Buffer),
     });
 
     expect(
@@ -42,8 +42,8 @@ describe("get-oct-keys", () => {
         encryption: "aes-128-gcm",
         kryptos,
         publicEncryptionKey: result.publicEncryptionKey,
-        salt: result.salt,
+        hkdfSalt: result.hkdfSalt,
       }),
-    ).toEqual(result.contentEncryptionKey);
+    ).toEqual({ contentEncryptionKey: result.contentEncryptionKey });
   });
 });

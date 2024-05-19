@@ -1,14 +1,10 @@
 import { KryptosCurve } from "@lindorm/kryptos";
 import { BufferFormat, ShaAlgorithm } from "@lindorm/types";
 import { AesError } from "../../errors";
-import {
-  AesEncryption,
-  AesEncryptionData,
-  AesEncryptionKeyAlgorithm,
-  AesStringValues,
-} from "../../types";
+import { AesEncryption, AesEncryptionData, AesEncryptionKeyAlgorithm } from "../../types";
+import { AesStringValues } from "../../types/private";
 
-const regex = /(?<key>[a-z]+)=(?<value>.+)/g;
+const regex = /(?<key>[a-z0-9]+)=(?<value>.+)/g;
 
 export const _decodeAesString = (data: string): AesEncryptionData => {
   const [_, alg, array, content] = data.split("$");
@@ -32,14 +28,16 @@ export const _decodeAesString = (data: string): AesEncryptionData => {
   const {
     v,
     f,
-    cek,
     crv: curve,
     eka,
+    hks,
     ih,
     iv,
     kid,
     kty: keyType,
-    s,
+    p2c,
+    p2s,
+    pek,
     tag,
     x,
     y,
@@ -47,20 +45,22 @@ export const _decodeAesString = (data: string): AesEncryptionData => {
 
   const crv = curve as KryptosCurve;
   const format = f as BufferFormat;
-  const kty = keyType as "EC";
+  const kty = keyType as "EC" | "OKP";
 
   return {
-    version: parseInt(v, 10),
-    format,
     authTag: tag ? Buffer.from(tag, format) : undefined,
     content: Buffer.from(content, format),
     encryption: algorithm,
     encryptionKeyAlgorithm: eka as AesEncryptionKeyAlgorithm,
+    format,
+    hkdfSalt: hks ? Buffer.from(hks, format) : undefined,
     initialisationVector: Buffer.from(iv, format),
     integrityHash: ih as ShaAlgorithm,
     keyId: kid ? Buffer.from(kid, format) : undefined,
+    pbkdfIterations: p2c ? parseInt(p2c, 10) : undefined,
+    pbkdfSalt: p2s ? Buffer.from(p2s, format) : undefined,
     publicEncryptionJwk: crv && x && kty ? { crv, x, y, kty } : undefined,
-    publicEncryptionKey: cek ? Buffer.from(cek, format) : undefined,
-    salt: s ? Buffer.from(s, format) : undefined,
+    publicEncryptionKey: pek ? Buffer.from(pek, format) : undefined,
+    version: parseInt(v, 10),
   };
 };

@@ -10,18 +10,18 @@ describe("hkdf", () => {
 
     expect(result).toEqual({
       derivedKey: expect.any(Buffer),
-      salt: expect.any(Buffer),
+      hkdfSalt: expect.any(Buffer),
     });
 
     expect(
       _hkdf({
         derivationKey: TEST_OCT_KEY.export("der").privateKey!,
         keyLength: 16,
-        salt: result.salt,
+        hkdfSalt: result.hkdfSalt,
       }),
     ).toEqual({
       derivedKey: result.derivedKey,
-      salt: result.salt,
+      hkdfSalt: result.hkdfSalt,
     });
   });
 });

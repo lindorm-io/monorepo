@@ -14,10 +14,12 @@ export type DecryptAesDataOptions = {
   authTag?: Buffer;
   content: Buffer;
   encryption: AesEncryption;
+  hkdfSalt?: Buffer;
   initialisationVector: Buffer;
   integrityHash?: ShaAlgorithm;
   kryptos: IKryptos;
+  pbkdfIterations?: number;
+  pbkdfSalt?: Buffer;
   publicEncryptionJwk?: PublicEncryptionJwk;
   publicEncryptionKey?: Buffer;
-  salt?: Buffer;
 };

@@ -1,54 +1,20 @@
-import { IKryptosOct } from "@lindorm/kryptos";
-import { AesEncryption } from "../../../types";
-import { _calculateEncryptionKeyLength } from "./calculate-encryption-key-length";
-import { _hkdf } from "./hkdf";
+import {
+  CreateCekOptions,
+  CreateCekResult,
+  DecryptCekOptions,
+  DecryptCekResult,
+} from "../../../types/private";
+import { _createOctKeyDerivation, _decryptOctKeyDerivation } from "./oct-key-derivation";
 
-type EncryptOptions = {
-  encryption: AesEncryption;
-  kryptos: IKryptosOct;
+export const _getOctDirEncryptionKey = (options: CreateCekOptions): CreateCekResult => {
+  const { derivedKey, hkdfSalt, pbkdfIterations, pbkdfSalt } =
+    _createOctKeyDerivation(options);
+
+  return { contentEncryptionKey: derivedKey, hkdfSalt, pbkdfIterations, pbkdfSalt };
 };
 
-type EncryptResult = {
-  contentEncryptionKey: Buffer;
-  salt: Buffer;
-};
+export const _getOctDirDecryptionKey = (options: DecryptCekOptions): DecryptCekResult => {
+  const { derivedKey } = _decryptOctKeyDerivation(options);
 
-type DecryptOptions = {
-  encryption: AesEncryption;
-  kryptos: IKryptosOct;
-  salt: Buffer;
-};
-
-export const _getOctDirEncryptionKey = ({
-  encryption,
-  kryptos,
-}: EncryptOptions): EncryptResult => {
-  const der = kryptos.export("der");
-
-  const keyLength = _calculateEncryptionKeyLength(encryption);
-
-  const { derivedKey, salt } = _hkdf({
-    derivationKey: der.privateKey,
-    keyLength,
-  });
-
-  return { contentEncryptionKey: derivedKey, salt };
-};
-
-export const _getOctDirDecryptionKey = ({
-  encryption,
-  kryptos,
-  salt,
-}: DecryptOptions): Buffer => {
-  const der = kryptos.export("der");
-
-  const keyLength = _calculateEncryptionKeyLength(encryption);
-
-  const { derivedKey } = _hkdf({
-    derivationKey: der.privateKey,
-    keyLength,
-    salt,
-  });
-
-  return derivedKey;
+  return { contentEncryptionKey: derivedKey };
 };

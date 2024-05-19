@@ -2,16 +2,17 @@ import { IKryptos, Kryptos } from "@lindorm/kryptos";
 import { createPrivateKey, createPublicKey, diffieHellman } from "crypto";
 import { AesError } from "../../../errors";
 import { PublicEncryptionJwk } from "../../../types";
+import { DecryptCekOptions } from "../../../types/private";
 
 type GenerateResult = {
   publicEncryptionJwk: PublicEncryptionJwk;
   sharedSecret: Buffer;
 };
 
-type CalculateSharedSecretOptions = {
-  kryptos: IKryptos;
-  publicEncryptionJwk: PublicEncryptionJwk;
-};
+type CalculateSharedSecretOptions = Pick<
+  DecryptCekOptions,
+  "kryptos" | "publicEncryptionJwk"
+>;
 
 const _generateKryptos = (kryptos: IKryptos): IKryptos => {
   if (!Kryptos.isEc(kryptos) && !Kryptos.isOkp(kryptos)) {
@@ -60,6 +61,10 @@ export const _calculateSharedSecret = ({
   kryptos,
   publicEncryptionJwk,
 }: CalculateSharedSecretOptions): Buffer => {
+  if (!publicEncryptionJwk) {
+    throw new AesError("Missing publicEncryptionJwk");
+  }
+
   const pek = Kryptos.from("jwk", { alg: "ECDH-ES", use: "enc", ...publicEncryptionJwk });
   const der = kryptos.export("der");
   const receiver = pek.export("der");

@@ -26,7 +26,7 @@ describe("diffieHellman", () => {
         y: expect.any(String),
       },
       publicEncryptionKey: expect.any(Buffer),
-      salt: expect.any(Buffer),
+      hkdfSalt: expect.any(Buffer),
     });
 
     expect(
@@ -35,9 +35,9 @@ describe("diffieHellman", () => {
         publicEncryptionJwk: result.publicEncryptionJwk,
         publicEncryptionKey: result.publicEncryptionKey,
         kryptos,
-        salt: result.salt,
+        hkdfSalt: result.hkdfSalt,
       }),
-    ).toEqual(result.contentEncryptionKey);
+    ).toEqual({ contentEncryptionKey: result.contentEncryptionKey });
   });
 
   test("should return encryption keys with ECDH-ES+A192KW", () => {
@@ -61,7 +61,7 @@ describe("diffieHellman", () => {
         y: expect.any(String),
       },
       publicEncryptionKey: expect.any(Buffer),
-      salt: expect.any(Buffer),
+      hkdfSalt: expect.any(Buffer),
     });
 
     expect(
@@ -70,9 +70,9 @@ describe("diffieHellman", () => {
         publicEncryptionJwk: result.publicEncryptionJwk,
         publicEncryptionKey: result.publicEncryptionKey,
         kryptos,
-        salt: result.salt,
+        hkdfSalt: result.hkdfSalt,
       }),
-    ).toEqual(result.contentEncryptionKey);
+    ).toEqual({ contentEncryptionKey: result.contentEncryptionKey });
   });
 
   test("should return encryption keys with ECDH-ES+A256KW", () => {
@@ -96,7 +96,7 @@ describe("diffieHellman", () => {
         y: expect.any(String),
       },
       publicEncryptionKey: expect.any(Buffer),
-      salt: expect.any(Buffer),
+      hkdfSalt: expect.any(Buffer),
     });
 
     expect(
@@ -105,8 +105,8 @@ describe("diffieHellman", () => {
         publicEncryptionJwk: result.publicEncryptionJwk,
         publicEncryptionKey: result.publicEncryptionKey,
         kryptos,
-        salt: result.salt,
+        hkdfSalt: result.hkdfSalt,
       }),
-    ).toEqual(result.contentEncryptionKey);
+    ).toEqual({ contentEncryptionKey: result.contentEncryptionKey });
   });
 });

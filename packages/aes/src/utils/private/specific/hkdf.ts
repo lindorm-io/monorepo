@@ -2,22 +2,22 @@ import { hkdfSync, randomBytes } from "crypto";
 
 type Options = {
   derivationKey: Buffer;
+  hkdfSalt?: Buffer;
   keyLength: 16 | 24 | 32;
-  salt?: Buffer;
 };
 
 type Result = {
   derivedKey: Buffer;
-  salt: Buffer;
+  hkdfSalt: Buffer;
 };
 
 export const _hkdf = (options: Options): Result => {
-  const salt = options.salt ?? randomBytes(16);
+  const hkdfSalt = options.hkdfSalt ?? randomBytes(16);
   const info = Buffer.from("lindorm.hkdf", "utf-8");
 
   const derivedKey = Buffer.from(
-    hkdfSync("SHA256", options.derivationKey, salt, info, options.keyLength),
+    hkdfSync("SHA256", options.derivationKey, hkdfSalt, info, options.keyLength),
   );
 
-  return { derivedKey, salt };
+  return { derivedKey, hkdfSalt };
 };

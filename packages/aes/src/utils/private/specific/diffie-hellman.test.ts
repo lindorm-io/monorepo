@@ -19,7 +19,7 @@ describe("diffieHellman", () => {
         x: expect.any(String),
         y: expect.any(String),
       },
-      salt: expect.any(Buffer),
+      hkdfSalt: expect.any(Buffer),
     });
 
     expect(
@@ -27,9 +27,9 @@ describe("diffieHellman", () => {
         encryption: "aes-256-gcm",
         publicEncryptionJwk: result.publicEncryptionJwk,
         kryptos: TEST_EC_KEY,
-        salt: result.salt,
+        hkdfSalt: result.hkdfSalt,
       }),
-    ).toEqual(result.contentEncryptionKey);
+    ).toEqual({ contentEncryptionKey: result.contentEncryptionKey });
   });
 
   test("should return encryption keys with OKP", () => {
@@ -45,7 +45,7 @@ describe("diffieHellman", () => {
         kty: "OKP",
         x: expect.any(String),
       },
-      salt: expect.any(Buffer),
+      hkdfSalt: expect.any(Buffer),
     });
 
     expect(
@@ -53,8 +53,8 @@ describe("diffieHellman", () => {
         encryption: "aes-256-gcm",
         publicEncryptionJwk: result.publicEncryptionJwk,
         kryptos: TEST_OKP_KEY,
-        salt: result.salt,
+        hkdfSalt: result.hkdfSalt,
       }),
-    ).toEqual(result.contentEncryptionKey);
+    ).toEqual({ contentEncryptionKey: result.contentEncryptionKey });
   });
 });

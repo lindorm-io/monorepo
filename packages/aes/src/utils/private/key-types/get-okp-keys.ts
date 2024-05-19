@@ -1,66 +1,35 @@
-import { IKryptos, Kryptos } from "@lindorm/kryptos";
 import { AesError } from "../../../errors";
-import { AesEncryption, PublicEncryptionJwk } from "../../../types";
+import {
+  CreateCekOptions,
+  CreateCekResult,
+  DecryptCekOptions,
+  DecryptCekResult,
+} from "../../../types/private";
 import {
   _getDiffieHellmanDecryptionKey,
   _getDiffieHellmanEncryptionKey,
 } from "../specific/diffie-hellman";
 
-type EncryptOptions = {
-  encryption: AesEncryption;
-  kryptos: IKryptos;
-};
-
-type EncryptResult = {
-  contentEncryptionKey: Buffer;
-  publicEncryptionJwk: PublicEncryptionJwk;
-  salt: Buffer;
-};
-
-type DecryptOptions = {
-  encryption: AesEncryption;
-  kryptos: IKryptos;
-  publicEncryptionJwk: PublicEncryptionJwk;
-  salt: Buffer;
-};
-
-export const _getOkpEncryptionKey = ({
-  encryption,
-  kryptos,
-}: EncryptOptions): EncryptResult => {
-  if (!Kryptos.isOkp(kryptos)) {
-    throw new AesError("Invalid Kryptos type", { debug: { kryptos } });
-  }
-
-  switch (kryptos.algorithm) {
+export const _getOkpEncryptionKey = (options: CreateCekOptions): CreateCekResult => {
+  switch (options.kryptos.algorithm) {
     case "ECDH-ES":
-      return _getDiffieHellmanEncryptionKey({ encryption, kryptos });
+      return _getDiffieHellmanEncryptionKey(options);
 
     default:
-      throw new AesError("Unsupported algorithm", { debug: { kryptos } });
-  }
-};
-
-export const _getOkpDecryptionKey = ({
-  encryption,
-  kryptos,
-  publicEncryptionJwk,
-  salt,
-}: DecryptOptions): Buffer => {
-  if (!Kryptos.isOkp(kryptos)) {
-    throw new AesError("Invalid Kryptos type", { debug: { kryptos } });
-  }
-
-  switch (kryptos.algorithm) {
-    case "ECDH-ES":
-      return _getDiffieHellmanDecryptionKey({
-        encryption,
-        kryptos,
-        publicEncryptionJwk,
-        salt,
+      throw new AesError("Unexpected Kryptos", {
+        debug: { kryptos: options.kryptos.toJSON() },
       });
+  }
+};
+
+export const _getOkpDecryptionKey = (options: DecryptCekOptions): DecryptCekResult => {
+  switch (options.kryptos.algorithm) {
+    case "ECDH-ES":
+      return _getDiffieHellmanDecryptionKey(options);
 
     default:
-      throw new AesError("Unsupported algorithm");
+      throw new AesError("Unexpected Kryptos", {
+        debug: { kryptos: options.kryptos.toJSON() },
+      });
   }
 };

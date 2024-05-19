@@ -1,24 +1,11 @@
-import { IKryptos } from "@lindorm/kryptos";
 import { AesError } from "../../../errors";
-import { AesEncryption, PublicEncryptionJwk } from "../../../types";
+import { CreateCekOptions, CreateCekResult } from "../../../types/private";
 import { _getEcEncryptionKey } from "../key-types/get-ec-keys";
 import { _getOctEncryptionKey } from "../key-types/get-oct-keys";
 import { _getOkpEncryptionKey } from "../key-types/get-okp-keys";
 import { _getRsaEncryptionKey } from "../key-types/get-rsa-keys";
 
-type Options = {
-  encryption: AesEncryption;
-  kryptos: IKryptos;
-};
-
-type EncryptionKeys = {
-  contentEncryptionKey: Buffer;
-  publicEncryptionJwk?: PublicEncryptionJwk;
-  publicEncryptionKey?: Buffer;
-  salt?: Buffer;
-};
-
-export const _getEncryptionKey = (options: Options): EncryptionKeys => {
+export const _getEncryptionKey = (options: CreateCekOptions): CreateCekResult => {
   switch (options.kryptos.type) {
     case "EC":
       return _getEcEncryptionKey(options);
@@ -33,6 +20,8 @@ export const _getEncryptionKey = (options: Options): EncryptionKeys => {
       return _getRsaEncryptionKey(options);
 
     default:
-      throw new AesError("Unexpected encryption key type");
+      throw new AesError("Unexpected Kryptos", {
+        debug: { kryptos: options.kryptos.toJSON() },
+      });
   }
 };

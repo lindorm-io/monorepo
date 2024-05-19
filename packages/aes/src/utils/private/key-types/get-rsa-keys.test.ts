@@ -21,10 +21,11 @@ describe("get-rsa-keys", () => {
 
     expect(
       _getRsaDecryptionKey({
+        encryption: "aes-128-gcm",
         publicEncryptionKey: result.publicEncryptionKey,
         kryptos,
       }),
-    ).toEqual(result.contentEncryptionKey);
+    ).toEqual({ contentEncryptionKey: result.contentEncryptionKey });
   });
 
   test("should return encryption keys with RSA-OAEP-256", () => {
@@ -46,10 +47,11 @@ describe("get-rsa-keys", () => {
 
     expect(
       _getRsaDecryptionKey({
+        encryption: "aes-128-gcm",
         publicEncryptionKey: result.publicEncryptionKey,
         kryptos,
       }),
-    ).toEqual(result.contentEncryptionKey);
+    ).toEqual({ contentEncryptionKey: result.contentEncryptionKey });
   });
 
   test("should return encryption keys with RSA-OAEP-384", () => {
@@ -71,10 +73,11 @@ describe("get-rsa-keys", () => {
 
     expect(
       _getRsaDecryptionKey({
+        encryption: "aes-128-gcm",
         publicEncryptionKey: result.publicEncryptionKey,
         kryptos,
       }),
-    ).toEqual(result.contentEncryptionKey);
+    ).toEqual({ contentEncryptionKey: result.contentEncryptionKey });
   });
 
   test("should return encryption keys with RSA-OAEP-512", () => {
@@ -96,9 +99,10 @@ describe("get-rsa-keys", () => {
 
     expect(
       _getRsaDecryptionKey({
+        encryption: "aes-128-gcm",
         publicEncryptionKey: result.publicEncryptionKey,
         kryptos,
       }),
-    ).toEqual(result.contentEncryptionKey);
+    ).toEqual({ contentEncryptionKey: result.contentEncryptionKey });
   });
 });

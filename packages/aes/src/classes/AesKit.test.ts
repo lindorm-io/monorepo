@@ -29,12 +29,12 @@ describe("AesKit", () => {
       encryption: "aes-256-gcm",
       encryptionKeyAlgorithm: "dir",
       format: "base64url",
+      hkdfSalt: expect.any(Buffer),
       initialisationVector: expect.any(Buffer),
       integrityHash: "SHA256",
       keyId: expect.any(Buffer),
       publicEncryptionJwk: undefined,
       publicEncryptionKey: undefined,
-      salt: expect.any(Buffer),
       version: LATEST_AES_VERSION,
     });
   });

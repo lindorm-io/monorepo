@@ -20,11 +20,17 @@ export const _encryptAesData = (options: EncryptAesDataOptions): AesEncryptionDa
     kryptos,
   } = options;
 
-  const { contentEncryptionKey, publicEncryptionJwk, publicEncryptionKey, salt } =
-    _getEncryptionKey({
-      encryption,
-      kryptos,
-    });
+  const {
+    contentEncryptionKey,
+    hkdfSalt,
+    pbkdfIterations,
+    pbkdfSalt,
+    publicEncryptionJwk,
+    publicEncryptionKey,
+  } = _getEncryptionKey({
+    encryption,
+    kryptos,
+  });
 
   const initialisationVector = _getInitialisationVector(encryption);
   const cipher = createCipheriv(encryption, contentEncryptionKey, initialisationVector);
@@ -46,12 +52,14 @@ export const _encryptAesData = (options: EncryptAesDataOptions): AesEncryptionDa
     encryption,
     encryptionKeyAlgorithm: kryptos.algorithm as AesEncryptionKeyAlgorithm,
     format,
+    hkdfSalt,
     initialisationVector,
     integrityHash,
     keyId: kryptos.id ? Buffer.from(kryptos.id, format) : undefined,
+    pbkdfIterations,
+    pbkdfSalt,
     publicEncryptionJwk,
     publicEncryptionKey,
-    salt,
     version: LATEST_AES_VERSION,
   };
 };
@@ -61,20 +69,24 @@ export const _decryptAesData = (options: DecryptAesDataOptions): string => {
     authTag,
     content,
     encryption,
+    hkdfSalt,
     initialisationVector,
     integrityHash,
     kryptos,
+    pbkdfIterations,
+    pbkdfSalt,
     publicEncryptionJwk,
     publicEncryptionKey,
-    salt,
   } = options;
 
-  const contentEncryptionKey = _getDecryptionKey({
+  const { contentEncryptionKey } = _getDecryptionKey({
     encryption,
+    hkdfSalt,
     kryptos,
+    pbkdfIterations,
+    pbkdfSalt,
     publicEncryptionJwk,
     publicEncryptionKey,
-    salt,
   });
 
   const decipher = createDecipheriv(

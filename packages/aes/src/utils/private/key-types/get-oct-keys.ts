@@ -1,6 +1,10 @@
-import { IKryptos, Kryptos } from "@lindorm/kryptos";
 import { AesError } from "../../../errors";
-import { AesEncryption } from "../../../types";
+import {
+  CreateCekOptions,
+  CreateCekResult,
+  DecryptCekOptions,
+  DecryptCekResult,
+} from "../../../types/private";
 import {
   _getOctDirDecryptionKey,
   _getOctDirEncryptionKey,
@@ -10,74 +14,36 @@ import {
   _getOctKeyWrapEncryptionKey,
 } from "../specific/get-oct-key-wrap-keys";
 
-type EncryptOptions = {
-  encryption: AesEncryption;
-  kryptos: IKryptos;
-};
-
-type EncryptResult = {
-  contentEncryptionKey: Buffer;
-  publicEncryptionKey?: Buffer;
-  salt: Buffer;
-};
-
-type DecryptOptions = {
-  encryption: AesEncryption;
-  kryptos: IKryptos;
-  publicEncryptionKey?: Buffer;
-  salt: Buffer;
-};
-
-export const _getOctEncryptionKey = ({
-  encryption,
-  kryptos,
-}: EncryptOptions): EncryptResult => {
-  if (!Kryptos.isOct(kryptos)) {
-    throw new AesError("Invalid Kryptos type", { debug: { kryptos } });
-  }
-
-  switch (kryptos.algorithm) {
+export const _getOctEncryptionKey = (options: CreateCekOptions): CreateCekResult => {
+  switch (options.kryptos.algorithm) {
     case "A128KW":
     case "A192KW":
     case "A256KW":
-      return _getOctKeyWrapEncryptionKey({ encryption, kryptos });
+      return _getOctKeyWrapEncryptionKey(options);
 
     case "dir":
-      return _getOctDirEncryptionKey({ encryption, kryptos });
+      return _getOctDirEncryptionKey(options);
 
     default:
-      throw new AesError("Unsupported algorithm", { debug: { kryptos } });
-  }
-};
-
-export const _getOctDecryptionKey = ({
-  encryption,
-  kryptos,
-  publicEncryptionKey,
-  salt,
-}: DecryptOptions): Buffer => {
-  if (!Kryptos.isOct(kryptos)) {
-    throw new AesError("Invalid Kryptos type", { debug: { kryptos } });
-  }
-
-  switch (kryptos.algorithm) {
-    case "A128KW":
-    case "A192KW":
-    case "A256KW":
-      if (!publicEncryptionKey) {
-        throw new AesError("Missing public encryption key");
-      }
-      return _getOctKeyWrapDecryptionKey({
-        encryption,
-        kryptos,
-        publicEncryptionKey,
-        salt,
+      throw new AesError("Unexpected Kryptos", {
+        debug: { kryptos: options.kryptos.toJSON() },
       });
+  }
+};
+
+export const _getOctDecryptionKey = (options: DecryptCekOptions): DecryptCekResult => {
+  switch (options.kryptos.algorithm) {
+    case "A128KW":
+    case "A192KW":
+    case "A256KW":
+      return _getOctKeyWrapDecryptionKey(options);
 
     case "dir":
-      return _getOctDirDecryptionKey({ encryption, kryptos, salt });
+      return _getOctDirDecryptionKey(options);
 
     default:
-      throw new AesError("Unsupported algorithm");
+      throw new AesError("Unexpected Kryptos", {
+        debug: { kryptos: options.kryptos.toJSON() },
+      });
   }
 };

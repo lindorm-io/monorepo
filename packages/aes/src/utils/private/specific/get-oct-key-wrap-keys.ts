@@ -1,65 +1,56 @@
-import { IKryptosOct } from "@lindorm/kryptos";
-import { randomBytes } from "crypto";
-import { AesEncryption } from "../../../types";
-import { _calculateEncryptionKeyLength } from "./calculate-encryption-key-length";
-import { _hkdf } from "./hkdf";
+import { Kryptos } from "@lindorm/kryptos";
+import { AesError } from "../../../errors";
+import {
+  CreateCekOptions,
+  CreateCekResult,
+  DecryptCekOptions,
+  DecryptCekResult,
+} from "../../../types/private";
 import { _aesKeyUnwrap, _aesKeyWrap } from "./key-wrap";
+import { _createOctKeyDerivation, _decryptOctKeyDerivation } from "./oct-key-derivation";
 
-type EncryptOptions = {
-  encryption: AesEncryption;
-  kryptos: IKryptosOct;
-};
-
-type EncryptResult = {
-  contentEncryptionKey: Buffer;
-  publicEncryptionKey: Buffer;
-  salt: Buffer;
-};
-
-type DecryptOptions = {
-  encryption: AesEncryption;
-  kryptos: IKryptosOct;
-  publicEncryptionKey: Buffer;
-  salt: Buffer;
-};
-
-export const _getOctKeyWrapEncryptionKey = ({
-  encryption,
-  kryptos,
-}: EncryptOptions): EncryptResult => {
-  const der = kryptos.export("der");
-
-  const keyLength = _calculateEncryptionKeyLength(encryption);
-  const contentEncryptionKey = randomBytes(keyLength);
-
-  const { derivedKey, salt } = _hkdf({
-    derivationKey: der.privateKey,
-    keyLength,
-  });
+export const _getOctKeyWrapEncryptionKey = (
+  options: CreateCekOptions,
+): CreateCekResult => {
+  const { derivedKey, hkdfSalt, pbkdfIterations, pbkdfSalt } =
+    _createOctKeyDerivation(options);
 
   const publicEncryptionKey = _aesKeyWrap({
-    contentEncryptionKey,
-    kryptos,
+    contentEncryptionKey: derivedKey,
+    kryptos: options.kryptos,
     keyEncryptionKey: derivedKey,
   });
 
-  return { contentEncryptionKey, publicEncryptionKey, salt };
+  return {
+    contentEncryptionKey: derivedKey,
+    hkdfSalt,
+    pbkdfIterations,
+    pbkdfSalt,
+    publicEncryptionKey,
+  };
 };
 
 export const _getOctKeyWrapDecryptionKey = ({
   encryption,
+  hkdfSalt,
   kryptos,
+  pbkdfIterations,
+  pbkdfSalt,
   publicEncryptionKey,
-  salt,
-}: DecryptOptions): Buffer => {
-  const der = kryptos.export("der");
+}: DecryptCekOptions): DecryptCekResult => {
+  if (!Kryptos.isOct(kryptos)) {
+    throw new AesError("Invalid Kryptos", { debug: { kryptos: kryptos.toJSON() } });
+  }
+  if (!publicEncryptionKey) {
+    throw new AesError("Missing publicEncryptionKey");
+  }
 
-  const keyLength = _calculateEncryptionKeyLength(encryption);
-
-  const { derivedKey } = _hkdf({
-    derivationKey: der.privateKey,
-    keyLength,
-    salt,
+  const { derivedKey } = _decryptOctKeyDerivation({
+    encryption,
+    hkdfSalt,
+    kryptos,
+    pbkdfIterations,
+    pbkdfSalt,
   });
 
   const unwrappedKey = _aesKeyUnwrap({
@@ -68,5 +59,5 @@ export const _getOctKeyWrapDecryptionKey = ({
     wrappedKey: publicEncryptionKey,
   });
 
-  return unwrappedKey;
+  return { contentEncryptionKey: unwrappedKey };
 };

@@ -1,30 +1,20 @@
-import { IKryptos, Kryptos } from "@lindorm/kryptos";
+import { Kryptos } from "@lindorm/kryptos";
 import { RSA_PKCS1_OAEP_PADDING } from "constants";
 import { privateDecrypt, publicEncrypt, randomBytes } from "crypto";
 import { AesError } from "../../../errors";
-import { AesEncryption } from "../../../types";
+import {
+  CreateCekOptions,
+  CreateCekResult,
+  DecryptCekOptions,
+  DecryptCekResult,
+} from "../../../types/private";
 import { _calculateEncryptionKeyLength } from "../specific/calculate-encryption-key-length";
 import { _rsaOaepHash } from "../specific/rsa-oaep-hash";
-
-type EncryptOptions = {
-  encryption: AesEncryption;
-  kryptos: IKryptos;
-};
-
-type EncryptResult = {
-  contentEncryptionKey: Buffer;
-  publicEncryptionKey: Buffer;
-};
-
-type DecryptOptions = {
-  kryptos: IKryptos;
-  publicEncryptionKey: Buffer;
-};
 
 export const _getRsaEncryptionKey = ({
   encryption,
   kryptos,
-}: EncryptOptions): EncryptResult => {
+}: CreateCekOptions): CreateCekResult => {
   if (!Kryptos.isRsa(kryptos)) {
     throw new AesError("Invalid Kryptos instance");
   }
@@ -58,9 +48,12 @@ export const _getRsaEncryptionKey = ({
 export const _getRsaDecryptionKey = ({
   kryptos,
   publicEncryptionKey,
-}: DecryptOptions): Buffer => {
+}: DecryptCekOptions): DecryptCekResult => {
   if (!Kryptos.isRsa(kryptos)) {
     throw new AesError("Invalid Kryptos instance");
+  }
+  if (!publicEncryptionKey) {
+    throw new AesError("Missing publicEncryptionKey");
   }
 
   if (
@@ -80,7 +73,7 @@ export const _getRsaDecryptionKey = ({
     throw new AesError("Unable to decrypt AES without private key");
   }
 
-  return privateDecrypt(
+  const contentEncryptionKey = privateDecrypt(
     {
       key: privateKey,
       padding: RSA_PKCS1_OAEP_PADDING,
@@ -88,4 +81,6 @@ export const _getRsaDecryptionKey = ({
     },
     publicEncryptionKey,
   );
+
+  return { contentEncryptionKey };
 };

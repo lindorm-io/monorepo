@@ -1,5 +1,6 @@
 import { removeEmpty } from "@lindorm/utils";
-import { AesEncryptionData, AesStringValues } from "../../types";
+import { AesEncryptionData } from "../../types";
+import { AesStringValues } from "../../types/private";
 
 export const _encodeAesString = ({
   authTag,
@@ -7,25 +8,29 @@ export const _encodeAesString = ({
   encryption,
   encryptionKeyAlgorithm,
   format,
+  hkdfSalt,
   initialisationVector,
   integrityHash,
   keyId,
+  pbkdfIterations,
+  pbkdfSalt,
   publicEncryptionJwk,
   publicEncryptionKey,
-  salt,
   version,
 }: AesEncryptionData): string => {
   const values: AesStringValues = removeEmpty({
     v: version.toString(),
     f: format,
-    cek: publicEncryptionKey?.toString(format),
     crv: publicEncryptionJwk?.crv,
     eka: encryptionKeyAlgorithm,
+    hks: hkdfSalt?.toString(format),
     ih: integrityHash,
     iv: initialisationVector.toString(format),
     kid: publicEncryptionKey && keyId ? keyId.toString(format) : undefined,
     kty: publicEncryptionJwk?.kty,
-    s: salt?.toString(format),
+    p2c: pbkdfIterations?.toString(),
+    p2s: pbkdfSalt?.toString(format),
+    pek: publicEncryptionKey?.toString(format),
     tag: authTag?.toString(format),
     x: publicEncryptionJwk?.x,
     y: publicEncryptionJwk?.y,
