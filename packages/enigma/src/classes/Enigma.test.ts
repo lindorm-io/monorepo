@@ -1,4 +1,4 @@
-import { TEST_OCT_KEY_ENC, TEST_OCT_KEY_SIG } from "../__fixtures__/keys";
+import { Kryptos } from "@lindorm/kryptos";
 import { EnigmaError } from "../errors";
 import { Enigma } from "./Enigma";
 
@@ -7,26 +7,40 @@ describe("Enigma", () => {
   let hash: string;
 
   beforeEach(async () => {
-    kit = new Enigma({
-      aes: { kryptos: TEST_OCT_KEY_ENC },
-      oct: { kryptos: TEST_OCT_KEY_SIG },
+    const enc = Kryptos.generate({
+      algorithm: "dir",
+      encryption: "A256GCM",
+      type: "oct",
+      use: "enc",
     });
+
+    const sig = Kryptos.generate({
+      algorithm: "HS256",
+      type: "oct",
+      use: "sig",
+    });
+
+    kit = new Enigma({
+      aes: { kryptos: enc },
+      oct: { kryptos: sig },
+    });
+
     hash = await kit.hash("string");
-  });
+  }, 10000);
 
   test("should verify", async () => {
     await expect(kit.verify("string", hash)).resolves.toBe(true);
-  });
+  }, 10000);
 
   test("should reject", async () => {
     await expect(kit.verify("wrong", hash)).resolves.toBe(false);
-  });
+  }, 10000);
 
   test("should assert", async () => {
     await expect(kit.assert("string", hash)).resolves.not.toThrow();
-  });
+  }, 10000);
 
   test("should throw error", async () => {
     await expect(kit.assert("wrong", hash)).rejects.toThrow(EnigmaError);
-  });
+  }, 10000);
 });

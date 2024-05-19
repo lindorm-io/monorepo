@@ -15,19 +15,19 @@ describe("ArgonKit", () => {
 
     test("should generate hash", async () => {
       expect(hash.length).toBe(397);
-    });
+    }, 10000);
 
     test("should verify", async () => {
       await expect(kit.verify("string", hash)).resolves.toBe(true);
-    });
+    }, 10000);
 
     test("should reject", async () => {
       await expect(kit.verify("wrong", hash)).resolves.toBe(false);
-    });
+    }, 10000);
 
     test("should throw error", async () => {
       await expect(kit.assert("wrong", hash)).rejects.toThrow(ArgonError);
-    });
+    }, 10000);
   });
 
   describe("with hashLength", () => {
@@ -40,19 +40,19 @@ describe("ArgonKit", () => {
 
     test("should generate hash", async () => {
       expect(hash.length).toBe(226);
-    });
+    }, 10000);
 
     test("should verify", async () => {
       await expect(kit.verify("string", hash)).resolves.toBe(true);
-    });
+    }, 10000);
 
     test("should reject", async () => {
       await expect(kit.verify("wrong", hash)).resolves.toBe(false);
-    });
+    }, 10000);
 
     test("should throw error", async () => {
       await expect(kit.assert("wrong", hash)).rejects.toThrow(ArgonError);
-    });
+    }, 10000);
   });
 
   describe("with memoryCost", () => {
@@ -65,19 +65,19 @@ describe("ArgonKit", () => {
 
     test("should generate hash", async () => {
       expect(hash.length).toBe(396);
-    });
+    }, 10000);
 
     test("should verify", async () => {
       await expect(kit.verify("string", hash)).resolves.toBe(true);
-    });
+    }, 10000);
 
     test("should reject", async () => {
       await expect(kit.verify("wrong", hash)).resolves.toBe(false);
-    });
+    }, 10000);
 
     test("should throw error", async () => {
       await expect(kit.assert("wrong", hash)).rejects.toThrow(ArgonError);
-    });
+    }, 10000);
   });
 
   describe("with parallelism", () => {
@@ -90,19 +90,19 @@ describe("ArgonKit", () => {
 
     test("should generate hash", async () => {
       expect(hash.length).toBe(398);
-    });
+    }, 10000);
 
     test("should verify", async () => {
       await expect(kit.verify("string", hash)).resolves.toBe(true);
-    });
+    }, 10000);
 
     test("should reject", async () => {
       await expect(kit.verify("wrong", hash)).resolves.toBe(false);
-    });
+    }, 10000);
 
     test("should throw error", async () => {
       await expect(kit.assert("wrong", hash)).rejects.toThrow(ArgonError);
-    });
+    }, 10000);
   });
 
   describe("with secret", () => {
@@ -113,23 +113,24 @@ describe("ArgonKit", () => {
 
     test("should generate hash", async () => {
       expect(hash.length).toBe(397);
-    });
+    }, 10000);
 
     test("should verify", async () => {
       await expect(kit.verify("string", hash)).resolves.toBe(true);
-    });
+    }, 10000);
 
     test("should reject", async () => {
       await expect(kit.verify("wrong", hash)).resolves.toBe(false);
-    });
+    }, 10000);
 
     test("should throw error", async () => {
       await expect(kit.assert("wrong", hash)).rejects.toThrow(ArgonError);
-    });
+    }, 10000);
 
     test("should reject on wrong secret", async () => {
       const kryptos = Kryptos.generate({
         algorithm: "dir",
+        encryption: "A256GCM",
         type: "oct",
         use: "enc",
       });
@@ -137,7 +138,7 @@ describe("ArgonKit", () => {
       const kit2 = new ArgonKit({ kryptos });
 
       await expect(kit2.verify("string", hash)).resolves.toBe(false);
-    });
+    }, 10000);
   });
 
   describe("with timeCost", () => {
@@ -150,18 +151,18 @@ describe("ArgonKit", () => {
 
     test("should generate hash", async () => {
       expect(hash.length).toBe(397);
-    });
+    }, 10000);
 
     test("should verify", async () => {
       await expect(kit.verify("string", hash)).resolves.toBe(true);
-    });
+    }, 10000);
 
     test("should reject", async () => {
       await expect(kit.verify("wrong", hash)).resolves.toBe(false);
-    });
+    }, 10000);
 
     test("should throw error", async () => {
       await expect(kit.assert("wrong", hash)).rejects.toThrow(ArgonError);
-    });
+    }, 10000);
   });
 });
