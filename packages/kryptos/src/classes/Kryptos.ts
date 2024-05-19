@@ -367,26 +367,19 @@ export class Kryptos implements IKryptos {
   public static from(format: "jwk", jwk: KryptosFromJwk): Kryptos;
   public static from(format: "pem", pem: KryptosFromPem): Kryptos;
   public static from(format: KryptosFormat, arg: KryptosFrom): Kryptos {
-    switch (format) {
-      case "b64":
-        if (!_isB64(arg)) throw new KryptosError("Invalid key format");
-        return new Kryptos({ ..._parseStdOptions(arg), ..._createDerFromB64(arg) });
+    const options = Kryptos.fromOptions(format, arg);
 
-      case "der":
-        if (!_isDer(arg)) throw new KryptosError("Invalid key format");
-        return new Kryptos({ ..._parseStdOptions(arg), ..._createDerFromDer(arg) });
-
-      case "jwk":
-        if (!_isJwk(arg)) throw new KryptosError("Invalid key format");
-        return new Kryptos({ ..._parseJwkOptions(arg), ..._createDerFromJwk(arg) });
-
-      case "pem":
-        if (!_isPem(arg)) throw new KryptosError("Invalid key format");
-        return new Kryptos({ ..._parseStdOptions(arg), ..._createDerFromPem(arg) });
-
-      default:
-        throw new KryptosError("Invalid key format");
+    if (!options.algorithm) {
+      throw new KryptosError("Algorithm is required");
     }
+    if (!options.type) {
+      throw new KryptosError("Type is required");
+    }
+    if (!options.use) {
+      throw new KryptosError("Use is required");
+    }
+
+    return new Kryptos(options);
   }
 
   public static make(options: KryptosFrom): Kryptos {
@@ -422,6 +415,8 @@ export class Kryptos implements IKryptos {
     );
   }
 
+  // private methods
+
   private generateKeys(options: KryptosOptions): KryptosKeys {
     const keys = _createDerFromDer(options as KryptosDer);
 
@@ -429,6 +424,31 @@ export class Kryptos implements IKryptos {
       return { privateKey: keys.privateKey };
     } else {
       return { privateKey: keys.privateKey, publicKey: keys.publicKey };
+    }
+  }
+
+  // private static methods
+
+  public static fromOptions(format: KryptosFormat, arg: KryptosFrom): KryptosOptions {
+    switch (format) {
+      case "b64":
+        if (!_isB64(arg)) throw new KryptosError("Invalid key format");
+        return { ..._parseStdOptions(arg), ..._createDerFromB64(arg) };
+
+      case "der":
+        if (!_isDer(arg)) throw new KryptosError("Invalid key format");
+        return { ..._parseStdOptions(arg), ..._createDerFromDer(arg) };
+
+      case "jwk":
+        if (!_isJwk(arg)) throw new KryptosError("Invalid key format");
+        return { ..._parseJwkOptions(arg), ..._createDerFromJwk(arg) };
+
+      case "pem":
+        if (!_isPem(arg)) throw new KryptosError("Invalid key format");
+        return { ..._parseStdOptions(arg), ..._createDerFromPem(arg) };
+
+      default:
+        throw new KryptosError("Invalid key format");
     }
   }
 }
