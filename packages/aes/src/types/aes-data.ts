@@ -1,22 +1,20 @@
-import { IKryptos } from "@lindorm/kryptos";
-import { BufferFormat, ShaAlgorithm } from "@lindorm/types";
-import { AesEncryption, PublicEncryptionJwk } from "./types";
+import { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
+import { BufferFormat } from "@lindorm/types";
+import { PublicEncryptionJwk } from "./types";
 
 export type EncryptAesDataOptions = {
   data: Buffer | string;
-  encryption?: AesEncryption;
+  encryption?: KryptosEncryption;
   format?: BufferFormat;
-  integrityHash?: ShaAlgorithm;
   kryptos: IKryptos;
 };
 
 export type DecryptAesDataOptions = {
   authTag?: Buffer;
   content: Buffer;
-  encryption: AesEncryption;
+  encryption: KryptosEncryption;
   hkdfSalt?: Buffer;
   initialisationVector: Buffer;
-  integrityHash?: ShaAlgorithm;
   kryptos: IKryptos;
   pbkdfIterations?: number;
   pbkdfSalt?: Buffer;

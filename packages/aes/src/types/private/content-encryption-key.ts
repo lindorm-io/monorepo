@@ -1,8 +1,8 @@
-import { IKryptos } from "@lindorm/kryptos";
-import { AesEncryption, PublicEncryptionJwk } from "../types";
+import { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
+import { PublicEncryptionJwk } from "../types";
 
 export type CreateCekOptions = {
-  encryption: AesEncryption;
+  encryption: KryptosEncryption;
   kryptos: IKryptos;
 };
 
@@ -16,7 +16,7 @@ export type CreateCekResult = {
 };
 
 export type DecryptCekOptions = {
-  encryption: AesEncryption;
+  encryption: KryptosEncryption;
   hkdfSalt?: Buffer;
   kryptos: IKryptos;
   pbkdfIterations?: number;

@@ -1,9 +1,10 @@
+import { AesKeyLength } from "@lindorm/types";
 import { hkdfSync, randomBytes } from "crypto";
 
 type Options = {
   derivationKey: Buffer;
   hkdfSalt?: Buffer;
-  keyLength: 16 | 24 | 32;
+  keyLength: AesKeyLength;
 };
 
 type Result = {

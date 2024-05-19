@@ -1,16 +1,16 @@
-import { BufferFormat, ShaAlgorithm } from "@lindorm/types";
-import { AesEncryption, AesEncryptionKeyAlgorithm, PublicEncryptionJwk } from "./types";
+import { KryptosAlgorithm, KryptosEncryption } from "@lindorm/kryptos";
+import { BufferFormat } from "@lindorm/types";
+import { PublicEncryptionJwk } from "./types";
 
 export type AesEncryptionData = {
-  authTag: Buffer | undefined;
+  algorithm: KryptosAlgorithm;
+  authTag: Buffer;
   content: Buffer;
-  encryption: AesEncryption;
-  encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm | undefined;
+  encryption: KryptosEncryption;
   format: BufferFormat;
   hkdfSalt: Buffer | undefined;
   initialisationVector: Buffer;
-  integrityHash: ShaAlgorithm | undefined;
-  keyId: Buffer | undefined;
+  keyId: Buffer;
   pbkdfIterations: number | undefined;
   pbkdfSalt: Buffer | undefined;
   publicEncryptionJwk: PublicEncryptionJwk | undefined;

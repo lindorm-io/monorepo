@@ -10,7 +10,7 @@ describe("get-rsa-keys", () => {
     });
 
     const result = _getRsaEncryptionKey({
-      encryption: "aes-128-gcm",
+      encryption: "A128GCM",
       kryptos,
     });
 
@@ -21,7 +21,7 @@ describe("get-rsa-keys", () => {
 
     expect(
       _getRsaDecryptionKey({
-        encryption: "aes-128-gcm",
+        encryption: "A128GCM",
         publicEncryptionKey: result.publicEncryptionKey,
         kryptos,
       }),
@@ -36,7 +36,7 @@ describe("get-rsa-keys", () => {
     });
 
     const result = _getRsaEncryptionKey({
-      encryption: "aes-128-gcm",
+      encryption: "A128GCM",
       kryptos,
     });
 
@@ -47,7 +47,7 @@ describe("get-rsa-keys", () => {
 
     expect(
       _getRsaDecryptionKey({
-        encryption: "aes-128-gcm",
+        encryption: "A128GCM",
         publicEncryptionKey: result.publicEncryptionKey,
         kryptos,
       }),
@@ -62,7 +62,7 @@ describe("get-rsa-keys", () => {
     });
 
     const result = _getRsaEncryptionKey({
-      encryption: "aes-128-gcm",
+      encryption: "A128GCM",
       kryptos,
     });
 
@@ -73,7 +73,7 @@ describe("get-rsa-keys", () => {
 
     expect(
       _getRsaDecryptionKey({
-        encryption: "aes-128-gcm",
+        encryption: "A128GCM",
         publicEncryptionKey: result.publicEncryptionKey,
         kryptos,
       }),
@@ -88,7 +88,7 @@ describe("get-rsa-keys", () => {
     });
 
     const result = _getRsaEncryptionKey({
-      encryption: "aes-128-gcm",
+      encryption: "A128GCM",
       kryptos,
     });
 
@@ -99,7 +99,7 @@ describe("get-rsa-keys", () => {
 
     expect(
       _getRsaDecryptionKey({
-        encryption: "aes-128-gcm",
+        encryption: "A128GCM",
         publicEncryptionKey: result.publicEncryptionKey,
         kryptos,
       }),

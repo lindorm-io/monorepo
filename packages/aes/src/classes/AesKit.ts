@@ -1,13 +1,8 @@
 import { isObject, isString } from "@lindorm/is";
-import { IKryptos } from "@lindorm/kryptos";
-import { BufferFormat, ShaAlgorithm } from "@lindorm/types";
+import { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
+import { BufferFormat } from "@lindorm/types";
 import { AesError } from "../errors";
-import {
-  AesEncryption,
-  AesEncryptionData,
-  AesKitOptions,
-  DecryptAesDataOptions,
-} from "../types";
+import { AesEncryptionData, AesKitOptions, DecryptAesDataOptions } from "../types";
 import {
   _assertAesCipher,
   _decryptAesCipher,
@@ -17,40 +12,36 @@ import {
 import { _decryptAesData, _encryptAesData } from "../utils/private/aes-data";
 
 export class AesKit {
-  private readonly encryption: AesEncryption;
+  private readonly encryption: KryptosEncryption;
   private readonly format: BufferFormat;
-  private readonly integrityHash: ShaAlgorithm;
   private readonly kryptos: IKryptos;
 
   public constructor(options: AesKitOptions) {
-    this.encryption = options.encryption || "aes-256-gcm";
+    this.encryption = options.encryption || "A256GCM";
     this.format = options.format || "base64url";
-    this.integrityHash = options.integrityHash || "SHA256";
     this.kryptos = options.kryptos;
   }
 
-  public encrypt(cipher: string, mode?: "cipher"): string;
+  public encrypt(data: string, mode?: "cipher"): string;
   public encrypt(data: string, mode: "object"): AesEncryptionData;
   public encrypt(
-    arg: string,
+    data: string,
     mode: "cipher" | "object" = "cipher",
   ): string | AesEncryptionData {
     switch (mode) {
       case "cipher":
         return _encryptAesCipher({
-          data: arg,
+          data: data,
           encryption: this.encryption,
           format: this.format,
-          integrityHash: this.integrityHash,
           kryptos: this.kryptos,
         });
 
       case "object":
         return _encryptAesData({
-          data: arg,
+          data: data,
           encryption: this.encryption,
           format: this.format,
-          integrityHash: this.integrityHash,
           kryptos: this.kryptos,
         });
 
@@ -59,19 +50,19 @@ export class AesKit {
     }
   }
 
-  public decrypt(cipher: string): string;
+  public decrypt(data: string): string;
   public decrypt(data: Omit<DecryptAesDataOptions, "kryptos">): string;
-  public decrypt(arg: Omit<DecryptAesDataOptions, "kryptos"> | string): string {
-    if (isString(arg)) {
+  public decrypt(data: Omit<DecryptAesDataOptions, "kryptos"> | string): string {
+    if (isString(data)) {
       return _decryptAesCipher({
-        cipher: arg,
+        cipher: data,
         kryptos: this.kryptos,
       });
     }
 
-    if (isObject(arg)) {
+    if (isObject(data)) {
       return _decryptAesData({
-        ...arg,
+        ...data,
         kryptos: this.kryptos,
       });
     }

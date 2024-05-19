@@ -7,7 +7,7 @@ import {
 describe("diffieHellman", () => {
   test("should return encryption keys with EC", () => {
     const result = _getDiffieHellmanEncryptionKey({
-      encryption: "aes-256-gcm",
+      encryption: "A256GCM",
       kryptos: TEST_EC_KEY,
     });
 
@@ -24,7 +24,7 @@ describe("diffieHellman", () => {
 
     expect(
       _getDiffieHellmanDecryptionKey({
-        encryption: "aes-256-gcm",
+        encryption: "A256GCM",
         publicEncryptionJwk: result.publicEncryptionJwk,
         kryptos: TEST_EC_KEY,
         hkdfSalt: result.hkdfSalt,
@@ -34,7 +34,7 @@ describe("diffieHellman", () => {
 
   test("should return encryption keys with OKP", () => {
     const result = _getDiffieHellmanEncryptionKey({
-      encryption: "aes-256-gcm",
+      encryption: "A256GCM",
       kryptos: TEST_OKP_KEY,
     });
 
@@ -50,7 +50,7 @@ describe("diffieHellman", () => {
 
     expect(
       _getDiffieHellmanDecryptionKey({
-        encryption: "aes-256-gcm",
+        encryption: "A256GCM",
         publicEncryptionJwk: result.publicEncryptionJwk,
         kryptos: TEST_OKP_KEY,
         hkdfSalt: result.hkdfSalt,

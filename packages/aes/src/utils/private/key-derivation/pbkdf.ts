@@ -1,8 +1,10 @@
+import { AesKeyLength, ShaAlgorithm } from "@lindorm/types";
 import { pbkdf2Sync, randomBytes } from "crypto";
 
 type Options = {
+  algorithm: ShaAlgorithm;
   derivationKey: Buffer;
-  keyLength: 16 | 24 | 32;
+  keyLength: AesKeyLength;
   pbkdfIterations?: number;
   pbkdfSalt?: Buffer;
 };
@@ -25,7 +27,7 @@ export const _pbkdf = (options: Options): Result => {
     pbkdfSalt,
     pbkdfIterations,
     options.keyLength,
-    "SHA256",
+    options.algorithm,
   );
 
   return { derivedKey, pbkdfIterations, pbkdfSalt };

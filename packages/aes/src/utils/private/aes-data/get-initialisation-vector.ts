@@ -1,17 +1,17 @@
+import { KryptosEncryption } from "@lindorm/kryptos";
 import { randomBytes } from "crypto";
 import { AesError } from "../../../errors";
-import { AesEncryption } from "../../../types";
 
-export const _getInitialisationVector = (encryption: AesEncryption): Buffer => {
+export const _getInitialisationVector = (encryption: KryptosEncryption): Buffer => {
   switch (encryption) {
-    case "aes-128-cbc":
-    case "aes-192-cbc":
-    case "aes-256-cbc":
+    case "A128CBC-HS256":
+    case "A192CBC-HS384":
+    case "A256CBC-HS512":
       return randomBytes(16);
 
-    case "aes-128-gcm":
-    case "aes-192-gcm":
-    case "aes-256-gcm":
+    case "A128GCM":
+    case "A192GCM":
+    case "A256GCM":
       return randomBytes(12);
 
     default:

@@ -1,6 +1,6 @@
 import { IKryptos } from "@lindorm/kryptos";
 import { createCipheriv, createDecipheriv } from "crypto";
-import { _calculateKeywrapEncryption } from "./calculate-keywrap-encryption";
+import { _calculateKeyWrapEncryption } from "../calculate/calculate-key-wrap-encryption";
 
 const AIV = "A6A6A6A6A6A6A6A6" as const;
 const BLOCK_SIZE = 8 as const;
@@ -22,7 +22,7 @@ export const _aesKeyWrap = ({
   keyEncryptionKey,
   kryptos,
 }: KeyWrapOptions): Buffer => {
-  const algorithm = _calculateKeywrapEncryption(kryptos);
+  const algorithm = _calculateKeyWrapEncryption(kryptos);
 
   const n = contentEncryptionKey.length / BLOCK_SIZE;
   let a = Buffer.from(AIV, "hex");
@@ -58,7 +58,7 @@ export const _aesKeyUnwrap = ({
   kryptos,
   wrappedKey,
 }: KeyUnwrapOptions): Buffer => {
-  const encryption = _calculateKeywrapEncryption(kryptos);
+  const encryption = _calculateKeyWrapEncryption(kryptos);
 
   const n = wrappedKey.length / BLOCK_SIZE - 1;
   let a = wrappedKey.subarray(0, BLOCK_SIZE);

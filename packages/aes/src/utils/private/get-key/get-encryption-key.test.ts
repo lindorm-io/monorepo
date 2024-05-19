@@ -33,7 +33,7 @@ describe("getEncryptionKeys", () => {
   test("should resolve encryption keys with EC key", () => {
     expect(
       _getEncryptionKey({
-        encryption: "aes-256-gcm",
+        encryption: "A256GCM",
         kryptos: TEST_EC_KEY,
       }),
     ).toBe("getEcEncryptionKey");
@@ -42,7 +42,7 @@ describe("getEncryptionKeys", () => {
   test("should resolve encryption keys with OCT key", () => {
     expect(
       _getEncryptionKey({
-        encryption: "aes-256-gcm",
+        encryption: "A256GCM",
         kryptos: TEST_OCT_KEY,
       }),
     ).toBe("getOctEncryptionKey");
@@ -51,7 +51,7 @@ describe("getEncryptionKeys", () => {
   test("should resolve encryption keys with OKP key", () => {
     expect(
       _getEncryptionKey({
-        encryption: "aes-256-gcm",
+        encryption: "A256GCM",
         kryptos: TEST_OKP_KEY,
       }),
     ).toBe("getOkpEncryptionKey");
@@ -60,7 +60,7 @@ describe("getEncryptionKeys", () => {
   test("should resolve encryption keys with RSA key", () => {
     expect(
       _getEncryptionKey({
-        encryption: "aes-256-gcm",
+        encryption: "A256GCM",
         kryptos: TEST_RSA_KEY,
       }),
     ).toBe("getRsaEncryptionKey");

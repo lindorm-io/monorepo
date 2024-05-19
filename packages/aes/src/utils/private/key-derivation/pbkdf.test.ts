@@ -4,6 +4,7 @@ import { _pbkdf } from "./pbkdf";
 describe("pbkdf", () => {
   test("should create a key derivation", () => {
     const result = _pbkdf({
+      algorithm: "SHA256",
       derivationKey: TEST_OCT_KEY.export("der").privateKey!,
       keyLength: 16,
     });
@@ -19,6 +20,7 @@ describe("pbkdf", () => {
 
     expect(
       _pbkdf({
+        algorithm: "SHA256",
         derivationKey: TEST_OCT_KEY.export("der").privateKey!,
         keyLength: 16,
         pbkdfIterations: result.pbkdfIterations,

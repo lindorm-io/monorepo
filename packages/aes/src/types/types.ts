@@ -8,14 +8,4 @@ export type AesEncryption =
   | "aes-192-gcm"
   | "aes-256-gcm";
 
-export type AesEncryptionKeyAlgorithm =
-  | "ECDH-ES"
-  | "RSA-OAEP"
-  | "RSA-OAEP-256"
-  | "RSA-OAEP-384"
-  | "RSA-OAEP-512"
-  | "RSA-PRIVATE-KEY";
-
 export type PublicEncryptionJwk = Pick<KryptosJwk, "crv" | "kty" | "x" | "y">;
-
-export type AesSecret = Buffer | string;

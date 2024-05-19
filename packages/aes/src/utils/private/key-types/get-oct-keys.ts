@@ -8,21 +8,30 @@ import {
 import {
   _getOctDirDecryptionKey,
   _getOctDirEncryptionKey,
-} from "../specific/get-oct-dir-keys";
+} from "../oct/get-oct-dir-keys";
 import {
   _getOctKeyWrapDecryptionKey,
   _getOctKeyWrapEncryptionKey,
-} from "../specific/get-oct-key-wrap-keys";
+} from "../oct/get-oct-key-wrap-keys";
+import {
+  _getOctPbkdfKeyWrapDecryptionKey,
+  _getOctPbkdfKeyWrapEncryptionKey,
+} from "../oct/get-oct-pbkdf-key-wrap-keys";
 
 export const _getOctEncryptionKey = (options: CreateCekOptions): CreateCekResult => {
   switch (options.kryptos.algorithm) {
+    case "dir":
+      return _getOctDirEncryptionKey(options);
+
     case "A128KW":
     case "A192KW":
     case "A256KW":
       return _getOctKeyWrapEncryptionKey(options);
 
-    case "dir":
-      return _getOctDirEncryptionKey(options);
+    case "PBES2-HS256+A128KW":
+    case "PBES2-HS384+A192KW":
+    case "PBES2-HS512+A256KW":
+      return _getOctPbkdfKeyWrapEncryptionKey(options);
 
     default:
       throw new AesError("Unexpected Kryptos", {
@@ -33,13 +42,18 @@ export const _getOctEncryptionKey = (options: CreateCekOptions): CreateCekResult
 
 export const _getOctDecryptionKey = (options: DecryptCekOptions): DecryptCekResult => {
   switch (options.kryptos.algorithm) {
+    case "dir":
+      return _getOctDirDecryptionKey(options);
+
     case "A128KW":
     case "A192KW":
     case "A256KW":
       return _getOctKeyWrapDecryptionKey(options);
 
-    case "dir":
-      return _getOctDirDecryptionKey(options);
+    case "PBES2-HS256+A128KW":
+    case "PBES2-HS384+A192KW":
+    case "PBES2-HS512+A256KW":
+      return _getOctPbkdfKeyWrapDecryptionKey(options);
 
     default:
       throw new AesError("Unexpected Kryptos", {

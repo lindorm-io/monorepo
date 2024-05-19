@@ -33,7 +33,7 @@ describe("getDecryptionKey", () => {
   test("should resolve decryption key with EC key", () => {
     expect(
       _getDecryptionKey({
-        encryption: "aes-256-gcm",
+        encryption: "A256GCM",
         kryptos: TEST_EC_KEY,
         publicEncryptionJwk: { crv: "P-521", x: "x", y: "y", kty: "EC" },
         hkdfSalt: Buffer.from("hkdfSalt"),
@@ -44,7 +44,7 @@ describe("getDecryptionKey", () => {
   test("should resolve decryption key with OCT key", () => {
     expect(
       _getDecryptionKey({
-        encryption: "aes-256-gcm",
+        encryption: "A256GCM",
         hkdfSalt: Buffer.from("hkdfSalt"),
         kryptos: TEST_OCT_KEY,
       }),
@@ -54,7 +54,7 @@ describe("getDecryptionKey", () => {
   test("should resolve decryption key with OKP key", () => {
     expect(
       _getDecryptionKey({
-        encryption: "aes-256-gcm",
+        encryption: "A256GCM",
         kryptos: TEST_OKP_KEY,
         publicEncryptionJwk: { crv: "P-521", x: "x", y: "y", kty: "EC" },
         hkdfSalt: Buffer.from("hkdfSalt"),
@@ -65,7 +65,7 @@ describe("getDecryptionKey", () => {
   test("should resolve decryption key with RSA key", () => {
     expect(
       _getDecryptionKey({
-        encryption: "aes-256-gcm",
+        encryption: "A256GCM",
         publicEncryptionKey: Buffer.from("public-encryption-key"),
         kryptos: TEST_RSA_KEY,
       }),

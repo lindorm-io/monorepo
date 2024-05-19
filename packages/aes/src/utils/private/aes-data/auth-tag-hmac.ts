@@ -1,14 +1,32 @@
+import { KryptosEncryption } from "@lindorm/kryptos";
+import { ShaAlgorithm } from "@lindorm/types";
 import { createHmac } from "crypto";
 import { AesError } from "../../../errors";
-import { CreateHmacAuthTag, VerifyHmacAuthTag } from "../../../types/auth-tag";
+import { CreateHmacAuthTag, VerifyHmacAuthTag } from "../../../types/private/auth-tag";
 
-export const createHmacAuthTag = ({
+const _shaHash = (encryption: KryptosEncryption): ShaAlgorithm => {
+  switch (encryption) {
+    case "A128CBC-HS256":
+      return "SHA256";
+
+    case "A192CBC-HS384":
+      return "SHA384";
+
+    case "A256CBC-HS512":
+      return "SHA512";
+
+    default:
+      throw new AesError("Unexpected algorithm");
+  }
+};
+
+export const _createHmacAuthTag = ({
   content,
-  contentEncryptionKey,
+  hashKey,
   initialisationVector,
-  integrityHash = "SHA256",
+  encryption,
 }: CreateHmacAuthTag): Buffer => {
-  const hmac = createHmac(integrityHash, contentEncryptionKey);
+  const hmac = createHmac(_shaHash(encryption), hashKey);
 
   hmac.update(initialisationVector);
   hmac.update(content);
@@ -16,18 +34,18 @@ export const createHmacAuthTag = ({
   return hmac.digest();
 };
 
-export const verifyHmacAuthTag = ({
+export const _assertHmacAuthTag = ({
   authTag,
   content,
-  contentEncryptionKey,
+  encryption,
+  hashKey,
   initialisationVector,
-  integrityHash,
 }: VerifyHmacAuthTag): void => {
-  const generated = createHmacAuthTag({
+  const generated = _createHmacAuthTag({
     content,
-    contentEncryptionKey,
+    encryption,
+    hashKey,
     initialisationVector,
-    integrityHash,
   });
 
   if (Buffer.compare(generated, authTag) === 0) return;

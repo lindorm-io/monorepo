@@ -3,14 +3,13 @@ import { AesEncryptionData } from "../../types";
 import { AesStringValues } from "../../types/private";
 
 export const _encodeAesString = ({
+  algorithm,
   authTag,
   content,
   encryption,
-  encryptionKeyAlgorithm,
   format,
   hkdfSalt,
   initialisationVector,
-  integrityHash,
   keyId,
   pbkdfIterations,
   pbkdfSalt,
@@ -21,17 +20,22 @@ export const _encodeAesString = ({
   const values: AesStringValues = removeEmpty({
     v: version.toString(),
     f: format,
-    crv: publicEncryptionJwk?.crv,
-    eka: encryptionKeyAlgorithm,
-    hks: hkdfSalt?.toString(format),
-    ih: integrityHash,
+
+    // Required
+    alg: algorithm,
     iv: initialisationVector.toString(format),
-    kid: publicEncryptionKey && keyId ? keyId.toString(format) : undefined,
-    kty: publicEncryptionJwk?.kty,
+    kid: keyId.toString(format),
+    tag: authTag.toString(format),
+
+    // Optional
+    hks: hkdfSalt?.toString(format),
     p2c: pbkdfIterations?.toString(),
     p2s: pbkdfSalt?.toString(format),
     pek: publicEncryptionKey?.toString(format),
-    tag: authTag?.toString(format),
+
+    // Public JWK
+    crv: publicEncryptionJwk?.crv,
+    kty: publicEncryptionJwk?.kty,
     x: publicEncryptionJwk?.x,
     y: publicEncryptionJwk?.y,
   });

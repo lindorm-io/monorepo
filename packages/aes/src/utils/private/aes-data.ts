@@ -2,23 +2,18 @@ import { createCipheriv, createDecipheriv } from "crypto";
 import { LATEST_AES_VERSION } from "../../constants";
 import {
   AesEncryptionData,
-  AesEncryptionKeyAlgorithm,
   DecryptAesDataOptions,
   EncryptAesDataOptions,
 } from "../../types";
-import { _getAuthTag, _setAuthTag } from "./aes-data/auth-tag";
+import { _assertAuthTag, _createAuthTag } from "./aes-data/auth-tag";
 import { _getInitialisationVector } from "./aes-data/get-initialisation-vector";
+import { _splitContentEncryptionKey } from "./aes-data/split-content-encryption-key";
+import { _calculateAesEncryption } from "./calculate/calculate-aes-encryption";
 import { _getDecryptionKey } from "./get-key/get-decryption-key";
 import { _getEncryptionKey } from "./get-key/get-encryption-key";
 
 export const _encryptAesData = (options: EncryptAesDataOptions): AesEncryptionData => {
-  const {
-    data,
-    encryption = "aes-256-gcm",
-    format = "base64url",
-    integrityHash,
-    kryptos,
-  } = options;
+  const { data, encryption = "A256GCM", format = "base64url", kryptos } = options;
 
   const {
     contentEncryptionKey,
@@ -32,30 +27,35 @@ export const _encryptAesData = (options: EncryptAesDataOptions): AesEncryptionDa
     kryptos,
   });
 
+  const { encryptionKey, hashKey } = _splitContentEncryptionKey(
+    encryption,
+    contentEncryptionKey,
+  );
+
+  const aesEncryption = _calculateAesEncryption(encryption);
   const initialisationVector = _getInitialisationVector(encryption);
-  const cipher = createCipheriv(encryption, contentEncryptionKey, initialisationVector);
+  const cipher = createCipheriv(aesEncryption, encryptionKey, initialisationVector);
+
   const buffer = Buffer.isBuffer(data) ? data : Buffer.from(data);
   const content = Buffer.concat([cipher.update(buffer), cipher.final()]);
 
-  const authTag = _getAuthTag({
+  const authTag = _createAuthTag({
     cipher,
     content,
-    contentEncryptionKey,
+    hashKey,
     encryption,
     initialisationVector,
-    integrityHash,
   });
 
   return {
+    algorithm: kryptos.algorithm,
     authTag,
     content,
     encryption,
-    encryptionKeyAlgorithm: kryptos.algorithm as AesEncryptionKeyAlgorithm,
     format,
     hkdfSalt,
     initialisationVector,
-    integrityHash,
-    keyId: kryptos.id ? Buffer.from(kryptos.id, format) : undefined,
+    keyId: Buffer.from(kryptos.id, format),
     pbkdfIterations,
     pbkdfSalt,
     publicEncryptionJwk,
@@ -71,7 +71,6 @@ export const _decryptAesData = (options: DecryptAesDataOptions): string => {
     encryption,
     hkdfSalt,
     initialisationVector,
-    integrityHash,
     kryptos,
     pbkdfIterations,
     pbkdfSalt,
@@ -89,20 +88,21 @@ export const _decryptAesData = (options: DecryptAesDataOptions): string => {
     publicEncryptionKey,
   });
 
-  const decipher = createDecipheriv(
+  const { encryptionKey, hashKey } = _splitContentEncryptionKey(
     encryption,
     contentEncryptionKey,
-    initialisationVector,
   );
 
-  _setAuthTag({
+  const aesEncryption = _calculateAesEncryption(encryption);
+  const decipher = createDecipheriv(aesEncryption, encryptionKey, initialisationVector);
+
+  _assertAuthTag({
     authTag,
     content,
-    contentEncryptionKey,
+    hashKey,
     decipher,
     encryption,
     initialisationVector,
-    integrityHash,
   });
 
   return Buffer.concat([decipher.update(content), decipher.final()]).toString("utf-8");

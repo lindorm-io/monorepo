@@ -1,15 +1,15 @@
-import { KryptosCurve } from "@lindorm/kryptos";
-import { BufferFormat, ShaAlgorithm } from "@lindorm/types";
+import { KryptosAlgorithm, KryptosCurve, KryptosEncryption } from "@lindorm/kryptos";
+import { BufferFormat } from "@lindorm/types";
 import { AesError } from "../../errors";
-import { AesEncryption, AesEncryptionData, AesEncryptionKeyAlgorithm } from "../../types";
+import { AesEncryptionData } from "../../types";
 import { AesStringValues } from "../../types/private";
 
 const regex = /(?<key>[a-z0-9]+)=(?<value>.+)/g;
 
 export const _decodeAesString = (data: string): AesEncryptionData => {
-  const [_, alg, array, content] = data.split("$");
+  const [_, enc, array, content] = data.split("$");
 
-  const algorithm = alg as AesEncryption;
+  const encryption = enc as KryptosEncryption;
   const items = array.split(",");
   const values: Record<string, string> = {};
 
@@ -28,17 +28,22 @@ export const _decodeAesString = (data: string): AesEncryptionData => {
   const {
     v,
     f,
-    crv: curve,
-    eka,
-    hks,
-    ih,
+
+    // Required
+    alg,
     iv,
     kid,
-    kty: keyType,
+    tag,
+
+    // Optional
+    hks,
     p2c,
     p2s,
     pek,
-    tag,
+
+    // Public JWK
+    crv: curve,
+    kty: keyType,
     x,
     y,
   } = values as unknown as AesStringValues;
@@ -48,15 +53,14 @@ export const _decodeAesString = (data: string): AesEncryptionData => {
   const kty = keyType as "EC" | "OKP";
 
   return {
-    authTag: tag ? Buffer.from(tag, format) : undefined,
+    authTag: Buffer.from(tag, format),
     content: Buffer.from(content, format),
-    encryption: algorithm,
-    encryptionKeyAlgorithm: eka as AesEncryptionKeyAlgorithm,
+    encryption: encryption,
+    algorithm: alg as KryptosAlgorithm,
     format,
     hkdfSalt: hks ? Buffer.from(hks, format) : undefined,
     initialisationVector: Buffer.from(iv, format),
-    integrityHash: ih as ShaAlgorithm,
-    keyId: kid ? Buffer.from(kid, format) : undefined,
+    keyId: Buffer.from(kid, format),
     pbkdfIterations: p2c ? parseInt(p2c, 10) : undefined,
     pbkdfSalt: p2s ? Buffer.from(p2s, format) : undefined,
     publicEncryptionJwk: crv && x && kty ? { crv, x, y, kty } : undefined,

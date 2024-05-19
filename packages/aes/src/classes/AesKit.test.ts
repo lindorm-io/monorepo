@@ -10,7 +10,12 @@ describe("AesKit", () => {
   let cipher: string;
 
   beforeEach(async () => {
-    const kryptos = Kryptos.generate({ algorithm: "dir", type: "oct", use: "enc" });
+    const kryptos = Kryptos.generate({
+      algorithm: "dir",
+      encryption: "A256GCM",
+      type: "oct",
+      use: "enc",
+    });
 
     string = randomBytes(32).toString("hex");
     aesKit = new AesKit({ kryptos });
@@ -24,15 +29,16 @@ describe("AesKit", () => {
 
   test("should encrypt to object", () => {
     expect(aesKit.encrypt(string, "object")).toEqual({
+      algorithm: "dir",
       authTag: expect.any(Buffer),
       content: expect.any(Buffer),
-      encryption: "aes-256-gcm",
-      encryptionKeyAlgorithm: "dir",
+      encryption: "A256GCM",
       format: "base64url",
-      hkdfSalt: expect.any(Buffer),
+      hkdfSalt: undefined,
       initialisationVector: expect.any(Buffer),
-      integrityHash: "SHA256",
       keyId: expect.any(Buffer),
+      pbkdfIterations: undefined,
+      pbkdfSalt: undefined,
       publicEncryptionJwk: undefined,
       publicEncryptionKey: undefined,
       version: LATEST_AES_VERSION,
