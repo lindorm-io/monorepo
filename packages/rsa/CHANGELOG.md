@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/rsa@0.1.1...@lindorm/rsa@0.1.2) (2024-05-19)
+
+### Bug Fixes
+
+- align with kryptos changes ([344c4e2](https://github.com/lindorm-io/monorepo/commit/344c4e2fad07e66c91f7e0820bfc929c1f8ffcab))
+- improve kryptos generate method ([9e7098d](https://github.com/lindorm-io/monorepo/commit/9e7098d4b219b11140e28e554ffd573204772249))
+- simplify interfaces with kryptos metadata ([c4075d2](https://github.com/lindorm-io/monorepo/commit/c4075d2e133c2fe0a1fafa548da68db34b3407c6))
+- use crypto constants ([2fc218e](https://github.com/lindorm-io/monorepo/commit/2fc218e8c279d23bdb386421a9896bbf9896e72b))
+
 ## [0.1.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/rsa@0.1.0...@lindorm/rsa@0.1.1) (2024-05-12)
 
 ### Bug Fixes

@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.4](https://github.com/lindorm-io/monorepo/compare/@lindorm/types@0.1.3...@lindorm/types@0.1.4) (2024-05-19)
+
+### Bug Fixes
+
+- add aes types ([ff5e5b8](https://github.com/lindorm-io/monorepo/commit/ff5e5b8d5e953bd86845d13639f20da2d1594bd0))
+- add crypto types ([a497d4a](https://github.com/lindorm-io/monorepo/commit/a497d4ae5391d4266be0ed3d5c005ca9efd8caaa))
+
 ## [0.1.3](https://github.com/lindorm-io/monorepo/compare/@lindorm/types@0.1.2...@lindorm/types@0.1.3) (2024-05-10)
 
 ### Bug Fixes

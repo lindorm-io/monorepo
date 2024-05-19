@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/case",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -25,9 +25,9 @@
     "update": "ncu -u"
   },
   "dependencies": {
-    "@lindorm/is": "^0.1.4"
+    "@lindorm/is": "^0.1.5"
   },
   "devDependencies": {
-    "@lindorm/types": "^0.1.3"
+    "@lindorm/types": "^0.1.4"
   }
 }

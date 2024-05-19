@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.3](https://github.com/lindorm-io/monorepo/compare/@lindorm/conduit@0.1.2...@lindorm/conduit@0.1.3) (2024-05-19)
+
+### Bug Fixes
+
+- amend faulty form data handling ([c46c419](https://github.com/lindorm-io/monorepo/commit/c46c41965d75229636ef529a745aa70159233a46))
+
 ## [0.1.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/conduit@0.1.1...@lindorm/conduit@0.1.2) (2024-05-11)
 
 ### Bug Fixes

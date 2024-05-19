@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.2.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/enigma@0.1.0...@lindorm/enigma@0.2.0) (2024-05-19)
+
+### Bug Fixes
+
+- align with aes changes ([fbed6e0](https://github.com/lindorm-io/monorepo/commit/fbed6e05e334ada373a443c2b9c09224771d86bf))
+- improve kryptos generate method ([9e7098d](https://github.com/lindorm-io/monorepo/commit/9e7098d4b219b11140e28e554ffd573204772249))
+- rename main class ([0db0597](https://github.com/lindorm-io/monorepo/commit/0db0597e9b822b350f8b8c4d8295d85d60ff0fa1))
+
+### Features
+
+- streamline and focus enigma package ([8a32d52](https://github.com/lindorm-io/monorepo/commit/8a32d5293f03497f0e53e731195721e85364580d))
+
 # 0.1.0 (2024-05-12)
 
 ### Features

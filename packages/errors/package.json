@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/errors",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -25,7 +25,7 @@
     "update": "ncu -u"
   },
   "dependencies": {
-    "@lindorm/is": "^0.1.4",
+    "@lindorm/is": "^0.1.5",
     "uuid": "^9.0.1"
   },
   "devDependencies": {
