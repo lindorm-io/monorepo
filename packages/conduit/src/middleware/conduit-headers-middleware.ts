@@ -1,5 +1,5 @@
 import { Dict, Header } from "@lindorm/types";
-import { ConduitMiddleware } from "../../types";
+import { ConduitMiddleware } from "../types";
 
 export const conduitHeadersMiddleware =
   (headers: Dict<Header>): ConduitMiddleware =>

@@ -1,7 +1,7 @@
 import { Next } from "@lindorm/middleware";
 import MockDate from "mockdate";
 import nock from "nock";
-import { OPEN_ID_CONFIGURATION_RESPONSE } from "../../__fixtures__/auth0";
+import { OPEN_ID_CONFIGURATION_RESPONSE } from "../__fixtures__/auth0";
 import {
   ConduitClientCredentialsMiddlewareFactory,
   createConduitClientCredentialsMiddleware,
@@ -23,7 +23,8 @@ describe("conduit-client-credentials-middleware", () => {
     factory = createConduitClientCredentialsMiddleware({
       clientId: "clientId",
       clientSecret: "clientSecret",
-      openIdConfigurationUrl: "https://lindorm.eu.auth0.com/.well-known/openid-configuration",
+      clockTolerance: 0,
+      openIdBaseUrl: "https://lindorm.eu.auth0.com/",
     });
   });
 
@@ -37,16 +38,19 @@ describe("conduit-client-credentials-middleware", () => {
 
   describe("with audience", () => {
     test("should return a middleware", async () => {
-      const scope = nock("https://lindorm.eu.auth0.com").post("/oauth/token").times(1).reply(200, {
-        access_token: "access_token",
-        expires_in: 10,
-        token_type: "Bearer",
-      });
+      const tokenScope = nock("https://lindorm.eu.auth0.com")
+        .post("/oauth/token")
+        .times(1)
+        .reply(200, {
+          access_token: "access_token",
+          expires_in: 10,
+          token_type: "Bearer",
+        });
 
-      const middleware = await factory({ audience: "https://geojson-service.no" });
+      const middleware = await factory({ audience: "https://identity.lindorm-io" });
 
       expect(configScope.isDone()).toBe(true);
-      expect(scope.isDone()).toBe(true);
+      expect(tokenScope.isDone()).toBe(true);
 
       await expect(middleware(ctx, next)).resolves.not.toThrow();
 
@@ -56,7 +60,7 @@ describe("conduit-client-credentials-middleware", () => {
     });
 
     test("should return middleware with cached data", async () => {
-      const middleware = await factory({ audience: "https://geojson-service.no" });
+      const middleware = await factory({ audience: "https://identity.lindorm-io" });
 
       await expect(middleware(ctx, next)).resolves.not.toThrow();
 
@@ -66,15 +70,18 @@ describe("conduit-client-credentials-middleware", () => {
     });
 
     test("should return middleware with timeout data", async () => {
-      const scope = nock("https://lindorm.eu.auth0.com").post("/oauth/token").times(1).reply(200, {
-        access_token: "access_token",
-        expires_in: 10,
-        token_type: "Bearer",
-      });
+      const scope = nock("https://lindorm.eu.auth0.com")
+        .post("/oauth/token")
+        .times(1)
+        .reply(200, {
+          access_token: "access_token",
+          expires_in: 10,
+          token_type: "Bearer",
+        });
 
       MockDate.set("2024-01-01T00:00:30.000Z");
 
-      const middleware = await factory({ audience: "https://geojson-service.no" });
+      const middleware = await factory({ audience: "https://identity.lindorm-io" });
 
       expect(scope.isDone()).toBe(true);
 
@@ -86,13 +93,16 @@ describe("conduit-client-credentials-middleware", () => {
     });
 
     test("should return a middleware with new data", async () => {
-      const scope = nock("https://lindorm.eu.auth0.com").post("/oauth/token").times(1).reply(200, {
-        access_token: "access_token",
-        expires_in: 10,
-        token_type: "Bearer",
-      });
+      const scope = nock("https://lindorm.eu.auth0.com")
+        .post("/oauth/token")
+        .times(1)
+        .reply(200, {
+          access_token: "access_token",
+          expires_in: 10,
+          token_type: "Bearer",
+        });
 
-      const middleware = await factory({ audience: "https://ioc-service.no" });
+      const middleware = await factory({ audience: "https://test.lindorm.io" });
 
       expect(scope.isDone()).toBe(true);
 
@@ -106,11 +116,14 @@ describe("conduit-client-credentials-middleware", () => {
 
   describe("without audience", () => {
     test("should return a middleware", async () => {
-      const scope = nock("https://lindorm.eu.auth0.com").post("/oauth/token").times(1).reply(200, {
-        access_token: "access_token",
-        expires_in: 10,
-        token_type: "Bearer",
-      });
+      const scope = nock("https://lindorm.eu.auth0.com")
+        .post("/oauth/token")
+        .times(1)
+        .reply(200, {
+          access_token: "access_token",
+          expires_in: 10,
+          token_type: "Bearer",
+        });
 
       const middleware = await factory();
 

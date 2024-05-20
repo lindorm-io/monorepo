@@ -9,7 +9,11 @@ describe("conduitChangeResponseDataMiddleware", () => {
   beforeEach(() => {
     ctx = {
       res: {
-        data: { PascalCase: "PascalCase", snake_case: "snake_case", camelCase: "camelCase" },
+        data: {
+          PascalCase: "PascalCase",
+          snake_case: "snake_case",
+          camelCase: "camelCase",
+        },
       },
     };
 

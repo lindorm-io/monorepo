@@ -9,7 +9,11 @@ describe("conduitChangeRequestHeadersMiddleware", () => {
   beforeEach(() => {
     ctx = {
       req: {
-        headers: { PascalCase: "PascalCase", snake_case: "snake_case", camelCase: "camelCase" },
+        headers: {
+          PascalCase: "PascalCase",
+          snake_case: "snake_case",
+          camelCase: "camelCase",
+        },
       },
     };
 
@@ -17,7 +21,9 @@ describe("conduitChangeRequestHeadersMiddleware", () => {
   });
 
   test("should resolve with default case", async () => {
-    await expect(conduitChangeRequestHeadersMiddleware()(ctx, next)).resolves.not.toThrow();
+    await expect(
+      conduitChangeRequestHeadersMiddleware()(ctx, next),
+    ).resolves.not.toThrow();
 
     expect(ctx.req.headers).toEqual({
       "Camel-Case": "camelCase",

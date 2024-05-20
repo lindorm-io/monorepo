@@ -1,4 +1,4 @@
-import { ConduitMiddleware } from "../../types";
+import { ConduitMiddleware } from "../types";
 
 export const conduitBasicAuthMiddleware =
   (username: string, password: string): ConduitMiddleware =>

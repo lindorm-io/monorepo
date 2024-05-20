@@ -9,7 +9,11 @@ describe("conduitChangeRequestBodyMiddleware", () => {
   beforeEach(() => {
     ctx = {
       req: {
-        body: { PascalCase: "PascalCase", snake_case: "snake_case", camelCase: "camelCase" },
+        body: {
+          PascalCase: "PascalCase",
+          snake_case: "snake_case",
+          camelCase: "camelCase",
+        },
       },
     };
 

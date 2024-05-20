@@ -24,6 +24,7 @@ export type OpenIdConfigurationResponse = {
 export type OAuthTokenResponse = {
   accessToken: string;
   expiresIn: number;
+  expiresOn: number;
   idToken: string | undefined;
   refreshToken: string | undefined;
   scope: Array<string> | string | undefined;

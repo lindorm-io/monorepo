@@ -1,4 +1,4 @@
-import { ConduitMiddleware } from "../../types";
+import { ConduitMiddleware } from "../types";
 
 export const conduitCorrelationMiddleware =
   (correlationId: string): ConduitMiddleware =>

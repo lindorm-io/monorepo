@@ -1,24 +1,27 @@
 import { ChangeCase } from "@lindorm/case";
 import { isArray, isString } from "@lindorm/is";
 import { ILogger } from "@lindorm/logger";
-import { Conduit } from "../../classes";
-import { ConduitUsing } from "../../enums";
+import { Conduit } from "../classes";
+import { ConduitUsing } from "../enums";
 import {
   ConduitMiddleware,
   OAuthTokenResponse,
   OpenIdConfigurationResponse,
   RequestOptions,
-} from "../../types";
+} from "../types";
 import { conduitBasicAuthMiddleware } from "./conduit-basic-auth-middleware";
 import { conduitBearerAuthMiddleware } from "./conduit-bearer-auth-middleware";
 import { conduitChangeRequestBodyMiddleware } from "./conduit-change-request-body-middleware";
 import { conduitChangeResponseDataMiddleware } from "./conduit-change-response-data-middleware";
 
 type Config = {
-  contentType?: "application/json" | "application/x-www-form-urlencoded";
   clientId: string;
   clientSecret: string;
-  openIdConfigurationUrl: string;
+  clockTolerance?: number;
+  contentType?: "application/json" | "application/x-www-form-urlencoded";
+  openIdBaseUrl: string;
+  openIdConfigurationPath?: string;
+  openIdTokenPath?: string;
   using?: ConduitUsing;
 };
 
@@ -47,8 +50,17 @@ const DEFAULT = "_@DEFAULT" as const;
 export const createConduitClientCredentialsMiddleware = (
   config: Config,
 ): ConduitClientCredentialsMiddlewareFactory => {
+  const {
+    clockTolerance = 10,
+    openIdConfigurationPath = "/.well-known/openid-configuration",
+  } = config;
+
+  const baseUrl = config.openIdBaseUrl.endsWith("/")
+    ? config.openIdBaseUrl.slice(0, -1)
+    : config.openIdBaseUrl;
+
   let cache: Cache = [];
-  let tokenUrl: string | null;
+  let tokenUrl: string | null = config.openIdTokenPath ?? null;
 
   return async function conduitClientCredentialsMiddleware(
     options?: Options,
@@ -68,6 +80,7 @@ export const createConduitClientCredentialsMiddleware = (
     }
 
     const client = new Conduit({
+      baseUrl,
       logger,
       middleware: [
         conduitChangeRequestBodyMiddleware(ChangeCase.Snake),
@@ -79,9 +92,9 @@ export const createConduitClientCredentialsMiddleware = (
     if (!tokenUrl) {
       const {
         data: { tokenEndpoint },
-      } = await client.get<OpenIdConfigurationResponse>(config.openIdConfigurationUrl);
+      } = await client.get<OpenIdConfigurationResponse>(openIdConfigurationPath);
 
-      tokenUrl = tokenEndpoint;
+      tokenUrl = tokenEndpoint.replace(baseUrl, "");
     }
 
     const contentType = config.contentType ?? "application/json";
@@ -112,16 +125,22 @@ export const createConduitClientCredentialsMiddleware = (
       middleware: [conduitBasicAuthMiddleware(config.clientId, config.clientSecret)],
     });
 
+    const receivedScope = isArray(data.scope)
+      ? data.scope
+      : isString(data.scope)
+        ? data.scope.split(" ")
+        : [];
+
+    const ttl = data.expiresOn
+      ? data.expiresOn * 1000
+      : Date.now() + data.expiresIn * 1000;
+
     cache.push({
       accessToken: data.accessToken,
       audience,
-      scope: isArray(data.scope)
-        ? data.scope
-        : isString(data.scope)
-          ? data.scope.split(" ")
-          : [],
+      scope: [...receivedScope, ...scope],
       tokenType: data.tokenType,
-      ttl: Date.now() + data.expiresIn * 1000,
+      ttl: ttl - clockTolerance * 1000,
     });
 
     return conduitBearerAuthMiddleware(data.accessToken, data.tokenType);

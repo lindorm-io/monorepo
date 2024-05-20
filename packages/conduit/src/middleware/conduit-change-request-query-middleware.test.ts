@@ -9,7 +9,11 @@ describe("conduitChangeRequestQueryMiddleware", () => {
   beforeEach(() => {
     ctx = {
       req: {
-        query: { PascalCase: "PascalCase", snake_case: "snake_case", camelCase: "camelCase" },
+        query: {
+          PascalCase: "PascalCase",
+          snake_case: "snake_case",
+          camelCase: "camelCase",
+        },
       },
     };
 
