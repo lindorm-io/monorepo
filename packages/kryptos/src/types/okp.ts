@@ -1,6 +1,13 @@
 import { KryptosUse } from "./types";
 
-export type OkpEncAlgorithm = "ECDH-ES";
+export type OkpEncAlgorithm =
+  | "ECDH-ES"
+  | "ECDH-ES+A128KW"
+  | "ECDH-ES+A192KW"
+  | "ECDH-ES+A256KW"
+  | "ECDH-ES+A128GCMKW"
+  | "ECDH-ES+A192GCMKW"
+  | "ECDH-ES+A256GCMKW";
 
 export type OkpSigAlgorithm = "EdDSA";
 

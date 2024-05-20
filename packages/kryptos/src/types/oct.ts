@@ -8,6 +8,9 @@ export type OctEncStdAlgorithm =
   | "A128KW"
   | "A192KW"
   | "A256KW"
+  | "A128GCMKW"
+  | "A192GCMKW"
+  | "A256GCMKW"
   | "PBES2-HS256+A128KW"
   | "PBES2-HS384+A192KW"
   | "PBES2-HS512+A256KW";
