@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.4](https://github.com/lindorm-io/monorepo/compare/@lindorm/conduit@0.1.3...@lindorm/conduit@0.1.4) (2024-05-20)
+
+### Bug Fixes
+
+- update client credentials middleware and move files ([9e97fdd](https://github.com/lindorm-io/monorepo/commit/9e97fdd74be547db33eafead56a0ad6d87744871))
+
 ## [0.1.3](https://github.com/lindorm-io/monorepo/compare/@lindorm/conduit@0.1.2...@lindorm/conduit@0.1.3) (2024-05-19)
 
 ### Bug Fixes

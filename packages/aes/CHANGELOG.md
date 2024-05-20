@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.3.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/aes@0.2.0...@lindorm/aes@0.3.0) (2024-05-20)
+
+### Features
+
+- add gcm keywrap ([8eefa5d](https://github.com/lindorm-io/monorepo/commit/8eefa5dd2914faba842c0a050a9317d2b6f5b197))
+
 # [0.2.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/aes@0.1.3...@lindorm/aes@0.2.0) (2024-05-19)
 
 ### Bug Fixes

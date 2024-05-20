@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/aegis@0.1.0...@lindorm/aegis@0.1.1) (2024-05-20)
+
+### Bug Fixes
+
+- update jwe with gcm keywrap ([0abbd3b](https://github.com/lindorm-io/monorepo/commit/0abbd3b26120dabe8e71223ea45b7c9beb14d4e9))
+
 # 0.1.0 (2024-05-19)
 
 ### Features

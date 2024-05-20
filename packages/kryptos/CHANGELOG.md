@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/kryptos@0.3.0...@lindorm/kryptos@0.3.1) (2024-05-20)
+
+### Bug Fixes
+
+- add encryption algorithms ([ce0698b](https://github.com/lindorm-io/monorepo/commit/ce0698b73c596ec1f414c9ad5c53375a639c3429))
+
 # [0.3.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/kryptos@0.2.1...@lindorm/kryptos@0.3.0) (2024-05-19)
 
 ### Bug Fixes
