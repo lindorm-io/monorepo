@@ -13,12 +13,14 @@ export type TokenHeaderClaims = {
   enc?: KryptosEncryption; // encryption
   epk?: PublicEncryptionJwk; // public encryption jwk
   hkdf_salt?: string; // salt
+  iv?: string; // public encryption iv
   jku?: string; // jwks uri
   jwk?: KryptosJwk; // jwk
   kid?: string; // key id
   oid?: string; // object id
   p2c?: number; // p2c
   p2s?: string; // p2s
+  tag?: string; // public encryption tag
   typ: TokenHeaderType; // header type
   x5c?: Array<string>;
   x5t?: string;
@@ -41,7 +43,9 @@ export type ParsedTokenHeader = {
   objectId: string | undefined;
   pbkdfIterations: number | undefined;
   pbkdfSalt: string | undefined;
+  publicEncryptionIv: string | undefined;
   publicEncryptionJwk: PublicEncryptionJwk | undefined;
+  publicEncryptionTag: string | undefined;
   x5c: Array<string> | undefined;
   x5t: string | undefined;
   x5u: string | undefined;
@@ -54,14 +58,16 @@ export type TokenHeaderSignOptions = {
   critical?: Array<Exclude<keyof TokenHeaderSignOptions, "critical">>;
   encryption?: KryptosEncryption;
   headerType: TokenHeaderType;
-  hkdfSalt?: string;
+  hkdfSalt?: Buffer;
   jwk?: KryptosJwk;
   jwksUri?: string;
   keyId: string;
   objectId?: string;
   pbkdfIterations?: number;
-  pbkdfSalt?: string;
+  pbkdfSalt?: Buffer;
+  publicEncryptionIv?: Buffer;
   publicEncryptionJwk?: PublicEncryptionJwk;
+  publicEncryptionTag?: Buffer;
   x5c?: Array<string>;
   x5t?: string;
   x5u?: string;

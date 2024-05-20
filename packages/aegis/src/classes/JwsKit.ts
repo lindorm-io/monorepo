@@ -3,6 +3,7 @@ import { isBuffer, isString } from "@lindorm/is";
 import { IKryptos } from "@lindorm/kryptos";
 import { ILogger } from "@lindorm/logger";
 import { randomUUID } from "crypto";
+import { _B64U } from "../constants/private/format";
 import { JwsError } from "../errors";
 import {
   DecodedJws,
@@ -58,9 +59,7 @@ export class JwsKit implements IJwsKit {
 
     this.logger.silly("Token header encoded", { header, options: headerOptions });
 
-    const payload = isBuffer(data)
-      ? data.toString("base64url")
-      : B64.encode(data, "base64url");
+    const payload = isBuffer(data) ? data.toString(_B64U) : B64.encode(data, _B64U);
 
     this.logger.silly("Token payload encoded", { payload, options });
 
@@ -114,7 +113,7 @@ export class JwsKit implements IJwsKit {
     const payload =
       header.contentType === "text/plain"
         ? decoded.payload
-        : B64.toBuffer(decoded.payload, "base64url");
+        : B64.toBuffer(decoded.payload, _B64U);
 
     this.logger.silly("Token verified", { header, payload });
 

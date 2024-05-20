@@ -1,6 +1,7 @@
 import { B64 } from "@lindorm/b64";
 import { KryptosAlgorithm } from "@lindorm/kryptos";
 import { createHash } from "crypto";
+import { _B64U } from "../../constants/private/format";
 
 type ShaAlgorithm = "SHA256" | "SHA384" | "SHA512";
 
@@ -23,7 +24,7 @@ const _createHash = (algorithm: KryptosAlgorithm, data: string, bits: number): s
   const buffer = _createHashBuffer(sha, data);
   const left = _getLeftBits(buffer, bits);
 
-  return B64.encode(left, "base64url");
+  return B64.encode(left, _B64U);
 };
 
 export const _createAccessTokenHash = (

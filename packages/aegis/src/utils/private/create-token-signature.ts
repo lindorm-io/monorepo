@@ -3,6 +3,7 @@ import { IKryptos } from "@lindorm/kryptos";
 import { OctKit } from "@lindorm/oct";
 import { OkpKit } from "@lindorm/okp";
 import { RsaKit } from "@lindorm/rsa";
+import { _B64U } from "../../constants/private/format";
 import { JwtError } from "../../errors";
 
 type Options = {
@@ -17,17 +18,17 @@ const _signEc = (kryptos: IKryptos, data: string): string => {
 };
 
 const _signOct = (kryptos: IKryptos, data: string): string => {
-  const kit = new OctKit({ kryptos, format: "base64url" });
+  const kit = new OctKit({ kryptos, format: _B64U });
   return kit.sign(data);
 };
 
 const _signOkp = (kryptos: IKryptos, data: string): string => {
-  const kit = new OkpKit({ kryptos, format: "base64url" });
+  const kit = new OkpKit({ kryptos, format: _B64U });
   return kit.sign(data);
 };
 
 const _signRsa = (kryptos: IKryptos, data: string): string => {
-  const kit = new RsaKit({ kryptos, format: "base64url" });
+  const kit = new RsaKit({ kryptos, format: _B64U });
   return kit.sign(data);
 };
 

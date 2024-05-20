@@ -3,6 +3,7 @@ import { IKryptos } from "@lindorm/kryptos";
 import { OctKit } from "@lindorm/oct";
 import { OkpKit } from "@lindorm/okp";
 import { RsaKit } from "@lindorm/rsa";
+import { _B64U } from "../../constants/private/format";
 import { JwtError } from "../../errors";
 
 const _verifyEc = (kryptos: IKryptos, data: string, signature: string): boolean => {
@@ -11,17 +12,17 @@ const _verifyEc = (kryptos: IKryptos, data: string, signature: string): boolean 
 };
 
 const _verifyOct = (kryptos: IKryptos, data: string, signature: string): boolean => {
-  const kit = new OctKit({ kryptos, format: "base64url" });
+  const kit = new OctKit({ kryptos, format: _B64U });
   return kit.verify(data, signature);
 };
 
 const _verifyOkp = (kryptos: IKryptos, data: string, signature: string): boolean => {
-  const kit = new OkpKit({ kryptos, format: "base64url" });
+  const kit = new OkpKit({ kryptos, format: _B64U });
   return kit.verify(data, signature);
 };
 
 const _verifyRsa = (kryptos: IKryptos, data: string, signature: string): boolean => {
-  const kit = new RsaKit({ kryptos, format: "base64url" });
+  const kit = new RsaKit({ kryptos, format: _B64U });
   return kit.verify(data, signature);
 };
 

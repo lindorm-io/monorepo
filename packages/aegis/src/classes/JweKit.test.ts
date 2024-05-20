@@ -271,6 +271,60 @@ describe("JweKit", () => {
       });
     });
 
+    test("should decrypt data using OCT A128GCMKW", () => {
+      const kryptos = Kryptos.generate({
+        algorithm: "A128GCMKW",
+        type: "oct",
+        use: "enc",
+      });
+
+      kit = new JweKit({ logger, kryptos });
+
+      const { token } = kit.encrypt("data", {
+        objectId: "19a0c0cc-3eec-4ece-a5a1-4d93a457c3a6",
+      });
+
+      expect(kit.decrypt(token)).toEqual({
+        __jwe: {
+          authTag: expect.any(String),
+          content: expect.any(String),
+          header: {
+            alg: "A128GCMKW",
+            crit: ["alg", "enc", "iv", "tag", "hkdf_salt"],
+            cty: "text/plain",
+            enc: "A256GCM",
+            hkdf_salt: expect.any(String),
+            iv: expect.any(String),
+            kid: kryptos.id,
+            oid: "19a0c0cc-3eec-4ece-a5a1-4d93a457c3a6",
+            tag: expect.any(String),
+            typ: "JWE",
+          },
+          initialisationVector: expect.any(String),
+          publicEncryptionKey: expect.any(String),
+        },
+        header: {
+          algorithm: "A128GCMKW",
+          contentType: "text/plain",
+          critical: [
+            "algorithm",
+            "encryption",
+            "publicEncryptionIv",
+            "publicEncryptionTag",
+            "hkdfSalt",
+          ],
+          encryption: "A256GCM",
+          headerType: "JWE",
+          hkdfSalt: expect.any(String),
+          keyId: kryptos.id,
+          objectId: "19a0c0cc-3eec-4ece-a5a1-4d93a457c3a6",
+          publicEncryptionIv: expect.any(String),
+          publicEncryptionTag: expect.any(String),
+        },
+        payload: "data",
+      });
+    });
+
     test("should decrypt data using OKP", () => {
       kit = new JweKit({ logger, kryptos: TEST_OKP_KEY_ENC });
 

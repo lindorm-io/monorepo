@@ -4,6 +4,7 @@ import { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
 import { ILogger } from "@lindorm/logger";
 import { removeUndefined } from "@lindorm/utils";
 import { randomUUID } from "crypto";
+import { _B64U } from "../constants/private/format";
 import { JweError } from "../errors";
 import {
   DecodedJwe,
@@ -41,23 +42,6 @@ export class JweKit implements IJweKit {
         ? this.kryptos.encryption
         : this.encryption;
 
-    const aes = new AesKit({
-      encryption,
-      format: "base64url",
-      kryptos: this.kryptos,
-    });
-
-    const {
-      authTag,
-      content,
-      hkdfSalt,
-      initialisationVector,
-      pbkdfIterations,
-      pbkdfSalt,
-      publicEncryptionJwk,
-      publicEncryptionKey,
-    } = aes.encrypt(data, "object");
-
     const jwksUri = this.kryptos.jwksUri;
     const keyId = this.kryptos.id;
     const objectId = options.objectId ?? randomUUID();
@@ -67,7 +51,24 @@ export class JweKit implements IJweKit {
       "encryption",
     ];
 
+    const aes = new AesKit({ encryption, kryptos: this.kryptos });
+
+    const {
+      authTag,
+      content,
+      hkdfSalt,
+      initialisationVector,
+      pbkdfIterations,
+      pbkdfSalt,
+      publicEncryptionIv,
+      publicEncryptionJwk,
+      publicEncryptionKey,
+      publicEncryptionTag,
+    } = aes.encrypt(data, "object");
+
     if (publicEncryptionJwk) critical.push("publicEncryptionJwk");
+    if (publicEncryptionIv) critical.push("publicEncryptionIv");
+    if (publicEncryptionTag) critical.push("publicEncryptionTag");
     if (hkdfSalt) critical.push("hkdfSalt");
     if (pbkdfIterations) critical.push("pbkdfIterations");
     if (pbkdfSalt) critical.push("pbkdfSalt");
@@ -78,13 +79,15 @@ export class JweKit implements IJweKit {
       critical,
       encryption,
       headerType: "JWE",
-      hkdfSalt: hkdfSalt ? B64.encode(hkdfSalt, "base64url") : undefined,
+      hkdfSalt,
       jwksUri,
       keyId,
       objectId,
       pbkdfIterations,
-      pbkdfSalt: pbkdfSalt ? B64.encode(pbkdfSalt, "base64url") : undefined,
+      pbkdfSalt,
+      publicEncryptionIv,
       publicEncryptionJwk,
+      publicEncryptionTag,
     };
 
     const header = _encodeTokenHeader(headerOptions);
@@ -93,10 +96,10 @@ export class JweKit implements IJweKit {
 
     const token = removeUndefined([
       header,
-      publicEncryptionKey ? B64.encode(publicEncryptionKey, "base64url") : "",
-      B64.encode(initialisationVector, "base64url"),
-      B64.encode(content, "base64url"),
-      authTag ? B64.encode(authTag, "base64url") : undefined,
+      publicEncryptionKey ? B64.encode(publicEncryptionKey, _B64U) : "",
+      B64.encode(initialisationVector, _B64U),
+      B64.encode(content, _B64U),
+      authTag ? B64.encode(authTag, _B64U) : undefined,
     ]).join(".");
 
     this.logger.silly("Token created", { keyId, token });
@@ -127,29 +130,33 @@ export class JweKit implements IJweKit {
 
     const header = _parseTokenHeader<DecryptedJweHeader>(decoded.header);
 
-    const aes = new AesKit({
-      encryption,
-      format: "base64url",
-      kryptos: this.kryptos,
-    });
-
     const authTag = decoded.authTag ? B64.toBuffer(decoded.authTag) : undefined;
     const content = B64.toBuffer(decoded.content);
-    const hkdfSalt = header.hkdfSalt
-      ? B64.toBuffer(header.hkdfSalt, "base64url")
-      : undefined;
+    const hkdfSalt = header.hkdfSalt ? B64.toBuffer(header.hkdfSalt, _B64U) : undefined;
     const initialisationVector = B64.toBuffer(decoded.initialisationVector);
     const pbkdfIterations = header.pbkdfIterations;
     const pbkdfSalt = header.pbkdfSalt
-      ? B64.toBuffer(header.pbkdfSalt, "base64url")
+      ? B64.toBuffer(header.pbkdfSalt, _B64U)
+      : undefined;
+    const publicEncryptionIv = header.publicEncryptionIv
+      ? B64.toBuffer(header.publicEncryptionIv)
       : undefined;
     const publicEncryptionKey = decoded.publicEncryptionKey
       ? B64.toBuffer(decoded.publicEncryptionKey)
       : undefined;
     const publicEncryptionJwk = header.publicEncryptionJwk;
+    const publicEncryptionTag = header.publicEncryptionTag
+      ? B64.toBuffer(header.publicEncryptionTag)
+      : undefined;
 
     if (header.critical.includes("publicEncryptionJwk") && !publicEncryptionJwk) {
       throw new JweError("Missing public encryption JWK");
+    }
+    if (header.critical.includes("publicEncryptionIv") && !publicEncryptionIv) {
+      throw new JweError("Missing public encryption iv");
+    }
+    if (header.critical.includes("publicEncryptionTag") && !publicEncryptionTag) {
+      throw new JweError("Missing public encryption tag");
     }
     if (header.critical.includes("hkdfSalt") && !hkdfSalt) {
       throw new JweError("Missing salt");
@@ -161,6 +168,8 @@ export class JweKit implements IJweKit {
       throw new JweError("Missing salt");
     }
 
+    const aes = new AesKit({ encryption, kryptos: this.kryptos });
+
     const payload = aes.decrypt({
       authTag,
       content,
@@ -169,8 +178,10 @@ export class JweKit implements IJweKit {
       initialisationVector,
       pbkdfIterations,
       pbkdfSalt,
+      publicEncryptionIv,
       publicEncryptionJwk,
       publicEncryptionKey,
+      publicEncryptionTag,
     });
 
     this.logger.silly("Token decrypted", { payload });

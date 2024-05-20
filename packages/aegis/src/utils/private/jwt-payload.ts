@@ -5,6 +5,7 @@ import { KryptosAlgorithm } from "@lindorm/kryptos";
 import { Dict } from "@lindorm/types";
 import { removeUndefined } from "@lindorm/utils";
 import { randomUUID } from "crypto";
+import { _B64U } from "../../constants/private/format";
 import { JwtError } from "../../errors";
 import { JwtClaims, ParsedJwtPayload, SignJwtContent, SignJwtOptions } from "../../types";
 import { _createAccessTokenHash, _createCodeHash, _createStateHash } from "./create-hash";
@@ -105,7 +106,7 @@ export const _encodeJwtPayload = <C extends Dict = Dict>(
       ...claims,
       ...(content.claims ?? {}),
     }),
-    "base64url",
+    _B64U,
   );
 
   return { expiresAt, expiresIn, expiresOn, payload, tokenId };

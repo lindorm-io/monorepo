@@ -1,6 +1,7 @@
 import { B64 } from "@lindorm/b64";
-import { isFinite, isObject, isString, isUrlLike } from "@lindorm/is";
+import { isBuffer, isFinite, isObject, isString, isUrlLike } from "@lindorm/is";
 import { removeUndefined } from "@lindorm/utils";
+import { _B64U } from "../../constants/private/format";
 import {
   DecodedTokenHeader,
   ParsedTokenHeader,
@@ -11,14 +12,20 @@ import {
 } from "../../types";
 
 const ALGS: Array<TokenHeaderAlgorithm> = [
+  "dir",
   "A128KW",
   "A192KW",
   "A256KW",
-  "dir",
+  "A128GCMKW",
+  "A192GCMKW",
+  "A256GCMKW",
   "ECDH-ES",
   "ECDH-ES+A128KW",
   "ECDH-ES+A192KW",
   "ECDH-ES+A256KW",
+  "ECDH-ES+A128GCMKW",
+  "ECDH-ES+A192GCMKW",
+  "ECDH-ES+A256GCMKW",
   "EdDSA",
   "ES256",
   "ES384",
@@ -58,7 +65,7 @@ export const _encodeTokenHeader = (header: TokenHeaderSignOptions): string => {
   }
 
   const crit = header.critical
-    ?.map((key) => {
+    ?.map((key): Exclude<keyof TokenHeaderClaims, "crit"> | undefined => {
       switch (key) {
         case "algorithm":
           return "alg";
@@ -82,8 +89,12 @@ export const _encodeTokenHeader = (header: TokenHeaderSignOptions): string => {
           return "p2c";
         case "pbkdfSalt":
           return "p2s";
+        case "publicEncryptionIv":
+          return "iv";
         case "publicEncryptionJwk":
           return "epk";
+        case "publicEncryptionTag":
+          return "tag";
         case "x5c":
           return "x5c";
         case "x5t":
@@ -104,13 +115,19 @@ export const _encodeTokenHeader = (header: TokenHeaderSignOptions): string => {
     cty: header.contentType,
     enc: isString(header.encryption) ? header.encryption : undefined,
     epk: isObject(header.publicEncryptionJwk) ? header.publicEncryptionJwk : undefined,
-    hkdf_salt: isString(header.hkdfSalt) ? header.hkdfSalt : undefined,
+    hkdf_salt: isBuffer(header.hkdfSalt) ? B64.encode(header.hkdfSalt) : undefined,
+    iv: isBuffer(header.publicEncryptionIv)
+      ? B64.encode(header.publicEncryptionIv)
+      : undefined,
     jku: isUrlLike(header.jwksUri) ? header.jwksUri : undefined,
     jwk: isObject(header.jwk) ? header.jwk : undefined,
     kid: header.keyId,
     oid: isString(header.objectId) ? header.objectId : undefined,
     p2c: isFinite(header.pbkdfIterations) ? header.pbkdfIterations : undefined,
-    p2s: isString(header.pbkdfSalt) ? header.pbkdfSalt : undefined,
+    p2s: isBuffer(header.pbkdfSalt) ? B64.encode(header.pbkdfSalt) : undefined,
+    tag: isBuffer(header.publicEncryptionTag)
+      ? B64.encode(header.publicEncryptionTag)
+      : undefined,
     typ: header.headerType,
     x5c: isString(header.x5c) ? header.x5c : undefined,
     x5t: isString(header.x5t) ? header.x5t : undefined,
@@ -118,7 +135,7 @@ export const _encodeTokenHeader = (header: TokenHeaderSignOptions): string => {
     "x5t#S256": isString(header.x5tS256) ? header.x5tS256 : undefined,
   });
 
-  return B64.encode(JSON.stringify(claims), "base64url");
+  return B64.encode(JSON.stringify(claims), _B64U);
 };
 
 export const _decodeTokenHeader = (header: string): DecodedTokenHeader => {
@@ -146,7 +163,7 @@ export const _parseTokenHeader = <T extends ParsedTokenHeader = ParsedTokenHeade
 ): T => {
   const critical =
     (decoded.crit
-      ?.map((key) => {
+      ?.map((key): Exclude<keyof ParsedTokenHeader, "crit"> | undefined => {
         switch (key) {
           case "alg":
             return "algorithm";
@@ -158,6 +175,8 @@ export const _parseTokenHeader = <T extends ParsedTokenHeader = ParsedTokenHeade
             return "publicEncryptionJwk";
           case "hkdf_salt":
             return "hkdfSalt";
+          case "iv":
+            return "publicEncryptionIv";
           case "jku":
             return "jwksUri";
           case "jwk":
@@ -170,6 +189,8 @@ export const _parseTokenHeader = <T extends ParsedTokenHeader = ParsedTokenHeade
             return "pbkdfIterations";
           case "p2s":
             return "pbkdfSalt";
+          case "tag":
+            return "publicEncryptionTag";
           case "typ":
             return "headerType";
           case "x5c":
@@ -186,7 +207,7 @@ export const _parseTokenHeader = <T extends ParsedTokenHeader = ParsedTokenHeade
       })
       .filter(isString) as ParsedTokenHeader["critical"]) ?? [];
 
-  return removeUndefined({
+  return {
     algorithm: decoded.alg,
     contentType: decoded.cty,
     critical,
@@ -199,10 +220,12 @@ export const _parseTokenHeader = <T extends ParsedTokenHeader = ParsedTokenHeade
     objectId: decoded.oid,
     pbkdfIterations: decoded.p2c,
     pbkdfSalt: decoded.p2s,
+    publicEncryptionIv: decoded.iv,
     publicEncryptionJwk: decoded.epk,
+    publicEncryptionTag: decoded.tag,
     x5c: decoded.x5c,
     x5t: decoded.x5t,
     x5u: decoded.x5u,
     x5tS256: decoded["x5t#S256"],
-  }) as T;
+  } as T;
 };
