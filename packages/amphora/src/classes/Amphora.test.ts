@@ -21,23 +21,28 @@ MockDate.set(MockedDate);
 describe("Amphora", () => {
   const issuer = "https://test.lindorm.io/";
 
-  let vault: Amphora;
+  let amphora: Amphora;
 
   beforeEach(() => {
-    vault = new Amphora({ issuer, logger: createMockLogger() });
+    amphora = new Amphora({ issuer, logger: createMockLogger() });
   });
 
   describe("add", () => {
     test("should add key to vault", () => {
-      vault.add(TEST_EC_KEY_SIG);
+      amphora.add(TEST_EC_KEY_SIG);
 
-      expect(vault.vault).toEqual([TEST_EC_KEY_SIG]);
+      expect(amphora.vault).toEqual([TEST_EC_KEY_SIG]);
     });
 
     test("should add multiple keys to vault", () => {
-      vault.add([TEST_EC_KEY_SIG, TEST_OCT_KEY_SIG, TEST_OKP_KEY_SIG, TEST_RSA_KEY_SIG]);
+      amphora.add([
+        TEST_EC_KEY_SIG,
+        TEST_OCT_KEY_SIG,
+        TEST_OKP_KEY_SIG,
+        TEST_RSA_KEY_SIG,
+      ]);
 
-      expect(vault.vault).toEqual([
+      expect(amphora.vault).toEqual([
         TEST_EC_KEY_SIG,
         TEST_OCT_KEY_SIG,
         TEST_OKP_KEY_SIG,
@@ -46,15 +51,20 @@ describe("Amphora", () => {
     });
 
     test("should only keep one copy of each key id", () => {
-      vault.add([TEST_EC_KEY_SIG, TEST_EC_KEY_SIG, TEST_EC_KEY_SIG, TEST_EC_KEY_SIG]);
+      amphora.add([TEST_EC_KEY_SIG, TEST_EC_KEY_SIG, TEST_EC_KEY_SIG, TEST_EC_KEY_SIG]);
 
-      expect(vault.vault).toEqual([TEST_EC_KEY_SIG]);
+      expect(amphora.vault).toEqual([TEST_EC_KEY_SIG]);
     });
 
     test("should update jwks when adding key", () => {
-      vault.add([TEST_EC_KEY_SIG, TEST_OCT_KEY_SIG, TEST_OKP_KEY_SIG, TEST_RSA_KEY_SIG]);
+      amphora.add([
+        TEST_EC_KEY_SIG,
+        TEST_OCT_KEY_SIG,
+        TEST_OKP_KEY_SIG,
+        TEST_RSA_KEY_SIG,
+      ]);
 
-      expect(vault.jwks).toEqual({
+      expect(amphora.jwks).toEqual({
         keys: [
           {
             alg: "RS512",
@@ -112,9 +122,9 @@ describe("Amphora", () => {
       const key = TEST_EC_KEY_SIG.clone();
       key.notBefore = new Date("2099-01-01T00:00:00.000Z");
 
-      vault.add([key, TEST_OCT_KEY_SIG]);
+      amphora.add([key, TEST_OCT_KEY_SIG]);
 
-      await expect(vault.filter({ issuer })).resolves.toEqual([TEST_OCT_KEY_SIG]);
+      await expect(amphora.filter({ issuer })).resolves.toEqual([TEST_OCT_KEY_SIG]);
     });
 
     test("should filter kryptos by issuer", async () => {
@@ -129,23 +139,28 @@ describe("Amphora", () => {
         },
       );
 
-      vault.add([kryptos, TEST_OCT_KEY_SIG]);
+      amphora.add([kryptos, TEST_OCT_KEY_SIG]);
 
-      await expect(vault.filter({ issuer })).resolves.toEqual([TEST_OCT_KEY_SIG]);
+      await expect(amphora.filter({ issuer })).resolves.toEqual([TEST_OCT_KEY_SIG]);
     });
 
     test("should find kryptos in vault using id", async () => {
-      vault.add(TEST_EC_KEY_SIG);
+      amphora.add(TEST_EC_KEY_SIG);
 
-      await expect(vault.find({ issuer, id: TEST_EC_KEY_SIG.id })).resolves.toEqual(
+      await expect(amphora.find({ issuer, id: TEST_EC_KEY_SIG.id })).resolves.toEqual(
         TEST_EC_KEY_SIG,
       );
     });
 
     test("should filter kryptos and sort them by creation date", async () => {
-      vault.add([TEST_EC_KEY_SIG, TEST_OCT_KEY_SIG, TEST_OKP_KEY_SIG, TEST_RSA_KEY_SIG]);
+      amphora.add([
+        TEST_EC_KEY_SIG,
+        TEST_OCT_KEY_SIG,
+        TEST_OKP_KEY_SIG,
+        TEST_RSA_KEY_SIG,
+      ]);
 
-      await expect(vault.filter({ issuer, private: true })).resolves.toEqual([
+      await expect(amphora.filter({ issuer, private: true })).resolves.toEqual([
         TEST_RSA_KEY_SIG,
         TEST_OKP_KEY_SIG,
         TEST_OCT_KEY_SIG,
@@ -157,41 +172,41 @@ describe("Amphora", () => {
       const { privateKey, ...der } = TEST_OKP_KEY_SIG.export("der");
       const key = Kryptos.from("der", { issuer, ...der });
 
-      vault.add([TEST_EC_KEY_SIG, key]);
+      amphora.add([TEST_EC_KEY_SIG, key]);
 
-      await expect(vault.filter({ issuer, private: true })).resolves.toEqual([
+      await expect(amphora.filter({ issuer, private: true })).resolves.toEqual([
         TEST_EC_KEY_SIG,
       ]);
     });
 
     test("should filter kryptos in vault using the public query", async () => {
-      vault.add([TEST_EC_KEY_SIG, TEST_OCT_KEY_SIG]);
+      amphora.add([TEST_EC_KEY_SIG, TEST_OCT_KEY_SIG]);
 
-      await expect(vault.filter({ issuer, public: true })).resolves.toEqual([
+      await expect(amphora.filter({ issuer, public: true })).resolves.toEqual([
         TEST_EC_KEY_SIG,
       ]);
     });
 
     test("should filter kryptos in vault using the operation query", async () => {
-      vault.add([TEST_EC_KEY_SIG, TEST_OCT_KEY_SIG, TEST_OCT_KEY_ENC]);
+      amphora.add([TEST_EC_KEY_SIG, TEST_OCT_KEY_SIG, TEST_OCT_KEY_ENC]);
 
-      await expect(vault.filter({ issuer, operation: "deriveKey" })).resolves.toEqual([
+      await expect(amphora.filter({ issuer, operation: "deriveKey" })).resolves.toEqual([
         TEST_OCT_KEY_ENC,
       ]);
     });
 
     test("should filter kryptos in vault using the type query", async () => {
-      vault.add([TEST_EC_KEY_SIG, TEST_OCT_KEY_SIG]);
+      amphora.add([TEST_EC_KEY_SIG, TEST_OCT_KEY_SIG]);
 
-      await expect(vault.filter({ issuer, type: "oct" })).resolves.toEqual([
+      await expect(amphora.filter({ issuer, type: "oct" })).resolves.toEqual([
         TEST_OCT_KEY_SIG,
       ]);
     });
 
     test("should filter kryptos in vault using the use query", async () => {
-      vault.add([TEST_EC_KEY_SIG, TEST_OCT_KEY_ENC]);
+      amphora.add([TEST_EC_KEY_SIG, TEST_OCT_KEY_ENC]);
 
-      await expect(vault.filter({ issuer, use: "sig" })).resolves.toEqual([
+      await expect(amphora.filter({ issuer, use: "sig" })).resolves.toEqual([
         TEST_EC_KEY_SIG,
       ]);
     });
@@ -214,7 +229,7 @@ describe("Amphora", () => {
         .times(1)
         .reply(200, { keys: [TEST_EC_KEY_SIG.toJWK("private")] });
 
-      vault = new Amphora({
+      amphora = new Amphora({
         issuer,
         logger: createMockLogger(),
         external: [
@@ -229,11 +244,11 @@ describe("Amphora", () => {
         ],
       });
 
-      expect(vault.config).toEqual([]);
+      expect(amphora.config).toEqual([]);
 
-      await vault.setup();
+      await amphora.setup();
 
-      expect(vault.config).toEqual([
+      expect(amphora.config).toEqual([
         {
           issuer: "https://external.lindorm.io/",
           jwksUri: "https://external.lindorm.io/.well-known/jwks.json",
@@ -244,7 +259,7 @@ describe("Amphora", () => {
         },
       ]);
 
-      expect(vault.vault).toEqual([
+      expect(amphora.vault).toEqual([
         expect.objectContaining({
           id: expect.any(String),
           type: "EC",
@@ -260,7 +275,7 @@ describe("Amphora", () => {
         .times(1)
         .reply(200, { keys: [TEST_EC_KEY_SIG.toJWK("private")] });
 
-      vault = new Amphora({
+      amphora = new Amphora({
         issuer,
         logger: createMockLogger(),
         external: [
@@ -271,7 +286,7 @@ describe("Amphora", () => {
         ],
       });
 
-      await expect(vault.find({ issuer, id: TEST_EC_KEY_SIG.id })).resolves.toEqual(
+      await expect(amphora.find({ issuer, id: TEST_EC_KEY_SIG.id })).resolves.toEqual(
         expect.objectContaining({ id: TEST_EC_KEY_SIG.id }),
       );
     });
