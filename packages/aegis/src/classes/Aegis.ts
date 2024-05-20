@@ -1,3 +1,4 @@
+import { IAmphora } from "@lindorm/amphora";
 import {
   IKryptos,
   KryptosEncAlgorithm,
@@ -15,7 +16,6 @@ import {
   IAegisJwe,
   IAegisJws,
   IAegisJwt,
-  IAegisVault,
   JweEncryptOptions,
   JwsContent,
   SignJwsOptions,
@@ -32,6 +32,7 @@ import { JwsKit } from "./JwsKit";
 import { JwtKit } from "./JwtKit";
 
 export class Aegis implements IAegis {
+  private readonly amphora: IAmphora;
   private readonly clockTolerance: number;
   private readonly encAlgorithm: KryptosEncAlgorithm | undefined;
   private readonly encryption: KryptosEncryption;
@@ -39,11 +40,10 @@ export class Aegis implements IAegis {
   private readonly kryptosMayOverrideEncryption: boolean;
   private readonly logger: ILogger;
   private readonly sigAlgorithm: KryptosSigAlgorithm | undefined;
-  private readonly vault: IAegisVault;
 
   public constructor(options: AegisOptions) {
     this.logger = options.logger.child(["AegisKit"]);
-    this.vault = options.vault;
+    this.amphora = options.amphora;
     this.issuer = options.issuer;
 
     this.clockTolerance = options.clockTolerance ?? 0;
@@ -153,7 +153,7 @@ export class Aegis implements IAegis {
   // private kryptos
 
   private async kryptosEnc(operation: KryptosOperation): Promise<IKryptos> {
-    const kryptos = await this.vault.find({
+    const kryptos = await this.amphora.find({
       algorithm: this.encAlgorithm,
       issuer: this.issuer,
       operation,
@@ -166,7 +166,7 @@ export class Aegis implements IAegis {
   }
 
   private async kryptosSig(operation: KryptosOperation): Promise<IKryptos> {
-    const kryptos = await this.vault.find({
+    const kryptos = await this.amphora.find({
       algorithm: this.sigAlgorithm,
       issuer: this.issuer,
       operation,

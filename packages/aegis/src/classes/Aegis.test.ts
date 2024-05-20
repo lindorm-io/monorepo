@@ -1,30 +1,31 @@
+import { Amphora, IAmphora } from "@lindorm/amphora";
 import { ILogger, createMockLogger } from "@lindorm/logger";
 import MockDate from "mockdate";
 import { TEST_EC_KEY_SIG, TEST_OKP_KEY_ENC } from "../__fixtures__/keys";
 import { Aegis } from "./Aegis";
-import { AegisVault } from "./AegisVault";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate);
 
 describe("Aegis", () => {
   let logger: ILogger;
-  let vault: AegisVault;
-  let kit: Aegis;
+  let amphora: IAmphora;
+  let aegis: Aegis;
 
   beforeEach(async () => {
+    const issuer = "https://test.lindorm.io/";
     logger = createMockLogger();
-    vault = new AegisVault({ logger });
-    kit = new Aegis({ issuer: "https://test.lindorm.io/", logger, vault });
+    amphora = new Amphora({ issuer, logger });
+    aegis = new Aegis({ amphora, issuer, logger });
 
-    await vault.setup();
+    await amphora.setup();
 
-    vault.add(TEST_EC_KEY_SIG);
-    vault.add(TEST_OKP_KEY_ENC);
+    amphora.add(TEST_EC_KEY_SIG);
+    amphora.add(TEST_OKP_KEY_ENC);
   });
 
   test("should sign and verify jwe", async () => {
-    const res = await kit.jwe.encrypt("data", {
+    const res = await aegis.jwe.encrypt("data", {
       objectId: "33100373-9769-4389-94dd-1b1d738f0fc4",
     });
 
@@ -32,7 +33,7 @@ describe("Aegis", () => {
       token: expect.any(String),
     });
 
-    await expect(kit.jwe.decrypt(res.token)).resolves.toEqual({
+    await expect(aegis.jwe.decrypt(res.token)).resolves.toEqual({
       __jwe: {
         authTag: expect.any(String),
         content: expect.any(String),
@@ -76,7 +77,7 @@ describe("Aegis", () => {
   });
 
   test("should sign jws", async () => {
-    const res = await kit.jws.sign("data", {
+    const res = await aegis.jws.sign("data", {
       objectId: "09172fab-dbff-40ef-bb86-94d9d4ed37dc",
     });
 
@@ -85,7 +86,7 @@ describe("Aegis", () => {
       token: expect.any(String),
     });
 
-    await expect(kit.jws.verify(res.token)).resolves.toEqual({
+    await expect(aegis.jws.verify(res.token)).resolves.toEqual({
       __jws: {
         header: {
           alg: "ES512",
@@ -112,7 +113,7 @@ describe("Aegis", () => {
   });
 
   test("should sign jwt", async () => {
-    const res = await kit.jwt.sign({
+    const res = await aegis.jwt.sign({
       expires: "1h",
       subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
       tokenType: "test_token",
@@ -127,7 +128,7 @@ describe("Aegis", () => {
       tokenId: expect.any(String),
     });
 
-    await expect(kit.jwt.verify(res.token)).resolves.toEqual({
+    await expect(aegis.jwt.verify(res.token)).resolves.toEqual({
       __jwt: {
         header: {
           alg: "ES512",

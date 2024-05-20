@@ -1,12 +1,13 @@
+import { IAmphora } from "@lindorm/amphora";
 import {
   KryptosEncAlgorithm,
   KryptosEncryption,
   KryptosSigAlgorithm,
 } from "@lindorm/kryptos";
 import { ILogger } from "@lindorm/logger";
-import { IAegisVault } from "./interfaces";
 
 export type AegisOptions = {
+  amphora: IAmphora;
   clockTolerance?: number;
   encAlgorithm?: KryptosEncAlgorithm;
   encryption?: KryptosEncryption;
@@ -14,5 +15,4 @@ export type AegisOptions = {
   kryptosMayOverrideEncryption?: boolean;
   logger: ILogger;
   sigAlgorithm?: KryptosSigAlgorithm;
-  vault: IAegisVault;
 };
