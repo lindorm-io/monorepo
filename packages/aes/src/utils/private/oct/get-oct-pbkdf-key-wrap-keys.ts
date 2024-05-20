@@ -11,7 +11,7 @@ import { _calculateContentEncryptionKeySize } from "../calculate/calculate-conte
 import { _calculateKeyWrapSize } from "../calculate/calculate-key-wrap-size";
 import { _calculatePbkdfAlgorithm } from "../calculate/calculate-pbkdf-hash";
 import { _pbkdf } from "../key-derivation/pbkdf";
-import { _aesKeyUnwrap, _aesKeyWrap } from "../key-wrap/key-wrap";
+import { _ecbKeyUnwrap, _ecbKeyWrap } from "../key-wrap/ecb-key-wrap";
 
 export const _getOctPbkdfKeyWrapEncryptionKey = ({
   encryption,
@@ -32,7 +32,7 @@ export const _getOctPbkdfKeyWrapEncryptionKey = ({
     algorithm: _calculatePbkdfAlgorithm(kryptos),
   });
 
-  const publicEncryptionKey = _aesKeyWrap({
+  const { publicEncryptionKey } = _ecbKeyWrap({
     contentEncryptionKey,
     kryptos,
     keyEncryptionKey: derivedKey,
@@ -69,11 +69,9 @@ export const _getOctPbkdfKeyWrapDecryptionKey = ({
     pbkdfSalt,
   });
 
-  const unwrappedKey = _aesKeyUnwrap({
+  return _ecbKeyUnwrap({
     keyEncryptionKey: derivedKey,
     kryptos,
-    wrappedKey: publicEncryptionKey,
+    publicEncryptionKey,
   });
-
-  return { contentEncryptionKey: unwrappedKey };
 };

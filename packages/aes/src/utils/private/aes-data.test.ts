@@ -25,12 +25,13 @@ describe("aes-data", () => {
       authTag: expect.any(Buffer),
       content: expect.any(Buffer),
       encryption: "A256GCM",
-      format: "base64url",
       hkdfSalt: undefined,
       initialisationVector: expect.any(Buffer),
       keyId: expect.any(Buffer),
+      publicEncryptionIv: undefined,
       publicEncryptionJwk: undefined,
       publicEncryptionKey: undefined,
+      publicEncryptionTag: undefined,
       version: LATEST_AES_VERSION,
     });
 
@@ -148,100 +149,4 @@ describe("aes-data", () => {
       expect(_decryptAesData({ ...encryption, kryptos })).toBe(data);
     });
   });
-
-  // describe("ec", () => {
-  //   test("should encrypt and decrypt", () => {
-  //     const encryption = _encryptAesData({
-  //       data,
-  //       kryptos: TEST_EC_KEY,
-  //     });
-
-  //     expect(encryption.encryption).toBe("A256GCM");
-  //     expect(encryption.encryptionKeyAlgorithm).toBe("ECDH-ES");
-  //     expect(_decryptAesData({ ...encryption, kryptos: TEST_EC_KEY })).toBe(data);
-  //   });
-  // });
-
-  // describe("oct", () => {
-  //   test("should encrypt and decrypt", () => {
-  //     const encryption = _encryptAesData({
-  //       data,
-  //       kryptos: TEST_OCT_KEY,
-  //     });
-
-  //     expect(encryption.encryption).toBe("A256GCM");
-  //     expect(encryption.encryptionKeyAlgorithm).toBe("dir");
-  //     expect(_decryptAesData({ ...encryption, kryptos: TEST_OCT_KEY })).toBe(data);
-  //   });
-  // });
-
-  // describe("rsa", () => {
-  //   test("should encrypt and decrypt with RSA-OAEP", () => {
-  //     const kryptos = Kryptos.generate({
-  //       algorithm: "RSA-OAEP",
-  //       type: "RSA",
-  //       use: "enc",
-  //     });
-
-  //     const encryption = _encryptAesData({
-  //       data,
-  //       kryptos,
-  //     });
-
-  //     expect(encryption.encryption).toBe("A256GCM");
-  //     expect(encryption.encryptionKeyAlgorithm).toBe("RSA-OAEP");
-  //     expect(_decryptAesData({ ...encryption, kryptos })).toBe(data);
-  //   });
-
-  //   test("should encrypt and decrypt with RSA-OAEP-256", () => {
-  //     const kryptos = Kryptos.generate({
-  //       algorithm: "RSA-OAEP-256",
-  //       type: "RSA",
-  //       use: "enc",
-  //     });
-
-  //     const encryption = _encryptAesData({
-  //       data,
-  //       kryptos,
-  //     });
-
-  //     expect(encryption.encryption).toBe("A256GCM");
-  //     expect(encryption.encryptionKeyAlgorithm).toBe("RSA-OAEP-256");
-  //     expect(_decryptAesData({ ...encryption, kryptos })).toBe(data);
-  //   });
-
-  //   test("should encrypt and decrypt with RSA-OAEP-384", () => {
-  //     const kryptos = Kryptos.generate({
-  //       algorithm: "RSA-OAEP-384",
-  //       type: "RSA",
-  //       use: "enc",
-  //     });
-
-  //     const encryption = _encryptAesData({
-  //       data,
-  //       kryptos,
-  //     });
-
-  //     expect(encryption.encryption).toBe("A256GCM");
-  //     expect(encryption.encryptionKeyAlgorithm).toBe("RSA-OAEP-384");
-  //     expect(_decryptAesData({ ...encryption, kryptos })).toBe(data);
-  //   });
-
-  //   test("should encrypt and decrypt with RSA-OAEP-512", () => {
-  //     const kryptos = Kryptos.generate({
-  //       algorithm: "RSA-OAEP-512",
-  //       type: "RSA",
-  //       use: "enc",
-  //     });
-
-  //     const encryption = _encryptAesData({
-  //       data,
-  //       kryptos,
-  //     });
-
-  //     expect(encryption.encryption).toBe("A256GCM");
-  //     expect(encryption.encryptionKeyAlgorithm).toBe("RSA-OAEP-512");
-  //     expect(_decryptAesData({ ...encryption, kryptos })).toBe(data);
-  //   });
-  // });
 });

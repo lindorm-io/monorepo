@@ -1,95 +1,55 @@
-import { IKryptos } from "@lindorm/kryptos";
-import { createCipheriv, createDecipheriv } from "crypto";
-import { _calculateKeyWrapEncryption } from "../calculate/calculate-key-wrap-encryption";
+import { AesError } from "../../../errors";
+import {
+  KeyUnwrapOptions,
+  KeyUnwrapResult,
+  KeyWrapOptions,
+  KeyWrapResult,
+} from "../../../types/private";
+import { _ecbKeyUnwrap, _ecbKeyWrap } from "./ecb-key-wrap";
+import { _gcmKeyUnwrap, _gcmKeyWrap } from "./gcm-key-wrap";
 
-const AIV = "A6A6A6A6A6A6A6A6" as const;
-const BLOCK_SIZE = 8 as const;
+export const _keyWrap = (options: KeyWrapOptions): KeyWrapResult => {
+  switch (options.kryptos.algorithm) {
+    case "A128KW":
+    case "A192KW":
+    case "A256KW":
+    case "ECDH-ES+A128KW":
+    case "ECDH-ES+A192KW":
+    case "ECDH-ES+A256KW":
+      return _ecbKeyWrap(options);
 
-type KeyWrapOptions = {
-  contentEncryptionKey: Buffer;
-  keyEncryptionKey: Buffer;
-  kryptos: IKryptos;
+    case "A128GCMKW":
+    case "A192GCMKW":
+    case "A256GCMKW":
+    case "ECDH-ES+A128GCMKW":
+    case "ECDH-ES+A192GCMKW":
+    case "ECDH-ES+A256GCMKW":
+      return _gcmKeyWrap(options);
+
+    default:
+      throw new AesError("Unsupported key wrap algorithm");
+  }
 };
 
-type KeyUnwrapOptions = {
-  keyEncryptionKey: Buffer;
-  kryptos: IKryptos;
-  wrappedKey: Buffer;
-};
+export const _keyUnwrap = (options: KeyUnwrapOptions): KeyUnwrapResult => {
+  switch (options.kryptos.algorithm) {
+    case "A128KW":
+    case "A192KW":
+    case "A256KW":
+    case "ECDH-ES+A128KW":
+    case "ECDH-ES+A192KW":
+    case "ECDH-ES+A256KW":
+      return _ecbKeyUnwrap(options);
 
-export const _aesKeyWrap = ({
-  contentEncryptionKey,
-  keyEncryptionKey,
-  kryptos,
-}: KeyWrapOptions): Buffer => {
-  const algorithm = _calculateKeyWrapEncryption(kryptos);
+    case "A128GCMKW":
+    case "A192GCMKW":
+    case "A256GCMKW":
+    case "ECDH-ES+A128GCMKW":
+    case "ECDH-ES+A192GCMKW":
+    case "ECDH-ES+A256GCMKW":
+      return _gcmKeyUnwrap(options);
 
-  const n = contentEncryptionKey.length / BLOCK_SIZE;
-  let a = Buffer.from(AIV, "hex");
-  const r = [];
-
-  for (let i = 0; i < n; i++) {
-    r[i] = contentEncryptionKey.subarray(i * BLOCK_SIZE, (i + 1) * BLOCK_SIZE);
+    default:
+      throw new AesError("Unsupported key wrap algorithm");
   }
-
-  const cipher = createCipheriv(algorithm, keyEncryptionKey, null);
-  cipher.setAutoPadding(false);
-
-  for (let j = 0; j < 6; j++) {
-    for (let i = 0; i < n; i++) {
-      const b = Buffer.concat([a, r[i]]);
-      const encrypted = cipher.update(b);
-      a = encrypted.subarray(0, BLOCK_SIZE);
-      const t = n * j + i + 1;
-      const tBuffer = Buffer.alloc(BLOCK_SIZE);
-      tBuffer.writeUIntBE(t, 4, 4);
-      for (let k = 0; k < BLOCK_SIZE; k++) {
-        a[k] ^= tBuffer[k];
-      }
-      r[i] = encrypted.subarray(BLOCK_SIZE);
-    }
-  }
-
-  return Buffer.concat([a, ...r]);
-};
-
-export const _aesKeyUnwrap = ({
-  keyEncryptionKey,
-  kryptos,
-  wrappedKey,
-}: KeyUnwrapOptions): Buffer => {
-  const encryption = _calculateKeyWrapEncryption(kryptos);
-
-  const n = wrappedKey.length / BLOCK_SIZE - 1;
-  let a = wrappedKey.subarray(0, BLOCK_SIZE);
-  const r = [];
-
-  for (let i = 0; i < n; i++) {
-    r[i] = wrappedKey.subarray((i + 1) * BLOCK_SIZE, (i + 2) * BLOCK_SIZE);
-  }
-
-  const decipher = createDecipheriv(encryption, keyEncryptionKey, null);
-  decipher.setAutoPadding(false);
-
-  for (let j = 5; j >= 0; j--) {
-    for (let i = n - 1; i >= 0; i--) {
-      const t = n * j + i + 1;
-      const tBuffer = Buffer.alloc(BLOCK_SIZE);
-      tBuffer.writeUIntBE(t, 4, 4);
-      const aXorT = Buffer.alloc(BLOCK_SIZE);
-      for (let k = 0; k < BLOCK_SIZE; k++) {
-        aXorT[k] = a[k] ^ tBuffer[k];
-      }
-      const b = Buffer.concat([aXorT, r[i]]);
-      const decrypted = decipher.update(b);
-      a = decrypted.subarray(0, BLOCK_SIZE);
-      r[i] = decrypted.subarray(BLOCK_SIZE);
-    }
-  }
-
-  if (!a.equals(Buffer.from(AIV, "hex"))) {
-    throw new Error("Integrity check failed");
-  }
-
-  return Buffer.concat(r);
 };

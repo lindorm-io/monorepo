@@ -1,5 +1,6 @@
 import { createCipheriv, createDecipheriv } from "crypto";
 import { LATEST_AES_VERSION } from "../../constants";
+import { _B64U } from "../../constants/private/format";
 import {
   AesEncryptionData,
   DecryptAesDataOptions,
@@ -13,15 +14,17 @@ import { _getDecryptionKey } from "./get-key/get-decryption-key";
 import { _getEncryptionKey } from "./get-key/get-encryption-key";
 
 export const _encryptAesData = (options: EncryptAesDataOptions): AesEncryptionData => {
-  const { data, encryption = "A256GCM", format = "base64url", kryptos } = options;
+  const { data, encryption = "A256GCM", kryptos } = options;
 
   const {
     contentEncryptionKey,
     hkdfSalt,
     pbkdfIterations,
     pbkdfSalt,
+    publicEncryptionIv,
     publicEncryptionJwk,
     publicEncryptionKey,
+    publicEncryptionTag,
   } = _getEncryptionKey({
     encryption,
     kryptos,
@@ -52,14 +55,15 @@ export const _encryptAesData = (options: EncryptAesDataOptions): AesEncryptionDa
     authTag,
     content,
     encryption,
-    format,
     hkdfSalt,
     initialisationVector,
-    keyId: Buffer.from(kryptos.id, format),
+    keyId: Buffer.from(kryptos.id, _B64U),
     pbkdfIterations,
     pbkdfSalt,
+    publicEncryptionIv,
     publicEncryptionJwk,
     publicEncryptionKey,
+    publicEncryptionTag,
     version: LATEST_AES_VERSION,
   };
 };
@@ -74,8 +78,10 @@ export const _decryptAesData = (options: DecryptAesDataOptions): string => {
     kryptos,
     pbkdfIterations,
     pbkdfSalt,
+    publicEncryptionIv,
     publicEncryptionJwk,
     publicEncryptionKey,
+    publicEncryptionTag,
   } = options;
 
   const { contentEncryptionKey } = _getDecryptionKey({
@@ -84,8 +90,10 @@ export const _decryptAesData = (options: DecryptAesDataOptions): string => {
     kryptos,
     pbkdfIterations,
     pbkdfSalt,
+    publicEncryptionIv,
     publicEncryptionJwk,
     publicEncryptionKey,
+    publicEncryptionTag,
   });
 
   const { encryptionKey, hashKey } = _splitContentEncryptionKey(

@@ -10,7 +10,7 @@ import {
 import { _calculateContentEncryptionKeySize } from "../calculate/calculate-content-encryption-key-size";
 import { _calculateKeyWrapSize } from "../calculate/calculate-key-wrap-size";
 import { _hkdf } from "../key-derivation/hkdf";
-import { _aesKeyUnwrap, _aesKeyWrap } from "../key-wrap/key-wrap";
+import { _keyUnwrap, _keyWrap } from "../key-wrap/key-wrap";
 
 export const _getOctKeyWrapEncryptionKey = ({
   encryption,
@@ -30,7 +30,7 @@ export const _getOctKeyWrapEncryptionKey = ({
     keyLength: _calculateKeyWrapSize(kryptos.algorithm),
   });
 
-  const publicEncryptionKey = _aesKeyWrap({
+  const { publicEncryptionKey, publicEncryptionIv, publicEncryptionTag } = _keyWrap({
     contentEncryptionKey,
     kryptos,
     keyEncryptionKey: derivedKey,
@@ -40,13 +40,17 @@ export const _getOctKeyWrapEncryptionKey = ({
     contentEncryptionKey,
     hkdfSalt,
     publicEncryptionKey,
+    publicEncryptionIv,
+    publicEncryptionTag,
   };
 };
 
 export const _getOctKeyWrapDecryptionKey = ({
   hkdfSalt,
   kryptos,
+  publicEncryptionIv,
   publicEncryptionKey,
+  publicEncryptionTag,
 }: DecryptCekOptions): DecryptCekResult => {
   if (!Kryptos.isOct(kryptos)) {
     throw new AesError("Invalid Kryptos", { debug: { kryptos: kryptos.toJSON() } });
@@ -63,11 +67,11 @@ export const _getOctKeyWrapDecryptionKey = ({
     keyLength: _calculateKeyWrapSize(kryptos.algorithm),
   });
 
-  const unwrappedKey = _aesKeyUnwrap({
+  return _keyUnwrap({
     keyEncryptionKey: derivedKey,
     kryptos,
-    wrappedKey: publicEncryptionKey,
+    publicEncryptionIv,
+    publicEncryptionKey,
+    publicEncryptionTag,
   });
-
-  return { contentEncryptionKey: unwrappedKey };
 };

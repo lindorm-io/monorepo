@@ -1,11 +1,9 @@
 import { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
-import { BufferFormat } from "@lindorm/types";
 import { PublicEncryptionJwk } from "./types";
 
 export type EncryptAesDataOptions = {
   data: Buffer | string;
   encryption?: KryptosEncryption;
-  format?: BufferFormat;
   kryptos: IKryptos;
 };
 
@@ -18,6 +16,8 @@ export type DecryptAesDataOptions = {
   kryptos: IKryptos;
   pbkdfIterations?: number;
   pbkdfSalt?: Buffer;
+  publicEncryptionIv?: Buffer;
   publicEncryptionJwk?: PublicEncryptionJwk;
   publicEncryptionKey?: Buffer;
+  publicEncryptionTag?: Buffer;
 };

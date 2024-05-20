@@ -33,7 +33,6 @@ describe("AesKit", () => {
       authTag: expect.any(Buffer),
       content: expect.any(Buffer),
       encryption: "A256GCM",
-      format: "base64url",
       hkdfSalt: undefined,
       initialisationVector: expect.any(Buffer),
       keyId: expect.any(Buffer),

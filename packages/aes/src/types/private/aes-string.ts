@@ -2,7 +2,6 @@ import { KryptosAlgorithm, KryptosCurve, KryptosType } from "@lindorm/kryptos";
 
 export type AesStringValues = {
   v: string; // version
-  f: string; // format
   alg: KryptosAlgorithm; // encryption key algorithm
   crv: KryptosCurve | undefined; // epk curve
   hks: string | undefined; // hkdf salt
@@ -11,7 +10,9 @@ export type AesStringValues = {
   kty: KryptosType | undefined; // epk key type
   p2c: string | undefined; // pbkdf iterations
   p2s: string | undefined; // pbkdf salt
+  pei: string | undefined; // public encryption iv
   pek: string | undefined; // public encryption key
+  pet: string | undefined; // public encryption tag
   tag: string; // auth tag
   x: string | undefined; // epk x
   y: string | undefined; // epk y

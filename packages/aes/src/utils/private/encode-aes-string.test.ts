@@ -7,13 +7,14 @@ describe("encodeAesString", () => {
       authTag: Buffer.from("authTag"),
       content: Buffer.from("encryption"),
       encryption: "A256GCM",
-      format: "base64url",
       hkdfSalt: Buffer.from("hkdfSalt"),
       initialisationVector: Buffer.from("initialisationVector"),
       keyId: Buffer.from("keyId"),
       pbkdfIterations: 1000,
       pbkdfSalt: Buffer.from("pbkdfSalt"),
+      publicEncryptionIv: Buffer.from("publicEncryptionIv"),
       publicEncryptionKey: Buffer.from("publicEncryptionKey"),
+      publicEncryptionTag: Buffer.from("publicEncryptionTag"),
       version: 1,
       publicEncryptionJwk: {
         crv: "P-521",
@@ -26,8 +27,6 @@ describe("encodeAesString", () => {
     expect(string).toContain("$A256GCM$");
 
     expect(string).toContain("v=1");
-    expect(string).toContain("f=base64");
-
     expect(string).toContain("alg=RSA-OAEP-256");
     expect(string).toContain("crv=P-521");
     expect(string).toContain("hks=aGtkZlNhbHQ");
@@ -35,7 +34,9 @@ describe("encodeAesString", () => {
     expect(string).toContain("kid=a2V5SWQ");
     expect(string).toContain("p2c=1000");
     expect(string).toContain("p2s=cGJrZGZTYWx0");
+    expect(string).toContain("pei=cHVibGljRW5jcnlwdGlvbkl2");
     expect(string).toContain("pek=cHVibGljRW5jcnlwdGlvbktleQ");
+    expect(string).toContain("pet=cHVibGljRW5jcnlwdGlvblRhZw");
     expect(string).toContain("tag=YXV0aFRhZw");
     expect(string).toContain(
       "x=Af3ZdH3XBQFqC4qISUyAPW9WrCDe36KuTFcLz0dIhoh8LeCk4PGt2HEs9pQyxlEVS9fm1tecb9Wk+83nUNBLDet7",

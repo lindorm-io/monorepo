@@ -9,7 +9,7 @@ import {
 import { _calculateContentEncryptionKeySize } from "../calculate/calculate-content-encryption-key-size";
 import { _calculateKeyWrapSize } from "../calculate/calculate-key-wrap-size";
 import { _hkdf } from "../key-derivation/hkdf";
-import { _aesKeyUnwrap, _aesKeyWrap } from "../key-wrap/key-wrap";
+import { _keyUnwrap, _keyWrap } from "../key-wrap/key-wrap";
 import { _calculateSharedSecret, _generateSharedSecret } from "./shared-secret";
 
 export const _getDiffieHellmanKeyWrapEncryptionKey = ({
@@ -26,7 +26,7 @@ export const _getDiffieHellmanKeyWrapEncryptionKey = ({
     keyLength: _calculateKeyWrapSize(kryptos.algorithm),
   });
 
-  const publicEncryptionKey = _aesKeyWrap({
+  const { publicEncryptionKey, publicEncryptionIv, publicEncryptionTag } = _keyWrap({
     contentEncryptionKey,
     kryptos,
     keyEncryptionKey: derivedKey,
@@ -37,6 +37,8 @@ export const _getDiffieHellmanKeyWrapEncryptionKey = ({
     hkdfSalt,
     publicEncryptionJwk,
     publicEncryptionKey,
+    publicEncryptionIv,
+    publicEncryptionTag,
   };
 };
 
@@ -44,7 +46,9 @@ export const _getDiffieHellmanKeyWrapDecryptionKey = ({
   hkdfSalt,
   kryptos,
   publicEncryptionJwk,
+  publicEncryptionIv,
   publicEncryptionKey,
+  publicEncryptionTag,
 }: DecryptCekOptions): DecryptCekResult => {
   if (!publicEncryptionKey) {
     throw new AesError("Missing publicEncryptionKey");
@@ -58,11 +62,11 @@ export const _getDiffieHellmanKeyWrapDecryptionKey = ({
     keyLength: _calculateKeyWrapSize(kryptos.algorithm),
   });
 
-  const unwrappedKey = _aesKeyUnwrap({
+  return _keyUnwrap({
     keyEncryptionKey: derivedKey,
     kryptos,
-    wrappedKey: publicEncryptionKey,
+    publicEncryptionIv,
+    publicEncryptionKey,
+    publicEncryptionTag,
   });
-
-  return { contentEncryptionKey: unwrappedKey };
 };

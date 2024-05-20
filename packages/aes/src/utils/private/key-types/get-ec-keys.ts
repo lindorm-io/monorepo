@@ -22,6 +22,9 @@ export const _getEcEncryptionKey = (options: CreateCekOptions): CreateCekResult 
     case "ECDH-ES+A128KW":
     case "ECDH-ES+A192KW":
     case "ECDH-ES+A256KW":
+    case "ECDH-ES+A128GCMKW":
+    case "ECDH-ES+A192GCMKW":
+    case "ECDH-ES+A256GCMKW":
       return _getDiffieHellmanKeyWrapEncryptionKey(options);
 
     default:
@@ -39,6 +42,9 @@ export const _getEcDecryptionKey = (options: DecryptCekOptions): DecryptCekResul
     case "ECDH-ES+A128KW":
     case "ECDH-ES+A192KW":
     case "ECDH-ES+A256KW":
+    case "ECDH-ES+A128GCMKW":
+    case "ECDH-ES+A192GCMKW":
+    case "ECDH-ES+A256GCMKW":
       return _getDiffieHellmanKeyWrapDecryptionKey(options);
 
     default:

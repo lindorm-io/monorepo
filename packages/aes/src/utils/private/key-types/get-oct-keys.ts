@@ -12,7 +12,7 @@ import {
 import {
   _getOctKeyWrapDecryptionKey,
   _getOctKeyWrapEncryptionKey,
-} from "../oct/get-oct-key-wrap-keys";
+} from "../oct/get-oct-key-key-wrap";
 import {
   _getOctPbkdfKeyWrapDecryptionKey,
   _getOctPbkdfKeyWrapEncryptionKey,
@@ -26,6 +26,9 @@ export const _getOctEncryptionKey = (options: CreateCekOptions): CreateCekResult
     case "A128KW":
     case "A192KW":
     case "A256KW":
+    case "A128GCMKW":
+    case "A192GCMKW":
+    case "A256GCMKW":
       return _getOctKeyWrapEncryptionKey(options);
 
     case "PBES2-HS256+A128KW":
@@ -48,6 +51,9 @@ export const _getOctDecryptionKey = (options: DecryptCekOptions): DecryptCekResu
     case "A128KW":
     case "A192KW":
     case "A256KW":
+    case "A128GCMKW":
+    case "A192GCMKW":
+    case "A256GCMKW":
       return _getOctKeyWrapDecryptionKey(options);
 
     case "PBES2-HS256+A128KW":
