@@ -1,9 +1,9 @@
 import { LindormError } from "@lindorm/errors";
 import { Dict } from "@lindorm/types";
 import { Operators } from "../../types";
-import { _validateValue } from "./validate-value";
+import { validateValue } from "./validate-value";
 
-export const _validate = <C extends Dict = Dict>(
+export const validate = <C extends Dict = Dict>(
   dict: C,
   operators: Dict<Operators>,
 ): void => {
@@ -12,7 +12,7 @@ export const _validate = <C extends Dict = Dict>(
   for (const [key, ops] of Object.entries(operators)) {
     const value = dict[key];
 
-    if (_validateValue(value, ops)) continue;
+    if (validateValue(value, ops)) continue;
 
     invalid.push({ key, value, ops });
   }

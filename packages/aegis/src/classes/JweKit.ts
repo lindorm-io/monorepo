@@ -4,7 +4,7 @@ import { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
 import { ILogger } from "@lindorm/logger";
 import { removeUndefined } from "@lindorm/utils";
 import { randomUUID } from "crypto";
-import { _B64U } from "../constants/private/format";
+import { B64U } from "../constants/private/format";
 import { JweError } from "../errors";
 import {
   DecodedJwe,
@@ -17,9 +17,9 @@ import {
   TokenHeaderSignOptions,
 } from "../types";
 import {
-  _decodeTokenHeader,
-  _encodeTokenHeader,
-  _parseTokenHeader,
+  decodeTokenHeader,
+  encodeTokenHeader,
+  parseTokenHeader,
 } from "../utils/private/token-header";
 
 export class JweKit implements IJweKit {
@@ -90,16 +90,16 @@ export class JweKit implements IJweKit {
       publicEncryptionTag,
     };
 
-    const header = _encodeTokenHeader(headerOptions);
+    const header = encodeTokenHeader(headerOptions);
 
     this.logger.silly("Token header encoded", { header, options: headerOptions });
 
     const token = removeUndefined([
       header,
-      publicEncryptionKey ? B64.encode(publicEncryptionKey, _B64U) : "",
-      B64.encode(initialisationVector, _B64U),
-      B64.encode(content, _B64U),
-      authTag ? B64.encode(authTag, _B64U) : undefined,
+      publicEncryptionKey ? B64.encode(publicEncryptionKey, B64U) : "",
+      B64.encode(initialisationVector, B64U),
+      B64.encode(content, B64U),
+      authTag ? B64.encode(authTag, B64U) : undefined,
     ]).join(".");
 
     this.logger.silly("Token created", { keyId, token });
@@ -128,16 +128,14 @@ export class JweKit implements IJweKit {
       });
     }
 
-    const header = _parseTokenHeader<DecryptedJweHeader>(decoded.header);
+    const header = parseTokenHeader<DecryptedJweHeader>(decoded.header);
 
     const authTag = decoded.authTag ? B64.toBuffer(decoded.authTag) : undefined;
     const content = B64.toBuffer(decoded.content);
-    const hkdfSalt = header.hkdfSalt ? B64.toBuffer(header.hkdfSalt, _B64U) : undefined;
+    const hkdfSalt = header.hkdfSalt ? B64.toBuffer(header.hkdfSalt, B64U) : undefined;
     const initialisationVector = B64.toBuffer(decoded.initialisationVector);
     const pbkdfIterations = header.pbkdfIterations;
-    const pbkdfSalt = header.pbkdfSalt
-      ? B64.toBuffer(header.pbkdfSalt, _B64U)
-      : undefined;
+    const pbkdfSalt = header.pbkdfSalt ? B64.toBuffer(header.pbkdfSalt, B64U) : undefined;
     const publicEncryptionIv = header.publicEncryptionIv
       ? B64.toBuffer(header.publicEncryptionIv)
       : undefined;
@@ -196,7 +194,7 @@ export class JweKit implements IJweKit {
       jwe.split(".");
 
     const result: DecodedJwe = {
-      header: _decodeTokenHeader(header),
+      header: decodeTokenHeader(header),
       publicEncryptionKey: publicEncryptionKey?.length ? publicEncryptionKey : undefined,
       initialisationVector,
       content,
@@ -215,6 +213,6 @@ export class JweKit implements IJweKit {
 
     const [header] = input.split(".");
 
-    return _decodeTokenHeader(header).typ;
+    return decodeTokenHeader(header).typ;
   }
 }

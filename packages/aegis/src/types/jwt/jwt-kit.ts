@@ -3,7 +3,7 @@ import { ILogger } from "@lindorm/logger";
 
 export type JwtKitOptions = {
   clockTolerance?: number;
-  issuer: string;
+  issuer?: string;
   logger: ILogger;
   kryptos: IKryptos;
 };

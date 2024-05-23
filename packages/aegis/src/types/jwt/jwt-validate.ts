@@ -1,8 +1,7 @@
 import { KryptosAlgorithm } from "@lindorm/kryptos";
-import { Dict } from "@lindorm/types";
 import { Operators } from "../operators";
 
-export type ValidateJwtOptions<C extends Dict = Dict> = {
+export type ValidateJwtOptions = {
   algorithm?: KryptosAlgorithm;
   accessToken?: string;
   adjustedAccessLevel?: Operators;
@@ -27,6 +26,4 @@ export type ValidateJwtOptions<C extends Dict = Dict> = {
   subjectHint?: string | Operators;
   tenantId?: Array<string> | string | Operators;
   tokenType?: string | Operators;
-} & {
-  [key in keyof C]?: Operators;
 };

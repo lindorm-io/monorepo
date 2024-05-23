@@ -15,21 +15,21 @@ import {
 } from "../types";
 
 export class Amphora implements IAmphora {
-  private readonly _conduit: Conduit;
-  private readonly _config: Array<AmphoraConfig>;
-  private readonly _external: Array<AmphoraExternalOption>;
-  private readonly _issuer: string;
-  private readonly _logger: ILogger;
+  private readonly conduit: Conduit;
+  private readonly external: Array<AmphoraExternalOption>;
+  private readonly issuer: string | null;
+  private readonly logger: ILogger;
 
+  private readonly _config: Array<AmphoraConfig>;
   private _jwks: Array<LindormJwk>;
   private _vault: Array<IKryptos>;
 
   public constructor(options: AmphoraOptions) {
-    this._logger = options.logger.child(["Amphora"]);
+    this.logger = options.logger.child(["Amphora"]);
 
-    this._conduit = new Conduit({
+    this.conduit = new Conduit({
       alias: "Amphora",
-      logger: this._logger,
+      logger: this.logger,
       middleware: [conduitChangeResponseDataMiddleware()],
       retryOptions: {
         maxAttempts: 10,
@@ -37,8 +37,8 @@ export class Amphora implements IAmphora {
     });
 
     this._config = [];
-    this._external = options.external ?? [];
-    this._issuer = options.issuer;
+    this.external = options.external ?? [];
+    this.issuer = options.issuer ?? null;
     this._jwks = [];
     this._vault = [];
   }
@@ -50,6 +50,10 @@ export class Amphora implements IAmphora {
   }
 
   public get jwks(): AmphoraJwks {
+    if (!this.issuer) {
+      throw new AmphoraError("Issuer is required to get JWKS");
+    }
+
     return { keys: this._jwks };
   }
 
@@ -58,19 +62,6 @@ export class Amphora implements IAmphora {
   }
 
   // public methods
-
-  public async setup(): Promise<void> {
-    await this.loadExternalConfig();
-    await this.refresh();
-  }
-
-  public async refresh(): Promise<void> {
-    this._logger.debug("Refreshing vault");
-
-    for (const config of this._config) {
-      await this.refreshExternal(config);
-    }
-  }
 
   public add(kryptos: Array<IKryptos> | IKryptos): void {
     const array = isArray(kryptos) ? kryptos : [kryptos];
@@ -94,13 +85,6 @@ export class Amphora implements IAmphora {
     this.refreshJwks();
   }
 
-  public async find(query: AmphoraQuery): Promise<IKryptos> {
-    const [key] = await this.filter(query);
-    if (key) return key;
-
-    throw new AmphoraError("Kryptos not found using query");
-  }
-
   public async filter(query: AmphoraQuery): Promise<Array<IKryptos>> {
     const filtered = this.filteredKeys(query);
     if (filtered.length) return filtered;
@@ -115,6 +99,26 @@ export class Amphora implements IAmphora {
     return this.filteredKeys(query);
   }
 
+  public async find(query: AmphoraQuery): Promise<IKryptos> {
+    const [key] = await this.filter(query);
+    if (key) return key;
+
+    throw new AmphoraError("Kryptos not found using query");
+  }
+
+  public async refresh(): Promise<void> {
+    this.logger.debug("Refreshing vault");
+
+    for (const config of this._config) {
+      await this.refreshExternal(config);
+    }
+  }
+
+  public async setup(): Promise<void> {
+    await this.loadExternalConfig();
+    await this.refresh();
+  }
+
   // private methods
 
   private async addExternalConfig(options: AmphoraExternalOption): Promise<void> {
@@ -127,7 +131,7 @@ export class Amphora implements IAmphora {
       throw new AmphoraError("Invalid issuer options");
     }
 
-    const { data } = await this._conduit.get<OpenIdConfigurationResponse>(
+    const { data } = await this.conduit.get<OpenIdConfigurationResponse>(
       options.openIdConfigurationUri,
     );
 
@@ -154,14 +158,14 @@ export class Amphora implements IAmphora {
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
 
-  private async getJwks(issuer: string): Promise<Array<IKryptos>> {
-    this._logger.debug("Finding JWKS", { issuer });
+  private async getExternalJwks(issuer: string): Promise<Array<IKryptos>> {
+    this.logger.debug("Finding JWKS", { issuer });
 
     const config = await this.issuerConfig(issuer);
 
     const {
       data: { keys },
-    } = await this._conduit.get<OpenIdJwksResponse>(config.jwksUri);
+    } = await this.conduit.get<OpenIdJwksResponse>(config.jwksUri);
 
     const result: Array<IKryptos> = [];
 
@@ -180,7 +184,7 @@ export class Amphora implements IAmphora {
   }
 
   private async issuerConfig(issuer: string): Promise<AmphoraConfig> {
-    if (this._external.length && !this._config.length) {
+    if (this.external.length && !this._config.length) {
       await this.loadExternalConfig();
     }
 
@@ -194,28 +198,30 @@ export class Amphora implements IAmphora {
   }
 
   private async loadExternalConfig(): Promise<void> {
-    this._logger.debug("Loading external config");
+    this.logger.debug("Loading external config");
 
-    for (const options of this._external) {
+    for (const options of this.external) {
       await this.addExternalConfig(options);
     }
   }
 
   private async refreshExternal(config: AmphoraConfig): Promise<void> {
-    const keys = await this.getJwks(config.issuer);
+    const keys = await this.getExternalJwks(config.issuer);
 
     this._vault = this._vault.filter((i) => i.issuer !== config.issuer).concat(keys);
   }
 
   private refreshJwks(): void {
-    this._logger.debug("Refreshing JWKS");
+    if (this.issuer === null) return;
+
+    this.logger.debug("Refreshing JWKS");
 
     this._jwks = this._vault
       .filter((i) => i.isActive)
       .filter((i) => !i.isExternal)
       .filter((i) => !i.ownerId)
       .filter((i) => i.hasPublicKey)
-      .filter((i) => i.issuer === this._issuer)
+      .filter((i) => i.issuer === this.issuer)
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
       .map((i) => i.toJWK("public"));
   }

@@ -3,9 +3,9 @@ import { isArray, isNumber, isObject, isString } from "@lindorm/is";
 import { KryptosAlgorithm } from "@lindorm/kryptos";
 import { Dict } from "@lindorm/types";
 import { JwtClaims, Operators, VerifyJwtOptions } from "../../types";
-import { _createAccessTokenHash, _createCodeHash, _createStateHash } from "./create-hash";
+import { createAccessTokenHash, createCodeHash, createStateHash } from "./create-hash";
 
-const _mapVerify = (key: keyof VerifyJwtOptions): keyof JwtClaims => {
+const mapVerify = (key: keyof VerifyJwtOptions): keyof JwtClaims => {
   switch (key) {
     case "accessToken":
       return "at_hash";
@@ -58,7 +58,7 @@ const _mapVerify = (key: keyof VerifyJwtOptions): keyof JwtClaims => {
   }
 };
 
-export const _createJwtVerify = (
+export const createJwtVerify = (
   algorithm: KryptosAlgorithm,
   verify: VerifyJwtOptions,
   clockTolerance: number,
@@ -79,18 +79,18 @@ export const _createJwtVerify = (
   };
 
   for (const [key, value] of Object.entries(verify)) {
-    const mapped = _mapVerify(key as keyof VerifyJwtOptions);
+    const mapped = mapVerify(key as keyof VerifyJwtOptions);
 
     if (mapped === "at_hash" && isString(value)) {
-      ops[mapped] = { $eq: _createAccessTokenHash(algorithm, value) };
+      ops[mapped] = { $eq: createAccessTokenHash(algorithm, value) };
       continue;
     }
     if (mapped === "c_hash" && isString(value)) {
-      ops[mapped] = { $eq: _createCodeHash(algorithm, value) };
+      ops[mapped] = { $eq: createCodeHash(algorithm, value) };
       continue;
     }
     if (mapped === "s_hash" && isString(value)) {
-      ops[mapped] = { $eq: _createStateHash(algorithm, value) };
+      ops[mapped] = { $eq: createStateHash(algorithm, value) };
       continue;
     }
     if (isArray<string>(value)) {

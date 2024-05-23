@@ -1,7 +1,7 @@
 import { B64 } from "@lindorm/b64";
 import { isBuffer, isFinite, isObject, isString, isUrlLike } from "@lindorm/is";
 import { removeUndefined } from "@lindorm/utils";
-import { _B64U } from "../../constants/private/format";
+import { B64U } from "../../constants/private/format";
 import {
   DecodedTokenHeader,
   ParsedTokenHeader,
@@ -47,7 +47,7 @@ const ALGS: Array<TokenHeaderAlgorithm> = [
 
 const TYPES: Array<TokenHeaderType> = ["JWE", "JWS", "JWT"] as const;
 
-export const _encodeTokenHeader = (header: TokenHeaderSignOptions): string => {
+export const encodeTokenHeader = (header: TokenHeaderSignOptions): string => {
   if (!header.algorithm) {
     throw new Error("Algorithm is required");
   }
@@ -135,10 +135,10 @@ export const _encodeTokenHeader = (header: TokenHeaderSignOptions): string => {
     "x5t#S256": isString(header.x5tS256) ? header.x5tS256 : undefined,
   });
 
-  return B64.encode(JSON.stringify(claims), _B64U);
+  return B64.encode(JSON.stringify(claims), B64U);
 };
 
-export const _decodeTokenHeader = (header: string): DecodedTokenHeader => {
+export const decodeTokenHeader = (header: string): DecodedTokenHeader => {
   const string = B64.toString(header);
   const json = JSON.parse(string) as Partial<TokenHeaderClaims>;
 
@@ -158,7 +158,7 @@ export const _decodeTokenHeader = (header: string): DecodedTokenHeader => {
   return json as DecodedTokenHeader;
 };
 
-export const _parseTokenHeader = <T extends ParsedTokenHeader = ParsedTokenHeader>(
+export const parseTokenHeader = <T extends ParsedTokenHeader = ParsedTokenHeader>(
   decoded: DecodedTokenHeader,
 ): T => {
   const critical =
