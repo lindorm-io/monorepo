@@ -175,16 +175,13 @@ describe("JweKit", () => {
     });
 
     test("should decrypt data using OCT hkdf", () => {
-      const kryptos = Kryptos.generate(
-        {
-          algorithm: "A128KW",
-          type: "oct",
-          use: "enc",
-        },
-        {
-          jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
-        },
-      );
+      const kryptos = Kryptos.generate({
+        algorithm: "A128KW",
+        type: "oct",
+        use: "enc",
+
+        jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
+      });
 
       kit = new JweKit({ logger, kryptos });
 
