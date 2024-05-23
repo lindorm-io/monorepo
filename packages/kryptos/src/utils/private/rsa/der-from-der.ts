@@ -7,7 +7,7 @@ type Options = Omit<KryptosDer, "algorithm" | "type" | "use">;
 
 type Result = Omit<RsaDer, "algorithm" | "type" | "use">;
 
-export const _createRsaDerFromDer = (options: Options): Result => {
+export const createRsaDerFromDer = (options: Options): Result => {
   const result: Result = {
     publicKey: Buffer.alloc(0),
   };

@@ -12,14 +12,14 @@ import {
   KeyWrapOptions,
   KeyWrapResult,
 } from "../../../types/private";
-import { _calculateKeyWrapEncryption } from "../calculate/calculate-key-wrap-encryption";
+import { calculateKeyWrapEncryption } from "../calculate/calculate-key-wrap-encryption";
 
-export const _gcmKeyWrap = ({
+export const gcmKeyWrap = ({
   contentEncryptionKey,
   keyEncryptionKey,
   kryptos,
 }: KeyWrapOptions): KeyWrapResult => {
-  const algorithm = _calculateKeyWrapEncryption(kryptos);
+  const algorithm = calculateKeyWrapEncryption(kryptos);
 
   const publicEncryptionIv = randomBytes(12);
   const cipher = createCipheriv(
@@ -38,7 +38,7 @@ export const _gcmKeyWrap = ({
   return { publicEncryptionKey, publicEncryptionIv, publicEncryptionTag };
 };
 
-export const _gcmKeyUnwrap = ({
+export const gcmKeyUnwrap = ({
   keyEncryptionKey,
   kryptos,
   publicEncryptionIv,
@@ -52,7 +52,7 @@ export const _gcmKeyUnwrap = ({
     throw new AesError("Invalid public encryption tag");
   }
 
-  const algorithm = _calculateKeyWrapEncryption(kryptos);
+  const algorithm = calculateKeyWrapEncryption(kryptos);
 
   const decipher = createDecipheriv(
     algorithm,

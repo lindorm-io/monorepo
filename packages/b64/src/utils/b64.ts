@@ -1,20 +1,20 @@
 import { Base64Encoding } from "../types";
-import { _decode } from "./private/decode";
-import { _encodeBase64, _encodeBase64Url } from "./private/encode";
+import { decode } from "./private/decode";
+import { encodeBase64, encodeBase64Url } from "./private/encode";
 
 export class B64 {
   public static encode(
     input: Buffer | string,
     encoding: Base64Encoding = "base64",
   ): string {
-    return encoding === "base64" ? _encodeBase64(input) : _encodeBase64Url(input);
+    return encoding === "base64" ? encodeBase64(input) : encodeBase64Url(input);
   }
 
   public static toBuffer(input: string, encoding?: Base64Encoding): Buffer {
-    return _decode(input, encoding);
+    return decode(input, encoding);
   }
 
   public static toString(input: string, encoding?: Base64Encoding): string {
-    return _decode(input, encoding).toString();
+    return decode(input, encoding).toString();
   }
 }

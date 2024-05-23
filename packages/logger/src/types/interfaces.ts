@@ -7,9 +7,7 @@ export interface ILogger {
   child(session: LogSession): ILogger;
   child(context: LogContext, session: LogSession): ILogger;
 
-  context(context: LogContext): void;
   filter(path: string, callback?: FilterCallback): void;
-  session(session: LogSession): void;
 
   error(error: Error): void;
   error(message: string, details?: Error | Dict): void;

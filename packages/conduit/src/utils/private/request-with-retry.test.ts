@@ -1,6 +1,6 @@
 import { calculateRetry as _calculateRetry } from "@lindorm/retry";
-import { _requestWithRetry } from "./request-with-retry";
-import { _sleep as __sleep } from "./sleep";
+import { requestWithRetry } from "./request-with-retry";
+import { sleep as __sleep } from "./sleep";
 
 jest.mock("@lindorm/retry");
 jest.mock("./sleep");
@@ -29,7 +29,7 @@ describe("requestWithRetry", () => {
   afterEach(jest.resetAllMocks);
 
   test("should resolve", async () => {
-    await expect(_requestWithRetry(fn, ctx)).resolves.toEqual("response");
+    await expect(requestWithRetry(fn, ctx)).resolves.toEqual("response");
 
     expect(fn).toHaveBeenCalledTimes(1);
   });
@@ -37,7 +37,7 @@ describe("requestWithRetry", () => {
   test("should retry", async () => {
     fn.mockRejectedValueOnce(new Error("message"));
 
-    await expect(_requestWithRetry(fn, ctx)).resolves.toEqual("response");
+    await expect(requestWithRetry(fn, ctx)).resolves.toEqual("response");
 
     expect(sleep).toHaveBeenCalledWith(1000);
     expect(fn).toHaveBeenCalledTimes(2);

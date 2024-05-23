@@ -2,14 +2,14 @@ import { isBuffer } from "@lindorm/is";
 import { createPrivateKey, createPublicKey } from "crypto";
 import { KryptosError } from "../../../errors";
 import { KryptosDer, OkpDer } from "../../../types";
-import { _isOkpCurve } from "./is-okp-curve";
+import { isOkpCurve } from "./is-okp-curve";
 
 type Options = Omit<KryptosDer, "algorithm" | "type" | "use">;
 
 type Result = Omit<OkpDer, "algorithm" | "type" | "use">;
 
-export const _createOkpDerFromDer = (options: Options): Result => {
-  if (!_isOkpCurve(options.curve)) {
+export const createOkpDerFromDer = (options: Options): Result => {
+  if (!isOkpCurve(options.curve)) {
     throw new KryptosError("Curve is required");
   }
 

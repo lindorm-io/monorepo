@@ -1,11 +1,11 @@
 import { calculateRetry } from "@lindorm/retry";
 import { ConduitError } from "../../errors";
 import { ConduitContext, ConduitResponse } from "../../types";
-import { _sleep } from "./sleep";
+import { sleep } from "./sleep";
 
 export type CommonRequestFunction<T = any> = () => Promise<ConduitResponse<T>>;
 
-export const _requestWithRetry = async <T = any>(
+export const requestWithRetry = async <T = any>(
   fn: CommonRequestFunction<T>,
   ctx: ConduitContext,
   attempt = 1,
@@ -24,10 +24,13 @@ export const _requestWithRetry = async <T = any>(
     const timeout = calculateRetry(attempt, ctx.req.retryConfig);
     const nextAttempt = attempt + 1;
 
-    ctx.logger?.debug("Conduit request failed, retrying after timeout", { nextAttempt, timeout });
+    ctx.logger?.debug("Conduit request failed, retrying after timeout", {
+      nextAttempt,
+      timeout,
+    });
 
-    await _sleep(timeout);
+    await sleep(timeout);
 
-    return _requestWithRetry(fn, ctx, nextAttempt);
+    return requestWithRetry(fn, ctx, nextAttempt);
   }
 };

@@ -2,14 +2,14 @@ import { isBuffer } from "@lindorm/is";
 import { createPrivateKey, createPublicKey } from "crypto";
 import { KryptosError } from "../../../errors";
 import { EcDer, KryptosJwk } from "../../../types";
-import { _isEcCurve } from "./is-ec-curve";
+import { isEcCurve } from "./is-ec-curve";
 
 type Options = Omit<KryptosJwk, "alg" | "use">;
 
 type Result = Omit<EcDer, "algorithm" | "type" | "use">;
 
-export const _createEcDerFromJwk = (options: Options): Result => {
-  if (!_isEcCurve(options.crv)) {
+export const createEcDerFromJwk = (options: Options): Result => {
+  if (!isEcCurve(options.crv)) {
     throw new KryptosError("Curve is required");
   }
 

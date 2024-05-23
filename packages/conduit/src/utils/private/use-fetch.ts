@@ -30,7 +30,7 @@ const parseResponseHeaders = (response: Response): Dict<Header> => {
   return headers;
 };
 
-export const _useFetch = async (
+export const useFetch = async (
   input: URL | string,
   init: RequestInit,
   config?: any,

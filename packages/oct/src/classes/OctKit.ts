@@ -3,9 +3,9 @@ import { BufferFormat } from "@lindorm/types";
 import { OctError } from "../errors";
 import { OctKitOptions } from "../types";
 import {
-  _assertOctSignature,
-  _createOctSignature,
-  _verifyOctSignature,
+  assertOctSignature,
+  createOctSignature,
+  verifyOctSignature,
 } from "../utils/private/oct-signature";
 
 export class OctKit {
@@ -23,7 +23,7 @@ export class OctKit {
   }
 
   public sign(data: string): string {
-    return _createOctSignature({
+    return createOctSignature({
       data,
       format: this.format,
       kryptos: this.kryptos,
@@ -31,7 +31,7 @@ export class OctKit {
   }
 
   public verify(data: string, signature: string): boolean {
-    return _verifyOctSignature({
+    return verifyOctSignature({
       data,
       format: this.format,
       kryptos: this.kryptos,
@@ -40,7 +40,7 @@ export class OctKit {
   }
 
   public assert(data: string, signature: string): void {
-    return _assertOctSignature({
+    return assertOctSignature({
       data,
       format: this.format,
       kryptos: this.kryptos,

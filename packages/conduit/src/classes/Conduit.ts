@@ -5,17 +5,13 @@ import { RetryConfig } from "@lindorm/retry";
 import { Dict } from "@lindorm/types";
 import { extractSearchParams, getPlainUrl, getValidUrl } from "@lindorm/url";
 import { v4 as uuid } from "uuid";
-import {
-  _CONDUIT_RESPONSE,
-  _RETRY_CONFIG,
-  _TIMEOUT,
-} from "../constants/private/defaults";
+import { CONDUIT_RESPONSE, RETRY_CONFIG, TIMEOUT } from "../constants/private/defaults";
 import { ConduitUsing } from "../enums";
-import { _axiosRequestHandler } from "../middleware/private/axios-request-handler";
-import { _defaultHeaders } from "../middleware/private/default-headers";
-import { _fetchRequestHandler } from "../middleware/private/fetch-request-handler";
-import { _requestLogger } from "../middleware/private/request-logger";
-import { _responseLogger } from "../middleware/private/response-logger";
+import { axiosRequestHandler } from "../middleware/private/axios-request-handler";
+import { defaultHeaders } from "../middleware/private/default-headers";
+import { fetchRequestHandler } from "../middleware/private/fetch-request-handler";
+import { requestLogger } from "../middleware/private/request-logger";
+import { responseLogger } from "../middleware/private/response-logger";
 import {
   AppContext,
   ConduitContext,
@@ -23,15 +19,16 @@ import {
   ConduitOptions,
   ConduitResponse,
   ConfigContext,
+  IConduit,
   MethodOptions,
   RequestContext,
   RequestOptions,
   RetryCallback,
 } from "../types";
-import { _defaultRetryCallback } from "../utils/private/default-retry-callback";
-import { _defaultValidateStatus } from "../utils/private/default-validate-status";
+import { defaultRetryCallback } from "../utils/private/default-retry-callback";
+import { defaultValidateStatus } from "../utils/private/default-validate-status";
 
-export class Conduit {
+export class Conduit implements IConduit {
   private readonly baseUrl: URL | undefined;
   private readonly config: ConfigContext;
   private readonly context: AppContext;
@@ -46,8 +43,8 @@ export class Conduit {
     this.baseUrl = options.baseUrl ? getPlainUrl(options.baseUrl) : undefined;
 
     this.config = {
-      timeout: options.timeout ?? _TIMEOUT,
-      validateStatus: _defaultValidateStatus,
+      timeout: options.timeout ?? TIMEOUT,
+      validateStatus: defaultValidateStatus,
       withCredentials: options.withCredentials,
       ...(options.config ?? {}),
     };
@@ -62,10 +59,10 @@ export class Conduit {
     this.logger = options.logger ? options.logger.child(["Conduit"]) : undefined;
     this.middleware = options.middleware ?? [];
 
-    this.retryCallback = options.retryCallback ?? _defaultRetryCallback;
+    this.retryCallback = options.retryCallback ?? defaultRetryCallback;
 
     this.retryConfig = {
-      ..._RETRY_CONFIG,
+      ...RETRY_CONFIG,
       ...(options.retryOptions ?? {}),
     };
 
@@ -272,18 +269,18 @@ export class Conduit {
       app: this.context,
       logger: this.logger,
       req,
-      res: _CONDUIT_RESPONSE,
+      res: CONDUIT_RESPONSE,
     };
 
     const result = await composeMiddleware<
       ConduitContext<ResponseData, RequestBody, RequestParams, RequestQuery>
     >(context, [
-      ...(this.logger ? [_responseLogger] : []),
+      ...(this.logger ? [responseLogger] : []),
       ...this.middleware,
       ...middleware,
-      _defaultHeaders,
-      ...(this.logger ? [_requestLogger] : []),
-      ...(using === ConduitUsing.Axios ? [_axiosRequestHandler] : [_fetchRequestHandler]),
+      defaultHeaders,
+      ...(this.logger ? [requestLogger] : []),
+      ...(using === ConduitUsing.Axios ? [axiosRequestHandler] : [fetchRequestHandler]),
     ]);
 
     return result.res;

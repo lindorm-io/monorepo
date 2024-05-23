@@ -68,10 +68,10 @@ describe("LindormLogger", () => {
     expect(child).toBeInstanceOf(LindormLogger);
 
     // @ts-expect-error
-    expect(child._context).toEqual(["parent", "child"]);
+    expect(child.context).toEqual(["parent", "child"]);
 
     // @ts-expect-error
-    expect(child._session).toEqual({ parent: "parent", child: "child" });
+    expect(child.session).toEqual({ parent: "parent", child: "child" });
 
     child.verbose("verbose message", { details: "verbose details" });
 

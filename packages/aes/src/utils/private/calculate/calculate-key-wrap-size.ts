@@ -2,7 +2,7 @@ import { KryptosAlgorithm } from "@lindorm/kryptos";
 import { AesKeyLength } from "@lindorm/types";
 import { AesError } from "../../../errors";
 
-export const _calculateKeyWrapSize = (algorithm: KryptosAlgorithm): AesKeyLength => {
+export const calculateKeyWrapSize = (algorithm: KryptosAlgorithm): AesKeyLength => {
   switch (algorithm) {
     case "A128KW":
     case "A128GCMKW":

@@ -2,7 +2,7 @@ import { KryptosEncryption } from "@lindorm/kryptos";
 import { AesError } from "../../../errors";
 import { AesEncryption } from "../../../types";
 
-export const _calculateAesEncryption = (encryption: KryptosEncryption): AesEncryption => {
+export const calculateAesEncryption = (encryption: KryptosEncryption): AesEncryption => {
   switch (encryption) {
     case "A128CBC-HS256":
       return "aes-128-cbc";

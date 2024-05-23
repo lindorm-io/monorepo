@@ -1,9 +1,9 @@
 import { removeEmpty } from "@lindorm/utils";
-import { _B64U } from "../../constants/private/format";
+import { B64U } from "../../constants/private/format";
 import { AesEncryptionData } from "../../types";
 import { AesStringValues } from "../../types/private";
 
-export const _encodeAesString = ({
+export const encodeAesString = ({
   algorithm,
   authTag,
   content,
@@ -21,22 +21,22 @@ export const _encodeAesString = ({
 }: AesEncryptionData): string => {
   const values: AesStringValues = removeEmpty({
     v: version.toString(),
-    kid: keyId.toString(_B64U),
+    kid: keyId.toString(B64U),
 
     // Required
     alg: algorithm,
-    iv: initialisationVector.toString(_B64U),
-    tag: authTag.toString(_B64U),
+    iv: initialisationVector.toString(B64U),
+    tag: authTag.toString(B64U),
 
     // Key Derivation
-    hks: hkdfSalt?.toString(_B64U),
+    hks: hkdfSalt?.toString(B64U),
     p2c: pbkdfIterations?.toString(),
-    p2s: pbkdfSalt?.toString(_B64U),
+    p2s: pbkdfSalt?.toString(B64U),
 
     // Public Encryption Key
-    pei: publicEncryptionIv?.toString(_B64U),
-    pek: publicEncryptionKey?.toString(_B64U),
-    pet: publicEncryptionTag?.toString(_B64U),
+    pei: publicEncryptionIv?.toString(B64U),
+    pek: publicEncryptionKey?.toString(B64U),
+    pet: publicEncryptionTag?.toString(B64U),
 
     // Public JWK
     crv: publicEncryptionJwk?.crv,
@@ -47,7 +47,7 @@ export const _encodeAesString = ({
   const array = Object.entries(values).map(([key, value]) => `${key}=${value}`);
 
   const str = array.join(",");
-  const cnt = content.toString(_B64U);
+  const cnt = content.toString(B64U);
 
   return `$${encryption}$${str}$${cnt}$`;
 };

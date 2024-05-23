@@ -1,18 +1,18 @@
 import { createUrl } from "@lindorm/url";
 import { ConduitContext } from "../../types";
-import { _composeFetchData } from "./compose-fetch-data";
+import { composeFetchData } from "./compose-fetch-data";
 
 type Composed = {
   input: URL;
   init: RequestInit;
 };
 
-export const _composeFetchConfig = (ctx: ConduitContext): Composed => {
+export const composeFetchConfig = (ctx: ConduitContext): Composed => {
   if (ctx.req.stream) {
     throw new Error("Stream requests are not supported when using fetch");
   }
 
-  const { body, headers } = _composeFetchData(ctx);
+  const { body, headers } = composeFetchData(ctx);
 
   return {
     input: createUrl(ctx.req.url, {

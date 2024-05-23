@@ -2,7 +2,7 @@ import { KryptosAlgorithm } from "@lindorm/kryptos";
 import { ShaAlgorithm } from "@lindorm/types";
 import { AesError } from "../../../errors";
 
-export const _calculateRsaOaepHash = (algorithm: KryptosAlgorithm): ShaAlgorithm => {
+export const calculateRsaOaepHash = (algorithm: KryptosAlgorithm): ShaAlgorithm => {
   switch (algorithm) {
     case "RSA-OAEP":
       return "SHA1";

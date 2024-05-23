@@ -3,9 +3,9 @@ import { randomBytes } from "crypto";
 import { TEST_OCT_KEY } from "../../__fixtures__/keys";
 import { OctError } from "../../errors";
 import {
-  _assertOctSignature,
-  _createOctSignature,
-  _verifyOctSignature,
+  assertOctSignature,
+  createOctSignature,
+  verifyOctSignature,
 } from "./oct-signature";
 
 describe("signature", () => {
@@ -25,7 +25,7 @@ describe("signature", () => {
         use: "sig",
       });
 
-      expect(_createOctSignature({ kryptos, data, format })).toEqual(expect.any(String));
+      expect(createOctSignature({ kryptos, data, format })).toEqual(expect.any(String));
     });
 
     test("should create signature with HS384", () => {
@@ -35,7 +35,7 @@ describe("signature", () => {
         use: "sig",
       });
 
-      expect(_createOctSignature({ kryptos, data, format })).toEqual(expect.any(String));
+      expect(createOctSignature({ kryptos, data, format })).toEqual(expect.any(String));
     });
 
     test("should create signature with HS512", () => {
@@ -45,14 +45,14 @@ describe("signature", () => {
         use: "sig",
       });
 
-      expect(_createOctSignature({ kryptos, data, format })).toEqual(expect.any(String));
+      expect(createOctSignature({ kryptos, data, format })).toEqual(expect.any(String));
     });
   });
 
   describe("formats", () => {
     test("should create signature at base64 digest", () => {
       expect(
-        _createOctSignature({
+        createOctSignature({
           data,
           format: "base64",
           kryptos: TEST_OCT_KEY,
@@ -62,7 +62,7 @@ describe("signature", () => {
 
     test("should create signature at base64url digest", () => {
       expect(
-        _createOctSignature({
+        createOctSignature({
           data,
           format: "base64url",
           kryptos: TEST_OCT_KEY,
@@ -72,7 +72,7 @@ describe("signature", () => {
 
     test("should create signature at hex digest", () => {
       expect(
-        _createOctSignature({
+        createOctSignature({
           data,
           format: "hex",
           kryptos: TEST_OCT_KEY,
@@ -85,10 +85,10 @@ describe("signature", () => {
     const kryptos = TEST_OCT_KEY;
 
     test("should verify signature", () => {
-      const signature = _createOctSignature({ kryptos, data, format });
+      const signature = createOctSignature({ kryptos, data, format });
 
       expect(
-        _verifyOctSignature({
+        verifyOctSignature({
           data,
           format,
           kryptos,
@@ -102,10 +102,10 @@ describe("signature", () => {
     const kryptos = TEST_OCT_KEY;
 
     test("should assert signature", () => {
-      const signature = _createOctSignature({ kryptos, data, format });
+      const signature = createOctSignature({ kryptos, data, format });
 
       expect(() =>
-        _assertOctSignature({
+        assertOctSignature({
           data,
           format,
           kryptos,
@@ -115,10 +115,10 @@ describe("signature", () => {
     });
 
     test("should throw error on invalid signature", () => {
-      const signature = _createOctSignature({ kryptos, data, format });
+      const signature = createOctSignature({ kryptos, data, format });
 
       expect(() =>
-        _assertOctSignature({
+        assertOctSignature({
           data: "invalid",
           format,
           kryptos,

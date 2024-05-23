@@ -8,10 +8,10 @@ import {
   DecryptCekOptions,
   DecryptCekResult,
 } from "../../../types/private";
-import { _calculateContentEncryptionKeySize } from "../calculate/calculate-content-encryption-key-size";
-import { _calculateRsaOaepHash } from "../calculate/calculate-rsa-oaep-hash";
+import { calculateContentEncryptionKeySize } from "../calculate/calculate-content-encryption-key-size";
+import { calculateRsaOaepHash } from "../calculate/calculate-rsa-oaep-hash";
 
-export const _getRsaEncryptionKey = ({
+export const getRsaEncryptionKey = ({
   encryption,
   kryptos,
 }: CreateCekOptions): CreateCekResult => {
@@ -28,7 +28,7 @@ export const _getRsaEncryptionKey = ({
     throw new AesError("Invalid encryption key algorithm");
   }
 
-  const keyLength = _calculateContentEncryptionKeySize(encryption);
+  const keyLength = calculateContentEncryptionKeySize(encryption);
   const contentEncryptionKey = randomBytes(keyLength);
 
   const { publicKey } = kryptos.export("pem");
@@ -37,7 +37,7 @@ export const _getRsaEncryptionKey = ({
     {
       key: publicKey,
       padding: RSA_PKCS1_OAEP_PADDING,
-      oaepHash: _calculateRsaOaepHash(kryptos.algorithm),
+      oaepHash: calculateRsaOaepHash(kryptos.algorithm),
     },
     contentEncryptionKey,
   );
@@ -45,7 +45,7 @@ export const _getRsaEncryptionKey = ({
   return { contentEncryptionKey, publicEncryptionKey };
 };
 
-export const _getRsaDecryptionKey = ({
+export const getRsaDecryptionKey = ({
   kryptos,
   publicEncryptionKey,
 }: DecryptCekOptions): DecryptCekResult => {
@@ -77,7 +77,7 @@ export const _getRsaDecryptionKey = ({
     {
       key: privateKey,
       padding: RSA_PKCS1_OAEP_PADDING,
-      oaepHash: _calculateRsaOaepHash(kryptos.algorithm),
+      oaepHash: calculateRsaOaepHash(kryptos.algorithm),
     },
     publicEncryptionKey,
   );

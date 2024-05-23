@@ -1,14 +1,14 @@
 import { KryptosError } from "../../../errors";
 import { KryptosPem, OkpDer } from "../../../types";
-import { _createOkpDerFromDer } from "./der-from-der";
-import { _isOkpCurve } from "./is-okp-curve";
+import { createOkpDerFromDer } from "./der-from-der";
+import { isOkpCurve } from "./is-okp-curve";
 
 type Options = Omit<KryptosPem, "algorithm" | "type" | "use">;
 
 type Result = Omit<OkpDer, "algorithm" | "type" | "use">;
 
-export const _createOkpDerFromB64 = (options: Options): Result => {
-  if (!_isOkpCurve(options.curve)) {
+export const createOkpDerFromB64 = (options: Options): Result => {
+  if (!isOkpCurve(options.curve)) {
     throw new KryptosError("Curve is required");
   }
 
@@ -18,7 +18,7 @@ export const _createOkpDerFromB64 = (options: Options): Result => {
   };
 
   if (options.privateKey && !options.publicKey) {
-    const der = _createOkpDerFromDer({
+    const der = createOkpDerFromDer({
       curve: options.curve,
       privateKey: Buffer.from(options.privateKey, "base64url"),
       publicKey: Buffer.alloc(0),

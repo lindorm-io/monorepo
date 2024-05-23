@@ -8,7 +8,7 @@ type Options = Omit<KryptosDer, "algorithm" | "type" | "use"> & {
 
 type Result = Omit<OctJwk, "alg" | "kty" | "use">;
 
-export const _exportOctToJwk = (options: Options): Result => {
+export const exportOctToJwk = (options: Options): Result => {
   if (!options.privateKey) {
     throw new KryptosError("Private key is required");
   }

@@ -7,7 +7,7 @@ type Options = Omit<KryptosJwk, "alg" | "use">;
 
 type Result = Omit<RsaDer, "algorithm" | "type" | "use">;
 
-export const _createRsaDerFromJwk = (options: Options): Result => {
+export const createRsaDerFromJwk = (options: Options): Result => {
   const result: Result = {
     publicKey: Buffer.alloc(0),
   };

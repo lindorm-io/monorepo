@@ -5,7 +5,7 @@ type Options = Omit<KryptosPem, "algorithm" | "type" | "use">;
 
 type Result = Omit<OctDer, "algorithm" | "type" | "use">;
 
-export const _createOctDerFromPem = (options: Options): Result => {
+export const createOctDerFromPem = (options: Options): Result => {
   if (!options.privateKey) {
     throw new KryptosError("Invalid key");
   }

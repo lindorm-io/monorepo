@@ -3,9 +3,9 @@ import { randomBytes } from "crypto";
 import { TEST_RSA_KEY } from "../../__fixtures__/keys";
 import { RsaError } from "../../errors";
 import {
-  _assertRsaSignature,
-  _createRsaSignature,
-  _verifyRsaSignature,
+  assertRsaSignature,
+  createRsaSignature,
+  verifyRsaSignature,
 } from "./rsa-signature";
 
 describe("rsa-signature", () => {
@@ -25,7 +25,7 @@ describe("rsa-signature", () => {
         use: "sig",
       });
 
-      expect(_createRsaSignature({ kryptos, data, format })).toEqual(expect.any(String));
+      expect(createRsaSignature({ kryptos, data, format })).toEqual(expect.any(String));
     });
 
     test("should create signature with RS384", () => {
@@ -35,7 +35,7 @@ describe("rsa-signature", () => {
         use: "sig",
       });
 
-      expect(_createRsaSignature({ kryptos, data, format })).toEqual(expect.any(String));
+      expect(createRsaSignature({ kryptos, data, format })).toEqual(expect.any(String));
     });
 
     test("should create signature with RS512", () => {
@@ -45,7 +45,7 @@ describe("rsa-signature", () => {
         use: "sig",
       });
 
-      expect(_createRsaSignature({ kryptos, data, format })).toEqual(expect.any(String));
+      expect(createRsaSignature({ kryptos, data, format })).toEqual(expect.any(String));
     });
 
     test("should create signature with PS256", () => {
@@ -55,7 +55,7 @@ describe("rsa-signature", () => {
         use: "sig",
       });
 
-      expect(_createRsaSignature({ kryptos, data, format })).toEqual(expect.any(String));
+      expect(createRsaSignature({ kryptos, data, format })).toEqual(expect.any(String));
     });
 
     test("should create signature with PS384", () => {
@@ -65,7 +65,7 @@ describe("rsa-signature", () => {
         use: "sig",
       });
 
-      expect(_createRsaSignature({ kryptos, data, format })).toEqual(expect.any(String));
+      expect(createRsaSignature({ kryptos, data, format })).toEqual(expect.any(String));
     });
 
     test("should create signature with PS512", () => {
@@ -75,7 +75,7 @@ describe("rsa-signature", () => {
         use: "sig",
       });
 
-      expect(_createRsaSignature({ kryptos, data, format })).toEqual(expect.any(String));
+      expect(createRsaSignature({ kryptos, data, format })).toEqual(expect.any(String));
     });
   });
 
@@ -84,7 +84,7 @@ describe("rsa-signature", () => {
 
     test("should create signature at base64 digest", () => {
       expect(
-        _createRsaSignature({
+        createRsaSignature({
           kryptos,
           data,
           format: "base64",
@@ -94,7 +94,7 @@ describe("rsa-signature", () => {
 
     test("should create signature at base64url digest", () => {
       expect(
-        _createRsaSignature({
+        createRsaSignature({
           kryptos,
           data,
           format: "base64url",
@@ -104,7 +104,7 @@ describe("rsa-signature", () => {
 
     test("should create signature at hex digest", () => {
       expect(
-        _createRsaSignature({
+        createRsaSignature({
           kryptos,
           data,
           format: "hex",
@@ -117,10 +117,10 @@ describe("rsa-signature", () => {
     const kryptos = TEST_RSA_KEY;
 
     test("should verify signature", () => {
-      const signature = _createRsaSignature({ kryptos, data, format });
+      const signature = createRsaSignature({ kryptos, data, format });
 
       expect(
-        _verifyRsaSignature({
+        verifyRsaSignature({
           data,
           format,
           kryptos,
@@ -134,10 +134,10 @@ describe("rsa-signature", () => {
     const kryptos = TEST_RSA_KEY;
 
     test("should assert signature", () => {
-      const signature = _createRsaSignature({ kryptos, data, format });
+      const signature = createRsaSignature({ kryptos, data, format });
 
       expect(() =>
-        _assertRsaSignature({
+        assertRsaSignature({
           data,
           format,
           kryptos,
@@ -147,10 +147,10 @@ describe("rsa-signature", () => {
     });
 
     test("should throw error on invalid signature", () => {
-      const signature = _createRsaSignature({ kryptos, data, format });
+      const signature = createRsaSignature({ kryptos, data, format });
 
       expect(() =>
-        _assertRsaSignature({
+        assertRsaSignature({
           data: "invalid",
           format,
           kryptos,

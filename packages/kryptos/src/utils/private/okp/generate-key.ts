@@ -7,7 +7,7 @@ type Result = {
   publicKey: Buffer;
 };
 
-export const _generateOkpKey = (options: OkpGenerate): Result => {
+export const generateOkpKey = (options: OkpGenerate): Result => {
   const curve = options.curve;
 
   const { privateKey, publicKey } = generateKeyPairSync(curve.toLowerCase() as any, {

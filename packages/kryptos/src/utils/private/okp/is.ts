@@ -1,14 +1,14 @@
 import { isBuffer, isString } from "@lindorm/is";
 import { KryptosCurve, OkpB64, OkpDer, OkpJwk, OkpPem } from "../../../types";
 import {
-  _IsBufferFormatOptions,
-  _IsJwkFormatOptions,
-  _IsStringFormatOptions,
+  IsBufferFormatOptions,
+  IsJwkFormatOptions,
+  IsStringFormatOptions,
 } from "../../../types/private/is-options";
 
 const CURVES: Array<KryptosCurve> = ["Ed25519", "Ed448", "X25519", "X448"] as const;
 
-export const _isOkpB64 = (options: _IsStringFormatOptions): options is OkpB64 => {
+export const isOkpB64 = (options: IsStringFormatOptions): options is OkpB64 => {
   if (options.type !== "OKP") return false;
   if (!options.curve || !CURVES.includes(options.curve)) return false;
 
@@ -23,7 +23,7 @@ export const _isOkpB64 = (options: _IsStringFormatOptions): options is OkpB64 =>
   return true;
 };
 
-export const _isOkpDer = (options: _IsBufferFormatOptions): options is OkpDer => {
+export const isOkpDer = (options: IsBufferFormatOptions): options is OkpDer => {
   if (options.type !== "OKP") return false;
   if (!options.curve || !CURVES.includes(options.curve)) return false;
 
@@ -32,7 +32,7 @@ export const _isOkpDer = (options: _IsBufferFormatOptions): options is OkpDer =>
   return true;
 };
 
-export const _isOkpJwk = (options: _IsJwkFormatOptions): options is OkpJwk => {
+export const isOkpJwk = (options: IsJwkFormatOptions): options is OkpJwk => {
   if (options.kty !== "OKP") return false;
   if (!options.crv || !CURVES.includes(options.crv)) return false;
 
@@ -41,7 +41,7 @@ export const _isOkpJwk = (options: _IsJwkFormatOptions): options is OkpJwk => {
   return true;
 };
 
-export const _isOkpPem = (options: _IsStringFormatOptions): options is OkpPem => {
+export const isOkpPem = (options: IsStringFormatOptions): options is OkpPem => {
   if (options.type !== "OKP") return false;
   if (!options.curve || !CURVES.includes(options.curve)) return false;
 

@@ -1,14 +1,14 @@
 import { KryptosError } from "../../../errors";
 import { KryptosDer } from "../../../types";
-import { _createEcDerFromDer } from "../ec/der-from-der";
-import { _createOkpDerFromDer } from "../okp/der-from-der";
-import { _createRsaDerFromDer } from "../rsa/der-from-der";
+import { createEcDerFromDer } from "../ec/der-from-der";
+import { createOkpDerFromDer } from "../okp/der-from-der";
+import { createRsaDerFromDer } from "../rsa/der-from-der";
 
-export const _createDerFromDer = (options: KryptosDer): KryptosDer => {
+export const createDerFromDer = (options: KryptosDer): KryptosDer => {
   switch (options.type) {
     case "EC":
       return {
-        ..._createEcDerFromDer(options),
+        ...createEcDerFromDer(options),
         algorithm: options.algorithm,
         type: options.type,
         use: options.use,
@@ -25,7 +25,7 @@ export const _createDerFromDer = (options: KryptosDer): KryptosDer => {
 
     case "OKP":
       return {
-        ..._createOkpDerFromDer(options),
+        ...createOkpDerFromDer(options),
         algorithm: options.algorithm,
         type: options.type,
         use: options.use,
@@ -33,7 +33,7 @@ export const _createDerFromDer = (options: KryptosDer): KryptosDer => {
 
     case "RSA":
       return {
-        ..._createRsaDerFromDer(options),
+        ...createRsaDerFromDer(options),
         algorithm: options.algorithm,
         type: options.type,
         use: options.use,

@@ -1,8 +1,8 @@
-import { _encodeAesString } from "./encode-aes-string";
+import { encodeAesString } from "./encode-aes-string";
 
 describe("encodeAesString", () => {
   test("should resolve string", () => {
-    const string = _encodeAesString({
+    const string = encodeAesString({
       algorithm: "RSA-OAEP-256",
       authTag: Buffer.from("authTag"),
       content: Buffer.from("encryption"),

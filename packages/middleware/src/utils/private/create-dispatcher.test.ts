@@ -1,5 +1,5 @@
 import { Middleware, Next } from "../../types";
-import { _createDispatcher } from "./create-dispatcher";
+import { createDispatcher } from "./create-dispatcher";
 
 describe("createDispatcher", () => {
   let ctx: any;
@@ -37,23 +37,23 @@ describe("createDispatcher", () => {
   afterEach(jest.resetAllMocks);
 
   test("should compose", async () => {
-    expect(_createDispatcher([mw1, mw2])).toBeInstanceOf(Function);
+    expect(createDispatcher([mw1, mw2])).toBeInstanceOf(Function);
   });
 
   test("should resolve", async () => {
-    const composed = _createDispatcher([mw1, mw2]);
+    const composed = createDispatcher([mw1, mw2]);
 
-    await expect(composed(ctx, next)).resolves.not.toThrow();
+    await expect(composed(ctx, next)).resolves.toBeUndefined();
   });
 
   test("should throw", async () => {
-    const composed = _createDispatcher([mw1, mw2, mw3]);
+    const composed = createDispatcher([mw1, mw2, mw3]);
 
     await expect(composed(ctx, next)).rejects.toThrow(new Error("message"));
   });
 
   test("should run all middleware", async () => {
-    const composed = _createDispatcher([mw1, mw2]);
+    const composed = createDispatcher([mw1, mw2]);
     await composed(ctx, next);
 
     expect(ctx.mw1before).toEqual(true);

@@ -1,6 +1,6 @@
 import { RetryStrategy } from "@lindorm/retry";
 import { RequestContext } from "../../types";
-import { _composeFetchConfig } from "./compose-fetch-config";
+import { composeFetchConfig } from "./compose-fetch-config";
 
 describe("composeFetchConfig", () => {
   let ctx: any;
@@ -54,7 +54,7 @@ describe("composeFetchConfig", () => {
   });
 
   test("should resolve", () => {
-    expect(_composeFetchConfig(ctx)).toEqual({
+    expect(composeFetchConfig(ctx)).toEqual({
       input: expect.objectContaining({
         host: "osprey.no:3000",
         hostname: "osprey.no",

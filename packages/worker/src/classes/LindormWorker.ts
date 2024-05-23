@@ -2,16 +2,17 @@ import { ILogger } from "@lindorm/logger";
 import { RetryConfig, calculateRetry } from "@lindorm/retry";
 import { sleep } from "@lindorm/utils";
 import { EventEmitter } from "events";
-import { _RETRY_CONFIG } from "../constants/private/defaults";
+import { RETRY_CONFIG } from "../constants/private/defaults";
 import { LindormWorkerEvent } from "../enums";
-import { LindormWorkerOptions, WorkerCallback } from "../types";
+import { ILindormWorker, LindormWorkerOptions, WorkerCallback } from "../types";
 
-export class LindormWorker {
-  private readonly _callback: WorkerCallback;
-  private readonly _emitter: EventEmitter;
-  private readonly _interval: number;
-  private readonly _logger: ILogger;
-  private readonly _retry: RetryConfig;
+export class LindormWorker implements ILindormWorker {
+  private readonly callback: WorkerCallback;
+  private readonly emitter: EventEmitter;
+  private readonly interval: number;
+  private readonly logger: ILogger;
+  private readonly retry: RetryConfig;
+  private timeout: NodeJS.Timeout | null;
 
   private _executing: boolean;
   private _latestError: Date | null;
@@ -19,15 +20,14 @@ export class LindormWorker {
   private _latestTry: Date | null;
   private _running: boolean;
   private _seq: number;
-  private _timeout: NodeJS.Timeout | null;
 
   public constructor(options: LindormWorkerOptions) {
-    this._emitter = new EventEmitter();
-    this._logger = options.logger.child(["Worker", options.alias]);
+    this.emitter = new EventEmitter();
+    this.logger = options.logger.child(["Worker", options.alias]);
 
-    this._retry = { ..._RETRY_CONFIG, ...(options.retry ?? {}) };
-    this._callback = options.callback;
-    this._interval = options.interval;
+    this.retry = { ...RETRY_CONFIG, ...(options.retry ?? {}) };
+    this.callback = options.callback;
+    this.interval = options.interval;
 
     this._executing = false;
     this._latestError = null;
@@ -35,7 +35,7 @@ export class LindormWorker {
     this._latestTry = null;
     this._running = false;
     this._seq = 0;
-    this._timeout = null;
+    this.timeout = null;
   }
 
   public get executing(): boolean {
@@ -70,29 +70,29 @@ export class LindormWorker {
   ): void;
   public on(evt: LindormWorkerEvent.Error, listener: (error: Error) => void): void;
   public on(evt: LindormWorkerEvent, listener: (...args: any[]) => void): void {
-    this._emitter.on(evt, listener);
+    this.emitter.on(evt, listener);
   }
 
   public start(): void {
-    if (this._timeout) return;
+    if (this.timeout) return;
 
-    this._logger.debug("Starting worker");
-    this._emitter.emit(LindormWorkerEvent.Start);
+    this.logger.debug("Starting worker");
+    this.emitter.emit(LindormWorkerEvent.Start);
 
     this.execute();
 
-    this._timeout = setInterval(() => this.execute(), this._interval);
+    this.timeout = setInterval(() => this.execute(), this.interval);
   }
 
   public stop(): void {
-    if (!this._timeout) return;
+    if (!this.timeout) return;
 
-    this._logger.debug("Stopping worker");
-    this._emitter.emit(LindormWorkerEvent.Stop);
+    this.logger.debug("Stopping worker");
+    this.emitter.emit(LindormWorkerEvent.Stop);
 
-    clearInterval(this._timeout);
+    clearInterval(this.timeout);
 
-    this._timeout = null;
+    this.timeout = null;
   }
 
   private execute(attempt = 0): void {
@@ -103,46 +103,46 @@ export class LindormWorker {
     this._running = true;
 
     if (attempt === 0) {
-      this._logger.debug("Executing worker callback");
+      this.logger.debug("Executing worker callback");
     } else {
-      this._logger.debug("Retrying worker callback", { attempt });
+      this.logger.debug("Retrying worker callback", { attempt });
     }
 
     this._latestTry = new Date();
     this._seq++;
 
-    this._callback({
+    this.callback({
       latestError: this._latestError,
       latestSuccess: this._latestSuccess,
       latestTry: this._latestTry,
-      logger: this._logger,
+      logger: this.logger,
       seq: this._seq,
     })
       .then((result) => {
-        this._logger.debug("Worker callback success", { result });
-        this._emitter.emit(LindormWorkerEvent.Success, result);
+        this.logger.debug("Worker callback success", { result });
+        this.emitter.emit(LindormWorkerEvent.Success, result);
 
         this._executing = false;
         this._running = false;
         this._latestSuccess = new Date();
       })
       .catch((err) => {
-        this._logger.debug("Worker callback error", err);
+        this.logger.debug("Worker callback error", err);
 
         this._latestError = new Date();
 
-        if (attempt <= this._retry.maxAttempts) {
-          sleep(calculateRetry(attempt, this._retry)).then(() =>
+        if (attempt <= this.retry.maxAttempts) {
+          sleep(calculateRetry(attempt, this.retry)).then(() =>
             this.execute(attempt + 1),
           );
         } else {
-          this._emitter.emit(LindormWorkerEvent.Error, err);
+          this.emitter.emit(LindormWorkerEvent.Error, err);
 
           this._executing = false;
           this._running = false;
-          this._logger.debug("Will not attempt any further retries", {
+          this.logger.debug("Will not attempt any further retries", {
             attempt,
-            maxAttempts: this._retry.maxAttempts,
+            maxAttempts: this.retry.maxAttempts,
           });
         }
       });

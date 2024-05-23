@@ -1,6 +1,6 @@
 import { RetryStrategy } from "@lindorm/retry";
 import { RequestContext } from "../../types";
-import { _composeAxiosConfig } from "./compose-axios-config";
+import { composeAxiosConfig } from "./compose-axios-config";
 
 describe("composeAxiosConfig", () => {
   let ctx: any;
@@ -44,7 +44,7 @@ describe("composeAxiosConfig", () => {
   });
 
   test("should resolve", async () => {
-    await expect(_composeAxiosConfig(ctx)).resolves.toEqual({
+    await expect(composeAxiosConfig(ctx)).resolves.toEqual({
       data: {
         body: "body",
       },

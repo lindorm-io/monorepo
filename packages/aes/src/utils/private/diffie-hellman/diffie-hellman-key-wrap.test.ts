@@ -1,7 +1,7 @@
 import { Kryptos } from "@lindorm/kryptos";
 import {
-  _getDiffieHellmanKeyWrapDecryptionKey,
-  _getDiffieHellmanKeyWrapEncryptionKey,
+  getDiffieHellmanKeyWrapDecryptionKey,
+  getDiffieHellmanKeyWrapEncryptionKey,
 } from "./diffie-hellman-key-wrap";
 
 describe("diffieHellman", () => {
@@ -13,7 +13,7 @@ describe("diffieHellman", () => {
         use: "enc",
       });
 
-      const result = _getDiffieHellmanKeyWrapEncryptionKey({
+      const result = getDiffieHellmanKeyWrapEncryptionKey({
         encryption: "A128GCM",
         kryptos,
       });
@@ -31,7 +31,7 @@ describe("diffieHellman", () => {
       });
 
       expect(
-        _getDiffieHellmanKeyWrapDecryptionKey({
+        getDiffieHellmanKeyWrapDecryptionKey({
           encryption: "A128GCM",
           publicEncryptionJwk: result.publicEncryptionJwk,
           publicEncryptionKey: result.publicEncryptionKey,
@@ -48,7 +48,7 @@ describe("diffieHellman", () => {
         use: "enc",
       });
 
-      const result = _getDiffieHellmanKeyWrapEncryptionKey({
+      const result = getDiffieHellmanKeyWrapEncryptionKey({
         encryption: "A192GCM",
         kryptos,
       });
@@ -66,7 +66,7 @@ describe("diffieHellman", () => {
       });
 
       expect(
-        _getDiffieHellmanKeyWrapDecryptionKey({
+        getDiffieHellmanKeyWrapDecryptionKey({
           encryption: "A192GCM",
           publicEncryptionJwk: result.publicEncryptionJwk,
           publicEncryptionKey: result.publicEncryptionKey,
@@ -83,7 +83,7 @@ describe("diffieHellman", () => {
         use: "enc",
       });
 
-      const result = _getDiffieHellmanKeyWrapEncryptionKey({
+      const result = getDiffieHellmanKeyWrapEncryptionKey({
         encryption: "A256GCM",
         kryptos,
       });
@@ -101,7 +101,7 @@ describe("diffieHellman", () => {
       });
 
       expect(
-        _getDiffieHellmanKeyWrapDecryptionKey({
+        getDiffieHellmanKeyWrapDecryptionKey({
           encryption: "A256GCM",
           publicEncryptionJwk: result.publicEncryptionJwk,
           publicEncryptionKey: result.publicEncryptionKey,
@@ -120,7 +120,7 @@ describe("diffieHellman", () => {
         use: "enc",
       });
 
-      const result = _getDiffieHellmanKeyWrapEncryptionKey({
+      const result = getDiffieHellmanKeyWrapEncryptionKey({
         encryption: "A128GCM",
         kryptos,
       });
@@ -140,7 +140,7 @@ describe("diffieHellman", () => {
       });
 
       expect(
-        _getDiffieHellmanKeyWrapDecryptionKey({
+        getDiffieHellmanKeyWrapDecryptionKey({
           encryption: "A128GCM",
           publicEncryptionJwk: result.publicEncryptionJwk,
           publicEncryptionIv: result.publicEncryptionIv,
@@ -159,7 +159,7 @@ describe("diffieHellman", () => {
         use: "enc",
       });
 
-      const result = _getDiffieHellmanKeyWrapEncryptionKey({
+      const result = getDiffieHellmanKeyWrapEncryptionKey({
         encryption: "A192GCM",
         kryptos,
       });
@@ -179,7 +179,7 @@ describe("diffieHellman", () => {
       });
 
       expect(
-        _getDiffieHellmanKeyWrapDecryptionKey({
+        getDiffieHellmanKeyWrapDecryptionKey({
           encryption: "A192GCM",
           publicEncryptionJwk: result.publicEncryptionJwk,
           publicEncryptionIv: result.publicEncryptionIv,
@@ -198,7 +198,7 @@ describe("diffieHellman", () => {
         use: "enc",
       });
 
-      const result = _getDiffieHellmanKeyWrapEncryptionKey({
+      const result = getDiffieHellmanKeyWrapEncryptionKey({
         encryption: "A256GCM",
         kryptos,
       });
@@ -218,7 +218,7 @@ describe("diffieHellman", () => {
       });
 
       expect(
-        _getDiffieHellmanKeyWrapDecryptionKey({
+        getDiffieHellmanKeyWrapDecryptionKey({
           encryption: "A256GCM",
           publicEncryptionJwk: result.publicEncryptionJwk,
           publicEncryptionIv: result.publicEncryptionIv,
@@ -240,7 +240,7 @@ describe("diffieHellman", () => {
         use: "enc",
       });
 
-      const result = _getDiffieHellmanKeyWrapEncryptionKey({
+      const result = getDiffieHellmanKeyWrapEncryptionKey({
         encryption: "A128GCM",
         kryptos,
       });
@@ -259,7 +259,7 @@ describe("diffieHellman", () => {
       });
 
       expect(
-        _getDiffieHellmanKeyWrapDecryptionKey({
+        getDiffieHellmanKeyWrapDecryptionKey({
           encryption: "A128GCM",
           publicEncryptionJwk: result.publicEncryptionJwk,
           publicEncryptionIv: result.publicEncryptionIv,
@@ -279,7 +279,7 @@ describe("diffieHellman", () => {
         use: "enc",
       });
 
-      const result = _getDiffieHellmanKeyWrapEncryptionKey({
+      const result = getDiffieHellmanKeyWrapEncryptionKey({
         encryption: "A192GCM",
         kryptos,
       });
@@ -296,7 +296,7 @@ describe("diffieHellman", () => {
       });
 
       expect(
-        _getDiffieHellmanKeyWrapDecryptionKey({
+        getDiffieHellmanKeyWrapDecryptionKey({
           encryption: "A192GCM",
           publicEncryptionJwk: result.publicEncryptionJwk,
           publicEncryptionKey: result.publicEncryptionKey,

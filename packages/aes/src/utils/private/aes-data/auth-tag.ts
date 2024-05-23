@@ -1,9 +1,9 @@
 import { CipherGCM, DecipherGCM } from "crypto";
 import { AesError } from "../../../errors";
 import { GetAuthTagOptions, SetAuthTagOptions } from "../../../types/private";
-import { _assertHmacAuthTag, _createHmacAuthTag } from "./auth-tag-hmac";
+import { assertHmacAuthTag, createHmacAuthTag } from "./auth-tag-hmac";
 
-export const _createAuthTag = ({
+export const createAuthTag = ({
   encryption,
   cipher,
   content,
@@ -14,7 +14,7 @@ export const _createAuthTag = ({
     case "A128CBC-HS256":
     case "A192CBC-HS384":
     case "A256CBC-HS512":
-      return _createHmacAuthTag({
+      return createHmacAuthTag({
         content,
         encryption,
         hashKey,
@@ -31,7 +31,7 @@ export const _createAuthTag = ({
   }
 };
 
-export const _assertAuthTag = ({
+export const assertAuthTag = ({
   authTag,
   content,
   hashKey,
@@ -47,7 +47,7 @@ export const _assertAuthTag = ({
     case "A128CBC-HS256":
     case "A192CBC-HS384":
     case "A256CBC-HS512":
-      _assertHmacAuthTag({
+      assertHmacAuthTag({
         authTag,
         content,
         encryption,

@@ -1,6 +1,6 @@
 import { Kryptos } from "@lindorm/kryptos";
 import { randomBytes } from "crypto";
-import { _ecbKeyUnwrap, _ecbKeyWrap } from "./ecb-key-wrap";
+import { ecbKeyUnwrap, ecbKeyWrap } from "./ecb-key-wrap";
 
 describe("ecbKeyWrap", () => {
   test("should wrap and unwrap key with A128KW", () => {
@@ -9,7 +9,7 @@ describe("ecbKeyWrap", () => {
     const contentEncryptionKey = randomBytes(128 / 8);
     const keyEncryptionKey = randomBytes(128 / 8);
 
-    const { publicEncryptionKey } = _ecbKeyWrap({
+    const { publicEncryptionKey } = ecbKeyWrap({
       contentEncryptionKey,
       keyEncryptionKey,
       kryptos,
@@ -17,7 +17,7 @@ describe("ecbKeyWrap", () => {
 
     expect(publicEncryptionKey).toEqual(expect.any(Buffer));
 
-    expect(_ecbKeyUnwrap({ keyEncryptionKey, kryptos, publicEncryptionKey })).toEqual({
+    expect(ecbKeyUnwrap({ keyEncryptionKey, kryptos, publicEncryptionKey })).toEqual({
       contentEncryptionKey,
     });
   });
@@ -28,7 +28,7 @@ describe("ecbKeyWrap", () => {
     const contentEncryptionKey = randomBytes(192 / 8);
     const keyEncryptionKey = randomBytes(192 / 8);
 
-    const { publicEncryptionKey } = _ecbKeyWrap({
+    const { publicEncryptionKey } = ecbKeyWrap({
       contentEncryptionKey,
       keyEncryptionKey,
       kryptos,
@@ -36,7 +36,7 @@ describe("ecbKeyWrap", () => {
 
     expect(publicEncryptionKey).toEqual(expect.any(Buffer));
 
-    expect(_ecbKeyUnwrap({ keyEncryptionKey, kryptos, publicEncryptionKey })).toEqual({
+    expect(ecbKeyUnwrap({ keyEncryptionKey, kryptos, publicEncryptionKey })).toEqual({
       contentEncryptionKey,
     });
   });
@@ -47,7 +47,7 @@ describe("ecbKeyWrap", () => {
     const contentEncryptionKey = randomBytes(256 / 8);
     const keyEncryptionKey = randomBytes(256 / 8);
 
-    const { publicEncryptionKey } = _ecbKeyWrap({
+    const { publicEncryptionKey } = ecbKeyWrap({
       contentEncryptionKey,
       keyEncryptionKey,
       kryptos,
@@ -55,7 +55,7 @@ describe("ecbKeyWrap", () => {
 
     expect(publicEncryptionKey).toEqual(expect.any(Buffer));
 
-    expect(_ecbKeyUnwrap({ keyEncryptionKey, kryptos, publicEncryptionKey })).toEqual({
+    expect(ecbKeyUnwrap({ keyEncryptionKey, kryptos, publicEncryptionKey })).toEqual({
       contentEncryptionKey,
     });
   });

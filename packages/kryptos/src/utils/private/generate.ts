@@ -9,10 +9,10 @@ import {
   RsaDer,
   RsaGenerate,
 } from "../../types";
-import { _generateEcKey } from "./ec/generate-key";
-import { _generateOctKey } from "./oct/generate-key";
-import { _generateOkpKey } from "./okp/generate-key";
-import { _generateRsaKey } from "./rsa/generate-key";
+import { generateEcKey } from "./ec/generate-key";
+import { generateOctKey } from "./oct/generate-key";
+import { generateOkpKey } from "./okp/generate-key";
+import { generateRsaKey } from "./rsa/generate-key";
 
 type Options = EcGenerate | OctGenerate | OkpGenerate | RsaGenerate;
 
@@ -22,19 +22,19 @@ type Result =
   | Omit<OkpDer, "algorithm" | "type" | "use">
   | Omit<RsaDer, "algorithm" | "type" | "use">;
 
-export const _generateKey = (options: Options): Result => {
+export const generateKey = (options: Options): Result => {
   switch (options.type) {
     case "EC":
-      return _generateEcKey(options);
+      return generateEcKey(options);
 
     case "oct":
-      return _generateOctKey(options);
+      return generateOctKey(options);
 
     case "OKP":
-      return _generateOkpKey(options);
+      return generateOkpKey(options);
 
     case "RSA":
-      return _generateRsaKey(options);
+      return generateRsaKey(options);
 
     default:
       throw new KryptosError("Invalid key type");

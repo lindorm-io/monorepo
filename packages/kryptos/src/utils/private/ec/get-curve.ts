@@ -1,7 +1,7 @@
 import { KryptosError } from "../../../errors";
 import { EcCurve, EcGenerate } from "../../../types";
 
-export const _getEcCurve = (options: EcGenerate): EcCurve => {
+export const getEcCurve = (options: EcGenerate): EcCurve => {
   if (options.curve) return options.curve;
 
   switch (options.algorithm) {

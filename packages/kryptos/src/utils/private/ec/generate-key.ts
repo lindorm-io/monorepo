@@ -1,6 +1,6 @@
 import { generateKeyPairSync } from "crypto";
 import { EcCurve, EcGenerate } from "../../../types";
-import { _getEcCurve } from "./get-curve";
+import { getEcCurve } from "./get-curve";
 
 type Result = {
   curve: EcCurve;
@@ -8,8 +8,8 @@ type Result = {
   publicKey: Buffer;
 };
 
-export const _generateEcKey = (options: EcGenerate): Result => {
-  const curve = _getEcCurve(options);
+export const generateEcKey = (options: EcGenerate): Result => {
+  const curve = getEcCurve(options);
 
   const { privateKey, publicKey } = generateKeyPairSync("ec", {
     namedCurve: curve,

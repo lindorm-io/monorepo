@@ -5,7 +5,7 @@ type Result = {
   headers: Record<string, string>;
 };
 
-export const _composeFetchData = (ctx: ConduitContext): Result => {
+export const composeFetchData = (ctx: ConduitContext): Result => {
   if (ctx.req.form) {
     for (const value of ctx.req.form.values()) {
       if (!(value instanceof File)) continue;

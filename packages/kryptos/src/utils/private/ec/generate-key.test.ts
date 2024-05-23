@@ -1,9 +1,9 @@
-import { _generateEcKey } from "./generate-key";
+import { generateEcKey } from "./generate-key";
 
 describe("generateEcKey", () => {
   describe("enc", () => {
     test("should generate ECDH-ES", () => {
-      const res = _generateEcKey({
+      const res = generateEcKey({
         algorithm: "ECDH-ES",
         type: "EC",
         use: "enc",
@@ -15,7 +15,7 @@ describe("generateEcKey", () => {
     });
 
     test("should generate ECDH-ES+A128KW", () => {
-      const res = _generateEcKey({
+      const res = generateEcKey({
         algorithm: "ECDH-ES+A128KW",
         type: "EC",
         use: "enc",
@@ -27,7 +27,7 @@ describe("generateEcKey", () => {
     });
 
     test("should generate ECDH-ES+A192KW", () => {
-      const res = _generateEcKey({
+      const res = generateEcKey({
         algorithm: "ECDH-ES+A192KW",
         type: "EC",
         use: "enc",
@@ -39,7 +39,7 @@ describe("generateEcKey", () => {
     });
 
     test("should generate ECDH-ES+A256KW", () => {
-      const res = _generateEcKey({
+      const res = generateEcKey({
         algorithm: "ECDH-ES+A256KW",
         type: "EC",
         use: "enc",
@@ -53,7 +53,7 @@ describe("generateEcKey", () => {
 
   describe("sig", () => {
     test("should generate ES256", () => {
-      const res = _generateEcKey({
+      const res = generateEcKey({
         algorithm: "ES256",
         type: "EC",
         use: "sig",
@@ -65,7 +65,7 @@ describe("generateEcKey", () => {
     });
 
     test("should generate ES384", () => {
-      const res = _generateEcKey({
+      const res = generateEcKey({
         algorithm: "ES384",
         type: "EC",
         use: "sig",
@@ -77,7 +77,7 @@ describe("generateEcKey", () => {
     });
 
     test("should generate ES512", () => {
-      const res = _generateEcKey({
+      const res = generateEcKey({
         algorithm: "ES512",
         type: "EC",
         use: "sig",

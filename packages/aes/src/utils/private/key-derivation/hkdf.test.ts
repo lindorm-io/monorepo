@@ -1,9 +1,9 @@
 import { TEST_OCT_KEY } from "../../../__fixtures__/keys";
-import { _hkdf } from "./hkdf";
+import { hkdf } from "./hkdf";
 
 describe("hkdf", () => {
   test("should create a key derivation", () => {
-    const result = _hkdf({
+    const result = hkdf({
       derivationKey: TEST_OCT_KEY.export("der").privateKey!,
       keyLength: 16,
     });
@@ -14,7 +14,7 @@ describe("hkdf", () => {
     });
 
     expect(
-      _hkdf({
+      hkdf({
         derivationKey: TEST_OCT_KEY.export("der").privateKey!,
         keyLength: 16,
         hkdfSalt: result.hkdfSalt,

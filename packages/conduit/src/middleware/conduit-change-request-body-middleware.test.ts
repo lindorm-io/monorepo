@@ -1,10 +1,8 @@
 import { ChangeCase } from "@lindorm/case";
-import { Next } from "@lindorm/middleware";
 import { conduitChangeRequestBodyMiddleware } from "./conduit-change-request-body-middleware";
 
 describe("conduitChangeRequestBodyMiddleware", () => {
   let ctx: any;
-  let next: Next;
 
   beforeEach(() => {
     ctx = {
@@ -16,12 +14,12 @@ describe("conduitChangeRequestBodyMiddleware", () => {
         },
       },
     };
-
-    next = () => Promise.resolve();
   });
 
   test("should resolve with default case", async () => {
-    await expect(conduitChangeRequestBodyMiddleware()(ctx, next)).resolves.not.toThrow();
+    await expect(
+      conduitChangeRequestBodyMiddleware()(ctx, jest.fn()),
+    ).resolves.toBeUndefined();
 
     expect(ctx.req.body).toEqual({
       camel_case: "camelCase",
@@ -34,8 +32,8 @@ describe("conduitChangeRequestBodyMiddleware", () => {
     ctx.req.body = [ctx.req.body, ctx.req.body];
 
     await expect(
-      conduitChangeRequestBodyMiddleware(ChangeCase.Camel)(ctx, next),
-    ).resolves.not.toThrow();
+      conduitChangeRequestBodyMiddleware(ChangeCase.Camel)(ctx, jest.fn()),
+    ).resolves.toBeUndefined();
 
     expect(ctx.req.body).toEqual([
       {
@@ -53,8 +51,8 @@ describe("conduitChangeRequestBodyMiddleware", () => {
 
   test("should resolve with camelCase for request object", async () => {
     await expect(
-      conduitChangeRequestBodyMiddleware(ChangeCase.Camel)(ctx, next),
-    ).resolves.not.toThrow();
+      conduitChangeRequestBodyMiddleware(ChangeCase.Camel)(ctx, jest.fn()),
+    ).resolves.toBeUndefined();
 
     expect(ctx.req.body).toEqual({
       camelCase: "camelCase",

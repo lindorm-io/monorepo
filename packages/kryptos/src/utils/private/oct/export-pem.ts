@@ -14,7 +14,7 @@ const splitStringIntoChunks = (input: string, size: number): Array<string> => {
   return chunks;
 };
 
-export const _exportOctToPem = (options: Options): Result => {
+export const exportOctToPem = (options: Options): Result => {
   if (!options.privateKey) {
     throw new Error("Private key is required");
   }

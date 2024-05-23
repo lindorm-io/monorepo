@@ -1,7 +1,7 @@
 import { createPrivateKey, createPublicKey } from "crypto";
 import { KryptosError } from "../../../errors";
 import { KryptosDer, KryptosExportMode, OkpJwk } from "../../../types";
-import { _isOkpCurve } from "./is-okp-curve";
+import { isOkpCurve } from "./is-okp-curve";
 
 type Options = Omit<KryptosDer, "algorithm" | "type" | "use"> & {
   mode: KryptosExportMode;
@@ -9,8 +9,8 @@ type Options = Omit<KryptosDer, "algorithm" | "type" | "use"> & {
 
 type Result = Omit<OkpJwk, "alg" | "kty" | "use">;
 
-export const _exportOkpToJwk = (options: Options): Result => {
-  if (!_isOkpCurve(options.curve)) {
+export const exportOkpToJwk = (options: Options): Result => {
+  if (!isOkpCurve(options.curve)) {
     throw new KryptosError("Curve is required");
   }
 

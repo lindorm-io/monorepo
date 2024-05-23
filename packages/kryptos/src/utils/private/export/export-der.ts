@@ -1,15 +1,15 @@
 import { KryptosError } from "../../../errors";
 import { KryptosDer } from "../../../types";
-import { _ExportOptions } from "../../../types/private/export-options";
-import { _isEcDer } from "../ec/is";
-import { _isOctDer } from "../oct/is";
-import { _isOkpDer } from "../okp/is";
-import { _isRsaDer } from "../rsa/is";
+import { ExportOptions } from "../../../types/private/export-options";
+import { isEcDer } from "../ec/is";
+import { isOctDer } from "../oct/is";
+import { isOkpDer } from "../okp/is";
+import { isRsaDer } from "../rsa/is";
 
-export const _exportToDer = (options: _ExportOptions): KryptosDer => {
+export const exportToDer = (options: ExportOptions): KryptosDer => {
   switch (options.type) {
     case "EC":
-      if (!_isEcDer(options)) {
+      if (!isEcDer(options)) {
         throw new KryptosError("Invalid options");
       }
       return {
@@ -22,7 +22,7 @@ export const _exportToDer = (options: _ExportOptions): KryptosDer => {
       };
 
     case "oct":
-      if (!_isOctDer(options)) {
+      if (!isOctDer(options)) {
         throw new KryptosError("Invalid options");
       }
       return {
@@ -34,7 +34,7 @@ export const _exportToDer = (options: _ExportOptions): KryptosDer => {
       };
 
     case "OKP":
-      if (!_isOkpDer(options)) {
+      if (!isOkpDer(options)) {
         throw new KryptosError("Invalid options");
       }
       return {
@@ -47,7 +47,7 @@ export const _exportToDer = (options: _ExportOptions): KryptosDer => {
       };
 
     case "RSA":
-      if (!_isRsaDer(options)) {
+      if (!isRsaDer(options)) {
         throw new KryptosError("Invalid options");
       }
       return {

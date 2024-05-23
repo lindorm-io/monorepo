@@ -1,5 +1,5 @@
 import { Kryptos } from "@lindorm/kryptos";
-import { _getRsaDecryptionKey, _getRsaEncryptionKey } from "./get-rsa-keys";
+import { getRsaDecryptionKey, getRsaEncryptionKey } from "./get-rsa-keys";
 
 describe("get-rsa-keys", () => {
   test("should return encryption keys with RSA-OAEP", () => {
@@ -9,7 +9,7 @@ describe("get-rsa-keys", () => {
       use: "enc",
     });
 
-    const result = _getRsaEncryptionKey({
+    const result = getRsaEncryptionKey({
       encryption: "A128GCM",
       kryptos,
     });
@@ -20,7 +20,7 @@ describe("get-rsa-keys", () => {
     });
 
     expect(
-      _getRsaDecryptionKey({
+      getRsaDecryptionKey({
         encryption: "A128GCM",
         publicEncryptionKey: result.publicEncryptionKey,
         kryptos,
@@ -35,7 +35,7 @@ describe("get-rsa-keys", () => {
       use: "enc",
     });
 
-    const result = _getRsaEncryptionKey({
+    const result = getRsaEncryptionKey({
       encryption: "A128GCM",
       kryptos,
     });
@@ -46,7 +46,7 @@ describe("get-rsa-keys", () => {
     });
 
     expect(
-      _getRsaDecryptionKey({
+      getRsaDecryptionKey({
         encryption: "A128GCM",
         publicEncryptionKey: result.publicEncryptionKey,
         kryptos,
@@ -61,7 +61,7 @@ describe("get-rsa-keys", () => {
       use: "enc",
     });
 
-    const result = _getRsaEncryptionKey({
+    const result = getRsaEncryptionKey({
       encryption: "A128GCM",
       kryptos,
     });
@@ -72,7 +72,7 @@ describe("get-rsa-keys", () => {
     });
 
     expect(
-      _getRsaDecryptionKey({
+      getRsaDecryptionKey({
         encryption: "A128GCM",
         publicEncryptionKey: result.publicEncryptionKey,
         kryptos,
@@ -87,7 +87,7 @@ describe("get-rsa-keys", () => {
       use: "enc",
     });
 
-    const result = _getRsaEncryptionKey({
+    const result = getRsaEncryptionKey({
       encryption: "A128GCM",
       kryptos,
     });
@@ -98,7 +98,7 @@ describe("get-rsa-keys", () => {
     });
 
     expect(
-      _getRsaDecryptionKey({
+      getRsaDecryptionKey({
         encryption: "A128GCM",
         publicEncryptionKey: result.publicEncryptionKey,
         kryptos,

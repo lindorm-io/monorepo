@@ -1,9 +1,9 @@
-import { _generateOkpKey } from "./generate-key";
+import { generateOkpKey } from "./generate-key";
 
 describe("generateEcKey", () => {
   describe("enc", () => {
     test("should generate X25519", () => {
-      const res = _generateOkpKey({
+      const res = generateOkpKey({
         algorithm: "ECDH-ES",
         curve: "X25519",
         type: "OKP",
@@ -16,7 +16,7 @@ describe("generateEcKey", () => {
     });
 
     test("should generate X448", () => {
-      const res = _generateOkpKey({
+      const res = generateOkpKey({
         algorithm: "ECDH-ES",
         curve: "X448",
         type: "OKP",
@@ -31,7 +31,7 @@ describe("generateEcKey", () => {
 
   describe("sig", () => {
     test("should generate Ed25519", () => {
-      const res = _generateOkpKey({
+      const res = generateOkpKey({
         algorithm: "EdDSA",
         curve: "Ed25519",
         type: "OKP",
@@ -44,7 +44,7 @@ describe("generateEcKey", () => {
     });
 
     test("should generate Ed448", () => {
-      const res = _generateOkpKey({
+      const res = generateOkpKey({
         algorithm: "EdDSA",
         curve: "Ed448",
         type: "OKP",

@@ -1,28 +1,28 @@
 import { isArray, isObject } from "@lindorm/is";
 import { Dict } from "@lindorm/types";
-import { _MetaType } from "../../enums/private/MetaType";
-import { _parseObjectValues } from "./parse-object-values";
+import { MetaType } from "../../enums/private/MetaType";
+import { parseObjectValues } from "./parse-object-values";
 
-export const _parseArrayValues = (input: any, meta: Dict): Array<any> => {
+export const parseArrayValues = (input: any, meta: Dict): Array<any> => {
   const parsed = isArray(input) ? input : JSON.parse(input);
   const result: Array<any> = [];
 
   for (const [index, value] of parsed.entries()) {
     if (isObject(meta[index])) {
-      result.push(_parseObjectValues(value, meta[index]));
+      result.push(parseObjectValues(value, meta[index]));
     } else if (isArray(meta[index])) {
-      result.push(_parseArrayValues(value, meta[index]));
-    } else if (meta[index] === _MetaType.Boolean) {
+      result.push(parseArrayValues(value, meta[index]));
+    } else if (meta[index] === MetaType.Boolean) {
       result.push(JSON.parse(value));
-    } else if (meta[index] === _MetaType.Date) {
+    } else if (meta[index] === MetaType.Date) {
       result.push(new Date(value));
-    } else if (meta[index] === _MetaType.Number) {
+    } else if (meta[index] === MetaType.Number) {
       result.push(parseInt(value, 10));
-    } else if (meta[index] === _MetaType.String) {
+    } else if (meta[index] === MetaType.String) {
       result.push(value);
-    } else if (meta[index] === _MetaType.Null) {
+    } else if (meta[index] === MetaType.Null) {
       result.push(null);
-    } else if (meta[index] === _MetaType.Undefined) {
+    } else if (meta[index] === MetaType.Undefined) {
       result.push(undefined);
     } else {
       result.push(JSON.parse(value));

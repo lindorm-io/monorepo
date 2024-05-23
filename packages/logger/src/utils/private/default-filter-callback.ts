@@ -1,1 +1,2 @@
-export const _defaultFilterCallback = (input: any): string => (input ? "[Filtered]" : input);
+export const defaultFilterCallback = (input: any): string =>
+  input ? "[Filtered]" : input;

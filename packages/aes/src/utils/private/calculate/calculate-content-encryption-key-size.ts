@@ -2,7 +2,7 @@ import { KryptosEncryption } from "@lindorm/kryptos";
 import { AesKeyLength } from "@lindorm/types";
 import { AesError } from "../../../errors";
 
-export const _calculateContentEncryptionKeySize = (
+export const calculateContentEncryptionKeySize = (
   encryption: KryptosEncryption,
 ): AesKeyLength => {
   switch (encryption) {

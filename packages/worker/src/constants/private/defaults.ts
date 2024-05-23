@@ -1,6 +1,6 @@
 import { RetryConfig, RetryStrategy } from "@lindorm/retry";
 
-export const _RETRY_CONFIG: RetryConfig = {
+export const RETRY_CONFIG: RetryConfig = {
   maxAttempts: 10,
   strategy: RetryStrategy.Exponential,
   timeout: 250,

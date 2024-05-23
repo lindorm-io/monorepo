@@ -1,32 +1,32 @@
 import { createHmac } from "crypto";
 import { OctError } from "../../errors";
 import { CreateOctSignatureOptions, VerifyOctSignatureOptions } from "../../types";
-import { _assertKeySize } from "./assert-key-size";
-import { _getPrivateKey } from "./get-key";
-import { _mapOctAlgorithm } from "./map-algorithm";
+import { assertKeySize } from "./assert-key-size";
+import { getPrivateKey } from "./get-key";
+import { mapOctAlgorithm } from "./map-algorithm";
 
-export const _createOctSignature = ({
+export const createOctSignature = ({
   data,
   format,
   kryptos,
 }: CreateOctSignatureOptions): string => {
-  const algorithm = _mapOctAlgorithm(kryptos);
-  const privateKey = _getPrivateKey(kryptos);
+  const algorithm = mapOctAlgorithm(kryptos);
+  const privateKey = getPrivateKey(kryptos);
 
-  _assertKeySize(algorithm, privateKey);
+  assertKeySize(algorithm, privateKey);
 
   return createHmac(algorithm, privateKey).update(data).digest(format);
 };
 
-export const _verifyOctSignature = ({
+export const verifyOctSignature = ({
   data,
   format,
   kryptos,
   signature,
 }: VerifyOctSignatureOptions): boolean =>
-  _createOctSignature({ data, format, kryptos }) === signature;
+  createOctSignature({ data, format, kryptos }) === signature;
 
-export const _assertOctSignature = (options: VerifyOctSignatureOptions): void => {
-  if (_verifyOctSignature(options)) return;
+export const assertOctSignature = (options: VerifyOctSignatureOptions): void => {
+  if (verifyOctSignature(options)) return;
   throw new OctError("OctSignature does not match");
 };

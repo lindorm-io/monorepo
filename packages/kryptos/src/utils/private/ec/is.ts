@@ -1,14 +1,14 @@
 import { isBuffer, isString } from "@lindorm/is";
 import { EcB64, EcDer, EcJwk, EcPem, KryptosCurve } from "../../../types";
 import {
-  _IsBufferFormatOptions,
-  _IsJwkFormatOptions,
-  _IsStringFormatOptions,
+  IsBufferFormatOptions,
+  IsJwkFormatOptions,
+  IsStringFormatOptions,
 } from "../../../types/private/is-options";
 
 const CURVES: Array<KryptosCurve> = ["P-256", "P-384", "P-521"] as const;
 
-export const _isEcB64 = (options: _IsStringFormatOptions): options is EcB64 => {
+export const isEcB64 = (options: IsStringFormatOptions): options is EcB64 => {
   if (options.type !== "EC") return false;
   if (!options.curve || !CURVES.includes(options.curve)) return false;
 
@@ -23,7 +23,7 @@ export const _isEcB64 = (options: _IsStringFormatOptions): options is EcB64 => {
   return true;
 };
 
-export const _isEcDer = (options: _IsBufferFormatOptions): options is EcDer => {
+export const isEcDer = (options: IsBufferFormatOptions): options is EcDer => {
   if (options.type !== "EC") return false;
   if (!options.curve || !CURVES.includes(options.curve)) return false;
 
@@ -32,7 +32,7 @@ export const _isEcDer = (options: _IsBufferFormatOptions): options is EcDer => {
   return true;
 };
 
-export const _isEcJwk = (options: _IsJwkFormatOptions): options is EcJwk => {
+export const isEcJwk = (options: IsJwkFormatOptions): options is EcJwk => {
   if (options.kty !== "EC") return false;
   if (!options.crv || !CURVES.includes(options.crv)) return false;
 
@@ -41,7 +41,7 @@ export const _isEcJwk = (options: _IsJwkFormatOptions): options is EcJwk => {
   return true;
 };
 
-export const _isEcPem = (options: _IsStringFormatOptions): options is EcPem => {
+export const isEcPem = (options: IsStringFormatOptions): options is EcPem => {
   if (options.type !== "EC") return false;
   if (!options.curve || !CURVES.includes(options.curve)) return false;
 

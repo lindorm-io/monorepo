@@ -1,7 +1,7 @@
 import { Kryptos } from "@lindorm/kryptos";
 import {
-  _getOctPbkdfKeyWrapDecryptionKey,
-  _getOctPbkdfKeyWrapEncryptionKey,
+  getOctPbkdfKeyWrapDecryptionKey,
+  getOctPbkdfKeyWrapEncryptionKey,
 } from "./get-oct-pbkdf-key-wrap-keys";
 
 describe("getOctKeyWrap", () => {
@@ -12,7 +12,7 @@ describe("getOctKeyWrap", () => {
       use: "enc",
     });
 
-    const result = _getOctPbkdfKeyWrapEncryptionKey({ encryption: "A128GCM", kryptos });
+    const result = getOctPbkdfKeyWrapEncryptionKey({ encryption: "A128GCM", kryptos });
 
     expect(result).toEqual({
       contentEncryptionKey: expect.any(Buffer),
@@ -22,7 +22,7 @@ describe("getOctKeyWrap", () => {
     });
 
     expect(
-      _getOctPbkdfKeyWrapDecryptionKey({
+      getOctPbkdfKeyWrapDecryptionKey({
         encryption: "A128GCM",
         kryptos,
         pbkdfIterations: result.pbkdfIterations,
@@ -39,7 +39,7 @@ describe("getOctKeyWrap", () => {
       use: "enc",
     });
 
-    const result = _getOctPbkdfKeyWrapEncryptionKey({ encryption: "A128GCM", kryptos });
+    const result = getOctPbkdfKeyWrapEncryptionKey({ encryption: "A128GCM", kryptos });
 
     expect(result).toEqual({
       contentEncryptionKey: expect.any(Buffer),
@@ -49,7 +49,7 @@ describe("getOctKeyWrap", () => {
     });
 
     expect(
-      _getOctPbkdfKeyWrapDecryptionKey({
+      getOctPbkdfKeyWrapDecryptionKey({
         encryption: "A128GCM",
         kryptos,
         pbkdfIterations: result.pbkdfIterations,
@@ -66,7 +66,7 @@ describe("getOctKeyWrap", () => {
       use: "enc",
     });
 
-    const result = _getOctPbkdfKeyWrapEncryptionKey({ encryption: "A128GCM", kryptos });
+    const result = getOctPbkdfKeyWrapEncryptionKey({ encryption: "A128GCM", kryptos });
 
     expect(result).toEqual({
       contentEncryptionKey: expect.any(Buffer),
@@ -76,7 +76,7 @@ describe("getOctKeyWrap", () => {
     });
 
     expect(
-      _getOctPbkdfKeyWrapDecryptionKey({
+      getOctPbkdfKeyWrapDecryptionKey({
         encryption: "A128GCM",
         kryptos,
         pbkdfIterations: result.pbkdfIterations,

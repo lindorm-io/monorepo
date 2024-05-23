@@ -8,7 +8,7 @@ type KeywrapEncryption =
   | "aes-192-gcm"
   | "aes-256-gcm";
 
-export const _calculateKeyWrapEncryption = (kryptos: IKryptos): KeywrapEncryption => {
+export const calculateKeyWrapEncryption = (kryptos: IKryptos): KeywrapEncryption => {
   switch (kryptos.algorithm) {
     case "A128KW":
     case "ECDH-ES+A128KW":

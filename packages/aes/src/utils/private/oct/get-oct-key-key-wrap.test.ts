@@ -1,7 +1,7 @@
 import { Kryptos } from "@lindorm/kryptos";
 import {
-  _getOctKeyWrapDecryptionKey,
-  _getOctKeyWrapEncryptionKey,
+  getOctKeyWrapDecryptionKey,
+  getOctKeyWrapEncryptionKey,
 } from "./get-oct-key-key-wrap";
 
 describe("getOctKeyWrap", () => {
@@ -13,7 +13,7 @@ describe("getOctKeyWrap", () => {
         use: "enc",
       });
 
-      const result = _getOctKeyWrapEncryptionKey({ encryption: "A128GCM", kryptos });
+      const result = getOctKeyWrapEncryptionKey({ encryption: "A128GCM", kryptos });
 
       expect(result).toEqual({
         contentEncryptionKey: expect.any(Buffer),
@@ -22,7 +22,7 @@ describe("getOctKeyWrap", () => {
       });
 
       expect(
-        _getOctKeyWrapDecryptionKey({
+        getOctKeyWrapDecryptionKey({
           encryption: "A128GCM",
           hkdfSalt: result.hkdfSalt,
           kryptos,
@@ -38,7 +38,7 @@ describe("getOctKeyWrap", () => {
         use: "enc",
       });
 
-      const result = _getOctKeyWrapEncryptionKey({ encryption: "A192GCM", kryptos });
+      const result = getOctKeyWrapEncryptionKey({ encryption: "A192GCM", kryptos });
 
       expect(result).toEqual({
         contentEncryptionKey: expect.any(Buffer),
@@ -47,7 +47,7 @@ describe("getOctKeyWrap", () => {
       });
 
       expect(
-        _getOctKeyWrapDecryptionKey({
+        getOctKeyWrapDecryptionKey({
           encryption: "A192GCM",
           hkdfSalt: result.hkdfSalt,
           kryptos,
@@ -63,7 +63,7 @@ describe("getOctKeyWrap", () => {
         use: "enc",
       });
 
-      const result = _getOctKeyWrapEncryptionKey({ encryption: "A256GCM", kryptos });
+      const result = getOctKeyWrapEncryptionKey({ encryption: "A256GCM", kryptos });
 
       expect(result).toEqual({
         contentEncryptionKey: expect.any(Buffer),
@@ -72,7 +72,7 @@ describe("getOctKeyWrap", () => {
       });
 
       expect(
-        _getOctKeyWrapDecryptionKey({
+        getOctKeyWrapDecryptionKey({
           encryption: "A256GCM",
           hkdfSalt: result.hkdfSalt,
           kryptos,
@@ -90,7 +90,7 @@ describe("getOctKeyWrap", () => {
         use: "enc",
       });
 
-      const result = _getOctKeyWrapEncryptionKey({ encryption: "A128GCM", kryptos });
+      const result = getOctKeyWrapEncryptionKey({ encryption: "A128GCM", kryptos });
 
       expect(result).toEqual({
         contentEncryptionKey: expect.any(Buffer),
@@ -101,7 +101,7 @@ describe("getOctKeyWrap", () => {
       });
 
       expect(
-        _getOctKeyWrapDecryptionKey({
+        getOctKeyWrapDecryptionKey({
           encryption: "A128GCM",
           hkdfSalt: result.hkdfSalt,
           kryptos,
@@ -119,7 +119,7 @@ describe("getOctKeyWrap", () => {
         use: "enc",
       });
 
-      const result = _getOctKeyWrapEncryptionKey({ encryption: "A192GCM", kryptos });
+      const result = getOctKeyWrapEncryptionKey({ encryption: "A192GCM", kryptos });
 
       expect(result).toEqual({
         contentEncryptionKey: expect.any(Buffer),
@@ -130,7 +130,7 @@ describe("getOctKeyWrap", () => {
       });
 
       expect(
-        _getOctKeyWrapDecryptionKey({
+        getOctKeyWrapDecryptionKey({
           encryption: "A192GCM",
           hkdfSalt: result.hkdfSalt,
           kryptos,
@@ -148,7 +148,7 @@ describe("getOctKeyWrap", () => {
         use: "enc",
       });
 
-      const result = _getOctKeyWrapEncryptionKey({ encryption: "A256GCM", kryptos });
+      const result = getOctKeyWrapEncryptionKey({ encryption: "A256GCM", kryptos });
 
       expect(result).toEqual({
         contentEncryptionKey: expect.any(Buffer),
@@ -159,7 +159,7 @@ describe("getOctKeyWrap", () => {
       });
 
       expect(
-        _getOctKeyWrapDecryptionKey({
+        getOctKeyWrapDecryptionKey({
           encryption: "A256GCM",
           hkdfSalt: result.hkdfSalt,
           kryptos,

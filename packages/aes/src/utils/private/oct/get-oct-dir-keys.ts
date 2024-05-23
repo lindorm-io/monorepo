@@ -6,9 +6,9 @@ import {
   DecryptCekOptions,
   DecryptCekResult,
 } from "../../../types/private";
-import { _calculateContentEncryptionKeySize } from "../calculate/calculate-content-encryption-key-size";
+import { calculateContentEncryptionKeySize } from "../calculate/calculate-content-encryption-key-size";
 
-export const _getOctDirEncryptionKey = ({
+export const getOctDirEncryptionKey = ({
   encryption,
   kryptos,
 }: CreateCekOptions): CreateCekResult => {
@@ -17,7 +17,7 @@ export const _getOctDirEncryptionKey = ({
   }
 
   const der = kryptos.export("der");
-  const keyLength = _calculateContentEncryptionKeySize(encryption);
+  const keyLength = calculateContentEncryptionKeySize(encryption);
 
   if (der.privateKey.length !== keyLength) {
     throw new AesError("Invalid key length", {
@@ -28,7 +28,7 @@ export const _getOctDirEncryptionKey = ({
   return { contentEncryptionKey: der.privateKey };
 };
 
-export const _getOctDirDecryptionKey = ({
+export const getOctDirDecryptionKey = ({
   encryption,
   kryptos,
 }: DecryptCekOptions): DecryptCekResult => {
@@ -37,7 +37,7 @@ export const _getOctDirDecryptionKey = ({
   }
 
   const der = kryptos.export("der");
-  const keyLength = _calculateContentEncryptionKeySize(encryption);
+  const keyLength = calculateContentEncryptionKeySize(encryption);
 
   if (der.privateKey.length !== keyLength) {
     throw new AesError("Invalid key length", {

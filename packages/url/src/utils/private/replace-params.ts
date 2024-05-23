@@ -1,8 +1,8 @@
 import { isObject } from "@lindorm/is";
 import { Dict, Param } from "@lindorm/types";
-import { _findAllMatches } from "./find-all-matches";
+import { findAllMatches } from "./find-all-matches";
 
-export const _replaceParams = <Params extends Dict<Param> = Dict<Param>>(
+export const replaceParams = <Params extends Dict<Param> = Dict<Param>>(
   pathname: string,
   params?: Params,
 ): string => {
@@ -10,7 +10,7 @@ export const _replaceParams = <Params extends Dict<Param> = Dict<Param>>(
     return pathname;
   }
 
-  const matches = _findAllMatches(pathname);
+  const matches = findAllMatches(pathname);
 
   if (!matches.length) {
     throw new Error("Pathname contains no param variables");

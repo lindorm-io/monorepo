@@ -1,10 +1,10 @@
-import { _generateOctKey } from "./generate-key";
+import { generateOctKey } from "./generate-key";
 
 describe("generateOctKey", () => {
   describe("enc", () => {
     describe("dir", () => {
       test("should generate A128GCM", () => {
-        const res = _generateOctKey({
+        const res = generateOctKey({
           algorithm: "dir",
           encryption: "A128GCM",
           type: "oct",
@@ -16,7 +16,7 @@ describe("generateOctKey", () => {
       });
 
       test("should generate A192GCM", () => {
-        const res = _generateOctKey({
+        const res = generateOctKey({
           algorithm: "dir",
           encryption: "A192GCM",
           type: "oct",
@@ -28,7 +28,7 @@ describe("generateOctKey", () => {
       });
 
       test("should generate A256GCM", () => {
-        const res = _generateOctKey({
+        const res = generateOctKey({
           algorithm: "dir",
           encryption: "A256GCM",
           type: "oct",
@@ -40,7 +40,7 @@ describe("generateOctKey", () => {
       });
 
       test("should generate A128CBC-HS256", () => {
-        const res = _generateOctKey({
+        const res = generateOctKey({
           algorithm: "dir",
           encryption: "A128CBC-HS256",
           type: "oct",
@@ -52,7 +52,7 @@ describe("generateOctKey", () => {
       });
 
       test("should generate A192CBC-HS384", () => {
-        const res = _generateOctKey({
+        const res = generateOctKey({
           algorithm: "dir",
           encryption: "A192CBC-HS384",
           type: "oct",
@@ -64,7 +64,7 @@ describe("generateOctKey", () => {
       });
 
       test("should generate A256CBC-HS512", () => {
-        const res = _generateOctKey({
+        const res = generateOctKey({
           algorithm: "dir",
           encryption: "A256CBC-HS512",
           type: "oct",
@@ -76,7 +76,7 @@ describe("generateOctKey", () => {
       });
 
       test("should generate A128KW", () => {
-        const res = _generateOctKey({
+        const res = generateOctKey({
           algorithm: "A128KW",
           type: "oct",
           use: "enc",
@@ -87,7 +87,7 @@ describe("generateOctKey", () => {
       });
 
       test("should generate A192KW", () => {
-        const res = _generateOctKey({
+        const res = generateOctKey({
           algorithm: "A192KW",
           type: "oct",
           use: "enc",
@@ -98,7 +98,7 @@ describe("generateOctKey", () => {
       });
 
       test("should generate A256KW", () => {
-        const res = _generateOctKey({
+        const res = generateOctKey({
           algorithm: "A256KW",
           type: "oct",
           use: "enc",
@@ -109,7 +109,7 @@ describe("generateOctKey", () => {
       });
 
       test("should generate PBES2-HS256+A128KW", () => {
-        const res = _generateOctKey({
+        const res = generateOctKey({
           algorithm: "PBES2-HS256+A128KW",
           type: "oct",
           use: "enc",
@@ -120,7 +120,7 @@ describe("generateOctKey", () => {
       });
 
       test("should generate PBES2-HS384+A192KW", () => {
-        const res = _generateOctKey({
+        const res = generateOctKey({
           algorithm: "PBES2-HS384+A192KW",
           type: "oct",
           use: "enc",
@@ -131,7 +131,7 @@ describe("generateOctKey", () => {
       });
 
       test("should generate PBES2-HS512+A256KW", () => {
-        const res = _generateOctKey({
+        const res = generateOctKey({
           algorithm: "PBES2-HS512+A256KW",
           type: "oct",
           use: "enc",
@@ -145,7 +145,7 @@ describe("generateOctKey", () => {
 
   describe("sig", () => {
     test("should generate HS256", () => {
-      const res = _generateOctKey({
+      const res = generateOctKey({
         algorithm: "HS256",
         type: "oct",
         use: "sig",
@@ -156,7 +156,7 @@ describe("generateOctKey", () => {
     });
 
     test("should generate HS384", () => {
-      const res = _generateOctKey({
+      const res = generateOctKey({
         algorithm: "HS384",
         type: "oct",
         use: "sig",
@@ -167,7 +167,7 @@ describe("generateOctKey", () => {
     });
 
     test("should generate HS512", () => {
-      const res = _generateOctKey({
+      const res = generateOctKey({
         algorithm: "HS512",
         type: "oct",
         use: "sig",

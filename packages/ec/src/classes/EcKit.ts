@@ -2,9 +2,9 @@ import { IKryptosEc, Kryptos } from "@lindorm/kryptos";
 import { EcError } from "../errors";
 import { EcKitOptions, EcSignatureFormat } from "../types";
 import {
-  _assertEcSignature,
-  _createEcSignature,
-  _verifyEcSignature,
+  assertEcSignature,
+  createEcSignature,
+  verifyEcSignature,
 } from "../utils/private/ec-signature";
 
 export class EcKit {
@@ -22,7 +22,7 @@ export class EcKit {
   }
 
   public sign(data: string): string {
-    return _createEcSignature({
+    return createEcSignature({
       data,
       format: this.format,
       kryptos: this.kryptos,
@@ -30,7 +30,7 @@ export class EcKit {
   }
 
   public verify(data: string, signature: string): boolean {
-    return _verifyEcSignature({
+    return verifyEcSignature({
       data,
       format: this.format,
       kryptos: this.kryptos,
@@ -39,7 +39,7 @@ export class EcKit {
   }
 
   public assert(data: string, signature: string): void {
-    return _assertEcSignature({
+    return assertEcSignature({
       data,
       format: this.format,
       kryptos: this.kryptos,

@@ -1,6 +1,6 @@
 import { ComposedMiddleware, Dispatch, Middleware, Next } from "../../types";
 
-export const _createDispatcher =
+export const createDispatcher =
   <Context>(middleware: Array<Middleware<Context>>): ComposedMiddleware<Context> =>
   (context: Context, next?: Next): Promise<void> => {
     let index = -1;

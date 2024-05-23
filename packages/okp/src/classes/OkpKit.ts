@@ -3,9 +3,9 @@ import { BufferFormat } from "@lindorm/types";
 import { OkpError } from "../errors";
 import { OkpKitOptions } from "../types";
 import {
-  _assertOkpSignature,
-  _createOkpSignature,
-  _verifyOkpSignature,
+  assertOkpSignature,
+  createOkpSignature,
+  verifyOkpSignature,
 } from "../utils/private/okp-signature";
 
 export class OkpKit {
@@ -23,7 +23,7 @@ export class OkpKit {
   }
 
   public sign(data: string): string {
-    return _createOkpSignature({
+    return createOkpSignature({
       data,
       format: this.format,
       kryptos: this.kryptos,
@@ -31,7 +31,7 @@ export class OkpKit {
   }
 
   public verify(data: string, signature: string): boolean {
-    return _verifyOkpSignature({
+    return verifyOkpSignature({
       data,
       format: this.format,
       kryptos: this.kryptos,
@@ -40,7 +40,7 @@ export class OkpKit {
   }
 
   public assert(data: string, signature: string): void {
-    return _assertOkpSignature({
+    return assertOkpSignature({
       data,
       format: this.format,
       kryptos: this.kryptos,

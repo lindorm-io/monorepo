@@ -5,7 +5,7 @@ import { RsaError } from "../../errors";
 
 const RSA_PKCS1_SALT_LENGTH = 32 as const;
 
-export const _getSignKey = (kryptos: IKryptosRsa): SignPrivateKeyInput | string => {
+export const getSignKey = (kryptos: IKryptosRsa): SignPrivateKeyInput | string => {
   const { privateKey } = kryptos.export("pem");
 
   if (!privateKey) {
@@ -27,7 +27,7 @@ export const _getSignKey = (kryptos: IKryptosRsa): SignPrivateKeyInput | string 
   throw new RsaError("Unsupported RSA algorithm", { debug: { kryptos } });
 };
 
-export const _getVerifyKey = (kryptos: IKryptosRsa): VerifyPublicKeyInput | string => {
+export const getVerifyKey = (kryptos: IKryptosRsa): VerifyPublicKeyInput | string => {
   const { publicKey } = kryptos.export("pem");
 
   if (!publicKey) {

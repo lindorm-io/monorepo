@@ -1,4 +1,4 @@
-export enum _MetaType {
+export enum MetaType {
   Array = "A",
   Boolean = "B",
   Date = "D",

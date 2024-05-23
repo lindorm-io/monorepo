@@ -1,4 +1,4 @@
-export type _RandomStringAmount =
+export type RandomStringAmount =
   | "random"
   | "10%"
   | "20%"
@@ -11,10 +11,10 @@ export type _RandomStringAmount =
   | "90%"
   | number;
 
-export type _CustomSymbols = "default" | "secret" | "token" | "unreserved";
+export type CustomSymbols = "default" | "secret" | "token" | "unreserved";
 
-export type _CreateRandomStringOptions = {
-  custom?: _CustomSymbols;
-  numbersMax?: _RandomStringAmount;
-  symbolsMax?: _RandomStringAmount;
+export type CreateRandomStringOptions = {
+  custom?: CustomSymbols;
+  numbersMax?: RandomStringAmount;
+  symbolsMax?: RandomStringAmount;
 };

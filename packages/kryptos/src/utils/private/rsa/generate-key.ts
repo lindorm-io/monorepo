@@ -1,14 +1,14 @@
 import { generateKeyPairSync } from "crypto";
 import { RsaGenerate } from "../../../types";
-import { _getRsaModulus } from "./get-modulus";
+import { getRsaModulus } from "./get-modulus";
 
 type Result = {
   privateKey: Buffer;
   publicKey: Buffer;
 };
 
-export const _generateRsaKey = (options: RsaGenerate): Result => {
-  const modulusLength = _getRsaModulus(options);
+export const generateRsaKey = (options: RsaGenerate): Result => {
+  const modulusLength = getRsaModulus(options);
 
   const { privateKey, publicKey } = generateKeyPairSync("rsa", {
     modulusLength,

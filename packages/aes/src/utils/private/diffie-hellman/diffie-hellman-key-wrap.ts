@@ -6,27 +6,27 @@ import {
   DecryptCekOptions,
   DecryptCekResult,
 } from "../../../types/private";
-import { _calculateContentEncryptionKeySize } from "../calculate/calculate-content-encryption-key-size";
-import { _calculateKeyWrapSize } from "../calculate/calculate-key-wrap-size";
-import { _hkdf } from "../key-derivation/hkdf";
-import { _keyUnwrap, _keyWrap } from "../key-wrap/key-wrap";
-import { _calculateSharedSecret, _generateSharedSecret } from "./shared-secret";
+import { calculateContentEncryptionKeySize } from "../calculate/calculate-content-encryption-key-size";
+import { calculateKeyWrapSize } from "../calculate/calculate-key-wrap-size";
+import { hkdf } from "../key-derivation/hkdf";
+import { keyUnwrap, keyWrap } from "../key-wrap/key-wrap";
+import { calculateSharedSecret, generateSharedSecret } from "./shared-secret";
 
-export const _getDiffieHellmanKeyWrapEncryptionKey = ({
+export const getDiffieHellmanKeyWrapEncryptionKey = ({
   encryption,
   kryptos,
 }: CreateCekOptions): CreateCekResult => {
-  const { publicEncryptionJwk, sharedSecret } = _generateSharedSecret(kryptos);
+  const { publicEncryptionJwk, sharedSecret } = generateSharedSecret(kryptos);
 
-  const cekSize = _calculateContentEncryptionKeySize(encryption);
+  const cekSize = calculateContentEncryptionKeySize(encryption);
   const contentEncryptionKey = randomBytes(cekSize);
 
-  const { derivedKey, hkdfSalt } = _hkdf({
+  const { derivedKey, hkdfSalt } = hkdf({
     derivationKey: sharedSecret,
-    keyLength: _calculateKeyWrapSize(kryptos.algorithm),
+    keyLength: calculateKeyWrapSize(kryptos.algorithm),
   });
 
-  const { publicEncryptionKey, publicEncryptionIv, publicEncryptionTag } = _keyWrap({
+  const { publicEncryptionKey, publicEncryptionIv, publicEncryptionTag } = keyWrap({
     contentEncryptionKey,
     kryptos,
     keyEncryptionKey: derivedKey,
@@ -42,7 +42,7 @@ export const _getDiffieHellmanKeyWrapEncryptionKey = ({
   };
 };
 
-export const _getDiffieHellmanKeyWrapDecryptionKey = ({
+export const getDiffieHellmanKeyWrapDecryptionKey = ({
   hkdfSalt,
   kryptos,
   publicEncryptionJwk,
@@ -54,15 +54,15 @@ export const _getDiffieHellmanKeyWrapDecryptionKey = ({
     throw new AesError("Missing publicEncryptionKey");
   }
 
-  const sharedSecret = _calculateSharedSecret({ kryptos, publicEncryptionJwk });
+  const sharedSecret = calculateSharedSecret({ kryptos, publicEncryptionJwk });
 
-  const { derivedKey } = _hkdf({
+  const { derivedKey } = hkdf({
     derivationKey: sharedSecret,
     hkdfSalt,
-    keyLength: _calculateKeyWrapSize(kryptos.algorithm),
+    keyLength: calculateKeyWrapSize(kryptos.algorithm),
   });
 
-  return _keyUnwrap({
+  return keyUnwrap({
     keyEncryptionKey: derivedKey,
     kryptos,
     publicEncryptionIv,

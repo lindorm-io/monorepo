@@ -3,12 +3,12 @@ import { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
 import { AesError } from "../errors";
 import { AesEncryptionData, AesKitOptions, DecryptAesDataOptions } from "../types";
 import {
-  _assertAesCipher,
-  _decryptAesCipher,
-  _encryptAesCipher,
-  _verifyAesCipher,
+  assertAesCipher,
+  decryptAesCipher,
+  encryptAesCipher,
+  verifyAesCipher,
 } from "../utils/private/aes-cipher";
-import { _decryptAesData, _encryptAesData } from "../utils/private/aes-data";
+import { decryptAesData, encryptAesData } from "../utils/private/aes-data";
 
 export class AesKit {
   private readonly encryption: KryptosEncryption;
@@ -27,14 +27,14 @@ export class AesKit {
   ): string | AesEncryptionData {
     switch (mode) {
       case "cipher":
-        return _encryptAesCipher({
+        return encryptAesCipher({
           data: data,
           encryption: this.encryption,
           kryptos: this.kryptos,
         });
 
       case "object":
-        return _encryptAesData({
+        return encryptAesData({
           data: data,
           encryption: this.encryption,
           kryptos: this.kryptos,
@@ -49,14 +49,14 @@ export class AesKit {
   public decrypt(data: Omit<DecryptAesDataOptions, "kryptos">): string;
   public decrypt(data: Omit<DecryptAesDataOptions, "kryptos"> | string): string {
     if (isString(data)) {
-      return _decryptAesCipher({
+      return decryptAesCipher({
         cipher: data,
         kryptos: this.kryptos,
       });
     }
 
     if (isObject(data)) {
-      return _decryptAesData({
+      return decryptAesData({
         ...data,
         kryptos: this.kryptos,
       });
@@ -66,7 +66,7 @@ export class AesKit {
   }
 
   public verify(data: string, cipher: string): boolean {
-    return _verifyAesCipher({
+    return verifyAesCipher({
       cipher,
       data,
       kryptos: this.kryptos,
@@ -74,7 +74,7 @@ export class AesKit {
   }
 
   public assert(data: string, cipher: string): void {
-    return _assertAesCipher({
+    return assertAesCipher({
       cipher,
       data,
       kryptos: this.kryptos,

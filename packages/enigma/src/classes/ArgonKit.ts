@@ -2,9 +2,9 @@ import { IKryptosOct, Kryptos } from "@lindorm/kryptos";
 import { OctError } from "@lindorm/oct";
 import { ArgonKitOptions } from "../types";
 import {
-  _assertArgonHash,
-  _createArgonHash,
-  _verifyArgonHash,
+  assertArgonHash,
+  createArgonHash,
+  verifyArgonHash,
 } from "../utils/private/argon-hash";
 
 export class ArgonKit {
@@ -28,7 +28,7 @@ export class ArgonKit {
   }
 
   public async hash(data: string): Promise<string> {
-    return await _createArgonHash({
+    return await createArgonHash({
       data,
       hashLength: this.hashLength,
       memoryCost: this.memoryCost,
@@ -39,10 +39,10 @@ export class ArgonKit {
   }
 
   public async verify(data: string, hash: string): Promise<boolean> {
-    return await _verifyArgonHash({ data, hash, kryptos: this.kryptos });
+    return await verifyArgonHash({ data, hash, kryptos: this.kryptos });
   }
 
   public async assert(data: string, hash: string): Promise<void> {
-    return await _assertArgonHash({ data, hash, kryptos: this.kryptos });
+    return await assertArgonHash({ data, hash, kryptos: this.kryptos });
   }
 }

@@ -16,7 +16,7 @@ type Result = {
   headers: Record<string, string>;
 };
 
-export const _composeAxiosData = async (ctx: ConduitContext): Promise<Result> => {
+export const composeAxiosData = async (ctx: ConduitContext): Promise<Result> => {
   if (ctx.req.stream) {
     const form = await newServerFormData();
 
