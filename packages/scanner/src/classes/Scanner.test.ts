@@ -1,36 +1,36 @@
-import { StructureScanner } from "./StructureScanner";
+import { Scanner } from "./Scanner";
 
-describe("StructureScanner", () => {
+describe("Scanner", () => {
   const path = [__dirname, "..", "..", "example"];
 
   test("should resolve all files", () => {
-    const scanner = new StructureScanner();
+    const scanner = new Scanner();
 
     expect(scanner.scan(__dirname)).toEqual([
       {
-        baseName: "StructureScanner",
-        basePath: "StructureScanner.test",
+        baseName: "Scanner",
+        basePath: "Scanner.test",
         children: [],
         extension: "ts",
-        fullName: "StructureScanner.test.ts",
-        fullPath: expect.stringContaining("/src/classes/StructureScanner.test.ts"),
+        fullName: "Scanner.test.ts",
+        fullPath: expect.stringContaining("/src/classes/Scanner.test.ts"),
         isDirectory: false,
         isFile: true,
         parents: [],
-        relativePath: "StructureScanner.test.ts",
+        relativePath: "Scanner.test.ts",
         types: ["test"],
       },
       {
-        baseName: "StructureScanner",
-        basePath: "StructureScanner",
+        baseName: "Scanner",
+        basePath: "Scanner",
         children: [],
         extension: "ts",
-        fullName: "StructureScanner.ts",
-        fullPath: expect.stringContaining("/src/classes/StructureScanner.ts"),
+        fullName: "Scanner.ts",
+        fullPath: expect.stringContaining("/src/classes/Scanner.ts"),
         isDirectory: false,
         isFile: true,
         parents: [],
-        relativePath: "StructureScanner.ts",
+        relativePath: "Scanner.ts",
         types: [],
       },
       {
@@ -50,11 +50,11 @@ describe("StructureScanner", () => {
   });
 
   test("should resolve with denied extensions", () => {
-    const scanner = new StructureScanner({
+    const scanner = new Scanner({
       deniedExtensions: [/js$/, /ts$/, /txt$/],
     });
 
-    expect(StructureScanner.flatten(scanner.scan(...path))).toEqual([
+    expect(Scanner.flatten(scanner.scan(...path))).toEqual([
       {
         baseName: "[file9]",
         basePath: "files/[parent4]/[file9]",
@@ -85,11 +85,11 @@ describe("StructureScanner", () => {
   });
 
   test("should resolve with denied directories", () => {
-    const scanner = new StructureScanner({
+    const scanner = new Scanner({
       deniedDirectories: [/parent/],
     });
 
-    expect(StructureScanner.flatten(scanner.scan(...path))).toEqual([
+    expect(Scanner.flatten(scanner.scan(...path))).toEqual([
       {
         baseName: "file1",
         basePath: "files/file1",
@@ -185,11 +185,11 @@ describe("StructureScanner", () => {
   });
 
   test("should resolve with denied file names", () => {
-    const scanner = new StructureScanner({
+    const scanner = new Scanner({
       deniedDirectories: [/file/],
     });
 
-    expect(StructureScanner.flatten(scanner.scan(...path))).toEqual([
+    expect(Scanner.flatten(scanner.scan(...path))).toEqual([
       {
         baseName: "index",
         basePath: "index",
@@ -207,11 +207,11 @@ describe("StructureScanner", () => {
   });
 
   test("should resolve with denied file types", () => {
-    const scanner = new StructureScanner({
+    const scanner = new Scanner({
       deniedTypes: [/^test$/, /^type$/],
     });
 
-    expect(StructureScanner.flatten(scanner.scan(...path))).toEqual([
+    expect(Scanner.flatten(scanner.scan(...path))).toEqual([
       {
         baseName: "[file9]",
         basePath: "files/[parent4]/[file9]",

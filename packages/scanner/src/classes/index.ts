@@ -1,1 +1,1 @@
-export * from "./StructureScanner";
+export * from "./Scanner";

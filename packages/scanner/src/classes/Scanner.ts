@@ -1,9 +1,9 @@
 import { isString } from "@lindorm/is";
 import { readdirSync, statSync } from "fs";
 import { basename, extname, join, relative, sep } from "path";
-import { ScanData, StructureScannerOptions } from "../types";
+import { IScanner, ScanData, StructureScannerOptions } from "../types";
 
-export class StructureScanner {
+export class Scanner implements IScanner {
   private readonly deniedDirectories: Array<RegExp>;
   private readonly deniedExtensions: Array<RegExp>;
   private readonly deniedFilenames: Array<RegExp>;
@@ -42,7 +42,7 @@ export class StructureScanner {
 
     for (const item of array) {
       if (item.isDirectory) {
-        result.push(StructureScanner.flatten(item.children));
+        result.push(Scanner.flatten(item.children));
       }
 
       if (item.isFile) {
