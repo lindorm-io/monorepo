@@ -1,9 +1,6 @@
 import { Optional } from "@lindorm/types";
-import { EcGenerate } from "./ec";
 import { KryptosEncryption } from "./encryption";
-import { OctGenerate } from "./oct";
-import { OkpGenerate } from "./okp";
-import { RsaGenerate, RsaModulus } from "./rsa";
+import { RsaModulus } from "./rsa";
 import {
   KryptosAlgorithm,
   KryptosCurve,
@@ -64,8 +61,6 @@ export type KryptosKeys = {
 };
 
 export type KryptosOptions = StdOptions & KryptosKeys;
-
-export type GenerateKryptosConfig = EcGenerate | OctGenerate | OkpGenerate | RsaGenerate;
 
 export type GenerateKryptosOptions = Pick<
   StdOptions,

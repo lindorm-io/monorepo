@@ -55,6 +55,15 @@ describe("Kryptos", () => {
 
       expect(key.export("b64")).toEqual(test.export("b64"));
     });
+
+    test("should auto generate", async () => {
+      const key = Kryptos.auto({ algorithm: "ES512" });
+
+      expect(key.type).toEqual("EC");
+      expect(key.use).toEqual("sig");
+
+      expect(key.operations).toEqual(["sign", "verify"]);
+    });
   });
 
   describe("export", () => {
@@ -111,22 +120,19 @@ describe("Kryptos", () => {
 
   describe("metadata", () => {
     test("should export metadata", async () => {
-      const key = Kryptos.generate(
-        {
-          algorithm: "ECDH-ES+A256KW",
-          type: "EC",
-          use: "enc",
-        },
-        {
-          encryption: "A192CBC-HS384",
-          expiresAt: new Date("2025-01-01T00:00:00.000Z"),
-          issuer: "https://test.lindorm.io/",
-          jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
-          notBefore: new Date("2024-01-01T08:00:00.000Z"),
-          operations: ["encrypt", "decrypt"],
-          ownerId: "2c3d8e05-b382-5b31-898c-2d1f6009f5c1",
-        },
-      );
+      const key = Kryptos.generate({
+        algorithm: "ECDH-ES+A256KW",
+        type: "EC",
+        use: "enc",
+
+        encryption: "A192CBC-HS384",
+        expiresAt: new Date("2025-01-01T00:00:00.000Z"),
+        issuer: "https://test.lindorm.io/",
+        jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
+        notBefore: new Date("2024-01-01T08:00:00.000Z"),
+        operations: ["encrypt", "decrypt"],
+        ownerId: "2c3d8e05-b382-5b31-898c-2d1f6009f5c1",
+      });
 
       expect(key.toJSON()).toEqual({
         id: expect.any(String),
@@ -156,22 +162,19 @@ describe("Kryptos", () => {
 
   describe("jwks", () => {
     test("should export private key to jwk", async () => {
-      const key = Kryptos.generate(
-        {
-          algorithm: "ECDH-ES+A256KW",
-          type: "EC",
-          use: "enc",
-        },
-        {
-          encryption: "A192CBC-HS384",
-          expiresAt: new Date("2025-01-01T00:00:00.000Z"),
-          issuer: "https://test.lindorm.io/",
-          jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
-          notBefore: new Date("2024-01-01T08:00:00.000Z"),
-          operations: ["encrypt", "decrypt"],
-          ownerId: "2c3d8e05-b382-5b31-898c-2d1f6009f5c1",
-        },
-      );
+      const key = Kryptos.generate({
+        algorithm: "ECDH-ES+A256KW",
+        type: "EC",
+        use: "enc",
+
+        encryption: "A192CBC-HS384",
+        expiresAt: new Date("2025-01-01T00:00:00.000Z"),
+        issuer: "https://test.lindorm.io/",
+        jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
+        notBefore: new Date("2024-01-01T08:00:00.000Z"),
+        operations: ["encrypt", "decrypt"],
+        ownerId: "2c3d8e05-b382-5b31-898c-2d1f6009f5c1",
+      });
 
       expect(key.toJWK("private")).toEqual({
         alg: "ECDH-ES+A256KW",
@@ -195,21 +198,18 @@ describe("Kryptos", () => {
     });
 
     test("should export public key to jwk", async () => {
-      const key = Kryptos.generate(
-        {
-          algorithm: "ECDH-ES+A256KW",
-          type: "EC",
-          use: "enc",
-        },
-        {
-          expiresAt: new Date("2025-01-01T00:00:00.000Z"),
-          issuer: "https://test.lindorm.io/",
-          jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
-          notBefore: new Date("2024-01-01T08:00:00.000Z"),
-          operations: ["encrypt", "decrypt"],
-          ownerId: "2c3d8e05-b382-5b31-898c-2d1f6009f5c1",
-        },
-      );
+      const key = Kryptos.generate({
+        algorithm: "ECDH-ES+A256KW",
+        type: "EC",
+        use: "enc",
+
+        expiresAt: new Date("2025-01-01T00:00:00.000Z"),
+        issuer: "https://test.lindorm.io/",
+        jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
+        notBefore: new Date("2024-01-01T08:00:00.000Z"),
+        operations: ["encrypt", "decrypt"],
+        ownerId: "2c3d8e05-b382-5b31-898c-2d1f6009f5c1",
+      });
 
       expect(key.toJWK("public")).toEqual({
         alg: "ECDH-ES+A256KW",
