@@ -1,1 +1,2 @@
-export * from "./structure-scanner";
+export * from "./interface";
+export * from "./types";
