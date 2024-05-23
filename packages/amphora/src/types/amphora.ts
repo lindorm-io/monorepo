@@ -14,7 +14,7 @@ export type AmphoraExternalOption = {
 
 export type AmphoraOptions = {
   external?: Array<AmphoraExternalOption>;
-  issuer: string;
+  issuer?: string;
   logger: ILogger;
 };
 

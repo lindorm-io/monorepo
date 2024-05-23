@@ -2,7 +2,7 @@ import { isAfter, isBefore, isEqual } from "@lindorm/date";
 import { isArray, isDate, isNumber, isString } from "@lindorm/is";
 import { Operators } from "../../types";
 
-export const _validateValue = (value: any, operators: Operators): boolean => {
+export const validateValue = (value: any, operators: Operators): boolean => {
   if (operators.$exists === true && !value) {
     return false;
   }
@@ -116,11 +116,11 @@ export const _validateValue = (value: any, operators: Operators): boolean => {
 
   // logical
 
-  if (operators.$and && !operators.$and.every((op) => _validateValue(value, op))) {
+  if (operators.$and && !operators.$and.every((op) => validateValue(value, op))) {
     return false;
   }
 
-  if (operators.$or && !operators.$or.some((op) => _validateValue(value, op))) {
+  if (operators.$or && !operators.$or.some((op) => validateValue(value, op))) {
     return false;
   }
 

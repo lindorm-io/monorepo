@@ -5,10 +5,10 @@ import { KryptosAlgorithm } from "@lindorm/kryptos";
 import { Dict } from "@lindorm/types";
 import { removeUndefined } from "@lindorm/utils";
 import { randomUUID } from "crypto";
-import { _B64U } from "../../constants/private/format";
+import { B64U } from "../../constants/private/format";
 import { JwtError } from "../../errors";
 import { JwtClaims, ParsedJwtPayload, SignJwtContent, SignJwtOptions } from "../../types";
-import { _createAccessTokenHash, _createCodeHash, _createStateHash } from "./create-hash";
+import { createAccessTokenHash, createCodeHash, createStateHash } from "./create-hash";
 
 type Config = {
   algorithm: KryptosAlgorithm;
@@ -23,7 +23,7 @@ type Result = {
   tokenId: string;
 };
 
-export const _encodeJwtPayload = <C extends Dict = Dict>(
+export const encodeJwtPayload = <C extends Dict = Dict>(
   config: Config,
   content: SignJwtContent<C>,
   options: SignJwtOptions,
@@ -49,19 +49,19 @@ export const _encodeJwtPayload = <C extends Dict = Dict>(
   const at_hash = isString(options.accessTokenHash)
     ? options.accessTokenHash
     : isString(content.accessToken)
-      ? _createAccessTokenHash(config.algorithm, content.accessToken)
+      ? createAccessTokenHash(config.algorithm, content.accessToken)
       : undefined;
 
   const c_hash = isString(options.codeHash)
     ? options.codeHash
     : isString(content.authCode)
-      ? _createCodeHash(config.algorithm, content.authCode)
+      ? createCodeHash(config.algorithm, content.authCode)
       : undefined;
 
   const s_hash = isString(options.stateHash)
     ? options.stateHash
     : isString(content.authState)
-      ? _createStateHash(config.algorithm, content.authState)
+      ? createStateHash(config.algorithm, content.authState)
       : undefined;
 
   const tokenId = isString(options.tokenId) ? options.tokenId : randomUUID();
@@ -106,7 +106,7 @@ export const _encodeJwtPayload = <C extends Dict = Dict>(
       ...claims,
       ...(content.claims ?? {}),
     }),
-    _B64U,
+    B64U,
   );
 
   return { expiresAt, expiresIn, expiresOn, payload, tokenId };
@@ -114,11 +114,11 @@ export const _encodeJwtPayload = <C extends Dict = Dict>(
 
 type DecodeClaims<C extends Dict = Dict> = JwtClaims & C;
 
-export const _decodeJwtPayload = <C extends Dict = Dict<never>>(
+export const decodeJwtPayload = <C extends Dict = Dict<never>>(
   payload: string,
 ): DecodeClaims<C> => JSON.parse(B64.toString(payload)) as DecodeClaims<C>;
 
-export const _parseJwtPayload = <C extends Dict = Dict<never>>(
+export const parseJwtPayload = <C extends Dict = Dict<never>>(
   decoded: DecodeClaims<C>,
 ): ParsedJwtPayload<C> => {
   if (!isFinite(decoded.exp)) {

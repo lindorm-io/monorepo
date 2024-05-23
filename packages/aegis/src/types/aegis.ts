@@ -11,7 +11,7 @@ export type AegisOptions = {
   clockTolerance?: number;
   encAlgorithm?: KryptosEncAlgorithm;
   encryption?: KryptosEncryption;
-  issuer: string;
+  issuer?: string;
   kryptosMayOverrideEncryption?: boolean;
   logger: ILogger;
   sigAlgorithm?: KryptosSigAlgorithm;

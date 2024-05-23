@@ -3,7 +3,7 @@ import { IKryptos } from "@lindorm/kryptos";
 import { OctKit } from "@lindorm/oct";
 import { OkpKit } from "@lindorm/okp";
 import { RsaKit } from "@lindorm/rsa";
-import { _B64U } from "../../constants/private/format";
+import { B64U } from "../../constants/private/format";
 import { JwtError } from "../../errors";
 
 type Options = {
@@ -12,41 +12,41 @@ type Options = {
   kryptos: IKryptos;
 };
 
-const _signEc = (kryptos: IKryptos, data: string): string => {
+const signEc = (kryptos: IKryptos, data: string): string => {
   const kit = new EcKit({ kryptos, format: "raw" });
   return kit.sign(data);
 };
 
-const _signOct = (kryptos: IKryptos, data: string): string => {
-  const kit = new OctKit({ kryptos, format: _B64U });
+const signOct = (kryptos: IKryptos, data: string): string => {
+  const kit = new OctKit({ kryptos, format: B64U });
   return kit.sign(data);
 };
 
-const _signOkp = (kryptos: IKryptos, data: string): string => {
-  const kit = new OkpKit({ kryptos, format: _B64U });
+const signOkp = (kryptos: IKryptos, data: string): string => {
+  const kit = new OkpKit({ kryptos, format: B64U });
   return kit.sign(data);
 };
 
-const _signRsa = (kryptos: IKryptos, data: string): string => {
-  const kit = new RsaKit({ kryptos, format: _B64U });
+const signRsa = (kryptos: IKryptos, data: string): string => {
+  const kit = new RsaKit({ kryptos, format: B64U });
   return kit.sign(data);
 };
 
-export const _createTokenSignature = (options: Options): string => {
+export const createTokenSignature = (options: Options): string => {
   const data = `${options.header}.${options.payload}`;
 
   switch (options.kryptos.type) {
     case "EC":
-      return _signEc(options.kryptos, data);
+      return signEc(options.kryptos, data);
 
     case "oct":
-      return _signOct(options.kryptos, data);
+      return signOct(options.kryptos, data);
 
     case "OKP":
-      return _signOkp(options.kryptos, data);
+      return signOkp(options.kryptos, data);
 
     case "RSA":
-      return _signRsa(options.kryptos, data);
+      return signRsa(options.kryptos, data);
 
     default:
       throw new JwtError("Unsupported algorithm");

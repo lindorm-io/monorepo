@@ -1,8 +1,8 @@
 import { TokenHeaderType } from "../../types";
-import { _decodeTokenHeader } from "./token-header";
+import { decodeTokenHeader } from "./token-header";
 
-export const _decodeTokenType = (token: string): TokenHeaderType => {
+export const decodeTokenType = (token: string): TokenHeaderType => {
   const [head] = token.split(".");
-  const header = _decodeTokenHeader(head);
+  const header = decodeTokenHeader(head);
   return header.typ;
 };

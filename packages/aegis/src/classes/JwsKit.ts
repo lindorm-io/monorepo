@@ -3,7 +3,7 @@ import { isBuffer, isString } from "@lindorm/is";
 import { IKryptos } from "@lindorm/kryptos";
 import { ILogger } from "@lindorm/logger";
 import { randomUUID } from "crypto";
-import { _B64U } from "../constants/private/format";
+import { B64U } from "../constants/private/format";
 import { JwsError } from "../errors";
 import {
   DecodedJws,
@@ -15,13 +15,13 @@ import {
   VerifiedJws,
   VerifiedJwsHeader,
 } from "../types";
-import { _createTokenSignature } from "../utils/private/create-token-signature";
+import { createTokenSignature } from "../utils/private/create-token-signature";
 import {
-  _decodeTokenHeader,
-  _encodeTokenHeader,
-  _parseTokenHeader,
+  decodeTokenHeader,
+  encodeTokenHeader,
+  parseTokenHeader,
 } from "../utils/private/token-header";
-import { _verifyTokenSignature } from "../utils/private/verify-token-signature";
+import { verifyTokenSignature } from "../utils/private/verify-token-signature";
 
 export class JwsKit implements IJwsKit {
   private readonly logger: ILogger;
@@ -55,15 +55,15 @@ export class JwsKit implements IJwsKit {
       objectId,
     };
 
-    const header = _encodeTokenHeader(headerOptions);
+    const header = encodeTokenHeader(headerOptions);
 
     this.logger.silly("Token header encoded", { header, options: headerOptions });
 
-    const payload = isBuffer(data) ? data.toString(_B64U) : B64.encode(data, _B64U);
+    const payload = isBuffer(data) ? data.toString(B64U) : B64.encode(data, B64U);
 
     this.logger.silly("Token payload encoded", { payload, options });
 
-    const signature = _createTokenSignature({
+    const signature = createTokenSignature({
       header,
       payload,
       kryptos: this.kryptos,
@@ -98,7 +98,7 @@ export class JwsKit implements IJwsKit {
       });
     }
 
-    const verified = _verifyTokenSignature(this.kryptos, jws);
+    const verified = verifyTokenSignature(this.kryptos, jws);
 
     this.logger.silly("Token signature verified", { verified, token: jws });
 
@@ -108,12 +108,12 @@ export class JwsKit implements IJwsKit {
       });
     }
 
-    const header = _parseTokenHeader<VerifiedJwsHeader>(decoded.header);
+    const header = parseTokenHeader<VerifiedJwsHeader>(decoded.header);
 
     const payload =
       header.contentType === "text/plain"
         ? decoded.payload
-        : B64.toBuffer(decoded.payload, _B64U);
+        : B64.toBuffer(decoded.payload, B64U);
 
     this.logger.silly("Token verified", { header, payload });
 
@@ -124,7 +124,7 @@ export class JwsKit implements IJwsKit {
 
   public static decode(jws: string): DecodedJws {
     const [header, payload, signature] = jws.split(".");
-    const decodedHeader = _decodeTokenHeader(header);
+    const decodedHeader = decodeTokenHeader(header);
 
     const result: DecodedJws = {
       header: decodedHeader,

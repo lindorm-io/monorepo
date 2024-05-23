@@ -1,9 +1,9 @@
-import { _validate } from "./validate";
+import { validate } from "./validate";
 
 describe("validate", () => {
   test("should validate", () => {
     expect(() =>
-      _validate(
+      validate(
         { one: "string" },
         { one: { $and: [{ $exists: true }, { $eq: "string" }] } },
       ),

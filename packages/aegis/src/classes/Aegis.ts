@@ -36,7 +36,7 @@ export class Aegis implements IAegis {
   private readonly clockTolerance: number;
   private readonly encAlgorithm: KryptosEncAlgorithm | undefined;
   private readonly encryption: KryptosEncryption;
-  private readonly issuer: string;
+  private readonly issuer: string | undefined;
   private readonly kryptosMayOverrideEncryption: boolean;
   private readonly logger: ILogger;
   private readonly sigAlgorithm: KryptosSigAlgorithm | undefined;
