@@ -6,10 +6,13 @@ import { Formatter } from "picocolors/types";
 import { inspect } from "util";
 import { LogLevel } from "../../enums";
 import { LogDetails } from "../../types";
-import { _Log } from "../../types/private";
+import { Log } from "../../types/private";
 
-const colourise = (formatter: Formatter, input: string, colours: boolean = true): string =>
-  colours ? formatter(input) : input;
+const colourise = (
+  formatter: Formatter,
+  input: string,
+  colours: boolean = true,
+): string => (colours ? formatter(input) : input);
 
 const sanitise = (dict: Dict): Dict => JSON.parse(fastSafeStringify(dict));
 
@@ -65,7 +68,10 @@ const colouriseError = (error: Error, colours: boolean = true): string => {
   return `${colourise(red, details as string, colours)}`;
 };
 
-const readableDetails = (logDetails: LogDetails, colours: boolean = true): string | undefined => {
+const readableDetails = (
+  logDetails: LogDetails,
+  colours: boolean = true,
+): string | undefined => {
   if (!logDetails) return;
 
   if (logDetails instanceof Error) {
@@ -81,7 +87,7 @@ const readableDetails = (logDetails: LogDetails, colours: boolean = true): strin
   }
 };
 
-export const _readableFormat = (log: _Log): string => {
+export const readableFormat = (log: Log): string => {
   if (!log.time || !log.context) {
     return formatContent(log, false);
   }
@@ -93,7 +99,9 @@ export const _readableFormat = (log: _Log): string => {
     const message = levelColor(log.level, log.message);
 
     const contextValues = log.context ? Object.values(log.context) : [];
-    const contextString = contextValues.length ? `[ ${contextValues.join(" | ")} ]` : undefined;
+    const contextString = contextValues.length
+      ? `[ ${contextValues.join(" | ")} ]`
+      : undefined;
     const context = contextString ? colourise(black, contextString) : "";
 
     const content = `${time}  ${level}${colon} ${message} ${context}`;

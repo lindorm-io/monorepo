@@ -7,7 +7,7 @@ type Options = Omit<KryptosDer, "algorithm" | "type" | "use">;
 
 type Result = Omit<RsaPem, "algorithm" | "type" | "use">;
 
-export const _exportRsaToPem = (options: Options): Result => {
+export const exportRsaToPem = (options: Options): Result => {
   const result: Result = {
     publicKey: "",
   };

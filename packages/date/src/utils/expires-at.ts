@@ -1,16 +1,16 @@
 import { isDate, isString } from "@lindorm/is";
 import { Expiry } from "../types";
-import { _addWithMilliseconds } from "./private/add-with-milliseconds";
-import { _assertExpiryDate } from "./private/assert-expiry-date";
-import { _readableToDuration } from "./private/readable-to-duration";
+import { addWithMilliseconds } from "./private/add-with-milliseconds";
+import { assertExpiryDate } from "./private/assert-expiry-date";
+import { readableToDuration } from "./private/readable-to-duration";
 
 export const expiresAt = (expiry: Expiry, from: Date = new Date()): Date => {
   if (isString(expiry)) {
-    return _addWithMilliseconds(from, _readableToDuration(expiry));
+    return addWithMilliseconds(from, readableToDuration(expiry));
   }
 
   if (isDate(expiry)) {
-    _assertExpiryDate(expiry);
+    assertExpiryDate(expiry);
 
     return expiry;
   }

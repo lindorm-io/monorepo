@@ -18,7 +18,7 @@ describe("conduitHeaderMiddleware", () => {
   test("should add headers to the request", async () => {
     await expect(
       conduitHeadersMiddleware({ new: "header-content" })(ctx, next),
-    ).resolves.not.toThrow();
+    ).resolves.toBeUndefined();
 
     expect(ctx.req.headers).toEqual({
       existing: "header",

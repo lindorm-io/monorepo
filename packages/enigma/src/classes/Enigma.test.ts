@@ -37,7 +37,7 @@ describe("Enigma", () => {
   }, 10000);
 
   test("should assert", async () => {
-    await expect(kit.assert("string", hash)).resolves.not.toThrow();
+    await expect(kit.assert("string", hash)).resolves.toBeUndefined();
   }, 10000);
 
   test("should throw error", async () => {

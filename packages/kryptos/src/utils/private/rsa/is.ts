@@ -1,12 +1,12 @@
 import { isBuffer, isString } from "@lindorm/is";
 import { RsaB64, RsaDer, RsaJwk, RsaPem } from "../../../types";
 import {
-  _IsBufferFormatOptions,
-  _IsJwkFormatOptions,
-  _IsStringFormatOptions,
+  IsBufferFormatOptions,
+  IsJwkFormatOptions,
+  IsStringFormatOptions,
 } from "../../../types/private/is-options";
 
-export const _isRsaB64 = (options: _IsStringFormatOptions): options is RsaB64 => {
+export const isRsaB64 = (options: IsStringFormatOptions): options is RsaB64 => {
   if (options.type !== "RSA") return false;
   if (options.curve) return false;
 
@@ -24,7 +24,7 @@ export const _isRsaB64 = (options: _IsStringFormatOptions): options is RsaB64 =>
   return true;
 };
 
-export const _isRsaDer = (options: _IsBufferFormatOptions): options is RsaDer => {
+export const isRsaDer = (options: IsBufferFormatOptions): options is RsaDer => {
   if (options.type !== "RSA") return false;
   if (options.curve) return false;
 
@@ -33,7 +33,7 @@ export const _isRsaDer = (options: _IsBufferFormatOptions): options is RsaDer =>
   return true;
 };
 
-export const _isRsaJwk = (options: _IsJwkFormatOptions): options is RsaJwk => {
+export const isRsaJwk = (options: IsJwkFormatOptions): options is RsaJwk => {
   if (options.kty !== "RSA") return false;
   if (options.crv) return false;
 
@@ -42,7 +42,7 @@ export const _isRsaJwk = (options: _IsJwkFormatOptions): options is RsaJwk => {
   return true;
 };
 
-export const _isRsaPem = (options: _IsStringFormatOptions): options is RsaPem => {
+export const isRsaPem = (options: IsStringFormatOptions): options is RsaPem => {
   if (options.type !== "RSA") return false;
   if (options.curve) return false;
 

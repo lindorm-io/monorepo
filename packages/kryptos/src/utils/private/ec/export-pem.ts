@@ -2,14 +2,14 @@ import { isString } from "@lindorm/is";
 import { createPrivateKey, createPublicKey } from "crypto";
 import { KryptosError } from "../../../errors";
 import { EcPem, KryptosDer } from "../../../types";
-import { _isEcCurve } from "./is-ec-curve";
+import { isEcCurve } from "./is-ec-curve";
 
 type Options = Omit<KryptosDer, "algorithm" | "type" | "use">;
 
 type Result = Omit<EcPem, "algorithm" | "type" | "use">;
 
-export const _exportEcToPem = (options: Options): Result => {
-  if (!_isEcCurve(options.curve)) {
+export const exportEcToPem = (options: Options): Result => {
+  if (!isEcCurve(options.curve)) {
     throw new KryptosError("Curve is required");
   }
 

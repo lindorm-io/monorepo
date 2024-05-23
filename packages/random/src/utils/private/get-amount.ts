@@ -1,7 +1,7 @@
-import { _RandomStringAmount } from "../../types/private/types";
-import { _randomInt } from "./random-int";
+import { RandomStringAmount } from "../../types/private/types";
+import { randomInt } from "./random-int";
 
-export const _getAmount = (length: number, amount?: _RandomStringAmount): number => {
+export const getAmount = (length: number, amount?: RandomStringAmount): number => {
   if (typeof amount === "number") {
     return amount;
   }
@@ -11,7 +11,7 @@ export const _getAmount = (length: number, amount?: _RandomStringAmount): number
   }
 
   if (amount === "random") {
-    return _randomInt(length / 3);
+    return randomInt(length / 3);
   }
 
   if (amount.endsWith("%")) {

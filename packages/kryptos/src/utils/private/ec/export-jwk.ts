@@ -1,7 +1,7 @@
 import { createPrivateKey, createPublicKey } from "crypto";
 import { KryptosError } from "../../../errors";
 import { EcJwk, KryptosDer, KryptosExportMode } from "../../../types";
-import { _isEcCurve } from "./is-ec-curve";
+import { isEcCurve } from "./is-ec-curve";
 
 type Options = Omit<KryptosDer, "algorithm" | "type" | "use"> & {
   mode: KryptosExportMode;
@@ -9,8 +9,8 @@ type Options = Omit<KryptosDer, "algorithm" | "type" | "use"> & {
 
 type Result = Omit<EcJwk, "alg" | "kty" | "use">;
 
-export const _exportEcToJwk = (options: Options): Result => {
-  if (!_isEcCurve(options.curve)) {
+export const exportEcToJwk = (options: Options): Result => {
+  if (!isEcCurve(options.curve)) {
     throw new KryptosError("Curve is required");
   }
 

@@ -26,7 +26,7 @@ const encryptionKeyLength = (encryption: KryptosEncryption): AesKeyLength => {
   }
 };
 
-export const _splitContentEncryptionKey = (
+export const splitContentEncryptionKey = (
   encryption: KryptosEncryption,
   contentEncryptionKey: Buffer,
 ): Result => {

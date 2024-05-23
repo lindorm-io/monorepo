@@ -1,14 +1,14 @@
 import { Dict, Param, Query } from "@lindorm/types";
 import { CreateUrlOptions } from "../../types/types";
-import { _addQueryToURL } from "./add-query-to-url";
-import { _replaceParams } from "./replace-params";
+import { addQueryToURL } from "./add-query-to-url";
+import { replaceParams } from "./replace-params";
 
-export const _addToUrl = <P extends Dict<Param> = Dict<Param>, Q = Dict<Query>>(
+export const addToUrl = <P extends Dict<Param> = Dict<Param>, Q = Dict<Query>>(
   url: URL,
   options: CreateUrlOptions<P, Q>,
 ): URL => {
-  const pathname = _replaceParams<P>(url.pathname, options.params);
+  const pathname = replaceParams<P>(url.pathname, options.params);
   const string = url.toString().replace(url.pathname, pathname);
 
-  return _addQueryToURL<Q>(new URL(string), options.query, options.changeQueryCase);
+  return addQueryToURL<Q>(new URL(string), options.query, options.changeQueryCase);
 };

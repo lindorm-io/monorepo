@@ -1,3 +1,4 @@
+import { camelKeys, snakeArray } from "@lindorm/case";
 import { isArray, isError, isObject } from "@lindorm/is";
 import { Dict } from "@lindorm/types";
 import { get, set } from "object-path";
@@ -11,39 +12,39 @@ import {
   LogDetails,
   LogSession,
 } from "../types";
-import { _FromLogger, _Log } from "../types/private";
-import { _defaultFilterCallback, _readableFormat } from "../utils/private";
+import { FromLogger, Log } from "../types/private";
+import { defaultFilterCallback, readableFormat } from "../utils/private";
 
 export class LindormLogger implements ILogger {
-  private readonly _filters: FilterRecord;
-  private readonly _winston: WinstonLogger;
+  private readonly filters: FilterRecord;
+  private readonly winston: WinstonLogger;
 
-  private _context: LogContext;
-  private _session: LogSession;
+  private context: LogContext;
+  private session: LogSession;
 
   public constructor(options?: LindormLoggerOptions);
-  public constructor(fromLogger: _FromLogger);
-  public constructor(options: LindormLoggerOptions | _FromLogger = {}) {
+  public constructor(fromLogger: FromLogger);
+  public constructor(options: LindormLoggerOptions | FromLogger = {}) {
     if ("_mode" in options && options._mode === "from_logger") {
-      this._context = options.context;
-      this._filters = options.filters;
-      this._session = options.session;
-      this._winston = options.winston;
+      this.context = snakeArray(options.context);
+      this.filters = options.filters;
+      this.session = camelKeys(options.session);
+      this.winston = options.winston;
     } else {
-      this._context = [];
-      this._filters = {};
-      this._session = {};
-      this._winston = winston.createLogger();
+      this.context = [];
+      this.filters = {};
+      this.session = {};
+      this.winston = winston.createLogger();
 
       const level = (options as LindormLoggerOptions).level ?? LogLevel.Info;
       const readable = (options as LindormLoggerOptions).readable ?? false;
 
-      this._winston.add(
+      this.winston.add(
         new winston.transports.Console({
           handleExceptions: true,
           level,
           format: readable
-            ? winston.format.printf((log) => _readableFormat(log as _Log))
+            ? winston.format.printf((log) => readableFormat(log as Log))
             : winston.format.json(),
         }),
       );
@@ -59,19 +60,11 @@ export class LindormLogger implements ILogger {
     const context = isArray(arg1) ? arg1 : [];
     const session = isObject(arg1) ? arg1 : isObject(arg2) ? arg2 : {};
 
-    return this._fromLogger(context, session);
-  }
-
-  public context(context: LogContext | string): void {
-    this._context = this._context.concat(isArray(context) ? context : [context]);
+    return this.fromLogger(context, session);
   }
 
   public filter(path: string, callback?: (value: any) => any): void {
-    this._filters[path] = callback ?? _defaultFilterCallback;
-  }
-
-  public session(session: LogSession): void {
-    this._session = { ...this._session, ...session };
+    this.filters[path] = callback ?? defaultFilterCallback;
   }
 
   // logging
@@ -81,7 +74,7 @@ export class LindormLogger implements ILogger {
   public error(arg1: Error | string, ...details: Array<Error | Dict>): void {
     const isErr = isError(arg1);
 
-    this._log({
+    this.log({
       details: isErr ? [arg1] : details?.length ? details : [],
       level: LogLevel.Error,
       message: isErr ? arg1.message : arg1,
@@ -89,37 +82,37 @@ export class LindormLogger implements ILogger {
   }
 
   public warn(message: string, ...details: Array<Dict>): void {
-    this._log({ details, level: LogLevel.Warn, message });
+    this.log({ details, level: LogLevel.Warn, message });
   }
 
   public info(message: string, ...details: Array<Dict>): void {
-    this._log({ details, level: LogLevel.Info, message });
+    this.log({ details, level: LogLevel.Info, message });
   }
 
   public verbose(message: string, ...details: Array<Dict>): void {
-    this._log({ details, level: LogLevel.Verbose, message });
+    this.log({ details, level: LogLevel.Verbose, message });
   }
 
   public debug(message: string, ...details: Array<Dict>): void {
-    this._log({ details, level: LogLevel.Debug, message });
+    this.log({ details, level: LogLevel.Debug, message });
   }
 
   public silly(message: string, ...details: Array<Dict>): void {
-    this._log({ details, level: LogLevel.Silly, message });
+    this.log({ details, level: LogLevel.Silly, message });
   }
 
   // private
 
-  private _getFilteredDetails(details: LogDetails): LogDetails {
+  private getFilteredDetails(details: LogDetails): LogDetails {
     if (!isObject(details)) return details ?? undefined;
-    if (!Object.keys(this._filters).length) return details;
+    if (!Object.keys(this.filters).length) return details;
     if (isError((details as any)?.error) && isArray((details as any)?.stack))
       return details;
 
     try {
       const data = structuredClone(details);
 
-      for (const [path, callback] of Object.entries(this._filters)) {
+      for (const [path, callback] of Object.entries(this.filters)) {
         if (!callback) continue;
 
         const item = get(details, path);
@@ -134,7 +127,7 @@ export class LindormLogger implements ILogger {
     }
   }
 
-  private _extractErrorData(details: LogDetails): LogDetails {
+  private extractErrorData(details: LogDetails): LogDetails {
     if (!isError(details)) return details;
 
     return {
@@ -152,27 +145,27 @@ export class LindormLogger implements ILogger {
 
   // private
 
-  private _log(log: Omit<_Log, "context" | "session" | "time">): void {
-    this._winston.log({
-      context: this._context,
+  private log(log: Omit<Log, "context" | "session" | "time">): void {
+    this.winston.log({
+      context: this.context,
       details: log.details
         .filter((d) => d)
-        .map((d) => this._extractErrorData(d))
-        .map((d) => this._getFilteredDetails(d)),
+        .map((d) => this.extractErrorData(d))
+        .map((d) => this.getFilteredDetails(d)),
       level: log.level,
       message: log.message,
-      session: this._session,
+      session: this.session,
       time: new Date(),
     });
   }
 
-  private _fromLogger(context: Array<string>, session: Dict): ILogger {
+  private fromLogger(context: Array<string>, session: Dict): ILogger {
     return new LindormLogger({
       _mode: "from_logger",
-      context: structuredClone(this._context.concat(context)),
-      filters: structuredClone(this._filters),
-      session: { ...structuredClone(this._session), ...session },
-      winston: this._winston,
+      context: structuredClone(this.context.concat(context)),
+      filters: structuredClone(this.filters),
+      session: { ...structuredClone(this.session), ...session },
+      winston: this.winston,
     });
   }
 }

@@ -1,5 +1,5 @@
 import { Middleware } from "../types";
-import { _createDispatcher } from "./private/create-dispatcher";
+import { createDispatcher } from "./private/create-dispatcher";
 
 type Options = {
   useClone?: boolean;
@@ -14,7 +14,7 @@ export const composeMiddleware = async <Context>(
 
   const ctx = useClone ? Object.assign({}, context) : context;
 
-  await _createDispatcher<Context>(middleware)(ctx);
+  await createDispatcher<Context>(middleware)(ctx);
 
   return ctx;
 };

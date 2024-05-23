@@ -7,12 +7,12 @@ import {
   DecryptCekOptions,
   DecryptCekResult,
 } from "../../../types/private";
-import { _calculateContentEncryptionKeySize } from "../calculate/calculate-content-encryption-key-size";
-import { _calculateKeyWrapSize } from "../calculate/calculate-key-wrap-size";
-import { _hkdf } from "../key-derivation/hkdf";
-import { _keyUnwrap, _keyWrap } from "../key-wrap/key-wrap";
+import { calculateContentEncryptionKeySize } from "../calculate/calculate-content-encryption-key-size";
+import { calculateKeyWrapSize } from "../calculate/calculate-key-wrap-size";
+import { hkdf } from "../key-derivation/hkdf";
+import { keyUnwrap, keyWrap } from "../key-wrap/key-wrap";
 
-export const _getOctKeyWrapEncryptionKey = ({
+export const getOctKeyWrapEncryptionKey = ({
   encryption,
   kryptos,
 }: CreateCekOptions): CreateCekResult => {
@@ -22,15 +22,15 @@ export const _getOctKeyWrapEncryptionKey = ({
 
   const der = kryptos.export("der");
 
-  const cekSize = _calculateContentEncryptionKeySize(encryption);
+  const cekSize = calculateContentEncryptionKeySize(encryption);
   const contentEncryptionKey = randomBytes(cekSize);
 
-  const { derivedKey, hkdfSalt } = _hkdf({
+  const { derivedKey, hkdfSalt } = hkdf({
     derivationKey: der.privateKey,
-    keyLength: _calculateKeyWrapSize(kryptos.algorithm),
+    keyLength: calculateKeyWrapSize(kryptos.algorithm),
   });
 
-  const { publicEncryptionKey, publicEncryptionIv, publicEncryptionTag } = _keyWrap({
+  const { publicEncryptionKey, publicEncryptionIv, publicEncryptionTag } = keyWrap({
     contentEncryptionKey,
     kryptos,
     keyEncryptionKey: derivedKey,
@@ -45,7 +45,7 @@ export const _getOctKeyWrapEncryptionKey = ({
   };
 };
 
-export const _getOctKeyWrapDecryptionKey = ({
+export const getOctKeyWrapDecryptionKey = ({
   hkdfSalt,
   kryptos,
   publicEncryptionIv,
@@ -61,13 +61,13 @@ export const _getOctKeyWrapDecryptionKey = ({
 
   const der = kryptos.export("der");
 
-  const { derivedKey } = _hkdf({
+  const { derivedKey } = hkdf({
     derivationKey: der.privateKey,
     hkdfSalt,
-    keyLength: _calculateKeyWrapSize(kryptos.algorithm),
+    keyLength: calculateKeyWrapSize(kryptos.algorithm),
   });
 
-  return _keyUnwrap({
+  return keyUnwrap({
     keyEncryptionKey: derivedKey,
     kryptos,
     publicEncryptionIv,

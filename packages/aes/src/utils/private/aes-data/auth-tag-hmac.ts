@@ -4,7 +4,7 @@ import { createHmac } from "crypto";
 import { AesError } from "../../../errors";
 import { CreateHmacAuthTag, VerifyHmacAuthTag } from "../../../types/private/auth-tag";
 
-const _shaHash = (encryption: KryptosEncryption): ShaAlgorithm => {
+const shaHash = (encryption: KryptosEncryption): ShaAlgorithm => {
   switch (encryption) {
     case "A128CBC-HS256":
       return "SHA256";
@@ -20,13 +20,13 @@ const _shaHash = (encryption: KryptosEncryption): ShaAlgorithm => {
   }
 };
 
-export const _createHmacAuthTag = ({
+export const createHmacAuthTag = ({
   content,
   hashKey,
   initialisationVector,
   encryption,
 }: CreateHmacAuthTag): Buffer => {
-  const hmac = createHmac(_shaHash(encryption), hashKey);
+  const hmac = createHmac(shaHash(encryption), hashKey);
 
   hmac.update(initialisationVector);
   hmac.update(content);
@@ -34,14 +34,14 @@ export const _createHmacAuthTag = ({
   return hmac.digest();
 };
 
-export const _assertHmacAuthTag = ({
+export const assertHmacAuthTag = ({
   authTag,
   content,
   encryption,
   hashKey,
   initialisationVector,
 }: VerifyHmacAuthTag): void => {
-  const generated = _createHmacAuthTag({
+  const generated = createHmacAuthTag({
     content,
     encryption,
     hashKey,

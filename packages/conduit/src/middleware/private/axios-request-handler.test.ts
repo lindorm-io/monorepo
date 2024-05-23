@@ -1,6 +1,6 @@
-import { _composeAxiosConfig } from "../../utils/private/compose-axios-config";
-import { _requestWithRetry } from "../../utils/private/request-with-retry";
-import { _axiosRequestHandler } from "./axios-request-handler";
+import { composeAxiosConfig as _composeAxiosConfig } from "../../utils/private/compose-axios-config";
+import { requestWithRetry as _requestWithRetry } from "../../utils/private/request-with-retry";
+import { axiosRequestHandler } from "./axios-request-handler";
 
 jest.mock("axios");
 jest.mock("../../utils/private/compose-axios-config");
@@ -11,11 +11,9 @@ const requestWithRetry = _requestWithRetry as jest.Mock;
 
 describe("axiosRequestHandler", () => {
   let ctx: any;
-  let next: any;
 
   beforeEach(() => {
     ctx = { req: "ctx" };
-    next = () => Promise.resolve();
 
     composeAxiosConfig.mockResolvedValueOnce({ config: true });
     requestWithRetry.mockResolvedValueOnce({ response: true });
@@ -24,7 +22,7 @@ describe("axiosRequestHandler", () => {
   afterEach(jest.resetAllMocks);
 
   test("should resolve", async () => {
-    await expect(_axiosRequestHandler(ctx, next)).resolves.not.toThrow();
+    await expect(axiosRequestHandler(ctx, jest.fn())).resolves.toBeUndefined();
 
     expect(requestWithRetry).toHaveBeenCalledTimes(1);
     expect(requestWithRetry).toHaveBeenCalledWith(expect.any(Function), ctx);

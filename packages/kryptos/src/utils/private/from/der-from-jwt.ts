@@ -7,16 +7,16 @@ import {
   OkpJwk,
   RsaJwk,
 } from "../../../types";
-import { _createEcDerFromJwk } from "../ec/der-from-jwk";
-import { _createOctDerFromJwk } from "../oct/der-from-jwk";
-import { _createOkpDerFromJwk } from "../okp/der-from-jwk";
-import { _createRsaDerFromJwk } from "../rsa/der-from-jwk";
+import { createEcDerFromJwk } from "../ec/der-from-jwk";
+import { createOctDerFromJwk } from "../oct/der-from-jwk";
+import { createOkpDerFromJwk } from "../okp/der-from-jwk";
+import { createRsaDerFromJwk } from "../rsa/der-from-jwk";
 
-export const _createDerFromJwk = (options: KryptosFromJwk): KryptosDer => {
+export const createDerFromJwk = (options: KryptosFromJwk): KryptosDer => {
   switch (options.kty) {
     case "EC":
       return {
-        ..._createEcDerFromJwk(options as EcJwk),
+        ...createEcDerFromJwk(options as EcJwk),
         algorithm: options.alg,
         type: options.kty,
         use: options.use,
@@ -24,7 +24,7 @@ export const _createDerFromJwk = (options: KryptosFromJwk): KryptosDer => {
 
     case "oct":
       return {
-        ..._createOctDerFromJwk(options as OctJwk),
+        ...createOctDerFromJwk(options as OctJwk),
         algorithm: options.alg,
         type: options.kty,
         use: options.use,
@@ -32,7 +32,7 @@ export const _createDerFromJwk = (options: KryptosFromJwk): KryptosDer => {
 
     case "OKP":
       return {
-        ..._createOkpDerFromJwk(options as OkpJwk),
+        ...createOkpDerFromJwk(options as OkpJwk),
         algorithm: options.alg,
         type: options.kty,
         use: options.use,
@@ -40,7 +40,7 @@ export const _createDerFromJwk = (options: KryptosFromJwk): KryptosDer => {
 
     case "RSA":
       return {
-        ..._createRsaDerFromJwk(options as RsaJwk),
+        ...createRsaDerFromJwk(options as RsaJwk),
         algorithm: options.alg,
         type: options.kty,
         use: options.use,

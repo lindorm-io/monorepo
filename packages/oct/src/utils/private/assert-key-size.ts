@@ -1,7 +1,7 @@
 import { ShaAlgorithm } from "@lindorm/types";
 import { OctError } from "../../errors";
 
-export const _assertKeySize = (algorithm: ShaAlgorithm, privateKey: Buffer): void => {
+export const assertKeySize = (algorithm: ShaAlgorithm, privateKey: Buffer): void => {
   switch (algorithm) {
     case "SHA256":
       if (privateKey.length >= 16) return;

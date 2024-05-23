@@ -1,14 +1,14 @@
 import { KryptosError } from "../../../errors";
 import { EcDer, KryptosPem } from "../../../types";
-import { _createEcDerFromDer } from "./der-from-der";
-import { _isEcCurve } from "./is-ec-curve";
+import { createEcDerFromDer } from "./der-from-der";
+import { isEcCurve } from "./is-ec-curve";
 
 type Options = Omit<KryptosPem, "algorithm" | "type" | "use">;
 
 type Result = Omit<EcDer, "algorithm" | "type" | "use">;
 
-export const _createEcDerFromB64 = (options: Options): Result => {
-  if (!_isEcCurve(options.curve)) {
+export const createEcDerFromB64 = (options: Options): Result => {
+  if (!isEcCurve(options.curve)) {
     throw new KryptosError("Curve is required");
   }
 
@@ -18,7 +18,7 @@ export const _createEcDerFromB64 = (options: Options): Result => {
   };
 
   if (options.privateKey && !options.publicKey) {
-    const der = _createEcDerFromDer({
+    const der = createEcDerFromDer({
       curve: options.curve,
       privateKey: Buffer.from(options.privateKey, "base64url"),
       publicKey: Buffer.alloc(0),

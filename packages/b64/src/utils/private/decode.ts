@@ -1,6 +1,6 @@
 import { Base64Encoding } from "../../types";
 
-export const _decode = (input: string, encoding?: Base64Encoding): Buffer => {
+export const decode = (input: string, encoding?: Base64Encoding): Buffer => {
   if (encoding === "base64") {
     return Buffer.from(input, "base64");
   }

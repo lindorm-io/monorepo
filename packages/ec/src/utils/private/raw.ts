@@ -6,7 +6,7 @@ const KEY_SIZES = {
   "P-521": 66,
 };
 
-export const _derToRaw = (kryptos: IKryptosEc, derSignature: Buffer): Buffer => {
+export const derToRaw = (kryptos: IKryptosEc, derSignature: Buffer): Buffer => {
   const keySize = KEY_SIZES[kryptos.curve as EcCurve];
 
   if (derSignature[0] !== 0x30) {
@@ -51,7 +51,7 @@ export const _derToRaw = (kryptos: IKryptosEc, derSignature: Buffer): Buffer => 
   return Buffer.concat([paddedR, paddedS]);
 };
 
-export const _rawToDer = (kryptos: IKryptosEc, rawSignature: Buffer): Buffer => {
+export const rawToDer = (kryptos: IKryptosEc, rawSignature: Buffer): Buffer => {
   const keySize = KEY_SIZES[kryptos.curve as EcCurve];
 
   if (rawSignature.length !== 2 * keySize) {

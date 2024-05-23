@@ -3,7 +3,7 @@ import { hash, verify } from "argon2";
 import { ArgonError } from "../../errors";
 import { CreateArgonHashOptions, VerifyArgonHashOptions } from "../../types";
 
-const _getSecret = (kryptos?: IKryptosOct): Buffer | undefined => {
+const getSecret = (kryptos?: IKryptosOct): Buffer | undefined => {
   if (!kryptos) return;
 
   const { privateKey } = kryptos.export("der");
@@ -15,7 +15,7 @@ const _getSecret = (kryptos?: IKryptosOct): Buffer | undefined => {
   return privateKey;
 };
 
-export const _createArgonHash = async ({
+export const createArgonHash = async ({
   data,
   hashLength = 256,
   kryptos,
@@ -23,7 +23,7 @@ export const _createArgonHash = async ({
   parallelism = 8,
   timeCost = 12,
 }: CreateArgonHashOptions): Promise<string> => {
-  const secret = _getSecret(kryptos);
+  const secret = getSecret(kryptos);
 
   return await hash(data, {
     hashLength,
@@ -34,19 +34,17 @@ export const _createArgonHash = async ({
   });
 };
 
-export const _verifyArgonHash = async ({
+export const verifyArgonHash = async ({
   data,
   hash,
   kryptos,
 }: VerifyArgonHashOptions): Promise<boolean> => {
-  const secret = _getSecret(kryptos);
+  const secret = getSecret(kryptos);
 
   return await verify(hash, data, secret ? { secret } : undefined);
 };
 
-export const _assertArgonHash = async (
-  options: VerifyArgonHashOptions,
-): Promise<void> => {
-  if (await _verifyArgonHash(options)) return;
+export const assertArgonHash = async (options: VerifyArgonHashOptions): Promise<void> => {
+  if (await verifyArgonHash(options)) return;
   throw new ArgonError("Invalid Argon hash");
 };

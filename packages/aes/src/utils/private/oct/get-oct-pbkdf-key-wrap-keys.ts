@@ -7,13 +7,13 @@ import {
   DecryptCekOptions,
   DecryptCekResult,
 } from "../../../types/private";
-import { _calculateContentEncryptionKeySize } from "../calculate/calculate-content-encryption-key-size";
-import { _calculateKeyWrapSize } from "../calculate/calculate-key-wrap-size";
-import { _calculatePbkdfAlgorithm } from "../calculate/calculate-pbkdf-hash";
-import { _pbkdf } from "../key-derivation/pbkdf";
-import { _ecbKeyUnwrap, _ecbKeyWrap } from "../key-wrap/ecb-key-wrap";
+import { calculateContentEncryptionKeySize } from "../calculate/calculate-content-encryption-key-size";
+import { calculateKeyWrapSize } from "../calculate/calculate-key-wrap-size";
+import { calculatePbkdfAlgorithm } from "../calculate/calculate-pbkdf-hash";
+import { pbkdf } from "../key-derivation/pbkdf";
+import { ecbKeyUnwrap, ecbKeyWrap } from "../key-wrap/ecb-key-wrap";
 
-export const _getOctPbkdfKeyWrapEncryptionKey = ({
+export const getOctPbkdfKeyWrapEncryptionKey = ({
   encryption,
   kryptos,
 }: CreateCekOptions): CreateCekResult => {
@@ -23,16 +23,16 @@ export const _getOctPbkdfKeyWrapEncryptionKey = ({
 
   const der = kryptos.export("der");
 
-  const cekSize = _calculateContentEncryptionKeySize(encryption);
+  const cekSize = calculateContentEncryptionKeySize(encryption);
   const contentEncryptionKey = randomBytes(cekSize);
 
-  const { derivedKey, pbkdfIterations, pbkdfSalt } = _pbkdf({
+  const { derivedKey, pbkdfIterations, pbkdfSalt } = pbkdf({
     derivationKey: der.privateKey,
-    keyLength: _calculateKeyWrapSize(kryptos.algorithm),
-    algorithm: _calculatePbkdfAlgorithm(kryptos),
+    keyLength: calculateKeyWrapSize(kryptos.algorithm),
+    algorithm: calculatePbkdfAlgorithm(kryptos),
   });
 
-  const { publicEncryptionKey } = _ecbKeyWrap({
+  const { publicEncryptionKey } = ecbKeyWrap({
     contentEncryptionKey,
     kryptos,
     keyEncryptionKey: derivedKey,
@@ -46,7 +46,7 @@ export const _getOctPbkdfKeyWrapEncryptionKey = ({
   };
 };
 
-export const _getOctPbkdfKeyWrapDecryptionKey = ({
+export const getOctPbkdfKeyWrapDecryptionKey = ({
   kryptos,
   pbkdfIterations,
   pbkdfSalt,
@@ -61,15 +61,15 @@ export const _getOctPbkdfKeyWrapDecryptionKey = ({
 
   const der = kryptos.export("der");
 
-  const { derivedKey } = _pbkdf({
+  const { derivedKey } = pbkdf({
     derivationKey: der.privateKey,
-    keyLength: _calculateKeyWrapSize(kryptos.algorithm),
-    algorithm: _calculatePbkdfAlgorithm(kryptos),
+    keyLength: calculateKeyWrapSize(kryptos.algorithm),
+    algorithm: calculatePbkdfAlgorithm(kryptos),
     pbkdfIterations,
     pbkdfSalt,
   });
 
-  return _ecbKeyUnwrap({
+  return ecbKeyUnwrap({
     keyEncryptionKey: derivedKey,
     kryptos,
     publicEncryptionKey,

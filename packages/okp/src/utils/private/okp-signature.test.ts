@@ -1,9 +1,9 @@
 import { TEST_OKP_KEY_25519, TEST_OKP_KEY_448 } from "../../__fixtures__/keys";
 import { OkpError } from "../../errors";
 import {
-  _assertOkpSignature,
-  _createOkpSignature,
-  _verifyOkpSignature,
+  assertOkpSignature,
+  createOkpSignature,
+  verifyOkpSignature,
 } from "./okp-signature";
 
 describe("okp-signature", () => {
@@ -12,7 +12,7 @@ describe("okp-signature", () => {
   describe("algorithms", () => {
     test("should create signature with 25519", () => {
       expect(
-        _createOkpSignature({
+        createOkpSignature({
           kryptos: TEST_OKP_KEY_25519,
           data: "data",
           format: "base64",
@@ -22,7 +22,7 @@ describe("okp-signature", () => {
 
     test("should create signature with 448", () => {
       expect(
-        _createOkpSignature({
+        createOkpSignature({
           kryptos: TEST_OKP_KEY_448,
           data: "data",
           format: "base64",
@@ -34,7 +34,7 @@ describe("okp-signature", () => {
   describe("formats", () => {
     test("should create signature at base64 digest", () => {
       expect(
-        _createOkpSignature({
+        createOkpSignature({
           kryptos: TEST_OKP_KEY_25519,
           data: "data",
           format: "base64",
@@ -44,7 +44,7 @@ describe("okp-signature", () => {
 
     test("should create signature at base64url digest", () => {
       expect(
-        _createOkpSignature({
+        createOkpSignature({
           kryptos: TEST_OKP_KEY_25519,
           data: "data",
           format: "base64url",
@@ -54,7 +54,7 @@ describe("okp-signature", () => {
 
     test("should create signature at hex digest", () => {
       expect(
-        _createOkpSignature({
+        createOkpSignature({
           kryptos: TEST_OKP_KEY_25519,
           data: "data",
           format: "hex",
@@ -65,14 +65,14 @@ describe("okp-signature", () => {
 
   describe("verify", () => {
     test("should verify signature", () => {
-      const signature = _createOkpSignature({
+      const signature = createOkpSignature({
         kryptos: TEST_OKP_KEY_25519,
         data: "data",
         format,
       });
 
       expect(
-        _verifyOkpSignature({
+        verifyOkpSignature({
           kryptos: TEST_OKP_KEY_25519,
           data: "data",
           format,
@@ -84,14 +84,14 @@ describe("okp-signature", () => {
 
   describe("assert", () => {
     test("should assert signature", () => {
-      const signature = _createOkpSignature({
+      const signature = createOkpSignature({
         kryptos: TEST_OKP_KEY_25519,
         data: "data",
         format,
       });
 
       expect(() =>
-        _assertOkpSignature({
+        assertOkpSignature({
           kryptos: TEST_OKP_KEY_25519,
           data: "data",
           format,
@@ -101,14 +101,14 @@ describe("okp-signature", () => {
     });
 
     test("should throw error on invalid signature", () => {
-      const signature = _createOkpSignature({
+      const signature = createOkpSignature({
         kryptos: TEST_OKP_KEY_25519,
         data: "data",
         format,
       });
 
       expect(() =>
-        _assertOkpSignature({
+        assertOkpSignature({
           kryptos: TEST_OKP_KEY_25519,
           data: "invalid",
           format,

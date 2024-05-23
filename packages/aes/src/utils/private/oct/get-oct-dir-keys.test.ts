@@ -1,5 +1,5 @@
 import { Kryptos } from "@lindorm/kryptos";
-import { _getOctDirDecryptionKey, _getOctDirEncryptionKey } from "./get-oct-dir-keys";
+import { getOctDirDecryptionKey, getOctDirEncryptionKey } from "./get-oct-dir-keys";
 
 describe("get-oct-std-keys", () => {
   describe("cbc", () => {
@@ -11,7 +11,7 @@ describe("get-oct-std-keys", () => {
         use: "enc",
       });
 
-      const result = _getOctDirEncryptionKey({
+      const result = getOctDirEncryptionKey({
         encryption: "A128CBC-HS256",
         kryptos,
       });
@@ -21,7 +21,7 @@ describe("get-oct-std-keys", () => {
       });
 
       expect(
-        _getOctDirDecryptionKey({
+        getOctDirDecryptionKey({
           encryption: "A128CBC-HS256",
           kryptos,
         }),
@@ -36,7 +36,7 @@ describe("get-oct-std-keys", () => {
         use: "enc",
       });
 
-      const result = _getOctDirEncryptionKey({
+      const result = getOctDirEncryptionKey({
         encryption: "A192CBC-HS384",
         kryptos,
       });
@@ -46,7 +46,7 @@ describe("get-oct-std-keys", () => {
       });
 
       expect(
-        _getOctDirDecryptionKey({
+        getOctDirDecryptionKey({
           encryption: "A192CBC-HS384",
           kryptos,
         }),
@@ -61,7 +61,7 @@ describe("get-oct-std-keys", () => {
         use: "enc",
       });
 
-      const result = _getOctDirEncryptionKey({
+      const result = getOctDirEncryptionKey({
         encryption: "A256CBC-HS512",
         kryptos,
       });
@@ -71,7 +71,7 @@ describe("get-oct-std-keys", () => {
       });
 
       expect(
-        _getOctDirDecryptionKey({
+        getOctDirDecryptionKey({
           encryption: "A256CBC-HS512",
           kryptos,
         }),
@@ -88,7 +88,7 @@ describe("get-oct-std-keys", () => {
         use: "enc",
       });
 
-      const result = _getOctDirEncryptionKey({
+      const result = getOctDirEncryptionKey({
         encryption: "A128GCM",
         kryptos,
       });
@@ -98,7 +98,7 @@ describe("get-oct-std-keys", () => {
       });
 
       expect(
-        _getOctDirDecryptionKey({
+        getOctDirDecryptionKey({
           encryption: "A128GCM",
           kryptos,
         }),
@@ -113,7 +113,7 @@ describe("get-oct-std-keys", () => {
         use: "enc",
       });
 
-      const result = _getOctDirEncryptionKey({
+      const result = getOctDirEncryptionKey({
         encryption: "A192GCM",
         kryptos,
       });
@@ -123,7 +123,7 @@ describe("get-oct-std-keys", () => {
       });
 
       expect(
-        _getOctDirDecryptionKey({
+        getOctDirDecryptionKey({
           encryption: "A192GCM",
           kryptos,
         }),
@@ -138,7 +138,7 @@ describe("get-oct-std-keys", () => {
         use: "enc",
       });
 
-      const result = _getOctDirEncryptionKey({
+      const result = getOctDirEncryptionKey({
         encryption: "A256GCM",
         kryptos,
       });
@@ -148,7 +148,7 @@ describe("get-oct-std-keys", () => {
       });
 
       expect(
-        _getOctDirDecryptionKey({
+        getOctDirDecryptionKey({
           encryption: "A256GCM",
           kryptos,
         }),

@@ -1,5 +1,5 @@
 import { ShaHashAlgorithm, ShaHashFormat, ShaKitOptions } from "../types";
-import { _assertShaHash, _createShaHash, _verifyShaHash } from "../utils/private/sha-hash";
+import { assertShaHash, createShaHash, verifyShaHash } from "../utils/private/sha-hash";
 
 export class ShaKit {
   private readonly algorithm: ShaHashAlgorithm | undefined;
@@ -11,7 +11,7 @@ export class ShaKit {
   }
 
   public hash(data: string): string {
-    return _createShaHash({
+    return createShaHash({
       algorithm: this.algorithm,
       data,
       format: this.format,
@@ -19,7 +19,7 @@ export class ShaKit {
   }
 
   public verify(data: string, hash: string): boolean {
-    return _verifyShaHash({
+    return verifyShaHash({
       algorithm: this.algorithm,
       data,
       format: this.format,
@@ -28,7 +28,7 @@ export class ShaKit {
   }
 
   public assert(data: string, hash: string): void {
-    return _assertShaHash({
+    return assertShaHash({
       algorithm: this.algorithm,
       data,
       format: this.format,

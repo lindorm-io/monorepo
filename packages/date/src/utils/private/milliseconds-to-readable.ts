@@ -1,22 +1,22 @@
 import {
-  _DAYS,
-  _HOURS,
-  _MINUTES,
-  _MONTHS,
-  _SECONDS,
-  _WEEKS,
-  _YEARS,
+  DAYS,
+  HOURS,
+  MINUTES,
+  MONTHS,
+  SECONDS,
+  WEEKS,
+  YEARS,
 } from "../../constants/private/time";
 import { ReadableTime } from "../../types";
 
-export const _millisecondsToReadable = (milliseconds: number): ReadableTime => {
-  const y = milliseconds / _YEARS;
-  const mo = milliseconds / _MONTHS;
-  const w = milliseconds / _WEEKS;
-  const d = milliseconds / _DAYS;
-  const h = milliseconds / _HOURS;
-  const m = milliseconds / _MINUTES;
-  const s = milliseconds / _SECONDS;
+export const millisecondsToReadable = (milliseconds: number): ReadableTime => {
+  const y = milliseconds / YEARS;
+  const mo = milliseconds / MONTHS;
+  const w = milliseconds / WEEKS;
+  const d = milliseconds / DAYS;
+  const h = milliseconds / HOURS;
+  const m = milliseconds / MINUTES;
+  const s = milliseconds / SECONDS;
 
   if (Math.floor(y) === y) return `${y}y`;
   if (Math.floor(mo) === mo) return `${mo}mo`;

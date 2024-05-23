@@ -1,6 +1,6 @@
 import { ConduitMiddleware } from "../../types";
 
-export const _requestLogger: ConduitMiddleware = async (ctx, next) => {
+export const requestLogger: ConduitMiddleware = async (ctx, next) => {
   ctx.logger?.verbose("Conduit request sent", {
     app: ctx.app,
     request: {

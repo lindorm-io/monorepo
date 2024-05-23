@@ -1,18 +1,18 @@
 import { KryptosError } from "../../../errors";
 import { KryptosPem, RsaDer } from "../../../types";
-import { _createRsaDerFromDer } from "./der-from-der";
+import { createRsaDerFromDer } from "./der-from-der";
 
 type Options = Omit<KryptosPem, "algorithm" | "type" | "use">;
 
 type Result = Omit<RsaDer, "algorithm" | "type" | "use">;
 
-export const _createRsaDerFromB64 = (options: Options): Result => {
+export const createRsaDerFromB64 = (options: Options): Result => {
   const result: Result = {
     publicKey: Buffer.alloc(0),
   };
 
   if (options.privateKey && !options.publicKey) {
-    const der = _createRsaDerFromDer({
+    const der = createRsaDerFromDer({
       privateKey: Buffer.from(options.privateKey, "base64url"),
       publicKey: Buffer.alloc(0),
     });

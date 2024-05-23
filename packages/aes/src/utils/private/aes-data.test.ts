@@ -1,7 +1,7 @@
 import { Kryptos } from "@lindorm/kryptos";
 import { randomBytes } from "crypto";
 import { LATEST_AES_VERSION } from "../../constants";
-import { _decryptAesData, _encryptAesData } from "./aes-data";
+import { decryptAesData, encryptAesData } from "./aes-data";
 
 describe("aes-data", () => {
   let data: string;
@@ -18,7 +18,7 @@ describe("aes-data", () => {
       use: "enc",
     });
 
-    const res = _encryptAesData({ data, kryptos });
+    const res = encryptAesData({ data, kryptos });
 
     expect(res).toEqual({
       algorithm: "dir",
@@ -35,7 +35,7 @@ describe("aes-data", () => {
       version: LATEST_AES_VERSION,
     });
 
-    expect(_decryptAesData({ ...res, kryptos })).toBe(data);
+    expect(decryptAesData({ ...res, kryptos })).toBe(data);
   });
 
   describe("cbc", () => {
@@ -47,14 +47,14 @@ describe("aes-data", () => {
         use: "enc",
       });
 
-      const encryption = _encryptAesData({
+      const encryption = encryptAesData({
         encryption: "A128CBC-HS256",
         data,
         kryptos,
       });
 
       expect(encryption.encryption).toBe("A128CBC-HS256");
-      expect(_decryptAesData({ ...encryption, kryptos })).toBe(data);
+      expect(decryptAesData({ ...encryption, kryptos })).toBe(data);
     });
 
     test("should encrypt and decrypt with A192CBC-HS384", () => {
@@ -65,14 +65,14 @@ describe("aes-data", () => {
         use: "enc",
       });
 
-      const encryption = _encryptAesData({
+      const encryption = encryptAesData({
         encryption: "A192CBC-HS384",
         data,
         kryptos,
       });
 
       expect(encryption.encryption).toBe("A192CBC-HS384");
-      expect(_decryptAesData({ ...encryption, kryptos })).toBe(data);
+      expect(decryptAesData({ ...encryption, kryptos })).toBe(data);
     });
 
     test("should encrypt and decrypt with A256CBC-HS512", () => {
@@ -83,14 +83,14 @@ describe("aes-data", () => {
         use: "enc",
       });
 
-      const encryption = _encryptAesData({
+      const encryption = encryptAesData({
         encryption: "A256CBC-HS512",
         data,
         kryptos,
       });
 
       expect(encryption.encryption).toBe("A256CBC-HS512");
-      expect(_decryptAesData({ ...encryption, kryptos })).toBe(data);
+      expect(decryptAesData({ ...encryption, kryptos })).toBe(data);
     });
   });
 
@@ -103,14 +103,14 @@ describe("aes-data", () => {
         use: "enc",
       });
 
-      const encryption = _encryptAesData({
+      const encryption = encryptAesData({
         encryption: "A128GCM",
         data,
         kryptos,
       });
 
       expect(encryption.encryption).toBe("A128GCM");
-      expect(_decryptAesData({ ...encryption, kryptos })).toBe(data);
+      expect(decryptAesData({ ...encryption, kryptos })).toBe(data);
     });
 
     test("should encrypt and decrypt with A192GCM", () => {
@@ -121,14 +121,14 @@ describe("aes-data", () => {
         use: "enc",
       });
 
-      const encryption = _encryptAesData({
+      const encryption = encryptAesData({
         encryption: "A192GCM",
         data,
         kryptos,
       });
 
       expect(encryption.encryption).toBe("A192GCM");
-      expect(_decryptAesData({ ...encryption, kryptos })).toBe(data);
+      expect(decryptAesData({ ...encryption, kryptos })).toBe(data);
     });
 
     test("should encrypt and decrypt with A256GCM", () => {
@@ -139,14 +139,14 @@ describe("aes-data", () => {
         use: "enc",
       });
 
-      const encryption = _encryptAesData({
+      const encryption = encryptAesData({
         encryption: "A256GCM",
         data,
         kryptos,
       });
 
       expect(encryption.encryption).toBe("A256GCM");
-      expect(_decryptAesData({ ...encryption, kryptos })).toBe(data);
+      expect(decryptAesData({ ...encryption, kryptos })).toBe(data);
     });
   });
 });

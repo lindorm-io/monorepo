@@ -1,60 +1,60 @@
 import { KryptosError } from "../../../errors";
 import { KryptosExportMode, KryptosJwk } from "../../../types";
-import { _ExportOptions } from "../../../types/private/export-options";
-import { _exportEcToJwk } from "../ec/export-jwk";
-import { _isEcDer } from "../ec/is";
-import { _exportOctToJwk } from "../oct/export-jwk";
-import { _isOctDer } from "../oct/is";
-import { _exportOkpToJwk } from "../okp/export-jwk";
-import { _isOkpDer } from "../okp/is";
-import { _exportRsaToJwk } from "../rsa/export-jwk";
-import { _isRsaDer } from "../rsa/is";
+import { ExportOptions } from "../../../types/private/export-options";
+import { exportEcToJwk } from "../ec/export-jwk";
+import { isEcDer } from "../ec/is";
+import { exportOctToJwk } from "../oct/export-jwk";
+import { isOctDer } from "../oct/is";
+import { exportOkpToJwk } from "../okp/export-jwk";
+import { isOkpDer } from "../okp/is";
+import { exportRsaToJwk } from "../rsa/export-jwk";
+import { isRsaDer } from "../rsa/is";
 
-type Options = _ExportOptions & {
+type Options = ExportOptions & {
   mode: KryptosExportMode;
 };
 
-export const _exportToJwk = (options: Options): KryptosJwk => {
+export const exportToJwk = (options: Options): KryptosJwk => {
   switch (options.type) {
     case "EC":
-      if (!_isEcDer(options)) {
+      if (!isEcDer(options)) {
         throw new KryptosError("Invalid options");
       }
       return {
-        ..._exportEcToJwk(options),
+        ...exportEcToJwk(options),
         alg: options.algorithm,
         use: options.use,
         kty: "EC",
       };
 
     case "oct":
-      if (!_isOctDer(options)) {
+      if (!isOctDer(options)) {
         throw new KryptosError("Invalid options");
       }
       return {
-        ..._exportOctToJwk(options),
+        ...exportOctToJwk(options),
         alg: options.algorithm,
         use: options.use,
         kty: "oct",
       };
 
     case "OKP":
-      if (!_isOkpDer(options)) {
+      if (!isOkpDer(options)) {
         throw new KryptosError("Invalid options");
       }
       return {
-        ..._exportOkpToJwk(options),
+        ...exportOkpToJwk(options),
         alg: options.algorithm,
         use: options.use,
         kty: "OKP",
       };
 
     case "RSA":
-      if (!_isRsaDer(options)) {
+      if (!isRsaDer(options)) {
         throw new KryptosError("Invalid options");
       }
       return {
-        ..._exportRsaToJwk(options),
+        ...exportRsaToJwk(options),
         alg: options.algorithm,
         use: options.use,
         kty: "RSA",

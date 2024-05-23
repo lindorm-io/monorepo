@@ -3,9 +3,9 @@ import { BufferFormat } from "@lindorm/types";
 import { RsaError } from "../errors";
 import { RsaKitOptions } from "../types";
 import {
-  _assertRsaSignature,
-  _createRsaSignature,
-  _verifyRsaSignature,
+  assertRsaSignature,
+  createRsaSignature,
+  verifyRsaSignature,
 } from "../utils/private/rsa-signature";
 
 export class RsaKit {
@@ -23,7 +23,7 @@ export class RsaKit {
   }
 
   public sign(data: string): string {
-    return _createRsaSignature({
+    return createRsaSignature({
       data,
       format: this.format,
       kryptos: this.kryptos,
@@ -31,7 +31,7 @@ export class RsaKit {
   }
 
   public verify(data: string, signature: string): boolean {
-    return _verifyRsaSignature({
+    return verifyRsaSignature({
       data,
       format: this.format,
       kryptos: this.kryptos,
@@ -40,7 +40,7 @@ export class RsaKit {
   }
 
   public assert(data: string, signature: string): void {
-    return _assertRsaSignature({
+    return assertRsaSignature({
       data,
       format: this.format,
       kryptos: this.kryptos,

@@ -1,9 +1,9 @@
 import { TEST_OCT_KEY } from "../../../__fixtures__/keys";
-import { _pbkdf } from "./pbkdf";
+import { pbkdf } from "./pbkdf";
 
 describe("pbkdf", () => {
   test("should create a key derivation", () => {
-    const result = _pbkdf({
+    const result = pbkdf({
       algorithm: "SHA256",
       derivationKey: TEST_OCT_KEY.export("der").privateKey!,
       keyLength: 16,
@@ -19,7 +19,7 @@ describe("pbkdf", () => {
     expect(result.pbkdfIterations).toBeLessThanOrEqual(110000);
 
     expect(
-      _pbkdf({
+      pbkdf({
         algorithm: "SHA256",
         derivationKey: TEST_OCT_KEY.export("der").privateKey!,
         keyLength: 16,

@@ -1,1 +1,1 @@
-export const _defaultValidateStatus = (status: number): boolean => status < 400;
+export const defaultValidateStatus = (status: number): boolean => status < 400;

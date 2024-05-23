@@ -1,7 +1,7 @@
-import { _composeFetchConfig } from "../../utils/private/compose-fetch-config";
-import { _requestWithRetry } from "../../utils/private/request-with-retry";
-import { _useFetch } from "../../utils/private/use-fetch";
-import { _fetchRequestHandler } from "./fetch-request-handler";
+import { composeFetchConfig as _composeFetchConfig } from "../../utils/private/compose-fetch-config";
+import { requestWithRetry as _requestWithRetry } from "../../utils/private/request-with-retry";
+import { useFetch as _useFetch } from "../../utils/private/use-fetch";
+import { fetchRequestHandler } from "./fetch-request-handler";
 
 jest.mock("../../utils/private/compose-fetch-config");
 jest.mock("../../utils/private/request-with-retry");
@@ -13,11 +13,9 @@ const useFetch = _useFetch as jest.Mock;
 
 describe("fetchRequestHandler", () => {
   let ctx: any;
-  let next: any;
 
   beforeEach(() => {
     ctx = { req: "ctx" };
-    next = () => Promise.resolve();
 
     composeFetchConfig.mockResolvedValueOnce({ config: true });
     useFetch.mockResolvedValueOnce({ response: true });
@@ -27,7 +25,7 @@ describe("fetchRequestHandler", () => {
   afterEach(jest.resetAllMocks);
 
   test("should resolve", async () => {
-    await expect(_fetchRequestHandler(ctx, next)).resolves.not.toThrow();
+    await expect(fetchRequestHandler(ctx, jest.fn())).resolves.toBeUndefined();
 
     expect(requestWithRetry).toHaveBeenCalledTimes(1);
     expect(requestWithRetry).toHaveBeenCalledWith(expect.any(Function), ctx);

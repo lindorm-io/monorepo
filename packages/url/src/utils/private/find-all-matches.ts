@@ -1,6 +1,6 @@
 type Match = { path: string; param: string };
 
-export const _findAllMatches = (input: string): Array<Match> => {
+export const findAllMatches = (input: string): Array<Match> => {
   const regex = new RegExp(/(:[a-zA-Z0-9]+)|({[a-zA-Z0-9]+})/g);
   const matches: Array<Match> = [];
 

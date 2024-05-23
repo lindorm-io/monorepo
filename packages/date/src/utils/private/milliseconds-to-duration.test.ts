@@ -1,11 +1,11 @@
-import { _millisecondsToDuration } from "./milliseconds-to-duration";
-import { _readableToMilliseconds } from "./readable-to-milliseconds";
+import { millisecondsToDuration } from "./milliseconds-to-duration";
+import { readableToMilliseconds } from "./readable-to-milliseconds";
 
 describe("millisecondsToDuration", () => {
   test("should return predictable duration", () => {
     expect(
-      _millisecondsToDuration(
-        _readableToMilliseconds(
+      millisecondsToDuration(
+        readableToMilliseconds(
           "1 years",
           "1 months",
           "1 weeks",
@@ -30,8 +30,8 @@ describe("millisecondsToDuration", () => {
 
   test("should return duration", () => {
     expect(
-      _millisecondsToDuration(
-        _readableToMilliseconds(
+      millisecondsToDuration(
+        readableToMilliseconds(
           "3 years",
           "13 months",
           "6 weeks",

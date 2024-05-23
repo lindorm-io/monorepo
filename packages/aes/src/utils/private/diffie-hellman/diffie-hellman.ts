@@ -6,18 +6,18 @@ import {
   DecryptCekOptions,
   DecryptCekResult,
 } from "../../../types/private";
-import { _calculateContentEncryptionKeySize } from "../calculate/calculate-content-encryption-key-size";
-import { _hkdf } from "../key-derivation/hkdf";
-import { _calculateSharedSecret, _generateSharedSecret } from "./shared-secret";
+import { calculateContentEncryptionKeySize } from "../calculate/calculate-content-encryption-key-size";
+import { hkdf } from "../key-derivation/hkdf";
+import { calculateSharedSecret, generateSharedSecret } from "./shared-secret";
 
-export const _getDiffieHellmanEncryptionKey = ({
+export const getDiffieHellmanEncryptionKey = ({
   encryption,
   kryptos,
 }: CreateCekOptions): CreateCekResult => {
-  const { publicEncryptionJwk, sharedSecret } = _generateSharedSecret(kryptos);
-  const keyLength = _calculateContentEncryptionKeySize(encryption);
+  const { publicEncryptionJwk, sharedSecret } = generateSharedSecret(kryptos);
+  const keyLength = calculateContentEncryptionKeySize(encryption);
 
-  const { derivedKey, hkdfSalt } = _hkdf({
+  const { derivedKey, hkdfSalt } = hkdf({
     derivationKey: sharedSecret,
     keyLength,
   });
@@ -29,7 +29,7 @@ export const _getDiffieHellmanEncryptionKey = ({
   };
 };
 
-export const _getDiffieHellmanDecryptionKey = ({
+export const getDiffieHellmanDecryptionKey = ({
   encryption,
   hkdfSalt,
   kryptos,
@@ -42,10 +42,10 @@ export const _getDiffieHellmanDecryptionKey = ({
     throw new AesError("Missing publicEncryptionJwk");
   }
 
-  const sharedSecret = _calculateSharedSecret({ kryptos, publicEncryptionJwk });
-  const keyLength = _calculateContentEncryptionKeySize(encryption);
+  const sharedSecret = calculateSharedSecret({ kryptos, publicEncryptionJwk });
+  const keyLength = calculateContentEncryptionKeySize(encryption);
 
-  const { derivedKey } = _hkdf({
+  const { derivedKey } = hkdf({
     derivationKey: sharedSecret,
     hkdfSalt,
     keyLength,

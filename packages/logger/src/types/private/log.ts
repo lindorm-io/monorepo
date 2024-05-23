@@ -1,7 +1,7 @@
 import { LogLevel } from "../../enums";
 import { LogDetails, LogSession } from "../types";
 
-export type _Log = {
+export type Log = {
   context: Array<string>;
   details: Array<LogDetails>;
   level: LogLevel;

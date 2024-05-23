@@ -2,7 +2,7 @@ import { ChangeCase, changeCase } from "@lindorm/case";
 import { isArray, isObject } from "@lindorm/is";
 import { Dict, Query } from "@lindorm/types";
 
-export const _addQueryToURL = <Q = Dict<Query>>(
+export const addQueryToURL = <Q = Dict<Query>>(
   url: URL,
   query?: Q,
   queryCaseTransform?: ChangeCase,

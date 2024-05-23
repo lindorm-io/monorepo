@@ -1,15 +1,15 @@
 import { KryptosError } from "../../../errors";
 import { KryptosDer, KryptosPem } from "../../../types";
-import { _createEcDerFromPem } from "../ec/der-from-pem";
-import { _createOctDerFromPem } from "../oct/der-from-pem";
-import { _createOkpDerFromPem } from "../okp/der-from-pem";
-import { _createRsaDerFromPem } from "../rsa/der-from-pem";
+import { createEcDerFromPem } from "../ec/der-from-pem";
+import { createOctDerFromPem } from "../oct/der-from-pem";
+import { createOkpDerFromPem } from "../okp/der-from-pem";
+import { createRsaDerFromPem } from "../rsa/der-from-pem";
 
-export const _createDerFromPem = (options: KryptosPem): KryptosDer => {
+export const createDerFromPem = (options: KryptosPem): KryptosDer => {
   switch (options.type) {
     case "EC":
       return {
-        ..._createEcDerFromPem(options),
+        ...createEcDerFromPem(options),
         algorithm: options.algorithm,
         use: options.use,
         type: options.type,
@@ -17,7 +17,7 @@ export const _createDerFromPem = (options: KryptosPem): KryptosDer => {
 
     case "oct":
       return {
-        ..._createOctDerFromPem(options),
+        ...createOctDerFromPem(options),
         algorithm: options.algorithm,
         use: options.use,
         type: options.type,
@@ -25,7 +25,7 @@ export const _createDerFromPem = (options: KryptosPem): KryptosDer => {
 
     case "OKP":
       return {
-        ..._createOkpDerFromPem(options),
+        ...createOkpDerFromPem(options),
         algorithm: options.algorithm,
         use: options.use,
         type: options.type,
@@ -33,7 +33,7 @@ export const _createDerFromPem = (options: KryptosPem): KryptosDer => {
 
     case "RSA":
       return {
-        ..._createRsaDerFromPem(options),
+        ...createRsaDerFromPem(options),
         algorithm: options.algorithm,
         use: options.use,
         type: options.type,

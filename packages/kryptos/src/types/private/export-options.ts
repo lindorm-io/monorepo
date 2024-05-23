@@ -1,6 +1,6 @@
 import { KryptosAlgorithm, KryptosCurve, KryptosType, KryptosUse } from "../types";
 
-export type _ExportOptions = {
+export type ExportOptions = {
   algorithm: KryptosAlgorithm;
   curve?: KryptosCurve;
   privateKey?: Buffer;

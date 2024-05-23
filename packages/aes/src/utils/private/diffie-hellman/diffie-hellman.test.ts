@@ -1,12 +1,12 @@
 import { TEST_EC_KEY, TEST_OKP_KEY } from "../../../__fixtures__/keys";
 import {
-  _getDiffieHellmanDecryptionKey,
-  _getDiffieHellmanEncryptionKey,
+  getDiffieHellmanDecryptionKey,
+  getDiffieHellmanEncryptionKey,
 } from "./diffie-hellman";
 
 describe("diffieHellman", () => {
   test("should return encryption keys with EC", () => {
-    const result = _getDiffieHellmanEncryptionKey({
+    const result = getDiffieHellmanEncryptionKey({
       encryption: "A256GCM",
       kryptos: TEST_EC_KEY,
     });
@@ -23,7 +23,7 @@ describe("diffieHellman", () => {
     });
 
     expect(
-      _getDiffieHellmanDecryptionKey({
+      getDiffieHellmanDecryptionKey({
         encryption: "A256GCM",
         publicEncryptionJwk: result.publicEncryptionJwk,
         kryptos: TEST_EC_KEY,
@@ -33,7 +33,7 @@ describe("diffieHellman", () => {
   });
 
   test("should return encryption keys with OKP", () => {
-    const result = _getDiffieHellmanEncryptionKey({
+    const result = getDiffieHellmanEncryptionKey({
       encryption: "A256GCM",
       kryptos: TEST_OKP_KEY,
     });
@@ -49,7 +49,7 @@ describe("diffieHellman", () => {
     });
 
     expect(
-      _getDiffieHellmanDecryptionKey({
+      getDiffieHellmanDecryptionKey({
         encryption: "A256GCM",
         publicEncryptionJwk: result.publicEncryptionJwk,
         kryptos: TEST_OKP_KEY,

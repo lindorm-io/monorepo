@@ -1,5 +1,6 @@
 export * from "./conduit";
 export * from "./context";
+export * from "./interfaces";
 export * from "./oauth";
 export * from "./overrides";
 export * from "./request";

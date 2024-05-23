@@ -2,7 +2,7 @@ import { KryptosEncryption } from "@lindorm/kryptos";
 import { randomBytes } from "crypto";
 import { AesError } from "../../../errors";
 
-export const _getInitialisationVector = (encryption: KryptosEncryption): Buffer => {
+export const getInitialisationVector = (encryption: KryptosEncryption): Buffer => {
   switch (encryption) {
     case "A128CBC-HS256":
     case "A192CBC-HS384":

@@ -1,12 +1,19 @@
 import { sign, verify } from "crypto";
 import { OkpError } from "../../errors";
-import { CreateOkpSignatureOptions, VerifyOkpSignatureOptions } from "../../types/okp-kit";
-import { _getSignKey, _getVerifyKey } from "./get-key";
+import {
+  CreateOkpSignatureOptions,
+  VerifyOkpSignatureOptions,
+} from "../../types/okp-kit";
+import { getSignKey, getVerifyKey } from "./get-key";
 
-export const _createOkpSignature = ({ data, format, kryptos }: CreateOkpSignatureOptions): string =>
-  sign(undefined, Buffer.from(data, "utf8"), _getSignKey(kryptos)).toString(format);
+export const createOkpSignature = ({
+  data,
+  format,
+  kryptos,
+}: CreateOkpSignatureOptions): string =>
+  sign(undefined, Buffer.from(data, "utf8"), getSignKey(kryptos)).toString(format);
 
-export const _verifyOkpSignature = ({
+export const verifyOkpSignature = ({
   data,
   format,
   kryptos,
@@ -15,16 +22,16 @@ export const _verifyOkpSignature = ({
   verify(
     undefined,
     Buffer.from(data, "utf8"),
-    _getVerifyKey(kryptos),
+    getVerifyKey(kryptos),
     Buffer.from(signature, format),
   );
 
-export const _assertOkpSignature = ({
+export const assertOkpSignature = ({
   data,
   format,
   kryptos,
   signature,
 }: VerifyOkpSignatureOptions): void => {
-  if (_verifyOkpSignature({ data, format, kryptos, signature })) return;
+  if (verifyOkpSignature({ data, format, kryptos, signature })) return;
   throw new OkpError("Invalid signature");
 };

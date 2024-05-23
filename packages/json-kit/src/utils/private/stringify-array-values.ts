@@ -1,14 +1,14 @@
 import { isArray, isDate, isNull, isObject, isString, isUndefined } from "@lindorm/is";
-import { _stringifyObjectValues } from "./stringify-object-values";
+import { stringifyObjectValues } from "./stringify-object-values";
 
-export const _stringifyArrayValues = (input: Array<any>): Array<any> => {
+export const stringifyArrayValues = (input: Array<any>): Array<any> => {
   const result: Array<any> = [];
 
   for (const value of input) {
     if (isObject(value)) {
-      result.push(_stringifyObjectValues(value));
+      result.push(stringifyObjectValues(value));
     } else if (isArray(value)) {
-      result.push(_stringifyArrayValues(value));
+      result.push(stringifyArrayValues(value));
     } else if (isDate(value)) {
       result.push(value.toISOString());
     } else if (isString(value)) {

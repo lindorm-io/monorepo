@@ -1,11 +1,11 @@
 import { TEST_EC_KEY, TEST_OKP_KEY } from "../../../__fixtures__/keys";
-import { _calculateSharedSecret, _generateSharedSecret } from "./shared-secret";
+import { calculateSharedSecret, generateSharedSecret } from "./shared-secret";
 
 describe("sharedSecret", () => {
   test("should generate and calculate shared secret with EC", () => {
     const kryptos = TEST_EC_KEY;
 
-    const result = _generateSharedSecret(kryptos);
+    const result = generateSharedSecret(kryptos);
 
     expect(result).toEqual({
       publicEncryptionJwk: {
@@ -18,7 +18,7 @@ describe("sharedSecret", () => {
     });
 
     expect(
-      _calculateSharedSecret({
+      calculateSharedSecret({
         kryptos,
         publicEncryptionJwk: result.publicEncryptionJwk,
       }),
@@ -28,7 +28,7 @@ describe("sharedSecret", () => {
   test("should generate and calculate shared secret with OKP", () => {
     const kryptos = TEST_OKP_KEY;
 
-    const result = _generateSharedSecret(kryptos);
+    const result = generateSharedSecret(kryptos);
 
     expect(result).toEqual({
       publicEncryptionJwk: {
@@ -40,7 +40,7 @@ describe("sharedSecret", () => {
     });
 
     expect(
-      _calculateSharedSecret({
+      calculateSharedSecret({
         kryptos,
         publicEncryptionJwk: result.publicEncryptionJwk,
       }),

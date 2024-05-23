@@ -14,7 +14,7 @@ type CalculateSharedSecretOptions = Pick<
   "kryptos" | "publicEncryptionJwk"
 >;
 
-const _generateKryptos = (kryptos: IKryptos): IKryptos => {
+const generateKryptos = (kryptos: IKryptos): IKryptos => {
   if (!Kryptos.isEc(kryptos) && !Kryptos.isOkp(kryptos)) {
     throw new AesError("Invalid kryptos type");
   }
@@ -27,8 +27,8 @@ const _generateKryptos = (kryptos: IKryptos): IKryptos => {
   } as any);
 };
 
-export const _generateSharedSecret = (kryptos: IKryptos): GenerateResult => {
-  const pek = _generateKryptos(kryptos);
+export const generateSharedSecret = (kryptos: IKryptos): GenerateResult => {
+  const pek = generateKryptos(kryptos);
   const der = kryptos.export("der");
   const sender = pek.export("der");
 
@@ -57,7 +57,7 @@ export const _generateSharedSecret = (kryptos: IKryptos): GenerateResult => {
   };
 };
 
-export const _calculateSharedSecret = ({
+export const calculateSharedSecret = ({
   kryptos,
   publicEncryptionJwk,
 }: CalculateSharedSecretOptions): Buffer => {

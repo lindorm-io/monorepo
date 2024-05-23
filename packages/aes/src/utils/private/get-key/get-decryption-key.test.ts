@@ -4,11 +4,11 @@ import {
   TEST_OKP_KEY,
   TEST_RSA_KEY,
 } from "../../../__fixtures__/keys";
-import { _getEcDecryptionKey } from "../key-types/get-ec-keys";
-import { _getOctDecryptionKey } from "../key-types/get-oct-keys";
-import { _getOkpDecryptionKey } from "../key-types/get-okp-keys";
-import { _getRsaDecryptionKey } from "../key-types/get-rsa-keys";
-import { _getDecryptionKey } from "./get-decryption-key";
+import { getEcDecryptionKey as _getEcDecryptionKey } from "../key-types/get-ec-keys";
+import { getOctDecryptionKey as _getOctDecryptionKey } from "../key-types/get-oct-keys";
+import { getOkpDecryptionKey as _getOkpDecryptionKey } from "../key-types/get-okp-keys";
+import { getRsaDecryptionKey as _getRsaDecryptionKey } from "../key-types/get-rsa-keys";
+import { getDecryptionKey } from "./get-decryption-key";
 
 jest.mock("../key-types/get-ec-keys");
 jest.mock("../key-types/get-oct-keys");
@@ -32,7 +32,7 @@ describe("getDecryptionKey", () => {
 
   test("should resolve decryption key with EC key", () => {
     expect(
-      _getDecryptionKey({
+      getDecryptionKey({
         encryption: "A256GCM",
         kryptos: TEST_EC_KEY,
         publicEncryptionJwk: { crv: "P-521", x: "x", y: "y", kty: "EC" },
@@ -43,7 +43,7 @@ describe("getDecryptionKey", () => {
 
   test("should resolve decryption key with OCT key", () => {
     expect(
-      _getDecryptionKey({
+      getDecryptionKey({
         encryption: "A256GCM",
         hkdfSalt: Buffer.from("hkdfSalt"),
         kryptos: TEST_OCT_KEY,
@@ -53,7 +53,7 @@ describe("getDecryptionKey", () => {
 
   test("should resolve decryption key with OKP key", () => {
     expect(
-      _getDecryptionKey({
+      getDecryptionKey({
         encryption: "A256GCM",
         kryptos: TEST_OKP_KEY,
         publicEncryptionJwk: { crv: "P-521", x: "x", y: "y", kty: "EC" },
@@ -64,7 +64,7 @@ describe("getDecryptionKey", () => {
 
   test("should resolve decryption key with RSA key", () => {
     expect(
-      _getDecryptionKey({
+      getDecryptionKey({
         encryption: "A256GCM",
         publicEncryptionKey: Buffer.from("public-encryption-key"),
         kryptos: TEST_RSA_KEY,

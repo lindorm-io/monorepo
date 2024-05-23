@@ -2,7 +2,7 @@ import { isObject, isObjectLike, isString } from "@lindorm/is";
 import { ConduitError } from "../../errors";
 import { ConduitMiddleware } from "../../types";
 
-export const _responseLogger: ConduitMiddleware = async (ctx, next) => {
+export const responseLogger: ConduitMiddleware = async (ctx, next) => {
   const start = Date.now();
 
   try {

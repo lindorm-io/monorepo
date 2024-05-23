@@ -26,7 +26,7 @@ const SIZES = [
   },
 ] as const;
 
-export const _modulusSize = (options: Options): RsaModulus => {
+export const modulusSize = (options: Options): RsaModulus => {
   if (!options.privateKey && !options.publicKey) {
     throw new KryptosError("Missing RSA key");
   }

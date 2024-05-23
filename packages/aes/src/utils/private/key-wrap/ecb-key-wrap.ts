@@ -5,17 +5,17 @@ import {
   KeyWrapOptions,
   KeyWrapResult,
 } from "../../../types/private";
-import { _calculateKeyWrapEncryption } from "../calculate/calculate-key-wrap-encryption";
+import { calculateKeyWrapEncryption } from "../calculate/calculate-key-wrap-encryption";
 
 const AIV = "A6A6A6A6A6A6A6A6" as const;
 const BLOCK_SIZE = 8 as const;
 
-export const _ecbKeyWrap = ({
+export const ecbKeyWrap = ({
   contentEncryptionKey,
   keyEncryptionKey,
   kryptos,
 }: KeyWrapOptions): KeyWrapResult => {
-  const algorithm = _calculateKeyWrapEncryption(kryptos);
+  const algorithm = calculateKeyWrapEncryption(kryptos);
 
   const n = contentEncryptionKey.length / BLOCK_SIZE;
   let a = Buffer.from(AIV, "hex");
@@ -46,12 +46,12 @@ export const _ecbKeyWrap = ({
   return { publicEncryptionKey: Buffer.concat([a, ...r]) };
 };
 
-export const _ecbKeyUnwrap = ({
+export const ecbKeyUnwrap = ({
   keyEncryptionKey,
   kryptos,
   publicEncryptionKey,
 }: KeyUnwrapOptions): KeyUnwrapResult => {
-  const encryption = _calculateKeyWrapEncryption(kryptos);
+  const encryption = calculateKeyWrapEncryption(kryptos);
 
   const n = publicEncryptionKey.length / BLOCK_SIZE - 1;
   let a = publicEncryptionKey.subarray(0, BLOCK_SIZE);

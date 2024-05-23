@@ -1,41 +1,41 @@
 import {
-  _DAYS,
-  _HOURS,
-  _MINUTES,
-  _MONTHS,
-  _SECONDS,
-  _WEEKS,
-  _YEARS,
+  DAYS,
+  HOURS,
+  MINUTES,
+  MONTHS,
+  SECONDS,
+  WEEKS,
+  YEARS,
 } from "../../constants/private/time";
 import { DurationString } from "../../enums";
 
-export const _calculateCurrentDuration = (
+export const calculateCurrentDuration = (
   milliseconds: number,
   duration: DurationString,
 ): number => {
   switch (duration) {
-    case DurationString.YEARS:
-      return milliseconds / _YEARS;
+    case DurationString.Years:
+      return milliseconds / YEARS;
 
-    case DurationString.MONTHS:
-      return milliseconds / _MONTHS;
+    case DurationString.Months:
+      return milliseconds / MONTHS;
 
-    case DurationString.WEEKS:
-      return milliseconds / _WEEKS;
+    case DurationString.Weeks:
+      return milliseconds / WEEKS;
 
-    case DurationString.DAYS:
-      return milliseconds / _DAYS;
+    case DurationString.Days:
+      return milliseconds / DAYS;
 
-    case DurationString.HOURS:
-      return milliseconds / _HOURS;
+    case DurationString.Hours:
+      return milliseconds / HOURS;
 
-    case DurationString.MINUTES:
-      return milliseconds / _MINUTES;
+    case DurationString.Minutes:
+      return milliseconds / MINUTES;
 
-    case DurationString.SECONDS:
-      return milliseconds / _SECONDS;
+    case DurationString.Seconds:
+      return milliseconds / SECONDS;
 
-    case DurationString.MILLISECONDS:
+    case DurationString.Milliseconds:
       return milliseconds;
 
     default:
@@ -48,28 +48,28 @@ export const calculateRemainingDuration = (
   duration: DurationString,
 ): number => {
   switch (duration) {
-    case DurationString.YEARS:
-      return Math.floor(milliseconds) * _YEARS;
+    case DurationString.Years:
+      return Math.floor(milliseconds) * YEARS;
 
-    case DurationString.MONTHS:
-      return Math.floor(milliseconds) * _MONTHS;
+    case DurationString.Months:
+      return Math.floor(milliseconds) * MONTHS;
 
-    case DurationString.WEEKS:
-      return Math.floor(milliseconds) * _WEEKS;
+    case DurationString.Weeks:
+      return Math.floor(milliseconds) * WEEKS;
 
-    case DurationString.DAYS:
-      return Math.floor(milliseconds) * _DAYS;
+    case DurationString.Days:
+      return Math.floor(milliseconds) * DAYS;
 
-    case DurationString.HOURS:
-      return Math.floor(milliseconds) * _HOURS;
+    case DurationString.Hours:
+      return Math.floor(milliseconds) * HOURS;
 
-    case DurationString.MINUTES:
-      return Math.floor(milliseconds) * _MINUTES;
+    case DurationString.Minutes:
+      return Math.floor(milliseconds) * MINUTES;
 
-    case DurationString.SECONDS:
-      return Math.floor(milliseconds) * _SECONDS;
+    case DurationString.Seconds:
+      return Math.floor(milliseconds) * SECONDS;
 
-    case DurationString.MILLISECONDS:
+    case DurationString.Milliseconds:
       return milliseconds;
 
     default:

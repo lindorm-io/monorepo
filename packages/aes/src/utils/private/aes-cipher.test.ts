@@ -1,13 +1,16 @@
 import { AesError } from "../../errors";
 import {
-  _assertAesCipher,
-  _decryptAesCipher,
-  _encryptAesCipher,
-  _verifyAesCipher,
+  assertAesCipher,
+  decryptAesCipher,
+  encryptAesCipher,
+  verifyAesCipher,
 } from "./aes-cipher";
-import { _decryptAesData, _encryptAesData } from "./aes-data";
-import { _decodeAesString } from "./decode-aes-string";
-import { _encodeAesString } from "./encode-aes-string";
+import {
+  decryptAesData as _decryptAesData,
+  encryptAesData as _encryptAesData,
+} from "./aes-data";
+import { decodeAesString as _decodeAesString } from "./decode-aes-string";
+import { encodeAesString as _encodeAesString } from "./encode-aes-string";
 
 jest.mock("./aes-data");
 jest.mock("./decode-aes-string");
@@ -31,28 +34,32 @@ describe("aes-cipher", () => {
   });
 
   test("should encrypt aes cipher", () => {
-    expect(_encryptAesCipher({ data: "data", kryptos })).toBe("encodeAesString");
+    expect(encryptAesCipher({ data: "data", kryptos })).toBe("encodeAesString");
   });
 
   test("should decrypt aes cipher", () => {
-    expect(_decryptAesCipher({ cipher: "cipher", kryptos })).toBe("decryptAesData");
+    expect(decryptAesCipher({ cipher: "cipher", kryptos })).toBe("decryptAesData");
   });
 
   test("should verify valid aes cipher", () => {
-    expect(_verifyAesCipher({ cipher: "cipher", data: "decryptAesData", kryptos })).toBe(true);
+    expect(verifyAesCipher({ cipher: "cipher", data: "decryptAesData", kryptos })).toBe(
+      true,
+    );
   });
 
   test("should verify invalid aes cipher", () => {
-    expect(_verifyAesCipher({ cipher: "cipher", data: "wrong", kryptos })).toBe(false);
+    expect(verifyAesCipher({ cipher: "cipher", data: "wrong", kryptos })).toBe(false);
   });
 
   test("should assert valid aes cipher", () => {
     expect(() =>
-      _assertAesCipher({ cipher: "cipher", data: "decryptAesData", kryptos }),
+      assertAesCipher({ cipher: "cipher", data: "decryptAesData", kryptos }),
     ).not.toThrow(AesError);
   });
 
   test("should assert invalid aes cipher", () => {
-    expect(() => _assertAesCipher({ cipher: "cipher", data: "wrong", kryptos })).toThrow(AesError);
+    expect(() => assertAesCipher({ cipher: "cipher", data: "wrong", kryptos })).toThrow(
+      AesError,
+    );
   });
 });

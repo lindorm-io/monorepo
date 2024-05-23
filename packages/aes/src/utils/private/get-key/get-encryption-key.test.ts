@@ -4,11 +4,11 @@ import {
   TEST_OKP_KEY,
   TEST_RSA_KEY,
 } from "../../../__fixtures__/keys";
-import { _getEcEncryptionKey } from "../key-types/get-ec-keys";
-import { _getOctEncryptionKey } from "../key-types/get-oct-keys";
-import { _getOkpEncryptionKey } from "../key-types/get-okp-keys";
-import { _getRsaEncryptionKey } from "../key-types/get-rsa-keys";
-import { _getEncryptionKey } from "./get-encryption-key";
+import { getEcEncryptionKey as _getEcEncryptionKey } from "../key-types/get-ec-keys";
+import { getOctEncryptionKey as _getOctEncryptionKey } from "../key-types/get-oct-keys";
+import { getOkpEncryptionKey as _getOkpEncryptionKey } from "../key-types/get-okp-keys";
+import { getRsaEncryptionKey as _getRsaEncryptionKey } from "../key-types/get-rsa-keys";
+import { getEncryptionKey } from "./get-encryption-key";
 
 jest.mock("../key-types/get-ec-keys");
 jest.mock("../key-types/get-oct-keys");
@@ -32,7 +32,7 @@ describe("getEncryptionKeys", () => {
 
   test("should resolve encryption keys with EC key", () => {
     expect(
-      _getEncryptionKey({
+      getEncryptionKey({
         encryption: "A256GCM",
         kryptos: TEST_EC_KEY,
       }),
@@ -41,7 +41,7 @@ describe("getEncryptionKeys", () => {
 
   test("should resolve encryption keys with OCT key", () => {
     expect(
-      _getEncryptionKey({
+      getEncryptionKey({
         encryption: "A256GCM",
         kryptos: TEST_OCT_KEY,
       }),
@@ -50,7 +50,7 @@ describe("getEncryptionKeys", () => {
 
   test("should resolve encryption keys with OKP key", () => {
     expect(
-      _getEncryptionKey({
+      getEncryptionKey({
         encryption: "A256GCM",
         kryptos: TEST_OKP_KEY,
       }),
@@ -59,7 +59,7 @@ describe("getEncryptionKeys", () => {
 
   test("should resolve encryption keys with RSA key", () => {
     expect(
-      _getEncryptionKey({
+      getEncryptionKey({
         encryption: "A256GCM",
         kryptos: TEST_RSA_KEY,
       }),

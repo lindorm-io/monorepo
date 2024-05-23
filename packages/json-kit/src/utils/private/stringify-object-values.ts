@@ -1,15 +1,15 @@
 import { isArray, isDate, isNull, isObject, isString, isUndefined } from "@lindorm/is";
 import { Dict } from "@lindorm/types";
-import { _stringifyArrayValues } from "./stringify-array-values";
+import { stringifyArrayValues } from "./stringify-array-values";
 
-export const _stringifyObjectValues = (dict: Dict): Dict => {
+export const stringifyObjectValues = (dict: Dict): Dict => {
   const result: Dict = {};
 
   for (const [key, value] of Object.entries(dict)) {
     if (isObject(value)) {
-      result[key] = _stringifyObjectValues(value);
+      result[key] = stringifyObjectValues(value);
     } else if (isArray(value)) {
-      result[key] = _stringifyArrayValues(value);
+      result[key] = stringifyArrayValues(value);
     } else if (isDate(value)) {
       result[key] = value.toISOString();
     } else if (isString(value)) {

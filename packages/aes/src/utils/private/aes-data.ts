@@ -1,19 +1,19 @@
 import { createCipheriv, createDecipheriv } from "crypto";
 import { LATEST_AES_VERSION } from "../../constants";
-import { _B64U } from "../../constants/private/format";
+import { B64U } from "../../constants/private/format";
 import {
   AesEncryptionData,
   DecryptAesDataOptions,
   EncryptAesDataOptions,
 } from "../../types";
-import { _assertAuthTag, _createAuthTag } from "./aes-data/auth-tag";
-import { _getInitialisationVector } from "./aes-data/get-initialisation-vector";
-import { _splitContentEncryptionKey } from "./aes-data/split-content-encryption-key";
-import { _calculateAesEncryption } from "./calculate/calculate-aes-encryption";
-import { _getDecryptionKey } from "./get-key/get-decryption-key";
-import { _getEncryptionKey } from "./get-key/get-encryption-key";
+import { assertAuthTag, createAuthTag } from "./aes-data/auth-tag";
+import { getInitialisationVector } from "./aes-data/get-initialisation-vector";
+import { splitContentEncryptionKey } from "./aes-data/split-content-encryption-key";
+import { calculateAesEncryption } from "./calculate/calculate-aes-encryption";
+import { getDecryptionKey } from "./get-key/get-decryption-key";
+import { getEncryptionKey } from "./get-key/get-encryption-key";
 
-export const _encryptAesData = (options: EncryptAesDataOptions): AesEncryptionData => {
+export const encryptAesData = (options: EncryptAesDataOptions): AesEncryptionData => {
   const { data, encryption = "A256GCM", kryptos } = options;
 
   const {
@@ -25,24 +25,24 @@ export const _encryptAesData = (options: EncryptAesDataOptions): AesEncryptionDa
     publicEncryptionJwk,
     publicEncryptionKey,
     publicEncryptionTag,
-  } = _getEncryptionKey({
+  } = getEncryptionKey({
     encryption,
     kryptos,
   });
 
-  const { encryptionKey, hashKey } = _splitContentEncryptionKey(
+  const { encryptionKey, hashKey } = splitContentEncryptionKey(
     encryption,
     contentEncryptionKey,
   );
 
-  const aesEncryption = _calculateAesEncryption(encryption);
-  const initialisationVector = _getInitialisationVector(encryption);
+  const aesEncryption = calculateAesEncryption(encryption);
+  const initialisationVector = getInitialisationVector(encryption);
   const cipher = createCipheriv(aesEncryption, encryptionKey, initialisationVector);
 
   const buffer = Buffer.isBuffer(data) ? data : Buffer.from(data);
   const content = Buffer.concat([cipher.update(buffer), cipher.final()]);
 
-  const authTag = _createAuthTag({
+  const authTag = createAuthTag({
     cipher,
     content,
     hashKey,
@@ -57,7 +57,7 @@ export const _encryptAesData = (options: EncryptAesDataOptions): AesEncryptionDa
     encryption,
     hkdfSalt,
     initialisationVector,
-    keyId: Buffer.from(kryptos.id, _B64U),
+    keyId: Buffer.from(kryptos.id, B64U),
     pbkdfIterations,
     pbkdfSalt,
     publicEncryptionIv,
@@ -68,7 +68,7 @@ export const _encryptAesData = (options: EncryptAesDataOptions): AesEncryptionDa
   };
 };
 
-export const _decryptAesData = (options: DecryptAesDataOptions): string => {
+export const decryptAesData = (options: DecryptAesDataOptions): string => {
   const {
     authTag,
     content,
@@ -84,7 +84,7 @@ export const _decryptAesData = (options: DecryptAesDataOptions): string => {
     publicEncryptionTag,
   } = options;
 
-  const { contentEncryptionKey } = _getDecryptionKey({
+  const { contentEncryptionKey } = getDecryptionKey({
     encryption,
     hkdfSalt,
     kryptos,
@@ -96,15 +96,15 @@ export const _decryptAesData = (options: DecryptAesDataOptions): string => {
     publicEncryptionTag,
   });
 
-  const { encryptionKey, hashKey } = _splitContentEncryptionKey(
+  const { encryptionKey, hashKey } = splitContentEncryptionKey(
     encryption,
     contentEncryptionKey,
   );
 
-  const aesEncryption = _calculateAesEncryption(encryption);
+  const aesEncryption = calculateAesEncryption(encryption);
   const decipher = createDecipheriv(aesEncryption, encryptionKey, initialisationVector);
 
-  _assertAuthTag({
+  assertAuthTag({
     authTag,
     content,
     hashKey,

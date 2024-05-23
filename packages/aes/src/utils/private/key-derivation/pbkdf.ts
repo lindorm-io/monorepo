@@ -18,7 +18,7 @@ type Result = {
 // get random iterations from 90000 to 110000
 const randomIterations = (): number => Math.floor(Math.random() * 20000) + 90000;
 
-export const _pbkdf = (options: Options): Result => {
+export const pbkdf = (options: Options): Result => {
   const pbkdfSalt = options.pbkdfSalt ?? randomBytes(16);
   const pbkdfIterations = options.pbkdfIterations ?? randomIterations();
 

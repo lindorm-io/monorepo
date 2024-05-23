@@ -1,4 +1,3 @@
-import { Next } from "@lindorm/middleware";
 import MockDate from "mockdate";
 import nock from "nock";
 import { OPEN_ID_CONFIGURATION_RESPONSE } from "../__fixtures__/auth0";
@@ -12,7 +11,6 @@ MockDate.set("2024-01-01T00:00:00.000Z");
 describe("conduit-client-credentials-middleware", () => {
   let ctx: any;
   let factory: ConduitClientCredentialsMiddlewareFactory;
-  let next: Next;
 
   const configScope = nock("https://lindorm.eu.auth0.com")
     .get("/.well-known/openid-configuration")
@@ -32,8 +30,6 @@ describe("conduit-client-credentials-middleware", () => {
     ctx = {
       req: { headers: {} },
     };
-
-    next = () => Promise.resolve();
   });
 
   describe("with audience", () => {
@@ -52,7 +48,7 @@ describe("conduit-client-credentials-middleware", () => {
       expect(configScope.isDone()).toBe(true);
       expect(tokenScope.isDone()).toBe(true);
 
-      await expect(middleware(ctx, next)).resolves.not.toThrow();
+      await expect(middleware(ctx, jest.fn())).resolves.toBeUndefined();
 
       expect(ctx.req.headers).toEqual({
         Authorization: "Bearer access_token",
@@ -62,7 +58,7 @@ describe("conduit-client-credentials-middleware", () => {
     test("should return middleware with cached data", async () => {
       const middleware = await factory({ audience: "https://identity.lindorm-io" });
 
-      await expect(middleware(ctx, next)).resolves.not.toThrow();
+      await expect(middleware(ctx, jest.fn())).resolves.toBeUndefined();
 
       expect(ctx.req.headers).toEqual({
         Authorization: "Bearer access_token",
@@ -85,7 +81,7 @@ describe("conduit-client-credentials-middleware", () => {
 
       expect(scope.isDone()).toBe(true);
 
-      await expect(middleware(ctx, next)).resolves.not.toThrow();
+      await expect(middleware(ctx, jest.fn())).resolves.toBeUndefined();
 
       expect(ctx.req.headers).toEqual({
         Authorization: "Bearer access_token",
@@ -106,7 +102,7 @@ describe("conduit-client-credentials-middleware", () => {
 
       expect(scope.isDone()).toBe(true);
 
-      await expect(middleware(ctx, next)).resolves.not.toThrow();
+      await expect(middleware(ctx, jest.fn())).resolves.toBeUndefined();
 
       expect(ctx.req.headers).toEqual({
         Authorization: "Bearer access_token",
@@ -130,7 +126,7 @@ describe("conduit-client-credentials-middleware", () => {
       expect(configScope.isDone()).toBe(true);
       expect(scope.isDone()).toBe(true);
 
-      await expect(middleware(ctx, next)).resolves.not.toThrow();
+      await expect(middleware(ctx, jest.fn())).resolves.toBeUndefined();
 
       expect(ctx.req.headers).toEqual({
         Authorization: "Bearer access_token",
@@ -140,7 +136,7 @@ describe("conduit-client-credentials-middleware", () => {
     test("should return middleware with cached data", async () => {
       const middleware = await factory();
 
-      await expect(middleware(ctx, next)).resolves.not.toThrow();
+      await expect(middleware(ctx, jest.fn())).resolves.toBeUndefined();
 
       expect(ctx.req.headers).toEqual({
         Authorization: "Bearer access_token",

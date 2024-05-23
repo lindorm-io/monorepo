@@ -4,7 +4,7 @@ import { KryptosOptions, KryptosType, UnknownJwk } from "../../types";
 
 const TYPES: Array<KryptosType> = ["EC", "oct", "OKP", "RSA"] as const;
 
-export const _parseJwkOptions = (options: UnknownJwk): KryptosOptions => {
+export const parseJwkOptions = (options: UnknownJwk): KryptosOptions => {
   const jwk = changeKeys(options, ChangeCase.Snake);
 
   if (!TYPES.includes(jwk.kty)) {
@@ -30,7 +30,7 @@ export const _parseJwkOptions = (options: UnknownJwk): KryptosOptions => {
 
 type Options = Omit<KryptosOptions, "curve" | "privateKey" | "publicKey">;
 
-export const _parseStdOptions = (options: Options): KryptosOptions => ({
+export const parseStdOptions = (options: Options): KryptosOptions => ({
   id: options.id,
   algorithm: options.algorithm,
   createdAt: options.createdAt,

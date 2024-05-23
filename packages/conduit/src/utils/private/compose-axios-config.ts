@@ -1,10 +1,12 @@
 import { createUrl } from "@lindorm/url";
 import type { RawAxiosRequestConfig } from "axios";
 import type { ConduitContext } from "../../types";
-import { _composeAxiosData } from "./compose-axios-data";
+import { composeAxiosData } from "./compose-axios-data";
 
-export const _composeAxiosConfig = async (ctx: ConduitContext): Promise<RawAxiosRequestConfig> => {
-  const { data, headers } = await _composeAxiosData(ctx);
+export const composeAxiosConfig = async (
+  ctx: ConduitContext,
+): Promise<RawAxiosRequestConfig> => {
+  const { data, headers } = await composeAxiosData(ctx);
 
   return {
     ...ctx.req.config,

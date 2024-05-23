@@ -12,7 +12,7 @@ type Result = {
   hkdfSalt: Buffer;
 };
 
-export const _hkdf = (options: Options): Result => {
+export const hkdf = (options: Options): Result => {
   const hkdfSalt = options.hkdfSalt ?? randomBytes(16);
   const info = Buffer.from("lindorm.hkdf", "utf-8");
 

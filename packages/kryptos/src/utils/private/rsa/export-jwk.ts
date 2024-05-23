@@ -8,7 +8,7 @@ type Options = Omit<KryptosDer, "algorithm" | "type" | "use"> & {
 
 type Result = Omit<RsaJwk, "alg" | "kty" | "use">;
 
-export const _exportRsaToJwk = (options: Options): Result => {
+export const exportRsaToJwk = (options: Options): Result => {
   const result: Result = {
     e: "",
     n: "",

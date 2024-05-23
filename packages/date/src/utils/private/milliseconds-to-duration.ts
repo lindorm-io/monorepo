@@ -1,24 +1,27 @@
 import { DurationString } from "../../enums";
 import { DurationDict } from "../../types";
-import { _calculateCurrentDuration, calculateRemainingDuration } from "./calculate-duration";
+import {
+  calculateCurrentDuration,
+  calculateRemainingDuration,
+} from "./calculate-duration";
 
-export const _millisecondsToDuration = (milliseconds: number): DurationDict => {
+export const millisecondsToDuration = (milliseconds: number): DurationDict => {
   const object: DurationDict = {
-    [DurationString.YEARS]: 0,
-    [DurationString.MONTHS]: 0,
-    [DurationString.WEEKS]: 0,
-    [DurationString.DAYS]: 0,
-    [DurationString.HOURS]: 0,
-    [DurationString.MINUTES]: 0,
-    [DurationString.SECONDS]: 0,
-    [DurationString.MILLISECONDS]: 0,
+    [DurationString.Years]: 0,
+    [DurationString.Months]: 0,
+    [DurationString.Weeks]: 0,
+    [DurationString.Days]: 0,
+    [DurationString.Hours]: 0,
+    [DurationString.Minutes]: 0,
+    [DurationString.Seconds]: 0,
+    [DurationString.Milliseconds]: 0,
   };
 
   let remaining: number = milliseconds;
 
   for (const key of Object.values(DurationString)) {
     const duration = key as DurationString;
-    const value = _calculateCurrentDuration(remaining, duration);
+    const value = calculateCurrentDuration(remaining, duration);
 
     if (value < 1) continue;
 

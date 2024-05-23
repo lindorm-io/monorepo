@@ -1,12 +1,12 @@
 import { isBuffer, isString } from "@lindorm/is";
 import { OctB64, OctDer, OctJwk, OctPem } from "../../../types";
 import {
-  _IsBufferFormatOptions,
-  _IsJwkFormatOptions,
-  _IsStringFormatOptions,
+  IsBufferFormatOptions,
+  IsJwkFormatOptions,
+  IsStringFormatOptions,
 } from "../../../types/private/is-options";
 
-export const _isOctB64 = (options: _IsStringFormatOptions): options is OctB64 => {
+export const isOctB64 = (options: IsStringFormatOptions): options is OctB64 => {
   if (options.type !== "oct") return false;
   if (options.curve) return false;
 
@@ -24,7 +24,7 @@ export const _isOctB64 = (options: _IsStringFormatOptions): options is OctB64 =>
   return true;
 };
 
-export const _isOctDer = (options: _IsBufferFormatOptions): options is OctDer => {
+export const isOctDer = (options: IsBufferFormatOptions): options is OctDer => {
   if (options.type !== "oct") return false;
   if (options.curve) return false;
 
@@ -33,7 +33,7 @@ export const _isOctDer = (options: _IsBufferFormatOptions): options is OctDer =>
   return true;
 };
 
-export const _isOctJwk = (options: _IsJwkFormatOptions): options is OctJwk => {
+export const isOctJwk = (options: IsJwkFormatOptions): options is OctJwk => {
   if (options.kty !== "oct") return false;
   if (options.crv) return false;
 
@@ -42,7 +42,7 @@ export const _isOctJwk = (options: _IsJwkFormatOptions): options is OctJwk => {
   return true;
 };
 
-export const _isOctPem = (options: _IsStringFormatOptions): options is OctPem => {
+export const isOctPem = (options: IsStringFormatOptions): options is OctPem => {
   if (options.type !== "oct") return false;
   if (options.curve) return false;
 

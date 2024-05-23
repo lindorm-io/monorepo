@@ -5,7 +5,7 @@ type Options = Omit<KryptosJwk, "alg" | "use">;
 
 type Result = Omit<OctDer, "algorithm" | "type" | "use">;
 
-export const _createOctDerFromJwk = (options: Options): Result => {
+export const createOctDerFromJwk = (options: Options): Result => {
   if (options.kty !== "oct") {
     throw new KryptosError("Invalid key type");
   }

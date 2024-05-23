@@ -1,6 +1,6 @@
 import { Kryptos } from "@lindorm/kryptos";
 import { randomBytes } from "crypto";
-import { _gcmKeyUnwrap, _gcmKeyWrap } from "./gcm-key-wrap";
+import { gcmKeyUnwrap, gcmKeyWrap } from "./gcm-key-wrap";
 
 describe("gcmKeyWrap", () => {
   test("should wrap and unwrap key with A128GCMKW", () => {
@@ -9,7 +9,7 @@ describe("gcmKeyWrap", () => {
     const contentEncryptionKey = randomBytes(128 / 8);
     const keyEncryptionKey = randomBytes(128 / 8);
 
-    const { publicEncryptionKey, publicEncryptionIv, publicEncryptionTag } = _gcmKeyWrap({
+    const { publicEncryptionKey, publicEncryptionIv, publicEncryptionTag } = gcmKeyWrap({
       contentEncryptionKey,
       keyEncryptionKey,
       kryptos,
@@ -18,7 +18,7 @@ describe("gcmKeyWrap", () => {
     expect(publicEncryptionKey).toEqual(expect.any(Buffer));
 
     expect(
-      _gcmKeyUnwrap({
+      gcmKeyUnwrap({
         keyEncryptionKey,
         kryptos,
         publicEncryptionKey,
@@ -36,7 +36,7 @@ describe("gcmKeyWrap", () => {
     const contentEncryptionKey = randomBytes(192 / 8);
     const keyEncryptionKey = randomBytes(192 / 8);
 
-    const { publicEncryptionKey, publicEncryptionIv, publicEncryptionTag } = _gcmKeyWrap({
+    const { publicEncryptionKey, publicEncryptionIv, publicEncryptionTag } = gcmKeyWrap({
       contentEncryptionKey,
       keyEncryptionKey,
       kryptos,
@@ -45,7 +45,7 @@ describe("gcmKeyWrap", () => {
     expect(publicEncryptionKey).toEqual(expect.any(Buffer));
 
     expect(
-      _gcmKeyUnwrap({
+      gcmKeyUnwrap({
         keyEncryptionKey,
         kryptos,
         publicEncryptionIv,
@@ -63,7 +63,7 @@ describe("gcmKeyWrap", () => {
     const contentEncryptionKey = randomBytes(256 / 8);
     const keyEncryptionKey = randomBytes(256 / 8);
 
-    const { publicEncryptionKey, publicEncryptionIv, publicEncryptionTag } = _gcmKeyWrap({
+    const { publicEncryptionKey, publicEncryptionIv, publicEncryptionTag } = gcmKeyWrap({
       contentEncryptionKey,
       keyEncryptionKey,
       kryptos,
@@ -72,7 +72,7 @@ describe("gcmKeyWrap", () => {
     expect(publicEncryptionKey).toEqual(expect.any(Buffer));
 
     expect(
-      _gcmKeyUnwrap({
+      gcmKeyUnwrap({
         keyEncryptionKey,
         kryptos,
         publicEncryptionKey,

@@ -5,89 +5,89 @@ import {
   KryptosFromJwk,
   KryptosFromPem,
 } from "../../types";
-import { _isEcB64, _isEcDer, _isEcJwk, _isEcPem } from "./ec/is";
-import { _isOctB64, _isOctDer, _isOctJwk, _isOctPem } from "./oct/is";
-import { _isOkpB64, _isOkpDer, _isOkpJwk, _isOkpPem } from "./okp/is";
-import { _isRsaB64, _isRsaDer, _isRsaJwk, _isRsaPem } from "./rsa/is";
+import { isEcB64, isEcDer, isEcJwk, isEcPem } from "./ec/is";
+import { isOctB64, isOctDer, isOctJwk, isOctPem } from "./oct/is";
+import { isOkpB64, isOkpDer, isOkpJwk, isOkpPem } from "./okp/is";
+import { isRsaB64, isRsaDer, isRsaJwk, isRsaPem } from "./rsa/is";
 
-export const _isB64 = (options: KryptosFrom): options is KryptosFromB64 => {
+export const isB64 = (options: KryptosFrom): options is KryptosFromB64 => {
   const typed = options as KryptosFromB64;
 
   switch (typed.type) {
     case "EC":
-      return _isEcB64(typed);
+      return isEcB64(typed);
 
     case "oct":
-      return _isOctB64(typed);
+      return isOctB64(typed);
 
     case "OKP":
-      return _isOkpB64(typed);
+      return isOkpB64(typed);
 
     case "RSA":
-      return _isRsaB64(typed);
+      return isRsaB64(typed);
 
     default:
       return false;
   }
 };
 
-export const _isDer = (options: KryptosFrom): options is KryptosFromDer => {
+export const isDer = (options: KryptosFrom): options is KryptosFromDer => {
   const typed = options as KryptosFromDer;
 
   switch (typed.type) {
     case "EC":
-      return _isEcDer(typed);
+      return isEcDer(typed);
 
     case "oct":
-      return _isOctDer(typed);
+      return isOctDer(typed);
 
     case "OKP":
-      return _isOkpDer(typed);
+      return isOkpDer(typed);
 
     case "RSA":
-      return _isRsaDer(typed);
+      return isRsaDer(typed);
 
     default:
       return false;
   }
 };
 
-export const _isJwk = (options: KryptosFrom): options is KryptosFromJwk => {
+export const isJwk = (options: KryptosFrom): options is KryptosFromJwk => {
   const typed = options as KryptosFromJwk;
 
   switch (typed.kty) {
     case "EC":
-      return _isEcJwk(typed);
+      return isEcJwk(typed);
 
     case "oct":
-      return _isOctJwk(typed);
+      return isOctJwk(typed);
 
     case "OKP":
-      return _isOkpJwk(typed);
+      return isOkpJwk(typed);
 
     case "RSA":
-      return _isRsaJwk(typed);
+      return isRsaJwk(typed);
 
     default:
       return false;
   }
 };
 
-export const _isPem = (options: KryptosFrom): options is KryptosFromPem => {
+export const isPem = (options: KryptosFrom): options is KryptosFromPem => {
   const typed = options as KryptosFromPem;
 
   switch (typed.type) {
     case "EC":
-      return _isEcPem(typed);
+      return isEcPem(typed);
 
     case "oct":
-      return _isOctPem(typed);
+      return isOctPem(typed);
 
     case "OKP":
-      return _isOkpPem(typed);
+      return isOkpPem(typed);
 
     case "RSA":
-      return _isRsaPem(typed);
+      return isRsaPem(typed);
 
     default:
       return false;
