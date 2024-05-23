@@ -34,6 +34,15 @@ describe("Kryptos (oct)", () => {
 
       expect(key.operations).toEqual(["encrypt", "decrypt"]);
     });
+
+    test("should auto generate", async () => {
+      const key = Kryptos.auto({ algorithm: "HS256" });
+
+      expect(key.type).toEqual("oct");
+      expect(key.use).toEqual("sig");
+
+      expect(key.operations).toEqual(["sign", "verify"]);
+    });
   });
 
   describe("export", () => {
@@ -84,22 +93,19 @@ describe("Kryptos (oct)", () => {
 
   describe("metadata", () => {
     test("should export metadata", async () => {
-      const key = Kryptos.generate(
-        {
-          algorithm: "dir",
-          encryption: "A128GCM",
-          type: "oct",
-          use: "enc",
-        },
-        {
-          expiresAt: new Date("2025-01-01T00:00:00.000Z"),
-          issuer: "https://test.lindorm.io/",
-          jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
-          notBefore: new Date("2024-01-01T08:00:00.000Z"),
-          operations: ["encrypt", "decrypt"],
-          ownerId: "2c3d8e05-b382-5b31-898c-2d1f6009f5c1",
-        },
-      );
+      const key = Kryptos.generate({
+        algorithm: "dir",
+        encryption: "A128GCM",
+        type: "oct",
+        use: "enc",
+
+        expiresAt: new Date("2025-01-01T00:00:00.000Z"),
+        issuer: "https://test.lindorm.io/",
+        jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
+        notBefore: new Date("2024-01-01T08:00:00.000Z"),
+        operations: ["encrypt", "decrypt"],
+        ownerId: "2c3d8e05-b382-5b31-898c-2d1f6009f5c1",
+      });
 
       expect(key.toJSON()).toEqual({
         id: expect.any(String),
@@ -128,22 +134,19 @@ describe("Kryptos (oct)", () => {
 
   describe("jwks", () => {
     test("should export private key to jwk", async () => {
-      const key = Kryptos.generate(
-        {
-          algorithm: "dir",
-          encryption: "A128GCM",
-          type: "oct",
-          use: "enc",
-        },
-        {
-          expiresAt: new Date("2025-01-01T00:00:00.000Z"),
-          issuer: "https://test.lindorm.io/",
-          jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
-          notBefore: new Date("2024-01-01T08:00:00.000Z"),
-          operations: ["encrypt", "decrypt"],
-          ownerId: "2c3d8e05-b382-5b31-898c-2d1f6009f5c1",
-        },
-      );
+      const key = Kryptos.generate({
+        algorithm: "dir",
+        encryption: "A128GCM",
+        type: "oct",
+        use: "enc",
+
+        expiresAt: new Date("2025-01-01T00:00:00.000Z"),
+        issuer: "https://test.lindorm.io/",
+        jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
+        notBefore: new Date("2024-01-01T08:00:00.000Z"),
+        operations: ["encrypt", "decrypt"],
+        ownerId: "2c3d8e05-b382-5b31-898c-2d1f6009f5c1",
+      });
 
       expect(key.toJWK("private")).toEqual({
         alg: "dir",
@@ -164,22 +167,19 @@ describe("Kryptos (oct)", () => {
     });
 
     test("should export public key to jwk", async () => {
-      const key = Kryptos.generate(
-        {
-          algorithm: "dir",
-          encryption: "A128GCM",
-          type: "oct",
-          use: "enc",
-        },
-        {
-          expiresAt: new Date("2025-01-01T00:00:00.000Z"),
-          issuer: "https://test.lindorm.io/",
-          jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
-          notBefore: new Date("2024-01-01T08:00:00.000Z"),
-          operations: ["encrypt", "decrypt"],
-          ownerId: "2c3d8e05-b382-5b31-898c-2d1f6009f5c1",
-        },
-      );
+      const key = Kryptos.generate({
+        algorithm: "dir",
+        encryption: "A128GCM",
+        type: "oct",
+        use: "enc",
+
+        expiresAt: new Date("2025-01-01T00:00:00.000Z"),
+        issuer: "https://test.lindorm.io/",
+        jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
+        notBefore: new Date("2024-01-01T08:00:00.000Z"),
+        operations: ["encrypt", "decrypt"],
+        ownerId: "2c3d8e05-b382-5b31-898c-2d1f6009f5c1",
+      });
 
       expect(key.toJWK("public")).toEqual({
         alg: "dir",

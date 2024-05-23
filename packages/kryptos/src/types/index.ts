@@ -3,6 +3,7 @@ export * from "./ec";
 export * from "./encryption";
 export * from "./export";
 export * from "./from";
+export * from "./generate";
 export * from "./interfaces";
 export * from "./jwk";
 export * from "./kryptos";

@@ -4,9 +4,12 @@ import { removeUndefined } from "@lindorm/utils";
 import { randomUUID } from "crypto";
 import { KryptosError } from "../errors";
 import {
-  EcGenerate,
-  GenerateKryptosConfig,
-  GenerateKryptosOptions,
+  AutoGenerateKryptos,
+  GenerateEcKryptos,
+  GenerateKryptos,
+  GenerateOctKryptos,
+  GenerateOkpKryptos,
+  GenerateRsaKryptos,
   KryptosAlgorithm,
   KryptosAttributes,
   KryptosB64,
@@ -31,9 +34,6 @@ import {
   KryptosType,
   KryptosUse,
   LindormJwk,
-  OctGenerate,
-  OkpGenerate,
-  RsaGenerate,
   RsaModulus,
 } from "../types";
 import {
@@ -47,15 +47,12 @@ import { exportToB64 } from "../utils/private/export/export-b64";
 import { exportToDer } from "../utils/private/export/export-der";
 import { exportToJwk } from "../utils/private/export/export-jwk";
 import { exportToPem } from "../utils/private/export/export-pem";
-import { createDerFromB64 } from "../utils/private/from/der-from-b64";
+import { fromOptions } from "../utils/private/from";
 import { createDerFromDer } from "../utils/private/from/der-from-der";
-import { createDerFromJwk } from "../utils/private/from/der-from-jwt";
-import { createDerFromPem } from "../utils/private/from/der-from-pem";
-import { generateKey } from "../utils/private/generate";
+import { autoGenerateConfig, generateKey } from "../utils/private/generate";
 import { isB64, isDer, isJwk, isPem } from "../utils/private/is";
 import { calculateKeyOps } from "../utils/private/key-ops";
 import { isOctDer } from "../utils/private/oct/is";
-import { parseJwkOptions, parseStdOptions } from "../utils/private/parse-options";
 import { modulusSize } from "../utils/private/rsa/modulus-size";
 
 export class Kryptos implements IKryptos {
@@ -365,26 +362,11 @@ export class Kryptos implements IKryptos {
 
   // public static
 
-  public static generate(
-    config: EcGenerate,
-    options?: GenerateKryptosOptions,
-  ): IKryptosEc;
-  public static generate(
-    config: OctGenerate,
-    options?: GenerateKryptosOptions,
-  ): IKryptosOct;
-  public static generate(
-    config: OkpGenerate,
-    options?: GenerateKryptosOptions,
-  ): IKryptosOkp;
-  public static generate(
-    config: RsaGenerate,
-    options?: GenerateKryptosOptions,
-  ): IKryptosRsa;
-  public static generate(
-    config: GenerateKryptosConfig,
-    options: GenerateKryptosOptions = {},
-  ): IKryptos {
+  public static auto(options: AutoGenerateKryptos): IKryptos {
+    const config = autoGenerateConfig(options.algorithm);
+
+    config.encryption = options.encryption ? options.encryption : config.encryption;
+
     return new Kryptos({
       operations: calculateKeyOps(config.use),
       ...options,
@@ -393,12 +375,24 @@ export class Kryptos implements IKryptos {
     });
   }
 
+  public static generate(options: GenerateEcKryptos): IKryptosEc;
+  public static generate(options: GenerateOctKryptos): IKryptosOct;
+  public static generate(options: GenerateOkpKryptos): IKryptosOkp;
+  public static generate(options: GenerateRsaKryptos): IKryptosRsa;
+  public static generate(options: GenerateKryptos): IKryptos {
+    return new Kryptos({
+      operations: calculateKeyOps(options.use),
+      ...options,
+      ...generateKey(options),
+    });
+  }
+
   public static from(format: "b64", b64: KryptosFromB64): Kryptos;
   public static from(format: "der", der: KryptosFromDer): Kryptos;
   public static from(format: "jwk", jwk: KryptosFromJwk): Kryptos;
   public static from(format: "pem", pem: KryptosFromPem): Kryptos;
   public static from(format: KryptosFormat, arg: KryptosFrom): Kryptos {
-    const options = Kryptos.fromOptions(format, arg);
+    const options = fromOptions(format, arg);
 
     if (!options.algorithm) {
       throw new KryptosError("Algorithm is required");
@@ -455,31 +449,6 @@ export class Kryptos implements IKryptos {
       return { privateKey: keys.privateKey };
     } else {
       return { privateKey: keys.privateKey, publicKey: keys.publicKey };
-    }
-  }
-
-  // private static methods
-
-  public static fromOptions(format: KryptosFormat, arg: KryptosFrom): KryptosOptions {
-    switch (format) {
-      case "b64":
-        if (!isB64(arg)) throw new KryptosError("Invalid key format");
-        return { ...parseStdOptions(arg), ...createDerFromB64(arg) };
-
-      case "der":
-        if (!isDer(arg)) throw new KryptosError("Invalid key format");
-        return { ...parseStdOptions(arg), ...createDerFromDer(arg) };
-
-      case "jwk":
-        if (!isJwk(arg)) throw new KryptosError("Invalid key format");
-        return { ...parseJwkOptions(arg), ...createDerFromJwk(arg) };
-
-      case "pem":
-        if (!isPem(arg)) throw new KryptosError("Invalid key format");
-        return { ...parseStdOptions(arg), ...createDerFromPem(arg) };
-
-      default:
-        throw new KryptosError("Invalid key format");
     }
   }
 }
