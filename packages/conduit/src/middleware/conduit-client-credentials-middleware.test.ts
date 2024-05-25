@@ -3,7 +3,7 @@ import nock from "nock";
 import { OPEN_ID_CONFIGURATION_RESPONSE } from "../__fixtures__/auth0";
 import {
   ConduitClientCredentialsMiddlewareFactory,
-  createConduitClientCredentialsMiddleware,
+  conduitClientCredentialsMiddleware,
 } from "./conduit-client-credentials-middleware";
 
 MockDate.set("2024-01-01T00:00:00.000Z");
@@ -18,7 +18,7 @@ describe("conduit-client-credentials-middleware", () => {
     .reply(200, OPEN_ID_CONFIGURATION_RESPONSE);
 
   beforeAll(() => {
-    factory = createConduitClientCredentialsMiddleware({
+    factory = conduitClientCredentialsMiddleware({
       clientId: "clientId",
       clientSecret: "clientSecret",
       clockTolerance: 0,

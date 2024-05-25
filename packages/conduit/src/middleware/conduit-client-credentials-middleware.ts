@@ -47,7 +47,7 @@ export type ConduitClientCredentialsMiddlewareFactory = (
 
 const DEFAULT = "_@DEFAULT" as const;
 
-export const createConduitClientCredentialsMiddleware = (
+export const conduitClientCredentialsMiddleware = (
   config: Config,
 ): ConduitClientCredentialsMiddlewareFactory => {
   const {

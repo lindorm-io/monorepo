@@ -249,7 +249,6 @@ export class Conduit implements IConduit {
       headers: { ...this.headers, ...headers },
       metadata: {
         correlationId: uuid(),
-        date: new Date(),
         requestId: uuid(),
       },
       params: params as RequestParams,

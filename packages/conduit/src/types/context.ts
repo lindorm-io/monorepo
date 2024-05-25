@@ -12,7 +12,6 @@ export type AppContext = {
 
 export type RequestMetadata = {
   correlationId: string;
-  date: Date;
   requestId: string;
 };
 

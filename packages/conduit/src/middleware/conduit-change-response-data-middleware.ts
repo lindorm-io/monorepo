@@ -2,9 +2,10 @@ import { ChangeCase, changeKeys } from "@lindorm/case";
 import { isArray, isObject } from "@lindorm/is";
 import { ConduitMiddleware } from "../types";
 
-export const conduitChangeResponseDataMiddleware =
-  (mode: ChangeCase = ChangeCase.Camel): ConduitMiddleware =>
-  async (ctx, next) => {
+export const conduitChangeResponseDataMiddleware = (
+  mode: ChangeCase = ChangeCase.Camel,
+): ConduitMiddleware =>
+  async function conduitChangeResponseDataMiddleware(ctx, next) {
     await next();
 
     const { data } = ctx.res;

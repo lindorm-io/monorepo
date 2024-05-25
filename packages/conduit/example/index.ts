@@ -1,9 +1,9 @@
 import { ChangeCase } from "@lindorm/case";
-import { LindormLogger, LogLevel } from "@lindorm/logger";
+import { Logger, LogLevel } from "@lindorm/logger";
 import { Conduit, conduitChangeResponseDataMiddleware } from "../src";
 
 const main = async (): Promise<void> => {
-  const logger = new LindormLogger({
+  const logger = new Logger({
     level: LogLevel.Debug,
     readable: true,
   });
