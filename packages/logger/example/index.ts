@@ -1,7 +1,7 @@
 import { LindormError } from "@lindorm/errors";
-import { LindormLogger, LogLevel } from "../src";
+import { Logger, LogLevel } from "../src";
 
-const logger = new LindormLogger({ level: LogLevel.Silly, readable: true });
+const logger = new Logger({ level: LogLevel.Silly, readable: true });
 
 const child1 = logger.child(["logger"]);
 const child2 = child1.child(["child1"]);
@@ -49,7 +49,7 @@ child1.info("this is a log from child 1");
 
 child2.info("this is a log from child 2");
 
-const logger2 = new LindormLogger({ level: LogLevel.Info, readable: true });
+const logger2 = new Logger({ level: LogLevel.Info, readable: true });
 
 logger2.info("this will not have any colour", { details: "data" });
 
@@ -59,7 +59,7 @@ logger.filter("two");
 
 logger.info("this will be filtered", data);
 
-const logger3 = new LindormLogger({ level: LogLevel.Info });
+const logger3 = new Logger({ level: LogLevel.Info });
 
 logger.session({ id: "session-id" });
 
@@ -67,7 +67,7 @@ logger3.info("this is a log from session logger with data", data);
 
 logger3.info("this is a log from session");
 
-const json = new LindormLogger({ level: LogLevel.Silly });
+const json = new Logger({ level: LogLevel.Silly });
 
 json.info("this is a log from json");
 

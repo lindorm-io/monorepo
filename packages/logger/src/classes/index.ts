@@ -1,1 +1,1 @@
-export * from "./LindormLogger";
+export * from "./Logger";

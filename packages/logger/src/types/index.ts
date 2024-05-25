@@ -1,3 +1,3 @@
-export * from "./interfaces";
-export * from "./lindorm-logger";
+export * from "./interface";
+export * from "./logger";
 export * from "./types";

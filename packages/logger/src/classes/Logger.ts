@@ -7,24 +7,24 @@ import { LogLevel } from "../enums";
 import {
   FilterRecord,
   ILogger,
-  LindormLoggerOptions,
   LogContext,
   LogDetails,
   LogSession,
+  LoggerOptions,
 } from "../types";
 import { FromLogger, Log } from "../types/private";
 import { defaultFilterCallback, readableFormat } from "../utils/private";
 
-export class LindormLogger implements ILogger {
+export class Logger implements ILogger {
   private readonly filters: FilterRecord;
   private readonly winston: WinstonLogger;
 
   private context: LogContext;
   private session: LogSession;
 
-  public constructor(options?: LindormLoggerOptions);
+  public constructor(options?: LoggerOptions);
   public constructor(fromLogger: FromLogger);
-  public constructor(options: LindormLoggerOptions | FromLogger = {}) {
+  public constructor(options: LoggerOptions | FromLogger = {}) {
     if ("_mode" in options && options._mode === "from_logger") {
       this.context = snakeArray(options.context);
       this.filters = options.filters;
@@ -36,8 +36,8 @@ export class LindormLogger implements ILogger {
       this.session = {};
       this.winston = winston.createLogger();
 
-      const level = (options as LindormLoggerOptions).level ?? LogLevel.Info;
-      const readable = (options as LindormLoggerOptions).readable ?? false;
+      const level = (options as LoggerOptions).level ?? LogLevel.Info;
+      const readable = (options as LoggerOptions).readable ?? false;
 
       this.winston.add(
         new winston.transports.Console({
@@ -160,7 +160,7 @@ export class LindormLogger implements ILogger {
   }
 
   private fromLogger(context: Array<string>, session: Dict): ILogger {
-    return new LindormLogger({
+    return new Logger({
       _mode: "from_logger",
       context: structuredClone(this.context.concat(context)),
       filters: structuredClone(this.filters),
