@@ -1,11 +1,11 @@
 import { createMockLogger } from "@lindorm/logger";
-import { WorkerCallback } from "../types";
+import { LindormWorkerCallback } from "../types";
 import { LindormWorker } from "./LindormWorker";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 describe("LindormWorker", () => {
-  let callback: jest.MockedFunction<WorkerCallback>;
+  let callback: jest.MockedFunction<LindormWorkerCallback>;
   let worker: LindormWorker;
 
   beforeEach(() => {
