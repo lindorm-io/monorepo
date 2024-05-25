@@ -1,7 +1,7 @@
-import { LindormLogger } from "@lindorm/logger";
+import { Logger } from "@lindorm/logger";
 import { StructureScanner } from "../src";
 
-const logger = new LindormLogger({ readable: true });
+const logger = new Logger({ readable: true });
 
 const scanner = new StructureScanner({
   deniedFilenames: [/.*[.]test/, /scanner/],

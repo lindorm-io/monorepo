@@ -3,7 +3,6 @@ export type StructureScannerOptions = {
   deniedExtensions: Array<RegExp>;
   deniedFilenames: Array<RegExp>;
   deniedTypes: Array<RegExp>;
-  parentDirection: "default" | "reverse";
   requireFn: NodeJS.Require;
 };
 

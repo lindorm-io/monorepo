@@ -26,6 +26,7 @@
     "update": "ncu -u"
   },
   "dependencies": {
+    "@lindorm/errors": "^0.1.5",
     "@lindorm/is": "^0.1.5"
   },
   "devDependencies": {

@@ -1,6 +1,7 @@
-import { isString } from "@lindorm/is";
+import { isArray, isString } from "@lindorm/is";
 import { readdirSync, statSync } from "fs";
 import { basename, extname, join, relative, sep } from "path";
+import { ScannerError } from "../errors";
 import { IScanner, ScanData, StructureScannerOptions } from "../types";
 
 export class Scanner implements IScanner {
@@ -8,7 +9,6 @@ export class Scanner implements IScanner {
   private readonly deniedExtensions: Array<RegExp>;
   private readonly deniedFilenames: Array<RegExp>;
   private readonly deniedTypes: Array<RegExp>;
-  private readonly parentDirection: "default" | "reverse";
   private readonly requireFn: NodeJS.Require;
 
   public constructor(options: Partial<StructureScannerOptions> = {}) {
@@ -16,15 +16,19 @@ export class Scanner implements IScanner {
     this.deniedExtensions = options.deniedExtensions || [];
     this.deniedFilenames = options.deniedFilenames || [];
     this.deniedTypes = options.deniedTypes || [];
-    this.parentDirection = options.parentDirection || "default";
 
     this.requireFn = options.requireFn || require;
   }
 
   // public
 
-  public scan(...paths: Array<string>): Array<ScanData> {
-    return this.performScan(join(...paths));
+  public scan(path: string): ScanData {
+    const root = path.split(sep).slice(0, -1).join(sep);
+    const result = this.performScan(path, root);
+
+    if (result) return result;
+
+    throw new ScannerError("No files found");
   }
 
   public async import<T>(fileOrPath: ScanData | string): Promise<T> {
@@ -37,7 +41,8 @@ export class Scanner implements IScanner {
 
   // public static
 
-  public static flatten(array: Array<ScanData>): Array<ScanData> {
+  public static flatten(scan: Array<ScanData> | ScanData): Array<ScanData> {
+    const array = isArray(scan) ? scan : [scan];
     const result: Array<ScanData | Array<ScanData>> = [];
 
     for (const item of array) {
@@ -63,72 +68,72 @@ export class Scanner implements IScanner {
 
   // private
 
-  private performScan(path: string, root?: string): Array<ScanData> {
+  private performScan(path: string, root?: string): ScanData | undefined {
     const rootDir = root ?? path;
-    const items = readdirSync(path);
-    const result: Array<ScanData> = [];
 
-    for (const item of items) {
-      const fullPath = join(path, item);
-      const fullName = basename(fullPath);
-      const relativePath = relative(rootDir, fullPath);
-      const stats = statSync(fullPath);
+    const fullPath = path;
+    const fullName = basename(fullPath);
+    const relativePath = relative(rootDir, fullPath);
+    const stats = statSync(fullPath);
 
-      const isDirectory = stats.isDirectory();
-      const isFile = stats.isFile();
+    const isDirectory = stats.isDirectory();
+    const isFile = stats.isFile();
 
-      const relativeParents = relativePath.split(sep).slice(0, -1);
-      const parents =
-        this.parentDirection === "default" ? relativeParents : relativeParents.reverse();
+    const parents = relativePath.split(sep).slice(0, -1);
 
-      if (isDirectory) {
-        if (!this.isAllowedDirectoryBaseName(fullName)) continue;
+    if (isDirectory) {
+      if (!this.isAllowedDirectoryBaseName(fullName)) return;
 
-        result.push({
-          baseName: fullName,
-          basePath: relativePath,
-          children: this.performScan(fullPath, rootDir),
-          extension: null,
-          fullName,
-          fullPath,
-          isDirectory,
-          isFile,
-          parents,
-          relativePath,
-          types: [],
-        });
+      const children: Array<ScanData> = [];
 
-        continue;
+      for (const content of readdirSync(path)) {
+        const child = this.performScan(join(path, content), rootDir);
+
+        if (!child) continue;
+
+        children.push(child);
       }
 
-      if (isFile) {
-        const ext = extname(item);
-        const [_, extension] = ext.split(".");
-        const nameArray = basename(item, ext).split(".");
-        const baseName = nameArray[0];
-        const types = nameArray.length > 1 ? nameArray.reverse().slice(0, -1) : [];
-
-        if (!this.isAllowedFileBaseName(baseName)) continue;
-        if (!this.isAllowedFileExtension(extension)) continue;
-        if (types.some((type) => !this.isAllowedFileType(type))) continue;
-
-        result.push({
-          baseName,
-          basePath: relativePath.replace(ext, ""),
-          children: [],
-          extension,
-          fullName,
-          fullPath,
-          isDirectory,
-          isFile,
-          parents,
-          relativePath,
-          types,
-        });
-      }
+      return {
+        baseName: fullName,
+        basePath: relativePath,
+        children,
+        extension: null,
+        fullName,
+        fullPath,
+        isDirectory,
+        isFile,
+        parents,
+        relativePath,
+        types: [],
+      };
     }
 
-    return result;
+    if (isFile) {
+      const ext = extname(path);
+      const [_, extension] = ext.split(".");
+      const nameArray = basename(path, ext).split(".");
+      const baseName = nameArray[0];
+      const types = nameArray.length > 1 ? nameArray.reverse().slice(0, -1) : [];
+
+      if (!this.isAllowedFileBaseName(baseName)) return;
+      if (!this.isAllowedFileExtension(extension)) return;
+      if (types.some((type) => !this.isAllowedFileType(type))) return;
+
+      return {
+        baseName,
+        basePath: relativePath.replace(ext, ""),
+        children: [],
+        extension,
+        fullName,
+        fullPath,
+        isDirectory,
+        isFile,
+        parents,
+        relativePath,
+        types,
+      };
+    }
   }
 
   private isAllowedDirectoryBaseName(base?: string): boolean {
