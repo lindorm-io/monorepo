@@ -31,19 +31,32 @@ export const modulusSize = (options: Options): RsaModulus => {
     throw new KryptosError("Missing RSA key");
   }
 
-  const privateLength = options.privateKey?.length || 0;
-  const publicLength = options.publicKey?.length || 0;
+  const privateLength = options.privateKey?.length;
+  const privateSize = privateLength
+    ? SIZES.find(
+        (size) => size.private.min <= privateLength && size.private.max >= privateLength,
+      )
+    : undefined;
 
-  const size = SIZES.find(
-    (size) =>
-      size.private.min <= privateLength &&
-      size.private.max >= privateLength &&
-      size.public.min <= publicLength &&
-      size.public.max >= publicLength,
-  );
+  if (privateLength && !privateSize) {
+    throw new KryptosError("Invalid RSA private key length");
+  }
+
+  const publicLength = options.publicKey?.length;
+  const publicSize = publicLength
+    ? SIZES.find(
+        (size) => size.public.min <= publicLength && size.public.max >= publicLength,
+      )
+    : undefined;
+
+  if (publicLength && !publicSize) {
+    throw new KryptosError("Invalid RSA public key length");
+  }
+
+  const size = privateSize ?? publicSize;
 
   if (!size) {
-    throw new KryptosError("Unexpected RSA key size");
+    throw new KryptosError("Invalid RSA key length");
   }
 
   return size.modulus;
