@@ -1,6 +1,6 @@
 import { LogLevel } from "../enums";
 
-export type LindormLoggerOptions = {
+export type LoggerOptions = {
   level?: LogLevel;
   readable?: boolean;
 };

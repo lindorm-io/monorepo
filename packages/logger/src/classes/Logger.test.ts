@@ -1,6 +1,6 @@
 import MockDate from "mockdate";
 import { ILogger } from "../types";
-import { LindormLogger } from "./LindormLogger";
+import { Logger } from "./Logger";
 
 MockDate.set("2024-01-01T10:00:00.000Z");
 
@@ -15,11 +15,11 @@ jest.mock("winston", () => ({
   })),
 }));
 
-describe("LindormLogger", () => {
+describe("Logger", () => {
   let logger: ILogger;
 
   beforeEach(() => {
-    logger = new LindormLogger();
+    logger = new Logger();
   });
 
   afterEach(jest.clearAllMocks);
@@ -65,7 +65,7 @@ describe("LindormLogger", () => {
 
     expect(add).toHaveBeenCalledTimes(1);
 
-    expect(child).toBeInstanceOf(LindormLogger);
+    expect(child).toBeInstanceOf(Logger);
 
     // @ts-expect-error
     expect(child.context).toEqual(["parent", "child"]);
