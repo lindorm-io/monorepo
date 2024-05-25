@@ -27,7 +27,6 @@ describe("composeFetchConfig", () => {
       headers: { header: "header" },
       metadata: {
         correlationId: "correlationId",
-        date: new Date(),
         requestId: "id",
       },
       params: {
