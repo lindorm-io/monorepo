@@ -1,7 +1,8 @@
+import { ReadableTime } from "@lindorm/date";
 import { ILogger } from "@lindorm/logger";
 import { RetryOptions } from "@lindorm/retry";
 
-export type WorkerContext = {
+export type LindormWorkerContext = {
   latestError: Date | null;
   latestSuccess: Date | null;
   latestTry: Date | null;
@@ -9,12 +10,12 @@ export type WorkerContext = {
   seq: number;
 };
 
-export type WorkerCallback = (ctx: WorkerContext) => Promise<void | string>;
+export type LindormWorkerCallback = (ctx: LindormWorkerContext) => Promise<void | string>;
 
 export type LindormWorkerOptions = {
   alias: string;
-  callback: WorkerCallback;
-  interval: number;
+  callback: LindormWorkerCallback;
+  interval: ReadableTime | number;
   logger: ILogger;
   retry?: RetryOptions;
 };

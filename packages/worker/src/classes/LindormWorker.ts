@@ -1,13 +1,15 @@
+import { ms } from "@lindorm/date";
+import { isString } from "@lindorm/is";
 import { ILogger } from "@lindorm/logger";
 import { RetryConfig, calculateRetry } from "@lindorm/retry";
 import { sleep } from "@lindorm/utils";
 import { EventEmitter } from "events";
 import { RETRY_CONFIG } from "../constants/private/defaults";
 import { LindormWorkerEvent } from "../enums";
-import { ILindormWorker, LindormWorkerOptions, WorkerCallback } from "../types";
+import { ILindormWorker, LindormWorkerCallback, LindormWorkerOptions } from "../types";
 
 export class LindormWorker implements ILindormWorker {
-  private readonly callback: WorkerCallback;
+  private readonly callback: LindormWorkerCallback;
   private readonly emitter: EventEmitter;
   private readonly interval: number;
   private readonly logger: ILogger;
@@ -23,11 +25,11 @@ export class LindormWorker implements ILindormWorker {
 
   public constructor(options: LindormWorkerOptions) {
     this.emitter = new EventEmitter();
-    this.logger = options.logger.child(["Worker", options.alias]);
+    this.logger = options.logger.child(["LindormWorker", options.alias]);
 
     this.retry = { ...RETRY_CONFIG, ...(options.retry ?? {}) };
     this.callback = options.callback;
-    this.interval = options.interval;
+    this.interval = isString(options.interval) ? ms(options.interval) : options.interval;
 
     this._executing = false;
     this._latestError = null;
