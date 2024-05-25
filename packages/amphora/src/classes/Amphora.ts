@@ -22,6 +22,7 @@ export class Amphora implements IAmphora {
 
   private readonly _config: Array<AmphoraConfig>;
   private _jwks: Array<LindormJwk>;
+  private _setup: boolean;
   private _vault: Array<IKryptos>;
 
   public constructor(options: AmphoraOptions) {
@@ -40,6 +41,7 @@ export class Amphora implements IAmphora {
     this.external = options.external ?? [];
     this.issuer = options.issuer ?? null;
     this._jwks = [];
+    this._setup = false;
     this._vault = [];
   }
 
@@ -107,7 +109,7 @@ export class Amphora implements IAmphora {
   }
 
   public async refresh(): Promise<void> {
-    this.logger.debug("Refreshing vault");
+    this.logger.silly("Refreshing vault");
 
     for (const config of this._config) {
       await this.refreshExternal(config);
@@ -115,13 +117,19 @@ export class Amphora implements IAmphora {
   }
 
   public async setup(): Promise<void> {
+    if (this._setup) return;
+
     await this.loadExternalConfig();
     await this.refresh();
+
+    this._setup = true;
   }
 
   // private methods
 
   private async addExternalConfig(options: AmphoraExternalOption): Promise<void> {
+    this.logger.silly("Adding external config", { options });
+
     if (isString(options.issuer) && isUrlLike(options.jwksUri)) {
       this._config.push({ issuer: options.issuer, jwksUri: options.jwksUri });
       return;
@@ -159,7 +167,7 @@ export class Amphora implements IAmphora {
   }
 
   private async getExternalJwks(issuer: string): Promise<Array<IKryptos>> {
-    this.logger.debug("Finding JWKS", { issuer });
+    this.logger.silly("Finding External JWKS", { issuer });
 
     const config = await this.issuerConfig(issuer);
 
@@ -176,6 +184,8 @@ export class Amphora implements IAmphora {
       const kryptos = Kryptos.make({ ...jwk, iss, jku });
 
       if (kryptos.isExpired) continue;
+
+      this.logger.silly("Adding Kryptos from external source", { kryptos });
 
       result.push(kryptos);
     }
@@ -198,7 +208,7 @@ export class Amphora implements IAmphora {
   }
 
   private async loadExternalConfig(): Promise<void> {
-    this.logger.debug("Loading external config");
+    this.logger.silly("Loading external config");
 
     for (const options of this.external) {
       await this.addExternalConfig(options);
@@ -214,7 +224,7 @@ export class Amphora implements IAmphora {
   private refreshJwks(): void {
     if (this.issuer === null) return;
 
-    this.logger.debug("Refreshing JWKS");
+    this.logger.silly("Refreshing JWKS");
 
     this._jwks = this._vault
       .filter((i) => i.isActive)
