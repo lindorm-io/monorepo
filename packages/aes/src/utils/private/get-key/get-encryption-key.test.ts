@@ -36,7 +36,7 @@ describe("getEncryptionKeys", () => {
         encryption: "A256GCM",
         kryptos: TEST_EC_KEY,
       }),
-    ).toBe("getEcEncryptionKey");
+    ).toEqual("getEcEncryptionKey");
   });
 
   test("should resolve encryption keys with OCT key", () => {
@@ -45,7 +45,7 @@ describe("getEncryptionKeys", () => {
         encryption: "A256GCM",
         kryptos: TEST_OCT_KEY,
       }),
-    ).toBe("getOctEncryptionKey");
+    ).toEqual("getOctEncryptionKey");
   });
 
   test("should resolve encryption keys with OKP key", () => {
@@ -54,7 +54,7 @@ describe("getEncryptionKeys", () => {
         encryption: "A256GCM",
         kryptos: TEST_OKP_KEY,
       }),
-    ).toBe("getOkpEncryptionKey");
+    ).toEqual("getOkpEncryptionKey");
   });
 
   test("should resolve encryption keys with RSA key", () => {
@@ -63,6 +63,6 @@ describe("getEncryptionKeys", () => {
         encryption: "A256GCM",
         kryptos: TEST_RSA_KEY,
       }),
-    ).toBe("getRsaEncryptionKey");
+    ).toEqual("getRsaEncryptionKey");
   });
 });

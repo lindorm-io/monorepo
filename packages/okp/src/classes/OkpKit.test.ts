@@ -12,11 +12,11 @@ describe("OkpKit", () => {
   });
 
   test("should verify", () => {
-    expect(kit.verify("string", signature)).toBe(true);
+    expect(kit.verify("string", signature)).toEqual(true);
   });
 
   test("should reject", () => {
-    expect(kit.verify("wrong", signature)).toBe(false);
+    expect(kit.verify("wrong", signature)).toEqual(false);
   });
 
   test("should assert", () => {

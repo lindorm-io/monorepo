@@ -14,15 +14,15 @@ describe("ArgonKit", () => {
     });
 
     test("should generate hash", async () => {
-      expect(hash.length).toBe(397);
+      expect(hash.length).toEqual(397);
     }, 10000);
 
     test("should verify", async () => {
-      await expect(kit.verify("string", hash)).resolves.toBe(true);
+      await expect(kit.verify("string", hash)).resolves.toEqual(true);
     }, 10000);
 
     test("should reject", async () => {
-      await expect(kit.verify("wrong", hash)).resolves.toBe(false);
+      await expect(kit.verify("wrong", hash)).resolves.toEqual(false);
     }, 10000);
 
     test("should throw error", async () => {
@@ -39,15 +39,15 @@ describe("ArgonKit", () => {
     });
 
     test("should generate hash", async () => {
-      expect(hash.length).toBe(226);
+      expect(hash.length).toEqual(226);
     }, 10000);
 
     test("should verify", async () => {
-      await expect(kit.verify("string", hash)).resolves.toBe(true);
+      await expect(kit.verify("string", hash)).resolves.toEqual(true);
     }, 10000);
 
     test("should reject", async () => {
-      await expect(kit.verify("wrong", hash)).resolves.toBe(false);
+      await expect(kit.verify("wrong", hash)).resolves.toEqual(false);
     }, 10000);
 
     test("should throw error", async () => {
@@ -64,15 +64,15 @@ describe("ArgonKit", () => {
     });
 
     test("should generate hash", async () => {
-      expect(hash.length).toBe(396);
+      expect(hash.length).toEqual(396);
     }, 10000);
 
     test("should verify", async () => {
-      await expect(kit.verify("string", hash)).resolves.toBe(true);
+      await expect(kit.verify("string", hash)).resolves.toEqual(true);
     }, 10000);
 
     test("should reject", async () => {
-      await expect(kit.verify("wrong", hash)).resolves.toBe(false);
+      await expect(kit.verify("wrong", hash)).resolves.toEqual(false);
     }, 10000);
 
     test("should throw error", async () => {
@@ -89,15 +89,15 @@ describe("ArgonKit", () => {
     });
 
     test("should generate hash", async () => {
-      expect(hash.length).toBe(398);
+      expect(hash.length).toEqual(398);
     }, 10000);
 
     test("should verify", async () => {
-      await expect(kit.verify("string", hash)).resolves.toBe(true);
+      await expect(kit.verify("string", hash)).resolves.toEqual(true);
     }, 10000);
 
     test("should reject", async () => {
-      await expect(kit.verify("wrong", hash)).resolves.toBe(false);
+      await expect(kit.verify("wrong", hash)).resolves.toEqual(false);
     }, 10000);
 
     test("should throw error", async () => {
@@ -112,15 +112,15 @@ describe("ArgonKit", () => {
     });
 
     test("should generate hash", async () => {
-      expect(hash.length).toBe(397);
+      expect(hash.length).toEqual(397);
     }, 10000);
 
     test("should verify", async () => {
-      await expect(kit.verify("string", hash)).resolves.toBe(true);
+      await expect(kit.verify("string", hash)).resolves.toEqual(true);
     }, 10000);
 
     test("should reject", async () => {
-      await expect(kit.verify("wrong", hash)).resolves.toBe(false);
+      await expect(kit.verify("wrong", hash)).resolves.toEqual(false);
     }, 10000);
 
     test("should throw error", async () => {
@@ -137,7 +137,7 @@ describe("ArgonKit", () => {
 
       const kit2 = new ArgonKit({ kryptos });
 
-      await expect(kit2.verify("string", hash)).resolves.toBe(false);
+      await expect(kit2.verify("string", hash)).resolves.toEqual(false);
     }, 10000);
   });
 
@@ -150,15 +150,15 @@ describe("ArgonKit", () => {
     });
 
     test("should generate hash", async () => {
-      expect(hash.length).toBe(397);
+      expect(hash.length).toEqual(397);
     }, 10000);
 
     test("should verify", async () => {
-      await expect(kit.verify("string", hash)).resolves.toBe(true);
+      await expect(kit.verify("string", hash)).resolves.toEqual(true);
     }, 10000);
 
     test("should reject", async () => {
-      await expect(kit.verify("wrong", hash)).resolves.toBe(false);
+      await expect(kit.verify("wrong", hash)).resolves.toEqual(false);
     }, 10000);
 
     test("should throw error", async () => {

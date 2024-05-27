@@ -34,21 +34,21 @@ describe("aes-cipher", () => {
   });
 
   test("should encrypt aes cipher", () => {
-    expect(encryptAesCipher({ data: "data", kryptos })).toBe("encodeAesString");
+    expect(encryptAesCipher({ data: "data", kryptos })).toEqual("encodeAesString");
   });
 
   test("should decrypt aes cipher", () => {
-    expect(decryptAesCipher({ cipher: "cipher", kryptos })).toBe("decryptAesData");
+    expect(decryptAesCipher({ cipher: "cipher", kryptos })).toEqual("decryptAesData");
   });
 
   test("should verify valid aes cipher", () => {
-    expect(verifyAesCipher({ cipher: "cipher", data: "decryptAesData", kryptos })).toBe(
-      true,
-    );
+    expect(
+      verifyAesCipher({ cipher: "cipher", data: "decryptAesData", kryptos }),
+    ).toEqual(true);
   });
 
   test("should verify invalid aes cipher", () => {
-    expect(verifyAesCipher({ cipher: "cipher", data: "wrong", kryptos })).toBe(false);
+    expect(verifyAesCipher({ cipher: "cipher", data: "wrong", kryptos })).toEqual(false);
   });
 
   test("should assert valid aes cipher", () => {

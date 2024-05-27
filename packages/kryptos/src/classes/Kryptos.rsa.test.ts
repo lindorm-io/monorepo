@@ -15,10 +15,10 @@ describe("Kryptos (RSA)", () => {
     test("should generate", async () => {
       const key = Kryptos.generate({ algorithm: "RS256", type: "RSA", use: "sig" });
 
-      expect(Kryptos.isEc(key)).toBe(false);
-      expect(Kryptos.isOct(key)).toBe(false);
-      expect(Kryptos.isOkp(key)).toBe(false);
-      expect(Kryptos.isRsa(key)).toBe(true);
+      expect(Kryptos.isEc(key)).toEqual(false);
+      expect(Kryptos.isOct(key)).toEqual(false);
+      expect(Kryptos.isOkp(key)).toEqual(false);
+      expect(Kryptos.isRsa(key)).toEqual(true);
 
       expect(key.modulus).toEqual(2048);
       expect(key.hasPrivateKey).toEqual(true);

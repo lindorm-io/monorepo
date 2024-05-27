@@ -94,7 +94,7 @@ describe("signature", () => {
           kryptos,
           signature,
         }),
-      ).toBe(true);
+      ).toEqual(true);
     });
   });
 

@@ -14,10 +14,10 @@ describe("Kryptos (oct)", () => {
     test("should generate", async () => {
       const key = Kryptos.generate({ algorithm: "HS512", type: "oct", use: "sig" });
 
-      expect(Kryptos.isEc(key)).toBe(false);
-      expect(Kryptos.isOct(key)).toBe(true);
-      expect(Kryptos.isOkp(key)).toBe(false);
-      expect(Kryptos.isRsa(key)).toBe(false);
+      expect(Kryptos.isEc(key)).toEqual(false);
+      expect(Kryptos.isOct(key)).toEqual(true);
+      expect(Kryptos.isOkp(key)).toEqual(false);
+      expect(Kryptos.isRsa(key)).toEqual(false);
 
       expect(key.hasPrivateKey).toEqual(true);
       expect(key.hasPublicKey).toEqual(false);

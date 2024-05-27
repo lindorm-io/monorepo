@@ -126,7 +126,7 @@ describe("rsa-signature", () => {
           kryptos,
           signature,
         }),
-      ).toBe(true);
+      ).toEqual(true);
     });
   });
 

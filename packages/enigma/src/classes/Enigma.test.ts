@@ -29,11 +29,11 @@ describe("Enigma", () => {
   }, 10000);
 
   test("should verify", async () => {
-    await expect(kit.verify("string", hash)).resolves.toBe(true);
+    await expect(kit.verify("string", hash)).resolves.toEqual(true);
   }, 10000);
 
   test("should reject", async () => {
-    await expect(kit.verify("wrong", hash)).resolves.toBe(false);
+    await expect(kit.verify("wrong", hash)).resolves.toEqual(false);
   }, 10000);
 
   test("should assert", async () => {

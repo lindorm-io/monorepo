@@ -20,10 +20,10 @@ describe("Kryptos (OKP)", () => {
         use: "sig",
       });
 
-      expect(Kryptos.isEc(key)).toBe(false);
-      expect(Kryptos.isOct(key)).toBe(false);
-      expect(Kryptos.isOkp(key)).toBe(true);
-      expect(Kryptos.isRsa(key)).toBe(false);
+      expect(Kryptos.isEc(key)).toEqual(false);
+      expect(Kryptos.isOct(key)).toEqual(false);
+      expect(Kryptos.isOkp(key)).toEqual(true);
+      expect(Kryptos.isRsa(key)).toEqual(false);
 
       expect(key.hasPrivateKey).toEqual(true);
       expect(key.hasPublicKey).toEqual(true);

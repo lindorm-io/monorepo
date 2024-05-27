@@ -78,7 +78,7 @@ describe("okp-signature", () => {
           format,
           signature,
         }),
-      ).toBe(true);
+      ).toEqual(true);
     });
   });
 
