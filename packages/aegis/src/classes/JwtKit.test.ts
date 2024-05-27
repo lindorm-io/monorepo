@@ -164,7 +164,7 @@ describe("JwtKit", () => {
       });
 
       expect(kit.verify(token)).toEqual({
-        __jwt: {
+        decoded: {
           header: {
             alg: "ES512",
             cty: "application/json",
@@ -248,6 +248,7 @@ describe("JwtKit", () => {
           tokenId: tokenId,
           tokenType: "test_token",
         },
+        token,
       });
     });
 

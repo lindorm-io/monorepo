@@ -8,7 +8,8 @@ export type VerifiedJwsHeader = Omit<ParsedTokenHeader, "algorithm" | "type"> & 
 };
 
 export type VerifiedJws<T extends Buffer | string> = {
-  __jws: DecodedJws;
+  decoded: DecodedJws;
   header: VerifiedJwsHeader;
   payload: T;
+  token: string;
 };

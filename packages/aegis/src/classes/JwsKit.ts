@@ -117,7 +117,12 @@ export class JwsKit implements IJwsKit {
 
     this.logger.silly("Token verified", { header, payload });
 
-    return { __jws: decoded, header, payload: payload as T };
+    return {
+      decoded,
+      header,
+      payload: payload as T,
+      token: jws,
+    };
   }
 
   // public static
@@ -126,12 +131,10 @@ export class JwsKit implements IJwsKit {
     const [header, payload, signature] = jws.split(".");
     const decodedHeader = decodeTokenHeader(header);
 
-    const result: DecodedJws = {
+    return {
       header: decodedHeader,
       payload: decodedHeader.cty === "text/plain" ? B64.toString(payload) : payload,
       signature,
     };
-
-    return result;
   }
 }

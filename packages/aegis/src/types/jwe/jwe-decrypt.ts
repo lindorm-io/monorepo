@@ -12,7 +12,8 @@ export type DecryptedJweHeader = Omit<
 };
 
 export type DecryptedJwe = {
-  __jwe: DecodedJwe;
+  decoded: DecodedJwe;
   header: DecryptedJweHeader;
   payload: string;
+  token: string;
 };

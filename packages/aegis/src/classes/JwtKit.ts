@@ -179,20 +179,24 @@ export class JwtKit implements IJwtKit {
 
     this.logger.silly("Token verified", { header, payload });
 
-    return { __jwt: decoded, header, payload };
+    return {
+      decoded,
+      header,
+      payload,
+      token: jwt,
+    };
   }
 
   // public static
 
   public static decode<C extends Dict = Dict>(jwt: string): DecodedJwt<C> {
     const [header, payload, signature] = jwt.split(".");
-    const result: DecodedJwt<C> = {
+
+    return {
       header: decodeTokenHeader(header),
       payload: decodeJwtPayload<C>(payload),
       signature,
     };
-
-    return result;
   }
 
   public static validate<C extends Dict = Dict>(

@@ -37,7 +37,8 @@ export type VerifiedJwtHeader = Omit<ParsedTokenHeader, "algorithm" | "type"> & 
 };
 
 export type VerifiedJwt<C extends Dict = Dict> = {
-  __jwt: DecodedJwt<C>;
+  decoded: DecodedJwt<C>;
   header: VerifiedJwtHeader;
   payload: ParsedJwtPayload<C>;
+  token: string;
 };
