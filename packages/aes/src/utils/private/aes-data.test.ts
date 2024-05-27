@@ -35,7 +35,7 @@ describe("aes-data", () => {
       version: LATEST_AES_VERSION,
     });
 
-    expect(decryptAesData({ ...res, kryptos })).toBe(data);
+    expect(decryptAesData({ ...res, kryptos })).toEqual(data);
   });
 
   describe("cbc", () => {
@@ -53,8 +53,8 @@ describe("aes-data", () => {
         kryptos,
       });
 
-      expect(encryption.encryption).toBe("A128CBC-HS256");
-      expect(decryptAesData({ ...encryption, kryptos })).toBe(data);
+      expect(encryption.encryption).toEqual("A128CBC-HS256");
+      expect(decryptAesData({ ...encryption, kryptos })).toEqual(data);
     });
 
     test("should encrypt and decrypt with A192CBC-HS384", () => {
@@ -71,8 +71,8 @@ describe("aes-data", () => {
         kryptos,
       });
 
-      expect(encryption.encryption).toBe("A192CBC-HS384");
-      expect(decryptAesData({ ...encryption, kryptos })).toBe(data);
+      expect(encryption.encryption).toEqual("A192CBC-HS384");
+      expect(decryptAesData({ ...encryption, kryptos })).toEqual(data);
     });
 
     test("should encrypt and decrypt with A256CBC-HS512", () => {
@@ -89,8 +89,8 @@ describe("aes-data", () => {
         kryptos,
       });
 
-      expect(encryption.encryption).toBe("A256CBC-HS512");
-      expect(decryptAesData({ ...encryption, kryptos })).toBe(data);
+      expect(encryption.encryption).toEqual("A256CBC-HS512");
+      expect(decryptAesData({ ...encryption, kryptos })).toEqual(data);
     });
   });
 
@@ -109,8 +109,8 @@ describe("aes-data", () => {
         kryptos,
       });
 
-      expect(encryption.encryption).toBe("A128GCM");
-      expect(decryptAesData({ ...encryption, kryptos })).toBe(data);
+      expect(encryption.encryption).toEqual("A128GCM");
+      expect(decryptAesData({ ...encryption, kryptos })).toEqual(data);
     });
 
     test("should encrypt and decrypt with A192GCM", () => {
@@ -127,8 +127,8 @@ describe("aes-data", () => {
         kryptos,
       });
 
-      expect(encryption.encryption).toBe("A192GCM");
-      expect(decryptAesData({ ...encryption, kryptos })).toBe(data);
+      expect(encryption.encryption).toEqual("A192GCM");
+      expect(decryptAesData({ ...encryption, kryptos })).toEqual(data);
     });
 
     test("should encrypt and decrypt with A256GCM", () => {
@@ -145,8 +145,8 @@ describe("aes-data", () => {
         kryptos,
       });
 
-      expect(encryption.encryption).toBe("A256GCM");
-      expect(decryptAesData({ ...encryption, kryptos })).toBe(data);
+      expect(encryption.encryption).toEqual("A256GCM");
+      expect(decryptAesData({ ...encryption, kryptos })).toEqual(data);
     });
   });
 });

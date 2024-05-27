@@ -11,11 +11,11 @@ describe("ShaKit", () => {
   });
 
   test("should verify", () => {
-    expect(kit.verify("string", hash)).toBe(true);
+    expect(kit.verify("string", hash)).toEqual(true);
   });
 
   test("should reject", () => {
-    expect(kit.verify("wrong", hash)).toBe(false);
+    expect(kit.verify("wrong", hash)).toEqual(false);
   });
 
   test("should assert", () => {

@@ -45,8 +45,8 @@ describe("conduit-client-credentials-middleware", () => {
 
       const middleware = await factory({ audience: "https://identity.lindorm-io" });
 
-      expect(configScope.isDone()).toBe(true);
-      expect(tokenScope.isDone()).toBe(true);
+      expect(configScope.isDone()).toEqual(true);
+      expect(tokenScope.isDone()).toEqual(true);
 
       await expect(middleware(ctx, jest.fn())).resolves.toBeUndefined();
 
@@ -79,7 +79,7 @@ describe("conduit-client-credentials-middleware", () => {
 
       const middleware = await factory({ audience: "https://identity.lindorm-io" });
 
-      expect(scope.isDone()).toBe(true);
+      expect(scope.isDone()).toEqual(true);
 
       await expect(middleware(ctx, jest.fn())).resolves.toBeUndefined();
 
@@ -100,7 +100,7 @@ describe("conduit-client-credentials-middleware", () => {
 
       const middleware = await factory({ audience: "https://test.lindorm.io" });
 
-      expect(scope.isDone()).toBe(true);
+      expect(scope.isDone()).toEqual(true);
 
       await expect(middleware(ctx, jest.fn())).resolves.toBeUndefined();
 
@@ -123,8 +123,8 @@ describe("conduit-client-credentials-middleware", () => {
 
       const middleware = await factory();
 
-      expect(configScope.isDone()).toBe(true);
-      expect(scope.isDone()).toBe(true);
+      expect(configScope.isDone()).toEqual(true);
+      expect(scope.isDone()).toEqual(true);
 
       await expect(middleware(ctx, jest.fn())).resolves.toBeUndefined();
 

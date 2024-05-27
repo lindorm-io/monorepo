@@ -17,7 +17,7 @@ describe("ec-signature", () => {
 
       expect(
         verifyEcSignature({ kryptos, data: "data", signature, format: "base64" }),
-      ).toBe(true);
+      ).toEqual(true);
     });
 
     test("should sign and verify with base64url formatting", () => {
@@ -25,15 +25,15 @@ describe("ec-signature", () => {
 
       expect(
         verifyEcSignature({ kryptos, data: "data", signature, format: "base64url" }),
-      ).toBe(true);
+      ).toEqual(true);
     });
 
     test("should sign and verify with hex formatting", () => {
       const signature = createEcSignature({ kryptos, data: "data", format: "hex" });
 
-      expect(verifyEcSignature({ kryptos, data: "data", signature, format: "hex" })).toBe(
-        true,
-      );
+      expect(
+        verifyEcSignature({ kryptos, data: "data", signature, format: "hex" }),
+      ).toEqual(true);
     });
   });
 
@@ -43,7 +43,9 @@ describe("ec-signature", () => {
 
       const signature = createEcSignature({ kryptos, data: "data", format });
 
-      expect(verifyEcSignature({ kryptos, data: "data", format, signature })).toBe(true);
+      expect(verifyEcSignature({ kryptos, data: "data", format, signature })).toEqual(
+        true,
+      );
     });
 
     test("should sign and verify with ES384", async () => {
@@ -51,7 +53,9 @@ describe("ec-signature", () => {
 
       const signature = createEcSignature({ kryptos, data: "data", format });
 
-      expect(verifyEcSignature({ kryptos, data: "data", format, signature })).toBe(true);
+      expect(verifyEcSignature({ kryptos, data: "data", format, signature })).toEqual(
+        true,
+      );
     });
 
     test("should sign and verify with ES512", async () => {
@@ -59,7 +63,9 @@ describe("ec-signature", () => {
 
       const signature = createEcSignature({ kryptos, data: "data", format });
 
-      expect(verifyEcSignature({ kryptos, data: "data", format, signature })).toBe(true);
+      expect(verifyEcSignature({ kryptos, data: "data", format, signature })).toEqual(
+        true,
+      );
     });
   });
 
@@ -69,9 +75,9 @@ describe("ec-signature", () => {
 
       const signature = createEcSignature({ kryptos, data: "data", format: "raw" });
 
-      expect(verifyEcSignature({ kryptos, data: "data", signature, format: "raw" })).toBe(
-        true,
-      );
+      expect(
+        verifyEcSignature({ kryptos, data: "data", signature, format: "raw" }),
+      ).toEqual(true);
     });
 
     test("should sign and verify with P-384 raw formatting", async () => {
@@ -79,9 +85,9 @@ describe("ec-signature", () => {
 
       const signature = createEcSignature({ kryptos, data: "data", format: "raw" });
 
-      expect(verifyEcSignature({ kryptos, data: "data", signature, format: "raw" })).toBe(
-        true,
-      );
+      expect(
+        verifyEcSignature({ kryptos, data: "data", signature, format: "raw" }),
+      ).toEqual(true);
     });
 
     test("should sign and verify with P-521 raw formatting", async () => {
@@ -89,9 +95,9 @@ describe("ec-signature", () => {
 
       const signature = createEcSignature({ kryptos, data: "data", format: "raw" });
 
-      expect(verifyEcSignature({ kryptos, data: "data", signature, format: "raw" })).toBe(
-        true,
-      );
+      expect(
+        verifyEcSignature({ kryptos, data: "data", signature, format: "raw" }),
+      ).toEqual(true);
     });
   });
 

@@ -18,7 +18,7 @@ describe("argon-hash", () => {
   it("should verify data", async () => {
     const hash = await createArgonHash({ data: "data" });
 
-    await expect(verifyArgonHash({ data: "data", hash })).resolves.toBe(true);
+    await expect(verifyArgonHash({ data: "data", hash })).resolves.toEqual(true);
   });
 
   it("should verify data with secret", async () => {
@@ -26,7 +26,7 @@ describe("argon-hash", () => {
 
     await expect(
       verifyArgonHash({ data: "data", hash, kryptos: TEST_OCT_KEY_SIG }),
-    ).resolves.toBe(true);
+    ).resolves.toEqual(true);
   });
 
   it("should assert data", async () => {
@@ -46,7 +46,7 @@ describe("argon-hash", () => {
   it("should verify invalid data", async () => {
     const hash = await createArgonHash({ data: "data" });
 
-    await expect(verifyArgonHash({ data: "wrong", hash })).resolves.toBe(false);
+    await expect(verifyArgonHash({ data: "wrong", hash })).resolves.toEqual(false);
   });
 
   it("should assert invalid data", async () => {
