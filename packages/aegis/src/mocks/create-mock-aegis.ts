@@ -4,7 +4,7 @@ export const createMockAegis = (): IAegis => ({
   jwe: {
     encrypt: jest.fn().mockResolvedValue({ token: "mocked_token" }),
     decrypt: jest.fn().mockResolvedValue({
-      __jwe: {},
+      decoded: {},
       header: {},
       payload: "mocked_payload",
     }),
@@ -15,7 +15,7 @@ export const createMockAegis = (): IAegis => ({
       token: "mocked_token",
     }),
     verify: jest.fn().mockResolvedValue({
-      __jws: {},
+      decoded: {},
       header: {},
       payload: "mocked_payload",
     }),
@@ -30,7 +30,7 @@ export const createMockAegis = (): IAegis => ({
       tokenId: "mocked_token_id",
     }),
     verify: jest.fn().mockResolvedValue({
-      __jwt: {},
+      decoded: {},
       header: {},
       payload: { subject: "mocked_subject" },
     }),

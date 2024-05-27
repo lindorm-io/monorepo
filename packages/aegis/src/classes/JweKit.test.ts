@@ -92,7 +92,7 @@ describe("JweKit", () => {
       });
 
       expect(kit.decrypt(token)).toEqual({
-        __jwe: {
+        decoded: {
           authTag: expect.any(String),
           content: expect.any(String),
           header: {
@@ -133,6 +133,7 @@ describe("JweKit", () => {
           },
         },
         payload: "data",
+        token,
       });
     });
 
@@ -144,7 +145,7 @@ describe("JweKit", () => {
       });
 
       expect(kit.decrypt(token)).toEqual({
-        __jwe: {
+        decoded: {
           authTag: expect.any(String),
           content: expect.any(String),
           header: {
@@ -171,6 +172,7 @@ describe("JweKit", () => {
           objectId: "19a0c0cc-3eec-4ece-a5a1-4d93a457c3a6",
         },
         payload: "data",
+        token,
       });
     });
 
@@ -190,7 +192,7 @@ describe("JweKit", () => {
       });
 
       expect(kit.decrypt(token)).toEqual({
-        __jwe: {
+        decoded: {
           authTag: expect.any(String),
           content: expect.any(String),
           header: {
@@ -219,6 +221,7 @@ describe("JweKit", () => {
           objectId: "19a0c0cc-3eec-4ece-a5a1-4d93a457c3a6",
         },
         payload: "data",
+        token,
       });
     });
 
@@ -236,7 +239,7 @@ describe("JweKit", () => {
       });
 
       expect(kit.decrypt(token)).toEqual({
-        __jwe: {
+        decoded: {
           authTag: expect.any(String),
           content: expect.any(String),
           header: {
@@ -265,6 +268,7 @@ describe("JweKit", () => {
           pbkdfSalt: expect.any(String),
         },
         payload: "data",
+        token,
       });
     });
 
@@ -282,7 +286,7 @@ describe("JweKit", () => {
       });
 
       expect(kit.decrypt(token)).toEqual({
-        __jwe: {
+        decoded: {
           authTag: expect.any(String),
           content: expect.any(String),
           header: {
@@ -319,6 +323,7 @@ describe("JweKit", () => {
           publicEncryptionTag: expect.any(String),
         },
         payload: "data",
+        token,
       });
     });
 
@@ -330,7 +335,7 @@ describe("JweKit", () => {
       });
 
       expect(kit.decrypt(token)).toEqual({
-        __jwe: {
+        decoded: {
           authTag: expect.any(String),
           content: expect.any(String),
           header: {
@@ -369,6 +374,7 @@ describe("JweKit", () => {
           },
         },
         payload: "data",
+        token,
       });
     });
 
@@ -380,7 +386,7 @@ describe("JweKit", () => {
       });
 
       expect(kit.decrypt(token)).toEqual({
-        __jwe: {
+        decoded: {
           authTag: expect.any(String),
           content: expect.any(String),
           header: {
@@ -407,6 +413,7 @@ describe("JweKit", () => {
           objectId: "a152d3f3-4e4b-46ea-ac6f-ae54e0e79090",
         },
         payload: "data",
+        token,
       });
     });
   });

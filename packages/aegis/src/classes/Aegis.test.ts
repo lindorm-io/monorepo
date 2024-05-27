@@ -34,7 +34,7 @@ describe("Aegis", () => {
     });
 
     await expect(aegis.jwe.decrypt(res.token)).resolves.toEqual({
-      __jwe: {
+      decoded: {
         authTag: expect.any(String),
         content: expect.any(String),
         header: {
@@ -73,6 +73,7 @@ describe("Aegis", () => {
         },
       },
       payload: "data",
+      token: res.token,
     });
   });
 
@@ -87,7 +88,7 @@ describe("Aegis", () => {
     });
 
     await expect(aegis.jws.verify(res.token)).resolves.toEqual({
-      __jws: {
+      decoded: {
         header: {
           alg: "ES512",
           cty: "text/plain",
@@ -109,6 +110,7 @@ describe("Aegis", () => {
         objectId: "09172fab-dbff-40ef-bb86-94d9d4ed37dc",
       },
       payload: "data",
+      token: res.token,
     });
   });
 
@@ -129,7 +131,7 @@ describe("Aegis", () => {
     });
 
     await expect(aegis.jwt.verify(res.token)).resolves.toEqual({
-      __jwt: {
+      decoded: {
         header: {
           alg: "ES512",
           cty: "application/json",
@@ -173,6 +175,7 @@ describe("Aegis", () => {
         tokenId: expect.any(String),
         tokenType: "test_token",
       },
+      token: res.token,
     });
   });
 });

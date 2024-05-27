@@ -184,7 +184,12 @@ export class JweKit implements IJweKit {
 
     this.logger.silly("Token decrypted", { payload });
 
-    return { __jwe: decoded, header, payload };
+    return {
+      decoded,
+      header,
+      payload,
+      token: jwe,
+    };
   }
 
   // public static
@@ -193,15 +198,13 @@ export class JweKit implements IJweKit {
     const [header, publicEncryptionKey, initialisationVector, content, authTag] =
       jwe.split(".");
 
-    const result: DecodedJwe = {
+    return {
       header: decodeTokenHeader(header),
       publicEncryptionKey: publicEncryptionKey?.length ? publicEncryptionKey : undefined,
       initialisationVector,
       content,
       authTag: authTag?.length ? authTag : undefined,
     };
-
-    return result;
   }
 
   // private

@@ -79,7 +79,7 @@ describe("JwsKit", () => {
       });
 
       expect(kit.verify(token)).toEqual({
-        __jws: {
+        decoded: {
           header: {
             alg: "ES512",
             cty: "text/plain",
@@ -101,6 +101,7 @@ describe("JwsKit", () => {
           objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
         },
         payload: "test data in plain text",
+        token,
       });
     });
 
@@ -110,7 +111,7 @@ describe("JwsKit", () => {
       });
 
       expect(kit.verify(token)).toEqual({
-        __jws: {
+        decoded: {
           header: {
             alg: "ES512",
             cty: "application/buffer",
@@ -132,6 +133,7 @@ describe("JwsKit", () => {
           objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
         },
         payload: Buffer.from("test data in buffer", "utf8"),
+        token,
       });
     });
   });
