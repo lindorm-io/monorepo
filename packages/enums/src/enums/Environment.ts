@@ -3,4 +3,5 @@ export enum Environment {
   Staging = "staging",
   Development = "development",
   Test = "test",
+  Unknown = "unknown",
 }
