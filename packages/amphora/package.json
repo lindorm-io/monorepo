@@ -32,6 +32,7 @@
     "@lindorm/kryptos": "^0.3.1"
   },
   "devDependencies": {
-    "@lindorm/logger": "^0.1.4"
+    "@lindorm/logger": "^0.1.4",
+    "@lindorm/types": "^0.1.4"
   }
 }
