@@ -2,6 +2,7 @@ import { Conduit, conduitChangeResponseDataMiddleware } from "@lindorm/conduit";
 import { isArray, isBoolean, isString, isUrlLike } from "@lindorm/is";
 import { IKryptos, Kryptos, LindormJwk } from "@lindorm/kryptos";
 import { ILogger } from "@lindorm/logger";
+import { OpenIdConfigurationResponse, OpenIdJwksResponse } from "@lindorm/types";
 import { AmphoraError } from "../errors";
 import {
   AmphoraConfig,
@@ -10,8 +11,6 @@ import {
   AmphoraOptions,
   AmphoraQuery,
   IAmphora,
-  OpenIdConfigurationResponse,
-  OpenIdJwksResponse,
 } from "../types";
 
 export class Amphora implements IAmphora {

@@ -1,14 +1,11 @@
 import { ChangeCase } from "@lindorm/case";
 import { isArray, isString } from "@lindorm/is";
 import { ILogger } from "@lindorm/logger";
+import { OpenIdConfigurationResponse, OpenIdTokenResponse } from "@lindorm/types";
 import { Conduit } from "../classes";
 import { ConduitUsing } from "../enums";
-import {
-  ConduitMiddleware,
-  OAuthTokenResponse,
-  OpenIdConfigurationResponse,
-  RequestOptions,
-} from "../types";
+import { ConduitError } from "../errors";
+import { ConduitMiddleware, RequestOptions } from "../types";
 import { conduitBasicAuthMiddleware } from "./conduit-basic-auth-middleware";
 import { conduitBearerAuthMiddleware } from "./conduit-bearer-auth-middleware";
 import { conduitChangeRequestBodyMiddleware } from "./conduit-change-request-body-middleware";
@@ -19,6 +16,7 @@ type Config = {
   clientSecret: string;
   clockTolerance?: number;
   contentType?: "application/json" | "application/x-www-form-urlencoded";
+  defaultExpiration?: number;
   openIdBaseUrl: string;
   openIdConfigurationPath?: string;
   openIdTokenPath?: string;
@@ -120,7 +118,7 @@ export const conduitClientCredentialsMiddleware = (
       requestOptions.form = form;
     }
 
-    const { data } = await client.post<OAuthTokenResponse>(tokenUrl, {
+    const { data } = await client.post<OpenIdTokenResponse>(tokenUrl, {
       ...requestOptions,
       middleware: [conduitBasicAuthMiddleware(config.clientId, config.clientSecret)],
     });
@@ -133,13 +131,25 @@ export const conduitClientCredentialsMiddleware = (
 
     const ttl = data.expiresOn
       ? data.expiresOn * 1000
-      : Date.now() + data.expiresIn * 1000;
+      : data.expiresIn
+        ? Date.now() + data.expiresIn * 1000
+        : config.defaultExpiration
+          ? config.defaultExpiration * 1000
+          : undefined;
+
+    if (!data.accessToken) {
+      throw new ConduitError("Token not provided", { debug: data });
+    }
+
+    if (!ttl) {
+      throw new ConduitError("Token expiration not provided", { debug: data });
+    }
 
     cache.push({
       accessToken: data.accessToken,
       audience,
       scope: [...receivedScope, ...scope],
-      tokenType: data.tokenType,
+      tokenType: data.tokenType ?? "Bearer",
       ttl: ttl - clockTolerance * 1000,
     });
 
