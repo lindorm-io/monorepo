@@ -2,6 +2,10 @@ export type ClassLike = { constructor: { name: string } };
 
 export type Constructor<T> = new (...args: any) => T;
 
+export type DeepPartial<T> = {
+  [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P];
+};
+
 export type Dict<T = any> = Record<string, T>;
 
 export type Function<T = any> = (...args: any[]) => T;
