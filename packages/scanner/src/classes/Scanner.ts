@@ -2,7 +2,8 @@ import { isArray, isString } from "@lindorm/is";
 import { readdirSync, statSync } from "fs";
 import { basename, extname, join, relative, sep } from "path";
 import { ScannerError } from "../errors";
-import { IScanner, ScanData, StructureScannerOptions } from "../types";
+import { IScanner } from "../interfaces";
+import { ScanData, StructureScannerOptions } from "../types";
 
 export class Scanner implements IScanner {
   private readonly deniedDirectories: Array<RegExp>;

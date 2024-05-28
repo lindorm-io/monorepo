@@ -7,6 +7,7 @@ import { extractSearchParams, getPlainUrl, getValidUrl } from "@lindorm/url";
 import { v4 as uuid } from "uuid";
 import { CONDUIT_RESPONSE, RETRY_CONFIG, TIMEOUT } from "../constants/private/defaults";
 import { ConduitUsing } from "../enums";
+import { IConduit } from "../interfaces";
 import { axiosRequestHandler } from "../middleware/private/axios-request-handler";
 import { defaultHeaders } from "../middleware/private/default-headers";
 import { fetchRequestHandler } from "../middleware/private/fetch-request-handler";
@@ -19,7 +20,6 @@ import {
   ConduitOptions,
   ConduitResponse,
   ConfigContext,
-  IConduit,
   MethodOptions,
   RequestContext,
   RequestOptions,

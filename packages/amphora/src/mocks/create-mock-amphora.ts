@@ -1,4 +1,4 @@
-import { IAmphora } from "../types";
+import { IAmphora } from "../interfaces";
 
 export const createMockAmphora = (): IAmphora => ({
   config: [],

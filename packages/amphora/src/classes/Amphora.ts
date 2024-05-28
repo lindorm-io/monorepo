@@ -4,13 +4,13 @@ import { IKryptos, Kryptos, LindormJwk } from "@lindorm/kryptos";
 import { ILogger } from "@lindorm/logger";
 import { OpenIdConfigurationResponse, OpenIdJwksResponse } from "@lindorm/types";
 import { AmphoraError } from "../errors";
+import { IAmphora } from "../interfaces";
 import {
   AmphoraConfig,
   AmphoraExternalOption,
   AmphoraJwks,
   AmphoraOptions,
   AmphoraQuery,
-  IAmphora,
 } from "../types";
 
 export class Amphora implements IAmphora {

@@ -1,5 +1,5 @@
 import { IKryptos } from "@lindorm/kryptos";
-import { AmphoraConfig, AmphoraJwks, AmphoraQuery } from "./amphora";
+import { AmphoraConfig, AmphoraJwks, AmphoraQuery } from "../types";
 
 export interface IAmphora {
   config: Array<AmphoraConfig>;

@@ -1,5 +1,5 @@
 import { Dict } from "@lindorm/types";
-import { FilterCallback, LogContext, LogSession } from "./types";
+import { FilterCallback, LogContext, LogSession } from "../types";
 
 export interface ILogger {
   child(): ILogger;

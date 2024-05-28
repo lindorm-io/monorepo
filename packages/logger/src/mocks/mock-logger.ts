@@ -1,4 +1,4 @@
-import { ILogger } from "../types";
+import { ILogger } from "../interfaces";
 
 type LogFn = (...args: any) => void;
 

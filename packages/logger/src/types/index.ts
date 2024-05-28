@@ -1,3 +1,2 @@
-export * from "./interface";
-export * from "./logger";
+export * from "./logger-options";
 export * from "./types";
