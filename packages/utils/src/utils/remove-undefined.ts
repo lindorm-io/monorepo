@@ -1,7 +1,6 @@
 import { isArray, isObject, isUndefined } from "@lindorm/is";
 import { Dict } from "@lindorm/types";
-import { removeFromArray } from "./private/remove-from-array";
-import { removeFromObject } from "./private/remove-from-object";
+import { removeFromArray, removeFromObject } from "./private";
 
 export function removeUndefined<T extends Array<any> = Array<any>>(array: T): T;
 export function removeUndefined<T extends Dict = Dict>(dict: T): T;
