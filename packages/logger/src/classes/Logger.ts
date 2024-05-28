@@ -4,9 +4,9 @@ import { Dict } from "@lindorm/types";
 import { get, set } from "object-path";
 import winston, { Logger as WinstonLogger } from "winston";
 import { LogLevel } from "../enums";
+import { ILogger } from "../interfaces";
 import {
   FilterRecord,
-  ILogger,
   LogContext,
   LogDetails,
   LogSession,

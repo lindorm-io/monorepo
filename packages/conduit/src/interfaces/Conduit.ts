@@ -1,6 +1,5 @@
 import { Dict } from "@lindorm/types";
-import { MethodOptions, RequestOptions } from "./request";
-import { ConduitResponse } from "./response";
+import { ConduitResponse, MethodOptions, RequestOptions } from "../types";
 
 export interface IConduit {
   delete<
