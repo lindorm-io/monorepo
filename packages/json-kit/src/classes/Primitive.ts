@@ -1,4 +1,4 @@
-import { isArray, isObject, isString } from "@lindorm/is";
+import { isArray, isObjectLike, isString } from "@lindorm/is";
 import { Dict } from "@lindorm/types";
 import { getMetaArray } from "../utils/private/get-meta-array";
 import { getMetaObject } from "../utils/private/get-meta-object";
@@ -15,7 +15,7 @@ export class Primitive<T extends Array<any> | Dict = Dict> {
     if (isArray(input)) {
       this._data = stringifyArrayValues(input);
       this._meta = getMetaArray(input);
-    } else if (isObject(input)) {
+    } else if (isObjectLike(input)) {
       this._data = stringifyObjectValues(input);
       this._meta = getMetaObject(input);
     } else if (isString(input)) {
@@ -45,7 +45,7 @@ export class Primitive<T extends Array<any> | Dict = Dict> {
   }
 
   public toString(): string {
-    return JSON.stringify({ json: this._data, meta: this._meta });
+    return JSON.stringify({ data: this._data, meta: this._meta });
   }
 
   // private
