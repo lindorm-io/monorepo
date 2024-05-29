@@ -8,4 +8,14 @@ export class TestEntityOne implements IRedisEntity {
   public expiresAt!: Date | undefined;
   public name!: string;
   public updatedAt!: Date;
+
+  public validate(): void {
+    if (!this.email) {
+      throw new Error("Missing email");
+    }
+
+    if (!this.name) {
+      throw new Error("Missing name");
+    }
+  }
 }
