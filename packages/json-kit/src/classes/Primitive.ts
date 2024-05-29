@@ -1,11 +1,13 @@
 import { isArray, isObjectLike, isString } from "@lindorm/is";
 import { Dict } from "@lindorm/types";
-import { getMetaArray } from "../utils/private/get-meta-array";
-import { getMetaObject } from "../utils/private/get-meta-object";
-import { parseArrayValues } from "../utils/private/parse-array-values";
-import { parseObjectValues } from "../utils/private/parse-object-values";
-import { stringifyArrayValues } from "../utils/private/stringify-array-values";
-import { stringifyObjectValues } from "../utils/private/stringify-object-values";
+import {
+  getMetaArray,
+  getMetaObject,
+  parseArrayValues,
+  parseObjectValues,
+  stringifyArrayValues,
+  stringifyObjectValues,
+} from "../utils/private";
 
 export class Primitive<T extends Array<any> | Dict = Dict> {
   private readonly _data: Array<any> | Dict;
