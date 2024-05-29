@@ -2,9 +2,12 @@ import { createMockLogger } from "@lindorm/logger";
 import { randomUUID } from "crypto";
 import { Redis } from "ioredis";
 import MockDate from "mockdate";
+import { TestEntityOne } from "../__fixtures__/entities/test-entity-one";
+import { TestEntityTwo } from "../__fixtures__/entities/test-entity-two";
 import { TestEntity } from "../__fixtures__/test-entity";
 import { TestRepository } from "../__fixtures__/test-repository";
 import { RedisError } from "../errors";
+import { RedisRepository } from "./RedisRepository";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate);
@@ -155,7 +158,7 @@ describe("RedisRepository", () => {
     await expect(repository.findOneByIdOrFail(randomUUID())).rejects.toThrow(RedisError);
   });
 
-  test("should save a new entity", async () => {
+  test("should save an entity", async () => {
     await expect(
       repository.save(
         repository.create({
@@ -171,6 +174,30 @@ describe("RedisRepository", () => {
       name: "Test User",
       updatedAt: MockedDate,
     });
+  });
+
+  test("should use toJSON when it exists", async () => {
+    const repo = new RedisRepository({
+      Entity: TestEntityTwo,
+      logger: createMockLogger(),
+      redis,
+    });
+
+    const entity = await repo.save(repo.create({ _test: "any" }));
+
+    await expect(repo.findOneById(entity.id)).resolves.toEqual(
+      expect.objectContaining({ _test: undefined }),
+    );
+  });
+
+  test("should validate an entity when it exists", async () => {
+    const repo = new RedisRepository({
+      Entity: TestEntityOne,
+      logger: createMockLogger(),
+      redis,
+    });
+
+    await expect(repo.save(repo.create({}))).rejects.toThrow("Missing email");
   });
 
   test("should save many entities", async () => {
