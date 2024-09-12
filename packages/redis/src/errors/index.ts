@@ -1,1 +1,1 @@
-export * from "./RedisError";
+export * from "./RedisRepositoryError";

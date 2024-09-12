@@ -1,21 +1,29 @@
-import { IRedisEntity } from "../../interfaces";
+import { RedisEntityBase } from "../../classes";
+import { ValidateRedisEntityFn } from "../../types";
 
-export class TestEntityOne implements IRedisEntity {
-  public readonly id!: string;
-  public readonly createdAt!: Date;
+export type TestEntityOneOptions = {
+  email?: string;
+  name: string;
+};
 
-  public email!: string;
-  public expiresAt!: Date | undefined;
-  public name!: string;
-  public updatedAt!: Date;
+export class TestEntityOne extends RedisEntityBase {
+  public readonly email: string | null;
+  public readonly name: string;
 
-  public validate(): void {
-    if (!this.email) {
-      throw new Error("Missing email");
-    }
+  public constructor(options: TestEntityOneOptions) {
+    super();
 
-    if (!this.name) {
-      throw new Error("Missing name");
-    }
+    this.email = options.email ?? null;
+    this.name = options.name;
   }
 }
+
+export const validate: ValidateRedisEntityFn<TestEntityOne> = (entity) => {
+  if (!entity.email) {
+    throw new Error("Missing email");
+  }
+
+  if (!entity.name) {
+    throw new Error("Missing name");
+  }
+};

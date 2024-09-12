@@ -1,31 +1,29 @@
 import { ILogger } from "@lindorm/logger";
 import { Constructor } from "@lindorm/types";
 import { Redis } from "ioredis";
-import { RedisError } from "../errors";
+import { RedisRepositoryError } from "../errors";
 import {
   IRedisEntity,
   IRedisRepository,
   IRedisSource,
-  SourceRepositoryOptions,
+  RedisSourceRepositoryOptions,
 } from "../interfaces";
-import { RedisSourceOptions } from "../types";
+import { RedisSourceEntity, RedisSourceOptions } from "../types";
 import { RedisRepository } from "./RedisRepository";
 import { EntityScanner } from "./private";
 
 export class RedisSource implements IRedisSource {
-  private readonly entities: Array<Constructor<IRedisEntity>>;
+  private readonly entities: Array<RedisSourceEntity>;
   private readonly logger: ILogger;
   private readonly namespace: string | undefined;
-  private readonly useCache: boolean | undefined;
 
-  public readonly redis: Redis;
+  public readonly client: Redis;
 
   public constructor(options: RedisSourceOptions) {
-    this.logger = options.logger;
+    this.logger = options.logger.child(["RedisSource"]);
     this.namespace = options.namespace;
-    this.useCache = options.useCache;
 
-    this.redis = options.config
+    this.client = options.config
       ? new Redis(options.url, options.config)
       : new Redis(options.url);
 
@@ -35,33 +33,41 @@ export class RedisSource implements IRedisSource {
   // public
 
   public async connect(): Promise<void> {
-    await this.redis.connect();
+    await this.client.connect();
   }
 
   public async disconnect(): Promise<void> {
-    await this.redis.quit();
+    await this.client.quit();
   }
 
-  public repository<T extends IRedisEntity>(
-    Entity: Constructor<T>,
-    options: SourceRepositoryOptions = {},
-  ): IRedisRepository<T> {
-    this.verify(Entity);
+  public repository<E extends IRedisEntity>(
+    Entity: Constructor<E>,
+    options: RedisSourceRepositoryOptions<E> = {},
+  ): IRedisRepository<E> {
+    const config = this.config(Entity);
 
     return new RedisRepository({
       Entity,
-      logger: this.logger,
+      client: this.client,
+      logger: options.logger ?? this.logger,
       namespace: this.namespace,
-      redis: this.redis,
-      useCache: options.useCache ?? this.useCache,
+      validate: options.validate ?? config.validate,
     });
+  }
+
+  public async setup(): Promise<void> {
+    await this.client.connect();
   }
 
   // private
 
-  private verify(Entity: Constructor<IRedisEntity>): void {
-    if (this.entities.find((entity) => entity === Entity)) return;
+  private config(Entity: Constructor<IRedisEntity>): RedisSourceEntity {
+    const config = this.entities.find((entity) => entity.Entity === Entity);
 
-    throw new RedisError(`Entity not found in entities list`);
+    if (config) {
+      return config;
+    }
+
+    throw new RedisRepositoryError(`Entity not found in entities list`);
   }
 }

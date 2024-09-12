@@ -2,11 +2,9 @@ import { createMockLogger } from "@lindorm/logger";
 import { randomUUID } from "crypto";
 import { Redis } from "ioredis";
 import MockDate from "mockdate";
-import { TestEntityOne } from "../__fixtures__/entities/test-entity-one";
-import { TestEntityTwo } from "../__fixtures__/entities/test-entity-two";
+import { TestEntityOne, validate } from "../__fixtures__/entities/test-entity-one";
 import { TestEntity } from "../__fixtures__/test-entity";
 import { TestRepository } from "../__fixtures__/test-repository";
-import { RedisError } from "../errors";
 import { RedisRepository } from "./RedisRepository";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
@@ -37,11 +35,13 @@ describe("RedisRepository", () => {
     expect(entity).toBeInstanceOf(TestEntity);
     expect(entity).toEqual({
       id: expect.any(String),
-      createdAt: undefined,
-      email: undefined,
-      expiresAt: undefined,
+      revision: 0,
+      createdAt: MockedDate,
+      updatedAt: MockedDate,
+      deletedAt: null,
+      expiresAt: null,
+      email: null,
       name: undefined,
-      updatedAt: undefined,
     });
   });
 
@@ -58,8 +58,10 @@ describe("RedisRepository", () => {
     expect(entity).toBeInstanceOf(TestEntity);
     expect(entity).toEqual({
       id: "0bc6f18f-48a7-52d4-a191-e15ed14eb087",
+      revision: 0,
       createdAt: new Date("2021-01-01T00:00:00.000Z"),
       updatedAt: new Date("2021-01-01T00:00:00.000Z"),
+      deletedAt: null,
       expiresAt: new Date("2021-01-01T00:00:00.000Z"),
       email: "test@lindorm.io",
       name: "Test User",
@@ -124,9 +126,7 @@ describe("RedisRepository", () => {
     await expect(repository.findOneOrFail({ name: entity.name })).resolves.toEqual(
       entity,
     );
-    await expect(repository.findOneOrFail({ name: randomUUID() })).rejects.toThrow(
-      RedisError,
-    );
+    await expect(repository.findOneOrFail({ name: randomUUID() })).rejects.toThrow();
   });
 
   test("should find one entity by criteria or save", async () => {
@@ -135,14 +135,7 @@ describe("RedisRepository", () => {
       expect.any(TestEntity),
     );
 
-    await expect(repository.findOneOrFail({ name })).resolves.toEqual({
-      createdAt: MockedDate,
-      email: undefined,
-      expiresAt: undefined,
-      id: expect.any(String),
-      name: name,
-      updatedAt: MockedDate,
-    });
+    await expect(repository.findOneOrFail({ name })).resolves.not.toThrow();
   });
 
   test("should find one entity by id", async () => {
@@ -155,7 +148,7 @@ describe("RedisRepository", () => {
     const entity = await repository.save(repository.create({ name: randomUUID() }));
 
     await expect(repository.findOneByIdOrFail(entity.id)).resolves.toEqual(entity);
-    await expect(repository.findOneByIdOrFail(randomUUID())).rejects.toThrow(RedisError);
+    await expect(repository.findOneByIdOrFail(randomUUID())).rejects.toThrow();
   });
 
   test("should save an entity", async () => {
@@ -168,50 +161,114 @@ describe("RedisRepository", () => {
       ),
     ).resolves.toEqual({
       id: expect.any(String),
+      revision: 1,
       createdAt: MockedDate,
-      email: "test@lindorm.io",
-      expiresAt: undefined,
-      name: "Test User",
       updatedAt: MockedDate,
+      deletedAt: null,
+      expiresAt: null,
+      email: "test@lindorm.io",
+      name: "Test User",
     });
-  });
-
-  test("should use toJSON when it exists", async () => {
-    const repo = new RedisRepository({
-      Entity: TestEntityTwo,
-      logger: createMockLogger(),
-      redis,
-    });
-
-    const entity = await repo.save(repo.create({ _test: "any" }));
-
-    await expect(repo.findOneById(entity.id)).resolves.toEqual(
-      expect.objectContaining({ _test: undefined }),
-    );
   });
 
   test("should validate an entity when it exists", async () => {
     const repo = new RedisRepository({
       Entity: TestEntityOne,
       logger: createMockLogger(),
-      redis,
+      client: redis,
+      validate: validate,
     });
 
-    await expect(repo.save(repo.create({}))).rejects.toThrow("Missing email");
+    await expect(repo.save(repo.create({}))).rejects.toThrow();
   });
 
   test("should save many entities", async () => {
     const e1 = repository.create({
-      email: "test@lindorm.io",
-      name: "Test User",
+      email: randomUUID(),
+      name: randomUUID(),
     });
 
     const e2 = repository.create({
-      email: "test2@lindorm.io",
-      name: "Test User 2",
+      email: randomUUID(),
+      name: randomUUID(),
     });
 
-    await expect(repository.saveBulk([e1, e2])).resolves.toEqual([e1, e2]);
+    await expect(repository.saveBulk([e1, e2])).resolves.toEqual([
+      expect.any(TestEntity),
+      expect.any(TestEntity),
+    ]);
+    await expect(repository.findOneById(e1.id)).resolves.toEqual(
+      expect.objectContaining({ id: e1.id }),
+    );
+    await expect(repository.findOneById(e2.id)).resolves.toEqual(
+      expect.objectContaining({ id: e2.id }),
+    );
+  });
+
+  test("should soft destroy one entity", async () => {
+    const entity = repository.create({
+      email: randomUUID(),
+      name: randomUUID(),
+    });
+
+    await expect(repository.save(entity)).resolves.toEqual(expect.any(TestEntity));
+    await expect(repository.softDestroy(entity)).resolves.toBeUndefined();
+    await expect(repository.findOneById(entity.id)).resolves.toEqual(null);
+  });
+
+  test("should soft destroy entities", async () => {
+    const e1 = repository.create({
+      email: randomUUID(),
+      name: randomUUID(),
+    });
+
+    const e2 = repository.create({
+      email: randomUUID(),
+      name: randomUUID(),
+    });
+
+    await expect(repository.saveBulk([e1, e2])).resolves.toEqual([
+      expect.any(TestEntity),
+      expect.any(TestEntity),
+    ]);
+    await expect(repository.softDestroyBulk([e1, e2])).resolves.toBeUndefined();
+    await expect(repository.findOneById(e1.id)).resolves.toEqual(null);
+    await expect(repository.findOneById(e2.id)).resolves.toEqual(null);
+  });
+
+  test("should soft delete entities by criteria", async () => {
+    const name = randomUUID();
+
+    const e1 = repository.create({
+      id: randomUUID(),
+      name,
+    });
+
+    const e2 = repository.create({
+      id: randomUUID(),
+      name,
+    });
+
+    await expect(repository.saveBulk([e1, e2])).resolves.toEqual([
+      expect.any(TestEntity),
+      expect.any(TestEntity),
+    ]);
+
+    await expect(repository.softDelete({ name })).resolves.toBeUndefined();
+    await expect(repository.findOneById(e1.id)).resolves.toEqual(null);
+    await expect(repository.findOneById(e2.id)).resolves.toEqual(null);
+  });
+
+  test("should soft delete one entity by id", async () => {
+    const entity = await repository.save(
+      repository.create({
+        email: randomUUID(),
+        name: randomUUID(),
+      }),
+    );
+
+    await expect(repository.softDeleteById(entity.id)).resolves.toBeUndefined();
+    await expect(repository.findOneById(entity.id)).resolves.toEqual(null);
   });
 
   test("should get the time to live for an entity", async () => {

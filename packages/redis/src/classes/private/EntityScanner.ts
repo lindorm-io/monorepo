@@ -1,10 +1,9 @@
-import { isString } from "@lindorm/is";
+import { isFunction, isObject, isString } from "@lindorm/is";
 import { ScanData, Scanner } from "@lindorm/scanner";
 import { Constructor, Dict } from "@lindorm/types";
-import { RedisError } from "../../errors";
+import { RedisRepositoryError } from "../../errors";
 import { IRedisEntity } from "../../interfaces";
-
-type Result = Constructor<IRedisEntity>;
+import { RedisSourceEntities, RedisSourceEntity } from "../../types";
 
 export class EntityScanner {
   private readonly scanner: Scanner;
@@ -18,16 +17,25 @@ export class EntityScanner {
 
   // public
 
-  public scan(array: Array<Constructor<IRedisEntity> | string>): Array<Result> {
-    const result: Array<Constructor<IRedisEntity>> = [];
-
-    const entities = array.filter((entity) => !isString(entity)) as Array<
-      Constructor<IRedisEntity>
-    >;
-
-    result.push(...entities);
+  public scan(array: RedisSourceEntities): Array<RedisSourceEntity> {
+    const result: Array<RedisSourceEntity> = [];
 
     const strings = array.filter((entity) => isString(entity)) as Array<string>;
+
+    const options = array.filter(
+      (opts) => isObject(opts) && (opts as RedisSourceEntity).Entity,
+    ) as Array<RedisSourceEntity>;
+
+    const entities = array
+      .filter(
+        (opts) =>
+          !isObject(opts) &&
+          !isString(opts) &&
+          (opts as Constructor<IRedisEntity>).prototype,
+      )
+      .map((i) => ({ Entity: i })) as Array<RedisSourceEntity>;
+
+    result.push(...options, ...entities);
 
     if (!strings.length) return result;
 
@@ -47,8 +55,8 @@ export class EntityScanner {
 
   // private
 
-  private scanDirectory(data: ScanData): Array<Constructor<IRedisEntity>> {
-    const result: Array<Constructor<IRedisEntity>> = [];
+  private scanDirectory(data: ScanData): Array<RedisSourceEntity> {
+    const result: Array<RedisSourceEntity> = [];
 
     for (const child of data.children) {
       if (child.isDirectory) {
@@ -62,24 +70,34 @@ export class EntityScanner {
     return result;
   }
 
-  private scanFile(data: ScanData): Constructor<IRedisEntity> {
+  private scanFile(data: ScanData): RedisSourceEntity {
     const module = this.scanner.require<Dict>(data.fullPath);
-    const values = Object.values(module);
+    const entries = Object.entries(module);
+    const result: Partial<RedisSourceEntity> = {};
 
-    if (values.length === 0) {
-      throw new RedisError(`No entities found in file: ${data.fullPath}`);
+    if (entries.length === 0) {
+      throw new RedisRepositoryError(`No entities found in file: ${data.fullPath}`);
     }
 
-    if (values.length === 1 && values.includes("default")) {
-      throw new RedisError(`No default export allowed for class: ${data.fullPath}`);
+    for (const [key, value] of Object.entries(module)) {
+      if (key === "default") continue;
+      if (result.Entity && result.validate) break;
+
+      if (key === "validate" && isFunction(value)) {
+        result.validate = value;
+        continue;
+      }
+
+      if (value.prototype) {
+        result.Entity = value;
+        continue;
+      }
     }
 
-    for (const value of values) {
-      if (value.default) continue;
-
-      return value as Constructor<IRedisEntity>;
+    if (!result.Entity) {
+      throw new RedisRepositoryError(`No entities found in file: ${data.fullPath}`);
     }
 
-    throw new RedisError(`No entities found in file: ${data.fullPath}`);
+    return result as RedisSourceEntity;
   }
 }
