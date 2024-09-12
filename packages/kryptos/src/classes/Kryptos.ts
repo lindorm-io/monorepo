@@ -4,6 +4,13 @@ import { removeUndefined } from "@lindorm/utils";
 import { randomUUID } from "crypto";
 import { KryptosError } from "../errors";
 import {
+  IKryptos,
+  IKryptosEc,
+  IKryptosOct,
+  IKryptosOkp,
+  IKryptosRsa,
+} from "../interfaces";
+import {
   AutoGenerateKryptos,
   GenerateEcKryptos,
   GenerateKryptos,
@@ -36,13 +43,6 @@ import {
   LindormJwk,
   RsaModulus,
 } from "../types";
-import {
-  IKryptos,
-  IKryptosEc,
-  IKryptosOct,
-  IKryptosOkp,
-  IKryptosRsa,
-} from "../types/interfaces";
 import { exportToB64 } from "../utils/private/export/export-b64";
 import { exportToDer } from "../utils/private/export/export-der";
 import { exportToJwk } from "../utils/private/export/export-jwk";
