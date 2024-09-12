@@ -26,9 +26,9 @@
   },
   "dependencies": {
     "@lindorm/is": "^0.1.5",
-    "uuid": "^9.0.1"
+    "uuid": "^10.0.0"
   },
   "devDependencies": {
-    "@types/uuid": "^9.0.8"
+    "@types/uuid": "^10.0.0"
   }
 }
