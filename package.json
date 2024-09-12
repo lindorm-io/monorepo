@@ -11,8 +11,8 @@
     "lint": "lerna exec -- eslint . --ext .ts,.tsx",
     "prepare": "husky",
     "release": "lerna publish",
-    "test": "lerna run test:ci",
-    "test:compd": "compd --file docker-compose.yml npm run test",
+    "test": "compd --file docker-compose.yml lerna run test:ci",
+    "test:ci": "lerna run test:ci",
     "typecheck": "lerna run typecheck:ci",
     "update": "ncu -u && lerna run update && npm install && npm audit fix"
   },
