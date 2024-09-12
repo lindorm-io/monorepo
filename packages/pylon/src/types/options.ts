@@ -28,7 +28,7 @@ export type PylonOptions<
   issuer?: string;
   keys?: Array<string>;
   name?: string;
-  openIdConfiguration?: OpenIdConfigurationOptions;
+  openIdConfiguration?: Partial<OpenIdConfigurationOptions>;
   parseBody?: ParseBodyOptions;
   port?: number;
   setup?: PylonSetup;
