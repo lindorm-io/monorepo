@@ -1,7 +1,7 @@
+import dotenvx from "@dotenvx/dotenvx";
 import { ChangeCase, changeKeys } from "@lindorm/case";
 import { Dict } from "@lindorm/types";
 import c from "config";
-import dotenv from "dotenv";
 import { mergeObjectWithProcessEnv } from "./private";
 
 type NpmInformation = {
@@ -18,12 +18,13 @@ type Configuration<T extends Dict = Dict> = NpmInformation & T;
 export const configuration = <T extends Dict = Dict>(
   mode: ChangeCase = ChangeCase.Camel,
 ): Configuration<T> => {
-  dotenv.config();
+  dotenvx.config({
+    path: process.env.NODE_ENV ? [`.env.${process.env.NODE_ENV}`, ".env"] : ".env",
+    quiet: true,
+  });
 
-  const config = changeKeys<T>(
-    mergeObjectWithProcessEnv<T>(process.env, c.util.toObject()),
-    mode,
-  );
+  const merged = mergeObjectWithProcessEnv<T>(process.env, c.util.toObject());
+  const config = changeKeys<T>(merged, mode);
 
   const npm = {
     package: {
