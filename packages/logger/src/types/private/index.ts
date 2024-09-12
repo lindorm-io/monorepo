@@ -1,2 +1,2 @@
 export * from "./from-logger";
-export * from "./log";
+export * from "./internal-log";

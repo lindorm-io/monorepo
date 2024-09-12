@@ -1,11 +1,19 @@
 import { Dict } from "@lindorm/types";
+import { LogLevel } from "../enums";
 
-export type LogContext = Array<string>;
+export type Log = {
+  context?: LogContent;
+  extra?: Array<LogContent>;
+  level?: LogLevel;
+  message: string;
+};
 
-export type LogDetails = Dict | Error | null | undefined;
+export type LogContent = Dict | Error | null | undefined;
 
-export type LogSession = Record<string, string | number | boolean>;
+export type LogCorrelation = Dict<string | number | boolean>;
+
+export type LogScope = Array<string>;
 
 export type FilterCallback = (data: any) => string;
 
-export type FilterRecord = Record<string, FilterCallback | undefined>;
+export type FilterRecord = Dict<FilterCallback | undefined>;

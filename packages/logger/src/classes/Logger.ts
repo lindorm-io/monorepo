@@ -7,33 +7,33 @@ import { LogLevel } from "../enums";
 import { ILogger } from "../interfaces";
 import {
   FilterRecord,
-  LogContext,
-  LogDetails,
-  LogSession,
+  Log,
+  LogContent,
+  LogCorrelation,
   LoggerOptions,
+  LogScope,
 } from "../types";
-import { FromLogger, Log } from "../types/private";
+import { FromLogger, InternalLog } from "../types/private";
 import { defaultFilterCallback, readableFormat } from "../utils/private";
 
 export class Logger implements ILogger {
+  private readonly correlation: LogCorrelation;
   private readonly filters: FilterRecord;
+  private readonly scope: LogScope;
   private readonly winston: WinstonLogger;
-
-  private context: LogContext;
-  private session: LogSession;
 
   public constructor(options?: LoggerOptions);
   public constructor(fromLogger: FromLogger);
   public constructor(options: LoggerOptions | FromLogger = {}) {
     if ("_mode" in options && options._mode === "from_logger") {
-      this.context = snakeArray(options.context);
+      this.correlation = camelKeys(options.correlation);
       this.filters = options.filters;
-      this.session = camelKeys(options.session);
+      this.scope = snakeArray(options.scope);
       this.winston = options.winston;
     } else {
-      this.context = [];
+      this.correlation = {};
       this.filters = {};
-      this.session = {};
+      this.scope = [];
       this.winston = winston.createLogger();
 
       const level = (options as LoggerOptions).level ?? LogLevel.Info;
@@ -44,7 +44,7 @@ export class Logger implements ILogger {
           handleExceptions: true,
           level,
           format: readable
-            ? winston.format.printf((log) => readableFormat(log as Log))
+            ? winston.format.printf((log) => readableFormat(log as InternalLog))
             : winston.format.json(),
         }),
       );
@@ -54,13 +54,19 @@ export class Logger implements ILogger {
   // utility
 
   public child(): ILogger;
-  public child(context: LogContext): ILogger;
-  public child(session: LogSession): ILogger;
-  public child(arg1?: LogContext | LogSession, arg2?: LogSession): ILogger {
-    const context = isArray(arg1) ? arg1 : [];
-    const session = isObject(arg1) ? arg1 : isObject(arg2) ? arg2 : {};
+  public child(scope: LogScope): ILogger;
+  public child(correlation: LogCorrelation): ILogger;
+  public child(arg1?: LogScope | LogCorrelation, arg2?: LogCorrelation): ILogger {
+    const scope = isArray(arg1) ? arg1 : [];
+    const correlation = isObject(arg1) ? arg1 : isObject(arg2) ? arg2 : {};
 
-    return this.fromLogger(context, session);
+    return new Logger({
+      _mode: "from_logger",
+      correlation: { ...this.correlation, ...(correlation as LogCorrelation) },
+      filters: { ...this.filters },
+      scope: [...this.scope.concat(scope)],
+      winston: this.winston,
+    });
   }
 
   public filter(path: string, callback?: (value: any) => any): void {
@@ -70,72 +76,109 @@ export class Logger implements ILogger {
   // logging
 
   public error(error: Error): void;
-  public error(message: string, ...details: Array<Error | Dict>): void;
-  public error(arg1: Error | string, ...details: Array<Error | Dict>): void {
-    const isErr = isError(arg1);
+  public error(message: string, context?: LogContent, extra?: Array<LogContent>): void;
+  public error(arg1: Error | string, arg2?: Error | Dict, extra?: Array<Dict>): void {
+    const isArg1Error = isError(arg1);
+    const isArg2Error = isError(arg2);
 
-    this.log({
-      details: isErr ? [arg1] : details?.length ? details : [],
+    this.logToWinston({
+      context: isArg1Error ? arg1 : isArg2Error ? arg2 : {},
+      extra: extra ?? [],
       level: LogLevel.Error,
-      message: isErr ? arg1.message : arg1,
+      message: isArg1Error ? arg1.message : arg1,
     });
   }
 
-  public warn(message: string, ...details: Array<Dict>): void {
-    this.log({ details, level: LogLevel.Warn, message });
+  public warn(message: string, context?: LogContent, extra?: Array<LogContent>): void {
+    this.logToWinston({
+      context: context ?? {},
+      extra: extra ?? [],
+      level: LogLevel.Warn,
+      message,
+    });
   }
 
-  public info(message: string, ...details: Array<Dict>): void {
-    this.log({ details, level: LogLevel.Info, message });
+  public info(message: string, context?: LogContent, extra?: Array<LogContent>): void {
+    this.logToWinston({
+      context: context ?? {},
+      extra: extra ?? [],
+      level: LogLevel.Info,
+      message,
+    });
   }
 
-  public verbose(message: string, ...details: Array<Dict>): void {
-    this.log({ details, level: LogLevel.Verbose, message });
+  public verbose(message: string, context?: LogContent, extra?: Array<LogContent>): void {
+    this.logToWinston({
+      context: context ?? {},
+      extra: extra ?? [],
+      level: LogLevel.Verbose,
+      message,
+    });
   }
 
-  public debug(message: string, ...details: Array<Dict>): void {
-    this.log({ details, level: LogLevel.Debug, message });
+  public debug(message: string, context?: LogContent, extra?: Array<LogContent>): void {
+    this.logToWinston({
+      context: context ?? {},
+      extra: extra ?? [],
+      level: LogLevel.Debug,
+      message,
+    });
   }
 
-  public silly(message: string, ...details: Array<Dict>): void {
-    this.log({ details, level: LogLevel.Silly, message });
+  public silly(message: string, context?: LogContent, extra?: Array<LogContent>): void {
+    this.logToWinston({
+      context: context ?? {},
+      extra: extra ?? [],
+      level: LogLevel.Silly,
+      message,
+    });
+  }
+
+  public log(log: Log): void {
+    this.logToWinston({
+      context: log.context ?? {},
+      extra: log.extra ?? [],
+      level: log.level ?? LogLevel.Info,
+      message: log.message,
+    });
   }
 
   // private
 
-  private getFilteredDetails(details: LogDetails): LogDetails {
-    if (!isObject(details)) return details ?? undefined;
-    if (!Object.keys(this.filters).length) return details;
-    if (isError((details as any)?.error) && isArray((details as any)?.stack))
-      return details;
+  private getFilteredContent(content: LogContent): LogContent {
+    if (!isObject(content)) return content ?? undefined;
+    if (!Object.keys(this.filters).length) return content;
+    if (isError((content as any)?.error) && isArray((content as any)?.stack))
+      return content;
 
     try {
-      const data = structuredClone(details);
+      const data = structuredClone(content);
 
       for (const [path, callback] of Object.entries(this.filters)) {
         if (!callback) continue;
 
-        const item = get(details, path);
+        const item = get(content, path);
         if (!item) continue;
 
         set(data, path, callback(item));
       }
 
       return data;
-    } catch (err) {
-      return details;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (err: any) {
+      return content;
     }
   }
 
-  private extractErrorData(details: LogDetails): LogDetails {
-    if (!isError(details)) return details;
+  private extractErrorData(content: LogContent): LogContent {
+    if (!isError(content)) return content;
 
     return {
-      error: details,
-      name: details.name,
-      message: details.message,
-      stack: details.stack
-        ? details.stack
+      error: content,
+      name: content.name,
+      message: content.message,
+      stack: content.stack
+        ? content.stack
             .split("\n")
             .map((s) => s.trim())
             .filter((s) => s)
@@ -143,29 +186,20 @@ export class Logger implements ILogger {
     };
   }
 
-  // private
-
-  private log(log: Omit<Log, "context" | "session" | "time">): void {
+  private logToWinston(log: Omit<InternalLog, "correlation" | "scope" | "time">): void {
     this.winston.log({
-      context: this.context,
-      details: log.details
-        .filter((d) => d)
+      context: log.context
+        ? this.getFilteredContent(this.extractErrorData(log.context))
+        : {},
+      correlation: this.correlation,
+      extra: log.extra
+        .filter(Boolean)
         .map((d) => this.extractErrorData(d))
-        .map((d) => this.getFilteredDetails(d)),
+        .map((d) => this.getFilteredContent(d)),
       level: log.level,
       message: log.message,
-      session: this.session,
+      scope: this.scope,
       time: new Date(),
-    });
-  }
-
-  private fromLogger(context: Array<string>, session: Dict): ILogger {
-    return new Logger({
-      _mode: "from_logger",
-      context: structuredClone(this.context.concat(context)),
-      filters: structuredClone(this.filters),
-      session: { ...structuredClone(this.session), ...session },
-      winston: this.winston,
     });
   }
 }
