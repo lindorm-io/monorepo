@@ -2,7 +2,10 @@ name: pull-request
 
 on:
   pull_request:
-    types: [opened, reopened, synchronize]
+    types:
+      - "opened"
+      - "reopened"
+      - "synchronize"
 
 env:
   NODE_VERSION: 20.x
@@ -32,11 +35,11 @@ jobs:
           npm run build
           npm run typecheck
 
-      # - name: Use Docker
-      #   uses: isbang/compose-action@v1.5.1
-      #   with:
-      #     compose-file: "./docker-compose.yml"
-      #     down-flags: "--volumes"
+      - name: Use Docker
+        uses: isbang/compose-action@v1.5.1
+        with:
+          compose-file: "./docker-compose.yml"
+          down-flags: "--volumes"
 
       - name: Test
-        run: npm run test
+        run: npm run test:ci

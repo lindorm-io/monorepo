@@ -33,14 +33,14 @@ jobs:
           npm run build
           npm run typecheck
 
-      # - name: Use Docker
-      #   uses: isbang/compose-action@v1.5.1
-      #   with:
-      #     compose-file: "./docker-compose.yml"
-      #     down-flags: "--volumes"
+      - name: Use Docker
+        uses: isbang/compose-action@v1.5.1
+        with:
+          compose-file: "./docker-compose.yml"
+          down-flags: "--volumes"
 
       - name: Test
-        run: npm run test
+        run: npm run test:ci
 
       - name: Authenticate Package Registry
         run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_AUTH_TOKEN }}" > .npmrc
