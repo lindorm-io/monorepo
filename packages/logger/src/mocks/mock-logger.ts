@@ -5,9 +5,7 @@ type LogFn = (...args: any) => void;
 export const createMockLogger = (logFn?: LogFn): ILogger => {
   const logger = {
     child: jest.fn().mockImplementation((): ILogger => createMockLogger(logFn)),
-    context: jest.fn(),
     filter: jest.fn(),
-    session: jest.fn(),
 
     error: jest
       .fn()
@@ -23,6 +21,7 @@ export const createMockLogger = (logFn?: LogFn): ILogger => {
     silly: jest
       .fn()
       .mockImplementation((...args) => (logFn ? logFn(...args) : undefined)),
+    log: jest.fn().mockImplementation((arg) => (logFn ? logFn(arg) : undefined)),
   };
 
   return logger;

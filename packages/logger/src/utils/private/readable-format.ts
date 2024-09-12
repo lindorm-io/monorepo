@@ -1,12 +1,12 @@
 import { isObject } from "@lindorm/is";
 import { Dict } from "@lindorm/types";
 import fastSafeStringify from "fast-safe-stringify";
-import { black, blue, cyan, gray, green, red, white, yellow } from "picocolors";
+import { blue, cyan, gray, green, red, white, yellow } from "picocolors";
 import { Formatter } from "picocolors/types";
 import { inspect } from "util";
 import { LogLevel } from "../../enums";
-import { LogDetails } from "../../types";
-import { Log } from "../../types/private";
+import { LogContent } from "../../types";
+import { InternalLog } from "../../types/private";
 
 const colourise = (
   formatter: Formatter,
@@ -30,6 +30,7 @@ const formatLevel = (level: LogLevel, colours: boolean = true): string => {
       return colourise(blue, level.toUpperCase(), colours);
     case LogLevel.Silly:
       return colourise(gray, level.toUpperCase(), colours);
+
     default:
       return colourise(white, "UNKNOWN", colours);
   }
@@ -41,6 +42,9 @@ const levelColor = (level: LogLevel, input: string, colours: boolean = true): st
       return colourise(red, input, colours);
     case LogLevel.Warn:
       return colourise(yellow, input, colours);
+    case LogLevel.Silly:
+      return colourise(gray, input, colours);
+
     default:
       return colourise(white, input, colours);
   }
@@ -59,58 +63,55 @@ const colouriseError = (error: Error, colours: boolean = true): string => {
   const { errors, stack, ...rest } = error as any;
 
   if (Object.keys(rest).length) {
-    const details = formatContent(rest, false);
-    return `${colourise(red, stack, colours)}\n${colourise(red, details, colours)}`;
+    const content = formatContent(rest, false);
+    return `${colourise(red, stack, colours)}\n${colourise(red, content, colours)}`;
   }
 
-  const details = error.stack ? error.stack : error;
+  const content = error.stack ? error.stack : error;
 
-  return `${colourise(red, details as string, colours)}`;
+  return `${colourise(red, content as string, colours)}`;
 };
 
-const readableDetails = (
-  logDetails: LogDetails,
+const readableContent = (
+  content: LogContent,
   colours: boolean = true,
 ): string | undefined => {
-  if (!logDetails) return;
+  if (!content) return;
 
-  if (logDetails instanceof Error) {
-    return colouriseError(logDetails, colours);
+  if (content instanceof Error) {
+    return colouriseError(content, colours);
   }
 
-  if (logDetails.error instanceof Error) {
-    return colouriseError(logDetails.error, colours);
+  if (content.error instanceof Error) {
+    return colouriseError(content.error, colours);
   }
 
-  if (isObject(logDetails)) {
-    return formatContent(logDetails, colours);
+  if (isObject(content)) {
+    return formatContent(content, colours);
   }
 };
 
-export const readableFormat = (log: Log): string => {
-  if (!log.time || !log.context) {
-    return formatContent(log, false);
-  }
-
+export const readableFormat = (log: InternalLog): string => {
   try {
-    const time = colourise(black, log.time.toISOString());
-    const colon = colourise(black, ":");
+    const time = colourise(gray, log.time.toISOString()) + " ";
+    const colon = colourise(gray, ": ");
     const level = formatLevel(log.level);
     const message = levelColor(log.level, log.message);
 
-    const contextValues = log.context ? Object.values(log.context) : [];
-    const contextString = contextValues.length
-      ? `[ ${contextValues.join(" | ")} ]`
-      : undefined;
-    const context = contextString ? colourise(black, contextString) : "";
+    const scopeString = log.scope.length ? `[ ${log.scope.join(" | ")} ]` : undefined;
+    const scope = scopeString ? " " + colourise(gray, scopeString) : "";
 
-    const content = `${time}  ${level}${colon} ${message} ${context}`;
+    const pre = `${time}${level}${colon}${message}${scope}`;
 
-    const detailsArray = log.details.map((d) => readableDetails(d));
+    const context =
+      log.context && Object.keys(log.context).length ? log.context : undefined;
+    const contentArray = [context, ...log.extra]
+      .filter((d) => d)
+      .map((d) => readableContent(d!));
 
-    const details = detailsArray.length ? `\n${detailsArray.join("\n")}` : "";
+    const content = contentArray.length ? `\n${contentArray.join("\n")}` : "";
 
-    return `${content}${details}`;
+    return `${pre}${content}`;
   } catch (err) {
     console.error("error when formatting message", err);
 

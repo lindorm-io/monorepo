@@ -1,10 +1,10 @@
 import { Logger as WinstonLogger } from "winston";
-import { FilterRecord, LogContext, LogSession } from "../types";
+import { FilterRecord, LogCorrelation, LogScope } from "../types";
 
 export type FromLogger = {
   _mode: "from_logger";
-  context: LogContext;
+  correlation: LogCorrelation;
   filters: FilterRecord;
-  session: LogSession;
+  scope: LogScope;
   winston: WinstonLogger;
 };

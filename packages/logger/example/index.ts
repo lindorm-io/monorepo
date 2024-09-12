@@ -3,9 +3,6 @@ import { Logger, LogLevel } from "../src";
 
 const logger = new Logger({ level: LogLevel.Silly, readable: true });
 
-const child1 = logger.child(["logger"]);
-const child2 = child1.child(["child1"]);
-
 const data = { one: 1, two: "two" };
 
 logger.silly("this is a silly log");
@@ -34,34 +31,57 @@ logger.error(
   }),
 );
 
-logger.info(
-  "this will be displayed with multiple details objects",
-  { details: "data" },
+logger.info("this will be displayed with multiple extra objects", { context: "data" }, [
   { other: 123 },
   { stuff: { else: true } },
-);
+]);
 
-logger.context(["extra", "stuff"]);
+logger.log({
+  context: { data: "context" },
+  extra: [{ extra: "extra" }],
+  level: LogLevel.Debug,
+  message: "this is a log with everything",
+});
 
-logger.info("this will be displayed with a context object");
+logger.log({
+  context: { data: "context" },
+  level: LogLevel.Debug,
+  message: "this is a log without extra",
+});
 
+logger.log({
+  level: LogLevel.Debug,
+  message: "this is a log without context",
+});
+
+logger.log({
+  message: "this is a log without level",
+});
+
+const child1 = logger.child(["logger"]);
 child1.info("this is a log from child 1");
 
+const child2 = child1.child(["child1"]);
 child2.info("this is a log from child 2");
+
+const child3 = child2.child(["extra", "stuff"]);
+child3.info("this will be displayed with a scope array");
 
 const logger2 = new Logger({ level: LogLevel.Info, readable: true });
 
 logger2.info("this will not have any colour", { details: "data" });
 
-logger2.info("data is not changed", data);
+logger2.info("data is not filtered", data);
 
 logger.filter("two");
 
 logger.info("this will be filtered", data);
 
+logger.info("data will not be changed", { readable: data });
+
 const logger3 = new Logger({ level: LogLevel.Info });
 
-logger.session({ id: "session-id" });
+logger.child({ id: "session-id" });
 
 logger3.info("this is a log from session logger with data", data);
 
