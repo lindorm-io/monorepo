@@ -7,6 +7,7 @@ describe("configuration", () => {
     jest.resetModules();
 
     process.env = {
+      NODE_ENV: "test",
       ONE_PARENT_WITH_NUMBER: "456",
       ONE_PARENT_WITH_STRING: "replaced string value",
       TWO_PARENT_WITH_OBJECT_WITH_STRING: "replaced parent value",
