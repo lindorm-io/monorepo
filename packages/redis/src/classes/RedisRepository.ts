@@ -7,36 +7,39 @@ import { Constructor, DeepPartial } from "@lindorm/types";
 import { filter, find } from "@lindorm/utils";
 import { randomUUID } from "crypto";
 import { Redis } from "ioredis";
-import { RedisError } from "../errors";
+import { z } from "zod";
+import { RedisRepositoryError } from "../errors";
 import { Criteria, IRedisEntity, IRedisRepository } from "../interfaces";
-import { RedisRepositoryOptions } from "../types";
+import { RedisRepositoryOptions, ValidateRedisEntityFn } from "../types";
 
-export class RedisRepository<E extends IRedisEntity> implements IRedisRepository<E> {
+export class RedisRepository<
+  E extends IRedisEntity,
+  O extends DeepPartial<E> = DeepPartial<E>,
+> implements IRedisRepository<E, O>
+{
   private readonly EntityConstructor: Constructor<E>;
+  private readonly client: Redis;
   private readonly keyPattern: string;
   private readonly logger: ILogger;
-  private readonly redis: Redis;
-  private readonly useCache: boolean;
-  private cache: Array<E>;
+  private readonly validate: ValidateRedisEntityFn<E> | undefined;
 
   public constructor(options: RedisRepositoryOptions<E>) {
-    this.EntityConstructor = options.Entity;
-
     this.logger = options.logger.child(["RedisRepository", options.Entity.name]);
-    this.redis = options.redis;
-    this.keyPattern = this.createKeyPattern(options);
-    this.useCache = options.useCache ?? false;
 
-    this.cache = [];
+    this.EntityConstructor = options.Entity;
+    this.keyPattern = this.createKeyPattern(options);
+    this.client = options.client;
+    this.validate = options.validate;
   }
 
   // public
 
   public async count(criteria: Criteria<E> = {}): Promise<number> {
     const scan = await this.scan();
-    const entities = filter(scan, criteria);
+    const extended = this.createDefaultFilter(criteria);
+    const entities = filter(scan, extended);
 
-    this.logger.silly("Counted entities", {
+    this.logger.debug("Counted documents", {
       count: entities.length,
       criteria,
       entities,
@@ -45,24 +48,22 @@ export class RedisRepository<E extends IRedisEntity> implements IRedisRepository
     return entities.length;
   }
 
-  public create(partial: DeepPartial<E> = {}): E {
-    const entity = new this.EntityConstructor(partial);
+  public create(options: O | E = {} as O): E {
+    const entity = new this.EntityConstructor(options);
 
-    entity.id = entity.id ?? partial.id ?? randomUUID();
+    entity.id = (options.id as string) ?? entity.id ?? randomUUID();
+    entity.revision = (options.revision as number) ?? entity.revision ?? 0;
+    entity.createdAt = (options.createdAt as Date) ?? entity.createdAt ?? new Date();
+    entity.updatedAt = (options.updatedAt as Date) ?? entity.updatedAt ?? new Date();
+    entity.deletedAt = (options.deletedAt as Date) ?? (entity.deletedAt as Date) ?? null;
+    entity.expiresAt = (options.expiresAt as Date) ?? (entity.expiresAt as Date) ?? null;
 
-    for (const [key, value] of Object.entries(partial)) {
-      if (value === undefined) continue;
-      if (entity[key as keyof E] !== undefined) continue;
-
-      entity[key as keyof E] = value as E[keyof E];
-    }
+    this.logger.debug("Created entity", { entity });
 
     return entity;
   }
 
   public async delete(criteria: Criteria<E>): Promise<void> {
-    this.logger.silly("Deleting entities", { criteria });
-
     if (isString(criteria.id)) {
       return this.deleteById(criteria.id);
     }
@@ -85,20 +86,21 @@ export class RedisRepository<E extends IRedisEntity> implements IRedisRepository
   public async destroy(entity: E): Promise<void> {
     const start = Date.now();
 
-    const result = await this.redis.del(this.key(entity));
-    const success = result === 1;
+    try {
+      const result = await this.client.del(this.key(entity));
+      const success = result === 1;
 
-    if (success) {
-      this.destroyEntityFromCache(entity);
+      this.logger.debug("Repository done: destroy", {
+        entity,
+        key: this.key(entity),
+        result,
+        success,
+        time: Date.now() - start,
+      });
+    } catch (error: any) {
+      this.logger.error("Repository error", error);
+      throw new RedisRepositoryError("Unable to destroy entity", { error });
     }
-
-    this.logger.silly("Destroyed entity", {
-      entity,
-      key: this.key(entity),
-      result,
-      success,
-      time: Date.now() - start,
-    });
   }
 
   public async destroyBulk(entities: Array<E>): Promise<void> {
@@ -106,26 +108,48 @@ export class RedisRepository<E extends IRedisEntity> implements IRedisRepository
   }
 
   public async exists(criteria: Criteria<E>): Promise<boolean> {
-    this.logger.silly("Checking entity existence", { criteria });
+    const count = await this.count(criteria);
+    const exists = count >= 1;
 
-    const entity = await this.findOne(criteria);
+    this.logger.debug("Repository done: exists", {
+      input: {
+        criteria,
+      },
+      result: {
+        exists,
+      },
+    });
 
-    return Boolean(entity);
+    if (count > 1) {
+      this.logger.warn("Multiple documents found", {
+        input: {
+          criteria,
+        },
+        result: {
+          count,
+        },
+      });
+    }
+
+    return exists;
   }
 
   public async find(criteria: Criteria<E> = {}): Promise<Array<E>> {
-    this.logger.silly("Finding entities", { criteria });
-
     if (isString(criteria.id)) {
       const entity = await this.findOneById(criteria.id);
-      if (entity) return [entity];
+
+      if (entity) {
+        return [entity];
+      }
+
       return [];
     }
 
     const scan = await this.scan();
-    const entities = filter(scan, criteria);
+    const extended = this.createDefaultFilter(criteria);
+    const entities = filter(scan, extended);
 
-    this.logger.silly("Found entities", {
+    this.logger.debug("Repository done: find", {
       count: entities.length,
       criteria,
       entities,
@@ -135,143 +159,197 @@ export class RedisRepository<E extends IRedisEntity> implements IRedisRepository
   }
 
   public async findOne(criteria: Criteria<E>): Promise<E | null> {
-    this.logger.silly("Finding entity", { criteria });
-
     if (isString(criteria.id)) {
       const entity = await this.findOneById(criteria.id);
-      if (entity) return entity;
+
+      if (entity) {
+        return entity;
+      }
+
       return null;
     }
 
     const scan = await this.scan();
-    const entity = find(scan, criteria);
+    const extended = this.createDefaultFilter(criteria);
+    const entity = find(scan, extended);
 
-    this.logger.silly("Found entity", {
+    this.logger.debug("Repository done: findOne", {
       criteria,
       entity,
     });
 
-    return entity || null;
-  }
-
-  public async findOneById(id: string): Promise<E | null> {
-    const start = Date.now();
-
-    const key = this.key(id);
-    const result = await this.redis.get(key);
-
-    if (!result) {
-      this.logger.silly("Entity not found", {
-        result,
-        key,
-        time: Date.now() - start,
-      });
-
-      return null;
-    }
-
-    const data = new Primitive<E>(result).toJSON();
-    const entity = this.create(data);
-
-    this.logger.silly("Found entity", {
-      entity,
-      key,
-      result,
-      time: Date.now() - start,
-    });
-
-    return entity;
-  }
-
-  public async findOneByIdOrFail(id: string): Promise<E> {
-    const entity = await this.findOneById(id);
-
-    if (!entity) {
-      throw new RedisError("Entity not found");
-    }
-
-    return entity;
+    return entity ?? null;
   }
 
   public async findOneOrFail(criteria: Criteria<E>): Promise<E> {
     const entity = await this.findOne(criteria);
 
     if (!entity) {
-      throw new RedisError("Entity not found");
+      throw new RedisRepositoryError("Entity not found", { debug: { criteria } });
     }
 
     return entity;
   }
 
-  public async findOneOrSave(criteria: Criteria<E>): Promise<E> {
+  public async findOneOrSave(criteria: DeepPartial<E>, options?: O): Promise<E> {
     const entity = await this.findOne(criteria);
     if (entity) return entity;
 
-    return this.save(this.create(criteria));
+    return this.save(this.create({ ...criteria, ...options } as O));
+  }
+
+  public async findOneById(id: string): Promise<E | null> {
+    const start = Date.now();
+
+    const key = this.key(id);
+
+    try {
+      const found = await this.client.get(key);
+
+      const primitive = found ? new Primitive<E>(found).toJSON() : null;
+      const document = primitive?.deletedAt === null ? primitive : null;
+
+      this.logger.debug("Repository done: findOneById", {
+        input: {
+          id,
+        },
+        result: {
+          document: found,
+          time: Date.now() - start,
+        },
+      });
+
+      if (!document) return null;
+
+      return this.create(document);
+    } catch (error: any) {
+      this.logger.error("Repository error", error);
+      throw new RedisRepositoryError("Unable to find entity", { error });
+    }
+  }
+
+  public async findOneByIdOrFail(id: string): Promise<E> {
+    const entity = await this.findOneById(id);
+
+    if (!entity) {
+      throw new RedisRepositoryError("Entity not found");
+    }
+
+    return entity;
   }
 
   public async save(entity: E): Promise<E> {
     const start = Date.now();
 
-    entity.createdAt = entity.createdAt ?? new Date();
-    entity.updatedAt = new Date();
+    this.validateEntity(entity);
 
-    const json = isFunction(entity.toJSON) ? entity.toJSON() : entity;
+    try {
+      const updated = this.updateEntityData(entity);
 
-    if (isFunction(entity.validate)) {
-      entity.validate();
+      const key = this.key(entity);
+      const ttl = entity.expiresAt ? expires(entity.expiresAt) : null;
+      const data = new Primitive(updated).toString();
+
+      let result: string | null;
+
+      if (ttl?.expiresIn) {
+        result = await this.client.setex(key, ttl.expiresIn, data);
+      } else {
+        result = await this.client.set(key, data);
+      }
+
+      const success = result === "OK";
+
+      this.logger.debug("Repository done: save", {
+        input: {
+          key,
+          ttl,
+          updated,
+        },
+        result: {
+          result,
+          success,
+          time: Date.now() - start,
+        },
+      });
+
+      return updated;
+    } catch (error: any) {
+      this.logger.error("Repository error", error);
+      throw new RedisRepositoryError("Unable to save entity", { error });
     }
-
-    const key = this.key(entity);
-    const ttl = entity.expiresAt ? expires(entity.expiresAt) : undefined;
-    const data = new Primitive(json).toString();
-
-    let result: string | null;
-
-    if (ttl?.expiresIn) {
-      result = await this.redis.setex(key, ttl.expiresIn, data);
-    } else {
-      result = await this.redis.set(key, data);
-    }
-
-    const success = result === "OK";
-
-    if (success) {
-      this.saveEntityToCache(entity);
-    }
-
-    this.logger.silly("Saved entity", {
-      entity,
-      key,
-      result,
-      success,
-      time: Date.now() - start,
-    });
-
-    return entity;
   }
 
   public async saveBulk(entities: Array<E>): Promise<Array<E>> {
     return Promise.all(entities.map((entity) => this.save(entity)));
   }
 
-  public async ttl(entity: E): Promise<number> {
-    return this.redis.ttl(this.key(entity));
+  public async softDestroy(entity: E): Promise<void> {
+    const updated = this.updateEntityData(entity);
+
+    updated.deletedAt = new Date();
+
+    await this.save(updated);
+  }
+
+  public async softDestroyBulk(entities: Array<E>): Promise<void> {
+    await Promise.all(entities.map((entity) => this.softDestroy(entity)));
+  }
+
+  public async softDelete(criteria: Criteria<E>): Promise<void> {
+    if (isString(criteria.id)) {
+      const entity = await this.findOneById(criteria.id);
+
+      if (entity) {
+        await this.softDestroy(entity);
+      }
+
+      return;
+    }
+
+    const entities = await this.find(criteria);
+
+    for (const entity of entities) {
+      await this.softDestroy(entity);
+    }
+  }
+
+  public async softDeleteById(id: string): Promise<void> {
+    const entity = await this.findOneById(id);
+
+    if (entity) {
+      await this.softDestroy(entity);
+    }
+  }
+
+  public async ttl(criteria: Criteria<E>): Promise<number> {
+    try {
+      const entity = await this.findOneOrFail(criteria);
+      return this.client.ttl(this.key(entity));
+    } catch (error: any) {
+      this.logger.error("Repository error", error);
+      throw new RedisRepositoryError("Unable to find ttl for entity", { error });
+    }
   }
 
   public async ttlById(id: string): Promise<number> {
-    return this.redis.ttl(this.key(id));
+    try {
+      return this.client.ttl(this.key(id));
+    } catch (error: any) {
+      this.logger.error("Repository error", error);
+      throw new RedisRepositoryError("Unable to find ttl for entity by id", { error });
+    }
   }
 
   // private
 
   private createKeyPattern(options: RedisRepositoryOptions<E>): string {
-    const nsp = options.namespace ? `${kebabCase(options.namespace)}:` : "";
-    const ent = `${kebabCase(options.Entity.name)}:`;
+    const nsp = options.namespace ? `${kebabCase(options.namespace)}` : "default";
+    const nam = `${kebabCase(options.Entity.name)}:`;
 
-    const key = `${nsp}entity:${ent}`;
+    const key = `${nsp}:entity:${nam}`;
 
-    this.logger.silly("Created key", { key });
+    this.logger.debug("Created key", { key });
 
     return key;
   }
@@ -281,63 +359,82 @@ export class RedisRepository<E extends IRedisEntity> implements IRedisRepository
     return `${this.keyPattern}${material.id}`;
   }
 
-  private saveEntityToCache(entity: E): void {
-    if (!this.useCache || !this.cache.length) return;
-
-    const start = Date.now();
-
-    this.cache = this.cache.filter((item) => item.id !== entity.id);
-    this.cache.push(entity);
-
-    this.logger.silly("Saved entity to cache", {
-      entity,
-      time: Date.now() - start,
-    });
+  private createDefaultFilter(criteria: Criteria<any> = {}): Criteria<any> {
+    return {
+      ...criteria,
+      deletedAt: null,
+    };
   }
 
-  private destroyEntityFromCache(entity: E): void {
-    if (!this.useCache || !this.cache.length) return;
+  private updateEntityData(entity: E): E {
+    const updated = this.create(entity);
 
-    const start = Date.now();
+    updated.revision = entity.revision + 1;
+    updated.updatedAt = new Date();
 
-    this.cache = this.cache.filter((item) => item.id !== entity.id);
-
-    this.logger.silly("Destroyed entity from cache", {
-      entity,
-      time: Date.now() - start,
-    });
+    return updated;
   }
 
   private async scan(): Promise<Array<E>> {
-    if (this.useCache && this.cache.length) return this.cache;
-
     const start = Date.now();
 
     const keys: Array<string> = [];
     const entities: Array<E> = [];
 
-    let cursor = "0";
+    try {
+      let cursor = "0";
 
-    do {
-      const reply = await this.redis.scan(cursor, "MATCH", `${this.keyPattern}*`);
-      cursor = reply[0];
-      keys.push(...reply[1]);
-    } while (cursor !== "0");
+      do {
+        const reply = await this.client.scan(cursor, "MATCH", `${this.keyPattern}*`);
+        cursor = reply[0];
+        keys.push(...reply[1]);
+      } while (cursor !== "0");
 
-    for (const key of keys) {
-      const result = await this.redis.get(key);
-      const data = new Primitive<E>(result).toJSON();
+      for (const key of keys) {
+        const result = await this.client.get(key);
+        const data = new Primitive<E>(result).toJSON();
+        if (data.deletedAt !== null) continue;
 
-      entities.push(this.create(data));
+        entities.push(this.create(data));
+      }
+
+      this.logger.debug("Repository done: scan", {
+        count: entities.length,
+        time: Date.now() - start,
+      });
+
+      return entities;
+    } catch (error: any) {
+      this.logger.error("Repository error", error);
+      throw new RedisRepositoryError("Failed to scan entities", { error });
     }
+  }
 
-    this.logger.silly("Scanned entities", {
-      count: entities.length,
-      time: Date.now() - start,
+  private validateBaseEntity(entity: E): void {
+    z.object({
+      id: z.string().uuid(),
+      revision: z.number().int().min(0),
+      createdAt: z.date(),
+      updatedAt: z.date(),
+      deletedAt: z.date().nullable(),
+      expiresAt: z.date().nullable(),
+    }).parse({
+      id: entity.id,
+      revision: entity.revision,
+      createdAt: entity.createdAt,
+      updatedAt: entity.updatedAt,
+      deletedAt: entity.deletedAt,
+      expiresAt: entity.expiresAt,
     });
+  }
 
-    this.cache = entities;
+  private validateEntity(entity: E): void {
+    this.validateBaseEntity(entity);
 
-    return entities;
+    if (isFunction(this.validate)) {
+      const { id, revision, createdAt, updatedAt, deletedAt, expiresAt, ...rest } =
+        entity;
+      this.validate(rest);
+    }
   }
 }

@@ -1,23 +1,15 @@
-import { IRedisEntity } from "../../interfaces";
+import { RedisEntityBase } from "../../classes";
 
-export class TestEntityTwo implements IRedisEntity {
-  public readonly id!: string;
-  public readonly createdAt!: Date;
+export class TestEntityTwo extends RedisEntityBase {
+  public readonly email: string;
+  public readonly name: string;
+  public readonly _test: string;
 
-  public _test!: string;
-  public email!: string;
-  public expiresAt!: Date | undefined;
-  public name!: string;
-  public updatedAt!: Date;
+  public constructor(data: Pick<TestEntityTwo, "email" | "name">) {
+    super();
 
-  public toJSON(): Partial<TestEntityTwo> {
-    return {
-      createdAt: this.createdAt,
-      email: this.email,
-      expiresAt: this.expiresAt,
-      id: this.id,
-      name: this.name,
-      updatedAt: this.updatedAt,
-    };
+    this.email = data.email ?? "";
+    this.name = data.name ?? "";
+    this._test = "test";
   }
 }

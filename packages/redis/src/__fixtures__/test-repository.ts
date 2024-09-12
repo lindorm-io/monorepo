@@ -4,12 +4,12 @@ import { RedisRepository } from "../classes";
 import { TestEntity } from "./test-entity";
 
 export class TestRepository extends RedisRepository<TestEntity> {
-  public constructor(redis: Redis, logger: ILogger) {
+  public constructor(client: Redis, logger: ILogger) {
     super({
       Entity: TestEntity,
       logger,
       namespace: "test",
-      redis,
+      client,
     });
   }
 }

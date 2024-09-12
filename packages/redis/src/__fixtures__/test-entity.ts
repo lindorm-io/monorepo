@@ -1,11 +1,18 @@
-import { IRedisEntity } from "../interfaces";
+import { RedisEntityBase } from "../classes";
 
-export class TestEntity implements IRedisEntity {
-  public readonly id!: string;
-  public readonly createdAt!: Date;
+export type TestEntityOptions = {
+  email?: string;
+  name: string;
+};
 
-  public email!: string;
-  public expiresAt!: Date | undefined;
-  public name!: string;
-  public updatedAt!: Date;
+export class TestEntity extends RedisEntityBase {
+  public email: string | null;
+  public name: string;
+
+  public constructor(options: TestEntityOptions) {
+    super();
+
+    this.email = options.email ?? null;
+    this.name = options.name;
+  }
 }
