@@ -6,7 +6,6 @@ export const decode = (input: string, encoding?: Base64Encoding): Buffer => {
   }
 
   const base64 = input.replace(/-/g, "+").replace(/_/g, "/");
-
   const padLength = (4 - (base64.length % 4)) % 4;
   const padded = base64 + "=".repeat(padLength);
 
