@@ -8,6 +8,10 @@ export class TestRepository extends MongoRepository<TestEntity, TestEntityOption
     super({
       Entity: TestEntity,
       client,
+      config: {
+        useExpiry: true,
+        useSoftDelete: true,
+      },
       database: "test",
       indexes: [],
       logger,

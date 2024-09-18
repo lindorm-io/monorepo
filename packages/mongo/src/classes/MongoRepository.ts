@@ -14,6 +14,7 @@ import { z } from "zod";
 import { MongoRepositoryError } from "../errors";
 import { IMongoEntity, IMongoRepository } from "../interfaces";
 import { MongoRepositoryOptions, ValidateMongoEntityFn } from "../types";
+import { MongoEntityConfig } from "../types/mongo-entity-config";
 import { MongoBase } from "./MongoBase";
 
 export class MongoRepository<
@@ -24,6 +25,7 @@ export class MongoRepository<
   implements IMongoRepository<E, O>
 {
   private readonly EntityConstructor: Constructor<E>;
+  private readonly config: MongoEntityConfig;
   private readonly validate: ValidateMongoEntityFn<E> | undefined;
 
   protected readonly logger: ILogger;
@@ -40,13 +42,32 @@ export class MongoRepository<
           unique: true,
         },
         {
-          index: { id: 1, deletedAt: 1, expiresAt: 1 },
-          nullable: ["deletedAt", "expiresAt"],
+          index: { id: 1, revision: 1 },
         },
-        {
-          index: { id: 1, revision: 1, deletedAt: 1, expiresAt: 1 },
-          nullable: ["deletedAt", "expiresAt"],
-        },
+        ...(options.config?.useSoftDelete
+          ? [
+              {
+                index: { id: 1, deletedAt: 1 },
+                nullable: ["deletedAt"],
+              },
+              {
+                index: { id: 1, revision: 1, deletedAt: 1 },
+                nullable: ["deletedAt"],
+              },
+            ]
+          : []),
+        ...(options.config?.useExpiry
+          ? [
+              {
+                index: { id: 1, deletedAt: 1, expiresAt: 1 },
+                nullable: ["deletedAt", "expiresAt"],
+              },
+              {
+                index: { id: 1, revision: 1, deletedAt: 1, expiresAt: 1 },
+                nullable: ["deletedAt", "expiresAt"],
+              },
+            ]
+          : []),
         ...(options.indexes ?? []),
       ],
     });
@@ -54,10 +75,28 @@ export class MongoRepository<
     this.logger = options.logger.child(["MongoRepository", options.Entity.name]);
 
     this.EntityConstructor = options.Entity;
+    this.config = options.config ?? {};
     this.validate = options.validate;
   }
 
-  // public
+  // public sync
+
+  public create(options: O | E = {} as O): E {
+    const entity = new this.EntityConstructor(options);
+
+    entity.id = (options.id as string) ?? entity.id ?? randomUUID();
+    entity.revision = (options.revision as number) ?? entity.revision ?? 0;
+    entity.createdAt = (options.createdAt as Date) ?? entity.createdAt ?? new Date();
+    entity.updatedAt = (options.updatedAt as Date) ?? entity.updatedAt ?? new Date();
+    entity.deletedAt = (options.deletedAt as Date) ?? (entity.deletedAt as Date) ?? null;
+    entity.expiresAt = (options.expiresAt as Date) ?? (entity.expiresAt as Date) ?? null;
+
+    this.logger.debug("Created entity", { entity });
+
+    return entity;
+  }
+
+  // public async
 
   public async count(
     criteria: Filter<E> = {},
@@ -89,21 +128,6 @@ export class MongoRepository<
     }
   }
 
-  public create(options: O | E = {} as O): E {
-    const entity = new this.EntityConstructor(options);
-
-    entity.id = (options.id as string) ?? entity.id ?? randomUUID();
-    entity.revision = (options.revision as number) ?? entity.revision ?? 0;
-    entity.createdAt = (options.createdAt as Date) ?? entity.createdAt ?? new Date();
-    entity.updatedAt = (options.updatedAt as Date) ?? entity.updatedAt ?? new Date();
-    entity.deletedAt = (options.deletedAt as Date) ?? (entity.deletedAt as Date) ?? null;
-    entity.expiresAt = (options.expiresAt as Date) ?? (entity.expiresAt as Date) ?? null;
-
-    this.logger.debug("Created entity", { entity });
-
-    return entity;
-  }
-
   public async delete(criteria: Filter<E>, options?: DeleteOptions): Promise<void> {
     const start = Date.now();
 
@@ -128,8 +152,9 @@ export class MongoRepository<
   public async deleteById(id: string): Promise<void> {
     const start = Date.now();
 
+    const filter: Filter<any> = { id };
+
     try {
-      const filter: Filter<any> = { id };
       const result = await this.collection.deleteOne(filter);
 
       this.logger.debug("Repository done: deleteById", {
@@ -158,33 +183,42 @@ export class MongoRepository<
   public async exists(criteria: Filter<E>, options?: FindOptions<E>): Promise<boolean> {
     const start = Date.now();
 
-    const count = await this.count(criteria, { limit: 1, ...options });
-    const exists = count >= 1;
+    const filter = this.createDefaultFilter(criteria);
 
-    this.logger.debug("Repository done: exists", {
-      input: {
-        criteria,
-        options,
-      },
-      result: {
-        exists,
-        time: Date.now() - start,
-      },
-    });
+    try {
+      const count = await this.count(filter, { limit: 1, ...options });
+      const exists = count >= 1;
 
-    if (count > 1) {
-      this.logger.warn("Multiple documents found", {
+      this.logger.debug("Repository done: exists", {
         input: {
           criteria,
           options,
         },
         result: {
-          count,
+          exists,
+          time: Date.now() - start,
         },
       });
-    }
 
-    return exists;
+      if (count > 1) {
+        this.logger.warn("Multiple documents found", {
+          input: {
+            criteria,
+            options,
+          },
+          result: {
+            count,
+          },
+        });
+      }
+
+      return exists;
+    } catch (error: any) {
+      this.logger.error("Repository error", error);
+      throw new MongoRepositoryError("Unable to establish existence of entity", {
+        error,
+      });
+    }
   }
 
   public async find(criteria?: Filter<E>, options?: FindOptions<E>): Promise<Array<E>> {
@@ -275,8 +309,9 @@ export class MongoRepository<
 
     this.validateEntity(entity);
 
+    const updated = this.updateEntityData(entity);
+
     try {
-      const updated = this.updateEntityData(entity);
       const result = await this.collection.insertOne(updated);
 
       this.logger.debug("Repository done: insert", {
@@ -303,8 +338,9 @@ export class MongoRepository<
       this.validateEntity(entity);
     }
 
+    const updated = entities.map((entity) => this.updateEntityData(entity));
+
     try {
-      const updated = entities.map((entity) => this.updateEntityData(entity));
       const result = await this.collection.insertMany(updated);
 
       this.logger.debug("Repository done: insertBulk", {
@@ -336,11 +372,17 @@ export class MongoRepository<
   }
 
   public async softDelete(criteria: Filter<E>, options?: DeleteOptions): Promise<void> {
+    if (!this.config.useSoftDelete) {
+      throw new MongoRepositoryError("Soft delete is not enabled", {
+        debug: { config: this.config },
+      });
+    }
+
     const start = Date.now();
 
-    try {
-      const deletedAt = new Date();
+    const deletedAt = new Date();
 
+    try {
       const result = await this.collection.updateMany(
         criteria,
         { $set: { deletedAt } as any },
@@ -366,12 +408,18 @@ export class MongoRepository<
   }
 
   public async softDeleteById(id: string): Promise<void> {
+    if (!this.config.useSoftDelete) {
+      throw new MongoRepositoryError("Soft delete is not enabled", {
+        debug: { config: this.config },
+      });
+    }
+
     const start = Date.now();
 
-    try {
-      const deletedAt = new Date();
-      const criteria: Filter<any> = { id };
+    const deletedAt = new Date();
+    const criteria: Filter<any> = { id };
 
+    try {
       const result = await this.collection.updateOne(criteria, {
         $set: { deletedAt } as any,
       });
@@ -411,6 +459,12 @@ export class MongoRepository<
   }
 
   public async ttl(criteria: Filter<E>): Promise<number> {
+    if (!this.config.useExpiry) {
+      throw new MongoRepositoryError("Expiry is not enabled", {
+        debug: { config: this.config },
+      });
+    }
+
     const start = Date.now();
 
     try {
@@ -462,9 +516,11 @@ export class MongoRepository<
 
   private createDefaultFilter(criteria: Filter<any> = {}): Filter<any> {
     return {
+      ...(this.config.useSoftDelete ? { deletedAt: { $eq: null } } : {}),
+      ...(this.config.useExpiry
+        ? { $or: [{ expiresAt: { $eq: null } }, { expiresAt: { $gt: new Date() } }] }
+        : {}),
       ...criteria,
-      deletedAt: { $eq: null },
-      $or: [{ expiresAt: { $eq: null } }, { expiresAt: { $gt: new Date() } }],
     };
   }
 
@@ -472,11 +528,13 @@ export class MongoRepository<
     const { id, revision } = entity;
 
     return {
-      ...criteria,
       id: { $eq: id },
       revision: { $eq: revision },
-      deletedAt: { $eq: null },
-      $or: [{ expiresAt: { $eq: null } }, { expiresAt: { $gt: new Date() } }],
+      ...(this.config.useSoftDelete ? { deletedAt: { $eq: null } } : {}),
+      ...(this.config.useExpiry
+        ? { $or: [{ expiresAt: { $eq: null } }, { expiresAt: { $gt: new Date() } }] }
+        : {}),
+      ...criteria,
     };
   }
 
@@ -494,10 +552,10 @@ export class MongoRepository<
 
     this.validateEntity(entity);
 
-    try {
-      const filter = this.createUpdateFilter(entity);
-      const updated = this.updateEntityData(entity);
+    const filter = this.createUpdateFilter(entity);
+    const updated = this.updateEntityData(entity);
 
+    try {
       const result = await this.collection.updateOne(
         filter,
         { $set: updated as any },

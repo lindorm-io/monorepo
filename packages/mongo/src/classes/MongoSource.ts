@@ -73,6 +73,7 @@ export class MongoSource implements IMongoSource {
 
     return new MongoRepository({
       Entity,
+      config: options.config ?? config.config,
       database: this.database,
       indexes: options.indexes ?? config.indexes,
       logger: options.logger ?? this.logger,

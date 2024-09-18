@@ -83,13 +83,18 @@ export class EntityScanner {
       if (key === "default") continue;
       if (result.Entity && result.validate) break;
 
-      if (key === "validate" && isFunction(value)) {
-        result.validate = value;
+      if (key === "config" && isObject(value)) {
+        result.config = value;
         continue;
       }
 
       if (key === "indexes" && isArray<MongoIndexOptions<any>>(value)) {
         result.indexes = value;
+        continue;
+      }
+
+      if (key === "validate" && isFunction(value)) {
+        result.validate = value;
         continue;
       }
 

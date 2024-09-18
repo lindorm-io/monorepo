@@ -24,12 +24,15 @@ describe("EntityScanner", () => {
       scanner.scan([
         { Entity: TestEntity, validate: jest.fn() },
         { Entity: TestEntityOne, validate: jest.fn() },
-        { Entity: TestEntityTwo, indexes: [] },
+        { Entity: TestEntityTwo, config: { useSoftDelete: true }, indexes: [] },
       ]),
     ).toEqual([
       { Entity: TestEntity, validate: expect.any(Function) },
-      { Entity: TestEntityOne, validate: expect.any(Function) },
-      { Entity: TestEntityTwo, indexes: [] },
+      {
+        Entity: TestEntityOne,
+        validate: expect.any(Function),
+      },
+      { Entity: TestEntityTwo, config: { useSoftDelete: true }, indexes: [] },
     ]);
   });
 
@@ -37,7 +40,11 @@ describe("EntityScanner", () => {
     expect(
       scanner.scan([join(__dirname, "..", "..", "__fixtures__", "entities")]),
     ).toEqual([
-      { Entity: TestEntityOne, validate: expect.any(Function) },
+      {
+        Entity: TestEntityOne,
+        config: { useSoftDelete: true },
+        validate: expect.any(Function),
+      },
       { Entity: TestEntityTwo, indexes: expect.any(Array) },
     ]);
   });
