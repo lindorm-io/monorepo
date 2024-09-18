@@ -1,5 +1,6 @@
 import { MongoEntityBase } from "../../classes";
 import { ValidateMongoEntityFn } from "../../types";
+import { MongoEntityConfig } from "../../types/mongo-entity-config";
 
 export type TestEntityOneOptions = {
   email?: string;
@@ -17,6 +18,10 @@ export class TestEntityOne extends MongoEntityBase {
     this.name = options.name;
   }
 }
+
+export const config: MongoEntityConfig = {
+  useSoftDelete: true,
+};
 
 export const validate: ValidateMongoEntityFn<TestEntityOne> = (entity) => {
   if (!entity.email) {

@@ -7,12 +7,14 @@ import {
   ValidateFileFn,
   ValidateMongoEntityFn,
 } from "../types";
+import { MongoEntityConfig } from "../types/mongo-entity-config";
 import { IMongoBucket } from "./MongoBucket";
 import { IMongoEntity } from "./MongoEntity";
 import { IMongoFile } from "./MongoFile";
 import { IMongoRepository } from "./MongoRepository";
 
 export type MongoSourceRepositoryOptions<E extends IMongoEntity> = {
+  config?: MongoEntityConfig;
   indexes?: Array<MongoIndexOptions<E>>;
   logger?: ILogger;
   validate?: ValidateMongoEntityFn<E>;

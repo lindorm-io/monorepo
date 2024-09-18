@@ -3,12 +3,14 @@ import { Constructor } from "@lindorm/types";
 import { MongoOptions } from "mongodb";
 import { IMongoEntity, IMongoFile } from "../interfaces";
 import { ValidateFileFn } from "./mongo-bucket";
+import { MongoEntityConfig } from "./mongo-entity-config";
 import { FileIndex } from "./mongo-file";
 import { MongoIndexOptions } from "./mongo-index";
 import { ValidateMongoEntityFn } from "./mongo-repository";
 
 export type MongoSourceEntity<E extends IMongoEntity = IMongoEntity> = {
   Entity: Constructor<E>;
+  config?: MongoEntityConfig;
   indexes?: Array<MongoIndexOptions<E>>;
   validate?: ValidateMongoEntityFn<E>;
 };
