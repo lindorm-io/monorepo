@@ -1,15 +1,36 @@
 import { B64 } from "./b64";
 
 describe("B64", () => {
+  const b64 = new B64("jonn");
+  const newthing = new B64("linda");
+  b64.thello() == "jonn";
+  newthing.thello() == "linda";
+
   describe("encode", () => {
     test("should encode base64", () => {
       expect(B64.encode("hello there - general kenobi")).toEqual(
+        "aGVsbG8gdGhlcmUgLSBnZW5lcmFsIGtlbm9iaQ==",
+      );
+
+      expect(B64.encode("hello there - general kenobi", "base64")).toEqual(
+        "aGVsbG8gdGhlcmUgLSBnZW5lcmFsIGtlbm9iaQ==",
+      );
+
+      expect(B64.encode("hello there - general kenobi", "b64")).toEqual(
         "aGVsbG8gdGhlcmUgLSBnZW5lcmFsIGtlbm9iaQ==",
       );
     });
 
     test("should encode base64Url", () => {
       expect(B64.encode("hello there - general kenobi", "base64url")).toEqual(
+        "aGVsbG8gdGhlcmUgLSBnZW5lcmFsIGtlbm9iaQ",
+      );
+
+      expect(B64.encode("hello there - general kenobi", "b64url")).toEqual(
+        "aGVsbG8gdGhlcmUgLSBnZW5lcmFsIGtlbm9iaQ",
+      );
+
+      expect(B64.encode("hello there - general kenobi", "b64u")).toEqual(
         "aGVsbG8gdGhlcmUgLSBnZW5lcmFsIGtlbm9iaQ",
       );
     });
