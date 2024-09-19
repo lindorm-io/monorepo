@@ -172,6 +172,31 @@ export class MongoRepository<
     }
   }
 
+  public async deleteExpired(): Promise<void> {
+    const start = Date.now();
+
+    const filter: Filter<any> = {
+      expiresAt: { $lt: new Date() },
+    };
+
+    try {
+      const result = await this.collection.deleteMany(filter);
+
+      this.logger.debug("Repository done: deleteExpired", {
+        input: {
+          filter,
+        },
+        result: {
+          ...result,
+          time: Date.now() - start,
+        },
+      });
+    } catch (error: any) {
+      this.logger.error("Repository error", error);
+      throw new MongoRepositoryError("Unable to delete expired entities", { error });
+    }
+  }
+
   public async destroy(entity: E): Promise<void> {
     await this.deleteById(entity.id);
   }

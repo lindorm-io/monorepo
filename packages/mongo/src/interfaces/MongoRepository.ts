@@ -10,6 +10,7 @@ export interface IMongoRepository<
   create(options?: O | E): E;
   delete(criteria: Filter<E>, options?: DeleteOptions): Promise<void>;
   deleteById(id: string): Promise<void>;
+  deleteExpired(): Promise<void>;
   destroy(entity: E): Promise<void>;
   destroyBulk(entities: Array<E>): Promise<void>;
   exists(criteria: Filter<E>, options?: FindOptions<E>): Promise<boolean>;
