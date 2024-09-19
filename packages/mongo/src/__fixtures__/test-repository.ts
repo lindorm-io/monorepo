@@ -10,6 +10,7 @@ export class TestRepository extends MongoRepository<TestEntity, TestEntityOption
       client,
       config: {
         useExpiry: true,
+        useSequence: true,
         useSoftDelete: true,
       },
       database: "test",

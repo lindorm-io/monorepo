@@ -8,7 +8,7 @@ import { MongoIndexOptions } from "./mongo-index";
 export type ValidateMongoEntityFn<E extends IMongoEntity = IMongoEntity> = (
   entity: Omit<
     E,
-    "id" | "revision" | "createdAt" | "updatedAt" | "deletedAt" | "expiresAt"
+    "id" | "revision" | "seq" | "createdAt" | "updatedAt" | "deletedAt" | "expiresAt"
   >,
 ) => void;
 

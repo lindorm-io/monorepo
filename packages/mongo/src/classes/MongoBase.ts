@@ -1,5 +1,5 @@
 import { ILogger } from "@lindorm/logger";
-import { Collection, Document, IndexSpecification, MongoClient } from "mongodb";
+import { Collection, Db, Document, IndexSpecification, MongoClient } from "mongodb";
 import { MongoRepositoryError } from "../errors";
 import { MongoBaseIndex, MongoBaseOptions, MongoIndexOptions } from "../types";
 
@@ -11,6 +11,7 @@ export abstract class MongoBase<D extends Document> {
   protected readonly logger: ILogger;
 
   protected _collection: Collection<D> | undefined;
+  protected _database: Db | undefined;
 
   protected constructor(options: MongoBaseOptions<D>) {
     this.logger = options.logger.child(["MongoBase"]);
@@ -25,12 +26,16 @@ export abstract class MongoBase<D extends Document> {
 
   protected get collection(): Collection<any> {
     if (!this._collection) {
-      this._collection = this.client
-        .db(this.databaseName)
-        .collection(this.collectionName);
+      this._collection = this.database.collection(this.collectionName);
     }
-
     return this._collection;
+  }
+
+  protected get database(): Db {
+    if (!this._database) {
+      this._database = this.client.db(this.databaseName);
+    }
+    return this._database;
   }
 
   // public
@@ -43,10 +48,13 @@ export abstract class MongoBase<D extends Document> {
         ...(item.name ? { name: item.name } : {}),
         ...(item.nullable?.length
           ? {
-              partialFilterExpression: item.nullable.reduce(
-                (obj, key) => ({ ...obj, [key]: { $exists: true } }),
-                {},
-              ),
+              partialFilterExpression: {
+                ...item.nullable.reduce(
+                  (obj, key) => ({ ...obj, [key]: { $exists: true } }),
+                  {},
+                ),
+                ...item.finite?.reduce((obj, key) => ({ ...obj, [key]: { $gt: 0 } }), {}),
+              },
             }
           : {}),
         ...(item.options ?? {}),
