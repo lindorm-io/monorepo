@@ -3,13 +3,7 @@ import { isFunction } from "@lindorm/is";
 import { ILogger } from "@lindorm/logger";
 import { Constructor, DeepPartial } from "@lindorm/types";
 import { randomUUID } from "crypto";
-import {
-  CountDocumentsOptions,
-  DeleteOptions,
-  Filter,
-  FindOptions,
-  UpdateOptions,
-} from "mongodb";
+import { CountDocumentsOptions, DeleteOptions, Filter, FindOptions } from "mongodb";
 import { z } from "zod";
 import { MongoRepositoryError } from "../errors";
 import { IMongoEntity, IMongoRepository } from "../interfaces";
@@ -44,6 +38,15 @@ export class MongoRepository<
         {
           index: { id: 1, revision: 1 },
         },
+        ...(options.config?.useSequence
+          ? [
+              {
+                index: { seq: 1 },
+                finite: ["seq"],
+                unique: true,
+              },
+            ]
+          : []),
         ...(options.config?.useSoftDelete
           ? [
               {
@@ -86,6 +89,7 @@ export class MongoRepository<
 
     entity.id = (options.id as string) ?? entity.id ?? randomUUID();
     entity.revision = (options.revision as number) ?? entity.revision ?? 0;
+    entity.seq = (options.seq as number) ?? entity.seq ?? 0;
     entity.createdAt = (options.createdAt as Date) ?? entity.createdAt ?? new Date();
     entity.updatedAt = (options.updatedAt as Date) ?? entity.updatedAt ?? new Date();
     entity.deletedAt = (options.deletedAt as Date) ?? (entity.deletedAt as Date) ?? null;
@@ -336,6 +340,8 @@ export class MongoRepository<
 
     const updated = this.updateEntityData(entity);
 
+    updated.seq = await this.getNextSequence();
+
     try {
       const result = await this.collection.insertOne(updated);
 
@@ -349,7 +355,7 @@ export class MongoRepository<
         },
       });
 
-      return updated;
+      return this.create(updated);
     } catch (error: any) {
       this.logger.error("Repository error", error);
       throw new MongoRepositoryError("Unable to insert entity", { error });
@@ -357,43 +363,18 @@ export class MongoRepository<
   }
 
   public async insertBulk(entities: Array<E>): Promise<Array<E>> {
-    const start = Date.now();
-
-    for (const entity of entities) {
-      this.validateEntity(entity);
-    }
-
-    const updated = entities.map((entity) => this.updateEntityData(entity));
-
-    try {
-      const result = await this.collection.insertMany(updated);
-
-      this.logger.debug("Repository done: insertBulk", {
-        input: {
-          count: entities.length,
-        },
-        result: {
-          acknowledged: result.acknowledged,
-          insertedCount: result.insertedCount,
-          time: Date.now() - start,
-        },
-      });
-
-      return updated.map((entity) => this.create(entity));
-    } catch (error: any) {
-      this.logger.error("Repository error", error);
-      throw new MongoRepositoryError("Unable to insert entities", { error });
-    }
+    return await Promise.all(entities.map((entity) => this.insert(entity)));
   }
 
   public async save(entity: E): Promise<E> {
-    return await this.updateEntity(entity, { upsert: true });
+    if (entity.revision === 0) {
+      return await this.insert(entity);
+    }
+    return await this.update(entity);
   }
 
   public async saveBulk(entities: Array<E>): Promise<Array<E>> {
-    return await Promise.all(
-      entities.map((entity) => this.updateEntity(entity, { upsert: true })),
-    );
+    return await Promise.all(entities.map((entity) => this.save(entity)));
   }
 
   public async softDelete(criteria: Filter<E>, options?: DeleteOptions): Promise<void> {
@@ -476,11 +457,45 @@ export class MongoRepository<
   }
 
   public async update(entity: E): Promise<E> {
-    return await this.updateEntity(entity);
+    const start = Date.now();
+
+    this.validateEntity(entity);
+
+    const filter = this.createUpdateFilter(entity);
+    const updated = this.updateEntityData(entity);
+
+    try {
+      const result = await this.collection.updateOne(filter, { $set: updated as any });
+
+      this.logger.debug("Repository done: updateEntity", {
+        input: {
+          filter,
+          updated,
+        },
+        result: {
+          acknowledged: result.acknowledged,
+          matchedCount: result.matchedCount,
+          modifiedCount: result.modifiedCount,
+          upsertedCount: result.upsertedCount,
+          time: Date.now() - start,
+        },
+      });
+
+      if (result.modifiedCount !== 1 && result.upsertedCount !== 1) {
+        throw new MongoRepositoryError("Entity not updated", {
+          debug: { filter, result },
+        });
+      }
+
+      return this.create(updated);
+    } catch (error: any) {
+      this.logger.error("Repository error", error);
+      throw new MongoRepositoryError("Unable to update entity", { error });
+    }
   }
 
   public async updateBulk(entities: Array<E>): Promise<Array<E>> {
-    return await Promise.all(entities.map((entity) => this.updateEntity(entity)));
+    return await Promise.all(entities.map((entity) => this.update(entity)));
   }
 
   public async ttl(criteria: Filter<E>): Promise<number> {
@@ -563,6 +578,45 @@ export class MongoRepository<
     };
   }
 
+  private async getNextSequence(): Promise<number> {
+    if (!this.config.useSequence) return 0;
+
+    const start = Date.now();
+
+    try {
+      const document = await this.database.collection("_counters").findOneAndUpdate(
+        {
+          collection: this.collectionName,
+        },
+        {
+          $inc: { seq: 1 },
+        },
+        {
+          returnDocument: "after",
+          upsert: true,
+        },
+      );
+
+      this.logger.silly("Repository done: getNextSequence", {
+        result: {
+          document,
+          time: Date.now() - start,
+        },
+      });
+
+      if (!document) {
+        throw new MongoRepositoryError("Unable to get next sequence", {
+          debug: { collection: this.collectionName, result: document },
+        });
+      }
+
+      return document.seq;
+    } catch (error: any) {
+      this.logger.error("Repository error", error);
+      throw new MongoRepositoryError("Unable to get next sequence", { error });
+    }
+  }
+
   private updateEntityData(entity: E): E {
     const updated = this.create(entity);
 
@@ -572,52 +626,11 @@ export class MongoRepository<
     return updated;
   }
 
-  private async updateEntity(entity: E, options?: UpdateOptions): Promise<E> {
-    const start = Date.now();
-
-    this.validateEntity(entity);
-
-    const filter = this.createUpdateFilter(entity);
-    const updated = this.updateEntityData(entity);
-
-    try {
-      const result = await this.collection.updateOne(
-        filter,
-        { $set: updated as any },
-        options,
-      );
-
-      this.logger.debug("Repository done: updateEntity", {
-        input: {
-          filter,
-          updated,
-        },
-        result: {
-          acknowledged: result.acknowledged,
-          matchedCount: result.matchedCount,
-          modifiedCount: result.modifiedCount,
-          upsertedCount: result.upsertedCount,
-          time: Date.now() - start,
-        },
-      });
-
-      if (result.modifiedCount !== 1 && result.upsertedCount !== 1) {
-        throw new MongoRepositoryError("Entity not updated", {
-          debug: { filter, result },
-        });
-      }
-
-      return updated;
-    } catch (error: any) {
-      this.logger.error("Repository error", error);
-      throw new MongoRepositoryError("Unable to update entity", { error });
-    }
-  }
-
   private validateBaseEntity(entity: E): void {
     z.object({
       id: z.string().uuid(),
       revision: z.number().int().min(0),
+      seq: z.number().int().min(0),
       createdAt: z.date(),
       updatedAt: z.date(),
       deletedAt: z.date().nullable(),
@@ -625,6 +638,7 @@ export class MongoRepository<
     }).parse({
       id: entity.id,
       revision: entity.revision,
+      seq: entity.seq,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
       deletedAt: entity.deletedAt,
@@ -636,7 +650,7 @@ export class MongoRepository<
     this.validateBaseEntity(entity);
 
     if (isFunction(this.validate)) {
-      const { id, revision, createdAt, updatedAt, deletedAt, expiresAt, ...rest } =
+      const { id, revision, seq, createdAt, updatedAt, deletedAt, expiresAt, ...rest } =
         entity;
       this.validate(rest);
     }

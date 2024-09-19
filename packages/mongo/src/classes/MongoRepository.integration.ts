@@ -43,6 +43,7 @@ describe("MongoRepository", () => {
     expect(entity).toEqual({
       id: expect.any(String),
       revision: 0,
+      seq: 0,
       createdAt: MockedDate,
       updatedAt: MockedDate,
       deletedAt: null,
@@ -56,6 +57,7 @@ describe("MongoRepository", () => {
     const entity = repository.create({
       id: "0bc6f18f-48a7-52d4-a191-e15ed14eb087",
       revision: 9,
+      seq: 8,
       createdAt: new Date("2021-01-01T00:00:00.000Z"),
       updatedAt: new Date("2021-01-01T00:00:00.000Z"),
       deletedAt: new Date("2021-01-01T00:00:00.000Z"),
@@ -67,6 +69,7 @@ describe("MongoRepository", () => {
     expect(entity).toEqual({
       id: "0bc6f18f-48a7-52d4-a191-e15ed14eb087",
       revision: 9,
+      seq: 8,
       createdAt: new Date("2021-01-01T00:00:00.000Z"),
       updatedAt: new Date("2021-01-01T00:00:00.000Z"),
       deletedAt: new Date("2021-01-01T00:00:00.000Z"),
@@ -160,6 +163,7 @@ describe("MongoRepository", () => {
     await expect(repository.findOneOrFail({ name })).resolves.toEqual({
       id: expect.any(String),
       revision: 1,
+      seq: expect.any(Number),
       createdAt: MockedDate,
       updatedAt: MockedDate,
       deletedAt: null,
@@ -193,6 +197,7 @@ describe("MongoRepository", () => {
     await expect(repository.findOneById(entity.id)).resolves.toEqual({
       id: expect.any(String),
       revision: 1,
+      seq: expect.any(Number),
       createdAt: MockedDate,
       updatedAt: MockedDate,
       deletedAt: null,
@@ -238,6 +243,7 @@ describe("MongoRepository", () => {
     await expect(repository.findOneById(entity.id)).resolves.toEqual({
       id: expect.any(String),
       revision: 1,
+      seq: expect.any(Number),
       createdAt: MockedDate,
       updatedAt: MockedDate,
       deletedAt: null,
