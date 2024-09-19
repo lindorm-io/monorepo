@@ -1,7 +1,7 @@
 import { createMockLogger } from "@lindorm/logger";
 import { randomUUID } from "crypto";
 import MockDate from "mockdate";
-import { MongoClient } from "mongodb";
+import { Collection, MongoClient } from "mongodb";
 import { TestEntityOne, validate } from "../__fixtures__/entities/test-entity-one";
 import { TestEntity } from "../__fixtures__/test-entity";
 import { TestRepository } from "../__fixtures__/test-repository";
@@ -13,11 +13,13 @@ MockDate.set(MockedDate);
 describe("MongoRepository", () => {
   let client: MongoClient;
   let repository: TestRepository;
+  let collection: Collection;
 
   beforeAll(async () => {
     client = new MongoClient("mongodb://root:example@localhost/admin?authSource=admin");
     await client.connect();
     repository = new TestRepository(client, createMockLogger());
+    collection = client.db("test").collection("test_test_entity");
   });
 
   afterAll(async () => {
@@ -88,6 +90,20 @@ describe("MongoRepository", () => {
     await expect(repository.deleteById(entity.id)).resolves.not.toThrow();
 
     await expect(repository.findOneById(entity.id)).resolves.toBeNull();
+  });
+
+  test("should delete all expired entities", async () => {
+    const entity = await repository.save(
+      repository.create({
+        name: randomUUID(),
+        expiresAt: new Date("2024-01-01T07:00:00.000Z"),
+      }),
+    );
+
+    await expect(repository.deleteExpired()).resolves.not.toThrow();
+
+    await expect(repository.findOneById(entity.id)).resolves.toBeNull();
+    await expect(collection.findOne({ id: entity.id })).resolves.toEqual(null);
   });
 
   test("should destroy an entity", async () => {
