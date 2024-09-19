@@ -35,7 +35,8 @@ describe("RedisRepository", () => {
     expect(entity).toBeInstanceOf(TestEntity);
     expect(entity).toEqual({
       id: expect.any(String),
-      revision: 0,
+      rev: 0,
+      seq: 0,
       createdAt: MockedDate,
       updatedAt: MockedDate,
       deletedAt: null,
@@ -48,6 +49,8 @@ describe("RedisRepository", () => {
   test("should create a new entity with custom values", async () => {
     const entity = repository.create({
       id: "0bc6f18f-48a7-52d4-a191-e15ed14eb087",
+      rev: 9,
+      seq: 8,
       createdAt: new Date("2021-01-01T00:00:00.000Z"),
       updatedAt: new Date("2021-01-01T00:00:00.000Z"),
       expiresAt: new Date("2021-01-01T00:00:00.000Z"),
@@ -58,7 +61,8 @@ describe("RedisRepository", () => {
     expect(entity).toBeInstanceOf(TestEntity);
     expect(entity).toEqual({
       id: "0bc6f18f-48a7-52d4-a191-e15ed14eb087",
-      revision: 0,
+      rev: 9,
+      seq: 8,
       createdAt: new Date("2021-01-01T00:00:00.000Z"),
       updatedAt: new Date("2021-01-01T00:00:00.000Z"),
       deletedAt: null,
@@ -161,7 +165,8 @@ describe("RedisRepository", () => {
       ),
     ).resolves.toEqual({
       id: expect.any(String),
-      revision: 1,
+      rev: 1,
+      seq: 0,
       createdAt: MockedDate,
       updatedAt: MockedDate,
       deletedAt: null,

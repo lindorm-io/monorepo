@@ -6,7 +6,7 @@ import { IRedisEntity } from "../interfaces";
 export type ValidateRedisEntityFn<E extends IRedisEntity = IRedisEntity> = (
   entity: Omit<
     E,
-    "id" | "revision" | "createdAt" | "updatedAt" | "deletedAt" | "expiresAt"
+    "id" | "rev" | "seq" | "createdAt" | "updatedAt" | "deletedAt" | "expiresAt"
   >,
 ) => void;
 
