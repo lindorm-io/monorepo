@@ -52,7 +52,8 @@ export class RedisRepository<
     const entity = new this.EntityConstructor(options);
 
     entity.id = (options.id as string) ?? entity.id ?? randomUUID();
-    entity.revision = (options.revision as number) ?? entity.revision ?? 0;
+    entity.rev = (options.rev as number) ?? entity.rev ?? 0;
+    entity.seq = (options.seq as number) ?? entity.seq ?? 0;
     entity.createdAt = (options.createdAt as Date) ?? entity.createdAt ?? new Date();
     entity.updatedAt = (options.updatedAt as Date) ?? entity.updatedAt ?? new Date();
     entity.deletedAt = (options.deletedAt as Date) ?? (entity.deletedAt as Date) ?? null;
@@ -369,7 +370,7 @@ export class RedisRepository<
   private updateEntityData(entity: E): E {
     const updated = this.create(entity);
 
-    updated.revision = entity.revision + 1;
+    updated.rev = entity.rev + 1;
     updated.updatedAt = new Date();
 
     return updated;
@@ -413,14 +414,16 @@ export class RedisRepository<
   private validateBaseEntity(entity: E): void {
     z.object({
       id: z.string().uuid(),
-      revision: z.number().int().min(0),
+      rev: z.number().int().min(0),
+      seq: z.number().int().min(0),
       createdAt: z.date(),
       updatedAt: z.date(),
       deletedAt: z.date().nullable(),
       expiresAt: z.date().nullable(),
     }).parse({
       id: entity.id,
-      revision: entity.revision,
+      rev: entity.rev,
+      seq: entity.seq,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
       deletedAt: entity.deletedAt,
@@ -432,7 +435,7 @@ export class RedisRepository<
     this.validateBaseEntity(entity);
 
     if (isFunction(this.validate)) {
-      const { id, revision, createdAt, updatedAt, deletedAt, expiresAt, ...rest } =
+      const { id, rev, seq, createdAt, updatedAt, deletedAt, expiresAt, ...rest } =
         entity;
       this.validate(rest);
     }

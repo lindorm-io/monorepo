@@ -1,6 +1,7 @@
 export interface IRedisEntity {
   id: string;
-  revision: number;
+  rev: number;
+  seq: number;
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;
