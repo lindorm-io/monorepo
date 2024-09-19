@@ -36,7 +36,7 @@ export class MongoRepository<
           unique: true,
         },
         {
-          index: { id: 1, revision: 1 },
+          index: { id: 1, rev: 1 },
         },
         ...(options.config?.useSequence
           ? [
@@ -54,7 +54,7 @@ export class MongoRepository<
                 nullable: ["deletedAt"],
               },
               {
-                index: { id: 1, revision: 1, deletedAt: 1 },
+                index: { id: 1, rev: 1, deletedAt: 1 },
                 nullable: ["deletedAt"],
               },
             ]
@@ -66,7 +66,7 @@ export class MongoRepository<
                 nullable: ["deletedAt", "expiresAt"],
               },
               {
-                index: { id: 1, revision: 1, deletedAt: 1, expiresAt: 1 },
+                index: { id: 1, rev: 1, deletedAt: 1, expiresAt: 1 },
                 nullable: ["deletedAt", "expiresAt"],
               },
             ]
@@ -88,7 +88,7 @@ export class MongoRepository<
     const entity = new this.EntityConstructor(options);
 
     entity.id = (options.id as string) ?? entity.id ?? randomUUID();
-    entity.revision = (options.revision as number) ?? entity.revision ?? 0;
+    entity.rev = (options.rev as number) ?? entity.rev ?? 0;
     entity.seq = (options.seq as number) ?? entity.seq ?? 0;
     entity.createdAt = (options.createdAt as Date) ?? entity.createdAt ?? new Date();
     entity.updatedAt = (options.updatedAt as Date) ?? entity.updatedAt ?? new Date();
@@ -367,7 +367,7 @@ export class MongoRepository<
   }
 
   public async save(entity: E): Promise<E> {
-    if (entity.revision === 0) {
+    if (entity.rev === 0) {
       return await this.insert(entity);
     }
     return await this.update(entity);
@@ -565,11 +565,11 @@ export class MongoRepository<
   }
 
   private createUpdateFilter(entity: E, criteria: Filter<E> = {}): Filter<any> {
-    const { id, revision } = entity;
+    const { id, rev } = entity;
 
     return {
       id: { $eq: id },
-      revision: { $eq: revision },
+      rev: { $eq: rev },
       ...(this.config.useSoftDelete ? { deletedAt: { $eq: null } } : {}),
       ...(this.config.useExpiry
         ? { $or: [{ expiresAt: { $eq: null } }, { expiresAt: { $gt: new Date() } }] }
@@ -620,7 +620,7 @@ export class MongoRepository<
   private updateEntityData(entity: E): E {
     const updated = this.create(entity);
 
-    updated.revision = entity.revision + 1;
+    updated.rev = entity.rev + 1;
     updated.updatedAt = new Date();
 
     return updated;
@@ -629,7 +629,7 @@ export class MongoRepository<
   private validateBaseEntity(entity: E): void {
     z.object({
       id: z.string().uuid(),
-      revision: z.number().int().min(0),
+      rev: z.number().int().min(0),
       seq: z.number().int().min(0),
       createdAt: z.date(),
       updatedAt: z.date(),
@@ -637,7 +637,7 @@ export class MongoRepository<
       expiresAt: z.date().nullable(),
     }).parse({
       id: entity.id,
-      revision: entity.revision,
+      rev: entity.rev,
       seq: entity.seq,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
@@ -650,7 +650,7 @@ export class MongoRepository<
     this.validateBaseEntity(entity);
 
     if (isFunction(this.validate)) {
-      const { id, revision, seq, createdAt, updatedAt, deletedAt, expiresAt, ...rest } =
+      const { id, rev, seq, createdAt, updatedAt, deletedAt, expiresAt, ...rest } =
         entity;
       this.validate(rest);
     }

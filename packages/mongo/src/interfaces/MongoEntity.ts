@@ -1,6 +1,6 @@
 export interface IMongoEntity {
   id: string;
-  revision: number;
+  rev: number;
   seq: number;
   createdAt: Date;
   updatedAt: Date;
