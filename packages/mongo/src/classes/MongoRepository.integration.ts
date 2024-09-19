@@ -42,7 +42,7 @@ describe("MongoRepository", () => {
     expect(entity).toBeInstanceOf(TestEntity);
     expect(entity).toEqual({
       id: expect.any(String),
-      revision: 0,
+      rev: 0,
       seq: 0,
       createdAt: MockedDate,
       updatedAt: MockedDate,
@@ -56,7 +56,7 @@ describe("MongoRepository", () => {
   test("should create a new entity with custom values", async () => {
     const entity = repository.create({
       id: "0bc6f18f-48a7-52d4-a191-e15ed14eb087",
-      revision: 9,
+      rev: 9,
       seq: 8,
       createdAt: new Date("2021-01-01T00:00:00.000Z"),
       updatedAt: new Date("2021-01-01T00:00:00.000Z"),
@@ -68,7 +68,7 @@ describe("MongoRepository", () => {
     expect(entity).toBeInstanceOf(TestEntity);
     expect(entity).toEqual({
       id: "0bc6f18f-48a7-52d4-a191-e15ed14eb087",
-      revision: 9,
+      rev: 9,
       seq: 8,
       createdAt: new Date("2021-01-01T00:00:00.000Z"),
       updatedAt: new Date("2021-01-01T00:00:00.000Z"),
@@ -162,7 +162,7 @@ describe("MongoRepository", () => {
 
     await expect(repository.findOneOrFail({ name })).resolves.toEqual({
       id: expect.any(String),
-      revision: 1,
+      rev: 1,
       seq: expect.any(Number),
       createdAt: MockedDate,
       updatedAt: MockedDate,
@@ -196,7 +196,7 @@ describe("MongoRepository", () => {
     await expect(repository.insert(entity)).resolves.toEqual(expect.any(TestEntity));
     await expect(repository.findOneById(entity.id)).resolves.toEqual({
       id: expect.any(String),
-      revision: 1,
+      rev: 1,
       seq: expect.any(Number),
       createdAt: MockedDate,
       updatedAt: MockedDate,
@@ -242,7 +242,7 @@ describe("MongoRepository", () => {
     await expect(repository.save(entity)).resolves.toEqual(expect.any(TestEntity));
     await expect(repository.findOneById(entity.id)).resolves.toEqual({
       id: expect.any(String),
-      revision: 1,
+      rev: 1,
       seq: expect.any(Number),
       createdAt: MockedDate,
       updatedAt: MockedDate,
@@ -351,13 +351,13 @@ describe("MongoRepository", () => {
     });
 
     const inserted = await repository.insert(entity);
-    expect(inserted.revision).toEqual(1);
+    expect(inserted.rev).toEqual(1);
     expect(inserted.name).toEqual(name1);
 
     inserted.name = name2;
 
     const updated = await repository.update(inserted);
-    expect(updated.revision).toEqual(2);
+    expect(updated.rev).toEqual(2);
     expect(updated.name).toEqual(name2);
 
     await expect(repository.findOneById(inserted.id)).resolves.toEqual(updated);
