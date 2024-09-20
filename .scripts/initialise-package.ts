@@ -1,5 +1,5 @@
+import { input } from "@inquirer/prompts";
 import fs from "fs-extra";
-import inquirer from "inquirer";
 import path from "path";
 
 const copyFiles = async (srcDir: string, destDir: string): Promise<void> => {
@@ -36,22 +36,18 @@ const replaceInFiles = async (
 };
 
 const main = async () => {
-  const answers = await inquirer.prompt([
-    {
-      type: "input",
-      name: "name",
-      message: "Enter package name",
-    },
-  ]);
+  const answer = await input({
+    message: "Enter package name",
+  });
 
   const srcDir = path.join(__dirname, "..", ".init", "package");
-  const destDir = path.join(__dirname, "..", "packages", answers.name);
+  const destDir = path.join(__dirname, "..", "packages", answer);
   const placeholder = new RegExp("{{NAME}}", "g");
 
   await copyFiles(srcDir, destDir);
-  await replaceInFiles(destDir, placeholder, answers.name);
+  await replaceInFiles(destDir, placeholder, answer);
 
-  console.log(`Package ${answers.name} initialised in /packages/${answers.name}`);
+  console.log(`Package ${answer} initialised in /packages/${answer}`);
 };
 
 main()
