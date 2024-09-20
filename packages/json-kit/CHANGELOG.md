@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/json-kit@0.2.0...@lindorm/json-kit@0.2.1) (2024-09-20)
+
+### Bug Fixes
+
+- solve bugs in primitive class ([11a62c2](https://github.com/lindorm-io/monorepo/commit/11a62c2b5170f99fa090e716365365bedfa3f84f))
+
 # [0.2.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/json-kit@0.1.2...@lindorm/json-kit@0.2.0) (2024-05-19)
 
 ### Features

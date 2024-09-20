@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/worker@0.1.1...@lindorm/worker@0.1.2) (2024-09-20)
+
+### Bug Fixes
+
+- improve typing ([34108f8](https://github.com/lindorm-io/monorepo/commit/34108f855681359439c6591970d2c853dc443637))
+
 ## [0.1.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/worker@0.1.0...@lindorm/worker@0.1.1) (2024-05-19)
 
 **Note:** Version bump only for package @lindorm/worker

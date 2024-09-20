@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.2.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/types@0.1.4...@lindorm/types@0.2.0) (2024-09-20)
+
+### Bug Fixes
+
+- add deep partial type ([27e36c6](https://github.com/lindorm-io/monorepo/commit/27e36c6acb9838e76dc5871ce6962f55431c6e4d))
+
+### Features
+
+- add jwks and open-id to types ([41783f5](https://github.com/lindorm-io/monorepo/commit/41783f59f5ddfa44b4072031522b2ca8d4646d38))
+
 ## [0.1.4](https://github.com/lindorm-io/monorepo/compare/@lindorm/types@0.1.3...@lindorm/types@0.1.4) (2024-05-19)
 
 ### Bug Fixes

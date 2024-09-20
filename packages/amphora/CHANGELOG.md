@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/amphora@0.1.1...@lindorm/amphora@0.1.2) (2024-09-20)
+
+### Bug Fixes
+
+- improve logging ([6412400](https://github.com/lindorm-io/monorepo/commit/64124001dca3c393b2696b8e5fa90a0d0533ac4d))
+- make issuer optional ([6e85927](https://github.com/lindorm-io/monorepo/commit/6e859272370e59dc334aca702fa37e1765f542ab))
+
 ## [0.1.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/amphora@0.1.0...@lindorm/amphora@0.1.1) (2024-05-20)
 
 ### Bug Fixes

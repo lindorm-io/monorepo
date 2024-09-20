@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/aes",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -26,11 +26,11 @@
     "update": "ncu -u"
   },
   "dependencies": {
-    "@lindorm/errors": "^0.1.5",
-    "@lindorm/is": "^0.1.5",
-    "@lindorm/kryptos": "^0.3.1"
+    "@lindorm/errors": "^0.1.6",
+    "@lindorm/is": "^0.1.6",
+    "@lindorm/kryptos": "^0.3.2"
   },
   "devDependencies": {
-    "@lindorm/types": "^0.1.4"
+    "@lindorm/types": "^0.2.0"
   }
 }

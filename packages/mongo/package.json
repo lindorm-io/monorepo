@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/mongo",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -26,17 +26,17 @@
     "update": "ncu -u"
   },
   "dependencies": {
-    "@lindorm/case": "^0.1.4",
-    "@lindorm/date": "^0.1.3",
-    "@lindorm/errors": "^0.1.5",
-    "@lindorm/is": "^0.1.5",
-    "@lindorm/scanner": "^0.1.1",
-    "@lindorm/utils": "^0.1.4",
+    "@lindorm/case": "^0.1.5",
+    "@lindorm/date": "^0.1.4",
+    "@lindorm/errors": "^0.1.6",
+    "@lindorm/is": "^0.1.6",
+    "@lindorm/scanner": "^0.2.0",
+    "@lindorm/utils": "^0.2.0",
     "mongodb": "^6.8.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@lindorm/logger": "^0.1.4",
-    "@lindorm/types": "^0.1.4"
+    "@lindorm/logger": "^0.2.0",
+    "@lindorm/types": "^0.2.0"
   }
 }

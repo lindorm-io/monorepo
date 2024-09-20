@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/retry",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -26,6 +26,6 @@
     "update": "ncu -u"
   },
   "devDependencies": {
-    "@lindorm/types": "^0.1.4"
+    "@lindorm/types": "^0.2.0"
   }
 }

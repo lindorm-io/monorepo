@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/kryptos@0.3.1...@lindorm/kryptos@0.3.2) (2024-09-20)
+
+### Bug Fixes
+
+- amend bug in modulus size calculation ([9d5d84c](https://github.com/lindorm-io/monorepo/commit/9d5d84c2790f2a941c963fd6bdeb58870d01c6c1))
+- import from interfaces ([153a89a](https://github.com/lindorm-io/monorepo/commit/153a89ae3ca0ff9731fe1b69108b6c0649d497f6))
+- improve kryptos generation ([aa7122c](https://github.com/lindorm-io/monorepo/commit/aa7122c2c1a0e29afc3e5a48d2b8a735a4a9b09b))
+
 ## [0.3.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/kryptos@0.3.0...@lindorm/kryptos@0.3.1) (2024-05-20)
 
 ### Bug Fixes

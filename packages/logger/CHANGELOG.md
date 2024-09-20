@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.2.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/logger@0.1.4...@lindorm/logger@0.2.0) (2024-09-20)
+
+### Bug Fixes
+
+- align logger with standards ([82a1cd7](https://github.com/lindorm-io/monorepo/commit/82a1cd771fa53c28cce28b6db8d627303126c9fa))
+
+### Features
+
+- rename logger ([1d7be9b](https://github.com/lindorm-io/monorepo/commit/1d7be9bf801fc817b9ef28c2a7eec30e64cb305e))
+
 ## [0.1.4](https://github.com/lindorm-io/monorepo/compare/@lindorm/logger@0.1.3...@lindorm/logger@0.1.4) (2024-05-19)
 
 **Note:** Version bump only for package @lindorm/logger

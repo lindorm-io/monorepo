@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/aegis@0.2.0...@lindorm/aegis@0.2.1) (2024-09-20)
+
+### Bug Fixes
+
+- make issuer optional ([6e85927](https://github.com/lindorm-io/monorepo/commit/6e859272370e59dc334aca702fa37e1765f542ab))
+- return token on verify ([8bad0e0](https://github.com/lindorm-io/monorepo/commit/8bad0e02cb7979c9462387fcb62026e9e895643c))
+
 # [0.2.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/aegis@0.1.1...@lindorm/aegis@0.2.0) (2024-05-20)
 
 ### Features

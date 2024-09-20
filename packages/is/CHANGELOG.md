@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.6](https://github.com/lindorm-io/monorepo/compare/@lindorm/is@0.1.5...@lindorm/is@0.1.6) (2024-09-20)
+
+### Bug Fixes
+
+- update eslint config ([0d64d3f](https://github.com/lindorm-io/monorepo/commit/0d64d3ffed42ce6472c81865facf33e8fd66a2d2))
+
 ## [0.1.5](https://github.com/lindorm-io/monorepo/compare/@lindorm/is@0.1.4...@lindorm/is@0.1.5) (2024-05-19)
 
 **Note:** Version bump only for package @lindorm/is

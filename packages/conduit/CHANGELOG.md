@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.5](https://github.com/lindorm-io/monorepo/compare/@lindorm/conduit@0.1.4...@lindorm/conduit@0.1.5) (2024-09-20)
+
+### Bug Fixes
+
+- improve logging capabilities of factory functions ([e510a56](https://github.com/lindorm-io/monorepo/commit/e510a5679843e5120df87d60b864d2274647dc25))
+
 ## [0.1.4](https://github.com/lindorm-io/monorepo/compare/@lindorm/conduit@0.1.3...@lindorm/conduit@0.1.4) (2024-05-20)
 
 ### Bug Fixes

@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.3](https://github.com/lindorm-io/monorepo/compare/@lindorm/b64@0.1.2...@lindorm/b64@0.1.3) (2024-09-20)
+
+### Bug Fixes
+
+- add more encoding strings ([627272c](https://github.com/lindorm-io/monorepo/commit/627272c1f5cb1dc31da8ff3e284fde084f1a25d7))
+
 ## [0.1.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/b64@0.1.1...@lindorm/b64@0.1.2) (2024-05-19)
 
 ### Bug Fixes

@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/amphora",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -26,13 +26,13 @@
     "update": "ncu -u"
   },
   "dependencies": {
-    "@lindorm/conduit": "^0.1.4",
-    "@lindorm/errors": "^0.1.5",
-    "@lindorm/is": "^0.1.5",
-    "@lindorm/kryptos": "^0.3.1"
+    "@lindorm/conduit": "^0.1.5",
+    "@lindorm/errors": "^0.1.6",
+    "@lindorm/is": "^0.1.6",
+    "@lindorm/kryptos": "^0.3.2"
   },
   "devDependencies": {
-    "@lindorm/logger": "^0.1.4",
-    "@lindorm/types": "^0.1.4"
+    "@lindorm/logger": "^0.2.0",
+    "@lindorm/types": "^0.2.0"
   }
 }
