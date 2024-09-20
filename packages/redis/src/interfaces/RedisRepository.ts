@@ -22,10 +22,6 @@ export interface IRedisRepository<
   findOneByIdOrFail(id: string): Promise<E>;
   save(entity: E): Promise<E>;
   saveBulk(entities: Array<E>): Promise<Array<E>>;
-  softDelete(criteria: Criteria<E>): Promise<void>;
-  softDeleteById(id: string): Promise<void>;
-  softDestroy(entity: E): Promise<void>;
-  softDestroyBulk(entities: Array<E>): Promise<void>;
   ttl(criteria: Criteria<E>): Promise<number>;
   ttlById(id: string): Promise<number>;
 }
