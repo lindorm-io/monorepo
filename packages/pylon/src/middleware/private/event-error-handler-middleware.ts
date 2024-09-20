@@ -22,7 +22,7 @@ export const eventErrorHandlerMiddleware: PylonEventMiddleware = async (ctx, nex
         name: err.name ?? "Error",
         title: err.title ?? "Error",
       });
-    } catch (err) {
+    } catch (_) {
       ctx.socket.emit("error", {
         code: "unexpected_exception",
         data: {},

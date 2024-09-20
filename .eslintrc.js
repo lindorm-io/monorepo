@@ -44,10 +44,14 @@ module.exports = {
     "@typescript-eslint/no-unused-vars": [
       "error",
       {
-        args: "after-used",
+        args: "all",
+        argsIgnorePattern: "^_",
+        caughtErrors: "all",
+        caughtErrorsIgnorePattern: "^_",
         destructuredArrayIgnorePattern: "^_",
         ignoreRestSiblings: true,
         vars: "all",
+        varsIgnorePattern: "^_",
       },
     ],
     "comma-dangle": ["error", "always-multiline"],
