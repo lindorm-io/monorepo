@@ -165,7 +165,7 @@ describe("RedisRepository", () => {
       ),
     ).resolves.toEqual({
       id: expect.any(String),
-      rev: 1,
+      rev: 0,
       seq: 0,
       createdAt: MockedDate,
       updatedAt: MockedDate,
@@ -208,72 +208,6 @@ describe("RedisRepository", () => {
     await expect(repository.findOneById(e2.id)).resolves.toEqual(
       expect.objectContaining({ id: e2.id }),
     );
-  });
-
-  test("should soft destroy one entity", async () => {
-    const entity = repository.create({
-      email: randomUUID(),
-      name: randomUUID(),
-    });
-
-    await expect(repository.save(entity)).resolves.toEqual(expect.any(TestEntity));
-    await expect(repository.softDestroy(entity)).resolves.toBeUndefined();
-    await expect(repository.findOneById(entity.id)).resolves.toEqual(null);
-  });
-
-  test("should soft destroy entities", async () => {
-    const e1 = repository.create({
-      email: randomUUID(),
-      name: randomUUID(),
-    });
-
-    const e2 = repository.create({
-      email: randomUUID(),
-      name: randomUUID(),
-    });
-
-    await expect(repository.saveBulk([e1, e2])).resolves.toEqual([
-      expect.any(TestEntity),
-      expect.any(TestEntity),
-    ]);
-    await expect(repository.softDestroyBulk([e1, e2])).resolves.toBeUndefined();
-    await expect(repository.findOneById(e1.id)).resolves.toEqual(null);
-    await expect(repository.findOneById(e2.id)).resolves.toEqual(null);
-  });
-
-  test("should soft delete entities by criteria", async () => {
-    const name = randomUUID();
-
-    const e1 = repository.create({
-      id: randomUUID(),
-      name,
-    });
-
-    const e2 = repository.create({
-      id: randomUUID(),
-      name,
-    });
-
-    await expect(repository.saveBulk([e1, e2])).resolves.toEqual([
-      expect.any(TestEntity),
-      expect.any(TestEntity),
-    ]);
-
-    await expect(repository.softDelete({ name })).resolves.toBeUndefined();
-    await expect(repository.findOneById(e1.id)).resolves.toEqual(null);
-    await expect(repository.findOneById(e2.id)).resolves.toEqual(null);
-  });
-
-  test("should soft delete one entity by id", async () => {
-    const entity = await repository.save(
-      repository.create({
-        email: randomUUID(),
-        name: randomUUID(),
-      }),
-    );
-
-    await expect(repository.softDeleteById(entity.id)).resolves.toBeUndefined();
-    await expect(repository.findOneById(entity.id)).resolves.toEqual(null);
   });
 
   test("should get the time to live for an entity", async () => {

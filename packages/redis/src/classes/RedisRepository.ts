@@ -285,44 +285,6 @@ export class RedisRepository<
     return Promise.all(entities.map((entity) => this.save(entity)));
   }
 
-  public async softDestroy(entity: E): Promise<void> {
-    const updated = this.updateEntityData(entity);
-
-    updated.deletedAt = new Date();
-
-    await this.save(updated);
-  }
-
-  public async softDestroyBulk(entities: Array<E>): Promise<void> {
-    await Promise.all(entities.map((entity) => this.softDestroy(entity)));
-  }
-
-  public async softDelete(criteria: Criteria<E>): Promise<void> {
-    if (isString(criteria.id)) {
-      const entity = await this.findOneById(criteria.id);
-
-      if (entity) {
-        await this.softDestroy(entity);
-      }
-
-      return;
-    }
-
-    const entities = await this.find(criteria);
-
-    for (const entity of entities) {
-      await this.softDestroy(entity);
-    }
-  }
-
-  public async softDeleteById(id: string): Promise<void> {
-    const entity = await this.findOneById(id);
-
-    if (entity) {
-      await this.softDestroy(entity);
-    }
-  }
-
   public async ttl(criteria: Criteria<E>): Promise<number> {
     try {
       const entity = await this.findOneOrFail(criteria);
@@ -370,7 +332,6 @@ export class RedisRepository<
   private updateEntityData(entity: E): E {
     const updated = this.create(entity);
 
-    updated.rev = entity.rev + 1;
     updated.updatedAt = new Date();
 
     return updated;
