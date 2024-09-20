@@ -42,7 +42,7 @@ export const httpErrorHandlerMiddleware: PylonHttpMiddleware = async (ctx, next)
           },
         };
       }
-    } catch (err) {
+    } catch (_) {
       ctx.status = ServerError.Status.InternalServerError;
       ctx.body = {
         error: {
