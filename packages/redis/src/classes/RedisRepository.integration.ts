@@ -30,7 +30,7 @@ describe("RedisRepository", () => {
   });
 
   test("should create a new entity with default values", async () => {
-    const entity = repository.create();
+    const entity = repository.create({});
 
     expect(entity).toBeInstanceOf(TestEntity);
     expect(entity).toEqual({
