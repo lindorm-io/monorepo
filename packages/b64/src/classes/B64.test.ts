@@ -1,11 +1,6 @@
-import { B64 } from "./b64";
+import { B64 } from "./B64";
 
 describe("B64", () => {
-  const b64 = new B64("jonn");
-  const newthing = new B64("linda");
-  b64.thello() == "jonn";
-  newthing.thello() == "linda";
-
   describe("encode", () => {
     test("should encode base64", () => {
       expect(B64.encode("hello there - general kenobi")).toEqual(

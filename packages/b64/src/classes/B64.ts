@@ -1,18 +1,7 @@
 import { Base64Encoding } from "../types";
-import { decode } from "./private/decode";
-import { encodeBase64, encodeBase64Url } from "./private/encode";
+import { decode, encodeBase64, encodeBase64Url } from "../utils/private";
 
 export class B64 {
-  public thing: string;
-
-  public constructor(thing: string = "thing") {
-    this.thing = thing;
-  }
-
-  public thello(): string {
-    return this.thing;
-  }
-
   public static encode(
     input: Buffer | string,
     encoding: Base64Encoding = "base64",
