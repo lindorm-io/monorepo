@@ -1,4 +1,4 @@
-import { isArray, isObjectLike, isString } from "@lindorm/is";
+import { isArray, isBuffer, isObjectLike, isString } from "@lindorm/is";
 import { Dict } from "@lindorm/types";
 import {
   getMetaArray,
@@ -14,7 +14,12 @@ export class Primitive<T extends Array<any> | Dict = Dict> {
   private readonly _meta: Array<any> | Dict;
 
   public constructor(input: any) {
-    if (isArray(input)) {
+    if (isBuffer(input)) {
+      const { data, meta } = JSON.parse(input.toString());
+
+      this._data = data;
+      this._meta = meta;
+    } else if (isArray(input)) {
       this._data = stringifyArrayValues(input);
       this._meta = getMetaArray(input);
     } else if (isObjectLike(input)) {
@@ -41,6 +46,10 @@ export class Primitive<T extends Array<any> | Dict = Dict> {
   }
 
   // public
+
+  public toBuffer(): Buffer {
+    return Buffer.from(this.toString());
+  }
 
   public toJSON(): T {
     return Primitive.parse(this._data, this._meta) as T;
