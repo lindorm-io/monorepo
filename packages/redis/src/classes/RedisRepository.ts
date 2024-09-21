@@ -48,7 +48,7 @@ export class RedisRepository<
     return entities.length;
   }
 
-  public create(options: O | E = {} as O): E {
+  public create(options: O | E): E {
     const entity = new this.EntityConstructor(options);
 
     entity.id = (options.id as string) ?? entity.id ?? randomUUID();
