@@ -5,14 +5,8 @@ import { TestEntity } from "../../__fixtures__/test-entity";
 import { EntityScanner } from "./EntityScanner";
 
 describe("EntityScanner", () => {
-  let scanner: EntityScanner;
-
-  beforeEach(() => {
-    scanner = new EntityScanner();
-  });
-
   test("should return with array of entity constructors", () => {
-    expect(scanner.scan([TestEntity, TestEntityOne, TestEntityTwo])).toEqual([
+    expect(EntityScanner.scan([TestEntity, TestEntityOne, TestEntityTwo])).toEqual([
       { Entity: TestEntity },
       { Entity: TestEntityOne },
       { Entity: TestEntityTwo },
@@ -21,7 +15,7 @@ describe("EntityScanner", () => {
 
   test("should return with array of entity options objects", () => {
     expect(
-      scanner.scan([
+      EntityScanner.scan([
         { Entity: TestEntity, validate: jest.fn() },
         { Entity: TestEntityOne, validate: jest.fn() },
         { Entity: TestEntityTwo },
@@ -35,7 +29,7 @@ describe("EntityScanner", () => {
 
   test("should return with array of entity paths", () => {
     expect(
-      scanner.scan([join(__dirname, "..", "..", "__fixtures__", "entities")]),
+      EntityScanner.scan([join(__dirname, "..", "..", "__fixtures__", "entities")]),
     ).toEqual([
       { Entity: TestEntityOne, validate: expect.any(Function) },
       { Entity: TestEntityTwo },

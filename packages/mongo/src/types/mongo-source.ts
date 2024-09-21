@@ -27,6 +27,19 @@ export type MongoSourceEntities = Array<
 
 export type MongoSourceFiles = Array<Constructor<IMongoFile> | MongoSourceFile | string>;
 
+export type MongoSourceRepositoryOptions<E extends IMongoEntity> = {
+  config?: MongoEntityConfig;
+  indexes?: Array<MongoIndexOptions<E>>;
+  logger?: ILogger;
+  validate?: ValidateMongoEntityFn<E>;
+};
+
+export type MongoSourceBucketOptions<F extends IMongoFile> = {
+  indexes?: Array<MongoIndexOptions<FileIndex<F>>>;
+  logger?: ILogger;
+  validate?: ValidateFileFn<F>;
+};
+
 export type MongoSourceOptions = {
   config?: MongoOptions;
   database: string;

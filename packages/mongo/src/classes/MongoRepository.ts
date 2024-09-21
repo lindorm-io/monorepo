@@ -95,6 +95,8 @@ export class MongoRepository<
     entity.deletedAt = (options.deletedAt as Date) ?? (entity.deletedAt as Date) ?? null;
     entity.expiresAt = (options.expiresAt as Date) ?? (entity.expiresAt as Date) ?? null;
 
+    this.validateBaseEntity(entity);
+
     this.logger.debug("Created entity", { entity });
 
     return entity;

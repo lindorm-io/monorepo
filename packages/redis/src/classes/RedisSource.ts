@@ -1,7 +1,7 @@
 import { ILogger } from "@lindorm/logger";
 import { Constructor } from "@lindorm/types";
 import { Redis } from "ioredis";
-import { RedisRepositoryError } from "../errors";
+import { RedisSourceError } from "../errors";
 import {
   IRedisEntity,
   IRedisRepository,
@@ -27,7 +27,7 @@ export class RedisSource implements IRedisSource {
       ? new Redis(options.url, options.config)
       : new Redis(options.url);
 
-    this.entities = new EntityScanner().scan(options.entities);
+    this.entities = EntityScanner.scan(options.entities);
   }
 
   // public
@@ -68,6 +68,8 @@ export class RedisSource implements IRedisSource {
       return config;
     }
 
-    throw new RedisRepositoryError(`Entity not found in entities list`);
+    throw new RedisSourceError("Entity not found in entities list", {
+      debug: { Entity },
+    });
   }
 }

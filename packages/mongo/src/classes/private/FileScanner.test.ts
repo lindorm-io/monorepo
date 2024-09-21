@@ -5,14 +5,8 @@ import { TestFile } from "../../__fixtures__/test-file";
 import { FileScanner } from "./FileScanner";
 
 describe("FileScanner", () => {
-  let scanner: FileScanner;
-
-  beforeEach(() => {
-    scanner = new FileScanner();
-  });
-
   test("should return with array of file constructors", () => {
-    expect(scanner.scan([TestFile, TestFileOne, TestFileTwo])).toEqual([
+    expect(FileScanner.scan([TestFile, TestFileOne, TestFileTwo])).toEqual([
       { File: TestFile },
       { File: TestFileOne },
       { File: TestFileTwo },
@@ -21,7 +15,7 @@ describe("FileScanner", () => {
 
   test("should return with array of file options objects", () => {
     expect(
-      scanner.scan([
+      FileScanner.scan([
         { File: TestFile, validate: jest.fn() },
         { File: TestFileOne, validate: jest.fn() },
         { File: TestFileTwo, indexes: [] },
@@ -34,7 +28,9 @@ describe("FileScanner", () => {
   });
 
   test("should return with array of file paths", () => {
-    expect(scanner.scan([join(__dirname, "..", "..", "__fixtures__", "files")])).toEqual([
+    expect(
+      FileScanner.scan([join(__dirname, "..", "..", "__fixtures__", "files")]),
+    ).toEqual([
       { File: TestFileOne, validate: expect.any(Function) },
       { File: TestFileTwo, indexes: expect.any(Array) },
     ]);
