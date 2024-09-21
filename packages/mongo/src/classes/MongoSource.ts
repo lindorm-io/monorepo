@@ -1,17 +1,21 @@
 import { ILogger } from "@lindorm/logger";
 import { Constructor } from "@lindorm/types";
 import { MongoClient } from "mongodb";
-import { MongoRepositoryError } from "../errors";
+import { MongoSourceError } from "../errors";
 import {
   IMongoBucket,
   IMongoEntity,
   IMongoFile,
   IMongoRepository,
   IMongoSource,
-  MongoSourceBucketOptions,
-  MongoSourceRepositoryOptions,
 } from "../interfaces";
-import { MongoSourceEntity, MongoSourceFile, MongoSourceOptions } from "../types";
+import {
+  MongoSourceBucketOptions,
+  MongoSourceEntity,
+  MongoSourceFile,
+  MongoSourceOptions,
+  MongoSourceRepositoryOptions,
+} from "../types";
 import { MongoBucket } from "./MongoBucket";
 import { MongoRepository } from "./MongoRepository";
 import { EntityScanner, FileScanner } from "./private";
@@ -26,16 +30,16 @@ export class MongoSource implements IMongoSource {
   public readonly client: MongoClient;
 
   public constructor(options: MongoSourceOptions) {
-    this.database = options.database;
     this.logger = options.logger.child(["MongoSource"]);
+    this.database = options.database;
     this.namespace = options.namespace;
 
     this.client = options.config
       ? new MongoClient(options.url, options.config)
       : new MongoClient(options.url);
 
-    this.entities = options.entities ? new EntityScanner().scan(options.entities) : [];
-    this.files = options.files ? new FileScanner().scan(options.files) : [];
+    this.entities = options.entities ? EntityScanner.scan(options.entities) : [];
+    this.files = options.files ? FileScanner.scan(options.files) : [];
   }
 
   // public
@@ -100,7 +104,9 @@ export class MongoSource implements IMongoSource {
       return config;
     }
 
-    throw new MongoRepositoryError(`Entity not found in entities list`);
+    throw new MongoSourceError("Entity not found in entities list", {
+      debug: { Entity },
+    });
   }
 
   private fileConfig(File: Constructor<IMongoFile>): MongoSourceFile {
@@ -110,6 +116,6 @@ export class MongoSource implements IMongoSource {
       return config;
     }
 
-    throw new MongoRepositoryError(`File not found in files list`);
+    throw new MongoSourceError("File not found in files list", { debug: { File } });
   }
 }

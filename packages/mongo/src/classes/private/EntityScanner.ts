@@ -6,18 +6,9 @@ import { IMongoEntity } from "../../interfaces";
 import { MongoIndexOptions, MongoSourceEntities, MongoSourceEntity } from "../../types";
 
 export class EntityScanner {
-  private readonly scanner: Scanner;
-
-  public constructor() {
-    this.scanner = new Scanner({
-      deniedFilenames: [/^index$/],
-      deniedTypes: [/^fixture$/, /^spec$/, /^test$/, /^integration$/],
-    });
-  }
-
   // public
 
-  public scan(array: MongoSourceEntities): Array<MongoSourceEntity> {
+  public static scan(array: MongoSourceEntities): Array<MongoSourceEntity> {
     const result: Array<MongoSourceEntity> = [];
 
     const strings = array.filter((entity) => isString(entity)) as Array<string>;
@@ -40,13 +31,13 @@ export class EntityScanner {
     if (!strings.length) return result;
 
     for (const path of strings) {
-      const item = this.scanner.scan(path);
+      const item = EntityScanner.scanner.scan(path);
 
       if (item.isDirectory) {
-        result.push(...this.scanDirectory(item));
+        result.push(...EntityScanner.scanDirectory(item));
       }
       if (item.isFile) {
-        result.push(this.scanFile(item));
+        result.push(EntityScanner.scanFile(item));
       }
     }
 
@@ -55,23 +46,23 @@ export class EntityScanner {
 
   // private
 
-  private scanDirectory(data: ScanData): Array<MongoSourceEntity> {
+  private static scanDirectory(data: ScanData): Array<MongoSourceEntity> {
     const result: Array<MongoSourceEntity> = [];
 
     for (const child of data.children) {
       if (child.isDirectory) {
-        result.push(...this.scanDirectory(child));
+        result.push(...EntityScanner.scanDirectory(child));
       }
       if (child.isFile) {
-        result.push(this.scanFile(child));
+        result.push(EntityScanner.scanFile(child));
       }
     }
 
     return result;
   }
 
-  private scanFile(data: ScanData): MongoSourceEntity {
-    const module = this.scanner.require<Dict>(data.fullPath);
+  private static scanFile(data: ScanData): MongoSourceEntity {
+    const module = EntityScanner.scanner.require<Dict>(data.fullPath);
     const entries = Object.entries(module);
     const result: Partial<MongoSourceEntity> = {};
 
@@ -81,7 +72,7 @@ export class EntityScanner {
 
     for (const [key, value] of Object.entries(module)) {
       if (key === "default") continue;
-      if (result.Entity && result.validate) break;
+      if (result.Entity && result.config && result.indexes && result.validate) break;
 
       if (key === "config" && isObject(value)) {
         result.config = value;
@@ -109,5 +100,12 @@ export class EntityScanner {
     }
 
     return result as MongoSourceEntity;
+  }
+
+  private static get scanner(): Scanner {
+    return new Scanner({
+      deniedFilenames: [/^index$/],
+      deniedTypes: [/^fixture$/, /^spec$/, /^test$/, /^integration$/],
+    });
   }
 }

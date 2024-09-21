@@ -6,18 +6,9 @@ import { IMongoFile } from "../../interfaces";
 import { MongoIndexOptions, MongoSourceFile, MongoSourceFiles } from "../../types";
 
 export class FileScanner {
-  private readonly scanner: Scanner;
-
-  public constructor() {
-    this.scanner = new Scanner({
-      deniedFilenames: [/^index$/],
-      deniedTypes: [/^fixture$/, /^spec$/, /^test$/, /^integration$/],
-    });
-  }
-
   // public
 
-  public scan(array: MongoSourceFiles): Array<MongoSourceFile> {
+  public static scan(array: MongoSourceFiles): Array<MongoSourceFile> {
     const result: Array<MongoSourceFile> = [];
 
     const strings = array.filter((file) => isString(file)) as Array<string>;
@@ -40,13 +31,13 @@ export class FileScanner {
     if (!strings.length) return result;
 
     for (const path of strings) {
-      const item = this.scanner.scan(path);
+      const item = FileScanner.scanner.scan(path);
 
       if (item.isDirectory) {
-        result.push(...this.scanDirectory(item));
+        result.push(...FileScanner.scanDirectory(item));
       }
       if (item.isFile) {
-        result.push(this.scanFile(item));
+        result.push(FileScanner.scanFile(item));
       }
     }
 
@@ -55,23 +46,23 @@ export class FileScanner {
 
   // private
 
-  private scanDirectory(data: ScanData): Array<MongoSourceFile> {
+  private static scanDirectory(data: ScanData): Array<MongoSourceFile> {
     const result: Array<MongoSourceFile> = [];
 
     for (const child of data.children) {
       if (child.isDirectory) {
-        result.push(...this.scanDirectory(child));
+        result.push(...FileScanner.scanDirectory(child));
       }
       if (child.isFile) {
-        result.push(this.scanFile(child));
+        result.push(FileScanner.scanFile(child));
       }
     }
 
     return result;
   }
 
-  private scanFile(data: ScanData): MongoSourceFile {
-    const module = this.scanner.require<Dict>(data.fullPath);
+  private static scanFile(data: ScanData): MongoSourceFile {
+    const module = FileScanner.scanner.require<Dict>(data.fullPath);
     const entries = Object.entries(module);
     const result: Partial<MongoSourceFile> = {};
 
@@ -81,7 +72,7 @@ export class FileScanner {
 
     for (const [key, value] of Object.entries(module)) {
       if (key === "default") continue;
-      if (result.File && result.validate) break;
+      if (result.File && result.indexes && result.validate) break;
 
       if (key === "validate" && isFunction(value)) {
         result.validate = value;
@@ -104,5 +95,12 @@ export class FileScanner {
     }
 
     return result as MongoSourceFile;
+  }
+
+  private static get scanner(): Scanner {
+    return new Scanner({
+      deniedFilenames: [/^index$/],
+      deniedTypes: [/^fixture$/, /^spec$/, /^test$/, /^integration$/],
+    });
   }
 }
