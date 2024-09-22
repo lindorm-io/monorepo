@@ -21,6 +21,8 @@ export type AmqpSourceMessageBusOptions<M extends IAmqpMessage> = {
 
 export type AmqpSourceOptions = {
   config?: Options.Connect;
+  connectInterval?: number;
+  connectTimeout?: number;
   deadletters?: string;
   exchange?: string;
   logger: ILogger;

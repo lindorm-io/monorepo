@@ -2,6 +2,7 @@ import { LindormError } from "@lindorm/errors";
 import { JsonKit } from "@lindorm/json-kit";
 import { ILogger } from "@lindorm/logger";
 import { Constructor } from "@lindorm/types";
+import { sleep } from "@lindorm/utils";
 import amqplib, { ConfirmChannel, Connection, ConsumeMessage } from "amqplib";
 import { AmqpSourceError } from "../errors";
 import { IAmqpMessage, IAmqpMessageBus, IAmqpSource } from "../interfaces";
@@ -33,9 +34,7 @@ export class AmqpSource implements IAmqpSource {
     this.nackTimeout = options.nackTimeout ?? 3000;
     this.subscriptions = new SubscriptionList();
 
-    this.promise = options.config
-      ? amqplib.connect(options.config)
-      : amqplib.connect(options.url);
+    this.promise = this.connectWithRetry(options);
 
     this.messages = options.messages ? MessageScanner.scan(options.messages) : [];
   }
@@ -54,8 +53,8 @@ export class AmqpSource implements IAmqpSource {
   }
 
   public async disconnect(): Promise<void> {
-    await this.channel.close();
-    await this.client.close();
+    await this.confirmChannel?.close();
+    await this.connection?.close();
   }
 
   public messageBus<M extends IAmqpMessage>(
@@ -82,11 +81,11 @@ export class AmqpSource implements IAmqpSource {
     }
 
     this.confirmChannel = await this.client.createConfirmChannel();
-    this.channel.on("return", this.onReturnedMessage.bind(this));
+    this.confirmChannel.on("return", this.onReturnedMessage.bind(this));
 
-    await this.channel.assertExchange(this.exchange, "topic", { durable: true });
+    await this.confirmChannel.assertExchange(this.exchange, "topic", { durable: true });
     await bindQueue({
-      channel: this.channel,
+      channel: this.confirmChannel,
       exchange: this.exchange,
       logger: this.logger,
       queue: this.deadletters,
@@ -135,5 +134,35 @@ export class AmqpSource implements IAmqpSource {
         }
       },
     );
+  }
+
+  private async connectWithRetry(
+    options: AmqpSourceOptions,
+    start = Date.now(),
+  ): Promise<Connection> {
+    const connectInterval = options.connectInterval ?? 250;
+    const connectTimeout = options.connectTimeout ?? 10000;
+
+    try {
+      const connection = options.config
+        ? amqplib.connect(options.config)
+        : amqplib.connect(options.url);
+
+      await connection;
+
+      this.logger.debug("Connection established", { time: Date.now() - start });
+
+      return connection;
+    } catch (err: any) {
+      this.logger.debug("Connection error", err);
+
+      await sleep(connectInterval);
+
+      if (Date.now() > start + connectTimeout) {
+        throw new LindormError("Connection Timeout", { error: err });
+      }
+
+      return this.connectWithRetry(options, start);
+    }
   }
 }
