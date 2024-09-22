@@ -17,7 +17,7 @@
     "build": "rimraf dist && tsc -b ./tsconfig.build.json",
     "example": "ts-node example",
     "integration": "compd --file docker-compose.yml jest --config jest.config.integration.js --watch --",
-    "test:ci": "npm run test:unit",
+    "test:ci": "npm run test:unit && npm run test:integration",
     "test:integration": "jest --config jest.config.integration.js --",
     "test:unit": "jest --config jest.config.js --",
     "test": "jest --watch --",
