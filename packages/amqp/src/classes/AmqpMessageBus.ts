@@ -47,7 +47,6 @@ export class AmqpMessageBus<
     message.delay = (options.delay as number) ?? message.delay ?? 0;
     message.mandatory = (options.mandatory as boolean) ?? message.mandatory ?? false;
     message.timestamp = (options.timestamp as Date) ?? message.timestamp ?? new Date();
-    message.topic = (options.topic as string) ?? message.topic;
     message.type =
       (options.type as string) ?? message.type ?? this.MessageConstructor.name;
 
