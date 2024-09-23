@@ -1,6 +1,6 @@
 import { Conduit } from "@lindorm/conduit";
 import { createMockLogger } from "@lindorm/logger";
-import { createSocketConduitMiddleware } from "./event-conduit-middleware";
+import { createSocketConduitMiddleware } from "./socket-conduit-middleware";
 
 describe("createSocketConduitMiddleware", () => {
   let ctx: any;

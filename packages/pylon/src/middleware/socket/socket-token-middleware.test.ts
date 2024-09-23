@@ -1,6 +1,6 @@
 import { createMockAegis } from "@lindorm/aegis";
 import { createMockLogger } from "@lindorm/logger";
-import { socketTokenMiddleware } from "./event-token-middleware";
+import { socketTokenMiddleware } from "./socket-token-middleware";
 
 describe("createSocketTokenMiddleware", () => {
   let ctx: any;
