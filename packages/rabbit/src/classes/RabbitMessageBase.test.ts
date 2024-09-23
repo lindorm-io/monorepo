@@ -12,7 +12,6 @@ describe("RabbitMessageBase", () => {
   test("should construct", () => {
     const message = new TestMessage({ name: "test message name" });
     expect(message).toEqual({
-      _topic: expect.any(String),
       id: "032eadb7-3889-48fe-b538-5f3baa879182",
       delay: 0,
       mandatory: false,

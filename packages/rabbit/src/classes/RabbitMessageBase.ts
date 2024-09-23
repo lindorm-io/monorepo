@@ -3,8 +3,6 @@ import { randomUUID } from "crypto";
 import { IRabbitMessage } from "../interfaces";
 
 export class RabbitMessageBase implements IRabbitMessage {
-  private readonly _topic: string;
-
   public readonly id: string;
   public readonly delay: number;
   public readonly mandatory: boolean;
@@ -17,11 +15,9 @@ export class RabbitMessageBase implements IRabbitMessage {
     this.mandatory = options.mandatory ?? false;
     this.timestamp = options.timestamp ?? new Date();
     this.type = options.type ?? this.constructor.name;
-
-    this._topic = options.topic ?? dotCase(this.constructor.name);
   }
 
   public get topic(): string {
-    return this._topic;
+    return dotCase(this.type);
   }
 }
