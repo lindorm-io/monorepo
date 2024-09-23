@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/rabbit",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -29,7 +29,7 @@
     "@lindorm/case": "^0.1.5",
     "@lindorm/errors": "^0.1.6",
     "@lindorm/is": "^0.1.6",
-    "@lindorm/json-kit": "^0.2.1",
+    "@lindorm/json-kit": "^0.3.0",
     "@lindorm/scanner": "^0.2.0",
     "@lindorm/utils": "^0.2.0",
     "amqplib": "^0.10.4",

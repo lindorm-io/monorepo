@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.4](https://github.com/lindorm-io/monorepo/compare/@lindorm/b64@0.1.3...@lindorm/b64@0.1.4) (2024-09-23)
+
+### Bug Fixes
+
+- move class to correct directory ([0a5f6f7](https://github.com/lindorm-io/monorepo/commit/0a5f6f784c0fd7727d37d36234dfabd75b8ad9c0))
+
 ## [0.1.3](https://github.com/lindorm-io/monorepo/compare/@lindorm/b64@0.1.2...@lindorm/b64@0.1.3) (2024-09-20)
 
 ### Bug Fixes

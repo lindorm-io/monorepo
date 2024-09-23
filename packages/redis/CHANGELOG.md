@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/redis@0.1.0...@lindorm/redis@0.1.1) (2024-09-23)
+
+### Bug Fixes
+
+- add missing mocks ([628c4c5](https://github.com/lindorm-io/monorepo/commit/628c4c5af3bf46e8bf7616aef5f2a248a455ca05))
+- update create method ([5d2db6f](https://github.com/lindorm-io/monorepo/commit/5d2db6f55f9081593533c38eccdb96202d30e2cc))
+- update scanners and errors ([a0769e5](https://github.com/lindorm-io/monorepo/commit/a0769e599a3b644e554c1ad75c687a0cc65feb12))
+
 # 0.1.0 (2024-09-20)
 
 ### Bug Fixes

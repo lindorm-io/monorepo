@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/mongo@0.1.0...@lindorm/mongo@0.1.1) (2024-09-23)
+
+### Bug Fixes
+
+- add missing mocks ([8ab49e4](https://github.com/lindorm-io/monorepo/commit/8ab49e44b25251ed14a61ca2c96e1a0e6ad2fc04))
+- update scanners and errors ([a0769e5](https://github.com/lindorm-io/monorepo/commit/a0769e599a3b644e554c1ad75c687a0cc65feb12))
+
 # 0.1.0 (2024-09-20)
 
 ### Bug Fixes
