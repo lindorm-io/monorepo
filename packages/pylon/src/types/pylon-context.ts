@@ -1,6 +1,7 @@
 import { IAegis, VerifiedJws, VerifiedJwt } from "@lindorm/aegis";
 import { IAmphora } from "@lindorm/amphora";
-import { Environment, IConduit } from "@lindorm/conduit";
+import { IConduit } from "@lindorm/conduit";
+import { Environment } from "@lindorm/enums";
 import { ILogger } from "@lindorm/logger";
 import { Dict } from "@lindorm/types";
 import { Files } from "formidable";

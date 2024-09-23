@@ -1,4 +1,4 @@
-import { Environment } from "@lindorm/conduit";
+import { Environment } from "@lindorm/enums";
 import { randomUUID as _randomUUID } from "crypto";
 import MockDate from "mockdate";
 import { createHttpMetadataMiddleware } from "./http-metadata-middleware";

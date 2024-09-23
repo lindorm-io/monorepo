@@ -1,4 +1,4 @@
-import { Environment } from "@lindorm/conduit";
+import { Environment } from "@lindorm/enums";
 import { isArray, isString } from "@lindorm/is";
 import { ILogger } from "@lindorm/logger";
 import { uniq } from "@lindorm/utils";
