@@ -1,3 +1,4 @@
+export * from "./http-basic-auth-middleware";
 export * from "./http-bearer-token-middleware";
 export * from "./http-conduit-middleware";
 export * from "./http-token-middleware";

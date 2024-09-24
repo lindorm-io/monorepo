@@ -1,3 +1,4 @@
+export * from "./credentials";
 export * from "./http-callback";
 export * from "./open-id-configuration";
 export * from "./options";
