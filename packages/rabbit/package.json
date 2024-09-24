@@ -37,6 +37,7 @@
   },
   "devDependencies": {
     "@lindorm/logger": "^0.2.0",
+    "@lindorm/pylon": "^0.1.1",
     "@lindorm/types": "^0.2.0",
     "@types/amqplib": "^0.10.5"
   }
