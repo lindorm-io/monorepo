@@ -11,6 +11,7 @@ import {
   RabbitSourceMessageBusOptions,
   RabbitSourceOptions,
 } from "../types";
+import { FromClone } from "../types/private";
 import { bindQueue } from "../utils";
 import { RabbitMessageBus } from "./RabbitMessageBus";
 import { MessageScanner, SubscriptionList } from "./private";
@@ -27,16 +28,29 @@ export class RabbitSource implements IRabbitSource {
   private confirmChannel: ConfirmChannel | undefined;
   private connection: Connection | undefined;
 
-  public constructor(options: RabbitSourceOptions) {
+  public constructor(options: RabbitSourceOptions);
+  public constructor(fromClone: FromClone);
+  public constructor(options: RabbitSourceOptions | FromClone) {
     this.logger = options.logger.child(["RabbitSource"]);
     this.deadletters = options.deadletters ?? "deadletters";
     this.exchange = options.exchange ?? "exchange";
     this.nackTimeout = options.nackTimeout ?? 3000;
-    this.subscriptions = new SubscriptionList();
 
-    this.promise = this.connectWithRetry(options);
+    if ("_mode" in options && options._mode === "from_clone") {
+      const opts = options as FromClone;
 
-    this.messages = options.messages ? MessageScanner.scan(options.messages) : [];
+      this.confirmChannel = opts.confirmChannel;
+      this.promise = Promise.resolve(opts.connection);
+      this.connection = opts.connection;
+      this.messages = opts.messages;
+      this.subscriptions = opts.subscriptions;
+    } else {
+      const opts = options as RabbitSourceOptions;
+
+      this.messages = opts.messages ? MessageScanner.scan(opts.messages) : [];
+      this.promise = this.connectWithRetry(opts);
+      this.subscriptions = new SubscriptionList();
+    }
   }
 
   // public
@@ -46,6 +60,26 @@ export class RabbitSource implements IRabbitSource {
       throw new LindormError("Connection not established");
     }
     return this.connection;
+  }
+
+  public clone(logger?: ILogger): IRabbitSource {
+    if (!this.connection) {
+      throw new RabbitSourceError("Connection not established");
+    }
+    if (!this.confirmChannel) {
+      throw new RabbitSourceError("Channel not established");
+    }
+    return new RabbitSource({
+      _mode: "from_clone",
+      confirmChannel: this.confirmChannel,
+      connection: this.connection,
+      deadletters: this.deadletters,
+      exchange: this.exchange,
+      logger: logger ?? this.logger,
+      messages: this.messages,
+      nackTimeout: this.nackTimeout,
+      subscriptions: this.subscriptions,
+    });
   }
 
   public async connect(): Promise<void> {
