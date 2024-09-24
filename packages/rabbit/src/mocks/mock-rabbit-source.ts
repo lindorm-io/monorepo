@@ -4,6 +4,7 @@ import { createMockRabbitMessageBus } from "./mock-rabbit-message-bus";
 
 export const createMockRabbitSource = (): IRabbitSource => ({
   client: {} as any,
+  clone: jest.fn().mockImplementation(() => createMockRabbitSource()),
   connect: jest.fn(),
   disconnect: jest.fn(),
   setup: jest.fn(),
