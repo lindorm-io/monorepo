@@ -9,6 +9,7 @@ import {
   RedisSourceRepositoryOptions,
 } from "../interfaces";
 import { RedisSourceEntity, RedisSourceOptions } from "../types";
+import { FromClone } from "../types/private";
 import { RedisRepository } from "./RedisRepository";
 import { EntityScanner } from "./private";
 
@@ -19,18 +20,36 @@ export class RedisSource implements IRedisSource {
 
   public readonly client: Redis;
 
-  public constructor(options: RedisSourceOptions) {
+  public constructor(options: RedisSourceOptions);
+  public constructor(options: FromClone);
+  public constructor(options: RedisSourceOptions | FromClone) {
     this.logger = options.logger.child(["RedisSource"]);
     this.namespace = options.namespace;
 
-    this.client = options.config
-      ? new Redis(options.url, options.config)
-      : new Redis(options.url);
+    if ("_mode" in options && options._mode === "from_clone") {
+      const opts = options as FromClone;
 
-    this.entities = EntityScanner.scan(options.entities);
+      this.client = opts.client;
+      this.entities = opts.entities;
+    } else {
+      const opts = options as RedisSourceOptions;
+
+      this.client = opts.config ? new Redis(opts.url, opts.config) : new Redis(opts.url);
+      this.entities = EntityScanner.scan(opts.entities);
+    }
   }
 
   // public
+
+  public clone(logger?: ILogger): IRedisSource {
+    return new RedisSource({
+      _mode: "from_clone",
+      client: this.client,
+      entities: this.entities,
+      logger: logger ?? this.logger,
+      namespace: this.namespace,
+    });
+  }
 
   public async connect(): Promise<void> {
     await this.client.connect();

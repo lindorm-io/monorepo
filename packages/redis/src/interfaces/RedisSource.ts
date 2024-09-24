@@ -13,6 +13,7 @@ export type RedisSourceRepositoryOptions<E extends IRedisEntity> = {
 export interface IRedisSource {
   client: Redis;
 
+  clone(logger?: ILogger): IRedisSource;
   connect(): Promise<void>;
   disconnect(): Promise<void>;
   repository<E extends IRedisEntity>(
