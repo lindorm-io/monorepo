@@ -6,7 +6,8 @@ import {
   conduitClientCredentialsMiddleware,
 } from "./conduit-client-credentials-middleware";
 
-MockDate.set("2024-01-01T00:00:00.000Z");
+const MockedDate = new Date("2024-01-01T00:00:00.000Z");
+MockDate.set(MockedDate);
 
 describe("conduit-client-credentials-middleware", () => {
   let ctx: any;

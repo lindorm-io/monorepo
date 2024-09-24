@@ -2,7 +2,8 @@ import MockDate from "mockdate";
 import { TEST_ARRAY, TEST_DICT, TEST_STRING } from "../__fixtures__/test-data";
 import { Primitive } from "./Primitive";
 
-MockDate.set("2020-01-01T08:00:00.000Z");
+const MockedDate = new Date("2024-01-01T08:00:00.000Z");
+MockDate.set(MockedDate);
 
 describe("Primitive", () => {
   describe("array", () => {
