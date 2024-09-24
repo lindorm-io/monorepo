@@ -1,3 +1,4 @@
+export * from "./middleware";
 export * from "./mongo-base";
 export * from "./mongo-bucket";
 export * from "./mongo-file";
