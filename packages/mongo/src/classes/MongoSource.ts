@@ -16,6 +16,7 @@ import {
   MongoSourceOptions,
   MongoSourceRepositoryOptions,
 } from "../types";
+import { FromClone } from "../types/private";
 import { MongoBucket } from "./MongoBucket";
 import { MongoRepository } from "./MongoRepository";
 import { EntityScanner, FileScanner } from "./private";
@@ -29,20 +30,44 @@ export class MongoSource implements IMongoSource {
 
   public readonly client: MongoClient;
 
-  public constructor(options: MongoSourceOptions) {
+  public constructor(options: MongoSourceOptions);
+  public constructor(fromClone: FromClone);
+  public constructor(options: MongoSourceOptions | FromClone) {
     this.logger = options.logger.child(["MongoSource"]);
     this.database = options.database;
     this.namespace = options.namespace;
 
-    this.client = options.config
-      ? new MongoClient(options.url, options.config)
-      : new MongoClient(options.url);
+    if ("_mode" in options && options._mode === "from_clone") {
+      const opts = options as FromClone;
 
-    this.entities = options.entities ? EntityScanner.scan(options.entities) : [];
-    this.files = options.files ? FileScanner.scan(options.files) : [];
+      this.client = opts.client;
+      this.entities = opts.entities;
+      this.files = opts.files;
+    } else {
+      const opts = options as MongoSourceOptions;
+
+      this.client = opts.config
+        ? new MongoClient(opts.url, opts.config)
+        : new MongoClient(opts.url);
+
+      this.entities = opts.entities ? EntityScanner.scan(opts.entities) : [];
+      this.files = opts.files ? FileScanner.scan(opts.files) : [];
+    }
   }
 
   // public
+
+  public clone(logger?: ILogger): IMongoSource {
+    return new MongoSource({
+      _mode: "from_clone",
+      client: this.client,
+      database: this.database,
+      entities: this.entities,
+      files: this.files,
+      logger: logger ?? this.logger,
+      namespace: this.namespace,
+    });
+  }
 
   public async connect(): Promise<void> {
     await this.client.connect();
@@ -92,6 +117,10 @@ export class MongoSource implements IMongoSource {
 
     for (const entity of this.entities) {
       await this.repository(entity.Entity).setup();
+    }
+
+    for (const file of this.files) {
+      await this.bucket(file.File).setup();
     }
   }
 
