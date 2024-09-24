@@ -6,6 +6,7 @@ import {
   conduitCorrelationMiddleware,
 } from "@lindorm/conduit";
 import { ServerError } from "@lindorm/errors";
+import { isArray } from "@lindorm/is";
 import { PylonHttpContext, PylonHttpMiddleware } from "../../types";
 
 type Options = Omit<ConduitOptions, "alias" | "baseUrl" | "logger"> & {
@@ -18,7 +19,7 @@ export const createHttpConduitMiddleware = <
 >(
   conduitOptions: Options | Array<Options>,
 ): PylonHttpMiddleware<C> => {
-  const array = Array.isArray(conduitOptions) ? conduitOptions : [conduitOptions];
+  const array = isArray(conduitOptions) ? conduitOptions : [conduitOptions];
 
   for (const options of array) {
     if (options.alias) continue;
