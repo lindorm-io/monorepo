@@ -1,3 +1,4 @@
+import { ILogger } from "@lindorm/logger";
 import { Constructor, DeepPartial } from "@lindorm/types";
 import { MongoClient } from "mongodb";
 import { MongoSourceBucketOptions, MongoSourceRepositoryOptions } from "../types";
@@ -9,6 +10,7 @@ import { IMongoRepository } from "./MongoRepository";
 export interface IMongoSource {
   client: MongoClient;
 
+  clone(logger?: ILogger): IMongoSource;
   connect(): Promise<void>;
   disconnect(): Promise<void>;
   setup(): Promise<void>;

@@ -5,6 +5,7 @@ import { createMockMongoRepository } from "./mock-mongo-repository";
 
 export const createMockMongoSource = (): IMongoSource => ({
   client: {} as any,
+  clone: jest.fn().mockImplementation(() => createMockMongoSource()),
   connect: jest.fn(),
   disconnect: jest.fn(),
   setup: jest.fn(),
@@ -13,9 +14,19 @@ export const createMockMongoSource = (): IMongoSource => ({
     .mockImplementation((File: Constructor<IMongoFile>) =>
       createMockMongoBucket((args) => new File(args)),
     ),
-  repository: jest
-    .fn()
-    .mockImplementation((Entity: Constructor<IMongoEntity>) =>
-      createMockMongoRepository((args) => new Entity(args)),
-    ),
+  repository: jest.fn().mockImplementation((Entity: Constructor<IMongoEntity>) =>
+    createMockMongoRepository((args) => {
+      const entity = new Entity(args);
+
+      entity.id = (args.id as string) ?? entity.id;
+      entity.rev = (args.rev as number) ?? entity.rev;
+      entity.seq = (args.seq as number) ?? entity.seq;
+      entity.createdAt = (args.createdAt as Date) ?? entity.createdAt;
+      entity.updatedAt = (args.updatedAt as Date) ?? entity.updatedAt;
+      entity.deletedAt = (args.deletedAt as Date) ?? (entity.deletedAt as Date);
+      entity.expiresAt = (args.expiresAt as Date) ?? (entity.expiresAt as Date);
+
+      return entity;
+    }),
+  ),
 });
