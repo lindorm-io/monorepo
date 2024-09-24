@@ -12,7 +12,8 @@ import { PylonHttpMiddleware } from "../types";
 import { Pylon } from "./Pylon";
 import { PylonRouter } from "./PylonRouter";
 
-MockDate.set("2024-01-01T10:00:00.000Z");
+const MockedDate = new Date("2024-01-01T08:00:00.000Z");
+MockDate.set(MockedDate);
 
 describe("Pylon", () => {
   let files: Array<string>;
@@ -121,7 +122,7 @@ describe("Pylon", () => {
       data: {},
       metadata: {
         correlationId: "correlation-id",
-        date: new Date("2024-01-01T10:00:00.000Z"),
+        date: MockedDate,
         environment: "test",
         requestId: "request-id",
         responseId: expect.any(String),
@@ -139,14 +140,14 @@ describe("Pylon", () => {
         {
           alg: "ES256",
           crv: "P-256",
-          exp: 1719655200,
-          iat: 1704103200,
+          exp: 1719648000,
+          iat: 1704096000,
           iss: "http://test.lindorm.io",
           key_ops: ["sign", "verify"],
           kty: "EC",
           kid: "5d17c551-7b6f-474a-8679-dba9bbfa06a2",
-          nbf: 1704103200,
-          uat: 1704103200,
+          nbf: 1704096000,
+          uat: 1704096000,
           use: "sig",
           x: "HxWiZBmTMQ5-uemIg60iebC0cIqfst2tFcwuHFD8cQA",
           y: "nO5EFG1WozcaK19NASJSvMXalyYxlu14A6EiouVT9_o",

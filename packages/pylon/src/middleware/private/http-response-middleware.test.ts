@@ -1,11 +1,12 @@
 import MockDate from "mockdate";
 import { httpResponseMiddleware } from "./http-response-middleware";
 
-MockDate.set("2024-01-01T10:00:00.000Z");
+const MockedDate = new Date("2024-01-01T08:00:00.000Z");
+MockDate.set(MockedDate);
 
 describe("httpResponseMiddleware", () => {
   const array = ["array"];
-  const date = new Date("2020-01-01T08:00:00.000Z");
+  const date = MockedDate;
   const error = new Error("error");
   const string = "string";
 
@@ -28,14 +29,14 @@ describe("httpResponseMiddleware", () => {
 
   test("should calculate response time and set on header", async () => {
     const next = async () => {
-      MockDate.set("2024-01-01T10:01:23.456Z");
+      MockDate.set("2024-01-01T08:01:23.456Z");
     };
 
     await expect(httpResponseMiddleware(ctx, next)).resolves.toBeUndefined();
 
-    expect(ctx.set).toHaveBeenCalledWith("Date", "Mon, 01 Jan 2024 10:01:23 GMT");
-    expect(ctx.set).toHaveBeenCalledWith("X-Start-Time", "1704103200000");
-    expect(ctx.set).toHaveBeenCalledWith("X-Current-Time", "1704103283456");
+    expect(ctx.set).toHaveBeenCalledWith("Date", "Mon, 01 Jan 2024 08:01:23 GMT");
+    expect(ctx.set).toHaveBeenCalledWith("X-Start-Time", "1704096000000");
+    expect(ctx.set).toHaveBeenCalledWith("X-Current-Time", "1704096083456");
     expect(ctx.set).toHaveBeenCalledWith("X-Response-Time", "83456ms");
   });
 

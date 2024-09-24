@@ -3,7 +3,8 @@ import { randomUUID as _randomUUID } from "crypto";
 import MockDate from "mockdate";
 import { createHttpMetadataMiddleware } from "./http-metadata-middleware";
 
-MockDate.set("2024-01-01T10:00:00.000Z");
+const MockedDate = new Date("2024-01-01T08:00:00.000Z");
+MockDate.set(MockedDate);
 
 jest.mock("crypto");
 
@@ -27,7 +28,7 @@ describe("createHttpMetadataMiddleware", () => {
     ctx.get.mockImplementation((key: string): string => {
       switch (key) {
         case "date":
-          return "2024-01-01T08:00:00.000Z";
+          return MockedDate.toISOString();
         case "x-correlation-id":
           return "8b39eafc-7e31-501b-ab7b-58514b14856a";
         case "x-environment":
@@ -49,7 +50,7 @@ describe("createHttpMetadataMiddleware", () => {
 
     expect(ctx.metadata).toEqual({
       correlationId: "8b39eafc-7e31-501b-ab7b-58514b14856a",
-      date: new Date("2024-01-01T08:00:00.000Z"),
+      date: MockedDate,
       environment: "test",
       requestId: "aa9a627d-8296-598c-9589-4ec91d27d056",
       responseId: "2f881f6e-f7ce-554f-a5cd-cb80266ff3ec",
@@ -74,7 +75,7 @@ describe("createHttpMetadataMiddleware", () => {
 
     expect(ctx.metadata).toEqual({
       correlationId: "2f881f6e-f7ce-554f-a5cd-cb80266ff3ec",
-      date: new Date("2024-01-01T10:00:00.000Z"),
+      date: MockedDate,
       environment: "unknown",
       requestId: "2f881f6e-f7ce-554f-a5cd-cb80266ff3ec",
       responseId: "2f881f6e-f7ce-554f-a5cd-cb80266ff3ec",

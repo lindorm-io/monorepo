@@ -1,7 +1,8 @@
 import MockDate from "mockdate";
 import { expiresIn } from "./expires-in";
 
-MockDate.set("2021-01-01T08:00:00.000Z");
+const MockedDate = new Date("2024-01-01T08:00:00.000Z");
+MockDate.set(MockedDate);
 
 describe("expiresIn", () => {
   test("should resolve", () => {

@@ -2,7 +2,8 @@ import MockDate from "mockdate";
 import { ILogger } from "../interfaces";
 import { Logger } from "./Logger";
 
-MockDate.set("2024-01-01T10:00:00.000Z");
+const MockedDate = new Date("2024-01-01T08:00:00.000Z");
+MockDate.set(MockedDate);
 
 const add = jest.fn();
 const log = jest.fn();
@@ -39,7 +40,7 @@ describe("Logger", () => {
       level: "error",
       message: "hello",
       scope: [],
-      time: new Date("2024-01-01T10:00:00.000Z"),
+      time: MockedDate,
     });
   });
 
@@ -53,7 +54,7 @@ describe("Logger", () => {
       level: "info",
       message: "hello",
       scope: [],
-      time: new Date("2024-01-01T10:00:00.000Z"),
+      time: MockedDate,
     });
   });
 
@@ -82,7 +83,7 @@ describe("Logger", () => {
       level: "verbose",
       message: "verbose message",
       scope: ["parent", "child"],
-      time: new Date("2024-01-01T10:00:00.000Z"),
+      time: MockedDate,
     });
   });
 
@@ -111,7 +112,7 @@ describe("Logger", () => {
       level: "info",
       message: "message",
       scope: [],
-      time: new Date("2024-01-01T10:00:00.000Z"),
+      time: MockedDate,
     });
   });
 });
