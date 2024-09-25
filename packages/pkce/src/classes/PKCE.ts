@@ -1,9 +1,9 @@
 import { PkceMethod } from "@lindorm/enums";
-import { Pkce } from "../types";
+import { PkceResult } from "../types";
 import { assertPkce, createPkce, verifyPkce } from "../utils/private";
 
 export class PKCE {
-  public static create(method: PkceMethod = PkceMethod.S256, length = 43): Pkce {
+  public static create(method: PkceMethod = PkceMethod.S256, length = 43): PkceResult {
     return createPkce(method, length);
   }
 
