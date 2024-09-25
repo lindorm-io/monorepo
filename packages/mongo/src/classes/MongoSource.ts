@@ -10,6 +10,7 @@ import {
   IMongoSource,
 } from "../interfaces";
 import {
+  CloneMongoSourceOptions,
   MongoSourceBucketOptions,
   MongoSourceEntity,
   MongoSourceFile,
@@ -57,14 +58,14 @@ export class MongoSource implements IMongoSource {
 
   // public
 
-  public clone(logger?: ILogger): IMongoSource {
+  public clone(options: CloneMongoSourceOptions = {}): IMongoSource {
     return new MongoSource({
       _mode: "from_clone",
       client: this.client,
       database: this.database,
       entities: this.entities,
       files: this.files,
-      logger: logger ?? this.logger,
+      logger: options.logger ?? this.logger,
       namespace: this.namespace,
     });
   }

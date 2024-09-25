@@ -13,6 +13,10 @@ export type RedisSourceEntities = Array<
   Constructor<IRedisEntity> | RedisSourceEntity | string
 >;
 
+export type CloneRedisSourceOptions = {
+  logger?: ILogger;
+};
+
 export type RedisSourceOptions = {
   config?: RedisOptions;
   entities: RedisSourceEntities;

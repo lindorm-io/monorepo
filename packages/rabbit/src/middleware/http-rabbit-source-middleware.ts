@@ -7,7 +7,7 @@ export const createHttpRabbitSourceMiddleware = <
   source: IRabbitSource,
 ): RabbitPylonHttpMiddleware<C> => {
   return async function httpRabbitSourceMiddleware(ctx, next): Promise<void> {
-    ctx.rabbit = source.clone(ctx.logger);
+    ctx.rabbit = source.clone({ logger: ctx.logger });
 
     await next();
   };

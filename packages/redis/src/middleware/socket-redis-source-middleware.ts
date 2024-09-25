@@ -7,7 +7,7 @@ export const createSocketRedisSourceMiddleware = <
   source: IRedisSource,
 ): RedisPylonEventMiddleware<C> => {
   return async function socketRedisSourceMiddleware(ctx, next): Promise<void> {
-    ctx.redis = source.clone(ctx.logger);
+    ctx.redis = source.clone({ logger: ctx.logger });
 
     await next();
   };
