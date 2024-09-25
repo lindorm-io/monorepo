@@ -7,7 +7,7 @@ export const createHttpMongoSourceMiddleware = <
   source: IMongoSource,
 ): MongoPylonHttpMiddleware<C> => {
   return async function httpMongoSourceMiddleware(ctx, next): Promise<void> {
-    ctx.mongo = source.clone(ctx.logger);
+    ctx.mongo = source.clone({ logger: ctx.logger });
 
     await next();
   };

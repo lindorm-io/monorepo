@@ -7,6 +7,7 @@ import amqplib, { ConfirmChannel, Connection, ConsumeMessage } from "amqplib";
 import { RabbitSourceError } from "../errors";
 import { IRabbitMessage, IRabbitMessageBus, IRabbitSource } from "../interfaces";
 import {
+  CloneRabbitSourceOptions,
   RabbitSourceMessage,
   RabbitSourceMessageBusOptions,
   RabbitSourceOptions,
@@ -62,7 +63,7 @@ export class RabbitSource implements IRabbitSource {
     return this.connection;
   }
 
-  public clone(logger?: ILogger): IRabbitSource {
+  public clone(options: CloneRabbitSourceOptions = {}): IRabbitSource {
     if (!this.connection) {
       throw new RabbitSourceError("Connection not established");
     }
@@ -75,7 +76,7 @@ export class RabbitSource implements IRabbitSource {
       connection: this.connection,
       deadletters: this.deadletters,
       exchange: this.exchange,
-      logger: logger ?? this.logger,
+      logger: options.logger ?? this.logger,
       messages: this.messages,
       nackTimeout: this.nackTimeout,
       subscriptions: this.subscriptions,

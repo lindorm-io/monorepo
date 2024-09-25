@@ -7,7 +7,7 @@ export const createHttpRedisSourceMiddleware = <
   source: IRedisSource,
 ): RedisPylonHttpMiddleware<C> => {
   return async function httpRedisSourceMiddleware(ctx, next): Promise<void> {
-    ctx.redis = source.clone(ctx.logger);
+    ctx.redis = source.clone({ logger: ctx.logger });
 
     await next();
   };

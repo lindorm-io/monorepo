@@ -7,7 +7,7 @@ export const createSocketMongoSourceMiddleware = <
   source: IMongoSource,
 ): MongoPylonEventMiddleware<C> => {
   return async function socketMongoSourceMiddleware(ctx, next): Promise<void> {
-    ctx.mongo = source.clone(ctx.logger);
+    ctx.mongo = source.clone({ logger: ctx.logger });
 
     await next();
   };

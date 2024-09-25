@@ -19,6 +19,10 @@ export type RabbitSourceMessageBusOptions<M extends IRabbitMessage> = {
   validate?: ValidateMessageFn<M>;
 };
 
+export type CloneRabbitSourceOptions = {
+  logger?: ILogger;
+};
+
 export type RabbitSourceOptions = {
   config?: Options.Connect;
   connectInterval?: number;

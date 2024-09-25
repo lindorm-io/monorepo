@@ -8,7 +8,7 @@ import {
   IRedisSource,
   RedisSourceRepositoryOptions,
 } from "../interfaces";
-import { RedisSourceEntity, RedisSourceOptions } from "../types";
+import { CloneRedisSourceOptions, RedisSourceEntity, RedisSourceOptions } from "../types";
 import { FromClone } from "../types/private";
 import { RedisRepository } from "./RedisRepository";
 import { EntityScanner } from "./private";
@@ -41,12 +41,12 @@ export class RedisSource implements IRedisSource {
 
   // public
 
-  public clone(logger?: ILogger): IRedisSource {
+  public clone(options: CloneRedisSourceOptions = {}): IRedisSource {
     return new RedisSource({
       _mode: "from_clone",
       client: this.client,
       entities: this.entities,
-      logger: logger ?? this.logger,
+      logger: options.logger ?? this.logger,
       namespace: this.namespace,
     });
   }

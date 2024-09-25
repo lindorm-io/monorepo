@@ -40,6 +40,10 @@ export type MongoSourceBucketOptions<F extends IMongoFile> = {
   validate?: ValidateFileFn<F>;
 };
 
+export type CloneMongoSourceOptions = {
+  logger?: ILogger;
+};
+
 export type MongoSourceOptions = {
   config?: MongoOptions;
   database: string;

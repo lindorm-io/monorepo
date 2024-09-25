@@ -7,7 +7,7 @@ export const createSocketRabbitSourceMiddleware = <
   source: IRabbitSource,
 ): RabbitPylonEventMiddleware<C> => {
   return async function socketRabbitSourceMiddleware(ctx, next): Promise<void> {
-    ctx.rabbit = source.clone(ctx.logger);
+    ctx.rabbit = source.clone({ logger: ctx.logger });
 
     await next();
   };
