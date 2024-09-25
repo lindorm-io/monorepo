@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/pylon",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -28,17 +28,17 @@
     "update": "ncu -u"
   },
   "dependencies": {
-    "@lindorm/aegis": "^0.2.2",
-    "@lindorm/amphora": "^0.1.3",
+    "@lindorm/aegis": "^0.2.3",
+    "@lindorm/amphora": "^0.1.4",
     "@lindorm/b64": "^0.1.4",
     "@lindorm/case": "^0.1.5",
-    "@lindorm/conduit": "^0.1.5",
-    "@lindorm/date": "^0.1.4",
+    "@lindorm/conduit": "^0.1.6",
+    "@lindorm/date": "^0.1.5",
     "@lindorm/errors": "^0.1.6",
     "@lindorm/is": "^0.1.6",
-    "@lindorm/logger": "^0.2.0",
+    "@lindorm/logger": "^0.2.1",
     "@lindorm/middleware": "^0.1.2",
-    "@lindorm/scanner": "^0.2.0",
+    "@lindorm/scanner": "^0.2.1",
     "@lindorm/url": "^0.1.4",
     "@lindorm/utils": "^0.2.0",
     "@socket.io/redis-adapter": "^8.3.0",
@@ -53,7 +53,7 @@
   },
   "devDependencies": {
     "@lindorm/types": "^0.2.0",
-    "@lindorm/worker": "^0.1.2",
+    "@lindorm/worker": "^0.1.3",
     "@types/co-body": "^6.1.3",
     "@types/formidable": "^3.4.5",
     "@types/ioredis": "^5.0.0",

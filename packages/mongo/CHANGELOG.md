@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.2.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/mongo@0.1.1...@lindorm/mongo@0.2.0) (2024-09-25)
+
+### Features
+
+- add clone to mongo source ([34dbfd0](https://github.com/lindorm-io/monorepo/commit/34dbfd081f195ff29f6c04cd764e0104478e4744))
+- add mongo middleware ([09bfd2a](https://github.com/lindorm-io/monorepo/commit/09bfd2ab5ab479d86212dcb02e3ffa0625d5c835))
+- give clone method options object ([a3b1644](https://github.com/lindorm-io/monorepo/commit/a3b16441c90dea194cd82c54cf913cd6e0d59071))
+
 ## [0.1.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/mongo@0.1.0...@lindorm/mongo@0.1.1) (2024-09-23)
 
 ### Bug Fixes

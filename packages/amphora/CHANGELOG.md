@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.4](https://github.com/lindorm-io/monorepo/compare/@lindorm/amphora@0.1.3...@lindorm/amphora@0.1.4) (2024-09-25)
+
+**Note:** Version bump only for package @lindorm/amphora
+
 ## [0.1.3](https://github.com/lindorm-io/monorepo/compare/@lindorm/amphora@0.1.2...@lindorm/amphora@0.1.3) (2024-09-23)
 
 **Note:** Version bump only for package @lindorm/amphora

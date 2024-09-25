@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/conduit",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -34,7 +34,7 @@
     "uuid": "^10.0.0"
   },
   "devDependencies": {
-    "@lindorm/logger": "^0.2.0",
+    "@lindorm/logger": "^0.2.1",
     "@lindorm/types": "^0.2.0",
     "@types/uuid": "^10.0.0",
     "fetch-mock": "^11.1.1",

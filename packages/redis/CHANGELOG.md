@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.2.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/redis@0.1.1...@lindorm/redis@0.2.0) (2024-09-25)
+
+### Features
+
+- add clone to redis source ([6d4dda6](https://github.com/lindorm-io/monorepo/commit/6d4dda638e820831507e84374f64fa58299dd2b4))
+- add redis middleware ([591ba2f](https://github.com/lindorm-io/monorepo/commit/591ba2f2b5ec48ee4222f014418b292d4b58aa25))
+- give clone method options object ([a3b1644](https://github.com/lindorm-io/monorepo/commit/a3b16441c90dea194cd82c54cf913cd6e0d59071))
+
 ## [0.1.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/redis@0.1.0...@lindorm/redis@0.1.1) (2024-09-23)
 
 ### Bug Fixes

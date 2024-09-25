@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/kryptos",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -28,7 +28,7 @@
   "dependencies": {
     "@lindorm/b64": "^0.1.4",
     "@lindorm/case": "^0.1.5",
-    "@lindorm/date": "^0.1.4",
+    "@lindorm/date": "^0.1.5",
     "@lindorm/errors": "^0.1.6",
     "@lindorm/is": "^0.1.6",
     "@lindorm/random": "^0.1.2",
