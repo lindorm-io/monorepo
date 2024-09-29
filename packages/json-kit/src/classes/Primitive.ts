@@ -10,26 +10,37 @@ import {
 } from "../utils/private";
 
 export class Primitive<T extends Array<any> | Dict = Dict> {
-  private readonly _data: Array<any> | Dict;
+  private readonly _data: T;
   private readonly _meta: Array<any> | Dict;
 
   public constructor(input: any) {
     if (isBuffer(input)) {
-      const { data, meta } = JSON.parse(input.toString());
-
-      this._data = data;
-      this._meta = meta;
+      const { __meta__, __array__, __record__ } = JSON.parse(input.toString());
+      this._data = __array__ ? __array__ : __record__;
+      this._meta = __meta__;
     } else if (isArray(input)) {
-      this._data = stringifyArrayValues(input);
+      this._data = stringifyArrayValues(input) as T;
       this._meta = getMetaArray(input);
-    } else if (isObjectLike(input)) {
-      this._data = stringifyObjectValues(input);
+    } else if (
+      isObjectLike(input) &&
+      !input.__meta__ &&
+      !input.__array__ &&
+      !input.__record__
+    ) {
+      this._data = stringifyObjectValues(input) as T;
       this._meta = getMetaObject(input);
+    } else if (
+      isObjectLike(input) &&
+      input.__meta__ &&
+      (input.__array__ || input.__record__)
+    ) {
+      const { __meta__, __array__, __record__ } = input;
+      this._data = __array__ ? __array__ : __record__;
+      this._meta = __meta__;
     } else if (isString(input)) {
-      const { data, meta } = JSON.parse(input);
-
-      this._data = data;
-      this._meta = meta;
+      const { __meta__, __array__, __record__ } = JSON.parse(input);
+      this._data = __array__ ? __array__ : __record__;
+      this._meta = __meta__;
     } else {
       throw new TypeError("Expected input to be an array or object");
     }
@@ -37,7 +48,7 @@ export class Primitive<T extends Array<any> | Dict = Dict> {
 
   // getters
 
-  public get data(): Array<any> | Dict {
+  public get data(): T {
     return this._data;
   }
 
@@ -56,7 +67,8 @@ export class Primitive<T extends Array<any> | Dict = Dict> {
   }
 
   public toString(): string {
-    return JSON.stringify({ data: this._data, meta: this._meta });
+    const key = isArray(this._data) ? "__array__" : "__record__";
+    return JSON.stringify({ __meta__: this._meta, [key]: this._data });
   }
 
   // private

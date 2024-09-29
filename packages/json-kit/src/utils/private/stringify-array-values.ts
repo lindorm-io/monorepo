@@ -5,12 +5,12 @@ export const stringifyArrayValues = (input: Array<any>): Array<any> => {
   const result: Array<any> = [];
 
   for (const value of input) {
-    if (isObject(value)) {
+    if (isDate(value)) {
+      result.push(value.toISOString());
+    } else if (isObject(value)) {
       result.push(stringifyObjectValues(value));
     } else if (isArray(value)) {
       result.push(stringifyArrayValues(value));
-    } else if (isDate(value)) {
-      result.push(value.toISOString());
     } else if (isString(value)) {
       result.push(value);
     } else if (isNull(value)) {
