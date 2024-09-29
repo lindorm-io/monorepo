@@ -1,5 +1,5 @@
 import { ILogger } from "@lindorm/logger";
-import { IScanner, ScanData, Scanner } from "@lindorm/scanner";
+import { IScanner, IScanData, Scanner } from "@lindorm/scanner";
 import { uniq } from "@lindorm/utils";
 import { PylonError } from "../../errors";
 import { PylonEventContext } from "../../types";
@@ -60,7 +60,7 @@ export class PylonListenerScanner<S extends PylonEventContext> {
   // private
 
   private findIndexInDirectory(
-    scan: ScanData,
+    scan: IScanData,
     parent?: PylonListener<S>,
   ): PylonListener<S> | undefined {
     this.logger.silly("Finding index in directory", { relative: scan.relativePath });
@@ -75,7 +75,7 @@ export class PylonListenerScanner<S extends PylonEventContext> {
   }
 
   private findListenersInDirectory(
-    scan: ScanData,
+    scan: IScanData,
     parent?: PylonListener<S>,
   ): Array<PylonListener<S>> {
     this.logger.silly("Finding listeners in directory", { relative: scan.relativePath });
@@ -98,7 +98,7 @@ export class PylonListenerScanner<S extends PylonEventContext> {
   }
 
   private findListenerInFile(
-    scan: ScanData,
+    scan: IScanData,
     parent?: PylonListener<S>,
   ): PylonListener<S> {
     this.logger.silly("Finding listener in file", { relative: scan.relativePath });
@@ -137,7 +137,7 @@ export class PylonListenerScanner<S extends PylonEventContext> {
   }
 
   private mapScanData(
-    scan: ScanData,
+    scan: IScanData,
     parent?: PylonListener<S>,
   ): Array<PylonListener<S>> {
     this.logger.silly("Mapping scan data", { scan });

@@ -1,5 +1,5 @@
 import { ILogger } from "@lindorm/logger";
-import { IScanner, ScanData, Scanner } from "@lindorm/scanner";
+import { IScanData, IScanner, Scanner } from "@lindorm/scanner";
 import { PylonError } from "../../errors";
 import { PylonHttpContext } from "../../types";
 import { PylonRouter } from "../PylonRouter";
@@ -50,7 +50,7 @@ export class PylonRouterScanner<C extends PylonHttpContext> {
 
   // private
 
-  public createRoutePath(scan: ScanData): string {
+  public createRoutePath(scan: IScanData): string {
     const path = "/" + scan.baseName.replace(/index/, "");
 
     if (path.startsWith("[") && path.endsWith("]")) {
@@ -70,7 +70,7 @@ export class PylonRouterScanner<C extends PylonHttpContext> {
     return path;
   }
 
-  private findIndexInDirectory(scan: ScanData): Result<C> | undefined {
+  private findIndexInDirectory(scan: IScanData): Result<C> | undefined {
     this.logger.silly("Finding index in directory", { relative: scan.relativePath });
 
     const index = scan.children.find((file) => file.baseName === "index");
@@ -82,7 +82,7 @@ export class PylonRouterScanner<C extends PylonHttpContext> {
     return this.findRouterInFile(index);
   }
 
-  private findRoutersInDirectory(scan: ScanData): Result<C> {
+  private findRoutersInDirectory(scan: IScanData): Result<C> {
     this.logger.silly("Finding routers in directory", { relative: scan.relativePath });
 
     const index = this.findIndexInDirectory(scan);
@@ -114,7 +114,7 @@ export class PylonRouterScanner<C extends PylonHttpContext> {
     return { path, router };
   }
 
-  private findRouterInFile(scan: ScanData): Result<C> {
+  private findRouterInFile(scan: IScanData): Result<C> {
     this.logger.silly("Finding router in file", { relative: scan.relativePath });
 
     const file = this.scanner.require<File<C>>(scan.fullPath);
@@ -135,7 +135,7 @@ export class PylonRouterScanner<C extends PylonHttpContext> {
     return { path, router };
   }
 
-  private mapScanData(scan: ScanData): Result<C> {
+  private mapScanData(scan: IScanData): Result<C> {
     this.logger.silly("Mapping scan data", { scan });
 
     if (scan.isDirectory) {
