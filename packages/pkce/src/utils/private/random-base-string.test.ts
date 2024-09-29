@@ -2,7 +2,7 @@ import { randomBaseString } from "./random-base-string";
 
 describe("randomBaseString", () => {
   test("should return a random string", () => {
-    expect(randomBaseString(32)).toStrictEqual(expect.any(String));
+    expect(randomBaseString(32)).toEqual(expect.any(String));
   });
 
   test("should respect length argument", () => {
