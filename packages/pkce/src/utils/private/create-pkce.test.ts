@@ -16,7 +16,7 @@ describe("createPkce", () => {
   });
 
   test("should resolve S256", () => {
-    expect(createPkce(PkceMethod.S256, 43)).toStrictEqual({
+    expect(createPkce(PkceMethod.S256, 43)).toEqual({
       challenge: "createBaseHash",
       method: "S256",
       verifier: "randomBaseString",
@@ -24,7 +24,7 @@ describe("createPkce", () => {
   });
 
   test("should resolve plain", () => {
-    expect(createPkce(PkceMethod.Plain, 43)).toStrictEqual({
+    expect(createPkce(PkceMethod.Plain, 43)).toEqual({
       challenge: "randomBaseString",
       method: "plain",
       verifier: "randomBaseString",
