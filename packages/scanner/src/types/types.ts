@@ -1,4 +1,4 @@
-export type StructureScannerOptions = {
+export type StructureScannerConfig = {
   deniedDirectories: Array<RegExp>;
   deniedExtensions: Array<RegExp>;
   deniedFilenames: Array<RegExp>;
@@ -6,16 +6,4 @@ export type StructureScannerOptions = {
   requireFn: NodeJS.Require;
 };
 
-export type ScanData = {
-  baseName: string;
-  basePath: string;
-  children: Array<ScanData>;
-  extension: string | null;
-  fullName: string;
-  fullPath: string;
-  isDirectory: boolean;
-  isFile: boolean;
-  parents: Array<string>;
-  relativePath: string;
-  types: Array<string>;
-};
+export type StructureScannerOptions = Partial<StructureScannerConfig>;
