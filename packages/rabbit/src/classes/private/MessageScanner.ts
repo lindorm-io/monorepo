@@ -1,5 +1,5 @@
 import { isFunction, isObject, isString } from "@lindorm/is";
-import { ScanData, Scanner } from "@lindorm/scanner";
+import { IScanData, Scanner } from "@lindorm/scanner";
 import { Constructor, Dict } from "@lindorm/types";
 import { RabbitSourceError } from "../../errors";
 import { IRabbitMessage } from "../../interfaces";
@@ -46,7 +46,7 @@ export class MessageScanner {
 
   // private
 
-  private static scanDirectory(data: ScanData): Array<RabbitSourceMessage> {
+  private static scanDirectory(data: IScanData): Array<RabbitSourceMessage> {
     const result: Array<RabbitSourceMessage> = [];
 
     for (const child of data.children) {
@@ -61,7 +61,7 @@ export class MessageScanner {
     return result;
   }
 
-  private static scanFile(data: ScanData): RabbitSourceMessage {
+  private static scanFile(data: IScanData): RabbitSourceMessage {
     const module = MessageScanner.scanner.require<Dict>(data.fullPath);
     const entries = Object.entries(module);
     const result: Partial<RabbitSourceMessage> = {};

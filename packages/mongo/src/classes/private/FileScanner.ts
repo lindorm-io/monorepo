@@ -1,5 +1,5 @@
 import { isArray, isFunction, isObject, isString } from "@lindorm/is";
-import { ScanData, Scanner } from "@lindorm/scanner";
+import { IScanData, Scanner } from "@lindorm/scanner";
 import { Constructor, Dict } from "@lindorm/types";
 import { MongoRepositoryError } from "../../errors";
 import { IMongoFile } from "../../interfaces";
@@ -46,7 +46,7 @@ export class FileScanner {
 
   // private
 
-  private static scanDirectory(data: ScanData): Array<MongoSourceFile> {
+  private static scanDirectory(data: IScanData): Array<MongoSourceFile> {
     const result: Array<MongoSourceFile> = [];
 
     for (const child of data.children) {
@@ -61,7 +61,7 @@ export class FileScanner {
     return result;
   }
 
-  private static scanFile(data: ScanData): MongoSourceFile {
+  private static scanFile(data: IScanData): MongoSourceFile {
     const module = FileScanner.scanner.require<Dict>(data.fullPath);
     const entries = Object.entries(module);
     const result: Partial<MongoSourceFile> = {};

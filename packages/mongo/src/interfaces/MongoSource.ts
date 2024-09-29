@@ -1,8 +1,10 @@
 import { Constructor, DeepPartial } from "@lindorm/types";
-import { MongoClient } from "mongodb";
+import { Collection, Db, Document, MongoClient } from "mongodb";
 import {
   CloneMongoSourceOptions,
   MongoSourceBucketOptions,
+  MongoSourceEntities,
+  MongoSourceFiles,
   MongoSourceRepositoryOptions,
 } from "../types";
 import { IMongoBucket } from "./MongoBucket";
@@ -12,8 +14,12 @@ import { IMongoRepository } from "./MongoRepository";
 
 export interface IMongoSource {
   client: MongoClient;
+  database: Db;
 
+  addEntities(entities: MongoSourceEntities): void;
+  addFiles(files: MongoSourceFiles): void;
   clone(options?: CloneMongoSourceOptions): IMongoSource;
+  collection<D extends Document>(name: string): Collection<D>;
   connect(): Promise<void>;
   disconnect(): Promise<void>;
   setup(): Promise<void>;

@@ -7,8 +7,9 @@ export interface IRedisRepository<
   E extends IRedisEntity,
   O extends DeepPartial<E> = DeepPartial<E>,
 > {
-  count(criteria?: Criteria<E>): Promise<number>;
   create(options: O | E): E;
+
+  count(criteria?: Criteria<E>): Promise<number>;
   delete(criteria: Criteria<E>): Promise<void>;
   deleteById(id: string): Promise<void>;
   destroy(entity: E): Promise<void>;

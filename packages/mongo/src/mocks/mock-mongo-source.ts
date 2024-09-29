@@ -5,7 +5,11 @@ import { createMockMongoRepository } from "./mock-mongo-repository";
 
 export const createMockMongoSource = (): IMongoSource => ({
   client: {} as any,
+  database: {} as any,
+  addEntities: jest.fn(),
+  addFiles: jest.fn(),
   clone: jest.fn().mockImplementation(() => createMockMongoSource()),
+  collection: jest.fn().mockImplementation(() => ({}) as any),
   connect: jest.fn(),
   disconnect: jest.fn(),
   setup: jest.fn(),

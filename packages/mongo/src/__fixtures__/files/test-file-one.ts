@@ -1,5 +1,5 @@
 import { MongoFileBase } from "../../classes";
-import { ValidateFileFn } from "../../types";
+import { ValidateMongoFileFn } from "../../types";
 
 export type TestFileOneOptions = {
   name: string;
@@ -15,7 +15,7 @@ export class TestFileOne extends MongoFileBase {
   }
 }
 
-export const validate: ValidateFileFn<TestFileOne> = (metadata) => {
+export const validate: ValidateMongoFileFn<TestFileOne> = (metadata) => {
   if (!metadata.mimeType) {
     throw new Error("Missing mimeType");
   }

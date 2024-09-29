@@ -6,8 +6,9 @@ export interface IMongoRepository<
   E extends IMongoEntity,
   O extends DeepPartial<E> = DeepPartial<E>,
 > {
-  count(criteria?: Filter<E>, options?: CountDocumentsOptions): Promise<number>;
   create(options?: O | E): E;
+
+  count(criteria?: Filter<E>, options?: CountDocumentsOptions): Promise<number>;
   delete(criteria: Filter<E>, options?: DeleteOptions): Promise<void>;
   deleteById(id: string): Promise<void>;
   deleteExpired(): Promise<void>;

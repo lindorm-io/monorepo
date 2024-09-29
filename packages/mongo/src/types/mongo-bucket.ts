@@ -5,7 +5,7 @@ import { IMongoFile } from "../interfaces";
 import { FileIndex, FileMetadata } from "./mongo-file";
 import { MongoIndexOptions } from "./mongo-index";
 
-export type ValidateFileFn<F extends IMongoFile = IMongoFile> = (
+export type ValidateMongoFileFn<F extends IMongoFile = IMongoFile> = (
   metadata: FileMetadata<F>,
 ) => void;
 
@@ -17,5 +17,5 @@ export type MongoBucketOptions<F extends IMongoFile> = {
   indexes?: Array<MongoIndexOptions<FileIndex<F>>>;
   logger: ILogger;
   namespace?: string;
-  validate?: ValidateFileFn<F>;
+  validate?: ValidateMongoFileFn<F>;
 };

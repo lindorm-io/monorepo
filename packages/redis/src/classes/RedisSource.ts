@@ -8,7 +8,12 @@ import {
   IRedisSource,
   RedisSourceRepositoryOptions,
 } from "../interfaces";
-import { CloneRedisSourceOptions, RedisSourceEntity, RedisSourceOptions } from "../types";
+import {
+  CloneRedisSourceOptions,
+  RedisSourceEntities,
+  RedisSourceEntity,
+  RedisSourceOptions,
+} from "../types";
 import { FromClone } from "../types/private";
 import { RedisRepository } from "./RedisRepository";
 import { EntityScanner } from "./private";
@@ -35,11 +40,15 @@ export class RedisSource implements IRedisSource {
       const opts = options as RedisSourceOptions;
 
       this.client = opts.config ? new Redis(opts.url, opts.config) : new Redis(opts.url);
-      this.entities = EntityScanner.scan(opts.entities);
+      this.entities = opts.entities ? EntityScanner.scan(opts.entities) : [];
     }
   }
 
   // public
+
+  public addEntities(entities: RedisSourceEntities): void {
+    this.entities.push(...EntityScanner.scan(entities));
+  }
 
   public clone(options: CloneRedisSourceOptions = {}): IRedisSource {
     return new RedisSource({
@@ -52,6 +61,10 @@ export class RedisSource implements IRedisSource {
   }
 
   public async connect(): Promise<void> {
+    if (this.client.status === "ready") return;
+    if (this.client.status === "connecting") return;
+    if (this.client.status === "reconnecting") return;
+
     await this.client.connect();
   }
 
@@ -63,28 +76,31 @@ export class RedisSource implements IRedisSource {
     Entity: Constructor<E>,
     options: RedisSourceRepositoryOptions<E> = {},
   ): IRedisRepository<E> {
-    const config = this.config(Entity);
+    const config = this.entityConfig(Entity);
 
     return new RedisRepository({
       Entity,
       client: this.client,
       logger: options.logger ?? this.logger,
       namespace: this.namespace,
+      create: options.create ?? config.create,
       validate: options.validate ?? config.validate,
     });
   }
 
   public async setup(): Promise<void> {
-    await this.client.connect();
+    await this.connect();
   }
 
   // private
 
-  private config(Entity: Constructor<IRedisEntity>): RedisSourceEntity {
+  private entityConfig<E extends IRedisEntity>(
+    Entity: Constructor<E>,
+  ): RedisSourceEntity<E> {
     const config = this.entities.find((entity) => entity.Entity === Entity);
 
     if (config) {
-      return config;
+      return config as RedisSourceEntity<E>;
     }
 
     throw new RedisSourceError("Entity not found in entities list", {

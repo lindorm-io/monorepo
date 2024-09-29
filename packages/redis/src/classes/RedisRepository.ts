@@ -10,7 +10,11 @@ import { Redis } from "ioredis";
 import { z } from "zod";
 import { RedisRepositoryError } from "../errors";
 import { Criteria, IRedisEntity, IRedisRepository } from "../interfaces";
-import { RedisRepositoryOptions, ValidateRedisEntityFn } from "../types";
+import {
+  CreateRedisEntityFn,
+  RedisRepositoryOptions,
+  ValidateRedisEntityFn,
+} from "../types";
 
 export class RedisRepository<
   E extends IRedisEntity,
@@ -21,7 +25,8 @@ export class RedisRepository<
   private readonly client: Redis;
   private readonly keyPattern: string;
   private readonly logger: ILogger;
-  private readonly validate: ValidateRedisEntityFn<E> | undefined;
+  private readonly createFn: CreateRedisEntityFn<E> | undefined;
+  private readonly validateFn: ValidateRedisEntityFn<E> | undefined;
 
   public constructor(options: RedisRepositoryOptions<E>) {
     this.logger = options.logger.child(["RedisRepository", options.Entity.name]);
@@ -29,10 +34,22 @@ export class RedisRepository<
     this.EntityConstructor = options.Entity;
     this.keyPattern = this.createKeyPattern(options);
     this.client = options.client;
-    this.validate = options.validate;
+
+    this.createFn = options.create;
+    this.validateFn = options.validate;
   }
 
   // public
+
+  public create(options: O | E): E {
+    const entity = this.createFn ? this.createFn(options) : this.handleCreate(options);
+
+    this.validateBaseEntity(entity);
+
+    this.logger.debug("Created entity", { entity });
+
+    return entity;
+  }
 
   public async count(criteria: Criteria<E> = {}): Promise<number> {
     const scan = await this.scan();
@@ -46,24 +63,6 @@ export class RedisRepository<
     });
 
     return entities.length;
-  }
-
-  public create(options: O | E): E {
-    const entity = new this.EntityConstructor(options);
-
-    entity.id = (options.id as string) ?? entity.id ?? randomUUID();
-    entity.rev = (options.rev as number) ?? entity.rev ?? 0;
-    entity.seq = (options.seq as number) ?? entity.seq ?? 0;
-    entity.createdAt = (options.createdAt as Date) ?? entity.createdAt ?? new Date();
-    entity.updatedAt = (options.updatedAt as Date) ?? entity.updatedAt ?? new Date();
-    entity.deletedAt = (options.deletedAt as Date) ?? (entity.deletedAt as Date) ?? null;
-    entity.expiresAt = (options.expiresAt as Date) ?? (entity.expiresAt as Date) ?? null;
-
-    this.validateBaseEntity(entity);
-
-    this.logger.debug("Created entity", { entity });
-
-    return entity;
   }
 
   public async delete(criteria: Criteria<E>): Promise<void> {
@@ -331,6 +330,20 @@ export class RedisRepository<
     };
   }
 
+  private handleCreate(options: O | E): E {
+    const entity = new this.EntityConstructor(options);
+
+    entity.id = (options.id as string) ?? entity.id ?? randomUUID();
+    entity.rev = (options.rev as number) ?? entity.rev ?? 0;
+    entity.seq = (options.seq as number) ?? entity.seq ?? 0;
+    entity.createdAt = (options.createdAt as Date) ?? entity.createdAt ?? new Date();
+    entity.updatedAt = (options.updatedAt as Date) ?? entity.updatedAt ?? new Date();
+    entity.deletedAt = (options.deletedAt as Date) ?? (entity.deletedAt as Date) ?? null;
+    entity.expiresAt = (options.expiresAt as Date) ?? (entity.expiresAt as Date) ?? null;
+
+    return entity;
+  }
+
   private updateEntityData(entity: E): E {
     const updated = this.create(entity);
 
@@ -397,10 +410,10 @@ export class RedisRepository<
   private validateEntity(entity: E): void {
     this.validateBaseEntity(entity);
 
-    if (isFunction(this.validate)) {
+    if (isFunction(this.validateFn)) {
       const { id, rev, seq, createdAt, updatedAt, deletedAt, expiresAt, ...rest } =
         entity;
-      this.validate(rest);
+      this.validateFn(rest);
     }
   }
 }
