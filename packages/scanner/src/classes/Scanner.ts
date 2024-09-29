@@ -2,8 +2,9 @@ import { isArray, isString } from "@lindorm/is";
 import { readdirSync, statSync } from "fs";
 import { basename, extname, join, relative, sep } from "path";
 import { ScannerError } from "../errors";
-import { IScanner } from "../interfaces";
-import { ScanData, StructureScannerOptions } from "../types";
+import { IScanData, IScanner } from "../interfaces";
+import { StructureScannerOptions } from "../types";
+import { ScanData } from "./ScanData";
 
 export class Scanner implements IScanner {
   private readonly deniedDirectories: Array<RegExp>;
@@ -12,7 +13,7 @@ export class Scanner implements IScanner {
   private readonly deniedTypes: Array<RegExp>;
   private readonly requireFn: NodeJS.Require;
 
-  public constructor(options: Partial<StructureScannerOptions> = {}) {
+  public constructor(options: StructureScannerOptions = {}) {
     this.deniedDirectories = options.deniedDirectories || [];
     this.deniedExtensions = options.deniedExtensions || [];
     this.deniedFilenames = options.deniedFilenames || [];
@@ -23,7 +24,7 @@ export class Scanner implements IScanner {
 
   // public
 
-  public scan(path: string): ScanData {
+  public scan(path: string): IScanData {
     const root = path.split(sep).slice(0, -1).join(sep);
     const result = this.performScan(path, root);
 
@@ -32,19 +33,19 @@ export class Scanner implements IScanner {
     throw new ScannerError("No files found");
   }
 
-  public async import<T>(fileOrPath: ScanData | string): Promise<T> {
+  public async import<T>(fileOrPath: IScanData | string): Promise<T> {
     return await import(isString(fileOrPath) ? fileOrPath : fileOrPath.fullPath);
   }
 
-  public require<T>(fileOrPath: ScanData | string): T {
+  public require<T>(fileOrPath: IScanData | string): T {
     return this.requireFn(isString(fileOrPath) ? fileOrPath : fileOrPath.fullPath);
   }
 
   // public static
 
-  public static flatten(scan: Array<ScanData> | ScanData): Array<ScanData> {
+  public static flatten(scan: Array<IScanData> | IScanData): Array<IScanData> {
     const array = isArray(scan) ? scan : [scan];
-    const result: Array<ScanData | Array<ScanData>> = [];
+    const result: Array<IScanData | Array<IScanData>> = [];
 
     for (const item of array) {
       if (item.isDirectory) {
@@ -69,7 +70,7 @@ export class Scanner implements IScanner {
 
   // private
 
-  private performScan(path: string, root?: string): ScanData | undefined {
+  private performScan(path: string, root?: string): IScanData | undefined {
     const rootDir = root ?? path;
 
     const fullPath = path;
@@ -85,7 +86,7 @@ export class Scanner implements IScanner {
     if (isDirectory) {
       if (!this.isAllowedDirectoryBaseName(fullName)) return;
 
-      const children: Array<ScanData> = [];
+      const children: Array<IScanData> = [];
 
       for (const content of readdirSync(path)) {
         const child = this.performScan(join(path, content), rootDir);
@@ -95,7 +96,7 @@ export class Scanner implements IScanner {
         children.push(child);
       }
 
-      return {
+      return new ScanData({
         baseName: fullName,
         basePath: relativePath,
         children,
@@ -107,7 +108,7 @@ export class Scanner implements IScanner {
         parents,
         relativePath,
         types: [],
-      };
+      });
     }
 
     if (isFile) {
@@ -121,7 +122,7 @@ export class Scanner implements IScanner {
       if (!this.isAllowedFileExtension(extension)) return;
       if (types.some((type) => !this.isAllowedFileType(type))) return;
 
-      return {
+      return new ScanData({
         baseName,
         basePath: relativePath.replace(ext, ""),
         children: [],
@@ -133,7 +134,7 @@ export class Scanner implements IScanner {
         parents,
         relativePath,
         types,
-      };
+      });
     }
   }
 
