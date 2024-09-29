@@ -6,12 +6,12 @@ export const stringifyObjectValues = (dict: Dict): Dict => {
   const result: Dict = {};
 
   for (const [key, value] of Object.entries(dict)) {
-    if (isObject(value)) {
+    if (isDate(value)) {
+      result[key] = value.toISOString();
+    } else if (isObject(value)) {
       result[key] = stringifyObjectValues(value);
     } else if (isArray(value)) {
       result[key] = stringifyArrayValues(value);
-    } else if (isDate(value)) {
-      result[key] = value.toISOString();
     } else if (isString(value)) {
       result[key] = value;
     } else if (isNull(value)) {
