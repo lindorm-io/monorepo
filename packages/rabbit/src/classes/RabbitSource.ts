@@ -10,6 +10,7 @@ import {
   CloneRabbitSourceOptions,
   RabbitSourceMessage,
   RabbitSourceMessageBusOptions,
+  RabbitSourceMessages,
   RabbitSourceOptions,
 } from "../types";
 import { FromClone } from "../types/private";
@@ -63,6 +64,10 @@ export class RabbitSource implements IRabbitSource {
     return this.connection;
   }
 
+  public addMessages(messages: RabbitSourceMessages): void {
+    this.messages.push(...MessageScanner.scan(messages));
+  }
+
   public clone(options: CloneRabbitSourceOptions = {}): IRabbitSource {
     if (!this.connection) {
       throw new RabbitSourceError("Connection not established");
@@ -106,6 +111,7 @@ export class RabbitSource implements IRabbitSource {
       logger: options.logger ?? this.logger,
       nackTimeout: options.nackTimeout ?? this.nackTimeout,
       subscriptions: this.subscriptions,
+      create: options.create ?? config.create,
       validate: options.validate ?? config.validate,
     });
   }

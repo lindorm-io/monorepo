@@ -7,7 +7,11 @@ import { CountDocumentsOptions, DeleteOptions, Filter, FindOptions } from "mongo
 import { z } from "zod";
 import { MongoRepositoryError } from "../errors";
 import { IMongoEntity, IMongoRepository } from "../interfaces";
-import { MongoRepositoryOptions, ValidateMongoEntityFn } from "../types";
+import {
+  CreateMongoEntityFn,
+  MongoRepositoryOptions,
+  ValidateMongoEntityFn,
+} from "../types";
 import { MongoEntityConfig } from "../types/mongo-entity-config";
 import { MongoBase } from "./MongoBase";
 
@@ -20,7 +24,8 @@ export class MongoRepository<
 {
   private readonly EntityConstructor: Constructor<E>;
   private readonly config: MongoEntityConfig;
-  private readonly validate: ValidateMongoEntityFn<E> | undefined;
+  private readonly createFn: CreateMongoEntityFn<E> | undefined;
+  private readonly validateFn: ValidateMongoEntityFn<E> | undefined;
 
   protected readonly logger: ILogger;
 
@@ -79,21 +84,15 @@ export class MongoRepository<
 
     this.EntityConstructor = options.Entity;
     this.config = options.config ?? {};
-    this.validate = options.validate;
+
+    this.createFn = options.create;
+    this.validateFn = options.validate;
   }
 
-  // public sync
+  // public
 
   public create(options: O | E = {} as O): E {
-    const entity = new this.EntityConstructor(options);
-
-    entity.id = (options.id as string) ?? entity.id ?? randomUUID();
-    entity.rev = (options.rev as number) ?? entity.rev ?? 0;
-    entity.seq = (options.seq as number) ?? entity.seq ?? 0;
-    entity.createdAt = (options.createdAt as Date) ?? entity.createdAt ?? new Date();
-    entity.updatedAt = (options.updatedAt as Date) ?? entity.updatedAt ?? new Date();
-    entity.deletedAt = (options.deletedAt as Date) ?? (entity.deletedAt as Date) ?? null;
-    entity.expiresAt = (options.expiresAt as Date) ?? (entity.expiresAt as Date) ?? null;
+    const entity = this.createFn ? this.createFn(options) : this.handleCreate(options);
 
     this.validateBaseEntity(entity);
 
@@ -101,8 +100,6 @@ export class MongoRepository<
 
     return entity;
   }
-
-  // public async
 
   public async count(
     criteria: Filter<E> = {},
@@ -619,6 +616,20 @@ export class MongoRepository<
     }
   }
 
+  private handleCreate(options: O | E): E {
+    const entity = new this.EntityConstructor(options);
+
+    entity.id = (options.id as string) ?? entity.id ?? randomUUID();
+    entity.rev = (options.rev as number) ?? entity.rev ?? 0;
+    entity.seq = (options.seq as number) ?? entity.seq ?? 0;
+    entity.createdAt = (options.createdAt as Date) ?? entity.createdAt ?? new Date();
+    entity.updatedAt = (options.updatedAt as Date) ?? entity.updatedAt ?? new Date();
+    entity.deletedAt = (options.deletedAt as Date) ?? (entity.deletedAt as Date) ?? null;
+    entity.expiresAt = (options.expiresAt as Date) ?? (entity.expiresAt as Date) ?? null;
+
+    return entity;
+  }
+
   private updateEntityData(entity: E): E {
     const updated = this.create(entity);
 
@@ -651,10 +662,10 @@ export class MongoRepository<
   private validateEntity(entity: E): void {
     this.validateBaseEntity(entity);
 
-    if (isFunction(this.validate)) {
+    if (isFunction(this.validateFn)) {
       const { id, rev, seq, createdAt, updatedAt, deletedAt, expiresAt, ...rest } =
         entity;
-      this.validate(rest);
+      this.validateFn(rest);
     }
   }
 }

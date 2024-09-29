@@ -1,5 +1,5 @@
 import { isFunction, isObject, isString } from "@lindorm/is";
-import { ScanData, Scanner } from "@lindorm/scanner";
+import { IScanData, Scanner } from "@lindorm/scanner";
 import { Constructor, Dict } from "@lindorm/types";
 import { RedisRepositoryError } from "../../errors";
 import { IRedisEntity } from "../../interfaces";
@@ -46,7 +46,7 @@ export class EntityScanner {
 
   // private
 
-  private static scanDirectory(data: ScanData): Array<RedisSourceEntity> {
+  private static scanDirectory(data: IScanData): Array<RedisSourceEntity> {
     const result: Array<RedisSourceEntity> = [];
 
     for (const child of data.children) {
@@ -61,7 +61,7 @@ export class EntityScanner {
     return result;
   }
 
-  private static scanFile(data: ScanData): RedisSourceEntity {
+  private static scanFile(data: IScanData): RedisSourceEntity {
     const module = EntityScanner.scanner.require<Dict>(data.fullPath);
     const entries = Object.entries(module);
     const result: Partial<RedisSourceEntity> = {};

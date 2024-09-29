@@ -1,7 +1,8 @@
 import { RabbitMessageBase } from "../../classes/RabbitMessageBase";
-import { ValidateMessageFn } from "../../types";
+import { IRabbitMessage } from "../../interfaces";
+import { ValidateRabbitMessageFn } from "../../types";
 
-export type TestMessageOneOptions = {
+export type TestMessageOneOptions = Partial<IRabbitMessage> & {
   data?: any;
   meta?: any;
 };
@@ -11,7 +12,7 @@ export class TestMessageOne extends RabbitMessageBase {
   public readonly meta: any;
 
   public constructor(options: TestMessageOneOptions) {
-    super();
+    super(options);
 
     this.data = options.data;
     this.meta = options.meta;
@@ -22,7 +23,7 @@ export class TestMessageOne extends RabbitMessageBase {
   }
 }
 
-export const validate: ValidateMessageFn<TestMessageOne> = (message) => {
+export const validate: ValidateRabbitMessageFn<TestMessageOne> = (message) => {
   if (!message.data) {
     throw new Error("Missing data");
   }

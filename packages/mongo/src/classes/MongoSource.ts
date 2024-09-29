@@ -1,6 +1,6 @@
 import { ILogger } from "@lindorm/logger";
 import { Constructor } from "@lindorm/types";
-import { MongoClient } from "mongodb";
+import { Collection, Db, Document, MongoClient } from "mongodb";
 import { MongoSourceError } from "../errors";
 import {
   IMongoBucket,
@@ -12,8 +12,10 @@ import {
 import {
   CloneMongoSourceOptions,
   MongoSourceBucketOptions,
+  MongoSourceEntities,
   MongoSourceEntity,
   MongoSourceFile,
+  MongoSourceFiles,
   MongoSourceOptions,
   MongoSourceRepositoryOptions,
 } from "../types";
@@ -23,7 +25,7 @@ import { MongoRepository } from "./MongoRepository";
 import { EntityScanner, FileScanner } from "./private";
 
 export class MongoSource implements IMongoSource {
-  private readonly database: string;
+  private readonly databaseName: string;
   private readonly entities: Array<MongoSourceEntity>;
   private readonly files: Array<MongoSourceFile>;
   private readonly logger: ILogger;
@@ -35,7 +37,7 @@ export class MongoSource implements IMongoSource {
   public constructor(fromClone: FromClone);
   public constructor(options: MongoSourceOptions | FromClone) {
     this.logger = options.logger.child(["MongoSource"]);
-    this.database = options.database;
+    this.databaseName = options.database;
     this.namespace = options.namespace;
 
     if ("_mode" in options && options._mode === "from_clone") {
@@ -58,16 +60,32 @@ export class MongoSource implements IMongoSource {
 
   // public
 
+  public get database(): Db {
+    return this.client.db(this.databaseName);
+  }
+
+  public addEntities(entities: MongoSourceEntities): void {
+    this.entities.push(...EntityScanner.scan(entities));
+  }
+
+  public addFiles(files: MongoSourceFiles): void {
+    this.files.push(...FileScanner.scan(files));
+  }
+
   public clone(options: CloneMongoSourceOptions = {}): IMongoSource {
     return new MongoSource({
       _mode: "from_clone",
       client: this.client,
-      database: this.database,
+      database: this.databaseName,
       entities: this.entities,
       files: this.files,
       logger: options.logger ?? this.logger,
       namespace: this.namespace,
     });
+  }
+
+  public collection<D extends Document>(name: string): Collection<D> {
+    return this.database.collection(name);
   }
 
   public async connect(): Promise<void> {
@@ -87,7 +105,7 @@ export class MongoSource implements IMongoSource {
     return new MongoBucket({
       File,
       client: this.client,
-      database: this.database,
+      database: this.databaseName,
       indexes: options.indexes ?? config.indexes,
       logger: options.logger ?? this.logger,
       namespace: this.namespace,
@@ -104,11 +122,12 @@ export class MongoSource implements IMongoSource {
     return new MongoRepository({
       Entity,
       config: options.config ?? config.config,
-      database: this.database,
+      database: this.databaseName,
       indexes: options.indexes ?? config.indexes,
       logger: options.logger ?? this.logger,
       client: this.client,
       namespace: this.namespace,
+      create: options.create ?? config.create,
       validate: options.validate ?? config.validate,
     });
   }
@@ -127,11 +146,13 @@ export class MongoSource implements IMongoSource {
 
   // private
 
-  private entityConfig(Entity: Constructor<IMongoEntity>): MongoSourceEntity {
+  private entityConfig<E extends IMongoEntity>(
+    Entity: Constructor<E>,
+  ): MongoSourceEntity<E> {
     const config = this.entities.find((entity) => entity.Entity === Entity);
 
     if (config) {
-      return config;
+      return config as MongoSourceEntity<E>;
     }
 
     throw new MongoSourceError("Entity not found in entities list", {
@@ -139,11 +160,11 @@ export class MongoSource implements IMongoSource {
     });
   }
 
-  private fileConfig(File: Constructor<IMongoFile>): MongoSourceFile {
+  private fileConfig<F extends IMongoFile>(File: Constructor<F>): MongoSourceFile<F> {
     const config = this.files.find((file) => file.File === File);
 
     if (config) {
-      return config;
+      return config as MongoSourceFile<F>;
     }
 
     throw new MongoSourceError("File not found in files list", { debug: { File } });

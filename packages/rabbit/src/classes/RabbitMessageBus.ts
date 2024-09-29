@@ -1,4 +1,4 @@
-import { isArray, isFunction } from "@lindorm/is";
+import { isArray, isBoolean, isDate, isFunction, isNumber, isString } from "@lindorm/is";
 import { JsonKit } from "@lindorm/json-kit";
 import { ILogger } from "@lindorm/logger";
 import { Constructor, DeepPartial } from "@lindorm/types";
@@ -8,7 +8,12 @@ import { z } from "zod";
 import { IRabbitMessage } from "../interfaces";
 import { IRabbitMessageBus } from "../interfaces/RabbitMessageBus";
 import { IRabbitSubscription } from "../interfaces/RabbitSubscription";
-import { RabbitBusOptions, UnsubscribeOptions, ValidateMessageFn } from "../types";
+import {
+  CreateRabbitMessageFn,
+  RabbitBusOptions,
+  UnsubscribeOptions,
+  ValidateRabbitMessageFn,
+} from "../types";
 import { bindQueue, sanitizeRouteKey } from "../utils";
 import { SubscriptionList } from "./private";
 
@@ -24,7 +29,8 @@ export class RabbitMessageBus<
   private readonly logger: ILogger;
   private readonly nackTimeout: number;
   private readonly subscriptions: SubscriptionList;
-  private readonly validate: ValidateMessageFn<M> | undefined;
+  private readonly createFn: CreateRabbitMessageFn<M> | undefined;
+  private readonly validateFn: ValidateRabbitMessageFn<M> | undefined;
 
   public constructor(options: RabbitBusOptions<M>) {
     this.logger = options.logger.child(["RabbitMessageBus", options.Message.name]);
@@ -35,24 +41,21 @@ export class RabbitMessageBus<
     this.exchange = options.exchange;
     this.nackTimeout = options.nackTimeout;
     this.subscriptions = options.subscriptions;
-    this.validate = options.validate;
+
+    this.createFn = options.create;
+    this.validateFn = options.validate;
   }
 
   // public
 
   public create(options: O | M): M {
-    const message = new this.MessageConstructor(options);
+    const message = this.createFn ? this.createFn(options) : this.handleCreate(options);
 
-    message.id = (options.id as string) ?? message.id ?? randomUUID();
-    message.delay = (options.delay as number) ?? message.delay ?? 0;
-    message.mandatory = (options.mandatory as boolean) ?? message.mandatory ?? false;
-    message.timestamp = (options.timestamp as Date) ?? message.timestamp ?? new Date();
-    message.type =
-      (options.type as string) ?? message.type ?? this.MessageConstructor.name;
+    this.logger.debug("Created message", { message });
 
     this.validateBaseMessage(message);
 
-    this.logger.debug("Created message", { message });
+    this.logger.debug("Validated message", { message });
 
     return message;
   }
@@ -60,9 +63,13 @@ export class RabbitMessageBus<
   public async publish(message: M | Array<M>): Promise<void> {
     const array = isArray(message) ? message : [message];
 
-    this.logger.verbose("Publishing messages", { messages: array });
+    const created = array.map((item) =>
+      item instanceof this.MessageConstructor ? item : this.create(item),
+    );
 
-    for (const message of array) {
+    this.logger.verbose("Publishing messages", { messages: created });
+
+    for (const message of created) {
       this.validateMessage(message);
       await this.handlePublish(message);
     }
@@ -98,6 +105,44 @@ export class RabbitMessageBus<
 
   // private
 
+  private handleCreate(options: O | M): M {
+    const message = new this.MessageConstructor(options);
+
+    message.id = isString(options.id)
+      ? options.id
+      : isString(message.id)
+        ? message.id
+        : randomUUID();
+
+    message.delay = isNumber(options.delay)
+      ? options.delay
+      : isNumber(message.delay)
+        ? message.delay
+        : 0;
+
+    message.mandatory = isBoolean(options.mandatory)
+      ? options.mandatory
+      : isBoolean(message.mandatory)
+        ? message.mandatory
+        : false;
+
+    message.timestamp = isDate(options.timestamp)
+      ? options.timestamp
+      : isString(options.timestamp)
+        ? new Date(options.timestamp)
+        : isDate(message.timestamp)
+          ? message.timestamp
+          : new Date();
+
+    message.type = isString(options.type)
+      ? options.type
+      : isString(message.type)
+        ? message.type
+        : this.MessageConstructor.name;
+
+    return message;
+  }
+
   private async handlePublish(message: M): Promise<void> {
     this.validateBaseMessage(message);
 
@@ -109,6 +154,8 @@ export class RabbitMessageBus<
   }
 
   private async handleSubscribe(subscription: IRabbitSubscription<M>): Promise<void> {
+    this.validateSubscription(subscription);
+
     const queue = sanitizeRouteKey(subscription.queue);
     const topic = sanitizeRouteKey(subscription.topic);
 
@@ -129,25 +176,27 @@ export class RabbitMessageBus<
     const { consumerTag } = await this.channel.consume(queue, (msg) => {
       if (!msg) return;
 
-      const message = this.create(JsonKit.parse<M>(msg.content));
+      const parsed = JsonKit.parse<M>(msg.content);
 
-      this.logger.debug("Subscription consuming message", {
+      this.logger.debug("Subscription consuming parsed message", {
         subscription,
-        message,
+        parsed,
       });
+
+      const message = this.create(parsed);
+
+      if (!(message instanceof this.MessageConstructor)) {
+        this.logger.error("Invalid message instance", {
+          actual: message.constructor.name,
+          expect: this.MessageConstructor.name,
+        });
+        return this.channel.nack(msg, false, false);
+      }
 
       try {
         this.validateBaseMessage(message);
       } catch (error: any) {
         this.logger.error("Message validation error", error, [{ message }]);
-        return this.channel.nack(msg, false, false);
-      }
-
-      if (message.type !== this.MessageConstructor.name) {
-        this.logger.error("Message type mismatch", {
-          message,
-          expected: this.MessageConstructor.name,
-        });
         return this.channel.nack(msg, false, false);
       }
 
@@ -290,12 +339,24 @@ export class RabbitMessageBus<
     });
   }
 
+  private validateSubscription(subscription: IRabbitSubscription<M>): void {
+    z.object({
+      callback: z.function(),
+      queue: z.string(),
+      topic: z.string(),
+    }).parse({
+      callback: subscription.callback,
+      queue: subscription.queue,
+      topic: subscription.topic,
+    });
+  }
+
   private validateMessage(message: M): void {
     this.validateBaseMessage(message);
 
-    if (isFunction(this.validate)) {
+    if (isFunction(this.validateFn)) {
       const { id, delay, mandatory, timestamp, topic, type, ...rest } = message;
-      this.validate(rest);
+      this.validateFn(rest);
     }
   }
 }

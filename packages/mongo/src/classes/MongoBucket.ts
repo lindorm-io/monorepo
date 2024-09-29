@@ -13,7 +13,7 @@ import {
   FileIndex,
   FileMetadata,
   MongoBucketOptions,
-  ValidateFileFn,
+  ValidateMongoFileFn,
 } from "../types";
 import { MongoBase } from "./MongoBase";
 
@@ -24,7 +24,7 @@ export class MongoBucket<F extends IMongoFile>
   private readonly FileConstructor: Constructor<F>;
   private readonly bucketName: string;
   private readonly chunkSizeBytes: number | undefined;
-  private readonly validate: ValidateFileFn<F> | undefined;
+  private readonly validate: ValidateMongoFileFn<F> | undefined;
   private _grid: GridFSBucket | undefined;
 
   protected readonly logger: ILogger;

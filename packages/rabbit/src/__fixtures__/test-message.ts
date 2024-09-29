@@ -1,6 +1,7 @@
 import { RabbitMessageBase } from "../classes/RabbitMessageBase";
+import { IRabbitMessage } from "../interfaces";
 
-export type TestMessageOptions = {
+export type TestMessageOptions = Partial<IRabbitMessage> & {
   name: string;
 };
 
@@ -8,7 +9,7 @@ export class TestMessage extends RabbitMessageBase {
   public name: string;
 
   public constructor(options: TestMessageOptions) {
-    super();
+    super(options);
 
     this.name = options.name;
   }

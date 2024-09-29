@@ -1,6 +1,7 @@
 import { RabbitMessageBase } from "../../classes/RabbitMessageBase";
+import { IRabbitMessage } from "../../interfaces";
 
-export type TestMessageTwoOptions = {
+export type TestMessageTwoOptions = Partial<IRabbitMessage> & {
   data?: any;
   meta?: any;
 };
@@ -10,7 +11,7 @@ export class TestMessageTwo extends RabbitMessageBase {
   public readonly meta: any;
 
   public constructor(options: TestMessageTwoOptions) {
-    super();
+    super(options);
 
     this.data = options.data;
     this.meta = options.meta;
