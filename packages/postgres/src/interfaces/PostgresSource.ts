@@ -1,5 +1,7 @@
-import { Pool, QueryConfig, QueryConfigValues, QueryResult, QueryResultRow } from "pg";
-import { ClonePostgresSourceOptions } from "../types";
+import { Dict } from "@lindorm/types";
+import { Pool, QueryConfig, QueryConfigValues } from "pg";
+import { ClonePostgresSourceOptions, PostgresResult } from "../types";
+import { IPostgresQueryBuilder } from "./PostgresQueryBuilder";
 
 export interface IPostgresSource {
   client: Pool;
@@ -9,8 +11,9 @@ export interface IPostgresSource {
   disconnect(): Promise<void>;
   setup(): Promise<void>;
 
-  query<R extends QueryResultRow = any, V = Array<any>>(
+  query<R extends Dict = any, V = Array<any>>(
     queryTextOrConfig: string | QueryConfig<V>,
     values?: QueryConfigValues<V>,
-  ): Promise<QueryResult<R>>;
+  ): Promise<PostgresResult<R>>;
+  queryBuilder<T extends Dict>(table: string): IPostgresQueryBuilder<T>;
 }

@@ -1,17 +1,17 @@
-import { isString } from "@lindorm/is";
 import { ILogger } from "@lindorm/logger";
-import {
-  Pool,
-  PoolClient,
-  QueryConfig,
-  QueryConfigValues,
-  QueryResult,
-  QueryResultRow,
-} from "pg";
+import { Dict } from "@lindorm/types";
+import { Pool, PoolClient, QueryConfig, QueryConfigValues } from "pg";
 import { PostgresError } from "../errors";
-import { IPostgresSource } from "../interfaces";
-import { ClonePostgresSourceOptions, PostgresSourceOptions } from "../types";
+import { IPostgresQueryBuilder, IPostgresSource } from "../interfaces";
+import {
+  ClonePostgresSourceOptions,
+  PostgresResult,
+  PostgresSourceOptions,
+} from "../types";
 import { FromClone } from "../types/private";
+import { parseQuery } from "../utils/private";
+import { parseQueryResult } from "../utils/private/parse-query-result";
+import { PostgresQueryBuilder } from "./PostgresQueryBuilder";
 
 export class PostgresSource implements IPostgresSource {
   private readonly logger: ILogger;
@@ -54,39 +54,39 @@ export class PostgresSource implements IPostgresSource {
 
   public async setup(): Promise<void> {}
 
-  public async query<R extends QueryResultRow = any, V = Array<any>>(
+  public async query<R extends Dict = any, V = Array<any>>(
     queryTextOrConfig: string | QueryConfig<V>,
     values?: QueryConfigValues<V>,
-  ): Promise<QueryResult<R>> {
+  ): Promise<PostgresResult<R>> {
     let client: PoolClient;
 
     try {
       client = await this.client.connect();
 
-      const query = isString(queryTextOrConfig)
-        ? this.trim(queryTextOrConfig)
-        : isString(queryTextOrConfig.text)
-          ? this.trim(queryTextOrConfig.text)
-          : queryTextOrConfig;
+      const query = parseQuery(queryTextOrConfig);
 
       this.logger.debug("Query", { query, values });
 
-      return await client.query<R, V>(query, values);
+      const result = await client.query<R, V>(query, values);
+
+      this.logger.debug("Result", {
+        command: result.command,
+        fields: result.fields,
+        oid: result.oid,
+        rowCount: result.rowCount,
+        rows: result.rows,
+      });
+
+      return parseQueryResult(result);
     } catch (error: any) {
-      this.logger.error("Query failed", { error });
+      this.logger.warn("Query failed", { error });
       throw new PostgresError("Query failed", { error });
     } finally {
       if (client!) client.release();
     }
   }
 
-  // private
-
-  private trim(query: string): string {
-    return query
-      .split("\n")
-      .map((line) => line.trim())
-      .filter((line) => line.length > 0)
-      .join(" ");
+  public queryBuilder<T extends Dict>(table: string): IPostgresQueryBuilder<T> {
+    return new PostgresQueryBuilder<T>({ table });
   }
 }

@@ -6,6 +6,7 @@ import { PostgresSource } from "./PostgresSource";
 describe("PostgresSource", () => {
   let source: IPostgresSource;
   let table: string;
+  let uuid: string;
 
   beforeAll(() => {
     source = new PostgresSource({
@@ -13,6 +14,7 @@ describe("PostgresSource", () => {
       url: "postgres://root:example@localhost:5432/default",
     });
     table = "t_" + randomUUID().split("-").join("").substring(0, 8);
+    uuid = randomUUID();
   });
 
   afterAll(async () => {
@@ -26,6 +28,7 @@ describe("PostgresSource", () => {
         username VARCHAR ( 128 ) NOT NULL,
         number INT NOT NULL,
         data JSONB NOT NULL,
+        list JSONB NOT NULL,
         created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp()
       );
     `;
@@ -92,16 +95,19 @@ describe("PostgresSource", () => {
   });
 
   test("should insert a row", async () => {
+    const id = uuid;
+
     const insert = `
-      INSERT INTO ${table} (id, username, number, data)
-        VALUES ($1, $2, $3, $4) RETURNING *;
+      INSERT INTO ${table} (id, username, number, data, list)
+        VALUES ($1, $2, $3, $4, $5) RETURNING *;
     `;
 
     const values = [
-      "8666cda3-114d-4c16-8c99-ef868e5f477b",
+      id,
       "username",
       1234,
       { hello_there: "general kenobi" },
+      JSON.stringify(["one", "two", 3]),
     ];
 
     await expect(source.query(insert, values)).resolves.toEqual(
@@ -109,12 +115,83 @@ describe("PostgresSource", () => {
         rowCount: 1,
         rows: [
           {
-            id: "8666cda3-114d-4c16-8c99-ef868e5f477b",
+            id: id,
             username: "username",
             number: 1234,
             data: {
               hello_there: "general kenobi",
             },
+            list: ["one", "two", 3],
+            created_at: expect.any(Date),
+          },
+        ],
+      }),
+    );
+  });
+
+  test("should insert a row using placeholder parsing", async () => {
+    const id = randomUUID();
+
+    const insert = `
+      INSERT INTO ${table} (id, username, number, data, list)
+      VALUES (?, ?, ?, ?, ?) RETURNING *;
+    `;
+
+    const values = [
+      id,
+      "testname",
+      5678,
+      { hello_there: "general kenobi" },
+      JSON.stringify(["one", "two", 3]),
+    ];
+
+    await expect(source.query(insert, values)).resolves.toEqual(
+      expect.objectContaining({
+        rowCount: 1,
+        rows: [
+          {
+            id: id,
+            username: "testname",
+            number: 5678,
+            data: {
+              hello_there: "general kenobi",
+            },
+            list: ["one", "two", 3],
+            created_at: expect.any(Date),
+          },
+        ],
+      }),
+    );
+  });
+
+  test("should insert a row using query builder", async () => {
+    const id = randomUUID();
+
+    const queryBuilder = source.queryBuilder(table);
+
+    await expect(
+      source.query(
+        queryBuilder.insert(
+          {
+            id: id,
+            username: "newname",
+            number: 9876,
+            data: { i_dont_like_sand: true },
+            list: ["one", "two", 3],
+          },
+          { returning: "*" },
+        ),
+      ),
+    ).resolves.toEqual(
+      expect.objectContaining({
+        rowCount: 1,
+        rows: [
+          {
+            id: id,
+            username: "newname",
+            number: 9876,
+            data: { i_dont_like_sand: true },
+            list: ["one", "two", 3],
             created_at: expect.any(Date),
           },
         ],
@@ -128,19 +205,42 @@ describe("PostgresSource", () => {
         WHERE id = $1;
     `;
 
-    const values = ["8666cda3-114d-4c16-8c99-ef868e5f477b"];
+    const values = [uuid];
 
     await expect(source.query(select, values)).resolves.toEqual(
       expect.objectContaining({
         rowCount: 1,
         rows: [
           {
-            id: "8666cda3-114d-4c16-8c99-ef868e5f477b",
+            id: uuid,
             username: "username",
             number: 1234,
             data: {
               hello_there: "general kenobi",
             },
+            list: ["one", "two", 3],
+            created_at: expect.any(Date),
+          },
+        ],
+      }),
+    );
+  });
+
+  test("should select a row using query builder", async () => {
+    const queryBuilder = source.queryBuilder(table);
+
+    await expect(source.query(queryBuilder.select({ id: uuid }))).resolves.toEqual(
+      expect.objectContaining({
+        rowCount: 1,
+        rows: [
+          {
+            id: uuid,
+            username: "username",
+            number: 1234,
+            data: {
+              hello_there: "general kenobi",
+            },
+            list: ["one", "two", 3],
             created_at: expect.any(Date),
           },
         ],
@@ -154,12 +254,7 @@ describe("PostgresSource", () => {
         VALUES ($1, $2, $3, $4) RETURNING *;
     `;
 
-    const values = [
-      "8666cda3-114d-4c16-8c99-ef868e5f477b",
-      "username",
-      5678,
-      { throws: "error" },
-    ];
+    const values = [uuid, "username", 5678, { throws: "error" }];
 
     await expect(source.query(insert, values)).rejects.toThrow();
   });

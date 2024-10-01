@@ -1,3 +1,4 @@
+import { PostgresQueryBuilder } from "../classes/PostgresQueryBuilder";
 import { IPostgresSource } from "../interfaces";
 
 export const createMockPostgresSource = (): IPostgresSource => ({
@@ -7,4 +8,7 @@ export const createMockPostgresSource = (): IPostgresSource => ({
   disconnect: jest.fn(),
   setup: jest.fn(),
   query: jest.fn(),
+  queryBuilder: jest
+    .fn()
+    .mockImplementation((table: string) => new PostgresQueryBuilder({ table })),
 });
