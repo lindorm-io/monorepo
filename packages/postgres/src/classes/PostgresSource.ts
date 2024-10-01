@@ -63,11 +63,11 @@ export class PostgresSource implements IPostgresSource {
     try {
       client = await this.client.connect();
 
-      const query = parseQuery(queryTextOrConfig);
+      const query = parseQuery(queryTextOrConfig, values);
 
       this.logger.debug("Query", { query, values });
 
-      const result = await client.query<R, V>(query, values);
+      const result = await client.query<R, V>(query);
 
       this.logger.debug("Result", {
         command: result.command,
