@@ -1,12 +1,12 @@
-import { JsonKit } from "@lindorm/json-kit";
 import { ILogger } from "@lindorm/logger";
-import { IPostgresSource } from "@lindorm/postgres";
+import { IPostgresQueryBuilder, IPostgresSource } from "@lindorm/postgres";
 import { Dict } from "@lindorm/types";
 import { IPostgresViewRepository } from "../../interfaces";
 import {
   HandlerIdentifier,
   PostgresViewRepositoryFindFilter,
   PostgresViewRepositoryFindOneFilter,
+  ViewIdentifier,
   ViewRepositoryData,
   ViewStoreAttributes,
 } from "../../types";
@@ -84,7 +84,7 @@ export class PostgresViewRepository<S extends Dict = Dict>
 
       return rows.map((item) => ({
         id: item.id,
-        state: JsonKit.parse(JSON.stringify(item.state)),
+        state: item.state as S,
         created_at: item.created_at,
         updated_at: item.updated_at,
       }));
@@ -153,6 +153,12 @@ export class PostgresViewRepository<S extends Dict = Dict>
   }
 
   // protected
+
+  protected queryBuilder(
+    filter: ViewIdentifier,
+  ): IPostgresQueryBuilder<ViewStoreAttributes> {
+    return this.source.queryBuilder<ViewStoreAttributes>(getViewStoreName(filter));
+  }
 
   protected async initialise(): Promise<void> {
     await this.connect();

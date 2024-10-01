@@ -1,5 +1,5 @@
 import { ILogger } from "@lindorm/logger";
-import { IPostgresSource } from "@lindorm/postgres";
+import { IPostgresQueryBuilder, IPostgresSource } from "@lindorm/postgres";
 import { CHECKSUM_STORE, CHECKSUM_STORE_INDEXES } from "../../constants/private";
 import { IChecksumStore } from "../../interfaces";
 import { ChecksumStoreAttributes, ChecksumStoreFindFilter } from "../../types";
@@ -7,8 +7,12 @@ import { PostgresBase } from "./PostgresBase";
 import { CREATE_TABLE_CHECKSUM_STORE } from "./sql/checksum-store";
 
 export class PostgresChecksumStore extends PostgresBase implements IChecksumStore {
+  private readonly qb: IPostgresQueryBuilder<ChecksumStoreAttributes>;
+
   public constructor(source: IPostgresSource, logger: ILogger) {
     super(source, logger);
+
+    this.qb = source.queryBuilder<ChecksumStoreAttributes>(CHECKSUM_STORE);
   }
 
   // public
@@ -21,32 +25,26 @@ export class PostgresChecksumStore extends PostgresBase implements IChecksumStor
     try {
       await this.promise();
 
-      const text = `
-        SELECT *
-        FROM
-          ${CHECKSUM_STORE}
-        WHERE
-          id = $1 AND
-          name = $2 AND
-          context = $3 AND
-          event_id = $4
-        LIMIT 1
-      `;
+      const result = await this.source.query(
+        this.qb.select({
+          id: filter.id,
+          name: filter.name,
+          context: filter.context,
+          event_id: filter.event_id,
+        }),
+      );
 
-      const values = [filter.id, filter.name, filter.context, filter.event_id];
+      const item = PostgresChecksumStore.toChecksumEntity(result.rows);
 
-      const result = await this.source.query<ChecksumStoreAttributes>(text, values);
-      const entity = PostgresChecksumStore.toChecksumEntity(result.rows);
-
-      if (!entity) {
+      if (!item) {
         this.logger.debug("No checksum entity found");
 
         return undefined;
       }
 
-      this.logger.debug("Found checksum entity", { entity });
+      this.logger.debug("Found checksum entity", { item });
 
-      return entity;
+      return item;
     } catch (err: any) {
       this.logger.error("Failed to find checksum entity", err);
 
@@ -60,26 +58,7 @@ export class PostgresChecksumStore extends PostgresBase implements IChecksumStor
     try {
       await this.promise();
 
-      const text = `
-        INSERT INTO ${CHECKSUM_STORE} (
-          id,
-          name,
-          context,
-          event_id,
-          checksum,
-          timestamp
-        ) VALUES ($1,$2,$3,$4,$5,$6)`;
-
-      const values = [
-        attributes.id,
-        attributes.name,
-        attributes.context,
-        attributes.event_id,
-        attributes.checksum,
-        attributes.timestamp,
-      ];
-
-      await this.source.query(text, values);
+      await this.source.query(this.qb.insert(attributes));
 
       this.logger.debug("Inserted checksum entity", { attributes });
     } catch (err: any) {
@@ -121,13 +100,6 @@ export class PostgresChecksumStore extends PostgresBase implements IChecksumStor
 
     const [row] = rows;
 
-    return {
-      id: row.id,
-      name: row.name,
-      context: row.context,
-      event_id: row.event_id,
-      checksum: row.checksum,
-      timestamp: row.timestamp,
-    };
+    return row;
   }
 }

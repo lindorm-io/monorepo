@@ -14,11 +14,10 @@ import { HermesEvent } from "../messages";
 import { Aggregate } from "../models";
 import {
   AggregateIdentifier,
-  EventData,
   EventStoreAttributes,
   HermesEventStoreOptions,
 } from "../types";
-import { createChecksum } from "../utils/private";
+import { assertChecksum, createChecksum } from "../utils/private";
 import { MongoEventStore } from "./mongo";
 import { PostgresEventStore } from "./postgres";
 
@@ -58,7 +57,7 @@ export class EventStore implements IHermesEventStore {
     if (events?.length) {
       this.logger.debug("Found events matching causation", { events });
 
-      return events.map((item) => new HermesEvent(item));
+      return events.map((item) => EventStore.toHermesEvent(item));
     }
 
     const causationEvents = aggregate.events.filter(
@@ -79,28 +78,30 @@ export class EventStore implements IHermesEventStore {
       lastExpectedEvent,
     });
 
-    const attributes: Omit<EventStoreAttributes, "checksum"> = {
-      id: aggregate.id,
-      name: aggregate.name,
-      context: aggregate.context,
-      causation_id: causation.id,
-      correlation_id: causation.correlationId,
-      events: causationEvents.map((item) => ({
-        id: item.id,
-        name: item.name,
-        data: item.data,
-        meta: item.meta,
-        version: item.version,
-        timestamp: item.timestamp,
-      })),
-      expected_events: expectedEvents.length,
-      previous_event_id: lastExpectedEvent ? lastExpectedEvent.id : null,
-      timestamp: new Date(),
-    };
+    const initialAttributes: Array<Omit<EventStoreAttributes, "checksum">> =
+      causationEvents.map((event) => ({
+        aggregate_id: aggregate.id,
+        aggregate_name: aggregate.name,
+        aggregate_context: aggregate.context,
+        causation_id: causation.id,
+        correlation_id: causation.correlationId,
+        data: event.data,
+        event_id: event.id,
+        event_name: event.name,
+        event_timestamp: event.timestamp,
+        expected_events: expectedEvents.length,
+        meta: event.meta,
+        previous_event_id: lastExpectedEvent ? lastExpectedEvent.id : null,
+        timestamp: new Date(),
+        version: event.version,
+      }));
 
-    const checksum = createChecksum(attributes);
+    const attributes: Array<EventStoreAttributes> = initialAttributes.map((item) => ({
+      ...item,
+      checksum: createChecksum(item),
+    }));
 
-    await this.store.insert({ ...attributes, checksum });
+    await this.store.insert(attributes);
 
     return causationEvents;
   }
@@ -113,7 +114,9 @@ export class EventStore implements IHermesEventStore {
 
     const data = await this.store.find(aggregateIdentifier);
 
-    const events = data.map((item) => this.toHermesEvent(item));
+    this.warnIfChecksumMismatch(data);
+
+    const events = data.map((item) => EventStore.toHermesEvent(item));
 
     const aggregate = new Aggregate({
       ...aggregateIdentifier,
@@ -133,22 +136,38 @@ export class EventStore implements IHermesEventStore {
   public async listEvents(from: Date, limit: number): Promise<Array<IHermesMessage>> {
     const dataArray = await this.store.listEvents(from, limit);
 
-    return dataArray.map((item) => this.toHermesEvent(item));
+    return dataArray.map((item) => EventStore.toHermesEvent(item));
   }
 
   // private
 
-  private toHermesEvent(data: EventData): HermesEvent {
+  private static toHermesEvent(data: EventStoreAttributes): HermesEvent {
     return new HermesEvent({
-      id: data.id,
-      name: data.name,
-      aggregate: data.aggregate,
+      id: data.event_id,
+      name: data.event_name,
+      aggregate: {
+        id: data.aggregate_id,
+        name: data.aggregate_name,
+        context: data.aggregate_context,
+      },
       causationId: data.causation_id,
       correlationId: data.correlation_id,
       data: data.data,
       meta: data.meta,
-      timestamp: data.timestamp,
+      timestamp: data.event_timestamp,
       version: data.version,
     });
+  }
+
+  private async warnIfChecksumMismatch(
+    attributes: Array<EventStoreAttributes>,
+  ): Promise<void> {
+    for (const event of attributes) {
+      try {
+        assertChecksum(event);
+      } catch (error: any) {
+        this.logger.warn("Checksum mismatch", error, [{ event }]);
+      }
+    }
   }
 }

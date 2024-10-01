@@ -1,21 +1,39 @@
-export interface EventAttributes {
-  id: string;
-  name: string;
-  data: Record<string, any>;
-  meta: Record<string, any>;
-  timestamp: Date;
-  version: number;
-}
+import { Dict } from "@lindorm/types";
 
-export interface EventStoreAttributes {
-  id: string;
-  name: string;
-  context: string;
+export type EventStoreAttributes = {
+  aggregate_id: string;
+  aggregate_name: string;
+  aggregate_context: string;
   causation_id: string;
   checksum: string;
   correlation_id: string;
-  events: Array<EventAttributes>;
+  data: Dict;
+  event_id: string;
+  event_name: string;
+  event_timestamp: Date;
+  expected_events: number;
+  meta: Dict;
+  previous_event_id: string | null;
+  timestamp: Date;
+  version: number;
+};
+
+export type MongoEventStoreDocument = {
+  aggregate_id: string;
+  aggregate_name: string;
+  aggregate_context: string;
+  causation_id: string;
+  correlation_id: string;
+  events: Array<{
+    id: string;
+    checksum: string;
+    data: Dict;
+    meta: Dict;
+    name: string;
+    timestamp: Date;
+    version: number;
+  }>;
   expected_events: number;
   previous_event_id: string | null;
   timestamp: Date;
-}
+};

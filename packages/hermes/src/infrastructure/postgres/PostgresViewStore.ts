@@ -1,6 +1,5 @@
-import { JsonKit } from "@lindorm/json-kit";
 import { ILogger } from "@lindorm/logger";
-import { IPostgresSource } from "@lindorm/postgres";
+import { IPostgresQueryBuilder, IPostgresSource } from "@lindorm/postgres";
 import {
   VIEW_CAUSATION,
   VIEW_CAUSATION_INDEXES,
@@ -24,11 +23,13 @@ import { createViewStoreTable } from "./sql/view-store";
 
 export class PostgresViewStore extends PostgresBase implements IViewStore {
   private readonly initialisedViews: Array<string>;
+  private readonly qbCausation: IPostgresQueryBuilder<ViewCausationAttributes>;
 
   public constructor(source: IPostgresSource, logger: ILogger) {
     super(source, logger);
 
     this.initialisedViews = [];
+    this.qbCausation = source.queryBuilder<ViewCausationAttributes>(VIEW_CAUSATION);
   }
 
   public async causationExists(
@@ -40,25 +41,19 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
     try {
       await this.promise();
 
-      const text = `
-        SELECT timestamp
-        FROM
-          ${VIEW_CAUSATION}
-        WHERE
-          id = $1 AND
-          name = $2 AND
-          context = $3 AND
-          causation_id = $4
-      `;
-
-      const values = [
-        viewIdentifier.id,
-        viewIdentifier.name,
-        viewIdentifier.context,
-        causation.id,
-      ];
-
-      const result = await this.source.query<ViewCausationAttributes>(text, values);
+      const result = await this.source.query(
+        this.qbCausation.select(
+          {
+            id: viewIdentifier.id,
+            name: viewIdentifier.name,
+            context: viewIdentifier.context,
+            causation_id: causation.id,
+          },
+          {
+            columns: ["id"],
+          },
+        ),
+      );
 
       return !!result.rowCount;
     } catch (err: any) {
@@ -83,19 +78,19 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
         UPDATE
           ${getViewStoreName(filter)}
         SET
-          processed_causation_ids = $1,
-          hash = $2,
-          revision = $3
+          processed_causation_ids = ?,
+          hash = ?,
+          revision = ?
         WHERE 
-          id = $4 AND 
-          name = $5 AND 
-          context = $6 AND 
-          hash = $7 AND 
-          revision = $8
+          id = ? AND 
+          name = ? AND 
+          context = ? AND 
+          hash = ? AND 
+          revision = ?
       `;
 
       const values = [
-        JSON.stringify(data.processed_causation_ids),
+        data.processed_causation_ids,
         data.hash,
         data.revision,
 
@@ -126,21 +121,11 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
       await this.promise();
       await this.initialiseView(viewIdentifier, adapter);
 
-      const text = `
-        SELECT *
-        FROM
-          ${getViewStoreName(viewIdentifier)}
-        WHERE
-          id = $1 AND
-          name = $2 AND
-          context = $3
-      `;
+      const qb = this.queryBuilder(viewIdentifier);
 
-      const values = [viewIdentifier.id, viewIdentifier.name, viewIdentifier.context];
+      const result = await this.source.query(qb.select(viewIdentifier));
 
-      const result = await this.source.query<ViewStoreAttributes>(text, values);
-
-      if (!result.rows.length) {
+      if (!result.rowCount) {
         this.logger.debug("View not found");
 
         return;
@@ -148,23 +133,9 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
 
       const [data] = result.rows;
 
-      const parsed = {
-        id: data.id,
-        name: data.name,
-        context: data.context,
-        destroyed: data.destroyed,
-        hash: data.hash,
-        meta: JsonKit.parse(data.meta),
-        processed_causation_ids: data.processed_causation_ids,
-        revision: data.revision,
-        state: JsonKit.parse(data.state),
-        created_at: data.created_at,
-        updated_at: data.updated_at,
-      };
+      this.logger.debug("Found view", { data });
 
-      this.logger.debug("Found view", { data, parsed });
-
-      return parsed;
+      return data;
     } catch (err: any) {
       this.logger.error("Failed to find view", err);
 
@@ -182,34 +153,15 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
       await this.promise();
       await this.initialiseView(attributes, adapter);
 
-      const text = `
-        INSERT INTO ${getViewStoreName(attributes)} (
-          id,
-          name,
-          context,
-          destroyed,
-          hash,
-          meta,
-          processed_causation_ids,
-          revision,
-          state
-        )
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
-      `;
+      const qb = this.queryBuilder(attributes);
 
-      const values = [
-        attributes.id,
-        attributes.name,
-        attributes.context,
-        attributes.destroyed,
-        attributes.hash,
-        JsonKit.stringify(attributes.meta),
-        JSON.stringify(attributes.processed_causation_ids),
-        attributes.revision,
-        JsonKit.stringify(attributes.state),
-      ];
-
-      await this.source.query(text, values);
+      await this.source.query(
+        qb.insert({
+          ...attributes,
+          created_at: new Date(),
+          updated_at: new Date(),
+        }),
+      );
 
       this.logger.debug("Inserted view", { attributes });
     } catch (err: any) {
@@ -231,30 +183,17 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
     try {
       await this.promise();
 
-      let num = 1;
-      let text = `
-        INSERT INTO ${VIEW_CAUSATION} (
-          id,
-          name,
-          context,
-          causation_id
-        ) VALUES
-      `;
-      const values = [];
-
-      for (const causationId of causationIds) {
-        text += `($${num}, $${num + 1}, $${num + 2}, $${num + 3}),`;
-        num += 4;
-
-        values.push(viewIdentifier.id);
-        values.push(viewIdentifier.name);
-        values.push(viewIdentifier.context);
-        values.push(causationId);
-      }
-
-      text = text.trim().slice(0, -1);
-
-      await this.source.query(text, values);
+      await this.source.query(
+        this.qbCausation.insertMany(
+          causationIds.map((causationId) => ({
+            id: viewIdentifier.id,
+            name: viewIdentifier.name,
+            context: viewIdentifier.context,
+            causation_id: causationId,
+            timestamp: new Date(),
+          })),
+        ),
+      );
 
       this.logger.debug("Inserted processed causation ids", {
         viewIdentifier,
@@ -282,28 +221,28 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
         UPDATE
           ${getViewStoreName(filter)}
         SET
-          destroyed = $1,
-          hash = $2,
-          meta = $3,
-          processed_causation_ids = $4,
-          revision = $5,
-          state = $6,
-          updated_at = $7
+          destroyed = ?,
+          hash = ?,
+          meta = ?,
+          processed_causation_ids = ?,
+          revision = ?,
+          state = ?,
+          updated_at = ?
         WHERE
-          id = $8 AND 
-          name = $9 AND 
-          context = $10 AND 
-          hash = $11 AND 
-          revision = $12
+          id = ? AND 
+          name = ? AND 
+          context = ? AND 
+          hash = ? AND 
+          revision = ?
       `;
 
       const values = [
         data.destroyed,
         data.hash,
-        JsonKit.stringify(data.meta),
-        JSON.stringify(data.processed_causation_ids),
+        data.meta,
+        data.processed_causation_ids,
         data.revision,
-        JsonKit.stringify(data.state),
+        data.state,
         new Date(),
 
         filter.id,
@@ -324,6 +263,12 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
   }
 
   // protected
+
+  protected queryBuilder(
+    filter: ViewIdentifier,
+  ): IPostgresQueryBuilder<ViewStoreAttributes> {
+    return this.source.queryBuilder<ViewStoreAttributes>(getViewStoreName(filter));
+  }
 
   protected async initialise(): Promise<void> {
     await this.connect();

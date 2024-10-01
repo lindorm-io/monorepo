@@ -1,4 +1,3 @@
-import { JsonKit } from "@lindorm/json-kit";
 import { createMockLogger } from "@lindorm/logger";
 import { IPostgresSource, PostgresSource } from "@lindorm/postgres";
 import { randomString } from "@lindorm/random";
@@ -6,6 +5,7 @@ import { randomUUID } from "crypto";
 import { TEST_AGGREGATE_IDENTIFIER } from "../../__fixtures__/aggregate";
 import { TEST_HERMES_COMMAND } from "../../__fixtures__/hermes-command";
 import { TEST_SAGA_IDENTIFIER } from "../../__fixtures__/saga";
+import { SAGA_CAUSATION, SAGA_STORE } from "../../constants/private";
 import { ISagaStore } from "../../interfaces";
 import { HermesCommand, HermesEvent } from "../../messages";
 import {
@@ -24,92 +24,46 @@ const insertSaga = async (
   source: IPostgresSource,
   attributes: SagaStoreAttributes,
 ): Promise<void> => {
-  const text = `
-    INSERT INTO saga_store (
-      id,
-      name,
-      context,
-      destroyed,
-      hash,
-      messages_to_dispatch,
-      processed_causation_ids,
-      revision,
-      state
-    )
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
-  `;
-  const values = [
-    attributes.id,
-    attributes.name,
-    attributes.context,
-    attributes.destroyed,
-    attributes.hash,
-    JsonKit.stringify(attributes.messages_to_dispatch),
-    JSON.stringify(attributes.processed_causation_ids),
-    attributes.revision,
-    JsonKit.stringify(attributes.state),
-  ];
-  await source.query(text, values);
+  const queryBuilder = source.queryBuilder<SagaStoreAttributes>(SAGA_STORE);
+  await source.query(queryBuilder.insert(attributes));
 };
 
 const insertCausation = async (
-  connection: IPostgresSource,
+  source: IPostgresSource,
   attributes: SagaCausationAttributes,
 ): Promise<void> => {
-  const text = `
-    INSERT INTO saga_causation (
-      id,
-      name,
-      context,
-      causation_id,
-      timestamp
-    ) 
-    VALUES ($1,$2,$3,$4,$5)
-  `;
-  const values = [
-    attributes.id,
-    attributes.name,
-    attributes.context,
-    attributes.causation_id,
-    attributes.timestamp,
-  ];
-  await connection.query(text, values);
+  const queryBuilder = source.queryBuilder<SagaCausationAttributes>(SAGA_CAUSATION);
+  await source.query(queryBuilder.insert(attributes));
 };
 
 const findSaga = async (
-  connection: IPostgresSource,
-  identifier: SagaIdentifier,
+  source: IPostgresSource,
+  filter: SagaIdentifier,
 ): Promise<Array<SagaStoreAttributes>> => {
-  const text = `
-    SELECT *
-      FROM saga_store
-    WHERE 
-      id = $1 AND
-      name = $2 AND
-      context = $3
-    LIMIT 1
-  `;
-  const values = [identifier.id, identifier.name, identifier.context];
-  const result = await connection.query<SagaStoreAttributes>(text, values);
-  return result.rows.length ? result.rows : [];
+  const queryBuilder = source.queryBuilder<SagaStoreAttributes>(SAGA_STORE);
+  const result = await source.query<SagaStoreAttributes>(
+    queryBuilder.select({
+      id: filter.id,
+      name: filter.name,
+      context: filter.context,
+    }),
+  );
+  return result.rows;
 };
 
 const findCausations = async (
-  connection: IPostgresSource,
-  identifier: SagaIdentifier,
+  source: IPostgresSource,
+  filter: SagaIdentifier,
 ): Promise<Array<SagaCausationAttributes>> => {
-  const text = `
-    SELECT *
-    FROM
-      saga_causation
-    WHERE
-      id = $1 AND
-      name = $2 AND
-      context = $3
-  `;
-  const values = [identifier.id, identifier.name, identifier.context];
-  const result = await connection.query<SagaCausationAttributes>(text, values);
-  return result.rows.length ? result.rows : [];
+  const queryBuilder = source.queryBuilder<SagaCausationAttributes>(SAGA_CAUSATION);
+  const result = await source.query<SagaCausationAttributes>(
+    queryBuilder.select({
+      id: filter.id,
+      name: filter.name,
+      context: filter.context,
+    }),
+  );
+  return result.rows;
 };
 
 describe("PostgresSagaStore", () => {
@@ -123,7 +77,7 @@ describe("PostgresSagaStore", () => {
 
   beforeAll(async () => {
     source = new PostgresSource({
-      logger: createMockLogger(),
+      logger,
       url: "postgres://root:example@localhost:5432/default",
     });
 
@@ -199,10 +153,7 @@ describe("PostgresSagaStore", () => {
     await expect(findSaga(source, attributes)).resolves.toEqual([
       expect.objectContaining({
         hash: update.hash,
-        messages_to_dispatch: {
-          __meta__: [],
-          __array__: [],
-        },
+        messages_to_dispatch: [],
         revision: 2,
       }),
     ]);
@@ -244,10 +195,7 @@ describe("PostgresSagaStore", () => {
     await expect(store.find(sagaIdentifier)).resolves.toEqual(
       expect.objectContaining({
         hash: attributes.hash,
-        state: {
-          __meta__: { data: "S" },
-          __record__: { data: "state" },
-        },
+        state: { data: "state" },
       }),
     );
   });
@@ -258,10 +206,7 @@ describe("PostgresSagaStore", () => {
     await expect(findSaga(source, attributes)).resolves.toEqual([
       expect.objectContaining({
         hash: attributes.hash,
-        state: {
-          __meta__: { data: "S" },
-          __record__: { data: "state" },
-        },
+        state: { data: "state" },
       }),
     ]);
   });
@@ -316,10 +261,7 @@ describe("PostgresSagaStore", () => {
       expect.objectContaining({
         hash: update.hash,
         revision: 2,
-        state: {
-          __record__: { updated: "true" },
-          __meta__: { updated: "B" },
-        },
+        state: { updated: true },
       }),
     ]);
   });
