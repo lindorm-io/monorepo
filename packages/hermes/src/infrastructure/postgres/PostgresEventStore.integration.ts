@@ -1,9 +1,9 @@
-import { JsonKit } from "@lindorm/json-kit";
 import { createMockLogger } from "@lindorm/logger";
 import { IPostgresSource, PostgresSource } from "@lindorm/postgres";
 import { randomUUID } from "crypto";
 import { subDays } from "date-fns";
 import { TEST_AGGREGATE_IDENTIFIER } from "../../__fixtures__/aggregate";
+import { EVENT_STORE } from "../../constants/private";
 import { IEventStore } from "../../interfaces";
 import { AggregateIdentifier, EventStoreAttributes } from "../../types";
 import { createChecksum } from "../../utils/private";
@@ -13,52 +13,28 @@ const insert = async (
   source: IPostgresSource,
   attributes: EventStoreAttributes,
 ): Promise<void> => {
-  const text = `
-    INSERT INTO event_store (
-      id,
-      name,
-      context,
-      causation_id,
-      checksum,
-      correlation_id,
-      events,
-      expected_events,
-      previous_event_id,
-      timestamp
-    )
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
-  `;
-  const values = [
-    attributes.id,
-    attributes.name,
-    attributes.context,
-    attributes.causation_id,
-    attributes.checksum,
-    attributes.correlation_id,
-    JsonKit.stringify(attributes.events),
-    attributes.expected_events,
-    attributes.previous_event_id,
-    attributes.timestamp,
-  ];
-  await source.query(text, values);
+  const queryBuilder = source.queryBuilder<EventStoreAttributes>(EVENT_STORE);
+  await source.query(queryBuilder.insert(attributes));
 };
 
 const find = async (
   source: IPostgresSource,
-  identifier: AggregateIdentifier,
+  filter: AggregateIdentifier,
 ): Promise<Array<EventStoreAttributes>> => {
-  const text = `
-    SELECT *
-      FROM event_store
-    WHERE 
-      id = $1 AND
-      name = $2 AND
-      context = $3
-    LIMIT 1
-  `;
-  const values = [identifier.id, identifier.name, identifier.context];
-  const result = await source.query<EventStoreAttributes>(text, values);
-  return result.rows.length ? result.rows : [];
+  const queryBuilder = source.queryBuilder<EventStoreAttributes>(EVENT_STORE);
+  const result = await source.query<EventStoreAttributes>(
+    queryBuilder.select(
+      {
+        aggregate_id: filter.id,
+        aggregate_name: filter.name,
+        aggregate_context: filter.context,
+      },
+      {
+        order: { expected_events: "ASC" },
+      },
+    ),
+  );
+  return result.rows;
 };
 
 describe("PostgresEventStore", () => {
@@ -72,13 +48,13 @@ describe("PostgresEventStore", () => {
 
   beforeAll(async () => {
     source = new PostgresSource({
-      logger: createMockLogger(),
+      logger,
       url: "postgres://root:example@localhost:5432/default",
     });
 
     store = new PostgresEventStore(source, logger);
 
-    // @ts-ignore
+    // @ts-expect-error
     await store.initialise();
   }, 10000);
 
@@ -86,26 +62,25 @@ describe("PostgresEventStore", () => {
     causationId = randomUUID();
     aggregateIdentifier = { ...TEST_AGGREGATE_IDENTIFIER, id: randomUUID() };
 
-    const data = {
-      ...aggregateIdentifier,
+    const data: EventStoreAttributes = {
+      aggregate_id: aggregateIdentifier.id,
+      aggregate_name: aggregateIdentifier.name,
+      aggregate_context: aggregateIdentifier.context,
       causation_id: causationId,
+      checksum: "",
       correlation_id: randomUUID(),
-      events: [
-        {
-          id: randomUUID(),
-          name: "event_name",
-          data: { stuff: "string" },
-          meta: {
-            origin: "origin",
-            origin_id: randomUUID(),
-          },
-          version: 3,
-          timestamp: new Date(),
-        },
-      ],
+      data: { stuff: "string" },
+      event_id: randomUUID(),
+      event_name: "event_name",
+      event_timestamp: new Date(),
       expected_events: 3,
+      meta: {
+        origin: "origin",
+        origin_id: randomUUID(),
+      },
       previous_event_id: randomUUID(),
       timestamp: new Date(),
+      version: 3,
     };
 
     const checksum = createChecksum(data);
@@ -125,36 +100,13 @@ describe("PostgresEventStore", () => {
         ...aggregateIdentifier,
         causation_id: causationId,
       }),
-    ).resolves.toEqual([
-      {
-        id: expect.any(String),
-        name: "event_name",
-        aggregate: {
-          id: expect.any(String),
-          name: "aggregate_name",
-          context: "default",
-        },
-        causation_id: causationId,
-        correlation_id: expect.any(String),
-        data: {
-          stuff: "string",
-        },
-        meta: {
-          origin: "origin",
-          origin_id: expect.any(String),
-        },
-        timestamp: expect.any(Date),
-        version: 3,
-      },
-    ]);
+    ).resolves.toEqual([attributes]);
   });
 
   test("should insert events", async () => {
-    await expect(store.insert(attributes)).resolves.toBeUndefined();
+    await expect(store.insert([attributes])).resolves.not.toThrow();
 
-    await expect(find(source, { ...aggregateIdentifier })).resolves.toEqual([
-      expect.objectContaining({ causation_id: causationId }),
-    ]);
+    await expect(find(source, { ...aggregateIdentifier })).resolves.toEqual([attributes]);
   });
 
   test("should list events", async () => {

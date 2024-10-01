@@ -1,6 +1,5 @@
 import {
   AggregateIdentifier,
-  EventData,
   EventStoreAttributes,
   EventStoreFindFilter,
 } from "../types";
@@ -18,7 +17,7 @@ export interface IHermesEventStore {
 }
 
 export interface IEventStore {
-  find(filter: EventStoreFindFilter): Promise<Array<EventData>>;
-  insert(attributes: EventStoreAttributes): Promise<void>;
-  listEvents(from: Date, limit: number): Promise<Array<EventData>>;
+  find(filter: EventStoreFindFilter): Promise<Array<EventStoreAttributes>>;
+  insert(attributes: Array<EventStoreAttributes>): Promise<void>;
+  listEvents(from: Date, limit: number): Promise<Array<EventStoreAttributes>>;
 }

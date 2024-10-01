@@ -84,31 +84,25 @@ describe("EventStore", () => {
       }),
     ]);
 
-    expect(mock.insert).toHaveBeenCalledWith({
-      id: aggregate.id,
-      name: "aggregate_name",
-      context: "default",
-      causation_id: command.id,
-      checksum: expect.any(String),
-      correlation_id: command.correlationId,
-      events: [
-        {
-          id: expect.any(String),
-          name: "hermes_event_create",
-          data: {
-            create: true,
-          },
-          meta: {
-            origin: "test",
-          },
-          timestamp: expect.any(Date),
-          version: 1,
-        },
-      ],
-      expected_events: 0,
-      previous_event_id: null,
-      timestamp: expect.any(Date),
-    });
+    expect(mock.insert).toHaveBeenCalledWith([
+      {
+        aggregate_id: aggregate.id,
+        aggregate_name: "aggregate_name",
+        aggregate_context: "default",
+        causation_id: command.id,
+        checksum: expect.any(String),
+        correlation_id: command.correlationId,
+        data: { create: true },
+        event_id: expect.any(String),
+        event_name: "hermes_event_create",
+        event_timestamp: expect.any(Date),
+        expected_events: 0,
+        meta: { origin: "test" },
+        previous_event_id: null,
+        timestamp: expect.any(Date),
+        version: 1,
+      },
+    ]);
   });
 
   test("should save existing aggregate", async () => {
@@ -138,31 +132,25 @@ describe("EventStore", () => {
       }),
     ]);
 
-    expect(mock.insert).toHaveBeenCalledWith({
-      id: aggregate.id,
-      name: "aggregate_name",
-      context: "default",
-      causation_id: command.id,
-      checksum: expect.any(String),
-      correlation_id: command.correlationId,
-      events: [
-        {
-          id: expect.any(String),
-          name: "hermes_event_merge_state",
-          data: {
-            merge: true,
-          },
-          meta: {
-            origin: "test",
-          },
-          timestamp: expect.any(Date),
-          version: 1,
-        },
-      ],
-      expected_events: 1,
-      previous_event_id: event.id,
-      timestamp: expect.any(Date),
-    });
+    expect(mock.insert).toHaveBeenCalledWith([
+      {
+        aggregate_id: aggregate.id,
+        aggregate_name: "aggregate_name",
+        aggregate_context: "default",
+        causation_id: command.id,
+        checksum: expect.any(String),
+        correlation_id: command.correlationId,
+        data: { merge: true },
+        event_id: expect.any(String),
+        event_name: "hermes_event_merge_state",
+        event_timestamp: expect.any(Date),
+        expected_events: 1,
+        meta: { origin: "test" },
+        previous_event_id: event.id,
+        timestamp: expect.any(Date),
+        version: 1,
+      },
+    ]);
   });
 
   test("should load new aggregate", async () => {
@@ -184,16 +172,14 @@ describe("EventStore", () => {
   test("should load existing aggregate", async () => {
     mock.find.mockImplementation(async (filter: any) => [
       {
-        id: "4f4723d5-5816-4fca-8b0c-86f82b79f16d",
-        name: "hermes_event_create",
-        aggregate: {
-          id: filter.id,
-          name: filter.name,
-          context: filter.context,
-        },
+        aggregate_id: filter.id,
+        aggregate_name: filter.name,
+        aggregate_context: filter.context,
         causation_id: filter.causation_id || "6de42a0d-1506-43df-b49b-aa2cdbc34fda",
         correlation_id: "cd89bb36-5369-4b26-a4cf-b67f5849e3fb",
         data: { event_data: "data" },
+        event_id: "4f4723d5-5816-4fca-8b0c-86f82b79f16d",
+        event_name: "hermes_event_create",
         timestamp: new Date("2022-01-01T08:00:00.000Z"),
         version: 1,
       },
@@ -262,16 +248,14 @@ describe("EventStore", () => {
   test("should list all events", async () => {
     mock.listEvents.mockImplementation(async (from: Date, limit: number) => [
       {
-        id: "4f4723d5-5816-4fca-8b0c-86f82b79f16d",
-        name: "event_name",
-        aggregate: {
-          id: "1816e87a-f560-423f-9caa-7752ff4f6cbd",
-          name: "aggregate_name",
-          context: "aggregate_context",
-        },
+        aggregate_id: "1816e87a-f560-423f-9caa-7752ff4f6cbd",
+        aggregate_name: "aggregate_name",
+        aggregate_context: "aggregate_context",
         causation_id: "6de42a0d-1506-43df-b49b-aa2cdbc34fda",
         correlation_id: "cd89bb36-5369-4b26-a4cf-b67f5849e3fb",
         data: { event_data: "data" },
+        event_id: "4f4723d5-5816-4fca-8b0c-86f82b79f16d",
+        event_name: "event_name",
         meta: { meta_data: "data" },
         timestamp: new Date("2022-01-01T08:00:00.000Z"),
         version: 1,

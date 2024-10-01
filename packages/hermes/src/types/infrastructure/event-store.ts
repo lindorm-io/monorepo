@@ -2,7 +2,6 @@ import { ILogger } from "@lindorm/logger";
 import { IMongoSource } from "@lindorm/mongo";
 import { IPostgresSource } from "@lindorm/postgres";
 import { IEventStore } from "../../interfaces";
-import { AggregateIdentifier } from "../identifiers";
 
 export type EventStoreOptions = {
   custom?: IEventStore;
@@ -11,18 +10,6 @@ export type EventStoreOptions = {
 };
 
 export type HermesEventStoreOptions = EventStoreOptions & { logger: ILogger };
-
-export type EventData = {
-  id: string;
-  aggregate: AggregateIdentifier;
-  causation_id: string;
-  correlation_id: string;
-  data: Record<string, any>;
-  meta: Record<string, any>;
-  name: string;
-  timestamp: Date;
-  version: number;
-};
 
 export type EventStoreFindFilter = {
   id: string;
