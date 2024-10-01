@@ -118,7 +118,7 @@ describe("AggregateDomain", () => {
     await expect(messageBus.publish(commandDestroy)).resolves.toBeUndefined();
     await sleep(50);
 
-    await expect(store.load(aggregate, eventHandlers)).resolves.toEqual(
+    await expect(domain.inspect(aggregate)).resolves.toEqual(
       expect.objectContaining({
         id: aggregate.id,
         name: "aggregate_name",

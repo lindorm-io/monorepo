@@ -7,6 +7,7 @@ import {
   AggregateAlreadyCreatedError,
   AggregateDestroyedError,
   AggregateNotCreatedError,
+  CausationMissingEventsError,
   CommandSchemaValidationError,
   ConcurrencyError,
   DomainError,
@@ -16,21 +17,28 @@ import { HermesAggregateCommandHandler, HermesAggregateEventHandler } from "../h
 import {
   IAggregate,
   IAggregateDomain,
+  IEventStore,
   IHermesAggregateCommandHandler,
   IHermesAggregateEventHandler,
-  IHermesEventStore,
+  IHermesMessage,
   IHermesMessageBus,
 } from "../interfaces";
-import { HermesCommand, HermesError } from "../messages";
-import { AggregateCommandHandlerContext, AggregateIdentifier } from "../types";
+import { HermesCommand, HermesError, HermesEvent } from "../messages";
+import { Aggregate } from "../models";
+import {
+  AggregateCommandHandlerContext,
+  AggregateIdentifier,
+  EventStoreAttributes,
+} from "../types";
 import { AggregateDomainOptions } from "../types/domain";
+import { assertChecksum, createChecksum } from "../utils/private";
 
 export class AggregateDomain implements IAggregateDomain {
   private readonly commandHandlers: Array<IHermesAggregateCommandHandler>;
   private readonly eventHandlers: Array<IHermesAggregateEventHandler>;
   private readonly logger: ILogger;
   private readonly messageBus: IHermesMessageBus;
-  private readonly store: IHermesEventStore;
+  private readonly store: IEventStore;
 
   public constructor(options: AggregateDomainOptions) {
     this.logger = options.logger.child(["AggregateDomain"]);
@@ -148,10 +156,7 @@ export class AggregateDomain implements IAggregateDomain {
   public async inspect<S extends Dict = Dict>(
     aggregateIdentifier: AggregateIdentifier,
   ): Promise<IAggregate<S>> {
-    return (await this.store.load(
-      aggregateIdentifier,
-      this.eventHandlers,
-    )) as IAggregate<S>;
+    return (await this.load(aggregateIdentifier, this.eventHandlers)) as IAggregate<S>;
   }
 
   // private
@@ -201,7 +206,7 @@ export class AggregateDomain implements IAggregateDomain {
         x.aggregate.context === command.aggregate.context,
     );
 
-    const aggregate = await this.store.load(command.aggregate, eventHandlers);
+    const aggregate = await this.load(command.aggregate, eventHandlers);
     const lastCausationMatchesCommandId = findLast(aggregate.events, {
       causationId: command.id,
     });
@@ -231,7 +236,7 @@ export class AggregateDomain implements IAggregateDomain {
         await commandHandler.handler(ctx);
       }
 
-      const events = await this.store.save(aggregate, command);
+      const events = await this.save(aggregate, command);
 
       await this.messageBus.publish(events);
 
@@ -281,6 +286,110 @@ export class AggregateDomain implements IAggregateDomain {
     }
   }
 
+  private async load(
+    aggregateIdentifier: AggregateIdentifier,
+    eventHandlers: Array<IHermesAggregateEventHandler>,
+  ): Promise<IAggregate<Dict>> {
+    this.logger.debug("Loading aggregate", { aggregateIdentifier });
+
+    const data = await this.store.find(aggregateIdentifier);
+
+    this.warnIfChecksumMismatch(data);
+
+    const events = data.map((item) => AggregateDomain.toHermesEvent(item));
+
+    const aggregate = new Aggregate({
+      ...aggregateIdentifier,
+      eventHandlers,
+      logger: this.logger,
+    });
+
+    for (const event of events) {
+      await aggregate.load(event);
+    }
+
+    this.logger.debug("Loaded aggregate", { aggregate: aggregate.toJSON() });
+
+    return aggregate;
+  }
+
+  private async save(
+    aggregate: IAggregate,
+    causation: IHermesMessage,
+  ): Promise<Array<IHermesMessage>> {
+    this.logger.debug("Saving aggregate", { aggregate: aggregate.toJSON(), causation });
+
+    const events = await this.store.find({
+      id: aggregate.id,
+      name: aggregate.name,
+      context: aggregate.context,
+      causation_id: causation.id,
+    });
+
+    if (events?.length) {
+      this.logger.debug("Found events matching causation", { events });
+
+      return events.map((item) => AggregateDomain.toHermesEvent(item));
+    }
+
+    const causationEvents = aggregate.events.filter(
+      (x) => x.causationId === causation.id,
+    );
+
+    if (causationEvents.length === 0) {
+      throw new CausationMissingEventsError();
+    }
+
+    const expectedEvents = aggregate.events.slice(0, aggregate.numberOfLoadedEvents);
+    const [lastExpectedEvent] = expectedEvents.reverse();
+
+    this.logger.debug("Saving aggregate", {
+      aggregate,
+      causationEvents,
+      expectedEvents,
+      lastExpectedEvent,
+    });
+
+    const initialAttributes: Array<Omit<EventStoreAttributes, "checksum">> =
+      causationEvents.map((event) => ({
+        aggregate_id: aggregate.id,
+        aggregate_name: aggregate.name,
+        aggregate_context: aggregate.context,
+        causation_id: causation.id,
+        correlation_id: causation.correlationId,
+        data: event.data,
+        event_id: event.id,
+        event_name: event.name,
+        event_timestamp: event.timestamp,
+        expected_events: expectedEvents.length,
+        meta: event.meta,
+        previous_event_id: lastExpectedEvent ? lastExpectedEvent.id : null,
+        timestamp: new Date(),
+        version: event.version,
+      }));
+
+    const attributes: Array<EventStoreAttributes> = initialAttributes.map((item) => ({
+      ...item,
+      checksum: createChecksum(item),
+    }));
+
+    await this.store.insert(attributes);
+
+    return causationEvents;
+  }
+
+  private async warnIfChecksumMismatch(
+    attributes: Array<EventStoreAttributes>,
+  ): Promise<void> {
+    for (const event of attributes) {
+      try {
+        assertChecksum(event);
+      } catch (error: any) {
+        this.logger.warn("Checksum mismatch", error, [{ event }]);
+      }
+    }
+  }
+
   // private static
 
   private static getQueue<T extends ClassLike = ClassLike>(
@@ -293,5 +402,23 @@ export class AggregateDomain implements IAggregateDomain {
     commandHandler: HermesAggregateCommandHandler<T>,
   ): string {
     return `${commandHandler.aggregate.context}.${commandHandler.aggregate.name}.${commandHandler.commandName}`;
+  }
+
+  private static toHermesEvent(data: EventStoreAttributes): HermesEvent {
+    return new HermesEvent({
+      id: data.event_id,
+      name: data.event_name,
+      aggregate: {
+        id: data.aggregate_id,
+        name: data.aggregate_name,
+        context: data.aggregate_context,
+      },
+      causationId: data.causation_id,
+      correlationId: data.correlation_id,
+      data: data.data,
+      meta: data.meta,
+      timestamp: data.event_timestamp,
+      version: data.version,
+    });
   }
 }
