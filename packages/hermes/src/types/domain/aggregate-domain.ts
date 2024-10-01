@@ -1,8 +1,8 @@
 import { ILogger } from "@lindorm/logger";
-import { IHermesEventStore, IHermesMessageBus } from "../../interfaces";
+import { IEventStore, IHermesMessageBus } from "../../interfaces";
 
 export type AggregateDomainOptions = {
   logger: ILogger;
   messageBus: IHermesMessageBus;
-  store: IHermesEventStore;
+  store: IEventStore;
 };

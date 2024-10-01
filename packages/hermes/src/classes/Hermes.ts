@@ -25,9 +25,9 @@ import {
   IAggregateDomain,
   IChecksumDomain,
   IErrorDomain,
+  IEventStore,
   IHermes,
   IHermesChecksumStore,
-  IHermesEventStore,
   IHermesMessageBus,
   IHermesSagaStore,
   IHermesViewStore,
@@ -66,7 +66,7 @@ export class Hermes<C extends ClassLike = ClassLike, Q extends ClassLike = Class
 
   // infrastructure
   private readonly checksumStore: IHermesChecksumStore;
-  private readonly eventStore: IHermesEventStore;
+  private readonly eventStore: IEventStore;
   private readonly messageBus: IHermesMessageBus;
   private readonly sagaStore: IHermesSagaStore;
   private readonly viewStore: IHermesViewStore;
