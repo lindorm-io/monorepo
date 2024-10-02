@@ -407,6 +407,19 @@ export class Kryptos implements IKryptos {
     return new Kryptos(options);
   }
 
+  public static fromB64(b64: KryptosFromB64): Kryptos {
+    return Kryptos.from("b64", b64);
+  }
+  public static fromDer(der: KryptosFromDer): Kryptos {
+    return Kryptos.from("der", der);
+  }
+  public static fromJwk(jwk: KryptosFromJwk): Kryptos {
+    return Kryptos.from("jwk", jwk);
+  }
+  public static fromPem(pem: KryptosFromPem): Kryptos {
+    return Kryptos.from("pem", pem);
+  }
+
   public static make(options: KryptosFrom): Kryptos {
     if (isB64(options)) return Kryptos.from("b64", options);
     if (isDer(options)) return Kryptos.from("der", options);
