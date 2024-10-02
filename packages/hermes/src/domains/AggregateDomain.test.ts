@@ -1,3 +1,4 @@
+import { createMockAesKit } from "@lindorm/aes";
 import { LindormError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger";
 import { createMockRabbitMessageBus } from "@lindorm/rabbit";
@@ -8,6 +9,7 @@ import {
   TEST_AGGREGATE_COMMAND_HANDLER_CREATE,
   TEST_AGGREGATE_COMMAND_HANDLER_DESTROY,
   TEST_AGGREGATE_COMMAND_HANDLER_DESTROY_NEXT,
+  TEST_AGGREGATE_COMMAND_HANDLER_ENCRYPT,
   TEST_AGGREGATE_COMMAND_HANDLER_MERGE_STATE,
   TEST_AGGREGATE_COMMAND_HANDLER_SET_STATE,
   TEST_AGGREGATE_COMMAND_HANDLER_THROWS,
@@ -17,12 +19,14 @@ import {
   TEST_AGGREGATE_EVENT_HANDLER_CREATE,
   TEST_AGGREGATE_EVENT_HANDLER_DESTROY,
   TEST_AGGREGATE_EVENT_HANDLER_DESTROY_NEXT,
+  TEST_AGGREGATE_EVENT_HANDLER_ENCRYPT,
   TEST_AGGREGATE_EVENT_HANDLER_MERGE_STATE,
   TEST_AGGREGATE_EVENT_HANDLER_SET_STATE,
   TEST_AGGREGATE_EVENT_HANDLER_THROWS,
 } from "../__fixtures__/aggregate-event-handler";
 import {
   TEST_HERMES_COMMAND_CREATE,
+  TEST_HERMES_COMMAND_ENCRYPT,
   TEST_HERMES_COMMAND_MERGE_STATE,
   TEST_HERMES_COMMAND_THROWS,
 } from "../__fixtures__/hermes-command";
@@ -43,6 +47,7 @@ describe("AggregateDomain", () => {
     TEST_AGGREGATE_COMMAND_HANDLER_CREATE,
     TEST_AGGREGATE_COMMAND_HANDLER_DESTROY,
     TEST_AGGREGATE_COMMAND_HANDLER_DESTROY_NEXT,
+    TEST_AGGREGATE_COMMAND_HANDLER_ENCRYPT,
     TEST_AGGREGATE_COMMAND_HANDLER_MERGE_STATE,
     TEST_AGGREGATE_COMMAND_HANDLER_SET_STATE,
     TEST_AGGREGATE_COMMAND_HANDLER_THROWS,
@@ -52,6 +57,7 @@ describe("AggregateDomain", () => {
     TEST_AGGREGATE_EVENT_HANDLER_CREATE,
     TEST_AGGREGATE_EVENT_HANDLER_DESTROY,
     TEST_AGGREGATE_EVENT_HANDLER_DESTROY_NEXT,
+    TEST_AGGREGATE_EVENT_HANDLER_ENCRYPT,
     TEST_AGGREGATE_EVENT_HANDLER_MERGE_STATE,
     TEST_AGGREGATE_EVENT_HANDLER_SET_STATE,
     TEST_AGGREGATE_EVENT_HANDLER_THROWS,
@@ -59,15 +65,19 @@ describe("AggregateDomain", () => {
 
   let domain: IAggregateDomain;
   let messageBus: IHermesMessageBus;
-  let store: any;
+  let encryptionStore: any;
+  let eventStore: any;
 
   beforeEach(async () => {
     messageBus = createMockRabbitMessageBus(HermesCommand);
-    store = {
+    eventStore = {
       find: jest.fn().mockImplementation(async () => []),
       insert: jest.fn().mockImplementation(async () => {}),
     };
-    domain = new AggregateDomain({ messageBus, store, logger });
+    encryptionStore = {
+      load: jest.fn().mockImplementation(async () => createMockAesKit()),
+    };
+    domain = new AggregateDomain({ messageBus, encryptionStore, eventStore, logger });
 
     for (const handler of commandHandlers) {
       await domain.registerCommandHandler(handler);
@@ -80,7 +90,7 @@ describe("AggregateDomain", () => {
 
   test("should register command handler", async () => {
     messageBus = createMockRabbitMessageBus(HermesCommand);
-    domain = new AggregateDomain({ messageBus, store, logger });
+    domain = new AggregateDomain({ messageBus, encryptionStore, eventStore, logger });
 
     await expect(
       domain.registerCommandHandler(TEST_AGGREGATE_COMMAND_HANDLER),
@@ -94,7 +104,7 @@ describe("AggregateDomain", () => {
   });
 
   test("should throw on existing command handler", async () => {
-    domain = new AggregateDomain({ messageBus, store, logger });
+    domain = new AggregateDomain({ messageBus, encryptionStore, eventStore, logger });
 
     await domain.registerCommandHandler(TEST_AGGREGATE_COMMAND_HANDLER);
 
@@ -104,7 +114,7 @@ describe("AggregateDomain", () => {
   });
 
   test("should throw on invalid command handler", async () => {
-    domain = new AggregateDomain({ messageBus, store, logger });
+    domain = new AggregateDomain({ messageBus, encryptionStore, eventStore, logger });
 
     await expect(
       // @ts-expect-error
@@ -113,7 +123,7 @@ describe("AggregateDomain", () => {
   });
 
   test("should register event handler", async () => {
-    domain = new AggregateDomain({ messageBus, store, logger });
+    domain = new AggregateDomain({ messageBus, encryptionStore, eventStore, logger });
 
     await expect(
       domain.registerEventHandler(TEST_AGGREGATE_EVENT_HANDLER),
@@ -121,7 +131,7 @@ describe("AggregateDomain", () => {
   });
 
   test("should throw on existing event handler", async () => {
-    domain = new AggregateDomain({ messageBus, store, logger });
+    domain = new AggregateDomain({ messageBus, encryptionStore, eventStore, logger });
 
     await domain.registerEventHandler(TEST_AGGREGATE_EVENT_HANDLER);
 
@@ -131,7 +141,7 @@ describe("AggregateDomain", () => {
   });
 
   test("should throw on invalid event handler", async () => {
-    domain = new AggregateDomain({ messageBus, store, logger });
+    domain = new AggregateDomain({ messageBus, encryptionStore, eventStore, logger });
 
     await expect(
       // @ts-expect-error
@@ -148,11 +158,11 @@ describe("AggregateDomain", () => {
       domain.handleCommand(command),
     ).resolves.toBeUndefined();
 
-    expect(store.find).toHaveBeenCalled();
+    expect(eventStore.find).toHaveBeenCalled();
 
     expect(TEST_AGGREGATE_COMMAND_HANDLER_CREATE.handler).toHaveBeenCalledTimes(1);
 
-    expect(store.insert).toHaveBeenCalledWith([
+    expect(eventStore.insert).toHaveBeenCalledWith([
       {
         aggregate_id: expect.any(String),
         aggregate_name: "aggregate_name",
@@ -161,6 +171,7 @@ describe("AggregateDomain", () => {
         checksum: expect.any(String),
         correlation_id: expect.any(String),
         data: { dataFromCommand: { commandData: true } },
+        encrypted: false,
         event_id: expect.any(String),
         event_name: "hermes_event_create",
         event_timestamp: expect.any(Date),
@@ -191,6 +202,62 @@ describe("AggregateDomain", () => {
     ]);
   });
 
+  test("should handle encryption command", async () => {
+    const aggregate = { ...TEST_AGGREGATE_IDENTIFIER, id: randomUUID() };
+    const command = new HermesCommand({ ...TEST_HERMES_COMMAND_ENCRYPT, aggregate });
+
+    await expect(
+      // @ts-expect-error
+      domain.handleCommand(command),
+    ).resolves.toBeUndefined();
+
+    expect(eventStore.find).toHaveBeenCalled();
+
+    expect(TEST_AGGREGATE_COMMAND_HANDLER_ENCRYPT.handler).toHaveBeenCalledTimes(1);
+
+    expect(eventStore.insert).toHaveBeenCalledWith([
+      {
+        aggregate_id: expect.any(String),
+        aggregate_name: "aggregate_name",
+        aggregate_context: "default",
+        causation_id: expect.any(String),
+        checksum: expect.any(String),
+        correlation_id: expect.any(String),
+        data: {
+          content:
+            "eyJfX21ldGFfXyI6eyJlbmNyeXB0ZWREYXRhIjp7ImNvbW1hbmREYXRhIjoiQiJ9fSwiX19yZWNvcmRfXyI6eyJlbmNyeXB0ZWREYXRhIjp7ImNvbW1hbmREYXRhIjoidHJ1ZSJ9fX0=",
+        },
+        encrypted: true,
+        event_id: expect.any(String),
+        event_name: "hermes_event_encrypt",
+        event_timestamp: expect.any(Date),
+        expected_events: 0,
+        meta: { origin: "test" },
+        previous_event_id: null,
+        timestamp: expect.any(Date),
+        version: 1,
+      },
+    ]);
+
+    expect(messageBus.publish).toHaveBeenCalledWith([
+      expect.objectContaining({
+        id: expect.any(String),
+        name: "hermes_event_encrypt",
+        aggregate,
+        causationId: command.id,
+        correlationId: command.correlationId,
+        data: { encryptedData: { commandData: true } },
+        meta: { origin: "test" },
+        delay: 0,
+        mandatory: false,
+        topic: "default.aggregate_name.hermes_event_encrypt",
+        timestamp: expect.any(Date),
+        type: "HermesEvent",
+        version: 1,
+      }),
+    ]);
+  });
+
   test("should skip handler when last causation matches command id", async () => {
     const aggregate = { ...TEST_AGGREGATE_IDENTIFIER, id: randomUUID(), logger };
 
@@ -200,7 +267,7 @@ describe("AggregateDomain", () => {
       id: "e6abb357-57da-564e-a7f6-6ff665db7834",
     });
 
-    store.find.mockImplementation(async () => [
+    eventStore.find.mockImplementation(async () => [
       {
         aggregate_id: aggregate.id,
         aggregate_name: aggregate.name,
@@ -209,6 +276,7 @@ describe("AggregateDomain", () => {
         checksum: "checksum",
         correlation_id: randomUUID(),
         data: { create: true },
+        encrypted: false,
         event_id: "000f86fe-b2b7-5586-b0fb-f9bbf91ad771",
         event_name: "hermes_event_create",
         event_timestamp: new Date(),
@@ -226,6 +294,7 @@ describe("AggregateDomain", () => {
         checksum: "checksum",
         correlation_id: randomUUID(),
         data: { merge: true },
+        encrypted: false,
         event_id: randomUUID(),
         event_name: "hermes_event_merge_state",
         event_timestamp: new Date(),
@@ -246,7 +315,7 @@ describe("AggregateDomain", () => {
   });
 
   test("should throw on missing command handler", async () => {
-    domain = new AggregateDomain({ messageBus, store, logger });
+    domain = new AggregateDomain({ messageBus, encryptionStore, eventStore, logger });
     const command = new HermesCommand(TEST_HERMES_COMMAND_CREATE);
 
     await expect(
@@ -283,7 +352,7 @@ describe("AggregateDomain", () => {
     const aggregate = { ...TEST_AGGREGATE_IDENTIFIER, id: randomUUID() };
     const command = new HermesCommand({ ...TEST_HERMES_COMMAND_CREATE, aggregate });
 
-    store.find.mockImplementation(async () => [
+    eventStore.find.mockImplementation(async () => [
       {
         aggregate_id: aggregate.id,
         aggregate_name: aggregate.name,
@@ -292,6 +361,7 @@ describe("AggregateDomain", () => {
         checksum: "checksum",
         correlation_id: randomUUID(),
         data: {},
+        encrypted: false,
         event_id: randomUUID(),
         event_name: "hermes_event_destroy",
         event_timestamp: new Date(),
@@ -343,7 +413,7 @@ describe("AggregateDomain", () => {
     const aggregate = { ...TEST_AGGREGATE_IDENTIFIER, id: randomUUID() };
     const command = new HermesCommand({ ...TEST_HERMES_COMMAND_CREATE, aggregate });
 
-    store.find.mockImplementation(async () => [
+    eventStore.find.mockImplementation(async () => [
       {
         aggregate_id: aggregate.id,
         aggregate_name: aggregate.name,
@@ -352,6 +422,7 @@ describe("AggregateDomain", () => {
         checksum: "checksum",
         correlation_id: randomUUID(),
         data: { create: true },
+        encrypted: false,
         event_id: randomUUID(),
         event_name: "hermes_event_create",
         event_timestamp: new Date(),
@@ -383,7 +454,7 @@ describe("AggregateDomain", () => {
     const aggregate = { ...TEST_AGGREGATE_IDENTIFIER, id: randomUUID() };
     const command = new HermesCommand({ ...TEST_HERMES_COMMAND_THROWS, aggregate });
 
-    store.find.mockImplementation(async () => [
+    eventStore.find.mockImplementation(async () => [
       {
         aggregate_id: aggregate.id,
         aggregate_name: aggregate.name,
@@ -392,6 +463,7 @@ describe("AggregateDomain", () => {
         checksum: "checksum",
         correlation_id: randomUUID(),
         data: { create: true },
+        encrypted: false,
         event_id: randomUUID(),
         event_name: "hermes_event_create",
         event_timestamp: new Date(),

@@ -9,6 +9,7 @@ export const CREATE_TABLE_EVENT_STORE = `
     checksum VARCHAR ( 64 ) NOT NULL,
     correlation_id UUID NOT NULL,
     data JSONB NOT NULL,
+    encrypted BOOLEAN NOT NULL,
     event_id UUID NOT NULL,
     event_name VARCHAR ( 256 ) NOT NULL,
     event_timestamp TIMESTAMPTZ NOT NULL,

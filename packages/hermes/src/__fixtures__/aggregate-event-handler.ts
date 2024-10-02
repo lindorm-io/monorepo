@@ -6,6 +6,7 @@ import {
   TEST_HERMES_EVENT_CREATE,
   TEST_HERMES_EVENT_DESTROY,
   TEST_HERMES_EVENT_DESTROY_NEXT,
+  TEST_HERMES_EVENT_ENCRYPT,
   TEST_HERMES_EVENT_MERGE_STATE,
   TEST_HERMES_EVENT_SET_STATE,
   TEST_HERMES_EVENT_THROWS,
@@ -45,6 +46,14 @@ export const TEST_AGGREGATE_EVENT_HANDLER_DESTROY_NEXT = new HermesAggregateEven
   eventName: TEST_HERMES_EVENT_DESTROY_NEXT.name,
   handler: jest.fn().mockImplementation(async (ctx) => {
     ctx.destroyNext();
+  }),
+});
+
+export const TEST_AGGREGATE_EVENT_HANDLER_ENCRYPT = new HermesAggregateEventHandler({
+  ...TEST_AGGREGATE_EVENT_HANDLER_OPTIONS,
+  eventName: TEST_HERMES_EVENT_ENCRYPT.name,
+  handler: jest.fn().mockImplementation(async (ctx) => {
+    ctx.mergeState({ encrypted: ctx.event });
   }),
 });
 

@@ -8,6 +8,7 @@ export type EventStoreAttributes = {
   checksum: string;
   correlation_id: string;
   data: Dict;
+  encrypted: boolean;
   event_id: string;
   event_name: string;
   event_timestamp: Date;
@@ -28,6 +29,7 @@ export type MongoEventStoreDocument = {
     id: string;
     checksum: string;
     data: Dict;
+    encrypted: boolean;
     meta: Dict;
     name: string;
     timestamp: Date;

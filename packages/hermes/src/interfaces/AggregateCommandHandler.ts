@@ -13,6 +13,7 @@ export interface IAggregateCommandHandler<
 > {
   command: Constructor<C>;
   conditions?: HandlerConditions;
+  encryption?: boolean;
   schema?: ZodSchema;
   handler(ctx: AggregateCommandHandlerContext<C, E, S>): Promise<void>;
 }
@@ -25,6 +26,7 @@ export interface IHermesAggregateCommandHandler<
   aggregate: HandlerIdentifier;
   commandName: string;
   conditions: HandlerConditions;
+  encryption: boolean;
   schema: ZodSchema | undefined;
   version: number;
   handler(ctx: AggregateCommandHandlerContext<C, E, S>): Promise<void>;

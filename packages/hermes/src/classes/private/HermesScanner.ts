@@ -314,6 +314,7 @@ export class HermesScanner {
           context: this.options.context,
         },
         conditions: handler.conditions,
+        encryption: handler.encryption,
         schema: handler.schema ? handler.schema : z.record(z.any()),
         version,
         handler: handler.handler,

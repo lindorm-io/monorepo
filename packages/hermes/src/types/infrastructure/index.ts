@@ -1,5 +1,7 @@
 export * from "./checksum-store";
 export * from "./checksum-store-attributes";
+export * from "./encryption-store";
+export * from "./encryption-store-attributes";
 export * from "./event-store";
 export * from "./event-store-attributes";
 export * from "./message-bus";

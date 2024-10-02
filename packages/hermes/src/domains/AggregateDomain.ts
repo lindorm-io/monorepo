@@ -1,8 +1,10 @@
+import { DecryptAesDataEncodedOptions } from "@lindorm/aes";
 import { snakeCase } from "@lindorm/case";
 import { LindormError } from "@lindorm/errors";
+import { JsonKit } from "@lindorm/json-kit";
 import { ILogger } from "@lindorm/logger";
 import { ClassLike, Dict } from "@lindorm/types";
-import { findLast } from "@lindorm/utils";
+import { findLast, removeUndefined } from "@lindorm/utils";
 import {
   AggregateAlreadyCreatedError,
   AggregateDestroyedError,
@@ -20,6 +22,7 @@ import {
   IEventStore,
   IHermesAggregateCommandHandler,
   IHermesAggregateEventHandler,
+  IHermesEncryptionStore,
   IHermesMessage,
   IHermesMessageBus,
 } from "../interfaces";
@@ -38,13 +41,15 @@ export class AggregateDomain implements IAggregateDomain {
   private readonly eventHandlers: Array<IHermesAggregateEventHandler>;
   private readonly logger: ILogger;
   private readonly messageBus: IHermesMessageBus;
-  private readonly store: IEventStore;
+  private readonly encryptionStore: IHermesEncryptionStore;
+  private readonly eventStore: IEventStore;
 
   public constructor(options: AggregateDomainOptions) {
     this.logger = options.logger.child(["AggregateDomain"]);
 
     this.messageBus = options.messageBus;
-    this.store = options.store;
+    this.encryptionStore = options.encryptionStore;
+    this.eventStore = options.eventStore;
 
     this.commandHandlers = [];
     this.eventHandlers = [];
@@ -236,7 +241,7 @@ export class AggregateDomain implements IAggregateDomain {
         await commandHandler.handler(ctx);
       }
 
-      const events = await this.save(aggregate, command);
+      const events = await this.save(aggregate, command, commandHandler.encryption);
 
       await this.messageBus.publish(events);
 
@@ -292,17 +297,19 @@ export class AggregateDomain implements IAggregateDomain {
   ): Promise<IAggregate<Dict>> {
     this.logger.debug("Loading aggregate", { aggregateIdentifier });
 
-    const data = await this.store.find(aggregateIdentifier);
+    const data = await this.eventStore.find(aggregateIdentifier);
 
     this.warnIfChecksumMismatch(data);
 
-    const events = data.map((item) => AggregateDomain.toHermesEvent(item));
+    const decrypted = await this.decryptAttributes(aggregateIdentifier, data);
 
     const aggregate = new Aggregate({
       ...aggregateIdentifier,
       eventHandlers,
       logger: this.logger,
     });
+
+    const events = decrypted.map(AggregateDomain.toHermesEvent);
 
     for (const event of events) {
       await aggregate.load(event);
@@ -316,10 +323,11 @@ export class AggregateDomain implements IAggregateDomain {
   private async save(
     aggregate: IAggregate,
     causation: IHermesMessage,
+    encryption: boolean,
   ): Promise<Array<IHermesMessage>> {
     this.logger.debug("Saving aggregate", { aggregate: aggregate.toJSON(), causation });
 
-    const events = await this.store.find({
+    const events = await this.eventStore.find({
       id: aggregate.id,
       name: aggregate.name,
       context: aggregate.context,
@@ -346,36 +354,110 @@ export class AggregateDomain implements IAggregateDomain {
     this.logger.debug("Saving aggregate", {
       aggregate,
       causationEvents,
+      encryption,
       expectedEvents,
       lastExpectedEvent,
     });
 
-    const initialAttributes: Array<Omit<EventStoreAttributes, "checksum">> =
-      causationEvents.map((event) => ({
-        aggregate_id: aggregate.id,
-        aggregate_name: aggregate.name,
-        aggregate_context: aggregate.context,
-        causation_id: causation.id,
-        correlation_id: causation.correlationId,
-        data: event.data,
-        event_id: event.id,
-        event_name: event.name,
-        event_timestamp: event.timestamp,
-        expected_events: expectedEvents.length,
-        meta: event.meta,
-        previous_event_id: lastExpectedEvent ? lastExpectedEvent.id : null,
-        timestamp: new Date(),
-        version: event.version,
-      }));
-
-    const attributes: Array<EventStoreAttributes> = initialAttributes.map((item) => ({
-      ...item,
-      checksum: createChecksum(item),
+    const initial: Array<EventStoreAttributes> = causationEvents.map((event) => ({
+      aggregate_id: aggregate.id,
+      aggregate_name: aggregate.name,
+      aggregate_context: aggregate.context,
+      causation_id: causation.id,
+      checksum: "",
+      correlation_id: causation.correlationId,
+      data: event.data,
+      encrypted: encryption,
+      event_id: event.id,
+      event_name: event.name,
+      event_timestamp: event.timestamp,
+      expected_events: expectedEvents.length,
+      meta: event.meta,
+      previous_event_id: lastExpectedEvent ? lastExpectedEvent.id : null,
+      timestamp: new Date(),
+      version: event.version,
     }));
 
-    await this.store.insert(attributes);
+    const encrypted = await this.encryptAttributes(aggregate, initial);
+    const attributes = this.addChecksumToAttributes(encrypted);
+
+    await this.eventStore.insert(attributes);
 
     return causationEvents;
+  }
+
+  private addChecksumToAttributes(
+    attributes: Array<EventStoreAttributes>,
+  ): Array<EventStoreAttributes> {
+    const result: Array<EventStoreAttributes> = [];
+
+    for (const item of attributes) {
+      const { checksum, ...rest } = item;
+      result.push({ ...rest, checksum: createChecksum(rest) });
+    }
+
+    return result;
+  }
+
+  private async encryptAttributes(
+    aggregateIdentifier: AggregateIdentifier,
+    attributes: Array<EventStoreAttributes>,
+  ): Promise<Array<EventStoreAttributes>> {
+    if (!attributes.some((x) => x.encrypted)) {
+      return attributes;
+    }
+
+    const aes = await this.encryptionStore.load(aggregateIdentifier);
+    const result: Array<EventStoreAttributes> = [];
+
+    for (const item of attributes) {
+      const { data, ...rest } = item;
+
+      const encrypted = aes.encrypt(JsonKit.stringify(data), "b64");
+
+      result.push({ ...rest, data: removeUndefined(encrypted) });
+    }
+
+    return result;
+  }
+
+  private async decryptAttributes(
+    aggregateIdentifier: AggregateIdentifier,
+    attributes: Array<EventStoreAttributes>,
+  ): Promise<Array<EventStoreAttributes>> {
+    if (!attributes.some((x) => x.encrypted)) {
+      return attributes;
+    }
+
+    const aes = await this.encryptionStore.load(aggregateIdentifier);
+    const result: Array<EventStoreAttributes> = [];
+
+    for (const item of attributes) {
+      if (!item.encrypted) {
+        result.push(item);
+        continue;
+      }
+
+      if (item.data.keyId !== aes.kryptos.id) {
+        this.logger.info("Encryption key mismatch", {
+          expect: item.data.keyId,
+          actual: aes.kryptos.id,
+        });
+        continue;
+      }
+
+      try {
+        const data = JsonKit.parse(
+          aes.decrypt(item.data as DecryptAesDataEncodedOptions),
+        );
+
+        result.push({ ...item, data });
+      } catch (error: any) {
+        this.logger.warn("Failed to decrypt event data", error, [{ item }]);
+      }
+    }
+
+    return result;
   }
 
   private async warnIfChecksumMismatch(

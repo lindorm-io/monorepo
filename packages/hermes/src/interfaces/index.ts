@@ -5,6 +5,7 @@ export * from "./AggregateEventHandler";
 export * from "./ChecksumDomain";
 export * from "./ChecksumEventHandler";
 export * from "./ChecksumStore";
+export * from "./EncryptionStore";
 export * from "./ErrorDomain";
 export * from "./ErrorHandler";
 export * from "./EventStore";

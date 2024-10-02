@@ -70,6 +70,7 @@ describe("PostgresEventStore", () => {
       checksum: "",
       correlation_id: randomUUID(),
       data: { stuff: "string" },
+      encrypted: false,
       event_id: randomUUID(),
       event_name: "event_name",
       event_timestamp: new Date(),

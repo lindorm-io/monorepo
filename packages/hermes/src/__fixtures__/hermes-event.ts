@@ -30,6 +30,11 @@ export const TEST_HERMES_EVENT_DISPATCH = {
   name: "hermes_event_dispatch",
 };
 
+export const TEST_HERMES_EVENT_ENCRYPT = {
+  ...TEST_HERMES_EVENT_OPTIONS,
+  name: "hermes_event_encrypt",
+};
+
 export const TEST_HERMES_EVENT_MERGE_STATE = {
   ...TEST_HERMES_EVENT_OPTIONS,
   name: "hermes_event_merge_state",
