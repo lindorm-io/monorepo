@@ -35,7 +35,7 @@ describe("AesKit", () => {
       encryption: "A256GCM",
       hkdfSalt: undefined,
       initialisationVector: expect.any(Buffer),
-      keyId: expect.any(Buffer),
+      keyId: expect.any(String),
       pbkdfIterations: undefined,
       pbkdfSalt: undefined,
       publicEncryptionJwk: undefined,

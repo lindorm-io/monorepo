@@ -9,7 +9,7 @@ describe("encodeAesString", () => {
       encryption: "A256GCM",
       hkdfSalt: Buffer.from("hkdfSalt"),
       initialisationVector: Buffer.from("initialisationVector"),
-      keyId: Buffer.from("keyId"),
+      keyId: "2e36ee7d-8423-59ad-a3f4-379e6b487c64",
       pbkdfIterations: 1000,
       pbkdfSalt: Buffer.from("pbkdfSalt"),
       publicEncryptionIv: Buffer.from("publicEncryptionIv"),
@@ -31,7 +31,7 @@ describe("encodeAesString", () => {
     expect(string).toContain("crv=P-521");
     expect(string).toContain("hks=aGtkZlNhbHQ");
     expect(string).toContain("iv=aW5pdGlhbGlzYXRpb25WZWN0b3I");
-    expect(string).toContain("kid=a2V5SWQ");
+    expect(string).toContain("kid=2e36ee7d-8423-59ad-a3f4-379e6b487c64");
     expect(string).toContain("p2c=1000");
     expect(string).toContain("p2s=cGJrZGZTYWx0");
     expect(string).toContain("pei=cHVibGljRW5jcnlwdGlvbkl2");

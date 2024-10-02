@@ -27,7 +27,7 @@ describe("aes-data", () => {
       encryption: "A256GCM",
       hkdfSalt: undefined,
       initialisationVector: expect.any(Buffer),
-      keyId: expect.any(Buffer),
+      keyId: expect.any(String),
       publicEncryptionIv: undefined,
       publicEncryptionJwk: undefined,
       publicEncryptionKey: undefined,

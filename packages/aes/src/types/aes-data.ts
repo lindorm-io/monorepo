@@ -21,3 +21,18 @@ export type DecryptAesDataOptions = {
   publicEncryptionKey?: Buffer;
   publicEncryptionTag?: Buffer;
 };
+
+export type DecryptAesDataEncodedOptions = {
+  authTag?: string;
+  content: string;
+  encryption: KryptosEncryption;
+  hkdfSalt?: string;
+  initialisationVector: string;
+  kryptos: IKryptos;
+  pbkdfIterations?: number;
+  pbkdfSalt?: string;
+  publicEncryptionIv?: string;
+  publicEncryptionJwk?: PublicEncryptionJwk;
+  publicEncryptionKey?: string;
+  publicEncryptionTag?: string;
+};

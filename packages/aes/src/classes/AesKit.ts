@@ -1,7 +1,14 @@
 import { isObject, isString } from "@lindorm/is";
 import { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
 import { AesError } from "../errors";
-import { AesEncryptionData, AesKitOptions, DecryptAesDataOptions } from "../types";
+import { IAesKit } from "../interfaces";
+import {
+  AesEncryptionData,
+  AesEncryptionDataEncoded,
+  AesKitOptions,
+  DecryptAesDataEncodedOptions,
+  DecryptAesDataOptions,
+} from "../types";
 import {
   assertAesCipher,
   decryptAesCipher,
@@ -9,10 +16,12 @@ import {
   verifyAesCipher,
 } from "../utils/private/aes-cipher";
 import { decryptAesData, encryptAesData } from "../utils/private/aes-data";
+import { decodeAesDataOptions } from "../utils/private/decode-aes-data";
+import { encodeAesData } from "../utils/private/encode-aes-data";
 
-export class AesKit {
+export class AesKit implements IAesKit {
   private readonly encryption: KryptosEncryption;
-  private readonly kryptos: IKryptos;
+  public readonly kryptos: IKryptos;
 
   public constructor(options: AesKitOptions) {
     this.kryptos = options.kryptos;
@@ -20,12 +29,18 @@ export class AesKit {
   }
 
   public encrypt(data: string, mode?: "cipher"): string;
+  public encrypt(data: string, mode: "b64"): AesEncryptionDataEncoded;
   public encrypt(data: string, mode: "object"): AesEncryptionData;
   public encrypt(
     data: string,
-    mode: "cipher" | "object" = "cipher",
-  ): string | AesEncryptionData {
+    mode: "b64" | "cipher" | "object" = "cipher",
+  ): string | AesEncryptionData | AesEncryptionDataEncoded {
     switch (mode) {
+      case "b64":
+        return encodeAesData(
+          encryptAesData({ data, encryption: this.encryption, kryptos: this.kryptos }),
+        );
+
       case "cipher":
         return encryptAesCipher({
           data: data,
@@ -47,7 +62,13 @@ export class AesKit {
 
   public decrypt(data: string): string;
   public decrypt(data: Omit<DecryptAesDataOptions, "kryptos">): string;
-  public decrypt(data: Omit<DecryptAesDataOptions, "kryptos"> | string): string {
+  public decrypt(data: Omit<DecryptAesDataEncodedOptions, "kryptos">): string;
+  public decrypt(
+    data:
+      | Omit<DecryptAesDataOptions, "kryptos">
+      | Omit<DecryptAesDataEncodedOptions, "kryptos">
+      | string,
+  ): string {
     if (isString(data)) {
       return decryptAesCipher({
         cipher: data,
@@ -57,7 +78,7 @@ export class AesKit {
 
     if (isObject(data)) {
       return decryptAesData({
-        ...data,
+        ...decodeAesDataOptions(data),
         kryptos: this.kryptos,
       });
     }
