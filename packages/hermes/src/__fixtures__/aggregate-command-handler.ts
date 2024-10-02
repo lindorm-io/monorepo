@@ -9,6 +9,7 @@ import {
   TEST_HERMES_COMMAND_DESTROY,
   TEST_HERMES_COMMAND_DESTROY_NEXT,
   TEST_HERMES_COMMAND_DISPATCH,
+  TEST_HERMES_COMMAND_ENCRYPT,
   TEST_HERMES_COMMAND_MERGE_STATE,
   TEST_HERMES_COMMAND_REMOVE_FIELD_WHERE_EQUAL,
   TEST_HERMES_COMMAND_REMOVE_FIELD_WHERE_MATCH,
@@ -90,6 +91,19 @@ export const TEST_AGGREGATE_COMMAND_HANDLER_DISPATCH = new HermesAggregateComman
       constructor(public readonly dataFromCommand: any) {}
     }
     await ctx.apply(new HermesEventDispatch(ctx.command));
+  }),
+});
+
+export const TEST_AGGREGATE_COMMAND_HANDLER_ENCRYPT = new HermesAggregateCommandHandler({
+  ...TEST_AGGREGATE_COMMAND_HANDLER_OPTIONS,
+  commandName: TEST_HERMES_COMMAND_ENCRYPT.name,
+  conditions: {},
+  encryption: true,
+  handler: jest.fn().mockImplementation(async (ctx) => {
+    class HermesEventEncrypt {
+      constructor(public readonly encryptedData: any) {}
+    }
+    await ctx.apply(new HermesEventEncrypt(ctx.command));
   }),
 });
 

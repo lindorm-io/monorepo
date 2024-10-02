@@ -15,6 +15,7 @@ import {
 import { HermesStatus } from "../enums";
 import {
   ChecksumStore,
+  EncryptionStore,
   EventStore,
   MessageBus,
   SagaStore,
@@ -28,6 +29,7 @@ import {
   IEventStore,
   IHermes,
   IHermesChecksumStore,
+  IHermesEncryptionStore,
   IHermesMessageBus,
   IHermesSagaStore,
   IHermesViewStore,
@@ -66,6 +68,7 @@ export class Hermes<C extends ClassLike = ClassLike, Q extends ClassLike = Class
 
   // infrastructure
   private readonly checksumStore: IHermesChecksumStore;
+  private readonly encryptionStore: IHermesEncryptionStore;
   private readonly eventStore: IEventStore;
   private readonly messageBus: IHermesMessageBus;
   private readonly sagaStore: IHermesSagaStore;
@@ -92,6 +95,7 @@ export class Hermes<C extends ClassLike = ClassLike, Q extends ClassLike = Class
         views: join(__dirname, "views"),
         ...(options.directories ?? {}),
       },
+      encryptionStore: options.encryptionStore ?? {},
       eventStore: options.eventStore ?? {},
       fileFilter: {
         include: [/.*/],
@@ -121,6 +125,10 @@ export class Hermes<C extends ClassLike = ClassLike, Q extends ClassLike = Class
       ...this.options.checksumStore,
       logger: this.logger,
     });
+    this.encryptionStore = new EncryptionStore({
+      ...this.options.encryptionStore,
+      logger: this.logger,
+    });
     this.eventStore = new EventStore({
       ...this.options.eventStore,
       logger: this.logger,
@@ -142,7 +150,8 @@ export class Hermes<C extends ClassLike = ClassLike, Q extends ClassLike = Class
 
     this.aggregateDomain = new AggregateDomain({
       messageBus: this.messageBus,
-      store: this.eventStore,
+      encryptionStore: this.encryptionStore,
+      eventStore: this.eventStore,
       logger: this.logger,
     });
     this.checksumDomain = new ChecksumDomain({

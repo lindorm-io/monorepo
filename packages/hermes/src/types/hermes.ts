@@ -17,6 +17,7 @@ import { ViewEventHandlerAdapter } from "./handlers";
 import { AggregateIdentifier, HandlerIdentifier } from "./identifiers";
 import {
   ChecksumStoreOptions,
+  EncryptionStoreOptions,
   EventStoreOptions,
   SagaStoreOptions,
   ViewStoreOptions,
@@ -37,6 +38,7 @@ export type HermesFileFilterOptions = {
 
 export type HermesConfig = {
   checksumStore: ChecksumStoreOptions;
+  encryptionStore: EncryptionStoreOptions;
   eventStore: EventStoreOptions;
   messageBus: MessageBusOptions;
   sagaStore: SagaStoreOptions;
@@ -51,6 +53,7 @@ export type HermesConfig = {
 
 export type HermesOptions = {
   checksumStore: ChecksumStoreOptions;
+  encryptionStore: EncryptionStoreOptions;
   eventStore: EventStoreOptions;
   messageBus: MessageBusOptions;
   sagaStore: SagaStoreOptions;

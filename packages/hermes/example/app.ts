@@ -31,6 +31,7 @@ const main = async (): Promise<void> => {
 
   const hermes = new Hermes<CreateGreeting | UpdateGreeting | RespondGreeting>({
     checksumStore: { postgres },
+    encryptionStore: { postgres },
     eventStore: { postgres },
     messageBus: { rabbit },
     sagaStore: { mongo },

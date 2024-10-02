@@ -18,6 +18,7 @@ export class HermesAggregateCommandHandler<
   public readonly aggregate: HandlerIdentifier;
   public readonly commandName: string;
   public readonly conditions: HandlerConditions;
+  public readonly encryption: boolean;
   public readonly schema: ZodSchema | undefined;
   public readonly version: number;
   public readonly handler: (
@@ -31,6 +32,7 @@ export class HermesAggregateCommandHandler<
     };
     this.commandName = snakeCase(options.commandName);
     this.conditions = options.conditions || {};
+    this.encryption = options.encryption ?? false;
     this.schema = options.schema;
     this.version = options.version || 1;
     this.handler = options.handler;

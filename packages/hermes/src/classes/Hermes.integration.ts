@@ -83,6 +83,7 @@ describe("Hermes", () => {
 
     hermes = new Hermes({
       checksumStore: { mongo },
+      encryptionStore: { mongo },
       eventStore: { mongo },
       messageBus: { rabbit },
       sagaStore: { mongo },

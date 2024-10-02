@@ -33,12 +33,12 @@ export const VIEW_CAUSATION = "view_causation";
 export const VIEW_CAUSATION_INDEXES: StoreIndexes<ViewCausationAttributes> = [
   {
     fields: ["id", "name", "context", "causation_id"],
-    name: "vca_pkey",
+    name: "view_causation_pkey",
     unique: true,
   },
   {
     fields: ["id", "name", "context"],
-    name: "vca_idx",
+    name: "view_causation_idx",
     unique: false,
   },
 ];

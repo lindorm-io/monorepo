@@ -26,9 +26,11 @@
     "update": "ncu -u"
   },
   "dependencies": {
+    "@lindorm/aes": "^0.3.3",
     "@lindorm/case": "^0.1.5",
     "@lindorm/is": "^0.1.6",
     "@lindorm/json-kit": "^0.3.1",
+    "@lindorm/kryptos": "^0.3.4",
     "@lindorm/mongo": "^0.2.0",
     "@lindorm/postgres": "^0.1.0",
     "@lindorm/rabbit": "^0.2.0",

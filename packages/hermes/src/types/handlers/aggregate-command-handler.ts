@@ -23,6 +23,7 @@ export type AggregateCommandHandlerOptions<
   aggregate: HandlerIdentifier;
   commandName: string;
   conditions?: HandlerConditions;
+  encryption?: boolean;
   schema?: ZodSchema;
   version?: number;
   handler(ctx: AggregateCommandHandlerContext<C, E, S>): Promise<void>;

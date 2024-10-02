@@ -11,6 +11,7 @@ describe("HermesScanner", () => {
     scanner = new HermesScanner(
       {
         checksumStore: {},
+        encryptionStore: {},
         eventStore: {},
         messageBus: {},
         sagaStore: {},

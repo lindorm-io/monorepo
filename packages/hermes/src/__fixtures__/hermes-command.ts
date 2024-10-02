@@ -35,6 +35,11 @@ export const TEST_HERMES_COMMAND_DISPATCH = {
   name: "hermes_command_dispatch",
 };
 
+export const TEST_HERMES_COMMAND_ENCRYPT = {
+  ...TEST_HERMES_COMMAND_OPTIONS,
+  name: "hermes_command_encrypt",
+};
+
 export const TEST_HERMES_COMMAND_MERGE_STATE = {
   ...TEST_HERMES_COMMAND_OPTIONS,
   name: "hermes_command_merge_state",
