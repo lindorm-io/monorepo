@@ -1,10 +1,14 @@
-import { SAGA_STORE } from "../../../constants/private";
+import {
+  MAX_CONTEXT_LENGTH,
+  MAX_NAME_LENGTH,
+  SAGA_STORE,
+} from "../../../constants/private";
 
 export const CREATE_TABLE_SAGA_STORE = `
   CREATE TABLE IF NOT EXISTS ${SAGA_STORE} (
-    id UUID NOT NULL,
-    name VARCHAR ( 64 ) NOT NULL,
-    context VARCHAR ( 32 ) NOT NULL,
+    id VARCHAR ( ${MAX_NAME_LENGTH} ) NOT NULL,
+    name VARCHAR ( ${MAX_NAME_LENGTH} ) NOT NULL,
+    context VARCHAR ( ${MAX_CONTEXT_LENGTH} ) NOT NULL,
     destroyed BOOLEAN NOT NULL,
     hash VARCHAR ( 16 ) NOT NULL,
     messages_to_dispatch JSONB NOT NULL,

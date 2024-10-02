@@ -1,6 +1,7 @@
 import { snakeCase } from "@lindorm/case";
 import { IHermesChecksumEventHandler } from "../interfaces";
 import { ChecksumEventHandlerOptions, HandlerIdentifier } from "../types";
+import { verifyIdentifierLength } from "../utils/private";
 
 export class HermesChecksumEventHandler implements IHermesChecksumEventHandler {
   public readonly aggregate: HandlerIdentifier;
@@ -12,5 +13,7 @@ export class HermesChecksumEventHandler implements IHermesChecksumEventHandler {
       context: snakeCase(options.aggregate.context),
     };
     this.eventName = snakeCase(options.eventName);
+
+    verifyIdentifierLength(options.aggregate);
   }
 }

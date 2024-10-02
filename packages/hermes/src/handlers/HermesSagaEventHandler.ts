@@ -9,6 +9,7 @@ import {
   SagaEventHandlerContext,
   SagaEventHandlerOptions,
 } from "../types";
+import { verifyIdentifierLength } from "../utils/private";
 
 export class HermesSagaEventHandler<
   E extends ClassLike = ClassLike,
@@ -42,5 +43,7 @@ export class HermesSagaEventHandler<
       ? options.getSagaId
       : (event): string => event.aggregate.id;
     this.handler = options.handler;
+
+    verifyIdentifierLength(options.aggregate);
   }
 }

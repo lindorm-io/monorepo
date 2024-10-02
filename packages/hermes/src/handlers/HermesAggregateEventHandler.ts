@@ -6,6 +6,7 @@ import {
   AggregateEventHandlerOptions,
   HandlerIdentifier,
 } from "../types";
+import { verifyIdentifierLength } from "../utils/private";
 
 export class HermesAggregateEventHandler<
   E extends ClassLike = ClassLike,
@@ -25,5 +26,7 @@ export class HermesAggregateEventHandler<
     this.eventName = snakeCase(options.eventName);
     this.version = options.version || 1;
     this.handler = options.handler;
+
+    verifyIdentifierLength(options.aggregate);
   }
 }

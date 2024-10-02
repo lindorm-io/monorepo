@@ -1,12 +1,16 @@
-import { EVENT_STORE } from "../../../constants/private";
+import {
+  EVENT_STORE,
+  MAX_CONTEXT_LENGTH,
+  MAX_NAME_LENGTH,
+} from "../../../constants/private";
 
 export const CREATE_TABLE_EVENT_STORE = `
   CREATE TABLE IF NOT EXISTS ${EVENT_STORE} (
     aggregate_id UUID NOT NULL,
-    aggregate_name VARCHAR ( 64 ) NOT NULL,
-    aggregate_context VARCHAR ( 32 ) NOT NULL,
+    aggregate_name VARCHAR ( ${MAX_NAME_LENGTH} ) NOT NULL,
+    aggregate_context VARCHAR ( ${MAX_CONTEXT_LENGTH} ) NOT NULL,
     causation_id UUID NOT NULL,
-    checksum VARCHAR ( 64 ) NOT NULL,
+    checksum VARCHAR ( 256 ) NOT NULL,
     correlation_id UUID NOT NULL,
     data JSONB NOT NULL,
     encrypted BOOLEAN NOT NULL,
