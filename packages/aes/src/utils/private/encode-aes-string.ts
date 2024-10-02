@@ -21,7 +21,7 @@ export const encodeAesString = ({
 }: AesEncryptionData): string => {
   const values: AesStringValues = removeEmpty({
     v: version.toString(),
-    kid: keyId.toString(B64U),
+    kid: keyId,
 
     // Required
     alg: algorithm,

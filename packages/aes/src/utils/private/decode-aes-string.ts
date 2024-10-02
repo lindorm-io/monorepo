@@ -61,7 +61,7 @@ export const decodeAesString = (data: string): AesEncryptionData => {
     algorithm: alg as KryptosAlgorithm,
     hkdfSalt: hks ? Buffer.from(hks, B64U) : undefined,
     initialisationVector: Buffer.from(iv, B64U),
-    keyId: Buffer.from(kid, B64U),
+    keyId: kid,
     pbkdfIterations: p2c ? parseInt(p2c, 10) : undefined,
     pbkdfSalt: p2s ? Buffer.from(p2s, B64U) : undefined,
     publicEncryptionJwk: crv && x && kty ? { crv, x, y, kty } : undefined,

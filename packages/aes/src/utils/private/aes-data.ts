@@ -1,6 +1,5 @@
 import { createCipheriv, createDecipheriv } from "crypto";
 import { LATEST_AES_VERSION } from "../../constants";
-import { B64U } from "../../constants/private/format";
 import {
   AesEncryptionData,
   DecryptAesDataOptions,
@@ -57,7 +56,7 @@ export const encryptAesData = (options: EncryptAesDataOptions): AesEncryptionDat
     encryption,
     hkdfSalt,
     initialisationVector,
-    keyId: Buffer.from(kryptos.id, B64U),
+    keyId: kryptos.id,
     pbkdfIterations,
     pbkdfSalt,
     publicEncryptionIv,
