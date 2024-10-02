@@ -45,7 +45,7 @@ describe("PostgresChecksumStore", () => {
       url: "postgres://root:example@localhost:5432/default",
     });
 
-    await source.connect();
+    await source.setup();
 
     store = new PostgresChecksumStore(source, logger);
 

@@ -22,12 +22,7 @@ import {
 import { CHECKSUM_STORE } from "../constants/private";
 import { MessageBus } from "../infrastructure";
 import { ChecksumStore } from "../infrastructure/ChecksumStore";
-import {
-  IChecksumDomain,
-  IHermesChecksumEventHandler,
-  IHermesChecksumStore,
-  IHermesMessageBus,
-} from "../interfaces";
+import { IChecksumDomain, IHermesChecksumStore, IHermesMessageBus } from "../interfaces";
 import { HermesEvent } from "../messages";
 import { AggregateIdentifier } from "../types";
 import { ChecksumDomain } from "./ChecksumDomain";
@@ -39,7 +34,6 @@ describe("ChecksumDomain", () => {
   let rabbit: IRabbitSource;
   let aggregate: AggregateIdentifier;
   let domain: IChecksumDomain;
-  let eventHandlers: Array<IHermesChecksumEventHandler>;
   let messageBus: IHermesMessageBus;
   let store: IHermesChecksumStore;
 

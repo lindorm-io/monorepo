@@ -8,6 +8,7 @@ import {
   HandlerConditions,
   HandlerIdentifier,
 } from "../types";
+import { verifyIdentifierLength } from "../utils/private";
 
 export class HermesAggregateCommandHandler<
   C extends ClassLike = ClassLike,
@@ -36,5 +37,7 @@ export class HermesAggregateCommandHandler<
     this.schema = options.schema;
     this.version = options.version || 1;
     this.handler = options.handler;
+
+    verifyIdentifierLength(options.aggregate);
   }
 }

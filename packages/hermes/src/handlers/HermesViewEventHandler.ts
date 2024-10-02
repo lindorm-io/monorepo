@@ -10,6 +10,7 @@ import {
   ViewEventHandlerContext,
   ViewEventHandlerOptions,
 } from "../types";
+import { verifyIdentifierLength, verifyViewIdentifier } from "../utils/private";
 
 export class HermesViewEventHandler<
   E extends ClassLike = ClassLike,
@@ -44,5 +45,8 @@ export class HermesViewEventHandler<
       ? options.getViewId
       : (event): string => event.aggregate.id;
     this.handler = options.handler;
+
+    verifyIdentifierLength(options.aggregate);
+    verifyViewIdentifier(options.view);
   }
 }

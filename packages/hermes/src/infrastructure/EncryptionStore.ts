@@ -50,7 +50,7 @@ export class EncryptionStore implements IHermesEncryptionStore {
     const exists = await this.store.find(aggregate);
 
     if (exists) {
-      const kryptos = Kryptos.from("b64", {
+      const kryptos = Kryptos.fromB64({
         id: exists.key_id,
         algorithm: exists.key_algorithm,
         curve: exists.key_curve ?? undefined,

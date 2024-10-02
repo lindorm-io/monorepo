@@ -45,7 +45,7 @@ describe("PostgresEncryptionStore", () => {
       url: "postgres://root:example@localhost:5432/default",
     });
 
-    await source.connect();
+    await source.setup();
 
     store = new PostgresEncryptionStore(source, logger);
 
