@@ -64,7 +64,7 @@ export class JweKit implements IJweKit {
       publicEncryptionJwk,
       publicEncryptionKey,
       publicEncryptionTag,
-    } = aes.encrypt(data, "object");
+    } = aes.encrypt(data, "record");
 
     if (publicEncryptionJwk) critical.push("publicEncryptionJwk");
     if (publicEncryptionIv) critical.push("publicEncryptionIv");
