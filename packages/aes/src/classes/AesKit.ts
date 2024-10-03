@@ -3,21 +3,26 @@ import { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
 import { AesError } from "../errors";
 import { IAesKit } from "../interfaces";
 import {
-  AesEncryptionData,
-  AesEncryptionDataEncoded,
+  AesDecryptionRecord,
+  AesEncryptionMode,
+  AesEncryptionRecord,
   AesKitOptions,
-  DecryptAesDataEncodedOptions,
-  DecryptAesDataOptions,
+  SerialisedAesDecryption,
+  SerialisedAesEncryption,
 } from "../types";
 import {
-  assertAesCipher,
-  decryptAesCipher,
-  encryptAesCipher,
-  verifyAesCipher,
-} from "../utils/private/aes-cipher";
-import { decryptAesData, encryptAesData } from "../utils/private/aes-data";
-import { decodeAesDataOptions } from "../utils/private/decode-aes-data";
-import { encodeAesData } from "../utils/private/encode-aes-data";
+  createEncodedAesString,
+  createSerialisedAesRecord,
+  createTokenisedAesString,
+  decryptAes,
+  encryptAes,
+  isAesBufferData,
+  isAesSerialisedData,
+  isAesTokenised,
+  parseEncodedAesString,
+  parseSerialisedAesRecord,
+  parseTokenisedAesString,
+} from "../utils/private";
 
 export class AesKit implements IAesKit {
   private readonly encryption: KryptosEncryption;
@@ -28,57 +33,79 @@ export class AesKit implements IAesKit {
     this.encryption = options.encryption ?? options.kryptos.encryption ?? "A256GCM";
   }
 
-  public encrypt(data: string, mode?: "cipher"): string;
-  public encrypt(data: string, mode: "b64"): AesEncryptionDataEncoded;
-  public encrypt(data: string, mode: "object"): AesEncryptionData;
+  public encrypt(data: string, mode?: "encoded"): string;
+  public encrypt(data: string, mode: "record"): AesEncryptionRecord;
+  public encrypt(data: string, mode: "serialised"): SerialisedAesEncryption;
+  public encrypt(data: string, mode: "tokenised"): string;
   public encrypt(
     data: string,
-    mode: "b64" | "cipher" | "object" = "cipher",
-  ): string | AesEncryptionData | AesEncryptionDataEncoded {
+    mode: AesEncryptionMode = "encoded",
+  ): string | AesEncryptionRecord | SerialisedAesEncryption {
     switch (mode) {
-      case "b64":
-        return encodeAesData(
-          encryptAesData({ data, encryption: this.encryption, kryptos: this.kryptos }),
+      case "encoded":
+        return createEncodedAesString(
+          encryptAes({
+            data: data,
+            encryption: this.encryption,
+            kryptos: this.kryptos,
+          }),
         );
 
-      case "cipher":
-        return encryptAesCipher({
+      case "record":
+        return encryptAes({
           data: data,
           encryption: this.encryption,
           kryptos: this.kryptos,
         });
 
-      case "object":
-        return encryptAesData({
-          data: data,
-          encryption: this.encryption,
-          kryptos: this.kryptos,
-        });
+      case "serialised":
+        return createSerialisedAesRecord(
+          encryptAes({
+            data: data,
+            encryption: this.encryption,
+            kryptos: this.kryptos,
+          }),
+        );
+
+      case "tokenised":
+        return createTokenisedAesString(
+          encryptAes({
+            data: data,
+            encryption: this.encryption,
+            kryptos: this.kryptos,
+          }),
+        );
 
       default:
         throw new AesError("Invalid encryption mode");
     }
   }
 
-  public decrypt(data: string): string;
-  public decrypt(data: Omit<DecryptAesDataOptions, "kryptos">): string;
-  public decrypt(data: Omit<DecryptAesDataEncodedOptions, "kryptos">): string;
-  public decrypt(
-    data:
-      | Omit<DecryptAesDataOptions, "kryptos">
-      | Omit<DecryptAesDataEncodedOptions, "kryptos">
-      | string,
-  ): string {
-    if (isString(data)) {
-      return decryptAesCipher({
-        cipher: data,
+  public decrypt(data: AesDecryptionRecord | SerialisedAesDecryption | string): string {
+    if (isString(data) && !isAesTokenised(data)) {
+      return decryptAes({
+        ...parseEncodedAesString(data),
         kryptos: this.kryptos,
       });
     }
 
-    if (isObject(data)) {
-      return decryptAesData({
-        ...decodeAesDataOptions(data),
+    if (isString(data) && isAesTokenised(data)) {
+      return decryptAes({
+        ...parseTokenisedAesString(data),
+        kryptos: this.kryptos,
+      });
+    }
+
+    if (isObject(data) && isAesBufferData(data)) {
+      return decryptAes({
+        ...data,
+        kryptos: this.kryptos,
+      });
+    }
+
+    if (isObject(data) && isAesSerialisedData(data)) {
+      return decryptAes({
+        ...parseSerialisedAesRecord(data),
         kryptos: this.kryptos,
       });
     }
@@ -86,19 +113,18 @@ export class AesKit implements IAesKit {
     throw new AesError("Invalid decryption type");
   }
 
-  public verify(data: string, cipher: string): boolean {
-    return verifyAesCipher({
-      cipher,
-      data,
-      kryptos: this.kryptos,
-    });
+  public verify(
+    input: string,
+    data: AesDecryptionRecord | SerialisedAesDecryption | string,
+  ): boolean {
+    return this.decrypt(data) === input;
   }
 
-  public assert(data: string, cipher: string): void {
-    return assertAesCipher({
-      cipher,
-      data,
-      kryptos: this.kryptos,
-    });
+  public assert(
+    input: string,
+    data: AesDecryptionRecord | SerialisedAesDecryption | string,
+  ): void {
+    if (this.verify(input, data)) return;
+    throw new AesError("Invalid AES cipher");
   }
 }

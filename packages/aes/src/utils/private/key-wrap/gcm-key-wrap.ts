@@ -12,7 +12,7 @@ import {
   KeyWrapOptions,
   KeyWrapResult,
 } from "../../../types/private";
-import { calculateKeyWrapEncryption } from "../calculate/calculate-key-wrap-encryption";
+import { calculateKeyWrapEncryption } from "../calculate";
 
 export const gcmKeyWrap = ({
   contentEncryptionKey,

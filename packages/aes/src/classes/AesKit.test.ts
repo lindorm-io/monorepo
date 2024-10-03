@@ -1,70 +1,84 @@
-import { Kryptos } from "@lindorm/kryptos";
-import { randomBytes } from "crypto";
-import { LATEST_AES_VERSION } from "../constants";
-import { AesError } from "../errors";
+import {
+  IKryptos,
+  Kryptos,
+  KryptosEncAlgorithm,
+  KryptosEncryption,
+} from "@lindorm/kryptos";
+import { IAesKit } from "../interfaces";
+import { AesEncryptionMode } from "../types";
 import { AesKit } from "./AesKit";
 
 describe("AesKit", () => {
-  let aesKit: AesKit;
-  let string: string;
-  let cipher: string;
+  const modes: Record<AesEncryptionMode, any> = {
+    encoded: String,
+    record: Object,
+    tokenised: String,
+    serialised: Object,
+  };
 
-  beforeEach(async () => {
-    const kryptos = Kryptos.generate({
-      algorithm: "dir",
-      encryption: "A256GCM",
-      type: "oct",
-      use: "enc",
+  const algorithms: Array<KryptosEncAlgorithm> = [
+    // EC / OKP
+    "ECDH-ES",
+    "ECDH-ES+A128KW",
+    "ECDH-ES+A128GCMKW",
+    // oct
+    "A128KW",
+    "A128GCMKW",
+    "PBES2-HS256+A128KW",
+    // RSA
+    "RSA-OAEP-256",
+  ];
+
+  const encryptions: Array<KryptosEncryption> = [
+    // CBC
+    "A128CBC-HS256",
+    // GCM
+    "A128GCM",
+  ];
+
+  describe.each(algorithms)("algorithm: %s", (algorithm) => {
+    let kryptos: IKryptos;
+
+    beforeEach(async () => {
+      kryptos = Kryptos.auto({ algorithm });
     });
 
-    string = randomBytes(32).toString("hex");
-    aesKit = new AesKit({ kryptos });
-    cipher = aesKit.encrypt(string);
-  });
+    describe.each(encryptions)("encryption: %s", (encryption) => {
+      let aesKit: IAesKit;
 
-  test("should encrypt to cipher", () => {
-    expect(cipher).toEqual(expect.any(String));
-    expect(cipher).not.toEqual(string);
-  });
+      beforeEach(async () => {
+        aesKit = new AesKit({ kryptos, encryption });
+      });
 
-  test("should encrypt to object", () => {
-    expect(aesKit.encrypt(string, "object")).toEqual({
-      algorithm: "dir",
-      authTag: expect.any(Buffer),
-      content: expect.any(Buffer),
-      encryption: "A256GCM",
-      hkdfSalt: undefined,
-      initialisationVector: expect.any(Buffer),
-      keyId: expect.any(String),
-      pbkdfIterations: undefined,
-      pbkdfSalt: undefined,
-      publicEncryptionJwk: undefined,
-      publicEncryptionKey: undefined,
-      version: LATEST_AES_VERSION,
+      describe.each(Object.entries(modes))("mode: %s", (mode, type) => {
+        test("should encrypt", () => {
+          expect(aesKit.encrypt("test", mode as any)).toEqual(expect.any(type));
+        });
+
+        test("should decrypt", () => {
+          const encrypted = aesKit.encrypt("test", mode as any);
+
+          expect(aesKit.decrypt(encrypted)).toEqual("test");
+        });
+
+        test("should verify", () => {
+          const encrypted = aesKit.encrypt("test", mode as any);
+
+          expect(aesKit.verify("test", encrypted)).toEqual(true);
+        });
+
+        test("should assert", () => {
+          const encrypted = aesKit.encrypt("test", mode as any);
+
+          expect(() => aesKit.assert("test", encrypted)).not.toThrow();
+        });
+
+        test("should throw", () => {
+          const encrypted = aesKit.encrypt("test", mode as any);
+
+          expect(() => aesKit.assert("invalid", encrypted)).toThrow();
+        });
+      });
     });
-  });
-
-  test("should decrypt cipher", () => {
-    expect(aesKit.decrypt(cipher)).toEqual(string);
-  });
-
-  test("should decrypt object", () => {
-    expect(aesKit.decrypt(aesKit.encrypt(string, "object"))).toEqual(string);
-  });
-
-  test("should verify", () => {
-    expect(aesKit.verify(string, cipher)).toEqual(true);
-  });
-
-  test("should reject", () => {
-    expect(aesKit.verify("wrong", cipher)).toEqual(false);
-  });
-
-  test("should assert", () => {
-    expect(() => aesKit.assert(string, cipher)).not.toThrow();
-  });
-
-  test("should throw error", () => {
-    expect(() => aesKit.assert("wrong", cipher)).toThrow(AesError);
   });
 });

@@ -5,7 +5,7 @@ import {
   KeyWrapOptions,
   KeyWrapResult,
 } from "../../../types/private";
-import { calculateKeyWrapEncryption } from "../calculate/calculate-key-wrap-encryption";
+import { calculateKeyWrapEncryption } from "../calculate";
 
 const AIV = "A6A6A6A6A6A6A6A6" as const;
 const BLOCK_SIZE = 8 as const;

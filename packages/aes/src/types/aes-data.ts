@@ -1,19 +1,19 @@
-import { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
+import { KryptosEncryption } from "@lindorm/kryptos";
 import { PublicEncryptionJwk } from "./types";
 
-export type EncryptAesDataOptions = {
+export type AesEncryptionMode = "encoded" | "record" | "serialised" | "tokenised";
+
+export type AesEncryptionOptions = {
   data: Buffer | string;
   encryption?: KryptosEncryption;
-  kryptos: IKryptos;
 };
 
-export type DecryptAesDataOptions = {
+export type AesDecryptionRecord = {
   authTag?: Buffer;
   content: Buffer;
   encryption: KryptosEncryption;
   hkdfSalt?: Buffer;
   initialisationVector: Buffer;
-  kryptos: IKryptos;
   pbkdfIterations?: number;
   pbkdfSalt?: Buffer;
   publicEncryptionIv?: Buffer;
@@ -22,13 +22,12 @@ export type DecryptAesDataOptions = {
   publicEncryptionTag?: Buffer;
 };
 
-export type DecryptAesDataEncodedOptions = {
+export type SerialisedAesDecryption = {
   authTag?: string;
   content: string;
   encryption: KryptosEncryption;
   hkdfSalt?: string;
   initialisationVector: string;
-  kryptos: IKryptos;
   pbkdfIterations?: number;
   pbkdfSalt?: string;
   publicEncryptionIv?: string;

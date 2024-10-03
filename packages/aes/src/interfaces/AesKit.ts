@@ -1,22 +1,26 @@
 import { IKryptos } from "@lindorm/kryptos";
 import {
-  AesEncryptionData,
-  AesEncryptionDataEncoded,
-  DecryptAesDataEncodedOptions,
-  DecryptAesDataOptions,
+  AesDecryptionRecord,
+  AesEncryptionRecord,
+  SerialisedAesDecryption,
+  SerialisedAesEncryption,
 } from "../types";
 
 export interface IAesKit {
   kryptos: IKryptos;
 
-  encrypt(data: string, mode?: "cipher"): string;
-  encrypt(data: string, mode: "b64"): AesEncryptionDataEncoded;
-  encrypt(data: string, mode: "object"): AesEncryptionData;
+  encrypt(data: string, mode?: "encoded"): string;
+  encrypt(data: string, mode: "record"): AesEncryptionRecord;
+  encrypt(data: string, mode: "serialised"): SerialisedAesEncryption;
+  encrypt(data: string, mode: "tokenised"): string;
 
-  decrypt(data: string): string;
-  decrypt(data: Omit<DecryptAesDataOptions, "kryptos">): string;
-  decrypt(data: Omit<DecryptAesDataEncodedOptions, "kryptos">): string;
-
-  verify(data: string, cipher: string): boolean;
-  assert(data: string, cipher: string): void;
+  decrypt(data: AesDecryptionRecord | SerialisedAesDecryption | string): string;
+  verify(
+    input: string,
+    data: AesDecryptionRecord | SerialisedAesDecryption | string,
+  ): boolean;
+  assert(
+    input: string,
+    data: AesDecryptionRecord | SerialisedAesDecryption | string,
+  ): void;
 }
