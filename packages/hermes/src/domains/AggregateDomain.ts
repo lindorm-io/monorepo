@@ -1,4 +1,4 @@
-import { DecryptAesDataEncodedOptions } from "@lindorm/aes";
+import { SerialisedAesDecryption } from "@lindorm/aes";
 import { snakeCase } from "@lindorm/case";
 import { LindormError } from "@lindorm/errors";
 import { JsonKit } from "@lindorm/json-kit";
@@ -413,7 +413,7 @@ export class AggregateDomain implements IAggregateDomain {
     for (const item of attributes) {
       const { data, ...rest } = item;
 
-      const encrypted = aes.encrypt(JsonKit.stringify(data), "b64");
+      const encrypted = aes.encrypt(JsonKit.stringify(data), "serialised");
 
       result.push({ ...rest, data: removeUndefined(encrypted) });
     }
@@ -447,9 +447,7 @@ export class AggregateDomain implements IAggregateDomain {
       }
 
       try {
-        const data = JsonKit.parse(
-          aes.decrypt(item.data as DecryptAesDataEncodedOptions),
-        );
+        const data = JsonKit.parse(aes.decrypt(item.data as SerialisedAesDecryption));
 
         result.push({ ...item, data });
       } catch (error: any) {
