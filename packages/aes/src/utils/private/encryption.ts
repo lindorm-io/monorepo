@@ -1,18 +1,20 @@
 import { createCipheriv, createDecipheriv } from "crypto";
-import { LATEST_AES_VERSION } from "../../constants";
+import { LATEST_AES_VERSION } from "../../constants/private";
+import { AesEncryptionRecord } from "../../types";
 import {
-  AesEncryptionData,
-  DecryptAesDataOptions,
-  EncryptAesDataOptions,
-} from "../../types";
-import { assertAuthTag, createAuthTag } from "./aes-data/auth-tag";
-import { getInitialisationVector } from "./aes-data/get-initialisation-vector";
-import { splitContentEncryptionKey } from "./aes-data/split-content-encryption-key";
-import { calculateAesEncryption } from "./calculate/calculate-aes-encryption";
-import { getDecryptionKey } from "./get-key/get-decryption-key";
-import { getEncryptionKey } from "./get-key/get-encryption-key";
+  PrivateAesDecryptionOptions,
+  PrivateAesEncryptionOptions,
+} from "../../types/private";
+import { calculateAesEncryption } from "./calculate";
+import {
+  assertAuthTag,
+  createAuthTag,
+  getInitialisationVector,
+  splitContentEncryptionKey,
+} from "./data";
+import { getDecryptionKey, getEncryptionKey } from "./get-key";
 
-export const encryptAesData = (options: EncryptAesDataOptions): AesEncryptionData => {
+export const encryptAes = (options: PrivateAesEncryptionOptions): AesEncryptionRecord => {
   const { data, encryption = "A256GCM", kryptos } = options;
 
   const {
@@ -67,7 +69,7 @@ export const encryptAesData = (options: EncryptAesDataOptions): AesEncryptionDat
   };
 };
 
-export const decryptAesData = (options: DecryptAesDataOptions): string => {
+export const decryptAes = (options: PrivateAesDecryptionOptions): string => {
   const {
     authTag,
     content,

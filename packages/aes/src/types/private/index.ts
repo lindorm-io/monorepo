@@ -1,3 +1,4 @@
+export * from "./aes-data";
 export * from "./aes-key-derivation";
 export * from "./aes-string";
 export * from "./auth-tag";

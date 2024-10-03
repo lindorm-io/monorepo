@@ -1,7 +1,7 @@
 import { KryptosAlgorithm, KryptosEncryption } from "@lindorm/kryptos";
 import { PublicEncryptionJwk } from "./types";
 
-export type AesEncryptionData = {
+export type AesEncryptionRecord = {
   algorithm: KryptosAlgorithm;
   authTag: Buffer;
   content: Buffer;
@@ -18,7 +18,7 @@ export type AesEncryptionData = {
   version: number;
 };
 
-export type AesEncryptionDataEncoded = {
+export type SerialisedAesEncryption = {
   algorithm: KryptosAlgorithm;
   authTag: string;
   content: string;

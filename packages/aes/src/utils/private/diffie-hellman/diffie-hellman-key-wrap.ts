@@ -6,10 +6,9 @@ import {
   DecryptCekOptions,
   DecryptCekResult,
 } from "../../../types/private";
-import { calculateContentEncryptionKeySize } from "../calculate/calculate-content-encryption-key-size";
-import { calculateKeyWrapSize } from "../calculate/calculate-key-wrap-size";
-import { hkdf } from "../key-derivation/hkdf";
-import { keyUnwrap, keyWrap } from "../key-wrap/key-wrap";
+import { calculateContentEncryptionKeySize, calculateKeyWrapSize } from "../calculate";
+import { hkdf } from "../key-derivation";
+import { keyUnwrap, keyWrap } from "../key-wrap";
 import { calculateSharedSecret, generateSharedSecret } from "./shared-secret";
 
 export const getDiffieHellmanKeyWrapEncryptionKey = ({

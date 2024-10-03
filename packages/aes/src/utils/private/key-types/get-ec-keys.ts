@@ -8,11 +8,9 @@ import {
 import {
   getDiffieHellmanDecryptionKey,
   getDiffieHellmanEncryptionKey,
-} from "../diffie-hellman/diffie-hellman";
-import {
   getDiffieHellmanKeyWrapDecryptionKey,
   getDiffieHellmanKeyWrapEncryptionKey,
-} from "../diffie-hellman/diffie-hellman-key-wrap";
+} from "../diffie-hellman";
 
 export const getEcEncryptionKey = (options: CreateCekOptions): CreateCekResult => {
   switch (options.kryptos.algorithm) {

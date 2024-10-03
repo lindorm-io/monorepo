@@ -1,8 +1,9 @@
-import { encodeAesString } from "./encode-aes-string";
+import { isAesTokenised } from "./is-aes";
+import { createTokenisedAesString, parseTokenisedAesString } from "./tokenised-aes";
 
-describe("encodeAesString", () => {
+describe("tokenised-aes", () => {
   test("should resolve string", () => {
-    const string = encodeAesString({
+    const string = createTokenisedAesString({
       algorithm: "RSA-OAEP-256",
       authTag: Buffer.from("authTag"),
       content: Buffer.from("encryption"),
@@ -46,5 +47,35 @@ describe("encodeAesString", () => {
     );
 
     expect(string).toContain("$ZW5jcnlwdGlvbg$");
+
+    expect(isAesTokenised(string)).toEqual(true);
+  });
+
+  test("should resolve decoded data", () => {
+    expect(
+      parseTokenisedAesString(
+        "$A256GCM$v=1,f=base64url,kid=2e36ee7d-8423-59ad-a3f4-379e6b487c64,alg=RSA-OAEP-256,iv=aW5pdGlhbGlzYXRpb25WZWN0b3I,tag=YXV0aFRhZw,hks=aGtkZlNhbHQ,p2c=1000,p2s=cGJrZGZTYWx0,pei=cHVibGljRW5jcnlwdGlvbkl2,pek=cHVibGljRW5jcnlwdGlvbktleQ,pet=cHVibGljRW5jcnlwdGlvblRhZw,crv=P-521,kty=EC,x=Af3ZdH3XBQFqC4qISUyAPW9WrCDe36KuTFcLz0dIhoh8LeCk4PGt2HEs9pQyxlEVS9fm1tecb9Wk+83nUNBLDet7,y=ATdzYQHx4ZS1DJYb27bRy+NouEm53Jmpdk0Z00B1PIZcRwBEoYVPUQAmYsEt18MX1nLDdwKXV2dONaytvbkdRIMH$ZW5jcnlwdGlvbg$",
+      ),
+    ).toEqual({
+      authTag: Buffer.from("authTag"),
+      content: Buffer.from("encryption"),
+      encryption: "A256GCM",
+      algorithm: "RSA-OAEP-256",
+      hkdfSalt: Buffer.from("hkdfSalt"),
+      initialisationVector: Buffer.from("initialisationVector"),
+      keyId: "2e36ee7d-8423-59ad-a3f4-379e6b487c64",
+      publicEncryptionJwk: {
+        crv: "P-521",
+        x: "Af3ZdH3XBQFqC4qISUyAPW9WrCDe36KuTFcLz0dIhoh8LeCk4PGt2HEs9pQyxlEVS9fm1tecb9Wk+83nUNBLDet7",
+        y: "ATdzYQHx4ZS1DJYb27bRy+NouEm53Jmpdk0Z00B1PIZcRwBEoYVPUQAmYsEt18MX1nLDdwKXV2dONaytvbkdRIMH",
+        kty: "EC",
+      },
+      pbkdfIterations: 1000,
+      pbkdfSalt: Buffer.from("pbkdfSalt"),
+      publicEncryptionIv: Buffer.from("publicEncryptionIv"),
+      publicEncryptionKey: Buffer.from("publicEncryptionKey"),
+      publicEncryptionTag: Buffer.from("publicEncryptionTag"),
+      version: 1,
+    });
   });
 });

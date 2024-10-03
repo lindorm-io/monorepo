@@ -5,15 +5,14 @@ import {
   DecryptCekOptions,
   DecryptCekResult,
 } from "../../../types/private";
-import { getOctDirDecryptionKey, getOctDirEncryptionKey } from "../oct/get-oct-dir-keys";
 import {
+  getOctDirDecryptionKey,
+  getOctDirEncryptionKey,
   getOctKeyWrapDecryptionKey,
   getOctKeyWrapEncryptionKey,
-} from "../oct/get-oct-key-key-wrap";
-import {
   getOctPbkdfKeyWrapDecryptionKey,
   getOctPbkdfKeyWrapEncryptionKey,
-} from "../oct/get-oct-pbkdf-key-wrap-keys";
+} from "../oct";
 
 export const getOctEncryptionKey = (options: CreateCekOptions): CreateCekResult => {
   switch (options.kryptos.algorithm) {
