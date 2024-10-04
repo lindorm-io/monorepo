@@ -12,19 +12,19 @@ describe("verifyPkce", () => {
   });
 
   test("should resolve for S256", () => {
-    expect(verifyPkce(pkceChallenge, pkceVerifier, PkceMethod.S256)).toBe(true);
+    expect(verifyPkce(pkceChallenge, pkceVerifier, PkceMethod.S256)).toEqual(true);
   });
 
   test("should fail for S256", () => {
-    expect(verifyPkce(pkceChallenge, "wrong", PkceMethod.S256)).toBe(false);
+    expect(verifyPkce(pkceChallenge, "wrong", PkceMethod.S256)).toEqual(false);
   });
 
   test("should resolve for Plain", () => {
-    expect(verifyPkce(pkceChallenge, pkceChallenge, PkceMethod.Plain)).toBe(true);
+    expect(verifyPkce(pkceChallenge, pkceChallenge, PkceMethod.Plain)).toEqual(true);
   });
 
   test("should fail for Plain", () => {
-    expect(verifyPkce(pkceChallenge, "wrong", PkceMethod.Plain)).toBe(false);
+    expect(verifyPkce(pkceChallenge, "wrong", PkceMethod.Plain)).toEqual(false);
   });
 
   test("should throw on invalid method", () => {
