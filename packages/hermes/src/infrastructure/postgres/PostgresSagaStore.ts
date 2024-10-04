@@ -157,38 +157,12 @@ export class PostgresSagaStore extends PostgresBase implements ISagaStore {
     try {
       await this.promise();
 
-      const text = `
-        UPDATE
-          ${SAGA_STORE}
-        SET
-          destroyed = ?,
-          messages_to_dispatch = ?,
-          processed_causation_ids = ?,
-          revision = ?,
-          state = ?,
-          updated_at = ?
-        WHERE 
-          id = ? AND 
-          name = ? AND 
-          context = ? AND 
-          revision = ?
-      `;
-
-      const values = [
-        data.destroyed,
-        data.messages_to_dispatch,
-        data.processed_causation_ids,
-        data.revision,
-        data.state,
-        new Date(),
-
-        filter.id,
-        filter.name,
-        filter.context,
-        filter.revision,
-      ];
-
-      await this.source.query(text, values);
+      await this.source.query(
+        this.qbSaga.update(filter, {
+          ...data,
+          updated_at: new Date(),
+        }),
+      );
 
       this.logger.debug("Updated saga", { filter, data });
     } catch (err: any) {
