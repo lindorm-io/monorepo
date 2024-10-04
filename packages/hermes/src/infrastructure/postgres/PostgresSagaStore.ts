@@ -6,11 +6,9 @@ import {
   SAGA_STORE,
   SAGA_STORE_INDEXES,
 } from "../../constants/private";
-import { IHermesMessage, ISagaStore } from "../../interfaces";
+import { ISagaStore } from "../../interfaces";
 import {
   SagaCausationAttributes,
-  SagaClearMessagesToDispatchData,
-  SagaClearProcessedCausationIdsData,
   SagaIdentifier,
   SagaStoreAttributes,
   SagaUpdateData,
@@ -31,132 +29,34 @@ export class PostgresSagaStore extends PostgresBase implements ISagaStore {
     this.qbCausation = source.queryBuilder<SagaCausationAttributes>(SAGA_CAUSATION);
   }
 
-  public async causationExists(
-    sagaIdentifier: SagaIdentifier,
-    causation: IHermesMessage,
-  ): Promise<boolean> {
-    this.logger.debug("Verifying if causation exists", { sagaIdentifier, causation });
+  // public
+
+  public async findCausationIds(sagaIdentifier: SagaIdentifier): Promise<Array<string>> {
+    this.logger.debug("Finding causation ids", { sagaIdentifier });
 
     try {
       await this.promise();
 
       const result = await this.source.query(
-        this.qbCausation.select(
-          {
-            id: sagaIdentifier.id,
-            name: sagaIdentifier.name,
-            context: sagaIdentifier.context,
-            causation_id: causation.id,
-          },
-          {
-            columns: ["id"],
-          },
-        ),
+        this.qbCausation.select({
+          id: sagaIdentifier.id,
+          name: sagaIdentifier.name,
+          context: sagaIdentifier.context,
+        }),
       );
 
-      return !!result.rowCount;
-    } catch (err: any) {
-      this.logger.error("Failed to verify if causation exists", err);
+      const causationIds = result.rows.map((row) => row.causation_id);
 
+      this.logger.debug("Found causation ids", { causationIds });
+
+      return causationIds;
+    } catch (err: any) {
+      this.logger.error("Failed to find causation ids", err);
       throw err;
     }
   }
 
-  public async clearMessagesToDispatch(
-    filter: SagaUpdateFilter,
-    data: SagaClearMessagesToDispatchData,
-  ): Promise<void> {
-    this.logger.debug("Clearing messages", { filter, data });
-
-    try {
-      await this.promise();
-
-      const text = `
-        UPDATE
-          ${SAGA_STORE}
-        SET
-          messages_to_dispatch = ?,
-          hash = ?,
-          revision = ?,
-          updated_at = ?
-        WHERE 
-          id = ? AND 
-          name = ? AND 
-          context = ? AND 
-          hash = ? AND 
-          revision = ?
-      `;
-
-      const values = [
-        data.messages_to_dispatch,
-        data.hash,
-        data.revision,
-        new Date(),
-
-        filter.id,
-        filter.name,
-        filter.context,
-        filter.hash,
-        filter.revision,
-      ];
-
-      await this.source.query(text, values);
-
-      this.logger.debug("Cleared messages", { filter, data });
-    } catch (err: any) {
-      this.logger.error("Failed to clear messages", err);
-
-      throw err;
-    }
-  }
-
-  public async clearProcessedCausationIds(
-    filter: SagaUpdateFilter,
-    data: SagaClearProcessedCausationIdsData,
-  ): Promise<void> {
-    this.logger.debug("Clearing processed causation ids", { filter, data });
-
-    try {
-      await this.promise();
-
-      const text = `
-        UPDATE
-          ${SAGA_STORE}
-        SET
-          processed_causation_ids = ?,
-          hash = ?,
-          revision = ?
-        WHERE 
-          id = ? AND 
-          name = ? AND 
-          context = ? AND 
-          hash = ? AND 
-          revision = ?
-      `;
-
-      const values = [
-        data.processed_causation_ids,
-        data.hash,
-        data.revision,
-
-        filter.id,
-        filter.name,
-        filter.context,
-        filter.hash,
-        filter.revision,
-      ];
-
-      await this.source.query(text, values);
-
-      this.logger.debug("Cleared processed causation ids", { filter, data });
-    } catch (err: any) {
-      this.logger.error("Failed to clear processed causation ids", err);
-
-      throw err;
-    }
-  }
-
-  public async find(
+  public async findSaga(
     sagaIdentifier: SagaIdentifier,
   ): Promise<SagaStoreAttributes | undefined> {
     this.logger.debug("Finding saga", { sagaIdentifier });
@@ -174,7 +74,6 @@ export class PostgresSagaStore extends PostgresBase implements ISagaStore {
 
       if (!result.rows.length) {
         this.logger.debug("Saga not found");
-
         return;
       }
 
@@ -185,34 +84,11 @@ export class PostgresSagaStore extends PostgresBase implements ISagaStore {
       return data;
     } catch (err: any) {
       this.logger.error("Failed to find saga", err);
-
       throw err;
     }
   }
 
-  public async insert(attributes: SagaStoreAttributes): Promise<void> {
-    this.logger.debug("Inserting saga", { attributes });
-
-    try {
-      await this.promise();
-
-      await this.source.query(
-        this.qbSaga.insert({
-          ...attributes,
-          created_at: new Date(),
-          updated_at: new Date(),
-        }),
-      );
-
-      this.logger.debug("Inserted saga", { attributes });
-    } catch (err: any) {
-      this.logger.error("Failed to insert saga", err);
-
-      throw err;
-    }
-  }
-
-  public async insertProcessedCausationIds(
+  public async insertCausationIds(
     sagaIdentifier: SagaIdentifier,
     causationIds: Array<string>,
   ): Promise<void> {
@@ -242,12 +118,32 @@ export class PostgresSagaStore extends PostgresBase implements ISagaStore {
       });
     } catch (err: any) {
       this.logger.error("Failed to ", err);
-
       throw err;
     }
   }
 
-  public async update(filter: SagaUpdateFilter, data: SagaUpdateData): Promise<void> {
+  public async insertSaga(attributes: SagaStoreAttributes): Promise<void> {
+    this.logger.debug("Inserting saga", { attributes });
+
+    try {
+      await this.promise();
+
+      await this.source.query(
+        this.qbSaga.insert({
+          ...attributes,
+          created_at: new Date(),
+          updated_at: new Date(),
+        }),
+      );
+
+      this.logger.debug("Inserted saga", { attributes });
+    } catch (err: any) {
+      this.logger.error("Failed to insert saga", err);
+      throw err;
+    }
+  }
+
+  public async updateSaga(filter: SagaUpdateFilter, data: SagaUpdateData): Promise<void> {
     this.logger.debug("Updating saga", { filter, data });
 
     try {
@@ -293,7 +189,6 @@ export class PostgresSagaStore extends PostgresBase implements ISagaStore {
       this.logger.debug("Updated saga", { filter, data });
     } catch (err: any) {
       this.logger.error("Failed to ", err);
-
       throw err;
     }
   }

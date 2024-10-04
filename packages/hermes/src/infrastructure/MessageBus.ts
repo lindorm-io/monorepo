@@ -1,7 +1,7 @@
 import { LindormError } from "@lindorm/errors";
 import { IRabbitMessageBus, IRabbitSubscription, RabbitSource } from "@lindorm/rabbit";
 import { IHermesMessage, IHermesMessageBus } from "../interfaces";
-import { HermesMessageBase } from "../messages/HermesMessageBase";
+import { HermesMessage } from "../messages/HermesMessage";
 import { HermesMessageBusOptions } from "../types";
 import { HermesRabbitMessageBus } from "./rabbit";
 
@@ -20,14 +20,14 @@ export class MessageBus implements IHermesMessageBus {
 
   // public
 
-  public publish(message: HermesMessageBase | Array<HermesMessageBase>): Promise<void> {
+  public publish(message: HermesMessage | Array<HermesMessage>): Promise<void> {
     return this.messageBus.publish(message);
   }
 
   public subscribe(
     subscription:
-      | IRabbitSubscription<HermesMessageBase>
-      | Array<IRabbitSubscription<HermesMessageBase>>,
+      | IRabbitSubscription<HermesMessage>
+      | Array<IRabbitSubscription<HermesMessage>>,
   ): Promise<void> {
     return this.messageBus.subscribe(subscription);
   }

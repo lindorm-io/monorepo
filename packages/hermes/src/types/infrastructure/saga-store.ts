@@ -26,15 +26,3 @@ export type SagaUpdateData = {
   revision: number;
   state: Record<string, any>;
 };
-
-export type SagaClearMessagesToDispatchData = {
-  hash: string;
-  messages_to_dispatch: Array<IHermesMessage>;
-  revision: number;
-};
-
-export type SagaClearProcessedCausationIdsData = {
-  hash: string;
-  processed_causation_ids: Array<string>;
-  revision: number;
-};

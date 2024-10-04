@@ -1,10 +1,10 @@
 import { Dict } from "@lindorm/types";
 import { IHermesMessage } from "../interfaces";
 import { HermesMessageOptions } from "../types";
-import { HermesMessageBase } from "./HermesMessageBase";
+import { HermesMessage } from "./HermesMessage";
 
 export class HermesCommand<D extends Dict = Dict>
-  extends HermesMessageBase<D>
+  extends HermesMessage<D>
   implements IHermesMessage<D>
 {
   public constructor(options: HermesMessageOptions<D>, causation?: IHermesMessage) {

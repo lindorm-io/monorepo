@@ -44,7 +44,7 @@ describe("View", () => {
   test("should destroy", () => {
     expect(() => view.destroy(hermesEvent)).not.toThrow();
 
-    expect(view.destroyed).toBe(true);
+    expect(view.destroyed).toEqual(true);
   });
 
   test("should merge state", () => {

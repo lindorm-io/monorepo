@@ -112,7 +112,7 @@ describe("RedisViewStore", () => {
       timestamp: event.timestamp,
     });
 
-    await expect(store.causationExists(viewIdentifier, event)).resolves.toBe(true);
+    await expect(store.causationExists(viewIdentifier, event)).resolves.toEqual(true);
 
     await expect(
       store.causationExists(
@@ -122,7 +122,7 @@ describe("RedisViewStore", () => {
         },
         event,
       ),
-    ).resolves.toBe(false);
+    ).resolves.toEqual(false);
   });
 
   test("should clear processed causation ids", async () => {

@@ -4,7 +4,7 @@ import { randomUUID } from "crypto";
 import { IHermesMessage } from "../interfaces";
 import { AggregateIdentifier, HermesMessageOptions } from "../types";
 
-export class HermesMessageBase<D extends Dict = Dict, M extends Dict = Dict>
+export class HermesMessage<D extends Dict = Dict, M extends Dict = Dict>
   extends RabbitMessageBase
   implements IHermesMessage<D, M>
 {

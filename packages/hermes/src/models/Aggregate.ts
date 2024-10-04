@@ -133,6 +133,7 @@ export class Aggregate<S extends Dict = Dict> implements IAggregate {
       );
 
       if (!(eventHandler instanceof HermesAggregateEventHandler)) {
+        this.logger.error("Event handler not registered", { event });
         throw new HandlerNotRegisteredError();
       }
 

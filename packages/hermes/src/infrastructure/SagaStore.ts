@@ -7,8 +7,6 @@ import { IHermesMessage, IHermesSagaStore, ISaga, ISagaStore } from "../interfac
 import { Saga } from "../models";
 import {
   HermesSagaStoreOptions,
-  SagaClearMessagesToDispatchData,
-  SagaClearProcessedCausationIdsData,
   SagaData,
   SagaIdentifier,
   SagaStoreAttributes,
@@ -38,7 +36,54 @@ export class SagaStore implements IHermesSagaStore {
 
   // public
 
-  public async save(saga: ISaga, causation: IHermesMessage): Promise<Saga> {
+  public async clearMessages(saga: ISaga): Promise<ISaga> {
+    this.logger.debug("Clearing messages", { saga: saga.toJSON() });
+
+    const filter: SagaUpdateFilter = {
+      id: saga.id,
+      name: saga.name,
+      context: saga.context,
+      hash: saga.hash,
+      revision: saga.revision,
+    };
+
+    const data: SagaUpdateData = {
+      destroyed: saga.destroyed,
+      hash: randomString(16),
+      messages_to_dispatch: [],
+      processed_causation_ids: saga.processedCausationIds,
+      revision: saga.revision + 1,
+      state: saga.state,
+    };
+
+    await this.store.updateSaga(filter, data);
+
+    return new Saga({ ...saga.toJSON(), ...data, logger: this.logger });
+  }
+
+  public async load(sagaIdentifier: SagaIdentifier): Promise<ISaga> {
+    this.logger.debug("Loading saga", { sagaIdentifier });
+
+    const existing = await this.store.findSaga(sagaIdentifier);
+
+    if (existing) {
+      this.logger.debug("Loading existing saga", { existing });
+
+      return new Saga({ ...SagaStore.toData(existing), logger: this.logger });
+    }
+
+    const saga = new Saga({ ...sagaIdentifier, logger: this.logger });
+
+    this.logger.debug("Loading ephemeral saga", { saga: saga.toJSON() });
+
+    return saga;
+  }
+
+  public async loadCausations(sagaIdentifier: SagaIdentifier): Promise<Array<string>> {
+    return await this.store.findCausationIds(sagaIdentifier);
+  }
+
+  public async save(saga: ISaga, causation: IHermesMessage): Promise<ISaga> {
     this.logger.debug("Saving saga", { saga: saga.toJSON(), causation });
 
     const sagaIdentifier: SagaIdentifier = {
@@ -47,20 +92,18 @@ export class SagaStore implements IHermesSagaStore {
       context: saga.context,
     };
 
-    const existing = await this.store.find(sagaIdentifier);
+    const existing = await this.store.findSaga(sagaIdentifier);
 
     if (existing) {
-      const included = existing.processed_causation_ids.includes(causation.id);
-
-      if (included) {
+      if (existing.processed_causation_ids.includes(causation.id)) {
         this.logger.debug("Found existing saga matching causation", { existing });
 
         return new Saga({ ...SagaStore.toData(existing), logger: this.logger });
       }
 
-      const causationExists = await this.store.causationExists(sagaIdentifier, causation);
+      const causations = await this.store.findCausationIds(sagaIdentifier);
 
-      if (causationExists) {
+      if (causations.includes(causation.id)) {
         this.logger.debug("Found existing saga matching causation", { existing });
 
         return new Saga({ ...SagaStore.toData(existing), logger: this.logger });
@@ -75,7 +118,7 @@ export class SagaStore implements IHermesSagaStore {
         revision: saga.revision + 1,
       };
 
-      await this.store.insert(SagaStore.toAttributes(data));
+      await this.store.insertSaga(SagaStore.toAttributes(data));
 
       return new Saga({ ...data, logger: this.logger });
     }
@@ -97,87 +140,53 @@ export class SagaStore implements IHermesSagaStore {
       state: saga.state,
     };
 
-    await this.store.update(filter, data);
+    await this.store.updateSaga(filter, data);
 
     return new Saga({ ...saga.toJSON(), ...data, logger: this.logger });
   }
 
-  public async load(sagaIdentifier: SagaIdentifier): Promise<Saga> {
-    this.logger.debug("Loading saga", { sagaIdentifier });
+  public async saveCausations(saga: ISaga): Promise<ISaga> {
+    this.logger.debug("Saving causations", { saga: saga.toJSON() });
 
-    const existing = await this.store.find(sagaIdentifier);
-
-    if (existing) {
-      this.logger.debug("Loading existing saga", { existing });
-
-      return new Saga({ ...SagaStore.toData(existing), logger: this.logger });
+    if (!saga.processedCausationIds.length) {
+      this.logger.debug("No causations to save", { saga: saga.toJSON() });
+      return saga;
     }
 
-    const saga = new Saga({ ...sagaIdentifier, logger: this.logger });
-
-    this.logger.debug("Loading ephemeral saga", { saga: saga.toJSON() });
-
-    return saga;
-  }
-
-  public async causationExists(
-    identifier: SagaIdentifier,
-    causation: IHermesMessage,
-  ): Promise<boolean> {
-    return await this.store.causationExists(identifier, causation);
-  }
-
-  public async clearMessagesToDispatch(saga: ISaga): Promise<Saga> {
-    const filter: SagaUpdateFilter = {
-      id: saga.id,
-      name: saga.name,
-      context: saga.context,
-      hash: saga.hash,
-      revision: saga.revision,
-    };
-
-    const data: SagaClearMessagesToDispatchData = {
-      hash: randomString(16),
-      messages_to_dispatch: [],
-      revision: saga.revision + 1,
-    };
-
-    await this.store.clearMessagesToDispatch(filter, data);
-
-    return new Saga({ ...saga.toJSON(), ...data, logger: this.logger });
-  }
-
-  public async clearProcessedCausationIds(saga: ISaga): Promise<Saga> {
-    const filter: SagaUpdateFilter = {
-      id: saga.id,
-      name: saga.name,
-      context: saga.context,
-      hash: saga.hash,
-      revision: saga.revision,
-    };
-
-    const data: SagaClearProcessedCausationIdsData = {
-      hash: randomString(16),
-      processed_causation_ids: [],
-      revision: saga.revision + 1,
-    };
-
-    await this.store.clearProcessedCausationIds(filter, data);
-
-    return new Saga({ ...saga.toJSON(), ...data, logger: this.logger });
-  }
-
-  public async processCausationIds(saga: ISaga): Promise<void> {
     const sagaIdentifier: SagaIdentifier = {
       id: saga.id,
       name: saga.name,
       context: saga.context,
     };
 
-    await this.store.insertProcessedCausationIds(
-      sagaIdentifier,
-      saga.processedCausationIds,
-    );
+    const causations = await this.store.findCausationIds(sagaIdentifier);
+    const insert = saga.processedCausationIds.filter((id) => !causations.includes(id));
+
+    if (insert.length) {
+      this.logger.debug("Inserting causations", { insert });
+      await this.store.insertCausationIds(sagaIdentifier, insert);
+    }
+
+    const filter: SagaUpdateFilter = {
+      id: saga.id,
+      name: saga.name,
+      context: saga.context,
+      hash: saga.hash,
+      revision: saga.revision,
+    };
+
+    const data: SagaUpdateData = {
+      destroyed: saga.destroyed,
+      hash: randomString(16),
+      messages_to_dispatch: saga.messagesToDispatch,
+      processed_causation_ids: [],
+      revision: saga.revision + 1,
+      state: saga.state,
+    };
+
+    await this.store.updateSaga(filter, data);
+
+    return new Saga({ ...saga.toJSON(), ...data, logger: this.logger });
   }
 
   // private

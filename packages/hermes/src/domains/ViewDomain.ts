@@ -207,10 +207,12 @@ export class ViewDomain implements IViewDomain {
       eventHandler.adapter,
     );
 
-    this.logger.debug("Causation exists", { exists });
+    const causationExists = exists || view.processedCausationIds.includes(event.id);
+
+    this.logger.debug("Causation exists", { causationExists });
 
     try {
-      if (!exists && !view.processedCausationIds.includes(event.id)) {
+      if (!causationExists) {
         view = await this.handleView(view, event, eventHandler, conditionValidators);
       }
 
