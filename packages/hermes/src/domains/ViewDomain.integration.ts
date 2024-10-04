@@ -18,6 +18,8 @@ import {
   TEST_VIEW_EVENT_HANDLER_MERGE_STATE,
   TEST_VIEW_EVENT_HANDLER_SET_STATE,
 } from "../__fixtures__/view-event-handler";
+import { ViewStoreType } from "../enums";
+import { HermesViewEventHandler } from "../handlers";
 import { MessageBus, ViewStore } from "../infrastructure";
 import { IHermesViewEventHandler } from "../interfaces";
 import { HermesEvent } from "../messages";
@@ -35,7 +37,7 @@ describe("ViewDomain", () => {
 
   beforeAll(async () => {
     mongo = new MongoSource({
-      database: "MongoSagaDomain",
+      database: "MongoViewDomain",
       logger,
       url: "mongodb://root:example@localhost/admin?authSource=admin",
     });
@@ -43,7 +45,6 @@ describe("ViewDomain", () => {
 
     rabbit = new RabbitSource({
       logger,
-      messages: [],
       url: "amqp://localhost:5672",
     });
     await rabbit.setup();
@@ -53,11 +54,26 @@ describe("ViewDomain", () => {
     domain = new ViewDomain({ messageBus, store, logger });
 
     eventHandlers = [
-      TEST_VIEW_EVENT_HANDLER,
-      TEST_VIEW_EVENT_HANDLER_CREATE,
-      TEST_VIEW_EVENT_HANDLER_DESTROY,
-      TEST_VIEW_EVENT_HANDLER_MERGE_STATE,
-      TEST_VIEW_EVENT_HANDLER_SET_STATE,
+      new HermesViewEventHandler({
+        ...TEST_VIEW_EVENT_HANDLER,
+        adapter: { type: ViewStoreType.Mongo },
+      }),
+      new HermesViewEventHandler({
+        ...TEST_VIEW_EVENT_HANDLER_CREATE,
+        adapter: { type: ViewStoreType.Mongo },
+      }),
+      new HermesViewEventHandler({
+        ...TEST_VIEW_EVENT_HANDLER_DESTROY,
+        adapter: { type: ViewStoreType.Mongo },
+      }),
+      new HermesViewEventHandler({
+        ...TEST_VIEW_EVENT_HANDLER_MERGE_STATE,
+        adapter: { type: ViewStoreType.Mongo },
+      }),
+      new HermesViewEventHandler({
+        ...TEST_VIEW_EVENT_HANDLER_SET_STATE,
+        adapter: { type: ViewStoreType.Mongo },
+      }),
     ];
 
     for (const handler of eventHandlers) {
@@ -96,62 +112,57 @@ describe("ViewDomain", () => {
     });
 
     await expect(messageBus.publish(eventCreate)).resolves.toBeUndefined();
-    await sleep(50);
+    await sleep(250);
 
     await expect(messageBus.publish(eventAddField)).resolves.toBeUndefined();
-    await sleep(50);
+    await sleep(250);
 
     await expect(messageBus.publish(eventSetState)).resolves.toBeUndefined();
-    await sleep(50);
+    await sleep(250);
 
     await expect(messageBus.publish(eventDestroy)).resolves.toBeUndefined();
-    await sleep(50);
+    await sleep(250);
 
-    // await expect(store.load(view, { type: ViewStoreType.Mongo })).resolves.toEqual(
-    //   expect.objectContaining({
-    //     id: aggregate.id,
-    //     name: "name",
-    //     context: "default",
-    //     destroyed: true,
-    //     hash: expect.any(String),
-    //     meta: {
-    //       created: {
-    //         destroyed: false,
-    //         timestamp: new Date("2022-01-01T08:00:00.000Z"),
-    //         value: true,
-    //       },
-    //       merge: {
-    //         hermesEveHermesEventData: {
-    //           destroyed: false,
-    //           timestamp: new Date("2022-01-02T08:00:00.000Z"),
-    //           value: true,
-    //         },
-    //       },
-    //       set: {
-    //         hermesEveHermesEventData: {
-    //           destroyed: false,
-    //           timestamp: new Date("2022-01-03T08:00:00.000Z"),
-    //           value: true,
-    //         },
-    //       },
-    //     },
-    //     processedCausationIds: [
-    //       eventCreate.id,
-    //       eventAddField.id,
-    //       eventSetState.id,
-    //       eventDestroy.id,
-    //     ],
-    //     revision: 4,
-    //     state: {
-    //       created: true,
-    //       merge: {
-    //         hermesEveHermesEventData: true,
-    //       },
-    //       set: {
-    //         hermesEveHermesEventData: true,
-    //       },
-    //     },
-    //   }),
-    // );
+    await expect(store.load(view, { type: ViewStoreType.Mongo })).resolves.toEqual(
+      expect.objectContaining({
+        id: aggregate.id,
+        name: "name",
+        context: "default",
+        destroyed: true,
+        hash: expect.any(String),
+        meta: {
+          created: {
+            destroyed: false,
+            timestamp: new Date("2022-01-01T08:00:00.000Z"),
+            value: true,
+          },
+          merge: {
+            hermesEventData: {
+              destroyed: false,
+              timestamp: new Date("2022-01-02T08:00:00.000Z"),
+              value: true,
+            },
+          },
+          set: {
+            hermesEventData: {
+              destroyed: false,
+              timestamp: new Date("2022-01-03T08:00:00.000Z"),
+              value: true,
+            },
+          },
+        },
+        processedCausationIds: [],
+        revision: 8,
+        state: {
+          created: true,
+          merge: {
+            hermesEventData: true,
+          },
+          set: {
+            hermesEventData: true,
+          },
+        },
+      }),
+    );
   }, 30000);
 });

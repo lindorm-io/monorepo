@@ -214,6 +214,8 @@ export class SagaDomain implements ISagaDomain {
       saga = await this.processCausationIds(saga);
 
       this.logger.verbose("Handled event", { event, saga: saga.toJSON() });
+
+      this.emit(saga);
     } catch (err: any) {
       if (err instanceof ConcurrencyError) {
         this.logger.warn("Transient concurrency error while handling event", err);
@@ -260,13 +262,8 @@ export class SagaDomain implements ISagaDomain {
 
       const saved = await this.store.save(saga, event);
 
-      this.emit(saved);
-
       this.logger.debug("Saved saga at new revision", {
-        id: saved.id,
-        name: saved.name,
-        context: saved.context,
-        revision: saved.revision,
+        saga: saved.toJSON(),
       });
 
       return saved;
@@ -313,6 +310,7 @@ export class SagaDomain implements ISagaDomain {
     });
 
     if (saga.revision === 0) {
+      this.logger.debug("Saga is new, returning without clearing messages");
       return saga;
     }
 
@@ -324,16 +322,17 @@ export class SagaDomain implements ISagaDomain {
       return saga;
     }
 
+    if (saga.revision === 0) {
+      this.logger.debug("Saga is new, returning without saving causations");
+      return saga;
+    }
+
     this.logger.debug("Processing causation ids for saga", {
       id: saga.id,
       name: saga.name,
       context: saga.context,
       processedCausationIds: saga.processedCausationIds,
     });
-
-    if (saga.revision === 0) {
-      return saga;
-    }
 
     return await this.store.saveCausations(saga);
   }

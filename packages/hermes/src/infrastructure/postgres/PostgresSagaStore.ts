@@ -11,7 +11,7 @@ import {
   SagaCausationAttributes,
   SagaIdentifier,
   SagaStoreAttributes,
-  SagaUpdateData,
+  SagaUpdateAttributes,
   SagaUpdateFilter,
 } from "../../types";
 import { PostgresBase } from "./PostgresBase";
@@ -38,11 +38,16 @@ export class PostgresSagaStore extends PostgresBase implements ISagaStore {
       await this.promise();
 
       const result = await this.source.query(
-        this.qbCausation.select({
-          id: sagaIdentifier.id,
-          name: sagaIdentifier.name,
-          context: sagaIdentifier.context,
-        }),
+        this.qbCausation.select(
+          {
+            id: sagaIdentifier.id,
+            name: sagaIdentifier.name,
+            context: sagaIdentifier.context,
+          },
+          {
+            columns: ["causation_id"],
+          },
+        ),
       );
 
       const causationIds = result.rows.map((row) => row.causation_id);
@@ -72,7 +77,7 @@ export class PostgresSagaStore extends PostgresBase implements ISagaStore {
         }),
       );
 
-      if (!result.rows.length) {
+      if (!result.rowCount) {
         this.logger.debug("Saga not found");
         return;
       }
@@ -92,7 +97,7 @@ export class PostgresSagaStore extends PostgresBase implements ISagaStore {
     sagaIdentifier: SagaIdentifier,
     causationIds: Array<string>,
   ): Promise<void> {
-    this.logger.debug("Inserting processed causation ids", {
+    this.logger.debug("Inserting causation ids", {
       sagaIdentifier,
       causationIds,
     });
@@ -143,7 +148,10 @@ export class PostgresSagaStore extends PostgresBase implements ISagaStore {
     }
   }
 
-  public async updateSaga(filter: SagaUpdateFilter, data: SagaUpdateData): Promise<void> {
+  public async updateSaga(
+    filter: SagaUpdateFilter,
+    data: SagaUpdateAttributes,
+  ): Promise<void> {
     this.logger.debug("Updating saga", { filter, data });
 
     try {

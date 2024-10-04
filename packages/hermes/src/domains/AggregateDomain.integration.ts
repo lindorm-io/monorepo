@@ -61,7 +61,6 @@ describe("AggregateDomain", () => {
 
     rabbit = new RabbitSource({
       logger,
-      messages: [],
       url: "amqp://localhost:5672",
     });
     await rabbit.setup();

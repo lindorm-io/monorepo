@@ -13,7 +13,7 @@ import {
   SagaCausationAttributes,
   SagaIdentifier,
   SagaStoreAttributes,
-  SagaUpdateData,
+  SagaUpdateAttributes,
   SagaUpdateFilter,
 } from "../../types";
 import { MongoBase } from "./MongoBase";
@@ -37,13 +37,14 @@ export class MongoSagaStore extends MongoBase implements ISagaStore {
     try {
       const collection = await this.causationCollection();
 
-      const result = collection.find({
-        id: sagaIdentifier.id,
-        name: sagaIdentifier.name,
-        context: sagaIdentifier.context,
-      });
+      const array = await collection
+        .find({
+          id: sagaIdentifier.id,
+          name: sagaIdentifier.name,
+          context: sagaIdentifier.context,
+        })
+        .toArray();
 
-      const array = await result.toArray();
       const causationIds = array.map((item) => item.causation_id);
 
       this.logger.debug("Found causation ids", { causationIds });
@@ -134,7 +135,10 @@ export class MongoSagaStore extends MongoBase implements ISagaStore {
 
   // public
 
-  public async updateSaga(filter: SagaUpdateFilter, data: SagaUpdateData): Promise<void> {
+  public async updateSaga(
+    filter: SagaUpdateFilter,
+    data: SagaUpdateAttributes,
+  ): Promise<void> {
     this.logger.debug("Updating saga", { filter, data });
 
     await this.promise();

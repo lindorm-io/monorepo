@@ -7,15 +7,13 @@ import {
   VIEW_CAUSATION_INDEXES,
 } from "../../constants/private";
 import { MongoNotUpdatedError } from "../../errors";
-import { IHermesMessage, IViewStore } from "../../interfaces";
+import { IViewStore } from "../../interfaces";
 import {
   HandlerIdentifier,
   ViewCausationAttributes,
-  ViewClearProcessedCausationIdsData,
-  ViewEventHandlerAdapter,
   ViewIdentifier,
   ViewStoreAttributes,
-  ViewUpdateData,
+  ViewUpdateAttributes,
   ViewUpdateFilter,
 } from "../../types";
 import { getViewStoreName } from "../../utils/private";
@@ -34,88 +32,47 @@ export class MongoViewStore extends MongoBase implements IViewStore {
 
   // public
 
-  public async causationExists(
-    viewIdentifier: ViewIdentifier,
-    causation: IHermesMessage,
-  ): Promise<boolean> {
-    this.logger.debug("Verifying if causation exists", { viewIdentifier, causation });
+  public async findCausationIds(viewIdentifier: ViewIdentifier): Promise<Array<string>> {
+    this.logger.debug("Finding causation ids", { viewIdentifier });
 
     await this.promise();
 
     try {
       const collection = await this.causationCollection();
 
-      const result = await collection.findOne({
-        id: viewIdentifier.id,
-        name: viewIdentifier.name,
-        context: viewIdentifier.context,
-        causation_id: causation.id,
-      });
+      const array = await collection
+        .find({
+          id: viewIdentifier.id,
+          name: viewIdentifier.name,
+          context: viewIdentifier.context,
+        })
+        .toArray();
 
-      return !!result;
+      const causationIds = array.map((item) => item.causation_id);
+
+      this.logger.debug("Found causation ids", { causationIds });
+
+      return causationIds;
     } catch (err: any) {
-      this.logger.error("Failed to verify if causation exists", err);
-
+      this.logger.error("Failed to find causation ids", err);
       throw err;
     }
   }
 
-  public async clearProcessedCausationIds(
-    filter: ViewUpdateFilter,
-    data: ViewClearProcessedCausationIdsData,
-    adapter: ViewEventHandlerAdapter,
-  ): Promise<void> {
-    this.logger.debug("Clearing processed causation ids", { filter, data });
-
-    await this.initialise(filter, adapter);
-
-    try {
-      const collection = await this.viewCollection(filter, adapter);
-
-      const result = await collection.updateOne(
-        {
-          id: filter.id,
-          hash: filter.hash,
-          revision: filter.revision,
-        },
-        {
-          $set: {
-            hash: data.hash,
-            processed_causation_ids: data.processed_causation_ids,
-            revision: data.revision,
-            updated_at: new Date(),
-          },
-        },
-      );
-
-      if (!result.acknowledged) {
-        throw new MongoNotUpdatedError();
-      }
-
-      this.logger.debug("Cleared processed causation ids", { result });
-    } catch (err: any) {
-      this.logger.error("Failed to clear processed causation ids", err);
-
-      throw err;
-    }
-  }
-
-  public async find(
+  public async findView(
     viewIdentifier: ViewIdentifier,
-    adapter: ViewEventHandlerAdapter,
   ): Promise<ViewStoreAttributes | undefined> {
     this.logger.debug("Finding view", { viewIdentifier });
 
-    await this.initialise(viewIdentifier, adapter);
+    await this.initialise(viewIdentifier);
 
     try {
-      const collection = await this.viewCollection(viewIdentifier, adapter);
+      const collection = await this.viewCollection(viewIdentifier);
 
       const result = await collection.findOne({ id: viewIdentifier.id });
 
       if (!result) {
         this.logger.debug("View not found");
-
         return;
       }
 
@@ -124,43 +81,15 @@ export class MongoViewStore extends MongoBase implements IViewStore {
       return result;
     } catch (err: any) {
       this.logger.error("Failed to find view", err);
-
       throw err;
     }
   }
 
-  public async insert(
-    attributes: ViewStoreAttributes,
-    adapter: ViewEventHandlerAdapter,
-  ): Promise<void> {
-    this.logger.debug("Inserting view", { attributes });
-
-    await this.initialise(attributes, adapter);
-
-    try {
-      const collection = await this.viewCollection(
-        {
-          name: attributes.name,
-          context: attributes.context,
-        },
-        adapter,
-      );
-
-      const result = await collection.insertOne(attributes);
-
-      this.logger.debug("Inserted view", { result });
-    } catch (err: any) {
-      this.logger.error("Failed to insert view", err);
-
-      throw err;
-    }
-  }
-
-  public async insertProcessedCausationIds(
+  public async insertCausationIds(
     viewIdentifier: ViewIdentifier,
     causationIds: Array<string>,
   ): Promise<void> {
-    this.logger.debug("Inserting processed causation ids", {
+    this.logger.debug("Inserting causation ids", {
       viewIdentifier,
       causationIds,
     });
@@ -190,17 +119,37 @@ export class MongoViewStore extends MongoBase implements IViewStore {
     }
   }
 
-  public async update(
+  public async insertView(attributes: ViewStoreAttributes): Promise<void> {
+    this.logger.debug("Inserting view", { attributes });
+
+    await this.initialise(attributes);
+
+    try {
+      const collection = await this.viewCollection({
+        name: attributes.name,
+        context: attributes.context,
+      });
+
+      const result = await collection.insertOne(attributes);
+
+      this.logger.debug("Inserted view", { result });
+    } catch (err: any) {
+      this.logger.error("Failed to insert view", err);
+
+      throw err;
+    }
+  }
+
+  public async updateView(
     filter: ViewUpdateFilter,
-    data: ViewUpdateData,
-    adapter: ViewEventHandlerAdapter,
+    data: ViewUpdateAttributes,
   ): Promise<void> {
     this.logger.debug("Updating view", { filter, data });
 
-    await this.initialise(filter, adapter);
+    await this.initialise(filter);
 
     try {
-      const collection = await this.viewCollection(filter, adapter);
+      const collection = await this.viewCollection(filter);
 
       const result = await collection.updateOne(
         {
@@ -228,17 +177,13 @@ export class MongoViewStore extends MongoBase implements IViewStore {
       this.logger.debug("Updated view", { result });
     } catch (err: any) {
       this.logger.error("Failed to update view", err);
-
       throw err;
     }
   }
 
   // private
 
-  private async initialise(
-    handlerIdentifier: HandlerIdentifier,
-    adapter: ViewEventHandlerAdapter,
-  ): Promise<void> {
+  private async initialise(handlerIdentifier: HandlerIdentifier): Promise<void> {
     await this.promise();
 
     if (
@@ -250,8 +195,7 @@ export class MongoViewStore extends MongoBase implements IViewStore {
       return;
 
     const storeName = getViewStoreName(handlerIdentifier);
-    const custom = adapter.indexes || [];
-    const indexes = [getViewStoreIndexes(handlerIdentifier), custom].flat();
+    const indexes = getViewStoreIndexes(handlerIdentifier);
 
     await this.createIndexes(storeName, indexes);
 
@@ -267,11 +211,9 @@ export class MongoViewStore extends MongoBase implements IViewStore {
 
   private async viewCollection(
     handlerIdentifier: HandlerIdentifier,
-    adapter: ViewEventHandlerAdapter,
   ): Promise<Collection<ViewStoreAttributes>> {
     const storeName = getViewStoreName(handlerIdentifier);
-    const custom = adapter.indexes || [];
-    const indexes = [getViewStoreIndexes(handlerIdentifier), custom].flat();
+    const indexes = getViewStoreIndexes(handlerIdentifier);
 
     await this.createIndexes(storeName, indexes);
 

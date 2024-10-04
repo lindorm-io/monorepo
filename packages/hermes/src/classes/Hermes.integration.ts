@@ -51,10 +51,15 @@ describe("Hermes", () => {
   let redis: IRedisSource;
   let hermes: IHermes;
 
-  let onEventSpyAll: jest.Mock;
-  let onEventSpyContext: jest.Mock;
-  let onEventSpyName: jest.Mock;
-  let onEventSpyId: jest.Mock;
+  let onSagaSpyAll: jest.Mock;
+  let onSagaSpyContext: jest.Mock;
+  let onSagaSpyName: jest.Mock;
+  let onSagaSpyId: jest.Mock;
+
+  let onViewSpyAll: jest.Mock;
+  let onViewSpyContext: jest.Mock;
+  let onViewSpyName: jest.Mock;
+  let onViewSpyId: jest.Mock;
 
   beforeAll(async () => {
     mongo = new MongoSource({
@@ -92,10 +97,15 @@ describe("Hermes", () => {
       logger,
     });
 
-    onEventSpyAll = jest.fn();
-    onEventSpyContext = jest.fn();
-    onEventSpyName = jest.fn();
-    onEventSpyId = jest.fn();
+    onSagaSpyAll = jest.fn();
+    onSagaSpyContext = jest.fn();
+    onSagaSpyName = jest.fn();
+    onSagaSpyId = jest.fn();
+
+    onViewSpyAll = jest.fn();
+    onViewSpyContext = jest.fn();
+    onViewSpyName = jest.fn();
+    onViewSpyId = jest.fn();
 
     await hermes.admin.register.aggregateCommandHandler(
       new HermesAggregateCommandHandler<CreateGreeting, GreetingCreated>({
@@ -323,20 +333,30 @@ describe("Hermes", () => {
   test("should publish", async () => {
     const id = randomUUID();
 
+    let sagaChangeCount = 0;
     let viewChangeCount = 0;
+
+    hermes.on("saga", () => {
+      onSagaSpyAll();
+      sagaChangeCount += 1;
+    });
+    hermes.on("saga.hermes", onSagaSpyContext);
+    hermes.on("saga.hermes.test_saga", onSagaSpyName);
+    hermes.on(`saga.hermes.test_saga.${id}`, onSagaSpyId);
+
     hermes.on("view", () => {
-      onEventSpyAll();
+      onViewSpyAll();
       viewChangeCount += 1;
     });
-    hermes.on("view.hermes", onEventSpyContext);
-    hermes.on("view.hermes.test_view_mongo", onEventSpyName);
-    hermes.on(`view.hermes.test_view_mongo.${id}`, onEventSpyId);
+    hermes.on("view.hermes", onViewSpyContext);
+    hermes.on("view.hermes.test_view_mongo", onViewSpyName);
+    hermes.on(`view.hermes.test_view_mongo.${id}`, onViewSpyId);
 
     await hermes.command(new CreateGreeting(true), { aggregate: { id } });
 
     await new Promise((resolve) => {
       const interval = setInterval(() => {
-        if (viewChangeCount >= 6) {
+        if (sagaChangeCount >= 2 && viewChangeCount >= 6) {
           clearInterval(interval);
           resolve(undefined);
         }
@@ -397,8 +417,8 @@ describe("Hermes", () => {
             value: true,
           },
         },
-        processedCausationIds: [expect.any(String), expect.any(String)],
-        revision: 2,
+        processedCausationIds: [],
+        revision: 4,
         state: {
           created: true,
           updated: true,
@@ -427,8 +447,8 @@ describe("Hermes", () => {
             value: true,
           },
         },
-        processedCausationIds: [expect.any(String), expect.any(String)],
-        revision: 2,
+        processedCausationIds: [],
+        revision: 4,
         state: {
           created: true,
           updated: true,
@@ -457,8 +477,8 @@ describe("Hermes", () => {
             value: true,
           },
         },
-        processedCausationIds: [expect.any(String), expect.any(String)],
-        revision: 2,
+        processedCausationIds: [],
+        revision: 4,
         state: {
           created: true,
           updated: true,
@@ -496,9 +516,14 @@ describe("Hermes", () => {
       updated_at: expect.any(Date),
     });
 
-    expect(onEventSpyAll).toHaveBeenCalledTimes(6);
-    expect(onEventSpyContext).toHaveBeenCalledTimes(6);
-    expect(onEventSpyName).toHaveBeenCalledTimes(2);
-    expect(onEventSpyId).toHaveBeenCalledTimes(2);
+    expect(onSagaSpyAll).toHaveBeenCalledTimes(2);
+    expect(onSagaSpyContext).toHaveBeenCalledTimes(2);
+    expect(onSagaSpyName).toHaveBeenCalledTimes(2);
+    expect(onSagaSpyId).toHaveBeenCalledTimes(2);
+
+    expect(onViewSpyAll).toHaveBeenCalledTimes(6);
+    expect(onViewSpyContext).toHaveBeenCalledTimes(6);
+    expect(onViewSpyName).toHaveBeenCalledTimes(2);
+    expect(onViewSpyId).toHaveBeenCalledTimes(2);
   }, 30000);
 });

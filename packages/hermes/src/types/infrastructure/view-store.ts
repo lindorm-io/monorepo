@@ -3,9 +3,11 @@ import { IMongoSource } from "@lindorm/mongo";
 import { IPostgresSource } from "@lindorm/postgres";
 import { IRedisSource } from "@lindorm/redis";
 import { Dict } from "@lindorm/types";
+import { IViewStore } from "../../interfaces";
 import { ViewIdentifier } from "../identifiers";
 
 export type ViewStoreOptions = {
+  custom?: IViewStore;
   mongo?: IMongoSource;
   postgres?: IPostgresSource;
   redis?: IRedisSource;
@@ -18,17 +20,11 @@ export type ViewUpdateFilter = ViewIdentifier & {
   revision: number;
 };
 
-export type ViewUpdateData = {
+export type ViewUpdateAttributes = {
   destroyed: boolean;
   hash: string;
   meta: Dict;
   processed_causation_ids: Array<string>;
   revision: number;
   state: Dict;
-};
-
-export type ViewClearProcessedCausationIdsData = {
-  hash: string;
-  processed_causation_ids: Array<string>;
-  revision: number;
 };

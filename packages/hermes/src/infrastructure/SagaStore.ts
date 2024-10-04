@@ -10,7 +10,7 @@ import {
   SagaData,
   SagaIdentifier,
   SagaStoreAttributes,
-  SagaUpdateData,
+  SagaUpdateAttributes,
   SagaUpdateFilter,
 } from "../types";
 import { MongoSagaStore } from "./mongo";
@@ -47,7 +47,7 @@ export class SagaStore implements IHermesSagaStore {
       revision: saga.revision,
     };
 
-    const data: SagaUpdateData = {
+    const data: SagaUpdateAttributes = {
       destroyed: saga.destroyed,
       hash: randomString(16),
       messages_to_dispatch: [],
@@ -58,7 +58,17 @@ export class SagaStore implements IHermesSagaStore {
 
     await this.store.updateSaga(filter, data);
 
-    return new Saga({ ...saga.toJSON(), ...data, logger: this.logger });
+    const update: SagaData = {
+      ...saga.toJSON(),
+      destroyed: data.destroyed,
+      hash: data.hash,
+      messagesToDispatch: data.messages_to_dispatch,
+      processedCausationIds: data.processed_causation_ids,
+      revision: data.revision,
+      state: data.state,
+    };
+
+    return new Saga({ ...update, logger: this.logger });
   }
 
   public async load(sagaIdentifier: SagaIdentifier): Promise<ISaga> {
@@ -131,7 +141,7 @@ export class SagaStore implements IHermesSagaStore {
       revision: saga.revision,
     };
 
-    const data: SagaUpdateData = {
+    const data: SagaUpdateAttributes = {
       destroyed: saga.destroyed,
       hash: randomString(16),
       messages_to_dispatch: saga.messagesToDispatch,
@@ -142,7 +152,17 @@ export class SagaStore implements IHermesSagaStore {
 
     await this.store.updateSaga(filter, data);
 
-    return new Saga({ ...saga.toJSON(), ...data, logger: this.logger });
+    const update: SagaData = {
+      ...saga.toJSON(),
+      destroyed: data.destroyed,
+      hash: data.hash,
+      messagesToDispatch: data.messages_to_dispatch,
+      processedCausationIds: data.processed_causation_ids,
+      revision: data.revision,
+      state: data.state,
+    };
+
+    return new Saga({ ...update, logger: this.logger });
   }
 
   public async saveCausations(saga: ISaga): Promise<ISaga> {
@@ -163,7 +183,10 @@ export class SagaStore implements IHermesSagaStore {
     const insert = saga.processedCausationIds.filter((id) => !causations.includes(id));
 
     if (insert.length) {
-      this.logger.debug("Inserting causations", { insert });
+      this.logger.debug("Inserting causations", {
+        insert,
+        saga: saga.processedCausationIds,
+      });
       await this.store.insertCausationIds(sagaIdentifier, insert);
     }
 
@@ -175,7 +198,7 @@ export class SagaStore implements IHermesSagaStore {
       revision: saga.revision,
     };
 
-    const data: SagaUpdateData = {
+    const data: SagaUpdateAttributes = {
       destroyed: saga.destroyed,
       hash: randomString(16),
       messages_to_dispatch: saga.messagesToDispatch,
@@ -186,7 +209,17 @@ export class SagaStore implements IHermesSagaStore {
 
     await this.store.updateSaga(filter, data);
 
-    return new Saga({ ...saga.toJSON(), ...data, logger: this.logger });
+    const update: SagaData = {
+      ...saga.toJSON(),
+      destroyed: data.destroyed,
+      hash: data.hash,
+      messagesToDispatch: data.messages_to_dispatch,
+      processedCausationIds: data.processed_causation_ids,
+      revision: data.revision,
+      state: data.state,
+    };
+
+    return new Saga({ ...update, logger: this.logger });
   }
 
   // private

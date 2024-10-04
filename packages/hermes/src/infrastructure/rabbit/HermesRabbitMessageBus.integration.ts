@@ -22,7 +22,6 @@ describe("HermesRabbitMessageBus", () => {
   beforeAll(async () => {
     source = new RabbitSource({
       logger,
-      messages: [],
       url: "amqp://localhost:5672",
     });
 

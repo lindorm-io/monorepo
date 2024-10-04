@@ -1,5 +1,4 @@
 export * from "./checksum-store";
-export * from "./domain";
 export * from "./encryption-store";
 export * from "./event-store";
 export * from "./maximum";

@@ -6,7 +6,7 @@ import { Collection } from "mongodb";
 import { TEST_AGGREGATE_IDENTIFIER } from "../../__fixtures__/aggregate";
 import { TEST_HERMES_COMMAND } from "../../__fixtures__/hermes-command";
 import { TEST_SAGA_IDENTIFIER } from "../../__fixtures__/saga";
-import { SAGA_CAUSATION, SAGA_STORE } from "../../constants/private";
+import { SAGA_CAUSATION } from "../../constants/private";
 import { ISagaStore } from "../../interfaces";
 import { HermesCommand, HermesEvent } from "../../messages";
 import {
@@ -14,7 +14,7 @@ import {
   SagaCausationAttributes,
   SagaIdentifier,
   SagaStoreAttributes,
-  SagaUpdateData,
+  SagaUpdateAttributes,
   SagaUpdateFilter,
 } from "../../types";
 import { MongoSagaStore } from "./MongoSagaStore";
@@ -47,9 +47,7 @@ describe("MongoSagaStore", () => {
     aggregateIdentifier = { ...TEST_AGGREGATE_IDENTIFIER, id: randomUUID() };
     sagaIdentifier = { ...TEST_SAGA_IDENTIFIER, id: aggregateIdentifier.id };
     attributes = {
-      id: sagaIdentifier.id,
-      name: sagaIdentifier.name,
-      context: sagaIdentifier.context,
+      ...sagaIdentifier,
       destroyed: false,
       hash: randomString(16),
       messages_to_dispatch: [new HermesCommand(TEST_HERMES_COMMAND)],
@@ -147,7 +145,7 @@ describe("MongoSagaStore", () => {
       revision: attributes.revision,
     };
 
-    const update: SagaUpdateData = {
+    const update: SagaUpdateAttributes = {
       destroyed: false,
       hash: randomString(16),
       messages_to_dispatch: [],
@@ -158,9 +156,7 @@ describe("MongoSagaStore", () => {
 
     await expect(store.updateSaga(filter, update)).resolves.toBeUndefined();
 
-    await expect(
-      source.client.db("MongoSagaStore").collection(SAGA_STORE).findOne(sagaIdentifier),
-    ).resolves.toEqual(
+    await expect(collection.findOne(sagaIdentifier)).resolves.toEqual(
       expect.objectContaining({
         hash: update.hash,
         revision: 2,
