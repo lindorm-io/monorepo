@@ -50,7 +50,7 @@ describe("PostgresQueryBuilder", () => {
           },
         ),
       ).toEqual({
-        text: "INSERT INTO my_table_name (one,two,three,four,five,six,seven) VALUES (?,?,?,?,?,?,?) RETURNING five,six",
+        text: "INSERT INTO my_table_name (one,two,three,four,five,six,seven) VALUES (?,?,?,?,?,?,?) RETURNING five, six",
         values: [
           "General",
           2,
@@ -170,6 +170,28 @@ describe("PostgresQueryBuilder", () => {
       ).toEqual({
         text: 'SELECT "one", "two" FROM my_table_name WHERE "one" = ? AND "two" = ? ORDER BY "one" ASC, "two" DESC LIMIT 10 OFFSET 5',
         values: ["General", 15],
+      });
+    });
+  });
+
+  describe("update", () => {
+    test("should create an update query", () => {
+      expect(queryBuilder.update({ one: "General" }, { two: 15 })).toEqual({
+        text: "UPDATE my_table_name SET two = ? WHERE one = ?",
+        values: [15, "General"],
+      });
+    });
+
+    test("should create an update query with options", () => {
+      expect(
+        queryBuilder.update(
+          { one: "General", two: 15 },
+          { two: 15 },
+          { returning: ["one", "two"] },
+        ),
+      ).toEqual({
+        text: "UPDATE my_table_name SET two = ? WHERE one = ? AND two = ? RETURNING one, two",
+        values: [15, "General", 15],
       });
     });
   });
