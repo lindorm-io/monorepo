@@ -27,7 +27,7 @@ import {
   ViewNotCreatedError,
 } from "../errors";
 import { HermesViewEventHandler } from "../handlers";
-import { IHermesMessage, IHermesMessageBus, IViewDomain } from "../interfaces";
+import { IHermesMessage, IHermesMessageBus, IView, IViewDomain } from "../interfaces";
 import { HermesEvent } from "../messages";
 import { View } from "../models";
 import { ViewIdentifier } from "../types";
@@ -51,11 +51,32 @@ describe("ViewDomain", () => {
   beforeEach(async () => {
     messageBus = createMockRabbitMessageBus(HermesEvent);
     store = {
-      causationExists: jest.fn(),
-      clearProcessedCausationIds: jest.fn(),
-      load: jest.fn(),
-      processCausationIds: jest.fn(),
-      save: jest.fn(),
+      load: jest
+        .fn()
+        .mockImplementation(
+          async (identifier: ViewIdentifier) => new View({ ...identifier, logger }),
+        ),
+      loadCausations: jest.fn().mockResolvedValue([]),
+      save: jest.fn().mockImplementation(
+        async (view: IView, causation: IHermesMessage) =>
+          new View({
+            ...view.toJSON(),
+            hash: randomString(16),
+            revision: view.revision + 1,
+            processedCausationIds: [...view.processedCausationIds, causation.id],
+            logger,
+          }),
+      ),
+      saveCausations: jest.fn().mockImplementation(
+        async (view: IView): Promise<IView> =>
+          new View({
+            ...view.toJSON(),
+            hash: randomString(16),
+            revision: view.revision + 1,
+            processedCausationIds: [],
+            logger,
+          }),
+      ),
     };
 
     domain = new ViewDomain({ messageBus, store: store as any, logger });
@@ -63,36 +84,6 @@ describe("ViewDomain", () => {
     for (const handler of eventHandlers) {
       await domain.registerEventHandler(handler);
     }
-
-    store.causationExists.mockResolvedValue(false);
-
-    store.clearProcessedCausationIds.mockImplementation(
-      async (view: View) =>
-        new View({
-          ...view.toJSON(),
-          hash: randomString(16),
-          revision: view.revision + 1,
-          processedCausationIds: [],
-          logger,
-        }),
-    );
-
-    store.load.mockImplementation(
-      async (identifier: ViewIdentifier) => new View({ ...identifier, logger }),
-    );
-
-    store.processCausationIds.mockResolvedValue(undefined);
-
-    store.save.mockImplementation(
-      async (view: View, causation: IHermesMessage) =>
-        new View({
-          ...view.toJSON(),
-          hash: randomString(16),
-          revision: view.revision + 1,
-          processedCausationIds: [...view.processedCausationIds, causation.id],
-          logger,
-        }),
-    );
   });
 
   test("should register event handler", async () => {

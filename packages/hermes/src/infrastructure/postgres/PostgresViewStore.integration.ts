@@ -6,20 +6,26 @@ import { TEST_AGGREGATE_IDENTIFIER } from "../../__fixtures__/aggregate";
 import { TEST_HERMES_COMMAND } from "../../__fixtures__/hermes-command";
 import { TEST_VIEW_IDENTIFIER } from "../../__fixtures__/view";
 import { VIEW_CAUSATION } from "../../constants/private";
-import { ViewStoreType } from "../../enums";
 import { IViewStore } from "../../interfaces";
 import { HermesEvent } from "../../messages";
 import {
   AggregateIdentifier,
   ViewCausationAttributes,
-  ViewClearProcessedCausationIdsData,
   ViewIdentifier,
   ViewStoreAttributes,
-  ViewUpdateData,
+  ViewUpdateAttributes,
   ViewUpdateFilter,
 } from "../../types";
 import { getViewStoreName } from "../../utils/private";
 import { PostgresViewStore } from "./PostgresViewStore";
+
+const insertCausation = async (
+  source: IPostgresSource,
+  attributes: ViewCausationAttributes,
+): Promise<void> => {
+  const queryBuilder = source.queryBuilder<ViewCausationAttributes>(VIEW_CAUSATION);
+  await source.query(queryBuilder.insert(attributes));
+};
 
 const insertView = async (
   source: IPostgresSource,
@@ -31,20 +37,12 @@ const insertView = async (
   await source.query(queryBuilder.insert(attributes));
 };
 
-const insertCausation = async (
-  source: IPostgresSource,
-  attributes: ViewCausationAttributes,
-): Promise<void> => {
-  const queryBuilder = source.queryBuilder<ViewCausationAttributes>(VIEW_CAUSATION);
-  await source.query(queryBuilder.insert(attributes));
-};
-
-const findView = async (
+const findCausations = async (
   source: IPostgresSource,
   filter: ViewIdentifier,
-): Promise<Array<ViewStoreAttributes>> => {
-  const queryBuilder = source.queryBuilder<ViewStoreAttributes>(getViewStoreName(filter));
-  const result = await source.query<ViewStoreAttributes>(
+): Promise<Array<ViewCausationAttributes>> => {
+  const queryBuilder = source.queryBuilder<ViewCausationAttributes>(VIEW_CAUSATION);
+  const result = await source.query<ViewCausationAttributes>(
     queryBuilder.select({
       id: filter.id,
       name: filter.name,
@@ -54,12 +52,12 @@ const findView = async (
   return result.rows;
 };
 
-const findCausations = async (
+const findView = async (
   source: IPostgresSource,
   filter: ViewIdentifier,
-): Promise<Array<ViewCausationAttributes>> => {
-  const queryBuilder = source.queryBuilder<ViewCausationAttributes>(VIEW_CAUSATION);
-  const result = await source.query<ViewCausationAttributes>(
+): Promise<Array<ViewStoreAttributes>> => {
+  const queryBuilder = source.queryBuilder<ViewStoreAttributes>(getViewStoreName(filter));
+  const result = await source.query<ViewStoreAttributes>(
     queryBuilder.select({
       id: filter.id,
       name: filter.name,
@@ -113,66 +111,26 @@ describe("PostgresViewStore", () => {
     await source.disconnect();
   });
 
-  test("should resolve existing causation", async () => {
+  test("should find causation ids", async () => {
     const event = new HermesEvent(TEST_HERMES_COMMAND);
 
     await insertCausation(source, {
       id: viewIdentifier.id,
       name: viewIdentifier.name,
       context: viewIdentifier.context,
-      causation_id: event.id,
+      causation_id: event.causationId,
       timestamp: event.timestamp,
     });
 
-    await expect(store.causationExists(viewIdentifier, event)).resolves.toEqual(true);
-
-    await expect(
-      store.causationExists(
-        {
-          ...viewIdentifier,
-          id: randomUUID(),
-        },
-        event,
-      ),
-    ).resolves.toEqual(false);
-  });
-
-  test("should clear processed causation ids", async () => {
-    await insertView(source, attributes);
-
-    const filter: ViewUpdateFilter = {
-      id: attributes.id,
-      name: attributes.name,
-      context: attributes.context,
-      hash: attributes.hash,
-      revision: attributes.revision,
-    };
-
-    const update: ViewClearProcessedCausationIdsData = {
-      hash: randomString(16),
-      processed_causation_ids: [],
-      revision: 2,
-    };
-
-    await expect(
-      store.clearProcessedCausationIds(filter, update, { type: ViewStoreType.Postgres }),
-    ).resolves.toBeUndefined();
-
-    await expect(findView(source, attributes)).resolves.toEqual([
-      expect.objectContaining({
-        hash: update.hash,
-        processed_causation_ids: [],
-        revision: 2,
-      }),
+    await expect(store.findCausationIds(viewIdentifier)).resolves.toEqual([
+      event.causationId,
     ]);
   });
 
   test("should find view", async () => {
     await insertView(source, attributes);
 
-    await expect(
-      store.find(viewIdentifier, { type: ViewStoreType.Postgres }),
-    ).resolves.toEqual(
+    await expect(store.findView(viewIdentifier)).resolves.toEqual(
       expect.objectContaining({
         hash: attributes.hash,
         state: { data: "state" },
@@ -180,27 +138,13 @@ describe("PostgresViewStore", () => {
     );
   });
 
-  test("should insert view", async () => {
-    await expect(
-      store.insert(attributes, { type: ViewStoreType.Postgres }),
-    ).resolves.toBeUndefined();
-
-    await expect(findView(source, attributes)).resolves.toEqual([
-      expect.objectContaining({
-        hash: attributes.hash,
-        meta: { data: "state" },
-        state: { data: "state" },
-      }),
-    ]);
-  });
-
-  test("should insert processed causation ids", async () => {
+  test("should insert causation ids", async () => {
     const one = randomUUID();
     const two = randomUUID();
     const three = randomUUID();
 
     await expect(
-      store.insertProcessedCausationIds(viewIdentifier, [one, two, three]),
+      store.insertCausationIds(viewIdentifier, [one, two, three]),
     ).resolves.toBeUndefined();
 
     await expect(
@@ -218,6 +162,18 @@ describe("PostgresViewStore", () => {
     );
   });
 
+  test("should insert view", async () => {
+    await expect(store.insertView(attributes)).resolves.toBeUndefined();
+
+    await expect(findView(source, attributes)).resolves.toEqual([
+      expect.objectContaining({
+        hash: attributes.hash,
+        meta: { data: "state" },
+        state: { data: "state" },
+      }),
+    ]);
+  });
+
   test("should update view", async () => {
     await insertView(source, attributes);
 
@@ -229,7 +185,7 @@ describe("PostgresViewStore", () => {
       revision: attributes.revision,
     };
 
-    const update: ViewUpdateData = {
+    const update: ViewUpdateAttributes = {
       destroyed: false,
       hash: randomString(16),
       meta: { meta: true },
@@ -238,9 +194,7 @@ describe("PostgresViewStore", () => {
       state: { updated: true },
     };
 
-    await expect(
-      store.update(filter, update, { type: ViewStoreType.Postgres }),
-    ).resolves.toBeUndefined();
+    await expect(store.updateView(filter, update)).resolves.toBeUndefined();
 
     await expect(findView(source, attributes)).resolves.toEqual([
       expect.objectContaining({

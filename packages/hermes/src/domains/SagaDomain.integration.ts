@@ -45,7 +45,6 @@ describe("SagaDomain", () => {
 
     rabbit = new RabbitSource({
       logger,
-      messages: [],
       url: "amqp://localhost:5672",
     });
     await rabbit.setup();
@@ -87,26 +86,26 @@ describe("SagaDomain", () => {
     const eventDestroy = new HermesEvent({ ...TEST_HERMES_EVENT_DESTROY, aggregate });
 
     await expect(messageBus.publish(eventCreate)).resolves.toBeUndefined();
-    await sleep(50);
+    await sleep(250);
 
     await expect(messageBus.publish(eventMergeState)).resolves.toBeUndefined();
-    await sleep(50);
+    await sleep(250);
 
     await expect(messageBus.publish(eventSetState)).resolves.toBeUndefined();
-    await sleep(50);
+    await sleep(250);
 
     await expect(messageBus.publish(eventDestroy)).resolves.toBeUndefined();
-    await sleep(50);
+    await sleep(250);
 
     await expect(store.load(saga)).resolves.toEqual(
       expect.objectContaining({
         id: aggregate.id,
         name: "name",
         context: "default",
-        processedCausationIds: [eventDestroy.id],
+        processedCausationIds: [],
         destroyed: true,
         messagesToDispatch: [],
-        revision: 6,
+        revision: 8,
         state: {
           created: true,
           merge: { hermesEventData: true },

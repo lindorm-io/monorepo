@@ -1,3 +1,4 @@
+import { LindormError } from "@lindorm/errors";
 import { ILogger } from "@lindorm/logger";
 import { MongoSource } from "@lindorm/mongo";
 import { PostgresSource } from "@lindorm/postgres";
@@ -8,12 +9,11 @@ import { IHermesMessage, IHermesViewStore, IView, IViewStore } from "../interfac
 import { View } from "../models";
 import {
   HermesViewStoreOptions,
-  ViewClearProcessedCausationIdsData,
   ViewData,
   ViewEventHandlerAdapter,
   ViewIdentifier,
   ViewStoreAttributes,
-  ViewUpdateData,
+  ViewUpdateAttributes,
   ViewUpdateFilter,
 } from "../types";
 import { MongoViewStore } from "./mongo";
@@ -22,6 +22,7 @@ import { RedisViewStore } from "./redis";
 
 export class ViewStore implements IHermesViewStore {
   private readonly logger: ILogger;
+  private readonly custom: IViewStore | undefined;
   private readonly mongo: IViewStore | undefined;
   private readonly postgres: IViewStore | undefined;
   private readonly redis: IViewStore | undefined;
@@ -29,6 +30,9 @@ export class ViewStore implements IHermesViewStore {
   public constructor(options: HermesViewStoreOptions) {
     this.logger = options.logger.child(["ViewStore"]);
 
+    if (options.custom) {
+      this.custom = options.custom;
+    }
     if (options.mongo instanceof MongoSource) {
       this.mongo = new MongoViewStore(options.mongo, this.logger);
     }
@@ -42,44 +46,13 @@ export class ViewStore implements IHermesViewStore {
 
   // public
 
-  public async causationExists(
-    identifier: ViewIdentifier,
-    causation: IHermesMessage,
-    adapter: ViewEventHandlerAdapter,
-  ): Promise<boolean> {
-    return await this.store(adapter).causationExists(identifier, causation);
-  }
-
-  public async clearProcessedCausationIds(
-    view: IView,
-    adapter: ViewEventHandlerAdapter,
-  ): Promise<View> {
-    const filter: ViewUpdateFilter = {
-      id: view.id,
-      name: view.name,
-      context: view.context,
-      hash: view.hash,
-      revision: view.revision,
-    };
-
-    const data: ViewClearProcessedCausationIdsData = {
-      hash: randomString(16),
-      processed_causation_ids: [],
-      revision: view.revision + 1,
-    };
-
-    await this.store(adapter).clearProcessedCausationIds(filter, data, adapter);
-
-    return new View({ ...view.toJSON(), ...data, logger: this.logger });
-  }
-
   public async load(
     viewIdentifier: ViewIdentifier,
     adapter: ViewEventHandlerAdapter,
   ): Promise<View> {
     this.logger.debug("Loading view", { viewIdentifier });
 
-    const existing = await this.store(adapter).find(viewIdentifier, adapter);
+    const existing = await this.store(adapter).findView(viewIdentifier);
 
     if (existing) {
       this.logger.debug("Loading existing view", { existing });
@@ -94,20 +67,11 @@ export class ViewStore implements IHermesViewStore {
     return view;
   }
 
-  public async processCausationIds(
-    view: IView,
+  public async loadCausations(
+    viewIdentifier: ViewIdentifier,
     adapter: ViewEventHandlerAdapter,
-  ): Promise<void> {
-    const viewIdentifier: ViewIdentifier = {
-      id: view.id,
-      name: view.name,
-      context: view.context,
-    };
-
-    await this.store(adapter).insertProcessedCausationIds(
-      viewIdentifier,
-      view.processedCausationIds,
-    );
+  ): Promise<Array<string>> {
+    return await this.store(adapter).findCausationIds(viewIdentifier);
   }
 
   public async save(
@@ -123,23 +87,18 @@ export class ViewStore implements IHermesViewStore {
       context: view.context,
     };
 
-    const existing = await this.store(adapter).find(viewIdentifier, adapter);
+    const existing = await this.store(adapter).findView(viewIdentifier);
 
     if (existing) {
-      const included = existing.processed_causation_ids.includes(causation.id);
-
-      if (included) {
+      if (existing.processed_causation_ids.includes(causation.id)) {
         this.logger.debug("Found existing view matching causation", { existing });
 
         return new View({ ...ViewStore.toData(existing), logger: this.logger });
       }
 
-      const causationExists = await this.store(adapter).causationExists(
-        viewIdentifier,
-        causation,
-      );
+      const causations = await this.store(adapter).findCausationIds(viewIdentifier);
 
-      if (causationExists) {
+      if (causations.includes(causation.id)) {
         this.logger.debug("Found existing view matching causation", { existing });
 
         return new View({ ...ViewStore.toData(existing), logger: this.logger });
@@ -154,7 +113,7 @@ export class ViewStore implements IHermesViewStore {
         revision: view.revision + 1,
       };
 
-      await this.store(adapter).insert(ViewStore.toAttributes(data), adapter);
+      await this.store(adapter).insertView(ViewStore.toAttributes(data));
 
       return new View({ ...data, logger: this.logger });
     }
@@ -167,7 +126,7 @@ export class ViewStore implements IHermesViewStore {
       revision: view.revision,
     };
 
-    const data: ViewUpdateData = {
+    const attributes: ViewUpdateAttributes = {
       destroyed: view.destroyed,
       hash: randomString(16),
       meta: view.meta,
@@ -176,9 +135,76 @@ export class ViewStore implements IHermesViewStore {
       state: view.state,
     };
 
-    await this.store(adapter).update(filter, data, adapter);
+    await this.store(adapter).updateView(filter, attributes);
 
-    return new View({ ...view.toJSON(), ...data, logger: this.logger });
+    const update: ViewData = {
+      ...view.toJSON(),
+      destroyed: attributes.destroyed,
+      hash: attributes.hash,
+      meta: attributes.meta,
+      processedCausationIds: attributes.processed_causation_ids,
+      revision: attributes.revision,
+      state: attributes.state,
+    };
+
+    return new View({ ...update, logger: this.logger });
+  }
+
+  public async saveCausations(
+    view: IView,
+    adapter: ViewEventHandlerAdapter,
+  ): Promise<IView> {
+    this.logger.debug("Saving causations", { view: view.toJSON() });
+
+    if (!view.processedCausationIds.length) {
+      this.logger.debug("No causations to save", { view: view.toJSON() });
+      return view;
+    }
+
+    const viewIdentifier: ViewIdentifier = {
+      id: view.id,
+      name: view.name,
+      context: view.context,
+    };
+
+    const causations = await this.store(adapter).findCausationIds(viewIdentifier);
+    const insert = view.processedCausationIds.filter((id) => !causations.includes(id));
+
+    if (insert.length) {
+      this.logger.debug("Inserting causations", { insert });
+      await this.store(adapter).insertCausationIds(viewIdentifier, insert);
+    }
+
+    const filter: ViewUpdateFilter = {
+      id: view.id,
+      name: view.name,
+      context: view.context,
+      hash: view.hash,
+      revision: view.revision,
+    };
+
+    const attributes: ViewUpdateAttributes = {
+      destroyed: view.destroyed,
+      hash: randomString(16),
+      meta: view.meta,
+      processed_causation_ids: [],
+      revision: view.revision + 1,
+      state: view.state,
+    };
+
+    await this.store(adapter).updateView(filter, attributes);
+
+    const update: ViewData = {
+      ...view.toJSON(),
+      destroyed: attributes.destroyed,
+      hash: attributes.hash,
+      meta: attributes.meta,
+      processedCausationIds: attributes.processed_causation_ids,
+      revision: attributes.revision,
+      state: attributes.state,
+    };
+
+    return new View({ ...update, logger: this.logger });
   }
 
   // private
@@ -186,31 +212,35 @@ export class ViewStore implements IHermesViewStore {
   private store(adapter: ViewEventHandlerAdapter): IViewStore {
     switch (adapter.type) {
       case ViewStoreType.Custom:
-        if (!adapter.custom) {
-          throw new Error("Custom ViewStore not provided");
+        if (!this.custom) {
+          this.logger.error("Custom ViewStore not provided");
+          throw new LindormError("Custom ViewStore not provided");
         }
-        return adapter.custom;
+        return this.custom;
 
       case ViewStoreType.Mongo:
         if (!this.mongo) {
-          throw new Error("Mongo connection not provided");
+          this.logger.error("Custom ViewStore not provided");
+          throw new LindormError("Mongo connection not provided");
         }
         return this.mongo;
 
       case ViewStoreType.Postgres:
         if (!this.postgres) {
-          throw new Error("Postgres connection not provided");
+          this.logger.error("Custom ViewStore not provided");
+          throw new LindormError("Postgres connection not provided");
         }
         return this.postgres;
 
       case ViewStoreType.Redis:
         if (!this.redis) {
-          throw new Error("Redis connection not provided");
+          this.logger.error("Custom ViewStore not provided");
+          throw new LindormError("Redis connection not provided");
         }
         return this.redis;
 
       default:
-        throw new Error("Invalid store type");
+        throw new LindormError("Invalid store type");
     }
   }
 

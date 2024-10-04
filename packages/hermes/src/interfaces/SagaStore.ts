@@ -1,7 +1,7 @@
 import {
   SagaIdentifier,
   SagaStoreAttributes,
-  SagaUpdateData,
+  SagaUpdateAttributes,
   SagaUpdateFilter,
 } from "../types";
 import { IHermesMessage } from "./HermesMessage";
@@ -23,5 +23,5 @@ export interface ISagaStore {
     causationIds: Array<string>,
   ): Promise<void>;
   insertSaga(attributes: SagaStoreAttributes): Promise<void>;
-  updateSaga(filter: SagaUpdateFilter, data: SagaUpdateData): Promise<void>;
+  updateSaga(filter: SagaUpdateFilter, data: SagaUpdateAttributes): Promise<void>;
 }

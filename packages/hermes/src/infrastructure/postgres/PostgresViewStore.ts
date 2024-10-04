@@ -9,11 +9,9 @@ import { IHermesMessage, IViewStore } from "../../interfaces";
 import {
   HandlerIdentifier,
   ViewCausationAttributes,
-  ViewClearProcessedCausationIdsData,
-  ViewEventHandlerAdapter,
   ViewIdentifier,
   ViewStoreAttributes,
-  ViewUpdateData,
+  ViewUpdateAttributes,
   ViewUpdateFilter,
 } from "../../types";
 import { getViewStoreName } from "../../utils/private";
@@ -30,6 +28,39 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
 
     this.initialisedViews = [];
     this.qbCausation = source.queryBuilder<ViewCausationAttributes>(VIEW_CAUSATION);
+  }
+
+  // public
+
+  public async findCausationIds(viewIdentifier: ViewIdentifier): Promise<Array<string>> {
+    this.logger.debug("Finding causation ids", { viewIdentifier });
+
+    try {
+      await this.promise();
+
+      const result = await this.source.query(
+        this.qbCausation.select(
+          {
+            id: viewIdentifier.id,
+            name: viewIdentifier.name,
+            context: viewIdentifier.context,
+          },
+          {
+            columns: ["causation_id"],
+          },
+        ),
+      );
+
+      const causationIds = result.rows.map((row) => row.causation_id);
+
+      this.logger.debug("Found causation ids", { causationIds });
+
+      return causationIds;
+    } catch (err: any) {
+      this.logger.error("Failed to find causation ids", err);
+
+      throw err;
+    }
   }
 
   public async causationExists(
@@ -63,63 +94,14 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
     }
   }
 
-  public async clearProcessedCausationIds(
-    filter: ViewUpdateFilter,
-    data: ViewClearProcessedCausationIdsData,
-    adapter: ViewEventHandlerAdapter,
-  ): Promise<void> {
-    this.logger.debug("Clearing processed causation ids", { filter, data });
-
-    try {
-      await this.promise();
-      await this.initialiseView(filter, adapter);
-
-      const text = `
-        UPDATE
-          ${getViewStoreName(filter)}
-        SET
-          processed_causation_ids = ?,
-          hash = ?,
-          revision = ?
-        WHERE 
-          id = ? AND 
-          name = ? AND 
-          context = ? AND 
-          hash = ? AND 
-          revision = ?
-      `;
-
-      const values = [
-        data.processed_causation_ids,
-        data.hash,
-        data.revision,
-
-        filter.id,
-        filter.name,
-        filter.context,
-        filter.hash,
-        filter.revision,
-      ];
-
-      await this.source.query(text, values);
-
-      this.logger.debug("Cleared processed causation ids", { filter, data });
-    } catch (err: any) {
-      this.logger.error("Failed to clear processed causation ids", err);
-
-      throw err;
-    }
-  }
-
-  public async find(
+  public async findView(
     viewIdentifier: ViewIdentifier,
-    adapter: ViewEventHandlerAdapter,
   ): Promise<ViewStoreAttributes | undefined> {
     this.logger.debug("Finding view", { viewIdentifier });
 
     try {
       await this.promise();
-      await this.initialiseView(viewIdentifier, adapter);
+      await this.initialiseView(viewIdentifier);
 
       const qb = this.queryBuilder(viewIdentifier);
 
@@ -127,7 +109,6 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
 
       if (!result.rowCount) {
         this.logger.debug("View not found");
-
         return;
       }
 
@@ -138,44 +119,15 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
       return data;
     } catch (err: any) {
       this.logger.error("Failed to find view", err);
-
       throw err;
     }
   }
 
-  public async insert(
-    attributes: ViewStoreAttributes,
-    adapter: ViewEventHandlerAdapter,
-  ): Promise<void> {
-    this.logger.debug("Inserting view", { attributes });
-
-    try {
-      await this.promise();
-      await this.initialiseView(attributes, adapter);
-
-      const qb = this.queryBuilder(attributes);
-
-      await this.source.query(
-        qb.insert({
-          ...attributes,
-          created_at: new Date(),
-          updated_at: new Date(),
-        }),
-      );
-
-      this.logger.debug("Inserted view", { attributes });
-    } catch (err: any) {
-      this.logger.error("Failed to insert view", err);
-
-      throw err;
-    }
-  }
-
-  public async insertProcessedCausationIds(
+  public async insertCausationIds(
     viewIdentifier: ViewIdentifier,
     causationIds: Array<string>,
   ): Promise<void> {
-    this.logger.debug("Inserting processed causation ids", {
+    this.logger.debug("Inserting causation ids", {
       viewIdentifier,
       causationIds,
     });
@@ -201,21 +153,43 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
       });
     } catch (err: any) {
       this.logger.error("Failed to insert processed causation ids", err);
-
       throw err;
     }
   }
 
-  public async update(
+  public async insertView(attributes: ViewStoreAttributes): Promise<void> {
+    this.logger.debug("Inserting view", { attributes });
+
+    try {
+      await this.promise();
+      await this.initialiseView(attributes);
+
+      const qb = this.queryBuilder(attributes);
+
+      await this.source.query(
+        qb.insert({
+          ...attributes,
+          created_at: new Date(),
+          updated_at: new Date(),
+        }),
+      );
+
+      this.logger.debug("Inserted view", { attributes });
+    } catch (err: any) {
+      this.logger.error("Failed to insert view", err);
+      throw err;
+    }
+  }
+
+  public async updateView(
     filter: ViewUpdateFilter,
-    data: ViewUpdateData,
-    adapter: ViewEventHandlerAdapter,
+    data: ViewUpdateAttributes,
   ): Promise<void> {
     this.logger.debug("Updating view", { filter, data });
 
     try {
       await this.promise();
-      await this.initialiseView(filter, adapter);
+      await this.initialiseView(filter);
 
       const text = `
         UPDATE
@@ -291,13 +265,9 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
 
   // private
 
-  private async initialiseView(
-    handlerIdentifier: HandlerIdentifier,
-    adapter: ViewEventHandlerAdapter,
-  ): Promise<void> {
+  private async initialiseView(handlerIdentifier: HandlerIdentifier): Promise<void> {
     const storeName = getViewStoreName(handlerIdentifier);
-    const custom = adapter.indexes || [];
-    const indexes = [getViewStoreIndexes(handlerIdentifier), custom].flat();
+    const indexes = getViewStoreIndexes(handlerIdentifier);
 
     if (this.initialisedViews.includes(storeName)) return;
 

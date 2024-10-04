@@ -18,7 +18,7 @@ export type SagaUpdateFilter = SagaIdentifier & {
   revision: number;
 };
 
-export type SagaUpdateData = {
+export type SagaUpdateAttributes = {
   destroyed: boolean;
   hash: string;
   messages_to_dispatch: Array<IHermesMessage>;

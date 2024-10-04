@@ -3,7 +3,6 @@ import { LindormError } from "@lindorm/errors";
 import { ILogger } from "@lindorm/logger";
 import { ClassLike, Dict } from "@lindorm/types";
 import EventEmitter from "events";
-import { MAX_PROCESSED_CAUSATION_IDS_LENGTH } from "../constants/private";
 import {
   ConcurrencyError,
   DomainError,
@@ -56,6 +55,7 @@ export class ViewDomain implements IViewDomain {
     eventHandler: IHermesViewEventHandler<T>,
   ): Promise<void> {
     this.logger.debug("Registering event handler", {
+      adapter: eventHandler.adapter,
       name: eventHandler.eventName,
       aggregate: eventHandler.aggregate,
       view: eventHandler.view,
@@ -201,13 +201,13 @@ export class ViewDomain implements IViewDomain {
 
     this.logger.debug("View loaded", { view: view.toJSON() });
 
-    const exists = await this.store.causationExists(
+    const causations = await this.store.loadCausations(
       viewIdentifier,
-      event,
       eventHandler.adapter,
     );
 
-    const causationExists = exists || view.processedCausationIds.includes(event.id);
+    const causationExists =
+      causations.includes(event.id) || view.processedCausationIds.includes(event.id);
 
     this.logger.debug("Causation exists", { causationExists });
 
@@ -219,6 +219,8 @@ export class ViewDomain implements IViewDomain {
       view = await this.processCausationIds(view, eventHandler);
 
       this.logger.verbose("Handled event", { event, view: view.toJSON() });
+
+      this.emit(view);
     } catch (err: any) {
       if (err instanceof ConcurrencyError) {
         this.logger.warn("Transient concurrency error while handling event", err);
@@ -264,8 +266,6 @@ export class ViewDomain implements IViewDomain {
 
     const saved = await this.store.save(view, event, eventHandler.adapter);
 
-    this.emit(saved);
-
     this.logger.debug("Saved view at new revision", {
       id: saved.id,
       name: saved.name,
@@ -280,7 +280,11 @@ export class ViewDomain implements IViewDomain {
     view: IView,
     eventHandler: IHermesViewEventHandler,
   ): Promise<IView> {
-    if (view.processedCausationIds.length < MAX_PROCESSED_CAUSATION_IDS_LENGTH) {
+    if (!view.processedCausationIds.length) {
+      return view;
+    }
+
+    if (view.revision === 0) {
       return view;
     }
 
@@ -291,8 +295,7 @@ export class ViewDomain implements IViewDomain {
       processedCausationIds: view.processedCausationIds,
     });
 
-    await this.store.processCausationIds(view, eventHandler.adapter);
-    return await this.store.clearProcessedCausationIds(view, eventHandler.adapter);
+    return await this.store.saveCausations(view, eventHandler.adapter);
   }
 
   private async rejectEvent(

@@ -1,9 +1,8 @@
 import { ILogger } from "@lindorm/logger";
 import { ClassLike, Dict } from "@lindorm/types";
 import { ViewStoreType } from "../../enums";
-import { IHermesMessage, IViewStore } from "../../interfaces";
+import { IHermesMessage } from "../../interfaces";
 import { HandlerIdentifier, HandlerIdentifierMultipleContexts } from "../identifiers";
-import { StoreIndexes } from "../infrastructure";
 import { HandlerConditions } from "./handler";
 
 export type ViewEventHandlerContext<
@@ -23,9 +22,7 @@ export type ViewEventHandlerFileAggregate = {
   context?: Array<string> | string;
 };
 
-export type ViewEventHandlerAdapter<F extends Dict = Dict> = {
-  custom?: IViewStore;
-  indexes?: StoreIndexes<F>;
+export type ViewEventHandlerAdapter = {
   type: ViewStoreType;
 };
 

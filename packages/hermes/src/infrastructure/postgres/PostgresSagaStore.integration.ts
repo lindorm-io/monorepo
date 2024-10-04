@@ -13,7 +13,7 @@ import {
   SagaCausationAttributes,
   SagaIdentifier,
   SagaStoreAttributes,
-  SagaUpdateData,
+  SagaUpdateAttributes,
   SagaUpdateFilter,
 } from "../../types";
 import { PostgresSagaStore } from "./PostgresSagaStore";
@@ -178,7 +178,7 @@ describe("PostgresSagaStore", () => {
       revision: attributes.revision,
     };
 
-    const update: SagaUpdateData = {
+    const update: SagaUpdateAttributes = {
       destroyed: false,
       hash: randomString(16),
       messages_to_dispatch: [],

@@ -6,16 +6,14 @@ import { randomUUID } from "crypto";
 import { TEST_AGGREGATE_IDENTIFIER } from "../../__fixtures__/aggregate";
 import { TEST_HERMES_COMMAND } from "../../__fixtures__/hermes-command";
 import { TEST_VIEW_IDENTIFIER } from "../../__fixtures__/view";
-import { ViewStoreType } from "../../enums";
 import { IViewStore } from "../../interfaces";
 import { HermesEvent } from "../../messages";
 import {
   AggregateIdentifier,
   ViewCausationAttributes,
-  ViewClearProcessedCausationIdsData,
   ViewIdentifier,
   ViewStoreAttributes,
-  ViewUpdateData,
+  ViewUpdateAttributes,
   ViewUpdateFilter,
 } from "../../types";
 import { RedisViewStore } from "./RedisViewStore";
@@ -28,13 +26,6 @@ const causationKey = (viewIdentifier: ViewIdentifier): string => {
   return `causation:${viewIdentifier.context}:${viewIdentifier.name}:${viewIdentifier.id}`;
 };
 
-const insertView = async (
-  source: IRedisSource,
-  attributes: ViewStoreAttributes,
-): Promise<void> => {
-  await source.client.set(redisKey(attributes), JsonKit.stringify(attributes));
-};
-
 const insertCausation = async (
   source: IRedisSource,
   attributes: ViewCausationAttributes,
@@ -45,12 +36,11 @@ const insertCausation = async (
   );
 };
 
-const findView = async (
+const insertView = async (
   source: IRedisSource,
-  identifier: ViewIdentifier,
-): Promise<ViewStoreAttributes | undefined> => {
-  const result = await source.client.get(redisKey(identifier));
-  return result ? JsonKit.parse<any>(result) : undefined;
+  attributes: ViewStoreAttributes,
+): Promise<void> => {
+  await source.client.set(redisKey(attributes), JsonKit.stringify(attributes));
 };
 
 const findCausations = async (
@@ -59,6 +49,14 @@ const findCausations = async (
 ): Promise<Array<string>> => {
   const result = await source.client.get(causationKey(identifier));
   return result ? JSON.parse(result) : [];
+};
+
+const findView = async (
+  source: IRedisSource,
+  identifier: ViewIdentifier,
+): Promise<ViewStoreAttributes | undefined> => {
+  const result = await source.client.get(redisKey(identifier));
+  return result ? JsonKit.parse<any>(result) : undefined;
 };
 
 describe("RedisViewStore", () => {
@@ -101,66 +99,26 @@ describe("RedisViewStore", () => {
     await source.disconnect();
   });
 
-  test("should resolve existing causation", async () => {
+  test("should find causation ids", async () => {
     const event = new HermesEvent(TEST_HERMES_COMMAND);
 
     await insertCausation(source, {
       id: viewIdentifier.id,
       name: viewIdentifier.name,
       context: viewIdentifier.context,
-      causation_id: event.id,
+      causation_id: event.causationId,
       timestamp: event.timestamp,
     });
 
-    await expect(store.causationExists(viewIdentifier, event)).resolves.toEqual(true);
-
-    await expect(
-      store.causationExists(
-        {
-          ...viewIdentifier,
-          id: randomUUID(),
-        },
-        event,
-      ),
-    ).resolves.toEqual(false);
-  });
-
-  test("should clear processed causation ids", async () => {
-    await insertView(source, attributes);
-
-    const filter: ViewUpdateFilter = {
-      id: attributes.id,
-      name: attributes.name,
-      context: attributes.context,
-      hash: attributes.hash,
-      revision: attributes.revision,
-    };
-
-    const update: ViewClearProcessedCausationIdsData = {
-      hash: randomString(16),
-      processed_causation_ids: [],
-      revision: 2,
-    };
-
-    await expect(
-      store.clearProcessedCausationIds(filter, update, { type: ViewStoreType.Redis }),
-    ).resolves.toBeUndefined();
-
-    await expect(findView(source, attributes)).resolves.toEqual(
-      expect.objectContaining({
-        hash: update.hash,
-        processed_causation_ids: [],
-        revision: 2,
-      }),
-    );
+    await expect(store.findCausationIds(viewIdentifier)).resolves.toEqual([
+      event.causationId,
+    ]);
   });
 
   test("should find view", async () => {
     await insertView(source, attributes);
 
-    await expect(
-      store.find(viewIdentifier, { type: ViewStoreType.Redis }),
-    ).resolves.toEqual(
+    await expect(store.findView(viewIdentifier)).resolves.toEqual(
       expect.objectContaining({
         hash: attributes.hash,
         state: { data: "state" },
@@ -168,27 +126,13 @@ describe("RedisViewStore", () => {
     );
   });
 
-  test("should insert view", async () => {
-    await expect(
-      store.insert(attributes, { type: ViewStoreType.Redis }),
-    ).resolves.toBeUndefined();
-
-    await expect(findView(source, attributes)).resolves.toEqual(
-      expect.objectContaining({
-        hash: attributes.hash,
-        meta: { data: "state" },
-        state: { data: "state" },
-      }),
-    );
-  });
-
-  test("should insert processed causation ids", async () => {
+  test("should insert causation ids", async () => {
     const one = randomUUID();
     const two = randomUUID();
     const three = randomUUID();
 
     await expect(
-      store.insertProcessedCausationIds(viewIdentifier, [one, two, three]),
+      store.insertCausationIds(viewIdentifier, [one, two, three]),
     ).resolves.toBeUndefined();
 
     await expect(
@@ -198,6 +142,18 @@ describe("RedisViewStore", () => {
         context: viewIdentifier.context,
       }),
     ).resolves.toEqual(expect.arrayContaining([one, two, three]));
+  });
+
+  test("should insert view", async () => {
+    await expect(store.insertView(attributes)).resolves.toBeUndefined();
+
+    await expect(findView(source, attributes)).resolves.toEqual(
+      expect.objectContaining({
+        hash: attributes.hash,
+        meta: { data: "state" },
+        state: { data: "state" },
+      }),
+    );
   });
 
   test("should update view", async () => {
@@ -211,7 +167,7 @@ describe("RedisViewStore", () => {
       revision: attributes.revision,
     };
 
-    const update: ViewUpdateData = {
+    const update: ViewUpdateAttributes = {
       destroyed: false,
       hash: randomString(16),
       meta: { meta: true },
@@ -220,9 +176,7 @@ describe("RedisViewStore", () => {
       state: { updated: true },
     };
 
-    await expect(
-      store.update(filter, update, { type: ViewStoreType.Redis }),
-    ).resolves.toBeUndefined();
+    await expect(store.updateView(filter, update)).resolves.toBeUndefined();
 
     await expect(findView(source, attributes)).resolves.toEqual(
       expect.objectContaining({
