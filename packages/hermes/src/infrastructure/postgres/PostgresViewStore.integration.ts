@@ -1,6 +1,5 @@
 import { createMockLogger } from "@lindorm/logger";
 import { IPostgresSource, PostgresSource } from "@lindorm/postgres";
-import { randomString } from "@lindorm/random";
 import { randomUUID } from "crypto";
 import { TEST_AGGREGATE_IDENTIFIER } from "../../__fixtures__/aggregate";
 import { TEST_HERMES_COMMAND } from "../../__fixtures__/hermes-command";
@@ -97,7 +96,6 @@ describe("PostgresViewStore", () => {
     attributes = {
       ...viewIdentifier,
       destroyed: false,
-      hash: randomString(16),
       meta: { data: "state" },
       processed_causation_ids: [randomUUID()],
       revision: 1,
@@ -132,7 +130,6 @@ describe("PostgresViewStore", () => {
 
     await expect(store.findView(viewIdentifier)).resolves.toEqual(
       expect.objectContaining({
-        hash: attributes.hash,
         state: { data: "state" },
       }),
     );
@@ -167,7 +164,6 @@ describe("PostgresViewStore", () => {
 
     await expect(findView(source, attributes)).resolves.toEqual([
       expect.objectContaining({
-        hash: attributes.hash,
         meta: { data: "state" },
         state: { data: "state" },
       }),
@@ -181,13 +177,11 @@ describe("PostgresViewStore", () => {
       id: attributes.id,
       name: attributes.name,
       context: attributes.context,
-      hash: attributes.hash,
       revision: attributes.revision,
     };
 
     const update: ViewUpdateAttributes = {
       destroyed: false,
-      hash: randomString(16),
       meta: { meta: true },
       processed_causation_ids: [],
       revision: 2,
@@ -198,7 +192,6 @@ describe("PostgresViewStore", () => {
 
     await expect(findView(source, attributes)).resolves.toEqual([
       expect.objectContaining({
-        hash: update.hash,
         meta: {
           meta: true,
         },

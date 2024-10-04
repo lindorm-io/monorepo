@@ -1,7 +1,6 @@
 import { LindormError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger";
 import { createMockRabbitMessageBus } from "@lindorm/rabbit";
-import { randomString } from "@lindorm/random";
 import { randomUUID } from "crypto";
 import { TEST_AGGREGATE_IDENTIFIER } from "../__fixtures__/aggregate";
 import { TEST_AGGREGATE_EVENT_HANDLER } from "../__fixtures__/aggregate-event-handler";
@@ -60,7 +59,6 @@ describe("SagaDomain", () => {
         async (saga: ISaga) =>
           new Saga({
             ...saga.toJSON(),
-            hash: randomString(16),
             revision: saga.revision + 1,
             messagesToDispatch: [],
             logger,
@@ -76,7 +74,6 @@ describe("SagaDomain", () => {
         async (saga: ISaga, causation: IHermesMessage) =>
           new Saga({
             ...saga.toJSON(),
-            hash: randomString(16),
             revision: saga.revision + 1,
             processedCausationIds: [...saga.processedCausationIds, causation.id],
             logger,
@@ -86,7 +83,6 @@ describe("SagaDomain", () => {
         async (saga: ISaga): Promise<ISaga> =>
           new Saga({
             ...saga.toJSON(),
-            hash: randomString(16),
             revision: saga.revision + 1,
             processedCausationIds: [],
             logger,

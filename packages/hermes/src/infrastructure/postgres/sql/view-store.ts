@@ -10,7 +10,6 @@ export const createViewStoreTable = (view: HandlerIdentifier): QueryConfig => {
       name VARCHAR ( ${MAX_NAME_LENGTH} ) NOT NULL,
       context VARCHAR ( ${MAX_CONTEXT_LENGTH} ) NOT NULL,
       destroyed BOOLEAN NOT NULL,
-      hash VARCHAR ( 16 ) NOT NULL,
       meta JSONB NOT NULL,
       processed_causation_ids JSONB NOT NULL,
       revision INTEGER NOT NULL,

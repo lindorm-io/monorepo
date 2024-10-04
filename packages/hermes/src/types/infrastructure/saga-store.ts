@@ -14,13 +14,11 @@ export type SagaStoreOptions = {
 export type HermesSagaStoreOptions = SagaStoreOptions & { logger: ILogger };
 
 export type SagaUpdateFilter = SagaIdentifier & {
-  hash: string;
   revision: number;
 };
 
 export type SagaUpdateAttributes = {
   destroyed: boolean;
-  hash: string;
   messages_to_dispatch: Array<IHermesMessage>;
   processed_causation_ids: Array<string>;
   revision: number;

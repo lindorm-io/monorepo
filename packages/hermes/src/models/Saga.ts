@@ -1,6 +1,5 @@
 import { snakeCase } from "@lindorm/case";
 import { ILogger } from "@lindorm/logger";
-import { randomString } from "@lindorm/random";
 import { ClassLike, Dict } from "@lindorm/types";
 import merge from "deepmerge";
 import { z } from "zod";
@@ -20,7 +19,6 @@ export class Saga<S extends Dict = Dict> implements ISaga {
   public readonly name: string;
   public readonly context: string;
 
-  private readonly _hash: string;
   private readonly _messagesToDispatch: Array<IHermesMessage>;
   private readonly _processedCausationIds: Array<string>;
   private readonly _revision: number;
@@ -37,7 +35,6 @@ export class Saga<S extends Dict = Dict> implements ISaga {
     this.context = snakeCase(options.context);
 
     this._destroyed = options.destroyed || false;
-    this._hash = options.hash || randomString(16);
     this._messagesToDispatch = options.messagesToDispatch || [];
     this._processedCausationIds = options.processedCausationIds || [];
     this._revision = options.revision || 0;
@@ -48,10 +45,6 @@ export class Saga<S extends Dict = Dict> implements ISaga {
 
   public get destroyed(): boolean {
     return this._destroyed;
-  }
-
-  public get hash(): string {
-    return this._hash;
   }
 
   public get messagesToDispatch(): Array<IHermesMessage> {
@@ -78,7 +71,6 @@ export class Saga<S extends Dict = Dict> implements ISaga {
       name: this.name,
       context: this.context,
       destroyed: this.destroyed,
-      hash: this.hash,
       messagesToDispatch: this.messagesToDispatch,
       processedCausationIds: this.processedCausationIds,
       revision: this.revision,

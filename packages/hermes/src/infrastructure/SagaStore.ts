@@ -2,7 +2,6 @@ import { LindormError } from "@lindorm/errors";
 import { ILogger } from "@lindorm/logger";
 import { MongoSource } from "@lindorm/mongo";
 import { PostgresSource } from "@lindorm/postgres";
-import { randomString } from "@lindorm/random";
 import { IHermesMessage, IHermesSagaStore, ISaga, ISagaStore } from "../interfaces";
 import { Saga } from "../models";
 import {
@@ -43,13 +42,11 @@ export class SagaStore implements IHermesSagaStore {
       id: saga.id,
       name: saga.name,
       context: saga.context,
-      hash: saga.hash,
       revision: saga.revision,
     };
 
     const data: SagaUpdateAttributes = {
       destroyed: saga.destroyed,
-      hash: randomString(16),
       messages_to_dispatch: [],
       processed_causation_ids: saga.processedCausationIds,
       revision: saga.revision + 1,
@@ -61,7 +58,6 @@ export class SagaStore implements IHermesSagaStore {
     const update: SagaData = {
       ...saga.toJSON(),
       destroyed: data.destroyed,
-      hash: data.hash,
       messagesToDispatch: data.messages_to_dispatch,
       processedCausationIds: data.processed_causation_ids,
       revision: data.revision,
@@ -123,7 +119,6 @@ export class SagaStore implements IHermesSagaStore {
     if (saga.revision === 0) {
       const data: SagaData = {
         ...saga.toJSON(),
-        hash: randomString(16),
         processedCausationIds: [causation.id],
         revision: saga.revision + 1,
       };
@@ -137,13 +132,11 @@ export class SagaStore implements IHermesSagaStore {
       id: saga.id,
       name: saga.name,
       context: saga.context,
-      hash: saga.hash,
       revision: saga.revision,
     };
 
     const data: SagaUpdateAttributes = {
       destroyed: saga.destroyed,
-      hash: randomString(16),
       messages_to_dispatch: saga.messagesToDispatch,
       processed_causation_ids: [saga.processedCausationIds, causation.id].flat(),
       revision: saga.revision + 1,
@@ -155,7 +148,6 @@ export class SagaStore implements IHermesSagaStore {
     const update: SagaData = {
       ...saga.toJSON(),
       destroyed: data.destroyed,
-      hash: data.hash,
       messagesToDispatch: data.messages_to_dispatch,
       processedCausationIds: data.processed_causation_ids,
       revision: data.revision,
@@ -194,13 +186,11 @@ export class SagaStore implements IHermesSagaStore {
       id: saga.id,
       name: saga.name,
       context: saga.context,
-      hash: saga.hash,
       revision: saga.revision,
     };
 
     const data: SagaUpdateAttributes = {
       destroyed: saga.destroyed,
-      hash: randomString(16),
       messages_to_dispatch: saga.messagesToDispatch,
       processed_causation_ids: [],
       revision: saga.revision + 1,
@@ -212,7 +202,6 @@ export class SagaStore implements IHermesSagaStore {
     const update: SagaData = {
       ...saga.toJSON(),
       destroyed: data.destroyed,
-      hash: data.hash,
       messagesToDispatch: data.messages_to_dispatch,
       processedCausationIds: data.processed_causation_ids,
       revision: data.revision,
@@ -230,7 +219,6 @@ export class SagaStore implements IHermesSagaStore {
       name: data.name,
       context: data.context,
       destroyed: data.destroyed,
-      hash: data.hash,
       messages_to_dispatch: data.messagesToDispatch,
       processed_causation_ids: data.processedCausationIds,
       revision: data.revision,
@@ -246,7 +234,6 @@ export class SagaStore implements IHermesSagaStore {
       name: attributes.name,
       context: attributes.context,
       destroyed: attributes.destroyed,
-      hash: attributes.hash,
       messagesToDispatch: attributes.messages_to_dispatch,
       processedCausationIds: attributes.processed_causation_ids,
       revision: attributes.revision,

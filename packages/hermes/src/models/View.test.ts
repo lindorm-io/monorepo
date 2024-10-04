@@ -23,7 +23,6 @@ describe("View", () => {
       name: "name",
       context: "default",
       destroyed: false,
-      hash: expect.any(String),
       meta: {},
       processedCausationIds: [],
       revision: 0,

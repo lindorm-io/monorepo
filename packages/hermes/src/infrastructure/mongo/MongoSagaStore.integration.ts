@@ -1,6 +1,5 @@
 import { createMockLogger } from "@lindorm/logger";
 import { IMongoSource, MongoSource } from "@lindorm/mongo";
-import { randomString } from "@lindorm/random";
 import { randomUUID } from "crypto";
 import { Collection } from "mongodb";
 import { TEST_AGGREGATE_IDENTIFIER } from "../../__fixtures__/aggregate";
@@ -49,7 +48,6 @@ describe("MongoSagaStore", () => {
     attributes = {
       ...sagaIdentifier,
       destroyed: false,
-      hash: randomString(16),
       messages_to_dispatch: [new HermesCommand(TEST_HERMES_COMMAND)],
       processed_causation_ids: [randomUUID()],
       revision: 1,
@@ -89,7 +87,6 @@ describe("MongoSagaStore", () => {
 
     await expect(store.findSaga(sagaIdentifier)).resolves.toEqual(
       expect.objectContaining({
-        hash: attributes.hash,
         state: { state: "state" },
       }),
     );
@@ -128,7 +125,6 @@ describe("MongoSagaStore", () => {
 
     await expect(collection.findOne(sagaIdentifier)).resolves.toEqual(
       expect.objectContaining({
-        hash: attributes.hash,
         state: { state: "state" },
       }),
     );
@@ -141,13 +137,11 @@ describe("MongoSagaStore", () => {
       id: attributes.id,
       name: attributes.name,
       context: attributes.context,
-      hash: attributes.hash,
       revision: attributes.revision,
     };
 
     const update: SagaUpdateAttributes = {
       destroyed: false,
-      hash: randomString(16),
       messages_to_dispatch: [],
       processed_causation_ids: [],
       revision: 2,
@@ -158,7 +152,6 @@ describe("MongoSagaStore", () => {
 
     await expect(collection.findOne(sagaIdentifier)).resolves.toEqual(
       expect.objectContaining({
-        hash: update.hash,
         revision: 2,
         state: { updated: true },
       }),

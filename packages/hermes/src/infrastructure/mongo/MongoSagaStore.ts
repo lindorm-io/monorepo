@@ -151,13 +151,11 @@ export class MongoSagaStore extends MongoBase implements ISagaStore {
           id: filter.id,
           name: filter.name,
           context: filter.context,
-          hash: filter.hash,
           revision: filter.revision,
         },
         {
           $set: {
             destroyed: data.destroyed,
-            hash: data.hash,
             messages_to_dispatch: data.messages_to_dispatch,
             processed_causation_ids: data.processed_causation_ids,
             revision: data.revision,

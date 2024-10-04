@@ -2,7 +2,6 @@ import { LindormError } from "@lindorm/errors";
 import { ILogger } from "@lindorm/logger";
 import { MongoSource } from "@lindorm/mongo";
 import { PostgresSource } from "@lindorm/postgres";
-import { randomString } from "@lindorm/random";
 import { RedisSource } from "@lindorm/redis";
 import { ViewStoreType } from "../enums";
 import { IHermesMessage, IHermesViewStore, IView, IViewStore } from "../interfaces";
@@ -108,7 +107,6 @@ export class ViewStore implements IHermesViewStore {
     if (view.revision === 0) {
       const data: ViewData = {
         ...view.toJSON(),
-        hash: randomString(16),
         processedCausationIds: [causation.id],
         revision: view.revision + 1,
       };
@@ -122,13 +120,11 @@ export class ViewStore implements IHermesViewStore {
       id: view.id,
       name: view.name,
       context: view.context,
-      hash: view.hash,
       revision: view.revision,
     };
 
     const attributes: ViewUpdateAttributes = {
       destroyed: view.destroyed,
-      hash: randomString(16),
       meta: view.meta,
       processed_causation_ids: [view.processedCausationIds, causation.id].flat(),
       revision: view.revision + 1,
@@ -140,7 +136,6 @@ export class ViewStore implements IHermesViewStore {
     const update: ViewData = {
       ...view.toJSON(),
       destroyed: attributes.destroyed,
-      hash: attributes.hash,
       meta: attributes.meta,
       processedCausationIds: attributes.processed_causation_ids,
       revision: attributes.revision,
@@ -179,13 +174,11 @@ export class ViewStore implements IHermesViewStore {
       id: view.id,
       name: view.name,
       context: view.context,
-      hash: view.hash,
       revision: view.revision,
     };
 
     const attributes: ViewUpdateAttributes = {
       destroyed: view.destroyed,
-      hash: randomString(16),
       meta: view.meta,
       processed_causation_ids: [],
       revision: view.revision + 1,
@@ -197,7 +190,6 @@ export class ViewStore implements IHermesViewStore {
     const update: ViewData = {
       ...view.toJSON(),
       destroyed: attributes.destroyed,
-      hash: attributes.hash,
       meta: attributes.meta,
       processedCausationIds: attributes.processed_causation_ids,
       revision: attributes.revision,
@@ -252,7 +244,6 @@ export class ViewStore implements IHermesViewStore {
       name: data.name,
       context: data.context,
       destroyed: data.destroyed,
-      hash: data.hash,
       meta: data.meta,
       processed_causation_ids: data.processedCausationIds,
       revision: data.revision,
@@ -268,7 +259,6 @@ export class ViewStore implements IHermesViewStore {
       name: attributes.name,
       context: attributes.context,
       destroyed: attributes.destroyed,
-      hash: attributes.hash,
       meta: attributes.meta,
       processedCausationIds: attributes.processed_causation_ids,
       revision: attributes.revision,

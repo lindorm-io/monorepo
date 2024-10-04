@@ -129,7 +129,6 @@ describe("ViewDomain", () => {
         name: "name",
         context: "default",
         destroyed: true,
-        hash: expect.any(String),
         meta: {
           created: {
             destroyed: false,

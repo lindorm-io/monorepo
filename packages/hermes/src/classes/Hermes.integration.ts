@@ -404,7 +404,6 @@ describe("Hermes", () => {
         name: "test_view_mongo",
         context: "hermes",
         destroyed: false,
-        hash: expect.any(String),
         meta: {
           created: {
             destroyed: false,
@@ -434,7 +433,6 @@ describe("Hermes", () => {
         name: "test_view_postgres",
         context: "hermes",
         destroyed: false,
-        hash: expect.any(String),
         meta: {
           created: {
             destroyed: false,
@@ -464,7 +462,6 @@ describe("Hermes", () => {
         name: "test_view_redis",
         context: "hermes",
         destroyed: false,
-        hash: expect.any(String),
         meta: {
           created: {
             destroyed: false,

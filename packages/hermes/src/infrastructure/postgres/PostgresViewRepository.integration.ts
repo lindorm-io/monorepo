@@ -1,7 +1,5 @@
-import { JsonKit } from "@lindorm/json-kit";
 import { createMockLogger } from "@lindorm/logger";
 import { IPostgresSource, PostgresSource } from "@lindorm/postgres";
-import { randomString } from "@lindorm/random";
 import { randomUUID } from "crypto";
 import { TEST_VIEW_IDENTIFIER } from "../../__fixtures__/view";
 import { IPostgresViewRepository } from "../../interfaces";
@@ -14,34 +12,10 @@ const insertView = async (
   source: IPostgresSource,
   attributes: ViewStoreAttributes,
 ): Promise<void> => {
-  const text = `
-    INSERT INTO ${getViewStoreName(attributes)} (
-      id,
-      name,
-      context,
-      destroyed,
-      hash,
-      meta,
-      processed_causation_ids,
-      revision,
-      state,
-      created_at
-    )
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
-  `;
-  const values = [
-    attributes.id,
-    attributes.name,
-    attributes.context,
-    attributes.destroyed,
-    attributes.hash,
-    JsonKit.stringify(attributes.meta),
-    JSON.stringify(attributes.processed_causation_ids),
-    attributes.revision,
-    JsonKit.stringify(attributes.state),
-    attributes.created_at,
-  ];
-  await source.query(text, values);
+  const queryBuilder = source.queryBuilder<ViewStoreAttributes>(
+    getViewStoreName(attributes),
+  );
+  await source.query(queryBuilder.insert(attributes));
 };
 
 describe("PostgresViewRepository", () => {
@@ -83,7 +57,6 @@ describe("PostgresViewRepository", () => {
       name: identifier.name,
       context: identifier.context,
       destroyed: false,
-      hash: randomString(16),
       meta: {},
       processed_causation_ids: [],
       revision: 1,
@@ -97,7 +70,6 @@ describe("PostgresViewRepository", () => {
       name: identifier.name,
       context: identifier.context,
       destroyed: false,
-      hash: randomString(16),
       meta: {},
       processed_causation_ids: [],
       revision: 2,
@@ -111,7 +83,6 @@ describe("PostgresViewRepository", () => {
       name: identifier.name,
       context: identifier.context,
       destroyed: false,
-      hash: randomString(16),
       meta: {},
       processed_causation_ids: [],
       revision: 3,
@@ -125,7 +96,6 @@ describe("PostgresViewRepository", () => {
       name: identifier.name,
       context: identifier.context,
       destroyed: true,
-      hash: randomString(16),
       meta: {},
       processed_causation_ids: [],
       revision: 4,
