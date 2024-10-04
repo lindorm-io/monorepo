@@ -211,6 +211,15 @@ export class AggregateDomain implements IAggregateDomain {
         x.aggregate.context === command.aggregate.context,
     );
 
+    if (!eventHandlers.length) {
+      this.logger.warn("No event handlers registered for aggregate", {
+        aggregate: command.aggregate,
+        eventHandlers,
+        domainHandlers: eventHandlers,
+      });
+      throw new HandlerNotRegisteredError();
+    }
+
     const aggregate = await this.load(command.aggregate, eventHandlers);
     const lastCausationMatchesCommandId = findLast(aggregate.events, {
       causationId: command.id,

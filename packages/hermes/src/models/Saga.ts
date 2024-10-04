@@ -129,20 +129,6 @@ export class Saga<S extends Dict = Dict> implements ISaga {
 
     const { ...data } = command;
 
-    this.logger.warn(
-      "what",
-      merge<HermesMessageOptions, SagaDispatchOptions>(
-        {
-          aggregate: causation.aggregate,
-          correlationId: causation.correlationId,
-          data,
-          meta: causation.meta,
-          name: snakeCase(command.constructor.name),
-        },
-        options,
-      ),
-    );
-
     this._messagesToDispatch.push(
       new HermesCommand(
         merge<HermesMessageOptions, SagaDispatchOptions>(

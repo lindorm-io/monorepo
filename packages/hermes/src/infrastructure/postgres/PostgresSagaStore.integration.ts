@@ -11,22 +11,12 @@ import { HermesCommand, HermesEvent } from "../../messages";
 import {
   AggregateIdentifier,
   SagaCausationAttributes,
-  SagaClearMessagesToDispatchData,
-  SagaClearProcessedCausationIdsData,
   SagaIdentifier,
   SagaStoreAttributes,
   SagaUpdateData,
   SagaUpdateFilter,
 } from "../../types";
 import { PostgresSagaStore } from "./PostgresSagaStore";
-
-const insertSaga = async (
-  source: IPostgresSource,
-  attributes: SagaStoreAttributes,
-): Promise<void> => {
-  const queryBuilder = source.queryBuilder<SagaStoreAttributes>(SAGA_STORE);
-  await source.query(queryBuilder.insert(attributes));
-};
 
 const insertCausation = async (
   source: IPostgresSource,
@@ -36,12 +26,20 @@ const insertCausation = async (
   await source.query(queryBuilder.insert(attributes));
 };
 
-const findSaga = async (
+const insertSaga = async (
+  source: IPostgresSource,
+  attributes: SagaStoreAttributes,
+): Promise<void> => {
+  const queryBuilder = source.queryBuilder<SagaStoreAttributes>(SAGA_STORE);
+  await source.query(queryBuilder.insert(attributes));
+};
+
+const findCausations = async (
   source: IPostgresSource,
   filter: SagaIdentifier,
-): Promise<Array<SagaStoreAttributes>> => {
-  const queryBuilder = source.queryBuilder<SagaStoreAttributes>(SAGA_STORE);
-  const result = await source.query<SagaStoreAttributes>(
+): Promise<Array<SagaCausationAttributes>> => {
+  const queryBuilder = source.queryBuilder<SagaCausationAttributes>(SAGA_CAUSATION);
+  const result = await source.query<SagaCausationAttributes>(
     queryBuilder.select({
       id: filter.id,
       name: filter.name,
@@ -51,12 +49,12 @@ const findSaga = async (
   return result.rows;
 };
 
-const findCausations = async (
+const findSaga = async (
   source: IPostgresSource,
   filter: SagaIdentifier,
-): Promise<Array<SagaCausationAttributes>> => {
-  const queryBuilder = source.queryBuilder<SagaCausationAttributes>(SAGA_CAUSATION);
-  const result = await source.query<SagaCausationAttributes>(
+): Promise<Array<SagaStoreAttributes>> => {
+  const queryBuilder = source.queryBuilder<SagaStoreAttributes>(SAGA_STORE);
+  const result = await source.query<SagaStoreAttributes>(
     queryBuilder.select({
       id: filter.id,
       name: filter.name,
@@ -107,7 +105,7 @@ describe("PostgresSagaStore", () => {
     await source.disconnect();
   });
 
-  test("should resolve existing causation", async () => {
+  test("should find causation ids", async () => {
     const event = new HermesEvent(TEST_HERMES_COMMAND);
 
     await insertCausation(source, {
@@ -118,81 +116,15 @@ describe("PostgresSagaStore", () => {
       timestamp: event.timestamp,
     });
 
-    await expect(store.causationExists(sagaIdentifier, event)).resolves.toBe(true);
-
-    await expect(
-      store.causationExists(
-        {
-          ...sagaIdentifier,
-          id: randomUUID(),
-        },
-        event,
-      ),
-    ).resolves.toBe(false);
-  });
-
-  test("should clear messages", async () => {
-    await insertSaga(source, attributes);
-
-    const filter: SagaUpdateFilter = {
-      id: attributes.id,
-      name: attributes.name,
-      context: attributes.context,
-      hash: attributes.hash,
-      revision: attributes.revision,
-    };
-
-    const update: SagaClearMessagesToDispatchData = {
-      hash: randomString(16),
-      messages_to_dispatch: [],
-      revision: 2,
-    };
-
-    await expect(store.clearMessagesToDispatch(filter, update)).resolves.toBeUndefined();
-
-    await expect(findSaga(source, attributes)).resolves.toEqual([
-      expect.objectContaining({
-        hash: update.hash,
-        messages_to_dispatch: [],
-        revision: 2,
-      }),
-    ]);
-  });
-
-  test("should clear processed causation ids", async () => {
-    await insertSaga(source, attributes);
-
-    const filter: SagaUpdateFilter = {
-      id: attributes.id,
-      name: attributes.name,
-      context: attributes.context,
-      hash: attributes.hash,
-      revision: attributes.revision,
-    };
-
-    const update: SagaClearProcessedCausationIdsData = {
-      hash: randomString(16),
-      processed_causation_ids: [],
-      revision: 2,
-    };
-
-    await expect(
-      store.clearProcessedCausationIds(filter, update),
-    ).resolves.toBeUndefined();
-
-    await expect(findSaga(source, attributes)).resolves.toEqual([
-      expect.objectContaining({
-        hash: update.hash,
-        processed_causation_ids: [],
-        revision: 2,
-      }),
+    await expect(store.findCausationIds(sagaIdentifier)).resolves.toEqual([
+      event.causationId,
     ]);
   });
 
   test("should find saga", async () => {
     await insertSaga(source, attributes);
 
-    await expect(store.find(sagaIdentifier)).resolves.toEqual(
+    await expect(store.findSaga(sagaIdentifier)).resolves.toEqual(
       expect.objectContaining({
         hash: attributes.hash,
         state: { data: "state" },
@@ -200,24 +132,13 @@ describe("PostgresSagaStore", () => {
     );
   });
 
-  test("should insert saga", async () => {
-    await expect(store.insert(attributes)).resolves.toBeUndefined();
-
-    await expect(findSaga(source, attributes)).resolves.toEqual([
-      expect.objectContaining({
-        hash: attributes.hash,
-        state: { data: "state" },
-      }),
-    ]);
-  });
-
-  test("should insert processed causation ids", async () => {
+  test("should insert causation ids", async () => {
     const one = randomUUID();
     const two = randomUUID();
     const three = randomUUID();
 
     await expect(
-      store.insertProcessedCausationIds(sagaIdentifier, [one, two, three]),
+      store.insertCausationIds(sagaIdentifier, [one, two, three]),
     ).resolves.toBeUndefined();
 
     await expect(
@@ -233,6 +154,17 @@ describe("PostgresSagaStore", () => {
         expect.objectContaining({ causation_id: three }),
       ]),
     );
+  });
+
+  test("should insert saga", async () => {
+    await expect(store.insertSaga(attributes)).resolves.toBeUndefined();
+
+    await expect(findSaga(source, attributes)).resolves.toEqual([
+      expect.objectContaining({
+        hash: attributes.hash,
+        state: { data: "state" },
+      }),
+    ]);
   });
 
   test("should update saga", async () => {
@@ -255,7 +187,7 @@ describe("PostgresSagaStore", () => {
       state: { updated: true },
     };
 
-    await expect(store.update(filter, update)).resolves.toBeUndefined();
+    await expect(store.updateSaga(filter, update)).resolves.toBeUndefined();
 
     await expect(findSaga(source, attributes)).resolves.toEqual([
       expect.objectContaining({

@@ -3,7 +3,6 @@ import { LindormError } from "@lindorm/errors";
 import { ILogger } from "@lindorm/logger";
 import { ClassLike, Dict } from "@lindorm/types";
 import EventEmitter from "events";
-import { MAX_PROCESSED_CAUSATION_IDS_LENGTH } from "../constants/private";
 import {
   ConcurrencyError,
   DomainError,
@@ -199,16 +198,19 @@ export class SagaDomain implements ISagaDomain {
 
     this.logger.debug("Saga loaded", { saga: saga.toJSON() });
 
-    const causationExists = await this.store.causationExists(sagaIdentifier, event);
+    const causations = await this.store.loadCausations(sagaIdentifier);
 
-    this.logger.debug("Causation exists", { exists: causationExists });
+    const causationExists =
+      causations.includes(event.id) || saga.processedCausationIds.includes(event.id);
+
+    this.logger.debug("Causation exists", { causationExists });
 
     try {
-      if (!causationExists && !saga.processedCausationIds.includes(event.id)) {
+      if (!causationExists) {
         saga = await this.handleSaga(saga, event, eventHandler, conditionValidators);
       }
 
-      saga = await this.publishCommands(saga);
+      saga = await this.publishMessages(saga);
       saga = await this.processCausationIds(saga);
 
       this.logger.verbose("Handled event", { event, saga: saga.toJSON() });
@@ -296,14 +298,14 @@ export class SagaDomain implements ISagaDomain {
     }
   }
 
-  private async publishCommands(saga: ISaga): Promise<ISaga> {
+  private async publishMessages(saga: ISaga): Promise<ISaga> {
     if (!saga.messagesToDispatch.length) {
       return saga;
     }
 
     await this.messageBus.publish(saga.messagesToDispatch);
 
-    this.logger.debug("Published commands for saga", {
+    this.logger.debug("Published messages for saga", {
       id: saga.id,
       name: saga.name,
       context: saga.context,
@@ -314,11 +316,11 @@ export class SagaDomain implements ISagaDomain {
       return saga;
     }
 
-    return await this.store.clearMessagesToDispatch(saga);
+    return await this.store.clearMessages(saga);
   }
 
   private async processCausationIds(saga: ISaga): Promise<ISaga> {
-    if (saga.processedCausationIds.length < MAX_PROCESSED_CAUSATION_IDS_LENGTH) {
+    if (!saga.processedCausationIds.length) {
       return saga;
     }
 
@@ -329,9 +331,11 @@ export class SagaDomain implements ISagaDomain {
       processedCausationIds: saga.processedCausationIds,
     });
 
-    await this.store.processCausationIds(saga);
+    if (saga.revision === 0) {
+      return saga;
+    }
 
-    return await this.store.clearProcessedCausationIds(saga);
+    return await this.store.saveCausations(saga);
   }
 
   private emit<S extends Dict = Dict>(saga: ISaga<S>): void {

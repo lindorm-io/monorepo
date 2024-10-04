@@ -32,7 +32,7 @@ describe("Saga", () => {
   test("should destroy", () => {
     expect(() => saga.destroy()).not.toThrow();
 
-    expect(saga.destroyed).toBe(true);
+    expect(saga.destroyed).toEqual(true);
   });
 
   test("should dispatch command", () => {

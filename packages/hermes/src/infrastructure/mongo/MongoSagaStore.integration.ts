@@ -12,8 +12,6 @@ import { HermesCommand, HermesEvent } from "../../messages";
 import {
   AggregateIdentifier,
   SagaCausationAttributes,
-  SagaClearMessagesToDispatchData,
-  SagaClearProcessedCausationIdsData,
   SagaIdentifier,
   SagaStoreAttributes,
   SagaUpdateData,
@@ -67,7 +65,7 @@ describe("MongoSagaStore", () => {
     await source.disconnect();
   });
 
-  test("should resolve existing causation", async () => {
+  test("should find causation ids", async () => {
     const event = new HermesEvent(TEST_HERMES_COMMAND);
 
     const document: SagaCausationAttributes = {
@@ -83,83 +81,15 @@ describe("MongoSagaStore", () => {
       .collection(SAGA_CAUSATION)
       .insertOne(document);
 
-    await expect(store.causationExists(sagaIdentifier, event)).resolves.toBe(true);
-
-    await expect(
-      store.causationExists(
-        {
-          ...sagaIdentifier,
-          id: randomUUID(),
-        },
-        event,
-      ),
-    ).resolves.toBe(false);
-  });
-
-  test("should clear messages", async () => {
-    await collection.insertOne({ ...attributes });
-
-    const filter: SagaUpdateFilter = {
-      id: attributes.id,
-      name: attributes.name,
-      context: attributes.context,
-      hash: attributes.hash,
-      revision: attributes.revision,
-    };
-
-    const update: SagaClearMessagesToDispatchData = {
-      hash: randomString(16),
-      messages_to_dispatch: [],
-      revision: 2,
-    };
-
-    await expect(store.clearMessagesToDispatch(filter, update)).resolves.toBeUndefined();
-
-    await expect(collection.findOne(sagaIdentifier)).resolves.toEqual(
-      expect.objectContaining({
-        hash: update.hash,
-        messages_to_dispatch: [],
-        revision: update.revision,
-      }),
-    );
-  });
-
-  test("should clear processed causation ids", async () => {
-    await collection.insertOne({ ...attributes });
-
-    const filter: SagaUpdateFilter = {
-      id: attributes.id,
-      name: attributes.name,
-      context: attributes.context,
-      hash: attributes.hash,
-      revision: attributes.revision,
-    };
-
-    const update: SagaClearProcessedCausationIdsData = {
-      hash: randomString(16),
-      processed_causation_ids: [],
-      revision: 2,
-    };
-
-    await expect(
-      store.clearProcessedCausationIds(filter, update),
-    ).resolves.toBeUndefined();
-
-    await expect(
-      source.client.db("MongoSagaStore").collection(SAGA_STORE).findOne(sagaIdentifier),
-    ).resolves.toEqual(
-      expect.objectContaining({
-        hash: update.hash,
-        processed_causation_ids: [],
-        revision: update.revision,
-      }),
-    );
+    await expect(store.findCausationIds(sagaIdentifier)).resolves.toEqual([
+      event.causationId,
+    ]);
   });
 
   test("should find saga", async () => {
-    await collection.insertOne({ ...attributes });
+    await collection.insertOne(attributes);
 
-    await expect(store.find(sagaIdentifier)).resolves.toEqual(
+    await expect(store.findSaga(sagaIdentifier)).resolves.toEqual(
       expect.objectContaining({
         hash: attributes.hash,
         state: { state: "state" },
@@ -167,33 +97,26 @@ describe("MongoSagaStore", () => {
     );
   });
 
-  test("should insert saga", async () => {
-    await expect(store.insert(attributes)).resolves.toBeUndefined();
-
-    await expect(collection.findOne(sagaIdentifier)).resolves.toEqual(
-      expect.objectContaining({
-        hash: attributes.hash,
-        state: { state: "state" },
-      }),
-    );
-  });
-
-  test("should insert processed causation ids", async () => {
+  test("should insert causation ids", async () => {
     const one = randomUUID();
     const two = randomUUID();
     const three = randomUUID();
 
     await expect(
-      store.insertProcessedCausationIds(sagaIdentifier, [one, two, three]),
+      store.insertCausationIds(sagaIdentifier, [one, two, three]),
     ).resolves.toBeUndefined();
 
-    const cursor = source.client.db("MongoSagaStore").collection(SAGA_CAUSATION).find({
-      id: sagaIdentifier.id,
-      name: sagaIdentifier.name,
-      context: sagaIdentifier.context,
-    });
-
-    await expect(cursor.toArray()).resolves.toEqual(
+    await expect(
+      source.client
+        .db("MongoSagaStore")
+        .collection(SAGA_CAUSATION)
+        .find({
+          id: sagaIdentifier.id,
+          name: sagaIdentifier.name,
+          context: sagaIdentifier.context,
+        })
+        .toArray(),
+    ).resolves.toEqual(
       expect.arrayContaining([
         expect.objectContaining({ causation_id: one }),
         expect.objectContaining({ causation_id: two }),
@@ -202,8 +125,19 @@ describe("MongoSagaStore", () => {
     );
   });
 
+  test("should insert saga", async () => {
+    await expect(store.insertSaga(attributes)).resolves.toBeUndefined();
+
+    await expect(collection.findOne(sagaIdentifier)).resolves.toEqual(
+      expect.objectContaining({
+        hash: attributes.hash,
+        state: { state: "state" },
+      }),
+    );
+  });
+
   test("should update saga", async () => {
-    await collection.insertOne({ ...attributes });
+    await collection.insertOne(attributes);
 
     const filter: SagaUpdateFilter = {
       id: attributes.id,
@@ -222,7 +156,7 @@ describe("MongoSagaStore", () => {
       state: { updated: true },
     };
 
-    await expect(store.update(filter, update)).resolves.toBeUndefined();
+    await expect(store.updateSaga(filter, update)).resolves.toBeUndefined();
 
     await expect(
       source.client.db("MongoSagaStore").collection(SAGA_STORE).findOne(sagaIdentifier),

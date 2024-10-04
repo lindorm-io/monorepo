@@ -98,26 +98,21 @@ describe("SagaDomain", () => {
     await expect(messageBus.publish(eventDestroy)).resolves.toBeUndefined();
     await sleep(50);
 
-    // await expect(store.load(saga)).resolves.toEqual(
-    //   expect.objectContaining({
-    //     id: aggregate.id,
-    //     name: "name",
-    //     context: "default",
-    //     processedCausationIds: [
-    //       eventCreate.id,
-    //       eventMergeState.id,
-    //       eventSetState.id,
-    //       eventDestroy.id,
-    //     ],
-    //     destroyed: true,
-    //     messagesToDispatch: [],
-    //     revision: 4,
-    //     state: {
-    //       created: true,
-    //       merge: { hermesEveHermesEventData: true },
-    //       set: "state",
-    //     },
-    //   }),
-    // );
+    await expect(store.load(saga)).resolves.toEqual(
+      expect.objectContaining({
+        id: aggregate.id,
+        name: "name",
+        context: "default",
+        processedCausationIds: [eventDestroy.id],
+        destroyed: true,
+        messagesToDispatch: [],
+        revision: 6,
+        state: {
+          created: true,
+          merge: { hermesEventData: true },
+          set: "state",
+        },
+      }),
+    );
   }, 30000);
 });

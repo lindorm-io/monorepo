@@ -30,7 +30,7 @@ import {
   SagaNotCreatedError,
 } from "../errors";
 import { HermesSagaEventHandler } from "../handlers";
-import { IHermesMessage, IHermesMessageBus, ISagaDomain } from "../interfaces";
+import { IHermesMessage, IHermesMessageBus, ISaga, ISagaDomain } from "../interfaces";
 import { HermesCommand, HermesEvent } from "../messages";
 import { Saga } from "../models";
 import { SagaIdentifier } from "../types";
@@ -56,12 +56,42 @@ describe("SagaDomain", () => {
   beforeEach(async () => {
     messageBus = createMockRabbitMessageBus(HermesEvent);
     store = {
-      causationExists: jest.fn(),
-      clearMessagesToDispatch: jest.fn(),
-      clearProcessedCausationIds: jest.fn(),
-      load: jest.fn(),
-      processCausationIds: jest.fn(),
-      save: jest.fn(),
+      clearMessages: jest.fn().mockImplementation(
+        async (saga: ISaga) =>
+          new Saga({
+            ...saga.toJSON(),
+            hash: randomString(16),
+            revision: saga.revision + 1,
+            messagesToDispatch: [],
+            logger,
+          }),
+      ),
+      load: jest
+        .fn()
+        .mockImplementation(
+          async (identifier: SagaIdentifier) => new Saga({ ...identifier, logger }),
+        ),
+      loadCausations: jest.fn().mockResolvedValue([]),
+      save: jest.fn().mockImplementation(
+        async (saga: ISaga, causation: IHermesMessage) =>
+          new Saga({
+            ...saga.toJSON(),
+            hash: randomString(16),
+            revision: saga.revision + 1,
+            processedCausationIds: [...saga.processedCausationIds, causation.id],
+            logger,
+          }),
+      ),
+      saveCausations: jest.fn().mockImplementation(
+        async (saga: ISaga): Promise<ISaga> =>
+          new Saga({
+            ...saga.toJSON(),
+            hash: randomString(16),
+            revision: saga.revision + 1,
+            processedCausationIds: [],
+            logger,
+          }),
+      ),
     };
 
     domain = new SagaDomain({ messageBus, store: store as any, logger });
@@ -69,46 +99,6 @@ describe("SagaDomain", () => {
     for (const handler of eventHandlers) {
       await domain.registerEventHandler(handler);
     }
-
-    store.causationExists.mockResolvedValue(false);
-
-    store.clearMessagesToDispatch.mockImplementation(
-      async (saga: Saga) =>
-        new Saga({
-          ...saga.toJSON(),
-          hash: randomString(16),
-          revision: saga.revision + 1,
-          messagesToDispatch: [],
-          logger,
-        }),
-    );
-
-    store.clearProcessedCausationIds.mockImplementation(
-      async (saga: Saga) =>
-        new Saga({
-          ...saga.toJSON(),
-          hash: randomString(16),
-          revision: saga.revision + 1,
-          processedCausationIds: [],
-          logger,
-        }),
-    );
-
-    store.load.mockImplementation(
-      async (identifier: SagaIdentifier) => new Saga({ ...identifier, logger }),
-    );
-
-    store.processCausationIds.mockResolvedValue(undefined);
-
-    store.save.mockImplementation(
-      async (saga: Saga, causation: IHermesMessage) =>
-        new Saga({
-          ...saga.toJSON(),
-          revision: saga.revision + 1,
-          processedCausationIds: [...saga.processedCausationIds, causation.id],
-          logger,
-        }),
-    );
   });
 
   test("should register event handler", async () => {
@@ -208,7 +198,8 @@ describe("SagaDomain", () => {
     );
 
     expect(messageBus.publish).not.toHaveBeenCalled();
-    expect(store.clearMessagesToDispatch).not.toHaveBeenCalled();
+    expect(store.clearMessages).not.toHaveBeenCalled();
+    expect(store.saveCausations).toHaveBeenCalled();
   });
 
   test("should handle event and dispatch commands", async () => {
@@ -257,10 +248,10 @@ describe("SagaDomain", () => {
       }),
     ]);
 
-    expect(store.clearMessagesToDispatch).toHaveBeenCalled();
+    expect(store.clearMessages).toHaveBeenCalled();
   });
 
-  test("should skip handler when last causation matches event id", async () => {
+  test("should skip handler when saga causations matches event id", async () => {
     const aggregate = { ...TEST_AGGREGATE_IDENTIFIER, id: randomUUID() };
     const event = new HermesEvent({ ...TEST_HERMES_EVENT_MERGE_STATE, aggregate });
 
@@ -281,7 +272,25 @@ describe("SagaDomain", () => {
 
     expect(store.save).not.toHaveBeenCalled();
     expect(messageBus.publish).not.toHaveBeenCalled();
-    expect(store.clearMessagesToDispatch).not.toHaveBeenCalled();
+    expect(store.clearMessages).not.toHaveBeenCalled();
+    expect(store.saveCausations).toHaveBeenCalled();
+  });
+
+  test("should skip handler when loaded causations matches event id", async () => {
+    const aggregate = { ...TEST_AGGREGATE_IDENTIFIER, id: randomUUID() };
+    const event = new HermesEvent({ ...TEST_HERMES_EVENT_MERGE_STATE, aggregate });
+
+    store.loadCausations.mockImplementation(async () => [event.id]);
+
+    await expect(
+      // @ts-expect-error
+      domain.handleEvent(event, TEST_SAGA_IDENTIFIER),
+    ).resolves.toBeUndefined();
+
+    expect(store.save).not.toHaveBeenCalled();
+    expect(messageBus.publish).not.toHaveBeenCalled();
+    expect(store.clearMessages).not.toHaveBeenCalled();
+    expect(store.saveCausations).not.toHaveBeenCalled();
   });
 
   test("should throw on missing handler", async () => {

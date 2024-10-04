@@ -66,7 +66,7 @@ describe("MongoViewStore", () => {
       .collection(VIEW_CAUSATION)
       .insertOne(document);
 
-    await expect(store.causationExists(viewIdentifier, event)).resolves.toBe(true);
+    await expect(store.causationExists(viewIdentifier, event)).resolves.toEqual(true);
 
     await expect(
       store.causationExists(
@@ -76,7 +76,7 @@ describe("MongoViewStore", () => {
         },
         event,
       ),
-    ).resolves.toBe(false);
+    ).resolves.toEqual(false);
   });
 
   test("should clear processed causation ids", async () => {

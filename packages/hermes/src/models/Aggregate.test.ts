@@ -73,9 +73,9 @@ describe("Aggregate", () => {
       ),
     ).resolves.toBeUndefined();
 
-    expect(aggregate.destroyed).toBe(false);
+    expect(aggregate.destroyed).toEqual(false);
     expect(aggregate.events).toEqual([expect.any(HermesEvent)]);
-    expect(aggregate.numberOfLoadedEvents).toBe(0);
+    expect(aggregate.numberOfLoadedEvents).toEqual(0);
     expect(aggregate.state).toEqual({ set: "state" });
   });
 
@@ -84,9 +84,9 @@ describe("Aggregate", () => {
 
     await expect(aggregate.load(event)).resolves.toBeUndefined();
 
-    expect(aggregate.destroyed).toBe(false);
+    expect(aggregate.destroyed).toEqual(false);
     expect(aggregate.events).toEqual([event]);
-    expect(aggregate.numberOfLoadedEvents).toBe(1);
+    expect(aggregate.numberOfLoadedEvents).toEqual(1);
     expect(aggregate.state).toEqual({
       merge: {
         hermesEventData: true,
@@ -110,9 +110,9 @@ describe("Aggregate", () => {
     await expect(aggregate.load(event3)).resolves.toBeUndefined();
     await expect(aggregate.load(event4)).resolves.toBeUndefined();
 
-    expect(aggregate.destroyed).toBe(true);
+    expect(aggregate.destroyed).toEqual(true);
     expect(aggregate.events).toEqual([event1, event2, event3, event4]);
-    expect(aggregate.numberOfLoadedEvents).toBe(4);
+    expect(aggregate.numberOfLoadedEvents).toEqual(4);
     expect(aggregate.state).toEqual({
       merge: {
         hermesEventData: true,

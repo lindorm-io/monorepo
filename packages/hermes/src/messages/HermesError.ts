@@ -1,9 +1,9 @@
 import { IHermesMessage } from "../interfaces";
 import { HermesErrorData, HermesMessageOptions } from "../types";
-import { HermesMessageBase } from "./HermesMessageBase";
+import { HermesMessage } from "./HermesMessage";
 
 export class HermesError
-  extends HermesMessageBase<HermesErrorData>
+  extends HermesMessage<HermesErrorData>
   implements IHermesMessage<HermesErrorData>
 {
   public constructor(

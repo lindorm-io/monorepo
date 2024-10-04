@@ -9,16 +9,16 @@ import { DeepPartial } from "@lindorm/types";
 import { DomainError } from "../../errors";
 import { IHermesMessage } from "../../interfaces";
 import { HermesCommand, HermesError, HermesEvent, HermesTimeout } from "../../messages";
-import { HermesMessageBase } from "../../messages/HermesMessageBase";
+import { HermesMessage } from "../../messages/HermesMessage";
 import { HermesErrorData, HermesMessageOptions } from "../../types";
 
-export class HermesRabbitMessageBus implements IRabbitMessageBus<HermesMessageBase> {
-  private readonly messageBus: IRabbitMessageBus<HermesMessageBase>;
+export class HermesRabbitMessageBus implements IRabbitMessageBus<HermesMessage> {
+  private readonly messageBus: IRabbitMessageBus<HermesMessage>;
 
   public constructor(source: IRabbitSource, logger: ILogger) {
-    source.addMessages([HermesMessageBase]);
+    source.addMessages([HermesMessage]);
 
-    this.messageBus = source.messageBus(HermesMessageBase, {
+    this.messageBus = source.messageBus(HermesMessage, {
       logger,
       create: this.createFn.bind(this),
     });
@@ -26,18 +26,18 @@ export class HermesRabbitMessageBus implements IRabbitMessageBus<HermesMessageBa
 
   // public
 
-  public create(options: HermesMessageOptions | HermesMessageBase): HermesMessageBase {
+  public create(options: HermesMessageOptions | HermesMessage): HermesMessage {
     return this.messageBus.create(options);
   }
 
-  public publish(message: HermesMessageBase | Array<HermesMessageBase>): Promise<void> {
+  public publish(message: HermesMessage | Array<HermesMessage>): Promise<void> {
     return this.messageBus.publish(message);
   }
 
   public subscribe(
     subscription:
-      | IRabbitSubscription<HermesMessageBase>
-      | Array<IRabbitSubscription<HermesMessageBase>>,
+      | IRabbitSubscription<HermesMessage>
+      | Array<IRabbitSubscription<HermesMessage>>,
   ): Promise<void> {
     return this.messageBus.subscribe(subscription);
   }

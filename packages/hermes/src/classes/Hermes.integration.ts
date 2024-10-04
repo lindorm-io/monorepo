@@ -1,4 +1,4 @@
-import { Logger, LogLevel } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger";
 import { IMongoSource, MongoSource } from "@lindorm/mongo";
 import { IPostgresSource, PostgresSource } from "@lindorm/postgres";
 import { IRabbitSource, RabbitSource } from "@lindorm/rabbit";
@@ -43,8 +43,7 @@ export class QueryGreetingRedis {
 }
 
 describe("Hermes", () => {
-  // const logger = createMockLogger(console.log);
-  const logger = new Logger({ level: LogLevel.Error, readable: true });
+  const logger = createMockLogger();
 
   let mongo: IMongoSource;
   let postgres: IPostgresSource;
@@ -88,7 +87,7 @@ describe("Hermes", () => {
       messageBus: { rabbit },
       sagaStore: { mongo },
       viewStore: { mongo, postgres, redis },
-      context: "hermes_integration",
+      context: "hermes",
       dangerouslyRegisterHandlersManually: true,
       logger,
     });
@@ -101,7 +100,7 @@ describe("Hermes", () => {
     await hermes.admin.register.aggregateCommandHandler(
       new HermesAggregateCommandHandler<CreateGreeting, GreetingCreated>({
         commandName: "create_greeting",
-        aggregate: { name: "test_aggregate", context: "hermes_integration" },
+        aggregate: { name: "test_aggregate", context: "hermes" },
         conditions: { created: false },
         schema: z.object({
           create: z.boolean(),
@@ -114,7 +113,7 @@ describe("Hermes", () => {
     await hermes.admin.register.aggregateCommandHandler(
       new HermesAggregateCommandHandler<UpdateGreeting, GreetingUpdated>({
         commandName: "update_greeting",
-        aggregate: { name: "test_aggregate", context: "hermes_integration" },
+        aggregate: { name: "test_aggregate", context: "hermes" },
         conditions: { created: true },
         schema: z.object({
           update: z.boolean(),
@@ -128,7 +127,7 @@ describe("Hermes", () => {
     await hermes.admin.register.aggregateEventHandler(
       new HermesAggregateEventHandler<GreetingCreated>({
         eventName: "greeting_created",
-        aggregate: { name: "test_aggregate", context: "hermes_integration" },
+        aggregate: { name: "test_aggregate", context: "hermes" },
         handler: async (ctx) => {
           ctx.mergeState(ctx.event);
         },
@@ -137,7 +136,7 @@ describe("Hermes", () => {
     await hermes.admin.register.aggregateEventHandler(
       new HermesAggregateEventHandler<GreetingUpdated>({
         eventName: "greeting_updated",
-        aggregate: { name: "test_aggregate", context: "hermes_integration" },
+        aggregate: { name: "test_aggregate", context: "hermes" },
         handler: async (ctx) => {
           ctx.mergeState(ctx.event);
         },
@@ -147,20 +146,20 @@ describe("Hermes", () => {
     await hermes.admin.register.checksumEventHandler(
       new HermesChecksumEventHandler({
         eventName: "greeting_created",
-        aggregate: { name: "test_aggregate", context: "hermes_integration" },
+        aggregate: { name: "test_aggregate", context: "hermes" },
       }),
     );
     await hermes.admin.register.checksumEventHandler(
       new HermesChecksumEventHandler({
         eventName: "greeting_updated",
-        aggregate: { name: "test_aggregate", context: "hermes_integration" },
+        aggregate: { name: "test_aggregate", context: "hermes" },
       }),
     );
 
     hermes.admin.register.queryHandler(
       new HermesQueryHandler<QueryGreetingMongo, unknown>({
         queryName: "query_greeting_mongo",
-        view: { name: "test_view_mongo", context: "hermes_integration" },
+        view: { name: "test_view_mongo", context: "hermes" },
         handler: (ctx) => ctx.repositories.mongo.findById(ctx.query.id),
       }),
     );
@@ -168,7 +167,7 @@ describe("Hermes", () => {
     hermes.admin.register.queryHandler(
       new HermesQueryHandler<QueryGreetingPostgres, unknown>({
         queryName: "query_greeting_postgres",
-        view: { name: "test_view_postgres", context: "hermes_integration" },
+        view: { name: "test_view_postgres", context: "hermes" },
         handler: (ctx) => ctx.repositories.postgres.findById(ctx.query.id),
       }),
     );
@@ -176,7 +175,7 @@ describe("Hermes", () => {
     hermes.admin.register.queryHandler(
       new HermesQueryHandler<QueryGreetingRedis, unknown>({
         queryName: "query_greeting_redis",
-        view: { name: "test_view_redis", context: "hermes_integration" },
+        view: { name: "test_view_redis", context: "hermes" },
         handler: (ctx) => ctx.repositories.redis.findById(ctx.query.id),
       }),
     );
@@ -184,8 +183,8 @@ describe("Hermes", () => {
     await hermes.admin.register.sagaEventHandler(
       new HermesSagaEventHandler<GreetingCreated>({
         eventName: "greeting_created",
-        aggregate: { name: "test_aggregate", context: "hermes_integration" },
-        saga: { name: "test_saga", context: "hermes_integration" },
+        aggregate: { name: "test_aggregate", context: "hermes" },
+        saga: { name: "test_saga", context: "hermes" },
         conditions: { created: false },
         getSagaId: (event) => event.aggregate.id,
         handler: async (ctx) => {
@@ -199,8 +198,8 @@ describe("Hermes", () => {
     await hermes.admin.register.sagaEventHandler(
       new HermesSagaEventHandler<GreetingUpdated>({
         eventName: "greeting_updated",
-        aggregate: { name: "test_aggregate", context: "hermes_integration" },
-        saga: { name: "test_saga", context: "hermes_integration" },
+        aggregate: { name: "test_aggregate", context: "hermes" },
+        saga: { name: "test_saga", context: "hermes" },
         conditions: { created: true },
         getSagaId: (event) => event.aggregate.id,
         handler: async (ctx) => {
@@ -214,9 +213,9 @@ describe("Hermes", () => {
       new HermesViewEventHandler<GreetingCreated>({
         eventName: "greeting_created",
         adapter: { type: ViewStoreType.Mongo },
-        aggregate: { name: "test_aggregate", context: "hermes_integration" },
+        aggregate: { name: "test_aggregate", context: "hermes" },
         conditions: { created: false },
-        view: { name: "test_view_mongo", context: "hermes_integration" },
+        view: { name: "test_view_mongo", context: "hermes" },
         getViewId: (event) => event.aggregate.id,
         handler: async (ctx) => {
           ctx.setState({ created: ctx.event.created });
@@ -227,9 +226,9 @@ describe("Hermes", () => {
       new HermesViewEventHandler<GreetingUpdated>({
         eventName: "greeting_updated",
         adapter: { type: ViewStoreType.Mongo },
-        aggregate: { name: "test_aggregate", context: "hermes_integration" },
+        aggregate: { name: "test_aggregate", context: "hermes" },
         conditions: { created: true },
-        view: { name: "test_view_mongo", context: "hermes_integration" },
+        view: { name: "test_view_mongo", context: "hermes" },
         getViewId: (event) => event.aggregate.id,
         handler: async (ctx) => {
           ctx.mergeState({ updated: ctx.event.updated });
@@ -241,9 +240,9 @@ describe("Hermes", () => {
       new HermesViewEventHandler<GreetingCreated>({
         eventName: "greeting_created",
         adapter: { type: ViewStoreType.Postgres },
-        aggregate: { name: "test_aggregate", context: "hermes_integration" },
+        aggregate: { name: "test_aggregate", context: "hermes" },
         conditions: { created: false },
-        view: { name: "test_view_postgres", context: "hermes_integration" },
+        view: { name: "test_view_postgres", context: "hermes" },
         getViewId: (event) => event.aggregate.id,
         handler: async (ctx) => {
           ctx.setState({ created: ctx.event.created });
@@ -254,9 +253,9 @@ describe("Hermes", () => {
       new HermesViewEventHandler<GreetingUpdated>({
         eventName: "greeting_updated",
         adapter: { type: ViewStoreType.Postgres },
-        aggregate: { name: "test_aggregate", context: "hermes_integration" },
+        aggregate: { name: "test_aggregate", context: "hermes" },
         conditions: { created: true },
-        view: { name: "test_view_postgres", context: "hermes_integration" },
+        view: { name: "test_view_postgres", context: "hermes" },
         getViewId: (event) => event.aggregate.id,
         handler: async (ctx) => {
           ctx.mergeState({ updated: ctx.event.updated });
@@ -268,9 +267,9 @@ describe("Hermes", () => {
       new HermesViewEventHandler<GreetingCreated>({
         eventName: "greeting_created",
         adapter: { type: ViewStoreType.Redis },
-        aggregate: { name: "test_aggregate", context: "hermes_integration" },
+        aggregate: { name: "test_aggregate", context: "hermes" },
         conditions: { created: false },
-        view: { name: "test_view_redis", context: "hermes_integration" },
+        view: { name: "test_view_redis", context: "hermes" },
         getViewId: (event) => event.aggregate.id,
         handler: async (ctx) => {
           ctx.setState({ created: ctx.event.created });
@@ -281,9 +280,9 @@ describe("Hermes", () => {
       new HermesViewEventHandler<GreetingUpdated>({
         eventName: "greeting_updated",
         adapter: { type: ViewStoreType.Redis },
-        aggregate: { name: "test_aggregate", context: "hermes_integration" },
+        aggregate: { name: "test_aggregate", context: "hermes" },
         conditions: { created: true },
-        view: { name: "test_view_redis", context: "hermes_integration" },
+        view: { name: "test_view_redis", context: "hermes" },
         getViewId: (event) => event.aggregate.id,
         handler: async (ctx) => {
           ctx.mergeState({ updated: ctx.event.updated });
@@ -295,17 +294,17 @@ describe("Hermes", () => {
     hermes.admin.register.commandAggregate("update_greeting", "test_aggregate");
     hermes.admin.register.viewAdapter({
       name: "test_view_mongo",
-      context: "hermes_integration",
+      context: "hermes",
       type: ViewStoreType.Mongo,
     });
     hermes.admin.register.viewAdapter({
       name: "test_view_postgres",
-      context: "hermes_integration",
+      context: "hermes",
       type: ViewStoreType.Postgres,
     });
     hermes.admin.register.viewAdapter({
       name: "test_view_redis",
-      context: "hermes_integration",
+      context: "hermes",
       type: ViewStoreType.Redis,
     });
 
@@ -329,9 +328,9 @@ describe("Hermes", () => {
       onEventSpyAll();
       viewChangeCount += 1;
     });
-    hermes.on("view.hermes_integration", onEventSpyContext);
-    hermes.on("view.hermes_integration.test_view_mongo", onEventSpyName);
-    hermes.on(`view.hermes_integration.test_view_mongo.${id}`, onEventSpyId);
+    hermes.on("view.hermes", onEventSpyContext);
+    hermes.on("view.hermes.test_view_mongo", onEventSpyName);
+    hermes.on(`view.hermes.test_view_mongo.${id}`, onEventSpyId);
 
     await hermes.command(new CreateGreeting(true), { aggregate: { id } });
 
@@ -350,7 +349,7 @@ describe("Hermes", () => {
       expect.objectContaining({
         id,
         name: "test_aggregate",
-        context: "hermes_integration",
+        context: "hermes",
         destroyed: false,
         events: [expect.any(HermesEvent), expect.any(HermesEvent)],
         numberOfLoadedEvents: 2,
@@ -365,11 +364,11 @@ describe("Hermes", () => {
       expect.objectContaining({
         id: id,
         name: "test_saga",
-        context: "hermes_integration",
-        processedCausationIds: [expect.any(String), expect.any(String)],
+        context: "hermes",
+        processedCausationIds: [],
         destroyed: false,
         messagesToDispatch: [],
-        revision: 3,
+        revision: 5,
         state: {
           created: true,
           updated: true,
@@ -383,7 +382,7 @@ describe("Hermes", () => {
       expect.objectContaining({
         id,
         name: "test_view_mongo",
-        context: "hermes_integration",
+        context: "hermes",
         destroyed: false,
         hash: expect.any(String),
         meta: {
@@ -413,7 +412,7 @@ describe("Hermes", () => {
       expect.objectContaining({
         id,
         name: "test_view_postgres",
-        context: "hermes_integration",
+        context: "hermes",
         destroyed: false,
         hash: expect.any(String),
         meta: {
@@ -443,7 +442,7 @@ describe("Hermes", () => {
       expect.objectContaining({
         id,
         name: "test_view_redis",
-        context: "hermes_integration",
+        context: "hermes",
         destroyed: false,
         hash: expect.any(String),
         meta: {
