@@ -1,6 +1,5 @@
 import { snakeCase } from "@lindorm/case";
 import { ILogger } from "@lindorm/logger";
-import { randomString } from "@lindorm/random";
 import { DeepPartial, Dict } from "@lindorm/types";
 import merge from "deepmerge";
 import { z } from "zod";
@@ -15,7 +14,6 @@ export class View<S extends Dict = Dict> implements IView<S> {
   public readonly name: string;
   public readonly context: string;
 
-  private readonly _hash: string;
   private readonly _processedCausationIds: Array<string>;
   private readonly _revision: number;
   private _destroyed: boolean;
@@ -32,7 +30,6 @@ export class View<S extends Dict = Dict> implements IView<S> {
     this.context = snakeCase(options.context);
 
     this._destroyed = options.destroyed || false;
-    this._hash = options.hash || randomString(16);
     this._meta = options.meta || {};
     this._processedCausationIds = options.processedCausationIds || [];
     this._revision = options.revision || 0;
@@ -43,10 +40,6 @@ export class View<S extends Dict = Dict> implements IView<S> {
 
   public get destroyed(): boolean {
     return this._destroyed;
-  }
-
-  public get hash(): string {
-    return this._hash;
   }
 
   public get meta(): Record<string, any> {
@@ -73,7 +66,6 @@ export class View<S extends Dict = Dict> implements IView<S> {
       name: this.name,
       context: this.context,
       destroyed: this.destroyed,
-      hash: this.hash,
       meta: this._meta,
       processedCausationIds: this.processedCausationIds,
       revision: this.revision,

@@ -154,13 +154,11 @@ export class MongoViewStore extends MongoBase implements IViewStore {
       const result = await collection.updateOne(
         {
           id: filter.id,
-          hash: filter.hash,
           revision: filter.revision,
         },
         {
           $set: {
             destroyed: data.destroyed,
-            hash: data.hash,
             meta: data.meta,
             processed_causation_ids: data.processed_causation_ids,
             revision: data.revision,

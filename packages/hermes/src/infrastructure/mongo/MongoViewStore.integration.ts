@@ -1,6 +1,5 @@
 import { createMockLogger } from "@lindorm/logger";
 import { IMongoSource, MongoSource } from "@lindorm/mongo";
-import { randomString } from "@lindorm/random";
 import { randomUUID } from "crypto";
 import { Collection } from "mongodb";
 import { TEST_AGGREGATE_IDENTIFIER } from "../../__fixtures__/aggregate";
@@ -50,7 +49,6 @@ describe("MongoViewStore", () => {
     attributes = {
       ...viewIdentifier,
       destroyed: false,
-      hash: randomString(16),
       meta: { data: "state" },
       processed_causation_ids: [randomUUID()],
       revision: 1,
@@ -90,7 +88,6 @@ describe("MongoViewStore", () => {
 
     await expect(store.findView(viewIdentifier)).resolves.toEqual(
       expect.objectContaining({
-        hash: attributes.hash,
         state: { data: "state" },
       }),
     );
@@ -129,7 +126,6 @@ describe("MongoViewStore", () => {
 
     await expect(collection.findOne({ id: viewIdentifier.id })).resolves.toEqual(
       expect.objectContaining({
-        hash: attributes.hash,
         state: { data: "state" },
       }),
     );
@@ -142,13 +138,11 @@ describe("MongoViewStore", () => {
       id: attributes.id,
       name: viewIdentifier.name,
       context: viewIdentifier.context,
-      hash: attributes.hash,
       revision: attributes.revision,
     };
 
     const update: ViewUpdateAttributes = {
       destroyed: false,
-      hash: randomString(16),
       meta: { meta: true },
       processed_causation_ids: [],
       revision: 2,
@@ -159,7 +153,6 @@ describe("MongoViewStore", () => {
 
     await expect(collection.findOne({ id: viewIdentifier.id })).resolves.toEqual(
       expect.objectContaining({
-        hash: update.hash,
         revision: 2,
         meta: { meta: true },
         state: { updated: true },

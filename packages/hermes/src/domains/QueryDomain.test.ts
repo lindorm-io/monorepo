@@ -1,6 +1,5 @@
 import { createMockLogger } from "@lindorm/logger";
 import { createMockMongoSource } from "@lindorm/mongo";
-import { randomString } from "@lindorm/random";
 import { randomUUID } from "crypto";
 import { HermesQueryHandler } from "../handlers";
 import { ViewStoreAttributes } from "../types";
@@ -44,7 +43,6 @@ describe("QueryDomain", () => {
       name: "test_view",
       context: "default",
       destroyed: false,
-      hash: randomString(16),
       meta: {},
       processed_causation_ids: ["processed"],
       revision: 1,

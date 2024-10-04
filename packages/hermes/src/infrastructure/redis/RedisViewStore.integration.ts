@@ -85,7 +85,6 @@ describe("RedisViewStore", () => {
     attributes = {
       ...viewIdentifier,
       destroyed: false,
-      hash: randomString(16),
       meta: { data: "state" },
       processed_causation_ids: [randomUUID()],
       revision: 1,
@@ -120,7 +119,6 @@ describe("RedisViewStore", () => {
 
     await expect(store.findView(viewIdentifier)).resolves.toEqual(
       expect.objectContaining({
-        hash: attributes.hash,
         state: { data: "state" },
       }),
     );
@@ -149,7 +147,6 @@ describe("RedisViewStore", () => {
 
     await expect(findView(source, attributes)).resolves.toEqual(
       expect.objectContaining({
-        hash: attributes.hash,
         meta: { data: "state" },
         state: { data: "state" },
       }),
@@ -163,13 +160,11 @@ describe("RedisViewStore", () => {
       id: attributes.id,
       name: attributes.name,
       context: attributes.context,
-      hash: attributes.hash,
       revision: attributes.revision,
     };
 
     const update: ViewUpdateAttributes = {
       destroyed: false,
-      hash: randomString(16),
       meta: { meta: true },
       processed_causation_ids: [],
       revision: 2,
@@ -180,7 +175,6 @@ describe("RedisViewStore", () => {
 
     await expect(findView(source, attributes)).resolves.toEqual(
       expect.objectContaining({
-        hash: update.hash,
         meta: { meta: true },
         revision: 2,
         state: { updated: true },

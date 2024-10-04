@@ -196,7 +196,6 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
           ${getViewStoreName(filter)}
         SET
           destroyed = ?,
-          hash = ?,
           meta = ?,
           processed_causation_ids = ?,
           revision = ?,
@@ -206,13 +205,11 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
           id = ? AND 
           name = ? AND 
           context = ? AND 
-          hash = ? AND 
           revision = ?
       `;
 
       const values = [
         data.destroyed,
-        data.hash,
         data.meta,
         data.processed_causation_ids,
         data.revision,
@@ -222,7 +219,6 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
         filter.id,
         filter.name,
         filter.context,
-        filter.hash,
         filter.revision,
       ];
 

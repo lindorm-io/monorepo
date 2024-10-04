@@ -5,7 +5,6 @@ export interface SagaStoreAttributes {
   name: string;
   context: string;
   destroyed: boolean;
-  hash: string;
   messages_to_dispatch: Array<IHermesMessage>;
   processed_causation_ids: Array<string>;
   revision: number;

@@ -21,7 +21,6 @@ describe("Saga", () => {
       name: "name",
       context: "default",
       destroyed: false,
-      hash: expect.any(String),
       messagesToDispatch: [],
       processedCausationIds: [],
       revision: 0,

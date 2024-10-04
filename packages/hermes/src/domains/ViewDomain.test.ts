@@ -1,7 +1,6 @@
 import { LindormError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger";
 import { createMockRabbitMessageBus } from "@lindorm/rabbit";
-import { randomString } from "@lindorm/random";
 import { randomUUID } from "crypto";
 import { TEST_AGGREGATE_IDENTIFIER } from "../__fixtures__/aggregate";
 import { TEST_AGGREGATE_EVENT_HANDLER } from "../__fixtures__/aggregate-event-handler";
@@ -61,7 +60,6 @@ describe("ViewDomain", () => {
         async (view: IView, causation: IHermesMessage) =>
           new View({
             ...view.toJSON(),
-            hash: randomString(16),
             revision: view.revision + 1,
             processedCausationIds: [...view.processedCausationIds, causation.id],
             logger,
@@ -71,7 +69,6 @@ describe("ViewDomain", () => {
         async (view: IView): Promise<IView> =>
           new View({
             ...view.toJSON(),
-            hash: randomString(16),
             revision: view.revision + 1,
             processedCausationIds: [],
             logger,

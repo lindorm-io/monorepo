@@ -22,7 +22,7 @@ export const getViewStoreIndexes = (
       unique: false,
     },
     {
-      fields: ["id", "name", "context", "hash", "revision"],
+      fields: ["id", "name", "context", "revision"],
       name: `${storeName}_idx2`,
       unique: false,
     },

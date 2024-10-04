@@ -162,7 +162,6 @@ export class PostgresSagaStore extends PostgresBase implements ISagaStore {
           ${SAGA_STORE}
         SET
           destroyed = ?,
-          hash = ?,
           messages_to_dispatch = ?,
           processed_causation_ids = ?,
           revision = ?,
@@ -172,13 +171,11 @@ export class PostgresSagaStore extends PostgresBase implements ISagaStore {
           id = ? AND 
           name = ? AND 
           context = ? AND 
-          hash = ? AND 
           revision = ?
       `;
 
       const values = [
         data.destroyed,
-        data.hash,
         data.messages_to_dispatch,
         data.processed_causation_ids,
         data.revision,
@@ -188,7 +185,6 @@ export class PostgresSagaStore extends PostgresBase implements ISagaStore {
         filter.id,
         filter.name,
         filter.context,
-        filter.hash,
         filter.revision,
       ];
 

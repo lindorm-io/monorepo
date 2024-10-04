@@ -4,7 +4,6 @@ import { ViewIdentifier } from "../identifiers";
 
 export interface ViewData<S extends Dict = Dict> extends ViewIdentifier {
   destroyed: boolean;
-  hash: string;
   meta: Dict;
   processedCausationIds: Array<string>;
   revision: number;
@@ -13,7 +12,6 @@ export interface ViewData<S extends Dict = Dict> extends ViewIdentifier {
 
 export interface ViewOptions<S extends Dict = Dict> extends ViewIdentifier {
   destroyed?: boolean;
-  hash?: string;
   logger: ILogger;
   meta?: Dict;
   processedCausationIds?: Array<string>;

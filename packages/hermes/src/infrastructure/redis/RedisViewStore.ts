@@ -61,7 +61,6 @@ export class RedisViewStore extends RedisBase implements IViewStore {
         name: data.name,
         context: data.context,
         destroyed: data.destroyed,
-        hash: data.hash,
         meta: data.meta,
         processed_causation_ids: data.processed_causation_ids,
         revision: data.revision,
@@ -143,10 +142,6 @@ export class RedisViewStore extends RedisBase implements IViewStore {
       const key = this.redisKey(filter);
       const result = await this.source.client.get(key);
       const parsed = JsonKit.parse(result);
-
-      if (parsed.hash !== filter.hash) {
-        throw new Error("Hash mismatch");
-      }
 
       if (parsed.revision !== filter.revision) {
         throw new Error("Revision mismatch");

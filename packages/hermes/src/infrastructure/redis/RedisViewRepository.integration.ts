@@ -1,6 +1,5 @@
 import { JsonKit } from "@lindorm/json-kit";
 import { createMockLogger } from "@lindorm/logger";
-import { randomString } from "@lindorm/random";
 import { IRedisSource, RedisSource } from "@lindorm/redis";
 import { randomUUID } from "crypto";
 import { IRedisViewRepository } from "../../interfaces";
@@ -45,7 +44,6 @@ describe("RedisViewRepository", () => {
         context: "view_repository",
         destroyed: false,
         processed_causation_ids: [],
-        hash: randomString(16),
         meta: {},
         revision: 1,
         state: { one: 1, common: "common" },
@@ -58,7 +56,6 @@ describe("RedisViewRepository", () => {
         context: "view_repository",
         destroyed: false,
         processed_causation_ids: [],
-        hash: randomString(16),
         meta: {},
         revision: 2,
         state: { two: 2, common: "common" },
@@ -71,7 +68,6 @@ describe("RedisViewRepository", () => {
         context: "view_repository",
         destroyed: false,
         processed_causation_ids: [],
-        hash: randomString(16),
         meta: {},
         revision: 3,
         state: { three: 3, common: "uncommon" },
@@ -84,7 +80,6 @@ describe("RedisViewRepository", () => {
         context: "view_repository",
         destroyed: true,
         processed_causation_ids: [],
-        hash: randomString(16),
         meta: {},
         revision: 4,
         state: { four: 4, common: "common" },

@@ -13,7 +13,7 @@ export const SAGA_STORE_INDEXES: StoreIndexes<SagaStoreAttributes> = [
     unique: false,
   },
   {
-    fields: ["id", "name", "context", "hash", "revision"],
+    fields: ["id", "name", "context", "revision"],
     name: "saga_store_idx2",
     unique: false,
   },

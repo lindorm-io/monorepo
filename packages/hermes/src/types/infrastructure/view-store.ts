@@ -16,13 +16,11 @@ export type ViewStoreOptions = {
 export type HermesViewStoreOptions = ViewStoreOptions & { logger: ILogger };
 
 export type ViewUpdateFilter = ViewIdentifier & {
-  hash: string;
   revision: number;
 };
 
 export type ViewUpdateAttributes = {
   destroyed: boolean;
-  hash: string;
   meta: Dict;
   processed_causation_ids: Array<string>;
   revision: number;

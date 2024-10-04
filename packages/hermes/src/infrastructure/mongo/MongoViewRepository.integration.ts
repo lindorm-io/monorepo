@@ -1,6 +1,5 @@
 import { createMockLogger } from "@lindorm/logger";
 import { IMongoSource, MongoSource } from "@lindorm/mongo";
-import { randomString } from "@lindorm/random";
 import { randomUUID } from "crypto";
 import { IMongoViewRepository } from "../../interfaces";
 import { ViewIdentifier, ViewStoreAttributes } from "../../types";
@@ -46,7 +45,6 @@ describe("MongoViewRepository", () => {
         context: "view_repository",
         destroyed: false,
         processed_causation_ids: [],
-        hash: randomString(16),
         meta: {},
         revision: 1,
         state: { one: 1, common: "common" },
@@ -59,7 +57,6 @@ describe("MongoViewRepository", () => {
         context: "view_repository",
         destroyed: false,
         processed_causation_ids: [],
-        hash: randomString(16),
         meta: {},
         revision: 2,
         state: { two: 2, common: "common" },
@@ -72,7 +69,6 @@ describe("MongoViewRepository", () => {
         context: "view_repository",
         destroyed: false,
         processed_causation_ids: [],
-        hash: randomString(16),
         meta: {},
         revision: 3,
         state: { three: 3, common: "uncommon" },
@@ -85,7 +81,6 @@ describe("MongoViewRepository", () => {
         context: "view_repository",
         destroyed: true,
         processed_causation_ids: [],
-        hash: randomString(16),
         meta: {},
         revision: 4,
         state: { four: 4, common: "common" },

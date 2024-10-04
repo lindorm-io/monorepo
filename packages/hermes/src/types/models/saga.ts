@@ -5,7 +5,6 @@ import { AggregateIdentifier, SagaIdentifier } from "../identifiers";
 
 export interface SagaData<S extends Dict = Dict> extends SagaIdentifier {
   destroyed: boolean;
-  hash: string;
   messagesToDispatch: Array<IHermesMessage>;
   processedCausationIds: Array<string>;
   revision: number;
@@ -14,7 +13,6 @@ export interface SagaData<S extends Dict = Dict> extends SagaIdentifier {
 
 export interface SagaOptions<S extends Dict = Dict> extends SagaIdentifier {
   destroyed?: boolean;
-  hash?: string;
   logger: ILogger;
   messagesToDispatch?: Array<IHermesMessage>;
   processedCausationIds?: Array<string>;

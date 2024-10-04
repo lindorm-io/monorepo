@@ -1,6 +1,5 @@
 import { createMockLogger } from "@lindorm/logger";
 import { IPostgresSource, PostgresSource } from "@lindorm/postgres";
-import { randomString } from "@lindorm/random";
 import { randomUUID } from "crypto";
 import { TEST_AGGREGATE_IDENTIFIER } from "../../__fixtures__/aggregate";
 import { TEST_HERMES_COMMAND } from "../../__fixtures__/hermes-command";
@@ -91,7 +90,6 @@ describe("PostgresSagaStore", () => {
     attributes = {
       ...sagaIdentifier,
       destroyed: false,
-      hash: randomString(16),
       messages_to_dispatch: [new HermesCommand(TEST_HERMES_COMMAND)],
       processed_causation_ids: [randomUUID()],
       revision: 1,
@@ -126,7 +124,6 @@ describe("PostgresSagaStore", () => {
 
     await expect(store.findSaga(sagaIdentifier)).resolves.toEqual(
       expect.objectContaining({
-        hash: attributes.hash,
         state: { data: "state" },
       }),
     );
@@ -161,7 +158,6 @@ describe("PostgresSagaStore", () => {
 
     await expect(findSaga(source, attributes)).resolves.toEqual([
       expect.objectContaining({
-        hash: attributes.hash,
         state: { data: "state" },
       }),
     ]);
@@ -174,13 +170,11 @@ describe("PostgresSagaStore", () => {
       id: attributes.id,
       name: attributes.name,
       context: attributes.context,
-      hash: attributes.hash,
       revision: attributes.revision,
     };
 
     const update: SagaUpdateAttributes = {
       destroyed: false,
-      hash: randomString(16),
       messages_to_dispatch: [],
       processed_causation_ids: [],
       revision: 2,
@@ -191,7 +185,6 @@ describe("PostgresSagaStore", () => {
 
     await expect(findSaga(source, attributes)).resolves.toEqual([
       expect.objectContaining({
-        hash: update.hash,
         revision: 2,
         state: { updated: true },
       }),
