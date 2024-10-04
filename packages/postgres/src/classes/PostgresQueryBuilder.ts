@@ -1,8 +1,13 @@
 import { isArray, isNumber, isObject, isString } from "@lindorm/is";
-import { DeepPartial, Dict } from "@lindorm/types";
+import { Dict } from "@lindorm/types";
 import { QueryConfig } from "pg";
 import { IPostgresQueryBuilder } from "../interfaces";
-import { InsertOptions, PostgresQueryBuilderOptions, SelectOptions } from "../types";
+import {
+  InsertOptions,
+  PostgresQueryBuilderOptions,
+  SelectOptions,
+  UpdateOptions,
+} from "../types";
 
 export class PostgresQueryBuilder<T extends Dict> implements IPostgresQueryBuilder<T> {
   private readonly table: string;
@@ -14,15 +19,15 @@ export class PostgresQueryBuilder<T extends Dict> implements IPostgresQueryBuild
 
   // public
 
-  public insert(attribute: T, options?: InsertOptions<T>): QueryConfig {
-    return this.handleInsert([attribute], options);
+  public insert(attributes: T, options?: InsertOptions<T>): QueryConfig {
+    return this.handleInsert([attributes], options);
   }
 
-  public insertMany(attributes: Array<T>, options?: InsertOptions<T>): QueryConfig {
-    return this.handleInsert(attributes, options);
+  public insertMany(array: Array<T>, options?: InsertOptions<T>): QueryConfig {
+    return this.handleInsert(array, options);
   }
 
-  public select(criteria: DeepPartial<T>, options: SelectOptions<T> = {}): QueryConfig {
+  public select(criteria: Partial<T>, options: SelectOptions<T> = {}): QueryConfig {
     let text = "SELECT ";
 
     const columns = options.columns ?? "*";
@@ -89,6 +94,36 @@ export class PostgresQueryBuilder<T extends Dict> implements IPostgresQueryBuild
     return { text, values };
   }
 
+  public update(
+    criteria: Partial<T>,
+    attributes: Partial<T>,
+    options: UpdateOptions<T> = {},
+  ): QueryConfig {
+    const whereKeys = Object.keys(criteria);
+    const setKeys = Object.keys(attributes);
+    const values = [];
+
+    let text = "UPDATE " + this.table + " SET ";
+
+    for (const key of setKeys) {
+      text += key + " = ?, ";
+      values.push(attributes[key]);
+    }
+
+    text = text.slice(0, -2) + " WHERE ";
+
+    for (const key of whereKeys) {
+      text += key + " = ? AND ";
+      values.push(criteria[key]);
+    }
+
+    text = text.slice(0, -5);
+
+    text = this.handleReturning(text, options.returning);
+
+    return { text, values };
+  }
+
   // private
 
   private handleInsert(
@@ -124,24 +159,28 @@ export class PostgresQueryBuilder<T extends Dict> implements IPostgresQueryBuild
 
     text = text.slice(0, -1);
 
-    if (options.returning) {
-      text += " RETURNING ";
-
-      if (isString(options.returning)) {
-        text += options.returning + ",";
-      } else if (isArray(options.returning)) {
-        for (const item of options.returning) {
-          if (!isString(item)) {
-            throw new TypeError("Returns must be an array of strings");
-          }
-          text += item + ",";
-        }
-      }
-
-      text = text.slice(0, -1);
-    }
+    text = this.handleReturning(text, options.returning);
 
     return { text, values };
+  }
+
+  private handleReturning(text: string, returning?: "*" | Array<keyof T>): string {
+    if (!returning) return text;
+
+    text += " RETURNING ";
+
+    if (isString(returning)) {
+      text += returning + ", ";
+    } else if (isArray(returning)) {
+      for (const item of returning) {
+        if (!isString(item)) {
+          throw new TypeError("Returns must be an array of strings");
+        }
+        text += item + ", ";
+      }
+    }
+
+    return text.slice(0, -2);
   }
 
   private validateTableName(table: string): void {

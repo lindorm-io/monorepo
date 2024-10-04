@@ -16,3 +16,7 @@ export type SelectOptions<T extends Dict> = {
   limit?: number;
   offset?: number;
 };
+
+export type UpdateOptions<T extends Dict> = {
+  returning?: "*" | Array<keyof T>;
+};
