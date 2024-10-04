@@ -191,38 +191,14 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
       await this.promise();
       await this.initialiseView(filter);
 
-      const text = `
-        UPDATE
-          ${getViewStoreName(filter)}
-        SET
-          destroyed = ?,
-          meta = ?,
-          processed_causation_ids = ?,
-          revision = ?,
-          state = ?,
-          updated_at = ?
-        WHERE
-          id = ? AND 
-          name = ? AND 
-          context = ? AND 
-          revision = ?
-      `;
+      const qb = this.queryBuilder(filter);
 
-      const values = [
-        data.destroyed,
-        data.meta,
-        data.processed_causation_ids,
-        data.revision,
-        data.state,
-        new Date(),
-
-        filter.id,
-        filter.name,
-        filter.context,
-        filter.revision,
-      ];
-
-      await this.source.query(text, values);
+      await this.source.query(
+        qb.update(filter, {
+          ...data,
+          updated_at: new Date(),
+        }),
+      );
 
       this.logger.debug("Updated view", { filter, data });
     } catch (err: any) {
