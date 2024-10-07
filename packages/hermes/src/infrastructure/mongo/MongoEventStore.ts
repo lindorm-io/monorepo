@@ -90,9 +90,9 @@ export class MongoEventStore extends MongoBase implements IEventStore {
       const collection = await this.eventCollection();
 
       const cursor = collection.find(
-        { timestamp: { $gte: from } },
+        { created_at: { $gte: from } },
         {
-          sort: { timestamp: 1 },
+          sort: { created_at: 1 },
           limit,
         },
       );

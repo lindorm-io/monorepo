@@ -75,8 +75,8 @@ export class PostgresEventStore extends PostgresBase implements IEventStore {
       const text = `
         SELECT *
           FROM ${EVENT_STORE}
-        WHERE timestamp >= ?
-          ORDER BY timestamp ASC
+        WHERE created_at >= ?
+          ORDER BY created_at ASC
           LIMIT ?`;
 
       const values = [from, limit];

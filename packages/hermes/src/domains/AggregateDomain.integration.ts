@@ -199,7 +199,7 @@ describe("AggregateDomain", () => {
       key_type: "oct",
       private_key: expect.any(String),
       public_key: expect.any(String),
-      timestamp: expect.any(Date),
+      created_at: expect.any(Date),
     });
 
     await expect(eventStore.find(aggregate)).resolves.toEqual([

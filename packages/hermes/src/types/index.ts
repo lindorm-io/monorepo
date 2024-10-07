@@ -8,4 +8,5 @@ export * from "./event-emitter";
 export * from "./hermes";
 export * from "./identifiers";
 export * from "./messages";
+export * from "./middleware";
 export * from "./scanner";
