@@ -43,6 +43,7 @@ import { HermesCommand } from "../messages";
 import { HermesMessageSchema } from "../schemas";
 import {
   AggregateIdentifier,
+  CloneHermesOptions,
   EventEmitterListener,
   HandlerIdentifier,
   HermesAdmin,
@@ -52,6 +53,7 @@ import {
   HermesOptions,
   ViewEventHandlerAdapter,
 } from "../types";
+import { FromClone } from "../types/private";
 import { extractDataTransferObject } from "../utils/private";
 import { HermesScanner } from "./private/HermesScanner";
 
@@ -82,101 +84,131 @@ export class Hermes<C extends ClassLike = ClassLike, Q extends ClassLike = Class
 
   private _status: HermesStatus;
 
-  public constructor(options: HermesOptions) {
-    this.options = {
-      checksumStore: options.checksumStore ?? {},
-      context: options.context ?? "default",
-      dangerouslyRegisterHandlersManually:
-        options.dangerouslyRegisterHandlersManually === true,
-      directories: {
-        aggregates: join(__dirname, "aggregates"),
-        queries: join(__dirname, "queries"),
-        sagas: join(__dirname, "sagas"),
-        views: join(__dirname, "views"),
-        ...(options.directories ?? {}),
-      },
-      encryptionStore: options.encryptionStore ?? {},
-      eventStore: options.eventStore ?? {},
-      fileFilter: {
-        include: [/.*/],
-        exclude: [],
-        ...(options.fileFilter ?? {}),
-      },
-      messageBus: options.messageBus ?? {},
-      sagaStore: options.sagaStore ?? {},
-      scanner: {
-        deniedDirectories: [],
-        deniedExtensions: [],
-        deniedFilenames: [],
-        deniedTypes: [/^spec$/, /^test$/],
-        ...(options.scanner ?? {}),
-      },
-      viewStore: options.viewStore ?? {},
-    };
-
-    this._status = HermesStatus.Created;
+  public constructor(options: HermesOptions);
+  public constructor(options: FromClone);
+  public constructor(options: HermesOptions | FromClone) {
     this.logger = options.logger.child(["Hermes"]);
-    this.adapters = [];
-    this.scanner = new HermesScanner(this.options, this.logger);
 
-    // infrastructure
+    if ("_mode" in options && options._mode === "from_clone") {
+      const opts = options as FromClone;
 
-    this.checksumStore = new ChecksumStore({
-      ...this.options.checksumStore,
-      logger: this.logger,
-    });
-    this.encryptionStore = new EncryptionStore({
-      ...this.options.encryptionStore,
-      logger: this.logger,
-    });
-    this.eventStore = new EventStore({
-      ...this.options.eventStore,
-      logger: this.logger,
-    });
-    this.messageBus = new MessageBus({
-      ...this.options.messageBus,
-      logger: this.logger,
-    });
-    this.sagaStore = new SagaStore({
-      ...this.options.sagaStore,
-      logger: this.logger,
-    });
-    this.viewStore = new ViewStore({
-      ...this.options.viewStore,
-      logger: this.logger,
-    });
+      this.aggregateDomain = opts.aggregateDomain;
+      this.checksumDomain = opts.checksumDomain;
+      this.errorDomain = opts.errorDomain;
+      this.queryDomain = opts.queryDomain;
+      this.sagaDomain = opts.sagaDomain;
+      this.viewDomain = opts.viewDomain;
 
-    // domains
+      this.checksumStore = opts.checksumStore;
+      this.encryptionStore = opts.encryptionStore;
+      this.eventStore = opts.eventStore;
+      this.messageBus = opts.messageBus;
+      this.sagaStore = opts.sagaStore;
+      this.viewStore = opts.viewStore;
 
-    this.aggregateDomain = new AggregateDomain({
-      messageBus: this.messageBus,
-      encryptionStore: this.encryptionStore,
-      eventStore: this.eventStore,
-      logger: this.logger,
-    });
-    this.checksumDomain = new ChecksumDomain({
-      messageBus: this.messageBus,
-      store: this.checksumStore,
-      logger: this.logger,
-    });
-    this.errorDomain = new ErrorDomain({
-      messageBus: this.messageBus,
-      logger: this.logger,
-    });
-    this.queryDomain = new QueryDomain({
-      ...this.options.viewStore,
-      logger: this.logger,
-    });
-    this.sagaDomain = new SagaDomain({
-      messageBus: this.messageBus,
-      store: this.sagaStore,
-      logger: this.logger,
-    });
-    this.viewDomain = new ViewDomain({
-      messageBus: this.messageBus,
-      store: this.viewStore,
-      logger: this.logger,
-    });
+      this.scanner = opts.scanner;
+      this.options = opts.options;
+      this.adapters = opts.adapters;
+
+      this._status = opts.status;
+    } else {
+      const opts = options as HermesOptions;
+
+      this.options = {
+        checksumStore: opts.checksumStore ?? {},
+        context: opts.context ?? "default",
+        dangerouslyRegisterHandlersManually:
+          opts.dangerouslyRegisterHandlersManually === true,
+        directories: {
+          aggregates: join(__dirname, "aggregates"),
+          queries: join(__dirname, "queries"),
+          sagas: join(__dirname, "sagas"),
+          views: join(__dirname, "views"),
+          ...(opts.directories ?? {}),
+        },
+        encryptionStore: opts.encryptionStore ?? {},
+        eventStore: opts.eventStore ?? {},
+        fileFilter: {
+          include: [/.*/],
+          exclude: [],
+          ...(opts.fileFilter ?? {}),
+        },
+        messageBus: opts.messageBus ?? {},
+        sagaStore: opts.sagaStore ?? {},
+        scanner: {
+          deniedDirectories: [],
+          deniedExtensions: [],
+          deniedFilenames: [],
+          deniedTypes: [/^spec$/, /^test$/],
+          ...(opts.scanner ?? {}),
+        },
+        viewStore: opts.viewStore ?? {},
+      };
+
+      this._status = HermesStatus.Created;
+
+      this.adapters = [];
+      this.scanner = new HermesScanner(this.options, this.logger);
+
+      // infrastructure
+
+      this.checksumStore = new ChecksumStore({
+        ...this.options.checksumStore,
+        logger: this.logger,
+      });
+      this.encryptionStore = new EncryptionStore({
+        ...this.options.encryptionStore,
+        logger: this.logger,
+      });
+      this.eventStore = new EventStore({
+        ...this.options.eventStore,
+        logger: this.logger,
+      });
+      this.messageBus = new MessageBus({
+        ...this.options.messageBus,
+        logger: this.logger,
+      });
+      this.sagaStore = new SagaStore({
+        ...this.options.sagaStore,
+        logger: this.logger,
+      });
+      this.viewStore = new ViewStore({
+        ...this.options.viewStore,
+        logger: this.logger,
+      });
+
+      // domains
+
+      this.aggregateDomain = new AggregateDomain({
+        messageBus: this.messageBus,
+        encryptionStore: this.encryptionStore,
+        eventStore: this.eventStore,
+        logger: this.logger,
+      });
+      this.checksumDomain = new ChecksumDomain({
+        messageBus: this.messageBus,
+        store: this.checksumStore,
+        logger: this.logger,
+      });
+      this.errorDomain = new ErrorDomain({
+        messageBus: this.messageBus,
+        logger: this.logger,
+      });
+      this.queryDomain = new QueryDomain({
+        ...this.options.viewStore,
+        logger: this.logger,
+      });
+      this.sagaDomain = new SagaDomain({
+        messageBus: this.messageBus,
+        store: this.sagaStore,
+        logger: this.logger,
+      });
+      this.viewDomain = new ViewDomain({
+        messageBus: this.messageBus,
+        store: this.viewStore,
+        logger: this.logger,
+      });
+    }
   }
 
   // public
@@ -210,6 +242,29 @@ export class Hermes<C extends ClassLike = ClassLike, Q extends ClassLike = Class
 
   public get status(): HermesStatus {
     return this._status;
+  }
+
+  public clone(options: CloneHermesOptions = {}): IHermes<C, Q> {
+    return new Hermes<C, Q>({
+      _mode: "from_clone",
+      adapters: this.adapters,
+      aggregateDomain: this.aggregateDomain,
+      checksumDomain: this.checksumDomain,
+      checksumStore: this.checksumStore,
+      encryptionStore: this.encryptionStore,
+      errorDomain: this.errorDomain,
+      eventStore: this.eventStore,
+      logger: options.logger ?? this.logger,
+      messageBus: this.messageBus,
+      options: this.options,
+      queryDomain: this.queryDomain,
+      sagaDomain: this.sagaDomain,
+      sagaStore: this.sagaStore,
+      scanner: this.scanner,
+      status: this.status,
+      viewDomain: this.viewDomain,
+      viewStore: this.viewStore,
+    });
   }
 
   public async command<M extends Dict = Dict>(
@@ -251,6 +306,8 @@ export class Hermes<C extends ClassLike = ClassLike, Q extends ClassLike = Class
         },
       });
     }
+
+    this.logger.verbose("Publishing command", { command: generated });
 
     await this.messageBus.publish(generated);
 

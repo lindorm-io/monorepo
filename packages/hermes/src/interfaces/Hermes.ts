@@ -2,6 +2,7 @@ import { ClassLike, Dict } from "@lindorm/types";
 import { HermesStatus } from "../enums";
 import {
   AggregateIdentifier,
+  CloneHermesOptions,
   EventEmitterListener,
   HermesAdmin,
   HermesCommandOptions,
@@ -15,6 +16,7 @@ export interface IHermes<
   status: HermesStatus;
 
   on<D extends Dict = Dict>(eventName: string, listener: EventEmitterListener<D>): void;
+  clone(options?: CloneHermesOptions): IHermes<C, Q>;
   command<M extends Dict = Dict>(
     command: C,
     options: HermesCommandOptions<M>,

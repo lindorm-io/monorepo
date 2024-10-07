@@ -106,7 +106,7 @@ describe("ChecksumDomain", () => {
         context: "default",
         checksum: expect.any(String),
         event_id: eventCreate.id,
-        timestamp: expect.any(Date),
+        created_at: expect.any(Date),
       }),
       expect.objectContaining({
         id: aggregate.id,
@@ -114,7 +114,7 @@ describe("ChecksumDomain", () => {
         context: "default",
         checksum: expect.any(String),
         event_id: eventMergeState.id,
-        timestamp: expect.any(Date),
+        created_at: expect.any(Date),
       }),
       expect.objectContaining({
         id: aggregate.id,
@@ -122,7 +122,7 @@ describe("ChecksumDomain", () => {
         context: "default",
         checksum: expect.any(String),
         event_id: eventSetState.id,
-        timestamp: expect.any(Date),
+        created_at: expect.any(Date),
       }),
       expect.objectContaining({
         id: aggregate.id,
@@ -130,7 +130,7 @@ describe("ChecksumDomain", () => {
         context: "default",
         checksum: expect.any(String),
         event_id: eventDestroy.id,
-        timestamp: expect.any(Date),
+        created_at: expect.any(Date),
       }),
     ]);
   });

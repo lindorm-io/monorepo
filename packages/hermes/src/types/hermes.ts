@@ -24,6 +24,10 @@ import {
 } from "./infrastructure";
 import { MessageBusOptions } from "./infrastructure/message-bus";
 
+export type CloneHermesOptions = {
+  logger?: ILogger;
+};
+
 export type HermesDirectories = {
   aggregates: string;
   queries: string;
