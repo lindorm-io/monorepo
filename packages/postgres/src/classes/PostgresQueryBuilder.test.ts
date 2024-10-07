@@ -50,7 +50,7 @@ describe("PostgresQueryBuilder", () => {
           },
         ),
       ).toEqual({
-        text: "INSERT INTO my_table_name (one,two,three,four,five,six,seven) VALUES (?,?,?,?,?,?,?) RETURNING five, six",
+        text: 'INSERT INTO "my_table_name" ("one", "two", "three", "four", "five", "six", "seven") VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING "five", "six"',
         values: [
           "General",
           2,
@@ -86,12 +86,10 @@ describe("PostgresQueryBuilder", () => {
               seven: new Date(),
             },
           ],
-          {
-            returning: "*",
-          },
+          { returning: true },
         ),
       ).toEqual({
-        text: "INSERT INTO my_table_name (one,two,three,four,five,six,seven) VALUES (?,?,?,?,?,?,?),(?,?,?,?,?,?,?) RETURNING *",
+        text: 'INSERT INTO "my_table_name" ("one", "two", "three", "four", "five", "six", "seven") VALUES (?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?) RETURNING *',
         values: [
           "General",
           2,
@@ -148,16 +146,17 @@ describe("PostgresQueryBuilder", () => {
   describe("select", () => {
     test("should create a select query", () => {
       expect(queryBuilder.select({ one: "General" })).toEqual({
-        text: 'SELECT * FROM my_table_name WHERE "one" = ?',
+        text: 'SELECT * FROM "my_table_name" WHERE "one" = ?',
         values: ["General"],
       });
     });
 
-    test("should create a select query with options", () => {
+    test("should create a select query with all options", () => {
       expect(
         queryBuilder.select(
           { one: "General", two: 15 },
           {
+            distinct: true,
             columns: ["one", "two"],
             limit: 10,
             offset: 5,
@@ -168,8 +167,8 @@ describe("PostgresQueryBuilder", () => {
           },
         ),
       ).toEqual({
-        text: 'SELECT "one", "two" FROM my_table_name WHERE "one" = ? AND "two" = ? ORDER BY "one" ASC, "two" DESC LIMIT 10 OFFSET 5',
-        values: ["General", 15],
+        text: 'SELECT DISTINCT "one", "two" FROM "my_table_name" WHERE "one" = ? AND "two" = ? ORDER BY "one" ASC, "two" DESC LIMIT ? OFFSET ?',
+        values: ["General", 15, 10, 5],
       });
     });
   });
@@ -177,7 +176,7 @@ describe("PostgresQueryBuilder", () => {
   describe("update", () => {
     test("should create an update query", () => {
       expect(queryBuilder.update({ one: "General" }, { two: 15 })).toEqual({
-        text: "UPDATE my_table_name SET two = ? WHERE one = ?",
+        text: 'UPDATE "my_table_name" SET "two" = ? WHERE "one" = ?',
         values: [15, "General"],
       });
     });
@@ -190,8 +189,23 @@ describe("PostgresQueryBuilder", () => {
           { returning: ["one", "two"] },
         ),
       ).toEqual({
-        text: "UPDATE my_table_name SET two = ? WHERE one = ? AND two = ? RETURNING one, two",
+        text: 'UPDATE "my_table_name" SET "two" = ? WHERE "one" = ? AND "two" = ? RETURNING "one", "two"',
         values: [15, "General", 15],
+      });
+    });
+  });
+
+  describe("upsert", () => {
+    test("should create an upsert query", () => {
+      expect(
+        queryBuilder.upsert(
+          { one: "General" },
+          { two: 15, three: true },
+          { returning: ["one", "two"] },
+        ),
+      ).toEqual({
+        text: 'INSERT INTO "my_table_name" ("two", "three") VALUES (?, ?) ON CONFLICT ("one") DO UPDATE SET "two" = EXCLUDED."two", "three" = EXCLUDED."three" RETURNING "one", "two"',
+        values: [15, true],
       });
     });
   });

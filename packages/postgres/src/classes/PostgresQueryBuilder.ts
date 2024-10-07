@@ -1,4 +1,3 @@
-import { isArray, isNumber, isObject, isString } from "@lindorm/is";
 import { Dict } from "@lindorm/types";
 import { QueryConfig } from "pg";
 import { IPostgresQueryBuilder } from "../interfaces";
@@ -8,16 +7,24 @@ import {
   SelectOptions,
   UpdateOptions,
 } from "../types";
+import {
+  handleOrdering,
+  handlePagination,
+  handleSelectColumns,
+  handleWhere,
+  quotation,
+  validateInsertAttributes,
+  validateTableName,
+} from "../utils/private";
+import { handleReturning } from "../utils/private/handle-returning";
 
 export class PostgresQueryBuilder<T extends Dict> implements IPostgresQueryBuilder<T> {
   private readonly table: string;
 
   public constructor(options: PostgresQueryBuilderOptions) {
-    this.validateTableName(options.table);
-    this.table = options.table;
+    validateTableName(options.table);
+    this.table = quotation(options.table);
   }
-
-  // public
 
   public insert(attributes: T, options?: InsertOptions<T>): QueryConfig {
     return this.handleInsert([attributes], options);
@@ -29,67 +36,29 @@ export class PostgresQueryBuilder<T extends Dict> implements IPostgresQueryBuild
 
   public select(criteria: Partial<T>, options: SelectOptions<T> = {}): QueryConfig {
     let text = "SELECT ";
-
-    const columns = options.columns ?? "*";
     const values: Array<any> = [];
 
-    if (isString(columns)) {
-      text += columns + ", ";
-    } else if (isArray(columns)) {
-      for (const key of columns) {
-        if (!isString(key)) {
-          throw new TypeError("Columns must be an array of strings");
-        }
-
-        text += '"' + key + '", ';
-      }
-    } else {
-      throw new TypeError("Columns must be * or an array of strings");
+    if (options.distinct) {
+      text += "DISTINCT ";
     }
 
-    text = text.slice(0, -2) + " FROM " + this.table + " WHERE ";
+    const select = handleSelectColumns(options);
+    text += select.text;
+    values.push(...select.values);
 
-    for (const [key, value] of Object.entries(criteria)) {
-      if (!isString(key)) {
-        throw new TypeError("Criteria key must be a string");
-      }
+    text += " FROM " + this.table;
 
-      text += '"' + key + '" = ? AND ';
+    const where = handleWhere<T>(criteria);
+    text += where.text;
+    values.push(...where.values);
 
-      values.push(value);
-    }
+    const ordering = handleOrdering(options);
+    text += ordering.text;
+    values.push(...ordering.values);
 
-    text = text.slice(0, -5);
-
-    if (options.order) {
-      text += " ORDER BY ";
-
-      for (const [key, value] of Object.entries(options.order)) {
-        if (!isString(key)) {
-          throw new TypeError("Order key must be a string");
-        }
-
-        text += '"' + key + '" ' + value + ", ";
-      }
-
-      text = text.slice(0, -2);
-    }
-
-    if (options.limit) {
-      if (!isNumber(options.limit)) {
-        throw new TypeError("Limit must be a number");
-      }
-
-      text += " LIMIT " + options.limit;
-    }
-
-    if (options.offset) {
-      if (!isNumber(options.offset)) {
-        throw new TypeError("Offset must be a number");
-      }
-
-      text += " OFFSET " + options.offset;
-    }
+    const pagination = handlePagination(options);
+    text += pagination.text;
+    values.push(...pagination.values);
 
     return { text, values };
   }
@@ -99,139 +68,107 @@ export class PostgresQueryBuilder<T extends Dict> implements IPostgresQueryBuild
     attributes: Partial<T>,
     options: UpdateOptions<T> = {},
   ): QueryConfig {
-    const whereKeys = Object.keys(criteria);
-    const setKeys = Object.keys(attributes);
-    const values = [];
+    const updateKeys = Object.keys(attributes);
+    const values: Array<any> = [];
 
-    let text = "UPDATE " + this.table + " SET ";
+    let setClause = "";
 
-    for (const key of setKeys) {
-      text += key + " = ?, ";
+    for (const key of updateKeys) {
+      const quotedKey = quotation(key);
+
+      setClause += `${quotedKey} = ?, `;
       values.push(attributes[key]);
     }
 
-    text = text.slice(0, -2) + " WHERE ";
+    setClause = setClause.slice(0, -2);
 
-    for (const key of whereKeys) {
-      text += key + " = ? AND ";
-      values.push(criteria[key]);
-    }
+    let text = `UPDATE ${this.table} SET ${setClause}`;
 
-    text = text.slice(0, -5);
+    const where = handleWhere<T>(criteria);
+    text += where.text;
+    values.push(...where.values);
 
-    text = this.handleReturning(text, options.returning);
+    const returning = handleReturning(options);
+    text += returning.text;
 
     return { text, values };
   }
 
-  // private
-
-  private handleInsert(
-    attributes: Array<T>,
-    options: InsertOptions<T> = {},
+  public upsert(
+    criteria: Partial<T>,
+    attributes: Partial<T>,
+    options: UpdateOptions<T> = {},
   ): QueryConfig {
-    this.validateInsertAttributes(attributes);
-
-    const keys = Object.keys(attributes[0]);
+    const conflictKeys = Object.keys(criteria);
+    const insertKeys = Object.keys(attributes);
     const values = [];
 
-    let text = "INSERT INTO " + this.table + " (";
+    let columns = "";
+    let placeholders = "";
+    let updates = "";
 
-    for (const key of keys) {
-      text += key + ",";
+    for (const key of insertKeys) {
+      const quotedKey = quotation(key);
+      columns += `${quotedKey}, `;
+      placeholders += "?, ";
+      values.push(attributes[key]);
+      updates += `${quotedKey} = EXCLUDED.${quotedKey}, `;
     }
 
-    text = text.slice(0, -1) + ") VALUES ";
+    columns = columns.slice(0, -2);
+    placeholders = placeholders.slice(0, -2);
+    updates = updates.slice(0, -2);
 
-    for (const attribute of attributes) {
-      text += "(";
+    let text = `INSERT INTO ${this.table} (${columns}) VALUES (${placeholders})`;
 
-      for (const _ of keys) {
-        text += "?,";
-      }
-
-      text = text.slice(0, -1) + "),";
-
-      for (const item of Object.values(attribute)) {
-        values.push(item);
-      }
+    if (conflictKeys.length) {
+      const conflictColumns = conflictKeys.map(quotation).join(", ");
+      text += ` ON CONFLICT (${conflictColumns}) DO UPDATE SET ${updates}`;
     }
 
-    text = text.slice(0, -1);
-
-    text = this.handleReturning(text, options.returning);
+    const returning = handleReturning(options);
+    text += returning.text;
 
     return { text, values };
   }
 
-  private handleReturning(text: string, returning?: "*" | Array<keyof T>): string {
-    if (!returning) return text;
+  private handleInsert(
+    attributesArray: Array<T>,
+    options: InsertOptions<T> = {},
+  ): QueryConfig {
+    validateInsertAttributes(attributesArray);
 
-    text += " RETURNING ";
+    const firstAttributes = attributesArray[0];
+    const insertKeys = Object.keys(firstAttributes);
+    const values: Array<any> = [];
 
-    if (isString(returning)) {
-      text += returning + ", ";
-    } else if (isArray(returning)) {
-      for (const item of returning) {
-        if (!isString(item)) {
-          throw new TypeError("Returns must be an array of strings");
-        }
-        text += item + ", ";
-      }
+    let columns = "";
+    let placeholders = "";
+    let allPlaceholders = "";
+
+    for (const key of insertKeys) {
+      const quotedKey = quotation(key);
+
+      columns += `${quotedKey}, `;
+
+      placeholders += "?, ";
     }
 
-    return text.slice(0, -2);
-  }
+    columns = columns.slice(0, -2);
+    placeholders = placeholders.slice(0, -2);
 
-  private validateTableName(table: string): void {
-    if (!table) {
-      throw new TypeError("Table name must be provided");
+    for (const attributes of attributesArray) {
+      allPlaceholders += `(${placeholders}), `;
+      values.push(...Object.values(attributes));
     }
 
-    if (typeof table !== "string") {
-      throw new TypeError("Table name must be a string");
-    }
+    allPlaceholders = allPlaceholders.slice(0, -2);
 
-    if (!table.length) {
-      throw new TypeError("Table name must contain at least one character");
-    }
+    let text = `INSERT INTO ${this.table} (${columns}) VALUES ${allPlaceholders}`;
 
-    if (table.includes(" ")) {
-      throw new TypeError("Table name must not contain spaces");
-    }
-  }
+    const returning = handleReturning(options);
+    text += returning.text;
 
-  private validateInsertAttributes(attributes: Array<T>): void {
-    if (!isArray(attributes)) {
-      throw new TypeError("Attributes must be an array");
-    }
-
-    if (!attributes.length) {
-      throw new TypeError("Attributes must contain at least one item");
-    }
-
-    const keys = Object.keys(attributes[0]);
-
-    for (const attribute of attributes) {
-      if (!isObject(attribute)) {
-        throw new TypeError("Attribute must be an object");
-      }
-
-      if (!Object.keys(attribute).length) {
-        throw new TypeError("Attributes must contain at least one key");
-      }
-
-      if (Object.keys(attribute).length !== keys.length) {
-        throw new TypeError("Attributes must contain the same keys");
-      }
-
-      if (Object.keys(attribute).some((key) => !keys.includes(key))) {
-        throw new TypeError("Attributes must contain the same keys");
-      }
-
-      if (keys.some((key) => !Object.keys(attribute).includes(key))) {
-        throw new TypeError("Attributes must contain the same keys");
-      }
-    }
+    return { text, values };
   }
 }
