@@ -60,7 +60,7 @@ export class MongoChecksumStore extends MongoBase implements IChecksumStore {
         context: attributes.context,
         event_id: attributes.event_id,
         checksum: attributes.checksum,
-        timestamp: attributes.timestamp,
+        created_at: attributes.created_at,
       });
 
       this.logger.verbose("Inserted checksum document", { result });
@@ -99,7 +99,7 @@ export class MongoChecksumStore extends MongoBase implements IChecksumStore {
       context: document.context,
       event_id: document.event_id,
       checksum: document.checksum,
-      timestamp: document.timestamp,
+      created_at: document.created_at,
     };
   }
 }

@@ -18,5 +18,5 @@ export interface SagaCausationAttributes {
   name: string;
   context: string;
   causation_id: string;
-  timestamp: Date;
+  created_at: Date;
 }

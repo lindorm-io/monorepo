@@ -105,7 +105,7 @@ export class MongoViewStore extends MongoBase implements IViewStore {
           name: viewIdentifier.name,
           context: viewIdentifier.context,
           causation_id: causationId,
-          timestamp: new Date(),
+          created_at: new Date(),
         }),
       );
 

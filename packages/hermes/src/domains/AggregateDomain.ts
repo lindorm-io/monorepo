@@ -383,8 +383,8 @@ export class AggregateDomain implements IAggregateDomain {
       expected_events: expectedEvents.length,
       meta: event.meta,
       previous_event_id: lastExpectedEvent ? lastExpectedEvent.id : null,
-      timestamp: new Date(),
       version: event.version,
+      created_at: new Date(),
     }));
 
     const encrypted = await this.encryptAttributes(aggregate, initial);

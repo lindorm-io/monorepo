@@ -138,7 +138,7 @@ export class MongoEventStore extends MongoBase implements IEventStore {
       events: [],
       expected_events: first.expected_events,
       previous_event_id: first.previous_event_id,
-      timestamp: first.timestamp,
+      created_at: first.created_at,
     };
 
     for (const item of attributes) {
@@ -179,7 +179,7 @@ export class MongoEventStore extends MongoBase implements IEventStore {
           expected_events: document.expected_events,
           meta: event.meta,
           previous_event_id: document.previous_event_id,
-          timestamp: document.timestamp,
+          created_at: document.created_at,
           version: event.version,
         });
       }

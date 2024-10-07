@@ -69,7 +69,7 @@ describe("MongoSagaStore", () => {
       name: sagaIdentifier.name,
       context: sagaIdentifier.context,
       causation_id: event.id,
-      timestamp: new Date(),
+      created_at: new Date(),
     };
 
     await source.client

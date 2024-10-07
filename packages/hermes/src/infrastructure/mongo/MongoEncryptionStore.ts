@@ -65,7 +65,7 @@ export class MongoEncryptionStore extends MongoBase implements IEncryptionStore 
         key_type: attributes.key_type,
         private_key: attributes.private_key,
         public_key: attributes.public_key,
-        timestamp: attributes.timestamp,
+        created_at: attributes.created_at,
       });
 
       this.logger.verbose("Inserted encryption document", { result });
@@ -109,7 +109,7 @@ export class MongoEncryptionStore extends MongoBase implements IEncryptionStore 
       key_type: document.key_type,
       private_key: document.private_key,
       public_key: document.public_key,
-      timestamp: document.timestamp,
+      created_at: document.created_at,
     };
   }
 }

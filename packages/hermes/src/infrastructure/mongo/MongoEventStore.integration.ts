@@ -88,7 +88,7 @@ describe("MongoEventStore", () => {
         origin_id: randomUUID(),
       },
       previous_event_id: randomUUID(),
-      timestamp: new Date(),
+      created_at: new Date(),
       version: 3,
     };
 

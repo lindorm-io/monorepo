@@ -2,9 +2,13 @@ import { createMockLogger } from "@lindorm/logger";
 import { ShaKit } from "@lindorm/sha";
 import { sortKeys } from "@lindorm/utils";
 import { randomUUID } from "crypto";
+import MockDate from "mockdate";
 import { ChecksumError } from "../errors";
 import { HermesEvent } from "../messages";
 import { ChecksumStore } from "./ChecksumStore";
+
+const MockedDate = new Date("2024-01-01T08:00:00.000Z");
+MockDate.set(MockedDate);
 
 describe("ChecksumStore", () => {
   const logger = createMockLogger();
@@ -63,7 +67,7 @@ describe("ChecksumStore", () => {
       context: event.aggregate.context,
       event_id: event.id,
       checksum,
-      timestamp: event.timestamp,
+      created_at: MockedDate,
     });
   });
 
@@ -74,7 +78,7 @@ describe("ChecksumStore", () => {
       context: event.aggregate.context,
       event_id: event.id,
       checksum,
-      timestamp: event.timestamp,
+      created_at: new Date(),
     });
 
     await expect(store.verify(event)).resolves.toBeUndefined();
@@ -89,7 +93,7 @@ describe("ChecksumStore", () => {
       context: event.aggregate.context,
       event_id: event.id,
       checksum: "invalid",
-      timestamp: event.timestamp,
+      created_at: new Date(),
     });
 
     await expect(store.verify(event)).rejects.toThrow(ChecksumError);

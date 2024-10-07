@@ -10,7 +10,7 @@ export const CREATE_TABLE_SAGA_CAUSATION = `
     name VARCHAR ( ${MAX_NAME_LENGTH} ) NOT NULL,
     context VARCHAR ( ${MAX_CONTEXT_LENGTH} ) NOT NULL,
     causation_id UUID NOT NULL,
-    timestamp TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
     
     PRIMARY KEY (
       id,

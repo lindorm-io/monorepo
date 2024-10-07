@@ -16,5 +16,5 @@ export interface EncryptionStoreAttributes {
   key_type: KryptosType;
   private_key: string;
   public_key: string;
-  timestamp: Date;
+  created_at: Date;
 }

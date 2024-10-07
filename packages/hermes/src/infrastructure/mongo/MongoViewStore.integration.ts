@@ -70,7 +70,7 @@ describe("MongoViewStore", () => {
       name: viewIdentifier.name,
       context: viewIdentifier.context,
       causation_id: event.causationId,
-      timestamp: new Date(),
+      created_at: new Date(),
     };
 
     await source.client

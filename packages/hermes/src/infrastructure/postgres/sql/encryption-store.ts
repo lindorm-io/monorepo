@@ -16,7 +16,7 @@ export const CREATE_TABLE_ENCRYPTION_STORE = `
     key_type VARCHAR ( 4 ) NOT NULL,
     private_key TEXT NOT NULL,
     public_key TEXT NOT NULL,
-    timestamp TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
 
     PRIMARY KEY (
       id,

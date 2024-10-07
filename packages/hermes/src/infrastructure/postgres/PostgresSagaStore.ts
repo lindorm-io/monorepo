@@ -112,7 +112,7 @@ export class PostgresSagaStore extends PostgresBase implements ISagaStore {
             name: sagaIdentifier.name,
             context: sagaIdentifier.context,
             causation_id: causationId,
-            timestamp: new Date(),
+            created_at: new Date(),
           })),
         ),
       );

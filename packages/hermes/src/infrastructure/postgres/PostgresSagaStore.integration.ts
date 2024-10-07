@@ -111,7 +111,7 @@ describe("PostgresSagaStore", () => {
       name: attributes.name,
       context: attributes.context,
       causation_id: event.causationId,
-      timestamp: event.timestamp,
+      created_at: new Date(),
     });
 
     await expect(store.findCausationIds(sagaIdentifier)).resolves.toEqual([
