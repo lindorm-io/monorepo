@@ -97,4 +97,18 @@ describe("handleWhere", () => {
       values: [1, 2],
     });
   });
+
+  test("should return using jsonb objects", () => {
+    expect(handleWhere<any>({ test1: { test2: "one" } })).toStrictEqual({
+      text: " WHERE \"test1\"->>'test2' = ?",
+      values: ["one"],
+    });
+  });
+
+  test("should return using nested jsonb objects", () => {
+    expect(handleWhere<any>({ test1: { test2: { test3: "one" } } })).toStrictEqual({
+      text: " WHERE \"test1\" #>> '{test2, test3}' = ?",
+      values: ["one"],
+    });
+  });
 });

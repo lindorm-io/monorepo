@@ -179,7 +179,7 @@ describe("PostgresSource", () => {
             data: { i_dont_like_sand: true },
             list: ["one", "two", 3],
           },
-          { returning: "*" },
+          { returning: true },
         ),
       ),
     ).resolves.toEqual(
