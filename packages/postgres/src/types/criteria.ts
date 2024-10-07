@@ -1,4 +1,4 @@
-import { Dict } from "@lindorm/types";
+import { DeepPartial, Dict } from "@lindorm/types";
 
 export type QueryOperator<T> = {
   $eq?: T | null; // Equal to or IS NULL
@@ -16,5 +16,5 @@ export type QueryOperator<T> = {
 
 // Allows for single values or operators for each field
 export type Criteria<T extends Dict> = {
-  [K in keyof T]?: T[K] | QueryOperator<T[K]> | null;
+  [K in keyof T]?: T[K] | DeepPartial<T[K]> | QueryOperator<T[K]> | null;
 };
