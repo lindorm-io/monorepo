@@ -16,5 +16,5 @@ export interface ViewCausationAttributes {
   name: string;
   context: string;
   causation_id: string;
-  timestamp: Date;
+  created_at: Date;
 }

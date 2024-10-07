@@ -103,7 +103,7 @@ export class MongoSagaStore extends MongoBase implements ISagaStore {
           name: sagaIdentifier.name,
           context: sagaIdentifier.context,
           causation_id: causationId,
-          timestamp: new Date(),
+          created_at: new Date(),
         }),
       );
 

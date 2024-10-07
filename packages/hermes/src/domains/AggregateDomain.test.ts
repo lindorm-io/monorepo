@@ -3,6 +3,7 @@ import { LindormError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger";
 import { createMockRabbitMessageBus } from "@lindorm/rabbit";
 import { randomUUID } from "crypto";
+import MockDate from "mockdate";
 import { TEST_AGGREGATE_IDENTIFIER } from "../__fixtures__/aggregate";
 import {
   TEST_AGGREGATE_COMMAND_HANDLER,
@@ -39,6 +40,9 @@ import {
 import { IAggregateDomain, IHermesMessageBus } from "../interfaces";
 import { HermesCommand } from "../messages";
 import { AggregateDomain } from "./AggregateDomain";
+
+const MockedDate = new Date("2024-01-01T08:00:00.000Z");
+MockDate.set(MockedDate);
 
 describe("AggregateDomain", () => {
   const logger = createMockLogger();
@@ -174,12 +178,12 @@ describe("AggregateDomain", () => {
         encrypted: false,
         event_id: expect.any(String),
         event_name: "hermes_event_create",
-        event_timestamp: expect.any(Date),
+        event_timestamp: MockedDate,
         expected_events: 0,
         meta: { origin: "test" },
         previous_event_id: null,
-        timestamp: expect.any(Date),
         version: 1,
+        created_at: MockedDate,
       },
     ]);
 
@@ -195,7 +199,7 @@ describe("AggregateDomain", () => {
         delay: 0,
         mandatory: false,
         topic: "default.aggregate_name.hermes_event_create",
-        timestamp: expect.any(Date),
+        timestamp: MockedDate,
         type: "HermesEvent",
         version: 1,
       }),
@@ -230,12 +234,12 @@ describe("AggregateDomain", () => {
         encrypted: true,
         event_id: expect.any(String),
         event_name: "hermes_event_encrypt",
-        event_timestamp: expect.any(Date),
+        event_timestamp: MockedDate,
         expected_events: 0,
         meta: { origin: "test" },
         previous_event_id: null,
-        timestamp: expect.any(Date),
         version: 1,
+        created_at: MockedDate,
       },
     ]);
 
@@ -251,7 +255,7 @@ describe("AggregateDomain", () => {
         delay: 0,
         mandatory: false,
         topic: "default.aggregate_name.hermes_event_encrypt",
-        timestamp: expect.any(Date),
+        timestamp: MockedDate,
         type: "HermesEvent",
         version: 1,
       }),

@@ -142,7 +142,7 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
             name: viewIdentifier.name,
             context: viewIdentifier.context,
             causation_id: causationId,
-            timestamp: new Date(),
+            created_at: new Date(),
           })),
         ),
       );

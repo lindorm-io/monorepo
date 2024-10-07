@@ -1,6 +1,5 @@
 import { JsonKit } from "@lindorm/json-kit";
 import { createMockLogger } from "@lindorm/logger";
-import { randomString } from "@lindorm/random";
 import { IRedisSource, RedisSource } from "@lindorm/redis";
 import { randomUUID } from "crypto";
 import { TEST_AGGREGATE_IDENTIFIER } from "../../__fixtures__/aggregate";
@@ -106,7 +105,7 @@ describe("RedisViewStore", () => {
       name: viewIdentifier.name,
       context: viewIdentifier.context,
       causation_id: event.causationId,
-      timestamp: event.timestamp,
+      created_at: new Date(),
     });
 
     await expect(store.findCausationIds(viewIdentifier)).resolves.toEqual([

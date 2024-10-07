@@ -60,7 +60,7 @@ describe("PostgresChecksumStore", () => {
       ...identifier,
       event_id: eventId,
       checksum: "checksum",
-      timestamp: new Date(),
+      created_at: new Date(),
     };
   });
 

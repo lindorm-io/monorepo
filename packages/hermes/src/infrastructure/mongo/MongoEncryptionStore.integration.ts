@@ -48,7 +48,7 @@ describe("MongoEncryptionStore", () => {
       key_type: "EC",
       private_key: "private_key",
       public_key: "public_key",
-      timestamp: new Date(),
+      created_at: new Date(),
     });
 
     await expect(store.find(identifier)).resolves.toEqual(
@@ -74,7 +74,7 @@ describe("MongoEncryptionStore", () => {
         key_type: "EC",
         private_key: "private_key",
         public_key: "public_key",
-        timestamp: new Date(),
+        created_at: new Date(),
       }),
     ).resolves.toBeUndefined();
 

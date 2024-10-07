@@ -20,8 +20,8 @@ export const CREATE_TABLE_EVENT_STORE = `
     expected_events INT NOT NULL,
     meta JSONB NOT NULL,
     previous_event_id UUID,
-    timestamp TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
     version INT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
 
     PRIMARY KEY (
       aggregate_id,

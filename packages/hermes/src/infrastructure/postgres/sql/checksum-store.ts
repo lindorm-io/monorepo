@@ -11,7 +11,7 @@ export const CREATE_TABLE_CHECKSUM_STORE = `
     context VARCHAR ( ${MAX_CONTEXT_LENGTH} ) NOT NULL,
     event_id UUID NOT NULL,
     checksum VARCHAR ( 256 ) NOT NULL,
-    timestamp TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
 
     PRIMARY KEY (
       id,

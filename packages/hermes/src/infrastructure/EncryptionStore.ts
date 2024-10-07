@@ -83,7 +83,7 @@ export class EncryptionStore implements IHermesEncryptionStore {
       key_type: type,
       private_key: privateKey!,
       public_key: publicKey,
-      timestamp: new Date(),
+      created_at: new Date(),
     });
 
     return new AesKit({ kryptos });

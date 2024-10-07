@@ -117,7 +117,7 @@ describe("PostgresViewStore", () => {
       name: viewIdentifier.name,
       context: viewIdentifier.context,
       causation_id: event.causationId,
-      timestamp: event.timestamp,
+      created_at: new Date(),
     });
 
     await expect(store.findCausationIds(viewIdentifier)).resolves.toEqual([

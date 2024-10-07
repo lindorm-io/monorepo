@@ -65,7 +65,7 @@ describe("PostgresEncryptionStore", () => {
       key_type: "EC",
       private_key: "private_key",
       public_key: "public_key",
-      timestamp: new Date(),
+      created_at: new Date(),
     };
   });
 

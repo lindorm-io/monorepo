@@ -4,5 +4,5 @@ export interface ChecksumStoreAttributes {
   context: string;
   event_id: string;
   checksum: string;
-  timestamp: Date;
+  created_at: Date;
 }

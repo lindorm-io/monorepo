@@ -45,7 +45,7 @@ describe("MongoChecksumStore", () => {
       ...identifier,
       event_id: eventId,
       checksum: "checksum",
-      timestamp: new Date(),
+      created_at: new Date(),
     });
 
     await expect(
@@ -66,7 +66,7 @@ describe("MongoChecksumStore", () => {
         ...identifier,
         event_id: eventId,
         checksum: "checksum",
-        timestamp: new Date(),
+        created_at: new Date(),
       }),
     ).resolves.toBeUndefined();
 

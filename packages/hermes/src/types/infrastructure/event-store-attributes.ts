@@ -15,8 +15,8 @@ export type EventStoreAttributes = {
   expected_events: number;
   meta: Dict;
   previous_event_id: string | null;
-  timestamp: Date;
   version: number;
+  created_at: Date;
 };
 
 export type MongoEventStoreDocument = {
@@ -37,5 +37,5 @@ export type MongoEventStoreDocument = {
   }>;
   expected_events: number;
   previous_event_id: string | null;
-  timestamp: Date;
+  created_at: Date;
 };
