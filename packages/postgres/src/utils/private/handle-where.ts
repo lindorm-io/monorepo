@@ -98,7 +98,7 @@ const processCriteria = (
   } else {
     if (condition === null) {
       text += `${operatorPath} IS NULL AND `;
-    } else {
+    } else if (condition !== undefined) {
       text += `${operatorPath} = ? AND `;
       values.push(condition);
     }
