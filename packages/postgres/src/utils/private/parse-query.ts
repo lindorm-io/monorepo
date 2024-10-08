@@ -2,6 +2,7 @@ import { isArray, isObject, isString } from "@lindorm/is";
 import { JsonKit } from "@lindorm/json-kit";
 import { QueryConfig, QueryConfigValues } from "pg";
 import { PostgresError } from "../../errors";
+import { PostgresQueryOptions } from "../../types";
 
 const trim = (query: string): string =>
   query
@@ -22,8 +23,15 @@ const replacePlaceholders = (query: string): string => {
   return query;
 };
 
-const replaceValues = <V>(values: QueryConfigValues<V>): QueryConfigValues<V> => {
+const replaceValues = <V>(
+  values: QueryConfigValues<V>,
+  options: PostgresQueryOptions = {},
+): QueryConfigValues<V> => {
   if (!values.length) return values;
+
+  const stringifyComplexTypes = options.stringifyComplexTypes ?? true;
+
+  if (!stringifyComplexTypes) return values;
 
   const array: Array<any> = [];
 
@@ -43,13 +51,14 @@ const replaceValues = <V>(values: QueryConfigValues<V>): QueryConfigValues<V> =>
 export const parseQuery = <V = Array<any>>(
   queryTextOrConfig: string | QueryConfig<V>,
   values?: QueryConfigValues<V>,
+  options?: PostgresQueryOptions,
 ): QueryConfig<V> => {
   if (isObject(queryTextOrConfig)) {
     if (isString(queryTextOrConfig.text)) {
       queryTextOrConfig.text = replacePlaceholders(trim(queryTextOrConfig.text));
     }
     if (isArray(queryTextOrConfig.values) && queryTextOrConfig.values.length) {
-      queryTextOrConfig.values = replaceValues(queryTextOrConfig.values);
+      queryTextOrConfig.values = replaceValues(queryTextOrConfig.values, options);
     }
     return queryTextOrConfig;
   }
@@ -57,7 +66,7 @@ export const parseQuery = <V = Array<any>>(
   if (isString(queryTextOrConfig)) {
     return {
       text: replacePlaceholders(trim(queryTextOrConfig)),
-      values: values ? replaceValues(values) : undefined,
+      values: values ? replaceValues(values, options) : undefined,
     };
   }
 

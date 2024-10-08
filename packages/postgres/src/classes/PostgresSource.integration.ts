@@ -248,6 +248,63 @@ describe("PostgresSource", () => {
     );
   });
 
+  test("should update a row using query builder", async () => {
+    const queryBuilder = source.queryBuilder(table);
+
+    await expect(
+      source.query(
+        queryBuilder.update(
+          { id: uuid },
+          {
+            username: "newname",
+            number: 5678,
+            data: { i_dont_like_sand: true },
+            list: ["one", "two", 3],
+          },
+          { returning: true },
+        ),
+      ),
+    ).resolves.toEqual(
+      expect.objectContaining({
+        rowCount: 1,
+        rows: [
+          {
+            id: uuid,
+            username: "newname",
+            number: 5678,
+            data: { i_dont_like_sand: true },
+            list: ["one", "two", 3],
+            created_at: expect.any(Date),
+          },
+        ],
+      }),
+    );
+  });
+
+  test("should delete a row using query builder", async () => {
+    const queryBuilder = source.queryBuilder(table);
+
+    const deleted = randomUUID();
+
+    await source.query(
+      queryBuilder.insert({
+        id: deleted,
+        username: "delete",
+        number: 1234,
+        data: {},
+        list: [],
+      }),
+    );
+
+    await expect(source.query(queryBuilder.delete({ id: deleted }))).resolves.toEqual(
+      expect.objectContaining({
+        command: "DELETE",
+        rowCount: 1,
+        rows: [],
+      }),
+    );
+  });
+
   test("should throw on primary key", async () => {
     const insert = `
       INSERT INTO ${table} (id, username, number, data)
