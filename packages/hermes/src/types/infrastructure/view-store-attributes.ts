@@ -1,12 +1,14 @@
+import { Dict } from "@lindorm/types";
+
 export interface ViewStoreAttributes {
   id: string;
   name: string;
   context: string;
   destroyed: boolean;
-  meta: Record<string, any>;
+  meta: Dict;
   processed_causation_ids: Array<string>;
   revision: number;
-  state: Record<string, any>;
+  state: Dict;
   created_at: Date;
   updated_at: Date;
 }

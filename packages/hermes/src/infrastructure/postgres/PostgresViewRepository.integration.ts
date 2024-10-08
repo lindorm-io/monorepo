@@ -32,7 +32,7 @@ describe("PostgresViewRepository", () => {
 
   beforeAll(async () => {
     source = new PostgresSource({
-      logger: createMockLogger(),
+      logger,
       url: "postgres://root:example@localhost:5432/default",
     });
 
@@ -110,17 +110,7 @@ describe("PostgresViewRepository", () => {
   });
 
   test("should find", async () => {
-    await expect(
-      repository.find({
-        where: {
-          text: "state ->> 'common' = $1",
-          values: ["common"],
-        },
-        orderBy: {
-          created_at: "ASC",
-        },
-      }),
-    ).resolves.toEqual(
+    await expect(repository.find({ state: { common: "common" } })).resolves.toEqual(
       expect.arrayContaining([
         {
           id: view1,
@@ -154,14 +144,7 @@ describe("PostgresViewRepository", () => {
   });
 
   test("should find one", async () => {
-    await expect(
-      repository.findOne({
-        where: {
-          text: `id = $1`,
-          values: [view1],
-        },
-      }),
-    ).resolves.toEqual({
+    await expect(repository.findOne({ id: view1 })).resolves.toEqual({
       id: view1,
       state: { one: 1, common: "common" },
       created_at: expect.any(Date),

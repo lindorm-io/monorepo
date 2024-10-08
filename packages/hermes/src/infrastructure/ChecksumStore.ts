@@ -51,7 +51,7 @@ export class ChecksumStore implements IHermesChecksumStore {
         context: event.aggregate.context,
         event_id: event.id,
         checksum,
-        created_at: new Date(),
+        created_at: event.timestamp,
       });
     }
 

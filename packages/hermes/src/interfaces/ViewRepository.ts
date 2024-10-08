@@ -1,36 +1,41 @@
 import { Dict } from "@lindorm/types";
-import { Filter, FindOptions } from "mongodb";
 import {
-  PostgresViewRepositoryFindFilter,
-  PostgresViewRepositoryFindOneFilter,
-  ViewRepositoryData,
-  ViewStoreAttributes,
+  MongoFindCriteria,
+  MongoFindOptions,
+  PostgresFindCriteria,
+  PostgresFindOptions,
+  RedisFindCriteria,
+  ViewRepositoryAttributes,
 } from "../types";
 
 export interface IMongoViewRepository<S extends Dict = Dict> {
   find(
-    filter?: Filter<ViewStoreAttributes>,
-    options?: FindOptions<ViewStoreAttributes>,
-  ): Promise<Array<ViewRepositoryData<S>>>;
-  findById(id: string): Promise<ViewRepositoryData<S> | undefined>;
+    criteria?: MongoFindCriteria<S>,
+    options?: MongoFindOptions<S>,
+  ): Promise<Array<ViewRepositoryAttributes<S>>>;
+  findById(id: string): Promise<ViewRepositoryAttributes<S> | undefined>;
   findOne(
-    find: Filter<ViewStoreAttributes>,
-    options?: FindOptions<ViewStoreAttributes>,
-  ): Promise<ViewRepositoryData<S> | undefined>;
+    criteria: MongoFindCriteria<S>,
+    options?: MongoFindOptions<S>,
+  ): Promise<ViewRepositoryAttributes<S> | undefined>;
 }
 
 export interface IPostgresViewRepository<S extends Dict = Dict> {
-  find(filter?: PostgresViewRepositoryFindFilter): Promise<Array<ViewRepositoryData<S>>>;
-  findById(id: string): Promise<ViewRepositoryData<S> | undefined>;
+  find(
+    criteria?: PostgresFindCriteria<S>,
+    options?: PostgresFindOptions<S>,
+  ): Promise<Array<ViewRepositoryAttributes<S>>>;
+  findById(id: string): Promise<ViewRepositoryAttributes<S> | undefined>;
   findOne(
-    filter: PostgresViewRepositoryFindOneFilter,
-  ): Promise<ViewRepositoryData<S> | undefined>;
+    criteria: PostgresFindCriteria<S>,
+    options?: PostgresFindOptions<S>,
+  ): Promise<ViewRepositoryAttributes<S> | undefined>;
 }
 
 export interface IRedisViewRepository<S extends Dict = Dict> {
-  find(filter?: Partial<ViewStoreAttributes>): Promise<Array<ViewRepositoryData<S>>>;
-  findById(id: string): Promise<ViewRepositoryData<S> | undefined>;
+  find(criteria?: RedisFindCriteria<S>): Promise<Array<ViewRepositoryAttributes<S>>>;
+  findById(id: string): Promise<ViewRepositoryAttributes<S> | undefined>;
   findOne(
-    filter?: Partial<ViewStoreAttributes>,
-  ): Promise<ViewRepositoryData<S> | undefined>;
+    criteria?: RedisFindCriteria<S>,
+  ): Promise<ViewRepositoryAttributes<S> | undefined>;
 }
