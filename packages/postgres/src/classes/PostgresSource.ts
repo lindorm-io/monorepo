@@ -5,6 +5,7 @@ import { PostgresError } from "../errors";
 import { IPostgresQueryBuilder, IPostgresSource } from "../interfaces";
 import {
   ClonePostgresSourceOptions,
+  PostgresQueryOptions,
   PostgresResult,
   PostgresSourceOptions,
 } from "../types";
@@ -57,13 +58,14 @@ export class PostgresSource implements IPostgresSource {
   public async query<R extends Dict = any, V = Array<any>>(
     queryTextOrConfig: string | QueryConfig<V>,
     values?: QueryConfigValues<V>,
+    options?: PostgresQueryOptions,
   ): Promise<PostgresResult<R>> {
     let client: PoolClient;
 
     try {
       client = await this.client.connect();
 
-      const query = parseQuery(queryTextOrConfig, values);
+      const query = parseQuery(queryTextOrConfig, values, options);
 
       this.logger.debug("Query", { query, values });
 
