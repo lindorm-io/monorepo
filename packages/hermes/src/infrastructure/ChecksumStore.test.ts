@@ -93,7 +93,7 @@ describe("ChecksumStore", () => {
       context: event.aggregate.context,
       event_id: event.id,
       checksum: "invalid",
-      created_at: new Date(),
+      created_at: expect.any(Date),
     });
 
     await expect(store.verify(event)).rejects.toThrow(ChecksumError);

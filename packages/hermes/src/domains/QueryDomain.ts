@@ -24,7 +24,7 @@ export class QueryDomain<Q extends ClassLike = ClassLike, S extends Dict = Dict>
   private readonly logger: ILogger;
   private readonly mongo: IMongoSource | undefined;
   private readonly postgres: IPostgresSource | undefined;
-  private readonly queryHandlers: Array<IHermesQueryHandler>;
+  private readonly queryHandlers: Array<IHermesQueryHandler<Q, any, S>>;
   private readonly redis: IRedisSource | undefined;
 
   public constructor(options: QueryDomainOptions) {
@@ -37,9 +37,7 @@ export class QueryDomain<Q extends ClassLike = ClassLike, S extends Dict = Dict>
     this.queryHandlers = [];
   }
 
-  public registerQueryHandler<T extends ClassLike = ClassLike>(
-    queryHandler: HermesQueryHandler<T>,
-  ): void {
+  public registerQueryHandler(queryHandler: IHermesQueryHandler<Q, any, S>): void {
     this.logger.debug("Registering query handler", {
       queryName: queryHandler.queryName,
       view: queryHandler.view,
@@ -86,19 +84,19 @@ export class QueryDomain<Q extends ClassLike = ClassLike, S extends Dict = Dict>
         throw new HandlerNotRegisteredError();
       }
 
-      const ctx: QueryHandlerContext = {
+      const ctx: QueryHandlerContext<Q, S> = {
         query: structuredClone(query),
         logger: this.logger.child(["QueryHandler"]),
         repositories: {
           mongo: this.mongo
             ? new MongoViewRepository<S>(this.mongo, queryHandler.view, this.logger)
-            : new NoopMongoViewRepository(),
+            : new NoopMongoViewRepository<S>(),
           postgres: this.postgres
             ? new PostgresViewRepository<S>(this.postgres, queryHandler.view, this.logger)
-            : new NoopPostgresViewRepository(),
+            : new NoopPostgresViewRepository<S>(),
           redis: this.redis
             ? new RedisViewRepository<S>(this.redis, queryHandler.view, this.logger)
-            : new NoopRedisViewRepository(),
+            : new NoopRedisViewRepository<S>(),
         },
       };
 

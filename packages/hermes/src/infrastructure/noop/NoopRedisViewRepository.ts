@@ -1,18 +1,20 @@
 import { LindormError } from "@lindorm/errors";
 import { Dict } from "@lindorm/types";
 import { IRedisViewRepository } from "../../interfaces";
-import { ViewRepositoryData } from "../../types";
+import { ViewRepositoryAttributes } from "../../types";
 
-export class NoopRedisViewRepository implements IRedisViewRepository {
-  public find(): Promise<Array<ViewRepositoryData<Dict>>> {
+export class NoopRedisViewRepository<S extends Dict = Dict>
+  implements IRedisViewRepository<S>
+{
+  public find(): Promise<Array<ViewRepositoryAttributes<S>>> {
     throw new LindormError("Redis Connection not found");
   }
 
-  public findById(): Promise<ViewRepositoryData<Dict> | undefined> {
+  public findById(): Promise<ViewRepositoryAttributes<S> | undefined> {
     throw new LindormError("Redis Connection not found");
   }
 
-  public findOne(): Promise<ViewRepositoryData<Dict> | undefined> {
+  public findOne(): Promise<ViewRepositoryAttributes<S> | undefined> {
     throw new LindormError("Redis Connection not found");
   }
 }

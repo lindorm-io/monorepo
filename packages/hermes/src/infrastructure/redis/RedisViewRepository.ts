@@ -1,10 +1,15 @@
 import { JsonKit } from "@lindorm/json-kit";
 import { ILogger } from "@lindorm/logger";
 import { IRedisSource } from "@lindorm/redis";
-import { DeepPartial, Dict } from "@lindorm/types";
+import { Dict } from "@lindorm/types";
 import { filter } from "@lindorm/utils";
 import { IRedisViewRepository } from "../../interfaces";
-import { HandlerIdentifier, ViewRepositoryData, ViewStoreAttributes } from "../../types";
+import {
+  HandlerIdentifier,
+  RedisFindCriteria,
+  ViewRepositoryAttributes,
+  ViewStoreAttributes,
+} from "../../types";
 import { RedisBase } from "./RedisBase";
 
 export class RedisViewRepository<S extends Dict = Dict>
@@ -24,8 +29,8 @@ export class RedisViewRepository<S extends Dict = Dict>
   }
 
   public async find(
-    findFilter: DeepPartial<ViewStoreAttributes> = {},
-  ): Promise<Array<ViewRepositoryData<S>>> {
+    criteria: RedisFindCriteria<S> = {},
+  ): Promise<Array<ViewRepositoryAttributes<S>>> {
     const keys = await this.scanKeys();
     const data = await this.source.client.mget(...keys);
 
@@ -33,36 +38,25 @@ export class RedisViewRepository<S extends Dict = Dict>
       .map((item) => JsonKit.parse<ViewStoreAttributes>(item))
       .filter((item) => !item.destroyed);
 
-    const filtered = filter(collection, findFilter);
+    const filtered = filter(collection, criteria);
 
     return filtered.map((x) => ({
       id: x.id,
       state: x.state,
       created_at: x.created_at,
       updated_at: x.updated_at,
-    })) as Array<ViewRepositoryData<S>>;
+    })) as Array<ViewRepositoryAttributes<S>>;
   }
 
-  public async findById(id: string): Promise<ViewRepositoryData<S> | undefined> {
-    const data = await this.source.client.get(this.redisKey(id));
-
-    if (!data) return undefined;
-
-    const parsed = JsonKit.parse<ViewStoreAttributes>(data);
-
-    return {
-      id: parsed.id,
-      state: parsed.state,
-      created_at: parsed.created_at,
-      updated_at: parsed.updated_at,
-    } as ViewRepositoryData<S>;
+  public async findById(id: string): Promise<ViewRepositoryAttributes<S> | undefined> {
+    return await this.findOne({ id });
   }
 
   public async findOne(
-    findFilter: Partial<ViewStoreAttributes> = {},
-  ): Promise<ViewRepositoryData<S> | undefined> {
-    const [data] = await this.find(findFilter);
-    return data ?? undefined;
+    criteria: RedisFindCriteria<S>,
+  ): Promise<ViewRepositoryAttributes<S> | undefined> {
+    const [data] = await this.find(criteria);
+    return data;
   }
 
   // private
