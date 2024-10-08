@@ -32,6 +32,15 @@ describe("PostgresQueryBuilder", () => {
     });
   });
 
+  describe("delete", () => {
+    test("should create a query to delete", () => {
+      expect(queryBuilder.delete({ one: "General", two: 123 })).toEqual({
+        text: 'DELETE FROM "my_table_name" WHERE "one" = ? AND "two" = ?',
+        values: ["General", 123],
+      });
+    });
+  });
+
   describe("insert", () => {
     test("should create an insert query", () => {
       expect(
