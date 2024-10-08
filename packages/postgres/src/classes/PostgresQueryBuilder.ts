@@ -26,6 +26,17 @@ export class PostgresQueryBuilder<T extends Dict> implements IPostgresQueryBuild
     this.table = quotation(options.table);
   }
 
+  public delete(criteria: Partial<T>): QueryConfig {
+    let text = `DELETE FROM ${this.table}`;
+    const values: Array<any> = [];
+
+    const where = handleWhere<T>(criteria);
+    text += where.text;
+    values.push(...where.values);
+
+    return { text, values };
+  }
+
   public insert(attributes: T, options?: InsertOptions<T>): QueryConfig {
     return this.handleInsert([attributes], options);
   }

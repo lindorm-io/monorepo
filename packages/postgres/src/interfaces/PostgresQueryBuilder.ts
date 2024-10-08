@@ -3,6 +3,7 @@ import { QueryConfig } from "pg";
 import { Criteria, InsertOptions, SelectOptions, UpdateOptions } from "../types";
 
 export interface IPostgresQueryBuilder<T extends Dict> {
+  delete(criteria: Criteria<T>): QueryConfig;
   insert(attributes: T, options?: InsertOptions<T>): QueryConfig;
   insertMany(array: Array<T>, options?: InsertOptions<T>): QueryConfig;
   select(criteria: Criteria<T>, options?: SelectOptions<T>): QueryConfig;
