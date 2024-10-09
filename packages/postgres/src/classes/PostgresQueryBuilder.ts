@@ -13,6 +13,7 @@ import {
   handleSelectColumns,
   handleWhere,
   quotation,
+  replaceValues,
   validateInsertAttributes,
   validateTableName,
 } from "../utils/private";
@@ -20,17 +21,20 @@ import { handleReturning } from "../utils/private/handle-returning";
 
 export class PostgresQueryBuilder<T extends Dict> implements IPostgresQueryBuilder<T> {
   private readonly table: string;
+  private readonly stringifyComplexTypes: boolean;
 
   public constructor(options: PostgresQueryBuilderOptions) {
     validateTableName(options.table);
+
     this.table = quotation(options.table);
+    this.stringifyComplexTypes = options.stringifyComplexTypes;
   }
 
   public delete(criteria: Partial<T>): QueryConfig {
     let text = `DELETE FROM ${this.table}`;
     const values: Array<any> = [];
 
-    const where = handleWhere<T>(criteria);
+    const where = handleWhere<T>(criteria, this.stringifyComplexTypes);
     text += where.text;
     values.push(...where.values);
 
@@ -59,7 +63,7 @@ export class PostgresQueryBuilder<T extends Dict> implements IPostgresQueryBuild
 
     text += " FROM " + this.table;
 
-    const where = handleWhere<T>(criteria);
+    const where = handleWhere<T>(criteria, this.stringifyComplexTypes);
     text += where.text;
     values.push(...where.values);
 
@@ -95,14 +99,14 @@ export class PostgresQueryBuilder<T extends Dict> implements IPostgresQueryBuild
 
     let text = `UPDATE ${this.table} SET ${setClause}`;
 
-    const where = handleWhere<T>(criteria);
+    const where = handleWhere<T>(criteria, this.stringifyComplexTypes);
     text += where.text;
     values.push(...where.values);
 
     const returning = handleReturning(options);
     text += returning.text;
 
-    return { text, values };
+    return { text, values: replaceValues(values, this.stringifyComplexTypes) };
   }
 
   public upsert(
@@ -140,7 +144,7 @@ export class PostgresQueryBuilder<T extends Dict> implements IPostgresQueryBuild
     const returning = handleReturning(options);
     text += returning.text;
 
-    return { text, values };
+    return { text, values: replaceValues(values, this.stringifyComplexTypes) };
   }
 
   private handleInsert(
@@ -180,6 +184,6 @@ export class PostgresQueryBuilder<T extends Dict> implements IPostgresQueryBuild
     const returning = handleReturning(options);
     text += returning.text;
 
-    return { text, values };
+    return { text, values: replaceValues(values, this.stringifyComplexTypes) };
   }
 }

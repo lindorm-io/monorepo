@@ -3,6 +3,7 @@ import { Dict } from "@lindorm/types";
 type Order = "ASC" | "DESC" | "asc" | "desc";
 
 export type PostgresQueryBuilderOptions = {
+  stringifyComplexTypes: boolean;
   table: string;
 };
 

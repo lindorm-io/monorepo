@@ -5,10 +5,22 @@ import { HandlerResult } from "../../types/private";
 import { quotation } from "./quotation";
 
 // Helper function to build SQL path for JSONB or regular fields
-const buildPath = (key: string, path: string[]): string => {
+const buildPath = (
+  key: string,
+  stringifyComplexTypes: boolean,
+  path: string[],
+): string => {
   if (path.length === 0) {
     // Top-level access: regular SQL column access
     return `${quotation(key)}`;
+  }
+  if (stringifyComplexTypes) {
+    if (path.length === 1) {
+      // First-level access within JSONB: use #>> for deep paths
+      return `${quotation(path[0])} #>> '{__record__, ${key}}'`;
+    }
+    // First-level access within JSONB: use #>> for deep paths
+    return `${quotation(path[0])} #>> '{__record__, ${path.slice(1).concat(key).join(", ")}}'`;
   }
   if (path.length === 1) {
     // First-level access within JSONB: use ->>
@@ -18,31 +30,32 @@ const buildPath = (key: string, path: string[]): string => {
   return `${quotation(path[0])} #>> '{${path.slice(1).concat(key).join(", ")}}'`;
 };
 
+const isCriteriaCondition = (condition: any): boolean =>
+  "$eq" in condition ||
+  "$neq" in condition ||
+  "$gt" in condition ||
+  "$gte" in condition ||
+  "$lt" in condition ||
+  "$lte" in condition ||
+  "$like" in condition ||
+  "$ilike" in condition ||
+  "$in" in condition ||
+  "$nin" in condition ||
+  "$between" in condition;
+
 // Function to handle different operators and construct WHERE clause
 const processCriteria = (
   key: string,
   condition: any,
+  stringifyComplexTypes: boolean,
   path: Array<string> = [],
 ): HandlerResult => {
   let text = "";
   const values: Array<any> = [];
 
-  const operatorPath = buildPath(key, path);
+  const operatorPath = buildPath(key, stringifyComplexTypes, path);
 
-  if (
-    isObject(condition) &&
-    ("$eq" in condition ||
-      "$neq" in condition ||
-      "$gt" in condition ||
-      "$gte" in condition ||
-      "$lt" in condition ||
-      "$lte" in condition ||
-      "$like" in condition ||
-      "$ilike" in condition ||
-      "$in" in condition ||
-      "$nin" in condition ||
-      "$between" in condition)
-  ) {
+  if (isObject(condition) && isCriteriaCondition(condition)) {
     const queryOps = condition as QueryOperator<any>;
 
     if (queryOps.$eq === null) {
@@ -110,35 +123,24 @@ const processCriteria = (
 // Recursive function to process criteria and return the WHERE clause parts
 const recursiveProcess = (
   currentCriteria: any,
+  stringifyComplexTypes: boolean,
   path: Array<string> = [],
 ): HandlerResult => {
   let text = "";
   const values: Array<any> = [];
 
   for (const [key, condition] of Object.entries(currentCriteria)) {
-    if (
-      isObject(condition) &&
-      !(
-        "$eq" in condition ||
-        "$neq" in condition ||
-        "$gt" in condition ||
-        "$gte" in condition ||
-        "$lt" in condition ||
-        "$lte" in condition ||
-        "$like" in condition ||
-        "$ilike" in condition ||
-        "$in" in condition ||
-        "$nin" in condition ||
-        "$between" in condition
-      )
-    ) {
+    if (isObject(condition) && !isCriteriaCondition(condition)) {
       // Recurse deeper into the object structure for nested fields
-      const nestedResult = recursiveProcess(condition, [...path, key]);
+      const nestedResult = recursiveProcess(condition, stringifyComplexTypes, [
+        ...path,
+        key,
+      ]);
       text += nestedResult.text;
       values.push(...nestedResult.values);
     } else {
       // Handle the current level criteria and append to query
-      const result = processCriteria(key, condition, path);
+      const result = processCriteria(key, condition, stringifyComplexTypes, path);
       text += result.text;
       values.push(...result.values);
     }
@@ -147,11 +149,14 @@ const recursiveProcess = (
   return { text, values };
 };
 
-export const handleWhere = <T extends Dict>(criteria: Criteria<T>): HandlerResult => {
+export const handleWhere = <T extends Dict>(
+  criteria: Criteria<T>,
+  stringifyComplexTypes: boolean,
+): HandlerResult => {
   if (!Object.keys(criteria).length) return { text: "", values: [] };
 
   // Call recursiveProcess to build the WHERE clause and collect values
-  const { text: whereText, values } = recursiveProcess(criteria);
+  const { text: whereText, values } = recursiveProcess(criteria, stringifyComplexTypes);
 
   // Remove trailing " AND " from the text
   const finalText = whereText.slice(0, -5); // Remove the last ' AND '

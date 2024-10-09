@@ -10,5 +10,7 @@ export const createMockPostgresSource = (): IPostgresSource => ({
   query: jest.fn(),
   queryBuilder: jest
     .fn()
-    .mockImplementation((table: string) => new PostgresQueryBuilder({ table })),
+    .mockImplementation(
+      (table: string) => new PostgresQueryBuilder({ table, stringifyComplexTypes: true }),
+    ),
 });
