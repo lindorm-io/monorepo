@@ -1,8 +1,8 @@
 import { camelCase } from "@lindorm/case";
+import { IEntity } from "@lindorm/entity";
 import { ClientError } from "@lindorm/errors";
 import { Constructor } from "@lindorm/types";
 import { get } from "object-path";
-import { IRedisEntity } from "../interfaces";
 import { RedisPylonEventContext, RedisPylonEventMiddleware } from "../types";
 
 type Options = {
@@ -12,7 +12,7 @@ type Options = {
 
 export const createSocketRedisEntityMiddleware =
   <C extends RedisPylonEventContext = RedisPylonEventContext>(
-    Entity: Constructor<IRedisEntity>,
+    Entity: Constructor<IEntity>,
   ) =>
   (path: string, options: Options = {}): RedisPylonEventMiddleware<C> => {
     return async function socketRedisEntityMiddleware(ctx, next): Promise<void> {

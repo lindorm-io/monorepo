@@ -1,5 +1,6 @@
 import { kebabCase } from "@lindorm/case";
 import { expires } from "@lindorm/date";
+import { IEntity } from "@lindorm/entity";
 import { isFunction, isString } from "@lindorm/is";
 import { Primitive } from "@lindorm/json-kit";
 import { ILogger } from "@lindorm/logger";
@@ -9,17 +10,15 @@ import { randomUUID } from "crypto";
 import { Redis } from "ioredis";
 import { z } from "zod";
 import { RedisRepositoryError } from "../errors";
-import { Criteria, IRedisEntity, IRedisRepository } from "../interfaces";
+import { Criteria, IRedisRepository } from "../interfaces";
 import {
   CreateRedisEntityFn,
   RedisRepositoryOptions,
   ValidateRedisEntityFn,
 } from "../types";
 
-export class RedisRepository<
-  E extends IRedisEntity,
-  O extends DeepPartial<E> = DeepPartial<E>,
-> implements IRedisRepository<E, O>
+export class RedisRepository<E extends IEntity, O extends DeepPartial<E> = DeepPartial<E>>
+  implements IRedisRepository<E, O>
 {
   private readonly EntityConstructor: Constructor<E>;
   private readonly client: Redis;

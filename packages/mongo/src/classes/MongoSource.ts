@@ -1,14 +1,9 @@
+import { IEntity } from "@lindorm/entity";
 import { ILogger } from "@lindorm/logger";
 import { Constructor } from "@lindorm/types";
 import { Collection, Db, Document, MongoClient } from "mongodb";
 import { MongoSourceError } from "../errors";
-import {
-  IMongoBucket,
-  IMongoEntity,
-  IMongoFile,
-  IMongoRepository,
-  IMongoSource,
-} from "../interfaces";
+import { IMongoBucket, IMongoFile, IMongoRepository, IMongoSource } from "../interfaces";
 import {
   CloneMongoSourceOptions,
   MongoSourceBucketOptions,
@@ -113,7 +108,7 @@ export class MongoSource implements IMongoSource {
     });
   }
 
-  public repository<E extends IMongoEntity>(
+  public repository<E extends IEntity>(
     Entity: Constructor<E>,
     options: MongoSourceRepositoryOptions<E> = {},
   ): IMongoRepository<E> {
@@ -146,9 +141,7 @@ export class MongoSource implements IMongoSource {
 
   // private
 
-  private entityConfig<E extends IMongoEntity>(
-    Entity: Constructor<E>,
-  ): MongoSourceEntity<E> {
+  private entityConfig<E extends IEntity>(Entity: Constructor<E>): MongoSourceEntity<E> {
     const config = this.entities.find((entity) => entity.Entity === Entity);
 
     if (config) {

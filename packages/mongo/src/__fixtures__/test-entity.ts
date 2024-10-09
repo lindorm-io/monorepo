@@ -1,11 +1,11 @@
-import { MongoEntityBase } from "../classes";
+import { EntityBase } from "@lindorm/entity";
 
 export type TestEntityOptions = {
   email?: string;
   name: string;
 };
 
-export class TestEntity extends MongoEntityBase {
+export class TestEntity extends EntityBase {
   public email: string | null;
   public name: string;
 

@@ -1,4 +1,4 @@
-import { MongoEntityBase } from "../../classes";
+import { EntityBase } from "@lindorm/entity";
 import { ValidateMongoEntityFn } from "../../types";
 import { MongoEntityConfig } from "../../types/mongo-entity-config";
 
@@ -7,7 +7,7 @@ export type TestEntityOneOptions = {
   name: string;
 };
 
-export class TestEntityOne extends MongoEntityBase {
+export class TestEntityOne extends EntityBase {
   public readonly email: string | null;
   public readonly name: string;
 

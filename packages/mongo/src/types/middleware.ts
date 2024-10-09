@@ -1,3 +1,4 @@
+import { IEntity } from "@lindorm/entity";
 import {
   PylonEventContext,
   PylonEventMiddleware,
@@ -6,13 +7,13 @@ import {
   PylonSocketData,
 } from "@lindorm/pylon";
 import { Dict } from "@lindorm/types";
-import { IMongoEntity, IMongoFile, IMongoSource } from "../interfaces";
+import { IMongoFile, IMongoSource } from "../interfaces";
 
 // common context
 
 type Context = {
   mongo: IMongoSource;
-  entities: Dict<IMongoEntity>;
+  entities: Dict<IEntity>;
   files: Array<IMongoFile>;
 };
 

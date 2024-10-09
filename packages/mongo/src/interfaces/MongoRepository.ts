@@ -1,9 +1,9 @@
+import { IEntity } from "@lindorm/entity";
 import { DeepPartial } from "@lindorm/types";
 import { CountDocumentsOptions, DeleteOptions, Filter, FindOptions } from "mongodb";
-import { IMongoEntity } from "./MongoEntity";
 
 export interface IMongoRepository<
-  E extends IMongoEntity,
+  E extends IEntity,
   O extends DeepPartial<E> = DeepPartial<E>,
 > {
   create(options?: O | E): E;

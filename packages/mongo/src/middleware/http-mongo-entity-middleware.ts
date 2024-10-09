@@ -2,8 +2,8 @@ import { camelCase } from "@lindorm/case";
 import { ClientError } from "@lindorm/errors";
 import { Constructor } from "@lindorm/types";
 import { get } from "object-path";
-import { IMongoEntity } from "../interfaces";
 import { MongoPylonHttpContext, MongoPylonHttpMiddleware } from "../types";
+import { IEntity } from "@lindorm/entity";
 
 type Options = {
   key?: string;
@@ -12,7 +12,7 @@ type Options = {
 
 export const createHttpMongoEntityMiddleware =
   <C extends MongoPylonHttpContext = MongoPylonHttpContext>(
-    Entity: Constructor<IMongoEntity>,
+    Entity: Constructor<IEntity>,
   ) =>
   (path: string, options: Options = {}): MongoPylonHttpMiddleware<C> => {
     return async function httpMongoEntityMiddleware(ctx, next): Promise<void> {
