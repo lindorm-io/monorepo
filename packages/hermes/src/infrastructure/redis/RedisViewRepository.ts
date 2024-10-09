@@ -49,7 +49,18 @@ export class RedisViewRepository<S extends Dict = Dict>
   }
 
   public async findById(id: string): Promise<ViewRepositoryAttributes<S> | undefined> {
-    return await this.findOne({ id });
+    const data = await this.source.client.get(this.redisKey(id));
+
+    if (!data) return undefined;
+
+    const parsed = JsonKit.parse<ViewStoreAttributes>(data);
+
+    return {
+      id: parsed.id,
+      state: parsed.state,
+      created_at: parsed.created_at,
+      updated_at: parsed.updated_at,
+    } as ViewRepositoryAttributes<S>;
   }
 
   public async findOne(
