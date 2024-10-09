@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/json-kit@0.3.1...@lindorm/json-kit@0.4.0) (2024-10-09)
+
+### Features
+
+- expand parsing and returns ([68b5a70](https://github.com/lindorm-io/monorepo/commit/68b5a700a3ed91b7909ad001188bc36216da9f1f))
+
 ## [0.3.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/json-kit@0.3.0...@lindorm/json-kit@0.3.1) (2024-09-25)
 
 **Note:** Version bump only for package @lindorm/json-kit

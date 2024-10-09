@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/aes@0.3.3...@lindorm/aes@0.4.0) (2024-10-09)
+
+### Bug Fixes
+
+- move content to end of encoded array so that it can be any size ([b053924](https://github.com/lindorm-io/monorepo/commit/b05392484342976f519b32f943aac41271761df4))
+
+### Features
+
+- add automatic b64 encoding ([f3ac64e](https://github.com/lindorm-io/monorepo/commit/f3ac64e7922528b1afe0f0acbc52b62aa7003d2d))
+- rename modes and add encoded ([b8c9d4c](https://github.com/lindorm-io/monorepo/commit/b8c9d4c26a069444fa7bff5a809308cecff971ef))
+
 ## [0.3.3](https://github.com/lindorm-io/monorepo/compare/@lindorm/aes@0.3.2...@lindorm/aes@0.3.3) (2024-09-25)
 
 **Note:** Version bump only for package @lindorm/aes

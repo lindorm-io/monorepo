@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.5](https://github.com/lindorm-io/monorepo/compare/@lindorm/kryptos@0.3.4...@lindorm/kryptos@0.3.5) (2024-10-09)
+
+### Bug Fixes
+
+- add mock ([e154c05](https://github.com/lindorm-io/monorepo/commit/e154c056bdeab56f2af68af2697ebc390ebc5bb9))
+- expand static generators ([3fe2a59](https://github.com/lindorm-io/monorepo/commit/3fe2a59d2a13b8ecbe10102e4cc1ff87490ff8f0))
+
 ## [0.3.4](https://github.com/lindorm-io/monorepo/compare/@lindorm/kryptos@0.3.3...@lindorm/kryptos@0.3.4) (2024-09-25)
 
 **Note:** Version bump only for package @lindorm/kryptos

@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.3.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/scanner@0.2.1...@lindorm/scanner@0.3.0) (2024-10-09)
+
+### Features
+
+- return class object for consistency ([de752e0](https://github.com/lindorm-io/monorepo/commit/de752e062f6bef8c059c79fabd7b6412990c2f5c))
+
 ## [0.2.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/scanner@0.2.0...@lindorm/scanner@0.2.1) (2024-09-25)
 
 **Note:** Version bump only for package @lindorm/scanner

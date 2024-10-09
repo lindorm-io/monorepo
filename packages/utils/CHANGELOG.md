@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.3.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/utils@0.2.0...@lindorm/utils@0.3.0) (2024-10-09)
+
+### Features
+
+- add fn to find last ([a7b2fda](https://github.com/lindorm-io/monorepo/commit/a7b2fda4f6b11305b1d8785bf263649f4532871c))
+
 # [0.2.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/utils@0.1.4...@lindorm/utils@0.2.0) (2024-09-20)
 
 ### Bug Fixes

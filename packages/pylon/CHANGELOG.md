@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/pylon@0.2.0...@lindorm/pylon@0.2.1) (2024-10-09)
+
+### Bug Fixes
+
+- align imports ([e6a77ce](https://github.com/lindorm-io/monorepo/commit/e6a77ceb096100007f38a58e36f607ca5994136a))
+
 # [0.2.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/pylon@0.1.1...@lindorm/pylon@0.2.0) (2024-09-25)
 
 ### Bug Fixes
