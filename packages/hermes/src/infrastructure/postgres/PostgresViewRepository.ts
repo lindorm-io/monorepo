@@ -46,7 +46,6 @@ export class PostgresViewRepository<S extends Dict = Dict>
     const selectCriteria: Criteria<ViewStoreAttributes> = {
       destroyed: false,
       ...criteria,
-      state: criteria.state ? { __record__: criteria.state } : criteria.state,
     };
 
     const selectOptions: SelectOptions<ViewStoreAttributes> = {

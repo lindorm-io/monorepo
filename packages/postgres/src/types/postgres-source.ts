@@ -12,8 +12,8 @@ export type PostgresSourceOptions = {
   url: string;
 };
 
-export type PostgresQueryOptions = {
-  stringifyComplexTypes?: boolean; // default: true
+export type PostgresSourceQueryBuilderOptions = {
+  stringifyComplexTypes?: boolean;
 };
 
 export type PostgresResult<T extends Dict> = Omit<QueryResult, "rows"> & {

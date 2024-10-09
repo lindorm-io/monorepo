@@ -5,9 +5,9 @@ import { PostgresError } from "../errors";
 import { IPostgresQueryBuilder, IPostgresSource } from "../interfaces";
 import {
   ClonePostgresSourceOptions,
-  PostgresQueryOptions,
   PostgresResult,
   PostgresSourceOptions,
+  PostgresSourceQueryBuilderOptions,
 } from "../types";
 import { FromClone } from "../types/private";
 import { parseQuery } from "../utils/private";
@@ -58,14 +58,13 @@ export class PostgresSource implements IPostgresSource {
   public async query<R extends Dict = any, V = Array<any>>(
     queryTextOrConfig: string | QueryConfig<V>,
     values?: QueryConfigValues<V>,
-    options?: PostgresQueryOptions,
   ): Promise<PostgresResult<R>> {
     let client: PoolClient;
 
     try {
       client = await this.client.connect();
 
-      const query = parseQuery(queryTextOrConfig, values, options);
+      const query = parseQuery(queryTextOrConfig, values);
 
       this.logger.debug("Query", { query, values });
 
@@ -88,7 +87,13 @@ export class PostgresSource implements IPostgresSource {
     }
   }
 
-  public queryBuilder<T extends Dict>(table: string): IPostgresQueryBuilder<T> {
-    return new PostgresQueryBuilder<T>({ table });
+  public queryBuilder<T extends Dict>(
+    table: string,
+    options: PostgresSourceQueryBuilderOptions = {},
+  ): IPostgresQueryBuilder<T> {
+    return new PostgresQueryBuilder<T>({
+      table,
+      stringifyComplexTypes: options.stringifyComplexTypes ?? true,
+    });
   }
 }

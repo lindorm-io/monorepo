@@ -21,14 +21,23 @@ describe("PostgresQueryBuilder", () => {
   beforeAll(() => {
     queryBuilder = new PostgresQueryBuilder<Attribute>({
       table: "my_table_name",
+      stringifyComplexTypes: true,
     });
   });
 
   describe("constructor", () => {
     test("should throw on invalid table name", () => {
-      expect(() => new PostgresQueryBuilder({ table: "" })).toThrow();
+      expect(
+        () => new PostgresQueryBuilder({ table: "", stringifyComplexTypes: true }),
+      ).toThrow();
 
-      expect(() => new PostgresQueryBuilder({ table: "invalid table name" })).toThrow();
+      expect(
+        () =>
+          new PostgresQueryBuilder({
+            table: "invalid table name",
+            stringifyComplexTypes: true,
+          }),
+      ).toThrow();
     });
   });
 
@@ -64,9 +73,9 @@ describe("PostgresQueryBuilder", () => {
           "General",
           2,
           true,
-          ["Four"],
-          [{ five: "Five" }],
-          { six: "Six" },
+          '["Four"]',
+          '{"__meta__":[{"five":"S"}],"__array__":[{"five":"Five"}]}',
+          '{"__meta__":{"six":"S"},"__record__":{"six":"Six"}}',
           MockedDate,
         ],
       });
@@ -103,17 +112,17 @@ describe("PostgresQueryBuilder", () => {
           "General",
           2,
           true,
-          ["Four"],
-          [{ five: "Five" }],
-          { six: "Six" },
+          '["Four"]',
+          '{"__meta__":[{"five":"S"}],"__array__":[{"five":"Five"}]}',
+          '{"__meta__":{"six":"S"},"__record__":{"six":"Six"}}',
           MockedDate,
 
           "Kenobi",
           4,
           false,
-          ["Five", "Six", "Seven", "Eight"],
-          [{ something: { else: true } }],
-          { is: { an_object: 1 } },
+          '["Five","Six","Seven","Eight"]',
+          '{"__meta__":[{"something":{"else":"B"}}],"__array__":[{"something":{"else":"true"}}]}',
+          '{"__meta__":{"is":{"an_object":"N"}},"__record__":{"is":{"an_object":"1"}}}',
           MockedDate,
         ],
       });
@@ -163,7 +172,7 @@ describe("PostgresQueryBuilder", () => {
     test("should create a select query with all options", () => {
       expect(
         queryBuilder.select(
-          { one: "General", two: 15 },
+          { one: "General", two: 15, six: { something: "something dark side" } },
           {
             distinct: true,
             columns: ["one", "two"],
@@ -176,8 +185,8 @@ describe("PostgresQueryBuilder", () => {
           },
         ),
       ).toEqual({
-        text: 'SELECT DISTINCT "one", "two" FROM "my_table_name" WHERE "one" = ? AND "two" = ? ORDER BY "one" ASC, "two" DESC LIMIT ? OFFSET ?',
-        values: ["General", 15, 10, 5],
+        text: 'SELECT DISTINCT "one", "two" FROM "my_table_name" WHERE "one" = ? AND "two" = ? AND "six" #>> \'{__record__, something}\' = ? ORDER BY "one" ASC, "two" DESC LIMIT ? OFFSET ?',
+        values: ["General", 15, "something dark side", 10, 5],
       });
     });
   });
