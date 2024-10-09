@@ -1,4 +1,5 @@
 import { snakeCase } from "@lindorm/case";
+import { IEntity } from "@lindorm/entity";
 import { isFunction } from "@lindorm/is";
 import { ILogger } from "@lindorm/logger";
 import { Constructor, DeepPartial } from "@lindorm/types";
@@ -6,19 +7,16 @@ import { randomUUID } from "crypto";
 import { CountDocumentsOptions, DeleteOptions, Filter, FindOptions } from "mongodb";
 import { z } from "zod";
 import { MongoRepositoryError } from "../errors";
-import { IMongoEntity, IMongoRepository } from "../interfaces";
+import { IMongoRepository } from "../interfaces";
 import {
   CreateMongoEntityFn,
+  MongoEntityConfig,
   MongoRepositoryOptions,
   ValidateMongoEntityFn,
 } from "../types";
-import { MongoEntityConfig } from "../types/mongo-entity-config";
 import { MongoBase } from "./MongoBase";
 
-export class MongoRepository<
-    E extends IMongoEntity,
-    O extends DeepPartial<E> = DeepPartial<E>,
-  >
+export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepPartial<E>>
   extends MongoBase<E>
   implements IMongoRepository<E, O>
 {
@@ -544,7 +542,7 @@ export class MongoRepository<
 
   // private
 
-  private static createCollectionName<E extends IMongoEntity>(
+  private static createCollectionName<E extends IEntity>(
     options: MongoRepositoryOptions<E>,
   ): string {
     const nsp = options.namespace ? `${snakeCase(options.namespace)}_` : "";

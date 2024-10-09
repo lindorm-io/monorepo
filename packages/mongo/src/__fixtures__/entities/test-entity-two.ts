@@ -1,7 +1,7 @@
-import { MongoEntityBase } from "../../classes";
+import { EntityBase } from "@lindorm/entity";
 import { MongoIndexOptions } from "../../types";
 
-export class TestEntityTwo extends MongoEntityBase {
+export class TestEntityTwo extends EntityBase {
   public readonly email: string;
   public readonly name: string;
   public readonly _test: string;

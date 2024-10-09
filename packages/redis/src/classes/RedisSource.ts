@@ -1,9 +1,9 @@
+import { IEntity } from "@lindorm/entity";
 import { ILogger } from "@lindorm/logger";
 import { Constructor } from "@lindorm/types";
 import { Redis } from "ioredis";
 import { RedisSourceError } from "../errors";
 import {
-  IRedisEntity,
   IRedisRepository,
   IRedisSource,
   RedisSourceRepositoryOptions,
@@ -72,7 +72,7 @@ export class RedisSource implements IRedisSource {
     await this.client.quit();
   }
 
-  public repository<E extends IRedisEntity>(
+  public repository<E extends IEntity>(
     Entity: Constructor<E>,
     options: RedisSourceRepositoryOptions<E> = {},
   ): IRedisRepository<E> {
@@ -94,9 +94,7 @@ export class RedisSource implements IRedisSource {
 
   // private
 
-  private entityConfig<E extends IRedisEntity>(
-    Entity: Constructor<E>,
-  ): RedisSourceEntity<E> {
+  private entityConfig<E extends IEntity>(Entity: Constructor<E>): RedisSourceEntity<E> {
     const config = this.entities.find((entity) => entity.Entity === Entity);
 
     if (config) {

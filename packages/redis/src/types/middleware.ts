@@ -1,3 +1,4 @@
+import { IEntity } from "@lindorm/entity";
 import {
   PylonEventContext,
   PylonEventMiddleware,
@@ -6,13 +7,13 @@ import {
   PylonSocketData,
 } from "@lindorm/pylon";
 import { Dict } from "@lindorm/types";
-import { IRedisEntity, IRedisSource } from "../interfaces";
+import { IRedisSource } from "../interfaces";
 
 // common context
 
 type Context = {
   redis: IRedisSource;
-  entities: Dict<IRedisEntity>;
+  entities: Dict<IEntity>;
 };
 
 // extended context

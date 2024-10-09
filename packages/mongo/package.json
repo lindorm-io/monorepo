@@ -39,6 +39,7 @@
   },
   "devDependencies": {
     "@lindorm/amphora": "^0.1.5",
+    "@lindorm/entity": "^0.1.0",
     "@lindorm/logger": "^0.2.1",
     "@lindorm/pylon": "^0.2.1",
     "@lindorm/types": "^0.2.0",

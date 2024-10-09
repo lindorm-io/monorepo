@@ -1,14 +1,15 @@
-import { IRedisEntity, IRedisRepository } from "../interfaces";
+import { IEntity } from "@lindorm/entity";
+import { IRedisRepository } from "../interfaces";
 
-export type CreateMockEntityCallback = (options?: any) => IRedisEntity;
+export type CreateMockEntityCallback = (options?: any) => IEntity;
 
-const updateEntity = (entity: IRedisEntity): IRedisEntity => {
+const updateEntity = (entity: IEntity): IEntity => {
   entity.rev = entity.rev + 1;
   entity.updatedAt = new Date();
   return entity;
 };
 
-export const createMockRedisRepository = <E extends IRedisEntity>(
+export const createMockRedisRepository = <E extends IEntity>(
   callback: CreateMockEntityCallback,
 ): IRedisRepository<E> => ({
   count: jest.fn().mockResolvedValue(1),

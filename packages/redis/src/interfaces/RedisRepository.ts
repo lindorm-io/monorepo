@@ -1,10 +1,10 @@
+import { IEntity } from "@lindorm/entity";
 import { DeepPartial } from "@lindorm/types";
-import { IRedisEntity } from "./RedisEntity";
 
 export type Criteria<E> = DeepPartial<E>;
 
 export interface IRedisRepository<
-  E extends IRedisEntity,
+  E extends IEntity,
   O extends DeepPartial<E> = DeepPartial<E>,
 > {
   create(options: O | E): E;

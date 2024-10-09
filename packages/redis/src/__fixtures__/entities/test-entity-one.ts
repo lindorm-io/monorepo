@@ -1,4 +1,4 @@
-import { RedisEntityBase } from "../../classes";
+import { EntityBase } from "@lindorm/entity";
 import { ValidateRedisEntityFn } from "../../types";
 
 export type TestEntityOneOptions = {
@@ -6,7 +6,7 @@ export type TestEntityOneOptions = {
   name: string;
 };
 
-export class TestEntityOne extends RedisEntityBase {
+export class TestEntityOne extends EntityBase {
   public readonly email: string | null;
   public readonly name: string;
 

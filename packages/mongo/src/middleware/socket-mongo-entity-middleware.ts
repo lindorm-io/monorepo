@@ -1,8 +1,8 @@
 import { camelCase } from "@lindorm/case";
+import { IEntity } from "@lindorm/entity";
 import { ClientError } from "@lindorm/errors";
 import { Constructor } from "@lindorm/types";
 import { get } from "object-path";
-import { IMongoEntity } from "../interfaces";
 import { MongoPylonEventContext, MongoPylonEventMiddleware } from "../types";
 
 type Options = {
@@ -12,7 +12,7 @@ type Options = {
 
 export const createSocketMongoEntityMiddleware =
   <C extends MongoPylonEventContext = MongoPylonEventContext>(
-    Entity: Constructor<IMongoEntity>,
+    Entity: Constructor<IEntity>,
   ) =>
   (path: string, options: Options = {}): MongoPylonEventMiddleware<C> => {
     return async function socketMongoEntityMiddleware(ctx, next): Promise<void> {

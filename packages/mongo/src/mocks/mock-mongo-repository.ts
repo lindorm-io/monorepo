@@ -1,14 +1,15 @@
-import { IMongoEntity, IMongoRepository } from "../interfaces";
+import { IEntity } from "@lindorm/entity";
+import { IMongoRepository } from "../interfaces";
 
-export type CreateMockEntityCallback = (options?: any) => IMongoEntity;
+export type CreateMockEntityCallback = (options?: any) => IEntity;
 
-const updateEntity = (entity: IMongoEntity): IMongoEntity => {
+const updateEntity = (entity: IEntity): IEntity => {
   entity.rev = entity.rev + 1;
   entity.updatedAt = new Date();
   return entity;
 };
 
-export const createMockMongoRepository = <E extends IMongoEntity>(
+export const createMockMongoRepository = <E extends IEntity>(
   callback: CreateMockEntityCallback,
 ): IMongoRepository<E> => ({
   count: jest.fn().mockResolvedValue(1),
