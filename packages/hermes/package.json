@@ -28,6 +28,7 @@
   "dependencies": {
     "@lindorm/aes": "^0.4.0",
     "@lindorm/case": "^0.1.5",
+    "@lindorm/date": "^0.1.5",
     "@lindorm/is": "^0.1.6",
     "@lindorm/json-kit": "^0.4.0",
     "@lindorm/kryptos": "^0.3.5",
