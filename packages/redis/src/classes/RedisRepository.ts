@@ -5,12 +5,12 @@ import { isFunction, isString } from "@lindorm/is";
 import { Primitive } from "@lindorm/json-kit";
 import { ILogger } from "@lindorm/logger";
 import { Constructor, DeepPartial } from "@lindorm/types";
-import { filter, find } from "@lindorm/utils";
+import { Predicate, Predicated } from "@lindorm/utils";
 import { randomUUID } from "crypto";
 import { Redis } from "ioredis";
 import { z } from "zod";
 import { RedisRepositoryError } from "../errors";
-import { Criteria, IRedisRepository } from "../interfaces";
+import { IRedisRepository } from "../interfaces";
 import {
   CreateRedisEntityFn,
   RedisRepositoryOptions,
@@ -50,26 +50,25 @@ export class RedisRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
     return entity;
   }
 
-  public async count(criteria: Criteria<E> = {}): Promise<number> {
+  public async count(predicate: Predicate<E> = {}): Promise<number> {
     const scan = await this.scan();
-    const extended = this.createDefaultFilter(criteria);
-    const entities = filter(scan, extended);
+    const extended = this.createDefaultFilter(predicate);
+    const count = Predicated.filter(scan, extended).length;
 
     this.logger.debug("Counted documents", {
-      count: entities.length,
-      criteria,
-      entities,
+      count,
+      predicate,
     });
 
-    return entities.length;
+    return count;
   }
 
-  public async delete(criteria: Criteria<E>): Promise<void> {
-    if (isString(criteria.id)) {
-      return this.deleteById(criteria.id);
+  public async delete(predicate: Predicate<E>): Promise<void> {
+    if (isString(predicate.id)) {
+      return this.deleteById(predicate.id);
     }
 
-    const entities = await this.find(criteria);
+    const entities = await this.find(predicate);
 
     for (const entity of entities) {
       await this.destroy(entity);
@@ -108,13 +107,13 @@ export class RedisRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
     await Promise.all(entities.map((entity) => this.destroy(entity)));
   }
 
-  public async exists(criteria: Criteria<E>): Promise<boolean> {
-    const count = await this.count(criteria);
+  public async exists(predicate: Predicate<E>): Promise<boolean> {
+    const count = await this.count(predicate);
     const exists = count >= 1;
 
     this.logger.debug("Repository done: exists", {
       input: {
-        criteria,
+        predicate,
       },
       result: {
         exists,
@@ -124,7 +123,7 @@ export class RedisRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
     if (count > 1) {
       this.logger.warn("Multiple documents found", {
         input: {
-          criteria,
+          predicate,
         },
         result: {
           count,
@@ -135,9 +134,9 @@ export class RedisRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
     return exists;
   }
 
-  public async find(criteria: Criteria<E> = {}): Promise<Array<E>> {
-    if (isString(criteria.id)) {
-      const entity = await this.findOneById(criteria.id);
+  public async find(predicate: Predicate<E> = {}): Promise<Array<E>> {
+    if (isString(predicate.id)) {
+      const entity = await this.findOneById(predicate.id);
 
       if (entity) {
         return [entity];
@@ -147,21 +146,21 @@ export class RedisRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
     }
 
     const scan = await this.scan();
-    const extended = this.createDefaultFilter(criteria);
-    const entities = filter(scan, extended);
+    const extended = this.createDefaultFilter(predicate);
+    const entities = Predicated.filter(scan, extended);
 
     this.logger.debug("Repository done: find", {
       count: entities.length,
-      criteria,
+      predicate,
       entities,
     });
 
     return entities;
   }
 
-  public async findOne(criteria: Criteria<E>): Promise<E | null> {
-    if (isString(criteria.id)) {
-      const entity = await this.findOneById(criteria.id);
+  public async findOne(predicate: Predicate<E>): Promise<E | null> {
+    if (isString(predicate.id)) {
+      const entity = await this.findOneById(predicate.id);
 
       if (entity) {
         return entity;
@@ -171,32 +170,32 @@ export class RedisRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
     }
 
     const scan = await this.scan();
-    const extended = this.createDefaultFilter(criteria);
-    const entity = find(scan, extended);
+    const extended = this.createDefaultFilter(predicate);
+    const entity = Predicated.find(scan, extended);
 
     this.logger.debug("Repository done: findOne", {
-      criteria,
+      predicate,
       entity,
     });
 
     return entity ?? null;
   }
 
-  public async findOneOrFail(criteria: Criteria<E>): Promise<E> {
-    const entity = await this.findOne(criteria);
+  public async findOneOrFail(predicate: Predicate<E>): Promise<E> {
+    const entity = await this.findOne(predicate);
 
     if (!entity) {
-      throw new RedisRepositoryError("Entity not found", { debug: { criteria } });
+      throw new RedisRepositoryError("Entity not found", { debug: { predicate } });
     }
 
     return entity;
   }
 
-  public async findOneOrSave(criteria: DeepPartial<E>, options?: O): Promise<E> {
-    const entity = await this.findOne(criteria);
+  public async findOneOrSave(predicate: DeepPartial<E>, options?: O): Promise<E> {
+    const entity = await this.findOne(predicate);
     if (entity) return entity;
 
-    return this.save(this.create({ ...criteria, ...options } as O));
+    return this.save(this.create({ ...predicate, ...options } as O));
   }
 
   public async findOneById(id: string): Promise<E | null> {
@@ -285,9 +284,9 @@ export class RedisRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
     return Promise.all(entities.map((entity) => this.save(entity)));
   }
 
-  public async ttl(criteria: Criteria<E>): Promise<number> {
+  public async ttl(predicate: Predicate<E>): Promise<number> {
     try {
-      const entity = await this.findOneOrFail(criteria);
+      const entity = await this.findOneOrFail(predicate);
       return this.client.ttl(this.key(entity));
     } catch (error: any) {
       this.logger.error("Repository error", error);
@@ -322,10 +321,10 @@ export class RedisRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
     return `${this.keyPattern}${material.id}`;
   }
 
-  private createDefaultFilter(criteria: Criteria<any> = {}): Criteria<any> {
+  private createDefaultFilter(predicate: Predicate<E> = {}): Predicate<E> {
     return {
-      ...criteria,
       deletedAt: null,
+      ...predicate,
     };
   }
 
