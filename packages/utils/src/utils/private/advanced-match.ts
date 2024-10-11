@@ -1,6 +1,6 @@
+import { isAfter, isBefore, isEqual } from "@lindorm/date";
 import { isArray, isDate, isNumber, isObject, isString, isUndefined } from "@lindorm/is";
 import { Dict } from "@lindorm/types";
-import { isAfter, isBefore, isEqual } from "date-fns";
 import { isRegExp } from "util/types";
 import { Predicate, PredicateOperator } from "../../types";
 
@@ -180,20 +180,22 @@ const handleLogicalOperators = <T>(
 export const advancedMatch = <T extends Dict>(
   object: T,
   predicate: Predicate<T>,
-): boolean => {
-  if (hasLogicalOperator(predicate)) {
-    return handleLogicalOperators(
-      object,
-      predicate as PredicateOperator<any>,
-      advancedMatch,
-    );
-  }
+): boolean =>
+  Object.entries(predicate).every(([key, predicateValue]) => {
+    // Handle logical operators if present
+    if (LOGICAL_OPERATORS.includes(key)) {
+      return handleLogicalOperators(
+        object,
+        { [key]: predicateValue } as PredicateOperator<any>,
+        advancedMatch,
+      );
+    }
 
-  return Object.entries(predicate).every(([key, predicateValue]) => {
     const objectValue = object[key as keyof T];
 
     if (isUndefined(objectValue)) return false;
 
+    // Handle field-level predicates
     if (isArray(predicateValue)) {
       if (!isArray(objectValue)) return false;
 
@@ -225,4 +227,3 @@ export const advancedMatch = <T extends Dict>(
 
     return predicateValue === objectValue;
   });
-};
