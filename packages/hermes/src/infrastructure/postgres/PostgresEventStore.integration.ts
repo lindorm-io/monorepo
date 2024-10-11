@@ -1,7 +1,7 @@
 import { createMockLogger } from "@lindorm/logger";
 import { IPostgresSource, PostgresSource } from "@lindorm/postgres";
 import { randomUUID } from "crypto";
-import { subDays } from "date-fns";
+import { subDays } from "@lindorm/date";
 import { TEST_AGGREGATE_IDENTIFIER } from "../../__fixtures__/aggregate";
 import { EVENT_STORE } from "../../constants/private";
 import { IEventStore } from "../../interfaces";

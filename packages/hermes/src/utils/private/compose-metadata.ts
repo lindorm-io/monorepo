@@ -1,6 +1,6 @@
 import { LindormError } from "@lindorm/errors";
 import { isObject } from "@lindorm/is";
-import { isBefore } from "date-fns";
+import { isBefore } from "@lindorm/date";
 import deepEqual from "deep-equal";
 
 type Meta = {
