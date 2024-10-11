@@ -2,6 +2,7 @@ export * from "./diff";
 export * from "./filter";
 export * from "./find";
 export * from "./find-last";
+export * from "./remove";
 export * from "./remove-empty";
 export * from "./remove-undefined";
 export * from "./sleep";
