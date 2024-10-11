@@ -10,8 +10,7 @@ import {
   PostgresSourceQueryBuilderOptions,
 } from "../types";
 import { FromClone } from "../types/private";
-import { parseQuery } from "../utils/private";
-import { parseQueryResult } from "../utils/private/parse-query-result";
+import { parseQuery, parseQueryResult } from "../utils/private";
 import { PostgresQueryBuilder } from "./PostgresQueryBuilder";
 
 export class PostgresSource implements IPostgresSource {

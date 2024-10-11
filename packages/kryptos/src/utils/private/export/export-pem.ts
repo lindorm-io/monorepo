@@ -1,14 +1,10 @@
 import { KryptosError } from "../../../errors";
 import { KryptosPem } from "../../../types";
-import { ExportOptions } from "../../../types/private/export-options";
-import { exportEcToPem } from "../ec/export-pem";
-import { isEcDer } from "../ec/is";
-import { exportOctToPem } from "../oct/export-pem";
-import { isOctDer } from "../oct/is";
-import { exportOkpToPem } from "../okp/export-pem";
-import { isOkpDer } from "../okp/is";
-import { exportRsaToPem } from "../rsa/export-pem";
-import { isRsaDer } from "../rsa/is";
+import { ExportOptions } from "../../../types/private";
+import { exportEcToPem, isEcDer } from "../ec";
+import { exportOctToPem, isOctDer } from "../oct";
+import { exportOkpToPem, isOkpDer } from "../okp";
+import { exportRsaToPem, isRsaDer } from "../rsa";
 
 export const exportToPem = (options: ExportOptions): KryptosPem => {
   switch (options.type) {

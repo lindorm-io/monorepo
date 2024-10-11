@@ -1,14 +1,10 @@
 import { KryptosError } from "../../../errors";
 import { KryptosExportMode, KryptosJwk } from "../../../types";
-import { ExportOptions } from "../../../types/private/export-options";
-import { exportEcToJwk } from "../ec/export-jwk";
-import { isEcDer } from "../ec/is";
-import { exportOctToJwk } from "../oct/export-jwk";
-import { isOctDer } from "../oct/is";
-import { exportOkpToJwk } from "../okp/export-jwk";
-import { isOkpDer } from "../okp/is";
-import { exportRsaToJwk } from "../rsa/export-jwk";
-import { isRsaDer } from "../rsa/is";
+import { ExportOptions } from "../../../types/private";
+import { exportEcToJwk, isEcDer } from "../ec";
+import { exportOctToJwk, isOctDer } from "../oct";
+import { exportOkpToJwk, isOkpDer } from "../okp";
+import { exportRsaToJwk, isRsaDer } from "../rsa";
 
 type Options = ExportOptions & {
   mode: KryptosExportMode;

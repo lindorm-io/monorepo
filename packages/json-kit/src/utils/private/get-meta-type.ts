@@ -7,7 +7,7 @@ import {
   isString,
   isUndefined,
 } from "@lindorm/is";
-import { MetaType } from "../../enums/private/MetaType";
+import { MetaType } from "../../enums/private";
 
 export const getMetaType = (value: any): string => {
   if (isDate(value)) return MetaType.Date;

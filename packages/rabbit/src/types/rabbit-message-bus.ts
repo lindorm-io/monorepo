@@ -2,8 +2,7 @@ import { ILogger } from "@lindorm/logger";
 import { Constructor, DeepPartial } from "@lindorm/types";
 import { ConfirmChannel } from "amqplib";
 import { SubscriptionList } from "../classes/private";
-import { IRabbitMessage } from "../interfaces";
-import { IRabbitSubscription } from "../interfaces/RabbitSubscription";
+import { IRabbitMessage, IRabbitSubscription } from "../interfaces";
 
 export type CreateRabbitMessageFn<M extends IRabbitMessage = IRabbitMessage> = (
   options: DeepPartial<M>,

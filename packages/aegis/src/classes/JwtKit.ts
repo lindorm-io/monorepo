@@ -18,22 +18,20 @@ import {
   VerifiedJwtHeader,
   VerifyJwtOptions,
 } from "../types";
-import { createTokenSignature } from "../utils/private/create-token-signature";
 import {
+  createJwtValidate,
+  createJwtVerify,
+  createTokenSignature,
   decodeJwtPayload,
-  encodeJwtPayload,
-  parseJwtPayload,
-} from "../utils/private/jwt-payload";
-import { createJwtValidate } from "../utils/private/jwt-validate";
-import { createJwtVerify } from "../utils/private/jwt-verify";
-import {
   decodeTokenHeader,
+  encodeJwtPayload,
   encodeTokenHeader,
+  parseJwtPayload,
   parseTokenHeader,
-} from "../utils/private/token-header";
-import { validate } from "../utils/private/validate";
-import { validateValue } from "../utils/private/validate-value";
-import { verifyTokenSignature } from "../utils/private/verify-token-signature";
+  validate,
+  validateValue,
+  verifyTokenSignature,
+} from "../utils/private";
 
 export class JwtKit implements IJwtKit {
   private readonly clockTolerance: number;

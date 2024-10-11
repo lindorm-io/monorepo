@@ -6,7 +6,7 @@ import {
   assertOctSignature,
   createOctSignature,
   verifyOctSignature,
-} from "../utils/private/oct-signature";
+} from "../utils/private";
 
 export class OctKit {
   private readonly format: BufferFormat;

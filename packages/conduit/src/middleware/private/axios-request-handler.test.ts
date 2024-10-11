@@ -1,10 +1,11 @@
-import { composeAxiosConfig as _composeAxiosConfig } from "../../utils/private/compose-axios-config";
-import { requestWithRetry as _requestWithRetry } from "../../utils/private/request-with-retry";
+import {
+  composeAxiosConfig as _composeAxiosConfig,
+  requestWithRetry as _requestWithRetry,
+} from "../../utils/private";
 import { axiosRequestHandler } from "./axios-request-handler";
 
 jest.mock("axios");
-jest.mock("../../utils/private/compose-axios-config");
-jest.mock("../../utils/private/request-with-retry");
+jest.mock("../../utils/private");
 
 const composeAxiosConfig = _composeAxiosConfig as jest.Mock;
 const requestWithRetry = _requestWithRetry as jest.Mock;

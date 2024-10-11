@@ -1,4 +1,4 @@
-import { RabbitMessageBase } from "../../classes/RabbitMessageBase";
+import { RabbitMessageBase } from "../../classes";
 import { IRabbitMessage } from "../../interfaces";
 import { ValidateRabbitMessageFn } from "../../types";
 

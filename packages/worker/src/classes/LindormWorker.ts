@@ -4,7 +4,7 @@ import { ILogger } from "@lindorm/logger";
 import { RetryConfig, calculateRetry } from "@lindorm/retry";
 import { sleep } from "@lindorm/utils";
 import { EventEmitter } from "events";
-import { RETRY_CONFIG } from "../constants/private/defaults";
+import { RETRY_CONFIG } from "../constants/private";
 import { LindormWorkerEvent } from "../enums";
 import { ILindormWorker } from "../interfaces";
 import { LindormWorkerCallback, LindormWorkerOptions } from "../types";

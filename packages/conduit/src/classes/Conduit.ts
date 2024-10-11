@@ -5,14 +5,16 @@ import { RetryConfig } from "@lindorm/retry";
 import { Dict } from "@lindorm/types";
 import { extractSearchParams, getPlainUrl, getValidUrl } from "@lindorm/url";
 import { v4 as uuid } from "uuid";
-import { CONDUIT_RESPONSE, RETRY_CONFIG, TIMEOUT } from "../constants/private/defaults";
+import { CONDUIT_RESPONSE, RETRY_CONFIG, TIMEOUT } from "../constants/private";
 import { ConduitUsing } from "../enums";
 import { IConduit } from "../interfaces";
-import { axiosRequestHandler } from "../middleware/private/axios-request-handler";
-import { defaultHeaders } from "../middleware/private/default-headers";
-import { fetchRequestHandler } from "../middleware/private/fetch-request-handler";
-import { requestLogger } from "../middleware/private/request-logger";
-import { responseLogger } from "../middleware/private/response-logger";
+import {
+  axiosRequestHandler,
+  defaultHeaders,
+  fetchRequestHandler,
+  requestLogger,
+  responseLogger,
+} from "../middleware/private";
 import {
   AppContext,
   ConduitContext,
@@ -25,8 +27,7 @@ import {
   RequestOptions,
   RetryCallback,
 } from "../types";
-import { defaultRetryCallback } from "../utils/private/default-retry-callback";
-import { defaultValidateStatus } from "../utils/private/default-validate-status";
+import { defaultRetryCallback, defaultValidateStatus } from "../utils/private";
 
 export class Conduit implements IConduit {
   private readonly baseUrl: URL | undefined;

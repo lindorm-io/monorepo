@@ -1,7 +1,5 @@
 import { KeysInput } from "../../types";
-import { convertArray } from "../private";
-import { capitalCase } from "../private/convert-case";
-import { convertObject } from "../private/convert-object";
+import { capitalCase, convertArray, convertObject } from "../private";
 
 export { capitalCase };
 

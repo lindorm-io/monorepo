@@ -7,7 +7,7 @@ import { ViewDestroyedError } from "../errors";
 import { IView } from "../interfaces";
 import { HermesEvent } from "../messages";
 import { ViewData, ViewOptions } from "../types";
-import { composeObjectMetadata } from "../utils/private/compose-metadata";
+import { composeObjectMetadata } from "../utils/private";
 
 export class View<S extends Dict = Dict> implements IView<S> {
   public readonly id: string;

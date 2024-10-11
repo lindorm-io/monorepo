@@ -3,7 +3,7 @@ import { IKryptos } from "@lindorm/kryptos";
 import { OctKit } from "@lindorm/oct";
 import { OkpKit } from "@lindorm/okp";
 import { RsaKit } from "@lindorm/rsa";
-import { B64U } from "../../constants/private/format";
+import { B64U } from "../../constants/private";
 import { JwtError } from "../../errors";
 
 const verifyEc = (kryptos: IKryptos, data: string, signature: string): boolean => {

@@ -1,7 +1,7 @@
 import { B64 } from "@lindorm/b64";
 import { isBuffer, isFinite, isObject, isString, isUrlLike } from "@lindorm/is";
 import { removeUndefined } from "@lindorm/utils";
-import { B64U } from "../../constants/private/format";
+import { B64U } from "../../constants/private";
 import {
   DecodedTokenHeader,
   ParsedTokenHeader,

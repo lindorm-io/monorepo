@@ -1,4 +1,4 @@
-import { CustomSymbols } from "../../types/private/types";
+import { CustomSymbols } from "../../types/private";
 
 const SYMBOLS = "!#$%&()*+,-./:;<=>?@[]^_{}~" as const;
 const SECRET_SYMBOLS = "!#$%&()*+,-./:;<=>?[]^_{}~" as const;

@@ -4,7 +4,7 @@ import {
   IsBufferFormatOptions,
   IsJwkFormatOptions,
   IsStringFormatOptions,
-} from "../../../types/private/is-options";
+} from "../../../types/private";
 
 export const isRsaB64 = (options: IsStringFormatOptions): options is RsaB64 => {
   if (options.type !== "RSA") return false;

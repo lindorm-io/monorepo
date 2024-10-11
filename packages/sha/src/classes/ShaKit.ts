@@ -1,5 +1,5 @@
 import { ShaHashAlgorithm, ShaHashFormat, ShaKitOptions } from "../types";
-import { assertShaHash, createShaHash, verifyShaHash } from "../utils/private/sha-hash";
+import { assertShaHash, createShaHash, verifyShaHash } from "../utils/private";
 
 export class ShaKit {
   private readonly algorithm: ShaHashAlgorithm | undefined;

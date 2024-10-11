@@ -6,7 +6,7 @@ import {
   SECONDS,
   WEEKS,
   YEARS,
-} from "../../constants/private/time";
+} from "../../constants/private";
 import { ReadableTime } from "../../types";
 
 export const millisecondsToReadable = (milliseconds: number): ReadableTime => {

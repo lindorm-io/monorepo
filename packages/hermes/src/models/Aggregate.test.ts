@@ -23,8 +23,8 @@ import {
   AggregateDestroyedError,
   AggregateNotDestroyedError,
   HandlerNotRegisteredError,
+  InvalidMessageTypeError,
 } from "../errors";
-import { InvalidMessageTypeError } from "../errors/InvalidMessageTypeError";
 import { HermesCommand, HermesEvent } from "../messages";
 import { Aggregate } from "./Aggregate";
 

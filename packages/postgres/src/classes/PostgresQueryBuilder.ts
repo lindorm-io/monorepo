@@ -10,6 +10,7 @@ import {
 import {
   handleOrdering,
   handlePagination,
+  handleReturning,
   handleSelectColumns,
   handleWhere,
   quotation,
@@ -17,7 +18,6 @@ import {
   validateInsertAttributes,
   validateTableName,
 } from "../utils/private";
-import { handleReturning } from "../utils/private/handle-returning";
 
 export class PostgresQueryBuilder<T extends Dict> implements IPostgresQueryBuilder<T> {
   private readonly table: string;

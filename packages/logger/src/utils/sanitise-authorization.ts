@@ -1,4 +1,4 @@
-import { defaultFilterCallback } from "./private/default-filter-callback";
+import { defaultFilterCallback } from "./private";
 import { sanitiseToken } from "./sanitise-token";
 
 export const sanitiseAuthorization = (authorization: string): string => {

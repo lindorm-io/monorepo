@@ -1,4 +1,4 @@
-import { CreateRandomStringOptions } from "../../types/private/types";
+import { CreateRandomStringOptions } from "../../types/private";
 import { getAmount } from "./get-amount";
 import { getSymbols } from "./get-symbols";
 import { randomSort } from "./random-sort";

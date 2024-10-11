@@ -1,6 +1,5 @@
 import { ReadableTime } from "../types";
-import { millisecondsToReadable } from "./private/milliseconds-to-readable";
-import { readableToMilliseconds } from "./private/readable-to-milliseconds";
+import { millisecondsToReadable, readableToMilliseconds } from "./private";
 
 export function ms(milliseconds: number): ReadableTime;
 export function ms(readable: ReadableTime): number;

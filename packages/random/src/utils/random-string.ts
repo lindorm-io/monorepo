@@ -1,3 +1,3 @@
-import { createRandomString } from "./private/create-random-string";
+import { createRandomString } from "./private";
 
 export const randomString = (length: number): string => createRandomString(length);

@@ -5,7 +5,7 @@ import { KryptosAlgorithm } from "@lindorm/kryptos";
 import { Dict } from "@lindorm/types";
 import { removeUndefined } from "@lindorm/utils";
 import { randomUUID } from "crypto";
-import { B64U } from "../../constants/private/format";
+import { B64U } from "../../constants/private";
 import { JwtError } from "../../errors";
 import { JwtClaims, ParsedJwtPayload, SignJwtContent, SignJwtOptions } from "../../types";
 import { createAccessTokenHash, createCodeHash, createStateHash } from "./create-hash";
