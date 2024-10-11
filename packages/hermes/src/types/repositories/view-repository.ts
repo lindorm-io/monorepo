@@ -1,5 +1,6 @@
 import { Criteria, SelectOptions } from "@lindorm/postgres";
-import { DeepPartial, Dict } from "@lindorm/types";
+import { Dict } from "@lindorm/types";
+import { Predicate } from "@lindorm/utils";
 import { Filter, FindOptions } from "mongodb";
 
 export type ViewRepositoryAttributes<S extends Dict = Dict> = {
@@ -21,4 +22,4 @@ export type PostgresFindCriteria<S extends Dict = Dict> = Criteria<Attributes<S>
 
 export type PostgresFindOptions<S extends Dict = Dict> = SelectOptions<Attributes<S>>;
 
-export type RedisFindCriteria<S extends Dict = Dict> = DeepPartial<Attributes<S>>;
+export type RedisFindCriteria<S extends Dict = Dict> = Predicate<Attributes<S>>;

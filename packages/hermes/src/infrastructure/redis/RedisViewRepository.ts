@@ -2,7 +2,7 @@ import { JsonKit } from "@lindorm/json-kit";
 import { ILogger } from "@lindorm/logger";
 import { IRedisSource } from "@lindorm/redis";
 import { Dict } from "@lindorm/types";
-import { filter } from "@lindorm/utils";
+import { Predicated } from "@lindorm/utils";
 import { IRedisViewRepository } from "../../interfaces";
 import {
   HandlerIdentifier,
@@ -38,7 +38,7 @@ export class RedisViewRepository<S extends Dict = Dict>
       .map((item) => JsonKit.parse<ViewStoreAttributes>(item))
       .filter((item) => !item.destroyed);
 
-    const filtered = filter(collection, criteria);
+    const filtered = Predicated.filter(collection, criteria);
 
     return filtered.map((x) => ({
       id: x.id,
