@@ -86,16 +86,16 @@ describe("ChecksumDomain", () => {
     const eventDestroy = new HermesEvent({ ...TEST_HERMES_EVENT_DESTROY, aggregate });
 
     await expect(messageBus.publish(eventCreate)).resolves.toBeUndefined();
-    await sleep(50);
+    await sleep(250);
 
     await expect(messageBus.publish(eventMergeState)).resolves.toBeUndefined();
-    await sleep(50);
+    await sleep(250);
 
     await expect(messageBus.publish(eventSetState)).resolves.toBeUndefined();
-    await sleep(50);
+    await sleep(250);
 
     await expect(messageBus.publish(eventDestroy)).resolves.toBeUndefined();
-    await sleep(50);
+    await sleep(250);
 
     await expect(
       mongo.collection(CHECKSUM_STORE).find({ id: aggregate.id }).toArray(),

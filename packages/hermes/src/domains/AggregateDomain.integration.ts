@@ -124,19 +124,19 @@ describe("AggregateDomain", () => {
     });
 
     await expect(messageBus.publish(commandCreate)).resolves.toBeUndefined();
-    await sleep(50);
+    await sleep(250);
 
     await expect(messageBus.publish(commandMergeState)).resolves.toBeUndefined();
-    await sleep(50);
+    await sleep(250);
 
     await expect(messageBus.publish(commandEncrypt)).resolves.toBeUndefined();
-    await sleep(50);
+    await sleep(250);
 
     await expect(messageBus.publish(commandDestroyNext)).resolves.toBeUndefined();
-    await sleep(50);
+    await sleep(250);
 
     await expect(messageBus.publish(commandDestroy)).resolves.toBeUndefined();
-    await sleep(50);
+    await sleep(250);
 
     await expect(domain.inspect(aggregate)).resolves.toEqual(
       expect.objectContaining({
