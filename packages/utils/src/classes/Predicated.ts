@@ -24,6 +24,10 @@ export class Predicated {
     return array.filter((item) => advancedMatch(item, predicate)).pop();
   }
 
+  public static match<T extends Dict>(record: T, predicate: Predicate<T>): boolean {
+    return advancedMatch(record, predicate);
+  }
+
   public static remove<T extends Dict>(
     array: Array<T>,
     predicate: Predicate<T>,
