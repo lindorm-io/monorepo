@@ -2,7 +2,7 @@ import { IEntity } from "@lindorm/entity";
 import { isFunction, isObject, isString } from "@lindorm/is";
 import { IScanData, Scanner } from "@lindorm/scanner";
 import { Constructor, Dict } from "@lindorm/types";
-import { RedisRepositoryError } from "../../errors";
+import { RedisSourceError } from "../../errors";
 import { RedisSourceEntities, RedisSourceEntity } from "../../types";
 
 export class EntityScanner {
@@ -65,12 +65,17 @@ export class EntityScanner {
     const result: Partial<RedisSourceEntity> = {};
 
     if (entries.length === 0) {
-      throw new RedisRepositoryError(`No entities found in file: ${data.fullPath}`);
+      throw new RedisSourceError(`No entities found in file: ${data.fullPath}`);
     }
 
     for (const [key, value] of Object.entries(module)) {
       if (key === "default") continue;
-      if (result.Entity && result.validate) break;
+      if (result.Entity && result.create && result.validate) break;
+
+      if (key === "create" && isFunction(value)) {
+        result.create = value;
+        continue;
+      }
 
       if (key === "validate" && isFunction(value)) {
         result.validate = value;
@@ -84,7 +89,7 @@ export class EntityScanner {
     }
 
     if (!result.Entity) {
-      throw new RedisRepositoryError(`No entities found in file: ${data.fullPath}`);
+      throw new RedisSourceError(`No entities found in file: ${data.fullPath}`);
     }
 
     return result as RedisSourceEntity;
