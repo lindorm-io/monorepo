@@ -1,11 +1,11 @@
-import { composeFetchConfig as _composeFetchConfig } from "../../utils/private/compose-fetch-config";
-import { requestWithRetry as _requestWithRetry } from "../../utils/private/request-with-retry";
-import { useFetch as _useFetch } from "../../utils/private/use-fetch";
+import {
+  composeFetchConfig as _composeFetchConfig,
+  requestWithRetry as _requestWithRetry,
+  useFetch as _useFetch,
+} from "../../utils/private";
 import { fetchRequestHandler } from "./fetch-request-handler";
 
-jest.mock("../../utils/private/compose-fetch-config");
-jest.mock("../../utils/private/request-with-retry");
-jest.mock("../../utils/private/use-fetch");
+jest.mock("../../utils/private");
 
 const requestWithRetry = _requestWithRetry as jest.Mock;
 const composeFetchConfig = _composeFetchConfig as jest.Mock;

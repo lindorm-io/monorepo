@@ -4,7 +4,7 @@ import {
   IsBufferFormatOptions,
   IsJwkFormatOptions,
   IsStringFormatOptions,
-} from "../../../types/private/is-options";
+} from "../../../types/private";
 
 const CURVES: Array<KryptosCurve> = ["P-256", "P-384", "P-521"] as const;
 

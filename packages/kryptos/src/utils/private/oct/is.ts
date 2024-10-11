@@ -4,7 +4,7 @@ import {
   IsBufferFormatOptions,
   IsJwkFormatOptions,
   IsStringFormatOptions,
-} from "../../../types/private/is-options";
+} from "../../../types/private";
 
 export const isOctB64 = (options: IsStringFormatOptions): options is OctB64 => {
   if (options.type !== "oct") return false;

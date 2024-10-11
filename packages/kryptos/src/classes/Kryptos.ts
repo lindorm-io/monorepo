@@ -43,17 +43,23 @@ import {
   LindormJwk,
   RsaModulus,
 } from "../types";
-import { exportToB64 } from "../utils/private/export/export-b64";
-import { exportToDer } from "../utils/private/export/export-der";
-import { exportToJwk } from "../utils/private/export/export-jwk";
-import { exportToPem } from "../utils/private/export/export-pem";
-import { fromOptions } from "../utils/private/from";
-import { createDerFromDer } from "../utils/private/from/der-from-der";
-import { autoGenerateConfig, generateKey } from "../utils/private/generate";
-import { isB64, isDer, isJwk, isPem } from "../utils/private/is";
-import { calculateKeyOps } from "../utils/private/key-ops";
-import { isOctDer } from "../utils/private/oct/is";
-import { modulusSize } from "../utils/private/rsa/modulus-size";
+import {
+  autoGenerateConfig,
+  calculateKeyOps,
+  createDerFromDer,
+  exportToB64,
+  exportToDer,
+  exportToJwk,
+  exportToPem,
+  fromOptions,
+  generateKey,
+  isB64,
+  isDer,
+  isJwk,
+  isOctDer,
+  isPem,
+  modulusSize,
+} from "../utils/private";
 
 export class Kryptos implements IKryptos {
   private readonly _id: string;

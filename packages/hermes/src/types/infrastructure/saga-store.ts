@@ -1,8 +1,7 @@
 import { ILogger } from "@lindorm/logger";
 import { IMongoSource } from "@lindorm/mongo";
 import { IPostgresSource } from "@lindorm/postgres";
-import { IHermesMessage } from "../../interfaces";
-import { ISagaStore } from "../../interfaces/SagaStore";
+import { IHermesMessage, ISagaStore } from "../../interfaces";
 import { SagaIdentifier } from "../identifiers";
 
 export type SagaStoreOptions = {

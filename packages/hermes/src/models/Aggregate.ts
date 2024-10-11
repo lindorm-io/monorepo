@@ -7,8 +7,8 @@ import {
   AggregateDestroyedError,
   AggregateNotDestroyedError,
   HandlerNotRegisteredError,
+  InvalidMessageTypeError,
 } from "../errors";
-import { InvalidMessageTypeError } from "../errors/InvalidMessageTypeError";
 import { HermesAggregateEventHandler } from "../handlers";
 import { IAggregate, IHermesAggregateEventHandler, IHermesMessage } from "../interfaces";
 import { HermesCommand, HermesEvent } from "../messages";

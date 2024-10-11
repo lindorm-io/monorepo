@@ -2,7 +2,7 @@ import { KryptosEncAlgorithm, KryptosEncryption } from "@lindorm/kryptos";
 import { ILogger } from "@lindorm/logger";
 import { IMongoSource } from "@lindorm/mongo";
 import { IPostgresSource } from "@lindorm/postgres";
-import { IEncryptionStore } from "../../interfaces/EncryptionStore";
+import { IEncryptionStore } from "../../interfaces";
 import { StandardIdentifier } from "../identifiers";
 
 export type EncryptionStoreOptions = {

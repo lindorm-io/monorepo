@@ -1,4 +1,4 @@
-import { RandomStringAmount } from "../../types/private/types";
+import { RandomStringAmount } from "../../types/private";
 import { randomInt } from "./random-int";
 
 export const getAmount = (length: number, amount?: RandomStringAmount): number => {

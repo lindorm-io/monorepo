@@ -6,7 +6,7 @@ import {
   SECONDS,
   WEEKS,
   YEARS,
-} from "../../constants/private/time";
+} from "../../constants/private";
 import { DurationString } from "../../enums";
 import { ReadableTime } from "../../types";
 import { readableToDuration } from "./readable-to-duration";

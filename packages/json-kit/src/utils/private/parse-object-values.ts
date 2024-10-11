@@ -1,6 +1,6 @@
 import { isArray, isObject } from "@lindorm/is";
 import { Dict } from "@lindorm/types";
-import { MetaType } from "../../enums/private/MetaType";
+import { MetaType } from "../../enums/private";
 import { parseArrayValues } from "./parse-array-values";
 
 export const parseObjectValues = (dict: Dict, meta: Dict): Dict => {

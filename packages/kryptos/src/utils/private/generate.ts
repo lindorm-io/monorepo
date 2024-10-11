@@ -11,10 +11,10 @@ import {
   RsaDer,
   RsaGenerate,
 } from "../../types";
-import { generateEcKey } from "./ec/generate-key";
-import { generateOctKey } from "./oct/generate-key";
-import { generateOkpKey } from "./okp/generate-key";
-import { generateRsaKey } from "./rsa/generate-key";
+import { generateEcKey } from "./ec";
+import { generateOctKey } from "./oct";
+import { generateOkpKey } from "./okp";
+import { generateRsaKey } from "./rsa";
 
 type Options = EcGenerate | OctGenerate | OkpGenerate | RsaGenerate;
 

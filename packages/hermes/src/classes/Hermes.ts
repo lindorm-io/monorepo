@@ -55,7 +55,7 @@ import {
 } from "../types";
 import { FromClone } from "../types/private";
 import { extractDataTransferObject } from "../utils/private";
-import { HermesScanner } from "./private/HermesScanner";
+import { HermesScanner } from "./private";
 
 export class Hermes<C extends ClassLike = ClassLike, Q extends ClassLike = ClassLike>
   implements IHermes<C, Q>

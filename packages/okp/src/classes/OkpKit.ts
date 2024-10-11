@@ -6,7 +6,7 @@ import {
   assertOkpSignature,
   createOkpSignature,
   verifyOkpSignature,
-} from "../utils/private/okp-signature";
+} from "../utils/private";
 
 export class OkpKit {
   private readonly format: BufferFormat;

@@ -1,5 +1,5 @@
 import { Middleware } from "../types";
-import { createDispatcher } from "./private/create-dispatcher";
+import { createDispatcher } from "./private";
 
 type Options = {
   useClone?: boolean;

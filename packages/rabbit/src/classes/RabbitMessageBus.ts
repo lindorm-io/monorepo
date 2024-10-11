@@ -5,9 +5,7 @@ import { Constructor, DeepPartial } from "@lindorm/types";
 import { ConfirmChannel } from "amqplib";
 import { randomUUID } from "crypto";
 import { z } from "zod";
-import { IRabbitMessage } from "../interfaces";
-import { IRabbitMessageBus } from "../interfaces/RabbitMessageBus";
-import { IRabbitSubscription } from "../interfaces/RabbitSubscription";
+import { IRabbitMessage, IRabbitMessageBus, IRabbitSubscription } from "../interfaces";
 import {
   CreateRabbitMessageFn,
   RabbitBusOptions,

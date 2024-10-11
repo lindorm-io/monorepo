@@ -1,10 +1,10 @@
 import { KryptosError } from "../../../errors";
 import { KryptosDer } from "../../../types";
-import { ExportOptions } from "../../../types/private/export-options";
-import { isEcDer } from "../ec/is";
-import { isOctDer } from "../oct/is";
-import { isOkpDer } from "../okp/is";
-import { isRsaDer } from "../rsa/is";
+import { ExportOptions } from "../../../types/private";
+import { isEcDer } from "../ec";
+import { isOctDer } from "../oct";
+import { isOkpDer } from "../okp";
+import { isRsaDer } from "../rsa";
 
 export const exportToDer = (options: ExportOptions): KryptosDer => {
   switch (options.type) {

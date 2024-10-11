@@ -1,4 +1,4 @@
-import { PostgresQueryBuilder } from "../classes/PostgresQueryBuilder";
+import { PostgresQueryBuilder } from "../classes";
 import { IPostgresSource } from "../interfaces";
 
 export const createMockPostgresSource = (): IPostgresSource => ({

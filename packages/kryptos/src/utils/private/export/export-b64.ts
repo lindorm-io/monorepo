@@ -1,7 +1,7 @@
 import { B64 } from "@lindorm/b64";
 import { KryptosError } from "../../../errors";
 import { KryptosB64 } from "../../../types";
-import { ExportOptions } from "../../../types/private/export-options";
+import { ExportOptions } from "../../../types/private";
 import { isEcDer } from "../ec/is";
 import { isOctDer } from "../oct/is";
 import { isOkpDer } from "../okp/is";

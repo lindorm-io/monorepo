@@ -6,7 +6,7 @@ import {
   assertRsaSignature,
   createRsaSignature,
   verifyRsaSignature,
-} from "../utils/private/rsa-signature";
+} from "../utils/private";
 
 export class RsaKit {
   private readonly format: BufferFormat;

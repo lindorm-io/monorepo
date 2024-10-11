@@ -1,6 +1,5 @@
 import { DurationDict, ReadableTime } from "../types";
-import { millisecondsToDuration } from "./private/milliseconds-to-duration";
-import { readableToDuration } from "./private/readable-to-duration";
+import { millisecondsToDuration, readableToDuration } from "./private";
 
 export function duration(milliseconds: number): DurationDict;
 export function duration(readable: ReadableTime): DurationDict;

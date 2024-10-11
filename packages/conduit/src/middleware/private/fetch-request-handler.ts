@@ -1,7 +1,5 @@
 import { ConduitMiddleware, ConduitResponse } from "../../types";
-import { composeFetchConfig } from "../../utils/private/compose-fetch-config";
-import { requestWithRetry } from "../../utils/private/request-with-retry";
-import { useFetch } from "../../utils/private/use-fetch";
+import { composeFetchConfig, requestWithRetry, useFetch } from "../../utils/private";
 
 export const fetchRequestHandler: ConduitMiddleware = async (ctx, next) => {
   const fn = async (): Promise<ConduitResponse> => {

@@ -5,7 +5,7 @@ import {
   assertEcSignature,
   createEcSignature,
   verifyEcSignature,
-} from "../utils/private/ec-signature";
+} from "../utils/private";
 
 export class EcKit {
   private readonly format: EcSignatureFormat;

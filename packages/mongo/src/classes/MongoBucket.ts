@@ -5,8 +5,7 @@ import { randomUUID } from "crypto";
 import { DeleteOptions, Filter, FindOptions, GridFSBucket } from "mongodb";
 import { Readable } from "stream";
 import { MongoBucketError } from "../errors";
-import { IMongoBucket } from "../interfaces";
-import { IMongoFile } from "../interfaces/MongoFile";
+import { IMongoBucket, IMongoFile } from "../interfaces";
 import { GridFSDocument } from "../interfaces/private";
 import {
   FileDownload,

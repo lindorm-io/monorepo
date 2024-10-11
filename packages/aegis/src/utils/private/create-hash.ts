@@ -1,7 +1,7 @@
 import { B64 } from "@lindorm/b64";
 import { KryptosAlgorithm } from "@lindorm/kryptos";
 import { createHash as cryptoHash } from "crypto";
-import { B64U } from "../../constants/private/format";
+import { B64U } from "../../constants/private";
 
 type ShaAlgorithm = "SHA256" | "SHA384" | "SHA512";
 

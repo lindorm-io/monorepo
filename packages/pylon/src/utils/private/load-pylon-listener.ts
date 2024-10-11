@@ -1,5 +1,5 @@
 import { composeMiddleware } from "@lindorm/middleware";
-import { PylonListener } from "../../classes/PylonListener";
+import { PylonListener } from "../../classes";
 import {
   IoServer,
   PylonEventContext,
