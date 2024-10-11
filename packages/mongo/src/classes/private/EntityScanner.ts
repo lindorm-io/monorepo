@@ -2,7 +2,7 @@ import { IEntity } from "@lindorm/entity";
 import { isArray, isFunction, isObject, isString } from "@lindorm/is";
 import { IScanData, Scanner } from "@lindorm/scanner";
 import { Constructor, Dict } from "@lindorm/types";
-import { MongoRepositoryError } from "../../errors";
+import { MongoSourceError } from "../../errors";
 import { MongoIndexOptions, MongoSourceEntities, MongoSourceEntity } from "../../types";
 
 export class EntityScanner {
@@ -65,7 +65,7 @@ export class EntityScanner {
     const result: Partial<MongoSourceEntity> = {};
 
     if (entries.length === 0) {
-      throw new MongoRepositoryError(`No entities found in file: ${data.fullPath}`);
+      throw new MongoSourceError(`No entities found in file: ${data.fullPath}`);
     }
 
     for (const [key, value] of Object.entries(module)) {
@@ -94,7 +94,7 @@ export class EntityScanner {
     }
 
     if (!result.Entity) {
-      throw new MongoRepositoryError(`No entities found in file: ${data.fullPath}`);
+      throw new MongoSourceError(`No entities found in file: ${data.fullPath}`);
     }
 
     return result as MongoSourceEntity;
