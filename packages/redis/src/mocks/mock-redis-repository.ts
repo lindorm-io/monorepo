@@ -4,7 +4,6 @@ import { IRedisRepository } from "../interfaces";
 export type CreateMockEntityCallback = (options?: any) => IEntity;
 
 const updateEntity = (entity: IEntity): IEntity => {
-  entity.rev = entity.rev + 1;
   entity.updatedAt = new Date();
   return entity;
 };

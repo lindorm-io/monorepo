@@ -3,6 +3,7 @@ import { IEntity } from "@lindorm/entity";
 import { ClientError } from "@lindorm/errors";
 import { Constructor } from "@lindorm/types";
 import { get } from "object-path";
+import { IMongoSource } from "../interfaces";
 import { MongoPylonEventContext, MongoPylonEventMiddleware } from "../types";
 
 type Options = {
@@ -13,6 +14,7 @@ type Options = {
 export const createSocketMongoEntityMiddleware =
   <C extends MongoPylonEventContext = MongoPylonEventContext>(
     Entity: Constructor<IEntity>,
+    source?: IMongoSource,
   ) =>
   (path: string, options: Options = {}): MongoPylonEventMiddleware<C> => {
     return async function socketMongoEntityMiddleware(ctx, next): Promise<void> {
@@ -33,7 +35,10 @@ export const createSocketMongoEntityMiddleware =
         ctx.entities = {};
       }
 
-      const repository = ctx.mongo.repository(Entity);
+      const repository = source
+        ? source.repository(Entity, { logger: ctx.logger })
+        : ctx.mongo.repository(Entity);
+
       const name = camelCase(Entity.name);
 
       ctx.entities[name] = await repository.findOneOrFail({ [key]: value });
