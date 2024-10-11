@@ -1,9 +1,10 @@
 import { camelCase } from "@lindorm/case";
+import { IEntity } from "@lindorm/entity";
 import { ClientError } from "@lindorm/errors";
 import { Constructor } from "@lindorm/types";
 import { get } from "object-path";
+import { IMongoSource } from "../interfaces";
 import { MongoPylonHttpContext, MongoPylonHttpMiddleware } from "../types";
-import { IEntity } from "@lindorm/entity";
 
 type Options = {
   key?: string;
@@ -13,6 +14,7 @@ type Options = {
 export const createHttpMongoEntityMiddleware =
   <C extends MongoPylonHttpContext = MongoPylonHttpContext>(
     Entity: Constructor<IEntity>,
+    source?: IMongoSource,
   ) =>
   (path: string, options: Options = {}): MongoPylonHttpMiddleware<C> => {
     return async function httpMongoEntityMiddleware(ctx, next): Promise<void> {
@@ -33,7 +35,10 @@ export const createHttpMongoEntityMiddleware =
         ctx.entities = {};
       }
 
-      const repository = ctx.mongo.repository(Entity);
+      const repository = source
+        ? source.repository(Entity, { logger: ctx.logger })
+        : ctx.mongo.repository(Entity);
+
       const name = camelCase(Entity.name);
 
       ctx.entities[name] = await repository.findOneOrFail({ [key]: value });

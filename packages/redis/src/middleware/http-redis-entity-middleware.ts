@@ -3,6 +3,7 @@ import { IEntity } from "@lindorm/entity";
 import { ClientError } from "@lindorm/errors";
 import { Constructor } from "@lindorm/types";
 import { get } from "object-path";
+import { IRedisSource } from "../interfaces";
 import { RedisPylonHttpContext, RedisPylonHttpMiddleware } from "../types";
 
 type Options = {
@@ -13,6 +14,7 @@ type Options = {
 export const createHttpRedisEntityMiddleware =
   <C extends RedisPylonHttpContext = RedisPylonHttpContext>(
     Entity: Constructor<IEntity>,
+    source?: IRedisSource,
   ) =>
   (path: string, options: Options = {}): RedisPylonHttpMiddleware<C> => {
     return async function httpRedisEntityMiddleware(ctx, next): Promise<void> {
@@ -33,7 +35,10 @@ export const createHttpRedisEntityMiddleware =
         ctx.entities = {};
       }
 
-      const repository = ctx.redis.repository(Entity);
+      const repository = source
+        ? source.repository(Entity, { logger: ctx.logger })
+        : ctx.redis.repository(Entity);
+
       const name = camelCase(Entity.name);
 
       ctx.entities[name] = await repository.findOneOrFail({ [key]: value });

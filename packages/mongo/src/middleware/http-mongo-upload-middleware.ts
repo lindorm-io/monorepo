@@ -4,7 +4,7 @@ import { Constructor, Dict } from "@lindorm/types";
 import busboy from "busboy";
 import { createReadStream } from "fs";
 import { Readable } from "stream";
-import { IMongoFile } from "../interfaces";
+import { IMongoFile, IMongoSource } from "../interfaces";
 import { FileMetadata, MongoPylonHttpContext, MongoPylonHttpMiddleware } from "../types";
 
 const getMetadata = <C extends MongoPylonHttpContext>(ctx: C): Dict => {
@@ -25,10 +25,14 @@ export const createHttpMongoUploadMiddleware = <
   C extends MongoPylonHttpContext = MongoPylonHttpContext,
 >(
   File: Constructor<IMongoFile>,
+  source?: IMongoSource,
 ): MongoPylonHttpMiddleware<C> => {
   return async function httpMongoUploadMiddleware(ctx, next): Promise<void> {
     try {
-      const bucket = ctx.mongo.bucket(File);
+      const bucket = source
+        ? source.bucket(File, { logger: ctx.logger })
+        : ctx.mongo.bucket(File);
+
       const metadata = getMetadata(ctx);
       const promises: Array<Promise<IMongoFile>> = [];
 
