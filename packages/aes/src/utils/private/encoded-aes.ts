@@ -26,71 +26,71 @@ export const createEncodedAesString = (data: AesEncryptionRecord): string => {
   const optionalFields: Buffer[] = [];
 
   if (data.hkdfSalt) {
-    optionalFields.push(Buffer.from([1])); // Field exists
+    optionalFields.push(Buffer.from([1]));
     optionalFields.push(Buffer.from([data.hkdfSalt.length]), data.hkdfSalt);
   } else {
-    optionalFields.push(Buffer.from([0])); // Field does not exist
+    optionalFields.push(Buffer.from([0]));
   }
 
   if (data.pbkdfSalt) {
-    const pbkdfIterations = Buffer.alloc(4); // Allocate space for 32-bit integer
+    const pbkdfIterations = Buffer.alloc(4);
     pbkdfIterations.writeUInt32BE(data.pbkdfIterations || 0);
-    optionalFields.push(Buffer.from([1])); // Field exists
+    optionalFields.push(Buffer.from([1]));
     optionalFields.push(pbkdfIterations);
   } else {
-    optionalFields.push(Buffer.from([0])); // Field does not exist
+    optionalFields.push(Buffer.from([0]));
   }
 
   if (data.pbkdfSalt) {
-    optionalFields.push(Buffer.from([1])); // Field exists
+    optionalFields.push(Buffer.from([1]));
     optionalFields.push(Buffer.from([data.pbkdfSalt.length]), data.pbkdfSalt);
   } else {
-    optionalFields.push(Buffer.from([0])); // Field does not exist
+    optionalFields.push(Buffer.from([0]));
   }
 
   if (data.publicEncryptionIv) {
-    optionalFields.push(Buffer.from([1])); // Field exists
+    optionalFields.push(Buffer.from([1]));
     optionalFields.push(
       Buffer.from([data.publicEncryptionIv.length]),
       data.publicEncryptionIv,
     );
   } else {
-    optionalFields.push(Buffer.from([0])); // Field does not exist
+    optionalFields.push(Buffer.from([0]));
   }
 
   const publicEncryptionJwkStr = data.publicEncryptionJwk
     ? JSON.stringify(data.publicEncryptionJwk)
     : "";
   if (publicEncryptionJwkStr.length > 0) {
-    optionalFields.push(Buffer.from([1])); // Field exists
+    optionalFields.push(Buffer.from([1]));
     optionalFields.push(
       Buffer.from([publicEncryptionJwkStr.length]),
       Buffer.from(publicEncryptionJwkStr),
     );
   } else {
-    optionalFields.push(Buffer.from([0])); // Field does not exist
+    optionalFields.push(Buffer.from([0]));
   }
 
   if (data.publicEncryptionKey) {
-    optionalFields.push(Buffer.from([1])); // Field exists
-    const keyLength = Buffer.alloc(4); // Use 4 bytes to store length
+    optionalFields.push(Buffer.from([1]));
+    const keyLength = Buffer.alloc(4);
     keyLength.writeUInt32BE(data.publicEncryptionKey.length);
     optionalFields.push(keyLength, data.publicEncryptionKey);
   } else {
-    optionalFields.push(Buffer.from([0])); // Field does not exist
+    optionalFields.push(Buffer.from([0]));
   }
 
   if (data.publicEncryptionTag) {
-    optionalFields.push(Buffer.from([1])); // Field exists
+    optionalFields.push(Buffer.from([1]));
     optionalFields.push(
       Buffer.from([data.publicEncryptionTag.length]),
       data.publicEncryptionTag,
     );
   } else {
-    optionalFields.push(Buffer.from([0])); // Field does not exist
+    optionalFields.push(Buffer.from([0]));
   }
 
-  const optionalFieldsLength = Buffer.alloc(4); // 4-byte integer to store length
+  const optionalFieldsLength = Buffer.alloc(4);
   optionalFieldsLength.writeUInt32BE(Buffer.concat(optionalFields).length);
   buffers.push(optionalFieldsLength, ...optionalFields);
 
@@ -98,6 +98,7 @@ export const createEncodedAesString = (data: AesEncryptionRecord): string => {
 
   return Buffer.concat(buffers).toString("base64url");
 };
+
 export const parseEncodedAesString = (encoded: string): AesEncryptionRecord => {
   const buffer = Buffer.from(encoded, "base64url");
   let offset = 0;
@@ -113,7 +114,7 @@ export const parseEncodedAesString = (encoded: string): AesEncryptionRecord => {
   const readOptionalFieldWithLength = (): Buffer | undefined => {
     const exists = buffer.readUInt8(offset);
     offset += 1;
-    if (exists === 0) return undefined; // Field does not exist
+    if (exists === 0) return undefined;
     const length = buffer.readUInt8(offset);
     offset += 1;
     const field = buffer.subarray(offset, offset + length);
@@ -124,8 +125,8 @@ export const parseEncodedAesString = (encoded: string): AesEncryptionRecord => {
   const readOptionalFieldWithLargeLength = (): Buffer | undefined => {
     const exists = buffer.readUInt8(offset);
     offset += 1;
-    if (exists === 0) return undefined; // Field does not exist
-    const length = buffer.readUInt32BE(offset); // Read the 4-byte length
+    if (exists === 0) return undefined;
+    const length = buffer.readUInt32BE(offset);
     offset += 4;
     const field = buffer.subarray(offset, offset + length);
     offset += length;
@@ -149,7 +150,7 @@ export const parseEncodedAesString = (encoded: string): AesEncryptionRecord => {
   const optionalFieldsLength = buffer.readUInt32BE(offset);
   offset += 4;
 
-  const optionalFieldsStart = offset; // Mark the start of the optional fields
+  const optionalFieldsStart = offset;
 
   const hkdfSalt = readOptionalFieldWithLength();
   let pbkdfIterations: number | undefined;
@@ -181,7 +182,7 @@ export const parseEncodedAesString = (encoded: string): AesEncryptionRecord => {
     throw new Error("Optional fields length mismatch");
   }
 
-  const content = buffer.subarray(offset); // Treat the remaining buffer as the content
+  const content = buffer.subarray(offset);
 
   return {
     version,
