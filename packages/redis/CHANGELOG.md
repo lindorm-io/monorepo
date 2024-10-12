@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/redis@0.3.0...@lindorm/redis@0.4.0) (2024-10-12)
+
+### Bug Fixes
+
+- throw source error ([acc3bdd](https://github.com/lindorm-io/monorepo/commit/acc3bddae041e43b12d1b50b030036063d076bd0))
+- use entity interface from package ([58cf620](https://github.com/lindorm-io/monorepo/commit/58cf620310391eea604fee3996c11b77c6274a54))
+
+### Features
+
+- add predicated filtering to redis ([d239e4b](https://github.com/lindorm-io/monorepo/commit/d239e4b8328d28db2b54800e3ecd9a567837c5f4))
+- allow source as optional argument for middleware ([4f85310](https://github.com/lindorm-io/monorepo/commit/4f85310c2ab771648544142c6cd9cde144b633d7))
+
 # [0.3.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/redis@0.2.0...@lindorm/redis@0.3.0) (2024-10-09)
 
 ### Features

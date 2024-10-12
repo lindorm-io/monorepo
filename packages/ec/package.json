@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/ec",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "@lindorm/errors": "^0.1.6",
-    "@lindorm/kryptos": "^0.3.5"
+    "@lindorm/kryptos": "^0.3.6"
   },
   "devDependencies": {
     "@lindorm/types": "^0.2.0"

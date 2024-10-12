@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.6](https://github.com/lindorm-io/monorepo/compare/@lindorm/kryptos@0.3.5...@lindorm/kryptos@0.3.6) (2024-10-12)
+
+**Note:** Version bump only for package @lindorm/kryptos
+
 ## [0.3.5](https://github.com/lindorm-io/monorepo/compare/@lindorm/kryptos@0.3.4...@lindorm/kryptos@0.3.5) (2024-10-09)
 
 ### Bug Fixes

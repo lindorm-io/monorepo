@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/utils@0.3.0...@lindorm/utils@0.4.0) (2024-10-12)
+
+### Bug Fixes
+
+- add missing date to dependencies ([5e4e6f5](https://github.com/lindorm-io/monorepo/commit/5e4e6f5430770ec79ffb6637d22297b6918cbd33))
+- solve bug where match only considered root logical ops ([ad9f9cd](https://github.com/lindorm-io/monorepo/commit/ad9f9cd27a5241d98c978ef41db80f1401a78e32))
+
+### Features
+
+- add match to predicated class ([0ace397](https://github.com/lindorm-io/monorepo/commit/0ace397756849dfd774e6eb1432b0da7aeff1fca))
+- add predicated filtering ([6b32a38](https://github.com/lindorm-io/monorepo/commit/6b32a38c600174dc8b7bcbea2992d0449b5c311a))
+
 # [0.3.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/utils@0.2.0...@lindorm/utils@0.3.0) (2024-10-09)
 
 ### Features
