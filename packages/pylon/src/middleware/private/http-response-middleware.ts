@@ -5,16 +5,18 @@ import { PylonHttpMiddleware } from "../../types";
 export const httpResponseMiddleware: PylonHttpMiddleware = async (ctx, next) => {
   const startTime = Date.now();
 
-  await next();
+  try {
+    await next();
+  } finally {
+    if (isObject(ctx.body) || isArray(ctx.body)) {
+      ctx.body = changeKeys(ctx.body, ChangeCase.Snake);
+    }
 
-  if (isObject(ctx.body) || isArray(ctx.body)) {
-    ctx.body = changeKeys(ctx.body, ChangeCase.Snake);
+    const endTime = Date.now();
+
+    ctx.set("Date", new Date().toUTCString());
+    ctx.set("X-Start-Time", startTime.toString());
+    ctx.set("X-Current-Time", endTime.toString());
+    ctx.set("X-Response-Time", `${endTime - startTime}ms`);
   }
-
-  const endTime = Date.now();
-
-  ctx.set("Date", new Date().toUTCString());
-  ctx.set("X-Start-Time", startTime.toString());
-  ctx.set("X-Current-Time", endTime.toString());
-  ctx.set("X-Response-Time", `${endTime - startTime}ms`);
 };
