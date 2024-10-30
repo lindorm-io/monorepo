@@ -8,7 +8,9 @@ describe("httpCorsMiddleware", () => {
 
   beforeEach(() => {
     ctx = {
+      get: jest.fn(),
       set: jest.fn(),
+      vary: jest.fn(),
     };
   });
 
