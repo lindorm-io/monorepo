@@ -22,6 +22,7 @@ describe("createHttpMetadataMiddleware", () => {
 
     options = {
       environment: Environment.Test,
+      httpMaxRequestAge: "10s",
       version: "1.0.0",
     };
 
@@ -91,5 +92,63 @@ describe("createHttpMetadataMiddleware", () => {
     );
     expect(ctx.set).toHaveBeenCalledWith("X-Server-Environment", "test");
     expect(ctx.set).toHaveBeenCalledWith("X-Server-Version", "1.0.0");
+  });
+
+  test("should return error on invalid date (min)", async () => {
+    ctx.get.mockImplementation((key: string): any => {
+      switch (key) {
+        case "date":
+          return new Date("2024-01-01T07:00:00.000Z").toISOString();
+        default:
+          return undefined;
+      }
+    });
+
+    await expect(
+      createHttpMetadataMiddleware(options)(ctx, jest.fn()),
+    ).resolves.toBeUndefined();
+
+    expect(ctx.status).toEqual(400);
+    expect(ctx.body).toStrictEqual({
+      error: {
+        code: "replay_error",
+        data: {
+          actual: "2024-01-01T07:00:00.000Z",
+          expect: "2024-01-01T07:59:50.000Z",
+        },
+        message: "Request has been identified as a likely replay attack",
+        name: "ClientError",
+        title: "Bad Request",
+      },
+    });
+  });
+
+  test("should return error on invalid date (max)", async () => {
+    ctx.get.mockImplementation((key: string): any => {
+      switch (key) {
+        case "date":
+          return new Date("2024-01-01T09:00:00.000Z").toISOString();
+        default:
+          return undefined;
+      }
+    });
+
+    await expect(
+      createHttpMetadataMiddleware(options)(ctx, jest.fn()),
+    ).resolves.toBeUndefined();
+
+    expect(ctx.status).toEqual(400);
+    expect(ctx.body).toStrictEqual({
+      error: {
+        code: "suspicious_request",
+        data: {
+          actual: "2024-01-01T09:00:00.000Z",
+          expect: "2024-01-01T08:00:10.000Z",
+        },
+        message: "Request has been identified as suspicious",
+        name: "ClientError",
+        title: "Bad Request",
+      },
+    });
   });
 });

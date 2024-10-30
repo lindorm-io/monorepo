@@ -97,7 +97,11 @@ export class Pylon<
       userAgent,
       httpBodyParserMiddleware(options.parseBody),
       createHttpCorsMiddleware(options.cors),
-      createHttpMetadataMiddleware({ environment, version }),
+      createHttpMetadataMiddleware({
+        environment,
+        httpMaxRequestAge: options.httpMaxRequestAge ?? "10s",
+        version,
+      }),
       createHttpContextInitialisationMiddleware({
         amphora: options.amphora,
         issuer: options.issuer,
