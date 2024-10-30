@@ -3,6 +3,7 @@ export * from "./event-error-handler-middleware";
 export * from "./event-logger-middleware";
 export * from "./http-body-parser-middleware";
 export * from "./http-context-initialisation-middleware";
+export * from "./http-cors-middleware";
 export * from "./http-error-handler-middleware";
 export * from "./http-metadata-middleware";
 export * from "./http-params-middleware";

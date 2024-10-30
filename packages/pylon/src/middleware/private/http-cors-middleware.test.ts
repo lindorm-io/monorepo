@@ -1,5 +1,5 @@
 import { HttpMethod } from "@lindorm/enums";
-import { createHttpCorsMiddleware } from "./http-cors-middleware";
+import { createHttpCorsMiddleware } from "../private/http-cors-middleware";
 
 describe("httpCorsMiddleware", () => {
   const next = jest.fn();

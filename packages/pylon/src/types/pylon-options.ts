@@ -5,6 +5,7 @@ import { ILindormWorker } from "@lindorm/worker";
 import Redis from "ioredis";
 import { ServerOptions as SocketOptions } from "socket.io";
 import { PylonListener, PylonRouter } from "../classes";
+import { CorsOptions } from "./cors-options";
 import { OpenIdConfigurationOptions } from "./open-id-configuration";
 import { ParseBodyOptions } from "./parse-body";
 import { PylonHttpContext, PylonHttpMiddleware } from "./pylon-context";
@@ -20,6 +21,7 @@ export type PylonOptions<
   amphora: IAmphora;
   logger: ILogger;
 
+  cors?: CorsOptions;
   domain?: string;
   environment?: Environment;
   httpMiddleware?: Array<PylonHttpMiddleware<C>>;

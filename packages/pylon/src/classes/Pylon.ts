@@ -11,6 +11,7 @@ import { Server as SocketIoServer } from "socket.io";
 import {
   createEventContextInitialisationMiddleware,
   createHttpContextInitialisationMiddleware,
+  createHttpCorsMiddleware,
   createHttpMetadataMiddleware,
   eventErrorHandlerMiddleware,
   eventLoggerMiddleware,
@@ -95,6 +96,7 @@ export class Pylon<
     this.addHttpMiddleware([
       userAgent,
       httpBodyParserMiddleware(options.parseBody),
+      createHttpCorsMiddleware(options.cors),
       createHttpMetadataMiddleware({ environment, version }),
       createHttpContextInitialisationMiddleware({
         amphora: options.amphora,

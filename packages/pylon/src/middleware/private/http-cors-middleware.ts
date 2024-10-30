@@ -1,18 +1,10 @@
-import { ReadableTime, sec } from "@lindorm/date";
-import { HttpMethod } from "@lindorm/enums";
+import { sec } from "@lindorm/date";
 import { isArray, isFinite } from "@lindorm/is";
-import { PylonHttpMiddleware } from "../../types";
+import { CorsOptions, PylonHttpMiddleware } from "../../types";
 
-type Options = {
-  allowCredentials?: boolean;
-  allowHeaders?: "*" | Array<string>;
-  allowMethods?: "*" | Array<HttpMethod>;
-  allowOrigins?: "*" | Array<string>;
-  exposeHeaders?: "*" | Array<string>;
-  maxAge?: ReadableTime | number;
-};
-
-export const createHttpCorsMiddleware = (options: Options = {}): PylonHttpMiddleware => {
+export const createHttpCorsMiddleware = (
+  options: CorsOptions = {},
+): PylonHttpMiddleware => {
   return async function httpCorsMiddleware(ctx, next) {
     if (options.allowCredentials) {
       ctx.set("Access-Control-Allow-Credentials", options.allowCredentials.toString());
