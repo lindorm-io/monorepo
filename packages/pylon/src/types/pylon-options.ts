@@ -1,4 +1,5 @@
 import { IAmphora } from "@lindorm/amphora";
+import { ReadableTime } from "@lindorm/date";
 import { Environment } from "@lindorm/enums";
 import { ILogger } from "@lindorm/logger";
 import { ILindormWorker } from "@lindorm/worker";
@@ -24,6 +25,7 @@ export type PylonOptions<
   cors?: CorsOptions;
   domain?: string;
   environment?: Environment;
+  httpMaxRequestAge?: ReadableTime;
   httpMiddleware?: Array<PylonHttpMiddleware<C>>;
   httpRouters?: string | Array<HttpRouters<C>>;
   issuer?: string;
