@@ -90,6 +90,6 @@ describe("httpSessionLoggerMiddleware", () => {
 
     await expect(httpSessionLoggerMiddleware(ctx, next)).resolves.toBeUndefined();
 
-    expect(ctx.logger.error).toHaveBeenCalledWith(new Error("error"));
+    expect(ctx.logger.error).toHaveBeenCalledWith("Service error", new Error("error"));
   });
 });

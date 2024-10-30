@@ -27,7 +27,9 @@ export const httpSessionLoggerMiddleware: PylonHttpMiddleware = async (ctx, next
     });
 
     await next();
-
+  } catch (err: any) {
+    ctx.logger.error("Service error", err);
+  } finally {
     ctx.logger.info("Service response", {
       metadata: ctx.metadata,
       request: {
@@ -61,7 +63,5 @@ export const httpSessionLoggerMiddleware: PylonHttpMiddleware = async (ctx, next
       },
       time: Date.now() - start,
     });
-  } catch (err: any) {
-    ctx.logger.error(err);
   }
 };
