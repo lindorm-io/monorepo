@@ -8,4 +8,6 @@ export type CorsOptions = {
   allowOrigins?: "*" | Array<string>;
   exposeHeaders?: "*" | Array<string>;
   maxAge?: ReadableTime | number;
+  privateNetworkAccess?: boolean;
+  secureContext?: boolean;
 };
