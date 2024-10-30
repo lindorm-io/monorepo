@@ -91,12 +91,15 @@ export class Pylon<
     this.router = new PylonRouter<C>();
     this.http = createServer(this.koa.callback());
 
+    // cors
+
+    this.koa.use(createHttpCorsMiddleware(options.cors));
+
     // middleware
 
     this.addHttpMiddleware([
       userAgent,
       httpBodyParserMiddleware(options.parseBody),
-      createHttpCorsMiddleware(options.cors),
       createHttpMetadataMiddleware({
         environment,
         httpMaxRequestAge: options.httpMaxRequestAge ?? "10s",

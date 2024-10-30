@@ -1,8 +1,9 @@
 import { Amphora } from "@lindorm/amphora";
 import { Environment } from "@lindorm/enums";
+import { ServerError } from "@lindorm/errors";
 import { isArray, isObject } from "@lindorm/is";
 import { Kryptos } from "@lindorm/kryptos";
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger, ILogger } from "@lindorm/logger";
 import { readFileSync } from "fs";
 import MockDate from "mockdate";
 import os from "os";
@@ -20,6 +21,7 @@ describe("Pylon", () => {
   let spy: any;
   let pylon: Pylon;
   let router: PylonRouter;
+  let logger: ILogger;
 
   beforeEach(() => {
     spy = jest.fn();
@@ -39,6 +41,16 @@ describe("Pylon", () => {
     router.post("/body", async (ctx) => {
       ctx.body = ctx.data;
       ctx.status = 200;
+    });
+
+    router.post("/error", async (ctx) => {
+      throw new ServerError("Test Error", {
+        code: "test_error_code",
+        data: { test: "data" },
+        debug: { test: "debug" },
+        status: ServerError.Status.LoopDetected,
+        title: "Test Error Title",
+      });
     });
 
     router.post("/upload", async (ctx) => {
@@ -86,9 +98,11 @@ describe("Pylon", () => {
 
     amphora.add(kryptos);
 
+    logger = createMockLogger();
+
     pylon = new Pylon({
       amphora,
-      logger: createMockLogger(),
+      logger,
 
       domain: "http://test.lindorm.io",
       environment: Environment.Test,
@@ -230,5 +244,19 @@ describe("Pylon", () => {
     expect(files).toEqual([expect.stringContaining(os.tmpdir())]);
 
     expect(readFileSync(files[0], "utf8")).toEqual("testfile\n");
+  });
+
+  test("should handle error correctly", async () => {
+    const response = await request(pylon.callback).post("/test/error").expect(508);
+
+    expect(response.body).toEqual({
+      error: {
+        code: "test_error_code",
+        data: { test: "data" },
+        message: "Test Error",
+        name: "ServerError",
+        title: "Test Error Title",
+      },
+    });
   });
 });
