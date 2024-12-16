@@ -4,6 +4,7 @@ export * from "./is-buffer";
 export * from "./is-class";
 export * from "./is-date";
 export * from "./is-empty";
+export * from "./is-equal";
 export * from "./is-error";
 export * from "./is-finite";
 export * from "./is-function";
