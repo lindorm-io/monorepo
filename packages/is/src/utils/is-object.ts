@@ -1,3 +1,4 @@
+import { isBuffer } from "./is-buffer";
 import { isClass } from "./is-class";
 import { isDate } from "./is-date";
 import { isError } from "./is-error";
@@ -7,6 +8,7 @@ import { isPromise } from "./is-promise";
 export const isObject = (input: any): input is Record<string, any> =>
   Boolean(input) &&
   isObjectLike(input) &&
+  !isBuffer(input) &&
   !isClass(input) &&
   !isDate(input) &&
   !isError(input) &&
