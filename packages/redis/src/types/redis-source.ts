@@ -14,6 +14,12 @@ export type RedisSourceEntities = Array<
   Constructor<IEntity> | RedisSourceEntity | string
 >;
 
+export type RedisSourceRepositoryOptions<E extends IEntity> = {
+  logger?: ILogger;
+  create?: CreateRedisEntityFn<E>;
+  validate?: ValidateRedisEntityFn<E>;
+};
+
 export type CloneRedisSourceOptions = {
   logger?: ILogger;
 };
