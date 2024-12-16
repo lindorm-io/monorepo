@@ -116,13 +116,13 @@ export class MongoSource implements IMongoSource {
 
     return new MongoRepository({
       Entity,
+      client: this.client,
       config: options.config ?? config.config,
+      create: options.create ?? config.create,
       database: this.databaseName,
       indexes: options.indexes ?? config.indexes,
       logger: options.logger ?? this.logger,
-      client: this.client,
       namespace: this.namespace,
-      create: options.create ?? config.create,
       validate: options.validate ?? config.validate,
     });
   }

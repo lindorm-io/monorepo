@@ -118,8 +118,8 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
         },
         result: {
           count,
-          time: Date.now() - start,
         },
+        time: Date.now() - start,
       });
 
       return count;
@@ -139,10 +139,8 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
         input: {
           criteria,
         },
-        result: {
-          ...result,
-          time: Date.now() - start,
-        },
+        result,
+        time: Date.now() - start,
       });
     } catch (error: any) {
       this.logger.error("Repository error", error);
@@ -162,10 +160,8 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
         input: {
           filter: { id },
         },
-        result: {
-          ...result,
-          time: Date.now() - start,
-        },
+        result,
+        time: Date.now() - start,
       });
     } catch (error: any) {
       this.logger.error("Repository error", error);
@@ -187,10 +183,8 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
         input: {
           filter,
         },
-        result: {
-          ...result,
-          time: Date.now() - start,
-        },
+        result,
+        time: Date.now() - start,
       });
     } catch (error: any) {
       this.logger.error("Repository error", error);
@@ -222,8 +216,8 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
         },
         result: {
           exists,
-          time: Date.now() - start,
         },
+        time: Date.now() - start,
       });
 
       if (count > 1) {
@@ -263,8 +257,8 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
         },
         result: {
           count: documents.length,
-          time: Date.now() - start,
         },
+        time: Date.now() - start,
       });
 
       return documents.map((document) => this.create(document));
@@ -290,8 +284,8 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
         },
         result: {
           document,
-          time: Date.now() - start,
         },
+        time: Date.now() - start,
       });
 
       if (!document) return null;
@@ -348,14 +342,14 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
         },
         result: {
           acknowledged: result.acknowledged,
-          time: Date.now() - start,
         },
+        time: Date.now() - start,
       });
 
       return this.create(updated);
     } catch (error: any) {
       this.logger.error("Repository error", error);
-      throw new MongoRepositoryError("Unable to insert entity", { error });
+      throw new MongoRepositoryError("Failed to insert entity", { error });
     }
   }
 
@@ -365,9 +359,9 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
 
   public async save(entity: E): Promise<E> {
     if (entity.rev === 0) {
-      return await this.insert(entity);
+      return this.insert(entity);
     }
-    return await this.update(entity);
+    return this.update(entity);
   }
 
   public async saveBulk(entities: Array<E>): Promise<Array<E>> {
@@ -401,8 +395,8 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
           matchedCount: result.matchedCount,
           modifiedCount: result.modifiedCount,
           upsertedCount: result.upsertedCount,
-          time: Date.now() - start,
         },
+        time: Date.now() - start,
       });
     } catch (error: any) {
       this.logger.error("Repository error", error);
@@ -436,8 +430,8 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
           matchedCount: result.matchedCount,
           modifiedCount: result.modifiedCount,
           upsertedCount: result.upsertedCount,
-          time: Date.now() - start,
         },
+        time: Date.now() - start,
       });
     } catch (error: any) {
       this.logger.error("Repository error", error);
@@ -474,8 +468,8 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
           matchedCount: result.matchedCount,
           modifiedCount: result.modifiedCount,
           upsertedCount: result.upsertedCount,
-          time: Date.now() - start,
         },
+        time: Date.now() - start,
       });
 
       if (result.modifiedCount !== 1 && result.upsertedCount !== 1) {
@@ -515,8 +509,8 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
         },
         result: {
           document,
-          time: Date.now() - start,
         },
+        time: Date.now() - start,
       });
 
       if (!document) {
@@ -525,7 +519,7 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
 
       if (!document.expiresAt) {
         throw new MongoRepositoryError("Entity does not have ttl", {
-          debug: { criteria },
+          debug: { document },
         });
       }
 
@@ -561,7 +555,7 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
     };
   }
 
-  private createUpdateFilter(entity: E, criteria: Filter<E> = {}): Filter<any> {
+  private createUpdateFilter(entity: E): Filter<any> {
     const { id, rev } = entity;
 
     return {
@@ -571,7 +565,6 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
       ...(this.config.useExpiry
         ? { $or: [{ expiresAt: { $eq: null } }, { expiresAt: { $gt: new Date() } }] }
         : {}),
-      ...criteria,
     };
   }
 
@@ -597,8 +590,8 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
       this.logger.silly("Repository done: getNextSequence", {
         result: {
           document,
-          time: Date.now() - start,
         },
+        time: Date.now() - start,
       });
 
       if (!document) {
