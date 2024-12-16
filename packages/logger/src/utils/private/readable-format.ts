@@ -1,4 +1,4 @@
-import { isObject } from "@lindorm/is";
+import { isArray, isObject } from "@lindorm/is";
 import { Dict } from "@lindorm/types";
 import fastSafeStringify from "fast-safe-stringify";
 import { blue, cyan, gray, green, red, white, yellow } from "picocolors";
@@ -105,7 +105,8 @@ export const readableFormat = (log: InternalLog): string => {
 
     const context =
       log.context && Object.keys(log.context).length ? log.context : undefined;
-    const contentArray = [context, ...log.extra]
+    const extra = isArray(log.extra) && log.extra.length ? log.extra : [];
+    const contentArray = [context, ...extra]
       .filter((d) => d)
       .map((d) => readableContent(d!));
 
