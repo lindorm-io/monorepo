@@ -70,10 +70,23 @@ export class EntityScanner {
 
     for (const [key, value] of Object.entries(module)) {
       if (key === "default") continue;
-      if (result.Entity && result.config && result.indexes && result.validate) break;
+      if (
+        result.Entity &&
+        result.config &&
+        result.indexes &&
+        result.create &&
+        result.validate
+      ) {
+        break;
+      }
 
       if (key === "config" && isObject(value)) {
         result.config = value;
+        continue;
+      }
+
+      if (key === "create" && isFunction(value)) {
+        result.create = value;
         continue;
       }
 
