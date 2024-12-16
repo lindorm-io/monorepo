@@ -155,8 +155,13 @@ export class Pylon<
     if (this.isSetup) return;
 
     if (this._setup) {
-      const result = await this._setup();
-      this.logger.verbose("Pylon setup", { result });
+      try {
+        const result = await this._setup();
+        this.logger.verbose("Pylon setup", { result });
+      } catch (error: any) {
+        this.logger.error("Pylon failed to setup", error);
+        process.exit(1);
+      }
     }
 
     this.isSetup = true;
