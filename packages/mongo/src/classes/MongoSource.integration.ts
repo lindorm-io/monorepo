@@ -18,11 +18,11 @@ describe("MongoSource", () => {
       url: "mongodb://root:example@localhost/admin?authSource=admin",
       database: "test_database",
     });
-    await source.connect();
+    await source.setup();
   });
 
-  afterAll(() => {
-    source.disconnect();
+  afterAll(async () => {
+    await source.disconnect();
   });
 
   test("should return a functioning bucket for directly registered entity", async () => {
