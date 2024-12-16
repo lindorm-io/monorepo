@@ -9,7 +9,7 @@ import { RedisSource } from "./RedisSource";
 describe("RedisSource", () => {
   let source: RedisSource;
 
-  beforeAll(() => {
+  beforeAll(async () => {
     source = new RedisSource({
       entities: [
         { Entity: TestEntity },
@@ -18,10 +18,11 @@ describe("RedisSource", () => {
       logger: createMockLogger(),
       url: "redis://localhost:6379",
     });
+    await source.setup();
   });
 
-  afterAll(() => {
-    source.disconnect();
+  afterAll(async () => {
+    await source.disconnect();
   });
 
   test("should return a functioning repository for directly registered entity", async () => {
