@@ -1,2 +1,2 @@
-export const randomInt = (maximum: number): number =>
-  Math.floor(Math.random() * Math.round(maximum));
+export const randomInt = (minimum: number, maximum: number): number =>
+  Math.floor(Math.random() * (maximum - minimum + 1)) + minimum;

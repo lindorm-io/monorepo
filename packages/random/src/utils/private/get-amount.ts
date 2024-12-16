@@ -11,7 +11,7 @@ export const getAmount = (length: number, amount?: RandomStringAmount): number =
   }
 
   if (amount === "random") {
-    return randomInt(length / 3);
+    return randomInt(0, length / 3);
   }
 
   if (amount.endsWith("%")) {
