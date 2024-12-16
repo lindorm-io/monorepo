@@ -29,6 +29,7 @@ export const createHttpMetadataMiddleware = (options: Options): PylonHttpMiddlew
         correlationId: ctx.get("x-correlation-id") || randomUUID(),
         date: requestDate ? new Date(requestDate) : new Date(),
         environment: (ctx.get("x-environment") as Environment) || Environment.Unknown,
+        origin: ctx.get("x-origin") || ctx.get("origin") || null,
         requestId: ctx.get("x-request-id") || randomUUID(),
         responseId: randomUUID(),
       };

@@ -34,6 +34,8 @@ describe("createHttpMetadataMiddleware", () => {
           return "8b39eafc-7e31-501b-ab7b-58514b14856a";
         case "x-environment":
           return "test";
+        case "x-origin":
+          return "test-origin";
         case "x-request-id":
           return "aa9a627d-8296-598c-9589-4ec91d27d056";
         default:
@@ -53,6 +55,7 @@ describe("createHttpMetadataMiddleware", () => {
       correlationId: "8b39eafc-7e31-501b-ab7b-58514b14856a",
       date: MockedDate,
       environment: "test",
+      origin: "test-origin",
       requestId: "aa9a627d-8296-598c-9589-4ec91d27d056",
       responseId: "2f881f6e-f7ce-554f-a5cd-cb80266ff3ec",
     });
@@ -78,6 +81,7 @@ describe("createHttpMetadataMiddleware", () => {
       correlationId: "2f881f6e-f7ce-554f-a5cd-cb80266ff3ec",
       date: MockedDate,
       environment: "unknown",
+      origin: null,
       requestId: "2f881f6e-f7ce-554f-a5cd-cb80266ff3ec",
       responseId: "2f881f6e-f7ce-554f-a5cd-cb80266ff3ec",
     });

@@ -129,6 +129,7 @@ describe("Pylon", () => {
       )
       .set("x-correlation-id", "correlation-id")
       .set("x-environment", "test")
+      .set("x-origin", "test-origin")
       .set("x-request-id", "request-id")
       .expect(204);
 
@@ -138,6 +139,7 @@ describe("Pylon", () => {
         correlationId: "correlation-id",
         date: MockedDate,
         environment: "test",
+        origin: "test-origin",
         requestId: "request-id",
         responseId: expect.any(String),
       },
@@ -251,12 +253,15 @@ describe("Pylon", () => {
 
     expect(response.body).toEqual({
       error: {
+        id: expect.any(String),
         code: "test_error_code",
         data: { test: "data" },
         message: "Test Error",
         name: "ServerError",
         title: "Test Error Title",
+        support: expect.any(String),
       },
+      server: "Pylon",
     });
   });
 });
