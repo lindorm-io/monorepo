@@ -20,6 +20,7 @@ type Metadata = {
   correlationId: string;
   date: Date;
   environment: Environment;
+  origin: string | null;
   requestId: string;
   responseId: string;
 };
