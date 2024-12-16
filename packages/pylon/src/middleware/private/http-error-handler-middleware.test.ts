@@ -30,12 +30,15 @@ describe("httpErrorHandlerMiddleware", () => {
     expect(ctx.status).toEqual(500);
     expect(ctx.body).toEqual({
       error: {
+        id: expect.any(String),
         code: "unknown_error",
         data: {},
         message: "error message",
         name: "Error",
+        support: expect.any(String),
         title: "Error",
       },
+      server: "Pylon",
     });
 
     expect(ctx.logger.error).toHaveBeenCalled();
@@ -58,12 +61,15 @@ describe("httpErrorHandlerMiddleware", () => {
     expect(ctx.status).toEqual(508);
     expect(ctx.body).toEqual({
       error: {
+        id: expect.any(String),
         code: "custom_error_code",
         data: { value: "data" },
         message: "server error message",
         name: "ServerError",
+        support: expect.any(String),
         title: "custom error title",
       },
+      server: "Pylon",
     });
 
     expect(ctx.logger.error).toHaveBeenCalled();
@@ -86,12 +92,15 @@ describe("httpErrorHandlerMiddleware", () => {
     expect(ctx.status).toEqual(418);
     expect(ctx.body).toEqual({
       error: {
+        id: expect.any(String),
         code: "custom_error_code",
         data: { value: "data" },
         message: "client error message",
         name: "ClientError",
+        support: expect.any(String),
         title: "custom error title",
       },
+      server: "Pylon",
     });
 
     expect(ctx.logger.warn).toHaveBeenCalled();
@@ -109,12 +118,15 @@ describe("httpErrorHandlerMiddleware", () => {
     expect(ctx.status).toEqual(500);
     expect(ctx.body).toEqual({
       error: {
+        id: expect.any(String),
         code: "unexpected_exception",
         data: {},
         message: "An unexpected exception occurred while handling thrown error",
         name: "UnexpectedException",
+        support: expect.any(String),
         title: "Unexpected Exception",
       },
+      server: "Pylon",
     });
   });
 });

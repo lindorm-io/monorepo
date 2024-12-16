@@ -1,4 +1,5 @@
 import { ServerError } from "@lindorm/errors";
+import { randomBytes, randomUUID } from "crypto";
 import { RedirectError } from "../../errors";
 import { PylonHttpMiddleware } from "../../types";
 
@@ -34,24 +35,30 @@ export const httpErrorHandlerMiddleware: PylonHttpMiddleware = async (ctx, next)
         ctx.status = status;
         ctx.body = {
           error: {
+            id: err.id ?? randomUUID(),
             code: err.code ?? "unknown_error",
             data: err.data ?? {},
             message: err.message,
             name: err.name ?? "Error",
+            support: randomBytes(8).toString("base64url"),
             title: err.title ?? "Error",
           },
+          server: "Pylon",
         };
       }
     } catch (_) {
       ctx.status = ServerError.Status.InternalServerError;
       ctx.body = {
         error: {
+          id: err.id ?? randomUUID(),
           code: "unexpected_exception",
           data: {},
-          name: "UnexpectedException",
-          title: "Unexpected Exception",
           message: "An unexpected exception occurred while handling thrown error",
+          name: "UnexpectedException",
+          support: randomBytes(8).toString("base64url"),
+          title: "Unexpected Exception",
         },
+        server: "Pylon",
       };
     }
   }
