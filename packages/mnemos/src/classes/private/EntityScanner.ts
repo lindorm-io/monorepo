@@ -1,5 +1,5 @@
 import { IEntity } from "@lindorm/entity";
-import { isFunction, isObject, isString } from "@lindorm/is";
+import { isArray, isFunction, isObject, isString } from "@lindorm/is";
 import { IScanData, Scanner } from "@lindorm/scanner";
 import { Constructor, Dict } from "@lindorm/types";
 import { MnemosSourceError } from "../../errors";
@@ -77,7 +77,7 @@ export class EntityScanner {
         continue;
       }
 
-      if (key === "constraints" && Array.isArray(value)) {
+      if (key === "constraints" && isArray<any>(value)) {
         result.constraints = value;
         continue;
       }
