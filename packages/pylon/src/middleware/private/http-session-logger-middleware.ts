@@ -1,4 +1,3 @@
-import { isObject, isString } from "@lindorm/is";
 import { Stream } from "stream";
 import { PylonHttpMiddleware } from "../../types";
 
@@ -51,12 +50,7 @@ export const httpSessionLoggerMiddleware: PylonHttpMiddleware = async (ctx, next
         },
       },
       response: {
-        body:
-          isObject(ctx.response.body) || isString(ctx.response.body)
-            ? ctx.response.body
-            : ctx.response.body instanceof Stream
-              ? "[Stream]"
-              : ctx.response.body,
+        body: ctx.response.body instanceof Stream ? "[Stream]" : ctx.response.body,
         headers: ctx.response.header,
         message: ctx.response.message,
         status: ctx.response.status,
