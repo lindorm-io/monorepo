@@ -215,8 +215,8 @@ export class RedisRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
         },
         result: {
           document: found,
-          time: Date.now() - start,
         },
+        time: Date.now() - start,
       });
 
       if (!document) return null;
@@ -269,8 +269,8 @@ export class RedisRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
         result: {
           result,
           success,
-          time: Date.now() - start,
         },
+        time: Date.now() - start,
       });
 
       return updated;
