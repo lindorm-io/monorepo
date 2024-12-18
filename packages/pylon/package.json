@@ -18,13 +18,14 @@
     "example": "ts-node example",
     "example:jwks": "ts-node example/jwks",
     "example:socket": "ts-node example/socket",
-    "integration": "compd --file docker-compose.yml jest --config jest.config.integration.js --watch --",
+    "integration": "compd --file docker-compose.yml jest --config jest.config.integration.js --watch",
+    "integration:focus": "compd --file docker-compose.yml jest --config jest.config.integration.js --watch $1",
+    "test": "jest --watch --",
     "test:ci": "npm run test:unit",
     "test:integration": "jest --config jest.config.integration.js --",
     "test:unit": "jest --config jest.config.js --",
-    "test": "jest --watch --",
-    "typecheck:ci": "tsc",
     "typecheck": "tsc --watch",
+    "typecheck:ci": "tsc",
     "update": "ncu -u"
   },
   "dependencies": {
