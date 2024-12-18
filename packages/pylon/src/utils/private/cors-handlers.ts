@@ -1,7 +1,7 @@
 import { sec } from "@lindorm/date";
 import { isArray, isBoolean, isFinite, isString } from "@lindorm/is";
-import { CorsError } from "../errors";
-import { CorsContext, CorsOptions } from "../types";
+import { CorsError } from "../../errors";
+import { CorsContext, CorsOptions } from "../../types";
 
 export const handleAllowedCredentials = (
   ctx: CorsContext,
