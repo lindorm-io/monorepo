@@ -6,7 +6,7 @@ import { ILindormWorker } from "@lindorm/worker";
 import Redis from "ioredis";
 import { ServerOptions as SocketOptions } from "socket.io";
 import { PylonListener, PylonRouter } from "../classes";
-import { CorsOptions } from "./cors-options";
+import { CorsOptions } from "./cors";
 import { OpenIdConfigurationOptions } from "./open-id-configuration";
 import { ParseBodyOptions } from "./parse-body";
 import { PylonHttpContext, PylonHttpMiddleware } from "./pylon-context";
