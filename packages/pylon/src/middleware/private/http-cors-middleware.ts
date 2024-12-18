@@ -1,61 +1,48 @@
-import { sec } from "@lindorm/date";
-import { isArray, isFinite } from "@lindorm/is";
-import { CorsOptions, PylonHttpMiddleware } from "../../types";
+import { CorsError } from "../../errors";
+import { CorsMiddleware, CorsOptions } from "../../types";
+import {
+  handleAllowedCredentials,
+  handleAllowedHeaders,
+  handleAllowedMethods,
+  handleAllowedOrigin,
+  handleEmbedderPolicy,
+  handleExposeHeaders,
+  handleMaxAge,
+  handleOpenerPolicy,
+  handlePrivateNetworkAccess,
+} from "../../utils/private";
 
-export const createHttpCorsMiddleware = (
-  options: CorsOptions = {},
-): PylonHttpMiddleware => {
+export const createHttpCorsMiddleware = (options: CorsOptions = {}): CorsMiddleware => {
   return async function httpCorsMiddleware(ctx, next) {
+    ctx.preflight = ctx.method === "OPTIONS";
     ctx.vary("Origin");
 
-    if (options.allowCredentials) {
-      ctx.set("Access-Control-Allow-Credentials", options.allowCredentials.toString());
+    try {
+      handleAllowedCredentials(ctx, options);
+      handleAllowedHeaders(ctx, options);
+      handleAllowedMethods(ctx, options);
+      handleAllowedOrigin(ctx, options);
+
+      handleExposeHeaders(ctx, options);
+      handleMaxAge(ctx, options);
+
+      handleEmbedderPolicy(ctx, options);
+      handleOpenerPolicy(ctx, options);
+      handlePrivateNetworkAccess(ctx, options);
+    } catch (error) {
+      if (error instanceof CorsError) {
+        ctx.status = error.status;
+        ctx.body = error.message;
+
+        return;
+      }
+
+      throw error;
     }
 
-    const requestHeaders = ctx.get("Access-Control-Request-Headers");
-    if (options.allowHeaders || requestHeaders) {
-      const opts = options.allowHeaders ?? requestHeaders;
-      ctx.set("Access-Control-Allow-Headers", isArray(opts) ? opts.join(",") : "*");
-    }
-
-    const requestMethods = ctx.get("Access-Control-Request-Methods");
-    if (options.allowMethods || requestMethods) {
-      const opts = options.allowMethods ?? requestMethods;
-      ctx.set("Access-Control-Allow-Methods", isArray(opts) ? opts.join(",") : "*");
-    }
-
-    const requestOrigin = ctx.get("Access-Control-Request-Origin");
-    if (options.allowOrigins || requestOrigin) {
-      const opts = options.allowOrigins ?? requestOrigin;
-      ctx.set("Access-Control-Allow-Origin", isArray(opts) ? opts.join(",") : "*");
-    }
-
-    if (options.exposeHeaders) {
-      ctx.set(
-        "Access-Control-Expose-Headers",
-        isArray(options.exposeHeaders) ? options.exposeHeaders.join(",") : "*",
-      );
-    }
-
-    if (options.maxAge) {
-      ctx.set(
-        "Access-Control-Max-Age",
-        isFinite(options.maxAge)
-          ? options.maxAge.toString()
-          : sec(options.maxAge).toString(),
-      );
-    }
-
-    if (
-      options.privateNetworkAccess &&
-      ctx.get("Access-Control-Request-Private-Network")
-    ) {
-      ctx.set("Access-Control-Allow-Private-Network", "true");
-    }
-
-    if (options.secureContext) {
-      ctx.set("Cross-Origin-Opener-Policy", "same-origin");
-      ctx.set("Cross-Origin-Embedder-Policy", "require-corp");
+    if (ctx.preflight) {
+      ctx.status = 204;
+      return;
     }
 
     await next();

@@ -1,4 +1,4 @@
-export * from "./cors-options";
+export * from "./cors";
 export * from "./credentials";
 export * from "./http-callback";
 export * from "./open-id-configuration";
