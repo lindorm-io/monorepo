@@ -1,3 +1,4 @@
+import { HttpMethod } from "@lindorm/conduit";
 import { sec } from "@lindorm/date";
 import { isArray, isBoolean, isFinite, isString } from "@lindorm/is";
 import { CorsError } from "../../errors";
@@ -23,9 +24,7 @@ export const handleAllowedHeaders = (ctx: CorsContext, options: CorsOptions): vo
     return ctx.set("Access-Control-Allow-Headers", "*");
   }
 
-  const config = isArray(options.allowHeaders)
-    ? options.allowHeaders.map((h) => h.toLowerCase())
-    : [];
+  const config = isArray(options.allowHeaders) ? options.allowHeaders : [];
 
   if (ctx.preflight) {
     const request =
@@ -56,14 +55,12 @@ export const handleAllowedMethods = (ctx: CorsContext, options: CorsOptions): vo
     return ctx.set("Access-Control-Allow-Methods", "*");
   }
 
-  const config = isArray(options.allowMethods)
-    ? options.allowMethods.map((m) => m.toUpperCase())
-    : [];
+  const config = isArray(options.allowMethods) ? options.allowMethods : [];
 
   if (ctx.preflight) {
     const request = ctx.get("Access-Control-Request-Method")?.toUpperCase() || null;
 
-    if (request && config.includes(request)) {
+    if (request && config.includes(request as HttpMethod)) {
       return ctx.set("Access-Control-Allow-Methods", request);
     }
 
@@ -88,12 +85,12 @@ export const handleAllowedOrigin = (ctx: CorsContext, options: CorsOptions): voi
     return ctx.set("Access-Control-Allow-Origin", "*");
   }
 
-  const config = isArray(options.allowOrigins)
-    ? options.allowOrigins.map((o) => o.toLowerCase())
-    : [];
+  const config = isArray(options.allowOrigins) ? options.allowOrigins : [];
 
-  const request =
+  const origin =
     ctx.get("Origin")?.toLowerCase() || ctx.get("X-Origin")?.toLowerCase() || null;
+
+  const request = origin?.endsWith("/") ? origin.slice(0, -1) : origin;
 
   if (ctx.preflight) {
     if (request && config.includes(request)) {
@@ -119,9 +116,7 @@ export const handleEmbedderPolicy = (ctx: CorsContext, options: CorsOptions): vo
 export const handleExposeHeaders = (ctx: CorsContext, options: CorsOptions): void => {
   if (!options.exposeHeaders) return;
 
-  const config = isArray(options.exposeHeaders)
-    ? options.exposeHeaders.map((h) => h.toLowerCase())
-    : [];
+  const config = isArray(options.exposeHeaders) ? options.exposeHeaders : [];
 
   if (config.length) {
     return ctx.set("Access-Control-Expose-Headers", config.join(","));
