@@ -3,16 +3,13 @@ import { ILogger } from "@lindorm/logger";
 import { Constructor } from "@lindorm/types";
 import { Redis } from "ioredis";
 import { RedisSourceError } from "../errors";
-import {
-  IRedisRepository,
-  IRedisSource,
-  RedisSourceRepositoryOptions,
-} from "../interfaces";
+import { IRedisRepository, IRedisSource } from "../interfaces";
 import {
   CloneRedisSourceOptions,
   RedisSourceEntities,
   RedisSourceEntity,
   RedisSourceOptions,
+  RedisSourceRepositoryOptions,
 } from "../types";
 import { FromClone } from "../types/private";
 import { RedisRepository } from "./RedisRepository";
