@@ -4,20 +4,56 @@ import { isArray, isBoolean, isFinite, isString } from "@lindorm/is";
 import { CorsError } from "../../errors";
 import { CorsContext, CorsOptions } from "../../types";
 
-export const handleAllowedCredentials = (
+export const handleAccessControlOrigin = (
+  ctx: CorsContext,
+  options: CorsOptions,
+): boolean => {
+  if (!options.allowOrigins) return false;
+
+  if (options.allowOrigins === "*") {
+    ctx.set("Access-Control-Allow-Origin", "*");
+    return true;
+  }
+
+  const config = isArray(options.allowOrigins) ? options.allowOrigins : [];
+
+  const origin =
+    ctx.get("Origin")?.toLowerCase() || ctx.get("X-Origin")?.toLowerCase() || null;
+
+  const request = origin?.endsWith("/") ? origin.slice(0, -1) : origin;
+
+  if (ctx.preflight) {
+    if (request && config.includes(request)) {
+      ctx.set("Access-Control-Allow-Origin", request);
+      return true;
+    }
+
+    throw new CorsError("Invalid origin", {
+      status: CorsError.Status.Forbidden,
+    });
+  }
+
+  if (request && config.includes(request)) {
+    ctx.set("Access-Control-Allow-Origin", request);
+    return true;
+  }
+
+  return false;
+};
+
+export const handleAccessControlCredentials = (
   ctx: CorsContext,
   options: CorsOptions,
 ): void => {
   if (!isBoolean(options.allowCredentials)) return;
 
   ctx.set("Access-Control-Allow-Credentials", options.allowCredentials.toString());
-
-  if (options.allowOrigins === "*") {
-    throw new Error("Cannot set allowCredentials to true when allowOrigins is set to *");
-  }
 };
 
-export const handleAllowedHeaders = (ctx: CorsContext, options: CorsOptions): void => {
+export const handleAccessControlHeaders = (
+  ctx: CorsContext,
+  options: CorsOptions,
+): void => {
   if (!options.allowHeaders) return;
 
   if (options.allowHeaders === "*") {
@@ -48,7 +84,10 @@ export const handleAllowedHeaders = (ctx: CorsContext, options: CorsOptions): vo
   }
 };
 
-export const handleAllowedMethods = (ctx: CorsContext, options: CorsOptions): void => {
+export const handleAccessControlMethods = (
+  ctx: CorsContext,
+  options: CorsOptions,
+): void => {
   if (!options.allowMethods) return;
 
   if (options.allowMethods === "*") {
@@ -78,42 +117,10 @@ export const handleAllowedMethods = (ctx: CorsContext, options: CorsOptions): vo
   }
 };
 
-export const handleAllowedOrigin = (ctx: CorsContext, options: CorsOptions): void => {
-  if (!options.allowOrigins) return;
-
-  if (options.allowOrigins === "*" && !options.allowCredentials) {
-    return ctx.set("Access-Control-Allow-Origin", "*");
-  }
-
-  const config = isArray(options.allowOrigins) ? options.allowOrigins : [];
-
-  const origin =
-    ctx.get("Origin")?.toLowerCase() || ctx.get("X-Origin")?.toLowerCase() || null;
-
-  const request = origin?.endsWith("/") ? origin.slice(0, -1) : origin;
-
-  if (ctx.preflight) {
-    if (request && config.includes(request)) {
-      return ctx.set("Access-Control-Allow-Origin", request);
-    }
-
-    throw new CorsError("Invalid origin", {
-      status: CorsError.Status.Forbidden,
-    });
-  }
-
-  if (request && config.includes(request)) {
-    return ctx.set("Access-Control-Allow-Origin", request);
-  }
-};
-
-export const handleEmbedderPolicy = (ctx: CorsContext, options: CorsOptions): void => {
-  if (!options.embedderPolicy) return;
-
-  ctx.set("Cross-Origin-Embedder-Policy", options.embedderPolicy);
-};
-
-export const handleExposeHeaders = (ctx: CorsContext, options: CorsOptions): void => {
+export const handleAccessControlExposeHeaders = (
+  ctx: CorsContext,
+  options: CorsOptions,
+): void => {
   if (!options.exposeHeaders) return;
 
   const config = isArray(options.exposeHeaders) ? options.exposeHeaders : [];
@@ -123,7 +130,10 @@ export const handleExposeHeaders = (ctx: CorsContext, options: CorsOptions): voi
   }
 };
 
-export const handleMaxAge = (ctx: CorsContext, options: CorsOptions): void => {
+export const handleAccessControlMaxAge = (
+  ctx: CorsContext,
+  options: CorsOptions,
+): void => {
   if (!isString(options.maxAge) && !isFinite(options.maxAge)) return;
   if (!ctx.preflight) return;
 
@@ -133,13 +143,7 @@ export const handleMaxAge = (ctx: CorsContext, options: CorsOptions): void => {
   );
 };
 
-export const handleOpenerPolicy = (ctx: CorsContext, options: CorsOptions): void => {
-  if (!options.openerPolicy) return;
-
-  ctx.set("Cross-Origin-Opener-Policy", options.openerPolicy);
-};
-
-export const handlePrivateNetworkAccess = (
+export const handleAccessControlPrivateNetwork = (
   ctx: CorsContext,
   options: CorsOptions,
 ): void => {
@@ -149,4 +153,22 @@ export const handlePrivateNetworkAccess = (
   if (ctx.get("Access-Control-Request-Private-Network") !== "true") return;
 
   ctx.set("Access-Control-Allow-Private-Network", "true");
+};
+
+export const handleCrossOriginEmbedderPolicy = (
+  ctx: CorsContext,
+  options: CorsOptions,
+): void => {
+  if (!options.embedderPolicy) return;
+
+  ctx.set("Cross-Origin-Embedder-Policy", options.embedderPolicy);
+};
+
+export const handleCrossOriginOpenerPolicy = (
+  ctx: CorsContext,
+  options: CorsOptions,
+): void => {
+  if (!options.openerPolicy) return;
+
+  ctx.set("Cross-Origin-Opener-Policy", options.openerPolicy);
 };

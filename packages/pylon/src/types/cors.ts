@@ -1,5 +1,6 @@
 import { ReadableTime } from "@lindorm/date";
 import { HttpMethod } from "@lindorm/enums";
+import { EmbedderPolicy, OpenerPolicy } from "../enums";
 import { PylonHttpContext, PylonHttpMiddleware } from "./pylon-context";
 
 export type CorsContext = PylonHttpContext & {
@@ -13,9 +14,9 @@ export type CorsOptions = {
   allowHeaders?: "*" | Array<string>;
   allowMethods?: "*" | Array<HttpMethod>;
   allowOrigins?: "*" | Array<string>;
-  embedderPolicy?: "credentialless" | "require-corp";
+  embedderPolicy?: EmbedderPolicy;
   exposeHeaders?: Array<string>;
   maxAge?: ReadableTime | number;
-  openerPolicy?: "unsafe-none" | "same-origin" | "same-origin-allow-popups";
+  openerPolicy?: OpenerPolicy;
   privateNetworkAccess?: boolean;
 };
