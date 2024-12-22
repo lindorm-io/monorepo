@@ -3,18 +3,22 @@ import { isArray } from "@lindorm/is";
 import { CorsError } from "../../errors";
 import { CorsMiddleware, CorsOptions } from "../../types";
 import {
-  handleAllowedCredentials,
-  handleAllowedHeaders,
-  handleAllowedMethods,
-  handleAllowedOrigin,
-  handleEmbedderPolicy,
-  handleExposeHeaders,
-  handleMaxAge,
-  handleOpenerPolicy,
-  handlePrivateNetworkAccess,
+  handleAccessControlCredentials,
+  handleAccessControlExposeHeaders,
+  handleAccessControlHeaders,
+  handleAccessControlMaxAge,
+  handleAccessControlMethods,
+  handleAccessControlOrigin,
+  handleAccessControlPrivateNetwork,
+  handleCrossOriginEmbedderPolicy,
+  handleCrossOriginOpenerPolicy,
 } from "../../utils/private";
 
 export const createHttpCorsMiddleware = (options: CorsOptions = {}): CorsMiddleware => {
+  if (options.allowOrigins === "*" && options.allowCredentials) {
+    throw new Error("Cannot set allowCredentials to true when allowOrigins is set to *");
+  }
+
   options.allowMethods = isArray(options.allowMethods)
     ? options.allowMethods.map((m) => m.toUpperCase() as HttpMethod)
     : options.allowMethods;
@@ -38,17 +42,19 @@ export const createHttpCorsMiddleware = (options: CorsOptions = {}): CorsMiddlew
     ctx.vary("Origin");
 
     try {
-      handleAllowedCredentials(ctx, options);
-      handleAllowedHeaders(ctx, options);
-      handleAllowedMethods(ctx, options);
-      handleAllowedOrigin(ctx, options);
+      const originHeader = handleAccessControlOrigin(ctx, options);
 
-      handleExposeHeaders(ctx, options);
-      handleMaxAge(ctx, options);
+      if (originHeader) {
+        handleAccessControlCredentials(ctx, options);
+        handleAccessControlExposeHeaders(ctx, options);
+        handleAccessControlHeaders(ctx, options);
+        handleAccessControlMaxAge(ctx, options);
+        handleAccessControlMethods(ctx, options);
+        handleAccessControlPrivateNetwork(ctx, options);
+      }
 
-      handleEmbedderPolicy(ctx, options);
-      handleOpenerPolicy(ctx, options);
-      handlePrivateNetworkAccess(ctx, options);
+      handleCrossOriginEmbedderPolicy(ctx, options);
+      handleCrossOriginOpenerPolicy(ctx, options);
     } catch (error) {
       if (error instanceof CorsError) {
         ctx.status = error.status;
