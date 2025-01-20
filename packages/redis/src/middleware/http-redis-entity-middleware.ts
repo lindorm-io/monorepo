@@ -37,7 +37,7 @@ export const createHttpRedisEntityMiddleware =
 
       const repository = source
         ? source.repository(Entity, { logger: ctx.logger })
-        : ctx.redis.repository(Entity);
+        : ctx.sources.redis.repository(Entity);
 
       const name = camelCase(Entity.name);
 

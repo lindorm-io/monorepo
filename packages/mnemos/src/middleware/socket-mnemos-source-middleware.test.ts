@@ -1,3 +1,4 @@
+import { createMockLogger } from "@lindorm/logger";
 import { IMnemosSource } from "../interfaces";
 import { createSocketMnemosSourceMiddleware } from "./socket-mnemos-source-middleware";
 
@@ -8,7 +9,9 @@ describe("createSocketMnemosSourceMiddleware", () => {
   let source: IMnemosSource;
 
   beforeEach(() => {
-    ctx = { logger: "logger" };
+    ctx = {
+      logger: createMockLogger(),
+    };
     source = { clone: () => ({ clonedSource: true }) } as any;
   });
 
@@ -17,6 +20,6 @@ describe("createSocketMnemosSourceMiddleware", () => {
       createSocketMnemosSourceMiddleware(source)(ctx, next),
     ).resolves.not.toThrow();
 
-    expect(ctx.mnemos).toEqual({ clonedSource: true });
+    expect(ctx.sources.mnemos).toEqual({ clonedSource: true });
   });
 });

@@ -7,13 +7,18 @@ import {
   PylonSocketData,
 } from "@lindorm/pylon";
 import { Dict } from "@lindorm/types";
-import { IMnemosSource } from "../interfaces";
+import { IMnemosRepository, IMnemosSource } from "../interfaces";
 
 // common context
 
 type Context = {
-  mnemos: IMnemosSource;
   entities: Dict<IEntity>;
+  repositories: {
+    mnemos: Dict<IMnemosRepository<IEntity>>;
+  };
+  sources: {
+    mnemos: IMnemosSource;
+  };
 };
 
 // extended context

@@ -1,3 +1,4 @@
+import { createMockLogger } from "@lindorm/logger";
 import { IRedisSource } from "../interfaces";
 import { createHttpRedisSourceMiddleware } from "./http-redis-source-middleware";
 
@@ -8,7 +9,9 @@ describe("createHttpRedisSourceMiddleware", () => {
   let source: IRedisSource;
 
   beforeEach(() => {
-    ctx = { logger: "logger" };
+    ctx = {
+      logger: createMockLogger(),
+    };
     source = { clone: () => ({ clonedSource: true }) } as any;
   });
 
@@ -17,6 +20,6 @@ describe("createHttpRedisSourceMiddleware", () => {
       createHttpRedisSourceMiddleware(source)(ctx, next),
     ).resolves.not.toThrow();
 
-    expect(ctx.redis).toEqual({ clonedSource: true });
+    expect(ctx.sources.redis).toEqual({ clonedSource: true });
   });
 });

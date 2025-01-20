@@ -1,12 +1,12 @@
 import { createMockLogger } from "@lindorm/logger";
-import { IMnemosSource } from "../interfaces";
-import { createHttpMnemosSourceMiddleware } from "./http-mnemos-source-middleware";
+import { IElasticSource } from "../interfaces";
+import { createSocketElasticSourceMiddleware } from "./socket-elastic-source-middleware";
 
-describe("createHttpMnemosSourceMiddleware", () => {
+describe("createSocketElasticSourceMiddleware", () => {
   const next = jest.fn();
 
   let ctx: any;
-  let source: IMnemosSource;
+  let source: IElasticSource;
 
   beforeEach(() => {
     ctx = {
@@ -17,9 +17,9 @@ describe("createHttpMnemosSourceMiddleware", () => {
 
   test("should set source on context", async () => {
     await expect(
-      createHttpMnemosSourceMiddleware(source)(ctx, next),
+      createSocketElasticSourceMiddleware(source)(ctx, next),
     ).resolves.not.toThrow();
 
-    expect(ctx.sources.mnemos).toEqual({ clonedSource: true });
+    expect(ctx.sources.elastic).toEqual({ clonedSource: true });
   });
 });

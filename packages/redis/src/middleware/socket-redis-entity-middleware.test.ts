@@ -1,3 +1,4 @@
+import { createMockLogger } from "@lindorm/logger";
 import MockDate from "mockdate";
 import { TestEntity } from "../__fixtures__/test-entity";
 import { createMockRedisSource } from "../mocks";
@@ -17,7 +18,10 @@ describe("createSocketRedisEntityMiddleware", () => {
         id: "43b6fb29-3b2c-53d9-a238-0a6262e02c86",
         other: "other",
       },
-      redis: createMockRedisSource(),
+      logger: createMockLogger(),
+      sources: {
+        redis: createMockRedisSource(),
+      },
     };
   });
 

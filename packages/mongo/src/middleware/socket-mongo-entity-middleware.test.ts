@@ -17,7 +17,9 @@ describe("createSocketMongoEntityMiddleware", () => {
         id: "43b6fb29-3b2c-53d9-a238-0a6262e02c86",
         other: "other",
       },
-      mongo: createMockMongoSource(),
+      sources: {
+        mongo: createMockMongoSource(),
+      },
     };
   });
 

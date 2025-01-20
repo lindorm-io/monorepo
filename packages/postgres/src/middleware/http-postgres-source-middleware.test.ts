@@ -1,3 +1,4 @@
+import { createMockLogger } from "@lindorm/logger";
 import { IPostgresSource } from "../interfaces";
 import { createHttpPostgresSourceMiddleware } from "./http-postgres-source-middleware";
 
@@ -8,7 +9,9 @@ describe("createHttpPostgresSourceMiddleware", () => {
   let source: IPostgresSource;
 
   beforeEach(() => {
-    ctx = { logger: "logger" };
+    ctx = {
+      logger: createMockLogger(),
+    };
     source = { clone: () => ({ clonedSource: true }) } as any;
   });
 
@@ -17,6 +20,6 @@ describe("createHttpPostgresSourceMiddleware", () => {
       createHttpPostgresSourceMiddleware(source)(ctx, next),
     ).resolves.not.toThrow();
 
-    expect(ctx.postgres).toEqual({ clonedSource: true });
+    expect(ctx.sources.postgres).toEqual({ clonedSource: true });
   });
 });

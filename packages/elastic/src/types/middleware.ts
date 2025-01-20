@@ -7,13 +7,18 @@ import {
   PylonSocketData,
 } from "@lindorm/pylon";
 import { Dict } from "@lindorm/types";
-import { IElasticSource } from "../interfaces";
+import { IElasticEntity, IElasticRepository, IElasticSource } from "../interfaces";
 
 // common context
 
 type Context = {
-  elastic: IElasticSource;
   entities: Dict<IEntity>;
+  repositories: {
+    elastic: Dict<IElasticRepository<IElasticEntity>>;
+  };
+  sources: {
+    elastic: IElasticSource;
+  };
 };
 
 // extended context

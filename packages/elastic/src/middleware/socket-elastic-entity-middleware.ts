@@ -36,7 +36,7 @@ export const createSocketElasticEntityMiddleware =
 
       const repository = source
         ? source.repository(Entity, { logger: ctx.logger })
-        : ctx.elastic.repository(Entity);
+        : ctx.sources.elastic.repository(Entity);
 
       const name = camelCase(Entity.name);
 
