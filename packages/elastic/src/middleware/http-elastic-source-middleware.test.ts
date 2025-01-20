@@ -1,3 +1,4 @@
+import { createMockLogger } from "@lindorm/logger";
 import { IElasticSource } from "../interfaces";
 import { createHttpElasticSourceMiddleware } from "./http-elastic-source-middleware";
 
@@ -8,7 +9,9 @@ describe("createHttpElasticSourceMiddleware", () => {
   let source: IElasticSource;
 
   beforeEach(() => {
-    ctx = { logger: "logger" };
+    ctx = {
+      logger: createMockLogger(),
+    };
     source = { clone: () => ({ clonedSource: true }) } as any;
   });
 
@@ -17,6 +20,6 @@ describe("createHttpElasticSourceMiddleware", () => {
       createHttpElasticSourceMiddleware(source)(ctx, next),
     ).resolves.not.toThrow();
 
-    expect(ctx.elastic).toEqual({ clonedSource: true });
+    expect(ctx.sources.elastic).toEqual({ clonedSource: true });
   });
 });

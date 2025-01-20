@@ -10,7 +10,9 @@ import { IPostgresSource } from "../interfaces";
 // common context
 
 type Context = {
-  postgres: IPostgresSource;
+  sources: {
+    postgres: IPostgresSource;
+  };
 };
 
 // extended context

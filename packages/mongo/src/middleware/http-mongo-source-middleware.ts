@@ -1,3 +1,4 @@
+import { isObject } from "@lindorm/is";
 import { IMongoSource } from "../interfaces";
 import { MongoPylonHttpContext, MongoPylonHttpMiddleware } from "../types";
 
@@ -7,7 +8,13 @@ export const createHttpMongoSourceMiddleware = <
   source: IMongoSource,
 ): MongoPylonHttpMiddleware<C> => {
   return async function httpMongoSourceMiddleware(ctx, next): Promise<void> {
-    ctx.mongo = source.clone({ logger: ctx.logger });
+    if (!isObject(ctx.sources)) {
+      ctx.sources = {} as any;
+    }
+
+    ctx.sources.mongo = source.clone({ logger: ctx.logger });
+
+    ctx.logger.debug("Mongo Source added to http context");
 
     await next();
   };

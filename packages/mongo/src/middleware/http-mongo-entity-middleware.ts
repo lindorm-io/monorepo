@@ -1,6 +1,7 @@
 import { camelCase } from "@lindorm/case";
 import { IEntity } from "@lindorm/entity";
 import { ClientError } from "@lindorm/errors";
+import { isObject } from "@lindorm/is";
 import { Constructor } from "@lindorm/types";
 import { get } from "object-path";
 import { IMongoSource } from "../interfaces";
@@ -31,13 +32,13 @@ export const createHttpMongoEntityMiddleware =
         });
       }
 
-      if (!ctx.entities) {
+      if (!isObject(ctx.entities)) {
         ctx.entities = {};
       }
 
       const repository = source
         ? source.repository(Entity, { logger: ctx.logger })
-        : ctx.mongo.repository(Entity);
+        : ctx.sources.mongo.repository(Entity);
 
       const name = camelCase(Entity.name);
 

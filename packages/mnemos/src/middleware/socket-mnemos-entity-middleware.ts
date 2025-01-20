@@ -37,11 +37,11 @@ export const createSocketMnemosEntityMiddleware =
 
       const repository = source
         ? source.repository(Entity, { logger: ctx.logger })
-        : ctx.mnemos.repository(Entity);
+        : ctx.sources.mnemos.repository(Entity);
 
       const name = camelCase(Entity.name);
 
-      ctx.entities[name] = await repository.findOneOrFail({ [key]: value });
+      ctx.entities[name] = repository.findOneOrFail({ [key]: value });
 
       await next();
     };

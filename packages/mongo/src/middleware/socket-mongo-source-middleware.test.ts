@@ -1,3 +1,4 @@
+import { createMockLogger } from "@lindorm/logger";
 import { IMongoSource } from "../interfaces";
 import { createSocketMongoSourceMiddleware } from "./socket-mongo-source-middleware";
 
@@ -8,7 +9,9 @@ describe("createSocketMongoSourceMiddleware", () => {
   let source: IMongoSource;
 
   beforeEach(() => {
-    ctx = { logger: "logger" };
+    ctx = {
+      logger: createMockLogger(),
+    };
     source = { clone: () => ({ clonedSource: true }) } as any;
   });
 
@@ -17,6 +20,6 @@ describe("createSocketMongoSourceMiddleware", () => {
       createSocketMongoSourceMiddleware(source)(ctx, next),
     ).resolves.not.toThrow();
 
-    expect(ctx.mongo).toEqual({ clonedSource: true });
+    expect(ctx.sources.mongo).toEqual({ clonedSource: true });
   });
 });

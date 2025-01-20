@@ -7,13 +7,18 @@ import {
   PylonSocketData,
 } from "@lindorm/pylon";
 import { Dict } from "@lindorm/types";
-import { IRedisSource } from "../interfaces";
+import { IRedisRepository, IRedisSource } from "../interfaces";
 
 // common context
 
 type Context = {
-  redis: IRedisSource;
   entities: Dict<IEntity>;
+  repositories: {
+    redis: Dict<IRedisRepository<IEntity>>;
+  };
+  sources: {
+    redis: IRedisSource;
+  };
 };
 
 // extended context

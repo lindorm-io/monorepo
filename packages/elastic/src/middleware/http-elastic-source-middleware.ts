@@ -1,3 +1,4 @@
+import { isObject } from "@lindorm/is";
 import { IElasticSource } from "../interfaces";
 import { ElasticPylonHttpContext, ElasticPylonHttpMiddleware } from "../types";
 
@@ -7,7 +8,13 @@ export const createHttpElasticSourceMiddleware = <
   source: IElasticSource,
 ): ElasticPylonHttpMiddleware<C> => {
   return async function httpElasticSourceMiddleware(ctx, next): Promise<void> {
-    ctx.elastic = source.clone({ logger: ctx.logger });
+    if (!isObject(ctx.sources)) {
+      ctx.sources = {} as any;
+    }
+
+    ctx.sources.elastic = source.clone({ logger: ctx.logger });
+
+    ctx.logger.debug("Elastic Source added to http context");
 
     await next();
   };

@@ -7,14 +7,19 @@ import {
   PylonSocketData,
 } from "@lindorm/pylon";
 import { Dict } from "@lindorm/types";
-import { IMongoFile, IMongoSource } from "../interfaces";
+import { IMongoFile, IMongoRepository, IMongoSource } from "../interfaces";
 
 // common context
 
 type Context = {
-  mongo: IMongoSource;
   entities: Dict<IEntity>;
   files: Array<IMongoFile>;
+  repositories: {
+    mongo: Dict<IMongoRepository<IEntity>>;
+  };
+  sources: {
+    mongo: IMongoSource;
+  };
 };
 
 // extended context

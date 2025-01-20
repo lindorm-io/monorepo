@@ -1,3 +1,4 @@
+import { createMockLogger } from "@lindorm/logger";
 import MockDate from "mockdate";
 import { TestEntity } from "../__fixtures__/test-entity";
 import { createMockElasticSource } from "../mocks";
@@ -17,7 +18,10 @@ describe("createSocketElasticEntityMiddleware", () => {
         id: "43b6fb29-3b2c-53d9-a238-0a6262e02c86",
         other: "other",
       },
-      elastic: createMockElasticSource(),
+      logger: createMockLogger(),
+      sources: {
+        elastic: createMockElasticSource(),
+      },
     };
   });
 

@@ -31,7 +31,7 @@ export const createHttpMongoUploadMiddleware = <
     try {
       const bucket = source
         ? source.bucket(File, { logger: ctx.logger })
-        : ctx.mongo.bucket(File);
+        : ctx.sources.mongo.bucket(File);
 
       const metadata = getMetadata(ctx);
       const promises: Array<Promise<IMongoFile>> = [];

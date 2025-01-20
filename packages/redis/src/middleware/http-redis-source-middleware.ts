@@ -1,3 +1,4 @@
+import { isObject } from "@lindorm/is";
 import { IRedisSource } from "../interfaces";
 import { RedisPylonHttpContext, RedisPylonHttpMiddleware } from "../types";
 
@@ -7,7 +8,13 @@ export const createHttpRedisSourceMiddleware = <
   source: IRedisSource,
 ): RedisPylonHttpMiddleware<C> => {
   return async function httpRedisSourceMiddleware(ctx, next): Promise<void> {
-    ctx.redis = source.clone({ logger: ctx.logger });
+    if (!isObject(ctx.sources)) {
+      ctx.sources = {} as any;
+    }
+
+    ctx.sources.redis = source.clone({ logger: ctx.logger });
+
+    ctx.logger.debug("Redis Source added to http context");
 
     await next();
   };
