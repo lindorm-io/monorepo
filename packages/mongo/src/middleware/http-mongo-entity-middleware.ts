@@ -22,6 +22,10 @@ export const createHttpMongoEntityMiddleware =
       const { key = "id", optional = false } = options;
       const value = get(ctx, path);
 
+      if (!isObject(ctx.entities)) {
+        ctx.entities = {};
+      }
+
       if (!value && optional) {
         return await next();
       }
@@ -32,17 +36,27 @@ export const createHttpMongoEntityMiddleware =
         });
       }
 
-      if (!isObject(ctx.entities)) {
-        ctx.entities = {};
-      }
-
       const repository = source
         ? source.repository(Entity, { logger: ctx.logger })
         : ctx.sources.mongo.repository(Entity);
 
       const name = camelCase(Entity.name);
+      const found = await repository.findOne({ [key]: value });
 
-      ctx.entities[name] = await repository.findOneOrFail({ [key]: value });
+      if (found) {
+        ctx.entities[name] = found;
+
+        ctx.logger.debug("Mongo Entity added to http context", {
+          name,
+          key,
+          value,
+        });
+      } else if (!optional) {
+        throw new ClientError("Entity not found", {
+          debug: { key, value, name },
+          status: ClientError.Status.NotFound,
+        });
+      }
 
       await next();
     };
