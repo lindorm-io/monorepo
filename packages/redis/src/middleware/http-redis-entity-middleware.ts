@@ -1,6 +1,7 @@
 import { camelCase } from "@lindorm/case";
 import { IEntity } from "@lindorm/entity";
 import { ClientError } from "@lindorm/errors";
+import { isObject } from "@lindorm/is";
 import { Constructor } from "@lindorm/types";
 import { get } from "object-path";
 import { IRedisSource } from "../interfaces";
@@ -21,6 +22,10 @@ export const createHttpRedisEntityMiddleware =
       const { key = "id", optional = false } = options;
       const value = get(ctx, path);
 
+      if (!isObject(ctx.entities)) {
+        ctx.entities = {};
+      }
+
       if (!value && optional) {
         return await next();
       }
@@ -31,17 +36,27 @@ export const createHttpRedisEntityMiddleware =
         });
       }
 
-      if (!ctx.entities) {
-        ctx.entities = {};
-      }
-
       const repository = source
         ? source.repository(Entity, { logger: ctx.logger })
         : ctx.sources.redis.repository(Entity);
 
       const name = camelCase(Entity.name);
+      const found = await repository.findOne({ [key]: value });
 
-      ctx.entities[name] = await repository.findOneOrFail({ [key]: value });
+      if (found) {
+        ctx.entities[name] = found;
+
+        ctx.logger.debug("Redis Entity added to http context", {
+          name,
+          key,
+          value,
+        });
+      } else if (!optional) {
+        throw new ClientError("Entity not found", {
+          debug: { key, value, name },
+          status: ClientError.Status.NotFound,
+        });
+      }
 
       await next();
     };
