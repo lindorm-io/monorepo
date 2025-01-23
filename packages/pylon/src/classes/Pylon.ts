@@ -10,12 +10,12 @@ import userAgent from "koa-useragent";
 import { Server as SocketIoServer } from "socket.io";
 import {
   createEventContextInitialisationMiddleware,
+  createHttpBodyParserMiddleware,
   createHttpContextInitialisationMiddleware,
   createHttpCorsMiddleware,
   createHttpMetadataMiddleware,
   eventErrorHandlerMiddleware,
   eventLoggerMiddleware,
-  httpBodyParserMiddleware,
   httpErrorHandlerMiddleware,
   httpResponseMiddleware,
   httpSessionLoggerMiddleware,
@@ -99,7 +99,7 @@ export class Pylon<
 
     this.addHttpMiddleware([
       userAgent,
-      httpBodyParserMiddleware(options.parseBody),
+      createHttpBodyParserMiddleware(options.parseBody),
       createHttpMetadataMiddleware({
         environment,
         httpMaxRequestAge: options.httpMaxRequestAge ?? "10s",
