@@ -86,8 +86,7 @@ export class Pylon<
     this._setup = options.setup;
     this._teardown = options.teardown;
 
-    this.koa = new Koa();
-    this.koa.keys = options.keys ?? [];
+    this.koa = new Koa({ keys: options.keys });
     this.router = new PylonRouter<C>();
     this.http = createServer(this.koa.callback());
 
