@@ -8,7 +8,7 @@ import { BodyType } from "../../enums";
 import { ParseBodyOptions, PylonHttpMiddleware } from "../../types";
 import { composeParseBodyConfig, getBodyType, parseBody } from "../../utils/private";
 
-export const httpBodyParserMiddleware = (
+export const createHttpBodyParserMiddleware = (
   options?: ParseBodyOptions,
 ): PylonHttpMiddleware => {
   const config = composeParseBodyConfig(options);

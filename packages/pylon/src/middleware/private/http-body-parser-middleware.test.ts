@@ -6,7 +6,7 @@ import {
   getBodyType as _getBodyType,
   parseBody as _parseBody,
 } from "../../utils/private";
-import { httpBodyParserMiddleware } from "./http-body-parser-middleware";
+import { createHttpBodyParserMiddleware } from "./http-body-parser-middleware";
 
 jest.mock("../../utils/private");
 
@@ -49,7 +49,9 @@ describe("createHttpBodyParserMiddleware", () => {
   });
 
   test("should parse body and files and set it on request context", async () => {
-    await expect(httpBodyParserMiddleware()(ctx, jest.fn())).resolves.toBeUndefined();
+    await expect(
+      createHttpBodyParserMiddleware()(ctx, jest.fn()),
+    ).resolves.toBeUndefined();
 
     expect(ctx.request.body).toEqual({ value: "parsed", snake_case_key: "body" });
     expect(ctx.request.files).toEqual([]);
@@ -57,7 +59,9 @@ describe("createHttpBodyParserMiddleware", () => {
   });
 
   test("should change case and set on data when body type is json", async () => {
-    await expect(httpBodyParserMiddleware()(ctx, jest.fn())).resolves.toBeUndefined();
+    await expect(
+      createHttpBodyParserMiddleware()(ctx, jest.fn()),
+    ).resolves.toBeUndefined();
 
     expect(ctx.data).toEqual({
       snakeCaseKey: "body",
@@ -69,7 +73,9 @@ describe("createHttpBodyParserMiddleware", () => {
   test("should change case and set on data when body type is urlencoded", async () => {
     getBodyType.mockReturnValue(BodyType.UrlEncoded);
 
-    await expect(httpBodyParserMiddleware()(ctx, jest.fn())).resolves.toBeUndefined();
+    await expect(
+      createHttpBodyParserMiddleware()(ctx, jest.fn()),
+    ).resolves.toBeUndefined();
 
     expect(ctx.data).toEqual({
       snakeCaseKey: "body",
@@ -81,7 +87,9 @@ describe("createHttpBodyParserMiddleware", () => {
   test("should not change case of body when multipart", async () => {
     getBodyType.mockReturnValue(BodyType.Multipart);
 
-    await expect(httpBodyParserMiddleware()(ctx, jest.fn())).resolves.toBeUndefined();
+    await expect(
+      createHttpBodyParserMiddleware()(ctx, jest.fn()),
+    ).resolves.toBeUndefined();
 
     expect(ctx.data).toEqual({ snakeCaseQuery: "query" });
   });
@@ -89,7 +97,9 @@ describe("createHttpBodyParserMiddleware", () => {
   test("should not change case of body when text", async () => {
     getBodyType.mockReturnValue(BodyType.Text);
 
-    await expect(httpBodyParserMiddleware()(ctx, jest.fn())).resolves.toBeUndefined();
+    await expect(
+      createHttpBodyParserMiddleware()(ctx, jest.fn()),
+    ).resolves.toBeUndefined();
 
     expect(ctx.data).toEqual({ snakeCaseQuery: "query" });
   });
@@ -97,7 +107,9 @@ describe("createHttpBodyParserMiddleware", () => {
   test("should not parse body if method is not POST, PUT or PATCH", async () => {
     ctx.method = "GET";
 
-    await expect(httpBodyParserMiddleware()(ctx, jest.fn())).resolves.toBeUndefined();
+    await expect(
+      createHttpBodyParserMiddleware()(ctx, jest.fn()),
+    ).resolves.toBeUndefined();
 
     expect(ctx.request.body).toBeUndefined();
     expect(ctx.request.files).toBeUndefined();
@@ -109,6 +121,6 @@ describe("createHttpBodyParserMiddleware", () => {
 
     parseBody.mockRejectedValue(error);
 
-    await expect(httpBodyParserMiddleware()(ctx, jest.fn())).rejects.toThrow(error);
+    await expect(createHttpBodyParserMiddleware()(ctx, jest.fn())).rejects.toThrow(error);
   });
 });
