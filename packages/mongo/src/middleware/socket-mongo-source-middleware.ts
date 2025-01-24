@@ -1,12 +1,12 @@
 import { isObject } from "@lindorm/is";
 import { IMongoSource } from "../interfaces";
-import { MongoPylonEventContext, MongoPylonEventMiddleware } from "../types";
+import { MongoPylonSocketContext, MongoPylonSocketMiddleware } from "../types";
 
 export const createSocketMongoSourceMiddleware = <
-  C extends MongoPylonEventContext = MongoPylonEventContext,
+  C extends MongoPylonSocketContext = MongoPylonSocketContext,
 >(
   source: IMongoSource,
-): MongoPylonEventMiddleware<C> => {
+): MongoPylonSocketMiddleware<C> => {
   return async function socketMongoSourceMiddleware(ctx, next): Promise<void> {
     if (!isObject(ctx.sources)) {
       ctx.sources = {} as any;

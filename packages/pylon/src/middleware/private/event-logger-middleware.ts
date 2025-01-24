@@ -1,6 +1,6 @@
-import { PylonEventMiddleware } from "../../types";
+import { PylonSocketMiddleware } from "../../types";
 
-export const eventLoggerMiddleware: PylonEventMiddleware = async (ctx, next) => {
+export const eventLoggerMiddleware: PylonSocketMiddleware = async (ctx, next) => {
   const start = Date.now();
 
   try {

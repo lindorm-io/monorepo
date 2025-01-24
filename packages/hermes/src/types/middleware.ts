@@ -1,9 +1,9 @@
 import {
-  PylonEventContext,
-  PylonEventMiddleware,
   PylonHttpContext,
   PylonHttpMiddleware,
+  PylonSocketContext,
   PylonSocketData,
+  PylonSocketMiddleware,
 } from "@lindorm/pylon";
 import { IHermes } from "../interfaces";
 
@@ -21,10 +21,10 @@ export type HermesPylonHttpContext<Data = any, WebhookData = any> = PylonHttpCon
 > &
   Context;
 
-export type HermesPylonEventContext<
+export type HermesPylonSocketContext<
   Args = any,
   Data extends PylonSocketData = PylonSocketData,
-> = PylonEventContext<Args, Data> & Context;
+> = PylonSocketContext<Args, Data> & Context;
 
 // extended middleware
 
@@ -32,6 +32,6 @@ export type HermesPylonHttpMiddleware<
   C extends HermesPylonHttpContext = HermesPylonHttpContext,
 > = PylonHttpMiddleware<C>;
 
-export type HermesPylonEventMiddleware<
-  C extends HermesPylonEventContext = HermesPylonEventContext,
-> = PylonEventMiddleware<C>;
+export type HermesPylonSocketMiddleware<
+  C extends HermesPylonSocketContext = HermesPylonSocketContext,
+> = PylonSocketMiddleware<C>;

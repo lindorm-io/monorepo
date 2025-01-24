@@ -6,7 +6,7 @@ import {
 } from "@lindorm/conduit";
 import { ServerError } from "@lindorm/errors";
 import { isArray } from "@lindorm/is";
-import { PylonEventContext, PylonEventMiddleware } from "../../types";
+import { PylonSocketContext, PylonSocketMiddleware } from "../../types";
 
 type Options = Omit<ConduitOptions, "alias" | "baseUrl" | "logger"> & {
   alias: string;
@@ -14,10 +14,10 @@ type Options = Omit<ConduitOptions, "alias" | "baseUrl" | "logger"> & {
 };
 
 export const createSocketConduitMiddleware = <
-  C extends PylonEventContext = PylonEventContext,
+  C extends PylonSocketContext = PylonSocketContext,
 >(
   conduitOptions: Options | Array<Options>,
-): PylonEventMiddleware<C> => {
+): PylonSocketMiddleware<C> => {
   const array = isArray(conduitOptions) ? conduitOptions : [conduitOptions];
 
   for (const options of array) {

@@ -2,16 +2,16 @@ import { composeMiddleware } from "@lindorm/middleware";
 import { PylonListener } from "../../classes";
 import {
   IoServer,
-  PylonEventContext,
-  PylonEventMiddleware,
   PylonSocket,
+  PylonSocketContext,
+  PylonSocketMiddleware,
 } from "../../types";
-import { composePylonEventContextBase } from "./compose-pylon-event-context";
+import { composePylonSocketContextBase } from "./compose-pylon-socket-context";
 
-export const loadPylonListeners = <C extends PylonEventContext>(
+export const loadPylonListeners = <C extends PylonSocketContext>(
   io: IoServer,
   socket: PylonSocket,
-  middleware: Array<PylonEventMiddleware<C>>,
+  middleware: Array<PylonSocketMiddleware<C>>,
   listeners: Array<PylonListener<C>>,
 ): void => {
   for (const listener of listeners) {
@@ -24,9 +24,9 @@ export const loadPylonListeners = <C extends PylonEventContext>(
 
       if (method === "on" || method === "once") {
         socket[method](event, async (...args: Array<any>) => {
-          const ctx = composePylonEventContextBase(io, socket, { args, event });
+          const ctx = composePylonSocketContextBase(io, socket, { args, event });
 
-          const evtMiddleware: Array<PylonEventMiddleware<C>> = [
+          const evtMiddleware: Array<PylonSocketMiddleware<C>> = [
             ...middleware,
             ...listener.middleware,
             ...listeners,
@@ -36,9 +36,9 @@ export const loadPylonListeners = <C extends PylonEventContext>(
         });
       } else {
         socket[method](async (event, ...args: Array<any>) => {
-          const ctx = composePylonEventContextBase(io, socket, { args, event });
+          const ctx = composePylonSocketContextBase(io, socket, { args, event });
 
-          const evtMiddleware: Array<PylonEventMiddleware<C>> = [
+          const evtMiddleware: Array<PylonSocketMiddleware<C>> = [
             ...middleware,
             ...listener.middleware,
             ...listeners,

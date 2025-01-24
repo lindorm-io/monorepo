@@ -1,11 +1,11 @@
 import { IRabbitSource } from "../interfaces";
-import { RabbitPylonEventContext, RabbitPylonEventMiddleware } from "../types";
+import { RabbitPylonSocketContext, RabbitPylonSocketMiddleware } from "../types";
 
 export const createSocketRabbitSourceMiddleware = <
-  C extends RabbitPylonEventContext = RabbitPylonEventContext,
+  C extends RabbitPylonSocketContext = RabbitPylonSocketContext,
 >(
   source: IRabbitSource,
-): RabbitPylonEventMiddleware<C> => {
+): RabbitPylonSocketMiddleware<C> => {
   return async function socketRabbitSourceMiddleware(ctx, next): Promise<void> {
     ctx.rabbit = source.clone({ logger: ctx.logger });
 

@@ -1,11 +1,11 @@
 import { IHermes } from "../interfaces";
-import { HermesPylonEventContext, HermesPylonEventMiddleware } from "../types";
+import { HermesPylonSocketContext, HermesPylonSocketMiddleware } from "../types";
 
 export const createSocketHermesMiddleware = <
-  C extends HermesPylonEventContext = HermesPylonEventContext,
+  C extends HermesPylonSocketContext = HermesPylonSocketContext,
 >(
   hermes: IHermes,
-): HermesPylonEventMiddleware<C> => {
+): HermesPylonSocketMiddleware<C> => {
   return async function socketHermesMiddleware(ctx, next): Promise<void> {
     ctx.hermes = hermes.clone({ logger: ctx.logger });
 

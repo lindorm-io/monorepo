@@ -2,10 +2,14 @@ import { camelCase } from "@lindorm/case";
 import { IEntity } from "@lindorm/entity";
 import { ClientError } from "@lindorm/errors";
 import { isObject } from "@lindorm/is";
-import { Constructor } from "@lindorm/types";
+import { Constructor, Dict } from "@lindorm/types";
 import { get } from "object-path";
 import { IRedisSource } from "../interfaces";
-import { RedisPylonEventContext, RedisPylonEventMiddleware } from "../types";
+import { RedisPylonSocketContext, RedisPylonSocketMiddleware } from "../types";
+
+type Path<E extends Constructor<IEntity>> =
+  | { [K in keyof InstanceType<E>]?: string }
+  | string;
 
 type Options = {
   key?: string;
@@ -13,26 +17,37 @@ type Options = {
 };
 
 export const createSocketRedisEntityMiddleware =
-  <C extends RedisPylonEventContext = RedisPylonEventContext>(
-    Entity: Constructor<IEntity>,
+  <
+    C extends RedisPylonSocketContext = RedisPylonSocketContext,
+    E extends Constructor<IEntity> = Constructor<IEntity>,
+  >(
+    Entity: E,
     source?: IRedisSource,
   ) =>
-  (path: string, options: Options = {}): RedisPylonEventMiddleware<C> => {
+  (path: Path<E>, options: Options = {}): RedisPylonSocketMiddleware<C> => {
     return async function socketRedisEntityMiddleware(ctx, next): Promise<void> {
-      const { key = "id", optional = false } = options;
-      const value = get(ctx, path);
+      const { optional = false } = options;
+
+      const paths: Dict<any> = isObject(path) ? path : { id: path };
+      const filter: Dict<any> = {};
+
+      for (const [key, objectPath] of Object.entries(paths)) {
+        filter[key] = get(ctx, objectPath);
+      }
 
       if (!isObject(ctx.entities)) {
         ctx.entities = {};
       }
 
-      if (!value && optional) {
+      const hasValues = Object.values(filter).every(Boolean);
+
+      if (!hasValues && optional) {
         return await next();
       }
 
-      if (!value) {
+      if (!hasValues) {
         throw new ClientError("Invalid value for repository query", {
-          debug: { path, key, value },
+          debug: { path, paths, filter },
         });
       }
 
@@ -41,19 +56,20 @@ export const createSocketRedisEntityMiddleware =
         : ctx.sources.redis.repository(Entity);
 
       const name = camelCase(Entity.name);
-      const found = await repository.findOne({ [key]: value });
+      const found = await repository.findOne(filter);
 
       if (found) {
         ctx.entities[name] = found;
 
-        ctx.logger.debug("Redis Entity added to event context", {
+        ctx.logger.debug("Redis Entity added to socket context", {
           name,
-          key,
-          value,
+          path,
+          paths,
+          filter,
         });
       } else if (!optional) {
         throw new ClientError("Entity not found", {
-          debug: { key, value, name },
+          debug: { name, path, paths, filter },
           status: ClientError.Status.NotFound,
         });
       }

@@ -16,6 +16,8 @@ describe("createHttpRedisEntityMiddleware", () => {
     ctx = {
       data: {
         id: "43b6fb29-3b2c-53d9-a238-0a6262e02c86",
+        name: "name",
+        email: "email@email.com",
         other: "other",
       },
       logger: createMockLogger(),
@@ -31,7 +33,7 @@ describe("createHttpRedisEntityMiddleware", () => {
     ).resolves.not.toThrow();
 
     expect(ctx.entities.testEntity).toEqual({
-      id: "43b6fb29-3b2c-53d9-a238-0a6262e02c86",
+      id: expect.any(String),
       rev: 0,
       seq: 0,
       createdAt: MockedDate,
@@ -41,6 +43,32 @@ describe("createHttpRedisEntityMiddleware", () => {
       email: null,
       name: undefined,
     });
+  });
+
+  test("should find entity based on object path", async () => {
+    const repo = createMockRedisRepository(() => new TestEntity({ name: "name" }));
+    repo.findOne = jest.fn().mockImplementation(
+      async (filter) =>
+        new TestEntity({
+          name: filter.name,
+          email: filter.email,
+        }),
+    );
+    ctx.sources.redis.repository.mockReturnValue(repo);
+
+    await expect(
+      createHttpRedisEntityMiddleware(TestEntity)({
+        name: "data.name",
+        email: "data.email",
+      })(ctx, next),
+    ).resolves.not.toThrow();
+
+    expect(ctx.entities.testEntity).toEqual(
+      expect.objectContaining({
+        name: "name",
+        email: "email@email.com",
+      }),
+    );
   });
 
   test("should skip optional key value", async () => {
