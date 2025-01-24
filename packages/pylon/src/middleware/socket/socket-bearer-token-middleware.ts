@@ -1,17 +1,17 @@
 import { VerifyJwtOptions } from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
 import { isString } from "@lindorm/is";
-import { PylonEventContext, PylonEventMiddleware } from "../../types";
+import { PylonSocketContext, PylonSocketMiddleware } from "../../types";
 
 type Options = Omit<VerifyJwtOptions, "issuer"> & {
   issuer: string;
 };
 
 export const createSocketBearerTokenMiddleware = <
-  C extends PylonEventContext = PylonEventContext,
+  C extends PylonSocketContext = PylonSocketContext,
 >(
   options: Options,
-): PylonEventMiddleware<C> =>
+): PylonSocketMiddleware<C> =>
   async function socketBearerTokenMiddleware(ctx, next): Promise<void> {
     const start = Date.now();
 

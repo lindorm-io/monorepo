@@ -2,7 +2,7 @@ export * from "./body";
 export * from "./file";
 
 export * from "./compose-parse-body-config";
-export * from "./compose-pylon-event-context";
+export * from "./compose-pylon-socket-context";
 export * from "./cors-handlers";
 export * from "./create-health-router";
 export * from "./create-well-known-router";

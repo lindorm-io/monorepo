@@ -1,10 +1,10 @@
 import { IEntity } from "@lindorm/entity";
 import {
-  PylonEventContext,
-  PylonEventMiddleware,
   PylonHttpContext,
   PylonHttpMiddleware,
+  PylonSocketContext,
   PylonSocketData,
+  PylonSocketMiddleware,
 } from "@lindorm/pylon";
 import { Dict } from "@lindorm/types";
 import { IRedisRepository, IRedisSource } from "../interfaces";
@@ -29,10 +29,10 @@ export type RedisPylonHttpContext<Data = any, WebhookData = any> = PylonHttpCont
 > &
   Context;
 
-export type RedisPylonEventContext<
+export type RedisPylonSocketContext<
   Args = any,
   Data extends PylonSocketData = PylonSocketData,
-> = PylonEventContext<Args, Data> & Context;
+> = PylonSocketContext<Args, Data> & Context;
 
 // extended middleware
 
@@ -40,6 +40,6 @@ export type RedisPylonHttpMiddleware<
   C extends RedisPylonHttpContext = RedisPylonHttpContext,
 > = PylonHttpMiddleware<C>;
 
-export type RedisPylonEventMiddleware<
-  C extends RedisPylonEventContext = RedisPylonEventContext,
-> = PylonEventMiddleware<C>;
+export type RedisPylonSocketMiddleware<
+  C extends RedisPylonSocketContext = RedisPylonSocketContext,
+> = PylonSocketMiddleware<C>;

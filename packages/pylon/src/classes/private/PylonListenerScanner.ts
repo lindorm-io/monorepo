@@ -1,21 +1,21 @@
 import { ILogger } from "@lindorm/logger";
-import { IScanner, IScanData, Scanner } from "@lindorm/scanner";
+import { IScanData, IScanner, Scanner } from "@lindorm/scanner";
 import { uniq } from "@lindorm/utils";
 import { PylonError } from "../../errors";
-import { PylonEventContext } from "../../types";
+import { PylonSocketContext } from "../../types";
 import { PylonListener } from "../PylonListener";
 
-type File<S extends PylonEventContext> = {
+type File<S extends PylonSocketContext> = {
   default?: PylonListener<S>;
   listener?: PylonListener<S>;
 };
 
-type Result<S extends PylonEventContext> = {
+type Result<S extends PylonSocketContext> = {
   namespaces: Array<string>;
   listeners: Array<PylonListener<S>>;
 };
 
-export class PylonListenerScanner<S extends PylonEventContext> {
+export class PylonListenerScanner<S extends PylonSocketContext> {
   private readonly logger: ILogger;
   private readonly scanner: IScanner;
 

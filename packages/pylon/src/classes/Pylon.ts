@@ -25,13 +25,13 @@ import {
   HttpCallback,
   IoServer,
   IoSocket,
-  PylonEventContext,
-  PylonEventMiddleware,
   PylonHttpContext,
   PylonHttpMiddleware,
   PylonOptions,
   PylonSetup,
   PylonSocket,
+  PylonSocketContext,
+  PylonSocketMiddleware,
   PylonTeardown,
 } from "../types";
 import {
@@ -46,7 +46,7 @@ import { PylonListenerScanner, PylonRouterScanner } from "./private";
 
 export class Pylon<
   C extends PylonHttpContext = PylonHttpContext,
-  E extends PylonEventContext = PylonEventContext,
+  E extends PylonSocketContext = PylonSocketContext,
 > {
   private readonly http: HttpServer;
   private readonly httpMiddleware: Array<PylonHttpMiddleware<C>>;
@@ -341,7 +341,7 @@ export class Pylon<
   private createSocketConnectionHandler(
     io: IoServer,
     socket: IoSocket,
-    middleware: Array<PylonEventMiddleware<E>>,
+    middleware: Array<PylonSocketMiddleware<E>>,
     listeners: Array<PylonListener<E>>,
   ): void {
     socket.data = initialisePylonSocketData();

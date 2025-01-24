@@ -3,14 +3,14 @@ import { IEntity } from "@lindorm/entity";
 import { isObject } from "@lindorm/is";
 import { Constructor } from "@lindorm/types";
 import { IRedisSource } from "../interfaces";
-import { RedisPylonEventContext, RedisPylonEventMiddleware } from "../types";
+import { RedisPylonSocketContext, RedisPylonSocketMiddleware } from "../types";
 
 export const createSocketRedisRepositoryMiddleware = <
-  C extends RedisPylonEventContext = RedisPylonEventContext,
+  C extends RedisPylonSocketContext = RedisPylonSocketContext,
 >(
   entities: Array<Constructor<IEntity>>,
   source?: IRedisSource,
-): RedisPylonEventMiddleware<C> => {
+): RedisPylonSocketMiddleware<C> => {
   return async function socketRedisRepositoryMiddleware(ctx, next): Promise<void> {
     if (!isObject(ctx.repositories)) {
       ctx.repositories = {} as any;

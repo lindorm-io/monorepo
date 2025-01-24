@@ -1,10 +1,10 @@
 import { IEntity } from "@lindorm/entity";
 import {
-  PylonEventContext,
-  PylonEventMiddleware,
   PylonHttpContext,
   PylonHttpMiddleware,
+  PylonSocketContext,
   PylonSocketData,
+  PylonSocketMiddleware,
 } from "@lindorm/pylon";
 import { Dict } from "@lindorm/types";
 import { IMongoFile, IMongoRepository, IMongoSource } from "../interfaces";
@@ -30,10 +30,10 @@ export type MongoPylonHttpContext<Data = any, WebhookData = any> = PylonHttpCont
 > &
   Context;
 
-export type MongoPylonEventContext<
+export type MongoPylonSocketContext<
   Args = any,
   Data extends PylonSocketData = PylonSocketData,
-> = PylonEventContext<Args, Data> & Context;
+> = PylonSocketContext<Args, Data> & Context;
 
 // extended middleware
 
@@ -41,6 +41,6 @@ export type MongoPylonHttpMiddleware<
   C extends MongoPylonHttpContext = MongoPylonHttpContext,
 > = PylonHttpMiddleware<C>;
 
-export type MongoPylonEventMiddleware<
-  C extends MongoPylonEventContext = MongoPylonEventContext,
-> = PylonEventMiddleware<C>;
+export type MongoPylonSocketMiddleware<
+  C extends MongoPylonSocketContext = MongoPylonSocketContext,
+> = PylonSocketMiddleware<C>;

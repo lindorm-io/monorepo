@@ -1,10 +1,10 @@
 import { IEntity } from "@lindorm/entity";
 import {
-  PylonEventContext,
-  PylonEventMiddleware,
   PylonHttpContext,
   PylonHttpMiddleware,
+  PylonSocketContext,
   PylonSocketData,
+  PylonSocketMiddleware,
 } from "@lindorm/pylon";
 import { Dict } from "@lindorm/types";
 import { IMnemosRepository, IMnemosSource } from "../interfaces";
@@ -29,10 +29,10 @@ export type MnemosPylonHttpContext<Data = any, WebhookData = any> = PylonHttpCon
 > &
   Context;
 
-export type MnemosPylonEventContext<
+export type MnemosPylonSocketContext<
   Args = any,
   Data extends PylonSocketData = PylonSocketData,
-> = PylonEventContext<Args, Data> & Context;
+> = PylonSocketContext<Args, Data> & Context;
 
 // extended middleware
 
@@ -40,6 +40,6 @@ export type MnemosPylonHttpMiddleware<
   C extends MnemosPylonHttpContext = MnemosPylonHttpContext,
 > = PylonHttpMiddleware<C>;
 
-export type MnemosPylonEventMiddleware<
-  C extends MnemosPylonEventContext = MnemosPylonEventContext,
-> = PylonEventMiddleware<C>;
+export type MnemosPylonSocketMiddleware<
+  C extends MnemosPylonSocketContext = MnemosPylonSocketContext,
+> = PylonSocketMiddleware<C>;

@@ -1,9 +1,9 @@
-import { PylonEventContext, PylonEventMiddleware, PylonListenerMethod } from "../types";
+import { PylonListenerMethod, PylonSocketContext, PylonSocketMiddleware } from "../types";
 
-type Listener<C extends PylonEventContext> = {
+type Listener<C extends PylonSocketContext> = {
   event: string;
   method: PylonListenerMethod;
-  listeners: Array<PylonEventMiddleware<C>>;
+  listeners: Array<PylonSocketMiddleware<C>>;
 };
 
 type Options = {
@@ -11,9 +11,9 @@ type Options = {
   prefix?: string;
 };
 
-export class PylonListener<C extends PylonEventContext = PylonEventContext> {
+export class PylonListener<C extends PylonSocketContext = PylonSocketContext> {
   private readonly _listeners: Array<Listener<C>>;
-  private _middleware: Array<PylonEventMiddleware<C>>;
+  private _middleware: Array<PylonSocketMiddleware<C>>;
   private _namespace: string | null;
   private _prefix: string | null;
 
@@ -30,7 +30,7 @@ export class PylonListener<C extends PylonEventContext = PylonEventContext> {
     return this._listeners;
   }
 
-  public get middleware(): Array<PylonEventMiddleware<C>> {
+  public get middleware(): Array<PylonSocketMiddleware<C>> {
     return this._middleware;
   }
 
@@ -56,36 +56,36 @@ export class PylonListener<C extends PylonEventContext = PylonEventContext> {
     this._middleware = [...listener.middleware, ...this._middleware];
   }
 
-  public use(...middleware: Array<PylonEventMiddleware<C>>): void {
+  public use(...middleware: Array<PylonSocketMiddleware<C>>): void {
     this._middleware.push(...middleware);
   }
 
-  public on(event: string, ...listeners: Array<PylonEventMiddleware<C>>): void {
+  public on(event: string, ...listeners: Array<PylonSocketMiddleware<C>>): void {
     this._listeners.push({ event, method: "on", listeners });
   }
 
-  public onAny(event: string, ...listeners: Array<PylonEventMiddleware<C>>): void {
+  public onAny(event: string, ...listeners: Array<PylonSocketMiddleware<C>>): void {
     this._listeners.push({ event, method: "onAny", listeners });
   }
 
   public onAnyOutgoing(
     event: string,
-    ...listeners: Array<PylonEventMiddleware<C>>
+    ...listeners: Array<PylonSocketMiddleware<C>>
   ): void {
     this._listeners.push({ event, method: "onAnyOutgoing", listeners });
   }
 
-  public once(event: string, ...listeners: Array<PylonEventMiddleware<C>>): void {
+  public once(event: string, ...listeners: Array<PylonSocketMiddleware<C>>): void {
     this._listeners.push({ event, method: "once", listeners });
   }
 
-  public prependAny(event: string, ...listeners: Array<PylonEventMiddleware<C>>): void {
+  public prependAny(event: string, ...listeners: Array<PylonSocketMiddleware<C>>): void {
     this._listeners.push({ event, method: "prependAny", listeners });
   }
 
   public prependAnyOutgoing(
     event: string,
-    ...listeners: Array<PylonEventMiddleware<C>>
+    ...listeners: Array<PylonSocketMiddleware<C>>
   ): void {
     this._listeners.push({ event, method: "prependAnyOutgoing", listeners });
   }

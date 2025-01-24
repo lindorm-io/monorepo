@@ -1,12 +1,12 @@
 import { isObject } from "@lindorm/is";
 import { IElasticSource } from "../interfaces";
-import { ElasticPylonEventContext, ElasticPylonEventMiddleware } from "../types";
+import { ElasticPylonSocketContext, ElasticPylonSocketMiddleware } from "../types";
 
 export const createSocketElasticSourceMiddleware = <
-  C extends ElasticPylonEventContext = ElasticPylonEventContext,
+  C extends ElasticPylonSocketContext = ElasticPylonSocketContext,
 >(
   source: IElasticSource,
-): ElasticPylonEventMiddleware<C> => {
+): ElasticPylonSocketMiddleware<C> => {
   return async function socketElasticSourceMiddleware(ctx, next): Promise<void> {
     if (!isObject(ctx.sources)) {
       ctx.sources = {} as any;

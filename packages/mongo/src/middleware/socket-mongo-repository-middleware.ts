@@ -3,14 +3,14 @@ import { IEntity } from "@lindorm/entity";
 import { isObject } from "@lindorm/is";
 import { Constructor } from "@lindorm/types";
 import { IMongoSource } from "../interfaces";
-import { MongoPylonEventContext, MongoPylonEventMiddleware } from "../types";
+import { MongoPylonSocketContext, MongoPylonSocketMiddleware } from "../types";
 
 export const createSocketMongoRepositoryMiddleware = <
-  C extends MongoPylonEventContext = MongoPylonEventContext,
+  C extends MongoPylonSocketContext = MongoPylonSocketContext,
 >(
   entities: Array<Constructor<IEntity>>,
   source?: IMongoSource,
-): MongoPylonEventMiddleware<C> => {
+): MongoPylonSocketMiddleware<C> => {
   return async function socketMongoRepositoryMiddleware(ctx, next): Promise<void> {
     if (!isObject(ctx.repositories)) {
       ctx.repositories = {} as any;

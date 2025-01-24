@@ -1,10 +1,10 @@
 import { IEntity } from "@lindorm/entity";
 import {
-  PylonEventContext,
-  PylonEventMiddleware,
   PylonHttpContext,
   PylonHttpMiddleware,
+  PylonSocketContext,
   PylonSocketData,
+  PylonSocketMiddleware,
 } from "@lindorm/pylon";
 import { Dict } from "@lindorm/types";
 import { IElasticEntity, IElasticRepository, IElasticSource } from "../interfaces";
@@ -29,10 +29,10 @@ export type ElasticPylonHttpContext<Data = any, WebhookData = any> = PylonHttpCo
 > &
   Context;
 
-export type ElasticPylonEventContext<
+export type ElasticPylonSocketContext<
   Args = any,
   Data extends PylonSocketData = PylonSocketData,
-> = PylonEventContext<Args, Data> & Context;
+> = PylonSocketContext<Args, Data> & Context;
 
 // extended middleware
 
@@ -40,6 +40,6 @@ export type ElasticPylonHttpMiddleware<
   C extends ElasticPylonHttpContext = ElasticPylonHttpContext,
 > = PylonHttpMiddleware<C>;
 
-export type ElasticPylonEventMiddleware<
-  C extends ElasticPylonEventContext = ElasticPylonEventContext,
-> = PylonEventMiddleware<C>;
+export type ElasticPylonSocketMiddleware<
+  C extends ElasticPylonSocketContext = ElasticPylonSocketContext,
+> = PylonSocketMiddleware<C>;

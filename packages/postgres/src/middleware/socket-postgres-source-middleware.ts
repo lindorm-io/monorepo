@@ -1,12 +1,12 @@
 import { isObject } from "@lindorm/is";
 import { IPostgresSource } from "../interfaces";
-import { PostgresPylonEventContext, PostgresPylonEventMiddleware } from "../types";
+import { PostgresPylonSocketContext, PostgresPylonSocketMiddleware } from "../types";
 
 export const createSocketPostgresSourceMiddleware = <
-  C extends PostgresPylonEventContext = PostgresPylonEventContext,
+  C extends PostgresPylonSocketContext = PostgresPylonSocketContext,
 >(
   source: IPostgresSource,
-): PostgresPylonEventMiddleware<C> => {
+): PostgresPylonSocketMiddleware<C> => {
   return async function socketPostgresSourceMiddleware(ctx, next): Promise<void> {
     if (!isObject(ctx.sources)) {
       ctx.sources = {} as any;

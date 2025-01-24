@@ -16,6 +16,8 @@ describe("createHttpElasticEntityMiddleware", () => {
     ctx = {
       data: {
         id: "43b6fb29-3b2c-53d9-a238-0a6262e02c86",
+        name: "name",
+        email: "email@email.com",
         other: "other",
       },
       logger: createMockLogger(),
@@ -31,7 +33,7 @@ describe("createHttpElasticEntityMiddleware", () => {
     ).resolves.not.toThrow();
 
     expect(ctx.entities.testEntity).toEqual({
-      id: "43b6fb29-3b2c-53d9-a238-0a6262e02c86",
+      id: expect.any(String),
       primaryTerm: 0,
       rev: 0,
       seq: 0,
@@ -42,6 +44,32 @@ describe("createHttpElasticEntityMiddleware", () => {
       email: null,
       name: undefined,
     });
+  });
+
+  test("should find entity based on object path", async () => {
+    const repo = createMockElasticRepository(() => new TestEntity({ name: "name" }));
+    repo.findOne = jest.fn().mockImplementation(
+      async (filter) =>
+        new TestEntity({
+          name: filter.must[0].term.name,
+          email: filter.must[1].term.email,
+        }),
+    );
+    ctx.sources.elastic.repository.mockReturnValue(repo);
+
+    await expect(
+      createHttpElasticEntityMiddleware(TestEntity)({
+        name: "data.name",
+        email: "data.email",
+      })(ctx, next),
+    ).resolves.not.toThrow();
+
+    expect(ctx.entities.testEntity).toEqual(
+      expect.objectContaining({
+        name: "name",
+        email: "email@email.com",
+      }),
+    );
   });
 
   test("should skip optional key value", async () => {

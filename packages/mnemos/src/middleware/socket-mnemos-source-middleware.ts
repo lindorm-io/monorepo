@@ -1,12 +1,12 @@
 import { isObject } from "@lindorm/is";
 import { IMnemosSource } from "../interfaces";
-import { MnemosPylonEventContext, MnemosPylonEventMiddleware } from "../types";
+import { MnemosPylonSocketContext, MnemosPylonSocketMiddleware } from "../types";
 
 export const createSocketMnemosSourceMiddleware = <
-  C extends MnemosPylonEventContext = MnemosPylonEventContext,
+  C extends MnemosPylonSocketContext = MnemosPylonSocketContext,
 >(
   source: IMnemosSource,
-): MnemosPylonEventMiddleware<C> => {
+): MnemosPylonSocketMiddleware<C> => {
   return async function socketMnemosSourceMiddleware(ctx, next): Promise<void> {
     if (!isObject(ctx.sources)) {
       ctx.sources = {} as any;

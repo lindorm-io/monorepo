@@ -2,7 +2,7 @@ import { Aegis } from "@lindorm/aegis";
 import { IAmphora } from "@lindorm/amphora";
 import { Conduit } from "@lindorm/conduit";
 import { ILogger } from "@lindorm/logger";
-import { PylonEventMiddleware } from "../../types";
+import { PylonSocketMiddleware } from "../../types";
 
 type Options = {
   amphora: IAmphora;
@@ -12,7 +12,7 @@ type Options = {
 
 export const createEventContextInitialisationMiddleware = (
   options: Options,
-): PylonEventMiddleware =>
+): PylonSocketMiddleware =>
   async function eventContextInitialisationMiddleware(ctx, next) {
     ctx.logger = options.logger.child(["Event"], {
       eventId: ctx.eventId,

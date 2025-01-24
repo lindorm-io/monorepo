@@ -11,7 +11,7 @@ type Conduits = {
   [key: string]: IConduit;
 };
 
-export type PylonEventContextBase<Args, Data extends PylonSocketData> = {
+export type PylonSocketContextBase<Args, Data extends PylonSocketData> = {
   args: Args;
   event: string;
   eventId: string;
@@ -26,10 +26,10 @@ type Context = {
   logger: ILogger;
 };
 
-export type PylonEventContext<
+export type PylonSocketContext<
   Args = any,
   Data extends PylonSocketData = PylonSocketData,
-> = PylonEventContextBase<Args, Data> & Context;
+> = PylonSocketContextBase<Args, Data> & Context;
 
-export type PylonEventMiddleware<C extends PylonEventContext = PylonEventContext> =
+export type PylonSocketMiddleware<C extends PylonSocketContext = PylonSocketContext> =
   Middleware<C>;

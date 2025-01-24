@@ -10,14 +10,14 @@ import { CorsOptions } from "./cors";
 import { OpenIdConfigurationOptions } from "./open-id-configuration";
 import { ParseBodyOptions } from "./parse-body";
 import { PylonHttpContext, PylonHttpMiddleware } from "./pylon-context";
-import { PylonEventContext, PylonEventMiddleware } from "./pylon-event-context";
+import { PylonSocketContext, PylonSocketMiddleware } from "./pylon-socket-context";
 import { PylonSetup, PylonTeardown } from "./setup";
 
 type HttpRouters<C extends PylonHttpContext> = { path: string; router: PylonRouter<C> };
 
 export type PylonOptions<
   C extends PylonHttpContext = PylonHttpContext,
-  S extends PylonEventContext = PylonEventContext,
+  S extends PylonSocketContext = PylonSocketContext,
 > = {
   amphora: IAmphora;
   logger: ILogger;
@@ -36,7 +36,7 @@ export type PylonOptions<
   port?: number;
   setup?: PylonSetup;
   socketListeners?: string | Array<PylonListener<S>>;
-  socketMiddleware?: Array<PylonEventMiddleware<S>>;
+  socketMiddleware?: Array<PylonSocketMiddleware<S>>;
   socketOptions?: Partial<SocketOptions>;
   socketRedis?: Redis;
   teardown?: PylonTeardown;

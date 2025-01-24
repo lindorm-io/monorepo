@@ -1,12 +1,12 @@
 import { isObject } from "@lindorm/is";
 import { IRedisSource } from "../interfaces";
-import { RedisPylonEventContext, RedisPylonEventMiddleware } from "../types";
+import { RedisPylonSocketContext, RedisPylonSocketMiddleware } from "../types";
 
 export const createSocketRedisSourceMiddleware = <
-  C extends RedisPylonEventContext = RedisPylonEventContext,
+  C extends RedisPylonSocketContext = RedisPylonSocketContext,
 >(
   source: IRedisSource,
-): RedisPylonEventMiddleware<C> => {
+): RedisPylonSocketMiddleware<C> => {
   return async function socketRedisSourceMiddleware(ctx, next): Promise<void> {
     if (!isObject(ctx.sources)) {
       ctx.sources = {} as any;

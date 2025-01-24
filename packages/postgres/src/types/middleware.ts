@@ -1,9 +1,9 @@
 import {
-  PylonEventContext,
-  PylonEventMiddleware,
   PylonHttpContext,
   PylonHttpMiddleware,
+  PylonSocketContext,
   PylonSocketData,
+  PylonSocketMiddleware,
 } from "@lindorm/pylon";
 import { IPostgresSource } from "../interfaces";
 
@@ -23,10 +23,10 @@ export type PostgresPylonHttpContext<Data = any, WebhookData = any> = PylonHttpC
 > &
   Context;
 
-export type PostgresPylonEventContext<
+export type PostgresPylonSocketContext<
   Args = any,
   Data extends PylonSocketData = PylonSocketData,
-> = PylonEventContext<Args, Data> & Context;
+> = PylonSocketContext<Args, Data> & Context;
 
 // extended middleware
 
@@ -34,6 +34,6 @@ export type PostgresPylonHttpMiddleware<
   C extends PostgresPylonHttpContext = PostgresPylonHttpContext,
 > = PylonHttpMiddleware<C>;
 
-export type PostgresPylonEventMiddleware<
-  C extends PostgresPylonEventContext = PostgresPylonEventContext,
-> = PylonEventMiddleware<C>;
+export type PostgresPylonSocketMiddleware<
+  C extends PostgresPylonSocketContext = PostgresPylonSocketContext,
+> = PylonSocketMiddleware<C>;

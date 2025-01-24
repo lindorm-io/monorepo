@@ -3,8 +3,8 @@ import { isObject } from "@lindorm/is";
 import { randomUUID } from "crypto";
 import {
   IoServer,
-  PylonEventContextBase,
   PylonSocket,
+  PylonSocketContextBase,
   PylonSocketData,
 } from "../../types";
 
@@ -13,11 +13,11 @@ type Options = {
   event: string;
 };
 
-export const composePylonEventContextBase = (
+export const composePylonSocketContextBase = (
   io: IoServer,
   socket: PylonSocket,
   options: Options,
-): PylonEventContextBase<any, PylonSocketData> => {
+): PylonSocketContextBase<any, PylonSocketData> => {
   let args: any;
 
   if (options.args.length === 1 && isObject(options.args[0])) {

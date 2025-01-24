@@ -3,14 +3,14 @@ import { IEntity } from "@lindorm/entity";
 import { isObject } from "@lindorm/is";
 import { Constructor } from "@lindorm/types";
 import { IMnemosSource } from "../interfaces";
-import { MnemosPylonEventContext, MnemosPylonEventMiddleware } from "../types";
+import { MnemosPylonSocketContext, MnemosPylonSocketMiddleware } from "../types";
 
 export const createSocketMnemosRepositoryMiddleware = <
-  C extends MnemosPylonEventContext = MnemosPylonEventContext,
+  C extends MnemosPylonSocketContext = MnemosPylonSocketContext,
 >(
   entities: Array<Constructor<IEntity>>,
   source?: IMnemosSource,
-): MnemosPylonEventMiddleware<C> => {
+): MnemosPylonSocketMiddleware<C> => {
   return async function socketMnemosRepositoryMiddleware(ctx, next): Promise<void> {
     if (!isObject(ctx.repositories)) {
       ctx.repositories = {} as any;

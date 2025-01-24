@@ -2,14 +2,14 @@ import { camelCase } from "@lindorm/case";
 import { isObject } from "@lindorm/is";
 import { Constructor } from "@lindorm/types";
 import { IElasticEntity, IElasticSource } from "../interfaces";
-import { ElasticPylonEventContext, ElasticPylonEventMiddleware } from "../types";
+import { ElasticPylonSocketContext, ElasticPylonSocketMiddleware } from "../types";
 
 export const createSocketElasticRepositoryMiddleware = <
-  C extends ElasticPylonEventContext = ElasticPylonEventContext,
+  C extends ElasticPylonSocketContext = ElasticPylonSocketContext,
 >(
   entities: Array<Constructor<IElasticEntity>>,
   source?: IElasticSource,
-): ElasticPylonEventMiddleware<C> => {
+): ElasticPylonSocketMiddleware<C> => {
   return async function socketElasticRepositoryMiddleware(ctx, next): Promise<void> {
     if (!isObject(ctx.repositories)) {
       ctx.repositories = {} as any;
