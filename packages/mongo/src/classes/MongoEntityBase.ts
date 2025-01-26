@@ -1,8 +1,7 @@
-import { IElasticEntity } from "../interfaces";
+import { IMongoEntity } from "../interfaces";
 
-export class ElasticEntityBase implements IElasticEntity {
+export class MongoEntityBase implements IMongoEntity {
   public readonly id!: string;
-  public readonly primaryTerm!: number;
   public readonly rev!: number;
   public readonly seq!: number;
   public readonly createdAt!: Date;

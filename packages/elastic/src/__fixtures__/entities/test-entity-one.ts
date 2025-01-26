@@ -9,15 +9,8 @@ export type TestEntityOneOptions = {
 };
 
 export class TestEntityOne extends ElasticEntityBase {
-  public readonly email: string | null;
-  public readonly name: string;
-
-  public constructor(options: TestEntityOneOptions) {
-    super();
-
-    this.email = options.email ?? null;
-    this.name = options.name;
-  }
+  public readonly email!: string | null;
+  public readonly name!: string;
 }
 
 export const config: ElasticEntityConfig = {

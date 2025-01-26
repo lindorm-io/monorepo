@@ -1,6 +1,5 @@
-export interface IElasticEntity {
+export interface IMongoEntity {
   id: string;
-  primaryTerm: number;
   rev: number;
   seq: number;
   createdAt: Date;

@@ -1,5 +1,4 @@
 import { snakeCase } from "@lindorm/case";
-import { IEntity } from "@lindorm/entity";
 import { isFunction } from "@lindorm/is";
 import { ILogger } from "@lindorm/logger";
 import { Constructor, DeepPartial } from "@lindorm/types";
@@ -7,7 +6,7 @@ import { randomUUID } from "crypto";
 import { CountDocumentsOptions, DeleteOptions, Filter, FindOptions } from "mongodb";
 import { z } from "zod";
 import { MongoRepositoryError } from "../errors";
-import { IMongoRepository } from "../interfaces";
+import { IMongoEntity, IMongoRepository } from "../interfaces";
 import {
   CreateMongoEntityFn,
   MongoEntityConfig,
@@ -16,7 +15,10 @@ import {
 } from "../types";
 import { MongoBase } from "./MongoBase";
 
-export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepPartial<E>>
+export class MongoRepository<
+    E extends IMongoEntity,
+    O extends DeepPartial<E> = DeepPartial<E>,
+  >
   extends MongoBase<E>
   implements IMongoRepository<E, O>
 {
@@ -87,10 +89,44 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
     this.validateFn = options.validate;
   }
 
+  // public static
+
+  public static createEntity<
+    E extends IMongoEntity,
+    O extends DeepPartial<E> = DeepPartial<E>,
+  >(Entity: Constructor<E>, options: O | E): E {
+    const entity = new Entity();
+
+    const { id, rev, seq, createdAt, updatedAt, deletedAt, expiresAt, ...rest } =
+      options as E;
+
+    entity.id = id ?? entity.id ?? randomUUID();
+    entity.rev = rev ?? entity.rev ?? 0;
+    entity.seq = seq ?? entity.seq ?? 0;
+    entity.createdAt = createdAt ?? entity.createdAt ?? new Date();
+    entity.updatedAt = updatedAt ?? entity.updatedAt ?? new Date();
+    entity.deletedAt = deletedAt ?? (entity.deletedAt as Date) ?? null;
+    entity.expiresAt = expiresAt ?? (entity.expiresAt as Date) ?? null;
+
+    for (const [key, value] of Object.entries(rest)) {
+      if (key === "_id") continue;
+      entity[key as keyof E] = (value ?? null) as E[keyof E];
+    }
+
+    for (const [key, value] of Object.entries(entity)) {
+      if (value !== undefined) continue;
+      entity[key as keyof E] = null as E[keyof E];
+    }
+
+    return entity;
+  }
+
   // public
 
   public create(options: O | E = {} as O): E {
-    const entity = this.createFn ? this.createFn(options) : this.handleCreate(options);
+    const entity = this.createFn
+      ? this.createFn(options)
+      : MongoRepository.createEntity(this.EntityConstructor, options);
 
     this.validateBaseEntity(entity);
 
@@ -105,7 +141,7 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
   ): Promise<number> {
     const start = Date.now();
 
-    const filter = this.createDefaultFilter(criteria);
+    const filter = this.defaultFindFilter(criteria);
 
     try {
       const count = await this.collection.countDocuments(filter, options);
@@ -203,7 +239,7 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
   public async exists(criteria: Filter<E>, options?: FindOptions<E>): Promise<boolean> {
     const start = Date.now();
 
-    const filter = this.createDefaultFilter(criteria);
+    const filter = this.defaultFindFilter(criteria);
 
     try {
       const count = await this.count(filter, { limit: 1, ...options });
@@ -244,7 +280,7 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
   public async find(criteria?: Filter<E>, options?: FindOptions<E>): Promise<Array<E>> {
     const start = Date.now();
 
-    const filter = this.createDefaultFilter(criteria);
+    const filter = this.defaultFindFilter(criteria);
 
     try {
       const documents = await this.collection.find(filter, options).toArray();
@@ -271,7 +307,7 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
   public async findOne(criteria: Filter<E>, options?: FindOptions<E>): Promise<E | null> {
     const start = Date.now();
 
-    const filter = this.createDefaultFilter(criteria);
+    const filter = this.defaultFindFilter(criteria);
 
     try {
       const document = await this.collection.findOne(filter, options);
@@ -452,7 +488,7 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
 
     this.validateEntity(entity);
 
-    const filter = this.createUpdateFilter(entity);
+    const filter = this.defaultUpdateFilter(entity);
     const updated = this.updateEntityData(entity);
 
     try {
@@ -534,9 +570,9 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
     return this.ttl({ id } as any);
   }
 
-  // private
+  // private static
 
-  private static createCollectionName<E extends IEntity>(
+  private static createCollectionName<E extends IMongoEntity>(
     options: MongoRepositoryOptions<E>,
   ): string {
     const nsp = options.namespace ? `${snakeCase(options.namespace)}_` : "";
@@ -545,7 +581,9 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
     return `${nsp}${name}`;
   }
 
-  private createDefaultFilter(criteria: Filter<any> = {}): Filter<any> {
+  // private
+
+  private defaultFindFilter(criteria: Filter<any> = {}): Filter<any> {
     return {
       ...(this.config.useSoftDelete ? { deletedAt: { $eq: null } } : {}),
       ...(this.config.useExpiry
@@ -555,7 +593,7 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
     };
   }
 
-  private createUpdateFilter(entity: E): Filter<any> {
+  private defaultUpdateFilter(entity: E): Filter<any> {
     const { id, rev } = entity;
 
     return {
@@ -607,20 +645,6 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
     }
   }
 
-  private handleCreate(options: O | E): E {
-    const entity = new this.EntityConstructor(options);
-
-    entity.id = (options.id as string) ?? entity.id ?? randomUUID();
-    entity.rev = (options.rev as number) ?? entity.rev ?? 0;
-    entity.seq = (options.seq as number) ?? entity.seq ?? 0;
-    entity.createdAt = (options.createdAt as Date) ?? entity.createdAt ?? new Date();
-    entity.updatedAt = (options.updatedAt as Date) ?? entity.updatedAt ?? new Date();
-    entity.deletedAt = (options.deletedAt as Date) ?? (entity.deletedAt as Date) ?? null;
-    entity.expiresAt = (options.expiresAt as Date) ?? (entity.expiresAt as Date) ?? null;
-
-    return entity;
-  }
-
   private updateEntityData(entity: E): E {
     const updated = this.create(entity);
 
@@ -656,6 +680,7 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
     if (isFunction(this.validateFn)) {
       const { id, rev, seq, createdAt, updatedAt, deletedAt, expiresAt, ...rest } =
         entity;
+
       this.validateFn(rest);
     }
   }

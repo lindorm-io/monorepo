@@ -56,10 +56,70 @@ export class ElasticRepository<
     this.validateFn = options.validate;
   }
 
+  // public static
+
+  public static createEntity<
+    E extends IElasticEntity,
+    O extends DeepPartial<E> = DeepPartial<E>,
+  >(Entity: Constructor<E>, options: O | E): E {
+    const entity = new Entity(options);
+
+    const {
+      id,
+      primaryTerm,
+      rev,
+      seq,
+      createdAt,
+      updatedAt,
+      deletedAt,
+      expiresAt,
+      ...rest
+    } = options as E;
+
+    entity.id = id ?? entity.id ?? randomUUID();
+    entity.primaryTerm = primaryTerm ?? entity.primaryTerm ?? 0;
+    entity.rev = rev ?? entity.rev ?? 0;
+    entity.seq = seq ?? entity.seq ?? 0;
+
+    entity.createdAt =
+      ElasticRepository.date(createdAt) ??
+      ElasticRepository.date(entity.createdAt) ??
+      new Date();
+
+    entity.updatedAt =
+      ElasticRepository.date(updatedAt) ??
+      ElasticRepository.date(entity.updatedAt) ??
+      new Date();
+
+    entity.deletedAt =
+      ElasticRepository.date(deletedAt) ??
+      ElasticRepository.date(entity.deletedAt) ??
+      null;
+
+    entity.expiresAt =
+      ElasticRepository.date(expiresAt) ??
+      ElasticRepository.date(entity.expiresAt) ??
+      null;
+
+    for (const [key, value] of Object.entries(rest)) {
+      if (key === "_id") continue;
+      entity[key as keyof E] = (value ?? null) as E[keyof E];
+    }
+
+    for (const [key, value] of Object.entries(entity)) {
+      if (value !== undefined) continue;
+      entity[key as keyof E] = null as E[keyof E];
+    }
+
+    return entity;
+  }
+
   // public
 
   public create(options: O | E = {} as O): E {
-    const entity = this.createFn ? this.createFn(options) : this.handleCreate(options);
+    const entity = this.createFn
+      ? this.createFn(options)
+      : ElasticRepository.createEntity(this.EntityConstructor, options);
 
     this.validateBaseEntity(entity);
 
@@ -96,7 +156,7 @@ export class ElasticRepository<
   public async count(query?: QueryDslBoolQuery): Promise<number> {
     const start = Date.now();
 
-    const bool = this.createDefaultFilter(query);
+    const bool = this.defaultFindFilter(query);
 
     try {
       const result = await this.client.count({
@@ -125,7 +185,7 @@ export class ElasticRepository<
   public async delete(query: QueryDslBoolQuery): Promise<void> {
     const start = Date.now();
 
-    const bool = this.createDefaultFilter(query);
+    const bool = this.defaultFindFilter(query);
 
     try {
       const result = await this.client.deleteByQuery({
@@ -250,7 +310,7 @@ export class ElasticRepository<
   public async exists(query: QueryDslBoolQuery): Promise<boolean> {
     const start = Date.now();
 
-    const bool = this.createDefaultFilter(query);
+    const bool = this.defaultFindFilter(query);
 
     try {
       const result = await this.client.search<any>({
@@ -282,7 +342,7 @@ export class ElasticRepository<
   public async find(query?: QueryDslBoolQuery): Promise<Array<E>> {
     const start = Date.now();
 
-    const bool = this.createDefaultFilter(query);
+    const bool = this.defaultFindFilter(query);
 
     try {
       const result = await this.client.search<any>({
@@ -315,7 +375,7 @@ export class ElasticRepository<
   public async findOne(query: QueryDslBoolQuery): Promise<E | null> {
     const start = Date.now();
 
-    const bool = this.createDefaultFilter(query);
+    const bool = this.defaultFindFilter(query);
 
     try {
       const result = await this.client.search<any>({
@@ -621,7 +681,7 @@ export class ElasticRepository<
 
     this.validateEntity(entity);
 
-    const filter = this.createUpdateFilter(entity);
+    const filter = this.defaultUpdateFilter(entity);
     const updated = this.updateEntityData(entity);
 
     try {
@@ -733,7 +793,7 @@ export class ElasticRepository<
   public async ttl(query: QueryDslBoolQuery): Promise<number> {
     const start = Date.now();
 
-    const bool = this.createDefaultFilter(query);
+    const bool = this.defaultFindFilter(query);
 
     try {
       const result = await this.client.search<any>({
@@ -816,7 +876,7 @@ export class ElasticRepository<
     return `${namespace}${baseName}`;
   }
 
-  private createDefaultFilter(query: QueryDslBoolQuery = {}): QueryDslBoolQuery {
+  private defaultFindFilter(query: QueryDslBoolQuery = {}): QueryDslBoolQuery {
     const mustNot: Array<any> = [];
 
     if (query.must_not) {
@@ -834,7 +894,7 @@ export class ElasticRepository<
     return { ...query, must_not: mustNot };
   }
 
-  private createUpdateFilter(entity: E): QueryDslBoolQuery {
+  private defaultUpdateFilter(entity: E): QueryDslBoolQuery {
     const result: QueryDslBoolQuery = {
       must: [{ term: { id: entity.id } }, { term: { rev: entity.rev } }],
     };
@@ -852,34 +912,7 @@ export class ElasticRepository<
     return result;
   }
 
-  private handleCreate(options: O | E): E {
-    const entity = new this.EntityConstructor(options);
-
-    entity.id = (options.id as string) ?? entity.id ?? randomUUID();
-    entity.primaryTerm = (options.primaryTerm as number) ?? entity.primaryTerm ?? 0;
-    entity.rev = (options.rev as number) ?? entity.rev ?? 0;
-    entity.seq = (options.seq as number) ?? entity.seq ?? 0;
-
-    entity.createdAt =
-      this.handleDate(options.createdAt) ??
-      this.handleDate(entity.createdAt) ??
-      new Date();
-
-    entity.updatedAt =
-      this.handleDate(options.updatedAt) ??
-      this.handleDate(entity.updatedAt) ??
-      new Date();
-
-    entity.deletedAt =
-      this.handleDate(options.deletedAt) ?? this.handleDate(entity.deletedAt);
-
-    entity.expiresAt =
-      this.handleDate(options.expiresAt) ?? this.handleDate(entity.expiresAt);
-
-    return entity;
-  }
-
-  private handleDate(date?: any): Date | null {
+  private static date(date?: any): Date | null {
     if (!date) return null;
     if (date instanceof Date) return date;
     if (isString(date)) return new Date(date);

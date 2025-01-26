@@ -1,13 +1,12 @@
 import { camelCase } from "@lindorm/case";
-import { IEntity } from "@lindorm/entity";
 import { ClientError } from "@lindorm/errors";
 import { isObject } from "@lindorm/is";
 import { Constructor, Dict } from "@lindorm/types";
 import { get } from "object-path";
-import { IMnemosSource } from "../interfaces";
+import { IMnemosEntity, IMnemosSource } from "../interfaces";
 import { MnemosPylonSocketContext, MnemosPylonSocketMiddleware } from "../types";
 
-type Path<E extends Constructor<IEntity>> =
+type Path<E extends Constructor<IMnemosEntity>> =
   | { [K in keyof InstanceType<E>]?: string }
   | string;
 
@@ -19,7 +18,7 @@ type Options = {
 export const createSocketMnemosEntityMiddleware =
   <
     C extends MnemosPylonSocketContext = MnemosPylonSocketContext,
-    E extends Constructor<IEntity> = Constructor<IEntity>,
+    E extends Constructor<IMnemosEntity> = Constructor<IMnemosEntity>,
   >(
     Entity: E,
     source?: IMnemosSource,

@@ -25,7 +25,7 @@ describe("createHttpMongoUploadMiddleware", () => {
 
     source = new MongoSource({
       files: [TestUpload],
-      logger: createMockLogger(),
+      logger,
       url: "mongodb://root:example@localhost/admin?authSource=admin",
       database: "test_database",
     });
@@ -73,11 +73,16 @@ describe("createHttpMongoUploadMiddleware", () => {
         busboy: true,
         chunkSize: 261120,
         encoding: "7bit",
+        extraOne: "1",
+        extraTwo: "2",
         filename: expect.any(String),
-        formidable: false,
+        formidable: null,
+        hash: null,
+        hashAlgorithm: null,
         length: 18,
         mimeType: "text/plain",
         originalName: "upload.txt",
+        size: null,
         uploadDate: MockedDate.toISOString(),
       },
     ]);
@@ -88,12 +93,16 @@ describe("createHttpMongoUploadMiddleware", () => {
       busboy: true,
       chunkSize: 261120,
       encoding: "7bit",
-      filename: response.body[0].filename,
-      formidable: false,
+      extraOne: "1",
+      extraTwo: "2",
+      filename: expect.any(String),
+      formidable: null,
+      hash: null,
+      hashAlgorithm: null,
       length: 18,
       mimeType: "text/plain",
-      name: undefined,
       originalName: "upload.txt",
+      size: null,
       uploadDate: MockedDate,
     });
   });
@@ -112,8 +121,11 @@ describe("createHttpMongoUploadMiddleware", () => {
 
     expect(response.body).toEqual([
       {
-        busboy: false,
+        busboy: null,
         chunkSize: 261120,
+        encoding: null,
+        extraOne: "1",
+        extraTwo: "2",
         filename: expect.any(String),
         formidable: true,
         hash: null,
@@ -129,8 +141,11 @@ describe("createHttpMongoUploadMiddleware", () => {
     const bucket = source.bucket(TestUpload);
 
     await expect(bucket.findOneByFilename(response.body[0].filename)).resolves.toEqual({
-      busboy: false,
+      busboy: null,
       chunkSize: 261120,
+      encoding: null,
+      extraOne: "1",
+      extraTwo: "2",
       filename: response.body[0].filename,
       formidable: true,
       hash: null,

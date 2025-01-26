@@ -1,4 +1,4 @@
-import { EntityBase } from "@lindorm/entity";
+import { MnemosEntityBase } from "../../classes";
 import { ValidateMnemosEntityFn } from "../../types";
 
 export type TestEntityOneOptions = {
@@ -6,16 +6,9 @@ export type TestEntityOneOptions = {
   name: string;
 };
 
-export class TestEntityOne extends EntityBase {
-  public readonly email: string | null;
-  public readonly name: string;
-
-  public constructor(options: TestEntityOneOptions) {
-    super();
-
-    this.email = options.email ?? null;
-    this.name = options.name;
-  }
+export class TestEntityOne extends MnemosEntityBase {
+  public readonly email!: string | null;
+  public readonly name!: string;
 }
 
 export const validate: ValidateMnemosEntityFn<TestEntityOne> = (entity) => {

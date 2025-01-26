@@ -1,13 +1,12 @@
 import { camelCase } from "@lindorm/case";
-import { IEntity } from "@lindorm/entity";
 import { ClientError } from "@lindorm/errors";
 import { isObject } from "@lindorm/is";
 import { Constructor, Dict } from "@lindorm/types";
 import { get } from "object-path";
-import { IMongoSource } from "../interfaces";
+import { IMongoEntity, IMongoSource } from "../interfaces";
 import { MongoPylonSocketContext, MongoPylonSocketMiddleware } from "../types";
 
-type Path<E extends Constructor<IEntity>> =
+type Path<E extends Constructor<IMongoEntity>> =
   | { [K in keyof InstanceType<E>]?: string }
   | string;
 
@@ -19,7 +18,7 @@ type Options = {
 export const createSocketMongoEntityMiddleware =
   <
     C extends MongoPylonSocketContext = MongoPylonSocketContext,
-    E extends Constructor<IEntity> = Constructor<IEntity>,
+    E extends Constructor<IMongoEntity> = Constructor<IMongoEntity>,
   >(
     Entity: E,
     source?: IMongoSource,

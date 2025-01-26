@@ -1,13 +1,12 @@
 import { camelCase } from "@lindorm/case";
-import { IEntity } from "@lindorm/entity";
 import { ClientError } from "@lindorm/errors";
 import { isObject } from "@lindorm/is";
 import { Constructor, Dict } from "@lindorm/types";
 import { get } from "object-path";
-import { IRedisSource } from "../interfaces";
+import { IRedisEntity, IRedisSource } from "../interfaces";
 import { RedisPylonHttpContext, RedisPylonHttpMiddleware } from "../types";
 
-type Path<E extends Constructor<IEntity>> =
+type Path<E extends Constructor<IRedisEntity>> =
   | { [K in keyof InstanceType<E>]?: string }
   | string;
 
@@ -19,7 +18,7 @@ type Options = {
 export const createHttpRedisEntityMiddleware =
   <
     C extends RedisPylonHttpContext = RedisPylonHttpContext,
-    E extends Constructor<IEntity> = Constructor<IEntity>,
+    E extends Constructor<IRedisEntity> = Constructor<IRedisEntity>,
   >(
     Entity: E,
     source?: IRedisSource,

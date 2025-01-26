@@ -1,4 +1,3 @@
-import { IEntity } from "@lindorm/entity";
 import { Constructor, DeepPartial } from "@lindorm/types";
 import { Collection, Db, Document, MongoClient } from "mongodb";
 import {
@@ -9,6 +8,7 @@ import {
   MongoSourceRepositoryOptions,
 } from "../types";
 import { IMongoBucket } from "./MongoBucket";
+import { IMongoEntity } from "./MongoEntity";
 import { IMongoFile } from "./MongoFile";
 import { IMongoRepository } from "./MongoRepository";
 
@@ -28,7 +28,7 @@ export interface IMongoSource {
     File: Constructor<F>,
     options?: MongoSourceBucketOptions<F>,
   ): IMongoBucket<F>;
-  repository<E extends IEntity, O extends DeepPartial<E> = DeepPartial<E>>(
+  repository<E extends IMongoEntity, O extends DeepPartial<E> = DeepPartial<E>>(
     Entity: Constructor<E>,
     options?: MongoSourceRepositoryOptions<E>,
   ): IMongoRepository<E, O>;

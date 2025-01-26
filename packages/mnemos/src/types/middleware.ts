@@ -1,4 +1,3 @@
-import { IEntity } from "@lindorm/entity";
 import {
   PylonHttpContext,
   PylonHttpMiddleware,
@@ -7,14 +6,14 @@ import {
   PylonSocketMiddleware,
 } from "@lindorm/pylon";
 import { Dict } from "@lindorm/types";
-import { IMnemosRepository, IMnemosSource } from "../interfaces";
+import { IMnemosEntity, IMnemosRepository, IMnemosSource } from "../interfaces";
 
 // common context
 
 type Context = {
-  entities: Dict<IEntity>;
+  entities: Dict<{ id: string }>;
   repositories: {
-    mnemos: Dict<IMnemosRepository<IEntity>>;
+    mnemos: Dict<IMnemosRepository<IMnemosEntity>>;
   };
   sources: {
     mnemos: IMnemosSource;

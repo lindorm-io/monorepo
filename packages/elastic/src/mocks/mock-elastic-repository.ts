@@ -1,3 +1,5 @@
+import { Constructor } from "@lindorm/types";
+import { ElasticRepository } from "../classes";
 import { IElasticEntity, IElasticRepository } from "../interfaces";
 
 export type CreateMockEntityCallback = (options?: any) => IElasticEntity;
@@ -8,6 +10,14 @@ const updateEntity = (entity: IElasticEntity): IElasticEntity => {
   entity.updatedAt = new Date();
   return entity;
 };
+
+export const createMockElasticEntityCallback =
+  <E extends IElasticEntity>(Entity: Constructor<E>): CreateMockEntityCallback =>
+  (options) =>
+    ElasticRepository.createEntity(
+      Entity,
+      options.must.reduce((acc: any, cur: any) => ({ ...acc, ...cur.term }), {}),
+    );
 
 export const createMockElasticRepository = <E extends IElasticEntity>(
   callback: CreateMockEntityCallback,

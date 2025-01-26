@@ -1,7 +1,11 @@
 import { createMockLogger } from "@lindorm/logger";
 import MockDate from "mockdate";
 import { TestEntity } from "../__fixtures__/test-entity";
-import { createMockMnemosRepository, createMockMnemosSource } from "../mocks";
+import {
+  createMockMnemosEntityCallback,
+  createMockMnemosRepository,
+  createMockMnemosSource,
+} from "../mocks";
 import { createSocketMnemosEntityMiddleware } from "./socket-mnemos-entity-middleware";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
@@ -34,26 +38,16 @@ describe("createSocketMnemosEntityMiddleware", () => {
 
     expect(ctx.entities.testEntity).toEqual({
       id: expect.any(String),
-      rev: 0,
-      seq: 0,
       createdAt: MockedDate,
       updatedAt: MockedDate,
-      deletedAt: null,
       expiresAt: null,
       email: null,
-      name: undefined,
+      name: null,
     });
   });
 
   test("should find entity based on object path", async () => {
-    const repo = createMockMnemosRepository(() => new TestEntity({ name: "name" }));
-    repo.findOne = jest.fn().mockImplementation(
-      (filter) =>
-        new TestEntity({
-          name: filter.name,
-          email: filter.email,
-        }),
-    );
+    const repo = createMockMnemosRepository(createMockMnemosEntityCallback(TestEntity));
     ctx.sources.mnemos.repository.mockReturnValue(repo);
 
     await expect(
@@ -83,7 +77,7 @@ describe("createSocketMnemosEntityMiddleware", () => {
   });
 
   test("should skip optional entity", async () => {
-    const repo = createMockMnemosRepository(() => new TestEntity({ name: "name" }));
+    const repo = createMockMnemosRepository(createMockMnemosEntityCallback(TestEntity));
     repo.findOne = jest.fn().mockReturnValue(null);
     ctx.sources.mnemos.repository.mockReturnValue(repo);
 
@@ -107,7 +101,7 @@ describe("createSocketMnemosEntityMiddleware", () => {
   });
 
   test("should throw on mandatory entity", async () => {
-    const repo = createMockMnemosRepository(() => new TestEntity({ name: "name" }));
+    const repo = createMockMnemosRepository(createMockMnemosEntityCallback(TestEntity));
     repo.findOne = jest.fn().mockReturnValue(null);
     ctx.sources.mnemos.repository.mockReturnValue(repo);
 
