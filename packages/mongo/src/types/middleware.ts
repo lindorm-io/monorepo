@@ -11,7 +11,7 @@ import { IMongoEntity, IMongoFile, IMongoRepository, IMongoSource } from "../int
 // common context
 
 type Context = {
-  entities: Dict<IMongoEntity>;
+  entities: Dict<{ id: string }>;
   files: Array<IMongoFile>;
   repositories: {
     mongo: Dict<IMongoRepository<IMongoEntity>>;
