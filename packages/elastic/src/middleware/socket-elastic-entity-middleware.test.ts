@@ -1,7 +1,11 @@
 import { createMockLogger } from "@lindorm/logger";
 import MockDate from "mockdate";
 import { TestEntity } from "../__fixtures__/test-entity";
-import { createMockElasticRepository, createMockElasticSource } from "../mocks";
+import {
+  createMockElasticEntityCallback,
+  createMockElasticRepository,
+  createMockElasticSource,
+} from "../mocks";
 import { createSocketElasticEntityMiddleware } from "./socket-elastic-entity-middleware";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
@@ -16,8 +20,8 @@ describe("createSocketElasticEntityMiddleware", () => {
     ctx = {
       data: {
         id: "43b6fb29-3b2c-53d9-a238-0a6262e02c86",
-        email: "email@email.com",
         name: "name",
+        email: "email@email.com",
         other: "other",
       },
       logger: createMockLogger(),
@@ -42,19 +46,12 @@ describe("createSocketElasticEntityMiddleware", () => {
       deletedAt: null,
       expiresAt: null,
       email: null,
-      name: undefined,
+      name: null,
     });
   });
 
   test("should find entity based on object path", async () => {
-    const repo = createMockElasticRepository(() => new TestEntity({ name: "name" }));
-    repo.findOne = jest.fn().mockImplementation(
-      async (filter) =>
-        new TestEntity({
-          name: filter.must[0].term.name,
-          email: filter.must[1].term.email,
-        }),
-    );
+    const repo = createMockElasticRepository(createMockElasticEntityCallback(TestEntity));
     ctx.sources.elastic.repository.mockReturnValue(repo);
 
     await expect(
@@ -84,7 +81,7 @@ describe("createSocketElasticEntityMiddleware", () => {
   });
 
   test("should skip optional entity", async () => {
-    const repo = createMockElasticRepository(() => new TestEntity({ name: "name" }));
+    const repo = createMockElasticRepository(createMockElasticEntityCallback(TestEntity));
     repo.findOne = jest.fn().mockResolvedValue(null);
     ctx.sources.elastic.repository.mockReturnValue(repo);
 
@@ -107,7 +104,7 @@ describe("createSocketElasticEntityMiddleware", () => {
   });
 
   test("should throw on mandatory entity", async () => {
-    const repo = createMockElasticRepository(() => new TestEntity({ name: "name" }));
+    const repo = createMockElasticRepository(createMockElasticEntityCallback(TestEntity));
     repo.findOne = jest.fn().mockResolvedValue(null);
     ctx.sources.elastic.repository.mockReturnValue(repo);
 

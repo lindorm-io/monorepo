@@ -5,11 +5,5 @@ export type TestFileOptions = {
 };
 
 export class TestFile extends MongoFileBase {
-  public readonly name: string;
-
-  public constructor(options: TestFileOptions) {
-    super();
-
-    this.name = options.name;
-  }
+  public readonly name!: string;
 }

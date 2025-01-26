@@ -1,15 +1,14 @@
-import { IEntity } from "@lindorm/entity";
 import { ILogger } from "@lindorm/logger";
 import { Constructor } from "@lindorm/types";
 import { MongoOptions } from "mongodb";
-import { IMongoFile } from "../interfaces";
+import { IMongoEntity, IMongoFile } from "../interfaces";
 import { ValidateMongoFileFn } from "./mongo-bucket";
 import { MongoEntityConfig } from "./mongo-entity-config";
 import { FileIndex } from "./mongo-file";
 import { MongoIndexOptions } from "./mongo-index";
 import { CreateMongoEntityFn, ValidateMongoEntityFn } from "./mongo-repository";
 
-export type MongoSourceEntity<E extends IEntity = IEntity> = {
+export type MongoSourceEntity<E extends IMongoEntity = IMongoEntity> = {
   Entity: Constructor<E>;
   config?: MongoEntityConfig;
   indexes?: Array<MongoIndexOptions<E>>;
@@ -24,12 +23,12 @@ export type MongoSourceFile<F extends IMongoFile = IMongoFile> = {
 };
 
 export type MongoSourceEntities = Array<
-  Constructor<IEntity> | MongoSourceEntity | string
+  Constructor<IMongoEntity> | MongoSourceEntity | string
 >;
 
 export type MongoSourceFiles = Array<Constructor<IMongoFile> | MongoSourceFile | string>;
 
-export type MongoSourceRepositoryOptions<E extends IEntity> = {
+export type MongoSourceRepositoryOptions<E extends IMongoEntity> = {
   config?: MongoEntityConfig;
   indexes?: Array<MongoIndexOptions<E>>;
   logger?: ILogger;

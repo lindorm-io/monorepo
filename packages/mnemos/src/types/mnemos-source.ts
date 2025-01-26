@@ -1,10 +1,10 @@
-import { IEntity } from "@lindorm/entity";
 import { ILogger } from "@lindorm/logger";
 import { Constructor } from "@lindorm/types";
+import { IMnemosEntity } from "../interfaces";
 import { MnemosConstraint } from "./mnemos-collection";
 import { CreateMnemosEntityFn, ValidateMnemosEntityFn } from "./mnemos-repository";
 
-export type MnemosSourceEntity<E extends IEntity = IEntity> = {
+export type MnemosSourceEntity<E extends IMnemosEntity = IMnemosEntity> = {
   Entity: Constructor<E>;
   constraints?: Array<MnemosConstraint<E>>;
   create?: CreateMnemosEntityFn<E>;
@@ -12,7 +12,7 @@ export type MnemosSourceEntity<E extends IEntity = IEntity> = {
 };
 
 export type MnemosSourceEntities = Array<
-  Constructor<IEntity> | MnemosSourceEntity | string
+  Constructor<IMnemosEntity> | MnemosSourceEntity | string
 >;
 
 export type CloneMnemosSourceOptions = {

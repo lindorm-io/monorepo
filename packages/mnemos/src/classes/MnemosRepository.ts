@@ -1,4 +1,3 @@
-import { IEntity } from "@lindorm/entity";
 import { isFunction } from "@lindorm/is";
 import { ILogger } from "@lindorm/logger";
 import { Constructor, DeepPartial } from "@lindorm/types";
@@ -6,7 +5,7 @@ import { Predicate } from "@lindorm/utils";
 import { randomUUID } from "crypto";
 import { z } from "zod";
 import { MnemosRepositoryError } from "../errors";
-import { IMnemosCollection, IMnemosRepository } from "../interfaces";
+import { IMnemosCollection, IMnemosEntity, IMnemosRepository } from "../interfaces";
 import {
   CreateMnemosEntityFn,
   MnemosRepositoryOptions,
@@ -14,7 +13,7 @@ import {
 } from "../types";
 
 export class MnemosRepository<
-  E extends IEntity,
+  E extends IMnemosEntity,
   O extends DeepPartial<E> = DeepPartial<E>,
 > implements IMnemosRepository<E, O>
 {
@@ -33,13 +32,41 @@ export class MnemosRepository<
     this.createFn = options.create;
     this.validateFn = options.validate;
   }
+  // public static
+
+  public static createEntity<
+    E extends IMnemosEntity,
+    O extends DeepPartial<E> = DeepPartial<E>,
+  >(Entity: Constructor<E>, options: O | E): E {
+    const entity = new Entity();
+
+    const { id, createdAt, updatedAt, expiresAt, ...rest } = options as E;
+
+    entity.id = id ?? entity.id ?? randomUUID();
+    entity.createdAt = createdAt ?? entity.createdAt ?? new Date();
+    entity.updatedAt = updatedAt ?? entity.updatedAt ?? new Date();
+    entity.expiresAt = expiresAt ?? (entity.expiresAt as Date) ?? null;
+
+    for (const [key, value] of Object.entries(rest)) {
+      entity[key as keyof E] = (value ?? null) as E[keyof E];
+    }
+
+    for (const [key, value] of Object.entries(entity)) {
+      if (value !== undefined) continue;
+      entity[key as keyof E] = null as E[keyof E];
+    }
+
+    return entity;
+  }
 
   // public
 
   public create(options: O | E): E {
-    const entity = this.createFn ? this.createFn(options) : this.handleCreate(options);
+    const entity = this.createFn
+      ? this.createFn(options)
+      : MnemosRepository.createEntity(this.EntityConstructor, options);
 
-    this.validateBaseEntity(entity);
+    this.validateEntity(entity);
 
     this.logger.debug("Created entity", { entity });
 
@@ -232,9 +259,8 @@ export class MnemosRepository<
 
   private createDefaultPredicate(predicate: Predicate<E> = {}): Predicate<E> {
     return {
-      deletedAt: null,
-      // $or: [{ expiresAt: null }, { expiresAt: { $gt: new Date() } }],
       ...predicate,
+      $or: [{ expiresAt: null }, { expiresAt: { $gt: new Date() } }],
     };
   }
 
@@ -242,36 +268,16 @@ export class MnemosRepository<
     return this.collection.filter(this.createDefaultPredicate(predicate));
   }
 
-  private handleCreate(options: O | E): E {
-    const entity = new this.EntityConstructor(options);
-
-    entity.id = (options.id as string) ?? entity.id ?? randomUUID();
-    entity.rev = (options.rev as number) ?? entity.rev ?? 0;
-    entity.seq = (options.seq as number) ?? entity.seq ?? 0;
-    entity.createdAt = (options.createdAt as Date) ?? entity.createdAt ?? new Date();
-    entity.updatedAt = (options.updatedAt as Date) ?? entity.updatedAt ?? new Date();
-    entity.deletedAt = (options.deletedAt as Date) ?? (entity.deletedAt as Date) ?? null;
-    entity.expiresAt = (options.expiresAt as Date) ?? (entity.expiresAt as Date) ?? null;
-
-    return entity;
-  }
-
   private validateBaseEntity(entity: E): void {
     z.object({
       id: z.string().uuid(),
-      rev: z.number().int().min(0),
-      seq: z.number().int().min(0),
       createdAt: z.date(),
       updatedAt: z.date(),
-      deletedAt: z.date().nullable(),
       expiresAt: z.date().nullable(),
     }).parse({
       id: entity.id,
-      rev: entity.rev,
-      seq: entity.seq,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
-      deletedAt: entity.deletedAt,
       expiresAt: entity.expiresAt,
     });
   }
@@ -280,8 +286,8 @@ export class MnemosRepository<
     this.validateBaseEntity(entity);
 
     if (isFunction(this.validateFn)) {
-      const { id, rev, seq, createdAt, updatedAt, deletedAt, expiresAt, ...rest } =
-        entity;
+      const { id, createdAt, updatedAt, expiresAt, ...rest } = entity;
+
       this.validateFn(rest);
     }
   }

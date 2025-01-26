@@ -1,7 +1,11 @@
 import { createMockLogger } from "@lindorm/logger";
 import MockDate from "mockdate";
 import { TestEntity } from "../__fixtures__/test-entity";
-import { createMockElasticRepository, createMockElasticSource } from "../mocks";
+import {
+  createMockElasticEntityCallback,
+  createMockElasticRepository,
+  createMockElasticSource,
+} from "../mocks";
 import { createHttpElasticEntityMiddleware } from "./http-elastic-entity-middleware";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
@@ -42,19 +46,12 @@ describe("createHttpElasticEntityMiddleware", () => {
       deletedAt: null,
       expiresAt: null,
       email: null,
-      name: undefined,
+      name: null,
     });
   });
 
   test("should find entity based on object path", async () => {
-    const repo = createMockElasticRepository(() => new TestEntity({ name: "name" }));
-    repo.findOne = jest.fn().mockImplementation(
-      async (filter) =>
-        new TestEntity({
-          name: filter.must[0].term.name,
-          email: filter.must[1].term.email,
-        }),
-    );
+    const repo = createMockElasticRepository(createMockElasticEntityCallback(TestEntity));
     ctx.sources.elastic.repository.mockReturnValue(repo);
 
     await expect(
@@ -84,7 +81,7 @@ describe("createHttpElasticEntityMiddleware", () => {
   });
 
   test("should skip optional entity", async () => {
-    const repo = createMockElasticRepository(() => new TestEntity({ name: "name" }));
+    const repo = createMockElasticRepository(createMockElasticEntityCallback(TestEntity));
     repo.findOne = jest.fn().mockResolvedValue(null);
     ctx.sources.elastic.repository.mockReturnValue(repo);
 
@@ -108,7 +105,7 @@ describe("createHttpElasticEntityMiddleware", () => {
   });
 
   test("should throw on mandatory entity", async () => {
-    const repo = createMockElasticRepository(() => new TestEntity({ name: "name" }));
+    const repo = createMockElasticRepository(createMockElasticEntityCallback(TestEntity));
     repo.findOne = jest.fn().mockResolvedValue(null);
     ctx.sources.elastic.repository.mockReturnValue(repo);
 

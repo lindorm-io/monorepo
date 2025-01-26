@@ -6,13 +6,7 @@ export type TestFileOneOptions = {
 };
 
 export class TestFileOne extends MongoFileBase {
-  public readonly name: string;
-
-  public constructor(options: TestFileOneOptions) {
-    super();
-
-    this.name = options.name;
-  }
+  public readonly name!: string;
 }
 
 export const validate: ValidateMongoFileFn<TestFileOne> = (metadata) => {

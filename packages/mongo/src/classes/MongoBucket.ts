@@ -87,6 +87,36 @@ export class MongoBucket<F extends IMongoFile>
     return this._grid;
   }
 
+  // public static
+
+  public static createFile<F extends IMongoFile>(
+    File: Constructor<F>,
+    options: GridFSDocument,
+  ): F {
+    const file = new File();
+
+    const { chunkSize, filename, length, metadata, uploadDate } = options;
+    const { mimeType, originalName, ...meta } = metadata;
+
+    file.chunkSize = chunkSize ?? 0;
+    file.filename = filename ?? "";
+    file.length = length ?? 0;
+    file.mimeType = metadata.mimeType ?? "";
+    file.originalName = metadata.originalName ?? null;
+    file.uploadDate = uploadDate ?? new Date();
+
+    for (const [key, value] of Object.entries(meta)) {
+      file[key as keyof F] = value as F[keyof F];
+    }
+
+    for (const [key, value] of Object.entries(file)) {
+      if (value !== undefined) continue;
+      file[key as keyof F] = null as F[keyof F];
+    }
+
+    return file;
+  }
+
   // public
 
   public async delete(criteria: Filter<F>, options?: DeleteOptions): Promise<void> {
@@ -278,16 +308,9 @@ export class MongoBucket<F extends IMongoFile>
   // private
 
   private create(document: GridFSDocument): F {
-    const file = new this.FileConstructor(document.metadata);
+    const file = MongoBucket.createFile(this.FileConstructor, document);
 
-    file.chunkSize = document.chunkSize;
-    file.filename = document.filename;
-    file.length = document.length;
-    file.mimeType = document.metadata.mimeType;
-    file.originalName = document.metadata.originalName;
-    file.uploadDate = document.uploadDate;
-
-    this.logger.debug("Created file", { file });
+    this.logger.debug("File created", { file });
 
     return file;
   }

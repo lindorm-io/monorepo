@@ -1,7 +1,11 @@
 import { createMockLogger } from "@lindorm/logger";
 import MockDate from "mockdate";
 import { TestEntity } from "../__fixtures__/test-entity";
-import { createMockMongoRepository, createMockMongoSource } from "../mocks";
+import {
+  createMockMongoEntityCallback,
+  createMockMongoRepository,
+  createMockMongoSource,
+} from "../mocks";
 import { createSocketMongoEntityMiddleware } from "./socket-mongo-entity-middleware";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
@@ -41,19 +45,12 @@ describe("createSocketMongoEntityMiddleware", () => {
       deletedAt: null,
       expiresAt: null,
       email: null,
-      name: undefined,
+      name: null,
     });
   });
 
   test("should find entity based on object path", async () => {
-    const repo = createMockMongoRepository(() => new TestEntity({ name: "name" }));
-    repo.findOne = jest.fn().mockImplementation(
-      async (filter) =>
-        new TestEntity({
-          name: filter.name,
-          email: filter.email,
-        }),
-    );
+    const repo = createMockMongoRepository(createMockMongoEntityCallback(TestEntity));
     ctx.sources.mongo.repository.mockReturnValue(repo);
 
     await expect(
@@ -83,7 +80,7 @@ describe("createSocketMongoEntityMiddleware", () => {
   });
 
   test("should skip optional entity", async () => {
-    const repo = createMockMongoRepository(() => new TestEntity({ name: "name" }));
+    const repo = createMockMongoRepository(createMockMongoEntityCallback(TestEntity));
     repo.findOne = jest.fn().mockResolvedValue(null);
     ctx.sources.mongo.repository.mockReturnValue(repo);
 
@@ -107,7 +104,7 @@ describe("createSocketMongoEntityMiddleware", () => {
   });
 
   test("should throw on mandatory entity", async () => {
-    const repo = createMockMongoRepository(() => new TestEntity({ name: "name" }));
+    const repo = createMockMongoRepository(createMockMongoEntityCallback(TestEntity));
     repo.findOne = jest.fn().mockResolvedValue(null);
     ctx.sources.mongo.repository.mockReturnValue(repo);
 

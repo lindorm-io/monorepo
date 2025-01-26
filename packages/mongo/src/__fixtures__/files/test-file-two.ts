@@ -6,13 +6,7 @@ export type TestFileTwoOptions = {
 };
 
 export class TestFileTwo extends MongoFileBase {
-  public readonly name: string;
-
-  public constructor(options: TestFileTwoOptions) {
-    super();
-
-    this.name = options.name;
-  }
+  public readonly name!: string;
 }
 
 export const indexes: Array<MongoIndexOptions<TestFileTwo>> = [

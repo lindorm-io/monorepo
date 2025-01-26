@@ -1,6 +1,5 @@
 import { kebabCase } from "@lindorm/case";
 import { expires } from "@lindorm/date";
-import { IEntity } from "@lindorm/entity";
 import { isFunction, isString } from "@lindorm/is";
 import { Primitive } from "@lindorm/json-kit";
 import { ILogger } from "@lindorm/logger";
@@ -10,15 +9,17 @@ import { randomUUID } from "crypto";
 import { Redis } from "ioredis";
 import { z } from "zod";
 import { RedisRepositoryError } from "../errors";
-import { IRedisRepository } from "../interfaces";
+import { IRedisEntity, IRedisRepository } from "../interfaces";
 import {
   CreateRedisEntityFn,
   RedisRepositoryOptions,
   ValidateRedisEntityFn,
 } from "../types";
 
-export class RedisRepository<E extends IEntity, O extends DeepPartial<E> = DeepPartial<E>>
-  implements IRedisRepository<E, O>
+export class RedisRepository<
+  E extends IRedisEntity,
+  O extends DeepPartial<E> = DeepPartial<E>,
+> implements IRedisRepository<E, O>
 {
   private readonly EntityConstructor: Constructor<E>;
   private readonly client: Redis;
@@ -38,10 +39,40 @@ export class RedisRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
     this.validateFn = options.validate;
   }
 
+  // public static
+
+  public static createEntity<
+    E extends IRedisEntity,
+    O extends DeepPartial<E> = DeepPartial<E>,
+  >(Entity: Constructor<E>, options: O | E): E {
+    const entity = new Entity();
+
+    const { id, createdAt, updatedAt, expiresAt, ...rest } = options as E;
+
+    entity.id = id ?? entity.id ?? randomUUID();
+    entity.createdAt = createdAt ?? entity.createdAt ?? new Date();
+    entity.updatedAt = updatedAt ?? entity.updatedAt ?? new Date();
+    entity.expiresAt = expiresAt ?? (entity.expiresAt as Date) ?? null;
+
+    for (const [key, value] of Object.entries(rest)) {
+      if (key === "_id") continue;
+      entity[key as keyof E] = (value ?? null) as E[keyof E];
+    }
+
+    for (const [key, value] of Object.entries(entity)) {
+      if (value !== undefined) continue;
+      entity[key as keyof E] = null as E[keyof E];
+    }
+
+    return entity;
+  }
+
   // public
 
   public create(options: O | E): E {
-    const entity = this.createFn ? this.createFn(options) : this.handleCreate(options);
+    const entity = this.createFn
+      ? this.createFn(options)
+      : RedisRepository.createEntity(this.EntityConstructor, options);
 
     this.validateBaseEntity(entity);
 
@@ -52,8 +83,7 @@ export class RedisRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
 
   public async count(predicate: Predicate<E> = {}): Promise<number> {
     const scan = await this.scan();
-    const extended = this.createDefaultFilter(predicate);
-    const count = Predicated.filter(scan, extended).length;
+    const count = Predicated.filter(scan, predicate).length;
 
     this.logger.debug("Counted documents", {
       count,
@@ -146,8 +176,7 @@ export class RedisRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
     }
 
     const scan = await this.scan();
-    const extended = this.createDefaultFilter(predicate);
-    const entities = Predicated.filter(scan, extended);
+    const entities = Predicated.filter(scan, predicate);
 
     this.logger.debug("Repository done: find", {
       count: entities.length,
@@ -170,8 +199,7 @@ export class RedisRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
     }
 
     const scan = await this.scan();
-    const extended = this.createDefaultFilter(predicate);
-    const entity = Predicated.find(scan, extended);
+    const entity = Predicated.find(scan, predicate);
 
     this.logger.debug("Repository done: findOne", {
       predicate,
@@ -206,8 +234,7 @@ export class RedisRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
     try {
       const found = await this.client.get(key);
 
-      const primitive = found ? new Primitive<E>(found).toJSON() : null;
-      const document = primitive?.deletedAt === null ? primitive : null;
+      const document = found ? new Primitive<E>(found).toJSON() : null;
 
       this.logger.debug("Repository done: findOneById", {
         input: {
@@ -321,27 +348,6 @@ export class RedisRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
     return `${this.keyPattern}${material.id}`;
   }
 
-  private createDefaultFilter(predicate: Predicate<E> = {}): Predicate<E> {
-    return {
-      deletedAt: null,
-      ...predicate,
-    };
-  }
-
-  private handleCreate(options: O | E): E {
-    const entity = new this.EntityConstructor(options);
-
-    entity.id = (options.id as string) ?? entity.id ?? randomUUID();
-    entity.rev = (options.rev as number) ?? entity.rev ?? 0;
-    entity.seq = (options.seq as number) ?? entity.seq ?? 0;
-    entity.createdAt = (options.createdAt as Date) ?? entity.createdAt ?? new Date();
-    entity.updatedAt = (options.updatedAt as Date) ?? entity.updatedAt ?? new Date();
-    entity.deletedAt = (options.deletedAt as Date) ?? (entity.deletedAt as Date) ?? null;
-    entity.expiresAt = (options.expiresAt as Date) ?? (entity.expiresAt as Date) ?? null;
-
-    return entity;
-  }
-
   private updateEntityData(entity: E): E {
     const updated = this.create(entity);
 
@@ -368,7 +374,6 @@ export class RedisRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
       for (const key of keys) {
         const result = await this.client.get(key);
         const data = new Primitive<E>(result).toJSON();
-        if (data.deletedAt !== null) continue;
 
         entities.push(this.create(data));
       }
@@ -388,19 +393,13 @@ export class RedisRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
   private validateBaseEntity(entity: E): void {
     z.object({
       id: z.string().uuid(),
-      rev: z.number().int().min(0),
-      seq: z.number().int().min(0),
       createdAt: z.date(),
       updatedAt: z.date(),
-      deletedAt: z.date().nullable(),
       expiresAt: z.date().nullable(),
     }).parse({
       id: entity.id,
-      rev: entity.rev,
-      seq: entity.seq,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
-      deletedAt: entity.deletedAt,
       expiresAt: entity.expiresAt,
     });
   }
@@ -409,8 +408,7 @@ export class RedisRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
     this.validateBaseEntity(entity);
 
     if (isFunction(this.validateFn)) {
-      const { id, rev, seq, createdAt, updatedAt, deletedAt, expiresAt, ...rest } =
-        entity;
+      const { id, createdAt, updatedAt, expiresAt, ...rest } = entity;
       this.validateFn(rest);
     }
   }

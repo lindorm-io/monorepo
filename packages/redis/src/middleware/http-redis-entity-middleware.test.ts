@@ -1,7 +1,11 @@
 import { createMockLogger } from "@lindorm/logger";
 import MockDate from "mockdate";
 import { TestEntity } from "../__fixtures__/test-entity";
-import { createMockRedisRepository, createMockRedisSource } from "../mocks";
+import {
+  createMockRedisEntityCallback,
+  createMockRedisRepository,
+  createMockRedisSource,
+} from "../mocks";
 import { createHttpRedisEntityMiddleware } from "./http-redis-entity-middleware";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
@@ -34,26 +38,16 @@ describe("createHttpRedisEntityMiddleware", () => {
 
     expect(ctx.entities.testEntity).toEqual({
       id: expect.any(String),
-      rev: 0,
-      seq: 0,
       createdAt: MockedDate,
       updatedAt: MockedDate,
-      deletedAt: null,
       expiresAt: null,
       email: null,
-      name: undefined,
+      name: null,
     });
   });
 
   test("should find entity based on object path", async () => {
-    const repo = createMockRedisRepository(() => new TestEntity({ name: "name" }));
-    repo.findOne = jest.fn().mockImplementation(
-      async (filter) =>
-        new TestEntity({
-          name: filter.name,
-          email: filter.email,
-        }),
-    );
+    const repo = createMockRedisRepository(createMockRedisEntityCallback(TestEntity));
     ctx.sources.redis.repository.mockReturnValue(repo);
 
     await expect(
@@ -83,7 +77,7 @@ describe("createHttpRedisEntityMiddleware", () => {
   });
 
   test("should skip optional entity", async () => {
-    const repo = createMockRedisRepository(() => new TestEntity({ name: "name" }));
+    const repo = createMockRedisRepository(createMockRedisEntityCallback(TestEntity));
     repo.findOne = jest.fn().mockResolvedValue(null);
     ctx.sources.redis.repository.mockReturnValue(repo);
 
@@ -107,7 +101,7 @@ describe("createHttpRedisEntityMiddleware", () => {
   });
 
   test("should throw on mandatory entity", async () => {
-    const repo = createMockRedisRepository(() => new TestEntity({ name: "name" }));
+    const repo = createMockRedisRepository(createMockRedisEntityCallback(TestEntity));
     repo.findOne = jest.fn().mockResolvedValue(null);
     ctx.sources.redis.repository.mockReturnValue(repo);
 

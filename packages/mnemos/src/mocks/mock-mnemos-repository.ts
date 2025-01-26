@@ -1,14 +1,20 @@
-import { IEntity } from "@lindorm/entity";
-import { IMnemosRepository } from "../interfaces";
+import { Constructor } from "@lindorm/types";
+import { MnemosRepository } from "../classes";
+import { IMnemosEntity, IMnemosRepository } from "../interfaces";
 
-export type CreateMockEntityCallback = (options?: any) => IEntity;
+export type CreateMockEntityCallback = (options?: any) => IMnemosEntity;
 
-const updateEntity = (entity: IEntity): IEntity => {
+const updateEntity = (entity: IMnemosEntity): IMnemosEntity => {
   entity.updatedAt = new Date();
   return entity;
 };
 
-export const createMockMnemosRepository = <E extends IEntity>(
+export const createMockMnemosEntityCallback =
+  <E extends IMnemosEntity>(Entity: Constructor<E>): CreateMockEntityCallback =>
+  (options) =>
+    MnemosRepository.createEntity(Entity, options);
+
+export const createMockMnemosRepository = <E extends IMnemosEntity>(
   callback: CreateMockEntityCallback,
 ): IMnemosRepository<E> => ({
   count: jest.fn().mockResolvedValue(1),

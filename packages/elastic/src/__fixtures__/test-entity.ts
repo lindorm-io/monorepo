@@ -6,13 +6,6 @@ export type TestEntityOptions = {
 };
 
 export class TestEntity extends ElasticEntityBase {
-  public email: string | null;
-  public name: string;
-
-  public constructor(options: TestEntityOptions) {
-    super();
-
-    this.email = options.email ?? null;
-    this.name = options.name;
-  }
+  public email!: string | null;
+  public name!: string;
 }

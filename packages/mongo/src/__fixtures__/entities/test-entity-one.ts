@@ -1,4 +1,4 @@
-import { EntityBase } from "@lindorm/entity";
+import { MongoEntityBase } from "../../classes";
 import { ValidateMongoEntityFn } from "../../types";
 import { MongoEntityConfig } from "../../types/mongo-entity-config";
 
@@ -7,16 +7,9 @@ export type TestEntityOneOptions = {
   name: string;
 };
 
-export class TestEntityOne extends EntityBase {
-  public readonly email: string | null;
-  public readonly name: string;
-
-  public constructor(options: TestEntityOneOptions) {
-    super();
-
-    this.email = options.email ?? null;
-    this.name = options.name;
-  }
+export class TestEntityOne extends MongoEntityBase {
+  public readonly email!: string | null;
+  public readonly name!: string;
 }
 
 export const config: MongoEntityConfig = {

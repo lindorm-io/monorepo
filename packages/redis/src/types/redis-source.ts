@@ -1,20 +1,20 @@
-import { IEntity } from "@lindorm/entity";
 import { ILogger } from "@lindorm/logger";
 import { Constructor } from "@lindorm/types";
 import { RedisOptions } from "ioredis";
+import { IRedisEntity } from "../interfaces";
 import { CreateRedisEntityFn, ValidateRedisEntityFn } from "./redis-repository";
 
-export type RedisSourceEntity<E extends IEntity = IEntity> = {
+export type RedisSourceEntity<E extends IRedisEntity = IRedisEntity> = {
   Entity: Constructor<E>;
   create?: CreateRedisEntityFn<E>;
   validate?: ValidateRedisEntityFn<E>;
 };
 
 export type RedisSourceEntities = Array<
-  Constructor<IEntity> | RedisSourceEntity | string
+  Constructor<IRedisEntity> | RedisSourceEntity | string
 >;
 
-export type RedisSourceRepositoryOptions<E extends IEntity> = {
+export type RedisSourceRepositoryOptions<E extends IRedisEntity> = {
   logger?: ILogger;
   create?: CreateRedisEntityFn<E>;
   validate?: ValidateRedisEntityFn<E>;

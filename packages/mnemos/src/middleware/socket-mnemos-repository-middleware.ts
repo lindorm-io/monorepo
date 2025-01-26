@@ -1,14 +1,13 @@
 import { camelCase } from "@lindorm/case";
-import { IEntity } from "@lindorm/entity";
 import { isObject } from "@lindorm/is";
 import { Constructor } from "@lindorm/types";
-import { IMnemosSource } from "../interfaces";
+import { IMnemosEntity, IMnemosSource } from "../interfaces";
 import { MnemosPylonSocketContext, MnemosPylonSocketMiddleware } from "../types";
 
 export const createSocketMnemosRepositoryMiddleware = <
   C extends MnemosPylonSocketContext = MnemosPylonSocketContext,
 >(
-  entities: Array<Constructor<IEntity>>,
+  entities: Array<Constructor<IMnemosEntity>>,
   source?: IMnemosSource,
 ): MnemosPylonSocketMiddleware<C> => {
   return async function socketMnemosRepositoryMiddleware(ctx, next): Promise<void> {
