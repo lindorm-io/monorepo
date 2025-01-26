@@ -52,7 +52,7 @@ describe("ElasticRepository", () => {
       deletedAt: null,
       expiresAt: null,
       email: null,
-      name: undefined,
+      name: null,
     });
   });
 
