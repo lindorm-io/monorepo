@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.4](https://github.com/lindorm-io/monorepo/compare/@lindorm/random@0.1.3...@lindorm/random@0.1.4) (2025-01-28)
+
+### Bug Fixes
+
+- update random int with minimum ([9dee2b7](https://github.com/lindorm-io/monorepo/commit/9dee2b72881d035f5c2dd9b55a96cbac293e0220))
+
 ## [0.1.3](https://github.com/lindorm-io/monorepo/compare/@lindorm/random@0.1.2...@lindorm/random@0.1.3) (2024-10-12)
 
 **Note:** Version bump only for package @lindorm/random

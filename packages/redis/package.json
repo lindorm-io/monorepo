@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/redis",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -27,21 +27,21 @@
     "update": "ncu -u"
   },
   "dependencies": {
-    "@lindorm/case": "^0.1.6",
-    "@lindorm/date": "^0.1.6",
-    "@lindorm/errors": "^0.1.6",
-    "@lindorm/is": "^0.1.6",
-    "@lindorm/json-kit": "^0.4.1",
-    "@lindorm/scanner": "^0.3.1",
-    "@lindorm/utils": "^0.4.0",
+    "@lindorm/case": "^0.1.7",
+    "@lindorm/date": "^0.2.0",
+    "@lindorm/errors": "^0.1.7",
+    "@lindorm/is": "^0.1.7",
+    "@lindorm/json-kit": "^0.4.2",
+    "@lindorm/scanner": "^0.3.2",
+    "@lindorm/utils": "^0.4.1",
     "ioredis": "^5.4.1",
     "object-path": "^0.11.8",
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@lindorm/logger": "^0.2.2",
-    "@lindorm/pylon": "^0.2.2",
-    "@lindorm/types": "^0.2.0",
+    "@lindorm/logger": "^0.2.3",
+    "@lindorm/pylon": "^0.3.0",
+    "@lindorm/types": "^0.2.1",
     "@types/ioredis": "^5.0.0",
     "@types/object-path": "^0.11.4"
   }

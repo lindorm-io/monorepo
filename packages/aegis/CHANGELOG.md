@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.6](https://github.com/lindorm-io/monorepo/compare/@lindorm/aegis@0.2.5...@lindorm/aegis@0.2.6) (2025-01-28)
+
+**Note:** Version bump only for package @lindorm/aegis
+
 ## [0.2.5](https://github.com/lindorm-io/monorepo/compare/@lindorm/aegis@0.2.4...@lindorm/aegis@0.2.5) (2024-10-12)
 
 **Note:** Version bump only for package @lindorm/aegis

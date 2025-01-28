@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.4.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/utils@0.4.0...@lindorm/utils@0.4.1) (2025-01-28)
+
+**Note:** Version bump only for package @lindorm/utils
+
 # [0.4.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/utils@0.3.0...@lindorm/utils@0.4.0) (2024-10-12)
 
 ### Bug Fixes

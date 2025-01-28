@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/config@0.1.1...@lindorm/config@0.1.2) (2025-01-28)
+
+**Note:** Version bump only for package @lindorm/config
+
 ## [0.1.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/config@0.1.0...@lindorm/config@0.1.1) (2024-10-12)
 
 **Note:** Version bump only for package @lindorm/config

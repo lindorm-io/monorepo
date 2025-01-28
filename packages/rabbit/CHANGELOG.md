@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/rabbit@0.3.1...@lindorm/rabbit@0.4.0) (2025-01-28)
+
+### Features
+
+- improve entity middleware to accept object as path arg ([1506f7e](https://github.com/lindorm-io/monorepo/commit/1506f7e5ab4cd90866916c4b151e61becb27dc06))
+
 ## [0.3.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/rabbit@0.3.0...@lindorm/rabbit@0.3.1) (2024-10-12)
 
 **Note:** Version bump only for package @lindorm/rabbit

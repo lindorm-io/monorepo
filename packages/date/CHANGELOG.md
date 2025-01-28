@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.2.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/date@0.1.6...@lindorm/date@0.2.0) (2025-01-28)
+
+### Features
+
+- add sec ([eec42fc](https://github.com/lindorm-io/monorepo/commit/eec42fc880d64cabf0acfcdf0f8d20d93311c76d))
+
 ## [0.1.6](https://github.com/lindorm-io/monorepo/compare/@lindorm/date@0.1.5...@lindorm/date@0.1.6) (2024-10-12)
 
 **Note:** Version bump only for package @lindorm/date

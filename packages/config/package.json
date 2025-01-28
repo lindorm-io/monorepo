@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/config",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -28,13 +28,13 @@
   },
   "dependencies": {
     "@dotenvx/dotenvx": "^1.10.3",
-    "@lindorm/case": "^0.1.6",
-    "@lindorm/is": "^0.1.6",
+    "@lindorm/case": "^0.1.7",
+    "@lindorm/is": "^0.1.7",
     "config": "^3.3.12",
     "dotenv": "^16.4.5"
   },
   "devDependencies": {
-    "@lindorm/types": "^0.2.0",
+    "@lindorm/types": "^0.2.1",
     "@types/config": "^3.3.4"
   }
 }

@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.3.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/postgres@0.2.1...@lindorm/postgres@0.3.0) (2025-01-28)
+
+### Bug Fixes
+
+- update io middleware and include repositories ([1ee206d](https://github.com/lindorm-io/monorepo/commit/1ee206d194dd8ef55ef0196f5beb011b6400304f))
+
+### Features
+
+- improve entity middleware to accept object as path arg ([1506f7e](https://github.com/lindorm-io/monorepo/commit/1506f7e5ab4cd90866916c4b151e61becb27dc06))
+
 ## [0.2.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/postgres@0.2.0...@lindorm/postgres@0.2.1) (2024-10-12)
 
 **Note:** Version bump only for package @lindorm/postgres

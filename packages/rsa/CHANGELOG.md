@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.9](https://github.com/lindorm-io/monorepo/compare/@lindorm/rsa@0.1.8...@lindorm/rsa@0.1.9) (2025-01-28)
+
+**Note:** Version bump only for package @lindorm/rsa
+
 ## [0.1.8](https://github.com/lindorm-io/monorepo/compare/@lindorm/rsa@0.1.7...@lindorm/rsa@0.1.8) (2024-10-12)
 
 **Note:** Version bump only for package @lindorm/rsa

@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.2.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/hermes@0.1.1...@lindorm/hermes@0.2.0) (2025-01-28)
+
+### Features
+
+- improve entity middleware to accept object as path arg ([1506f7e](https://github.com/lindorm-io/monorepo/commit/1506f7e5ab4cd90866916c4b151e61becb27dc06))
+
 ## [0.1.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/hermes@0.1.0...@lindorm/hermes@0.1.1) (2024-10-12)
 
 **Note:** Version bump only for package @lindorm/hermes

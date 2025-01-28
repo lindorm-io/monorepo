@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.4](https://github.com/lindorm-io/monorepo/compare/@lindorm/middleware@0.1.3...@lindorm/middleware@0.1.4) (2025-01-28)
+
+**Note:** Version bump only for package @lindorm/middleware
+
 ## [0.1.3](https://github.com/lindorm-io/monorepo/compare/@lindorm/middleware@0.1.2...@lindorm/middleware@0.1.3) (2024-10-12)
 
 **Note:** Version bump only for package @lindorm/middleware
