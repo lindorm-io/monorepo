@@ -1,4 +1,4 @@
-import { RedisEntityBase } from "../../classes";
+import { REDIS_ENTITY_CONFIG, RedisEntity } from "../../classes";
 import { ValidateRedisEntityFn } from "../../types";
 
 export type TestEntityOneOptions = {
@@ -6,10 +6,13 @@ export type TestEntityOneOptions = {
   name: string;
 };
 
-export class TestEntityOne extends RedisEntityBase {
+export class TestEntityOne extends RedisEntity {
   public readonly email!: string | null;
   public readonly name!: string;
+  public readonly ttlAt!: Date | null;
 }
+
+export const config = REDIS_ENTITY_CONFIG;
 
 export const validate: ValidateRedisEntityFn<TestEntityOne> = (entity) => {
   if (!entity.email) {

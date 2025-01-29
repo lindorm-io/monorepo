@@ -1,5 +1,6 @@
+import { IEntityBase } from "@lindorm/entity";
 import { Constructor } from "@lindorm/types";
-import { IElasticEntity, IElasticSource } from "../interfaces";
+import { IElasticSource } from "../interfaces";
 import {
   createMockElasticEntityCallback,
   createMockElasticRepository,
@@ -14,7 +15,7 @@ export const createMockElasticSource = (): IElasticSource => ({
   setup: jest.fn(),
   repository: jest
     .fn()
-    .mockImplementation((Entity: Constructor<IElasticEntity>) =>
+    .mockImplementation((Entity: Constructor<IEntityBase>) =>
       createMockElasticRepository(createMockElasticEntityCallback(Entity)),
     ),
 });

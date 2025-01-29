@@ -1,12 +1,13 @@
 import { camelCase } from "@lindorm/case";
+import { IEntityBase } from "@lindorm/entity";
 import { ClientError } from "@lindorm/errors";
 import { isObject } from "@lindorm/is";
 import { Constructor, Dict } from "@lindorm/types";
 import { get } from "object-path";
-import { IMnemosEntity, IMnemosSource } from "../interfaces";
+import { IMnemosSource } from "../interfaces";
 import { MnemosPylonHttpContext, MnemosPylonHttpMiddleware } from "../types";
 
-type Path<E extends Constructor<IMnemosEntity>> =
+type Path<E extends Constructor<IEntityBase>> =
   | { [K in keyof InstanceType<E>]?: string }
   | string;
 
@@ -18,7 +19,7 @@ type Options = {
 export const createHttpMnemosEntityMiddleware =
   <
     C extends MnemosPylonHttpContext = MnemosPylonHttpContext,
-    E extends Constructor<IMnemosEntity> = Constructor<IMnemosEntity>,
+    E extends Constructor<IEntityBase> = Constructor<IEntityBase>,
   >(
     Entity: E,
     source?: IMnemosSource,

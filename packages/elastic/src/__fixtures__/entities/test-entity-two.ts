@@ -1,7 +1,7 @@
 import { MappingTypeMapping } from "@elastic/elasticsearch/lib/api/types";
-import { ElasticEntityBase } from "../../classes";
+import { ElasticEntity } from "../../classes";
 
-export class TestEntityTwo extends ElasticEntityBase {
+export class TestEntityTwo extends ElasticEntity {
   public readonly email!: string;
   public readonly name!: string;
   public readonly _test!: string;

@@ -38,8 +38,8 @@ describe("createHttpMongoEntityMiddleware", () => {
 
     expect(ctx.entities.testEntity).toEqual({
       id: expect.any(String),
-      rev: 0,
-      seq: 0,
+      rev: null,
+      seq: null,
       createdAt: MockedDate,
       updatedAt: MockedDate,
       deletedAt: null,

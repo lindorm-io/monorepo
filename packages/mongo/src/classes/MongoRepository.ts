@@ -1,12 +1,13 @@
 import { snakeCase } from "@lindorm/case";
-import { isFunction } from "@lindorm/is";
+import { IEntityBase } from "@lindorm/entity";
+import { isDate, isFunction, isNumber } from "@lindorm/is";
 import { ILogger } from "@lindorm/logger";
 import { Constructor, DeepPartial } from "@lindorm/types";
 import { randomUUID } from "crypto";
 import { CountDocumentsOptions, DeleteOptions, Filter, FindOptions } from "mongodb";
 import { z } from "zod";
 import { MongoRepositoryError } from "../errors";
-import { IMongoEntity, IMongoRepository } from "../interfaces";
+import { IMongoRepository } from "../interfaces";
 import {
   CreateMongoEntityFn,
   MongoEntityConfig,
@@ -16,14 +17,14 @@ import {
 import { MongoBase } from "./MongoBase";
 
 export class MongoRepository<
-    E extends IMongoEntity,
+    E extends IEntityBase,
     O extends DeepPartial<E> = DeepPartial<E>,
   >
   extends MongoBase<E>
   implements IMongoRepository<E, O>
 {
   private readonly EntityConstructor: Constructor<E>;
-  private readonly config: MongoEntityConfig;
+  private readonly config: MongoEntityConfig<E>;
   private readonly createFn: CreateMongoEntityFn<E> | undefined;
   private readonly validateFn: ValidateMongoEntityFn<E> | undefined;
 
@@ -40,39 +41,76 @@ export class MongoRepository<
           index: { id: 1 },
           unique: true,
         },
-        {
-          index: { id: 1, rev: 1 },
-        },
-        ...(options.config?.useSequence
+        ...(options.config?.revisionAttribute
           ? [
               {
-                index: { seq: 1 },
-                finite: ["seq"],
+                index: {
+                  id: 1,
+                  [options.config.revisionAttribute as any]: 1,
+                },
+                finite: [options.config.revisionAttribute],
                 unique: true,
               },
             ]
           : []),
-        ...(options.config?.useSoftDelete
+        ...(options.config?.sequenceAttribute
           ? [
               {
-                index: { id: 1, deletedAt: 1 },
-                nullable: ["deletedAt"],
-              },
-              {
-                index: { id: 1, rev: 1, deletedAt: 1 },
-                nullable: ["deletedAt"],
+                index: {
+                  [options.config.sequenceAttribute as any]: 1,
+                },
+                finite: [options.config.sequenceAttribute],
+                unique: true,
               },
             ]
           : []),
-        ...(options.config?.useExpiry
+        ...(options.config?.deleteAttribute
           ? [
               {
-                index: { id: 1, deletedAt: 1, expiresAt: 1 },
-                nullable: ["deletedAt", "expiresAt"],
+                index: {
+                  id: 1,
+                  [options.config.deleteAttribute]: 1,
+                },
+                nullable: [options.config.deleteAttribute],
               },
+            ]
+          : []),
+        ...(options.config?.deleteAttribute && options.config?.revisionAttribute
+          ? [
               {
-                index: { id: 1, rev: 1, deletedAt: 1, expiresAt: 1 },
-                nullable: ["deletedAt", "expiresAt"],
+                index: {
+                  id: 1,
+                  [options.config.revisionAttribute]: 1,
+                  [options.config.deleteAttribute]: 1,
+                },
+                nullable: [options.config.deleteAttribute],
+              },
+            ]
+          : []),
+        ...(options.config?.deleteAttribute && options.config?.ttlAttribute
+          ? [
+              {
+                index: {
+                  id: 1,
+                  [options.config.deleteAttribute]: 1,
+                  [options.config.ttlAttribute]: 1,
+                },
+                nullable: [options.config.deleteAttribute, options.config.ttlAttribute],
+              },
+            ]
+          : []),
+        ...(options.config?.deleteAttribute &&
+        options.config?.revisionAttribute &&
+        options.config?.ttlAttribute
+          ? [
+              {
+                index: {
+                  id: 1,
+                  [options.config.revisionAttribute]: 1,
+                  [options.config.deleteAttribute]: 1,
+                  [options.config.ttlAttribute]: 1,
+                },
+                nullable: [options.config.deleteAttribute, options.config.ttlAttribute],
               },
             ]
           : []),
@@ -92,21 +130,16 @@ export class MongoRepository<
   // public static
 
   public static createEntity<
-    E extends IMongoEntity,
+    E extends IEntityBase,
     O extends DeepPartial<E> = DeepPartial<E>,
   >(Entity: Constructor<E>, options: O | E): E {
     const entity = new Entity();
 
-    const { id, rev, seq, createdAt, updatedAt, deletedAt, expiresAt, ...rest } =
-      options as E;
+    const { id, createdAt, updatedAt, ...rest } = options as E;
 
     entity.id = id ?? entity.id ?? randomUUID();
-    entity.rev = rev ?? entity.rev ?? 0;
-    entity.seq = seq ?? entity.seq ?? 0;
     entity.createdAt = createdAt ?? entity.createdAt ?? new Date();
     entity.updatedAt = updatedAt ?? entity.updatedAt ?? new Date();
-    entity.deletedAt = deletedAt ?? (entity.deletedAt as Date) ?? null;
-    entity.expiresAt = expiresAt ?? (entity.expiresAt as Date) ?? null;
 
     for (const [key, value] of Object.entries(rest)) {
       if (key === "_id") continue;
@@ -128,9 +161,23 @@ export class MongoRepository<
       ? this.createFn(options)
       : MongoRepository.createEntity(this.EntityConstructor, options);
 
-    this.validateBaseEntity(entity);
+    if (
+      this.config.revisionAttribute &&
+      !isNumber(entity[this.config.revisionAttribute])
+    ) {
+      entity[this.config.revisionAttribute] = 0 as any;
+    }
 
-    this.logger.debug("Created entity", { entity });
+    if (
+      this.config.sequenceAttribute &&
+      !isNumber(entity[this.config.sequenceAttribute])
+    ) {
+      entity[this.config.sequenceAttribute] = 0 as any;
+    }
+
+    this.logger.silly("Created entity", { entity });
+
+    this.validateEntity(entity);
 
     return entity;
   }
@@ -208,8 +255,14 @@ export class MongoRepository<
   public async deleteExpired(): Promise<void> {
     const start = Date.now();
 
+    if (!this.config.ttlAttribute) {
+      throw new MongoRepositoryError("TTL is not enabled", {
+        debug: { config: this.config },
+      });
+    }
+
     const filter: Filter<any> = {
-      expiresAt: { $lt: new Date() },
+      [this.config.ttlAttribute]: { $lt: new Date() },
     };
 
     try {
@@ -367,7 +420,9 @@ export class MongoRepository<
 
     const updated = this.updateEntityData(entity);
 
-    updated.seq = await this.getNextSequence();
+    if (this.config.sequenceAttribute) {
+      (updated[this.config.sequenceAttribute] as number) = await this.getNextSequence();
+    }
 
     try {
       const result = await this.collection.insertOne(updated);
@@ -394,10 +449,18 @@ export class MongoRepository<
   }
 
   public async save(entity: E): Promise<E> {
-    if (entity.rev === 0) {
-      return this.insert(entity);
+    if (this.config.revisionAttribute) {
+      if (entity[this.config.revisionAttribute] === 0) {
+        return this.insert(entity);
+      }
+      return this.update(entity);
     }
-    return this.update(entity);
+
+    try {
+      return this.insert(entity);
+    } catch (_) {
+      return this.update(entity);
+    }
   }
 
   public async saveBulk(entities: Array<E>): Promise<Array<E>> {
@@ -405,7 +468,7 @@ export class MongoRepository<
   }
 
   public async softDelete(criteria: Filter<E>, options?: DeleteOptions): Promise<void> {
-    if (!this.config.useSoftDelete) {
+    if (!this.config.deleteAttribute) {
       throw new MongoRepositoryError("Soft delete is not enabled", {
         debug: { config: this.config },
       });
@@ -413,12 +476,10 @@ export class MongoRepository<
 
     const start = Date.now();
 
-    const deletedAt = new Date();
-
     try {
       const result = await this.collection.updateMany(
         criteria,
-        { $set: { deletedAt } as any },
+        { $set: { [this.config.deleteAttribute]: new Date() } },
         options,
       );
 
@@ -441,7 +502,7 @@ export class MongoRepository<
   }
 
   public async softDeleteById(id: string): Promise<void> {
-    if (!this.config.useSoftDelete) {
+    if (!this.config.deleteAttribute) {
       throw new MongoRepositoryError("Soft delete is not enabled", {
         debug: { config: this.config },
       });
@@ -449,12 +510,11 @@ export class MongoRepository<
 
     const start = Date.now();
 
-    const deletedAt = new Date();
     const criteria: Filter<any> = { id };
 
     try {
       const result = await this.collection.updateOne(criteria, {
-        $set: { deletedAt } as any,
+        $set: { [this.config.deleteAttribute]: new Date() },
       });
 
       this.logger.debug("Repository done: softDeleteById", {
@@ -526,8 +586,8 @@ export class MongoRepository<
   }
 
   public async ttl(criteria: Filter<E>): Promise<number> {
-    if (!this.config.useExpiry) {
-      throw new MongoRepositoryError("Expiry is not enabled", {
+    if (!this.config.ttlAttribute) {
+      throw new MongoRepositoryError("TTL is not enabled", {
         debug: { config: this.config },
       });
     }
@@ -536,7 +596,7 @@ export class MongoRepository<
 
     try {
       const document = await this.collection.findOne(criteria, {
-        projection: { expiresAt: 1 },
+        projection: { [this.config.ttlAttribute]: 1 },
       });
 
       this.logger.debug("Repository done: ttl", {
@@ -553,13 +613,15 @@ export class MongoRepository<
         throw new MongoRepositoryError("Entity not found", { debug: { criteria } });
       }
 
-      if (!document.expiresAt) {
+      if (!isDate(document[this.config.ttlAttribute])) {
         throw new MongoRepositoryError("Entity does not have ttl", {
           debug: { document },
         });
       }
 
-      return Math.round((document.expiresAt.getTime() - Date.now()) / 1000);
+      return Math.round(
+        (document[this.config.ttlAttribute].getTime() - Date.now()) / 1000,
+      );
     } catch (error: any) {
       this.logger.error("Repository error", error);
       throw new MongoRepositoryError("Unable to establish ttl for entity", { error });
@@ -572,7 +634,7 @@ export class MongoRepository<
 
   // private static
 
-  private static createCollectionName<E extends IMongoEntity>(
+  private static createCollectionName<E extends IEntityBase>(
     options: MongoRepositoryOptions<E>,
   ): string {
     const nsp = options.namespace ? `${snakeCase(options.namespace)}_` : "";
@@ -585,30 +647,48 @@ export class MongoRepository<
 
   private defaultFindFilter(criteria: Filter<any> = {}): Filter<any> {
     return {
-      ...(this.config.useSoftDelete ? { deletedAt: { $eq: null } } : {}),
-      ...(this.config.useExpiry
-        ? { $or: [{ expiresAt: { $eq: null } }, { expiresAt: { $gt: new Date() } }] }
+      ...(this.config.deleteAttribute
+        ? { [this.config.deleteAttribute]: { $eq: null } }
+        : {}),
+      ...(this.config.ttlAttribute
+        ? {
+            $or: [
+              { [this.config.ttlAttribute]: { $eq: null } },
+              { [this.config.ttlAttribute]: { $gt: new Date() } },
+            ],
+          }
         : {}),
       ...criteria,
     };
   }
 
   private defaultUpdateFilter(entity: E): Filter<any> {
-    const { id, rev } = entity;
+    const { id } = entity;
 
     return {
       id: { $eq: id },
-      rev: { $eq: rev },
-      ...(this.config.useSoftDelete ? { deletedAt: { $eq: null } } : {}),
-      ...(this.config.useExpiry
-        ? { $or: [{ expiresAt: { $eq: null } }, { expiresAt: { $gt: new Date() } }] }
+      ...(this.config.revisionAttribute
+        ? {
+            [this.config.revisionAttribute]: {
+              $eq: entity[this.config.revisionAttribute],
+            },
+          }
+        : {}),
+      ...(this.config.deleteAttribute
+        ? { [this.config.deleteAttribute]: { $eq: null } }
+        : {}),
+      ...(this.config.ttlAttribute
+        ? {
+            $or: [
+              { [this.config.ttlAttribute]: { $eq: null } },
+              { [this.config.ttlAttribute]: { $gt: new Date() } },
+            ],
+          }
         : {}),
     };
   }
 
   private async getNextSequence(): Promise<number> {
-    if (!this.config.useSequence) return 0;
-
     const start = Date.now();
 
     try {
@@ -648,7 +728,11 @@ export class MongoRepository<
   private updateEntityData(entity: E): E {
     const updated = this.create(entity);
 
-    updated.rev = entity.rev + 1;
+    if (this.config.revisionAttribute) {
+      (updated[this.config.revisionAttribute] as number) =
+        (entity[this.config.revisionAttribute] as number) + 1;
+    }
+
     updated.updatedAt = new Date();
 
     return updated;
@@ -657,20 +741,12 @@ export class MongoRepository<
   private validateBaseEntity(entity: E): void {
     z.object({
       id: z.string().uuid(),
-      rev: z.number().int().min(0),
-      seq: z.number().int().min(0),
       createdAt: z.date(),
       updatedAt: z.date(),
-      deletedAt: z.date().nullable(),
-      expiresAt: z.date().nullable(),
     }).parse({
       id: entity.id,
-      rev: entity.rev,
-      seq: entity.seq,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
-      deletedAt: entity.deletedAt,
-      expiresAt: entity.expiresAt,
     });
   }
 
@@ -678,10 +754,11 @@ export class MongoRepository<
     this.validateBaseEntity(entity);
 
     if (isFunction(this.validateFn)) {
-      const { id, rev, seq, createdAt, updatedAt, deletedAt, expiresAt, ...rest } =
-        entity;
+      const { id, createdAt, updatedAt, ...rest } = entity;
 
       this.validateFn(rest);
     }
+
+    this.logger.silly("Entity validated", { entity });
   }
 }

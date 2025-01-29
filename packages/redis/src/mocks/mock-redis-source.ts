@@ -1,5 +1,6 @@
+import { IEntityBase } from "@lindorm/entity";
 import { Constructor } from "@lindorm/types";
-import { IRedisEntity, IRedisSource } from "../interfaces";
+import { IRedisSource } from "../interfaces";
 import {
   createMockRedisEntityCallback,
   createMockRedisRepository,
@@ -14,7 +15,7 @@ export const createMockRedisSource = (): IRedisSource => ({
   setup: jest.fn(),
   repository: jest
     .fn()
-    .mockImplementation((Entity: Constructor<IRedisEntity>) =>
+    .mockImplementation((Entity: Constructor<IEntityBase>) =>
       createMockRedisRepository(createMockRedisEntityCallback(Entity)),
     ),
 });

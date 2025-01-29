@@ -38,15 +38,15 @@ describe("createSocketElasticEntityMiddleware", () => {
 
     expect(ctx.entities.testEntity).toEqual({
       id: expect.any(String),
-      primaryTerm: 0,
-      rev: 0,
-      seq: 0,
       createdAt: MockedDate,
-      updatedAt: MockedDate,
       deletedAt: null,
-      expiresAt: null,
       email: null,
       name: null,
+      primaryTerm: null,
+      rev: null,
+      seq: null,
+      ttlAt: null,
+      updatedAt: MockedDate,
     });
   });
 

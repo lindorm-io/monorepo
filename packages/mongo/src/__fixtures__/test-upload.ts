@@ -1,4 +1,4 @@
-import { MongoFileBase } from "../classes";
+import { MongoFile } from "../classes";
 
 export type TestUploadOptions = {
   busboy?: boolean;
@@ -9,7 +9,7 @@ export type TestUploadOptions = {
   size?: number;
 };
 
-export class TestUpload extends MongoFileBase {
+export class TestUpload extends MongoFile {
   public readonly busboy!: boolean;
   public readonly encoding!: string | undefined;
   public readonly formidable!: boolean;

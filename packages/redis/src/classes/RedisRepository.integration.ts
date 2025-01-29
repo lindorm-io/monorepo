@@ -173,7 +173,7 @@ describe("RedisRepository", () => {
       validate: validate,
     });
 
-    await expect(repo.save(repo.create({}))).rejects.toThrow();
+    expect(() => repo.create({})).toThrow();
   });
 
   test("should save many entities", async () => {

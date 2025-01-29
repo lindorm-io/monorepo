@@ -1,25 +1,24 @@
+import { IEntityBase } from "@lindorm/entity";
 import { Constructor } from "@lindorm/types";
 import { ElasticRepository } from "../classes";
-import { IElasticEntity, IElasticRepository } from "../interfaces";
+import { IElasticRepository } from "../interfaces";
 
-export type CreateMockEntityCallback = (options?: any) => IElasticEntity;
+export type CreateMockEntityCallback = (options?: any) => IEntityBase;
 
-const updateEntity = (entity: IElasticEntity): IElasticEntity => {
-  entity.primaryTerm = entity.primaryTerm + 1;
-  entity.rev = entity.rev + 1;
+const updateEntity = (entity: IEntityBase): IEntityBase => {
   entity.updatedAt = new Date();
   return entity;
 };
 
 export const createMockElasticEntityCallback =
-  <E extends IElasticEntity>(Entity: Constructor<E>): CreateMockEntityCallback =>
+  <E extends IEntityBase>(Entity: Constructor<E>): CreateMockEntityCallback =>
   (options) =>
     ElasticRepository.createEntity(
       Entity,
       options.must.reduce((acc: any, cur: any) => ({ ...acc, ...cur.term }), {}),
     );
 
-export const createMockElasticRepository = <E extends IElasticEntity>(
+export const createMockElasticRepository = <E extends IEntityBase>(
   callback: CreateMockEntityCallback,
 ): IElasticRepository<E> => ({
   count: jest.fn().mockResolvedValue(1),

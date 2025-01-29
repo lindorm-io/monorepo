@@ -1,12 +1,13 @@
 import { camelCase } from "@lindorm/case";
+import { IEntityBase } from "@lindorm/entity";
 import { ClientError } from "@lindorm/errors";
 import { isObject } from "@lindorm/is";
 import { Constructor, Dict } from "@lindorm/types";
 import { get } from "object-path";
-import { IElasticEntity, IElasticSource } from "../interfaces";
+import { IElasticSource } from "../interfaces";
 import { ElasticPylonSocketContext, ElasticPylonSocketMiddleware } from "../types";
 
-type Path<E extends Constructor<IElasticEntity>> =
+type Path<E extends Constructor<IEntityBase>> =
   | { [K in keyof InstanceType<E>]?: string }
   | string;
 
@@ -17,7 +18,7 @@ type Options = {
 export const createSocketElasticEntityMiddleware =
   <
     C extends ElasticPylonSocketContext = ElasticPylonSocketContext,
-    E extends Constructor<IElasticEntity> = Constructor<IElasticEntity>,
+    E extends Constructor<IEntityBase> = Constructor<IEntityBase>,
   >(
     Entity: E,
     source?: IElasticSource,

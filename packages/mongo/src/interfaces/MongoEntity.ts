@@ -1,9 +1,8 @@
-export interface IMongoEntity {
-  id: string;
+import { IEntityBase } from "@lindorm/entity";
+
+export interface IMongoEntity extends IEntityBase {
   rev: number;
   seq: number;
-  createdAt: Date;
   deletedAt: Date | null;
   expiresAt: Date | null;
-  updatedAt: Date;
 }

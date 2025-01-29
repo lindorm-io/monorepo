@@ -18,7 +18,11 @@ describe("EntityScanner", () => {
       EntityScanner.scan([
         { Entity: TestEntity, validate: jest.fn() },
         { Entity: TestEntityOne, validate: jest.fn() },
-        { Entity: TestEntityTwo, config: { useSoftDelete: true }, mappings: {} },
+        {
+          Entity: TestEntityTwo,
+          config: { deleteAttribute: "updatedAt" },
+          mappings: {},
+        },
       ]),
     ).toEqual([
       { Entity: TestEntity, validate: expect.any(Function) },
@@ -26,7 +30,11 @@ describe("EntityScanner", () => {
         Entity: TestEntityOne,
         validate: expect.any(Function),
       },
-      { Entity: TestEntityTwo, config: { useSoftDelete: true }, mappings: {} },
+      {
+        Entity: TestEntityTwo,
+        config: { deleteAttribute: "updatedAt" },
+        mappings: {},
+      },
     ]);
   });
 
@@ -36,7 +44,7 @@ describe("EntityScanner", () => {
     ).toEqual([
       {
         Entity: TestEntityOne,
-        config: { useSoftDelete: true },
+        config: { deleteAttribute: "deletedAt", ttlAttribute: "ttlAt" },
         mappings: expect.any(Object),
         validate: expect.any(Function),
       },

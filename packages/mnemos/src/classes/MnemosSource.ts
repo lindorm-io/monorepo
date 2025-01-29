@@ -1,9 +1,9 @@
+import { IEntityBase } from "@lindorm/entity";
 import { ILogger } from "@lindorm/logger";
 import { Constructor } from "@lindorm/types";
 import { MnemosSourceError } from "../errors";
 import {
   IMnemosCache,
-  IMnemosEntity,
   IMnemosRepository,
   IMnemosSource,
   MnemosSourceRepositoryOptions,
@@ -58,7 +58,7 @@ export class MnemosSource implements IMnemosSource {
     });
   }
 
-  public repository<E extends IMnemosEntity>(
+  public repository<E extends IEntityBase>(
     Entity: Constructor<E>,
     options: MnemosSourceRepositoryOptions<E> = {},
   ): IMnemosRepository<E> {
@@ -75,7 +75,7 @@ export class MnemosSource implements IMnemosSource {
 
   // private
 
-  private entityConfig<E extends IMnemosEntity>(
+  private entityConfig<E extends IEntityBase>(
     Entity: Constructor<E>,
   ): MnemosSourceEntity<E> {
     const config = this.entities.find((entity) => entity.Entity === Entity);

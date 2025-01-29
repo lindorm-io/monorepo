@@ -1,10 +1,9 @@
-export interface IElasticEntity {
-  id: string;
+import { IEntityBase } from "@lindorm/entity";
+
+export interface IElasticEntity extends IEntityBase {
   primaryTerm: number;
   rev: number;
   seq: number;
-  createdAt: Date;
   deletedAt: Date | null;
   expiresAt: Date | null;
-  updatedAt: Date;
 }

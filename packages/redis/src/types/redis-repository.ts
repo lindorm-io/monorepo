@@ -1,19 +1,17 @@
+import { IEntityBase } from "@lindorm/entity";
 import { ILogger } from "@lindorm/logger";
-import { Constructor, DeepPartial } from "@lindorm/types";
+import { Constructor } from "@lindorm/types";
 import { Redis } from "ioredis";
-import { IRedisEntity } from "../interfaces";
+import {
+  CreateRedisEntityFn,
+  RedisEntityConfig,
+  ValidateRedisEntityFn,
+} from "./redis-entity";
 
-export type CreateRedisEntityFn<E extends IRedisEntity = IRedisEntity> = (
-  options: DeepPartial<E>,
-) => E;
-
-export type ValidateRedisEntityFn<E extends IRedisEntity = IRedisEntity> = (
-  entity: Omit<E, "id" | "createdAt" | "updatedAt" | "expiresAt">,
-) => void;
-
-export type RedisRepositoryOptions<E extends IRedisEntity> = {
+export type RedisRepositoryOptions<E extends IEntityBase> = {
   Entity: Constructor<E>;
   client: Redis;
+  config?: RedisEntityConfig<E>;
   logger: ILogger;
   namespace?: string;
   create?: CreateRedisEntityFn<E>;

@@ -1,3 +1,3 @@
-export * from "./RedisEntityBase";
+export * from "./RedisEntity";
 export * from "./RedisRepository";
 export * from "./RedisSource";

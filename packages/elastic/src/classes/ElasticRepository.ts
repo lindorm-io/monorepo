@@ -6,13 +6,14 @@ import {
 } from "@elastic/elasticsearch/lib/api/types";
 import { snakeCase } from "@lindorm/case";
 import { isAfter } from "@lindorm/date";
-import { isArray, isFunction, isString } from "@lindorm/is";
+import { IEntityBase } from "@lindorm/entity";
+import { isArray, isDate, isFunction, isNumber, isString } from "@lindorm/is";
 import { ILogger } from "@lindorm/logger";
 import { Constructor, DeepPartial } from "@lindorm/types";
 import { randomUUID } from "crypto";
 import { z } from "zod";
 import { ElasticRepositoryError } from "../errors";
-import { IElasticEntity, IElasticRepository } from "../interfaces";
+import { IElasticRepository } from "../interfaces";
 import {
   CreateElasticEntityFn,
   ElasticEntityConfig,
@@ -21,13 +22,13 @@ import {
 } from "../types";
 
 export class ElasticRepository<
-  E extends IElasticEntity,
+  E extends IEntityBase,
   O extends DeepPartial<E> = DeepPartial<E>,
 > implements IElasticRepository<E, O>
 {
   private readonly EntityConstructor: Constructor<E>;
   private readonly client: Client;
-  private readonly config: ElasticEntityConfig;
+  private readonly config: ElasticEntityConfig<E>;
   private readonly createFn: CreateElasticEntityFn<E> | undefined;
   private readonly index: string;
   private readonly logger: ILogger;
@@ -47,8 +48,6 @@ export class ElasticRepository<
         ...(options.mappings?.properties ?? {}),
         createdAt: { type: "date" },
         updatedAt: { type: "date" },
-        deletedAt: { type: "date" },
-        expiresAt: { type: "date" },
       },
     };
 
@@ -59,27 +58,14 @@ export class ElasticRepository<
   // public static
 
   public static createEntity<
-    E extends IElasticEntity,
+    E extends IEntityBase,
     O extends DeepPartial<E> = DeepPartial<E>,
   >(Entity: Constructor<E>, options: O | E): E {
     const entity = new Entity(options);
 
-    const {
-      id,
-      primaryTerm,
-      rev,
-      seq,
-      createdAt,
-      updatedAt,
-      deletedAt,
-      expiresAt,
-      ...rest
-    } = options as E;
+    const { id, createdAt, updatedAt, ...rest } = options as E;
 
     entity.id = id ?? entity.id ?? randomUUID();
-    entity.primaryTerm = primaryTerm ?? entity.primaryTerm ?? 0;
-    entity.rev = rev ?? entity.rev ?? 0;
-    entity.seq = seq ?? entity.seq ?? 0;
 
     entity.createdAt =
       ElasticRepository.date(createdAt) ??
@@ -90,16 +76,6 @@ export class ElasticRepository<
       ElasticRepository.date(updatedAt) ??
       ElasticRepository.date(entity.updatedAt) ??
       new Date();
-
-    entity.deletedAt =
-      ElasticRepository.date(deletedAt) ??
-      ElasticRepository.date(entity.deletedAt) ??
-      null;
-
-    entity.expiresAt =
-      ElasticRepository.date(expiresAt) ??
-      ElasticRepository.date(entity.expiresAt) ??
-      null;
 
     for (const [key, value] of Object.entries(rest)) {
       if (key === "_id") continue;
@@ -121,9 +97,42 @@ export class ElasticRepository<
       ? this.createFn(options)
       : ElasticRepository.createEntity(this.EntityConstructor, options);
 
-    this.validateBaseEntity(entity);
+    if (this.config.deleteAttribute && !isDate(entity[this.config.deleteAttribute])) {
+      entity[this.config.deleteAttribute] = ElasticRepository.date(
+        entity[this.config.deleteAttribute],
+      ) as any;
+    }
+
+    if (
+      this.config.primaryTermAttribute &&
+      !isNumber(entity[this.config.primaryTermAttribute])
+    ) {
+      entity[this.config.primaryTermAttribute] = 0 as any;
+    }
+
+    if (
+      this.config.revisionAttribute &&
+      !isNumber(entity[this.config.revisionAttribute])
+    ) {
+      entity[this.config.revisionAttribute] = 0 as any;
+    }
+
+    if (
+      this.config.sequenceAttribute &&
+      !isNumber(entity[this.config.sequenceAttribute])
+    ) {
+      entity[this.config.sequenceAttribute] = 0 as any;
+    }
+
+    if (this.config.ttlAttribute && !isDate(entity[this.config.ttlAttribute])) {
+      entity[this.config.ttlAttribute] = ElasticRepository.date(
+        entity[this.config.ttlAttribute],
+      ) as any;
+    }
 
     this.logger.debug("Created entity", { entity });
+
+    this.validateEntity(entity);
 
     return entity;
   }
@@ -260,7 +269,7 @@ export class ElasticRepository<
     const start = Date.now();
 
     try {
-      if (!this.config.useExpiry) {
+      if (!this.config.ttlAttribute) {
         this.logger.debug("Expiry is not enabled; no action taken on deleteExpired");
         return;
       }
@@ -269,7 +278,7 @@ export class ElasticRepository<
         must: [
           {
             range: {
-              expiresAt: { lte: "now" },
+              [this.config.ttlAttribute]: { lte: "now" },
             },
           },
         ],
@@ -448,14 +457,14 @@ export class ElasticRepository<
       const document = this.handleHit(result);
 
       if (
-        this.config.useExpiry &&
-        document.expiresAt &&
-        isAfter(document.expiresAt, new Date())
+        this.config.ttlAttribute &&
+        isDate(document[this.config.ttlAttribute]) &&
+        isAfter(document[this.config.ttlAttribute] as Date, new Date())
       ) {
         return null;
       }
 
-      if (this.config.useSoftDelete && document.deletedAt) {
+      if (this.config.deleteAttribute && document[this.config.deleteAttribute]) {
         return null;
       }
 
@@ -488,7 +497,16 @@ export class ElasticRepository<
     const updated = this.updateEntityData(entity);
 
     try {
-      const { id, rev, seq, ...body } = updated;
+      const { id, ...body } = updated;
+
+      if (this.config.revisionAttribute) {
+        delete body[this.config.revisionAttribute as keyof Omit<E, "id">];
+      }
+
+      if (this.config.sequenceAttribute) {
+        delete body[this.config.sequenceAttribute as keyof Omit<E, "id">];
+      }
+
       const result = await this.client.index({
         refresh: "wait_for",
         index: this.index,
@@ -510,8 +528,8 @@ export class ElasticRepository<
           id: result._id,
           message: result.result,
           primaryTerm: result._primary_term,
-          rev: result._version,
-          seq: result._seq_no,
+          version: result._version,
+          seqNo: result._seq_no,
         },
         time: Date.now() - start,
       });
@@ -534,7 +552,15 @@ export class ElasticRepository<
       this.validateEntity(entity);
 
       const updated = this.updateEntityData(entity);
-      const { id, primaryTerm, rev, seq, ...doc } = updated;
+      const { id, ...doc } = updated;
+
+      if (this.config.revisionAttribute) {
+        delete doc[this.config.revisionAttribute as keyof Omit<E, "id">];
+      }
+
+      if (this.config.sequenceAttribute) {
+        delete doc[this.config.sequenceAttribute as keyof Omit<E, "id">];
+      }
 
       actions.push({ index: { _index: this.index, _id: id } });
       actions.push(doc);
@@ -579,37 +605,59 @@ export class ElasticRepository<
   }
 
   public async save(entity: E): Promise<E> {
-    if (entity.rev === 0) {
-      return this.insert(entity);
+    if (this.config.revisionAttribute) {
+      if (entity[this.config.revisionAttribute] === 0) {
+        return this.insert(entity);
+      }
+      return this.update(entity);
     }
-    return this.update(entity);
+
+    try {
+      return this.insert(entity);
+    } catch (_) {
+      return this.update(entity);
+    }
   }
 
   public async saveBulk(entities: Array<E>): Promise<Array<E>> {
-    const toInsert = entities.filter((e) => e.rev === 0);
-    const inserted = toInsert.length ? await this.insertBulk(toInsert) : [];
+    if (this.config.revisionAttribute) {
+      const toInsert = entities.filter(
+        (e) => (e[this.config.revisionAttribute as keyof E] as number) === 0,
+      );
+      const inserted = toInsert.length ? await this.insertBulk(toInsert) : [];
 
-    const toUpdate = entities.filter((e) => e.rev !== 0);
-    const updated = toUpdate.length ? await this.updateBulk(toUpdate) : [];
+      const toUpdate = entities.filter(
+        (e) => (e[this.config.revisionAttribute as keyof E] as number) !== 0,
+      );
+      const updated = toUpdate.length ? await this.updateBulk(toUpdate) : [];
 
-    return entities.map(
-      (entity) =>
-        inserted.find((e) => e.id === entity.id) ??
-        updated.find((e) => e.id === entity.id) ??
-        entity,
-    );
+      return entities.map(
+        (entity) =>
+          inserted.find((e) => e.id === entity.id) ??
+          updated.find((e) => e.id === entity.id) ??
+          entity,
+      );
+    }
+
+    return Promise.all(entities.map((e) => this.save(e)));
   }
 
   public async softDelete(query: QueryDslBoolQuery): Promise<void> {
     const start = Date.now();
+
+    if (!this.config.deleteAttribute) {
+      throw new ElasticRepositoryError("Soft delete is not enabled");
+    }
+
+    const softDelete = this.config.deleteAttribute.toString();
 
     try {
       const result = await this.client.updateByQuery({
         index: this.index,
         body: {
           script: {
-            source: "ctx._source.deletedAt = params.deletedAt",
-            params: { deletedAt: new Date().toISOString() },
+            source: `ctx._source.${softDelete} = params.${softDelete}`,
+            params: { [softDelete]: new Date().toISOString() },
           },
           query: { bool: query },
         },
@@ -633,6 +681,12 @@ export class ElasticRepository<
   public async softDeleteById(id: string): Promise<void> {
     const start = Date.now();
 
+    if (!this.config.deleteAttribute) {
+      throw new ElasticRepositoryError("Soft delete is not enabled");
+    }
+
+    const softDelete = this.config.deleteAttribute.toString();
+
     try {
       const result = await this.client.update({
         refresh: "wait_for",
@@ -640,8 +694,8 @@ export class ElasticRepository<
         id,
         body: {
           script: {
-            source: "ctx._source.deletedAt = params.deletedAt",
-            params: { deletedAt: new Date().toISOString() },
+            source: `ctx._source.${softDelete} = params.${softDelete}`,
+            params: { [softDelete]: new Date().toISOString() },
           },
         },
       });
@@ -685,13 +739,30 @@ export class ElasticRepository<
     const updated = this.updateEntityData(entity);
 
     try {
-      const { id, primaryTerm, rev, seq, ...doc } = updated;
+      const { id, ...doc } = updated;
+
+      if (this.config.primaryTermAttribute) {
+        delete doc[this.config.primaryTermAttribute as keyof Omit<E, "id">];
+      }
+
+      if (this.config.revisionAttribute) {
+        delete doc[this.config.revisionAttribute as keyof Omit<E, "id">];
+      }
+
+      if (this.config.sequenceAttribute) {
+        delete doc[this.config.sequenceAttribute as keyof Omit<E, "id">];
+      }
+
       const result = await this.client.update({
         refresh: "wait_for",
         index: this.index,
         id,
-        if_primary_term: primaryTerm,
-        if_seq_no: seq,
+        ...(this.config.primaryTermAttribute && {
+          if_primary_term: updated[this.config.primaryTermAttribute] as number,
+        }),
+        ...(this.config.sequenceAttribute && {
+          if_seq_no: updated[this.config.sequenceAttribute] as number,
+        }),
         body: { doc },
       });
 
@@ -720,9 +791,15 @@ export class ElasticRepository<
       return this.create({
         ...updated,
         id: result._id,
-        primaryTerm: result._primary_term,
-        rev: result._version,
-        seq: result._seq_no,
+        ...(this.config.primaryTermAttribute && {
+          [this.config.primaryTermAttribute]: result._primary_term,
+        }),
+        ...(this.config.revisionAttribute && {
+          [this.config.revisionAttribute]: result._version,
+        }),
+        ...(this.config.sequenceAttribute && {
+          [this.config.sequenceAttribute]: result._seq_no,
+        }),
       });
     } catch (error: any) {
       this.logger.error("Repository error", error);
@@ -739,14 +816,30 @@ export class ElasticRepository<
       this.validateEntity(entity);
 
       const updated = this.updateEntityData(entity);
-      const { id, primaryTerm, rev, seq, ...doc } = updated;
+      const { id, ...doc } = updated;
+
+      if (this.config.primaryTermAttribute) {
+        delete doc[this.config.primaryTermAttribute as keyof Omit<E, "id">];
+      }
+
+      if (this.config.revisionAttribute) {
+        delete doc[this.config.revisionAttribute as keyof Omit<E, "id">];
+      }
+
+      if (this.config.sequenceAttribute) {
+        delete doc[this.config.sequenceAttribute as keyof Omit<E, "id">];
+      }
 
       actions.push({
         update: {
           _index: this.index,
           _id: id,
-          if_primary_term: primaryTerm,
-          if_seq_no: seq,
+          ...(this.config.primaryTermAttribute && {
+            if_primary_term: updated[this.config.primaryTermAttribute] as number,
+          }),
+          ...(this.config.sequenceAttribute && {
+            if_seq_no: updated[this.config.sequenceAttribute] as number,
+          }),
         },
       });
       actions.push({ doc });
@@ -821,13 +914,15 @@ export class ElasticRepository<
 
       const entity = this.handleHit(result.hits.hits[0]);
 
-      if (!entity.expiresAt) {
+      if (!this.config.ttlAttribute || !isDate(entity[this.config.ttlAttribute])) {
         throw new ElasticRepositoryError("Entity does not have ttl", {
           debug: { entity },
         });
       }
 
-      return Math.round((entity.expiresAt.getTime() - Date.now()) / 1000);
+      return Math.round(
+        ((entity[this.config.ttlAttribute] as Date).getTime() - Date.now()) / 1000,
+      );
     } catch (error: any) {
       this.logger.error("Repository error", error);
       throw new ElasticRepositoryError("Failed to get ttl for entity", { error });
@@ -853,13 +948,15 @@ export class ElasticRepository<
 
       const entity = this.handleHit(result);
 
-      if (!entity.expiresAt) {
+      if (!this.config.ttlAttribute || !isDate(entity[this.config.ttlAttribute])) {
         throw new ElasticRepositoryError("Entity does not have ttl", {
           debug: { entity },
         });
       }
 
-      return Math.round((entity.expiresAt.getTime() - Date.now()) / 1000);
+      return Math.round(
+        ((entity[this.config.ttlAttribute] as Date).getTime() - Date.now()) / 1000,
+      );
     } catch (error: any) {
       this.logger.error("Repository error", error);
       throw new ElasticRepositoryError("Failed to get ttl for entity", { error });
@@ -868,7 +965,7 @@ export class ElasticRepository<
 
   // private
 
-  private static createIndexName<E extends IElasticEntity>(
+  private static createIndexName<E extends IEntityBase>(
     options: ElasticRepositoryOptions<E>,
   ): string {
     const baseName = snakeCase(options.Entity.name);
@@ -883,12 +980,14 @@ export class ElasticRepository<
       mustNot.push(...(isArray(query.must_not) ? query.must_not : [query.must_not]));
     }
 
-    if (this.config.useExpiry) {
-      mustNot.push({ range: { expiresAt: { lte: new Date().toISOString() } } });
+    if (this.config.ttlAttribute) {
+      mustNot.push({
+        range: { [this.config.ttlAttribute]: { lte: new Date().toISOString() } },
+      });
     }
 
-    if (this.config.useSoftDelete) {
-      mustNot.push({ exists: { field: "deletedAt" } });
+    if (this.config.deleteAttribute) {
+      mustNot.push({ exists: { field: this.config.deleteAttribute } });
     }
 
     return { ...query, must_not: mustNot };
@@ -896,17 +995,21 @@ export class ElasticRepository<
 
   private defaultUpdateFilter(entity: E): QueryDslBoolQuery {
     const result: QueryDslBoolQuery = {
-      must: [{ term: { id: entity.id } }, { term: { rev: entity.rev } }],
+      must: [{ term: { id: entity.id } }],
     };
 
     result.must_not = [];
 
-    if (this.config.useExpiry) {
-      result.must_not.push({ range: { expiresAt: { lte: "now" } } });
+    if (this.config.ttlAttribute) {
+      result.must_not.push({
+        range: { [this.config.ttlAttribute]: { lte: "now" } },
+      });
     }
 
-    if (this.config.useSoftDelete) {
-      result.must_not.push({ exists: { field: "deletedAt" } });
+    if (this.config.deleteAttribute) {
+      result.must_not.push({
+        exists: { field: this.config.deleteAttribute.toString() },
+      });
     }
 
     return result;
@@ -924,9 +1027,15 @@ export class ElasticRepository<
     return this.create({
       ...hit._source,
       id: hit._id,
-      primaryTerm: hit._primary_term,
-      rev: hit._version,
-      seq: hit._seq_no,
+      ...(this.config.primaryTermAttribute && {
+        [this.config.primaryTermAttribute]: hit._primary_term,
+      }),
+      ...(this.config.revisionAttribute && {
+        [this.config.revisionAttribute]: hit._version,
+      }),
+      ...(this.config.sequenceAttribute && {
+        [this.config.sequenceAttribute]: hit._seq_no,
+      }),
     });
   }
 
@@ -941,22 +1050,12 @@ export class ElasticRepository<
   private validateBaseEntity(entity: E): void {
     z.object({
       id: z.string().uuid(),
-      primaryTerm: z.number().int().min(0),
-      rev: z.number().int().min(0),
-      seq: z.number().int().min(0),
       createdAt: z.date(),
       updatedAt: z.date(),
-      deletedAt: z.date().nullable(),
-      expiresAt: z.date().nullable(),
     }).parse({
       id: entity.id,
-      primaryTerm: entity.primaryTerm,
-      rev: entity.rev,
-      seq: entity.seq,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
-      deletedAt: entity.deletedAt,
-      expiresAt: entity.expiresAt,
     });
   }
 
@@ -964,19 +1063,11 @@ export class ElasticRepository<
     this.validateBaseEntity(entity);
 
     if (isFunction(this.validateFn)) {
-      const {
-        id,
-        primaryTerm,
-        rev,
-        seq,
-        createdAt,
-        updatedAt,
-        deletedAt,
-        expiresAt,
-        ...rest
-      } = entity;
+      const { id, createdAt, updatedAt, ...rest } = entity;
 
       this.validateFn(rest);
     }
+
+    this.logger.silly("Entity validated", { entity });
   }
 }

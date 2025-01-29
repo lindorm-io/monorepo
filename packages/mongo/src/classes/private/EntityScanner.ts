@@ -1,8 +1,8 @@
+import { IEntityBase } from "@lindorm/entity";
 import { isArray, isFunction, isObject, isString } from "@lindorm/is";
 import { IScanData, Scanner } from "@lindorm/scanner";
 import { Constructor, Dict } from "@lindorm/types";
 import { MongoSourceError } from "../../errors";
-import { IMongoEntity } from "../../interfaces";
 import { MongoIndexOptions, MongoSourceEntities, MongoSourceEntity } from "../../types";
 
 export class EntityScanner {
@@ -22,7 +22,7 @@ export class EntityScanner {
         (opts) =>
           !isObject(opts) &&
           !isString(opts) &&
-          (opts as Constructor<IMongoEntity>).prototype,
+          (opts as Constructor<IEntityBase>).prototype,
       )
       .map((i) => ({ Entity: i })) as Array<MongoSourceEntity>;
 

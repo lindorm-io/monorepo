@@ -1,9 +1,10 @@
 import { Client } from "@elastic/elasticsearch";
+import { IEntityBase } from "@lindorm/entity";
 import { ILogger } from "@lindorm/logger";
 import { Constructor } from "@lindorm/types";
 import { sleep } from "@lindorm/utils";
 import { ElasticSourceError } from "../errors";
-import { IElasticEntity, IElasticRepository, IElasticSource } from "../interfaces";
+import { IElasticRepository, IElasticSource } from "../interfaces";
 import {
   CloneElasticSourceOptions,
   ElasticSourceEntities,
@@ -73,7 +74,7 @@ export class ElasticSource implements IElasticSource {
     await this.client.close();
   }
 
-  public repository<E extends IElasticEntity>(
+  public repository<E extends IEntityBase>(
     Entity: Constructor<E>,
     options: ElasticSourceRepositoryOptions<E> = {},
   ): IElasticRepository<E> {
@@ -101,13 +102,13 @@ export class ElasticSource implements IElasticSource {
 
   // private
 
-  private entityConfig<E extends IElasticEntity>(
+  private entityConfig<E extends IEntityBase>(
     Entity: Constructor<E>,
   ): ElasticSourceEntity<E> {
     const config = this.entities.find((entity) => entity.Entity === Entity);
 
     if (config) {
-      return config as ElasticSourceEntity<E>;
+      return config as unknown as ElasticSourceEntity<E>;
     }
 
     throw new ElasticSourceError("Entity not found in entities list", {

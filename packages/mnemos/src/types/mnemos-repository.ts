@@ -1,19 +1,18 @@
+import { IEntityBase } from "@lindorm/entity";
 import { ILogger } from "@lindorm/logger";
-import { Constructor, DeepPartial } from "@lindorm/types";
-import { IMnemosCache, IMnemosEntity } from "../interfaces";
+import { Constructor } from "@lindorm/types";
+import { IMnemosCache } from "../interfaces";
 import { MnemosConstraint } from "./mnemos-collection";
+import {
+  CreateMnemosEntityFn,
+  MnemosEntityConfig,
+  ValidateMnemosEntityFn,
+} from "./mnemos-entity";
 
-export type CreateMnemosEntityFn<E extends IMnemosEntity = IMnemosEntity> = (
-  options: DeepPartial<E>,
-) => E;
-
-export type ValidateMnemosEntityFn<E extends IMnemosEntity = IMnemosEntity> = (
-  entity: Omit<E, "id" | "createdAt" | "updatedAt" | "expiresAt">,
-) => void;
-
-export type MnemosRepositoryOptions<E extends IMnemosEntity> = {
+export type MnemosRepositoryOptions<E extends IEntityBase> = {
   Entity: Constructor<E>;
   cache: IMnemosCache;
+  config?: MnemosEntityConfig<E>;
   constraints?: Array<MnemosConstraint<E>>;
   logger: ILogger;
   create?: CreateMnemosEntityFn<E>;

@@ -1,9 +1,9 @@
 import { QueryDslBoolQuery } from "@elastic/elasticsearch/lib/api/types";
+import { IEntityBase } from "@lindorm/entity";
 import { DeepPartial } from "@lindorm/types";
-import { IElasticEntity } from "./ElasticEntity";
 
 export interface IElasticRepository<
-  E extends IElasticEntity,
+  E extends IEntityBase,
   O extends DeepPartial<E> = DeepPartial<E>,
 > {
   create(options: O | E): E;

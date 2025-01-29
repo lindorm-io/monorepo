@@ -1,24 +1,27 @@
-import { isFunction } from "@lindorm/is";
+import { IEntityBase } from "@lindorm/entity";
+import { isDate, isFunction } from "@lindorm/is";
 import { ILogger } from "@lindorm/logger";
 import { Constructor, DeepPartial } from "@lindorm/types";
 import { Predicate } from "@lindorm/utils";
 import { randomUUID } from "crypto";
 import { z } from "zod";
 import { MnemosRepositoryError } from "../errors";
-import { IMnemosCollection, IMnemosEntity, IMnemosRepository } from "../interfaces";
+import { IMnemosCollection, IMnemosRepository } from "../interfaces";
 import {
   CreateMnemosEntityFn,
+  MnemosEntityConfig,
   MnemosRepositoryOptions,
   ValidateMnemosEntityFn,
 } from "../types";
 
 export class MnemosRepository<
-  E extends IMnemosEntity,
+  E extends IEntityBase,
   O extends DeepPartial<E> = DeepPartial<E>,
 > implements IMnemosRepository<E, O>
 {
   private readonly EntityConstructor: Constructor<E>;
   private readonly collection: IMnemosCollection<E>;
+  private readonly config: MnemosEntityConfig<E>;
   private readonly logger: ILogger;
   private readonly createFn: CreateMnemosEntityFn<E> | undefined;
   private readonly validateFn: ValidateMnemosEntityFn<E> | undefined;
@@ -28,6 +31,7 @@ export class MnemosRepository<
 
     this.EntityConstructor = options.Entity;
     this.collection = options.cache.collection(options.Entity.name, options);
+    this.config = options.config ?? {};
 
     this.createFn = options.create;
     this.validateFn = options.validate;
@@ -35,17 +39,16 @@ export class MnemosRepository<
   // public static
 
   public static createEntity<
-    E extends IMnemosEntity,
+    E extends IEntityBase,
     O extends DeepPartial<E> = DeepPartial<E>,
   >(Entity: Constructor<E>, options: O | E): E {
     const entity = new Entity();
 
-    const { id, createdAt, updatedAt, expiresAt, ...rest } = options as E;
+    const { id, createdAt, updatedAt, ...rest } = options as E;
 
     entity.id = id ?? entity.id ?? randomUUID();
     entity.createdAt = createdAt ?? entity.createdAt ?? new Date();
     entity.updatedAt = updatedAt ?? entity.updatedAt ?? new Date();
-    entity.expiresAt = expiresAt ?? (entity.expiresAt as Date) ?? null;
 
     for (const [key, value] of Object.entries(rest)) {
       entity[key as keyof E] = (value ?? null) as E[keyof E];
@@ -242,13 +245,15 @@ export class MnemosRepository<
       throw new MnemosRepositoryError("Entity not found", { debug: { predicate } });
     }
 
-    if (!entity.expiresAt) {
+    if (!this.config.ttlAttribute || !isDate(entity[this.config.ttlAttribute])) {
       throw new MnemosRepositoryError("Entity does not have ttl", {
-        debug: { predicate },
+        debug: { entity },
       });
     }
 
-    return Math.round((entity.expiresAt.getTime() - Date.now()) / 1000);
+    return Math.round(
+      ((entity[this.config.ttlAttribute] as Date).getTime() - Date.now()) / 1000,
+    );
   }
 
   public ttlById(id: string): number {
@@ -260,7 +265,12 @@ export class MnemosRepository<
   private createDefaultPredicate(predicate: Predicate<E> = {}): Predicate<E> {
     return {
       ...predicate,
-      $or: [{ expiresAt: null }, { expiresAt: { $gt: new Date() } }],
+      ...(this.config.ttlAttribute && {
+        $or: [
+          { [this.config.ttlAttribute]: null },
+          { [this.config.ttlAttribute]: { $gt: new Date() } },
+        ],
+      }),
     };
   }
 
@@ -273,12 +283,10 @@ export class MnemosRepository<
       id: z.string().uuid(),
       createdAt: z.date(),
       updatedAt: z.date(),
-      expiresAt: z.date().nullable(),
     }).parse({
       id: entity.id,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
-      expiresAt: entity.expiresAt,
     });
   }
 
@@ -286,9 +294,11 @@ export class MnemosRepository<
     this.validateBaseEntity(entity);
 
     if (isFunction(this.validateFn)) {
-      const { id, createdAt, updatedAt, expiresAt, ...rest } = entity;
+      const { id, createdAt, updatedAt, ...rest } = entity;
 
       this.validateFn(rest);
     }
+
+    this.logger.silly("Entity validated", { entity });
   }
 }

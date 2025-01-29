@@ -1,8 +1,8 @@
+import { IEntityBase } from "@lindorm/entity";
 import { isFunction, isObject, isString } from "@lindorm/is";
 import { IScanData, Scanner } from "@lindorm/scanner";
 import { Constructor, Dict } from "@lindorm/types";
 import { ElasticSourceError } from "../../errors";
-import { IElasticEntity } from "../../interfaces";
 import { ElasticSourceEntities, ElasticSourceEntity } from "../../types";
 
 export class EntityScanner {
@@ -22,7 +22,7 @@ export class EntityScanner {
         (opts) =>
           !isObject(opts) &&
           !isString(opts) &&
-          (opts as Constructor<IElasticEntity>).prototype,
+          (opts as Constructor<IEntityBase>).prototype,
       )
       .map((i) => ({ Entity: i })) as Array<ElasticSourceEntity>;
 

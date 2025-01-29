@@ -1,6 +1,6 @@
 import { IMongoFile } from "../interfaces";
 
-export class MongoFileBase implements IMongoFile {
+export class MongoFile implements IMongoFile {
   public readonly chunkSize!: number;
   public readonly filename!: string;
   public readonly length!: number;

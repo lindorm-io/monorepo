@@ -31,7 +31,13 @@ describe("EntityScanner", () => {
     expect(
       EntityScanner.scan([join(__dirname, "..", "..", "__fixtures__", "entities")]),
     ).toEqual([
-      { Entity: TestEntityOne, validate: expect.any(Function) },
+      {
+        Entity: TestEntityOne,
+        config: {
+          ttlAttribute: "expiresAt",
+        },
+        validate: expect.any(Function),
+      },
       { Entity: TestEntityTwo },
     ]);
   });

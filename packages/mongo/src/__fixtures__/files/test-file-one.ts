@@ -1,11 +1,11 @@
-import { MongoFileBase } from "../../classes";
+import { MongoFile } from "../../classes";
 import { ValidateMongoFileFn } from "../../types";
 
 export type TestFileOneOptions = {
   name: string;
 };
 
-export class TestFileOne extends MongoFileBase {
+export class TestFileOne extends MongoFile {
   public readonly name!: string;
 }
 

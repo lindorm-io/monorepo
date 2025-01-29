@@ -1,8 +1,8 @@
+import { IEntityBase } from "@lindorm/entity";
 import { isFunction, isObject, isString } from "@lindorm/is";
 import { IScanData, Scanner } from "@lindorm/scanner";
 import { Constructor, Dict } from "@lindorm/types";
 import { RedisSourceError } from "../../errors";
-import { IRedisEntity } from "../../interfaces";
 import { RedisSourceEntities, RedisSourceEntity } from "../../types";
 
 export class EntityScanner {
@@ -22,7 +22,7 @@ export class EntityScanner {
         (opts) =>
           !isObject(opts) &&
           !isString(opts) &&
-          (opts as Constructor<IRedisEntity>).prototype,
+          (opts as Constructor<IEntityBase>).prototype,
       )
       .map((i) => ({ Entity: i })) as Array<RedisSourceEntity>;
 
@@ -72,10 +72,15 @@ export class EntityScanner {
 
     for (const [key, value] of Object.entries(module)) {
       if (key === "default") continue;
-      if (result.Entity && result.create && result.validate) break;
+      if (result.Entity && result.create && result.config && result.validate) break;
 
       if (key === "create" && isFunction(value)) {
         result.create = value;
+        continue;
+      }
+
+      if (key === "config" && isObject(value)) {
+        result.config = value;
         continue;
       }
 

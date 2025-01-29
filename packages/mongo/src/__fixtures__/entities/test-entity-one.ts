@@ -1,20 +1,17 @@
-import { MongoEntityBase } from "../../classes";
+import { MONGO_ENTITY_CONFIG, MongoEntity } from "../../classes";
 import { ValidateMongoEntityFn } from "../../types";
-import { MongoEntityConfig } from "../../types/mongo-entity-config";
 
 export type TestEntityOneOptions = {
   email?: string;
   name: string;
 };
 
-export class TestEntityOne extends MongoEntityBase {
+export class TestEntityOne extends MongoEntity {
   public readonly email!: string | null;
   public readonly name!: string;
 }
 
-export const config: MongoEntityConfig = {
-  useSoftDelete: true,
-};
+export const config = MONGO_ENTITY_CONFIG;
 
 export const validate: ValidateMongoEntityFn<TestEntityOne> = (entity) => {
   if (!entity.email) {

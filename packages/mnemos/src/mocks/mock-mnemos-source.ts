@@ -1,5 +1,6 @@
+import { IEntityBase } from "@lindorm/entity";
 import { Constructor } from "@lindorm/types";
-import { IMnemosEntity, IMnemosSource } from "../interfaces";
+import { IMnemosSource } from "../interfaces";
 import {
   createMockMnemosEntityCallback,
   createMockMnemosRepository,
@@ -11,7 +12,7 @@ export const createMockMnemosSource = (): IMnemosSource => ({
   clone: jest.fn().mockImplementation(() => createMockMnemosSource()),
   repository: jest
     .fn()
-    .mockImplementation((Entity: Constructor<IMnemosEntity>) =>
+    .mockImplementation((Entity: Constructor<IEntityBase>) =>
       createMockMnemosRepository(createMockMnemosEntityCallback(Entity)),
     ),
 });

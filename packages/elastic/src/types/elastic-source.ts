@@ -1,25 +1,28 @@
 import { ClientOptions } from "@elastic/elasticsearch";
 import { MappingTypeMapping } from "@elastic/elasticsearch/lib/api/types";
+import { IEntityBase } from "@lindorm/entity";
 import { ILogger } from "@lindorm/logger";
 import { Constructor } from "@lindorm/types";
-import { IElasticEntity } from "../interfaces";
-import { ElasticEntityConfig } from "./elastic-entity-config";
-import { CreateElasticEntityFn, ValidateElasticEntityFn } from "./elastic-repository";
+import {
+  CreateElasticEntityFn,
+  ElasticEntityConfig,
+  ValidateElasticEntityFn,
+} from "./elastic-entity";
 
-export type ElasticSourceEntity<E extends IElasticEntity = IElasticEntity> = {
+export type ElasticSourceEntity<E extends IEntityBase = IEntityBase> = {
   Entity: Constructor<E>;
-  config?: ElasticEntityConfig;
+  config?: ElasticEntityConfig<E>;
   mappings?: MappingTypeMapping;
   create?: CreateElasticEntityFn<E>;
   validate?: ValidateElasticEntityFn<E>;
 };
 
 export type ElasticSourceEntities = Array<
-  Constructor<IElasticEntity> | ElasticSourceEntity | string
+  Constructor<IEntityBase> | ElasticSourceEntity | string
 >;
 
-export type ElasticSourceRepositoryOptions<E extends IElasticEntity> = {
-  config?: ElasticEntityConfig;
+export type ElasticSourceRepositoryOptions<E extends IEntityBase> = {
+  config?: ElasticEntityConfig<E>;
   create?: CreateElasticEntityFn<E>;
   logger?: ILogger;
   mappings?: MappingTypeMapping;

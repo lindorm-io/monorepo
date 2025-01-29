@@ -1,32 +1,18 @@
 import { Client } from "@elastic/elasticsearch";
 import { MappingTypeMapping } from "@elastic/elasticsearch/lib/api/types";
+import { IEntityBase } from "@lindorm/entity";
 import { ILogger } from "@lindorm/logger";
-import { Constructor, DeepPartial } from "@lindorm/types";
-import { IElasticEntity } from "../interfaces";
-import { ElasticEntityConfig } from "./elastic-entity-config";
+import { Constructor } from "@lindorm/types";
+import {
+  CreateElasticEntityFn,
+  ElasticEntityConfig,
+  ValidateElasticEntityFn,
+} from "./elastic-entity";
 
-export type CreateElasticEntityFn<E extends IElasticEntity = IElasticEntity> = (
-  options: DeepPartial<E>,
-) => E;
-
-export type ValidateElasticEntityFn<E extends IElasticEntity = IElasticEntity> = (
-  entity: Omit<
-    E,
-    | "id"
-    | "primaryTerm"
-    | "rev"
-    | "seq"
-    | "createdAt"
-    | "updatedAt"
-    | "deletedAt"
-    | "expiresAt"
-  >,
-) => void;
-
-export type ElasticRepositoryOptions<E extends IElasticEntity> = {
+export type ElasticRepositoryOptions<E extends IEntityBase> = {
   Entity: Constructor<E>;
   client: Client;
-  config?: ElasticEntityConfig;
+  config?: ElasticEntityConfig<E>;
   create?: CreateElasticEntityFn<E>;
   logger: ILogger;
   mappings?: MappingTypeMapping;

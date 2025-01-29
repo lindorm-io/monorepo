@@ -1,11 +1,11 @@
-import { MongoEntityBase } from "../classes";
+import { MongoEntity } from "../classes";
 
 export type TestEntityOptions = {
   email?: string;
   name: string;
 };
 
-export class TestEntity extends MongoEntityBase {
+export class TestEntity extends MongoEntity {
   public email!: string | null;
   public name!: string;
 }

@@ -1,5 +1,5 @@
 export * from "./MongoBucket";
-export * from "./MongoEntityBase";
-export * from "./MongoFileBase";
+export * from "./MongoEntity";
+export * from "./MongoFile";
 export * from "./MongoRepository";
 export * from "./MongoSource";

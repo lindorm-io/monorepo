@@ -1,7 +1,7 @@
-import { MongoEntityBase } from "../../classes";
+import { MongoEntity } from "../../classes";
 import { MongoIndexOptions } from "../../types";
 
-export class TestEntityTwo extends MongoEntityBase {
+export class TestEntityTwo extends MongoEntity {
   public readonly email!: undefined;
   public readonly name!: string;
   public readonly _test!: string;

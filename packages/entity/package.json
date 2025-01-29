@@ -19,7 +19,7 @@
     "integration": "compd --file docker-compose.yml jest --config jest.config.integration.js --watch",
     "integration:focus": "compd --file docker-compose.yml jest --config jest.config.integration.js --watch $1",
     "test": "jest --watch --",
-    "test:ci": "npm run test:unit",
+    "test:ci": "npm run typecheck:ci",
     "test:integration": "jest --config jest.config.integration.js --",
     "test:unit": "jest --config jest.config.js --",
     "typecheck": "tsc --watch",

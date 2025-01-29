@@ -1,6 +1,7 @@
 import { kebabCase } from "@lindorm/case";
 import { expires } from "@lindorm/date";
-import { isFunction, isString } from "@lindorm/is";
+import { IEntityBase } from "@lindorm/entity";
+import { isDate, isFunction, isString } from "@lindorm/is";
 import { Primitive } from "@lindorm/json-kit";
 import { ILogger } from "@lindorm/logger";
 import { Constructor, DeepPartial } from "@lindorm/types";
@@ -9,20 +10,22 @@ import { randomUUID } from "crypto";
 import { Redis } from "ioredis";
 import { z } from "zod";
 import { RedisRepositoryError } from "../errors";
-import { IRedisEntity, IRedisRepository } from "../interfaces";
+import { IRedisRepository } from "../interfaces";
 import {
   CreateRedisEntityFn,
+  RedisEntityConfig,
   RedisRepositoryOptions,
   ValidateRedisEntityFn,
 } from "../types";
 
 export class RedisRepository<
-  E extends IRedisEntity,
+  E extends IEntityBase,
   O extends DeepPartial<E> = DeepPartial<E>,
 > implements IRedisRepository<E, O>
 {
   private readonly EntityConstructor: Constructor<E>;
   private readonly client: Redis;
+  private readonly config: RedisEntityConfig<E>;
   private readonly keyPattern: string;
   private readonly logger: ILogger;
   private readonly createFn: CreateRedisEntityFn<E> | undefined;
@@ -34,6 +37,7 @@ export class RedisRepository<
     this.EntityConstructor = options.Entity;
     this.keyPattern = this.createKeyPattern(options);
     this.client = options.client;
+    this.config = options.config ?? {};
 
     this.createFn = options.create;
     this.validateFn = options.validate;
@@ -42,17 +46,16 @@ export class RedisRepository<
   // public static
 
   public static createEntity<
-    E extends IRedisEntity,
+    E extends IEntityBase,
     O extends DeepPartial<E> = DeepPartial<E>,
   >(Entity: Constructor<E>, options: O | E): E {
     const entity = new Entity();
 
-    const { id, createdAt, updatedAt, expiresAt, ...rest } = options as E;
+    const { id, createdAt, updatedAt, ...rest } = options as E;
 
     entity.id = id ?? entity.id ?? randomUUID();
     entity.createdAt = createdAt ?? entity.createdAt ?? new Date();
     entity.updatedAt = updatedAt ?? entity.updatedAt ?? new Date();
-    entity.expiresAt = expiresAt ?? (entity.expiresAt as Date) ?? null;
 
     for (const [key, value] of Object.entries(rest)) {
       if (key === "_id") continue;
@@ -74,9 +77,9 @@ export class RedisRepository<
       ? this.createFn(options)
       : RedisRepository.createEntity(this.EntityConstructor, options);
 
-    this.validateBaseEntity(entity);
-
     this.logger.debug("Created entity", { entity });
+
+    this.validateEntity(entity);
 
     return entity;
   }
@@ -272,10 +275,13 @@ export class RedisRepository<
 
     try {
       const updated = this.updateEntityData(entity);
+      const data = new Primitive(updated).toString();
 
       const key = this.key(entity);
-      const ttl = entity.expiresAt ? expires(entity.expiresAt) : null;
-      const data = new Primitive(updated).toString();
+      const ttl =
+        this.config.ttlAttribute && isDate(entity[this.config.ttlAttribute])
+          ? expires(entity[this.config.ttlAttribute] as Date)
+          : null;
 
       let result: string | null;
 
@@ -395,12 +401,10 @@ export class RedisRepository<
       id: z.string().uuid(),
       createdAt: z.date(),
       updatedAt: z.date(),
-      expiresAt: z.date().nullable(),
     }).parse({
       id: entity.id,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
-      expiresAt: entity.expiresAt,
     });
   }
 
@@ -408,8 +412,11 @@ export class RedisRepository<
     this.validateBaseEntity(entity);
 
     if (isFunction(this.validateFn)) {
-      const { id, createdAt, updatedAt, expiresAt, ...rest } = entity;
+      const { id, createdAt, updatedAt, ...rest } = entity;
+
       this.validateFn(rest);
     }
+
+    this.logger.silly("Entity validated", { entity });
   }
 }

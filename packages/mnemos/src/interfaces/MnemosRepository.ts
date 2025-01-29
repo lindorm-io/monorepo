@@ -1,9 +1,9 @@
+import { IEntityBase } from "@lindorm/entity";
 import { DeepPartial } from "@lindorm/types";
 import { Predicate } from "@lindorm/utils";
-import { IMnemosEntity } from "./MnemosEntity";
 
 export interface IMnemosRepository<
-  E extends IMnemosEntity,
+  E extends IEntityBase,
   O extends DeepPartial<E> = DeepPartial<E>,
 > {
   create(options?: O | E): E;

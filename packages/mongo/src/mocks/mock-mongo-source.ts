@@ -1,5 +1,6 @@
+import { IEntityBase } from "@lindorm/entity";
 import { Constructor } from "@lindorm/types";
-import { IMongoEntity, IMongoFile, IMongoSource } from "../interfaces";
+import { IMongoFile, IMongoSource } from "../interfaces";
 import { createMockMongoBucket, createMockMongoFileCallback } from "./mock-mongo-bucket";
 import {
   createMockMongoEntityCallback,
@@ -23,7 +24,7 @@ export const createMockMongoSource = (): IMongoSource => ({
     ),
   repository: jest
     .fn()
-    .mockImplementation((Entity: Constructor<IMongoEntity>) =>
+    .mockImplementation((Entity: Constructor<IEntityBase>) =>
       createMockMongoRepository(createMockMongoEntityCallback(Entity)),
     ),
 });

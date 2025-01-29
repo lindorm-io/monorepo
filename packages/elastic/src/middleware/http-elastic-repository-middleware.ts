@@ -1,13 +1,14 @@
 import { camelCase } from "@lindorm/case";
+import { IEntityBase } from "@lindorm/entity";
 import { isObject } from "@lindorm/is";
 import { Constructor } from "@lindorm/types";
-import { IElasticEntity, IElasticSource } from "../interfaces";
+import { IElasticSource } from "../interfaces";
 import { ElasticPylonHttpContext, ElasticPylonHttpMiddleware } from "../types";
 
 export const createHttpElasticRepositoryMiddleware = <
   C extends ElasticPylonHttpContext = ElasticPylonHttpContext,
 >(
-  entities: Array<Constructor<IElasticEntity>>,
+  entities: Array<Constructor<IEntityBase>>,
   source?: IElasticSource,
 ): ElasticPylonHttpMiddleware<C> => {
   return async function httpElasticRepositoryMiddleware(ctx, next): Promise<void> {

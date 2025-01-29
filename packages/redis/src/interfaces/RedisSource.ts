@@ -1,3 +1,4 @@
+import { IEntityBase } from "@lindorm/entity";
 import { Constructor } from "@lindorm/types";
 import { Redis } from "ioredis";
 import {
@@ -5,7 +6,6 @@ import {
   RedisSourceEntities,
   RedisSourceRepositoryOptions,
 } from "../types";
-import { IRedisEntity } from "./RedisEntity";
 import { IRedisRepository } from "./RedisRepository";
 
 export interface IRedisSource {
@@ -15,7 +15,7 @@ export interface IRedisSource {
   clone(options?: CloneRedisSourceOptions): IRedisSource;
   connect(): Promise<void>;
   disconnect(): Promise<void>;
-  repository<E extends IRedisEntity>(
+  repository<E extends IEntityBase>(
     Entity: Constructor<E>,
     options?: RedisSourceRepositoryOptions<E>,
   ): IRedisRepository<E>;

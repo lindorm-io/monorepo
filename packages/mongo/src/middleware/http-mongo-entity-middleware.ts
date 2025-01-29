@@ -1,12 +1,13 @@
 import { camelCase } from "@lindorm/case";
+import { IEntityBase } from "@lindorm/entity";
 import { ClientError } from "@lindorm/errors";
 import { isObject } from "@lindorm/is";
 import { Constructor, Dict } from "@lindorm/types";
 import { get } from "object-path";
-import { IMongoEntity, IMongoSource } from "../interfaces";
+import { IMongoSource } from "../interfaces";
 import { MongoPylonHttpContext, MongoPylonHttpMiddleware } from "../types";
 
-type Path<E extends Constructor<IMongoEntity>> =
+type Path<E extends Constructor<IEntityBase>> =
   | { [K in keyof InstanceType<E>]?: string }
   | string;
 
@@ -18,7 +19,7 @@ type Options = {
 export const createHttpMongoEntityMiddleware =
   <
     C extends MongoPylonHttpContext = MongoPylonHttpContext,
-    E extends Constructor<IMongoEntity> = Constructor<IMongoEntity>,
+    E extends Constructor<IEntityBase> = Constructor<IEntityBase>,
   >(
     Entity: E,
     source?: IMongoSource,

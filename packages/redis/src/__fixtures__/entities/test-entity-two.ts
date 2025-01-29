@@ -1,6 +1,6 @@
-import { RedisEntityBase } from "../../classes";
+import { RedisEntity } from "../../classes";
 
-export class TestEntityTwo extends RedisEntityBase {
+export class TestEntityTwo extends RedisEntity {
   public readonly email!: string;
   public readonly name!: string;
   public readonly _test!: string;
