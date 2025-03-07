@@ -2,6 +2,8 @@ export * from "./diff";
 export * from "./filter";
 export * from "./find";
 export * from "./find-last";
+export * from "./noop";
+export * from "./parse-string-record";
 export * from "./remove";
 export * from "./remove-empty";
 export * from "./remove-undefined";
