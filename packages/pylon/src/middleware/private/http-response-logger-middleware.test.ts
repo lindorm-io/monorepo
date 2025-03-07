@@ -1,12 +1,11 @@
 import { createMockLogger } from "@lindorm/logger";
-import { httpSessionLoggerMiddleware } from "./http-session-logger-middleware";
+import { httpResponseLoggerMiddleware } from "./http-response-logger-middleware";
 
-describe("httpSessionLoggerMiddleware", () => {
+describe("httpResponseLoggerMiddleware", () => {
   let ctx: any;
 
   beforeEach(() => {
     ctx = {
-      data: "data",
       metadata: "metadata",
       logger: createMockLogger(),
       request: {
@@ -32,34 +31,13 @@ describe("httpSessionLoggerMiddleware", () => {
     };
   });
 
-  test("should log session information", async () => {
-    await expect(httpSessionLoggerMiddleware(ctx, jest.fn())).resolves.toBeUndefined();
-
-    expect(ctx.logger.info).toHaveBeenCalledWith("Service request", {
-      metadata: "metadata",
-      request: {
-        body: "request.body",
-        data: "data",
-        header: "request.header",
-        method: "request.method",
-        query: undefined,
-        url: "request.url",
-        userAgent: {
-          browser: "browser",
-          geoIp: "geoIp",
-          os: "os",
-          platform: "platform",
-          source: "source",
-          version: "version",
-        },
-      },
-    });
+  test("should log response information", async () => {
+    await expect(httpResponseLoggerMiddleware(ctx, jest.fn())).resolves.toBeUndefined();
 
     expect(ctx.logger.info).toHaveBeenCalledWith("Service response", {
       metadata: "metadata",
       request: {
         body: "request.body",
-        data: "data",
         files: undefined,
         header: "request.header",
         method: "request.method",
@@ -77,19 +55,10 @@ describe("httpSessionLoggerMiddleware", () => {
       },
       response: {
         body: "response.body",
-        headers: "response.header",
+        header: "response.header",
         message: "response.message",
         status: "response.status",
       },
-      time: expect.any(Number),
     });
-  });
-
-  test("should log session error", async () => {
-    const next = () => Promise.reject(new Error("error"));
-
-    await expect(httpSessionLoggerMiddleware(ctx, next)).resolves.toBeUndefined();
-
-    expect(ctx.logger.error).toHaveBeenCalledWith("Service error", new Error("error"));
   });
 });

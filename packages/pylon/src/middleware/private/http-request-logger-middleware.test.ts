@@ -1,0 +1,56 @@
+import { createMockLogger } from "@lindorm/logger";
+import { httpRequestLoggerMiddleware } from "./http-request-logger-middleware";
+
+describe("httpRequestLoggerMiddleware", () => {
+  let ctx: any;
+
+  beforeEach(() => {
+    ctx = {
+      metadata: "metadata",
+      logger: createMockLogger(),
+      request: {
+        body: "request.body",
+        header: "request.header",
+        method: "request.method",
+        url: "request.url",
+      },
+      response: {
+        body: "response.body",
+        header: "response.header",
+        message: "response.message",
+        status: "response.status",
+      },
+      userAgent: {
+        browser: "browser",
+        geoIp: "geoIp",
+        os: "os",
+        platform: "platform",
+        source: "source",
+        version: "version",
+      },
+    };
+  });
+
+  test("should log request information", async () => {
+    await expect(httpRequestLoggerMiddleware(ctx, jest.fn())).resolves.toBeUndefined();
+
+    expect(ctx.logger.info).toHaveBeenCalledWith("Service request", {
+      metadata: "metadata",
+      request: {
+        body: "request.body",
+        header: "request.header",
+        method: "request.method",
+        query: undefined,
+        url: "request.url",
+        userAgent: {
+          browser: "browser",
+          geoIp: "geoIp",
+          os: "os",
+          platform: "platform",
+          source: "source",
+          version: "version",
+        },
+      },
+    });
+  });
+});

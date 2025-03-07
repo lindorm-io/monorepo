@@ -11,12 +11,6 @@ export const httpErrorHandlerMiddleware: PylonHttpMiddleware = async (ctx, next)
       const status =
         err.status ?? err.statusCode ?? ServerError.Status.InternalServerError;
 
-      if (status >= 500) {
-        ctx.logger.error("Server error", err);
-      } else {
-        ctx.logger.warn("Client error", err);
-      }
-
       if (err instanceof RedirectError) {
         const url = new URL(err.redirect);
 
@@ -25,6 +19,9 @@ export const httpErrorHandlerMiddleware: PylonHttpMiddleware = async (ctx, next)
         }
         if (err.uri?.length) {
           url.searchParams.append("error_uri", err.uri);
+        }
+        if (err.support?.length) {
+          url.searchParams.append("support", err.support);
         }
         if (err.state?.length) {
           url.searchParams.append("state", err.state);
@@ -36,12 +33,12 @@ export const httpErrorHandlerMiddleware: PylonHttpMiddleware = async (ctx, next)
         ctx.body = {
           error: {
             id: err.id ?? randomUUID(),
-            code: err.code ?? "unknown_error",
-            data: err.data ?? {},
-            message: err.message,
             name: err.name ?? "Error",
-            support: randomBytes(8).toString("base64url"),
             title: err.title ?? "Error",
+            message: err.message,
+            code: err.code ?? "unknown_error",
+            support: err.support ?? randomBytes(8).toString("base64url"),
+            data: err.data ?? {},
           },
           server: "Pylon",
         };
@@ -51,12 +48,12 @@ export const httpErrorHandlerMiddleware: PylonHttpMiddleware = async (ctx, next)
       ctx.body = {
         error: {
           id: err.id ?? randomUUID(),
-          code: "unexpected_exception",
-          data: {},
-          message: "An unexpected exception occurred while handling thrown error",
           name: "UnexpectedException",
-          support: randomBytes(8).toString("base64url"),
           title: "Unexpected Exception",
+          message: "An unexpected exception occurred while handling thrown error",
+          code: "unexpected_exception",
+          support: randomBytes(8).toString("base64url"),
+          data: {},
         },
         server: "Pylon",
       };

@@ -1,3 +1,4 @@
+export * from "./cookies";
 export * from "./cors";
 export * from "./credentials";
 export * from "./http-callback";
@@ -8,6 +9,7 @@ export * from "./pylon-handler";
 export * from "./pylon-options";
 export * from "./pylon-socket";
 export * from "./pylon-socket-context";
+export * from "./session";
 export * from "./setup";
 export * from "./socket";
 export * from "./webhook-handler";

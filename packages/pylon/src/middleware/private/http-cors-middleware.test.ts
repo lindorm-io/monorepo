@@ -11,7 +11,7 @@ describe("httpCorsMiddleware", () => {
 
   beforeEach(() => {
     ctx = {
-      method: "post",
+      method: "OPTIONS",
       get: jest.fn(),
       set: jest.fn(),
       vary: jest.fn(),
@@ -31,19 +31,19 @@ describe("httpCorsMiddleware", () => {
 
     ctx.get.mockImplementation((header: string) => {
       switch (header) {
-        case "Access-Control-Request-Headers":
+        case "access-control-request-headers":
           return "allowed-header-1,allowed-header-2";
 
-        case "Access-Control-Request-Method":
+        case "access-control-request-method":
           return "post";
 
-        case "Access-Control-Request-Private-Network":
+        case "access-control-request-private-network":
           return "true";
 
-        case "Origin":
+        case "origin":
           return "http://localhost:3000";
 
-        case "X-Origin":
+        case "x-origin":
           return "http://localhost:3001";
 
         default:
@@ -54,54 +54,37 @@ describe("httpCorsMiddleware", () => {
 
   afterEach(jest.clearAllMocks);
 
-  test("should resolve options with arrays on a normal request", async () => {
+  test("should resolve next on a normal request", async () => {
+    ctx.method = "POST";
+
     await expect(createHttpCorsMiddleware(options)(ctx, next)).resolves.not.toThrow();
 
-    expect(ctx.set).toHaveBeenCalledWith("Access-Control-Allow-Credentials", "true");
-    expect(ctx.set).toHaveBeenCalledWith(
-      "Access-Control-Allow-Headers",
-      "allowed-header-1,allowed-header-2,allowed-header-3",
-    );
-    expect(ctx.set).toHaveBeenCalledWith(
-      "Access-Control-Allow-Methods",
-      "GET,POST,OPTIONS",
-    );
-    expect(ctx.set).toHaveBeenCalledWith(
-      "Access-Control-Allow-Origin",
-      "http://localhost:3000",
-    );
-    expect(ctx.set).toHaveBeenCalledWith(
-      "Access-Control-Expose-Headers",
-      "exposed-header-1,exposed-header-2",
-    );
-    expect(ctx.set).toHaveBeenCalledWith("Cross-Origin-Opener-Policy", "same-origin");
+    expect(ctx.set).not.toHaveBeenCalled();
   });
 
-  test("should resolve options with arrays on a preflight request", async () => {
-    ctx.method = "OPTIONS";
-
+  test("should resolve options with arrays", async () => {
     await expect(createHttpCorsMiddleware(options)(ctx, next)).resolves.not.toThrow();
 
-    expect(ctx.set).toHaveBeenCalledWith("Access-Control-Allow-Credentials", "true");
+    expect(ctx.set).toHaveBeenCalledWith("access-control-allow-credentials", "true");
     expect(ctx.set).toHaveBeenCalledWith(
-      "Access-Control-Allow-Headers",
+      "access-control-allow-headers",
       "allowed-header-1,allowed-header-2",
     );
-    expect(ctx.set).toHaveBeenCalledWith("Access-Control-Allow-Methods", "POST");
+    expect(ctx.set).toHaveBeenCalledWith("access-control-allow-methods", "POST");
     expect(ctx.set).toHaveBeenCalledWith(
-      "Access-Control-Allow-Origin",
+      "access-control-allow-origin",
       "http://localhost:3000",
     );
     expect(ctx.set).toHaveBeenCalledWith(
-      "Access-Control-Expose-Headers",
+      "access-control-expose-headers",
       "exposed-header-1,exposed-header-2",
     );
-    expect(ctx.set).toHaveBeenCalledWith("Cross-Origin-Embedder-Policy", "require-corp");
-    expect(ctx.set).toHaveBeenCalledWith("Cross-Origin-Opener-Policy", "same-origin");
-    expect(ctx.set).toHaveBeenCalledWith("Access-Control-Allow-Private-Network", "true");
+    expect(ctx.set).toHaveBeenCalledWith("cross-origin-embedder-policy", "require-corp");
+    expect(ctx.set).toHaveBeenCalledWith("cross-origin-opener-policy", "same-origin");
+    expect(ctx.set).toHaveBeenCalledWith("access-control-allow-private-network", "true");
   });
 
-  test("should resolve options with wildcards on a normal request", async () => {
+  test("should resolve options with wildcards", async () => {
     await expect(
       createHttpCorsMiddleware({
         allowHeaders: "*",
@@ -110,30 +93,12 @@ describe("httpCorsMiddleware", () => {
       })(ctx, next),
     ).resolves.not.toThrow();
 
-    expect(ctx.set).toHaveBeenCalledWith("Access-Control-Allow-Headers", "*");
-    expect(ctx.set).toHaveBeenCalledWith("Access-Control-Allow-Methods", "*");
-    expect(ctx.set).toHaveBeenCalledWith("Access-Control-Allow-Origin", "*");
-  });
-
-  test("should resolve options with wildcards on a preflight request", async () => {
-    ctx.method = "OPTIONS";
-
-    await expect(
-      createHttpCorsMiddleware({
-        allowHeaders: "*",
-        allowMethods: "*",
-        allowOrigins: "*",
-      })(ctx, next),
-    ).resolves.not.toThrow();
-
-    expect(ctx.set).toHaveBeenCalledWith("Access-Control-Allow-Headers", "*");
-    expect(ctx.set).toHaveBeenCalledWith("Access-Control-Allow-Methods", "*");
-    expect(ctx.set).toHaveBeenCalledWith("Access-Control-Allow-Origin", "*");
+    expect(ctx.set).toHaveBeenCalledWith("access-control-allow-headers", "*");
+    expect(ctx.set).toHaveBeenCalledWith("access-control-allow-methods", "*");
+    expect(ctx.set).toHaveBeenCalledWith("access-control-allow-origin", "*");
   });
 
   test("should immediately respond with CORS on preflight requests", async () => {
-    ctx.method = "OPTIONS";
-
     await expect(createHttpCorsMiddleware(options)(ctx, next)).resolves.not.toThrow();
 
     expect(ctx.status).toEqual(204);
@@ -150,7 +115,6 @@ describe("httpCorsMiddleware", () => {
   });
 
   test("should throw on invalid request origin during preflight", async () => {
-    ctx.method = "OPTIONS";
     options.allowOrigins = ["http://localhost:4000"];
 
     await expect(createHttpCorsMiddleware(options)(ctx, next)).resolves.not.toThrow();
@@ -170,13 +134,12 @@ describe("httpCorsMiddleware", () => {
     await expect(createHttpCorsMiddleware(options)(ctx, next)).resolves.not.toThrow();
 
     expect(ctx.set).not.toHaveBeenCalledWith(
-      "Access-Control-Allow-Origin",
+      "access-control-allow-origin",
       expect.anything(),
     );
   });
 
   test("should throw on invalid method in preflight", async () => {
-    ctx.method = "OPTIONS";
     options.allowMethods = [HttpMethod.Get];
 
     await expect(createHttpCorsMiddleware(options)(ctx, next)).resolves.not.toThrow();
@@ -188,7 +151,6 @@ describe("httpCorsMiddleware", () => {
   });
 
   test("should throw on invalid headers in preflight", async () => {
-    ctx.method = "OPTIONS";
     options.allowHeaders = ["allowed-header-1"];
 
     await expect(createHttpCorsMiddleware(options)(ctx, next)).resolves.not.toThrow();
@@ -200,15 +162,17 @@ describe("httpCorsMiddleware", () => {
   });
 
   test("should not set Access-Control-Allow-Private-Network if not requested", async () => {
-    ctx.method = "OPTIONS";
     ctx.get.mockImplementation((header: string) => {
       switch (header) {
-        case "Access-Control-Request-Headers":
+        case "access-control-request-headers":
           return "allowed-header-1,allowed-header-2";
-        case "Access-Control-Request-Method":
+
+        case "access-control-request-method":
           return "post";
-        case "Origin":
+
+        case "origin":
           return "http://localhost:3000";
+
         default:
           return null;
       }
@@ -217,7 +181,7 @@ describe("httpCorsMiddleware", () => {
     await expect(createHttpCorsMiddleware(options)(ctx, next)).resolves.not.toThrow();
 
     expect(ctx.set).not.toHaveBeenCalledWith(
-      "Access-Control-Allow-Private-Network",
+      "access-control-allow-private-network",
       "true",
     );
   });
@@ -228,9 +192,9 @@ describe("httpCorsMiddleware", () => {
 
     await expect(createHttpCorsMiddleware(options)(ctx, next)).resolves.not.toThrow();
 
-    expect(ctx.set).toHaveBeenCalledWith("Access-Control-Allow-Credentials", "true");
+    expect(ctx.set).toHaveBeenCalledWith("access-control-allow-credentials", "true");
     expect(ctx.set).toHaveBeenCalledWith(
-      "Access-Control-Allow-Origin",
+      "access-control-allow-origin",
       "http://localhost:3000",
     );
   });
@@ -241,7 +205,7 @@ describe("httpCorsMiddleware", () => {
     await expect(createHttpCorsMiddleware(options)(ctx, next)).resolves.not.toThrow();
 
     expect(ctx.set).not.toHaveBeenCalledWith(
-      "Access-Control-Allow-Origin",
+      "access-control-allow-origin",
       expect.anything(),
     );
   });

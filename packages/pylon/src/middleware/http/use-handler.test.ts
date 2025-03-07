@@ -67,14 +67,14 @@ describe("useHandler", () => {
 
     await expect(useHandler(handler)(ctx, jest.fn())).resolves.toBeUndefined();
 
-    expect(ctx.set).toHaveBeenCalledWith("Cache-Control", "max-age=123,immutable");
+    expect(ctx.set).toHaveBeenCalledWith("cache-control", "max-age=123,immutable");
     expect(ctx.set).toHaveBeenCalledWith(
-      "Content-Disposition",
+      "content-disposition",
       "attachment; filename=file/filename",
     );
-    expect(ctx.set).toHaveBeenCalledWith("Content-Length", "123");
-    expect(ctx.set).toHaveBeenCalledWith("Content-Type", "application/octet-stream");
-    expect(ctx.set).toHaveBeenCalledWith("Last-Modified", expect.any(String));
+    expect(ctx.set).toHaveBeenCalledWith("content-length", "123");
+    expect(ctx.set).toHaveBeenCalledWith("content-type", "application/octet-stream");
+    expect(ctx.set).toHaveBeenCalledWith("last-modified", expect.any(String));
 
     expect(ctx.type).toEqual("file/mimeType");
     expect(ctx.body).toEqual("file-stream");
@@ -95,14 +95,14 @@ describe("useHandler", () => {
 
     await expect(useHandler(handler)(ctx, jest.fn())).resolves.toBeUndefined();
 
-    expect(ctx.set).toHaveBeenCalledWith("Cache-Control", "max-age=123,immutable");
+    expect(ctx.set).toHaveBeenCalledWith("cache-control", "max-age=123,immutable");
     expect(ctx.set).toHaveBeenCalledWith(
-      "Content-Disposition",
+      "content-disposition",
       "attachment; filename=stream/filename",
     );
-    expect(ctx.set).toHaveBeenCalledWith("Content-Length", "123");
-    expect(ctx.set).toHaveBeenCalledWith("Content-Type", "application/octet-stream");
-    expect(ctx.set).toHaveBeenCalledWith("Last-Modified", expect.any(String));
+    expect(ctx.set).toHaveBeenCalledWith("content-length", "123");
+    expect(ctx.set).toHaveBeenCalledWith("content-type", "application/octet-stream");
+    expect(ctx.set).toHaveBeenCalledWith("last-modified", expect.any(String));
 
     expect(ctx.type).toEqual("stream/mimeType");
     expect(ctx.body).toEqual("stream/stream");

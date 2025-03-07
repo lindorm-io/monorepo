@@ -11,7 +11,7 @@ export const createHttpBasicAuthMiddleware = (
   }
 
   return async function httpBasicAuthMiddleware(ctx, next) {
-    const authorization = ctx.get("Authorization");
+    const authorization = ctx.get("authorization");
 
     if (!authorization) {
       throw new ClientError("Authorization header is required", {

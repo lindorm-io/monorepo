@@ -1,5 +1,5 @@
 import { ClientError, ServerError } from "@lindorm/errors";
-import { createMockLogger } from "@lindorm/logger";
+import { RedirectError } from "../../errors";
 import { httpErrorHandlerMiddleware } from "./http-error-handler-middleware";
 
 describe("httpErrorHandlerMiddleware", () => {
@@ -9,7 +9,6 @@ describe("httpErrorHandlerMiddleware", () => {
     ctx = {
       body: undefined,
       status: 204,
-      logger: createMockLogger(),
     };
   });
 
@@ -40,8 +39,6 @@ describe("httpErrorHandlerMiddleware", () => {
       },
       server: "Pylon",
     });
-
-    expect(ctx.logger.error).toHaveBeenCalled();
   });
 
   test("should handle thrown server errors", async () => {
@@ -71,8 +68,6 @@ describe("httpErrorHandlerMiddleware", () => {
       },
       server: "Pylon",
     });
-
-    expect(ctx.logger.error).toHaveBeenCalled();
   });
 
   test("should handle thrown client errors", async () => {
@@ -102,16 +97,11 @@ describe("httpErrorHandlerMiddleware", () => {
       },
       server: "Pylon",
     });
-
-    expect(ctx.logger.warn).toHaveBeenCalled();
   });
 
   test("should handle exceptions", async () => {
-    const next = () => Promise.reject(new Error("error message"));
-
-    ctx.logger.error.mockImplementationOnce(() => {
-      throw new Error("unexpected");
-    });
+    const next = () =>
+      Promise.reject(new RedirectError("error message", { redirect: "error" }));
 
     await expect(httpErrorHandlerMiddleware(ctx, next)).resolves.toBeUndefined();
 

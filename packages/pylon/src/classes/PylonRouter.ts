@@ -1,6 +1,6 @@
 import { DefaultState } from "koa";
 import Router, { IRouterOptions } from "koa-router";
-import { httpParamsMiddleware } from "../middleware/private";
+import { httpParamsParserMiddleware } from "../middleware/private";
 import { PylonHttpContext, PylonHttpMiddleware } from "../types";
 
 export class PylonRouter<C extends PylonHttpContext = PylonHttpContext> {
@@ -38,7 +38,7 @@ export class PylonRouter<C extends PylonHttpContext = PylonHttpContext> {
 
   public get(path: string, ...middleware: Array<PylonHttpMiddleware<C>>): PylonRouter<C> {
     if (path.includes("/:")) {
-      this._router.get(path, ...[httpParamsMiddleware, ...middleware]);
+      this._router.get(path, ...[httpParamsParserMiddleware, ...middleware]);
     } else {
       this._router.get(path, ...middleware);
     }
@@ -50,7 +50,7 @@ export class PylonRouter<C extends PylonHttpContext = PylonHttpContext> {
     ...middleware: Array<PylonHttpMiddleware<C>>
   ): PylonRouter<C> {
     if (path.includes("/:")) {
-      this._router.post(path, ...[httpParamsMiddleware, ...middleware]);
+      this._router.post(path, ...[httpParamsParserMiddleware, ...middleware]);
     } else {
       this._router.post(path, ...middleware);
     }
@@ -59,7 +59,7 @@ export class PylonRouter<C extends PylonHttpContext = PylonHttpContext> {
 
   public put(path: string, ...middleware: Array<PylonHttpMiddleware<C>>): PylonRouter<C> {
     if (path.includes("/:")) {
-      this._router.put(path, ...[httpParamsMiddleware, ...middleware]);
+      this._router.put(path, ...[httpParamsParserMiddleware, ...middleware]);
     } else {
       this._router.put(path, ...middleware);
     }
@@ -71,7 +71,7 @@ export class PylonRouter<C extends PylonHttpContext = PylonHttpContext> {
     ...middleware: Array<PylonHttpMiddleware<C>>
   ): PylonRouter<C> {
     if (path.includes("/:")) {
-      this._router.link(path, ...[httpParamsMiddleware, ...middleware]);
+      this._router.link(path, ...[httpParamsParserMiddleware, ...middleware]);
     } else {
       this._router.link(path, ...middleware);
     }
@@ -83,7 +83,7 @@ export class PylonRouter<C extends PylonHttpContext = PylonHttpContext> {
     ...middleware: Array<PylonHttpMiddleware<C>>
   ): PylonRouter<C> {
     if (path.includes("/:")) {
-      this._router.unlink(path, ...[httpParamsMiddleware, ...middleware]);
+      this._router.unlink(path, ...[httpParamsParserMiddleware, ...middleware]);
     } else {
       this._router.unlink(path, ...middleware);
     }
@@ -95,7 +95,7 @@ export class PylonRouter<C extends PylonHttpContext = PylonHttpContext> {
     ...middleware: Array<PylonHttpMiddleware<C>>
   ): PylonRouter<C> {
     if (path.includes("/:")) {
-      this._router.delete(path, ...[httpParamsMiddleware, ...middleware]);
+      this._router.delete(path, ...[httpParamsParserMiddleware, ...middleware]);
     } else {
       this._router.delete(path, ...middleware);
     }
@@ -107,7 +107,7 @@ export class PylonRouter<C extends PylonHttpContext = PylonHttpContext> {
     ...middleware: Array<PylonHttpMiddleware<C>>
   ): PylonRouter<C> {
     if (path.includes("/:")) {
-      this._router.head(path, ...[httpParamsMiddleware, ...middleware]);
+      this._router.head(path, ...[httpParamsParserMiddleware, ...middleware]);
     } else {
       this._router.head(path, ...middleware);
     }
@@ -119,7 +119,7 @@ export class PylonRouter<C extends PylonHttpContext = PylonHttpContext> {
     ...middleware: Array<PylonHttpMiddleware<C>>
   ): PylonRouter<C> {
     if (path.includes("/:")) {
-      this._router.options(path, ...[httpParamsMiddleware, ...middleware]);
+      this._router.options(path, ...[httpParamsParserMiddleware, ...middleware]);
     } else {
       this._router.options(path, ...middleware);
     }
@@ -131,7 +131,7 @@ export class PylonRouter<C extends PylonHttpContext = PylonHttpContext> {
     ...middleware: Array<PylonHttpMiddleware<C>>
   ): PylonRouter<C> {
     if (path.includes("/:")) {
-      this._router.patch(path, ...[httpParamsMiddleware, ...middleware]);
+      this._router.patch(path, ...[httpParamsParserMiddleware, ...middleware]);
     } else {
       this._router.patch(path, ...middleware);
     }
@@ -140,7 +140,7 @@ export class PylonRouter<C extends PylonHttpContext = PylonHttpContext> {
 
   public all(path: string, ...middleware: Array<PylonHttpMiddleware<C>>): PylonRouter<C> {
     if (path.includes("/:")) {
-      this._router.all(path, ...[httpParamsMiddleware, ...middleware]);
+      this._router.all(path, ...[httpParamsParserMiddleware, ...middleware]);
     } else {
       this._router.all(path, ...middleware);
     }

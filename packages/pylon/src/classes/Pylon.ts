@@ -12,15 +12,20 @@ import {
   createEventContextInitialisationMiddleware,
   createHttpBodyParserMiddleware,
   createHttpContextInitialisationMiddleware,
+  createHttpCookieMiddleware,
   createHttpCorsMiddleware,
   createHttpMetadataMiddleware,
   eventErrorHandlerMiddleware,
   eventLoggerMiddleware,
   httpErrorHandlerMiddleware,
-  httpResponseMiddleware,
-  httpSessionLoggerMiddleware,
+  httpQueryParserMiddleware,
+  httpRequestLoggerMiddleware,
+  httpResponseBodyMiddleware,
+  httpResponseTimeMiddleware,
   httpSocketIoMiddleware,
 } from "../middleware/private";
+import { httpResponseLoggerMiddleware } from "../middleware/private/http-response-logger-middleware";
+import { createHttpSessionMiddleware } from "../middleware/private/http-session-middleware";
 import {
   HttpCallback,
   IoServer,
@@ -86,7 +91,7 @@ export class Pylon<
     this._setup = options.setup;
     this._teardown = options.teardown;
 
-    this.koa = new Koa({ keys: options.keys });
+    this.koa = new Koa({ keys: options.cookies?.signatureKeys });
     this.router = new PylonRouter<C>();
     this.http = createServer(this.koa.callback());
 
@@ -98,7 +103,9 @@ export class Pylon<
 
     this.addHttpMiddleware([
       userAgent,
-      createHttpBodyParserMiddleware(options.parseBody),
+      httpResponseTimeMiddleware,
+      httpResponseLoggerMiddleware,
+      httpErrorHandlerMiddleware,
       createHttpMetadataMiddleware({
         environment,
         httpMaxRequestAge: options.httpMaxRequestAge ?? "10s",
@@ -109,9 +116,12 @@ export class Pylon<
         issuer: options.issuer,
         logger: this.logger,
       }),
-      httpSessionLoggerMiddleware,
-      httpResponseMiddleware,
-      httpErrorHandlerMiddleware,
+      createHttpCookieMiddleware(options.cookies),
+      createHttpSessionMiddleware(options.session),
+      createHttpBodyParserMiddleware(options.parseBody),
+      httpQueryParserMiddleware,
+      httpRequestLoggerMiddleware,
+      httpResponseBodyMiddleware,
     ]);
 
     // socket

@@ -16,7 +16,7 @@ export const createHttpBearerTokenMiddleware = <
     const start = Date.now();
 
     try {
-      const authorization = ctx.get("Authorization");
+      const authorization = ctx.get("authorization");
 
       if (!authorization) {
         throw new ClientError("Authorization header is required", {

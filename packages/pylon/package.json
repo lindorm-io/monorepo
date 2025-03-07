@@ -30,6 +30,7 @@
   },
   "dependencies": {
     "@lindorm/aegis": "^0.2.6",
+    "@lindorm/aes": "^0.4.2",
     "@lindorm/amphora": "^0.1.7",
     "@lindorm/b64": "^0.1.5",
     "@lindorm/case": "^0.1.7",
@@ -53,6 +54,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@lindorm/kryptos": "^0.3.7",
     "@lindorm/types": "^0.2.1",
     "@lindorm/worker": "^0.1.6",
     "@types/co-body": "^6.1.3",

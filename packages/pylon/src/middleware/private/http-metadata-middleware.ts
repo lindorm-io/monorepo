@@ -32,17 +32,13 @@ export const createHttpMetadataMiddleware = (options: Options): PylonHttpMiddlew
         origin: ctx.get("x-origin") || ctx.get("origin") || null,
         requestId: ctx.get("x-request-id") || randomUUID(),
         responseId: randomUUID(),
+        sessionId: null,
       };
 
-      ctx.set("X-Correlation-ID", ctx.metadata.correlationId);
-      ctx.set("X-Request-ID", ctx.metadata.requestId);
-      ctx.set("X-Response-ID", ctx.metadata.responseId);
-      ctx.set("X-Server-Environment", options.environment);
-      ctx.set("X-Server-Version", options.version);
-
       if (isBefore(ctx.metadata.date, minDate)) {
-        throw new ClientError("Request has been identified as a likely replay attack", {
+        throw new ClientError("Replay Attack", {
           code: "replay_error",
+          details: "Request has been identified as a likely replay attack",
           data: {
             actual: ctx.metadata.date.toISOString(),
             expect: minDate.toISOString(),
@@ -51,27 +47,23 @@ export const createHttpMetadataMiddleware = (options: Options): PylonHttpMiddlew
       }
 
       if (isAfter(ctx.metadata.date, maxDate)) {
-        throw new ClientError("Request has been identified as suspicious", {
+        throw new ClientError("Suspicious Request", {
           code: "suspicious_request",
+          details: "Request has been identified as suspicious",
           data: {
             actual: ctx.metadata.date.toISOString(),
             expect: maxDate.toISOString(),
           },
         });
       }
-    } catch (err: any) {
-      ctx.status = ClientError.Status.BadRequest;
-      ctx.body = {
-        error: {
-          code: err.code ?? "unexpected_error",
-          data: err.data ?? {},
-          message: err.message,
-          name: err.name ?? "Error",
-          title: err.title ?? "Unexpected Error",
-        },
-      };
-      return;
-    }
 
-    await next();
+      await next();
+    } finally {
+      ctx.set("x-correlation-id", ctx.metadata.correlationId);
+      ctx.set("x-request-id", ctx.metadata.requestId);
+      ctx.set("x-response-id", ctx.metadata.responseId);
+      ctx.set("x-server-environment", options.environment);
+      ctx.set("x-server-version", options.version);
+      ctx.set("x-session-id", ctx.metadata.sessionId ?? "");
+    }
   };

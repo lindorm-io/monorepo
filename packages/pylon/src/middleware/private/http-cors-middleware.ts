@@ -1,7 +1,7 @@
 import { HttpMethod } from "@lindorm/conduit";
 import { isArray } from "@lindorm/is";
 import { CorsError } from "../../errors";
-import { CorsMiddleware, CorsOptions } from "../../types";
+import { CorsOptions, PylonHttpMiddleware } from "../../types";
 import {
   handleAccessControlCredentials,
   handleAccessControlExposeHeaders,
@@ -14,7 +14,9 @@ import {
   handleCrossOriginOpenerPolicy,
 } from "../../utils/private";
 
-export const createHttpCorsMiddleware = (options: CorsOptions = {}): CorsMiddleware => {
+export const createHttpCorsMiddleware = (
+  options: CorsOptions = {},
+): PylonHttpMiddleware => {
   if (options.allowOrigins === "*" && options.allowCredentials) {
     throw new Error("Cannot set allowCredentials to true when allowOrigins is set to *");
   }
@@ -38,7 +40,10 @@ export const createHttpCorsMiddleware = (options: CorsOptions = {}): CorsMiddlew
     : options.exposeHeaders;
 
   return async function httpCorsMiddleware(ctx, next) {
-    ctx.preflight = ctx.method === "OPTIONS";
+    if (ctx.method.toLowerCase() !== "options") {
+      return await next();
+    }
+
     ctx.vary("Origin");
 
     try {
@@ -66,11 +71,6 @@ export const createHttpCorsMiddleware = (options: CorsOptions = {}): CorsMiddlew
       throw error;
     }
 
-    if (ctx.preflight) {
-      ctx.status = 204;
-      return;
-    }
-
-    await next();
+    ctx.status = 204;
   };
 };

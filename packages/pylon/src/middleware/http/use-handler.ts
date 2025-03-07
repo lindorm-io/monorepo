@@ -42,19 +42,19 @@ export const useHandler = <C extends PylonHttpContext = PylonHttpContext>(
 
         if (download) {
           ctx.set(
-            "Cache-Control",
+            "cache-control",
             [
               `max-age=${download.maxAge ?? 0}`,
               ...(download.immutable ? ["immutable"] : []),
             ].join(","),
           );
           ctx.set(
-            "Content-Disposition",
+            "content-disposition",
             `attachment; filename=${download.filename ?? "download"}`,
           );
-          ctx.set("Content-Length", download.contentLength.toString());
-          ctx.set("Content-Type", "application/octet-stream");
-          ctx.set("Last-Modified", download.lastModified.toUTCString());
+          ctx.set("content-length", download.contentLength.toString());
+          ctx.set("content-type", "application/octet-stream");
+          ctx.set("last-modified", download.lastModified.toUTCString());
 
           ctx.type = download.mimeType;
           ctx.body = download.stream;

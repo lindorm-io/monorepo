@@ -9,6 +9,8 @@ import { BaseRequest, DefaultState, Middleware } from "koa";
 import { RouterContext } from "koa-router";
 import { UserAgentContext } from "koa-useragent";
 import UserAgent from "koa-useragent/dist/lib/useragent";
+import { CookieOptions } from "./cookies";
+import { PylonSession } from "./session";
 import { IoServer } from "./socket";
 
 type Conduits = {
@@ -23,6 +25,7 @@ type Metadata = {
   origin: string | null;
   requestId: string;
   responseId: string;
+  sessionId: string | null;
 };
 
 type Request = BaseRequest & {
@@ -45,9 +48,14 @@ type Context<Data, WebhookData> = {
   logger: ILogger;
   metadata: Metadata;
   request: Request;
+  session: PylonSession | null;
   tokens: Dict<VerifiedJwt | VerifiedJws<any>>;
   userAgent: UserAgent;
   webhook: Webhook<WebhookData>;
+
+  setCookie<T = any>(name: string, value: T, options?: CookieOptions): void;
+  getCookie<T = any>(name: string): T | undefined;
+  delCookie(name: string): void;
 };
 
 export type PylonHttpContext<Data = any, WebhookData = any> = RouterContext &

@@ -1,4 +1,6 @@
 import { HttpMethod } from "@lindorm/enums";
+import { parseStringRecord as _parseStringRecord } from "@lindorm/utils";
+import MockDate from "mockdate";
 import { BodyType } from "../../enums";
 import { PylonError } from "../../errors";
 import {
@@ -8,19 +10,35 @@ import {
 } from "../../utils/private";
 import { createHttpBodyParserMiddleware } from "./http-body-parser-middleware";
 
+const MockedDate = new Date("2024-01-01T08:00:00.000Z");
+MockDate.set(MockedDate);
+
+jest.mock("@lindorm/utils");
 jest.mock("../../utils/private");
 
 const composeParseBodyConfig = _composeParseBodyConfig as jest.Mock;
 const getBodyType = _getBodyType as jest.Mock;
 const parseBody = _parseBody as jest.Mock;
+const parseStringRecord = _parseStringRecord as jest.Mock;
 
 describe("createHttpBodyParserMiddleware", () => {
+  const array = ["array"];
+  const date = MockedDate;
+  const error = new Error("error");
+  const string = "string";
+
   let ctx: any;
 
   beforeEach(() => {
     ctx = {
-      query: {
-        snake_case_query: "query",
+      body: {
+        PascalCaseTwo: "PascalCaseTwo",
+        camelCaseTwo: "camelCaseTwo",
+        snake_case_two: "snake_case_two",
+        array,
+        date,
+        error,
+        string,
       },
       method: "POST",
       request: {},
@@ -46,6 +64,7 @@ describe("createHttpBodyParserMiddleware", () => {
       files: [],
       raw: '{"value":"parsed"}',
     });
+    parseStringRecord.mockImplementation((input) => input);
   });
 
   test("should parse body and files and set it on request context", async () => {
@@ -65,7 +84,6 @@ describe("createHttpBodyParserMiddleware", () => {
 
     expect(ctx.data).toEqual({
       snakeCaseKey: "body",
-      snakeCaseQuery: "query",
       value: "parsed",
     });
   });
@@ -79,7 +97,6 @@ describe("createHttpBodyParserMiddleware", () => {
 
     expect(ctx.data).toEqual({
       snakeCaseKey: "body",
-      snakeCaseQuery: "query",
       value: "parsed",
     });
   });
@@ -91,7 +108,7 @@ describe("createHttpBodyParserMiddleware", () => {
       createHttpBodyParserMiddleware()(ctx, jest.fn()),
     ).resolves.toBeUndefined();
 
-    expect(ctx.data).toEqual({ snakeCaseQuery: "query" });
+    expect(ctx.data).toEqual({});
   });
 
   test("should not change case of body when text", async () => {
@@ -101,7 +118,7 @@ describe("createHttpBodyParserMiddleware", () => {
       createHttpBodyParserMiddleware()(ctx, jest.fn()),
     ).resolves.toBeUndefined();
 
-    expect(ctx.data).toEqual({ snakeCaseQuery: "query" });
+    expect(ctx.data).toEqual({});
   });
 
   test("should not parse body if method is not POST, PUT or PATCH", async () => {

@@ -2,7 +2,7 @@ import { Amphora } from "@lindorm/amphora";
 import { Environment } from "@lindorm/enums";
 import { ServerError } from "@lindorm/errors";
 import { isArray, isObject } from "@lindorm/is";
-import { Kryptos } from "@lindorm/kryptos";
+import { KryptosKit } from "@lindorm/kryptos";
 import { createMockLogger, ILogger } from "@lindorm/logger";
 import { readFileSync } from "fs";
 import MockDate from "mockdate";
@@ -53,6 +53,22 @@ describe("Pylon", () => {
       });
     });
 
+    router.post("/session", async (ctx) => {
+      ctx.session = {
+        id: "c1460965-fb6d-5a2a-be8a-84f7cd7d1a9f",
+        accessToken: "access",
+        idToken: "id",
+        refreshToken: "refresh",
+      };
+      ctx.body = ctx.session;
+      ctx.status = 200;
+    });
+
+    router.get("/session", async (ctx) => {
+      ctx.body = ctx.session;
+      ctx.status = 200;
+    });
+
     router.post("/upload", async (ctx) => {
       if (isObject(ctx.request.files)) {
         for (const file of Object.values(ctx.request.files)) {
@@ -82,7 +98,7 @@ describe("Pylon", () => {
       logger: createMockLogger(),
     });
 
-    const kryptos = Kryptos.make({
+    const kryptos = KryptosKit.from.b64({
       id: "5d17c551-7b6f-474a-8679-dba9bbfa06a2",
       algorithm: "ES256",
       curve: "P-256",
@@ -104,6 +120,10 @@ describe("Pylon", () => {
       amphora,
       logger,
 
+      cookies: {
+        encryptionKeys: ["abcdefghijklmnopqrstuvwxyz_01234"],
+        signatureKeys: ["test-key"],
+      },
       domain: "http://test.lindorm.io",
       environment: Environment.Test,
       httpMiddleware: [middlewareSpy],
@@ -112,7 +132,6 @@ describe("Pylon", () => {
       openIdConfiguration: {
         jwksUri: "http://test.lindorm.io/.well-known/jwks.json",
       },
-      keys: ["test-key"],
       name: "@lindorm/pylon",
       parseBody: { formidable: true },
       port: 55555,
@@ -142,6 +161,7 @@ describe("Pylon", () => {
         origin: "test-origin",
         requestId: "request-id",
         responseId: expect.any(String),
+        sessionId: null,
       },
     });
   });
@@ -188,6 +208,7 @@ describe("Pylon", () => {
       .post("/test/123456")
       .query({
         query_value: "test",
+        query_number: "987654",
       })
       .send({
         body_value: "value",
@@ -200,20 +221,27 @@ describe("Pylon", () => {
       },
       data: {
         body_value: "value",
-        param_value: "123456",
+        param_value: 123456,
         query_value: "test",
+        query_number: 987654,
       },
       params: {
         param_value: "123456",
       },
       query: {
         query_value: "test",
+        query_number: "987654",
       },
     });
 
     expect(spy).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: { bodyValue: "value", paramValue: "123456", queryValue: "test" },
+        data: {
+          bodyValue: "value",
+          paramValue: 123456,
+          queryValue: "test",
+          queryNumber: 987654,
+        },
       }),
     );
   });
@@ -235,6 +263,53 @@ describe("Pylon", () => {
         data: { testString: "test" },
       }),
     );
+  });
+
+  test("should create session", async () => {
+    const response = await request(pylon.callback).post("/test/session").expect(200);
+
+    expect(response.body).toEqual({
+      id: "c1460965-fb6d-5a2a-be8a-84f7cd7d1a9f",
+      access_token: "access",
+      id_token: "id",
+      refresh_token: "refresh",
+    });
+
+    expect(response.headers).toEqual(
+      expect.objectContaining({
+        date: "Mon, 01 Jan 2024 08:00:00 GMT",
+        "set-cookie": [
+          expect.stringContaining("pylon_session="),
+          expect.stringContaining("pylon_session.sig="),
+        ],
+        "x-correlation-id": expect.any(String),
+        "x-current-time": "1704096000000",
+        "x-request-id": expect.any(String),
+        "x-response-id": expect.any(String),
+        "x-response-time": "0ms",
+        "x-server-environment": "test",
+        "x-server-version": "0.0.1",
+        "x-session-id": "",
+        "x-start-time": "1704096000000",
+      }),
+    );
+  });
+
+  test("should verify session", async () => {
+    const response = await request(pylon.callback)
+      .get("/test/session")
+      .set("Cookie", [
+        "pylon_session=JEEyNTZHQ00kdj05LGtpZD1kZWYzMmY5Ny02ODgxLTQ1OWEtOGI3MC02NTM5NTgxY2Q4NzEsYWxnPWRpcixpdj1QSVhaaGIzZmxGdHpwM2k2LHRhZz1xVjRlbzF4ZmE5YXV1SHlRckRpY0VRJDJBYkFRMVpEMGQxRGRzNjVCRlItNm1ZYkRPUVhYcjFfVk9vQlJqM3NZcjZIR0tkOVlOOHk1NDhlYVFDMG9ZUl9oWjNpdmQ0cGRlbW5JbGtNSjFaUE5CaElKdFhXLUZOQ004OVZpMjd4TG9qM3JaTjBKZ2pveHNQQ1YwYkpSSTdTVnFhQWRsOVJ1OFg0QWhEOSQ; priority=high",
+        "pylon_session.sig=hw_3jAt2s0h3v3tDOl1yef-oHLI; priority=high",
+      ])
+      .expect(200);
+
+    expect(response.body).toEqual({
+      id: "c1460965-fb6d-5a2a-be8a-84f7cd7d1a9f",
+      access_token: "access",
+      id_token: "id",
+      refresh_token: "refresh",
+    });
   });
 
   test("should upload a file using formidable", async () => {
