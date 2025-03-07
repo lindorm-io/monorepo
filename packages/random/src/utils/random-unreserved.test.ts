@@ -1,7 +1,7 @@
-import { randomToken } from "./random-token";
+import { randomUnreserved } from "./random-unreserved";
 
-describe("randomToken", () => {
-  test("should return a random token", () => {
-    expect(randomToken(10)).toEqual(expect.any(String));
+describe("randomUnreserved", () => {
+  test("should return a random unreserved", () => {
+    expect(randomUnreserved(10)).toEqual(expect.any(String));
   });
 });
