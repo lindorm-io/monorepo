@@ -1,4 +1,4 @@
-import { Kryptos } from "@lindorm/kryptos";
+import { KryptosKit } from "@lindorm/kryptos";
 import { ILogger, createMockLogger } from "@lindorm/logger";
 import MockDate from "mockdate";
 import {
@@ -177,11 +177,8 @@ describe("JweKit", () => {
     });
 
     test("should decrypt data using OCT hkdf", () => {
-      const kryptos = Kryptos.generate({
+      const kryptos = KryptosKit.make.enc.oct({
         algorithm: "A128KW",
-        type: "oct",
-        use: "enc",
-
         jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
       });
 
@@ -226,11 +223,7 @@ describe("JweKit", () => {
     });
 
     test("should decrypt data using OCT pbkdf", () => {
-      const kryptos = Kryptos.generate({
-        algorithm: "PBES2-HS512+A256KW",
-        type: "oct",
-        use: "enc",
-      });
+      const kryptos = KryptosKit.make.enc.oct({ algorithm: "PBES2-HS512+A256KW" });
 
       kit = new JweKit({ logger, kryptos });
 
@@ -273,11 +266,7 @@ describe("JweKit", () => {
     });
 
     test("should decrypt data using OCT A128GCMKW", () => {
-      const kryptos = Kryptos.generate({
-        algorithm: "A128GCMKW",
-        type: "oct",
-        use: "enc",
-      });
+      const kryptos = KryptosKit.make.enc.oct({ algorithm: "A128GCMKW" });
 
       kit = new JweKit({ logger, kryptos });
 

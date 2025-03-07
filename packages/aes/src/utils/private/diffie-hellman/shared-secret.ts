@@ -1,4 +1,10 @@
-import { IKryptos, Kryptos } from "@lindorm/kryptos";
+import {
+  EcEncAlgorithm,
+  IKryptos,
+  KryptosKit,
+  OkpEncAlgorithm,
+  OkpEncCurve,
+} from "@lindorm/kryptos";
 import { createPrivateKey, createPublicKey, diffieHellman } from "crypto";
 import { AesError } from "../../../errors";
 import { PublicEncryptionJwk } from "../../../types";
@@ -15,16 +21,21 @@ type CalculateSharedSecretOptions = Pick<
 >;
 
 const generateKryptos = (kryptos: IKryptos): IKryptos => {
-  if (!Kryptos.isEc(kryptos) && !Kryptos.isOkp(kryptos)) {
-    throw new AesError("Invalid kryptos type");
+  if (KryptosKit.isEc(kryptos)) {
+    return KryptosKit.make.enc.ec({
+      algorithm: kryptos.algorithm as EcEncAlgorithm,
+      curve: kryptos.curve,
+    });
   }
 
-  return Kryptos.generate({
-    algorithm: kryptos.algorithm,
-    curve: kryptos.curve,
-    type: kryptos.type,
-    use: "enc",
-  } as any);
+  if (KryptosKit.isOkp(kryptos)) {
+    return KryptosKit.make.enc.okp({
+      algorithm: kryptos.algorithm as OkpEncAlgorithm,
+      curve: kryptos.curve as OkpEncCurve,
+    });
+  }
+
+  throw new AesError("Invalid kryptos type");
 };
 
 export const generateSharedSecret = (kryptos: IKryptos): GenerateResult => {
@@ -65,7 +76,7 @@ export const calculateSharedSecret = ({
     throw new AesError("Missing publicEncryptionJwk");
   }
 
-  const pek = Kryptos.from("jwk", { alg: "ECDH-ES", use: "enc", ...publicEncryptionJwk });
+  const pek = KryptosKit.from.jwk({ alg: "ECDH-ES", use: "enc", ...publicEncryptionJwk });
   const der = kryptos.export("der");
   const receiver = pek.export("der");
 

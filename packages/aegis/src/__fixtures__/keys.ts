@@ -1,4 +1,4 @@
-import { Kryptos, KryptosFromB64 } from "@lindorm/kryptos";
+import { KryptosFromString, KryptosKit } from "@lindorm/kryptos";
 
 const defaults = {
   notBefore: new Date("2023-01-01T01:00:00.000Z"),
@@ -8,7 +8,7 @@ const defaults = {
   jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
 };
 
-const EC: KryptosFromB64 = {
+const EC: KryptosFromString = {
   ...defaults,
   algorithm: "ES512",
   curve: "P-521",
@@ -20,7 +20,7 @@ const EC: KryptosFromB64 = {
   use: "sig",
 };
 
-export const TEST_EC_KEY_SIG = Kryptos.from("b64", {
+export const TEST_EC_KEY_SIG = KryptosKit.from.b64({
   ...EC,
   id: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
   algorithm: "ES512",
@@ -29,7 +29,7 @@ export const TEST_EC_KEY_SIG = Kryptos.from("b64", {
   use: "sig",
 });
 
-export const TEST_EC_KEY_ENC = Kryptos.from("b64", {
+export const TEST_EC_KEY_ENC = KryptosKit.from.b64({
   ...EC,
   id: "43bd1720-5dab-5d52-ae1e-e9dbbe6adfe4",
   algorithm: "ECDH-ES",
@@ -38,7 +38,7 @@ export const TEST_EC_KEY_ENC = Kryptos.from("b64", {
   use: "enc",
 });
 
-export const TEST_OCT_KEY_SIG = Kryptos.from("b64", {
+export const TEST_OCT_KEY_SIG = KryptosKit.from.b64({
   ...defaults,
   id: "d32bed7b-40d7-5851-aad6-95589dadb65e",
   algorithm: "HS256",
@@ -51,7 +51,7 @@ export const TEST_OCT_KEY_SIG = Kryptos.from("b64", {
   operations: ["sign", "verify"],
 });
 
-export const TEST_OCT_KEY_ENC = Kryptos.from("b64", {
+export const TEST_OCT_KEY_ENC = KryptosKit.from.b64({
   ...defaults,
   id: "ae26175f-961d-5947-8318-6299e4576b83",
   algorithm: "dir",
@@ -63,7 +63,7 @@ export const TEST_OCT_KEY_ENC = Kryptos.from("b64", {
   use: "enc",
 });
 
-export const TEST_OKP_KEY_SIG = Kryptos.from("b64", {
+export const TEST_OKP_KEY_SIG = KryptosKit.from.b64({
   ...defaults,
   id: "2fa52a91-7f63-5731-a55d-30d36350c642",
   algorithm: "EdDSA",
@@ -76,7 +76,7 @@ export const TEST_OKP_KEY_SIG = Kryptos.from("b64", {
   use: "sig",
 });
 
-export const TEST_OKP_KEY_ENC = Kryptos.from("b64", {
+export const TEST_OKP_KEY_ENC = KryptosKit.from.b64({
   ...defaults,
   id: "035f7f00-8101-5387-a935-e92f57347309",
   algorithm: "ECDH-ES",
@@ -89,7 +89,7 @@ export const TEST_OKP_KEY_ENC = Kryptos.from("b64", {
   use: "enc",
 });
 
-const RSA: KryptosFromB64 = {
+const RSA: KryptosFromString = {
   ...defaults,
   algorithm: "RS512",
   privateKey:
@@ -100,7 +100,7 @@ const RSA: KryptosFromB64 = {
   use: "sig",
 };
 
-export const TEST_RSA_KEY_SIG = Kryptos.from("b64", {
+export const TEST_RSA_KEY_SIG = KryptosKit.from.b64({
   ...RSA,
   id: "aaac22b3-2253-5598-8e0c-1733fc748122",
   algorithm: "RS512",
@@ -108,7 +108,7 @@ export const TEST_RSA_KEY_SIG = Kryptos.from("b64", {
   operations: ["sign", "verify"],
   use: "sig",
 });
-export const TEST_RSA_KEY_ENC = Kryptos.from("b64", {
+export const TEST_RSA_KEY_ENC = KryptosKit.from.b64({
   ...RSA,
   id: "20b09138-bab7-54ce-a491-1f4ba52e3d4e",
   algorithm: "RSA-OAEP-256",

@@ -1,4 +1,4 @@
-import { Kryptos } from "@lindorm/kryptos";
+import { KryptosKit } from "@lindorm/kryptos";
 import { randomBytes } from "crypto";
 import { AesError } from "../../../errors";
 import {
@@ -15,7 +15,7 @@ export const getOctKeyWrapEncryptionKey = ({
   encryption,
   kryptos,
 }: CreateCekOptions): CreateCekResult => {
-  if (!Kryptos.isOct(kryptos)) {
+  if (!KryptosKit.isOct(kryptos)) {
     throw new AesError("Invalid Kryptos", { debug: { kryptos: kryptos.toJSON() } });
   }
 
@@ -51,7 +51,7 @@ export const getOctKeyWrapDecryptionKey = ({
   publicEncryptionKey,
   publicEncryptionTag,
 }: DecryptCekOptions): DecryptCekResult => {
-  if (!Kryptos.isOct(kryptos)) {
+  if (!KryptosKit.isOct(kryptos)) {
     throw new AesError("Invalid Kryptos", { debug: { kryptos: kryptos.toJSON() } });
   }
   if (!publicEncryptionKey) {

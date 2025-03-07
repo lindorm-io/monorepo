@@ -1,10 +1,10 @@
-import { Kryptos } from "@lindorm/kryptos";
+import { KryptosKit } from "@lindorm/kryptos";
 import { randomBytes } from "crypto";
 import { gcmKeyUnwrap, gcmKeyWrap } from "./gcm-key-wrap";
 
 describe("gcmKeyWrap", () => {
   test("should wrap and unwrap key with A128GCMKW", () => {
-    const kryptos = Kryptos.generate({ algorithm: "A128GCMKW", type: "oct", use: "enc" });
+    const kryptos = KryptosKit.make.enc.oct({ algorithm: "A128GCMKW" });
 
     const contentEncryptionKey = randomBytes(128 / 8);
     const keyEncryptionKey = randomBytes(128 / 8);
@@ -31,7 +31,7 @@ describe("gcmKeyWrap", () => {
   });
 
   test("should wrap and unwrap key with A192GCMKW", () => {
-    const kryptos = Kryptos.generate({ algorithm: "A192GCMKW", type: "oct", use: "enc" });
+    const kryptos = KryptosKit.make.enc.oct({ algorithm: "A192GCMKW" });
 
     const contentEncryptionKey = randomBytes(192 / 8);
     const keyEncryptionKey = randomBytes(192 / 8);
@@ -58,7 +58,7 @@ describe("gcmKeyWrap", () => {
   });
 
   test("should wrap and unwrap key with A256GCMKW", () => {
-    const kryptos = Kryptos.generate({ algorithm: "A256GCMKW", type: "oct", use: "enc" });
+    const kryptos = KryptosKit.make.enc.oct({ algorithm: "A256GCMKW" });
 
     const contentEncryptionKey = randomBytes(256 / 8);
     const keyEncryptionKey = randomBytes(256 / 8);

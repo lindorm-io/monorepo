@@ -1,4 +1,4 @@
-import { IKryptosOct, Kryptos } from "@lindorm/kryptos";
+import { IKryptosOct, KryptosKit } from "@lindorm/kryptos";
 import { BufferFormat } from "@lindorm/types";
 import { OctError } from "../errors";
 import { OctKitOptions } from "../types";
@@ -15,7 +15,7 @@ export class OctKit {
   public constructor(options: OctKitOptions) {
     this.format = options.format ?? "base64";
 
-    if (!Kryptos.isOct(options.kryptos)) {
+    if (!KryptosKit.isOct(options.kryptos)) {
       throw new OctError("Invalid Kryptos instance");
     }
 

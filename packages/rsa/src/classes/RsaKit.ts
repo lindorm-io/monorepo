@@ -1,4 +1,4 @@
-import { IKryptosRsa, Kryptos } from "@lindorm/kryptos";
+import { IKryptosRsa, KryptosKit } from "@lindorm/kryptos";
 import { BufferFormat } from "@lindorm/types";
 import { RsaError } from "../errors";
 import { RsaKitOptions } from "../types";
@@ -15,7 +15,7 @@ export class RsaKit {
   public constructor(options: RsaKitOptions) {
     this.format = options.format ?? "base64";
 
-    if (!Kryptos.isRsa(options.kryptos)) {
+    if (!KryptosKit.isRsa(options.kryptos)) {
       throw new RsaError("Invalid Kryptos instance");
     }
 

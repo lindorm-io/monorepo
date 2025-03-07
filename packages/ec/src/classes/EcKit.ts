@@ -1,4 +1,4 @@
-import { IKryptosEc, Kryptos } from "@lindorm/kryptos";
+import { IKryptosEc, KryptosKit } from "@lindorm/kryptos";
 import { EcError } from "../errors";
 import { EcKitOptions, EcSignatureFormat } from "../types";
 import {
@@ -14,7 +14,7 @@ export class EcKit {
   public constructor(options: EcKitOptions) {
     this.format = options.format ?? "base64";
 
-    if (!Kryptos.isEc(options.kryptos)) {
+    if (!KryptosKit.isEc(options.kryptos)) {
       throw new EcError("Invalid Kryptos instance");
     }
 

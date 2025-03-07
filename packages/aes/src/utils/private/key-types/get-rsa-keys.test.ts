@@ -1,13 +1,9 @@
-import { Kryptos } from "@lindorm/kryptos";
+import { KryptosKit } from "@lindorm/kryptos";
 import { getRsaDecryptionKey, getRsaEncryptionKey } from "./get-rsa-keys";
 
 describe("get-rsa-keys", () => {
   test("should return encryption keys with RSA-OAEP", () => {
-    const kryptos = Kryptos.generate({
-      algorithm: "RSA-OAEP",
-      type: "RSA",
-      use: "enc",
-    });
+    const kryptos = KryptosKit.make.enc.rsa({ algorithm: "RSA-OAEP" });
 
     const result = getRsaEncryptionKey({
       encryption: "A128GCM",
@@ -29,11 +25,7 @@ describe("get-rsa-keys", () => {
   });
 
   test("should return encryption keys with RSA-OAEP-256", () => {
-    const kryptos = Kryptos.generate({
-      algorithm: "RSA-OAEP-256",
-      type: "RSA",
-      use: "enc",
-    });
+    const kryptos = KryptosKit.make.enc.rsa({ algorithm: "RSA-OAEP-256" });
 
     const result = getRsaEncryptionKey({
       encryption: "A128GCM",
@@ -55,11 +47,7 @@ describe("get-rsa-keys", () => {
   });
 
   test("should return encryption keys with RSA-OAEP-384", () => {
-    const kryptos = Kryptos.generate({
-      algorithm: "RSA-OAEP-384",
-      type: "RSA",
-      use: "enc",
-    });
+    const kryptos = KryptosKit.make.enc.rsa({ algorithm: "RSA-OAEP-384" });
 
     const result = getRsaEncryptionKey({
       encryption: "A128GCM",
@@ -81,11 +69,7 @@ describe("get-rsa-keys", () => {
   });
 
   test("should return encryption keys with RSA-OAEP-512", () => {
-    const kryptos = Kryptos.generate({
-      algorithm: "RSA-OAEP-512",
-      type: "RSA",
-      use: "enc",
-    });
+    const kryptos = KryptosKit.make.enc.rsa({ algorithm: "RSA-OAEP-512" });
 
     const result = getRsaEncryptionKey({
       encryption: "A128GCM",

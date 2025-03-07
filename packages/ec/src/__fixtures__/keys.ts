@@ -1,6 +1,6 @@
-import { IKryptosEc, Kryptos } from "@lindorm/kryptos";
+import { IKryptosEc, KryptosKit } from "@lindorm/kryptos";
 
-export const TEST_EC_KEY_256 = Kryptos.make({
+export const TEST_EC_KEY_256 = KryptosKit.from.b64({
   id: "693db144-37fe-521a-817b-2686c6306d9d",
   algorithm: "ES256",
   curve: "P-256",
@@ -13,7 +13,7 @@ export const TEST_EC_KEY_256 = Kryptos.make({
   use: "sig",
 }) as IKryptosEc;
 
-export const TEST_EC_KEY_384 = Kryptos.make({
+export const TEST_EC_KEY_384 = KryptosKit.from.b64({
   id: "4f095e70-6694-511d-bc64-76fb6ca283f6",
   algorithm: "ES384",
   curve: "P-384",
@@ -26,7 +26,7 @@ export const TEST_EC_KEY_384 = Kryptos.make({
   use: "sig",
 }) as IKryptosEc;
 
-export const TEST_EC_KEY_512 = Kryptos.make({
+export const TEST_EC_KEY_512 = KryptosKit.from.b64({
   id: "9e568fdb-ed87-5a24-800a-44e1a143d5da",
   algorithm: "ES512",
   curve: "P-521",

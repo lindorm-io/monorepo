@@ -1,4 +1,4 @@
-import { IKryptosOkp, Kryptos } from "@lindorm/kryptos";
+import { IKryptosOkp, KryptosKit } from "@lindorm/kryptos";
 import { BufferFormat } from "@lindorm/types";
 import { OkpError } from "../errors";
 import { OkpKitOptions } from "../types";
@@ -15,7 +15,7 @@ export class OkpKit {
   public constructor(options: OkpKitOptions) {
     this.format = options.format ?? "base64";
 
-    if (!Kryptos.isOkp(options.kryptos)) {
+    if (!KryptosKit.isOkp(options.kryptos)) {
       throw new OkpError("Invalid Kryptos instance");
     }
 

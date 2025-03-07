@@ -1,4 +1,4 @@
-import { isAesTokenised } from "./is-aes";
+import { isAesTokenised } from "../is-aes";
 import { createTokenisedAesString, parseTokenisedAesString } from "./tokenised-aes";
 
 describe("tokenised-aes", () => {

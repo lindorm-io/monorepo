@@ -1,8 +1,8 @@
 import {
   IKryptos,
-  Kryptos,
   KryptosEncAlgorithm,
   KryptosEncryption,
+  KryptosKit,
 } from "@lindorm/kryptos";
 import { IAesKit } from "../interfaces";
 import { AesEncryptionMode } from "../types";
@@ -40,7 +40,7 @@ describe("AesKit", () => {
     let kryptos: IKryptos;
 
     beforeEach(async () => {
-      kryptos = Kryptos.auto({ algorithm });
+      kryptos = KryptosKit.make.auto({ algorithm });
     });
 
     describe.each(encryptions)("encryption: %s", (encryption) => {

@@ -1,4 +1,4 @@
-import { Kryptos } from "@lindorm/kryptos";
+import { KryptosKit } from "@lindorm/kryptos";
 import { RSA_PKCS1_OAEP_PADDING } from "constants";
 import { privateDecrypt, publicEncrypt, randomBytes } from "crypto";
 import { AesError } from "../../../errors";
@@ -14,7 +14,7 @@ export const getRsaEncryptionKey = ({
   encryption,
   kryptos,
 }: CreateCekOptions): CreateCekResult => {
-  if (!Kryptos.isRsa(kryptos)) {
+  if (!KryptosKit.isRsa(kryptos)) {
     throw new AesError("Invalid Kryptos instance");
   }
 
@@ -48,7 +48,7 @@ export const getRsaDecryptionKey = ({
   kryptos,
   publicEncryptionKey,
 }: DecryptCekOptions): DecryptCekResult => {
-  if (!Kryptos.isRsa(kryptos)) {
+  if (!KryptosKit.isRsa(kryptos)) {
     throw new AesError("Invalid Kryptos instance");
   }
   if (!publicEncryptionKey) {

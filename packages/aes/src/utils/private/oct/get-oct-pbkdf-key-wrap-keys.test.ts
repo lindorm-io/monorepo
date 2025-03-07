@@ -1,4 +1,4 @@
-import { Kryptos } from "@lindorm/kryptos";
+import { KryptosKit } from "@lindorm/kryptos";
 import {
   getOctPbkdfKeyWrapDecryptionKey,
   getOctPbkdfKeyWrapEncryptionKey,
@@ -6,11 +6,7 @@ import {
 
 describe("getOctKeyWrap", () => {
   test("should return PBES2-HS256+A128KW", () => {
-    const kryptos = Kryptos.generate({
-      algorithm: "PBES2-HS256+A128KW",
-      type: "oct",
-      use: "enc",
-    });
+    const kryptos = KryptosKit.make.enc.oct({ algorithm: "PBES2-HS256+A128KW" });
 
     const result = getOctPbkdfKeyWrapEncryptionKey({ encryption: "A128GCM", kryptos });
 
@@ -33,11 +29,7 @@ describe("getOctKeyWrap", () => {
   });
 
   test("should return PBES2-HS384+A192KW", () => {
-    const kryptos = Kryptos.generate({
-      algorithm: "PBES2-HS384+A192KW",
-      type: "oct",
-      use: "enc",
-    });
+    const kryptos = KryptosKit.make.enc.oct({ algorithm: "PBES2-HS384+A192KW" });
 
     const result = getOctPbkdfKeyWrapEncryptionKey({ encryption: "A128GCM", kryptos });
 
@@ -60,11 +52,7 @@ describe("getOctKeyWrap", () => {
   });
 
   test("should return PBES2-HS512+A256KW", () => {
-    const kryptos = Kryptos.generate({
-      algorithm: "PBES2-HS512+A256KW",
-      type: "oct",
-      use: "enc",
-    });
+    const kryptos = KryptosKit.make.enc.oct({ algorithm: "PBES2-HS512+A256KW" });
 
     const result = getOctPbkdfKeyWrapEncryptionKey({ encryption: "A128GCM", kryptos });
 

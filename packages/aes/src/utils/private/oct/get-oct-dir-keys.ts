@@ -1,4 +1,4 @@
-import { Kryptos } from "@lindorm/kryptos";
+import { KryptosKit } from "@lindorm/kryptos";
 import { AesError } from "../../../errors";
 import {
   CreateCekOptions,
@@ -12,7 +12,7 @@ export const getOctDirEncryptionKey = ({
   encryption,
   kryptos,
 }: CreateCekOptions): CreateCekResult => {
-  if (!Kryptos.isOct(kryptos)) {
+  if (!KryptosKit.isOct(kryptos)) {
     throw new AesError("Invalid Kryptos", { debug: { kryptos: kryptos.toJSON() } });
   }
 
@@ -32,7 +32,7 @@ export const getOctDirDecryptionKey = ({
   encryption,
   kryptos,
 }: DecryptCekOptions): DecryptCekResult => {
-  if (!Kryptos.isOct(kryptos)) {
+  if (!KryptosKit.isOct(kryptos)) {
     throw new AesError("Invalid Kryptos", { debug: { kryptos: kryptos.toJSON() } });
   }
 

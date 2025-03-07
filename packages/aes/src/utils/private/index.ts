@@ -9,6 +9,5 @@ export * from "./oct";
 
 export * from "./encoded-aes";
 export * from "./encryption";
-export * from "./is-aes";
 export * from "./serialised-aes";
 export * from "./tokenised-aes";

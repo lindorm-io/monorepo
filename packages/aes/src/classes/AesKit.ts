@@ -10,15 +10,13 @@ import {
   SerialisedAesDecryption,
   SerialisedAesEncryption,
 } from "../types";
+import { isAesBufferData, isAesSerialisedData, isAesTokenised } from "../utils";
 import {
   createEncodedAesString,
   createSerialisedAesRecord,
   createTokenisedAesString,
   decryptAes,
   encryptAes,
-  isAesBufferData,
-  isAesSerialisedData,
-  isAesTokenised,
   parseEncodedAesString,
   parseSerialisedAesRecord,
   parseTokenisedAesString,

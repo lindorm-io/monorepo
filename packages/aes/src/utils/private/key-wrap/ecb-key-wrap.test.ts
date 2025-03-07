@@ -1,10 +1,10 @@
-import { Kryptos } from "@lindorm/kryptos";
+import { KryptosKit } from "@lindorm/kryptos";
 import { randomBytes } from "crypto";
 import { ecbKeyUnwrap, ecbKeyWrap } from "./ecb-key-wrap";
 
 describe("ecbKeyWrap", () => {
   test("should wrap and unwrap key with A128KW", () => {
-    const kryptos = Kryptos.generate({ algorithm: "A128KW", type: "oct", use: "enc" });
+    const kryptos = KryptosKit.make.enc.oct({ algorithm: "A128KW" });
 
     const contentEncryptionKey = randomBytes(128 / 8);
     const keyEncryptionKey = randomBytes(128 / 8);
@@ -23,7 +23,7 @@ describe("ecbKeyWrap", () => {
   });
 
   test("should wrap and unwrap key with A192KW", () => {
-    const kryptos = Kryptos.generate({ algorithm: "A192KW", type: "oct", use: "enc" });
+    const kryptos = KryptosKit.make.enc.oct({ algorithm: "A192KW" });
 
     const contentEncryptionKey = randomBytes(192 / 8);
     const keyEncryptionKey = randomBytes(192 / 8);
@@ -42,7 +42,7 @@ describe("ecbKeyWrap", () => {
   });
 
   test("should wrap and unwrap key with A256KW", () => {
-    const kryptos = Kryptos.generate({ algorithm: "A256KW", type: "oct", use: "enc" });
+    const kryptos = KryptosKit.make.enc.oct({ algorithm: "A256KW" });
 
     const contentEncryptionKey = randomBytes(256 / 8);
     const keyEncryptionKey = randomBytes(256 / 8);

@@ -1,14 +1,12 @@
-import { Kryptos, KryptosEncryption } from "@lindorm/kryptos";
+import { KryptosEncryption, KryptosKit } from "@lindorm/kryptos";
 import { LATEST_AES_VERSION } from "../../constants/private";
 import { decryptAes, encryptAes } from "./encryption";
 
 describe("aes-data", () => {
   test("should encrypt and decrypt", () => {
-    const kryptos = Kryptos.generate({
+    const kryptos = KryptosKit.make.enc.oct({
       algorithm: "dir",
       encryption: "A256GCM",
-      type: "oct",
-      use: "enc",
     });
 
     const data = encryptAes({ data: "test", kryptos });
@@ -44,11 +42,9 @@ describe("aes-data", () => {
     ];
 
     test.each(encryptions)("should encrypt and decrypt with %s", (encryption) => {
-      const kryptos = Kryptos.generate({
+      const kryptos = KryptosKit.make.enc.oct({
         algorithm: "dir",
         encryption,
-        type: "oct",
-        use: "enc",
       });
 
       const data = encryptAes({ data: "test", encryption, kryptos });

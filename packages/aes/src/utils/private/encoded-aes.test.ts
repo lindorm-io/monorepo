@@ -1,4 +1,4 @@
-import { Kryptos, KryptosEncAlgorithm } from "@lindorm/kryptos";
+import { KryptosEncAlgorithm, KryptosKit } from "@lindorm/kryptos";
 import { createEncodedAesString, parseEncodedAesString } from "./encoded-aes";
 import { encryptAes } from "./encryption";
 
@@ -83,7 +83,7 @@ describe("encoded-aes", () => {
     ];
 
     test.each(algorithms)("should encode and decode %s", (algorithm) => {
-      const kryptos = Kryptos.auto({ algorithm });
+      const kryptos = KryptosKit.make.auto({ algorithm });
       const data = encryptAes({ data: "test", kryptos });
       const encoded = createEncodedAesString(data);
       const decoded = parseEncodedAesString(encoded);

@@ -1,4 +1,4 @@
-import { Kryptos } from "@lindorm/kryptos";
+import { KryptosKit } from "@lindorm/kryptos";
 import {
   getOctKeyWrapDecryptionKey,
   getOctKeyWrapEncryptionKey,
@@ -7,11 +7,7 @@ import {
 describe("getOctKeyWrap", () => {
   describe("ECB", () => {
     test("should return A128KW", () => {
-      const kryptos = Kryptos.generate({
-        algorithm: "A128KW",
-        type: "oct",
-        use: "enc",
-      });
+      const kryptos = KryptosKit.make.enc.oct({ algorithm: "A128KW" });
 
       const result = getOctKeyWrapEncryptionKey({ encryption: "A128GCM", kryptos });
 
@@ -32,11 +28,7 @@ describe("getOctKeyWrap", () => {
     });
 
     test("should return A192KW", () => {
-      const kryptos = Kryptos.generate({
-        algorithm: "A192KW",
-        type: "oct",
-        use: "enc",
-      });
+      const kryptos = KryptosKit.make.enc.oct({ algorithm: "A192KW" });
 
       const result = getOctKeyWrapEncryptionKey({ encryption: "A192GCM", kryptos });
 
@@ -57,11 +49,7 @@ describe("getOctKeyWrap", () => {
     });
 
     test("should return A256KW", () => {
-      const kryptos = Kryptos.generate({
-        algorithm: "A256KW",
-        type: "oct",
-        use: "enc",
-      });
+      const kryptos = KryptosKit.make.enc.oct({ algorithm: "A256KW" });
 
       const result = getOctKeyWrapEncryptionKey({ encryption: "A256GCM", kryptos });
 
@@ -84,11 +72,7 @@ describe("getOctKeyWrap", () => {
 
   describe("GCM", () => {
     test("should return A128GCMKW", () => {
-      const kryptos = Kryptos.generate({
-        algorithm: "A128GCMKW",
-        type: "oct",
-        use: "enc",
-      });
+      const kryptos = KryptosKit.make.enc.oct({ algorithm: "A128GCMKW" });
 
       const result = getOctKeyWrapEncryptionKey({ encryption: "A128GCM", kryptos });
 
@@ -113,11 +97,7 @@ describe("getOctKeyWrap", () => {
     });
 
     test("should return A192GCMKW", () => {
-      const kryptos = Kryptos.generate({
-        algorithm: "A192GCMKW",
-        type: "oct",
-        use: "enc",
-      });
+      const kryptos = KryptosKit.make.enc.oct({ algorithm: "A192GCMKW" });
 
       const result = getOctKeyWrapEncryptionKey({ encryption: "A192GCM", kryptos });
 
@@ -142,11 +122,7 @@ describe("getOctKeyWrap", () => {
     });
 
     test("should return A256GCMKW", () => {
-      const kryptos = Kryptos.generate({
-        algorithm: "A256GCMKW",
-        type: "oct",
-        use: "enc",
-      });
+      const kryptos = KryptosKit.make.enc.oct({ algorithm: "A256GCMKW" });
 
       const result = getOctKeyWrapEncryptionKey({ encryption: "A256GCM", kryptos });
 

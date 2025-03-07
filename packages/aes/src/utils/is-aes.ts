@@ -1,5 +1,5 @@
 import { isBuffer } from "@lindorm/is";
-import { AesDecryptionRecord, SerialisedAesDecryption } from "../../types";
+import { AesDecryptionRecord, SerialisedAesDecryption } from "../types";
 
 export const isAesBufferData = (
   data: AesDecryptionRecord | SerialisedAesDecryption,

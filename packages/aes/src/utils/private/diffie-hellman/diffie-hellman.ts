@@ -1,4 +1,4 @@
-import { Kryptos } from "@lindorm/kryptos";
+import { KryptosKit } from "@lindorm/kryptos";
 import { AesError } from "../../../errors";
 import {
   CreateCekOptions,
@@ -35,7 +35,7 @@ export const getDiffieHellmanDecryptionKey = ({
   kryptos,
   publicEncryptionJwk,
 }: DecryptCekOptions): DecryptCekResult => {
-  if (!Kryptos.isEc(kryptos) && !Kryptos.isOkp(kryptos)) {
+  if (!KryptosKit.isEc(kryptos) && !KryptosKit.isOkp(kryptos)) {
     throw new AesError("Invalid kryptos type");
   }
   if (!publicEncryptionJwk) {
