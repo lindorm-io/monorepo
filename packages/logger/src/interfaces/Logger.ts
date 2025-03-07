@@ -6,7 +6,9 @@ export interface ILogger {
   child(correlation: LogCorrelation): ILogger;
   child(scope: LogScope, correlation: LogCorrelation): ILogger;
 
+  correlation(correlation: LogCorrelation): void;
   filter(path: string, callback?: FilterCallback): void;
+  scope(scope: LogScope): void;
 
   error(error: Error): void;
   error(message: string, context?: LogContent, extra?: Array<LogContent>): void;

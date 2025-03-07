@@ -1,4 +1,4 @@
-import { camelKeys, snakeArray } from "@lindorm/case";
+import { camelCase, camelKeys } from "@lindorm/case";
 import { isArray, isError, isObject } from "@lindorm/is";
 import { Dict } from "@lindorm/types";
 import { get, set } from "object-path";
@@ -17,23 +17,23 @@ import { FromLogger, InternalLog } from "../types/private";
 import { defaultFilterCallback, readableFormat } from "../utils/private";
 
 export class Logger implements ILogger {
-  private readonly correlation: LogCorrelation;
   private readonly filters: FilterRecord;
-  private readonly scope: LogScope;
   private readonly winston: WinstonLogger;
+  private _correlation: LogCorrelation;
+  private _scope: LogScope;
 
   public constructor(options?: LoggerOptions);
   public constructor(fromLogger: FromLogger);
   public constructor(options: LoggerOptions | FromLogger = {}) {
     if ("_mode" in options && options._mode === "from_logger") {
-      this.correlation = camelKeys(options.correlation);
+      this._correlation = this.getCorrelation(options.correlation);
       this.filters = options.filters;
-      this.scope = snakeArray(options.scope);
+      this._scope = this.getScope(options.scope);
       this.winston = options.winston;
     } else {
-      this.correlation = {};
+      this._correlation = {};
       this.filters = {};
-      this.scope = [];
+      this._scope = [];
       this.winston = winston.createLogger();
 
       const level = (options as LoggerOptions).level ?? LogLevel.Info;
@@ -62,15 +62,23 @@ export class Logger implements ILogger {
 
     return new Logger({
       _mode: "from_logger",
-      correlation: { ...this.correlation, ...(correlation as LogCorrelation) },
+      correlation: this.getCorrelation(correlation as LogCorrelation),
       filters: { ...this.filters },
-      scope: [...this.scope.concat(scope)],
+      scope: this.getScope(scope),
       winston: this.winston,
     });
   }
 
+  public correlation(correlation: LogCorrelation): void {
+    this._correlation = this.getCorrelation(correlation);
+  }
+
   public filter(path: string, callback?: (value: any) => any): void {
     this.filters[path] = callback ?? defaultFilterCallback;
+  }
+
+  public scope(scope: LogScope): void {
+    this._scope = this.getScope(scope);
   }
 
   // logging
@@ -145,6 +153,20 @@ export class Logger implements ILogger {
 
   // private
 
+  private getCorrelation(correlation: LogCorrelation = {}): LogCorrelation {
+    return { ...(this._correlation ?? {}), ...camelKeys(correlation) };
+  }
+
+  private getScope(scope: LogScope = []): LogScope {
+    return [
+      ...(this._scope ?? []),
+      ...scope
+        .map((s) => s.trim())
+        .filter((s) => s)
+        .map((s) => camelCase(s)),
+    ];
+  }
+
   private getFilteredContent(content: LogContent): LogContent {
     if (!isObject(content)) return content ?? undefined;
     if (!Object.keys(this.filters).length) return content;
@@ -191,14 +213,14 @@ export class Logger implements ILogger {
       context: log.context
         ? this.getFilteredContent(this.extractErrorData(log.context))
         : {},
-      correlation: this.correlation,
+      correlation: this._correlation,
       extra: log.extra
         .filter(Boolean)
         .map((d) => this.extractErrorData(d))
         .map((d) => this.getFilteredContent(d)),
       level: log.level,
       message: log.message,
-      scope: this.scope,
+      scope: this._scope,
       time: new Date(),
     });
   }

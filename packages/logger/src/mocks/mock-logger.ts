@@ -5,7 +5,10 @@ type LogFn = (...args: any) => void;
 export const createMockLogger = (logFn?: LogFn): ILogger => {
   const logger = {
     child: jest.fn().mockImplementation((): ILogger => createMockLogger(logFn)),
+
+    correlation: jest.fn(),
     filter: jest.fn(),
+    scope: jest.fn(),
 
     error: jest
       .fn()

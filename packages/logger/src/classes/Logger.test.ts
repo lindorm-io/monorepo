@@ -68,21 +68,28 @@ describe("Logger", () => {
 
     expect(child).toBeInstanceOf(Logger);
 
-    // @ts-expect-error
-    expect(child.correlation).toEqual({ parent: "parent", child: "child" });
+    child.correlation({ again: "again" });
+    child.scope(["again"]);
 
     // @ts-expect-error
-    expect(child.scope).toEqual(["parent", "child"]);
+    expect(child._correlation).toEqual({
+      parent: "parent",
+      child: "child",
+      again: "again",
+    });
+
+    // @ts-expect-error
+    expect(child._scope).toEqual(["parent", "child", "again"]);
 
     child.verbose("verbose message", { extra: "verbose extra" });
 
     expect(log).toHaveBeenCalledWith({
       context: { extra: "verbose extra" },
-      correlation: { parent: "parent", child: "child" },
+      correlation: { parent: "parent", child: "child", again: "again" },
       extra: [],
       level: "verbose",
       message: "verbose message",
-      scope: ["parent", "child"],
+      scope: ["parent", "child", "again"],
       time: MockedDate,
     });
   });
