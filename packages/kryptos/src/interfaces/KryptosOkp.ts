@@ -1,4 +1,4 @@
-import { OkpAlgorithm, OkpB64, OkpCurve, OkpDer, OkpJwk, OkpPem } from "../types";
+import { OkpAlgorithm, OkpCurve, OkpDer, OkpJwk, OkpString } from "../types";
 import { IKryptos } from "./Kryptos";
 
 export interface IKryptosOkp extends IKryptos {
@@ -6,8 +6,8 @@ export interface IKryptosOkp extends IKryptos {
   curve: OkpCurve;
   type: "OKP";
 
-  export(format: "b64"): OkpB64;
+  export(format: "b64"): OkpString;
   export(format: "der"): OkpDer;
   export(format: "jwk"): OkpJwk;
-  export(format: "pem"): OkpPem;
+  export(format: "pem"): OkpString;
 }

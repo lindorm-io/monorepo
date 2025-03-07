@@ -1,4 +1,5 @@
-import { KryptosCurve, KryptosType } from "../types";
+import { KryptosCurve } from "../curve";
+import { KryptosType } from "../types";
 
 export type IsBufferFormatOptions = {
   curve?: KryptosCurve;

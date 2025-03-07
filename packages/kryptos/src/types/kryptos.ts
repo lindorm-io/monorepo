@@ -1,74 +1,45 @@
-import { Optional } from "@lindorm/types";
+import { KryptosAlgorithm } from "./algorithm";
+import { KryptosCurve } from "./curve";
 import { KryptosEncryption } from "./encryption";
-import { RsaModulus } from "./rsa";
-import {
-  KryptosAlgorithm,
-  KryptosCurve,
-  KryptosOperation,
-  KryptosType,
-  KryptosUse,
-} from "./types";
+import { KryptosType, KryptosUse } from "./types";
 
-export type KryptosAttributes = {
-  id: string;
+export type KryptosString = {
   algorithm: KryptosAlgorithm;
-  createdAt: Date;
-  curve: KryptosCurve | undefined;
-  encryption: KryptosEncryption | undefined;
-  expiresAt: Date;
-  isExternal: boolean;
-  issuer: string | undefined;
-  jwksUri: string | undefined;
-  notBefore: Date;
-  operations: Array<KryptosOperation>;
-  ownerId: string | undefined;
+  curve?: KryptosCurve;
+  encryption?: KryptosEncryption;
+  privateKey?: string;
+  publicKey: string;
   type: KryptosType;
-  updatedAt: Date;
   use: KryptosUse;
 };
 
-export type KryptosMetadata = {
-  expiresIn: number;
-  hasPrivateKey: boolean;
-  hasPublicKey: boolean;
-  isActive: boolean;
-  isExpired: boolean;
-  isUsable: boolean;
-  modulus: RsaModulus | undefined;
-};
-
-export type KryptosLike = Partial<KryptosAttributes>;
-
-type StdOptions = Optional<
-  KryptosAttributes,
-  | "id"
-  | "createdAt"
-  | "curve"
-  | "encryption"
-  | "expiresAt"
-  | "isExternal"
-  | "issuer"
-  | "jwksUri"
-  | "notBefore"
-  | "operations"
-  | "ownerId"
-  | "updatedAt"
->;
-
-export type KryptosKeys = {
+export type KryptosBuffer = {
+  algorithm: KryptosAlgorithm;
+  curve?: KryptosCurve;
+  encryption?: KryptosEncryption;
   privateKey?: Buffer;
-  publicKey?: Buffer;
+  publicKey: Buffer;
+  type: KryptosType;
+  use: KryptosUse;
 };
 
-export type KryptosOptions = StdOptions & KryptosKeys;
+export type KryptosJwk = {
+  alg: KryptosAlgorithm;
+  enc?: KryptosEncryption;
+  crv?: KryptosCurve;
+  d?: string;
+  dp?: string;
+  dq?: string;
+  e?: string;
+  k?: string;
+  kty: KryptosType;
+  n?: string;
+  p?: string;
+  q?: string;
+  qi?: string;
+  use: KryptosUse;
+  x?: string;
+  y?: string;
+};
 
-export type GenerateKryptosOptions = Pick<
-  StdOptions,
-  | "encryption"
-  | "expiresAt"
-  | "issuer"
-  | "jwksUri"
-  | "notBefore"
-  | "operations"
-  | "ownerId"
->;
+export type KryptosKey = KryptosString | KryptosBuffer | KryptosJwk;

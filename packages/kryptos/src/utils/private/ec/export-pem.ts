@@ -1,12 +1,12 @@
 import { isString } from "@lindorm/is";
 import { createPrivateKey, createPublicKey } from "crypto";
 import { KryptosError } from "../../../errors";
-import { EcPem, KryptosDer } from "../../../types";
+import { EcString, KryptosBuffer } from "../../../types";
 import { isEcCurve } from "./is-ec-curve";
 
-type Options = Omit<KryptosDer, "algorithm" | "type" | "use">;
+type Options = Omit<KryptosBuffer, "algorithm" | "type" | "use">;
 
-type Result = Omit<EcPem, "algorithm" | "type" | "use">;
+type Result = Omit<EcString, "algorithm" | "type" | "use">;
 
 export const exportEcToPem = (options: Options): Result => {
   if (!isEcCurve(options.curve)) {

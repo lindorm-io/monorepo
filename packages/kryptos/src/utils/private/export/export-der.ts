@@ -1,12 +1,12 @@
 import { KryptosError } from "../../../errors";
-import { KryptosDer } from "../../../types";
+import { KryptosBuffer } from "../../../types";
 import { ExportOptions } from "../../../types/private";
 import { isEcDer } from "../ec";
 import { isOctDer } from "../oct";
 import { isOkpDer } from "../okp";
 import { isRsaDer } from "../rsa";
 
-export const exportToDer = (options: ExportOptions): KryptosDer => {
+export const exportToDer = (options: ExportOptions): KryptosBuffer => {
   switch (options.type) {
     case "EC":
       if (!isEcDer(options)) {

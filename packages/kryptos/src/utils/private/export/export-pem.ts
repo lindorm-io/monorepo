@@ -1,12 +1,12 @@
 import { KryptosError } from "../../../errors";
-import { KryptosPem } from "../../../types";
+import { KryptosString } from "../../../types";
 import { ExportOptions } from "../../../types/private";
 import { exportEcToPem, isEcDer } from "../ec";
 import { exportOctToPem, isOctDer } from "../oct";
 import { exportOkpToPem, isOkpDer } from "../okp";
 import { exportRsaToPem, isRsaDer } from "../rsa";
 
-export const exportToPem = (options: ExportOptions): KryptosPem => {
+export const exportToPem = (options: ExportOptions): KryptosString => {
   switch (options.type) {
     case "EC":
       if (!isEcDer(options)) {

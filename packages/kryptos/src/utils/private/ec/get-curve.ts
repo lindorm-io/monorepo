@@ -1,8 +1,14 @@
 import { KryptosError } from "../../../errors";
-import { EcCurve, EcGenerate } from "../../../types";
+import { EcCurve, KryptosAlgorithm, KryptosCurve } from "../../../types";
+import { isEcCurve } from "./is-ec-curve";
 
-export const getEcCurve = (options: EcGenerate): EcCurve => {
-  if (options.curve) return options.curve;
+type Options = {
+  algorithm: KryptosAlgorithm;
+  curve?: KryptosCurve;
+};
+
+export const getEcCurve = (options: Options): EcCurve => {
+  if (isEcCurve(options.curve)) return options.curve;
 
   switch (options.algorithm) {
     case "ES256":

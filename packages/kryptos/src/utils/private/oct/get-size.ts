@@ -1,7 +1,12 @@
 import { KryptosError } from "../../../errors";
-import { OctGenerate, OctSize } from "../../../types";
+import { KryptosAlgorithm, KryptosEncryption, OctSize } from "../../../types";
 
-export const getOctSize = (options: OctGenerate): OctSize => {
+type Options = {
+  algorithm: KryptosAlgorithm;
+  encryption?: KryptosEncryption;
+};
+
+export const getOctSize = (options: Options): OctSize => {
   if (options.algorithm === "dir") {
     switch (options.encryption) {
       case "A128GCM":

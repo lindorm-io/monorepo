@@ -1,9 +1,9 @@
 import { createPrivateKey, createPublicKey } from "crypto";
 import { KryptosError } from "../../../errors";
-import { EcJwk, KryptosDer, KryptosExportMode } from "../../../types";
+import { EcJwk, KryptosBuffer, KryptosExportMode } from "../../../types";
 import { isEcCurve } from "./is-ec-curve";
 
-type Options = Omit<KryptosDer, "algorithm" | "type" | "use"> & {
+type Options = Omit<KryptosBuffer, "algorithm" | "type" | "use"> & {
   mode: KryptosExportMode;
 };
 

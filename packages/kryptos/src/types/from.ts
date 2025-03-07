@@ -1,22 +1,16 @@
-import { KryptosB64, KryptosDer, KryptosJwk, KryptosPem } from "./export";
 import { UnknownJwk } from "./jwk";
-import { KryptosOptions } from "./kryptos";
+import { KryptosBuffer, KryptosJwk, KryptosString } from "./kryptos";
+import { KryptosOptions } from "./options";
 
 type Std = Omit<
   KryptosOptions,
   "algorithm" | "curve" | "privateKey" | "publicKey" | "type" | "use"
 >;
 
-export type KryptosFromB64 = Std & KryptosB64;
+export type KryptosFromString = Std & KryptosString;
 
-export type KryptosFromDer = Std & KryptosDer;
+export type KryptosFromBuffer = Std & KryptosBuffer;
 
 export type KryptosFromJwk = UnknownJwk & Partial<KryptosJwk>;
 
-export type KryptosFromPem = Std & KryptosPem;
-
-export type KryptosFrom =
-  | KryptosFromB64
-  | KryptosFromDer
-  | KryptosFromJwk
-  | KryptosFromPem;
+export type KryptosFrom = KryptosFromString | KryptosFromBuffer | KryptosFromJwk;

@@ -1,10 +1,10 @@
 import { isBuffer } from "@lindorm/is";
 import { createPrivateKey, createPublicKey } from "crypto";
 import { KryptosError } from "../../../errors";
-import { KryptosDer, OkpDer } from "../../../types";
+import { KryptosFromBuffer, OkpDer } from "../../../types";
 import { isOkpCurve } from "./is-okp-curve";
 
-type Options = Omit<KryptosDer, "algorithm" | "type" | "use">;
+type Options = Omit<KryptosFromBuffer, "algorithm" | "type" | "use">;
 
 type Result = Omit<OkpDer, "algorithm" | "type" | "use">;
 

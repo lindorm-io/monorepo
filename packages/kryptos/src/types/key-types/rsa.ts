@@ -1,4 +1,4 @@
-import { KryptosUse } from "./types";
+import { KryptosUse } from "../types";
 
 export type RsaEncAlgorithm =
   | "RSA-OAEP"
@@ -26,7 +26,7 @@ export type RsaGenerateSig = {
 
 export type RsaGenerate = RsaGenerateEnc | RsaGenerateSig;
 
-export type RsaB64 = {
+export type RsaString = {
   algorithm: RsaAlgorithm;
   privateKey?: string;
   publicKey: string;
@@ -53,13 +53,5 @@ export type RsaJwk = {
   q?: string;
   qi?: string;
   kty: "RSA";
-  use: KryptosUse;
-};
-
-export type RsaPem = {
-  algorithm: RsaAlgorithm;
-  privateKey?: string;
-  publicKey: string;
-  type: "RSA";
   use: KryptosUse;
 };

@@ -1,21 +1,19 @@
 import {
   KryptosAttributes,
-  KryptosB64,
-  KryptosDer,
+  KryptosBuffer,
   KryptosExportMode,
   KryptosJwk,
   KryptosMetadata,
-  KryptosPem,
+  KryptosString,
   LindormJwk,
 } from "../types";
 
 export interface IKryptos extends KryptosAttributes, KryptosMetadata {
   toJSON(): KryptosAttributes & KryptosMetadata;
-  clone(): IKryptos;
   toJWK(mode?: KryptosExportMode): LindormJwk;
 
-  export(format: "b64"): KryptosB64;
-  export(format: "der"): KryptosDer;
+  export(format: "b64"): KryptosString;
+  export(format: "der"): KryptosBuffer;
   export(format: "jwk"): KryptosJwk;
-  export(format: "pem"): KryptosPem;
+  export(format: "pem"): KryptosString;
 }

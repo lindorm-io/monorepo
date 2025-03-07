@@ -1,9 +1,9 @@
 import { KryptosError } from "../../../errors";
-import { EcDer, KryptosPem } from "../../../types";
+import { EcDer, KryptosFromString } from "../../../types";
 import { createEcDerFromDer } from "./der-from-der";
 import { isEcCurve } from "./is-ec-curve";
 
-type Options = Omit<KryptosPem, "algorithm" | "type" | "use">;
+type Options = Omit<KryptosFromString, "algorithm" | "type" | "use">;
 
 type Result = Omit<EcDer, "algorithm" | "type" | "use">;
 

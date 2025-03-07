@@ -1,7 +1,7 @@
 import { KryptosError } from "../../../errors";
 import {
   EcJwk,
-  KryptosDer,
+  KryptosBuffer,
   KryptosFromJwk,
   OctJwk,
   OkpJwk,
@@ -12,7 +12,7 @@ import { createOctDerFromJwk } from "../oct/der-from-jwk";
 import { createOkpDerFromJwk } from "../okp/der-from-jwk";
 import { createRsaDerFromJwk } from "../rsa/der-from-jwk";
 
-export const createDerFromJwk = (options: KryptosFromJwk): KryptosDer => {
+export const createDerFromJwk = (options: KryptosFromJwk): KryptosBuffer => {
   switch (options.kty) {
     case "EC":
       return {

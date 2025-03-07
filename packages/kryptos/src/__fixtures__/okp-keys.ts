@@ -1,6 +1,6 @@
-import { OkpB64, OkpJwk, OkpPem } from "../types";
+import { OkpJwk, OkpString } from "../types";
 
-export const TEST_OKP_KEY_B64: OkpB64 = {
+export const TEST_OKP_KEY_B64: OkpString = {
   algorithm: "EdDSA",
   curve: "Ed25519",
   privateKey: "MC4CAQAwBQYDK2VwBCIEIBwKJlvoh1ngd9LRd7dtvGOSqW4uZamdvIu0ABD2AkxL",
@@ -18,7 +18,7 @@ export const TEST_OKP_KEY_JWK: OkpJwk = {
   use: "sig",
 };
 
-export const TEST_OKP_KEY_PEM: OkpPem = {
+export const TEST_OKP_KEY_PEM: OkpString = {
   algorithm: "EdDSA",
   curve: "Ed25519",
   publicKey:

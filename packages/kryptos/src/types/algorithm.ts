@@ -1,7 +1,13 @@
-import { EcEncAlgorithm, EcSigAlgorithm } from "./ec";
-import { OctEncAlgorithm, OctSigAlgorithm } from "./oct";
-import { OkpEncAlgorithm, OkpSigAlgorithm } from "./okp";
-import { RsaEncAlgorithm, RsaSigAlgorithm } from "./rsa";
+import {
+  EcEncAlgorithm,
+  EcSigAlgorithm,
+  OctEncAlgorithm,
+  OctSigAlgorithm,
+  OkpEncAlgorithm,
+  OkpSigAlgorithm,
+  RsaEncAlgorithm,
+  RsaSigAlgorithm,
+} from "./key-types";
 
 export type KryptosEncAlgorithm =
   | EcEncAlgorithm
@@ -14,3 +20,5 @@ export type KryptosSigAlgorithm =
   | OctSigAlgorithm
   | OkpSigAlgorithm
   | RsaSigAlgorithm;
+
+export type KryptosAlgorithm = KryptosEncAlgorithm | KryptosSigAlgorithm;

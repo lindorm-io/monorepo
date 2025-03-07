@@ -6,7 +6,7 @@ export * from "./okp";
 export * from "./rsa";
 
 export * from "./from-options";
-export * from "./generate";
 export * from "./is";
 export * from "./key-ops";
+export * from "./make";
 export * from "./parse-options";

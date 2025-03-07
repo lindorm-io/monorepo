@@ -1,7 +1,11 @@
 import { KryptosError } from "../../../errors";
-import { RsaGenerate, RsaModulus } from "../../../types";
+import { KryptosAlgorithm, RsaModulus } from "../../../types";
 
-export const getRsaModulus = (options: RsaGenerate): RsaModulus => {
+type Options = {
+  algorithm: KryptosAlgorithm;
+};
+
+export const getRsaModulus = (options: Options): RsaModulus => {
   switch (options.algorithm) {
     case "RSA-OAEP":
       return 1024;

@@ -1,10 +1,10 @@
 import { KryptosError } from "../../../errors";
-import { KryptosB64, KryptosDer } from "../../../types";
+import { KryptosBuffer, KryptosString } from "../../../types";
 import { createEcDerFromB64 } from "../ec/der-from-b64";
 import { createOkpDerFromB64 } from "../okp/der-from-b64";
 import { createRsaDerFromB64 } from "../rsa/der-from-b64";
 
-export const createDerFromB64 = (options: KryptosB64): KryptosDer => {
+export const createDerFromB64 = (options: KryptosString): KryptosBuffer => {
   switch (options.type) {
     case "EC":
       return {

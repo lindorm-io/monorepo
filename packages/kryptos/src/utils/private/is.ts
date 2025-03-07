@@ -1,17 +1,16 @@
 import {
   KryptosFrom,
-  KryptosFromB64,
-  KryptosFromDer,
+  KryptosFromBuffer,
   KryptosFromJwk,
-  KryptosFromPem,
+  KryptosFromString,
 } from "../../types";
 import { isEcB64, isEcDer, isEcJwk, isEcPem } from "./ec/is";
-import { isOctB64, isOctDer, isOctJwk, isOctPem } from "./oct/is";
+import { isOctB64, isOctDer, isOctJwk, isOctPem, isOctUtf } from "./oct/is";
 import { isOkpB64, isOkpDer, isOkpJwk, isOkpPem } from "./okp/is";
 import { isRsaB64, isRsaDer, isRsaJwk, isRsaPem } from "./rsa/is";
 
-export const isB64 = (options: KryptosFrom): options is KryptosFromB64 => {
-  const typed = options as KryptosFromB64;
+export const isB64 = (options: KryptosFrom): options is KryptosFromString => {
+  const typed = options as KryptosFromString;
 
   switch (typed.type) {
     case "EC":
@@ -31,8 +30,8 @@ export const isB64 = (options: KryptosFrom): options is KryptosFromB64 => {
   }
 };
 
-export const isDer = (options: KryptosFrom): options is KryptosFromDer => {
-  const typed = options as KryptosFromDer;
+export const isDer = (options: KryptosFrom): options is KryptosFromBuffer => {
+  const typed = options as KryptosFromBuffer;
 
   switch (typed.type) {
     case "EC":
@@ -73,8 +72,8 @@ export const isJwk = (options: KryptosFrom): options is KryptosFromJwk => {
   }
 };
 
-export const isPem = (options: KryptosFrom): options is KryptosFromPem => {
-  const typed = options as KryptosFromPem;
+export const isPem = (options: KryptosFrom): options is KryptosFromString => {
+  const typed = options as KryptosFromString;
 
   switch (typed.type) {
     case "EC":
@@ -88,6 +87,18 @@ export const isPem = (options: KryptosFrom): options is KryptosFromPem => {
 
     case "RSA":
       return isRsaPem(typed);
+
+    default:
+      return false;
+  }
+};
+
+export const isUtf = (options: KryptosFrom): options is KryptosFromString => {
+  const typed = options as KryptosFromString;
+
+  switch (typed.type) {
+    case "oct":
+      return isOctUtf(typed);
 
     default:
       return false;

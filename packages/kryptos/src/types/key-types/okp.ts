@@ -1,4 +1,4 @@
-import { KryptosUse } from "./types";
+import { KryptosUse } from "../types";
 
 export type OkpEncAlgorithm =
   | "ECDH-ES"
@@ -35,7 +35,7 @@ export type OkpGenerateSig = {
 
 export type OkpGenerate = OkpGenerateEnc | OkpGenerateSig;
 
-export type OkpB64 = {
+export type OkpString = {
   algorithm: OkpAlgorithm;
   curve: OkpCurve;
   privateKey?: string;
@@ -59,14 +59,5 @@ export type OkpJwk = {
   x: string;
   crv: OkpCurve;
   kty: "OKP";
-  use: KryptosUse;
-};
-
-export type OkpPem = {
-  algorithm: OkpAlgorithm;
-  curve: OkpCurve;
-  privateKey?: string;
-  publicKey: string;
-  type: "OKP";
   use: KryptosUse;
 };

@@ -1,13 +1,13 @@
 import { B64 } from "@lindorm/b64";
 import { KryptosError } from "../../../errors";
-import { KryptosB64 } from "../../../types";
+import { KryptosString } from "../../../types";
 import { ExportOptions } from "../../../types/private";
 import { isEcDer } from "../ec/is";
 import { isOctDer } from "../oct/is";
 import { isOkpDer } from "../okp/is";
 import { isRsaDer } from "../rsa/is";
 
-export const exportToB64 = (options: ExportOptions): KryptosB64 => {
+export const exportToB64 = (options: ExportOptions): KryptosString => {
   switch (options.type) {
     case "EC":
       if (!isEcDer(options)) {

@@ -1,7 +1,9 @@
 import { Optional } from "@lindorm/types";
+import { KryptosAlgorithm } from "./algorithm";
 import { KryptosEncryption } from "./encryption";
-import { KryptosJwk } from "./export";
-import { KryptosAlgorithm, KryptosOperation, KryptosType, KryptosUse } from "./types";
+import { KryptosJwk } from "./kryptos";
+import { KryptosOperation } from "./operation";
+import { KryptosType, KryptosUse } from "./types";
 
 export type JwkMetadata = {
   alg: KryptosAlgorithm;

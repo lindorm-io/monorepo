@@ -1,9 +1,9 @@
 import { isBuffer } from "@lindorm/is";
 import { createPrivateKey, createPublicKey } from "crypto";
 import { KryptosError } from "../../../errors";
-import { KryptosJwk, RsaDer } from "../../../types";
+import { KryptosFromJwk, RsaDer } from "../../../types";
 
-type Options = Omit<KryptosJwk, "alg" | "use">;
+type Options = Omit<KryptosFromJwk, "alg" | "use">;
 
 type Result = Omit<RsaDer, "algorithm" | "type" | "use">;
 

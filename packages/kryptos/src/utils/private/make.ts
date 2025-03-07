@@ -1,30 +1,19 @@
+import { Optional } from "@lindorm/types";
 import { KryptosError } from "../../errors";
-import {
-  EcDer,
-  EcGenerate,
-  GenerateKryptos,
-  KryptosAlgorithm,
-  OctDer,
-  OctGenerate,
-  OkpDer,
-  OkpGenerate,
-  RsaDer,
-  RsaGenerate,
-} from "../../types";
+import { EcDer, KryptosAlgorithm, OctDer, OkpDer, RsaDer } from "../../types";
+import { KryptosMake } from "../../types/private";
 import { generateEcKey } from "./ec";
 import { generateOctKey } from "./oct";
 import { generateOkpKey } from "./okp";
 import { generateRsaKey } from "./rsa";
 
-type Options = EcGenerate | OctGenerate | OkpGenerate | RsaGenerate;
-
-type Result =
+type MakeResult =
   | Omit<EcDer, "algorithm" | "type" | "use">
   | Omit<OctDer, "algorithm" | "type" | "use">
   | Omit<OkpDer, "algorithm" | "type" | "use">
   | Omit<RsaDer, "algorithm" | "type" | "use">;
 
-export const generateKey = (options: Options): Result => {
+export const makeKey = (options: KryptosMake): MakeResult => {
   switch (options.type) {
     case "EC":
       return generateEcKey(options);
@@ -43,7 +32,10 @@ export const generateKey = (options: Options): Result => {
   }
 };
 
-export const autoGenerateConfig = (algorithm: KryptosAlgorithm): GenerateKryptos => {
+type AutoResult = Omit<KryptosMake, "curve" | "encryption" | "operations"> &
+  Optional<KryptosMake, "curve" | "encryption" | "operations">;
+
+export const autoMakeConfig = (algorithm: KryptosAlgorithm): AutoResult => {
   switch (algorithm) {
     case "A128KW":
     case "A192KW":

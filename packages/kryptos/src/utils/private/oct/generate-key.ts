@@ -1,13 +1,18 @@
 import { randomBytes } from "crypto";
-import { OctGenerate } from "../../../types";
+import { KryptosAlgorithm, KryptosEncryption } from "../../../types";
 import { getOctSize } from "./get-size";
+
+type Options = {
+  algorithm: KryptosAlgorithm;
+  encryption?: KryptosEncryption;
+};
 
 type Result = {
   privateKey: Buffer;
   publicKey: Buffer;
 };
 
-export const generateOctKey = (options: OctGenerate): Result => {
+export const generateOctKey = (options: Options): Result => {
   const size = getOctSize(options);
 
   return {

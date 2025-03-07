@@ -1,7 +1,7 @@
 import { KryptosError } from "../../../errors";
-import { KryptosJwk, OctDer } from "../../../types";
+import { KryptosFromJwk, OctDer } from "../../../types";
 
-type Options = Omit<KryptosJwk, "alg" | "use">;
+type Options = Omit<KryptosFromJwk, "alg" | "use">;
 
 type Result = Omit<OctDer, "algorithm" | "type" | "use">;
 

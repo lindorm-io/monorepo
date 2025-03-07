@@ -6,7 +6,8 @@ import {
   createDerFromJwk,
   createDerFromPem,
 } from "./from";
-import { isB64, isDer, isJwk, isPem } from "./is";
+import { createDerFromUtf } from "./from/der-from-utf";
+import { isB64, isDer, isJwk, isPem, isUtf } from "./is";
 import { parseJwkOptions, parseStdOptions } from "./parse-options";
 
 export const fromOptions = (format: KryptosFormat, arg: KryptosFrom): KryptosOptions => {
@@ -26,6 +27,10 @@ export const fromOptions = (format: KryptosFormat, arg: KryptosFrom): KryptosOpt
     case "pem":
       if (!isPem(arg)) throw new KryptosError("Invalid key format");
       return { ...parseStdOptions(arg), ...createDerFromPem(arg) };
+
+    case "utf":
+      if (!isUtf(arg)) throw new KryptosError("Invalid key format");
+      return { ...parseStdOptions(arg), ...createDerFromUtf(arg) };
 
     default:
       throw new KryptosError("Invalid key format");

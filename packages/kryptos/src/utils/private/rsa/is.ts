@@ -1,12 +1,13 @@
+import { B64 } from "@lindorm/b64";
 import { isBuffer, isString } from "@lindorm/is";
-import { RsaB64, RsaDer, RsaJwk, RsaPem } from "../../../types";
+import { RsaDer, RsaJwk, RsaString } from "../../../types";
 import {
   IsBufferFormatOptions,
   IsJwkFormatOptions,
   IsStringFormatOptions,
 } from "../../../types/private";
 
-export const isRsaB64 = (options: IsStringFormatOptions): options is RsaB64 => {
+export const isRsaB64 = (options: IsStringFormatOptions): options is RsaString => {
   if (options.type !== "RSA") return false;
   if (options.curve) return false;
 
@@ -20,6 +21,10 @@ export const isRsaB64 = (options: IsStringFormatOptions): options is RsaB64 => {
 
   if (options.publicKey && options.publicKey.startsWith("-----BEGIN RSA PUBLIC KEY-----"))
     return false;
+
+  if (options.privateKey && !B64.isBase64Url(options.privateKey)) return false;
+
+  if (options.publicKey && !B64.isBase64Url(options.publicKey)) return false;
 
   return true;
 };
@@ -42,7 +47,7 @@ export const isRsaJwk = (options: IsJwkFormatOptions): options is RsaJwk => {
   return true;
 };
 
-export const isRsaPem = (options: IsStringFormatOptions): options is RsaPem => {
+export const isRsaPem = (options: IsStringFormatOptions): options is RsaString => {
   if (options.type !== "RSA") return false;
   if (options.curve) return false;
 

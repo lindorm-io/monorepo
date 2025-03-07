@@ -1,6 +1,6 @@
-import { EcB64, EcJwk, EcPem } from "../types";
+import { EcJwk, EcString } from "../types";
 
-export const TEST_EC_KEY_B64: EcB64 = {
+export const TEST_EC_KEY_B64: EcString = {
   algorithm: "ES512",
   curve: "P-521",
   privateKey:
@@ -21,7 +21,7 @@ export const TEST_EC_KEY_JWK: EcJwk = {
   use: "sig",
 };
 
-export const TEST_EC_KEY_PEM: EcPem = {
+export const TEST_EC_KEY_PEM: EcString = {
   algorithm: "ES512",
   curve: "P-521",
   type: "EC",

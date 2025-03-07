@@ -1,4 +1,4 @@
-import { KryptosUse } from "./types";
+import { KryptosUse } from "../types";
 
 export type EcEncAlgorithm =
   | "ECDH-ES"
@@ -31,7 +31,7 @@ export type EcGenerateSig = {
 
 export type EcGenerate = EcGenerateEnc | EcGenerateSig;
 
-export type EcB64 = {
+export type EcString = {
   algorithm: EcAlgorithm;
   curve: EcCurve;
   privateKey?: string;
@@ -56,14 +56,5 @@ export type EcJwk = {
   y: string;
   crv: EcCurve;
   kty: "EC";
-  use: KryptosUse;
-};
-
-export type EcPem = {
-  algorithm: EcAlgorithm;
-  curve: EcCurve;
-  privateKey?: string;
-  publicKey: string;
-  type: "EC";
   use: KryptosUse;
 };

@@ -1,5 +1,11 @@
 import { generateKeyPairSync } from "crypto";
-import { OkpCurve, OkpGenerate } from "../../../types";
+import { KryptosAlgorithm, KryptosCurve, OkpCurve } from "../../../types";
+import { getOkpCurve } from "./get-curve";
+
+type Options = {
+  algorithm: KryptosAlgorithm;
+  curve?: KryptosCurve;
+};
 
 type Result = {
   curve: OkpCurve;
@@ -7,8 +13,8 @@ type Result = {
   publicKey: Buffer;
 };
 
-export const generateOkpKey = (options: OkpGenerate): Result => {
-  const curve = options.curve;
+export const generateOkpKey = (options: Options): Result => {
+  const curve = getOkpCurve(options);
 
   const { privateKey, publicKey } = generateKeyPairSync(curve.toLowerCase() as any, {
     privateKeyEncoding: { format: "der", type: "pkcs8" },

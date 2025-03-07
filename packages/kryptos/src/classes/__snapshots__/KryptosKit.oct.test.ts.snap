@@ -1,0 +1,381 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`KryptosKit (oct) from auto b64 1`] = `
+{
+  "algorithm": "HS512",
+  "createdAt": 2024-01-01T08:00:00.000Z,
+  "expiresIn": -1,
+  "hasPrivateKey": true,
+  "hasPublicKey": false,
+  "id": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "isActive": true,
+  "isExpired": false,
+  "isExternal": false,
+  "notBefore": 2024-01-01T08:00:00.000Z,
+  "operations": [],
+  "type": "oct",
+  "updatedAt": 2024-01-01T08:00:00.000Z,
+  "use": "sig",
+}
+`;
+
+exports[`KryptosKit (oct) from auto b64 2`] = `
+{
+  "alg": "HS512",
+  "iat": 1704096000,
+  "k": "",
+  "key_ops": [],
+  "kid": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "kty": "oct",
+  "nbf": 1704096000,
+  "uat": 1704096000,
+  "use": "sig",
+}
+`;
+
+exports[`KryptosKit (oct) from auto b64 3`] = `
+{
+  "algorithm": "HS512",
+  "privateKey": "diYnyceZxmn18xGjVobBEwOSj2QOavHfv_tWGNuBpjND572Pa3qD8PDqDSrvoLtLOWyHdQ5lsmsuEIDcPgbPKp92HfNkawbKpCsVNBpoTlbZ-5jewLMREoGje9_pQzGSPLgh-cAkwtcrLUJNbwbyMGMlXmIJXeGukWsD6BfOAimNzPIyLf8QYMJYL9tzf16X4mQ1SvU76Y8Mqop6wz8ylAET7xWTivI-iOK8Zk1MiiomJww5w47Uz7X6Ha_uz7ctCESsyYMef9ZnYlsqwsHPrnP78ihyiv8cH7obubKJ6HkmsCnSTBOchDYxnmQiVZffuMSb8pScaIK6Vfef_1c7Vg",
+  "publicKey": "",
+  "type": "oct",
+  "use": "sig",
+}
+`;
+
+exports[`KryptosKit (oct) from auto jwk 1`] = `
+{
+  "algorithm": "HS512",
+  "createdAt": 2024-01-01T08:00:00.000Z,
+  "expiresIn": -1,
+  "hasPrivateKey": true,
+  "hasPublicKey": false,
+  "id": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "isActive": true,
+  "isExpired": false,
+  "isExternal": true,
+  "notBefore": 2024-01-01T08:00:00.000Z,
+  "operations": [],
+  "type": "oct",
+  "updatedAt": 2024-01-01T08:00:00.000Z,
+  "use": "sig",
+}
+`;
+
+exports[`KryptosKit (oct) from auto jwk 2`] = `
+{
+  "alg": "HS512",
+  "iat": 1704096000,
+  "k": "",
+  "key_ops": [],
+  "kid": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "kty": "oct",
+  "nbf": 1704096000,
+  "uat": 1704096000,
+  "use": "sig",
+}
+`;
+
+exports[`KryptosKit (oct) from auto jwk 3`] = `
+{
+  "alg": "HS512",
+  "k": "tt8sKlXAatelhbSo_IZgvyFzIiKPOKhv-IZTqAEkCkJZPVrO5PK9hb1NH9m9bJXa1nGmqlEVCjzsA1lwYsA2clgUvjQ3QlL3x7yDxzZqReg2x_W4XezFU2fBsGdsD2u-CW5FJ3WJZPsSDG5zOsARCdjvIyDiNO1Ryb-MRb0LWxcvsDdzNPIJNTf5adhf4Qsf5ZIWhvnSF5y9fglB6QRcskgwdRfGoYjjkiw3-h5UDrUnjzCPLQ7GVhq2gg_OyZJsduwTVYGObpAG6EYplvQZjNAWyekHivXfpc556jNTWCzfmAyZvvucsGIM5wuupicfn7AbA1a50fuppCyMwbBKSg",
+  "kty": "oct",
+  "use": "sig",
+}
+`;
+
+exports[`KryptosKit (oct) from auto pem 1`] = `
+{
+  "algorithm": "HS512",
+  "createdAt": 2024-01-01T08:00:00.000Z,
+  "expiresIn": -1,
+  "hasPrivateKey": true,
+  "hasPublicKey": false,
+  "id": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "isActive": true,
+  "isExpired": false,
+  "isExternal": false,
+  "notBefore": 2024-01-01T08:00:00.000Z,
+  "operations": [],
+  "type": "oct",
+  "updatedAt": 2024-01-01T08:00:00.000Z,
+  "use": "sig",
+}
+`;
+
+exports[`KryptosKit (oct) from auto pem 2`] = `
+{
+  "alg": "HS512",
+  "iat": 1704096000,
+  "k": "",
+  "key_ops": [],
+  "kid": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "kty": "oct",
+  "nbf": 1704096000,
+  "uat": 1704096000,
+  "use": "sig",
+}
+`;
+
+exports[`KryptosKit (oct) from auto pem 3`] = `
+{
+  "algorithm": "HS512",
+  "privateKey": "-----BEGIN OCT PRIVATE KEY-----
+ts4FwuyVlXJqw2ruyxbpzRpkknqiZicDS02J2YjfX+FwZ423Q42E0T/AKYkVXHNW
+uD8Gi0aKMYytagkT7qJx3PsFCgDND01mXOg8pDhXv1n1Cbl8JxavKwbx87QCZ9Bm
+PlUCPWDU8khZ/djxbtK/Hdl7ehFnk3KoFsEYphydCFhdI29UaURoj1ZNDV08Psnu
+iqBCE9DgYc58QHaGRmpct9ORyYOJ4o+7jOD45cxeKZubVq4HIifiXk724DGP4M1/
+crSKuYK1lddiniPwv/nnl0DAxI8/5Vz8NGXvGoJFaltQiZmKMC8y5O74DvIDknS3
+cvQHzpn+t5VXn6eD+7A74Q==
+-----END OCT PRIVATE KEY-----",
+  "publicKey": "",
+  "type": "oct",
+  "use": "sig",
+}
+`;
+
+exports[`KryptosKit (oct) from b64 1`] = `
+{
+  "algorithm": "HS512",
+  "createdAt": 2024-01-01T08:00:00.000Z,
+  "expiresIn": -1,
+  "hasPrivateKey": true,
+  "hasPublicKey": false,
+  "id": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "isActive": true,
+  "isExpired": false,
+  "isExternal": false,
+  "notBefore": 2024-01-01T08:00:00.000Z,
+  "operations": [],
+  "type": "oct",
+  "updatedAt": 2024-01-01T08:00:00.000Z,
+  "use": "sig",
+}
+`;
+
+exports[`KryptosKit (oct) from b64 2`] = `
+{
+  "alg": "HS512",
+  "iat": 1704096000,
+  "k": "",
+  "key_ops": [],
+  "kid": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "kty": "oct",
+  "nbf": 1704096000,
+  "uat": 1704096000,
+  "use": "sig",
+}
+`;
+
+exports[`KryptosKit (oct) from b64 3`] = `
+{
+  "algorithm": "HS512",
+  "privateKey": "diYnyceZxmn18xGjVobBEwOSj2QOavHfv_tWGNuBpjND572Pa3qD8PDqDSrvoLtLOWyHdQ5lsmsuEIDcPgbPKp92HfNkawbKpCsVNBpoTlbZ-5jewLMREoGje9_pQzGSPLgh-cAkwtcrLUJNbwbyMGMlXmIJXeGukWsD6BfOAimNzPIyLf8QYMJYL9tzf16X4mQ1SvU76Y8Mqop6wz8ylAET7xWTivI-iOK8Zk1MiiomJww5w47Uz7X6Ha_uz7ctCESsyYMef9ZnYlsqwsHPrnP78ihyiv8cH7obubKJ6HkmsCnSTBOchDYxnmQiVZffuMSb8pScaIK6Vfef_1c7Vg",
+  "publicKey": "",
+  "type": "oct",
+  "use": "sig",
+}
+`;
+
+exports[`KryptosKit (oct) from jwk 1`] = `
+{
+  "algorithm": "HS512",
+  "createdAt": 2024-01-01T08:00:00.000Z,
+  "expiresIn": -1,
+  "hasPrivateKey": true,
+  "hasPublicKey": false,
+  "id": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "isActive": true,
+  "isExpired": false,
+  "isExternal": true,
+  "notBefore": 2024-01-01T08:00:00.000Z,
+  "operations": [],
+  "type": "oct",
+  "updatedAt": 2024-01-01T08:00:00.000Z,
+  "use": "sig",
+}
+`;
+
+exports[`KryptosKit (oct) from jwk 2`] = `
+{
+  "alg": "HS512",
+  "iat": 1704096000,
+  "k": "",
+  "key_ops": [],
+  "kid": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "kty": "oct",
+  "nbf": 1704096000,
+  "uat": 1704096000,
+  "use": "sig",
+}
+`;
+
+exports[`KryptosKit (oct) from jwk 3`] = `
+{
+  "alg": "HS512",
+  "k": "tt8sKlXAatelhbSo_IZgvyFzIiKPOKhv-IZTqAEkCkJZPVrO5PK9hb1NH9m9bJXa1nGmqlEVCjzsA1lwYsA2clgUvjQ3QlL3x7yDxzZqReg2x_W4XezFU2fBsGdsD2u-CW5FJ3WJZPsSDG5zOsARCdjvIyDiNO1Ryb-MRb0LWxcvsDdzNPIJNTf5adhf4Qsf5ZIWhvnSF5y9fglB6QRcskgwdRfGoYjjkiw3-h5UDrUnjzCPLQ7GVhq2gg_OyZJsduwTVYGObpAG6EYplvQZjNAWyekHivXfpc556jNTWCzfmAyZvvucsGIM5wuupicfn7AbA1a50fuppCyMwbBKSg",
+  "kty": "oct",
+  "use": "sig",
+}
+`;
+
+exports[`KryptosKit (oct) from pem 1`] = `
+{
+  "algorithm": "HS512",
+  "createdAt": 2024-01-01T08:00:00.000Z,
+  "expiresIn": -1,
+  "hasPrivateKey": true,
+  "hasPublicKey": false,
+  "id": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "isActive": true,
+  "isExpired": false,
+  "isExternal": false,
+  "notBefore": 2024-01-01T08:00:00.000Z,
+  "operations": [],
+  "type": "oct",
+  "updatedAt": 2024-01-01T08:00:00.000Z,
+  "use": "sig",
+}
+`;
+
+exports[`KryptosKit (oct) from pem 2`] = `
+{
+  "alg": "HS512",
+  "iat": 1704096000,
+  "k": "",
+  "key_ops": [],
+  "kid": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "kty": "oct",
+  "nbf": 1704096000,
+  "uat": 1704096000,
+  "use": "sig",
+}
+`;
+
+exports[`KryptosKit (oct) from pem 3`] = `
+{
+  "algorithm": "HS512",
+  "privateKey": "-----BEGIN OCT PRIVATE KEY-----
+ts4FwuyVlXJqw2ruyxbpzRpkknqiZicDS02J2YjfX+FwZ423Q42E0T/AKYkVXHNW
+uD8Gi0aKMYytagkT7qJx3PsFCgDND01mXOg8pDhXv1n1Cbl8JxavKwbx87QCZ9Bm
+PlUCPWDU8khZ/djxbtK/Hdl7ehFnk3KoFsEYphydCFhdI29UaURoj1ZNDV08Psnu
+iqBCE9DgYc58QHaGRmpct9ORyYOJ4o+7jOD45cxeKZubVq4HIifiXk724DGP4M1/
+crSKuYK1lddiniPwv/nnl0DAxI8/5Vz8NGXvGoJFaltQiZmKMC8y5O74DvIDknS3
+cvQHzpn+t5VXn6eD+7A74Q==
+-----END OCT PRIVATE KEY-----",
+  "publicKey": "",
+  "type": "oct",
+  "use": "sig",
+}
+`;
+
+exports[`KryptosKit (oct) from utf 1`] = `
+{
+  "algorithm": "HS512",
+  "createdAt": 2024-01-01T08:00:00.000Z,
+  "expiresIn": -1,
+  "hasPrivateKey": true,
+  "hasPublicKey": false,
+  "id": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "isActive": true,
+  "isExpired": false,
+  "isExternal": false,
+  "notBefore": 2024-01-01T08:00:00.000Z,
+  "operations": [],
+  "type": "oct",
+  "updatedAt": 2024-01-01T08:00:00.000Z,
+  "use": "sig",
+}
+`;
+
+exports[`KryptosKit (oct) from utf 2`] = `
+{
+  "alg": "HS512",
+  "iat": 1704096000,
+  "k": "",
+  "key_ops": [],
+  "kid": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "kty": "oct",
+  "nbf": 1704096000,
+  "uat": 1704096000,
+  "use": "sig",
+}
+`;
+
+exports[`KryptosKit (oct) from utf 3`] = `
+{
+  "algorithm": "HS512",
+  "privateKey": "I-KCrCEuYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXouQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVouMDEyMzQ1Njc4OQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+  "publicKey": "",
+  "type": "oct",
+  "use": "sig",
+}
+`;
+
+exports[`KryptosKit (oct) make auto 1`] = `
+{
+  "algorithm": "HS384",
+  "createdAt": 2024-01-01T08:00:00.000Z,
+  "expiresIn": -1,
+  "hasPrivateKey": true,
+  "hasPublicKey": false,
+  "id": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "isActive": true,
+  "isExpired": false,
+  "isExternal": false,
+  "notBefore": 2024-01-01T08:00:00.000Z,
+  "operations": [
+    "sign",
+    "verify",
+  ],
+  "type": "oct",
+  "updatedAt": 2024-01-01T08:00:00.000Z,
+  "use": "sig",
+}
+`;
+
+exports[`KryptosKit (oct) make enc 1`] = `
+{
+  "algorithm": "dir",
+  "createdAt": 2024-01-01T08:00:00.000Z,
+  "encryption": "A256GCM",
+  "expiresIn": -1,
+  "hasPrivateKey": true,
+  "hasPublicKey": false,
+  "id": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "isActive": true,
+  "isExpired": false,
+  "isExternal": false,
+  "notBefore": 2024-01-01T08:00:00.000Z,
+  "operations": [
+    "encrypt",
+    "decrypt",
+  ],
+  "type": "oct",
+  "updatedAt": 2024-01-01T08:00:00.000Z,
+  "use": "enc",
+}
+`;
+
+exports[`KryptosKit (oct) make sig 1`] = `
+{
+  "algorithm": "HS512",
+  "createdAt": 2024-01-01T08:00:00.000Z,
+  "expiresIn": -1,
+  "hasPrivateKey": true,
+  "hasPublicKey": false,
+  "id": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "isActive": true,
+  "isExpired": false,
+  "isExternal": false,
+  "notBefore": 2024-01-01T08:00:00.000Z,
+  "operations": [
+    "sign",
+    "verify",
+  ],
+  "type": "oct",
+  "updatedAt": 2024-01-01T08:00:00.000Z,
+  "use": "sig",
+}
+`;

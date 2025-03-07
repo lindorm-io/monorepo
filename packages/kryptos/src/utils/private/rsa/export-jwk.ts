@@ -1,8 +1,8 @@
 import { createPrivateKey, createPublicKey } from "crypto";
 import { KryptosError } from "../../../errors";
-import { KryptosDer, KryptosExportMode, RsaJwk } from "../../../types";
+import { KryptosBuffer, KryptosExportMode, RsaJwk } from "../../../types";
 
-type Options = Omit<KryptosDer, "algorithm" | "type" | "use"> & {
+type Options = Omit<KryptosBuffer, "algorithm" | "type" | "use"> & {
   mode: KryptosExportMode;
 };
 

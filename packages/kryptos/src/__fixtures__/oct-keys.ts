@@ -1,6 +1,6 @@
-import { OctB64, OctJwk, OctPem } from "../types";
+import { OctJwk, OctString } from "../types";
 
-export const TEST_OCT_KEY_B64: OctB64 = {
+export const TEST_OCT_KEY_B64: OctString = {
   algorithm: "HS512",
   privateKey:
     "diYnyceZxmn18xGjVobBEwOSj2QOavHfv_tWGNuBpjND572Pa3qD8PDqDSrvoLtLOWyHdQ5lsmsuEIDcPgbPKp92HfNkawbKpCsVNBpoTlbZ-5jewLMREoGje9_pQzGSPLgh-cAkwtcrLUJNbwbyMGMlXmIJXeGukWsD6BfOAimNzPIyLf8QYMJYL9tzf16X4mQ1SvU76Y8Mqop6wz8ylAET7xWTivI-iOK8Zk1MiiomJww5w47Uz7X6Ha_uz7ctCESsyYMef9ZnYlsqwsHPrnP78ihyiv8cH7obubKJ6HkmsCnSTBOchDYxnmQiVZffuMSb8pScaIK6Vfef_1c7Vg",
@@ -16,7 +16,7 @@ export const TEST_OCT_KEY_JWK: OctJwk = {
   use: "sig",
 };
 
-export const TEST_OCT_KEY_PEM: OctPem = {
+export const TEST_OCT_KEY_PEM: OctString = {
   algorithm: "HS512",
   privateKey:
     "-----BEGIN OCT PRIVATE KEY-----\n" +
@@ -30,4 +30,12 @@ export const TEST_OCT_KEY_PEM: OctPem = {
   publicKey: "",
   use: "sig",
   type: "oct",
+};
+
+export const TEST_OCT_KEY_UTF: OctString = {
+  algorithm: "HS512",
+  privateKey: "#€!.abcdefghijklmnopqrstuvwxyz.ABCDEFGHIJKLMNOPQRSTUVWXYZ.0123456789",
+  publicKey: "",
+  type: "oct",
+  use: "sig",
 };

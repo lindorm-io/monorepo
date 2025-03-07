@@ -1,0 +1,223 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Kryptos (OKP) export should export b64 1`] = `
+{
+  "algorithm": "EdDSA",
+  "curve": "Ed25519",
+  "privateKey": "MC4CAQAwBQYDK2VwBCIEIBwKJlvoh1ngd9LRd7dtvGOSqW4uZamdvIu0ABD2AkxL",
+  "publicKey": "MCowBQYDK2VwAyEAGRCwCA6lChosFGMQwxGiHCdzblfvCz0FNiRtTnm1qqc",
+  "type": "OKP",
+  "use": "sig",
+}
+`;
+
+exports[`Kryptos (OKP) export should export der 1`] = `
+{
+  "algorithm": "EdDSA",
+  "curve": "Ed25519",
+  "privateKey": {
+    "data": [
+      48,
+      46,
+      2,
+      1,
+      0,
+      48,
+      5,
+      6,
+      3,
+      43,
+      101,
+      112,
+      4,
+      34,
+      4,
+      32,
+      28,
+      10,
+      38,
+      91,
+      232,
+      135,
+      89,
+      224,
+      119,
+      210,
+      209,
+      119,
+      183,
+      109,
+      188,
+      99,
+      146,
+      169,
+      110,
+      46,
+      101,
+      169,
+      157,
+      188,
+      139,
+      180,
+      0,
+      16,
+      246,
+      2,
+      76,
+      75,
+    ],
+    "type": "Buffer",
+  },
+  "publicKey": {
+    "data": [
+      48,
+      42,
+      48,
+      5,
+      6,
+      3,
+      43,
+      101,
+      112,
+      3,
+      33,
+      0,
+      25,
+      16,
+      176,
+      8,
+      14,
+      165,
+      10,
+      26,
+      44,
+      20,
+      99,
+      16,
+      195,
+      17,
+      162,
+      28,
+      39,
+      115,
+      110,
+      87,
+      239,
+      11,
+      61,
+      5,
+      54,
+      36,
+      109,
+      78,
+      121,
+      181,
+      170,
+      167,
+    ],
+    "type": "Buffer",
+  },
+  "type": "OKP",
+  "use": "sig",
+}
+`;
+
+exports[`Kryptos (OKP) export should export jwk 1`] = `
+{
+  "alg": "EdDSA",
+  "crv": "Ed25519",
+  "d": "HAomW-iHWeB30tF3t228Y5Kpbi5lqZ28i7QAEPYCTEs",
+  "kty": "OKP",
+  "use": "sig",
+  "x": "GRCwCA6lChosFGMQwxGiHCdzblfvCz0FNiRtTnm1qqc",
+}
+`;
+
+exports[`Kryptos (OKP) export should export pem 1`] = `
+{
+  "algorithm": "EdDSA",
+  "curve": "Ed25519",
+  "privateKey": "-----BEGIN PRIVATE KEY-----
+MC4CAQAwBQYDK2VwBCIEIBwKJlvoh1ngd9LRd7dtvGOSqW4uZamdvIu0ABD2AkxL
+-----END PRIVATE KEY-----
+",
+  "publicKey": "-----BEGIN PUBLIC KEY-----
+MCowBQYDK2VwAyEAGRCwCA6lChosFGMQwxGiHCdzblfvCz0FNiRtTnm1qqc=
+-----END PUBLIC KEY-----
+",
+  "type": "OKP",
+  "use": "sig",
+}
+`;
+
+exports[`Kryptos (OKP) to should return json 1`] = `
+{
+  "algorithm": "EdDSA",
+  "createdAt": 2023-01-01T08:00:00.000Z,
+  "curve": "Ed25519",
+  "expiresAt": 2099-01-01T08:00:00.000Z,
+  "expiresIn": 2366841600,
+  "hasPrivateKey": true,
+  "hasPublicKey": true,
+  "id": "3b9a051f-e1ec-562b-bf92-7cf92ec465ba",
+  "isActive": true,
+  "isExpired": false,
+  "isExternal": false,
+  "issuer": "https://example.com",
+  "jwksUri": "https://example.com/.well-known/jwks.json",
+  "notBefore": 2023-01-01T08:00:00.000Z,
+  "operations": [
+    "sign",
+    "verify",
+  ],
+  "ownerId": "f02c2d0c-44ee-5e4e-8b3b-39d46924d227",
+  "type": "OKP",
+  "updatedAt": 2023-12-01T08:00:00.000Z,
+  "use": "sig",
+}
+`;
+
+exports[`Kryptos (OKP) to should return jwk with private key 1`] = `
+{
+  "alg": "EdDSA",
+  "crv": "Ed25519",
+  "d": "HAomW-iHWeB30tF3t228Y5Kpbi5lqZ28i7QAEPYCTEs",
+  "exp": 4070937600,
+  "iat": 1672560000,
+  "iss": "https://example.com",
+  "jku": "https://example.com/.well-known/jwks.json",
+  "key_ops": [
+    "sign",
+    "verify",
+  ],
+  "kid": "3b9a051f-e1ec-562b-bf92-7cf92ec465ba",
+  "kty": "OKP",
+  "nbf": 1672560000,
+  "owner_id": "f02c2d0c-44ee-5e4e-8b3b-39d46924d227",
+  "uat": 1701417600,
+  "use": "sig",
+  "x": "GRCwCA6lChosFGMQwxGiHCdzblfvCz0FNiRtTnm1qqc",
+}
+`;
+
+exports[`Kryptos (OKP) to should return jwk with public key 1`] = `
+{
+  "alg": "EdDSA",
+  "crv": "Ed25519",
+  "exp": 4070937600,
+  "iat": 1672560000,
+  "iss": "https://example.com",
+  "jku": "https://example.com/.well-known/jwks.json",
+  "key_ops": [
+    "sign",
+    "verify",
+  ],
+  "kid": "3b9a051f-e1ec-562b-bf92-7cf92ec465ba",
+  "kty": "OKP",
+  "nbf": 1672560000,
+  "owner_id": "f02c2d0c-44ee-5e4e-8b3b-39d46924d227",
+  "uat": 1701417600,
+  "use": "sig",
+  "x": "GRCwCA6lChosFGMQwxGiHCdzblfvCz0FNiRtTnm1qqc",
+}
+`;

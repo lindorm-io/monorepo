@@ -1,8 +1,8 @@
-import { KryptosDer, OctPem } from "../../../types";
+import { KryptosBuffer, OctString } from "../../../types";
 
-type Options = Omit<KryptosDer, "algorithm" | "type" | "use">;
+type Options = Omit<KryptosBuffer, "algorithm" | "type" | "use">;
 
-type Result = Omit<OctPem, "algorithm" | "type" | "use">;
+type Result = Omit<OctString, "algorithm" | "type" | "use">;
 
 const splitStringIntoChunks = (input: string, size: number): Array<string> => {
   const chunks: Array<string> = [];

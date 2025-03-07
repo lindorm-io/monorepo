@@ -1,8 +1,8 @@
 import { KryptosError } from "../../../errors";
-import { KryptosPem, RsaDer } from "../../../types";
+import { KryptosFromString, RsaDer } from "../../../types";
 import { createRsaDerFromDer } from "./der-from-der";
 
-type Options = Omit<KryptosPem, "algorithm" | "type" | "use">;
+type Options = Omit<KryptosFromString, "algorithm" | "type" | "use">;
 
 type Result = Omit<RsaDer, "algorithm" | "type" | "use">;
 

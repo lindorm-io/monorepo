@@ -1,11 +1,11 @@
 import { KryptosError } from "../../../errors";
-import { KryptosDer, KryptosPem } from "../../../types";
+import { KryptosBuffer, KryptosFromString } from "../../../types";
 import { createEcDerFromPem } from "../ec/der-from-pem";
 import { createOctDerFromPem } from "../oct/der-from-pem";
 import { createOkpDerFromPem } from "../okp/der-from-pem";
 import { createRsaDerFromPem } from "../rsa/der-from-pem";
 
-export const createDerFromPem = (options: KryptosPem): KryptosDer => {
+export const createDerFromPem = (options: KryptosFromString): KryptosBuffer => {
   switch (options.type) {
     case "EC":
       return {

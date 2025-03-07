@@ -1,4 +1,4 @@
-import { OctAlgorithm, OctB64, OctDer, OctJwk, OctPem } from "../types";
+import { OctAlgorithm, OctDer, OctJwk, OctString } from "../types";
 import { IKryptos } from "./Kryptos";
 
 export interface IKryptosOct extends IKryptos {
@@ -6,8 +6,8 @@ export interface IKryptosOct extends IKryptos {
   curve: undefined;
   type: "oct";
 
-  export(format: "b64"): OctB64;
+  export(format: "b64"): OctString;
   export(format: "der"): OctDer;
   export(format: "jwk"): OctJwk;
-  export(format: "pem"): OctPem;
+  export(format: "pem"): OctString;
 }

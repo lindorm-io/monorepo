@@ -1,4 +1,6 @@
-import { KryptosAlgorithm, KryptosCurve, KryptosType, KryptosUse } from "../types";
+import { KryptosAlgorithm } from "../algorithm";
+import { KryptosCurve } from "../curve";
+import { KryptosType, KryptosUse } from "../types";
 
 export type ExportOptions = {
   algorithm: KryptosAlgorithm;

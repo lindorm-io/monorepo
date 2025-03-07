@@ -1,8 +1,8 @@
 import { B64 } from "@lindorm/b64";
 import { KryptosError } from "../../../errors";
-import { KryptosDer, KryptosExportMode, OctJwk } from "../../../types";
+import { KryptosBuffer, KryptosExportMode, OctJwk } from "../../../types";
 
-type Options = Omit<KryptosDer, "algorithm" | "type" | "use"> & {
+type Options = Omit<KryptosBuffer, "algorithm" | "type" | "use"> & {
   mode: KryptosExportMode;
 };
 

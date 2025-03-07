@@ -1,7 +1,7 @@
 import { KryptosError } from "../../../errors";
-import { KryptosPem, OctDer } from "../../../types";
+import { KryptosFromString, OctDer } from "../../../types";
 
-type Options = Omit<KryptosPem, "algorithm" | "type" | "use">;
+type Options = Omit<KryptosFromString, "algorithm" | "type" | "use">;
 
 type Result = Omit<OctDer, "algorithm" | "type" | "use">;
 

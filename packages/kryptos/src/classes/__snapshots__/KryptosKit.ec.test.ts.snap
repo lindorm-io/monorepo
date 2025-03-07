@@ -1,0 +1,383 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`KryptosKit (EC) from auto b64 1`] = `
+{
+  "algorithm": "ES512",
+  "createdAt": 2024-01-01T08:00:00.000Z,
+  "curve": "P-521",
+  "expiresIn": -1,
+  "hasPrivateKey": true,
+  "hasPublicKey": true,
+  "id": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "isActive": true,
+  "isExpired": false,
+  "isExternal": false,
+  "notBefore": 2024-01-01T08:00:00.000Z,
+  "operations": [],
+  "type": "EC",
+  "updatedAt": 2024-01-01T08:00:00.000Z,
+  "use": "sig",
+}
+`;
+
+exports[`KryptosKit (EC) from auto b64 2`] = `
+{
+  "alg": "ES512",
+  "crv": "P-521",
+  "iat": 1704096000,
+  "key_ops": [],
+  "kid": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "kty": "EC",
+  "nbf": 1704096000,
+  "uat": 1704096000,
+  "use": "sig",
+  "x": "AI3Y8hWlFN19cuY3GSDwGTabmd62piw1bYt5-GSWvaN8mJVQlQM-hmgZ9psbMcSCwqM_YdFs-wQj-00PfHg31VbR",
+  "y": "AAgPZRhdrsY3SLMdYgVF2NVi5Hn7SPLAW136j83Y852u-VXzG6Z1Ur5OJI8Qh18qgv8i7R7sgpOwmyP5SYTysMmf",
+}
+`;
+
+exports[`KryptosKit (EC) from auto b64 3`] = `
+{
+  "algorithm": "ES512",
+  "curve": "P-521",
+  "privateKey": "MIHuAgEAMBAGByqGSM49AgEGBSuBBAAjBIHWMIHTAgEBBEIATAYo3DQYroDV5EgJSUs_kOIvnEScZen73gXa5oQkub0ekQmgOJdPQjINUsdYRn67QK_oBdNUhVbtG_qdxqIgarehgYkDgYYABACN2PIVpRTdfXLmNxkg8Bk2m5netqYsNW2Lefhklr2jfJiVUJUDPoZoGfabGzHEgsKjP2HRbPsEI_tND3x4N9VW0QAID2UYXa7GN0izHWIFRdjVYuR5-0jywFtd-o_N2POdrvlV8xumdVK-TiSPEIdfKoL_Iu0e7IKTsJsj-UmE8rDJnw",
+  "publicKey": "MIGbMBAGByqGSM49AgEGBSuBBAAjA4GGAAQAjdjyFaUU3X1y5jcZIPAZNpuZ3ramLDVti3n4ZJa9o3yYlVCVAz6GaBn2mxsxxILCoz9h0Wz7BCP7TQ98eDfVVtEACA9lGF2uxjdIsx1iBUXY1WLkeftI8sBbXfqPzdjzna75VfMbpnVSvk4kjxCHXyqC_yLtHuyCk7CbI_lJhPKwyZ8",
+  "type": "EC",
+  "use": "sig",
+}
+`;
+
+exports[`KryptosKit (EC) from auto jwk 1`] = `
+{
+  "algorithm": "ES512",
+  "createdAt": 2024-01-01T08:00:00.000Z,
+  "curve": "P-521",
+  "expiresIn": -1,
+  "hasPrivateKey": true,
+  "hasPublicKey": true,
+  "id": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "isActive": true,
+  "isExpired": false,
+  "isExternal": true,
+  "notBefore": 2024-01-01T08:00:00.000Z,
+  "operations": [],
+  "type": "EC",
+  "updatedAt": 2024-01-01T08:00:00.000Z,
+  "use": "sig",
+}
+`;
+
+exports[`KryptosKit (EC) from auto jwk 2`] = `
+{
+  "alg": "ES512",
+  "crv": "P-521",
+  "iat": 1704096000,
+  "key_ops": [],
+  "kid": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "kty": "EC",
+  "nbf": 1704096000,
+  "uat": 1704096000,
+  "use": "sig",
+  "x": "APR_foe7ldh7LLa8ZFvQA6t2niQqzdFbV38w7jt5KrCcMGoIizvVqHEf4DeFe-KGI8u3QiP7UNVrU1yuldAoEwhw",
+  "y": "ABzy87I16-HAaIfLYfT1vayxG0HuHX8h771d9EnX_vweC1fcMHetmzYDKT5heXvVE4JmREBsoGwdk4e7vDSD5RVR",
+}
+`;
+
+exports[`KryptosKit (EC) from auto jwk 3`] = `
+{
+  "alg": "ES512",
+  "crv": "P-521",
+  "d": "AcDSceRWjuYGq83oE_BgW_P7SRwYhUrLRAvhsjxCFe9iE3gyKBurav6YguL-OWJJ40dGQ7XJQW1D8S4or8QMuLIE",
+  "kty": "EC",
+  "use": "sig",
+  "x": "APR_foe7ldh7LLa8ZFvQA6t2niQqzdFbV38w7jt5KrCcMGoIizvVqHEf4DeFe-KGI8u3QiP7UNVrU1yuldAoEwhw",
+  "y": "ABzy87I16-HAaIfLYfT1vayxG0HuHX8h771d9EnX_vweC1fcMHetmzYDKT5heXvVE4JmREBsoGwdk4e7vDSD5RVR",
+}
+`;
+
+exports[`KryptosKit (EC) from auto pem 1`] = `
+{
+  "algorithm": "ES512",
+  "createdAt": 2024-01-01T08:00:00.000Z,
+  "curve": "P-521",
+  "expiresIn": -1,
+  "hasPrivateKey": true,
+  "hasPublicKey": true,
+  "id": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "isActive": true,
+  "isExpired": false,
+  "isExternal": false,
+  "notBefore": 2024-01-01T08:00:00.000Z,
+  "operations": [],
+  "type": "EC",
+  "updatedAt": 2024-01-01T08:00:00.000Z,
+  "use": "sig",
+}
+`;
+
+exports[`KryptosKit (EC) from auto pem 2`] = `
+{
+  "alg": "ES512",
+  "crv": "P-521",
+  "iat": 1704096000,
+  "key_ops": [],
+  "kid": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "kty": "EC",
+  "nbf": 1704096000,
+  "uat": 1704096000,
+  "use": "sig",
+  "x": "APR_foe7ldh7LLa8ZFvQA6t2niQqzdFbV38w7jt5KrCcMGoIizvVqHEf4DeFe-KGI8u3QiP7UNVrU1yuldAoEwhw",
+  "y": "ABzy87I16-HAaIfLYfT1vayxG0HuHX8h771d9EnX_vweC1fcMHetmzYDKT5heXvVE4JmREBsoGwdk4e7vDSD5RVR",
+}
+`;
+
+exports[`KryptosKit (EC) from auto pem 3`] = `
+{
+  "algorithm": "ES512",
+  "curve": "P-521",
+  "privateKey": "-----BEGIN PRIVATE KEY-----
+MIHuAgEAMBAGByqGSM49AgEGBSuBBAAjBIHWMIHTAgEBBEIBwNJx5FaO5garzegT
+8GBb8/tJHBiFSstEC+GyPEIV72ITeDIoG6tq/piC4v45YknjR0ZDtclBbUPxLiiv
+xAy4sgShgYkDgYYABAD0f36Hu5XYeyy2vGRb0AOrdp4kKs3RW1d/MO47eSqwnDBq
+CIs71ahxH+A3hXvihiPLt0Ij+1DVa1NcrpXQKBMIcAAc8vOyNevhwGiHy2H09b2s
+sRtB7h1/Ie+9XfRJ1/78HgtX3DB3rZs2Ayk+YXl71ROCZkRAbKBsHZOHu7w0g+UV
+UQ==
+-----END PRIVATE KEY-----
+",
+  "publicKey": "-----BEGIN PUBLIC KEY-----
+MIGbMBAGByqGSM49AgEGBSuBBAAjA4GGAAQA9H9+h7uV2HsstrxkW9ADq3aeJCrN
+0VtXfzDuO3kqsJwwagiLO9WocR/gN4V74oYjy7dCI/tQ1WtTXK6V0CgTCHAAHPLz
+sjXr4cBoh8th9PW9rLEbQe4dfyHvvV30Sdf+/B4LV9wwd62bNgMpPmF5e9UTgmZE
+QGygbB2Th7u8NIPlFVE=
+-----END PUBLIC KEY-----
+",
+  "type": "EC",
+  "use": "sig",
+}
+`;
+
+exports[`KryptosKit (EC) from b64 1`] = `
+{
+  "algorithm": "ES512",
+  "createdAt": 2024-01-01T08:00:00.000Z,
+  "curve": "P-521",
+  "expiresIn": -1,
+  "hasPrivateKey": true,
+  "hasPublicKey": true,
+  "id": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "isActive": true,
+  "isExpired": false,
+  "isExternal": false,
+  "notBefore": 2024-01-01T08:00:00.000Z,
+  "operations": [],
+  "type": "EC",
+  "updatedAt": 2024-01-01T08:00:00.000Z,
+  "use": "sig",
+}
+`;
+
+exports[`KryptosKit (EC) from b64 2`] = `
+{
+  "alg": "ES512",
+  "crv": "P-521",
+  "iat": 1704096000,
+  "key_ops": [],
+  "kid": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "kty": "EC",
+  "nbf": 1704096000,
+  "uat": 1704096000,
+  "use": "sig",
+  "x": "AI3Y8hWlFN19cuY3GSDwGTabmd62piw1bYt5-GSWvaN8mJVQlQM-hmgZ9psbMcSCwqM_YdFs-wQj-00PfHg31VbR",
+  "y": "AAgPZRhdrsY3SLMdYgVF2NVi5Hn7SPLAW136j83Y852u-VXzG6Z1Ur5OJI8Qh18qgv8i7R7sgpOwmyP5SYTysMmf",
+}
+`;
+
+exports[`KryptosKit (EC) from b64 3`] = `
+{
+  "algorithm": "ES512",
+  "curve": "P-521",
+  "privateKey": "MIHuAgEAMBAGByqGSM49AgEGBSuBBAAjBIHWMIHTAgEBBEIATAYo3DQYroDV5EgJSUs_kOIvnEScZen73gXa5oQkub0ekQmgOJdPQjINUsdYRn67QK_oBdNUhVbtG_qdxqIgarehgYkDgYYABACN2PIVpRTdfXLmNxkg8Bk2m5netqYsNW2Lefhklr2jfJiVUJUDPoZoGfabGzHEgsKjP2HRbPsEI_tND3x4N9VW0QAID2UYXa7GN0izHWIFRdjVYuR5-0jywFtd-o_N2POdrvlV8xumdVK-TiSPEIdfKoL_Iu0e7IKTsJsj-UmE8rDJnw",
+  "publicKey": "MIGbMBAGByqGSM49AgEGBSuBBAAjA4GGAAQAjdjyFaUU3X1y5jcZIPAZNpuZ3ramLDVti3n4ZJa9o3yYlVCVAz6GaBn2mxsxxILCoz9h0Wz7BCP7TQ98eDfVVtEACA9lGF2uxjdIsx1iBUXY1WLkeftI8sBbXfqPzdjzna75VfMbpnVSvk4kjxCHXyqC_yLtHuyCk7CbI_lJhPKwyZ8",
+  "type": "EC",
+  "use": "sig",
+}
+`;
+
+exports[`KryptosKit (EC) from jwk 1`] = `
+{
+  "algorithm": "ES512",
+  "createdAt": 2024-01-01T08:00:00.000Z,
+  "curve": "P-521",
+  "expiresIn": -1,
+  "hasPrivateKey": true,
+  "hasPublicKey": true,
+  "id": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "isActive": true,
+  "isExpired": false,
+  "isExternal": true,
+  "notBefore": 2024-01-01T08:00:00.000Z,
+  "operations": [],
+  "type": "EC",
+  "updatedAt": 2024-01-01T08:00:00.000Z,
+  "use": "sig",
+}
+`;
+
+exports[`KryptosKit (EC) from jwk 2`] = `
+{
+  "alg": "ES512",
+  "crv": "P-521",
+  "iat": 1704096000,
+  "key_ops": [],
+  "kid": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "kty": "EC",
+  "nbf": 1704096000,
+  "uat": 1704096000,
+  "use": "sig",
+  "x": "APR_foe7ldh7LLa8ZFvQA6t2niQqzdFbV38w7jt5KrCcMGoIizvVqHEf4DeFe-KGI8u3QiP7UNVrU1yuldAoEwhw",
+  "y": "ABzy87I16-HAaIfLYfT1vayxG0HuHX8h771d9EnX_vweC1fcMHetmzYDKT5heXvVE4JmREBsoGwdk4e7vDSD5RVR",
+}
+`;
+
+exports[`KryptosKit (EC) from jwk 3`] = `
+{
+  "alg": "ES512",
+  "crv": "P-521",
+  "d": "AcDSceRWjuYGq83oE_BgW_P7SRwYhUrLRAvhsjxCFe9iE3gyKBurav6YguL-OWJJ40dGQ7XJQW1D8S4or8QMuLIE",
+  "kty": "EC",
+  "use": "sig",
+  "x": "APR_foe7ldh7LLa8ZFvQA6t2niQqzdFbV38w7jt5KrCcMGoIizvVqHEf4DeFe-KGI8u3QiP7UNVrU1yuldAoEwhw",
+  "y": "ABzy87I16-HAaIfLYfT1vayxG0HuHX8h771d9EnX_vweC1fcMHetmzYDKT5heXvVE4JmREBsoGwdk4e7vDSD5RVR",
+}
+`;
+
+exports[`KryptosKit (EC) from pem 1`] = `
+{
+  "algorithm": "ES512",
+  "createdAt": 2024-01-01T08:00:00.000Z,
+  "curve": "P-521",
+  "expiresIn": -1,
+  "hasPrivateKey": true,
+  "hasPublicKey": true,
+  "id": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "isActive": true,
+  "isExpired": false,
+  "isExternal": false,
+  "notBefore": 2024-01-01T08:00:00.000Z,
+  "operations": [],
+  "type": "EC",
+  "updatedAt": 2024-01-01T08:00:00.000Z,
+  "use": "sig",
+}
+`;
+
+exports[`KryptosKit (EC) from pem 2`] = `
+{
+  "alg": "ES512",
+  "crv": "P-521",
+  "iat": 1704096000,
+  "key_ops": [],
+  "kid": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "kty": "EC",
+  "nbf": 1704096000,
+  "uat": 1704096000,
+  "use": "sig",
+  "x": "APR_foe7ldh7LLa8ZFvQA6t2niQqzdFbV38w7jt5KrCcMGoIizvVqHEf4DeFe-KGI8u3QiP7UNVrU1yuldAoEwhw",
+  "y": "ABzy87I16-HAaIfLYfT1vayxG0HuHX8h771d9EnX_vweC1fcMHetmzYDKT5heXvVE4JmREBsoGwdk4e7vDSD5RVR",
+}
+`;
+
+exports[`KryptosKit (EC) from pem 3`] = `
+{
+  "algorithm": "ES512",
+  "curve": "P-521",
+  "privateKey": "-----BEGIN PRIVATE KEY-----
+MIHuAgEAMBAGByqGSM49AgEGBSuBBAAjBIHWMIHTAgEBBEIBwNJx5FaO5garzegT
+8GBb8/tJHBiFSstEC+GyPEIV72ITeDIoG6tq/piC4v45YknjR0ZDtclBbUPxLiiv
+xAy4sgShgYkDgYYABAD0f36Hu5XYeyy2vGRb0AOrdp4kKs3RW1d/MO47eSqwnDBq
+CIs71ahxH+A3hXvihiPLt0Ij+1DVa1NcrpXQKBMIcAAc8vOyNevhwGiHy2H09b2s
+sRtB7h1/Ie+9XfRJ1/78HgtX3DB3rZs2Ayk+YXl71ROCZkRAbKBsHZOHu7w0g+UV
+UQ==
+-----END PRIVATE KEY-----
+",
+  "publicKey": "-----BEGIN PUBLIC KEY-----
+MIGbMBAGByqGSM49AgEGBSuBBAAjA4GGAAQA9H9+h7uV2HsstrxkW9ADq3aeJCrN
+0VtXfzDuO3kqsJwwagiLO9WocR/gN4V74oYjy7dCI/tQ1WtTXK6V0CgTCHAAHPLz
+sjXr4cBoh8th9PW9rLEbQe4dfyHvvV30Sdf+/B4LV9wwd62bNgMpPmF5e9UTgmZE
+QGygbB2Th7u8NIPlFVE=
+-----END PUBLIC KEY-----
+",
+  "type": "EC",
+  "use": "sig",
+}
+`;
+
+exports[`KryptosKit (EC) make auto 1`] = `
+{
+  "algorithm": "ES256",
+  "createdAt": 2024-01-01T08:00:00.000Z,
+  "curve": "P-256",
+  "expiresIn": -1,
+  "hasPrivateKey": true,
+  "hasPublicKey": true,
+  "id": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "isActive": true,
+  "isExpired": false,
+  "isExternal": false,
+  "notBefore": 2024-01-01T08:00:00.000Z,
+  "operations": [
+    "sign",
+    "verify",
+  ],
+  "type": "EC",
+  "updatedAt": 2024-01-01T08:00:00.000Z,
+  "use": "sig",
+}
+`;
+
+exports[`KryptosKit (EC) make enc 1`] = `
+{
+  "algorithm": "ECDH-ES+A192GCMKW",
+  "createdAt": 2024-01-01T08:00:00.000Z,
+  "curve": "P-384",
+  "encryption": "A256GCM",
+  "expiresIn": -1,
+  "hasPrivateKey": true,
+  "hasPublicKey": true,
+  "id": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "isActive": true,
+  "isExpired": false,
+  "isExternal": false,
+  "notBefore": 2024-01-01T08:00:00.000Z,
+  "operations": [
+    "encrypt",
+    "decrypt",
+  ],
+  "type": "EC",
+  "updatedAt": 2024-01-01T08:00:00.000Z,
+  "use": "enc",
+}
+`;
+
+exports[`KryptosKit (EC) make sig 1`] = `
+{
+  "algorithm": "ES256",
+  "createdAt": 2024-01-01T08:00:00.000Z,
+  "curve": "P-256",
+  "expiresIn": -1,
+  "hasPrivateKey": true,
+  "hasPublicKey": true,
+  "id": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "isActive": true,
+  "isExpired": false,
+  "isExternal": false,
+  "notBefore": 2024-01-01T08:00:00.000Z,
+  "operations": [
+    "sign",
+    "verify",
+  ],
+  "type": "EC",
+  "updatedAt": 2024-01-01T08:00:00.000Z,
+  "use": "sig",
+}
+`;
