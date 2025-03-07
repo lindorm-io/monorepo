@@ -24,6 +24,7 @@ describe("LindormError", () => {
           code: "code",
           data: { value: "data" },
           debug: { value: "debug" },
+          details: "details",
           title: "title",
         }),
       ).toEqual(
@@ -31,6 +32,7 @@ describe("LindormError", () => {
           code: "code",
           data: { value: "data" },
           debug: { value: "debug" },
+          details: "details",
           title: "title",
         }),
       );
@@ -47,6 +49,7 @@ describe("LindormError", () => {
       code: "code",
       data: { value: "data" },
       debug: { value: "debug" },
+      details: "details",
       title: "title",
     });
 
@@ -64,6 +67,7 @@ describe("LindormError", () => {
           code: "code",
           data: { value: "data" },
           debug: { value: "debug" },
+          details: "details",
           title: "title",
           errors: ["Error: error message", "LindormError: lindorm error message"],
         }),
