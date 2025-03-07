@@ -1,1 +1,2 @@
-export const isString = (input?: any): input is string => typeof input === "string";
+export const isString = <T = string>(input?: any): input is T =>
+  typeof input === "string";

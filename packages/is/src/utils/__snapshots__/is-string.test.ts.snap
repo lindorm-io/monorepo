@@ -4,11 +4,15 @@ exports[`isString should resolve TEST_ARRAY 1`] = `false`;
 
 exports[`isString should resolve TEST_BOOLEAN 1`] = `false`;
 
+exports[`isString should resolve TEST_BOOLEAN_STRING 1`] = `true`;
+
 exports[`isString should resolve TEST_BUFFER 1`] = `false`;
 
 exports[`isString should resolve TEST_CLASS 1`] = `false`;
 
 exports[`isString should resolve TEST_DATE 1`] = `false`;
+
+exports[`isString should resolve TEST_DATE_STRING 1`] = `true`;
 
 exports[`isString should resolve TEST_EMPTY_ARRAY 1`] = `false`;
 
@@ -35,6 +39,8 @@ exports[`isString should resolve TEST_NEGATIVE_INFINITY 1`] = `false`;
 exports[`isString should resolve TEST_NULL 1`] = `false`;
 
 exports[`isString should resolve TEST_NUMBER 1`] = `false`;
+
+exports[`isString should resolve TEST_NUMBER_STRING 1`] = `true`;
 
 exports[`isString should resolve TEST_OBJECT 1`] = `false`;
 
