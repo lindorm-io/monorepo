@@ -1,11 +1,7 @@
-// Polyfill required to override fetch (undici instead of http) when using nock
-const fetch = require("node-fetch");
-global.fetch = fetch;
-
 import nock from "nock";
-import { useFetch } from "./use-fetch";
+import { useAxios } from "./use-axios";
 
-describe("useFetch", () => {
+describe("useAxios", () => {
   afterEach(() => {
     nock.cleanAll();
   });
@@ -14,16 +10,19 @@ describe("useFetch", () => {
     nock("https://test.lindorm.io").delete("/").reply(204);
 
     await expect(
-      useFetch("https://test.lindorm.io", { method: "delete" }),
+      useAxios({ url: "https://test.lindorm.io", method: "delete" }),
     ).resolves.toEqual(expect.objectContaining({ status: 204 }));
   });
 
   test("should resolve get", async () => {
     nock("https://test.lindorm.io").get("/").reply(204);
 
-    await expect(useFetch("https://test.lindorm.io", { method: "get" })).resolves.toEqual(
-      expect.objectContaining({ status: 204 }),
-    );
+    await expect(
+      useAxios({
+        url: "https://test.lindorm.io",
+        method: "get",
+      }),
+    ).resolves.toEqual(expect.objectContaining({ status: 204 }));
   });
 
   test("should resolve get with text", async () => {
@@ -31,9 +30,12 @@ describe("useFetch", () => {
       .get("/")
       .reply(200, "hello", { "content-type": "text/plain" });
 
-    await expect(useFetch("https://test.lindorm.io", { method: "get" })).resolves.toEqual(
-      expect.objectContaining({ status: 200, data: "hello" }),
-    );
+    await expect(
+      useAxios({
+        url: "https://test.lindorm.io",
+        method: "get",
+      }),
+    ).resolves.toEqual(expect.objectContaining({ status: 200, data: "hello" }));
   });
 
   test("should resolve get with json", async () => {
@@ -41,9 +43,12 @@ describe("useFetch", () => {
       .get("/")
       .reply(200, { json: "hello" }, { "content-type": "application/json" });
 
-    await expect(useFetch("https://test.lindorm.io", { method: "get" })).resolves.toEqual(
-      expect.objectContaining({ status: 200, data: { json: "hello" } }),
-    );
+    await expect(
+      useAxios({
+        url: "https://test.lindorm.io",
+        method: "get",
+      }),
+    ).resolves.toEqual(expect.objectContaining({ status: 200, data: { json: "hello" } }));
   });
 
   test("should resolve get with buffer", async () => {
@@ -52,11 +57,11 @@ describe("useFetch", () => {
       .reply(200, Buffer.from("hello"), { "content-type": "image/jpeg" });
 
     await expect(
-      useFetch(
-        "https://test.lindorm.io",
-        { method: "get" },
-        { responseType: "arraybuffer" },
-      ),
+      useAxios({
+        url: "https://test.lindorm.io",
+        method: "get",
+        responseType: "arraybuffer",
+      }),
     ).resolves.toEqual(
       expect.objectContaining({ status: 200, data: Buffer.from("hello") }),
     );
@@ -68,17 +73,18 @@ describe("useFetch", () => {
       .reply(200, Buffer.from("hello"), { "content-type": "image/jpeg" });
 
     await expect(
-      useFetch("https://test.lindorm.io", { method: "get" }, { responseType: "blob" }),
-    ).resolves.toEqual(
-      expect.objectContaining({ status: 200, data: expect.any(Object) }),
-    );
+      useAxios({ url: "https://test.lindorm.io", method: "get", responseType: "blob" }),
+    ).resolves.toEqual(expect.objectContaining({ status: 200, data: "hello" }));
   });
 
   test("should resolve head", async () => {
     nock("https://test.lindorm.io").head("/").reply(204);
 
     await expect(
-      useFetch("https://test.lindorm.io", { method: "head" }),
+      useAxios({
+        url: "https://test.lindorm.io",
+        method: "head",
+      }),
     ).resolves.toEqual(expect.objectContaining({ status: 204 }));
   });
 
@@ -86,7 +92,10 @@ describe("useFetch", () => {
     nock("https://test.lindorm.io").options("/").reply(204);
 
     await expect(
-      useFetch("https://test.lindorm.io", { method: "options" }),
+      useAxios({
+        url: "https://test.lindorm.io",
+        method: "options",
+      }),
     ).resolves.toEqual(expect.objectContaining({ status: 204 }));
   });
 
@@ -94,7 +103,10 @@ describe("useFetch", () => {
     nock("https://test.lindorm.io").patch("/").reply(204);
 
     await expect(
-      useFetch("https://test.lindorm.io", { method: "patch" }),
+      useAxios({
+        url: "https://test.lindorm.io",
+        method: "patch",
+      }),
     ).resolves.toEqual(expect.objectContaining({ status: 204 }));
   });
 
@@ -102,15 +114,21 @@ describe("useFetch", () => {
     nock("https://test.lindorm.io").post("/").reply(204);
 
     await expect(
-      useFetch("https://test.lindorm.io", { method: "post" }),
+      useAxios({
+        url: "https://test.lindorm.io",
+        method: "post",
+      }),
     ).resolves.toEqual(expect.objectContaining({ status: 204 }));
   });
 
   test("should resolve put", async () => {
     nock("https://test.lindorm.io").put("/").reply(204);
 
-    await expect(useFetch("https://test.lindorm.io", { method: "put" })).resolves.toEqual(
-      expect.objectContaining({ status: 204 }),
-    );
+    await expect(
+      useAxios({
+        url: "https://test.lindorm.io",
+        method: "put",
+      }),
+    ).resolves.toEqual(expect.objectContaining({ status: 204 }));
   });
 });

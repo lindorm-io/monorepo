@@ -218,6 +218,7 @@ export class Conduit implements IConduit {
     const {
       body,
       config = {},
+      expectedResponse,
       filename,
       form,
       headers = {},
@@ -242,6 +243,7 @@ export class Conduit implements IConduit {
         ...this.config,
         ...config,
         method,
+        responseType: expectedResponse,
         timeout,
         withCredentials,
       },
@@ -251,6 +253,7 @@ export class Conduit implements IConduit {
       metadata: {
         correlationId: uuid(),
         requestId: uuid(),
+        sessionId: null,
       },
       params: params as RequestParams,
       query: { ...searchParams, ...query },

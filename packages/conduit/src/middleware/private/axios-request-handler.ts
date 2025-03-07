@@ -1,10 +1,10 @@
-import axios from "axios";
 import { ConduitMiddleware, ConduitResponse } from "../../types";
-import { composeAxiosConfig, requestWithRetry } from "../../utils/private";
+import { composeAxiosConfig, requestWithRetry, useAxios } from "../../utils/private";
 
 export const axiosRequestHandler: ConduitMiddleware = async (ctx, next) => {
-  const fn = async (): Promise<ConduitResponse> =>
-    await axios.request(await composeAxiosConfig(ctx));
+  const config = await composeAxiosConfig(ctx);
+
+  const fn = async (): Promise<ConduitResponse> => useAxios(config);
 
   ctx.res = await requestWithRetry(fn, ctx);
 

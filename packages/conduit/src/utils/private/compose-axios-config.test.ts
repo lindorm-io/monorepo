@@ -18,6 +18,7 @@ describe("composeAxiosConfig", () => {
       metadata: {
         correlationId: "correlationId",
         requestId: "id",
+        sessionId: "sessionId",
       },
       params: {
         answer: "there",
@@ -36,7 +37,7 @@ describe("composeAxiosConfig", () => {
         timeoutMax: 3000,
       },
       stream: undefined,
-      url: "https://osprey.no:3000/test/path/hello/:answer/:general",
+      url: "https://lindorm.io:3000/test/path/hello/:answer/:general",
     };
 
     ctx = { req };
@@ -49,7 +50,7 @@ describe("composeAxiosConfig", () => {
       },
       headers: { "Content-Type": "application/json", header: "header" },
       timeout: 250,
-      url: "https://osprey.no:3000/test/path/hello/there/kenobi?may=the&force=be&with=you",
+      url: "https://lindorm.io:3000/test/path/hello/there/kenobi?may=the&force=be&with=you",
       withCredentials: true,
     });
   });

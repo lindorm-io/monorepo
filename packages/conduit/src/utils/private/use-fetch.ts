@@ -1,11 +1,35 @@
+import { isFunction } from "@lindorm/is";
 import { Dict, Header } from "@lindorm/types";
+import { ExpectedResponse } from "../../enums";
 import { ConduitError } from "../../errors";
-import { ConduitResponse } from "../../types";
+import { ConduitResponse, ConfigContext } from "../../types";
 
-const parseResponseData = async (response: Response): Promise<any> => {
+const parseResponseData = async (
+  response: Response,
+  config?: ConfigContext,
+): Promise<any> => {
   const contentType = response.headers.get("content-type");
 
   try {
+    if (
+      config?.responseType === ExpectedResponse.ArrayBuffer ||
+      contentType?.includes("application/octet-stream")
+    ) {
+      return Buffer.from(await response.arrayBuffer());
+    }
+
+    if (config?.responseType === ExpectedResponse.Blob) {
+      return await response.blob();
+    }
+
+    if (
+      isFunction(response.formData) &&
+      (contentType?.includes("multipart/form-data") ||
+        config?.responseType === ExpectedResponse.FormData)
+    ) {
+      return await response.formData();
+    }
+
     if (contentType?.includes("application/json")) {
       return await response.json();
     }
@@ -33,28 +57,15 @@ const parseResponseHeaders = (response: Response): Dict<Header> => {
 export const useFetch = async (
   input: URL | string,
   init: RequestInit,
-  config?: any,
+  config?: ConfigContext,
 ): Promise<ConduitResponse> => {
   const response = await fetch(input, init);
 
-  const data = await parseResponseData(response);
+  const data = await parseResponseData(response, config);
   const headers = parseResponseHeaders(response);
 
   if (!response.ok) {
-    throw new ConduitError(response.statusText, {
-      status: response.status,
-      config,
-      request: {
-        ...init,
-        url: input.toString(),
-      },
-      response: {
-        data,
-        headers,
-        status: response.status,
-        statusText: response.statusText,
-      },
-    });
+    throw ConduitError.fromFetchError(response, input, init, config, data, headers);
   }
 
   return {

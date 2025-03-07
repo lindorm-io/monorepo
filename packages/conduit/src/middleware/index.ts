@@ -8,3 +8,4 @@ export * from "./conduit-client-credentials-middleware";
 export * from "./conduit-correlation-middleware";
 export * from "./conduit-header-middleware";
 export * from "./conduit-headers-middleware";
+export * from "./conduit-session-middleware";

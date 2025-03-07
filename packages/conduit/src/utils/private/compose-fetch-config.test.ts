@@ -28,6 +28,7 @@ describe("composeFetchConfig", () => {
       metadata: {
         correlationId: "correlationId",
         requestId: "id",
+        sessionId: "sessionId",
       },
       params: {
         answer: "there",
@@ -46,7 +47,7 @@ describe("composeFetchConfig", () => {
         timeout: 25,
         timeoutMax: 3000,
       },
-      url: "https://osprey.no:3000/test/path/hello/:answer/:general",
+      url: "https://lindorm.io:3000/test/path/hello/:answer/:general",
     };
 
     ctx = { req };
@@ -55,10 +56,10 @@ describe("composeFetchConfig", () => {
   test("should resolve", () => {
     expect(composeFetchConfig(ctx)).toEqual({
       input: expect.objectContaining({
-        host: "osprey.no:3000",
-        hostname: "osprey.no",
-        href: "https://osprey.no:3000/test/path/hello/there/kenobi?may=the&force=be&with=you",
-        origin: "https://osprey.no:3000",
+        host: "lindorm.io:3000",
+        hostname: "lindorm.io",
+        href: "https://lindorm.io:3000/test/path/hello/there/kenobi?may=the&force=be&with=you",
+        origin: "https://lindorm.io:3000",
         pathname: "/test/path/hello/there/kenobi",
         port: "3000",
         protocol: "https:",

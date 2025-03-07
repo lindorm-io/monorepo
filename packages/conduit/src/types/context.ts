@@ -13,6 +13,7 @@ export type AppContext = {
 export type RequestMetadata = {
   correlationId: string;
   requestId: string;
+  sessionId: string | null;
 };
 
 export type RequestContext<

@@ -1,14 +1,15 @@
 import {
   composeAxiosConfig as _composeAxiosConfig,
   requestWithRetry as _requestWithRetry,
+  useAxios as _useAxios,
 } from "../../utils/private";
 import { axiosRequestHandler } from "./axios-request-handler";
 
-jest.mock("axios");
 jest.mock("../../utils/private");
 
 const composeAxiosConfig = _composeAxiosConfig as jest.Mock;
 const requestWithRetry = _requestWithRetry as jest.Mock;
+const useAxios = _useAxios as jest.Mock;
 
 describe("axiosRequestHandler", () => {
   let ctx: any;
@@ -17,6 +18,7 @@ describe("axiosRequestHandler", () => {
     ctx = { req: "ctx" };
 
     composeAxiosConfig.mockResolvedValueOnce({ config: true });
+    useAxios.mockResolvedValueOnce({ response: true });
     requestWithRetry.mockResolvedValueOnce({ response: true });
   });
 
