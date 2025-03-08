@@ -193,6 +193,7 @@ export const advancedMatch = <T extends Dict>(
 
     const objectValue = object[key as keyof T];
 
+    if (isUndefined(predicateValue)) return true;
     if (isUndefined(objectValue)) return false;
 
     // Handle field-level predicates
