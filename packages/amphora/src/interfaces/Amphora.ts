@@ -3,6 +3,7 @@ import { AmphoraConfig, AmphoraJwks, AmphoraQuery } from "../types";
 
 export interface IAmphora {
   config: Array<AmphoraConfig>;
+  issuer: string | null;
   jwks: AmphoraJwks;
   vault: Array<IKryptos>;
 
@@ -11,4 +12,10 @@ export interface IAmphora {
   find(query: AmphoraQuery): Promise<IKryptos>;
   refresh(): Promise<void>;
   setup(): Promise<void>;
+
+  canEncrypt(): boolean;
+  canDecrypt(): boolean;
+
+  canSign(): boolean;
+  canVerify(): boolean;
 }

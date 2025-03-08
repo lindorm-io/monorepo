@@ -30,7 +30,8 @@
     "@lindorm/conduit": "^0.1.8",
     "@lindorm/errors": "^0.1.7",
     "@lindorm/is": "^0.1.7",
-    "@lindorm/kryptos": "^0.3.7"
+    "@lindorm/kryptos": "^0.3.7",
+    "@lindorm/utils": "^0.4.1"
   },
   "devDependencies": {
     "@lindorm/logger": "^0.2.3",

@@ -1,8 +1,9 @@
 import { Conduit, conduitChangeResponseDataMiddleware } from "@lindorm/conduit";
-import { isArray, isBoolean, isString, isUrlLike } from "@lindorm/is";
-import { IKryptos, Kryptos, LindormJwk } from "@lindorm/kryptos";
+import { isArray, isString, isUrlLike } from "@lindorm/is";
+import { IKryptos, KryptosKit, LindormJwk } from "@lindorm/kryptos";
 import { ILogger } from "@lindorm/logger";
 import { OpenIdConfigurationResponse, OpenIdJwksResponse } from "@lindorm/types";
+import { Predicated } from "@lindorm/utils";
 import { AmphoraError } from "../errors";
 import { IAmphora } from "../interfaces";
 import {
@@ -14,9 +15,10 @@ import {
 } from "../types";
 
 export class Amphora implements IAmphora {
+  public readonly issuer: string | null;
+
   private readonly conduit: Conduit;
   private readonly external: Array<AmphoraExternalOption>;
-  private readonly issuer: string | null;
   private readonly logger: ILogger;
 
   private readonly _config: Array<AmphoraConfig>;
@@ -72,6 +74,10 @@ export class Amphora implements IAmphora {
         throw new AmphoraError("Id is required when adding Kryptos");
       }
 
+      if (!item.issuer && this.issuer) {
+        item.issuer = this.issuer;
+      }
+
       if (!item.issuer) {
         throw new AmphoraError("Issuer is required when adding Kryptos");
       }
@@ -90,7 +96,7 @@ export class Amphora implements IAmphora {
     const filtered = this.filteredKeys(query);
     if (filtered.length) return filtered;
 
-    if (!query.issuer) {
+    if (!isString(query.issuer)) {
       throw new AmphoraError("Unable to find Kryptos without issuer");
     }
 
@@ -124,45 +130,60 @@ export class Amphora implements IAmphora {
     this._setup = true;
   }
 
+  public canEncrypt(): boolean {
+    return (
+      this.filteredKeys({ $or: [{ operations: ["encrypt"] }, { use: "enc" }] }).length > 0
+    );
+  }
+
+  public canDecrypt(): boolean {
+    return (
+      this.filteredKeys({ $or: [{ operations: ["decrypt"] }, { use: "enc" }] }).length > 0
+    );
+  }
+
+  public canSign(): boolean {
+    return (
+      this.filteredKeys({ $or: [{ operations: ["sign"] }, { use: "sig" }] }).length > 0
+    );
+  }
+
+  public canVerify(): boolean {
+    return (
+      this.filteredKeys({ $or: [{ operations: ["verify"] }, { use: "sig" }] }).length > 0
+    );
+  }
+
   // private methods
 
   private async addExternalConfig(options: AmphoraExternalOption): Promise<void> {
     this.logger.silly("Adding external config", { options });
 
-    if (isString(options.issuer) && isUrlLike(options.jwksUri)) {
-      this._config.push({ issuer: options.issuer, jwksUri: options.jwksUri });
+    if (isUrlLike(options.openIdConfigurationUri)) {
+      const { data } = await this.conduit.get<OpenIdConfigurationResponse>(
+        options.openIdConfigurationUri,
+      );
+
+      this._config.push(data);
+
       return;
     }
 
-    if (!isUrlLike(options.openIdConfigurationUri)) {
-      throw new AmphoraError("Invalid issuer options");
+    if (isString(options.issuer) && isUrlLike(options.jwksUri)) {
+      this._config.push({ issuer: options.issuer, jwksUri: options.jwksUri });
+
+      return;
     }
 
-    const { data } = await this.conduit.get<OpenIdConfigurationResponse>(
-      options.openIdConfigurationUri,
-    );
-
-    this._config.push({ issuer: data.issuer, jwksUri: data.jwksUri });
+    throw new AmphoraError("Invalid issuer options");
   }
 
   private filteredKeys(query: AmphoraQuery): Array<IKryptos> {
-    return this._vault
-      .filter((i) => i.isActive)
-      .filter((i) => (isString(query.issuer) ? query.issuer === i.issuer : true))
-      .filter((i) => (isString(query.id) ? i.id === query.id : true))
-      .filter((i) => (isString(query.algorithm) ? i.algorithm === query.algorithm : true))
-      .filter((i) => (isBoolean(query.external) ? i.isExternal === query.external : true))
-      .filter((i) =>
-        isString(query.operation) && i.operations.length
-          ? i.operations.includes(query.operation)
-          : true,
-      )
-      .filter((i) => (isString(query.ownerId) ? i.ownerId === query.ownerId : true))
-      .filter((i) => (isBoolean(query.private) ? i.hasPrivateKey : true))
-      .filter((i) => (isBoolean(query.public) ? i.hasPublicKey : true))
-      .filter((i) => (isString(query.type) ? i.type === query.type : true))
-      .filter((i) => (isString(query.use) ? i.use === query.use : true))
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    const vault = this._vault.filter((i) => i.isActive);
+
+    return Predicated.filter<IKryptos>(vault, query).sort(
+      (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+    );
   }
 
   private async getExternalJwks(issuer: string): Promise<Array<IKryptos>> {
@@ -180,7 +201,7 @@ export class Amphora implements IAmphora {
       const iss = jwk.iss ?? config.issuer;
       const jku = jwk.jku ?? config.jwksUri;
 
-      const kryptos = Kryptos.make({ ...jwk, iss, jku });
+      const kryptos = KryptosKit.from.jwk({ ...jwk, iss, jku });
 
       if (kryptos.isExpired) continue;
 

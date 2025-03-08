@@ -1,7 +1,9 @@
-import { KryptosOperation, KryptosType, KryptosUse, LindormJwk } from "@lindorm/kryptos";
+import { KryptosAttributes, KryptosMetadata, LindormJwk } from "@lindorm/kryptos";
 import { ILogger } from "@lindorm/logger";
+import { OpenIdConfiguration } from "@lindorm/types";
+import { Predicate } from "@lindorm/utils";
 
-export type AmphoraConfig = {
+export type AmphoraConfig = Partial<OpenIdConfiguration> & {
   issuer: string;
   jwksUri: string;
 };
@@ -18,18 +20,24 @@ export type AmphoraOptions = {
   logger: ILogger;
 };
 
-export type AmphoraQuery = {
-  id?: string;
-  algorithm?: string;
-  external?: boolean;
-  issuer?: string;
-  operation?: KryptosOperation;
-  ownerId?: string;
-  private?: boolean;
-  public?: boolean;
-  type?: KryptosType;
-  use?: KryptosUse;
-};
+export type AmphoraQuery = Predicate<
+  Pick<
+    KryptosAttributes & KryptosMetadata,
+    | "id"
+    | "algorithm"
+    | "curve"
+    | "encryption"
+    | "hasPrivateKey"
+    | "hasPublicKey"
+    | "isExternal"
+    | "issuer"
+    | "operations"
+    | "ownerId"
+    | "purpose"
+    | "type"
+    | "use"
+  >
+>;
 
 export type AmphoraJwks = {
   keys: Array<LindormJwk>;
