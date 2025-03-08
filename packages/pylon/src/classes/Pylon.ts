@@ -1,3 +1,4 @@
+import { IAmphora } from "@lindorm/amphora";
 import { Environment } from "@lindorm/enums";
 import { isArray, isString } from "@lindorm/is";
 import { ILogger } from "@lindorm/logger";
@@ -53,14 +54,16 @@ export class Pylon<
   C extends PylonHttpContext = PylonHttpContext,
   E extends PylonSocketContext = PylonSocketContext,
 > {
+  private readonly amphora: IAmphora;
   private readonly http: HttpServer;
   private readonly httpMiddleware: Array<PylonHttpMiddleware<C>>;
   private readonly io: IoServer | undefined;
   private readonly koa: Koa;
-  private readonly router: PylonRouter<C>;
   private readonly logger: ILogger;
   private readonly port: number;
+  private readonly router: PylonRouter<C>;
   private readonly workers: Array<ILindormWorker>;
+
   private isStarted: boolean;
   private isSetup: boolean;
   private isTeardown: boolean;
@@ -91,6 +94,7 @@ export class Pylon<
     this._setup = options.setup;
     this._teardown = options.teardown;
 
+    this.amphora = options.amphora;
     this.koa = new Koa({ keys: options.cookies?.signatureKeys });
     this.router = new PylonRouter<C>();
     this.http = createServer(this.koa.callback());
@@ -112,8 +116,7 @@ export class Pylon<
         version,
       }),
       createHttpContextInitialisationMiddleware({
-        amphora: options.amphora,
-        issuer: options.issuer,
+        amphora: this.amphora,
         logger: this.logger,
       }),
       createHttpCookieMiddleware(options.cookies),
@@ -162,6 +165,8 @@ export class Pylon<
 
   public async setup(): Promise<void> {
     if (this.isSetup) return;
+
+    await this.amphora.setup();
 
     if (this._setup) {
       try {
@@ -313,8 +318,7 @@ export class Pylon<
 
     const middleware = [
       createEventContextInitialisationMiddleware({
-        amphora: options.amphora,
-        issuer: options.issuer,
+        amphora: this.amphora,
         logger: this.logger,
       }),
       eventLoggerMiddleware,

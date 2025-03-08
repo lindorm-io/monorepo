@@ -53,8 +53,8 @@ type Context<Data, WebhookData> = {
   userAgent: UserAgent;
   webhook: Webhook<WebhookData>;
 
-  setCookie<T = any>(name: string, value: T, options?: CookieOptions): void;
-  getCookie<T = any>(name: string): T | undefined;
+  setCookie<T = any>(name: string, value: T, options?: CookieOptions): Promise<void>;
+  getCookie<T = any>(name: string): Promise<T | undefined>;
   delCookie(name: string): void;
 };
 

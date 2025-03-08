@@ -8,7 +8,6 @@ import { PylonHttpMiddleware } from "../../types";
 type Options = {
   amphora: IAmphora;
   logger: ILogger;
-  issuer?: string;
 };
 
 export const createHttpContextInitialisationMiddleware = (
@@ -28,7 +27,6 @@ export const createHttpContextInitialisationMiddleware = (
 
     ctx.aegis = new Aegis({
       amphora: ctx.amphora,
-      issuer: options.issuer,
       logger: ctx.logger,
     });
 

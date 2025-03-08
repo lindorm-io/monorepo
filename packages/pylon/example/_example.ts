@@ -1,5 +1,5 @@
 import { Amphora } from "@lindorm/amphora";
-import { Kryptos } from "@lindorm/kryptos";
+import { KryptosKit } from "@lindorm/kryptos";
 import { Logger, LogLevel } from "@lindorm/logger";
 import { join } from "path";
 import { Environment, Pylon } from "../src";
@@ -15,7 +15,7 @@ const amphora = new Amphora({
 });
 
 amphora.add(
-  Kryptos.auto({
+  KryptosKit.make.auto({
     algorithm: "ES256",
     issuer: "http://test.lindorm.io",
   }),

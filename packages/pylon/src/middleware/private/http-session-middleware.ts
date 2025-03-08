@@ -7,9 +7,9 @@ export const createHttpSessionMiddleware = (
   const name = config.name || "pylon_session";
 
   return async function httpSessionMiddleware(ctx, next) {
-    const session = ctx.getCookie<PylonSession>(name) ?? null;
+    const session = await ctx.getCookie<PylonSession>(name);
 
-    ctx.session = session;
+    ctx.session = session ?? null;
 
     if (ctx.session) {
       ctx.metadata.sessionId = ctx.session.id;

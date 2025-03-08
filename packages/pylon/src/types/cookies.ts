@@ -16,7 +16,7 @@ export type CookieOptions = {
 
 export type PylonCookieConfig = {
   domain?: string;
-  encryptionKeys?: Array<string>;
+  encrypted?: boolean;
   httpOnly?: boolean;
   overwrite?: boolean;
   priority?: CookiePriority;

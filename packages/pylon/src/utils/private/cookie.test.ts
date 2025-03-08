@@ -1,67 +1,134 @@
-import { isAesTokenised } from "@lindorm/aes";
+import { Aegis } from "@lindorm/aegis";
+import { Amphora } from "@lindorm/amphora";
 import { B64 } from "@lindorm/b64";
-import { IKryptos } from "@lindorm/kryptos";
-import { decodeCookieValue, encodeCookieValue, getCookieEncryptionKeys } from "./cookie";
+import { KryptosAlgorithm, KryptosKit } from "@lindorm/kryptos";
+import { createMockLogger } from "@lindorm/logger";
+import { PylonSession } from "../../types";
+import { decodeCookieValue, encodeCookieValue } from "./cookie";
 
 describe("cookie", () => {
-  let keys: Array<IKryptos>;
+  let ctx: any;
 
-  beforeEach(() => {
-    keys = getCookieEncryptionKeys({
-      encryptionKeys: ["short", "longer-secret", "abcdefghijklmnopqrstuvwxyz_0123456789"],
+  beforeAll(() => {
+    const amphora = new Amphora({
+      issuer: "issuer",
+      logger: createMockLogger(),
+    });
+
+    amphora.add(KryptosKit.make.auto({ algorithm: "A128KW", issuer: "issuer" }));
+
+    const aegis = new Aegis({
+      amphora,
+      logger: createMockLogger(),
+    });
+
+    ctx = {
+      amphora,
+      aegis,
+    };
+  });
+
+  test("should encode cookie value", async () => {
+    const cookie = await encodeCookieValue(ctx, "test");
+
+    expect(B64.decode(cookie)).toEqual("test");
+  });
+
+  test("should encode encrypted cookie value", async () => {
+    const cookie = await encodeCookieValue(ctx, "test", { encrypted: true });
+
+    expect(Aegis.isJwe(cookie)).toEqual(true);
+
+    const [kryptos] = await ctx.amphora.filter({ algorithm: "A128KW" });
+
+    expect(Aegis.header(cookie)).toEqual({
+      alg: "A128KW",
+      crit: ["alg", "enc", "hkdf_salt"],
+      cty: "text/plain",
+      enc: "A256GCM",
+      hkdf_salt: expect.any(String),
+      kid: kryptos.id,
+      oid: expect.any(String),
+      typ: "JWE",
     });
   });
 
-  test("should get cookie encryption kryptos keys", () => {
-    expect(keys).toHaveLength(3);
-
-    const key0 = keys[0].export("b64").privateKey;
-    const key1 = keys[1].export("b64").privateKey;
-    const key2 = keys[2].export("b64").privateKey;
-
-    expect(key0).toEqual("c2hvcnQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
-    expect(B64.toString(key0!)).toEqual(expect.stringContaining("short"));
-
-    expect(key1).toEqual("bG9uZ2VyLXNlY3JldAAAAAAAAAAAAAAAAAAAAAAAAAA");
-    expect(B64.toString(key1!)).toEqual(expect.stringContaining("longer-secret"));
-
-    expect(key2).toEqual("YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXpfMDEyMzQ");
-    expect(B64.toString(key2!)).toEqual("abcdefghijklmnopqrstuvwxyz_01234");
+  test("should decode cookie value", async () => {
+    await expect(decodeCookieValue(ctx, "dGVzdA")).resolves.toEqual("test");
   });
 
-  test("should encode cookie value", () => {
-    const encoded = encodeCookieValue("test", keys, { encrypted: false });
-
-    expect(B64.decode(encoded)).toEqual("test");
+  test("should decode cookie value as array", async () => {
+    await expect(decodeCookieValue(ctx, "WyJoZWxsbyJd")).resolves.toEqual(["hello"]);
   });
 
-  test("should encode encrypted cookie value", () => {
-    const encoded = encodeCookieValue("test", keys);
-    const aes = B64.decode(encoded);
-
-    expect(isAesTokenised(aes)).toEqual(true);
-  });
-
-  test("should decode cookie value", () => {
-    expect(decodeCookieValue("dGVzdA", keys)).toEqual("test");
-  });
-
-  test("should decode cookie value as array", () => {
-    expect(decodeCookieValue("WyJoZWxsbyJd", keys)).toEqual(["hello"]);
-  });
-
-  test("should decode cookie value as record", () => {
-    expect(decodeCookieValue("eyJoZWxsbyI6ImhlbGxvIn0", keys)).toEqual({
+  test("should decode cookie value as record", async () => {
+    await expect(decodeCookieValue(ctx, "eyJoZWxsbyI6ImhlbGxvIn0")).resolves.toEqual({
       hello: "hello",
     });
   });
 
-  test("should decode encrypted cookie value", () => {
-    expect(
-      decodeCookieValue(
-        "JEEyNTZHQ00kdj05LGtpZD0yY2Q1ZjMwNi05MWQwLTRmYzgtODJiOC01MmVmZTYyNWM1YzYsYWxnPWRpcixpdj1wcTRxNFNEcVhBVjFrQ3BILHRhZz13WlVJejJTczBfQWUtY0VoTWZjLVlnJGtjeU05LWJXJA",
-        keys,
-      ),
-    ).toEqual("test");
+  test("should decode encrypted cookie value", async () => {
+    const cookie = await encodeCookieValue(ctx, "test", { encrypted: true });
+
+    await expect(decodeCookieValue(ctx, cookie)).resolves.toEqual("test");
+  });
+
+  describe("session algorithms", () => {
+    const algorithms: Array<KryptosAlgorithm> = [
+      "A128GCMKW",
+      "A128KW",
+      "A192GCMKW",
+      "A192KW",
+      "A256GCMKW",
+      "A256KW",
+      "dir",
+      "ECDH-ES",
+      "ECDH-ES+A128GCMKW",
+      "ECDH-ES+A128KW",
+      "ECDH-ES+A192GCMKW",
+      "ECDH-ES+A192KW",
+      "ECDH-ES+A256GCMKW",
+      "ECDH-ES+A256KW",
+      "PBES2-HS256+A128KW",
+      "PBES2-HS384+A192KW",
+      "PBES2-HS512+A256KW",
+      "RSA-OAEP-256",
+      "RSA-OAEP-384",
+      "RSA-OAEP-512",
+      "RSA-OAEP",
+    ];
+
+    test.each(algorithms)(
+      "should encrypt and decrypt data using %s",
+      async (algorithm) => {
+        const amphora = new Amphora({
+          issuer: "issuer",
+          logger: createMockLogger(),
+        });
+
+        amphora.add(KryptosKit.make.auto({ algorithm, issuer: "issuer" }));
+
+        const aegis = new Aegis({
+          amphora,
+          logger: createMockLogger(),
+        });
+
+        ctx = {
+          amphora,
+          aegis,
+        };
+
+        const session: PylonSession = {
+          id: "4648186c-147a-5201-a0f7-1f377ad72862",
+          accessToken: "access_token",
+          idToken: "id_token",
+          refreshToken: "refresh_token",
+        };
+
+        const cookie = await encodeCookieValue(ctx, session, { encrypted: true });
+
+        await expect(decodeCookieValue(ctx, cookie)).resolves.toEqual(session);
+      },
+    );
   });
 });

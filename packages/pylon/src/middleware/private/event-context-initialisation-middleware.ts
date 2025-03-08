@@ -7,7 +7,6 @@ import { PylonSocketMiddleware } from "../../types";
 type Options = {
   amphora: IAmphora;
   logger: ILogger;
-  issuer?: string;
 };
 
 export const createEventContextInitialisationMiddleware = (
@@ -23,7 +22,6 @@ export const createEventContextInitialisationMiddleware = (
 
     ctx.aegis = new Aegis({
       amphora: ctx.amphora,
-      issuer: options.issuer,
       logger: ctx.logger,
     });
 

@@ -4,7 +4,6 @@ import { CookieOptions, PylonCookieConfig } from "../../types";
 import {
   decodeCookieValue as _decodeCookieValue,
   encodeCookieValue as _encodeCookieValue,
-  getCookieEncryptionKeys as _getCookieEncryptionKeys,
 } from "../../utils/private";
 import { createHttpCookieMiddleware } from "./http-cookie-middleware";
 
@@ -15,7 +14,6 @@ jest.mock("../../utils/private");
 
 const decodeCookieValue = _decodeCookieValue as jest.Mock;
 const encodeCookieValue = _encodeCookieValue as jest.Mock;
-const getCookieEncryptionKeys = _getCookieEncryptionKeys as jest.Mock;
 
 describe("httpCookieMiddleware", () => {
   let ctx: any;
@@ -37,7 +35,6 @@ describe("httpCookieMiddleware", () => {
       overwrite: true,
       priority: "high",
       sameSite: "strict",
-      encryptionKeys: ["encryption", "decryption"],
       signatureKeys: ["signature"],
     };
 
@@ -54,9 +51,8 @@ describe("httpCookieMiddleware", () => {
 
     next = () => Promise.resolve();
 
-    decodeCookieValue.mockReturnValue("decode");
-    encodeCookieValue.mockReturnValue("encode");
-    getCookieEncryptionKeys.mockReturnValue(["key"]);
+    decodeCookieValue.mockResolvedValue("decode");
+    encodeCookieValue.mockResolvedValue("encode");
   });
 
   test("should add functions to context", async () => {
@@ -70,7 +66,7 @@ describe("httpCookieMiddleware", () => {
   test("should set cookie with default set options", async () => {
     await createHttpCookieMiddleware()(ctx, next);
 
-    ctx.setCookie("name", "value");
+    await ctx.setCookie("name", "value");
 
     expect(ctx.cookies.set).toHaveBeenCalledWith("name", "encode", {
       domain: undefined,
@@ -87,7 +83,7 @@ describe("httpCookieMiddleware", () => {
   test("should set cookie with config", async () => {
     await createHttpCookieMiddleware(config)(ctx, next);
 
-    ctx.setCookie("name", "value");
+    await ctx.setCookie("name", "value");
 
     expect(ctx.cookies.set).toHaveBeenCalledWith("name", "encode", {
       domain: "test-domain",
@@ -104,7 +100,7 @@ describe("httpCookieMiddleware", () => {
   test("should set cookie with options", async () => {
     await createHttpCookieMiddleware(config)(ctx, next);
 
-    ctx.setCookie("name", "value", options);
+    await ctx.setCookie("name", "value", options);
 
     expect(ctx.cookies.set).toHaveBeenCalledWith("name", "encode", {
       domain: "test-domain",
@@ -123,12 +119,12 @@ describe("httpCookieMiddleware", () => {
 
     ctx.cookies.get.mockReturnValue("value");
 
-    expect(ctx.getCookie("name")).toEqual("decode");
+    await expect(ctx.getCookie("name")).resolves.toEqual("decode");
 
     expect(ctx.cookies.get).toHaveBeenCalledWith("name", {
       signed: true,
     });
-    expect(decodeCookieValue).toHaveBeenCalledWith("value", ["key"]);
+    expect(decodeCookieValue).toHaveBeenCalledWith(ctx, "value");
   });
 
   test("should delete cookie", async () => {

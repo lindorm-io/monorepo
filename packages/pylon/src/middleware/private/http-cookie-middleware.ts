@@ -1,23 +1,19 @@
 import { expiresAt } from "@lindorm/date";
 import { CookieOptions, PylonCookieConfig, PylonHttpMiddleware } from "../../types";
-import {
-  decodeCookieValue,
-  encodeCookieValue,
-  getCookieEncryptionKeys,
-} from "../../utils/private";
+import { decodeCookieValue, encodeCookieValue } from "../../utils/private";
 
 export const createHttpCookieMiddleware = (
   config: PylonCookieConfig = {},
-): PylonHttpMiddleware => {
-  const keys = getCookieEncryptionKeys(config);
-
-  return async function httpCookieMiddleware(ctx, next) {
-    ctx.setCookie = <T = any>(
+): PylonHttpMiddleware =>
+  async function httpCookieMiddleware(ctx, next) {
+    ctx.setCookie = async <T = any>(
       name: string,
       value: T,
       options: CookieOptions = {},
-    ): void => {
-      ctx.cookies.set(name, encodeCookieValue(value, keys, options), {
+    ): Promise<void> => {
+      const cookie = await encodeCookieValue<T>(ctx, value, options);
+
+      ctx.cookies.set(name, cookie, {
         domain: config.domain,
         expires: options.expiry ? expiresAt(options.expiry) : undefined,
         httpOnly: options.httpOnly ?? config.httpOnly,
@@ -29,14 +25,14 @@ export const createHttpCookieMiddleware = (
       });
     };
 
-    ctx.getCookie = <T = any>(name: string): T | undefined => {
-      const value = ctx.cookies.get(name, {
+    ctx.getCookie = async <T = any>(name: string): Promise<T | undefined> => {
+      const cookie = ctx.cookies.get(name, {
         signed: Boolean(config.signatureKeys?.length),
       });
 
-      if (!value) return;
+      if (!cookie) return;
 
-      return decodeCookieValue(value, keys) as T;
+      return await decodeCookieValue<T>(ctx, cookie);
     };
 
     ctx.delCookie = (name: string): void => {
@@ -45,4 +41,3 @@ export const createHttpCookieMiddleware = (
 
     await next();
   };
-};

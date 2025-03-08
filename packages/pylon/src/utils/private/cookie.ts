@@ -1,9 +1,8 @@
-import { AesKit, isAesTokenised } from "@lindorm/aes";
+import { Aegis } from "@lindorm/aegis";
 import { B64 } from "@lindorm/b64";
 import { ServerError } from "@lindorm/errors";
 import { isString } from "@lindorm/is";
-import { IKryptos, KryptosKit } from "@lindorm/kryptos";
-import { CookieOptions, PylonCookieConfig } from "../../types";
+import { CookieOptions, PylonHttpContext } from "../../types";
 
 const safelyParse = <T = any>(value: string): T => {
   try {
@@ -13,72 +12,39 @@ const safelyParse = <T = any>(value: string): T => {
   }
 };
 
-const tryDecryptCookie = (keys: Array<IKryptos>, value: string): string => {
-  for (const kryptos of keys.filter((k) => k.operations.includes("decrypt"))) {
-    try {
-      return new AesKit({ kryptos }).decrypt(value);
-    } catch (_) {
-      // Do nothing
-    }
-  }
-
-  throw new ServerError("Failed to decrypt cookie");
-};
-
-export const getCookieEncryptionKeys = (options: PylonCookieConfig): Array<IKryptos> => {
-  if (!options.encryptionKeys?.length) return [];
-
-  const result: Array<IKryptos> = [];
-
-  let primary = true;
-
-  for (const key of options.encryptionKeys) {
-    result.push(
-      KryptosKit.from.utf({
-        algorithm: "dir",
-        encryption: "A256GCM",
-        operations: primary ? ["encrypt", "decrypt"] : ["decrypt"],
-        privateKey: key,
-        publicKey: "",
-        type: "oct",
-        use: "enc",
-      }),
-    );
-
-    primary = false;
-  }
-
-  return result;
-};
-
-export const encodeCookieValue = <T = any>(
+export const encodeCookieValue = async <T = any>(
+  ctx: PylonHttpContext,
   value: T,
-  keys: Array<IKryptos>,
   options: CookieOptions = {},
-): string => {
+): Promise<string> => {
   const string = isString(value) ? value : JSON.stringify(value);
 
-  if (!keys.length || options.encrypted === false) {
+  if (options.encrypted && !ctx.amphora.canEncrypt()) {
+    throw new ServerError("Encryption requested but not possible", {
+      details: "Add encryption keys to Amphora",
+    });
+  }
+
+  if (!options.encrypted) {
     return B64.encode(string, "b64u");
   }
 
-  const [kryptos] = keys.filter((k) => k.operations.includes("encrypt"));
+  const jwe = await ctx.aegis.jwe.encrypt(string);
 
-  const aes = new AesKit({ kryptos });
-
-  return B64.encode(aes.encrypt(string, "tokenised"), "b64u");
+  return jwe.token;
 };
 
-export const decodeCookieValue = <T = any>(value: string, keys: Array<IKryptos>): T => {
+export const decodeCookieValue = async <T = any>(
+  ctx: PylonHttpContext,
+  value: string,
+): Promise<T> => {
+  if (Aegis.isJwe(value)) {
+    const string = await ctx.aegis.jwe.decrypt(value);
+
+    return safelyParse<T>(string.payload);
+  }
+
   const decoded = B64.decode(value, "b64u");
 
-  if (!isAesTokenised(decoded)) {
-    return safelyParse<T>(decoded);
-  }
-
-  if (!keys.length) {
-    throw new ServerError("Missing encryption keys");
-  }
-
-  return safelyParse<T>(tryDecryptCookie(keys, decoded));
+  return safelyParse<T>(decoded);
 };

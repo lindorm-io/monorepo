@@ -1,4 +1,4 @@
-import { Amphora } from "@lindorm/amphora";
+import { Amphora, IAmphora } from "@lindorm/amphora";
 import { Environment } from "@lindorm/enums";
 import { ServerError } from "@lindorm/errors";
 import { isArray, isObject } from "@lindorm/is";
@@ -22,6 +22,48 @@ describe("Pylon", () => {
   let pylon: Pylon;
   let router: PylonRouter;
   let logger: ILogger;
+  let amphora: IAmphora;
+
+  beforeAll(() => {
+    logger = createMockLogger();
+
+    amphora = new Amphora({
+      issuer: "http://test.lindorm.io",
+      logger,
+    });
+
+    amphora.add(
+      KryptosKit.from.b64({
+        id: "5d17c551-7b6f-474a-8679-dba9bbfa06a2",
+        algorithm: "ES256",
+        curve: "P-256",
+        issuer: "http://test.lindorm.io",
+        privateKey:
+          "MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgcyOxjn7CekTvSkiQvqx5JhFOmwPYFVFHmLKfio6aJ1uhRANCAAQfFaJkGZMxDn656YiDrSJ5sLRwip-y3a0VzC4cUPxxAJzuRBRtVqM3GitfTQEiUrzF2pcmMZbteAOhIqLlU_f6",
+        publicKey:
+          "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEHxWiZBmTMQ5-uemIg60iebC0cIqfst2tFcwuHFD8cQCc7kQUbVajNxorX00BIlK8xdqXJjGW7XgDoSKi5VP3-g",
+        operations: ["sign", "verify"],
+        type: "EC",
+        use: "sig",
+      }),
+    );
+
+    amphora.add(
+      KryptosKit.from.b64({
+        id: "5382ca15-b849-55ae-904a-9196797ccc1b",
+        algorithm: "ECDH-ES",
+        curve: "X448",
+        issuer: "http://test.lindorm.io",
+        privateKey:
+          "MEYCAQAwBQYDK2VvBDoEOGRWElZ3_EFza2XMyTVr4LroWzaQtjDpyA0h3JX6HcHbf1_91UOlU4_mdMkQUDfRFtL4VR9PmwHT",
+        publicKey:
+          "MEIwBQYDK2VvAzkACmHn63oaLtiwYY2FyuoObj5A6nLWxyqKgiMa-ueJuYr6WhirvxFYYYY-tB_7HolUBGCca3UxG04",
+        operations: ["encrypt", "decrypt"],
+        type: "OKP",
+        use: "enc",
+      }),
+    );
+  });
 
   beforeEach(() => {
     spy = jest.fn();
@@ -93,35 +135,11 @@ describe("Pylon", () => {
       ctx.status = 200;
     });
 
-    const amphora = new Amphora({
-      issuer: "http://test.lindorm.io",
-      logger: createMockLogger(),
-    });
-
-    const kryptos = KryptosKit.from.b64({
-      id: "5d17c551-7b6f-474a-8679-dba9bbfa06a2",
-      algorithm: "ES256",
-      curve: "P-256",
-      issuer: "http://test.lindorm.io",
-      privateKey:
-        "MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgcyOxjn7CekTvSkiQvqx5JhFOmwPYFVFHmLKfio6aJ1uhRANCAAQfFaJkGZMxDn656YiDrSJ5sLRwip-y3a0VzC4cUPxxAJzuRBRtVqM3GitfTQEiUrzF2pcmMZbteAOhIqLlU_f6",
-      publicKey:
-        "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEHxWiZBmTMQ5-uemIg60iebC0cIqfst2tFcwuHFD8cQCc7kQUbVajNxorX00BIlK8xdqXJjGW7XgDoSKi5VP3-g",
-      operations: ["sign", "verify"],
-      type: "EC",
-      use: "sig",
-    });
-
-    amphora.add(kryptos);
-
-    logger = createMockLogger();
-
     pylon = new Pylon({
       amphora,
       logger,
 
       cookies: {
-        encryptionKeys: ["abcdefghijklmnopqrstuvwxyz_01234"],
         signatureKeys: ["test-key"],
       },
       domain: "http://test.lindorm.io",
@@ -176,7 +194,6 @@ describe("Pylon", () => {
         {
           alg: "ES256",
           crv: "P-256",
-          exp: 1719648000,
           iat: 1704096000,
           iss: "http://test.lindorm.io",
           key_ops: ["sign", "verify"],
@@ -187,6 +204,19 @@ describe("Pylon", () => {
           use: "sig",
           x: "HxWiZBmTMQ5-uemIg60iebC0cIqfst2tFcwuHFD8cQA",
           y: "nO5EFG1WozcaK19NASJSvMXalyYxlu14A6EiouVT9_o",
+        },
+        {
+          alg: "ECDH-ES",
+          crv: "X448",
+          iat: 1704096000,
+          iss: "http://test.lindorm.io",
+          key_ops: ["encrypt", "decrypt"],
+          kid: "5382ca15-b849-55ae-904a-9196797ccc1b",
+          kty: "OKP",
+          nbf: 1704096000,
+          uat: 1704096000,
+          use: "enc",
+          x: "CmHn63oaLtiwYY2FyuoObj5A6nLWxyqKgiMa-ueJuYr6WhirvxFYYYY-tB_7HolUBGCca3UxG04",
         },
       ],
     });
@@ -265,17 +295,17 @@ describe("Pylon", () => {
     );
   });
 
-  test("should create session", async () => {
-    const response = await request(pylon.callback).post("/test/session").expect(200);
+  test("should create and verify session", async () => {
+    const r1 = await request(pylon.callback).post("/test/session").expect(200);
 
-    expect(response.body).toEqual({
+    expect(r1.body).toEqual({
       id: "c1460965-fb6d-5a2a-be8a-84f7cd7d1a9f",
       access_token: "access",
       id_token: "id",
       refresh_token: "refresh",
     });
 
-    expect(response.headers).toEqual(
+    expect(r1.headers).toEqual(
       expect.objectContaining({
         date: "Mon, 01 Jan 2024 08:00:00 GMT",
         "set-cookie": [
@@ -293,18 +323,13 @@ describe("Pylon", () => {
         "x-start-time": "1704096000000",
       }),
     );
-  });
 
-  test("should verify session", async () => {
-    const response = await request(pylon.callback)
+    const r2 = await request(pylon.callback)
       .get("/test/session")
-      .set("Cookie", [
-        "pylon_session=JEEyNTZHQ00kdj05LGtpZD1kZWYzMmY5Ny02ODgxLTQ1OWEtOGI3MC02NTM5NTgxY2Q4NzEsYWxnPWRpcixpdj1QSVhaaGIzZmxGdHpwM2k2LHRhZz1xVjRlbzF4ZmE5YXV1SHlRckRpY0VRJDJBYkFRMVpEMGQxRGRzNjVCRlItNm1ZYkRPUVhYcjFfVk9vQlJqM3NZcjZIR0tkOVlOOHk1NDhlYVFDMG9ZUl9oWjNpdmQ0cGRlbW5JbGtNSjFaUE5CaElKdFhXLUZOQ004OVZpMjd4TG9qM3JaTjBKZ2pveHNQQ1YwYkpSSTdTVnFhQWRsOVJ1OFg0QWhEOSQ; priority=high",
-        "pylon_session.sig=hw_3jAt2s0h3v3tDOl1yef-oHLI; priority=high",
-      ])
+      .set("Cookie", r1.headers["set-cookie"])
       .expect(200);
 
-    expect(response.body).toEqual({
+    expect(r2.body).toEqual({
       id: "c1460965-fb6d-5a2a-be8a-84f7cd7d1a9f",
       access_token: "access",
       id_token: "id",
