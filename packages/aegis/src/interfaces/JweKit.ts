@@ -1,5 +1,4 @@
-import { DecryptedJwe } from "../jwe/jwe-decrypt";
-import { EncryptedJwe, JweEncryptOptions } from "../jwe/jwe-encrypt";
+import { DecryptedJwe, EncryptedJwe, JweEncryptOptions } from "../types";
 
 export interface IJweKit {
   encrypt(data: string, options?: JweEncryptOptions): EncryptedJwe;

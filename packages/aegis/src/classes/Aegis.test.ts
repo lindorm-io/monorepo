@@ -14,9 +14,10 @@ describe("Aegis", () => {
 
   beforeEach(async () => {
     const issuer = "https://test.lindorm.io/";
+
     logger = createMockLogger();
     amphora = new Amphora({ issuer, logger });
-    aegis = new Aegis({ amphora, issuer, logger });
+    aegis = new Aegis({ amphora, logger });
 
     await amphora.setup();
 

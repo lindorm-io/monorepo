@@ -5,9 +5,9 @@ import { ILogger } from "@lindorm/logger";
 import { randomUUID } from "crypto";
 import { B64U } from "../constants/private";
 import { JwsError } from "../errors";
+import { IJwsKit } from "../interfaces";
 import {
   DecodedJws,
-  IJwsKit,
   JwsKitOptions,
   SignJwsOptions,
   SignedJws,
@@ -136,5 +136,15 @@ export class JwsKit implements IJwsKit {
       payload: decodedHeader.cty === "text/plain" ? B64.toString(payload) : payload,
       signature,
     };
+  }
+
+  public static isJws(jws: string): boolean {
+    if (!jws.includes(".")) return false;
+    if (!jws.startsWith("eyJ")) return false;
+
+    const [header] = jws.split(".");
+    const decoded = decodeTokenHeader(header);
+
+    return decoded.typ === "JWS";
   }
 }

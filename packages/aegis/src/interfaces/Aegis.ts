@@ -1,13 +1,18 @@
 import { Dict } from "@lindorm/types";
-import { DecryptedJwe, EncryptedJwe, JweEncryptOptions } from "../jwe";
-import { JwsContent, SignJwsOptions, SignedJws, VerifiedJws } from "../jws";
 import {
+  DecryptedJwe,
+  EncryptedJwe,
+  JweEncryptOptions,
+  JwsContent,
+  SignJwsOptions,
   SignJwtContent,
   SignJwtOptions,
+  SignedJws,
   SignedJwt,
+  VerifiedJws,
   VerifiedJwt,
   VerifyJwtOptions,
-} from "../jwt";
+} from "../types";
 
 export interface IAegisJwe {
   encrypt(data: string, options?: JweEncryptOptions): Promise<EncryptedJwe>;
@@ -31,6 +36,8 @@ export interface IAegisJwt {
 }
 
 export interface IAegis {
+  issuer: string | null;
+
   jwe: IAegisJwe;
   jws: IAegisJws;
   jwt: IAegisJwt;

@@ -3,9 +3,9 @@ import { ILogger } from "@lindorm/logger";
 import { Dict } from "@lindorm/types";
 import { randomUUID } from "crypto";
 import { JwtError } from "../errors";
+import { IJwtKit } from "../interfaces";
 import {
   DecodedJwt,
-  IJwtKit,
   JwtKitOptions,
   Operators,
   ParsedJwtPayload,
@@ -52,7 +52,7 @@ export class JwtKit implements IJwtKit {
     options: SignJwtOptions = {},
   ): SignedJwt {
     if (!this.issuer) {
-      throw new JwtError("Issuer is required to sign JWS");
+      throw new JwtError("Issuer is required to sign JWT");
     }
 
     const algorithm = this.kryptos.algorithm;
@@ -204,5 +204,15 @@ export class JwtKit implements IJwtKit {
     const operators = createJwtValidate(options);
 
     validate(payload, operators);
+  }
+
+  public static isJwt(jwt: string): boolean {
+    if (!jwt.includes(".")) return false;
+    if (!jwt.startsWith("eyJ")) return false;
+
+    const [header] = jwt.split(".");
+    const decoded = decodeTokenHeader(header);
+
+    return decoded.typ === "JWT";
   }
 }

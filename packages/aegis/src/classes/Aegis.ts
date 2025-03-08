@@ -8,14 +8,11 @@ import {
 } from "@lindorm/kryptos";
 import { ILogger } from "@lindorm/logger";
 import { Dict } from "@lindorm/types";
+import { IAegis, IAegisJwe, IAegisJws, IAegisJwt } from "../interfaces";
 import {
   AegisOptions,
   DecryptedJwe,
   EncryptedJwe,
-  IAegis,
-  IAegisJwe,
-  IAegisJws,
-  IAegisJwt,
   JweEncryptOptions,
   JwsContent,
   SignJwsOptions,
@@ -23,20 +20,23 @@ import {
   SignJwtOptions,
   SignedJws,
   SignedJwt,
+  TokenHeaderClaims,
   VerifiedJws,
   VerifiedJwt,
   VerifyJwtOptions,
 } from "../types";
+import { decodeTokenHeader } from "../utils/private";
 import { JweKit } from "./JweKit";
 import { JwsKit } from "./JwsKit";
 import { JwtKit } from "./JwtKit";
 
 export class Aegis implements IAegis {
+  public readonly issuer: string | null;
+
   private readonly amphora: IAmphora;
   private readonly clockTolerance: number;
   private readonly encAlgorithm: KryptosEncAlgorithm | undefined;
   private readonly encryption: KryptosEncryption;
-  private readonly issuer: string | undefined;
   private readonly kryptosMayOverrideEncryption: boolean;
   private readonly logger: ILogger;
   private readonly sigAlgorithm: KryptosSigAlgorithm | undefined;
@@ -44,7 +44,7 @@ export class Aegis implements IAegis {
   public constructor(options: AegisOptions) {
     this.logger = options.logger.child(["AegisKit"]);
     this.amphora = options.amphora;
-    this.issuer = options.issuer;
+    this.issuer = options.issuer ?? this.amphora.issuer;
 
     this.clockTolerance = options.clockTolerance ?? 0;
     this.encAlgorithm = options.encAlgorithm;
@@ -72,6 +72,25 @@ export class Aegis implements IAegis {
       sign: this.jwtSign.bind(this),
       verify: this.jwtVerify.bind(this),
     };
+  }
+
+  // public static
+
+  public static header(token: string): TokenHeaderClaims {
+    const [header] = token.split(".");
+    return decodeTokenHeader(header);
+  }
+
+  public static isJwe(jwe: string): boolean {
+    return JweKit.isJwe(jwe);
+  }
+
+  public static isJws(jws: string): boolean {
+    return JwsKit.isJws(jws);
+  }
+
+  public static isJwt(jwt: string): boolean {
+    return JwtKit.isJwt(jwt);
   }
 
   // private jwe
@@ -128,7 +147,7 @@ export class Aegis implements IAegis {
 
     return new JwtKit({
       clockTolerance: this.clockTolerance,
-      issuer: this.issuer,
+      issuer: this.issuer ?? undefined,
       kryptos,
       logger: this.logger,
     });
@@ -155,8 +174,8 @@ export class Aegis implements IAegis {
   private async kryptosEnc(operation: KryptosOperation): Promise<IKryptos> {
     const kryptos = await this.amphora.find({
       algorithm: this.encAlgorithm,
-      issuer: this.issuer,
-      operation,
+      issuer: this.issuer ?? undefined,
+      operations: [operation],
       use: "enc",
     });
 
@@ -168,9 +187,9 @@ export class Aegis implements IAegis {
   private async kryptosSig(operation: KryptosOperation): Promise<IKryptos> {
     const kryptos = await this.amphora.find({
       algorithm: this.sigAlgorithm,
-      issuer: this.issuer,
-      operation,
-      private: true,
+      issuer: this.issuer ?? undefined,
+      operations: [operation],
+      hasPrivateKey: true,
       use: "sig",
     });
 

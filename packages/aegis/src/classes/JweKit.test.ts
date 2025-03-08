@@ -1,4 +1,4 @@
-import { KryptosKit } from "@lindorm/kryptos";
+import { KryptosAlgorithm, KryptosKit } from "@lindorm/kryptos";
 import { ILogger, createMockLogger } from "@lindorm/logger";
 import MockDate from "mockdate";
 import {
@@ -404,6 +404,42 @@ describe("JweKit", () => {
         payload: "data",
         token,
       });
+    });
+  });
+
+  describe("algorithms", () => {
+    const algorithms: Array<KryptosAlgorithm> = [
+      "A128GCMKW",
+      "A128KW",
+      "A192GCMKW",
+      "A192KW",
+      "A256GCMKW",
+      "A256KW",
+      "dir",
+      "ECDH-ES",
+      "ECDH-ES+A128GCMKW",
+      "ECDH-ES+A128KW",
+      "ECDH-ES+A192GCMKW",
+      "ECDH-ES+A192KW",
+      "ECDH-ES+A256GCMKW",
+      "ECDH-ES+A256KW",
+      "PBES2-HS256+A128KW",
+      "PBES2-HS384+A192KW",
+      "PBES2-HS512+A256KW",
+      "RSA-OAEP-256",
+      "RSA-OAEP-384",
+      "RSA-OAEP-512",
+      "RSA-OAEP",
+    ];
+
+    test.each(algorithms)("should encrypt and decrypt data using %s", (algorithm) => {
+      const kryptos = KryptosKit.make.auto({ algorithm });
+
+      const jweKit = new JweKit({ logger, kryptos });
+
+      const { token } = jweKit.encrypt("data");
+
+      expect(jweKit.decrypt(token)).toBeDefined();
     });
   });
 });

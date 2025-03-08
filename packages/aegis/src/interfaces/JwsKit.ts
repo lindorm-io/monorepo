@@ -1,4 +1,4 @@
-import { JwsContent, SignJwsOptions, SignedJws, VerifiedJws } from "../jws";
+import { JwsContent, SignJwsOptions, SignedJws, VerifiedJws } from "../types";
 
 export interface IJwsKit {
   sign<T extends JwsContent>(data: T, options?: SignJwsOptions): SignedJws;

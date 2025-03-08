@@ -1,6 +1,8 @@
-import { IAegis } from "../types";
+import { IAegis } from "../interfaces";
 
 export const createMockAegis = (): IAegis => ({
+  issuer: "https://test.lindorm.io/",
+
   jwe: {
     encrypt: jest.fn().mockResolvedValue({ token: "mocked_token" }),
     decrypt: jest.fn().mockResolvedValue({

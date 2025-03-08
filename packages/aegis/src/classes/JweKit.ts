@@ -6,12 +6,12 @@ import { removeUndefined } from "@lindorm/utils";
 import { randomUUID } from "crypto";
 import { B64U } from "../constants/private";
 import { JweError } from "../errors";
+import { IJweKit } from "../interfaces";
 import {
   DecodedJwe,
   DecryptedJwe,
   DecryptedJweHeader,
   EncryptedJwe,
-  IJweKit,
   JweEncryptOptions,
   JweKitOptions,
   TokenHeaderSignOptions,
@@ -201,6 +201,16 @@ export class JweKit implements IJweKit {
       content,
       authTag: authTag?.length ? authTag : undefined,
     };
+  }
+
+  public static isJwe(jwe: string): boolean {
+    if (!jwe.includes(".")) return false;
+    if (!jwe.startsWith("eyJ")) return false;
+
+    const [header] = jwe.split(".");
+    const decoded = decodeTokenHeader(header);
+
+    return decoded.typ === "JWE";
   }
 
   // private

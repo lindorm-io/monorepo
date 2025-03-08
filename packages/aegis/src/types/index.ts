@@ -1,4 +1,3 @@
-export * from "./interfaces";
 export * from "./jwe";
 export * from "./jws";
 export * from "./jwt";

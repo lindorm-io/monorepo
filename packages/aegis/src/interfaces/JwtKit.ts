@@ -1,6 +1,11 @@
 import { Dict } from "@lindorm/types";
-import { SignJwtContent, SignJwtOptions, SignedJwt } from "../jwt/jwt-sign";
-import { VerifiedJwt, VerifyJwtOptions } from "../jwt/jwt-verify";
+import {
+  SignJwtContent,
+  SignJwtOptions,
+  SignedJwt,
+  VerifiedJwt,
+  VerifyJwtOptions,
+} from "../types";
 
 export interface IJwtKit {
   sign<T extends Dict = Dict>(
