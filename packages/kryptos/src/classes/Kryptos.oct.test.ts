@@ -24,6 +24,7 @@ describe("Kryptos (oct)", () => {
       notBefore: new Date("2023-01-01T08:00:00.000Z"),
       operations: ["sign", "verify"],
       ownerId: "f02c2d0c-44ee-5e4e-8b3b-39d46924d227",
+      purpose: "test",
       updatedAt: new Date("2023-12-01T08:00:00.000Z"),
     };
   });
@@ -47,6 +48,7 @@ describe("Kryptos (oct)", () => {
       expect(kryptos.notBefore).toEqual(new Date("2023-01-01T08:00:00.000Z"));
       expect(kryptos.operations).toEqual(["sign", "verify"]);
       expect(kryptos.ownerId).toEqual("f02c2d0c-44ee-5e4e-8b3b-39d46924d227");
+      expect(kryptos.purpose).toEqual("test");
       expect(kryptos.type).toEqual("oct");
       expect(kryptos.updatedAt).toEqual(new Date("2023-12-01T08:00:00.000Z"));
       expect(kryptos.use).toEqual("sig");

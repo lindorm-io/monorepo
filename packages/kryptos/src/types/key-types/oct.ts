@@ -1,5 +1,4 @@
 import { AesKeyLength } from "@lindorm/types";
-import { KryptosEncryption } from "../encryption";
 import { KryptosUse } from "../types";
 
 export type OctEncDirAlgorithm = "dir";
@@ -27,31 +26,9 @@ export type OctStdSize = 64 | 96 | 128;
 
 export type OctSize = OctDirSize | OctStdSize;
 
-export type OctDirGenerateEnc = {
-  algorithm: OctEncDirAlgorithm;
-  encryption: KryptosEncryption;
-  type: "oct";
-  use: "enc";
-};
-
-export type OctStdGenerateEnc = {
-  algorithm: OctEncStdAlgorithm;
-  type: "oct";
-  use: "enc";
-};
-
-export type OctGenerateSig = {
-  algorithm: OctSigAlgorithm;
-  type: "oct";
-  use: "sig";
-};
-
-export type OctGenerate = OctDirGenerateEnc | OctStdGenerateEnc | OctGenerateSig;
-
 export type OctString = {
   algorithm: OctAlgorithm;
   privateKey: string;
-  publicKey: string; // empty
   type: "oct";
   use: KryptosUse;
 };
@@ -59,7 +36,6 @@ export type OctString = {
 export type OctDer = {
   algorithm: OctAlgorithm;
   privateKey: Buffer;
-  publicKey: Buffer; // empty
   type: "oct";
   use: KryptosUse;
 };

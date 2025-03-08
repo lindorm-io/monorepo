@@ -68,8 +68,8 @@ type Make = {
 export class KryptosKit {
   // clone
 
-  public static clone(kryptos: IKryptos): IKryptos {
-    return new Kryptos({ ...kryptos.toJSON(), ...kryptos.export("der") });
+  public static clone(kryptos: IKryptos, overwrite: KryptosLike = {}): IKryptos {
+    return new Kryptos({ ...kryptos.toJSON(), ...overwrite, ...kryptos.export("der") });
   }
 
   // from

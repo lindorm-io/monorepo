@@ -1,6 +1,7 @@
 export * from "./key-types";
 
 export * from "./algorithm";
+export * from "./attributes";
 export * from "./auto";
 export * from "./curve";
 export * from "./encryption";

@@ -34,7 +34,7 @@ export const createRsaDerFromDer = (options: Options): Result => {
     result.publicKey = publicKey;
   }
 
-  if (!result.publicKey.length && options.publicKey.length) {
+  if (!result.publicKey.length && options.publicKey?.length) {
     const publicObject = createPublicKey({
       key: options.publicKey,
       format: "der",

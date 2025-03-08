@@ -4,7 +4,6 @@ export const TEST_OCT_KEY_B64: OctString = {
   algorithm: "HS512",
   privateKey:
     "diYnyceZxmn18xGjVobBEwOSj2QOavHfv_tWGNuBpjND572Pa3qD8PDqDSrvoLtLOWyHdQ5lsmsuEIDcPgbPKp92HfNkawbKpCsVNBpoTlbZ-5jewLMREoGje9_pQzGSPLgh-cAkwtcrLUJNbwbyMGMlXmIJXeGukWsD6BfOAimNzPIyLf8QYMJYL9tzf16X4mQ1SvU76Y8Mqop6wz8ylAET7xWTivI-iOK8Zk1MiiomJww5w47Uz7X6Ha_uz7ctCESsyYMef9ZnYlsqwsHPrnP78ihyiv8cH7obubKJ6HkmsCnSTBOchDYxnmQiVZffuMSb8pScaIK6Vfef_1c7Vg",
-  publicKey: "",
   type: "oct",
   use: "sig",
 };
@@ -27,7 +26,6 @@ export const TEST_OCT_KEY_PEM: OctString = {
     "crSKuYK1lddiniPwv/nnl0DAxI8/5Vz8NGXvGoJFaltQiZmKMC8y5O74DvIDknS3\n" +
     "cvQHzpn+t5VXn6eD+7A74Q==\n" +
     "-----END OCT PRIVATE KEY-----",
-  publicKey: "",
   use: "sig",
   type: "oct",
 };
@@ -35,7 +33,6 @@ export const TEST_OCT_KEY_PEM: OctString = {
 export const TEST_OCT_KEY_UTF: OctString = {
   algorithm: "HS512",
   privateKey: "#€!.abcdefghijklmnopqrstuvwxyz.ABCDEFGHIJKLMNOPQRSTUVWXYZ.0123456789",
-  publicKey: "",
   type: "oct",
   use: "sig",
 };

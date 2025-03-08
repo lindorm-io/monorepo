@@ -3014,6 +3014,7 @@ exports[`Kryptos (RSA) to should return json 1`] = `
     "verify",
   ],
   "ownerId": "f02c2d0c-44ee-5e4e-8b3b-39d46924d227",
+  "purpose": "test",
   "type": "RSA",
   "updatedAt": 2023-12-01T08:00:00.000Z,
   "use": "sig",
@@ -3041,6 +3042,7 @@ exports[`Kryptos (RSA) to should return jwk with private key 1`] = `
   "nbf": 1672560000,
   "owner_id": "f02c2d0c-44ee-5e4e-8b3b-39d46924d227",
   "p": "-chzifBq71q8mETLfBQjWh5kKkVUdaaSuZ02lyMhziR8iZAsF0R08SFP2XWlOJrRGvLBItul787MurOI4VLhOSF-y5CZufSxHO-xDsZTDGD-GxYWAuLcdshcSl4HyJ4SZs13u3FUNVJeINC6IY4kn8iWHnPUbUHtu4kKvd-0t6hYxUB36wb_4fUjnQnghjtSJK23oeoArQ7ZDA0hApC3fPE2g5oQDkGqWDd1Smrmz3XlAZTMK9vqUlGHZRhaqC-dBhptLGSUulwrncEqsYKlW7NYppAWgHAY40wRy5Yglpv9GOhtJfUqkm7mQsmLhVw-1GtGc7Mi8sP3Nn-03mcqoQ",
+  "purpose": "test",
   "q": "87d6H0DGvJNNLCZdlexp9Q84PpZYMMy-4JjbOpZh6qyhvclgXnkwXk0uo7G1dI5a--Eggft6_nQs8qQ-2bbtJ3V6BAECnEsWPJeWmeiMFEf0L51P0MMf_AY5Y4XOLCE6A3TieuH4NJ0iWMIZqYkCEYIqGTjR3TWNkSzQGJaewKpDu1m95dZCIbXGMXc0Tg6QJF0DIRdpqSQw5QAyLFmSQYLudjds688te-s63g02W_xLeUgKOKd-zsMY_xnubElXaEXVItBtgpbPoMqz6DGr92uNTpKUO3Wb2swIHhoMKp5G7XNQzSlsHLnEjwbz8m4xMXlCZDfx_-ukJ0iNFlz81w",
   "qi": "pkpfvpYVUG8F1oyTKF0GMGQe4i1VwIGQ4M40rWZUP5xJmH-r_kEz7D8-lCnORVspQn1gPuQev63URaF_25BzmBkuRtKXrmw4bFvKysLqgm2PWH8vBDOOA-efTUVtvSdHlQ1aUYRLWN4_2KhWQ_Z-X0vlYTGyjtYWQjECv5COAridavE2iMfi-vWJe1LWB55rcmrbh2jc38enMNdD2SJ9GMQeThZeW5imClah8NCQ_wqM1qCgIVH22EueStwxn4doybRqXcjqvFUvnvB9eAvxmcXcDdVJou3c7znB3fv8Yv9w3BxMDS7ZA4ZAnlpRNz0LNAruclpdzZWhVa0ZjfXLCQ",
   "uat": 1701417600,
@@ -3065,6 +3067,7 @@ exports[`Kryptos (RSA) to should return jwk with public key 1`] = `
   "n": "7cxLHoxaHdYU8EX2ij5m42XIQYWBUxKMOfVbV2OX0nNHEdojXfRfONvrAHwsvRqcdN44yv1E1be18qs5HRB67D3qLeRjXcjegdjWvQj66IFVZIxQHNJ-LXDbAYs7gez8RYbBObnDzfrqy9vIPZet1tbqvlxv9aTR38x3ORJ4Y6Ym9StbKOUIo7BLIvoc1M5uNUIEnFKKZhbmVR423-F50w_E0618KExZgeur_8cMsSWZxyl0oeSI-rIodjfVJbshT1yy98zKRj-mMnyPKgHQARr9SwDA5Xlt9L2fVZ72xgwaPOBUgFoDTPQsqQ3Rkj7nYUSqwQVEL0-oH2K7U3OeGeKyIQMNzRdSfYMw3gSc5dtwqX64oK33lN2jzTKa0clSZjqJ4jzUL1YrXMddF07dMQqjN2mGjeZVy5LaO4B58Y5l-kO01KdwA-_LcDhkNgbKiZMZVtNPlVkR3nCvInt5cqPOqMOcLW3oA1wmh7zauWqorklpSSs75zw8ETtzATSJv8h7kUG9Bl1QQgdBkGqKb4ZG-r5Bj6pwJrHVmgPSMowP8P9G13iQLFdKX714A3DMKDc03TJvs2yVK81YUCtO5aRdwb0q0YcFqn9BHI3cmO-kOhXquMakPQ3zW_FBSnIeBhJMObCQOmYEuZxrifMcCQTY7j5jsP962e7ZPn53STc",
   "nbf": 1672560000,
   "owner_id": "f02c2d0c-44ee-5e4e-8b3b-39d46924d227",
+  "purpose": "test",
   "uat": 1701417600,
   "use": "sig",
 }

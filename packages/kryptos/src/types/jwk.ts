@@ -21,6 +21,7 @@ export type LindormJwkMetadata = {
   jku?: string;
   nbf: number;
   owner_id?: string;
+  purpose?: string;
   uat: number;
 };
 

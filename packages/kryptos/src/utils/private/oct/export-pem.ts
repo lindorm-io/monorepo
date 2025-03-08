@@ -1,6 +1,6 @@
-import { KryptosBuffer, OctString } from "../../../types";
+import { KryptosFromBuffer, OctString } from "../../../types";
 
-type Options = Omit<KryptosBuffer, "algorithm" | "type" | "use">;
+type Options = Omit<KryptosFromBuffer, "algorithm" | "type" | "use">;
 
 type Result = Omit<OctString, "algorithm" | "type" | "use">;
 
@@ -26,5 +26,5 @@ export const exportOctToPem = (options: Options): Result => {
   const content = chunks.join("\n");
   const footer = "-----END OCT PRIVATE KEY-----";
 
-  return { privateKey: [header, content, footer].join("\n"), publicKey: "" };
+  return { privateKey: [header, content, footer].join("\n") };
 };

@@ -13,9 +13,11 @@ export const createMockKryptos = (): IKryptos => ({
   notBefore: new Date("2000-01-01T00:00:00.000Z"),
   operations: ["encrypt", "decrypt"],
   ownerId: "",
+  purpose: "test",
   type: "EC",
   updatedAt: new Date("2020-01-01T00:00:00.000Z"),
   use: "enc",
+
   expiresIn: 999999999,
   hasPrivateKey: true,
   hasPublicKey: true,

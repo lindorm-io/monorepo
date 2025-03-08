@@ -12,20 +12,6 @@ export type RsaAlgorithm = RsaEncAlgorithm | RsaSigAlgorithm;
 
 export type RsaModulus = 1024 | 2048 | 3072 | 4096;
 
-export type RsaGenerateEnc = {
-  algorithm: RsaEncAlgorithm;
-  type: "RSA";
-  use: "enc";
-};
-
-export type RsaGenerateSig = {
-  algorithm: RsaSigAlgorithm;
-  type: "RSA";
-  use: "sig";
-};
-
-export type RsaGenerate = RsaGenerateEnc | RsaGenerateSig;
-
 export type RsaString = {
   algorithm: RsaAlgorithm;
   privateKey?: string;

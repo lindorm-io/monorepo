@@ -22,9 +22,10 @@ export const parseJwkOptions = (options: UnknownJwk): KryptosOptions => {
     notBefore: jwk.nbf ? new Date(jwk.nbf * 1000) : undefined,
     operations: jwk.key_ops,
     ownerId: jwk.owner_id,
+    purpose: jwk.purpose,
+    type: jwk.kty,
     updatedAt: jwk.uat ? new Date(jwk.uat * 1000) : undefined,
     use: jwk.use,
-    type: jwk.kty,
   };
 };
 
@@ -40,6 +41,7 @@ export const parseStdOptions = (options: Options): KryptosOptions => ({
   notBefore: options.notBefore,
   operations: options.operations,
   ownerId: options.ownerId,
+  purpose: options.purpose,
   updatedAt: options.updatedAt,
   use: options.use,
   type: options.type,

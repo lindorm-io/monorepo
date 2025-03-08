@@ -303,7 +303,6 @@ PLgh+cAkwtcrLUJNbwbyMGMlXmIJXeGukWsD6BfOAimNzPIyLf8QYMJYL9tzf16X
 CESsyYMef9ZnYlsqwsHPrnP78ihyiv8cH7obubKJ6HkmsCnSTBOchDYxnmQiVZff
 uMSb8pScaIK6Vfef/1c7Vg==
 -----END OCT PRIVATE KEY-----",
-  "publicKey": "",
   "type": "oct",
   "use": "sig",
 }
@@ -329,6 +328,7 @@ exports[`Kryptos (oct) to should return json 1`] = `
     "verify",
   ],
   "ownerId": "f02c2d0c-44ee-5e4e-8b3b-39d46924d227",
+  "purpose": "test",
   "type": "oct",
   "updatedAt": 2023-12-01T08:00:00.000Z,
   "use": "sig",
@@ -351,6 +351,7 @@ exports[`Kryptos (oct) to should return jwk with private key 1`] = `
   "kty": "oct",
   "nbf": 1672560000,
   "owner_id": "f02c2d0c-44ee-5e4e-8b3b-39d46924d227",
+  "purpose": "test",
   "uat": 1701417600,
   "use": "sig",
 }
@@ -372,6 +373,7 @@ exports[`Kryptos (oct) to should return jwk with public key 1`] = `
   "kty": "oct",
   "nbf": 1672560000,
   "owner_id": "f02c2d0c-44ee-5e4e-8b3b-39d46924d227",
+  "purpose": "test",
   "uat": 1701417600,
   "use": "sig",
 }

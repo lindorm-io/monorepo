@@ -15,8 +15,5 @@ export const createOctDerFromPem = (options: Options): Result => {
     .filter((chunk) => !chunk.startsWith("-----BEGIN OCT PRIVATE KEY-----"))
     .filter((chunk) => !chunk.startsWith("-----END OCT PRIVATE KEY-----"));
 
-  return {
-    privateKey: Buffer.from(chunks.join(""), "base64"),
-    publicKey: Buffer.alloc(0),
-  };
+  return { privateKey: Buffer.from(chunks.join(""), "base64") };
 };

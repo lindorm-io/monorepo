@@ -1,5 +1,5 @@
 import { Optional } from "@lindorm/types";
-import { KryptosAttributes } from "../options";
+import { KryptosAttributes } from "../attributes";
 
 type Attributes = Omit<KryptosAttributes, "algorithm" | "type" | "use">;
 
@@ -16,6 +16,7 @@ type Std = Optional<
   | "notBefore"
   | "operations"
   | "ownerId"
+  | "purpose"
   | "updatedAt"
 >;
 

@@ -13,8 +13,5 @@ export const createOctDerFromJwk = (options: Options): Result => {
     throw new KryptosError("Invalid key");
   }
 
-  return {
-    privateKey: Buffer.from(options.k, "base64url"),
-    publicKey: Buffer.alloc(0),
-  };
+  return { privateKey: Buffer.from(options.k, "base64url") };
 };

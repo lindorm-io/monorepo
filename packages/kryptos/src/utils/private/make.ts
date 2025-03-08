@@ -83,7 +83,7 @@ export const autoMakeConfig = (algorithm: KryptosAlgorithm): AutoResult => {
     case "EdDSA":
       return {
         algorithm,
-        curve: "Ed448",
+        curve: "Ed25519",
         type: "OKP",
         use: "sig",
       };

@@ -19,22 +19,6 @@ export type OkpSigCurve = "Ed25519" | "Ed448";
 
 export type OkpCurve = OkpEncCurve | OkpSigCurve;
 
-export type OkpGenerateEnc = {
-  algorithm: OkpEncAlgorithm;
-  curve: OkpEncCurve;
-  type: "OKP";
-  use: "enc";
-};
-
-export type OkpGenerateSig = {
-  algorithm: OkpSigAlgorithm;
-  curve: OkpSigCurve;
-  type: "OKP";
-  use: "sig";
-};
-
-export type OkpGenerate = OkpGenerateEnc | OkpGenerateSig;
-
 export type OkpString = {
   algorithm: OkpAlgorithm;
   curve: OkpCurve;

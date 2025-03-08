@@ -1,7 +1,7 @@
 // default options
 
 import { Optional } from "@lindorm/types";
-import { KryptosAttributes } from "./options";
+import { KryptosAttributes } from "./attributes";
 
 type Attributes = Omit<KryptosAttributes, "curve" | "operations" | "type" | "use">;
 
@@ -16,5 +16,6 @@ export type KryptosAuto = Optional<
   | "jwksUri"
   | "notBefore"
   | "ownerId"
+  | "purpose"
   | "updatedAt"
 >;

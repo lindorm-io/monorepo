@@ -1,4 +1,5 @@
 import { Optional } from "@lindorm/types";
+import { KryptosAttributes } from "./attributes";
 import { KryptosEncryption } from "./encryption";
 import {
   OctEncDirAlgorithm,
@@ -13,7 +14,6 @@ import {
 } from "./key-types";
 import { EcCurve, EcEncAlgorithm, EcSigAlgorithm } from "./key-types/ec";
 import { KryptosEncOperation, KryptosSigOperation } from "./operation";
-import { KryptosAttributes } from "./options";
 
 // default options
 
@@ -32,6 +32,7 @@ type Std = Optional<
   | "jwksUri"
   | "notBefore"
   | "ownerId"
+  | "purpose"
   | "updatedAt"
 >;
 

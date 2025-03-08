@@ -39,19 +39,20 @@ export class Kryptos implements IKryptos {
   private readonly _algorithm: KryptosAlgorithm;
   private readonly _createdAt: Date;
   private readonly _curve: KryptosCurve | undefined;
-  private readonly _encryption: KryptosEncryption | undefined;
   private readonly _isExternal: boolean;
-  private readonly _issuer: string | undefined;
-  private readonly _jwksUri: string | undefined;
-  private readonly _notBefore: Date;
-  private readonly _operations: Array<KryptosOperation>;
-  private readonly _ownerId: string | undefined;
   private readonly _privateKey: Buffer | undefined;
   private readonly _publicKey: Buffer | undefined;
   private readonly _type: KryptosType;
   private readonly _use: KryptosUse;
 
+  private _encryption: KryptosEncryption | undefined;
   private _expiresAt: Date | undefined;
+  private _issuer: string | undefined;
+  private _jwksUri: string | undefined;
+  private _notBefore: Date;
+  private _operations: Array<KryptosOperation>;
+  private _ownerId: string | undefined;
+  private _purpose: string | undefined;
   private _updatedAt: Date;
 
   public constructor(options: KryptosOptions) {
@@ -67,6 +68,7 @@ export class Kryptos implements IKryptos {
     this._notBefore = options.notBefore ?? new Date();
     this._operations = options.operations ?? [];
     this._ownerId = options.ownerId;
+    this._purpose = options.purpose;
     this._type = options.type;
     this._updatedAt = options.updatedAt ?? new Date();
     this._use = options.use;
@@ -110,6 +112,11 @@ export class Kryptos implements IKryptos {
     return this._encryption;
   }
 
+  public set encryption(encryption: KryptosEncryption | undefined) {
+    this._encryption = encryption;
+    this._updatedAt = new Date();
+  }
+
   public get expiresAt(): Date | undefined {
     return this._expiresAt;
   }
@@ -117,24 +124,6 @@ export class Kryptos implements IKryptos {
   public set expiresAt(date: Date) {
     this._expiresAt = date;
     this._updatedAt = new Date();
-  }
-
-  public get expiresIn(): number {
-    if (!this._expiresAt) return -1;
-    if (this.isExpired) return 0;
-    return getUnixTime(this._expiresAt) - getUnixTime(new Date());
-  }
-
-  public get isActive(): boolean {
-    return (
-      (isEqual(new Date(), this._notBefore) || isAfter(new Date(), this._notBefore)) &&
-      !this.isExpired
-    );
-  }
-
-  public get isExpired(): boolean {
-    if (!this._expiresAt) return false;
-    return isEqual(new Date(), this._expiresAt) || isAfter(new Date(), this._expiresAt);
   }
 
   public get isExternal(): boolean {
@@ -145,25 +134,54 @@ export class Kryptos implements IKryptos {
     return this._issuer;
   }
 
+  public set issuer(issuer: string | undefined) {
+    this._issuer = issuer;
+    this._updatedAt = new Date();
+  }
+
   public get jwksUri(): string | undefined {
     return this._jwksUri;
   }
 
-  public get modulus(): RsaModulus | undefined {
-    if (this._type !== "RSA") return undefined;
-    return modulusSize({ privateKey: this._privateKey, publicKey: this._publicKey! });
+  public set jwksUri(jwksUri: string | undefined) {
+    this._jwksUri = jwksUri;
+    this._updatedAt = new Date();
   }
 
   public get notBefore(): Date {
     return this._notBefore;
   }
 
+  public set notBefore(notBefore: Date) {
+    this._notBefore = notBefore;
+    this._updatedAt = new Date();
+  }
+
   public get operations(): Array<KryptosOperation> {
     return this._operations;
   }
 
+  public set operations(operations: Array<KryptosOperation>) {
+    this._operations = operations;
+    this._updatedAt = new Date();
+  }
+
   public get ownerId(): string | undefined {
     return this._ownerId;
+  }
+
+  public set ownerId(ownerId: string | undefined) {
+    this._ownerId = ownerId;
+    this._updatedAt = new Date();
+  }
+
+  public get purpose(): string | undefined {
+    return this._purpose;
+  }
+
+  public set purpose(purpose: string | undefined) {
+    this._purpose = purpose;
+    this._updatedAt = new Date();
   }
 
   public get type(): KryptosType {
@@ -180,12 +198,35 @@ export class Kryptos implements IKryptos {
 
   // metadata
 
+  public get expiresIn(): number {
+    if (!this._expiresAt) return -1;
+    if (this.isExpired) return 0;
+    return getUnixTime(this._expiresAt) - getUnixTime(new Date());
+  }
+
   public get hasPrivateKey(): boolean {
     return isBuffer(this._privateKey) && this._privateKey.length > 0;
   }
 
   public get hasPublicKey(): boolean {
     return isBuffer(this._publicKey) && this._publicKey.length > 0;
+  }
+
+  public get isActive(): boolean {
+    return (
+      (isEqual(new Date(), this._notBefore) || isAfter(new Date(), this._notBefore)) &&
+      !this.isExpired
+    );
+  }
+
+  public get isExpired(): boolean {
+    if (!this._expiresAt) return false;
+    return isEqual(new Date(), this._expiresAt) || isAfter(new Date(), this._expiresAt);
+  }
+
+  public get modulus(): RsaModulus | undefined {
+    if (this._type !== "RSA") return undefined;
+    return modulusSize({ privateKey: this._privateKey, publicKey: this._publicKey! });
   }
 
   // public methods
@@ -264,6 +305,7 @@ export class Kryptos implements IKryptos {
       notBefore: this.notBefore,
       operations: this.operations,
       ownerId: this.ownerId,
+      purpose: this.purpose,
       type: this.type,
       updatedAt: this.updatedAt,
       use: this.use,
@@ -291,6 +333,7 @@ export class Kryptos implements IKryptos {
       kid: this.id,
       nbf: getUnixTime(this.notBefore),
       owner_id: this.ownerId ?? undefined,
+      purpose: this.purpose ?? undefined,
       uat: getUnixTime(this.updatedAt),
       ...keys,
     });

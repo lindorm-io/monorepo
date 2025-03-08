@@ -8,7 +8,7 @@ export type KryptosString = {
   curve?: KryptosCurve;
   encryption?: KryptosEncryption;
   privateKey?: string;
-  publicKey: string;
+  publicKey?: string;
   type: KryptosType;
   use: KryptosUse;
 };
@@ -18,7 +18,7 @@ export type KryptosBuffer = {
   curve?: KryptosCurve;
   encryption?: KryptosEncryption;
   privateKey?: Buffer;
-  publicKey: Buffer;
+  publicKey?: Buffer;
   type: KryptosType;
   use: KryptosUse;
 };
