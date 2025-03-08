@@ -125,4 +125,10 @@ export class AesKit implements IAesKit {
     if (this.verify(input, data)) return;
     throw new AesError("Invalid AES cipher");
   }
+
+  // public static
+
+  public static isAesTokenised(input: any): input is string {
+    return isAesTokenised(input);
+  }
 }

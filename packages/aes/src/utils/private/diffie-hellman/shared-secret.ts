@@ -46,6 +46,9 @@ export const generateSharedSecret = (kryptos: IKryptos): GenerateResult => {
   if (!sender.privateKey) {
     throw new AesError("Sender private key is missing");
   }
+  if (!der.publicKey) {
+    throw new AesError("Kryptos public key is missing");
+  }
 
   const sharedSecret = diffieHellman({
     privateKey: createPrivateKey({
@@ -82,6 +85,9 @@ export const calculateSharedSecret = ({
 
   if (!der.privateKey) {
     throw new AesError("Kryptos private key is missing");
+  }
+  if (!receiver.publicKey) {
+    throw new AesError("Receiver public key is missing");
   }
 
   return diffieHellman({
