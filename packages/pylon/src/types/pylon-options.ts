@@ -15,7 +15,10 @@ import { PylonSocketContext, PylonSocketMiddleware } from "./pylon-socket-contex
 import { PylonSessionConfig } from "./session";
 import { PylonSetup, PylonTeardown } from "./setup";
 
-type HttpRouters<C extends PylonHttpContext> = { path: string; router: PylonRouter<C> };
+export type PylonHttpRouters<C extends PylonHttpContext> = {
+  path: string;
+  router: PylonRouter<C>;
+};
 
 export type PylonOptions<
   C extends PylonHttpContext = PylonHttpContext,
@@ -30,7 +33,7 @@ export type PylonOptions<
   environment?: Environment;
   httpMaxRequestAge?: ReadableTime;
   httpMiddleware?: Array<PylonHttpMiddleware<C>>;
-  httpRouters?: string | Array<HttpRouters<C>>;
+  httpRouters?: string | Array<PylonHttpRouters<C>>;
   issuer?: string;
   name?: string;
   openIdConfiguration?: Partial<OpenIdConfigurationOptions>;

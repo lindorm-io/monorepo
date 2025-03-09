@@ -1,6 +1,6 @@
 import { Next } from "@lindorm/middleware";
 import MockDate from "mockdate";
-import { CookieOptions, PylonCookieConfig } from "../../types";
+import { PylonCookieConfig, SetCookieOptions } from "../../types";
 import {
   decodeCookieValue as _decodeCookieValue,
   encodeCookieValue as _encodeCookieValue,
@@ -19,7 +19,7 @@ describe("httpCookieMiddleware", () => {
   let ctx: any;
   let next: Next;
   let config: PylonCookieConfig;
-  let options: CookieOptions;
+  let options: SetCookieOptions;
 
   beforeEach(() => {
     ctx = {

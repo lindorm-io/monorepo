@@ -1,5 +1,10 @@
 import { expiresAt } from "@lindorm/date";
-import { CookieOptions, PylonCookieConfig, PylonHttpMiddleware } from "../../types";
+import {
+  GetCookieOptions,
+  PylonCookieConfig,
+  PylonHttpMiddleware,
+  SetCookieOptions,
+} from "../../types";
 import { decodeCookieValue, encodeCookieValue } from "../../utils/private";
 
 export const createHttpCookieMiddleware = (
@@ -9,25 +14,33 @@ export const createHttpCookieMiddleware = (
     ctx.setCookie = async <T = any>(
       name: string,
       value: T,
-      options: CookieOptions = {},
+      options: SetCookieOptions = {},
     ): Promise<void> => {
-      const cookie = await encodeCookieValue<T>(ctx, value, options);
+      const opts: PylonCookieConfig & SetCookieOptions = {
+        ...config,
+        ...options,
+      };
+
+      const cookie = await encodeCookieValue<T>(ctx, value, opts);
 
       ctx.cookies.set(name, cookie, {
-        domain: config.domain,
-        expires: options.expiry ? expiresAt(options.expiry) : undefined,
-        httpOnly: options.httpOnly ?? config.httpOnly,
-        overwrite: options.overwrite ?? config.overwrite,
-        path: options.path,
-        priority: options.priority ?? config.priority,
-        sameSite: config.sameSite,
-        signed: options.signed ?? Boolean(config.signatureKeys?.length),
+        domain: opts.domain,
+        expires: opts.expiry ? expiresAt(opts.expiry) : undefined,
+        httpOnly: opts.httpOnly ?? false,
+        overwrite: opts.overwrite ?? false,
+        path: opts.path,
+        priority: opts.priority,
+        sameSite: opts.sameSite ?? false,
+        signed: opts.signed ?? false,
       });
     };
 
-    ctx.getCookie = async <T = any>(name: string): Promise<T | undefined> => {
+    ctx.getCookie = async <T = any>(
+      name: string,
+      options: GetCookieOptions = {},
+    ): Promise<T | undefined> => {
       const cookie = ctx.cookies.get(name, {
-        signed: Boolean(config.signatureKeys?.length),
+        signed: config.signed ?? options.signed ?? false,
       });
 
       if (!cookie) return;

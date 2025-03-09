@@ -9,7 +9,7 @@ import { BaseRequest, DefaultState, Middleware } from "koa";
 import { RouterContext } from "koa-router";
 import { UserAgentContext } from "koa-useragent";
 import UserAgent from "koa-useragent/dist/lib/useragent";
-import { CookieOptions } from "./cookies";
+import { GetCookieOptions, SetCookieOptions } from "./cookies";
 import { PylonSession } from "./session";
 import { IoServer } from "./socket";
 
@@ -53,8 +53,8 @@ type Context<Data, WebhookData> = {
   userAgent: UserAgent;
   webhook: Webhook<WebhookData>;
 
-  setCookie<T = any>(name: string, value: T, options?: CookieOptions): Promise<void>;
-  getCookie<T = any>(name: string): Promise<T | undefined>;
+  setCookie<T = any>(name: string, value: T, options?: SetCookieOptions): Promise<void>;
+  getCookie<T = any>(name: string, options?: GetCookieOptions): Promise<T | undefined>;
   delCookie(name: string): void;
 };
 

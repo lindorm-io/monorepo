@@ -7,7 +7,7 @@ export const createHttpSessionMiddleware = (
   const name = config.name || "pylon_session";
 
   return async function httpSessionMiddleware(ctx, next) {
-    const session = await ctx.getCookie<PylonSession>(name);
+    const session = await ctx.getCookie<PylonSession>(name, config);
 
     ctx.session = session ?? null;
 
@@ -25,13 +25,9 @@ export const createHttpSessionMiddleware = (
 
     if (shouldSetNew || shouldSetExisting) {
       ctx.setCookie(name, ctx.session, {
-        encrypted: true,
-        expiry: config.expiry,
-        httpOnly: config.httpOnly,
+        ...config,
         overwrite: true,
         priority: "high",
-        sameSite: config.sameSite,
-        signed: true,
       });
     } else if (shouldDelete) {
       ctx.delCookie(name);

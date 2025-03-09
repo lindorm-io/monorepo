@@ -1,5 +1,4 @@
-import { Expiry } from "@lindorm/date";
-import { CookieSameSite } from "./cookies";
+import { SetCookieOptions } from "./cookies";
 
 export type PylonSession = {
   id: string;
@@ -8,9 +7,6 @@ export type PylonSession = {
   refreshToken?: string;
 };
 
-export type PylonSessionConfig = {
+export type PylonSessionConfig = Omit<SetCookieOptions, "overwrite" | "priority"> & {
   name?: string;
-  expiry?: Expiry;
-  httpOnly?: boolean;
-  sameSite?: CookieSameSite;
 };

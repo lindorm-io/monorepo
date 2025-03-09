@@ -1,8 +1,13 @@
 import { PylonRouter } from "../../classes";
-import { PylonHttpContext, PylonOptions } from "../../types";
+import { OpenIdConfigurationOptions, PylonHttpContext } from "../../types";
+
+type Options = {
+  issuer?: string;
+  openIdConfiguration?: Partial<OpenIdConfigurationOptions>;
+};
 
 export const createWellKnownRouter = <C extends PylonHttpContext>(
-  options: PylonOptions<C, any>,
+  options: Options,
 ): PylonRouter<C> => {
   const router = new PylonRouter<C>();
 

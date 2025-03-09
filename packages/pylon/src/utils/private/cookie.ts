@@ -2,7 +2,7 @@ import { Aegis } from "@lindorm/aegis";
 import { B64 } from "@lindorm/b64";
 import { ServerError } from "@lindorm/errors";
 import { isString } from "@lindorm/is";
-import { CookieOptions, PylonHttpContext } from "../../types";
+import { PylonHttpContext, SetCookieOptions } from "../../types";
 
 const safelyParse = <T = any>(value: string): T => {
   try {
@@ -15,7 +15,7 @@ const safelyParse = <T = any>(value: string): T => {
 export const encodeCookieValue = async <T = any>(
   ctx: PylonHttpContext,
   value: T,
-  options: CookieOptions = {},
+  options: SetCookieOptions = {},
 ): Promise<string> => {
   const string = isString(value) ? value : JSON.stringify(value);
 

@@ -3,7 +3,7 @@ import { Expiry } from "@lindorm/date";
 export type CookiePriority = "low" | "medium" | "high";
 export type CookieSameSite = "strict" | "lax";
 
-export type CookieOptions = {
+export type SetCookieOptions = {
   encrypted?: boolean;
   expiry?: Expiry;
   httpOnly?: boolean;
@@ -14,6 +14,10 @@ export type CookieOptions = {
   signed?: boolean;
 };
 
+export type GetCookieOptions = {
+  signed?: boolean;
+};
+
 export type PylonCookieConfig = {
   domain?: string;
   encrypted?: boolean;
@@ -21,5 +25,5 @@ export type PylonCookieConfig = {
   overwrite?: boolean;
   priority?: CookiePriority;
   sameSite?: CookieSameSite;
-  signatureKeys?: Array<string>;
+  signed?: boolean;
 };
