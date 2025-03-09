@@ -14,7 +14,7 @@ export const findProcessEnvValue = (
   processEnv: ProcessEnv,
   key: string,
   parentKey?: string,
-): string | null => {
+): any => {
   const k: string = changeCase(key, ChangeCase.Constant);
   const p: string | null = parentKey ? changeCase(parentKey, ChangeCase.Constant) : null;
 

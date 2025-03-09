@@ -32,7 +32,7 @@ export const ecbKeyWrap = ({
     for (let i = 0; i < n; i++) {
       const b = Buffer.concat([a, r[i]]);
       const encrypted = cipher.update(b);
-      a = encrypted.subarray(0, BLOCK_SIZE);
+      a = encrypted.subarray(0, BLOCK_SIZE) as Buffer<ArrayBuffer>;
       const t = n * j + i + 1;
       const tBuffer = Buffer.alloc(BLOCK_SIZE);
       tBuffer.writeUIntBE(t, 4, 4);

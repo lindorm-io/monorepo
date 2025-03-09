@@ -4,14 +4,7 @@ import { Dict } from "@lindorm/types";
 import c from "config";
 import { mergeObjectWithProcessEnv } from "./private";
 
-type NpmInformation = {
-  npm: {
-    package: {
-      name: string;
-      version: string;
-    };
-  };
-};
+type NpmInformation = { npm: { package: { name: string; version: string } } };
 
 type Configuration<T extends Dict = Dict> = NpmInformation & T;
 

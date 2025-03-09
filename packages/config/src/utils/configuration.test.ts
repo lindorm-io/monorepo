@@ -43,12 +43,7 @@ describe("configuration", () => {
       fourArray: [1, 2, 3],
       fiveArray: [1, 2, 3],
       withDotEnvReplacement: "two",
-      npm: {
-        package: {
-          name: "@osprey-solutions-as/config",
-          version: "0.0.0",
-        },
-      },
+      npm: { package: { name: "@osprey-solutions-as/config", version: "0.0.0" } },
     });
   });
 });
