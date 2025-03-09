@@ -33,9 +33,7 @@ export class Amphora implements IAmphora {
       alias: "Amphora",
       logger: this.logger,
       middleware: [conduitChangeResponseDataMiddleware()],
-      retryOptions: {
-        maxAttempts: 10,
-      },
+      retryOptions: { maxAttempts: 10 },
     });
 
     this._config = [];
