@@ -1,23 +1,12 @@
-import { LindormError } from "@lindorm/errors";
-import { isObject } from "@lindorm/is";
 import { isBefore } from "@lindorm/date";
-import deepEqual from "deep-equal";
+import { LindormError } from "@lindorm/errors";
+import { isEqual, isObject } from "@lindorm/is";
 
-type Meta = {
-  value: any;
-  destroyed: boolean;
-  timestamp: Date;
-};
+type Meta = { value: any; destroyed: boolean; timestamp: Date };
 
-type ArrayResult = {
-  state: Array<any>;
-  meta: Array<any>;
-};
+type ArrayResult = { state: Array<any>; meta: Array<any> };
 
-type ObjectResult<TState> = {
-  state: TState;
-  meta: any;
-};
+type ObjectResult<TState> = { state: TState; meta: any };
 
 export const composeArrayMetadata = (
   currentArray: Array<any> = [],
@@ -59,7 +48,7 @@ export const composeArrayMetadata = (
         /**
          * example: { key: 1, word: "hello" } === { key: 1, word: "hello" }
          */
-      } else if (deepEqual(currentItem, inputItem)) {
+      } else if (isEqual(currentItem, inputItem)) {
         meta.push(currentMeta);
         state.push(currentItem);
 
@@ -97,10 +86,7 @@ export const composeArrayMetadata = (
       if (!inputItem.key) {
         throw new LindormError(
           "Array items need to match [ { key: string } ] to correctly process changes",
-          {
-            data: { item: inputItem },
-            debug: { input: inputArray },
-          },
+          { data: { item: inputItem }, debug: { input: inputArray } },
         );
       }
 
@@ -216,7 +202,7 @@ export const composeObjectMetadata = <TState = Record<string, any>>(
       /**
        * example: { key: 1, word: "hello" } === { key: 1, word: "hello" }
        */
-    } else if (deepEqual(currentObject[key], inputObject[key])) {
+    } else if (isEqual(currentObject[key], inputObject[key])) {
       meta[key] = metadata[key];
       state[key] = currentObject[key];
 

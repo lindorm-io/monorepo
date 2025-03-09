@@ -1,5 +1,5 @@
 import { AesKit } from "@lindorm/aes";
-import { Kryptos, KryptosEncAlgorithm, KryptosEncryption } from "@lindorm/kryptos";
+import { KryptosEncAlgorithm, KryptosEncryption, KryptosKit } from "@lindorm/kryptos";
 import { ILogger } from "@lindorm/logger";
 import { MongoSource } from "@lindorm/mongo";
 import { PostgresSource } from "@lindorm/postgres";
@@ -50,7 +50,7 @@ export class EncryptionStore implements IHermesEncryptionStore {
     const exists = await this.store.find(aggregate);
 
     if (exists) {
-      const kryptos = Kryptos.fromB64({
+      const kryptos = KryptosKit.from.b64({
         id: exists.key_id,
         algorithm: exists.key_algorithm,
         curve: exists.key_curve ?? undefined,
@@ -64,7 +64,7 @@ export class EncryptionStore implements IHermesEncryptionStore {
       return new AesKit({ kryptos });
     }
 
-    const kryptos = Kryptos.auto({
+    const kryptos = KryptosKit.make.auto({
       algorithm: this.algorithm,
       encryption: this.encryption,
     });
@@ -82,7 +82,7 @@ export class EncryptionStore implements IHermesEncryptionStore {
       key_encryption: encryption!,
       key_type: type,
       private_key: privateKey!,
-      public_key: publicKey,
+      public_key: publicKey!,
       created_at: new Date(),
     });
 
