@@ -9,7 +9,9 @@ export interface IAmphora {
 
   add(kryptos: Array<IKryptos> | IKryptos): void;
   filter(query: AmphoraQuery): Promise<Array<IKryptos>>;
+  filterSync(query: AmphoraQuery): Array<IKryptos>;
   find(query: AmphoraQuery): Promise<IKryptos>;
+  findSync(query: AmphoraQuery): IKryptos;
   refresh(): Promise<void>;
   setup(): Promise<void>;
 

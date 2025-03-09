@@ -68,7 +68,7 @@ describe("Amphora", () => {
     });
   });
 
-  describe("find & filter", () => {
+  describe("filter", () => {
     test("should filter kryptos by active", async () => {
       const key = KryptosKit.clone(TEST_EC_KEY_SIG, {
         notBefore: new Date("2099-01-01T00:00:00.000Z"),
@@ -88,14 +88,6 @@ describe("Amphora", () => {
       amphora.add([kryptos, TEST_OCT_KEY_SIG]);
 
       await expect(amphora.filter({ issuer })).resolves.toEqual([TEST_OCT_KEY_SIG]);
-    });
-
-    test("should find kryptos in vault using id", async () => {
-      amphora.add(TEST_EC_KEY_SIG);
-
-      await expect(amphora.find({ issuer, id: TEST_EC_KEY_SIG.id })).resolves.toEqual(
-        TEST_EC_KEY_SIG,
-      );
     });
 
     test("should filter kryptos and sort them by creation date", async () => {
@@ -155,6 +147,32 @@ describe("Amphora", () => {
       await expect(amphora.filter({ issuer, use: "sig" })).resolves.toEqual([
         TEST_EC_KEY_SIG,
       ]);
+    });
+
+    test("should filter kryptos in vault synchronously", async () => {
+      amphora.add(TEST_EC_KEY_SIG);
+
+      expect(amphora.filterSync({ issuer, id: TEST_EC_KEY_SIG.id })).toEqual([
+        TEST_EC_KEY_SIG,
+      ]);
+    });
+  });
+
+  describe("find", () => {
+    test("should find kryptos in vault using id", async () => {
+      amphora.add(TEST_EC_KEY_SIG);
+
+      await expect(amphora.find({ issuer, id: TEST_EC_KEY_SIG.id })).resolves.toEqual(
+        TEST_EC_KEY_SIG,
+      );
+    });
+
+    test("should find kryptos in vault synchronously", async () => {
+      amphora.add(TEST_EC_KEY_SIG);
+
+      expect(amphora.findSync({ issuer, id: TEST_EC_KEY_SIG.id })).toEqual(
+        TEST_EC_KEY_SIG,
+      );
     });
   });
 

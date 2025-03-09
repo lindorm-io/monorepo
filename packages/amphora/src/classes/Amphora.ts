@@ -106,8 +106,19 @@ export class Amphora implements IAmphora {
     return this.filteredKeys(query);
   }
 
+  public filterSync(query: AmphoraQuery): Array<IKryptos> {
+    return this.filteredKeys(query);
+  }
+
   public async find(query: AmphoraQuery): Promise<IKryptos> {
     const [key] = await this.filter(query);
+    if (key) return key;
+
+    throw new AmphoraError("Kryptos not found using query");
+  }
+
+  public findSync(query: AmphoraQuery): IKryptos {
+    const [key] = this.filterSync(query);
     if (key) return key;
 
     throw new AmphoraError("Kryptos not found using query");
