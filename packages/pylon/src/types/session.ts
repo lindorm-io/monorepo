@@ -4,8 +4,8 @@ import { CookieSameSite } from "./cookies";
 export type PylonSession = {
   id: string;
   accessToken: string;
-  idToken: string;
-  refreshToken: string;
+  idToken?: string;
+  refreshToken?: string;
 };
 
 export type PylonSessionConfig = {
