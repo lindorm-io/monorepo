@@ -21,3 +21,6 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Build
+tsconfig.build.tsbuildinfo
