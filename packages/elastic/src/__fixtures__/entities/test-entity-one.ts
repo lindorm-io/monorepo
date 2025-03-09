@@ -1,37 +1,35 @@
-import { MappingTypeMapping } from "@elastic/elasticsearch/lib/api/types";
 import {
-  ELASTIC_ENTITY_CONFIG,
-  ELASTIC_ENTITY_MAPPING_PROPERTIES,
-  ElasticEntity,
-} from "../../classes";
-import { ValidateElasticEntityFn } from "../../types";
+  Column,
+  Entity,
+  EntityBase,
+  OnValidate,
+  PrimarySource,
+  UpdateDateColumn,
+  VersionColumn,
+} from "@lindorm/entity";
 
 export type TestEntityOneOptions = {
   email?: string;
   name: string;
 };
 
-export class TestEntityOne extends ElasticEntity {
-  public readonly email!: string | null;
-  public readonly name!: string;
+@Entity()
+@OnValidate((entity: TestEntityOne) => {
+  if (entity.name.length < 3) {
+    throw new Error("Name must be at least 3 characters long");
+  }
+})
+@PrimarySource("postgres")
+export class TestEntityOne extends EntityBase {
+  @VersionColumn()
+  public version!: number;
+
+  @UpdateDateColumn()
+  public updatedAt!: Date;
+
+  @Column("string", { nullable: true })
+  public email!: string | null;
+
+  @Column("string")
+  public name!: string;
 }
-
-export const config = ELASTIC_ENTITY_CONFIG;
-
-export const mappings: MappingTypeMapping = {
-  properties: {
-    ...ELASTIC_ENTITY_MAPPING_PROPERTIES,
-    email: { type: "text" },
-    name: { type: "text" },
-  },
-};
-
-export const validate: ValidateElasticEntityFn<TestEntityOne> = (entity) => {
-  if (!entity.email) {
-    throw new Error("Missing email");
-  }
-
-  if (!entity.name) {
-    throw new Error("Missing name");
-  }
-};

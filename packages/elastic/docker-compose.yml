@@ -1,6 +1,7 @@
 services:
   elastic:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.7.1
+    platform: linux/amd64
     ports:
       - "9200:9200"
     environment:
@@ -14,7 +15,7 @@ services:
       - xpack.security.enabled=true
       - xpack.security.http.ssl.enabled=false
       - xpack.security.transport.ssl.enabled=false
-    mem_limit: 1073741824
+    mem_limit: 2147483648
     ulimits:
       memlock:
         soft: -1
@@ -22,6 +23,6 @@ services:
     healthcheck:
       test:
         [ "CMD-SHELL", "curl -s https://localhost:9200" ]
-      interval: 10s
-      timeout: 10s
+      interval: 5s
+      timeout: 30s
       retries: 120

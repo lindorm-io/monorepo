@@ -2,181 +2,173 @@ import { Client } from "@elastic/elasticsearch";
 import {
   MappingTypeMapping,
   QueryDslBoolQuery,
+  QueryDslQueryContainer,
   SearchHit,
 } from "@elastic/elasticsearch/lib/api/types";
-import { snakeCase } from "@lindorm/case";
-import { isAfter } from "@lindorm/date";
-import { IEntityBase } from "@lindorm/entity";
-import { isArray, isDate, isFunction, isNumber, isString } from "@lindorm/is";
+import { ms, ReadableTime } from "@lindorm/date";
+import {
+  EntityKit,
+  EntityMetadata,
+  globalEntityMetadata,
+  IEntity,
+  MetaSource,
+} from "@lindorm/entity";
+import { isArray } from "@lindorm/is";
 import { ILogger } from "@lindorm/logger";
 import { Constructor, DeepPartial } from "@lindorm/types";
-import { randomUUID } from "crypto";
-import { z } from "zod";
+import { sleep } from "@lindorm/utils";
 import { ElasticRepositoryError } from "../errors";
 import { IElasticRepository } from "../interfaces";
-import {
-  CreateElasticEntityFn,
-  ElasticEntityConfig,
-  ElasticRepositoryOptions,
-  ValidateElasticEntityFn,
-} from "../types";
+import { ElasticRepositoryOptions } from "../types";
+import { getMapping } from "../utils";
+
+const PRIMARY_SOURCE: MetaSource = "elastic" as const;
 
 export class ElasticRepository<
-  E extends IEntityBase,
+  E extends IEntity,
   O extends DeepPartial<E> = DeepPartial<E>,
 > implements IElasticRepository<E, O>
 {
   private readonly EntityConstructor: Constructor<E>;
   private readonly client: Client;
-  private readonly config: ElasticEntityConfig<E>;
-  private readonly createFn: CreateElasticEntityFn<E> | undefined;
-  private readonly index: string;
+  private readonly indexName: string;
+  private readonly incrementName: string;
+  private readonly kit: EntityKit<E, O>;
   private readonly logger: ILogger;
-  private readonly mappings: MappingTypeMapping;
-  private readonly validateFn: ValidateElasticEntityFn<E> | undefined;
+  private readonly mapping: MappingTypeMapping;
+  private readonly metadata: EntityMetadata;
 
   public constructor(options: ElasticRepositoryOptions<E>) {
     this.logger = options.logger.child(["ElasticRepository", options.Entity.name]);
 
-    this.EntityConstructor = options.Entity;
+    this.kit = new EntityKit({
+      Entity: options.Entity,
+      logger: this.logger,
+      source: PRIMARY_SOURCE,
+      getNextIncrement: this.getNextIncrement.bind(this),
+    });
+
     this.client = options.client;
-    this.config = options.config ?? {};
-    this.index = ElasticRepository.createIndexName(options);
-    this.mappings = {
-      ...(options.mappings ?? {}),
-      properties: {
-        ...(options.mappings?.properties ?? {}),
-        createdAt: { type: "date" },
-        updatedAt: { type: "date" },
-      },
-    };
+    this.metadata = globalEntityMetadata.get(options.Entity);
+    this.indexName = this.kit.getCollectionName(options);
+    this.incrementName = this.kit.getIncrementName(options);
+    this.mapping = getMapping(this.metadata);
 
-    this.createFn = options.create;
-    this.validateFn = options.validate;
-  }
-
-  // public static
-
-  public static createEntity<
-    E extends IEntityBase,
-    O extends DeepPartial<E> = DeepPartial<E>,
-  >(Entity: Constructor<E>, options: O | E): E {
-    const entity = new Entity(options);
-
-    const { id, createdAt, updatedAt, ...rest } = options as E;
-
-    entity.id = id ?? entity.id ?? randomUUID();
-
-    entity.createdAt =
-      ElasticRepository.date(createdAt) ??
-      ElasticRepository.date(entity.createdAt) ??
-      new Date();
-
-    entity.updatedAt =
-      ElasticRepository.date(updatedAt) ??
-      ElasticRepository.date(entity.updatedAt) ??
-      new Date();
-
-    for (const [key, value] of Object.entries(rest)) {
-      if (key === "_id") continue;
-      entity[key as keyof E] = (value ?? null) as E[keyof E];
-    }
-
-    for (const [key, value] of Object.entries(entity)) {
-      if (value !== undefined) continue;
-      entity[key as keyof E] = null as E[keyof E];
-    }
-
-    return entity;
+    this.EntityConstructor = options.Entity;
   }
 
   // public
 
-  public create(options: O | E = {} as O): E {
-    const entity = this.createFn
-      ? this.createFn(options)
-      : ElasticRepository.createEntity(this.EntityConstructor, options);
+  public create(options?: O | E): E {
+    return this.kit.create(options);
+  }
 
-    if (this.config.deleteAttribute && !isDate(entity[this.config.deleteAttribute])) {
-      entity[this.config.deleteAttribute] = ElasticRepository.date(
-        entity[this.config.deleteAttribute],
-      ) as any;
-    }
+  public copy(entity: E): E {
+    return this.kit.copy(entity);
+  }
 
-    if (
-      this.config.primaryTermAttribute &&
-      !isNumber(entity[this.config.primaryTermAttribute])
-    ) {
-      entity[this.config.primaryTermAttribute] = 0 as any;
-    }
-
-    if (
-      this.config.revisionAttribute &&
-      !isNumber(entity[this.config.revisionAttribute])
-    ) {
-      entity[this.config.revisionAttribute] = 0 as any;
-    }
-
-    if (
-      this.config.sequenceAttribute &&
-      !isNumber(entity[this.config.sequenceAttribute])
-    ) {
-      entity[this.config.sequenceAttribute] = 0 as any;
-    }
-
-    if (this.config.ttlAttribute && !isDate(entity[this.config.ttlAttribute])) {
-      entity[this.config.ttlAttribute] = ElasticRepository.date(
-        entity[this.config.ttlAttribute],
-      ) as any;
-    }
-
-    this.logger.debug("Created entity", { entity });
-
-    this.validateEntity(entity);
-
-    return entity;
+  public validate(entity: E): void {
+    return this.kit.validate(entity);
   }
 
   public async setup(): Promise<void> {
-    this.logger.debug("Setting up index", { index: this.index });
+    await this.waitForElastic();
 
-    try {
-      await this.client.indices.get({ index: this.index });
+    const options = [{ indexName: this.indexName, mapping: this.mapping }];
+    const metadata = this.metadata.generated.filter((g) => g.strategy === "increment");
 
-      this.logger.debug("Index already exists", { index: this.index });
-
-      return;
-    } catch (error: any) {
-      if (error.meta?.statusCode !== 404) {
-        throw new ElasticRepositoryError("Failed to get index", { error });
-      }
+    if (metadata.length) {
+      options.push({
+        indexName: this.incrementName,
+        mapping: { properties: { key: { type: "text" }, value: { type: "long" } } },
+      });
     }
 
-    this.logger.debug("Creating new index", { index: this.index });
+    for (const config of options) {
+      this.logger.debug("Configuring index", { index: config.indexName });
 
-    await this.client.indices.create({
-      index: this.index,
-      mappings: this.mappings,
-    });
+      try {
+        await this.client.indices.get({ index: config.indexName, master_timeout: "60s" });
 
-    this.logger.debug("Index created", { index: this.index });
+        this.logger.debug("Writing mapping to index", { index: config.indexName });
+
+        await this.client.indices.putMapping({
+          index: config.indexName,
+          body: config.mapping,
+        });
+
+        return;
+      } catch (error: any) {
+        if (error.meta?.statusCode !== 404) {
+          throw new ElasticRepositoryError("Failed to get index", { error });
+        }
+      }
+
+      this.logger.debug("Creating new index", { index: config.indexName });
+
+      await this.client.indices.create({
+        index: config.indexName,
+        mappings: config.mapping,
+      });
+    }
+  }
+
+  public async clone(entity: E): Promise<E> {
+    const start = Date.now();
+
+    const clone = await this.kit.clone(entity);
+
+    this.validate(clone);
+
+    try {
+      const result = await this.client.index({
+        index: this.indexName,
+        body: clone,
+        refresh: "wait_for",
+      });
+
+      this.logger.debug("Repository done: clone", {
+        input: { entity },
+        result: {
+          id: result._id,
+          message: result.result,
+          primaryTerm: result._primary_term,
+          version: result._version,
+          seqNo: result._seq_no,
+        },
+        time: Date.now() - start,
+      });
+
+      this.kit.onInsert(clone);
+
+      return clone;
+    } catch (error: any) {
+      this.logger.error("Repository error", error);
+      throw new ElasticRepositoryError("Failed to clone entity", { error });
+    }
+  }
+
+  public async cloneBulk(entities: Array<E>): Promise<Array<E>> {
+    const result: Array<E> = [];
+    for (const entity of entities) {
+      result.push(await this.clone(entity));
+    }
+    return result;
   }
 
   public async count(query?: QueryDslBoolQuery): Promise<number> {
     const start = Date.now();
 
-    const bool = this.defaultFindFilter(query);
+    const bool = this.createDefaultQuery(query);
 
     try {
       const result = await this.client.count({
-        index: this.index,
+        index: this.indexName,
         query: { bool },
       });
 
       this.logger.debug("Repository done: count", {
-        input: {
-          query,
-        },
+        input: { query },
         result: {
           count: result.count,
           shards: result._shards,
@@ -194,11 +186,11 @@ export class ElasticRepository<
   public async delete(query: QueryDslBoolQuery): Promise<void> {
     const start = Date.now();
 
-    const bool = this.defaultFindFilter(query);
+    const bool = this.createDefaultQuery(query);
 
     try {
       const result = await this.client.deleteByQuery({
-        index: this.index,
+        index: this.indexName,
         query: { bool },
       });
 
@@ -208,7 +200,7 @@ export class ElasticRepository<
         });
       }
 
-      await this.client.indices.refresh({ index: this.index });
+      await this.client.indices.refresh({ index: this.indexName });
 
       this.logger.debug("Repository done: delete", {
         input: {
@@ -229,71 +221,33 @@ export class ElasticRepository<
     }
   }
 
-  public async deleteById(id: string): Promise<void> {
-    const start = Date.now();
-
-    try {
-      const result = await this.client.delete({
-        refresh: "wait_for",
-        index: this.index,
-        id,
-      });
-
-      if (result.result !== "deleted") {
-        throw new ElasticRepositoryError("Failed to delete entity", {
-          debug: { result },
-        });
-      }
-
-      this.logger.debug("Repository done: deleteById", {
-        input: {
-          id,
-        },
-        result: {
-          id: result._id,
-          message: result.result,
-          primaryTerm: result._primary_term,
-          seqNo: result._seq_no,
-          shards: result._shards,
-          version: result._version,
-        },
-        time: Date.now() - start,
-      });
-    } catch (error: any) {
-      this.logger.error("Repository error", error);
-      throw new ElasticRepositoryError("Unable to destroy entity", { error });
-    }
-  }
-
   public async deleteExpired(): Promise<void> {
     const start = Date.now();
 
-    try {
-      if (!this.config.ttlAttribute) {
-        this.logger.debug("Expiry is not enabled; no action taken on deleteExpired");
-        return;
-      }
+    const expiryDate = this.metadata.columns.find(
+      (c) => c.decorator === "ExpiryDateColumn",
+    );
+    if (!expiryDate) {
+      throw new ElasticRepositoryError("ExpiryDate column not found", {
+        debug: { metadata: this.metadata },
+      });
+    }
 
-      const query: QueryDslBoolQuery = {
-        must: [
-          {
-            range: {
-              [this.config.ttlAttribute]: { lte: "now" },
-            },
-          },
-        ],
+    try {
+      const bool: QueryDslBoolQuery = {
+        must: [{ range: { [expiryDate.key]: { lte: "now" } } }],
       };
 
       const result = await this.client.deleteByQuery({
-        index: this.index,
-        query: { bool: query },
+        index: this.indexName,
+        query: { bool },
       });
 
-      await this.client.indices.refresh({ index: this.index });
+      await this.client.indices.refresh({ index: this.indexName });
 
       this.logger.debug("Repository done: deleteExpired", {
         input: {
-          query,
+          query: { bool },
         },
         result: {
           deleted: result.deleted,
@@ -309,21 +263,29 @@ export class ElasticRepository<
   }
 
   public async destroy(entity: E): Promise<void> {
-    await this.deleteById(entity.id);
+    const [primaryKey] = this.metadata.primaryKeys;
+
+    await this.delete({
+      must: [{ terms: { _id: entity[primaryKey] } }],
+    });
+
+    this.kit.onDestroy(entity);
   }
 
   public async destroyBulk(entities: Array<E>): Promise<void> {
-    await Promise.all(entities.map((entity) => this.destroy(entity)));
+    for (const entity of entities) {
+      await this.destroy(entity);
+    }
   }
 
   public async exists(query: QueryDslBoolQuery): Promise<boolean> {
     const start = Date.now();
 
-    const bool = this.defaultFindFilter(query);
+    const bool = this.createDefaultQuery(query);
 
     try {
       const result = await this.client.search<any>({
-        index: this.index,
+        index: this.indexName,
         query: { bool },
         size: 1,
       });
@@ -351,14 +313,12 @@ export class ElasticRepository<
   public async find(query?: QueryDslBoolQuery): Promise<Array<E>> {
     const start = Date.now();
 
-    const bool = this.defaultFindFilter(query);
+    const bool = this.createDefaultQuery(query);
 
     try {
       const result = await this.client.search<any>({
-        index: this.index,
+        index: this.indexName,
         query: { bool },
-        seq_no_primary_term: true,
-        version: true,
       });
 
       this.logger.debug("Repository done: find", {
@@ -384,15 +344,13 @@ export class ElasticRepository<
   public async findOne(query: QueryDslBoolQuery): Promise<E | null> {
     const start = Date.now();
 
-    const bool = this.defaultFindFilter(query);
+    const bool = this.createDefaultQuery(query);
 
     try {
       const result = await this.client.search<any>({
-        index: this.index,
+        index: this.indexName,
         query: { bool },
-        seq_no_primary_term: true,
         size: 1,
-        version: true,
       });
 
       if (result.hits.hits.length === 0) {
@@ -435,90 +393,22 @@ export class ElasticRepository<
     return this.insert(this.create(options));
   }
 
-  public async findOneById(id: string): Promise<E | null> {
-    const start = Date.now();
-
-    try {
-      const result = await this.client.get<any>({ index: this.index, id });
-
-      this.logger.debug("Repository done: findOneById", {
-        input: {
-          id,
-        },
-        result: {
-          id: result._id,
-          primaryTerm: result._primary_term,
-          seq: result._seq_no,
-          version: result._version,
-        },
-        time: Date.now() - start,
-      });
-
-      const document = this.handleHit(result);
-
-      if (
-        this.config.ttlAttribute &&
-        isDate(document[this.config.ttlAttribute]) &&
-        isAfter(document[this.config.ttlAttribute] as Date, new Date())
-      ) {
-        return null;
-      }
-
-      if (this.config.deleteAttribute && document[this.config.deleteAttribute]) {
-        return null;
-      }
-
-      return document;
-    } catch (error: any) {
-      if (error.meta?.statusCode === 404) {
-        return null;
-      }
-
-      this.logger.error("Repository error", error);
-      throw new ElasticRepositoryError("Failed to find entity by id", { error });
-    }
-  }
-
-  public async findOneByIdOrFail(id: string): Promise<E> {
-    const entity = await this.findOneById(id);
-
-    if (!entity) {
-      throw new ElasticRepositoryError("Entity not found", { debug: { id } });
-    }
-
-    return entity;
-  }
-
   public async insert(entity: E): Promise<E> {
     const start = Date.now();
 
-    this.validateEntity(entity);
+    const insert = await this.kit.insert(entity);
 
-    const updated = this.updateEntityData(entity);
+    this.validate(insert);
 
     try {
-      const { id, ...body } = updated;
-
-      if (this.config.revisionAttribute) {
-        delete body[this.config.revisionAttribute as keyof Omit<E, "id">];
-      }
-
-      if (this.config.sequenceAttribute) {
-        delete body[this.config.sequenceAttribute as keyof Omit<E, "id">];
-      }
+      const [primaryKey] = this.metadata.primaryKeys;
 
       const result = await this.client.index({
+        index: this.indexName,
+        id: insert[primaryKey],
+        body: insert,
         refresh: "wait_for",
-        index: this.index,
-        id,
-        body,
       });
-
-      if (result.result !== "created") {
-        throw new ElasticRepositoryError("Failed to create entity", {
-          debug: { result },
-        });
-      }
 
       this.logger.debug("Repository done: insert", {
         input: {
@@ -534,9 +424,9 @@ export class ElasticRepository<
         time: Date.now() - start,
       });
 
-      const get = await this.client.get<any>({ index: this.index, id });
+      this.kit.onInsert(insert);
 
-      return this.handleHit(get);
+      return insert;
     } catch (error: any) {
       this.logger.error("Repository error", error);
       throw new ElasticRepositoryError("Failed to insert entity", { error });
@@ -544,126 +434,68 @@ export class ElasticRepository<
   }
 
   public async insertBulk(entities: Array<E>): Promise<Array<E>> {
-    const start = Date.now();
-
-    const actions: Array<any> = [];
-
+    const result: Array<E> = [];
     for (const entity of entities) {
-      this.validateEntity(entity);
-
-      const updated = this.updateEntityData(entity);
-      const { id, ...doc } = updated;
-
-      if (this.config.revisionAttribute) {
-        delete doc[this.config.revisionAttribute as keyof Omit<E, "id">];
-      }
-
-      if (this.config.sequenceAttribute) {
-        delete doc[this.config.sequenceAttribute as keyof Omit<E, "id">];
-      }
-
-      actions.push({ index: { _index: this.index, _id: id } });
-      actions.push(doc);
+      result.push(await this.insert(entity));
     }
-
-    try {
-      const result = await this.client.bulk({
-        refresh: "wait_for",
-        body: actions,
-      });
-
-      if (result.errors) {
-        throw new ElasticRepositoryError("Failed to bulk insert entities", {
-          debug: { result },
-        });
-      }
-
-      this.logger.debug("Repository done: insertBulk", {
-        input: {
-          actions,
-        },
-        result,
-        time: Date.now() - start,
-      });
-
-      const search = await this.client.search<any>({
-        index: this.index,
-        query: {
-          bool: { must: [{ terms: { _id: entities.map((entity) => entity.id) } }] },
-        },
-        seq_no_primary_term: true,
-        version: true,
-      });
-
-      return entities
-        .map((e) => search.hits.hits.find((h) => h._id === e.id))
-        .map((h) => this.handleHit(h!));
-    } catch (error: any) {
-      this.logger.error("Repository error", error);
-      throw new ElasticRepositoryError("Failed to bulk insert entities", { error });
-    }
+    return result;
   }
 
   public async save(entity: E): Promise<E> {
-    if (this.config.revisionAttribute) {
-      if (entity[this.config.revisionAttribute] === 0) {
-        return this.insert(entity);
-      }
-      return this.update(entity);
+    const strategy = this.kit.getSaveStrategy(entity);
+
+    switch (strategy) {
+      case "insert":
+        return await this.insert(entity);
+      case "update":
+        return await this.update(entity);
+      default:
+        break;
     }
 
     try {
       return this.insert(entity);
-    } catch (_) {
-      return this.update(entity);
+    } catch (err: any) {
+      if (err.code === 11000) {
+        return this.update(entity);
+      }
+      throw err;
     }
   }
 
   public async saveBulk(entities: Array<E>): Promise<Array<E>> {
-    if (this.config.revisionAttribute) {
-      const toInsert = entities.filter(
-        (e) => (e[this.config.revisionAttribute as keyof E] as number) === 0,
-      );
-      const inserted = toInsert.length ? await this.insertBulk(toInsert) : [];
-
-      const toUpdate = entities.filter(
-        (e) => (e[this.config.revisionAttribute as keyof E] as number) !== 0,
-      );
-      const updated = toUpdate.length ? await this.updateBulk(toUpdate) : [];
-
-      return entities.map(
-        (entity) =>
-          inserted.find((e) => e.id === entity.id) ??
-          updated.find((e) => e.id === entity.id) ??
-          entity,
-      );
+    const result: Array<E> = [];
+    for (const entity of entities) {
+      result.push(await this.save(entity));
     }
-
-    return Promise.all(entities.map((e) => this.save(e)));
+    return result;
   }
 
   public async softDelete(query: QueryDslBoolQuery): Promise<void> {
     const start = Date.now();
 
-    if (!this.config.deleteAttribute) {
-      throw new ElasticRepositoryError("Soft delete is not enabled");
+    const deleteDate = this.metadata.columns.find(
+      (c) => c.decorator === "DeleteDateColumn",
+    );
+    if (!deleteDate) {
+      throw new ElasticRepositoryError("DeleteDate column not found", {
+        debug: { metadata: this.metadata },
+      });
     }
-
-    const softDelete = this.config.deleteAttribute.toString();
 
     try {
       const result = await this.client.updateByQuery({
-        index: this.index,
+        index: this.indexName,
         body: {
           script: {
-            source: `ctx._source.${softDelete} = params.${softDelete}`,
-            params: { [softDelete]: new Date().toISOString() },
+            source: `ctx._source.${deleteDate.key} = params.${deleteDate.key}`,
+            params: { [deleteDate.key]: new Date().toISOString() },
           },
           query: { bool: query },
         },
       });
 
-      await this.client.indices.refresh({ index: this.index });
+      await this.client.indices.refresh({ index: this.indexName });
 
       this.logger.debug("Repository done: softDelete", {
         input: {
@@ -678,219 +510,39 @@ export class ElasticRepository<
     }
   }
 
-  public async softDeleteById(id: string): Promise<void> {
-    const start = Date.now();
-
-    if (!this.config.deleteAttribute) {
-      throw new ElasticRepositoryError("Soft delete is not enabled");
-    }
-
-    const softDelete = this.config.deleteAttribute.toString();
-
-    try {
-      const result = await this.client.update({
-        refresh: "wait_for",
-        index: this.index,
-        id,
-        body: {
-          script: {
-            source: `ctx._source.${softDelete} = params.${softDelete}`,
-            params: { [softDelete]: new Date().toISOString() },
-          },
-        },
-      });
-
-      this.logger.debug("Repository done: softDeleteById", {
-        input: {
-          id,
-        },
-        result: {
-          id: result._id,
-          message: result.result,
-          primaryTerm: result._primary_term,
-          seqNo: result._seq_no,
-          shards: result._shards,
-          version: result._version,
-        },
-        time: Date.now() - start,
-      });
-    } catch (error: any) {
-      this.logger.error("Repository error", error);
-      throw new ElasticRepositoryError("Failed to soft delete entity", { error });
-    }
-  }
-
   public async softDestroy(entity: E): Promise<void> {
-    await this.softDeleteById(entity.id);
-  }
+    const [primaryKey] = this.metadata.primaryKeys;
 
-  public async softDestroyBulk(entities: Array<E>): Promise<void> {
     await this.softDelete({
-      must: [{ terms: { _id: entities.map((entity) => entity.id) } }],
+      must: [{ terms: { _id: entity[primaryKey] } }],
     });
   }
 
-  public async update(entity: E): Promise<E> {
-    const start = Date.now();
+  public async softDestroyBulk(entities: Array<E>): Promise<void> {
+    const [primaryKey] = this.metadata.primaryKeys;
 
-    this.validateEntity(entity);
-
-    const filter = this.defaultUpdateFilter(entity);
-    const updated = this.updateEntityData(entity);
-
-    try {
-      const { id, ...doc } = updated;
-
-      if (this.config.primaryTermAttribute) {
-        delete doc[this.config.primaryTermAttribute as keyof Omit<E, "id">];
-      }
-
-      if (this.config.revisionAttribute) {
-        delete doc[this.config.revisionAttribute as keyof Omit<E, "id">];
-      }
-
-      if (this.config.sequenceAttribute) {
-        delete doc[this.config.sequenceAttribute as keyof Omit<E, "id">];
-      }
-
-      const result = await this.client.update({
-        refresh: "wait_for",
-        index: this.index,
-        id,
-        ...(this.config.primaryTermAttribute && {
-          if_primary_term: updated[this.config.primaryTermAttribute] as number,
-        }),
-        ...(this.config.sequenceAttribute && {
-          if_seq_no: updated[this.config.sequenceAttribute] as number,
-        }),
-        body: { doc },
-      });
-
-      if (result.result !== "updated") {
-        throw new ElasticRepositoryError("Failed to update entity", {
-          debug: { result },
-        });
-      }
-
-      this.logger.debug("Repository done: updateEntity", {
-        input: {
-          filter,
-          updated,
-        },
-        result: {
-          id: result._id,
-          message: result.result,
-          primaryTerm: result._primary_term,
-          seqNo: result._seq_no,
-          shards: result._shards,
-          version: result._version,
-        },
-        time: Date.now() - start,
-      });
-
-      return this.create({
-        ...updated,
-        id: result._id,
-        ...(this.config.primaryTermAttribute && {
-          [this.config.primaryTermAttribute]: result._primary_term,
-        }),
-        ...(this.config.revisionAttribute && {
-          [this.config.revisionAttribute]: result._version,
-        }),
-        ...(this.config.sequenceAttribute && {
-          [this.config.sequenceAttribute]: result._seq_no,
-        }),
-      });
-    } catch (error: any) {
-      this.logger.error("Repository error", error);
-      throw new ElasticRepositoryError("Unable to update entity", { error });
-    }
-  }
-
-  public async updateBulk(entities: Array<E>): Promise<Array<E>> {
-    const start = Date.now();
-
-    const actions: Array<any> = [];
-
-    for (const entity of entities) {
-      this.validateEntity(entity);
-
-      const updated = this.updateEntityData(entity);
-      const { id, ...doc } = updated;
-
-      if (this.config.primaryTermAttribute) {
-        delete doc[this.config.primaryTermAttribute as keyof Omit<E, "id">];
-      }
-
-      if (this.config.revisionAttribute) {
-        delete doc[this.config.revisionAttribute as keyof Omit<E, "id">];
-      }
-
-      if (this.config.sequenceAttribute) {
-        delete doc[this.config.sequenceAttribute as keyof Omit<E, "id">];
-      }
-
-      actions.push({
-        update: {
-          _index: this.index,
-          _id: id,
-          ...(this.config.primaryTermAttribute && {
-            if_primary_term: updated[this.config.primaryTermAttribute] as number,
-          }),
-          ...(this.config.sequenceAttribute && {
-            if_seq_no: updated[this.config.sequenceAttribute] as number,
-          }),
-        },
-      });
-      actions.push({ doc });
-    }
-
-    try {
-      const result = await this.client.bulk({
-        refresh: "wait_for",
-        body: actions,
-      });
-
-      if (result.errors) {
-        throw new ElasticRepositoryError("Failed to bulk update entities", {
-          debug: { result },
-        });
-      }
-
-      this.logger.debug("Repository done: updateBulk", {
-        input: {
-          actions,
-        },
-        result,
-        time: Date.now() - start,
-      });
-
-      const search = await this.client.search<any>({
-        index: this.index,
-        query: {
-          bool: { must: [{ terms: { _id: entities.map((entity) => entity.id) } }] },
-        },
-        seq_no_primary_term: true,
-        version: true,
-      });
-
-      return entities
-        .map((e) => search.hits.hits.find((h) => h._id === e.id))
-        .map((h) => this.handleHit(h!));
-    } catch (error: any) {
-      this.logger.error("Repository error", error);
-      throw new ElasticRepositoryError("Failed to bulk update entities", { error });
-    }
+    await this.softDelete({
+      must: [{ terms: { _id: entities.map((entity) => entity[primaryKey]) } }],
+    });
   }
 
   public async ttl(query: QueryDslBoolQuery): Promise<number> {
     const start = Date.now();
 
-    const bool = this.defaultFindFilter(query);
+    const expiryDate = this.metadata.columns.find(
+      (c) => c.decorator === "ExpiryDateColumn",
+    );
+    if (!expiryDate) {
+      throw new ElasticRepositoryError("ExpiryDate column not found", {
+        debug: { metadata: this.metadata },
+      });
+    }
+
+    const bool = this.createDefaultQuery(query);
 
     try {
       const result = await this.client.search<any>({
-        index: this.index,
+        index: this.indexName,
         query: { bool },
         size: 1,
       });
@@ -914,160 +566,264 @@ export class ElasticRepository<
 
       const entity = this.handleHit(result.hits.hits[0]);
 
-      if (!this.config.ttlAttribute || !isDate(entity[this.config.ttlAttribute])) {
-        throw new ElasticRepositoryError("Entity does not have ttl", {
-          debug: { entity },
-        });
-      }
-
-      return Math.round(
-        ((entity[this.config.ttlAttribute] as Date).getTime() - Date.now()) / 1000,
-      );
+      return Math.round(((entity[expiryDate.key] as Date).getTime() - Date.now()) / 1000);
     } catch (error: any) {
       this.logger.error("Repository error", error);
       throw new ElasticRepositoryError("Failed to get ttl for entity", { error });
     }
   }
 
-  public async ttlById(id: string): Promise<number> {
+  public async update(entity: E): Promise<E> {
     const start = Date.now();
 
-    try {
-      const result = await this.client.get<any>({ index: this.index, id });
+    const query = this.createUpdateQuery(entity);
+    const update = this.kit.update(entity);
+    const set = this.kit.removeReadonly(update);
 
-      this.logger.debug("Repository done: ttlById", {
+    this.validate(update);
+
+    try {
+      const result = await this.client.updateByQuery({
+        index: this.indexName,
+        body: {
+          script: {
+            source: Object.keys(set)
+              .map((key) => `ctx._source.${key} = params.${key}`)
+              .join("; "),
+            params: set,
+          },
+          query: { bool: query },
+        },
+      });
+
+      await this.client.indices.refresh({ index: this.indexName });
+
+      this.logger.debug("Repository done: updateEntity", {
         input: {
-          id,
+          query,
+          update,
         },
-        result: {
-          id: result._id,
-          version: result._version,
-        },
+        result,
         time: Date.now() - start,
       });
 
-      const entity = this.handleHit(result);
+      this.kit.onUpdate(update);
 
-      if (!this.config.ttlAttribute || !isDate(entity[this.config.ttlAttribute])) {
-        throw new ElasticRepositoryError("Entity does not have ttl", {
-          debug: { entity },
-        });
-      }
-
-      return Math.round(
-        ((entity[this.config.ttlAttribute] as Date).getTime() - Date.now()) / 1000,
-      );
+      return update;
     } catch (error: any) {
       this.logger.error("Repository error", error);
-      throw new ElasticRepositoryError("Failed to get ttl for entity", { error });
+      throw new ElasticRepositoryError("Unable to update entity", { error });
+    }
+  }
+
+  public async updateBulk(entities: Array<E>): Promise<Array<E>> {
+    const result: Array<E> = [];
+    for (const entity of entities) {
+      result.push(await this.update(entity));
+    }
+    return result;
+  }
+
+  public async updateMany(
+    query: QueryDslBoolQuery,
+    update: DeepPartial<E>,
+  ): Promise<void> {
+    const start = Date.now();
+
+    this.kit.verifyReadonly(update);
+
+    const updateDate = this.metadata.columns.find(
+      (c) => c.decorator === "UpdateDateColumn",
+    );
+    const version = this.metadata.columns.find((c) => c.decorator === "VersionColumn");
+
+    if (updateDate) {
+      (update as any)[updateDate.key] = new Date();
+    }
+
+    try {
+      const result = await this.client.updateByQuery({
+        index: this.indexName,
+        body: {
+          script: {
+            source:
+              Object.keys(update)
+                .map((key) => `ctx._source.${key} = params.${key}`)
+                .join("; ") + (version ? `; ctx._source.${version.key} += 1` : ""),
+            params: update,
+          },
+          query: { bool: query },
+        },
+      });
+
+      await this.client.indices.refresh({ index: this.indexName });
+
+      this.logger.debug("Repository done: updateMany", {
+        input: {
+          query,
+          update,
+        },
+        result,
+        time: Date.now() - start,
+      });
+    } catch (error: any) {
+      this.logger.error("Repository error", error);
+      throw new ElasticRepositoryError("Failed to update entities", { error });
     }
   }
 
   // private
 
-  private static createIndexName<E extends IEntityBase>(
-    options: ElasticRepositoryOptions<E>,
-  ): string {
-    const baseName = snakeCase(options.Entity.name);
-    const namespace = options.namespace ? `${snakeCase(options.namespace)}_` : "";
-    return `${namespace}${baseName}`;
-  }
+  private createPrimaryQuery(entity: E): QueryDslBoolQuery {
+    const must: Array<QueryDslQueryContainer> = [];
 
-  private defaultFindFilter(query: QueryDslBoolQuery = {}): QueryDslBoolQuery {
-    const mustNot: Array<any> = [];
-
-    if (query.must_not) {
-      mustNot.push(...(isArray(query.must_not) ? query.must_not : [query.must_not]));
+    for (const key of this.metadata.primaryKeys) {
+      must.push({ term: { [key]: entity[key] } });
     }
 
-    if (this.config.ttlAttribute) {
-      mustNot.push({
-        range: { [this.config.ttlAttribute]: { lte: new Date().toISOString() } },
+    return { must };
+  }
+
+  private createDefaultQuery(query: QueryDslBoolQuery = {}): QueryDslBoolQuery {
+    const result = { ...query };
+    const must_not: Array<any> = [];
+
+    if (result.must_not) {
+      must_not.push(...(isArray(query.must_not) ? query.must_not : [query.must_not]));
+    }
+
+    const deleteDate = this.metadata.columns.find(
+      (c) => c.decorator === "DeleteDateColumn",
+    );
+    if (deleteDate) {
+      must_not.push({ exists: { field: deleteDate.key } });
+    }
+
+    const expiryDate = this.metadata.columns.find(
+      (c) => c.decorator === "ExpiryDateColumn",
+    );
+    if (expiryDate) {
+      must_not.push({ range: { [expiryDate.key]: { lte: new Date().toISOString() } } });
+    }
+
+    return { ...query, must_not };
+  }
+
+  private createUpdateQuery(entity: E): QueryDslBoolQuery {
+    const result: QueryDslBoolQuery = this.createPrimaryQuery(entity);
+
+    if (!this.kit.isPrimarySource) {
+      this.logger.debug("Skipping update filter for non-primary source", {
+        source: this.metadata.primarySource,
+      });
+
+      return result;
+    }
+
+    const deleteDate = this.metadata.columns.find(
+      (c) => c.decorator === "DeleteDateColumn",
+    );
+    if (deleteDate) {
+      if (!result.must_not) result.must_not = [];
+      (result.must_not as Array<QueryDslQueryContainer>).push({
+        exists: { field: deleteDate.key },
       });
     }
 
-    if (this.config.deleteAttribute) {
-      mustNot.push({ exists: { field: this.config.deleteAttribute } });
-    }
-
-    return { ...query, must_not: mustNot };
-  }
-
-  private defaultUpdateFilter(entity: E): QueryDslBoolQuery {
-    const result: QueryDslBoolQuery = {
-      must: [{ term: { id: entity.id } }],
-    };
-
-    result.must_not = [];
-
-    if (this.config.ttlAttribute) {
-      result.must_not.push({
-        range: { [this.config.ttlAttribute]: { lte: "now" } },
+    const expiryDate = this.metadata.columns.find(
+      (c) => c.decorator === "ExpiryDateColumn",
+    );
+    if (expiryDate) {
+      if (!result.must_not) result.must_not = [];
+      (result.must_not as Array<QueryDslQueryContainer>).push({
+        range: { [expiryDate.key]: { lte: new Date().toISOString() } },
       });
     }
 
-    if (this.config.deleteAttribute) {
-      result.must_not.push({
-        exists: { field: this.config.deleteAttribute.toString() },
+    const version = this.metadata.columns.find((c) => c.decorator === "VersionColumn");
+    if (version) {
+      if (!result.must) result.must = [];
+      (result.must as Array<QueryDslQueryContainer>).push({
+        term: { [version.key]: entity[version.key] },
       });
     }
 
     return result;
   }
 
-  private static date(date?: any): Date | null {
-    if (!date) return null;
-    if (date instanceof Date) return date;
-    if (isString(date)) return new Date(date);
+  private async getNextIncrement(key: string): Promise<number> {
+    const start = Date.now();
 
-    return null;
+    try {
+      const result = await this.client.search<any>({
+        index: this.incrementName,
+        query: { term: { key } },
+        size: 1,
+      });
+
+      if (result.hits.hits.length === 0) {
+        await this.client.index({
+          index: this.incrementName,
+          body: { key, value: 1 },
+          refresh: "wait_for",
+        });
+
+        return 1;
+      }
+
+      const [hit] = result.hits.hits;
+
+      const value = hit._source.value + 1;
+
+      if (!hit._id) {
+        throw new ElasticRepositoryError("Failed to get increment id", {
+          debug: { hit },
+        });
+      }
+
+      await this.client.update({
+        index: this.incrementName,
+        id: hit._id,
+        body: { doc: { value } },
+        refresh: "wait_for",
+      });
+
+      this.logger.debug("Repository done: getNextIncrement", {
+        input: { key },
+        result: { value },
+        time: Date.now() - start,
+      });
+
+      return value;
+    } catch (error: any) {
+      this.logger.error("Repository error", error);
+      throw new ElasticRepositoryError("Failed to get next increment", { error });
+    }
   }
 
   private handleHit(hit: SearchHit<any>): E {
-    return this.create({
-      ...hit._source,
-      id: hit._id,
-      ...(this.config.primaryTermAttribute && {
-        [this.config.primaryTermAttribute]: hit._primary_term,
-      }),
-      ...(this.config.revisionAttribute && {
-        [this.config.revisionAttribute]: hit._version,
-      }),
-      ...(this.config.sequenceAttribute && {
-        [this.config.sequenceAttribute]: hit._seq_no,
-      }),
-    });
+    return this.copy(hit._source);
   }
 
-  private updateEntityData(entity: E): E {
-    const updated = this.create(entity);
+  private async waitForElastic(
+    timeout: ReadableTime = "30s",
+    delay: ReadableTime = "2s",
+  ): Promise<void> {
+    const end = Date.now() + ms(timeout);
 
-    updated.updatedAt = new Date();
+    while (Date.now() < end) {
+      try {
+        const health = await this.client.cluster.health();
+        if (health.status === "yellow" || health.status === "green") {
+          return;
+        }
+      } catch (_) {
+        /* ignore */
+      }
 
-    return updated;
-  }
-
-  private validateBaseEntity(entity: E): void {
-    z.object({
-      id: z.string().uuid(),
-      createdAt: z.date(),
-      updatedAt: z.date(),
-    }).parse({
-      id: entity.id,
-      createdAt: entity.createdAt,
-      updatedAt: entity.updatedAt,
-    });
-  }
-
-  private validateEntity(entity: E): void {
-    this.validateBaseEntity(entity);
-
-    if (isFunction(this.validateFn)) {
-      const { id, createdAt, updatedAt, ...rest } = entity;
-
-      this.validateFn(rest);
+      await sleep(ms(delay));
     }
 
-    this.logger.silly("Entity validated", { entity });
+    throw new ElasticRepositoryError("Elasticsearch did not become ready in time.");
   }
 }

@@ -1,11 +1,43 @@
-import { ElasticEntity } from "../classes";
+import {
+  Column,
+  DeleteDateColumn,
+  Entity,
+  EntityBase,
+  ExpiryDateColumn,
+  Generated,
+  PrimarySource,
+  UpdateDateColumn,
+  VersionColumn,
+} from "@lindorm/entity";
 
 export type TestEntityOptions = {
-  email?: string;
-  name: string;
+  expiresAt?: Date;
+  email?: string | null;
+  name?: string;
 };
 
-export class TestEntity extends ElasticEntity {
+@Entity()
+@PrimarySource("elastic")
+export class TestEntity extends EntityBase {
+  @DeleteDateColumn()
+  public readonly deletedAt!: Date | null;
+
+  @ExpiryDateColumn()
+  public expiresAt!: Date | null;
+
+  @UpdateDateColumn()
+  public readonly updatedAt!: Date;
+
+  @VersionColumn()
+  public readonly version!: number;
+
+  @Column()
+  @Generated("increment")
+  public readonly seq!: number;
+
+  @Column()
   public email!: string | null;
+
+  @Column()
   public name!: string;
 }

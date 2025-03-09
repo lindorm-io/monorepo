@@ -1,41 +1,52 @@
 import { camelCase } from "@lindorm/case";
-import { IEntityBase } from "@lindorm/entity";
-import { ClientError } from "@lindorm/errors";
-import { isObject } from "@lindorm/is";
+import { globalEntityMetadata, IEntity } from "@lindorm/entity";
+import { ClientError, ServerError } from "@lindorm/errors";
+import { isObject, isString } from "@lindorm/is";
 import { Constructor, Dict } from "@lindorm/types";
 import { get } from "object-path";
 import { IElasticSource } from "../interfaces";
 import { ElasticPylonHttpContext, ElasticPylonHttpMiddleware } from "../types";
 
-type Path<E extends Constructor<IEntityBase>> =
+type Path<E extends Constructor<IEntity>> =
   | { [K in keyof InstanceType<E>]?: string }
   | string;
 
 type Options = {
+  key?: string;
   optional?: boolean;
 };
 
 export const createHttpElasticEntityMiddleware =
   <
     C extends ElasticPylonHttpContext = ElasticPylonHttpContext,
-    E extends Constructor<IEntityBase> = Constructor<IEntityBase>,
+    E extends Constructor<IEntity> = Constructor<IEntity>,
   >(
     Entity: E,
     source?: IElasticSource,
   ) =>
   (path: Path<E>, options: Options = {}): ElasticPylonHttpMiddleware<C> => {
+    const metadata = globalEntityMetadata.get(Entity);
+    const primaryKey = metadata.columns.find((c) => c.decorator === "PrimaryKeyColumn");
+
     return async function httpElasticEntityMiddleware(ctx, next): Promise<void> {
+      if (!isObject(ctx.entities)) {
+        ctx.entities = {};
+      }
+
       const { optional = false } = options;
 
-      const paths: Dict<any> = isObject(path) ? path : { id: path };
+      if (isString(path) && !primaryKey) {
+        throw new ServerError("@PrimaryKeyColumn not set on @Entity", {
+          details: "String path cannot be used",
+          debug: { path },
+        });
+      }
+
+      const paths: Dict<any> = isObject(path) ? path : { [primaryKey!.key]: path };
       const filter: Dict<any> = {};
 
       for (const [key, objectPath] of Object.entries(paths)) {
         filter[key] = get(ctx, objectPath);
-      }
-
-      if (!isObject(ctx.entities)) {
-        ctx.entities = {};
       }
 
       const hasValues = Object.values(filter).every(Boolean);
@@ -46,7 +57,7 @@ export const createHttpElasticEntityMiddleware =
 
       if (!hasValues) {
         throw new ClientError("Invalid value for repository query", {
-          debug: { path, keys: paths, filter },
+          debug: { path, paths, filter },
         });
       }
 
@@ -67,12 +78,12 @@ export const createHttpElasticEntityMiddleware =
         ctx.logger.debug("Elastic Entity added to http context", {
           name,
           path,
-          keys: paths,
+          paths,
           filter,
         });
       } else if (!optional) {
         throw new ClientError("Entity not found", {
-          debug: { name, path, keys: paths, filter },
+          debug: { name, path, paths, filter },
           status: ClientError.Status.NotFound,
         });
       }

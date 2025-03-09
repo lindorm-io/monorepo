@@ -1,51 +1,45 @@
-import { IEntityBase } from "@lindorm/entity";
+import { defaultCreateEntity, IEntity } from "@lindorm/entity";
 import { Constructor } from "@lindorm/types";
-import { ElasticRepository } from "../classes";
+import { noopAsync } from "@lindorm/utils";
 import { IElasticRepository } from "../interfaces";
 
-export type CreateMockEntityCallback = (options?: any) => IEntityBase;
+type Callback<E extends IEntity = IEntity> = (options?: any) => E;
 
-const updateEntity = (entity: IEntityBase): IEntityBase => {
-  entity.updatedAt = new Date();
-  return entity;
-};
-
-export const createMockElasticEntityCallback =
-  <E extends IEntityBase>(Entity: Constructor<E>): CreateMockEntityCallback =>
+const defaultCallback =
+  <E extends IEntity = IEntity>(Entity: Constructor<E>): Callback<E> =>
   (options) =>
-    ElasticRepository.createEntity(
-      Entity,
-      options.must.reduce((acc: any, cur: any) => ({ ...acc, ...cur.term }), {}),
-    );
+    defaultCreateEntity(Entity, options);
 
-export const createMockElasticRepository = <E extends IEntityBase>(
-  callback: CreateMockEntityCallback,
+export const createMockElasticRepository = <E extends IEntity = IEntity>(
+  Entity: Constructor<E>,
+  callback: Callback<E> = defaultCallback(Entity),
 ): IElasticRepository<E> => ({
-  count: jest.fn().mockResolvedValue(1),
   create: jest.fn().mockImplementation((args) => callback(args)),
-  delete: jest.fn(),
-  deleteById: jest.fn(),
-  deleteExpired: jest.fn(),
-  destroy: jest.fn(),
-  destroyBulk: jest.fn(),
+  copy: jest.fn().mockImplementation((args) => callback(args)),
+  validate: jest.fn(),
+  setup: jest.fn().mockImplementation(noopAsync),
+
+  clone: jest.fn().mockImplementation(async (entity) => entity),
+  cloneBulk: jest.fn().mockImplementation(async (array) => array),
+  count: jest.fn().mockResolvedValue(1),
+  delete: jest.fn().mockImplementation(noopAsync),
+  deleteExpired: jest.fn().mockImplementation(noopAsync),
+  destroy: jest.fn().mockImplementation(noopAsync),
+  destroyBulk: jest.fn().mockImplementation(noopAsync),
   exists: jest.fn().mockReturnValue(true),
   find: jest.fn().mockImplementation(async (criteria) => [callback(criteria)]),
   findOne: jest.fn().mockImplementation(async (criteria) => callback(criteria)),
   findOneOrFail: jest.fn().mockImplementation(async (criteria) => callback(criteria)),
   findOneOrSave: jest.fn().mockImplementation(async (criteria) => callback(criteria)),
-  findOneById: jest.fn().mockImplementation(async (id) => callback({ id })),
-  findOneByIdOrFail: jest.fn().mockImplementation(async (id) => callback({ id })),
-  insert: jest.fn().mockImplementation(async (entity) => updateEntity(entity)),
-  insertBulk: jest.fn().mockImplementation(async (array) => array.map(updateEntity)),
-  save: jest.fn().mockImplementation(async (entity) => updateEntity(entity)),
-  saveBulk: jest.fn().mockImplementation(async (array) => array.map(updateEntity)),
-  softDelete: jest.fn(),
-  softDeleteById: jest.fn(),
-  softDestroy: jest.fn(),
-  softDestroyBulk: jest.fn(),
-  update: jest.fn().mockImplementation(async (entity) => updateEntity(entity)),
-  updateBulk: jest.fn().mockImplementation(async (array) => array.map(updateEntity)),
+  insert: jest.fn().mockImplementation(async (entity) => entity),
+  insertBulk: jest.fn().mockImplementation(async (array) => array),
+  save: jest.fn().mockImplementation(async (entity) => entity),
+  saveBulk: jest.fn().mockImplementation(async (array) => array),
+  softDelete: jest.fn().mockImplementation(noopAsync),
+  softDestroy: jest.fn().mockImplementation(noopAsync),
+  softDestroyBulk: jest.fn().mockImplementation(noopAsync),
   ttl: jest.fn().mockResolvedValue(60),
-  ttlById: jest.fn().mockResolvedValue(60),
-  setup: jest.fn(),
+  update: jest.fn().mockImplementation(async (entity) => entity),
+  updateBulk: jest.fn().mockImplementation(async (array) => array),
+  updateMany: jest.fn().mockImplementation(noopAsync),
 });

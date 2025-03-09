@@ -1,23 +1,20 @@
 import { Client } from "@elastic/elasticsearch";
-import { IEntityBase } from "@lindorm/entity";
+import { EntityScannerInput, IEntity } from "@lindorm/entity";
 import { Constructor } from "@lindorm/types";
-import {
-  CloneElasticSourceOptions,
-  ElasticSourceEntities,
-  ElasticSourceRepositoryOptions,
-} from "../types";
+import { CloneElasticSourceOptions, ElasticSourceRepositoryOptions } from "../types";
 import { IElasticRepository } from "./ElasticRepository";
 
 export interface IElasticSource {
   client: Client;
 
-  addEntities(entities: ElasticSourceEntities): void;
   clone(options?: CloneElasticSourceOptions): IElasticSource;
   connect(): Promise<void>;
   disconnect(): Promise<void>;
-  repository<E extends IEntityBase>(
-    Entity: Constructor<E>,
-    options?: ElasticSourceRepositoryOptions<E>,
-  ): IElasticRepository<E>;
   setup(): Promise<void>;
+
+  addEntities(entities: EntityScannerInput): void;
+  repository<E extends IEntity>(
+    Entity: Constructor<E>,
+    options?: ElasticSourceRepositoryOptions,
+  ): IElasticRepository<E>;
 }

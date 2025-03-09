@@ -1,4 +1,4 @@
-import { IEntityBase } from "@lindorm/entity";
+import { IEntity } from "@lindorm/entity";
 import {
   PylonHttpContext,
   PylonHttpMiddleware,
@@ -12,9 +12,9 @@ import { IElasticRepository, IElasticSource } from "../interfaces";
 // common context
 
 type Context = {
-  entities: Dict<IEntityBase>;
+  entities: Dict<IEntity>;
   repositories: {
-    elastic: Dict<IElasticRepository<IEntityBase>>;
+    elastic: Dict<IElasticRepository<IEntity>>;
   };
   sources: {
     elastic: IElasticSource;
