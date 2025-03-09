@@ -2,7 +2,7 @@ import { PylonRouter } from "../../classes";
 import { OpenIdConfigurationOptions, PylonHttpContext } from "../../types";
 
 type Options = {
-  issuer?: string;
+  issuer?: string | null;
   openIdConfiguration?: Partial<OpenIdConfigurationOptions>;
 };
 
@@ -13,7 +13,7 @@ export const createWellKnownRouter = <C extends PylonHttpContext>(
 
   const openIdConfiguration = {
     ...(options.openIdConfiguration ?? {}),
-    issuer: options.issuer,
+    ...(options.issuer && { issuer: options.issuer }),
   };
 
   router.get("/jwks.json", async (ctx) => {

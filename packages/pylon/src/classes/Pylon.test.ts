@@ -25,6 +25,7 @@ describe("Pylon", () => {
   let amphora: IAmphora;
 
   beforeAll(() => {
+    // logger = new Logger({ level: LogLevel.Debug, readable: true });
     logger = createMockLogger();
 
     amphora = new Amphora({
@@ -37,7 +38,6 @@ describe("Pylon", () => {
         id: "5d17c551-7b6f-474a-8679-dba9bbfa06a2",
         algorithm: "ES256",
         curve: "P-256",
-        issuer: "http://test.lindorm.io",
         privateKey:
           "MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgcyOxjn7CekTvSkiQvqx5JhFOmwPYFVFHmLKfio6aJ1uhRANCAAQfFaJkGZMxDn656YiDrSJ5sLRwip-y3a0VzC4cUPxxAJzuRBRtVqM3GitfTQEiUrzF2pcmMZbteAOhIqLlU_f6",
         publicKey:
@@ -50,15 +50,27 @@ describe("Pylon", () => {
 
     amphora.add(
       KryptosKit.from.b64({
+        algorithm: "HS256",
+        privateKey:
+          "ZtL9AyQMb60GXUhTYziSizr6SFb_i6bHu8RnN283-gU4I1fPRZbGE9X0QT0YLWW3m1AM1rl2yRf9zS9PhDuylA",
+        operations: ["sign", "verify"],
+        purpose: "cookie",
+        type: "oct",
+        use: "sig",
+      }),
+    );
+
+    amphora.add(
+      KryptosKit.from.b64({
         id: "5382ca15-b849-55ae-904a-9196797ccc1b",
         algorithm: "ECDH-ES",
         curve: "X448",
-        issuer: "http://test.lindorm.io",
         privateKey:
           "MEYCAQAwBQYDK2VvBDoEOGRWElZ3_EFza2XMyTVr4LroWzaQtjDpyA0h3JX6HcHbf1_91UOlU4_mdMkQUDfRFtL4VR9PmwHT",
         publicKey:
           "MEIwBQYDK2VvAzkACmHn63oaLtiwYY2FyuoObj5A6nLWxyqKgiMa-ueJuYr6WhirvxFYYYY-tB_7HolUBGCca3UxG04",
         operations: ["encrypt", "decrypt"],
+        purpose: "session",
         type: "OKP",
         use: "enc",
       }),
@@ -139,20 +151,16 @@ describe("Pylon", () => {
       amphora,
       logger,
 
-      cookies: {
-        signatureKeys: ["test-key"],
-      },
       domain: "http://test.lindorm.io",
       environment: Environment.Test,
       httpMiddleware: [middlewareSpy],
       httpRouters: [{ path: "/test", router }],
       issuer: "http://test.lindorm.io",
-      openIdConfiguration: {
-        jwksUri: "http://test.lindorm.io/.well-known/jwks.json",
-      },
       name: "@lindorm/pylon",
+      openIdConfiguration: { jwksUri: "http://test.lindorm.io/.well-known/jwks.json" },
       parseBody: { formidable: true },
       port: 55555,
+      session: { encrypted: true, signed: true },
       version: "0.0.1",
     });
   });
@@ -214,6 +222,7 @@ describe("Pylon", () => {
           kid: "5382ca15-b849-55ae-904a-9196797ccc1b",
           kty: "OKP",
           nbf: 1704096000,
+          purpose: "session",
           uat: 1704096000,
           use: "enc",
           x: "CmHn63oaLtiwYY2FyuoObj5A6nLWxyqKgiMa-ueJuYr6WhirvxFYYYY-tB_7HolUBGCca3UxG04",

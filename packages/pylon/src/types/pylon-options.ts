@@ -20,32 +20,41 @@ export type PylonHttpRouters<C extends PylonHttpContext> = {
   router: PylonRouter<C>;
 };
 
+type Common = {
+  amphora: IAmphora;
+  logger: ILogger;
+};
+
+export type PylonHttpOptions<C extends PylonHttpContext = PylonHttpContext> = Common & {
+  cookies?: PylonCookieConfig;
+  cors?: CorsOptions;
+  environment?: Environment;
+  httpMiddleware?: Array<PylonHttpMiddleware<C>>;
+  httpRouters?: string | Array<PylonHttpRouters<C>>;
+  issuer?: string | null;
+  maxRequestAge?: ReadableTime;
+  openIdConfiguration?: Partial<OpenIdConfigurationOptions>;
+  parseBody?: ParseBodyOptions;
+  session?: PylonSessionConfig;
+  version?: string;
+};
+
+export type PylonIoOptions<T extends PylonSocketContext = PylonSocketContext> = Common & {
+  socketListeners?: string | Array<PylonListener<T>>;
+  socketMiddleware?: Array<PylonSocketMiddleware<T>>;
+  socketOptions?: Partial<SocketOptions>;
+  socketRedis?: Redis;
+};
+
 export type PylonOptions<
   C extends PylonHttpContext = PylonHttpContext,
   S extends PylonSocketContext = PylonSocketContext,
-> = {
-  amphora: IAmphora;
-  logger: ILogger;
-
-  cookies?: PylonCookieConfig;
-  cors?: CorsOptions;
-  domain?: string;
-  environment?: Environment;
-  httpMaxRequestAge?: ReadableTime;
-  httpMiddleware?: Array<PylonHttpMiddleware<C>>;
-  httpRouters?: string | Array<PylonHttpRouters<C>>;
-  issuer?: string;
-  name?: string;
-  openIdConfiguration?: Partial<OpenIdConfigurationOptions>;
-  parseBody?: ParseBodyOptions;
-  port?: number;
-  session?: PylonSessionConfig;
-  setup?: PylonSetup;
-  socketListeners?: string | Array<PylonListener<S>>;
-  socketMiddleware?: Array<PylonSocketMiddleware<S>>;
-  socketOptions?: Partial<SocketOptions>;
-  socketRedis?: Redis;
-  teardown?: PylonTeardown;
-  version?: string;
-  workers?: Array<ILindormWorker>;
-};
+> = PylonHttpOptions<C> &
+  PylonIoOptions<S> & {
+    domain?: string;
+    name?: string;
+    port?: number;
+    setup?: PylonSetup;
+    teardown?: PylonTeardown;
+    workers?: Array<ILindormWorker>;
+  };
