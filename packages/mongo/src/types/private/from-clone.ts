@@ -1,13 +1,15 @@
+import { IEntity } from "@lindorm/entity";
 import { ILogger } from "@lindorm/logger";
+import { Constructor } from "@lindorm/types";
 import { MongoClient } from "mongodb";
-import { MongoSourceEntity, MongoSourceFile } from "../mongo-source";
+import { IMongoFile } from "../../interfaces";
 
 export type FromClone = {
   _mode: "from_clone";
   client: MongoClient;
-  database: string;
-  entities: Array<MongoSourceEntity>;
-  files: Array<MongoSourceFile>;
+  database?: string;
+  entities: Array<Constructor<IEntity>>;
+  files: Array<Constructor<IMongoFile>>;
   logger: ILogger;
-  namespace: string | undefined;
+  namespace?: string;
 };

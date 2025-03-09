@@ -1,7 +1,11 @@
+import "reflect-metadata";
+import { CreateDateColumn, PrimaryKeyColumn } from "../decorators";
 import { IEntityBase } from "../interfaces";
 
-export class EntityBase implements IEntityBase {
+export abstract class EntityBase implements IEntityBase {
+  @PrimaryKeyColumn()
   public readonly id!: string;
+
+  @CreateDateColumn()
   public readonly createdAt!: Date;
-  public readonly updatedAt!: Date;
 }

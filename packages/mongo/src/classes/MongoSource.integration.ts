@@ -25,7 +25,7 @@ describe("MongoSource", () => {
     await source.disconnect();
   });
 
-  test("should return a functioning bucket for directly registered entity", async () => {
+  test("should return a functioning bucket for directly registered file", async () => {
     const bucket = source.bucket(TestFile);
 
     expect(bucket).toBeDefined();
@@ -38,7 +38,9 @@ describe("MongoSource", () => {
 
     expect(repository).toBeDefined();
 
-    await expect(repository.find({ name: randomUUID() })).resolves.not.toThrow();
+    await expect(
+      repository.save(repository.create({ name: randomUUID() })),
+    ).resolves.toBeInstanceOf(TestEntity);
   });
 
   test("should return a repository for directory registered entity", () => {

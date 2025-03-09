@@ -1,0 +1,32 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`defaultCloneEntity should clone existing entity 1`] = `
+TestCloneEntity {
+  "array": [
+    1,
+    2,
+    3,
+  ],
+  "bigint": 1n,
+  "boolean": true,
+  "createDate": 2024-01-01T08:00:00.000Z,
+  "deleteDate": null,
+  "endDate": null,
+  "enum": "2",
+  "expiryDate": null,
+  "generatedDate": undefined,
+  "generatedNumber": undefined,
+  "generatedString": undefined,
+  "generatedUuid": undefined,
+  "increment": undefined,
+  "object": {
+    "key": "value",
+  },
+  "primaryKey": "e8edbe03-f52f-56c6-8d98-82e6961329fe",
+  "startDate": 2024-01-01T08:00:00.000Z,
+  "unique": null,
+  "updateDate": 2024-01-01T08:00:00.000Z,
+  "version": 0,
+  "versionKey": "0c8c31df-f1cc-5381-97fc-31b3714327de",
+}
+`;

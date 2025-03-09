@@ -2,7 +2,7 @@ export interface IMongoFile {
   chunkSize: number;
   filename: string;
   length: number;
-  mimeType: string;
+  mimeType: string | null;
   originalName: string | null;
   uploadDate: Date;
 }

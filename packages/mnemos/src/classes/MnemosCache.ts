@@ -1,6 +1,6 @@
+import { EntityMetadata } from "@lindorm/entity";
 import { Dict } from "@lindorm/types";
 import { IMnemosCache, IMnemosCollection } from "../interfaces";
-import { MnemosCollectionOptions } from "../types";
 import { MnemosCollection } from "./MnemosCollection";
 
 export class MnemosCache implements IMnemosCache {
@@ -12,10 +12,10 @@ export class MnemosCache implements IMnemosCache {
 
   public collection<T extends Dict>(
     collection: string,
-    options: MnemosCollectionOptions = {},
+    metadata?: EntityMetadata,
   ): IMnemosCollection<T> {
     if (!this.collections[collection]) {
-      this.collections[collection] = new MnemosCollection<T>(options);
+      this.collections[collection] = new MnemosCollection<T>({ metadata });
     }
     return this.collections[collection] as IMnemosCollection<T>;
   }

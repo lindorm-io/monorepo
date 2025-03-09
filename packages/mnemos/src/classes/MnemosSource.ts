@@ -1,26 +1,24 @@
-import { IEntityBase } from "@lindorm/entity";
+import {
+  EntityScanner,
+  EntityScannerInput,
+  globalEntityMetadata,
+  IEntity,
+} from "@lindorm/entity";
 import { ILogger } from "@lindorm/logger";
 import { Constructor } from "@lindorm/types";
 import { MnemosSourceError } from "../errors";
-import {
-  IMnemosCache,
-  IMnemosRepository,
-  IMnemosSource,
-  MnemosSourceRepositoryOptions,
-} from "../interfaces";
+import { IMnemosCache, IMnemosRepository, IMnemosSource } from "../interfaces";
 import {
   CloneMnemosSourceOptions,
-  MnemosSourceEntities,
-  MnemosSourceEntity,
   MnemosSourceOptions,
+  MnemosSourceRepositoryOptions,
 } from "../types";
 import { FromClone } from "../types/private";
 import { MnemosCache } from "./MnemosCache";
 import { MnemosRepository } from "./MnemosRepository";
-import { EntityScanner } from "./private";
 
 export class MnemosSource implements IMnemosSource {
-  private readonly entities: Array<MnemosSourceEntity>;
+  private readonly entities: Array<Constructor<IEntity>>;
   private readonly logger: ILogger;
 
   public readonly client: IMnemosCache;
@@ -45,7 +43,7 @@ export class MnemosSource implements IMnemosSource {
 
   // public
 
-  public addEntities(entities: MnemosSourceEntities): void {
+  public addEntities(entities: EntityScannerInput): void {
     this.entities.push(...EntityScanner.scan(entities));
   }
 
@@ -58,34 +56,37 @@ export class MnemosSource implements IMnemosSource {
     });
   }
 
-  public repository<E extends IEntityBase>(
+  public repository<E extends IEntity = IEntity>(
     Entity: Constructor<E>,
-    options: MnemosSourceRepositoryOptions<E> = {},
+    options: MnemosSourceRepositoryOptions = {},
   ): IMnemosRepository<E> {
-    const config = this.entityConfig(Entity);
+    this.configExists(Entity);
 
     return new MnemosRepository({
       Entity,
       cache: this.client,
       logger: options.logger ?? this.logger,
-      create: options.create ?? config.create,
-      validate: options.validate ?? config.validate,
+      namespace: options.namespace,
     });
   }
 
   // private
 
-  private entityConfig<E extends IEntityBase>(
-    Entity: Constructor<E>,
-  ): MnemosSourceEntity<E> {
-    const config = this.entities.find((entity) => entity.Entity === Entity);
+  private configExists<E extends IEntity>(Entity: Constructor<E>): void {
+    const config = this.entities.find((e) => e === Entity);
 
-    if (config) {
-      return config as unknown as MnemosSourceEntity<E>;
+    if (!config) {
+      throw new MnemosSourceError("Entity not found in entities list", {
+        debug: { Entity },
+      });
     }
 
-    throw new MnemosSourceError("Entity not found in entities list", {
-      debug: { Entity },
-    });
+    const metadata = globalEntityMetadata.get(Entity);
+
+    if (metadata.entity.decorator !== "Entity") {
+      throw new MnemosSourceError(`Entity is not decorated with @Entity`, {
+        debug: { Entity },
+      });
+    }
   }
 }

@@ -1,11 +1,7 @@
 import { createMockLogger } from "@lindorm/logger";
 import MockDate from "mockdate";
 import { TestEntity } from "../__fixtures__/test-entity";
-import {
-  createMockMongoEntityCallback,
-  createMockMongoRepository,
-  createMockMongoSource,
-} from "../mocks";
+import { createMockMongoRepository, createMockMongoSource } from "../mocks";
 import { createSocketMongoEntityMiddleware } from "./socket-mongo-entity-middleware";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
@@ -38,19 +34,19 @@ describe("createSocketMongoEntityMiddleware", () => {
 
     expect(ctx.entities.testEntity).toEqual({
       id: expect.any(String),
-      rev: null,
-      seq: null,
       createdAt: MockedDate,
-      updatedAt: MockedDate,
       deletedAt: null,
-      expiresAt: null,
       email: null,
+      expiresAt: null,
       name: null,
+      seq: null,
+      updatedAt: MockedDate,
+      version: 0,
     });
   });
 
   test("should find entity based on object path", async () => {
-    const repo = createMockMongoRepository(createMockMongoEntityCallback(TestEntity));
+    const repo = createMockMongoRepository(TestEntity);
     ctx.sources.mongo.repository.mockReturnValue(repo);
 
     await expect(
@@ -80,7 +76,7 @@ describe("createSocketMongoEntityMiddleware", () => {
   });
 
   test("should skip optional entity", async () => {
-    const repo = createMockMongoRepository(createMockMongoEntityCallback(TestEntity));
+    const repo = createMockMongoRepository(TestEntity);
     repo.findOne = jest.fn().mockResolvedValue(null);
     ctx.sources.mongo.repository.mockReturnValue(repo);
 
@@ -104,7 +100,7 @@ describe("createSocketMongoEntityMiddleware", () => {
   });
 
   test("should throw on mandatory entity", async () => {
-    const repo = createMockMongoRepository(createMockMongoEntityCallback(TestEntity));
+    const repo = createMockMongoRepository(TestEntity);
     repo.findOne = jest.fn().mockResolvedValue(null);
     ctx.sources.mongo.repository.mockReturnValue(repo);
 

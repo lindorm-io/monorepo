@@ -1,25 +1,35 @@
-import { REDIS_ENTITY_CONFIG, RedisEntity } from "../../classes";
-import { ValidateRedisEntityFn } from "../../types";
+import {
+  Column,
+  Entity,
+  EntityBase,
+  OnValidate,
+  PrimarySource,
+  UpdateDateColumn,
+  VersionColumn,
+} from "@lindorm/entity";
 
 export type TestEntityOneOptions = {
   email?: string;
   name: string;
 };
 
-export class TestEntityOne extends RedisEntity {
-  public readonly email!: string | null;
-  public readonly name!: string;
-  public readonly ttlAt!: Date | null;
+@Entity()
+@OnValidate((entity: TestEntityOne) => {
+  if (entity.name.length < 3) {
+    throw new Error("Name must be at least 3 characters long");
+  }
+})
+@PrimarySource("postgres")
+export class TestEntityOne extends EntityBase {
+  @VersionColumn()
+  public version!: number;
+
+  @UpdateDateColumn()
+  public updatedAt!: Date;
+
+  @Column("string", { nullable: true })
+  public email!: string | null;
+
+  @Column("string")
+  public name!: string;
 }
-
-export const config = REDIS_ENTITY_CONFIG;
-
-export const validate: ValidateRedisEntityFn<TestEntityOne> = (entity) => {
-  if (!entity.email) {
-    throw new Error("Missing email");
-  }
-
-  if (!entity.name) {
-    throw new Error("Missing name");
-  }
-};

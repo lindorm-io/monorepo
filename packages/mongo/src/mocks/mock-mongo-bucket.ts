@@ -1,29 +1,24 @@
+import { defaultCreateEntity } from "@lindorm/entity";
 import { Constructor } from "@lindorm/types";
-import { MongoBucket } from "../classes";
 import { IMongoBucket, IMongoFile } from "../interfaces";
 
-export type CreateMockFileCallback = (options?: any) => IMongoFile;
+type Callback<F extends IMongoFile = IMongoFile> = (options?: any) => F;
 
-export const createMockMongoFileCallback =
-  <F extends IMongoFile>(File: Constructor<F>): CreateMockFileCallback =>
+const defaultCallback =
+  <F extends IMongoFile = IMongoFile>(Entity: Constructor<F>): Callback<F> =>
   (options) =>
-    MongoBucket.createFile(File, options);
+    defaultCreateEntity(Entity, options);
 
-export const createMockMongoBucket = <F extends IMongoFile>(
-  callback: CreateMockFileCallback,
+export const createMockMongoBucket = <F extends IMongoFile = IMongoFile>(
+  Entity: Constructor<F>,
+  callback: Callback<F> = defaultCallback(Entity),
 ): IMongoBucket<F> => ({
+  setup: jest.fn(),
+
   delete: jest.fn(),
-  deleteByFilename: jest.fn(),
   download: jest.fn(),
   find: jest.fn().mockImplementation(async (criteria) => [callback(criteria)]),
   findOne: jest.fn().mockImplementation(async (criteria) => callback(criteria)),
   findOneOrFail: jest.fn().mockImplementation(async (criteria) => callback(criteria)),
-  findOneByFilename: jest
-    .fn()
-    .mockImplementation(async (filename) => callback({ filename })),
-  findOneByFilenameOrFail: jest
-    .fn()
-    .mockImplementation(async (filename) => callback({ filename })),
   upload: jest.fn().mockImplementation(async (_, metadata) => callback(metadata)),
-  setup: jest.fn(),
 });

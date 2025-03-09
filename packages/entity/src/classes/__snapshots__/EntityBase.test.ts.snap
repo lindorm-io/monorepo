@@ -1,0 +1,58 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`EntityBase should have expected properties 1`] = `
+TestEntityBase {
+  "createdAt": undefined,
+  "id": undefined,
+}
+`;
+
+exports[`EntityBase should have expected properties 2`] = `
+{
+  "columns": [
+    {
+      "decorator": "PrimaryKeyColumn",
+      "enum": null,
+      "fallback": [Function],
+      "key": "id",
+      "max": null,
+      "min": null,
+      "nullable": false,
+      "optional": false,
+      "readonly": true,
+      "schema": null,
+      "type": "uuid",
+    },
+    {
+      "decorator": "CreateDateColumn",
+      "enum": null,
+      "fallback": [Function],
+      "key": "createdAt",
+      "max": null,
+      "min": null,
+      "nullable": false,
+      "optional": false,
+      "readonly": true,
+      "schema": null,
+      "type": "date",
+    },
+  ],
+  "entity": {
+    "cache": null,
+    "database": null,
+    "decorator": "Entity",
+    "name": null,
+    "namespace": null,
+  },
+  "extras": [],
+  "generated": [],
+  "hooks": [],
+  "indexes": [],
+  "primaryKeys": [
+    "id",
+  ],
+  "primarySource": null,
+  "schemas": [],
+  "uniques": [],
+}
+`;

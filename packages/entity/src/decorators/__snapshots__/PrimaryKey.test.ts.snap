@@ -1,0 +1,89 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`PrimaryKey Decorator should add metadata 1`] = `
+{
+  "columns": [
+    {
+      "decorator": "Column",
+      "enum": null,
+      "fallback": null,
+      "key": "givenName",
+      "max": null,
+      "min": null,
+      "nullable": false,
+      "optional": false,
+      "readonly": false,
+      "schema": null,
+      "type": null,
+    },
+    {
+      "decorator": "Column",
+      "enum": null,
+      "fallback": null,
+      "key": "familyName",
+      "max": null,
+      "min": null,
+      "nullable": false,
+      "optional": false,
+      "readonly": false,
+      "schema": null,
+      "type": null,
+    },
+  ],
+  "entity": {
+    "cache": null,
+    "database": null,
+    "decorator": "Entity",
+    "name": null,
+    "namespace": null,
+  },
+  "extras": [],
+  "generated": [],
+  "hooks": [],
+  "indexes": [],
+  "primaryKeys": [
+    "givenName",
+    "familyName",
+  ],
+  "primarySource": null,
+  "schemas": [],
+  "uniques": [],
+}
+`;
+
+exports[`PrimaryKey Decorator should add metadata with string 1`] = `
+{
+  "columns": [
+    {
+      "decorator": "Column",
+      "enum": null,
+      "fallback": null,
+      "key": "id",
+      "max": null,
+      "min": null,
+      "nullable": false,
+      "optional": false,
+      "readonly": false,
+      "schema": null,
+      "type": null,
+    },
+  ],
+  "entity": {
+    "cache": null,
+    "database": null,
+    "decorator": "Entity",
+    "name": null,
+    "namespace": null,
+  },
+  "extras": [],
+  "generated": [],
+  "hooks": [],
+  "indexes": [],
+  "primaryKeys": [
+    "id",
+  ],
+  "primarySource": null,
+  "schemas": [],
+  "uniques": [],
+}
+`;

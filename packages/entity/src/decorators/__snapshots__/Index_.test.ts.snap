@@ -1,0 +1,101 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Index Decorator should add metadata 1`] = `
+{
+  "columns": [
+    {
+      "decorator": "PrimaryKeyColumn",
+      "enum": null,
+      "fallback": [Function],
+      "key": "id",
+      "max": null,
+      "min": null,
+      "nullable": false,
+      "optional": false,
+      "readonly": true,
+      "schema": null,
+      "type": "uuid",
+    },
+    {
+      "decorator": "Column",
+      "enum": null,
+      "fallback": null,
+      "key": "key",
+      "max": null,
+      "min": null,
+      "nullable": false,
+      "optional": false,
+      "readonly": false,
+      "schema": null,
+      "type": null,
+    },
+    {
+      "decorator": "Column",
+      "enum": null,
+      "fallback": null,
+      "key": "other",
+      "max": null,
+      "min": null,
+      "nullable": false,
+      "optional": false,
+      "readonly": false,
+      "schema": null,
+      "type": null,
+    },
+    {
+      "decorator": "Column",
+      "enum": null,
+      "fallback": null,
+      "key": "third",
+      "max": 100,
+      "min": 0,
+      "nullable": false,
+      "optional": false,
+      "readonly": false,
+      "schema": null,
+      "type": null,
+    },
+  ],
+  "entity": {
+    "cache": null,
+    "database": null,
+    "decorator": "Entity",
+    "name": null,
+    "namespace": null,
+  },
+  "extras": [],
+  "generated": [],
+  "hooks": [],
+  "indexes": [
+    {
+      "index": {
+        "third": "2d",
+      },
+      "name": null,
+      "options": {
+        "background": true,
+      },
+    },
+    {
+      "index": {
+        "other": "asc",
+      },
+      "name": "custom_name",
+      "options": {},
+    },
+    {
+      "index": {
+        "key": "asc",
+      },
+      "name": null,
+      "options": {},
+    },
+  ],
+  "primaryKeys": [
+    "id",
+  ],
+  "primarySource": null,
+  "schemas": [],
+  "uniques": [],
+}
+`;

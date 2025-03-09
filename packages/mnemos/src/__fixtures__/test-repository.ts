@@ -1,15 +1,10 @@
 import { ILogger } from "@lindorm/logger";
-import { MNEMOS_ENTITY_CONFIG, MnemosRepository } from "../classes";
+import { MnemosRepository } from "../classes";
 import { IMnemosCache } from "../interfaces";
-import { TestEntity } from "./test-entity";
+import { TestEntity, TestEntityOptions } from "./test-entity";
 
-export class TestRepository extends MnemosRepository<TestEntity> {
+export class TestRepository extends MnemosRepository<TestEntity, TestEntityOptions> {
   public constructor(cache: IMnemosCache, logger: ILogger) {
-    super({
-      Entity: TestEntity,
-      cache,
-      config: MNEMOS_ENTITY_CONFIG,
-      logger,
-    });
+    super({ Entity: TestEntity, cache, logger });
   }
 }

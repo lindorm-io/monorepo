@@ -19,11 +19,23 @@
     "integration": "compd --file docker-compose.yml jest --config jest.config.integration.js --watch",
     "integration:focus": "compd --file docker-compose.yml jest --config jest.config.integration.js --watch $1",
     "test": "jest --watch --",
-    "test:ci": "npm run typecheck:ci",
+    "test:ci": "npm run test:unit",
     "test:integration": "jest --config jest.config.integration.js --",
     "test:unit": "jest --config jest.config.js --",
     "typecheck": "tsc --watch",
     "typecheck:ci": "tsc",
     "update": "ncu -u"
+  },
+  "dependencies": {
+    "@lindorm/case": "^0.1.7",
+    "@lindorm/errors": "^0.1.7",
+    "@lindorm/is": "^0.1.7",
+    "@lindorm/scanner": "^0.3.2",
+    "reflect-metadata": "^0.2.2",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@lindorm/logger": "^0.2.3",
+    "@lindorm/types": "^0.2.1"
   }
 }

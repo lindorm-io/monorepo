@@ -1,0 +1,62 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`defaultCreateEntity should create with empty values 1`] = `
+TestCreateEntityEmpty {
+  "OnCreate": "OnCreate",
+  "array": null,
+  "bigint": null,
+  "boolean": null,
+  "createdDate": 2024-01-01T08:00:00.000Z,
+  "date": null,
+  "deletedDate": null,
+  "enum": null,
+  "expiryDate": null,
+  "number": null,
+  "object": null,
+  "primaryKey": "e8edbe03-f52f-56c6-8d98-82e6961329fe",
+  "sequence": null,
+  "string": null,
+  "updatedDate": 2024-01-01T08:00:00.000Z,
+  "uuid": null,
+  "version": 0,
+  "versionEndDate": null,
+  "versionKey": "0c8c31df-f1cc-5381-97fc-31b3714327de",
+  "versionStartDate": 2024-01-01T08:00:00.000Z,
+}
+`;
+
+exports[`defaultCreateEntity should create with fallback values 1`] = `
+TestCreateEntityFallback {
+  "array": [],
+  "bigint": 0n,
+  "boolean": false,
+  "date": 2024-01-01T08:00:00.000Z,
+  "enum": "1",
+  "id": "2dc92d72-9ce3-50c7-b982-59022ec393f1",
+  "number": 0,
+  "object": {},
+  "string": "string",
+  "uuid": "00000000-0000-0000-0000-000000000000",
+}
+`;
+
+exports[`defaultCreateEntity should create with options values 1`] = `
+TestCreateEntityOptions {
+  "array": [
+    1,
+    2,
+    3,
+  ],
+  "bigint": 1n,
+  "boolean": true,
+  "date": 2025-01-01T00:00:00.000Z,
+  "enum": "2",
+  "id": "88943033-fef1-5ad8-8cf8-4470be80d197",
+  "number": 1,
+  "object": {
+    "key": "value",
+  },
+  "string": "value",
+  "uuid": "00000000-0000-0000-0000-000000000001",
+}
+`;

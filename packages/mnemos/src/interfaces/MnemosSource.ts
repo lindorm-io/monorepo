@@ -1,28 +1,17 @@
-import { IEntityBase } from "@lindorm/entity";
-import { ILogger } from "@lindorm/logger";
+import { EntityScannerInput, IEntity } from "@lindorm/entity";
 import { Constructor } from "@lindorm/types";
-import {
-  CloneMnemosSourceOptions,
-  CreateMnemosEntityFn,
-  MnemosSourceEntities,
-  ValidateMnemosEntityFn,
-} from "../types";
+import { CloneMnemosSourceOptions, MnemosSourceRepositoryOptions } from "../types";
 import { IMnemosCache } from "./MnemosCache";
 import { IMnemosRepository } from "./MnemosRepository";
-
-export type MnemosSourceRepositoryOptions<E extends IEntityBase> = {
-  logger?: ILogger;
-  create?: CreateMnemosEntityFn<E>;
-  validate?: ValidateMnemosEntityFn<E>;
-};
 
 export interface IMnemosSource {
   client: IMnemosCache;
 
-  addEntities(entities: MnemosSourceEntities): void;
   clone(options?: CloneMnemosSourceOptions): IMnemosSource;
-  repository<E extends IEntityBase>(
+
+  addEntities(entities: EntityScannerInput): void;
+  repository<E extends IEntity>(
     Entity: Constructor<E>,
-    options?: MnemosSourceRepositoryOptions<E>,
+    options?: MnemosSourceRepositoryOptions,
   ): IMnemosRepository<E>;
 }

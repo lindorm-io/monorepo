@@ -1,159 +1,134 @@
-import { IEntityBase } from "@lindorm/entity";
-import { isDate, isFunction } from "@lindorm/is";
-import { ILogger } from "@lindorm/logger";
-import { Constructor, DeepPartial } from "@lindorm/types";
-import { Predicate } from "@lindorm/utils";
-import { randomUUID } from "crypto";
-import { z } from "zod";
-import { MnemosRepositoryError } from "../errors";
-import { IMnemosCollection, IMnemosRepository } from "../interfaces";
 import {
-  CreateMnemosEntityFn,
-  MnemosEntityConfig,
-  MnemosRepositoryOptions,
-  ValidateMnemosEntityFn,
-} from "../types";
+  EntityKit,
+  EntityMetadata,
+  globalEntityMetadata,
+  IEntity,
+  MetaSource,
+} from "@lindorm/entity";
+import { isDate } from "@lindorm/is";
+import { ILogger } from "@lindorm/logger";
+import { DeepPartial } from "@lindorm/types";
+import { Predicate } from "@lindorm/utils";
+import { MnemosRepositoryError } from "../errors";
+import { IMnemosCache, IMnemosCollection, IMnemosRepository } from "../interfaces";
+import { MnemosRepositoryOptions } from "../types";
+
+const PRIMARY_SOURCE: MetaSource = "mnemos" as const;
 
 export class MnemosRepository<
-  E extends IEntityBase,
+  E extends IEntity = IEntity,
   O extends DeepPartial<E> = DeepPartial<E>,
 > implements IMnemosRepository<E, O>
 {
-  private readonly EntityConstructor: Constructor<E>;
+  private readonly cache: IMnemosCache;
   private readonly collection: IMnemosCollection<E>;
-  private readonly config: MnemosEntityConfig<E>;
+  private readonly collectionName: string;
+  private readonly incrementName: string;
+  private readonly kit: EntityKit<E, O>;
   private readonly logger: ILogger;
-  private readonly createFn: CreateMnemosEntityFn<E> | undefined;
-  private readonly validateFn: ValidateMnemosEntityFn<E> | undefined;
+  private readonly metadata: EntityMetadata;
 
   public constructor(options: MnemosRepositoryOptions<E>) {
+    const metadata = globalEntityMetadata.get(options.Entity);
+
     this.logger = options.logger.child(["MnemosRepository", options.Entity.name]);
 
-    this.EntityConstructor = options.Entity;
-    this.collection = options.cache.collection(options.Entity.name, options);
-    this.config = options.config ?? {};
+    this.kit = new EntityKit({
+      Entity: options.Entity,
+      logger: this.logger,
+      source: PRIMARY_SOURCE,
+      getNextIncrement: this.getNextIncrement.bind(this),
+    });
 
-    this.createFn = options.create;
-    this.validateFn = options.validate;
-  }
-  // public static
-
-  public static createEntity<
-    E extends IEntityBase,
-    O extends DeepPartial<E> = DeepPartial<E>,
-  >(Entity: Constructor<E>, options: O | E): E {
-    const entity = new Entity();
-
-    const { id, createdAt, updatedAt, ...rest } = options as E;
-
-    entity.id = id ?? entity.id ?? randomUUID();
-    entity.createdAt = createdAt ?? entity.createdAt ?? new Date();
-    entity.updatedAt = updatedAt ?? entity.updatedAt ?? new Date();
-
-    for (const [key, value] of Object.entries(rest)) {
-      entity[key as keyof E] = (value ?? null) as E[keyof E];
-    }
-
-    for (const [key, value] of Object.entries(entity)) {
-      if (value !== undefined) continue;
-      entity[key as keyof E] = null as E[keyof E];
-    }
-
-    return entity;
+    this.cache = options.cache;
+    this.collectionName = this.kit.getCollectionName(options);
+    this.incrementName = this.kit.getIncrementName(options);
+    this.metadata = metadata;
+    this.collection = this.cache.collection(this.collectionName, this.metadata);
   }
 
   // public
 
   public create(options: O | E): E {
-    const entity = this.createFn
-      ? this.createFn(options)
-      : MnemosRepository.createEntity(this.EntityConstructor, options);
-
-    this.validateEntity(entity);
-
-    this.logger.debug("Created entity", { entity });
-
-    return entity;
+    return this.kit.create(options);
   }
 
-  public count(predicate: Predicate<E>): number {
-    const count = this.filter(predicate).length;
+  public copy(entity: E): E {
+    return this.kit.copy(entity);
+  }
+
+  public validate(entity: E): void {
+    return this.kit.validate(entity);
+  }
+
+  public async count(predicate: Predicate<E>): Promise<number> {
+    const entities = this.filterCollection(predicate);
+    const count = entities.length;
 
     this.logger.debug("Repository done: count", {
-      count,
-      predicate,
+      input: { predicate },
+      result: { count },
     });
 
     return count;
   }
 
-  public delete(predicate: Predicate<E>): void {
+  public async delete(predicate: Predicate<E>): Promise<void> {
     this.collection.delete(predicate);
 
-    this.logger.debug("Repository done: delete", {
-      predicate,
-    });
+    this.logger.debug("Repository done: delete", { input: { predicate } });
   }
 
-  public deleteById(id: string): void {
-    this.collection.delete({ id });
+  public async destroy(entity: E): Promise<void> {
+    this.collection.delete(this.createPrimaryPredicate(entity));
 
-    this.logger.debug("Repository done: deleteById", {
-      id,
-    });
+    this.logger.debug("Repository done: destroy", { input: { entity } });
+
+    this.kit.onDestroy(entity);
   }
 
-  public destroy(entity: E): void {
-    this.collection.delete({ id: entity.id });
-
-    this.logger.debug("Repository done: destroy", {
-      id: entity.id,
-    });
-  }
-
-  public destroyBulk(entities: Array<E>): void {
+  public async destroyBulk(entities: Array<E>): Promise<void> {
     for (const entity of entities) {
-      this.collection.delete({ id: entity.id });
+      this.destroy(entity);
     }
   }
 
-  public exists(predicate: Predicate<E>): boolean {
-    const entities = this.filter(predicate);
+  public async exists(predicate: Predicate<E>): Promise<boolean> {
+    const entities = this.filterCollection(predicate);
     const exists = entities.length > 0;
 
     this.logger.debug("Repository done: exists", {
-      exists,
-      predicate,
+      input: { predicate },
+      result: { exists },
     });
 
     return exists;
   }
 
-  public find(predicate: Predicate<E> = {}): Array<E> {
-    const entities = this.filter(predicate);
+  public async find(predicate: Predicate<E> = {}): Promise<Array<E>> {
+    const entities = this.filterCollection(predicate);
 
     this.logger.debug("Repository done: find", {
-      count: entities.length,
-      predicate,
-      entities,
+      input: { predicate },
+      result: { count: entities.length, entities },
     });
 
     return entities;
   }
 
-  public findOne(predicate: Predicate<E>): E | null {
-    const [entity] = this.filter(predicate);
+  public async findOne(predicate: Predicate<E>): Promise<E | null> {
+    const [entity] = this.filterCollection(predicate);
 
     this.logger.debug("Repository done: findOne", {
-      predicate,
-      entity,
+      input: { predicate },
+      result: { entity },
     });
 
     return entity ?? null;
   }
 
-  public findOneOrFail(predicate: Predicate<E>): E {
-    const entity = this.findOne(predicate);
+  public async findOneOrFail(predicate: Predicate<E>): Promise<E> {
+    const entity = await this.findOne(predicate);
 
     if (!entity) {
       throw new MnemosRepositoryError("Entity not found", { debug: { predicate } });
@@ -162,143 +137,218 @@ export class MnemosRepository<
     return entity;
   }
 
-  public findOneOrSave(predicate: Predicate<E>, options?: O): E {
-    const entity = this.findOne(predicate);
+  public async findOneOrSave(predicate: Predicate<E>, options?: O): Promise<E> {
+    const entity = await this.findOne(predicate);
     if (entity) return entity;
 
     return this.save(this.create({ ...predicate, ...options } as O));
   }
 
-  public findOneById(id: string): E | null {
-    return this.findOne({ id });
-  }
+  public async insert(entity: E): Promise<E> {
+    this.validate(entity);
 
-  public findOneByIdOrFail(id: string): E {
-    return this.findOneOrFail({ id });
-  }
-
-  public insert(entity: E): E {
-    this.validateEntity(entity);
+    const insert = await this.kit.insert(entity);
 
     try {
-      this.collection.insertOne(entity);
+      this.collection.insertOne(insert);
 
-      this.logger.debug("Repository done: insert", {
-        entity,
-      });
+      this.logger.debug("Repository done: insert", { input: { insert } });
 
-      return entity;
+      this.kit.onInsert(insert);
+
+      return insert;
     } catch (error: any) {
       this.logger.error("Repository error", error);
       throw new MnemosRepositoryError("Unable to insert entity", { error });
     }
   }
 
-  public insertBulk(entities: Array<E>): Array<E> {
-    return entities.map((entity) => this.insert(entity));
+  public async insertBulk(entities: Array<E>): Promise<Array<E>> {
+    return Promise.all(entities.map((entity) => this.insert(entity)));
   }
 
-  public save(entity: E): E {
-    if (!this.exists({ id: entity.id })) {
-      return this.insert(entity);
+  public async save(entity: E): Promise<E> {
+    const strategy = this.kit.getSaveStrategy(entity);
+
+    switch (strategy) {
+      case "insert":
+        return await this.insert(entity);
+      case "update":
+        return await this.update(entity);
+      default:
+        break;
     }
-    return this.update(entity);
+
+    try {
+      return await this.insert(entity);
+    } catch (err: any) {
+      if (err.code === "duplicate_record") {
+        return await this.update(entity);
+      }
+      throw err;
+    }
   }
 
-  public saveBulk(entities: Array<E>): Array<E> {
-    return entities.map((entity) => this.save(entity));
+  public async saveBulk(entities: Array<E>): Promise<Array<E>> {
+    return Promise.all(entities.map((entity) => this.save(entity)));
   }
 
-  public update(entity: E): E {
-    this.validateEntity(entity);
+  public async update(entity: E): Promise<E> {
+    this.validate(entity);
 
-    const predicate = this.createDefaultPredicate({ id: entity.id });
+    const predicate = this.createDefaultPredicate(this.createPrimaryPredicate(entity));
 
     if (!this.exists(predicate)) {
-      throw new MnemosRepositoryError("Entity not found", {
-        debug: { predicate },
-      });
+      throw new MnemosRepositoryError("Entity not found", { debug: { predicate } });
     }
 
-    this.collection.update(predicate, entity);
+    const filter = this.createUpdatePredicate(entity);
+    const update = this.kit.update(entity);
 
-    this.logger.debug("Repository done: update", {
-      entity,
-    });
+    this.collection.update(filter, update);
 
-    return entity;
+    this.logger.debug("Repository done: update", { input: { filter, update } });
+
+    this.kit.onUpdate(update);
+
+    return update;
   }
 
-  public updateBulk(entities: Array<E>): Array<E> {
-    return entities.map((entity) => this.update(entity));
+  public async updateBulk(entities: Array<E>): Promise<Array<E>> {
+    return Promise.all(entities.map((entity) => this.update(entity)));
   }
 
-  public ttl(predicate: Predicate<E>): number {
-    const [entity] = this.filter(predicate);
+  public async ttl(predicate: Predicate<E>): Promise<number> {
+    const [entity] = this.filterCollection(predicate);
 
     this.logger.debug("Repository done: ttl", {
-      predicate,
-      entity,
+      input: { predicate },
+      result: { entity },
     });
 
     if (!entity) {
       throw new MnemosRepositoryError("Entity not found", { debug: { predicate } });
     }
 
-    if (!this.config.ttlAttribute || !isDate(entity[this.config.ttlAttribute])) {
-      throw new MnemosRepositoryError("Entity does not have ttl", {
+    const expiryDate = this.metadata.columns.find(
+      (a) => a.decorator === "ExpiryDateColumn",
+    );
+    if (!expiryDate) {
+      throw new MnemosRepositoryError("Entity does not have expiry date", {
         debug: { entity },
       });
     }
 
-    return Math.round(
-      ((entity[this.config.ttlAttribute] as Date).getTime() - Date.now()) / 1000,
-    );
-  }
+    const attribute = (entity as any)[expiryDate.key];
 
-  public ttlById(id: string): number {
-    return this.ttl({ id });
+    if (!isDate(attribute)) {
+      throw new MnemosRepositoryError("Entity does not have expiry date", {
+        debug: { entity },
+      });
+    }
+
+    return Math.floor((attribute.getTime() - Date.now()) / 1000);
   }
 
   // private
 
-  private createDefaultPredicate(predicate: Predicate<E> = {}): Predicate<E> {
-    return {
-      ...predicate,
-      ...(this.config.ttlAttribute && {
-        $or: [
-          { [this.config.ttlAttribute]: null },
-          { [this.config.ttlAttribute]: { $gt: new Date() } },
-        ],
-      }),
-    };
+  private createPrimaryPredicate(entity: E): Predicate<E> {
+    const result: Predicate<any> = {};
+
+    for (const key of this.metadata.primaryKeys) {
+      result[key] = entity[key];
+    }
+
+    return result;
   }
 
-  private filter(predicate: Predicate<E>): Array<E> {
+  private createDefaultPredicate(predicate: Predicate<E> = {}): Predicate<E> {
+    const result: Predicate<any> = { ...predicate };
+
+    const expiryDate = this.metadata.columns.find(
+      (c) => c.decorator === "ExpiryDateColumn",
+    );
+    if (expiryDate) {
+      result["$or"] = [
+        { [expiryDate.key]: null },
+        { [expiryDate.key]: { $gt: new Date() } },
+      ];
+    }
+
+    return result;
+  }
+
+  private createUpdatePredicate(entity: E): Predicate<E> {
+    const result: Predicate<any> = this.createPrimaryPredicate(entity);
+
+    if (!this.kit.isPrimarySource) {
+      this.logger.debug("Skipping update predicate for non-primary source", {
+        source: this.metadata.primarySource,
+      });
+      return result;
+    }
+
+    const deleteDate = this.metadata.columns.find(
+      (c) => c.decorator === "DeleteDateColumn",
+    );
+    if (deleteDate) {
+      result[deleteDate.key] = { $eq: null };
+    }
+
+    const expiryDate = this.metadata.columns.find(
+      (c) => c.decorator === "ExpiryDateColumn",
+    );
+    if (expiryDate) {
+      result["$or"] = [
+        { [expiryDate.key]: null },
+        { [expiryDate.key]: { $gt: new Date() } },
+      ];
+    }
+
+    const version = this.metadata.columns.find((c) => c.decorator === "VersionColumn");
+    if (version) {
+      result[version.key] = { $eq: entity[version.key] };
+    }
+
+    return result;
+  }
+
+  private filterCollection(predicate: Predicate<E>): Array<E> {
     return this.collection.filter(this.createDefaultPredicate(predicate));
   }
 
-  private validateBaseEntity(entity: E): void {
-    z.object({
-      id: z.string().uuid(),
-      createdAt: z.date(),
-      updatedAt: z.date(),
-    }).parse({
-      id: entity.id,
-      createdAt: entity.createdAt,
-      updatedAt: entity.updatedAt,
-    });
-  }
+  private async getNextIncrement(key: string): Promise<number> {
+    const start = Date.now();
 
-  private validateEntity(entity: E): void {
-    this.validateBaseEntity(entity);
+    try {
+      const collection = this.cache.collection<{ key: string; value: number }>(
+        this.incrementName,
+      );
 
-    if (isFunction(this.validateFn)) {
-      const { id, createdAt, updatedAt, ...rest } = entity;
+      let document = collection.find({ key });
 
-      this.validateFn(rest);
+      if (!document) {
+        document = collection.insertOne({ key, value: 0 });
+      }
+
+      document.value = document.value + 1;
+
+      collection.update({ key }, { value: document.value });
+
+      this.logger.silly("Repository done: getNextIncrement", {
+        input: { key },
+        result: {
+          collection: this.collectionName,
+          increment: this.incrementName,
+          document,
+        },
+        time: Date.now() - start,
+      });
+
+      return document.value;
+    } catch (error: any) {
+      this.logger.error("Repository error", error);
+      throw new MnemosRepositoryError("Unable to get next increment", { error });
     }
-
-    this.logger.silly("Entity validated", { entity });
   }
 }

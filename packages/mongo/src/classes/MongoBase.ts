@@ -1,23 +1,23 @@
 import { ILogger } from "@lindorm/logger";
-import { Collection, Db, Document, IndexSpecification, MongoClient } from "mongodb";
+import { Collection, Db, Document, MongoClient } from "mongodb";
 import { MongoRepositoryError } from "../errors";
-import { MongoBaseIndex, MongoBaseOptions, MongoIndexOptions } from "../types";
+import { MongoBaseIndex, MongoBaseOptions } from "../types";
 
 export abstract class MongoBase<D extends Document> {
   protected readonly client: MongoClient;
   protected readonly collectionName: string;
   protected readonly databaseName: string;
-  protected readonly indexes: Array<MongoIndexOptions<D>>;
+  protected readonly indexes: Array<MongoBaseIndex>;
   protected readonly logger: ILogger;
 
   protected _collection: Collection<D> | undefined;
   protected _database: Db | undefined;
 
-  protected constructor(options: MongoBaseOptions<D>) {
+  protected constructor(options: MongoBaseOptions) {
     this.logger = options.logger.child(["MongoBase"]);
 
-    this.collectionName = options.collectionName;
-    this.databaseName = options.databaseName;
+    this.collectionName = options.collection;
+    this.databaseName = options.database;
     this.indexes = options.indexes;
     this.client = options.client;
   }
@@ -41,28 +41,12 @@ export abstract class MongoBase<D extends Document> {
   // public
 
   public async setup(): Promise<void> {
-    const indexes: Array<MongoBaseIndex> = this.indexes.map((item) => ({
-      index: item.index as IndexSpecification,
-      options: {
-        unique: item.unique ?? false,
-        ...(item.name ? { name: item.name } : {}),
-        ...(item.nullable?.length
-          ? {
-              partialFilterExpression: {
-                ...item.nullable.reduce(
-                  (obj, key) => ({ ...obj, [key]: { $exists: true } }),
-                  {},
-                ),
-                ...item.finite?.reduce((obj, key) => ({ ...obj, [key]: { $gt: 0 } }), {}),
-              },
-            }
-          : {}),
-        ...(item.options ?? {}),
-      },
-    }));
-
-    for (const { index, options } of indexes) {
-      this.logger.debug("Creating index", { index, options });
+    for (const { index, options } of this.indexes) {
+      this.logger.debug("Creating index", {
+        collection: this.collectionName,
+        index,
+        options,
+      });
 
       try {
         const result = await this.collection.createIndex(index, options);
@@ -71,7 +55,10 @@ export abstract class MongoBase<D extends Document> {
       } catch (error: any) {
         this.logger.silly("Mongo setup error", error);
 
-        throw new MongoRepositoryError(error.message, { error });
+        throw new MongoRepositoryError(error.message, {
+          debug: { collection: this.collectionName, index, options },
+          error,
+        });
       }
     }
   }

@@ -1,7 +1,8 @@
-import { RedisEntity } from "../../classes";
+import { Column, Entity, PrimarySource, VersionedEntityBase } from "@lindorm/entity";
 
-export class TestEntityTwo extends RedisEntity {
-  public readonly email!: string;
-  public readonly name!: string;
-  public readonly _test!: string;
+@Entity()
+@PrimarySource("redis")
+export class TestEntityTwo extends VersionedEntityBase {
+  @Column("string")
+  public name!: string;
 }

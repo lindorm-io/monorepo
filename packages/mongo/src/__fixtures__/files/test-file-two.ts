@@ -1,16 +1,10 @@
-import { MongoFile } from "../../classes";
-import { MongoIndexOptions } from "../../types";
+import { Column, Index } from "@lindorm/entity";
+import { MongoFileBase } from "../../classes";
+import { File } from "../../decorators";
 
-export type TestFileTwoOptions = {
-  name: string;
-};
-
-export class TestFileTwo extends MongoFile {
-  public readonly name!: string;
+@File()
+export class TestFileTwo extends MongoFileBase {
+  @Column("string")
+  @Index()
+  public name!: string;
 }
-
-export const indexes: Array<MongoIndexOptions<TestFileTwo>> = [
-  {
-    index: { name: 1 },
-  },
-];

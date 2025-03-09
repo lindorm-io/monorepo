@@ -1,9 +1,20 @@
-import { MongoFile } from "../classes";
+import { Column, Index } from "@lindorm/entity";
+import { MongoFileBase } from "../classes";
+import { File } from "../decorators";
 
 export type TestFileOptions = {
-  name: string;
+  name?: string | null;
 };
 
-export class TestFile extends MongoFile {
-  public readonly name!: string;
+@File()
+export class TestFile extends MongoFileBase {
+  @Column("string", { nullable: true })
+  @Index()
+  public readonly name!: string | null;
+
+  @Column("integer", { nullable: true })
+  public readonly extraOne!: number | null;
+
+  @Column("integer", { nullable: true })
+  public readonly extraTwo!: number | null;
 }

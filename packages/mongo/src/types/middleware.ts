@@ -1,4 +1,4 @@
-import { IEntityBase } from "@lindorm/entity";
+import { IEntity } from "@lindorm/entity";
 import {
   PylonHttpContext,
   PylonHttpMiddleware,
@@ -12,10 +12,10 @@ import { IMongoFile, IMongoRepository, IMongoSource } from "../interfaces";
 // common context
 
 type Context = {
-  entities: Dict<IEntityBase>;
+  entities: Dict<IEntity>;
   files: Array<IMongoFile>;
   repositories: {
-    mongo: Dict<IMongoRepository<IEntityBase>>;
+    mongo: Dict<IMongoRepository<IEntity>>;
   };
   sources: {
     mongo: IMongoSource;

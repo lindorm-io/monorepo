@@ -11,10 +11,7 @@ describe("RedisSource", () => {
 
   beforeAll(async () => {
     source = new RedisSource({
-      entities: [
-        { Entity: TestEntity },
-        join(__dirname, "..", "__fixtures__", "entities"),
-      ],
+      entities: [TestEntity, join(__dirname, "..", "__fixtures__", "entities")],
       logger: createMockLogger(),
       url: "redis://localhost:6379",
     });

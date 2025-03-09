@@ -1,4 +1,4 @@
-import { IEntityBase } from "@lindorm/entity";
+import { IEntity } from "@lindorm/entity";
 import {
   PylonHttpContext,
   PylonHttpMiddleware,
@@ -12,9 +12,9 @@ import { IMnemosRepository, IMnemosSource } from "../interfaces";
 // common context
 
 type Context = {
-  entities: Dict<IEntityBase>;
+  entities: Dict<IEntity>;
   repositories: {
-    mnemos: Dict<IMnemosRepository<IEntityBase>>;
+    mnemos: Dict<IMnemosRepository<IEntity>>;
   };
   sources: {
     mnemos: IMnemosSource;

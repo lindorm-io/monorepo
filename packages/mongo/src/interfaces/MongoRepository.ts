@@ -1,16 +1,21 @@
-import { IEntityBase } from "@lindorm/entity";
+import { IEntity } from "@lindorm/entity";
 import { DeepPartial } from "@lindorm/types";
-import { CountDocumentsOptions, DeleteOptions, Filter, FindOptions } from "mongodb";
+import { CountDocumentsOptions, DeleteOptions, Filter } from "mongodb";
+import { FindOptions } from "../types";
 
 export interface IMongoRepository<
-  E extends IEntityBase,
+  E extends IEntity,
   O extends DeepPartial<E> = DeepPartial<E>,
 > {
   create(options?: O | E): E;
+  copy(entity: E): E;
+  validate(entity: E): void;
+  setup(): Promise<void>;
 
+  clone(entity: E): Promise<E>;
+  cloneBulk(entities: Array<E>): Promise<Array<E>>;
   count(criteria?: Filter<E>, options?: CountDocumentsOptions): Promise<number>;
   delete(criteria: Filter<E>, options?: DeleteOptions): Promise<void>;
-  deleteById(id: string): Promise<void>;
   deleteExpired(): Promise<void>;
   destroy(entity: E): Promise<void>;
   destroyBulk(entities: Array<E>): Promise<void>;
@@ -19,20 +24,16 @@ export interface IMongoRepository<
   findOne(criteria: Filter<E>, options?: FindOptions<E>): Promise<E | null>;
   findOneOrFail(criteria: Filter<E>, options?: FindOptions<E>): Promise<E>;
   findOneOrSave(criteria: DeepPartial<E>, options?: O): Promise<E>;
-  findOneById(id: string): Promise<E | null>;
-  findOneByIdOrFail(id: string): Promise<E>;
   insert(entity: E): Promise<E>;
   insertBulk(entities: Array<E>): Promise<Array<E>>;
   save(entity: E): Promise<E>;
   saveBulk(entities: Array<E>): Promise<Array<E>>;
   softDelete(criteria: Filter<E>, options?: DeleteOptions): Promise<void>;
-  softDeleteById(id: string): Promise<void>;
   softDestroy(entity: E): Promise<void>;
   softDestroyBulk(entities: Array<E>): Promise<void>;
+  ttl(criteria: Filter<E>): Promise<number>;
   update(entity: E): Promise<E>;
   updateBulk(entities: Array<E>): Promise<Array<E>>;
-  ttl(criteria: Filter<E>): Promise<number>;
-  ttlById(id: string): Promise<number>;
-
-  setup(): Promise<void>;
+  updateMany(criteria: Filter<E>, update: DeepPartial<E>): Promise<void>;
+  versions(criteria: Filter<E>): Promise<Array<E>>;
 }

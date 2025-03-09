@@ -9,7 +9,7 @@ import { TestBucket } from "../__fixtures__/test-bucket";
 import { TestFile } from "../__fixtures__/test-file";
 import { getReadStreamContent } from "../__fixtures__/utils";
 import { MongoBucketError } from "../errors";
-import { FileMetadata } from "../types";
+import { FileUpload } from "../types";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate);
@@ -18,7 +18,7 @@ describe("MongoBucket", () => {
   let client: MongoClient;
   let bucket: TestBucket;
   let stream: () => Readable;
-  let metadata: FileMetadata<TestFile>;
+  let metadata: FileUpload<TestFile>;
 
   beforeAll(async () => {
     client = new MongoClient("mongodb://root:example@localhost/admin?authSource=admin");
@@ -31,9 +31,16 @@ describe("MongoBucket", () => {
       createReadStream(join(__dirname, "..", "__fixtures__", "test-file-upload.txt"));
 
     metadata = {
+      encoding: "7bit",
+      extraOne: 1,
+      extraTwo: 2,
+      hash: "hash",
+      hashAlgorithm: "sha256",
       mimeType: "text/plain",
-      originalName: "test-file-upload.txt",
       name: randomUUID(),
+      originalName: "test-file-upload.txt",
+      size: 18,
+      strategy: "local",
     };
   });
 
@@ -51,10 +58,10 @@ describe("MongoBucket", () => {
 
     await expect(bucket.delete({ name: f1.name })).resolves.not.toThrow();
 
-    await expect(bucket.findOneByFilename(f1.filename)).resolves.toBeNull();
+    await expect(bucket.findOne({ filename: f1.filename })).resolves.toBeNull();
     await expect(bucket.download(f1.filename)).rejects.toThrow();
 
-    await expect(bucket.findOneByFilename(f2.filename)).resolves.toBeNull();
+    await expect(bucket.findOne({ filename: f2.filename })).resolves.toBeNull();
     await expect(bucket.download(f2.filename)).rejects.toThrow();
   });
 
@@ -101,15 +108,17 @@ describe("MongoBucket", () => {
   test("should find one file by filename", async () => {
     const file = await bucket.upload(stream(), metadata);
 
-    await expect(bucket.findOneByFilename(file.filename)).resolves.toEqual(file);
-    await expect(bucket.findOneByFilename(randomUUID())).resolves.toBeNull();
+    await expect(bucket.findOne({ filename: file.filename })).resolves.toEqual(file);
+    await expect(bucket.findOne({ filename: randomUUID() })).resolves.toBeNull();
   });
 
   test("should find one file by filename or fail", async () => {
     const file = await bucket.upload(stream(), metadata);
 
-    await expect(bucket.findOneByFilenameOrFail(file.filename)).resolves.toEqual(file);
-    await expect(bucket.findOneByFilenameOrFail(randomUUID())).rejects.toThrow(
+    await expect(bucket.findOneOrFail({ filename: file.filename })).resolves.toEqual(
+      file,
+    );
+    await expect(bucket.findOneOrFail({ filename: randomUUID() })).rejects.toThrow(
       MongoBucketError,
     );
   });
@@ -117,11 +126,18 @@ describe("MongoBucket", () => {
   test("should upload file", async () => {
     await expect(bucket.upload(stream(), metadata)).resolves.toEqual({
       chunkSize: 261120,
+      encoding: "7bit",
+      extraOne: 1,
+      extraTwo: 2,
       filename: expect.any(String),
+      hash: "hash",
+      hashAlgorithm: "sha256",
       length: 18,
       mimeType: "text/plain",
       name: metadata.name,
       originalName: "test-file-upload.txt",
+      size: 18,
+      strategy: "local",
       uploadDate: MockedDate,
     });
   });

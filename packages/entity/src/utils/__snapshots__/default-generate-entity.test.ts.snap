@@ -1,0 +1,12 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`defaultGenerateEntity should generate standard values 1`] = `
+TestGenerateEntityOptions {
+  "date": 2024-01-01T08:00:00.000Z,
+  "id": "e8edbe03-f52f-56c6-8d98-82e6961329fe",
+  "increment": null,
+  "number": 123456,
+  "string": "yP85UoukUaOk1S8HJsSVJA",
+  "uuid": "0c8c31df-f1cc-5381-97fc-31b3714327de",
+}
+`;

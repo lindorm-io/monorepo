@@ -11,22 +11,19 @@ describe("MnemosSource", () => {
 
   beforeAll(() => {
     source = new MnemosSource({
-      entities: [
-        { Entity: TestEntity },
-        join(__dirname, "..", "__fixtures__", "entities"),
-      ],
+      entities: [TestEntity, join(__dirname, "..", "__fixtures__", "entities")],
       logger: createMockLogger(),
     });
   });
 
-  test("should return a functioning repository for directly registered entity", () => {
+  test("should return a functioning repository for directly registered entity", async () => {
     const repository = source.repository(TestEntity);
 
     expect(repository).toBeDefined();
 
-    expect(repository.save(repository.create({ name: randomUUID() }))).toBeInstanceOf(
-      TestEntity,
-    );
+    await expect(
+      repository.save(repository.create({ name: randomUUID() })),
+    ).resolves.toBeInstanceOf(TestEntity);
   });
 
   test("should return a repository for directory registered entity", () => {

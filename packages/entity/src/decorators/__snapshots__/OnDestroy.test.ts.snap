@@ -1,0 +1,43 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`OnDestroy Decorator should add metadata 1`] = `
+{
+  "columns": [
+    {
+      "decorator": "PrimaryKeyColumn",
+      "enum": null,
+      "fallback": [Function],
+      "key": "id",
+      "max": null,
+      "min": null,
+      "nullable": false,
+      "optional": false,
+      "readonly": true,
+      "schema": null,
+      "type": "uuid",
+    },
+  ],
+  "entity": {
+    "cache": null,
+    "database": null,
+    "decorator": "Entity",
+    "name": null,
+    "namespace": null,
+  },
+  "extras": [],
+  "generated": [],
+  "hooks": [
+    {
+      "callback": [Function],
+      "decorator": "OnDestroy",
+    },
+  ],
+  "indexes": [],
+  "primaryKeys": [
+    "id",
+  ],
+  "primarySource": null,
+  "schemas": [],
+  "uniques": [],
+}
+`;

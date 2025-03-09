@@ -1,77 +1,65 @@
-import { snakeCase } from "@lindorm/case";
+import {
+  defaultCreateEntity,
+  defaultValidateEntity,
+  getCollectionName,
+  globalEntityMetadata,
+} from "@lindorm/entity";
 import { ILogger } from "@lindorm/logger";
-import { Constructor, Dict } from "@lindorm/types";
+import { Constructor, DeepPartial, Dict } from "@lindorm/types";
 import { randomUUID } from "crypto";
 import { DeleteOptions, Filter, FindOptions, GridFSBucket } from "mongodb";
 import { Readable } from "stream";
+import { FileExtra } from "../decorators";
 import { MongoBucketError } from "../errors";
 import { IMongoBucket, IMongoFile } from "../interfaces";
 import { GridFSDocument } from "../interfaces/private";
+import { FileDownload, FileUpload, MongoBucketOptions } from "../types";
 import {
-  FileDownload,
-  FileIndex,
-  FileMetadata,
-  MongoBucketOptions,
-  ValidateMongoFileFn,
-} from "../types";
+  getBucketChunkSize,
+  getBucketCollectionName,
+  getBucketMetadataIndexes,
+  getIndexOptions,
+} from "../utils/private";
 import { MongoBase } from "./MongoBase";
 
 export class MongoBucket<F extends IMongoFile>
-  extends MongoBase<FileIndex<F>>
+  extends MongoBase<F>
   implements IMongoBucket<F>
 {
   private readonly FileConstructor: Constructor<F>;
   private readonly bucketName: string;
-  private readonly chunkSizeBytes: number | undefined;
-  private readonly validate: ValidateMongoFileFn<F> | undefined;
+  private readonly chunkSizeBytes: number | null;
   private _grid: GridFSBucket | undefined;
 
   protected readonly logger: ILogger;
 
   public constructor(options: MongoBucketOptions<F>) {
+    const metadata = globalEntityMetadata.get<FileExtra>(options.File);
+    const database = metadata.entity.database || options.database;
+
+    if (!database) {
+      throw new MongoBucketError("Database name not found", {
+        debug: { metadata, options },
+      });
+    }
+
     super({
       client: options.client,
-      collectionName: MongoBucket.createCollectionName(options),
-      databaseName: options.database,
+      collection: getBucketCollectionName(options.File, options),
+      database,
       logger: options.logger,
-      indexes: [
-        {
-          index: { filename: 1 },
-          unique: true,
-        },
-        {
-          index: { "metadata.mimeType": 1 },
-          unique: false,
-        },
-        {
-          index: { "metadata.originalName": 1 },
-          unique: false,
-          nullable: ["metadata.originalName"],
-        },
-        ...(options.indexes
-          ? options.indexes.map((item) => ({
-              ...item,
-              index: Object.entries(item.index).reduce(
-                (acc, [key, value]) => ({
-                  ...acc,
-                  [`metadata.${key}`]: value,
-                }),
-                {},
-              ),
-              ...(item.nullable
-                ? { nullable: item.nullable.map((key) => `metadata.${key as string}`) }
-                : {}),
-            }))
-          : []),
-      ],
+      indexes: getIndexOptions({
+        ...metadata,
+        indexes: getBucketMetadataIndexes(metadata),
+      }),
     });
 
     this.logger = options.logger.child(["MongoMongoBucket", options.File.name]);
 
+    this.bucketName = getCollectionName(options.File, options);
+    this.chunkSizeBytes = getBucketChunkSize(options, metadata);
+
     this.FileConstructor = options.File;
-    this.bucketName = MongoBucket.createBucketName(options);
-    this.chunkSizeBytes = options.chunkSizeBytes;
-    this.validate = options.validate;
   }
 
   // getters
@@ -85,36 +73,6 @@ export class MongoBucket<F extends IMongoFile>
     }
 
     return this._grid;
-  }
-
-  // public static
-
-  public static createFile<F extends IMongoFile>(
-    File: Constructor<F>,
-    options: GridFSDocument,
-  ): F {
-    const file = new File();
-
-    const { chunkSize, filename, length, metadata, uploadDate } = options;
-    const { mimeType, originalName, ...meta } = metadata;
-
-    file.chunkSize = chunkSize ?? 0;
-    file.filename = filename ?? "";
-    file.length = length ?? 0;
-    file.mimeType = metadata.mimeType ?? "";
-    file.originalName = metadata.originalName ?? null;
-    file.uploadDate = uploadDate ?? new Date();
-
-    for (const [key, value] of Object.entries(meta)) {
-      file[key as keyof F] = value as F[keyof F];
-    }
-
-    for (const [key, value] of Object.entries(file)) {
-      if (value !== undefined) continue;
-      file[key as keyof F] = null as F[keyof F];
-    }
-
-    return file;
   }
 
   // public
@@ -147,33 +105,9 @@ export class MongoBucket<F extends IMongoFile>
     }
   }
 
-  public async deleteByFilename(filename: string): Promise<void> {
-    const start = Date.now();
-
+  public async download(filename: string): Promise<FileDownload<F>> {
     try {
-      const result = await this.collection.findOne({ filename });
-
-      await this.collection.deleteOne({ _id: result._id });
-      await this.grid.delete(result._id);
-
-      this.logger.debug("Bucket done: deleteByFilename", {
-        input: {
-          filename,
-        },
-        result: {
-          ...result,
-          time: Date.now() - start,
-        },
-      });
-    } catch (error: any) {
-      this.logger.error("MongoBucket error", error);
-      throw new MongoBucketError("Unable to delete file", { error });
-    }
-  }
-
-  public async download(filename: string): Promise<FileDownload> {
-    try {
-      const file = await this.findOneByFilenameOrFail(filename);
+      const file = await this.findOneOrFail({ filename } as any);
       const stream = this.grid.openDownloadStreamByName(filename);
 
       return { ...file, stream };
@@ -250,18 +184,8 @@ export class MongoBucket<F extends IMongoFile>
     return document;
   }
 
-  public async findOneByFilename(filename: string): Promise<F | null> {
-    return this.findOne({ filename } as any);
-  }
-
-  public async findOneByFilenameOrFail(filename: string): Promise<F> {
-    return this.findOneOrFail({ filename } as any);
-  }
-
-  public async upload(stream: Readable, metadata: FileMetadata<F>): Promise<F> {
+  public async upload(stream: Readable, metadata: FileUpload<F>): Promise<F> {
     this.logger.debug("Uploading file", { metadata });
-
-    this.validateMetadata(metadata);
 
     try {
       const filename = randomUUID();
@@ -297,7 +221,20 @@ export class MongoBucket<F extends IMongoFile>
         uploadDate,
       });
 
-      return await this.findOneByFilenameOrFail(filename);
+      const file = await this.findOneOrFail({ filename } as any);
+
+      try {
+        this.validate(file);
+      } catch (error: any) {
+        this.logger.error("Error validating file", error);
+
+        await this.grid.delete(upload.id);
+        await this.collection.deleteOne({ _id: upload.id });
+
+        throw new MongoBucketError("Error validating file", { error });
+      }
+
+      return file;
     } catch (error: any) {
       this.logger.error("Error uploading file", error);
 
@@ -308,11 +245,25 @@ export class MongoBucket<F extends IMongoFile>
   // private
 
   private create(document: GridFSDocument): F {
-    const file = MongoBucket.createFile(this.FileConstructor, document);
+    const { chunkSize, filename, length, uploadDate, metadata = {} } = document;
 
-    this.logger.debug("File created", { file });
+    const file = defaultCreateEntity<F>(this.FileConstructor, {
+      chunkSize,
+      filename,
+      length,
+      uploadDate,
+      ...metadata,
+    } as DeepPartial<F>);
+
+    this.logger.debug("Created file", { file });
 
     return file;
+  }
+
+  private validate(file: F): void {
+    defaultValidateEntity(this.FileConstructor, file);
+
+    this.logger.debug("File validated", { file });
   }
 
   private parseFilter(criteria: Filter<any> = {}): Filter<any> {
@@ -335,28 +286,5 @@ export class MongoBucket<F extends IMongoFile>
     this.logger.debug("Parsed criteria", { criteria, parsed });
 
     return parsed;
-  }
-
-  private validateMetadata(metadata: FileMetadata<F>): void {
-    if (!this.validate) return;
-
-    this.validate(metadata);
-  }
-
-  // private static
-
-  private static createBucketName<F extends IMongoFile>(
-    options: MongoBucketOptions<F>,
-  ): string {
-    const nsp = options.namespace ? `${snakeCase(options.namespace)}_` : "";
-    const name = snakeCase(options.File.name);
-
-    return `${nsp}${name}`;
-  }
-
-  private static createCollectionName<F extends IMongoFile>(
-    options: MongoBucketOptions<F>,
-  ): string {
-    return `${MongoBucket.createBucketName(options)}.files`;
   }
 }

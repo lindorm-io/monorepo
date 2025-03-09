@@ -1,11 +1,7 @@
 import { createMockLogger } from "@lindorm/logger";
 import MockDate from "mockdate";
 import { TestEntity } from "../__fixtures__/test-entity";
-import {
-  createMockRedisEntityCallback,
-  createMockRedisRepository,
-  createMockRedisSource,
-} from "../mocks";
+import { createMockRedisRepository, createMockRedisSource } from "../mocks";
 import { createSocketRedisEntityMiddleware } from "./socket-redis-entity-middleware";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
@@ -39,15 +35,18 @@ describe("createSocketRedisEntityMiddleware", () => {
     expect(ctx.entities.testEntity).toEqual({
       id: expect.any(String),
       createdAt: MockedDate,
-      updatedAt: MockedDate,
-      expiresAt: null,
+      deletedAt: null,
       email: null,
+      expiresAt: null,
       name: null,
+      seq: null,
+      updatedAt: MockedDate,
+      version: 0,
     });
   });
 
   test("should find entity based on object path", async () => {
-    const repo = createMockRedisRepository(createMockRedisEntityCallback(TestEntity));
+    const repo = createMockRedisRepository(TestEntity);
     ctx.sources.redis.repository.mockReturnValue(repo);
 
     await expect(
@@ -77,7 +76,7 @@ describe("createSocketRedisEntityMiddleware", () => {
   });
 
   test("should skip optional entity", async () => {
-    const repo = createMockRedisRepository(createMockRedisEntityCallback(TestEntity));
+    const repo = createMockRedisRepository(TestEntity);
     repo.findOne = jest.fn().mockResolvedValue(null);
     ctx.sources.redis.repository.mockReturnValue(repo);
 
@@ -101,7 +100,7 @@ describe("createSocketRedisEntityMiddleware", () => {
   });
 
   test("should throw on mandatory entity", async () => {
-    const repo = createMockRedisRepository(createMockRedisEntityCallback(TestEntity));
+    const repo = createMockRedisRepository(TestEntity);
     repo.findOne = jest.fn().mockResolvedValue(null);
     ctx.sources.redis.repository.mockReturnValue(repo);
 

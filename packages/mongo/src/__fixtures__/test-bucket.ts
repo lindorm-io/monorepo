@@ -9,9 +9,8 @@ export class TestBucket extends MongoBucket<TestFile> {
       File: TestFile,
       client,
       database: "test",
-      indexes: [{ index: { name: 1 } }],
       logger,
-      namespace: "test",
+      namespace: "ns",
     });
   }
 }

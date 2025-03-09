@@ -1,14 +1,8 @@
-import { MongoEntity } from "../../classes";
-import { MongoIndexOptions } from "../../types";
+import { Column, Entity, PrimarySource, VersionedEntityBase } from "@lindorm/entity";
 
-export class TestEntityTwo extends MongoEntity {
-  public readonly email!: undefined;
-  public readonly name!: string;
-  public readonly _test!: string;
+@Entity()
+@PrimarySource("mongo")
+export class TestEntityTwo extends VersionedEntityBase {
+  @Column("string")
+  public name!: string;
 }
-
-export const indexes: Array<MongoIndexOptions<TestEntityTwo>> = [
-  {
-    index: { name: 1 },
-  },
-];

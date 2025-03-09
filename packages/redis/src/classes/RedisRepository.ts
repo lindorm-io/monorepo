@@ -1,104 +1,121 @@
-import { kebabCase } from "@lindorm/case";
-import { expires } from "@lindorm/date";
-import { IEntityBase } from "@lindorm/entity";
-import { isDate, isFunction, isString } from "@lindorm/is";
+import { snakeCase } from "@lindorm/case";
+import { expiresIn } from "@lindorm/date";
+import {
+  EntityKit,
+  EntityMetadata,
+  globalEntityMetadata,
+  IEntity,
+  MetaSource,
+} from "@lindorm/entity";
+import { isDate } from "@lindorm/is";
 import { Primitive } from "@lindorm/json-kit";
 import { ILogger } from "@lindorm/logger";
-import { Constructor, DeepPartial } from "@lindorm/types";
+import { DeepPartial } from "@lindorm/types";
 import { Predicate, Predicated } from "@lindorm/utils";
-import { randomUUID } from "crypto";
 import { Redis } from "ioredis";
-import { z } from "zod";
 import { RedisRepositoryError } from "../errors";
 import { IRedisRepository } from "../interfaces";
-import {
-  CreateRedisEntityFn,
-  RedisEntityConfig,
-  RedisRepositoryOptions,
-  ValidateRedisEntityFn,
-} from "../types";
+import { RedisRepositoryOptions } from "../types";
 
-export class RedisRepository<
-  E extends IEntityBase,
-  O extends DeepPartial<E> = DeepPartial<E>,
-> implements IRedisRepository<E, O>
+const PRIMARY_SOURCE: MetaSource = "redis" as const;
+
+export class RedisRepository<E extends IEntity, O extends DeepPartial<E> = DeepPartial<E>>
+  implements IRedisRepository<E, O>
 {
-  private readonly EntityConstructor: Constructor<E>;
   private readonly client: Redis;
-  private readonly config: RedisEntityConfig<E>;
-  private readonly keyPattern: string;
+  private readonly collectionName: string;
+  private readonly incrementName: string;
+  private readonly kit: EntityKit<E, O>;
   private readonly logger: ILogger;
-  private readonly createFn: CreateRedisEntityFn<E> | undefined;
-  private readonly validateFn: ValidateRedisEntityFn<E> | undefined;
+  private readonly metadata: EntityMetadata;
 
   public constructor(options: RedisRepositoryOptions<E>) {
+    const metadata = globalEntityMetadata.get(options.Entity);
+
     this.logger = options.logger.child(["RedisRepository", options.Entity.name]);
 
-    this.EntityConstructor = options.Entity;
-    this.keyPattern = this.createKeyPattern(options);
+    this.kit = new EntityKit({
+      Entity: options.Entity,
+      logger: this.logger,
+      source: PRIMARY_SOURCE,
+      getNextIncrement: this.getNextIncrement.bind(this),
+    });
+
+    this.collectionName = this.kit.getCollectionName(options);
+    this.incrementName = this.kit.getIncrementName(options);
+    this.metadata = metadata;
+
     this.client = options.client;
-    this.config = options.config ?? {};
-
-    this.createFn = options.create;
-    this.validateFn = options.validate;
   }
 
-  // public static
+  public async setup(): Promise<void> {}
 
-  public static createEntity<
-    E extends IEntityBase,
-    O extends DeepPartial<E> = DeepPartial<E>,
-  >(Entity: Constructor<E>, options: O | E): E {
-    const entity = new Entity();
-
-    const { id, createdAt, updatedAt, ...rest } = options as E;
-
-    entity.id = id ?? entity.id ?? randomUUID();
-    entity.createdAt = createdAt ?? entity.createdAt ?? new Date();
-    entity.updatedAt = updatedAt ?? entity.updatedAt ?? new Date();
-
-    for (const [key, value] of Object.entries(rest)) {
-      if (key === "_id") continue;
-      entity[key as keyof E] = (value ?? null) as E[keyof E];
-    }
-
-    for (const [key, value] of Object.entries(entity)) {
-      if (value !== undefined) continue;
-      entity[key as keyof E] = null as E[keyof E];
-    }
-
-    return entity;
+  public create(options?: O | E): E {
+    return this.kit.create(options);
   }
 
-  // public
+  public copy(entity: E): E {
+    return this.kit.copy(entity);
+  }
 
-  public create(options: O | E): E {
-    const entity = this.createFn
-      ? this.createFn(options)
-      : RedisRepository.createEntity(this.EntityConstructor, options);
+  public validate(entity: E): void {
+    return this.kit.validate(entity);
+  }
 
-    this.logger.debug("Created entity", { entity });
+  public async clone(entity: E): Promise<E> {
+    const start = Date.now();
 
-    this.validateEntity(entity);
+    try {
+      const clone = await this.kit.clone(entity);
 
-    return entity;
+      this.validate(clone);
+
+      const string = new Primitive(clone).toString();
+
+      const key = this.createPrimaryKey(entity);
+      const ttl = this.getTTL(entity);
+
+      let result: string | null;
+
+      if (ttl) {
+        result = await this.client.setex(key, ttl, string);
+      } else {
+        result = await this.client.set(key, string);
+      }
+
+      const success = result === "OK";
+
+      this.logger.debug("Repository done: clone", {
+        input: { key, ttl, entity: clone },
+        result: { result, success },
+        time: Date.now() - start,
+      });
+
+      this.kit.onInsert(clone);
+
+      return clone;
+    } catch (error: any) {
+      this.logger.error("Repository error", error);
+      throw new RedisRepositoryError("Unable to clone entity", { error });
+    }
+  }
+
+  public async cloneBulk(entities: Array<E>): Promise<Array<E>> {
+    return Promise.all(entities.map((entity) => this.clone(entity)));
   }
 
   public async count(predicate: Predicate<E> = {}): Promise<number> {
     const scan = await this.scan();
     const count = Predicated.filter(scan, predicate).length;
 
-    this.logger.debug("Counted documents", {
-      count,
-      predicate,
-    });
+    this.logger.debug("Counted documents", { count, predicate });
 
     return count;
   }
 
   public async delete(predicate: Predicate<E>): Promise<void> {
-    if (isString(predicate.id)) {
-      return this.deleteById(predicate.id);
+    if (this.metadata.primaryKeys.every((key) => predicate[key])) {
+      return this.deleteByKey(predicate);
     }
 
     const entities = await this.find(predicate);
@@ -108,28 +125,22 @@ export class RedisRepository<
     }
   }
 
-  public async deleteById(id: string): Promise<void> {
-    const entity = await this.findOneById(id);
-
-    if (entity) {
-      await this.destroy(entity);
-    }
-  }
-
   public async destroy(entity: E): Promise<void> {
     const start = Date.now();
 
     try {
-      const result = await this.client.del(this.key(entity));
+      const result = await this.client.del(this.createPrimaryKey(entity));
       const success = result === 1;
 
       this.logger.debug("Repository done: destroy", {
         entity,
-        key: this.key(entity),
+        key: this.createPrimaryKey(entity),
         result,
         success,
         time: Date.now() - start,
       });
+
+      this.kit.onDestroy(entity);
     } catch (error: any) {
       this.logger.error("Repository error", error);
       throw new RedisRepositoryError("Unable to destroy entity", { error });
@@ -145,22 +156,14 @@ export class RedisRepository<
     const exists = count >= 1;
 
     this.logger.debug("Repository done: exists", {
-      input: {
-        predicate,
-      },
-      result: {
-        exists,
-      },
+      input: { predicate },
+      result: { exists },
     });
 
     if (count > 1) {
       this.logger.warn("Multiple documents found", {
-        input: {
-          predicate,
-        },
-        result: {
-          count,
-        },
+        input: { predicate },
+        result: { count },
       });
     }
 
@@ -168,14 +171,9 @@ export class RedisRepository<
   }
 
   public async find(predicate: Predicate<E> = {}): Promise<Array<E>> {
-    if (isString(predicate.id)) {
-      const entity = await this.findOneById(predicate.id);
-
-      if (entity) {
-        return [entity];
-      }
-
-      return [];
+    if (this.metadata.primaryKeys.every((key) => predicate[key])) {
+      const entity = await this.findOneByKey(predicate);
+      return entity ? [entity] : [];
     }
 
     const scan = await this.scan();
@@ -191,23 +189,14 @@ export class RedisRepository<
   }
 
   public async findOne(predicate: Predicate<E>): Promise<E | null> {
-    if (isString(predicate.id)) {
-      const entity = await this.findOneById(predicate.id);
-
-      if (entity) {
-        return entity;
-      }
-
-      return null;
+    if (this.metadata.primaryKeys.every((key) => predicate[key])) {
+      return await this.findOneByKey(predicate);
     }
 
     const scan = await this.scan();
     const entity = Predicated.find(scan, predicate);
 
-    this.logger.debug("Repository done: findOne", {
-      predicate,
-      entity,
-    });
+    this.logger.debug("Repository done: findOne", { predicate, entity });
 
     return entity ?? null;
   }
@@ -229,87 +218,71 @@ export class RedisRepository<
     return this.save(this.create({ ...predicate, ...options } as O));
   }
 
-  public async findOneById(id: string): Promise<E | null> {
+  public async insert(entity: E): Promise<E> {
     const start = Date.now();
 
-    const key = this.key(id);
-
     try {
-      const found = await this.client.get(key);
+      const insert = await this.kit.insert(entity);
 
-      const document = found ? new Primitive<E>(found).toJSON() : null;
+      this.validate(insert);
 
-      this.logger.debug("Repository done: findOneById", {
-        input: {
-          id,
-        },
-        result: {
-          document: found,
-        },
-        time: Date.now() - start,
-      });
+      const string = new Primitive(insert).toString();
 
-      if (!document) return null;
-
-      return this.create(document);
-    } catch (error: any) {
-      this.logger.error("Repository error", error);
-      throw new RedisRepositoryError("Unable to find entity", { error });
-    }
-  }
-
-  public async findOneByIdOrFail(id: string): Promise<E> {
-    const entity = await this.findOneById(id);
-
-    if (!entity) {
-      throw new RedisRepositoryError("Entity not found");
-    }
-
-    return entity;
-  }
-
-  public async save(entity: E): Promise<E> {
-    const start = Date.now();
-
-    this.validateEntity(entity);
-
-    try {
-      const updated = this.updateEntityData(entity);
-      const data = new Primitive(updated).toString();
-
-      const key = this.key(entity);
-      const ttl =
-        this.config.ttlAttribute && isDate(entity[this.config.ttlAttribute])
-          ? expires(entity[this.config.ttlAttribute] as Date)
-          : null;
+      const key = this.createPrimaryKey(entity);
+      const ttl = this.getTTL(entity);
 
       let result: string | null;
 
-      if (ttl?.expiresIn) {
-        result = await this.client.setex(key, ttl.expiresIn, data);
+      if (ttl) {
+        result = await this.client.setex(key, ttl, string);
       } else {
-        result = await this.client.set(key, data);
+        result = await this.client.set(key, string);
       }
 
       const success = result === "OK";
 
-      this.logger.debug("Repository done: save", {
-        input: {
-          key,
-          ttl,
-          updated,
-        },
-        result: {
-          result,
-          success,
-        },
+      this.logger.debug("Repository done: insert", {
+        input: { key, ttl, entity: insert },
+        result: { result, success },
         time: Date.now() - start,
       });
 
-      return updated;
+      this.kit.onInsert(insert);
+
+      return insert;
     } catch (error: any) {
       this.logger.error("Repository error", error);
       throw new RedisRepositoryError("Unable to save entity", { error });
+    }
+  }
+
+  public async insertBulk(entities: Array<E>): Promise<Array<E>> {
+    return Promise.all(entities.map((entity) => this.insert(entity)));
+  }
+
+  public async save(entity: E): Promise<E> {
+    const strategy = this.kit.getSaveStrategy(entity);
+
+    switch (strategy) {
+      case "insert":
+        return await this.insert(entity);
+      case "update":
+        return await this.update(entity);
+      default:
+        break;
+    }
+
+    try {
+      const found = await this.client.get(this.createPrimaryKey(entity));
+
+      if (found) {
+        return await this.update(entity);
+      }
+
+      return await this.insert(entity);
+    } catch (error: any) {
+      this.logger.error("Repository error", error);
+      throw new RedisRepositoryError(error.message, { error });
     }
   }
 
@@ -320,46 +293,152 @@ export class RedisRepository<
   public async ttl(predicate: Predicate<E>): Promise<number> {
     try {
       const entity = await this.findOneOrFail(predicate);
-      return this.client.ttl(this.key(entity));
+      return this.client.ttl(this.createPrimaryKey(entity));
     } catch (error: any) {
       this.logger.error("Repository error", error);
       throw new RedisRepositoryError("Unable to find ttl for entity", { error });
     }
   }
 
-  public async ttlById(id: string): Promise<number> {
+  public async update(entity: E): Promise<E> {
+    const start = Date.now();
+
     try {
-      return this.client.ttl(this.key(id));
+      const update = this.kit.update(entity);
+
+      this.validate(entity);
+
+      const string = new Primitive(update).toString();
+
+      const key = this.createPrimaryKey(entity);
+      const ttl = this.getTTL(entity);
+
+      let result: string | null;
+
+      await this.validateUpdate(entity);
+
+      if (ttl) {
+        result = await this.client.setex(key, ttl, string);
+      } else {
+        result = await this.client.set(key, string);
+      }
+
+      const success = result === "OK";
+
+      this.logger.debug("Repository done: update", {
+        input: { key, ttl, entity: update },
+        result: { result, success },
+        time: Date.now() - start,
+      });
+
+      this.kit.onUpdate(update);
+
+      return update;
     } catch (error: any) {
       this.logger.error("Repository error", error);
-      throw new RedisRepositoryError("Unable to find ttl for entity by id", { error });
+      throw new RedisRepositoryError("Unable to save entity", { error });
     }
+  }
+
+  public async updateBulk(entities: Array<E>): Promise<Array<E>> {
+    return Promise.all(entities.map((entity) => this.update(entity)));
   }
 
   // private
 
-  private createKeyPattern(options: RedisRepositoryOptions<E>): string {
-    const nsp = options.namespace ? `${kebabCase(options.namespace)}` : "default";
-    const nam = `${kebabCase(options.Entity.name)}:`;
+  private createPrimaryKey(material: E | Predicate<E>): string {
+    const result: Array<string> = [];
 
-    const key = `${nsp}:entity:${nam}`;
+    for (const column of this.metadata.primaryKeys) {
+      result.push(material[column]);
+    }
 
-    this.logger.debug("Created key", { key });
-
-    return key;
+    return `${this.collectionName}_${result.join(":")}`;
   }
 
-  private key(material: E | string): string {
-    if (isString(material)) return `${this.keyPattern}${material}`;
-    return `${this.keyPattern}${material.id}`;
+  private async deleteByKey(predicate: Predicate<E>): Promise<void> {
+    const start = Date.now();
+
+    try {
+      const result = await this.client.del(this.createPrimaryKey(predicate));
+
+      const success = result === 1;
+
+      this.logger.debug("Repository done: deleteByKey", {
+        input: { predicate },
+        result: { result, success },
+        time: Date.now() - start,
+      });
+    } catch (error: any) {
+      this.logger.error("Repository error", error);
+      throw new RedisRepositoryError("Failed to delete entity by key", { error });
+    }
   }
 
-  private updateEntityData(entity: E): E {
-    const updated = this.create(entity);
+  private async findOneByKey(predicate: Predicate<E>): Promise<E | null> {
+    const start = Date.now();
 
-    updated.updatedAt = new Date();
+    try {
+      const result = await this.client.get(this.createPrimaryKey(predicate));
 
-    return updated;
+      if (!result) {
+        return null;
+      }
+
+      const data = new Primitive<E>(result).toJSON();
+
+      this.logger.debug("Repository done: findOneByKey", {
+        input: { predicate },
+        result: { data },
+        time: Date.now() - start,
+      });
+
+      return this.create(data);
+    } catch (error: any) {
+      this.logger.error("Repository error", error);
+      throw new RedisRepositoryError("Failed to find entity by key", { error });
+    }
+  }
+
+  private async getNextIncrement(key: string): Promise<number> {
+    const start = Date.now();
+    const name = `${this.incrementName}.${snakeCase(key)}`;
+
+    try {
+      const inc = await this.client.incr(name);
+
+      this.logger.silly("Repository done: getNextIncrement", {
+        result: {
+          collection: this.collectionName,
+          increment: this.incrementName,
+          key,
+          inc,
+        },
+        time: Date.now() - start,
+      });
+
+      return inc;
+    } catch (error: any) {
+      this.logger.error("Repository error", error);
+      throw new RedisRepositoryError("Unable to get next increment", { error });
+    }
+  }
+
+  private getTTL(entity: E): number | null {
+    const expiryDate = this.metadata.columns.find(
+      (c) => c.decorator === "ExpiryDateColumn",
+    );
+
+    if (!expiryDate) return null;
+    if (entity[expiryDate.key] === null) return null;
+
+    if (!isDate(entity[expiryDate.key])) {
+      throw new RedisRepositoryError("Invalid expiry date on entity", {
+        debug: { key: expiryDate.key, value: entity[expiryDate.key] },
+      });
+    }
+
+    return expiresIn(entity[expiryDate.key]);
   }
 
   private async scan(): Promise<Array<E>> {
@@ -372,7 +451,7 @@ export class RedisRepository<
       let cursor = "0";
 
       do {
-        const reply = await this.client.scan(cursor, "MATCH", `${this.keyPattern}*`);
+        const reply = await this.client.scan(cursor, "MATCH", `${this.collectionName}*`);
         cursor = reply[0];
         keys.push(...reply[1]);
       } while (cursor !== "0");
@@ -396,27 +475,32 @@ export class RedisRepository<
     }
   }
 
-  private validateBaseEntity(entity: E): void {
-    z.object({
-      id: z.string().uuid(),
-      createdAt: z.date(),
-      updatedAt: z.date(),
-    }).parse({
-      id: entity.id,
-      createdAt: entity.createdAt,
-      updatedAt: entity.updatedAt,
-    });
-  }
+  private async validateUpdate(entity: E): Promise<void> {
+    if (!this.kit.isPrimarySource) {
+      this.logger.debug("Skipping update validation for non-primary source", {
+        expect: PRIMARY_SOURCE,
+        actual: this.metadata.primarySource,
+      });
 
-  private validateEntity(entity: E): void {
-    this.validateBaseEntity(entity);
-
-    if (isFunction(this.validateFn)) {
-      const { id, createdAt, updatedAt, ...rest } = entity;
-
-      this.validateFn(rest);
+      return;
     }
 
-    this.logger.silly("Entity validated", { entity });
+    const key = this.createPrimaryKey(entity);
+    const exists = await this.client.get(key);
+
+    if (!exists) {
+      throw new RedisRepositoryError("Entity not found", { debug: { key } });
+    }
+
+    const version = this.metadata.columns.find((c) => c.decorator === "VersionColumn");
+
+    if (version) {
+      const found = new Primitive(exists).toJSON();
+      if (entity[version.key] !== found[version.key]) {
+        throw new RedisRepositoryError("Version mismatch", {
+          debug: { key, expect: entity[version.key], actual: found[version.key] },
+        });
+      }
+    }
   }
 }

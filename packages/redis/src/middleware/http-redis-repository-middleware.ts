@@ -1,5 +1,5 @@
 import { camelCase } from "@lindorm/case";
-import { IEntityBase } from "@lindorm/entity";
+import { IEntity } from "@lindorm/entity";
 import { isObject } from "@lindorm/is";
 import { Constructor } from "@lindorm/types";
 import { IRedisSource } from "../interfaces";
@@ -8,7 +8,7 @@ import { RedisPylonHttpContext, RedisPylonHttpMiddleware } from "../types";
 export const createHttpRedisRepositoryMiddleware = <
   C extends RedisPylonHttpContext = RedisPylonHttpContext,
 >(
-  entities: Array<Constructor<IEntityBase>>,
+  entities: Array<Constructor<IEntity>>,
   source?: IRedisSource,
 ): RedisPylonHttpMiddleware<C> => {
   return async function httpRedisRepositoryMiddleware(ctx, next): Promise<void> {

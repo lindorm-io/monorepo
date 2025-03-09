@@ -1,7 +1,7 @@
-import { MnemosEntity } from "../../classes";
+import { Column, Entity, VersionedEntityBase } from "@lindorm/entity";
 
-export class TestEntityTwo extends MnemosEntity {
-  public readonly email!: string;
+@Entity()
+export class TestEntityTwo extends VersionedEntityBase {
+  @Column("string")
   public readonly name!: string;
-  public readonly _test!: string;
 }

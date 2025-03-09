@@ -1,20 +1,10 @@
-import { MongoFile } from "../../classes";
-import { ValidateMongoFileFn } from "../../types";
+import { Column, Index } from "@lindorm/entity";
+import { MongoFileBase } from "../../classes";
+import { File } from "../../decorators";
 
-export type TestFileOneOptions = {
-  name: string;
-};
-
-export class TestFileOne extends MongoFile {
-  public readonly name!: string;
+@File()
+export class TestFileOne extends MongoFileBase {
+  @Column("string")
+  @Index()
+  public name!: string;
 }
-
-export const validate: ValidateMongoFileFn<TestFileOne> = (metadata) => {
-  if (!metadata.mimeType) {
-    throw new Error("Missing mimeType");
-  }
-
-  if (!metadata.originalName) {
-    throw new Error("Missing originalName");
-  }
-};

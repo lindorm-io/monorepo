@@ -1,0 +1,141 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`VersionedEntityBase should have expected properties 1`] = `
+TestVersionedEntityBase {
+  "createdAt": undefined,
+  "id": undefined,
+  "version": undefined,
+  "versionEndAt": undefined,
+  "versionId": undefined,
+  "versionStartAt": undefined,
+}
+`;
+
+exports[`VersionedEntityBase should have expected properties 2`] = `
+{
+  "columns": [
+    {
+      "decorator": "VersionColumn",
+      "enum": null,
+      "fallback": 0,
+      "key": "version",
+      "max": null,
+      "min": 0,
+      "nullable": false,
+      "optional": false,
+      "readonly": true,
+      "schema": null,
+      "type": "integer",
+    },
+    {
+      "decorator": "VersionKeyColumn",
+      "enum": null,
+      "fallback": [Function],
+      "key": "versionId",
+      "max": null,
+      "min": null,
+      "nullable": false,
+      "optional": false,
+      "readonly": true,
+      "schema": null,
+      "type": "uuid",
+    },
+    {
+      "decorator": "VersionStartDateColumn",
+      "enum": null,
+      "fallback": [Function],
+      "key": "versionStartAt",
+      "max": null,
+      "min": null,
+      "nullable": false,
+      "optional": false,
+      "readonly": true,
+      "schema": null,
+      "type": "date",
+    },
+    {
+      "decorator": "VersionEndDateColumn",
+      "enum": null,
+      "fallback": null,
+      "key": "versionEndAt",
+      "max": null,
+      "min": null,
+      "nullable": true,
+      "optional": false,
+      "readonly": false,
+      "schema": null,
+      "type": "date",
+    },
+    {
+      "decorator": "PrimaryKeyColumn",
+      "enum": null,
+      "fallback": [Function],
+      "key": "id",
+      "max": null,
+      "min": null,
+      "nullable": false,
+      "optional": false,
+      "readonly": true,
+      "schema": null,
+      "type": "uuid",
+    },
+    {
+      "decorator": "CreateDateColumn",
+      "enum": null,
+      "fallback": [Function],
+      "key": "createdAt",
+      "max": null,
+      "min": null,
+      "nullable": false,
+      "optional": false,
+      "readonly": true,
+      "schema": null,
+      "type": "date",
+    },
+  ],
+  "entity": {
+    "cache": null,
+    "database": null,
+    "decorator": "Entity",
+    "name": null,
+    "namespace": null,
+  },
+  "extras": [],
+  "generated": [],
+  "hooks": [],
+  "indexes": [
+    {
+      "index": {
+        "id": "asc",
+        "versionStartAt": "asc",
+      },
+      "name": null,
+      "options": {},
+    },
+    {
+      "index": {
+        "id": "asc",
+        "versionEndAt": "asc",
+        "versionStartAt": "asc",
+      },
+      "name": null,
+      "options": {},
+    },
+  ],
+  "primaryKeys": [
+    "versionId",
+    "id",
+  ],
+  "primarySource": null,
+  "schemas": [],
+  "uniques": [
+    {
+      "keys": [
+        "id",
+        "version",
+      ],
+      "name": null,
+    },
+  ],
+}
+`;

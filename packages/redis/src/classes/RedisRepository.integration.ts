@@ -2,7 +2,7 @@ import { createMockLogger } from "@lindorm/logger";
 import { randomUUID } from "crypto";
 import { Redis } from "ioredis";
 import MockDate from "mockdate";
-import { TestEntityOne, validate } from "../__fixtures__/entities/test-entity-one";
+import { TestEntityOne } from "../__fixtures__/entities/test-entity-one";
 import { TestEntity } from "../__fixtures__/test-entity";
 import { TestRepository } from "../__fixtures__/test-repository";
 import { RedisRepository } from "./RedisRepository";
@@ -11,32 +11,29 @@ const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate);
 
 describe("RedisRepository", () => {
-  let redis: Redis;
+  let client: Redis;
   let repository: TestRepository;
 
   beforeAll(async () => {
-    redis = new Redis("redis://localhost:6379");
-    repository = new TestRepository(redis, createMockLogger());
+    client = new Redis("redis://localhost:6379");
+    repository = new TestRepository(client, createMockLogger());
   });
 
   afterAll(async () => {
-    await redis.quit();
-  });
-
-  test("should count entities by criteria", async () => {
-    const entity = await repository.save(repository.create({ name: randomUUID() }));
-
-    await expect(repository.count({ name: entity.name })).resolves.toEqual(1);
+    await client.quit();
   });
 
   test("should create a new entity with default values", async () => {
-    const entity = repository.create({});
+    const entity = repository.create();
 
     expect(entity).toBeInstanceOf(TestEntity);
     expect(entity).toEqual({
       id: expect.any(String),
+      version: 0,
+      seq: null,
       createdAt: MockedDate,
       updatedAt: MockedDate,
+      deletedAt: null,
       expiresAt: null,
       email: null,
       name: null,
@@ -46,9 +43,11 @@ describe("RedisRepository", () => {
   test("should create a new entity with custom values", async () => {
     const entity = repository.create({
       id: "0bc6f18f-48a7-52d4-a191-e15ed14eb087",
+      version: 9,
+      seq: 8,
       createdAt: new Date("2021-01-01T00:00:00.000Z"),
       updatedAt: new Date("2021-01-01T00:00:00.000Z"),
-      expiresAt: new Date("2021-01-01T00:00:00.000Z"),
+      deletedAt: new Date("2021-01-01T00:00:00.000Z"),
       email: "test@lindorm.io",
       name: "Test User",
     });
@@ -56,12 +55,58 @@ describe("RedisRepository", () => {
     expect(entity).toBeInstanceOf(TestEntity);
     expect(entity).toEqual({
       id: "0bc6f18f-48a7-52d4-a191-e15ed14eb087",
+      version: 9,
+      seq: 8,
       createdAt: new Date("2021-01-01T00:00:00.000Z"),
       updatedAt: new Date("2021-01-01T00:00:00.000Z"),
-      expiresAt: new Date("2021-01-01T00:00:00.000Z"),
+      deletedAt: new Date("2021-01-01T00:00:00.000Z"),
+      expiresAt: null,
       email: "test@lindorm.io",
       name: "Test User",
     });
+  });
+
+  test("should validate an entity", async () => {
+    const repo = new RedisRepository({
+      Entity: TestEntityOne,
+      client: client,
+      logger: createMockLogger(),
+      namespace: "ns",
+    });
+
+    expect(() => repo.validate(repo.create({ name: "aa" }))).toThrow();
+  });
+
+  test("should clone an entity", async () => {
+    const entity = await repository.insert(repository.create({ name: randomUUID() }));
+    entity.email = "cunije@gozevguk.io";
+
+    const updated = await repository.update(entity);
+    const clone = await repository.clone(updated);
+
+    expect(clone.id).not.toEqual(entity.id);
+    expect(clone.version).not.toEqual(updated.version);
+    expect(clone.email).toEqual(updated.email);
+    expect(clone.name).toEqual(updated.name);
+  });
+
+  test("should clone many entities", async () => {
+    const e1 = await repository.insert(repository.create({ name: randomUUID() }));
+    const e2 = await repository.insert(repository.create({ name: randomUUID() }));
+
+    const cloned = await repository.cloneBulk([e1, e2]);
+
+    expect(cloned[0].id).not.toEqual(e1.id);
+    expect(cloned[0].name).toEqual(e1.name);
+
+    expect(cloned[1].id).not.toEqual(e2.id);
+    expect(cloned[1].name).toEqual(e2.name);
+  });
+
+  test("should count entities by criteria", async () => {
+    const entity = await repository.save(repository.create({ name: randomUUID() }));
+
+    await expect(repository.count({ name: entity.name })).resolves.toEqual(1);
   });
 
   test("should delete entities by criteria", async () => {
@@ -69,15 +114,7 @@ describe("RedisRepository", () => {
 
     await expect(repository.delete({ name: entity.name })).resolves.not.toThrow();
 
-    await expect(repository.findOneById(entity.id)).resolves.toBeNull();
-  });
-
-  test("should delete entities by id", async () => {
-    const entity = await repository.save(repository.create({ name: randomUUID() }));
-
-    await expect(repository.deleteById(entity.id)).resolves.not.toThrow();
-
-    await expect(repository.findOneById(entity.id)).resolves.toBeNull();
+    await expect(repository.findOne({ id: entity.id })).resolves.toBeNull();
   });
 
   test("should destroy an entity", async () => {
@@ -85,7 +122,7 @@ describe("RedisRepository", () => {
 
     await expect(repository.destroy(entity)).resolves.not.toThrow();
 
-    await expect(repository.findOneById(entity.id)).resolves.toBeNull();
+    await expect(repository.findOne({ id: entity.id })).resolves.toBeNull();
   });
 
   test("should destroy many entities", async () => {
@@ -94,8 +131,8 @@ describe("RedisRepository", () => {
 
     await expect(repository.destroyBulk([e1, e2])).resolves.not.toThrow();
 
-    await expect(repository.findOneById(e1.id)).resolves.toBeNull();
-    await expect(repository.findOneById(e2.id)).resolves.toBeNull();
+    await expect(repository.findOne({ id: e1.id })).resolves.toBeNull();
+    await expect(repository.findOne({ id: e2.id })).resolves.toBeNull();
   });
 
   test("should check if entity exists", async () => {
@@ -131,49 +168,84 @@ describe("RedisRepository", () => {
       expect.any(TestEntity),
     );
 
-    await expect(repository.findOneOrFail({ name })).resolves.not.toThrow();
+    await expect(repository.findOneOrFail({ name })).resolves.toEqual({
+      id: expect.any(String),
+      version: 1,
+      seq: expect.any(Number),
+      createdAt: MockedDate,
+      updatedAt: MockedDate,
+      deletedAt: null,
+      expiresAt: null,
+      email: null,
+      name: name,
+    });
   });
 
-  test("should find one entity by id", async () => {
-    const entity = await repository.save(repository.create({ name: randomUUID() }));
+  test("should insert an entity", async () => {
+    const entity = repository.create({
+      id: randomUUID(),
+      email: randomUUID(),
+      name: randomUUID(),
+    });
 
-    await expect(repository.findOneById(entity.id)).resolves.toEqual(entity);
+    await expect(repository.insert(entity)).resolves.toEqual(expect.any(TestEntity));
+    await expect(repository.findOne({ id: entity.id })).resolves.toEqual({
+      id: expect.any(String),
+      version: 1,
+      seq: expect.any(Number),
+      createdAt: MockedDate,
+      updatedAt: MockedDate,
+      deletedAt: null,
+      expiresAt: null,
+      email: entity.email,
+      name: entity.name,
+    });
   });
 
-  test("should find one entity by id or throw", async () => {
-    const entity = await repository.save(repository.create({ name: randomUUID() }));
+  test("should insert many entities", async () => {
+    const e1 = repository.create({
+      id: randomUUID(),
+      email: randomUUID(),
+      name: randomUUID(),
+    });
 
-    await expect(repository.findOneByIdOrFail(entity.id)).resolves.toEqual(entity);
-    await expect(repository.findOneByIdOrFail(randomUUID())).rejects.toThrow();
+    const e2 = repository.create({
+      id: randomUUID(),
+      email: randomUUID(),
+      name: randomUUID(),
+    });
+
+    await expect(repository.insertBulk([e1, e2])).resolves.toEqual([
+      expect.any(TestEntity),
+      expect.any(TestEntity),
+    ]);
+    await expect(repository.findOne({ id: e1.id })).resolves.toEqual(
+      expect.objectContaining({ id: e1.id }),
+    );
+    await expect(repository.findOne({ id: e2.id })).resolves.toEqual(
+      expect.objectContaining({ id: e2.id }),
+    );
   });
 
   test("should save an entity", async () => {
-    await expect(
-      repository.save(
-        repository.create({
-          email: "test@lindorm.io",
-          name: "Test User",
-        }),
-      ),
-    ).resolves.toEqual({
+    const entity = repository.create({
+      id: randomUUID(),
+      email: randomUUID(),
+      name: randomUUID(),
+    });
+
+    await expect(repository.save(entity)).resolves.toEqual(expect.any(TestEntity));
+    await expect(repository.findOne({ id: entity.id })).resolves.toEqual({
       id: expect.any(String),
+      version: 1,
+      seq: expect.any(Number),
       createdAt: MockedDate,
       updatedAt: MockedDate,
+      deletedAt: null,
       expiresAt: null,
-      email: "test@lindorm.io",
-      name: "Test User",
+      email: entity.email,
+      name: entity.name,
     });
-  });
-
-  test("should validate an entity when it exists", async () => {
-    const repo = new RedisRepository({
-      Entity: TestEntityOne,
-      logger: createMockLogger(),
-      client: redis,
-      validate: validate,
-    });
-
-    expect(() => repo.create({})).toThrow();
   });
 
   test("should save many entities", async () => {
@@ -191,31 +263,100 @@ describe("RedisRepository", () => {
       expect.any(TestEntity),
       expect.any(TestEntity),
     ]);
-    await expect(repository.findOneById(e1.id)).resolves.toEqual(
+    await expect(repository.findOne({ id: e1.id })).resolves.toEqual(
       expect.objectContaining({ id: e1.id }),
     );
-    await expect(repository.findOneById(e2.id)).resolves.toEqual(
+    await expect(repository.findOne({ id: e2.id })).resolves.toEqual(
       expect.objectContaining({ id: e2.id }),
     );
   });
 
-  test("should get the time to live for an entity", async () => {
-    const entity = await repository.save(
-      repository.create({
-        expiresAt: new Date("2024-01-01T10:00:00.000Z"),
-      }),
-    );
+  test("should update an entity", async () => {
+    const name1 = randomUUID();
+    const name2 = randomUUID();
 
-    await expect(repository.ttl(entity)).resolves.toEqual(7200);
+    const entity = repository.create({
+      email: randomUUID(),
+      name: name1,
+    });
+
+    const inserted = await repository.insert(entity);
+    expect(inserted.version).toEqual(1);
+    expect(inserted.name).toEqual(name1);
+
+    inserted.name = name2;
+
+    const updated = await repository.update(inserted);
+    expect(updated.version).toEqual(2);
+    expect(updated.name).toEqual(name2);
+
+    await expect(repository.findOne({ id: inserted.id })).resolves.toEqual(updated);
   });
 
-  test("should get the time to live for an entity by id", async () => {
+  test("should update many entities", async () => {
+    const name1 = randomUUID();
+    const name2 = randomUUID();
+
+    const e1 = repository.create({
+      email: randomUUID(),
+      name: name1,
+    });
+
+    const e2 = repository.create({
+      email: randomUUID(),
+      name: name1,
+    });
+
+    const [i1, i2] = await repository.insertBulk([e1, e2]);
+
+    i1.name = name2;
+    i2.name = name2;
+
+    const [u1, u2] = await repository.updateBulk([i1, i2]);
+
+    await expect(repository.findOne({ id: i1.id })).resolves.toEqual(u1);
+    await expect(repository.findOne({ id: i2.id })).resolves.toEqual(u2);
+  });
+
+  test("should calculate entity ttl", async () => {
     const entity = await repository.save(
       repository.create({
-        expiresAt: new Date("2024-01-01T10:00:00.000Z"),
+        name: randomUUID(),
+        expiresAt: new Date("2024-01-01T09:00:00.000Z"),
       }),
     );
 
-    await expect(repository.ttlById(entity.id)).resolves.toEqual(7200);
+    await expect(repository.ttl({ name: entity.name })).resolves.toEqual(3600);
+  });
+
+  test("should not automatically update entity from another source", async () => {
+    const repository = new RedisRepository({
+      Entity: TestEntityOne,
+      client,
+      logger: createMockLogger(),
+    });
+
+    await repository.setup();
+
+    const name = randomUUID();
+    const nameAfter = randomUUID();
+
+    const insert = await repository.insert(repository.create({ name }));
+
+    MockDate.set(new Date("2024-01-02T08:00:00.000Z"));
+
+    insert.name = nameAfter;
+
+    const update = await repository.update(insert);
+
+    expect(update).toEqual(
+      expect.objectContaining({
+        name: nameAfter,
+        version: 0,
+        updatedAt: new Date("2024-01-01T08:00:00.000Z"),
+      }),
+    );
+
+    MockDate.set(MockedDate);
   });
 });

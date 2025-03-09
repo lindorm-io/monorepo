@@ -1,0 +1,122 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`PrimaryKeyColumn Decorator should add metadata 1`] = `
+{
+  "columns": [
+    {
+      "decorator": "PrimaryKeyColumn",
+      "enum": null,
+      "fallback": [Function],
+      "key": "primaryKey",
+      "max": null,
+      "min": null,
+      "nullable": false,
+      "optional": false,
+      "readonly": true,
+      "schema": null,
+      "type": "uuid",
+    },
+    {
+      "decorator": "VersionColumn",
+      "enum": null,
+      "fallback": 0,
+      "key": "version",
+      "max": null,
+      "min": 0,
+      "nullable": false,
+      "optional": false,
+      "readonly": true,
+      "schema": null,
+      "type": "integer",
+    },
+    {
+      "decorator": "ExpiryDateColumn",
+      "enum": null,
+      "fallback": null,
+      "key": "expiryDate",
+      "max": null,
+      "min": null,
+      "nullable": true,
+      "optional": false,
+      "readonly": false,
+      "schema": null,
+      "type": "date",
+    },
+    {
+      "decorator": "DeleteDateColumn",
+      "enum": null,
+      "fallback": null,
+      "key": "deleteDate",
+      "max": null,
+      "min": null,
+      "nullable": true,
+      "optional": false,
+      "readonly": true,
+      "schema": null,
+      "type": "date",
+    },
+  ],
+  "entity": {
+    "cache": null,
+    "database": null,
+    "decorator": "Entity",
+    "name": null,
+    "namespace": null,
+  },
+  "extras": [],
+  "generated": [],
+  "hooks": [],
+  "indexes": [
+    {
+      "index": {
+        "deleteDate": "asc",
+        "primaryKey": "asc",
+      },
+      "name": null,
+      "options": {},
+    },
+    {
+      "index": {
+        "deleteDate": "asc",
+        "expiryDate": "asc",
+        "primaryKey": "asc",
+      },
+      "name": null,
+      "options": {},
+    },
+    {
+      "index": {
+        "deleteDate": "asc",
+        "primaryKey": "asc",
+        "version": "asc",
+      },
+      "name": null,
+      "options": {},
+    },
+    {
+      "index": {
+        "deleteDate": "asc",
+        "expiryDate": "asc",
+        "primaryKey": "asc",
+        "version": "asc",
+      },
+      "name": null,
+      "options": {},
+    },
+    {
+      "index": {
+        "primaryKey": "asc",
+        "version": "asc",
+      },
+      "name": null,
+      "options": {},
+    },
+  ],
+  "primaryKeys": [
+    "primaryKey",
+  ],
+  "primarySource": null,
+  "schemas": [],
+  "uniques": [],
+}
+`;

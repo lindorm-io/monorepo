@@ -1,11 +1,12 @@
 import { camelCase } from "@lindorm/case";
 import { ServerError } from "@lindorm/errors";
 import { Constructor, Dict } from "@lindorm/types";
+import { parseStringRecord } from "@lindorm/utils";
 import busboy from "busboy";
 import { createReadStream } from "fs";
 import { Readable } from "stream";
 import { IMongoFile, IMongoSource } from "../interfaces";
-import { FileMetadata, MongoPylonHttpContext, MongoPylonHttpMiddleware } from "../types";
+import { FileUpload, MongoPylonHttpContext, MongoPylonHttpMiddleware } from "../types";
 
 const getMetadata = <C extends MongoPylonHttpContext>(ctx: C): Dict => {
   const headers = Object.entries(ctx.request.headers)
@@ -18,7 +19,7 @@ const getMetadata = <C extends MongoPylonHttpContext>(ctx: C): Dict => {
     result[camelCase(key.replace(/^x-file-meta-/, ""))] = value;
   }
 
-  return result;
+  return parseStringRecord(result);
 };
 
 export const createHttpMongoUploadMiddleware = <
@@ -41,21 +42,17 @@ export const createHttpMongoUploadMiddleware = <
           if (!fileArray) continue;
 
           for (const file of fileArray) {
-            metadata.formidable = true;
             metadata.hash = file.hash;
             metadata.hashAlgorithm = file.hashAlgorithm;
             metadata.size = file.size;
+            metadata.strategy = "formidable";
 
             promises.push(
               bucket.upload(createReadStream(file.filepath), {
+                mimeType: file.mimetype ?? null,
+                originalName: file.originalFilename ?? null,
                 ...metadata,
-                mimeType:
-                  file.mimetype ?? ctx.get("x-file-meta-mime-type") ?? "unknown/unknown",
-                originalName:
-                  file.originalFilename ??
-                  ctx.get("x-file-meta-original-filename") ??
-                  "unknown",
-              } satisfies FileMetadata<IMongoFile>),
+              } satisfies FileUpload<IMongoFile>),
             );
           }
         }
@@ -65,23 +62,15 @@ export const createHttpMongoUploadMiddleware = <
         bb.on("file", (name: string, file: Readable, info: Dict): void => {
           ctx.logger.silly("Uploading file", { name, info });
 
-          metadata.busboy = true;
           metadata.encoding = info.encoding;
+          metadata.strategy = "busboy";
 
           promises.push(
             bucket.upload(file, {
+              mimeType: info.mimeType ?? info.mimetype ?? null,
+              originalName: name ?? info.filename ?? null,
               ...metadata,
-              mimeType:
-                info.mimeType ??
-                info.mimetype ??
-                ctx.get("x-file-meta-mime-type") ??
-                "unknown/unknown",
-              originalName:
-                name ??
-                info.filename ??
-                ctx.get("x-file-meta-original-filename") ??
-                "unknown",
-            } satisfies FileMetadata<IMongoFile>),
+            } satisfies FileUpload<IMongoFile>),
           );
         });
 

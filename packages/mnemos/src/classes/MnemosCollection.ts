@@ -1,15 +1,16 @@
+import { EntityMetadata } from "@lindorm/entity";
 import { DeepPartial, Dict } from "@lindorm/types";
 import { Predicate, Predicated, remove } from "@lindorm/utils";
 import { MnemosCollectionError } from "../errors";
 import { IMnemosCollection } from "../interfaces";
-import { MnemosCollectionOptions, MnemosConstraint } from "../types";
+import { MnemosCollectionOptions } from "../types";
 
 export class MnemosCollection<T extends Dict> implements IMnemosCollection<T> {
-  private readonly constraints: Array<MnemosConstraint<T>>;
+  private readonly metadata: EntityMetadata | null;
   private state: Array<any>;
 
-  public constructor(options: MnemosCollectionOptions<T>) {
-    this.constraints = options.constraints ?? [];
+  public constructor(options: MnemosCollectionOptions) {
+    this.metadata = options.metadata ?? null;
     this.state = [];
   }
 
@@ -27,17 +28,19 @@ export class MnemosCollection<T extends Dict> implements IMnemosCollection<T> {
     return Predicated.filter<T>(this.state, predicate);
   }
 
-  public insertOne(attributes: T): void {
+  public insertOne(attributes: T): T {
     this.validate(attributes);
     this.state.push(attributes);
+    return attributes;
   }
 
-  public insertMany(attributes: Array<T>): void {
+  public insertMany(attributes: Array<T>): Array<T> {
     for (const item of attributes) {
       this.validate(item);
       this.validate(item, remove(attributes, item));
     }
     this.state = this.state.concat(attributes);
+    return attributes;
   }
 
   public update(predicate: Predicate<T>, attributes: DeepPartial<T>): void {
@@ -65,23 +68,29 @@ export class MnemosCollection<T extends Dict> implements IMnemosCollection<T> {
       });
     }
 
-    for (const constraint of this.constraints) {
-      const predicate: Predicate<T> = {};
+    if (!this.metadata) return;
 
-      for (const key of constraint.unique) {
-        if (constraint.nullable?.includes(key)) {
+    for (const unique of this.metadata.uniques) {
+      const predicate: Predicate<any> = {};
+
+      for (const key of unique.keys) {
+        const attribute = this.metadata.columns.find((a) => a.key === key);
+        const nullable = attribute?.nullable ?? false;
+
+        if (nullable) {
           predicate[key] = {
             $and: [{ $eq: attributes[key] }, { $neq: null }],
-          } as Predicate<T>[keyof T];
+          };
         } else {
           predicate[key] = attributes[key];
         }
       }
 
-      if (!Predicated.find<T>(state, predicate)) continue;
+      if (!Predicated.find(state, predicate)) continue;
 
       throw new MnemosCollectionError("Duplicate record", {
-        debug: { attributes, constraint },
+        code: "duplicate_record",
+        debug: { attributes, unique },
       });
     }
   }

@@ -7,14 +7,52 @@ describe("MnemosCollection", () => {
 
   beforeEach(() => {
     collection = new MnemosCollection<TestPerson>({
-      constraints: [{ unique: ["id"] }, { unique: ["name"], nullable: ["name"] }],
+      metadata: {
+        columns: [
+          {
+            key: "name",
+            decorator: "Column",
+            enum: null,
+            fallback: null,
+            max: null,
+            min: null,
+            nullable: true,
+            optional: false,
+            readonly: false,
+            schema: null,
+            type: "string",
+          },
+        ],
+        entity: {
+          cache: null,
+          database: null,
+          decorator: "Entity",
+          name: "test",
+          namespace: null,
+        },
+        extras: [],
+        generated: [],
+        hooks: [],
+        indexes: [],
+        primaryKeys: ["id"],
+        primarySource: null,
+        schemas: [],
+        uniques: [
+          {
+            keys: ["id"],
+            name: null,
+          },
+          { keys: ["name"], name: null },
+        ],
+      },
     });
     collection.insertOne(TEST_PEOPLE[0]);
   });
 
   describe("delete", () => {
     test("should delete entity", () => {
-      expect(() => collection.delete({ id: TEST_PEOPLE[0].id })).not.toThrow();
+      expect(collection.delete({ id: TEST_PEOPLE[0].id })).toBeUndefined();
+
       expect(
         // @ts-expect-error
         collection.state,
@@ -48,7 +86,7 @@ describe("MnemosCollection", () => {
 
   describe("insert", () => {
     test("should insert entity", () => {
-      expect(() => collection.insertOne(TEST_PEOPLE[1])).not.toThrow();
+      expect(collection.insertOne(TEST_PEOPLE[1])).toBeDefined();
       expect(
         // @ts-expect-error
         collection.state,
@@ -66,9 +104,9 @@ describe("MnemosCollection", () => {
 
   describe("update", () => {
     test("should update entity", () => {
-      expect(() =>
+      expect(
         collection.update({ id: TEST_PEOPLE[0].id }, TEST_PEOPLE[1]),
-      ).not.toThrow();
+      ).toBeUndefined();
       expect(
         // @ts-expect-error
         collection.state,
@@ -83,9 +121,9 @@ describe("MnemosCollection", () => {
       collection.insertOne(TEST_PEOPLE[1]);
       collection.insertOne(TEST_PEOPLE[2]);
 
-      expect(() =>
+      expect(
         collection.update({ id: TEST_PEOPLE[1].id }, TEST_PEOPLE[3]),
-      ).not.toThrow();
+      ).toBeUndefined();
       expect(
         // @ts-expect-error
         collection.state,

@@ -1,0 +1,51 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`getIndexOptions should return options for EntityBase 1`] = `
+[
+  {
+    "index": {
+      "id": 1,
+    },
+    "options": {
+      "unique": true,
+    },
+  },
+]
+`;
+
+exports[`getIndexOptions should return options for MongoFileBase 1`] = `
+[
+  {
+    "index": {
+      "filename": 1,
+    },
+    "options": {
+      "unique": true,
+    },
+  },
+  {
+    "index": {
+      "mimeType": 1,
+    },
+    "options": {
+      "partialFilterExpression": {
+        "mimeType": {
+          "$exists": true,
+        },
+      },
+    },
+  },
+  {
+    "index": {
+      "originalName": 1,
+    },
+    "options": {
+      "partialFilterExpression": {
+        "originalName": {
+          "$exists": true,
+        },
+      },
+    },
+  },
+]
+`;

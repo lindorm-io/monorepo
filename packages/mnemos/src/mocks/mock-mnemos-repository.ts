@@ -1,42 +1,37 @@
-import { IEntityBase } from "@lindorm/entity";
+import { defaultCreateEntity, IEntity } from "@lindorm/entity";
 import { Constructor } from "@lindorm/types";
-import { MnemosRepository } from "../classes";
+import { noop } from "@lindorm/utils";
 import { IMnemosRepository } from "../interfaces";
 
-export type CreateMockEntityCallback = (options?: any) => IEntityBase;
+type Callback<E extends IEntity = IEntity> = (options?: any) => E;
 
-const updateEntity = (entity: IEntityBase): IEntityBase => {
-  entity.updatedAt = new Date();
-  return entity;
-};
-
-export const createMockMnemosEntityCallback =
-  <E extends IEntityBase>(Entity: Constructor<E>): CreateMockEntityCallback =>
+const defaultCallback =
+  <E extends IEntity = IEntity>(Entity: Constructor<E>): Callback<E> =>
   (options) =>
-    MnemosRepository.createEntity(Entity, options);
+    defaultCreateEntity(Entity, options);
 
-export const createMockMnemosRepository = <E extends IEntityBase>(
-  callback: CreateMockEntityCallback,
+export const createMockMnemosRepository = <E extends IEntity = IEntity>(
+  Entity: Constructor<E>,
+  callback: Callback<E> = defaultCallback(Entity),
 ): IMnemosRepository<E> => ({
-  count: jest.fn().mockResolvedValue(1),
   create: jest.fn().mockImplementation((args) => callback(args)),
-  delete: jest.fn(),
-  deleteById: jest.fn(),
-  destroy: jest.fn(),
-  destroyBulk: jest.fn(),
-  exists: jest.fn().mockReturnValue(true),
+  copy: jest.fn().mockImplementation((args) => callback(args)),
+  validate: jest.fn(),
+
+  count: jest.fn().mockResolvedValue(1),
+  delete: jest.fn().mockImplementation(noop),
+  destroy: jest.fn().mockImplementation(noop),
+  destroyBulk: jest.fn().mockImplementation(noop),
+  exists: jest.fn().mockResolvedValue(true),
   find: jest.fn().mockImplementation((criteria) => [callback(criteria)]),
   findOne: jest.fn().mockImplementation((criteria) => callback(criteria)),
   findOneOrFail: jest.fn().mockImplementation((criteria) => callback(criteria)),
   findOneOrSave: jest.fn().mockImplementation((criteria) => callback(criteria)),
-  findOneById: jest.fn().mockImplementation((id) => callback({ id })),
-  findOneByIdOrFail: jest.fn().mockImplementation((id) => callback({ id })),
-  insert: jest.fn().mockImplementation((entity) => updateEntity(entity)),
-  insertBulk: jest.fn().mockImplementation((array) => array.map(updateEntity)),
-  save: jest.fn().mockImplementation((entity) => updateEntity(entity)),
-  saveBulk: jest.fn().mockImplementation((array) => array.map(updateEntity)),
-  update: jest.fn().mockImplementation((entity) => updateEntity(entity)),
-  updateBulk: jest.fn().mockImplementation((array) => array.map(updateEntity)),
+  insert: jest.fn().mockImplementation((entity) => entity),
+  insertBulk: jest.fn().mockImplementation((array) => array),
+  save: jest.fn().mockImplementation((entity) => entity),
+  saveBulk: jest.fn().mockImplementation((array) => array),
+  update: jest.fn().mockImplementation((entity) => entity),
+  updateBulk: jest.fn().mockImplementation((array) => array),
   ttl: jest.fn().mockResolvedValue(60),
-  ttlById: jest.fn().mockResolvedValue(60),
 });

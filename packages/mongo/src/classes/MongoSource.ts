@@ -1,4 +1,9 @@
-import { IEntityBase } from "@lindorm/entity";
+import {
+  EntityScanner,
+  EntityScannerInput,
+  globalEntityMetadata,
+  IEntity,
+} from "@lindorm/entity";
 import { ILogger } from "@lindorm/logger";
 import { Constructor } from "@lindorm/types";
 import { Collection, Db, Document, MongoClient } from "mongodb";
@@ -6,30 +11,26 @@ import { MongoSourceError } from "../errors";
 import { IMongoBucket, IMongoFile, IMongoRepository, IMongoSource } from "../interfaces";
 import {
   CloneMongoSourceOptions,
+  FileScannerInput,
   MongoSourceBucketOptions,
-  MongoSourceEntities,
-  MongoSourceEntity,
-  MongoSourceFile,
-  MongoSourceFiles,
   MongoSourceOptions,
   MongoSourceRepositoryOptions,
 } from "../types";
 import { FromClone } from "../types/private";
 import { MongoBucket } from "./MongoBucket";
 import { MongoRepository } from "./MongoRepository";
-import { EntityScanner, FileScanner } from "./private";
 
 export class MongoSource implements IMongoSource {
-  private readonly databaseName: string;
-  private readonly entities: Array<MongoSourceEntity>;
-  private readonly files: Array<MongoSourceFile>;
+  private readonly databaseName: string | undefined;
+  private readonly entities: Array<Constructor<IEntity>>;
+  private readonly files: Array<Constructor<IMongoFile>>;
   private readonly logger: ILogger;
   private readonly namespace: string | undefined;
 
   public readonly client: MongoClient;
 
   public constructor(options: MongoSourceOptions);
-  public constructor(fromClone: FromClone);
+  public constructor(options: FromClone);
   public constructor(options: MongoSourceOptions | FromClone) {
     this.logger = options.logger.child(["MongoSource"]);
     this.databaseName = options.database;
@@ -48,23 +49,26 @@ export class MongoSource implements IMongoSource {
         ? new MongoClient(opts.url, opts.config)
         : new MongoClient(opts.url);
 
-      this.entities = opts.entities ? EntityScanner.scan(opts.entities) : [];
-      this.files = opts.files ? FileScanner.scan(opts.files) : [];
+      this.entities = opts.entities ? EntityScanner.scan<IEntity>(opts.entities) : [];
+      this.files = opts.files ? EntityScanner.scan<IMongoFile>(opts.files) : [];
     }
   }
 
   // public
 
   public get database(): Db {
+    if (!this.databaseName) {
+      throw new MongoSourceError("Database name not set");
+    }
     return this.client.db(this.databaseName);
   }
 
-  public addEntities(entities: MongoSourceEntities): void {
+  public addEntities(entities: EntityScannerInput): void {
     this.entities.push(...EntityScanner.scan(entities));
   }
 
-  public addFiles(files: MongoSourceFiles): void {
-    this.files.push(...FileScanner.scan(files));
+  public addFiles(files: FileScannerInput): void {
+    this.files.push(...EntityScanner.scan(files));
   }
 
   public clone(options: CloneMongoSourceOptions = {}): IMongoSource {
@@ -93,37 +97,31 @@ export class MongoSource implements IMongoSource {
 
   public bucket<F extends IMongoFile>(
     File: Constructor<F>,
-    options: MongoSourceBucketOptions<F> = {},
+    options: MongoSourceBucketOptions = {},
   ): IMongoBucket<F> {
-    const config = this.fileConfig(File);
+    this.fileExists(File);
 
     return new MongoBucket({
       File,
       client: this.client,
       database: this.databaseName,
-      indexes: options.indexes ?? config.indexes,
       logger: options.logger ?? this.logger,
       namespace: this.namespace,
-      validate: options.validate ?? config.validate,
     });
   }
 
-  public repository<E extends IEntityBase>(
+  public repository<E extends IEntity>(
     Entity: Constructor<E>,
-    options: MongoSourceRepositoryOptions<E> = {},
+    options: MongoSourceRepositoryOptions = {},
   ): IMongoRepository<E> {
-    const config = this.entityConfig(Entity);
+    this.entityExists(Entity);
 
     return new MongoRepository({
       Entity,
       client: this.client,
-      config: options.config ?? config.config,
-      create: options.create ?? config.create,
       database: this.databaseName,
-      indexes: options.indexes ?? config.indexes,
       logger: options.logger ?? this.logger,
       namespace: this.namespace,
-      validate: options.validate ?? config.validate,
     });
   }
 
@@ -131,37 +129,45 @@ export class MongoSource implements IMongoSource {
     await this.client.connect();
 
     for (const entity of this.entities) {
-      await this.repository(entity.Entity).setup();
+      await this.repository(entity).setup();
     }
 
     for (const file of this.files) {
-      await this.bucket(file.File).setup();
+      await this.bucket(file).setup();
     }
   }
 
   // private
 
-  private entityConfig<E extends IEntityBase>(
-    Entity: Constructor<E>,
-  ): MongoSourceEntity<E> {
-    const config = this.entities.find((entity) => entity.Entity === Entity);
+  private entityExists<E extends IEntity>(Entity: Constructor<E>): void {
+    const config = this.entities.find((e) => e === Entity);
 
-    if (config) {
-      return config as MongoSourceEntity<E>;
+    if (!config) {
+      throw new MongoSourceError("Entity not found in entities list", {
+        debug: { Entity },
+      });
     }
 
-    throw new MongoSourceError("Entity not found in entities list", {
-      debug: { Entity },
-    });
+    const metadata = globalEntityMetadata.get(Entity);
+
+    if (metadata.entity.decorator !== "Entity") {
+      throw new MongoSourceError(`Entity is not decorated with @Entity`, {
+        debug: { Entity },
+      });
+    }
   }
 
-  private fileConfig<F extends IMongoFile>(File: Constructor<F>): MongoSourceFile<F> {
-    const config = this.files.find((file) => file.File === File);
+  private fileExists<E extends IMongoFile>(File: Constructor<E>): void {
+    const config = this.files.find((e) => e === File);
 
-    if (config) {
-      return config as MongoSourceFile<F>;
+    if (!config) {
+      throw new MongoSourceError("File not found in entities list", { debug: { File } });
     }
 
-    throw new MongoSourceError("File not found in files list", { debug: { File } });
+    const metadata = globalEntityMetadata.get(File);
+
+    if (metadata.entity.decorator !== "File") {
+      throw new MongoSourceError(`File is not decorated with @File`, { debug: { File } });
+    }
   }
 }

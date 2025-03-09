@@ -1,16 +1,15 @@
-import { ILogger } from "@lindorm/logger";
-import { CreateIndexesOptions, Document, IndexSpecification, MongoClient } from "mongodb";
-import { MongoIndexOptions } from "./mongo-index";
+import type { ILogger } from "@lindorm/logger";
+import type { CreateIndexesOptions, IndexSpecification, MongoClient } from "mongodb";
 
 export type MongoBaseIndex = {
   index: IndexSpecification;
   options: CreateIndexesOptions;
 };
 
-export type MongoBaseOptions<D extends Document> = {
+export type MongoBaseOptions = {
   client: MongoClient;
-  collectionName: string;
-  databaseName: string;
-  indexes: Array<MongoIndexOptions<D>>;
+  collection: string;
+  database: string;
+  indexes: Array<MongoBaseIndex>;
   logger: ILogger;
 };

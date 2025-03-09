@@ -1,0 +1,19 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`defaultUpdateEntity should update existing entity 1`] = `
+TestUpdateEntity {
+  "array": [
+    1,
+    2,
+    3,
+  ],
+  "bigint": 1n,
+  "boolean": true,
+  "id": "0c8c31df-f1cc-5381-97fc-31b3714327de",
+  "object": {
+    "key": "value",
+  },
+  "updateDate": 2024-01-01T08:00:00.000Z,
+  "version": 0,
+}
+`;

@@ -1,0 +1,20 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`getBucketMetadataIndexes should return array for MongoFileBase 1`] = `
+[
+  {
+    "index": {
+      "metadata.mimeType": "asc",
+    },
+    "name": null,
+    "options": {},
+  },
+  {
+    "index": {
+      "metadata.originalName": "asc",
+    },
+    "name": null,
+    "options": {},
+  },
+]
+`;

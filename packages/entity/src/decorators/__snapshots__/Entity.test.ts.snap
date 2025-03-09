@@ -1,0 +1,38 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Entity Decorator should add metadata 1`] = `
+{
+  "columns": [
+    {
+      "decorator": "PrimaryKeyColumn",
+      "enum": null,
+      "fallback": [Function],
+      "key": "id",
+      "max": null,
+      "min": null,
+      "nullable": false,
+      "optional": false,
+      "readonly": true,
+      "schema": null,
+      "type": "uuid",
+    },
+  ],
+  "entity": {
+    "cache": null,
+    "database": "database",
+    "decorator": "Entity",
+    "name": "name",
+    "namespace": "namespace",
+  },
+  "extras": [],
+  "generated": [],
+  "hooks": [],
+  "indexes": [],
+  "primaryKeys": [
+    "id",
+  ],
+  "primarySource": null,
+  "schemas": [],
+  "uniques": [],
+}
+`;

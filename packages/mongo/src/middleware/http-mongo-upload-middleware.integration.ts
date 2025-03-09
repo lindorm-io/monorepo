@@ -4,7 +4,7 @@ import { Pylon, PylonOptions, PylonRouter } from "@lindorm/pylon";
 import MockDate from "mockdate";
 import { join } from "path";
 import request from "supertest";
-import { TestUpload } from "../__fixtures__/test-upload";
+import { TestFile } from "../__fixtures__/test-file";
 import { MongoSource } from "../classes";
 import { IMongoSource } from "../interfaces";
 import { MongoPylonHttpContext } from "../types";
@@ -24,7 +24,7 @@ describe("createHttpMongoUploadMiddleware", () => {
     const logger = createMockLogger();
 
     source = new MongoSource({
-      files: [TestUpload],
+      files: [TestFile],
       logger,
       url: "mongodb://root:example@localhost/admin?authSource=admin",
       database: "test_database",
@@ -37,7 +37,7 @@ describe("createHttpMongoUploadMiddleware", () => {
     router.post(
       "/upload",
       createHttpMongoSourceMiddleware(source),
-      createHttpMongoUploadMiddleware(TestUpload),
+      createHttpMongoUploadMiddleware(TestFile),
       async (ctx) => {
         ctx.body = ctx.files;
         ctx.status = 200;
@@ -70,39 +70,41 @@ describe("createHttpMongoUploadMiddleware", () => {
 
     expect(response.body).toEqual([
       {
-        busboy: true,
         chunkSize: 261120,
         encoding: "7bit",
-        extraOne: "1",
-        extraTwo: "2",
+        extraOne: 1,
+        extraTwo: 2,
         filename: expect.any(String),
-        formidable: null,
         hash: null,
         hashAlgorithm: null,
         length: 18,
         mimeType: "text/plain",
+        name: null,
         originalName: "upload.txt",
         size: null,
+        strategy: "busboy",
         uploadDate: MockedDate.toISOString(),
       },
     ]);
 
-    const bucket = source.bucket(TestUpload);
+    const bucket = source.bucket(TestFile);
 
-    await expect(bucket.findOneByFilename(response.body[0].filename)).resolves.toEqual({
-      busboy: true,
+    await expect(
+      bucket.findOne({ filename: response.body[0].filename }),
+    ).resolves.toEqual({
       chunkSize: 261120,
       encoding: "7bit",
-      extraOne: "1",
-      extraTwo: "2",
-      filename: expect.any(String),
-      formidable: null,
+      extraOne: 1,
+      extraTwo: 2,
+      filename: response.body[0].filename,
       hash: null,
       hashAlgorithm: null,
       length: 18,
       mimeType: "text/plain",
+      name: null,
       originalName: "upload.txt",
       size: null,
+      strategy: "busboy",
       uploadDate: MockedDate,
     });
   });
@@ -121,39 +123,41 @@ describe("createHttpMongoUploadMiddleware", () => {
 
     expect(response.body).toEqual([
       {
-        busboy: null,
         chunkSize: 261120,
         encoding: null,
-        extraOne: "1",
-        extraTwo: "2",
+        extraOne: 1,
+        extraTwo: 2,
         filename: expect.any(String),
-        formidable: true,
         hash: null,
-        hashAlgorithm: false,
+        hashAlgorithm: null,
         length: 18,
         mimeType: "text/plain",
+        name: null,
         originalName: "test-file-upload.txt",
         size: 18,
+        strategy: "formidable",
         uploadDate: MockedDate.toISOString(),
       },
     ]);
 
-    const bucket = source.bucket(TestUpload);
+    const bucket = source.bucket(TestFile);
 
-    await expect(bucket.findOneByFilename(response.body[0].filename)).resolves.toEqual({
-      busboy: null,
+    await expect(
+      bucket.findOne({ filename: response.body[0].filename }),
+    ).resolves.toEqual({
       chunkSize: 261120,
       encoding: null,
-      extraOne: "1",
-      extraTwo: "2",
+      extraOne: 1,
+      extraTwo: 2,
       filename: response.body[0].filename,
-      formidable: true,
       hash: null,
-      hashAlgorithm: false,
+      hashAlgorithm: null,
       length: 18,
       mimeType: "text/plain",
+      name: null,
       originalName: "test-file-upload.txt",
       size: 18,
+      strategy: "formidable",
       uploadDate: MockedDate,
     });
   });

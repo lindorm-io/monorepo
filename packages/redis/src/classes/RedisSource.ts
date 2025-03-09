@@ -1,4 +1,9 @@
-import { IEntityBase } from "@lindorm/entity";
+import {
+  EntityScanner,
+  EntityScannerInput,
+  globalEntityMetadata,
+  IEntity,
+} from "@lindorm/entity";
 import { ILogger } from "@lindorm/logger";
 import { Constructor } from "@lindorm/types";
 import { Redis } from "ioredis";
@@ -6,17 +11,14 @@ import { RedisSourceError } from "../errors";
 import { IRedisRepository, IRedisSource } from "../interfaces";
 import {
   CloneRedisSourceOptions,
-  RedisSourceEntities,
-  RedisSourceEntity,
   RedisSourceOptions,
   RedisSourceRepositoryOptions,
 } from "../types";
 import { FromClone } from "../types/private";
 import { RedisRepository } from "./RedisRepository";
-import { EntityScanner } from "./private";
 
 export class RedisSource implements IRedisSource {
-  private readonly entities: Array<RedisSourceEntity>;
+  private readonly entities: Array<Constructor<IEntity>>;
   private readonly logger: ILogger;
   private readonly namespace: string | undefined;
 
@@ -37,15 +39,12 @@ export class RedisSource implements IRedisSource {
       const opts = options as RedisSourceOptions;
 
       this.client = opts.config ? new Redis(opts.url, opts.config) : new Redis(opts.url);
-      this.entities = opts.entities ? EntityScanner.scan(opts.entities) : [];
+
+      this.entities = opts.entities ? EntityScanner.scan<IEntity>(opts.entities) : [];
     }
   }
 
   // public
-
-  public addEntities(entities: RedisSourceEntities): void {
-    this.entities.push(...EntityScanner.scan(entities));
-  }
 
   public clone(options: CloneRedisSourceOptions = {}): IRedisSource {
     return new RedisSource({
@@ -69,39 +68,49 @@ export class RedisSource implements IRedisSource {
     await this.client.quit();
   }
 
-  public repository<E extends IEntityBase>(
+  public async setup(): Promise<void> {
+    await this.connect();
+
+    for (const Entity of this.entities) {
+      await this.repository(Entity).setup();
+    }
+  }
+
+  public addEntities(entities: EntityScannerInput): void {
+    this.entities.push(...EntityScanner.scan(entities));
+  }
+
+  public repository<E extends IEntity>(
     Entity: Constructor<E>,
-    options: RedisSourceRepositoryOptions<E> = {},
+    options: RedisSourceRepositoryOptions = {},
   ): IRedisRepository<E> {
-    const config = this.entityConfig(Entity);
+    this.entityExists(Entity);
 
     return new RedisRepository({
       Entity,
       client: this.client,
       logger: options.logger ?? this.logger,
       namespace: this.namespace,
-      create: options.create ?? config.create,
-      validate: options.validate ?? config.validate,
     });
-  }
-
-  public async setup(): Promise<void> {
-    await this.connect();
   }
 
   // private
 
-  private entityConfig<E extends IEntityBase>(
-    Entity: Constructor<E>,
-  ): RedisSourceEntity<E> {
-    const config = this.entities.find((entity) => entity.Entity === Entity);
+  private entityExists<E extends IEntity>(Entity: Constructor<E>): void {
+    const config = this.entities.find((e) => e === Entity);
 
-    if (config) {
-      return config as unknown as RedisSourceEntity<E>;
+    if (!config) {
+      throw new RedisSourceError("Entity not found in entities list", {
+        debug: { Entity },
+      });
     }
 
-    throw new RedisSourceError("Entity not found in entities list", {
-      debug: { Entity },
-    });
+    const metadata = globalEntityMetadata.get(Entity);
+
+    if (metadata.entity.decorator !== "Entity") {
+      throw new RedisSourceError(`Entity is not decorated with @Entity`, {
+        debug: { Entity },
+      });
+    }
   }
 }

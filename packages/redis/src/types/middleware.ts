@@ -1,4 +1,4 @@
-import { IEntityBase } from "@lindorm/entity";
+import { IEntity } from "@lindorm/entity";
 import {
   PylonHttpContext,
   PylonHttpMiddleware,
@@ -12,9 +12,9 @@ import { IRedisRepository, IRedisSource } from "../interfaces";
 // common context
 
 type Context = {
-  entities: Dict<IEntityBase>;
+  entities: Dict<IEntity>;
   repositories: {
-    redis: Dict<IRedisRepository<IEntityBase>>;
+    redis: Dict<IRedisRepository<IEntity>>;
   };
   sources: {
     redis: IRedisSource;

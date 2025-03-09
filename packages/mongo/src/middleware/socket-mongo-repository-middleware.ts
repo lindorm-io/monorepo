@@ -1,5 +1,5 @@
 import { camelCase } from "@lindorm/case";
-import { IEntityBase } from "@lindorm/entity";
+import { IEntity } from "@lindorm/entity";
 import { isObject } from "@lindorm/is";
 import { Constructor } from "@lindorm/types";
 import { IMongoSource } from "../interfaces";
@@ -8,7 +8,7 @@ import { MongoPylonSocketContext, MongoPylonSocketMiddleware } from "../types";
 export const createSocketMongoRepositoryMiddleware = <
   C extends MongoPylonSocketContext = MongoPylonSocketContext,
 >(
-  entities: Array<Constructor<IEntityBase>>,
+  entities: Array<Constructor<IEntity>>,
   source?: IMongoSource,
 ): MongoPylonSocketMiddleware<C> => {
   return async function socketMongoRepositoryMiddleware(ctx, next): Promise<void> {

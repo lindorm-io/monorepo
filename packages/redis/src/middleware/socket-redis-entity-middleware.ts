@@ -1,13 +1,13 @@
 import { camelCase } from "@lindorm/case";
-import { IEntityBase } from "@lindorm/entity";
-import { ClientError } from "@lindorm/errors";
-import { isObject } from "@lindorm/is";
+import { globalEntityMetadata, IEntity } from "@lindorm/entity";
+import { ClientError, ServerError } from "@lindorm/errors";
+import { isObject, isString } from "@lindorm/is";
 import { Constructor, Dict } from "@lindorm/types";
 import { get } from "object-path";
 import { IRedisSource } from "../interfaces";
 import { RedisPylonSocketContext, RedisPylonSocketMiddleware } from "../types";
 
-type Path<E extends Constructor<IEntityBase>> =
+type Path<E extends Constructor<IEntity>> =
   | { [K in keyof InstanceType<E>]?: string }
   | string;
 
@@ -19,24 +19,34 @@ type Options = {
 export const createSocketRedisEntityMiddleware =
   <
     C extends RedisPylonSocketContext = RedisPylonSocketContext,
-    E extends Constructor<IEntityBase> = Constructor<IEntityBase>,
+    E extends Constructor<IEntity> = Constructor<IEntity>,
   >(
     Entity: E,
     source?: IRedisSource,
   ) =>
   (path: Path<E>, options: Options = {}): RedisPylonSocketMiddleware<C> => {
+    const metadata = globalEntityMetadata.get(Entity);
+    const primaryKey = metadata.columns.find((c) => c.decorator === "PrimaryKeyColumn");
+
     return async function socketRedisEntityMiddleware(ctx, next): Promise<void> {
+      if (!isObject(ctx.entities)) {
+        ctx.entities = {};
+      }
+
       const { optional = false } = options;
 
-      const paths: Dict<any> = isObject(path) ? path : { id: path };
+      if (isString(path) && !primaryKey) {
+        throw new ServerError("@PrimaryKeyColumn not set on @Entity", {
+          details: "String path cannot be used",
+          debug: { path },
+        });
+      }
+
+      const paths: Dict<any> = isObject(path) ? path : { [primaryKey!.key]: path };
       const filter: Dict<any> = {};
 
       for (const [key, objectPath] of Object.entries(paths)) {
         filter[key] = get(ctx, objectPath);
-      }
-
-      if (!isObject(ctx.entities)) {
-        ctx.entities = {};
       }
 
       const hasValues = Object.values(filter).every(Boolean);

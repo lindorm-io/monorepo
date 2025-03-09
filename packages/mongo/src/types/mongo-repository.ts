@@ -1,22 +1,16 @@
-import { IEntityBase } from "@lindorm/entity";
-import { ILogger } from "@lindorm/logger";
-import { Constructor } from "@lindorm/types";
-import { MongoClient } from "mongodb";
-import {
-  CreateMongoEntityFn,
-  MongoEntityConfig,
-  ValidateMongoEntityFn,
-} from "./mongo-entity";
-import { MongoIndexOptions } from "./mongo-index";
+import type { IEntity } from "@lindorm/entity";
+import type { ILogger } from "@lindorm/logger";
+import type { Constructor } from "@lindorm/types";
+import type { MongoClient, FindOptions as MongoFindOptions } from "mongodb";
 
-export type MongoRepositoryOptions<E extends IEntityBase> = {
+export type FindOptions<E extends IEntity> = MongoFindOptions<E> & {
+  versionTimestamp?: Date;
+};
+
+export type MongoRepositoryOptions<E extends IEntity> = {
   Entity: Constructor<E>;
   client: MongoClient;
-  config?: MongoEntityConfig<E>;
-  database: string;
-  indexes?: Array<MongoIndexOptions<E>>;
+  database?: string;
   logger: ILogger;
   namespace?: string;
-  create?: CreateMongoEntityFn<E>;
-  validate?: ValidateMongoEntityFn<E>;
 };

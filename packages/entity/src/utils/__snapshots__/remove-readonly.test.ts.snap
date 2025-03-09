@@ -1,0 +1,9 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`removeReadonly should update existing entity 1`] = `
+{
+  "array": [],
+  "id": "e8edbe03-f52f-56c6-8d98-82e6961329fe",
+  "object": {},
+}
+`;

@@ -1,16 +1,15 @@
 import { ILogger } from "@lindorm/logger";
 import { Redis } from "ioredis";
-import { REDIS_ENTITY_CONFIG, RedisRepository } from "../classes";
-import { TestEntity } from "./test-entity";
+import { RedisRepository } from "../classes";
+import { TestEntity, TestEntityOptions } from "./test-entity";
 
-export class TestRepository extends RedisRepository<TestEntity> {
+export class TestRepository extends RedisRepository<TestEntity, TestEntityOptions> {
   public constructor(client: Redis, logger: ILogger) {
     super({
       Entity: TestEntity,
       client,
-      config: REDIS_ENTITY_CONFIG,
       logger,
-      namespace: "test",
+      namespace: "ns",
     });
   }
 }
