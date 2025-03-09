@@ -31,11 +31,12 @@ describe("httpCookieMiddleware", () => {
 
     config = {
       domain: "test-domain",
+      encrypted: true,
       httpOnly: true,
       overwrite: true,
       priority: "high",
       sameSite: "strict",
-      signatureKeys: ["signature"],
+      signed: true,
     };
 
     options = {
@@ -71,11 +72,11 @@ describe("httpCookieMiddleware", () => {
     expect(ctx.cookies.set).toHaveBeenCalledWith("name", "encode", {
       domain: undefined,
       expires: undefined,
-      httpOnly: undefined,
-      overwrite: undefined,
+      httpOnly: false,
+      overwrite: false,
       path: undefined,
       priority: undefined,
-      sameSite: undefined,
+      sameSite: false,
       signed: false,
     });
   });
@@ -109,7 +110,7 @@ describe("httpCookieMiddleware", () => {
       overwrite: false,
       path: "/hello",
       priority: "medium",
-      sameSite: "strict",
+      sameSite: "lax",
       signed: false,
     });
   });
