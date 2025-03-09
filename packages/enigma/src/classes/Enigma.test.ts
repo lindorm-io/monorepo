@@ -1,4 +1,4 @@
-import { Kryptos } from "@lindorm/kryptos";
+import { KryptosKit } from "@lindorm/kryptos";
 import { EnigmaError } from "../errors";
 import { Enigma } from "./Enigma";
 
@@ -7,23 +7,10 @@ describe("Enigma", () => {
   let hash: string;
 
   beforeEach(async () => {
-    const enc = Kryptos.generate({
-      algorithm: "dir",
-      encryption: "A256GCM",
-      type: "oct",
-      use: "enc",
-    });
+    const enc = KryptosKit.make.enc.oct({ algorithm: "dir", encryption: "A256GCM" });
+    const sig = KryptosKit.make.sig.oct({ algorithm: "HS256" });
 
-    const sig = Kryptos.generate({
-      algorithm: "HS256",
-      type: "oct",
-      use: "sig",
-    });
-
-    kit = new Enigma({
-      aes: { kryptos: enc },
-      oct: { kryptos: sig },
-    });
+    kit = new Enigma({ aes: { kryptos: enc }, oct: { kryptos: sig } });
 
     hash = await kit.hash("string");
   }, 10000);

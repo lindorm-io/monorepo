@@ -1,4 +1,4 @@
-import { Kryptos } from "@lindorm/kryptos";
+import { KryptosKit } from "@lindorm/kryptos";
 import { TEST_OCT_KEY_SIG } from "../__fixtures__/keys";
 import { ArgonError } from "../errors";
 import { ArgonKit } from "./ArgonKit";
@@ -32,9 +32,7 @@ describe("ArgonKit", () => {
 
   describe("with hashLength", () => {
     beforeEach(async () => {
-      kit = new ArgonKit({
-        hashLength: 128,
-      });
+      kit = new ArgonKit({ hashLength: 128 });
       hash = await kit.hash("string");
     });
 
@@ -57,9 +55,7 @@ describe("ArgonKit", () => {
 
   describe("with memoryCost", () => {
     beforeEach(async () => {
-      kit = new ArgonKit({
-        memoryCost: 2048,
-      });
+      kit = new ArgonKit({ memoryCost: 2048 });
       hash = await kit.hash("string");
     });
 
@@ -82,9 +78,7 @@ describe("ArgonKit", () => {
 
   describe("with parallelism", () => {
     beforeEach(async () => {
-      kit = new ArgonKit({
-        parallelism: 16,
-      });
+      kit = new ArgonKit({ parallelism: 16 });
       hash = await kit.hash("string");
     });
 
@@ -128,11 +122,9 @@ describe("ArgonKit", () => {
     }, 10000);
 
     test("should reject on wrong secret", async () => {
-      const kryptos = Kryptos.generate({
+      const kryptos = KryptosKit.make.enc.oct({
         algorithm: "dir",
         encryption: "A256GCM",
-        type: "oct",
-        use: "enc",
       });
 
       const kit2 = new ArgonKit({ kryptos });
@@ -143,9 +135,7 @@ describe("ArgonKit", () => {
 
   describe("with timeCost", () => {
     beforeEach(async () => {
-      kit = new ArgonKit({
-        timeCost: 16,
-      });
+      kit = new ArgonKit({ timeCost: 16 });
       hash = await kit.hash("string");
     });
 

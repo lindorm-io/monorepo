@@ -1,4 +1,4 @@
-import { IKryptosOct, Kryptos } from "@lindorm/kryptos";
+import { IKryptosOct, KryptosKit } from "@lindorm/kryptos";
 import { OctError } from "@lindorm/oct";
 import { ArgonKitOptions } from "../types";
 import { assertArgonHash, createArgonHash, verifyArgonHash } from "../utils/private";
@@ -16,7 +16,7 @@ export class ArgonKit {
     this.parallelism = options?.parallelism;
     this.timeCost = options?.timeCost;
 
-    if (options.kryptos && !Kryptos.isOct(options.kryptos)) {
+    if (options.kryptos && !KryptosKit.isOct(options.kryptos)) {
       throw new OctError("Invalid Kryptos instance");
     }
 
