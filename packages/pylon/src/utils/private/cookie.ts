@@ -1,4 +1,5 @@
 import { Aegis } from "@lindorm/aegis";
+import { IAmphora } from "@lindorm/amphora";
 import { B64 } from "@lindorm/b64";
 import { ServerError } from "@lindorm/errors";
 import { isString } from "@lindorm/is";
@@ -10,6 +11,19 @@ const safelyParse = <T = any>(value: string): T => {
   } catch (_) {
     return value as T;
   }
+};
+
+export const getCookieKeys = (amphora: IAmphora): Array<string> | undefined => {
+  const keys = amphora.filterSync({
+    hasPrivateKey: true,
+    isExternal: false,
+    type: "oct",
+    use: "sig",
+  });
+
+  const result = keys.map((k) => k.export("b64").privateKey!);
+
+  return result.length ? result : undefined;
 };
 
 export const encodeCookieValue = async <T = any>(

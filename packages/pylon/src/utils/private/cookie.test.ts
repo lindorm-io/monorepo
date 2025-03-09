@@ -1,21 +1,32 @@
 import { Aegis } from "@lindorm/aegis";
-import { Amphora } from "@lindorm/amphora";
+import { Amphora, IAmphora } from "@lindorm/amphora";
 import { B64 } from "@lindorm/b64";
 import { KryptosAlgorithm, KryptosKit } from "@lindorm/kryptos";
 import { createMockLogger } from "@lindorm/logger";
 import { PylonSession } from "../../types";
-import { decodeCookieValue, encodeCookieValue } from "./cookie";
+import { decodeCookieValue, encodeCookieValue, getCookieKeys } from "./cookie";
 
 describe("cookie", () => {
+  let amphora: IAmphora;
   let ctx: any;
 
   beforeAll(() => {
-    const amphora = new Amphora({
+    amphora = new Amphora({
       issuer: "issuer",
       logger: createMockLogger(),
     });
 
     amphora.add(KryptosKit.make.auto({ algorithm: "A128KW", issuer: "issuer" }));
+
+    amphora.add(
+      KryptosKit.from.b64({
+        algorithm: "HS256",
+        privateKey:
+          "0aF6XOiEaEKNMhijwA74_sZZdmI1dyUtkiVdwkwD1hKrKubFTHKHBugER12Uq-62r-kBeuru3TjC3jUSYNjKag",
+        type: "oct",
+        use: "sig",
+      }),
+    );
 
     const aegis = new Aegis({
       amphora,
@@ -26,6 +37,12 @@ describe("cookie", () => {
       amphora,
       aegis,
     };
+  });
+
+  test("should get cookie keys", () => {
+    expect(getCookieKeys(amphora)).toEqual([
+      "0aF6XOiEaEKNMhijwA74_sZZdmI1dyUtkiVdwkwD1hKrKubFTHKHBugER12Uq-62r-kBeuru3TjC3jUSYNjKag",
+    ]);
   });
 
   test("should encode cookie value", async () => {
