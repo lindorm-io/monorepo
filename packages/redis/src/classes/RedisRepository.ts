@@ -7,10 +7,10 @@ import {
   IEntity,
   MetaSource,
 } from "@lindorm/entity";
-import { isDate } from "@lindorm/is";
+import { isDate, isObjectLike } from "@lindorm/is";
 import { Primitive } from "@lindorm/json-kit";
 import { ILogger } from "@lindorm/logger";
-import { DeepPartial } from "@lindorm/types";
+import { DeepPartial, Dict } from "@lindorm/types";
 import { Predicate, Predicated } from "@lindorm/utils";
 import { Redis } from "ioredis";
 import { RedisRepositoryError } from "../errors";
@@ -105,7 +105,7 @@ export class RedisRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
   }
 
   public async count(predicate: Predicate<E> = {}): Promise<number> {
-    const scan = await this.scan();
+    const scan = await this.scan(predicate);
     const count = Predicated.filter(scan, predicate).length;
 
     this.logger.debug("Counted documents", { count, predicate });
@@ -171,12 +171,16 @@ export class RedisRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
   }
 
   public async find(predicate: Predicate<E> = {}): Promise<Array<E>> {
-    if (this.metadata.primaryKeys.every((key) => predicate[key])) {
+    if (
+      this.metadata.primaryKeys.every(
+        (key) => predicate[key] && !isObjectLike(predicate[key]),
+      )
+    ) {
       const entity = await this.findOneByKey(predicate);
       return entity ? [entity] : [];
     }
 
-    const scan = await this.scan();
+    const scan = await this.scan(predicate);
     const entities = Predicated.filter(scan, predicate);
 
     this.logger.debug("Repository done: find", {
@@ -189,11 +193,15 @@ export class RedisRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
   }
 
   public async findOne(predicate: Predicate<E>): Promise<E | null> {
-    if (this.metadata.primaryKeys.every((key) => predicate[key])) {
+    if (
+      this.metadata.primaryKeys.every(
+        (key) => predicate[key] && !isObjectLike(predicate[key]),
+      )
+    ) {
       return await this.findOneByKey(predicate);
     }
 
-    const scan = await this.scan();
+    const scan = await this.scan(predicate);
     const entity = Predicated.find(scan, predicate);
 
     this.logger.debug("Repository done: findOne", { predicate, entity });
@@ -232,6 +240,12 @@ export class RedisRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
       const ttl = this.getTTL(entity);
 
       let result: string | null;
+
+      const found = await this.client.get(key);
+
+      if (found) {
+        throw new RedisRepositoryError("Entity already exists", { debug: { key } });
+      }
 
       if (ttl) {
         result = await this.client.setex(key, ttl, string);
@@ -347,13 +361,27 @@ export class RedisRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
   // private
 
   private createPrimaryKey(material: E | Predicate<E>): string {
-    const result: Array<string> = [];
+    const result: Dict<string> = {};
 
-    for (const column of this.metadata.primaryKeys) {
-      result.push(material[column]);
+    const primaryKey = this.metadata.columns.find(
+      (c) => c.decorator === "PrimaryKeyColumn",
+    );
+
+    if (primaryKey) {
+      result[primaryKey.key] = material[primaryKey.key];
+    } else {
+      for (const column of this.metadata.primaryKeys) {
+        result[column] = material[column];
+      }
     }
 
-    return `${this.collectionName}_${result.join(":")}`;
+    const array = Object.entries(result)
+      .sort()
+      .map(([k, v]) => `${k}:${v}`);
+
+    const scope = this.getScope(material);
+
+    return `${this.collectionName}${scope}.${array.join(".")}`;
   }
 
   private async deleteByKey(predicate: Predicate<E>): Promise<void> {
@@ -424,6 +452,24 @@ export class RedisRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
     }
   }
 
+  private getScope(material: E | Predicate<E>): string {
+    const scope = this.metadata.columns.find((c) => c.decorator === "ScopeColumn");
+
+    if (!scope) return "";
+
+    const string =
+      scope && material[scope.key] && !isObjectLike(material[scope.key])
+        ? `.${material[scope.key]}`
+        : null;
+
+    if (string) return string;
+
+    throw new RedisRepositoryError("Scope predicate missing", {
+      debug: { scope },
+      details: "Scope predicate is required when scope column is defined",
+    });
+  }
+
   private getTTL(entity: E): number | null {
     const expiryDate = this.metadata.columns.find(
       (c) => c.decorator === "ExpiryDateColumn",
@@ -441,17 +487,20 @@ export class RedisRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
     return expiresIn(entity[expiryDate.key]);
   }
 
-  private async scan(): Promise<Array<E>> {
+  private async scan(predicate: Predicate<E>): Promise<Array<E>> {
     const start = Date.now();
 
     const keys: Array<string> = [];
     const entities: Array<E> = [];
 
+    const scope = this.getScope(predicate);
+    const search = `${this.collectionName}${scope}.*`;
+
     try {
       let cursor = "0";
 
       do {
-        const reply = await this.client.scan(cursor, "MATCH", `${this.collectionName}*`);
+        const reply = await this.client.scan(cursor, "MATCH", search);
         cursor = reply[0];
         keys.push(...reply[1]);
       } while (cursor !== "0");

@@ -23,6 +23,7 @@ export type MetaColumnDecorator =
   | "Column"
   // special (unique)
   | "PrimaryKeyColumn"
+  | "ScopeColumn"
   | "VersionColumn"
   // date
   | "CreateDateColumn"

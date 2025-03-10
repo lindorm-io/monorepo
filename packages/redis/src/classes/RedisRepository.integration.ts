@@ -3,6 +3,7 @@ import { randomUUID } from "crypto";
 import { Redis } from "ioredis";
 import MockDate from "mockdate";
 import { TestEntityOne } from "../__fixtures__/entities/test-entity-one";
+import { TestEntityThree } from "../__fixtures__/entities/test-entity-three";
 import { TestEntity } from "../__fixtures__/test-entity";
 import { TestRepository } from "../__fixtures__/test-repository";
 import { RedisRepository } from "./RedisRepository";
@@ -358,5 +359,21 @@ describe("RedisRepository", () => {
     );
 
     MockDate.set(MockedDate);
+  });
+
+  test("should handle entity scoping", async () => {
+    const repository = new RedisRepository({
+      Entity: TestEntityThree,
+      client,
+      logger: createMockLogger(),
+    });
+
+    await repository.setup();
+    const scope = "scope";
+    const name = randomUUID();
+
+    const insert = await repository.insert(repository.create({ scope, name }));
+
+    await expect(repository.find({ scope, name })).resolves.toEqual([insert]);
   });
 });

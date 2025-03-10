@@ -38,6 +38,7 @@ type InternalArray =
 const UNIQUE_COLUMNS: Array<MetaColumnDecorator> = [
   // special
   "PrimaryKeyColumn",
+  "ScopeColumn",
   "VersionColumn",
   // date
   "CreateDateColumn",
