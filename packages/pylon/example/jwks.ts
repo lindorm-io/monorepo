@@ -1,6 +1,6 @@
 import { Amphora } from "@lindorm/amphora";
 import { Conduit } from "@lindorm/conduit";
-import { Kryptos } from "@lindorm/kryptos";
+import { KryptosKit } from "@lindorm/kryptos";
 import { Logger, LogLevel } from "@lindorm/logger";
 import { sleep } from "@lindorm/utils";
 import { AmphoraWorker, Environment, Pylon } from "../src";
@@ -19,7 +19,7 @@ const amphora = new Amphora({
 });
 
 amphora.add(
-  Kryptos.auto({
+  KryptosKit.make.auto({
     algorithm: "ES256",
     issuer: "http://test.lindorm.io",
   }),
@@ -51,7 +51,7 @@ const externalAmphora = new Amphora({
 });
 
 externalAmphora.add(
-  Kryptos.auto({
+  KryptosKit.make.auto({
     algorithm: "RS256",
     issuer: "http://external.lindorm.io",
     jwksUri: "http://localhost:3001/.well-known/jwks.json",
