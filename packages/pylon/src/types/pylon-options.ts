@@ -10,7 +10,7 @@ import { PylonCookieConfig } from "./cookies";
 import { CorsOptions } from "./cors";
 import { OpenIdConfigurationOptions } from "./open-id-configuration";
 import { ParseBodyOptions } from "./parse-body";
-import { PylonHttpContext, PylonHttpMiddleware } from "./pylon-context";
+import { PylonHttpContext, PylonHttpMiddleware } from "./pylon-http-context";
 import { PylonSocketContext, PylonSocketMiddleware } from "./pylon-socket-context";
 import { PylonSessionConfig } from "./session";
 import { PylonSetup, PylonTeardown } from "./setup";

@@ -1,4 +1,4 @@
-import { PylonHttpContext } from "./pylon-context";
+import { PylonHttpContext } from "./pylon-http-context";
 
 export type WebhookHandler<C extends PylonHttpContext = PylonHttpContext> = (
   ctx: C,

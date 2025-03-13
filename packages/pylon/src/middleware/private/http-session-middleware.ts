@@ -1,36 +1,25 @@
-import { isEqual, isObject } from "@lindorm/is";
-import { PylonHttpMiddleware, PylonSession, PylonSessionConfig } from "../../types";
+import { PylonHttpMiddleware, PylonSessionConfig } from "../../types";
 
 export const createHttpSessionMiddleware = (
-  config: PylonSessionConfig = {},
-): PylonHttpMiddleware => {
-  const name = config.name || "pylon_session";
+  config: PylonSessionConfig,
+): PylonHttpMiddleware =>
+  async function httpSessionMiddleware(ctx, next) {
+    const session = await ctx.getSession();
 
-  return async function httpSessionMiddleware(ctx, next) {
-    const session = await ctx.getCookie<PylonSession>(name, config);
+    ctx.session = session;
 
-    ctx.session = session ?? null;
+    if (session?.id) {
+      ctx.metadata.sessionId = session.id;
+      ctx.logger.correlation({ sessionId: session.id });
+    }
 
-    if (ctx.session) {
-      ctx.metadata.sessionId = ctx.session.id;
-      ctx.logger.correlation({ sessionId: ctx.session.id });
+    if (config.verify && session?.accessToken) {
+      ctx.tokens.accessToken = await ctx.aegis.verify(session.accessToken);
+    }
+
+    if (config.verify && session?.idToken) {
+      ctx.tokens.idToken = await ctx.aegis.verify(session.idToken);
     }
 
     await next();
-
-    const shouldSetNew = !session && isObject(ctx.session);
-    const shouldSetExisting =
-      session && isObject(ctx.session) && !isEqual(session, ctx.session);
-    const shouldDelete = session && ctx.session === null;
-
-    if (shouldSetNew || shouldSetExisting) {
-      ctx.setCookie(name, ctx.session, {
-        ...config,
-        overwrite: true,
-        priority: "high",
-      });
-    } else if (shouldDelete) {
-      ctx.delCookie(name);
-    }
   };
-};

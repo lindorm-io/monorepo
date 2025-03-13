@@ -108,14 +108,13 @@ describe("Pylon", () => {
     });
 
     router.post("/session", async (ctx) => {
-      ctx.session = {
+      await ctx.setSession({
         id: "c1460965-fb6d-5a2a-be8a-84f7cd7d1a9f",
         accessToken: "access",
         idToken: "id",
         refreshToken: "refresh",
-      };
-      ctx.body = ctx.session;
-      ctx.status = 200;
+      });
+      ctx.status = 204;
     });
 
     router.get("/session", async (ctx) => {
@@ -305,14 +304,7 @@ describe("Pylon", () => {
   });
 
   test("should create and verify session", async () => {
-    const r1 = await request(pylon.callback).post("/test/session").expect(200);
-
-    expect(r1.body).toEqual({
-      id: "c1460965-fb6d-5a2a-be8a-84f7cd7d1a9f",
-      access_token: "access",
-      id_token: "id",
-      refresh_token: "refresh",
-    });
+    const r1 = await request(pylon.callback).post("/test/session").expect(204);
 
     expect(r1.headers).toEqual(
       expect.objectContaining({

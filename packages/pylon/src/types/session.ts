@@ -1,5 +1,11 @@
 import { SetCookieOptions } from "./cookies";
 
+export type PylonSessionStore = {
+  setSession: (session: PylonSession) => Promise<string>;
+  getSession: (id: string) => Promise<PylonSession | null>;
+  delSession: (id: string) => Promise<void>;
+};
+
 export type PylonSession = {
   id: string;
   accessToken: string;
@@ -7,6 +13,11 @@ export type PylonSession = {
   refreshToken?: string;
 };
 
-export type PylonSessionConfig = Omit<SetCookieOptions, "overwrite" | "priority"> & {
+export type PylonSessionConfig = Omit<
+  SetCookieOptions,
+  "overwrite" | "path" | "priority"
+> & {
   name?: string;
+  store?: PylonSessionStore;
+  verify?: boolean;
 };

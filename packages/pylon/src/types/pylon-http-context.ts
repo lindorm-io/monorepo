@@ -56,6 +56,10 @@ type Context<Data, WebhookData> = {
   setCookie<T = any>(name: string, value: T, options?: SetCookieOptions): Promise<void>;
   getCookie<T = any>(name: string, options?: GetCookieOptions): Promise<T | undefined>;
   delCookie(name: string): void;
+
+  setSession(session: PylonSession): Promise<void>;
+  getSession(): Promise<PylonSession | null>;
+  delSession(): Promise<void>;
 };
 
 export type PylonHttpContext<Data = any, WebhookData = any> = RouterContext &

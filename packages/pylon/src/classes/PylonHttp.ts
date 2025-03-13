@@ -9,17 +9,17 @@ import userAgent from "koa-useragent";
 import {
   createHttpBodyParserMiddleware,
   createHttpContextInitialisationMiddleware,
-  createHttpCookieMiddleware,
   createHttpCorsMiddleware,
+  createHttpFunctionsMiddleware,
   createHttpMetadataMiddleware,
+  createHttpSessionMiddleware,
   httpErrorHandlerMiddleware,
   httpQueryParserMiddleware,
   httpRequestLoggerMiddleware,
   httpResponseBodyMiddleware,
+  httpResponseLoggerMiddleware,
   httpResponseTimeMiddleware,
 } from "../middleware/private";
-import { httpResponseLoggerMiddleware } from "../middleware/private/http-response-logger-middleware";
-import { createHttpSessionMiddleware } from "../middleware/private/http-session-middleware";
 import {
   CorsOptions,
   HttpCallback,
@@ -118,8 +118,8 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
         amphora: this.amphora,
         logger: this.logger,
       }),
-      createHttpCookieMiddleware(this.cookies),
-      createHttpSessionMiddleware(this.session),
+      createHttpFunctionsMiddleware(this.cookies, this.session),
+      ...(this.session ? [createHttpSessionMiddleware(this.session)] : []),
       createHttpBodyParserMiddleware(this.parseBody),
       httpQueryParserMiddleware,
       httpRequestLoggerMiddleware,
@@ -164,6 +164,7 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
 
   private addMiddleware(middleware: Array<PylonHttpMiddleware<T>>): void {
     for (const mw of middleware) {
+      if (!mw) continue;
       this.logger.debug("Adding middleware", {
         middleware: mw.name ?? mw.constructor.name,
       });
