@@ -10,6 +10,7 @@ import {
   TEST_EC_KEY_SIG,
   TEST_OCT_KEY_ENC,
   TEST_OCT_KEY_SIG,
+  TEST_OKP_KEY_ENC,
   TEST_OKP_KEY_SIG,
   TEST_RSA_KEY_SIG,
 } from "../__fixtures__/keys";
@@ -230,6 +231,20 @@ describe("Amphora", () => {
         .times(1)
         .reply(200, OPEN_ID_JWKS_RESPONSE);
 
+      nock("https://lindorm.jp.auth0.com")
+        .get("/.well-known/openid-configuration")
+        .times(1)
+        .reply(200, {
+          ...OPEN_ID_CONFIGURATION_RESPONSE,
+          issuer: "https://lindorm.jp.auth0.io/",
+          jwksUri: "https://lindorm.jp.auth0.com/.well-known/jwks.json",
+        });
+
+      nock("https://lindorm.jp.auth0.com")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, { keys: [TEST_OKP_KEY_ENC.toJWK()] });
+
       nock("https://external.lindorm.io")
         .get("/.well-known/jwks.json")
         .times(1)
@@ -247,6 +262,9 @@ describe("Amphora", () => {
             openIdConfigurationUri:
               "https://lindorm.eu.auth0.com/.well-known/openid-configuration",
           },
+          {
+            issuer: "https://lindorm.jp.auth0.com/",
+          },
         ],
       });
 
@@ -256,14 +274,20 @@ describe("Amphora", () => {
 
       expect(amphora.config).toMatchSnapshot();
 
-      expect(amphora.vault).toEqual([
-        expect.objectContaining({
-          id: expect.any(String),
-          type: "EC",
-        }),
-        expect.objectContaining({ id: "iPy9pgzr7cFw1kTuiClWE", type: "RSA" }),
-        expect.objectContaining({ id: "IjICkHcf-qq8_stUQ00IN", type: "RSA" }),
-      ]);
+      expect(amphora.vault).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: expect.any(String),
+            type: "EC",
+          }),
+          expect.objectContaining({
+            id: expect.any(String),
+            type: "OKP",
+          }),
+          expect.objectContaining({ id: "iPy9pgzr7cFw1kTuiClWE", type: "RSA" }),
+          expect.objectContaining({ id: "IjICkHcf-qq8_stUQ00IN", type: "RSA" }),
+        ]),
+      );
     });
 
     test("should add use external config when vault is unable to find key", async () => {
