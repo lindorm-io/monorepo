@@ -1,8 +1,8 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`JsonKit should create a primitive buffer from json data 1`] = `"eyJfX21ldGFfXyI6eyJvbmUiOlsiQiIsIkQiLCJOIiwiUyIseyJ0aGlydGVlbiI6WyJCIiwiTiIsIlMiLCJMIiwiVSJdLCJmb3VydGVlbiI6IkIiLCJmaWZ0ZWVuIjoiRCIsInNpeHRlZW4iOiJOIiwic2V2ZW50ZWVuIjoiUyJ9XSwidHdvIjoiQiIsInRocmVlIjoiRCIsImZvdXIiOiJOIiwiZml2ZSI6eyJzaXgiOiJTIiwic2V2ZW4iOiJOIiwiZWlnaHQiOiJMIiwibmluZSI6IkIiLCJ0ZW4iOltdLCJlbGV2ZW4iOiJVIn0sInR3ZWx2ZSI6IlMifSwiX19yZWNvcmRfXyI6eyJvbmUiOlsidHJ1ZSIsIjIwMjAtMDEtMDFUMDg6MDA6MDAuMDAwWiIsIjEyMzQ1Iiwic3RyaW5nIix7InRoaXJ0ZWVuIjpbInRydWUiLCIxMjMiLCJhcnIiLDAsMF0sImZvdXJ0ZWVuIjoiZmFsc2UiLCJmaWZ0ZWVuIjoiMjAyMC0wMS0wMVQwODowMDowMC4wMDBaIiwic2l4dGVlbiI6IjEyMyIsInNldmVudGVlbiI6InN0ciJ9XSwidHdvIjoidHJ1ZSIsInRocmVlIjoiMjAyMC0wMS0wMVQwODowMDowMC4wMDBaIiwiZm91ciI6IjEyMzQ1IiwiZml2ZSI6eyJzaXgiOiJhIiwic2V2ZW4iOiIxIiwiZWlnaHQiOjAsIm5pbmUiOiJ0cnVlIiwidGVuIjpbXSwiZWxldmVuIjowfSwidHdlbHZlIjoic3RyaW5nIn19"`;
+exports[`JsonKit should create a primitive buffer from json data 1`] = `"eyJfX21ldGFfXyI6eyJvbmUiOlsiQiIsIkQiLCJOIiwiUyIseyJ0aGlydGVlbiI6WyJCIiwiTiIsIlMiLCJMIiwiVSJdLCJmb3VydGVlbiI6IkIiLCJmaWZ0ZWVuIjoiRCIsInNpeHRlZW4iOiJOIiwic2V2ZW50ZWVuIjoiUyJ9XSwidHdvIjoiQiIsInRocmVlIjoiRCIsImZvdXIiOiJOIiwiZml2ZSI6eyJzaXgiOiJTIiwic2V2ZW4iOiJOIiwiZWlnaHQiOiJMIiwibmluZSI6IkIiLCJ0ZW4iOltdLCJlbGV2ZW4iOiJVIn0sInR3ZWx2ZSI6IlMiLCJ0aGlydGVlbiI6IkYifSwiX19yZWNvcmRfXyI6eyJvbmUiOlsidHJ1ZSIsIjIwMjAtMDEtMDFUMDg6MDA6MDAuMDAwWiIsIjEyMzQ1Iiwic3RyaW5nIix7InRoaXJ0ZWVuIjpbInRydWUiLCIxMjMiLCJhcnIiLDAsMF0sImZvdXJ0ZWVuIjoiZmFsc2UiLCJmaWZ0ZWVuIjoiMjAyMC0wMS0wMVQwODowMDowMC4wMDBaIiwic2l4dGVlbiI6IjEyMyIsInNldmVudGVlbiI6InN0ciJ9XSwidHdvIjoidHJ1ZSIsInRocmVlIjoiMjAyMC0wMS0wMVQwODowMDowMC4wMDBaIiwiZm91ciI6IjEyMzQ1IiwiZml2ZSI6eyJzaXgiOiJhIiwic2V2ZW4iOiIxIiwiZWlnaHQiOjAsIm5pbmUiOiJ0cnVlIiwidGVuIjpbXSwiZWxldmVuIjowfSwidHdlbHZlIjoic3RyaW5nIiwidGhpcnRlZW4iOiJhR1ZzYkc4In19"`;
 
-exports[`JsonKit should create a primitive string from json data 1`] = `"{"__meta__":{"one":["B","D","N","S",{"thirteen":["B","N","S","L","U"],"fourteen":"B","fifteen":"D","sixteen":"N","seventeen":"S"}],"two":"B","three":"D","four":"N","five":{"six":"S","seven":"N","eight":"L","nine":"B","ten":[],"eleven":"U"},"twelve":"S"},"__record__":{"one":["true","2020-01-01T08:00:00.000Z","12345","string",{"thirteen":["true","123","arr",0,0],"fourteen":"false","fifteen":"2020-01-01T08:00:00.000Z","sixteen":"123","seventeen":"str"}],"two":"true","three":"2020-01-01T08:00:00.000Z","four":"12345","five":{"six":"a","seven":"1","eight":0,"nine":"true","ten":[],"eleven":0},"twelve":"string"}}"`;
+exports[`JsonKit should create a primitive string from json data 1`] = `"{"__meta__":{"one":["B","D","N","S",{"thirteen":["B","N","S","L","U"],"fourteen":"B","fifteen":"D","sixteen":"N","seventeen":"S"}],"two":"B","three":"D","four":"N","five":{"six":"S","seven":"N","eight":"L","nine":"B","ten":[],"eleven":"U"},"twelve":"S","thirteen":"F"},"__record__":{"one":["true","2020-01-01T08:00:00.000Z","12345","string",{"thirteen":["true","123","arr",0,0],"fourteen":"false","fifteen":"2020-01-01T08:00:00.000Z","sixteen":"123","seventeen":"str"}],"two":"true","three":"2020-01-01T08:00:00.000Z","four":"12345","five":{"six":"a","seven":"1","eight":0,"nine":"true","ten":[],"eleven":0},"twelve":"string","thirteen":"aGVsbG8"}}"`;
 
 exports[`JsonKit should parse a primitive string (array) to json data 1`] = `
 [
@@ -35,6 +35,16 @@ exports[`JsonKit should parse a primitive string (array) to json data 1`] = `
         ],
       },
     ],
+    "thirteen": {
+      "data": [
+        104,
+        101,
+        108,
+        108,
+        111,
+      ],
+      "type": "Buffer",
+    },
     "three": 2020-01-01T08:00:00.000Z,
     "twelve": "string",
     "two": true,
@@ -68,6 +78,16 @@ exports[`JsonKit should parse a primitive string (array) to json data 1`] = `
         ],
       },
     ],
+    "thirteen": {
+      "data": [
+        104,
+        101,
+        108,
+        108,
+        111,
+      ],
+      "type": "Buffer",
+    },
     "three": 2020-01-01T08:00:00.000Z,
     "twelve": "string",
     "two": true,
@@ -105,6 +125,16 @@ exports[`JsonKit should parse a primitive string (json) to json data 1`] = `
       ],
     },
   ],
+  "thirteen": {
+    "data": [
+      104,
+      101,
+      108,
+      108,
+      111,
+    ],
+    "type": "Buffer",
+  },
   "three": 2020-01-01T08:00:00.000Z,
   "twelve": "string",
   "two": true,

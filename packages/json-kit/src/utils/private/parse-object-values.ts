@@ -23,6 +23,8 @@ export const parseObjectValues = (dict: Dict, meta: Dict): Dict => {
       result[key] = null;
     } else if (meta[key] === MetaType.Undefined) {
       result[key] = undefined;
+    } else if (meta[key] === MetaType.Buffer) {
+      result[key] = Buffer.from(value, "base64url");
     } else {
       result[key] = JSON.parse(value);
     }

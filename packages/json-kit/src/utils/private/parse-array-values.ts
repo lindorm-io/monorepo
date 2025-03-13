@@ -24,6 +24,8 @@ export const parseArrayValues = (input: any, meta: Dict): Array<any> => {
       result.push(null);
     } else if (meta[index] === MetaType.Undefined) {
       result.push(undefined);
+    } else if (meta[index] === MetaType.Buffer) {
+      result.push(Buffer.from(value, "base64url"));
     } else {
       result.push(JSON.parse(value));
     }

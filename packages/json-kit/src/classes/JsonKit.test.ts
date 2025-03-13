@@ -1,7 +1,7 @@
 import {
+  TEST_ARRAY_STRING,
   TEST_DICT,
-  TEST_STRING_ARRAY,
-  TEST_STRING_JSON,
+  TEST_DICT_STRING,
 } from "../__fixtures__/test-data";
 import { JsonKit } from "./JsonKit";
 import { Primitive } from "./Primitive";
@@ -12,11 +12,11 @@ describe("JsonKit", () => {
   });
 
   test("should parse a primitive string (array) to json data", () => {
-    expect(JsonKit.parse(TEST_STRING_ARRAY)).toMatchSnapshot();
+    expect(JsonKit.parse(TEST_ARRAY_STRING)).toMatchSnapshot();
   });
 
   test("should parse a primitive string (json) to json data", () => {
-    expect(JsonKit.parse(TEST_STRING_JSON)).toMatchSnapshot();
+    expect(JsonKit.parse(TEST_DICT_STRING)).toMatchSnapshot();
   });
 
   test("should create a Primitive instance from json data", () => {

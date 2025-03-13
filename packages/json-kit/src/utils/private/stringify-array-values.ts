@@ -1,4 +1,12 @@
-import { isArray, isDate, isNull, isObject, isString, isUndefined } from "@lindorm/is";
+import {
+  isArray,
+  isBuffer,
+  isDate,
+  isNull,
+  isObject,
+  isString,
+  isUndefined,
+} from "@lindorm/is";
 import { stringifyObjectValues } from "./stringify-object-values";
 
 export const stringifyArrayValues = (input: Array<any>): Array<any> => {
@@ -17,6 +25,8 @@ export const stringifyArrayValues = (input: Array<any>): Array<any> => {
       result.push(0);
     } else if (isUndefined(value)) {
       result.push(0);
+    } else if (isBuffer(value)) {
+      result.push(value.toString("base64url"));
     } else {
       result.push(JSON.stringify(value));
     }

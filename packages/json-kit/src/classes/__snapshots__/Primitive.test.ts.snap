@@ -31,6 +31,7 @@ exports[`Primitive array should resolve expected data 1`] = `
         ],
       },
     ],
+    "thirteen": "aGVsbG8",
     "three": "2020-01-01T08:00:00.000Z",
     "twelve": "string",
     "two": "true",
@@ -64,6 +65,7 @@ exports[`Primitive array should resolve expected data 1`] = `
         ],
       },
     ],
+    "thirteen": "aGVsbG8",
     "three": "2020-01-01T08:00:00.000Z",
     "twelve": "string",
     "two": "true",
@@ -102,6 +104,16 @@ exports[`Primitive array should resolve expected json 1`] = `
         ],
       },
     ],
+    "thirteen": {
+      "data": [
+        104,
+        101,
+        108,
+        108,
+        111,
+      ],
+      "type": "Buffer",
+    },
     "three": 2020-01-01T08:00:00.000Z,
     "twelve": "string",
     "two": true,
@@ -135,6 +147,16 @@ exports[`Primitive array should resolve expected json 1`] = `
         ],
       },
     ],
+    "thirteen": {
+      "data": [
+        104,
+        101,
+        108,
+        108,
+        111,
+      ],
+      "type": "Buffer",
+    },
     "three": 2020-01-01T08:00:00.000Z,
     "twelve": "string",
     "two": true,
@@ -173,6 +195,7 @@ exports[`Primitive array should resolve expected meta 1`] = `
         ],
       },
     ],
+    "thirteen": "F",
     "three": "D",
     "twelve": "S",
     "two": "B",
@@ -206,6 +229,7 @@ exports[`Primitive array should resolve expected meta 1`] = `
         ],
       },
     ],
+    "thirteen": "F",
     "three": "D",
     "twelve": "S",
     "two": "B",
@@ -213,7 +237,7 @@ exports[`Primitive array should resolve expected meta 1`] = `
 ]
 `;
 
-exports[`Primitive array should resolve expected string 1`] = `"{"__meta__":[{"one":["B","D","N","S",{"thirteen":["B","N","S","L","U"],"fourteen":"B","fifteen":"D","sixteen":"N","seventeen":"S"}],"two":"B","three":"D","four":"N","five":{"six":"S","seven":"N","eight":"L","nine":"B","ten":[],"eleven":"U"},"twelve":"S"},{"one":["B","D","N","S",{"thirteen":["B","N","S","L","U"],"fourteen":"B","fifteen":"D","sixteen":"N","seventeen":"S"}],"two":"B","three":"D","four":"N","five":{"six":"S","seven":"N","eight":"L","nine":"B","ten":[],"eleven":"U"},"twelve":"S"}],"__array__":[{"one":["true","2020-01-01T08:00:00.000Z","12345","string",{"thirteen":["true","123","arr",0,0],"fourteen":"false","fifteen":"2020-01-01T08:00:00.000Z","sixteen":"123","seventeen":"str"}],"two":"true","three":"2020-01-01T08:00:00.000Z","four":"12345","five":{"six":"a","seven":"1","eight":0,"nine":"true","ten":[],"eleven":0},"twelve":"string"},{"one":["true","2020-01-01T08:00:00.000Z","12345","string",{"thirteen":["true","123","arr",0,0],"fourteen":"false","fifteen":"2020-01-01T08:00:00.000Z","sixteen":"123","seventeen":"str"}],"two":"true","three":"2020-01-01T08:00:00.000Z","four":"12345","five":{"six":"a","seven":"1","eight":0,"nine":"true","ten":[],"eleven":0},"twelve":"string"}]}"`;
+exports[`Primitive array should resolve expected string 1`] = `"{"__meta__":[{"one":["B","D","N","S",{"thirteen":["B","N","S","L","U"],"fourteen":"B","fifteen":"D","sixteen":"N","seventeen":"S"}],"two":"B","three":"D","four":"N","five":{"six":"S","seven":"N","eight":"L","nine":"B","ten":[],"eleven":"U"},"twelve":"S","thirteen":"F"},{"one":["B","D","N","S",{"thirteen":["B","N","S","L","U"],"fourteen":"B","fifteen":"D","sixteen":"N","seventeen":"S"}],"two":"B","three":"D","four":"N","five":{"six":"S","seven":"N","eight":"L","nine":"B","ten":[],"eleven":"U"},"twelve":"S","thirteen":"F"}],"__array__":[{"one":["true","2020-01-01T08:00:00.000Z","12345","string",{"thirteen":["true","123","arr",0,0],"fourteen":"false","fifteen":"2020-01-01T08:00:00.000Z","sixteen":"123","seventeen":"str"}],"two":"true","three":"2020-01-01T08:00:00.000Z","four":"12345","five":{"six":"a","seven":"1","eight":0,"nine":"true","ten":[],"eleven":0},"twelve":"string","thirteen":"aGVsbG8"},{"one":["true","2020-01-01T08:00:00.000Z","12345","string",{"thirteen":["true","123","arr",0,0],"fourteen":"false","fifteen":"2020-01-01T08:00:00.000Z","sixteen":"123","seventeen":"str"}],"two":"true","three":"2020-01-01T08:00:00.000Z","four":"12345","five":{"six":"a","seven":"1","eight":0,"nine":"true","ten":[],"eleven":0},"twelve":"string","thirteen":"aGVsbG8"}]}"`;
 
 exports[`Primitive dict should resolve expected data 1`] = `
 {
@@ -245,6 +269,7 @@ exports[`Primitive dict should resolve expected data 1`] = `
       ],
     },
   ],
+  "thirteen": "aGVsbG8",
   "three": "2020-01-01T08:00:00.000Z",
   "twelve": "string",
   "two": "true",
@@ -281,6 +306,16 @@ exports[`Primitive dict should resolve expected json 1`] = `
       ],
     },
   ],
+  "thirteen": {
+    "data": [
+      104,
+      101,
+      108,
+      108,
+      111,
+    ],
+    "type": "Buffer",
+  },
   "three": 2020-01-01T08:00:00.000Z,
   "twelve": "string",
   "two": true,
@@ -317,13 +352,14 @@ exports[`Primitive dict should resolve expected meta 1`] = `
       ],
     },
   ],
+  "thirteen": "F",
   "three": "D",
   "twelve": "S",
   "two": "B",
 }
 `;
 
-exports[`Primitive dict should resolve expected string 1`] = `"{"__meta__":{"one":["B","D","N","S",{"thirteen":["B","N","S","L","U"],"fourteen":"B","fifteen":"D","sixteen":"N","seventeen":"S"}],"two":"B","three":"D","four":"N","five":{"six":"S","seven":"N","eight":"L","nine":"B","ten":[],"eleven":"U"},"twelve":"S"},"__record__":{"one":["true","2020-01-01T08:00:00.000Z","12345","string",{"thirteen":["true","123","arr",0,0],"fourteen":"false","fifteen":"2020-01-01T08:00:00.000Z","sixteen":"123","seventeen":"str"}],"two":"true","three":"2020-01-01T08:00:00.000Z","four":"12345","five":{"six":"a","seven":"1","eight":0,"nine":"true","ten":[],"eleven":0},"twelve":"string"}}"`;
+exports[`Primitive dict should resolve expected string 1`] = `"{"__meta__":{"one":["B","D","N","S",{"thirteen":["B","N","S","L","U"],"fourteen":"B","fifteen":"D","sixteen":"N","seventeen":"S"}],"two":"B","three":"D","four":"N","five":{"six":"S","seven":"N","eight":"L","nine":"B","ten":[],"eleven":"U"},"twelve":"S","thirteen":"F"},"__record__":{"one":["true","2020-01-01T08:00:00.000Z","12345","string",{"thirteen":["true","123","arr",0,0],"fourteen":"false","fifteen":"2020-01-01T08:00:00.000Z","sixteen":"123","seventeen":"str"}],"two":"true","three":"2020-01-01T08:00:00.000Z","four":"12345","five":{"six":"a","seven":"1","eight":0,"nine":"true","ten":[],"eleven":0},"twelve":"string","thirteen":"aGVsbG8"}}"`;
 
 exports[`Primitive string (array) should resolve expected data 1`] = `
 [
@@ -356,6 +392,7 @@ exports[`Primitive string (array) should resolve expected data 1`] = `
         ],
       },
     ],
+    "thirteen": "aGVsbG8",
     "three": "2020-01-01T08:00:00.000Z",
     "twelve": "string",
     "two": "true",
@@ -389,6 +426,7 @@ exports[`Primitive string (array) should resolve expected data 1`] = `
         ],
       },
     ],
+    "thirteen": "aGVsbG8",
     "three": "2020-01-01T08:00:00.000Z",
     "twelve": "string",
     "two": "true",
@@ -427,6 +465,16 @@ exports[`Primitive string (array) should resolve expected json 1`] = `
         ],
       },
     ],
+    "thirteen": {
+      "data": [
+        104,
+        101,
+        108,
+        108,
+        111,
+      ],
+      "type": "Buffer",
+    },
     "three": 2020-01-01T08:00:00.000Z,
     "twelve": "string",
     "two": true,
@@ -460,6 +508,16 @@ exports[`Primitive string (array) should resolve expected json 1`] = `
         ],
       },
     ],
+    "thirteen": {
+      "data": [
+        104,
+        101,
+        108,
+        108,
+        111,
+      ],
+      "type": "Buffer",
+    },
     "three": 2020-01-01T08:00:00.000Z,
     "twelve": "string",
     "two": true,
@@ -498,6 +556,7 @@ exports[`Primitive string (array) should resolve expected meta 1`] = `
         ],
       },
     ],
+    "thirteen": "F",
     "three": "D",
     "twelve": "S",
     "two": "B",
@@ -531,6 +590,7 @@ exports[`Primitive string (array) should resolve expected meta 1`] = `
         ],
       },
     ],
+    "thirteen": "F",
     "three": "D",
     "twelve": "S",
     "two": "B",
@@ -538,7 +598,7 @@ exports[`Primitive string (array) should resolve expected meta 1`] = `
 ]
 `;
 
-exports[`Primitive string (array) should resolve expected string 1`] = `"{"__meta__":[{"one":["B","D","N","S",{"thirteen":["B","N","S","L","U"],"fourteen":"B","fifteen":"D","sixteen":"N","seventeen":"S"}],"two":"B","three":"D","four":"N","five":{"six":"S","seven":"N","eight":"L","nine":"B","ten":[],"eleven":"U"},"twelve":"S"},{"one":["B","D","N","S",{"thirteen":["B","N","S","L","U"],"fourteen":"B","fifteen":"D","sixteen":"N","seventeen":"S"}],"two":"B","three":"D","four":"N","five":{"six":"S","seven":"N","eight":"L","nine":"B","ten":[],"eleven":"U"},"twelve":"S"}],"__array__":[{"one":["true","2020-01-01T08:00:00.000Z","12345","string",{"thirteen":["true","123","arr",0,0],"fourteen":"false","fifteen":"2020-01-01T08:00:00.000Z","sixteen":"123","seventeen":"str"}],"two":"true","three":"2020-01-01T08:00:00.000Z","four":"12345","five":{"six":"a","seven":"1","eight":0,"nine":"true","ten":[],"eleven":0},"twelve":"string"},{"one":["true","2020-01-01T08:00:00.000Z","12345","string",{"thirteen":["true","123","arr",0,0],"fourteen":"false","fifteen":"2020-01-01T08:00:00.000Z","sixteen":"123","seventeen":"str"}],"two":"true","three":"2020-01-01T08:00:00.000Z","four":"12345","five":{"six":"a","seven":"1","eight":0,"nine":"true","ten":[],"eleven":0},"twelve":"string"}]}"`;
+exports[`Primitive string (array) should resolve expected string 1`] = `"{"__meta__":[{"one":["B","D","N","S",{"thirteen":["B","N","S","L","U"],"fourteen":"B","fifteen":"D","sixteen":"N","seventeen":"S"}],"two":"B","three":"D","four":"N","five":{"six":"S","seven":"N","eight":"L","nine":"B","ten":[],"eleven":"U"},"twelve":"S","thirteen":"F"},{"one":["B","D","N","S",{"thirteen":["B","N","S","L","U"],"fourteen":"B","fifteen":"D","sixteen":"N","seventeen":"S"}],"two":"B","three":"D","four":"N","five":{"six":"S","seven":"N","eight":"L","nine":"B","ten":[],"eleven":"U"},"twelve":"S","thirteen":"F"}],"__array__":[{"one":["true","2020-01-01T08:00:00.000Z","12345","string",{"thirteen":["true","123","arr",0,0],"fourteen":"false","fifteen":"2020-01-01T08:00:00.000Z","sixteen":"123","seventeen":"str"}],"two":"true","three":"2020-01-01T08:00:00.000Z","four":"12345","five":{"six":"a","seven":"1","eight":0,"nine":"true","ten":[],"eleven":0},"twelve":"string","thirteen":"aGVsbG8"},{"one":["true","2020-01-01T08:00:00.000Z","12345","string",{"thirteen":["true","123","arr",0,0],"fourteen":"false","fifteen":"2020-01-01T08:00:00.000Z","sixteen":"123","seventeen":"str"}],"two":"true","three":"2020-01-01T08:00:00.000Z","four":"12345","five":{"six":"a","seven":"1","eight":0,"nine":"true","ten":[],"eleven":0},"twelve":"string","thirteen":"aGVsbG8"}]}"`;
 
 exports[`Primitive string (json) should resolve expected data 1`] = `
 {
@@ -570,6 +630,7 @@ exports[`Primitive string (json) should resolve expected data 1`] = `
       ],
     },
   ],
+  "thirteen": "aGVsbG8",
   "three": "2020-01-01T08:00:00.000Z",
   "twelve": "string",
   "two": "true",
@@ -606,6 +667,16 @@ exports[`Primitive string (json) should resolve expected json 1`] = `
       ],
     },
   ],
+  "thirteen": {
+    "data": [
+      104,
+      101,
+      108,
+      108,
+      111,
+    ],
+    "type": "Buffer",
+  },
   "three": 2020-01-01T08:00:00.000Z,
   "twelve": "string",
   "two": true,
@@ -642,10 +713,11 @@ exports[`Primitive string (json) should resolve expected meta 1`] = `
       ],
     },
   ],
+  "thirteen": "F",
   "three": "D",
   "twelve": "S",
   "two": "B",
 }
 `;
 
-exports[`Primitive string (json) should resolve expected string 1`] = `"{"__meta__":{"one":["B","D","N","S",{"thirteen":["B","N","S","L","U"],"fourteen":"B","fifteen":"D","sixteen":"N","seventeen":"S"}],"two":"B","three":"D","four":"N","five":{"six":"S","seven":"N","eight":"L","nine":"B","ten":[],"eleven":"U"},"twelve":"S"},"__record__":{"one":["true","2020-01-01T08:00:00.000Z","12345","string",{"thirteen":["true","123","arr",0,0],"fourteen":"false","fifteen":"2020-01-01T08:00:00.000Z","sixteen":"123","seventeen":"str"}],"two":"true","three":"2020-01-01T08:00:00.000Z","four":"12345","five":{"six":"a","seven":"1","eight":0,"nine":"true","ten":[],"eleven":0},"twelve":"string"}}"`;
+exports[`Primitive string (json) should resolve expected string 1`] = `"{"__meta__":{"one":["B","D","N","S",{"thirteen":["B","N","S","L","U"],"fourteen":"B","fifteen":"D","sixteen":"N","seventeen":"S"}],"two":"B","three":"D","four":"N","five":{"six":"S","seven":"N","eight":"L","nine":"B","ten":[],"eleven":"U"},"twelve":"S","thirteen":"F"},"__record__":{"one":["true","2020-01-01T08:00:00.000Z","12345","string",{"thirteen":["true","123","arr",0,0],"fourteen":"false","fifteen":"2020-01-01T08:00:00.000Z","sixteen":"123","seventeen":"str"}],"two":"true","three":"2020-01-01T08:00:00.000Z","four":"12345","five":{"six":"a","seven":"1","eight":0,"nine":"true","ten":[],"eleven":0},"twelve":"string","thirteen":"aGVsbG8"}}"`;

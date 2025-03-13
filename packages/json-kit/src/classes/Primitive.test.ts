@@ -1,9 +1,9 @@
 import MockDate from "mockdate";
 import {
   TEST_ARRAY,
+  TEST_ARRAY_STRING,
   TEST_DICT,
-  TEST_STRING_ARRAY,
-  TEST_STRING_JSON,
+  TEST_DICT_STRING,
 } from "../__fixtures__/test-data";
 import { Primitive } from "./Primitive";
 
@@ -63,7 +63,7 @@ describe("Primitive", () => {
     let struct: Primitive;
 
     beforeAll(() => {
-      struct = new Primitive(TEST_STRING_ARRAY);
+      struct = new Primitive(TEST_ARRAY_STRING);
     });
 
     test("should resolve expected data", () => {
@@ -87,7 +87,7 @@ describe("Primitive", () => {
     let struct: Primitive;
 
     beforeAll(() => {
-      struct = new Primitive(TEST_STRING_JSON);
+      struct = new Primitive(TEST_DICT_STRING);
     });
 
     test("should resolve expected data", () => {

@@ -1,6 +1,7 @@
 import {
   isArray,
   isBoolean,
+  isBuffer,
   isDate,
   isFinite,
   isNull,
@@ -16,6 +17,7 @@ export const getMetaType = (value: any): string => {
   if (isNull(value)) return MetaType.Null;
   if (isFinite(value)) return MetaType.Number;
   if (isString(value)) return MetaType.String;
+  if (isBuffer(value)) return MetaType.Buffer;
   if (isUndefined(value)) return MetaType.Undefined;
 
   return MetaType.Unknown;

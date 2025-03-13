@@ -1,4 +1,12 @@
-import { isArray, isDate, isNull, isObject, isString, isUndefined } from "@lindorm/is";
+import {
+  isArray,
+  isBuffer,
+  isDate,
+  isNull,
+  isObject,
+  isString,
+  isUndefined,
+} from "@lindorm/is";
 import { Dict } from "@lindorm/types";
 import { stringifyArrayValues } from "./stringify-array-values";
 
@@ -18,6 +26,8 @@ export const stringifyObjectValues = (dict: Dict): Dict => {
       result[key] = 0;
     } else if (isUndefined(value)) {
       result[key] = 0;
+    } else if (isBuffer(value)) {
+      result[key] = value.toString("base64url");
     } else {
       result[key] = JSON.stringify(value);
     }
