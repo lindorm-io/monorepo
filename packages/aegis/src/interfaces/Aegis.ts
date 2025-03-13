@@ -46,5 +46,8 @@ export interface IAegis {
   jwt: IAegisJwt;
 
   decode<T extends DecodedJwe | DecodedJws | DecodedJwt>(token: string): T;
-  verify<T extends VerifiedJwt | VerifiedJws<any>>(token: string): Promise<T>;
+  verify<T extends VerifiedJwt | VerifiedJws<any>>(
+    token: string,
+    options?: VerifyJwtOptions,
+  ): Promise<T>;
 }

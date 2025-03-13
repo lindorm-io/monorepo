@@ -93,6 +93,7 @@ export class Aegis implements IAegis {
 
   public async verify<T extends VerifiedJwt | VerifiedJws<any>>(
     token: string,
+    options?: VerifyJwtOptions,
   ): Promise<T> {
     if (Aegis.isJwe(token)) {
       const decrypt = await this.jweDecrypt(token);
@@ -102,7 +103,7 @@ export class Aegis implements IAegis {
       return (await this.jwsVerify(token)) as T;
     }
     if (Aegis.isJwt(token)) {
-      return (await this.jwtVerify(token)) as T;
+      return (await this.jwtVerify(token, options)) as T;
     }
     throw new AegisError("Invalid token type", { debug: { token } });
   }
