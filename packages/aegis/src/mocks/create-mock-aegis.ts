@@ -37,4 +37,11 @@ export const createMockAegis = (): IAegis => ({
       payload: { subject: "mocked_subject" },
     }),
   },
+
+  decode: jest.fn(),
+  verify: jest.fn().mockResolvedValue({
+    decoded: {},
+    header: {},
+    payload: { subject: "mocked_subject" },
+  }),
 });

@@ -179,4 +179,66 @@ describe("Aegis", () => {
       token: res.token,
     });
   });
+
+  test("should sign and verify jwe with jws", async () => {
+    const jws = await aegis.jws.sign("data", {
+      objectId: "09172fab-dbff-40ef-bb86-94d9d4ed37dc",
+    });
+
+    const jwe = await aegis.jwe.encrypt(jws.token, {
+      objectId: "33100373-9769-4389-94dd-1b1d738f0fc4",
+    });
+
+    await expect(aegis.verify(jwe.token)).resolves.toEqual(
+      expect.objectContaining({ payload: "data" }),
+    );
+  });
+
+  test("should sign and verify jwe with jwt", async () => {
+    const jwt = await aegis.jwt.sign({
+      expires: "1h",
+      subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
+      tokenType: "test_token",
+    });
+
+    const jwe = await aegis.jwe.encrypt(jwt.token, {
+      objectId: "33100373-9769-4389-94dd-1b1d738f0fc4",
+    });
+
+    await expect(aegis.verify(jwe.token)).resolves.toEqual(
+      expect.objectContaining({
+        payload: expect.objectContaining({
+          subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
+          tokenType: "test_token",
+        }),
+      }),
+    );
+  });
+
+  test("should sign and verify jws", async () => {
+    const jws = await aegis.jws.sign("data", {
+      objectId: "09172fab-dbff-40ef-bb86-94d9d4ed37dc",
+    });
+
+    await expect(aegis.verify(jws.token)).resolves.toEqual(
+      expect.objectContaining({ payload: "data" }),
+    );
+  });
+
+  test("should sign and verify jwt", async () => {
+    const jwt = await aegis.jwt.sign({
+      expires: "1h",
+      subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
+      tokenType: "test_token",
+    });
+
+    await expect(aegis.verify(jwt.token)).resolves.toEqual(
+      expect.objectContaining({
+        payload: expect.objectContaining({
+          subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
+          tokenType: "test_token",
+        }),
+      }),
+    );
+  });
 });

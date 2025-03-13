@@ -8,9 +8,13 @@ import {
 } from "@lindorm/kryptos";
 import { ILogger } from "@lindorm/logger";
 import { Dict } from "@lindorm/types";
+import { AegisError } from "../errors";
 import { IAegis, IAegisJwe, IAegisJws, IAegisJwt } from "../interfaces";
 import {
   AegisOptions,
+  DecodedJwe,
+  DecodedJws,
+  DecodedJwt,
   DecryptedJwe,
   EncryptedJwe,
   JweEncryptOptions,
@@ -72,6 +76,35 @@ export class Aegis implements IAegis {
       sign: this.jwtSign.bind(this),
       verify: this.jwtVerify.bind(this),
     };
+  }
+
+  public decode<T extends DecodedJwe | DecodedJws | DecodedJwt>(token: string): T {
+    if (Aegis.isJwe(token)) {
+      return JweKit.decode(token) as T;
+    }
+    if (Aegis.isJws(token)) {
+      return JwsKit.decode(token) as T;
+    }
+    if (Aegis.isJwt(token)) {
+      return JwtKit.decode(token) as T;
+    }
+    throw new AegisError("Invalid token type", { debug: { token } });
+  }
+
+  public async verify<T extends VerifiedJwt | VerifiedJws<any>>(
+    token: string,
+  ): Promise<T> {
+    if (Aegis.isJwe(token)) {
+      const decrypt = await this.jweDecrypt(token);
+      return (await this.verify(decrypt.payload)) as T;
+    }
+    if (Aegis.isJws(token)) {
+      return (await this.jwsVerify(token)) as T;
+    }
+    if (Aegis.isJwt(token)) {
+      return (await this.jwtVerify(token)) as T;
+    }
+    throw new AegisError("Invalid token type", { debug: { token } });
   }
 
   // public static

@@ -1,5 +1,8 @@
 import { Dict } from "@lindorm/types";
 import {
+  DecodedJwe,
+  DecodedJws,
+  DecodedJwt,
   DecryptedJwe,
   EncryptedJwe,
   JweEncryptOptions,
@@ -41,4 +44,7 @@ export interface IAegis {
   jwe: IAegisJwe;
   jws: IAegisJws;
   jwt: IAegisJwt;
+
+  decode<T extends DecodedJwe | DecodedJws | DecodedJwt>(token: string): T;
+  verify<T extends VerifiedJwt | VerifiedJws<any>>(token: string): Promise<T>;
 }
