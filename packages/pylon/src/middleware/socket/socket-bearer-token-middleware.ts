@@ -26,7 +26,7 @@ export const createSocketBearerTokenMiddleware = <
         });
       }
 
-      const verified = await ctx.aegis.jwt.verify(token, options);
+      const verified = await ctx.aegis.verify(token, options);
 
       ctx.logger.debug("Token verified", { verified });
 
