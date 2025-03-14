@@ -107,6 +107,5 @@ exports[`Schema Decorator should add metadata 1`] = `
       },
     },
   ],
-  "uniques": [],
 }
 `;

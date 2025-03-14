@@ -41,6 +41,7 @@ export type IndexDecoratorOptions = {
   direction?: IndexDirection;
   name?: string;
   options?: MetaIndexOptions;
+  unique?: boolean;
 };
 
 export type UniqueDecoratorOptions = {

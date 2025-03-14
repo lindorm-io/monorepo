@@ -6,8 +6,8 @@ import {
   Entity,
   ExpiryDateColumn,
   Generated,
+  Index,
   PrimaryKeyColumn,
-  Unique,
   UpdateDateColumn,
   VersionColumn,
   VersionEndDateColumn,
@@ -89,7 +89,7 @@ describe("defaultCloneEntity", () => {
       object!: Record<string, any>;
 
       @Column("string")
-      @Unique()
+      @Index({ unique: true })
       unique!: string;
 
       @Column("date")

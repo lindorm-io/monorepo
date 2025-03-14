@@ -15,7 +15,6 @@ import {
   MetaPrimarySource,
   MetaSchema,
   MetaSource,
-  MetaUnique,
 } from "../../types";
 
 type Cache = {
@@ -32,8 +31,7 @@ type InternalArray =
   | "indexes"
   | "primaryKeys"
   | "primarySources"
-  | "schemas"
-  | "uniques";
+  | "schemas";
 
 const UNIQUE_COLUMNS: Array<MetaColumnDecorator> = [
   // special
@@ -63,7 +61,6 @@ export class GlobalEntityMetadata {
   private readonly primaryKeys: Array<MetaPrimaryKey>;
   private readonly primarySources: Array<MetaPrimarySource>;
   private readonly schemas: Array<MetaSchema>;
-  private readonly uniques: Array<MetaUnique>;
 
   public constructor() {
     this.cache = [];
@@ -77,7 +74,6 @@ export class GlobalEntityMetadata {
     this.primaryKeys = [];
     this.primarySources = [];
     this.schemas = [];
-    this.uniques = [];
   }
 
   // public
@@ -118,10 +114,6 @@ export class GlobalEntityMetadata {
 
   public addSchema(metadata: MetaSchema): void {
     this.addMetadata("schemas", metadata);
-  }
-
-  public addUnique(metadata: MetaUnique): void {
-    this.addMetadata("uniques", metadata);
   }
 
   public get<
@@ -167,9 +159,6 @@ export class GlobalEntityMetadata {
     const schemas = this.getMeta<MetaSchema>(target, "schemas").map(
       ({ target: _, schema }) => schema,
     );
-    const uniques = this.getMeta<MetaUnique>(target, "uniques").map(
-      ({ target, ...rest }) => rest,
-    );
 
     if (columns.find((a) => a.decorator === "VersionKeyColumn")) {
       if (!columns.find((a) => a.decorator === "PrimaryKeyColumn")) {
@@ -213,6 +202,7 @@ export class GlobalEntityMetadata {
       }
 
       if (decorator === "PrimaryKeyColumn") {
+        const primaryKey = column;
         const versionKey = columns.find((a) => a.decorator === "VersionKeyColumn");
         const versionStartDate = columns.find(
           (a) => a.decorator === "VersionStartDateColumn",
@@ -226,90 +216,97 @@ export class GlobalEntityMetadata {
 
         if (deleteDate) {
           indexes.push({
-            index: [column.key, deleteDate.key].reduce(
-              (acc, key) => ({ ...acc, [key]: "asc" }),
-              {},
-            ),
+            keys: [
+              { key: primaryKey.key, direction: "asc" },
+              { key: deleteDate.key, direction: "asc" },
+            ],
             name: null,
             options: {},
+            unique: false,
           });
         }
 
         if (deleteDate && expiryDate) {
           indexes.push({
-            index: [column.key, deleteDate.key, expiryDate.key].reduce(
-              (acc, key) => ({ ...acc, [key]: "asc" }),
-              {},
-            ),
+            keys: [
+              { key: primaryKey.key, direction: "asc" },
+              { key: deleteDate.key, direction: "asc" },
+              { key: expiryDate.key, direction: "asc" },
+            ],
             name: null,
             options: {},
+            unique: false,
           });
         }
 
         if (deleteDate && version) {
           indexes.push({
-            index: [column.key, deleteDate.key, version.key].reduce(
-              (acc, key) => ({ ...acc, [key]: "asc" }),
-              {},
-            ),
+            keys: [
+              { key: primaryKey.key, direction: "asc" },
+              { key: deleteDate.key, direction: "asc" },
+              { key: version.key, direction: "asc" },
+            ],
             name: null,
             options: {},
+            unique: false,
           });
         }
 
         if (deleteDate && expiryDate && version) {
           indexes.push({
-            index: [column.key, deleteDate.key, expiryDate.key, version.key].reduce(
-              (acc, key) => ({ ...acc, [key]: "asc" }),
-              {},
-            ),
+            keys: [
+              { key: primaryKey.key, direction: "asc" },
+              { key: deleteDate.key, direction: "asc" },
+              { key: expiryDate.key, direction: "asc" },
+              { key: version.key, direction: "asc" },
+            ],
             name: null,
             options: {},
+            unique: false,
           });
         }
 
-        if (version && versionKey) {
-          uniques.push({
-            keys: [column.key, version.key],
-            name: null,
-          });
-        } else if (version) {
+        if (version) {
           indexes.push({
-            index: [column.key, version.key].reduce(
-              (acc, key) => ({ ...acc, [key]: "asc" }),
-              {},
-            ),
+            keys: [
+              { key: primaryKey.key, direction: "asc" },
+              { key: version.key, direction: "asc" },
+            ],
             name: null,
             options: {},
+            unique: Boolean(versionKey),
           });
         }
 
         if (versionStartDate) {
           indexes.push({
-            index: [column.key, versionStartDate.key].reduce(
-              (acc, key) => ({ ...acc, [key]: "asc" }),
-              {},
-            ),
+            keys: [
+              { key: primaryKey.key, direction: "asc" },
+              { key: versionStartDate.key, direction: "asc" },
+            ],
             name: null,
             options: {},
+            unique: false,
           });
         }
 
         if (versionStartDate && versionEndDate) {
           indexes.push({
-            index: [column.key, versionStartDate.key, versionEndDate.key].reduce(
-              (acc, key) => ({ ...acc, [key]: "asc" }),
-              {},
-            ),
+            keys: [
+              { key: primaryKey.key, direction: "asc" },
+              { key: versionStartDate.key, direction: "asc" },
+              { key: versionEndDate.key, direction: "asc" },
+            ],
             name: null,
             options: {},
+            unique: false,
           });
         }
       }
     }
 
     for (const index of indexes) {
-      if (!Object.keys(index.index).length) {
+      if (!index.keys.length) {
         throw new EntityMetadataError("Index columns not found", {
           debug: { Entity: target.name, index: index.name },
         });
@@ -321,10 +318,23 @@ export class GlobalEntityMetadata {
         });
       }
 
-      for (const column of Object.keys(index.index)) {
-        if (columns.find((a) => a.key === column)) continue;
+      for (const { key } of index.keys) {
+        if (columns.find((a) => a.key === key)) continue;
         throw new EntityMetadataError("Index column not found", {
-          debug: { Entity: target.name, column, index: index.name },
+          debug: { Entity: target.name, key, index: index.name },
+        });
+      }
+
+      if (
+        indexes.filter(
+          (i) =>
+            i.keys.length === index.keys.length &&
+            i.name === index.name &&
+            i.keys.every((k) => index.keys.includes(k)),
+        ).length > 1
+      ) {
+        throw new EntityMetadataError("Duplicate index keys", {
+          debug: { Entity: target.name, index: index.name },
         });
       }
     }
@@ -352,40 +362,6 @@ export class GlobalEntityMetadata {
       });
     }
 
-    for (const unique of uniques) {
-      if (!unique.keys.length) {
-        throw new EntityMetadataError("Unique keys not found", {
-          debug: { Entity: target.name, unique: unique.name },
-        });
-      }
-
-      if (uniques.filter((u) => u.name !== null && u.name === unique.name).length > 1) {
-        throw new EntityMetadataError("Duplicate unique name", {
-          debug: { Entity: target.name, unique: unique.name },
-        });
-      }
-
-      for (const column of unique.keys) {
-        if (columns.find((a) => a.key === column)) continue;
-        throw new EntityMetadataError("Unique column not found", {
-          debug: { Entity: target.name, column, unique: unique.name },
-        });
-      }
-
-      if (
-        uniques.filter(
-          (u) =>
-            u.keys.length === unique.keys.length &&
-            u.name === unique.name &&
-            u.keys.every((k) => unique.keys.includes(k)),
-        ).length > 1
-      ) {
-        throw new EntityMetadataError("Duplicate unique keys", {
-          debug: { Entity: target.name, unique: unique.name },
-        });
-      }
-    }
-
     const final: EntityMetadata<TExtra, TDecorator, TSource> = {
       columns,
       entity,
@@ -396,7 +372,6 @@ export class GlobalEntityMetadata {
       primaryKeys,
       primarySource: primarySource?.source || null,
       schemas,
-      uniques,
     };
 
     this.setCache(target, final);

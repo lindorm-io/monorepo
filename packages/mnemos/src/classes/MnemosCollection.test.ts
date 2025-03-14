@@ -33,17 +33,23 @@ describe("MnemosCollection", () => {
         extras: [],
         generated: [],
         hooks: [],
-        indexes: [],
+        indexes: [
+          {
+            keys: [{ key: "id", direction: "asc" }],
+            name: null,
+            options: {},
+            unique: true,
+          },
+          {
+            keys: [{ key: "name", direction: "asc" }],
+            name: null,
+            options: {},
+            unique: true,
+          },
+        ],
         primaryKeys: ["id"],
         primarySource: null,
         schemas: [],
-        uniques: [
-          {
-            keys: ["id"],
-            name: null,
-          },
-          { keys: ["name"], name: null },
-        ],
       },
     });
     collection.insertOne(TEST_PEOPLE[0]);

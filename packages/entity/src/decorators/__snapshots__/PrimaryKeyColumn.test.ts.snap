@@ -68,48 +68,95 @@ exports[`PrimaryKeyColumn Decorator should add metadata 1`] = `
   "hooks": [],
   "indexes": [
     {
-      "index": {
-        "deleteDate": "asc",
-        "primaryKey": "asc",
-      },
+      "keys": [
+        {
+          "direction": "asc",
+          "key": "primaryKey",
+        },
+        {
+          "direction": "asc",
+          "key": "deleteDate",
+        },
+      ],
       "name": null,
       "options": {},
+      "unique": false,
     },
     {
-      "index": {
-        "deleteDate": "asc",
-        "expiryDate": "asc",
-        "primaryKey": "asc",
-      },
+      "keys": [
+        {
+          "direction": "asc",
+          "key": "primaryKey",
+        },
+        {
+          "direction": "asc",
+          "key": "deleteDate",
+        },
+        {
+          "direction": "asc",
+          "key": "expiryDate",
+        },
+      ],
       "name": null,
       "options": {},
+      "unique": false,
     },
     {
-      "index": {
-        "deleteDate": "asc",
-        "primaryKey": "asc",
-        "version": "asc",
-      },
+      "keys": [
+        {
+          "direction": "asc",
+          "key": "primaryKey",
+        },
+        {
+          "direction": "asc",
+          "key": "deleteDate",
+        },
+        {
+          "direction": "asc",
+          "key": "version",
+        },
+      ],
       "name": null,
       "options": {},
+      "unique": false,
     },
     {
-      "index": {
-        "deleteDate": "asc",
-        "expiryDate": "asc",
-        "primaryKey": "asc",
-        "version": "asc",
-      },
+      "keys": [
+        {
+          "direction": "asc",
+          "key": "primaryKey",
+        },
+        {
+          "direction": "asc",
+          "key": "deleteDate",
+        },
+        {
+          "direction": "asc",
+          "key": "expiryDate",
+        },
+        {
+          "direction": "asc",
+          "key": "version",
+        },
+      ],
       "name": null,
       "options": {},
+      "unique": false,
     },
     {
-      "index": {
-        "primaryKey": "asc",
-        "version": "asc",
-      },
+      "keys": [
+        {
+          "direction": "asc",
+          "key": "primaryKey",
+        },
+        {
+          "direction": "asc",
+          "key": "version",
+        },
+      ],
       "name": null,
       "options": {},
+      "unique": false,
     },
   ],
   "primaryKeys": [
@@ -117,6 +164,5 @@ exports[`PrimaryKeyColumn Decorator should add metadata 1`] = `
   ],
   "primarySource": null,
   "schemas": [],
-  "uniques": [],
 }
 `;

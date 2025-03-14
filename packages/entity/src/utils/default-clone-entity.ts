@@ -27,7 +27,7 @@ export const defaultCloneEntity = <E extends IEntity>(
       reset.includes(column.decorator) ||
       metadata.primaryKeys.includes(column.key) ||
       metadata.generated.some((g) => g.key === column.key) ||
-      metadata.uniques.some((u) => u.keys.includes(column.key))
+      metadata.indexes.some((u) => u.unique && u.keys.every((k) => k.key === column.key))
     ) {
       (clone as any)[column.key] = undefined;
     } else {

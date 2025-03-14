@@ -6,15 +6,29 @@ exports[`getBucketMetadataIndexes should return array for MongoFileBase 1`] = `
     "index": {
       "metadata.mimeType": "asc",
     },
+    "keys": [
+      {
+        "direction": "asc",
+        "key": "mimeType",
+      },
+    ],
     "name": null,
     "options": {},
+    "unique": false,
   },
   {
     "index": {
       "metadata.originalName": "asc",
     },
+    "keys": [
+      {
+        "direction": "asc",
+        "key": "originalName",
+      },
+    ],
     "name": null,
     "options": {},
+    "unique": false,
   },
 ]
 `;

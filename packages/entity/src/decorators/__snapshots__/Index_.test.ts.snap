@@ -68,27 +68,39 @@ exports[`Index Decorator should add metadata 1`] = `
   "hooks": [],
   "indexes": [
     {
-      "index": {
-        "third": "2d",
-      },
+      "keys": [
+        {
+          "direction": "2d",
+          "key": "third",
+        },
+      ],
       "name": null,
       "options": {
         "background": true,
       },
+      "unique": false,
     },
     {
-      "index": {
-        "other": "asc",
-      },
+      "keys": [
+        {
+          "direction": "asc",
+          "key": "other",
+        },
+      ],
       "name": "custom_name",
       "options": {},
+      "unique": false,
     },
     {
-      "index": {
-        "key": "asc",
-      },
+      "keys": [
+        {
+          "direction": "asc",
+          "key": "key",
+        },
+      ],
       "name": null,
       "options": {},
+      "unique": false,
     },
   ],
   "primaryKeys": [
@@ -96,6 +108,5 @@ exports[`Index Decorator should add metadata 1`] = `
   ],
   "primarySource": null,
   "schemas": [],
-  "uniques": [],
 }
 `;

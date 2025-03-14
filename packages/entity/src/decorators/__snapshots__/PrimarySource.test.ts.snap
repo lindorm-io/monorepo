@@ -33,6 +33,5 @@ exports[`PrimarySource Decorator should add metadata 1`] = `
   ],
   "primarySource": "elastic",
   "schemas": [],
-  "uniques": [],
 }
 `;

@@ -107,57 +107,129 @@ exports[`VersionKeyColumn Decorator should add metadata 1`] = `
   "hooks": [],
   "indexes": [
     {
-      "index": {
-        "deleteDate": "asc",
-        "primaryKey": "asc",
-      },
+      "keys": [
+        {
+          "direction": "asc",
+          "key": "primaryKey",
+        },
+        {
+          "direction": "asc",
+          "key": "deleteDate",
+        },
+      ],
       "name": null,
       "options": {},
+      "unique": false,
     },
     {
-      "index": {
-        "deleteDate": "asc",
-        "expiryDate": "asc",
-        "primaryKey": "asc",
-      },
+      "keys": [
+        {
+          "direction": "asc",
+          "key": "primaryKey",
+        },
+        {
+          "direction": "asc",
+          "key": "deleteDate",
+        },
+        {
+          "direction": "asc",
+          "key": "expiryDate",
+        },
+      ],
       "name": null,
       "options": {},
+      "unique": false,
     },
     {
-      "index": {
-        "deleteDate": "asc",
-        "primaryKey": "asc",
-        "version": "asc",
-      },
+      "keys": [
+        {
+          "direction": "asc",
+          "key": "primaryKey",
+        },
+        {
+          "direction": "asc",
+          "key": "deleteDate",
+        },
+        {
+          "direction": "asc",
+          "key": "version",
+        },
+      ],
       "name": null,
       "options": {},
+      "unique": false,
     },
     {
-      "index": {
-        "deleteDate": "asc",
-        "expiryDate": "asc",
-        "primaryKey": "asc",
-        "version": "asc",
-      },
+      "keys": [
+        {
+          "direction": "asc",
+          "key": "primaryKey",
+        },
+        {
+          "direction": "asc",
+          "key": "deleteDate",
+        },
+        {
+          "direction": "asc",
+          "key": "expiryDate",
+        },
+        {
+          "direction": "asc",
+          "key": "version",
+        },
+      ],
       "name": null,
       "options": {},
+      "unique": false,
     },
     {
-      "index": {
-        "primaryKey": "asc",
-        "versionStartDate": "asc",
-      },
+      "keys": [
+        {
+          "direction": "asc",
+          "key": "primaryKey",
+        },
+        {
+          "direction": "asc",
+          "key": "version",
+        },
+      ],
       "name": null,
       "options": {},
+      "unique": true,
     },
     {
-      "index": {
-        "primaryKey": "asc",
-        "versionEndDate": "asc",
-        "versionStartDate": "asc",
-      },
+      "keys": [
+        {
+          "direction": "asc",
+          "key": "primaryKey",
+        },
+        {
+          "direction": "asc",
+          "key": "versionStartDate",
+        },
+      ],
       "name": null,
       "options": {},
+      "unique": false,
+    },
+    {
+      "keys": [
+        {
+          "direction": "asc",
+          "key": "primaryKey",
+        },
+        {
+          "direction": "asc",
+          "key": "versionStartDate",
+        },
+        {
+          "direction": "asc",
+          "key": "versionEndDate",
+        },
+      ],
+      "name": null,
+      "options": {},
+      "unique": false,
     },
   ],
   "primaryKeys": [
@@ -166,14 +238,5 @@ exports[`VersionKeyColumn Decorator should add metadata 1`] = `
   ],
   "primarySource": null,
   "schemas": [],
-  "uniques": [
-    {
-      "keys": [
-        "primaryKey",
-        "version",
-      ],
-      "name": null,
-    },
-  ],
 }
 `;

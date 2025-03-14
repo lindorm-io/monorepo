@@ -47,7 +47,6 @@ exports[`PrimaryKey Decorator should add metadata 1`] = `
   ],
   "primarySource": null,
   "schemas": [],
-  "uniques": [],
 }
 `;
 
@@ -84,6 +83,5 @@ exports[`PrimaryKey Decorator should add metadata with string 1`] = `
   ],
   "primarySource": null,
   "schemas": [],
-  "uniques": [],
 }
 `;

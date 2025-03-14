@@ -33,6 +33,5 @@ exports[`Entity Decorator should add metadata 1`] = `
   ],
   "primarySource": null,
   "schemas": [],
-  "uniques": [],
 }
 `;

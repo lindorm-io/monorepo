@@ -39,8 +39,8 @@ export const getIndexOptions = (metadata: EntityMetadata): Array<MongoBaseIndex>
 
   for (const index of metadata.indexes) {
     result.push({
-      index: Object.entries(index.index).reduce(
-        (acc, [key, direction]) => ({
+      index: index.keys.reduce(
+        (acc, { key, direction }) => ({
           ...acc,
           [key]: direction === "asc" ? 1 : direction === "desc" ? -1 : direction,
         }),
@@ -48,19 +48,12 @@ export const getIndexOptions = (metadata: EntityMetadata): Array<MongoBaseIndex>
       ),
       options: {
         ...(index.name ? { name: index.name } : {}),
-        ...getPartialFilterExpression(metadata, Object.keys(index.index)),
+        ...getPartialFilterExpression(
+          metadata,
+          index.keys.map((i) => i.key),
+        ),
+        unique: index.unique,
         ...index.options,
-      },
-    });
-  }
-
-  for (const unique of metadata.uniques) {
-    result.push({
-      index: unique.keys.reduce((acc, key) => ({ ...acc, [key]: 1 }), {}),
-      options: {
-        ...(unique.name ? { name: unique.name } : {}),
-        unique: true,
-        ...getPartialFilterExpression(metadata, unique.keys),
       },
     });
   }

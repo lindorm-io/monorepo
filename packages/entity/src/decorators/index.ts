@@ -15,7 +15,6 @@ export * from "./PrimaryKeyColumn";
 export * from "./PrimarySource";
 export * from "./Schema";
 export * from "./ScopeColumn";
-export * from "./Unique";
 export * from "./UpdateDateColumn";
 export * from "./VersionColumn";
 export * from "./VersionEndDateColumn";

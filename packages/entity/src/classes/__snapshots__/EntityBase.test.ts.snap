@@ -53,6 +53,5 @@ exports[`EntityBase should have expected properties 2`] = `
   ],
   "primarySource": null,
   "schemas": [],
-  "uniques": [],
 }
 `;

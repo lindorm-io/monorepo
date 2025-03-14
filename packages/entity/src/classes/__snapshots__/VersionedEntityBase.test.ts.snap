@@ -105,21 +105,53 @@ exports[`VersionedEntityBase should have expected properties 2`] = `
   "hooks": [],
   "indexes": [
     {
-      "index": {
-        "id": "asc",
-        "versionStartAt": "asc",
-      },
+      "keys": [
+        {
+          "direction": "asc",
+          "key": "id",
+        },
+        {
+          "direction": "asc",
+          "key": "version",
+        },
+      ],
       "name": null,
       "options": {},
+      "unique": true,
     },
     {
-      "index": {
-        "id": "asc",
-        "versionEndAt": "asc",
-        "versionStartAt": "asc",
-      },
+      "keys": [
+        {
+          "direction": "asc",
+          "key": "id",
+        },
+        {
+          "direction": "asc",
+          "key": "versionStartAt",
+        },
+      ],
       "name": null,
       "options": {},
+      "unique": false,
+    },
+    {
+      "keys": [
+        {
+          "direction": "asc",
+          "key": "id",
+        },
+        {
+          "direction": "asc",
+          "key": "versionStartAt",
+        },
+        {
+          "direction": "asc",
+          "key": "versionEndAt",
+        },
+      ],
+      "name": null,
+      "options": {},
+      "unique": false,
     },
   ],
   "primaryKeys": [
@@ -128,14 +160,5 @@ exports[`VersionedEntityBase should have expected properties 2`] = `
   ],
   "primarySource": null,
   "schemas": [],
-  "uniques": [
-    {
-      "keys": [
-        "id",
-        "version",
-      ],
-      "name": null,
-    },
-  ],
 }
 `;

@@ -42,12 +42,19 @@ exports[`VersionStartDateColumn Decorator should add metadata 1`] = `
   "hooks": [],
   "indexes": [
     {
-      "index": {
-        "id": "asc",
-        "versionStartDate": "asc",
-      },
+      "keys": [
+        {
+          "direction": "asc",
+          "key": "id",
+        },
+        {
+          "direction": "asc",
+          "key": "versionStartDate",
+        },
+      ],
       "name": null,
       "options": {},
+      "unique": false,
     },
   ],
   "primaryKeys": [
@@ -55,6 +62,5 @@ exports[`VersionStartDateColumn Decorator should add metadata 1`] = `
   ],
   "primarySource": null,
   "schemas": [],
-  "uniques": [],
 }
 `;

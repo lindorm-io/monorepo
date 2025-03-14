@@ -33,6 +33,7 @@ exports[`getIndexOptions should return options for MongoFileBase 1`] = `
           "$exists": true,
         },
       },
+      "unique": false,
     },
   },
   {
@@ -45,6 +46,7 @@ exports[`getIndexOptions should return options for MongoFileBase 1`] = `
           "$exists": true,
         },
       },
+      "unique": false,
     },
   },
 ]

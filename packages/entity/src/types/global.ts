@@ -11,7 +11,6 @@ import {
   MetaPrimaryKey,
   MetaPrimarySource,
   MetaSchema,
-  MetaUnique,
 } from "./metadata";
 
 export type GlobalMetadata = {
@@ -24,7 +23,6 @@ export type GlobalMetadata = {
   primaryKeys: Array<MetaPrimaryKey>;
   primarySources: Array<MetaPrimarySource>;
   schemas: Array<MetaSchema>;
-  uniques: Array<MetaUnique>;
 };
 
 export type GlobalThisEntity = typeof globalThis & {

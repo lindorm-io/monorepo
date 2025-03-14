@@ -70,19 +70,19 @@ export class MnemosCollection<T extends Dict> implements IMnemosCollection<T> {
 
     if (!this.metadata) return;
 
-    for (const unique of this.metadata.uniques) {
+    for (const index of this.metadata.indexes) {
       const predicate: Predicate<any> = {};
 
-      for (const key of unique.keys) {
-        const attribute = this.metadata.columns.find((a) => a.key === key);
+      for (const k of index.keys) {
+        const attribute = this.metadata.columns.find((a) => a.key === k.key);
         const nullable = attribute?.nullable ?? false;
 
         if (nullable) {
-          predicate[key] = {
-            $and: [{ $eq: attributes[key] }, { $neq: null }],
+          predicate[k.key] = {
+            $and: [{ $eq: attributes[k.key] }, { $neq: null }],
           };
         } else {
-          predicate[key] = attributes[key];
+          predicate[k.key] = attributes[k.key];
         }
       }
 
@@ -90,7 +90,7 @@ export class MnemosCollection<T extends Dict> implements IMnemosCollection<T> {
 
       throw new MnemosCollectionError("Duplicate record", {
         code: "duplicate_record",
-        debug: { attributes, unique },
+        debug: { attributes, unique: index },
       });
     }
   }

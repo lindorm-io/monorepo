@@ -105,6 +105,11 @@ export type MetaHook = {
   callback: (entity: any) => void;
 };
 
+export type MetaIndexItem = {
+  key: string;
+  direction: IndexDirection;
+};
+
 export type MetaIndexOptions = {
   background?: boolean;
   bits?: number;
@@ -119,9 +124,10 @@ export type MetaIndexOptions = {
 
 export type MetaIndex = {
   target: Function;
-  index: Dict<IndexDirection>;
+  keys: Array<MetaIndexItem>;
   name: string | null;
   options: MetaIndexOptions;
+  unique: boolean;
 };
 
 export type MetaPrimaryKey = {
@@ -147,12 +153,6 @@ export type MetaSchema = {
   schema: ZodObject<IEntity>;
 };
 
-export type MetaUnique = {
-  target: Function;
-  keys: Array<string>;
-  name: string | null;
-};
-
 export type EntityMetadata<
   TExtra extends Dict = Dict,
   TDecorator extends MetaColumnDecorator = MetaColumnDecorator,
@@ -167,5 +167,4 @@ export type EntityMetadata<
   primaryKeys: Array<string>;
   primarySource: TSource | null;
   schemas: Array<ZodObject<IEntity>>;
-  uniques: Array<Omit<MetaUnique, "target">>;
 };
