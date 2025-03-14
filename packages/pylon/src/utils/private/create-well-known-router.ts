@@ -1,13 +1,8 @@
 import { PylonRouter } from "../../classes";
-import { OpenIdConfigurationOptions, PylonHttpContext } from "../../types";
-
-type Options = {
-  issuer?: string | null;
-  openIdConfiguration?: Partial<OpenIdConfigurationOptions>;
-};
+import { PylonHttpContext, PylonHttpOptions } from "../../types";
 
 export const createWellKnownRouter = <C extends PylonHttpContext>(
-  options: Options,
+  options: PylonHttpOptions<any>,
 ): PylonRouter<C> => {
   const router = new PylonRouter<C>();
 
@@ -23,6 +18,19 @@ export const createWellKnownRouter = <C extends PylonHttpContext>(
 
   router.get("/openid-configuration", async (ctx) => {
     ctx.body = openIdConfiguration;
+    ctx.status = 200;
+  });
+
+  router.get("/pylon-configuration", async (ctx) => {
+    ctx.body = {
+      cors: options.cors,
+      domain: options.domain,
+      environment: options.environment,
+      issuer: options.issuer,
+      maxRequestAge: options.maxRequestAge,
+      name: options.name,
+      version: options.version,
+    };
     ctx.status = 200;
   });
 
