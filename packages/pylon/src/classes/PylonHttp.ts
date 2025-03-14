@@ -1,9 +1,5 @@
-import { IAmphora } from "@lindorm/amphora";
-import { ReadableTime } from "@lindorm/date";
-import { Environment } from "@lindorm/enums";
 import { isArray, isString } from "@lindorm/is";
 import { ILogger } from "@lindorm/logger";
-import { OpenIdConfiguration } from "@lindorm/types";
 import Koa from "koa";
 import userAgent from "koa-useragent";
 import {
@@ -21,15 +17,10 @@ import {
   httpResponseTimeMiddleware,
 } from "../middleware/private";
 import {
-  CorsOptions,
   HttpCallback,
-  ParseBodyOptions,
-  PylonCookieConfig,
   PylonHttpContext,
   PylonHttpMiddleware,
   PylonHttpOptions,
-  PylonHttpRouters,
-  PylonSessionConfig,
 } from "../types";
 import {
   createHealthRouter,
@@ -40,47 +31,22 @@ import { PylonRouter } from "./PylonRouter";
 import { PylonRouterScanner } from "./private";
 
 export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
-  private readonly amphora: IAmphora;
-  private readonly cookies: PylonCookieConfig | undefined;
-  private readonly cors: CorsOptions | undefined;
-  private readonly environment: Environment;
-  private readonly httpMaxRequestAge: ReadableTime | undefined;
-  private readonly issuer: string | null;
   private readonly logger: ILogger;
   private readonly middleware: Array<PylonHttpMiddleware<T>>;
-  private readonly openIdConfiguration: Partial<OpenIdConfiguration>;
-  private readonly parseBody: ParseBodyOptions | undefined;
+  private readonly options: PylonHttpOptions<T>;
   private readonly router: PylonRouter<T>;
-  private readonly routers: Array<PylonHttpRouters<T>> | string | undefined;
-  private readonly session: PylonSessionConfig | undefined;
-  private readonly version: string;
 
   private _callback: HttpCallback | undefined;
 
   public readonly server: Koa;
 
   public constructor(options: PylonHttpOptions<T>) {
-    options.environment = options.environment ?? Environment.Development;
-    options.version = options.version ?? "0.0.0";
-    options.issuer = options.issuer ?? options.amphora.issuer;
-
     this.logger = options.logger.child(["PylonHttp"]);
 
-    this.amphora = options.amphora;
-    this.cookies = options.cookies;
-    this.cors = options.cors;
-    this.environment = options.environment;
-    this.httpMaxRequestAge = options.maxRequestAge;
-    this.issuer = options.issuer;
     this.middleware = [];
-    this.openIdConfiguration = options.openIdConfiguration ?? {};
-    this.parseBody = options.parseBody;
+    this.options = options;
     this.router = new PylonRouter<T>();
-    this.routers = options.httpRouters;
-    this.session = options.session;
-    this.version = options.version;
-
-    this.server = new Koa({ keys: getCookieKeys(this.amphora) });
+    this.server = new Koa({ keys: getCookieKeys(options.amphora) });
   }
 
   // public
@@ -100,7 +66,7 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
   public loadMiddleware(): void {
     this.logger.debug("Loading middleware");
 
-    this.server.use(createHttpCorsMiddleware(this.cors));
+    this.server.use(createHttpCorsMiddleware(this.options.cors));
 
     // middleware
 
@@ -110,17 +76,19 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
       httpResponseLoggerMiddleware,
       httpErrorHandlerMiddleware,
       createHttpMetadataMiddleware({
-        environment: this.environment,
-        httpMaxRequestAge: this.httpMaxRequestAge ?? "10s",
-        version: this.version,
+        environment: this.options.environment!,
+        httpMaxRequestAge: this.options.maxRequestAge ?? "10s",
+        version: this.options.version!,
       }),
       createHttpContextInitialisationMiddleware({
-        amphora: this.amphora,
+        amphora: this.options.amphora,
         logger: this.logger,
       }),
-      createHttpFunctionsMiddleware(this.cookies, this.session),
-      ...(this.session ? [createHttpSessionMiddleware(this.session)] : []),
-      createHttpBodyParserMiddleware(this.parseBody),
+      createHttpFunctionsMiddleware(this.options.cookies, this.options.session),
+      ...(this.options.session
+        ? [createHttpSessionMiddleware(this.options.session)]
+        : []),
+      createHttpBodyParserMiddleware(this.options.parseBody),
       httpQueryParserMiddleware,
       httpRequestLoggerMiddleware,
       httpResponseBodyMiddleware,
@@ -135,21 +103,15 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
     this.router.use(...this.middleware);
 
     this.addRouter("/health", createHealthRouter());
-    this.addRouter(
-      "/.well-known",
-      createWellKnownRouter({
-        issuer: this.issuer,
-        openIdConfiguration: this.openIdConfiguration,
-      }),
-    );
+    this.addRouter("/.well-known", createWellKnownRouter(this.options));
 
-    if (isString(this.routers)) {
+    if (isString(this.options.httpRouters)) {
       const scanner = new PylonRouterScanner<T>(this.logger);
-      const router = scanner.scan(this.routers);
+      const router = scanner.scan(this.options.httpRouters);
 
       this.router.use(router.routes(), router.allowedMethods());
-    } else if (isArray(this.routers)) {
-      for (const router of this.routers ?? []) {
+    } else if (isArray(this.options.httpRouters)) {
+      for (const router of this.options.httpRouters ?? []) {
         this.addRouter(router.path, router.router);
       }
     }

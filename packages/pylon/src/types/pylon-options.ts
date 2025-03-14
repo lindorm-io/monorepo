@@ -28,11 +28,13 @@ type Common = {
 export type PylonHttpOptions<C extends PylonHttpContext = PylonHttpContext> = Common & {
   cookies?: PylonCookieConfig;
   cors?: CorsOptions;
+  domain?: string;
   environment?: Environment;
   httpMiddleware?: Array<PylonHttpMiddleware<C>>;
   httpRouters?: string | Array<PylonHttpRouters<C>>;
   issuer?: string | null;
   maxRequestAge?: ReadableTime;
+  name?: string;
   openIdConfiguration?: Partial<OpenIdConfigurationOptions>;
   parseBody?: ParseBodyOptions;
   session?: PylonSessionConfig;
@@ -51,8 +53,6 @@ export type PylonOptions<
   S extends PylonSocketContext = PylonSocketContext,
 > = PylonHttpOptions<C> &
   PylonIoOptions<S> & {
-    domain?: string;
-    name?: string;
     port?: number;
     setup?: PylonSetup;
     teardown?: PylonTeardown;

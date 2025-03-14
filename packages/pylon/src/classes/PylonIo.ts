@@ -1,4 +1,3 @@
-import { IAmphora } from "@lindorm/amphora";
 import { isArray, isString } from "@lindorm/is";
 import { ILogger } from "@lindorm/logger";
 import { uniq } from "@lindorm/utils";
@@ -23,9 +22,8 @@ import { PylonListenerScanner } from "./private";
 import { PylonListener } from "./PylonListener";
 
 export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
-  private readonly amphora: IAmphora;
-  private readonly listeners: Array<PylonListener<T>> | string;
   private readonly logger: ILogger;
+  private readonly options: PylonIoOptions<T>;
   private readonly middleware: Array<PylonSocketMiddleware<T>>;
 
   public readonly server: IoServer;
@@ -33,10 +31,8 @@ export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
   public constructor(http: Server, options: PylonIoOptions<T>) {
     this.logger = options.logger.child(["PylonSocket"]);
 
-    this.amphora = options.amphora;
-    this.listeners = options.socketListeners ?? [];
     this.middleware = [];
-
+    this.options = options;
     this.server = new SocketIoServer(http, {
       ...(options.socketOptions ?? {}),
       ...(options.socketRedis
@@ -62,14 +58,14 @@ export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
     const listeners: Array<PylonListener<T>> = [];
     const namespaces: Array<string> = [];
 
-    if (isString(this.listeners)) {
+    if (isString(this.options.socketListeners)) {
       const scanner = new PylonListenerScanner<T>(this.logger);
-      const result = scanner.scan(this.listeners);
+      const result = scanner.scan(this.options.socketListeners);
 
       listeners.push(...result.listeners);
       namespaces.push(...result.namespaces);
-    } else if (isArray(this.listeners)) {
-      for (const listener of this.listeners) {
+    } else if (isArray(this.options.socketListeners)) {
+      for (const listener of this.options.socketListeners) {
         listeners.push(listener);
 
         if (listener.namespace) {
@@ -80,7 +76,7 @@ export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
 
     const middleware = [
       createEventContextInitialisationMiddleware({
-        amphora: this.amphora,
+        amphora: this.options.amphora,
         logger: this.logger,
       }),
       eventLoggerMiddleware,
