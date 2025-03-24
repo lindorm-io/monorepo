@@ -1,5 +1,5 @@
 import { IKryptosOct, KryptosKit } from "@lindorm/kryptos";
-import { BufferFormat } from "@lindorm/types";
+import { BufferFormat, IKeyKit } from "@lindorm/types";
 import { OctError } from "../errors";
 import { OctKitOptions } from "../types";
 import {
@@ -8,7 +8,7 @@ import {
   verifyOctSignature,
 } from "../utils/private";
 
-export class OctKit {
+export class OctKit implements IKeyKit {
   private readonly format: BufferFormat;
   private readonly kryptos: IKryptosOct;
 

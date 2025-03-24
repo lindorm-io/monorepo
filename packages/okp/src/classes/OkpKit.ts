@@ -1,5 +1,5 @@
 import { IKryptosOkp, KryptosKit } from "@lindorm/kryptos";
-import { BufferFormat } from "@lindorm/types";
+import { BufferFormat, IKeyKit } from "@lindorm/types";
 import { OkpError } from "../errors";
 import { OkpKitOptions } from "../types";
 import {
@@ -8,7 +8,7 @@ import {
   verifyOkpSignature,
 } from "../utils/private";
 
-export class OkpKit {
+export class OkpKit implements IKeyKit {
   private readonly format: BufferFormat;
   private readonly kryptos: IKryptosOkp;
 

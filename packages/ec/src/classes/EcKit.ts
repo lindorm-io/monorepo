@@ -1,4 +1,5 @@
 import { IKryptosEc, KryptosKit } from "@lindorm/kryptos";
+import { IKeyKit } from "@lindorm/types";
 import { EcError } from "../errors";
 import { EcKitOptions, EcSignatureFormat } from "../types";
 import {
@@ -7,7 +8,7 @@ import {
   verifyEcSignature,
 } from "../utils/private";
 
-export class EcKit {
+export class EcKit implements IKeyKit {
   private readonly format: EcSignatureFormat;
   private readonly kryptos: IKryptosEc;
 

@@ -1,5 +1,5 @@
 import { IKryptosRsa, KryptosKit } from "@lindorm/kryptos";
-import { BufferFormat } from "@lindorm/types";
+import { BufferFormat, IKeyKit } from "@lindorm/types";
 import { RsaError } from "../errors";
 import { RsaKitOptions } from "../types";
 import {
@@ -8,7 +8,7 @@ import {
   verifyRsaSignature,
 } from "../utils/private";
 
-export class RsaKit {
+export class RsaKit implements IKeyKit {
   private readonly format: BufferFormat;
   private readonly kryptos: IKryptosRsa;
 
