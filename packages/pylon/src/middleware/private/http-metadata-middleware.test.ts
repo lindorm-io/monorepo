@@ -52,7 +52,7 @@ describe("createHttpMetadataMiddleware", () => {
       createHttpMetadataMiddleware(options)(ctx, jest.fn()),
     ).resolves.toBeUndefined();
 
-    expect(ctx.metadata).toEqual({
+    expect(ctx.state.metadata).toEqual({
       correlationId: "8b39eafc-7e31-501b-ab7b-58514b14856a",
       date: MockedDate,
       environment: "test",
@@ -79,7 +79,7 @@ describe("createHttpMetadataMiddleware", () => {
       createHttpMetadataMiddleware(options)(ctx, jest.fn()),
     ).resolves.toBeUndefined();
 
-    expect(ctx.metadata).toEqual({
+    expect(ctx.state.metadata).toEqual({
       correlationId: "2f881f6e-f7ce-554f-a5cd-cb80266ff3ec",
       date: MockedDate,
       environment: "unknown",

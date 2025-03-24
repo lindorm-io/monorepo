@@ -5,7 +5,6 @@ import {
   createHttpBodyParserMiddleware,
   createHttpContextInitialisationMiddleware,
   createHttpCorsMiddleware,
-  createHttpFunctionsMiddleware,
   createHttpMetadataMiddleware,
   createHttpSessionMiddleware,
   httpErrorHandlerMiddleware,
@@ -84,7 +83,6 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
         cookies: this.options.cookies,
         logger: this.logger,
       }),
-      createHttpFunctionsMiddleware(this.options.session),
       ...(this.options.session
         ? [createHttpSessionMiddleware(this.options.session)]
         : []),

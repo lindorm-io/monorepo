@@ -18,10 +18,12 @@ describe("createHttpContextInitialisationMiddleware", () => {
 
   beforeEach(() => {
     ctx = {
-      metadata: {
-        correlationId: "8b39eafc-7e31-501b-ab7b-58514b14856a",
-        requestId: "aa9a627d-8296-598c-9589-4ec91d27d056",
-        responseId: "ee576e4a-c30c-5138-bfa8-51ca832bdaec",
+      state: {
+        metadata: {
+          correlationId: "8b39eafc-7e31-501b-ab7b-58514b14856a",
+          requestId: "aa9a627d-8296-598c-9589-4ec91d27d056",
+          responseId: "ee576e4a-c30c-5138-bfa8-51ca832bdaec",
+        },
       },
       set: jest.fn(),
     };
@@ -51,7 +53,6 @@ describe("createHttpContextInitialisationMiddleware", () => {
     expect(ctx.aegis).toEqual(expect.any(Aegis));
     expect(ctx.conduits.conduit).toEqual(expect.any(Conduit));
     expect(ctx.cookies).toBeDefined();
-    expect(ctx.tokens).toEqual({});
     expect(ctx.webhook).toEqual({ event: null, data: undefined });
   });
 });

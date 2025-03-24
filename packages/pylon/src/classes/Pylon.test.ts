@@ -86,7 +86,7 @@ describe("Pylon", () => {
 
       spy({
         data: ctx.data,
-        metadata: ctx.metadata,
+        metadata: ctx.state.metadata,
       });
     };
 
@@ -108,7 +108,7 @@ describe("Pylon", () => {
     });
 
     router.post("/session", async (ctx) => {
-      await ctx.sessions.set({
+      await ctx.session.set({
         id: "c1460965-fb6d-5a2a-be8a-84f7cd7d1a9f",
         accessToken: "access",
         idToken: "id",
@@ -118,7 +118,7 @@ describe("Pylon", () => {
     });
 
     router.get("/session", async (ctx) => {
-      ctx.body = ctx.session;
+      ctx.body = ctx.state.session;
       ctx.status = 200;
     });
 

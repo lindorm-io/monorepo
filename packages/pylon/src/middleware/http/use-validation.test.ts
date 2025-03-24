@@ -7,7 +7,9 @@ describe("useValidation", () => {
   beforeEach(() => {
     ctx = {
       logger: createMockLogger(),
-      tokens: { jwt: { audience: "value" } },
+      state: {
+        tokens: { jwt: { audience: "value" } },
+      },
     };
   });
 

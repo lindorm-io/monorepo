@@ -25,33 +25,37 @@ export const createHttpMetadataMiddleware = (options: Options): PylonHttpMiddlew
       const minDate = subMilliseconds(new Date(), ms(options.httpMaxRequestAge));
       const maxDate = addMilliseconds(new Date(), ms(options.httpMaxRequestAge));
 
-      ctx.metadata = {
-        correlationId: ctx.get("x-correlation-id") || randomUUID(),
-        date: requestDate ? new Date(requestDate) : new Date(),
-        environment: (ctx.get("x-environment") as Environment) || Environment.Unknown,
-        origin: ctx.get("x-origin") || ctx.get("origin") || null,
-        requestId: ctx.get("x-request-id") || randomUUID(),
-        responseId: randomUUID(),
-        sessionId: null,
+      ctx.state = {
+        metadata: {
+          correlationId: ctx.get("x-correlation-id") || randomUUID(),
+          date: requestDate ? new Date(requestDate) : new Date(),
+          environment: (ctx.get("x-environment") as Environment) || Environment.Unknown,
+          origin: ctx.get("x-origin") || ctx.get("origin") || null,
+          requestId: ctx.get("x-request-id") || randomUUID(),
+          responseId: randomUUID(),
+          sessionId: null,
+        },
+        session: null,
+        tokens: {},
       };
 
-      if (isBefore(ctx.metadata.date, minDate)) {
+      if (isBefore(ctx.state.metadata.date, minDate)) {
         throw new ClientError("Replay Attack", {
           code: "replay_error",
           details: "Request has been identified as a likely replay attack",
           data: {
-            actual: ctx.metadata.date.toISOString(),
+            actual: ctx.state.metadata.date.toISOString(),
             expect: minDate.toISOString(),
           },
         });
       }
 
-      if (isAfter(ctx.metadata.date, maxDate)) {
+      if (isAfter(ctx.state.metadata.date, maxDate)) {
         throw new ClientError("Suspicious Request", {
           code: "suspicious_request",
           details: "Request has been identified as suspicious",
           data: {
-            actual: ctx.metadata.date.toISOString(),
+            actual: ctx.state.metadata.date.toISOString(),
             expect: maxDate.toISOString(),
           },
         });
@@ -59,11 +63,11 @@ export const createHttpMetadataMiddleware = (options: Options): PylonHttpMiddlew
 
       await next();
     } finally {
-      ctx.set("x-correlation-id", ctx.metadata.correlationId);
-      ctx.set("x-request-id", ctx.metadata.requestId);
-      ctx.set("x-response-id", ctx.metadata.responseId);
+      ctx.set("x-correlation-id", ctx.state.metadata.correlationId);
+      ctx.set("x-request-id", ctx.state.metadata.requestId);
+      ctx.set("x-response-id", ctx.state.metadata.responseId);
       ctx.set("x-server-environment", options.environment);
       ctx.set("x-server-version", options.version);
-      ctx.set("x-session-id", ctx.metadata.sessionId ?? "");
+      ctx.set("x-session-id", ctx.state.metadata.sessionId ?? "");
     }
   };

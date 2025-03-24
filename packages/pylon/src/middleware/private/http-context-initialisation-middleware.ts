@@ -20,9 +20,9 @@ export const createHttpContextInitialisationMiddleware = (
     ctx.status = ClientError.Status.NotFound;
 
     ctx.logger = options.logger.child(["Request"], {
-      correlationId: ctx.metadata.correlationId,
-      requestId: ctx.metadata.requestId,
-      responseId: ctx.metadata.responseId,
+      correlationId: ctx.state.metadata.correlationId,
+      requestId: ctx.state.metadata.requestId,
+      responseId: ctx.state.metadata.responseId,
     });
 
     ctx.amphora = options.amphora;
@@ -37,8 +37,6 @@ export const createHttpContextInitialisationMiddleware = (
     };
 
     ctx.cookies = new PylonCookieKit(ctx, options.cookies);
-
-    ctx.tokens = {};
 
     ctx.webhook = { event: null, data: undefined };
 

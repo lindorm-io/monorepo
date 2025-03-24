@@ -38,7 +38,7 @@ export const createHttpTokenMiddleware =
             time: Date.now() - start,
           });
 
-          ctx.tokens[options.contextKey] = verified;
+          ctx.state.tokens[options.contextKey] = verified;
         }
       } catch (error: any) {
         ctx.logger.debug("Token verification failed", {

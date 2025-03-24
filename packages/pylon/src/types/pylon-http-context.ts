@@ -9,10 +9,11 @@ import { Files } from "formidable";
 import { BaseRequest } from "koa";
 import { RouterContext } from "koa-router";
 import { PylonCookieKit } from "../classes/private/PylonCookieKit";
+import { IPylonSession } from "../interfaces/PylonSession";
 import { PylonSession } from "./session";
 import { IoServer } from "./socket";
 
-type KoaContext = Omit<RouterContext, "cookies">;
+type KoaContext = Omit<RouterContext, "cookies" | "state">;
 
 type Conduits = {
   conduit: IConduit;
@@ -40,7 +41,13 @@ type Webhook<Data> = {
   data: Data;
 };
 
-type Context<Data, WebhookData> = {
+export type PylonHttpState = {
+  metadata: Metadata;
+  session: PylonSession | null;
+  tokens: Dict<VerifiedJwt | VerifiedJws<any>>;
+};
+
+type Context<Data, State, WebhookData> = {
   aegis: IAegis;
   amphora: IAmphora;
   conduits: Conduits;
@@ -48,20 +55,17 @@ type Context<Data, WebhookData> = {
   data: Data;
   io: IoServer;
   logger: ILogger;
-  metadata: Metadata;
   request: Request;
-  session: PylonSession | null;
-  sessions: {
-    set(session: PylonSession): Promise<void>;
-    get(): Promise<PylonSession | null>;
-    del(): Promise<void>;
-  };
-  tokens: Dict<VerifiedJwt | VerifiedJws<any>>;
+  session: IPylonSession;
+  state: State;
   webhook: Webhook<WebhookData>;
 };
 
-export type PylonHttpContext<Data = any, WebhookData = any> = KoaContext &
-  Context<Data, WebhookData>;
+export type PylonHttpContext<
+  Data = any,
+  State = PylonHttpState,
+  WebhookData = any,
+> = KoaContext & Context<Data, State, WebhookData>;
 
 export type PylonHttpMiddleware<C extends PylonHttpContext = PylonHttpContext> =
   Middleware<C>;

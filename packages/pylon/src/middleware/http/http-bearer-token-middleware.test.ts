@@ -10,7 +10,9 @@ describe("createHttpBearerTokenMiddleware", () => {
     ctx = {
       aegis: createMockAegis(),
       logger: createMockLogger(),
-      tokens: {},
+      state: {
+        tokens: {},
+      },
 
       get: jest.fn().mockReturnValue("Bearer token"),
     };
@@ -25,7 +27,7 @@ describe("createHttpBearerTokenMiddleware", () => {
       createHttpBearerTokenMiddleware(options)(ctx, jest.fn()),
     ).resolves.toBeUndefined();
 
-    expect(ctx.tokens.bearer).toEqual({
+    expect(ctx.state.tokens.bearer).toEqual({
       decoded: {},
       header: {},
       payload: {

@@ -1,25 +1,49 @@
-import { PylonHttpMiddleware, PylonSessionConfig } from "../../types";
+import { PylonHttpMiddleware, PylonSession, PylonSessionConfig } from "../../types";
 
 export const createHttpSessionMiddleware = (
-  config: PylonSessionConfig,
-): PylonHttpMiddleware =>
-  async function httpSessionMiddleware(ctx, next) {
-    const session = await ctx.sessions.get();
+  config: PylonSessionConfig = {},
+): PylonHttpMiddleware => {
+  const sessionName = config.name ?? "pylon_session";
 
-    ctx.session = session;
+  return async function httpSessionMiddleware(ctx, next) {
+    ctx.session = {
+      set: async (session: PylonSession): Promise<void> => {
+        const value = config.store ? await config.store.set(session) : session;
+        await ctx.cookies.set(sessionName, value, config);
+      },
 
-    if (session?.id) {
-      ctx.metadata.sessionId = session.id;
-      ctx.logger.correlation({ sessionId: session.id });
+      get: async (): Promise<PylonSession | null> => {
+        const cookie = await ctx.cookies.get(sessionName, config);
+        const value = config.store ? await config.store.get(cookie) : cookie;
+        return value ?? null;
+      },
+
+      del: async (): Promise<void> => {
+        if (config.store) {
+          const cookie = await ctx.cookies.get(sessionName, config);
+          await config.store.del(cookie);
+        }
+        ctx.cookies.del(sessionName);
+      },
+    };
+
+    ctx.state.session = await ctx.session.get();
+
+    if (ctx.state.session?.id) {
+      ctx.state.metadata.sessionId = ctx.state.session.id;
+      ctx.logger.correlation({ sessionId: ctx.state.session.id });
     }
 
-    if (config.verify && session?.accessToken) {
-      ctx.tokens.accessToken = await ctx.aegis.verify(session.accessToken);
+    if (config.verify && ctx.state.session?.accessToken) {
+      ctx.state.tokens.accessToken = await ctx.aegis.verify(
+        ctx.state.session.accessToken,
+      );
     }
 
-    if (config.verify && session?.idToken) {
-      ctx.tokens.idToken = await ctx.aegis.verify(session.idToken);
+    if (config.verify && ctx.state.session?.idToken) {
+      ctx.state.tokens.idToken = await ctx.aegis.verify(ctx.state.session.idToken);
     }
 
     await next();
   };
+};

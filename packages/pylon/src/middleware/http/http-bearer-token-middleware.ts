@@ -51,7 +51,7 @@ export const createHttpBearerTokenMiddleware = <
         time: Date.now() - start,
       });
 
-      ctx.tokens.bearer = verified;
+      ctx.state.tokens.bearer = verified;
     } catch (error: any) {
       ctx.logger.debug("Bearer token verification failed", {
         error,

@@ -2,7 +2,7 @@ import { PylonHttpMiddleware } from "../../types";
 
 export const httpRequestLoggerMiddleware: PylonHttpMiddleware = async (ctx, next) => {
   ctx.logger.info("Service request", {
-    metadata: ctx.metadata,
+    metadata: ctx.state.metadata,
     request: {
       body: ctx.request.body,
       header: ctx.request.header,

@@ -6,7 +6,7 @@ export const httpResponseLoggerMiddleware: PylonHttpMiddleware = async (ctx, nex
     await next();
   } finally {
     ctx.logger.info("Service response", {
-      metadata: ctx.metadata,
+      metadata: ctx.state.metadata,
       request: {
         body: ctx.request.body,
         files: ctx.request.files,

@@ -34,7 +34,7 @@ export const createHttpConduitMiddleware = <
       ctx.conduits[options.alias] = new Conduit({
         ...options,
         middleware: [
-          conduitCorrelationMiddleware(ctx.metadata.correlationId),
+          conduitCorrelationMiddleware(ctx.state.metadata.correlationId),
           conduitChangeResponseDataMiddleware(ChangeCase.Camel),
           ...(options.middleware ?? []),
         ],

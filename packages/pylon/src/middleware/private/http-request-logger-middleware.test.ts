@@ -6,7 +6,6 @@ describe("httpRequestLoggerMiddleware", () => {
 
   beforeEach(() => {
     ctx = {
-      metadata: "metadata",
       logger: createMockLogger(),
       request: {
         body: "request.body",
@@ -19,6 +18,9 @@ describe("httpRequestLoggerMiddleware", () => {
         header: "response.header",
         message: "response.message",
         status: "response.status",
+      },
+      state: {
+        metadata: "metadata",
       },
     };
   });

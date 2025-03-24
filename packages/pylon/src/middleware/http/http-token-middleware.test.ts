@@ -10,7 +10,9 @@ describe("createHttpTokenMiddleware", () => {
     ctx = {
       aegis: createMockAegis(),
       logger: createMockLogger(),
-      tokens: {},
+      state: {
+        tokens: {},
+      },
 
       request: { body: { id_token: "value" } },
     };
@@ -26,7 +28,7 @@ describe("createHttpTokenMiddleware", () => {
       createHttpTokenMiddleware(options)("request.body.id_token")(ctx, jest.fn()),
     ).resolves.toBeUndefined();
 
-    expect(ctx.tokens.id).toEqual({
+    expect(ctx.state.tokens.id).toEqual({
       decoded: {},
       header: {},
       payload: {
@@ -49,6 +51,6 @@ describe("createHttpTokenMiddleware", () => {
       ),
     ).resolves.toBeUndefined();
 
-    expect(ctx.tokens.id).toBeUndefined();
+    expect(ctx.state.tokens.id).toBeUndefined();
   });
 });

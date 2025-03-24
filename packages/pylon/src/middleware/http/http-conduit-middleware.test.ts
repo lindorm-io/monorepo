@@ -8,8 +8,10 @@ describe("createHttpConduitMiddleware", () => {
   beforeEach(() => {
     ctx = {
       conduits: {},
-      metadata: { correlationId: "correlationId", requestId: "requestId" },
       logger: createMockLogger(),
+      state: {
+        metadata: { correlationId: "correlationId", requestId: "requestId" },
+      },
     };
   });
 

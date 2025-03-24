@@ -11,7 +11,7 @@ export const useValidation = (
     const start = Date.now();
 
     try {
-      const token = get(ctx.tokens, tokenPath);
+      const token = get(ctx.state.tokens, tokenPath);
 
       if (!token) {
         throw new ClientError("Token not found");
