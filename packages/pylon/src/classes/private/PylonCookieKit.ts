@@ -1,13 +1,9 @@
-import { IAegis } from "@lindorm/aegis";
+import { IAegis, SignatureKit } from "@lindorm/aegis";
 import { IAmphora } from "@lindorm/amphora";
-import { EcKit } from "@lindorm/ec";
 import { ClientError } from "@lindorm/errors";
 import { isString } from "@lindorm/is";
-import { IKryptos } from "@lindorm/kryptos";
-import { OctKit } from "@lindorm/oct";
-import { OkpKit } from "@lindorm/okp";
-import { RsaKit } from "@lindorm/rsa";
 import { Dict } from "@lindorm/types";
+import { safelyParse } from "@lindorm/utils";
 import {
   PylonCookieConfig,
   PylonGetCookie,
@@ -95,7 +91,7 @@ export class PylonCookieKit {
       cookie.value = (await this.aegis.jwe.decrypt(cookie.value)).payload;
     }
 
-    this.cache[name] = this.safelyParse(cookie.value);
+    this.cache[name] = safelyParse(cookie.value);
 
     return this.cache[name];
   }
@@ -118,14 +114,6 @@ export class PylonCookieKit {
     );
   }
 
-  private safelyParse(value: string): any {
-    try {
-      return JSON.parse(value);
-    } catch (_) {
-      return value;
-    }
-  }
-
   private async sign(value: string): Promise<string> {
     const kryptos = await this.amphora.find({
       isExternal: false,
@@ -133,18 +121,7 @@ export class PylonCookieKit {
       use: "sig",
     });
 
-    switch (kryptos.type) {
-      case "EC":
-        return new EcKit({ kryptos }).sign(value);
-      case "RSA":
-        return new RsaKit({ kryptos }).sign(value);
-      case "OKP":
-        return new OkpKit({ kryptos }).sign(value);
-      case "oct":
-        return new OctKit({ kryptos }).sign(value);
-      default:
-        throw new Error("Unsupported kryptos type");
-    }
+    return new SignatureKit({ kryptos }).sign(value);
   }
 
   private async verify(
@@ -166,31 +143,12 @@ export class PylonCookieKit {
     });
 
     for (const kryptos of array) {
-      if (this.verifyWithKryptos(kryptos, value, signature)) return;
+      if (new SignatureKit({ kryptos }).verify(value, signature)) return;
     }
 
     throw new ClientError("Invalid cookie signature", {
       code: "invalid_signature",
       debug: { name, value, signature },
     });
-  }
-
-  private verifyWithKryptos(
-    kryptos: IKryptos,
-    value: string,
-    signature: string,
-  ): boolean {
-    switch (kryptos.type) {
-      case "EC":
-        return new EcKit({ kryptos }).verify(value, signature);
-      case "RSA":
-        return new RsaKit({ kryptos }).verify(value, signature);
-      case "OKP":
-        return new OkpKit({ kryptos }).verify(value, signature);
-      case "oct":
-        return new OctKit({ kryptos }).verify(value, signature);
-      default:
-        throw new Error("Unsupported kryptos type");
-    }
   }
 }
