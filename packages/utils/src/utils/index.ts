@@ -7,6 +7,7 @@ export * from "./parse-string-record";
 export * from "./remove";
 export * from "./remove-empty";
 export * from "./remove-undefined";
+export * from "./safely-parse";
 export * from "./sleep";
 export * from "./sort-keys";
 export * from "./uniq";
