@@ -1,29 +1,33 @@
 import { Expiry } from "@lindorm/date";
 
+export type CookieEncoding = "base64" | "base64url" | "hex";
 export type CookiePriority = "low" | "medium" | "high";
-export type CookieSameSite = "strict" | "lax";
+export type CookieSameSite = "strict" | "lax" | "none";
 
-export type SetCookieOptions = {
-  encrypted?: boolean;
+export type PylonCookieOptions = {
+  domain?: string;
   expiry?: Expiry;
   httpOnly?: boolean;
-  overwrite?: boolean;
+  partitioned?: boolean;
   path?: string;
   priority?: CookiePriority;
   sameSite?: CookieSameSite;
-  signed?: boolean;
+  secure?: boolean;
 };
 
-export type GetCookieOptions = {
-  signed?: boolean;
-};
+export type PylonCookieConfig = Pick<
+  PylonCookieOptions,
+  "domain" | "httpOnly" | "sameSite" | "secure"
+>;
 
-export type PylonCookieConfig = {
-  domain?: string;
+export type PylonSetCookie = PylonCookieOptions & {
+  encoding?: CookieEncoding;
   encrypted?: boolean;
-  httpOnly?: boolean;
-  overwrite?: boolean;
-  priority?: CookiePriority;
-  sameSite?: CookieSameSite;
+  signed?: boolean;
+};
+
+export type PylonGetCookie = {
+  encoding?: CookieEncoding;
+  encrypted?: boolean;
   signed?: boolean;
 };

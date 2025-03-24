@@ -3,10 +3,12 @@ import { IAmphora } from "@lindorm/amphora";
 import { Conduit } from "@lindorm/conduit";
 import { ClientError } from "@lindorm/errors";
 import { ILogger } from "@lindorm/logger";
-import { PylonHttpMiddleware } from "../../types";
+import { PylonCookieKit } from "../../classes/private";
+import { PylonCookieConfig, PylonHttpMiddleware } from "../../types";
 
 type Options = {
   amphora: IAmphora;
+  cookies?: PylonCookieConfig;
   logger: ILogger;
 };
 
@@ -33,6 +35,8 @@ export const createHttpContextInitialisationMiddleware = (
     ctx.conduits = {
       conduit: new Conduit(),
     };
+
+    ctx.cookies = new PylonCookieKit(ctx, options.cookies);
 
     ctx.tokens = {};
 

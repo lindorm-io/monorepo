@@ -1,9 +1,9 @@
-import { SetCookieOptions } from "./cookies";
+import { PylonSetCookie } from "./cookies";
 
 export type PylonSessionStore = {
-  setSession: (session: PylonSession) => Promise<string>;
-  getSession: (id: string) => Promise<PylonSession | null>;
-  delSession: (id: string) => Promise<void>;
+  set: (session: PylonSession) => Promise<string>;
+  get: (id: string) => Promise<PylonSession | null>;
+  del: (id: string) => Promise<void>;
 };
 
 export type PylonSession = {
@@ -13,9 +13,18 @@ export type PylonSession = {
   refreshToken?: string;
 };
 
-export type PylonSessionConfig = Omit<
-  SetCookieOptions,
-  "overwrite" | "path" | "priority"
+export type PylonSessionConfig = Pick<
+  PylonSetCookie,
+  | "domain"
+  | "encoding"
+  | "encrypted"
+  | "expiry"
+  | "httpOnly"
+  | "path"
+  | "priority"
+  | "sameSite"
+  | "secure"
+  | "signed"
 > & {
   name?: string;
   store?: PylonSessionStore;

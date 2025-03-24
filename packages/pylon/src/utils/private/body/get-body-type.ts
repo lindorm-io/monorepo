@@ -1,5 +1,5 @@
-import { Context } from "koa";
 import { BodyType } from "../../../enums";
+import { PylonHttpContext } from "../../../types";
 
 const JSON_TYPES = [
   "application/csp-report",
@@ -13,15 +13,16 @@ const JSON_TYPES = [
   "application/vnd.jcard+json",
 ];
 
-const isJsonBody = (ctx: Context): boolean => Boolean(ctx.is(JSON_TYPES));
+const isJsonBody = (ctx: PylonHttpContext): boolean => Boolean(ctx.is(JSON_TYPES));
 
-const isUrlEncodedBody = (ctx: Context): boolean => Boolean(ctx.is("urlencoded"));
+const isUrlEncodedBody = (ctx: PylonHttpContext): boolean =>
+  Boolean(ctx.is("urlencoded"));
 
-const isTextBody = (ctx: Context): boolean => Boolean(ctx.is("text/*"));
+const isTextBody = (ctx: PylonHttpContext): boolean => Boolean(ctx.is("text/*"));
 
-const isMultipartBody = (ctx: Context): boolean => Boolean(ctx.is("multipart"));
+const isMultipartBody = (ctx: PylonHttpContext): boolean => Boolean(ctx.is("multipart"));
 
-export const getBodyType = (ctx: Context): BodyType => {
+export const getBodyType = (ctx: PylonHttpContext): BodyType => {
   if (isJsonBody(ctx)) return BodyType.Json;
   if (isUrlEncodedBody(ctx)) return BodyType.UrlEncoded;
   if (isTextBody(ctx)) return BodyType.Text;

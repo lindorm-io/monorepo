@@ -4,7 +4,7 @@ export const createHttpSessionMiddleware = (
   config: PylonSessionConfig,
 ): PylonHttpMiddleware =>
   async function httpSessionMiddleware(ctx, next) {
-    const session = await ctx.getSession();
+    const session = await ctx.sessions.get();
 
     ctx.session = session;
 

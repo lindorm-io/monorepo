@@ -20,14 +20,6 @@ describe("httpResponseLoggerMiddleware", () => {
         message: "response.message",
         status: "response.status",
       },
-      userAgent: {
-        browser: "browser",
-        geoIp: "geoIp",
-        os: "os",
-        platform: "platform",
-        source: "source",
-        version: "version",
-      },
     };
   });
 
@@ -44,14 +36,6 @@ describe("httpResponseLoggerMiddleware", () => {
         params: undefined,
         query: undefined,
         url: "request.url",
-        userAgent: {
-          browser: "browser",
-          geoIp: "geoIp",
-          os: "os",
-          platform: "platform",
-          source: "source",
-          version: "version",
-        },
       },
       response: {
         body: "response.body",

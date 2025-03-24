@@ -9,14 +9,6 @@ export const httpRequestLoggerMiddleware: PylonHttpMiddleware = async (ctx, next
       method: ctx.request.method,
       query: ctx.query,
       url: ctx.request.url,
-      userAgent: {
-        browser: ctx.userAgent.browser,
-        geoIp: ctx.userAgent.geoIp,
-        os: ctx.userAgent.os,
-        platform: ctx.userAgent.platform,
-        source: ctx.userAgent.source,
-        version: ctx.userAgent.version,
-      },
     },
   });
 

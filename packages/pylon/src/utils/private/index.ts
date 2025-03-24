@@ -1,4 +1,5 @@
 export * from "./body";
+export * from "./cookies";
 export * from "./file";
 
 export * from "./compose-parse-body-config";

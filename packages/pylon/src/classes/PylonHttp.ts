@@ -1,7 +1,6 @@
 import { isArray, isString } from "@lindorm/is";
 import { ILogger } from "@lindorm/logger";
 import Koa from "koa";
-import userAgent from "koa-useragent";
 import {
   createHttpBodyParserMiddleware,
   createHttpContextInitialisationMiddleware,
@@ -16,6 +15,7 @@ import {
   httpResponseLoggerMiddleware,
   httpResponseTimeMiddleware,
 } from "../middleware/private";
+import { httpSetCookieMiddleware } from "../middleware/private/http-set-cookie-middleware";
 import {
   HttpCallback,
   PylonHttpContext,
@@ -71,7 +71,6 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
     // middleware
 
     this.addMiddleware([
-      userAgent,
       httpResponseTimeMiddleware,
       httpResponseLoggerMiddleware,
       httpErrorHandlerMiddleware,
@@ -82,13 +81,15 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
       }),
       createHttpContextInitialisationMiddleware({
         amphora: this.options.amphora,
+        cookies: this.options.cookies,
         logger: this.logger,
       }),
-      createHttpFunctionsMiddleware(this.options.cookies, this.options.session),
+      createHttpFunctionsMiddleware(this.options.session),
       ...(this.options.session
         ? [createHttpSessionMiddleware(this.options.session)]
         : []),
       createHttpBodyParserMiddleware(this.options.parseBody),
+      httpSetCookieMiddleware,
       httpQueryParserMiddleware,
       httpRequestLoggerMiddleware,
       httpResponseBodyMiddleware,

@@ -3,15 +3,16 @@ import { IAmphora } from "@lindorm/amphora";
 import { IConduit } from "@lindorm/conduit";
 import { Environment } from "@lindorm/enums";
 import { ILogger } from "@lindorm/logger";
+import { Middleware } from "@lindorm/middleware";
 import { Dict } from "@lindorm/types";
 import { Files } from "formidable";
-import { BaseRequest, DefaultState, Middleware } from "koa";
+import { BaseRequest } from "koa";
 import { RouterContext } from "koa-router";
-import { UserAgentContext } from "koa-useragent";
-import UserAgent from "koa-useragent/dist/lib/useragent";
-import { GetCookieOptions, SetCookieOptions } from "./cookies";
+import { PylonCookieKit } from "../classes/private/PylonCookieKit";
 import { PylonSession } from "./session";
 import { IoServer } from "./socket";
+
+type KoaContext = Omit<RouterContext, "cookies">;
 
 type Conduits = {
   conduit: IConduit;
@@ -43,28 +44,24 @@ type Context<Data, WebhookData> = {
   aegis: IAegis;
   amphora: IAmphora;
   conduits: Conduits;
+  cookies: PylonCookieKit;
   data: Data;
   io: IoServer;
   logger: ILogger;
   metadata: Metadata;
   request: Request;
   session: PylonSession | null;
+  sessions: {
+    set(session: PylonSession): Promise<void>;
+    get(): Promise<PylonSession | null>;
+    del(): Promise<void>;
+  };
   tokens: Dict<VerifiedJwt | VerifiedJws<any>>;
-  userAgent: UserAgent;
   webhook: Webhook<WebhookData>;
-
-  setCookie<T = any>(name: string, value: T, options?: SetCookieOptions): Promise<void>;
-  getCookie<T = any>(name: string, options?: GetCookieOptions): Promise<T | undefined>;
-  delCookie(name: string): void;
-
-  setSession(session: PylonSession): Promise<void>;
-  getSession(): Promise<PylonSession | null>;
-  delSession(): Promise<void>;
 };
 
-export type PylonHttpContext<Data = any, WebhookData = any> = RouterContext &
-  UserAgentContext &
+export type PylonHttpContext<Data = any, WebhookData = any> = KoaContext &
   Context<Data, WebhookData>;
 
 export type PylonHttpMiddleware<C extends PylonHttpContext = PylonHttpContext> =
-  Middleware<DefaultState, C>;
+  Middleware<C>;

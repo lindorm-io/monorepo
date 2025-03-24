@@ -3,7 +3,7 @@ import { IAmphora } from "@lindorm/amphora";
 import { B64 } from "@lindorm/b64";
 import { ServerError } from "@lindorm/errors";
 import { isString } from "@lindorm/is";
-import { PylonHttpContext, SetCookieOptions } from "../../types";
+import { PylonHttpContext, PylonSetCookie } from "../../types";
 
 const safelyParse = <T = any>(value: string): T => {
   try {
@@ -29,7 +29,7 @@ export const getCookieKeys = (amphora: IAmphora): Array<string> | undefined => {
 export const encodeCookieValue = async <T = any>(
   ctx: PylonHttpContext,
   value: T,
-  options: SetCookieOptions = {},
+  options: PylonSetCookie = {},
 ): Promise<string> => {
   const string = isString(value) ? value : JSON.stringify(value);
 

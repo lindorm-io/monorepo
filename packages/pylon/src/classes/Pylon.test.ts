@@ -108,7 +108,7 @@ describe("Pylon", () => {
     });
 
     router.post("/session", async (ctx) => {
-      await ctx.setSession({
+      await ctx.sessions.set({
         id: "c1460965-fb6d-5a2a-be8a-84f7cd7d1a9f",
         accessToken: "access",
         idToken: "id",
@@ -309,10 +309,10 @@ describe("Pylon", () => {
     expect(r1.headers).toEqual(
       expect.objectContaining({
         date: "Mon, 01 Jan 2024 08:00:00 GMT",
-        "set-cookie": [
+        "set-cookie": expect.arrayContaining([
           expect.stringContaining("pylon_session="),
           expect.stringContaining("pylon_session.sig="),
-        ],
+        ]),
         "x-correlation-id": expect.any(String),
         "x-current-time": "1704096000000",
         "x-request-id": expect.any(String),
