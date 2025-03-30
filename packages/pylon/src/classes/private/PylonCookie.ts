@@ -54,7 +54,11 @@ export class PylonCookie {
   public toHeader(): string {
     let header = this.toString();
 
-    const expires = this.expiry ? expiresAt(this.expiry) : null;
+    const expires = isDate(this.expiry)
+      ? this.expiry
+      : isString(this.expiry)
+        ? expiresAt(this.expiry)
+        : null;
 
     if (this.domain) {
       header += `; domain=${this.domain}`;

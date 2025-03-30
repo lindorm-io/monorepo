@@ -8,8 +8,7 @@ import { Dict } from "@lindorm/types";
 import { Files } from "formidable";
 import { BaseRequest } from "koa";
 import { RouterContext } from "koa-router";
-import { PylonCookieKit } from "../classes/private/PylonCookieKit";
-import { IPylonSession } from "../interfaces/PylonSession";
+import { IPylonCookies, IPylonSession } from "../interfaces";
 import { PylonSession } from "./session";
 import { IoServer } from "./socket";
 
@@ -51,7 +50,7 @@ type Context<Data, State, WebhookData> = {
   aegis: IAegis;
   amphora: IAmphora;
   conduits: Conduits;
-  cookies: PylonCookieKit;
+  cookies: IPylonCookies;
   data: Data;
   io: IoServer;
   logger: ILogger;
@@ -63,7 +62,7 @@ type Context<Data, State, WebhookData> = {
 
 export type PylonHttpContext<
   Data = any,
-  State = PylonHttpState,
+  State extends PylonHttpState = PylonHttpState,
   WebhookData = any,
 > = KoaContext & Context<Data, State, WebhookData>;
 

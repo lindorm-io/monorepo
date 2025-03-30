@@ -4,6 +4,7 @@ import Koa from "koa";
 import {
   createHttpBodyParserMiddleware,
   createHttpContextInitialisationMiddleware,
+  createHttpCookiesMiddleware,
   createHttpCorsMiddleware,
   createHttpMetadataMiddleware,
   createHttpSessionMiddleware,
@@ -14,18 +15,13 @@ import {
   httpResponseLoggerMiddleware,
   httpResponseTimeMiddleware,
 } from "../middleware/private";
-import { httpSetCookieMiddleware } from "../middleware/private/http-set-cookie-middleware";
 import {
   HttpCallback,
   PylonHttpContext,
   PylonHttpMiddleware,
   PylonHttpOptions,
 } from "../types";
-import {
-  createHealthRouter,
-  createWellKnownRouter,
-  getCookieKeys,
-} from "../utils/private";
+import { createHealthRouter, createWellKnownRouter } from "../utils/private";
 import { PylonRouter } from "./PylonRouter";
 import { PylonRouterScanner } from "./private";
 
@@ -45,7 +41,7 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
     this.middleware = [];
     this.options = options;
     this.router = new PylonRouter<T>();
-    this.server = new Koa({ keys: getCookieKeys(options.amphora) });
+    this.server = new Koa();
   }
 
   // public
@@ -75,19 +71,19 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
       httpErrorHandlerMiddleware,
       createHttpMetadataMiddleware({
         environment: this.options.environment!,
-        httpMaxRequestAge: this.options.maxRequestAge ?? "10s",
+        minRequestAge: this.options.minRequestAge ?? "10s",
+        maxRequestAge: this.options.maxRequestAge ?? "10s",
         version: this.options.version!,
       }),
       createHttpContextInitialisationMiddleware({
         amphora: this.options.amphora,
-        cookies: this.options.cookies,
         logger: this.logger,
       }),
+      createHttpCookiesMiddleware(this.options.cookies),
       ...(this.options.session
         ? [createHttpSessionMiddleware(this.options.session)]
         : []),
       createHttpBodyParserMiddleware(this.options.parseBody),
-      httpSetCookieMiddleware,
       httpQueryParserMiddleware,
       httpRequestLoggerMiddleware,
       httpResponseBodyMiddleware,

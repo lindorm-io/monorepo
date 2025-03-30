@@ -23,7 +23,8 @@ describe("createHttpMetadataMiddleware", () => {
 
     options = {
       environment: Environment.Test,
-      httpMaxRequestAge: "10s",
+      minRequestAge: "10s",
+      maxRequestAge: "10s",
       version: "1.0.0",
     };
 

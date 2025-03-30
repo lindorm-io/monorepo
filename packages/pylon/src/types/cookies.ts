@@ -6,6 +6,8 @@ export type CookieSameSite = "strict" | "lax" | "none";
 
 export type PylonCookieOptions = {
   domain?: string;
+  encoding?: CookieEncoding;
+  encrypted?: boolean;
   expiry?: Expiry;
   httpOnly?: boolean;
   partitioned?: boolean;
@@ -13,21 +15,17 @@ export type PylonCookieOptions = {
   priority?: CookiePriority;
   sameSite?: CookieSameSite;
   secure?: boolean;
+  signed?: boolean;
 };
 
 export type PylonCookieConfig = Pick<
   PylonCookieOptions,
-  "domain" | "httpOnly" | "sameSite" | "secure"
+  "domain" | "encoding" | "httpOnly" | "sameSite" | "secure"
 >;
 
-export type PylonSetCookie = PylonCookieOptions & {
-  encoding?: CookieEncoding;
-  encrypted?: boolean;
-  signed?: boolean;
-};
+export type PylonSetCookie = PylonCookieOptions;
 
-export type PylonGetCookie = {
-  encoding?: CookieEncoding;
+export type PylonGetCookie = Pick<PylonCookieOptions, "encoding"> & {
   encrypted?: boolean;
   signed?: boolean;
 };

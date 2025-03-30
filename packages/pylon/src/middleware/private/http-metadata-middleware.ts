@@ -13,7 +13,8 @@ import { PylonHttpMiddleware } from "../../types";
 
 type Options = {
   environment: Environment;
-  httpMaxRequestAge: ReadableTime;
+  minRequestAge: ReadableTime;
+  maxRequestAge: ReadableTime;
   version: string;
 };
 
@@ -22,8 +23,8 @@ export const createHttpMetadataMiddleware = (options: Options): PylonHttpMiddlew
     try {
       const requestDate = ctx.get("date");
 
-      const minDate = subMilliseconds(new Date(), ms(options.httpMaxRequestAge));
-      const maxDate = addMilliseconds(new Date(), ms(options.httpMaxRequestAge));
+      const minDate = subMilliseconds(new Date(), ms(options.minRequestAge));
+      const maxDate = addMilliseconds(new Date(), ms(options.maxRequestAge));
 
       ctx.state = {
         metadata: {

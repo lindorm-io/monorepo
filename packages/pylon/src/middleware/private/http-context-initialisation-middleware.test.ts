@@ -4,14 +4,6 @@ import { Conduit } from "@lindorm/conduit";
 import { createMockLogger } from "@lindorm/logger";
 import { createHttpContextInitialisationMiddleware } from "./http-context-initialisation-middleware";
 
-jest.mock("../../classes/private", () => ({
-  PylonCookieKit: class PylonCookieKit {
-    public toHeader() {
-      return ["header"];
-    }
-  },
-}));
-
 describe("createHttpContextInitialisationMiddleware", () => {
   let ctx: any;
   let options: any;
@@ -52,7 +44,6 @@ describe("createHttpContextInitialisationMiddleware", () => {
     expect(ctx.amphora).toEqual(options.amphora);
     expect(ctx.aegis).toEqual(expect.any(Aegis));
     expect(ctx.conduits.conduit).toEqual(expect.any(Conduit));
-    expect(ctx.cookies).toBeDefined();
     expect(ctx.webhook).toEqual({ event: null, data: undefined });
   });
 });
