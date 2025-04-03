@@ -7,7 +7,11 @@ import {
   IKryptosRsa,
 } from "../interfaces";
 import {
+  KryptosAlgorithm,
+  KryptosAttributes,
   KryptosAuto,
+  KryptosCurve,
+  KryptosEncryption,
   KryptosFormat,
   KryptosFrom,
   KryptosFromBuffer,
@@ -22,6 +26,8 @@ import {
   KryptosMakeOkpSig,
   KryptosMakeRsaEnc,
   KryptosMakeRsaSig,
+  KryptosType,
+  KryptosUse,
 } from "../types";
 import { KryptosMake } from "../types/private";
 import {
@@ -35,6 +41,13 @@ import {
   makeKey,
 } from "../utils/private";
 import { Kryptos } from "./Kryptos";
+
+const KRYPTOS = "kryptos" as const;
+
+type Env = {
+  import(string: string): IKryptos;
+  export(kryptos: IKryptos): string;
+};
 
 type From = {
   auto(options: KryptosFrom): IKryptos;
@@ -72,16 +85,25 @@ export class KryptosKit {
     return new Kryptos({ ...kryptos.toJSON(), ...overwrite, ...kryptos.export("der") });
   }
 
+  // env
+
+  public static get env(): Env {
+    return {
+      import: KryptosKit.envImport,
+      export: KryptosKit.envExport,
+    };
+  }
+
   // from
 
   public static get from(): From {
     return {
-      auto: this.fromAuto,
-      b64: this.fromB64,
-      der: this.fromDer,
-      jwk: this.fromJwk,
-      pem: this.fromPem,
-      utf: this.fromUtf,
+      auto: KryptosKit.fromAuto,
+      b64: KryptosKit.fromB64,
+      der: KryptosKit.fromDer,
+      jwk: KryptosKit.fromJwk,
+      pem: KryptosKit.fromPem,
+      utf: KryptosKit.fromUtf,
     };
   }
 
@@ -119,6 +141,48 @@ export class KryptosKit {
       enc: this.encryption,
       sig: this.signature,
     };
+  }
+
+  // private env
+
+  private static envImport(string: string): IKryptos {
+    const result: Array<string> = string.split(":");
+    const [kryptos, id, algorithm, curve, encryption, privateKey, publicKey, type, use] =
+      result;
+
+    if (kryptos !== KRYPTOS) {
+      throw new KryptosError("Invalid kryptos string");
+    }
+
+    return KryptosKit.fromB64({
+      id,
+      algorithm: algorithm as KryptosAlgorithm,
+      curve: curve as KryptosCurve,
+      encryption: encryption as KryptosEncryption,
+      privateKey,
+      publicKey,
+      type: type as KryptosType,
+      use: use as KryptosUse,
+    });
+  }
+
+  private static envExport(kryptos: IKryptos): string {
+    const json: KryptosAttributes = kryptos.toJSON();
+    const b64 = kryptos.export("b64");
+
+    const result: Array<string | undefined> = [
+      KRYPTOS,
+      json.id,
+      b64.algorithm,
+      b64.curve,
+      b64.encryption,
+      b64.privateKey,
+      b64.publicKey,
+      b64.type,
+      b64.use,
+    ];
+
+    return result.map((i) => (i ? i : "")).join(":");
   }
 
   // private from

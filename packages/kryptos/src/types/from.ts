@@ -13,4 +13,4 @@ export type KryptosFromBuffer = Std & KryptosBuffer;
 
 export type KryptosFromJwk = UnknownJwk & Partial<KryptosJwk>;
 
-export type KryptosFrom = KryptosFromString | KryptosFromBuffer | KryptosFromJwk;
+export type KryptosFrom = KryptosFromString | KryptosFromBuffer | KryptosFromJwk | string;

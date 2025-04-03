@@ -26,6 +26,24 @@ describe("KryptosKit (OKP)", () => {
     });
   });
 
+  describe("env", () => {
+    test("import", () => {
+      const string = KryptosKit.env.import(
+        "kryptos:6e6f84b0-e125-5e3f-90ae-c65269668d98:EdDSA:Ed25519::MC4CAQAwBQYDK2VwBCIEIBwKJlvoh1ngd9LRd7dtvGOSqW4uZamdvIu0ABD2AkxL:MCowBQYDK2VwAyEAGRCwCA6lChosFGMQwxGiHCdzblfvCz0FNiRtTnm1qqc:OKP:sig",
+      );
+
+      expect(string.export("b64")).toEqual(TEST_OKP_KEY_B64);
+    });
+
+    test("export", () => {
+      const kryptos = KryptosKit.from.auto(TEST_OKP_KEY_B64);
+
+      expect(KryptosKit.env.export(kryptos)).toEqual(
+        "kryptos:6e6f84b0-e125-5e3f-90ae-c65269668d98:EdDSA:Ed25519::MC4CAQAwBQYDK2VwBCIEIBwKJlvoh1ngd9LRd7dtvGOSqW4uZamdvIu0ABD2AkxL:MCowBQYDK2VwAyEAGRCwCA6lChosFGMQwxGiHCdzblfvCz0FNiRtTnm1qqc:OKP:sig",
+      );
+    });
+  });
+
   describe("from", () => {
     describe("auto", () => {
       test("b64", () => {
