@@ -13,6 +13,7 @@ import {
   MetaIndex,
   MetaPrimaryKey,
   MetaPrimarySource,
+  MetaRelation,
   MetaSchema,
   MetaSource,
 } from "../../types";
@@ -31,6 +32,7 @@ type InternalArray =
   | "indexes"
   | "primaryKeys"
   | "primarySources"
+  | "relations"
   | "schemas";
 
 const UNIQUE_COLUMNS: Array<MetaColumnDecorator> = [
@@ -60,6 +62,7 @@ export class GlobalEntityMetadata {
   private readonly indexes: Array<MetaIndex>;
   private readonly primaryKeys: Array<MetaPrimaryKey>;
   private readonly primarySources: Array<MetaPrimarySource>;
+  private readonly relations: Array<MetaRelation>;
   private readonly schemas: Array<MetaSchema>;
 
   public constructor() {
@@ -73,6 +76,7 @@ export class GlobalEntityMetadata {
     this.indexes = [];
     this.primaryKeys = [];
     this.primarySources = [];
+    this.relations = [];
     this.schemas = [];
   }
 
@@ -110,6 +114,10 @@ export class GlobalEntityMetadata {
 
   public addPrimarySource<T extends MetaSource>(metadata: MetaPrimarySource<T>): void {
     this.addMetadata("primarySources", metadata);
+  }
+
+  public addRelation(metadata: MetaRelation): void {
+    this.addMetadata("relations", metadata);
   }
 
   public addSchema(metadata: MetaSchema): void {
@@ -156,6 +164,9 @@ export class GlobalEntityMetadata {
       target,
       "primarySources",
     ).map(({ target, ...rest }) => rest);
+    const relations = this.getMeta<MetaRelation>(target, "relations").map(
+      ({ target, ...rest }) => rest,
+    );
     const schemas = this.getMeta<MetaSchema>(target, "schemas").map(
       ({ target: _, schema }) => schema,
     );
@@ -371,6 +382,7 @@ export class GlobalEntityMetadata {
       indexes,
       primaryKeys,
       primarySource: primarySource?.source || null,
+      relations,
       schemas,
     };
 

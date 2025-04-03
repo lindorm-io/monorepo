@@ -1,0 +1,109 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`OneToOne Decorator should add metadata 1`] = `
+{
+  "columns": [
+    {
+      "decorator": "PrimaryKeyColumn",
+      "enum": null,
+      "fallback": [Function],
+      "key": "id",
+      "max": null,
+      "min": null,
+      "nullable": false,
+      "optional": false,
+      "readonly": true,
+      "schema": null,
+      "type": "uuid",
+    },
+  ],
+  "entity": {
+    "cache": null,
+    "database": null,
+    "decorator": "Entity",
+    "name": null,
+    "namespace": null,
+  },
+  "extras": [],
+  "generated": [],
+  "hooks": [],
+  "indexes": [],
+  "primaryKeys": [
+    "id",
+  ],
+  "primarySource": null,
+  "relations": [
+    {
+      "foreignConstructor": [Function],
+      "foreignKey": "first",
+      "key": "second",
+      "options": {
+        "joinKey": true,
+        "joinTable": null,
+        "loading": null,
+        "nullable": false,
+        "onDelete": null,
+        "onOrphan": null,
+        "onUpdate": null,
+        "strategy": null,
+      },
+      "type": "OneToOne",
+    },
+  ],
+  "schemas": [],
+}
+`;
+
+exports[`OneToOne Decorator should add metadata 2`] = `
+{
+  "columns": [
+    {
+      "decorator": "PrimaryKeyColumn",
+      "enum": null,
+      "fallback": [Function],
+      "key": "id",
+      "max": null,
+      "min": null,
+      "nullable": false,
+      "optional": false,
+      "readonly": true,
+      "schema": null,
+      "type": "uuid",
+    },
+  ],
+  "entity": {
+    "cache": null,
+    "database": null,
+    "decorator": "Entity",
+    "name": null,
+    "namespace": null,
+  },
+  "extras": [],
+  "generated": [],
+  "hooks": [],
+  "indexes": [],
+  "primaryKeys": [
+    "id",
+  ],
+  "primarySource": null,
+  "relations": [
+    {
+      "foreignConstructor": [Function],
+      "foreignKey": "second",
+      "key": "first",
+      "options": {
+        "joinKey": false,
+        "joinTable": null,
+        "loading": null,
+        "nullable": false,
+        "onDelete": null,
+        "onOrphan": null,
+        "onUpdate": null,
+        "strategy": null,
+      },
+      "type": "OneToOne",
+    },
+  ],
+  "schemas": [],
+}
+`;

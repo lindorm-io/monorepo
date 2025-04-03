@@ -45,6 +45,7 @@ exports[`UpdateDateColumn Decorator should add metadata 1`] = `
     "id",
   ],
   "primarySource": null,
+  "relations": [],
   "schemas": [],
 }
 `;

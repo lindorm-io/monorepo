@@ -237,6 +237,7 @@ exports[`VersionKeyColumn Decorator should add metadata 1`] = `
     "versionKey",
   ],
   "primarySource": null,
+  "relations": [],
   "schemas": [],
 }
 `;

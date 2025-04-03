@@ -163,6 +163,7 @@ exports[`PrimaryKeyColumn Decorator should add metadata 1`] = `
     "primaryKey",
   ],
   "primarySource": null,
+  "relations": [],
   "schemas": [],
 }
 `;

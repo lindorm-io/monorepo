@@ -46,6 +46,7 @@ exports[`PrimaryKey Decorator should add metadata 1`] = `
     "familyName",
   ],
   "primarySource": null,
+  "relations": [],
   "schemas": [],
 }
 `;
@@ -82,6 +83,7 @@ exports[`PrimaryKey Decorator should add metadata with string 1`] = `
     "id",
   ],
   "primarySource": null,
+  "relations": [],
   "schemas": [],
 }
 `;

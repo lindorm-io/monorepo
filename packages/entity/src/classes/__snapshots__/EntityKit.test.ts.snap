@@ -348,6 +348,7 @@ exports[`EntityKit should calculate entity 1`] = `
     "primaryKey",
   ],
   "primarySource": "external",
+  "relations": [],
   "schemas": [],
 }
 `;
@@ -513,6 +514,7 @@ exports[`EntityKit should calculate versioned entity 1`] = `
     "versionKey",
   ],
   "primarySource": "mongo",
+  "relations": [],
   "schemas": [],
 }
 `;

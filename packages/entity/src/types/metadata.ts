@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-function-type */
 
-import { Dict } from "@lindorm/types";
+import { Constructor, Dict } from "@lindorm/types";
 import { ZodObject, ZodType } from "zod";
 import { IEntity } from "../interfaces";
 import { IndexDirection } from "./types";
@@ -135,6 +135,31 @@ export type MetaPrimaryKey = {
   key: string;
 };
 
+export type RelationChange = "cascade" | "default" | "restrict";
+export type RelationLoading = "eager" | "lazy";
+export type RelationOrphan = "delete" | "ignore";
+export type RelationStrategy = "join" | "query";
+
+export type MetaRelationOptions = {
+  joinKey: boolean | string | null;
+  joinTable: boolean | string | null;
+  loading: RelationLoading | null;
+  nullable: boolean;
+  onDelete: RelationChange | null;
+  onOrphan: RelationOrphan | null;
+  onUpdate: RelationChange | null;
+  strategy: RelationStrategy | null;
+};
+
+export type MetaRelation = {
+  target: Function;
+  key: string;
+  options: MetaRelationOptions;
+  foreignConstructor: () => Constructor<IEntity>;
+  foreignKey: string | null;
+  type: "ManyToMany" | "ManyToOne" | "OneToMany" | "OneToOne";
+};
+
 export type MetaSource =
   | "elastic"
   | "external"
@@ -166,5 +191,6 @@ export type EntityMetadata<
   indexes: Array<Omit<MetaIndex, "target">>;
   primaryKeys: Array<string>;
   primarySource: TSource | null;
+  relations: Array<Omit<MetaRelation, "target">>;
   schemas: Array<ZodObject<IEntity>>;
 };

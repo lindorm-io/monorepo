@@ -1,11 +1,16 @@
 /* eslint-disable @typescript-eslint/no-unsafe-function-type */
 
 import { ZodType } from "zod";
+import { IEntity } from "../interfaces";
 import {
   MetaColumnFallback,
   MetaColumnType,
   MetaGeneratedStrategy,
   MetaIndexOptions,
+  RelationChange,
+  RelationLoading,
+  RelationOrphan,
+  RelationStrategy,
 } from "./metadata";
 import { IndexDirection } from "./types";
 
@@ -42,6 +47,43 @@ export type IndexDecoratorOptions = {
   name?: string;
   options?: MetaIndexOptions;
   unique?: boolean;
+};
+
+export type ManyToManyOptions<E extends IEntity> = {
+  joinKey?: keyof E;
+  joinTable?: boolean | string;
+  loading?: RelationLoading;
+  onDelete?: RelationChange;
+  onOrphan?: RelationOrphan;
+  onUpdate?: RelationChange;
+  strategy?: RelationStrategy;
+};
+
+export type ManyToOneOptions<E extends IEntity> = {
+  joinKey?: keyof E;
+  loading?: RelationLoading;
+  onDelete?: RelationChange;
+  onOrphan?: RelationOrphan;
+  onUpdate?: RelationChange;
+  strategy?: RelationStrategy;
+};
+
+export type OneToManyOptions = {
+  loading?: RelationLoading;
+  onDelete?: RelationChange;
+  onOrphan?: RelationOrphan;
+  onUpdate?: RelationChange;
+  strategy?: RelationStrategy;
+};
+
+export type OneToOneOptions<E extends IEntity> = {
+  joinKey?: boolean | keyof E;
+  loading?: RelationLoading;
+  nullable?: boolean;
+  onDelete?: RelationChange;
+  onOrphan?: RelationOrphan;
+  onUpdate?: RelationChange;
+  strategy?: RelationStrategy;
 };
 
 export type UniqueDecoratorOptions = {

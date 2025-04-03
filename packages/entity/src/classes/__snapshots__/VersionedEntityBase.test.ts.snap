@@ -159,6 +159,7 @@ exports[`VersionedEntityBase should have expected properties 2`] = `
     "id",
   ],
   "primarySource": null,
+  "relations": [],
   "schemas": [],
 }
 `;
