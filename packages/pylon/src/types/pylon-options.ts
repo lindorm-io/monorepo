@@ -38,6 +38,7 @@ export type PylonHttpOptions<C extends PylonHttpContext = PylonHttpContext> = Co
   name?: string;
   openIdConfiguration?: Partial<OpenIdConfigurationOptions>;
   parseBody?: ParseBodyOptions;
+  proxy?: boolean;
   session?: PylonSessionConfig;
   version?: string;
 };

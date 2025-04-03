@@ -41,7 +41,7 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
     this.middleware = [];
     this.options = options;
     this.router = new PylonRouter<T>();
-    this.server = new Koa();
+    this.server = new Koa({ proxy: options.proxy ?? true });
   }
 
   // public
