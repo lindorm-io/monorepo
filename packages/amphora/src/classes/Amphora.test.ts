@@ -69,6 +69,26 @@ describe("Amphora", () => {
     });
   });
 
+  describe("env", () => {
+    test("should add keys to vault from env", () => {
+      amphora.env([
+        "kryptos:136171c5-7b76-5e14-9bb8-c60551977c59.ECDH-ES+A256GCMKW.P-521.A256GCM.sign,verify.MIHuAgEAMBAGByqGSM49AgEGBSuBBAAjBIHWMIHTAgEBBEIATAYo3DQYroDV5EgJSUs_kOIvnEScZen73gXa5oQkub0ekQmgOJdPQjINUsdYRn67QK_oBdNUhVbtG_qdxqIgarehgYkDgYYABACN2PIVpRTdfXLmNxkg8Bk2m5netqYsNW2Lefhklr2jfJiVUJUDPoZoGfabGzHEgsKjP2HRbPsEI_tND3x4N9VW0QAID2UYXa7GN0izHWIFRdjVYuR5-0jywFtd-o_N2POdrvlV8xumdVK-TiSPEIdfKoL_Iu0e7IKTsJsj-UmE8rDJnw.MIGbMBAGByqGSM49AgEGBSuBBAAjA4GGAAQAjdjyFaUU3X1y5jcZIPAZNpuZ3ramLDVti3n4ZJa9o3yYlVCVAz6GaBn2mxsxxILCoz9h0Wz7BCP7TQ98eDfVVtEACA9lGF2uxjdIsx1iBUXY1WLkeftI8sBbXfqPzdjzna75VfMbpnVSvk4kjxCHXyqC_yLtHuyCk7CbI_lJhPKwyZ8.test.EC.enc",
+        "kryptos:6e6f84b0-e125-5e3f-90ae-c65269668d98.EdDSA.Ed25519...MC4CAQAwBQYDK2VwBCIEIBwKJlvoh1ngd9LRd7dtvGOSqW4uZamdvIu0ABD2AkxL.MCowBQYDK2VwAyEAGRCwCA6lChosFGMQwxGiHCdzblfvCz0FNiRtTnm1qqc..OKP.sig",
+      ]);
+
+      expect(amphora.vault).toEqual([
+        expect.objectContaining({
+          id: "136171c5-7b76-5e14-9bb8-c60551977c59",
+          type: "EC",
+        }),
+        expect.objectContaining({
+          id: "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+          type: "OKP",
+        }),
+      ]);
+    });
+  });
+
   describe("filter", () => {
     test("should filter kryptos by active", async () => {
       const key = KryptosKit.clone(TEST_EC_KEY_SIG, {

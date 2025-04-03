@@ -105,6 +105,18 @@ export class Amphora implements IAmphora {
     this.refreshJwks();
   }
 
+  public env(keys: Array<string> | string): void {
+    const array = isArray(keys) ? keys : [keys];
+
+    const result: Array<IKryptos> = [];
+
+    for (const key of array) {
+      result.push(KryptosKit.env.import(key));
+    }
+
+    this.add(result);
+  }
+
   public async filter(query: AmphoraQuery): Promise<Array<IKryptos>> {
     const filtered = this.filteredKeys(query);
 
