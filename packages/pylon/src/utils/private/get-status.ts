@@ -1,10 +1,14 @@
 import { PylonHandlerResult } from "../../types";
 
 export const getStatus = (response: PylonHandlerResult): number => {
-  const { body, file, redirect, stream, status } = response;
+  const { body, file, location, redirect, stream, status } = response;
 
   if (status) {
     return status;
+  }
+
+  if (location) {
+    return 201;
   }
 
   if (redirect && body) {

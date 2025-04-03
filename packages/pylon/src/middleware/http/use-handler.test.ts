@@ -54,6 +54,14 @@ describe("useHandler", () => {
     expect(ctx.webhook).toEqual({ event: "event", data: "data" });
   });
 
+  test("should resolve with location", async () => {
+    handler.mockReturnValue({ location: "redirect" });
+
+    await expect(useHandler(handler)(ctx, jest.fn())).resolves.toBeUndefined();
+
+    expect(ctx.set).toHaveBeenCalledWith("location", "redirect");
+  });
+
   test("should resolve with redirect", async () => {
     handler.mockReturnValue({ redirect: "redirect" });
 

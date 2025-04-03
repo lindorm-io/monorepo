@@ -25,6 +25,10 @@ export const useHandler = <C extends PylonHttpContext = PylonHttpContext>(
         data: result.webhook?.data ?? undefined,
       };
 
+      if (result.location) {
+        ctx.set("location", result.location.toString());
+      }
+
       if (result.redirect && (result.file || result.stream)) {
         throw new ServerError("Redirect cannot be used with file download");
       }
@@ -64,6 +68,7 @@ export const useHandler = <C extends PylonHttpContext = PylonHttpContext>(
       ctx.logger.debug("Handler [ success ]", {
         body: Boolean(ctx.body),
         file: Boolean(result.file),
+        location: result.location,
         redirect: result.redirect,
         status: ctx.status,
         stream: Boolean(result.stream),

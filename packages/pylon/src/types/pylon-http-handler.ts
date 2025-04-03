@@ -31,6 +31,7 @@ export type PylonHandlerWebhook<Data = any> = {
 export type PylonHandlerResult<Body = any, Webhook = any> = {
   body?: Body;
   file?: PylonHandlerFile;
+  location?: URL | string;
   redirect?: URL | string;
   status?: number;
   stream?: PylonHandlerStream;

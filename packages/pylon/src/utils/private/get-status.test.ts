@@ -2,7 +2,11 @@ import { getStatus } from "./get-status";
 
 describe("getStatus", () => {
   test("should return status", () => {
-    expect(getStatus({ status: 201 })).toEqual(201);
+    expect(getStatus({ status: 202 })).toEqual(202);
+  });
+
+  test("should return 201", () => {
+    expect(getStatus({ location: "redirect" })).toEqual(201);
   });
 
   test("should return 308", () => {
