@@ -36,7 +36,7 @@ export const isEqual = (expect: any, actual: any, visited = new WeakMap()): bool
   }
 
   if (isUrl(expect) && isUrl(actual)) {
-    return expect.href === actual.href;
+    return expect.toString() === actual.toString();
   }
 
   if (isArray(expect) && isArray(actual)) {
