@@ -35,6 +35,7 @@ export const parseStdOptions = (options: Options): KryptosOptions => ({
   id: options.id,
   algorithm: options.algorithm,
   createdAt: options.createdAt,
+  encryption: options.encryption,
   expiresAt: options.expiresAt,
   issuer: options.issuer,
   jwksUri: options.jwksUri,
@@ -42,7 +43,7 @@ export const parseStdOptions = (options: Options): KryptosOptions => ({
   operations: options.operations,
   ownerId: options.ownerId,
   purpose: options.purpose,
+  type: options.type,
   updatedAt: options.updatedAt,
   use: options.use,
-  type: options.type,
 });
