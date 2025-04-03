@@ -26,6 +26,7 @@ import {
   KryptosMakeOkpSig,
   KryptosMakeRsaEnc,
   KryptosMakeRsaSig,
+  KryptosOperation,
   KryptosType,
   KryptosUse,
 } from "../types";
@@ -146,21 +147,37 @@ export class KryptosKit {
   // private env
 
   private static envImport(string: string): IKryptos {
-    const result: Array<string> = string.split(":");
-    const [kryptos, id, algorithm, curve, encryption, privateKey, publicKey, type, use] =
-      result;
+    const init: Array<string> = string.split(":");
+    const [kryptos, rest] = init;
 
     if (kryptos !== KRYPTOS) {
       throw new KryptosError("Invalid kryptos string");
     }
 
-    return KryptosKit.fromB64({
+    const result: Array<string> = rest.split(".");
+
+    const [
       id,
-      algorithm: algorithm as KryptosAlgorithm,
-      curve: curve as KryptosCurve,
-      encryption: encryption as KryptosEncryption,
+      algorithm,
+      curve,
+      encryption,
+      operations,
       privateKey,
       publicKey,
+      purpose,
+      type,
+      use,
+    ] = result;
+
+    return KryptosKit.fromB64({
+      id: id || undefined,
+      algorithm: algorithm as KryptosAlgorithm,
+      curve: (curve as KryptosCurve) || undefined,
+      encryption: (encryption as KryptosEncryption) || undefined,
+      operations: operations.split(",") as Array<KryptosOperation>,
+      privateKey: privateKey || undefined,
+      publicKey: publicKey || undefined,
+      purpose: purpose || undefined,
       type: type as KryptosType,
       use: use as KryptosUse,
     });
@@ -171,18 +188,19 @@ export class KryptosKit {
     const b64 = kryptos.export("b64");
 
     const result: Array<string | undefined> = [
-      KRYPTOS,
       json.id,
       b64.algorithm,
       b64.curve,
-      b64.encryption,
+      json.encryption,
+      json.operations.join(","),
       b64.privateKey,
       b64.publicKey,
+      json.purpose,
       b64.type,
       b64.use,
     ];
 
-    return result.map((i) => (i ? i : "")).join(":");
+    return KRYPTOS + ":" + result.map((i) => (i ? i : "")).join(".");
   }
 
   // private from
