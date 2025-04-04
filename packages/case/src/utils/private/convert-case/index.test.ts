@@ -406,7 +406,9 @@ describe("change case", () => {
       const input = "version 1.2.10";
 
       expect(camelCase(input, { mergeAmbiguousCharacters: true })).toEqual("version1210");
-      expect(pascalCase(input, { mergeAmbiguousCharacters: true })).toEqual("Version1210");
+      expect(pascalCase(input, { mergeAmbiguousCharacters: true })).toEqual(
+        "Version1210",
+      );
     });
   });
 });

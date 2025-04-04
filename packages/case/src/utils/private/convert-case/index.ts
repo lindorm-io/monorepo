@@ -86,7 +86,11 @@ export const splitSeparateNumbers = (value: string): Array<string> => {
 export const lowerCase = (input: string, options?: CaseOptions): string => {
   const [prefix, words, suffix] = splitPrefixSuffix(input, options);
 
-  return prefix + words.map(lowerFactory(options?.locale)).join(options?.delimiter ?? " ") + suffix;
+  return (
+    prefix +
+    words.map(lowerFactory(options?.locale)).join(options?.delimiter ?? " ") +
+    suffix
+  );
 };
 
 /**
@@ -156,7 +160,11 @@ export const capitalCase = (input: string, options?: CaseOptions): string => {
 export const constantCase = (input: string, options?: CaseOptions): string => {
   const [prefix, words, suffix] = splitPrefixSuffix(input, options);
 
-  return prefix + words.map(upperFactory(options?.locale)).join(options?.delimiter ?? "_") + suffix;
+  return (
+    prefix +
+    words.map(upperFactory(options?.locale)).join(options?.delimiter ?? "_") +
+    suffix
+  );
 };
 
 /**
@@ -233,7 +241,8 @@ const pascalCaseTransformFactory =
   (lower: (input: string) => string, upper: (input: string) => string) =>
   (word: string, index: number): string => {
     const char0 = word[0];
-    const initial = index > 0 && char0 >= "0" && char0 <= "9" ? "_" + char0 : upper(char0);
+    const initial =
+      index > 0 && char0 >= "0" && char0 <= "9" ? "_" + char0 : upper(char0);
     return initial + lower(word.slice(1));
   };
 
@@ -244,7 +253,8 @@ const splitPrefixSuffix = (
   input: string,
   options: CaseOptions = {},
 ): [string, string[], string] => {
-  const splitFn = options.split ?? (options.separateNumbers ? splitSeparateNumbers : split);
+  const splitFn =
+    options.split ?? (options.separateNumbers ? splitSeparateNumbers : split);
   const prefixCharacters = options.prefixCharacters ?? DEFAULT_PREFIX_SUFFIX_CHARACTERS;
   const suffixCharacters = options.suffixCharacters ?? DEFAULT_PREFIX_SUFFIX_CHARACTERS;
   let prefixIndex = 0;

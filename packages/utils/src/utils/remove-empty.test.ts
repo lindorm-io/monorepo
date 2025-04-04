@@ -40,7 +40,17 @@ describe("removeEmpty", () => {
       "",
       {},
       { a: 1, b: {} },
-      [1, 2, 3, 4, null, undefined, "", {}, { a: 1, b: {}, c: null, d: undefined, f: "", h: [] }],
+      [
+        1,
+        2,
+        3,
+        4,
+        null,
+        undefined,
+        "",
+        {},
+        { a: 1, b: {}, c: null, d: undefined, f: "", h: [] },
+      ],
     ],
   };
 

@@ -20,13 +20,15 @@ describe("calculateRetry", () => {
     });
 
     test("should resolve maximum", () => {
-      expect(calculateRetry(60, { strategy: RetryStrategy.Linear, timeoutMax: 5000 })).toEqual(
-        5000,
-      );
+      expect(
+        calculateRetry(60, { strategy: RetryStrategy.Linear, timeoutMax: 5000 }),
+      ).toEqual(5000);
     });
 
     test("should resolve for custom timeout", () => {
-      expect(calculateRetry(2, { strategy: RetryStrategy.Linear, timeout: 250 })).toEqual(500);
+      expect(calculateRetry(2, { strategy: RetryStrategy.Linear, timeout: 250 })).toEqual(
+        500,
+      );
     });
   });
 
@@ -48,15 +50,15 @@ describe("calculateRetry", () => {
     });
 
     test("should resolve maximum", () => {
-      expect(calculateRetry(60, { strategy: RetryStrategy.Exponential, timeoutMax: 5000 })).toEqual(
-        5000,
-      );
+      expect(
+        calculateRetry(60, { strategy: RetryStrategy.Exponential, timeoutMax: 5000 }),
+      ).toEqual(5000);
     });
 
     test("should resolve for custom timeout", () => {
-      expect(calculateRetry(3, { strategy: RetryStrategy.Exponential, timeout: 300 })).toEqual(
-        1200,
-      );
+      expect(
+        calculateRetry(3, { strategy: RetryStrategy.Exponential, timeout: 300 }),
+      ).toEqual(1200);
     });
   });
 });

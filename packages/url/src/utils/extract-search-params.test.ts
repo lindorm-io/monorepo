@@ -16,6 +16,8 @@ describe("extractSearchParams", () => {
   });
 
   test("should resolve without query params", () => {
-    expect(extractSearchParams(new URL("https://test.lindorm.io:4000/test/path"))).toEqual({});
+    expect(
+      extractSearchParams(new URL("https://test.lindorm.io:4000/test/path")),
+    ).toEqual({});
   });
 });

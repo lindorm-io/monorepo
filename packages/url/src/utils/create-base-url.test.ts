@@ -10,33 +10,33 @@ describe("createBaseUrl", () => {
   });
 
   test("should resolve with base URL", () => {
-    expect(createBaseUrl({ base: new URL("https://test.lindorm.io:4000") }).toString()).toEqual(
-      "https://test.lindorm.io:4000/",
-    );
+    expect(
+      createBaseUrl({ base: new URL("https://test.lindorm.io:4000") }).toString(),
+    ).toEqual("https://test.lindorm.io:4000/");
   });
 
   test("should resolve with host string and port", () => {
-    expect(createBaseUrl({ host: "https://test.lindorm.io", port: 4000 }).toString()).toEqual(
-      "https://test.lindorm.io:4000/",
-    );
+    expect(
+      createBaseUrl({ host: "https://test.lindorm.io", port: 4000 }).toString(),
+    ).toEqual("https://test.lindorm.io:4000/");
   });
 
   test("should resolve with host string", () => {
-    expect(createBaseUrl({ host: "https://test.lindorm.io", port: 4000 }).toString()).toEqual(
-      "https://test.lindorm.io:4000/",
-    );
+    expect(
+      createBaseUrl({ host: "https://test.lindorm.io", port: 4000 }).toString(),
+    ).toEqual("https://test.lindorm.io:4000/");
   });
 
   test("should resolve with base string and port", () => {
-    expect(createBaseUrl({ base: "https://test.lindorm.io", port: 4000 }).toString()).toEqual(
-      "https://test.lindorm.io:4000/",
-    );
+    expect(
+      createBaseUrl({ base: "https://test.lindorm.io", port: 4000 }).toString(),
+    ).toEqual("https://test.lindorm.io:4000/");
   });
 
   test("should resolve with base string", () => {
-    expect(createBaseUrl({ base: "https://test.lindorm.io", port: 4000 }).toString()).toEqual(
-      "https://test.lindorm.io:4000/",
-    );
+    expect(
+      createBaseUrl({ base: "https://test.lindorm.io", port: 4000 }).toString(),
+    ).toEqual("https://test.lindorm.io:4000/");
   });
 
   test("should prefer host", () => {

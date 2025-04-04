@@ -4,7 +4,10 @@ import { createMockLogger } from "@lindorm/logger";
 import { RetryStrategy } from "@lindorm/retry";
 import nock from "nock";
 import { join } from "path";
-import { conduitBasicAuthMiddleware, conduitChangeRequestQueryMiddleware } from "../middleware";
+import {
+  conduitBasicAuthMiddleware,
+  conduitChangeRequestQueryMiddleware,
+} from "../middleware";
 import { ConduitMiddleware } from "../types";
 import { Conduit } from "./Conduit";
 
@@ -15,7 +18,9 @@ describe("Conduit", () => {
     });
 
     test("should construct with base url as URL", () => {
-      expect(() => new Conduit({ baseUrl: new URL("http://test.lindorm.io") })).not.toThrow();
+      expect(
+        () => new Conduit({ baseUrl: new URL("http://test.lindorm.io") }),
+      ).not.toThrow();
     });
 
     test("should construct with base url as string", () => {

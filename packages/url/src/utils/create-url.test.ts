@@ -13,7 +13,9 @@ describe("createUrl", () => {
   });
 
   test("should accept URL string as primary arg", () => {
-    expect(createUrl("https://lindorm.io/test").toString()).toEqual("https://lindorm.io/test");
+    expect(createUrl("https://lindorm.io/test").toString()).toEqual(
+      "https://lindorm.io/test",
+    );
   });
 
   test("should use host", () => {
@@ -37,14 +39,16 @@ describe("createUrl", () => {
   });
 
   test("should use host and port from options", () => {
-    expect(createUrl("/path", { host: "https://lindorm.io", port: 3000 }).toString()).toEqual(
-      "https://lindorm.io:3000/path",
-    );
+    expect(
+      createUrl("/path", { host: "https://lindorm.io", port: 3000 }).toString(),
+    ).toEqual("https://lindorm.io:3000/path");
   });
 
   test("should add existing query", () => {
     expect(
-      createUrl("/path", { host: "https://lindorm.io?testCamel=one&hello_snake=two" }).toString(),
+      createUrl("/path", {
+        host: "https://lindorm.io?testCamel=one&hello_snake=two",
+      }).toString(),
     ).toEqual("https://lindorm.io/path?testCamel=one&hello_snake=two");
   });
 

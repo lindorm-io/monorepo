@@ -1,7 +1,13 @@
 import { RawAxiosRequestConfig } from "axios";
 
 type FetchConfigOverride = {
-  cache?: "default" | "force-cache" | "no-cache" | "no-store" | "only-if-cached" | "reload";
+  cache?:
+    | "default"
+    | "force-cache"
+    | "no-cache"
+    | "no-store"
+    | "only-if-cached"
+    | "reload";
   credentials?: RequestCredentials;
   integrity?: string;
   keepalive?: boolean;

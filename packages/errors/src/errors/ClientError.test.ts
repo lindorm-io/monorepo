@@ -23,9 +23,9 @@ describe("ClientError", () => {
     });
 
     test("should use status", () => {
-      expect(new ClientError("message", { status: ClientError.Status.Forbidden }).status).toEqual(
-        403,
-      );
+      expect(
+        new ClientError("message", { status: ClientError.Status.Forbidden }).status,
+      ).toEqual(403);
     });
 
     test("should use title", () => {

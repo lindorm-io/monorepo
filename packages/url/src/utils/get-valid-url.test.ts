@@ -2,9 +2,9 @@ import { getValidUrl } from "./get-valid-url";
 
 describe("getValidUrl", () => {
   test("should resolve for URL", () => {
-    expect(getValidUrl(new URL("https://test.lindorm.io:3000/test/path")).toString()).toEqual(
-      "https://test.lindorm.io:3000/test/path",
-    );
+    expect(
+      getValidUrl(new URL("https://test.lindorm.io:3000/test/path")).toString(),
+    ).toEqual("https://test.lindorm.io:3000/test/path");
   });
 
   test("should resolve for string", () => {

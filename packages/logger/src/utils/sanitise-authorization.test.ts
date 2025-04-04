@@ -8,7 +8,9 @@ describe("sanitiseAuthorization", () => {
   });
 
   test("should sanitise Bearer by removing encryption", () => {
-    expect(sanitiseAuthorization(authorization)).toEqual("Bearer mock-header.mock-payload");
+    expect(sanitiseAuthorization(authorization)).toEqual(
+      "Bearer mock-header.mock-payload",
+    );
   });
 
   test("should sanitise Basic by removing everything", () => {
