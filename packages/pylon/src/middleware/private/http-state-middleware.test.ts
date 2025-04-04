@@ -2,16 +2,19 @@ import { Environment } from "@lindorm/enums";
 import { ClientError } from "@lindorm/errors";
 import { randomUUID as _randomUUID } from "crypto";
 import MockDate from "mockdate";
-import { createHttpMetadataMiddleware } from "./http-metadata-middleware";
+import { getAuthorization as _getAuthorization } from "../../utils/private";
+import { createHttpStateMiddleware } from "./http-state-middleware";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate);
 
 jest.mock("crypto");
+jest.mock("../../utils/private");
 
 const randomUUID = _randomUUID as jest.Mock;
+const getAuthorization = _getAuthorization as jest.Mock;
 
-describe("createHttpMetadataMiddleware", () => {
+describe("createHttpStateMiddleware", () => {
   let ctx: any;
   let options: any;
 
@@ -28,7 +31,7 @@ describe("createHttpMetadataMiddleware", () => {
       version: "1.0.0",
     };
 
-    ctx.get.mockImplementation((key: string): string => {
+    ctx.get.mockImplementation((key: string): string | null => {
       switch (key) {
         case "date":
           return MockedDate.toISOString();
@@ -40,17 +43,20 @@ describe("createHttpMetadataMiddleware", () => {
           return "test-origin";
         case "x-request-id":
           return "aa9a627d-8296-598c-9589-4ec91d27d056";
+        case "x-session-id":
+          return "d8a044f5-5b49-5456-829a-b57b44caa785";
         default:
-          throw new Error(`Unknown key: ${key}`);
+          return null;
       }
     });
 
     randomUUID.mockReturnValue("2f881f6e-f7ce-554f-a5cd-cb80266ff3ec");
+    getAuthorization.mockReturnValue({ type: "Bearer", value: "token" });
   });
 
   test("should enrich context with metadata", async () => {
     await expect(
-      createHttpMetadataMiddleware(options)(ctx, jest.fn()),
+      createHttpStateMiddleware(options)(ctx, jest.fn()),
     ).resolves.toBeUndefined();
 
     expect(ctx.state.metadata).toEqual({
@@ -60,7 +66,7 @@ describe("createHttpMetadataMiddleware", () => {
       origin: "test-origin",
       requestId: "aa9a627d-8296-598c-9589-4ec91d27d056",
       responseId: "2f881f6e-f7ce-554f-a5cd-cb80266ff3ec",
-      sessionId: null,
+      sessionId: "d8a044f5-5b49-5456-829a-b57b44caa785",
     });
 
     expect(ctx.set).toHaveBeenCalledWith(
@@ -71,13 +77,17 @@ describe("createHttpMetadataMiddleware", () => {
       "x-request-id",
       "aa9a627d-8296-598c-9589-4ec91d27d056",
     );
+    expect(ctx.set).toHaveBeenCalledWith(
+      "x-session-id",
+      "d8a044f5-5b49-5456-829a-b57b44caa785",
+    );
   });
 
   test("should enrich context with generated metadata", async () => {
     ctx.get.mockReturnValue("");
 
     await expect(
-      createHttpMetadataMiddleware(options)(ctx, jest.fn()),
+      createHttpStateMiddleware(options)(ctx, jest.fn()),
     ).resolves.toBeUndefined();
 
     expect(ctx.state.metadata).toEqual({
@@ -103,31 +113,31 @@ describe("createHttpMetadataMiddleware", () => {
   });
 
   test("should throw error on invalid date (min)", async () => {
-    ctx.get.mockImplementation((key: string): any => {
+    ctx.get.mockImplementation((key: string): string | null => {
       switch (key) {
         case "date":
           return new Date("2024-01-01T07:00:00.000Z").toISOString();
         default:
-          return undefined;
+          return null;
       }
     });
 
-    await expect(createHttpMetadataMiddleware(options)(ctx, jest.fn())).rejects.toThrow(
+    await expect(createHttpStateMiddleware(options)(ctx, jest.fn())).rejects.toThrow(
       ClientError,
     );
   });
 
   test("should return error on invalid date (max)", async () => {
-    ctx.get.mockImplementation((key: string): any => {
+    ctx.get.mockImplementation((key: string): string | null => {
       switch (key) {
         case "date":
           return new Date("2024-01-01T09:00:00.000Z").toISOString();
         default:
-          return undefined;
+          return null;
       }
     });
 
-    await expect(createHttpMetadataMiddleware(options)(ctx, jest.fn())).rejects.toThrow(
+    await expect(createHttpStateMiddleware(options)(ctx, jest.fn())).rejects.toThrow(
       ClientError,
     );
   });

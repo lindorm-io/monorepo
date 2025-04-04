@@ -10,7 +10,10 @@ describe("createHttpConduitMiddleware", () => {
       conduits: {},
       logger: createMockLogger(),
       state: {
-        metadata: { correlationId: "correlationId", requestId: "requestId" },
+        metadata: {
+          correlationId: "correlationId",
+          sessionId: "sessionId",
+        },
       },
     };
   });

@@ -1,47 +1,21 @@
 import { B64 } from "@lindorm/b64";
 import { ClientError } from "@lindorm/errors";
+import { isArray, isFunction } from "@lindorm/is";
+import { AuthorizationType } from "../../enums";
 import { PylonError } from "../../errors";
 import { Credentials, PylonHttpMiddleware } from "../../types";
 
-export const createHttpBasicAuthMiddleware = (
-  credentials: Array<Credentials>,
-): PylonHttpMiddleware => {
-  if (credentials.length === 0) {
-    throw new PylonError("No credentials provided");
-  }
+type VerifyCredentialsFn = (username: string, password: string) => Promise<void>;
 
-  return async function httpBasicAuthMiddleware(ctx, next) {
-    const authorization = ctx.get("authorization");
-
-    if (!authorization) {
-      throw new ClientError("Authorization header is required", {
-        status: ClientError.Status.Unauthorized,
-      });
-    }
-
-    const [authType, encoded] = authorization.split(" ");
-
-    if (authType !== "Basic") {
-      throw new ClientError("Authorization header must be of type Basic", {
-        status: ClientError.Status.Unauthorized,
-      });
-    }
-
-    const parsed = B64.toString(encoded);
-
-    if (!parsed.includes(":")) {
-      throw new ClientError("Authorization header must contain a colon", {
-        status: ClientError.Status.Unauthorized,
-      });
-    }
-
-    const [username, password] = parsed.split(":");
-
+const defaultCallback =
+  (credentials: Array<Credentials>): VerifyCredentialsFn =>
+  async (username, password) => {
     const credential = credentials.find((item) => item.username === username);
 
     if (!credential) {
       throw new ClientError("Invalid credentials", {
         status: ClientError.Status.Unauthorized,
+        details: "No matching credential found",
         debug: { username },
       });
     }
@@ -49,13 +23,55 @@ export const createHttpBasicAuthMiddleware = (
     if (credential.password !== password) {
       throw new ClientError("Invalid credentials", {
         status: ClientError.Status.Unauthorized,
+        details: "Password does not match",
         debug: { username, password },
       });
     }
+  };
 
-    ctx.logger.debug("Basic Auth successful", {
-      credential,
-    });
+export const createHttpBasicAuthMiddleware = (
+  credentials: Array<Credentials> | VerifyCredentialsFn,
+): PylonHttpMiddleware => {
+  if (isArray(credentials) && !credentials.length) {
+    throw new PylonError("No credentials provided");
+  }
+
+  const array = isArray(credentials) ? credentials : [];
+  const verify = isFunction(credentials) ? credentials : defaultCallback(array);
+
+  return async function httpBasicAuthMiddleware(ctx, next) {
+    if (ctx.state.authorization.type !== AuthorizationType.Basic) {
+      throw new ClientError("Invalid Authorization header", {
+        details: "Authorization header must be of type Basic",
+        debug: {
+          header: ctx.get("authorization"),
+          state: ctx.state.authorization,
+        },
+        status: ClientError.Status.Unauthorized,
+      });
+    }
+
+    const parsed = B64.toString(ctx.state.authorization.value);
+
+    if (!parsed.includes(":")) {
+      throw new ClientError("Invalid credentials", {
+        status: ClientError.Status.Unauthorized,
+        details: "Invalid credentials format",
+        debug: { parsed },
+      });
+    }
+
+    const [username, password] = parsed.split(":");
+
+    try {
+      await verify(username, password);
+    } catch (error: any) {
+      throw new ClientError("Invalid credentials", {
+        error,
+        debug: { username, password },
+        status: ClientError.Status.Unauthorized,
+      });
+    }
 
     await next();
   };

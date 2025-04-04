@@ -9,6 +9,7 @@ import { Files } from "formidable";
 import { BaseRequest } from "koa";
 import { RouterContext } from "koa-router";
 import { IPylonCookies, IPylonSession } from "../interfaces";
+import { AuthorizationState } from "./authorization-state";
 import { PylonSession } from "./session";
 import { IoServer } from "./socket";
 
@@ -19,7 +20,7 @@ type Conduits = {
   [key: string]: IConduit;
 };
 
-type Metadata = {
+export type MetadataState = {
   correlationId: string;
   date: Date;
   environment: Environment;
@@ -41,7 +42,8 @@ type Webhook<Data> = {
 };
 
 export type PylonHttpState = {
-  metadata: Metadata;
+  authorization: AuthorizationState;
+  metadata: MetadataState;
   session: PylonSession | null;
   tokens: Dict<VerifiedJwt | VerifiedJws<any>>;
 };

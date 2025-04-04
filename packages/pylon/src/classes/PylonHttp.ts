@@ -6,8 +6,8 @@ import {
   createHttpContextInitialisationMiddleware,
   createHttpCookiesMiddleware,
   createHttpCorsMiddleware,
-  createHttpMetadataMiddleware,
   createHttpSessionMiddleware,
+  createHttpStateMiddleware,
   httpErrorHandlerMiddleware,
   httpQueryParserMiddleware,
   httpRequestLoggerMiddleware,
@@ -69,7 +69,7 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
       httpResponseTimeMiddleware,
       httpResponseLoggerMiddleware,
       httpErrorHandlerMiddleware,
-      createHttpMetadataMiddleware({
+      createHttpStateMiddleware({
         environment: this.options.environment!,
         minRequestAge: this.options.minRequestAge ?? "10s",
         maxRequestAge: this.options.maxRequestAge ?? "10s",

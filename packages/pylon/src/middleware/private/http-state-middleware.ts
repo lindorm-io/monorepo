@@ -10,6 +10,7 @@ import { Environment } from "@lindorm/enums";
 import { ClientError } from "@lindorm/errors";
 import { randomUUID } from "crypto";
 import { PylonHttpMiddleware } from "../../types";
+import { getAuthorization } from "../../utils/private";
 
 type Options = {
   environment: Environment;
@@ -18,8 +19,8 @@ type Options = {
   version: string;
 };
 
-export const createHttpMetadataMiddleware = (options: Options): PylonHttpMiddleware =>
-  async function httpMetadataMiddleware(ctx, next) {
+export const createHttpStateMiddleware = (options: Options): PylonHttpMiddleware =>
+  async function httpStateMiddleware(ctx, next) {
     try {
       const requestDate = ctx.get("date");
 
@@ -27,6 +28,7 @@ export const createHttpMetadataMiddleware = (options: Options): PylonHttpMiddlew
       const maxDate = addMilliseconds(new Date(), ms(options.maxRequestAge));
 
       ctx.state = {
+        authorization: getAuthorization(ctx),
         metadata: {
           correlationId: ctx.get("x-correlation-id") || randomUUID(),
           date: requestDate ? new Date(requestDate) : new Date(),
@@ -34,7 +36,7 @@ export const createHttpMetadataMiddleware = (options: Options): PylonHttpMiddlew
           origin: ctx.get("x-origin") || ctx.get("origin") || null,
           requestId: ctx.get("x-request-id") || randomUUID(),
           responseId: randomUUID(),
-          sessionId: null,
+          sessionId: ctx.get("x-session-id") || null,
         },
         session: null,
         tokens: {},

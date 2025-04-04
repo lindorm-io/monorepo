@@ -1,6 +1,6 @@
 import { VerifyJwtOptions } from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
-import { isString } from "@lindorm/is";
+import { AuthorizationType } from "../../enums";
 import { PylonHttpContext, PylonHttpMiddleware } from "../../types";
 
 type Options = Omit<VerifyJwtOptions, "issuer"> & {
@@ -16,31 +16,18 @@ export const createHttpBearerTokenMiddleware = <
     const start = Date.now();
 
     try {
-      const authorization = ctx.get("authorization");
-
-      if (!authorization) {
-        throw new ClientError("Authorization header is required", {
+      if (ctx.state.authorization.type !== AuthorizationType.Bearer) {
+        throw new ClientError("Invalid Authorization header", {
+          details: "Authorization header must be of type Bearer",
+          debug: {
+            header: ctx.get("authorization"),
+            state: ctx.state.authorization,
+          },
           status: ClientError.Status.Unauthorized,
         });
       }
 
-      const [tokenType, token] = authorization.split(" ");
-
-      ctx.logger.debug("Token found in Authorization header", { token, tokenType });
-
-      if (tokenType !== "Bearer") {
-        throw new ClientError("Authorization header must be of type Bearer", {
-          status: ClientError.Status.Unauthorized,
-        });
-      }
-
-      if (!isString(token)) {
-        throw new ClientError("Authorization token must be of type JWT", {
-          status: ClientError.Status.Unauthorized,
-        });
-      }
-
-      const verified = await ctx.aegis.verify(token, options);
+      const verified = await ctx.aegis.verify(ctx.state.authorization.value, options);
 
       ctx.logger.debug("Token verified", { verified });
 
@@ -53,13 +40,9 @@ export const createHttpBearerTokenMiddleware = <
 
       ctx.state.tokens.bearer = verified;
     } catch (error: any) {
-      ctx.logger.debug("Bearer token verification failed", {
+      throw new ClientError("Invalid credentials", {
         error,
-        time: Date.now() - start,
-      });
-
-      throw new ClientError(error.message, {
-        error,
+        debug: { token: ctx.state.authorization.value },
         status: ClientError.Status.Unauthorized,
       });
     }

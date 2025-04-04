@@ -4,6 +4,7 @@ import {
   ConduitOptions,
   conduitChangeResponseDataMiddleware,
   conduitCorrelationMiddleware,
+  conduitSessionMiddleware,
 } from "@lindorm/conduit";
 import { ServerError } from "@lindorm/errors";
 import { isArray } from "@lindorm/is";
@@ -35,6 +36,9 @@ export const createHttpConduitMiddleware = <
         ...options,
         middleware: [
           conduitCorrelationMiddleware(ctx.state.metadata.correlationId),
+          ...(ctx.state.metadata.sessionId
+            ? [conduitSessionMiddleware(ctx.state.metadata.sessionId)]
+            : []),
           conduitChangeResponseDataMiddleware(ChangeCase.Camel),
           ...(options.middleware ?? []),
         ],
