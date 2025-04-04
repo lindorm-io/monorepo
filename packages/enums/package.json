@@ -20,6 +20,7 @@
     "test:ci": "npm run typecheck:ci",
     "test:integration": "jest --config jest.config.integration.js --",
     "test:unit": "jest --config jest.config.js --",
+    "prettier": "prettier --write ./src/*",
     "test": "jest --watch --",
     "typecheck": "tsc --watch",
     "typecheck:ci": "tsc",

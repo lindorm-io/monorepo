@@ -10,7 +10,7 @@
     "init": "ts-node ./.scripts/initialise-package && npm i",
     "lint": "lerna exec -- eslint . --ext .ts,.tsx",
     "prepare": "husky",
-    "release": "lerna publish",
+    "prettier": "lerna run prettier",
     "test": "compd --file docker-compose.yml lerna run test:ci",
     "test:ci": "lerna run test:ci",
     "typecheck": "lerna run typecheck:ci",
