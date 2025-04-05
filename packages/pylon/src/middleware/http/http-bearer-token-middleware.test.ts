@@ -31,7 +31,7 @@ describe("createHttpBearerTokenMiddleware", () => {
       createHttpBearerTokenMiddleware(options)(ctx, jest.fn()),
     ).resolves.toBeUndefined();
 
-    expect(ctx.state.tokens.bearer).toEqual({
+    expect(ctx.state.tokens.accessToken).toEqual({
       decoded: {},
       header: {},
       payload: {

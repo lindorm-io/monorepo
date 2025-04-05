@@ -3,7 +3,7 @@ import { ClientError } from "@lindorm/errors";
 import { AuthorizationType } from "../../enums";
 import { PylonHttpContext, PylonHttpMiddleware } from "../../types";
 
-type Options = Omit<VerifyJwtOptions, "issuer"> & {
+type Options = Omit<VerifyJwtOptions, "issuer" | "tokenType"> & {
   issuer: string;
 };
 
@@ -27,7 +27,10 @@ export const createHttpBearerTokenMiddleware = <
         });
       }
 
-      const verified = await ctx.aegis.verify(ctx.state.authorization.value, options);
+      const verified = await ctx.aegis.verify(ctx.state.authorization.value, {
+        ...options,
+        tokenType: "access_token",
+      });
 
       ctx.logger.debug("Token verified", { verified });
 
@@ -38,7 +41,7 @@ export const createHttpBearerTokenMiddleware = <
         time: Date.now() - start,
       });
 
-      ctx.state.tokens.bearer = verified;
+      ctx.state.tokens.accessToken = verified;
     } catch (error: any) {
       throw new ClientError("Invalid credentials", {
         error,

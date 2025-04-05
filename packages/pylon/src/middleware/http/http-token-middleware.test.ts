@@ -18,7 +18,7 @@ describe("createHttpTokenMiddleware", () => {
     };
 
     options = {
-      contextKey: "id",
+      contextKey: "idToken",
       issuer: "issuer",
     };
   });
@@ -28,7 +28,7 @@ describe("createHttpTokenMiddleware", () => {
       createHttpTokenMiddleware(options)("request.body.id_token")(ctx, jest.fn()),
     ).resolves.toBeUndefined();
 
-    expect(ctx.state.tokens.id).toEqual({
+    expect(ctx.state.tokens.idToken).toEqual({
       decoded: {},
       header: {},
       payload: {
@@ -51,6 +51,6 @@ describe("createHttpTokenMiddleware", () => {
       ),
     ).resolves.toBeUndefined();
 
-    expect(ctx.state.tokens.id).toBeUndefined();
+    expect(ctx.state.tokens.idToken).toBeUndefined();
   });
 });
