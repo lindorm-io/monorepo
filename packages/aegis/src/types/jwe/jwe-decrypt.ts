@@ -4,11 +4,11 @@ import { DecodedJwe } from "./jwe-decode";
 
 export type DecryptedJweHeader = Omit<
   ParsedTokenHeader,
-  "algorithm" | "encryption" | "type"
+  "algorithm" | "encryption" | "headerType"
 > & {
   algorithm: KryptosEncAlgorithm;
   encryption: KryptosEncryption;
-  type: "JWE";
+  headerType: "JWE";
 };
 
 export type DecryptedJwe = {

@@ -31,9 +31,9 @@ export type VerifyJwtOptions = {
   tokenType?: string | Operators;
 };
 
-export type VerifiedJwtHeader = Omit<ParsedTokenHeader, "algorithm" | "type"> & {
+export type VerifiedJwtHeader = Omit<ParsedTokenHeader, "algorithm" | "headerType"> & {
   algorithm: KryptosSigAlgorithm;
-  type: "JWT";
+  headerType: "JWT";
 };
 
 export type VerifiedJwt<C extends Dict = Dict> = {
