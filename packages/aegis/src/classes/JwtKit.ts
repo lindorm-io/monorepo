@@ -108,11 +108,11 @@ export class JwtKit implements IJwtKit {
     jwt: string,
     verify: VerifyJwtOptions = {},
   ): ParsedJwt<C> {
-    const decoded = JwtKit.parse<C>(jwt);
+    const parsed = JwtKit.parse<C>(jwt);
 
-    if (this.kryptos.algorithm !== decoded.header.algorithm) {
+    if (this.kryptos.algorithm !== parsed.header.algorithm) {
       throw new JwtError("Invalid token", {
-        data: { algorithm: decoded.header.algorithm },
+        data: { algorithm: parsed.header.algorithm },
         debug: { expected: this.kryptos.algorithm },
       });
     }
@@ -137,7 +137,7 @@ export class JwtKit implements IJwtKit {
 
     const {
       decoded: { payload },
-    } = decoded;
+    } = parsed;
 
     const withDates = {
       ...payload,
@@ -163,7 +163,7 @@ export class JwtKit implements IJwtKit {
       throw new JwtError("Invalid token", { data: { invalid } });
     }
 
-    return decoded;
+    return parsed;
   }
 
   // public static

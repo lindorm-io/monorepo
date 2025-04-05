@@ -83,11 +83,11 @@ export class JwsKit implements IJwsKit {
   }
 
   public verify<T extends Buffer | string>(jws: string): ParsedJws<T> {
-    const decoded = JwsKit.parse<T>(jws);
+    const parsed = JwsKit.parse<T>(jws);
 
-    if (this.kryptos.algorithm !== decoded.header.algorithm) {
+    if (this.kryptos.algorithm !== parsed.header.algorithm) {
       throw new JwsError("Invalid token", {
-        data: { algorithm: decoded.header.algorithm },
+        data: { algorithm: parsed.header.algorithm },
         debug: { expected: this.kryptos.algorithm },
       });
     }
@@ -102,7 +102,7 @@ export class JwsKit implements IJwsKit {
       });
     }
 
-    return decoded;
+    return parsed;
   }
 
   // public static
