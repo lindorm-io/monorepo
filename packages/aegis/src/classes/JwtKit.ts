@@ -8,14 +8,14 @@ import {
   DecodedJwt,
   JwtKitOptions,
   Operators,
+  ParsedJwt,
+  ParsedJwtHeader,
   ParsedJwtPayload,
   SignJwtContent,
   SignJwtOptions,
   SignedJwt,
   TokenHeaderSignOptions,
   ValidateJwtOptions,
-  VerifiedJwt,
-  VerifiedJwtHeader,
   VerifyJwtOptions,
 } from "../types";
 import {
@@ -107,24 +107,12 @@ export class JwtKit implements IJwtKit {
   public verify<C extends Dict = Dict>(
     jwt: string,
     verify: VerifyJwtOptions = {},
-  ): VerifiedJwt<C> {
-    const decoded = JwtKit.decode<C>(jwt);
+  ): ParsedJwt<C> {
+    const decoded = JwtKit.parse<C>(jwt);
 
-    if (decoded.header.typ !== "JWT") {
+    if (this.kryptos.algorithm !== decoded.header.algorithm) {
       throw new JwtError("Invalid token", {
-        data: { typ: decoded.header.typ },
-      });
-    }
-
-    if (!decoded.payload.iss) {
-      throw new JwtError("Invalid token", {
-        data: { iss: decoded.payload.iss },
-      });
-    }
-
-    if (this.kryptos.algorithm !== decoded.header.alg) {
-      throw new JwtError("Invalid token", {
-        data: { alg: decoded.header.alg },
+        data: { algorithm: decoded.header.algorithm },
         debug: { expected: this.kryptos.algorithm },
       });
     }
@@ -144,16 +132,19 @@ export class JwtKit implements IJwtKit {
       verify,
       this.clockTolerance,
     );
+
     const invalid: Array<{ key: string; value: any; ops: Operators }> = [];
 
+    const {
+      decoded: { payload },
+    } = decoded;
+
     const withDates = {
-      ...decoded.payload,
-      exp: decoded.payload.exp ? new Date(decoded.payload.exp * 1000) : undefined,
-      iat: decoded.payload.iat ? new Date(decoded.payload.iat * 1000) : undefined,
-      nbf: decoded.payload.nbf ? new Date(decoded.payload.nbf * 1000) : undefined,
-      auth_time: decoded.payload.auth_time
-        ? new Date(decoded.payload.auth_time * 1000)
-        : undefined,
+      ...payload,
+      exp: payload.exp ? new Date(payload.exp * 1000) : undefined,
+      iat: payload.iat ? new Date(payload.iat * 1000) : undefined,
+      nbf: payload.nbf ? new Date(payload.nbf * 1000) : undefined,
+      auth_time: payload.auth_time ? new Date(payload.auth_time * 1000) : undefined,
     };
 
     this.logger.silly("Operators created", { operators });
@@ -172,17 +163,7 @@ export class JwtKit implements IJwtKit {
       throw new JwtError("Invalid token", { data: { invalid } });
     }
 
-    const header = parseTokenHeader<VerifiedJwtHeader>(decoded.header);
-    const payload = parseJwtPayload<C>(decoded.payload);
-
-    this.logger.silly("Token verified", { header, payload });
-
-    return {
-      decoded,
-      header,
-      payload,
-      token: jwt,
-    };
+    return decoded;
   }
 
   // public static
@@ -195,6 +176,30 @@ export class JwtKit implements IJwtKit {
       payload: decodeJwtPayload<C>(payload),
       signature,
     };
+  }
+
+  public static parse<C extends Dict = Dict>(token: string): ParsedJwt<C> {
+    const decoded = JwtKit.decode<C>(token);
+
+    if (decoded.header.typ !== "JWT") {
+      throw new JwtError("Invalid token", {
+        data: { typ: decoded.header.typ },
+        details: "Header type must be JWT",
+      });
+    }
+
+    if (!decoded.payload.iss) {
+      throw new JwtError("Invalid token", {
+        data: { iss: decoded.payload.iss },
+        details: "Issuer is required to decode JWT",
+      });
+    }
+
+    const header = parseTokenHeader<ParsedJwtHeader>(decoded.header);
+
+    const payload = parseJwtPayload<C>(decoded.payload);
+
+    return { decoded, header, payload, token };
   }
 
   public static validate<C extends Dict = Dict>(

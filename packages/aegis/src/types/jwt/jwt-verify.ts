@@ -1,9 +1,4 @@
-import { KryptosSigAlgorithm } from "@lindorm/kryptos";
-import { Dict } from "@lindorm/types";
-import { ParsedTokenHeader } from "../header";
 import { Operators } from "../operators";
-import { DecodedJwt } from "./jwt-decode";
-import { ParsedJwtPayload } from "./jwt-parse";
 
 export type VerifyJwtOptions = {
   accessToken?: string;
@@ -29,16 +24,4 @@ export type VerifyJwtOptions = {
   subjectHint?: string | Operators;
   tenantId?: Array<string> | string | Operators;
   tokenType?: string | Operators;
-};
-
-export type VerifiedJwtHeader = Omit<ParsedTokenHeader, "algorithm" | "headerType"> & {
-  algorithm: KryptosSigAlgorithm;
-  headerType: "JWT";
-};
-
-export type VerifiedJwt<C extends Dict = Dict> = {
-  decoded: DecodedJwt<C>;
-  header: VerifiedJwtHeader;
-  payload: ParsedJwtPayload<C>;
-  token: string;
 };

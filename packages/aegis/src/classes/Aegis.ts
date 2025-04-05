@@ -19,14 +19,14 @@ import {
   EncryptedJwe,
   JweEncryptOptions,
   JwsContent,
+  ParsedJws,
+  ParsedJwt,
   SignJwsOptions,
   SignJwtContent,
   SignJwtOptions,
   SignedJws,
   SignedJwt,
   TokenHeaderClaims,
-  VerifiedJws,
-  VerifiedJwt,
   VerifyJwtOptions,
 } from "../types";
 import { decodeTokenHeader } from "../utils/private";
@@ -78,20 +78,7 @@ export class Aegis implements IAegis {
     };
   }
 
-  public decode<T extends DecodedJwe | DecodedJws | DecodedJwt>(token: string): T {
-    if (Aegis.isJwe(token)) {
-      return JweKit.decode(token) as T;
-    }
-    if (Aegis.isJws(token)) {
-      return JwsKit.decode(token) as T;
-    }
-    if (Aegis.isJwt(token)) {
-      return JwtKit.decode(token) as T;
-    }
-    throw new AegisError("Invalid token type", { debug: { token } });
-  }
-
-  public async verify<T extends VerifiedJwt | VerifiedJws<any>>(
+  public async verify<T extends ParsedJwt | ParsedJws<any>>(
     token: string,
     options?: VerifyJwtOptions,
   ): Promise<T> {
@@ -125,6 +112,29 @@ export class Aegis implements IAegis {
 
   public static isJwt(jwt: string): boolean {
     return JwtKit.isJwt(jwt);
+  }
+
+  public static decode<T extends DecodedJwe | DecodedJws | DecodedJwt>(token: string): T {
+    if (Aegis.isJwe(token)) {
+      return JweKit.decode(token) as T;
+    }
+    if (Aegis.isJws(token)) {
+      return JwsKit.decode(token) as T;
+    }
+    if (Aegis.isJwt(token)) {
+      return JwtKit.decode(token) as T;
+    }
+    throw new AegisError("Invalid token type", { debug: { token } });
+  }
+
+  public static parse<T extends ParsedJwt | ParsedJws<any>>(token: string): T {
+    if (Aegis.isJws(token)) {
+      return JwsKit.parse(token) as T;
+    }
+    if (Aegis.isJwt(token)) {
+      return JwtKit.parse(token) as T;
+    }
+    throw new AegisError("Invalid token type", { debug: { token } });
   }
 
   // private jwe
@@ -169,7 +179,7 @@ export class Aegis implements IAegis {
     return jwsKit.sign(data, options);
   }
 
-  private async jwsVerify<T extends JwsContent>(jws: string): Promise<VerifiedJws<T>> {
+  private async jwsVerify<T extends JwsContent>(jws: string): Promise<ParsedJws<T>> {
     const jwsKit = await this.jwsKit("verify");
     return jwsKit.verify(jws);
   }
@@ -198,7 +208,7 @@ export class Aegis implements IAegis {
   private async jwtVerify<T extends Dict = Dict>(
     jwt: string,
     verify?: VerifyJwtOptions,
-  ): Promise<VerifiedJwt<T>> {
+  ): Promise<ParsedJwt<T>> {
     const jwtKit = await this.jwtKit("verify");
     return jwtKit.verify(jwt, verify);
   }

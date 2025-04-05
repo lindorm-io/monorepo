@@ -1,19 +1,16 @@
 import { Dict } from "@lindorm/types";
 import {
-  DecodedJwe,
-  DecodedJws,
-  DecodedJwt,
   DecryptedJwe,
   EncryptedJwe,
   JweEncryptOptions,
   JwsContent,
+  ParsedJws,
+  ParsedJwt,
   SignJwsOptions,
   SignJwtContent,
   SignJwtOptions,
   SignedJws,
   SignedJwt,
-  VerifiedJws,
-  VerifiedJwt,
   VerifyJwtOptions,
 } from "../types";
 
@@ -24,7 +21,7 @@ export interface IAegisJwe {
 
 export interface IAegisJws {
   sign<T extends JwsContent>(data: T, options?: SignJwsOptions): Promise<SignedJws>;
-  verify<T extends JwsContent>(jws: string): Promise<VerifiedJws<T>>;
+  verify<T extends JwsContent>(jws: string): Promise<ParsedJws<T>>;
 }
 
 export interface IAegisJwt {
@@ -35,7 +32,7 @@ export interface IAegisJwt {
   verify<T extends Dict = Dict>(
     jwt: string,
     verify?: VerifyJwtOptions,
-  ): Promise<VerifiedJwt<T>>;
+  ): Promise<ParsedJwt<T>>;
 }
 
 export interface IAegis {
@@ -45,8 +42,8 @@ export interface IAegis {
   jws: IAegisJws;
   jwt: IAegisJwt;
 
-  decode<T extends DecodedJwe | DecodedJws | DecodedJwt>(token: string): T;
-  verify<T extends VerifiedJwt | VerifiedJws<any>>(
+  // decode<T extends DecodedJwe | RawJws | DecodedJwt>(token: string): T;
+  verify<T extends ParsedJwt | ParsedJws<any>>(
     token: string,
     options?: VerifyJwtOptions,
   ): Promise<T>;

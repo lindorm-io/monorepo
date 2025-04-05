@@ -1,5 +1,13 @@
+import { KryptosSigAlgorithm } from "@lindorm/kryptos";
 import { Dict } from "@lindorm/types";
+import { ParsedTokenHeader } from "../header";
 import { AdjustedAccessLevel, LevelOfAssurance } from "../level-of-assurance";
+import { DecodedJwt } from "./jwt-decode";
+
+export type ParsedJwtHeader = Omit<ParsedTokenHeader, "algorithm" | "headerType"> & {
+  algorithm: KryptosSigAlgorithm;
+  headerType: "JWT";
+};
 
 export type ParsedJwtPayload<C extends Dict = Dict> = {
   accessTokenHash: string | undefined;
@@ -31,4 +39,11 @@ export type ParsedJwtPayload<C extends Dict = Dict> = {
   tenantId: string | undefined;
   tokenId: string;
   tokenType: string;
+};
+
+export type ParsedJwt<C extends Dict = Dict> = {
+  decoded: DecodedJwt<C>;
+  header: ParsedJwtHeader;
+  payload: ParsedJwtPayload<C>;
+  token: string;
 };

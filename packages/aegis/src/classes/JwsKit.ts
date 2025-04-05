@@ -9,11 +9,11 @@ import { IJwsKit } from "../interfaces";
 import {
   DecodedJws,
   JwsKitOptions,
+  ParsedJws,
+  ParsedJwsHeader,
   SignJwsOptions,
   SignedJws,
   TokenHeaderSignOptions,
-  VerifiedJws,
-  VerifiedJwsHeader,
 } from "../types";
 import {
   createTokenSignature,
@@ -82,18 +82,12 @@ export class JwsKit implements IJwsKit {
     return { objectId, token };
   }
 
-  public verify<T extends Buffer | string>(jws: string): VerifiedJws<T> {
-    const decoded = JwsKit.decode(jws);
+  public verify<T extends Buffer | string>(jws: string): ParsedJws<T> {
+    const decoded = JwsKit.parse<T>(jws);
 
-    if (decoded.header.typ !== "JWS") {
+    if (this.kryptos.algorithm !== decoded.header.algorithm) {
       throw new JwsError("Invalid token", {
-        data: { typ: decoded.header.typ },
-      });
-    }
-
-    if (this.kryptos.algorithm !== decoded.header.alg) {
-      throw new JwsError("Invalid token", {
-        data: { alg: decoded.header.alg },
+        data: { algorithm: decoded.header.algorithm },
         debug: { expected: this.kryptos.algorithm },
       });
     }
@@ -108,21 +102,7 @@ export class JwsKit implements IJwsKit {
       });
     }
 
-    const header = parseTokenHeader<VerifiedJwsHeader>(decoded.header);
-
-    const payload =
-      header.contentType === "text/plain"
-        ? decoded.payload
-        : B64.toBuffer(decoded.payload, B64U);
-
-    this.logger.silly("Token verified", { header, payload });
-
-    return {
-      decoded,
-      header,
-      payload: payload as T,
-      token: jws,
-    };
+    return decoded;
   }
 
   // public static
@@ -136,6 +116,26 @@ export class JwsKit implements IJwsKit {
       payload: decodedHeader.cty === "text/plain" ? B64.toString(payload) : payload,
       signature,
     };
+  }
+
+  public static parse<T extends Buffer | string>(token: string): ParsedJws<T> {
+    const decoded = JwsKit.decode(token);
+
+    if (decoded.header.typ !== "JWS") {
+      throw new JwsError("Invalid token", {
+        data: { typ: decoded.header.typ },
+        details: "Header type must be JWS",
+      });
+    }
+
+    const header = parseTokenHeader<ParsedJwsHeader>(decoded.header);
+
+    const payload =
+      header.contentType === "text/plain"
+        ? (decoded.payload as T)
+        : (B64.toBuffer(decoded.payload, B64U) as T);
+
+    return { decoded, header, payload, token };
   }
 
   public static isJws(jws: string): boolean {

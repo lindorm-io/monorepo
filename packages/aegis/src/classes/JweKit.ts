@@ -103,40 +103,40 @@ export class JweKit implements IJweKit {
     return { token };
   }
 
-  public decrypt(jwe: string): DecryptedJwe {
+  public decrypt(token: string): DecryptedJwe {
     const encryption =
       this.kryptosMayOverrideEncryption && this.kryptos.encryption
         ? this.kryptos.encryption
         : this.encryption;
 
-    const decoded = JweKit.decode(jwe);
+    const raw = JweKit.decode(token);
 
-    if (decoded.header.typ !== "JWE") {
+    if (raw.header.typ !== "JWE") {
       throw new JweError("Invalid token", {
-        data: { typ: decoded.header.typ },
+        data: { typ: raw.header.typ },
       });
     }
 
-    if (this.kryptos.algorithm !== decoded.header.alg) {
+    if (this.kryptos.algorithm !== raw.header.alg) {
       throw new JweError("Invalid token", {
-        data: { alg: decoded.header.alg },
+        data: { alg: raw.header.alg },
         debug: { expected: this.kryptos.algorithm },
       });
     }
 
-    const header = parseTokenHeader<DecryptedJweHeader>(decoded.header);
+    const header = parseTokenHeader<DecryptedJweHeader>(raw.header);
 
-    const authTag = decoded.authTag ? B64.toBuffer(decoded.authTag) : undefined;
-    const content = B64.toBuffer(decoded.content);
+    const authTag = raw.authTag ? B64.toBuffer(raw.authTag) : undefined;
+    const content = B64.toBuffer(raw.content);
     const hkdfSalt = header.hkdfSalt ? B64.toBuffer(header.hkdfSalt, B64U) : undefined;
-    const initialisationVector = B64.toBuffer(decoded.initialisationVector);
+    const initialisationVector = B64.toBuffer(raw.initialisationVector);
     const pbkdfIterations = header.pbkdfIterations;
     const pbkdfSalt = header.pbkdfSalt ? B64.toBuffer(header.pbkdfSalt, B64U) : undefined;
     const publicEncryptionIv = header.publicEncryptionIv
       ? B64.toBuffer(header.publicEncryptionIv)
       : undefined;
-    const publicEncryptionKey = decoded.publicEncryptionKey
-      ? B64.toBuffer(decoded.publicEncryptionKey)
+    const publicEncryptionKey = raw.publicEncryptionKey
+      ? B64.toBuffer(raw.publicEncryptionKey)
       : undefined;
     const publicEncryptionJwk = header.publicEncryptionJwk;
     const publicEncryptionTag = header.publicEncryptionTag
@@ -180,12 +180,7 @@ export class JweKit implements IJweKit {
 
     this.logger.silly("Token decrypted", { payload });
 
-    return {
-      decoded,
-      header,
-      payload,
-      token: jwe,
-    };
+    return { header, payload, decoded: raw, token };
   }
 
   // public static

@@ -38,17 +38,30 @@ describe("JwsKit", () => {
         objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
       });
 
-      expect(JwsKit.decode(token)).toEqual({
+      expect(JwsKit.parse(token)).toEqual({
+        decoded: {
+          header: {
+            alg: "ES512",
+            cty: "text/plain",
+            jku: "https://test.lindorm.io/.well-known/jwks.json",
+            kid: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+            oid: "ba63b8d4-500a-4646-9aac-cb45543c966d",
+            typ: "JWS",
+          },
+          payload: "test data in plain text",
+          signature: expect.any(String),
+        },
         header: {
-          alg: "ES512",
-          cty: "text/plain",
-          jku: "https://test.lindorm.io/.well-known/jwks.json",
-          kid: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
-          oid: "ba63b8d4-500a-4646-9aac-cb45543c966d",
-          typ: "JWS",
+          algorithm: "ES512",
+          contentType: "text/plain",
+          critical: [],
+          headerType: "JWS",
+          jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
+          keyId: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+          objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
         },
         payload: "test data in plain text",
-        signature: expect.any(String),
+        token,
       });
     });
 
@@ -57,17 +70,30 @@ describe("JwsKit", () => {
         objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
       });
 
-      expect(JwsKit.decode(token)).toEqual({
-        header: {
-          alg: "ES512",
-          cty: "application/buffer",
-          jku: "https://test.lindorm.io/.well-known/jwks.json",
-          kid: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
-          oid: "ba63b8d4-500a-4646-9aac-cb45543c966d",
-          typ: "JWS",
+      expect(JwsKit.parse(token)).toEqual({
+        decoded: {
+          header: {
+            alg: "ES512",
+            cty: "application/buffer",
+            jku: "https://test.lindorm.io/.well-known/jwks.json",
+            kid: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+            oid: "ba63b8d4-500a-4646-9aac-cb45543c966d",
+            typ: "JWS",
+          },
+          payload: "dGVzdCBkYXRhIGluIGJ1ZmZlcg",
+          signature: expect.any(String),
         },
-        payload: "dGVzdCBkYXRhIGluIGJ1ZmZlcg",
-        signature: expect.any(String),
+        header: {
+          algorithm: "ES512",
+          contentType: "application/buffer",
+          critical: [],
+          headerType: "JWS",
+          jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
+          keyId: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+          objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
+        },
+        payload: Buffer.from("test data in buffer", "utf8"),
+        token,
       });
     });
   });
@@ -134,6 +160,46 @@ describe("JwsKit", () => {
         },
         payload: Buffer.from("test data in buffer", "utf8"),
         token,
+      });
+    });
+  });
+
+  describe("raw", () => {
+    test("should decode token with plain text data", () => {
+      const { token } = kit.sign("test data in plain text", {
+        objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
+      });
+
+      expect(JwsKit.decode(token)).toEqual({
+        header: {
+          alg: "ES512",
+          cty: "text/plain",
+          jku: "https://test.lindorm.io/.well-known/jwks.json",
+          kid: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+          oid: "ba63b8d4-500a-4646-9aac-cb45543c966d",
+          typ: "JWS",
+        },
+        payload: "test data in plain text",
+        signature: expect.any(String),
+      });
+    });
+
+    test("should decode token with buffer data", () => {
+      const { token } = kit.sign(Buffer.from("test data in buffer", "utf8"), {
+        objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
+      });
+
+      expect(JwsKit.decode(token)).toEqual({
+        header: {
+          alg: "ES512",
+          cty: "application/buffer",
+          jku: "https://test.lindorm.io/.well-known/jwks.json",
+          kid: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+          oid: "ba63b8d4-500a-4646-9aac-cb45543c966d",
+          typ: "JWS",
+        },
+        payload: "dGVzdCBkYXRhIGluIGJ1ZmZlcg",
+        signature: expect.any(String),
       });
     });
   });

@@ -1,15 +1,15 @@
 import { KryptosSigAlgorithm } from "@lindorm/kryptos";
 import { ParsedTokenHeader } from "../header";
-import { DecodedJws } from "./jws-decode";
+import { DecodedJws } from "./jws-raw";
 
-export type VerifiedJwsHeader = Omit<ParsedTokenHeader, "algorithm" | "headerType"> & {
+export type ParsedJwsHeader = Omit<ParsedTokenHeader, "algorithm" | "headerType"> & {
   algorithm: KryptosSigAlgorithm;
   headerType: "JWS";
 };
 
-export type VerifiedJws<T extends Buffer | string> = {
+export type ParsedJws<T extends Buffer | string> = {
   decoded: DecodedJws;
-  header: VerifiedJwsHeader;
+  header: ParsedJwsHeader;
   payload: T;
   token: string;
 };

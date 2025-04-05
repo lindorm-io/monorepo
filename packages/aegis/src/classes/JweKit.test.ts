@@ -53,38 +53,6 @@ describe("JweKit", () => {
     });
   });
 
-  describe("decode", () => {
-    test("should decode data", () => {
-      const { token } = kit.encrypt("data", {
-        objectId: "e5d4ed15-3350-4fdc-a9cf-d8270d637e99",
-      });
-
-      expect(JweKit.decode(token)).toEqual({
-        authTag: expect.any(String),
-        content: expect.any(String),
-        header: {
-          alg: "ECDH-ES",
-          crit: ["alg", "enc", "epk", "hkdf_salt"],
-          cty: "text/plain",
-          enc: "A256GCM",
-          epk: {
-            crv: "P-521",
-            kty: "EC",
-            x: expect.any(String),
-            y: expect.any(String),
-          },
-          hkdf_salt: expect.any(String),
-          jku: "https://test.lindorm.io/.well-known/jwks.json",
-          kid: "43bd1720-5dab-5d52-ae1e-e9dbbe6adfe4",
-          oid: "e5d4ed15-3350-4fdc-a9cf-d8270d637e99",
-          typ: "JWE",
-        },
-        initialisationVector: expect.any(String),
-        publicEncryptionKey: undefined,
-      });
-    });
-  });
-
   describe("decrypt", () => {
     test("should decrypt data using EC", () => {
       const { token } = kit.encrypt("data", {
@@ -403,6 +371,38 @@ describe("JweKit", () => {
         },
         payload: "data",
         token,
+      });
+    });
+  });
+
+  describe("raw", () => {
+    test("should decode data", () => {
+      const { token } = kit.encrypt("data", {
+        objectId: "e5d4ed15-3350-4fdc-a9cf-d8270d637e99",
+      });
+
+      expect(JweKit.decode(token)).toEqual({
+        authTag: expect.any(String),
+        content: expect.any(String),
+        header: {
+          alg: "ECDH-ES",
+          crit: ["alg", "enc", "epk", "hkdf_salt"],
+          cty: "text/plain",
+          enc: "A256GCM",
+          epk: {
+            crv: "P-521",
+            kty: "EC",
+            x: expect.any(String),
+            y: expect.any(String),
+          },
+          hkdf_salt: expect.any(String),
+          jku: "https://test.lindorm.io/.well-known/jwks.json",
+          kid: "43bd1720-5dab-5d52-ae1e-e9dbbe6adfe4",
+          oid: "e5d4ed15-3350-4fdc-a9cf-d8270d637e99",
+          typ: "JWE",
+        },
+        initialisationVector: expect.any(String),
+        publicEncryptionKey: undefined,
       });
     });
   });

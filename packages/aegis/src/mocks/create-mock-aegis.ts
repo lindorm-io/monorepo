@@ -19,7 +19,7 @@ export const createMockAegis = (): IAegis => ({
     verify: jest.fn().mockResolvedValue({
       decoded: {},
       header: {},
-      payload: "mocked_payload",
+      payload: "verified_payload",
     }),
   },
   jwt: {
@@ -34,14 +34,14 @@ export const createMockAegis = (): IAegis => ({
     verify: jest.fn().mockResolvedValue({
       decoded: {},
       header: {},
-      payload: { subject: "mocked_subject" },
+      payload: { subject: "verified_subject" },
     }),
   },
 
-  decode: jest.fn(),
+  // decode: jest.fn(),
   verify: jest.fn().mockResolvedValue({
     decoded: {},
     header: {},
-    payload: { subject: "mocked_subject" },
+    payload: { subject: "verified_subject" },
   }),
 });
