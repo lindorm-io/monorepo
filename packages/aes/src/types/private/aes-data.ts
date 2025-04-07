@@ -3,7 +3,7 @@ import {
   AesDecryptionRecord,
   AesEncryptionOptions,
   SerialisedAesDecryption,
-} from "../aes-data";
+} from "../aes-decryption-data";
 
 export type PrivateAesEncryptionOptions = AesEncryptionOptions & { kryptos: IKryptos };
 

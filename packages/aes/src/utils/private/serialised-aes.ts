@@ -34,11 +34,13 @@ export const createSerialisedAesRecord = (
 export const parseSerialisedAesRecord = (
   options: SerialisedAesDecryption,
 ): AesDecryptionRecord => ({
+  algorithm: options.algorithm,
   authTag: options.authTag ? B64.toBuffer(options.authTag) : undefined,
   content: B64.toBuffer(options.content),
   encryption: options.encryption,
   hkdfSalt: options.hkdfSalt ? B64.toBuffer(options.hkdfSalt) : undefined,
   initialisationVector: B64.toBuffer(options.initialisationVector),
+  keyId: options.keyId,
   pbkdfIterations: options.pbkdfIterations,
   pbkdfSalt: options.pbkdfSalt ? B64.toBuffer(options.pbkdfSalt) : undefined,
   publicEncryptionIv: options.publicEncryptionIv
@@ -51,4 +53,5 @@ export const parseSerialisedAesRecord = (
   publicEncryptionTag: options.publicEncryptionTag
     ? B64.toBuffer(options.publicEncryptionTag)
     : undefined,
+  version: options.version,
 });

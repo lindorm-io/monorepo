@@ -7,7 +7,7 @@ import {
 describe("diffieHellman", () => {
   describe("ECB", () => {
     test("should return encryption keys with ECDH-ES+A128KW", () => {
-      const kryptos = KryptosKit.make.enc.ec({ algorithm: "ECDH-ES+A128KW" });
+      const kryptos = KryptosKit.generate.enc.ec({ algorithm: "ECDH-ES+A128KW" });
 
       const result = getDiffieHellmanKeyWrapEncryptionKey({
         encryption: "A128GCM",
@@ -38,7 +38,7 @@ describe("diffieHellman", () => {
     });
 
     test("should return encryption keys with ECDH-ES+A192KW", () => {
-      const kryptos = KryptosKit.make.enc.ec({ algorithm: "ECDH-ES+A192KW" });
+      const kryptos = KryptosKit.generate.enc.ec({ algorithm: "ECDH-ES+A192KW" });
 
       const result = getDiffieHellmanKeyWrapEncryptionKey({
         encryption: "A192GCM",
@@ -69,7 +69,7 @@ describe("diffieHellman", () => {
     });
 
     test("should return encryption keys with ECDH-ES+A256KW", () => {
-      const kryptos = KryptosKit.make.enc.ec({ algorithm: "ECDH-ES+A256KW" });
+      const kryptos = KryptosKit.generate.enc.ec({ algorithm: "ECDH-ES+A256KW" });
 
       const result = getDiffieHellmanKeyWrapEncryptionKey({
         encryption: "A256GCM",
@@ -102,7 +102,7 @@ describe("diffieHellman", () => {
 
   describe("GCM", () => {
     test("should return encryption keys with ECDH-ES+A128GCMKW", () => {
-      const kryptos = KryptosKit.make.enc.ec({ algorithm: "ECDH-ES+A128GCMKW" });
+      const kryptos = KryptosKit.generate.enc.ec({ algorithm: "ECDH-ES+A128GCMKW" });
 
       const result = getDiffieHellmanKeyWrapEncryptionKey({
         encryption: "A128GCM",
@@ -137,7 +137,7 @@ describe("diffieHellman", () => {
     });
 
     test("should return encryption keys with ECDH-ES+A192GCMKW", () => {
-      const kryptos = KryptosKit.make.enc.ec({ algorithm: "ECDH-ES+A192GCMKW" });
+      const kryptos = KryptosKit.generate.enc.ec({ algorithm: "ECDH-ES+A192GCMKW" });
 
       const result = getDiffieHellmanKeyWrapEncryptionKey({
         encryption: "A192GCM",
@@ -172,7 +172,7 @@ describe("diffieHellman", () => {
     });
 
     test("should return encryption keys with ECDH-ES+A256GCMKW", () => {
-      const kryptos = KryptosKit.make.enc.ec({ algorithm: "ECDH-ES+A256GCMKW" });
+      const kryptos = KryptosKit.generate.enc.ec({ algorithm: "ECDH-ES+A256GCMKW" });
 
       const result = getDiffieHellmanKeyWrapEncryptionKey({
         encryption: "A256GCM",
@@ -209,7 +209,7 @@ describe("diffieHellman", () => {
 
   describe("OKP", () => {
     test("should return encryption keys with X25519 OKP and GCM KW", () => {
-      const kryptos = KryptosKit.make.enc.okp({
+      const kryptos = KryptosKit.generate.enc.okp({
         algorithm: "ECDH-ES+A128GCMKW",
         curve: "X25519",
       });
@@ -246,7 +246,7 @@ describe("diffieHellman", () => {
     });
 
     test("should return encryption keys with X448 OKP and ECB KW", () => {
-      const kryptos = KryptosKit.make.enc.okp({
+      const kryptos = KryptosKit.generate.enc.okp({
         algorithm: "ECDH-ES+A192KW",
         curve: "X448",
       });

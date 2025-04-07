@@ -4,7 +4,7 @@ import { getOctDirDecryptionKey, getOctDirEncryptionKey } from "./get-oct-dir-ke
 describe("get-oct-std-keys", () => {
   describe("cbc", () => {
     test("should resolve dir key for A128CBC-HS256", () => {
-      const kryptos = KryptosKit.make.enc.oct({
+      const kryptos = KryptosKit.generate.enc.oct({
         algorithm: "dir",
         encryption: "A128CBC-HS256",
       });
@@ -27,7 +27,7 @@ describe("get-oct-std-keys", () => {
     });
 
     test("should resolve dir key for A192CBC-HS384", () => {
-      const kryptos = KryptosKit.make.enc.oct({
+      const kryptos = KryptosKit.generate.enc.oct({
         algorithm: "dir",
         encryption: "A192CBC-HS384",
       });
@@ -50,7 +50,7 @@ describe("get-oct-std-keys", () => {
     });
 
     test("should resolve dir key for A256CBC-HS512", () => {
-      const kryptos = KryptosKit.make.enc.oct({
+      const kryptos = KryptosKit.generate.enc.oct({
         algorithm: "dir",
         encryption: "A256CBC-HS512",
       });
@@ -75,7 +75,7 @@ describe("get-oct-std-keys", () => {
 
   describe("gcm", () => {
     test("should resolve dir key for A128GCM", () => {
-      const kryptos = KryptosKit.make.enc.oct({
+      const kryptos = KryptosKit.generate.enc.oct({
         algorithm: "dir",
         encryption: "A128GCM",
       });
@@ -98,7 +98,7 @@ describe("get-oct-std-keys", () => {
     });
 
     test("should resolve dir key for A192GCM", () => {
-      const kryptos = KryptosKit.make.enc.oct({
+      const kryptos = KryptosKit.generate.enc.oct({
         algorithm: "dir",
         encryption: "A192GCM",
       });
@@ -121,7 +121,7 @@ describe("get-oct-std-keys", () => {
     });
 
     test("should resolve dir key for A256GCM", () => {
-      const kryptos = KryptosKit.make.enc.oct({
+      const kryptos = KryptosKit.generate.enc.oct({
         algorithm: "dir",
         encryption: "A256GCM",
       });

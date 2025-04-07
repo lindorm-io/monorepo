@@ -83,7 +83,7 @@ describe("encoded-aes", () => {
     ];
 
     test.each(algorithms)("should encode and decode %s", (algorithm) => {
-      const kryptos = KryptosKit.make.auto({ algorithm });
+      const kryptos = KryptosKit.generate.auto({ algorithm });
       const data = encryptAes({ data: "test", kryptos });
       const encoded = createEncodedAesString(data);
       const decoded = parseEncodedAesString(encoded);

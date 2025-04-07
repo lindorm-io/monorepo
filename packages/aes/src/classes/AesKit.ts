@@ -1,4 +1,3 @@
-import { isObject, isString } from "@lindorm/is";
 import { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
 import { AesError } from "../errors";
 import { IAesKit } from "../interfaces";
@@ -10,16 +9,13 @@ import {
   SerialisedAesDecryption,
   SerialisedAesEncryption,
 } from "../types";
-import { isAesBufferData, isAesSerialisedData, isAesTokenised } from "../utils";
+import { isAesTokenised, parseAes } from "../utils";
 import {
   createEncodedAesString,
   createSerialisedAesRecord,
   createTokenisedAesString,
   decryptAes,
   encryptAes,
-  parseEncodedAesString,
-  parseSerialisedAesRecord,
-  parseTokenisedAesString,
 } from "../utils/private";
 
 export class AesKit implements IAesKit {
@@ -80,35 +76,7 @@ export class AesKit implements IAesKit {
   }
 
   public decrypt(data: AesDecryptionRecord | SerialisedAesDecryption | string): string {
-    if (isString(data) && !isAesTokenised(data)) {
-      return decryptAes({
-        ...parseEncodedAesString(data),
-        kryptos: this.kryptos,
-      });
-    }
-
-    if (isString(data) && isAesTokenised(data)) {
-      return decryptAes({
-        ...parseTokenisedAesString(data),
-        kryptos: this.kryptos,
-      });
-    }
-
-    if (isObject(data) && isAesBufferData(data)) {
-      return decryptAes({
-        ...data,
-        kryptos: this.kryptos,
-      });
-    }
-
-    if (isObject(data) && isAesSerialisedData(data)) {
-      return decryptAes({
-        ...parseSerialisedAesRecord(data),
-        kryptos: this.kryptos,
-      });
-    }
-
-    throw new AesError("Invalid decryption type");
+    return decryptAes({ ...parseAes(data), kryptos: this.kryptos });
   }
 
   public verify(
@@ -130,5 +98,11 @@ export class AesKit implements IAesKit {
 
   public static isAesTokenised(input: any): input is string {
     return isAesTokenised(input);
+  }
+
+  public static parse(
+    data: AesDecryptionRecord | SerialisedAesDecryption | string,
+  ): AesDecryptionRecord {
+    return parseAes(data);
   }
 }

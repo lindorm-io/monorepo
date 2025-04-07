@@ -22,14 +22,14 @@ type CalculateSharedSecretOptions = Pick<
 
 const generateKryptos = (kryptos: IKryptos): IKryptos => {
   if (KryptosKit.isEc(kryptos)) {
-    return KryptosKit.make.enc.ec({
+    return KryptosKit.generate.enc.ec({
       algorithm: kryptos.algorithm as EcEncAlgorithm,
       curve: kryptos.curve,
     });
   }
 
   if (KryptosKit.isOkp(kryptos)) {
-    return KryptosKit.make.enc.okp({
+    return KryptosKit.generate.enc.okp({
       algorithm: kryptos.algorithm as OkpEncAlgorithm,
       curve: kryptos.curve as OkpEncCurve,
     });

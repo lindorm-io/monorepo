@@ -6,7 +6,7 @@ import {
 
 describe("getOctKeyWrap", () => {
   test("should return PBES2-HS256+A128KW", () => {
-    const kryptos = KryptosKit.make.enc.oct({ algorithm: "PBES2-HS256+A128KW" });
+    const kryptos = KryptosKit.generate.enc.oct({ algorithm: "PBES2-HS256+A128KW" });
 
     const result = getOctPbkdfKeyWrapEncryptionKey({ encryption: "A128GCM", kryptos });
 
@@ -29,7 +29,7 @@ describe("getOctKeyWrap", () => {
   });
 
   test("should return PBES2-HS384+A192KW", () => {
-    const kryptos = KryptosKit.make.enc.oct({ algorithm: "PBES2-HS384+A192KW" });
+    const kryptos = KryptosKit.generate.enc.oct({ algorithm: "PBES2-HS384+A192KW" });
 
     const result = getOctPbkdfKeyWrapEncryptionKey({ encryption: "A128GCM", kryptos });
 
@@ -52,7 +52,7 @@ describe("getOctKeyWrap", () => {
   });
 
   test("should return PBES2-HS512+A256KW", () => {
-    const kryptos = KryptosKit.make.enc.oct({ algorithm: "PBES2-HS512+A256KW" });
+    const kryptos = KryptosKit.generate.enc.oct({ algorithm: "PBES2-HS512+A256KW" });
 
     const result = getOctPbkdfKeyWrapEncryptionKey({ encryption: "A128GCM", kryptos });
 

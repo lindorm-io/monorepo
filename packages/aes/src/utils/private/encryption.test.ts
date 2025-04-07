@@ -4,7 +4,7 @@ import { decryptAes, encryptAes } from "./encryption";
 
 describe("aes-data", () => {
   test("should encrypt and decrypt", () => {
-    const kryptos = KryptosKit.make.enc.oct({
+    const kryptos = KryptosKit.generate.enc.oct({
       algorithm: "dir",
       encryption: "A256GCM",
     });
@@ -42,7 +42,7 @@ describe("aes-data", () => {
     ];
 
     test.each(encryptions)("should encrypt and decrypt with %s", (encryption) => {
-      const kryptos = KryptosKit.make.enc.oct({
+      const kryptos = KryptosKit.generate.enc.oct({
         algorithm: "dir",
         encryption,
       });

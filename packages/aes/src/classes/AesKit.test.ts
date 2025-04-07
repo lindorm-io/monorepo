@@ -40,7 +40,7 @@ describe("AesKit", () => {
     let kryptos: IKryptos;
 
     beforeEach(async () => {
-      kryptos = KryptosKit.make.auto({ algorithm });
+      kryptos = KryptosKit.generate.auto({ algorithm });
     });
 
     describe.each(encryptions)("encryption: %s", (encryption) => {
