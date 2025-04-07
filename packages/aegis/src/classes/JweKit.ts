@@ -1,5 +1,6 @@
 import { AesKit } from "@lindorm/aes";
 import { B64 } from "@lindorm/b64";
+import { isString } from "@lindorm/is";
 import { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
 import { ILogger } from "@lindorm/logger";
 import { removeUndefined } from "@lindorm/utils";
@@ -211,12 +212,30 @@ export class JweKit implements IJweKit {
   // private
 
   private contentType(input: string): string {
+    if (isString(input) && input.startsWith("{") && input.endsWith("}")) {
+      return "application/json";
+    }
+
+    if (isString(input) && input.startsWith("[") && input.endsWith("]")) {
+      return "application/json";
+    }
+
     if (!input.startsWith("eyJ") && !input.includes(".")) {
       return "text/plain";
     }
 
-    const [header] = input.split(".");
+    try {
+      const [header] = input.split(".");
 
-    return decodeTokenHeader(header).typ;
+      return decodeTokenHeader(header).typ;
+    } catch (err) {
+      this.logger.silly("Failed to decode content type", { err });
+    }
+
+    if (isString(input)) {
+      return "text/plain";
+    }
+
+    return "application/unknown";
   }
 }

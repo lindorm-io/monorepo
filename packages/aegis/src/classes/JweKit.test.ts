@@ -145,7 +145,7 @@ describe("JweKit", () => {
     });
 
     test("should decrypt data using OCT hkdf", () => {
-      const kryptos = KryptosKit.make.enc.oct({
+      const kryptos = KryptosKit.generate.enc.oct({
         algorithm: "A128KW",
         jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
       });
@@ -191,7 +191,7 @@ describe("JweKit", () => {
     });
 
     test("should decrypt data using OCT pbkdf", () => {
-      const kryptos = KryptosKit.make.enc.oct({ algorithm: "PBES2-HS512+A256KW" });
+      const kryptos = KryptosKit.generate.enc.oct({ algorithm: "PBES2-HS512+A256KW" });
 
       kit = new JweKit({ logger, kryptos });
 
@@ -234,7 +234,7 @@ describe("JweKit", () => {
     });
 
     test("should decrypt data using OCT A128GCMKW", () => {
-      const kryptos = KryptosKit.make.enc.oct({ algorithm: "A128GCMKW" });
+      const kryptos = KryptosKit.generate.enc.oct({ algorithm: "A128GCMKW" });
 
       kit = new JweKit({ logger, kryptos });
 
@@ -433,7 +433,7 @@ describe("JweKit", () => {
     ];
 
     test.each(algorithms)("should encrypt and decrypt data using %s", (algorithm) => {
-      const kryptos = KryptosKit.make.auto({ algorithm });
+      const kryptos = KryptosKit.generate.auto({ algorithm });
 
       const jweKit = new JweKit({ logger, kryptos });
 
