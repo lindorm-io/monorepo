@@ -1,15 +1,21 @@
-import { IAmphora } from "@lindorm/amphora";
+import {
+  AesDecryptionRecord,
+  AesEncryptionRecord,
+  AesKit,
+  SerialisedAesDecryption,
+  SerialisedAesEncryption,
+} from "@lindorm/aes";
+import { AmphoraQuery, IAmphora } from "@lindorm/amphora";
 import {
   IKryptos,
   KryptosEncAlgorithm,
   KryptosEncryption,
-  KryptosOperation,
   KryptosSigAlgorithm,
 } from "@lindorm/kryptos";
 import { ILogger } from "@lindorm/logger";
 import { Dict } from "@lindorm/types";
 import { AegisError } from "../errors";
-import { IAegis, IAegisJwe, IAegisJws, IAegisJwt } from "../interfaces";
+import { IAegis, IAegisAes, IAegisJwe, IAegisJws, IAegisJwt } from "../interfaces";
 import {
   AegisOptions,
   DecodedJwe,
@@ -26,6 +32,7 @@ import {
   SignJwtOptions,
   SignedJws,
   SignedJwt,
+  TokenHeaderAlgorithm,
   TokenHeaderClaims,
   VerifyJwtOptions,
 } from "../types";
@@ -33,6 +40,18 @@ import { decodeTokenHeader } from "../utils/private";
 import { JweKit } from "./JweKit";
 import { JwsKit } from "./JwsKit";
 import { JwtKit } from "./JwtKit";
+
+type EncOptions = {
+  id?: string;
+  algorithm?: TokenHeaderAlgorithm;
+  encrypt?: boolean;
+};
+
+type SigOptions = {
+  id?: string;
+  algorithm?: TokenHeaderAlgorithm;
+  sign?: boolean;
+};
 
 export class Aegis implements IAegis {
   public readonly issuer: string | null;
@@ -55,6 +74,13 @@ export class Aegis implements IAegis {
     this.encryption = options.encryption ?? "A256GCM";
     this.kryptosMayOverrideEncryption = options.kryptosMayOverrideEncryption ?? true;
     this.sigAlgorithm = options.sigAlgorithm;
+  }
+
+  public get aes(): IAegisAes {
+    return {
+      encrypt: this.aesEncrypt.bind(this) as IAegisAes["encrypt"],
+      decrypt: this.aesDecrypt.bind(this),
+    };
   }
 
   public get jwe(): IAegisJwe {
@@ -137,10 +163,37 @@ export class Aegis implements IAegis {
     throw new AegisError("Invalid token type", { debug: { token } });
   }
 
+  // private aes
+
+  private async aesKit(options: EncOptions = {}): Promise<AesKit> {
+    const kryptos = await this.kryptosEnc(options);
+
+    return new AesKit({ kryptos });
+  }
+
+  private async aesEncrypt(
+    data: string,
+    mode: "encoded" | "record" | "serialised" | "tokenised",
+  ): Promise<string | AesEncryptionRecord | SerialisedAesEncryption> {
+    const kit = await this.aesKit({ encrypt: true });
+
+    return kit.encrypt(data, mode as "encoded");
+  }
+
+  private async aesDecrypt(
+    data: AesDecryptionRecord | SerialisedAesDecryption | string,
+  ): Promise<string> {
+    const parsed = AesKit.parse(data);
+
+    const kit = await this.aesKit({ id: parsed.keyId, algorithm: parsed.algorithm });
+
+    return kit.decrypt(data);
+  }
+
   // private jwe
 
-  private async jweKit(operation: KryptosOperation): Promise<JweKit> {
-    const kryptos = await this.kryptosEnc(operation);
+  private async jweKit(options: EncOptions = {}): Promise<JweKit> {
+    const kryptos = await this.kryptosEnc(options);
 
     return new JweKit({
       encryption: this.encryption,
@@ -154,19 +207,26 @@ export class Aegis implements IAegis {
     data: string,
     options?: JweEncryptOptions,
   ): Promise<EncryptedJwe> {
-    const jweKit = await this.jweKit("encrypt");
-    return jweKit.encrypt(data, options);
+    const kit = await this.jweKit({ encrypt: true });
+
+    return kit.encrypt(data, options);
   }
 
   private async jweDecrypt(jwe: string): Promise<DecryptedJwe> {
-    const jweKit = await this.jweKit("decrypt");
-    return jweKit.decrypt(jwe);
+    const decode = JweKit.decode(jwe);
+
+    const kit = await this.jweKit({
+      id: decode.header.kid,
+      algorithm: decode.header.alg,
+    });
+
+    return kit.decrypt(jwe);
   }
 
   // private jws
 
-  private async jwsKit(operation: KryptosOperation): Promise<JwsKit> {
-    const kryptos = await this.kryptosSig(operation);
+  private async jwsKit(options: SigOptions = {}): Promise<JwsKit> {
+    const kryptos = await this.kryptosSig(options);
 
     return new JwsKit({ kryptos, logger: this.logger });
   }
@@ -175,19 +235,26 @@ export class Aegis implements IAegis {
     data: T,
     options?: SignJwsOptions,
   ): Promise<SignedJws> {
-    const jwsKit = await this.jwsKit("sign");
-    return jwsKit.sign(data, options);
+    const kit = await this.jwsKit({ sign: true });
+
+    return kit.sign(data, options);
   }
 
   private async jwsVerify<T extends JwsContent>(jws: string): Promise<ParsedJws<T>> {
-    const jwsKit = await this.jwsKit("verify");
-    return jwsKit.verify(jws);
+    const decode = JwsKit.decode(jws);
+
+    const kit = await this.jwsKit({
+      id: decode.header.kid,
+      algorithm: decode.header.alg,
+    });
+
+    return kit.verify(jws);
   }
 
   // private jwt
 
-  private async jwtKit(operation: KryptosOperation): Promise<JwtKit> {
-    const kryptos = await this.kryptosSig(operation);
+  private async jwtKit(options: SigOptions = {}): Promise<JwtKit> {
+    const kryptos = await this.kryptosSig(options);
 
     return new JwtKit({
       clockTolerance: this.clockTolerance,
@@ -201,41 +268,71 @@ export class Aegis implements IAegis {
     content: SignJwtContent<T>,
     options?: SignJwtOptions,
   ): Promise<SignedJwt> {
-    const jwtKit = await this.jwtKit("sign");
-    return jwtKit.sign(content, options);
+    const kit = await this.jwtKit({ sign: true });
+
+    return kit.sign(content, options);
   }
 
   private async jwtVerify<T extends Dict = Dict>(
     jwt: string,
     verify?: VerifyJwtOptions,
   ): Promise<ParsedJwt<T>> {
-    const jwtKit = await this.jwtKit("verify");
-    return jwtKit.verify(jwt, verify);
+    const decode = JwtKit.decode(jwt);
+
+    const kit = await this.jwtKit({
+      id: decode.header.kid,
+      algorithm: decode.header.alg,
+    });
+
+    return kit.verify(jwt, verify);
   }
 
   // private kryptos
 
-  private async kryptosEnc(operation: KryptosOperation): Promise<IKryptos> {
-    const kryptos = await this.amphora.find({
-      algorithm: this.encAlgorithm,
-      issuer: this.issuer ?? undefined,
-      operations: [operation],
-      use: "enc",
-    });
+  private async kryptosEnc(options: EncOptions = {}): Promise<IKryptos> {
+    const query: AmphoraQuery = options.encrypt
+      ? {
+          $or: [
+            { operations: ["encrypt"] },
+            { operations: ["deriveKey"] },
+            { operations: ["wrapKey"] },
+          ],
+          algorithm: this.encAlgorithm,
+          issuer: this.issuer ?? undefined,
+        }
+      : {
+          $or: [
+            { operations: ["decrypt"] },
+            { operations: ["deriveKey"] },
+            { operations: ["unwrapKey"] },
+          ],
+          algorithm: options.algorithm ?? this.encAlgorithm,
+        };
+
+    const kryptos = await this.amphora.find(
+      options.id ? { id: options.id } : { ...query, use: "enc" },
+    );
 
     this.logger.silly("Kryptos found", { kryptos: kryptos.toJSON() });
 
     return kryptos;
   }
 
-  private async kryptosSig(operation: KryptosOperation): Promise<IKryptos> {
-    const kryptos = await this.amphora.find({
-      algorithm: this.sigAlgorithm,
-      issuer: this.issuer ?? undefined,
-      operations: [operation],
-      hasPrivateKey: true,
-      use: "sig",
-    });
+  private async kryptosSig(options: SigOptions = {}): Promise<IKryptos> {
+    const query: AmphoraQuery = options.sign
+      ? {
+          algorithm: this.encAlgorithm,
+          issuer: this.issuer ?? undefined,
+          operations: ["sign"],
+        }
+      : {
+          algorithm: options.algorithm ?? this.sigAlgorithm,
+          operations: ["verify"],
+        };
+
+    const kryptos = await this.amphora.find(
+      options.id ? { id: options.id } : { ...query, use: "sig" },
+    );
 
     this.logger.silly("Kryptos found", { kryptos: kryptos.toJSON() });
 

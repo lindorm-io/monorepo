@@ -1,3 +1,9 @@
+import {
+  AesDecryptionRecord,
+  AesEncryptionRecord,
+  SerialisedAesDecryption,
+  SerialisedAesEncryption,
+} from "@lindorm/aes";
 import { Dict } from "@lindorm/types";
 import {
   DecryptedJwe,
@@ -13,6 +19,14 @@ import {
   SignedJwt,
   VerifyJwtOptions,
 } from "../types";
+
+export interface IAegisAes {
+  encrypt(data: string, mode: "encoded"): Promise<string>;
+  encrypt(data: string, mode: "record"): Promise<AesEncryptionRecord>;
+  encrypt(data: string, mode: "serialised"): Promise<SerialisedAesEncryption>;
+  encrypt(data: string, mode: "tokenised"): Promise<string>;
+  decrypt(data: AesDecryptionRecord | SerialisedAesDecryption | string): Promise<string>;
+}
 
 export interface IAegisJwe {
   encrypt(data: string, options?: JweEncryptOptions): Promise<EncryptedJwe>;
@@ -38,13 +52,11 @@ export interface IAegisJwt {
 export interface IAegis {
   issuer: string | null;
 
+  aes: IAegisAes;
   jwe: IAegisJwe;
   jws: IAegisJws;
   jwt: IAegisJwt;
 
-  // decode<T extends DecodedJwe | RawJws | DecodedJwt>(token: string): T;
-  verify<T extends ParsedJwt | ParsedJws<any>>(
-    token: string,
-    options?: VerifyJwtOptions,
-  ): Promise<T>;
+  verify<T extends ParsedJws<any>>(jws: string): Promise<T>;
+  verify<T extends ParsedJwt>(jwt: string, options?: VerifyJwtOptions): Promise<T>;
 }
