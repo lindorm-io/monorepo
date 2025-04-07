@@ -9,6 +9,7 @@ export const createDerFromB64 = (options: KryptosString): KryptosBuffer => {
     case "EC":
       return {
         ...createEcDerFromB64(options),
+        id: options.id,
         algorithm: options.algorithm,
         type: options.type,
         use: options.use,
@@ -16,6 +17,7 @@ export const createDerFromB64 = (options: KryptosString): KryptosBuffer => {
 
     case "oct":
       return {
+        id: options.id,
         algorithm: options.algorithm,
         privateKey: options.privateKey
           ? Buffer.from(options.privateKey, "base64url")
@@ -28,6 +30,7 @@ export const createDerFromB64 = (options: KryptosString): KryptosBuffer => {
     case "OKP":
       return {
         ...createOkpDerFromB64(options),
+        id: options.id,
         algorithm: options.algorithm,
         type: options.type,
         use: options.use,
@@ -36,6 +39,7 @@ export const createDerFromB64 = (options: KryptosString): KryptosBuffer => {
     case "RSA":
       return {
         ...createRsaDerFromB64(options),
+        id: options.id,
         algorithm: options.algorithm,
         type: options.type,
         use: options.use,

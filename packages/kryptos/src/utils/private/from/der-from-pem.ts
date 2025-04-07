@@ -10,6 +10,7 @@ export const createDerFromPem = (options: KryptosFromString): KryptosBuffer => {
     case "EC":
       return {
         ...createEcDerFromPem(options),
+        id: options.id,
         algorithm: options.algorithm,
         use: options.use,
         type: options.type,
@@ -18,6 +19,7 @@ export const createDerFromPem = (options: KryptosFromString): KryptosBuffer => {
     case "oct":
       return {
         ...createOctDerFromPem(options),
+        id: options.id,
         algorithm: options.algorithm,
         use: options.use,
         type: options.type,
@@ -26,6 +28,7 @@ export const createDerFromPem = (options: KryptosFromString): KryptosBuffer => {
     case "OKP":
       return {
         ...createOkpDerFromPem(options),
+        id: options.id,
         algorithm: options.algorithm,
         use: options.use,
         type: options.type,
@@ -34,6 +37,7 @@ export const createDerFromPem = (options: KryptosFromString): KryptosBuffer => {
     case "RSA":
       return {
         ...createRsaDerFromPem(options),
+        id: options.id,
         algorithm: options.algorithm,
         use: options.use,
         type: options.type,

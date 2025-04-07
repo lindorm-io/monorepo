@@ -16,6 +16,7 @@ export type EcAlgorithm = EcEncAlgorithm | EcSigAlgorithm;
 export type EcCurve = "P-256" | "P-384" | "P-521";
 
 export type EcString = {
+  id: string;
   algorithm: EcAlgorithm;
   curve: EcCurve;
   privateKey?: string;
@@ -24,7 +25,8 @@ export type EcString = {
   use: KryptosUse;
 };
 
-export type EcDer = {
+export type EcBuffer = {
+  id: string;
   algorithm: EcAlgorithm;
   curve: EcCurve;
   privateKey?: Buffer;
@@ -34,6 +36,7 @@ export type EcDer = {
 };
 
 export type EcJwk = {
+  kid: string;
   alg: EcAlgorithm;
   d?: string;
   x: string;

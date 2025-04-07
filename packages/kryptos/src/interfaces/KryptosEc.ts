@@ -1,4 +1,4 @@
-import { EcAlgorithm, EcCurve, EcDer, EcJwk, EcString } from "../types";
+import { EcAlgorithm, EcBuffer, EcCurve, EcJwk, EcString } from "../types";
 import { IKryptos } from "./Kryptos";
 
 export interface IKryptosEc extends IKryptos {
@@ -7,7 +7,7 @@ export interface IKryptosEc extends IKryptos {
   type: "EC";
 
   export(format: "b64"): EcString;
-  export(format: "der"): EcDer;
+  export(format: "der"): EcBuffer;
   export(format: "jwk"): EcJwk;
   export(format: "pem"): EcString;
 }

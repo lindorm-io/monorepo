@@ -8,7 +8,7 @@ export * from "./encryption";
 export * from "./from";
 export * from "./jwk";
 export * from "./kryptos";
-export * from "./make";
+export * from "./generate";
 export * from "./operation";
 export * from "./options";
 export * from "./types";

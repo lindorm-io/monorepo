@@ -239,6 +239,7 @@ export class Kryptos implements IKryptos {
     switch (format) {
       case "b64":
         return exportToB64({
+          id: this.id,
           algorithm: this.algorithm,
           curve: this.curve,
           privateKey: this._privateKey,
@@ -249,6 +250,7 @@ export class Kryptos implements IKryptos {
 
       case "der":
         return exportToDer({
+          id: this.id,
           algorithm: this.algorithm,
           curve: this.curve,
           privateKey: this._privateKey,
@@ -259,6 +261,7 @@ export class Kryptos implements IKryptos {
 
       case "jwk":
         return exportToJwk({
+          id: this.id,
           algorithm: this.algorithm,
           curve: this.curve,
           mode: "private",
@@ -270,6 +273,7 @@ export class Kryptos implements IKryptos {
 
       case "pem":
         return exportToPem({
+          id: this.id,
           algorithm: this.algorithm,
           curve: this.curve,
           privateKey: this._privateKey,
@@ -314,6 +318,7 @@ export class Kryptos implements IKryptos {
 
   public toJWK(mode: KryptosExportMode = "public"): LindormJwk {
     const keys = exportToJwk({
+      id: this.id,
       algorithm: this.algorithm,
       curve: this.curve,
       mode: mode,
@@ -330,7 +335,6 @@ export class Kryptos implements IKryptos {
       iss: this.issuer,
       jku: this.jwksUri ?? undefined,
       key_ops: this.operations,
-      kid: this.id,
       nbf: getUnixTime(this.notBefore),
       owner_id: this.ownerId ?? undefined,
       purpose: this.purpose ?? undefined,

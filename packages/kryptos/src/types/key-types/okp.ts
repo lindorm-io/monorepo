@@ -20,6 +20,7 @@ export type OkpSigCurve = "Ed25519" | "Ed448";
 export type OkpCurve = OkpEncCurve | OkpSigCurve;
 
 export type OkpString = {
+  id: string;
   algorithm: OkpAlgorithm;
   curve: OkpCurve;
   privateKey?: string;
@@ -28,7 +29,8 @@ export type OkpString = {
   use: KryptosUse;
 };
 
-export type OkpDer = {
+export type OkpBuffer = {
+  id: string;
   algorithm: OkpAlgorithm;
   curve: OkpCurve;
   privateKey?: Buffer;
@@ -38,6 +40,7 @@ export type OkpDer = {
 };
 
 export type OkpJwk = {
+  kid: string;
   alg: OkpAlgorithm;
   d?: string;
   x: string;

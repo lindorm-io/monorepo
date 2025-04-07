@@ -1,7 +1,7 @@
 import { KryptosError } from "../../../errors";
-import { RsaDer, RsaModulus } from "../../../types";
+import { RsaBuffer, RsaModulus } from "../../../types";
 
-type Options = Omit<RsaDer, "algorithm" | "type" | "use">;
+type Options = Omit<RsaBuffer, "id" | "algorithm" | "type" | "use">;
 
 const SIZES = [
   {

@@ -8,5 +8,5 @@ export * from "./rsa";
 export * from "./from-options";
 export * from "./is";
 export * from "./key-ops";
-export * from "./make";
+export * from "./generate";
 export * from "./parse-options";

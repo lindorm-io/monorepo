@@ -3,9 +3,9 @@ import { createPrivateKey, createPublicKey } from "crypto";
 import { KryptosError } from "../../../errors";
 import { KryptosBuffer, RsaString } from "../../../types";
 
-type Options = Omit<KryptosBuffer, "algorithm" | "type" | "use">;
+type Options = Omit<KryptosBuffer, "id" | "algorithm" | "type" | "use">;
 
-type Result = Omit<RsaString, "algorithm" | "type" | "use">;
+type Result = Omit<RsaString, "id" | "algorithm" | "type" | "use">;
 
 export const exportRsaToPem = (options: Options): Result => {
   const result: Result = {

@@ -29,7 +29,7 @@ describe("KryptosKit (OKP)", () => {
   describe("env", () => {
     test("import", () => {
       const kryptos = KryptosKit.env.import(
-        "kryptos:6e6f84b0-e125-5e3f-90ae-c65269668d98.EdDSA.Ed25519...MC4CAQAwBQYDK2VwBCIEIBwKJlvoh1ngd9LRd7dtvGOSqW4uZamdvIu0ABD2AkxL.MCowBQYDK2VwAyEAGRCwCA6lChosFGMQwxGiHCdzblfvCz0FNiRtTnm1qqc..OKP.sig",
+        "kryptos:ff2a448e-8eb0-59a8-8fc6-0ce23ad07e8f.EdDSA.Ed25519..sign,verify.MC4CAQAwBQYDK2VwBCIEIBwKJlvoh1ngd9LRd7dtvGOSqW4uZamdvIu0ABD2AkxL.MCowBQYDK2VwAyEAGRCwCA6lChosFGMQwxGiHCdzblfvCz0FNiRtTnm1qqc..OKP.sig",
       );
 
       expect(kryptos.export("b64")).toEqual(TEST_OKP_KEY_B64);
@@ -39,7 +39,7 @@ describe("KryptosKit (OKP)", () => {
       const kryptos = KryptosKit.from.auto(TEST_OKP_KEY_B64);
 
       expect(KryptosKit.env.export(kryptos)).toEqual(
-        "kryptos:6e6f84b0-e125-5e3f-90ae-c65269668d98.EdDSA.Ed25519...MC4CAQAwBQYDK2VwBCIEIBwKJlvoh1ngd9LRd7dtvGOSqW4uZamdvIu0ABD2AkxL.MCowBQYDK2VwAyEAGRCwCA6lChosFGMQwxGiHCdzblfvCz0FNiRtTnm1qqc..OKP.sig",
+        "kryptos:ff2a448e-8eb0-59a8-8fc6-0ce23ad07e8f.EdDSA.Ed25519..sign,verify.MC4CAQAwBQYDK2VwBCIEIBwKJlvoh1ngd9LRd7dtvGOSqW4uZamdvIu0ABD2AkxL.MCowBQYDK2VwAyEAGRCwCA6lChosFGMQwxGiHCdzblfvCz0FNiRtTnm1qqc..OKP.sig",
       );
     });
   });
@@ -122,14 +122,15 @@ describe("KryptosKit (OKP)", () => {
     });
   });
 
-  describe("make", () => {
+  describe("generate", () => {
     test("auto", () => {
-      const kryptos = KryptosKit.make.auto({
+      const kryptos = KryptosKit.generate.auto({
         algorithm: "ECDH-ES+A128GCMKW",
       });
 
       expect(kryptos.toJSON()).toMatchSnapshot();
       expect(kryptos.export("b64")).toEqual({
+        id: "6e6f84b0-e125-5e3f-90ae-c65269668d98",
         algorithm: "ECDH-ES+A128GCMKW",
         curve: "P-256",
         privateKey: expect.any(String),
@@ -140,13 +141,14 @@ describe("KryptosKit (OKP)", () => {
     });
 
     test("enc", () => {
-      const kryptos = KryptosKit.make.enc.okp({
+      const kryptos = KryptosKit.generate.enc.okp({
         algorithm: "ECDH-ES",
         encryption: "A256GCM",
       });
 
       expect(kryptos.toJSON()).toMatchSnapshot();
       expect(kryptos.export("b64")).toEqual({
+        id: "6e6f84b0-e125-5e3f-90ae-c65269668d98",
         algorithm: "ECDH-ES",
         curve: "X25519",
         privateKey: expect.any(String),
@@ -157,12 +159,13 @@ describe("KryptosKit (OKP)", () => {
     });
 
     test("sig", () => {
-      const kryptos = KryptosKit.make.sig.okp({
+      const kryptos = KryptosKit.generate.sig.okp({
         algorithm: "EdDSA",
       });
 
       expect(kryptos.toJSON()).toMatchSnapshot();
       expect(kryptos.export("b64")).toEqual({
+        id: "6e6f84b0-e125-5e3f-90ae-c65269668d98",
         algorithm: "EdDSA",
         curve: "Ed448",
         privateKey: expect.any(String),

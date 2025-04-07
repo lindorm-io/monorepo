@@ -3,11 +3,11 @@ import { KryptosError } from "../../../errors";
 import { EcJwk, KryptosBuffer, KryptosExportMode } from "../../../types";
 import { isEcCurve } from "./is-ec-curve";
 
-type Options = Omit<KryptosBuffer, "algorithm" | "type" | "use"> & {
+type Options = Omit<KryptosBuffer, "id" | "algorithm" | "type" | "use"> & {
   mode: KryptosExportMode;
 };
 
-type Result = Omit<EcJwk, "alg" | "kty" | "use">;
+type Result = Omit<EcJwk, "kid" | "alg" | "kty" | "use">;
 
 export const exportEcToJwk = (options: Options): Result => {
   if (!isEcCurve(options.curve)) {

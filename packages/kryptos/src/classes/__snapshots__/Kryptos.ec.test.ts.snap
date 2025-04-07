@@ -4,6 +4,7 @@ exports[`Kryptos (EC) export should export b64 1`] = `
 {
   "algorithm": "ES512",
   "curve": "P-521",
+  "id": "3b9a051f-e1ec-562b-bf92-7cf92ec465ba",
   "privateKey": "MIHuAgEAMBAGByqGSM49AgEGBSuBBAAjBIHWMIHTAgEBBEIATAYo3DQYroDV5EgJSUs_kOIvnEScZen73gXa5oQkub0ekQmgOJdPQjINUsdYRn67QK_oBdNUhVbtG_qdxqIgarehgYkDgYYABACN2PIVpRTdfXLmNxkg8Bk2m5netqYsNW2Lefhklr2jfJiVUJUDPoZoGfabGzHEgsKjP2HRbPsEI_tND3x4N9VW0QAID2UYXa7GN0izHWIFRdjVYuR5-0jywFtd-o_N2POdrvlV8xumdVK-TiSPEIdfKoL_Iu0e7IKTsJsj-UmE8rDJnw",
   "publicKey": "MIGbMBAGByqGSM49AgEGBSuBBAAjA4GGAAQAjdjyFaUU3X1y5jcZIPAZNpuZ3ramLDVti3n4ZJa9o3yYlVCVAz6GaBn2mxsxxILCoz9h0Wz7BCP7TQ98eDfVVtEACA9lGF2uxjdIsx1iBUXY1WLkeftI8sBbXfqPzdjzna75VfMbpnVSvk4kjxCHXyqC_yLtHuyCk7CbI_lJhPKwyZ8",
   "type": "EC",
@@ -15,6 +16,7 @@ exports[`Kryptos (EC) export should export der 1`] = `
 {
   "algorithm": "ES512",
   "curve": "P-521",
+  "id": "3b9a051f-e1ec-562b-bf92-7cf92ec465ba",
   "privateKey": {
     "data": [
       48,
@@ -434,6 +436,7 @@ exports[`Kryptos (EC) export should export jwk 1`] = `
   "alg": "ES512",
   "crv": "P-521",
   "d": "AEwGKNw0GK6A1eRICUlLP5DiL5xEnGXp-94F2uaEJLm9HpEJoDiXT0IyDVLHWEZ-u0Cv6AXTVIVW7Rv6ncaiIGq3",
+  "kid": "3b9a051f-e1ec-562b-bf92-7cf92ec465ba",
   "kty": "EC",
   "use": "sig",
   "x": "AI3Y8hWlFN19cuY3GSDwGTabmd62piw1bYt5-GSWvaN8mJVQlQM-hmgZ9psbMcSCwqM_YdFs-wQj-00PfHg31VbR",
@@ -445,6 +448,7 @@ exports[`Kryptos (EC) export should export pem 1`] = `
 {
   "algorithm": "ES512",
   "curve": "P-521",
+  "id": "3b9a051f-e1ec-562b-bf92-7cf92ec465ba",
   "privateKey": "-----BEGIN PRIVATE KEY-----
 MIHuAgEAMBAGByqGSM49AgEGBSuBBAAjBIHWMIHTAgEBBEIATAYo3DQYroDV5EgJ
 SUs/kOIvnEScZen73gXa5oQkub0ekQmgOJdPQjINUsdYRn67QK/oBdNUhVbtG/qd

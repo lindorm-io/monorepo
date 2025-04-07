@@ -1,12 +1,12 @@
 import { isBuffer } from "@lindorm/is";
 import { createPrivateKey, createPublicKey } from "crypto";
 import { KryptosError } from "../../../errors";
-import { KryptosFromJwk, OkpDer } from "../../../types";
+import { KryptosFromJwk, OkpBuffer } from "../../../types";
 import { isOkpCurve } from "./is-okp-curve";
 
-type Options = Omit<KryptosFromJwk, "alg" | "use">;
+type Options = Omit<KryptosFromJwk, "kid" | "alg" | "use">;
 
-type Result = Omit<OkpDer, "algorithm" | "type" | "use">;
+type Result = Omit<OkpBuffer, "id" | "algorithm" | "type" | "use">;
 
 export const createOkpDerFromJwk = (options: Options): Result => {
   if (!isOkpCurve(options.crv)) {

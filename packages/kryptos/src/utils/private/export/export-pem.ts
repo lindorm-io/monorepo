@@ -14,6 +14,7 @@ export const exportToPem = (options: ExportOptions): KryptosString => {
       }
       return {
         ...exportEcToPem(options),
+        id: options.id,
         algorithm: options.algorithm,
         use: options.use,
         type: "EC",
@@ -25,6 +26,7 @@ export const exportToPem = (options: ExportOptions): KryptosString => {
       }
       return {
         ...exportOctToPem(options),
+        id: options.id,
         algorithm: options.algorithm,
         use: options.use,
         type: "oct",
@@ -36,6 +38,7 @@ export const exportToPem = (options: ExportOptions): KryptosString => {
       }
       return {
         ...exportOkpToPem(options),
+        id: options.id,
         algorithm: options.algorithm,
         use: options.use,
         type: "OKP",
@@ -47,6 +50,7 @@ export const exportToPem = (options: ExportOptions): KryptosString => {
       }
       return {
         ...exportRsaToPem(options),
+        id: options.id,
         algorithm: options.algorithm,
         use: options.use,
         type: "RSA",

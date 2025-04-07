@@ -4,6 +4,7 @@ exports[`Kryptos (OKP) export should export b64 1`] = `
 {
   "algorithm": "EdDSA",
   "curve": "Ed25519",
+  "id": "3b9a051f-e1ec-562b-bf92-7cf92ec465ba",
   "privateKey": "MC4CAQAwBQYDK2VwBCIEIBwKJlvoh1ngd9LRd7dtvGOSqW4uZamdvIu0ABD2AkxL",
   "publicKey": "MCowBQYDK2VwAyEAGRCwCA6lChosFGMQwxGiHCdzblfvCz0FNiRtTnm1qqc",
   "type": "OKP",
@@ -15,6 +16,7 @@ exports[`Kryptos (OKP) export should export der 1`] = `
 {
   "algorithm": "EdDSA",
   "curve": "Ed25519",
+  "id": "3b9a051f-e1ec-562b-bf92-7cf92ec465ba",
   "privateKey": {
     "data": [
       48,
@@ -127,6 +129,7 @@ exports[`Kryptos (OKP) export should export jwk 1`] = `
   "alg": "EdDSA",
   "crv": "Ed25519",
   "d": "HAomW-iHWeB30tF3t228Y5Kpbi5lqZ28i7QAEPYCTEs",
+  "kid": "3b9a051f-e1ec-562b-bf92-7cf92ec465ba",
   "kty": "OKP",
   "use": "sig",
   "x": "GRCwCA6lChosFGMQwxGiHCdzblfvCz0FNiRtTnm1qqc",
@@ -137,6 +140,7 @@ exports[`Kryptos (OKP) export should export pem 1`] = `
 {
   "algorithm": "EdDSA",
   "curve": "Ed25519",
+  "id": "3b9a051f-e1ec-562b-bf92-7cf92ec465ba",
   "privateKey": "-----BEGIN PRIVATE KEY-----
 MC4CAQAwBQYDK2VwBCIEIBwKJlvoh1ngd9LRd7dtvGOSqW4uZamdvIu0ABD2AkxL
 -----END PRIVATE KEY-----

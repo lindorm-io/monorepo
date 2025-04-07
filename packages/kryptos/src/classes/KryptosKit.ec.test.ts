@@ -33,6 +33,7 @@ describe("KryptosKit (EC)", () => {
       );
 
       expect(kryptos.export("b64")).toEqual({
+        id: "136171c5-7b76-5e14-9bb8-c60551977c59",
         algorithm: "ECDH-ES+A256GCMKW",
         curve: "P-521",
         privateKey:
@@ -148,14 +149,15 @@ describe("KryptosKit (EC)", () => {
     });
   });
 
-  describe("make", () => {
+  describe("generate", () => {
     test("auto", () => {
-      const kryptos = KryptosKit.make.auto({
+      const kryptos = KryptosKit.generate.auto({
         algorithm: "ES256",
       });
 
       expect(kryptos.toJSON()).toMatchSnapshot();
       expect(kryptos.export("b64")).toEqual({
+        id: "6e6f84b0-e125-5e3f-90ae-c65269668d98",
         algorithm: "ES256",
         curve: "P-256",
         privateKey: expect.any(String),
@@ -166,13 +168,14 @@ describe("KryptosKit (EC)", () => {
     });
 
     test("enc", () => {
-      const kryptos = KryptosKit.make.enc.ec({
+      const kryptos = KryptosKit.generate.enc.ec({
         algorithm: "ECDH-ES+A192GCMKW",
         encryption: "A256GCM",
       });
 
       expect(kryptos.toJSON()).toMatchSnapshot();
       expect(kryptos.export("b64")).toEqual({
+        id: "6e6f84b0-e125-5e3f-90ae-c65269668d98",
         algorithm: "ECDH-ES+A192GCMKW",
         curve: "P-384",
         privateKey: expect.any(String),
@@ -183,12 +186,13 @@ describe("KryptosKit (EC)", () => {
     });
 
     test("sig", () => {
-      const kryptos = KryptosKit.make.sig.ec({
+      const kryptos = KryptosKit.generate.sig.ec({
         algorithm: "ES256",
       });
 
       expect(kryptos.toJSON()).toMatchSnapshot();
       expect(kryptos.export("b64")).toEqual({
+        id: "6e6f84b0-e125-5e3f-90ae-c65269668d98",
         algorithm: "ES256",
         curve: "P-256",
         privateKey: expect.any(String),

@@ -2,11 +2,11 @@ import { createPrivateKey, createPublicKey } from "crypto";
 import { KryptosError } from "../../../errors";
 import { KryptosBuffer, KryptosExportMode, RsaJwk } from "../../../types";
 
-type Options = Omit<KryptosBuffer, "algorithm" | "type" | "use"> & {
+type Options = Omit<KryptosBuffer, "id" | "algorithm" | "type" | "use"> & {
   mode: KryptosExportMode;
 };
 
-type Result = Omit<RsaJwk, "alg" | "kty" | "use">;
+type Result = Omit<RsaJwk, "kid" | "alg" | "kty" | "use">;
 
 export const exportRsaToJwk = (options: Options): Result => {
   const result: Result = {

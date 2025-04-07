@@ -13,6 +13,7 @@ export type RsaAlgorithm = RsaEncAlgorithm | RsaSigAlgorithm;
 export type RsaModulus = 1024 | 2048 | 3072 | 4096;
 
 export type RsaString = {
+  id: string;
   algorithm: RsaAlgorithm;
   privateKey?: string;
   publicKey: string;
@@ -20,7 +21,8 @@ export type RsaString = {
   use: KryptosUse;
 };
 
-export type RsaDer = {
+export type RsaBuffer = {
+  id: string;
   algorithm: RsaAlgorithm;
   privateKey?: Buffer;
   publicKey: Buffer;
@@ -29,6 +31,7 @@ export type RsaDer = {
 };
 
 export type RsaJwk = {
+  kid: string;
   alg: RsaAlgorithm;
   e: string;
   n: string;

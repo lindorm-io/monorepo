@@ -1,11 +1,11 @@
 import { isBuffer } from "@lindorm/is";
 import { createPrivateKey, createPublicKey } from "crypto";
 import { KryptosError } from "../../../errors";
-import { KryptosFromBuffer, RsaDer } from "../../../types";
+import { KryptosFromBuffer, RsaBuffer } from "../../../types";
 
-type Options = Omit<KryptosFromBuffer, "algorithm" | "type" | "use">;
+type Options = Omit<KryptosFromBuffer, "id" | "algorithm" | "type" | "use">;
 
-type Result = Omit<RsaDer, "algorithm" | "type" | "use">;
+type Result = Omit<RsaBuffer, "id" | "algorithm" | "type" | "use">;
 
 export const createRsaDerFromDer = (options: Options): Result => {
   const result: Result = {

@@ -1,6 +1,6 @@
 import { B64 } from "@lindorm/b64";
 import { isBuffer, isString } from "@lindorm/is";
-import { OctDer, OctJwk, OctString } from "../../../types";
+import { OctBuffer, OctJwk, OctString } from "../../../types";
 import {
   IsBufferFormatOptions,
   IsJwkFormatOptions,
@@ -22,7 +22,7 @@ export const isOctB64 = (options: IsStringFormatOptions): options is OctString =
   return true;
 };
 
-export const isOctDer = (options: IsBufferFormatOptions): options is OctDer => {
+export const isOctDer = (options: IsBufferFormatOptions): options is OctBuffer => {
   if (options.type !== "oct") return false;
   if (options.curve) return false;
 

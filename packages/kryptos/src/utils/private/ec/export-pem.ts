@@ -4,9 +4,9 @@ import { KryptosError } from "../../../errors";
 import { EcString, KryptosBuffer } from "../../../types";
 import { isEcCurve } from "./is-ec-curve";
 
-type Options = Omit<KryptosBuffer, "algorithm" | "type" | "use">;
+type Options = Omit<KryptosBuffer, "id" | "algorithm" | "type" | "use">;
 
-type Result = Omit<EcString, "algorithm" | "type" | "use">;
+type Result = Omit<EcString, "id" | "algorithm" | "type" | "use">;
 
 export const exportEcToPem = (options: Options): Result => {
   if (!isEcCurve(options.curve)) {

@@ -27,13 +27,15 @@ export type OctStdSize = 64 | 96 | 128;
 export type OctSize = OctDirSize | OctStdSize;
 
 export type OctString = {
+  id: string;
   algorithm: OctAlgorithm;
   privateKey: string;
   type: "oct";
   use: KryptosUse;
 };
 
-export type OctDer = {
+export type OctBuffer = {
+  id: string;
   algorithm: OctAlgorithm;
   privateKey: Buffer;
   type: "oct";
@@ -41,6 +43,7 @@ export type OctDer = {
 };
 
 export type OctJwk = {
+  kid: string;
   alg: OctAlgorithm;
   k: string;
   kty: "oct";

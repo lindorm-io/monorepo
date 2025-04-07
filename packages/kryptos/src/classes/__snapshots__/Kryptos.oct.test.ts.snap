@@ -3,6 +3,7 @@
 exports[`Kryptos (oct) export should export b64 1`] = `
 {
   "algorithm": "HS512",
+  "id": "3b9a051f-e1ec-562b-bf92-7cf92ec465ba",
   "privateKey": "diYnyceZxmn18xGjVobBEwOSj2QOavHfv_tWGNuBpjND572Pa3qD8PDqDSrvoLtLOWyHdQ5lsmsuEIDcPgbPKp92HfNkawbKpCsVNBpoTlbZ-5jewLMREoGje9_pQzGSPLgh-cAkwtcrLUJNbwbyMGMlXmIJXeGukWsD6BfOAimNzPIyLf8QYMJYL9tzf16X4mQ1SvU76Y8Mqop6wz8ylAET7xWTivI-iOK8Zk1MiiomJww5w47Uz7X6Ha_uz7ctCESsyYMef9ZnYlsqwsHPrnP78ihyiv8cH7obubKJ6HkmsCnSTBOchDYxnmQiVZffuMSb8pScaIK6Vfef_1c7Vg",
   "publicKey": "",
   "type": "oct",
@@ -13,6 +14,7 @@ exports[`Kryptos (oct) export should export b64 1`] = `
 exports[`Kryptos (oct) export should export der 1`] = `
 {
   "algorithm": "HS512",
+  "id": "3b9a051f-e1ec-562b-bf92-7cf92ec465ba",
   "privateKey": {
     "data": [
       118,
@@ -287,6 +289,7 @@ exports[`Kryptos (oct) export should export jwk 1`] = `
 {
   "alg": "HS512",
   "k": "diYnyceZxmn18xGjVobBEwOSj2QOavHfv_tWGNuBpjND572Pa3qD8PDqDSrvoLtLOWyHdQ5lsmsuEIDcPgbPKp92HfNkawbKpCsVNBpoTlbZ-5jewLMREoGje9_pQzGSPLgh-cAkwtcrLUJNbwbyMGMlXmIJXeGukWsD6BfOAimNzPIyLf8QYMJYL9tzf16X4mQ1SvU76Y8Mqop6wz8ylAET7xWTivI-iOK8Zk1MiiomJww5w47Uz7X6Ha_uz7ctCESsyYMef9ZnYlsqwsHPrnP78ihyiv8cH7obubKJ6HkmsCnSTBOchDYxnmQiVZffuMSb8pScaIK6Vfef_1c7Vg",
+  "kid": "3b9a051f-e1ec-562b-bf92-7cf92ec465ba",
   "kty": "oct",
   "use": "sig",
 }
@@ -295,6 +298,7 @@ exports[`Kryptos (oct) export should export jwk 1`] = `
 exports[`Kryptos (oct) export should export pem 1`] = `
 {
   "algorithm": "HS512",
+  "id": "3b9a051f-e1ec-562b-bf92-7cf92ec465ba",
   "privateKey": "-----BEGIN OCT PRIVATE KEY-----
 diYnyceZxmn18xGjVobBEwOSj2QOavHfv/tWGNuBpjND572Pa3qD8PDqDSrvoLtL
 OWyHdQ5lsmsuEIDcPgbPKp92HfNkawbKpCsVNBpoTlbZ+5jewLMREoGje9/pQzGS

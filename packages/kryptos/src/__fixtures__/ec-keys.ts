@@ -1,6 +1,7 @@
 import { EcJwk, EcString } from "../types";
 
 export const TEST_EC_KEY_B64: EcString = {
+  id: "217d138b-6ce6-5e5c-953a-35fb11865b9a",
   algorithm: "ES512",
   curve: "P-521",
   privateKey:
@@ -12,6 +13,7 @@ export const TEST_EC_KEY_B64: EcString = {
 };
 
 export const TEST_EC_KEY_JWK: EcJwk = {
+  kid: "df280784-0bf1-5362-9ab5-23715e4ece69",
   alg: "ES512",
   x: "APR_foe7ldh7LLa8ZFvQA6t2niQqzdFbV38w7jt5KrCcMGoIizvVqHEf4DeFe-KGI8u3QiP7UNVrU1yuldAoEwhw",
   y: "ABzy87I16-HAaIfLYfT1vayxG0HuHX8h771d9EnX_vweC1fcMHetmzYDKT5heXvVE4JmREBsoGwdk4e7vDSD5RVR",
@@ -22,6 +24,7 @@ export const TEST_EC_KEY_JWK: EcJwk = {
 };
 
 export const TEST_EC_KEY_PEM: EcString = {
+  id: "583238e6-9496-5f7a-adfe-aca1ad5de594",
   algorithm: "ES512",
   curve: "P-521",
   type: "EC",

@@ -9,6 +9,7 @@ export const createDerFromDer = (options: KryptosBuffer): KryptosBuffer => {
     case "EC":
       return {
         ...createEcDerFromDer(options),
+        id: options.id,
         algorithm: options.algorithm,
         type: options.type,
         use: options.use,
@@ -16,6 +17,7 @@ export const createDerFromDer = (options: KryptosBuffer): KryptosBuffer => {
 
     case "oct":
       return {
+        id: options.id,
         algorithm: options.algorithm,
         privateKey: options.privateKey,
         publicKey: Buffer.alloc(0),
@@ -26,6 +28,7 @@ export const createDerFromDer = (options: KryptosBuffer): KryptosBuffer => {
     case "OKP":
       return {
         ...createOkpDerFromDer(options),
+        id: options.id,
         algorithm: options.algorithm,
         type: options.type,
         use: options.use,
@@ -34,6 +37,7 @@ export const createDerFromDer = (options: KryptosBuffer): KryptosBuffer => {
     case "RSA":
       return {
         ...createRsaDerFromDer(options),
+        id: options.id,
         algorithm: options.algorithm,
         type: options.type,
         use: options.use,

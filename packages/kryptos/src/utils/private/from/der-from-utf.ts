@@ -19,6 +19,7 @@ export const createDerFromUtf = (options: KryptosFromString): KryptosBuffer => {
   switch (options.type) {
     case "oct":
       return {
+        id: options.id,
         algorithm: options.algorithm,
         privateKey: allocate(options),
         publicKey: Buffer.alloc(0),

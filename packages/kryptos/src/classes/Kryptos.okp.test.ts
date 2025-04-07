@@ -31,7 +31,7 @@ describe("Kryptos (OKP)", () => {
 
   describe("metadata", () => {
     test("should return attribute values", () => {
-      const kryptos = KryptosKit.from.b64({ ...options, ...TEST_OKP_KEY_B64 });
+      const kryptos = KryptosKit.from.b64({ ...TEST_OKP_KEY_B64, ...options });
 
       expect(kryptos.id).toEqual("3b9a051f-e1ec-562b-bf92-7cf92ec465ba");
       expect(kryptos.algorithm).toEqual("EdDSA");
@@ -58,7 +58,7 @@ describe("Kryptos (OKP)", () => {
     });
 
     test("should allow setting expiry", () => {
-      const kryptos = KryptosKit.from.b64({ ...options, ...TEST_OKP_KEY_B64 });
+      const kryptos = KryptosKit.from.b64({ ...TEST_OKP_KEY_B64, ...options });
 
       kryptos.expiresAt = new Date("2023-12-31T08:00:00.000Z");
 
@@ -73,25 +73,25 @@ describe("Kryptos (OKP)", () => {
 
   describe("export", () => {
     test("should export b64", () => {
-      const kryptos = KryptosKit.from.b64({ ...options, ...TEST_OKP_KEY_B64 });
+      const kryptos = KryptosKit.from.b64({ ...TEST_OKP_KEY_B64, ...options });
 
       expect(kryptos.export("b64")).toMatchSnapshot();
     });
 
     test("should export der", () => {
-      const kryptos = KryptosKit.from.b64({ ...options, ...TEST_OKP_KEY_B64 });
+      const kryptos = KryptosKit.from.b64({ ...TEST_OKP_KEY_B64, ...options });
 
       expect(kryptos.export("der")).toMatchSnapshot();
     });
 
     test("should export jwk", () => {
-      const kryptos = KryptosKit.from.b64({ ...options, ...TEST_OKP_KEY_B64 });
+      const kryptos = KryptosKit.from.b64({ ...TEST_OKP_KEY_B64, ...options });
 
       expect(kryptos.export("jwk")).toMatchSnapshot();
     });
 
     test("should export pem", () => {
-      const kryptos = KryptosKit.from.b64({ ...options, ...TEST_OKP_KEY_B64 });
+      const kryptos = KryptosKit.from.b64({ ...TEST_OKP_KEY_B64, ...options });
 
       expect(kryptos.export("pem")).toMatchSnapshot();
     });
@@ -99,19 +99,19 @@ describe("Kryptos (OKP)", () => {
 
   describe("to", () => {
     test("should return json", () => {
-      const kryptos = KryptosKit.from.b64({ ...options, ...TEST_OKP_KEY_B64 });
+      const kryptos = KryptosKit.from.b64({ ...TEST_OKP_KEY_B64, ...options });
 
       expect(kryptos.toJSON()).toMatchSnapshot();
     });
 
     test("should return jwk with public key", () => {
-      const kryptos = KryptosKit.from.b64({ ...options, ...TEST_OKP_KEY_B64 });
+      const kryptos = KryptosKit.from.b64({ ...TEST_OKP_KEY_B64, ...options });
 
       expect(kryptos.toJWK()).toMatchSnapshot();
     });
 
     test("should return jwk with private key", () => {
-      const kryptos = KryptosKit.from.b64({ ...options, ...TEST_OKP_KEY_B64 });
+      const kryptos = KryptosKit.from.b64({ ...TEST_OKP_KEY_B64, ...options });
 
       expect(kryptos.toJWK("private")).toMatchSnapshot();
     });

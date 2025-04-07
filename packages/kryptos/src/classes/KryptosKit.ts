@@ -17,29 +17,29 @@ import {
   KryptosFromBuffer,
   KryptosFromJwk,
   KryptosFromString,
+  KryptosGenerateEcEnc,
+  KryptosGenerateEcSig,
+  KryptosGenerateOctEnc,
+  KryptosGenerateOctSig,
+  KryptosGenerateOkpEnc,
+  KryptosGenerateOkpSig,
+  KryptosGenerateRsaEnc,
+  KryptosGenerateRsaSig,
   KryptosLike,
-  KryptosMakeEcEnc,
-  KryptosMakeEcSig,
-  KryptosMakeOctEnc,
-  KryptosMakeOctSig,
-  KryptosMakeOkpEnc,
-  KryptosMakeOkpSig,
-  KryptosMakeRsaEnc,
-  KryptosMakeRsaSig,
   KryptosOperation,
   KryptosType,
   KryptosUse,
 } from "../types";
-import { KryptosMake } from "../types/private";
+import { KryptosGenerate } from "../types/private";
 import {
-  autoMakeConfig,
+  autoGenerateConfig,
   calculateKeyOps,
   fromOptions,
+  generateKey,
   isB64,
   isDer,
   isJwk,
   isPem,
-  makeKey,
 } from "../utils/private";
 import { Kryptos } from "./Kryptos";
 
@@ -60,20 +60,20 @@ type From = {
 };
 
 type Encryption = {
-  ec(options: KryptosMakeEcEnc): IKryptos;
-  oct(options: KryptosMakeOctEnc): IKryptos;
-  okp(options: KryptosMakeOkpEnc): IKryptos;
-  rsa(options: KryptosMakeRsaEnc): IKryptos;
+  ec(options: KryptosGenerateEcEnc): IKryptos;
+  oct(options: KryptosGenerateOctEnc): IKryptos;
+  okp(options: KryptosGenerateOkpEnc): IKryptos;
+  rsa(options: KryptosGenerateRsaEnc): IKryptos;
 };
 
 type Signature = {
-  ec(options: KryptosMakeEcSig): IKryptos;
-  oct(options: KryptosMakeOctSig): IKryptos;
-  okp(options: KryptosMakeOkpSig): IKryptos;
-  rsa(options: KryptosMakeRsaSig): IKryptos;
+  ec(options: KryptosGenerateEcSig): IKryptos;
+  oct(options: KryptosGenerateOctSig): IKryptos;
+  okp(options: KryptosGenerateOkpSig): IKryptos;
+  rsa(options: KryptosGenerateRsaSig): IKryptos;
 };
 
-type Make = {
+type Generate = {
   auto(options: KryptosAuto): IKryptos;
   enc: Encryption;
   sig: Signature;
@@ -134,11 +134,11 @@ export class KryptosKit {
     );
   }
 
-  // make
+  // generate
 
-  public static get make(): Make {
+  public static get generate(): Generate {
     return {
-      auto: this.makeAuto,
+      auto: this.generateAuto,
       enc: this.encryption,
       sig: this.signature,
     };
@@ -170,7 +170,7 @@ export class KryptosKit {
     ] = result;
 
     return KryptosKit.fromB64({
-      id: id || undefined,
+      id: id,
       algorithm: algorithm as KryptosAlgorithm,
       curve: (curve as KryptosCurve) || undefined,
       encryption: (encryption as KryptosEncryption) || undefined,
@@ -247,122 +247,129 @@ export class KryptosKit {
       throw new KryptosError("Use is required");
     }
 
-    return new Kryptos(options);
+    return new Kryptos({
+      ...options,
+      operations: options.operations?.length
+        ? options.operations
+        : calculateKeyOps(options),
+    });
   }
 
-  // private make
+  // private generate
 
   private static get encryption(): Encryption {
     return {
-      ec: this.makeEcEnc,
-      oct: this.makeOctEnc,
-      okp: this.makeOkpEnc,
-      rsa: this.makeRsaEnc,
+      ec: this.generateEcEnc,
+      oct: this.generateOctEnc,
+      okp: this.generateOkpEnc,
+      rsa: this.generateRsaEnc,
     };
   }
 
   private static get signature(): Signature {
     return {
-      ec: this.makeEcSig,
-      oct: this.makeOctSig,
-      okp: this.makeOkpSig,
-      rsa: this.makeRsaSig,
+      ec: this.GenerateEcSig,
+      oct: this.generateOctSig,
+      okp: this.generateOkpSig,
+      rsa: this.generateRsaSig,
     };
   }
 
-  private static makeAuto(options: KryptosAuto): IKryptos {
-    const config = autoMakeConfig(options.algorithm);
-    const operations = calculateKeyOps(config.use);
+  private static generateAuto(options: KryptosAuto): IKryptos {
+    const config = autoGenerateConfig(options.algorithm);
+    const operations = calculateKeyOps(config);
 
-    const make: KryptosMake = {
+    const generate: KryptosGenerate = {
       ...config,
       ...options,
       operations,
     };
 
     return new Kryptos({
-      ...make,
-      ...makeKey(make),
+      ...generate,
+      ...generateKey(generate),
     });
   }
 
-  private static makeEcEnc(options: KryptosMakeEcEnc): IKryptos {
-    const make: KryptosMake = {
+  private static generateEcEnc(options: KryptosGenerateEcEnc): IKryptos {
+    const generate: KryptosGenerate = {
       ...options,
       type: "EC",
       use: "enc",
     };
-    return KryptosKit.makeKryptos(make);
+    return KryptosKit.generateKryptos(generate);
   }
 
-  private static makeEcSig(options: KryptosMakeEcSig): IKryptos {
-    const make: KryptosMake = {
+  private static GenerateEcSig(options: KryptosGenerateEcSig): IKryptos {
+    const generate: KryptosGenerate = {
       ...options,
       type: "EC",
       use: "sig",
     };
-    return KryptosKit.makeKryptos(make);
+    return KryptosKit.generateKryptos(generate);
   }
 
-  private static makeOctEnc(options: KryptosMakeOctEnc): IKryptos {
-    const make: KryptosMake = {
+  private static generateOctEnc(options: KryptosGenerateOctEnc): IKryptos {
+    const generate: KryptosGenerate = {
       ...options,
       type: "oct",
       use: "enc",
     };
-    return KryptosKit.makeKryptos(make);
+    return KryptosKit.generateKryptos(generate);
   }
 
-  private static makeOctSig(options: KryptosMakeOctSig): IKryptos {
-    const make: KryptosMake = {
+  private static generateOctSig(options: KryptosGenerateOctSig): IKryptos {
+    const generate: KryptosGenerate = {
       ...options,
       type: "oct",
       use: "sig",
     };
-    return KryptosKit.makeKryptos(make);
+    return KryptosKit.generateKryptos(generate);
   }
 
-  private static makeOkpEnc(options: KryptosMakeOkpEnc): IKryptos {
-    const make: KryptosMake = {
+  private static generateOkpEnc(options: KryptosGenerateOkpEnc): IKryptos {
+    const generate: KryptosGenerate = {
       ...options,
       type: "OKP",
       use: "enc",
     };
-    return KryptosKit.makeKryptos(make);
+    return KryptosKit.generateKryptos(generate);
   }
 
-  private static makeOkpSig(options: KryptosMakeOkpSig): IKryptos {
-    const make: KryptosMake = {
+  private static generateOkpSig(options: KryptosGenerateOkpSig): IKryptos {
+    const generate: KryptosGenerate = {
       ...options,
       type: "OKP",
       use: "sig",
     };
-    return KryptosKit.makeKryptos(make);
+    return KryptosKit.generateKryptos(generate);
   }
 
-  private static makeRsaEnc(options: KryptosMakeRsaEnc): IKryptos {
-    const make: KryptosMake = {
+  private static generateRsaEnc(options: KryptosGenerateRsaEnc): IKryptos {
+    const generate: KryptosGenerate = {
       ...options,
       type: "RSA",
       use: "enc",
     };
-    return KryptosKit.makeKryptos(make);
+    return KryptosKit.generateKryptos(generate);
   }
 
-  private static makeRsaSig(options: KryptosMakeRsaSig): IKryptos {
-    const make: KryptosMake = {
+  private static generateRsaSig(options: KryptosGenerateRsaSig): IKryptos {
+    const generate: KryptosGenerate = {
       ...options,
       type: "RSA",
       use: "sig",
     };
-    return KryptosKit.makeKryptos(make);
+    return KryptosKit.generateKryptos(generate);
   }
 
-  private static makeKryptos(make: KryptosMake): IKryptos {
+  private static generateKryptos(generate: KryptosGenerate): IKryptos {
     return new Kryptos({
-      ...make,
-      operations: make.operations ?? calculateKeyOps(make.use),
-      ...makeKey(make),
+      ...generate,
+      operations: generate.operations?.length
+        ? generate.operations
+        : calculateKeyOps(generate),
+      ...generateKey(generate),
     });
   }
 }

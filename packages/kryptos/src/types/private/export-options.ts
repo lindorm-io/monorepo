@@ -3,6 +3,7 @@ import { KryptosCurve } from "../curve";
 import { KryptosType, KryptosUse } from "../types";
 
 export type ExportOptions = {
+  id: string;
   algorithm: KryptosAlgorithm;
   curve?: KryptosCurve;
   privateKey?: Buffer;

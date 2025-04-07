@@ -18,6 +18,7 @@ export const exportToJwk = (options: Options): KryptosJwk => {
       }
       return {
         ...exportEcToJwk(options),
+        kid: options.id,
         alg: options.algorithm,
         use: options.use,
         kty: "EC",
@@ -29,6 +30,7 @@ export const exportToJwk = (options: Options): KryptosJwk => {
       }
       return {
         ...exportOctToJwk(options),
+        kid: options.id,
         alg: options.algorithm,
         use: options.use,
         kty: "oct",
@@ -40,6 +42,7 @@ export const exportToJwk = (options: Options): KryptosJwk => {
       }
       return {
         ...exportOkpToJwk(options),
+        kid: options.id,
         alg: options.algorithm,
         use: options.use,
         kty: "OKP",
@@ -51,6 +54,7 @@ export const exportToJwk = (options: Options): KryptosJwk => {
       }
       return {
         ...exportRsaToJwk(options),
+        kid: options.id,
         alg: options.algorithm,
         use: options.use,
         kty: "RSA",

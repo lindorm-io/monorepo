@@ -1,10 +1,10 @@
 import { KryptosError } from "../../../errors";
-import { KryptosFromString, RsaDer } from "../../../types";
+import { KryptosFromString, RsaBuffer } from "../../../types";
 import { createRsaDerFromDer } from "./der-from-der";
 
-type Options = Omit<KryptosFromString, "algorithm" | "type" | "use">;
+type Options = Omit<KryptosFromString, "id" | "algorithm" | "type" | "use">;
 
-type Result = Omit<RsaDer, "algorithm" | "type" | "use">;
+type Result = Omit<RsaBuffer, "id" | "algorithm" | "type" | "use">;
 
 export const createRsaDerFromB64 = (options: Options): Result => {
   const result: Result = {

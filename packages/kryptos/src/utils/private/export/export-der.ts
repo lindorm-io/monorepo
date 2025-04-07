@@ -13,6 +13,7 @@ export const exportToDer = (options: ExportOptions): KryptosBuffer => {
         throw new KryptosError("Invalid options");
       }
       return {
+        id: options.id,
         algorithm: options.algorithm,
         curve: options.curve,
         privateKey: options.privateKey,
@@ -26,6 +27,7 @@ export const exportToDer = (options: ExportOptions): KryptosBuffer => {
         throw new KryptosError("Invalid options");
       }
       return {
+        id: options.id,
         algorithm: options.algorithm,
         privateKey: options.privateKey,
         publicKey: Buffer.alloc(0),
@@ -38,6 +40,7 @@ export const exportToDer = (options: ExportOptions): KryptosBuffer => {
         throw new KryptosError("Invalid options");
       }
       return {
+        id: options.id,
         algorithm: options.algorithm,
         curve: options.curve,
         privateKey: options.privateKey,
@@ -51,6 +54,7 @@ export const exportToDer = (options: ExportOptions): KryptosBuffer => {
         throw new KryptosError("Invalid options");
       }
       return {
+        id: options.id,
         algorithm: options.algorithm,
         privateKey: options.privateKey,
         publicKey: options.publicKey,

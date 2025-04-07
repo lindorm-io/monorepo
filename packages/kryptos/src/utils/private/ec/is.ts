@@ -1,6 +1,6 @@
 import { B64 } from "@lindorm/b64";
 import { isBuffer, isString } from "@lindorm/is";
-import { EcDer, EcJwk, EcString, KryptosCurve } from "../../../types";
+import { EcBuffer, EcJwk, EcString, KryptosCurve } from "../../../types";
 import {
   IsBufferFormatOptions,
   IsJwkFormatOptions,
@@ -28,7 +28,7 @@ export const isEcB64 = (options: IsStringFormatOptions): options is EcString => 
   return true;
 };
 
-export const isEcDer = (options: IsBufferFormatOptions): options is EcDer => {
+export const isEcDer = (options: IsBufferFormatOptions): options is EcBuffer => {
   if (options.type !== "EC") return false;
   if (!options.curve || !CURVES.includes(options.curve)) return false;
 

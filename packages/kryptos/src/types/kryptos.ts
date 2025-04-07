@@ -4,6 +4,7 @@ import { KryptosEncryption } from "./encryption";
 import { KryptosType, KryptosUse } from "./types";
 
 export type KryptosString = {
+  id: string;
   algorithm: KryptosAlgorithm;
   curve?: KryptosCurve;
   encryption?: KryptosEncryption;
@@ -14,6 +15,7 @@ export type KryptosString = {
 };
 
 export type KryptosBuffer = {
+  id: string;
   algorithm: KryptosAlgorithm;
   curve?: KryptosCurve;
   encryption?: KryptosEncryption;
@@ -24,6 +26,7 @@ export type KryptosBuffer = {
 };
 
 export type KryptosJwk = {
+  kid: string;
   alg: KryptosAlgorithm;
   enc?: KryptosEncryption;
   crv?: KryptosCurve;

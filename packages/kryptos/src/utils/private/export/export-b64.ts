@@ -14,6 +14,7 @@ export const exportToB64 = (options: ExportOptions): KryptosString => {
         throw new KryptosError("Invalid options");
       }
       return {
+        id: options.id,
         algorithm: options.algorithm,
         curve: options.curve,
         privateKey: options.privateKey
@@ -29,6 +30,7 @@ export const exportToB64 = (options: ExportOptions): KryptosString => {
         throw new KryptosError("Invalid options");
       }
       return {
+        id: options.id,
         algorithm: options.algorithm,
         privateKey: B64.encode(options.privateKey, "base64url"),
         publicKey: "",
@@ -41,6 +43,7 @@ export const exportToB64 = (options: ExportOptions): KryptosString => {
         throw new KryptosError("Invalid options");
       }
       return {
+        id: options.id,
         algorithm: options.algorithm,
         curve: options.curve,
         privateKey: options.privateKey
@@ -56,6 +59,7 @@ export const exportToB64 = (options: ExportOptions): KryptosString => {
         throw new KryptosError("Invalid options");
       }
       return {
+        id: options.id,
         algorithm: options.algorithm,
         privateKey: options.privateKey
           ? B64.encode(options.privateKey, "base64url")

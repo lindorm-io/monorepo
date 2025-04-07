@@ -1,32 +1,38 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`KryptosKit (EC) from auto b64 1`] = `
+exports[`KryptosKit (RSA) from auto b64 1`] = `
 {
   "algorithm": "RS512",
   "createdAt": 2024-01-01T08:00:00.000Z,
   "expiresIn": -1,
   "hasPrivateKey": true,
   "hasPublicKey": true,
-  "id": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "id": "fa659780-0d5c-565b-a76e-d85477c2b00b",
   "isActive": true,
   "isExpired": false,
   "isExternal": false,
   "modulus": 4096,
   "notBefore": 2024-01-01T08:00:00.000Z,
-  "operations": [],
+  "operations": [
+    "sign",
+    "verify",
+  ],
   "type": "RSA",
   "updatedAt": 2024-01-01T08:00:00.000Z,
   "use": "sig",
 }
 `;
 
-exports[`KryptosKit (EC) from auto b64 2`] = `
+exports[`KryptosKit (RSA) from auto b64 2`] = `
 {
   "alg": "RS512",
   "e": "AQAB",
   "iat": 1704096000,
-  "key_ops": [],
-  "kid": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "key_ops": [
+    "sign",
+    "verify",
+  ],
+  "kid": "fa659780-0d5c-565b-a76e-d85477c2b00b",
   "kty": "RSA",
   "n": "7cxLHoxaHdYU8EX2ij5m42XIQYWBUxKMOfVbV2OX0nNHEdojXfRfONvrAHwsvRqcdN44yv1E1be18qs5HRB67D3qLeRjXcjegdjWvQj66IFVZIxQHNJ-LXDbAYs7gez8RYbBObnDzfrqy9vIPZet1tbqvlxv9aTR38x3ORJ4Y6Ym9StbKOUIo7BLIvoc1M5uNUIEnFKKZhbmVR423-F50w_E0618KExZgeur_8cMsSWZxyl0oeSI-rIodjfVJbshT1yy98zKRj-mMnyPKgHQARr9SwDA5Xlt9L2fVZ72xgwaPOBUgFoDTPQsqQ3Rkj7nYUSqwQVEL0-oH2K7U3OeGeKyIQMNzRdSfYMw3gSc5dtwqX64oK33lN2jzTKa0clSZjqJ4jzUL1YrXMddF07dMQqjN2mGjeZVy5LaO4B58Y5l-kO01KdwA-_LcDhkNgbKiZMZVtNPlVkR3nCvInt5cqPOqMOcLW3oA1wmh7zauWqorklpSSs75zw8ETtzATSJv8h7kUG9Bl1QQgdBkGqKb4ZG-r5Bj6pwJrHVmgPSMowP8P9G13iQLFdKX714A3DMKDc03TJvs2yVK81YUCtO5aRdwb0q0YcFqn9BHI3cmO-kOhXquMakPQ3zW_FBSnIeBhJMObCQOmYEuZxrifMcCQTY7j5jsP962e7ZPn53STc",
   "nbf": 1704096000,
@@ -35,9 +41,10 @@ exports[`KryptosKit (EC) from auto b64 2`] = `
 }
 `;
 
-exports[`KryptosKit (EC) from auto b64 3`] = `
+exports[`KryptosKit (RSA) from auto b64 3`] = `
 {
   "algorithm": "RS512",
+  "id": "fa659780-0d5c-565b-a76e-d85477c2b00b",
   "privateKey": "MIIJKQIBAAKCAgEA7cxLHoxaHdYU8EX2ij5m42XIQYWBUxKMOfVbV2OX0nNHEdojXfRfONvrAHwsvRqcdN44yv1E1be18qs5HRB67D3qLeRjXcjegdjWvQj66IFVZIxQHNJ-LXDbAYs7gez8RYbBObnDzfrqy9vIPZet1tbqvlxv9aTR38x3ORJ4Y6Ym9StbKOUIo7BLIvoc1M5uNUIEnFKKZhbmVR423-F50w_E0618KExZgeur_8cMsSWZxyl0oeSI-rIodjfVJbshT1yy98zKRj-mMnyPKgHQARr9SwDA5Xlt9L2fVZ72xgwaPOBUgFoDTPQsqQ3Rkj7nYUSqwQVEL0-oH2K7U3OeGeKyIQMNzRdSfYMw3gSc5dtwqX64oK33lN2jzTKa0clSZjqJ4jzUL1YrXMddF07dMQqjN2mGjeZVy5LaO4B58Y5l-kO01KdwA-_LcDhkNgbKiZMZVtNPlVkR3nCvInt5cqPOqMOcLW3oA1wmh7zauWqorklpSSs75zw8ETtzATSJv8h7kUG9Bl1QQgdBkGqKb4ZG-r5Bj6pwJrHVmgPSMowP8P9G13iQLFdKX714A3DMKDc03TJvs2yVK81YUCtO5aRdwb0q0YcFqn9BHI3cmO-kOhXquMakPQ3zW_FBSnIeBhJMObCQOmYEuZxrifMcCQTY7j5jsP962e7ZPn53STcCAwEAAQKCAgArosNeFa8rrm8lMBFviMfkjnbS3ya-Ebc9o3JhdNsVOSYfdoHq6b7XdjOHYUHsaYewQl71kMgi15VBtH3EgZOs6iegyDobqZJ7DUlKYu134NPEoaLJxy50NDNb8yq2SsB4GaQ3bYkqsRKI2gnCk6TIuaNVzyyUTOxePuzZwjPpRUH81znhJTYSo3UGNBM6Ua8TgsvJy7OtzCH0GJlFN-DdBBXAKiOQWYJLPu3O_72qfBXd4BOQ6ZjhN_QIzXIFfHM-VupYYnHzthZPSWAT-0UqDsPQEZFUCpZMxMcKNSNfcDUYWqnm652Tb3MKioicZ4KZ7LnQtaCvddSJ_doWFC88gjf2CFVdB7XlL2qkK6jY7tQXAJ4NAZwZo7PtIHf3lTvD8jI6a1ANf_MEb2Ww-ZNJHVw8ht0SB-ucLJtllyNesTc9MwyLdwp8864KK2TBT3V2h0h9ksySTB6oqWYY4tghz4mZmH95GvttORqVeJXExNMhrouI7-nbTJa6QInFb7ZGeRg3aV0GcNTQfYmEpCuwPz5hFz_MGcslDZMyvDraE3C1XYMNWg0Pewm7RII4xR0fQqZ8iSkE8RnjeyYJQv17R8b-rTTgFt2a3yri9Xy2t1gX-fP776jK5qx7T1wnsJ_6qao1aqwBuLpk1HTi1YJBqvc57DXRnN9m2cPeM351gQKCAQEA-chzifBq71q8mETLfBQjWh5kKkVUdaaSuZ02lyMhziR8iZAsF0R08SFP2XWlOJrRGvLBItul787MurOI4VLhOSF-y5CZufSxHO-xDsZTDGD-GxYWAuLcdshcSl4HyJ4SZs13u3FUNVJeINC6IY4kn8iWHnPUbUHtu4kKvd-0t6hYxUB36wb_4fUjnQnghjtSJK23oeoArQ7ZDA0hApC3fPE2g5oQDkGqWDd1Smrmz3XlAZTMK9vqUlGHZRhaqC-dBhptLGSUulwrncEqsYKlW7NYppAWgHAY40wRy5Yglpv9GOhtJfUqkm7mQsmLhVw-1GtGc7Mi8sP3Nn-03mcqoQKCAQEA87d6H0DGvJNNLCZdlexp9Q84PpZYMMy-4JjbOpZh6qyhvclgXnkwXk0uo7G1dI5a--Eggft6_nQs8qQ-2bbtJ3V6BAECnEsWPJeWmeiMFEf0L51P0MMf_AY5Y4XOLCE6A3TieuH4NJ0iWMIZqYkCEYIqGTjR3TWNkSzQGJaewKpDu1m95dZCIbXGMXc0Tg6QJF0DIRdpqSQw5QAyLFmSQYLudjds688te-s63g02W_xLeUgKOKd-zsMY_xnubElXaEXVItBtgpbPoMqz6DGr92uNTpKUO3Wb2swIHhoMKp5G7XNQzSlsHLnEjwbz8m4xMXlCZDfx_-ukJ0iNFlz81wKCAQEAqxYylUO4axPSY9WTLvy4Lizs3Ms6C4-5pitZzfHBYOo65xp6KMG5-8OeZsufDIN2QKgPw-mA4h3auvLoCbX0EGax64qy0N0aR0CiHQWYsrzor_LTxsxOx4l7NXDskew7nHCV1yzLye4ODRoKs5sh2NPShy89TEzBIhe-5MkKhlVn4EvFF5VmxQVcjF7MjASrwfW-9sdKCT9HSWrgtlobZBfwB_oJj0pI_D2YOA265FTTM98QbeYmvJWdUJB64AIk4p5NMv_9oxwov9gkfwuGaaYRTZ0Z3IVrdpyO_8xnq-FSXbItuLcRntUZIJvd1c2WN3b2_Z6wjGnPtWOJpmAxoQKCAQAdD-kBJxFL1WjjdeO9CAcOkPUNCZKUpyWv1Kp3zwz4FgPnhMb4HQ12gU-pd3yC3KLe3FarCVj-VM4zVQClp5maFfkp1xD_oDiTmyP7UG670GS-9MxawZnjzL41LvSJ8KBhXyPOsXmOlJpO6T50KAFWIyZwAYWNEmDCSgy6keN2aBdRlP7_FFCogmuS5HsZP8VSgMDpxkf0QnuOIzrYbQnyw_E5qZxUdk0fNMq9RegQigJaAQwu-1I0x7EIYog643gH2CP1VdNpOiCiNOnFK38tLucX0oTYnkqqiaACLur6fgtJL3IYNPNObZyRzatzYk59bs9K8hzqfqgBgzZHz2jbAoIBAQCmSl--lhVQbwXWjJMoXQYwZB7iLVXAgZDgzjStZlQ_nEmYf6v-QTPsPz6UKc5FWylCfWA-5B6_rdRFoX_bkHOYGS5G0peubDhsW8rKwuqCbY9Yfy8EM44D559NRW29J0eVDVpRhEtY3j_YqFZD9n5fS-VhMbKO1hZCMQK_kI4CuJ1q8TaIx-L69Yl7UtYHnmtyatuHaNzfx6cw10PZIn0YxB5OFl5bmKYKVqHw0JD_CozWoKAhUfbYS55K3DGfh2jJtGpdyOq8VS-e8H14C_GZxdwN1Umi7dzvOcHd-_xi_3DcHEwNLtkDhkCeWlE3PQs0Cu5yWl3NlaFVrRmN9csJ",
   "publicKey": "MIICCgKCAgEA7cxLHoxaHdYU8EX2ij5m42XIQYWBUxKMOfVbV2OX0nNHEdojXfRfONvrAHwsvRqcdN44yv1E1be18qs5HRB67D3qLeRjXcjegdjWvQj66IFVZIxQHNJ-LXDbAYs7gez8RYbBObnDzfrqy9vIPZet1tbqvlxv9aTR38x3ORJ4Y6Ym9StbKOUIo7BLIvoc1M5uNUIEnFKKZhbmVR423-F50w_E0618KExZgeur_8cMsSWZxyl0oeSI-rIodjfVJbshT1yy98zKRj-mMnyPKgHQARr9SwDA5Xlt9L2fVZ72xgwaPOBUgFoDTPQsqQ3Rkj7nYUSqwQVEL0-oH2K7U3OeGeKyIQMNzRdSfYMw3gSc5dtwqX64oK33lN2jzTKa0clSZjqJ4jzUL1YrXMddF07dMQqjN2mGjeZVy5LaO4B58Y5l-kO01KdwA-_LcDhkNgbKiZMZVtNPlVkR3nCvInt5cqPOqMOcLW3oA1wmh7zauWqorklpSSs75zw8ETtzATSJv8h7kUG9Bl1QQgdBkGqKb4ZG-r5Bj6pwJrHVmgPSMowP8P9G13iQLFdKX714A3DMKDc03TJvs2yVK81YUCtO5aRdwb0q0YcFqn9BHI3cmO-kOhXquMakPQ3zW_FBSnIeBhJMObCQOmYEuZxrifMcCQTY7j5jsP962e7ZPn53STcCAwEAAQ",
   "type": "RSA",
@@ -45,33 +52,39 @@ exports[`KryptosKit (EC) from auto b64 3`] = `
 }
 `;
 
-exports[`KryptosKit (EC) from auto jwk 1`] = `
+exports[`KryptosKit (RSA) from auto jwk 1`] = `
 {
   "algorithm": "RS256",
   "createdAt": 2024-01-01T08:00:00.000Z,
   "expiresIn": -1,
   "hasPrivateKey": true,
   "hasPublicKey": true,
-  "id": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "id": "16816f0a-3f23-568f-b052-123e63cfa37a",
   "isActive": true,
   "isExpired": false,
   "isExternal": true,
   "modulus": 1024,
   "notBefore": 2024-01-01T08:00:00.000Z,
-  "operations": [],
+  "operations": [
+    "sign",
+    "verify",
+  ],
   "type": "RSA",
   "updatedAt": 2024-01-01T08:00:00.000Z,
   "use": "sig",
 }
 `;
 
-exports[`KryptosKit (EC) from auto jwk 2`] = `
+exports[`KryptosKit (RSA) from auto jwk 2`] = `
 {
   "alg": "RS256",
   "e": "AQAB",
   "iat": 1704096000,
-  "key_ops": [],
-  "kid": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "key_ops": [
+    "sign",
+    "verify",
+  ],
+  "kid": "16816f0a-3f23-568f-b052-123e63cfa37a",
   "kty": "RSA",
   "n": "tsSkRYzjC1YlpxyrPw2oC-BligZg5-CrdIZ0bcvXCjvQNynYLHMS1IbCT53WMNFpeIlo1RLj84MsRM4BS6Ov3rPys042Ie-y23yMPH5ikXFHvmLjECvcsngHAHwroJ9JXyl3u8Qir3vnx_n_l1ggf3BgpG3utU0lMsw-eRq1aF8",
   "nbf": 1704096000,
@@ -80,13 +93,14 @@ exports[`KryptosKit (EC) from auto jwk 2`] = `
 }
 `;
 
-exports[`KryptosKit (EC) from auto jwk 3`] = `
+exports[`KryptosKit (RSA) from auto jwk 3`] = `
 {
   "alg": "RS256",
   "d": "IrZAONFkQb_v0MhaIdSXKQJKZqeFeiSqi6wJqty_D7uCdSemXfLRDbo2Z2ajyovLS1BVr7oxvwsXuk2h41rISOJmtdJ2mCOwjbMhMXQ2-eknf1byOvxDrO9fBi-laL7IjZVWwe0hYjx8Plm33D9kdP29nhBvSMCkMQM4wtCBYek",
   "dp": "gTSoEONk-DKpAlYaJHPHbt0el8QTdpkQcCVb44L5xK8ox3_YMT8-kAnG8MWAsTO5jkOvYi7pL_rcaSEpWOip8Q",
   "dq": "M7CpLl0LHXS5DmFfW6W0Rc_Qogo39R5lKbKkbpzhFAKNqEpgGuaVfn3bbMYa2R8RJ2tv3XnfSqBYe5zGTZvxHw",
   "e": "AQAB",
+  "kid": "16816f0a-3f23-568f-b052-123e63cfa37a",
   "kty": "RSA",
   "n": "tsSkRYzjC1YlpxyrPw2oC-BligZg5-CrdIZ0bcvXCjvQNynYLHMS1IbCT53WMNFpeIlo1RLj84MsRM4BS6Ov3rPys042Ie-y23yMPH5ikXFHvmLjECvcsngHAHwroJ9JXyl3u8Qir3vnx_n_l1ggf3BgpG3utU0lMsw-eRq1aF8",
   "p": "6Ex5gfLWiKK3P9illzQGbGju0Gc7UggVahZG6N9dy8GBk-hJ1S8qKSDxxn_T4wpUO6XAuPGrNhri8_zfAbpL3Q",
@@ -96,33 +110,39 @@ exports[`KryptosKit (EC) from auto jwk 3`] = `
 }
 `;
 
-exports[`KryptosKit (EC) from auto pem 1`] = `
+exports[`KryptosKit (RSA) from auto pem 1`] = `
 {
   "algorithm": "RS256",
   "createdAt": 2024-01-01T08:00:00.000Z,
   "expiresIn": -1,
   "hasPrivateKey": true,
   "hasPublicKey": true,
-  "id": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "id": "246299a0-bbbf-5999-a4dc-9b50e115b23c",
   "isActive": true,
   "isExpired": false,
   "isExternal": false,
   "modulus": 1024,
   "notBefore": 2024-01-01T08:00:00.000Z,
-  "operations": [],
+  "operations": [
+    "sign",
+    "verify",
+  ],
   "type": "RSA",
   "updatedAt": 2024-01-01T08:00:00.000Z,
   "use": "sig",
 }
 `;
 
-exports[`KryptosKit (EC) from auto pem 2`] = `
+exports[`KryptosKit (RSA) from auto pem 2`] = `
 {
   "alg": "RS256",
   "e": "AQAB",
   "iat": 1704096000,
-  "key_ops": [],
-  "kid": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "key_ops": [
+    "sign",
+    "verify",
+  ],
+  "kid": "246299a0-bbbf-5999-a4dc-9b50e115b23c",
   "kty": "RSA",
   "n": "vY8fqQa8JhjJXUZjRxqTRU67lp79x3RmXZBS9ov5ySNOLxBUvgbJYax6qnj0AW5C3hzirvZeNVPvQs_YEytU-TKIoPmUb53xdAJCozB0HAqn9gYEEC_8oAoT9aJmKUMfVu1tUOvkZDU-0m7KZeWDUyTgC_NXGfytUU1kxBskfVM",
   "nbf": 1704096000,
@@ -131,9 +151,10 @@ exports[`KryptosKit (EC) from auto pem 2`] = `
 }
 `;
 
-exports[`KryptosKit (EC) from auto pem 3`] = `
+exports[`KryptosKit (RSA) from auto pem 3`] = `
 {
   "algorithm": "RS256",
+  "id": "246299a0-bbbf-5999-a4dc-9b50e115b23c",
   "privateKey": "-----BEGIN RSA PRIVATE KEY-----
 MIICWwIBAAKBgQC9jx+pBrwmGMldRmNHGpNFTruWnv3HdGZdkFL2i/nJI04vEFS+
 BslhrHqqePQBbkLeHOKu9l41U+9Cz9gTK1T5Moig+ZRvnfF0AkKjMHQcCqf2BgQQ
@@ -161,33 +182,39 @@ E/WiZilDH1btbVDr5GQ1PtJuymXlg1Mk4AvzVxn8rVFNZMQbJH1TAgMBAAE=
 }
 `;
 
-exports[`KryptosKit (EC) from b64 1`] = `
+exports[`KryptosKit (RSA) from b64 1`] = `
 {
   "algorithm": "RS512",
   "createdAt": 2024-01-01T08:00:00.000Z,
   "expiresIn": -1,
   "hasPrivateKey": true,
   "hasPublicKey": true,
-  "id": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "id": "fa659780-0d5c-565b-a76e-d85477c2b00b",
   "isActive": true,
   "isExpired": false,
   "isExternal": false,
   "modulus": 4096,
   "notBefore": 2024-01-01T08:00:00.000Z,
-  "operations": [],
+  "operations": [
+    "sign",
+    "verify",
+  ],
   "type": "RSA",
   "updatedAt": 2024-01-01T08:00:00.000Z,
   "use": "sig",
 }
 `;
 
-exports[`KryptosKit (EC) from b64 2`] = `
+exports[`KryptosKit (RSA) from b64 2`] = `
 {
   "alg": "RS512",
   "e": "AQAB",
   "iat": 1704096000,
-  "key_ops": [],
-  "kid": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "key_ops": [
+    "sign",
+    "verify",
+  ],
+  "kid": "fa659780-0d5c-565b-a76e-d85477c2b00b",
   "kty": "RSA",
   "n": "7cxLHoxaHdYU8EX2ij5m42XIQYWBUxKMOfVbV2OX0nNHEdojXfRfONvrAHwsvRqcdN44yv1E1be18qs5HRB67D3qLeRjXcjegdjWvQj66IFVZIxQHNJ-LXDbAYs7gez8RYbBObnDzfrqy9vIPZet1tbqvlxv9aTR38x3ORJ4Y6Ym9StbKOUIo7BLIvoc1M5uNUIEnFKKZhbmVR423-F50w_E0618KExZgeur_8cMsSWZxyl0oeSI-rIodjfVJbshT1yy98zKRj-mMnyPKgHQARr9SwDA5Xlt9L2fVZ72xgwaPOBUgFoDTPQsqQ3Rkj7nYUSqwQVEL0-oH2K7U3OeGeKyIQMNzRdSfYMw3gSc5dtwqX64oK33lN2jzTKa0clSZjqJ4jzUL1YrXMddF07dMQqjN2mGjeZVy5LaO4B58Y5l-kO01KdwA-_LcDhkNgbKiZMZVtNPlVkR3nCvInt5cqPOqMOcLW3oA1wmh7zauWqorklpSSs75zw8ETtzATSJv8h7kUG9Bl1QQgdBkGqKb4ZG-r5Bj6pwJrHVmgPSMowP8P9G13iQLFdKX714A3DMKDc03TJvs2yVK81YUCtO5aRdwb0q0YcFqn9BHI3cmO-kOhXquMakPQ3zW_FBSnIeBhJMObCQOmYEuZxrifMcCQTY7j5jsP962e7ZPn53STc",
   "nbf": 1704096000,
@@ -196,9 +223,10 @@ exports[`KryptosKit (EC) from b64 2`] = `
 }
 `;
 
-exports[`KryptosKit (EC) from b64 3`] = `
+exports[`KryptosKit (RSA) from b64 3`] = `
 {
   "algorithm": "RS512",
+  "id": "fa659780-0d5c-565b-a76e-d85477c2b00b",
   "privateKey": "MIIJKQIBAAKCAgEA7cxLHoxaHdYU8EX2ij5m42XIQYWBUxKMOfVbV2OX0nNHEdojXfRfONvrAHwsvRqcdN44yv1E1be18qs5HRB67D3qLeRjXcjegdjWvQj66IFVZIxQHNJ-LXDbAYs7gez8RYbBObnDzfrqy9vIPZet1tbqvlxv9aTR38x3ORJ4Y6Ym9StbKOUIo7BLIvoc1M5uNUIEnFKKZhbmVR423-F50w_E0618KExZgeur_8cMsSWZxyl0oeSI-rIodjfVJbshT1yy98zKRj-mMnyPKgHQARr9SwDA5Xlt9L2fVZ72xgwaPOBUgFoDTPQsqQ3Rkj7nYUSqwQVEL0-oH2K7U3OeGeKyIQMNzRdSfYMw3gSc5dtwqX64oK33lN2jzTKa0clSZjqJ4jzUL1YrXMddF07dMQqjN2mGjeZVy5LaO4B58Y5l-kO01KdwA-_LcDhkNgbKiZMZVtNPlVkR3nCvInt5cqPOqMOcLW3oA1wmh7zauWqorklpSSs75zw8ETtzATSJv8h7kUG9Bl1QQgdBkGqKb4ZG-r5Bj6pwJrHVmgPSMowP8P9G13iQLFdKX714A3DMKDc03TJvs2yVK81YUCtO5aRdwb0q0YcFqn9BHI3cmO-kOhXquMakPQ3zW_FBSnIeBhJMObCQOmYEuZxrifMcCQTY7j5jsP962e7ZPn53STcCAwEAAQKCAgArosNeFa8rrm8lMBFviMfkjnbS3ya-Ebc9o3JhdNsVOSYfdoHq6b7XdjOHYUHsaYewQl71kMgi15VBtH3EgZOs6iegyDobqZJ7DUlKYu134NPEoaLJxy50NDNb8yq2SsB4GaQ3bYkqsRKI2gnCk6TIuaNVzyyUTOxePuzZwjPpRUH81znhJTYSo3UGNBM6Ua8TgsvJy7OtzCH0GJlFN-DdBBXAKiOQWYJLPu3O_72qfBXd4BOQ6ZjhN_QIzXIFfHM-VupYYnHzthZPSWAT-0UqDsPQEZFUCpZMxMcKNSNfcDUYWqnm652Tb3MKioicZ4KZ7LnQtaCvddSJ_doWFC88gjf2CFVdB7XlL2qkK6jY7tQXAJ4NAZwZo7PtIHf3lTvD8jI6a1ANf_MEb2Ww-ZNJHVw8ht0SB-ucLJtllyNesTc9MwyLdwp8864KK2TBT3V2h0h9ksySTB6oqWYY4tghz4mZmH95GvttORqVeJXExNMhrouI7-nbTJa6QInFb7ZGeRg3aV0GcNTQfYmEpCuwPz5hFz_MGcslDZMyvDraE3C1XYMNWg0Pewm7RII4xR0fQqZ8iSkE8RnjeyYJQv17R8b-rTTgFt2a3yri9Xy2t1gX-fP776jK5qx7T1wnsJ_6qao1aqwBuLpk1HTi1YJBqvc57DXRnN9m2cPeM351gQKCAQEA-chzifBq71q8mETLfBQjWh5kKkVUdaaSuZ02lyMhziR8iZAsF0R08SFP2XWlOJrRGvLBItul787MurOI4VLhOSF-y5CZufSxHO-xDsZTDGD-GxYWAuLcdshcSl4HyJ4SZs13u3FUNVJeINC6IY4kn8iWHnPUbUHtu4kKvd-0t6hYxUB36wb_4fUjnQnghjtSJK23oeoArQ7ZDA0hApC3fPE2g5oQDkGqWDd1Smrmz3XlAZTMK9vqUlGHZRhaqC-dBhptLGSUulwrncEqsYKlW7NYppAWgHAY40wRy5Yglpv9GOhtJfUqkm7mQsmLhVw-1GtGc7Mi8sP3Nn-03mcqoQKCAQEA87d6H0DGvJNNLCZdlexp9Q84PpZYMMy-4JjbOpZh6qyhvclgXnkwXk0uo7G1dI5a--Eggft6_nQs8qQ-2bbtJ3V6BAECnEsWPJeWmeiMFEf0L51P0MMf_AY5Y4XOLCE6A3TieuH4NJ0iWMIZqYkCEYIqGTjR3TWNkSzQGJaewKpDu1m95dZCIbXGMXc0Tg6QJF0DIRdpqSQw5QAyLFmSQYLudjds688te-s63g02W_xLeUgKOKd-zsMY_xnubElXaEXVItBtgpbPoMqz6DGr92uNTpKUO3Wb2swIHhoMKp5G7XNQzSlsHLnEjwbz8m4xMXlCZDfx_-ukJ0iNFlz81wKCAQEAqxYylUO4axPSY9WTLvy4Lizs3Ms6C4-5pitZzfHBYOo65xp6KMG5-8OeZsufDIN2QKgPw-mA4h3auvLoCbX0EGax64qy0N0aR0CiHQWYsrzor_LTxsxOx4l7NXDskew7nHCV1yzLye4ODRoKs5sh2NPShy89TEzBIhe-5MkKhlVn4EvFF5VmxQVcjF7MjASrwfW-9sdKCT9HSWrgtlobZBfwB_oJj0pI_D2YOA265FTTM98QbeYmvJWdUJB64AIk4p5NMv_9oxwov9gkfwuGaaYRTZ0Z3IVrdpyO_8xnq-FSXbItuLcRntUZIJvd1c2WN3b2_Z6wjGnPtWOJpmAxoQKCAQAdD-kBJxFL1WjjdeO9CAcOkPUNCZKUpyWv1Kp3zwz4FgPnhMb4HQ12gU-pd3yC3KLe3FarCVj-VM4zVQClp5maFfkp1xD_oDiTmyP7UG670GS-9MxawZnjzL41LvSJ8KBhXyPOsXmOlJpO6T50KAFWIyZwAYWNEmDCSgy6keN2aBdRlP7_FFCogmuS5HsZP8VSgMDpxkf0QnuOIzrYbQnyw_E5qZxUdk0fNMq9RegQigJaAQwu-1I0x7EIYog643gH2CP1VdNpOiCiNOnFK38tLucX0oTYnkqqiaACLur6fgtJL3IYNPNObZyRzatzYk59bs9K8hzqfqgBgzZHz2jbAoIBAQCmSl--lhVQbwXWjJMoXQYwZB7iLVXAgZDgzjStZlQ_nEmYf6v-QTPsPz6UKc5FWylCfWA-5B6_rdRFoX_bkHOYGS5G0peubDhsW8rKwuqCbY9Yfy8EM44D559NRW29J0eVDVpRhEtY3j_YqFZD9n5fS-VhMbKO1hZCMQK_kI4CuJ1q8TaIx-L69Yl7UtYHnmtyatuHaNzfx6cw10PZIn0YxB5OFl5bmKYKVqHw0JD_CozWoKAhUfbYS55K3DGfh2jJtGpdyOq8VS-e8H14C_GZxdwN1Umi7dzvOcHd-_xi_3DcHEwNLtkDhkCeWlE3PQs0Cu5yWl3NlaFVrRmN9csJ",
   "publicKey": "MIICCgKCAgEA7cxLHoxaHdYU8EX2ij5m42XIQYWBUxKMOfVbV2OX0nNHEdojXfRfONvrAHwsvRqcdN44yv1E1be18qs5HRB67D3qLeRjXcjegdjWvQj66IFVZIxQHNJ-LXDbAYs7gez8RYbBObnDzfrqy9vIPZet1tbqvlxv9aTR38x3ORJ4Y6Ym9StbKOUIo7BLIvoc1M5uNUIEnFKKZhbmVR423-F50w_E0618KExZgeur_8cMsSWZxyl0oeSI-rIodjfVJbshT1yy98zKRj-mMnyPKgHQARr9SwDA5Xlt9L2fVZ72xgwaPOBUgFoDTPQsqQ3Rkj7nYUSqwQVEL0-oH2K7U3OeGeKyIQMNzRdSfYMw3gSc5dtwqX64oK33lN2jzTKa0clSZjqJ4jzUL1YrXMddF07dMQqjN2mGjeZVy5LaO4B58Y5l-kO01KdwA-_LcDhkNgbKiZMZVtNPlVkR3nCvInt5cqPOqMOcLW3oA1wmh7zauWqorklpSSs75zw8ETtzATSJv8h7kUG9Bl1QQgdBkGqKb4ZG-r5Bj6pwJrHVmgPSMowP8P9G13iQLFdKX714A3DMKDc03TJvs2yVK81YUCtO5aRdwb0q0YcFqn9BHI3cmO-kOhXquMakPQ3zW_FBSnIeBhJMObCQOmYEuZxrifMcCQTY7j5jsP962e7ZPn53STcCAwEAAQ",
   "type": "RSA",
@@ -206,33 +234,39 @@ exports[`KryptosKit (EC) from b64 3`] = `
 }
 `;
 
-exports[`KryptosKit (EC) from jwk 1`] = `
+exports[`KryptosKit (RSA) from jwk 1`] = `
 {
   "algorithm": "RS256",
   "createdAt": 2024-01-01T08:00:00.000Z,
   "expiresIn": -1,
   "hasPrivateKey": true,
   "hasPublicKey": true,
-  "id": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "id": "16816f0a-3f23-568f-b052-123e63cfa37a",
   "isActive": true,
   "isExpired": false,
   "isExternal": true,
   "modulus": 1024,
   "notBefore": 2024-01-01T08:00:00.000Z,
-  "operations": [],
+  "operations": [
+    "sign",
+    "verify",
+  ],
   "type": "RSA",
   "updatedAt": 2024-01-01T08:00:00.000Z,
   "use": "sig",
 }
 `;
 
-exports[`KryptosKit (EC) from jwk 2`] = `
+exports[`KryptosKit (RSA) from jwk 2`] = `
 {
   "alg": "RS256",
   "e": "AQAB",
   "iat": 1704096000,
-  "key_ops": [],
-  "kid": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "key_ops": [
+    "sign",
+    "verify",
+  ],
+  "kid": "16816f0a-3f23-568f-b052-123e63cfa37a",
   "kty": "RSA",
   "n": "tsSkRYzjC1YlpxyrPw2oC-BligZg5-CrdIZ0bcvXCjvQNynYLHMS1IbCT53WMNFpeIlo1RLj84MsRM4BS6Ov3rPys042Ie-y23yMPH5ikXFHvmLjECvcsngHAHwroJ9JXyl3u8Qir3vnx_n_l1ggf3BgpG3utU0lMsw-eRq1aF8",
   "nbf": 1704096000,
@@ -241,13 +275,14 @@ exports[`KryptosKit (EC) from jwk 2`] = `
 }
 `;
 
-exports[`KryptosKit (EC) from jwk 3`] = `
+exports[`KryptosKit (RSA) from jwk 3`] = `
 {
   "alg": "RS256",
   "d": "IrZAONFkQb_v0MhaIdSXKQJKZqeFeiSqi6wJqty_D7uCdSemXfLRDbo2Z2ajyovLS1BVr7oxvwsXuk2h41rISOJmtdJ2mCOwjbMhMXQ2-eknf1byOvxDrO9fBi-laL7IjZVWwe0hYjx8Plm33D9kdP29nhBvSMCkMQM4wtCBYek",
   "dp": "gTSoEONk-DKpAlYaJHPHbt0el8QTdpkQcCVb44L5xK8ox3_YMT8-kAnG8MWAsTO5jkOvYi7pL_rcaSEpWOip8Q",
   "dq": "M7CpLl0LHXS5DmFfW6W0Rc_Qogo39R5lKbKkbpzhFAKNqEpgGuaVfn3bbMYa2R8RJ2tv3XnfSqBYe5zGTZvxHw",
   "e": "AQAB",
+  "kid": "16816f0a-3f23-568f-b052-123e63cfa37a",
   "kty": "RSA",
   "n": "tsSkRYzjC1YlpxyrPw2oC-BligZg5-CrdIZ0bcvXCjvQNynYLHMS1IbCT53WMNFpeIlo1RLj84MsRM4BS6Ov3rPys042Ie-y23yMPH5ikXFHvmLjECvcsngHAHwroJ9JXyl3u8Qir3vnx_n_l1ggf3BgpG3utU0lMsw-eRq1aF8",
   "p": "6Ex5gfLWiKK3P9illzQGbGju0Gc7UggVahZG6N9dy8GBk-hJ1S8qKSDxxn_T4wpUO6XAuPGrNhri8_zfAbpL3Q",
@@ -257,33 +292,39 @@ exports[`KryptosKit (EC) from jwk 3`] = `
 }
 `;
 
-exports[`KryptosKit (EC) from pem 1`] = `
+exports[`KryptosKit (RSA) from pem 1`] = `
 {
   "algorithm": "RS256",
   "createdAt": 2024-01-01T08:00:00.000Z,
   "expiresIn": -1,
   "hasPrivateKey": true,
   "hasPublicKey": true,
-  "id": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "id": "246299a0-bbbf-5999-a4dc-9b50e115b23c",
   "isActive": true,
   "isExpired": false,
   "isExternal": false,
   "modulus": 1024,
   "notBefore": 2024-01-01T08:00:00.000Z,
-  "operations": [],
+  "operations": [
+    "sign",
+    "verify",
+  ],
   "type": "RSA",
   "updatedAt": 2024-01-01T08:00:00.000Z,
   "use": "sig",
 }
 `;
 
-exports[`KryptosKit (EC) from pem 2`] = `
+exports[`KryptosKit (RSA) from pem 2`] = `
 {
   "alg": "RS256",
   "e": "AQAB",
   "iat": 1704096000,
-  "key_ops": [],
-  "kid": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "key_ops": [
+    "sign",
+    "verify",
+  ],
+  "kid": "246299a0-bbbf-5999-a4dc-9b50e115b23c",
   "kty": "RSA",
   "n": "vY8fqQa8JhjJXUZjRxqTRU67lp79x3RmXZBS9ov5ySNOLxBUvgbJYax6qnj0AW5C3hzirvZeNVPvQs_YEytU-TKIoPmUb53xdAJCozB0HAqn9gYEEC_8oAoT9aJmKUMfVu1tUOvkZDU-0m7KZeWDUyTgC_NXGfytUU1kxBskfVM",
   "nbf": 1704096000,
@@ -292,9 +333,10 @@ exports[`KryptosKit (EC) from pem 2`] = `
 }
 `;
 
-exports[`KryptosKit (EC) from pem 3`] = `
+exports[`KryptosKit (RSA) from pem 3`] = `
 {
   "algorithm": "RS256",
+  "id": "246299a0-bbbf-5999-a4dc-9b50e115b23c",
   "privateKey": "-----BEGIN RSA PRIVATE KEY-----
 MIICWwIBAAKBgQC9jx+pBrwmGMldRmNHGpNFTruWnv3HdGZdkFL2i/nJI04vEFS+
 BslhrHqqePQBbkLeHOKu9l41U+9Cz9gTK1T5Moig+ZRvnfF0AkKjMHQcCqf2BgQQ
@@ -322,7 +364,7 @@ E/WiZilDH1btbVDr5GQ1PtJuymXlg1Mk4AvzVxn8rVFNZMQbJH1TAgMBAAE=
 }
 `;
 
-exports[`KryptosKit (EC) make auto 1`] = `
+exports[`KryptosKit (RSA) generate auto 1`] = `
 {
   "algorithm": "PS384",
   "createdAt": 2024-01-01T08:00:00.000Z,
@@ -345,7 +387,7 @@ exports[`KryptosKit (EC) make auto 1`] = `
 }
 `;
 
-exports[`KryptosKit (EC) make enc 1`] = `
+exports[`KryptosKit (RSA) generate enc 1`] = `
 {
   "algorithm": "RSA-OAEP-384",
   "createdAt": 2024-01-01T08:00:00.000Z,
@@ -360,8 +402,8 @@ exports[`KryptosKit (EC) make enc 1`] = `
   "modulus": 3072,
   "notBefore": 2024-01-01T08:00:00.000Z,
   "operations": [
-    "encrypt",
-    "decrypt",
+    "wrapKey",
+    "unwrapKey",
   ],
   "type": "RSA",
   "updatedAt": 2024-01-01T08:00:00.000Z,
@@ -369,7 +411,7 @@ exports[`KryptosKit (EC) make enc 1`] = `
 }
 `;
 
-exports[`KryptosKit (EC) make sig 1`] = `
+exports[`KryptosKit (RSA) generate sig 1`] = `
 {
   "algorithm": "RS256",
   "createdAt": 2024-01-01T08:00:00.000Z,

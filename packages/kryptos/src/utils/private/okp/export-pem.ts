@@ -4,9 +4,9 @@ import { KryptosError } from "../../../errors";
 import { KryptosBuffer, OkpString } from "../../../types";
 import { isOkpCurve } from "./is-okp-curve";
 
-type Options = Omit<KryptosBuffer, "algorithm" | "type" | "use">;
+type Options = Omit<KryptosBuffer, "id" | "algorithm" | "type" | "use">;
 
-type Result = Omit<OkpString, "algorithm" | "type" | "use">;
+type Result = Omit<OkpString, "id" | "algorithm" | "type" | "use">;
 
 export const exportOkpToPem = (options: Options): Result => {
   if (!isOkpCurve(options.curve)) {

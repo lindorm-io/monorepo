@@ -69,26 +69,34 @@ type RsaSig = { algorithm: RsaSigAlgorithm };
 
 // combined options
 
-export type KryptosMakeEcEnc = Std & Enc & EcEnc;
+export type KryptosGenerateEcEnc = Std & Enc & EcEnc;
 
-export type KryptosMakeEcSig = Std & Sig & EcSig;
+export type KryptosGenerateEcSig = Std & Sig & EcSig;
 
-export type KryptosMakeEc = (KryptosMakeEcEnc | KryptosMakeEcSig) & { type: "EC" };
+export type KryptosGenerateEc = (KryptosGenerateEcEnc | KryptosGenerateEcSig) & {
+  type: "EC";
+};
 
-export type KryptosMakeOctEnc = Std & Enc & OctEnc;
+export type KryptosGenerateOctEnc = Std & Enc & OctEnc;
 
-export type KryptosMakeOctSig = Std & Sig & OctSig;
+export type KryptosGenerateOctSig = Std & Sig & OctSig;
 
-export type KryptosMakeOct = (KryptosMakeOctEnc | KryptosMakeOctSig) & { type: "oct" };
+export type KryptosGenerateOct = (KryptosGenerateOctEnc | KryptosGenerateOctSig) & {
+  type: "oct";
+};
 
-export type KryptosMakeOkpEnc = Std & Enc & OkpEnc;
+export type KryptosGenerateOkpEnc = Std & Enc & OkpEnc;
 
-export type KryptosMakeOkpSig = Std & Sig & OkpSig;
+export type KryptosGenerateOkpSig = Std & Sig & OkpSig;
 
-export type KryptosMakeOkp = (KryptosMakeOkpEnc | KryptosMakeOkpSig) & { type: "OKP" };
+export type KryptosGenerateOkp = (KryptosGenerateOkpEnc | KryptosGenerateOkpSig) & {
+  type: "OKP";
+};
 
-export type KryptosMakeRsaEnc = Std & Enc & RsaEnc;
+export type KryptosGenerateRsaEnc = Std & Enc & RsaEnc;
 
-export type KryptosMakeRsaSig = Std & Sig & RsaSig;
+export type KryptosGenerateRsaSig = Std & Sig & RsaSig;
 
-export type KryptosMakeRsa = (KryptosMakeRsaEnc | KryptosMakeRsaSig) & { type: "RSA" };
+export type KryptosGenerateRsa = (KryptosGenerateRsaEnc | KryptosGenerateRsaSig) & {
+  type: "RSA";
+};

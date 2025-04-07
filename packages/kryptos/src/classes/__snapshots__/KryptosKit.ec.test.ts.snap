@@ -8,12 +8,15 @@ exports[`KryptosKit (EC) from auto b64 1`] = `
   "expiresIn": -1,
   "hasPrivateKey": true,
   "hasPublicKey": true,
-  "id": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "id": "217d138b-6ce6-5e5c-953a-35fb11865b9a",
   "isActive": true,
   "isExpired": false,
   "isExternal": false,
   "notBefore": 2024-01-01T08:00:00.000Z,
-  "operations": [],
+  "operations": [
+    "sign",
+    "verify",
+  ],
   "type": "EC",
   "updatedAt": 2024-01-01T08:00:00.000Z,
   "use": "sig",
@@ -25,8 +28,11 @@ exports[`KryptosKit (EC) from auto b64 2`] = `
   "alg": "ES512",
   "crv": "P-521",
   "iat": 1704096000,
-  "key_ops": [],
-  "kid": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "key_ops": [
+    "sign",
+    "verify",
+  ],
+  "kid": "217d138b-6ce6-5e5c-953a-35fb11865b9a",
   "kty": "EC",
   "nbf": 1704096000,
   "uat": 1704096000,
@@ -40,6 +46,7 @@ exports[`KryptosKit (EC) from auto b64 3`] = `
 {
   "algorithm": "ES512",
   "curve": "P-521",
+  "id": "217d138b-6ce6-5e5c-953a-35fb11865b9a",
   "privateKey": "MIHuAgEAMBAGByqGSM49AgEGBSuBBAAjBIHWMIHTAgEBBEIATAYo3DQYroDV5EgJSUs_kOIvnEScZen73gXa5oQkub0ekQmgOJdPQjINUsdYRn67QK_oBdNUhVbtG_qdxqIgarehgYkDgYYABACN2PIVpRTdfXLmNxkg8Bk2m5netqYsNW2Lefhklr2jfJiVUJUDPoZoGfabGzHEgsKjP2HRbPsEI_tND3x4N9VW0QAID2UYXa7GN0izHWIFRdjVYuR5-0jywFtd-o_N2POdrvlV8xumdVK-TiSPEIdfKoL_Iu0e7IKTsJsj-UmE8rDJnw",
   "publicKey": "MIGbMBAGByqGSM49AgEGBSuBBAAjA4GGAAQAjdjyFaUU3X1y5jcZIPAZNpuZ3ramLDVti3n4ZJa9o3yYlVCVAz6GaBn2mxsxxILCoz9h0Wz7BCP7TQ98eDfVVtEACA9lGF2uxjdIsx1iBUXY1WLkeftI8sBbXfqPzdjzna75VfMbpnVSvk4kjxCHXyqC_yLtHuyCk7CbI_lJhPKwyZ8",
   "type": "EC",
@@ -55,12 +62,15 @@ exports[`KryptosKit (EC) from auto jwk 1`] = `
   "expiresIn": -1,
   "hasPrivateKey": true,
   "hasPublicKey": true,
-  "id": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "id": "df280784-0bf1-5362-9ab5-23715e4ece69",
   "isActive": true,
   "isExpired": false,
   "isExternal": true,
   "notBefore": 2024-01-01T08:00:00.000Z,
-  "operations": [],
+  "operations": [
+    "sign",
+    "verify",
+  ],
   "type": "EC",
   "updatedAt": 2024-01-01T08:00:00.000Z,
   "use": "sig",
@@ -72,8 +82,11 @@ exports[`KryptosKit (EC) from auto jwk 2`] = `
   "alg": "ES512",
   "crv": "P-521",
   "iat": 1704096000,
-  "key_ops": [],
-  "kid": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "key_ops": [
+    "sign",
+    "verify",
+  ],
+  "kid": "df280784-0bf1-5362-9ab5-23715e4ece69",
   "kty": "EC",
   "nbf": 1704096000,
   "uat": 1704096000,
@@ -88,6 +101,7 @@ exports[`KryptosKit (EC) from auto jwk 3`] = `
   "alg": "ES512",
   "crv": "P-521",
   "d": "AcDSceRWjuYGq83oE_BgW_P7SRwYhUrLRAvhsjxCFe9iE3gyKBurav6YguL-OWJJ40dGQ7XJQW1D8S4or8QMuLIE",
+  "kid": "df280784-0bf1-5362-9ab5-23715e4ece69",
   "kty": "EC",
   "use": "sig",
   "x": "APR_foe7ldh7LLa8ZFvQA6t2niQqzdFbV38w7jt5KrCcMGoIizvVqHEf4DeFe-KGI8u3QiP7UNVrU1yuldAoEwhw",
@@ -103,12 +117,15 @@ exports[`KryptosKit (EC) from auto pem 1`] = `
   "expiresIn": -1,
   "hasPrivateKey": true,
   "hasPublicKey": true,
-  "id": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "id": "583238e6-9496-5f7a-adfe-aca1ad5de594",
   "isActive": true,
   "isExpired": false,
   "isExternal": false,
   "notBefore": 2024-01-01T08:00:00.000Z,
-  "operations": [],
+  "operations": [
+    "sign",
+    "verify",
+  ],
   "type": "EC",
   "updatedAt": 2024-01-01T08:00:00.000Z,
   "use": "sig",
@@ -120,8 +137,11 @@ exports[`KryptosKit (EC) from auto pem 2`] = `
   "alg": "ES512",
   "crv": "P-521",
   "iat": 1704096000,
-  "key_ops": [],
-  "kid": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "key_ops": [
+    "sign",
+    "verify",
+  ],
+  "kid": "583238e6-9496-5f7a-adfe-aca1ad5de594",
   "kty": "EC",
   "nbf": 1704096000,
   "uat": 1704096000,
@@ -135,6 +155,7 @@ exports[`KryptosKit (EC) from auto pem 3`] = `
 {
   "algorithm": "ES512",
   "curve": "P-521",
+  "id": "583238e6-9496-5f7a-adfe-aca1ad5de594",
   "privateKey": "-----BEGIN PRIVATE KEY-----
 MIHuAgEAMBAGByqGSM49AgEGBSuBBAAjBIHWMIHTAgEBBEIBwNJx5FaO5garzegT
 8GBb8/tJHBiFSstEC+GyPEIV72ITeDIoG6tq/piC4v45YknjR0ZDtclBbUPxLiiv
@@ -164,12 +185,15 @@ exports[`KryptosKit (EC) from b64 1`] = `
   "expiresIn": -1,
   "hasPrivateKey": true,
   "hasPublicKey": true,
-  "id": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "id": "217d138b-6ce6-5e5c-953a-35fb11865b9a",
   "isActive": true,
   "isExpired": false,
   "isExternal": false,
   "notBefore": 2024-01-01T08:00:00.000Z,
-  "operations": [],
+  "operations": [
+    "sign",
+    "verify",
+  ],
   "type": "EC",
   "updatedAt": 2024-01-01T08:00:00.000Z,
   "use": "sig",
@@ -181,8 +205,11 @@ exports[`KryptosKit (EC) from b64 2`] = `
   "alg": "ES512",
   "crv": "P-521",
   "iat": 1704096000,
-  "key_ops": [],
-  "kid": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "key_ops": [
+    "sign",
+    "verify",
+  ],
+  "kid": "217d138b-6ce6-5e5c-953a-35fb11865b9a",
   "kty": "EC",
   "nbf": 1704096000,
   "uat": 1704096000,
@@ -196,6 +223,7 @@ exports[`KryptosKit (EC) from b64 3`] = `
 {
   "algorithm": "ES512",
   "curve": "P-521",
+  "id": "217d138b-6ce6-5e5c-953a-35fb11865b9a",
   "privateKey": "MIHuAgEAMBAGByqGSM49AgEGBSuBBAAjBIHWMIHTAgEBBEIATAYo3DQYroDV5EgJSUs_kOIvnEScZen73gXa5oQkub0ekQmgOJdPQjINUsdYRn67QK_oBdNUhVbtG_qdxqIgarehgYkDgYYABACN2PIVpRTdfXLmNxkg8Bk2m5netqYsNW2Lefhklr2jfJiVUJUDPoZoGfabGzHEgsKjP2HRbPsEI_tND3x4N9VW0QAID2UYXa7GN0izHWIFRdjVYuR5-0jywFtd-o_N2POdrvlV8xumdVK-TiSPEIdfKoL_Iu0e7IKTsJsj-UmE8rDJnw",
   "publicKey": "MIGbMBAGByqGSM49AgEGBSuBBAAjA4GGAAQAjdjyFaUU3X1y5jcZIPAZNpuZ3ramLDVti3n4ZJa9o3yYlVCVAz6GaBn2mxsxxILCoz9h0Wz7BCP7TQ98eDfVVtEACA9lGF2uxjdIsx1iBUXY1WLkeftI8sBbXfqPzdjzna75VfMbpnVSvk4kjxCHXyqC_yLtHuyCk7CbI_lJhPKwyZ8",
   "type": "EC",
@@ -211,12 +239,15 @@ exports[`KryptosKit (EC) from jwk 1`] = `
   "expiresIn": -1,
   "hasPrivateKey": true,
   "hasPublicKey": true,
-  "id": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "id": "df280784-0bf1-5362-9ab5-23715e4ece69",
   "isActive": true,
   "isExpired": false,
   "isExternal": true,
   "notBefore": 2024-01-01T08:00:00.000Z,
-  "operations": [],
+  "operations": [
+    "sign",
+    "verify",
+  ],
   "type": "EC",
   "updatedAt": 2024-01-01T08:00:00.000Z,
   "use": "sig",
@@ -228,8 +259,11 @@ exports[`KryptosKit (EC) from jwk 2`] = `
   "alg": "ES512",
   "crv": "P-521",
   "iat": 1704096000,
-  "key_ops": [],
-  "kid": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "key_ops": [
+    "sign",
+    "verify",
+  ],
+  "kid": "df280784-0bf1-5362-9ab5-23715e4ece69",
   "kty": "EC",
   "nbf": 1704096000,
   "uat": 1704096000,
@@ -244,6 +278,7 @@ exports[`KryptosKit (EC) from jwk 3`] = `
   "alg": "ES512",
   "crv": "P-521",
   "d": "AcDSceRWjuYGq83oE_BgW_P7SRwYhUrLRAvhsjxCFe9iE3gyKBurav6YguL-OWJJ40dGQ7XJQW1D8S4or8QMuLIE",
+  "kid": "df280784-0bf1-5362-9ab5-23715e4ece69",
   "kty": "EC",
   "use": "sig",
   "x": "APR_foe7ldh7LLa8ZFvQA6t2niQqzdFbV38w7jt5KrCcMGoIizvVqHEf4DeFe-KGI8u3QiP7UNVrU1yuldAoEwhw",
@@ -259,12 +294,15 @@ exports[`KryptosKit (EC) from pem 1`] = `
   "expiresIn": -1,
   "hasPrivateKey": true,
   "hasPublicKey": true,
-  "id": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "id": "583238e6-9496-5f7a-adfe-aca1ad5de594",
   "isActive": true,
   "isExpired": false,
   "isExternal": false,
   "notBefore": 2024-01-01T08:00:00.000Z,
-  "operations": [],
+  "operations": [
+    "sign",
+    "verify",
+  ],
   "type": "EC",
   "updatedAt": 2024-01-01T08:00:00.000Z,
   "use": "sig",
@@ -276,8 +314,11 @@ exports[`KryptosKit (EC) from pem 2`] = `
   "alg": "ES512",
   "crv": "P-521",
   "iat": 1704096000,
-  "key_ops": [],
-  "kid": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "key_ops": [
+    "sign",
+    "verify",
+  ],
+  "kid": "583238e6-9496-5f7a-adfe-aca1ad5de594",
   "kty": "EC",
   "nbf": 1704096000,
   "uat": 1704096000,
@@ -291,6 +332,7 @@ exports[`KryptosKit (EC) from pem 3`] = `
 {
   "algorithm": "ES512",
   "curve": "P-521",
+  "id": "583238e6-9496-5f7a-adfe-aca1ad5de594",
   "privateKey": "-----BEGIN PRIVATE KEY-----
 MIHuAgEAMBAGByqGSM49AgEGBSuBBAAjBIHWMIHTAgEBBEIBwNJx5FaO5garzegT
 8GBb8/tJHBiFSstEC+GyPEIV72ITeDIoG6tq/piC4v45YknjR0ZDtclBbUPxLiiv
@@ -312,7 +354,7 @@ QGygbB2Th7u8NIPlFVE=
 }
 `;
 
-exports[`KryptosKit (EC) make auto 1`] = `
+exports[`KryptosKit (EC) generate auto 1`] = `
 {
   "algorithm": "ES256",
   "createdAt": 2024-01-01T08:00:00.000Z,
@@ -335,7 +377,7 @@ exports[`KryptosKit (EC) make auto 1`] = `
 }
 `;
 
-exports[`KryptosKit (EC) make enc 1`] = `
+exports[`KryptosKit (EC) generate enc 1`] = `
 {
   "algorithm": "ECDH-ES+A192GCMKW",
   "createdAt": 2024-01-01T08:00:00.000Z,
@@ -350,8 +392,7 @@ exports[`KryptosKit (EC) make enc 1`] = `
   "isExternal": false,
   "notBefore": 2024-01-01T08:00:00.000Z,
   "operations": [
-    "encrypt",
-    "decrypt",
+    "deriveKey",
   ],
   "type": "EC",
   "updatedAt": 2024-01-01T08:00:00.000Z,
@@ -359,7 +400,7 @@ exports[`KryptosKit (EC) make enc 1`] = `
 }
 `;
 
-exports[`KryptosKit (EC) make sig 1`] = `
+exports[`KryptosKit (EC) generate sig 1`] = `
 {
   "algorithm": "ES256",
   "createdAt": 2024-01-01T08:00:00.000Z,

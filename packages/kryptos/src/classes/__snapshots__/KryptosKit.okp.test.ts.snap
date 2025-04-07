@@ -8,12 +8,15 @@ exports[`KryptosKit (OKP) from auto b64 1`] = `
   "expiresIn": -1,
   "hasPrivateKey": true,
   "hasPublicKey": true,
-  "id": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "id": "ff2a448e-8eb0-59a8-8fc6-0ce23ad07e8f",
   "isActive": true,
   "isExpired": false,
   "isExternal": false,
   "notBefore": 2024-01-01T08:00:00.000Z,
-  "operations": [],
+  "operations": [
+    "sign",
+    "verify",
+  ],
   "type": "OKP",
   "updatedAt": 2024-01-01T08:00:00.000Z,
   "use": "sig",
@@ -25,8 +28,11 @@ exports[`KryptosKit (OKP) from auto b64 2`] = `
   "alg": "EdDSA",
   "crv": "Ed25519",
   "iat": 1704096000,
-  "key_ops": [],
-  "kid": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "key_ops": [
+    "sign",
+    "verify",
+  ],
+  "kid": "ff2a448e-8eb0-59a8-8fc6-0ce23ad07e8f",
   "kty": "OKP",
   "nbf": 1704096000,
   "uat": 1704096000,
@@ -39,6 +45,7 @@ exports[`KryptosKit (OKP) from auto b64 3`] = `
 {
   "algorithm": "EdDSA",
   "curve": "Ed25519",
+  "id": "ff2a448e-8eb0-59a8-8fc6-0ce23ad07e8f",
   "privateKey": "MC4CAQAwBQYDK2VwBCIEIBwKJlvoh1ngd9LRd7dtvGOSqW4uZamdvIu0ABD2AkxL",
   "publicKey": "MCowBQYDK2VwAyEAGRCwCA6lChosFGMQwxGiHCdzblfvCz0FNiRtTnm1qqc",
   "type": "OKP",
@@ -54,12 +61,15 @@ exports[`KryptosKit (OKP) from auto jwk 1`] = `
   "expiresIn": -1,
   "hasPrivateKey": true,
   "hasPublicKey": true,
-  "id": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "id": "6fc93fb6-d40e-52dc-9606-adaa80fef0c7",
   "isActive": true,
   "isExpired": false,
   "isExternal": true,
   "notBefore": 2024-01-01T08:00:00.000Z,
-  "operations": [],
+  "operations": [
+    "sign",
+    "verify",
+  ],
   "type": "OKP",
   "updatedAt": 2024-01-01T08:00:00.000Z,
   "use": "sig",
@@ -71,8 +81,11 @@ exports[`KryptosKit (OKP) from auto jwk 2`] = `
   "alg": "EdDSA",
   "crv": "Ed25519",
   "iat": 1704096000,
-  "key_ops": [],
-  "kid": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "key_ops": [
+    "sign",
+    "verify",
+  ],
+  "kid": "6fc93fb6-d40e-52dc-9606-adaa80fef0c7",
   "kty": "OKP",
   "nbf": 1704096000,
   "uat": 1704096000,
@@ -86,6 +99,7 @@ exports[`KryptosKit (OKP) from auto jwk 3`] = `
   "alg": "EdDSA",
   "crv": "Ed25519",
   "d": "CDqMp2HAyaLiV8Xdt8ouEnhYbZtRXlFAsEkccUCcpQk",
+  "kid": "6fc93fb6-d40e-52dc-9606-adaa80fef0c7",
   "kty": "OKP",
   "use": "sig",
   "x": "eTgk2sA8y7_9q8MjEPskpM4mAUZqtXmwEiHwy249kj4",
@@ -100,12 +114,15 @@ exports[`KryptosKit (OKP) from auto pem 1`] = `
   "expiresIn": -1,
   "hasPrivateKey": true,
   "hasPublicKey": true,
-  "id": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "id": "3ee7c51b-e879-554e-ae49-e6330610f09e",
   "isActive": true,
   "isExpired": false,
   "isExternal": false,
   "notBefore": 2024-01-01T08:00:00.000Z,
-  "operations": [],
+  "operations": [
+    "sign",
+    "verify",
+  ],
   "type": "OKP",
   "updatedAt": 2024-01-01T08:00:00.000Z,
   "use": "sig",
@@ -117,8 +134,11 @@ exports[`KryptosKit (OKP) from auto pem 2`] = `
   "alg": "EdDSA",
   "crv": "Ed25519",
   "iat": 1704096000,
-  "key_ops": [],
-  "kid": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "key_ops": [
+    "sign",
+    "verify",
+  ],
+  "kid": "3ee7c51b-e879-554e-ae49-e6330610f09e",
   "kty": "OKP",
   "nbf": 1704096000,
   "uat": 1704096000,
@@ -131,6 +151,7 @@ exports[`KryptosKit (OKP) from auto pem 3`] = `
 {
   "algorithm": "EdDSA",
   "curve": "Ed25519",
+  "id": "3ee7c51b-e879-554e-ae49-e6330610f09e",
   "privateKey": "-----BEGIN PRIVATE KEY-----
 MC4CAQAwBQYDK2VwBCIEIA5gn8ikyFzW8+jNHtl4CvQvLSC2xXJVKTqsdY49bwma
 -----END PRIVATE KEY-----
@@ -152,12 +173,15 @@ exports[`KryptosKit (OKP) from b64 1`] = `
   "expiresIn": -1,
   "hasPrivateKey": true,
   "hasPublicKey": true,
-  "id": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "id": "ff2a448e-8eb0-59a8-8fc6-0ce23ad07e8f",
   "isActive": true,
   "isExpired": false,
   "isExternal": false,
   "notBefore": 2024-01-01T08:00:00.000Z,
-  "operations": [],
+  "operations": [
+    "sign",
+    "verify",
+  ],
   "type": "OKP",
   "updatedAt": 2024-01-01T08:00:00.000Z,
   "use": "sig",
@@ -169,8 +193,11 @@ exports[`KryptosKit (OKP) from b64 2`] = `
   "alg": "EdDSA",
   "crv": "Ed25519",
   "iat": 1704096000,
-  "key_ops": [],
-  "kid": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "key_ops": [
+    "sign",
+    "verify",
+  ],
+  "kid": "ff2a448e-8eb0-59a8-8fc6-0ce23ad07e8f",
   "kty": "OKP",
   "nbf": 1704096000,
   "uat": 1704096000,
@@ -183,6 +210,7 @@ exports[`KryptosKit (OKP) from b64 3`] = `
 {
   "algorithm": "EdDSA",
   "curve": "Ed25519",
+  "id": "ff2a448e-8eb0-59a8-8fc6-0ce23ad07e8f",
   "privateKey": "MC4CAQAwBQYDK2VwBCIEIBwKJlvoh1ngd9LRd7dtvGOSqW4uZamdvIu0ABD2AkxL",
   "publicKey": "MCowBQYDK2VwAyEAGRCwCA6lChosFGMQwxGiHCdzblfvCz0FNiRtTnm1qqc",
   "type": "OKP",
@@ -198,12 +226,15 @@ exports[`KryptosKit (OKP) from jwk 1`] = `
   "expiresIn": -1,
   "hasPrivateKey": true,
   "hasPublicKey": true,
-  "id": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "id": "6fc93fb6-d40e-52dc-9606-adaa80fef0c7",
   "isActive": true,
   "isExpired": false,
   "isExternal": true,
   "notBefore": 2024-01-01T08:00:00.000Z,
-  "operations": [],
+  "operations": [
+    "sign",
+    "verify",
+  ],
   "type": "OKP",
   "updatedAt": 2024-01-01T08:00:00.000Z,
   "use": "sig",
@@ -215,8 +246,11 @@ exports[`KryptosKit (OKP) from jwk 2`] = `
   "alg": "EdDSA",
   "crv": "Ed25519",
   "iat": 1704096000,
-  "key_ops": [],
-  "kid": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "key_ops": [
+    "sign",
+    "verify",
+  ],
+  "kid": "6fc93fb6-d40e-52dc-9606-adaa80fef0c7",
   "kty": "OKP",
   "nbf": 1704096000,
   "uat": 1704096000,
@@ -230,6 +264,7 @@ exports[`KryptosKit (OKP) from jwk 3`] = `
   "alg": "EdDSA",
   "crv": "Ed25519",
   "d": "CDqMp2HAyaLiV8Xdt8ouEnhYbZtRXlFAsEkccUCcpQk",
+  "kid": "6fc93fb6-d40e-52dc-9606-adaa80fef0c7",
   "kty": "OKP",
   "use": "sig",
   "x": "eTgk2sA8y7_9q8MjEPskpM4mAUZqtXmwEiHwy249kj4",
@@ -244,12 +279,15 @@ exports[`KryptosKit (OKP) from pem 1`] = `
   "expiresIn": -1,
   "hasPrivateKey": true,
   "hasPublicKey": true,
-  "id": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "id": "3ee7c51b-e879-554e-ae49-e6330610f09e",
   "isActive": true,
   "isExpired": false,
   "isExternal": false,
   "notBefore": 2024-01-01T08:00:00.000Z,
-  "operations": [],
+  "operations": [
+    "sign",
+    "verify",
+  ],
   "type": "OKP",
   "updatedAt": 2024-01-01T08:00:00.000Z,
   "use": "sig",
@@ -261,8 +299,11 @@ exports[`KryptosKit (OKP) from pem 2`] = `
   "alg": "EdDSA",
   "crv": "Ed25519",
   "iat": 1704096000,
-  "key_ops": [],
-  "kid": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "key_ops": [
+    "sign",
+    "verify",
+  ],
+  "kid": "3ee7c51b-e879-554e-ae49-e6330610f09e",
   "kty": "OKP",
   "nbf": 1704096000,
   "uat": 1704096000,
@@ -275,6 +316,7 @@ exports[`KryptosKit (OKP) from pem 3`] = `
 {
   "algorithm": "EdDSA",
   "curve": "Ed25519",
+  "id": "3ee7c51b-e879-554e-ae49-e6330610f09e",
   "privateKey": "-----BEGIN PRIVATE KEY-----
 MC4CAQAwBQYDK2VwBCIEIA5gn8ikyFzW8+jNHtl4CvQvLSC2xXJVKTqsdY49bwma
 -----END PRIVATE KEY-----
@@ -288,7 +330,7 @@ MCowBQYDK2VwAyEAFqCTfRe3gmMUYSmAmAl8id+ZYSsmFpKHXmh+ZOaPOfM=
 }
 `;
 
-exports[`KryptosKit (OKP) make auto 1`] = `
+exports[`KryptosKit (OKP) generate auto 1`] = `
 {
   "algorithm": "ECDH-ES+A128GCMKW",
   "createdAt": 2024-01-01T08:00:00.000Z,
@@ -302,8 +344,7 @@ exports[`KryptosKit (OKP) make auto 1`] = `
   "isExternal": false,
   "notBefore": 2024-01-01T08:00:00.000Z,
   "operations": [
-    "encrypt",
-    "decrypt",
+    "deriveKey",
   ],
   "type": "EC",
   "updatedAt": 2024-01-01T08:00:00.000Z,
@@ -311,7 +352,7 @@ exports[`KryptosKit (OKP) make auto 1`] = `
 }
 `;
 
-exports[`KryptosKit (OKP) make enc 1`] = `
+exports[`KryptosKit (OKP) generate enc 1`] = `
 {
   "algorithm": "ECDH-ES",
   "createdAt": 2024-01-01T08:00:00.000Z,
@@ -326,8 +367,7 @@ exports[`KryptosKit (OKP) make enc 1`] = `
   "isExternal": false,
   "notBefore": 2024-01-01T08:00:00.000Z,
   "operations": [
-    "encrypt",
-    "decrypt",
+    "deriveKey",
   ],
   "type": "OKP",
   "updatedAt": 2024-01-01T08:00:00.000Z,
@@ -335,7 +375,7 @@ exports[`KryptosKit (OKP) make enc 1`] = `
 }
 `;
 
-exports[`KryptosKit (OKP) make sig 1`] = `
+exports[`KryptosKit (OKP) generate sig 1`] = `
 {
   "algorithm": "EdDSA",
   "createdAt": 2024-01-01T08:00:00.000Z,

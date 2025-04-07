@@ -1,11 +1,11 @@
 import { KryptosError } from "../../../errors";
-import { KryptosFromString, OkpDer } from "../../../types";
+import { KryptosFromString, OkpBuffer } from "../../../types";
 import { createOkpDerFromDer } from "./der-from-der";
 import { isOkpCurve } from "./is-okp-curve";
 
-type Options = Omit<KryptosFromString, "algorithm" | "type" | "use">;
+type Options = Omit<KryptosFromString, "id" | "algorithm" | "type" | "use">;
 
-type Result = Omit<OkpDer, "algorithm" | "type" | "use">;
+type Result = Omit<OkpBuffer, "id" | "algorithm" | "type" | "use">;
 
 export const createOkpDerFromB64 = (options: Options): Result => {
   if (!isOkpCurve(options.curve)) {

@@ -7,12 +7,15 @@ exports[`KryptosKit (oct) from auto b64 1`] = `
   "expiresIn": -1,
   "hasPrivateKey": true,
   "hasPublicKey": false,
-  "id": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "id": "d8e83070-b906-5540-9933-01fe89037168",
   "isActive": true,
   "isExpired": false,
   "isExternal": false,
   "notBefore": 2024-01-01T08:00:00.000Z,
-  "operations": [],
+  "operations": [
+    "sign",
+    "verify",
+  ],
   "type": "oct",
   "updatedAt": 2024-01-01T08:00:00.000Z,
   "use": "sig",
@@ -24,8 +27,11 @@ exports[`KryptosKit (oct) from auto b64 2`] = `
   "alg": "HS512",
   "iat": 1704096000,
   "k": "",
-  "key_ops": [],
-  "kid": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "key_ops": [
+    "sign",
+    "verify",
+  ],
+  "kid": "d8e83070-b906-5540-9933-01fe89037168",
   "kty": "oct",
   "nbf": 1704096000,
   "uat": 1704096000,
@@ -36,6 +42,7 @@ exports[`KryptosKit (oct) from auto b64 2`] = `
 exports[`KryptosKit (oct) from auto b64 3`] = `
 {
   "algorithm": "HS512",
+  "id": "d8e83070-b906-5540-9933-01fe89037168",
   "privateKey": "diYnyceZxmn18xGjVobBEwOSj2QOavHfv_tWGNuBpjND572Pa3qD8PDqDSrvoLtLOWyHdQ5lsmsuEIDcPgbPKp92HfNkawbKpCsVNBpoTlbZ-5jewLMREoGje9_pQzGSPLgh-cAkwtcrLUJNbwbyMGMlXmIJXeGukWsD6BfOAimNzPIyLf8QYMJYL9tzf16X4mQ1SvU76Y8Mqop6wz8ylAET7xWTivI-iOK8Zk1MiiomJww5w47Uz7X6Ha_uz7ctCESsyYMef9ZnYlsqwsHPrnP78ihyiv8cH7obubKJ6HkmsCnSTBOchDYxnmQiVZffuMSb8pScaIK6Vfef_1c7Vg",
   "publicKey": "",
   "type": "oct",
@@ -50,12 +57,15 @@ exports[`KryptosKit (oct) from auto jwk 1`] = `
   "expiresIn": -1,
   "hasPrivateKey": true,
   "hasPublicKey": false,
-  "id": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "id": "5c42d670-5db6-5bef-8093-a8e18a89d6c4",
   "isActive": true,
   "isExpired": false,
   "isExternal": true,
   "notBefore": 2024-01-01T08:00:00.000Z,
-  "operations": [],
+  "operations": [
+    "sign",
+    "verify",
+  ],
   "type": "oct",
   "updatedAt": 2024-01-01T08:00:00.000Z,
   "use": "sig",
@@ -67,8 +77,11 @@ exports[`KryptosKit (oct) from auto jwk 2`] = `
   "alg": "HS512",
   "iat": 1704096000,
   "k": "",
-  "key_ops": [],
-  "kid": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "key_ops": [
+    "sign",
+    "verify",
+  ],
+  "kid": "5c42d670-5db6-5bef-8093-a8e18a89d6c4",
   "kty": "oct",
   "nbf": 1704096000,
   "uat": 1704096000,
@@ -80,6 +93,7 @@ exports[`KryptosKit (oct) from auto jwk 3`] = `
 {
   "alg": "HS512",
   "k": "tt8sKlXAatelhbSo_IZgvyFzIiKPOKhv-IZTqAEkCkJZPVrO5PK9hb1NH9m9bJXa1nGmqlEVCjzsA1lwYsA2clgUvjQ3QlL3x7yDxzZqReg2x_W4XezFU2fBsGdsD2u-CW5FJ3WJZPsSDG5zOsARCdjvIyDiNO1Ryb-MRb0LWxcvsDdzNPIJNTf5adhf4Qsf5ZIWhvnSF5y9fglB6QRcskgwdRfGoYjjkiw3-h5UDrUnjzCPLQ7GVhq2gg_OyZJsduwTVYGObpAG6EYplvQZjNAWyekHivXfpc556jNTWCzfmAyZvvucsGIM5wuupicfn7AbA1a50fuppCyMwbBKSg",
+  "kid": "5c42d670-5db6-5bef-8093-a8e18a89d6c4",
   "kty": "oct",
   "use": "sig",
 }
@@ -92,12 +106,15 @@ exports[`KryptosKit (oct) from auto pem 1`] = `
   "expiresIn": -1,
   "hasPrivateKey": true,
   "hasPublicKey": false,
-  "id": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "id": "737b2dcd-f6d0-5535-86f0-956ecfa8b983",
   "isActive": true,
   "isExpired": false,
   "isExternal": false,
   "notBefore": 2024-01-01T08:00:00.000Z,
-  "operations": [],
+  "operations": [
+    "sign",
+    "verify",
+  ],
   "type": "oct",
   "updatedAt": 2024-01-01T08:00:00.000Z,
   "use": "sig",
@@ -109,8 +126,11 @@ exports[`KryptosKit (oct) from auto pem 2`] = `
   "alg": "HS512",
   "iat": 1704096000,
   "k": "",
-  "key_ops": [],
-  "kid": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "key_ops": [
+    "sign",
+    "verify",
+  ],
+  "kid": "737b2dcd-f6d0-5535-86f0-956ecfa8b983",
   "kty": "oct",
   "nbf": 1704096000,
   "uat": 1704096000,
@@ -121,6 +141,7 @@ exports[`KryptosKit (oct) from auto pem 2`] = `
 exports[`KryptosKit (oct) from auto pem 3`] = `
 {
   "algorithm": "HS512",
+  "id": "737b2dcd-f6d0-5535-86f0-956ecfa8b983",
   "privateKey": "-----BEGIN OCT PRIVATE KEY-----
 ts4FwuyVlXJqw2ruyxbpzRpkknqiZicDS02J2YjfX+FwZ423Q42E0T/AKYkVXHNW
 uD8Gi0aKMYytagkT7qJx3PsFCgDND01mXOg8pDhXv1n1Cbl8JxavKwbx87QCZ9Bm
@@ -141,12 +162,15 @@ exports[`KryptosKit (oct) from b64 1`] = `
   "expiresIn": -1,
   "hasPrivateKey": true,
   "hasPublicKey": false,
-  "id": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "id": "d8e83070-b906-5540-9933-01fe89037168",
   "isActive": true,
   "isExpired": false,
   "isExternal": false,
   "notBefore": 2024-01-01T08:00:00.000Z,
-  "operations": [],
+  "operations": [
+    "sign",
+    "verify",
+  ],
   "type": "oct",
   "updatedAt": 2024-01-01T08:00:00.000Z,
   "use": "sig",
@@ -158,8 +182,11 @@ exports[`KryptosKit (oct) from b64 2`] = `
   "alg": "HS512",
   "iat": 1704096000,
   "k": "",
-  "key_ops": [],
-  "kid": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "key_ops": [
+    "sign",
+    "verify",
+  ],
+  "kid": "d8e83070-b906-5540-9933-01fe89037168",
   "kty": "oct",
   "nbf": 1704096000,
   "uat": 1704096000,
@@ -170,6 +197,7 @@ exports[`KryptosKit (oct) from b64 2`] = `
 exports[`KryptosKit (oct) from b64 3`] = `
 {
   "algorithm": "HS512",
+  "id": "d8e83070-b906-5540-9933-01fe89037168",
   "privateKey": "diYnyceZxmn18xGjVobBEwOSj2QOavHfv_tWGNuBpjND572Pa3qD8PDqDSrvoLtLOWyHdQ5lsmsuEIDcPgbPKp92HfNkawbKpCsVNBpoTlbZ-5jewLMREoGje9_pQzGSPLgh-cAkwtcrLUJNbwbyMGMlXmIJXeGukWsD6BfOAimNzPIyLf8QYMJYL9tzf16X4mQ1SvU76Y8Mqop6wz8ylAET7xWTivI-iOK8Zk1MiiomJww5w47Uz7X6Ha_uz7ctCESsyYMef9ZnYlsqwsHPrnP78ihyiv8cH7obubKJ6HkmsCnSTBOchDYxnmQiVZffuMSb8pScaIK6Vfef_1c7Vg",
   "publicKey": "",
   "type": "oct",
@@ -184,12 +212,15 @@ exports[`KryptosKit (oct) from jwk 1`] = `
   "expiresIn": -1,
   "hasPrivateKey": true,
   "hasPublicKey": false,
-  "id": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "id": "5c42d670-5db6-5bef-8093-a8e18a89d6c4",
   "isActive": true,
   "isExpired": false,
   "isExternal": true,
   "notBefore": 2024-01-01T08:00:00.000Z,
-  "operations": [],
+  "operations": [
+    "sign",
+    "verify",
+  ],
   "type": "oct",
   "updatedAt": 2024-01-01T08:00:00.000Z,
   "use": "sig",
@@ -201,8 +232,11 @@ exports[`KryptosKit (oct) from jwk 2`] = `
   "alg": "HS512",
   "iat": 1704096000,
   "k": "",
-  "key_ops": [],
-  "kid": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "key_ops": [
+    "sign",
+    "verify",
+  ],
+  "kid": "5c42d670-5db6-5bef-8093-a8e18a89d6c4",
   "kty": "oct",
   "nbf": 1704096000,
   "uat": 1704096000,
@@ -214,6 +248,7 @@ exports[`KryptosKit (oct) from jwk 3`] = `
 {
   "alg": "HS512",
   "k": "tt8sKlXAatelhbSo_IZgvyFzIiKPOKhv-IZTqAEkCkJZPVrO5PK9hb1NH9m9bJXa1nGmqlEVCjzsA1lwYsA2clgUvjQ3QlL3x7yDxzZqReg2x_W4XezFU2fBsGdsD2u-CW5FJ3WJZPsSDG5zOsARCdjvIyDiNO1Ryb-MRb0LWxcvsDdzNPIJNTf5adhf4Qsf5ZIWhvnSF5y9fglB6QRcskgwdRfGoYjjkiw3-h5UDrUnjzCPLQ7GVhq2gg_OyZJsduwTVYGObpAG6EYplvQZjNAWyekHivXfpc556jNTWCzfmAyZvvucsGIM5wuupicfn7AbA1a50fuppCyMwbBKSg",
+  "kid": "5c42d670-5db6-5bef-8093-a8e18a89d6c4",
   "kty": "oct",
   "use": "sig",
 }
@@ -226,12 +261,15 @@ exports[`KryptosKit (oct) from pem 1`] = `
   "expiresIn": -1,
   "hasPrivateKey": true,
   "hasPublicKey": false,
-  "id": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "id": "737b2dcd-f6d0-5535-86f0-956ecfa8b983",
   "isActive": true,
   "isExpired": false,
   "isExternal": false,
   "notBefore": 2024-01-01T08:00:00.000Z,
-  "operations": [],
+  "operations": [
+    "sign",
+    "verify",
+  ],
   "type": "oct",
   "updatedAt": 2024-01-01T08:00:00.000Z,
   "use": "sig",
@@ -243,8 +281,11 @@ exports[`KryptosKit (oct) from pem 2`] = `
   "alg": "HS512",
   "iat": 1704096000,
   "k": "",
-  "key_ops": [],
-  "kid": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "key_ops": [
+    "sign",
+    "verify",
+  ],
+  "kid": "737b2dcd-f6d0-5535-86f0-956ecfa8b983",
   "kty": "oct",
   "nbf": 1704096000,
   "uat": 1704096000,
@@ -255,6 +296,7 @@ exports[`KryptosKit (oct) from pem 2`] = `
 exports[`KryptosKit (oct) from pem 3`] = `
 {
   "algorithm": "HS512",
+  "id": "737b2dcd-f6d0-5535-86f0-956ecfa8b983",
   "privateKey": "-----BEGIN OCT PRIVATE KEY-----
 ts4FwuyVlXJqw2ruyxbpzRpkknqiZicDS02J2YjfX+FwZ423Q42E0T/AKYkVXHNW
 uD8Gi0aKMYytagkT7qJx3PsFCgDND01mXOg8pDhXv1n1Cbl8JxavKwbx87QCZ9Bm
@@ -275,12 +317,15 @@ exports[`KryptosKit (oct) from utf 1`] = `
   "expiresIn": -1,
   "hasPrivateKey": true,
   "hasPublicKey": false,
-  "id": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "id": "19a58ae7-b62c-51be-8bd5-cc417002cee4",
   "isActive": true,
   "isExpired": false,
   "isExternal": false,
   "notBefore": 2024-01-01T08:00:00.000Z,
-  "operations": [],
+  "operations": [
+    "sign",
+    "verify",
+  ],
   "type": "oct",
   "updatedAt": 2024-01-01T08:00:00.000Z,
   "use": "sig",
@@ -292,8 +337,11 @@ exports[`KryptosKit (oct) from utf 2`] = `
   "alg": "HS512",
   "iat": 1704096000,
   "k": "",
-  "key_ops": [],
-  "kid": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "key_ops": [
+    "sign",
+    "verify",
+  ],
+  "kid": "19a58ae7-b62c-51be-8bd5-cc417002cee4",
   "kty": "oct",
   "nbf": 1704096000,
   "uat": 1704096000,
@@ -304,6 +352,7 @@ exports[`KryptosKit (oct) from utf 2`] = `
 exports[`KryptosKit (oct) from utf 3`] = `
 {
   "algorithm": "HS512",
+  "id": "19a58ae7-b62c-51be-8bd5-cc417002cee4",
   "privateKey": "I-KCrCEuYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXouQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVouMDEyMzQ1Njc4OQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
   "publicKey": "",
   "type": "oct",
@@ -311,7 +360,7 @@ exports[`KryptosKit (oct) from utf 3`] = `
 }
 `;
 
-exports[`KryptosKit (oct) make auto 1`] = `
+exports[`KryptosKit (oct) generate auto 1`] = `
 {
   "algorithm": "HS384",
   "createdAt": 2024-01-01T08:00:00.000Z,
@@ -333,7 +382,7 @@ exports[`KryptosKit (oct) make auto 1`] = `
 }
 `;
 
-exports[`KryptosKit (oct) make enc 1`] = `
+exports[`KryptosKit (oct) generate enc 1`] = `
 {
   "algorithm": "dir",
   "createdAt": 2024-01-01T08:00:00.000Z,
@@ -356,7 +405,7 @@ exports[`KryptosKit (oct) make enc 1`] = `
 }
 `;
 
-exports[`KryptosKit (oct) make sig 1`] = `
+exports[`KryptosKit (oct) generate sig 1`] = `
 {
   "algorithm": "HS512",
   "createdAt": 2024-01-01T08:00:00.000Z,

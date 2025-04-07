@@ -1,6 +1,6 @@
 import { B64 } from "@lindorm/b64";
 import { isBuffer, isString } from "@lindorm/is";
-import { KryptosCurve, OkpDer, OkpJwk, OkpString } from "../../../types";
+import { KryptosCurve, OkpBuffer, OkpJwk, OkpString } from "../../../types";
 import {
   IsBufferFormatOptions,
   IsJwkFormatOptions,
@@ -28,7 +28,7 @@ export const isOkpB64 = (options: IsStringFormatOptions): options is OkpString =
   return true;
 };
 
-export const isOkpDer = (options: IsBufferFormatOptions): options is OkpDer => {
+export const isOkpDer = (options: IsBufferFormatOptions): options is OkpBuffer => {
   if (options.type !== "OKP") return false;
   if (!options.curve || !CURVES.includes(options.curve)) return false;
 

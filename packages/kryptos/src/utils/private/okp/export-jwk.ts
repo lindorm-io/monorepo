@@ -3,11 +3,11 @@ import { KryptosError } from "../../../errors";
 import { KryptosBuffer, KryptosExportMode, OkpJwk } from "../../../types";
 import { isOkpCurve } from "./is-okp-curve";
 
-type Options = Omit<KryptosBuffer, "algorithm" | "type" | "use"> & {
+type Options = Omit<KryptosBuffer, "id" | "algorithm" | "type" | "use"> & {
   mode: KryptosExportMode;
 };
 
-type Result = Omit<OkpJwk, "alg" | "kty" | "use">;
+type Result = Omit<OkpJwk, "kid" | "alg" | "kty" | "use">;
 
 export const exportOkpToJwk = (options: Options): Result => {
   if (!isOkpCurve(options.curve)) {

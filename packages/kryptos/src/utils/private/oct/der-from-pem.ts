@@ -1,9 +1,9 @@
 import { KryptosError } from "../../../errors";
-import { KryptosFromString, OctDer } from "../../../types";
+import { KryptosFromString, OctBuffer } from "../../../types";
 
-type Options = Omit<KryptosFromString, "algorithm" | "type" | "use">;
+type Options = Omit<KryptosFromString, "id" | "algorithm" | "type" | "use">;
 
-type Result = Omit<OctDer, "algorithm" | "type" | "use">;
+type Result = Omit<OctBuffer, "id" | "algorithm" | "type" | "use">;
 
 export const createOctDerFromPem = (options: Options): Result => {
   if (!options.privateKey) {

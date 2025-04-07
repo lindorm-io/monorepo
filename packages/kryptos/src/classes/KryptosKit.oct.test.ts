@@ -30,7 +30,7 @@ describe("KryptosKit (oct)", () => {
   describe("env", () => {
     test("import", () => {
       const kryptos = KryptosKit.env.import(
-        "kryptos:6e6f84b0-e125-5e3f-90ae-c65269668d98.HS512....diYnyceZxmn18xGjVobBEwOSj2QOavHfv_tWGNuBpjND572Pa3qD8PDqDSrvoLtLOWyHdQ5lsmsuEIDcPgbPKp92HfNkawbKpCsVNBpoTlbZ-5jewLMREoGje9_pQzGSPLgh-cAkwtcrLUJNbwbyMGMlXmIJXeGukWsD6BfOAimNzPIyLf8QYMJYL9tzf16X4mQ1SvU76Y8Mqop6wz8ylAET7xWTivI-iOK8Zk1MiiomJww5w47Uz7X6Ha_uz7ctCESsyYMef9ZnYlsqwsHPrnP78ihyiv8cH7obubKJ6HkmsCnSTBOchDYxnmQiVZffuMSb8pScaIK6Vfef_1c7Vg...oct.sig",
+        "kryptos:d8e83070-b906-5540-9933-01fe89037168.HS512...sign,verify.diYnyceZxmn18xGjVobBEwOSj2QOavHfv_tWGNuBpjND572Pa3qD8PDqDSrvoLtLOWyHdQ5lsmsuEIDcPgbPKp92HfNkawbKpCsVNBpoTlbZ-5jewLMREoGje9_pQzGSPLgh-cAkwtcrLUJNbwbyMGMlXmIJXeGukWsD6BfOAimNzPIyLf8QYMJYL9tzf16X4mQ1SvU76Y8Mqop6wz8ylAET7xWTivI-iOK8Zk1MiiomJww5w47Uz7X6Ha_uz7ctCESsyYMef9ZnYlsqwsHPrnP78ihyiv8cH7obubKJ6HkmsCnSTBOchDYxnmQiVZffuMSb8pScaIK6Vfef_1c7Vg...oct.sig",
       );
 
       expect(kryptos.export("b64")).toEqual(expect.objectContaining(TEST_OCT_KEY_B64));
@@ -40,7 +40,7 @@ describe("KryptosKit (oct)", () => {
       const kryptos = KryptosKit.from.auto(TEST_OCT_KEY_B64);
 
       expect(KryptosKit.env.export(kryptos)).toEqual(
-        "kryptos:6e6f84b0-e125-5e3f-90ae-c65269668d98.HS512....diYnyceZxmn18xGjVobBEwOSj2QOavHfv_tWGNuBpjND572Pa3qD8PDqDSrvoLtLOWyHdQ5lsmsuEIDcPgbPKp92HfNkawbKpCsVNBpoTlbZ-5jewLMREoGje9_pQzGSPLgh-cAkwtcrLUJNbwbyMGMlXmIJXeGukWsD6BfOAimNzPIyLf8QYMJYL9tzf16X4mQ1SvU76Y8Mqop6wz8ylAET7xWTivI-iOK8Zk1MiiomJww5w47Uz7X6Ha_uz7ctCESsyYMef9ZnYlsqwsHPrnP78ihyiv8cH7obubKJ6HkmsCnSTBOchDYxnmQiVZffuMSb8pScaIK6Vfef_1c7Vg...oct.sig",
+        "kryptos:d8e83070-b906-5540-9933-01fe89037168.HS512...sign,verify.diYnyceZxmn18xGjVobBEwOSj2QOavHfv_tWGNuBpjND572Pa3qD8PDqDSrvoLtLOWyHdQ5lsmsuEIDcPgbPKp92HfNkawbKpCsVNBpoTlbZ-5jewLMREoGje9_pQzGSPLgh-cAkwtcrLUJNbwbyMGMlXmIJXeGukWsD6BfOAimNzPIyLf8QYMJYL9tzf16X4mQ1SvU76Y8Mqop6wz8ylAET7xWTivI-iOK8Zk1MiiomJww5w47Uz7X6Ha_uz7ctCESsyYMef9ZnYlsqwsHPrnP78ihyiv8cH7obubKJ6HkmsCnSTBOchDYxnmQiVZffuMSb8pScaIK6Vfef_1c7Vg...oct.sig",
       );
     });
   });
@@ -131,14 +131,15 @@ describe("KryptosKit (oct)", () => {
     });
   });
 
-  describe("make", () => {
+  describe("generate", () => {
     test("auto", () => {
-      const kryptos = KryptosKit.make.auto({
+      const kryptos = KryptosKit.generate.auto({
         algorithm: "HS384",
       });
 
       expect(kryptos.toJSON()).toMatchSnapshot();
       expect(kryptos.export("b64")).toEqual({
+        id: "6e6f84b0-e125-5e3f-90ae-c65269668d98",
         algorithm: "HS384",
         privateKey: expect.any(String),
         publicKey: "",
@@ -148,13 +149,14 @@ describe("KryptosKit (oct)", () => {
     });
 
     test("enc", () => {
-      const kryptos = KryptosKit.make.enc.oct({
+      const kryptos = KryptosKit.generate.enc.oct({
         algorithm: "dir",
         encryption: "A256GCM",
       });
 
       expect(kryptos.toJSON()).toMatchSnapshot();
       expect(kryptos.export("b64")).toEqual({
+        id: "6e6f84b0-e125-5e3f-90ae-c65269668d98",
         algorithm: "dir",
         privateKey: expect.any(String),
         publicKey: "",
@@ -164,12 +166,13 @@ describe("KryptosKit (oct)", () => {
     });
 
     test("sig", () => {
-      const kryptos = KryptosKit.make.sig.oct({
+      const kryptos = KryptosKit.generate.sig.oct({
         algorithm: "HS512",
       });
 
       expect(kryptos.toJSON()).toMatchSnapshot();
       expect(kryptos.export("b64")).toEqual({
+        id: "6e6f84b0-e125-5e3f-90ae-c65269668d98",
         algorithm: "HS512",
         privateKey: expect.any(String),
         publicKey: "",

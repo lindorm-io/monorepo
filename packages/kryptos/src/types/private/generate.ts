@@ -22,4 +22,4 @@ type Std = Optional<
 
 type Req = Pick<KryptosAttributes, "algorithm" | "type" | "use">;
 
-export type KryptosMake = Std & Req;
+export type KryptosGenerate = Std & Req;

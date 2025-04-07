@@ -1,9 +1,9 @@
 import { KryptosError } from "../../../errors";
-import { KryptosFromJwk, OctDer } from "../../../types";
+import { KryptosFromJwk, OctBuffer } from "../../../types";
 
-type Options = Omit<KryptosFromJwk, "alg" | "use">;
+type Options = Omit<KryptosFromJwk, "kid" | "alg" | "use">;
 
-type Result = Omit<OctDer, "algorithm" | "type" | "use">;
+type Result = Omit<OctBuffer, "id" | "algorithm" | "type" | "use">;
 
 export const createOctDerFromJwk = (options: Options): Result => {
   if (options.kty !== "oct") {
