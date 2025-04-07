@@ -29,7 +29,7 @@ describe("KryptosKit (OKP)", () => {
   describe("env", () => {
     test("import", () => {
       const kryptos = KryptosKit.env.import(
-        "kryptos:ff2a448e-8eb0-59a8-8fc6-0ce23ad07e8f.EdDSA.Ed25519..sign,verify.MC4CAQAwBQYDK2VwBCIEIBwKJlvoh1ngd9LRd7dtvGOSqW4uZamdvIu0ABD2AkxL.MCowBQYDK2VwAyEAGRCwCA6lChosFGMQwxGiHCdzblfvCz0FNiRtTnm1qqc..OKP.sig",
+        "kryptos:ZmYyYTQ0OGUtOGViMC01OWE4LThmYzYtMGNlMjNhZDA3ZThmLkVkRFNBLkVkMjU1MTkuLnNpZ24sdmVyaWZ5Lk1DNENBUUF3QlFZREsyVndCQ0lFSUJ3S0psdm9oMW5nZDlMUmQ3ZHR2R09TcVc0dVphbWR2SXUwQUJEMkFreEwuTUNvd0JRWURLMlZ3QXlFQUdSQ3dDQTZsQ2hvc0ZHTVF3eEdpSENkemJsZnZDejBGTmlSdFRubTFxcWMuLk9LUC5zaWc",
       );
 
       expect(kryptos.export("b64")).toEqual(TEST_OKP_KEY_B64);
@@ -39,7 +39,7 @@ describe("KryptosKit (OKP)", () => {
       const kryptos = KryptosKit.from.auto(TEST_OKP_KEY_B64);
 
       expect(KryptosKit.env.export(kryptos)).toEqual(
-        "kryptos:ff2a448e-8eb0-59a8-8fc6-0ce23ad07e8f.EdDSA.Ed25519..sign,verify.MC4CAQAwBQYDK2VwBCIEIBwKJlvoh1ngd9LRd7dtvGOSqW4uZamdvIu0ABD2AkxL.MCowBQYDK2VwAyEAGRCwCA6lChosFGMQwxGiHCdzblfvCz0FNiRtTnm1qqc..OKP.sig",
+        "kryptos:ZmYyYTQ0OGUtOGViMC01OWE4LThmYzYtMGNlMjNhZDA3ZThmLkVkRFNBLkVkMjU1MTkuLnNpZ24sdmVyaWZ5Lk1DNENBUUF3QlFZREsyVndCQ0lFSUJ3S0psdm9oMW5nZDlMUmQ3ZHR2R09TcVc0dVphbWR2SXUwQUJEMkFreEwuTUNvd0JRWURLMlZ3QXlFQUdSQ3dDQTZsQ2hvc0ZHTVF3eEdpSENkemJsZnZDejBGTmlSdFRubTFxcWMuLk9LUC5zaWc",
       );
     });
   });

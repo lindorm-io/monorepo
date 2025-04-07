@@ -1,3 +1,4 @@
+import { B64 } from "@lindorm/b64";
 import { KryptosError } from "../errors";
 import {
   IKryptos,
@@ -154,7 +155,7 @@ export class KryptosKit {
       throw new KryptosError("Invalid kryptos string");
     }
 
-    const result: Array<string> = rest.split(".");
+    const result: Array<string> = B64.decode(rest).split(".");
 
     const [
       id,
@@ -200,7 +201,10 @@ export class KryptosKit {
       b64.use,
     ];
 
-    return KRYPTOS + ":" + result.map((i) => (i ? i : "")).join(".");
+    const string = result.map((i) => (i ? i : "")).join(".");
+    const encoded = B64.encode(string, "base64url");
+
+    return KRYPTOS + ":" + encoded;
   }
 
   // private from

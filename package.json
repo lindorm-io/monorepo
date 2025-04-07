@@ -19,7 +19,7 @@
   "devDependencies": {
     "@commitlint/cli": "19.4.0",
     "@commitlint/config-conventional": "19.2.2",
-    "@inquirer/prompts": "^6.0.1",
+    "@inquirer/prompts": "^7.4.1",
     "@types/fs-extra": "^11.0.4",
     "@types/jest": "^29.5.12",
     "@types/node": "^20.17.23",

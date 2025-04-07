@@ -1,21 +1,30 @@
 import { KryptosUse } from "../types";
 
-export type OkpEncAlgorithm =
-  | "ECDH-ES"
-  | "ECDH-ES+A128KW"
-  | "ECDH-ES+A192KW"
-  | "ECDH-ES+A256KW"
-  | "ECDH-ES+A128GCMKW"
-  | "ECDH-ES+A192GCMKW"
-  | "ECDH-ES+A256GCMKW";
+export const OKP_ENC_ALGORITHMS = [
+  "ECDH-ES",
+  "ECDH-ES+A128KW",
+  "ECDH-ES+A192KW",
+  "ECDH-ES+A256KW",
+  "ECDH-ES+A128GCMKW",
+  "ECDH-ES+A192GCMKW",
+  "ECDH-ES+A256GCMKW",
+] as const;
 
-export type OkpSigAlgorithm = "EdDSA";
+export const OKP_SIG_ALGORITHMS = ["EdDSA"] as const;
+
+export const OKP_ENC_CURVES = ["X25519", "X448"] as const;
+
+export const OKP_SIG_CURVES = ["Ed25519", "Ed448"] as const;
+
+export type OkpEncAlgorithm = (typeof OKP_ENC_ALGORITHMS)[number];
+
+export type OkpSigAlgorithm = (typeof OKP_SIG_ALGORITHMS)[number];
 
 export type OkpAlgorithm = OkpEncAlgorithm | OkpSigAlgorithm;
 
-export type OkpEncCurve = "X25519" | "X448";
+export type OkpEncCurve = (typeof OKP_ENC_CURVES)[number];
 
-export type OkpSigCurve = "Ed25519" | "Ed448";
+export type OkpSigCurve = (typeof OKP_SIG_CURVES)[number];
 
 export type OkpCurve = OkpEncCurve | OkpSigCurve;
 

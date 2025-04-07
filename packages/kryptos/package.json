@@ -14,7 +14,7 @@
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "scripts": {
-    "build": "rimraf dist && tsc -b ./tsconfig.build.json",
+    "build": "rimraf dist && tsc -b ./tsconfig.build.json && chmod +x dist/cli.js",
     "example": "ts-node example",
     "integration": "compd --file docker-compose.yml jest --config jest.config.integration.js --watch",
     "integration:focus": "compd --file docker-compose.yml jest --config jest.config.integration.js --watch $1",
@@ -27,7 +27,11 @@
     "typecheck:ci": "tsc",
     "update": "ncu -u"
   },
+  "bin": {
+    "kryptos": "dist/cli.js"
+  },
   "dependencies": {
+    "@inquirer/prompts": "^7.4.1",
     "@lindorm/b64": "^0.1.5",
     "@lindorm/case": "^0.1.7",
     "@lindorm/date": "^0.2.0",
