@@ -15,6 +15,7 @@ export const parseJwkOptions = (options: UnknownJwk): KryptosOptions => {
     id: jwk.kid,
     algorithm: jwk.alg,
     createdAt: jwk.iat ? new Date(jwk.iat * 1000) : undefined,
+    encryption: jwk.enc,
     expiresAt: jwk.exp ? new Date(jwk.exp * 1000) : undefined,
     isExternal: true,
     issuer: jwk.iss,

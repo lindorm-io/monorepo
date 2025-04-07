@@ -8,11 +8,7 @@ import {
   IKryptosRsa,
 } from "../interfaces";
 import {
-  KryptosAlgorithm,
-  KryptosAttributes,
   KryptosAuto,
-  KryptosCurve,
-  KryptosEncryption,
   KryptosFormat,
   KryptosFrom,
   KryptosFromBuffer,
@@ -27,9 +23,6 @@ import {
   KryptosGenerateRsaEnc,
   KryptosGenerateRsaSig,
   KryptosLike,
-  KryptosOperation,
-  KryptosType,
-  KryptosUse,
 } from "../types";
 import { KryptosGenerate } from "../types/private";
 import {
@@ -155,56 +148,11 @@ export class KryptosKit {
       throw new KryptosError("Invalid kryptos string");
     }
 
-    const result: Array<string> = B64.decode(rest).split(".");
-
-    const [
-      id,
-      algorithm,
-      curve,
-      encryption,
-      operations,
-      privateKey,
-      publicKey,
-      purpose,
-      type,
-      use,
-    ] = result;
-
-    return KryptosKit.fromB64({
-      id: id,
-      algorithm: algorithm as KryptosAlgorithm,
-      curve: (curve as KryptosCurve) || undefined,
-      encryption: (encryption as KryptosEncryption) || undefined,
-      operations: operations.split(",") as Array<KryptosOperation>,
-      privateKey: privateKey || undefined,
-      publicKey: publicKey || undefined,
-      purpose: purpose || undefined,
-      type: type as KryptosType,
-      use: use as KryptosUse,
-    });
+    return KryptosKit.fromJwk(JSON.parse(B64.decode(rest, "b64u")));
   }
 
   private static envExport(kryptos: IKryptos): string {
-    const json: KryptosAttributes = kryptos.toJSON();
-    const b64 = kryptos.export("b64");
-
-    const result: Array<string | undefined> = [
-      json.id,
-      b64.algorithm,
-      b64.curve,
-      json.encryption,
-      json.operations.join(","),
-      b64.privateKey,
-      b64.publicKey,
-      json.purpose,
-      b64.type,
-      b64.use,
-    ];
-
-    const string = result.map((i) => (i ? i : "")).join(".");
-    const encoded = B64.encode(string, "base64url");
-
-    return KRYPTOS + ":" + encoded;
+    return KRYPTOS + ":" + B64.encode(JSON.stringify(kryptos.toJWK("private")), "b64u");
   }
 
   // private from
