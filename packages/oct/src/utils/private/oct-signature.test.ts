@@ -19,19 +19,19 @@ describe("signature", () => {
 
   describe("algorithms", () => {
     test("should create signature with HS256", () => {
-      const kryptos = KryptosKit.make.sig.oct({ algorithm: "HS256" }) as IKryptosOct;
+      const kryptos = KryptosKit.generate.sig.oct({ algorithm: "HS256" }) as IKryptosOct;
 
       expect(createOctSignature({ kryptos, data, format })).toEqual(expect.any(String));
     });
 
     test("should create signature with HS384", () => {
-      const kryptos = KryptosKit.make.sig.oct({ algorithm: "HS384" }) as IKryptosOct;
+      const kryptos = KryptosKit.generate.sig.oct({ algorithm: "HS384" }) as IKryptosOct;
 
       expect(createOctSignature({ kryptos, data, format })).toEqual(expect.any(String));
     });
 
     test("should create signature with HS512", () => {
-      const kryptos = KryptosKit.make.sig.oct({ algorithm: "HS512" }) as IKryptosOct;
+      const kryptos = KryptosKit.generate.sig.oct({ algorithm: "HS512" }) as IKryptosOct;
 
       expect(createOctSignature({ kryptos, data, format })).toEqual(expect.any(String));
     });

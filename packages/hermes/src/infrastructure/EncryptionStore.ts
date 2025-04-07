@@ -64,7 +64,7 @@ export class EncryptionStore implements IHermesEncryptionStore {
       return new AesKit({ kryptos });
     }
 
-    const kryptos = KryptosKit.make.auto({
+    const kryptos = KryptosKit.generate.auto({
       algorithm: this.algorithm,
       encryption: this.encryption,
     });

@@ -1,6 +1,7 @@
 import {
   PylonHttpContext,
   PylonHttpMiddleware,
+  PylonHttpState,
   PylonSocketContext,
   PylonSocketData,
   PylonSocketMiddleware,
@@ -19,6 +20,7 @@ type Context = {
 
 export type PostgresPylonHttpContext<Data = any, WebhookData = any> = PylonHttpContext<
   Data,
+  PylonHttpState,
   WebhookData
 > &
   Context;

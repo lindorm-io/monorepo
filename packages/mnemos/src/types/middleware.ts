@@ -2,6 +2,7 @@ import { IEntity } from "@lindorm/entity";
 import {
   PylonHttpContext,
   PylonHttpMiddleware,
+  PylonHttpState,
   PylonSocketContext,
   PylonSocketData,
   PylonSocketMiddleware,
@@ -25,6 +26,7 @@ type Context = {
 
 export type MnemosPylonHttpContext<Data = any, WebhookData = any> = PylonHttpContext<
   Data,
+  PylonHttpState,
   WebhookData
 > &
   Context;

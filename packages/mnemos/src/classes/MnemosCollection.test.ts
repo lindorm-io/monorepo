@@ -49,6 +49,7 @@ describe("MnemosCollection", () => {
         ],
         primaryKeys: ["id"],
         primarySource: null,
+        relations: [],
         schemas: [],
       },
     });

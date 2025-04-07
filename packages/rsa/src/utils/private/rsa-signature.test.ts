@@ -19,37 +19,37 @@ describe("rsa-signature", () => {
 
   describe("algorithms", () => {
     test("should create signature with RS256", () => {
-      const kryptos = KryptosKit.make.sig.rsa({ algorithm: "RS256" }) as IKryptosRsa;
+      const kryptos = KryptosKit.generate.sig.rsa({ algorithm: "RS256" }) as IKryptosRsa;
 
       expect(createRsaSignature({ kryptos, data, format })).toEqual(expect.any(String));
     });
 
     test("should create signature with RS384", () => {
-      const kryptos = KryptosKit.make.sig.rsa({ algorithm: "RS384" }) as IKryptosRsa;
+      const kryptos = KryptosKit.generate.sig.rsa({ algorithm: "RS384" }) as IKryptosRsa;
 
       expect(createRsaSignature({ kryptos, data, format })).toEqual(expect.any(String));
     });
 
     test("should create signature with RS512", () => {
-      const kryptos = KryptosKit.make.sig.rsa({ algorithm: "RS512" }) as IKryptosRsa;
+      const kryptos = KryptosKit.generate.sig.rsa({ algorithm: "RS512" }) as IKryptosRsa;
 
       expect(createRsaSignature({ kryptos, data, format })).toEqual(expect.any(String));
     });
 
     test("should create signature with PS256", () => {
-      const kryptos = KryptosKit.make.sig.rsa({ algorithm: "PS256" }) as IKryptosRsa;
+      const kryptos = KryptosKit.generate.sig.rsa({ algorithm: "PS256" }) as IKryptosRsa;
 
       expect(createRsaSignature({ kryptos, data, format })).toEqual(expect.any(String));
     });
 
     test("should create signature with PS384", () => {
-      const kryptos = KryptosKit.make.sig.rsa({ algorithm: "PS384" }) as IKryptosRsa;
+      const kryptos = KryptosKit.generate.sig.rsa({ algorithm: "PS384" }) as IKryptosRsa;
 
       expect(createRsaSignature({ kryptos, data, format })).toEqual(expect.any(String));
     });
 
     test("should create signature with PS512", () => {
-      const kryptos = KryptosKit.make.sig.rsa({ algorithm: "PS512" }) as IKryptosRsa;
+      const kryptos = KryptosKit.generate.sig.rsa({ algorithm: "PS512" }) as IKryptosRsa;
 
       expect(createRsaSignature({ kryptos, data, format })).toEqual(expect.any(String));
     });

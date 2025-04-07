@@ -7,8 +7,8 @@ describe("Enigma", () => {
   let hash: string;
 
   beforeEach(async () => {
-    const enc = KryptosKit.make.enc.oct({ algorithm: "dir", encryption: "A256GCM" });
-    const sig = KryptosKit.make.sig.oct({ algorithm: "HS256" });
+    const enc = KryptosKit.generate.enc.oct({ algorithm: "dir", encryption: "A256GCM" });
+    const sig = KryptosKit.generate.sig.oct({ algorithm: "HS256" });
 
     kit = new Enigma({ aes: { kryptos: enc }, oct: { kryptos: sig } });
 

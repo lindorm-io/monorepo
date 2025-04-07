@@ -101,7 +101,7 @@ describe("Amphora", () => {
     });
 
     test("should filter kryptos by issuer", async () => {
-      const kryptos = KryptosKit.make.sig.oct({
+      const kryptos = KryptosKit.generate.sig.oct({
         algorithm: "HS256",
         issuer: "https://other.lindorm.io/",
       });

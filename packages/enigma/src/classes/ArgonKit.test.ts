@@ -122,7 +122,7 @@ describe("ArgonKit", () => {
     }, 10000);
 
     test("should reject on wrong secret", async () => {
-      const kryptos = KryptosKit.make.enc.oct({
+      const kryptos = KryptosKit.generate.enc.oct({
         algorithm: "dir",
         encryption: "A256GCM",
       });
