@@ -3,7 +3,7 @@ import { ClientError } from "@lindorm/errors";
 import { AuthorizationType } from "../../enums";
 import { PylonHttpContext, PylonHttpMiddleware } from "../../types";
 
-type Options = Omit<VerifyJwtOptions, "issuer" | "tokenType"> & {
+type Options = Omit<VerifyJwtOptions, "issuer "> & {
   issuer: string;
 };
 
@@ -28,8 +28,8 @@ export const createHttpBearerTokenMiddleware = <
       }
 
       const verified = await ctx.aegis.verify(ctx.state.authorization.value, {
-        ...options,
         tokenType: "access_token",
+        ...options,
       });
 
       ctx.logger.debug("Token verified", { verified });

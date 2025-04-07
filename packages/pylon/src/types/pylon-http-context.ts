@@ -1,4 +1,4 @@
-import { IAegis, VerifiedJws, VerifiedJwt } from "@lindorm/aegis";
+import { IAegis, ParsedJws, ParsedJwt } from "@lindorm/aegis";
 import { IAmphora } from "@lindorm/amphora";
 import { IConduit } from "@lindorm/conduit";
 import { Environment } from "@lindorm/enums";
@@ -45,7 +45,7 @@ export type PylonHttpState = {
   authorization: AuthorizationState;
   metadata: MetadataState;
   session: PylonSession | null;
-  tokens: Dict<VerifiedJwt | VerifiedJws<any>>;
+  tokens: Dict<ParsedJwt | ParsedJws<any>>;
 };
 
 type Context<Data, State, WebhookData> = {

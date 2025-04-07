@@ -15,7 +15,7 @@ const amphora = new Amphora({
 });
 
 amphora.add(
-  KryptosKit.make.auto({
+  KryptosKit.generate.auto({
     algorithm: "ES256",
     issuer: "http://test.lindorm.io",
   }),

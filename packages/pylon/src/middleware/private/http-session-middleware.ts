@@ -1,3 +1,4 @@
+import { Aegis } from "@lindorm/aegis";
 import { PylonHttpMiddleware, PylonSession, PylonSessionConfig } from "../../types";
 
 export const createHttpSessionMiddleware = (
@@ -34,14 +35,16 @@ export const createHttpSessionMiddleware = (
       ctx.logger.correlation({ sessionId: ctx.state.session.id });
     }
 
-    if (config.verify && ctx.state.session?.accessToken) {
-      ctx.state.tokens.accessToken = await ctx.aegis.verify(
-        ctx.state.session.accessToken,
-      );
+    if (ctx.state.session?.accessToken) {
+      try {
+        ctx.state.tokens.accessToken = Aegis.parse(ctx.state.session.accessToken);
+      } catch (_) {
+        /* ignore */
+      }
     }
 
-    if (config.verify && ctx.state.session?.idToken) {
-      ctx.state.tokens.idToken = await ctx.aegis.verify(ctx.state.session.idToken);
+    if (ctx.state.session?.idToken) {
+      ctx.state.tokens.idToken = Aegis.parse(ctx.state.session.idToken);
     }
 
     await next();

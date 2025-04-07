@@ -35,7 +35,7 @@ describe("createHttpBearerTokenMiddleware", () => {
       decoded: {},
       header: {},
       payload: {
-        subject: "mocked_subject",
+        subject: "verified_subject",
       },
     });
   });

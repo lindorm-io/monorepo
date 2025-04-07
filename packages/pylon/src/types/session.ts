@@ -28,5 +28,4 @@ export type PylonSessionConfig = Pick<
 > & {
   name?: string;
   store?: PylonSessionStore;
-  verify?: boolean;
 };

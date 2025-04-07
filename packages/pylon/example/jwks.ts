@@ -19,7 +19,7 @@ const amphora = new Amphora({
 });
 
 amphora.add(
-  KryptosKit.make.auto({
+  KryptosKit.generate.auto({
     algorithm: "ES256",
     issuer: "http://test.lindorm.io",
   }),
@@ -51,7 +51,7 @@ const externalAmphora = new Amphora({
 });
 
 externalAmphora.add(
-  KryptosKit.make.auto({
+  KryptosKit.generate.auto({
     algorithm: "RS256",
     issuer: "http://external.lindorm.io",
     jwksUri: "http://localhost:3001/.well-known/jwks.json",

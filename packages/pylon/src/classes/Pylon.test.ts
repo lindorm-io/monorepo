@@ -21,11 +21,11 @@ describe("Pylon", () => {
   let spy: any;
   let pylon: Pylon;
   let router: PylonRouter;
-  let logger: ILogger;
   let amphora: IAmphora;
+  let logger: ILogger;
 
   beforeAll(() => {
-    // logger = new Logger({ level: LogLevel.Debug, readable: true });
+    // logger = new Logger({ level: LogLevel.Error, readable: true });
     logger = createMockLogger();
 
     amphora = new Amphora({
@@ -42,7 +42,7 @@ describe("Pylon", () => {
           "MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgcyOxjn7CekTvSkiQvqx5JhFOmwPYFVFHmLKfio6aJ1uhRANCAAQfFaJkGZMxDn656YiDrSJ5sLRwip-y3a0VzC4cUPxxAJzuRBRtVqM3GitfTQEiUrzF2pcmMZbteAOhIqLlU_f6",
         publicKey:
           "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEHxWiZBmTMQ5-uemIg60iebC0cIqfst2tFcwuHFD8cQCc7kQUbVajNxorX00BIlK8xdqXJjGW7XgDoSKi5VP3-g",
-        operations: ["sign", "verify"],
+        purpose: "tokens",
         type: "EC",
         use: "sig",
       }),
@@ -50,10 +50,10 @@ describe("Pylon", () => {
 
     amphora.add(
       KryptosKit.from.b64({
+        id: "e3f09bd8-6b50-55da-8a05-bd62283f753b",
         algorithm: "HS256",
         privateKey:
           "ZtL9AyQMb60GXUhTYziSizr6SFb_i6bHu8RnN283-gU4I1fPRZbGE9X0QT0YLWW3m1AM1rl2yRf9zS9PhDuylA",
-        operations: ["sign", "verify"],
         purpose: "cookie",
         type: "oct",
         use: "sig",
@@ -69,7 +69,6 @@ describe("Pylon", () => {
           "MEYCAQAwBQYDK2VvBDoEOGRWElZ3_EFza2XMyTVr4LroWzaQtjDpyA0h3JX6HcHbf1_91UOlU4_mdMkQUDfRFtL4VR9PmwHT",
         publicKey:
           "MEIwBQYDK2VvAzkACmHn63oaLtiwYY2FyuoObj5A6nLWxyqKgiMa-ueJuYr6WhirvxFYYYY-tB_7HolUBGCca3UxG04",
-        operations: ["encrypt", "decrypt"],
         purpose: "session",
         type: "OKP",
         use: "enc",
@@ -108,12 +107,25 @@ describe("Pylon", () => {
     });
 
     router.post("/session", async (ctx) => {
+      const accessToken = await ctx.aegis.jwt.sign({
+        expires: "1h",
+        subject: "subject",
+        tokenType: "access_token",
+      });
+
+      const idToken = await ctx.aegis.jwt.sign({
+        expires: "1h",
+        subject: "subject",
+        tokenType: "id_token",
+      });
+
       await ctx.session.set({
         id: "c1460965-fb6d-5a2a-be8a-84f7cd7d1a9f",
-        accessToken: "access",
-        idToken: "id",
+        accessToken: accessToken.token,
+        idToken: idToken.token,
         refreshToken: "refresh",
       });
+
       ctx.status = 204;
     });
 
@@ -204,9 +216,10 @@ describe("Pylon", () => {
           iat: 1704096000,
           iss: "http://test.lindorm.io",
           key_ops: ["sign", "verify"],
-          kty: "EC",
           kid: "5d17c551-7b6f-474a-8679-dba9bbfa06a2",
+          kty: "EC",
           nbf: 1704096000,
+          purpose: "tokens",
           uat: 1704096000,
           use: "sig",
           x: "HxWiZBmTMQ5-uemIg60iebC0cIqfst2tFcwuHFD8cQA",
@@ -217,7 +230,7 @@ describe("Pylon", () => {
           crv: "X448",
           iat: 1704096000,
           iss: "http://test.lindorm.io",
-          key_ops: ["encrypt", "decrypt"],
+          key_ops: ["deriveKey"],
           kid: "5382ca15-b849-55ae-904a-9196797ccc1b",
           kty: "OKP",
           nbf: 1704096000,
@@ -332,8 +345,8 @@ describe("Pylon", () => {
 
     expect(r2.body).toEqual({
       id: "c1460965-fb6d-5a2a-be8a-84f7cd7d1a9f",
-      access_token: "access",
-      id_token: "id",
+      access_token: expect.any(String),
+      id_token: expect.any(String),
       refresh_token: "refresh",
     });
   });
