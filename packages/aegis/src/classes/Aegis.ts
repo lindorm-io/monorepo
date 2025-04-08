@@ -173,7 +173,7 @@ export class Aegis implements IAegis {
 
   private async aesEncrypt(
     data: string,
-    mode: "encoded" | "record" | "serialised" | "tokenised",
+    mode: "encoded" | "record" | "serialised" | "tokenised" = "encoded",
   ): Promise<string | AesEncryptionRecord | SerialisedAesEncryption> {
     const kit = await this.aesKit({ encrypt: true });
 

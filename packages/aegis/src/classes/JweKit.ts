@@ -1,6 +1,6 @@
 import { AesKit } from "@lindorm/aes";
 import { B64 } from "@lindorm/b64";
-import { isString } from "@lindorm/is";
+import { isJwe, isJws, isJwt, isString } from "@lindorm/is";
 import { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
 import { ILogger } from "@lindorm/logger";
 import { removeUndefined } from "@lindorm/utils";
@@ -186,6 +186,10 @@ export class JweKit implements IJweKit {
 
   // public static
 
+  public static isJwe(jwe: string): boolean {
+    return isJwe(jwe);
+  }
+
   public static decode(jwe: string): DecodedJwe {
     const [header, publicEncryptionKey, initialisationVector, content, authTag] =
       jwe.split(".");
@@ -199,37 +203,23 @@ export class JweKit implements IJweKit {
     };
   }
 
-  public static isJwe(jwe: string): boolean {
-    if (!jwe.includes(".")) return false;
-    if (!jwe.startsWith("eyJ")) return false;
-
-    const [header] = jwe.split(".");
-    const decoded = decodeTokenHeader(header);
-
-    return decoded.typ === "JWE";
-  }
-
   // private
 
   private contentType(input: string): string {
-    if (isString(input) && input.startsWith("{") && input.endsWith("}")) {
+    if (isJws(input)) {
+      return "application/jws";
+    }
+
+    if (isJwt(input)) {
+      return "application/jwt";
+    }
+
+    if (input.startsWith("{") && input.endsWith("}")) {
       return "application/json";
     }
 
-    if (isString(input) && input.startsWith("[") && input.endsWith("]")) {
+    if (input.startsWith("[") && input.endsWith("]")) {
       return "application/json";
-    }
-
-    if (!input.startsWith("eyJ") && !input.includes(".")) {
-      return "text/plain";
-    }
-
-    try {
-      const [header] = input.split(".");
-
-      return decodeTokenHeader(header).typ;
-    } catch (err) {
-      this.logger.silly("Failed to decode content type", { err });
     }
 
     if (isString(input)) {

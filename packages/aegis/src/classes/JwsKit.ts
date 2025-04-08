@@ -1,5 +1,5 @@
 import { B64 } from "@lindorm/b64";
-import { isBuffer, isString } from "@lindorm/is";
+import { isBuffer, isJws, isString } from "@lindorm/is";
 import { IKryptos } from "@lindorm/kryptos";
 import { ILogger } from "@lindorm/logger";
 import { randomUUID } from "crypto";
@@ -107,6 +107,10 @@ export class JwsKit implements IJwsKit {
 
   // public static
 
+  public static isJws(jws: string): boolean {
+    return isJws(jws);
+  }
+
   public static decode(jws: string): DecodedJws {
     const [header, payload, signature] = jws.split(".");
     const decodedHeader = decodeTokenHeader(header);
@@ -136,15 +140,5 @@ export class JwsKit implements IJwsKit {
         : (B64.toBuffer(decoded.payload, B64U) as T);
 
     return { decoded, header, payload, token };
-  }
-
-  public static isJws(jws: string): boolean {
-    if (!jws.includes(".")) return false;
-    if (!jws.startsWith("eyJ")) return false;
-
-    const [header] = jws.split(".");
-    const decoded = decodeTokenHeader(header);
-
-    return decoded.typ === "JWS";
   }
 }

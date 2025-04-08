@@ -1,3 +1,4 @@
+import { isJwt } from "@lindorm/is";
 import { IKryptos } from "@lindorm/kryptos";
 import { ILogger } from "@lindorm/logger";
 import { Dict } from "@lindorm/types";
@@ -168,6 +169,10 @@ export class JwtKit implements IJwtKit {
 
   // public static
 
+  public static isJwt(jwt: string): boolean {
+    return isJwt(jwt);
+  }
+
   public static decode<C extends Dict = Dict>(jwt: string): DecodedJwt<C> {
     const [header, payload, signature] = jwt.split(".");
 
@@ -209,15 +214,5 @@ export class JwtKit implements IJwtKit {
     const operators = createJwtValidate(options);
 
     validate(payload, operators);
-  }
-
-  public static isJwt(jwt: string): boolean {
-    if (!jwt.includes(".")) return false;
-    if (!jwt.startsWith("eyJ")) return false;
-
-    const [header] = jwt.split(".");
-    const decoded = decodeTokenHeader(header);
-
-    return decoded.typ === "JWT";
   }
 }

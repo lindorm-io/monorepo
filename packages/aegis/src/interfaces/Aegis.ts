@@ -21,7 +21,7 @@ import {
 } from "../types";
 
 export interface IAegisAes {
-  encrypt(data: string, mode: "encoded"): Promise<string>;
+  encrypt(data: string, mode?: "encoded"): Promise<string>;
   encrypt(data: string, mode: "record"): Promise<AesEncryptionRecord>;
   encrypt(data: string, mode: "serialised"): Promise<SerialisedAesEncryption>;
   encrypt(data: string, mode: "tokenised"): Promise<string>;
