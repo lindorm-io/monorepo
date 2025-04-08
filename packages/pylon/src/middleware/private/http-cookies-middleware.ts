@@ -34,6 +34,10 @@ export const createHttpCookiesMiddleware = (
       ): Promise<void> => {
         const opts = { ...config, ...options };
 
+        if (opts.encrypted && !opts.encoding) {
+          opts.encoding = "base64url";
+        }
+
         if (!value) {
           throw new ClientError("Invalid cookie value", {
             code: "invalid_cookie_value",
@@ -41,11 +45,13 @@ export const createHttpCookiesMiddleware = (
           });
         }
 
-        let final: string = isString(value) ? value : JSON.stringify(value);
+        let final: any = value;
 
         if (opts.encrypted) {
-          final = (await ctx.aegis.jwe.encrypt(final)).token;
+          final = await ctx.aegis.aes.encrypt(final, "serialised");
         }
+
+        final = isString(final) ? final : JSON.stringify(final);
 
         if (opts.encoding) {
           final = Buffer.from(final).toString(opts.encoding);
@@ -74,6 +80,10 @@ export const createHttpCookiesMiddleware = (
 
         const opts = { ...config, ...options };
 
+        if (opts.encrypted && !opts.encoding) {
+          opts.encoding = "base64url";
+        }
+
         if (opts.signed) {
           await verifyCookie(ctx, name, cookie.value, cookie.signature);
         }
@@ -82,11 +92,13 @@ export const createHttpCookiesMiddleware = (
           cookie.value = Buffer.from(cookie.value, opts.encoding).toString();
         }
 
+        cookie.value = safelyParse(cookie.value);
+
         if (opts.encrypted) {
-          cookie.value = (await ctx.aegis.jwe.decrypt(cookie.value)).payload;
+          cookie.value = await ctx.aegis.aes.decrypt(cookie.value);
         }
 
-        cache[name] = safelyParse(cookie.value);
+        cache[name] = cookie.value;
 
         return cache[name];
       },
