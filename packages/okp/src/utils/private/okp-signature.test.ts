@@ -7,14 +7,16 @@ import {
 } from "./okp-signature";
 
 describe("okp-signature", () => {
+  const dsa = "der";
   const format = "base64";
 
-  describe("algorithms", () => {
+  describe("curves", () => {
     test("should create signature with 25519", () => {
       expect(
         createOkpSignature({
           kryptos: TEST_OKP_KEY_25519,
           data: "data",
+          dsa,
           format: "base64",
         }),
       ).toEqual(expect.any(String));
@@ -25,9 +27,46 @@ describe("okp-signature", () => {
         createOkpSignature({
           kryptos: TEST_OKP_KEY_448,
           data: "data",
+          dsa,
           format: "base64",
         }),
       ).toEqual(expect.any(String));
+    });
+  });
+
+  describe("dsa", () => {
+    const kryptos = TEST_OKP_KEY_25519;
+
+    test("should sign and verify signature with der", () => {
+      const signature = createOkpSignature({
+        kryptos,
+        data: "data",
+        dsa: "der",
+        format: "base64",
+      });
+
+      expect(
+        verifyOkpSignature({ kryptos, data: "data", dsa: "der", format, signature }),
+      ).toEqual(true);
+    });
+
+    test("should sign and verify signature with ieee-p1363", () => {
+      const signature = createOkpSignature({
+        kryptos,
+        data: "data",
+        dsa: "ieee-p1363",
+        format: "base64",
+      });
+
+      expect(
+        verifyOkpSignature({
+          kryptos,
+          data: "data",
+          dsa: "ieee-p1363",
+          format,
+          signature,
+        }),
+      ).toEqual(true);
     });
   });
 
@@ -37,6 +76,7 @@ describe("okp-signature", () => {
         createOkpSignature({
           kryptos: TEST_OKP_KEY_25519,
           data: "data",
+          dsa,
           format: "base64",
         }),
       ).toEqual(expect.any(String));
@@ -47,6 +87,7 @@ describe("okp-signature", () => {
         createOkpSignature({
           kryptos: TEST_OKP_KEY_25519,
           data: "data",
+          dsa,
           format: "base64url",
         }),
       ).toEqual(expect.any(String));
@@ -57,6 +98,7 @@ describe("okp-signature", () => {
         createOkpSignature({
           kryptos: TEST_OKP_KEY_25519,
           data: "data",
+          dsa,
           format: "hex",
         }),
       ).toEqual(expect.any(String));
@@ -68,6 +110,7 @@ describe("okp-signature", () => {
       const signature = createOkpSignature({
         kryptos: TEST_OKP_KEY_25519,
         data: "data",
+        dsa,
         format,
       });
 
@@ -75,6 +118,7 @@ describe("okp-signature", () => {
         verifyOkpSignature({
           kryptos: TEST_OKP_KEY_25519,
           data: "data",
+          dsa,
           format,
           signature,
         }),
@@ -87,6 +131,7 @@ describe("okp-signature", () => {
       const signature = createOkpSignature({
         kryptos: TEST_OKP_KEY_25519,
         data: "data",
+        dsa,
         format,
       });
 
@@ -94,6 +139,7 @@ describe("okp-signature", () => {
         assertOkpSignature({
           kryptos: TEST_OKP_KEY_25519,
           data: "data",
+          dsa,
           format,
           signature,
         }),
@@ -104,6 +150,7 @@ describe("okp-signature", () => {
       const signature = createOkpSignature({
         kryptos: TEST_OKP_KEY_25519,
         data: "data",
+        dsa,
         format,
       });
 
@@ -111,6 +158,7 @@ describe("okp-signature", () => {
         assertOkpSignature({
           kryptos: TEST_OKP_KEY_25519,
           data: "invalid",
+          dsa,
           format,
           signature,
         }),

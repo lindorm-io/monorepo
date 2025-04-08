@@ -1,11 +1,15 @@
 import { IKryptosRsa } from "@lindorm/kryptos";
+import { DsaEncoding } from "@lindorm/types";
 import { RSA_PKCS1_PSS_PADDING } from "constants";
 import { SignPrivateKeyInput, VerifyPublicKeyInput } from "crypto";
 import { RsaError } from "../../errors";
 
 const RSA_PKCS1_SALT_LENGTH = 32 as const;
 
-export const getSignKey = (kryptos: IKryptosRsa): SignPrivateKeyInput | string => {
+export const getSignKey = (
+  kryptos: IKryptosRsa,
+  dsaEncoding: DsaEncoding,
+): SignPrivateKeyInput | string => {
   const { privateKey } = kryptos.export("pem");
 
   if (!privateKey) {
@@ -17,17 +21,21 @@ export const getSignKey = (kryptos: IKryptosRsa): SignPrivateKeyInput | string =
       key: privateKey,
       padding: RSA_PKCS1_PSS_PADDING,
       saltLength: RSA_PKCS1_SALT_LENGTH,
+      dsaEncoding,
     };
   }
 
   if (kryptos.algorithm.startsWith("RS")) {
-    return privateKey;
+    return { key: privateKey, dsaEncoding };
   }
 
   throw new RsaError("Unsupported RSA algorithm", { debug: { kryptos } });
 };
 
-export const getVerifyKey = (kryptos: IKryptosRsa): VerifyPublicKeyInput | string => {
+export const getVerifyKey = (
+  kryptos: IKryptosRsa,
+  dsaEncoding: DsaEncoding,
+): VerifyPublicKeyInput | string => {
   const { publicKey } = kryptos.export("pem");
 
   if (!publicKey) {
@@ -39,11 +47,12 @@ export const getVerifyKey = (kryptos: IKryptosRsa): VerifyPublicKeyInput | strin
       key: publicKey,
       padding: RSA_PKCS1_PSS_PADDING,
       saltLength: RSA_PKCS1_SALT_LENGTH,
+      dsaEncoding,
     };
   }
 
   if (kryptos.algorithm.startsWith("RS")) {
-    return publicKey;
+    return { key: publicKey, dsaEncoding };
   }
 
   throw new RsaError("Unsupported RSA algorithm", { debug: { kryptos } });

@@ -7,47 +7,50 @@ import { derToRaw, rawToDer } from "./raw";
 
 export const createEcSignature = ({
   data,
+  dsa,
   format,
   kryptos,
 }: CreateEcSignatureOptions): string => {
-  const der = createSign(mapEcAlgorithm(kryptos))
+  const signature = createSign(mapEcAlgorithm(kryptos))
     .update(data)
     .end()
-    .sign(getSignKey(kryptos));
+    .sign({ key: getSignKey(kryptos), dsaEncoding: dsa });
 
   if (format === "raw") {
-    return derToRaw(kryptos, der).toString("base64url");
+    return derToRaw(kryptos, signature).toString("base64url");
   }
 
-  return der.toString(format);
+  return signature.toString(format);
 };
 
 export const verifyEcSignature = ({
   data,
+  dsa,
   format,
   kryptos,
   signature,
 }: VerifyEcSignatureOptions): boolean => {
-  let der: Buffer;
+  let buffer: Buffer;
 
   if (format === "raw") {
-    der = rawToDer(kryptos, Buffer.from(signature, "base64url"));
+    buffer = rawToDer(kryptos, Buffer.from(signature, "base64url"));
   } else {
-    der = Buffer.from(signature, format);
+    buffer = Buffer.from(signature, format);
   }
 
   return createVerify(mapEcAlgorithm(kryptos))
     .update(data)
     .end()
-    .verify(getVerifyKey(kryptos), der);
+    .verify({ key: getVerifyKey(kryptos), dsaEncoding: dsa }, buffer);
 };
 
 export const assertEcSignature = ({
   data,
+  dsa,
   format,
   kryptos,
   signature,
 }: VerifyEcSignatureOptions): void => {
-  if (verifyEcSignature({ data, format, kryptos, signature })) return;
+  if (verifyEcSignature({ data, dsa, format, kryptos, signature })) return;
   throw new EcError("Invalid signature");
 };

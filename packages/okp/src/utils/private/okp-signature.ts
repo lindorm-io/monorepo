@@ -8,13 +8,18 @@ import { getSignKey, getVerifyKey } from "./get-key";
 
 export const createOkpSignature = ({
   data,
+  dsa,
   format,
   kryptos,
 }: CreateOkpSignatureOptions): string =>
-  sign(undefined, Buffer.from(data, "utf8"), getSignKey(kryptos)).toString(format);
+  sign(undefined, Buffer.from(data, "utf8"), {
+    key: getSignKey(kryptos),
+    dsaEncoding: dsa,
+  }).toString(format);
 
 export const verifyOkpSignature = ({
   data,
+  dsa,
   format,
   kryptos,
   signature,
@@ -22,16 +27,17 @@ export const verifyOkpSignature = ({
   verify(
     undefined,
     Buffer.from(data, "utf8"),
-    getVerifyKey(kryptos),
+    { key: getVerifyKey(kryptos), dsaEncoding: dsa },
     Buffer.from(signature, format),
   );
 
 export const assertOkpSignature = ({
   data,
+  dsa,
   format,
   kryptos,
   signature,
 }: VerifyOkpSignatureOptions): void => {
-  if (verifyOkpSignature({ data, format, kryptos, signature })) return;
+  if (verifyOkpSignature({ data, dsa, format, kryptos, signature })) return;
   throw new OkpError("Invalid signature");
 };
