@@ -1,7 +1,21 @@
-import { isString } from "./is-string";
+import { parseTokenHeader } from "./private";
 
 const LENGTH = 3;
 const REGEX = /^[a-zA-Z0-9-_]+\.[a-zA-Z0-9-_]+\.[a-zA-Z0-9-_]+$/;
 
-export const isJwt = (input: any): input is string =>
-  isString(input) && input.split(".").length === LENGTH && REGEX.test(input);
+export const isJwt = (input: any): boolean => {
+  if (typeof input !== "string") return false;
+  if (!REGEX.test(input)) return false;
+
+  const header = parseTokenHeader(input);
+  if (!header) return false;
+
+  const split = input.split(".");
+  if (split.length !== LENGTH) return false;
+
+  try {
+    return header && typeof header.alg === "string" && header.typ === "JWT";
+  } catch {
+    return false;
+  }
+};

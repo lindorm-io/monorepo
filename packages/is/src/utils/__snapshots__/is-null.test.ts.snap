@@ -30,6 +30,8 @@ exports[`isNull should resolve TEST_INFINITY 1`] = `false`;
 
 exports[`isNull should resolve TEST_JWE 1`] = `false`;
 
+exports[`isNull should resolve TEST_JWS 1`] = `false`;
+
 exports[`isNull should resolve TEST_JWT 1`] = `false`;
 
 exports[`isNull should resolve TEST_NAN 1`] = `false`;
