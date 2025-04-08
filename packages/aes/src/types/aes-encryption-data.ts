@@ -1,10 +1,12 @@
 import { KryptosAlgorithm, KryptosEncryption } from "@lindorm/kryptos";
+import { AesContentType } from "./content";
 import { PublicEncryptionJwk } from "./types";
 
 export type AesEncryptionRecord = {
   algorithm: KryptosAlgorithm;
   authTag: Buffer;
   content: Buffer;
+  contentType: AesContentType;
   encryption: KryptosEncryption;
   hkdfSalt: Buffer | undefined;
   initialisationVector: Buffer;
@@ -22,6 +24,7 @@ export type SerialisedAesEncryption = {
   algorithm: KryptosAlgorithm;
   authTag: string;
   content: string;
+  contentType: AesContentType;
   encryption: KryptosEncryption;
   hkdfSalt: string | undefined;
   initialisationVector: string;

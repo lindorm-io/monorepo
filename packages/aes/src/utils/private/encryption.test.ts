@@ -15,6 +15,7 @@ describe("aes-data", () => {
       algorithm: "dir",
       authTag: expect.any(Buffer),
       content: expect.any(Buffer),
+      contentType: "text/plain",
       encryption: "A256GCM",
       hkdfSalt: undefined,
       initialisationVector: expect.any(Buffer),

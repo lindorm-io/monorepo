@@ -11,6 +11,7 @@ export const createTokenisedAesString = ({
   algorithm,
   authTag,
   content,
+  contentType,
   encryption,
   hkdfSalt,
   initialisationVector,
@@ -29,6 +30,7 @@ export const createTokenisedAesString = ({
 
     // Required
     alg: algorithm,
+    cty: contentType,
     iv: initialisationVector.toString(B64U),
     tag: authTag.toString(B64U),
 
@@ -81,6 +83,7 @@ export const parseTokenisedAesString = (data: string): AesEncryptionRecord => {
 
     // Required
     alg,
+    cty,
     iv,
     tag,
 
@@ -105,17 +108,18 @@ export const parseTokenisedAesString = (data: string): AesEncryptionRecord => {
   const kty = keyType as "EC" | "OKP";
 
   return {
+    algorithm: alg as KryptosAlgorithm,
     authTag: Buffer.from(tag, B64U),
     content: Buffer.from(content, B64U),
+    contentType: cty,
     encryption: encryption,
-    algorithm: alg as KryptosAlgorithm,
     hkdfSalt: hks ? Buffer.from(hks, B64U) : undefined,
     initialisationVector: Buffer.from(iv, B64U),
     keyId: kid,
     pbkdfIterations: p2c ? parseInt(p2c, 10) : undefined,
     pbkdfSalt: p2s ? Buffer.from(p2s, B64U) : undefined,
-    publicEncryptionJwk: crv && x && kty ? { crv, x, y, kty } : undefined,
     publicEncryptionIv: pei ? Buffer.from(pei, B64U) : undefined,
+    publicEncryptionJwk: crv && x && kty ? { crv, x, y, kty } : undefined,
     publicEncryptionKey: pek ? Buffer.from(pek, B64U) : undefined,
     publicEncryptionTag: pet ? Buffer.from(pet, B64U) : undefined,
     version: parseInt(v, 10),

@@ -1,11 +1,12 @@
 import { createCipheriv, createDecipheriv } from "crypto";
 import { LATEST_AES_VERSION } from "../../constants/private";
-import { AesEncryptionRecord } from "../../types";
+import { AesContent, AesEncryptionRecord } from "../../types";
 import {
   PrivateAesDecryptionOptions,
   PrivateAesEncryptionOptions,
 } from "../../types/private";
 import { calculateAesEncryption } from "./calculate";
+import { calculateContentType, contentToBuffer, parseContent } from "./content";
 import {
   assertAuthTag,
   createAuthTag,
@@ -40,7 +41,8 @@ export const encryptAes = (options: PrivateAesEncryptionOptions): AesEncryptionR
   const initialisationVector = getInitialisationVector(encryption);
   const cipher = createCipheriv(aesEncryption, encryptionKey, initialisationVector);
 
-  const buffer = Buffer.isBuffer(data) ? data : Buffer.from(data);
+  const contentType = calculateContentType(data);
+  const buffer = contentToBuffer(data, contentType);
   const content = Buffer.concat([cipher.update(buffer), cipher.final()]);
 
   const authTag = createAuthTag({
@@ -55,6 +57,7 @@ export const encryptAes = (options: PrivateAesEncryptionOptions): AesEncryptionR
     algorithm: kryptos.algorithm,
     authTag,
     content,
+    contentType,
     encryption,
     hkdfSalt,
     initialisationVector,
@@ -69,10 +72,13 @@ export const encryptAes = (options: PrivateAesEncryptionOptions): AesEncryptionR
   };
 };
 
-export const decryptAes = (options: PrivateAesDecryptionOptions): string => {
+export const decryptAes = <T extends AesContent = string>(
+  options: PrivateAesDecryptionOptions,
+): T => {
   const {
     authTag,
     content,
+    contentType,
     encryption,
     hkdfSalt,
     initialisationVector,
@@ -114,5 +120,7 @@ export const decryptAes = (options: PrivateAesDecryptionOptions): string => {
     initialisationVector,
   });
 
-  return Buffer.concat([decipher.update(content), decipher.final()]).toString("utf-8");
+  const final = Buffer.concat([decipher.update(content), decipher.final()]);
+
+  return parseContent<T>(final, contentType);
 };

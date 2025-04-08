@@ -2,6 +2,8 @@ import { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
 import { AesError } from "../errors";
 import { IAesKit } from "../interfaces";
 import {
+  AesContent,
+  AesContentType,
   AesDecryptionRecord,
   AesEncryptionMode,
   AesEncryptionRecord,
@@ -17,6 +19,7 @@ import {
   decryptAes,
   encryptAes,
 } from "../utils/private";
+import { calculateContentType } from "../utils/private/content";
 
 export class AesKit implements IAesKit {
   private readonly encryption: KryptosEncryption;
@@ -75,8 +78,10 @@ export class AesKit implements IAesKit {
     }
   }
 
-  public decrypt(data: AesDecryptionRecord | SerialisedAesDecryption | string): string {
-    return decryptAes({ ...parseAes(data), kryptos: this.kryptos });
+  public decrypt<T extends AesContent = string>(
+    data: AesDecryptionRecord | SerialisedAesDecryption | string,
+  ): T {
+    return decryptAes<T>({ ...parseAes(data), kryptos: this.kryptos });
   }
 
   public verify(
@@ -95,6 +100,10 @@ export class AesKit implements IAesKit {
   }
 
   // public static
+
+  public static contentType(input: any): AesContentType {
+    return calculateContentType(input);
+  }
 
   public static isAesTokenised(input: any): input is string {
     return isAesTokenised(input);

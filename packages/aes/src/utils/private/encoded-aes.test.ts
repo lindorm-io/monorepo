@@ -9,6 +9,7 @@ describe("encoded-aes", () => {
         algorithm: "PBES2-HS512+A256KW",
         authTag: Buffer.from("jscAu1QymW2pXRGksYrFvA==", "base64url"),
         content: Buffer.from("mpTW97o=", "base64url"),
+        contentType: "text/plain",
         encryption: "A256GCM",
         hkdfSalt: undefined,
         initialisationVector: Buffer.from("2R3KWgWuSS+u8/tm", "base64url"),
@@ -25,19 +26,20 @@ describe("encoded-aes", () => {
         version: 8,
       }),
     ).toEqual(
-      "ATgkYzAzYjU4OWItMTI0ZC00NWViLTgzNzYtZDdmMDU3NjgxMWZmElBCRVMyLUhTNTEyK0EyNTZLVwdBMjU2R0NNEI7HALtUMpltqV0RpLGKxbwM2R3KWgWuSS-u8_tmAAAASAABAAF21wEQqauzF1XQGmbtwtoIpVEFYQAAAQAAACih0D1-FgGCWx-9GuryEuwKzkVosB6n1yTq6rMFk4ApvZmrCUpKGFI_AJqU1ve6",
+      "ATgkYzAzYjU4OWItMTI0ZC00NWViLTgzNzYtZDdmMDU3NjgxMWZmElBCRVMyLUhTNTEyK0EyNTZLVwdBMjU2R0NNCnRleHQvcGxhaW4QjscAu1QymW2pXRGksYrFvAzZHcpaBa5JL67z-2YAAABIAAEAAXbXARCpq7MXVdAaZu3C2gilUQVhAAABAAAAKKHQPX4WAYJbH70a6vIS7ArORWiwHqfXJOrqswWTgCm9masJSkoYUj8AmpTW97o",
     );
   });
 
   test("should consistently resolve record", () => {
     expect(
       parseEncodedAesString(
-        "ATgkYzAzYjU4OWItMTI0ZC00NWViLTgzNzYtZDdmMDU3NjgxMWZmElBCRVMyLUhTNTEyK0EyNTZLVwdBMjU2R0NNEI7HALtUMpltqV0RpLGKxbwM2R3KWgWuSS-u8_tmAAAASAABAAF21wEQqauzF1XQGmbtwtoIpVEFYQAAAQAAACih0D1-FgGCWx-9GuryEuwKzkVosB6n1yTq6rMFk4ApvZmrCUpKGFI_AJqU1ve6",
+        "ATgkYzAzYjU4OWItMTI0ZC00NWViLTgzNzYtZDdmMDU3NjgxMWZmElBCRVMyLUhTNTEyK0EyNTZLVwdBMjU2R0NNCnRleHQvcGxhaW4QjscAu1QymW2pXRGksYrFvAzZHcpaBa5JL67z-2YAAABIAAEAAXbXARCpq7MXVdAaZu3C2gilUQVhAAABAAAAKKHQPX4WAYJbH70a6vIS7ArORWiwHqfXJOrqswWTgCm9masJSkoYUj8AmpTW97o",
       ),
     ).toEqual({
       algorithm: "PBES2-HS512+A256KW",
       authTag: Buffer.from("jscAu1QymW2pXRGksYrFvA==", "base64url"),
       content: Buffer.from("mpTW97o=", "base64url"),
+      contentType: "text/plain",
       encryption: "A256GCM",
       hkdfSalt: undefined,
       initialisationVector: Buffer.from("2R3KWgWuSS+u8/tm", "base64url"),

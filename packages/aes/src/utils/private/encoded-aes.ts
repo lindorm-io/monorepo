@@ -1,5 +1,5 @@
 import { KryptosAlgorithm, KryptosEncryption } from "@lindorm/kryptos";
-import { AesEncryptionRecord, PublicEncryptionJwk } from "../../types";
+import { AesContentType, AesEncryptionRecord, PublicEncryptionJwk } from "../../types";
 
 export const createEncodedAesString = (data: AesEncryptionRecord): string => {
   const buffers: Buffer[] = [];
@@ -15,6 +15,9 @@ export const createEncodedAesString = (data: AesEncryptionRecord): string => {
 
   const encryption = Buffer.from(data.encryption);
   buffers.push(Buffer.from([encryption.length]), encryption);
+
+  const contentType = Buffer.from(data.contentType);
+  buffers.push(Buffer.from([contentType.length]), contentType);
 
   buffers.push(Buffer.from([data.authTag.length]), data.authTag);
 
@@ -144,6 +147,7 @@ export const parseEncodedAesString = (encoded: string): AesEncryptionRecord => {
   const keyId = readFieldWithLength().toString();
   const algorithm = readFieldWithLength().toString() as KryptosAlgorithm;
   const encryption = readFieldWithLength().toString() as KryptosEncryption;
+  const contentType = readFieldWithLength().toString() as AesContentType;
   const authTag = readFieldWithLength();
   const initialisationVector = readFieldWithLength();
 
@@ -185,19 +189,20 @@ export const parseEncodedAesString = (encoded: string): AesEncryptionRecord => {
   const content = buffer.subarray(offset);
 
   return {
-    version,
-    keyId,
     algorithm,
-    encryption,
     authTag,
     content,
-    initialisationVector,
+    contentType,
+    encryption,
     hkdfSalt,
+    initialisationVector,
+    keyId,
     pbkdfIterations,
     pbkdfSalt,
     publicEncryptionIv,
     publicEncryptionJwk,
     publicEncryptionKey,
     publicEncryptionTag,
+    version,
   };
 };

@@ -1,5 +1,6 @@
 import { IKryptos } from "@lindorm/kryptos";
 import {
+  AesContent,
   AesDecryptionRecord,
   AesEncryptionRecord,
   SerialisedAesDecryption,
@@ -9,12 +10,14 @@ import {
 export interface IAesKit {
   kryptos: IKryptos;
 
-  encrypt(data: string, mode?: "encoded"): string;
-  encrypt(data: string, mode: "record"): AesEncryptionRecord;
-  encrypt(data: string, mode: "serialised"): SerialisedAesEncryption;
-  encrypt(data: string, mode: "tokenised"): string;
+  encrypt(content: AesContent, mode?: "encoded"): string;
+  encrypt(content: AesContent, mode: "record"): AesEncryptionRecord;
+  encrypt(content: AesContent, mode: "serialised"): SerialisedAesEncryption;
+  encrypt(content: AesContent, mode: "tokenised"): string;
 
-  decrypt(data: AesDecryptionRecord | SerialisedAesDecryption | string): string;
+  decrypt<T extends AesContent = string>(
+    data: AesDecryptionRecord | SerialisedAesDecryption | string,
+  ): T;
   verify(
     input: string,
     data: AesDecryptionRecord | SerialisedAesDecryption | string,
