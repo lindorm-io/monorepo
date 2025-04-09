@@ -17,7 +17,7 @@ import {
   JweKitOptions,
   TokenHeaderSignOptions,
 } from "../types";
-import { decodeTokenHeader, encodeTokenHeader, parseTokenHeader } from "../utils/private";
+import { decodeJoseHeader, encodeJoseHeader, parseTokenHeader } from "../utils/private";
 
 export class JweKit implements IJweKit {
   private readonly encryption: KryptosEncryption;
@@ -87,7 +87,7 @@ export class JweKit implements IJweKit {
       publicEncryptionTag,
     };
 
-    const header = encodeTokenHeader(headerOptions);
+    const header = encodeJoseHeader(headerOptions);
 
     this.logger.silly("Token header encoded", { header, options: headerOptions });
 
@@ -195,7 +195,7 @@ export class JweKit implements IJweKit {
       jwe.split(".");
 
     return {
-      header: decodeTokenHeader(header),
+      header: decodeJoseHeader(header),
       publicEncryptionKey: publicEncryptionKey?.length ? publicEncryptionKey : undefined,
       initialisationVector,
       content,

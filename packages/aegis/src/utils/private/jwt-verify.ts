@@ -42,7 +42,7 @@ const mapVerify = (key: keyof VerifyJwtOptions): keyof JwtClaims => {
     case "roles":
       return "rls";
     case "scope":
-      return "scp";
+      return "scope";
     case "sessionHint":
       return "sih";
     case "subject":

@@ -1,71 +1,15 @@
-import { B64 } from "@lindorm/b64";
-import { isBuffer, isFinite, isObject, isString, isUrlLike } from "@lindorm/is";
+import { isFinite, isObject, isString, isUrlLike } from "@lindorm/is";
 import { removeUndefined } from "@lindorm/utils";
-import { B64U } from "../../constants/private";
 import {
   DecodedTokenHeader,
   ParsedTokenHeader,
-  TokenHeaderAlgorithm,
-  TokenHeaderClaims,
+  RawTokenHeaderClaims,
   TokenHeaderSignOptions,
-  TokenHeaderType,
 } from "../../types";
 
-const ALGS: Array<TokenHeaderAlgorithm> = [
-  "dir",
-  "A128KW",
-  "A192KW",
-  "A256KW",
-  "A128GCMKW",
-  "A192GCMKW",
-  "A256GCMKW",
-  "ECDH-ES",
-  "ECDH-ES+A128KW",
-  "ECDH-ES+A192KW",
-  "ECDH-ES+A256KW",
-  "ECDH-ES+A128GCMKW",
-  "ECDH-ES+A192GCMKW",
-  "ECDH-ES+A256GCMKW",
-  "EdDSA",
-  "ES256",
-  "ES384",
-  "ES512",
-  "HS256",
-  "HS384",
-  "HS512",
-  "PBES2-HS256+A128KW",
-  "PBES2-HS384+A192KW",
-  "PBES2-HS512+A256KW",
-  "RS256",
-  "RS384",
-  "RS512",
-  "RSA-OAEP",
-  "RSA-OAEP-256",
-  "RSA-OAEP-384",
-  "RSA-OAEP-512",
-] as const;
-
-const TYPES: Array<TokenHeaderType> = ["JWE", "JWS", "JWT"] as const;
-
-export const encodeTokenHeader = (header: TokenHeaderSignOptions): string => {
-  if (!header.algorithm) {
-    throw new Error("Algorithm is required");
-  }
-  if (!ALGS.includes(header.algorithm)) {
-    throw new Error(`Invalid algorithm: ${header.algorithm}`);
-  }
-  if (!header.headerType) {
-    throw new Error("Header type is required");
-  }
-  if (!TYPES.includes(header.headerType)) {
-    throw new Error(`Invalid header type: ${header.headerType}`);
-  }
-  if (!header.keyId) {
-    throw new Error("Key ID is required");
-  }
-
-  const crit = header.critical
-    ?.map((key): Exclude<keyof TokenHeaderClaims, "crit"> | undefined => {
+export const mapTokenHeader = (options: TokenHeaderSignOptions): RawTokenHeaderClaims => {
+  const crit = options.critical
+    ?.map((key): Exclude<keyof RawTokenHeaderClaims, "crit"> | undefined => {
       switch (key) {
         case "algorithm":
           return "alg";
@@ -107,55 +51,29 @@ export const encodeTokenHeader = (header: TokenHeaderSignOptions): string => {
           return undefined;
       }
     })
-    .filter(isString) as TokenHeaderClaims["crit"];
+    .filter(isString) as RawTokenHeaderClaims["crit"];
 
-  const claims: TokenHeaderClaims = removeUndefined({
-    alg: header.algorithm,
+  return removeUndefined({
+    alg: options.algorithm,
     crit,
-    cty: header.contentType,
-    enc: isString(header.encryption) ? header.encryption : undefined,
-    epk: isObject(header.publicEncryptionJwk) ? header.publicEncryptionJwk : undefined,
-    hkdf_salt: isBuffer(header.hkdfSalt) ? B64.encode(header.hkdfSalt) : undefined,
-    iv: isBuffer(header.publicEncryptionIv)
-      ? B64.encode(header.publicEncryptionIv)
-      : undefined,
-    jku: isUrlLike(header.jwksUri) ? header.jwksUri : undefined,
-    jwk: isObject(header.jwk) ? header.jwk : undefined,
-    kid: header.keyId,
-    oid: isString(header.objectId) ? header.objectId : undefined,
-    p2c: isFinite(header.pbkdfIterations) ? header.pbkdfIterations : undefined,
-    p2s: isBuffer(header.pbkdfSalt) ? B64.encode(header.pbkdfSalt) : undefined,
-    tag: isBuffer(header.publicEncryptionTag)
-      ? B64.encode(header.publicEncryptionTag)
-      : undefined,
-    typ: header.headerType,
-    x5c: isString(header.x5c) ? header.x5c : undefined,
-    x5t: isString(header.x5t) ? header.x5t : undefined,
-    x5u: isString(header.x5u) ? header.x5u : undefined,
-    "x5t#S256": isString(header.x5tS256) ? header.x5tS256 : undefined,
+    cty: options.contentType,
+    enc: isString(options.encryption) ? options.encryption : undefined,
+    epk: isObject(options.publicEncryptionJwk) ? options.publicEncryptionJwk : undefined,
+    hkdf_salt: options.hkdfSalt,
+    iv: options.publicEncryptionIv,
+    jku: isUrlLike(options.jwksUri) ? options.jwksUri : undefined,
+    jwk: isObject(options.jwk) ? options.jwk : undefined,
+    kid: options.keyId,
+    oid: isString(options.objectId) ? options.objectId : undefined,
+    p2c: isFinite(options.pbkdfIterations) ? options.pbkdfIterations : undefined,
+    p2s: options.pbkdfSalt,
+    tag: options.publicEncryptionTag,
+    typ: options.headerType,
+    x5c: isString(options.x5c) ? options.x5c : undefined,
+    x5t: isString(options.x5t) ? options.x5t : undefined,
+    x5u: isString(options.x5u) ? options.x5u : undefined,
+    "x5t#S256": isString(options.x5tS256) ? options.x5tS256 : undefined,
   });
-
-  return B64.encode(JSON.stringify(claims), B64U);
-};
-
-export const decodeTokenHeader = (header: string): DecodedTokenHeader => {
-  const string = B64.toString(header);
-  const json = JSON.parse(string) as Partial<TokenHeaderClaims>;
-
-  if (!json.alg) {
-    throw new Error("Missing token header: alg");
-  }
-  if (!ALGS.includes(json.alg)) {
-    throw new Error(`Invalid token header: alg: ${json.alg}`);
-  }
-  if (!json.typ) {
-    throw new Error("Missing token header: typ");
-  }
-  if (!TYPES.includes(json.typ)) {
-    throw new Error(`Invalid token header: typ: ${json.typ}`);
-  }
-
-  return json as DecodedTokenHeader;
 };
 
 export const parseTokenHeader = <T extends ParsedTokenHeader = ParsedTokenHeader>(
@@ -207,7 +125,7 @@ export const parseTokenHeader = <T extends ParsedTokenHeader = ParsedTokenHeader
       })
       .filter(isString) as ParsedTokenHeader["critical"]) ?? [];
 
-  return {
+  return removeUndefined({
     algorithm: decoded.alg,
     contentType: decoded.cty,
     critical,
@@ -227,5 +145,5 @@ export const parseTokenHeader = <T extends ParsedTokenHeader = ParsedTokenHeader
     x5t: decoded.x5t,
     x5u: decoded.x5u,
     x5tS256: decoded["x5t#S256"],
-  } as T;
+  }) as T;
 };

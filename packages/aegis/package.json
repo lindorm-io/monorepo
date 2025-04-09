@@ -40,7 +40,8 @@
     "@lindorm/oct": "^0.1.8",
     "@lindorm/okp": "^0.1.8",
     "@lindorm/rsa": "^0.1.9",
-    "@lindorm/utils": "^0.4.1"
+    "@lindorm/utils": "^0.4.1",
+    "cbor": "^10.0.3"
   },
   "devDependencies": {
     "@lindorm/logger": "^0.2.3",

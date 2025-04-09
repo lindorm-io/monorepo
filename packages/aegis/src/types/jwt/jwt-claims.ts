@@ -31,7 +31,7 @@ type LindormClaims = {
   loa?: LevelOfAssurance; // level of assurance
   per?: Array<string>; // permissions;
   rls?: Array<string> | string; // role(s)
-  scp?: Array<string> | string; // scope(s)
+  scope?: Array<string> | string; // scope(s)
   sid?: string; // session id
   sih?: string; // session hint
   suh?: string; // subject hint

@@ -16,11 +16,11 @@ import {
   TokenHeaderSignOptions,
 } from "../types";
 import {
-  createTokenSignature,
-  decodeTokenHeader,
-  encodeTokenHeader,
+  createJoseSignature,
+  decodeJoseHeader,
+  encodeJoseHeader,
   parseTokenHeader,
-  verifyTokenSignature,
+  verifyJoseSignature,
 } from "../utils/private";
 
 export class JwsKit implements IJwsKit {
@@ -55,7 +55,7 @@ export class JwsKit implements IJwsKit {
       objectId,
     };
 
-    const header = encodeTokenHeader(headerOptions);
+    const header = encodeJoseHeader(headerOptions);
 
     this.logger.silly("Token header encoded", { header, options: headerOptions });
 
@@ -63,7 +63,7 @@ export class JwsKit implements IJwsKit {
 
     this.logger.silly("Token payload encoded", { payload, options });
 
-    const signature = createTokenSignature({
+    const signature = createJoseSignature({
       header,
       payload,
       kryptos: this.kryptos,
@@ -92,7 +92,7 @@ export class JwsKit implements IJwsKit {
       });
     }
 
-    const verified = verifyTokenSignature(this.kryptos, jws);
+    const verified = verifyJoseSignature(this.kryptos, jws);
 
     this.logger.silly("Token signature verified", { verified, token: jws });
 
@@ -113,7 +113,7 @@ export class JwsKit implements IJwsKit {
 
   public static decode(jws: string): DecodedJws {
     const [header, payload, signature] = jws.split(".");
-    const decodedHeader = decodeTokenHeader(header);
+    const decodedHeader = decodeJoseHeader(header);
 
     return {
       header: decodedHeader,

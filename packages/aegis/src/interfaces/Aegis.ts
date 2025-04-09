@@ -10,13 +10,18 @@ import {
   EncryptedJwe,
   JweEncryptOptions,
   JwsContent,
+  ParsedCwt,
   ParsedJws,
   ParsedJwt,
+  SignCwtContent,
+  SignCwtOptions,
   SignJwsOptions,
   SignJwtContent,
   SignJwtOptions,
+  SignedCwt,
   SignedJws,
   SignedJwt,
+  VerifyCwtOptions,
   VerifyJwtOptions,
 } from "../types";
 
@@ -26,6 +31,17 @@ export interface IAegisAes {
   encrypt(data: string, mode: "serialised"): Promise<SerialisedAesEncryption>;
   encrypt(data: string, mode: "tokenised"): Promise<string>;
   decrypt(data: AesDecryptionRecord | SerialisedAesDecryption | string): Promise<string>;
+}
+
+export interface IAegisCwt {
+  sign<T extends Dict = Dict>(
+    content: SignCwtContent<T>,
+    options?: SignCwtOptions,
+  ): Promise<SignedCwt>;
+  verify<T extends Dict = Dict>(
+    token: string,
+    verify?: VerifyCwtOptions,
+  ): Promise<ParsedCwt<T>>;
 }
 
 export interface IAegisJwe {
@@ -53,6 +69,9 @@ export interface IAegis {
   issuer: string | null;
 
   aes: IAegisAes;
+
+  cwt: IAegisCwt;
+
   jwe: IAegisJwe;
   jws: IAegisJws;
   jwt: IAegisJwt;

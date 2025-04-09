@@ -15,6 +15,8 @@ type Config = {
   issuer: string;
 };
 
+type DecodeClaims<C extends Dict = Dict> = JwtClaims & C;
+
 type Result = {
   expiresAt: Date;
   expiresIn: number;
@@ -23,11 +25,11 @@ type Result = {
   tokenId: string;
 };
 
-export const encodeJwtPayload = <C extends Dict = Dict>(
+export const mapJwtContentToClaims = <C extends Dict = Dict>(
   config: Config,
   content: SignJwtContent<C>,
   options: SignJwtOptions,
-): Result => {
+): JwtClaims => {
   if (!isString(config.algorithm)) {
     throw new JwtError("Algorithm is required");
   }
@@ -44,7 +46,7 @@ export const encodeJwtPayload = <C extends Dict = Dict>(
     throw new JwtError("Token type is required");
   }
 
-  const { expiresAt, expiresIn, expiresOn } = expires(content.expires);
+  const { expiresOn } = expires(content.expires);
 
   const at_hash = isString(options.accessTokenHash)
     ? options.accessTokenHash
@@ -66,7 +68,7 @@ export const encodeJwtPayload = <C extends Dict = Dict>(
 
   const tokenId = isString(options.tokenId) ? options.tokenId : randomUUID();
 
-  const claims: JwtClaims = removeUndefined({
+  return removeUndefined({
     aal: isFinite(content.adjustedAccessLevel) ? content.adjustedAccessLevel : undefined,
     acr: isString(content.authContextClass) ? content.authContextClass : undefined,
     afr: isString(content.authFactor) ? content.authFactor : undefined,
@@ -92,7 +94,7 @@ export const encodeJwtPayload = <C extends Dict = Dict>(
     per: isArray(content.permissions) ? content.permissions : undefined,
     rls: isArray(content.roles) ? content.roles : undefined,
     s_hash,
-    scp: isArray(content.scope) ? content.scope : undefined,
+    scope: isArray(content.scope) ? content.scope : undefined,
     sid: isString(content.sessionId) ? content.sessionId : undefined,
     sih: isString(content.sessionHint) ? content.sessionHint : undefined,
     sub: content.subject,
@@ -100,25 +102,29 @@ export const encodeJwtPayload = <C extends Dict = Dict>(
     tid: isString(content.tenantId) ? content.tenantId : undefined,
     token_type: content.tokenType,
   });
+};
+
+export const encodeJwtPayload = <C extends Dict = Dict>(
+  config: Config,
+  content: SignJwtContent<C>,
+  options: SignJwtOptions,
+): Result => {
+  const claims = mapJwtContentToClaims(config, content, options);
+  const { expiresAt, expiresIn, expiresOn } = expires(content.expires);
 
   const payload = B64.encode(
-    JSON.stringify({
-      ...claims,
-      ...(content.claims ?? {}),
-    }),
+    JSON.stringify({ ...claims, ...(content.claims ?? {}) }),
     B64U,
   );
 
-  return { expiresAt, expiresIn, expiresOn, payload, tokenId };
+  return { expiresAt, expiresIn, expiresOn, payload, tokenId: claims.jti! };
 };
-
-type DecodeClaims<C extends Dict = Dict> = JwtClaims & C;
 
 export const decodeJwtPayload = <C extends Dict = Dict<never>>(
   payload: string,
 ): DecodeClaims<C> => JSON.parse(B64.toString(payload)) as DecodeClaims<C>;
 
-export const parseJwtPayload = <C extends Dict = Dict<never>>(
+export const parseTokenPayload = <C extends Dict = Dict<never>>(
   decoded: DecodeClaims<C>,
 ): ParsedJwtPayload<C> => {
   if (!isFinite(decoded.exp)) {
@@ -153,7 +159,7 @@ export const parseJwtPayload = <C extends Dict = Dict<never>>(
     per,
     rls,
     s_hash,
-    scp,
+    scope,
     sid,
     sih,
     sub,
@@ -185,7 +191,7 @@ export const parseJwtPayload = <C extends Dict = Dict<never>>(
     notBefore: nbf ? new Date(nbf * 1000) : undefined,
     permissions: isArray(per) ? per : isString(per) ? [per] : [],
     roles: isArray(rls) ? rls : isString(rls) ? [rls] : [],
-    scope: isArray(scp) ? scp : isString(scp) ? [scp] : [],
+    scope: isArray(scope) ? scope : isString(scope) ? [scope] : [],
     sessionHint: sih,
     sessionId: sid,
     stateHash: s_hash,

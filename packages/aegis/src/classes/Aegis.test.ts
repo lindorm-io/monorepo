@@ -25,6 +25,73 @@ describe("Aegis", () => {
     amphora.add(TEST_OKP_KEY_ENC);
   });
 
+  test("should sign cwt", async () => {
+    const res = await aegis.cwt.sign({
+      expires: "1h",
+      subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
+      tokenType: "test_token",
+    });
+
+    expect(res).toEqual({
+      expiresAt: new Date("2024-01-01T09:00:00.000Z"),
+      expiresIn: 3600,
+      expiresOn: 1704099600,
+      objectId: expect.any(String),
+      token: expect.any(String),
+      tokenId: expect.any(String),
+    });
+
+    await expect(aegis.cwt.verify(res.token)).resolves.toEqual({
+      decoded: {
+        protected: {
+          alg: "ES512",
+          cty: "application/json",
+          typ: "application/cwt",
+        },
+        unprotected: {
+          jku: "https://test.lindorm.io/.well-known/jwks.json",
+          kid: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+          oid: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
+        },
+        payload: {
+          exp: 1704099600,
+          iat: 1704096000,
+          iss: "https://test.lindorm.io/",
+          jti: expect.any(String),
+          nbf: 1704096000,
+          sub: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
+          token_type: "test_token",
+        },
+        signature: expect.any(Buffer),
+      },
+      header: {
+        algorithm: "ES512",
+        contentType: "application/json",
+        critical: [],
+        headerType: "application/cwt",
+        jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
+        keyId: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+        objectId: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
+      },
+      payload: {
+        audience: [],
+        authMethods: [],
+        claims: {},
+        expiresAt: new Date("2024-01-01T09:00:00.000Z"),
+        issuedAt: new Date("2024-01-01T08:00:00.000Z"),
+        issuer: "https://test.lindorm.io/",
+        notBefore: new Date("2024-01-01T08:00:00.000Z"),
+        permissions: [],
+        roles: [],
+        scope: [],
+        subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
+        tokenId: expect.any(String),
+        tokenType: "test_token",
+      },
+      token: res.token,
+    });
+  });
+
   test("should sign and verify jwe", async () => {
     const res = await aegis.jwe.encrypt("data", {
       objectId: "33100373-9769-4389-94dd-1b1d738f0fc4",

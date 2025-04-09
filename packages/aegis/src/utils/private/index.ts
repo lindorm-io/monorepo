@@ -1,10 +1,11 @@
+export * from "./cose";
+
 export * from "./create-hash";
-export * from "./create-token-signature";
+export * from "./jose-header";
+export * from "./jose-signature";
 export * from "./jwt-payload";
 export * from "./jwt-validate";
 export * from "./jwt-verify";
 export * from "./token-header";
-export * from "./token-type";
 export * from "./validate";
 export * from "./validate-value";
-export * from "./verify-token-signature";

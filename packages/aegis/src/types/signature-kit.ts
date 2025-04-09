@@ -1,9 +1,9 @@
 import { IKryptos } from "@lindorm/kryptos";
-import { BufferFormat } from "@lindorm/types";
-
-export type SignatureFormat = BufferFormat | "raw";
+import { DsaEncoding } from "@lindorm/types";
 
 export type SignatureOptions = {
-  format?: SignatureFormat;
+  dsa?: DsaEncoding;
+  encoding?: BufferEncoding;
   kryptos: IKryptos;
+  raw?: boolean;
 };

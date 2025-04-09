@@ -1,9 +1,10 @@
 import { PublicEncryptionJwk } from "@lindorm/aes";
-import { KryptosAlgorithm, KryptosEncryption, KryptosJwk } from "@lindorm/kryptos";
+import { KryptosEncryption, KryptosJwk } from "@lindorm/kryptos";
+import { TOKEN_HEADER_ALGORITHMS, TOKEN_HEADER_TYPES } from "../constants/private";
 
-export type TokenHeaderAlgorithm = KryptosAlgorithm;
+export type TokenHeaderAlgorithm = (typeof TOKEN_HEADER_ALGORITHMS)[number];
 
-export type TokenHeaderType = "JWE" | "JWS" | "JWT";
+export type TokenHeaderType = (typeof TOKEN_HEADER_TYPES)[number];
 
 // https://www.rfc-editor.org/rfc/rfc7515.html#section-4.1
 export type TokenHeaderClaims = {
@@ -22,6 +23,28 @@ export type TokenHeaderClaims = {
   p2s?: string; // p2s
   tag?: string; // public encryption tag
   typ: TokenHeaderType; // header type
+  x5c?: Array<string>;
+  x5t?: string;
+  x5u?: string;
+  "x5t#S256"?: string;
+};
+
+export type RawTokenHeaderClaims = {
+  alg?: TokenHeaderAlgorithm;
+  crit?: Array<Exclude<keyof TokenHeaderSignOptions, "critical">>;
+  cty?: string;
+  enc?: KryptosEncryption;
+  epk?: PublicEncryptionJwk;
+  hkdf_salt?: Buffer;
+  iv?: Buffer;
+  jku?: string;
+  jwk?: KryptosJwk;
+  kid?: string;
+  oid?: string;
+  p2c?: number;
+  p2s?: Buffer;
+  tag?: Buffer;
+  typ?: TokenHeaderType;
   x5c?: Array<string>;
   x5t?: string;
   x5u?: string;
@@ -53,15 +76,15 @@ export type ParsedTokenHeader = {
 };
 
 export type TokenHeaderSignOptions = {
-  algorithm: TokenHeaderAlgorithm;
+  algorithm?: TokenHeaderAlgorithm;
   contentType?: string;
   critical?: Array<Exclude<keyof TokenHeaderSignOptions, "critical">>;
   encryption?: KryptosEncryption;
-  headerType: TokenHeaderType;
+  headerType?: TokenHeaderType;
   hkdfSalt?: Buffer;
   jwk?: KryptosJwk;
   jwksUri?: string;
-  keyId: string;
+  keyId?: string;
   objectId?: string;
   pbkdfIterations?: number;
   pbkdfSalt?: Buffer;

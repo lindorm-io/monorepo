@@ -15,7 +15,14 @@ import {
 import { ILogger } from "@lindorm/logger";
 import { Dict } from "@lindorm/types";
 import { AegisError } from "../errors";
-import { IAegis, IAegisAes, IAegisJwe, IAegisJws, IAegisJwt } from "../interfaces";
+import {
+  IAegis,
+  IAegisAes,
+  IAegisCwt,
+  IAegisJwe,
+  IAegisJws,
+  IAegisJwt,
+} from "../interfaces";
 import {
   AegisOptions,
   DecodedJwe,
@@ -25,18 +32,24 @@ import {
   EncryptedJwe,
   JweEncryptOptions,
   JwsContent,
+  ParsedCwt,
   ParsedJws,
   ParsedJwt,
+  SignCwtContent,
+  SignCwtOptions,
   SignJwsOptions,
   SignJwtContent,
   SignJwtOptions,
+  SignedCwt,
   SignedJws,
   SignedJwt,
   TokenHeaderAlgorithm,
   TokenHeaderClaims,
+  VerifyCwtOptions,
   VerifyJwtOptions,
 } from "../types";
-import { decodeTokenHeader } from "../utils/private";
+import { decodeJoseHeader } from "../utils/private";
+import { CwtKit } from "./CwtKit";
 import { JweKit } from "./JweKit";
 import { JwsKit } from "./JwsKit";
 import { JwtKit } from "./JwtKit";
@@ -83,6 +96,13 @@ export class Aegis implements IAegis {
     };
   }
 
+  public get cwt(): IAegisCwt {
+    return {
+      sign: this.cwtSign.bind(this),
+      verify: this.cwtVerify.bind(this),
+    };
+  }
+
   public get jwe(): IAegisJwe {
     return {
       encrypt: this.jweEncrypt.bind(this),
@@ -125,7 +145,7 @@ export class Aegis implements IAegis {
 
   public static header(token: string): TokenHeaderClaims {
     const [header] = token.split(".");
-    return decodeTokenHeader(header);
+    return decodeJoseHeader(header);
   }
 
   public static isJwe(jwe: string): boolean {
@@ -188,6 +208,42 @@ export class Aegis implements IAegis {
     const kit = await this.aesKit({ id: parsed.keyId, algorithm: parsed.algorithm });
 
     return kit.decrypt(data);
+  }
+
+  // private cwt
+
+  private async cwtKit(options: SigOptions = {}): Promise<CwtKit> {
+    const kryptos = await this.kryptosSig(options);
+
+    return new CwtKit({
+      clockTolerance: this.clockTolerance,
+      issuer: this.issuer ?? undefined,
+      kryptos,
+      logger: this.logger,
+    });
+  }
+
+  private async cwtSign<T extends Dict = Dict>(
+    content: SignCwtContent<T>,
+    options?: SignCwtOptions,
+  ): Promise<SignedCwt> {
+    const kit = await this.cwtKit({ sign: true });
+
+    return kit.sign(content, options);
+  }
+
+  private async cwtVerify<T extends Dict = Dict>(
+    cwt: string,
+    verify?: VerifyCwtOptions,
+  ): Promise<ParsedCwt<T>> {
+    const decode = CwtKit.decode(cwt);
+
+    const kit = await this.cwtKit({
+      id: decode.unprotected.kid,
+      algorithm: decode.protected.alg,
+    });
+
+    return kit.verify(cwt, verify);
   }
 
   // private jwe
