@@ -22,7 +22,7 @@ exports[`isNumberString should resolve TEST_EMPTY_STRING 1`] = `false`;
 
 exports[`isNumberString should resolve TEST_ERROR 1`] = `false`;
 
-exports[`isNumberString should resolve TEST_FINITE 1`] = `true`;
+exports[`isNumberString should resolve TEST_FINITE 1`] = `false`;
 
 exports[`isNumberString should resolve TEST_FUNCTION 1`] = `false`;
 
@@ -38,9 +38,13 @@ exports[`isNumberString should resolve TEST_NAN 1`] = `false`;
 
 exports[`isNumberString should resolve TEST_NEGATIVE_INFINITY 1`] = `false`;
 
+exports[`isNumberString should resolve TEST_NEGATIVE_NUMBER 1`] = `false`;
+
+exports[`isNumberString should resolve TEST_NEGATIVE_NUMBER_STRING 1`] = `true`;
+
 exports[`isNumberString should resolve TEST_NULL 1`] = `false`;
 
-exports[`isNumberString should resolve TEST_NUMBER 1`] = `true`;
+exports[`isNumberString should resolve TEST_NUMBER 1`] = `false`;
 
 exports[`isNumberString should resolve TEST_NUMBER_STRING 1`] = `true`;
 

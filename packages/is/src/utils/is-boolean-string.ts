@@ -1,2 +1,2 @@
 export const isBooleanString = (input?: any): input is string =>
-  input === "true" || input === "false";
+  typeof input === "string" && (input === "true" || input === "false");

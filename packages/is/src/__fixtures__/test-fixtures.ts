@@ -3,12 +3,12 @@ class TestClass {
 }
 
 export const TEST_ARRAY: any = ["array"];
-export const TEST_BOOLEAN: any = true;
 export const TEST_BOOLEAN_STRING: any = "false";
+export const TEST_BOOLEAN: any = true;
 export const TEST_BUFFER: any = Buffer.from("test", "utf8");
 export const TEST_CLASS: any = new TestClass();
-export const TEST_DATE: any = new Date();
 export const TEST_DATE_STRING: any = new Date().toISOString();
+export const TEST_DATE: any = new Date();
 export const TEST_EMPTY_ARRAY: any = ["array"];
 export const TEST_EMPTY_OBJECT: any = {};
 export const TEST_EMPTY_STRING: any = "";
@@ -24,9 +24,11 @@ export const TEST_JWT: any =
   "eyJhbGciOiJFUzUxMiIsImN0eSI6ImFwcGxpY2F0aW9uL2pzb24iLCJqa3UiOiJodHRwczovL3Rlc3QubGluZG9ybS5pby8ud2VsbC1rbm93bi9qd2tzLmpzb24iLCJraWQiOiJiOWU3YmI0ZC1kMzMyLTU1ZDItOWIzMy1mOTkwZmY3ZGI0YzciLCJvaWQiOiIzZjJhZTc5ZC1mMWQxLTU1NmItYThiYy0zMDVlNmIyMzM0YWQiLCJ0eXAiOiJKV1QifQ.eyJleHAiOjE3MDQwOTk2MDAsImlhdCI6MTcwNDA5NjAwMCwiaXNzIjoiaHR0cHM6Ly90ZXN0LmxpbmRvcm0uaW8vIiwianRpIjoiMmNjYzFhNTctNzJmMi00NjY1LWFmNDktMmExNGQ3OTU2NGI5IiwibmJmIjoxNzA0MDk2MDAwLCJzdWIiOiIzZjJhZTc5ZC1mMWQxLTU1NmItYThiYy0zMDVlNmIyMzM0YWQiLCJ0b2tlbl90eXBlIjoidGVzdF90b2tlbiJ9.AC8K2lM5CdEmR87vWLWodhA4B7xGmhHIvoQ2YXZUCnTPiFEwLsoHjQCUySgu7pHBBFEFgRrtie5Ho0gWfVk6NwYfAepqi-DT1vmsO_zx2UGEgmlZr3T9YS-yb6AredTqYIJYoLHxcuwvLWnb_8wTYR1pIrTMbLK-MBtr_jdX7AbVOkuf";
 export const TEST_NAN: any = NaN;
 export const TEST_NEGATIVE_INFINITY: any = -Infinity;
+export const TEST_NEGATIVE_NUMBER_STRING: any = "-123456";
+export const TEST_NEGATIVE_NUMBER: any = -256;
 export const TEST_NULL: any = null;
-export const TEST_NUMBER: any = 123456;
 export const TEST_NUMBER_STRING: any = "123456";
+export const TEST_NUMBER: any = 123456;
 export const TEST_OBJECT: any = { object: true };
 export const TEST_PROMISE: any = Promise.resolve();
 export const TEST_STRING: any = "string";
@@ -36,12 +38,12 @@ export const TEST_URL: any = new URL(TEST_URL_STRING);
 
 export const TEST_FIXTURES = {
   TEST_ARRAY,
-  TEST_BOOLEAN,
   TEST_BOOLEAN_STRING,
+  TEST_BOOLEAN,
   TEST_BUFFER,
   TEST_CLASS,
-  TEST_DATE,
   TEST_DATE_STRING,
+  TEST_DATE,
   TEST_EMPTY_ARRAY,
   TEST_EMPTY_OBJECT,
   TEST_EMPTY_STRING,
@@ -54,9 +56,11 @@ export const TEST_FIXTURES = {
   TEST_JWT,
   TEST_NAN,
   TEST_NEGATIVE_INFINITY,
+  TEST_NEGATIVE_NUMBER_STRING,
+  TEST_NEGATIVE_NUMBER,
   TEST_NULL,
-  TEST_NUMBER,
   TEST_NUMBER_STRING,
+  TEST_NUMBER,
   TEST_OBJECT,
   TEST_PROMISE,
   TEST_STRING,
