@@ -1,6 +1,6 @@
 import { IKryptosOkp, KryptosKit } from "@lindorm/kryptos";
 
-export const TEST_OKP_KEY_25519 = KryptosKit.from.b64({
+export const TEST_OKP_KEY_ED25519 = KryptosKit.from.b64({
   id: "78254bd8-6a5d-5b6f-98da-0d3539fa54be",
   algorithm: "EdDSA",
   curve: "Ed25519",
@@ -10,7 +10,7 @@ export const TEST_OKP_KEY_25519 = KryptosKit.from.b64({
   use: "sig",
 }) as IKryptosOkp;
 
-export const TEST_OKP_KEY_448 = KryptosKit.from.b64({
+export const TEST_OKP_KEY_ED448 = KryptosKit.from.b64({
   id: "83b0bdda-f518-5308-942f-28452b2a524b",
   algorithm: "EdDSA",
   curve: "Ed448",

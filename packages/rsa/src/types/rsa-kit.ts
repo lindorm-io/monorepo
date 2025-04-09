@@ -1,23 +1,22 @@
 import { IKryptos, IKryptosRsa } from "@lindorm/kryptos";
-import { BufferFormat, DsaEncoding } from "@lindorm/types";
+import { DsaEncoding, KeyData } from "@lindorm/types";
 
 export type CreateRsaSignatureOptions = {
-  data: string;
-  dsa: DsaEncoding;
-  format: BufferFormat;
+  data: KeyData;
+  dsaEncoding: DsaEncoding;
   kryptos: IKryptosRsa;
 };
 
 export type VerifyRsaSignatureOptions = {
-  data: string;
-  dsa: DsaEncoding;
-  format: BufferFormat;
+  data: KeyData;
+  dsaEncoding: DsaEncoding;
+  encoding: BufferEncoding;
   kryptos: IKryptosRsa;
-  signature: string;
+  signature: KeyData;
 };
 
 export type RsaKitOptions = {
   dsa?: DsaEncoding;
-  format?: BufferFormat;
+  encoding?: BufferEncoding;
   kryptos: IKryptos;
 };

@@ -1,37 +1,32 @@
 import { randomBytes } from "crypto";
-import { TEST_RSA_KEY } from "../__fixtures__/keys";
+import { TEST_RSA_KEY_RS256 } from "../__fixtures__/keys";
 import { RsaError } from "../errors";
 import { RsaKit } from "./RsaKit";
 
 describe("RsaKit", () => {
   let kit: RsaKit;
-  let data: string;
-  let hash: string;
+  let data: Buffer;
+  let signature: Buffer;
 
   beforeEach(() => {
-    data = randomBytes(32).toString("hex");
-    kit = new RsaKit({ kryptos: TEST_RSA_KEY });
-    hash = kit.sign(data);
-  });
-
-  test("should sign", () => {
-    expect(hash).toEqual(expect.any(String));
-    expect(hash).not.toEqual(data);
+    kit = new RsaKit({ kryptos: TEST_RSA_KEY_RS256 });
+    data = randomBytes(32);
+    signature = kit.sign(data);
   });
 
   test("should verify", () => {
-    expect(kit.verify(data, hash)).toEqual(true);
+    expect(kit.verify(data, signature)).toEqual(true);
   });
 
   test("should reject", () => {
-    expect(kit.verify("wrong", hash)).toEqual(false);
+    expect(kit.verify("wrong", signature)).toEqual(false);
   });
 
   test("should assert", () => {
-    expect(() => kit.assert(data, hash)).not.toThrow();
+    expect(() => kit.assert(data, signature)).not.toThrow();
   });
 
   test("should throw error", () => {
-    expect(() => kit.assert("wrong", hash)).toThrow(RsaError);
+    expect(() => kit.assert("wrong", signature)).toThrow(RsaError);
   });
 });

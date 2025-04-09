@@ -1,25 +1,25 @@
 import { IKryptos, IKryptosEc } from "@lindorm/kryptos";
-import { BufferFormat, DsaEncoding } from "@lindorm/types";
-
-export type EcSignatureFormat = BufferFormat | "raw";
+import { DsaEncoding, KeyData } from "@lindorm/types";
 
 export type CreateEcSignatureOptions = {
-  data: string;
-  dsa: DsaEncoding;
-  format: EcSignatureFormat;
+  data: KeyData;
+  dsaEncoding: DsaEncoding;
   kryptos: IKryptosEc;
+  raw: boolean;
 };
 
 export type VerifyEcSignatureOptions = {
-  data: string;
-  dsa: DsaEncoding;
-  format: EcSignatureFormat;
+  data: KeyData;
+  dsaEncoding: DsaEncoding;
+  encoding: BufferEncoding;
   kryptos: IKryptosEc;
-  signature: string;
+  raw: boolean;
+  signature: KeyData;
 };
 
 export type EcKitOptions = {
   dsa?: DsaEncoding;
-  format?: EcSignatureFormat;
+  encoding?: BufferEncoding;
   kryptos: IKryptos;
+  raw?: boolean;
 };

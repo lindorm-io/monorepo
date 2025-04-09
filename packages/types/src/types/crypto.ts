@@ -1,3 +1,5 @@
+export type KeyData = Buffer | string;
+
 export type BufferFormat = "base64" | "base64url" | "hex";
 
 export type DsaEncoding = "der" | "ieee-p1363";

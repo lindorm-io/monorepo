@@ -1,5 +1,5 @@
 import { IKryptosOct, KryptosKit } from "@lindorm/kryptos";
-import { BufferFormat, IKeyKit } from "@lindorm/types";
+import { IKeyKit, KeyData } from "@lindorm/types";
 import { OctError } from "../errors";
 import { OctKitOptions } from "../types";
 import {
@@ -9,11 +9,11 @@ import {
 } from "../utils/private";
 
 export class OctKit implements IKeyKit {
-  private readonly format: BufferFormat;
+  private readonly encoding: BufferEncoding;
   private readonly kryptos: IKryptosOct;
 
   public constructor(options: OctKitOptions) {
-    this.format = options.format ?? "base64";
+    this.encoding = options.encoding ?? "base64";
 
     if (!KryptosKit.isOct(options.kryptos)) {
       throw new OctError("Invalid Kryptos instance");
@@ -22,29 +22,32 @@ export class OctKit implements IKeyKit {
     this.kryptos = options.kryptos;
   }
 
-  public sign(data: string): string {
+  public sign(data: KeyData): Buffer {
     return createOctSignature({
       data,
-      format: this.format,
       kryptos: this.kryptos,
     });
   }
 
-  public verify(data: string, signature: string): boolean {
+  public verify(data: KeyData, signature: KeyData): boolean {
     return verifyOctSignature({
       data,
-      format: this.format,
+      encoding: this.encoding,
       kryptos: this.kryptos,
       signature,
     });
   }
 
-  public assert(data: string, signature: string): void {
+  public assert(data: KeyData, signature: KeyData): void {
     return assertOctSignature({
       data,
-      format: this.format,
+      encoding: this.encoding,
       kryptos: this.kryptos,
       signature,
     });
+  }
+
+  public format(data: Buffer): string {
+    return data.toString(this.encoding);
   }
 }

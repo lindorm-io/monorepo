@@ -1,13 +1,16 @@
-import { TEST_OKP_KEY_25519 } from "../__fixtures__/keys";
+import { randomBytes } from "crypto";
+import { TEST_OKP_KEY_ED25519 } from "../__fixtures__/keys";
 import { OkpError } from "../errors";
 import { OkpKit } from "./OkpKit";
 
 describe("OkpKit", () => {
   let kit: OkpKit;
-  let signature: string;
+  let data: Buffer;
+  let signature: Buffer;
 
   beforeEach(() => {
-    kit = new OkpKit({ kryptos: TEST_OKP_KEY_25519 });
+    kit = new OkpKit({ kryptos: TEST_OKP_KEY_ED25519 });
+    data = randomBytes(32);
     signature = kit.sign("string");
   });
 

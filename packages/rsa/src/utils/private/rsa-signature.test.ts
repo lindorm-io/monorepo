@@ -1,6 +1,12 @@
-import { IKryptosRsa, KryptosKit } from "@lindorm/kryptos";
 import { randomBytes } from "crypto";
-import { TEST_RSA_KEY } from "../../__fixtures__/keys";
+import {
+  TEST_RSA_KEY_PS256,
+  TEST_RSA_KEY_PS384,
+  TEST_RSA_KEY_PS512,
+  TEST_RSA_KEY_RS256,
+  TEST_RSA_KEY_RS384,
+  TEST_RSA_KEY_RS512,
+} from "../../__fixtures__/keys";
 import { RsaError } from "../../errors";
 import {
   assertRsaSignature,
@@ -9,145 +15,252 @@ import {
 } from "./rsa-signature";
 
 describe("rsa-signature", () => {
-  const dsa = "der";
-  const format = "base64";
+  const dsaEncoding = "der";
+  const encoding = "base64";
 
-  let data: string;
+  let data: any;
 
   beforeEach(() => {
-    data = randomBytes(32).toString("hex");
+    data = randomBytes(32);
   });
 
   describe("algorithms", () => {
-    test("should create signature with RS256", () => {
-      const kryptos = KryptosKit.generate.sig.rsa({ algorithm: "RS256" }) as IKryptosRsa;
+    test("should sign and verify with RS256", async () => {
+      const kryptos = TEST_RSA_KEY_RS256;
 
-      expect(createRsaSignature({ kryptos, data, dsa, format })).toEqual(
-        expect.any(String),
-      );
+      const signature = createRsaSignature({
+        data,
+        dsaEncoding,
+        kryptos,
+      });
+
+      expect(
+        verifyRsaSignature({
+          data,
+          dsaEncoding,
+          encoding,
+          kryptos,
+          signature,
+        }),
+      ).toEqual(true);
     });
 
-    test("should create signature with RS384", () => {
-      const kryptos = KryptosKit.generate.sig.rsa({ algorithm: "RS384" }) as IKryptosRsa;
+    test("should sign and verify with RS384", async () => {
+      const kryptos = TEST_RSA_KEY_RS384;
 
-      expect(createRsaSignature({ kryptos, data, dsa, format })).toEqual(
-        expect.any(String),
-      );
+      const signature = createRsaSignature({
+        data,
+        dsaEncoding,
+        kryptos,
+      });
+
+      expect(
+        verifyRsaSignature({
+          data,
+          dsaEncoding,
+          encoding,
+          kryptos,
+          signature,
+        }),
+      ).toEqual(true);
     });
 
-    test("should create signature with RS512", () => {
-      const kryptos = KryptosKit.generate.sig.rsa({ algorithm: "RS512" }) as IKryptosRsa;
+    test("should sign and verify with RS512", async () => {
+      const kryptos = TEST_RSA_KEY_RS512;
 
-      expect(createRsaSignature({ kryptos, data, dsa, format })).toEqual(
-        expect.any(String),
-      );
+      const signature = createRsaSignature({
+        data,
+        dsaEncoding,
+        kryptos,
+      });
+
+      expect(
+        verifyRsaSignature({
+          data,
+          dsaEncoding,
+          encoding,
+          kryptos,
+          signature,
+        }),
+      ).toEqual(true);
     });
 
-    test("should create signature with PS256", () => {
-      const kryptos = KryptosKit.generate.sig.rsa({ algorithm: "PS256" }) as IKryptosRsa;
+    test("should sign and verify with PS256", async () => {
+      const kryptos = TEST_RSA_KEY_PS256;
 
-      expect(createRsaSignature({ kryptos, data, dsa, format })).toEqual(
-        expect.any(String),
-      );
+      const signature = createRsaSignature({
+        data,
+        dsaEncoding,
+        kryptos,
+      });
+
+      expect(
+        verifyRsaSignature({
+          data,
+          dsaEncoding,
+          encoding,
+          kryptos,
+          signature,
+        }),
+      ).toEqual(true);
     });
 
-    test("should create signature with PS384", () => {
-      const kryptos = KryptosKit.generate.sig.rsa({ algorithm: "PS384" }) as IKryptosRsa;
+    test("should sign and verify with PS384", async () => {
+      const kryptos = TEST_RSA_KEY_PS384;
 
-      expect(createRsaSignature({ kryptos, data, dsa, format })).toEqual(
-        expect.any(String),
-      );
+      const signature = createRsaSignature({
+        data,
+        dsaEncoding,
+        kryptos,
+      });
+
+      expect(
+        verifyRsaSignature({
+          data,
+          dsaEncoding,
+          encoding,
+          kryptos,
+          signature,
+        }),
+      ).toEqual(true);
     });
 
-    test("should create signature with PS512", () => {
-      const kryptos = KryptosKit.generate.sig.rsa({ algorithm: "PS512" }) as IKryptosRsa;
+    test("should sign and verify with PS512", async () => {
+      const kryptos = TEST_RSA_KEY_PS512;
 
-      expect(createRsaSignature({ kryptos, data, dsa, format })).toEqual(
-        expect.any(String),
-      );
+      const signature = createRsaSignature({
+        data,
+        dsaEncoding,
+        kryptos,
+      });
+
+      expect(
+        verifyRsaSignature({
+          data,
+          dsaEncoding,
+          encoding,
+          kryptos,
+          signature,
+        }),
+      ).toEqual(true);
+    });
+  });
+
+  describe("encoding", () => {
+    const kryptos = TEST_RSA_KEY_RS256;
+
+    test("should sign and verify with no encoding", () => {
+      const signature = createRsaSignature({
+        data,
+        dsaEncoding,
+        kryptos,
+      }).toString("base64");
+
+      expect(
+        verifyRsaSignature({
+          data,
+          dsaEncoding,
+          encoding: "base64",
+          kryptos,
+          signature,
+        }),
+      ).toEqual(true);
+    });
+
+    test("should sign and verify with base64 encoding", () => {
+      data = randomBytes(32).toString("base64");
+
+      const signature = createRsaSignature({
+        data,
+        dsaEncoding,
+        kryptos,
+      }).toString("base64");
+
+      expect(
+        verifyRsaSignature({
+          data,
+          dsaEncoding,
+          encoding: "base64",
+          kryptos,
+          signature,
+        }),
+      ).toEqual(true);
+    });
+
+    test("should sign and verify with base64url encoding", () => {
+      data = randomBytes(32).toString("base64url");
+
+      const signature = createRsaSignature({
+        data,
+        dsaEncoding,
+        kryptos,
+      }).toString("base64url");
+
+      expect(
+        verifyRsaSignature({
+          data,
+          dsaEncoding,
+          encoding: "base64url",
+          kryptos,
+          signature,
+        }),
+      ).toEqual(true);
+    });
+
+    test("should sign and verify with hex encoding", () => {
+      data = randomBytes(32).toString("hex");
+
+      const signature = createRsaSignature({
+        data,
+        dsaEncoding,
+        kryptos,
+      }).toString("hex");
+
+      expect(
+        verifyRsaSignature({
+          data,
+          dsaEncoding,
+          encoding: "hex",
+          kryptos,
+          signature,
+        }),
+      ).toEqual(true);
     });
   });
 
   describe("dsa", () => {
-    const kryptos = TEST_RSA_KEY;
+    const kryptos = TEST_RSA_KEY_RS256;
 
-    test("should sign and verify signature with der", () => {
-      const signature = createRsaSignature({ kryptos, data, dsa: "der", format });
+    test("should sign and verify with der", () => {
+      const signature = createRsaSignature({
+        data,
+        dsaEncoding: "der",
+        kryptos,
+      });
 
       expect(
         verifyRsaSignature({
           data,
-          dsa: "der",
-          format,
+          dsaEncoding: "der",
+          encoding,
           kryptos,
           signature,
         }),
       ).toEqual(true);
     });
 
-    test("should sign and verify signature with ieee-p1363", () => {
-      const signature = createRsaSignature({ kryptos, data, dsa: "ieee-p1363", format });
+    test("should sign and verify with ieee-p1363", () => {
+      const signature = createRsaSignature({
+        data,
+        dsaEncoding: "ieee-p1363",
+        kryptos,
+      });
 
       expect(
         verifyRsaSignature({
           data,
-          dsa: "ieee-p1363",
-          format,
-          kryptos,
-          signature,
-        }),
-      ).toEqual(true);
-    });
-  });
-
-  describe("formats", () => {
-    const kryptos = TEST_RSA_KEY;
-
-    test("should create signature at base64 digest", () => {
-      expect(
-        createRsaSignature({
-          kryptos,
-          data,
-          dsa,
-          format: "base64",
-        }),
-      ).toEqual(expect.any(String));
-    });
-
-    test("should create signature at base64url digest", () => {
-      expect(
-        createRsaSignature({
-          kryptos,
-          data,
-          dsa,
-          format: "base64url",
-        }),
-      ).toEqual(expect.any(String));
-    });
-
-    test("should create signature at hex digest", () => {
-      expect(
-        createRsaSignature({
-          kryptos,
-          data,
-          dsa,
-          format: "hex",
-        }),
-      ).toEqual(expect.any(String));
-    });
-  });
-
-  describe("verify", () => {
-    const kryptos = TEST_RSA_KEY;
-
-    test("should verify signature", () => {
-      const signature = createRsaSignature({ kryptos, data, dsa, format });
-
-      expect(
-        verifyRsaSignature({
-          data,
-          dsa,
-          format,
+          dsaEncoding: "ieee-p1363",
+          encoding,
           kryptos,
           signature,
         }),
@@ -156,16 +269,20 @@ describe("rsa-signature", () => {
   });
 
   describe("assert", () => {
-    const kryptos = TEST_RSA_KEY;
+    const kryptos = TEST_RSA_KEY_RS256;
 
     test("should assert signature", () => {
-      const signature = createRsaSignature({ kryptos, data, dsa, format });
+      const signature = createRsaSignature({
+        data,
+        dsaEncoding,
+        kryptos,
+      });
 
       expect(() =>
         assertRsaSignature({
           data,
-          dsa,
-          format,
+          dsaEncoding,
+          encoding,
           kryptos,
           signature,
         }),
@@ -173,13 +290,17 @@ describe("rsa-signature", () => {
     });
 
     test("should throw error on invalid signature", () => {
-      const signature = createRsaSignature({ kryptos, data, dsa, format });
+      const signature = createRsaSignature({
+        data,
+        dsaEncoding,
+        kryptos,
+      });
 
       expect(() =>
         assertRsaSignature({
           data: "invalid",
-          dsa,
-          format,
+          dsaEncoding,
+          encoding,
           kryptos,
           signature,
         }),

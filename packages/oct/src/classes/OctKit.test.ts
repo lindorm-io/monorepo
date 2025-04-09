@@ -1,20 +1,21 @@
-import { TEST_OCT_KEY } from "../__fixtures__/keys";
+import { randomBytes } from "crypto";
+import { TEST_OCT_KEY_HS256 } from "../__fixtures__/keys";
 import { OctError } from "../errors";
 import { OctKit } from "./OctKit";
 
 describe("OctKit", () => {
   let kit: OctKit;
-  let signature: string;
+  let data: Buffer;
+  let signature: Buffer;
 
   beforeEach(() => {
-    kit = new OctKit({
-      kryptos: TEST_OCT_KEY,
-    });
-    signature = kit.sign("string");
+    kit = new OctKit({ kryptos: TEST_OCT_KEY_HS256 });
+    data = randomBytes(32);
+    signature = kit.sign(data);
   });
 
   test("should verify", () => {
-    expect(kit.verify("string", signature)).toEqual(true);
+    expect(kit.verify(data, signature)).toEqual(true);
   });
 
   test("should reject", () => {
@@ -22,7 +23,7 @@ describe("OctKit", () => {
   });
 
   test("should assert", () => {
-    expect(() => kit.assert("string", signature)).not.toThrow();
+    expect(() => kit.assert(data, signature)).not.toThrow();
   });
 
   test("should throw error", () => {

@@ -1,23 +1,22 @@
 import { IKryptos, IKryptosOkp } from "@lindorm/kryptos";
-import { BufferFormat, DsaEncoding } from "@lindorm/types";
+import { DsaEncoding, KeyData } from "@lindorm/types";
 
 export type CreateOkpSignatureOptions = {
-  data: string;
-  dsa: DsaEncoding;
-  format: BufferFormat;
+  data: KeyData;
+  dsaEncoding: DsaEncoding;
   kryptos: IKryptosOkp;
 };
 
 export type VerifyOkpSignatureOptions = {
-  data: string;
-  dsa: DsaEncoding;
-  format: BufferFormat;
-  signature: string;
+  data: KeyData;
+  dsaEncoding: DsaEncoding;
+  encoding: BufferEncoding;
   kryptos: IKryptosOkp;
+  signature: KeyData;
 };
 
 export type OkpKitOptions = {
   dsa?: DsaEncoding;
-  format?: BufferFormat;
+  encoding?: BufferEncoding;
   kryptos: IKryptos;
 };

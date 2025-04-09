@@ -1,4 +1,5 @@
-import { TEST_OKP_KEY_25519, TEST_OKP_KEY_448 } from "../../__fixtures__/keys";
+import { randomBytes } from "crypto";
+import { TEST_OKP_KEY_ED25519, TEST_OKP_KEY_ED448 } from "../../__fixtures__/keys";
 import { OkpError } from "../../errors";
 import {
   assertOkpSignature,
@@ -7,119 +8,173 @@ import {
 } from "./okp-signature";
 
 describe("okp-signature", () => {
-  const dsa = "der";
-  const format = "base64";
+  const dsaEncoding = "der";
+  const encoding = "base64";
 
-  describe("curves", () => {
-    test("should create signature with 25519", () => {
-      expect(
-        createOkpSignature({
-          kryptos: TEST_OKP_KEY_25519,
-          data: "data",
-          dsa,
-          format: "base64",
-        }),
-      ).toEqual(expect.any(String));
-    });
+  let data: any;
 
-    test("should create signature with 448", () => {
-      expect(
-        createOkpSignature({
-          kryptos: TEST_OKP_KEY_448,
-          data: "data",
-          dsa,
-          format: "base64",
-        }),
-      ).toEqual(expect.any(String));
-    });
+  beforeEach(() => {
+    data = randomBytes(32);
   });
 
-  describe("dsa", () => {
-    const kryptos = TEST_OKP_KEY_25519;
+  describe("algorithms", () => {
+    test("should sign and verify with Ed25519", async () => {
+      const kryptos = TEST_OKP_KEY_ED25519;
 
-    test("should sign and verify signature with der", () => {
       const signature = createOkpSignature({
+        data,
+        dsaEncoding,
         kryptos,
-        data: "data",
-        dsa: "der",
-        format: "base64",
-      });
-
-      expect(
-        verifyOkpSignature({ kryptos, data: "data", dsa: "der", format, signature }),
-      ).toEqual(true);
-    });
-
-    test("should sign and verify signature with ieee-p1363", () => {
-      const signature = createOkpSignature({
-        kryptos,
-        data: "data",
-        dsa: "ieee-p1363",
-        format: "base64",
       });
 
       expect(
         verifyOkpSignature({
+          data,
+          dsaEncoding,
+          encoding,
           kryptos,
-          data: "data",
-          dsa: "ieee-p1363",
-          format,
+          signature,
+        }),
+      ).toEqual(true);
+    });
+
+    test("should sign and verify with X448", async () => {
+      const kryptos = TEST_OKP_KEY_ED448;
+
+      const signature = createOkpSignature({
+        data,
+        dsaEncoding,
+        kryptos,
+      });
+
+      expect(
+        verifyOkpSignature({
+          data,
+          dsaEncoding,
+          encoding,
+          kryptos,
           signature,
         }),
       ).toEqual(true);
     });
   });
 
-  describe("formats", () => {
-    test("should create signature at base64 digest", () => {
-      expect(
-        createOkpSignature({
-          kryptos: TEST_OKP_KEY_25519,
-          data: "data",
-          dsa,
-          format: "base64",
-        }),
-      ).toEqual(expect.any(String));
-    });
+  describe("dsa", () => {
+    const kryptos = TEST_OKP_KEY_ED25519;
 
-    test("should create signature at base64url digest", () => {
-      expect(
-        createOkpSignature({
-          kryptos: TEST_OKP_KEY_25519,
-          data: "data",
-          dsa,
-          format: "base64url",
-        }),
-      ).toEqual(expect.any(String));
-    });
-
-    test("should create signature at hex digest", () => {
-      expect(
-        createOkpSignature({
-          kryptos: TEST_OKP_KEY_25519,
-          data: "data",
-          dsa,
-          format: "hex",
-        }),
-      ).toEqual(expect.any(String));
-    });
-  });
-
-  describe("verify", () => {
-    test("should verify signature", () => {
+    test("should sign and verify with der", () => {
       const signature = createOkpSignature({
-        kryptos: TEST_OKP_KEY_25519,
-        data: "data",
-        dsa,
-        format,
+        data,
+        dsaEncoding: "der",
+        kryptos,
       });
 
       expect(
         verifyOkpSignature({
-          kryptos: TEST_OKP_KEY_25519,
-          data: "data",
-          dsa,
-          format,
+          data,
+          dsaEncoding: "der",
+          encoding,
+          kryptos,
+          signature,
+        }),
+      ).toEqual(true);
+    });
+
+    test("should sign and verify with ieee-p1363", () => {
+      const signature = createOkpSignature({
+        data,
+        dsaEncoding: "ieee-p1363",
+        kryptos,
+      });
+
+      expect(
+        verifyOkpSignature({
+          data,
+          dsaEncoding: "ieee-p1363",
+          encoding,
+          kryptos,
+          signature,
+        }),
+      ).toEqual(true);
+    });
+  });
+
+  describe("encoding", () => {
+    const kryptos = TEST_OKP_KEY_ED25519;
+
+    test("should sign and verify with no encoding", () => {
+      const signature = createOkpSignature({
+        data,
+        dsaEncoding,
+        kryptos,
+      }).toString("base64");
+
+      expect(
+        verifyOkpSignature({
+          data,
+          dsaEncoding,
+          encoding: "base64",
+          kryptos,
+          signature,
+        }),
+      ).toEqual(true);
+    });
+
+    test("should sign and verify with base64 encoding", () => {
+      data = randomBytes(32).toString("base64");
+
+      const signature = createOkpSignature({
+        data,
+        dsaEncoding,
+        kryptos,
+      }).toString("base64");
+
+      expect(
+        verifyOkpSignature({
+          data,
+          dsaEncoding,
+          encoding: "base64",
+          kryptos,
+          signature,
+        }),
+      ).toEqual(true);
+    });
+
+    test("should sign and verify with base64url encoding", () => {
+      data = randomBytes(32).toString("base64url");
+
+      const signature = createOkpSignature({
+        data,
+        dsaEncoding,
+        kryptos,
+      }).toString("base64url");
+
+      expect(
+        verifyOkpSignature({
+          data,
+          dsaEncoding,
+          encoding: "base64url",
+          kryptos,
+          signature,
+        }),
+      ).toEqual(true);
+    });
+
+    test("should sign and verify with hex encoding", () => {
+      data = randomBytes(32).toString("hex");
+
+      const signature = createOkpSignature({
+        data,
+        dsaEncoding,
+        kryptos,
+      }).toString("hex");
+
+      expect(
+        verifyOkpSignature({
+          data,
+          dsaEncoding,
+          encoding: "hex",
+          kryptos,
           signature,
         }),
       ).toEqual(true);
@@ -127,20 +182,21 @@ describe("okp-signature", () => {
   });
 
   describe("assert", () => {
+    const kryptos = TEST_OKP_KEY_ED25519;
+
     test("should assert signature", () => {
       const signature = createOkpSignature({
-        kryptos: TEST_OKP_KEY_25519,
-        data: "data",
-        dsa,
-        format,
+        data,
+        dsaEncoding,
+        kryptos,
       });
 
       expect(() =>
         assertOkpSignature({
-          kryptos: TEST_OKP_KEY_25519,
-          data: "data",
-          dsa,
-          format,
+          data,
+          dsaEncoding,
+          encoding,
+          kryptos,
           signature,
         }),
       ).not.toThrow();
@@ -148,18 +204,17 @@ describe("okp-signature", () => {
 
     test("should throw error on invalid signature", () => {
       const signature = createOkpSignature({
-        kryptos: TEST_OKP_KEY_25519,
-        data: "data",
-        dsa,
-        format,
+        data,
+        dsaEncoding,
+        kryptos,
       });
 
       expect(() =>
         assertOkpSignature({
-          kryptos: TEST_OKP_KEY_25519,
           data: "invalid",
-          dsa,
-          format,
+          dsaEncoding,
+          encoding,
+          kryptos,
           signature,
         }),
       ).toThrow(OkpError);

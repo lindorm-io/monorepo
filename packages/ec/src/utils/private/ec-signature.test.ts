@@ -1,164 +1,340 @@
+import { randomBytes } from "crypto";
 import {
-  TEST_EC_KEY_256,
-  TEST_EC_KEY_384,
-  TEST_EC_KEY_512,
+  TEST_EC_KEY_ES256,
+  TEST_EC_KEY_ES384,
+  TEST_EC_KEY_ES512,
 } from "../../__fixtures__/keys";
 import { EcError } from "../../errors";
 import { assertEcSignature, createEcSignature, verifyEcSignature } from "./ec-signature";
 
 describe("ec-signature", () => {
-  const dsa = "der";
-  const format = "base64";
+  const dsaEncoding = "der";
+  const encoding = "base64";
 
-  describe("standard formatting", () => {
-    const kryptos = TEST_EC_KEY_256;
+  let data: any;
+  let raw: boolean;
 
-    test("should sign and verify with base64 formatting", () => {
-      const signature = createEcSignature({
-        kryptos,
-        data: "data",
-        dsa,
-        format: "base64",
-      });
-
-      expect(
-        verifyEcSignature({ kryptos, data: "data", dsa, signature, format: "base64" }),
-      ).toEqual(true);
-    });
-
-    test("should sign and verify with base64url formatting", () => {
-      const signature = createEcSignature({
-        kryptos,
-        data: "data",
-        dsa,
-        format: "base64url",
-      });
-
-      expect(
-        verifyEcSignature({ kryptos, data: "data", dsa, signature, format: "base64url" }),
-      ).toEqual(true);
-    });
-
-    test("should sign and verify with hex formatting", () => {
-      const signature = createEcSignature({ kryptos, data: "data", dsa, format: "hex" });
-
-      expect(
-        verifyEcSignature({ kryptos, data: "data", dsa, signature, format: "hex" }),
-      ).toEqual(true);
-    });
+  beforeEach(() => {
+    data = randomBytes(32);
+    raw = false;
   });
 
-  describe("curves", () => {
+  describe("algorithms", () => {
     test("should sign and verify with ES256", async () => {
-      const kryptos = TEST_EC_KEY_256;
+      const kryptos = TEST_EC_KEY_ES256;
 
-      const signature = createEcSignature({ kryptos, data: "data", dsa, format });
+      const signature = createEcSignature({
+        data,
+        dsaEncoding,
+        kryptos,
+        raw,
+      });
 
       expect(
-        verifyEcSignature({ kryptos, data: "data", dsa, format, signature }),
+        verifyEcSignature({
+          data,
+          dsaEncoding,
+          encoding,
+          kryptos,
+          raw,
+          signature,
+        }),
       ).toEqual(true);
     });
 
     test("should sign and verify with ES384", async () => {
-      const kryptos = TEST_EC_KEY_384;
+      const kryptos = TEST_EC_KEY_ES384;
 
-      const signature = createEcSignature({ kryptos, data: "data", dsa, format });
+      const signature = createEcSignature({
+        data,
+        dsaEncoding,
+        kryptos,
+        raw,
+      });
 
       expect(
-        verifyEcSignature({ kryptos, data: "data", dsa, format, signature }),
+        verifyEcSignature({
+          data,
+          dsaEncoding,
+          encoding,
+          kryptos,
+          raw,
+          signature,
+        }),
       ).toEqual(true);
     });
 
     test("should sign and verify with ES512", async () => {
-      const kryptos = TEST_EC_KEY_512;
+      const kryptos = TEST_EC_KEY_ES512;
 
-      const signature = createEcSignature({ kryptos, data: "data", dsa, format });
+      const signature = createEcSignature({
+        data,
+        dsaEncoding,
+        kryptos,
+        raw,
+      });
 
       expect(
-        verifyEcSignature({ kryptos, data: "data", dsa, format, signature }),
+        verifyEcSignature({
+          data,
+          dsaEncoding,
+          encoding,
+          kryptos,
+          raw,
+          signature,
+        }),
       ).toEqual(true);
+    });
+
+    describe("raw", () => {
+      test("should sign and verify with P-256 raw formatting", async () => {
+        const kryptos = TEST_EC_KEY_ES256;
+
+        raw = true;
+
+        const signature = createEcSignature({
+          data,
+          dsaEncoding,
+          kryptos,
+          raw,
+        });
+
+        expect(
+          verifyEcSignature({
+            data,
+            dsaEncoding,
+            encoding,
+            kryptos,
+            raw,
+            signature,
+          }),
+        ).toEqual(true);
+      });
+
+      test("should sign and verify with P-384 raw formatting", async () => {
+        const kryptos = TEST_EC_KEY_ES384;
+
+        raw = true;
+
+        const signature = createEcSignature({
+          data,
+          dsaEncoding,
+          kryptos,
+          raw,
+        });
+
+        expect(
+          verifyEcSignature({
+            data,
+            dsaEncoding,
+            encoding,
+            kryptos,
+            raw,
+            signature,
+          }),
+        ).toEqual(true);
+      });
+
+      test("should sign and verify with P-521 raw formatting", async () => {
+        const kryptos = TEST_EC_KEY_ES512;
+
+        raw = true;
+
+        const signature = createEcSignature({
+          data,
+          dsaEncoding,
+          kryptos,
+          raw,
+        });
+
+        expect(
+          verifyEcSignature({
+            data,
+            dsaEncoding,
+            encoding,
+            kryptos,
+            raw,
+            signature,
+          }),
+        ).toEqual(true);
+      });
     });
   });
 
-  describe("dsa encoding", () => {
-    const kryptos = TEST_EC_KEY_256;
+  describe("dsa", () => {
+    const kryptos = TEST_EC_KEY_ES256;
 
     test("should sign and verify with der", () => {
-      const signature = createEcSignature({ kryptos, data: "data", dsa: "der", format });
+      const signature = createEcSignature({
+        data,
+        dsaEncoding: "der",
+        kryptos,
+        raw,
+      });
 
       expect(
-        verifyEcSignature({ kryptos, data: "data", dsa: "der", signature, format }),
+        verifyEcSignature({
+          data,
+          dsaEncoding: "der",
+          encoding,
+          kryptos,
+          raw,
+          signature,
+        }),
       ).toEqual(true);
     });
 
     test("should sign and verify with ieee-p1363", () => {
       const signature = createEcSignature({
+        data,
+        dsaEncoding: "ieee-p1363",
         kryptos,
-        data: "data",
-        dsa: "ieee-p1363",
-        format,
+        raw,
       });
 
       expect(
         verifyEcSignature({
+          data,
+          dsaEncoding: "ieee-p1363",
+          encoding,
           kryptos,
-          data: "data",
-          dsa: "ieee-p1363",
+          raw,
           signature,
-          format,
         }),
       ).toEqual(true);
     });
   });
 
-  describe("raw", () => {
-    test("should sign and verify with P-256 raw formatting", async () => {
-      const kryptos = TEST_EC_KEY_256;
+  describe("encoding", () => {
+    const kryptos = TEST_EC_KEY_ES256;
 
-      const signature = createEcSignature({ kryptos, data: "data", dsa, format: "raw" });
+    test("should sign and verify with no encoding", () => {
+      const signature = createEcSignature({
+        data,
+        dsaEncoding,
+        kryptos,
+        raw,
+      });
 
       expect(
-        verifyEcSignature({ kryptos, data: "data", dsa, signature, format: "raw" }),
+        verifyEcSignature({
+          data,
+          dsaEncoding,
+          encoding,
+          kryptos,
+          raw,
+          signature,
+        }),
       ).toEqual(true);
     });
 
-    test("should sign and verify with P-384 raw formatting", async () => {
-      const kryptos = TEST_EC_KEY_384;
+    test("should sign and verify with base64 encoding", () => {
+      data = randomBytes(32).toString("base64");
 
-      const signature = createEcSignature({ kryptos, data: "data", dsa, format: "raw" });
+      const signature = createEcSignature({
+        data,
+        dsaEncoding,
+        kryptos,
+        raw,
+      }).toString("base64");
 
       expect(
-        verifyEcSignature({ kryptos, data: "data", dsa, signature, format: "raw" }),
+        verifyEcSignature({
+          data,
+          dsaEncoding,
+          encoding: "base64",
+          kryptos,
+          raw,
+          signature,
+        }),
       ).toEqual(true);
     });
 
-    test("should sign and verify with P-521 raw formatting", async () => {
-      const kryptos = TEST_EC_KEY_512;
+    test("should sign and verify with base64url encoding", () => {
+      data = randomBytes(32).toString("base64url");
 
-      const signature = createEcSignature({ kryptos, data: "data", dsa, format: "raw" });
+      const signature = createEcSignature({
+        data,
+        dsaEncoding,
+        kryptos,
+        raw,
+      }).toString("base64url");
 
       expect(
-        verifyEcSignature({ kryptos, data: "data", dsa, signature, format: "raw" }),
+        verifyEcSignature({
+          data,
+          dsaEncoding,
+          encoding: "base64url",
+          kryptos,
+          raw,
+          signature,
+        }),
+      ).toEqual(true);
+    });
+
+    test("should sign and verify with hex encoding", () => {
+      data = randomBytes(32).toString("hex");
+
+      const signature = createEcSignature({
+        data,
+        dsaEncoding,
+        kryptos,
+        raw,
+      }).toString("hex");
+
+      expect(
+        verifyEcSignature({
+          data,
+          dsaEncoding,
+          encoding: "hex",
+          kryptos,
+          raw,
+          signature,
+        }),
       ).toEqual(true);
     });
   });
 
   describe("assert", () => {
-    const kryptos = TEST_EC_KEY_256;
+    const kryptos = TEST_EC_KEY_ES256;
 
     test("should assert signature", () => {
-      const signature = createEcSignature({ kryptos, data: "data", dsa, format });
+      const signature = createEcSignature({
+        data,
+        dsaEncoding,
+        kryptos,
+        raw,
+      });
 
       expect(() =>
-        assertEcSignature({ kryptos, data: "data", dsa, format, signature }),
+        assertEcSignature({
+          data,
+          dsaEncoding,
+          encoding,
+          kryptos,
+          raw,
+          signature,
+        }),
       ).not.toThrow();
     });
 
     test("should throw error on invalid signature", () => {
-      const signature = createEcSignature({ kryptos, data: "data", dsa, format });
+      const signature = createEcSignature({
+        data,
+        dsaEncoding,
+        kryptos,
+        raw,
+      });
 
       expect(() =>
-        assertEcSignature({ kryptos, data: "invalid", dsa, format, signature }),
+        assertEcSignature({
+          data: "invalid",
+          dsaEncoding,
+          encoding,
+          kryptos,
+          raw,
+          signature,
+        }),
       ).toThrow(EcError);
     });
   });

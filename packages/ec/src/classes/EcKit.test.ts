@@ -1,18 +1,21 @@
-import { TEST_EC_KEY_512 } from "../__fixtures__/keys";
+import { randomBytes } from "crypto";
+import { TEST_EC_KEY_ES512 } from "../__fixtures__/keys";
 import { EcError } from "../errors";
 import { EcKit } from "./EcKit";
 
 describe("EcKit", () => {
   let kit: EcKit;
-  let signature: string;
+  let data: Buffer;
+  let signature: Buffer;
 
   beforeEach(() => {
-    kit = new EcKit({ kryptos: TEST_EC_KEY_512 });
-    signature = kit.sign("string");
+    kit = new EcKit({ kryptos: TEST_EC_KEY_ES512 });
+    data = randomBytes(32);
+    signature = kit.sign(data);
   });
 
   test("should verify", () => {
-    expect(kit.verify("string", signature)).toEqual(true);
+    expect(kit.verify(data, signature)).toEqual(true);
   });
 
   test("should reject", () => {
@@ -20,7 +23,7 @@ describe("EcKit", () => {
   });
 
   test("should assert", () => {
-    expect(() => kit.assert("string", signature)).not.toThrow();
+    expect(() => kit.assert(data, signature)).not.toThrow();
   });
 
   test("should throw error", () => {

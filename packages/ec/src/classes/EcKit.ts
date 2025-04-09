@@ -1,7 +1,7 @@
 import { IKryptosEc, KryptosKit } from "@lindorm/kryptos";
-import { DsaEncoding, IKeyKit } from "@lindorm/types";
+import { DsaEncoding, IKeyKit, KeyData } from "@lindorm/types";
 import { EcError } from "../errors";
-import { EcKitOptions, EcSignatureFormat } from "../types";
+import { EcKitOptions } from "../types";
 import {
   assertEcSignature,
   createEcSignature,
@@ -10,12 +10,14 @@ import {
 
 export class EcKit implements IKeyKit {
   private readonly dsa: DsaEncoding;
-  private readonly format: EcSignatureFormat;
+  private readonly encoding: BufferEncoding;
   private readonly kryptos: IKryptosEc;
+  private readonly raw: boolean;
 
   public constructor(options: EcKitOptions) {
     this.dsa = options.dsa ?? "der";
-    this.format = options.format ?? "base64";
+    this.encoding = options.encoding ?? "base64";
+    this.raw = options.raw ?? false;
 
     if (!KryptosKit.isEc(options.kryptos)) {
       throw new EcError("Invalid Kryptos instance");
@@ -24,32 +26,38 @@ export class EcKit implements IKeyKit {
     this.kryptos = options.kryptos;
   }
 
-  public sign(data: string): string {
+  public sign(data: KeyData): Buffer {
     return createEcSignature({
       data,
-      dsa: this.dsa,
-      format: this.format,
+      dsaEncoding: this.dsa,
       kryptos: this.kryptos,
+      raw: this.raw,
     });
   }
 
-  public verify(data: string, signature: string): boolean {
+  public verify(data: KeyData, signature: KeyData): boolean {
     return verifyEcSignature({
       data,
-      dsa: this.dsa,
-      format: this.format,
+      dsaEncoding: this.dsa,
+      encoding: this.encoding,
       kryptos: this.kryptos,
+      raw: this.raw,
       signature,
     });
   }
 
-  public assert(data: string, signature: string): void {
+  public assert(data: KeyData, signature: KeyData): void {
     return assertEcSignature({
       data,
-      dsa: this.dsa,
-      format: this.format,
+      dsaEncoding: this.dsa,
+      encoding: this.encoding,
       kryptos: this.kryptos,
+      raw: this.raw,
       signature,
     });
+  }
+
+  public format(data: Buffer): string {
+    return data.toString(this.encoding);
   }
 }

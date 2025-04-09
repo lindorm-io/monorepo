@@ -1,5 +1,5 @@
 import { IKryptosRsa, KryptosKit } from "@lindorm/kryptos";
-import { BufferFormat, DsaEncoding, IKeyKit } from "@lindorm/types";
+import { DsaEncoding, IKeyKit, KeyData } from "@lindorm/types";
 import { RsaError } from "../errors";
 import { RsaKitOptions } from "../types";
 import {
@@ -10,12 +10,12 @@ import {
 
 export class RsaKit implements IKeyKit {
   private readonly dsa: DsaEncoding;
-  private readonly format: BufferFormat;
+  private readonly encoding: BufferEncoding;
   private readonly kryptos: IKryptosRsa;
 
   public constructor(options: RsaKitOptions) {
     this.dsa = options.dsa ?? "der";
-    this.format = options.format ?? "base64";
+    this.encoding = options.encoding ?? "base64";
 
     if (!KryptosKit.isRsa(options.kryptos)) {
       throw new RsaError("Invalid Kryptos instance");
@@ -24,32 +24,35 @@ export class RsaKit implements IKeyKit {
     this.kryptos = options.kryptos;
   }
 
-  public sign(data: string): string {
+  public sign(data: KeyData): Buffer {
     return createRsaSignature({
       data,
-      dsa: this.dsa,
-      format: this.format,
+      dsaEncoding: this.dsa,
       kryptos: this.kryptos,
     });
   }
 
-  public verify(data: string, signature: string): boolean {
+  public verify(data: KeyData, signature: KeyData): boolean {
     return verifyRsaSignature({
       data,
-      dsa: this.dsa,
-      format: this.format,
+      dsaEncoding: this.dsa,
+      encoding: this.encoding,
       kryptos: this.kryptos,
       signature,
     });
   }
 
-  public assert(data: string, signature: string): void {
+  public assert(data: KeyData, signature: KeyData): void {
     return assertRsaSignature({
       data,
-      dsa: this.dsa,
-      format: this.format,
+      dsaEncoding: this.dsa,
+      encoding: this.encoding,
       kryptos: this.kryptos,
       signature,
     });
+  }
+
+  public format(data: Buffer): string {
+    return data.toString(this.encoding);
   }
 }

@@ -1,20 +1,19 @@
 import { IKryptos, IKryptosOct } from "@lindorm/kryptos";
-import { BufferFormat } from "@lindorm/types";
+import { KeyData } from "@lindorm/types";
 
 export type CreateOctSignatureOptions = {
-  data: string;
-  format: BufferFormat;
+  data: KeyData;
   kryptos: IKryptosOct;
 };
 
 export type VerifyOctSignatureOptions = {
-  data: string;
-  format: BufferFormat;
+  data: KeyData;
+  encoding: BufferEncoding;
   kryptos: IKryptosOct;
-  signature: string;
+  signature: KeyData;
 };
 
 export type OctKitOptions = {
-  format?: BufferFormat;
+  encoding?: BufferEncoding;
   kryptos: IKryptos;
 };

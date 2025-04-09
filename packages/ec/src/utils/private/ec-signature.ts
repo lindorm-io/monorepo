@@ -1,3 +1,4 @@
+import { isBuffer, isString } from "@lindorm/is";
 import { createSign, createVerify } from "crypto";
 import { EcError } from "../../errors";
 import { CreateEcSignatureOptions, VerifyEcSignatureOptions } from "../../types/ec-kit";
@@ -7,50 +8,57 @@ import { derToRaw, rawToDer } from "./raw";
 
 export const createEcSignature = ({
   data,
-  dsa,
-  format,
+  dsaEncoding,
   kryptos,
-}: CreateEcSignatureOptions): string => {
+  raw,
+}: CreateEcSignatureOptions): Buffer => {
   const signature = createSign(mapEcAlgorithm(kryptos))
     .update(data)
     .end()
-    .sign({ key: getSignKey(kryptos), dsaEncoding: dsa });
+    .sign({ key: getSignKey(kryptos), dsaEncoding });
 
-  if (format === "raw") {
-    return derToRaw(kryptos, signature).toString("base64url");
+  if (raw) {
+    return derToRaw(kryptos, signature);
   }
 
-  return signature.toString(format);
+  return signature;
 };
 
 export const verifyEcSignature = ({
   data,
-  dsa,
-  format,
+  dsaEncoding,
+  encoding,
   kryptos,
+  raw,
   signature,
 }: VerifyEcSignatureOptions): boolean => {
   let buffer: Buffer;
 
-  if (format === "raw") {
-    buffer = rawToDer(kryptos, Buffer.from(signature, "base64url"));
+  if (raw) {
+    buffer = rawToDer(
+      kryptos,
+      isBuffer(signature) ? signature : Buffer.from(signature, encoding),
+    );
+  } else if (isString(signature)) {
+    buffer = Buffer.from(signature, encoding);
   } else {
-    buffer = Buffer.from(signature, format);
+    buffer = signature;
   }
 
   return createVerify(mapEcAlgorithm(kryptos))
     .update(data)
     .end()
-    .verify({ key: getVerifyKey(kryptos), dsaEncoding: dsa }, buffer);
+    .verify({ key: getVerifyKey(kryptos), dsaEncoding }, buffer);
 };
 
 export const assertEcSignature = ({
   data,
-  dsa,
-  format,
+  dsaEncoding,
+  encoding,
   kryptos,
+  raw,
   signature,
 }: VerifyEcSignatureOptions): void => {
-  if (verifyEcSignature({ data, dsa, format, kryptos, signature })) return;
+  if (verifyEcSignature({ data, dsaEncoding, encoding, kryptos, raw, signature })) return;
   throw new EcError("Invalid signature");
 };

@@ -1,5 +1,5 @@
 import { IKryptosOkp, KryptosKit } from "@lindorm/kryptos";
-import { BufferFormat, DsaEncoding, IKeyKit } from "@lindorm/types";
+import { DsaEncoding, IKeyKit, KeyData } from "@lindorm/types";
 import { OkpError } from "../errors";
 import { OkpKitOptions } from "../types";
 import {
@@ -10,12 +10,12 @@ import {
 
 export class OkpKit implements IKeyKit {
   private readonly dsa: DsaEncoding;
-  private readonly format: BufferFormat;
+  private readonly encoding: BufferEncoding;
   private readonly kryptos: IKryptosOkp;
 
   public constructor(options: OkpKitOptions) {
     this.dsa = options.dsa ?? "der";
-    this.format = options.format ?? "base64";
+    this.encoding = options.encoding ?? "base64";
 
     if (!KryptosKit.isOkp(options.kryptos)) {
       throw new OkpError("Invalid Kryptos instance");
@@ -24,32 +24,35 @@ export class OkpKit implements IKeyKit {
     this.kryptos = options.kryptos;
   }
 
-  public sign(data: string): string {
+  public sign(data: KeyData): Buffer {
     return createOkpSignature({
       data,
-      dsa: this.dsa,
-      format: this.format,
+      dsaEncoding: this.dsa,
       kryptos: this.kryptos,
     });
   }
 
-  public verify(data: string, signature: string): boolean {
+  public verify(data: KeyData, signature: KeyData): boolean {
     return verifyOkpSignature({
       data,
-      dsa: this.dsa,
-      format: this.format,
+      dsaEncoding: this.dsa,
+      encoding: this.encoding,
       kryptos: this.kryptos,
       signature,
     });
   }
 
-  public assert(data: string, signature: string): void {
+  public assert(data: KeyData, signature: KeyData): void {
     return assertOkpSignature({
       data,
-      dsa: this.dsa,
-      format: this.format,
+      dsaEncoding: this.dsa,
+      encoding: this.encoding,
       kryptos: this.kryptos,
       signature,
     });
+  }
+
+  public format(data: Buffer): string {
+    return data.toString(this.encoding);
   }
 }

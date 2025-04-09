@@ -1,3 +1,4 @@
+import { isString } from "@lindorm/is";
 import { sign, verify } from "crypto";
 import { OkpError } from "../../errors";
 import {
@@ -8,36 +9,35 @@ import { getSignKey, getVerifyKey } from "./get-key";
 
 export const createOkpSignature = ({
   data,
-  dsa,
-  format,
+  dsaEncoding,
   kryptos,
-}: CreateOkpSignatureOptions): string =>
-  sign(undefined, Buffer.from(data, "utf8"), {
+}: CreateOkpSignatureOptions): Buffer =>
+  sign(undefined, isString(data) ? Buffer.from(data, "utf8") : data, {
     key: getSignKey(kryptos),
-    dsaEncoding: dsa,
-  }).toString(format);
+    dsaEncoding,
+  });
 
 export const verifyOkpSignature = ({
   data,
-  dsa,
-  format,
+  dsaEncoding,
+  encoding,
   kryptos,
   signature,
 }: VerifyOkpSignatureOptions): boolean =>
   verify(
     undefined,
-    Buffer.from(data, "utf8"),
-    { key: getVerifyKey(kryptos), dsaEncoding: dsa },
-    Buffer.from(signature, format),
+    isString(data) ? Buffer.from(data, "utf8") : data,
+    { key: getVerifyKey(kryptos), dsaEncoding },
+    isString(signature) ? Buffer.from(signature, encoding) : signature,
   );
 
 export const assertOkpSignature = ({
   data,
-  dsa,
-  format,
+  dsaEncoding,
+  encoding,
   kryptos,
   signature,
 }: VerifyOkpSignatureOptions): void => {
-  if (verifyOkpSignature({ data, dsa, format, kryptos, signature })) return;
+  if (verifyOkpSignature({ data, dsaEncoding, encoding, kryptos, signature })) return;
   throw new OkpError("Invalid signature");
 };

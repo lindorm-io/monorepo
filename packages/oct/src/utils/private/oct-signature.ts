@@ -1,3 +1,4 @@
+import { isString } from "@lindorm/is";
 import { createHmac } from "crypto";
 import { OctError } from "../../errors";
 import { CreateOctSignatureOptions, VerifyOctSignatureOptions } from "../../types";
@@ -7,24 +8,25 @@ import { mapOctAlgorithm } from "./map-algorithm";
 
 export const createOctSignature = ({
   data,
-  format,
   kryptos,
-}: CreateOctSignatureOptions): string => {
+}: CreateOctSignatureOptions): Buffer => {
   const algorithm = mapOctAlgorithm(kryptos);
   const privateKey = getPrivateKey(kryptos);
 
   assertKeySize(algorithm, privateKey);
 
-  return createHmac(algorithm, privateKey).update(data).digest(format);
+  return createHmac(algorithm, privateKey).update(data).digest();
 };
 
 export const verifyOctSignature = ({
   data,
-  format,
+  encoding,
   kryptos,
   signature,
 }: VerifyOctSignatureOptions): boolean =>
-  createOctSignature({ data, format, kryptos }) === signature;
+  createOctSignature({ data, kryptos }).equals(
+    isString(signature) ? Buffer.from(signature, encoding) : signature,
+  );
 
 export const assertOctSignature = (options: VerifyOctSignatureOptions): void => {
   if (verifyOctSignature(options)) return;
