@@ -1,10 +1,12 @@
 import { expires } from "@lindorm/date";
+import { isBuffer } from "@lindorm/is";
 import { IKryptos } from "@lindorm/kryptos";
 import { ILogger } from "@lindorm/logger";
 import { Dict } from "@lindorm/types";
 import { decode, encode } from "cbor";
 import { randomBytes } from "crypto";
 import { CwtError } from "../errors";
+import { ICwtKit } from "../interfaces";
 import {
   CwtKitOptions,
   DecodedCwt,
@@ -18,6 +20,8 @@ import {
   VerifyCwtOptions,
 } from "../types";
 import {
+  createCoseSignToken,
+  createCoseSignature,
   createJwtValidate,
   createJwtVerify,
   decodeCoseClaims,
@@ -30,10 +34,10 @@ import {
   parseTokenPayload,
   validate,
   validateValue,
+  verifyCoseSignature,
 } from "../utils/private";
-import { SignatureKit } from "./SignatureKit";
 
-export class CwtKit {
+export class CwtKit implements ICwtKit {
   private readonly clockTolerance: number;
   private readonly issuer: string | null;
   private readonly logger: ILogger;
@@ -51,11 +55,6 @@ export class CwtKit {
     content: SignCwtContent<C>,
     options: SignCwtOptions = {},
   ): SignedCwt {
-    const kit = new SignatureKit({
-      dsa: "ieee-p1363",
-      kryptos: this.kryptos,
-    });
-
     if (!this.issuer) {
       throw new Error("Issuer is required to sign CWT");
     }
@@ -63,16 +62,16 @@ export class CwtKit {
     const objectId =
       options.objectId ?? content.subject ?? randomBytes(20).toString("base64url");
 
-    const protectedHeader = mapCoseHeader(
+    const protectedDict = mapCoseHeader(
       mapTokenHeader({
         algorithm: this.kryptos.algorithm,
         contentType: "application/json",
         headerType: "application/cwt",
       }),
     );
-    const protectedCbor = encode(protectedHeader);
+    const protectedCbor = encode(protectedDict);
 
-    const unprotectedHeader = mapCoseHeader(
+    const unprotectedDict = mapCoseHeader(
       mapTokenHeader({
         jwksUri: this.kryptos.jwksUri,
         keyId: this.kryptos.id,
@@ -81,8 +80,8 @@ export class CwtKit {
     );
 
     this.logger.silly("Token headers created", {
-      protectedHeader,
-      unprotectedHeader,
+      protectedDict,
+      unprotectedDict,
     });
 
     const claims = mapJwtContentToClaims(
@@ -90,50 +89,66 @@ export class CwtKit {
       content,
       { tokenId: randomBytes(20).toString("base64url"), ...options },
     );
-    const payload = mapCoseClaims({ ...claims, ...(content.claims ?? {}) });
-    const payloadCbor = encode(payload);
+    const payloadDict = mapCoseClaims({ ...claims, ...(content.claims ?? {}) });
+    const payloadCbor = encode(payloadDict);
 
-    this.logger.silly("Token payload created", { payload, options: content });
+    this.logger.silly("Token payload created", {
+      payload: payloadDict,
+      content,
+      options,
+    });
 
-    const signatureArray = ["Signature1", protectedCbor, Buffer.alloc(0), payloadCbor];
-    const signatureCbor = encode(signatureArray);
-    const signature = kit.sign(signatureCbor);
+    const signature = createCoseSignature({
+      kryptos: this.kryptos,
+      payload: payloadCbor,
+      protectedHeader: protectedCbor,
+    });
 
-    const tokenArray = [protectedCbor, unprotectedHeader, payloadCbor, signature];
-    const token = encode(tokenArray).toString("base64url");
+    const buffer = createCoseSignToken({
+      payload: payloadCbor,
+      protectedHeader: protectedCbor,
+      unprotectedHeader: unprotectedDict,
+      signature,
+    });
+    const token = buffer.toString("base64url");
 
     const { expiresAt, expiresIn, expiresOn } = expires(content.expires);
 
-    return { expiresAt, expiresIn, expiresOn, objectId, token, tokenId: claims.jti! };
+    return {
+      buffer,
+      expiresAt,
+      expiresIn,
+      expiresOn,
+      objectId,
+      token,
+      tokenId: claims.jti!,
+    };
   }
 
   public verify<C extends Dict = Dict>(
-    token: string,
+    token: Buffer | string,
     verify: VerifyCwtOptions = {},
   ): ParsedCwt<C> {
-    const kit = new SignatureKit({
-      dsa: "ieee-p1363",
-      kryptos: this.kryptos,
-    });
-
     const [protectedCbor, unprotectedCose, payloadCbor, signature] = decode(
-      Buffer.from(token, "base64url"),
+      isBuffer(token) ? token : Buffer.from(token, "base64url"),
     );
-    const protectedHeader = decodeCoseHeader(decode(protectedCbor));
-    const unprotectedHeader = decodeCoseHeader(unprotectedCose);
-    const payload = decodeCoseClaims<C>(decode(payloadCbor));
+    const protectedDict = decodeCoseHeader(decode(protectedCbor));
+    const unprotectedDict = decodeCoseHeader(unprotectedCose);
+    const payloadDict = decodeCoseClaims<C>(decode(payloadCbor));
 
-    if (this.kryptos.algorithm !== protectedHeader.alg) {
+    if (this.kryptos.algorithm !== protectedDict.alg) {
       throw new CwtError("Invalid token", {
-        data: { algorithm: protectedHeader.alg },
+        data: { algorithm: protectedDict.alg },
         debug: { expected: this.kryptos.algorithm },
       });
     }
 
-    const signatureArray = ["Signature1", protectedCbor, Buffer.alloc(0), payloadCbor];
-    const signatureCbor = encode(signatureArray);
-
-    const verified = kit.verify(signatureCbor, signature);
+    const verified = verifyCoseSignature({
+      kryptos: this.kryptos,
+      payload: payloadCbor,
+      protectedHeader: protectedCbor,
+      signature,
+    });
 
     this.logger.silly("Token signature verified", { verified, token: token });
 
@@ -152,11 +167,13 @@ export class CwtKit {
     const invalid: Array<{ key: string; value: any; ops: Operators }> = [];
 
     const withDates = {
-      ...payload,
-      exp: payload.exp ? new Date(payload.exp * 1000) : undefined,
-      iat: payload.iat ? new Date(payload.iat * 1000) : undefined,
-      nbf: payload.nbf ? new Date(payload.nbf * 1000) : undefined,
-      auth_time: payload.auth_time ? new Date(payload.auth_time * 1000) : undefined,
+      ...payloadDict,
+      exp: payloadDict.exp ? new Date(payloadDict.exp * 1000) : undefined,
+      iat: payloadDict.iat ? new Date(payloadDict.iat * 1000) : undefined,
+      nbf: payloadDict.nbf ? new Date(payloadDict.nbf * 1000) : undefined,
+      auth_time: payloadDict.auth_time
+        ? new Date(payloadDict.auth_time * 1000)
+        : undefined,
     };
 
     this.logger.silly("Operators created", { operators });
@@ -174,48 +191,48 @@ export class CwtKit {
     }
 
     const decoded: DecodedCwt<C> = {
-      protected: protectedHeader as any,
-      unprotected: unprotectedHeader as any,
-      payload: payload as any,
+      protected: protectedDict as any,
+      unprotected: unprotectedDict as any,
+      payload: payloadDict as any,
       signature: signature,
     };
 
     return {
       decoded,
       header: parseTokenHeader({
-        ...protectedHeader,
-        ...unprotectedHeader,
+        ...protectedDict,
+        ...unprotectedDict,
       } as any),
-      payload: parseTokenPayload(payload),
-      token,
+      payload: parseTokenPayload(payloadDict),
+      token: isBuffer(token) ? token.toString("base64url") : token,
     };
   }
 
   // public static
 
-  public static decode<C extends Dict = Dict>(token: string): DecodedCwt<C> {
+  public static decode<C extends Dict = Dict>(token: Buffer | string): DecodedCwt<C> {
     const [protectedCbor, unprotectedHeader, payloadCbor, signature] = decode(
-      Buffer.from(token, "base64url"),
+      isBuffer(token) ? token : Buffer.from(token, "base64url"),
     );
-    const protectedHeader = decode(protectedCbor);
+    const protectedCose = decode(protectedCbor);
     const payloadCose = decode(payloadCbor);
 
     return {
-      protected: decodeCoseHeader(protectedHeader) as any,
+      protected: decodeCoseHeader(protectedCose) as any,
       unprotected: decodeCoseHeader(unprotectedHeader) as any,
       payload: decodeCoseClaims(payloadCose) as any,
       signature: signature.toString("base64url"),
     };
   }
 
-  public static parse<C extends Dict = Dict>(token: string): ParsedCwt<C> {
+  public static parse<C extends Dict = Dict>(token: Buffer | string): ParsedCwt<C> {
     const decoded = CwtKit.decode<C>(token);
 
     return {
       decoded,
       header: parseTokenHeader({ ...decoded.protected, ...decoded.unprotected }),
       payload: parseTokenPayload(decoded.payload),
-      token,
+      token: isBuffer(token) ? token.toString("base64url") : token,
     };
   }
 

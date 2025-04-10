@@ -1,5 +1,7 @@
 export * from "./cose";
 
+export * from "./cose-sign-token";
+export * from "./cose-signature";
 export * from "./create-hash";
 export * from "./jose-header";
 export * from "./jose-signature";

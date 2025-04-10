@@ -3,7 +3,6 @@ import { B64 } from "@lindorm/b64";
 import { isJwe, isJws, isJwt, isString } from "@lindorm/is";
 import { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
 import { ILogger } from "@lindorm/logger";
-import { removeUndefined } from "@lindorm/utils";
 import { randomUUID } from "crypto";
 import { B64U } from "../constants/private";
 import { JweError } from "../errors";
@@ -39,8 +38,6 @@ export class JweKit implements IJweKit {
         ? this.kryptos.encryption
         : this.encryption;
 
-    const jwksUri = this.kryptos.jwksUri;
-    const keyId = this.kryptos.id;
     const objectId = options.objectId ?? randomUUID();
 
     const critical: Array<Exclude<keyof TokenHeaderSignOptions, "critical">> = [
@@ -77,8 +74,8 @@ export class JweKit implements IJweKit {
       encryption,
       headerType: "JWE",
       hkdfSalt,
-      jwksUri,
-      keyId,
+      jwksUri: this.kryptos.jwksUri,
+      keyId: this.kryptos.id,
       objectId,
       pbkdfIterations,
       pbkdfSalt,
@@ -91,15 +88,19 @@ export class JweKit implements IJweKit {
 
     this.logger.silly("Token header encoded", { header, options: headerOptions });
 
-    const token = removeUndefined([
+    if (!authTag) {
+      throw new JweError("Missing auth tag");
+    }
+
+    const token = [
       header,
       publicEncryptionKey ? B64.encode(publicEncryptionKey, B64U) : "",
       B64.encode(initialisationVector, B64U),
       B64.encode(content, B64U),
-      authTag ? B64.encode(authTag, B64U) : undefined,
-    ]).join(".");
+      B64.encode(authTag, B64U),
+    ].join(".");
 
-    this.logger.silly("Token created", { keyId, token });
+    this.logger.silly("Token created", { keyId: this.kryptos.id, token });
 
     return { token };
   }
@@ -110,34 +111,40 @@ export class JweKit implements IJweKit {
         ? this.kryptos.encryption
         : this.encryption;
 
-    const raw = JweKit.decode(token);
+    const decoded = JweKit.decode(token);
 
-    if (raw.header.typ !== "JWE") {
+    if (decoded.header.typ !== "JWE") {
       throw new JweError("Invalid token", {
-        data: { typ: raw.header.typ },
+        data: { typ: decoded.header.typ },
       });
     }
 
-    if (this.kryptos.algorithm !== raw.header.alg) {
+    if (this.kryptos.algorithm !== decoded.header.alg) {
       throw new JweError("Invalid token", {
-        data: { alg: raw.header.alg },
+        data: { alg: decoded.header.alg },
         debug: { expected: this.kryptos.algorithm },
       });
     }
 
-    const header = parseTokenHeader<DecryptedJweHeader>(raw.header);
+    const header = parseTokenHeader<DecryptedJweHeader>(decoded.header);
 
-    const authTag = raw.authTag ? B64.toBuffer(raw.authTag) : undefined;
-    const content = B64.toBuffer(raw.content);
+    if (header.encryption !== encryption) {
+      throw new JweError("Unexpected encryption", {
+        debug: { actual: header.encryption, encryption },
+      });
+    }
+
+    const authTag = B64.toBuffer(decoded.authTag);
+    const content = B64.toBuffer(decoded.content);
     const hkdfSalt = header.hkdfSalt ? B64.toBuffer(header.hkdfSalt, B64U) : undefined;
-    const initialisationVector = B64.toBuffer(raw.initialisationVector);
+    const initialisationVector = B64.toBuffer(decoded.initialisationVector);
     const pbkdfIterations = header.pbkdfIterations;
     const pbkdfSalt = header.pbkdfSalt ? B64.toBuffer(header.pbkdfSalt, B64U) : undefined;
     const publicEncryptionIv = header.publicEncryptionIv
       ? B64.toBuffer(header.publicEncryptionIv)
       : undefined;
-    const publicEncryptionKey = raw.publicEncryptionKey
-      ? B64.toBuffer(raw.publicEncryptionKey)
+    const publicEncryptionKey = decoded.publicEncryptionKey
+      ? B64.toBuffer(decoded.publicEncryptionKey)
       : undefined;
     const publicEncryptionJwk = header.publicEncryptionJwk;
     const publicEncryptionTag = header.publicEncryptionTag
@@ -181,7 +188,7 @@ export class JweKit implements IJweKit {
 
     this.logger.silly("Token decrypted", { payload });
 
-    return { header, payload, decoded: raw, token };
+    return { header, payload, decoded, token };
   }
 
   // public static
@@ -199,7 +206,7 @@ export class JweKit implements IJweKit {
       publicEncryptionKey: publicEncryptionKey?.length ? publicEncryptionKey : undefined,
       initialisationVector,
       content,
-      authTag: authTag?.length ? authTag : undefined,
+      authTag,
     };
   }
 
@@ -223,7 +230,7 @@ export class JweKit implements IJweKit {
     }
 
     if (isString(input)) {
-      return "text/plain";
+      return "text/plain; charset=utf-8";
     }
 
     return "application/unknown";

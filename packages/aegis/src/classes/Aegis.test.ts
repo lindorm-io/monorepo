@@ -25,7 +25,47 @@ describe("Aegis", () => {
     amphora.add(TEST_OKP_KEY_ENC);
   });
 
-  test("should sign cwt", async () => {
+  test("should sign and verify cose-sign", async () => {
+    const res = await aegis.cose.sign("data", {
+      objectId: "09172fab-dbff-40ef-bb86-94d9d4ed37dc",
+    });
+
+    expect(res).toEqual({
+      buffer: expect.any(Buffer),
+      objectId: "09172fab-dbff-40ef-bb86-94d9d4ed37dc",
+      token: expect.any(String),
+    });
+
+    await expect(aegis.cose.verify(res.token)).resolves.toEqual({
+      decoded: {
+        protected: {
+          alg: "ES512",
+          cty: "text/plain; charset=utf-8",
+          typ: "application/cose; cose-type=cose-sign",
+        },
+        unprotected: {
+          jku: "https://test.lindorm.io/.well-known/jwks.json",
+          kid: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+          oid: "09172fab-dbff-40ef-bb86-94d9d4ed37dc",
+        },
+        payload: Buffer.from("data"),
+        signature: expect.any(Buffer),
+      },
+      header: {
+        algorithm: "ES512",
+        contentType: "text/plain; charset=utf-8",
+        critical: [],
+        headerType: "application/cose; cose-type=cose-sign",
+        jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
+        keyId: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+        objectId: "09172fab-dbff-40ef-bb86-94d9d4ed37dc",
+      },
+      payload: "data",
+      token: res.token,
+    });
+  });
+
+  test("should sign and verify cwt", async () => {
     const res = await aegis.cwt.sign({
       expires: "1h",
       subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
@@ -33,6 +73,7 @@ describe("Aegis", () => {
     });
 
     expect(res).toEqual({
+      buffer: expect.any(Buffer),
       expiresAt: new Date("2024-01-01T09:00:00.000Z"),
       expiresIn: 3600,
       expiresOn: 1704099600,
@@ -108,7 +149,7 @@ describe("Aegis", () => {
         header: {
           alg: "ECDH-ES",
           crit: ["alg", "enc", "epk", "hkdf_salt"],
-          cty: "text/plain",
+          cty: "text/plain; charset=utf-8",
           enc: "A256GCM",
           epk: {
             crv: "X25519",
@@ -126,7 +167,7 @@ describe("Aegis", () => {
       },
       header: {
         algorithm: "ECDH-ES",
-        contentType: "text/plain",
+        contentType: "text/plain; charset=utf-8",
         critical: ["algorithm", "encryption", "publicEncryptionJwk", "hkdfSalt"],
         encryption: "A256GCM",
         headerType: "JWE",
@@ -145,7 +186,7 @@ describe("Aegis", () => {
     });
   });
 
-  test("should sign jws", async () => {
+  test("should sign and verify jws", async () => {
     const res = await aegis.jws.sign("data", {
       objectId: "09172fab-dbff-40ef-bb86-94d9d4ed37dc",
     });
@@ -159,7 +200,7 @@ describe("Aegis", () => {
       decoded: {
         header: {
           alg: "ES512",
-          cty: "text/plain",
+          cty: "text/plain; charset=utf-8",
           jku: "https://test.lindorm.io/.well-known/jwks.json",
           kid: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
           oid: "09172fab-dbff-40ef-bb86-94d9d4ed37dc",
@@ -170,7 +211,7 @@ describe("Aegis", () => {
       },
       header: {
         algorithm: "ES512",
-        contentType: "text/plain",
+        contentType: "text/plain; charset=utf-8",
         critical: [],
         headerType: "JWS",
         jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
@@ -182,7 +223,7 @@ describe("Aegis", () => {
     });
   });
 
-  test("should sign jwt", async () => {
+  test("should sign and verify jwt", async () => {
     const res = await aegis.jwt.sign({
       expires: "1h",
       subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",

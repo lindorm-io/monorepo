@@ -1,24 +1,25 @@
 import { createMockLogger } from "@lindorm/logger";
 import MockDate from "mockdate";
-import { TEST_EC_KEY_SIG } from "../__fixtures__/keys";
-import { JwsKit } from "./JwsKit";
+import { TEST_OKP_KEY_SIG } from "../__fixtures__/keys";
+import { CoseSignKit } from "./CoseSignKit";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate);
 
-describe("JwsKit", () => {
-  let kit: JwsKit;
+describe("CoseSignKit", () => {
+  let kit: CoseSignKit;
 
   beforeEach(() => {
-    kit = new JwsKit({
+    kit = new CoseSignKit({
       logger: createMockLogger(),
-      kryptos: TEST_EC_KEY_SIG,
+      kryptos: TEST_OKP_KEY_SIG,
     });
   });
 
   describe("sign", () => {
     test("should sign token with plain text data", () => {
       expect(kit.sign("test data in plain text")).toEqual({
+        buffer: expect.any(Buffer),
         objectId: expect.any(String),
         token: expect.any(String),
       });
@@ -26,6 +27,7 @@ describe("JwsKit", () => {
 
     test("should sign token with buffer data", () => {
       expect(kit.sign(Buffer.from("test data in buffer", "utf8"))).toEqual({
+        buffer: expect.any(Buffer),
         objectId: expect.any(String),
         token: expect.any(String),
       });
@@ -40,28 +42,30 @@ describe("JwsKit", () => {
 
       expect(kit.verify(token)).toEqual({
         decoded: {
-          header: {
-            alg: "ES512",
+          protected: {
+            alg: "EdDSA",
             cty: "text/plain; charset=utf-8",
-            jku: "https://test.lindorm.io/.well-known/jwks.json",
-            kid: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
-            oid: "ba63b8d4-500a-4646-9aac-cb45543c966d",
-            typ: "JWS",
+            typ: "application/cose; cose-type=cose-sign",
           },
-          payload: "test data in plain text",
-          signature: expect.any(String),
+          unprotected: {
+            jku: "https://test.lindorm.io/.well-known/jwks.json",
+            kid: "2fa52a91-7f63-5731-a55d-30d36350c642",
+            oid: "ba63b8d4-500a-4646-9aac-cb45543c966d",
+          },
+          payload: expect.any(Buffer),
+          signature: expect.any(Buffer),
         },
         header: {
-          algorithm: "ES512",
+          algorithm: "EdDSA",
           contentType: "text/plain; charset=utf-8",
           critical: [],
-          headerType: "JWS",
+          headerType: "application/cose; cose-type=cose-sign",
           jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
-          keyId: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+          keyId: "2fa52a91-7f63-5731-a55d-30d36350c642",
           objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
         },
         payload: "test data in plain text",
-        token,
+        token: expect.any(String),
       });
     });
 
@@ -72,28 +76,30 @@ describe("JwsKit", () => {
 
       expect(kit.verify(token)).toEqual({
         decoded: {
-          header: {
-            alg: "ES512",
+          protected: {
+            alg: "EdDSA",
             cty: "application/octet-stream",
-            jku: "https://test.lindorm.io/.well-known/jwks.json",
-            kid: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
-            oid: "ba63b8d4-500a-4646-9aac-cb45543c966d",
-            typ: "JWS",
+            typ: "application/cose; cose-type=cose-sign",
           },
-          payload: "dGVzdCBkYXRhIGluIGJ1ZmZlcg",
-          signature: expect.any(String),
+          unprotected: {
+            jku: "https://test.lindorm.io/.well-known/jwks.json",
+            kid: "2fa52a91-7f63-5731-a55d-30d36350c642",
+            oid: "ba63b8d4-500a-4646-9aac-cb45543c966d",
+          },
+          payload: expect.any(Buffer),
+          signature: expect.any(Buffer),
         },
         header: {
-          algorithm: "ES512",
+          algorithm: "EdDSA",
           contentType: "application/octet-stream",
           critical: [],
-          headerType: "JWS",
+          headerType: "application/cose; cose-type=cose-sign",
           jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
-          keyId: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+          keyId: "2fa52a91-7f63-5731-a55d-30d36350c642",
           objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
         },
         payload: Buffer.from("test data in buffer", "utf8"),
-        token,
+        token: expect.any(String),
       });
     });
   });
@@ -104,14 +110,16 @@ describe("JwsKit", () => {
         objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
       });
 
-      expect(JwsKit.decode(token)).toEqual({
-        header: {
-          alg: "ES512",
+      expect(CoseSignKit.decode(token)).toEqual({
+        protected: {
+          alg: "EdDSA",
           cty: "text/plain; charset=utf-8",
+          typ: "application/cose; cose-type=cose-sign",
+        },
+        unprotected: {
           jku: "https://test.lindorm.io/.well-known/jwks.json",
-          kid: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+          kid: "2fa52a91-7f63-5731-a55d-30d36350c642",
           oid: "ba63b8d4-500a-4646-9aac-cb45543c966d",
-          typ: "JWS",
         },
         payload: "test data in plain text",
         signature: expect.any(String),
@@ -123,16 +131,18 @@ describe("JwsKit", () => {
         objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
       });
 
-      expect(JwsKit.decode(token)).toEqual({
-        header: {
-          alg: "ES512",
+      expect(CoseSignKit.decode(token)).toEqual({
+        protected: {
+          alg: "EdDSA",
           cty: "application/octet-stream",
-          jku: "https://test.lindorm.io/.well-known/jwks.json",
-          kid: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
-          oid: "ba63b8d4-500a-4646-9aac-cb45543c966d",
-          typ: "JWS",
+          typ: "application/cose; cose-type=cose-sign",
         },
-        payload: "dGVzdCBkYXRhIGluIGJ1ZmZlcg",
+        unprotected: {
+          jku: "https://test.lindorm.io/.well-known/jwks.json",
+          kid: "2fa52a91-7f63-5731-a55d-30d36350c642",
+          oid: "ba63b8d4-500a-4646-9aac-cb45543c966d",
+        },
+        payload: Buffer.from("test data in buffer", "utf8"),
         signature: expect.any(String),
       });
     });
@@ -144,26 +154,28 @@ describe("JwsKit", () => {
         objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
       });
 
-      expect(JwsKit.parse(token)).toEqual({
+      expect(CoseSignKit.parse(token)).toEqual({
         decoded: {
-          header: {
-            alg: "ES512",
+          protected: {
+            alg: "EdDSA",
             cty: "text/plain; charset=utf-8",
+            typ: "application/cose; cose-type=cose-sign",
+          },
+          unprotected: {
             jku: "https://test.lindorm.io/.well-known/jwks.json",
-            kid: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+            kid: "2fa52a91-7f63-5731-a55d-30d36350c642",
             oid: "ba63b8d4-500a-4646-9aac-cb45543c966d",
-            typ: "JWS",
           },
           payload: "test data in plain text",
           signature: expect.any(String),
         },
         header: {
-          algorithm: "ES512",
+          algorithm: "EdDSA",
           contentType: "text/plain; charset=utf-8",
           critical: [],
-          headerType: "JWS",
+          headerType: "application/cose; cose-type=cose-sign",
           jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
-          keyId: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+          keyId: "2fa52a91-7f63-5731-a55d-30d36350c642",
           objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
         },
         payload: "test data in plain text",
@@ -176,26 +188,28 @@ describe("JwsKit", () => {
         objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
       });
 
-      expect(JwsKit.parse(token)).toEqual({
+      expect(CoseSignKit.parse(token)).toEqual({
         decoded: {
-          header: {
-            alg: "ES512",
+          protected: {
+            alg: "EdDSA",
             cty: "application/octet-stream",
-            jku: "https://test.lindorm.io/.well-known/jwks.json",
-            kid: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
-            oid: "ba63b8d4-500a-4646-9aac-cb45543c966d",
-            typ: "JWS",
+            typ: "application/cose; cose-type=cose-sign",
           },
-          payload: "dGVzdCBkYXRhIGluIGJ1ZmZlcg",
+          unprotected: {
+            jku: "https://test.lindorm.io/.well-known/jwks.json",
+            kid: "2fa52a91-7f63-5731-a55d-30d36350c642",
+            oid: "ba63b8d4-500a-4646-9aac-cb45543c966d",
+          },
+          payload: Buffer.from("test data in buffer", "utf8"),
           signature: expect.any(String),
         },
         header: {
-          algorithm: "ES512",
+          algorithm: "EdDSA",
           contentType: "application/octet-stream",
           critical: [],
-          headerType: "JWS",
+          headerType: "application/cose; cose-type=cose-sign",
           jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
-          keyId: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+          keyId: "2fa52a91-7f63-5731-a55d-30d36350c642",
           objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
         },
         payload: Buffer.from("test data in buffer", "utf8"),

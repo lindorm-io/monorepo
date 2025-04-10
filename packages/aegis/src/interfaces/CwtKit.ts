@@ -12,5 +12,8 @@ export interface ICwtKit {
     content: SignCwtContent<T>,
     options?: SignCwtOptions,
   ): SignedCwt;
-  verify<T extends Dict = Dict>(token: string, verify?: VerifyCwtOptions): ParsedCwt<T>;
+  verify<T extends Dict = Dict>(
+    token: Buffer | string,
+    verify?: VerifyCwtOptions,
+  ): ParsedCwt<T>;
 }

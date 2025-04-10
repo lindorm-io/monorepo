@@ -66,7 +66,7 @@ describe("JweKit", () => {
           header: {
             alg: "ECDH-ES",
             crit: ["alg", "enc", "epk", "hkdf_salt"],
-            cty: "text/plain",
+            cty: "text/plain; charset=utf-8",
             enc: "A256GCM",
             epk: {
               crv: "P-521",
@@ -85,7 +85,7 @@ describe("JweKit", () => {
         },
         header: {
           algorithm: "ECDH-ES",
-          contentType: "text/plain",
+          contentType: "text/plain; charset=utf-8",
           critical: ["algorithm", "encryption", "publicEncryptionJwk", "hkdfSalt"],
           encryption: "A256GCM",
           headerType: "JWE",
@@ -119,7 +119,7 @@ describe("JweKit", () => {
           header: {
             alg: "dir",
             crit: ["alg", "enc"],
-            cty: "text/plain",
+            cty: "text/plain; charset=utf-8",
             enc: "A256GCM",
             jku: "https://test.lindorm.io/.well-known/jwks.json",
             kid: "ae26175f-961d-5947-8318-6299e4576b83",
@@ -131,7 +131,7 @@ describe("JweKit", () => {
         },
         header: {
           algorithm: "dir",
-          contentType: "text/plain",
+          contentType: "text/plain; charset=utf-8",
           critical: ["algorithm", "encryption"],
           encryption: "A256GCM",
           headerType: "JWE",
@@ -163,7 +163,7 @@ describe("JweKit", () => {
           header: {
             alg: "A128KW",
             crit: ["alg", "enc", "hkdf_salt"],
-            cty: "text/plain",
+            cty: "text/plain; charset=utf-8",
             enc: "A256GCM",
             hkdf_salt: expect.any(String),
             jku: "https://test.lindorm.io/.well-known/jwks.json",
@@ -176,7 +176,7 @@ describe("JweKit", () => {
         },
         header: {
           algorithm: "A128KW",
-          contentType: "text/plain",
+          contentType: "text/plain; charset=utf-8",
           critical: ["algorithm", "encryption", "hkdfSalt"],
           encryption: "A256GCM",
           headerType: "JWE",
@@ -206,7 +206,7 @@ describe("JweKit", () => {
           header: {
             alg: "PBES2-HS512+A256KW",
             crit: ["alg", "enc", "p2c", "p2s"],
-            cty: "text/plain",
+            cty: "text/plain; charset=utf-8",
             enc: "A256GCM",
             kid: kryptos.id,
             oid: "19a0c0cc-3eec-4ece-a5a1-4d93a457c3a6",
@@ -219,7 +219,7 @@ describe("JweKit", () => {
         },
         header: {
           algorithm: "PBES2-HS512+A256KW",
-          contentType: "text/plain",
+          contentType: "text/plain; charset=utf-8",
           critical: ["algorithm", "encryption", "pbkdfIterations", "pbkdfSalt"],
           encryption: "A256GCM",
           headerType: "JWE",
@@ -249,7 +249,7 @@ describe("JweKit", () => {
           header: {
             alg: "A128GCMKW",
             crit: ["alg", "enc", "iv", "tag", "hkdf_salt"],
-            cty: "text/plain",
+            cty: "text/plain; charset=utf-8",
             enc: "A256GCM",
             hkdf_salt: expect.any(String),
             iv: expect.any(String),
@@ -263,7 +263,7 @@ describe("JweKit", () => {
         },
         header: {
           algorithm: "A128GCMKW",
-          contentType: "text/plain",
+          contentType: "text/plain; charset=utf-8",
           critical: [
             "algorithm",
             "encryption",
@@ -298,7 +298,7 @@ describe("JweKit", () => {
           header: {
             alg: "ECDH-ES",
             crit: ["alg", "enc", "epk", "hkdf_salt"],
-            cty: "text/plain",
+            cty: "text/plain; charset=utf-8",
             enc: "A256GCM",
             epk: {
               crv: "X25519",
@@ -316,7 +316,7 @@ describe("JweKit", () => {
         },
         header: {
           algorithm: "ECDH-ES",
-          contentType: "text/plain",
+          contentType: "text/plain; charset=utf-8",
           critical: ["algorithm", "encryption", "publicEncryptionJwk", "hkdfSalt"],
           encryption: "A256GCM",
           headerType: "JWE",
@@ -349,7 +349,7 @@ describe("JweKit", () => {
           header: {
             alg: "RSA-OAEP-256",
             crit: ["alg", "enc"],
-            cty: "text/plain",
+            cty: "text/plain; charset=utf-8",
             enc: "A256GCM",
             jku: "https://test.lindorm.io/.well-known/jwks.json",
             kid: "20b09138-bab7-54ce-a491-1f4ba52e3d4e",
@@ -361,7 +361,7 @@ describe("JweKit", () => {
         },
         header: {
           algorithm: "RSA-OAEP-256",
-          contentType: "text/plain",
+          contentType: "text/plain; charset=utf-8",
           critical: ["algorithm", "encryption"],
           encryption: "A256GCM",
           headerType: "JWE",
@@ -375,7 +375,7 @@ describe("JweKit", () => {
     });
   });
 
-  describe("raw", () => {
+  describe("decode", () => {
     test("should decode data", () => {
       const { token } = kit.encrypt("data", {
         objectId: "e5d4ed15-3350-4fdc-a9cf-d8270d637e99",
@@ -387,7 +387,7 @@ describe("JweKit", () => {
         header: {
           alg: "ECDH-ES",
           crit: ["alg", "enc", "epk", "hkdf_salt"],
-          cty: "text/plain",
+          cty: "text/plain; charset=utf-8",
           enc: "A256GCM",
           epk: {
             crv: "P-521",

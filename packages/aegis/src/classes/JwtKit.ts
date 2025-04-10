@@ -77,7 +77,7 @@ export class JwtKit implements IJwtKit {
       options,
     );
 
-    this.logger.silly("Token payload encoded", { payload, content });
+    this.logger.silly("Token payload encoded", { payload, content, options });
 
     const signature = createJoseSignature({
       header,

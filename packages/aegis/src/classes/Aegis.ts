@@ -18,6 +18,7 @@ import { AegisError } from "../errors";
 import {
   IAegis,
   IAegisAes,
+  IAegisCose,
   IAegisCwt,
   IAegisJwe,
   IAegisJws,
@@ -25,6 +26,7 @@ import {
 } from "../interfaces";
 import {
   AegisOptions,
+  CoseSignContent,
   DecodedJwe,
   DecodedJws,
   DecodedJwt,
@@ -32,14 +34,17 @@ import {
   EncryptedJwe,
   JweEncryptOptions,
   JwsContent,
+  ParsedCoseSign,
   ParsedCwt,
   ParsedJws,
   ParsedJwt,
+  SignCoseSignOptions,
   SignCwtContent,
   SignCwtOptions,
   SignJwsOptions,
   SignJwtContent,
   SignJwtOptions,
+  SignedCoseSign,
   SignedCwt,
   SignedJws,
   SignedJwt,
@@ -49,6 +54,7 @@ import {
   VerifyJwtOptions,
 } from "../types";
 import { decodeJoseHeader } from "../utils/private";
+import { CoseSignKit } from "./CoseSignKit";
 import { CwtKit } from "./CwtKit";
 import { JweKit } from "./JweKit";
 import { JwsKit } from "./JwsKit";
@@ -93,6 +99,13 @@ export class Aegis implements IAegis {
     return {
       encrypt: this.aesEncrypt.bind(this) as IAegisAes["encrypt"],
       decrypt: this.aesDecrypt.bind(this),
+    };
+  }
+
+  public get cose(): IAegisCose {
+    return {
+      sign: this.coseSign.bind(this),
+      verify: this.coseVerify.bind(this),
     };
   }
 
@@ -208,6 +221,39 @@ export class Aegis implements IAegis {
     const kit = await this.aesKit({ id: parsed.keyId, algorithm: parsed.algorithm });
 
     return kit.decrypt(data);
+  }
+
+  // private coseSign
+
+  private async coseSignKit(options: SigOptions = {}): Promise<CoseSignKit> {
+    const kryptos = await this.kryptosSig(options);
+
+    return new CoseSignKit({
+      kryptos,
+      logger: this.logger,
+    });
+  }
+
+  private async coseSign<T extends CoseSignContent>(
+    content: T,
+    options: SignCoseSignOptions = {},
+  ): Promise<SignedCoseSign> {
+    const kit = await this.coseSignKit({ sign: true });
+
+    return kit.sign(content, options);
+  }
+
+  private async coseVerify<T extends CoseSignContent>(
+    token: Buffer | string,
+  ): Promise<ParsedCoseSign<T>> {
+    const decode = CoseSignKit.decode(token);
+
+    const kit = await this.coseSignKit({
+      id: decode.unprotected.kid,
+      algorithm: decode.protected.alg,
+    });
+
+    return kit.verify(token);
   }
 
   // private cwt

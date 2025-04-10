@@ -5,5 +5,5 @@ export type DecodedJwe = {
   publicEncryptionKey: string | undefined;
   initialisationVector: string;
   content: string;
-  authTag: string | undefined;
+  authTag: string;
 };

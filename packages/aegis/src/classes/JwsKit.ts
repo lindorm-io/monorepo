@@ -36,22 +36,18 @@ export class JwsKit implements IJwsKit {
     data: T,
     options: SignJwsOptions = {},
   ): SignedJws {
-    const algorithm = this.kryptos.algorithm;
-    const jwksUri = this.kryptos.jwksUri;
-    const keyId = this.kryptos.id;
     const objectId = options.objectId ?? randomUUID();
-    const contentType = options.contentType
-      ? options.contentType
-      : isString(data)
-        ? "text/plain"
-        : "application/buffer";
 
     const headerOptions: TokenHeaderSignOptions = {
-      algorithm,
-      contentType,
+      algorithm: this.kryptos.algorithm,
+      contentType: options.contentType
+        ? options.contentType
+        : isString(data)
+          ? "text/plain; charset=utf-8"
+          : "application/octet-stream",
       headerType: "JWS",
-      jwksUri,
-      keyId,
+      jwksUri: this.kryptos.jwksUri,
+      keyId: this.kryptos.id,
       objectId,
     };
 
@@ -74,7 +70,7 @@ export class JwsKit implements IJwsKit {
     const token = `${header}.${payload}.${signature}`;
 
     this.logger.silly("Token signed", {
-      keyId,
+      keyId: this.kryptos.id,
       objectId,
       token,
     });
@@ -117,7 +113,10 @@ export class JwsKit implements IJwsKit {
 
     return {
       header: decodedHeader,
-      payload: decodedHeader.cty === "text/plain" ? B64.toString(payload) : payload,
+      payload:
+        decodedHeader.cty === "text/plain; charset=utf-8"
+          ? B64.toString(payload)
+          : payload,
       signature,
     };
   }
@@ -135,7 +134,7 @@ export class JwsKit implements IJwsKit {
     const header = parseTokenHeader<ParsedJwsHeader>(decoded.header);
 
     const payload =
-      header.contentType === "text/plain"
+      header.contentType === "text/plain; charset=utf-8"
         ? (decoded.payload as T)
         : (B64.toBuffer(decoded.payload, B64U) as T);
 

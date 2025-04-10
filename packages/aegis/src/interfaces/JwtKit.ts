@@ -12,5 +12,5 @@ export interface IJwtKit {
     content: SignJwtContent<T>,
     options?: SignJwtOptions,
   ): SignedJwt;
-  verify<T extends Dict = Dict>(jwt: string, verify?: VerifyJwtOptions): ParsedJwt<T>;
+  verify<T extends Dict = Dict>(token: string, verify?: VerifyJwtOptions): ParsedJwt<T>;
 }

@@ -30,7 +30,7 @@ export const TOKEN_HEADER_TYPES = [
 
   // IANA
   "application/cwt",
-  'application/cose; cose-type="cose-encrypt"',
-  'application/cose; cose-type="cose-mac"',
-  'application/cose; cose-type="cose-sign"',
+  "application/cose; cose-type=cose-encrypt",
+  "application/cose; cose-type=cose-mac",
+  "application/cose; cose-type=cose-sign",
 ] as const;

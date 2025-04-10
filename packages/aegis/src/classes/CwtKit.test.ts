@@ -31,6 +31,7 @@ describe("CwtKit", () => {
           tokenType: "test_token",
         }),
       ).toEqual({
+        buffer: expect.any(Buffer),
         expiresAt: new Date("2024-01-01T09:00:00.000Z"),
         expiresIn: 3600,
         expiresOn: 1704099600,
@@ -50,6 +51,7 @@ describe("CwtKit", () => {
           tokenType: "test_token",
         }),
       ).toEqual({
+        buffer: expect.any(Buffer),
         expiresAt: new Date("2024-01-01T09:00:00.000Z"),
         expiresIn: 3600,
         expiresOn: 1704099600,
@@ -69,6 +71,7 @@ describe("CwtKit", () => {
           tokenType: "test_token",
         }),
       ).toEqual({
+        buffer: expect.any(Buffer),
         expiresAt: new Date("2024-01-01T09:00:00.000Z"),
         expiresIn: 3600,
         expiresOn: 1704099600,
@@ -88,6 +91,7 @@ describe("CwtKit", () => {
           tokenType: "test_token",
         }),
       ).toEqual({
+        buffer: expect.any(Buffer),
         expiresAt: new Date("2024-01-01T09:00:00.000Z"),
         expiresIn: 3600,
         expiresOn: 1704099600,
