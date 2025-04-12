@@ -1,6 +1,6 @@
 import { KryptosJwk } from "@lindorm/kryptos";
 
-export type AesEncryption =
+export type AesInternalEncryption =
   | "aes-128-cbc"
   | "aes-192-cbc"
   | "aes-256-cbc"

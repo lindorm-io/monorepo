@@ -1,4 +1,4 @@
-import { AesEncryption } from "../aes";
+import { AesEncryption } from "../aes-encryption";
 import { JwksAlgorithm } from "./jwks-algorithm";
 import { JwksCurve } from "./jwks-curve";
 import { JwksKeyOps } from "./jwks-key-ops";

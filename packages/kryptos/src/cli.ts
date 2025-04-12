@@ -1,12 +1,11 @@
 #!/usr/bin/env node
 
 import { input, select } from "@inquirer/prompts";
+import { AES_ENCRYPTION_ALGORITHMS } from "@lindorm/types";
 import { KryptosKit } from "./classes";
 import {
-  CBC_ENCRYPTION_ALGORITHMS,
   EC_ENC_ALGORITHMS,
   EC_SIG_ALGORITHMS,
-  GCM_ENCRYPTION_ALGORITHMS,
   KryptosAlgorithm,
   KryptosEncryption,
   KryptosType,
@@ -87,8 +86,8 @@ const selectAlgorithm = async (
 const selectEncryption = async (): Promise<KryptosEncryption> =>
   await select({
     message: "Encryption",
-    choices: [...GCM_ENCRYPTION_ALGORITHMS, ...CBC_ENCRYPTION_ALGORITHMS],
-    default: GCM_ENCRYPTION_ALGORITHMS[2],
+    choices: AES_ENCRYPTION_ALGORITHMS,
+    default: AES_ENCRYPTION_ALGORITHMS[AES_ENCRYPTION_ALGORITHMS.length - 1],
   });
 
 export const main = async (): Promise<void> => {

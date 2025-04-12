@@ -5,6 +5,10 @@ import { AesError } from "../../../errors";
 export const calculateContentEncryptionKeySize = (
   encryption: KryptosEncryption,
 ): AesKeyLength => {
+  if (!encryption) {
+    throw new AesError("Encryption algorithm is required");
+  }
+
   switch (encryption) {
     case "A128GCM":
       return 16;

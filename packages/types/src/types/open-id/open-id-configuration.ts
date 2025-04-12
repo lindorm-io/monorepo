@@ -1,4 +1,4 @@
-import { AesEncryption } from "../aes";
+import { AesEncryption } from "../aes-encryption";
 import { JwksEncryptionAlgorithm, JwksSigningAlgorithm } from "../jwks";
 import { OpenIdBackchannelTokenDeliveryMode } from "./open-id-backchannel-token-delivery-mode";
 import { OpenIdClaims } from "./open-id-claims";

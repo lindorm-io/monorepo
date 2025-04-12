@@ -1,8 +1,14 @@
 import { KryptosEncryption } from "@lindorm/kryptos";
 import { AesError } from "../../../errors";
-import { AesEncryption } from "../../../types";
+import { AesInternalEncryption } from "../../../types";
 
-export const calculateAesEncryption = (encryption: KryptosEncryption): AesEncryption => {
+export const calculateAesEncryption = (
+  encryption: KryptosEncryption,
+): AesInternalEncryption => {
+  if (!encryption) {
+    throw new AesError("Encryption algorithm is required");
+  }
+
   switch (encryption) {
     case "A128CBC-HS256":
       return "aes-128-cbc";

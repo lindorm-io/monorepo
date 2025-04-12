@@ -30,19 +30,19 @@ export class AesKit implements IAesKit {
     this.encryption = options.encryption ?? options.kryptos.encryption ?? "A256GCM";
   }
 
-  public encrypt(data: string, mode?: "encoded"): string;
-  public encrypt(data: string, mode: "record"): AesEncryptionRecord;
-  public encrypt(data: string, mode: "serialised"): SerialisedAesEncryption;
-  public encrypt(data: string, mode: "tokenised"): string;
+  public encrypt(data: AesContent, mode?: "encoded"): string;
+  public encrypt(data: AesContent, mode: "record"): AesEncryptionRecord;
+  public encrypt(data: AesContent, mode: "serialised"): SerialisedAesEncryption;
+  public encrypt(data: AesContent, mode: "tokenised"): string;
   public encrypt(
-    data: string,
+    data: AesContent,
     mode: AesEncryptionMode = "encoded",
   ): string | AesEncryptionRecord | SerialisedAesEncryption {
     switch (mode) {
       case "encoded":
         return createEncodedAesString(
           encryptAes({
-            data: data,
+            data,
             encryption: this.encryption,
             kryptos: this.kryptos,
           }),
@@ -50,7 +50,7 @@ export class AesKit implements IAesKit {
 
       case "record":
         return encryptAes({
-          data: data,
+          data,
           encryption: this.encryption,
           kryptos: this.kryptos,
         });
@@ -58,7 +58,7 @@ export class AesKit implements IAesKit {
       case "serialised":
         return createSerialisedAesRecord(
           encryptAes({
-            data: data,
+            data,
             encryption: this.encryption,
             kryptos: this.kryptos,
           }),
@@ -67,7 +67,7 @@ export class AesKit implements IAesKit {
       case "tokenised":
         return createTokenisedAesString(
           encryptAes({
-            data: data,
+            data,
             encryption: this.encryption,
             kryptos: this.kryptos,
           }),

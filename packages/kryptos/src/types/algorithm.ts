@@ -1,24 +1,35 @@
 import {
-  EcEncAlgorithm,
-  EcSigAlgorithm,
-  OctEncAlgorithm,
-  OctSigAlgorithm,
-  OkpEncAlgorithm,
-  OkpSigAlgorithm,
-  RsaEncAlgorithm,
-  RsaSigAlgorithm,
+  EC_ENC_ALGORITHMS,
+  EC_SIG_ALGORITHMS,
+  OCT_ENC_DIR_ALGORITHMS,
+  OCT_ENC_STD_ALGORITHMS,
+  OCT_SIG_ALGORITHMS,
+  OKP_ENC_ALGORITHMS,
+  OKP_SIG_ALGORITHMS,
+  RSA_ENC_ALGORITHMS,
+  RSA_SIG_ALGORITHMS,
 } from "./key-types";
 
-export type KryptosEncAlgorithm =
-  | EcEncAlgorithm
-  | OctEncAlgorithm
-  | OkpEncAlgorithm
-  | RsaEncAlgorithm;
+export const KRYPTOS_ENC_ALGORITHMS = [
+  ...EC_ENC_ALGORITHMS,
+  ...OKP_ENC_ALGORITHMS,
+  ...RSA_ENC_ALGORITHMS,
+  ...OCT_ENC_DIR_ALGORITHMS,
+  ...OCT_ENC_STD_ALGORITHMS,
+] as const;
 
-export type KryptosSigAlgorithm =
-  | EcSigAlgorithm
-  | OctSigAlgorithm
-  | OkpSigAlgorithm
-  | RsaSigAlgorithm;
+export const KRYPTOS_SIG_ALGORITHMS = [
+  ...EC_SIG_ALGORITHMS,
+  ...OKP_SIG_ALGORITHMS,
+  ...RSA_SIG_ALGORITHMS,
+  ...OCT_SIG_ALGORITHMS,
+] as const;
 
-export type KryptosAlgorithm = KryptosEncAlgorithm | KryptosSigAlgorithm;
+export const KRYPTOS_ALGORITHMS = [
+  ...KRYPTOS_ENC_ALGORITHMS,
+  ...KRYPTOS_SIG_ALGORITHMS,
+] as const;
+
+export type KryptosEncAlgorithm = (typeof KRYPTOS_ENC_ALGORITHMS)[number];
+export type KryptosSigAlgorithm = (typeof KRYPTOS_SIG_ALGORITHMS)[number];
+export type KryptosAlgorithm = (typeof KRYPTOS_ALGORITHMS)[number];

@@ -1,11 +1,11 @@
 import { KryptosAlgorithm, KryptosEncryption } from "@lindorm/kryptos";
-import { AesContentType } from "./content";
+import { AesContent, AesContentType } from "./content";
 import { PublicEncryptionJwk } from "./types";
 
 export type AesEncryptionMode = "encoded" | "record" | "serialised" | "tokenised";
 
 export type AesEncryptionOptions = {
-  data: Buffer | string;
+  data: AesContent;
   encryption?: KryptosEncryption;
 };
 
