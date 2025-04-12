@@ -256,6 +256,8 @@ describe("CwtKit", () => {
         },
         signature: expect.any(String),
       });
+
+      expect(CwtKit.isCwt(token)).toBe(true);
     });
   });
 

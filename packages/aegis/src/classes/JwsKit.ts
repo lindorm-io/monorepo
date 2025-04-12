@@ -13,7 +13,7 @@ import {
   ParsedJwsHeader,
   SignJwsOptions,
   SignedJws,
-  TokenHeaderSignOptions,
+  TokenHeaderOptions,
 } from "../types";
 import {
   createJoseSignature,
@@ -36,9 +36,11 @@ export class JwsKit implements IJwsKit {
     data: T,
     options: SignJwsOptions = {},
   ): SignedJws {
+    this.logger.debug("Signing token", { options });
+
     const objectId = options.objectId ?? randomUUID();
 
-    const headerOptions: TokenHeaderSignOptions = {
+    const headerOptions: TokenHeaderOptions = {
       algorithm: this.kryptos.algorithm,
       contentType: options.contentType
         ? options.contentType
@@ -53,11 +55,7 @@ export class JwsKit implements IJwsKit {
 
     const header = encodeJoseHeader(headerOptions);
 
-    this.logger.silly("Token header encoded", { header, options: headerOptions });
-
     const payload = isBuffer(data) ? data.toString(B64U) : B64.encode(data, B64U);
-
-    this.logger.silly("Token payload encoded", { payload, options });
 
     const signature = createJoseSignature({
       header,
@@ -65,21 +63,17 @@ export class JwsKit implements IJwsKit {
       kryptos: this.kryptos,
     });
 
-    this.logger.silly("Token signature created", { signature });
-
     const token = `${header}.${payload}.${signature}`;
 
-    this.logger.silly("Token signed", {
-      keyId: this.kryptos.id,
-      objectId,
-      token,
-    });
+    this.logger.debug("Token signed", { token });
 
     return { objectId, token };
   }
 
-  public verify<T extends Buffer | string>(jws: string): ParsedJws<T> {
-    const parsed = JwsKit.parse<T>(jws);
+  public verify<T extends Buffer | string>(token: string): ParsedJws<T> {
+    this.logger.debug("Verifying token", { token });
+
+    const parsed = JwsKit.parse<T>(token);
 
     if (this.kryptos.algorithm !== parsed.header.algorithm) {
       throw new JwsError("Invalid token", {
@@ -88,15 +82,15 @@ export class JwsKit implements IJwsKit {
       });
     }
 
-    const verified = verifyJoseSignature(this.kryptos, jws);
-
-    this.logger.silly("Token signature verified", { verified, token: jws });
+    const verified = verifyJoseSignature(this.kryptos, token);
 
     if (!verified) {
       throw new JwsError("Invalid token", {
-        data: { verified, token: jws },
+        data: { verified, token: token },
       });
     }
+
+    this.logger.debug("Token verified");
 
     return parsed;
   }

@@ -6,8 +6,12 @@ import {
 } from "@lindorm/aes";
 import { Dict } from "@lindorm/types";
 import {
+  CoseEncryptContent,
+  CoseEncryptEncryptOptions,
   CoseSignContent,
+  DecryptedCoseEncrypt,
   DecryptedJwe,
+  EncryptedCoseEncrypt,
   EncryptedJwe,
   JweEncryptOptions,
   JwsContent,
@@ -38,11 +42,16 @@ export interface IAegisAes {
 }
 
 export interface IAegisCose {
-  sign<T extends CoseSignContent>(
-    data: T,
-    options?: SignCoseSignOptions,
-  ): Promise<SignedCoseSign>;
-  verify<T extends CoseSignContent>(token: string): Promise<ParsedCoseSign<T>>;
+  sign(data: CoseSignContent, options?: SignCoseSignOptions): Promise<SignedCoseSign>;
+  verify<T extends CoseSignContent>(token: CoseSignContent): Promise<ParsedCoseSign<T>>;
+
+  encrypt(
+    data: CoseEncryptContent,
+    options?: CoseEncryptEncryptOptions,
+  ): Promise<EncryptedCoseEncrypt>;
+  decrypt<T extends CoseEncryptContent = string>(
+    token: CoseEncryptContent,
+  ): Promise<DecryptedCoseEncrypt<T>>;
 }
 
 export interface IAegisCwt {

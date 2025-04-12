@@ -18,61 +18,6 @@ exports[`mapCoseClaims should map COSE claims 1`] = `
     "audience",
   ],
   "4": 1234567890,
-  "400": {
-    "data": [
-      97,
-      99,
-      114,
-    ],
-    "type": "Buffer",
-  },
-  "401": [
-    "amr1",
-    "amr2",
-  ],
-  "402": {
-    "data": [
-      97,
-      116,
-      95,
-      104,
-      97,
-      115,
-      104,
-    ],
-    "type": "Buffer",
-  },
-  "403": 1234567890,
-  "404": {
-    "data": [
-      97,
-      122,
-      112,
-    ],
-    "type": "Buffer",
-  },
-  "405": {
-    "data": [
-      99,
-      95,
-      104,
-      97,
-      115,
-      104,
-    ],
-    "type": "Buffer",
-  },
-  "406": {
-    "data": [
-      115,
-      95,
-      104,
-      97,
-      115,
-      104,
-    ],
-    "type": "Buffer",
-  },
   "5": 1234567890,
   "500": 3,
   "501": {
@@ -340,5 +285,15 @@ exports[`mapCoseClaims should map COSE claims 1`] = `
     ],
     "type": "Buffer",
   },
+  "acr": "acr",
+  "amr": [
+    "amr1",
+    "amr2",
+  ],
+  "at_hash": "at_hash",
+  "auth_time": 1234567890,
+  "azp": "azp",
+  "c_hash": "c_hash",
+  "s_hash": "s_hash",
 }
 `;

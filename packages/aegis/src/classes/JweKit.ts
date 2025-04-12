@@ -14,38 +14,32 @@ import {
   EncryptedJwe,
   JweEncryptOptions,
   JweKitOptions,
-  TokenHeaderSignOptions,
+  TokenHeaderOptions,
 } from "../types";
 import { decodeJoseHeader, encodeJoseHeader, parseTokenHeader } from "../utils/private";
 
 export class JweKit implements IJweKit {
   private readonly encryption: KryptosEncryption;
-  private readonly logger: ILogger;
   private readonly kryptos: IKryptos;
-  private readonly kryptosMayOverrideEncryption: boolean;
+  private readonly logger: ILogger;
 
   public constructor(options: JweKitOptions) {
     this.logger = options.logger.child(["JweKit"]);
     this.kryptos = options.kryptos;
-
-    this.encryption = options.encryption = "A256GCM";
-    this.kryptosMayOverrideEncryption = options.kryptosMayOverrideEncryption ?? false;
+    this.encryption = options.encryption ?? options.kryptos.encryption ?? "A256GCM";
   }
 
   public encrypt(data: string, options: JweEncryptOptions = {}): EncryptedJwe {
-    const encryption =
-      this.kryptosMayOverrideEncryption && this.kryptos.encryption
-        ? this.kryptos.encryption
-        : this.encryption;
+    const kit = new AesKit({ encryption: this.encryption, kryptos: this.kryptos });
+
+    this.logger.debug("Encrypting token", { options });
 
     const objectId = options.objectId ?? randomUUID();
 
-    const critical: Array<Exclude<keyof TokenHeaderSignOptions, "critical">> = [
+    const critical: Array<Exclude<keyof TokenHeaderOptions, "critical">> = [
       "algorithm",
       "encryption",
     ];
-
-    const aes = new AesKit({ encryption, kryptos: this.kryptos });
 
     const {
       authTag,
@@ -58,20 +52,20 @@ export class JweKit implements IJweKit {
       publicEncryptionJwk,
       publicEncryptionKey,
       publicEncryptionTag,
-    } = aes.encrypt(data, "record");
+    } = kit.encrypt(data, "record");
 
-    if (publicEncryptionJwk) critical.push("publicEncryptionJwk");
-    if (publicEncryptionIv) critical.push("publicEncryptionIv");
-    if (publicEncryptionTag) critical.push("publicEncryptionTag");
     if (hkdfSalt) critical.push("hkdfSalt");
     if (pbkdfIterations) critical.push("pbkdfIterations");
     if (pbkdfSalt) critical.push("pbkdfSalt");
+    if (publicEncryptionIv) critical.push("initialisationVector");
+    if (publicEncryptionJwk) critical.push("publicEncryptionJwk");
+    if (publicEncryptionTag) critical.push("publicEncryptionTag");
 
-    const headerOptions: TokenHeaderSignOptions = {
+    const headerOptions: TokenHeaderOptions = {
       algorithm: this.kryptos.algorithm,
       contentType: this.contentType(data),
       critical,
-      encryption,
+      encryption: this.encryption,
       headerType: "JWE",
       hkdfSalt,
       jwksUri: this.kryptos.jwksUri,
@@ -79,14 +73,12 @@ export class JweKit implements IJweKit {
       objectId,
       pbkdfIterations,
       pbkdfSalt,
-      publicEncryptionIv,
+      initialisationVector: publicEncryptionIv,
       publicEncryptionJwk,
       publicEncryptionTag,
     };
 
     const header = encodeJoseHeader(headerOptions);
-
-    this.logger.silly("Token header encoded", { header, options: headerOptions });
 
     if (!authTag) {
       throw new JweError("Missing auth tag");
@@ -100,16 +92,15 @@ export class JweKit implements IJweKit {
       B64.encode(authTag, B64U),
     ].join(".");
 
-    this.logger.silly("Token created", { keyId: this.kryptos.id, token });
+    this.logger.debug("Token encrypted", { token });
 
     return { token };
   }
 
   public decrypt(token: string): DecryptedJwe {
-    const encryption =
-      this.kryptosMayOverrideEncryption && this.kryptos.encryption
-        ? this.kryptos.encryption
-        : this.encryption;
+    const kit = new AesKit({ encryption: this.encryption, kryptos: this.kryptos });
+
+    this.logger.debug("Decrypting token", { token });
 
     const decoded = JweKit.decode(token);
 
@@ -128,9 +119,9 @@ export class JweKit implements IJweKit {
 
     const header = parseTokenHeader<DecryptedJweHeader>(decoded.header);
 
-    if (header.encryption !== encryption) {
+    if (header.encryption !== this.encryption) {
       throw new JweError("Unexpected encryption", {
-        debug: { actual: header.encryption, encryption },
+        debug: { actual: header.encryption, encryption: this.encryption },
       });
     }
 
@@ -140,8 +131,8 @@ export class JweKit implements IJweKit {
     const initialisationVector = B64.toBuffer(decoded.initialisationVector);
     const pbkdfIterations = header.pbkdfIterations;
     const pbkdfSalt = header.pbkdfSalt ? B64.toBuffer(header.pbkdfSalt, B64U) : undefined;
-    const publicEncryptionIv = header.publicEncryptionIv
-      ? B64.toBuffer(header.publicEncryptionIv)
+    const publicEncryptionIv = header.initialisationVector
+      ? B64.toBuffer(header.initialisationVector)
       : undefined;
     const publicEncryptionKey = decoded.publicEncryptionKey
       ? B64.toBuffer(decoded.publicEncryptionKey)
@@ -154,7 +145,7 @@ export class JweKit implements IJweKit {
     if (header.critical.includes("publicEncryptionJwk") && !publicEncryptionJwk) {
       throw new JweError("Missing public encryption JWK");
     }
-    if (header.critical.includes("publicEncryptionIv") && !publicEncryptionIv) {
+    if (header.critical.includes("initialisationVector") && !publicEncryptionIv) {
       throw new JweError("Missing public encryption iv");
     }
     if (header.critical.includes("publicEncryptionTag") && !publicEncryptionTag) {
@@ -170,12 +161,10 @@ export class JweKit implements IJweKit {
       throw new JweError("Missing salt");
     }
 
-    const aes = new AesKit({ encryption, kryptos: this.kryptos });
-
-    const payload = aes.decrypt({
+    const payload = kit.decrypt({
       authTag,
       content,
-      encryption,
+      encryption: this.encryption,
       hkdfSalt,
       initialisationVector,
       pbkdfIterations,
@@ -186,7 +175,7 @@ export class JweKit implements IJweKit {
       publicEncryptionTag,
     });
 
-    this.logger.silly("Token decrypted", { payload });
+    this.logger.debug("Token decrypted");
 
     return { header, payload, decoded, token };
   }

@@ -65,6 +65,66 @@ describe("Aegis", () => {
     });
   });
 
+  test("should sign and verify cose-encrypt", async () => {
+    const res = await aegis.cose.encrypt("data", {
+      objectId: "33100373-9769-4389-94dd-1b1d738f0fc4",
+    });
+
+    expect(res).toEqual({
+      buffer: expect.any(Buffer),
+      token: expect.any(String),
+    });
+
+    await expect(aegis.cose.decrypt(res.token)).resolves.toEqual({
+      decoded: {
+        authTag: expect.any(Buffer),
+        content: expect.any(Buffer),
+        initialisationVector: expect.any(Buffer),
+        protected: {
+          alg: "ECDH-ES",
+          cty: "text/plain",
+          typ: "application/cose; cose-type=cose-encrypt",
+        },
+        recipient: {
+          initialisationVector: undefined,
+          publicEncryptionKey: null,
+          unprotected: {
+            enc: "A256GCM",
+            epk: {
+              crv: "X25519",
+              kty: "OKP",
+              x: expect.any(String),
+            },
+            hkdf_salt: expect.any(Buffer),
+            jku: "https://test.lindorm.io/.well-known/jwks.json",
+            kid: "035f7f00-8101-5387-a935-e92f57347309",
+          },
+        },
+        unprotected: {
+          iv: expect.any(Buffer),
+          oid: "33100373-9769-4389-94dd-1b1d738f0fc4",
+        },
+      },
+      header: {
+        algorithm: "ECDH-ES",
+        contentType: "text/plain",
+        critical: [],
+        encryption: "A256GCM",
+        headerType: "application/cose; cose-type=cose-encrypt",
+        jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
+        keyId: "035f7f00-8101-5387-a935-e92f57347309",
+        objectId: "33100373-9769-4389-94dd-1b1d738f0fc4",
+        publicEncryptionJwk: {
+          crv: "X25519",
+          kty: "OKP",
+          x: expect.any(String),
+        },
+      },
+      payload: "data",
+      token: res.token,
+    });
+  });
+
   test("should sign and verify cwt", async () => {
     const res = await aegis.cwt.sign({
       expires: "1h",
@@ -168,7 +228,7 @@ describe("Aegis", () => {
       header: {
         algorithm: "ECDH-ES",
         contentType: "text/plain; charset=utf-8",
-        critical: ["algorithm", "encryption", "publicEncryptionJwk", "hkdfSalt"],
+        critical: ["algorithm", "encryption", "hkdfSalt", "publicEncryptionJwk"],
         encryption: "A256GCM",
         headerType: "JWE",
         hkdfSalt: expect.any(String),

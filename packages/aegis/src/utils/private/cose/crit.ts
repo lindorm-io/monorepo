@@ -1,4 +1,5 @@
 import { isArray } from "@lindorm/is";
+import { uniq } from "@lindorm/utils";
 import { COSE_HEADER } from "../../../constants/private";
 import { AegisError } from "../../../errors";
 import { findCoseByKey, findCoseByLabel } from "./find";
@@ -44,5 +45,5 @@ export const decodeCoseCrit = (crit: any): Array<string> => {
     continue;
   }
 
-  return result;
+  return uniq(result);
 };

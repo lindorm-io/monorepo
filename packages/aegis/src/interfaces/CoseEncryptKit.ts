@@ -1,6 +1,16 @@
-import { DecryptedJwe, EncryptedJwe, JweEncryptOptions } from "../types";
+import {
+  CoseEncryptContent,
+  CoseEncryptEncryptOptions,
+  DecryptedCoseEncrypt,
+  EncryptedCoseEncrypt,
+} from "../types";
 
 export interface ICoseEncryptKit {
-  encrypt(data: string, options?: JweEncryptOptions): EncryptedJwe;
-  decrypt(token: string): DecryptedJwe;
+  encrypt(
+    data: CoseEncryptContent,
+    options?: CoseEncryptEncryptOptions,
+  ): EncryptedCoseEncrypt;
+  decrypt<T extends CoseEncryptContent = string>(
+    token: CoseEncryptContent,
+  ): DecryptedCoseEncrypt<T>;
 }

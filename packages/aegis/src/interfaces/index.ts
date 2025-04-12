@@ -1,4 +1,5 @@
 export * from "./Aegis";
+export * from "./CoseEncryptKit";
 export * from "./CoseSignKit";
 export * from "./CwtKit";
 export * from "./JweKit";

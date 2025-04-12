@@ -31,7 +31,7 @@ export type TokenHeaderClaims = {
 
 export type RawTokenHeaderClaims = {
   alg?: TokenHeaderAlgorithm;
-  crit?: Array<Exclude<keyof TokenHeaderSignOptions, "critical">>;
+  crit?: Array<Exclude<keyof TokenHeaderOptions, "critical">>;
   cty?: string;
   enc?: KryptosEncryption;
   epk?: PublicEncryptionJwk;
@@ -60,13 +60,13 @@ export type ParsedTokenHeader = {
   encryption: KryptosEncryption | undefined;
   headerType: TokenHeaderType;
   hkdfSalt: string | undefined;
+  initialisationVector: string | undefined;
   jwk: KryptosJwk | undefined;
   jwksUri: string | undefined;
   keyId: string | undefined;
   objectId: string | undefined;
   pbkdfIterations: number | undefined;
   pbkdfSalt: string | undefined;
-  publicEncryptionIv: string | undefined;
   publicEncryptionJwk: PublicEncryptionJwk | undefined;
   publicEncryptionTag: string | undefined;
   x5c: Array<string> | undefined;
@@ -75,24 +75,24 @@ export type ParsedTokenHeader = {
   x5tS256: string | undefined;
 };
 
-export type TokenHeaderSignOptions = {
+export type TokenHeaderOptions = {
   algorithm?: TokenHeaderAlgorithm;
   contentType?: string;
-  critical?: Array<Exclude<keyof TokenHeaderSignOptions, "critical">>;
+  critical?: Array<Exclude<keyof TokenHeaderOptions, "critical">>;
   encryption?: KryptosEncryption;
   headerType?: TokenHeaderType;
   hkdfSalt?: Buffer;
+  initialisationVector?: Buffer;
   jwk?: KryptosJwk;
   jwksUri?: string;
   keyId?: string;
   objectId?: string;
   pbkdfIterations?: number;
   pbkdfSalt?: Buffer;
-  publicEncryptionIv?: Buffer;
   publicEncryptionJwk?: PublicEncryptionJwk;
   publicEncryptionTag?: Buffer;
   x5c?: Array<string>;
   x5t?: string;
-  x5u?: string;
   x5tS256?: string;
+  x5u?: string;
 };

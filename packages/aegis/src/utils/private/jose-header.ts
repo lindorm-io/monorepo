@@ -5,14 +5,10 @@ import {
   TOKEN_HEADER_ALGORITHMS,
   TOKEN_HEADER_TYPES,
 } from "../../constants/private";
-import {
-  DecodedTokenHeader,
-  TokenHeaderClaims,
-  TokenHeaderSignOptions,
-} from "../../types";
+import { DecodedTokenHeader, TokenHeaderClaims, TokenHeaderOptions } from "../../types";
 import { mapTokenHeader } from "./token-header";
 
-export const encodeJoseHeader = (options: TokenHeaderSignOptions): string => {
+export const encodeJoseHeader = (options: TokenHeaderOptions): string => {
   if (!options.algorithm) {
     throw new Error("Algorithm is required");
   }

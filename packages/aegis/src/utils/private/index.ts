@@ -1,5 +1,6 @@
 export * from "./cose";
 
+export * from "./auth-tag-length";
 export * from "./cose-sign-token";
 export * from "./cose-signature";
 export * from "./create-hash";

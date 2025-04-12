@@ -7,9 +7,9 @@ describe("mapCoseHeader", () => {
   beforeEach(() => {
     header = {
       alg: "ECDH-ES",
-      crit: ["alg", "cty", "enc", "epk"],
+      crit: ["alg", "cty", "epk"],
       cty: "application/cwt",
-      enc: "A128GCM",
+      // enc: "A128GCM",
       epk: {
         crv: "X25519",
         d: "d-private-key",
@@ -41,7 +41,13 @@ describe("mapCoseHeader", () => {
     };
   });
 
-  test("should map COSE header", () => {
+  test("should map COSE header with alg", () => {
+    expect(mapCoseHeader(header as any)).toMatchSnapshot();
+  });
+
+  test("should map COSE header with enc", () => {
+    header.alg = undefined;
+    header.enc = "A128GCM";
     expect(mapCoseHeader(header as any)).toMatchSnapshot();
   });
 

@@ -11,30 +11,29 @@ export type CoseItem<K = string> = {
 const array = true;
 const bstr = true;
 
+// 400 is mapped to Lindorm Kryptos Algorithms
+// 500 is mapped to Lindorm Token Payload Claims
+// 600 is mapped to Lindorm Kryptos Encryption
+// 700 is mapped to Lindorm Token Header Claims
+
 export const COSE_ALGORITHM: Array<CoseItem<KryptosAlgorithm | KryptosEncryption>> = [
   // RFC Encryption
   { key: "dir", label: -6 },
   { key: "A128KW", label: -3 },
   { key: "A192KW", label: -4 },
   { key: "A256KW", label: -5 },
-  { key: "A128GCM", label: 1 },
-  { key: "A192GCM", label: 2 },
-  { key: "A256GCM", label: 3 },
   { key: "ECDH-ES", label: -25 },
   { key: "ECDH-ES+A128KW", label: -29 },
   { key: "ECDH-ES+A192KW", label: -30 },
   { key: "ECDH-ES+A256KW", label: -31 },
 
   // Lindorm Encryption
-  { key: "ECDH-ES+A128GCMKW", label: 501 },
-  { key: "ECDH-ES+A192GCMKW", label: 502 },
-  { key: "ECDH-ES+A256GCMKW", label: 503 },
-  { key: "A128GCMKW", label: 504 },
-  { key: "A192GCMKW", label: 505 },
-  { key: "A256GCMKW", label: 506 },
-  { key: "A128CBC-HS256", label: 507 },
-  { key: "A192CBC-HS384", label: 508 },
-  { key: "A256CBC-HS512", label: 509 },
+  { key: "ECDH-ES+A128GCMKW", label: 401 },
+  { key: "ECDH-ES+A192GCMKW", label: 402 },
+  { key: "ECDH-ES+A256GCMKW", label: 403 },
+  { key: "A128GCMKW", label: 404 },
+  { key: "A192GCMKW", label: 405 },
+  { key: "A256GCMKW", label: 406 },
 
   // RFC Signatures
   { key: "EdDSA", label: -8 },
@@ -64,15 +63,6 @@ export const COSE_CLAIMS: Array<CoseItem> = [
   { key: "scope", label: 9, bstr, array },
   { key: "nonce", label: 10, bstr },
 
-  // OIDC
-  { key: "acr", label: 400, bstr },
-  { key: "amr", label: 401 },
-  { key: "at_hash", label: 402, bstr },
-  { key: "auth_time", label: 403 },
-  { key: "azp", label: 404, bstr },
-  { key: "c_hash", label: 405, bstr },
-  { key: "s_hash", label: 406, bstr },
-
   // Lindorm
   { key: "aal", label: 500 },
   { key: "afr", label: 501, bstr },
@@ -88,6 +78,18 @@ export const COSE_CLAIMS: Array<CoseItem> = [
   { key: "token_type", label: 511, bstr },
 ] as const;
 
+export const COSE_ENCRYPTION: Array<CoseItem<KryptosAlgorithm | KryptosEncryption>> = [
+  // RFC Encryption
+  { key: "A128GCM", label: 1 },
+  { key: "A192GCM", label: 2 },
+  { key: "A256GCM", label: 3 },
+
+  // Lindorm Encryption
+  { key: "A128CBC-HS256", label: 600 },
+  { key: "A192CBC-HS384", label: 601 },
+  { key: "A256CBC-HS512", label: 602 },
+] as const;
+
 export const COSE_HEADER: Array<CoseItem> = [
   // RFC
   { key: "alg", label: 1 },
@@ -97,9 +99,10 @@ export const COSE_HEADER: Array<CoseItem> = [
   { key: "c5u", label: 23 },
   { key: "crit", label: 2 },
   { key: "cty", label: 3 },
+  { key: "enc", label: 1 }, // overwrites "alg"
   { key: "epk", label: -1 },
-  { key: "hkdf_salt", label: -20, bstr }, // translated from "salt"
-  { key: "iv", label: 5, bstr },
+  { key: "hkdf_salt", label: -20 }, // translated from "salt"
+  { key: "iv", label: 5 },
   { key: "kid", label: 4, bstr },
   { key: "typ", label: 16 },
   { key: "x5c", label: 33 },
@@ -107,12 +110,12 @@ export const COSE_HEADER: Array<CoseItem> = [
   { key: "x5u", label: 35 },
 
   // Lindorm
-  { key: "jku", label: 501 },
-  { key: "jwk", label: 502 },
-  { key: "oid", label: 503, bstr },
-  { key: "p2c", label: 504 },
-  { key: "p2s", label: 505, bstr },
-  { key: "tag", label: 506, bstr },
+  { key: "jku", label: 701 },
+  { key: "jwk", label: 702 },
+  { key: "oid", label: 703, bstr },
+  { key: "p2c", label: 704 },
+  { key: "p2s", label: 705 },
+  { key: "tag", label: 706 },
 ] as const;
 
 export const COSE_KEY: Array<CoseItem> = [

@@ -1,5 +1,5 @@
 import { Dict } from "@lindorm/types";
-import { COSE_ALGORITHM, COSE_HEADER } from "../../../constants/private";
+import { COSE_ALGORITHM, COSE_ENCRYPTION, COSE_HEADER } from "../../../constants/private";
 import { AegisError } from "../../../errors";
 import { RawTokenHeaderClaims } from "../../../types";
 import { fromBstr, toBstr } from "./bstr";
@@ -10,7 +10,13 @@ import { decodeCoseKey, mapCoseKey } from "./key";
 export const mapCoseHeader = (claims: RawTokenHeaderClaims): Dict => {
   const result: Dict = {};
 
+  if (claims["alg"] && claims["enc"]) {
+    throw new AegisError("COSE header cannot contain both alg and enc");
+  }
+
   for (const [key, value] of Object.entries(claims)) {
+    if (!value) continue;
+
     const claim = findCoseByKey(COSE_HEADER, key);
 
     if (!claim) {
@@ -21,10 +27,19 @@ export const mapCoseHeader = (claims: RawTokenHeaderClaims): Dict => {
     if (key === "alg") {
       const alg = findCoseByKey(COSE_ALGORITHM, value);
       if (!alg) {
-        console.error("map", { key, value, claim, alg });
         throw new AegisError(`Unsupported COSE algorithm: ${value}`);
       }
       result[claim.label] = alg.label;
+      continue;
+    }
+
+    if (key === "enc") {
+      const enc = findCoseByKey(COSE_ENCRYPTION, value);
+      if (!enc) {
+        console.error("map", { key, value, claim, alg: enc });
+        throw new AegisError(`Unsupported COSE algorithm: ${value}`);
+      }
+      result[claim.label] = enc.label;
       continue;
     }
 
@@ -49,6 +64,8 @@ export const decodeCoseHeader = (cose: Dict): RawTokenHeaderClaims => {
   const result: Dict = {};
 
   for (const [label, value] of Object.entries(cose)) {
+    if (!value) continue;
+
     const claim = findCoseByLabel(COSE_HEADER, label);
 
     if (!claim) {
@@ -56,13 +73,14 @@ export const decodeCoseHeader = (cose: Dict): RawTokenHeaderClaims => {
       continue;
     }
 
-    if (claim.key === "alg") {
+    if (claim.key === "alg" || claim.key === "enc") {
       const alg = findCoseByLabel(COSE_ALGORITHM, value);
-      if (!alg) {
-        console.error("decode", { label, value, claim, alg });
-        throw new AegisError(`Unsupported COSE algorithm: ${value}`);
+      const enc = findCoseByLabel(COSE_ENCRYPTION, value);
+      if (!alg && !enc) {
+        throw new AegisError(`Unsupported COSE algorithm/encryption: ${value}`);
       }
-      result[claim.key] = alg.key;
+      const calc = alg ? "alg" : "enc";
+      result[calc] = alg?.key ?? enc?.key;
       continue;
     }
 

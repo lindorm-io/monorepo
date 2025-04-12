@@ -1,3 +1,4 @@
+export * from "./cose-encrypt";
 export * from "./cose-sign";
 export * from "./cwt";
 export * from "./jwe";

@@ -12,7 +12,6 @@ export type AegisOptions = {
   encAlgorithm?: KryptosEncAlgorithm;
   encryption?: KryptosEncryption;
   issuer?: string;
-  kryptosMayOverrideEncryption?: boolean;
   logger: ILogger;
   sigAlgorithm?: KryptosSigAlgorithm;
 };

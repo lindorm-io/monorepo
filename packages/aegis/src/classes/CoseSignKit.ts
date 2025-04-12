@@ -3,7 +3,7 @@ import { IKryptos } from "@lindorm/kryptos";
 import { ILogger } from "@lindorm/logger";
 import { decode, encode } from "cbor";
 import { randomBytes } from "crypto";
-import { CoseSignError } from "../errors/CoseSignError";
+import { CoseSignError } from "../errors";
 import { ICoseSignKit } from "../interfaces";
 import {
   CoseSignContent,
@@ -33,11 +33,10 @@ export class CoseSignKit implements ICoseSignKit {
     this.kryptos = options.kryptos;
   }
 
-  public sign<T extends CoseSignContent>(
-    data: T,
-    options: SignCoseSignOptions = {},
-  ): SignedCoseSign {
+  public sign(data: CoseSignContent, options: SignCoseSignOptions = {}): SignedCoseSign {
     const objectId = options.objectId ?? randomBytes(20).toString("base64url");
+
+    this.logger.debug("Signing token", { options });
 
     const protectedHeader = mapCoseHeader(
       mapTokenHeader({
@@ -60,15 +59,8 @@ export class CoseSignKit implements ICoseSignKit {
       }),
     );
 
-    this.logger.silly("Token headers created", {
-      protectedHeader,
-      unprotectedHeader,
-    });
-
     const payloadBuffer = isBuffer(data) ? data : Buffer.from(data, "utf-8");
     const payloadCbor = encode(payloadBuffer);
-
-    this.logger.silly("Token payload encoded", { options });
 
     const signature = createCoseSignature({
       kryptos: this.kryptos,
@@ -84,10 +76,14 @@ export class CoseSignKit implements ICoseSignKit {
     });
     const token = buffer.toString("base64url");
 
+    this.logger.debug("Token signed", { token });
+
     return { buffer, objectId, token };
   }
 
-  public verify<T extends CoseSignContent>(token: Buffer | string): ParsedCoseSign<T> {
+  public verify<T extends CoseSignContent>(token: CoseSignContent): ParsedCoseSign<T> {
+    this.logger.debug("Verifying token", { token });
+
     const [protectedCbor, unprotectedCose, payloadCbor, signature] = decode(
       isBuffer(token) ? token : Buffer.from(token, "base64url"),
     );
@@ -106,8 +102,6 @@ export class CoseSignKit implements ICoseSignKit {
       protectedHeader: protectedCbor,
       signature,
     });
-
-    this.logger.silly("Token signature verified", { verified, token: token });
 
     if (!verified) {
       throw new CoseSignError("Invalid token", {
@@ -135,6 +129,8 @@ export class CoseSignKit implements ICoseSignKit {
         ? (payloadBuffer.toString("utf-8") as T)
         : payloadBuffer;
 
+    this.logger.debug("Token verified");
+
     return {
       decoded,
       header,
@@ -145,17 +141,26 @@ export class CoseSignKit implements ICoseSignKit {
 
   // public static
 
+  public static isCoseSign(token: Buffer | string): boolean {
+    try {
+      const decode = CoseSignKit.decode(token);
+      return decode.protected.typ === "application/cose; cose-type=cose-sign";
+    } catch {
+      return false;
+    }
+  }
+
   public static decode<T extends CoseSignContent>(
-    token: Buffer | string,
+    token: CoseSignContent,
   ): DecodedCoseSign<T> {
     const [protectedCbor, unprotectedHeader, payloadCbor, signature] = decode(
       isBuffer(token) ? token : Buffer.from(token, "base64url"),
     );
-    const protectedCose = decode(protectedCbor);
-    const protectedDict = decodeCoseHeader(protectedCose);
+
+    const protectedDict = decodeCoseHeader(decode(protectedCbor));
+    const unprotectedDict = decodeCoseHeader(unprotectedHeader);
 
     const payloadBuffer = decode(payloadCbor);
-
     const payload =
       protectedDict.cty === "text/plain; charset=utf-8"
         ? (payloadBuffer.toString("utf-8") as T)
@@ -163,14 +168,14 @@ export class CoseSignKit implements ICoseSignKit {
 
     return {
       protected: protectedDict as any,
-      unprotected: decodeCoseHeader(unprotectedHeader) as any,
+      unprotected: unprotectedDict as any,
       payload,
       signature: signature.toString("base64url"),
     };
   }
 
   public static parse<T extends CoseSignContent>(
-    token: Buffer | string,
+    token: CoseSignContent,
   ): ParsedCoseSign<T> {
     const decoded = CoseSignKit.decode<T>(token);
 

@@ -26,11 +26,18 @@ import {
 } from "../interfaces";
 import {
   AegisOptions,
+  CoseEncryptContent,
+  CoseEncryptEncryptOptions,
   CoseSignContent,
+  DecodedCoseEncrypt,
+  DecodedCoseSign,
+  DecodedCwt,
   DecodedJwe,
   DecodedJws,
   DecodedJwt,
+  DecryptedCoseEncrypt,
   DecryptedJwe,
+  EncryptedCoseEncrypt,
   EncryptedJwe,
   JweEncryptOptions,
   JwsContent,
@@ -54,6 +61,7 @@ import {
   VerifyJwtOptions,
 } from "../types";
 import { decodeJoseHeader } from "../utils/private";
+import { CoseEncryptKit } from "./CoseEncryptKit";
 import { CoseSignKit } from "./CoseSignKit";
 import { CwtKit } from "./CwtKit";
 import { JweKit } from "./JweKit";
@@ -79,7 +87,6 @@ export class Aegis implements IAegis {
   private readonly clockTolerance: number;
   private readonly encAlgorithm: KryptosEncAlgorithm | undefined;
   private readonly encryption: KryptosEncryption;
-  private readonly kryptosMayOverrideEncryption: boolean;
   private readonly logger: ILogger;
   private readonly sigAlgorithm: KryptosSigAlgorithm | undefined;
 
@@ -91,7 +98,6 @@ export class Aegis implements IAegis {
     this.clockTolerance = options.clockTolerance ?? 0;
     this.encAlgorithm = options.encAlgorithm;
     this.encryption = options.encryption ?? "A256GCM";
-    this.kryptosMayOverrideEncryption = options.kryptosMayOverrideEncryption ?? true;
     this.sigAlgorithm = options.sigAlgorithm;
   }
 
@@ -106,6 +112,9 @@ export class Aegis implements IAegis {
     return {
       sign: this.coseSign.bind(this),
       verify: this.coseVerify.bind(this),
+
+      encrypt: this.coseEncrypt.bind(this),
+      decrypt: this.coseDecrypt.bind(this),
     };
   }
 
@@ -137,10 +146,12 @@ export class Aegis implements IAegis {
     };
   }
 
-  public async verify<T extends ParsedJwt | ParsedJws<any>>(
-    token: string,
-    options?: VerifyJwtOptions,
-  ): Promise<T> {
+  public async verify<
+    T extends ParsedJwt | ParsedJws<any> | ParsedCwt | ParsedCoseSign<any>,
+  >(token: string, options?: VerifyJwtOptions): Promise<T> {
+    if (Aegis.isJwt(token)) {
+      return (await this.jwtVerify(token, options)) as T;
+    }
     if (Aegis.isJwe(token)) {
       const decrypt = await this.jweDecrypt(token);
       return (await this.verify(decrypt.payload)) as T;
@@ -148,8 +159,15 @@ export class Aegis implements IAegis {
     if (Aegis.isJws(token)) {
       return (await this.jwsVerify(token)) as T;
     }
-    if (Aegis.isJwt(token)) {
-      return (await this.jwtVerify(token, options)) as T;
+    if (Aegis.isCwt(token)) {
+      return (await this.cwtVerify(token, options)) as T;
+    }
+    if (Aegis.isCoseEncrypt(token)) {
+      const decrypt = await this.coseDecrypt(token);
+      return (await this.verify(decrypt.payload)) as T;
+    }
+    if (Aegis.isCoseSign(token)) {
+      return (await this.coseVerify(token)) as T;
     }
     throw new AegisError("Invalid token type", { debug: { token } });
   }
@@ -173,7 +191,27 @@ export class Aegis implements IAegis {
     return JwtKit.isJwt(jwt);
   }
 
-  public static decode<T extends DecodedJwe | DecodedJws | DecodedJwt>(token: string): T {
+  public static isCwt(cwt: string): boolean {
+    return CwtKit.isCwt(cwt);
+  }
+
+  public static isCoseSign(cose: string): boolean {
+    return CoseSignKit.isCoseSign(cose);
+  }
+
+  public static isCoseEncrypt(cose: string): boolean {
+    return CoseEncryptKit.isCoseEncrypt(cose);
+  }
+
+  public static decode<
+    T extends
+      | DecodedJwe
+      | DecodedJws
+      | DecodedJwt
+      | DecodedCwt
+      | DecodedCoseEncrypt
+      | DecodedCoseSign<any>,
+  >(token: string): T {
     if (Aegis.isJwe(token)) {
       return JweKit.decode(token) as T;
     }
@@ -183,15 +221,32 @@ export class Aegis implements IAegis {
     if (Aegis.isJwt(token)) {
       return JwtKit.decode(token) as T;
     }
+    if (Aegis.isCwt(token)) {
+      return CwtKit.decode(token) as T;
+    }
+    if (Aegis.isCoseEncrypt(token)) {
+      return CoseEncryptKit.decode(token) as T;
+    }
+    if (Aegis.isCoseSign(token)) {
+      return CoseSignKit.decode(token) as T;
+    }
     throw new AegisError("Invalid token type", { debug: { token } });
   }
 
-  public static parse<T extends ParsedJwt | ParsedJws<any>>(token: string): T {
+  public static parse<
+    T extends ParsedJwt | ParsedJws<any> | ParsedCwt | ParsedCoseSign<any>,
+  >(token: string): T {
+    if (Aegis.isJwt(token)) {
+      return JwtKit.parse(token) as T;
+    }
     if (Aegis.isJws(token)) {
       return JwsKit.parse(token) as T;
     }
-    if (Aegis.isJwt(token)) {
-      return JwtKit.parse(token) as T;
+    if (Aegis.isCwt(token)) {
+      return CwtKit.parse(token) as T;
+    }
+    if (Aegis.isCoseSign(token)) {
+      return CoseSignKit.parse(token) as T;
     }
     throw new AegisError("Invalid token type", { debug: { token } });
   }
@@ -201,7 +256,7 @@ export class Aegis implements IAegis {
   private async aesKit(options: EncOptions = {}): Promise<AesKit> {
     const kryptos = await this.kryptosEnc(options);
 
-    return new AesKit({ kryptos });
+    return new AesKit({ encryption: this.encryption, kryptos });
   }
 
   private async aesEncrypt(
@@ -224,6 +279,38 @@ export class Aegis implements IAegis {
   }
 
   // private coseSign
+
+  private async coseEncryptKit(options: EncOptions = {}): Promise<CoseEncryptKit> {
+    const kryptos = await this.kryptosEnc(options);
+
+    return new CoseEncryptKit({
+      encryption: this.encryption,
+      kryptos,
+      logger: this.logger,
+    });
+  }
+
+  private async coseEncrypt(
+    data: CoseEncryptContent,
+    options: CoseEncryptEncryptOptions = {},
+  ): Promise<EncryptedCoseEncrypt> {
+    const kit = await this.coseEncryptKit({ encrypt: true });
+
+    return kit.encrypt(data, options);
+  }
+
+  private async coseDecrypt<T extends CoseEncryptContent = string>(
+    token: CoseEncryptContent,
+  ): Promise<DecryptedCoseEncrypt<T>> {
+    const decode = CoseEncryptKit.decode(token);
+
+    const kit = await this.coseEncryptKit({
+      id: decode.recipient.unprotected.kid,
+      algorithm: decode.protected.alg,
+    });
+
+    return kit.decrypt(token);
+  }
 
   private async coseSignKit(options: SigOptions = {}): Promise<CoseSignKit> {
     const kryptos = await this.kryptosSig(options);
@@ -300,7 +387,6 @@ export class Aegis implements IAegis {
     return new JweKit({
       encryption: this.encryption,
       kryptos,
-      kryptosMayOverrideEncryption: this.kryptosMayOverrideEncryption,
       logger: this.logger,
     });
   }
@@ -415,7 +501,7 @@ export class Aegis implements IAegis {
       options.id ? { id: options.id } : { ...query, use: "enc" },
     );
 
-    this.logger.silly("Kryptos found", { kryptos: kryptos.toJSON() });
+    this.logger.debug("Kryptos found", { kryptos: kryptos.toJSON() });
 
     return kryptos;
   }
@@ -436,7 +522,7 @@ export class Aegis implements IAegis {
       options.id ? { id: options.id } : { ...query, use: "sig" },
     );
 
-    this.logger.silly("Kryptos found", { kryptos: kryptos.toJSON() });
+    this.logger.debug("Kryptos found", { kryptos: kryptos.toJSON() });
 
     return kryptos;
   }

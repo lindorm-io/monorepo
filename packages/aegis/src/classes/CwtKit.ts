@@ -55,6 +55,8 @@ export class CwtKit implements ICwtKit {
     content: SignCwtContent<C>,
     options: SignCwtOptions = {},
   ): SignedCwt {
+    this.logger.debug("Signing token", { content, options });
+
     if (!this.issuer) {
       throw new Error("Issuer is required to sign CWT");
     }
@@ -79,11 +81,6 @@ export class CwtKit implements ICwtKit {
       }),
     );
 
-    this.logger.silly("Token headers created", {
-      protectedDict,
-      unprotectedDict,
-    });
-
     const claims = mapJwtContentToClaims(
       { algorithm: this.kryptos.algorithm, issuer: this.issuer },
       content,
@@ -91,12 +88,6 @@ export class CwtKit implements ICwtKit {
     );
     const payloadDict = mapCoseClaims({ ...claims, ...(content.claims ?? {}) });
     const payloadCbor = encode(payloadDict);
-
-    this.logger.silly("Token payload created", {
-      payload: payloadDict,
-      content,
-      options,
-    });
 
     const signature = createCoseSignature({
       kryptos: this.kryptos,
@@ -114,6 +105,8 @@ export class CwtKit implements ICwtKit {
 
     const { expiresAt, expiresIn, expiresOn } = expires(content.expires);
 
+    this.logger.debug("Token signed", { token });
+
     return {
       buffer,
       expiresAt,
@@ -129,6 +122,8 @@ export class CwtKit implements ICwtKit {
     token: Buffer | string,
     verify: VerifyCwtOptions = {},
   ): ParsedCwt<C> {
+    this.logger.debug("Verifying token", { token, verify });
+
     const [protectedCbor, unprotectedCose, payloadCbor, signature] = decode(
       isBuffer(token) ? token : Buffer.from(token, "base64url"),
     );
@@ -149,8 +144,6 @@ export class CwtKit implements ICwtKit {
       protectedHeader: protectedCbor,
       signature,
     });
-
-    this.logger.silly("Token signature verified", { verified, token: token });
 
     if (!verified) {
       throw new CwtError("Invalid token", {
@@ -176,15 +169,11 @@ export class CwtKit implements ICwtKit {
         : undefined,
     };
 
-    this.logger.silly("Operators created", { operators });
-
     for (const [key, ops] of Object.entries(operators)) {
       const value = withDates[key];
       if (validateValue(value, ops)) continue;
       invalid.push({ key, value, ops });
     }
-
-    this.logger.silly("Operators verified", { invalid });
 
     if (invalid.length) {
       throw new CwtError("Invalid token", { data: { invalid } });
@@ -197,18 +186,31 @@ export class CwtKit implements ICwtKit {
       signature: signature,
     };
 
+    const payload = parseTokenPayload(payloadDict);
+
+    this.logger.debug("Token verified");
+
     return {
       decoded,
       header: parseTokenHeader({
         ...protectedDict,
         ...unprotectedDict,
       } as any),
-      payload: parseTokenPayload(payloadDict),
+      payload,
       token: isBuffer(token) ? token.toString("base64url") : token,
     };
   }
 
   // public static
+
+  public static isCwt(token: Buffer | string): boolean {
+    try {
+      const decode = CwtKit.decode(token);
+      return decode.protected.typ === "application/cwt";
+    } catch {
+      return false;
+    }
+  }
 
   public static decode<C extends Dict = Dict>(token: Buffer | string): DecodedCwt<C> {
     const [protectedCbor, unprotectedHeader, payloadCbor, signature] = decode(

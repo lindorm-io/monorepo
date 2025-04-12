@@ -4,10 +4,10 @@ import {
   DecodedTokenHeader,
   ParsedTokenHeader,
   RawTokenHeaderClaims,
-  TokenHeaderSignOptions,
+  TokenHeaderOptions,
 } from "../../types";
 
-export const mapTokenHeader = (options: TokenHeaderSignOptions): RawTokenHeaderClaims => {
+export const mapTokenHeader = (options: TokenHeaderOptions): RawTokenHeaderClaims => {
   const crit = options.critical
     ?.map((key): Exclude<keyof RawTokenHeaderClaims, "crit"> | undefined => {
       switch (key) {
@@ -33,7 +33,7 @@ export const mapTokenHeader = (options: TokenHeaderSignOptions): RawTokenHeaderC
           return "p2c";
         case "pbkdfSalt":
           return "p2s";
-        case "publicEncryptionIv":
+        case "initialisationVector":
           return "iv";
         case "publicEncryptionJwk":
           return "epk";
@@ -51,7 +51,8 @@ export const mapTokenHeader = (options: TokenHeaderSignOptions): RawTokenHeaderC
           return undefined;
       }
     })
-    .filter(isString) as RawTokenHeaderClaims["crit"];
+    .filter(isString)
+    .sort() as RawTokenHeaderClaims["crit"];
 
   return removeUndefined({
     alg: options.algorithm,
@@ -60,7 +61,7 @@ export const mapTokenHeader = (options: TokenHeaderSignOptions): RawTokenHeaderC
     enc: isString(options.encryption) ? options.encryption : undefined,
     epk: isObject(options.publicEncryptionJwk) ? options.publicEncryptionJwk : undefined,
     hkdf_salt: options.hkdfSalt,
-    iv: options.publicEncryptionIv,
+    iv: options.initialisationVector,
     jku: isUrlLike(options.jwksUri) ? options.jwksUri : undefined,
     jwk: isObject(options.jwk) ? options.jwk : undefined,
     kid: options.keyId,
@@ -94,7 +95,7 @@ export const parseTokenHeader = <T extends ParsedTokenHeader = ParsedTokenHeader
           case "hkdf_salt":
             return "hkdfSalt";
           case "iv":
-            return "publicEncryptionIv";
+            return "initialisationVector";
           case "jku":
             return "jwksUri";
           case "jwk":
@@ -123,7 +124,8 @@ export const parseTokenHeader = <T extends ParsedTokenHeader = ParsedTokenHeader
             return undefined;
         }
       })
-      .filter(isString) as ParsedTokenHeader["critical"]) ?? [];
+      .filter(isString)
+      .sort() as ParsedTokenHeader["critical"]) ?? [];
 
   return removeUndefined({
     algorithm: decoded.alg,
@@ -132,13 +134,13 @@ export const parseTokenHeader = <T extends ParsedTokenHeader = ParsedTokenHeader
     encryption: decoded.enc,
     headerType: decoded.typ,
     hkdfSalt: decoded.hkdf_salt,
+    initialisationVector: decoded.iv,
     jwk: decoded.jwk,
     jwksUri: decoded.jku,
     keyId: decoded.kid,
     objectId: decoded.oid,
     pbkdfIterations: decoded.p2c,
     pbkdfSalt: decoded.p2s,
-    publicEncryptionIv: decoded.iv,
     publicEncryptionJwk: decoded.epk,
     publicEncryptionTag: decoded.tag,
     x5c: decoded.x5c,

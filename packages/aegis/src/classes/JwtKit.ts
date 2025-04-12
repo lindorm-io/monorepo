@@ -15,7 +15,7 @@ import {
   SignJwtContent,
   SignJwtOptions,
   SignedJwt,
-  TokenHeaderSignOptions,
+  TokenHeaderOptions,
   ValidateJwtOptions,
   VerifyJwtOptions,
 } from "../types";
@@ -52,13 +52,15 @@ export class JwtKit implements IJwtKit {
     content: SignJwtContent<C>,
     options: SignJwtOptions = {},
   ): SignedJwt {
+    this.logger.debug("Signing token", { content, options });
+
     if (!this.issuer) {
       throw new JwtError("Issuer is required to sign JWT");
     }
 
     const objectId = options.objectId ?? content.subject ?? randomUUID();
 
-    const headerOptions: TokenHeaderSignOptions = {
+    const headerOptions: TokenHeaderOptions = {
       algorithm: this.kryptos.algorithm,
       contentType: "application/json",
       headerType: "JWT",
@@ -69,15 +71,11 @@ export class JwtKit implements IJwtKit {
 
     const header = encodeJoseHeader(headerOptions);
 
-    this.logger.silly("Token header encoded", { header, options: headerOptions });
-
     const { expiresAt, expiresIn, expiresOn, payload, tokenId } = encodeJwtPayload<C>(
       { algorithm: this.kryptos.algorithm, issuer: this.issuer },
       content,
       options,
     );
-
-    this.logger.silly("Token payload encoded", { payload, content, options });
 
     const signature = createJoseSignature({
       header,
@@ -85,28 +83,20 @@ export class JwtKit implements IJwtKit {
       kryptos: this.kryptos,
     });
 
-    this.logger.silly("Token signature created", { signature });
-
     const token = `${header}.${payload}.${signature}`;
 
-    this.logger.silly("Token signed", {
-      expiresAt,
-      expiresIn,
-      expiresOn,
-      keyId: this.kryptos.id,
-      objectId,
-      token,
-      tokenId,
-    });
+    this.logger.debug("Token signed", { token });
 
     return { expiresAt, expiresIn, expiresOn, objectId, token, tokenId };
   }
 
   public verify<C extends Dict = Dict>(
-    jwt: string,
+    token: string,
     verify: VerifyJwtOptions = {},
   ): ParsedJwt<C> {
-    const parsed = JwtKit.parse<C>(jwt);
+    this.logger.debug("Verifying token", { token, verify });
+
+    const parsed = JwtKit.parse<C>(token);
 
     if (this.kryptos.algorithm !== parsed.header.algorithm) {
       throw new JwtError("Invalid token", {
@@ -115,13 +105,11 @@ export class JwtKit implements IJwtKit {
       });
     }
 
-    const verified = verifyJoseSignature(this.kryptos, jwt);
-
-    this.logger.silly("Token signature verified", { verified, token: jwt });
+    const verified = verifyJoseSignature(this.kryptos, token);
 
     if (!verified) {
       throw new JwtError("Invalid token", {
-        data: { verified, token: jwt },
+        data: { verified, token: token },
       });
     }
 
@@ -145,19 +133,17 @@ export class JwtKit implements IJwtKit {
       auth_time: payload.auth_time ? new Date(payload.auth_time * 1000) : undefined,
     };
 
-    this.logger.silly("Operators created", { operators });
-
     for (const [key, ops] of Object.entries(operators)) {
       const value = withDates[key];
       if (validateValue(value, ops)) continue;
       invalid.push({ key, value, ops });
     }
 
-    this.logger.silly("Operators verified", { invalid });
-
     if (invalid.length) {
       throw new JwtError("Invalid token", { data: { invalid } });
     }
+
+    this.logger.debug("Token verified");
 
     return parsed;
   }
