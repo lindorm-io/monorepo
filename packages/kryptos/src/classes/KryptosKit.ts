@@ -318,6 +318,7 @@ export class KryptosKit {
   private static generateKryptos(generate: KryptosGenerate): IKryptos {
     return new Kryptos({
       ...generate,
+      encryption: generate.use === "enc" ? (generate.encryption ?? "A256GCM") : undefined,
       operations: generate.operations?.length
         ? generate.operations
         : calculateKeyOps(generate),
