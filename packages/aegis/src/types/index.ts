@@ -1,5 +1,5 @@
-export * from "./cose-encrypt";
-export * from "./cose-sign";
+export * from "./cwe";
+export * from "./cws";
 export * from "./cwt";
 export * from "./jwe";
 export * from "./jws";

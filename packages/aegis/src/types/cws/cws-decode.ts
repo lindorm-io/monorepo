@@ -1,7 +1,7 @@
 import { TokenHeaderClaims } from "../header";
-import { CoseSignContent } from "./cose-sign-kit";
+import { CwsContent } from "./cws-kit";
 
-export type DecodedCoseSign<T extends CoseSignContent> = {
+export type DecodedCws<T extends CwsContent> = {
   protected: Pick<TokenHeaderClaims, "alg" | "crit" | "cty" | "typ">;
   unprotected: Omit<TokenHeaderClaims, "alg" | "crit" | "cty" | "typ">;
   payload: T;

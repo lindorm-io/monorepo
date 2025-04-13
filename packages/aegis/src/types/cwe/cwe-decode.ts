@@ -1,6 +1,6 @@
 import { RawTokenHeaderClaims, TokenHeaderClaims } from "../header";
 
-export type DecodedCoseEncrypt = {
+export type DecodedCwe = {
   protected: Pick<TokenHeaderClaims, "alg" | "cty" | "typ">;
   unprotected: Pick<RawTokenHeaderClaims, "iv" | "oid">;
   recipient: {

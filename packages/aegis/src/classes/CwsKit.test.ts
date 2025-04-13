@@ -1,16 +1,16 @@
 import { createMockLogger } from "@lindorm/logger";
 import MockDate from "mockdate";
 import { TEST_OKP_KEY_SIG } from "../__fixtures__/keys";
-import { CoseSignKit } from "./CoseSignKit";
+import { CwsKit } from "./CwsKit";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate);
 
-describe("CoseSignKit", () => {
-  let kit: CoseSignKit;
+describe("CwsKit", () => {
+  let kit: CwsKit;
 
   beforeEach(() => {
-    kit = new CoseSignKit({
+    kit = new CwsKit({
       logger: createMockLogger(),
       kryptos: TEST_OKP_KEY_SIG,
     });
@@ -110,7 +110,7 @@ describe("CoseSignKit", () => {
         objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
       });
 
-      expect(CoseSignKit.decode(token)).toEqual({
+      expect(CwsKit.decode(token)).toEqual({
         protected: {
           alg: "EdDSA",
           cty: "text/plain; charset=utf-8",
@@ -131,7 +131,7 @@ describe("CoseSignKit", () => {
         objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
       });
 
-      expect(CoseSignKit.decode(token)).toEqual({
+      expect(CwsKit.decode(token)).toEqual({
         protected: {
           alg: "EdDSA",
           cty: "application/octet-stream",
@@ -154,7 +154,7 @@ describe("CoseSignKit", () => {
         objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
       });
 
-      expect(CoseSignKit.parse(token)).toEqual({
+      expect(CwsKit.parse(token)).toEqual({
         decoded: {
           protected: {
             alg: "EdDSA",
@@ -188,7 +188,7 @@ describe("CoseSignKit", () => {
         objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
       });
 
-      expect(CoseSignKit.parse(token)).toEqual({
+      expect(CwsKit.parse(token)).toEqual({
         decoded: {
           protected: {
             alg: "EdDSA",

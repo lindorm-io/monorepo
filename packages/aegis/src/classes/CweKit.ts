@@ -5,15 +5,15 @@ import { ILogger } from "@lindorm/logger";
 import { decode, encode } from "cbor";
 import { randomBytes } from "crypto";
 import { CoseEncryptError } from "../errors";
-import { ICoseEncryptKit } from "../interfaces";
+import { ICweKit } from "../interfaces";
 import {
-  CoseEncryptContent,
-  CoseEncryptEncryptOptions,
-  CoseEncryptKitOptions,
-  DecodedCoseEncrypt,
-  DecryptedCoseEncrypt,
-  DecryptedCoseEncryptHeader,
-  EncryptedCoseEncrypt,
+  CweContent,
+  CweEncryptOptions,
+  CweKitOptions,
+  DecodedCwe,
+  DecryptedCwe,
+  DecryptedCweHeader,
+  EncryptedCwe,
 } from "../types";
 import {
   authTagLength,
@@ -23,21 +23,18 @@ import {
   parseTokenHeader,
 } from "../utils/private";
 
-export class CoseEncryptKit implements ICoseEncryptKit {
+export class CweKit implements ICweKit {
   private readonly encryption: KryptosEncryption;
   private readonly logger: ILogger;
   private readonly kryptos: IKryptos;
 
-  public constructor(options: CoseEncryptKitOptions) {
+  public constructor(options: CweKitOptions) {
     this.logger = options.logger.child(["CoseEncryptKit"]);
     this.kryptos = options.kryptos;
     this.encryption = options.encryption ?? options.kryptos.encryption ?? "A256GCM";
   }
 
-  public encrypt(
-    data: CoseEncryptContent,
-    options: CoseEncryptEncryptOptions = {},
-  ): EncryptedCoseEncrypt {
+  public encrypt(data: CweContent, options: CweEncryptOptions = {}): EncryptedCwe {
     const kit = new AesKit({ encryption: this.encryption, kryptos: this.kryptos });
 
     this.logger.debug("Encrypting token", { options });
@@ -99,14 +96,12 @@ export class CoseEncryptKit implements ICoseEncryptKit {
     return { buffer, token };
   }
 
-  public decrypt<T extends CoseEncryptContent = string>(
-    token: CoseEncryptContent,
-  ): DecryptedCoseEncrypt<T> {
+  public decrypt<T extends CweContent = string>(token: CweContent): DecryptedCwe<T> {
     const kit = new AesKit({ encryption: this.encryption, kryptos: this.kryptos });
 
     this.logger.debug("Decrypting token", { token });
 
-    const decoded = CoseEncryptKit.decode(token);
+    const decoded = CweKit.decode(token);
 
     if (this.kryptos.algorithm !== decoded.protected.alg) {
       throw new CoseEncryptError("Invalid token", {
@@ -139,7 +134,7 @@ export class CoseEncryptKit implements ICoseEncryptKit {
       throw new CoseEncryptError("Missing iv");
     }
 
-    const header = parseTokenHeader<DecryptedCoseEncryptHeader>({
+    const header = parseTokenHeader<DecryptedCweHeader>({
       ...decoded.protected,
       enc: decoded.recipient.unprotected.enc,
       epk: decoded.recipient.unprotected.epk,
@@ -175,16 +170,16 @@ export class CoseEncryptKit implements ICoseEncryptKit {
 
   // public static
 
-  public static isCoseEncrypt(token: Buffer | string): boolean {
+  public static isCwe(token: Buffer | string): boolean {
     try {
-      const decode = CoseEncryptKit.decode(token);
+      const decode = CweKit.decode(token);
       return decode.protected.typ === "application/cose; cose-type=cose-encrypt";
     } catch {
       return false;
     }
   }
 
-  public static decode(token: CoseEncryptContent): DecodedCoseEncrypt {
+  public static decode(token: CweContent): DecodedCwe {
     const [protectedCbor, unprotectedCose, ciphertext, recipients] = decode(
       isBuffer(token) ? token : Buffer.from(token, "base64url"),
     );
@@ -216,7 +211,7 @@ export class CoseEncryptKit implements ICoseEncryptKit {
 
   // private
 
-  private contentType(input: CoseEncryptContent): string {
+  private contentType(input: CweContent): string {
     if (isBuffer(input)) {
       return "application/octet-stream";
     }

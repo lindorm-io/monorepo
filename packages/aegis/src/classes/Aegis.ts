@@ -18,7 +18,8 @@ import { AegisError } from "../errors";
 import {
   IAegis,
   IAegisAes,
-  IAegisCose,
+  IAegisCwe,
+  IAegisCws,
   IAegisCwt,
   IAegisJwe,
   IAegisJws,
@@ -26,32 +27,32 @@ import {
 } from "../interfaces";
 import {
   AegisOptions,
-  CoseEncryptContent,
-  CoseEncryptEncryptOptions,
-  CoseSignContent,
-  DecodedCoseEncrypt,
-  DecodedCoseSign,
+  CweContent,
+  CweEncryptOptions,
+  CwsContent,
+  DecodedCwe,
+  DecodedCws,
   DecodedCwt,
   DecodedJwe,
   DecodedJws,
   DecodedJwt,
-  DecryptedCoseEncrypt,
+  DecryptedCwe,
   DecryptedJwe,
-  EncryptedCoseEncrypt,
+  EncryptedCwe,
   EncryptedJwe,
   JweEncryptOptions,
   JwsContent,
-  ParsedCoseSign,
+  ParsedCws,
   ParsedCwt,
   ParsedJws,
   ParsedJwt,
-  SignCoseSignOptions,
+  SignCwsOptions,
   SignCwtContent,
   SignCwtOptions,
   SignJwsOptions,
   SignJwtContent,
   SignJwtOptions,
-  SignedCoseSign,
+  SignedCws,
   SignedCwt,
   SignedJws,
   SignedJwt,
@@ -61,8 +62,8 @@ import {
   VerifyJwtOptions,
 } from "../types";
 import { decodeJoseHeader } from "../utils/private";
-import { CoseEncryptKit } from "./CoseEncryptKit";
-import { CoseSignKit } from "./CoseSignKit";
+import { CweKit } from "./CweKit";
+import { CwsKit } from "./CwsKit";
 import { CwtKit } from "./CwtKit";
 import { JweKit } from "./JweKit";
 import { JwsKit } from "./JwsKit";
@@ -108,13 +109,17 @@ export class Aegis implements IAegis {
     };
   }
 
-  public get cose(): IAegisCose {
+  public get cwe(): IAegisCwe {
+    return {
+      encrypt: this.coseEncrypt.bind(this),
+      decrypt: this.coseDecrypt.bind(this),
+    };
+  }
+
+  public get cws(): IAegisCws {
     return {
       sign: this.coseSign.bind(this),
       verify: this.coseVerify.bind(this),
-
-      encrypt: this.coseEncrypt.bind(this),
-      decrypt: this.coseDecrypt.bind(this),
     };
   }
 
@@ -146,9 +151,10 @@ export class Aegis implements IAegis {
     };
   }
 
-  public async verify<
-    T extends ParsedJwt | ParsedJws<any> | ParsedCwt | ParsedCoseSign<any>,
-  >(token: string, options?: VerifyJwtOptions): Promise<T> {
+  public async verify<T extends ParsedJwt | ParsedJws<any> | ParsedCwt | ParsedCws<any>>(
+    token: string,
+    options?: VerifyJwtOptions,
+  ): Promise<T> {
     if (Aegis.isJwt(token)) {
       return (await this.jwtVerify(token, options)) as T;
     }
@@ -196,11 +202,11 @@ export class Aegis implements IAegis {
   }
 
   public static isCoseSign(cose: string): boolean {
-    return CoseSignKit.isCoseSign(cose);
+    return CwsKit.isCws(cose);
   }
 
   public static isCoseEncrypt(cose: string): boolean {
-    return CoseEncryptKit.isCoseEncrypt(cose);
+    return CweKit.isCwe(cose);
   }
 
   public static decode<
@@ -209,8 +215,8 @@ export class Aegis implements IAegis {
       | DecodedJws
       | DecodedJwt
       | DecodedCwt
-      | DecodedCoseEncrypt
-      | DecodedCoseSign<any>,
+      | DecodedCwe
+      | DecodedCws<any>,
   >(token: string): T {
     if (Aegis.isJwe(token)) {
       return JweKit.decode(token) as T;
@@ -225,17 +231,17 @@ export class Aegis implements IAegis {
       return CwtKit.decode(token) as T;
     }
     if (Aegis.isCoseEncrypt(token)) {
-      return CoseEncryptKit.decode(token) as T;
+      return CweKit.decode(token) as T;
     }
     if (Aegis.isCoseSign(token)) {
-      return CoseSignKit.decode(token) as T;
+      return CwsKit.decode(token) as T;
     }
     throw new AegisError("Invalid token type", { debug: { token } });
   }
 
-  public static parse<
-    T extends ParsedJwt | ParsedJws<any> | ParsedCwt | ParsedCoseSign<any>,
-  >(token: string): T {
+  public static parse<T extends ParsedJwt | ParsedJws<any> | ParsedCwt | ParsedCws<any>>(
+    token: string,
+  ): T {
     if (Aegis.isJwt(token)) {
       return JwtKit.parse(token) as T;
     }
@@ -246,7 +252,7 @@ export class Aegis implements IAegis {
       return CwtKit.parse(token) as T;
     }
     if (Aegis.isCoseSign(token)) {
-      return CoseSignKit.parse(token) as T;
+      return CwsKit.parse(token) as T;
     }
     throw new AegisError("Invalid token type", { debug: { token } });
   }
@@ -280,10 +286,10 @@ export class Aegis implements IAegis {
 
   // private coseSign
 
-  private async coseEncryptKit(options: EncOptions = {}): Promise<CoseEncryptKit> {
+  private async coseEncryptKit(options: EncOptions = {}): Promise<CweKit> {
     const kryptos = await this.kryptosEnc(options);
 
-    return new CoseEncryptKit({
+    return new CweKit({
       encryption: this.encryption,
       kryptos,
       logger: this.logger,
@@ -291,18 +297,18 @@ export class Aegis implements IAegis {
   }
 
   private async coseEncrypt(
-    data: CoseEncryptContent,
-    options: CoseEncryptEncryptOptions = {},
-  ): Promise<EncryptedCoseEncrypt> {
+    data: CweContent,
+    options: CweEncryptOptions = {},
+  ): Promise<EncryptedCwe> {
     const kit = await this.coseEncryptKit({ encrypt: true });
 
     return kit.encrypt(data, options);
   }
 
-  private async coseDecrypt<T extends CoseEncryptContent = string>(
-    token: CoseEncryptContent,
-  ): Promise<DecryptedCoseEncrypt<T>> {
-    const decode = CoseEncryptKit.decode(token);
+  private async coseDecrypt<T extends CweContent = string>(
+    token: CweContent,
+  ): Promise<DecryptedCwe<T>> {
+    const decode = CweKit.decode(token);
 
     const kit = await this.coseEncryptKit({
       id: decode.recipient.unprotected.kid,
@@ -312,28 +318,28 @@ export class Aegis implements IAegis {
     return kit.decrypt(token);
   }
 
-  private async coseSignKit(options: SigOptions = {}): Promise<CoseSignKit> {
+  private async coseSignKit(options: SigOptions = {}): Promise<CwsKit> {
     const kryptos = await this.kryptosSig(options);
 
-    return new CoseSignKit({
+    return new CwsKit({
       kryptos,
       logger: this.logger,
     });
   }
 
-  private async coseSign<T extends CoseSignContent>(
+  private async coseSign<T extends CwsContent>(
     content: T,
-    options: SignCoseSignOptions = {},
-  ): Promise<SignedCoseSign> {
+    options: SignCwsOptions = {},
+  ): Promise<SignedCws> {
     const kit = await this.coseSignKit({ sign: true });
 
     return kit.sign(content, options);
   }
 
-  private async coseVerify<T extends CoseSignContent>(
+  private async coseVerify<T extends CwsContent>(
     token: Buffer | string,
-  ): Promise<ParsedCoseSign<T>> {
-    const decode = CoseSignKit.decode(token);
+  ): Promise<ParsedCws<T>> {
+    const decode = CwsKit.decode(token);
 
     const kit = await this.coseSignKit({
       id: decode.unprotected.kid,

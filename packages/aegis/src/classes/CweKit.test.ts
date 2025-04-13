@@ -6,18 +6,18 @@ import {
   TEST_OCT_KEY_ENC,
   TEST_OKP_KEY_ENC,
 } from "../__fixtures__/keys";
-import { CoseEncryptKit } from "./CoseEncryptKit";
+import { CweKit } from "./CweKit";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate);
 
-describe("CoseEncryptKit", () => {
+describe("CweKit", () => {
   let logger: ILogger;
-  let kit: CoseEncryptKit;
+  let kit: CweKit;
 
   beforeEach(() => {
     logger = createMockLogger();
-    kit = new CoseEncryptKit({ logger, kryptos: TEST_EC_KEY_ENC });
+    kit = new CweKit({ logger, kryptos: TEST_EC_KEY_ENC });
   });
 
   describe("encrypt", () => {
@@ -29,7 +29,7 @@ describe("CoseEncryptKit", () => {
     });
 
     test("should encrypt data using OCT", () => {
-      kit = new CoseEncryptKit({ logger, kryptos: TEST_OCT_KEY_ENC });
+      kit = new CweKit({ logger, kryptos: TEST_OCT_KEY_ENC });
 
       expect(kit.encrypt("data")).toEqual({
         buffer: expect.any(Buffer),
@@ -38,7 +38,7 @@ describe("CoseEncryptKit", () => {
     });
 
     test("should encrypt data using OKP", () => {
-      kit = new CoseEncryptKit({ logger, kryptos: TEST_OKP_KEY_ENC });
+      kit = new CweKit({ logger, kryptos: TEST_OKP_KEY_ENC });
 
       expect(kit.encrypt("data")).toEqual({
         buffer: expect.any(Buffer),
@@ -106,7 +106,7 @@ describe("CoseEncryptKit", () => {
     });
 
     test("should decrypt data using OCT dir", () => {
-      kit = new CoseEncryptKit({ logger, kryptos: TEST_OCT_KEY_ENC });
+      kit = new CweKit({ logger, kryptos: TEST_OCT_KEY_ENC });
 
       const { token } = kit.encrypt("data", {
         objectId: "19a0c0cc-3eec-4ece-a5a1-4d93a457c3a6",
@@ -157,7 +157,7 @@ describe("CoseEncryptKit", () => {
         jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
       });
 
-      kit = new CoseEncryptKit({ logger, kryptos });
+      kit = new CweKit({ logger, kryptos });
 
       const { token } = kit.encrypt("data", {
         objectId: "19a0c0cc-3eec-4ece-a5a1-4d93a457c3a6",
@@ -206,7 +206,7 @@ describe("CoseEncryptKit", () => {
     test("should decrypt data using OCT A128GCMKW", () => {
       const kryptos = KryptosKit.generate.enc.oct({ algorithm: "A128GCMKW" });
 
-      kit = new CoseEncryptKit({ logger, kryptos });
+      kit = new CweKit({ logger, kryptos });
 
       const { token } = kit.encrypt("data", {
         objectId: "19a0c0cc-3eec-4ece-a5a1-4d93a457c3a6",
@@ -253,7 +253,7 @@ describe("CoseEncryptKit", () => {
     });
 
     test("should decrypt data using OKP", () => {
-      kit = new CoseEncryptKit({ logger, kryptos: TEST_OKP_KEY_ENC });
+      kit = new CweKit({ logger, kryptos: TEST_OKP_KEY_ENC });
 
       const { token } = kit.encrypt("data", {
         objectId: "540061f3-aea2-4625-b034-c48a7a9ac114",
@@ -316,7 +316,7 @@ describe("CoseEncryptKit", () => {
         objectId: "e5d4ed15-3350-4fdc-a9cf-d8270d637e99",
       });
 
-      expect(CoseEncryptKit.decode(token)).toEqual({
+      expect(CweKit.decode(token)).toEqual({
         protected: {
           alg: "ECDH-ES",
           cty: "text/plain",
@@ -370,7 +370,7 @@ describe("CoseEncryptKit", () => {
     test.each(algorithms)("should encrypt and decrypt data using %s", (algorithm) => {
       const kryptos = KryptosKit.generate.auto({ algorithm });
 
-      const coseEncryptKit = new CoseEncryptKit({ logger, kryptos });
+      const coseEncryptKit = new CweKit({ logger, kryptos });
 
       const { token } = coseEncryptKit.encrypt("data");
 

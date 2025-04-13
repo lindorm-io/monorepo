@@ -1,9 +1,9 @@
-export type SignCoseSignOptions = {
+export type SignCwsOptions = {
   contentType?: string;
   objectId?: string;
 };
 
-export type SignedCoseSign = {
+export type SignedCws = {
   buffer: Buffer;
   objectId: string;
   token: string;

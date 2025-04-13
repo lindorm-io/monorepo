@@ -1,9 +1,9 @@
 import { IKryptos } from "@lindorm/kryptos";
 import { ILogger } from "@lindorm/logger";
 
-export type CoseSignContent = Buffer | string;
+export type CwsContent = Buffer | string;
 
-export type CoseSignKitOptions = {
+export type CwsKitOptions = {
   logger: ILogger;
   kryptos: IKryptos;
 };

@@ -4,15 +4,15 @@ import { ILogger } from "@lindorm/logger";
 import { decode, encode } from "cbor";
 import { randomBytes } from "crypto";
 import { CoseSignError } from "../errors";
-import { ICoseSignKit } from "../interfaces";
+import { ICwsKit } from "../interfaces";
 import {
-  CoseSignContent,
-  CoseSignKitOptions,
-  DecodedCoseSign,
-  ParsedCoseSign,
-  ParsedCoseSignHeader,
-  SignCoseSignOptions,
-  SignedCoseSign,
+  CwsContent,
+  CwsKitOptions,
+  DecodedCws,
+  ParsedCws,
+  ParsedCwsHeader,
+  SignCwsOptions,
+  SignedCws,
 } from "../types";
 import {
   createCoseSignToken,
@@ -24,16 +24,16 @@ import {
   verifyCoseSignature,
 } from "../utils/private";
 
-export class CoseSignKit implements ICoseSignKit {
+export class CwsKit implements ICwsKit {
   private readonly logger: ILogger;
   private readonly kryptos: IKryptos;
 
-  public constructor(options: CoseSignKitOptions) {
+  public constructor(options: CwsKitOptions) {
     this.logger = options.logger.child(["CoseSignKit"]);
     this.kryptos = options.kryptos;
   }
 
-  public sign(data: CoseSignContent, options: SignCoseSignOptions = {}): SignedCoseSign {
+  public sign(data: CwsContent, options: SignCwsOptions = {}): SignedCws {
     const objectId = options.objectId ?? randomBytes(20).toString("base64url");
 
     this.logger.debug("Signing token", { options });
@@ -81,7 +81,7 @@ export class CoseSignKit implements ICoseSignKit {
     return { buffer, objectId, token };
   }
 
-  public verify<T extends CoseSignContent>(token: CoseSignContent): ParsedCoseSign<T> {
+  public verify<T extends CwsContent>(token: CwsContent): ParsedCws<T> {
     this.logger.debug("Verifying token", { token });
 
     const [protectedCbor, unprotectedCose, payloadCbor, signature] = decode(
@@ -112,14 +112,14 @@ export class CoseSignKit implements ICoseSignKit {
     const unprotectedDict = decodeCoseHeader(unprotectedCose);
     const payloadBuffer = decode(payloadCbor);
 
-    const decoded: DecodedCoseSign<T> = {
+    const decoded: DecodedCws<T> = {
       protected: protectedDict as any,
       unprotected: unprotectedDict as any,
       payload: payloadBuffer as any,
       signature: signature,
     };
 
-    const header = parseTokenHeader<ParsedCoseSignHeader>({
+    const header = parseTokenHeader<ParsedCwsHeader>({
       ...protectedDict,
       ...unprotectedDict,
     } as any);
@@ -141,18 +141,16 @@ export class CoseSignKit implements ICoseSignKit {
 
   // public static
 
-  public static isCoseSign(token: Buffer | string): boolean {
+  public static isCws(token: Buffer | string): boolean {
     try {
-      const decode = CoseSignKit.decode(token);
+      const decode = CwsKit.decode(token);
       return decode.protected.typ === "application/cose; cose-type=cose-sign";
     } catch {
       return false;
     }
   }
 
-  public static decode<T extends CoseSignContent>(
-    token: CoseSignContent,
-  ): DecodedCoseSign<T> {
+  public static decode<T extends CwsContent>(token: CwsContent): DecodedCws<T> {
     const [protectedCbor, unprotectedHeader, payloadCbor, signature] = decode(
       isBuffer(token) ? token : Buffer.from(token, "base64url"),
     );
@@ -174,10 +172,8 @@ export class CoseSignKit implements ICoseSignKit {
     };
   }
 
-  public static parse<T extends CoseSignContent>(
-    token: CoseSignContent,
-  ): ParsedCoseSign<T> {
-    const decoded = CoseSignKit.decode<T>(token);
+  public static parse<T extends CwsContent>(token: CwsContent): ParsedCws<T> {
+    const decoded = CwsKit.decode<T>(token);
 
     return {
       decoded,
