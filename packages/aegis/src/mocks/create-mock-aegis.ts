@@ -7,38 +7,7 @@ export const createMockAegis = (): IAegis => ({
     encrypt: jest.fn().mockResolvedValue("mocked_encryption"),
     decrypt: jest.fn().mockResolvedValue("mocked_decryption"),
   },
-  cose: {
-    sign: jest.fn().mockResolvedValue({
-      buffer: Buffer.alloc(0),
-      objectId: "mocked_object_id",
-      token: "mocked_token",
-    }),
-    verify: jest.fn().mockResolvedValue({
-      decoded: {},
-      header: {},
-      payload: "verified_payload",
-    }),
-    encrypt: jest
-      .fn()
-      .mockResolvedValue({ buffer: Buffer.alloc(0), token: "mocked_token" }),
-    decrypt: jest.fn().mockResolvedValue({
-      decoded: {},
-      header: {},
-      payload: "mocked_payload",
-    }),
-  },
-  cwt: {
-    sign: jest.fn().mockResolvedValue({
-      buffer: Buffer.alloc(0),
-      objectId: "mocked_object_id",
-      token: "mocked_token",
-    }),
-    verify: jest.fn().mockResolvedValue({
-      decoded: {},
-      header: {},
-      payload: "verified_payload",
-    }),
-  },
+
   jwe: {
     encrypt: jest.fn().mockResolvedValue({ token: "mocked_token" }),
     decrypt: jest.fn().mockResolvedValue({
@@ -71,6 +40,41 @@ export const createMockAegis = (): IAegis => ({
       decoded: {},
       header: {},
       payload: { subject: "verified_subject" },
+    }),
+  },
+
+  cwe: {
+    encrypt: jest
+      .fn()
+      .mockResolvedValue({ buffer: Buffer.alloc(0), token: "mocked_token" }),
+    decrypt: jest.fn().mockResolvedValue({
+      decoded: {},
+      header: {},
+      payload: "mocked_payload",
+    }),
+  },
+  cwt: {
+    sign: jest.fn().mockResolvedValue({
+      buffer: Buffer.alloc(0),
+      objectId: "mocked_object_id",
+      token: "mocked_token",
+    }),
+    verify: jest.fn().mockResolvedValue({
+      decoded: {},
+      header: {},
+      payload: "verified_payload",
+    }),
+  },
+  cws: {
+    sign: jest.fn().mockResolvedValue({
+      buffer: Buffer.alloc(0),
+      objectId: "mocked_object_id",
+      token: "mocked_token",
+    }),
+    verify: jest.fn().mockResolvedValue({
+      decoded: {},
+      header: {},
+      payload: "verified_payload",
     }),
   },
 

@@ -168,11 +168,11 @@ export class Aegis implements IAegis {
     if (Aegis.isCwt(token)) {
       return (await this.cwtVerify(token, options)) as T;
     }
-    if (Aegis.isCoseEncrypt(token)) {
+    if (Aegis.isCwe(token)) {
       const decrypt = await this.coseDecrypt(token);
       return (await this.verify(decrypt.payload)) as T;
     }
-    if (Aegis.isCoseSign(token)) {
+    if (Aegis.isCws(token)) {
       return (await this.coseVerify(token)) as T;
     }
     throw new AegisError("Invalid token type", { debug: { token } });
@@ -197,16 +197,16 @@ export class Aegis implements IAegis {
     return JwtKit.isJwt(jwt);
   }
 
-  public static isCwt(cwt: string): boolean {
-    return CwtKit.isCwt(cwt);
+  public static isCwe(cose: string): boolean {
+    return CweKit.isCwe(cose);
   }
 
-  public static isCoseSign(cose: string): boolean {
+  public static isCws(cose: string): boolean {
     return CwsKit.isCws(cose);
   }
 
-  public static isCoseEncrypt(cose: string): boolean {
-    return CweKit.isCwe(cose);
+  public static isCwt(cwt: string): boolean {
+    return CwtKit.isCwt(cwt);
   }
 
   public static decode<
@@ -230,10 +230,10 @@ export class Aegis implements IAegis {
     if (Aegis.isCwt(token)) {
       return CwtKit.decode(token) as T;
     }
-    if (Aegis.isCoseEncrypt(token)) {
+    if (Aegis.isCwe(token)) {
       return CweKit.decode(token) as T;
     }
-    if (Aegis.isCoseSign(token)) {
+    if (Aegis.isCws(token)) {
       return CwsKit.decode(token) as T;
     }
     throw new AegisError("Invalid token type", { debug: { token } });
@@ -251,7 +251,7 @@ export class Aegis implements IAegis {
     if (Aegis.isCwt(token)) {
       return CwtKit.parse(token) as T;
     }
-    if (Aegis.isCoseSign(token)) {
+    if (Aegis.isCws(token)) {
       return CwsKit.parse(token) as T;
     }
     throw new AegisError("Invalid token type", { debug: { token } });
