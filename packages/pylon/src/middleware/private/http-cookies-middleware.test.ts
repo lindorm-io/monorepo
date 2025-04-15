@@ -73,7 +73,7 @@ describe("httpCookiesMiddleware", () => {
     await expect(createHttpCookiesMiddleware(config)(ctx, next)).resolves.toBeUndefined();
 
     expect(ctx.set).toHaveBeenCalledWith("set-cookie", [
-      "new_cookie=mocked_encryption; domain=http://lindorm.io; path=/; samesite=strict; secure; httponly",
+      "new_cookie=bW9ja2VkX2VuY3J5cHRpb24; domain=http://lindorm.io; path=/; samesite=strict; secure; httponly",
     ]);
   });
 

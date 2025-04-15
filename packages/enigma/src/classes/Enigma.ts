@@ -16,13 +16,13 @@ export class Enigma {
   }
 
   public async hash(data: string): Promise<string> {
-    const oct = this.oct.sign(data);
+    const oct = this.oct.format(this.oct.sign(data));
     const argon = await this.argon.hash(oct);
     return this.aes.encrypt(argon);
   }
 
   public async verify(data: string, hash: string): Promise<boolean> {
-    const oct = this.oct.sign(data);
+    const oct = this.oct.format(this.oct.sign(data));
     const argon = this.aes.decrypt(hash);
     return this.argon.verify(oct, argon);
   }

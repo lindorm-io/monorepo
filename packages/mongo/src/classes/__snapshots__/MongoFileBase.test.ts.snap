@@ -175,25 +175,33 @@ exports[`File should have expected properties 2`] = `
   "hooks": [],
   "indexes": [
     {
-      "index": {
-        "mimeType": "asc",
-      },
+      "keys": [
+        {
+          "direction": "asc",
+          "key": "mimeType",
+        },
+      ],
       "name": null,
       "options": {},
+      "unique": false,
     },
     {
-      "index": {
-        "originalName": "asc",
-      },
+      "keys": [
+        {
+          "direction": "asc",
+          "key": "originalName",
+        },
+      ],
       "name": null,
       "options": {},
+      "unique": false,
     },
   ],
   "primaryKeys": [
     "filename",
   ],
   "primarySource": null,
+  "relations": [],
   "schemas": [],
-  "uniques": [],
 }
 `;
