@@ -1,5 +1,4 @@
 import { HttpMethod } from "@lindorm/enums";
-import { parseStringRecord as _parseStringRecord } from "@lindorm/utils";
 import MockDate from "mockdate";
 import { BodyType } from "../../enums";
 import { PylonError } from "../../errors";
@@ -13,13 +12,11 @@ import { createHttpBodyParserMiddleware } from "./http-body-parser-middleware";
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate);
 
-jest.mock("@lindorm/utils");
 jest.mock("../../utils/private");
 
 const composeParseBodyConfig = _composeParseBodyConfig as jest.Mock;
 const getBodyType = _getBodyType as jest.Mock;
 const parseBody = _parseBody as jest.Mock;
-const parseStringRecord = _parseStringRecord as jest.Mock;
 
 describe("createHttpBodyParserMiddleware", () => {
   const array = ["array"];
@@ -64,7 +61,6 @@ describe("createHttpBodyParserMiddleware", () => {
       files: [],
       raw: '{"value":"parsed"}',
     });
-    parseStringRecord.mockImplementation((input) => input);
   });
 
   test("should parse body and files and set it on request context", async () => {
