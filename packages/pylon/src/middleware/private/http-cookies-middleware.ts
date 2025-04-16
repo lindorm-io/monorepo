@@ -1,5 +1,5 @@
 import { ClientError } from "@lindorm/errors";
-import { isString } from "@lindorm/is";
+import { isObject, isString } from "@lindorm/is";
 import { Dict } from "@lindorm/types";
 import { safelyParse } from "@lindorm/utils";
 import { PylonCookie } from "../../classes/private/PylonCookie";
@@ -35,6 +35,9 @@ export const createHttpCookiesMiddleware = (
         const opts = { ...config, ...options };
 
         if (opts.encrypted && !opts.encoding) {
+          opts.encoding = "base64url";
+        }
+        if (!opts.encoding && isObject(value)) {
           opts.encoding = "base64url";
         }
 
