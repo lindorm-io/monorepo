@@ -92,13 +92,13 @@ describe("httpCookiesMiddleware", () => {
 
   test("should set cookie with json data", async () => {
     next.mockImplementation(async () => {
-      ctx.cookies.set("new_cookie", { key: "value" });
+      ctx.cookies.set("new_cookie", { key: "value" }, { encoding: "hex" });
     });
 
     await expect(createHttpCookiesMiddleware(config)(ctx, next)).resolves.toBeUndefined();
 
     expect(ctx.set).toHaveBeenCalledWith("set-cookie", [
-      "new_cookie=eyJrZXkiOiJ2YWx1ZSJ9; domain=http://lindorm.io; path=/; samesite=strict; secure; httponly",
+      "new_cookie=7b226b6579223a2276616c7565227d; domain=http://lindorm.io; path=/; samesite=strict; secure; httponly",
     ]);
   });
 

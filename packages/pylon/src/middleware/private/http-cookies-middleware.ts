@@ -1,4 +1,4 @@
-import { ClientError } from "@lindorm/errors";
+import { ServerError } from "@lindorm/errors";
 import { isObject, isString } from "@lindorm/is";
 import { Dict } from "@lindorm/types";
 import { safelyParse } from "@lindorm/utils";
@@ -34,17 +34,21 @@ export const createHttpCookiesMiddleware = (
       ): Promise<void> => {
         const opts = { ...config, ...options };
 
+        if (!value) {
+          throw new ServerError("Cookie value is not set", {
+            code: "invalid_cookie_value",
+            debug: { name, value, opts },
+          });
+        }
+
         if (opts.encrypted && !opts.encoding) {
           opts.encoding = "base64url";
         }
-        if (!opts.encoding && isObject(value)) {
-          opts.encoding = "base64url";
-        }
 
-        if (!value) {
-          throw new ClientError("Invalid cookie value", {
+        if (!opts.encoding && isObject(value)) {
+          throw new ServerError("Encoding required for object value", {
             code: "invalid_cookie_value",
-            debug: { name, value, options },
+            debug: { name, value, opts },
           });
         }
 
