@@ -53,6 +53,7 @@ type ExtendingLindormClaims = {
   pronouns: string | null;
 
   // profile
+  honorific: string | null;
   language: string | null;
   maritalStatus: string | null;
   namingSystem: OpenIdNamingSystem | null;
