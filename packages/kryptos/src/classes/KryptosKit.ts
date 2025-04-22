@@ -9,6 +9,7 @@ import {
 } from "../interfaces";
 import {
   KryptosAuto,
+  KryptosDB,
   KryptosFormat,
   KryptosFrom,
   KryptosFromBuffer,
@@ -47,6 +48,7 @@ type Env = {
 type From = {
   auto(options: KryptosFrom): IKryptos;
   b64(options: KryptosFromString): IKryptos;
+  db(options: KryptosDB): IKryptos;
   der(options: KryptosFromBuffer): IKryptos;
   jwk(options: KryptosFromJwk): IKryptos;
   pem(options: KryptosFromString): IKryptos;
@@ -95,6 +97,7 @@ export class KryptosKit {
     return {
       auto: KryptosKit.fromAuto,
       b64: KryptosKit.fromB64,
+      db: KryptosKit.fromB64,
       der: KryptosKit.fromDer,
       jwk: KryptosKit.fromJwk,
       pem: KryptosKit.fromPem,

@@ -9,9 +9,11 @@ import {
   KryptosAttributes,
   KryptosBuffer,
   KryptosCurve,
+  KryptosDB,
   KryptosEncryption,
   KryptosExportMode,
   KryptosFormat,
+  KryptosJSON,
   KryptosJwk,
   KryptosKey,
   KryptosKeys,
@@ -289,7 +291,31 @@ export class Kryptos implements IKryptos {
 
   // to types
 
-  public toJSON(): KryptosAttributes & KryptosMetadata {
+  public toDB(): KryptosDB {
+    const { privateKey, publicKey } = this.export("b64");
+    return {
+      id: this.id,
+      algorithm: this.algorithm,
+      createdAt: this.createdAt,
+      curve: this.curve,
+      encryption: this.encryption,
+      expiresAt: this.expiresAt,
+      isExternal: this.isExternal,
+      issuer: this.issuer,
+      jwksUri: this.jwksUri,
+      notBefore: this.notBefore,
+      operations: this.operations,
+      ownerId: this.ownerId,
+      purpose: this.purpose,
+      type: this.type,
+      updatedAt: this.updatedAt,
+      use: this.use,
+      privateKey,
+      publicKey,
+    };
+  }
+
+  public toJSON(): KryptosJSON {
     return removeUndefined<KryptosAttributes & KryptosMetadata>({
       id: this.id,
       algorithm: this.algorithm,

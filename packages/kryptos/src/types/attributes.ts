@@ -2,6 +2,7 @@ import { KryptosAlgorithm } from "./algorithm";
 import { KryptosCurve } from "./curve";
 import { KryptosEncryption } from "./encryption";
 import { RsaModulus } from "./key-types";
+import { KryptosString } from "./kryptos";
 import { KryptosOperation } from "./operation";
 import { KryptosType, KryptosUse } from "./types";
 
@@ -32,5 +33,9 @@ export type KryptosMetadata = {
   isExpired: boolean;
   modulus: RsaModulus | undefined;
 };
+
+export type KryptosJSON = KryptosAttributes & KryptosMetadata;
+
+export type KryptosDB = KryptosAttributes & KryptosString;
 
 export type KryptosLike = Partial<KryptosAttributes>;

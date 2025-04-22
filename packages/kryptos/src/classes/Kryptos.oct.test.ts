@@ -98,6 +98,12 @@ describe("Kryptos (oct)", () => {
   });
 
   describe("to", () => {
+    test("should return db", () => {
+      const kryptos = KryptosKit.from.b64({ ...TEST_OCT_KEY_B64, ...options });
+
+      expect(kryptos.toDB()).toMatchSnapshot();
+    });
+
     test("should return json", () => {
       const kryptos = KryptosKit.from.b64({ ...TEST_OCT_KEY_B64, ...options });
 

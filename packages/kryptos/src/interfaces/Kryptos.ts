@@ -1,7 +1,9 @@
 import {
   KryptosAttributes,
   KryptosBuffer,
+  KryptosDB,
   KryptosExportMode,
+  KryptosJSON,
   KryptosJwk,
   KryptosMetadata,
   KryptosString,
@@ -9,7 +11,8 @@ import {
 } from "../types";
 
 export interface IKryptos extends KryptosAttributes, KryptosMetadata {
-  toJSON(): KryptosAttributes & KryptosMetadata;
+  toDB(): KryptosDB;
+  toJSON(): KryptosJSON;
   toJWK(mode?: KryptosExportMode): LindormJwk;
 
   export(format: "b64"): KryptosString;
