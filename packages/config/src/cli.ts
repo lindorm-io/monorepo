@@ -6,14 +6,7 @@ import { existsSync, readFileSync } from "fs";
 import { load } from "js-yaml";
 import { join } from "path";
 
-const version = JSON.parse(
-  readFileSync(join(__dirname, "..", "package.json"), "utf-8"),
-).version;
-
-program
-  .name("config")
-  .description("CLI for managing configuration files")
-  .version(version);
+program.name("config").description("CLI for managing configuration files");
 
 const parseFile = (file: string): Dict => {
   if (file.endsWith(".json")) {

@@ -35,6 +35,7 @@
     "@lindorm/case": "^0.1.7",
     "@lindorm/is": "^0.1.7",
     "@lindorm/utils": "^0.4.1",
+    "commander": "^13.1.0",
     "config": "^3.3.12",
     "dotenv": "^16.4.5",
     "js-yaml": "^4.1.0",
@@ -43,7 +44,6 @@
   "devDependencies": {
     "@lindorm/types": "^0.2.1",
     "@types/config": "^3.3.4",
-    "@types/js-yaml": "^4.0.9",
-    "commander": "^13.1.0"
+    "@types/js-yaml": "^4.0.9"
   }
 }
