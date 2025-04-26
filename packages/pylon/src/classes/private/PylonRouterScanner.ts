@@ -50,7 +50,7 @@ export class PylonRouterScanner<C extends PylonHttpContext> {
 
   // private
 
-  public createRoutePath(scan: IScanData): string {
+  private createRoutePath(scan: IScanData): string {
     const path = "/" + scan.baseName.replace(/index/, "");
 
     if (path.startsWith("[") && path.endsWith("]")) {
