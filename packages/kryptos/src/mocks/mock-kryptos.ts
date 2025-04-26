@@ -25,6 +25,7 @@ export const createMockKryptos = (): IKryptos => ({
   isExpired: false,
   modulus: undefined,
 
+  toDB: jest.fn().mockReturnValue({}),
   toJSON: jest.fn().mockReturnValue({}),
   toJWK: jest.fn().mockReturnValue({}),
   export: jest.fn().mockReturnValue({}),
