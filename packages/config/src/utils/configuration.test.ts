@@ -15,7 +15,7 @@ describe("configuration", () => {
       TWO_ARRAY: '["four", "five", "six"]',
       THREE_ARRAY: '["seven","eight","nine"]',
       FOUR_ARRAY: "[1,2,3]",
-      npm_package_name: "@osprey-solutions-as/config",
+      npm_package_name: "@lindorm/config",
       npm_package_version: "0.0.0",
     };
   });
@@ -65,7 +65,7 @@ describe("configuration", () => {
       fiveArray: ["one", "two", "three"],
       sixNumberString: 987,
       withDotEnvReplacement: "two",
-      npm: { package: { name: "@osprey-solutions-as/config", version: "0.0.0" } },
+      npm: { package: { name: "@lindorm/config", version: "0.0.0" } },
     });
   });
 });
