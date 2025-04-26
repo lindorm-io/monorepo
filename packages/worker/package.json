@@ -31,6 +31,7 @@
     "@lindorm/date": "^0.2.0",
     "@lindorm/is": "^0.1.7",
     "@lindorm/retry": "^0.1.5",
+    "@lindorm/scanner": "^0.3.2",
     "@lindorm/utils": "^0.4.1"
   },
   "devDependencies": {

@@ -33,7 +33,7 @@ describe("LindormWorker", () => {
       }, 25);
     });
 
-  test("should execute callback when starting", async () => {
+  test("should run callback when starting", async () => {
     worker.start();
 
     expect(worker.running).toEqual(true);
@@ -51,7 +51,7 @@ describe("LindormWorker", () => {
     expect(worker.seq).toEqual(1);
   });
 
-  test("should execute callback multiple times", async () => {
+  test("should run callback multiple times", async () => {
     worker.start();
 
     expect(worker.running).toEqual(true);
@@ -81,7 +81,7 @@ describe("LindormWorker", () => {
     expect(worker.seq).toEqual(2);
   });
 
-  test("should only execute callback once when starting multiple times", async () => {
+  test("should only run callback once when starting multiple times", async () => {
     worker.start();
     worker.start();
     worker.start();
