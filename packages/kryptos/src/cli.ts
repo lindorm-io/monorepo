@@ -2,6 +2,7 @@
 
 import { input, select } from "@inquirer/prompts";
 import { AES_ENCRYPTION_ALGORITHMS } from "@lindorm/types";
+import { program } from "commander";
 import { KryptosKit } from "./classes";
 import {
   EC_ENC_ALGORITHMS,
@@ -18,6 +19,8 @@ import {
   RSA_ENC_ALGORITHMS,
   RSA_SIG_ALGORITHMS,
 } from "./types";
+
+program.name("kryptos").description("CLI for managing kryptos keys");
 
 const selectType = async (): Promise<KryptosType> =>
   await select({
@@ -90,7 +93,7 @@ const selectEncryption = async (): Promise<KryptosEncryption> =>
     default: AES_ENCRYPTION_ALGORITHMS[AES_ENCRYPTION_ALGORITHMS.length - 1],
   });
 
-export const main = async (): Promise<void> => {
+export const generate = async (): Promise<void> => {
   console.log("This script will generate a Kryptos key for you.\n\n");
   const type = await selectType();
 
@@ -121,6 +124,6 @@ export const main = async (): Promise<void> => {
   );
 };
 
-main()
-  .catch(console.error)
-  .finally(() => process.exit(0));
+program.command("generate").description("Generate a Kryptos key").action(generate);
+
+program.parse();
