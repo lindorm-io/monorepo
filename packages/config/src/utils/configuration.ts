@@ -1,30 +1,30 @@
 import dotenvx from "@dotenvx/dotenvx";
-import { ChangeCase, changeKeys } from "@lindorm/case";
-import { Dict } from "@lindorm/types";
-import c from "config";
-import { mergeObjectWithProcessEnv } from "./private";
+import { merge } from "@lindorm/utils";
+import { z, ZodRawShape } from "zod";
+import { NpmInformation } from "../types";
+import { coerceAll, loadConfig, loadNodeConfig } from "./private";
 
-type NpmInformation = { npm: { package: { name: string; version: string } } };
-
-type Configuration<T extends Dict = Dict> = NpmInformation & T;
-
-export const configuration = <T extends Dict = Dict>(
-  mode: ChangeCase = ChangeCase.Camel,
-): Configuration<T> => {
+export const configuration = <T extends ZodRawShape>(schema: T): NpmInformation & T => {
   dotenvx.config({
     path: process.env.NODE_ENV ? [`.env.${process.env.NODE_ENV}`, ".env"] : ".env",
     quiet: true,
   });
 
-  const merged = mergeObjectWithProcessEnv<T>(process.env, c.util.toObject());
-  const config = changeKeys<T>(merged, mode);
+  const config = loadConfig(process.env);
+  const node = loadNodeConfig(process.env);
+  const merged = merge(config, node);
+
+  const zod = coerceAll(z.object(schema));
+  const parsed = zod.parse(merged);
 
   const npm = {
-    package: {
-      name: process.env.npm_package_name || "",
-      version: process.env.npm_package_version || "",
+    npm: {
+      package: {
+        name: process.env.npm_package_name || "",
+        version: process.env.npm_package_version || "",
+      },
     },
   };
 
-  return { npm, ...config };
+  return merge(parsed, npm);
 };

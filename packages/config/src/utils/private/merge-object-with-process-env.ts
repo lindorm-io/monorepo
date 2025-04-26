@@ -1,22 +1,31 @@
-import { isObject } from "@lindorm/is";
+import { isObject, isUndefined } from "@lindorm/is";
 import { Dict } from "@lindorm/types";
 import { ProcessEnv } from "../../types";
-import { mergeValueWithProcessEnv } from "./merge-value-with-process-env";
+import { findProcessEnvValue } from "./find-process-env-value";
 
-export const mergeObjectWithProcessEnv = <T extends Dict = Dict>(
+export const mergeObjectWithProcessEnv = (
   processEnv: ProcessEnv,
-  config: T,
-  parentKey?: string,
-): T => {
+  config: Dict,
+  parent?: string,
+): Dict => {
   const result: Dict = {};
 
   for (const [key, value] of Object.entries(config)) {
-    const p = parentKey ? `${parentKey}_${key}` : key;
+    const env = findProcessEnvValue(processEnv, key, parent);
 
-    result[key] = isObject(value)
-      ? mergeObjectWithProcessEnv(processEnv, value, p)
-      : mergeValueWithProcessEnv(processEnv, value, key, parentKey);
+    if (!isUndefined(env)) {
+      result[key] = env;
+      continue;
+    }
+
+    if (isObject(value)) {
+      const pkey = parent ? `${parent}_${key}` : key;
+      result[key] = mergeObjectWithProcessEnv(processEnv, value, pkey);
+      continue;
+    }
+
+    result[key] = value;
   }
 
-  return result as T;
+  return result;
 };

@@ -20,4 +20,6 @@ five_array:
   - "two"
   - "three"
 
+six_number_string: "987"
+
 with_dot_env_replacement: "one"
