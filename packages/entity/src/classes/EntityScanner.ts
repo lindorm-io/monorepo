@@ -6,13 +6,13 @@ import { EntityScannerInput } from "../types";
 
 export class EntityScanner {
   public static scan<T extends Dict = Dict>(
-    array: EntityScannerInput<T>,
+    input: EntityScannerInput<T>,
   ): Array<Constructor<T>> {
-    const entities = array.filter(
+    const entities = input.filter(
       (a) => !isObject(a) && !isString(a) && (a as T).prototype,
     ) as Array<Constructor<T>>;
 
-    const strings = array.filter((a) => isString(a));
+    const strings = input.filter((a) => isString(a));
 
     const result: Array<Constructor<T>> = [...entities];
 
