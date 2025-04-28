@@ -96,3 +96,8 @@ export type TokenHeaderOptions = {
   x5tS256?: string;
   x5u?: string;
 };
+
+export type TokenEncryptOrSignOptions = Pick<
+  TokenHeaderOptions,
+  "jwk" | "x5c" | "x5t" | "x5tS256" | "x5u"
+>;

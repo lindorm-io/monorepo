@@ -1,5 +1,8 @@
+import { TokenEncryptOrSignOptions } from "../header";
+
 export type SignCwsOptions = {
   contentType?: string;
+  header?: TokenEncryptOrSignOptions;
   objectId?: string;
 };
 

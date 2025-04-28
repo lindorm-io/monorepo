@@ -75,6 +75,7 @@ export class CwtKit implements ICwtKit {
 
     const unprotectedDict = mapCoseHeader(
       mapTokenHeader({
+        ...(options.header ?? {}),
         jwksUri: this.kryptos.jwksUri,
         keyId: this.kryptos.id,
         objectId,

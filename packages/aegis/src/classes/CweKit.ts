@@ -65,6 +65,7 @@ export class CweKit implements ICweKit {
 
     const unprotectedHeader = mapCoseHeader(
       mapTokenHeader({
+        ...(options.header ?? {}),
         initialisationVector,
         objectId,
       }),

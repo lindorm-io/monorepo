@@ -1,5 +1,6 @@
 import { Expiry } from "@lindorm/date";
 import { Dict } from "@lindorm/types";
+import { TokenEncryptOrSignOptions } from "../header";
 import { AdjustedAccessLevel, LevelOfAssurance } from "../level-of-assurance";
 
 export type SignJwtContent<C extends Dict = Dict> = {
@@ -34,6 +35,7 @@ export type SignJwtContent<C extends Dict = Dict> = {
 export type SignJwtOptions = {
   accessTokenHash?: string;
   codeHash?: string;
+  header?: TokenEncryptOrSignOptions;
   issuedAt?: Date;
   objectId?: string;
   stateHash?: string;

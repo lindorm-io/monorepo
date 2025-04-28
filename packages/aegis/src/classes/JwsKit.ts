@@ -41,6 +41,7 @@ export class JwsKit implements IJwsKit {
     const objectId = options.objectId ?? randomUUID();
 
     const headerOptions: TokenHeaderOptions = {
+      ...(options.header ?? {}),
       algorithm: this.kryptos.algorithm,
       contentType: options.contentType
         ? options.contentType

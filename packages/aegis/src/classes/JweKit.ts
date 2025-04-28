@@ -62,18 +62,19 @@ export class JweKit implements IJweKit {
     if (publicEncryptionTag) critical.push("publicEncryptionTag");
 
     const headerOptions: TokenHeaderOptions = {
+      ...(options.header ?? {}),
       algorithm: this.kryptos.algorithm,
       contentType: this.contentType(data),
       critical,
       encryption: this.encryption,
       headerType: "JWE",
       hkdfSalt,
+      initialisationVector: publicEncryptionIv,
       jwksUri: this.kryptos.jwksUri,
       keyId: this.kryptos.id,
       objectId,
       pbkdfIterations,
       pbkdfSalt,
-      initialisationVector: publicEncryptionIv,
       publicEncryptionJwk,
       publicEncryptionTag,
     };

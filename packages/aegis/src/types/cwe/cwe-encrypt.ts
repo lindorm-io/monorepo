@@ -1,4 +1,7 @@
+import { TokenEncryptOrSignOptions } from "../header";
+
 export type CweEncryptOptions = {
+  header?: TokenEncryptOrSignOptions;
   objectId?: string;
 };
 

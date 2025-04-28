@@ -61,6 +61,7 @@ export class JwtKit implements IJwtKit {
     const objectId = options.objectId ?? content.subject ?? randomUUID();
 
     const headerOptions: TokenHeaderOptions = {
+      ...(options.header ?? {}),
       algorithm: this.kryptos.algorithm,
       contentType: "application/json",
       headerType: "JWT",

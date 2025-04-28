@@ -53,6 +53,7 @@ export class CwsKit implements ICwsKit {
 
     const unprotectedHeader = mapCoseHeader(
       mapTokenHeader({
+        ...(options.header ?? {}),
         jwksUri: this.kryptos.jwksUri,
         keyId: this.kryptos.id,
         objectId,
