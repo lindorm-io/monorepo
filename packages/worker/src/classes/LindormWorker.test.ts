@@ -33,6 +33,12 @@ describe("LindormWorker", () => {
       }, 25);
     });
 
+  test("should trigger callback", async () => {
+    await expect(worker.trigger()).resolves.toEqual("OK");
+
+    expect(callback).toHaveBeenCalledTimes(1);
+  });
+
   test("should run callback when starting", async () => {
     worker.start();
 

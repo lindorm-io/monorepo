@@ -1,6 +1,6 @@
 import { LindormWorkerEvent } from "../enums";
 
-export interface ILindormWorker {
+export interface ILindormWorker<T = unknown> {
   latestError: Date | null;
   latestSuccess: Date | null;
   latestTry: Date | null;
@@ -17,5 +17,5 @@ export interface ILindormWorker {
 
   start(): void;
   stop(): void;
-  trigger(): void;
+  trigger(): Promise<T | void>;
 }

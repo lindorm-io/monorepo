@@ -8,4 +8,6 @@ export type LindormWorkerContext = {
   seq: number;
 };
 
-export type LindormWorkerCallback = (ctx: LindormWorkerContext) => Promise<void | string>;
+export type LindormWorkerCallback<T = any> = (
+  ctx: LindormWorkerContext,
+) => Promise<T | void>;

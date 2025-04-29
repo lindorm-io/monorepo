@@ -9,8 +9,8 @@ import { LindormWorkerEvent } from "../enums";
 import { ILindormWorker } from "../interfaces";
 import { LindormWorkerCallback, LindormWorkerOptions } from "../types";
 
-export class LindormWorker implements ILindormWorker {
-  private readonly callback: LindormWorkerCallback;
+export class LindormWorker<T = unknown> implements ILindormWorker<T> {
+  private readonly callback: LindormWorkerCallback<T>;
   private readonly emitter: EventEmitter;
   private readonly interval: number;
   private readonly logger: ILogger;
@@ -23,7 +23,7 @@ export class LindormWorker implements ILindormWorker {
   private _running: boolean;
   private _seq: number;
 
-  public constructor(options: LindormWorkerOptions) {
+  public constructor(options: LindormWorkerOptions<T>) {
     this.emitter = new EventEmitter();
     this.logger = options.logger.child(["LindormWorker", options.alias]);
 
@@ -93,13 +93,13 @@ export class LindormWorker implements ILindormWorker {
     this.timeout = null;
   }
 
-  public trigger(): void {
-    this.run();
+  public async trigger(): Promise<T | void> {
+    return this.run();
   }
 
   // private
 
-  private run(attempt = 0): void {
+  private async run(attempt = 0): Promise<T | void> {
     if (this._running && attempt === 0) return;
 
     this._running = true;
@@ -112,7 +112,7 @@ export class LindormWorker implements ILindormWorker {
       this.logger.debug("Retrying worker callback", { attempt });
     }
 
-    this.callback({
+    return this.callback({
       latestError: this._latestError,
       latestSuccess: this._latestSuccess,
       latestTry: this._latestTry,
@@ -125,6 +125,8 @@ export class LindormWorker implements ILindormWorker {
 
         this._running = false;
         this._latestSuccess = new Date();
+
+        return result;
       })
       .catch((err) => {
         this.logger.debug("Worker callback error", err);

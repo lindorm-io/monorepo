@@ -3,9 +3,9 @@ import { ILogger } from "@lindorm/logger";
 import { RetryOptions } from "@lindorm/retry";
 import { LindormWorkerCallback } from "./context";
 
-export type LindormWorkerOptions = {
+export type LindormWorkerOptions<T = unknown> = {
   alias: string;
-  callback: LindormWorkerCallback;
+  callback: LindormWorkerCallback<T>;
   interval: ReadableTime | number;
   logger: ILogger;
   retry?: RetryOptions;
