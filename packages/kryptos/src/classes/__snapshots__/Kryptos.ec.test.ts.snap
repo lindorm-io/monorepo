@@ -470,6 +470,32 @@ HuyCk7CbI/lJhPKwyZ8=
 }
 `;
 
+exports[`Kryptos (EC) to should return db 1`] = `
+{
+  "algorithm": "ES512",
+  "createdAt": 2023-01-01T08:00:00.000Z,
+  "curve": "P-521",
+  "encryption": undefined,
+  "expiresAt": 2099-01-01T08:00:00.000Z,
+  "id": "3b9a051f-e1ec-562b-bf92-7cf92ec465ba",
+  "isExternal": false,
+  "issuer": "https://example.com",
+  "jwksUri": "https://example.com/.well-known/jwks.json",
+  "notBefore": 2023-01-01T08:00:00.000Z,
+  "operations": [
+    "sign",
+    "verify",
+  ],
+  "ownerId": "f02c2d0c-44ee-5e4e-8b3b-39d46924d227",
+  "privateKey": "MIHuAgEAMBAGByqGSM49AgEGBSuBBAAjBIHWMIHTAgEBBEIATAYo3DQYroDV5EgJSUs_kOIvnEScZen73gXa5oQkub0ekQmgOJdPQjINUsdYRn67QK_oBdNUhVbtG_qdxqIgarehgYkDgYYABACN2PIVpRTdfXLmNxkg8Bk2m5netqYsNW2Lefhklr2jfJiVUJUDPoZoGfabGzHEgsKjP2HRbPsEI_tND3x4N9VW0QAID2UYXa7GN0izHWIFRdjVYuR5-0jywFtd-o_N2POdrvlV8xumdVK-TiSPEIdfKoL_Iu0e7IKTsJsj-UmE8rDJnw",
+  "publicKey": "MIGbMBAGByqGSM49AgEGBSuBBAAjA4GGAAQAjdjyFaUU3X1y5jcZIPAZNpuZ3ramLDVti3n4ZJa9o3yYlVCVAz6GaBn2mxsxxILCoz9h0Wz7BCP7TQ98eDfVVtEACA9lGF2uxjdIsx1iBUXY1WLkeftI8sBbXfqPzdjzna75VfMbpnVSvk4kjxCHXyqC_yLtHuyCk7CbI_lJhPKwyZ8",
+  "purpose": "test",
+  "type": "EC",
+  "updatedAt": 2023-12-01T08:00:00.000Z,
+  "use": "sig",
+}
+`;
+
 exports[`Kryptos (EC) to should return json 1`] = `
 {
   "algorithm": "ES512",

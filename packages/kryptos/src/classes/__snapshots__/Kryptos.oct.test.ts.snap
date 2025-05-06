@@ -312,6 +312,32 @@ uMSb8pScaIK6Vfef/1c7Vg==
 }
 `;
 
+exports[`Kryptos (oct) to should return db 1`] = `
+{
+  "algorithm": "HS512",
+  "createdAt": 2023-01-01T08:00:00.000Z,
+  "curve": undefined,
+  "encryption": undefined,
+  "expiresAt": 2099-01-01T08:00:00.000Z,
+  "id": "3b9a051f-e1ec-562b-bf92-7cf92ec465ba",
+  "isExternal": false,
+  "issuer": "https://example.com",
+  "jwksUri": "https://example.com/.well-known/jwks.json",
+  "notBefore": 2023-01-01T08:00:00.000Z,
+  "operations": [
+    "sign",
+    "verify",
+  ],
+  "ownerId": "f02c2d0c-44ee-5e4e-8b3b-39d46924d227",
+  "privateKey": "diYnyceZxmn18xGjVobBEwOSj2QOavHfv_tWGNuBpjND572Pa3qD8PDqDSrvoLtLOWyHdQ5lsmsuEIDcPgbPKp92HfNkawbKpCsVNBpoTlbZ-5jewLMREoGje9_pQzGSPLgh-cAkwtcrLUJNbwbyMGMlXmIJXeGukWsD6BfOAimNzPIyLf8QYMJYL9tzf16X4mQ1SvU76Y8Mqop6wz8ylAET7xWTivI-iOK8Zk1MiiomJww5w47Uz7X6Ha_uz7ctCESsyYMef9ZnYlsqwsHPrnP78ihyiv8cH7obubKJ6HkmsCnSTBOchDYxnmQiVZffuMSb8pScaIK6Vfef_1c7Vg",
+  "publicKey": "",
+  "purpose": "test",
+  "type": "oct",
+  "updatedAt": 2023-12-01T08:00:00.000Z,
+  "use": "sig",
+}
+`;
+
 exports[`Kryptos (oct) to should return json 1`] = `
 {
   "algorithm": "HS512",

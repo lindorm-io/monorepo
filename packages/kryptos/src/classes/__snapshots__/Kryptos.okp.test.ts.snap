@@ -154,6 +154,32 @@ MCowBQYDK2VwAyEAGRCwCA6lChosFGMQwxGiHCdzblfvCz0FNiRtTnm1qqc=
 }
 `;
 
+exports[`Kryptos (OKP) to should return db 1`] = `
+{
+  "algorithm": "EdDSA",
+  "createdAt": 2023-01-01T08:00:00.000Z,
+  "curve": "Ed25519",
+  "encryption": undefined,
+  "expiresAt": 2099-01-01T08:00:00.000Z,
+  "id": "3b9a051f-e1ec-562b-bf92-7cf92ec465ba",
+  "isExternal": false,
+  "issuer": "https://example.com",
+  "jwksUri": "https://example.com/.well-known/jwks.json",
+  "notBefore": 2023-01-01T08:00:00.000Z,
+  "operations": [
+    "sign",
+    "verify",
+  ],
+  "ownerId": "f02c2d0c-44ee-5e4e-8b3b-39d46924d227",
+  "privateKey": "MC4CAQAwBQYDK2VwBCIEIBwKJlvoh1ngd9LRd7dtvGOSqW4uZamdvIu0ABD2AkxL",
+  "publicKey": "MCowBQYDK2VwAyEAGRCwCA6lChosFGMQwxGiHCdzblfvCz0FNiRtTnm1qqc",
+  "purpose": "test",
+  "type": "OKP",
+  "updatedAt": 2023-12-01T08:00:00.000Z,
+  "use": "sig",
+}
+`;
+
 exports[`Kryptos (OKP) to should return json 1`] = `
 {
   "algorithm": "EdDSA",
