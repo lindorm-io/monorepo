@@ -1,3 +1,5 @@
+import { ServerError } from "@lindorm/errors";
+import { isUrlLike } from "@lindorm/is";
 import { PylonRouter } from "../../classes";
 import { PylonHttpContext, PylonHttpOptions } from "../../types";
 
@@ -10,6 +12,13 @@ export const createWellKnownRouter = <C extends PylonHttpContext>(
     ...(options.openIdConfiguration ?? {}),
     ...(options.issuer && { issuer: options.issuer }),
   };
+
+  router.get("/change-password", async (ctx) => {
+    if (!isUrlLike(options.changePasswordUri)) {
+      throw new ServerError("Change password URI not configured");
+    }
+    ctx.redirect(options.changePasswordUri);
+  });
 
   router.get("/jwks.json", async (ctx) => {
     ctx.body = ctx.amphora.jwks;

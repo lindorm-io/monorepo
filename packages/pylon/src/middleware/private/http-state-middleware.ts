@@ -13,14 +13,19 @@ import { PylonHttpMiddleware } from "../../types";
 import { getAuthorization } from "../../utils/private";
 
 type Options = {
-  environment: Environment;
+  environment?: Environment;
   minRequestAge: ReadableTime;
   maxRequestAge: ReadableTime;
-  version: string;
+  name?: string;
+  version?: string;
 };
 
-export const createHttpStateMiddleware = (options: Options): PylonHttpMiddleware =>
-  async function httpStateMiddleware(ctx, next) {
+export const createHttpStateMiddleware = (options: Options): PylonHttpMiddleware => {
+  const environment = options.environment || Environment.Unknown;
+  const name = options.name ?? "unknown";
+  const version = options.version ?? "0.0.0";
+
+  return async function httpStateMiddleware(ctx, next) {
     try {
       const requestDate = ctx.get("date");
 
@@ -28,6 +33,7 @@ export const createHttpStateMiddleware = (options: Options): PylonHttpMiddleware
       const maxDate = addMilliseconds(new Date(), ms(options.maxRequestAge));
 
       ctx.state = {
+        app: { environment, name, version },
         authorization: getAuthorization(ctx),
         metadata: {
           correlationId: ctx.get("x-correlation-id") || randomUUID(),
@@ -43,8 +49,8 @@ export const createHttpStateMiddleware = (options: Options): PylonHttpMiddleware
       };
 
       if (isBefore(ctx.state.metadata.date, minDate)) {
-        throw new ClientError("Replay Attack", {
-          code: "replay_error",
+        throw new ClientError("Suspicious request denied", {
+          code: "replay_denied",
           details: "Request has been identified as a likely replay attack",
           data: {
             actual: ctx.state.metadata.date.toISOString(),
@@ -54,7 +60,7 @@ export const createHttpStateMiddleware = (options: Options): PylonHttpMiddleware
       }
 
       if (isAfter(ctx.state.metadata.date, maxDate)) {
-        throw new ClientError("Suspicious Request", {
+        throw new ClientError("Suspicious request denied", {
           code: "suspicious_request",
           details: "Request has been identified as suspicious",
           data: {
@@ -69,8 +75,10 @@ export const createHttpStateMiddleware = (options: Options): PylonHttpMiddleware
       ctx.set("x-correlation-id", ctx.state.metadata.correlationId);
       ctx.set("x-request-id", ctx.state.metadata.requestId);
       ctx.set("x-response-id", ctx.state.metadata.responseId);
-      ctx.set("x-server-environment", options.environment);
-      ctx.set("x-server-version", options.version);
+      ctx.set("x-server-environment", environment);
+      ctx.set("x-server-name", name);
+      ctx.set("x-server-version", version);
       ctx.set("x-session-id", ctx.state.metadata.sessionId ?? "");
     }
   };
+};

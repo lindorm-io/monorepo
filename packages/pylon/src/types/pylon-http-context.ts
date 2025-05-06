@@ -20,6 +20,12 @@ type Conduits = {
   [key: string]: IConduit;
 };
 
+export type AppState = {
+  environment: Environment;
+  name: string;
+  version: string;
+};
+
 export type MetadataState = {
   correlationId: string;
   date: Date;
@@ -42,6 +48,7 @@ type Webhook<Data> = {
 };
 
 export type PylonHttpState = {
+  app: AppState;
   authorization: AuthorizationState;
   metadata: MetadataState;
   session: PylonSession | null;

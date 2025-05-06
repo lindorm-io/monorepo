@@ -1,0 +1,91 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`parseAuthConfig should merge defaults with minimal options 1`] = `
+{
+  "clientId": "test-client-id",
+  "clientSecret": "test-client-secret",
+  "codeChallengeMethod": "S256",
+  "cookies": {
+    "login": "pylon_login_session",
+    "logout": "pylon_logout_session",
+  },
+  "defaults": {
+    "acrValues": null,
+    "audience": null,
+    "maxAge": null,
+    "prompt": null,
+    "responseType": "code",
+    "scope": [
+      "openid",
+      "offline_access",
+      "email",
+      "profile",
+    ],
+  },
+  "dynamicRedirectDomains": [],
+  "errorRedirect": "/auth/error",
+  "expose": {
+    "accessToken": false,
+    "idToken": false,
+    "scope": false,
+    "subject": false,
+  },
+  "issuer": "https://issuer.com",
+  "pathPrefix": "/auth",
+  "refresh": {
+    "maxAge": "1h",
+    "mode": "half_life",
+  },
+  "staticRedirect": {
+    "login": null,
+    "logout": null,
+  },
+  "tokenExpiry": "1d",
+}
+`;
+
+exports[`parseAuthConfig should merge defaults with options 1`] = `
+{
+  "clientId": "test-client-id",
+  "clientSecret": "test-client-secret",
+  "codeChallengeMethod": "plain",
+  "cookies": {
+    "login": "pylon_login_session",
+    "logout": "pylon_logout_session",
+  },
+  "defaults": {
+    "acrValues": null,
+    "audience": null,
+    "maxAge": null,
+    "prompt": null,
+    "responseType": "code",
+    "scope": [
+      "openid",
+      "offline_access",
+      "email",
+      "profile",
+    ],
+  },
+  "dynamicRedirectDomains": [
+    "https://client.com",
+  ],
+  "errorRedirect": "/auth/error",
+  "expose": {
+    "accessToken": false,
+    "idToken": false,
+    "scope": false,
+    "subject": false,
+  },
+  "issuer": "https://issuer.com",
+  "pathPrefix": "/auth",
+  "refresh": {
+    "maxAge": "6m",
+    "mode": "none",
+  },
+  "staticRedirect": {
+    "login": "https://client.com/login/static",
+    "logout": null,
+  },
+  "tokenExpiry": "1d",
+}
+`;

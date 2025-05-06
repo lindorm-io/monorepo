@@ -51,6 +51,7 @@ describe("httpSessionMiddleware", () => {
           refreshToken: "refresh_token",
         }),
         del: jest.fn(),
+        logout: jest.fn(),
       },
     };
 
@@ -82,6 +83,7 @@ describe("httpSessionMiddleware", () => {
           del: expect.any(Function),
           get: expect.any(Function),
           set: expect.any(Function),
+          logout: expect.any(Function),
         },
       },
     );

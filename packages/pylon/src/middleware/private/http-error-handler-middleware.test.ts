@@ -8,6 +8,13 @@ describe("httpErrorHandlerMiddleware", () => {
   beforeEach(() => {
     ctx = {
       body: undefined,
+      state: {
+        app: {
+          environment: "test",
+          name: "test_name",
+          version: "0.0.0",
+        },
+      },
       status: 204,
     };
   });
@@ -28,6 +35,12 @@ describe("httpErrorHandlerMiddleware", () => {
 
     expect(ctx.status).toEqual(500);
     expect(ctx.body).toEqual({
+      __meta: {
+        app: "Pylon",
+        environment: "test",
+        name: "test_name",
+        version: "0.0.0",
+      },
       error: {
         id: expect.any(String),
         code: "unknown_error",
@@ -37,7 +50,6 @@ describe("httpErrorHandlerMiddleware", () => {
         support: expect.any(String),
         title: "Error",
       },
-      server: "Pylon",
     });
   });
 
@@ -57,6 +69,12 @@ describe("httpErrorHandlerMiddleware", () => {
 
     expect(ctx.status).toEqual(508);
     expect(ctx.body).toEqual({
+      __meta: {
+        app: "Pylon",
+        environment: "test",
+        name: "test_name",
+        version: "0.0.0",
+      },
       error: {
         id: expect.any(String),
         code: "custom_error_code",
@@ -66,7 +84,6 @@ describe("httpErrorHandlerMiddleware", () => {
         support: expect.any(String),
         title: "custom error title",
       },
-      server: "Pylon",
     });
   });
 
@@ -86,6 +103,12 @@ describe("httpErrorHandlerMiddleware", () => {
 
     expect(ctx.status).toEqual(418);
     expect(ctx.body).toEqual({
+      __meta: {
+        app: "Pylon",
+        environment: "test",
+        name: "test_name",
+        version: "0.0.0",
+      },
       error: {
         id: expect.any(String),
         code: "custom_error_code",
@@ -95,7 +118,6 @@ describe("httpErrorHandlerMiddleware", () => {
         support: expect.any(String),
         title: "custom error title",
       },
-      server: "Pylon",
     });
   });
 
@@ -107,6 +129,12 @@ describe("httpErrorHandlerMiddleware", () => {
 
     expect(ctx.status).toEqual(500);
     expect(ctx.body).toEqual({
+      __meta: {
+        app: "Pylon",
+        environment: "test",
+        name: "test_name",
+        version: "0.0.0",
+      },
       error: {
         id: expect.any(String),
         code: "unexpected_exception",
@@ -116,7 +144,6 @@ describe("httpErrorHandlerMiddleware", () => {
         support: expect.any(String),
         title: "Unexpected Exception",
       },
-      server: "Pylon",
     });
   });
 });

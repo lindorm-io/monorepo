@@ -13,8 +13,10 @@ import { parseCookieHeader, signCookie, verifyCookie } from "../../utils/private
 
 export const createHttpCookiesMiddleware = (
   config: PylonCookieConfig = {},
-): PylonHttpMiddleware =>
-  async function httpCookiesMiddleware(ctx, next) {
+): PylonHttpMiddleware => {
+  config.encoding = config.encoding || "base64url";
+
+  return async function httpCookiesMiddleware(ctx, next) {
     const cache: Dict<any> = {};
     const parsed = parseCookieHeader(ctx.get("cookie"));
 
@@ -126,3 +128,4 @@ export const createHttpCookiesMiddleware = (
       );
     }
   };
+};

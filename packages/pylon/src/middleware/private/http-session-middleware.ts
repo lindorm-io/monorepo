@@ -26,6 +26,8 @@ export const createHttpSessionMiddleware = (
         }
         ctx.cookies.del(sessionName);
       },
+
+      store: config.store,
     };
 
     ctx.state.session = await ctx.session.get();
@@ -38,7 +40,7 @@ export const createHttpSessionMiddleware = (
     if (ctx.state.session?.accessToken) {
       try {
         ctx.state.tokens.accessToken = Aegis.parse(ctx.state.session.accessToken);
-      } catch (_) {
+      } catch {
         /* ignore */
       }
     }

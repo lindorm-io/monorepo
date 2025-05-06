@@ -5,6 +5,7 @@ export * from "./file";
 export * from "./compose-parse-body-config";
 export * from "./compose-pylon-socket-context";
 export * from "./cors-handlers";
+export * from "./create-auth-router";
 export * from "./create-health-router";
 export * from "./create-well-known-router";
 export * from "./get-authorization";

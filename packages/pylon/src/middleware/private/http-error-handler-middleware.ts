@@ -31,6 +31,12 @@ export const httpErrorHandlerMiddleware: PylonHttpMiddleware = async (ctx, next)
       } else {
         ctx.status = status;
         ctx.body = {
+          __meta: {
+            app: "Pylon",
+            environment: ctx.state?.app?.environment,
+            name: ctx.state?.app?.name,
+            version: ctx.state?.app?.version,
+          },
           error: {
             id: err.id ?? randomUUID(),
             name: err.name ?? "Error",
@@ -40,12 +46,17 @@ export const httpErrorHandlerMiddleware: PylonHttpMiddleware = async (ctx, next)
             support: err.support ?? randomBytes(8).toString("base64url"),
             data: err.data ?? {},
           },
-          server: "Pylon",
         };
       }
-    } catch (_) {
+    } catch {
       ctx.status = ServerError.Status.InternalServerError;
       ctx.body = {
+        __meta: {
+          app: "Pylon",
+          environment: ctx.state?.app?.environment,
+          name: ctx.state?.app?.name,
+          version: ctx.state?.app?.version,
+        },
         error: {
           id: err.id ?? randomUUID(),
           name: "UnexpectedException",
@@ -55,7 +66,6 @@ export const httpErrorHandlerMiddleware: PylonHttpMiddleware = async (ctx, next)
           support: randomBytes(8).toString("base64url"),
           data: {},
         },
-        server: "Pylon",
       };
     }
   }

@@ -6,6 +6,7 @@ import { ILindormWorker } from "@lindorm/worker";
 import Redis from "ioredis";
 import { ServerOptions as SocketOptions } from "socket.io";
 import { PylonListener, PylonRouter } from "../classes";
+import { PylonAuthOptions } from "./auth";
 import { PylonCookieConfig } from "./cookies";
 import { CorsOptions } from "./cors";
 import { OpenIdConfigurationOptions } from "./open-id-configuration";
@@ -26,6 +27,8 @@ type Common = {
 };
 
 export type PylonHttpOptions<C extends PylonHttpContext = PylonHttpContext> = Common & {
+  auth?: PylonAuthOptions;
+  changePasswordUri?: string;
   cookies?: PylonCookieConfig;
   cors?: CorsOptions;
   domain?: string;

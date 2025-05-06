@@ -4,7 +4,7 @@ export const fileExists = async (path: string): Promise<boolean> => {
   try {
     await access(path);
     return true;
-  } catch (_) {
+  } catch {
     return false;
   }
 };

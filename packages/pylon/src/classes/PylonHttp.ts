@@ -21,7 +21,12 @@ import {
   PylonHttpMiddleware,
   PylonHttpOptions,
 } from "../types";
-import { createHealthRouter, createWellKnownRouter } from "../utils/private";
+import {
+  createAuthRouter,
+  createHealthRouter,
+  createWellKnownRouter,
+} from "../utils/private";
+import { parseAuthConfig } from "../utils/private/auth";
 import { PylonRouter } from "./PylonRouter";
 import { PylonRouterScanner } from "./private";
 
@@ -99,6 +104,11 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
 
     this.addRouter("/health", createHealthRouter());
     this.addRouter("/.well-known", createWellKnownRouter(this.options));
+
+    if (this.options.auth) {
+      const config = parseAuthConfig(this.options.auth);
+      this.addRouter(config.pathPrefix, createAuthRouter(config));
+    }
 
     if (isString(this.options.httpRouters)) {
       const scanner = new PylonRouterScanner<T>(this.logger);

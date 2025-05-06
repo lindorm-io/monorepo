@@ -58,6 +58,7 @@ export class Pylon<
     this._teardown = options.teardown;
 
     this.http = new PylonHttp({
+      auth: options.auth,
       amphora: this.amphora,
       cookies: options.cookies,
       cors: options.cors,

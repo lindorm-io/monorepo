@@ -26,6 +26,7 @@ describe("createHttpStateMiddleware", () => {
 
     options = {
       environment: Environment.Test,
+      name: "test_name",
       minRequestAge: "10s",
       maxRequestAge: "10s",
       version: "1.0.0",

@@ -1,0 +1,76 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`parseTokenData should not parse access token if not jwt 1`] = `
+{
+  "accessToken": "accessToken",
+  "expiresAt": 1704099600000,
+  "id": "c8ff3952-8ba4-51a3-a4d5-2f0726c49524",
+  "issuedAt": 1704096000000,
+  "scope": [
+    "scope1",
+    "scope2",
+  ],
+  "subject": "",
+}
+`;
+
+exports[`parseTokenData should parse access token correctly 1`] = `
+{
+  "accessToken": "accessToken",
+  "expiresAt": 1704182400000,
+  "id": "85924874-c05c-5574-ad85-0cf2cf39be95",
+  "issuedAt": 1704096000000,
+  "scope": [
+    "scope1",
+    "scope2",
+  ],
+  "subject": "4e294800-be7e-5954-b143-0ebdcf393906",
+}
+`;
+
+exports[`parseTokenData should parse all tokens correctly 1`] = `
+{
+  "accessToken": "accessToken",
+  "expiresAt": 1704099600000,
+  "id": "85924874-c05c-5574-ad85-0cf2cf39be95",
+  "idToken": "idToken",
+  "issuedAt": 1704096000000,
+  "refreshToken": "refreshToken",
+  "scope": [
+    "scope1",
+    "scope2",
+  ],
+  "subject": "4e294800-be7e-5954-b143-0ebdcf393906",
+}
+`;
+
+exports[`parseTokenData should parse id token correctly 1`] = `
+{
+  "accessToken": "accessToken",
+  "expiresAt": 1704099600000,
+  "id": "85924874-c05c-5574-ad85-0cf2cf39be95",
+  "idToken": "idToken",
+  "issuedAt": 1704096000000,
+  "scope": [
+    "scope1",
+    "scope2",
+  ],
+  "subject": "4e294800-be7e-5954-b143-0ebdcf393906",
+}
+`;
+
+exports[`parseTokenData should parse when session exists 1`] = `
+{
+  "accessToken": "accessToken",
+  "expiresAt": 1707696000000,
+  "id": "35e8805b-2352-5c71-871a-19e8545540ce",
+  "idToken": "existingIdToken",
+  "issuedAt": 1704096000000,
+  "refreshToken": "existingRefreshToken",
+  "scope": [
+    "scope1",
+    "scope2",
+  ],
+  "subject": "efd9178b-778b-53ce-b929-da87c320140e",
+}
+`;

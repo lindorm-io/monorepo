@@ -1,14 +1,20 @@
 import { Amphora, IAmphora } from "@lindorm/amphora";
+import { B64 } from "@lindorm/b64";
 import { Environment } from "@lindorm/enums";
 import { ServerError } from "@lindorm/errors";
 import { isArray, isObject } from "@lindorm/is";
 import { KryptosKit } from "@lindorm/kryptos";
-import { createMockLogger, ILogger } from "@lindorm/logger";
+import { ILogger, Logger, LogLevel } from "@lindorm/logger";
 import { readFileSync } from "fs";
 import MockDate from "mockdate";
+import nock from "nock";
 import os from "os";
 import { join } from "path";
 import request from "supertest";
+import {
+  OPEN_ID_CONFIGURATION_RESPONSE,
+  OPEN_ID_JWKS_RESPONSE,
+} from "../__fixtures__/auth0";
 import { PylonHttpMiddleware } from "../types";
 import { Pylon } from "./Pylon";
 import { PylonRouter } from "./PylonRouter";
@@ -24,13 +30,44 @@ describe("Pylon", () => {
   let amphora: IAmphora;
   let logger: ILogger;
 
+  nock("https://lindorm.eu.auth0.com")
+    .get("/.well-known/openid-configuration")
+    .times(1)
+    .reply(200, OPEN_ID_CONFIGURATION_RESPONSE);
+
+  nock("https://lindorm.eu.auth0.com")
+    .get("/.well-known/jwks.json")
+    .times(1)
+    .reply(200, OPEN_ID_JWKS_RESPONSE);
+
+  nock("https://lindorm.eu.auth0.com").post("/oauth/token").times(999).reply(200, {
+    access_token: "access_token",
+    expires_in: 3600,
+    refresh_token: "refresh_token",
+    scope: "openid profile email",
+    token_type: "Bearer",
+  });
+
+  nock("https://lindorm.eu.auth0.com").get("/userinfo").times(999).reply(200, {
+    sub: "sub",
+  });
+
   beforeAll(() => {
-    // logger = new Logger({ level: LogLevel.Error, readable: true });
-    logger = createMockLogger();
+    logger = new Logger({ level: LogLevel.Error, readable: true });
+    // logger = createMockLogger();
 
     amphora = new Amphora({
       issuer: "http://test.lindorm.io",
       logger,
+      external: [
+        {
+          openIdConfiguration: {
+            logoutEndpoint: "https://lindorm.eu.auth0.com/v2/logout",
+          },
+          openIdConfigurationUri:
+            "https://lindorm.eu.auth0.com/.well-known/openid-configuration",
+        },
+      ],
     });
 
     amphora.add(
@@ -76,7 +113,7 @@ describe("Pylon", () => {
     );
   });
 
-  beforeEach(() => {
+  beforeEach(async () => {
     spy = jest.fn();
     files = [];
 
@@ -124,6 +161,10 @@ describe("Pylon", () => {
         accessToken: accessToken.token,
         idToken: idToken.token,
         refreshToken: "refresh",
+        expiresAt: 1,
+        issuedAt: 1,
+        scope: ["openid"],
+        subject: "5399df4a-a3d9-5a62-ba81-91dd11f69b6f",
       });
 
       ctx.status = 204;
@@ -162,6 +203,18 @@ describe("Pylon", () => {
       amphora,
       logger,
 
+      auth: {
+        clientId: "clientId",
+        clientSecret: "clientSecret",
+        issuer: "https://lindorm.eu.auth0.com/",
+        dynamicRedirectDomains: ["http://client.lindorm.io"],
+        expose: {
+          accessToken: true,
+          idToken: true,
+          scope: true,
+          subject: true,
+        },
+      },
       domain: "http://test.lindorm.io",
       environment: Environment.Test,
       httpMiddleware: [middlewareSpy],
@@ -174,6 +227,15 @@ describe("Pylon", () => {
       session: { encrypted: true, signed: true },
       version: "0.0.1",
     });
+
+    await pylon.setup();
+  });
+
+  afterEach(jest.clearAllMocks);
+
+  test("should setup correctly", async () => {
+    expect(amphora.config).toMatchSnapshot();
+    expect(amphora.vault).toMatchSnapshot();
   });
 
   test("should return health check OK", async () => {
@@ -252,6 +314,100 @@ describe("Pylon", () => {
       issuer: "http://test.lindorm.io",
       jwks_uri: "http://test.lindorm.io/.well-known/jwks.json",
     });
+  });
+
+  test.only("should handle auth", async () => {
+    const loginRes = await request(pylon.callback)
+      .get("/auth/login")
+      .query({ redirect_uri: "http://client.lindorm.io/login/callback" })
+      .expect(302);
+
+    expect(loginRes.headers).toEqual(
+      expect.objectContaining({
+        location: expect.stringContaining("https://lindorm.eu.auth0.com/authorize"),
+        "set-cookie": expect.arrayContaining([
+          expect.stringContaining("pylon_login_session="),
+        ]),
+      }),
+    );
+
+    const loginJson = JSON.parse(
+      B64.decode(loginRes.headers["set-cookie"][0].split(";")[0].split("=")[1]),
+    );
+
+    const loginCallbackRes = await request(pylon.callback)
+      .get("/auth/login/callback")
+      .set("Cookie", loginRes.headers["set-cookie"])
+      .query({ code: "code", state: loginJson.state })
+      .expect(302);
+
+    expect(loginCallbackRes.headers).toEqual(
+      expect.objectContaining({
+        location: expect.stringContaining("http://client.lindorm.io/login/callback"),
+        "set-cookie": expect.arrayContaining([
+          expect.stringContaining("pylon_session="),
+          expect.stringContaining("pylon_login_session="),
+        ]),
+      }),
+    );
+
+    const authRes = await request(pylon.callback)
+      .get("/auth")
+      .set("Cookie", loginCallbackRes.headers["set-cookie"])
+      .expect(200);
+
+    expect(authRes.body).toEqual({
+      access_token: "access_token",
+      scope: ["openid", "profile", "email"],
+      subject: "sub",
+    });
+
+    await request(pylon.callback)
+      .get("/auth/refresh")
+      .set("Cookie", loginCallbackRes.headers["set-cookie"])
+      .expect(204);
+
+    const userinfoRes = await request(pylon.callback)
+      .get("/auth/userinfo")
+      .set("Cookie", loginCallbackRes.headers["set-cookie"])
+      .expect(200);
+
+    expect(userinfoRes.body).toEqual({ sub: "sub" });
+
+    const logoutRes = await request(pylon.callback)
+      .get("/auth/logout")
+      .set("Cookie", loginCallbackRes.headers["set-cookie"])
+      .query({ redirect_uri: "http://client.lindorm.io/logout/callback" })
+      .expect(302);
+
+    expect(logoutRes.headers).toEqual(
+      expect.objectContaining({
+        location: expect.stringContaining("https://lindorm.eu.auth0.com/v2/logout"),
+        "set-cookie": expect.arrayContaining([
+          expect.stringContaining("pylon_logout_session="),
+        ]),
+      }),
+    );
+
+    const logoutJson = JSON.parse(
+      B64.decode(logoutRes.headers["set-cookie"][0].split(";")[0].split("=")[1]),
+    );
+
+    const logoutCallbackRes = await request(pylon.callback)
+      .get("/auth/logout/callback")
+      .set("Cookie", logoutRes.headers["set-cookie"])
+      .query({ state: logoutJson.state })
+      .expect(302);
+
+    expect(logoutCallbackRes.headers).toEqual(
+      expect.objectContaining({
+        location: expect.stringContaining("http://client.lindorm.io/logout/callback"),
+        "set-cookie": expect.arrayContaining([
+          expect.stringContaining("pylon_session="),
+          expect.stringContaining("pylon_logout_session="),
+        ]),
+      }),
+    );
   });
 
   test("should parse params", async () => {
@@ -346,8 +502,12 @@ describe("Pylon", () => {
     expect(r2.body).toEqual({
       id: "c1460965-fb6d-5a2a-be8a-84f7cd7d1a9f",
       access_token: expect.any(String),
+      expires_at: 1,
       id_token: expect.any(String),
+      issued_at: 1,
       refresh_token: "refresh",
+      scope: ["openid"],
+      subject: "5399df4a-a3d9-5a62-ba81-91dd11f69b6f",
     });
   });
 
@@ -366,6 +526,12 @@ describe("Pylon", () => {
     const response = await request(pylon.callback).post("/test/error").expect(508);
 
     expect(response.body).toEqual({
+      __meta: {
+        app: "Pylon",
+        environment: "test",
+        name: "unknown",
+        version: "0.0.1",
+      },
       error: {
         id: expect.any(String),
         code: "test_error_code",
@@ -375,7 +541,6 @@ describe("Pylon", () => {
         title: "Test Error Title",
         support: expect.any(String),
       },
-      server: "Pylon",
     });
   });
 });
