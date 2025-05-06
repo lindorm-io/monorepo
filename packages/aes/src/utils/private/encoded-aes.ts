@@ -173,7 +173,7 @@ export const parseEncodedAesString = (encoded: string): AesEncryptionRecord => {
     const jwkString = publicEncryptionJwkBuffer.toString();
     try {
       publicEncryptionJwk = JSON.parse(jwkString);
-    } catch (_) {
+    } catch {
       throw new SyntaxError(`Invalid JSON in publicEncryptionJwk: ${jwkString}`);
     }
   }

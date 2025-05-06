@@ -63,7 +63,7 @@ export class Scanner implements IScanner {
   public static hasFiles(directory: string): boolean {
     try {
       return readdirSync(directory).length > 0;
-    } catch (_) {
+    } catch {
       return false;
     }
   }

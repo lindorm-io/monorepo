@@ -5,7 +5,7 @@ export const isUrlLike = (input: any, base?: any): input is URL | string => {
 
   try {
     new URL(input, base).toString();
-  } catch (_) {
+  } catch {
     return false;
   }
 

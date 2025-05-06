@@ -1,7 +1,7 @@
 export const safelyParse = <T = any>(value: string): T => {
   try {
     return JSON.parse(value);
-  } catch (_) {
+  } catch {
     return value as T;
   }
 };
