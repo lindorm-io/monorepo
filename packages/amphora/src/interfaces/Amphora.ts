@@ -8,6 +8,7 @@ export interface IAmphora {
   vault: Array<IKryptos>;
 
   add(kryptos: Array<IKryptos> | IKryptos): void;
+  env(keys: Array<string> | string): void;
   filter(query: AmphoraQuery): Promise<Array<IKryptos>>;
   filterSync(query: AmphoraQuery): Array<IKryptos>;
   find(query: AmphoraQuery): Promise<IKryptos>;

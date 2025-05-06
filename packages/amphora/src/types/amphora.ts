@@ -6,11 +6,13 @@ import { Predicate } from "@lindorm/utils";
 export type AmphoraConfig = Partial<OpenIdConfiguration> & {
   issuer: string;
   jwksUri: string;
+  openIdConfigurationUri?: string;
 };
 
 export type AmphoraExternalOption = {
   issuer?: string;
   jwksUri?: string;
+  openIdConfiguration?: Partial<OpenIdConfiguration>;
   openIdConfigurationUri?: string;
 };
 

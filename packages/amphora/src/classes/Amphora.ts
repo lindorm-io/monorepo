@@ -198,13 +198,17 @@ export class Amphora implements IAmphora {
         options.openIdConfigurationUri,
       );
 
-      this._config.push(data);
+      this._config.push({ ...data, ...(options.openIdConfiguration ?? {}) });
 
       return;
     }
 
     if (isString(options.issuer) && isUrlLike(options.jwksUri)) {
-      this._config.push({ issuer: options.issuer, jwksUri: options.jwksUri });
+      this._config.push({
+        issuer: options.issuer,
+        jwksUri: options.jwksUri,
+        ...(options.openIdConfiguration ?? {}),
+      });
 
       return;
     }
@@ -251,15 +255,18 @@ export class Amphora implements IAmphora {
     for (const item of this._external) {
       if (isUrlLike(item.openIdConfigurationUri)) {
         result.push({
+          openIdConfiguration: item.openIdConfiguration,
           openIdConfigurationUri: item.openIdConfigurationUri,
         });
       } else if (isString(item.issuer) && isUrlLike(item.jwksUri)) {
         result.push({
           issuer: item.issuer,
           jwksUri: item.jwksUri,
+          openIdConfiguration: item.openIdConfiguration,
         });
       } else if (isUrlLike(item.issuer)) {
         result.push({
+          openIdConfiguration: item.openIdConfiguration,
           openIdConfigurationUri: new URL(
             "/.well-known/openid-configuration",
             item.issuer,
