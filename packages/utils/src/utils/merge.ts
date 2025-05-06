@@ -1,7 +1,10 @@
 import { isArray, isObject, isUndefined } from "@lindorm/is";
-import { Dict } from "@lindorm/types";
+import { DeepPartial, Dict } from "@lindorm/types";
 
-export const merge = <T extends Dict>(origin: Dict, ...records: Array<Dict>): T => {
+export const merge = <T extends Dict>(
+  origin: DeepPartial<T>,
+  ...records: Array<DeepPartial<T>>
+): T => {
   const result: Dict = { ...origin };
 
   for (const record of records) {
