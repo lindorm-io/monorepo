@@ -7,7 +7,33 @@ import { OpenIdPromptMode } from "./open-id-prompt-mode";
 import { OpenIdResponseMode } from "./open-id-response-mode";
 import { OpenIdResponseType } from "./open-id-response-type";
 
-export type OpenIdAuthorizeRequestQuery = {
+type LindormRequestQuery = {
+  /**
+   * OPTIONAL
+   *
+   * The logical name of the target service where the client
+   * intends to use the requested security token. This serves
+   * a purpose similar to the resource parameter but with the
+   * client providing a logical name for the target service.
+   * Interpretation of the name requires that the value be
+   * something that both the client and the authorization
+   * server understand. An OAuth client identifier, a SAML
+   * entity identifier [OASIS.saml-core-2.0-os], and an OpenID
+   * Connect Issuer Identifier [OpenID.Core] are examples of
+   * things that might be used as audience parameter values.
+   * However, audience values used with a given authorization
+   * server must be unique within that server to ensure that
+   * they are properly interpreted as the intended type of
+   * value. Multiple audience parameters may be used to indicate
+   * that the issued token is intended to be used at the multiple
+   * audiences listed. The audience and resource parameters
+   * may be used together to indicate multiple target services
+   * with a mix of logical names and resource URIs.
+   */
+  audience?: string;
+};
+
+export type OpenIdAuthorizeRequestQuery = LindormRequestQuery & {
   /**
    * OPTIONAL
    *

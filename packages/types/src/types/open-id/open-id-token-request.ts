@@ -62,7 +62,7 @@ export type OpenIdTokenRequest = {
    * may be used together to indicate multiple target services
    * with a mix of logical names and resource URIs.
    */
-  audience?: string;
+  audience?: Array<string> | string;
 
   /**
    * REQUIRED if the grant type is backchannel authentication

@@ -2,7 +2,16 @@
 // https://www.rfc-editor.org/rfc/rfc8693
 // https://www.rfc-editor.org/rfc/rfc6749
 
-export type OpenIdTokenResponse = {
+type LindormResponse = {
+  /**
+   * The unix date in seconds for when the access token expires.
+   * The value is based on the current time in UTC and the expiresIn
+   * value.
+   */
+  expiresOn?: number;
+};
+
+export type OpenIdTokenResponse = LindormResponse & {
   /**
    * The access token issued by the authorization server.
    */
@@ -19,13 +28,6 @@ export type OpenIdTokenResponse = {
   expiresIn?: number;
 
   /**
-   * The unix date in seconds for when the access token expires.
-   * The value is based on the current time in UTC and the expiresIn
-   * value.
-   */
-  expiresOn?: number;
-
-  /**
    * ID Token value associated with the authenticated session.
    */
   idToken?: string;
@@ -39,7 +41,7 @@ export type OpenIdTokenResponse = {
 
   /**
    * If identical to the scope requested by the client;
-   * otherwise, REQUIRED.  The scope of the access token
+   * otherwise, REQUIRED. The scope of the access token
    * as described by Section 3.3.
    */
   scope?: string;
