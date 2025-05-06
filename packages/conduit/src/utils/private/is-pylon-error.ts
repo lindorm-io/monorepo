@@ -1,20 +1,29 @@
 import { isObjectLike, isString } from "@lindorm/is";
 import { Dict } from "@lindorm/types";
 
-type PylonErrorBody = {
-  id: string;
-  code: string;
-  data: Dict;
-  message: string;
-  name: string;
-  support: string;
-  title: string;
+type PylonError = {
+  __meta: {
+    app: "Pylon";
+    environment: string;
+    name: string;
+    version: string;
+  };
+  error: {
+    id: string;
+    code: string;
+    data: Dict;
+    message: string;
+    name: string;
+    support: string;
+    title: string;
+  };
 };
 
-export const isPylonError = (body: any): body is PylonErrorBody =>
+export const isPylonError = (body: any): body is PylonError =>
   isObjectLike(body) &&
-  body.server === "Pylon" &&
-  body.error &&
+  isObjectLike(body.__meta) &&
+  body.__meta.app === "Pylon" &&
+  isObjectLike(body.error) &&
   isString(body.error.id) &&
   isString(body.error.code) &&
   isObjectLike(body.error.data) &&

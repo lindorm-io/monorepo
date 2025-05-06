@@ -73,17 +73,18 @@ export class ConduitError extends LindormError {
 
     const pylon = isPylonError(response.data) ? response.data : undefined;
 
-    return new ConduitError(pylon?.message ?? err.message, {
-      id: pylon?.id,
-      code: pylon?.code ?? err.code,
+    return new ConduitError(pylon?.error.message ?? err.message, {
+      id: pylon?.error.id,
+      code: pylon?.error.code ?? err.code,
       config,
-      data: pylon?.data,
+      data: pylon?.error.data,
+      debug: { pylon },
       error: err.cause,
       request,
       response,
       status,
-      support: pylon?.support,
-      title: pylon?.title,
+      support: pylon?.error.support,
+      title: pylon?.error.title,
     });
   }
 
@@ -111,16 +112,17 @@ export class ConduitError extends LindormError {
 
     const pylon = isPylonError(data) ? data : undefined;
 
-    return new ConduitError(pylon?.message ?? res.statusText, {
-      id: pylon?.id,
-      code: pylon?.code,
+    return new ConduitError(pylon?.error.message ?? res.statusText, {
+      id: pylon?.error.id,
+      code: pylon?.error.code,
       config,
-      data: pylon?.data,
+      data: pylon?.error.data,
+      debug: { pylon },
       request,
       response,
       status,
-      support: pylon?.support,
-      title: pylon?.title,
+      support: pylon?.error.support,
+      title: pylon?.error.title,
     });
   }
 }

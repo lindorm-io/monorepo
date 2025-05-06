@@ -37,7 +37,7 @@ const parseResponseData = async (
     if (contentType?.includes("text/plain")) {
       return await response.text();
     }
-  } catch (_) {
+  } catch {
     return undefined;
   }
 
