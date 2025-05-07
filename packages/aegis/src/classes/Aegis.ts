@@ -94,7 +94,7 @@ export class Aegis implements IAegis {
   public constructor(options: AegisOptions) {
     this.logger = options.logger.child(["AegisKit"]);
     this.amphora = options.amphora;
-    this.issuer = options.issuer ?? this.amphora.issuer;
+    this.issuer = options.issuer ?? this.amphora.domain;
 
     this.clockTolerance = options.clockTolerance ?? 0;
     this.encAlgorithm = options.encAlgorithm;

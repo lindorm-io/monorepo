@@ -35,7 +35,6 @@ export type PylonHttpOptions<C extends PylonHttpContext = PylonHttpContext> = Co
   environment?: Environment;
   httpMiddleware?: Array<PylonHttpMiddleware<C>>;
   httpRouters?: string | Array<PylonHttpRouters<C>>;
-  issuer?: string | null;
   minRequestAge?: ReadableTime;
   maxRequestAge?: ReadableTime;
   name?: string;

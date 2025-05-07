@@ -59,6 +59,7 @@ describe("getAuthClient", () => {
       logoutEndpoint: "https://example.com/logout",
       tokenEndpoint: "https://example.com/token",
       userinfoEndpoint: "https://example.com/userinfo",
+      tokenEndpointAuthMethodsSupported: ["client_secret_post", "client_secret_basic"],
     });
   });
 

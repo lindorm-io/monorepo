@@ -17,8 +17,8 @@ export type AmphoraExternalOption = {
 };
 
 export type AmphoraOptions = {
+  domain?: string;
   external?: Array<AmphoraExternalOption>;
-  issuer?: string;
   logger: ILogger;
 };
 

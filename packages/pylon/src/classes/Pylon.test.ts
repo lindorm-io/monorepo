@@ -54,10 +54,9 @@ describe("Pylon", () => {
 
   beforeAll(() => {
     logger = new Logger({ level: LogLevel.Error, readable: true });
-    // logger = createMockLogger();
 
     amphora = new Amphora({
-      issuer: "http://test.lindorm.io",
+      domain: "http://test.lindorm.io",
       logger,
       external: [
         {
@@ -215,11 +214,9 @@ describe("Pylon", () => {
           subject: true,
         },
       },
-      domain: "http://test.lindorm.io",
       environment: Environment.Test,
       httpMiddleware: [middlewareSpy],
       httpRouters: [{ path: "/test", router }],
-      issuer: "http://test.lindorm.io",
       name: "@lindorm/pylon",
       openIdConfiguration: { jwksUri: "http://test.lindorm.io/.well-known/jwks.json" },
       parseBody: { formidable: true },
@@ -316,7 +313,7 @@ describe("Pylon", () => {
     });
   });
 
-  test.only("should handle auth", async () => {
+  test("should handle auth", async () => {
     const loginRes = await request(pylon.callback)
       .get("/auth/login")
       .query({ redirect_uri: "http://client.lindorm.io/login/callback" })
@@ -350,6 +347,21 @@ describe("Pylon", () => {
         ]),
       }),
     );
+
+    const sessionRes = await request(pylon.callback)
+      .get("/test/session")
+      .set("Cookie", loginCallbackRes.headers["set-cookie"])
+      .expect(200);
+
+    expect(sessionRes.body).toEqual({
+      id: expect.any(String),
+      access_token: "access_token",
+      expires_at: 1707696000000,
+      issued_at: 1704096000000,
+      refresh_token: "refresh_token",
+      scope: ["openid", "profile", "email"],
+      subject: "sub",
+    });
 
     const authRes = await request(pylon.callback)
       .get("/auth")

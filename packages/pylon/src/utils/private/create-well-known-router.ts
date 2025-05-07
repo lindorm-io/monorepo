@@ -1,5 +1,6 @@
 import { ServerError } from "@lindorm/errors";
 import { isUrlLike } from "@lindorm/is";
+import { removeUndefined, sortKeys } from "@lindorm/utils";
 import { PylonRouter } from "../../classes";
 import { PylonHttpContext, PylonHttpOptions } from "../../types";
 
@@ -8,10 +9,12 @@ export const createWellKnownRouter = <C extends PylonHttpContext>(
 ): PylonRouter<C> => {
   const router = new PylonRouter<C>();
 
-  const openIdConfiguration = {
-    ...(options.openIdConfiguration ?? {}),
-    ...(options.issuer && { issuer: options.issuer }),
-  };
+  const openIdConfiguration = sortKeys(
+    removeUndefined({
+      ...(options.openIdConfiguration ?? {}),
+      ...(options.domain && { issuer: options.domain }),
+    }),
+  );
 
   router.get("/change-password", async (ctx) => {
     if (!isUrlLike(options.changePasswordUri)) {
@@ -35,7 +38,6 @@ export const createWellKnownRouter = <C extends PylonHttpContext>(
       cors: options.cors,
       domain: options.domain,
       environment: options.environment,
-      issuer: options.issuer,
       maxRequestAge: options.maxRequestAge,
       name: options.name,
       version: options.version,

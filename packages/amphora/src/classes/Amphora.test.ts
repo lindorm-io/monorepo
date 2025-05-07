@@ -25,7 +25,7 @@ describe("Amphora", () => {
   let amphora: Amphora;
 
   beforeEach(() => {
-    amphora = new Amphora({ issuer, logger: createMockLogger() });
+    amphora = new Amphora({ domain: issuer, logger: createMockLogger() });
   });
 
   describe("add", () => {
@@ -271,7 +271,7 @@ describe("Amphora", () => {
         .reply(200, { keys: [TEST_EC_KEY_SIG.toJWK("private")] });
 
       amphora = new Amphora({
-        issuer,
+        domain: issuer,
         logger: createMockLogger(),
         external: [
           {
@@ -317,7 +317,7 @@ describe("Amphora", () => {
         .reply(200, { keys: [TEST_EC_KEY_SIG.toJWK("private")] });
 
       amphora = new Amphora({
-        issuer,
+        domain: issuer,
         logger: createMockLogger(),
         external: [
           {

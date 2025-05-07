@@ -2,7 +2,7 @@ import { IAmphora } from "../interfaces";
 
 export const createMockAmphora = (): IAmphora => ({
   config: [],
-  issuer: "mock_issuer",
+  domain: "mock_issuer",
   jwks: {
     keys: [],
   },

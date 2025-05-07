@@ -37,10 +37,10 @@ export class Pylon<
   public constructor(options: PylonOptions<C, E>) {
     options.environment = options.environment ?? Environment.Development;
     options.version = options.version ?? "0.0.0";
-    options.issuer = options.issuer ?? options.amphora.issuer;
+    options.domain = options.domain ?? options.amphora.domain ?? "unknown";
 
     this.logger = options.logger.child(["Pylon"], {
-      domain: options.domain ?? "unknown",
+      domain: options.domain,
       environment: options.environment,
       name: options.name ?? "unknown",
       version: options.version,
@@ -58,14 +58,14 @@ export class Pylon<
     this._teardown = options.teardown;
 
     this.http = new PylonHttp({
-      auth: options.auth,
       amphora: this.amphora,
+      auth: options.auth,
       cookies: options.cookies,
       cors: options.cors,
+      domain: options.domain,
       environment: options.environment,
       httpMiddleware: options.httpMiddleware,
       httpRouters: options.httpRouters,
-      issuer: options.issuer,
       logger: this.logger,
       maxRequestAge: options.maxRequestAge,
       openIdConfiguration: options.openIdConfiguration,

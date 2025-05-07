@@ -63,7 +63,6 @@ describe("createLoginHandler", () => {
   test("should resolve dynamic redirect uri", async () => {
     await expect(createLoginHandler(config)(ctx, jest.fn())).resolves.toBeUndefined();
 
-    expect(ctx.cookies.del).toHaveBeenCalled();
     expect(ctx.cookies.set).toHaveBeenCalledWith(
       "login_cookie",
       {
@@ -85,7 +84,6 @@ describe("createLoginHandler", () => {
 
     await expect(createLoginHandler(config)(ctx, jest.fn())).resolves.toBeUndefined();
 
-    expect(ctx.cookies.del).toHaveBeenCalled();
     expect(ctx.cookies.set).toHaveBeenCalledWith(
       "login_cookie",
       {

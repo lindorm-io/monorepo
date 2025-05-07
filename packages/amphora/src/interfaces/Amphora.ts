@@ -3,7 +3,7 @@ import { AmphoraConfig, AmphoraJwks, AmphoraQuery } from "../types";
 
 export interface IAmphora {
   config: Array<AmphoraConfig>;
-  issuer: string | null;
+  domain: string | null;
   jwks: AmphoraJwks;
   vault: Array<IKryptos>;
 

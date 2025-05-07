@@ -15,7 +15,7 @@ import {
 } from "../types";
 
 export class Amphora implements IAmphora {
-  public readonly issuer: string | null;
+  public readonly domain: string | null;
 
   private readonly conduit: Conduit;
   private readonly logger: ILogger;
@@ -44,7 +44,7 @@ export class Amphora implements IAmphora {
     this._setup = false;
     this._vault = [];
 
-    this.issuer = options.issuer ?? null;
+    this.domain = options.domain ?? null;
   }
 
   // public getters
@@ -54,8 +54,11 @@ export class Amphora implements IAmphora {
   }
 
   public get jwks(): AmphoraJwks {
-    if (!this.issuer) {
-      throw new AmphoraError("Issuer is required to get JWKS");
+    if (!this.domain) {
+      throw new AmphoraError("Domain is required to get JWKS", {
+        details:
+          "Domain is used to determine the signing issuer of the keys. If your server signs tokens, it must have a domain.",
+      });
     }
 
     return { keys: this._jwks };
@@ -87,8 +90,8 @@ export class Amphora implements IAmphora {
         throw new AmphoraError("Id is required when adding Kryptos");
       }
 
-      if (!item.issuer && this.issuer) {
-        item.issuer = this.issuer;
+      if (!item.issuer && this.domain) {
+        item.issuer = this.domain;
       }
 
       if (!item.issuer) {
@@ -299,7 +302,7 @@ export class Amphora implements IAmphora {
   }
 
   private refreshJwks(): void {
-    if (this.issuer === null) return;
+    if (this.domain === null) return;
 
     this.logger.silly("Refreshing JWKS");
 
@@ -307,7 +310,7 @@ export class Amphora implements IAmphora {
       isActive: true,
       isExternal: false,
       hasPublicKey: true,
-      issuer: this.issuer,
+      issuer: this.domain,
     })
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
       .map((i) => i.toJWK("public"));

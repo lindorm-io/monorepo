@@ -34,6 +34,7 @@ exports[`Pylon should setup correctly 1`] = `
     ],
     "issuer": "https://lindorm.eu.auth0.com/",
     "jwksUri": "https://lindorm.eu.auth0.com/.well-known/jwks.json",
+    "logoutEndpoint": "https://lindorm.eu.auth0.com/v2/logout",
     "mfaChallengeEndpoint": "https://lindorm.eu.auth0.com/mfa/challenge",
     "registrationEndpoint": "https://lindorm.eu.auth0.com/oidc/register",
     "requestParameterSupported": false,
