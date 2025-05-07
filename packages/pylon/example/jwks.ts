@@ -8,7 +8,7 @@ import { AmphoraWorker, Environment, Pylon } from "../src";
 const logger = new Logger({ level: LogLevel.Silly, readable: true });
 
 const amphora = new Amphora({
-  issuer: "http://test.lindorm.io",
+  domain: "http://test.lindorm.io",
   logger,
   external: [
     {
@@ -36,7 +36,6 @@ const pylon = new Pylon({
   logger,
 
   environment: Environment.Test,
-  issuer: "http://test.lindorm.io",
   name: "@lindorm/pylon",
   port: 3000,
   version: "0.0.0",
@@ -46,7 +45,7 @@ const pylon = new Pylon({
 // creating what's needed for the pretend external server
 
 const externalAmphora = new Amphora({
-  issuer: "http://external.lindorm.io",
+  domain: "http://external.lindorm.io",
   logger,
 });
 
@@ -63,7 +62,6 @@ const externalPylon = new Pylon({
   logger,
 
   environment: Environment.Test,
-  issuer: "http://external.lindorm.io",
   name: "pretend-external-server",
   openIdConfiguration: {
     jwksUri: "http://localhost:3001/.well-known/jwks.json",

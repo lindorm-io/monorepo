@@ -10,7 +10,7 @@ const logger = new Logger({
 });
 
 const amphora = new Amphora({
-  issuer: "http://test.lindorm.io",
+  domain: "http://test.lindorm.io",
   logger,
 });
 
@@ -27,7 +27,6 @@ export const EXAMPLE_PYLON = new Pylon({
 
   environment: Environment.Test,
   httpRouters: join(__dirname, "routers"),
-  issuer: "http://test.lindorm.io",
   name: "@lindorm/pylon",
   port: 3000,
   socketListeners: join(__dirname, "listeners"),

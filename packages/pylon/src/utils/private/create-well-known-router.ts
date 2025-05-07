@@ -1,5 +1,5 @@
 import { ServerError } from "@lindorm/errors";
-import { isUrlLike } from "@lindorm/is";
+import { isString, isUrlLike } from "@lindorm/is";
 import { removeUndefined, sortKeys } from "@lindorm/utils";
 import { PylonRouter } from "../../classes";
 import { PylonHttpContext, PylonHttpOptions } from "../../types";
@@ -16,6 +16,15 @@ export const createWellKnownRouter = <C extends PylonHttpContext>(
     }),
   );
 
+  if (options.domain) {
+    for (const [key, value] of Object.entries(openIdConfiguration)) {
+      if (isString(value) && value.includes("<DOMAIN>")) {
+        (openIdConfiguration as any)[key] = value.replace("<DOMAIN>", options.domain);
+        continue;
+      }
+    }
+  }
+
   router.get("/change-password", async (ctx) => {
     if (!isUrlLike(options.changePasswordUri)) {
       throw new ServerError("Change password URI not configured");
@@ -29,6 +38,15 @@ export const createWellKnownRouter = <C extends PylonHttpContext>(
   });
 
   router.get("/openid-configuration", async (ctx) => {
+    const result = { ...openIdConfiguration };
+
+    for (const [key, value] of Object.entries(result)) {
+      if (isString(value) && value.includes("<ORIGIN>")) {
+        (result as any)[key] = value.replace("<ORIGIN>", ctx.request.origin);
+        continue;
+      }
+    }
+
     ctx.body = openIdConfiguration;
     ctx.status = 200;
   });

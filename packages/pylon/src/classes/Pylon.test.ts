@@ -132,7 +132,7 @@ describe("Pylon", () => {
       ctx.status = 200;
     });
 
-    router.post("/error", async (ctx) => {
+    router.post("/error", async () => {
       throw new ServerError("Test Error", {
         code: "test_error_code",
         data: { test: "data" },
@@ -140,6 +140,33 @@ describe("Pylon", () => {
         status: ServerError.Status.LoopDetected,
         title: "Test Error Title",
       });
+    });
+
+    router.get("/request", async (ctx) => {
+      ctx.body = {
+        header: ctx.request.header,
+        headers: ctx.request.headers,
+        url: ctx.request.url,
+        origin: ctx.request.origin,
+        href: ctx.request.href,
+        method: ctx.request.method,
+        path: ctx.request.path,
+        query: ctx.request.query,
+        querystring: ctx.request.querystring,
+        search: ctx.request.search,
+        host: ctx.request.host,
+        hostname: ctx.request.hostname,
+        URL: ctx.request.URL,
+        fresh: ctx.request.fresh,
+        stale: ctx.request.stale,
+        idempotent: ctx.request.idempotent,
+        protocol: ctx.request.protocol,
+        secure: ctx.request.secure,
+        ip: ctx.request.ip,
+        ips: ctx.request.ips,
+        subdomains: ctx.request.subdomains,
+      };
+      ctx.status = 200;
     });
 
     router.post("/session", async (ctx) => {
@@ -259,6 +286,41 @@ describe("Pylon", () => {
         responseId: expect.any(String),
         sessionId: null,
       },
+    });
+  });
+
+  test("should return request info", async () => {
+    const response = await request(pylon.callback).get("/test/request").expect(200);
+
+    expect(response.body).toEqual({
+      fresh: false,
+      header: {
+        accept_encoding: "gzip, deflate",
+        connection: "close",
+        host: expect.stringMatching(/127\.0\.0\.1:\d+/),
+      },
+      headers: {
+        accept_encoding: "gzip, deflate",
+        connection: "close",
+        host: expect.stringMatching(/127\.0\.0\.1:\d+/),
+      },
+      host: expect.stringMatching(/127\.0\.0\.1:\d+/),
+      hostname: "127.0.0.1",
+      href: expect.stringMatching(/http:\/\/127\.0\.0\.1:\d+\/test\/request/),
+      idempotent: true,
+      ip: "::ffff:127.0.0.1",
+      ips: [],
+      method: "GET",
+      origin: expect.stringMatching(/http:\/\/127\.0\.0\.1:\d+/),
+      path: "/test/request",
+      protocol: "http",
+      query: {},
+      querystring: "",
+      search: "",
+      secure: false,
+      stale: true,
+      subdomains: [],
+      url: expect.stringMatching(/http:\/\/127\.0\.0\.1:\d+\/test\/request/),
     });
   });
 
