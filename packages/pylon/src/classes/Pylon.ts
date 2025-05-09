@@ -172,6 +172,22 @@ export class Pylon<
     this.isTeardown = true;
   }
 
+  public async work(): Promise<void> {
+    if (this.isStarted) return;
+
+    this.logger.verbose("Pylon workers starting");
+
+    await this.setup();
+
+    for (const worker of this.workers) {
+      worker.start();
+    }
+
+    this.isStarted = true;
+
+    this.logger.info("Pylon workers started");
+  }
+
   // private
 
   private async close(): Promise<void> {
