@@ -2,7 +2,8 @@ import { IAmphora } from "@lindorm/amphora";
 import { ReadableTime } from "@lindorm/date";
 import { Environment } from "@lindorm/enums";
 import { ILogger } from "@lindorm/logger";
-import { ILindormWorker } from "@lindorm/worker";
+import { RetryOptions } from "@lindorm/retry";
+import { ILindormWorker, LindormWorkerConfig } from "@lindorm/worker";
 import Redis from "ioredis";
 import { ServerOptions as SocketOptions } from "socket.io";
 import { PylonListener, PylonRouter } from "../classes";
@@ -60,5 +61,7 @@ export type PylonOptions<
     port?: number;
     setup?: PylonSetup;
     teardown?: PylonTeardown;
-    workers?: Array<ILindormWorker>;
+    workers?: Array<ILindormWorker | LindormWorkerConfig | string>;
+    workersInterval?: ReadableTime;
+    workersRetry?: RetryOptions;
   };

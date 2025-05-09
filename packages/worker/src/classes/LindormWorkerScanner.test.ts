@@ -3,7 +3,7 @@ import { join } from "path";
 import { LindormWorkerConfig } from "../types";
 import { LindormWorkerScanner } from "./LindormWorkerScanner";
 
-const worker: LindormWorkerConfig = {
+const workerConfig: LindormWorkerConfig = {
   alias: "CustomWorker",
   callback: async () => {},
   interval: 1000,
@@ -16,11 +16,11 @@ const worker: LindormWorkerConfig = {
 };
 
 describe("LindormWorkerScanner", () => {
-  test("should return with array of entity constructors", () => {
-    expect(LindormWorkerScanner.scan([worker])).toEqual([worker]);
+  test("should return with array of worker config", () => {
+    expect(LindormWorkerScanner.scan([workerConfig])).toEqual([workerConfig]);
   });
 
-  test("should return with array of entity paths", () => {
+  test("should return with array of worker config", () => {
     expect(
       LindormWorkerScanner.scan([join(__dirname, "..", "__fixtures__", "workers")]),
     ).toEqual([

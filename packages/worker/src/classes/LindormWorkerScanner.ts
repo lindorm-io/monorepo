@@ -2,14 +2,18 @@ import { ReadableTime } from "@lindorm/date";
 import { isFunction, isNumber, isObject, isString } from "@lindorm/is";
 import { IScanData, Scanner } from "@lindorm/scanner";
 import { LindormWorkerScannerError } from "../errors";
-import { LindormWorkerConfig, LindormWorkerScannerInput } from "../types";
+import {
+  LindormWorkerConfig,
+  LindormWorkerScannerInput,
+  LindormWorkerScannerOutput,
+} from "../types";
 
 export class LindormWorkerScanner {
-  public static scan(input: LindormWorkerScannerInput): Array<LindormWorkerConfig> {
-    const workers = input.filter((a) => isObject(a));
+  public static scan(input: LindormWorkerScannerInput): LindormWorkerScannerOutput {
+    const objects = input.filter((a) => isObject(a));
     const strings = input.filter((a) => isString(a));
 
-    const result: Array<LindormWorkerConfig> = [...workers];
+    const result: Array<LindormWorkerConfig> = [...objects];
 
     if (!strings.length) return result;
 

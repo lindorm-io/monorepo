@@ -17,6 +17,7 @@ export class LindormWorker<T = unknown> implements ILindormWorker<T> {
   private readonly retry: RetryConfig;
   private timeout: NodeJS.Timeout | null;
 
+  private readonly _alias: string;
   private _latestError: Date | null;
   private _latestSuccess: Date | null;
   private _latestTry: Date | null;
@@ -27,6 +28,7 @@ export class LindormWorker<T = unknown> implements ILindormWorker<T> {
     this.emitter = new EventEmitter();
     this.logger = options.logger.child(["LindormWorker", options.alias]);
 
+    this._alias = options.alias;
     this.retry = { ...RETRY_CONFIG, ...(options.retry ?? {}) };
     this.callback = options.callback;
     this.interval = isString(options.interval) ? ms(options.interval) : options.interval;
@@ -37,6 +39,10 @@ export class LindormWorker<T = unknown> implements ILindormWorker<T> {
     this._running = false;
     this._seq = 0;
     this.timeout = null;
+  }
+
+  public get alias(): string {
+    return this._alias;
   }
 
   public get latestError(): Date | null {

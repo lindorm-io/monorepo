@@ -1,6 +1,7 @@
 import { LindormWorkerEvent } from "../enums";
 
 export interface ILindormWorker<T = unknown> {
+  alias: string;
   latestError: Date | null;
   latestSuccess: Date | null;
   latestTry: Date | null;

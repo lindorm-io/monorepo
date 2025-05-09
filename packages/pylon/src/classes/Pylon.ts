@@ -12,6 +12,7 @@ import {
   PylonSocketContext,
   PylonTeardown,
 } from "../types";
+import { scanWorkers } from "../utils/private";
 import { PylonHttp } from "./PylonHttp";
 import { PylonIo } from "./PylonIo";
 
@@ -52,7 +53,7 @@ export class Pylon<
 
     this.amphora = options.amphora;
     this.port = options.port ?? 3000;
-    this.workers = options.workers ?? [];
+    this.workers = scanWorkers(options);
 
     this._setup = options.setup;
     this._teardown = options.teardown;

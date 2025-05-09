@@ -10,3 +10,5 @@ export type LindormWorkerConfig = {
 };
 
 export type LindormWorkerScannerInput = Array<LindormWorkerConfig | string>;
+
+export type LindormWorkerScannerOutput = Array<LindormWorkerConfig>;
