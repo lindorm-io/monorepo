@@ -26,5 +26,5 @@ export const configuration = <T extends ZodRawShape>(schema: T): NpmInformation 
     },
   };
 
-  return merge(parsed, npm);
+  return merge<NpmInformation & T>(parsed, npm as any);
 };

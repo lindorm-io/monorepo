@@ -1,9 +1,10 @@
+import { Dict } from "@lindorm/types";
 import { merge } from "./merge";
 
 describe("merge", () => {
   test("should merge objects", () => {
     expect(
-      merge(
+      merge<Dict>(
         {
           a: 1,
           b: 1,
@@ -32,7 +33,7 @@ describe("merge", () => {
 
   test("should merge objects with arrays", () => {
     expect(
-      merge(
+      merge<Dict>(
         {
           a: [1],
           b: [1],
