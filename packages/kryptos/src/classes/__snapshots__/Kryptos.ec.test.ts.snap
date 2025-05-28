@@ -475,8 +475,9 @@ exports[`Kryptos (EC) to should return db 1`] = `
   "algorithm": "ES512",
   "createdAt": 2023-01-01T08:00:00.000Z,
   "curve": "P-521",
-  "encryption": undefined,
+  "encryption": null,
   "expiresAt": 2099-01-01T08:00:00.000Z,
+  "hidden": false,
   "id": "3b9a051f-e1ec-562b-bf92-7cf92ec465ba",
   "isExternal": false,
   "issuer": "https://example.com",
@@ -501,16 +502,19 @@ exports[`Kryptos (EC) to should return json 1`] = `
   "algorithm": "ES512",
   "createdAt": 2023-01-01T08:00:00.000Z,
   "curve": "P-521",
+  "encryption": null,
   "expiresAt": 2099-01-01T08:00:00.000Z,
   "expiresIn": 2366841600,
   "hasPrivateKey": true,
   "hasPublicKey": true,
+  "hidden": false,
   "id": "3b9a051f-e1ec-562b-bf92-7cf92ec465ba",
   "isActive": true,
   "isExpired": false,
   "isExternal": false,
   "issuer": "https://example.com",
   "jwksUri": "https://example.com/.well-known/jwks.json",
+  "modulus": null,
   "notBefore": 2023-01-01T08:00:00.000Z,
   "operations": [
     "sign",
@@ -572,3 +576,5 @@ exports[`Kryptos (EC) to should return jwk with public key 1`] = `
   "y": "AAgPZRhdrsY3SLMdYgVF2NVi5Hn7SPLAW136j83Y852u-VXzG6Z1Ur5OJI8Qh18qgv8i7R7sgpOwmyP5SYTysMmf",
 }
 `;
+
+exports[`Kryptos (EC) to should return kryptos string 1`] = `"kryptos:eyJjcnYiOiJQLTUyMSIsIngiOiJBSTNZOGhXbEZOMTljdVkzR1NEd0dUYWJtZDYycGl3MWJZdDUtR1NXdmFOOG1KVlFsUU0taG1nWjlwc2JNY1NDd3FNX1lkRnMtd1FqLTAwUGZIZzMxVmJSIiwieSI6IkFBZ1BaUmhkcnNZM1NMTWRZZ1ZGMk5WaTVIbjdTUExBVzEzNmo4M1k4NTJ1LVZYekc2WjFVcjVPSkk4UWgxOHFndjhpN1I3c2dwT3dteVA1U1lUeXNNbWYiLCJkIjoiQUV3R0tOdzBHSzZBMWVSSUNVbExQNURpTDV4RW5HWHAtOTRGMnVhRUpMbTlIcEVKb0RpWFQwSXlEVkxIV0VaLXUwQ3Y2QVhUVklWVzdSdjZuY2FpSUdxMyIsImtpZCI6IjNiOWEwNTFmLWUxZWMtNTYyYi1iZjkyLTdjZjkyZWM0NjViYSIsImFsZyI6IkVTNTEyIiwidXNlIjoic2lnIiwia3R5IjoiRUMiLCJleHAiOjQwNzA5Mzc2MDAsImlhdCI6MTY3MjU2MDAwMCwiaXNzIjoiaHR0cHM6Ly9leGFtcGxlLmNvbSIsImprdSI6Imh0dHBzOi8vZXhhbXBsZS5jb20vLndlbGwta25vd24vandrcy5qc29uIiwia2V5X29wcyI6WyJzaWduIiwidmVyaWZ5Il0sIm5iZiI6MTY3MjU2MDAwMCwib3duZXJfaWQiOiJmMDJjMmQwYy00NGVlLTVlNGUtOGIzYi0zOWQ0NjkyNGQyMjciLCJwdXJwb3NlIjoidGVzdCIsInVhdCI6MTcwMTQxNzYwMH0"`;

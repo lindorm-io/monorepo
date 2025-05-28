@@ -3,7 +3,7 @@ import { KryptosAlgorithm, KryptosEncryption, OctSize } from "../../../types";
 
 type Options = {
   algorithm: KryptosAlgorithm;
-  encryption?: KryptosEncryption;
+  encryption?: KryptosEncryption | null;
 };
 
 export const getOctSize = (options: Options): OctSize => {

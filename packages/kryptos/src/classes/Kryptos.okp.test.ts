@@ -44,7 +44,7 @@ describe("Kryptos (OKP)", () => {
       expect(kryptos.isExternal).toEqual(false);
       expect(kryptos.issuer).toEqual("https://example.com");
       expect(kryptos.jwksUri).toEqual("https://example.com/.well-known/jwks.json");
-      expect(kryptos.modulus).toEqual(undefined);
+      expect(kryptos.modulus).toEqual(null);
       expect(kryptos.notBefore).toEqual(new Date("2023-01-01T08:00:00.000Z"));
       expect(kryptos.operations).toEqual(["sign", "verify"]);
       expect(kryptos.ownerId).toEqual("f02c2d0c-44ee-5e4e-8b3b-39d46924d227");
@@ -120,6 +120,12 @@ describe("Kryptos (OKP)", () => {
       const kryptos = KryptosKit.from.b64({ ...TEST_OKP_KEY_B64, ...options });
 
       expect(kryptos.toJWK("private")).toMatchSnapshot();
+    });
+
+    test("should return kryptos string", () => {
+      const kryptos = KryptosKit.from.b64({ ...TEST_OKP_KEY_B64, ...options });
+
+      expect(kryptos.toString()).toMatchSnapshot();
     });
   });
 });

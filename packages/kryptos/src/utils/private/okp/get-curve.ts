@@ -4,7 +4,7 @@ import { isOkpCurve } from "./is-okp-curve";
 
 type Options = {
   algorithm: KryptosAlgorithm;
-  curve?: KryptosCurve;
+  curve?: KryptosCurve | null;
 };
 
 export const getOkpCurve = (options: Options): OkpCurve => {

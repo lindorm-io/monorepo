@@ -2,14 +2,14 @@ import { KryptosCurve } from "../curve";
 import { KryptosType } from "../types";
 
 export type IsBufferFormatOptions = {
-  curve?: KryptosCurve;
+  curve?: KryptosCurve | null;
   privateKey?: Buffer;
   publicKey?: Buffer;
   type: KryptosType;
 };
 
 export type IsJwkFormatOptions = {
-  crv?: KryptosCurve;
+  crv?: KryptosCurve | null;
   d?: string;
   dp?: string;
   dq?: string;
@@ -25,7 +25,7 @@ export type IsJwkFormatOptions = {
 };
 
 export type IsStringFormatOptions = {
-  curve?: KryptosCurve;
+  curve?: KryptosCurve | null;
   privateKey?: string;
   publicKey?: string;
   type: KryptosType;

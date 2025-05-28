@@ -3,7 +3,7 @@ import { IKryptos } from "./Kryptos";
 
 export interface IKryptosOct extends IKryptos {
   algorithm: OctAlgorithm;
-  curve: undefined;
+  curve: null;
   type: "oct";
 
   export(format: "b64"): OctString;

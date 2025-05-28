@@ -64,6 +64,7 @@ export const autoGenerateConfig = (algorithm: KryptosAlgorithm): AutoResult => {
       return {
         algorithm,
         curve: "X448",
+        encryption: "A256GCM",
         type: "OKP",
         use: "enc",
       };
@@ -76,6 +77,7 @@ export const autoGenerateConfig = (algorithm: KryptosAlgorithm): AutoResult => {
     case "ECDH-ES+A256GCMKW":
       return {
         algorithm,
+        encryption: "A256GCM",
         type: "EC",
         use: "enc",
       };
@@ -139,6 +141,7 @@ export const autoGenerateConfig = (algorithm: KryptosAlgorithm): AutoResult => {
     case "RSA-OAEP":
       return {
         algorithm,
+        encryption: "A256GCM",
         type: "RSA",
         use: "enc",
       };

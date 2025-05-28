@@ -8,6 +8,7 @@ type StdOptions = Optional<
   | "curve"
   | "encryption"
   | "expiresAt"
+  | "hidden"
   | "isExternal"
   | "issuer"
   | "jwksUri"

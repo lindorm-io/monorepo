@@ -1,6 +1,7 @@
+import { B64 } from "@lindorm/b64";
 import { getUnixTime, isAfter, isEqual } from "@lindorm/date";
 import { isBuffer } from "@lindorm/is";
-import { removeUndefined } from "@lindorm/utils";
+import { removeEmpty, removeUndefined } from "@lindorm/utils";
 import { randomUUID } from "crypto";
 import { KryptosError } from "../errors";
 import { IKryptos } from "../interfaces";
@@ -20,6 +21,7 @@ import {
   KryptosMetadata,
   KryptosOperation,
   KryptosOptions,
+  KryptosPurpose,
   KryptosString,
   KryptosType,
   KryptosUse,
@@ -40,37 +42,39 @@ export class Kryptos implements IKryptos {
   private readonly _id: string;
   private readonly _algorithm: KryptosAlgorithm;
   private readonly _createdAt: Date;
-  private readonly _curve: KryptosCurve | undefined;
+  private readonly _curve: KryptosCurve | null;
   private readonly _isExternal: boolean;
   private readonly _privateKey: Buffer | undefined;
   private readonly _publicKey: Buffer | undefined;
   private readonly _type: KryptosType;
   private readonly _use: KryptosUse;
 
-  private _encryption: KryptosEncryption | undefined;
-  private _expiresAt: Date | undefined;
-  private _issuer: string | undefined;
-  private _jwksUri: string | undefined;
+  private _encryption: KryptosEncryption | null;
+  private _expiresAt: Date | null;
+  private _hidden: boolean;
+  private _issuer: string | null;
+  private _jwksUri: string | null;
   private _notBefore: Date;
   private _operations: Array<KryptosOperation>;
-  private _ownerId: string | undefined;
-  private _purpose: string | undefined;
+  private _ownerId: string | null;
+  private _purpose: KryptosPurpose | null;
   private _updatedAt: Date;
 
   public constructor(options: KryptosOptions) {
     this._id = options.id || randomUUID();
     this._algorithm = options.algorithm;
     this._createdAt = options.createdAt ?? new Date();
-    this._curve = options.curve;
-    this._encryption = options.encryption;
-    this._expiresAt = options.expiresAt;
+    this._curve = options.curve || null;
+    this._encryption = options.encryption || null;
+    this._expiresAt = options.expiresAt || null;
+    this._hidden = options.hidden ?? false;
     this._isExternal = options.isExternal ?? false;
-    this._issuer = options.issuer;
-    this._jwksUri = options.jwksUri;
+    this._issuer = options.issuer || null;
+    this._jwksUri = options.jwksUri || null;
     this._notBefore = options.notBefore ?? new Date();
     this._operations = options.operations ?? [];
-    this._ownerId = options.ownerId;
-    this._purpose = options.purpose;
+    this._ownerId = options.ownerId || null;
+    this._purpose = options.purpose || null;
     this._type = options.type;
     this._updatedAt = options.updatedAt ?? new Date();
     this._use = options.use;
@@ -106,20 +110,20 @@ export class Kryptos implements IKryptos {
     return this._createdAt;
   }
 
-  public get curve(): KryptosCurve | undefined {
+  public get curve(): KryptosCurve | null {
     return this._curve;
   }
 
-  public get encryption(): KryptosEncryption | undefined {
+  public get encryption(): KryptosEncryption | null {
     return this._encryption;
   }
 
-  public set encryption(encryption: KryptosEncryption | undefined) {
+  public set encryption(encryption: KryptosEncryption | null) {
     this._encryption = encryption;
     this._updatedAt = new Date();
   }
 
-  public get expiresAt(): Date | undefined {
+  public get expiresAt(): Date | null {
     return this._expiresAt;
   }
 
@@ -128,24 +132,33 @@ export class Kryptos implements IKryptos {
     this._updatedAt = new Date();
   }
 
+  public get hidden(): boolean {
+    return this._hidden;
+  }
+
+  public set hidden(hidden: boolean) {
+    this._hidden = hidden;
+    this._updatedAt = new Date();
+  }
+
   public get isExternal(): boolean {
     return this._isExternal;
   }
 
-  public get issuer(): string | undefined {
+  public get issuer(): string | null {
     return this._issuer;
   }
 
-  public set issuer(issuer: string | undefined) {
+  public set issuer(issuer: string | null) {
     this._issuer = issuer;
     this._updatedAt = new Date();
   }
 
-  public get jwksUri(): string | undefined {
+  public get jwksUri(): string | null {
     return this._jwksUri;
   }
 
-  public set jwksUri(jwksUri: string | undefined) {
+  public set jwksUri(jwksUri: string | null) {
     this._jwksUri = jwksUri;
     this._updatedAt = new Date();
   }
@@ -168,20 +181,20 @@ export class Kryptos implements IKryptos {
     this._updatedAt = new Date();
   }
 
-  public get ownerId(): string | undefined {
+  public get ownerId(): string | null {
     return this._ownerId;
   }
 
-  public set ownerId(ownerId: string | undefined) {
+  public set ownerId(ownerId: string | null) {
     this._ownerId = ownerId;
     this._updatedAt = new Date();
   }
 
-  public get purpose(): string | undefined {
+  public get purpose(): KryptosPurpose | null | null {
     return this._purpose;
   }
 
-  public set purpose(purpose: string | undefined) {
+  public set purpose(purpose: KryptosPurpose | null) {
     this._purpose = purpose;
     this._updatedAt = new Date();
   }
@@ -226,8 +239,8 @@ export class Kryptos implements IKryptos {
     return isEqual(new Date(), this._expiresAt) || isAfter(new Date(), this._expiresAt);
   }
 
-  public get modulus(): RsaModulus | undefined {
-    if (this._type !== "RSA") return undefined;
+  public get modulus(): RsaModulus | null {
+    if (this._type !== "RSA") return null;
     return modulusSize({ privateKey: this._privateKey, publicKey: this._publicKey! });
   }
 
@@ -243,7 +256,7 @@ export class Kryptos implements IKryptos {
         return exportToB64({
           id: this.id,
           algorithm: this.algorithm,
-          curve: this.curve,
+          curve: this.curve ?? undefined,
           privateKey: this._privateKey,
           publicKey: this._publicKey,
           type: this.type,
@@ -254,7 +267,7 @@ export class Kryptos implements IKryptos {
         return exportToDer({
           id: this.id,
           algorithm: this.algorithm,
-          curve: this.curve,
+          curve: this.curve ?? undefined,
           privateKey: this._privateKey,
           publicKey: this._publicKey,
           type: this.type,
@@ -265,7 +278,7 @@ export class Kryptos implements IKryptos {
         return exportToJwk({
           id: this.id,
           algorithm: this.algorithm,
-          curve: this.curve,
+          curve: this.curve ?? undefined,
           mode: "private",
           privateKey: this._privateKey,
           publicKey: this._publicKey,
@@ -277,7 +290,7 @@ export class Kryptos implements IKryptos {
         return exportToPem({
           id: this.id,
           algorithm: this.algorithm,
-          curve: this.curve,
+          curve: this.curve ?? undefined,
           privateKey: this._privateKey,
           publicKey: this._publicKey,
           type: this.type,
@@ -297,9 +310,10 @@ export class Kryptos implements IKryptos {
       id: this.id,
       algorithm: this.algorithm,
       createdAt: this.createdAt,
-      curve: this.curve,
-      encryption: this.encryption,
+      curve: this.curve!,
+      encryption: this.encryption!,
       expiresAt: this.expiresAt,
+      hidden: this.hidden,
       isExternal: this.isExternal,
       issuer: this.issuer,
       jwksUri: this.jwksUri,
@@ -326,6 +340,7 @@ export class Kryptos implements IKryptos {
       expiresIn: this.expiresIn,
       hasPrivateKey: this.hasPrivateKey,
       hasPublicKey: this.hasPublicKey,
+      hidden: this.hidden,
       isActive: this.isActive,
       isExpired: this.isExpired,
       isExternal: this.isExternal,
@@ -346,7 +361,7 @@ export class Kryptos implements IKryptos {
     const keys = exportToJwk({
       id: this.id,
       algorithm: this.algorithm,
-      curve: this.curve,
+      curve: this.curve ?? undefined,
       mode: mode,
       privateKey: this._privateKey,
       publicKey: this._publicKey,
@@ -354,19 +369,23 @@ export class Kryptos implements IKryptos {
       use: this.use,
     });
 
-    return removeUndefined({
-      enc: this.encryption,
+    return removeEmpty({
+      ...keys,
+      enc: this.encryption ?? undefined,
       exp: this.expiresAt ? getUnixTime(this.expiresAt) : undefined,
       iat: getUnixTime(this.createdAt),
-      iss: this.issuer,
+      iss: this.issuer ?? undefined,
       jku: this.jwksUri ?? undefined,
       key_ops: this.operations,
       nbf: getUnixTime(this.notBefore),
       owner_id: this.ownerId ?? undefined,
       purpose: this.purpose ?? undefined,
       uat: getUnixTime(this.updatedAt),
-      ...keys,
     });
+  }
+
+  public toString(): string {
+    return "kryptos:" + B64.encode(JSON.stringify(this.toJWK("private")), "b64u");
   }
 
   // private methods

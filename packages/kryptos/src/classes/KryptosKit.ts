@@ -13,6 +13,7 @@ import {
   KryptosFormat,
   KryptosFrom,
   KryptosFromBuffer,
+  KryptosFromDb,
   KryptosFromJwk,
   KryptosFromString,
   KryptosGenerateEcEnc,
@@ -37,8 +38,6 @@ import {
   isPem,
 } from "../utils/private";
 import { Kryptos } from "./Kryptos";
-
-const KRYPTOS = "kryptos" as const;
 
 type Env = {
   import(string: string): IKryptos;
@@ -97,7 +96,7 @@ export class KryptosKit {
     return {
       auto: KryptosKit.fromAuto,
       b64: KryptosKit.fromB64,
-      db: KryptosKit.fromB64,
+      db: KryptosKit.fromDb,
       der: KryptosKit.fromDer,
       jwk: KryptosKit.fromJwk,
       pem: KryptosKit.fromPem,
@@ -108,27 +107,19 @@ export class KryptosKit {
   // is
 
   public static isEc(kryptos: KryptosLike): kryptos is IKryptosEc {
-    return (
-      kryptos instanceof Kryptos && kryptos.type === "EC" && kryptos.curve !== undefined
-    );
+    return kryptos instanceof Kryptos && kryptos.type === "EC" && Boolean(kryptos.curve);
   }
 
   public static isOct(kryptos: KryptosLike): kryptos is IKryptosOct {
-    return (
-      kryptos instanceof Kryptos && kryptos.type === "oct" && kryptos.curve === undefined
-    );
+    return kryptos instanceof Kryptos && kryptos.type === "oct" && !kryptos.curve;
   }
 
   public static isOkp(kryptos: KryptosLike): kryptos is IKryptosOkp {
-    return (
-      kryptos instanceof Kryptos && kryptos.type === "OKP" && kryptos.curve !== undefined
-    );
+    return kryptos instanceof Kryptos && kryptos.type === "OKP" && Boolean(kryptos.curve);
   }
 
   public static isRsa(kryptos: KryptosLike): kryptos is IKryptosRsa {
-    return (
-      kryptos instanceof Kryptos && kryptos.type === "RSA" && kryptos.curve === undefined
-    );
+    return kryptos instanceof Kryptos && kryptos.type === "RSA" && !kryptos.curve;
   }
 
   // generate
@@ -144,18 +135,17 @@ export class KryptosKit {
   // private env
 
   private static envImport(string: string): IKryptos {
-    const init: Array<string> = string.split(":");
-    const [kryptos, rest] = init;
-
-    if (kryptos !== KRYPTOS) {
+    if (!string.startsWith("kryptos:")) {
       throw new KryptosError("Invalid kryptos string");
     }
 
-    return KryptosKit.fromJwk(JSON.parse(B64.decode(rest, "b64u")));
+    const [_, jwk] = string.split(":");
+
+    return KryptosKit.fromJwk(JSON.parse(B64.decode(jwk, "b64u")));
   }
 
   private static envExport(kryptos: IKryptos): string {
-    return KRYPTOS + ":" + B64.encode(JSON.stringify(kryptos.toJWK("private")), "b64u");
+    return kryptos.toString();
   }
 
   // private from
@@ -171,6 +161,18 @@ export class KryptosKit {
 
   private static fromB64(options: KryptosFromString): IKryptos {
     return KryptosKit.fromKryptos("b64", options);
+  }
+
+  private static fromDb(options: KryptosFromDb): IKryptos {
+    const { curve, encryption, privateKey, publicKey, ...rest } = options;
+
+    return KryptosKit.fromKryptos("b64", {
+      ...rest,
+      curve: curve ?? undefined,
+      encryption: encryption ?? undefined,
+      privateKey: privateKey ?? undefined,
+      publicKey: publicKey ?? undefined,
+    });
   }
 
   private static fromDer(options: KryptosFromBuffer): IKryptos {
@@ -234,16 +236,17 @@ export class KryptosKit {
     const config = autoGenerateConfig(options.algorithm);
     const operations = calculateKeyOps(config);
 
+    if (config.purpose && ["cookie", "session"].includes(config.purpose)) {
+      config.hidden = config.hidden ?? true;
+    }
+
     const generate: KryptosGenerate = {
       ...config,
       ...options,
       operations,
     };
 
-    return new Kryptos({
-      ...generate,
-      ...generateKey(generate),
-    });
+    return new Kryptos({ ...generate, ...generateKey(generate) });
   }
 
   private static generateEcEnc(options: KryptosGenerateEcEnc): IKryptos {
@@ -321,7 +324,7 @@ export class KryptosKit {
   private static generateKryptos(generate: KryptosGenerate): IKryptos {
     return new Kryptos({
       ...generate,
-      encryption: generate.use === "enc" ? (generate.encryption ?? "A256GCM") : undefined,
+      encryption: generate.use === "enc" ? (generate.encryption ?? "A256GCM") : null,
       operations: generate.operations?.length
         ? generate.operations
         : calculateKeyOps(generate),

@@ -36,7 +36,7 @@ describe("Kryptos (RSA)", () => {
       expect(kryptos.id).toEqual("3b9a051f-e1ec-562b-bf92-7cf92ec465ba");
       expect(kryptos.algorithm).toEqual("RS512");
       expect(kryptos.createdAt).toEqual(new Date("2023-01-01T08:00:00.000Z"));
-      expect(kryptos.curve).toEqual(undefined);
+      expect(kryptos.curve).toEqual(null);
       expect(kryptos.expiresAt).toEqual(new Date("2099-01-01T08:00:00.000Z"));
       expect(kryptos.expiresIn).toEqual(2366841600);
       expect(kryptos.isActive).toEqual(true);
@@ -120,6 +120,12 @@ describe("Kryptos (RSA)", () => {
       const kryptos = KryptosKit.from.b64({ ...TEST_RSA_KEY_B64, ...options });
 
       expect(kryptos.toJWK("private")).toMatchSnapshot();
+    });
+
+    test("should return kryptos string", () => {
+      const kryptos = KryptosKit.from.b64({ ...TEST_RSA_KEY_B64, ...options });
+
+      expect(kryptos.toString()).toMatchSnapshot();
     });
   });
 });

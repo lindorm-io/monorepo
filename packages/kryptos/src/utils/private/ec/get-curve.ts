@@ -4,7 +4,7 @@ import { isEcCurve } from "./is-ec-curve";
 
 type Options = {
   algorithm: KryptosAlgorithm;
-  curve?: KryptosCurve;
+  curve?: KryptosCurve | null;
 };
 
 export const getEcCurve = (options: Options): EcCurve => {

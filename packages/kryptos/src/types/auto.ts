@@ -11,6 +11,7 @@ export type KryptosAuto = Optional<
   | "createdAt"
   | "encryption"
   | "expiresAt"
+  | "hidden"
   | "isExternal"
   | "issuer"
   | "jwksUri"

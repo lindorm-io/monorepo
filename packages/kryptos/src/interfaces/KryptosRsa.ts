@@ -3,7 +3,7 @@ import { IKryptos } from "./Kryptos";
 
 export interface IKryptosRsa extends IKryptos {
   algorithm: RsaAlgorithm;
-  curve: undefined;
+  curve: null;
   type: "RSA";
 
   export(format: "b64"): RsaString;

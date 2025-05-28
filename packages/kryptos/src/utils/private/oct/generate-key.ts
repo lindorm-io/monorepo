@@ -4,7 +4,7 @@ import { getOctSize } from "./get-size";
 
 type Options = {
   algorithm: KryptosAlgorithm;
-  encryption?: KryptosEncryption;
+  encryption?: KryptosEncryption | null;
 };
 
 type Result = {

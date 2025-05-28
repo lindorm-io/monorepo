@@ -27,6 +27,7 @@ type Std = Optional<
   | "id"
   | "createdAt"
   | "expiresAt"
+  | "hidden"
   | "isExternal"
   | "issuer"
   | "jwksUri"

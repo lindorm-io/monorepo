@@ -1,4 +1,4 @@
-import { EcCurve, KryptosCurve } from "../../../types";
+import { EcCurve } from "../../../types";
 
-export const isEcCurve = (curve: KryptosCurve | undefined): curve is EcCurve =>
+export const isEcCurve = (curve?: any): curve is EcCurve =>
   curve === "P-256" || curve === "P-384" || curve === "P-521";

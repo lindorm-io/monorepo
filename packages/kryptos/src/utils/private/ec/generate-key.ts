@@ -4,7 +4,7 @@ import { getEcCurve } from "./get-curve";
 
 type Options = {
   algorithm: KryptosAlgorithm;
-  curve?: KryptosCurve;
+  curve?: KryptosCurve | null;
 };
 
 type Result = {
