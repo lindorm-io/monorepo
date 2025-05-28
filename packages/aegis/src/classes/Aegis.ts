@@ -10,6 +10,7 @@ import {
   IKryptos,
   KryptosEncAlgorithm,
   KryptosEncryption,
+  KryptosPurpose,
   KryptosSigAlgorithm,
 } from "@lindorm/kryptos";
 import { ILogger } from "@lindorm/logger";
@@ -69,13 +70,19 @@ import { JweKit } from "./JweKit";
 import { JwsKit } from "./JwsKit";
 import { JwtKit } from "./JwtKit";
 
-type EncOptions = {
+type FilterOptions = {
+  keyFilter?: {
+    purpose?: KryptosPurpose;
+  };
+};
+
+type EncOptions = FilterOptions & {
   id?: string;
   algorithm?: TokenHeaderAlgorithm;
   encrypt?: boolean;
 };
 
-type SigOptions = {
+type SigOptions = FilterOptions & {
   id?: string;
   algorithm?: TokenHeaderAlgorithm;
   sign?: boolean;
@@ -298,7 +305,7 @@ export class Aegis implements IAegis {
 
   private async coseEncrypt(
     data: CweContent,
-    options: CweEncryptOptions = {},
+    options: CweEncryptOptions & FilterOptions = {},
   ): Promise<EncryptedCwe> {
     const kit = await this.coseEncryptKit({ encrypt: true });
 
@@ -329,7 +336,7 @@ export class Aegis implements IAegis {
 
   private async coseSign<T extends CwsContent>(
     content: T,
-    options: SignCwsOptions = {},
+    options: SignCwsOptions & FilterOptions = {},
   ): Promise<SignedCws> {
     const kit = await this.coseSignKit({ sign: true });
 
@@ -364,7 +371,7 @@ export class Aegis implements IAegis {
 
   private async cwtSign<T extends Dict = Dict>(
     content: SignCwtContent<T>,
-    options?: SignCwtOptions,
+    options: SignCwtOptions & FilterOptions = {},
   ): Promise<SignedCwt> {
     const kit = await this.cwtKit({ sign: true });
 
@@ -373,7 +380,7 @@ export class Aegis implements IAegis {
 
   private async cwtVerify<T extends Dict = Dict>(
     cwt: string,
-    verify?: VerifyCwtOptions,
+    verify: VerifyCwtOptions = {},
   ): Promise<ParsedCwt<T>> {
     const decode = CwtKit.decode(cwt);
 
@@ -399,7 +406,7 @@ export class Aegis implements IAegis {
 
   private async jweEncrypt(
     data: string,
-    options?: JweEncryptOptions,
+    options: JweEncryptOptions & FilterOptions = {},
   ): Promise<EncryptedJwe> {
     const kit = await this.jweKit({ encrypt: true });
 
@@ -427,7 +434,7 @@ export class Aegis implements IAegis {
 
   private async jwsSign<T extends JwsContent>(
     data: T,
-    options?: SignJwsOptions,
+    options: SignJwsOptions & FilterOptions = {},
   ): Promise<SignedJws> {
     const kit = await this.jwsKit({ sign: true });
 
@@ -460,7 +467,7 @@ export class Aegis implements IAegis {
 
   private async jwtSign<T extends Dict = Dict>(
     content: SignJwtContent<T>,
-    options?: SignJwtOptions,
+    options: SignJwtOptions & FilterOptions = {},
   ): Promise<SignedJwt> {
     const kit = await this.jwtKit({ sign: true });
 
@@ -469,7 +476,7 @@ export class Aegis implements IAegis {
 
   private async jwtVerify<T extends Dict = Dict>(
     jwt: string,
-    verify?: VerifyJwtOptions,
+    verify: VerifyJwtOptions = {},
   ): Promise<ParsedJwt<T>> {
     const decode = JwtKit.decode(jwt);
 
@@ -493,6 +500,7 @@ export class Aegis implements IAegis {
           ],
           algorithm: this.encAlgorithm,
           issuer: this.issuer ?? undefined,
+          ...(options.keyFilter ? { purpose: options.keyFilter.purpose } : {}),
         }
       : {
           $or: [
@@ -518,6 +526,7 @@ export class Aegis implements IAegis {
           algorithm: this.encAlgorithm,
           issuer: this.issuer ?? undefined,
           operations: ["sign"],
+          ...(options.keyFilter ? { purpose: options.keyFilter.purpose } : {}),
         }
       : {
           algorithm: options.algorithm ?? this.sigAlgorithm,
