@@ -27,7 +27,7 @@
     "test:unit": "jest --config jest.config.js --",
     "typecheck": "tsc --watch",
     "typecheck:ci": "tsc",
-    "update": "ncu -u"
+    "update": "ncu -i"
   },
   "dependencies": {
     "@lindorm/aegis": "^0.2.6",
@@ -47,16 +47,17 @@
     "@lindorm/pkce": "^0.1.2",
     "@lindorm/rsa": "^0.1.9",
     "@lindorm/scanner": "^0.3.2",
+    "@lindorm/sha": "^0.1.4",
     "@lindorm/url": "^0.1.6",
     "@lindorm/utils": "^0.4.1",
     "@socket.io/redis-adapter": "^8.3.0",
     "co-body": "^6.2.0",
-    "formidable": "^3.5.1",
+    "formidable": "^3.5.4",
     "koa": "^2.15.3",
     "koa-router": "^12.0.1",
     "object-path": "^0.11.8",
-    "socket.io": "^4.7.5",
-    "zod": "^3.23.8"
+    "socket.io": "^4.8.1",
+    "zod": "^3.25.32"
   },
   "devDependencies": {
     "@lindorm/kryptos": "^0.3.7",
@@ -69,6 +70,6 @@
     "@types/koa": "^2.15.0",
     "@types/koa-router": "^7.4.8",
     "@types/object-path": "^0.11.4",
-    "socket.io-client": "^4.7.5"
+    "socket.io-client": "^4.8.1"
   }
 }
