@@ -33,7 +33,8 @@
     "@lindorm/middleware": "^0.1.4",
     "@lindorm/retry": "^0.1.5",
     "@lindorm/url": "^0.1.6",
-    "uuid": "^10.0.0"
+    "uuid": "^10.0.0",
+    "zod": "^3.25.23"
   },
   "devDependencies": {
     "@lindorm/logger": "^0.2.3",
