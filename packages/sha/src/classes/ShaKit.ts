@@ -1,20 +1,22 @@
-import { ShaHashAlgorithm, ShaHashFormat, ShaKitOptions } from "../types";
+import { ShaAlgorithm } from "@lindorm/types";
+import { BinaryToTextEncoding } from "crypto";
+import { ShaKitOptions } from "../types";
 import { assertShaHash, createShaHash, verifyShaHash } from "../utils/private";
 
 export class ShaKit {
-  private readonly algorithm: ShaHashAlgorithm | undefined;
-  private readonly format: ShaHashFormat | undefined;
+  private readonly algorithm: ShaAlgorithm | undefined;
+  private readonly encoding: BinaryToTextEncoding | undefined;
 
   public constructor(options: ShaKitOptions = {}) {
-    this.algorithm = options.algorithm;
-    this.format = options.format;
+    this.algorithm = options.algorithm ?? "SHA256";
+    this.encoding = options.encoding ?? "base64";
   }
 
   public hash(data: string): string {
     return createShaHash({
       algorithm: this.algorithm,
       data,
-      format: this.format,
+      encoding: this.encoding,
     });
   }
 
@@ -22,7 +24,7 @@ export class ShaKit {
     return verifyShaHash({
       algorithm: this.algorithm,
       data,
-      format: this.format,
+      encoding: this.encoding,
       hash,
     });
   }
@@ -31,7 +33,7 @@ export class ShaKit {
     return assertShaHash({
       algorithm: this.algorithm,
       data,
-      format: this.format,
+      encoding: this.encoding,
       hash,
     });
   }

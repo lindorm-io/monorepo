@@ -28,6 +28,7 @@
     "update": "ncu -u"
   },
   "dependencies": {
-    "@lindorm/errors": "^0.1.7"
+    "@lindorm/errors": "^0.1.7",
+    "@lindorm/types": "^0.2.1"
   }
 }

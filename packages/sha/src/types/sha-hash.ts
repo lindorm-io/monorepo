@@ -1,21 +1,20 @@
-export type ShaHashAlgorithm = "SHA256" | "SHA384" | "SHA512";
-
-export type ShaHashFormat = "base64" | "hex";
+import { ShaAlgorithm } from "@lindorm/types";
+import { BinaryToTextEncoding } from "crypto";
 
 export type CreateShaHashOptions = {
-  algorithm?: ShaHashAlgorithm;
+  algorithm?: ShaAlgorithm;
   data: string;
-  format?: ShaHashFormat;
+  encoding?: BinaryToTextEncoding;
 };
 
 export type VerifyShaHashOptions = {
-  algorithm?: ShaHashAlgorithm;
+  algorithm?: ShaAlgorithm;
   data: string;
-  format?: ShaHashFormat;
+  encoding?: BinaryToTextEncoding;
   hash: string;
 };
 
 export type ShaKitOptions = {
-  algorithm?: ShaHashAlgorithm;
-  format?: ShaHashFormat;
+  algorithm?: ShaAlgorithm;
+  encoding?: BinaryToTextEncoding;
 };

@@ -5,8 +5,8 @@ import { CreateShaHashOptions, VerifyShaHashOptions } from "../../types";
 export const createShaHash = ({
   algorithm = "SHA256",
   data,
-  format = "base64",
-}: CreateShaHashOptions): string => createHash(algorithm).update(data).digest(format);
+  encoding = "base64",
+}: CreateShaHashOptions): string => createHash(algorithm).update(data).digest(encoding);
 
 export const verifyShaHash = ({ hash, ...options }: VerifyShaHashOptions): boolean =>
   createShaHash(options) === hash;
