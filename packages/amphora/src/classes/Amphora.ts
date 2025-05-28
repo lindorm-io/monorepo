@@ -94,6 +94,10 @@ export class Amphora implements IAmphora {
         item.issuer = this.domain;
       }
 
+      if (!item.jwksUri && this.domain) {
+        item.jwksUri = new URL("/.well-known/jwks.json", this.domain).toString();
+      }
+
       if (!item.issuer) {
         throw new AmphoraError("Issuer is required when adding Kryptos");
       }
