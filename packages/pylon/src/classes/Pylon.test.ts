@@ -78,7 +78,7 @@ describe("Pylon", () => {
           "MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgcyOxjn7CekTvSkiQvqx5JhFOmwPYFVFHmLKfio6aJ1uhRANCAAQfFaJkGZMxDn656YiDrSJ5sLRwip-y3a0VzC4cUPxxAJzuRBRtVqM3GitfTQEiUrzF2pcmMZbteAOhIqLlU_f6",
         publicKey:
           "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEHxWiZBmTMQ5-uemIg60iebC0cIqfst2tFcwuHFD8cQCc7kQUbVajNxorX00BIlK8xdqXJjGW7XgDoSKi5VP3-g",
-        purpose: "tokens",
+        purpose: "token",
         type: "EC",
         use: "sig",
       }),
@@ -215,7 +215,19 @@ describe("Pylon", () => {
       ctx.status = 204;
     });
 
-    router.post("/:param_value", async (ctx) => {
+    router.post("/amphora", async (ctx) => {
+      ctx.amphora.add(
+        KryptosKit.generate.auto({
+          algorithm: "HS256",
+          hidden: true,
+          ownerId: "e9cea99a-9bcc-534e-a7ee-c58af70d33ad",
+        }),
+      );
+
+      ctx.status = 204;
+    });
+
+    router.post("/param/:param_value", async (ctx) => {
       ctx.body = {
         body: ctx.request.body,
         data: ctx.data,
@@ -336,11 +348,12 @@ describe("Pylon", () => {
           crv: "P-256",
           iat: 1704096000,
           iss: "http://test.lindorm.io",
+          jku: "http://test.lindorm.io/.well-known/jwks.json",
           key_ops: ["sign", "verify"],
           kid: "5d17c551-7b6f-474a-8679-dba9bbfa06a2",
           kty: "EC",
           nbf: 1704096000,
-          purpose: "tokens",
+          purpose: "token",
           uat: 1704096000,
           use: "sig",
           x: "HxWiZBmTMQ5-uemIg60iebC0cIqfst2tFcwuHFD8cQA",
@@ -351,6 +364,7 @@ describe("Pylon", () => {
           crv: "X448",
           iat: 1704096000,
           iss: "http://test.lindorm.io",
+          jku: "http://test.lindorm.io/.well-known/jwks.json",
           key_ops: ["deriveKey"],
           kid: "5382ca15-b849-55ae-904a-9196797ccc1b",
           kty: "OKP",
@@ -486,7 +500,7 @@ describe("Pylon", () => {
 
   test("should parse params", async () => {
     const response = await request(pylon.callback)
-      .post("/test/123456")
+      .post("/test/param/123456")
       .query({
         query_value: "test",
         query_number: "987654",
@@ -616,5 +630,17 @@ describe("Pylon", () => {
         support: expect.any(String),
       },
     });
+  });
+
+  test("should add amphora key globally", async () => {
+    await request(pylon.callback).post("/test/amphora").expect(204);
+
+    expect(amphora.findSync({ ownerId: "e9cea99a-9bcc-534e-a7ee-c58af70d33ad" })).toEqual(
+      expect.objectContaining({
+        algorithm: "HS256",
+        hidden: true,
+        ownerId: "e9cea99a-9bcc-534e-a7ee-c58af70d33ad",
+      }),
+    );
   });
 });
