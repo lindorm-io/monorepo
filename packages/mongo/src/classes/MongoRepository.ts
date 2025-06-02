@@ -69,6 +69,12 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
         "Versioned entities with readonly @Column() are not supported. Mongo will not be able to handle readonly filtering automatically. Make sure to handle this manually.",
       );
     }
+
+    if (this.metadata.relations.length > 0) {
+      this.logger.warn(
+        "This version of @lindorm/mongo does not support relations. Make sure to handle this manually or keep your eye open for updates.",
+      );
+    }
   }
 
   // public

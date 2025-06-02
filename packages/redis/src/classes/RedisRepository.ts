@@ -46,6 +46,12 @@ export class RedisRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
     this.metadata = metadata;
 
     this.client = options.client;
+
+    if (this.metadata.relations.length > 0) {
+      this.logger.warn(
+        "This version of @lindorm/redis does not support relations. Make sure to handle this manually or keep your eye open for updates.",
+      );
+    }
   }
 
   public async setup(): Promise<void> {}

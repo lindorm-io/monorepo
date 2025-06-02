@@ -45,6 +45,12 @@ export class MnemosRepository<
     this.incrementName = this.kit.getIncrementName(options);
     this.metadata = metadata;
     this.collection = this.cache.collection(this.collectionName, this.metadata);
+
+    if (this.metadata.relations.length > 0) {
+      this.logger.warn(
+        "This version of @lindorm/mnemos does not support relations. Make sure to handle this manually or keep your eye open for updates.",
+      );
+    }
   }
 
   // public
