@@ -21,6 +21,7 @@ describe("parseBody", () => {
       request: {
         body: "multipart",
       },
+      get: jest.fn(),
     };
 
     config = composeParseBodyConfig();

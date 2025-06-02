@@ -3,6 +3,7 @@ import CoBody from "co-body";
 import { Files } from "formidable";
 import { BodyType } from "../../../enums";
 import { ParseBodyConfig, PylonHttpContext } from "../../../types";
+import { getContentEncoding } from "./get-content-encoding";
 import { parseWithFormidable } from "./parse-with-formidable";
 
 type Result = {
@@ -11,7 +12,7 @@ type Result = {
   raw?: any;
 };
 
-const encoding = "utf-8";
+const UTF8 = "utf-8";
 const returnRawBody = true;
 const strict = true;
 
@@ -26,6 +27,8 @@ export const parseBody = async (
     config.multipart ?? config.formidable ?? config.formidableOptions !== undefined;
 
   const formidable = config.formidable ?? config.formidableOptions !== undefined;
+
+  const encoding = getContentEncoding(ctx.get("content-type")) ?? UTF8;
 
   switch (bodyType) {
     case BodyType.Json:
