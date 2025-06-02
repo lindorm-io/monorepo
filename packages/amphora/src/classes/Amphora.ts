@@ -311,9 +311,10 @@ export class Amphora implements IAmphora {
     this.logger.silly("Refreshing JWKS");
 
     this._jwks = Predicated.filter(this._vault, {
+      hasPublicKey: true,
+      hidden: false,
       isActive: true,
       isExternal: false,
-      hasPublicKey: true,
       issuer: this.domain,
     })
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
