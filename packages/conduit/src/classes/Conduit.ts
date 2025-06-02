@@ -33,7 +33,7 @@ export class Conduit implements IConduit {
   private readonly baseUrl: URL | undefined;
   private readonly config: ConfigContext;
   private readonly context: AppContext;
-  private readonly headers: Record<string, string>;
+  private readonly headers: Dict<string>;
   private readonly logger: ILogger | undefined;
   private readonly middleware: Array<ConduitMiddleware>;
   private readonly retryCallback: RetryCallback;
@@ -279,9 +279,9 @@ export class Conduit implements IConduit {
       ConduitContext<ResponseData, RequestBody, RequestParams, RequestQuery>
     >(context, [
       ...(this.logger ? [responseLogger] : []),
+      defaultHeaders,
       ...this.middleware,
       ...middleware,
-      defaultHeaders,
       ...(this.logger ? [requestLogger] : []),
       ...(using === ConduitUsing.Axios ? [axiosRequestHandler] : [fetchRequestHandler]),
     ]);

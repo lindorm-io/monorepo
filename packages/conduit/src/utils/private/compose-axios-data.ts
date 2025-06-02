@@ -1,3 +1,4 @@
+import { Dict } from "@lindorm/types";
 import type ServerFormData from "form-data";
 import { ConduitContext } from "../../types";
 
@@ -12,8 +13,8 @@ const newServerFormData = async (): Promise<ServerFormData> => {
 };
 
 type Result = {
-  data: ServerFormData | FormData | Record<string, unknown> | undefined;
-  headers: Record<string, string>;
+  data: ServerFormData | FormData | Dict<unknown> | undefined;
+  headers: Dict<string>;
 };
 
 export const composeAxiosData = async (ctx: ConduitContext): Promise<Result> => {

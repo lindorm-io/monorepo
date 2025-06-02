@@ -17,7 +17,7 @@ export type SagaEventHandlerContext<
   dispatch(command: D, options?: SagaDispatchOptions): void;
   mergeState(data: Partial<S>): void;
   setState(state: S): void;
-  timeout(name: string, data: Record<string, any>, delay: number): void;
+  timeout(name: string, data: Dict, delay: number): void;
 };
 
 export type SagaEventHandlerFileAggregate = {

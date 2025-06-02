@@ -1,4 +1,5 @@
 import { createMockLogger } from "@lindorm/logger";
+import { Dict } from "@lindorm/types";
 import MockDate from "mockdate";
 import {
   Column,
@@ -95,7 +96,7 @@ describe("EntityKit", () => {
     number!: number;
 
     @Column("object")
-    object!: Record<string, any>;
+    object!: Dict;
 
     @Column("string", { readonly: true })
     string!: string;

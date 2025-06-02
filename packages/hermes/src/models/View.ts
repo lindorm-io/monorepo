@@ -17,7 +17,7 @@ export class View<S extends Dict = Dict> implements IView<S> {
   private readonly _processedCausationIds: Array<string>;
   private readonly _revision: number;
   private _destroyed: boolean;
-  private _meta: Record<string, any>;
+  private _meta: Dict;
   private _state: S;
 
   private readonly logger: ILogger;
@@ -42,7 +42,7 @@ export class View<S extends Dict = Dict> implements IView<S> {
     return this._destroyed;
   }
 
-  public get meta(): Record<string, any> {
+  public get meta(): Dict {
     return this._meta;
   }
 

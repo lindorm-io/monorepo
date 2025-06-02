@@ -1,5 +1,6 @@
 import { Environment } from "@lindorm/enums";
 import { RetryConfig } from "@lindorm/retry";
+import { Dict } from "@lindorm/types";
 import { Readable } from "stream";
 import { ConfigContext } from "./overrides";
 import { RetryCallback } from "./retry";
@@ -16,16 +17,12 @@ export type RequestMetadata = {
   sessionId: string | null;
 };
 
-export type RequestContext<
-  Body = Record<string, any>,
-  Params = Record<string, any>,
-  Query = Record<string, any>,
-> = {
+export type RequestContext<Body = Dict, Params = Dict, Query = Dict> = {
   body: Body | undefined;
   config: ConfigContext;
   filename: string | undefined;
   form: FormData | undefined;
-  headers: Record<string, any>;
+  headers: Dict<string>;
   metadata: RequestMetadata;
   params: Params;
   query: Query;

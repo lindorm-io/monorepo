@@ -4,6 +4,7 @@ import { B64U } from "../../constants/private";
 import { AesError } from "../../errors";
 import { AesEncryptionRecord } from "../../types";
 import { AesStringValues } from "../../types/private";
+import { Dict } from "@lindorm/types";
 
 const regex = /(?<key>[a-z0-9]+)=(?<value>.+)/g;
 
@@ -63,7 +64,7 @@ export const parseTokenisedAesString = (data: string): AesEncryptionRecord => {
 
   const encryption = enc as KryptosEncryption;
   const items = array.split(",");
-  const values: Record<string, string> = {};
+  const values: Dict<string> = {};
 
   for (const item of items) {
     const match = new RegExp(regex).exec(item);

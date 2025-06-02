@@ -1,6 +1,7 @@
 import { isBefore } from "@lindorm/date";
 import { LindormError } from "@lindorm/errors";
 import { isEqual, isObject } from "@lindorm/is";
+import { Dict } from "@lindorm/types";
 
 type Meta = { value: any; destroyed: boolean; timestamp: Date };
 
@@ -111,14 +112,14 @@ export const composeArrayMetadata = (
   return { state, meta };
 };
 
-export const composeObjectMetadata = <TState = Record<string, any>>(
-  currentObject: Record<string, any> = {},
-  inputObject: Record<string, any> = {},
-  metadata: Record<string, any> = {},
+export const composeObjectMetadata = <T = Dict>(
+  currentObject: Dict = {},
+  inputObject: Dict = {},
+  metadata: Dict = {},
   timestamp: Date,
-): ObjectResult<TState> => {
-  const state: Record<string, any> = {};
-  const meta: Record<string, Meta> = metadata;
+): ObjectResult<T> => {
+  const state: Dict = {};
+  const meta: Dict<Meta> = metadata;
 
   for (const key in currentObject) {
     const metaTime = metadata[key] ? metadata[key].timestamp : metadata.timestamp;
@@ -262,5 +263,5 @@ export const composeObjectMetadata = <TState = Record<string, any>>(
     }
   }
 
-  return { state: state as TState, meta };
+  return { state: state as T, meta };
 };

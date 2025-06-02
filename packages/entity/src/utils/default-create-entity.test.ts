@@ -1,3 +1,4 @@
+import { Dict } from "@lindorm/types";
 import MockDate from "mockdate";
 import {
   Column,
@@ -94,7 +95,7 @@ describe("defaultCreateEntity", () => {
       number!: number;
 
       @Column("object")
-      object!: Record<string, any>;
+      object!: Dict;
 
       @Column("string")
       string!: string;
@@ -136,7 +137,7 @@ describe("defaultCreateEntity", () => {
       number!: number;
 
       @Column("object", { fallback: {} })
-      object!: Record<string, any>;
+      object!: Dict;
 
       @Column("string", { fallback: "string" })
       string!: string;
@@ -178,7 +179,7 @@ describe("defaultCreateEntity", () => {
       number!: number;
 
       @Column("object", { fallback: {} })
-      object!: Record<string, any>;
+      object!: Dict;
 
       @Column("string", { fallback: "string" })
       string!: string;

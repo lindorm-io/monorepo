@@ -1,3 +1,4 @@
+import { Dict } from "@lindorm/types";
 import { IHermesMessage } from "../../interfaces";
 
 export interface SagaStoreAttributes {
@@ -8,7 +9,7 @@ export interface SagaStoreAttributes {
   messages_to_dispatch: Array<IHermesMessage>;
   processed_causation_ids: Array<string>;
   revision: number;
-  state: Record<string, any>;
+  state: Dict;
   created_at: Date;
   updated_at: Date;
 }

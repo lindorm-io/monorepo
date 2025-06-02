@@ -2,6 +2,7 @@ import { snakeCase } from "@lindorm/case";
 import { LindormError } from "@lindorm/errors";
 import { ILogger } from "@lindorm/logger";
 import { IScanData, IScanner, Scanner } from "@lindorm/scanner";
+import { Dict } from "@lindorm/types";
 import { uniq } from "@lindorm/utils";
 import { z } from "zod";
 import {
@@ -52,8 +53,8 @@ export class HermesScanner {
   public readonly sagaEventHandlers: Array<IHermesSagaEventHandler>;
   public readonly viewEventHandlers: Array<IHermesViewEventHandler>;
 
-  public readonly commandAggregates: Record<string, Array<string>>;
-  public readonly eventAggregates: Record<string, Array<string>>;
+  public readonly commandAggregates: Dict<Array<string>>;
+  public readonly eventAggregates: Dict<Array<string>>;
 
   public constructor(options: HermesConfig, logger: ILogger) {
     this.logger = logger;

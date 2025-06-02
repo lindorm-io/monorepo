@@ -40,7 +40,7 @@ const parseValue = (value: string | undefined): any => {
 export const parseStringRecord = <T = any>(
   record: Dict<string | undefined | Array<string | undefined>>,
 ): Dict<T> => {
-  const result: Dict<any> = {};
+  const result: Dict = {};
 
   for (const [key, value] of Object.entries(record)) {
     if (value === undefined) {

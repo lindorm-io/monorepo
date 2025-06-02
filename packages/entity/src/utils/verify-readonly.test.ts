@@ -1,3 +1,4 @@
+import { Dict } from "@lindorm/types";
 import MockDate from "mockdate";
 import { Column, Entity, PrimaryKeyColumn } from "../decorators";
 import { defaultCreateEntity } from "./default-create-entity";
@@ -36,7 +37,7 @@ describe("verifyReadonly", () => {
       boolean!: boolean;
 
       @Column("object", { fallback: {} })
-      object!: Record<string, any>;
+      object!: Dict;
     }
 
     const original = defaultCreateEntity<TestRemoveReadonly>(TestRemoveReadonly);

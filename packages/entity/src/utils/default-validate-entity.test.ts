@@ -1,3 +1,4 @@
+import { Dict } from "@lindorm/types";
 import { Column, Entity, PrimaryKeyColumn } from "../decorators";
 import { defaultCreateEntity } from "./default-create-entity";
 import { defaultValidateEntity } from "./default-validate-entity";
@@ -36,7 +37,7 @@ describe("defaultValidateEntity", () => {
       number!: number;
 
       @Column("object", { fallback: {} })
-      object!: Record<string, any>;
+      object!: Dict;
 
       @Column("string", { fallback: "string" })
       string!: string;

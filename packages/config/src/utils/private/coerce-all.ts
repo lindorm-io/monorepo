@@ -1,3 +1,4 @@
+import { Dict } from "@lindorm/types";
 import { z, ZodFirstPartyTypeKind, ZodTypeAny } from "zod";
 
 export const coerceAll = <T extends ZodTypeAny>(schema: T): T => {
@@ -23,8 +24,8 @@ export const coerceAll = <T extends ZodTypeAny>(schema: T): T => {
       return z.array(coerceAll(def.type), def) as any;
 
     case ZodFirstPartyTypeKind.ZodObject: {
-      const shape = (def.shape as () => Record<string, ZodTypeAny>)();
-      const newShape: Record<string, ZodTypeAny> = {};
+      const shape = (def.shape as () => Dict<ZodTypeAny>)();
+      const newShape: Dict<ZodTypeAny> = {};
       for (const key in shape) {
         newShape[key] = coerceAll(shape[key]);
       }

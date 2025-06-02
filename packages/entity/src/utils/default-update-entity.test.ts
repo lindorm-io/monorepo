@@ -1,3 +1,4 @@
+import { Dict } from "@lindorm/types";
 import MockDate from "mockdate";
 import {
   Column,
@@ -48,7 +49,7 @@ describe("defaultUpdateEntity", () => {
       boolean!: boolean;
 
       @Column("object", { fallback: {} })
-      object!: Record<string, any>;
+      object!: Dict;
     }
 
     const original = defaultCreateEntity<TestUpdateEntity>(TestUpdateEntity, {

@@ -17,7 +17,7 @@ export const createHttpCookiesMiddleware = (
   config.encoding = config.encoding || "base64url";
 
   return async function httpCookiesMiddleware(ctx, next) {
-    const cache: Dict<any> = {};
+    const cache: Dict = {};
     const parsed = parseCookieHeader(ctx.get("cookie"));
 
     let cookies: Array<PylonCookie> = [];

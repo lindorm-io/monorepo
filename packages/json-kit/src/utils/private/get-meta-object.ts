@@ -3,7 +3,7 @@ import { Dict } from "@lindorm/types";
 import { getMetaArray } from "./get-meta-array";
 import { getMetaType } from "./get-meta-type";
 
-export const getMetaObject = (input: Dict): Record<string, string> => {
+export const getMetaObject = (input: Dict): Dict<string> => {
   const result: Dict = {};
 
   for (const [key, value] of Object.entries(input)) {

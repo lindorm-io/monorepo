@@ -1,6 +1,6 @@
 import { HttpMethod } from "@lindorm/enums";
 import { RetryOptions } from "@lindorm/retry";
-import { Dict, Header, Param, Query } from "@lindorm/types";
+import { Dict, Param, Query } from "@lindorm/types";
 import { Readable } from "stream";
 import { ConduitUsing, ExpectedResponse } from "../enums";
 import { ConduitMiddleware } from "./conduit";
@@ -19,7 +19,7 @@ export type RequestOptions<D = any, B = Dict, P = Dict<Param>, Q = Dict<Query>> 
   expectedResponse?: ExpectedResponse;
   filename?: string;
   form?: FormData;
-  headers?: Dict<Header>;
+  headers?: Dict<string>;
   middleware?: Array<ConduitMiddleware<D, B, P, Q>>;
   params?: P;
   query?: Q;

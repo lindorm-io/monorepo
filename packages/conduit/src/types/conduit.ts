@@ -2,6 +2,7 @@ import { Environment } from "@lindorm/enums";
 import { ILogger } from "@lindorm/logger";
 import { Middleware } from "@lindorm/middleware";
 import { RetryOptions } from "@lindorm/retry";
+import { Dict } from "@lindorm/types";
 import { ConduitUsing } from "../enums";
 import { AppContext, RequestContext } from "./context";
 import { ConfigOptions } from "./overrides";
@@ -10,9 +11,9 @@ import { RetryCallback } from "./retry";
 
 export type ConduitContext<
   ResponseData = any,
-  RequestBody = Record<string, any>,
-  RequestParams = Record<string, any>,
-  RequestQuery = Record<string, any>,
+  RequestBody = Dict,
+  RequestParams = Dict,
+  RequestQuery = Dict,
 > = {
   app: AppContext;
   logger?: ILogger;
@@ -32,7 +33,7 @@ export type ConduitOptions = {
   baseUrl?: URL | string;
   config?: ConfigOptions;
   environment?: Environment;
-  headers?: Record<string, any>;
+  headers?: Dict;
   logger?: ILogger;
   middleware?: Array<ConduitMiddleware>;
   retryCallback?: RetryCallback;

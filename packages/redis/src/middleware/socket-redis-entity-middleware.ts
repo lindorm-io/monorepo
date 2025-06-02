@@ -42,8 +42,8 @@ export const createSocketRedisEntityMiddleware =
         });
       }
 
-      const paths: Dict<any> = isObject(path) ? path : { [primaryKey!.key]: path };
-      const filter: Dict<any> = {};
+      const paths: Dict = isObject(path) ? path : { [primaryKey!.key]: path };
+      const filter: Dict = {};
 
       for (const [key, objectPath] of Object.entries(paths)) {
         filter[key] = get(ctx, objectPath);

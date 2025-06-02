@@ -1,11 +1,12 @@
 import { isArray, isFinite, isFunction, isObject, isString } from "@lindorm/is";
+import { Dict } from "@lindorm/types";
 import { v4 as uuid } from "uuid";
 
 export type LindormErrorAttributes = {
   id: string;
   code: string | null;
-  data: Record<string, any>;
-  debug: Record<string, any>;
+  data: Dict;
+  debug: Dict;
   details: string | null;
   errors: Array<string>;
   message: string;
@@ -19,8 +20,8 @@ export type LindormErrorAttributes = {
 export type LindormErrorOptions = {
   id?: string;
   code?: string;
-  data?: Record<string, any>;
-  debug?: Record<string, any>;
+  data?: Dict;
+  debug?: Dict;
   details?: string;
   error?: Error;
   status?: number;
@@ -31,8 +32,8 @@ export type LindormErrorOptions = {
 export class LindormError extends Error {
   public readonly id: string;
   public readonly code: string | null;
-  public readonly data: Record<string, any>;
-  public readonly debug: Record<string, any>;
+  public readonly data: Dict;
+  public readonly debug: Dict;
   public readonly details: string | null;
   public readonly errors: Array<string>;
   public readonly status: number;

@@ -1,5 +1,7 @@
-export const extractSearchParams = <T = Record<string, any>>(url: URL): T => {
-  const query: Record<string, any> = {};
+import { Dict } from "@lindorm/types";
+
+export const extractSearchParams = <T = Dict>(url: URL): T => {
+  const query: Dict = {};
 
   url.searchParams.forEach((value, key) => {
     if (/\d+/.test(value)) {

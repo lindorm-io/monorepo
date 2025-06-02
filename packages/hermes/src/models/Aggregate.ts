@@ -60,7 +60,7 @@ export class Aggregate<S extends Dict = Dict> implements IAggregate {
     return this._numberOfLoadedEvents;
   }
 
-  public get state(): Record<string, any> {
+  public get state(): Dict {
     return this._state;
   }
 

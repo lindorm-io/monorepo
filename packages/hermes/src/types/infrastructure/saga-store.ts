@@ -1,6 +1,7 @@
 import { ILogger } from "@lindorm/logger";
 import { IMongoSource } from "@lindorm/mongo";
 import { IPostgresSource } from "@lindorm/postgres";
+import { Dict } from "@lindorm/types";
 import { IHermesMessage, ISagaStore } from "../../interfaces";
 import { SagaIdentifier } from "../identifiers";
 
@@ -21,5 +22,5 @@ export type SagaUpdateAttributes = {
   messages_to_dispatch: Array<IHermesMessage>;
   processed_causation_ids: Array<string>;
   revision: number;
-  state: Record<string, any>;
+  state: Dict;
 };

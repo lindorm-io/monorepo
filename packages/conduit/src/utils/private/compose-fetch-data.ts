@@ -1,8 +1,9 @@
+import { Dict } from "@lindorm/types";
 import { ConduitContext } from "../../types";
 
 type Result = {
   body: FormData | URLSearchParams | string | undefined;
-  headers: Record<string, string>;
+  headers: Dict<string>;
 };
 
 export const composeFetchData = (ctx: ConduitContext): Result => {

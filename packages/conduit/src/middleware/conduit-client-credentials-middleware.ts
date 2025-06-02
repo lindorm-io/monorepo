@@ -1,7 +1,7 @@
 import { ChangeCase } from "@lindorm/case";
 import { isArray, isString } from "@lindorm/is";
 import { ILogger } from "@lindorm/logger";
-import { OpenIdConfigurationResponse, OpenIdTokenResponse } from "@lindorm/types";
+import { Dict, OpenIdConfigurationResponse, OpenIdTokenResponse } from "@lindorm/types";
 import { Conduit } from "../classes";
 import { ConduitUsing } from "../enums";
 import { ConduitError } from "../errors";
@@ -98,7 +98,7 @@ export const conduitClientCredentialsMiddleware = (
     const contentType = config.contentType ?? "application/json";
     const requestOptions: RequestOptions = {};
 
-    const requestContent: Record<string, string> = {
+    const requestContent: Dict<string> = {
       ...(audience !== DEFAULT ? { audience } : {}),
       grant_type: "client_credentials",
       ...(scope.length > 0 ? { scope: scope.join(" ") } : {}),

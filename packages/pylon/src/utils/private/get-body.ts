@@ -1,7 +1,8 @@
 import { isNumber } from "@lindorm/is";
+import { Dict } from "@lindorm/types";
 import { PylonHandlerResult } from "../../types";
 
-type Body = Record<string, any> | undefined;
+type Body = Dict | undefined;
 
 export const getBody = (response: PylonHandlerResult): Body => {
   const { body, file, status, stream } = response;

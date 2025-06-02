@@ -1,3 +1,4 @@
+import { Dict } from "@lindorm/types";
 import MockDate from "mockdate";
 import {
   Column,
@@ -86,7 +87,7 @@ describe("defaultCloneEntity", () => {
       enum!: TestEnum;
 
       @Column("object", { fallback: {} })
-      object!: Record<string, any>;
+      object!: Dict;
 
       @Column("string")
       @Index({ unique: true })
