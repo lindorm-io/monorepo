@@ -6,7 +6,7 @@ import { PylonHttpContext, PylonHttpMiddleware } from "../../types";
 
 type From = "data" | "body" | "headers" | "params" | "query" | string;
 
-const destructHeaders = (ctx: PylonHttpContext): Record<string, string> => {
+const destructHeaders = (ctx: PylonHttpContext): Dict<string> => {
   const result: Dict = {};
 
   for (const [key, value] of Object.entries(ctx.headers)) {

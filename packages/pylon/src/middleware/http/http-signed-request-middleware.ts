@@ -1,4 +1,5 @@
 import { SignatureKit } from "@lindorm/aegis";
+import { snakeKeys } from "@lindorm/case";
 import { ClientError } from "@lindorm/errors";
 import { IKryptos } from "@lindorm/kryptos";
 import { ShaKit } from "@lindorm/sha";
@@ -74,7 +75,7 @@ const verifyDigest = <C extends PylonHttpContext = PylonHttpContext>(
   decoded: DecodedDigest,
 ): void =>
   new ShaKit({ algorithm: decoded.algorithm, encoding: decoded.encoding }).assert(
-    JSON.stringify(ctx.request.body),
+    JSON.stringify(snakeKeys(ctx.request.body)),
     decoded.hash,
   );
 

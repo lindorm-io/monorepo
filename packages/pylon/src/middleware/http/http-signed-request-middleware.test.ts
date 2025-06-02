@@ -57,7 +57,7 @@ describe("httpSignedRequestMiddleware", () => {
     const bodyHash = shaKit.hash(JSON.stringify(body));
 
     digest = [`algorithm="SHA384"`, `encoding="base64url"`, `hash="${bodyHash}"`].join(
-      ";",
+      "; ",
     );
 
     headers = {
@@ -76,7 +76,7 @@ describe("httpSignedRequestMiddleware", () => {
       `hash="${headersHash}"`,
       `headers="${Object.keys(headers).join(",")}"`,
       `key="${kryptos.id}"`,
-    ].join(";");
+    ].join("; ");
 
     ctx = {
       logger: createMockLogger(),

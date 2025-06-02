@@ -5,6 +5,7 @@ import { ServerError } from "@lindorm/errors";
 import { isArray, isObject } from "@lindorm/is";
 import { KryptosKit } from "@lindorm/kryptos";
 import { ILogger, Logger, LogLevel } from "@lindorm/logger";
+import { randomBytes } from "crypto";
 import { readFileSync } from "fs";
 import MockDate from "mockdate";
 import nock from "nock";
@@ -15,6 +16,10 @@ import {
   OPEN_ID_CONFIGURATION_RESPONSE,
   OPEN_ID_JWKS_RESPONSE,
 } from "../__fixtures__/auth0";
+import {
+  conduitSignedRequestMiddleware,
+  createHttpSignedRequestMiddleware,
+} from "../middleware";
 import { PylonHttpMiddleware } from "../types";
 import { Pylon } from "./Pylon";
 import { PylonRouter } from "./PylonRouter";
@@ -110,6 +115,19 @@ describe("Pylon", () => {
         use: "enc",
       }),
     );
+
+    amphora.add(
+      KryptosKit.from.b64({
+        id: "257ba848-a577-5c3f-9bdc-ff3ef3f69fa0",
+        algorithm: "EdDSA",
+        curve: "Ed25519",
+        hidden: true,
+        privateKey: "MC4CAQAwBQYDK2VwBCIEIHz8wdpCMi7g2mLiYK8UbwsK-mek7rE5hEi-XJXI53sy",
+        publicKey: "MCowBQYDK2VwAyEAN9ZHC3n7N-ie40H0DkXuRfHQziEPu-YhDgORjHmuneU",
+        type: "OKP",
+        use: "sig",
+      }),
+    );
   });
 
   beforeEach(async () => {
@@ -200,6 +218,16 @@ describe("Pylon", () => {
       ctx.body = ctx.state.session;
       ctx.status = 200;
     });
+
+    router.post(
+      "/signed",
+      createHttpSignedRequestMiddleware(async (_, id) => amphora.find({ id }), {
+        required: true,
+      }),
+      async (ctx) => {
+        ctx.status = 204;
+      },
+    );
 
     router.post("/upload", async (ctx) => {
       if (isObject(ctx.request.files)) {
@@ -597,6 +625,36 @@ describe("Pylon", () => {
       scope: ["openid"],
       subject: "5399df4a-a3d9-5a62-ba81-91dd11f69b6f",
     });
+  });
+
+  test("should sign request", async () => {
+    const date = new Date().toUTCString();
+    const test = randomBytes(32).toString("base64url");
+    const randomString = randomBytes(16).toString("base64url");
+
+    const mockContext: any = {
+      req: {
+        body: { foo: "bar", baz: 42, randomString },
+        headers: { date, test },
+      },
+    };
+
+    const kryptos = amphora.findSync({ id: "257ba848-a577-5c3f-9bdc-ff3ef3f69fa0" });
+
+    await conduitSignedRequestMiddleware({ kryptos })(mockContext, jest.fn());
+
+    await request(pylon.callback)
+      .post("/test/signed")
+      .set("date", mockContext.req.headers.date)
+      .set("test", mockContext.req.headers.test)
+      .set("digest", mockContext.req.headers.digest)
+      .set("signature", mockContext.req.headers.signature)
+      .send({
+        foo: "bar",
+        baz: 42,
+        random_string: randomString,
+      })
+      .expect(204);
   });
 
   test("should upload a file using formidable", async () => {
