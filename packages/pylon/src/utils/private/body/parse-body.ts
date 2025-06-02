@@ -20,7 +20,7 @@ export const parseBody = async (
   config: ParseBodyConfig,
   bodyType: BodyType,
 ): Promise<Result> => {
-  const { json = "1mb", form = "56kb", text = "56kb" } = config.limits ?? {};
+  const { json = "10mb", form = "1mb", text = "1mb" } = config.limits ?? {};
 
   const multipart =
     config.multipart ?? config.formidable ?? config.formidableOptions !== undefined;
