@@ -212,6 +212,13 @@ export class GlobalEntityMetadata {
         });
       }
 
+      if (decorator === "Column" && column.type === "enum" && !column.enum) {
+        throw new EntityMetadataError("Invalid @Column enum", {
+          details: "@Column enum type requires an enum option",
+          debug: { Entity: target.name, column: column.key },
+        });
+      }
+
       if (decorator === "PrimaryKeyColumn") {
         const primaryKey = column;
         const versionKey = columns.find((a) => a.decorator === "VersionKeyColumn");
