@@ -1,20 +1,17 @@
 import { isArray, isObject } from "@lindorm/is";
-import { Dict } from "@lindorm/types";
 import fastSafeStringify from "fast-safe-stringify";
 import { blue, cyan, gray, green, red, white, yellow } from "picocolors";
 import { Formatter } from "picocolors/types";
-import { inspect } from "util";
 import { LogLevel } from "../../enums";
 import { LogContent } from "../../types";
 import { InternalLog } from "../../types/private";
+import { inspectDictionary } from "../inspect-dictionary";
 
 const colourise = (
   formatter: Formatter,
   input: string,
   colours: boolean = true,
 ): string => (colours ? formatter(input) : input);
-
-const sanitise = (dict: Dict): Dict => JSON.parse(fastSafeStringify(dict));
 
 const formatLevel = (level: LogLevel, colours: boolean = true): string => {
   switch (level) {
@@ -50,20 +47,11 @@ const levelColor = (level: LogLevel, input: string, colours: boolean = true): st
   }
 };
 
-const formatContent = (dict: Dict, colours: boolean = true): string =>
-  inspect(sanitise(dict), {
-    colors: colours !== false,
-    depth: Infinity,
-    compact: 5,
-    breakLength: process.stdout.columns ? process.stdout.columns - 10 : 140,
-    sorted: true,
-  });
-
 const colouriseError = (error: Error, colours: boolean = true): string => {
   const { errors, stack, ...rest } = error as any;
 
   if (Object.keys(rest).length) {
-    const content = formatContent(rest, false);
+    const content = inspectDictionary(rest, false);
     return `${colourise(red, stack, colours)}\n${colourise(red, content, colours)}`;
   }
 
@@ -87,7 +75,7 @@ const readableContent = (
   }
 
   if (isObject(content)) {
-    return formatContent(content, colours);
+    return inspectDictionary(content, colours);
   }
 };
 
