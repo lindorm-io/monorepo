@@ -34,6 +34,10 @@ describe("loadConfig", () => {
       fourArray: [1, 2, 3],
       fiveArray: [1, 2, 3],
       sixNumberString: "987",
+      seven: {
+        boolean: false,
+        nope: true,
+      },
       withDotEnvReplacement: "two",
     });
   });

@@ -15,6 +15,8 @@ describe("configuration", () => {
       TWO_ARRAY: '["four", "five", "six"]',
       THREE_ARRAY: '["seven","eight","nine"]',
       FOUR_ARRAY: "[1,2,3]",
+      SEVEN_BOOLEAN: "true",
+      SEVEN_NOPE: "false",
       npm_package_name: "@lindorm/config",
       npm_package_version: "0.0.0",
     };
@@ -43,6 +45,10 @@ describe("configuration", () => {
       fourArray: z.array(z.number()),
       fiveArray: z.array(z.string()),
       sixNumberString: z.number(),
+      seven: z.object({
+        boolean: z.boolean(),
+        nope: z.boolean(),
+      }),
       withDotEnvReplacement: z.string().optional(),
     });
 
@@ -64,6 +70,10 @@ describe("configuration", () => {
       fourArray: [1, 2, 3],
       fiveArray: ["one", "two", "three"],
       sixNumberString: 987,
+      seven: {
+        boolean: true,
+        nope: false,
+      },
       withDotEnvReplacement: "two",
       npm: { package: { name: "@lindorm/config", version: "0.0.0" } },
     });

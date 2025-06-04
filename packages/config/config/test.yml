@@ -22,4 +22,8 @@ five_array:
 
 six_number_string: "987"
 
+seven:
+  boolean: false
+  nope: true
+
 with_dot_env_replacement: "one"
