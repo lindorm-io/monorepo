@@ -6,6 +6,7 @@ export type LindormWorkerConfig = {
   alias: string;
   callback: LindormWorkerCallback;
   interval: ReadableTime | number | undefined;
+  randomize: ReadableTime | number | undefined;
   retry: RetryOptions | undefined;
 };
 

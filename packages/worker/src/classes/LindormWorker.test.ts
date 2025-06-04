@@ -43,6 +43,8 @@ describe("LindormWorker", () => {
     worker.start();
 
     expect(worker.running).toEqual(true);
+    expect(worker.started).toEqual(true);
+    expect(worker.latestStart).toEqual(expect.any(Date));
 
     await wait(1);
 
@@ -61,6 +63,7 @@ describe("LindormWorker", () => {
     worker.start();
 
     expect(worker.running).toEqual(true);
+    expect(worker.started).toEqual(true);
 
     await wait(2);
 

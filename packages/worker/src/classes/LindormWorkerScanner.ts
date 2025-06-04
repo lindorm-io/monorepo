@@ -1,4 +1,4 @@
-import { ReadableTime } from "@lindorm/date";
+import { isReadableTime } from "@lindorm/date";
 import { isFunction, isNumber, isObject, isString } from "@lindorm/is";
 import { IScanData, Scanner } from "@lindorm/scanner";
 import { LindormWorkerScannerError } from "../errors";
@@ -67,8 +67,12 @@ export class LindormWorkerScanner {
       result.callback = module.callback;
     }
 
-    if (isString<ReadableTime>(module.interval) || isNumber(module.interval)) {
+    if (isReadableTime(module.interval) || isNumber(module.interval)) {
       result.interval = module.interval;
+    }
+
+    if (isReadableTime(module.randomize) || isNumber(module.randomize)) {
+      result.randomize = module.randomize;
     }
 
     if (

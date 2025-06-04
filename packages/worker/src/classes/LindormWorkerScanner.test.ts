@@ -7,6 +7,7 @@ const workerConfig: LindormWorkerConfig = {
   alias: "CustomWorker",
   callback: async () => {},
   interval: 1000,
+  randomize: 100,
   retry: {
     maxAttempts: 10,
     strategy: RetryStrategy.Exponential,
@@ -28,6 +29,7 @@ describe("LindormWorkerScanner", () => {
         alias: "WorkerOne",
         callback: expect.any(Function),
         interval: "1w",
+        randomize: "1h",
         retry: {
           maxAttempts: 10,
           strategy: "linear",

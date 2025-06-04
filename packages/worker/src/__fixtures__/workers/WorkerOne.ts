@@ -8,6 +8,8 @@ export const callback: LindormWorkerCallback = async (ctx) => {
 
 export const interval: ReadableTime = "1w";
 
+export const randomize: ReadableTime = "1h";
+
 export const retry: RetryOptions = {
   maxAttempts: 10,
   strategy: RetryStrategy.Linear,

@@ -8,5 +8,6 @@ export type LindormWorkerOptions<T = unknown> = {
   callback: LindormWorkerCallback<T>;
   interval: ReadableTime | number;
   logger: ILogger;
+  randomize?: ReadableTime | number;
   retry?: RetryOptions;
 };

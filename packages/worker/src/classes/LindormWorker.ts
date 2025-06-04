@@ -1,5 +1,5 @@
-import { ms } from "@lindorm/date";
-import { isString } from "@lindorm/is";
+import { isReadableTime, ms } from "@lindorm/date";
+import { isNumber } from "@lindorm/is";
 import { ILogger } from "@lindorm/logger";
 import { RetryConfig, calculateRetry } from "@lindorm/retry";
 import { sleep } from "@lindorm/utils";
@@ -10,43 +10,62 @@ import { ILindormWorker } from "../interfaces";
 import { LindormWorkerCallback, LindormWorkerOptions } from "../types";
 
 export class LindormWorker<T = unknown> implements ILindormWorker<T> {
+  public readonly alias: string;
+
   private readonly callback: LindormWorkerCallback<T>;
   private readonly emitter: EventEmitter;
   private readonly interval: number;
   private readonly logger: ILogger;
+  private readonly randomize: number;
   private readonly retry: RetryConfig;
-  private timeout: NodeJS.Timeout | null;
 
-  private readonly _alias: string;
   private _latestError: Date | null;
+  private _latestStart: Date | null;
+  private _latestStop: Date | null;
   private _latestSuccess: Date | null;
   private _latestTry: Date | null;
   private _running: boolean;
   private _seq: number;
+  private _started: boolean;
+  private _timeout: NodeJS.Timeout | null;
 
   public constructor(options: LindormWorkerOptions<T>) {
     this.emitter = new EventEmitter();
     this.logger = options.logger.child(["LindormWorker", options.alias]);
 
-    this._alias = options.alias;
+    this.alias = options.alias;
     this.retry = { ...RETRY_CONFIG, ...(options.retry ?? {}) };
     this.callback = options.callback;
-    this.interval = isString(options.interval) ? ms(options.interval) : options.interval;
+    this.randomize = isReadableTime(options.randomize)
+      ? ms(options.randomize)
+      : isNumber(options.randomize)
+        ? options.randomize
+        : 0;
+    this.interval = isReadableTime(options.interval)
+      ? ms(options.interval)
+      : options.interval;
 
     this._latestError = null;
+    this._latestStart = null;
+    this._latestStop = null;
     this._latestSuccess = null;
     this._latestTry = null;
     this._running = false;
     this._seq = 0;
-    this.timeout = null;
-  }
-
-  public get alias(): string {
-    return this._alias;
+    this._started = false;
+    this._timeout = null;
   }
 
   public get latestError(): Date | null {
     return this._latestError;
+  }
+
+  public get latestStart(): Date | null {
+    return this._latestStart;
+  }
+
+  public get latestStop(): Date | null {
+    return this._latestStop;
   }
 
   public get latestSuccess(): Date | null {
@@ -65,6 +84,10 @@ export class LindormWorker<T = unknown> implements ILindormWorker<T> {
     return this._seq;
   }
 
+  public get started(): boolean {
+    return this._started;
+  }
+
   public on(evt: LindormWorkerEvent.Start, listener: () => void): void;
   public on(evt: LindormWorkerEvent.Stop, listener: () => void): void;
   public on(
@@ -78,25 +101,29 @@ export class LindormWorker<T = unknown> implements ILindormWorker<T> {
   }
 
   public start(): void {
-    if (this.timeout) return;
+    if (this._started) return;
+    if (this._timeout) return;
 
     this.logger.debug("Starting worker");
     this.emitter.emit(LindormWorkerEvent.Start);
 
-    this.run();
+    this._started = true;
+    this._latestStart = new Date();
 
-    this.timeout = setInterval(() => this.run(), this.interval);
+    this.run();
   }
 
   public stop(): void {
-    if (!this.timeout) return;
+    if (!this._timeout) return;
 
     this.logger.debug("Stopping worker");
     this.emitter.emit(LindormWorkerEvent.Stop);
 
-    clearInterval(this.timeout);
+    clearTimeout(this._timeout);
 
-    this.timeout = null;
+    this._timeout = null;
+    this._started = false;
+    this._latestStop = new Date();
   }
 
   public async trigger(): Promise<T | void> {
@@ -104,6 +131,10 @@ export class LindormWorker<T = unknown> implements ILindormWorker<T> {
   }
 
   // private
+
+  private get randomizedInterval(): number {
+    return this.interval + Math.floor(Math.random() * this.randomize);
+  }
 
   private async run(attempt = 0): Promise<T | void> {
     if (this._running && attempt === 0) return;
@@ -132,6 +163,10 @@ export class LindormWorker<T = unknown> implements ILindormWorker<T> {
         this._running = false;
         this._latestSuccess = new Date();
 
+        if (this._started) {
+          this._timeout = setTimeout(() => this.run(), this.randomizedInterval);
+        }
+
         return result;
       })
       .catch((err) => {
@@ -147,10 +182,14 @@ export class LindormWorker<T = unknown> implements ILindormWorker<T> {
           this._running = false;
           this._latestError = new Date();
 
-          this.logger.debug("Will not attempt any further retries", {
+          this.logger.debug("Will not attempt any further retries for this interval", {
             attempt,
             maxAttempts: this.retry.maxAttempts,
           });
+
+          if (this._started) {
+            this._timeout = setTimeout(() => this.run(), this.randomizedInterval);
+          }
         }
       });
   }
