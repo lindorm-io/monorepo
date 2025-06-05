@@ -1,19 +1,14 @@
 import { IAmphora } from "@lindorm/amphora";
-import { ReadableTime } from "@lindorm/date";
-import { RetryOptions } from "@lindorm/retry";
-import { LindormWorkerConfig } from "@lindorm/worker";
+import { CreateLindormWorkerOptions, LindormWorkerConfig } from "@lindorm/worker";
 
-type Options = {
+type Options = CreateLindormWorkerOptions & {
   amphora: IAmphora;
-  interval?: ReadableTime;
-  retry?: RetryOptions;
 };
 
 export const createAmphoraRefreshWorker = (options: Options): LindormWorkerConfig => ({
   alias: "AmphoraRefreshWorker",
-  interval: options.interval ?? "12h",
+  interval: options.interval ?? "15m",
   retry: options.retry,
-  callback: async (): Promise<void> => {
-    await options.amphora.refresh();
-  },
+  randomize: options.randomize,
+  callback: options.amphora.refresh.bind(options.amphora),
 });

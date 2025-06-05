@@ -10,6 +10,12 @@ export type LindormWorkerConfig = {
   retry: RetryOptions | undefined;
 };
 
+export type CreateLindormWorkerOptions = {
+  interval?: ReadableTime | number;
+  randomize?: ReadableTime | number;
+  retry?: RetryOptions;
+};
+
 export type LindormWorkerScannerInput = Array<LindormWorkerConfig | string>;
 
 export type LindormWorkerScannerOutput = Array<LindormWorkerConfig>;
