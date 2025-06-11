@@ -26,10 +26,10 @@ export const useSchema = <T extends ZodRawShape>(
       const output = schema.passthrough().parse(input);
 
       set(ctx, path, output);
-    } catch (err: any) {
-      throw new ClientError(err.message, {
-        error: err,
-        data: err.details,
+    } catch (error: any) {
+      throw new ClientError(error.message, {
+        error,
+        data: error.details,
       });
     }
 

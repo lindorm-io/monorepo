@@ -65,6 +65,7 @@ export class Pylon<
       cors: options.cors,
       domain: options.domain,
       environment: options.environment,
+      handlers: options.handlers,
       httpMiddleware: options.httpMiddleware,
       httpRouters: options.httpRouters,
       logger: this.logger,

@@ -6,7 +6,7 @@ export const useHandler = <C extends PylonHttpContext = PylonHttpContext>(
   handler: PylonHandler<C>,
 ): PylonHttpMiddleware<C> =>
   async function httpHandlerMiddleware(ctx, next) {
-    const start = Date.now();
+    const metric = ctx.metric("httpHandlerMiddleware");
 
     ctx.logger = ctx.logger.child([
       handler.name || handler.constructor.name || "handler",
@@ -19,11 +19,6 @@ export const useHandler = <C extends PylonHttpContext = PylonHttpContext>(
 
       ctx.body = getBody(result);
       ctx.status = getStatus(result);
-
-      ctx.webhook = {
-        event: result.webhook?.event ?? null,
-        data: result.webhook?.data ?? undefined,
-      };
 
       if (result.location) {
         ctx.set("location", result.location.toString());
@@ -72,16 +67,13 @@ export const useHandler = <C extends PylonHttpContext = PylonHttpContext>(
         redirect: result.redirect,
         status: ctx.status,
         stream: Boolean(result.stream),
-        webhook: Boolean(result.webhook),
-        time: Date.now() - start,
       });
-    } catch (error: any) {
-      ctx.logger.debug("Handler [ failure ]", {
-        error,
-        time: Date.now() - start,
-      });
+    } catch (err: any) {
+      ctx.logger.warn("Handler [ failure ]", err);
 
-      throw error;
+      throw err;
+    } finally {
+      metric.end();
     }
 
     await next();

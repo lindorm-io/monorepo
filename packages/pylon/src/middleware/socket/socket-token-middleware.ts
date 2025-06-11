@@ -13,7 +13,7 @@ export const socketTokenMiddleware =
   <C extends PylonSocketContext = PylonSocketContext>(options: Options) =>
   (path: string, optional: boolean = false): PylonSocketMiddleware<C> =>
     async function socketTokenMiddleware(ctx, next): Promise<void> {
-      const start = Date.now();
+      const metric = ctx.metric("socketTokenMiddleware");
 
       try {
         const token = get(ctx, path);
@@ -35,21 +35,19 @@ export const socketTokenMiddleware =
             subject: verified.payload.subject,
             subjectHint: verified.payload.subjectHint,
             tokenType: verified.payload.tokenType,
-            time: Date.now() - start,
           });
 
           ctx.socket.data.tokens[options.contextKey] = verified;
         }
       } catch (error: any) {
-        ctx.logger.debug("Token verification failed", {
-          error,
-          time: Date.now() - start,
-        });
+        ctx.logger.debug("Token verification failed", error);
 
         throw new ClientError(error.message, {
           error,
           status: ClientError.Status.Unauthorized,
         });
+      } finally {
+        metric.end();
       }
 
       await next();

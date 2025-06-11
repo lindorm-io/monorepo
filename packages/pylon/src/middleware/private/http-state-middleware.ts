@@ -1,21 +1,10 @@
-import {
-  addMilliseconds,
-  isAfter,
-  isBefore,
-  ms,
-  ReadableTime,
-  subMilliseconds,
-} from "@lindorm/date";
 import { Environment } from "@lindorm/enums";
-import { ClientError } from "@lindorm/errors";
 import { randomUUID } from "crypto";
 import { PylonHttpMiddleware } from "../../types";
 import { getAuthorization } from "../../utils/private";
 
 type Options = {
   environment?: Environment;
-  minRequestAge: ReadableTime;
-  maxRequestAge: ReadableTime;
   name?: string;
   version?: string;
 };
@@ -28,9 +17,6 @@ export const createHttpStateMiddleware = (options: Options): PylonHttpMiddleware
   return async function httpStateMiddleware(ctx, next) {
     try {
       const requestDate = ctx.get("date");
-
-      const minDate = subMilliseconds(new Date(), ms(options.minRequestAge));
-      const maxDate = addMilliseconds(new Date(), ms(options.maxRequestAge));
 
       ctx.state = {
         app: { environment, name, version },
@@ -46,29 +32,8 @@ export const createHttpStateMiddleware = (options: Options): PylonHttpMiddleware
         },
         session: null,
         tokens: {},
+        webhooks: [],
       };
-
-      if (isBefore(ctx.state.metadata.date, minDate)) {
-        throw new ClientError("Suspicious request denied", {
-          code: "replay_denied",
-          details: "Request has been identified as a likely replay attack",
-          data: {
-            actual: ctx.state.metadata.date.toISOString(),
-            expect: minDate.toISOString(),
-          },
-        });
-      }
-
-      if (isAfter(ctx.state.metadata.date, maxDate)) {
-        throw new ClientError("Suspicious request denied", {
-          code: "suspicious_request",
-          details: "Request has been identified as suspicious",
-          data: {
-            actual: ctx.state.metadata.date.toISOString(),
-            expect: maxDate.toISOString(),
-          },
-        });
-      }
 
       await next();
     } finally {

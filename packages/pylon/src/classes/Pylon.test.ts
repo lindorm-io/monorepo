@@ -29,7 +29,8 @@ MockDate.set(MockedDate);
 
 describe("Pylon", () => {
   let files: Array<string>;
-  let spy: any;
+  let handlerSpy: any;
+  let mwSpy: any;
   let pylon: Pylon;
   let router: PylonRouter;
   let amphora: IAmphora;
@@ -131,13 +132,14 @@ describe("Pylon", () => {
   });
 
   beforeEach(async () => {
-    spy = jest.fn();
+    handlerSpy = jest.fn();
+    mwSpy = jest.fn();
     files = [];
 
     const middlewareSpy: PylonHttpMiddleware = async (ctx, next) => {
       await next();
 
-      spy({
+      mwSpy({
         data: ctx.data,
         metadata: ctx.state.metadata,
       });
@@ -265,6 +267,13 @@ describe("Pylon", () => {
       ctx.status = 200;
     });
 
+    router.post("/webhook", async (ctx) => {
+      ctx.webhook("webhook_event", "webhook_data");
+
+      ctx.body = ctx.state.webhooks;
+      ctx.status = 200;
+    });
+
     pylon = new Pylon({
       amphora,
       logger,
@@ -282,6 +291,11 @@ describe("Pylon", () => {
         },
       },
       environment: Environment.Test,
+      handlers: {
+        health: () => handlerSpy("health"),
+        rightToBeForgotten: () => handlerSpy("rightToBeForgotten"),
+        webhook: () => handlerSpy("webhook"),
+      },
       httpMiddleware: [middlewareSpy],
       httpRouters: [{ path: "/test", router }],
       name: "@lindorm/pylon",
@@ -315,7 +329,8 @@ describe("Pylon", () => {
       .set("x-request-id", "request-id")
       .expect(204);
 
-    expect(spy).toHaveBeenCalledWith({
+    expect(handlerSpy).toHaveBeenCalledWith("health");
+    expect(mwSpy).toHaveBeenCalledWith({
       data: {},
       metadata: {
         correlationId: "correlation-id",
@@ -415,6 +430,27 @@ describe("Pylon", () => {
       issuer: "http://test.lindorm.io",
       jwks_uri: "http://test.lindorm.io/.well-known/jwks.json",
     });
+  });
+
+  test("should return well-known pylon-configuration", async () => {
+    const response = await request(pylon.callback)
+      .get("/.well-known/pylon-configuration")
+      .expect(200);
+
+    expect(response.body).toEqual({
+      domain: "http://test.lindorm.io",
+      environment: "test",
+      version: "0.0.1",
+    });
+  });
+
+  test("should return well-known right-to-be-forgotten", async () => {
+    await request(pylon.callback)
+      .get("/.well-known/right-to-be-forgotten")
+      .set("Authorization", "Bearer access_token")
+      .expect(204);
+
+    expect(handlerSpy).toHaveBeenCalledWith("rightToBeForgotten");
   });
 
   test("should handle auth", async () => {
@@ -557,7 +593,7 @@ describe("Pylon", () => {
       },
     });
 
-    expect(spy).toHaveBeenCalledWith(
+    expect(mwSpy).toHaveBeenCalledWith(
       expect.objectContaining({
         data: {
           bodyValue: "value",
@@ -581,7 +617,7 @@ describe("Pylon", () => {
       test_string: "test",
     });
 
-    expect(spy).toHaveBeenCalledWith(
+    expect(mwSpy).toHaveBeenCalledWith(
       expect.objectContaining({
         data: { testString: "test" },
       }),
@@ -700,5 +736,13 @@ describe("Pylon", () => {
         ownerId: "e9cea99a-9bcc-534e-a7ee-c58af70d33ad",
       }),
     );
+  });
+
+  test("should handle webhook", async () => {
+    const response = await request(pylon.callback).post("/test/webhook").expect(200);
+
+    expect(response.body).toEqual([{ event: "webhook_event", data: "webhook_data" }]);
+
+    expect(handlerSpy).toHaveBeenCalledWith("webhook");
   });
 });

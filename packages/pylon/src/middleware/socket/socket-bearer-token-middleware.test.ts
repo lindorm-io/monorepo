@@ -17,6 +17,8 @@ describe("createSocketBearerTokenMiddleware", () => {
         },
         handshake: { auth: { bearer: "token" } },
       },
+
+      metric: jest.fn().mockReturnValue({ end: jest.fn() }),
     };
 
     options = {

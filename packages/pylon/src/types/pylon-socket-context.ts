@@ -3,6 +3,7 @@ import { IAmphora } from "@lindorm/amphora";
 import { IConduit } from "@lindorm/conduit";
 import { ILogger } from "@lindorm/logger";
 import { Middleware } from "@lindorm/middleware";
+import { PylonMetric } from "../classes/private";
 import { PylonSocket, PylonSocketData } from "./pylon-socket";
 import { IoServer } from "./socket";
 
@@ -24,6 +25,8 @@ type Context = {
   amphora: IAmphora;
   conduits: Conduits;
   logger: ILogger;
+
+  metric: (name: string) => PylonMetric;
 };
 
 export type PylonSocketContext<

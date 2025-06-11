@@ -19,6 +19,8 @@ export const createHttpBodyParserMiddleware = (
   }
 
   return async function httpBodyParserMiddleware(ctx, next) {
+    const metric = ctx.metric("httpBodyParserMiddleware");
+
     ctx.data = {};
 
     if (!config.methods.includes(ctx.method.toUpperCase() as HttpMethod)) {
@@ -35,6 +37,8 @@ export const createHttpBodyParserMiddleware = (
     if ([BodyType.Json, BodyType.UrlEncoded].includes(bodyType) && isObject(parsed)) {
       ctx.data = changeKeys(parsed, ChangeCase.Camel);
     }
+
+    metric.end();
 
     await next();
   };

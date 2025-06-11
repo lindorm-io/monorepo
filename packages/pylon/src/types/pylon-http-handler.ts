@@ -23,27 +23,18 @@ export type PylonHandlerStream = {
   originalName?: string;
 };
 
-export type PylonHandlerWebhook<Data = any> = {
-  event: string;
-  data?: Data;
-};
-
-export type PylonHandlerResult<Body = any, Webhook = any> = {
+export type PylonHandlerResult<Body = any> = {
   body?: Body;
   file?: PylonHandlerFile;
   location?: URL | string;
   redirect?: URL | string;
   status?: number;
   stream?: PylonHandlerStream;
-  webhook?: PylonHandlerWebhook<Webhook>;
 };
 
-export type PylonHandlerResponse<Body = any, Webhook = any> = Promise<
-  PylonHandlerResult<Body, Webhook>
->;
+export type PylonHandlerResponse<Body = any> = Promise<PylonHandlerResult<Body>>;
 
 export type PylonHandler<
   Context extends PylonHttpContext = PylonHttpContext,
   Body = any,
-  Webhook = any,
-> = (ctx: Context) => PylonHandlerResponse<Body, Webhook> | Promise<void>;
+> = (ctx: Context) => PylonHandlerResponse<Body> | Promise<void>;

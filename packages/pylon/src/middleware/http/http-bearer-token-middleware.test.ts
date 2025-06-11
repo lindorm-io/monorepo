@@ -19,6 +19,7 @@ describe("createHttpBearerTokenMiddleware", () => {
         },
         tokens: {},
       },
+      metric: jest.fn().mockReturnValue({ end: jest.fn() }),
     };
 
     options = {

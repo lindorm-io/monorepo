@@ -13,7 +13,7 @@ export const createHttpTokenMiddleware =
   <C extends PylonHttpContext = PylonHttpContext>(options: Options) =>
   (path: string, optional: boolean = false): PylonHttpMiddleware<C> =>
     async function httpTokenMiddleware(ctx, next): Promise<void> {
-      const start = Date.now();
+      const metric = ctx.metric("httpTokenMiddleware");
 
       try {
         const token = get(ctx, path);
@@ -35,21 +35,19 @@ export const createHttpTokenMiddleware =
             subject: verified.payload.subject,
             subjectHint: verified.payload.subjectHint,
             tokenType: verified.payload.tokenType,
-            time: Date.now() - start,
           });
 
           ctx.state.tokens[options.contextKey] = verified;
         }
       } catch (error: any) {
-        ctx.logger.debug("Token verification failed", {
-          error,
-          time: Date.now() - start,
-        });
+        ctx.logger.debug("Token verification failed", error);
 
         throw new ClientError(error.message, {
           error,
           status: ClientError.Status.Unauthorized,
         });
+      } finally {
+        metric.end();
       }
 
       await next();

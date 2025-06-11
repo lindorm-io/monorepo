@@ -3,6 +3,7 @@ import { IAmphora } from "@lindorm/amphora";
 import { Conduit } from "@lindorm/conduit";
 import { ClientError } from "@lindorm/errors";
 import { ILogger } from "@lindorm/logger";
+import { PylonMetric } from "../../classes/private";
 import { PylonHttpMiddleware } from "../../types";
 
 type Options = {
@@ -34,7 +35,12 @@ export const createHttpContextInitialisationMiddleware = (
       conduit: new Conduit(),
     };
 
-    ctx.webhook = { event: null, data: undefined };
+    ctx.webhook = (event: string, data?: any): void => {
+      ctx.state.webhooks.push({ event, data });
+    };
+
+    ctx.metric = (name: string): PylonMetric =>
+      new PylonMetric({ logger: ctx.logger, name });
 
     await next();
   };

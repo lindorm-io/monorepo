@@ -1,7 +1,8 @@
-import { ServerError } from "@lindorm/errors";
+import { ClientError, ServerError } from "@lindorm/errors";
 import { isString, isUrlLike } from "@lindorm/is";
 import { removeUndefined, sortKeys } from "@lindorm/utils";
 import { PylonRouter } from "../../classes";
+import { AuthorizationType } from "../../enums";
 import { PylonHttpContext, PylonHttpOptions } from "../../types";
 
 export const createWellKnownRouter = <C extends PylonHttpContext>(
@@ -61,6 +62,23 @@ export const createWellKnownRouter = <C extends PylonHttpContext>(
       version: options.version,
     };
     ctx.status = 200;
+  });
+
+  router.get("/right-to-be-forgotten", async (ctx) => {
+    if (ctx.state.authorization.type !== AuthorizationType.Bearer) {
+      throw new ClientError("Unauthorized", {
+        code: "unauthorized",
+        details: "Right to be forgotten requires Bearer authorization",
+        status: ClientError.Status.Unauthorized,
+      });
+    }
+
+    if (options.handlers?.rightToBeForgotten) {
+      await options.handlers.rightToBeForgotten(ctx);
+    }
+
+    ctx.body = undefined;
+    ctx.status = 204;
   });
 
   return router;

@@ -11,6 +11,7 @@ import { PylonAuthOptions } from "./auth";
 import { PylonCookieConfig } from "./cookies";
 import { CorsOptions } from "./cors";
 import { OpenIdConfigurationOptions } from "./open-id-configuration";
+import { OptionsHandler } from "./options-handler";
 import { ParseBodyOptions } from "./parse-body";
 import { PylonHttpContext, PylonHttpMiddleware } from "./pylon-http-context";
 import { PylonSocketContext, PylonSocketMiddleware } from "./pylon-socket-context";
@@ -27,6 +28,12 @@ type Common = {
   logger: ILogger;
 };
 
+type Handlers<C extends PylonHttpContext = PylonHttpContext> = {
+  health?: OptionsHandler<C>;
+  rightToBeForgotten?: OptionsHandler<C>;
+  webhook?: OptionsHandler<C>;
+};
+
 export type PylonHttpOptions<C extends PylonHttpContext = PylonHttpContext> = Common & {
   auth?: PylonAuthOptions;
   changePasswordUri?: string;
@@ -34,6 +41,7 @@ export type PylonHttpOptions<C extends PylonHttpContext = PylonHttpContext> = Co
   cors?: CorsOptions;
   domain?: string;
   environment?: Environment;
+  handlers?: Handlers<C>;
   httpMiddleware?: Array<PylonHttpMiddleware<C>>;
   httpRouters?: string | Array<PylonHttpRouters<C>>;
   minRequestAge?: ReadableTime;

@@ -13,7 +13,7 @@ export const createHttpBearerTokenMiddleware = <
   options: Options,
 ): PylonHttpMiddleware<C> =>
   async function httpBearerTokenMiddleware(ctx, next): Promise<void> {
-    const start = Date.now();
+    const metric = ctx.metric("httpBearerTokenMiddleware");
 
     try {
       if (ctx.state.authorization.type !== AuthorizationType.Bearer) {
@@ -38,16 +38,19 @@ export const createHttpBearerTokenMiddleware = <
         subject: verified.payload.subject,
         subjectHint: verified.payload.subjectHint,
         tokenType: verified.payload.tokenType,
-        time: Date.now() - start,
       });
 
       ctx.state.tokens.accessToken = verified;
     } catch (error: any) {
+      ctx.logger.debug("Bearer token verification failed", error);
+
       throw new ClientError("Invalid credentials", {
         error,
         debug: { token: ctx.state.authorization.value },
         status: ClientError.Status.Unauthorized,
       });
+    } finally {
+      metric.end();
     }
 
     await next();

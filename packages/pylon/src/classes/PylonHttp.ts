@@ -6,8 +6,10 @@ import {
   createHttpContextInitialisationMiddleware,
   createHttpCookiesMiddleware,
   createHttpCorsMiddleware,
+  createHttpDateValidationMiddleware,
   createHttpSessionMiddleware,
   createHttpStateMiddleware,
+  createHttpWebhookMiddleware,
   httpErrorHandlerMiddleware,
   httpQueryParserMiddleware,
   httpRequestLoggerMiddleware,
@@ -75,20 +77,24 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
       httpResponseLoggerMiddleware,
       httpErrorHandlerMiddleware,
       createHttpStateMiddleware({
-        environment: this.options.environment!,
-        minRequestAge: this.options.minRequestAge ?? "10s",
-        maxRequestAge: this.options.maxRequestAge ?? "10s",
-        version: this.options.version!,
+        environment: this.options.environment,
+        name: this.options.name,
+        version: this.options.version,
       }),
       createHttpContextInitialisationMiddleware({
         amphora: this.options.amphora,
         logger: this.logger,
+      }),
+      createHttpDateValidationMiddleware({
+        minRequestAge: this.options.minRequestAge,
+        maxRequestAge: this.options.maxRequestAge,
       }),
       createHttpCookiesMiddleware(this.options.cookies),
       ...(this.options.session
         ? [createHttpSessionMiddleware(this.options.session)]
         : []),
       createHttpBodyParserMiddleware(this.options.parseBody),
+      createHttpWebhookMiddleware(this.options.handlers?.webhook),
       httpQueryParserMiddleware,
       httpRequestLoggerMiddleware,
       httpResponseBodyMiddleware,
@@ -102,7 +108,7 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
 
     this.router.use(...this.middleware);
 
-    this.addRouter("/health", createHealthRouter());
+    this.addRouter("/health", createHealthRouter(this.options.handlers?.health));
     this.addRouter("/.well-known", createWellKnownRouter(this.options));
 
     if (this.options.auth) {

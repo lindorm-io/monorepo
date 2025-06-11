@@ -39,6 +39,7 @@ describe("createHttpBodyParserMiddleware", () => {
       },
       method: "POST",
       request: {},
+      metric: jest.fn().mockReturnValue({ end: jest.fn() }),
     };
 
     composeParseBodyConfig.mockReturnValue({

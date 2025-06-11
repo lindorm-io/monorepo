@@ -13,7 +13,7 @@ export const createSocketBearerTokenMiddleware = <
   options: Options,
 ): PylonSocketMiddleware<C> =>
   async function socketBearerTokenMiddleware(ctx, next): Promise<void> {
-    const start = Date.now();
+    const metric = ctx.metric("socketBearerTokenMiddleware");
 
     try {
       const token = ctx.socket.handshake.auth.bearer;
@@ -34,20 +34,18 @@ export const createSocketBearerTokenMiddleware = <
         subject: verified.payload.subject,
         subjectHint: verified.payload.subjectHint,
         tokenType: verified.payload.tokenType,
-        time: Date.now() - start,
       });
 
       ctx.socket.data.tokens.bearer = verified;
     } catch (error: any) {
-      ctx.logger.debug("Token verification failed", {
-        error,
-        time: Date.now() - start,
-      });
+      ctx.logger.debug("Token verification failed", error);
 
       throw new ClientError(error.message, {
         error,
         status: ClientError.Status.Unauthorized,
       });
+    } finally {
+      metric.end();
     }
 
     await next();

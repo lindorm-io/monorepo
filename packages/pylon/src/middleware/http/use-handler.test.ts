@@ -21,6 +21,7 @@ describe("useHandler", () => {
       logger: createMockLogger(),
       redirect: jest.fn(),
       set: jest.fn(),
+      metric: jest.fn().mockReturnValue({ end: jest.fn() }),
     };
 
     handler = jest.fn();
@@ -44,14 +45,6 @@ describe("useHandler", () => {
     expect(handler).toHaveBeenCalled();
     expect(ctx.body).toEqual("body");
     expect(ctx.status).toEqual(999);
-  });
-
-  test("should resolve with webhook", async () => {
-    handler.mockReturnValue({ webhook: { event: "event", data: "data" } });
-
-    await expect(useHandler(handler)(ctx, jest.fn())).resolves.toBeUndefined();
-
-    expect(ctx.webhook).toEqual({ event: "event", data: "data" });
   });
 
   test("should resolve with location", async () => {

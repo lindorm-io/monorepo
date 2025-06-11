@@ -1,5 +1,4 @@
 import { Environment } from "@lindorm/enums";
-import { ClientError } from "@lindorm/errors";
 import { randomUUID as _randomUUID } from "crypto";
 import MockDate from "mockdate";
 import { getAuthorization as _getAuthorization } from "../../utils/private";
@@ -111,35 +110,5 @@ describe("createHttpStateMiddleware", () => {
     );
     expect(ctx.set).toHaveBeenCalledWith("x-server-environment", "test");
     expect(ctx.set).toHaveBeenCalledWith("x-server-version", "1.0.0");
-  });
-
-  test("should throw error on invalid date (min)", async () => {
-    ctx.get.mockImplementation((key: string): string | null => {
-      switch (key) {
-        case "date":
-          return new Date("2024-01-01T07:00:00.000Z").toISOString();
-        default:
-          return null;
-      }
-    });
-
-    await expect(createHttpStateMiddleware(options)(ctx, jest.fn())).rejects.toThrow(
-      ClientError,
-    );
-  });
-
-  test("should return error on invalid date (max)", async () => {
-    ctx.get.mockImplementation((key: string): string | null => {
-      switch (key) {
-        case "date":
-          return new Date("2024-01-01T09:00:00.000Z").toISOString();
-        default:
-          return null;
-      }
-    });
-
-    await expect(createHttpStateMiddleware(options)(ctx, jest.fn())).rejects.toThrow(
-      ClientError,
-    );
   });
 });
