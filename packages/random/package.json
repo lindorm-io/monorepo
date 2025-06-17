@@ -29,6 +29,7 @@
     "test:unit": "jest --config jest.config.js --",
     "typecheck": "tsc --watch",
     "typecheck:ci": "tsc",
-    "update": "ncu -u"
+    "update": "ncu -i",
+    "update:auto": "ncu -u"
   }
 }

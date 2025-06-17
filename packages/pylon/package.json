@@ -27,7 +27,8 @@
     "test:unit": "jest --config jest.config.js --",
     "typecheck": "tsc --watch",
     "typecheck:ci": "tsc",
-    "update": "ncu -i"
+    "update": "ncu -i",
+    "update:auto": "ncu -u"
   },
   "dependencies": {
     "@lindorm/aegis": "^0.2.6",

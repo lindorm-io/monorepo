@@ -14,7 +14,7 @@
     "test": "compd --file docker-compose.yml lerna run test:ci",
     "test:ci": "lerna run test:ci",
     "typecheck": "lerna run typecheck:ci",
-    "update": "ncu -u && lerna run update && npm install && npm audit fix"
+    "update": "ncu -u && lerna run update:auto && npm install && npm audit fix"
   },
   "devDependencies": {
     "@commitlint/cli": "19.4.0",
