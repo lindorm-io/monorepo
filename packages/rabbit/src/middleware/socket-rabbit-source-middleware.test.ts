@@ -1,3 +1,4 @@
+import { createMockLogger } from "@lindorm/logger";
 import { IRabbitSource } from "../interfaces";
 import { createSocketRabbitSourceMiddleware } from "./socket-rabbit-source-middleware";
 
@@ -8,7 +9,7 @@ describe("createSocketRabbitSourceMiddleware", () => {
   let source: IRabbitSource;
 
   beforeEach(() => {
-    ctx = { logger: "logger" };
+    ctx = { logger: createMockLogger() };
     source = { clone: () => ({ clonedSource: true }) } as any;
   });
 

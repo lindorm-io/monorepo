@@ -1,3 +1,4 @@
+import { createMockLogger } from "@lindorm/logger";
 import { IHermes } from "../interfaces";
 import { createSocketHermesMiddleware } from "./socket-hermes-middleware";
 
@@ -8,7 +9,7 @@ describe("createSocketHermesMiddleware", () => {
   let hermes: IHermes;
 
   beforeEach(() => {
-    ctx = { logger: "logger" };
+    ctx = { logger: createMockLogger() };
     hermes = { clone: () => ({ clonedSource: true }) } as any;
   });
 
