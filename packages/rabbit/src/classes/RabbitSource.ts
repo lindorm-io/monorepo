@@ -3,7 +3,7 @@ import { JsonKit } from "@lindorm/json-kit";
 import { ILogger } from "@lindorm/logger";
 import { Constructor } from "@lindorm/types";
 import { sleep } from "@lindorm/utils";
-import amqplib, { ConfirmChannel, Connection, ConsumeMessage } from "amqplib";
+import amqplib, { ChannelModel, ConfirmChannel, ConsumeMessage } from "amqplib";
 import { RabbitSourceError } from "../errors";
 import { IRabbitMessage, IRabbitMessageBus, IRabbitSource } from "../interfaces";
 import {
@@ -24,11 +24,11 @@ export class RabbitSource implements IRabbitSource {
   private readonly logger: ILogger;
   private readonly messages: Array<RabbitSourceMessage>;
   private readonly nackTimeout: number;
-  private readonly promise: Promise<Connection>;
+  private readonly promise: Promise<ChannelModel>;
   private readonly subscriptions: SubscriptionList;
 
   private confirmChannel: ConfirmChannel | undefined;
-  private connection: Connection | undefined;
+  private channelModel: ChannelModel | undefined;
 
   public constructor(options: RabbitSourceOptions);
   public constructor(fromClone: FromClone);
@@ -42,8 +42,8 @@ export class RabbitSource implements IRabbitSource {
       const opts = options as FromClone;
 
       this.confirmChannel = opts.confirmChannel;
-      this.promise = Promise.resolve(opts.connection);
-      this.connection = opts.connection;
+      this.promise = Promise.resolve(opts.channelModel);
+      this.channelModel = opts.channelModel;
       this.messages = opts.messages;
       this.subscriptions = opts.subscriptions;
     } else {
@@ -57,11 +57,11 @@ export class RabbitSource implements IRabbitSource {
 
   // public
 
-  public get client(): Connection {
-    if (!this.connection) {
+  public get client(): ChannelModel {
+    if (!this.channelModel) {
       throw new LindormError("Connection not established");
     }
-    return this.connection;
+    return this.channelModel;
   }
 
   public addMessages(messages: RabbitSourceMessages): void {
@@ -69,7 +69,7 @@ export class RabbitSource implements IRabbitSource {
   }
 
   public clone(options: CloneRabbitSourceOptions = {}): IRabbitSource {
-    if (!this.connection) {
+    if (!this.channelModel) {
       throw new RabbitSourceError("Connection not established");
     }
     if (!this.confirmChannel) {
@@ -77,8 +77,8 @@ export class RabbitSource implements IRabbitSource {
     }
     return new RabbitSource({
       _mode: "from_clone",
+      channelModel: this.channelModel,
       confirmChannel: this.confirmChannel,
-      connection: this.connection,
       deadletters: this.deadletters,
       exchange: this.exchange,
       logger: options.logger ?? this.logger,
@@ -89,12 +89,12 @@ export class RabbitSource implements IRabbitSource {
   }
 
   public async connect(): Promise<void> {
-    this.connection = await this.promise;
+    this.channelModel = await this.promise;
   }
 
   public async disconnect(): Promise<void> {
     await this.confirmChannel?.close();
-    await this.connection?.close();
+    await this.channelModel?.close();
   }
 
   public messageBus<M extends IRabbitMessage>(
@@ -117,7 +117,7 @@ export class RabbitSource implements IRabbitSource {
   }
 
   public async setup(): Promise<void> {
-    if (!this.connection) {
+    if (!this.channelModel) {
       await this.connect();
     }
 
@@ -180,7 +180,7 @@ export class RabbitSource implements IRabbitSource {
   private async connectWithRetry(
     options: RabbitSourceOptions,
     start = Date.now(),
-  ): Promise<Connection> {
+  ): Promise<ChannelModel> {
     const connectInterval = options.connectInterval ?? 250;
     const connectTimeout = options.connectTimeout ?? 10000;
 

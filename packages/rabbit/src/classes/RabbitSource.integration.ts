@@ -4,19 +4,20 @@ import { join } from "path";
 import { TestMessageOne } from "../__fixtures__/messages/test-message-one";
 import { TestMessageTwo } from "../__fixtures__/messages/test-message-two";
 import { TestMessage } from "../__fixtures__/test-message";
+import { IRabbitSource } from "../interfaces";
 import { RabbitSource } from "./RabbitSource";
 
 describe("RabbitSource", () => {
-  let source: RabbitSource;
+  let source: IRabbitSource;
 
   beforeAll(async () => {
     source = new RabbitSource({
       messages: [TestMessage, join(__dirname, "..", "__fixtures__", "messages")],
-      logger: createMockLogger(),
+      logger: createMockLogger(console.log),
       url: "amqp://localhost:5672",
     });
     await source.setup();
-  });
+  }, 60000);
 
   afterAll(() => {
     source.disconnect();

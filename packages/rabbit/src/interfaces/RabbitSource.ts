@@ -1,5 +1,5 @@
 import { Constructor } from "@lindorm/types";
-import { Connection } from "amqplib";
+import { ChannelModel } from "amqplib";
 import {
   CloneRabbitSourceOptions,
   RabbitSourceMessageBusOptions,
@@ -9,7 +9,7 @@ import { IRabbitMessage } from "./RabbitMessage";
 import { IRabbitMessageBus } from "./RabbitMessageBus";
 
 export interface IRabbitSource {
-  client: Connection;
+  client: ChannelModel;
 
   addMessages(messages: RabbitSourceMessages): void;
   clone(options?: CloneRabbitSourceOptions): IRabbitSource;
