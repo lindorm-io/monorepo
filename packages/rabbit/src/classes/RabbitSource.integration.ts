@@ -13,7 +13,7 @@ describe("RabbitSource", () => {
   beforeAll(async () => {
     source = new RabbitSource({
       messages: [TestMessage, join(__dirname, "..", "__fixtures__", "messages")],
-      logger: createMockLogger(console.log),
+      logger: createMockLogger(),
       url: "amqp://localhost:5672",
     });
     await source.setup();
