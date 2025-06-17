@@ -3,6 +3,49 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/pylon@0.3.0...@lindorm/pylon@0.4.0) (2025-06-17)
+
+### Bug Fixes
+
+- add global worker options type ([32d0f22](https://github.com/lindorm-io/monorepo/commit/32d0f22696becae80bc6886e8463ba053855b820))
+- align tokens in state ([8fda3c9](https://github.com/lindorm-io/monorepo/commit/8fda3c9ff65923c382036480bae42d52e93f48e2))
+- align with changes to dependencies ([ae6c911](https://github.com/lindorm-io/monorepo/commit/ae6c911e5494a252f11f66b948be0e11d7fc91ed))
+- allow for dynamic openid config ([c5ea972](https://github.com/lindorm-io/monorepo/commit/c5ea972260cf94f2e8364b6b03467c58aa5505fa))
+- allow proxy headers by default ([892be64](https://github.com/lindorm-io/monorepo/commit/892be6427d53b76eacbe0fa701fe5949798927a0))
+- allow schema handler to coerce values ([350f06f](https://github.com/lindorm-io/monorepo/commit/350f06f398d9583111324665253082f00ec9202d))
+- amend bugs ([a68a77a](https://github.com/lindorm-io/monorepo/commit/a68a77a811ddfe33a0b487cd84cda6a18d3054b6))
+- amend error in example ([c320566](https://github.com/lindorm-io/monorepo/commit/c320566998d013a82e2590d227d0d1c6253af3e8))
+- automatically encode cookie objects ([c0bee5d](https://github.com/lindorm-io/monorepo/commit/c0bee5da4287d78d8153f8c233fe9db99529dc7d))
+- cookie encryption should be handled by aegis ([cdb6218](https://github.com/lindorm-io/monorepo/commit/cdb6218190e706502dc892b988eb944059bba49d))
+- correctly parse content-type encoding ([8037aed](https://github.com/lindorm-io/monorepo/commit/8037aed8064a2d0a7c914e4689eed376fccf262b))
+- improve cookie options ([62a056c](https://github.com/lindorm-io/monorepo/commit/62a056c306a5034a29f3a4e54c696317d1ce9515))
+- improve middleware and their ordering ([dd77ff1](https://github.com/lindorm-io/monorepo/commit/dd77ff125a60466ce7638f5f92c96b16b50417b8))
+- make method private ([67f83d3](https://github.com/lindorm-io/monorepo/commit/67f83d31f730c0a4cf5254459be8915e1ff18a71))
+- merge domain with issuer for ease of understanding ([9123cc2](https://github.com/lindorm-io/monorepo/commit/9123cc2ede63962a5c226a9bed0d0541001384d9))
+- move state into context state ([754bc5f](https://github.com/lindorm-io/monorepo/commit/754bc5f17210ab1e07957d016ee931dbdcfda122))
+- require encoding for cookie objects ([e585d18](https://github.com/lindorm-io/monorepo/commit/e585d1859173fe04404afbaadb9eb29337a54c0a))
+- resolve errors ([f7ae1a3](https://github.com/lindorm-io/monorepo/commit/f7ae1a3bbbc9e70c4e2244b0f2f3575a5912b6cb))
+- scan and load workers into pylon ([171b990](https://github.com/lindorm-io/monorepo/commit/171b9902467386397f455166e092d6dfb10ff5f5))
+- update default body parser config ([9c8b1fa](https://github.com/lindorm-io/monorepo/commit/9c8b1fabf8ffffba8dc4f5c6d440ca856eb13e58))
+- update dependency ([06c7166](https://github.com/lindorm-io/monorepo/commit/06c716612867438193eb58d3c9e4492d24dc2d24))
+- update middleware and move specific handlers into options ([b6d06a3](https://github.com/lindorm-io/monorepo/commit/b6d06a301ef6b0ed57ab281376c155c03a05aa5c))
+- use signature kit for pylon cookie kit ([e0ba22d](https://github.com/lindorm-io/monorepo/commit/e0ba22d1a04f72ecd9c120367097c79bf6da218a))
+- used serialised aes object for encrypted cookie ([309e65a](https://github.com/lindorm-io/monorepo/commit/309e65a1e0146fc0ba63b97fee9a315afc6adcce))
+
+### Features
+
+- add amphora refresh worker ([f1d5e45](https://github.com/lindorm-io/monorepo/commit/f1d5e457c0dbfde669f3d5da6b6d431f59caa60e))
+- add authorization state and improve affected mw ([7af6060](https://github.com/lindorm-io/monorepo/commit/7af6060742ef0a52b71a7f12f1af00f6202bc525))
+- add conduit signed request middleware ([1503004](https://github.com/lindorm-io/monorepo/commit/150300412f6dd2dd7a8ade34516db7db4e1cdb2b))
+- add default pylon-configuration endpoint ([82f6960](https://github.com/lindorm-io/monorepo/commit/82f6960ca58f4fa80aadaa1ea00f1b46738cf1a4))
+- add location data to handler ([22ea5e6](https://github.com/lindorm-io/monorepo/commit/22ea5e6274674c2f7ba7ff66cd003c3f9d73efbd))
+- add method to only start workers ([b2fa2c5](https://github.com/lindorm-io/monorepo/commit/b2fa2c5635681aa4e7db62370329435a4b4e2b91))
+- add util to get cookie keys ([3ad99da](https://github.com/lindorm-io/monorepo/commit/3ad99dad4f76815b4006d9ba736739c0206d9e2d))
+- expand session middleware with store and functions ([6e0b46d](https://github.com/lindorm-io/monorepo/commit/6e0b46db15268cacc10028d1cb59add9bf045eb2))
+- handle cookies and signatures in new kit ([eb736eb](https://github.com/lindorm-io/monorepo/commit/eb736eb09e7651b14c75ed77a853af7a902e50ff))
+- implement auth router ([7bbf293](https://github.com/lindorm-io/monorepo/commit/7bbf2932a1b8b4fc178b76983e8ed317110252bd))
+- implement signed request middleware ([836444d](https://github.com/lindorm-io/monorepo/commit/836444d45db794a748b789015cc8f0bcad9db2b4))
+
 # [0.3.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/pylon@0.2.2...@lindorm/pylon@0.3.0) (2025-01-28)
 
 ### Bug Fixes

@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.2.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/sha@0.1.4...@lindorm/sha@0.2.0) (2025-06-17)
+
+### Features
+
+- align sha kit with other crypto kits ([16d6527](https://github.com/lindorm-io/monorepo/commit/16d6527a2a9f4a19fe50ff6718e81f7ea7fec820))
+
 ## [0.1.4](https://github.com/lindorm-io/monorepo/compare/@lindorm/sha@0.1.3...@lindorm/sha@0.1.4) (2025-01-28)
 
 **Note:** Version bump only for package @lindorm/sha

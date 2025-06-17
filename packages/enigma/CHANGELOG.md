@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.8](https://github.com/lindorm-io/monorepo/compare/@lindorm/enigma@0.2.7...@lindorm/enigma@0.2.8) (2025-06-17)
+
+### Bug Fixes
+
+- align enigma with kryptos ([5800d0e](https://github.com/lindorm-io/monorepo/commit/5800d0e9c3ed9e5f22a9dae705bc304d43306caa))
+- align with changes to kryptos ([74bbfff](https://github.com/lindorm-io/monorepo/commit/74bbfff6fb50504dc70327f7de3fd6d4b45cb65a))
+- resolve errors ([f7ae1a3](https://github.com/lindorm-io/monorepo/commit/f7ae1a3bbbc9e70c4e2244b0f2f3575a5912b6cb))
+
 ## [0.2.7](https://github.com/lindorm-io/monorepo/compare/@lindorm/enigma@0.2.6...@lindorm/enigma@0.2.7) (2025-01-28)
 
 **Note:** Version bump only for package @lindorm/enigma

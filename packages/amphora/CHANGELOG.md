@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.2.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/amphora@0.1.7...@lindorm/amphora@0.2.0) (2025-06-17)
+
+### Bug Fixes
+
+- align with changes to kryptos ([74bbfff](https://github.com/lindorm-io/monorepo/commit/74bbfff6fb50504dc70327f7de3fd6d4b45cb65a))
+- align with kryptos changes and use predicate ([bf12f85](https://github.com/lindorm-io/monorepo/commit/bf12f856e9c70d175cee50ba944822ab1f92939d))
+- amend overcomplexity in amphora ([f7f320f](https://github.com/lindorm-io/monorepo/commit/f7f320ff4917de0908bb619a7f66b3026d3bf554))
+- automatically resolve jwks uri for added kryptos ([7b0189b](https://github.com/lindorm-io/monorepo/commit/7b0189b67e8fe694249afb9a890fb1cce67e1fb3))
+- merge domain with issuer for ease of understanding ([9123cc2](https://github.com/lindorm-io/monorepo/commit/9123cc2ede63962a5c226a9bed0d0541001384d9))
+- refresh unhidden jwks in amphora ([6586050](https://github.com/lindorm-io/monorepo/commit/6586050bf653621874736e101b577703e657b3f6))
+- resolve errors ([f7ae1a3](https://github.com/lindorm-io/monorepo/commit/f7ae1a3bbbc9e70c4e2244b0f2f3575a5912b6cb))
+
+### Features
+
+- add env import to amphora ([24a1017](https://github.com/lindorm-io/monorepo/commit/24a1017b1a4cbbe8dc66ea0e004e9e00d92a9497))
+- add sync filters to amphora ([6c7258f](https://github.com/lindorm-io/monorepo/commit/6c7258f8c5c5f83403d3fc3c16137405f4171f85))
+- allow for adding openid config ([5735142](https://github.com/lindorm-io/monorepo/commit/57351424db224c361c2c9bf41972603fc172c49c))
+
 ## [0.1.7](https://github.com/lindorm-io/monorepo/compare/@lindorm/amphora@0.1.6...@lindorm/amphora@0.1.7) (2025-01-28)
 
 **Note:** Version bump only for package @lindorm/amphora

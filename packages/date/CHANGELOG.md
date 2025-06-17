@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.3.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/date@0.2.0...@lindorm/date@0.3.0) (2025-06-17)
+
+### Bug Fixes
+
+- export duration from date ([17919e9](https://github.com/lindorm-io/monorepo/commit/17919e9953161d1336a1c68902a4c143287fd553))
+
+### Features
+
+- add readable time checker ([8b74dac](https://github.com/lindorm-io/monorepo/commit/8b74dac813336143488bf58c3eacf68fc18b98a0))
+
 # [0.2.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/date@0.1.6...@lindorm/date@0.2.0) (2025-01-28)
 
 ### Features

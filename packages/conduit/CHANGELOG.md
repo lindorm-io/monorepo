@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.2.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/conduit@0.1.8...@lindorm/conduit@0.2.0) (2025-06-17)
+
+### Bug Fixes
+
+- add expected response and session id ([235325c](https://github.com/lindorm-io/monorepo/commit/235325c94696f42c0c1cabdbc9a18638e7d41c83))
+- remove 500 from default retry ([0e3862c](https://github.com/lindorm-io/monorepo/commit/0e3862c37c48b12c6a252a4fea0c10b4060a92b1))
+- solve issue with pylon error ([dd93387](https://github.com/lindorm-io/monorepo/commit/dd9338704f3d96e4393587b560889af4aae8c073))
+
+### Features
+
+- add schema middleware for response data ([845c9b3](https://github.com/lindorm-io/monorepo/commit/845c9b3501ff35b7947caf5920bf21eba0e2767b))
+
 ## [0.1.8](https://github.com/lindorm-io/monorepo/compare/@lindorm/conduit@0.1.7...@lindorm/conduit@0.1.8) (2025-01-28)
 
 **Note:** Version bump only for package @lindorm/conduit

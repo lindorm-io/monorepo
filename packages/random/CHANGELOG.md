@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.2.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/random@0.1.4...@lindorm/random@0.2.0) (2025-06-17)
+
+### Bug Fixes
+
+- add examples and remove unused random token ([6e6c6f8](https://github.com/lindorm-io/monorepo/commit/6e6c6f877f0bfa1599d750f2851fbfce32d8f1db))
+
+### Features
+
+- add random id generator ([5d2cb49](https://github.com/lindorm-io/monorepo/commit/5d2cb498bde1f6954c84e9206da40ce966ca2421))
+
 ## [0.1.4](https://github.com/lindorm-io/monorepo/compare/@lindorm/random@0.1.3...@lindorm/random@0.1.4) (2025-01-28)
 
 ### Bug Fixes

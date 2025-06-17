@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.5.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/aes@0.4.2...@lindorm/aes@0.5.0) (2025-06-17)
+
+### Bug Fixes
+
+- align with kryptos changes ([3f934a4](https://github.com/lindorm-io/monorepo/commit/3f934a4ec55eee3d4ebc6f0be55886d8f095af8b))
+- align with kryptos changes ([206eb38](https://github.com/lindorm-io/monorepo/commit/206eb38ae2a03b14973e706035c87a953cc753af))
+- improve and expose aes parsing ([ec6f271](https://github.com/lindorm-io/monorepo/commit/ec6f27179ec3d67146a50257cbff98fe253c3380))
+- improve types ([f6ce002](https://github.com/lindorm-io/monorepo/commit/f6ce002e8555c54ba4f12bd67222457fa2bcf90a))
+- update try catch ([7ebebe8](https://github.com/lindorm-io/monorepo/commit/7ebebe81f40851b0d1fcb05e6e6cc60b1c754a91))
+
+### Features
+
+- add content type to aes data ([dfb3285](https://github.com/lindorm-io/monorepo/commit/dfb3285ddf20bc77cf8f3d2531e26032853b98a9))
+
 ## [0.4.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/aes@0.4.1...@lindorm/aes@0.4.2) (2025-01-28)
 
 **Note:** Version bump only for package @lindorm/aes

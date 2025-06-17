@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.2.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/okp@0.1.8...@lindorm/okp@0.2.0) (2025-06-17)
+
+### Bug Fixes
+
+- add and implement keykit interface ([70762aa](https://github.com/lindorm-io/monorepo/commit/70762aaca51c9fe904121b69b4bc072cdd89c8a2))
+- align with changes to kryptos ([74bbfff](https://github.com/lindorm-io/monorepo/commit/74bbfff6fb50504dc70327f7de3fd6d4b45cb65a))
+- align with kryptos changes ([206eb38](https://github.com/lindorm-io/monorepo/commit/206eb38ae2a03b14973e706035c87a953cc753af))
+
+### Features
+
+- add dsa encoding ([a893601](https://github.com/lindorm-io/monorepo/commit/a8936015a9408733445cdbda8d8b70d633a2330a))
+- upgrade key kits ([198956c](https://github.com/lindorm-io/monorepo/commit/198956c5fa276ae192af22cb204b3c2158c74339))
+
 ## [0.1.8](https://github.com/lindorm-io/monorepo/compare/@lindorm/okp@0.1.7...@lindorm/okp@0.1.8) (2025-01-28)
 
 **Note:** Version bump only for package @lindorm/okp

@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.3.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/logger@0.2.3...@lindorm/logger@0.3.0) (2025-06-17)
+
+### Bug Fixes
+
+- add missing methods to logger ([2f479af](https://github.com/lindorm-io/monorepo/commit/2f479afeae63a0de5b98377b5f49d26314fdac9c))
+
+### Features
+
+- export dictionary inspector ([14fd6e1](https://github.com/lindorm-io/monorepo/commit/14fd6e13c386d9e0c9f8864db5e3b1dc2f0ee9d9))
+
 ## [0.2.3](https://github.com/lindorm-io/monorepo/compare/@lindorm/logger@0.2.2...@lindorm/logger@0.2.3) (2025-01-28)
 
 ### Bug Fixes

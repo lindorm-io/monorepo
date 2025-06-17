@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.4.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/rabbit@0.4.0...@lindorm/rabbit@0.4.1) (2025-06-17)
+
+### Bug Fixes
+
+- align with changes to kryptos ([74bbfff](https://github.com/lindorm-io/monorepo/commit/74bbfff6fb50504dc70327f7de3fd6d4b45cb65a))
+- amend bugs ([a68a77a](https://github.com/lindorm-io/monorepo/commit/a68a77a811ddfe33a0b487cd84cda6a18d3054b6))
+- update dependencies ([a591a45](https://github.com/lindorm-io/monorepo/commit/a591a455aa77fc91ef980a3ad8646e0d2e3afefc))
+
 # [0.4.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/rabbit@0.3.1...@lindorm/rabbit@0.4.0) (2025-01-28)
 
 ### Features

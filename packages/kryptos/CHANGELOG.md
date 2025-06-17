@@ -3,6 +3,28 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/kryptos@0.3.7...@lindorm/kryptos@0.4.0) (2025-06-17)
+
+### Bug Fixes
+
+- automatically generate encryption ([2084cc7](https://github.com/lindorm-io/monorepo/commit/2084cc75968b152a40355e8c2dfa807a78aaf157))
+- export env string as b64u encoded jwk ([06185f6](https://github.com/lindorm-io/monorepo/commit/06185f6b525e61badf6af3ad5272159b0caa8541))
+- export more data in env string ([ea92ef5](https://github.com/lindorm-io/monorepo/commit/ea92ef514f9efd9ae9e81018799d9c60ca30662b))
+- improve types ([f6ce002](https://github.com/lindorm-io/monorepo/commit/f6ce002e8555c54ba4f12bd67222457fa2bcf90a))
+- parse encryption in std options ([ffe9a8f](https://github.com/lindorm-io/monorepo/commit/ffe9a8fc99382b459d2aed25bd567c3a98e4c9c5))
+- update mock ([6dc1a8a](https://github.com/lindorm-io/monorepo/commit/6dc1a8abfa208ae316716c6eec4df3e45935735d))
+- update typing and make public key optional ([ebe9311](https://github.com/lindorm-io/monorepo/commit/ebe9311c395da84b69d95701b087aaecb8057574))
+- use commander for kryptos cli ([20168d8](https://github.com/lindorm-io/monorepo/commit/20168d89f9ced49b744dc6a0fb4cc72c6f6e3a58))
+- use null and typed purpose ([b318d83](https://github.com/lindorm-io/monorepo/commit/b318d83b572eb52c7bfdf1e086f7e559da898661))
+
+### Features
+
+- add cli for generating kryptos env keys ([073ca5f](https://github.com/lindorm-io/monorepo/commit/073ca5fa867d82af2d47f497aad785eaf964aeb8))
+- add env string to kryptos kit ([174970d](https://github.com/lindorm-io/monorepo/commit/174970d99b77642f4e69ac01d038b90c746f0890))
+- add kryptos db consideration ([7c35ac7](https://github.com/lindorm-io/monorepo/commit/7c35ac74d4404c88ffd69b70d08ed4b14b35d246))
+- introduce kryptos kit ([92b2cbb](https://github.com/lindorm-io/monorepo/commit/92b2cbb231b382c4f52c09ff47b3de2e68e8ca8a))
+- require id for valid kryptos ([a49cf11](https://github.com/lindorm-io/monorepo/commit/a49cf1106d679ca28fb3af5334e80d78e71e8ce0))
+
 ## [0.3.7](https://github.com/lindorm-io/monorepo/compare/@lindorm/kryptos@0.3.6...@lindorm/kryptos@0.3.7) (2025-01-28)
 
 **Note:** Version bump only for package @lindorm/kryptos

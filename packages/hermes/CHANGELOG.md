@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/hermes@0.2.0...@lindorm/hermes@0.2.1) (2025-06-17)
+
+### Bug Fixes
+
+- align hermes with kryptos and utils ([eb11c21](https://github.com/lindorm-io/monorepo/commit/eb11c216a7d5e0c7e3de7aafa232082edf469423))
+- align with changes to kryptos ([74bbfff](https://github.com/lindorm-io/monorepo/commit/74bbfff6fb50504dc70327f7de3fd6d4b45cb65a))
+- amend bugs ([a68a77a](https://github.com/lindorm-io/monorepo/commit/a68a77a811ddfe33a0b487cd84cda6a18d3054b6))
+
 # [0.2.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/hermes@0.1.1...@lindorm/hermes@0.2.0) (2025-01-28)
 
 ### Features

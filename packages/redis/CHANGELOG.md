@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.6.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/redis@0.5.0...@lindorm/redis@0.6.0) (2025-06-17)
+
+### Bug Fixes
+
+- add entity relations disclaimer ([825a35d](https://github.com/lindorm-io/monorepo/commit/825a35d823e47cfc0e76a085871f2f444db14b04))
+- align with changes to kryptos ([74bbfff](https://github.com/lindorm-io/monorepo/commit/74bbfff6fb50504dc70327f7de3fd6d4b45cb65a))
+- amend bugs ([a68a77a](https://github.com/lindorm-io/monorepo/commit/a68a77a811ddfe33a0b487cd84cda6a18d3054b6))
+- introduce entity scoping ([201617c](https://github.com/lindorm-io/monorepo/commit/201617c57e453015a7f42b30d75a122fab7b4a35))
+- use common slim entity and align with improved config ([f4094b1](https://github.com/lindorm-io/monorepo/commit/f4094b173f11af4d342ece49d8a3ff72f1846d20))
+
+### Features
+
+- new entity package with decorators ([00750c7](https://github.com/lindorm-io/monorepo/commit/00750c7380e1c934be8f3f317b4fba7b834f90a8))
+
 # [0.5.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/redis@0.4.0...@lindorm/redis@0.5.0) (2025-01-28)
 
 ### Bug Fixes

@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.2.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/worker@0.1.6...@lindorm/worker@0.2.0) (2025-06-17)
+
+### Bug Fixes
+
+- add global worker options type ([32d0f22](https://github.com/lindorm-io/monorepo/commit/32d0f22696becae80bc6886e8463ba053855b820))
+- scan and load workers into pylon ([171b990](https://github.com/lindorm-io/monorepo/commit/171b9902467386397f455166e092d6dfb10ff5f5))
+
+### Features
+
+- add interval randomization ([956abb3](https://github.com/lindorm-io/monorepo/commit/956abb3460d8328aee1bbba9240f1ce33ae854f1))
+- allow worker callback to return typed result ([7d89de5](https://github.com/lindorm-io/monorepo/commit/7d89de557ffa356781bf5f6d91b483fbd417112f))
+- update worker to include file scanner ([7534de9](https://github.com/lindorm-io/monorepo/commit/7534de9dd891e141b891153f42449d914843a2cb))
+
 ## [0.1.6](https://github.com/lindorm-io/monorepo/compare/@lindorm/worker@0.1.5...@lindorm/worker@0.1.6) (2025-01-28)
 
 **Note:** Version bump only for package @lindorm/worker

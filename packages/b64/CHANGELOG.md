@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.6](https://github.com/lindorm-io/monorepo/compare/@lindorm/b64@0.1.5...@lindorm/b64@0.1.6) (2025-06-17)
+
+### Bug Fixes
+
+- update with better methods ([92f9875](https://github.com/lindorm-io/monorepo/commit/92f98750488f762da9db950f9dbd56d14ccf114e))
+
 ## [0.1.5](https://github.com/lindorm-io/monorepo/compare/@lindorm/b64@0.1.4...@lindorm/b64@0.1.5) (2025-01-28)
 
 **Note:** Version bump only for package @lindorm/b64

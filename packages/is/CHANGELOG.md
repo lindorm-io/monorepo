@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.8](https://github.com/lindorm-io/monorepo/compare/@lindorm/is@0.1.7...@lindorm/is@0.1.8) (2025-06-17)
+
+### Bug Fixes
+
+- add missing token functions ([3da2424](https://github.com/lindorm-io/monorepo/commit/3da2424869208df3d34ca280a240c12e54eb011e))
+- ensure correct url matching for is-equal ([22f958a](https://github.com/lindorm-io/monorepo/commit/22f958a7805c92826f8a7384169b2099472f3534))
+- handle is string correctly ([5afcfa4](https://github.com/lindorm-io/monorepo/commit/5afcfa4e2c464b863db21075249ccb9a39ec03ec))
+- improve typing and add missing functions ([52f1813](https://github.com/lindorm-io/monorepo/commit/52f18131bf8e1ebe83638d8a88c626a211902891))
+- update try catch ([7ebebe8](https://github.com/lindorm-io/monorepo/commit/7ebebe81f40851b0d1fcb05e6e6cc60b1c754a91))
+
 ## [0.1.7](https://github.com/lindorm-io/monorepo/compare/@lindorm/is@0.1.6...@lindorm/is@0.1.7) (2025-01-28)
 
 ### Bug Fixes

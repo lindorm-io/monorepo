@@ -3,6 +3,21 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.3.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/types@0.2.1...@lindorm/types@0.3.0) (2025-06-17)
+
+### Bug Fixes
+
+- add and implement keykit interface ([70762aa](https://github.com/lindorm-io/monorepo/commit/70762aaca51c9fe904121b69b4bc072cdd89c8a2))
+- add honorific to profile claims ([0bac153](https://github.com/lindorm-io/monorepo/commit/0bac153b3708613f440855a92d450ad553946feb))
+- improve types ([f6ce002](https://github.com/lindorm-io/monorepo/commit/f6ce002e8555c54ba4f12bd67222457fa2bcf90a))
+- use common slim entity and align with improved config ([f4094b1](https://github.com/lindorm-io/monorepo/commit/f4094b173f11af4d342ece49d8a3ff72f1846d20))
+
+### Features
+
+- add dsa encoding ([a893601](https://github.com/lindorm-io/monorepo/commit/a8936015a9408733445cdbda8d8b70d633a2330a))
+- align sha kit with other crypto kits ([16d6527](https://github.com/lindorm-io/monorepo/commit/16d6527a2a9f4a19fe50ff6718e81f7ea7fec820))
+- upgrade key kits ([198956c](https://github.com/lindorm-io/monorepo/commit/198956c5fa276ae192af22cb204b3c2158c74339))
+
 ## [0.2.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/types@0.2.0...@lindorm/types@0.2.1) (2025-01-28)
 
 **Note:** Version bump only for package @lindorm/types
