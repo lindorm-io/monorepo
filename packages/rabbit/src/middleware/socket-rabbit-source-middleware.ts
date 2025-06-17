@@ -1,3 +1,4 @@
+import { isObject } from "@lindorm/is";
 import { IRabbitSource } from "../interfaces";
 import { RabbitPylonSocketContext, RabbitPylonSocketMiddleware } from "../types";
 
@@ -7,7 +8,13 @@ export const createSocketRabbitSourceMiddleware = <
   source: IRabbitSource,
 ): RabbitPylonSocketMiddleware<C> => {
   return async function socketRabbitSourceMiddleware(ctx, next): Promise<void> {
-    ctx.rabbit = source.clone({ logger: ctx.logger });
+    if (!isObject(ctx.sources)) {
+      ctx.sources = {} as any;
+    }
+
+    ctx.sources.rabbit = source.clone({ logger: ctx.logger });
+
+    ctx.logger.debug("Rabbit Source added to event context");
 
     await next();
   };

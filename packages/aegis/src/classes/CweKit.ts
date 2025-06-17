@@ -78,7 +78,7 @@ export class CweKit implements ICweKit {
         encryption: this.encryption,
         hkdfSalt,
         initialisationVector: publicEncryptionIv,
-        jwksUri: this.kryptos.jwksUri,
+        jwksUri: this.kryptos.jwksUri ?? undefined,
         keyId: this.kryptos.id,
         pbkdfIterations,
         pbkdfSalt,

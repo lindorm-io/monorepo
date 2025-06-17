@@ -70,7 +70,7 @@ export class JweKit implements IJweKit {
       headerType: "JWE",
       hkdfSalt,
       initialisationVector: publicEncryptionIv,
-      jwksUri: this.kryptos.jwksUri,
+      jwksUri: this.kryptos.jwksUri ?? undefined,
       keyId: this.kryptos.id,
       objectId,
       pbkdfIterations,

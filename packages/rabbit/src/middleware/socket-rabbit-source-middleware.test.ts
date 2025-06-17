@@ -17,6 +17,6 @@ describe("createSocketRabbitSourceMiddleware", () => {
       createSocketRabbitSourceMiddleware(source)(ctx, next),
     ).resolves.not.toThrow();
 
-    expect(ctx.rabbit).toEqual({ clonedSource: true });
+    expect(ctx.sources.rabbit).toEqual({ clonedSource: true });
   });
 });

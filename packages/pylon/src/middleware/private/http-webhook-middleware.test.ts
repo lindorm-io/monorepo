@@ -1,5 +1,4 @@
 import { createMockLogger } from "@lindorm/logger";
-import { OptionsHandler } from "../../types";
 import { createHttpWebhookMiddleware } from "./http-webhook-middleware";
 
 describe("createHttpWebhookMiddleware", () => {
@@ -23,10 +22,8 @@ describe("createHttpWebhookMiddleware", () => {
   afterEach(jest.clearAllMocks);
 
   test("should call the webhook handler and await next before webhook is finished", async () => {
-    const handler: OptionsHandler = async () => "OK";
-
     await expect(
-      createHttpWebhookMiddleware(handler)(ctx, jest.fn()),
+      createHttpWebhookMiddleware(jest.fn())(ctx, jest.fn()),
     ).resolves.toBeUndefined();
   });
 });

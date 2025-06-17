@@ -9,7 +9,7 @@ export const assertChecksum = (attributes: EventStoreAttributes): void => {
     throw new Error("Missing checksum");
   }
 
-  const kit = new ShaKit({ algorithm: "SHA256", format: "base64" });
+  const kit = new ShaKit({ algorithm: "SHA256", encoding: "base64" });
 
   return kit.assert(JSON.stringify(sortKeys(rest)), checksum);
 };

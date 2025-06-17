@@ -11,16 +11,14 @@ import { IRabbitSource } from "../interfaces";
 // common context
 
 type Context = {
-  rabbit: IRabbitSource;
+  sources: {
+    rabbit: IRabbitSource;
+  };
 };
 
 // extended context
 
-export type RabbitPylonHttpContext<Data = any, WebhookData = any> = PylonHttpContext<
-  Data,
-  PylonHttpState,
-  WebhookData
-> &
+export type RabbitPylonHttpContext<Data = any> = PylonHttpContext<Data, PylonHttpState> &
   Context;
 
 export type RabbitPylonSocketContext<

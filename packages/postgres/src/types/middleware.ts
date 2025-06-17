@@ -18,10 +18,9 @@ type Context = {
 
 // extended context
 
-export type PostgresPylonHttpContext<Data = any, WebhookData = any> = PylonHttpContext<
+export type PostgresPylonHttpContext<Data = any> = PylonHttpContext<
   Data,
-  PylonHttpState,
-  WebhookData
+  PylonHttpState
 > &
   Context;
 

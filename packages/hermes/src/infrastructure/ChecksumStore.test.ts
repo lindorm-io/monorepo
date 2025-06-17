@@ -49,7 +49,7 @@ describe("ChecksumStore", () => {
       version: 1,
     });
 
-    const kit = new ShaKit({ algorithm: "SHA256", format: "base64" });
+    const kit = new ShaKit({ algorithm: "SHA256", encoding: "base64" });
 
     checksum = kit.hash(JSON.stringify(sortKeys(event)));
   });

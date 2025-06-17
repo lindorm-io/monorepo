@@ -49,7 +49,7 @@ export class JwsKit implements IJwsKit {
           ? "text/plain; charset=utf-8"
           : "application/octet-stream",
       headerType: "JWS",
-      jwksUri: this.kryptos.jwksUri,
+      jwksUri: this.kryptos.jwksUri ?? undefined,
       keyId: this.kryptos.id,
       objectId,
     };

@@ -33,7 +33,7 @@ export class ChecksumStore implements IHermesChecksumStore {
   public async verify(event: HermesEvent): Promise<void> {
     this.logger.debug("Verifying event checksum", { event });
 
-    const kit = new ShaKit({ algorithm: "SHA256", format: "base64" });
+    const kit = new ShaKit({ algorithm: "SHA256", encoding: "base64" });
 
     const checksum = kit.hash(JSON.stringify(sortKeys(event)));
 

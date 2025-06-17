@@ -65,7 +65,7 @@ export class JwtKit implements IJwtKit {
       algorithm: this.kryptos.algorithm,
       contentType: "application/json",
       headerType: "JWT",
-      jwksUri: this.kryptos.jwksUri,
+      jwksUri: this.kryptos.jwksUri ?? undefined,
       keyId: this.kryptos.id,
       objectId,
     };

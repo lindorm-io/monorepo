@@ -24,11 +24,7 @@ type Context = {
 
 // extended context
 
-export type RedisPylonHttpContext<Data = any, WebhookData = any> = PylonHttpContext<
-  Data,
-  PylonHttpState,
-  WebhookData
-> &
+export type RedisPylonHttpContext<Data = any> = PylonHttpContext<Data, PylonHttpState> &
   Context;
 
 export type RedisPylonSocketContext<

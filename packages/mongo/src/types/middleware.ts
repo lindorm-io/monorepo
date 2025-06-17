@@ -25,11 +25,7 @@ type Context = {
 
 // extended context
 
-export type MongoPylonHttpContext<Data = any, WebhookData = any> = PylonHttpContext<
-  Data,
-  PylonHttpState,
-  WebhookData
-> &
+export type MongoPylonHttpContext<Data = any> = PylonHttpContext<Data, PylonHttpState> &
   Context;
 
 export type MongoPylonSocketContext<
