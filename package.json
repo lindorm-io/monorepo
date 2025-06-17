@@ -11,6 +11,7 @@
     "lint": "lerna exec -- eslint . --ext .ts,.tsx",
     "prepare": "husky",
     "prettier": "lerna run prettier",
+    "release": "lerna publish",
     "test": "compd --file docker-compose.yml lerna run test:ci",
     "test:ci": "lerna run test:ci",
     "typecheck": "lerna run typecheck:ci",
