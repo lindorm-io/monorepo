@@ -54,11 +54,11 @@
     "@socket.io/redis-adapter": "^8.3.0",
     "co-body": "^6.2.0",
     "formidable": "^3.5.4",
-    "koa": "^2.15.3",
+    "koa": "^2.16.1",
     "koa-router": "^12.0.1",
     "object-path": "^0.11.8",
     "socket.io": "^4.8.1",
-    "zod": "^3.25.32"
+    "zod": "^3.25.67"
   },
   "devDependencies": {
     "@lindorm/kryptos": "^0.3.7",
