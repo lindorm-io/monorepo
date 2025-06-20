@@ -1,0 +1,43 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`LindormWorkerScanner should return with array of worker config 1`] = `
+[
+  {
+    "alias": "WorkerOne",
+    "callback": [Function],
+    "interval": "1w",
+    "randomize": "1h",
+    "retry": {
+      "maxAttempts": 10,
+      "strategy": "linear",
+      "timeout": 1000,
+      "timeoutMax": 10000,
+    },
+  },
+  {
+    "alias": "WorkerThree",
+    "callback": [Function],
+    "retry": {
+      "maxAttempts": 10,
+      "strategy": "linear",
+      "timeout": 1000,
+      "timeoutMax": 10000,
+    },
+  },
+  {
+    "alias": "WorkerTwo",
+    "callback": [Function],
+    "interval": "2y",
+    "listeners": [
+      {
+        "event": "start",
+        "listener": [Function],
+      },
+      {
+        "event": "stop",
+        "listener": [Function],
+      },
+    ],
+  },
+]
+`;

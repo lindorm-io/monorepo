@@ -1,5 +1,5 @@
 import { isReadableTime } from "@lindorm/date";
-import { isFunction, isNumber, isObject, isString } from "@lindorm/is";
+import { isArray, isFunction, isNumber, isObject, isString } from "@lindorm/is";
 import { IScanData, Scanner } from "@lindorm/scanner";
 import { LindormWorkerScannerError } from "../errors";
 import {
@@ -69,6 +69,10 @@ export class LindormWorkerScanner {
 
     if (isReadableTime(module.interval) || isNumber(module.interval)) {
       result.interval = module.interval;
+    }
+
+    if (isArray(module.listeners)) {
+      result.listeners = module.listeners;
     }
 
     if (isReadableTime(module.randomize) || isNumber(module.randomize)) {

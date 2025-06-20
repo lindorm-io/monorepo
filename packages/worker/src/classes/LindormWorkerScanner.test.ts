@@ -1,5 +1,6 @@
 import { RetryStrategy } from "@lindorm/retry";
 import { join } from "path";
+import { LindormWorkerEvent } from "../enums";
 import { LindormWorkerConfig } from "../types";
 import { LindormWorkerScanner } from "./LindormWorkerScanner";
 
@@ -7,6 +8,7 @@ const workerConfig: LindormWorkerConfig = {
   alias: "CustomWorker",
   callback: async () => {},
   interval: 1000,
+  listeners: [{ event: LindormWorkerEvent.Start, listener: () => {} }],
   randomize: 100,
   retry: {
     maxAttempts: 10,
@@ -24,34 +26,6 @@ describe("LindormWorkerScanner", () => {
   test("should return with array of worker config", () => {
     expect(
       LindormWorkerScanner.scan([join(__dirname, "..", "__fixtures__", "workers")]),
-    ).toEqual([
-      {
-        alias: "WorkerOne",
-        callback: expect.any(Function),
-        interval: "1w",
-        randomize: "1h",
-        retry: {
-          maxAttempts: 10,
-          strategy: "linear",
-          timeout: 1000,
-          timeoutMax: 10000,
-        },
-      },
-      {
-        alias: "WorkerThree",
-        callback: expect.any(Function),
-        retry: {
-          maxAttempts: 10,
-          strategy: "linear",
-          timeout: 1000,
-          timeoutMax: 10000,
-        },
-      },
-      {
-        alias: "WorkerTwo",
-        callback: expect.any(Function),
-        interval: "2y",
-      },
-    ]);
+    ).toMatchSnapshot();
   });
 });

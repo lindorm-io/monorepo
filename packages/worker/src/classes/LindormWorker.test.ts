@@ -1,4 +1,7 @@
+import { LindormError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger";
+import { RetryStrategy } from "@lindorm/retry";
+import { LindormWorkerEvent } from "../enums";
 import { LindormWorkerCallback } from "../types";
 import { LindormWorker } from "./LindormWorker";
 
@@ -6,16 +9,25 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 describe("LindormWorker", () => {
   let callback: jest.MockedFunction<LindormWorkerCallback>;
+  let listener: jest.MockedFunction<() => void>;
   let worker: LindormWorker;
 
   beforeEach(() => {
     callback = jest.fn().mockResolvedValue("OK");
+    listener = jest.fn();
 
     worker = new LindormWorker({
       alias: "Alias",
       callback,
       interval: 40,
+      listeners: [{ event: LindormWorkerEvent.Error, listener }],
       logger: createMockLogger(),
+      retry: {
+        maxAttempts: 5,
+        strategy: RetryStrategy.Linear,
+        timeout: 25,
+        timeoutMax: 5000,
+      },
     });
   });
 
@@ -23,10 +35,10 @@ describe("LindormWorker", () => {
     worker.stop();
   });
 
-  const wait = (times: number) =>
+  const wait = (times: number, cb: any = callback) =>
     new Promise((resolve) => {
       const interval = setInterval(() => {
-        if (callback.mock.calls.length === times) {
+        if (cb.mock.calls.length === times) {
           clearInterval(interval);
           resolve(undefined);
         }
@@ -116,5 +128,15 @@ describe("LindormWorker", () => {
 
     expect(callback).toHaveBeenCalledTimes(1);
     expect(worker.seq).toEqual(1);
+  });
+
+  test("should call listener on error", async () => {
+    callback.mockRejectedValue(new Error("Test Error"));
+
+    await expect(worker.trigger()).resolves.toBeUndefined();
+
+    await wait(1, listener);
+
+    expect(listener).toHaveBeenCalledWith(expect.any(LindormError));
   });
 });

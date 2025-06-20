@@ -1,18 +1,27 @@
 import { isReadableTime, ms } from "@lindorm/date";
+import { LindormError } from "@lindorm/errors";
 import { isNumber } from "@lindorm/is";
 import { ILogger } from "@lindorm/logger";
-import { RetryConfig, calculateRetry } from "@lindorm/retry";
+import { calculateRetry, RetryConfig } from "@lindorm/retry";
 import { sleep } from "@lindorm/utils";
 import { EventEmitter } from "events";
 import { RETRY_CONFIG } from "../constants/private";
 import { LindormWorkerEvent } from "../enums";
 import { ILindormWorker } from "../interfaces";
-import { LindormWorkerCallback, LindormWorkerOptions } from "../types";
+import {
+  LindormWorkerCallback,
+  LindormWorkerContext,
+  LindormWorkerErrorListener,
+  LindormWorkerListener,
+  LindormWorkerOptions,
+  LindormWorkerSuccessListener,
+} from "../types";
 
 export class LindormWorker<T = unknown> implements ILindormWorker<T> {
   public readonly alias: string;
 
   private readonly callback: LindormWorkerCallback<T>;
+
   private readonly emitter: EventEmitter;
   private readonly interval: number;
   private readonly logger: ILogger;
@@ -33,9 +42,10 @@ export class LindormWorker<T = unknown> implements ILindormWorker<T> {
     this.emitter = new EventEmitter();
     this.logger = options.logger.child(["LindormWorker", options.alias]);
 
+    this.callback = options.callback;
+
     this.alias = options.alias;
     this.retry = { ...RETRY_CONFIG, ...(options.retry ?? {}) };
-    this.callback = options.callback;
     this.randomize = isReadableTime(options.randomize)
       ? ms(options.randomize)
       : isNumber(options.randomize)
@@ -54,6 +64,10 @@ export class LindormWorker<T = unknown> implements ILindormWorker<T> {
     this._seq = 0;
     this._started = false;
     this._timeout = null;
+
+    for (const listener of options.listeners ?? []) {
+      this.emitter.on(listener.event, listener.listener);
+    }
   }
 
   public get latestError(): Date | null {
@@ -88,14 +102,14 @@ export class LindormWorker<T = unknown> implements ILindormWorker<T> {
     return this._started;
   }
 
-  public on(evt: LindormWorkerEvent.Start, listener: () => void): void;
-  public on(evt: LindormWorkerEvent.Stop, listener: () => void): void;
+  public on(evt: LindormWorkerEvent.Start, listener: LindormWorkerListener): void;
+  public on(evt: LindormWorkerEvent.Stop, listener: LindormWorkerListener): void;
   public on(
     evt: LindormWorkerEvent.Success,
-    listener: (result: string | undefined) => void,
+    listener: LindormWorkerSuccessListener,
   ): void;
-  public on(evt: LindormWorkerEvent.Error, listener: (error: Error) => void): void;
-  public on(evt: LindormWorkerEvent.Warning, listener: (error: Error) => void): void;
+  public on(evt: LindormWorkerEvent.Error, listener: LindormWorkerErrorListener): void;
+  public on(evt: LindormWorkerEvent.Warning, listener: LindormWorkerErrorListener): void;
   public on(evt: LindormWorkerEvent, listener: (...args: any[]) => void): void {
     this.emitter.on(evt, listener);
   }
@@ -132,10 +146,6 @@ export class LindormWorker<T = unknown> implements ILindormWorker<T> {
 
   // private
 
-  private get randomizedInterval(): number {
-    return this.interval + Math.floor(Math.random() * this.randomize);
-  }
-
   private async run(attempt = 0): Promise<T | void> {
     if (this._running && attempt === 0) return;
 
@@ -149,13 +159,7 @@ export class LindormWorker<T = unknown> implements ILindormWorker<T> {
       this.logger.debug("Retrying worker callback", { attempt });
     }
 
-    return this.callback({
-      latestError: this._latestError,
-      latestSuccess: this._latestSuccess,
-      latestTry: this._latestTry,
-      logger: this.logger.child(["Callback"]),
-      seq: this._seq,
-    })
+    return this.callback(this.ctx())
       .then((result) => {
         this.logger.debug("Worker callback success", { result });
         this.emitter.emit(LindormWorkerEvent.Success, result);
@@ -164,20 +168,28 @@ export class LindormWorker<T = unknown> implements ILindormWorker<T> {
         this._latestSuccess = new Date();
 
         if (this._started) {
-          this._timeout = setTimeout(() => this.run(), this.randomizedInterval);
+          this._timeout = setTimeout(() => this.run(), this.randomizeInterval());
         }
 
         return result;
       })
-      .catch((err) => {
-        this.logger.debug("Worker callback error", err);
+      .catch((error: any) => {
+        this.logger.debug("Worker callback error", error);
 
-        if (attempt <= this.retry.maxAttempts) {
-          this.emitter.emit(LindormWorkerEvent.Warning, err);
+        if (attempt < this.retry.maxAttempts) {
+          this.emitter.emit(
+            LindormWorkerEvent.Warning,
+            new LindormError(error.message, { error }),
+          );
 
-          sleep(calculateRetry(attempt, this.retry)).then(() => this.run(attempt + 1));
+          return sleep(calculateRetry(attempt, this.retry)).then(() =>
+            this.run(attempt + 1),
+          );
         } else {
-          this.emitter.emit(LindormWorkerEvent.Error, err);
+          this.emitter.emit(
+            LindormWorkerEvent.Error,
+            new LindormError(error.message, { error }),
+          );
 
           this._running = false;
           this._latestError = new Date();
@@ -188,9 +200,23 @@ export class LindormWorker<T = unknown> implements ILindormWorker<T> {
           });
 
           if (this._started) {
-            this._timeout = setTimeout(() => this.run(), this.randomizedInterval);
+            this._timeout = setTimeout(() => this.run(), this.randomizeInterval());
           }
         }
       });
+  }
+
+  private ctx(): LindormWorkerContext {
+    return {
+      latestError: this._latestError,
+      latestSuccess: this._latestSuccess,
+      latestTry: this._latestTry,
+      logger: this.logger.child(["Context"]),
+      seq: this._seq,
+    };
+  }
+
+  private randomizeInterval(): number {
+    return this.interval + Math.floor(Math.random() * this.randomize);
   }
 }
