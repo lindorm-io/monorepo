@@ -14,6 +14,8 @@ import {
   AmphoraQuery,
 } from "../types";
 
+const OIDCONF = "/.well-known/openid-configuration" as const;
+
 export class Amphora implements IAmphora {
   public readonly domain: string | null;
 
@@ -23,7 +25,6 @@ export class Amphora implements IAmphora {
   private _config: Array<AmphoraConfig>;
   private _external: Array<AmphoraExternalOption>;
   private _jwks: Array<LindormJwk>;
-  private _lastRefresh: Date | null;
   private _setup: boolean;
   private _vault: Array<IKryptos>;
 
@@ -40,7 +41,6 @@ export class Amphora implements IAmphora {
     this._config = [];
     this._external = options.external ?? [];
     this._jwks = [];
-    this._lastRefresh = null;
     this._setup = false;
     this._vault = [];
 
@@ -152,34 +152,32 @@ export class Amphora implements IAmphora {
     throw new AmphoraError("Kryptos not found using query");
   }
 
-  public async refresh(force: boolean = false): Promise<void> {
-    if (
-      this._lastRefresh &&
-      this._lastRefresh.getTime() > Date.now() - 600000 &&
-      !force
-    ) {
-      this.logger.silly("Skipping refresh of vault");
-
-      return;
-    }
-
+  public async refresh(): Promise<void> {
     this.logger.silly("Refreshing vault");
 
     await this.refreshExternalConfig();
     await this.refreshExternalKeys();
-
-    this._lastRefresh = new Date();
   }
 
   public canEncrypt(): boolean {
     return (
-      this.filteredKeys({ $or: [{ operations: ["encrypt"] }, { use: "enc" }] }).length > 0
+      this.filteredKeys({
+        $or: [
+          { operations: { $in: ["encrypt", "deriveKey", "wrapKey"] } },
+          { use: "enc" },
+        ],
+      }).length > 0
     );
   }
 
   public canDecrypt(): boolean {
     return (
-      this.filteredKeys({ $or: [{ operations: ["decrypt"] }, { use: "enc" }] }).length > 0
+      this.filteredKeys({
+        $or: [
+          { operations: { $in: ["decrypt", "deriveKey", "unwrapKey"] } },
+          { use: "enc" },
+        ],
+      }).length > 0
     );
   }
 
@@ -274,10 +272,7 @@ export class Amphora implements IAmphora {
       } else if (isUrlLike(item.issuer)) {
         result.push({
           openIdConfiguration: item.openIdConfiguration,
-          openIdConfigurationUri: new URL(
-            "/.well-known/openid-configuration",
-            item.issuer,
-          ).toString(),
+          openIdConfigurationUri: new URL(OIDCONF, item.issuer).toString(),
         });
       } else {
         throw new AmphoraError("Invalid external options", { debug: { item } });
