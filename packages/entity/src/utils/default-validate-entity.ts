@@ -30,14 +30,17 @@ const getValidator = (column: Omit<MetaColumn, "target">): ZodType<any> | undefi
     case "integer":
       return z.number();
 
+    case "object":
+      return z.object({}).passthrough();
+
     case "string":
       return z.string();
 
+    case "url":
+      return z.string().url();
+
     case "uuid":
       return z.string().uuid();
-
-    case "object":
-      return z.object({}).passthrough();
 
     default:
       return;

@@ -16,6 +16,7 @@ export type MetaColumnType =
   | "integer"
   | "object"
   | "string"
+  | "url"
   | "uuid";
 
 export type MetaColumnDecorator =

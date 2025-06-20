@@ -42,6 +42,9 @@ describe("defaultValidateEntity", () => {
       @Column("string", { fallback: "string" })
       string!: string;
 
+      @Column("url", { fallback: "https://example.com" })
+      url!: string;
+
       @Column("uuid", { fallback: "00000000-0000-0000-0000-000000000000" })
       uuid!: string;
     }
