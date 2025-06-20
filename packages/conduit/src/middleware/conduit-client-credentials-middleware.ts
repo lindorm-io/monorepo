@@ -11,15 +11,22 @@ import { conduitBearerAuthMiddleware } from "./conduit-bearer-auth-middleware";
 import { conduitChangeRequestBodyMiddleware } from "./conduit-change-request-body-middleware";
 import { conduitChangeResponseDataMiddleware } from "./conduit-change-response-data-middleware";
 
+export type ClientCredentialsAuthLocation = "body" | "header";
+
+export type ClientCredentialsContentType =
+  | "application/json"
+  | "application/x-www-form-urlencoded";
+
 type Config = {
+  authLocation?: ClientCredentialsAuthLocation;
   clientId: string;
   clientSecret: string;
   clockTolerance?: number;
-  contentType?: "application/json" | "application/x-www-form-urlencoded";
+  contentType?: ClientCredentialsContentType;
   defaultExpiration?: number;
-  openIdBaseUrl: string;
-  openIdConfigurationPath?: string;
-  openIdTokenPath?: string;
+  grantType?: "client_credentials";
+  issuer: string;
+  tokenUri?: string;
   using?: ConduitUsing;
 };
 
@@ -31,12 +38,14 @@ type Options = {
 type CacheItem = {
   accessToken: string;
   audience: string | null;
+  issuer: string;
   scope: Array<string>;
   tokenType: string;
+  tokenUri: string;
   ttl: number;
 };
 
-type Cache = Array<CacheItem>;
+export type ConduitClientCredentialsCache = Array<CacheItem>;
 
 export type ConduitClientCredentialsMiddlewareFactory = (
   options?: Options,
@@ -44,21 +53,38 @@ export type ConduitClientCredentialsMiddlewareFactory = (
 ) => Promise<ConduitMiddleware>;
 
 const DEFAULT = "_@DEFAULT" as const;
+const OIDCONF = "/.well-known/openid-configuration" as const;
 
-export const conduitClientCredentialsMiddleware = (
+const replaceInCache = (cache: ConduitClientCredentialsCache, item: CacheItem): void => {
+  const now = Date.now();
+
+  for (const [index, entry] of cache.entries()) {
+    if (
+      entry.audience === item.audience &&
+      entry.issuer === item.issuer &&
+      entry.ttl <= now
+    ) {
+      cache.splice(index, 1);
+    }
+  }
+
+  cache.push(item);
+};
+
+export const conduitClientCredentialsMiddlewareFactory = (
   config: Config,
+  cache: ConduitClientCredentialsCache = [],
 ): ConduitClientCredentialsMiddlewareFactory => {
   const {
+    authLocation = "body",
+    clientId,
+    clientSecret,
     clockTolerance = 10,
-    openIdConfigurationPath = "/.well-known/openid-configuration",
+    contentType = "application/json",
+    grantType = "client_credentials",
+    issuer,
+    using,
   } = config;
-
-  const baseUrl = config.openIdBaseUrl.endsWith("/")
-    ? config.openIdBaseUrl.slice(0, -1)
-    : config.openIdBaseUrl;
-
-  let cache: Cache = [];
-  let tokenUrl: string | null = config.openIdTokenPath ?? null;
 
   return async function conduitClientCredentialsMiddleware(
     options?: Options,
@@ -66,49 +92,52 @@ export const conduitClientCredentialsMiddleware = (
   ): Promise<ConduitMiddleware> {
     const { audience = DEFAULT, scope = [] } = options ?? {};
 
-    cache = cache.filter((item) => item.ttl > Date.now());
+    const cachedToken = cache.filter(
+      (item) => item.audience === audience && item.issuer === issuer,
+    );
 
-    const filtered = cache.filter((item) => item.audience === audience);
-    const existing = filtered.find((item) =>
+    const existing = cachedToken.find((item) =>
       scope.every((scope) => item.scope.includes(scope)),
     );
 
-    if (existing && existing.accessToken && existing.tokenType) {
+    if (existing && existing.ttl > Date.now()) {
       return conduitBearerAuthMiddleware(existing.accessToken, existing.tokenType);
     }
 
     const client = new Conduit({
-      baseUrl,
+      baseUrl: issuer,
       logger,
       middleware: [
         conduitChangeRequestBodyMiddleware(ChangeCase.Snake),
         conduitChangeResponseDataMiddleware(ChangeCase.Camel),
       ],
-      using: config.using,
+      using,
     });
 
-    if (!tokenUrl) {
+    const cachedIssuer = cache.find((item) => item.issuer === issuer);
+
+    let tokenUri = cachedIssuer?.tokenUri ?? config.tokenUri ?? null;
+
+    if (!tokenUri) {
       const {
         data: { tokenEndpoint },
-      } = await client.get<OpenIdConfigurationResponse>(openIdConfigurationPath);
+      } = await client.get<OpenIdConfigurationResponse>(OIDCONF);
 
-      tokenUrl = tokenEndpoint.replace(baseUrl, "");
+      tokenUri = tokenEndpoint;
     }
 
-    const contentType = config.contentType ?? "application/json";
     const requestOptions: RequestOptions = {};
 
     const requestContent: Dict<string> = {
       ...(audience !== DEFAULT ? { audience } : {}),
-      grant_type: "client_credentials",
+      ...(authLocation === "body" ? { clientId, clientSecret } : {}),
+      grantType,
       ...(scope.length > 0 ? { scope: scope.join(" ") } : {}),
     };
 
     if (contentType === "application/json") {
       requestOptions.body = requestContent;
-    }
-
-    if (contentType === "application/x-www-form-urlencoded") {
+    } else if (contentType === "application/x-www-form-urlencoded") {
       const form = new FormData();
 
       for (const [key, value] of Object.entries(requestContent)) {
@@ -116,18 +145,26 @@ export const conduitClientCredentialsMiddleware = (
       }
 
       requestOptions.form = form;
+    } else {
+      throw new ConduitError("Unsupported content type", {
+        debug: { contentType },
+      });
     }
 
-    const { data } = await client.post<OpenIdTokenResponse>(tokenUrl, {
+    const { data } = await client.post<OpenIdTokenResponse>(tokenUri, {
       ...requestOptions,
-      middleware: [conduitBasicAuthMiddleware(config.clientId, config.clientSecret)],
+      middleware: [
+        ...(authLocation === "header"
+          ? [conduitBasicAuthMiddleware(clientId, clientSecret)]
+          : []),
+      ],
     });
 
-    const receivedScope = isArray(data.scope)
+    const receivedScope = isArray<string>(data.scope)
       ? data.scope
       : isString(data.scope)
         ? data.scope.split(" ")
-        : [];
+        : scope;
 
     const ttl = data.expiresOn
       ? data.expiresOn * 1000
@@ -145,11 +182,13 @@ export const conduitClientCredentialsMiddleware = (
       throw new ConduitError("Token expiration not provided", { debug: data });
     }
 
-    cache.push({
+    replaceInCache(cache, {
       accessToken: data.accessToken,
       audience,
-      scope: [...receivedScope, ...scope],
+      issuer,
+      scope: receivedScope,
       tokenType: data.tokenType ?? "Bearer",
+      tokenUri,
       ttl: ttl - clockTolerance * 1000,
     });
 

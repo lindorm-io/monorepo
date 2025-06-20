@@ -2,14 +2,17 @@ import MockDate from "mockdate";
 import nock from "nock";
 import { OPEN_ID_CONFIGURATION_RESPONSE } from "../__fixtures__/auth0";
 import {
+  ConduitClientCredentialsCache,
   ConduitClientCredentialsMiddlewareFactory,
-  conduitClientCredentialsMiddleware,
+  conduitClientCredentialsMiddlewareFactory,
 } from "./conduit-client-credentials-middleware";
 
 const MockedDate = new Date("2024-01-01T00:00:00.000Z");
 MockDate.set(MockedDate);
 
 describe("conduit-client-credentials-middleware", () => {
+  const cache: ConduitClientCredentialsCache = [];
+
   let ctx: any;
   let factory: ConduitClientCredentialsMiddlewareFactory;
 
@@ -19,12 +22,15 @@ describe("conduit-client-credentials-middleware", () => {
     .reply(200, OPEN_ID_CONFIGURATION_RESPONSE);
 
   beforeAll(() => {
-    factory = conduitClientCredentialsMiddleware({
-      clientId: "clientId",
-      clientSecret: "clientSecret",
-      clockTolerance: 0,
-      openIdBaseUrl: "https://lindorm.eu.auth0.com/",
-    });
+    factory = conduitClientCredentialsMiddlewareFactory(
+      {
+        clientId: "clientId",
+        clientSecret: "clientSecret",
+        clockTolerance: 0,
+        issuer: "https://lindorm.eu.auth0.com/",
+      },
+      cache,
+    );
   });
 
   beforeEach(() => {
@@ -54,6 +60,8 @@ describe("conduit-client-credentials-middleware", () => {
       expect(ctx.req.headers).toEqual({
         Authorization: "Bearer access_token",
       });
+
+      expect(cache).toMatchSnapshot();
     });
 
     test("should return middleware with cached data", async () => {
@@ -64,6 +72,8 @@ describe("conduit-client-credentials-middleware", () => {
       expect(ctx.req.headers).toEqual({
         Authorization: "Bearer access_token",
       });
+
+      expect(cache).toMatchSnapshot();
     });
 
     test("should return middleware with timeout data", async () => {
@@ -87,6 +97,8 @@ describe("conduit-client-credentials-middleware", () => {
       expect(ctx.req.headers).toEqual({
         Authorization: "Bearer access_token",
       });
+
+      expect(cache).toMatchSnapshot();
     });
 
     test("should return a middleware with new data", async () => {
@@ -108,6 +120,8 @@ describe("conduit-client-credentials-middleware", () => {
       expect(ctx.req.headers).toEqual({
         Authorization: "Bearer access_token",
       });
+
+      expect(cache).toMatchSnapshot();
     });
   });
 
@@ -126,6 +140,64 @@ describe("conduit-client-credentials-middleware", () => {
 
       expect(configScope.isDone()).toEqual(true);
       expect(scope.isDone()).toEqual(true);
+
+      await expect(middleware(ctx, jest.fn())).resolves.toBeUndefined();
+
+      expect(ctx.req.headers).toEqual({
+        Authorization: "Bearer access_token",
+      });
+
+      expect(cache).toMatchSnapshot();
+    });
+
+    test("should return middleware with cached data", async () => {
+      const middleware = await factory();
+
+      await expect(middleware(ctx, jest.fn())).resolves.toBeUndefined();
+
+      expect(ctx.req.headers).toEqual({
+        Authorization: "Bearer access_token",
+      });
+
+      expect(cache).toMatchSnapshot();
+    });
+  });
+
+  describe("with internal cache", () => {
+    let ctx: any;
+    let factory: ConduitClientCredentialsMiddlewareFactory;
+
+    nock("https://lindorm.jp.auth0.com")
+      .get("/.well-known/openid-configuration")
+      .times(1)
+      .reply(200, {
+        ...OPEN_ID_CONFIGURATION_RESPONSE,
+        token_endpoint: "https://lindorm.jp.auth0.com/oauth/token",
+      });
+
+    nock("https://lindorm.jp.auth0.com").post("/oauth/token").times(1).reply(200, {
+      access_token: "access_token",
+      expires_in: 10,
+      token_type: "Bearer",
+    });
+
+    beforeAll(() => {
+      factory = conduitClientCredentialsMiddlewareFactory({
+        clientId: "clientId",
+        clientSecret: "clientSecret",
+        clockTolerance: 0,
+        issuer: "https://lindorm.jp.auth0.com/",
+      });
+    });
+
+    beforeEach(() => {
+      ctx = {
+        req: { headers: {} },
+      };
+    });
+
+    test("should return a middleware", async () => {
+      const middleware = await factory();
 
       await expect(middleware(ctx, jest.fn())).resolves.toBeUndefined();
 
