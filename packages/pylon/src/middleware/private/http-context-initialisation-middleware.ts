@@ -1,19 +1,30 @@
 import { Aegis } from "@lindorm/aegis";
 import { IAmphora } from "@lindorm/amphora";
 import { Conduit } from "@lindorm/conduit";
-import { ClientError } from "@lindorm/errors";
+import { Priority } from "@lindorm/enums";
+import { ClientError, ServerError } from "@lindorm/errors";
 import { ILogger } from "@lindorm/logger";
+import { Dict } from "@lindorm/types";
 import { PylonMetric } from "../../classes/private";
-import { PylonHttpMiddleware } from "../../types";
+import {
+  OptionsQueueHandler,
+  OptionsWebhookHandler,
+  PylonHttpContext,
+  PylonHttpMiddleware,
+} from "../../types";
 
-type Options = {
+type Options<C extends PylonHttpContext = PylonHttpContext> = {
   amphora: IAmphora;
   logger: ILogger;
+  queue?: OptionsQueueHandler<C>;
+  webhook?: OptionsWebhookHandler<C>;
 };
 
-export const createHttpContextInitialisationMiddleware = (
-  options: Options,
-): PylonHttpMiddleware =>
+export const createHttpContextInitialisationMiddleware = <
+  C extends PylonHttpContext = PylonHttpContext,
+>(
+  options: Options<C>,
+): PylonHttpMiddleware<C> =>
   async function httpContextInitialisationMiddleware(ctx, next) {
     ctx.body = {};
     ctx.status = ClientError.Status.NotFound;
@@ -35,12 +46,42 @@ export const createHttpContextInitialisationMiddleware = (
       conduit: new Conduit(),
     };
 
-    ctx.webhook = (event: string, data?: any): void => {
-      ctx.state.webhooks.push({ event, data });
+    ctx.queue = async (
+      payload: Dict,
+      priority?: Priority,
+      optional = false,
+    ): Promise<void> => {
+      if (!options.queue) {
+        throw new ServerError("Queue handler is not configured");
+      }
+      try {
+        await options.queue(ctx, payload, priority ?? Priority.Default);
+      } catch (err: any) {
+        if (optional) {
+          ctx.logger.warn("Failed to handle queue", err);
+          return;
+        }
+        throw err;
+      }
     };
 
     ctx.metric = (name: string): PylonMetric =>
       new PylonMetric({ logger: ctx.logger, name });
+
+    ctx.webhook = async (event: string, data?: any, optional = false): Promise<void> => {
+      if (!options.webhook) {
+        throw new ServerError("Webhook handler is not configured");
+      }
+      try {
+        await options.webhook(ctx, event, data);
+      } catch (err: any) {
+        if (optional) {
+          ctx.logger.warn("Failed to handle webhook", err);
+          return;
+        }
+        throw err;
+      }
+    };
 
     await next();
   };

@@ -9,7 +9,6 @@ import {
   createHttpDateValidationMiddleware,
   createHttpSessionMiddleware,
   createHttpStateMiddleware,
-  createHttpWebhookMiddleware,
   httpErrorHandlerMiddleware,
   httpQueryParserMiddleware,
   httpRequestLoggerMiddleware,
@@ -84,6 +83,8 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
       createHttpContextInitialisationMiddleware({
         amphora: this.options.amphora,
         logger: this.logger,
+        queue: this.options.handlers?.queue,
+        webhook: this.options.handlers?.webhook,
       }),
       createHttpDateValidationMiddleware({
         minRequestAge: this.options.minRequestAge,
@@ -94,7 +95,6 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
         ? [createHttpSessionMiddleware(this.options.session)]
         : []),
       createHttpBodyParserMiddleware(this.options.parseBody),
-      createHttpWebhookMiddleware(this.options.handlers?.webhook),
       httpQueryParserMiddleware,
       httpRequestLoggerMiddleware,
       httpResponseBodyMiddleware,

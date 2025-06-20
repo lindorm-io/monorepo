@@ -1,6 +1,6 @@
 import { Amphora, IAmphora } from "@lindorm/amphora";
 import { B64 } from "@lindorm/b64";
-import { Environment } from "@lindorm/enums";
+import { Environment, Priority } from "@lindorm/enums";
 import { ServerError } from "@lindorm/errors";
 import { isArray, isObject } from "@lindorm/is";
 import { KryptosKit } from "@lindorm/kryptos";
@@ -267,11 +267,16 @@ describe("Pylon", () => {
       ctx.status = 200;
     });
 
+    router.post("/queue", async (ctx) => {
+      ctx.queue({ payload: "payload" }, Priority.Background);
+
+      ctx.status = 204;
+    });
+
     router.post("/webhook", async (ctx) => {
       ctx.webhook("webhook_event", "webhook_data");
 
-      ctx.body = ctx.state.webhooks;
-      ctx.status = 200;
+      ctx.status = 204;
     });
 
     pylon = new Pylon({
@@ -294,7 +299,8 @@ describe("Pylon", () => {
       handlers: {
         health: () => handlerSpy("health"),
         rightToBeForgotten: () => handlerSpy("rightToBeForgotten"),
-        webhook: () => handlerSpy("webhook"),
+        queue: (...args) => handlerSpy(...args),
+        webhook: (...args) => handlerSpy(...args),
       },
       httpMiddleware: [middlewareSpy],
       httpRouters: [{ path: "/test", router }],
@@ -738,11 +744,23 @@ describe("Pylon", () => {
     );
   });
 
+  test("should handle queue", async () => {
+    await request(pylon.callback).post("/test/queue").expect(204);
+
+    expect(handlerSpy).toHaveBeenCalledWith(
+      expect.any(Object),
+      { payload: "payload" },
+      "background",
+    );
+  });
+
   test("should handle webhook", async () => {
-    const response = await request(pylon.callback).post("/test/webhook").expect(200);
+    await request(pylon.callback).post("/test/webhook").expect(204);
 
-    expect(response.body).toEqual([{ event: "webhook_event", data: "webhook_data" }]);
-
-    expect(handlerSpy).toHaveBeenCalledWith("webhook");
+    expect(handlerSpy).toHaveBeenCalledWith(
+      expect.any(Object),
+      "webhook_event",
+      "webhook_data",
+    );
   });
 });

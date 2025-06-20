@@ -1,7 +1,7 @@
 import { IAegis, ParsedCws, ParsedCwt, ParsedJws, ParsedJwt } from "@lindorm/aegis";
 import { IAmphora } from "@lindorm/amphora";
 import { IConduit } from "@lindorm/conduit";
-import { Environment } from "@lindorm/enums";
+import { Environment, Priority } from "@lindorm/enums";
 import { ILogger } from "@lindorm/logger";
 import { Middleware } from "@lindorm/middleware";
 import { Dict } from "@lindorm/types";
@@ -43,18 +43,12 @@ type Request = BaseRequest & {
   raw?: any;
 };
 
-type Webhook<Data = any> = {
-  event: string;
-  data: Data;
-};
-
 export type PylonHttpState = {
   app: AppState;
   authorization: AuthorizationState;
   metadata: MetadataState;
   session: PylonSession | null;
   tokens: Dict<ParsedJwt | ParsedJws<any> | ParsedCwt | ParsedCws<any>>;
-  webhooks: Array<Webhook>;
 };
 
 type Context<Data, State> = {
@@ -70,7 +64,8 @@ type Context<Data, State> = {
   state: State;
 
   metric: (name: string) => PylonMetric;
-  webhook: (event: string, data?: any) => void;
+  queue: (payload: Dict, priority?: Priority, optional?: boolean) => Promise<void>;
+  webhook: (event: string, data?: any, optional?: boolean) => Promise<void>;
 };
 
 export type PylonHttpContext<

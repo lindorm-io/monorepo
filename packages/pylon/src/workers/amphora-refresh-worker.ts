@@ -8,7 +8,8 @@ type Options = CreateLindormWorkerOptions & {
 export const createAmphoraRefreshWorker = (options: Options): LindormWorkerConfig => ({
   alias: "AmphoraRefreshWorker",
   interval: options.interval ?? "15m",
-  retry: options.retry,
+  listeners: options.listeners ?? [],
   randomize: options.randomize,
+  retry: options.retry,
   callback: options.amphora.refresh.bind(options.amphora),
 });

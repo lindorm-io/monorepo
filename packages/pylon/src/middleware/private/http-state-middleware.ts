@@ -32,7 +32,6 @@ export const createHttpStateMiddleware = (options: Options): PylonHttpMiddleware
         },
         session: null,
         tokens: {},
-        webhooks: [],
       };
 
       await next();

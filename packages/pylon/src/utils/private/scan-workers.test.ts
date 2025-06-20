@@ -14,6 +14,7 @@ describe("scanWorkers", () => {
       alias: "config-alias",
       callback: async () => {},
       interval: "1m",
+      listeners: [],
       randomize: "10s",
       retry: {},
     };

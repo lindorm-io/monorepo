@@ -39,6 +39,7 @@
     "@lindorm/conduit": "^0.2.0",
     "@lindorm/date": "^0.3.0",
     "@lindorm/ec": "^0.2.0",
+    "@lindorm/enums": "^0.1.4",
     "@lindorm/errors": "^0.1.8",
     "@lindorm/is": "^0.1.8",
     "@lindorm/logger": "^0.3.0",

@@ -22,12 +22,6 @@ describe("createHttpContextInitialisationMiddleware", () => {
 
     options = {
       amphora: createMockAmphora(),
-      cookies: {
-        domain: "test-domain",
-        httpOnly: true,
-        sameSite: "strict",
-        secure: true,
-      },
       logger: createMockLogger(),
     };
   });
@@ -46,6 +40,81 @@ describe("createHttpContextInitialisationMiddleware", () => {
     expect(ctx.conduits.conduit).toEqual(expect.any(Conduit));
 
     expect(ctx.metric).toEqual(expect.any(Function));
+    expect(ctx.queue).toEqual(expect.any(Function));
     expect(ctx.webhook).toEqual(expect.any(Function));
+  });
+
+  test("should handle queues", async () => {
+    const queueHandler = jest.fn();
+
+    options.queue = queueHandler;
+
+    await createHttpContextInitialisationMiddleware(options)(ctx, jest.fn());
+
+    await ctx.queue({ key: "value" });
+
+    expect(queueHandler).toHaveBeenCalledWith(
+      expect.any(Object),
+      { key: "value" },
+      "default",
+    );
+  });
+
+  test("should handle optional queues", async () => {
+    const queueHandler = jest.fn().mockRejectedValue(new Error("Queue error"));
+
+    options.queue = queueHandler;
+
+    await createHttpContextInitialisationMiddleware(options)(ctx, jest.fn());
+
+    await expect(ctx.queue({ key: "value" }, "high", true)).resolves.not.toThrow();
+  });
+
+  test("should throw on queue error if not optional", async () => {
+    const queueHandler = jest.fn().mockRejectedValue(new Error("Queue error"));
+
+    options.queue = queueHandler;
+
+    await createHttpContextInitialisationMiddleware(options)(ctx, jest.fn());
+
+    await expect(ctx.queue({ key: "value" })).rejects.toThrow("Queue error");
+  });
+
+  test("should handle webhooks", async () => {
+    const webhookHandler = jest.fn();
+
+    options.webhook = webhookHandler;
+
+    await createHttpContextInitialisationMiddleware(options)(ctx, jest.fn());
+
+    await ctx.webhook("event_name", { data: "test" });
+
+    expect(webhookHandler).toHaveBeenCalledWith(expect.any(Object), "event_name", {
+      data: "test",
+    });
+  });
+
+  test("should handle optional webhooks", async () => {
+    const webhookHandler = jest.fn().mockRejectedValue(new Error("Webhook error"));
+
+    options.webhook = webhookHandler;
+
+    await createHttpContextInitialisationMiddleware(options)(ctx, jest.fn());
+
+    await expect(
+      ctx.webhook("event_name", { data: "test" }, true),
+    ).resolves.not.toThrow();
+  });
+
+  test("should throw on webhook error if not optional", async () => {
+    const webhookHandler = jest.fn().mockRejectedValue(new Error("Webhook error"));
+
+    options.webhook = webhookHandler;
+
+    await createHttpContextInitialisationMiddleware(options)(ctx, jest.fn());
+
+    await expect(ctx.webhook("event_name", { data: "test" })).rejects.toThrow(
+      "Webhook error",
+    );
   });
 });

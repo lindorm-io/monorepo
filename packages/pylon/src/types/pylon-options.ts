@@ -11,7 +11,11 @@ import { PylonAuthOptions } from "./auth";
 import { PylonCookieConfig } from "./cookies";
 import { CorsOptions } from "./cors";
 import { OpenIdConfigurationOptions } from "./open-id-configuration";
-import { OptionsHandler } from "./options-handler";
+import {
+  OptionsHandler,
+  OptionsQueueHandler,
+  OptionsWebhookHandler,
+} from "./options-handler";
 import { ParseBodyOptions } from "./parse-body";
 import { PylonHttpContext, PylonHttpMiddleware } from "./pylon-http-context";
 import { PylonSocketContext, PylonSocketMiddleware } from "./pylon-socket-context";
@@ -30,8 +34,9 @@ type Common = {
 
 type Handlers<C extends PylonHttpContext = PylonHttpContext> = {
   health?: OptionsHandler<C>;
+  queue?: OptionsQueueHandler<C>;
   rightToBeForgotten?: OptionsHandler<C>;
-  webhook?: OptionsHandler<C>;
+  webhook?: OptionsWebhookHandler<C>;
 };
 
 export type PylonHttpOptions<C extends PylonHttpContext = PylonHttpContext> = Common & {
