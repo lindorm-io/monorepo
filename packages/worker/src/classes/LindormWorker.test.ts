@@ -2,23 +2,26 @@ import { LindormError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger";
 import { RetryStrategy } from "@lindorm/retry";
 import { LindormWorkerEvent } from "../enums";
-import { LindormWorkerCallback } from "../types";
+import { LindormWorkerCallback, LindormWorkerErrorCallback } from "../types";
 import { LindormWorker } from "./LindormWorker";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 describe("LindormWorker", () => {
   let callback: jest.MockedFunction<LindormWorkerCallback>;
+  let errorCallback: jest.MockedFunction<LindormWorkerErrorCallback>;
   let listener: jest.MockedFunction<() => void>;
   let worker: LindormWorker;
 
   beforeEach(() => {
-    callback = jest.fn().mockResolvedValue("OK");
+    callback = jest.fn().mockResolvedValue(undefined);
+    errorCallback = jest.fn().mockResolvedValue(undefined);
     listener = jest.fn();
 
     worker = new LindormWorker({
       alias: "Alias",
       callback,
+      errorCallback,
       interval: 40,
       listeners: [{ event: LindormWorkerEvent.Error, listener }],
       logger: createMockLogger(),
@@ -46,7 +49,7 @@ describe("LindormWorker", () => {
     });
 
   test("should trigger callback", async () => {
-    await expect(worker.trigger()).resolves.toEqual("OK");
+    await expect(worker.trigger()).resolves.toBeUndefined();
 
     expect(callback).toHaveBeenCalledTimes(1);
   });
@@ -128,6 +131,17 @@ describe("LindormWorker", () => {
 
     expect(callback).toHaveBeenCalledTimes(1);
     expect(worker.seq).toEqual(1);
+  });
+
+  test("should call error callback on error", async () => {
+    callback.mockRejectedValue(new Error("Test Error"));
+
+    await expect(worker.trigger()).resolves.toBeUndefined();
+
+    expect(errorCallback).toHaveBeenCalledWith(
+      expect.any(Object),
+      expect.any(LindormError),
+    );
   });
 
   test("should call listener on error", async () => {

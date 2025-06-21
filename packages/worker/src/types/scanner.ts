@@ -1,15 +1,16 @@
 import { ReadableTime } from "@lindorm/date";
 import { RetryOptions } from "@lindorm/retry";
-import { LindormWorkerCallback } from "./context";
+import { LindormWorkerCallback, LindormWorkerErrorCallback } from "./context";
 import { LindormWorkerListenerConfig } from "./listener";
 
 export type LindormWorkerConfig = {
   alias: string;
   callback: LindormWorkerCallback;
-  interval: ReadableTime | number | undefined;
-  listeners: Array<LindormWorkerListenerConfig>;
-  randomize: ReadableTime | number | undefined;
-  retry: RetryOptions | undefined;
+  errorCallback?: LindormWorkerErrorCallback;
+  interval: ReadableTime | number;
+  listeners?: Array<LindormWorkerListenerConfig>;
+  randomize?: ReadableTime | number;
+  retry?: RetryOptions;
 };
 
 export type CreateLindormWorkerOptions = {
