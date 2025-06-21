@@ -141,6 +141,9 @@ export class Pylon<
     this.isStarted = true;
 
     this.logger.info("Pylon started", { port: this.port });
+
+    process.on("SIGINT", this.handleSignal.bind(this, "SIGINT"));
+    process.on("SIGTERM", this.handleSignal.bind(this, "SIGTERM"));
   }
 
   public async stop(): Promise<void> {
@@ -158,6 +161,9 @@ export class Pylon<
     this.isStarted = false;
 
     this.logger.info("Pylon stopped");
+
+    process.removeListener("SIGINT", this.handleSignal.bind(this, "SIGINT"));
+    process.removeListener("SIGTERM", this.handleSignal.bind(this, "SIGTERM"));
   }
 
   public async teardown(): Promise<void> {
@@ -212,5 +218,18 @@ export class Pylon<
         return resolve();
       });
     });
+  }
+
+  private handleSignal(signal: string): void {
+    this.logger.info("Pylon received signal", { signal });
+
+    this.stop()
+      .then(() => process.exit(0))
+      .catch(() => process.exit(1));
+
+    setTimeout(() => {
+      this.logger.warn("Forcing shutdown due to timeout");
+      process.exit(1);
+    }, 10000).unref();
   }
 }
