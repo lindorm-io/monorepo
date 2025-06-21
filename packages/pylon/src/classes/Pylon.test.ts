@@ -750,7 +750,7 @@ describe("Pylon", () => {
     expect(handlerSpy).toHaveBeenCalledWith(
       expect.any(Object),
       { payload: "payload" },
-      "background",
+      "urn:lindorm:priority:background",
     );
   });
 

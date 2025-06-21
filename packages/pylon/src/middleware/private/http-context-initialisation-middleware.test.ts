@@ -56,7 +56,7 @@ describe("createHttpContextInitialisationMiddleware", () => {
     expect(queueHandler).toHaveBeenCalledWith(
       expect.any(Object),
       { key: "value" },
-      "default",
+      "urn:lindorm:priority:default",
     );
   });
 
