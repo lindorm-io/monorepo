@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/conduit",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -29,7 +29,7 @@
     "update:auto": "ncu -u"
   },
   "dependencies": {
-    "@lindorm/enums": "^0.1.4",
+    "@lindorm/enums": "^0.1.5",
     "@lindorm/is": "^0.1.8",
     "@lindorm/middleware": "^0.1.5",
     "@lindorm/retry": "^0.1.6",

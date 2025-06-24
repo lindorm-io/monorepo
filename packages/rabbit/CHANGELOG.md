@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.4.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/rabbit@0.4.1...@lindorm/rabbit@0.4.2) (2025-06-24)
+
+**Note:** Version bump only for package @lindorm/rabbit
+
 ## [0.4.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/rabbit@0.4.0...@lindorm/rabbit@0.4.1) (2025-06-17)
 
 ### Bug Fixes

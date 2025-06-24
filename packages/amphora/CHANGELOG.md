@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/amphora@0.2.0...@lindorm/amphora@0.2.1) (2025-06-24)
+
+### Bug Fixes
+
+- improve amphora ([f9815e5](https://github.com/lindorm-io/monorepo/commit/f9815e52bf685e68de39b590e8d2edc2fa2e9f61))
+
 # [0.2.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/amphora@0.1.7...@lindorm/amphora@0.2.0) (2025-06-17)
 
 ### Bug Fixes

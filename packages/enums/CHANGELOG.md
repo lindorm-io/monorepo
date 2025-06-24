@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.5](https://github.com/lindorm-io/monorepo/compare/@lindorm/enums@0.1.4...@lindorm/enums@0.1.5) (2025-06-24)
+
+### Bug Fixes
+
+- add common priority enum ([016e68f](https://github.com/lindorm-io/monorepo/commit/016e68fcd63aa5278c5ea2ef4f882100ea7b0a40))
+
 ## [0.1.4](https://github.com/lindorm-io/monorepo/compare/@lindorm/enums@0.1.3...@lindorm/enums@0.1.4) (2025-06-17)
 
 **Note:** Version bump only for package @lindorm/enums

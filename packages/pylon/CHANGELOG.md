@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.4.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/pylon@0.4.0...@lindorm/pylon@0.4.1) (2025-06-24)
+
+### Bug Fixes
+
+- add signal listeners for teardown ([f44834e](https://github.com/lindorm-io/monorepo/commit/f44834e95bb502228f5d68144c7a6090be1ff1ce))
+- update pylon with better handlers ([9f270f4](https://github.com/lindorm-io/monorepo/commit/9f270f464e49772f51f3d96f35c641a253b1730b))
+
 # [0.4.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/pylon@0.3.0...@lindorm/pylon@0.4.0) (2025-06-17)
 
 ### Bug Fixes

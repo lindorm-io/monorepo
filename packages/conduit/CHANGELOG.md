@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/conduit@0.2.0...@lindorm/conduit@0.2.1) (2025-06-24)
+
+### Bug Fixes
+
+- amend issues with client credentials middlware ([72947ee](https://github.com/lindorm-io/monorepo/commit/72947eee035707c77ba59e867aedde1d51e7c3bd))
+
 # [0.2.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/conduit@0.1.8...@lindorm/conduit@0.2.0) (2025-06-17)
 
 ### Bug Fixes

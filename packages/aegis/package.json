@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/aegis",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -43,7 +43,7 @@
     "cbor": "^10.0.3"
   },
   "devDependencies": {
-    "@lindorm/amphora": "^0.2.0",
+    "@lindorm/amphora": "^0.2.1",
     "@lindorm/logger": "^0.3.0",
     "@lindorm/types": "^0.3.0",
     "@types/jsonwebtoken": "^9.0.6",

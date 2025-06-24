@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/worker@0.2.0...@lindorm/worker@0.2.1) (2025-06-24)
+
+### Bug Fixes
+
+- add error callback and update types ([2ebd756](https://github.com/lindorm-io/monorepo/commit/2ebd7566dc0e3dd3dfe29bfa68e3a8145eac92f8))
+- update types and listeners ([7469a4d](https://github.com/lindorm-io/monorepo/commit/7469a4d04b8160624d794e13886f66cb5d3e880a))
+
 # [0.2.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/worker@0.1.6...@lindorm/worker@0.2.0) (2025-06-17)
 
 ### Bug Fixes
