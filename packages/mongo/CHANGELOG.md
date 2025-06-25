@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.6.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/mongo@0.6.1...@lindorm/mongo@0.6.2) (2025-06-25)
+
+### Bug Fixes
+
+- add missing cursor method ([8eca798](https://github.com/lindorm-io/monorepo/commit/8eca798566d8903643ce103be7210c6f40e4fbb8))
+
 ## [0.6.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/mongo@0.6.0...@lindorm/mongo@0.6.1) (2025-06-24)
 
 **Note:** Version bump only for package @lindorm/mongo
