@@ -9,7 +9,7 @@ import {
 import { isDate } from "@lindorm/is";
 import { ILogger } from "@lindorm/logger";
 import { DeepPartial } from "@lindorm/types";
-import { CountDocumentsOptions, DeleteOptions, Filter } from "mongodb";
+import { CountDocumentsOptions, DeleteOptions, Filter, FindCursor } from "mongodb";
 import { MongoRepositoryError } from "../errors";
 import { IMongoRepository } from "../interfaces";
 import { FindOptions, MongoRepositoryOptions } from "../types";
@@ -177,6 +177,29 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
     } catch (error: any) {
       this.logger.error("Repository error", error);
       throw new MongoRepositoryError("Unable to count entities", { error });
+    }
+  }
+
+  public cursor(
+    criteria?: Filter<E>,
+    options?: FindOptions<E>,
+  ): FindCursor<DeepPartial<E>> {
+    const start = Date.now();
+
+    const filter = this.createDefaultFilter(criteria, options);
+
+    try {
+      const cursor = this.collection.find(filter, options);
+
+      this.logger.debug("Repository done: cursor", {
+        input: { criteria, filter, options },
+        time: Date.now() - start,
+      });
+
+      return cursor;
+    } catch (error: any) {
+      this.logger.error("Repository error", error);
+      throw new MongoRepositoryError("Unable to find entities", { error });
     }
   }
 

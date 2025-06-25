@@ -22,6 +22,9 @@ export const createMockMongoRepository = <E extends IEntity = IEntity>(
   clone: jest.fn().mockImplementation(async (entity) => entity),
   cloneBulk: jest.fn().mockImplementation(async (array) => array),
   count: jest.fn().mockResolvedValue(1),
+  cursor: jest.fn().mockImplementation((criteria) => ({
+    toArray: () => [callback(criteria)],
+  })),
   delete: jest.fn().mockImplementation(noopAsync),
   deleteExpired: jest.fn().mockImplementation(noopAsync),
   destroy: jest.fn().mockImplementation(noopAsync),

@@ -1,6 +1,6 @@
 import { IEntity } from "@lindorm/entity";
 import { DeepPartial } from "@lindorm/types";
-import { CountDocumentsOptions, DeleteOptions, Filter } from "mongodb";
+import { CountDocumentsOptions, DeleteOptions, Filter, FindCursor } from "mongodb";
 import { FindOptions } from "../types";
 
 export interface IMongoRepository<
@@ -15,6 +15,7 @@ export interface IMongoRepository<
   clone(entity: E): Promise<E>;
   cloneBulk(entities: Array<E>): Promise<Array<E>>;
   count(criteria?: Filter<E>, options?: CountDocumentsOptions): Promise<number>;
+  cursor(criteria?: Filter<E>, options?: FindOptions<E>): FindCursor<DeepPartial<E>>;
   delete(criteria: Filter<E>, options?: DeleteOptions): Promise<void>;
   deleteExpired(): Promise<void>;
   destroy(entity: E): Promise<void>;

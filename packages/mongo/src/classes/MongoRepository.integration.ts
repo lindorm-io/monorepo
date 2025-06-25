@@ -118,6 +118,18 @@ describe("MongoRepository", () => {
     await expect(repository.count({ name: entity.name })).resolves.toEqual(1);
   });
 
+  test("should return a cursor for entities by criteria", async () => {
+    const entity = await repository.save(repository.create({ name: randomUUID() }));
+
+    const c1 = repository.cursor({ name: entity.name });
+    await expect(c1.hasNext()).resolves.toEqual(true);
+    await expect(c1.next()).resolves.toEqual(expect.objectContaining(entity));
+    await expect(c1.close()).resolves.toBeUndefined();
+
+    const c2 = repository.cursor({ name: entity.name });
+    await expect(c2.toArray()).resolves.toEqual([expect.objectContaining(entity)]);
+  });
+
   test("should delete entities by criteria", async () => {
     const entity = await repository.save(repository.create({ name: randomUUID() }));
 
