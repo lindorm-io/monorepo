@@ -13,7 +13,12 @@ export const requestWithRetry = async <T = any>(
   try {
     return await fn();
   } catch (raw: any) {
-    const err = raw.isAxiosError ? ConduitError.fromAxiosError(raw) : raw;
+    const err =
+      raw instanceof ConduitError
+        ? raw
+        : raw.isAxiosError
+          ? ConduitError.fromAxiosError(raw)
+          : new ConduitError(raw.message || "Unknown error", { error: raw });
 
     if (!ctx.req.retryCallback(err, attempt, ctx.req.retryConfig)) {
       ctx.logger?.debug("Conduit retry callback returned false, not retrying");

@@ -55,7 +55,7 @@ const parseResponseHeaders = (response: Response): Dict<Header> => {
 };
 
 export const useFetch = async (
-  input: URL | string,
+  input: string,
   init: RequestInit,
   config?: ConfigContext,
 ): Promise<ConduitResponse> => {

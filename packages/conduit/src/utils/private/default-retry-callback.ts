@@ -1,3 +1,4 @@
+import { ServerError } from "@lindorm/errors";
 import { RetryCallback } from "../../types";
 
 export const defaultRetryCallback: RetryCallback = (err, attempt, options) => {
@@ -5,9 +6,9 @@ export const defaultRetryCallback: RetryCallback = (err, attempt, options) => {
   if (attempt > options.maxAttempts) return false;
 
   switch (err.response?.status) {
-    case 502:
-    case 503:
-    case 504:
+    case ServerError.Status.BadGateway:
+    case ServerError.Status.ServiceUnavailable:
+    case ServerError.Status.GatewayTimeout:
       return true;
 
     default:

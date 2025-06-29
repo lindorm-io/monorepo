@@ -21,6 +21,14 @@ export class ConduitError extends LindormError {
     this.response = options.response;
   }
 
+  public get isClientError(): boolean {
+    return this.status >= 400 && this.status < 500;
+  }
+
+  public get isServerError(): boolean {
+    return this.status >= 500 && this.status < 600;
+  }
+
   public static fromAxiosError(err: AxiosError): ConduitError {
     const config = {
       adapter: err.config?.adapter,
