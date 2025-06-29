@@ -1,4 +1,4 @@
-import { isArray, isFinite, isFunction, isObject, isString } from "@lindorm/is";
+import { isArray, isDate, isFinite, isFunction, isObject, isString } from "@lindorm/is";
 import { Dict } from "@lindorm/types";
 import { v4 as uuid } from "uuid";
 
@@ -15,6 +15,7 @@ export type LindormErrorAttributes = {
   status: number;
   support: string | null;
   title: string | null;
+  timestamp: Date;
 };
 
 export type LindormErrorOptions = {
@@ -39,6 +40,7 @@ export class LindormError extends Error {
   public readonly status: number;
   public readonly support: string | null;
   public readonly title: string | null;
+  public readonly timestamp: Date;
 
   public constructor(message: string, options: LindormErrorOptions = {}) {
     super(message);
@@ -62,9 +64,10 @@ export class LindormError extends Error {
     this.debug = { ...destruct.debug, ...debug };
     this.details = options.details ?? destruct.details ?? null;
     this.errors = destruct.errors ?? [];
-    this.status = status ?? destruct?.status ?? 500;
+    this.status = status ?? destruct?.status ?? -1;
     this.support = support ?? destruct?.support ?? null;
     this.title = title ?? destruct?.title ?? null;
+    this.timestamp = destruct?.timestamp ?? new Date();
 
     if (options.error instanceof Error && options.error.name && options.error.message) {
       this.errors.push(`${destruct.name}: ${destruct.message}`);
@@ -87,6 +90,7 @@ export class LindormError extends Error {
       status: this.status,
       support: this.support,
       title: this.title,
+      timestamp: this.timestamp,
     };
   }
 
@@ -106,6 +110,7 @@ export class LindormError extends Error {
       status: isFinite(error?.status) ? error.status : undefined,
       support: isString(error?.support) ? error.support : undefined,
       title: isString(error?.title) ? error.title : undefined,
+      timestamp: isDate(error?.timestamp) ? error.timestamp : undefined,
     };
   }
 }

@@ -1,4 +1,8 @@
+import MockDate from "mockdate";
 import { LindormError } from "./LindormError";
+
+const MockedDate = new Date("2024-01-01T08:00:00.000Z");
+MockDate.set(MockedDate);
 
 class ExternalError extends Error {
   constructor(message: string) {
@@ -14,6 +18,41 @@ describe("LindormError", () => {
 
     test("should be an LindormError", () => {
       expect(new LindormError("message").name).toEqual("LindormError");
+    });
+  });
+
+  describe("serialisation", () => {
+    test("should serialise to string", () => {
+      expect(new LindormError("message").toString()).toEqual("LindormError: message");
+    });
+
+    test("should serialise to json", () => {
+      expect(
+        new LindormError("message", {
+          id: "aaf972cc-6fbf-54c3-8706-2bea9fb0c1d4",
+          code: "custom_code",
+          data: { value: "data" },
+          debug: { value: "debug" },
+          details: "details",
+          status: 999,
+          support: "56d82695bdbb3aab55ef",
+          title: "title",
+        }).toJSON(),
+      ).toEqual({
+        code: "custom_code",
+        data: { value: "data" },
+        debug: { value: "debug" },
+        details: "details",
+        errors: [],
+        id: "aaf972cc-6fbf-54c3-8706-2bea9fb0c1d4",
+        message: "message",
+        name: "LindormError",
+        stack: expect.stringContaining("LindormError: message"),
+        status: 999,
+        support: "56d82695bdbb3aab55ef",
+        timestamp: new Date("2024-01-01T08:00:00.000Z"),
+        title: "title",
+      });
     });
   });
 
