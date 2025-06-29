@@ -1,4 +1,5 @@
 import { RetryStrategy } from "@lindorm/retry";
+import { REPLACE_URL } from "../../constants/private";
 import { RequestContext } from "../../types";
 import { composeAxiosConfig } from "./compose-axios-config";
 
@@ -51,6 +52,20 @@ describe("composeAxiosConfig", () => {
       headers: { "Content-Type": "application/json", header: "header" },
       timeout: 250,
       url: "https://lindorm.io:3000/test/path/hello/there/kenobi?may=the&force=be&with=you",
+      withCredentials: true,
+    });
+  });
+
+  test("should resolve without host", async () => {
+    ctx.req.url = REPLACE_URL + "/test/path/hello/:answer/:general";
+
+    await expect(composeAxiosConfig(ctx)).resolves.toEqual({
+      data: {
+        body: "body",
+      },
+      headers: { "Content-Type": "application/json", header: "header" },
+      timeout: 250,
+      url: "/test/path/hello/there/kenobi?may=the&force=be&with=you",
       withCredentials: true,
     });
   });

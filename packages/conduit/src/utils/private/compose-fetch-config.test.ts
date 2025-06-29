@@ -1,4 +1,5 @@
 import { RetryStrategy } from "@lindorm/retry";
+import { REPLACE_URL } from "../../constants/private";
 import { RequestContext } from "../../types";
 import { composeFetchConfig } from "./compose-fetch-config";
 
@@ -55,16 +56,30 @@ describe("composeFetchConfig", () => {
 
   test("should resolve", () => {
     expect(composeFetchConfig(ctx)).toEqual({
-      input: expect.objectContaining({
-        host: "lindorm.io:3000",
-        hostname: "lindorm.io",
-        href: "https://lindorm.io:3000/test/path/hello/there/kenobi?may=the&force=be&with=you",
-        origin: "https://lindorm.io:3000",
-        pathname: "/test/path/hello/there/kenobi",
-        port: "3000",
-        protocol: "https:",
-        search: "?may=the&force=be&with=you",
-      }),
+      input:
+        "https://lindorm.io:3000/test/path/hello/there/kenobi?may=the&force=be&with=you",
+      init: {
+        body: '{"body":"body"}',
+        headers: { "Content-Type": "application/json", header: "header" },
+        cache: "force-cache",
+        credentials: "omit",
+        integrity: "integrity",
+        keepalive: true,
+        method: "method",
+        mode: "cors",
+        priority: "auto",
+        redirect: "error",
+        referrer: "referrer",
+        referrerPolicy: "no-referrer",
+      },
+    });
+  });
+
+  test("should resolve path without host", () => {
+    ctx.req.url = REPLACE_URL + "/test/path/hello/:answer/:general";
+
+    expect(composeFetchConfig(ctx)).toEqual({
+      input: "/test/path/hello/there/kenobi?may=the&force=be&with=you",
       init: {
         body: '{"body":"body"}',
         headers: { "Content-Type": "application/json", header: "header" },

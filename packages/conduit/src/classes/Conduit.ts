@@ -5,7 +5,12 @@ import { RetryConfig } from "@lindorm/retry";
 import { Dict } from "@lindorm/types";
 import { extractSearchParams, getPlainUrl, getValidUrl } from "@lindorm/url";
 import { v4 as uuid } from "uuid";
-import { CONDUIT_RESPONSE, RETRY_CONFIG, TIMEOUT } from "../constants/private";
+import {
+  CONDUIT_RESPONSE,
+  REPLACE_URL,
+  RETRY_CONFIG,
+  TIMEOUT,
+} from "../constants/private";
 import { ConduitUsing } from "../enums";
 import { IConduit } from "../interfaces";
 import {
@@ -233,7 +238,7 @@ export class Conduit implements IConduit {
       withCredentials,
     } = options;
 
-    const valid = getValidUrl(pathOrUrl, this.baseUrl);
+    const valid = getValidUrl(pathOrUrl, this.baseUrl ?? REPLACE_URL);
     const searchParams = extractSearchParams<RequestQuery>(valid);
     const url = getPlainUrl(valid).toString();
 

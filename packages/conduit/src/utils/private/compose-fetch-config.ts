@@ -1,9 +1,10 @@
 import { createUrl } from "@lindorm/url";
+import { REPLACE_URL } from "../../constants/private";
 import { ConduitContext } from "../../types";
 import { composeFetchData } from "./compose-fetch-data";
 
 type Composed = {
-  input: URL;
+  input: string;
   init: RequestInit;
 };
 
@@ -18,7 +19,9 @@ export const composeFetchConfig = (ctx: ConduitContext): Composed => {
     input: createUrl(ctx.req.url, {
       params: ctx.req.params,
       query: ctx.req.query,
-    }),
+    })
+      .toString()
+      .replace(REPLACE_URL, ""),
     init: {
       body,
       cache: ctx.req.config.cache,
