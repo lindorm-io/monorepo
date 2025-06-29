@@ -52,10 +52,26 @@ describe("createUrl", () => {
     ).toEqual("https://lindorm.io/path?testCamel=one&hello_snake=two");
   });
 
-  test("should add existing path", () => {
-    expect(createUrl("/path", { host: "https://lindorm.io/test" }).toString()).toEqual(
-      "https://lindorm.io/test/path",
+  test("should add existing path and query and create url object", () => {
+    const url = createUrl("https://lindorm.io:5555/path?testCamel=one&hello_snake=two");
+    expect(url.host).toEqual("lindorm.io:5555");
+    expect(url.hostname).toEqual("lindorm.io");
+    expect(url.href).toEqual(
+      "https://lindorm.io:5555/path?testCamel=one&hello_snake=two",
     );
+    expect(url.origin).toEqual("https://lindorm.io:5555");
+    expect(url.pathname).toEqual("/path");
+    expect(url.port).toEqual("5555");
+    expect(url.protocol).toEqual("https:");
+    expect(url.search).toEqual("?testCamel=one&hello_snake=two");
+  });
+
+  test("should resolve instance of URL", () => {
+    const url = createUrl("https://lindorm.io/test");
+    expect(url).toEqual(expect.any(URL));
+    expect(url.host).toEqual("lindorm.io");
+    expect(url.pathname).toEqual("/test");
+    expect(url.search).toEqual("");
   });
 
   test("should add params to path", () => {
