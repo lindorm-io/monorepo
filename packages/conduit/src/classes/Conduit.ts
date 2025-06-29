@@ -35,7 +35,7 @@ import {
 import { defaultRetryCallback, defaultValidateStatus } from "../utils/private";
 
 export class Conduit implements IConduit {
-  private readonly baseUrl: URL | undefined;
+  private readonly baseURL: URL | undefined;
   private readonly config: ConfigContext;
   private readonly context: AppContext;
   private readonly headers: Dict<string>;
@@ -46,7 +46,7 @@ export class Conduit implements IConduit {
   private readonly using: ConduitUsing;
 
   public constructor(options: ConduitOptions = {}) {
-    this.baseUrl = options.baseUrl ? getPlainUrl(options.baseUrl) : undefined;
+    this.baseURL = options.baseURL ? getPlainUrl(options.baseURL) : undefined;
 
     this.config = {
       timeout: options.timeout ?? TIMEOUT,
@@ -57,7 +57,7 @@ export class Conduit implements IConduit {
 
     this.context = {
       alias: options.alias ?? null,
-      baseUrl: this.baseUrl?.toString() ?? null,
+      baseURL: this.baseURL?.toString() ?? null,
       environment: options.environment ?? null,
     };
 
@@ -238,9 +238,9 @@ export class Conduit implements IConduit {
       withCredentials,
     } = options;
 
-    const valid = getValidUrl(pathOrUrl, this.baseUrl ?? REPLACE_URL);
+    const valid = getValidUrl(pathOrUrl, this.baseURL ?? REPLACE_URL);
     const searchParams = extractSearchParams<RequestQuery>(valid);
-    const url = getPlainUrl(valid).toString();
+    const url = getPlainUrl(valid).toString().replace(REPLACE_URL, "");
 
     const req: RequestContext<RequestBody, RequestParams, RequestQuery> = {
       body: body as RequestBody,

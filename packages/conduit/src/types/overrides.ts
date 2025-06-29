@@ -22,7 +22,7 @@ type FetchConfigOverride = {
 type RawAxiosRequestConfigOptions = Omit<
   RawAxiosRequestConfig,
   | "auth"
-  | "baseUrl"
+  | "baseURL"
   | "data"
   | "headers"
   | "method"
@@ -39,7 +39,7 @@ type RawAxiosRequestConfigOptions = Omit<
 type RawAxiosRequestConfigContext = Omit<
   RawAxiosRequestConfig,
   | "auth"
-  | "baseUrl"
+  | "baseURL"
   | "data"
   | "headers"
   | "params"

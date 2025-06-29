@@ -17,6 +17,7 @@ export const composeFetchConfig = (ctx: ConduitContext): Composed => {
 
   return {
     input: createUrl(ctx.req.url, {
+      baseUrl: ctx.app.baseURL ?? REPLACE_URL,
       params: ctx.req.params,
       query: ctx.req.query,
     })

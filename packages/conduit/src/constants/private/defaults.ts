@@ -8,7 +8,7 @@ export const CONDUIT_RESPONSE: ConduitResponse = {
   statusText: "",
 };
 
-export const REPLACE_URL = "https://root" as const;
+export const REPLACE_URL = "https://lindorm.temporary.replace.url" as const;
 
 export const RETRY_CONFIG: RetryConfig = {
   maxAttempts: 5,

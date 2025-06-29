@@ -105,7 +105,7 @@ export const conduitClientCredentialsMiddlewareFactory = (
     }
 
     const client = new Conduit({
-      baseUrl: issuer,
+      baseURL: issuer,
       logger,
       middleware: [
         conduitChangeRequestBodyMiddleware(ChangeCase.Snake),

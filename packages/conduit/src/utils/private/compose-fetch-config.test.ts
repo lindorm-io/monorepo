@@ -1,5 +1,4 @@
 import { RetryStrategy } from "@lindorm/retry";
-import { REPLACE_URL } from "../../constants/private";
 import { RequestContext } from "../../types";
 import { composeFetchConfig } from "./compose-fetch-config";
 
@@ -51,7 +50,10 @@ describe("composeFetchConfig", () => {
       url: "https://lindorm.io:3000/test/path/hello/:answer/:general",
     };
 
-    ctx = { req };
+    ctx = {
+      app: { baseURL: undefined },
+      req,
+    };
   });
 
   test("should resolve", () => {
@@ -75,8 +77,32 @@ describe("composeFetchConfig", () => {
     });
   });
 
-  test("should resolve path without host", () => {
-    ctx.req.url = REPLACE_URL + "/test/path/hello/:answer/:general";
+  test("should resolve with base url", () => {
+    ctx.app.baseURL = "https://lindorm.io:5555";
+    ctx.req.url = "/test/path/hello/:answer/:general";
+
+    expect(composeFetchConfig(ctx)).toEqual({
+      input:
+        "https://lindorm.io:5555/test/path/hello/there/kenobi?may=the&force=be&with=you",
+      init: {
+        body: '{"body":"body"}',
+        headers: { "Content-Type": "application/json", header: "header" },
+        cache: "force-cache",
+        credentials: "omit",
+        integrity: "integrity",
+        keepalive: true,
+        method: "method",
+        mode: "cors",
+        priority: "auto",
+        redirect: "error",
+        referrer: "referrer",
+        referrerPolicy: "no-referrer",
+      },
+    });
+  });
+
+  test("should resolve without host", () => {
+    ctx.req.url = "/test/path/hello/:answer/:general";
 
     expect(composeFetchConfig(ctx)).toEqual({
       input: "/test/path/hello/there/kenobi?may=the&force=be&with=you",

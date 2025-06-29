@@ -30,7 +30,7 @@ export type ConduitMiddleware<
 
 export type ConduitOptions = {
   alias?: string;
-  baseUrl?: URL | string;
+  baseURL?: URL | string;
   config?: ConfigOptions;
   environment?: Environment;
   headers?: Dict;

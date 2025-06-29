@@ -7,7 +7,7 @@ import { RetryCallback } from "./retry";
 
 export type AppContext = {
   alias: string | null;
-  baseUrl: string | null;
+  baseURL: string | null;
   environment: Environment | null;
 };
 
