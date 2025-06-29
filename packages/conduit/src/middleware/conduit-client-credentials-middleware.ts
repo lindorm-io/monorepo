@@ -129,7 +129,7 @@ export const conduitClientCredentialsMiddlewareFactory = (
     const requestOptions: RequestOptions = {};
 
     const requestContent: Dict<string> = {
-      ...(audience !== DEFAULT ? { audience } : {}),
+      ...(audience && audience !== DEFAULT ? { audience } : {}),
       ...(authLocation === "body" ? { clientId, clientSecret } : {}),
       grantType,
       ...(scope.length > 0 ? { scope: scope.join(" ") } : {}),
