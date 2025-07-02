@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/entity@0.2.1...@lindorm/entity@0.2.2) (2025-07-02)
+
+### Bug Fixes
+
+- rename types and files ([6e63a04](https://github.com/lindorm-io/monorepo/commit/6e63a040d1fe11dd8363b73d958d16a1c7c7b31f))
+
 ## [0.2.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/entity@0.2.0...@lindorm/entity@0.2.1) (2025-06-24)
 
 ### Bug Fixes

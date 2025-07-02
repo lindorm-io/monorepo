@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/oct",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -29,9 +29,9 @@
     "update:auto": "ncu -u"
   },
   "dependencies": {
-    "@lindorm/errors": "^0.1.8",
+    "@lindorm/errors": "^0.1.9",
     "@lindorm/is": "^0.1.8",
-    "@lindorm/kryptos": "^0.4.0"
+    "@lindorm/kryptos": "^0.4.1"
   },
   "devDependencies": {
     "@lindorm/types": "^0.3.0"

@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.3.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/conduit@0.2.1...@lindorm/conduit@0.3.0) (2025-07-02)
+
+### Bug Fixes
+
+- add replace url ([7fa3bfe](https://github.com/lindorm-io/monorepo/commit/7fa3bfe3350a03af886abf7727d0696fc7b2727f))
+- amend bug with audience ([d393f9c](https://github.com/lindorm-io/monorepo/commit/d393f9c9495e7b5f53eb289e65fc894c8a1126a4))
+- make replace url ephemeral ([f86c963](https://github.com/lindorm-io/monorepo/commit/f86c963446f43538bad32d8060117a7971a31a2a))
+
+### Features
+
+- add circuit breaker middleware ([cba41a4](https://github.com/lindorm-io/monorepo/commit/cba41a4cdfc302500d4112aa586b920bac4c94f6))
+
 ## [0.2.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/conduit@0.2.0...@lindorm/conduit@0.2.1) (2025-06-24)
 
 ### Bug Fixes

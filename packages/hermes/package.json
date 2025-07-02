@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/hermes",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -29,24 +29,24 @@
     "update:auto": "ncu -u"
   },
   "dependencies": {
-    "@lindorm/aes": "^0.5.0",
+    "@lindorm/aes": "^0.5.1",
     "@lindorm/case": "^0.1.8",
     "@lindorm/date": "^0.3.0",
     "@lindorm/is": "^0.1.8",
     "@lindorm/json-kit": "^0.5.0",
-    "@lindorm/kryptos": "^0.4.0",
-    "@lindorm/mongo": "^0.6.2",
-    "@lindorm/postgres": "^0.3.2",
-    "@lindorm/rabbit": "^0.4.2",
+    "@lindorm/kryptos": "^0.4.1",
+    "@lindorm/mongo": "^0.6.3",
+    "@lindorm/postgres": "^0.3.3",
+    "@lindorm/rabbit": "^0.4.3",
     "@lindorm/random": "^0.2.0",
-    "@lindorm/redis": "^0.6.1",
-    "@lindorm/scanner": "^0.3.3",
-    "@lindorm/sha": "^0.2.0",
+    "@lindorm/redis": "^0.6.2",
+    "@lindorm/scanner": "^0.3.4",
+    "@lindorm/sha": "^0.2.1",
     "deepmerge": "^4.3.1",
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@lindorm/logger": "^0.3.0",
-    "@lindorm/pylon": "^0.4.1"
+    "@lindorm/logger": "^0.3.1",
+    "@lindorm/pylon": "^0.4.2"
   }
 }

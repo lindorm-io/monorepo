@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.5.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/aes@0.5.0...@lindorm/aes@0.5.1) (2025-07-02)
+
+### Bug Fixes
+
+- amend bug in aes utility ([7437e8e](https://github.com/lindorm-io/monorepo/commit/7437e8e0f047bb0995b8a8c0e6929c9cc368d592))
+
 # [0.5.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/aes@0.4.2...@lindorm/aes@0.5.0) (2025-06-17)
 
 ### Bug Fixes

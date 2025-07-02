@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.4.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/pylon@0.4.1...@lindorm/pylon@0.4.2) (2025-07-02)
+
+### Bug Fixes
+
+- update queue and webhook handlers ([13d9d8f](https://github.com/lindorm-io/monorepo/commit/13d9d8f155538504b6ddfa0c1d68835e50502834))
+
 ## [0.4.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/pylon@0.4.0...@lindorm/pylon@0.4.1) (2025-06-24)
 
 ### Bug Fixes

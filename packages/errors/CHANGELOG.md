@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.9](https://github.com/lindorm-io/monorepo/compare/@lindorm/errors@0.1.8...@lindorm/errors@0.1.9) (2025-07-02)
+
+### Bug Fixes
+
+- add timestamp to errors ([c7a33a5](https://github.com/lindorm-io/monorepo/commit/c7a33a5fe375369ae06cc68cc2db71341aa22d26))
+
 ## [0.1.8](https://github.com/lindorm-io/monorepo/compare/@lindorm/errors@0.1.7...@lindorm/errors@0.1.8) (2025-06-17)
 
 ### Bug Fixes

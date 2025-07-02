@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.9](https://github.com/lindorm-io/monorepo/compare/@lindorm/enigma@0.2.8...@lindorm/enigma@0.2.9) (2025-07-02)
+
+**Note:** Version bump only for package @lindorm/enigma
+
 ## [0.2.8](https://github.com/lindorm-io/monorepo/compare/@lindorm/enigma@0.2.7...@lindorm/enigma@0.2.8) (2025-06-17)
 
 ### Bug Fixes
