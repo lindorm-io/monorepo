@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-function-type */
 
-import { GlobalEntityMetadata } from "../classes/private";
+import { GlobalEntityMetadata as GlobalEntityMetadataImpl } from "../classes/private";
 import {
   MetaColumn,
   MetaEntity,
@@ -13,7 +13,7 @@ import {
   MetaSchema,
 } from "./metadata";
 
-export type GlobalMetadata = {
+export type GlobalEntityMetadata = {
   columns: Array<MetaColumn>;
   entities: Array<MetaEntity>;
   extras: Array<MetaExtra>;
@@ -26,5 +26,5 @@ export type GlobalMetadata = {
 };
 
 export type GlobalThisEntity = typeof globalThis & {
-  __lindorm_entity__: GlobalEntityMetadata;
+  __lindorm_entity__: GlobalEntityMetadataImpl;
 };

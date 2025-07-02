@@ -4,8 +4,8 @@ import { Constructor, DeepPartial, Dict } from "@lindorm/types";
 import { randomUUID } from "crypto";
 import { IEntity } from "../interfaces";
 import {
+  EntityKitOptions,
   EntityMetadata,
-  EntityUtilityOptions,
   GetIncrementFn,
   MetaColumnDecorator,
   MetaSource,
@@ -43,7 +43,7 @@ export class EntityKit<
   public readonly metadata: EntityMetadata<TExtra, TDecorator, TSource>;
   public readonly updateStrategy: UpdateStrategy;
 
-  public constructor(options: EntityUtilityOptions<E>) {
+  public constructor(options: EntityKitOptions<E>) {
     this.Entity = options.Entity;
     this.getNextIncrement = options.getNextIncrement;
     this.logger = options.logger.child(["EntityKit"]);

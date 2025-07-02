@@ -4,7 +4,7 @@ import { IEntity } from "../interfaces";
 
 export type GetIncrementFn = (key: string) => Promise<number>;
 
-export type EntityUtilityOptions<E extends IEntity> = {
+export type EntityKitOptions<E extends IEntity> = {
   Entity: Constructor<E>;
   logger: ILogger;
   source: string;
