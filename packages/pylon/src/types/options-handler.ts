@@ -8,12 +8,13 @@ export type OptionsHandler<C extends PylonHttpContext = PylonHttpContext> = (
 
 export type OptionsQueueHandler<C extends PylonHttpContext = PylonHttpContext> = (
   ctx: C,
-  payload: Dict,
+  name: string,
+  data: Dict,
   priority: Priority,
 ) => Promise<void>;
 
 export type OptionsWebhookHandler<C extends PylonHttpContext = PylonHttpContext> = (
   ctx: C,
   event: string,
-  data?: any,
+  payload: Dict,
 ) => Promise<void>;

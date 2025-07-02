@@ -64,7 +64,12 @@ type Context<Data, State> = {
   state: State;
 
   metric: (name: string) => PylonMetric;
-  queue: (payload: Dict, priority?: Priority, optional?: boolean) => Promise<void>;
+  queue: (
+    event: string,
+    payload: Dict,
+    priority?: Priority,
+    optional?: boolean,
+  ) => Promise<void>;
   webhook: (event: string, data?: any, optional?: boolean) => Promise<void>;
 };
 

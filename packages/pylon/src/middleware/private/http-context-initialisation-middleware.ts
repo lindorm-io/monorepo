@@ -47,15 +47,16 @@ export const createHttpContextInitialisationMiddleware = <
     };
 
     ctx.queue = async (
-      payload: Dict,
-      priority?: Priority,
+      name: string,
+      data: Dict = {},
+      priority: Priority = Priority.Default,
       optional = false,
     ): Promise<void> => {
       if (!options.queue) {
         throw new ServerError("Queue handler is not configured");
       }
       try {
-        await options.queue(ctx, payload, priority ?? Priority.Default);
+        await options.queue(ctx, name, data, priority);
       } catch (err: any) {
         if (optional) {
           ctx.logger.warn("Failed to handle queue", err);
@@ -68,12 +69,16 @@ export const createHttpContextInitialisationMiddleware = <
     ctx.metric = (name: string): PylonMetric =>
       new PylonMetric({ logger: ctx.logger, name });
 
-    ctx.webhook = async (event: string, data?: any, optional = false): Promise<void> => {
+    ctx.webhook = async (
+      event: string,
+      payload: Dict = {},
+      optional = false,
+    ): Promise<void> => {
       if (!options.webhook) {
         throw new ServerError("Webhook handler is not configured");
       }
       try {
-        await options.webhook(ctx, event, data);
+        await options.webhook(ctx, event, payload);
       } catch (err: any) {
         if (optional) {
           ctx.logger.warn("Failed to handle webhook", err);
