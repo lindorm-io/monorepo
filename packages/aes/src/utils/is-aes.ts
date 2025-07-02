@@ -1,4 +1,4 @@
-import { isBuffer } from "@lindorm/is";
+import { isBuffer, isString } from "@lindorm/is";
 import { AesDecryptionRecord, SerialisedAesDecryption } from "../types";
 
 export const isAesBufferData = (
@@ -11,6 +11,7 @@ export const isAesSerialisedData = (
   Object.values(options).every((x) => !isBuffer(x));
 
 export const isAesTokenised = (string: string): boolean =>
+  isString(string) &&
   string.startsWith("$") &&
   string.endsWith("$") &&
   string.includes("v=") &&
