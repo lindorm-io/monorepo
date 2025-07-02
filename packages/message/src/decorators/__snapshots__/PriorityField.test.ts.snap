@@ -1,0 +1,29 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`PriorityField Decorator should add metadata 1`] = `
+{
+  "fields": [
+    {
+      "decorator": "PriorityField",
+      "enum": null,
+      "fallback": 1,
+      "key": "priority",
+      "max": null,
+      "min": 0,
+      "nullable": false,
+      "optional": false,
+      "schema": null,
+      "type": "integer",
+    },
+  ],
+  "generated": [],
+  "hooks": [],
+  "message": {
+    "decorator": "Message",
+    "name": null,
+    "namespace": null,
+    "topic": null,
+  },
+  "schemas": [],
+}
+`;

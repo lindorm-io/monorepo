@@ -1,0 +1,16 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Message Decorator should add metadata 1`] = `
+{
+  "fields": [],
+  "generated": [],
+  "hooks": [],
+  "message": {
+    "decorator": "Message",
+    "name": "name",
+    "namespace": "namespace",
+    "topic": "topic",
+  },
+  "schemas": [],
+}
+`;

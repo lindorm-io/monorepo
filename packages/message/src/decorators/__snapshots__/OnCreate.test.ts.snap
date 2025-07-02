@@ -1,0 +1,21 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`OnCreate Decorator should add metadata 1`] = `
+{
+  "fields": [],
+  "generated": [],
+  "hooks": [
+    {
+      "callback": [Function],
+      "decorator": "OnCreate",
+    },
+  ],
+  "message": {
+    "decorator": "Message",
+    "name": null,
+    "namespace": null,
+    "topic": null,
+  },
+  "schemas": [],
+}
+`;

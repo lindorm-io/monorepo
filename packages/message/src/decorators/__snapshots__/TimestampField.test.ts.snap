@@ -1,0 +1,29 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TimestampField Decorator should add metadata 1`] = `
+{
+  "fields": [
+    {
+      "decorator": "TimestampField",
+      "enum": null,
+      "fallback": [Function],
+      "key": "timestamp",
+      "max": null,
+      "min": null,
+      "nullable": false,
+      "optional": false,
+      "schema": null,
+      "type": "date",
+    },
+  ],
+  "generated": [],
+  "hooks": [],
+  "message": {
+    "decorator": "Message",
+    "name": null,
+    "namespace": null,
+    "topic": null,
+  },
+  "schemas": [],
+}
+`;

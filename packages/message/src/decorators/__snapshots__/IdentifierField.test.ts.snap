@@ -1,0 +1,29 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`IdentifierField Decorator should add metadata 1`] = `
+{
+  "fields": [
+    {
+      "decorator": "IdentifierField",
+      "enum": null,
+      "fallback": [Function],
+      "key": "id",
+      "max": null,
+      "min": null,
+      "nullable": false,
+      "optional": false,
+      "schema": null,
+      "type": "uuid",
+    },
+  ],
+  "generated": [],
+  "hooks": [],
+  "message": {
+    "decorator": "Message",
+    "name": null,
+    "namespace": null,
+    "topic": null,
+  },
+  "schemas": [],
+}
+`;

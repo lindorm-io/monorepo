@@ -1,0 +1,29 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`DelayField Decorator should add metadata 1`] = `
+{
+  "fields": [
+    {
+      "decorator": "DelayField",
+      "enum": null,
+      "fallback": 0,
+      "key": "delay",
+      "max": null,
+      "min": 0,
+      "nullable": false,
+      "optional": false,
+      "schema": null,
+      "type": "integer",
+    },
+  ],
+  "generated": [],
+  "hooks": [],
+  "message": {
+    "decorator": "Message",
+    "name": null,
+    "namespace": null,
+    "topic": null,
+  },
+  "schemas": [],
+}
+`;

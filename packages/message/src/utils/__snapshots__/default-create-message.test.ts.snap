@@ -1,0 +1,84 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`defaultCreateMessage should create with empty values 1`] = `
+TestCreateMessageEmpty {
+  "OnCreate": "OnCreate",
+  "array": null,
+  "bigint": null,
+  "boolean": null,
+  "correlation": "e8edbe03-f52f-56c6-8d98-82e6961329fe",
+  "date": null,
+  "delay": 0,
+  "email": null,
+  "enum": null,
+  "float": null,
+  "identifier": "0c8c31df-f1cc-5381-97fc-31b3714327de",
+  "integer": null,
+  "mandatory": false,
+  "object": null,
+  "persistent": false,
+  "priority": 1,
+  "string": null,
+  "timestamp": 2024-01-01T08:00:00.000Z,
+  "url": null,
+  "uuid": null,
+}
+`;
+
+exports[`defaultCreateMessage should create with fallback values 1`] = `
+TestCreateMessageFallback {
+  "OnCreate": "OnCreate",
+  "array": [],
+  "bigint": 0n,
+  "boolean": false,
+  "correlation": "2dc92d72-9ce3-50c7-b982-59022ec393f1",
+  "date": 2024-01-01T08:00:00.000Z,
+  "delay": 0,
+  "email": "ba@fer.af",
+  "enum": "1",
+  "float": 0,
+  "identifier": "88943033-fef1-5ad8-8cf8-4470be80d197",
+  "integer": 0,
+  "mandatory": false,
+  "object": {
+    "object": true,
+  },
+  "persistent": false,
+  "priority": 1,
+  "string": "string",
+  "timestamp": 2024-01-01T08:00:00.000Z,
+  "url": "https://example.com",
+  "uuid": "f264a693-99a3-5cb0-955c-f70fd90e59d4",
+}
+`;
+
+exports[`defaultCreateMessage should create with options values 1`] = `
+TestCreateMessageOptions {
+  "OnCreate": "OnCreate",
+  "array": [
+    "array",
+    "of",
+    "values",
+  ],
+  "bigint": 1234567890123456768n,
+  "boolean": true,
+  "correlation": "b3f411b3-aafc-5445-b2f4-b761c8dce43e",
+  "date": 2026-01-01T08:00:00.000Z,
+  "delay": 1234,
+  "email": "sus@uco.as",
+  "enum": "2",
+  "float": 3.14,
+  "identifier": "9350aeb8-8bb2-57f0-9268-64f955683261",
+  "integer": 42,
+  "mandatory": true,
+  "object": {
+    "key": "value",
+  },
+  "persistent": true,
+  "priority": 999,
+  "string": "x7cyJh9R3w1",
+  "timestamp": 2025-01-01T08:00:00.000Z,
+  "url": "http://comomzi.kh/iwibavif",
+  "uuid": "c6263d16-9031-571c-92c1-f62f5dec8286",
+}
+`;

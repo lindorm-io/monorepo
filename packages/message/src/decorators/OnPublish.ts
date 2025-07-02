@@ -1,0 +1,12 @@
+import { HookDecoratorCallback } from "../types";
+import { globalMessageMetadata } from "../utils";
+
+export function OnPublish(callback: HookDecoratorCallback): ClassDecorator {
+  return function (target) {
+    globalMessageMetadata.addHook({
+      target,
+      decorator: "OnPublish",
+      callback,
+    });
+  };
+}

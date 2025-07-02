@@ -1,0 +1,29 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`MandatoryField Decorator should add metadata 1`] = `
+{
+  "fields": [
+    {
+      "decorator": "MandatoryField",
+      "enum": null,
+      "fallback": [Function],
+      "key": "mandatory",
+      "max": null,
+      "min": null,
+      "nullable": false,
+      "optional": false,
+      "schema": null,
+      "type": "boolean",
+    },
+  ],
+  "generated": [],
+  "hooks": [],
+  "message": {
+    "decorator": "Message",
+    "name": null,
+    "namespace": null,
+    "topic": null,
+  },
+  "schemas": [],
+}
+`;

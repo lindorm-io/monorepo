@@ -1,0 +1,48 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`MessageBase should have expected properties 1`] = `
+TestMessageBase {
+  "id": undefined,
+  "timestamp": undefined,
+}
+`;
+
+exports[`MessageBase should have expected properties 2`] = `
+{
+  "fields": [
+    {
+      "decorator": "IdentifierField",
+      "enum": null,
+      "fallback": [Function],
+      "key": "id",
+      "max": null,
+      "min": null,
+      "nullable": false,
+      "optional": false,
+      "schema": null,
+      "type": "uuid",
+    },
+    {
+      "decorator": "TimestampField",
+      "enum": null,
+      "fallback": [Function],
+      "key": "timestamp",
+      "max": null,
+      "min": null,
+      "nullable": false,
+      "optional": false,
+      "schema": null,
+      "type": "date",
+    },
+  ],
+  "generated": [],
+  "hooks": [],
+  "message": {
+    "decorator": "Message",
+    "name": null,
+    "namespace": null,
+    "topic": null,
+  },
+  "schemas": [],
+}
+`;
