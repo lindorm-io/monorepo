@@ -51,10 +51,11 @@ describe("createHttpContextInitialisationMiddleware", () => {
 
     await createHttpContextInitialisationMiddleware(options)(ctx, jest.fn());
 
-    await ctx.queue({ key: "value" });
+    await ctx.queue("event", { key: "value" });
 
     expect(queueHandler).toHaveBeenCalledWith(
       expect.any(Object),
+      "event",
       { key: "value" },
       "urn:lindorm:priority:default",
     );
@@ -67,7 +68,9 @@ describe("createHttpContextInitialisationMiddleware", () => {
 
     await createHttpContextInitialisationMiddleware(options)(ctx, jest.fn());
 
-    await expect(ctx.queue({ key: "value" }, "high", true)).resolves.not.toThrow();
+    await expect(
+      ctx.queue("event", { key: "value" }, "high", true),
+    ).resolves.not.toThrow();
   });
 
   test("should throw on queue error if not optional", async () => {
@@ -77,7 +80,7 @@ describe("createHttpContextInitialisationMiddleware", () => {
 
     await createHttpContextInitialisationMiddleware(options)(ctx, jest.fn());
 
-    await expect(ctx.queue({ key: "value" })).rejects.toThrow("Queue error");
+    await expect(ctx.queue("event", { key: "value" })).rejects.toThrow("Queue error");
   });
 
   test("should handle webhooks", async () => {

@@ -268,7 +268,7 @@ describe("Pylon", () => {
     });
 
     router.post("/queue", async (ctx) => {
-      ctx.queue({ payload: "payload" }, Priority.Background);
+      ctx.queue("event", { payload: "payload" }, Priority.Background);
 
       ctx.status = 204;
     });
@@ -749,6 +749,7 @@ describe("Pylon", () => {
 
     expect(handlerSpy).toHaveBeenCalledWith(
       expect.any(Object),
+      "event",
       { payload: "payload" },
       "urn:lindorm:priority:background",
     );
