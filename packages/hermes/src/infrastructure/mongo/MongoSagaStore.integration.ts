@@ -1,4 +1,5 @@
 import { createMockLogger } from "@lindorm/logger";
+import { MessageKit } from "@lindorm/message";
 import { IMongoSource, MongoSource } from "@lindorm/mongo";
 import { randomUUID } from "crypto";
 import { Collection } from "mongodb";
@@ -19,6 +20,9 @@ import {
 import { MongoSagaStore } from "./MongoSagaStore";
 
 describe("MongoSagaStore", () => {
+  const commandKit = new MessageKit({ Message: HermesCommand });
+  const eventKit = new MessageKit({ Message: HermesEvent });
+
   const logger = createMockLogger();
 
   let aggregateIdentifier: AggregateIdentifier;
@@ -48,7 +52,7 @@ describe("MongoSagaStore", () => {
     attributes = {
       ...sagaIdentifier,
       destroyed: false,
-      messages_to_dispatch: [new HermesCommand(TEST_HERMES_COMMAND)],
+      messages_to_dispatch: [commandKit.create(TEST_HERMES_COMMAND)],
       processed_causation_ids: [randomUUID()],
       revision: 1,
       state: { state: "state" },
@@ -62,7 +66,7 @@ describe("MongoSagaStore", () => {
   });
 
   test("should find causation ids", async () => {
-    const event = new HermesEvent(TEST_HERMES_COMMAND);
+    const event = eventKit.create(TEST_HERMES_COMMAND);
 
     const document: SagaCausationAttributes = {
       id: sagaIdentifier.id,
@@ -77,9 +81,7 @@ describe("MongoSagaStore", () => {
       .collection(SAGA_CAUSATION)
       .insertOne(document);
 
-    await expect(store.findCausationIds(sagaIdentifier)).resolves.toEqual([
-      event.causationId,
-    ]);
+    await expect(store.findCausationIds(sagaIdentifier)).resolves.toEqual([event.id]);
   });
 
   test("should find saga", async () => {

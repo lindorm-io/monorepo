@@ -3,5 +3,6 @@ import { IHermesMessageBus } from "../../interfaces";
 
 export type ErrorDomainOptions = {
   logger: ILogger;
-  messageBus: IHermesMessageBus;
+  commandBus: IHermesMessageBus;
+  errorBus: IHermesMessageBus;
 };

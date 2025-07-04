@@ -1,6 +1,4 @@
 import { LindormError } from "@lindorm/errors";
-import { MongoSource } from "@lindorm/mongo";
-import { PostgresSource } from "@lindorm/postgres";
 import { IEventStore } from "../interfaces";
 import {
   EventStoreAttributes,
@@ -16,9 +14,9 @@ export class EventStore implements IEventStore {
   public constructor(options: HermesEventStoreOptions) {
     if (options.custom) {
       this.store = options.custom;
-    } else if (options.mongo instanceof MongoSource) {
+    } else if (options.mongo?.name === "MongoSource") {
       this.store = new MongoEventStore(options.mongo, options.logger);
-    } else if (options.postgres instanceof PostgresSource) {
+    } else if (options.postgres?.name === "PostgresSource") {
       this.store = new PostgresEventStore(options.postgres, options.logger);
     } else {
       throw new LindormError("Invalid EventStore configuration");

@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { HermesCommand, HermesError, HermesEvent, HermesTimeout } from "../messages";
 
 export const HermesMessageSchema = z.object({
   id: z.string().uuid(),
@@ -16,12 +15,5 @@ export const HermesMessageSchema = z.object({
   meta: z.record(z.any()),
   name: z.string(),
   timestamp: z.date(),
-  topic: z.string(),
-  type: z.enum([
-    HermesCommand.name,
-    HermesError.name,
-    HermesEvent.name,
-    HermesTimeout.name,
-  ]),
   version: z.number(),
 });

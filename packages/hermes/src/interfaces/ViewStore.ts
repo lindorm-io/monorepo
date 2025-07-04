@@ -1,4 +1,5 @@
 import {
+  ViewData,
   ViewEventHandlerAdapter,
   ViewIdentifier,
   ViewStoreAttributes,
@@ -9,7 +10,10 @@ import { IHermesMessage } from "./HermesMessage";
 import { IView } from "./View";
 
 export interface IHermesViewStore {
-  load(viewIdentifier: ViewIdentifier, adapter: ViewEventHandlerAdapter): Promise<IView>;
+  load(
+    viewIdentifier: ViewIdentifier,
+    adapter: ViewEventHandlerAdapter,
+  ): Promise<ViewData>;
   loadCausations(
     viewIdentifier: ViewIdentifier,
     adapter: ViewEventHandlerAdapter,
@@ -18,8 +22,8 @@ export interface IHermesViewStore {
     view: IView,
     causation: IHermesMessage,
     adapter: ViewEventHandlerAdapter,
-  ): Promise<IView>;
-  saveCausations(view: IView, adapter: ViewEventHandlerAdapter): Promise<IView>;
+  ): Promise<ViewData>;
+  saveCausations(view: IView, adapter: ViewEventHandlerAdapter): Promise<ViewData>;
 }
 
 export interface IViewStore {

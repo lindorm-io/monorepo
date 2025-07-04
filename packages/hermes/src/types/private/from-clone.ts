@@ -15,6 +15,7 @@ import {
   ISagaDomain,
   IViewDomain,
 } from "../../interfaces";
+import { HermesCommand, HermesError, HermesEvent, HermesTimeout } from "../../messages";
 import { ViewEventHandlerAdapter } from "../handlers";
 import { HermesConfig } from "../hermes";
 import { HandlerIdentifier } from "../identifiers";
@@ -33,9 +34,13 @@ export type FromClone = {
   checksumStore: IHermesChecksumStore;
   encryptionStore: IHermesEncryptionStore;
   eventStore: IEventStore;
-  messageBus: IHermesMessageBus;
   sagaStore: IHermesSagaStore;
   viewStore: IHermesViewStore;
+
+  commandBus: IHermesMessageBus<HermesCommand>;
+  errorBus: IHermesMessageBus<HermesError>;
+  eventBus: IHermesMessageBus<HermesEvent>;
+  timeoutBus: IHermesMessageBus<HermesTimeout>;
 
   scanner: HermesScanner;
   options: HermesConfig;

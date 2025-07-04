@@ -1,11 +1,7 @@
-import { IRabbitSubscription } from "@lindorm/rabbit";
+/* eslint-disable @typescript-eslint/no-empty-object-type */
+
+import { IRabbitMessageBus } from "@lindorm/rabbit";
 import { IHermesMessage } from "./HermesMessage";
 
-export interface IHermesMessageBus {
-  publish(message: IHermesMessage | Array<IHermesMessage>): Promise<void>;
-  subscribe(
-    subscription:
-      | IRabbitSubscription<IHermesMessage>
-      | Array<IRabbitSubscription<IHermesMessage>>,
-  ): Promise<void>;
-}
+export interface IHermesMessageBus<M extends IHermesMessage = IHermesMessage>
+  extends IRabbitMessageBus<M> {}

@@ -13,14 +13,14 @@ import {
 } from "../errors";
 import { HermesViewEventHandler } from "../handlers";
 import {
-  IHermesMessage,
   IHermesMessageBus,
   IHermesViewEventHandler,
   IHermesViewStore,
   IView,
   IViewDomain,
 } from "../interfaces";
-import { HermesError } from "../messages";
+import { HermesEvent } from "../messages";
+import { View } from "../models";
 import {
   HandlerIdentifier,
   ViewDomainOptions,
@@ -34,14 +34,16 @@ export class ViewDomain implements IViewDomain {
   private readonly eventEmitter: EventEmitter;
   private readonly eventHandlers: Array<IHermesViewEventHandler>;
   private readonly logger: ILogger;
-  private messageBus: IHermesMessageBus;
+  private errorBus: IHermesMessageBus;
+  private eventBus: IHermesMessageBus;
   private store: IHermesViewStore;
 
   public constructor(options: ViewDomainOptions) {
     this.eventEmitter = new EventEmitter();
     this.logger = options.logger.child(["ViewDomain"]);
 
-    this.messageBus = options.messageBus;
+    this.errorBus = options.errorBus;
+    this.eventBus = options.eventBus;
     this.store = options.store;
 
     this.eventHandlers = [];
@@ -117,9 +119,8 @@ export class ViewDomain implements IViewDomain {
         }),
       );
 
-      await this.messageBus.subscribe({
-        callback: (message: IHermesMessage) =>
-          this.handleEvent(message, eventHandler.view),
+      await this.eventBus.subscribe({
+        callback: (message: HermesEvent) => this.handleEvent(message, eventHandler.view),
         queue: ViewDomain.getQueue(context, eventHandler),
         topic: ViewDomain.getTopic(context, eventHandler),
       });
@@ -145,7 +146,7 @@ export class ViewDomain implements IViewDomain {
   // private
 
   private async handleEvent(
-    event: IHermesMessage,
+    event: HermesEvent,
     handlerIdentifier: HandlerIdentifier,
   ): Promise<void> {
     this.logger.debug("Handling event", { event, viewIdentifier: handlerIdentifier });
@@ -197,7 +198,9 @@ export class ViewDomain implements IViewDomain {
       context: handlerIdentifier.context,
     };
 
-    let view = await this.store.load(viewIdentifier, eventHandler.adapter);
+    const data = await this.store.load(viewIdentifier, eventHandler.adapter);
+
+    let view: IView = new View({ ...data, logger: this.logger });
 
     this.logger.debug("View loaded", { view: view.toJSON() });
 
@@ -240,7 +243,7 @@ export class ViewDomain implements IViewDomain {
 
   private async handleView(
     view: IView,
-    event: IHermesMessage,
+    event: HermesEvent,
     eventHandler: IHermesViewEventHandler,
     conditionValidators: Array<(view: IView) => void>,
   ): Promise<IView> {
@@ -264,16 +267,16 @@ export class ViewDomain implements IViewDomain {
 
     await eventHandler.handler(ctx);
 
-    const saved = await this.store.save(view, event, eventHandler.adapter);
+    const data = await this.store.save(view, event, eventHandler.adapter);
 
     this.logger.debug("Saved view at new revision", {
-      id: saved.id,
-      name: saved.name,
-      context: saved.context,
-      revision: saved.revision,
+      id: data.id,
+      name: data.name,
+      context: data.context,
+      revision: data.revision,
     });
 
-    return saved;
+    return new View({ ...data, logger: this.logger });
   }
 
   private async processCausationIds(
@@ -295,33 +298,34 @@ export class ViewDomain implements IViewDomain {
       processedCausationIds: view.processedCausationIds,
     });
 
-    return await this.store.saveCausations(view, eventHandler.adapter);
+    const data = await this.store.saveCausations(view, eventHandler.adapter);
+
+    return new View({ ...data, logger: this.logger });
   }
 
   private async rejectEvent(
-    event: IHermesMessage,
+    event: HermesEvent,
     view: IView,
     error: DomainError,
   ): Promise<void> {
     try {
       this.logger.debug("Rejecting event", { event, view, error });
 
-      await this.messageBus.publish([
-        new HermesError(
-          {
-            name: snakeCase(error.name),
-            aggregate: event.aggregate,
-            data: {
-              error,
-              message: event,
-              view: { id: view.id, name: view.name, context: view.context },
-            },
-            meta: event.meta,
-            mandatory: false,
+      await this.errorBus.publish(
+        this.errorBus.create({
+          data: {
+            error,
+            message: event,
+            view: { id: view.id, name: view.name, context: view.context },
           },
-          event,
-        ),
-      ]);
+          aggregate: event.aggregate,
+          causationId: event.id,
+          correlationId: event.correlationId,
+          mandatory: false,
+          meta: event.meta,
+          name: snakeCase(error.name),
+        }),
+      );
 
       this.logger.verbose("Rejected event", { event, view, error });
     } catch (err: any) {

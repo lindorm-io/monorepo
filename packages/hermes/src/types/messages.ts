@@ -1,4 +1,3 @@
-import { IRabbitMessage } from "@lindorm/rabbit";
 import { Dict } from "@lindorm/types";
 import { IHermesMessage } from "../interfaces";
 import { AggregateIdentifier, SagaIdentifier, ViewIdentifier } from "./identifiers";
@@ -6,7 +5,7 @@ import { AggregateIdentifier, SagaIdentifier, ViewIdentifier } from "./identifie
 export type HermesMessageOptions<
   D extends Dict = Dict,
   M extends Dict = Dict,
-> = Partial<IRabbitMessage> & {
+> = Partial<IHermesMessage> & {
   aggregate: AggregateIdentifier;
   causationId?: string;
   correlationId?: string;

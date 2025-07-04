@@ -1,11 +1,7 @@
 import { LindormError } from "@lindorm/errors";
 import { ILogger } from "@lindorm/logger";
-import { MongoSource } from "@lindorm/mongo";
-import { PostgresSource } from "@lindorm/postgres";
-import { RedisSource } from "@lindorm/redis";
 import { ViewStoreType } from "../enums";
 import { IHermesMessage, IHermesViewStore, IView, IViewStore } from "../interfaces";
-import { View } from "../models";
 import {
   HermesViewStoreOptions,
   ViewData,
@@ -32,13 +28,13 @@ export class ViewStore implements IHermesViewStore {
     if (options.custom) {
       this.custom = options.custom;
     }
-    if (options.mongo instanceof MongoSource) {
+    if (options.mongo?.name === "MongoSource") {
       this.mongo = new MongoViewStore(options.mongo, this.logger);
     }
-    if (options.postgres instanceof PostgresSource) {
+    if (options.postgres?.name === "PostgresSource") {
       this.postgres = new PostgresViewStore(options.postgres, this.logger);
     }
-    if (options.redis instanceof RedisSource) {
+    if (options.redis?.name === "RedisSource") {
       this.redis = new RedisViewStore(options.redis, this.logger);
     }
   }
@@ -48,20 +44,31 @@ export class ViewStore implements IHermesViewStore {
   public async load(
     viewIdentifier: ViewIdentifier,
     adapter: ViewEventHandlerAdapter,
-  ): Promise<View> {
+  ): Promise<ViewData> {
     this.logger.debug("Loading view", { viewIdentifier });
 
-    const existing = await this.store(adapter).findView(viewIdentifier);
+    const existing = await this.store(adapter).findView({
+      id: viewIdentifier.id,
+      name: viewIdentifier.name,
+      context: viewIdentifier.context,
+    });
 
     if (existing) {
       this.logger.debug("Loading existing view", { existing });
 
-      return new View({ ...ViewStore.toData(existing), logger: this.logger });
+      return ViewStore.toData(existing);
     }
 
-    const view = new View({ ...viewIdentifier, logger: this.logger });
+    const view: ViewData = {
+      ...viewIdentifier,
+      destroyed: false,
+      meta: {},
+      processedCausationIds: [],
+      revision: 0,
+      state: {},
+    };
 
-    this.logger.debug("Loading ephemeral view", { view: view.toJSON() });
+    this.logger.debug("Loading ephemeral view", { view });
 
     return view;
   }
@@ -77,7 +84,7 @@ export class ViewStore implements IHermesViewStore {
     view: IView,
     causation: IHermesMessage,
     adapter: ViewEventHandlerAdapter,
-  ): Promise<View> {
+  ): Promise<ViewData> {
     this.logger.debug("Saving view", { view: view.toJSON(), causation });
 
     const viewIdentifier: ViewIdentifier = {
@@ -92,7 +99,7 @@ export class ViewStore implements IHermesViewStore {
       if (existing.processed_causation_ids.includes(causation.id)) {
         this.logger.debug("Found existing view matching causation", { existing });
 
-        return new View({ ...ViewStore.toData(existing), logger: this.logger });
+        return ViewStore.toData(existing);
       }
 
       const causations = await this.store(adapter).findCausationIds(viewIdentifier);
@@ -100,7 +107,7 @@ export class ViewStore implements IHermesViewStore {
       if (causations.includes(causation.id)) {
         this.logger.debug("Found existing view matching causation", { existing });
 
-        return new View({ ...ViewStore.toData(existing), logger: this.logger });
+        return ViewStore.toData(existing);
       }
     }
 
@@ -113,7 +120,7 @@ export class ViewStore implements IHermesViewStore {
 
       await this.store(adapter).insertView(ViewStore.toAttributes(data));
 
-      return new View({ ...data, logger: this.logger });
+      return data;
     }
 
     const filter: ViewUpdateFilter = {
@@ -133,7 +140,7 @@ export class ViewStore implements IHermesViewStore {
 
     await this.store(adapter).updateView(filter, attributes);
 
-    const update: ViewData = {
+    return {
       ...view.toJSON(),
       destroyed: attributes.destroyed,
       meta: attributes.meta,
@@ -141,14 +148,12 @@ export class ViewStore implements IHermesViewStore {
       revision: attributes.revision,
       state: attributes.state,
     };
-
-    return new View({ ...update, logger: this.logger });
   }
 
   public async saveCausations(
     view: IView,
     adapter: ViewEventHandlerAdapter,
-  ): Promise<IView> {
+  ): Promise<ViewData> {
     this.logger.debug("Saving causations", { view: view.toJSON() });
 
     if (!view.processedCausationIds.length) {
@@ -187,7 +192,7 @@ export class ViewStore implements IHermesViewStore {
 
     await this.store(adapter).updateView(filter, attributes);
 
-    const update: ViewData = {
+    return {
       ...view.toJSON(),
       destroyed: attributes.destroyed,
       meta: attributes.meta,
@@ -195,8 +200,6 @@ export class ViewStore implements IHermesViewStore {
       revision: attributes.revision,
       state: attributes.state,
     };
-
-    return new View({ ...update, logger: this.logger });
   }
 
   // private

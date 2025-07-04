@@ -1,5 +1,6 @@
 import { JsonKit } from "@lindorm/json-kit";
 import { createMockLogger } from "@lindorm/logger";
+import { MessageKit } from "@lindorm/message";
 import { IRedisSource, RedisSource } from "@lindorm/redis";
 import { randomUUID } from "crypto";
 import { TEST_AGGREGATE_IDENTIFIER } from "../../__fixtures__/aggregate";
@@ -59,6 +60,8 @@ const findView = async (
 };
 
 describe("RedisViewStore", () => {
+  const eventKit = new MessageKit({ Message: HermesEvent });
+
   const logger = createMockLogger();
 
   let aggregateIdentifier: AggregateIdentifier;
@@ -98,7 +101,7 @@ describe("RedisViewStore", () => {
   });
 
   test("should find causation ids", async () => {
-    const event = new HermesEvent(TEST_HERMES_COMMAND);
+    const event = eventKit.create(TEST_HERMES_COMMAND);
 
     await insertCausation(source, {
       id: viewIdentifier.id,

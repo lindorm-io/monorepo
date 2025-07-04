@@ -1,4 +1,5 @@
 import { createMockLogger } from "@lindorm/logger";
+import { MessageKit } from "@lindorm/message";
 import { ShaKit } from "@lindorm/sha";
 import { sortKeys } from "@lindorm/utils";
 import { randomUUID } from "crypto";
@@ -11,6 +12,8 @@ const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate);
 
 describe("ChecksumStore", () => {
+  const eventKit = new MessageKit({ Message: HermesEvent });
+
   const logger = createMockLogger();
 
   let checksum: string;
@@ -31,7 +34,7 @@ describe("ChecksumStore", () => {
   });
 
   beforeEach(() => {
-    event = new HermesEvent({
+    event = eventKit.create({
       id: randomUUID(),
       aggregate: {
         id: randomUUID(),

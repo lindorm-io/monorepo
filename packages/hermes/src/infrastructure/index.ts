@@ -1,7 +1,6 @@
 export * from "./mongo";
 export * from "./noop";
 export * from "./postgres";
-export * from "./rabbit";
 export * from "./redis";
 
 export * from "./ChecksumStore";

@@ -1,6 +1,4 @@
 import { ILogger } from "@lindorm/logger";
-import { MongoSource } from "@lindorm/mongo";
-import { PostgresSource } from "@lindorm/postgres";
 import { ShaKit } from "@lindorm/sha";
 import { sortKeys } from "@lindorm/utils";
 import { ChecksumError } from "../errors";
@@ -19,9 +17,9 @@ export class ChecksumStore implements IHermesChecksumStore {
 
     if (options.custom) {
       this.store = options.custom;
-    } else if (options.mongo instanceof MongoSource) {
+    } else if (options.mongo?.name === "MongoSource") {
       this.store = new MongoChecksumStore(options.mongo, this.logger);
-    } else if (options.postgres instanceof PostgresSource) {
+    } else if (options.postgres?.name === "PostgresSource") {
       this.store = new PostgresChecksumStore(options.postgres, this.logger);
     } else {
       throw new Error("Invalid ChecksumStore configuration");

@@ -3,6 +3,7 @@ import { IHermesChecksumStore, IHermesMessageBus } from "../../interfaces";
 
 export type ChecksumDomainOptions = {
   logger: ILogger;
-  messageBus: IHermesMessageBus;
+  errorBus: IHermesMessageBus;
+  eventBus: IHermesMessageBus;
   store: IHermesChecksumStore;
 };

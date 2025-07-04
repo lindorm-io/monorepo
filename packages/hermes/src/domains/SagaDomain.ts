@@ -13,14 +13,13 @@ import {
 } from "../errors";
 import { HermesSagaEventHandler } from "../handlers";
 import {
-  IHermesMessage,
   IHermesMessageBus,
   IHermesSagaEventHandler,
   IHermesSagaStore,
   ISaga,
   ISagaDomain,
 } from "../interfaces";
-import { HermesEvent, HermesTimeout } from "../messages";
+import { HermesCommand, HermesError, HermesEvent, HermesTimeout } from "../messages";
 import { Saga } from "../models";
 import {
   HandlerIdentifier,
@@ -34,14 +33,20 @@ export class SagaDomain implements ISagaDomain {
   private readonly eventEmitter: EventEmitter;
   private readonly eventHandlers: Array<IHermesSagaEventHandler>;
   private readonly logger: ILogger;
-  private readonly messageBus: IHermesMessageBus;
+  private readonly commandBus: IHermesMessageBus;
+  private readonly errorBus: IHermesMessageBus;
+  private readonly eventBus: IHermesMessageBus;
+  private readonly timeoutBus: IHermesMessageBus;
   private store: IHermesSagaStore;
 
   public constructor(options: SagaDomainOptions) {
     this.eventEmitter = new EventEmitter();
     this.logger = options.logger.child(["SagaDomain"]);
 
-    this.messageBus = options.messageBus;
+    this.commandBus = options.commandBus;
+    this.errorBus = options.errorBus;
+    this.eventBus = options.eventBus;
+    this.timeoutBus = options.timeoutBus;
     this.store = options.store;
 
     this.eventHandlers = [];
@@ -115,9 +120,8 @@ export class SagaDomain implements ISagaDomain {
         }),
       );
 
-      await this.messageBus.subscribe({
-        callback: (event: HermesEvent | HermesTimeout) =>
-          this.handleEvent(event, eventHandler.saga),
+      await this.eventBus.subscribe({
+        callback: (event: HermesEvent) => this.handleEvent(event, eventHandler.saga),
         queue: SagaDomain.getQueue(context, eventHandler),
         topic: SagaDomain.getTopic(context, eventHandler),
       });
@@ -142,7 +146,7 @@ export class SagaDomain implements ISagaDomain {
   // private
 
   private async handleEvent(
-    event: IHermesMessage,
+    event: HermesEvent,
     handlerIdentifier: HandlerIdentifier,
   ): Promise<void> {
     this.logger.debug("Handling event", { event, sagaIdentifier: handlerIdentifier });
@@ -194,7 +198,14 @@ export class SagaDomain implements ISagaDomain {
       context: handlerIdentifier.context,
     };
 
-    let saga: ISaga = await this.store.load(sagaIdentifier);
+    const data = await this.store.load(sagaIdentifier);
+
+    let saga: ISaga = new Saga({
+      ...data,
+      commandBus: this.commandBus,
+      timeoutBus: this.timeoutBus,
+      logger: this.logger,
+    });
 
     this.logger.debug("Saga loaded", { saga: saga.toJSON() });
 
@@ -231,7 +242,7 @@ export class SagaDomain implements ISagaDomain {
 
   private async handleSaga(
     saga: ISaga,
-    event: IHermesMessage,
+    event: HermesEvent,
     eventHandler: IHermesSagaEventHandler,
     conditionValidators: Array<(saga: ISaga) => void>,
   ): Promise<ISaga> {
@@ -239,7 +250,12 @@ export class SagaDomain implements ISagaDomain {
 
     this.logger.debug("Handling Saga", { saga: json, event });
 
-    const untouchedSaga = new Saga({ ...json, logger: this.logger });
+    const untouchedSaga = new Saga({
+      ...json,
+      commandBus: this.commandBus,
+      timeoutBus: this.timeoutBus,
+      logger: this.logger,
+    });
 
     try {
       for (const validator of conditionValidators) {
@@ -260,7 +276,14 @@ export class SagaDomain implements ISagaDomain {
 
       await eventHandler.handler(ctx);
 
-      const saved = await this.store.save(saga, event);
+      const data = await this.store.save(saga, event);
+
+      const saved = new Saga({
+        ...data,
+        commandBus: this.commandBus,
+        timeoutBus: this.timeoutBus,
+        logger: this.logger,
+      });
 
       this.logger.debug("Saved saga at new revision", {
         saga: saved.toJSON(),
@@ -275,20 +298,19 @@ export class SagaDomain implements ISagaDomain {
       }
 
       untouchedSaga.messagesToDispatch.push(
-        new HermesEvent(
-          {
-            name: snakeCase(err.name),
-            aggregate: event.aggregate,
-            data: {
-              error: err,
-              message: event,
-              saga: { id: saga.id, name: saga.name, context: saga.context },
-            },
-            mandatory: false,
-            meta: event.meta,
+        this.errorBus.create({
+          data: {
+            error: err,
+            message: event,
+            saga: { id: saga.id, name: saga.name, context: saga.context },
           },
-          event,
-        ),
+          aggregate: event.aggregate,
+          causationId: event.id,
+          correlationId: event.correlationId,
+          mandatory: false,
+          meta: event.meta,
+          name: snakeCase(err.name),
+        }),
       );
 
       return untouchedSaga;
@@ -300,7 +322,17 @@ export class SagaDomain implements ISagaDomain {
       return saga;
     }
 
-    await this.messageBus.publish(saga.messagesToDispatch);
+    await this.commandBus.publish(
+      saga.messagesToDispatch.filter((x) => x instanceof HermesCommand),
+    );
+
+    await this.errorBus.publish(
+      saga.messagesToDispatch.filter((x) => x instanceof HermesError),
+    );
+
+    await this.timeoutBus.publish(
+      saga.messagesToDispatch.filter((x) => x instanceof HermesTimeout),
+    );
 
     this.logger.debug("Published messages for saga", {
       id: saga.id,
@@ -314,7 +346,14 @@ export class SagaDomain implements ISagaDomain {
       return saga;
     }
 
-    return await this.store.clearMessages(saga);
+    const data = await this.store.clearMessages(saga);
+
+    return new Saga({
+      ...data,
+      commandBus: this.commandBus,
+      timeoutBus: this.timeoutBus,
+      logger: this.logger,
+    });
   }
 
   private async processCausationIds(saga: ISaga): Promise<ISaga> {
@@ -334,7 +373,14 @@ export class SagaDomain implements ISagaDomain {
       processedCausationIds: saga.processedCausationIds,
     });
 
-    return await this.store.saveCausations(saga);
+    const data = await this.store.saveCausations(saga);
+
+    return new Saga({
+      ...data,
+      commandBus: this.commandBus,
+      timeoutBus: this.timeoutBus,
+      logger: this.logger,
+    });
   }
 
   private emit<S extends Dict = Dict>(saga: ISaga<S>): void {

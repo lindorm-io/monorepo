@@ -1,4 +1,5 @@
 import { createMockLogger } from "@lindorm/logger";
+import { MessageKit } from "@lindorm/message";
 import { IPostgresSource, PostgresSource } from "@lindorm/postgres";
 import { randomUUID } from "crypto";
 import { TEST_AGGREGATE_IDENTIFIER } from "../../__fixtures__/aggregate";
@@ -64,6 +65,9 @@ const findSaga = async (
 };
 
 describe("PostgresSagaStore", () => {
+  const commandKit = new MessageKit({ Message: HermesCommand });
+  const eventKit = new MessageKit({ Message: HermesEvent });
+
   const logger = createMockLogger();
 
   let aggregateIdentifier: AggregateIdentifier;
@@ -90,7 +94,7 @@ describe("PostgresSagaStore", () => {
     attributes = {
       ...sagaIdentifier,
       destroyed: false,
-      messages_to_dispatch: [new HermesCommand(TEST_HERMES_COMMAND)],
+      messages_to_dispatch: [commandKit.create(TEST_HERMES_COMMAND)],
       processed_causation_ids: [randomUUID()],
       revision: 1,
       state: { data: "state" },
@@ -104,7 +108,7 @@ describe("PostgresSagaStore", () => {
   });
 
   test("should find causation ids", async () => {
-    const event = new HermesEvent(TEST_HERMES_COMMAND);
+    const event = eventKit.create(TEST_HERMES_COMMAND);
 
     await insertCausation(source, {
       id: attributes.id,

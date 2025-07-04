@@ -1,35 +1,54 @@
-import { RabbitMessageBase } from "@lindorm/rabbit";
+import {
+  CorrelationField,
+  DelayField,
+  Field,
+  MandatoryField,
+  MessageBase,
+  Topic,
+} from "@lindorm/message";
 import { Dict } from "@lindorm/types";
 import { randomUUID } from "crypto";
+import z from "zod";
 import { IHermesMessage } from "../interfaces";
-import { AggregateIdentifier, HermesMessageOptions } from "../types";
+import { AggregateIdentifier } from "../types";
 
+@Topic(
+  (message) => `${message.aggregate.context}.${message.aggregate.name}.${message.name}`,
+)
 export class HermesMessage<D extends Dict = Dict, M extends Dict = Dict>
-  extends RabbitMessageBase
-  implements IHermesMessage<D, M>
+  extends MessageBase
+  implements IHermesMessage<D>
 {
-  public readonly aggregate: AggregateIdentifier;
-  public readonly causationId: string;
-  public readonly correlationId: string;
-  public readonly data: D;
-  public readonly meta: M;
-  public readonly name: string;
-  public readonly version: number;
+  @Field("string")
+  public readonly name!: string;
 
-  public constructor(options: HermesMessageOptions<D, M>, causation?: IHermesMessage) {
-    super(options);
+  @Field("integer", { fallback: () => 1 })
+  public readonly version!: number;
 
-    this.aggregate = options.aggregate;
-    this.causationId = options.causationId ?? causation?.id ?? this.id;
-    this.correlationId =
-      options.correlationId ?? causation?.correlationId ?? randomUUID();
-    this.data = options.data ?? ({} as D);
-    this.meta = options.meta ?? ({} as M);
-    this.name = options.name;
-    this.version = options.version ?? 1;
-  }
+  @Field("object", {
+    schema: z.object({
+      id: z.string().uuid(),
+      name: z.string(),
+      context: z.string(),
+    }),
+  })
+  public readonly aggregate!: AggregateIdentifier;
 
-  public get topic(): string {
-    return `${this.aggregate.context}.${this.aggregate.name}.${this.name}`;
-  }
+  @DelayField()
+  public readonly delay!: number;
+
+  @MandatoryField()
+  public readonly mandatory!: boolean;
+
+  @Field("uuid", { fallback: () => randomUUID() })
+  public readonly causationId!: string;
+
+  @CorrelationField()
+  public readonly correlationId!: string;
+
+  @Field("object", { fallback: () => ({}) })
+  public readonly data!: D;
+
+  @Field("object", { fallback: () => ({}) })
+  public readonly meta!: M;
 }

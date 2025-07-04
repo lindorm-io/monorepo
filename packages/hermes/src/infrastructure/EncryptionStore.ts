@@ -1,8 +1,6 @@
 import { AesKit } from "@lindorm/aes";
 import { KryptosEncAlgorithm, KryptosEncryption, KryptosKit } from "@lindorm/kryptos";
 import { ILogger } from "@lindorm/logger";
-import { MongoSource } from "@lindorm/mongo";
-import { PostgresSource } from "@lindorm/postgres";
 import { IEncryptionStore, IHermesEncryptionStore } from "../interfaces";
 import {
   AggregateIdentifier,
@@ -25,9 +23,9 @@ export class EncryptionStore implements IHermesEncryptionStore {
 
     if (options.custom) {
       this.store = options.custom;
-    } else if (options.mongo instanceof MongoSource) {
+    } else if (options.mongo?.name === "MongoSource") {
       this.store = new MongoEncryptionStore(options.mongo, this.logger);
-    } else if (options.postgres instanceof PostgresSource) {
+    } else if (options.postgres?.name === "PostgresSource") {
       this.store = new PostgresEncryptionStore(options.postgres, this.logger);
     } else {
       throw new Error("Invalid EncryptionStore configuration");
@@ -41,13 +39,21 @@ export class EncryptionStore implements IHermesEncryptionStore {
   ): Promise<EncryptionStoreAttributes | undefined> {
     this.logger.debug("Inspecting encryption keys", { aggregate });
 
-    return await this.store.find(aggregate);
+    return await this.store.find({
+      id: aggregate.id,
+      name: aggregate.name,
+      context: aggregate.context,
+    });
   }
 
   public async load(aggregate: AggregateIdentifier): Promise<AesKit> {
     this.logger.debug("Loading encryption keys", { aggregate });
 
-    const exists = await this.store.find(aggregate);
+    const exists = await this.store.find({
+      id: aggregate.id,
+      name: aggregate.name,
+      context: aggregate.context,
+    });
 
     if (exists) {
       const kryptos = KryptosKit.from.b64({

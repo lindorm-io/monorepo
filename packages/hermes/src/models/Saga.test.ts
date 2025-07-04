@@ -1,3 +1,4 @@
+import { MessageKit } from "@lindorm/message";
 import { TEST_HERMES_EVENT } from "../__fixtures__/hermes-event";
 import { TEST_SAGA_OPTIONS } from "../__fixtures__/saga";
 import { SagaDestroyedError } from "../errors";
@@ -5,6 +6,8 @@ import { HermesEvent, HermesTimeout } from "../messages";
 import { Saga } from "./Saga";
 
 describe("Saga", () => {
+  const eventKit = new MessageKit({ Message: HermesEvent });
+
   let saga: Saga;
 
   beforeEach(() => {
@@ -39,7 +42,7 @@ describe("Saga", () => {
       public constructor(public readonly dispatchedData: any) {}
     }
 
-    const event = new HermesEvent(TEST_HERMES_EVENT);
+    const event = eventKit.create(TEST_HERMES_EVENT);
 
     expect(() => saga.dispatch(event, new DispatchedCommand(true))).not.toThrow();
 
@@ -57,8 +60,6 @@ describe("Saga", () => {
           origin: "test",
         },
         timestamp: expect.any(Date),
-        topic: "default.aggregate_name.dispatched_command",
-        type: "HermesCommand",
         version: 1,
       }),
     ]);
@@ -84,7 +85,7 @@ describe("Saga", () => {
   test("should dispatch timeout event", () => {
     expect(() =>
       saga.timeout(
-        new HermesEvent(TEST_HERMES_EVENT),
+        eventKit.create(TEST_HERMES_EVENT),
         "timeoutName",
         { timeoutData: true },
         250,
@@ -115,7 +116,7 @@ describe("Saga", () => {
 
     expect(() =>
       saga.dispatch(
-        new HermesEvent(TEST_HERMES_EVENT),
+        eventKit.create(TEST_HERMES_EVENT),
         new DispatchedCommand("destroyed"),
       ),
     ).toThrow(SagaDestroyedError);
@@ -147,7 +148,7 @@ describe("Saga", () => {
 
     expect(() =>
       saga.timeout(
-        new HermesEvent(TEST_HERMES_EVENT),
+        eventKit.create(TEST_HERMES_EVENT),
         "timeoutName",
         { timeoutData: true },
         250,

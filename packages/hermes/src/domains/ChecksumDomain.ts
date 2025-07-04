@@ -9,10 +9,9 @@ import {
   IChecksumDomain,
   IHermesChecksumEventHandler,
   IHermesChecksumStore,
-  IHermesMessage,
   IHermesMessageBus,
 } from "../interfaces";
-import { HermesError, HermesEvent } from "../messages";
+import { HermesEvent } from "../messages";
 import { ChecksumDomainOptions } from "../types";
 import { EventEmitterListener } from "../types/event-emitter";
 
@@ -20,13 +19,15 @@ export class ChecksumDomain implements IChecksumDomain {
   private readonly eventEmitter: EventEmitter;
   private readonly eventHandlers: Array<IHermesChecksumEventHandler>;
   private readonly logger: ILogger;
-  private readonly messageBus: IHermesMessageBus;
+  private readonly errorBus: IHermesMessageBus;
+  private readonly eventBus: IHermesMessageBus;
   private readonly store: IHermesChecksumStore;
 
   public constructor(options: ChecksumDomainOptions) {
     this.logger = options.logger.child(["ChecksumDomain"]);
 
-    this.messageBus = options.messageBus;
+    this.errorBus = options.errorBus;
+    this.eventBus = options.eventBus;
     this.store = options.store;
 
     this.eventEmitter = new EventEmitter();
@@ -77,7 +78,7 @@ export class ChecksumDomain implements IChecksumDomain {
 
     this.eventHandlers.push(eventHandler);
 
-    await this.messageBus.subscribe({
+    await this.eventBus.subscribe({
       callback: (event: HermesEvent) => this.handleEvent(event),
       queue: ChecksumDomain.getQueue(eventHandler),
       topic: ChecksumDomain.getTopic(eventHandler),
@@ -94,7 +95,7 @@ export class ChecksumDomain implements IChecksumDomain {
 
   // private
 
-  private async handleEvent(event: IHermesMessage): Promise<void> {
+  private async handleEvent(event: HermesEvent): Promise<void> {
     this.logger.debug("Handling event", { event });
 
     const eventHandler = this.eventHandlers.find(
@@ -117,20 +118,19 @@ export class ChecksumDomain implements IChecksumDomain {
 
       this.eventEmitter.emit("checksum", { error: err, event });
 
-      await this.messageBus.publish(
-        new HermesError(
-          {
-            name: snakeCase(err.name),
-            aggregate: event.aggregate,
-            data: {
-              error: err,
-              message: event,
-            },
-            mandatory: false,
-            meta: event.meta,
+      await this.errorBus.publish(
+        this.errorBus.create({
+          data: {
+            error: err,
+            message: event,
           },
-          event,
-        ),
+          aggregate: event.aggregate,
+          causationId: event.id,
+          correlationId: event.correlationId,
+          mandatory: false,
+          meta: event.meta,
+          name: snakeCase(err.name),
+        }),
       );
     }
   }

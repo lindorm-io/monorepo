@@ -3,6 +3,7 @@ import { snakeCase } from "@lindorm/case";
 import { LindormError } from "@lindorm/errors";
 import { JsonKit } from "@lindorm/json-kit";
 import { ILogger } from "@lindorm/logger";
+import { MessageKit } from "@lindorm/message";
 import { ClassLike, Dict } from "@lindorm/types";
 import { findLast, removeUndefined } from "@lindorm/utils";
 import {
@@ -23,10 +24,9 @@ import {
   IHermesAggregateCommandHandler,
   IHermesAggregateEventHandler,
   IHermesEncryptionStore,
-  IHermesMessage,
   IHermesMessageBus,
 } from "../interfaces";
-import { HermesCommand, HermesError, HermesEvent } from "../messages";
+import { HermesCommand, HermesEvent } from "../messages";
 import { Aggregate } from "../models";
 import {
   AggregateCommandHandlerContext,
@@ -40,16 +40,21 @@ export class AggregateDomain implements IAggregateDomain {
   private readonly commandHandlers: Array<IHermesAggregateCommandHandler>;
   private readonly eventHandlers: Array<IHermesAggregateEventHandler>;
   private readonly logger: ILogger;
-  private readonly messageBus: IHermesMessageBus;
+  private readonly commandBus: IHermesMessageBus;
+  private readonly errorBus: IHermesMessageBus;
+  private readonly eventBus: IHermesMessageBus;
   private readonly encryptionStore: IHermesEncryptionStore;
   private readonly eventStore: IEventStore;
 
   public constructor(options: AggregateDomainOptions) {
     this.logger = options.logger.child(["AggregateDomain"]);
 
-    this.messageBus = options.messageBus;
     this.encryptionStore = options.encryptionStore;
     this.eventStore = options.eventStore;
+
+    this.commandBus = options.commandBus;
+    this.errorBus = options.errorBus;
+    this.eventBus = options.eventBus;
 
     this.commandHandlers = [];
     this.eventHandlers = [];
@@ -96,7 +101,7 @@ export class AggregateDomain implements IAggregateDomain {
 
     this.commandHandlers.push(commandHandler);
 
-    await this.messageBus.subscribe({
+    await this.commandBus.subscribe({
       callback: (command: HermesCommand) => this.handleCommand(command),
       queue: AggregateDomain.getQueue(commandHandler),
       topic: AggregateDomain.getTopic(commandHandler),
@@ -252,7 +257,7 @@ export class AggregateDomain implements IAggregateDomain {
 
       const events = await this.save(aggregate, command, commandHandler.encryption);
 
-      await this.messageBus.publish(events);
+      await this.eventBus.publish(events);
 
       this.logger.verbose("Handled command", { command });
     } catch (err: any) {
@@ -276,21 +281,19 @@ export class AggregateDomain implements IAggregateDomain {
     this.logger.debug("Rejecting command", { command, error });
 
     try {
-      await this.messageBus.publish([
-        new HermesError(
-          {
-            name: snakeCase(error.name),
-            aggregate: command.aggregate,
-            data: {
-              error,
-              message: command,
-            },
-            meta: command.meta,
-            mandatory: true,
+      await this.errorBus.publish(
+        this.errorBus.create({
+          data: {
+            error,
+            message: command,
           },
-          command,
-        ),
-      ]);
+          aggregate: command.aggregate,
+          causationId: command.id,
+          mandatory: true,
+          meta: command.meta,
+          name: snakeCase(error.name),
+        }),
+      );
 
       this.logger.verbose("Rejected command", { command, error });
     } catch (err: any) {
@@ -314,6 +317,7 @@ export class AggregateDomain implements IAggregateDomain {
 
     const aggregate = new Aggregate({
       ...aggregateIdentifier,
+      eventBus: this.eventBus,
       eventHandlers,
       logger: this.logger,
     });
@@ -331,9 +335,9 @@ export class AggregateDomain implements IAggregateDomain {
 
   private async save(
     aggregate: IAggregate,
-    causation: IHermesMessage,
+    causation: HermesCommand,
     encryption: boolean,
-  ): Promise<Array<IHermesMessage>> {
+  ): Promise<Array<HermesEvent>> {
     this.logger.debug("Saving aggregate", { aggregate: aggregate.toJSON(), causation });
 
     const events = await this.eventStore.find({
@@ -422,7 +426,7 @@ export class AggregateDomain implements IAggregateDomain {
     for (const item of attributes) {
       const { data, ...rest } = item;
 
-      const encrypted = aes.encrypt(JsonKit.stringify(data), "serialised");
+      const encrypted = aes.encrypt(JsonKit.buffer(data), "serialised");
 
       result.push({ ...rest, data: removeUndefined(encrypted) });
     }
@@ -494,9 +498,8 @@ export class AggregateDomain implements IAggregateDomain {
   }
 
   private static toHermesEvent(data: EventStoreAttributes): HermesEvent {
-    return new HermesEvent({
+    return new MessageKit({ Message: HermesEvent }).create({
       id: data.event_id,
-      name: data.event_name,
       aggregate: {
         id: data.aggregate_id,
         name: data.aggregate_name,
@@ -506,6 +509,7 @@ export class AggregateDomain implements IAggregateDomain {
       correlationId: data.correlation_id,
       data: data.data,
       meta: data.meta,
+      name: data.event_name,
       timestamp: data.event_timestamp,
       version: data.version,
     });

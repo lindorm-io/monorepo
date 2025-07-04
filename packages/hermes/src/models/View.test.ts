@@ -1,3 +1,4 @@
+import { MessageKit } from "@lindorm/message";
 import { TEST_HERMES_EVENT } from "../__fixtures__/hermes-event";
 import { TEST_VIEW_OPTIONS } from "../__fixtures__/view";
 import { ViewDestroyedError } from "../errors";
@@ -5,7 +6,9 @@ import { HermesEvent } from "../messages";
 import { View } from "./View";
 
 describe("View", () => {
-  const hermesEvent = new HermesEvent(TEST_HERMES_EVENT);
+  const eventKit = new MessageKit({ Message: HermesEvent });
+
+  const hermesEvent = eventKit.create(TEST_HERMES_EVENT);
 
   let view: View;
 

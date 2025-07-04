@@ -39,8 +39,7 @@ import {
   IView,
   IViewDomain,
 } from "../interfaces";
-import { HermesCommand } from "../messages";
-import { HermesMessageSchema } from "../schemas";
+import { HermesCommand, HermesError, HermesEvent, HermesTimeout } from "../messages";
 import {
   AggregateIdentifier,
   CloneHermesOptions,
@@ -72,9 +71,14 @@ export class Hermes<C extends ClassLike = ClassLike, Q extends ClassLike = Class
   private readonly checksumStore: IHermesChecksumStore;
   private readonly encryptionStore: IHermesEncryptionStore;
   private readonly eventStore: IEventStore;
-  private readonly messageBus: IHermesMessageBus;
   private readonly sagaStore: IHermesSagaStore;
   private readonly viewStore: IHermesViewStore;
+
+  // messages
+  private readonly commandBus: IHermesMessageBus<HermesCommand>;
+  private readonly errorBus: IHermesMessageBus<HermesError>;
+  private readonly eventBus: IHermesMessageBus<HermesEvent>;
+  private readonly timeoutBus: IHermesMessageBus<HermesTimeout>;
 
   // primary
   private readonly scanner: HermesScanner;
@@ -102,9 +106,13 @@ export class Hermes<C extends ClassLike = ClassLike, Q extends ClassLike = Class
       this.checksumStore = opts.checksumStore;
       this.encryptionStore = opts.encryptionStore;
       this.eventStore = opts.eventStore;
-      this.messageBus = opts.messageBus;
       this.sagaStore = opts.sagaStore;
       this.viewStore = opts.viewStore;
+
+      this.commandBus = opts.commandBus;
+      this.errorBus = opts.errorBus;
+      this.eventBus = opts.eventBus;
+      this.timeoutBus = opts.timeoutBus;
 
       this.scanner = opts.scanner;
       this.options = opts.options;
@@ -164,10 +172,6 @@ export class Hermes<C extends ClassLike = ClassLike, Q extends ClassLike = Class
         ...this.options.eventStore,
         logger: this.logger,
       });
-      this.messageBus = new MessageBus({
-        ...this.options.messageBus,
-        logger: this.logger,
-      });
       this.sagaStore = new SagaStore({
         ...this.options.sagaStore,
         logger: this.logger,
@@ -177,21 +181,50 @@ export class Hermes<C extends ClassLike = ClassLike, Q extends ClassLike = Class
         logger: this.logger,
       });
 
+      this.commandBus = new MessageBus<HermesCommand>({
+        Message: HermesCommand,
+        custom: this.options.messageBus.custom as any,
+        rabbit: this.options.messageBus.rabbit,
+        logger: this.logger,
+      });
+      this.errorBus = new MessageBus<HermesError>({
+        Message: HermesError,
+        custom: this.options.messageBus.custom as any,
+        rabbit: this.options.messageBus.rabbit,
+        logger: this.logger,
+      });
+      this.eventBus = new MessageBus<HermesEvent>({
+        Message: HermesEvent,
+        custom: this.options.messageBus.custom as any,
+        rabbit: this.options.messageBus.rabbit,
+        logger: this.logger,
+      });
+      this.timeoutBus = new MessageBus<HermesTimeout>({
+        Message: HermesTimeout,
+        custom: this.options.messageBus.custom as any,
+        rabbit: this.options.messageBus.rabbit,
+        logger: this.logger,
+      });
+
       // domains
 
       this.aggregateDomain = new AggregateDomain({
-        messageBus: this.messageBus,
+        commandBus: this.commandBus,
+        errorBus: this.errorBus,
+        eventBus: this.eventBus,
         encryptionStore: this.encryptionStore,
         eventStore: this.eventStore,
         logger: this.logger,
       });
       this.checksumDomain = new ChecksumDomain({
-        messageBus: this.messageBus,
+        errorBus: this.errorBus,
+        eventBus: this.eventBus,
         store: this.checksumStore,
         logger: this.logger,
       });
       this.errorDomain = new ErrorDomain({
-        messageBus: this.messageBus,
+        commandBus: this.commandBus,
+        errorBus: this.errorBus,
         logger: this.logger,
       });
       this.queryDomain = new QueryDomain({
@@ -199,12 +232,16 @@ export class Hermes<C extends ClassLike = ClassLike, Q extends ClassLike = Class
         logger: this.logger,
       });
       this.sagaDomain = new SagaDomain({
-        messageBus: this.messageBus,
+        commandBus: this.commandBus,
+        errorBus: this.errorBus,
+        eventBus: this.eventBus,
+        timeoutBus: this.timeoutBus,
         store: this.sagaStore,
         logger: this.logger,
       });
       this.viewDomain = new ViewDomain({
-        messageBus: this.messageBus,
+        errorBus: this.errorBus,
+        eventBus: this.eventBus,
         store: this.viewStore,
         logger: this.logger,
       });
@@ -251,17 +288,20 @@ export class Hermes<C extends ClassLike = ClassLike, Q extends ClassLike = Class
       aggregateDomain: this.aggregateDomain,
       checksumDomain: this.checksumDomain,
       checksumStore: this.checksumStore,
+      commandBus: this.commandBus,
       encryptionStore: this.encryptionStore,
+      errorBus: this.errorBus,
       errorDomain: this.errorDomain,
+      eventBus: this.eventBus,
       eventStore: this.eventStore,
       logger: options.logger ?? this.logger,
-      messageBus: this.messageBus,
       options: this.options,
       queryDomain: this.queryDomain,
       sagaDomain: this.sagaDomain,
       sagaStore: this.sagaStore,
       scanner: this.scanner,
       status: this.status,
+      timeoutBus: this.timeoutBus,
       viewDomain: this.viewDomain,
       viewStore: this.viewStore,
     });
@@ -286,8 +326,11 @@ export class Hermes<C extends ClassLike = ClassLike, Q extends ClassLike = Class
       context: this.scanner.context(options.aggregate?.context),
     };
 
-    const generated = new HermesCommand({
+    const id = randomUUID();
+    const generated = this.commandBus.create({
+      id,
       aggregate,
+      causationId: id,
       correlationId,
       data,
       delay,
@@ -295,8 +338,6 @@ export class Hermes<C extends ClassLike = ClassLike, Q extends ClassLike = Class
       name,
       version,
     });
-
-    HermesMessageSchema.parse(generated);
 
     if (!(generated instanceof HermesCommand)) {
       throw new LindormError("Invalid operation", {
@@ -309,7 +350,7 @@ export class Hermes<C extends ClassLike = ClassLike, Q extends ClassLike = Class
 
     this.logger.verbose("Publishing command", { command: generated });
 
-    await this.messageBus.publish(generated);
+    await this.commandBus.publish(generated);
 
     return aggregate;
   }

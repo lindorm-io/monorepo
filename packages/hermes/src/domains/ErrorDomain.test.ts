@@ -1,5 +1,6 @@
 import { snakeCase } from "@lindorm/case";
 import { createMockLogger } from "@lindorm/logger";
+import { MessageKit } from "@lindorm/message";
 import { createMockRabbitMessageBus } from "@lindorm/rabbit";
 import { randomUUID } from "crypto";
 import { TEST_AGGREGATE_COMMAND_HANDLER } from "../__fixtures__/aggregate-command-handler";
@@ -11,14 +12,20 @@ import { AggregateIdentifier } from "../types";
 import { ErrorDomain } from "./ErrorDomain";
 
 describe("ErrorDomain", () => {
+  const commandKit = new MessageKit({ Message: HermesCommand });
+  const errorKit = new MessageKit({ Message: HermesError });
+
   const logger = createMockLogger();
 
   let domain: IErrorDomain;
-  let messageBus: IHermesMessageBus;
+  let commandBus: IHermesMessageBus<HermesCommand>;
+  let errorBus: IHermesMessageBus<HermesError>;
 
   beforeEach(() => {
-    messageBus = createMockRabbitMessageBus(HermesError);
-    domain = new ErrorDomain({ messageBus, logger });
+    commandBus = createMockRabbitMessageBus(HermesCommand);
+    errorBus = createMockRabbitMessageBus(HermesError);
+
+    domain = new ErrorDomain({ commandBus, errorBus, logger });
   });
 
   test("should register error handler", async () => {
@@ -56,7 +63,7 @@ describe("ErrorDomain", () => {
 
     await domain.registerErrorHandler(handler);
 
-    await messageBus.subscribe({
+    await commandBus.subscribe({
       callback: async (message) => {
         commandSpy(message);
       },
@@ -65,13 +72,13 @@ describe("ErrorDomain", () => {
     });
 
     await expect(
-      messageBus.publish(
-        new HermesError({
+      errorBus.publish(
+        errorKit.create({
           name: snakeCase(new AggregateAlreadyCreatedError().name),
           aggregate,
           data: {
             error: new AggregateAlreadyCreatedError(),
-            message: new HermesCommand({ name: "causation", aggregate }),
+            message: commandKit.create({ name: "causation", aggregate }),
           },
           meta: {},
           mandatory: true,

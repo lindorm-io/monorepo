@@ -1,4 +1,5 @@
 import { createMockLogger } from "@lindorm/logger";
+import { MessageKit } from "@lindorm/message";
 import { IPostgresSource, PostgresSource } from "@lindorm/postgres";
 import { randomUUID } from "crypto";
 import { TEST_AGGREGATE_IDENTIFIER } from "../../__fixtures__/aggregate";
@@ -110,7 +111,9 @@ describe("PostgresViewStore", () => {
   });
 
   test("should find causation ids", async () => {
-    const event = new HermesEvent(TEST_HERMES_COMMAND);
+    const eventKit = new MessageKit({ Message: HermesEvent });
+
+    const event = eventKit.create(TEST_HERMES_COMMAND);
 
     await insertCausation(source, {
       id: viewIdentifier.id,

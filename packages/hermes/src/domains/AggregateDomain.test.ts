@@ -1,6 +1,7 @@
 import { createMockAesKit } from "@lindorm/aes";
 import { LindormError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger";
+import { MessageKit } from "@lindorm/message";
 import { createMockRabbitMessageBus } from "@lindorm/rabbit";
 import { randomUUID } from "crypto";
 import MockDate from "mockdate";
@@ -38,13 +39,15 @@ import {
   HandlerNotRegisteredError,
 } from "../errors";
 import { IAggregateDomain, IHermesMessageBus } from "../interfaces";
-import { HermesCommand } from "../messages";
+import { HermesCommand, HermesError, HermesEvent } from "../messages";
 import { AggregateDomain } from "./AggregateDomain";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate);
 
 describe("AggregateDomain", () => {
+  const commandKit = new MessageKit({ Message: HermesCommand });
+
   const logger = createMockLogger();
   const commandHandlers = [
     TEST_AGGREGATE_COMMAND_HANDLER,
@@ -68,12 +71,17 @@ describe("AggregateDomain", () => {
   ];
 
   let domain: IAggregateDomain;
-  let messageBus: IHermesMessageBus;
+  let commandBus: IHermesMessageBus<HermesCommand>;
+  let errorBus: IHermesMessageBus<HermesError>;
+  let eventBus: IHermesMessageBus<HermesEvent>;
   let encryptionStore: any;
   let eventStore: any;
 
   beforeEach(async () => {
-    messageBus = createMockRabbitMessageBus(HermesCommand);
+    commandBus = createMockRabbitMessageBus(HermesCommand);
+    errorBus = createMockRabbitMessageBus(HermesError);
+    eventBus = createMockRabbitMessageBus(HermesEvent);
+
     eventStore = {
       find: jest.fn().mockImplementation(async () => []),
       insert: jest.fn().mockImplementation(async () => {}),
@@ -81,7 +89,15 @@ describe("AggregateDomain", () => {
     encryptionStore = {
       load: jest.fn().mockImplementation(async () => createMockAesKit()),
     };
-    domain = new AggregateDomain({ messageBus, encryptionStore, eventStore, logger });
+
+    domain = new AggregateDomain({
+      commandBus,
+      errorBus,
+      eventBus,
+      encryptionStore,
+      eventStore,
+      logger,
+    });
 
     for (const handler of commandHandlers) {
       await domain.registerCommandHandler(handler);
@@ -93,14 +109,21 @@ describe("AggregateDomain", () => {
   });
 
   test("should register command handler", async () => {
-    messageBus = createMockRabbitMessageBus(HermesCommand);
-    domain = new AggregateDomain({ messageBus, encryptionStore, eventStore, logger });
+    commandBus = createMockRabbitMessageBus(HermesCommand);
+    domain = new AggregateDomain({
+      commandBus,
+      errorBus,
+      eventBus,
+      encryptionStore,
+      eventStore,
+      logger,
+    });
 
     await expect(
       domain.registerCommandHandler(TEST_AGGREGATE_COMMAND_HANDLER),
     ).resolves.toBeUndefined();
 
-    expect(messageBus.subscribe).toHaveBeenCalledWith({
+    expect(commandBus.subscribe).toHaveBeenCalledWith({
       callback: expect.any(Function),
       queue: "queue.aggregate.default.aggregate_name.hermes_command_default",
       topic: "default.aggregate_name.hermes_command_default",
@@ -108,7 +131,14 @@ describe("AggregateDomain", () => {
   });
 
   test("should throw on existing command handler", async () => {
-    domain = new AggregateDomain({ messageBus, encryptionStore, eventStore, logger });
+    domain = new AggregateDomain({
+      commandBus,
+      errorBus,
+      eventBus,
+      encryptionStore,
+      eventStore,
+      logger,
+    });
 
     await domain.registerCommandHandler(TEST_AGGREGATE_COMMAND_HANDLER);
 
@@ -118,7 +148,14 @@ describe("AggregateDomain", () => {
   });
 
   test("should throw on invalid command handler", async () => {
-    domain = new AggregateDomain({ messageBus, encryptionStore, eventStore, logger });
+    domain = new AggregateDomain({
+      commandBus,
+      errorBus,
+      eventBus,
+      encryptionStore,
+      eventStore,
+      logger,
+    });
 
     await expect(
       // @ts-expect-error
@@ -127,7 +164,14 @@ describe("AggregateDomain", () => {
   });
 
   test("should register event handler", async () => {
-    domain = new AggregateDomain({ messageBus, encryptionStore, eventStore, logger });
+    domain = new AggregateDomain({
+      commandBus,
+      errorBus,
+      eventBus,
+      encryptionStore,
+      eventStore,
+      logger,
+    });
 
     await expect(
       domain.registerEventHandler(TEST_AGGREGATE_EVENT_HANDLER),
@@ -135,7 +179,14 @@ describe("AggregateDomain", () => {
   });
 
   test("should throw on existing event handler", async () => {
-    domain = new AggregateDomain({ messageBus, encryptionStore, eventStore, logger });
+    domain = new AggregateDomain({
+      commandBus,
+      errorBus,
+      eventBus,
+      encryptionStore,
+      eventStore,
+      logger,
+    });
 
     await domain.registerEventHandler(TEST_AGGREGATE_EVENT_HANDLER);
 
@@ -145,7 +196,14 @@ describe("AggregateDomain", () => {
   });
 
   test("should throw on invalid event handler", async () => {
-    domain = new AggregateDomain({ messageBus, encryptionStore, eventStore, logger });
+    domain = new AggregateDomain({
+      commandBus,
+      errorBus,
+      eventBus,
+      encryptionStore,
+      eventStore,
+      logger,
+    });
 
     await expect(
       // @ts-expect-error
@@ -155,7 +213,7 @@ describe("AggregateDomain", () => {
 
   test("should handle command", async () => {
     const aggregate = { ...TEST_AGGREGATE_IDENTIFIER, id: randomUUID() };
-    const command = new HermesCommand({ ...TEST_HERMES_COMMAND_CREATE, aggregate });
+    const command = commandKit.create({ ...TEST_HERMES_COMMAND_CREATE, aggregate });
 
     await expect(
       // @ts-expect-error
@@ -187,7 +245,7 @@ describe("AggregateDomain", () => {
       },
     ]);
 
-    expect(messageBus.publish).toHaveBeenCalledWith([
+    expect(eventBus.publish).toHaveBeenCalledWith([
       expect.objectContaining({
         id: expect.any(String),
         name: "hermes_event_create",
@@ -198,9 +256,7 @@ describe("AggregateDomain", () => {
         meta: { origin: "test" },
         delay: 0,
         mandatory: false,
-        topic: "default.aggregate_name.hermes_event_create",
         timestamp: MockedDate,
-        type: "HermesEvent",
         version: 1,
       }),
     ]);
@@ -208,7 +264,7 @@ describe("AggregateDomain", () => {
 
   test("should handle encryption command", async () => {
     const aggregate = { ...TEST_AGGREGATE_IDENTIFIER, id: randomUUID() };
-    const command = new HermesCommand({ ...TEST_HERMES_COMMAND_ENCRYPT, aggregate });
+    const command = commandKit.create({ ...TEST_HERMES_COMMAND_ENCRYPT, aggregate });
 
     await expect(
       // @ts-expect-error
@@ -243,7 +299,7 @@ describe("AggregateDomain", () => {
       },
     ]);
 
-    expect(messageBus.publish).toHaveBeenCalledWith([
+    expect(eventBus.publish).toHaveBeenCalledWith([
       expect.objectContaining({
         id: expect.any(String),
         name: "hermes_event_encrypt",
@@ -254,9 +310,7 @@ describe("AggregateDomain", () => {
         meta: { origin: "test" },
         delay: 0,
         mandatory: false,
-        topic: "default.aggregate_name.hermes_event_encrypt",
         timestamp: MockedDate,
-        type: "HermesEvent",
         version: 1,
       }),
     ]);
@@ -265,7 +319,7 @@ describe("AggregateDomain", () => {
   test("should skip handler when last causation matches command id", async () => {
     const aggregate = { ...TEST_AGGREGATE_IDENTIFIER, id: randomUUID(), logger };
 
-    const command = new HermesCommand({
+    const command = commandKit.create({
       ...TEST_HERMES_COMMAND_MERGE_STATE,
       aggregate,
       id: "e6abb357-57da-564e-a7f6-6ff665db7834",
@@ -319,8 +373,15 @@ describe("AggregateDomain", () => {
   });
 
   test("should throw on missing command handler", async () => {
-    domain = new AggregateDomain({ messageBus, encryptionStore, eventStore, logger });
-    const command = new HermesCommand(TEST_HERMES_COMMAND_CREATE);
+    domain = new AggregateDomain({
+      commandBus,
+      errorBus,
+      eventBus,
+      encryptionStore,
+      eventStore,
+      logger,
+    });
+    const command = commandKit.create(TEST_HERMES_COMMAND_CREATE);
 
     await expect(
       // @ts-expect-error
@@ -330,7 +391,7 @@ describe("AggregateDomain", () => {
 
   test("should throw on invalid command data", async () => {
     const aggregate = { ...TEST_AGGREGATE_IDENTIFIER, id: randomUUID() };
-    const command = new HermesCommand({
+    const command = commandKit.create({
       ...TEST_HERMES_COMMAND_CREATE,
       aggregate,
       data: {},
@@ -341,7 +402,7 @@ describe("AggregateDomain", () => {
       domain.handleCommand(command),
     ).rejects.toThrow(Error);
 
-    expect(messageBus.publish).toHaveBeenCalledWith([
+    expect(errorBus.publish).toHaveBeenCalledWith(
       expect.objectContaining({
         name: "command_schema_validation_error",
         data: {
@@ -349,12 +410,12 @@ describe("AggregateDomain", () => {
           message: command,
         },
       }),
-    ]);
+    );
   });
 
   test("should throw on destroyed aggregate", async () => {
     const aggregate = { ...TEST_AGGREGATE_IDENTIFIER, id: randomUUID() };
-    const command = new HermesCommand({ ...TEST_HERMES_COMMAND_CREATE, aggregate });
+    const command = commandKit.create({ ...TEST_HERMES_COMMAND_CREATE, aggregate });
 
     eventStore.find.mockImplementation(async () => [
       {
@@ -382,7 +443,7 @@ describe("AggregateDomain", () => {
       domain.handleCommand(command),
     ).rejects.toThrow(AggregateDestroyedError);
 
-    expect(messageBus.publish).toHaveBeenCalledWith([
+    expect(errorBus.publish).toHaveBeenCalledWith(
       expect.objectContaining({
         name: "aggregate_destroyed_error",
         data: {
@@ -390,19 +451,19 @@ describe("AggregateDomain", () => {
           message: command,
         },
       }),
-    ]);
+    );
   });
 
   test("should throw on not created aggregate", async () => {
     const aggregate = { ...TEST_AGGREGATE_IDENTIFIER, id: randomUUID() };
-    const command = new HermesCommand({ ...TEST_HERMES_COMMAND_MERGE_STATE, aggregate });
+    const command = commandKit.create({ ...TEST_HERMES_COMMAND_MERGE_STATE, aggregate });
 
     await expect(
       // @ts-expect-error
       domain.handleCommand(command),
     ).rejects.toThrow(AggregateNotCreatedError);
 
-    expect(messageBus.publish).toHaveBeenCalledWith([
+    expect(errorBus.publish).toHaveBeenCalledWith(
       expect.objectContaining({
         name: "aggregate_not_created_error",
         data: {
@@ -410,12 +471,12 @@ describe("AggregateDomain", () => {
           message: command,
         },
       }),
-    ]);
+    );
   });
 
   test("should throw on already created aggregate", async () => {
     const aggregate = { ...TEST_AGGREGATE_IDENTIFIER, id: randomUUID() };
-    const command = new HermesCommand({ ...TEST_HERMES_COMMAND_CREATE, aggregate });
+    const command = commandKit.create({ ...TEST_HERMES_COMMAND_CREATE, aggregate });
 
     eventStore.find.mockImplementation(async () => [
       {
@@ -443,7 +504,7 @@ describe("AggregateDomain", () => {
       domain.handleCommand(command),
     ).rejects.toThrow(AggregateAlreadyCreatedError);
 
-    expect(messageBus.publish).toHaveBeenCalledWith([
+    expect(errorBus.publish).toHaveBeenCalledWith(
       expect.objectContaining({
         name: "aggregate_already_created_error",
         data: {
@@ -451,12 +512,12 @@ describe("AggregateDomain", () => {
           message: command,
         },
       }),
-    ]);
+    );
   });
 
   test("should throw from command handler", async () => {
     const aggregate = { ...TEST_AGGREGATE_IDENTIFIER, id: randomUUID() };
-    const command = new HermesCommand({ ...TEST_HERMES_COMMAND_THROWS, aggregate });
+    const command = commandKit.create({ ...TEST_HERMES_COMMAND_THROWS, aggregate });
 
     eventStore.find.mockImplementation(async () => [
       {

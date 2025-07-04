@@ -1,4 +1,5 @@
 import { createMockLogger } from "@lindorm/logger";
+import { MessageKit } from "@lindorm/message";
 import { IMongoSource, MongoSource } from "@lindorm/mongo";
 import { IRabbitSource, RabbitSource } from "@lindorm/rabbit";
 import { sleep } from "@lindorm/utils";
@@ -22,17 +23,20 @@ import { ViewStoreType } from "../enums";
 import { HermesViewEventHandler } from "../handlers";
 import { MessageBus, ViewStore } from "../infrastructure";
 import { IHermesViewEventHandler } from "../interfaces";
-import { HermesEvent } from "../messages";
+import { HermesError, HermesEvent } from "../messages";
 import { ViewDomain } from "./ViewDomain";
 
 describe("ViewDomain", () => {
+  const eventKit = new MessageKit({ Message: HermesEvent });
+
   const logger = createMockLogger();
 
   let mongo: IMongoSource;
   let rabbit: IRabbitSource;
   let domain: ViewDomain;
   let eventHandlers: Array<IHermesViewEventHandler>;
-  let messageBus: MessageBus;
+  let errorBus: MessageBus<HermesError>;
+  let eventBus: MessageBus<HermesEvent>;
   let store: ViewStore;
 
   beforeAll(async () => {
@@ -49,9 +53,10 @@ describe("ViewDomain", () => {
     });
     await rabbit.setup();
 
-    messageBus = new MessageBus({ rabbit, logger });
+    errorBus = new MessageBus({ Message: HermesError, rabbit, logger });
+    eventBus = new MessageBus({ Message: HermesEvent, rabbit, logger });
     store = new ViewStore({ mongo, logger });
-    domain = new ViewDomain({ messageBus, store, logger });
+    domain = new ViewDomain({ errorBus, eventBus, store, logger });
 
     eventHandlers = [
       new HermesViewEventHandler({
@@ -90,37 +95,37 @@ describe("ViewDomain", () => {
     const aggregate = { ...TEST_AGGREGATE_IDENTIFIER, id: randomUUID() };
     const view = { ...TEST_VIEW_IDENTIFIER, id: aggregate.id };
 
-    const eventCreate = new HermesEvent({
+    const eventCreate = eventKit.create({
       ...TEST_HERMES_EVENT_CREATE,
       aggregate,
       timestamp: new Date("2022-01-01T08:00:00.000Z"),
     });
-    const eventAddField = new HermesEvent({
+    const eventAddField = eventKit.create({
       ...TEST_HERMES_EVENT_MERGE_STATE,
       aggregate,
       timestamp: new Date("2022-01-02T08:00:00.000Z"),
     });
-    const eventSetState = new HermesEvent({
+    const eventSetState = eventKit.create({
       ...TEST_HERMES_EVENT_SET_STATE,
       aggregate,
       timestamp: new Date("2022-01-03T08:00:00.000Z"),
     });
-    const eventDestroy = new HermesEvent({
+    const eventDestroy = eventKit.create({
       ...TEST_HERMES_EVENT_DESTROY,
       aggregate,
       timestamp: new Date("2022-01-04T08:00:00.000Z"),
     });
 
-    await expect(messageBus.publish(eventCreate)).resolves.toBeUndefined();
+    await expect(eventBus.publish(eventCreate)).resolves.toBeUndefined();
     await sleep(250);
 
-    await expect(messageBus.publish(eventAddField)).resolves.toBeUndefined();
+    await expect(eventBus.publish(eventAddField)).resolves.toBeUndefined();
     await sleep(250);
 
-    await expect(messageBus.publish(eventSetState)).resolves.toBeUndefined();
+    await expect(eventBus.publish(eventSetState)).resolves.toBeUndefined();
     await sleep(250);
 
-    await expect(messageBus.publish(eventDestroy)).resolves.toBeUndefined();
+    await expect(eventBus.publish(eventDestroy)).resolves.toBeUndefined();
     await sleep(250);
 
     await expect(store.load(view, { type: ViewStoreType.Mongo })).resolves.toEqual(

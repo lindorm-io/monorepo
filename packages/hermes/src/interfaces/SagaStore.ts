@@ -1,4 +1,5 @@
 import {
+  SagaData,
   SagaIdentifier,
   SagaStoreAttributes,
   SagaUpdateAttributes,
@@ -8,11 +9,11 @@ import { IHermesMessage } from "./HermesMessage";
 import { ISaga } from "./Saga";
 
 export interface IHermesSagaStore {
-  clearMessages(saga: ISaga): Promise<ISaga>;
-  load(sagaIdentifier: SagaIdentifier): Promise<ISaga>;
+  clearMessages(saga: ISaga): Promise<SagaData>;
+  load(sagaIdentifier: SagaIdentifier): Promise<SagaData>;
   loadCausations(sagaIdentifier: SagaIdentifier): Promise<Array<string>>;
-  save(saga: ISaga, causation: IHermesMessage): Promise<ISaga>;
-  saveCausations(saga: ISaga): Promise<ISaga>;
+  save(saga: ISaga, causation: IHermesMessage): Promise<SagaData>;
+  saveCausations(saga: ISaga): Promise<SagaData>;
 }
 
 export interface ISagaStore {

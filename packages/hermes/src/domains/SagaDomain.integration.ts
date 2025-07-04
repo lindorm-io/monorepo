@@ -1,4 +1,5 @@
 import { createMockLogger } from "@lindorm/logger";
+import { MessageKit } from "@lindorm/message";
 import { IMongoSource, MongoSource } from "@lindorm/mongo";
 import { IRabbitSource, RabbitSource } from "@lindorm/rabbit";
 import { sleep } from "@lindorm/utils";
@@ -22,17 +23,22 @@ import {
 } from "../__fixtures__/saga-event-handler";
 import { MessageBus, SagaStore } from "../infrastructure";
 import { IHermesSagaEventHandler } from "../interfaces";
-import { HermesEvent } from "../messages";
+import { HermesCommand, HermesError, HermesEvent, HermesTimeout } from "../messages";
 import { SagaDomain } from "./SagaDomain";
 
 describe("SagaDomain", () => {
+  const eventKit = new MessageKit({ Message: HermesEvent });
+
   const logger = createMockLogger();
 
   let mongo: IMongoSource;
   let rabbit: IRabbitSource;
   let domain: SagaDomain;
   let eventHandlers: Array<IHermesSagaEventHandler>;
-  let messageBus: MessageBus;
+  let commandBus: MessageBus<HermesCommand>;
+  let errorBus: MessageBus<HermesError>;
+  let eventBus: MessageBus<HermesEvent>;
+  let timeoutBus: MessageBus<HermesTimeout>;
   let store: SagaStore;
 
   beforeAll(async () => {
@@ -49,9 +55,20 @@ describe("SagaDomain", () => {
     });
     await rabbit.setup();
 
-    messageBus = new MessageBus({ rabbit, logger });
+    commandBus = new MessageBus({ Message: HermesCommand, rabbit, logger });
+    errorBus = new MessageBus({ Message: HermesError, rabbit, logger });
+    eventBus = new MessageBus({ Message: HermesEvent, rabbit, logger });
+    timeoutBus = new MessageBus({ Message: HermesTimeout, rabbit, logger });
+
     store = new SagaStore({ mongo, logger });
-    domain = new SagaDomain({ messageBus, store, logger });
+    domain = new SagaDomain({
+      commandBus,
+      errorBus,
+      eventBus,
+      timeoutBus,
+      store,
+      logger,
+    });
 
     eventHandlers = [
       TEST_SAGA_EVENT_HANDLER,
@@ -77,24 +94,24 @@ describe("SagaDomain", () => {
     const aggregate = { ...TEST_AGGREGATE_IDENTIFIER, id: randomUUID() };
     const saga = { ...TEST_SAGA_IDENTIFIER, id: aggregate.id };
 
-    const eventCreate = new HermesEvent({ ...TEST_HERMES_EVENT_CREATE, aggregate });
-    const eventMergeState = new HermesEvent({
+    const eventCreate = eventKit.create({ ...TEST_HERMES_EVENT_CREATE, aggregate });
+    const eventMergeState = eventKit.create({
       ...TEST_HERMES_EVENT_MERGE_STATE,
       aggregate,
     });
-    const eventSetState = new HermesEvent({ ...TEST_HERMES_EVENT_SET_STATE, aggregate });
-    const eventDestroy = new HermesEvent({ ...TEST_HERMES_EVENT_DESTROY, aggregate });
+    const eventSetState = eventKit.create({ ...TEST_HERMES_EVENT_SET_STATE, aggregate });
+    const eventDestroy = eventKit.create({ ...TEST_HERMES_EVENT_DESTROY, aggregate });
 
-    await expect(messageBus.publish(eventCreate)).resolves.toBeUndefined();
+    await expect(eventBus.publish(eventCreate)).resolves.toBeUndefined();
     await sleep(250);
 
-    await expect(messageBus.publish(eventMergeState)).resolves.toBeUndefined();
+    await expect(eventBus.publish(eventMergeState)).resolves.toBeUndefined();
     await sleep(250);
 
-    await expect(messageBus.publish(eventSetState)).resolves.toBeUndefined();
+    await expect(eventBus.publish(eventSetState)).resolves.toBeUndefined();
     await sleep(250);
 
-    await expect(messageBus.publish(eventDestroy)).resolves.toBeUndefined();
+    await expect(eventBus.publish(eventDestroy)).resolves.toBeUndefined();
     await sleep(250);
 
     await expect(store.load(saga)).resolves.toEqual(

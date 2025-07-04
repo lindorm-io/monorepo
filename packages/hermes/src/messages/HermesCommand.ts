@@ -1,13 +1,10 @@
+import { IMessage, Message, OnCreate } from "@lindorm/message";
 import { Dict } from "@lindorm/types";
 import { IHermesMessage } from "../interfaces";
-import { HermesMessageOptions } from "../types";
 import { HermesMessage } from "./HermesMessage";
 
-export class HermesCommand<D extends Dict = Dict>
-  extends HermesMessage<D>
-  implements IHermesMessage<D>
-{
-  public constructor(options: HermesMessageOptions<D>, causation?: IHermesMessage) {
-    super({ ...options, mandatory: true }, causation);
-  }
-}
+@Message()
+@OnCreate((message) => {
+  (message as IMessage).mandatory = true;
+})
+export class HermesCommand extends HermesMessage<Dict> implements IHermesMessage<Dict> {}

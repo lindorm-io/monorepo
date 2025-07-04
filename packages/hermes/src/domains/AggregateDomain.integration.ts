@@ -1,4 +1,5 @@
 import { createMockLogger } from "@lindorm/logger";
+import { MessageKit } from "@lindorm/message";
 import { IMongoSource, MongoSource } from "@lindorm/mongo";
 import { IRabbitSource, RabbitSource } from "@lindorm/rabbit";
 import { sleep } from "@lindorm/utils";
@@ -36,10 +37,12 @@ import {
   IHermesEncryptionStore,
   IHermesMessageBus,
 } from "../interfaces";
-import { HermesCommand } from "../messages";
+import { HermesCommand, HermesError, HermesEvent } from "../messages";
 import { AggregateDomain } from "./AggregateDomain";
 
 describe("AggregateDomain", () => {
+  const commandKit = new MessageKit({ Message: HermesCommand });
+
   const logger = createMockLogger();
 
   let commandHandlers: Array<IHermesAggregateCommandHandler>;
@@ -47,7 +50,9 @@ describe("AggregateDomain", () => {
   let encryptionStore: IHermesEncryptionStore;
   let eventHandlers: Array<IHermesAggregateEventHandler>;
   let eventStore: IEventStore;
-  let messageBus: IHermesMessageBus;
+  let commandBus: IHermesMessageBus<HermesCommand>;
+  let errorBus: IHermesMessageBus<HermesError>;
+  let eventBus: IHermesMessageBus<HermesEvent>;
   let mongo: IMongoSource;
   let rabbit: IRabbitSource;
 
@@ -65,10 +70,21 @@ describe("AggregateDomain", () => {
     });
     await rabbit.setup();
 
-    messageBus = new MessageBus({ rabbit, logger });
+    commandBus = new MessageBus({ Message: HermesCommand, rabbit, logger });
+    errorBus = new MessageBus({ Message: HermesError, rabbit, logger });
+    eventBus = new MessageBus({ Message: HermesEvent, rabbit, logger });
+
     encryptionStore = new EncryptionStore({ mongo, logger });
     eventStore = new EventStore({ mongo, logger });
-    domain = new AggregateDomain({ messageBus, encryptionStore, eventStore, logger });
+
+    domain = new AggregateDomain({
+      commandBus,
+      errorBus,
+      eventBus,
+      encryptionStore,
+      eventStore,
+      logger,
+    });
 
     commandHandlers = [
       TEST_AGGREGATE_COMMAND_HANDLER,
@@ -105,37 +121,41 @@ describe("AggregateDomain", () => {
   test("should handle multiple published commands", async () => {
     const aggregate = { ...TEST_AGGREGATE_IDENTIFIER, id: randomUUID() };
 
-    const commandCreate = new HermesCommand({ ...TEST_HERMES_COMMAND_CREATE, aggregate });
-    const commandMergeState = new HermesCommand({
+    const commandCreate = commandKit.create({ ...TEST_HERMES_COMMAND_CREATE, aggregate });
+
+    const commandMergeState = commandKit.create({
       ...TEST_HERMES_COMMAND_MERGE_STATE,
       aggregate,
     });
-    const commandEncrypt = new HermesCommand({
+
+    const commandEncrypt = commandKit.create({
       ...TEST_HERMES_COMMAND_ENCRYPT,
       aggregate,
     });
-    const commandDestroyNext = new HermesCommand({
+
+    const commandDestroyNext = commandKit.create({
       ...TEST_HERMES_COMMAND_DESTROY_NEXT,
       aggregate,
     });
-    const commandDestroy = new HermesCommand({
+
+    const commandDestroy = commandKit.create({
       ...TEST_HERMES_COMMAND_DESTROY,
       aggregate,
     });
 
-    await expect(messageBus.publish(commandCreate)).resolves.toBeUndefined();
+    await expect(commandBus.publish(commandCreate)).resolves.toBeUndefined();
     await sleep(250);
 
-    await expect(messageBus.publish(commandMergeState)).resolves.toBeUndefined();
+    await expect(commandBus.publish(commandMergeState)).resolves.toBeUndefined();
     await sleep(250);
 
-    await expect(messageBus.publish(commandEncrypt)).resolves.toBeUndefined();
+    await expect(commandBus.publish(commandEncrypt)).resolves.toBeUndefined();
     await sleep(250);
 
-    await expect(messageBus.publish(commandDestroyNext)).resolves.toBeUndefined();
+    await expect(commandBus.publish(commandDestroyNext)).resolves.toBeUndefined();
     await sleep(250);
 
-    await expect(messageBus.publish(commandDestroy)).resolves.toBeUndefined();
+    await expect(commandBus.publish(commandDestroy)).resolves.toBeUndefined();
     await sleep(250);
 
     await expect(domain.inspect(aggregate)).resolves.toEqual(
@@ -221,6 +241,7 @@ describe("AggregateDomain", () => {
           algorithm: "dir",
           authTag: expect.any(String),
           content: expect.any(String),
+          contentType: "application/octet-stream",
           encryption: "A256GCM",
           initialisationVector: expect.any(String),
           keyId: expect.any(String),

@@ -5,5 +5,8 @@ export type AggregateDomainOptions = {
   encryptionStore: IHermesEncryptionStore;
   eventStore: IEventStore;
   logger: ILogger;
-  messageBus: IHermesMessageBus;
+
+  commandBus: IHermesMessageBus;
+  errorBus: IHermesMessageBus;
+  eventBus: IHermesMessageBus;
 };

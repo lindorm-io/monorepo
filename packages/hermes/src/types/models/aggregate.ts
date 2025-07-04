@@ -1,6 +1,10 @@
 import { ILogger } from "@lindorm/logger";
 import { Dict } from "@lindorm/types";
-import { IHermesAggregateEventHandler, IHermesMessage } from "../../interfaces";
+import {
+  IHermesAggregateEventHandler,
+  IHermesMessage,
+  IHermesMessageBus,
+} from "../../interfaces";
 import { AggregateIdentifier } from "../identifiers";
 
 export interface AggregateData<S extends Dict = Dict> extends AggregateIdentifier {
@@ -11,6 +15,7 @@ export interface AggregateData<S extends Dict = Dict> extends AggregateIdentifie
 }
 
 export interface AggregateOptions extends AggregateIdentifier {
+  eventBus: IHermesMessageBus;
   eventHandlers: Array<IHermesAggregateEventHandler>;
   logger: ILogger;
 }

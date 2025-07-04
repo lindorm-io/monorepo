@@ -4,8 +4,8 @@ import { ClassLike, Dict } from "@lindorm/types";
 import merge from "deepmerge";
 import { z } from "zod";
 import { SagaDestroyedError } from "../errors";
-import { IHermesMessage, ISaga } from "../interfaces";
-import { HermesCommand, HermesEvent, HermesTimeout } from "../messages";
+import { IHermesMessage, IHermesMessageBus, ISaga } from "../interfaces";
+import { HermesEvent } from "../messages";
 import { HermesMessageSchema } from "../schemas";
 import {
   HermesMessageOptions,
@@ -19,9 +19,13 @@ export class Saga<S extends Dict = Dict> implements ISaga {
   public readonly name: string;
   public readonly context: string;
 
+  private readonly _commandBus: IHermesMessageBus;
+  private readonly _timeoutBus: IHermesMessageBus;
+
   private readonly _messagesToDispatch: Array<IHermesMessage>;
   private readonly _processedCausationIds: Array<string>;
   private readonly _revision: number;
+
   private _destroyed: boolean;
   private _state: S;
 
@@ -34,10 +38,14 @@ export class Saga<S extends Dict = Dict> implements ISaga {
     this.name = snakeCase(options.name);
     this.context = snakeCase(options.context);
 
-    this._destroyed = options.destroyed || false;
+    this._commandBus = options.commandBus;
+    this._timeoutBus = options.timeoutBus;
+
     this._messagesToDispatch = options.messagesToDispatch || [];
     this._processedCausationIds = options.processedCausationIds || [];
     this._revision = options.revision || 0;
+
+    this._destroyed = options.destroyed || false;
     this._state = options.state || ({} as S);
   }
 
@@ -122,7 +130,7 @@ export class Saga<S extends Dict = Dict> implements ISaga {
     const { ...data } = command;
 
     this._messagesToDispatch.push(
-      new HermesCommand(
+      this._commandBus.create(
         merge<HermesMessageOptions, SagaDispatchOptions>(
           {
             aggregate: causation.aggregate,
@@ -176,20 +184,19 @@ export class Saga<S extends Dict = Dict> implements ISaga {
     }
 
     this._messagesToDispatch.push(
-      new HermesTimeout(
-        {
-          aggregate: {
-            id: this.id,
-            name: this.name,
-            context: this.context,
-          },
-          name,
-          data,
-          delay,
-          meta: causation.meta,
+      this._timeoutBus.create({
+        aggregate: {
+          id: this.id,
+          name: this.name,
+          context: this.context,
         },
-        causation,
-      ),
+        causationId: causation.id,
+        correlationId: causation.correlationId,
+        data,
+        delay,
+        meta: causation.meta,
+        name,
+      }),
     );
   }
 }

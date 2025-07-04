@@ -3,6 +3,7 @@ import { IHermesMessageBus, IHermesViewStore } from "../../interfaces";
 
 export type ViewDomainOptions = {
   logger: ILogger;
-  messageBus: IHermesMessageBus;
+  errorBus: IHermesMessageBus;
+  eventBus: IHermesMessageBus;
   store: IHermesViewStore;
 };

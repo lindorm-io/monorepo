@@ -1,4 +1,5 @@
 import { createMockLogger } from "@lindorm/logger";
+import { MessageKit } from "@lindorm/message";
 import { IMongoSource, MongoSource } from "@lindorm/mongo";
 import { IRabbitSource, RabbitSource } from "@lindorm/rabbit";
 import { sleep } from "@lindorm/utils";
@@ -23,18 +24,21 @@ import { CHECKSUM_STORE } from "../constants/private";
 import { MessageBus } from "../infrastructure";
 import { ChecksumStore } from "../infrastructure/ChecksumStore";
 import { IChecksumDomain, IHermesChecksumStore, IHermesMessageBus } from "../interfaces";
-import { HermesEvent } from "../messages";
+import { HermesError, HermesEvent } from "../messages";
 import { AggregateIdentifier } from "../types";
 import { ChecksumDomain } from "./ChecksumDomain";
 
 describe("ChecksumDomain", () => {
+  const eventKit = new MessageKit({ Message: HermesEvent });
+
   const logger = createMockLogger();
 
   let mongo: IMongoSource;
   let rabbit: IRabbitSource;
   let aggregate: AggregateIdentifier;
   let domain: IChecksumDomain;
-  let messageBus: IHermesMessageBus;
+  let errorBus: IHermesMessageBus<HermesError>;
+  let eventBus: IHermesMessageBus<HermesEvent>;
   let store: IHermesChecksumStore;
 
   beforeAll(async () => {
@@ -52,9 +56,10 @@ describe("ChecksumDomain", () => {
     await rabbit.setup();
 
     aggregate = { ...TEST_AGGREGATE_IDENTIFIER, id: randomUUID() };
-    messageBus = new MessageBus({ rabbit, logger });
+    errorBus = new MessageBus({ Message: HermesError, rabbit, logger });
+    eventBus = new MessageBus({ Message: HermesEvent, rabbit, logger });
     store = new ChecksumStore({ mongo, logger });
-    domain = new ChecksumDomain({ messageBus, store, logger });
+    domain = new ChecksumDomain({ errorBus, eventBus, store, logger });
 
     const eventHandlers = [
       TEST_CHECKSUM_EVENT_HANDLER,
@@ -77,24 +82,24 @@ describe("ChecksumDomain", () => {
   });
 
   test("should handle multiple published events", async () => {
-    const eventCreate = new HermesEvent({ ...TEST_HERMES_EVENT_CREATE, aggregate });
-    const eventMergeState = new HermesEvent({
+    const eventCreate = eventKit.create({ ...TEST_HERMES_EVENT_CREATE, aggregate });
+    const eventMergeState = eventKit.create({
       ...TEST_HERMES_EVENT_MERGE_STATE,
       aggregate,
     });
-    const eventSetState = new HermesEvent({ ...TEST_HERMES_EVENT_SET_STATE, aggregate });
-    const eventDestroy = new HermesEvent({ ...TEST_HERMES_EVENT_DESTROY, aggregate });
+    const eventSetState = eventKit.create({ ...TEST_HERMES_EVENT_SET_STATE, aggregate });
+    const eventDestroy = eventKit.create({ ...TEST_HERMES_EVENT_DESTROY, aggregate });
 
-    await expect(messageBus.publish(eventCreate)).resolves.toBeUndefined();
+    await expect(eventBus.publish(eventCreate)).resolves.toBeUndefined();
     await sleep(250);
 
-    await expect(messageBus.publish(eventMergeState)).resolves.toBeUndefined();
+    await expect(eventBus.publish(eventMergeState)).resolves.toBeUndefined();
     await sleep(250);
 
-    await expect(messageBus.publish(eventSetState)).resolves.toBeUndefined();
+    await expect(eventBus.publish(eventSetState)).resolves.toBeUndefined();
     await sleep(250);
 
-    await expect(messageBus.publish(eventDestroy)).resolves.toBeUndefined();
+    await expect(eventBus.publish(eventDestroy)).resolves.toBeUndefined();
     await sleep(250);
 
     await expect(

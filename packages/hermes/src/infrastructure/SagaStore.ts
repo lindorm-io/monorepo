@@ -1,9 +1,6 @@
 import { LindormError } from "@lindorm/errors";
 import { ILogger } from "@lindorm/logger";
-import { MongoSource } from "@lindorm/mongo";
-import { PostgresSource } from "@lindorm/postgres";
 import { IHermesMessage, IHermesSagaStore, ISaga, ISagaStore } from "../interfaces";
-import { Saga } from "../models";
 import {
   HermesSagaStoreOptions,
   SagaData,
@@ -24,9 +21,9 @@ export class SagaStore implements IHermesSagaStore {
 
     if (options.custom) {
       this.store = options.custom;
-    } else if (options.mongo instanceof MongoSource) {
+    } else if (options.mongo?.name === "MongoSource") {
       this.store = new MongoSagaStore(options.mongo, this.logger);
-    } else if (options.postgres instanceof PostgresSource) {
+    } else if (options.postgres?.name === "PostgresSource") {
       this.store = new PostgresSagaStore(options.postgres, this.logger);
     } else {
       throw new LindormError("Invalid SagaStore configuration");
@@ -35,7 +32,7 @@ export class SagaStore implements IHermesSagaStore {
 
   // public
 
-  public async clearMessages(saga: ISaga): Promise<ISaga> {
+  public async clearMessages(saga: ISaga): Promise<SagaData> {
     this.logger.debug("Clearing messages", { saga: saga.toJSON() });
 
     const filter: SagaUpdateFilter = {
@@ -55,7 +52,7 @@ export class SagaStore implements IHermesSagaStore {
 
     await this.store.updateSaga(filter, data);
 
-    const update: SagaData = {
+    return {
       ...saga.toJSON(),
       destroyed: data.destroyed,
       messagesToDispatch: data.messages_to_dispatch,
@@ -63,24 +60,33 @@ export class SagaStore implements IHermesSagaStore {
       revision: data.revision,
       state: data.state,
     };
-
-    return new Saga({ ...update, logger: this.logger });
   }
 
-  public async load(sagaIdentifier: SagaIdentifier): Promise<ISaga> {
+  public async load(sagaIdentifier: SagaIdentifier): Promise<SagaData> {
     this.logger.debug("Loading saga", { sagaIdentifier });
 
-    const existing = await this.store.findSaga(sagaIdentifier);
+    const existing = await this.store.findSaga({
+      id: sagaIdentifier.id,
+      name: sagaIdentifier.name,
+      context: sagaIdentifier.context,
+    });
 
     if (existing) {
       this.logger.debug("Loading existing saga", { existing });
 
-      return new Saga({ ...SagaStore.toData(existing), logger: this.logger });
+      return SagaStore.toData(existing);
     }
 
-    const saga = new Saga({ ...sagaIdentifier, logger: this.logger });
+    const saga: SagaData = {
+      ...sagaIdentifier,
+      destroyed: false,
+      messagesToDispatch: [],
+      processedCausationIds: [],
+      revision: 0,
+      state: {},
+    };
 
-    this.logger.debug("Loading ephemeral saga", { saga: saga.toJSON() });
+    this.logger.debug("Loading ephemeral saga", { saga });
 
     return saga;
   }
@@ -89,7 +95,7 @@ export class SagaStore implements IHermesSagaStore {
     return await this.store.findCausationIds(sagaIdentifier);
   }
 
-  public async save(saga: ISaga, causation: IHermesMessage): Promise<ISaga> {
+  public async save(saga: ISaga, causation: IHermesMessage): Promise<SagaData> {
     this.logger.debug("Saving saga", { saga: saga.toJSON(), causation });
 
     const sagaIdentifier: SagaIdentifier = {
@@ -104,7 +110,7 @@ export class SagaStore implements IHermesSagaStore {
       if (existing.processed_causation_ids.includes(causation.id)) {
         this.logger.debug("Found existing saga matching causation", { existing });
 
-        return new Saga({ ...SagaStore.toData(existing), logger: this.logger });
+        return SagaStore.toData(existing);
       }
 
       const causations = await this.store.findCausationIds(sagaIdentifier);
@@ -112,7 +118,7 @@ export class SagaStore implements IHermesSagaStore {
       if (causations.includes(causation.id)) {
         this.logger.debug("Found existing saga matching causation", { existing });
 
-        return new Saga({ ...SagaStore.toData(existing), logger: this.logger });
+        return SagaStore.toData(existing);
       }
     }
 
@@ -125,7 +131,7 @@ export class SagaStore implements IHermesSagaStore {
 
       await this.store.insertSaga(SagaStore.toAttributes(data));
 
-      return new Saga({ ...data, logger: this.logger });
+      return data;
     }
 
     const filter: SagaUpdateFilter = {
@@ -145,7 +151,7 @@ export class SagaStore implements IHermesSagaStore {
 
     await this.store.updateSaga(filter, data);
 
-    const update: SagaData = {
+    return {
       ...saga.toJSON(),
       destroyed: data.destroyed,
       messagesToDispatch: data.messages_to_dispatch,
@@ -153,11 +159,9 @@ export class SagaStore implements IHermesSagaStore {
       revision: data.revision,
       state: data.state,
     };
-
-    return new Saga({ ...update, logger: this.logger });
   }
 
-  public async saveCausations(saga: ISaga): Promise<ISaga> {
+  public async saveCausations(saga: ISaga): Promise<SagaData> {
     this.logger.debug("Saving causations", { saga: saga.toJSON() });
 
     if (!saga.processedCausationIds.length) {
@@ -199,7 +203,7 @@ export class SagaStore implements IHermesSagaStore {
 
     await this.store.updateSaga(filter, data);
 
-    const update: SagaData = {
+    return {
       ...saga.toJSON(),
       destroyed: data.destroyed,
       messagesToDispatch: data.messages_to_dispatch,
@@ -207,8 +211,6 @@ export class SagaStore implements IHermesSagaStore {
       revision: data.revision,
       state: data.state,
     };
-
-    return new Saga({ ...update, logger: this.logger });
   }
 
   // private

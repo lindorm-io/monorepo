@@ -1,4 +1,5 @@
 import { createMockLogger } from "@lindorm/logger";
+import { MessageKit } from "@lindorm/message";
 import { IMongoSource, MongoSource } from "@lindorm/mongo";
 import { randomUUID } from "crypto";
 import { Collection } from "mongodb";
@@ -20,6 +21,8 @@ import { getViewStoreName } from "../../utils/private";
 import { MongoViewStore } from "./MongoViewStore";
 
 describe("MongoViewStore", () => {
+  const eventKit = new MessageKit({ Message: HermesEvent });
+
   const logger = createMockLogger();
 
   let aggregateIdentifier: AggregateIdentifier;
@@ -63,7 +66,7 @@ describe("MongoViewStore", () => {
   });
 
   test("should find causation ids", async () => {
-    const event = new HermesEvent(TEST_HERMES_COMMAND);
+    const event = eventKit.create(TEST_HERMES_COMMAND);
 
     const document: ViewCausationAttributes = {
       id: viewIdentifier.id,

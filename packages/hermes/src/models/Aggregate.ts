@@ -10,9 +10,12 @@ import {
   InvalidMessageTypeError,
 } from "../errors";
 import { HermesAggregateEventHandler } from "../handlers";
-import { IAggregate, IHermesAggregateEventHandler, IHermesMessage } from "../interfaces";
+import {
+  IAggregate,
+  IHermesAggregateEventHandler,
+  IHermesMessageBus,
+} from "../interfaces";
 import { HermesCommand, HermesEvent } from "../messages";
-import { HermesMessageSchema } from "../schemas";
 import { AggregateData, AggregateEventHandlerContext, AggregateOptions } from "../types";
 import { extractDataTransferObject } from "../utils/private";
 
@@ -21,8 +24,9 @@ export class Aggregate<S extends Dict = Dict> implements IAggregate {
   public readonly name: string;
   public readonly context: string;
 
+  private readonly _eventBus: IHermesMessageBus<HermesEvent>;
   private readonly _eventHandlers: Array<IHermesAggregateEventHandler>;
-  private readonly _events: Array<IHermesMessage>;
+  private readonly _events: Array<HermesEvent>;
 
   private _destroyed: boolean;
   private _destroying: boolean;
@@ -40,6 +44,7 @@ export class Aggregate<S extends Dict = Dict> implements IAggregate {
 
     this._destroyed = false;
     this._destroying = false;
+    this._eventBus = options.eventBus;
     this._eventHandlers = options.eventHandlers || [];
     this._events = [];
     this._numberOfLoadedEvents = 0;
@@ -52,7 +57,7 @@ export class Aggregate<S extends Dict = Dict> implements IAggregate {
     return this._destroyed;
   }
 
-  public get events(): Array<IHermesMessage> {
+  public get events(): Array<HermesEvent> {
     return this._events;
   }
 
@@ -77,23 +82,24 @@ export class Aggregate<S extends Dict = Dict> implements IAggregate {
     const { name, version, data } = extractDataTransferObject(event);
 
     await this.handleEvent(
-      new HermesEvent(
-        {
-          aggregate: { id: this.id, name: this.name, context: this.context },
-          data,
-          name,
-          meta: causation.meta,
-          version,
+      this._eventBus.create({
+        aggregate: {
+          id: this.id,
+          name: this.name,
+          context: this.context,
         },
-        causation,
-      ),
+        causationId: causation.id,
+        correlationId: causation.correlationId,
+        data,
+        meta: causation.meta,
+        name,
+        version,
+      }),
     );
   }
 
   public async load(event: HermesEvent): Promise<void> {
     this.logger.debug("Load HermesEvent", { event });
-
-    HermesMessageSchema.parse(event);
 
     await this.handleEvent(event);
 

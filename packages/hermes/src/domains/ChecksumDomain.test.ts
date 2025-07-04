@@ -1,5 +1,6 @@
 import { LindormError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger";
+import { MessageKit } from "@lindorm/message";
 import { createMockRabbitMessageBus } from "@lindorm/rabbit";
 import { randomUUID } from "crypto";
 import { TEST_AGGREGATE_IDENTIFIER } from "../__fixtures__/aggregate";
@@ -19,11 +20,13 @@ import {
 } from "../__fixtures__/hermes-event";
 import { ChecksumError, HandlerNotRegisteredError } from "../errors";
 import { IChecksumDomain, IHermesMessageBus } from "../interfaces";
-import { HermesEvent } from "../messages";
+import { HermesError, HermesEvent } from "../messages";
 import { AggregateIdentifier } from "../types";
 import { ChecksumDomain } from "./ChecksumDomain";
 
 describe("ChecksumDomain", () => {
+  const eventKit = new MessageKit({ Message: HermesEvent });
+
   const logger = createMockLogger();
   const eventHandlers = [
     TEST_CHECKSUM_EVENT_HANDLER,
@@ -37,17 +40,19 @@ describe("ChecksumDomain", () => {
 
   let aggregate: AggregateIdentifier;
   let domain: IChecksumDomain;
-  let messageBus: IHermesMessageBus;
+  let errorBus: IHermesMessageBus<HermesError>;
+  let eventBus: IHermesMessageBus<HermesEvent>;
   let store: any;
 
   beforeEach(async () => {
     aggregate = { ...TEST_AGGREGATE_IDENTIFIER, id: randomUUID() };
-    messageBus = createMockRabbitMessageBus(HermesEvent);
+    errorBus = createMockRabbitMessageBus(HermesError);
+    eventBus = createMockRabbitMessageBus(HermesEvent);
     store = {
       verify: jest.fn(),
     };
 
-    domain = new ChecksumDomain({ messageBus, store, logger });
+    domain = new ChecksumDomain({ errorBus, eventBus, store, logger });
 
     for (const handler of eventHandlers) {
       await domain.registerEventHandler(handler);
@@ -55,14 +60,14 @@ describe("ChecksumDomain", () => {
   });
 
   test("should register event handler", async () => {
-    messageBus = createMockRabbitMessageBus(HermesEvent);
-    domain = new ChecksumDomain({ messageBus, store, logger });
+    eventBus = createMockRabbitMessageBus(HermesEvent);
+    domain = new ChecksumDomain({ errorBus, eventBus, store, logger });
 
     await expect(
       domain.registerEventHandler(TEST_CHECKSUM_EVENT_HANDLER),
     ).resolves.toBeUndefined();
 
-    expect(messageBus.subscribe).toHaveBeenCalledWith({
+    expect(eventBus.subscribe).toHaveBeenCalledWith({
       callback: expect.any(Function),
       queue: "queue.checksum.default.aggregate_name.hermes_event_default",
       topic: "default.aggregate_name.hermes_event_default",
@@ -70,7 +75,7 @@ describe("ChecksumDomain", () => {
   });
 
   test("should throw on existing event handler", async () => {
-    domain = new ChecksumDomain({ messageBus, store, logger });
+    domain = new ChecksumDomain({ errorBus, eventBus, store, logger });
 
     domain.registerEventHandler(TEST_CHECKSUM_EVENT_HANDLER);
 
@@ -80,7 +85,7 @@ describe("ChecksumDomain", () => {
   });
 
   test("should throw on invalid event handler", async () => {
-    domain = new ChecksumDomain({ messageBus, store, logger });
+    domain = new ChecksumDomain({ errorBus, eventBus, store, logger });
 
     await expect(
       domain.registerEventHandler(TEST_AGGREGATE_EVENT_HANDLER),
@@ -88,7 +93,7 @@ describe("ChecksumDomain", () => {
   });
 
   test("should handle event", async () => {
-    const event = new HermesEvent({ ...TEST_HERMES_EVENT_CREATE, aggregate });
+    const event = eventKit.create({ ...TEST_HERMES_EVENT_CREATE, aggregate });
 
     await expect(
       // @ts-expect-error
@@ -101,14 +106,14 @@ describe("ChecksumDomain", () => {
   test("should dispatch error event on invalid checksum", async () => {
     store.verify.mockRejectedValue(new ChecksumError("test"));
 
-    const event = new HermesEvent({ ...TEST_HERMES_EVENT_CREATE, aggregate });
+    const event = eventKit.create({ ...TEST_HERMES_EVENT_CREATE, aggregate });
 
     await expect(
       // @ts-expect-error
       domain.handleEvent(event),
     ).resolves.toBeUndefined();
 
-    expect(messageBus.publish).toHaveBeenCalledWith(
+    expect(errorBus.publish).toHaveBeenCalledWith(
       expect.objectContaining({
         name: "checksum_error",
         data: {
@@ -126,7 +131,7 @@ describe("ChecksumDomain", () => {
 
     domain.on("checksum", listener);
 
-    const event = new HermesEvent({ ...TEST_HERMES_EVENT_CREATE, aggregate });
+    const event = eventKit.create({ ...TEST_HERMES_EVENT_CREATE, aggregate });
 
     await expect(
       // @ts-expect-error
@@ -142,9 +147,9 @@ describe("ChecksumDomain", () => {
   });
 
   test("should throw on missing handler", async () => {
-    domain = new ChecksumDomain({ messageBus, store, logger });
+    domain = new ChecksumDomain({ errorBus, eventBus, store, logger });
 
-    const event = new HermesEvent(TEST_HERMES_EVENT);
+    const event = eventKit.create(TEST_HERMES_EVENT);
 
     await expect(
       // @ts-expect-error

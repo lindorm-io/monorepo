@@ -7,7 +7,7 @@ import { z } from "zod";
 import { HandlerNotRegisteredError } from "../errors";
 import { HermesErrorHandler } from "../handlers";
 import { IErrorDomain, IHermesErrorHandler, IHermesMessageBus } from "../interfaces";
-import { HermesCommand, HermesError } from "../messages";
+import { HermesError } from "../messages";
 import { HermesMessageSchema } from "../schemas";
 import {
   ErrorDispatchOptions,
@@ -17,13 +17,16 @@ import {
 } from "../types";
 
 export class ErrorDomain implements IErrorDomain {
+  private readonly commandBus: IHermesMessageBus;
+  private readonly errorBus: IHermesMessageBus;
   private readonly errorHandlers: Array<IHermesErrorHandler>;
   private readonly logger: ILogger;
-  private readonly messageBus: IHermesMessageBus;
 
   public constructor(options: ErrorDomainOptions) {
     this.logger = options.logger.child(["ErrorDomain"]);
-    this.messageBus = options.messageBus;
+
+    this.commandBus = options.commandBus;
+    this.errorBus = options.errorBus;
 
     this.errorHandlers = [];
   }
@@ -78,7 +81,7 @@ export class ErrorDomain implements IErrorDomain {
         }),
       );
 
-      await this.messageBus.subscribe({
+      await this.errorBus.subscribe({
         callback: (message: HermesError) => this.handleError(message),
         queue: ErrorDomain.getQueue(context, errorHandler),
         topic: ErrorDomain.getTopic(context, errorHandler),
@@ -114,7 +117,7 @@ export class ErrorDomain implements IErrorDomain {
       saga: message.data.saga,
       view: message.data.view,
       logger: this.logger.child(["ErrorHandler"]),
-      dispatch: this.dispatchMessage.bind(this, message),
+      dispatch: this.dispatchCommand.bind(this, message),
     };
 
     try {
@@ -126,7 +129,7 @@ export class ErrorDomain implements IErrorDomain {
     }
   }
 
-  private async dispatchMessage(
+  private async dispatchCommand(
     causation: HermesError,
     command: ClassLike,
     options: ErrorDispatchOptions = {},
@@ -153,8 +156,8 @@ export class ErrorDomain implements IErrorDomain {
 
     const { ...data } = command;
 
-    await this.messageBus.publish(
-      new HermesCommand(
+    await this.commandBus.publish(
+      this.commandBus.create(
         merge<HermesMessageOptions, ErrorDispatchOptions>(
           {
             name: snakeCase(command.constructor.name),
