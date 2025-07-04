@@ -1,28 +1,29 @@
-import { LindormError } from "@lindorm/errors";
 import { JsonKit } from "@lindorm/json-kit";
 import { ILogger } from "@lindorm/logger";
+import { globalMessageMetadata, IMessage, MessageScanner } from "@lindorm/message";
 import { Constructor } from "@lindorm/types";
 import { sleep } from "@lindorm/utils";
 import amqplib, { ChannelModel, ConfirmChannel, ConsumeMessage } from "amqplib";
 import { RabbitSourceError } from "../errors";
-import { IRabbitMessage, IRabbitMessageBus, IRabbitSource } from "../interfaces";
+import { IRabbitMessageBus, IRabbitSource } from "../interfaces";
 import {
   CloneRabbitSourceOptions,
-  RabbitSourceMessage,
+  MessageScannerInput,
   RabbitSourceMessageBusOptions,
-  RabbitSourceMessages,
   RabbitSourceOptions,
 } from "../types";
 import { FromClone } from "../types/private";
 import { bindQueue } from "../utils";
 import { RabbitMessageBus } from "./RabbitMessageBus";
-import { MessageScanner, SubscriptionList } from "./private";
+import { SubscriptionList } from "./private";
 
 export class RabbitSource implements IRabbitSource {
+  public readonly name = "RabbitSource";
+
   private readonly deadletters: string;
   private readonly exchange: string;
   private readonly logger: ILogger;
-  private readonly messages: Array<RabbitSourceMessage>;
+  private readonly messages: Array<Constructor<IMessage>>;
   private readonly nackTimeout: number;
   private readonly promise: Promise<ChannelModel>;
   private readonly subscriptions: SubscriptionList;
@@ -59,13 +60,17 @@ export class RabbitSource implements IRabbitSource {
 
   public get client(): ChannelModel {
     if (!this.channelModel) {
-      throw new LindormError("Connection not established");
+      throw new RabbitSourceError("Connection not established");
     }
     return this.channelModel;
   }
 
-  public addMessages(messages: RabbitSourceMessages): void {
-    this.messages.push(...MessageScanner.scan(messages));
+  public addMessages(messages: MessageScannerInput): void {
+    this.messages.push(
+      ...MessageScanner.scan(messages).filter(
+        (Message) => !this.messages.includes(Message),
+      ),
+    );
   }
 
   public clone(options: CloneRabbitSourceOptions = {}): IRabbitSource {
@@ -97,22 +102,20 @@ export class RabbitSource implements IRabbitSource {
     await this.channelModel?.close();
   }
 
-  public messageBus<M extends IRabbitMessage>(
+  public messageBus<M extends IMessage>(
     Message: Constructor<M>,
-    options: RabbitSourceMessageBusOptions<M> = {},
+    options: RabbitSourceMessageBusOptions = {},
   ): IRabbitMessageBus<M> {
-    const config = this.messageConfig(Message);
+    this.messageExists(Message);
 
     return new RabbitMessageBus<M>({
-      Message: config.Message,
+      Message,
       channel: this.channel,
       deadletters: this.deadletters,
       exchange: this.exchange,
       logger: options.logger ?? this.logger,
       nackTimeout: options.nackTimeout ?? this.nackTimeout,
       subscriptions: this.subscriptions,
-      create: options.create ?? config.create,
-      validate: options.validate ?? config.validate,
     });
   }
 
@@ -138,23 +141,27 @@ export class RabbitSource implements IRabbitSource {
 
   private get channel(): ConfirmChannel {
     if (!this.confirmChannel) {
-      throw new LindormError("Channel not established");
+      throw new RabbitSourceError("Channel not established");
     }
     return this.confirmChannel;
   }
 
-  private messageConfig<M extends IRabbitMessage>(
-    Message: Constructor<M>,
-  ): RabbitSourceMessage<M> {
-    const config = this.messages.find((message) => message.Message === Message);
+  private messageExists<M extends IMessage>(Message: Constructor<M>): void {
+    const config = this.messages.find((m) => m === Message);
 
-    if (config) {
-      return config as RabbitSourceMessage<M>;
+    if (!config) {
+      throw new RabbitSourceError("Message not found in messages list", {
+        debug: { Message },
+      });
     }
 
-    throw new RabbitSourceError("Message not found in entities list", {
-      debug: { Message },
-    });
+    const metadata = globalMessageMetadata.get(Message);
+
+    if (metadata.message.decorator !== "Message") {
+      throw new RabbitSourceError(`Message is not decorated with @Message`, {
+        debug: { Message },
+      });
+    }
   }
 
   private onReturnedMessage(msg: ConsumeMessage): void {
@@ -200,7 +207,7 @@ export class RabbitSource implements IRabbitSource {
       await sleep(connectInterval);
 
       if (Date.now() > start + connectTimeout) {
-        throw new LindormError("Connection Timeout", { error: err });
+        throw new RabbitSourceError("Connection Timeout", { error: err });
       }
 
       return this.connectWithRetry(options, start);

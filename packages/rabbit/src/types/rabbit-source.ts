@@ -1,24 +1,11 @@
 import { ILogger } from "@lindorm/logger";
-import { Constructor } from "@lindorm/types";
+import { IMessage } from "@lindorm/message";
 import { Options } from "amqplib";
-import { IRabbitMessage } from "../interfaces";
-import { CreateRabbitMessageFn, ValidateRabbitMessageFn } from "./rabbit-message-bus";
+import { MessageScannerInput } from "./scanner";
 
-export type RabbitSourceMessage<M extends IRabbitMessage = IRabbitMessage> = {
-  Message: Constructor<M>;
-  create?: CreateRabbitMessageFn<M>;
-  validate?: ValidateRabbitMessageFn<M>;
-};
-
-export type RabbitSourceMessages = Array<
-  Constructor<IRabbitMessage> | RabbitSourceMessage | string
->;
-
-export type RabbitSourceMessageBusOptions<M extends IRabbitMessage> = {
+export type RabbitSourceMessageBusOptions = {
   logger?: ILogger;
   nackTimeout?: number;
-  create?: CreateRabbitMessageFn<M>;
-  validate?: ValidateRabbitMessageFn<M>;
 };
 
 export type CloneRabbitSourceOptions = {
@@ -32,7 +19,7 @@ export type RabbitSourceOptions = {
   deadletters?: string;
   exchange?: string;
   logger: ILogger;
-  messages?: RabbitSourceMessages;
+  messages?: MessageScannerInput<IMessage>;
   nackTimeout?: number;
   url: string;
 };

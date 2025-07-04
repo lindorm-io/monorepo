@@ -1,34 +1,11 @@
-import { RabbitMessageBase } from "../../classes";
-import { IRabbitMessage } from "../../interfaces";
-import { ValidateRabbitMessageFn } from "../../types";
+import { Field, Message, MessageBase } from "@lindorm/message";
+import { Dict } from "@lindorm/types";
 
-export type TestMessageOneOptions = Partial<IRabbitMessage> & {
-  data?: any;
-  meta?: any;
-};
+@Message({ topic: "test.message.one.override" })
+export class TestMessageOne extends MessageBase {
+  @Field("object")
+  public readonly data!: Dict;
 
-export class TestMessageOne extends RabbitMessageBase {
-  public readonly data: any;
-  public readonly meta: any;
-
-  public constructor(options: TestMessageOneOptions) {
-    super(options);
-
-    this.data = options.data;
-    this.meta = options.meta;
-  }
-
-  public get topic(): string {
-    return "override.test.message.one";
-  }
+  @Field("object")
+  public readonly meta!: Dict;
 }
-
-export const validate: ValidateRabbitMessageFn<TestMessageOne> = (message) => {
-  if (!message.data) {
-    throw new Error("Missing data");
-  }
-
-  if (!message.meta) {
-    throw new Error("Missing meta");
-  }
-};

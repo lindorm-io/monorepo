@@ -1,18 +1,25 @@
+import { IMessage, MessageKit } from "@lindorm/message";
 import { Constructor } from "@lindorm/types";
-import { IRabbitMessage, IRabbitMessageBus, IRabbitSubscription } from "../interfaces";
+import { IRabbitMessageBus, IRabbitSubscription } from "../interfaces";
 
-export const createMockRabbitMessageBus = <M extends IRabbitMessage>(
+export const createMockRabbitMessageBus = <M extends IMessage>(
   Message: Constructor<M>,
+  log = false,
 ): IRabbitMessageBus<M> => {
+  const kit = new MessageKit({ Message });
+
   let array: Array<IRabbitSubscription<M>> = [];
 
   return {
-    create: jest.fn().mockImplementation((args) => new Message(args)),
+    create: jest.fn().mockImplementation((args) => kit.create(args)),
     publish: jest.fn().mockImplementation(async (args) => {
       const list = Array.isArray(args) ? args : [args];
 
+      if (log) console.log(args);
+
       for (const message of list) {
-        const subs = array.filter((a) => a.topic === message.topic);
+        const topic = kit.getTopicName(message);
+        const subs = array.filter((a) => a.topic === topic);
 
         for (const subscription of subs) {
           if (message.delay) {
@@ -24,9 +31,13 @@ export const createMockRabbitMessageBus = <M extends IRabbitMessage>(
       }
     }),
     subscribe: jest.fn().mockImplementation(async (args) => {
+      if (log) console.log(args);
+
       array = [array, args].flat();
     }),
     unsubscribe: jest.fn().mockImplementation(async (args) => {
+      if (log) console.log(args);
+
       const list = Array.isArray(args) ? args : [args];
 
       for (const sub of list) {

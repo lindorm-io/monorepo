@@ -1,8 +1,10 @@
+import { IMessage } from "@lindorm/message";
 import { Constructor } from "@lindorm/types";
-import { IRabbitMessage, IRabbitSource } from "../interfaces";
+import { IRabbitSource } from "../interfaces";
 import { createMockRabbitMessageBus } from "./mock-rabbit-message-bus";
 
 export const createMockRabbitSource = (): IRabbitSource => ({
+  name: "RabbitSource",
   client: {} as any,
   addMessages: jest.fn(),
   clone: jest.fn().mockImplementation(() => createMockRabbitSource()),
@@ -11,7 +13,7 @@ export const createMockRabbitSource = (): IRabbitSource => ({
   setup: jest.fn(),
   messageBus: jest
     .fn()
-    .mockImplementation((Message: Constructor<IRabbitMessage>) =>
+    .mockImplementation((Message: Constructor<IMessage>) =>
       createMockRabbitMessageBus(Message),
     ),
 });

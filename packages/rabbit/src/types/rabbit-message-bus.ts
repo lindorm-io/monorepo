@@ -1,23 +1,15 @@
 import { ILogger } from "@lindorm/logger";
-import { Constructor, DeepPartial } from "@lindorm/types";
+import { IMessage } from "@lindorm/message";
+import { Constructor } from "@lindorm/types";
 import { ConfirmChannel } from "amqplib";
 import { SubscriptionList } from "../classes/private";
-import { IRabbitMessage, IRabbitSubscription } from "../interfaces";
-
-export type CreateRabbitMessageFn<M extends IRabbitMessage = IRabbitMessage> = (
-  options: DeepPartial<M>,
-) => M;
-
-export type ValidateRabbitMessageFn<M extends IRabbitMessage = IRabbitMessage> = (
-  message: Omit<M, "id" | "delay" | "mandatory" | "timestamp" | "topic" | "type">,
-) => void;
+import { IRabbitSubscription } from "../interfaces";
 
 export type RabbitSubscriptionItem<
-  M extends IRabbitMessage = IRabbitMessage,
+  M extends IMessage = IMessage,
   S extends IRabbitSubscription<M> = IRabbitSubscription<M>,
 > = {
-  queue: string;
-  topic: string;
+  Message: Constructor<M>;
   consumerTag: string;
   subscription: S;
 };
@@ -27,7 +19,7 @@ export type UnsubscribeOptions = {
   topic: string;
 };
 
-export type RabbitBusOptions<M extends IRabbitMessage> = {
+export type RabbitBusOptions<M extends IMessage> = {
   Message: Constructor<M>;
   channel: ConfirmChannel;
   deadletters: string;
@@ -35,6 +27,4 @@ export type RabbitBusOptions<M extends IRabbitMessage> = {
   logger: ILogger;
   nackTimeout: number;
   subscriptions: SubscriptionList;
-  create?: CreateRabbitMessageFn<M>;
-  validate?: ValidateRabbitMessageFn<M>;
 };

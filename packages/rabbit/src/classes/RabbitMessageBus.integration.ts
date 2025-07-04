@@ -1,19 +1,19 @@
 import { createMockLogger } from "@lindorm/logger";
 import { TestMessageOne } from "../__fixtures__/messages/test-message-one";
+import { TestMessageThree } from "../__fixtures__/messages/test-message-three";
 import { TestMessageTwo } from "../__fixtures__/messages/test-message-two";
-import { TestMessage } from "../__fixtures__/test-message";
 import { IRabbitSubscription } from "../interfaces";
 import { RabbitSource } from "./RabbitSource";
 
 describe("RabbitMessageBus", () => {
   let source: RabbitSource;
-  let subscription: IRabbitSubscription<TestMessage>;
   let subscriptionOne: IRabbitSubscription<TestMessageOne>;
   let subscriptionTwo: IRabbitSubscription<TestMessageTwo>;
+  let subscriptionThree: IRabbitSubscription<TestMessageThree>;
 
   beforeAll(async () => {
     source = new RabbitSource({
-      messages: [TestMessage, TestMessageOne, TestMessageTwo],
+      messages: [TestMessageOne, TestMessageTwo, TestMessageThree],
       logger: createMockLogger(),
       url: "amqp://localhost:5672",
     });
@@ -25,46 +25,46 @@ describe("RabbitMessageBus", () => {
   });
 
   test("should subscribe", async () => {
-    subscription = {
-      callback: jest.fn().mockResolvedValue({}),
-      queue: "test.message.queue",
-      topic: "test.message",
-    };
     subscriptionOne = {
       callback: jest.fn().mockResolvedValue({}),
-      queue: "test.message.one.queue",
-      topic: "override.test.message.one",
+      queue: "test.message.one.queue.override",
+      topic: "test.message.one.override",
     };
     subscriptionTwo = {
       callback: jest.fn().mockResolvedValue({}),
-      queue: "test.message.two.queue",
-      topic: "override.test.message.two",
+      queue: "test-message-two.queue",
+      topic: "test-message-two",
+    };
+    subscriptionThree = {
+      callback: jest.fn().mockResolvedValue({}),
+      queue: "decorated.topic.whimsy.queue",
+      topic: "decorated.topic.whimsy",
     };
 
-    const bus = source.messageBus(TestMessage);
     const busOne = source.messageBus(TestMessageOne);
     const busTwo = source.messageBus(TestMessageTwo);
+    const busThree = source.messageBus(TestMessageThree);
 
-    await bus.subscribe(subscription);
     await busOne.subscribe(subscriptionOne);
     await busTwo.subscribe(subscriptionTwo);
+    await busThree.subscribe(subscriptionThree);
   });
 
   test("should publish", async () => {
-    const bus = source.messageBus(TestMessage);
     const busOne = source.messageBus(TestMessageOne);
     const busTwo = source.messageBus(TestMessageTwo);
+    const busThree = source.messageBus(TestMessageThree);
 
-    const message = bus.create({ name: "test message name" });
-    const messageOne = busOne.create({ data: { json: 1 } });
-    const messageTwo = busTwo.create({ data: { json: 2 } });
+    const messageOne = busOne.create({ data: { json: 1 }, meta: { test: 2 } });
+    const messageTwo = busTwo.create({ name: "test" });
+    const messageThree = busThree.create({ topic: "whimsy" });
 
-    await bus.publish(message);
     await busOne.publish(messageOne);
     await busTwo.publish(messageTwo);
+    await busThree.publish(messageThree);
 
-    expect(subscription.callback).toHaveBeenCalledWith(message);
     expect(subscriptionOne.callback).toHaveBeenCalledWith(messageOne);
     expect(subscriptionTwo.callback).toHaveBeenCalledWith(messageTwo);
+    expect(subscriptionThree.callback).toHaveBeenCalledWith(messageThree);
   });
 });

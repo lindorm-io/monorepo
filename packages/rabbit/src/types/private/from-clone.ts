@@ -1,7 +1,8 @@
 import { ILogger } from "@lindorm/logger";
+import { IMessage } from "@lindorm/message";
+import { Constructor } from "@lindorm/types";
 import { ChannelModel, ConfirmChannel } from "amqplib";
 import { SubscriptionList } from "../../classes/private";
-import { RabbitSourceMessage } from "../rabbit-source";
 
 export type FromClone = {
   _mode: "from_clone";
@@ -10,7 +11,7 @@ export type FromClone = {
   deadletters: string;
   exchange: string;
   logger: ILogger;
-  messages: Array<RabbitSourceMessage>;
+  messages: Array<Constructor<IMessage>>;
   nackTimeout: number;
   subscriptions: SubscriptionList;
 };

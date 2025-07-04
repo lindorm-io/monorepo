@@ -33,6 +33,7 @@
     "@lindorm/errors": "^0.1.9",
     "@lindorm/is": "^0.1.8",
     "@lindorm/json-kit": "^0.5.0",
+    "@lindorm/message": "^0.1.0",
     "@lindorm/scanner": "^0.3.4",
     "@lindorm/utils": "^0.5.0",
     "amqplib": "0.10.8",

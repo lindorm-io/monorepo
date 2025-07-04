@@ -3,7 +3,6 @@ import { randomUUID } from "crypto";
 import { join } from "path";
 import { TestMessageOne } from "../__fixtures__/messages/test-message-one";
 import { TestMessageTwo } from "../__fixtures__/messages/test-message-two";
-import { TestMessage } from "../__fixtures__/test-message";
 import { IRabbitSource } from "../interfaces";
 import { RabbitSource } from "./RabbitSource";
 
@@ -12,7 +11,7 @@ describe("RabbitSource", () => {
 
   beforeAll(async () => {
     source = new RabbitSource({
-      messages: [TestMessage, join(__dirname, "..", "__fixtures__", "messages")],
+      messages: [join(__dirname, "..", "__fixtures__", "messages")],
       logger: createMockLogger(),
       url: "amqp://localhost:5672",
     });
@@ -24,7 +23,7 @@ describe("RabbitSource", () => {
   });
 
   test("should return a functioning repository for directly registered message", async () => {
-    const messageBus = source.messageBus(TestMessage);
+    const messageBus = source.messageBus(TestMessageTwo);
 
     expect(messageBus).toBeDefined();
 
