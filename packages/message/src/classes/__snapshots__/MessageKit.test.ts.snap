@@ -375,81 +375,9 @@ exports[`MessageKit should calculate message 1`] = `
     "namespace": null,
     "topic": null,
   },
-  "schemas": [
-    ZodObject {
-      "_cached": null,
-      "_def": {
-        "catchall": ZodNever {
-          "_def": {
-            "typeName": "ZodNever",
-          },
-          "and": [Function],
-          "array": [Function],
-          "brand": [Function],
-          "catch": [Function],
-          "default": [Function],
-          "describe": [Function],
-          "isNullable": [Function],
-          "isOptional": [Function],
-          "nullable": [Function],
-          "nullish": [Function],
-          "optional": [Function],
-          "or": [Function],
-          "parse": [Function],
-          "parseAsync": [Function],
-          "pipe": [Function],
-          "promise": [Function],
-          "readonly": [Function],
-          "refine": [Function],
-          "refinement": [Function],
-          "safeParse": [Function],
-          "safeParseAsync": [Function],
-          "spa": [Function],
-          "superRefine": [Function],
-          "transform": [Function],
-          "~standard": {
-            "validate": [Function],
-            "vendor": "zod",
-            "version": 1,
-          },
-        },
-        "shape": [Function],
-        "typeName": "ZodObject",
-        "unknownKeys": "passthrough",
-      },
-      "and": [Function],
-      "array": [Function],
-      "augment": [Function],
-      "brand": [Function],
-      "catch": [Function],
-      "default": [Function],
-      "describe": [Function],
-      "isNullable": [Function],
-      "isOptional": [Function],
-      "nonstrict": [Function],
-      "nullable": [Function],
-      "nullish": [Function],
-      "optional": [Function],
-      "or": [Function],
-      "parse": [Function],
-      "parseAsync": [Function],
-      "pipe": [Function],
-      "promise": [Function],
-      "readonly": [Function],
-      "refine": [Function],
-      "refinement": [Function],
-      "safeParse": [Function],
-      "safeParseAsync": [Function],
-      "spa": [Function],
-      "superRefine": [Function],
-      "transform": [Function],
-      "~standard": {
-        "validate": [Function],
-        "vendor": "zod",
-        "version": 1,
-      },
-    },
-  ],
+  "priority": undefined,
+  "schema": undefined,
+  "topic": undefined,
 }
 `;
 
@@ -684,6 +612,6 @@ TestMessageKit {
 }
 `;
 
-exports[`MessageKit should resolve topic name 1`] = `"message.test-message-kit"`;
+exports[`MessageKit should resolve topic name 1`] = `"test-message-kit"`;
 
 exports[`MessageKit should resolve validate 1`] = `undefined`;

@@ -12,18 +12,18 @@ import {
 } from "../utils";
 
 export class MessageKit<
-  M extends IMessage,
+  M extends IMessage = IMessage,
   O extends DeepPartial<M> = DeepPartial<M>,
-  T extends MetaFieldDecorator = MetaFieldDecorator,
+  D extends MetaFieldDecorator = MetaFieldDecorator,
 > {
   private readonly Message: Constructor<M>;
-  private readonly logger: ILogger;
+  private readonly logger: ILogger | undefined;
 
-  public readonly metadata: MessageMetadata<T>;
+  public readonly metadata: MessageMetadata<M, D>;
 
   public constructor(options: MessageKitOptions<M>) {
     this.Message = options.Message;
-    this.logger = options.logger.child(["MessageKit"]);
+    this.logger = options.logger?.child(["MessageKit"]);
 
     this.metadata = globalMessageMetadata.get(this.Message);
   }
@@ -31,7 +31,7 @@ export class MessageKit<
   public create(options: O | M = {} as O): M {
     const message = defaultCreateMessage(this.Message, options);
 
-    this.logger.silly("Created message", { message });
+    this.logger?.silly("Created message", { message });
 
     return defaultGenerateMessage(this.Message, message);
   }
@@ -39,7 +39,7 @@ export class MessageKit<
   public copy(message: M): M {
     const copy = new this.Message(message);
 
-    this.logger.silly("Copied message", { copy });
+    this.logger?.silly("Copied message", { copy });
 
     return copy;
   }
@@ -47,7 +47,7 @@ export class MessageKit<
   public publish(message: M): M {
     const result = defaultGenerateMessage(this.Message, message);
 
-    this.logger.silly("Generated message", { message: result });
+    this.logger?.silly("Generated message", { message: result });
 
     return result;
   }
@@ -55,11 +55,11 @@ export class MessageKit<
   public validate(message: M): void {
     defaultValidateMessage(this.Message, message);
 
-    this.logger.silly("Validated message", { message });
+    this.logger?.silly("Validated message", { message });
   }
 
-  public getTopicName(options: TopicNameOptions = {}): string {
-    return getTopicName(this.Message, options);
+  public getTopicName(message: M, options: TopicNameOptions = {}): string {
+    return getTopicName(this.Message, message, options);
   }
 
   // public hooks

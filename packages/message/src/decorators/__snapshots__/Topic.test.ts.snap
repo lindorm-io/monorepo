@@ -1,19 +1,19 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`PersistentField Decorator should add metadata 1`] = `
+exports[`Topic Decorator should add metadata 1`] = `
 {
   "fields": [
     {
-      "decorator": "PersistentField",
+      "decorator": "Field",
       "enum": null,
-      "fallback": [Function],
-      "key": "persistent",
+      "fallback": null,
+      "key": "test",
       "max": null,
       "min": null,
       "nullable": false,
       "optional": false,
       "schema": null,
-      "type": "boolean",
+      "type": null,
     },
   ],
   "generated": [],
@@ -26,6 +26,8 @@ exports[`PersistentField Decorator should add metadata 1`] = `
   },
   "priority": undefined,
   "schema": undefined,
-  "topic": undefined,
+  "topic": {
+    "callback": [Function],
+  },
 }
 `;

@@ -1,7 +1,6 @@
 import { createMockLogger } from "@lindorm/logger";
 import { Dict } from "@lindorm/types";
 import MockDate from "mockdate";
-import z from "zod";
 import {
   CorrelationField,
   DelayField,
@@ -16,10 +15,8 @@ import {
   OnValidate,
   PersistentField,
   PriorityField,
-  Schema,
   TimestampField,
 } from "../decorators";
-import { IMessage } from "../interfaces";
 import { MessageKit } from "./MessageKit";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
@@ -43,7 +40,7 @@ jest.mock("crypto", () => ({
 }));
 
 describe("MessageKit", () => {
-  let kit: MessageKit<IMessage>;
+  let kit: MessageKit<TestMessageKit>;
 
   enum TestEnum {
     One = "1",
@@ -51,18 +48,17 @@ describe("MessageKit", () => {
   }
 
   @Message()
-  @Schema(z.object({}).passthrough())
   @OnCreate((message) => {
-    message.OnCreate = "OnCreate";
+    (message as any).OnCreate = "OnCreate";
   })
   @OnConsume((message) => {
-    message.OnValidate = "OnValidate";
+    (message as any).OnValidate = "OnValidate";
   })
   @OnPublish((message) => {
-    message.OnValidate = "OnValidate";
+    (message as any).OnValidate = "OnValidate";
   })
   @OnValidate((message) => {
-    message.OnValidate = "OnValidate";
+    (message as any).OnValidate = "OnValidate";
   })
   class TestMessageKit {
     @CorrelationField()
@@ -175,7 +171,7 @@ describe("MessageKit", () => {
   });
 
   test("should resolve topic name", () => {
-    expect(kit.getTopicName(kit.create())).toMatchSnapshot();
+    expect(kit.getTopicName(new TestMessageKit())).toMatchSnapshot();
   });
 
   test("should resolve OnConsume hooks", () => {

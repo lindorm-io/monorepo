@@ -43,6 +43,8 @@ exports[`MessageBase should have expected properties 2`] = `
     "namespace": null,
     "topic": null,
   },
-  "schemas": [],
+  "priority": undefined,
+  "schema": undefined,
+  "topic": undefined,
 }
 `;

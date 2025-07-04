@@ -4,9 +4,9 @@ import { MetaField } from "../../types";
 
 type Field = Omit<MetaField, "target">;
 
-export const parseField = <E extends IMessage, O extends DeepPartial<E> = DeepPartial<E>>(
+export const parseField = <M extends IMessage, O extends DeepPartial<M> = DeepPartial<M>>(
   field: Field,
-  message: E,
+  message: M,
   options: O = {} as O,
 ): any => {
   const value = (options as any)[field.key] ?? (message as any)[field.key];

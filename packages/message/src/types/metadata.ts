@@ -3,6 +3,7 @@
 import { Dict } from "@lindorm/types";
 import { ZodObject, ZodType } from "zod";
 import { IMessage } from "../interfaces";
+import { HookDecoratorCallback, TopicDecoratorCallback } from "./decorators";
 
 export type MetaFieldType =
   | "array"
@@ -38,10 +39,10 @@ export type FieldFallbackComplex =
   | FieldFallbackPrimitive;
 export type MetaFieldFallback = (() => FieldFallbackComplex) | FieldFallbackComplex;
 
-export type MetaField<T extends MetaFieldDecorator = MetaFieldDecorator> = {
+export type MetaField<D extends MetaFieldDecorator = MetaFieldDecorator> = {
   target: Function;
   key: string;
-  decorator: T;
+  decorator: D;
   enum: any | null;
   fallback: MetaFieldFallback | null;
   max: number | null;
@@ -79,21 +80,36 @@ export type MetaHookDecorator =
   | "OnPublish"
   | "OnConsume";
 
-export type MetaHook = {
+export type MetaHook<M extends IMessage = IMessage> = {
   target: Function;
   decorator: MetaHookDecorator;
-  callback: (message: any) => void;
+  callback: HookDecoratorCallback<M>;
 };
 
-export type MetaSchema = {
+export type MetaPriority = {
   target: Function;
-  schema: ZodObject<IMessage>;
+  priority: number;
 };
 
-export type MessageMetadata<T extends MetaFieldDecorator = MetaFieldDecorator> = {
+export type MetaSchema<M extends IMessage = IMessage> = {
+  target: Function;
+  schema: ZodObject<M>;
+};
+
+export type MetaTopic<M extends IMessage = IMessage> = {
+  target: Function;
+  callback: TopicDecoratorCallback<M>;
+};
+
+export type MessageMetadata<
+  M extends IMessage = IMessage,
+  T extends MetaFieldDecorator = MetaFieldDecorator,
+> = {
   fields: Array<Omit<MetaField<T>, "target">>;
   generated: Array<Omit<MetaGenerated, "target">>;
-  hooks: Array<Omit<MetaHook, "target">>;
+  hooks: Array<Omit<MetaHook<M>, "target">>;
   message: Omit<MetaMessage, "target">;
-  schemas: Array<ZodObject<IMessage>>;
+  priority: number | null;
+  schema: ZodObject<M>;
+  topic: Omit<MetaTopic<M>, "target"> | null;
 };

@@ -1,15 +1,14 @@
 import { Constructor } from "@lindorm/types";
 import { IMessage } from "../interfaces";
-import { HookDecoratorCallback } from "../types";
+import { TopicDecoratorCallback } from "../types";
 import { globalMessageMetadata } from "../utils";
 
-export function OnConsume<C extends Constructor<IMessage>>(
-  callback: HookDecoratorCallback<InstanceType<C>>,
+export function Topic<C extends Constructor<IMessage>>(
+  callback: TopicDecoratorCallback<InstanceType<C>>,
 ): (ctor: C) => void {
   return function (target) {
-    globalMessageMetadata.addHook({
+    globalMessageMetadata.addTopic<InstanceType<C>>({
       target,
-      decorator: "OnConsume",
       callback,
     });
   };

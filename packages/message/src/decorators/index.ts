@@ -10,6 +10,8 @@ export * from "./OnCreate";
 export * from "./OnPublish";
 export * from "./OnValidate";
 export * from "./PersistentField";
+export * from "./Priority";
 export * from "./PriorityField";
 export * from "./Schema";
 export * from "./TimestampField";
+export * from "./Topic";

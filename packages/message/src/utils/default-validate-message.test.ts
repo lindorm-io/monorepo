@@ -27,18 +27,17 @@ describe("defaultValidateMessage", () => {
 
   test("should validate", () => {
     @Message()
-    @Schema(z.object({}).passthrough())
     @OnCreate((message) => {
-      message.OnCreate = "OnCreate";
+      (message as any).OnCreate = "OnCreate";
     })
     @OnConsume((message) => {
-      message.OnValidate = "OnValidate";
+      (message as any).OnValidate = "OnValidate";
     })
     @OnPublish((message) => {
-      message.OnValidate = "OnValidate";
+      (message as any).OnValidate = "OnValidate";
     })
     @OnValidate((message) => {
-      message.OnValidate = "OnValidate";
+      (message as any).OnValidate = "OnValidate";
     })
     class TestValidationMessage {
       @CorrelationField()
@@ -104,6 +103,67 @@ describe("defaultValidateMessage", () => {
         TestValidationMessage,
         defaultCreateMessage(TestValidationMessage),
       ),
+    ).not.toThrow();
+  });
+
+  test("should validate with schema", () => {
+    @Message()
+    @Schema(
+      z.object({
+        array: z.array(z.any()),
+        bigint: z.bigint(),
+        boolean: z.boolean(),
+        date: z.date(),
+        email: z.string().email(),
+        enum: z.nativeEnum(TestEnum),
+        float: z.number(),
+        integer: z.number().int(),
+        object: z.record(z.any()),
+        string: z.string(),
+        url: z.string().url(),
+        uuid: z.string().uuid(),
+      }),
+    )
+    class TestSchemaMessage {
+      @Field({ fallback: () => [] })
+      array!: any[];
+
+      @Field({ fallback: () => BigInt(0) })
+      bigint!: bigint;
+
+      @Field({ fallback: () => false })
+      boolean!: boolean;
+
+      @Field({ fallback: () => new Date("2024-01-01T08:00:00.000Z") })
+      date!: Date;
+
+      @Field({ fallback: () => "ba@fer.af" })
+      email!: string;
+
+      @Field({ enum: TestEnum, fallback: () => TestEnum.One })
+      enum!: TestEnum;
+
+      @Field({ fallback: () => 0.0 })
+      float!: number;
+
+      @Field({ fallback: () => 0 })
+      integer!: number;
+
+      @Field({ fallback: () => ({ object: true }) })
+      object!: Dict;
+
+      @Field({ fallback: () => "string" })
+      string!: string;
+
+      @Field({ fallback: () => "https://example.com" })
+      url!: string;
+
+      @Field({ fallback: () => "f264a693-99a3-5cb0-955c-f70fd90e59d4" })
+      uuid!: string;
+    }
+
+    expect(() =>
+      defaultValidateMessage(TestSchemaMessage, defaultCreateMessage(TestSchemaMessage)),
     ).not.toThrow();
   });
 });

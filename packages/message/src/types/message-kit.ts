@@ -4,7 +4,7 @@ import { IMessage } from "../interfaces";
 
 export type MessageKitOptions<M extends IMessage> = {
   Message: Constructor<M>;
-  logger: ILogger;
+  logger?: ILogger;
 };
 
 export type TopicNameOptions = {

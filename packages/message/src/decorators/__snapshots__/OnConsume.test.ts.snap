@@ -2,7 +2,20 @@
 
 exports[`OnConsume Decorator should add metadata 1`] = `
 {
-  "fields": [],
+  "fields": [
+    {
+      "decorator": "Field",
+      "enum": null,
+      "fallback": null,
+      "key": "test",
+      "max": null,
+      "min": null,
+      "nullable": false,
+      "optional": false,
+      "schema": null,
+      "type": null,
+    },
+  ],
   "generated": [],
   "hooks": [
     {
@@ -16,6 +29,8 @@ exports[`OnConsume Decorator should add metadata 1`] = `
     "namespace": null,
     "topic": null,
   },
-  "schemas": [],
+  "priority": undefined,
+  "schema": undefined,
+  "topic": undefined,
 }
 `;

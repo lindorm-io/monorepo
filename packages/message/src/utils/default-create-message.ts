@@ -5,12 +5,12 @@ import { globalMessageMetadata } from "./global";
 import { parseField } from "./private";
 
 export const defaultCreateMessage = <
-  E extends IMessage,
-  O extends DeepPartial<E> = DeepPartial<E>,
+  M extends IMessage,
+  O extends DeepPartial<M> = DeepPartial<M>,
 >(
-  Message: Constructor<E>,
-  options: O | E = {} as O,
-): E => {
+  Message: Constructor<M>,
+  options: O | M = {} as O,
+): M => {
   const metadata = globalMessageMetadata.get(Message);
   const message = new Message();
 

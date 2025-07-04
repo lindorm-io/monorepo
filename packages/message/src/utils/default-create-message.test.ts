@@ -1,6 +1,5 @@
 import { Dict } from "@lindorm/types";
 import MockDate from "mockdate";
-import z from "zod";
 import {
   CorrelationField,
   DelayField,
@@ -14,7 +13,6 @@ import {
   OnValidate,
   PersistentField,
   PriorityField,
-  Schema,
   TimestampField,
 } from "../decorators";
 import { defaultCreateMessage } from "./default-create-message";
@@ -43,18 +41,17 @@ describe("defaultCreateMessage", () => {
 
   test("should create with empty values", () => {
     @Message()
-    @Schema(z.object({}).passthrough())
     @OnCreate((message) => {
-      message.OnCreate = "OnCreate";
+      (message as any).OnCreate = "OnCreate";
     })
     @OnConsume((message) => {
-      message.OnValidate = "OnValidate";
+      (message as any).OnValidate = "OnValidate";
     })
     @OnPublish((message) => {
-      message.OnValidate = "OnValidate";
+      (message as any).OnValidate = "OnValidate";
     })
     @OnValidate((message) => {
-      message.OnValidate = "OnValidate";
+      (message as any).OnValidate = "OnValidate";
     })
     class TestCreateMessageEmpty {
       @CorrelationField()
@@ -120,18 +117,17 @@ describe("defaultCreateMessage", () => {
 
   test("should create with fallback values", () => {
     @Message()
-    @Schema(z.object({}).passthrough())
     @OnCreate((message) => {
-      message.OnCreate = "OnCreate";
+      (message as any).OnCreate = "OnCreate";
     })
     @OnConsume((message) => {
-      message.OnValidate = "OnValidate";
+      (message as any).OnValidate = "OnValidate";
     })
     @OnPublish((message) => {
-      message.OnValidate = "OnValidate";
+      (message as any).OnValidate = "OnValidate";
     })
     @OnValidate((message) => {
-      message.OnValidate = "OnValidate";
+      (message as any).OnValidate = "OnValidate";
     })
     class TestCreateMessageFallback {
       @CorrelationField()
@@ -197,18 +193,17 @@ describe("defaultCreateMessage", () => {
 
   test("should create with options values", () => {
     @Message()
-    @Schema(z.object({}).passthrough())
     @OnCreate((message) => {
-      message.OnCreate = "OnCreate";
+      (message as any).OnCreate = "OnCreate";
     })
     @OnConsume((message) => {
-      message.OnValidate = "OnValidate";
+      (message as any).OnValidate = "OnValidate";
     })
     @OnPublish((message) => {
-      message.OnValidate = "OnValidate";
+      (message as any).OnValidate = "OnValidate";
     })
     @OnValidate((message) => {
-      message.OnValidate = "OnValidate";
+      (message as any).OnValidate = "OnValidate";
     })
     class TestCreateMessageOptions {
       @CorrelationField()

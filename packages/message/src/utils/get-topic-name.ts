@@ -8,31 +8,34 @@ type Options = {
   topic?: string | null;
 };
 
-export const getTopicName = <E extends IMessage>(
-  Message: Constructor<E>,
+export const getTopicName = <M extends IMessage>(
+  MessageConstructor: Constructor<M>,
+  message: M,
   options: Options,
 ): string => {
-  const metadata = globalMessageMetadata.get(Message);
+  const metadata = globalMessageMetadata.get(MessageConstructor);
+
+  if (metadata.topic?.callback) {
+    return metadata.topic.callback(message);
+  }
 
   if (metadata.message.topic) return metadata.message.topic;
   if (options.topic) return options.topic;
 
   const namespace = metadata.message.namespace || options.namespace;
-  const messageName = metadata.message.name || Message.name;
-  const decorator = metadata.message.decorator;
+  const messageName = metadata.message.name || MessageConstructor.name;
 
   if (namespace === "system") {
     throw new Error("The 'system' namespace is reserved for internal use");
   }
 
   const n = namespace ? `${kebabCase(namespace)}.` : "";
-  const d = decorator ? `${kebabCase(decorator)}.` : "";
   const e = kebabCase(messageName);
 
-  const name = `${n}${d}${e}`;
+  const name = `${n}${e}`;
 
   if (name.length > 120) {
-    throw new Error(`Collection name exceeds 120 characters: ${name}`);
+    throw new Error(`Topic name exceeds 120 characters: ${name}`);
   }
 
   return name;

@@ -1,4 +1,5 @@
 import { ZodType } from "zod";
+import { IMessage } from "../interfaces";
 import { MetaFieldFallback, MetaFieldType, MetaGeneratedStrategy } from "./metadata";
 
 export type FieldDecoratorOptions = {
@@ -25,4 +26,8 @@ export type GeneratedDecoratorOptions = {
   min?: number;
 };
 
-export type HookDecoratorCallback = (message: any) => void;
+export type HookDecoratorCallback<M extends IMessage> = (message: M) => void;
+
+export type TopicDecoratorCallback<M extends IMessage = IMessage> = (
+  message: M,
+) => string;

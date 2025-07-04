@@ -69,10 +69,10 @@ const validator = (
   }
 };
 
-export const defaultGenerateMessage = <E extends IMessage>(
-  Message: Constructor<E>,
-  message: DeepPartial<E>,
-): E => {
+export const defaultGenerateMessage = <M extends IMessage>(
+  Message: Constructor<M>,
+  message: DeepPartial<M>,
+): M => {
   const metadata = globalMessageMetadata.get(Message);
 
   for (const config of metadata.generated) {
@@ -83,5 +83,5 @@ export const defaultGenerateMessage = <E extends IMessage>(
     (message as any)[config.key] = generator(config);
   }
 
-  return message as E;
+  return message as M;
 };

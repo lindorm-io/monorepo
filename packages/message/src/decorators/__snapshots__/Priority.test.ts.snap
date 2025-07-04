@@ -1,17 +1,17 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Message Decorator should add metadata 1`] = `
+exports[`Priority Decorator should add metadata 1`] = `
 {
   "fields": [],
   "generated": [],
   "hooks": [],
   "message": {
     "decorator": "Message",
-    "name": "name",
-    "namespace": "namespace",
-    "topic": "topic",
+    "name": null,
+    "namespace": null,
+    "topic": null,
   },
-  "priority": undefined,
+  "priority": 99,
   "schema": undefined,
   "topic": undefined,
 }

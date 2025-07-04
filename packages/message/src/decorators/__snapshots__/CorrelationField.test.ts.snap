@@ -24,6 +24,8 @@ exports[`CorrelationField Decorator should add metadata 1`] = `
     "namespace": null,
     "topic": null,
   },
-  "schemas": [],
+  "priority": undefined,
+  "schema": undefined,
+  "topic": undefined,
 }
 `;

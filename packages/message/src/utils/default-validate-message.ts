@@ -28,7 +28,7 @@ const getValidator = (field: Omit<MetaField, "target">): ZodType<any> | undefine
       return z.number();
 
     case "integer":
-      return z.number();
+      return z.number().int();
 
     case "object":
       return z.object({}).passthrough();
@@ -47,9 +47,9 @@ const getValidator = (field: Omit<MetaField, "target">): ZodType<any> | undefine
   }
 };
 
-export const defaultValidateMessage = <E extends IMessage>(
-  Message: Constructor<E>,
-  message: E,
+export const defaultValidateMessage = <M extends IMessage>(
+  Message: Constructor<M>,
+  message: M,
 ): void => {
   const metadata = globalMessageMetadata.get(Message);
   const validators: ZodRawShape = {};
@@ -80,8 +80,8 @@ export const defaultValidateMessage = <E extends IMessage>(
 
   z.object(validators).passthrough().parse(message);
 
-  for (const schema of metadata.schemas) {
-    schema.parse(message);
+  if (metadata.schema) {
+    metadata.schema.parse(message);
   }
 
   const hooks = metadata.hooks.filter((h) => h.decorator === "OnValidate");

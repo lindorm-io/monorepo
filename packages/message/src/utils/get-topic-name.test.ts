@@ -1,47 +1,66 @@
-import { Message } from "../decorators";
+import { Field, Message, Topic } from "../decorators";
 import { getTopicName } from "./get-topic-name";
 
 describe("getTopicName", () => {
   test("should get default topic name", () => {
     @Message()
-    class TestNameMessageOne {}
+    class TestMessageOne {}
 
-    expect(getTopicName(TestNameMessageOne, {})).toEqual("message.test-name-message-one");
+    expect(getTopicName(TestMessageOne, new TestMessageOne(), {})).toEqual(
+      "test-message-one",
+    );
   });
 
-  test("should get topic name from namespace decorator", () => {
+  test("should modify topic name from namespace decorator", () => {
     @Message({ namespace: "custom" })
-    class TestNameMessageTwo {}
+    class TestMessageTwo {}
 
-    expect(getTopicName(TestNameMessageTwo, { namespace: "namespace" })).toEqual(
-      "custom.message.test-name-message-two",
-    );
+    expect(
+      getTopicName(TestMessageTwo, new TestMessageTwo(), { namespace: "namespace" }),
+    ).toEqual("custom.test-message-two");
   });
 
-  test("should get topic name from namespace options", () => {
+  test("should modify topic name from namespace options", () => {
     @Message()
-    class TestNameMessageThree {}
+    class TestMessageThree {}
 
-    expect(getTopicName(TestNameMessageThree, { namespace: "namespace" })).toEqual(
-      "namespace.message.test-name-message-three",
-    );
+    expect(
+      getTopicName(TestMessageThree, new TestMessageThree(), { namespace: "namespace" }),
+    ).toEqual("namespace.test-message-three");
   });
 
-  test("should get topic name from topic decorator", () => {
+  test("should get topic name from message decorator", () => {
     @Message({ topic: "decorator.topic.name" })
-    class TestNameMessageOne {}
+    class TestMessageFour {}
 
-    expect(getTopicName(TestNameMessageOne, { topic: "options.topic.name" })).toEqual(
-      "decorator.topic.name",
-    );
+    expect(
+      getTopicName(TestMessageFour, new TestMessageFour(), {
+        topic: "options.topic.name",
+      }),
+    ).toEqual("decorator.topic.name");
   });
 
   test("should get topic name from topic options", () => {
     @Message()
-    class TestNameMessageOne {}
+    class TestMessageFive {}
 
-    expect(getTopicName(TestNameMessageOne, { topic: "options.topic.name" })).toEqual(
-      "options.topic.name",
-    );
+    expect(
+      getTopicName(TestMessageFive, new TestMessageFive(), {
+        topic: "options.topic.name",
+      }),
+    ).toEqual("options.topic.name");
+  });
+
+  test("should get topic name from callback decorator", () => {
+    @Message()
+    @Topic((message) => `callback.topic.name.${message.field}`)
+    class TestMessageSix {
+      @Field()
+      public field!: string;
+    }
+    const message = new TestMessageSix();
+    message.field = "test";
+
+    expect(getTopicName(TestMessageSix, message, {})).toEqual("callback.topic.name.test");
   });
 });

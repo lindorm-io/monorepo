@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-function-type */
 
 import { MessageMetadataError } from "../../errors";
+import { IMessage } from "../../interfaces";
 import {
   MessageMetadata,
   MetaField,
@@ -8,7 +9,9 @@ import {
   MetaGenerated,
   MetaHook,
   MetaMessage,
+  MetaPriority,
   MetaSchema,
+  MetaTopic,
 } from "../../types";
 
 type Cache = {
@@ -16,7 +19,14 @@ type Cache = {
   metadata: MessageMetadata;
 };
 
-type InternalArray = "fields" | "generated" | "hooks" | "messages" | "schemas";
+type InternalArray =
+  | "fields"
+  | "generated"
+  | "hooks"
+  | "messages"
+  | "priorities"
+  | "schemas"
+  | "topics";
 
 const UNIQUE_FIELDS: Array<MetaFieldDecorator> = [
   // special
@@ -37,7 +47,9 @@ export class GlobalMessageMetadata {
   private readonly generated: Array<MetaGenerated>;
   private readonly hooks: Array<MetaHook>;
   private readonly messages: Array<MetaMessage>;
+  private readonly priorities: Array<MetaPriority>;
   private readonly schemas: Array<MetaSchema>;
+  private readonly topics: Array<MetaTopic>;
 
   public constructor() {
     this.cache = [];
@@ -46,7 +58,9 @@ export class GlobalMessageMetadata {
     this.generated = [];
     this.hooks = [];
     this.messages = [];
+    this.priorities = [];
     this.schemas = [];
+    this.topics = [];
   }
 
   // public
@@ -61,7 +75,7 @@ export class GlobalMessageMetadata {
     this.addMetadata("generated", metadata);
   }
 
-  public addHook(metadata: MetaHook): void {
+  public addHook<M extends IMessage>(metadata: MetaHook<M>): void {
     this.addMetadata("hooks", metadata);
   }
 
@@ -69,25 +83,44 @@ export class GlobalMessageMetadata {
     this.addMetadata("messages", metadata);
   }
 
-  public addSchema(metadata: MetaSchema): void {
+  public addPriority(metadata: MetaPriority): void {
+    this.addMetadata("priorities", metadata);
+  }
+
+  public addSchema<M extends IMessage>(metadata: MetaSchema<M>): void {
     this.addMetadata("schemas", metadata);
   }
 
-  public get<T extends MetaFieldDecorator = MetaFieldDecorator>(
-    target: Function,
-  ): MessageMetadata<T> {
-    const cached = this.getCache<T>(target);
-    if (cached) return cached;
+  public addTopic<M extends IMessage>(metadata: MetaTopic<M>): void {
+    this.addMetadata("topics", metadata);
+  }
 
-    const [foundMessage] = this.getMeta<MetaMessage>(target, "messages");
+  public get<
+    M extends IMessage = IMessage,
+    T extends MetaFieldDecorator = MetaFieldDecorator,
+  >(target: Function): MessageMetadata<M, T> {
+    const cached = this.getCache(target);
 
-    if (!foundMessage) {
+    if (cached) return cached as unknown as MessageMetadata<M, T>;
+
+    const [message] = this.getMeta<MetaMessage>(target, "messages").map(
+      ({ target: _, ...rest }) => rest,
+    );
+    const [priority] = this.getMeta<MetaPriority>(target, "priorities").map(
+      ({ target: _, priority }) => priority,
+    );
+    const [schema] = this.getMeta<MetaSchema>(target, "schemas").map(
+      ({ target: _, schema }) => schema,
+    );
+    const [topic] = this.getMeta<MetaTopic>(target, "topics").map(
+      ({ target: _, ...rest }) => rest,
+    );
+
+    if (!message) {
       throw new MessageMetadataError("Message metadata not found", {
         debug: { Message: target.name },
       });
     }
-
-    const { target: _, ...message } = foundMessage;
 
     const fields = this.getMeta<MetaField<T>>(target, "fields").map(
       ({ target: _, ...rest }) => rest,
@@ -97,9 +130,6 @@ export class GlobalMessageMetadata {
     );
     const hooks = this.getMeta<MetaHook>(target, "hooks").map(
       ({ target: _, ...rest }) => rest,
-    );
-    const schemas = this.getMeta<MetaSchema>(target, "schemas").map(
-      ({ target: _, schema }) => schema,
     );
 
     for (const field of fields) {
@@ -134,17 +164,19 @@ export class GlobalMessageMetadata {
       });
     }
 
-    const final: MessageMetadata<T> = {
+    const final: MessageMetadata = {
       fields,
       message,
       generated,
       hooks,
-      schemas,
+      priority,
+      schema,
+      topic,
     };
 
     this.setCache(target, final);
 
-    return final;
+    return final as unknown as MessageMetadata<M, T>;
   }
 
   // private
@@ -153,11 +185,8 @@ export class GlobalMessageMetadata {
     this[key].push(metadata);
   }
 
-  private getCache<T extends MetaFieldDecorator = MetaFieldDecorator>(
-    target: Function,
-  ): MessageMetadata<T> | undefined {
-    return this.cache.find((item) => item.target === target)
-      ?.metadata as MessageMetadata<T>;
+  private getCache(target: Function): MessageMetadata | undefined {
+    return this.cache.find((item) => item.target === target)?.metadata as MessageMetadata;
   }
 
   private getMeta<T>(target: Function, key: InternalArray): Array<T> {
