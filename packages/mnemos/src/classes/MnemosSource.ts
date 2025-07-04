@@ -18,6 +18,8 @@ import { MnemosCache } from "./MnemosCache";
 import { MnemosRepository } from "./MnemosRepository";
 
 export class MnemosSource implements IMnemosSource {
+  public readonly name = "MnemosSource";
+
   private readonly entities: Array<Constructor<IEntity>>;
   private readonly logger: ILogger;
 
@@ -44,7 +46,9 @@ export class MnemosSource implements IMnemosSource {
   // public
 
   public addEntities(entities: EntityScannerInput): void {
-    this.entities.push(...EntityScanner.scan(entities));
+    this.entities.push(
+      ...EntityScanner.scan(entities).filter((Entity) => !this.entities.includes(Entity)),
+    );
   }
 
   public clone(options: CloneMnemosSourceOptions = {}): IMnemosSource {

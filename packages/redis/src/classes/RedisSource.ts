@@ -18,6 +18,8 @@ import { FromClone } from "../types/private";
 import { RedisRepository } from "./RedisRepository";
 
 export class RedisSource implements IRedisSource {
+  public readonly name = "RedisSource";
+
   private readonly entities: Array<Constructor<IEntity>>;
   private readonly logger: ILogger;
   private readonly namespace: string | undefined;
@@ -77,7 +79,9 @@ export class RedisSource implements IRedisSource {
   }
 
   public addEntities(entities: EntityScannerInput): void {
-    this.entities.push(...EntityScanner.scan(entities));
+    this.entities.push(
+      ...EntityScanner.scan(entities).filter((Entity) => !this.entities.includes(Entity)),
+    );
   }
 
   public repository<E extends IEntity>(

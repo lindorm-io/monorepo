@@ -5,6 +5,8 @@ import { CloneRedisSourceOptions, RedisSourceRepositoryOptions } from "../types"
 import { IRedisRepository } from "./RedisRepository";
 
 export interface IRedisSource {
+  name: "RedisSource";
+
   client: Redis;
 
   clone(options?: CloneRedisSourceOptions): IRedisSource;

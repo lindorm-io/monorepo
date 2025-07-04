@@ -8,6 +8,8 @@ import {
 import { IPostgresQueryBuilder } from "./PostgresQueryBuilder";
 
 export interface IPostgresSource {
+  name: "PostgresSource";
+
   client: Pool;
 
   clone(options?: ClonePostgresSourceOptions): IPostgresSource;

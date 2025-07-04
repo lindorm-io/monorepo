@@ -12,6 +12,8 @@ import { IMongoFile } from "./MongoFile";
 import { IMongoRepository } from "./MongoRepository";
 
 export interface IMongoSource {
+  name: "MongoSource";
+
   client: MongoClient;
   database: Db;
 

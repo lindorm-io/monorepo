@@ -21,6 +21,8 @@ import { MongoBucket } from "./MongoBucket";
 import { MongoRepository } from "./MongoRepository";
 
 export class MongoSource implements IMongoSource {
+  public readonly name = "MongoSource";
+
   private readonly databaseName: string | undefined;
   private readonly entities: Array<Constructor<IEntity>>;
   private readonly files: Array<Constructor<IMongoFile>>;
@@ -64,11 +66,15 @@ export class MongoSource implements IMongoSource {
   }
 
   public addEntities(entities: EntityScannerInput): void {
-    this.entities.push(...EntityScanner.scan(entities));
+    this.entities.push(
+      ...EntityScanner.scan(entities).filter((Entity) => !this.entities.includes(Entity)),
+    );
   }
 
   public addFiles(files: FileScannerInput): void {
-    this.files.push(...EntityScanner.scan(files));
+    this.files.push(
+      ...EntityScanner.scan(files).filter((Entity) => !this.files.includes(Entity)),
+    );
   }
 
   public clone(options: CloneMongoSourceOptions = {}): IMongoSource {

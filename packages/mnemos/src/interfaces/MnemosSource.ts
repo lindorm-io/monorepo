@@ -5,6 +5,8 @@ import { IMnemosCache } from "./MnemosCache";
 import { IMnemosRepository } from "./MnemosRepository";
 
 export interface IMnemosSource {
+  name: "MnemosSource";
+
   client: IMnemosCache;
 
   clone(options?: CloneMnemosSourceOptions): IMnemosSource;
