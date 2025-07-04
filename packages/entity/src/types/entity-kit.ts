@@ -6,7 +6,7 @@ export type GetIncrementFn = (key: string) => Promise<number>;
 
 export type EntityKitOptions<E extends IEntity> = {
   Entity: Constructor<E>;
-  logger: ILogger;
+  logger?: ILogger;
   source: string;
   getNextIncrement?: GetIncrementFn;
 };

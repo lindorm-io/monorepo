@@ -36,7 +36,7 @@ export class EntityKit<
 > {
   private readonly Entity: Constructor<E>;
   private readonly getNextIncrement: GetIncrementFn | undefined;
-  private readonly logger: ILogger;
+  private readonly logger: ILogger | undefined;
   private readonly source: string;
 
   public readonly isPrimarySource: boolean;
@@ -46,7 +46,7 @@ export class EntityKit<
   public constructor(options: EntityKitOptions<E>) {
     this.Entity = options.Entity;
     this.getNextIncrement = options.getNextIncrement;
-    this.logger = options.logger.child(["EntityKit"]);
+    this.logger = options.logger?.child(["EntityKit"]);
     this.source = options.source;
 
     this.metadata = globalEntityMetadata.get(this.Entity);
@@ -57,7 +57,7 @@ export class EntityKit<
   public create(options: O | E = {} as O): E {
     const entity = defaultCreateEntity(this.Entity, options);
 
-    this.logger.silly("Created entity", { entity });
+    this.logger?.silly("Created entity", { entity });
 
     return entity;
   }
@@ -65,7 +65,7 @@ export class EntityKit<
   public copy(entity: E): E {
     const copy = defaultCreateEntity(this.Entity, entity);
 
-    this.logger.silly("Copied entity", { entity });
+    this.logger?.silly("Copied entity", { entity });
 
     return copy;
   }
@@ -86,7 +86,7 @@ export class EntityKit<
     const copy = this.copy(entity);
 
     if (!this.isPrimarySource) {
-      this.logger.debug("Skipping default insert for non-primary source", {
+      this.logger?.debug("Skipping default insert for non-primary source", {
         source: this.metadata.primarySource,
       });
 
@@ -106,7 +106,7 @@ export class EntityKit<
     const copy = this.copy(entity);
 
     if (!this.isPrimarySource) {
-      this.logger.debug("Skipping default update for non-primary source", {
+      this.logger?.debug("Skipping default update for non-primary source", {
         source: this.metadata.primarySource,
       });
 
@@ -206,7 +206,7 @@ export class EntityKit<
   public validate(entity: E): void {
     defaultValidateEntity(this.Entity, entity);
 
-    this.logger.silly("Validated entity", { entity });
+    this.logger?.silly("Validated entity", { entity });
   }
 
   public verifyReadonly(entity: DeepPartial<E>): void {
@@ -223,7 +223,7 @@ export class EntityKit<
 
   private calculateUpdateStrategy(): UpdateStrategy {
     if (!this.metadata.primarySource) {
-      this.logger.warn(
+      this.logger?.warn(
         "@PrimarySource not set on @Entity. Bypassing update strategy calculation and using default.",
       );
 
