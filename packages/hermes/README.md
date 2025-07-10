@@ -44,134 +44,107 @@ npm install @lindorm/rabbit    # RabbitMQ   Message bus
 
 | Concept   | Purpose                                                                                                     |
 |-----------|-------------------------------------------------------------------------------------------------------------|
-| Aggregate | Owns the business state and invariants.  Accepts **Commands** and produces **Events**.                      |
+| Aggregate | Owns the business state and invariants. Accepts **Commands** and produces **Events**.                       |
 | Saga      | Long-running process manager reacting to events and dispatching new commands.                               |
-| View      | Projection / read-model updated by events.  Can be stored in Mongo, Postgres, Redis or any custom adapter.  |
+| View      | Projection / read-model updated by events. Can be stored in Mongo, Postgres, Redis or any custom adapter.   |
 | Query     | Stateless handler returning data from a view.                                                               |
 | Checksum  | Lightweight projection keeping track of aggregate / event checksums.                                        |
 | Error     | Handles domain-level errors and publishes them on the message bus.                                          |
 
-All handlers are plain classes so they can be discovered automatically by the scanner
-or registered manually through the **admin** API.
+All modules and handlers are plain classes so they can be discovered automatically by the scanner or registered manually.
 
-### Handler cheat-sheet
+### Module/Handler cheat-sheet
 
 ```ts
-new HermesAggregateCommandHandler<MyCommand, MyEvent>({...})
-new HermesAggregateEventHandler<MyEvent>({...})
-new HermesSagaEventHandler<MyEvent>({...})
-new HermesViewEventHandler<MyEvent>({...})
-new HermesChecksumEventHandler({...})
-new HermesErrorHandler<MyError, MyEvent>({...})
-new HermesQueryHandler<MyQuery, Result>({...})
+@Aggregate()
+export class ExampleAggregate {
+
+  @AggregateCommandHandler(TestCommandCreate, {
+    conditions: { created: false },
+    schema: z.object({ input: z.string() }),
+  })
+  public async onCreate(
+    ctx: AggregateCommandCtx<TestCommandCreate, TestAggregateState>,
+  ): Promise<void> {
+    await ctx.apply(new TestEventCreate("create"));
+  }
+
+  @AggregateEventHandler(TestEventCreate)
+  public async onCreated(
+    ctx: AggregateEventCtx<TestEventCreate, TestAggregateState>,
+  ): Promise<void> {
+    ctx.mergeState({ create: ctx.event.input });
+  }
+
+  @AggregateErrorHandler(DomainError)
+  public async onDomainError(ctx: AggregateErrorCtx<DomainError>): Promise<void> {
+    ctx.logger.warn("DomainError", {
+      command: ctx.command,
+      error: ctx.error,
+      message: ctx.message,
+    });
+  }
+
+}
+
+@Saga(ExampleAggregate)
+export class ExampleSaga {
+
+  @SagaEventHandler(ExampleEventCreate, { conditions: { created: false } })
+  public async onCreateEvent(
+    ctx: SagaEventCtx<ExampleEventCreate, ExampleSagaState>,
+  ): Promise<void> {
+    ctx.mergeState({ create: ctx.event.input });
+  }
+
+  @SagaTimeoutHandler(TestTimeoutMergeState)
+  public async onMergeStateTimeout(
+    ctx: SagaTimeoutCtx<TestTimeoutMergeState, TestSagaState>,
+  ): Promise<void> {
+    ctx.mergeState({ mergeStateTimeout: ctx.timeout.input });
+  }
+
+  @SagaErrorHandler(DomainError)
+  public async onDomainError(ctx: SagaErrorCtx<DomainError>): Promise<void> {
+    ctx.logger.warn("DomainError", {
+      event: ctx.event,
+      error: ctx.error,
+      message: ctx.message,
+      saga: ctx.saga,
+    });
+  }
+
+}
+
+@View(ExampleAggregate, "mongo")
+export class ExampleMongoView {
+
+  @ViewEventHandler(ExampleEventCreate, { conditions: { created: false } })
+  public async onCreateEvent(
+    ctx: ViewEventCtx<ExampleEventCreate, ExampleMongoViewState>,
+  ): Promise<void> {
+    ctx.mergeState({ create: ctx.event.input });
+  }
+
+  @ViewQueryHandler(ExampleMongoQuery)
+  public async onMongoQuery(
+    ctx: ViewQueryCtx<ExampleMongoQuery, ExampleMongoViewState>,
+  ): Promise<Dict | undefined> {
+    return await ctx.repositories.mongo.findById(ctx.query.id);
+  }
+
+}
 ```
 
-Each handler accepts a strongly typed `handler: (ctx) => {}` function where the
+Each handler has a strongly typed `(ctx) => {}` callback function where the
 context exposes the relevant domain APIs (`apply`, `mergeState`, `dispatch`,
-`repositories`, …).
+`repositories`, ...).
 
 ---
 
 ## Quick start
 
-Below is a **minimal but complete** example distilled from the
-`Hermes.integration.ts` test suite.  It demonstrates the full publish / react /
-query flow using MongoDB for storage and RabbitMQ for messaging.  Replace the
-sources to suit your own environment.
-
-```ts
-import {
-  Hermes,
-  HermesAggregateCommandHandler,
-  HermesAggregateEventHandler,
-  HermesViewEventHandler,
-  HermesQueryHandler,
-  ViewStoreType,
-} from '@lindorm/hermes';
-import { MongoSource } from '@lindorm/mongo';
-import { RabbitSource } from '@lindorm/rabbit';
-import { Logger } from '@lindorm/logger';
-import { z } from 'zod';
-
-// 1. Infrastructure
-const logger   = new Logger();
-const mongo    = new MongoSource({ url: 'mongodb://root:example@localhost/admin?authSource=admin', logger });
-const rabbit   = new RabbitSource({ url: 'amqp://localhost:5672', logger });
-
-await Promise.all([mongo.setup(), rabbit.setup()]);
-
-// 2. Hermes instance
-const hermes = new Hermes({
-  checksumStore: { mongo },
-  encryptionStore: { mongo },
-  eventStore: { mongo },
-  messageBus: { rabbit },
-  sagaStore: { mongo },
-  viewStore: { mongo },
-  context: 'hermes-example',
-  logger,
-});
-
-// 3. Domain objects
-class CreateGreeting { constructor(public readonly text: string) {} }
-class GreetingCreated { constructor(public readonly text: string) {} }
-class GetGreeting { constructor(public readonly id: string) {} }
-
-// 4. Command handler (validates and emits event)
-await hermes.admin.register.aggregateCommandHandler(
-  new HermesAggregateCommandHandler<CreateGreeting, GreetingCreated>({
-    commandName: 'create_greeting',
-    aggregate: { name: 'greeting', context: 'hermes-example' },
-    schema: z.object({ text: z.string().min(1) }),
-    handler: async (ctx) => {
-      await ctx.apply(new GreetingCreated(ctx.command.text));
-    },
-  }),
-);
-
-// 5. Event handler (updates aggregate state)
-await hermes.admin.register.aggregateEventHandler(
-  new HermesAggregateEventHandler<GreetingCreated>({
-    eventName: 'greeting_created',
-    aggregate: { name: 'greeting', context: 'hermes-example' },
-    handler: async (ctx) => {
-      ctx.mergeState({ text: ctx.event.text });
-    },
-  }),
-);
-
-// 6. View projection (for fast reads)
-await hermes.admin.register.viewEventHandler(
-  new HermesViewEventHandler<GreetingCreated>({
-    eventName: 'greeting_created',
-    adapter: { type: ViewStoreType.Mongo },
-    aggregate: { name: 'greeting', context: 'hermes-example' },
-    view: { name: 'greeting_view', context: 'hermes-example' },
-    getViewId: (event) => event.aggregate.id,
-    handler: async (ctx) => ctx.setState({ text: ctx.event.text }),
-  }),
-);
-
-// 7. Query handler
-hermes.admin.register.queryHandler(
-  new HermesQueryHandler<GetGreeting, any>({
-    queryName: 'get_greeting',
-    view: { name: 'greeting_view', context: 'hermes-example' },
-    handler: (ctx) => ctx.repositories.mongo.findById(ctx.query.id),
-  }),
-);
-
-// 8. Boot Hermes (scans directories, subscribes to queues, …)
-await hermes.setup();
-
-// 9. Publish a command
-const aggregateId = '1234';
-await hermes.command(new CreateGreeting('Hello world!'), { aggregate: { id: aggregateId } });
-
-// 10. Read the projection
-const greeting = await hermes.query(new GetGreeting(aggregateId));
-console.log(greeting.state.text); // → "Hello world!"
-```
+The simplest way to start your project is to look up the `examples` directory and follow the examples there.
 
 ---
 
@@ -183,9 +156,9 @@ wildcards:
 
 ```ts
 hermes.on('saga',            () => { /* any saga changed */ })
-hermes.on('saga.my-ctx',     () => {})
-hermes.on('saga.my-ctx.foo', () => {})
-hermes.on(`saga.my-ctx.foo.${aggregateId}`, () => {})
+hermes.on('saga.namespace',     () => {})
+hermes.on('saga.namespace.name', () => {})
+hermes.on(`saga.namespace.name.${aggregateId}`, () => {})
 ```
 
 ---
