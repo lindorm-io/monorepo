@@ -1,6 +1,3 @@
-import { HandlerIdentifier } from "./identifiers";
+import { Constructor, Dict } from "@lindorm/types";
 
-export type GetAggregateEventData = {
-  eventName: string;
-  aggregate: HandlerIdentifier;
-};
+export type HermesScannerInput<T extends Dict = Dict> = Array<Constructor<T> | string>;

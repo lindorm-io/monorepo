@@ -1,0 +1,102 @@
+import { Dict } from "@lindorm/types";
+import {
+  View,
+  ViewEventCtx,
+  ViewEventHandler,
+  ViewQueryCtx,
+  ViewQueryHandler,
+} from "../../../src";
+import { ExampleAggregate } from "../aggregates/ExampleAggregate";
+import { ExampleEventCreate } from "../events/ExampleEventCreate";
+import { ExampleEventDestroy } from "../events/ExampleEventDestroy";
+import { ExampleEventDestroyNext } from "../events/ExampleEventDestroyNext";
+import { ExampleEventDispatch } from "../events/ExampleEventDispatch";
+import { ExampleEventEncrypt } from "../events/ExampleEventEncrypt";
+import { ExampleEventMergeState } from "../events/ExampleEventMergeState";
+import { ExampleEventSetState } from "../events/ExampleEventSetState";
+import { ExampleEventThrows } from "../events/ExampleEventThrows";
+import { ExampleEventTimeout } from "../events/ExampleEventTimeout";
+import { ExampleRedisQuery } from "../queries/ExampleQueryRedis";
+
+export type ExampleRedisViewState = Dict;
+
+@View(ExampleAggregate, "redis")
+export class ExampleRedisView {
+  // event handlers
+
+  @ViewEventHandler(ExampleEventCreate, { conditions: { created: false } })
+  public async onCreateEvent(
+    ctx: ViewEventCtx<ExampleEventCreate, ExampleRedisViewState>,
+  ): Promise<void> {
+    ctx.mergeState({ create: ctx.event.input });
+  }
+
+  @ViewEventHandler(ExampleEventDestroy, { conditions: { created: true } })
+  public async onDestroyEvent(
+    ctx: ViewEventCtx<ExampleEventDestroy, ExampleRedisViewState>,
+  ): Promise<void> {
+    ctx.mergeState({ destroy: ctx.event.input });
+    ctx.destroy();
+  }
+
+  @ViewEventHandler(ExampleEventDestroyNext, { conditions: { created: true } })
+  public async onDestroyNextEvent(
+    ctx: ViewEventCtx<ExampleEventDestroyNext, ExampleRedisViewState>,
+  ): Promise<void> {
+    ctx.mergeState({ destroyNext: ctx.event.input });
+  }
+
+  @ViewEventHandler(ExampleEventDispatch)
+  public async onDispatchEvent(
+    ctx: ViewEventCtx<ExampleEventDispatch, ExampleRedisViewState>,
+  ): Promise<void> {
+    ctx.mergeState({ dispatch: ctx.event.input });
+  }
+
+  @ViewEventHandler(ExampleEventEncrypt)
+  public async onEncryptEvent(
+    ctx: ViewEventCtx<ExampleEventEncrypt, ExampleRedisViewState>,
+  ): Promise<void> {
+    ctx.mergeState({ encrypt: ctx.event.input });
+  }
+
+  @ViewEventHandler(ExampleEventMergeState)
+  public async onMergeStateEvent(
+    ctx: ViewEventCtx<ExampleEventMergeState, ExampleRedisViewState>,
+  ): Promise<void> {
+    ctx.mergeState({ mergeState: ctx.event.input });
+  }
+
+  @ViewEventHandler(ExampleEventSetState)
+  public async onSetStateEvent(
+    ctx: ViewEventCtx<ExampleEventSetState, ExampleRedisViewState>,
+  ): Promise<void> {
+    ctx.setState({
+      ...ctx.state,
+      setState: ctx.event.input,
+    });
+  }
+
+  @ViewEventHandler(ExampleEventThrows)
+  public async onThrowsEvent(
+    ctx: ViewEventCtx<ExampleEventThrows, ExampleRedisViewState>,
+  ): Promise<void> {
+    throw new Error(ctx.event.input);
+  }
+
+  @ViewEventHandler(ExampleEventTimeout)
+  public async onTimeoutEvent(
+    ctx: ViewEventCtx<ExampleEventTimeout, ExampleRedisViewState>,
+  ): Promise<void> {
+    ctx.mergeState({ timeout: ctx.event.input });
+  }
+
+  // query handlers
+
+  @ViewQueryHandler(ExampleRedisQuery)
+  public async onRedisQuery(
+    ctx: ViewQueryCtx<ExampleRedisQuery, ExampleRedisViewState>,
+  ): Promise<Dict | undefined> {
+    return await ctx.repositories.redis.findById(ctx.query.id);
+  }
+}

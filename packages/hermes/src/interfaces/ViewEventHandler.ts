@@ -1,36 +1,20 @@
-import { ClassLike, Constructor, Dict } from "@lindorm/types";
+import { Constructor, Dict } from "@lindorm/types";
 import {
   HandlerConditions,
   HandlerIdentifier,
-  HandlerIdentifierMultipleContexts,
-  ViewEventHandlerAdapter,
-  ViewEventHandlerContext,
-  ViewEventHandlerFileAggregate,
+  ViewEventCtx,
+  ViewStoreSource,
 } from "../types";
-import { IHermesMessage } from "./HermesMessage";
+import { NameData } from "../utils/private";
 
 export interface IViewEventHandler<
-  E extends ClassLike = ClassLike,
+  C extends Constructor = Constructor,
   S extends Dict = Dict,
 > {
-  event: Constructor<E>;
-  adapter: ViewEventHandlerAdapter;
-  aggregate?: ViewEventHandlerFileAggregate;
-  conditions?: HandlerConditions;
-  getViewId?(event: IHermesMessage<E>): string;
-  handler(ctx: ViewEventHandlerContext<E, S>): Promise<void>;
-}
-
-export interface IHermesViewEventHandler<
-  E extends ClassLike = ClassLike,
-  S extends Dict = Dict,
-> {
-  aggregate: HandlerIdentifierMultipleContexts;
+  aggregate: HandlerIdentifier;
   conditions: HandlerConditions;
-  eventName: string;
-  adapter: ViewEventHandlerAdapter;
-  version: number;
+  event: NameData;
+  source: ViewStoreSource;
   view: HandlerIdentifier;
-  getViewId(event: IHermesMessage<E>): string;
-  handler(ctx: ViewEventHandlerContext<E, S>): Promise<void>;
+  handler(ctx: ViewEventCtx<C, S>): Promise<void>;
 }

@@ -1,14 +1,14 @@
 import { createMockLogger } from "@lindorm/logger";
-import { MessageKit } from "@lindorm/message";
 import { IMongoSource, MongoSource } from "@lindorm/mongo";
 import { randomUUID } from "crypto";
 import { Collection } from "mongodb";
-import { TEST_AGGREGATE_IDENTIFIER } from "../../__fixtures__/aggregate";
-import { TEST_HERMES_COMMAND } from "../../__fixtures__/hermes-command";
-import { TEST_SAGA_IDENTIFIER } from "../../__fixtures__/saga";
+import { createTestCommand, createTestEvent } from "../../__fixtures__/create-message";
+import { createTestAggregateIdentifier } from "../../__fixtures__/create-test-aggregate-identifier";
+import { createTestSagaIdentifier } from "../../__fixtures__/create-test-saga-identifier";
+import { TestCommandCreate } from "../../__fixtures__/modules/commands/TestCommandCreate";
+import { TestEventCreate } from "../../__fixtures__/modules/events/TestEventCreate";
 import { SAGA_CAUSATION } from "../../constants/private";
 import { ISagaStore } from "../../interfaces";
-import { HermesCommand, HermesEvent } from "../../messages";
 import {
   AggregateIdentifier,
   SagaCausationAttributes,
@@ -20,15 +20,13 @@ import {
 import { MongoSagaStore } from "./MongoSagaStore";
 
 describe("MongoSagaStore", () => {
-  const commandKit = new MessageKit({ Message: HermesCommand });
-  const eventKit = new MessageKit({ Message: HermesEvent });
-
+  const namespace = "mon_sag_sto";
   const logger = createMockLogger();
 
-  let aggregateIdentifier: AggregateIdentifier;
+  let aggregate: AggregateIdentifier;
   let attributes: SagaStoreAttributes;
   let collection: Collection<SagaStoreAttributes>;
-  let sagaIdentifier: SagaIdentifier;
+  let saga: SagaIdentifier;
   let source: IMongoSource;
   let store: ISagaStore;
 
@@ -47,12 +45,12 @@ describe("MongoSagaStore", () => {
   }, 10000);
 
   beforeEach(() => {
-    aggregateIdentifier = { ...TEST_AGGREGATE_IDENTIFIER, id: randomUUID() };
-    sagaIdentifier = { ...TEST_SAGA_IDENTIFIER, id: aggregateIdentifier.id };
+    aggregate = createTestAggregateIdentifier(namespace);
+    saga = { ...createTestSagaIdentifier(namespace), id: aggregate.id };
     attributes = {
-      ...sagaIdentifier,
+      ...saga,
       destroyed: false,
-      messages_to_dispatch: [commandKit.create(TEST_HERMES_COMMAND)],
+      messages_to_dispatch: [createTestCommand(new TestCommandCreate("create"))],
       processed_causation_ids: [randomUUID()],
       revision: 1,
       state: { state: "state" },
@@ -66,12 +64,12 @@ describe("MongoSagaStore", () => {
   });
 
   test("should find causation ids", async () => {
-    const event = eventKit.create(TEST_HERMES_COMMAND);
+    const event = createTestEvent(new TestEventCreate("create"));
 
     const document: SagaCausationAttributes = {
-      id: sagaIdentifier.id,
-      name: sagaIdentifier.name,
-      context: sagaIdentifier.context,
+      id: saga.id,
+      name: saga.name,
+      context: saga.context,
       causation_id: event.id,
       created_at: event.timestamp,
     };
@@ -81,13 +79,13 @@ describe("MongoSagaStore", () => {
       .collection(SAGA_CAUSATION)
       .insertOne(document);
 
-    await expect(store.findCausationIds(sagaIdentifier)).resolves.toEqual([event.id]);
+    await expect(store.findCausationIds(saga)).resolves.toEqual([event.id]);
   });
 
   test("should find saga", async () => {
     await collection.insertOne(attributes);
 
-    await expect(store.findSaga(sagaIdentifier)).resolves.toEqual(
+    await expect(store.findSaga(saga)).resolves.toEqual(
       expect.objectContaining({
         state: { state: "state" },
       }),
@@ -100,7 +98,7 @@ describe("MongoSagaStore", () => {
     const three = randomUUID();
 
     await expect(
-      store.insertCausationIds(sagaIdentifier, [one, two, three]),
+      store.insertCausationIds(saga, [one, two, three]),
     ).resolves.toBeUndefined();
 
     await expect(
@@ -108,9 +106,9 @@ describe("MongoSagaStore", () => {
         .db("MongoSagaStore")
         .collection(SAGA_CAUSATION)
         .find({
-          id: sagaIdentifier.id,
-          name: sagaIdentifier.name,
-          context: sagaIdentifier.context,
+          id: saga.id,
+          name: saga.name,
+          context: saga.context,
         })
         .toArray(),
     ).resolves.toEqual(
@@ -125,7 +123,7 @@ describe("MongoSagaStore", () => {
   test("should insert saga", async () => {
     await expect(store.insertSaga(attributes)).resolves.toBeUndefined();
 
-    await expect(collection.findOne(sagaIdentifier)).resolves.toEqual(
+    await expect(collection.findOne(saga)).resolves.toEqual(
       expect.objectContaining({
         state: { state: "state" },
       }),
@@ -152,7 +150,7 @@ describe("MongoSagaStore", () => {
 
     await expect(store.updateSaga(filter, update)).resolves.toBeUndefined();
 
-    await expect(collection.findOne(sagaIdentifier)).resolves.toEqual(
+    await expect(collection.findOne(saga)).resolves.toEqual(
       expect.objectContaining({
         revision: 2,
         state: { updated: true },

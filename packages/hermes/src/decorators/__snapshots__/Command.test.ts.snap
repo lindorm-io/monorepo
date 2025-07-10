@@ -1,0 +1,15 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Command Decorator should add metadata 1`] = `
+{
+  "name": "test_command",
+  "target": [Function],
+}
+`;
+
+exports[`Command Decorator should add metadata with custom options 1`] = `
+{
+  "name": "custom_command",
+  "target": [Function],
+}
+`;

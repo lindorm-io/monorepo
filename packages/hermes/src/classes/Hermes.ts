@@ -1,17 +1,8 @@
 import { LindormError } from "@lindorm/errors";
 import { ILogger } from "@lindorm/logger";
-import { Scanner } from "@lindorm/scanner";
 import { ClassLike, Dict } from "@lindorm/types";
 import { randomUUID } from "crypto";
-import { join } from "path";
-import {
-  AggregateDomain,
-  ChecksumDomain,
-  ErrorDomain,
-  QueryDomain,
-  SagaDomain,
-  ViewDomain,
-} from "../domains";
+import { AggregateDomain, ChecksumDomain, SagaDomain, ViewDomain } from "../domains";
 import { HermesStatus } from "../enums";
 import {
   ChecksumStore,
@@ -21,70 +12,47 @@ import {
   SagaStore,
   ViewStore,
 } from "../infrastructure";
-import {
-  IAggregate,
-  IAggregateDomain,
-  IChecksumDomain,
-  IErrorDomain,
-  IEventStore,
-  IHermes,
-  IHermesChecksumStore,
-  IHermesEncryptionStore,
-  IHermesMessageBus,
-  IHermesSagaStore,
-  IHermesViewStore,
-  IQueryDomain,
-  ISaga,
-  ISagaDomain,
-  IView,
-  IViewDomain,
-} from "../interfaces";
+import { IAggregateModel, IHermes, ISagaModel, IViewModel } from "../interfaces";
 import { HermesCommand, HermesError, HermesEvent, HermesTimeout } from "../messages";
 import {
   AggregateIdentifier,
   CloneHermesOptions,
   EventEmitterListener,
-  HandlerIdentifier,
   HermesAdmin,
   HermesCommandOptions,
-  HermesConfig,
   HermesInspectOptions,
   HermesOptions,
-  ViewEventHandlerAdapter,
 } from "../types";
 import { FromClone } from "../types/private";
 import { extractDataTransferObject } from "../utils/private";
-import { HermesScanner } from "./private";
+import { HermesRegistry } from "./private";
 
-export class Hermes<C extends ClassLike = ClassLike, Q extends ClassLike = ClassLike>
-  implements IHermes<C, Q>
-{
+export class Hermes implements IHermes {
+  private readonly namespace: string;
+
   // domains
-  private readonly aggregateDomain: IAggregateDomain;
-  private readonly checksumDomain: IChecksumDomain;
-  private readonly errorDomain: IErrorDomain;
-  private readonly queryDomain: IQueryDomain;
-  private readonly sagaDomain: ISagaDomain;
-  private readonly viewDomain: IViewDomain;
+  private readonly aggregateDomain: AggregateDomain;
+  private readonly checksumDomain: ChecksumDomain;
+  private readonly sagaDomain: SagaDomain;
+  private readonly viewDomain: ViewDomain;
 
   // infrastructure
-  private readonly checksumStore: IHermesChecksumStore;
-  private readonly encryptionStore: IHermesEncryptionStore;
-  private readonly eventStore: IEventStore;
-  private readonly sagaStore: IHermesSagaStore;
-  private readonly viewStore: IHermesViewStore;
+  private readonly checksumStore: ChecksumStore;
+  private readonly encryptionStore: EncryptionStore;
+  private readonly eventStore: EventStore;
+  private readonly sagaStore: SagaStore;
+  private readonly viewStore: ViewStore;
 
   // messages
-  private readonly commandBus: IHermesMessageBus<HermesCommand>;
-  private readonly errorBus: IHermesMessageBus<HermesError>;
-  private readonly eventBus: IHermesMessageBus<HermesEvent>;
-  private readonly timeoutBus: IHermesMessageBus<HermesTimeout>;
+  private readonly commandBus: MessageBus<HermesCommand<Dict>>;
+  private readonly errorBus: MessageBus<HermesError>;
+  private readonly eventBus: MessageBus<HermesEvent<Dict>>;
+  private readonly timeoutBus: MessageBus<HermesTimeout>;
 
   // primary
-  private readonly scanner: HermesScanner;
-  private readonly options: HermesConfig;
+  private readonly registry: HermesRegistry;
+  private readonly options: HermesOptions;
   private readonly logger: ILogger;
-  private readonly adapters: Array<HandlerIdentifier & ViewEventHandlerAdapter>;
 
   private _status: HermesStatus;
 
@@ -98,8 +66,6 @@ export class Hermes<C extends ClassLike = ClassLike, Q extends ClassLike = Class
 
       this.aggregateDomain = opts.aggregateDomain;
       this.checksumDomain = opts.checksumDomain;
-      this.errorDomain = opts.errorDomain;
-      this.queryDomain = opts.queryDomain;
       this.sagaDomain = opts.sagaDomain;
       this.viewDomain = opts.viewDomain;
 
@@ -114,49 +80,19 @@ export class Hermes<C extends ClassLike = ClassLike, Q extends ClassLike = Class
       this.eventBus = opts.eventBus;
       this.timeoutBus = opts.timeoutBus;
 
-      this.scanner = opts.scanner;
       this.options = opts.options;
-      this.adapters = opts.adapters;
+      this.registry = opts.registry;
 
+      this.namespace = opts.namespace;
       this._status = opts.status;
     } else {
       const opts = options as HermesOptions;
 
-      this.options = {
-        checksumStore: opts.checksumStore ?? {},
-        context: opts.context ?? "default",
-        dangerouslyRegisterHandlersManually:
-          opts.dangerouslyRegisterHandlersManually === true,
-        directories: {
-          aggregates: join(__dirname, "aggregates"),
-          queries: join(__dirname, "queries"),
-          sagas: join(__dirname, "sagas"),
-          views: join(__dirname, "views"),
-          ...(opts.directories ?? {}),
-        },
-        encryptionStore: opts.encryptionStore ?? {},
-        eventStore: opts.eventStore ?? {},
-        fileFilter: {
-          include: [/.*/],
-          exclude: [],
-          ...(opts.fileFilter ?? {}),
-        },
-        messageBus: opts.messageBus ?? {},
-        sagaStore: opts.sagaStore ?? {},
-        scanner: {
-          deniedDirectories: [],
-          deniedExtensions: [],
-          deniedFilenames: [],
-          deniedTypes: [/^spec$/, /^test$/],
-          ...(opts.scanner ?? {}),
-        },
-        viewStore: opts.viewStore ?? {},
-      };
-
+      this.namespace = opts.namespace ?? "hermes";
       this._status = HermesStatus.Created;
 
-      this.adapters = [];
-      this.scanner = new HermesScanner(this.options, this.logger);
+      this.options = opts;
+      this.registry = new HermesRegistry({ namespace: this.namespace });
 
       // infrastructure
 
@@ -181,28 +117,24 @@ export class Hermes<C extends ClassLike = ClassLike, Q extends ClassLike = Class
         logger: this.logger,
       });
 
-      this.commandBus = new MessageBus<HermesCommand>({
+      this.commandBus = new MessageBus<HermesCommand<Dict>>({
+        ...this.options.messageBus,
         Message: HermesCommand,
-        custom: this.options.messageBus.custom as any,
-        rabbit: this.options.messageBus.rabbit,
         logger: this.logger,
       });
       this.errorBus = new MessageBus<HermesError>({
+        ...(this.options.messageBus as any),
         Message: HermesError,
-        custom: this.options.messageBus.custom as any,
-        rabbit: this.options.messageBus.rabbit,
         logger: this.logger,
       });
-      this.eventBus = new MessageBus<HermesEvent>({
+      this.eventBus = new MessageBus<HermesEvent<Dict>>({
+        ...this.options.messageBus,
         Message: HermesEvent,
-        custom: this.options.messageBus.custom as any,
-        rabbit: this.options.messageBus.rabbit,
         logger: this.logger,
       });
       this.timeoutBus = new MessageBus<HermesTimeout>({
+        ...this.options.messageBus,
         Message: HermesTimeout,
-        custom: this.options.messageBus.custom as any,
-        rabbit: this.options.messageBus.rabbit,
         logger: this.logger,
       });
 
@@ -210,26 +142,19 @@ export class Hermes<C extends ClassLike = ClassLike, Q extends ClassLike = Class
 
       this.aggregateDomain = new AggregateDomain({
         commandBus: this.commandBus,
+        encryptionStore: this.encryptionStore,
         errorBus: this.errorBus,
         eventBus: this.eventBus,
-        encryptionStore: this.encryptionStore,
         eventStore: this.eventStore,
         logger: this.logger,
+        registry: this.registry,
       });
       this.checksumDomain = new ChecksumDomain({
         errorBus: this.errorBus,
         eventBus: this.eventBus,
         store: this.checksumStore,
         logger: this.logger,
-      });
-      this.errorDomain = new ErrorDomain({
-        commandBus: this.commandBus,
-        errorBus: this.errorBus,
-        logger: this.logger,
-      });
-      this.queryDomain = new QueryDomain({
-        ...this.options.viewStore,
-        logger: this.logger,
+        registry: this.registry,
       });
       this.sagaDomain = new SagaDomain({
         commandBus: this.commandBus,
@@ -238,12 +163,16 @@ export class Hermes<C extends ClassLike = ClassLike, Q extends ClassLike = Class
         timeoutBus: this.timeoutBus,
         store: this.sagaStore,
         logger: this.logger,
+        registry: this.registry,
       });
       this.viewDomain = new ViewDomain({
+        ...this.options.viewStore,
+        commandBus: this.commandBus,
         errorBus: this.errorBus,
         eventBus: this.eventBus,
-        store: this.viewStore,
         logger: this.logger,
+        registry: this.registry,
+        store: this.viewStore,
       });
     }
   }
@@ -257,23 +186,6 @@ export class Hermes<C extends ClassLike = ClassLike, Q extends ClassLike = Class
         saga: this.inspectSaga.bind(this),
         view: this.inspectView.bind(this),
       },
-      register: {
-        aggregateCommandHandler: this.aggregateDomain.registerCommandHandler.bind(
-          this.aggregateDomain,
-        ),
-        aggregateEventHandler: this.aggregateDomain.registerEventHandler.bind(
-          this.aggregateDomain,
-        ),
-        checksumEventHandler: this.checksumDomain.registerEventHandler.bind(
-          this.checksumDomain,
-        ),
-        errorHandler: this.errorDomain.registerErrorHandler.bind(this.errorDomain),
-        queryHandler: this.queryDomain.registerQueryHandler.bind(this.queryDomain),
-        sagaEventHandler: this.sagaDomain.registerEventHandler.bind(this.sagaDomain),
-        viewEventHandler: this.viewDomain.registerEventHandler.bind(this.viewDomain),
-        commandAggregate: this.scanner.registerAggregateCommand.bind(this.scanner),
-        viewAdapter: this.registerViewAdapter.bind(this),
-      },
     };
   }
 
@@ -281,25 +193,23 @@ export class Hermes<C extends ClassLike = ClassLike, Q extends ClassLike = Class
     return this._status;
   }
 
-  public clone(options: CloneHermesOptions = {}): IHermes<C, Q> {
-    return new Hermes<C, Q>({
+  public clone(options: CloneHermesOptions = {}): IHermes {
+    return new Hermes({
       _mode: "from_clone",
-      adapters: this.adapters,
       aggregateDomain: this.aggregateDomain,
       checksumDomain: this.checksumDomain,
       checksumStore: this.checksumStore,
       commandBus: this.commandBus,
       encryptionStore: this.encryptionStore,
       errorBus: this.errorBus,
-      errorDomain: this.errorDomain,
       eventBus: this.eventBus,
       eventStore: this.eventStore,
       logger: options.logger ?? this.logger,
+      namespace: this.namespace,
       options: this.options,
-      queryDomain: this.queryDomain,
+      registry: this.registry,
       sagaDomain: this.sagaDomain,
       sagaStore: this.sagaStore,
-      scanner: this.scanner,
       status: this.status,
       timeoutBus: this.timeoutBus,
       viewDomain: this.viewDomain,
@@ -308,7 +218,7 @@ export class Hermes<C extends ClassLike = ClassLike, Q extends ClassLike = Class
   }
 
   public async command<M extends Dict = Dict>(
-    command: C,
+    Command: ClassLike,
     options: HermesCommandOptions<M> = {},
   ): Promise<AggregateIdentifier> {
     if (this.status !== HermesStatus.Ready) {
@@ -317,17 +227,20 @@ export class Hermes<C extends ClassLike = ClassLike, Q extends ClassLike = Class
       });
     }
 
-    const { name, version, data } = extractDataTransferObject(command);
+    const { name, data } = extractDataTransferObject(Command);
     const { correlationId, delay, meta } = options;
 
-    const aggregate = {
-      id: data.aggregateId || options.aggregate?.id || randomUUID(),
-      name: options.aggregate?.name || this.scanner.getAggregateFromCommand(name),
-      context: this.scanner.context(options.aggregate?.context),
+    const metadata = this.registry.getCommand(Command.constructor);
+
+    const aggregate: AggregateIdentifier = {
+      id: data.aggregateId || options.id || randomUUID(),
+      name: metadata.aggregate.name,
+      context: metadata.aggregate.context,
     };
 
     const id = randomUUID();
-    const generated = this.commandBus.create({
+
+    const command = this.commandBus.create({
       id,
       aggregate,
       causationId: id,
@@ -336,21 +249,11 @@ export class Hermes<C extends ClassLike = ClassLike, Q extends ClassLike = Class
       delay,
       meta,
       name,
-      version,
     });
 
-    if (!(generated instanceof HermesCommand)) {
-      throw new LindormError("Invalid operation", {
-        data: {
-          expect: "Command",
-          actual: typeof generated,
-        },
-      });
-    }
+    this.logger.verbose("Publishing command", { command });
 
-    this.logger.verbose("Publishing command", { command: generated });
-
-    await this.commandBus.publish(generated);
+    await this.commandBus.publish(command);
 
     return aggregate;
   }
@@ -365,8 +268,8 @@ export class Hermes<C extends ClassLike = ClassLike, Q extends ClassLike = Class
     }
   }
 
-  public async query<R>(query: Q): Promise<R> {
-    return this.queryDomain.query(query);
+  public async query<R>(query: ClassLike): Promise<R> {
+    return this.viewDomain.query(query);
   }
 
   public async setup(): Promise<void> {
@@ -407,50 +310,12 @@ export class Hermes<C extends ClassLike = ClassLike, Q extends ClassLike = Class
       await this.options.viewStore.redis.setup();
     }
 
-    if (!this.options.dangerouslyRegisterHandlersManually) {
-      if (!Scanner.hasFiles(this.options.directories.aggregates)) {
-        throw new Error(
-          `No files found at directory [ ${this.options.directories.aggregates} ]`,
-        );
-      }
+    this.registry.add(this.options.modules);
 
-      await this.scanner.scanAggregates();
-
-      for (const handler of this.scanner.aggregateCommandHandlers) {
-        await this.aggregateDomain.registerCommandHandler(handler);
-      }
-
-      for (const handler of this.scanner.aggregateEventHandlers) {
-        await this.aggregateDomain.registerEventHandler(handler);
-      }
-
-      for (const handler of this.scanner.checksumEventHandlers) {
-        await this.checksumDomain.registerEventHandler(handler);
-      }
-
-      for (const handler of this.scanner.errorHandlers) {
-        await this.errorDomain.registerErrorHandler(handler);
-      }
-
-      await this.scanner.scanQueries();
-
-      for (const handler of this.scanner.queryHandlers) {
-        this.queryDomain.registerQueryHandler(handler);
-      }
-
-      await this.scanner.scanSagas();
-
-      for (const handler of this.scanner.sagaEventHandlers) {
-        await this.sagaDomain.registerEventHandler(handler);
-      }
-
-      await this.scanner.scanViews();
-
-      for (const handler of this.scanner.viewEventHandlers) {
-        await this.viewDomain.registerEventHandler(handler);
-        this.registerViewAdapter({ ...handler.view, ...handler.adapter });
-      }
-    }
+    await this.aggregateDomain.registerHandlers();
+    await this.checksumDomain.registerHandlers();
+    await this.sagaDomain.registerHandlers();
+    await this.viewDomain.registerHandlers();
 
     this._status = HermesStatus.Ready;
   }
@@ -458,52 +323,44 @@ export class Hermes<C extends ClassLike = ClassLike, Q extends ClassLike = Class
   // private admin
 
   private async inspectAggregate<S extends Dict = Dict>(
-    aggregate: HermesInspectOptions,
-  ): Promise<IAggregate<S>> {
+    inspect: HermesInspectOptions,
+  ): Promise<IAggregateModel<S>> {
     return this.aggregateDomain.inspect<S>({
-      id: aggregate.id,
-      name: aggregate.name,
-      context: this.scanner.context(aggregate.context),
+      id: inspect.id,
+      name: inspect.name,
+      context: inspect.context ?? this.namespace,
     });
   }
 
   private async inspectSaga<S extends Dict = Dict>(
-    saga: HermesInspectOptions,
-  ): Promise<ISaga<S>> {
+    inspect: HermesInspectOptions,
+  ): Promise<ISagaModel<S>> {
     return this.sagaDomain.inspect<S>({
-      id: saga.id,
-      name: saga.name,
-      context: this.scanner.context(saga.context),
+      id: inspect.id,
+      name: inspect.name,
+      context: inspect.context ?? this.namespace,
     });
   }
 
   private async inspectView<S extends Dict = Dict>(
-    view: HermesInspectOptions,
-  ): Promise<IView<S>> {
+    inspect: HermesInspectOptions,
+  ): Promise<IViewModel<S>> {
     const viewIdentifier = {
-      id: view.id,
-      name: view.name,
-      context: this.scanner.context(view.context),
+      id: inspect.id,
+      name: inspect.name,
+      context: inspect.context ?? this.namespace,
     };
 
-    const adapter = this.adapters.find(
-      (x) => x.name === viewIdentifier.name && x.context === viewIdentifier.context,
+    const registry = this.registry.views.find(
+      (v) => v.name === viewIdentifier.name && v.namespace === viewIdentifier.context,
     );
 
-    if (!adapter) {
-      throw new LindormError("Adapter not found", {
-        data: { viewIdentifier },
-      });
+    if (!registry) {
+      throw new Error(
+        `View not found: ${viewIdentifier.name} (${viewIdentifier.context})`,
+      );
     }
 
-    return this.viewDomain.inspect<S>(viewIdentifier, adapter);
-  }
-
-  // private
-
-  private registerViewAdapter(
-    adapter: HandlerIdentifier & ViewEventHandlerAdapter,
-  ): void {
-    this.adapters.push(adapter);
+    return this.viewDomain.inspect<S>(viewIdentifier, registry.source);
   }
 }

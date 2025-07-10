@@ -1,40 +1,27 @@
 import { ILogger } from "@lindorm/logger";
-import { ClassLike, Dict } from "@lindorm/types";
-import { IHermesMessage } from "../../interfaces";
-import { HandlerIdentifier, HandlerIdentifierMultipleContexts } from "../identifiers";
+import { ClassLike, DeepPartial, Dict } from "@lindorm/types";
+import { NameData } from "../../utils/private";
+import { AggregateIdentifier, HandlerIdentifier } from "../identifiers";
 import { SagaDispatchOptions } from "../models";
-import { HandlerConditions } from "./handler";
+import { HandlerConditions } from "./conditions";
 
-export type SagaEventHandlerContext<
-  E extends ClassLike = ClassLike,
-  S extends Dict = Dict,
-  D extends ClassLike = ClassLike,
-> = {
+export type SagaEventCtx<E extends ClassLike, S extends Dict> = {
+  aggregate: AggregateIdentifier;
   event: E;
   logger: ILogger;
+  meta: Dict;
   state: S;
   destroy(): void;
-  dispatch(command: D, options?: SagaDispatchOptions): void;
-  mergeState(data: Partial<S>): void;
+  dispatch(item: ClassLike, options?: SagaDispatchOptions): void;
+  mergeState(data: DeepPartial<S>): void;
   setState(state: S): void;
-  timeout(name: string, data: Dict, delay: number): void;
 };
 
-export type SagaEventHandlerFileAggregate = {
-  name?: string;
-  context?: Array<string> | string;
-};
-
-export type SagaEventHandlerOptions<
-  E extends ClassLike = ClassLike,
-  S extends Dict = Dict,
-  D extends ClassLike = ClassLike,
-> = {
-  aggregate: HandlerIdentifierMultipleContexts;
+export type SagaEventHandlerOptions<E extends ClassLike, S extends Dict> = {
+  aggregate: HandlerIdentifier;
   conditions?: HandlerConditions;
-  eventName: string;
+  event: NameData;
+  key: string;
   saga: HandlerIdentifier;
-  version?: number;
-  getSagaId?(message: IHermesMessage): string;
-  handler(ctx: SagaEventHandlerContext<E, S, D>): Promise<void>;
+  handler(ctx: SagaEventCtx<E, S>): Promise<void>;
 };

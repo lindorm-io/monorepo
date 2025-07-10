@@ -1,12 +1,19 @@
 import { ILogger } from "@lindorm/logger";
-import { IEventStore, IHermesEncryptionStore, IHermesMessageBus } from "../../interfaces";
+import { Dict } from "@lindorm/types";
+import {
+  IEventStore,
+  IHermesEncryptionStore,
+  IHermesMessageBus,
+  IHermesRegistry,
+} from "../../interfaces";
+import { HermesCommand, HermesError, HermesEvent } from "../../messages";
 
 export type AggregateDomainOptions = {
+  commandBus: IHermesMessageBus<HermesCommand<Dict>>;
   encryptionStore: IHermesEncryptionStore;
+  errorBus: IHermesMessageBus<HermesError>;
+  eventBus: IHermesMessageBus<HermesEvent>;
   eventStore: IEventStore;
   logger: ILogger;
-
-  commandBus: IHermesMessageBus;
-  errorBus: IHermesMessageBus;
-  eventBus: IHermesMessageBus;
+  registry: IHermesRegistry;
 };

@@ -1,0 +1,17 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Event Decorator should add metadata 1`] = `
+{
+  "name": "test_event",
+  "target": [Function],
+  "version": 1,
+}
+`;
+
+exports[`Event Decorator should add metadata with custom options 1`] = `
+{
+  "name": "custom_event",
+  "target": [Function],
+  "version": 99,
+}
+`;

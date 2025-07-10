@@ -1,0 +1,21 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Aggregate Decorator should add metadata 1`] = `
+{
+  "encryption": false,
+  "handlers": [],
+  "name": "test_aggregate",
+  "namespace": null,
+  "target": [Function],
+}
+`;
+
+exports[`Aggregate Decorator should add metadata with custom options 1`] = `
+{
+  "encryption": true,
+  "handlers": [],
+  "name": "custom_name",
+  "namespace": "custom_namespace",
+  "target": [Function],
+}
+`;

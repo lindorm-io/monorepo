@@ -1,7 +1,7 @@
 import { createMockLogger } from "@lindorm/logger";
 import { IPostgresSource, PostgresSource } from "@lindorm/postgres";
 import { randomUUID } from "crypto";
-import { TEST_VIEW_IDENTIFIER } from "../../__fixtures__/view";
+import { createTestViewIdentifier } from "../../__fixtures__/create-test-view-identifier";
 import { IPostgresViewRepository } from "../../interfaces";
 import { ViewIdentifier, ViewStoreAttributes } from "../../types";
 import { getViewStoreName } from "../../utils/private";
@@ -19,6 +19,7 @@ const insertView = async (
 };
 
 describe("PostgresViewRepository", () => {
+  const namespace = "pg_vie_rep";
   const logger = createMockLogger();
 
   let source: IPostgresSource;
@@ -42,9 +43,9 @@ describe("PostgresViewRepository", () => {
     await store.initialise();
 
     // @ts-ignore
-    await store.initialiseView(TEST_VIEW_IDENTIFIER, {});
+    await store.initialiseView(createTestViewIdentifier(namespace), {});
 
-    identifier = { ...TEST_VIEW_IDENTIFIER, id: randomUUID() };
+    identifier = createTestViewIdentifier(namespace);
     repository = new PostgresViewRepository(source, identifier, logger);
 
     view1 = randomUUID();

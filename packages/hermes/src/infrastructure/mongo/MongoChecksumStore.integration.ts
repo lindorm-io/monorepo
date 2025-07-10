@@ -2,18 +2,19 @@ import { createMockLogger } from "@lindorm/logger";
 import { IMongoSource, MongoSource } from "@lindorm/mongo";
 import { randomUUID } from "crypto";
 import { Collection } from "mongodb";
-import { TEST_AGGREGATE_IDENTIFIER } from "../../__fixtures__/aggregate";
+import { createTestAggregateIdentifier } from "../../__fixtures__/create-test-aggregate-identifier";
 import { CHECKSUM_STORE } from "../../constants/private";
 import { IChecksumStore } from "../../interfaces";
 import { AggregateIdentifier, ChecksumStoreAttributes } from "../../types";
 import { MongoChecksumStore } from "./MongoChecksumStore";
 
 describe("MongoChecksumStore", () => {
+  const namespace = "mon_che_sto";
   const logger = createMockLogger();
 
+  let aggregate: AggregateIdentifier;
   let collection: Collection<ChecksumStoreAttributes>;
   let source: IMongoSource;
-  let identifier: AggregateIdentifier;
   let store: IChecksumStore;
 
   beforeAll(async () => {
@@ -31,7 +32,7 @@ describe("MongoChecksumStore", () => {
   }, 10000);
 
   beforeEach(() => {
-    identifier = { ...TEST_AGGREGATE_IDENTIFIER, id: randomUUID() };
+    aggregate = createTestAggregateIdentifier(namespace);
   });
 
   afterAll(async () => {
@@ -42,7 +43,7 @@ describe("MongoChecksumStore", () => {
     const eventId = randomUUID();
 
     await collection.insertOne({
-      ...identifier,
+      ...aggregate,
       event_id: eventId,
       checksum: "checksum",
       created_at: new Date(),
@@ -50,7 +51,7 @@ describe("MongoChecksumStore", () => {
 
     await expect(
       store.find({
-        ...identifier,
+        ...aggregate,
         event_id: eventId,
       }),
     ).resolves.toEqual(
@@ -63,14 +64,14 @@ describe("MongoChecksumStore", () => {
 
     await expect(
       store.insert({
-        ...identifier,
+        ...aggregate,
         event_id: eventId,
         checksum: "checksum",
         created_at: new Date(),
       }),
     ).resolves.toBeUndefined();
 
-    expect(await collection.findOne({ ...identifier })).toEqual(
+    expect(await collection.findOne({ ...aggregate })).toEqual(
       expect.objectContaining({ event_id: eventId, checksum: "checksum" }),
     );
   });

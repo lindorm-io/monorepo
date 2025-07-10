@@ -6,14 +6,14 @@ import {
   SagaUpdateFilter,
 } from "../types";
 import { IHermesMessage } from "./HermesMessage";
-import { ISaga } from "./Saga";
+import { ISagaModel } from "./SagaModel";
 
 export interface IHermesSagaStore {
-  clearMessages(saga: ISaga): Promise<SagaData>;
+  clearMessages(saga: ISagaModel): Promise<SagaData>;
   load(sagaIdentifier: SagaIdentifier): Promise<SagaData>;
   loadCausations(sagaIdentifier: SagaIdentifier): Promise<Array<string>>;
-  save(saga: ISaga, causation: IHermesMessage): Promise<SagaData>;
-  saveCausations(saga: ISaga): Promise<SagaData>;
+  save(saga: ISagaModel, causation: IHermesMessage): Promise<SagaData>;
+  saveCausations(saga: ISagaModel): Promise<SagaData>;
 }
 
 export interface ISagaStore {

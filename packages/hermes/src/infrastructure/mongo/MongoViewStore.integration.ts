@@ -1,14 +1,13 @@
 import { createMockLogger } from "@lindorm/logger";
-import { MessageKit } from "@lindorm/message";
 import { IMongoSource, MongoSource } from "@lindorm/mongo";
 import { randomUUID } from "crypto";
 import { Collection } from "mongodb";
-import { TEST_AGGREGATE_IDENTIFIER } from "../../__fixtures__/aggregate";
-import { TEST_HERMES_COMMAND } from "../../__fixtures__/hermes-command";
-import { TEST_VIEW_IDENTIFIER } from "../../__fixtures__/view";
+import { createTestEvent } from "../../__fixtures__/create-message";
+import { createTestAggregateIdentifier } from "../../__fixtures__/create-test-aggregate-identifier";
+import { createTestViewIdentifier } from "../../__fixtures__/create-test-view-identifier";
+import { TestEventCreate } from "../../__fixtures__/modules/events/TestEventCreate";
 import { VIEW_CAUSATION } from "../../constants/private";
 import { IViewStore } from "../../interfaces";
-import { HermesEvent } from "../../messages";
 import {
   AggregateIdentifier,
   ViewCausationAttributes,
@@ -21,16 +20,15 @@ import { getViewStoreName } from "../../utils/private";
 import { MongoViewStore } from "./MongoViewStore";
 
 describe("MongoViewStore", () => {
-  const eventKit = new MessageKit({ Message: HermesEvent });
-
+  const namespace = "mon_vie_sto";
   const logger = createMockLogger();
 
-  let aggregateIdentifier: AggregateIdentifier;
+  let aggregate: AggregateIdentifier;
   let attributes: ViewStoreAttributes;
   let collection: Collection<ViewStoreAttributes>;
   let source: IMongoSource;
   let store: IViewStore;
-  let viewIdentifier: ViewIdentifier;
+  let view: ViewIdentifier;
 
   beforeAll(async () => {
     source = new MongoSource({
@@ -41,16 +39,18 @@ describe("MongoViewStore", () => {
 
     await source.setup();
 
-    collection = source.database.collection(getViewStoreName(TEST_VIEW_IDENTIFIER));
+    collection = source.database.collection(
+      getViewStoreName(createTestViewIdentifier(namespace)),
+    );
 
     store = new MongoViewStore(source, logger);
   }, 10000);
 
   beforeEach(() => {
-    aggregateIdentifier = { ...TEST_AGGREGATE_IDENTIFIER, id: randomUUID() };
-    viewIdentifier = { ...TEST_VIEW_IDENTIFIER, id: aggregateIdentifier.id };
+    aggregate = createTestAggregateIdentifier(namespace);
+    view = { ...createTestViewIdentifier(namespace), id: aggregate.id };
     attributes = {
-      ...viewIdentifier,
+      ...view,
       destroyed: false,
       meta: { data: "state" },
       processed_causation_ids: [randomUUID()],
@@ -66,12 +66,12 @@ describe("MongoViewStore", () => {
   });
 
   test("should find causation ids", async () => {
-    const event = eventKit.create(TEST_HERMES_COMMAND);
+    const event = createTestEvent(new TestEventCreate("create"));
 
     const document: ViewCausationAttributes = {
-      id: viewIdentifier.id,
-      name: viewIdentifier.name,
-      context: viewIdentifier.context,
+      id: view.id,
+      name: view.name,
+      context: view.context,
       causation_id: event.causationId,
       created_at: new Date(),
     };
@@ -81,15 +81,13 @@ describe("MongoViewStore", () => {
       .collection(VIEW_CAUSATION)
       .insertOne(document);
 
-    await expect(store.findCausationIds(viewIdentifier)).resolves.toEqual([
-      event.causationId,
-    ]);
+    await expect(store.findCausationIds(view)).resolves.toEqual([event.causationId]);
   });
 
   test("should find view", async () => {
     await collection.insertOne(attributes);
 
-    await expect(store.findView(viewIdentifier)).resolves.toEqual(
+    await expect(store.findView(view)).resolves.toEqual(
       expect.objectContaining({
         state: { data: "state" },
       }),
@@ -102,7 +100,7 @@ describe("MongoViewStore", () => {
     const three = randomUUID();
 
     await expect(
-      store.insertCausationIds(viewIdentifier, [one, two, three]),
+      store.insertCausationIds(view, [one, two, three]),
     ).resolves.toBeUndefined();
 
     await expect(
@@ -110,9 +108,9 @@ describe("MongoViewStore", () => {
         .db("MongoViewStore")
         .collection(VIEW_CAUSATION)
         .find({
-          id: viewIdentifier.id,
-          name: viewIdentifier.name,
-          context: viewIdentifier.context,
+          id: view.id,
+          name: view.name,
+          context: view.context,
         })
         .toArray(),
     ).resolves.toEqual(
@@ -127,7 +125,7 @@ describe("MongoViewStore", () => {
   test("should insert view", async () => {
     await expect(store.insertView(attributes)).resolves.toBeUndefined();
 
-    await expect(collection.findOne({ id: viewIdentifier.id })).resolves.toEqual(
+    await expect(collection.findOne({ id: view.id })).resolves.toEqual(
       expect.objectContaining({
         state: { data: "state" },
       }),
@@ -139,8 +137,8 @@ describe("MongoViewStore", () => {
 
     const filter: ViewUpdateFilter = {
       id: attributes.id,
-      name: viewIdentifier.name,
-      context: viewIdentifier.context,
+      name: view.name,
+      context: view.context,
       revision: attributes.revision,
     };
 
@@ -154,7 +152,7 @@ describe("MongoViewStore", () => {
 
     await expect(store.updateView(filter, update)).resolves.toBeUndefined();
 
-    await expect(collection.findOne({ id: viewIdentifier.id })).resolves.toEqual(
+    await expect(collection.findOne({ id: view.id })).resolves.toEqual(
       expect.objectContaining({
         revision: 2,
         meta: { meta: true },

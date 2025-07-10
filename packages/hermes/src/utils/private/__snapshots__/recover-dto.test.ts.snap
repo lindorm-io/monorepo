@@ -1,0 +1,30 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`recoverCommand should recover an exact copy of the command 1`] = `
+{
+  "name": "test_recover_command",
+  "target": [Function],
+}
+`;
+
+exports[`recoverCommand should recover an exact copy of the command 2`] = `
+TestRecoverCommand {
+  "one": "test",
+  "two": 123,
+}
+`;
+
+exports[`recoverEvent should recover an exact copy of the event 1`] = `
+{
+  "name": "test_recover_event",
+  "target": [Function],
+  "version": 1,
+}
+`;
+
+exports[`recoverEvent should recover an exact copy of the event 2`] = `
+TestRecoverEvent {
+  "one": "test",
+  "two": 123,
+}
+`;

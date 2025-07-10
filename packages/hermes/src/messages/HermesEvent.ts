@@ -4,4 +4,6 @@ import { IHermesMessage } from "../interfaces";
 import { HermesMessage } from "./HermesMessage";
 
 @Message()
-export class HermesEvent extends HermesMessage<Dict> implements IHermesMessage<Dict> {}
+export class HermesEvent<E = Dict>
+  extends HermesMessage<E>
+  implements IHermesMessage<E> {}

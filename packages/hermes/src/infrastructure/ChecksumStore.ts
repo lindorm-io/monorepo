@@ -2,8 +2,7 @@ import { ILogger } from "@lindorm/logger";
 import { ShaKit } from "@lindorm/sha";
 import { sortKeys } from "@lindorm/utils";
 import { ChecksumError } from "../errors";
-import { IChecksumStore, IHermesChecksumStore } from "../interfaces";
-import { HermesEvent } from "../messages";
+import { IChecksumStore, IHermesChecksumStore, IHermesMessage } from "../interfaces";
 import { HermesChecksumStoreOptions } from "../types";
 import { MongoChecksumStore } from "./mongo";
 import { PostgresChecksumStore } from "./postgres";
@@ -28,7 +27,7 @@ export class ChecksumStore implements IHermesChecksumStore {
 
   // public
 
-  public async verify(event: HermesEvent): Promise<void> {
+  public async verify(event: IHermesMessage): Promise<void> {
     this.logger.debug("Verifying event checksum", { event });
 
     const kit = new ShaKit({ algorithm: "SHA256", encoding: "base64" });

@@ -14,8 +14,3 @@ export interface HandlerIdentifier {
   name: string;
   context: string;
 }
-
-export interface HandlerIdentifierMultipleContexts {
-  name: string;
-  context: Array<string> | string;
-}

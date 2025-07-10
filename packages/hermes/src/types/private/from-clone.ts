@@ -1,50 +1,42 @@
 import { ILogger } from "@lindorm/logger";
-import { HermesScanner } from "../../classes/private";
+import { Dict } from "@lindorm/types";
+import { HermesRegistry } from "../../classes/private";
+import { AggregateDomain, ChecksumDomain, SagaDomain, ViewDomain } from "../../domains";
 import { HermesStatus } from "../../enums";
 import {
-  IAggregateDomain,
-  IChecksumDomain,
-  IErrorDomain,
-  IEventStore,
-  IHermesChecksumStore,
-  IHermesEncryptionStore,
-  IHermesMessageBus,
-  IHermesSagaStore,
-  IHermesViewStore,
-  IQueryDomain,
-  ISagaDomain,
-  IViewDomain,
-} from "../../interfaces";
+  ChecksumStore,
+  EncryptionStore,
+  EventStore,
+  MessageBus,
+  SagaStore,
+  ViewStore,
+} from "../../infrastructure";
 import { HermesCommand, HermesError, HermesEvent, HermesTimeout } from "../../messages";
-import { ViewEventHandlerAdapter } from "../handlers";
-import { HermesConfig } from "../hermes";
-import { HandlerIdentifier } from "../identifiers";
+import { HermesOptions } from "../hermes";
 
 export type FromClone = {
   _mode: "from_clone";
   logger: ILogger;
 
-  aggregateDomain: IAggregateDomain;
-  checksumDomain: IChecksumDomain;
-  errorDomain: IErrorDomain;
-  queryDomain: IQueryDomain;
-  sagaDomain: ISagaDomain;
-  viewDomain: IViewDomain;
+  aggregateDomain: AggregateDomain;
+  checksumDomain: ChecksumDomain;
+  sagaDomain: SagaDomain;
+  viewDomain: ViewDomain;
 
-  checksumStore: IHermesChecksumStore;
-  encryptionStore: IHermesEncryptionStore;
-  eventStore: IEventStore;
-  sagaStore: IHermesSagaStore;
-  viewStore: IHermesViewStore;
+  checksumStore: ChecksumStore;
+  encryptionStore: EncryptionStore;
+  eventStore: EventStore;
+  sagaStore: SagaStore;
+  viewStore: ViewStore;
 
-  commandBus: IHermesMessageBus<HermesCommand>;
-  errorBus: IHermesMessageBus<HermesError>;
-  eventBus: IHermesMessageBus<HermesEvent>;
-  timeoutBus: IHermesMessageBus<HermesTimeout>;
+  commandBus: MessageBus<HermesCommand<Dict>>;
+  errorBus: MessageBus<HermesError>;
+  eventBus: MessageBus<HermesEvent<Dict>>;
+  timeoutBus: MessageBus<HermesTimeout>;
 
-  scanner: HermesScanner;
-  options: HermesConfig;
-  adapters: Array<HandlerIdentifier & ViewEventHandlerAdapter>;
-
+  options: HermesOptions;
+  registry: HermesRegistry;
   status: HermesStatus;
+
+  namespace: string;
 };

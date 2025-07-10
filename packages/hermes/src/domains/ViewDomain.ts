@@ -1,7 +1,10 @@
 import { snakeCase } from "@lindorm/case";
-import { LindormError } from "@lindorm/errors";
 import { ILogger } from "@lindorm/logger";
+import { IMongoSource } from "@lindorm/mongo";
+import { IPostgresSource } from "@lindorm/postgres";
+import { IRedisSource } from "@lindorm/redis";
 import { ClassLike, Dict } from "@lindorm/types";
+import merge from "deepmerge";
 import EventEmitter from "events";
 import {
   ConcurrencyError,
@@ -11,154 +14,304 @@ import {
   ViewDestroyedError,
   ViewNotCreatedError,
 } from "../errors";
-import { HermesViewEventHandler } from "../handlers";
 import {
+  HermesViewErrorHandler,
+  HermesViewEventHandler,
+  HermesViewQueryHandler,
+} from "../handlers";
+import {
+  MongoViewRepository,
+  NoopMongoViewRepository,
+  NoopPostgresViewRepository,
+  NoopRedisViewRepository,
+  PostgresViewRepository,
+  RedisViewRepository,
+} from "../infrastructure";
+import {
+  IHermesMessage,
   IHermesMessageBus,
-  IHermesViewEventHandler,
+  IHermesRegistry,
   IHermesViewStore,
-  IView,
   IViewDomain,
+  IViewErrorHandler,
+  IViewEventHandler,
+  IViewModel,
 } from "../interfaces";
-import { HermesEvent } from "../messages";
-import { View } from "../models";
+import { ViewModel } from "../models";
+import { DispatchMessageSchema } from "../schemas/dispatch-command";
 import {
+  AggregateIdentifier,
   HandlerIdentifier,
+  HermesErrorData,
+  HermesMessageOptions,
   ViewDomainOptions,
-  ViewEventHandlerAdapter,
-  ViewEventHandlerContext,
+  ViewErrorCtx,
+  ViewErrorDispatchOptions,
+  ViewEventCtx,
+  ViewIdCtx,
   ViewIdentifier,
+  ViewQueryCtx,
+  ViewStoreSource,
 } from "../types";
 import { EventEmitterListener, EventEmitterViewData } from "../types/event-emitter";
+import { extractDataTransferObject, recoverError, recoverEvent } from "../utils/private";
 
 export class ViewDomain implements IViewDomain {
   private readonly eventEmitter: EventEmitter;
-  private readonly eventHandlers: Array<IHermesViewEventHandler>;
   private readonly logger: ILogger;
-  private errorBus: IHermesMessageBus;
-  private eventBus: IHermesMessageBus;
-  private store: IHermesViewStore;
+
+  private readonly commandBus: IHermesMessageBus;
+  private readonly errorBus: IHermesMessageBus;
+  private readonly eventBus: IHermesMessageBus;
+  private readonly mongo: IMongoSource | undefined;
+  private readonly postgres: IPostgresSource | undefined;
+  private readonly redis: IRedisSource | undefined;
+  private readonly registry: IHermesRegistry;
+  private readonly store: IHermesViewStore;
 
   public constructor(options: ViewDomainOptions) {
     this.eventEmitter = new EventEmitter();
     this.logger = options.logger.child(["ViewDomain"]);
 
+    this.commandBus = options.commandBus;
     this.errorBus = options.errorBus;
     this.eventBus = options.eventBus;
+    this.registry = options.registry;
     this.store = options.store;
 
-    this.eventHandlers = [];
+    this.mongo = options.mongo;
+    this.postgres = options.postgres;
+    this.redis = options.redis;
   }
 
   public on<D extends Dict = Dict>(evt: string, listener: EventEmitterListener<D>): void {
     this.eventEmitter.on(evt, listener);
   }
 
-  public async registerEventHandler<T extends ClassLike = ClassLike>(
-    eventHandler: IHermesViewEventHandler<T>,
-  ): Promise<void> {
-    this.logger.debug("Registering event handler", {
-      adapter: eventHandler.adapter,
-      name: eventHandler.eventName,
-      aggregate: eventHandler.aggregate,
-      view: eventHandler.view,
-    });
+  public async registerHandlers(): Promise<void> {
+    for (const handler of this.registry.viewErrorHandlers) {
+      this.logger.debug("Registering view error handler", {
+        aggregate: handler.aggregate,
+        error: handler.error,
+        view: handler.view,
+      });
 
-    if (!(eventHandler instanceof HermesViewEventHandler)) {
-      throw new LindormError("Invalid handler type", {
-        data: {
-          expect: "ViewEventHandler",
-          actual: typeof eventHandler,
-        },
+      await this.errorBus.subscribe({
+        callback: (message: IHermesMessage<HermesErrorData>) =>
+          this.handleError(message, handler.view),
+        queue: ViewDomain.getErrorQueue(handler),
+        topic: ViewDomain.getErrorTopic(handler),
+      });
+
+      this.logger.verbose("Error handler registered", {
+        aggregate: handler.aggregate,
+        error: handler.error,
+        view: handler.view,
       });
     }
 
-    const contexts = Array.isArray(eventHandler.aggregate.context)
-      ? eventHandler.aggregate.context
-      : [eventHandler.aggregate.context];
-
-    for (const context of contexts) {
-      const existingHandler = this.eventHandlers.some(
-        (x) =>
-          x.eventName === eventHandler.eventName &&
-          x.version === eventHandler.version &&
-          x.aggregate.name === eventHandler.aggregate.name &&
-          x.aggregate.context === eventHandler.aggregate.context &&
-          x.view.name === eventHandler.view.name &&
-          x.view.context === eventHandler.view.context,
-      );
-
-      if (existingHandler) {
-        throw new LindormError("Event handler has already been registered", {
-          debug: {
-            eventName: eventHandler.eventName,
-            version: eventHandler.version,
-            aggregate: {
-              name: eventHandler.aggregate.name,
-              context: eventHandler.aggregate.context,
-            },
-            view: {
-              name: eventHandler.view.name,
-              context: eventHandler.view.context,
-            },
-          },
-        });
-      }
-
-      this.eventHandlers.push(
-        new HermesViewEventHandler<T>({
-          eventName: eventHandler.eventName,
-          adapter: eventHandler.adapter,
-          aggregate: {
-            name: eventHandler.aggregate.name,
-            context: context,
-          },
-          conditions: eventHandler.conditions,
-          getViewId: eventHandler.getViewId,
-          handler: eventHandler.handler,
-          view: eventHandler.view,
-        }),
-      );
+    for (const handler of this.registry.viewEventHandlers) {
+      this.logger.debug("Registering view event handler", {
+        aggregate: handler.aggregate,
+        event: handler.event,
+        source: handler.source,
+        view: handler.view,
+      });
 
       await this.eventBus.subscribe({
-        callback: (message: HermesEvent) => this.handleEvent(message, eventHandler.view),
-        queue: ViewDomain.getQueue(context, eventHandler),
-        topic: ViewDomain.getTopic(context, eventHandler),
+        callback: (message: IHermesMessage) => this.handleEvent(message, handler.view),
+        queue: ViewDomain.getEventQueue(handler),
+        topic: ViewDomain.getEventTopic(handler),
       });
 
       this.logger.verbose("Event handler registered", {
-        eventName: eventHandler.eventName,
-        aggregate: {
-          name: eventHandler.aggregate.name,
-          context: context,
-        },
-        view: eventHandler.view,
+        aggregate: handler.aggregate,
+        event: handler.event,
+        source: handler.source,
+        view: handler.view,
       });
     }
   }
 
   public async inspect<S extends Dict = Dict>(
     viewIdentifier: ViewIdentifier,
-    adapter: ViewEventHandlerAdapter,
-  ): Promise<IView<S>> {
-    return (await this.store.load(viewIdentifier, adapter)) as IView<S>;
+    source: ViewStoreSource,
+  ): Promise<IViewModel<S>> {
+    return (await this.store.load(viewIdentifier, source)) as IViewModel<S>;
+  }
+
+  public async query<Q extends ClassLike, S extends Dict, R>(query: Q): Promise<R> {
+    this.logger.debug("Handling query", { query });
+
+    try {
+      const meta = this.registry.getQuery((query as ClassLike).constructor);
+
+      const handler = this.registry.viewQueryHandlers.find((x) => x.query === meta.name);
+
+      if (!(handler instanceof HermesViewQueryHandler)) {
+        throw new HandlerNotRegisteredError();
+      }
+
+      const ctx: ViewQueryCtx<Q, S> = {
+        query: structuredClone(query),
+        logger: this.logger.child(["QueryHandler"]),
+        repositories: {
+          mongo: this.mongo
+            ? new MongoViewRepository<S>(this.mongo, handler.view, this.logger)
+            : new NoopMongoViewRepository<S>(),
+          postgres: this.postgres
+            ? new PostgresViewRepository<S>(this.postgres, handler.view, this.logger)
+            : new NoopPostgresViewRepository<S>(),
+          redis: this.redis
+            ? new RedisViewRepository<S>(this.redis, handler.view, this.logger)
+            : new NoopRedisViewRepository<S>(),
+        },
+      };
+
+      return await handler.handler(ctx);
+    } catch (err: any) {
+      this.logger.error("Failed to handle query", err);
+      throw err;
+    }
   }
 
   // private
 
-  private async handleEvent(
-    event: HermesEvent,
+  private async dispatchCommand(
+    causation: IHermesMessage<HermesErrorData>,
+    message: ClassLike,
+    options: ViewErrorDispatchOptions = {},
+  ): Promise<void> {
+    this.logger.debug("Dispatch", { causation, message, options });
+
+    DispatchMessageSchema.parse({ causation, message, options });
+
+    const metadata = this.registry.getCommand(message.constructor);
+
+    if (!metadata) {
+      throw new Error(
+        `Cannot dispatch message of type ${message.constructor.name} - not registered`,
+      );
+    }
+
+    const aggregate: AggregateIdentifier = {
+      id: options.id || causation.aggregate.id,
+      name: metadata.aggregate.name,
+      context: metadata.aggregate.context,
+    };
+
+    const { name, data } = extractDataTransferObject(message);
+    const { delay, mandatory, meta = {} } = options;
+
+    await this.commandBus.publish(
+      this.commandBus.create(
+        merge<HermesMessageOptions, ViewErrorDispatchOptions>(
+          {
+            aggregate,
+            correlationId: causation.correlationId,
+            data,
+            meta: { ...causation.meta, ...meta },
+            name,
+          },
+          { delay, mandatory },
+        ),
+      ),
+    );
+  }
+
+  private getId(
+    message: IHermesMessage,
+    event: ClassLike,
+    handlerIdentifier: HandlerIdentifier,
+  ): string {
+    const idHandler = this.registry.viewIdHandlers.find(
+      (x) =>
+        x.aggregate.name === message.aggregate.name &&
+        x.aggregate.context === message.aggregate.context &&
+        x.event.name === message.name &&
+        x.event.version === message.version &&
+        x.view.name === handlerIdentifier.name &&
+        x.view.context === handlerIdentifier.context,
+    );
+
+    if (!idHandler) {
+      return message.aggregate.id;
+    }
+
+    const ctx: ViewIdCtx<ClassLike> = {
+      aggregate: message.aggregate,
+      event,
+      logger: this.logger.child(["ViewIdHandler"]),
+      meta: message.meta,
+      view: handlerIdentifier,
+    };
+
+    return idHandler.handler(ctx);
+  }
+
+  private async handleError(
+    message: IHermesMessage<HermesErrorData>,
     handlerIdentifier: HandlerIdentifier,
   ): Promise<void> {
-    this.logger.debug("Handling event", { event, viewIdentifier: handlerIdentifier });
+    this.logger.debug("Handling error", {
+      message,
+      handlerIdentifier,
+    });
+
+    const error = recoverError(message);
+    const event = recoverEvent(message.data.message);
+
+    const errorHandler = this.registry.viewErrorHandlers.find(
+      (x) =>
+        x.aggregate.name === message.aggregate.name &&
+        x.aggregate.context === message.aggregate.context &&
+        x.error === message.name &&
+        x.view.name === handlerIdentifier.name &&
+        x.view.context === handlerIdentifier.context,
+    );
+
+    if (!(errorHandler instanceof HermesViewErrorHandler)) {
+      throw new HandlerNotRegisteredError();
+    }
+
+    const ctx: ViewErrorCtx<typeof error> = {
+      error,
+      event,
+      logger: this.logger.child(["ViewErrorHandler"]),
+      message,
+      view: message.data.view!,
+
+      dispatch: this.dispatchCommand.bind(this, message),
+    };
+
+    try {
+      await errorHandler.handler(ctx);
+
+      this.logger.verbose("Handled error message", { message, error, event });
+    } catch (err: any) {
+      this.logger.error("Failed to handle error", err);
+    }
+  }
+
+  private async handleEvent(
+    message: IHermesMessage,
+    handlerIdentifier: HandlerIdentifier,
+  ): Promise<void> {
+    this.logger.debug("Handling event", {
+      message,
+      handlerIdentifier,
+    });
+
+    const event = recoverEvent(message);
 
     const conditionValidators = [];
 
-    const eventHandler = this.eventHandlers.find(
+    const eventHandler = this.registry.viewEventHandlers.find(
       (x) =>
-        x.eventName === event.name &&
-        x.version === event.version &&
-        x.aggregate.name === event.aggregate.name &&
-        x.aggregate.context === event.aggregate.context &&
+        x.aggregate.name === message.aggregate.name &&
+        x.aggregate.context === message.aggregate.context &&
+        x.event.name === message.name &&
+        x.event.version === message.version &&
         x.view.name === handlerIdentifier.name &&
         x.view.context === handlerIdentifier.context,
     );
@@ -167,14 +320,14 @@ export class ViewDomain implements IViewDomain {
       throw new HandlerNotRegisteredError();
     }
 
-    conditionValidators.push((view: IView) => {
+    conditionValidators.push((view: IViewModel) => {
       if (view.destroyed) {
         throw new ViewDestroyedError();
       }
     });
 
     if (eventHandler.conditions?.created === true) {
-      conditionValidators.push((view: IView) => {
+      conditionValidators.push((view: IViewModel) => {
         if (view.revision < 1) {
           throw new ViewNotCreatedError(eventHandler.conditions.permanent === true);
         }
@@ -182,7 +335,7 @@ export class ViewDomain implements IViewDomain {
     }
 
     if (eventHandler.conditions?.created === false) {
-      conditionValidators.push((view: IView) => {
+      conditionValidators.push((view: IViewModel) => {
         if (view.revision > 0) {
           throw new ViewAlreadyCreatedError(
             eventHandler.conditions.permanent === undefined ||
@@ -193,35 +346,44 @@ export class ViewDomain implements IViewDomain {
     }
 
     const viewIdentifier: ViewIdentifier = {
-      id: eventHandler.getViewId(event),
+      id: this.getId(message, event, handlerIdentifier),
       name: handlerIdentifier.name,
       context: handlerIdentifier.context,
     };
 
-    const data = await this.store.load(viewIdentifier, eventHandler.adapter);
+    const data = await this.store.load(viewIdentifier, eventHandler.source);
 
-    let view: IView = new View({ ...data, logger: this.logger });
+    let view: IViewModel = new ViewModel({
+      ...data,
+      logger: this.logger,
+    });
 
     this.logger.debug("View loaded", { view: view.toJSON() });
 
     const causations = await this.store.loadCausations(
       viewIdentifier,
-      eventHandler.adapter,
+      eventHandler.source,
     );
 
     const causationExists =
-      causations.includes(event.id) || view.processedCausationIds.includes(event.id);
+      causations.includes(message.id) || view.processedCausationIds.includes(message.id);
 
     this.logger.debug("Causation exists", { causationExists });
 
     try {
       if (!causationExists) {
-        view = await this.handleView(view, event, eventHandler, conditionValidators);
+        view = await this.handleView(
+          view,
+          message,
+          event,
+          eventHandler,
+          conditionValidators,
+        );
       }
 
       view = await this.processCausationIds(view, eventHandler);
 
-      this.logger.verbose("Handled event", { event, view: view.toJSON() });
+      this.logger.verbose("Handled event", { message, event, view: view.toJSON() });
 
       this.emit(view);
     } catch (err: any) {
@@ -234,7 +396,7 @@ export class ViewDomain implements IViewDomain {
       }
 
       if (err instanceof DomainError && err.permanent) {
-        return await this.rejectEvent(event, view, err);
+        return await this.publishError(message, event, view, err);
       }
 
       throw err;
@@ -242,32 +404,34 @@ export class ViewDomain implements IViewDomain {
   }
 
   private async handleView(
-    view: IView,
-    event: HermesEvent,
-    eventHandler: IHermesViewEventHandler,
-    conditionValidators: Array<(view: IView) => void>,
-  ): Promise<IView> {
+    view: IViewModel,
+    message: IHermesMessage,
+    event: ClassLike,
+    eventHandler: IViewEventHandler,
+    conditionValidators: Array<(view: IViewModel) => void>,
+  ): Promise<IViewModel> {
     const json = view.toJSON();
 
-    this.logger.debug("Handling View", { view: json, event });
+    this.logger.debug("Handling View", { view: json, event: message });
 
     for (const validator of conditionValidators) {
       validator(view);
     }
 
-    const ctx: ViewEventHandlerContext = {
-      event: structuredClone(event.data),
+    const ctx: ViewEventCtx<ClassLike, Dict> = {
+      event,
       logger: this.logger.child(["ViewEventHandler"]),
+      meta: message.meta,
       state: structuredClone(view.state),
 
-      destroy: view.destroy.bind(view, event),
-      mergeState: view.mergeState.bind(view, event),
-      setState: view.setState.bind(view, event),
+      destroy: view.destroy.bind(view, message),
+      mergeState: view.mergeState.bind(view, message),
+      setState: view.setState.bind(view, message),
     };
 
     await eventHandler.handler(ctx);
 
-    const data = await this.store.save(view, event, eventHandler.adapter);
+    const data = await this.store.save(view, message, eventHandler.source);
 
     this.logger.debug("Saved view at new revision", {
       id: data.id,
@@ -276,13 +440,13 @@ export class ViewDomain implements IViewDomain {
       revision: data.revision,
     });
 
-    return new View({ ...data, logger: this.logger });
+    return new ViewModel({ ...data, logger: this.logger });
   }
 
   private async processCausationIds(
-    view: IView,
-    eventHandler: IHermesViewEventHandler,
-  ): Promise<IView> {
+    view: IViewModel,
+    eventHandler: IViewEventHandler,
+  ): Promise<IViewModel> {
     if (!view.processedCausationIds.length) {
       return view;
     }
@@ -298,36 +462,38 @@ export class ViewDomain implements IViewDomain {
       processedCausationIds: view.processedCausationIds,
     });
 
-    const data = await this.store.saveCausations(view, eventHandler.adapter);
+    const data = await this.store.saveCausations(view, eventHandler.source);
 
-    return new View({ ...data, logger: this.logger });
+    return new ViewModel({ ...data, logger: this.logger });
   }
 
-  private async rejectEvent(
-    event: HermesEvent,
-    view: IView,
+  private async publishError(
+    message: IHermesMessage,
+    event: ClassLike,
+    view: IViewModel,
     error: DomainError,
   ): Promise<void> {
     try {
-      this.logger.debug("Rejecting event", { event, view, error });
+      this.logger.debug("Rejecting event", { event: message, view, error });
 
       await this.errorBus.publish(
         this.errorBus.create({
           data: {
-            error,
-            message: event,
+            error: error.toJSON ? error.toJSON() : { ...error },
+            event,
+            message: message,
             view: { id: view.id, name: view.name, context: view.context },
           },
-          aggregate: event.aggregate,
-          causationId: event.id,
-          correlationId: event.correlationId,
+          aggregate: message.aggregate,
+          causationId: message.id,
+          correlationId: message.correlationId,
           mandatory: false,
-          meta: event.meta,
+          meta: message.meta,
           name: snakeCase(error.name),
         }),
       );
 
-      this.logger.verbose("Rejected event", { event, view, error });
+      this.logger.verbose("Rejected event", { event: message, view, error });
     } catch (err: any) {
       this.logger.warn("Failed to reject event", err);
 
@@ -335,7 +501,7 @@ export class ViewDomain implements IViewDomain {
     }
   }
 
-  private emit<S extends Dict = Dict>(view: IView<S>): void {
+  private emit<S extends Dict = Dict>(view: IViewModel<S>): void {
     const data: EventEmitterViewData<S> = {
       id: view.id,
       name: view.name,
@@ -353,17 +519,19 @@ export class ViewDomain implements IViewDomain {
 
   // private static
 
-  private static getQueue<T extends ClassLike = ClassLike>(
-    context: string,
-    eventHandler: HermesViewEventHandler<T>,
-  ): string {
-    return `queue.view.${context}.${eventHandler.aggregate.name}.${eventHandler.eventName}.${eventHandler.view.context}.${eventHandler.view.name}`;
+  private static getErrorQueue(handler: IViewErrorHandler): string {
+    return `queue.view.${handler.aggregate.context}.${handler.aggregate.name}.${handler.error}.${handler.view.context}.${handler.view.name}`;
   }
 
-  private static getTopic<T extends ClassLike = ClassLike>(
-    context: string,
-    eventHandler: HermesViewEventHandler<T>,
-  ): string {
-    return `${context}.${eventHandler.aggregate.name}.${eventHandler.eventName}`;
+  private static getErrorTopic(handler: IViewErrorHandler): string {
+    return `${handler.aggregate.context}.${handler.aggregate.name}.${handler.error}`;
+  }
+
+  private static getEventQueue(handler: IViewEventHandler): string {
+    return `queue.view.${handler.aggregate.context}.${handler.aggregate.name}.${handler.event.name}.${handler.view.context}.${handler.view.name}`;
+  }
+
+  private static getEventTopic(handler: IViewEventHandler): string {
+    return `${handler.aggregate.context}.${handler.aggregate.name}.${handler.event.name}`;
   }
 }

@@ -1,3 +1,4 @@
+export * from "./decorators";
 export * from "./domain";
 export * from "./handlers";
 export * from "./infrastructure";
@@ -9,4 +10,5 @@ export * from "./hermes";
 export * from "./identifiers";
 export * from "./messages";
 export * from "./middleware";
+export * from "./registry";
 export * from "./scanner";

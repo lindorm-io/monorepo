@@ -32,6 +32,8 @@ export class RedisViewRepository<S extends Dict = Dict>
     criteria: RedisFindCriteria<S> = {},
   ): Promise<Array<ViewRepositoryAttributes<S>>> {
     const keys = await this.scanKeys();
+    if (!keys.length) return [];
+
     const data = await this.source.client.mget(...keys);
 
     const collection = data

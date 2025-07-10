@@ -1,6 +1,8 @@
+import { NameData } from "../../utils/private";
 import { HandlerIdentifier } from "../identifiers";
 
 export type ChecksumEventHandlerOptions = {
   aggregate: HandlerIdentifier;
-  eventName: string;
+  event: NameData;
+  key: string;
 };

@@ -1,8 +1,8 @@
+import { subDays } from "@lindorm/date";
 import { createMockLogger } from "@lindorm/logger";
 import { IMongoSource, MongoSource } from "@lindorm/mongo";
 import { randomUUID } from "crypto";
-import { subDays } from "@lindorm/date";
-import { TEST_AGGREGATE_IDENTIFIER } from "../../__fixtures__/aggregate";
+import { createTestAggregateIdentifier } from "../../__fixtures__/create-test-aggregate-identifier";
 import { EVENT_STORE } from "../../constants/private";
 import { IEventStore } from "../../interfaces";
 import {
@@ -46,9 +46,10 @@ const find = async (
 };
 
 describe("MongoEventStore", () => {
+  const namespace = "mon_eve_sto";
   const logger = createMockLogger();
 
-  let aggregateIdentifier: AggregateIdentifier;
+  let aggregate: AggregateIdentifier;
   let attributes: EventStoreAttributes;
   let causationId: string;
   let source: IMongoSource;
@@ -67,13 +68,13 @@ describe("MongoEventStore", () => {
   }, 10000);
 
   beforeEach(() => {
+    aggregate = createTestAggregateIdentifier(namespace);
     causationId = randomUUID();
-    aggregateIdentifier = { ...TEST_AGGREGATE_IDENTIFIER, id: randomUUID() };
 
     const data: EventStoreAttributes = {
-      aggregate_id: aggregateIdentifier.id,
-      aggregate_name: aggregateIdentifier.name,
-      aggregate_context: aggregateIdentifier.context,
+      aggregate_id: aggregate.id,
+      aggregate_name: aggregate.name,
+      aggregate_context: aggregate.context,
       causation_id: causationId,
       checksum: "",
       correlation_id: randomUUID(),
@@ -106,9 +107,9 @@ describe("MongoEventStore", () => {
 
     await expect(
       store.find({
-        id: aggregateIdentifier.id,
-        name: aggregateIdentifier.name,
-        context: aggregateIdentifier.context,
+        id: aggregate.id,
+        name: aggregate.name,
+        context: aggregate.context,
         causation_id: causationId,
       }),
     ).resolves.toEqual([attributes]);
@@ -117,7 +118,7 @@ describe("MongoEventStore", () => {
   test("should insert events", async () => {
     await expect(store.insert([attributes])).resolves.not.toThrow();
 
-    await expect(find(source, { ...aggregateIdentifier })).resolves.toEqual([attributes]);
+    await expect(find(source, { ...aggregate })).resolves.toEqual([attributes]);
   });
 
   test("should list events", async () => {

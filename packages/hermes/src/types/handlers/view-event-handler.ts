@@ -1,41 +1,26 @@
 import { ILogger } from "@lindorm/logger";
-import { ClassLike, Dict } from "@lindorm/types";
-import { ViewStoreType } from "../../enums";
-import { IHermesMessage } from "../../interfaces";
-import { HandlerIdentifier, HandlerIdentifierMultipleContexts } from "../identifiers";
-import { HandlerConditions } from "./handler";
+import { ClassLike, DeepPartial, Dict } from "@lindorm/types";
+import { NameData } from "../../utils/private";
+import { HandlerIdentifier } from "../identifiers";
+import { ViewStoreSource } from "../infrastructure";
+import { HandlerConditions } from "./conditions";
 
-export type ViewEventHandlerContext<
-  E extends ClassLike = ClassLike,
-  S extends Dict = Dict,
-> = {
+export type ViewEventCtx<E extends ClassLike, S extends Dict> = {
   event: E;
   logger: ILogger;
+  meta: Dict;
   state: S;
   destroy(): void;
-  mergeState(data: Partial<S>): void;
+  mergeState(data: DeepPartial<S>): void;
   setState(state: S): void;
 };
 
-export type ViewEventHandlerFileAggregate = {
-  name?: string;
-  context?: Array<string> | string;
-};
-
-export type ViewEventHandlerAdapter = {
-  type: ViewStoreType;
-};
-
-export type ViewEventHandlerOptions<
-  E extends ClassLike = ClassLike,
-  S extends Dict = Dict,
-> = {
-  adapter: ViewEventHandlerAdapter;
-  aggregate: HandlerIdentifierMultipleContexts;
+export type ViewEventHandlerOptions<C extends ClassLike, S extends Dict> = {
+  aggregate: HandlerIdentifier;
   conditions?: HandlerConditions;
-  eventName: string;
-  version?: number;
+  event: NameData;
+  key: string;
+  source: ViewStoreSource;
   view: HandlerIdentifier;
-  getViewId?(event: IHermesMessage<E>): string;
-  handler(ctx: ViewEventHandlerContext<E, S>): Promise<void>;
+  handler(ctx: ViewEventCtx<C, S>): Promise<void>;
 };

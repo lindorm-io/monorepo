@@ -1,9 +1,8 @@
-import { snakeCase } from "@lindorm/case";
-import { ClassLike, Dict } from "@lindorm/types";
+import { Constructor, Dict } from "@lindorm/types";
 import { ZodSchema } from "zod";
-import { IHermesAggregateCommandHandler } from "../interfaces";
+import { IAggregateCommandHandler } from "../interfaces";
 import {
-  AggregateCommandHandlerContext,
+  AggregateCommandCallback,
   AggregateCommandHandlerOptions,
   HandlerConditions,
   HandlerIdentifier,
@@ -11,31 +10,28 @@ import {
 import { verifyIdentifierLength } from "../utils/private";
 
 export class HermesAggregateCommandHandler<
-  C extends ClassLike = ClassLike,
-  E extends ClassLike = ClassLike,
+  C extends Constructor = Constructor,
   S extends Dict = Dict,
-> implements IHermesAggregateCommandHandler<C, E, S>
+> implements IAggregateCommandHandler<C, S>
 {
   public readonly aggregate: HandlerIdentifier;
-  public readonly commandName: string;
+  public readonly command: string;
   public readonly conditions: HandlerConditions;
   public readonly encryption: boolean;
+  public readonly key: string;
   public readonly schema: ZodSchema | undefined;
-  public readonly version: number;
-  public readonly handler: (
-    ctx: AggregateCommandHandlerContext<C, E, S>,
-  ) => Promise<void>;
+  public readonly handler: AggregateCommandCallback<C, S>;
 
-  public constructor(options: AggregateCommandHandlerOptions<C, E, S>) {
+  public constructor(options: AggregateCommandHandlerOptions<C, S>) {
     this.aggregate = {
-      name: snakeCase(options.aggregate.name),
-      context: snakeCase(options.aggregate.context),
+      name: options.aggregate.name,
+      context: options.aggregate.context,
     };
-    this.commandName = snakeCase(options.commandName);
+    this.key = options.key;
+    this.command = options.command;
     this.conditions = options.conditions || {};
     this.encryption = options.encryption ?? false;
     this.schema = options.schema;
-    this.version = options.version || 1;
     this.handler = options.handler;
 
     verifyIdentifierLength(options.aggregate);

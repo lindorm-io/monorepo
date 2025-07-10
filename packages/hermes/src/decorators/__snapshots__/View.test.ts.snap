@@ -1,0 +1,27 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`View Decorator should add metadata 1`] = `
+{
+  "aggregates": [
+    [Function],
+  ],
+  "handlers": [],
+  "name": "test_view",
+  "namespace": null,
+  "source": "mongo",
+  "target": [Function],
+}
+`;
+
+exports[`View Decorator should add metadata with custom options 1`] = `
+{
+  "aggregates": [
+    [Function],
+  ],
+  "handlers": [],
+  "name": "custom_name",
+  "namespace": "custom_namespace",
+  "source": "mongo",
+  "target": [Function],
+}
+`;

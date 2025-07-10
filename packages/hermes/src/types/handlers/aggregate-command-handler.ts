@@ -2,29 +2,22 @@ import { ILogger } from "@lindorm/logger";
 import { ClassLike, Dict } from "@lindorm/types";
 import { ZodSchema } from "zod";
 import { HandlerIdentifier } from "../identifiers";
-import { HandlerConditions } from "./handler";
+import { HandlerConditions } from "./conditions";
 
-export type AggregateCommandHandlerContext<
-  C extends ClassLike = ClassLike,
-  E extends ClassLike = ClassLike,
-  S extends Dict = Dict,
-> = {
+export type AggregateCommandCtx<C extends ClassLike, S extends Dict> = {
   command: C;
   logger: ILogger;
+  meta: Dict;
   state: S;
-  apply(event: E): Promise<void>;
+  apply(event: ClassLike): Promise<void>;
 };
 
-export type AggregateCommandHandlerOptions<
-  C extends ClassLike = ClassLike,
-  E extends ClassLike = ClassLike,
-  S extends Dict = Dict,
-> = {
+export type AggregateCommandHandlerOptions<C extends ClassLike, S extends Dict> = {
   aggregate: HandlerIdentifier;
-  commandName: string;
+  command: string;
   conditions?: HandlerConditions;
   encryption?: boolean;
+  key: string;
   schema?: ZodSchema;
-  version?: number;
-  handler(ctx: AggregateCommandHandlerContext<C, E, S>): Promise<void>;
+  handler(ctx: AggregateCommandCtx<C, S>): Promise<void>;
 };

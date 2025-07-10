@@ -15,7 +15,7 @@ import { AggregateIdentifier } from "../types";
 @Topic(
   (message) => `${message.aggregate.context}.${message.aggregate.name}.${message.name}`,
 )
-export class HermesMessage<D extends Dict = Dict, M extends Dict = Dict>
+export class HermesMessage<D = Dict, M extends Dict = Dict>
   extends MessageBase
   implements IHermesMessage<D>
 {

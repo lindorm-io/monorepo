@@ -1,0 +1,25 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ViewErrorHandler Decorator should add metadata 1`] = `
+{
+  "aggregates": [
+    [Function],
+  ],
+  "handlers": [
+    {
+      "conditions": null,
+      "decorator": "ViewErrorHandler",
+      "encryption": false,
+      "handler": [Function],
+      "key": "onTestViewDomainError",
+      "schema": null,
+      "target": [Function],
+      "trigger": [Function],
+    },
+  ],
+  "name": "test_view_error_handler_view",
+  "namespace": null,
+  "source": "mongo",
+  "target": [Function],
+}
+`;

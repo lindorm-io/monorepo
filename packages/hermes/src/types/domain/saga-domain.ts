@@ -1,11 +1,14 @@
 import { ILogger } from "@lindorm/logger";
-import { IHermesMessageBus, IHermesSagaStore } from "../../interfaces";
+import { Dict } from "@lindorm/types";
+import { IHermesMessageBus, IHermesRegistry, IHermesSagaStore } from "../../interfaces";
+import { HermesCommand, HermesError, HermesEvent, HermesTimeout } from "../../messages";
 
 export type SagaDomainOptions = {
-  commandBus: IHermesMessageBus;
-  errorBus: IHermesMessageBus;
-  eventBus: IHermesMessageBus;
+  commandBus: IHermesMessageBus<HermesCommand<Dict>>;
+  errorBus: IHermesMessageBus<HermesError>;
+  eventBus: IHermesMessageBus<HermesEvent>;
   logger: ILogger;
   store: IHermesSagaStore;
-  timeoutBus: IHermesMessageBus;
+  timeoutBus: IHermesMessageBus<HermesTimeout>;
+  registry: IHermesRegistry;
 };

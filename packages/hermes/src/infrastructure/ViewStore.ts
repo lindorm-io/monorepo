@@ -1,13 +1,13 @@
 import { LindormError } from "@lindorm/errors";
 import { ILogger } from "@lindorm/logger";
 import { ViewStoreType } from "../enums";
-import { IHermesMessage, IHermesViewStore, IView, IViewStore } from "../interfaces";
+import { IHermesMessage, IHermesViewStore, IViewModel, IViewStore } from "../interfaces";
 import {
   HermesViewStoreOptions,
   ViewData,
-  ViewEventHandlerAdapter,
   ViewIdentifier,
   ViewStoreAttributes,
+  ViewStoreSource,
   ViewUpdateAttributes,
   ViewUpdateFilter,
 } from "../types";
@@ -43,11 +43,11 @@ export class ViewStore implements IHermesViewStore {
 
   public async load(
     viewIdentifier: ViewIdentifier,
-    adapter: ViewEventHandlerAdapter,
+    source: ViewStoreSource,
   ): Promise<ViewData> {
     this.logger.debug("Loading view", { viewIdentifier });
 
-    const existing = await this.store(adapter).findView({
+    const existing = await this.store(source).findView({
       id: viewIdentifier.id,
       name: viewIdentifier.name,
       context: viewIdentifier.context,
@@ -75,15 +75,15 @@ export class ViewStore implements IHermesViewStore {
 
   public async loadCausations(
     viewIdentifier: ViewIdentifier,
-    adapter: ViewEventHandlerAdapter,
+    source: ViewStoreSource,
   ): Promise<Array<string>> {
-    return await this.store(adapter).findCausationIds(viewIdentifier);
+    return await this.store(source).findCausationIds(viewIdentifier);
   }
 
   public async save(
-    view: IView,
+    view: IViewModel,
     causation: IHermesMessage,
-    adapter: ViewEventHandlerAdapter,
+    source: ViewStoreSource,
   ): Promise<ViewData> {
     this.logger.debug("Saving view", { view: view.toJSON(), causation });
 
@@ -93,7 +93,7 @@ export class ViewStore implements IHermesViewStore {
       context: view.context,
     };
 
-    const existing = await this.store(adapter).findView(viewIdentifier);
+    const existing = await this.store(source).findView(viewIdentifier);
 
     if (existing) {
       if (existing.processed_causation_ids.includes(causation.id)) {
@@ -102,7 +102,7 @@ export class ViewStore implements IHermesViewStore {
         return ViewStore.toData(existing);
       }
 
-      const causations = await this.store(adapter).findCausationIds(viewIdentifier);
+      const causations = await this.store(source).findCausationIds(viewIdentifier);
 
       if (causations.includes(causation.id)) {
         this.logger.debug("Found existing view matching causation", { existing });
@@ -118,7 +118,7 @@ export class ViewStore implements IHermesViewStore {
         revision: view.revision + 1,
       };
 
-      await this.store(adapter).insertView(ViewStore.toAttributes(data));
+      await this.store(source).insertView(ViewStore.toAttributes(data));
 
       return data;
     }
@@ -138,7 +138,7 @@ export class ViewStore implements IHermesViewStore {
       state: view.state,
     };
 
-    await this.store(adapter).updateView(filter, attributes);
+    await this.store(source).updateView(filter, attributes);
 
     return {
       ...view.toJSON(),
@@ -151,8 +151,8 @@ export class ViewStore implements IHermesViewStore {
   }
 
   public async saveCausations(
-    view: IView,
-    adapter: ViewEventHandlerAdapter,
+    view: IViewModel,
+    source: ViewStoreSource,
   ): Promise<ViewData> {
     this.logger.debug("Saving causations", { view: view.toJSON() });
 
@@ -167,12 +167,12 @@ export class ViewStore implements IHermesViewStore {
       context: view.context,
     };
 
-    const causations = await this.store(adapter).findCausationIds(viewIdentifier);
+    const causations = await this.store(source).findCausationIds(viewIdentifier);
     const insert = view.processedCausationIds.filter((id) => !causations.includes(id));
 
     if (insert.length) {
       this.logger.debug("Inserting causations", { insert });
-      await this.store(adapter).insertCausationIds(viewIdentifier, insert);
+      await this.store(source).insertCausationIds(viewIdentifier, insert);
     }
 
     const filter: ViewUpdateFilter = {
@@ -190,7 +190,7 @@ export class ViewStore implements IHermesViewStore {
       state: view.state,
     };
 
-    await this.store(adapter).updateView(filter, attributes);
+    await this.store(source).updateView(filter, attributes);
 
     return {
       ...view.toJSON(),
@@ -204,8 +204,8 @@ export class ViewStore implements IHermesViewStore {
 
   // private
 
-  private store(adapter: ViewEventHandlerAdapter): IViewStore {
-    switch (adapter.type) {
+  private store(source: ViewStoreSource): IViewStore {
+    switch (source) {
       case ViewStoreType.Custom:
         if (!this.custom) {
           this.logger.error("Custom ViewStore not provided");

@@ -1,0 +1,24 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`SagaIdHandler Decorator should add metadata 1`] = `
+{
+  "aggregates": [
+    [Function],
+  ],
+  "handlers": [
+    {
+      "conditions": null,
+      "decorator": "SagaIdHandler",
+      "encryption": false,
+      "handler": [Function],
+      "key": "getIdTestSagaIdentityHandlerEvent",
+      "schema": null,
+      "target": [Function],
+      "trigger": [Function],
+    },
+  ],
+  "name": "test_saga_identity_handler_saga",
+  "namespace": null,
+  "target": [Function],
+}
+`;

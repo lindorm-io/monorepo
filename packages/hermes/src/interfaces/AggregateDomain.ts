@@ -1,13 +1,10 @@
 import { Dict } from "@lindorm/types";
 import { AggregateIdentifier } from "../types";
-import { IAggregate } from "./Aggregate";
-import { IHermesAggregateCommandHandler } from "./AggregateCommandHandler";
-import { IHermesAggregateEventHandler } from "./AggregateEventHandler";
+import { IAggregateModel } from "./AggregateModel";
 
 export interface IAggregateDomain {
-  registerCommandHandler(handler: IHermesAggregateCommandHandler): Promise<void>;
-  registerEventHandler(handler: IHermesAggregateEventHandler): Promise<void>;
+  registerHandlers(): Promise<void>;
   inspect<S extends Dict = Dict>(
     aggregateIdentifier: AggregateIdentifier,
-  ): Promise<IAggregate<S>>;
+  ): Promise<IAggregateModel<S>>;
 }

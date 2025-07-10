@@ -1,7 +1,7 @@
 import { createMockLogger } from "@lindorm/logger";
 import { IPostgresSource, PostgresSource } from "@lindorm/postgres";
 import { randomUUID } from "crypto";
-import { TEST_AGGREGATE_IDENTIFIER } from "../../__fixtures__/aggregate";
+import { createTestAggregateIdentifier } from "../../__fixtures__/create-test-aggregate-identifier";
 import { CHECKSUM_STORE } from "../../constants/private";
 import { IChecksumStore } from "../../interfaces";
 import { AggregateIdentifier, ChecksumStoreAttributes } from "../../types";
@@ -31,12 +31,13 @@ const find = async (
 };
 
 describe("PostgresChecksumStore", () => {
+  const namespace = "pg_che_sto";
   const logger = createMockLogger();
 
+  let aggregate: AggregateIdentifier;
   let attributes: ChecksumStoreAttributes;
-  let source: IPostgresSource;
   let eventId: string;
-  let identifier: AggregateIdentifier;
+  let source: IPostgresSource;
   let store: IChecksumStore;
 
   beforeAll(async () => {
@@ -55,9 +56,9 @@ describe("PostgresChecksumStore", () => {
 
   beforeEach(() => {
     eventId = randomUUID();
-    identifier = { ...TEST_AGGREGATE_IDENTIFIER, id: randomUUID() };
+    aggregate = createTestAggregateIdentifier(namespace);
     attributes = {
-      ...identifier,
+      ...aggregate,
       event_id: eventId,
       checksum: "checksum",
       created_at: new Date(),
@@ -73,7 +74,7 @@ describe("PostgresChecksumStore", () => {
 
     await expect(
       store.find({
-        ...identifier,
+        ...aggregate,
         event_id: eventId,
       }),
     ).resolves.toEqual(
@@ -87,7 +88,7 @@ describe("PostgresChecksumStore", () => {
   test("should insert checksum", async () => {
     await expect(store.insert(attributes)).resolves.toBeUndefined();
 
-    await expect(find(source, { ...identifier })).resolves.toEqual([
+    await expect(find(source, { ...aggregate })).resolves.toEqual([
       expect.objectContaining({
         event_id: eventId,
         checksum: "checksum",

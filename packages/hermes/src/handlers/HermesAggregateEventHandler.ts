@@ -1,30 +1,29 @@
-import { snakeCase } from "@lindorm/case";
-import { ClassLike, Dict } from "@lindorm/types";
-import { IHermesAggregateEventHandler } from "../interfaces";
+import { Constructor, Dict } from "@lindorm/types";
+import { IAggregateEventHandler } from "../interfaces";
 import {
-  AggregateEventHandlerContext,
+  AggregateEventCallback,
   AggregateEventHandlerOptions,
   HandlerIdentifier,
 } from "../types";
-import { verifyIdentifierLength } from "../utils/private";
+import { NameData, verifyIdentifierLength } from "../utils/private";
 
 export class HermesAggregateEventHandler<
-  E extends ClassLike = ClassLike,
+  C extends Constructor = Constructor,
   S extends Dict = Dict,
-> implements IHermesAggregateEventHandler<E, S>
+> implements IAggregateEventHandler<C, S>
 {
   public readonly aggregate: HandlerIdentifier;
-  public readonly eventName: string;
-  public readonly version: number;
-  public readonly handler: (ctx: AggregateEventHandlerContext<E, S>) => Promise<void>;
+  public readonly event: NameData;
+  public readonly key: string;
+  public readonly handler: AggregateEventCallback<C, S>;
 
-  public constructor(options: AggregateEventHandlerOptions<E, S>) {
+  public constructor(options: AggregateEventHandlerOptions<C, S>) {
     this.aggregate = {
-      name: snakeCase(options.aggregate.name),
-      context: snakeCase(options.aggregate.context),
+      name: options.aggregate.name,
+      context: options.aggregate.context,
     };
-    this.eventName = snakeCase(options.eventName);
-    this.version = options.version || 1;
+    this.event = options.event;
+    this.key = options.key;
     this.handler = options.handler;
 
     verifyIdentifierLength(options.aggregate);

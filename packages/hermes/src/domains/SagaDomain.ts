@@ -1,7 +1,7 @@
 import { snakeCase } from "@lindorm/case";
-import { LindormError } from "@lindorm/errors";
 import { ILogger } from "@lindorm/logger";
 import { ClassLike, Dict } from "@lindorm/types";
+import merge from "deepmerge";
 import EventEmitter from "events";
 import {
   ConcurrencyError,
@@ -11,33 +11,56 @@ import {
   SagaDestroyedError,
   SagaNotCreatedError,
 } from "../errors";
-import { HermesSagaEventHandler } from "../handlers";
 import {
+  HermesSagaErrorHandler,
+  HermesSagaEventHandler,
+  HermesSagaTimeoutHandler,
+} from "../handlers";
+import {
+  IHermesMessage,
   IHermesMessageBus,
-  IHermesSagaEventHandler,
+  IHermesRegistry,
   IHermesSagaStore,
-  ISaga,
   ISagaDomain,
+  ISagaErrorHandler,
+  ISagaEventHandler,
+  ISagaModel,
+  ISagaTimeoutHandler,
 } from "../interfaces";
-import { HermesCommand, HermesError, HermesEvent, HermesTimeout } from "../messages";
-import { Saga } from "../models";
+import { HermesCommand, HermesError, HermesTimeout } from "../messages";
+import { SagaModel } from "../models";
+import { DispatchMessageSchema } from "../schemas/dispatch-command";
 import {
+  AggregateIdentifier,
   HandlerIdentifier,
+  HermesErrorData,
+  HermesMessageOptions,
   SagaDomainOptions,
-  SagaEventHandlerContext,
+  SagaErrorCtx,
+  SagaErrorDispatchOptions,
+  SagaEventCtx,
+  SagaIdCtx,
   SagaIdentifier,
+  SagaTimeoutCtx,
 } from "../types";
 import { EventEmitterListener, EventEmitterSagaData } from "../types/event-emitter";
+import {
+  extractDataTransferObject,
+  recoverError,
+  recoverEvent,
+  recoverTimeout,
+} from "../utils/private";
 
 export class SagaDomain implements ISagaDomain {
   private readonly eventEmitter: EventEmitter;
-  private readonly eventHandlers: Array<IHermesSagaEventHandler>;
   private readonly logger: ILogger;
+
   private readonly commandBus: IHermesMessageBus;
   private readonly errorBus: IHermesMessageBus;
   private readonly eventBus: IHermesMessageBus;
+  private readonly registry: IHermesRegistry;
+  private readonly store: IHermesSagaStore;
   private readonly timeoutBus: IHermesMessageBus;
-  private store: IHermesSagaStore;
 
   public constructor(options: SagaDomainOptions) {
     this.eventEmitter = new EventEmitter();
@@ -46,119 +69,219 @@ export class SagaDomain implements ISagaDomain {
     this.commandBus = options.commandBus;
     this.errorBus = options.errorBus;
     this.eventBus = options.eventBus;
-    this.timeoutBus = options.timeoutBus;
+    this.registry = options.registry;
     this.store = options.store;
-
-    this.eventHandlers = [];
+    this.timeoutBus = options.timeoutBus;
   }
 
   public on<D extends Dict = Dict>(evt: string, listener: EventEmitterListener<D>): void {
     this.eventEmitter.on(evt, listener);
   }
 
-  public async registerEventHandler<T extends ClassLike = ClassLike>(
-    eventHandler: IHermesSagaEventHandler<T>,
-  ): Promise<void> {
-    this.logger.debug("Registering event handler", {
-      name: eventHandler.eventName,
-      aggregate: eventHandler.aggregate,
-      saga: eventHandler.saga,
-    });
+  public async registerHandlers(): Promise<void> {
+    for (const handler of this.registry.sagaErrorHandlers) {
+      this.logger.debug("Registering saga error handler", {
+        aggregate: handler.aggregate,
+        error: handler.error,
+        saga: handler.saga,
+      });
 
-    if (!(eventHandler instanceof HermesSagaEventHandler)) {
-      throw new LindormError("Invalid handler type", {
-        data: {
-          expect: HermesSagaEventHandler.name,
-          actual: typeof eventHandler,
-        },
+      await this.errorBus.subscribe({
+        callback: (message: IHermesMessage<HermesErrorData>) =>
+          this.handleError(message, handler.saga),
+        queue: SagaDomain.getErrorQueue(handler),
+        topic: SagaDomain.getErrorTopic(handler),
+      });
+
+      this.logger.verbose("Error handler registered", {
+        aggregate: handler.aggregate,
+        error: handler.error,
+        saga: handler.saga,
       });
     }
 
-    const contexts = Array.isArray(eventHandler.aggregate.context)
-      ? eventHandler.aggregate.context
-      : [eventHandler.aggregate.context];
-
-    for (const context of contexts) {
-      const existingHandler = this.eventHandlers.some(
-        (x) =>
-          x.eventName === eventHandler.eventName &&
-          x.version === eventHandler.version &&
-          x.aggregate.name === eventHandler.aggregate.name &&
-          x.aggregate.context === context &&
-          x.saga.name === eventHandler.saga.name &&
-          x.saga.context === eventHandler.saga.context,
-      );
-
-      if (existingHandler) {
-        throw new LindormError("Event handler has already been registered", {
-          debug: {
-            eventName: eventHandler.eventName,
-            version: eventHandler.version,
-            aggregate: {
-              name: eventHandler.aggregate.name,
-              context: eventHandler.aggregate.context,
-            },
-            saga: {
-              name: eventHandler.saga.name,
-              context: eventHandler.saga.context,
-            },
-          },
-        });
-      }
-
-      this.eventHandlers.push(
-        new HermesSagaEventHandler({
-          eventName: eventHandler.eventName,
-          aggregate: {
-            name: eventHandler.aggregate.name,
-            context,
-          },
-          conditions: eventHandler.conditions,
-          getSagaId: eventHandler.getSagaId,
-          handler: eventHandler.handler,
-          saga: eventHandler.saga,
-        }),
-      );
+    for (const handler of this.registry.sagaEventHandlers) {
+      this.logger.debug("Registering saga event handler", {
+        aggregate: handler.aggregate,
+        event: handler.event,
+        saga: handler.saga,
+      });
 
       await this.eventBus.subscribe({
-        callback: (event: HermesEvent) => this.handleEvent(event, eventHandler.saga),
-        queue: SagaDomain.getQueue(context, eventHandler),
-        topic: SagaDomain.getTopic(context, eventHandler),
+        callback: (event: IHermesMessage) => this.handleEvent(event, handler.saga),
+        queue: SagaDomain.getEventQueue(handler),
+        topic: SagaDomain.getEventTopic(handler),
       });
 
       this.logger.verbose("Event handler registered", {
-        eventName: eventHandler.eventName,
-        aggregate: {
-          name: eventHandler.aggregate.name,
-          context,
-        },
-        saga: eventHandler.saga,
+        aggregate: handler.aggregate,
+        event: handler.event,
+        saga: handler.saga,
+      });
+    }
+
+    for (const handler of this.registry.sagaTimeoutHandlers) {
+      this.logger.debug("Registering saga timeout handler", {
+        aggregate: handler.aggregate,
+        saga: handler.saga,
+        timeout: handler.timeout,
+      });
+
+      await this.timeoutBus.subscribe({
+        callback: (event: IHermesMessage) => this.handleTimeout(event, handler.saga),
+        queue: SagaDomain.getTimeoutQueue(handler),
+        topic: SagaDomain.getTimeoutTopic(handler),
+      });
+
+      this.logger.verbose("Timeout handler registered", {
+        aggregate: handler.aggregate,
+        saga: handler.saga,
+        timeout: handler.timeout,
       });
     }
   }
 
   public async inspect<S extends Dict = Dict>(
     sagaIdentifier: SagaIdentifier,
-  ): Promise<ISaga<S>> {
-    return (await this.store.load(sagaIdentifier)) as ISaga<S>;
+  ): Promise<ISagaModel<S>> {
+    return (await this.store.load(sagaIdentifier)) as ISagaModel<S>;
   }
 
   // private
 
-  private async handleEvent(
-    event: HermesEvent,
+  private async dispatchCommand(
+    causation: IHermesMessage<HermesErrorData>,
+    message: ClassLike,
+    options: SagaErrorDispatchOptions = {},
+  ): Promise<void> {
+    this.logger.debug("Dispatch", { causation, message, options });
+
+    DispatchMessageSchema.parse({ causation, message, options });
+
+    const metadata = this.registry.getCommand(message.constructor);
+
+    if (!metadata) {
+      throw new Error(
+        `Cannot dispatch message of type ${message.constructor.name} - not registered`,
+      );
+    }
+
+    const aggregate: AggregateIdentifier = {
+      id: options.id || causation.aggregate.id,
+      name: metadata.aggregate.name,
+      context: metadata.aggregate.context,
+    };
+
+    const { name, data } = extractDataTransferObject(message);
+    const { delay, mandatory, meta = {} } = options;
+
+    await this.commandBus.publish(
+      this.commandBus.create(
+        merge<HermesMessageOptions, SagaErrorDispatchOptions>(
+          {
+            aggregate,
+            correlationId: causation.correlationId,
+            data,
+            meta: { ...causation.meta, ...meta },
+            name,
+          },
+          { delay, mandatory },
+        ),
+      ),
+    );
+  }
+
+  private getId(
+    message: IHermesMessage,
+    event: ClassLike,
+    handlerIdentifier: HandlerIdentifier,
+  ): string {
+    const idHandler = this.registry.sagaIdHandlers.find(
+      (x) =>
+        x.aggregate.name === message.aggregate.name &&
+        x.aggregate.context === message.aggregate.context &&
+        x.event.name === message.name &&
+        x.event.version === message.version &&
+        x.saga.name === handlerIdentifier.name &&
+        x.saga.context === handlerIdentifier.context,
+    );
+
+    if (!idHandler) {
+      return message.aggregate.id;
+    }
+
+    const ctx: SagaIdCtx<ClassLike> = {
+      aggregate: message.aggregate,
+      event,
+      logger: this.logger.child(["SagaIdHandler"]),
+      meta: message.meta,
+      saga: handlerIdentifier,
+    };
+
+    return idHandler.handler(ctx);
+  }
+
+  private async handleError(
+    message: IHermesMessage<HermesErrorData>,
     handlerIdentifier: HandlerIdentifier,
   ): Promise<void> {
-    this.logger.debug("Handling event", { event, sagaIdentifier: handlerIdentifier });
+    this.logger.debug("Handling error", {
+      message,
+      handlerIdentifier,
+    });
 
-    const conditionValidators = [];
+    const error = recoverError(message);
+    const event = recoverEvent(message.data.message);
 
-    const eventHandler = this.eventHandlers.find(
+    const errorHandler = this.registry.sagaErrorHandlers.find(
       (x) =>
-        x.eventName === event.name &&
-        x.version === event.version &&
-        x.aggregate.name === event.aggregate.name &&
-        x.aggregate.context === event.aggregate.context &&
+        x.aggregate.name === message.aggregate.name &&
+        x.aggregate.context === message.aggregate.context &&
+        x.error === message.name &&
+        x.saga.name === handlerIdentifier.name &&
+        x.saga.context === handlerIdentifier.context,
+    );
+
+    if (!(errorHandler instanceof HermesSagaErrorHandler)) {
+      throw new HandlerNotRegisteredError();
+    }
+
+    const ctx: SagaErrorCtx<typeof error> = {
+      error,
+      event,
+      logger: this.logger.child(["SagaErrorHandler"]),
+      message,
+      saga: message.data.saga!,
+
+      dispatch: this.dispatchCommand.bind(this, message),
+    };
+
+    try {
+      await errorHandler.handler(ctx);
+
+      this.logger.verbose("Handled error message", { message, error, event });
+    } catch (err: any) {
+      this.logger.error("Failed to handle error", err);
+    }
+  }
+
+  private async handleEvent(
+    message: IHermesMessage,
+    handlerIdentifier: HandlerIdentifier,
+  ): Promise<void> {
+    this.logger.debug("Handling event", {
+      message,
+      handlerIdentifier,
+    });
+
+    const event = recoverEvent(message);
+
+    const eventHandler = this.registry.sagaEventHandlers.find(
+      (x) =>
+        x.aggregate.name === message.aggregate.name &&
+        x.aggregate.context === message.aggregate.context &&
+        x.event.name === message.name &&
+        x.event.version === message.version &&
         x.saga.name === handlerIdentifier.name &&
         x.saga.context === handlerIdentifier.context,
     );
@@ -167,14 +290,16 @@ export class SagaDomain implements ISagaDomain {
       throw new HandlerNotRegisteredError();
     }
 
-    conditionValidators.push((saga: ISaga) => {
+    const conditionValidators = [];
+
+    conditionValidators.push((saga: ISagaModel) => {
       if (saga.destroyed) {
         throw new SagaDestroyedError();
       }
     });
 
     if (eventHandler.conditions?.created === true) {
-      conditionValidators.push((saga: ISaga) => {
+      conditionValidators.push((saga: ISagaModel) => {
         if (saga.revision < 1) {
           throw new SagaNotCreatedError(eventHandler.conditions.permanent === true);
         }
@@ -182,7 +307,7 @@ export class SagaDomain implements ISagaDomain {
     }
 
     if (eventHandler.conditions?.created === false) {
-      conditionValidators.push((saga: ISaga) => {
+      conditionValidators.push((saga: ISagaModel) => {
         if (saga.revision > 0) {
           throw new SagaAlreadyCreatedError(
             eventHandler.conditions.permanent === undefined ||
@@ -193,18 +318,19 @@ export class SagaDomain implements ISagaDomain {
     }
 
     const sagaIdentifier: SagaIdentifier = {
-      id: eventHandler.getSagaId(event),
+      id: this.getId(message, event, handlerIdentifier),
       name: handlerIdentifier.name,
       context: handlerIdentifier.context,
     };
 
     const data = await this.store.load(sagaIdentifier);
 
-    let saga: ISaga = new Saga({
+    let saga: ISagaModel = new SagaModel({
       ...data,
       commandBus: this.commandBus,
-      timeoutBus: this.timeoutBus,
       logger: this.logger,
+      registry: this.registry,
+      timeoutBus: this.timeoutBus,
     });
 
     this.logger.debug("Saga loaded", { saga: saga.toJSON() });
@@ -212,19 +338,25 @@ export class SagaDomain implements ISagaDomain {
     const causations = await this.store.loadCausations(sagaIdentifier);
 
     const causationExists =
-      causations.includes(event.id) || saga.processedCausationIds.includes(event.id);
+      causations.includes(message.id) || saga.processedCausationIds.includes(message.id);
 
     this.logger.debug("Causation exists", { causationExists });
 
     try {
       if (!causationExists) {
-        saga = await this.handleSaga(saga, event, eventHandler, conditionValidators);
+        saga = await this.handleSagaForEvent(
+          saga,
+          message,
+          event,
+          eventHandler,
+          conditionValidators,
+        );
       }
 
       saga = await this.publishMessages(saga);
       saga = await this.processCausationIds(saga);
 
-      this.logger.verbose("Handled event", { event, saga: saga.toJSON() });
+      this.logger.verbose("Handled event", { message, saga: saga.toJSON() });
 
       this.emit(saga);
     } catch (err: any) {
@@ -236,88 +368,188 @@ export class SagaDomain implements ISagaDomain {
         this.logger.error("Failed to handle event", err);
       }
 
+      if (err instanceof DomainError && err.permanent) {
+        return await this.publishError(message, event, saga, err);
+      }
+
       throw err;
     }
   }
 
-  private async handleSaga(
-    saga: ISaga,
-    event: HermesEvent,
-    eventHandler: IHermesSagaEventHandler,
-    conditionValidators: Array<(saga: ISaga) => void>,
-  ): Promise<ISaga> {
-    const json = saga.toJSON();
-
-    this.logger.debug("Handling Saga", { saga: json, event });
-
-    const untouchedSaga = new Saga({
-      ...json,
-      commandBus: this.commandBus,
-      timeoutBus: this.timeoutBus,
-      logger: this.logger,
+  private async handleTimeout(
+    message: IHermesMessage,
+    handlerIdentifier: HandlerIdentifier,
+  ): Promise<void> {
+    this.logger.debug("Handling event", {
+      message,
+      handlerIdentifier,
     });
 
+    const timeout = recoverTimeout(message);
+
+    const conditionValidators = [];
+
+    const timeoutHandler = this.registry.sagaTimeoutHandlers.find(
+      (x) =>
+        x.aggregate.name === message.aggregate.name &&
+        x.aggregate.context === message.aggregate.context &&
+        x.timeout === message.name &&
+        x.saga.name === handlerIdentifier.name &&
+        x.saga.context === handlerIdentifier.context,
+    );
+
+    if (!(timeoutHandler instanceof HermesSagaTimeoutHandler)) {
+      throw new HandlerNotRegisteredError();
+    }
+
+    conditionValidators.push((saga: ISagaModel) => {
+      if (saga.destroyed) {
+        throw new SagaDestroyedError();
+      }
+    });
+
+    const sagaIdentifier: SagaIdentifier = {
+      id: this.getId(message, timeout, handlerIdentifier),
+      name: handlerIdentifier.name,
+      context: handlerIdentifier.context,
+    };
+
+    const data = await this.store.load(sagaIdentifier);
+
+    let saga: ISagaModel = new SagaModel({
+      ...data,
+      commandBus: this.commandBus,
+      logger: this.logger,
+      registry: this.registry,
+      timeoutBus: this.timeoutBus,
+    });
+
+    this.logger.debug("Saga loaded", { saga: saga.toJSON() });
+
+    const causations = await this.store.loadCausations(sagaIdentifier);
+
+    const causationExists =
+      causations.includes(message.id) || saga.processedCausationIds.includes(message.id);
+
+    this.logger.debug("Causation exists", { causationExists });
+
     try {
-      for (const validator of conditionValidators) {
-        validator(saga);
+      if (!causationExists) {
+        saga = await this.handleSagaForTimeout(
+          saga,
+          message,
+          timeout,
+          timeoutHandler,
+          conditionValidators,
+        );
       }
 
-      const ctx: SagaEventHandlerContext = {
-        event: structuredClone(event.data),
-        logger: this.logger.child(["SagaEventHandler"]),
-        state: structuredClone(saga.state),
+      saga = await this.publishMessages(saga);
+      saga = await this.processCausationIds(saga);
 
-        destroy: saga.destroy.bind(saga),
-        dispatch: saga.dispatch.bind(saga, event),
-        mergeState: saga.mergeState.bind(saga),
-        setState: saga.setState.bind(saga),
-        timeout: saga.timeout.bind(saga, event),
-      };
+      this.logger.verbose("Handled event", { message, saga: saga.toJSON() });
 
-      await eventHandler.handler(ctx);
-
-      const data = await this.store.save(saga, event);
-
-      const saved = new Saga({
-        ...data,
-        commandBus: this.commandBus,
-        timeoutBus: this.timeoutBus,
-        logger: this.logger,
-      });
-
-      this.logger.debug("Saved saga at new revision", {
-        saga: saved.toJSON(),
-      });
-
-      return saved;
+      this.emit(saga);
     } catch (err: any) {
-      this.logger.error("Failed to handle Saga", err);
-
-      if (!(err instanceof DomainError) || !err.permanent) {
-        throw err;
+      if (err instanceof ConcurrencyError) {
+        this.logger.warn("Transient concurrency error while handling event", err);
+      } else if (err instanceof DomainError) {
+        this.logger.warn("Domain error while handling event", err);
+      } else {
+        this.logger.error("Failed to handle event", err);
       }
 
-      untouchedSaga.messagesToDispatch.push(
-        this.errorBus.create({
-          data: {
-            error: err,
-            message: event,
-            saga: { id: saga.id, name: saga.name, context: saga.context },
-          },
-          aggregate: event.aggregate,
-          causationId: event.id,
-          correlationId: event.correlationId,
-          mandatory: false,
-          meta: event.meta,
-          name: snakeCase(err.name),
-        }),
-      );
+      if (err instanceof DomainError && err.permanent) {
+        return await this.publishError(message, timeout, saga, err);
+      }
 
-      return untouchedSaga;
+      throw err;
     }
   }
 
-  private async publishMessages(saga: ISaga): Promise<ISaga> {
+  private async handleSagaForEvent(
+    saga: ISagaModel,
+    message: IHermesMessage,
+    event: ClassLike,
+    eventHandler: ISagaEventHandler,
+    conditionValidators: Array<(saga: ISagaModel) => void>,
+  ): Promise<ISagaModel> {
+    const json = saga.toJSON();
+
+    this.logger.debug("Handling Saga", { saga: json, message });
+
+    for (const validator of conditionValidators) {
+      validator(saga);
+    }
+
+    const ctx: SagaEventCtx<ClassLike, Dict> = {
+      aggregate: message.aggregate,
+      event,
+      logger: this.logger.child(["SagaEventHandler"]),
+      meta: message.meta,
+      state: structuredClone(saga.state),
+
+      destroy: saga.destroy.bind(saga),
+      dispatch: saga.dispatch.bind(saga, message),
+      mergeState: saga.mergeState.bind(saga),
+      setState: saga.setState.bind(saga),
+    };
+
+    await eventHandler.handler(ctx);
+
+    const data = await this.store.save(saga, message);
+
+    return new SagaModel({
+      ...data,
+      commandBus: this.commandBus,
+      logger: this.logger,
+      registry: this.registry,
+      timeoutBus: this.timeoutBus,
+    });
+  }
+
+  private async handleSagaForTimeout(
+    saga: ISagaModel,
+    message: IHermesMessage,
+    timeout: ClassLike,
+    timeoutHandler: ISagaTimeoutHandler,
+    conditionValidators: Array<(saga: ISagaModel) => void>,
+  ): Promise<ISagaModel> {
+    const json = saga.toJSON();
+
+    this.logger.debug("Handling Saga", { saga: json, message });
+
+    for (const validator of conditionValidators) {
+      validator(saga);
+    }
+
+    const ctx: SagaTimeoutCtx<ClassLike, Dict> = {
+      aggregate: message.aggregate,
+      logger: this.logger.child(["SagaTimeoutHandler"]),
+      meta: message.meta,
+      state: structuredClone(saga.state),
+      timeout,
+
+      destroy: saga.destroy.bind(saga),
+      dispatch: saga.dispatch.bind(saga, message),
+      mergeState: saga.mergeState.bind(saga),
+      setState: saga.setState.bind(saga),
+    };
+
+    await timeoutHandler.handler(ctx);
+
+    const data = await this.store.save(saga, message);
+
+    return new SagaModel({
+      ...data,
+      commandBus: this.commandBus,
+      logger: this.logger,
+      registry: this.registry,
+      timeoutBus: this.timeoutBus,
+    });
+  }
+
+  private async publishMessages(saga: ISagaModel): Promise<ISagaModel> {
     if (!saga.messagesToDispatch.length) {
       return saga;
     }
@@ -348,15 +580,16 @@ export class SagaDomain implements ISagaDomain {
 
     const data = await this.store.clearMessages(saga);
 
-    return new Saga({
+    return new SagaModel({
       ...data,
       commandBus: this.commandBus,
-      timeoutBus: this.timeoutBus,
       logger: this.logger,
+      registry: this.registry,
+      timeoutBus: this.timeoutBus,
     });
   }
 
-  private async processCausationIds(saga: ISaga): Promise<ISaga> {
+  private async processCausationIds(saga: ISagaModel): Promise<ISagaModel> {
     if (!saga.processedCausationIds.length) {
       return saga;
     }
@@ -375,15 +608,60 @@ export class SagaDomain implements ISagaDomain {
 
     const data = await this.store.saveCausations(saga);
 
-    return new Saga({
+    return new SagaModel({
       ...data,
       commandBus: this.commandBus,
-      timeoutBus: this.timeoutBus,
       logger: this.logger,
+      registry: this.registry,
+      timeoutBus: this.timeoutBus,
     });
   }
 
-  private emit<S extends Dict = Dict>(saga: ISaga<S>): void {
+  private async publishError(
+    message: IHermesMessage,
+    event: ClassLike,
+    saga: ISagaModel,
+    error: DomainError,
+  ): Promise<void> {
+    try {
+      this.logger.debug("Publishing unrecoverable error", {
+        error,
+        event,
+        message,
+        saga,
+      });
+
+      await this.errorBus.publish(
+        this.errorBus.create({
+          data: {
+            error: error.toJSON ? error.toJSON() : { ...error },
+            event,
+            message,
+            saga: { id: saga.id, name: saga.name, context: saga.context },
+          },
+          aggregate: message.aggregate,
+          causationId: message.id,
+          correlationId: message.correlationId,
+          mandatory: false,
+          meta: message.meta,
+          name: snakeCase(error.name),
+        }),
+      );
+
+      this.logger.verbose("Published unrecoverable error", {
+        error,
+        event,
+        message,
+        saga,
+      });
+    } catch (err: any) {
+      this.logger.warn("Failed to publish unrecoverable error", err);
+
+      throw err;
+    }
+  }
+
+  private emit<S extends Dict = Dict>(saga: ISagaModel<S>): void {
     const data: EventEmitterSagaData<S> = {
       id: saga.id,
       name: saga.name,
@@ -400,17 +678,27 @@ export class SagaDomain implements ISagaDomain {
 
   // private static
 
-  private static getQueue(
-    context: string,
-    eventHandler: IHermesSagaEventHandler,
-  ): string {
-    return `queue.saga.${context}.${eventHandler.aggregate.name}.${eventHandler.eventName}.${eventHandler.saga.context}.${eventHandler.saga.name}`;
+  private static getErrorQueue(handler: ISagaErrorHandler): string {
+    return `queue.saga.${handler.aggregate.context}.${handler.aggregate.name}.${handler.error}.${handler.saga.context}.${handler.saga.name}`;
   }
 
-  private static getTopic(
-    context: string,
-    eventHandler: IHermesSagaEventHandler,
-  ): string {
-    return `${context}.${eventHandler.aggregate.name}.${eventHandler.eventName}`;
+  private static getErrorTopic(handler: ISagaErrorHandler): string {
+    return `${handler.aggregate.context}.${handler.aggregate.name}.${handler.error}`;
+  }
+
+  private static getEventQueue(handler: ISagaEventHandler): string {
+    return `queue.saga.${handler.aggregate.context}.${handler.aggregate.name}.${handler.event.name}.${handler.saga.context}.${handler.saga.name}`;
+  }
+
+  private static getEventTopic(handler: ISagaEventHandler): string {
+    return `${handler.aggregate.context}.${handler.aggregate.name}.${handler.event.name}`;
+  }
+
+  private static getTimeoutQueue(handler: ISagaTimeoutHandler): string {
+    return `queue.saga.${handler.aggregate.context}.${handler.aggregate.name}.${handler.timeout}.${handler.saga.context}.${handler.saga.name}`;
+  }
+
+  private static getTimeoutTopic(handler: ISagaTimeoutHandler): string {
+    return `${handler.aggregate.context}.${handler.aggregate.name}.${handler.timeout}`;
   }
 }

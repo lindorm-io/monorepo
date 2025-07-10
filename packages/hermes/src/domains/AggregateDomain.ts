@@ -1,11 +1,11 @@
 import { SerialisedAesDecryption } from "@lindorm/aes";
 import { snakeCase } from "@lindorm/case";
-import { LindormError } from "@lindorm/errors";
 import { JsonKit } from "@lindorm/json-kit";
 import { ILogger } from "@lindorm/logger";
 import { MessageKit } from "@lindorm/message";
 import { ClassLike, Dict } from "@lindorm/types";
 import { findLast, removeUndefined } from "@lindorm/utils";
+import merge from "deepmerge";
 import {
   AggregateAlreadyCreatedError,
   AggregateDestroyedError,
@@ -16,186 +16,181 @@ import {
   DomainError,
   HandlerNotRegisteredError,
 } from "../errors";
-import { HermesAggregateCommandHandler, HermesAggregateEventHandler } from "../handlers";
+import { HermesAggregateCommandHandler, HermesAggregateErrorHandler } from "../handlers";
 import {
-  IAggregate,
+  IAggregateCommandHandler,
   IAggregateDomain,
+  IAggregateErrorHandler,
+  IAggregateModel,
   IEventStore,
-  IHermesAggregateCommandHandler,
-  IHermesAggregateEventHandler,
   IHermesEncryptionStore,
+  IHermesMessage,
   IHermesMessageBus,
+  IHermesRegistry,
 } from "../interfaces";
-import { HermesCommand, HermesEvent } from "../messages";
-import { Aggregate } from "../models";
+import { HermesEvent } from "../messages";
+import { AggregateModel } from "../models";
+import { DispatchMessageSchema } from "../schemas/dispatch-command";
 import {
-  AggregateCommandHandlerContext,
+  AggregateCommandCtx,
+  AggregateErrorCtx,
+  AggregateErrorDispatchOptions,
   AggregateIdentifier,
   EventStoreAttributes,
+  HermesErrorData,
+  HermesMessageOptions,
 } from "../types";
 import { AggregateDomainOptions } from "../types/domain";
-import { assertChecksum, createChecksum } from "../utils/private";
+import {
+  assertChecksum,
+  createChecksum,
+  extractDataTransferObject,
+  recoverCommand,
+  recoverError,
+} from "../utils/private";
 
 export class AggregateDomain implements IAggregateDomain {
-  private readonly commandHandlers: Array<IHermesAggregateCommandHandler>;
-  private readonly eventHandlers: Array<IHermesAggregateEventHandler>;
   private readonly logger: ILogger;
+
   private readonly commandBus: IHermesMessageBus;
+  private readonly encryptionStore: IHermesEncryptionStore;
   private readonly errorBus: IHermesMessageBus;
   private readonly eventBus: IHermesMessageBus;
-  private readonly encryptionStore: IHermesEncryptionStore;
   private readonly eventStore: IEventStore;
+  private readonly registry: IHermesRegistry;
+  private readonly messageKit: MessageKit<HermesEvent>;
 
   public constructor(options: AggregateDomainOptions) {
     this.logger = options.logger.child(["AggregateDomain"]);
 
-    this.encryptionStore = options.encryptionStore;
-    this.eventStore = options.eventStore;
-
     this.commandBus = options.commandBus;
+    this.encryptionStore = options.encryptionStore;
     this.errorBus = options.errorBus;
     this.eventBus = options.eventBus;
+    this.eventStore = options.eventStore;
+    this.registry = options.registry;
 
-    this.commandHandlers = [];
-    this.eventHandlers = [];
+    this.messageKit = new MessageKit({ Message: HermesEvent, logger: this.logger });
   }
 
-  public async registerCommandHandler<T extends ClassLike = ClassLike>(
-    commandHandler: HermesAggregateCommandHandler<T>,
-  ): Promise<void> {
-    this.logger.debug("Registering command handler", {
-      aggregate: commandHandler.aggregate,
-      commandName: commandHandler.commandName,
-      version: commandHandler.version,
-    });
+  public async registerHandlers(): Promise<void> {
+    for (const handler of this.registry.aggregateCommandHandlers) {
+      this.logger.debug("Registering aggregate command handler", {
+        aggregate: handler.aggregate,
+        command: handler.command,
+        conditions: handler.conditions,
+        encryption: handler.encryption,
+      });
 
-    if (!(commandHandler instanceof HermesAggregateCommandHandler)) {
-      throw new LindormError("Invalid handler type", {
-        data: {
-          expect: "AggregateDomainCommandHandler",
-          actual: typeof commandHandler,
-        },
+      await this.commandBus.subscribe({
+        callback: (message: IHermesMessage) => this.handleCommand(message),
+        queue: AggregateDomain.getCommandQueue(handler),
+        topic: AggregateDomain.getCommandTopic(handler),
+      });
+
+      this.logger.verbose("Command handler registered", {
+        aggregate: handler.aggregate,
+        command: handler.command,
+        conditions: handler.conditions,
+        encryption: handler.encryption,
       });
     }
 
-    const existingHandler = this.commandHandlers.some(
-      (x) =>
-        x.commandName === commandHandler.commandName &&
-        x.version === commandHandler.version &&
-        x.aggregate.name === commandHandler.aggregate.name &&
-        x.aggregate.context === commandHandler.aggregate.context,
-    );
+    for (const handler of this.registry.aggregateErrorHandlers) {
+      this.logger.debug("Registering aggregate error handler", {
+        aggregate: handler.aggregate,
+        error: handler.error,
+      });
 
-    if (existingHandler) {
-      throw new LindormError("Command handler already registered", {
-        debug: {
-          commandName: commandHandler.commandName,
-          version: commandHandler.version,
-          aggregate: {
-            name: commandHandler.aggregate.name,
-            context: commandHandler.aggregate.context,
-          },
-        },
+      await this.errorBus.subscribe({
+        callback: (message: IHermesMessage<HermesErrorData>) => this.handleError(message),
+        queue: AggregateDomain.getErrorQueue(handler),
+        topic: AggregateDomain.getErrorTopic(handler),
+      });
+
+      this.logger.verbose("Error handler registered", {
+        aggregate: handler.aggregate,
+        error: handler.error,
       });
     }
-
-    this.commandHandlers.push(commandHandler);
-
-    await this.commandBus.subscribe({
-      callback: (command: HermesCommand) => this.handleCommand(command),
-      queue: AggregateDomain.getQueue(commandHandler),
-      topic: AggregateDomain.getTopic(commandHandler),
-    });
-
-    this.logger.verbose("Registered command handler", {
-      commandName: commandHandler.commandName,
-      aggregate: commandHandler.aggregate,
-      version: commandHandler.version,
-      conditions: commandHandler.conditions,
-    });
-  }
-
-  public async registerEventHandler<T extends ClassLike = ClassLike>(
-    eventHandler: HermesAggregateEventHandler<T>,
-  ): Promise<void> {
-    this.logger.debug("Registering event handler", {
-      aggregate: eventHandler.aggregate,
-      eventName: eventHandler.eventName,
-      version: eventHandler.version,
-    });
-
-    if (!(eventHandler instanceof HermesAggregateEventHandler)) {
-      throw new LindormError("Invalid handler type", {
-        data: {
-          expect: "AggregateEventHandler",
-          actual: typeof eventHandler,
-        },
-      });
-    }
-
-    const existingHandler = this.eventHandlers.some(
-      (x) =>
-        x.eventName === eventHandler.eventName &&
-        x.version === eventHandler.version &&
-        x.aggregate.name === eventHandler.aggregate.name &&
-        x.aggregate.context === eventHandler.aggregate.context,
-    );
-
-    if (existingHandler) {
-      throw new LindormError("Event handler already registered", {
-        debug: {
-          eventName: eventHandler.eventName,
-          version: eventHandler.version,
-          aggregate: {
-            name: eventHandler.aggregate.name,
-            context: eventHandler.aggregate.context,
-          },
-        },
-      });
-    }
-
-    this.eventHandlers.push(eventHandler);
-
-    this.logger.debug("Event handler registered", {
-      aggregate: eventHandler.aggregate,
-      eventName: eventHandler.eventName,
-      version: eventHandler.version,
-    });
   }
 
   public async inspect<S extends Dict = Dict>(
     aggregateIdentifier: AggregateIdentifier,
-  ): Promise<IAggregate<S>> {
-    return (await this.load(aggregateIdentifier, this.eventHandlers)) as IAggregate<S>;
+  ): Promise<IAggregateModel<S>> {
+    return (await this.load(aggregateIdentifier)) as IAggregateModel<S>;
   }
 
   // private
 
-  private async handleCommand(command: HermesCommand): Promise<void> {
-    this.logger.debug("Handling command", { command });
+  private async dispatchCommand(
+    causation: IHermesMessage<HermesErrorData>,
+    message: ClassLike,
+    options: AggregateErrorDispatchOptions = {},
+  ): Promise<void> {
+    this.logger.debug("Dispatch", { causation, message, options });
 
-    const conditionValidators = [];
+    DispatchMessageSchema.parse({ causation, message, options });
 
-    const commandHandler = this.commandHandlers.find(
+    const metadata = this.registry.getCommand(message.constructor);
+
+    if (!metadata) {
+      throw new Error(
+        `Cannot dispatch message of type ${message.constructor.name} - not registered`,
+      );
+    }
+
+    const aggregate: AggregateIdentifier = {
+      id: options.id || causation.aggregate.id,
+      name: metadata.aggregate.name,
+      context: metadata.aggregate.context,
+    };
+
+    const { name, data } = extractDataTransferObject(message);
+    const { delay, mandatory, meta = {} } = options;
+
+    await this.commandBus.publish(
+      this.commandBus.create(
+        merge<HermesMessageOptions, AggregateErrorDispatchOptions>(
+          {
+            aggregate,
+            correlationId: causation.correlationId,
+            data,
+            meta: { ...causation.meta, ...meta },
+            name,
+          },
+          { delay, mandatory },
+        ),
+      ),
+    );
+  }
+
+  private async handleCommand(message: IHermesMessage): Promise<void> {
+    this.logger.debug("Handling command", { message });
+
+    const command = recoverCommand(message);
+
+    const commandHandler = this.registry.aggregateCommandHandlers.find(
       (x) =>
-        x.commandName === command.name &&
-        x.version === command.version &&
-        x.aggregate.name === command.aggregate.name &&
-        x.aggregate.context === command.aggregate.context,
+        x.aggregate.name === message.aggregate.name &&
+        x.aggregate.context === message.aggregate.context &&
+        x.command === message.name,
     );
 
     if (!(commandHandler instanceof HermesAggregateCommandHandler)) {
       throw new HandlerNotRegisteredError();
     }
 
-    conditionValidators.push((aggregate: IAggregate) => {
+    const conditionValidators = [];
+
+    conditionValidators.push((aggregate: IAggregateModel) => {
       if (aggregate.destroyed) {
         throw new AggregateDestroyedError();
       }
     });
 
     if (commandHandler.conditions?.created === true) {
-      conditionValidators.push((aggregate: IAggregate) => {
+      conditionValidators.push((aggregate: IAggregateModel) => {
         if (aggregate.events.length < 1) {
           throw new AggregateNotCreatedError();
         }
@@ -203,38 +198,23 @@ export class AggregateDomain implements IAggregateDomain {
     }
 
     if (commandHandler.conditions?.created === false) {
-      conditionValidators.push((aggregate: IAggregate) => {
+      conditionValidators.push((aggregate: IAggregateModel) => {
         if (aggregate.events.length > 0) {
           throw new AggregateAlreadyCreatedError();
         }
       });
     }
 
-    const eventHandlers = this.eventHandlers.filter(
-      (x) =>
-        x.aggregate.name === command.aggregate.name &&
-        x.aggregate.context === command.aggregate.context,
-    );
-
-    if (!eventHandlers.length) {
-      this.logger.warn("No event handlers registered for aggregate", {
-        aggregate: command.aggregate,
-        eventHandlers,
-        domainHandlers: eventHandlers,
-      });
-      throw new HandlerNotRegisteredError();
-    }
-
-    const aggregate = await this.load(command.aggregate, eventHandlers);
+    const aggregate = await this.load(message.aggregate);
     const lastCausationMatchesCommandId = findLast(aggregate.events, {
-      causationId: command.id,
+      causationId: message.id,
     });
 
     try {
       if (!lastCausationMatchesCommandId) {
         if (commandHandler.schema) {
           try {
-            await commandHandler.schema.parse(command.data);
+            await commandHandler.schema.parse(message.data);
           } catch (error: any) {
             throw new CommandSchemaValidationError(error);
           }
@@ -244,22 +224,23 @@ export class AggregateDomain implements IAggregateDomain {
           validator(aggregate);
         }
 
-        const ctx: AggregateCommandHandlerContext = {
-          command: structuredClone(command.data),
+        const ctx: AggregateCommandCtx<typeof command, Dict> = {
+          command,
           logger: this.logger.child(["AggregateCommandHandler"]),
+          meta: message.meta,
           state: structuredClone(aggregate.state),
 
-          apply: aggregate.apply.bind(aggregate, command),
+          apply: aggregate.apply.bind(aggregate, message),
         };
 
         await commandHandler.handler(ctx);
       }
 
-      const events = await this.save(aggregate, command, commandHandler.encryption);
+      const events = await this.save(aggregate, message, commandHandler.encryption);
 
       await this.eventBus.publish(events);
 
-      this.logger.verbose("Handled command", { command });
+      this.logger.verbose("Handled command", { message });
     } catch (err: any) {
       if (err instanceof ConcurrencyError) {
         this.logger.warn("Transient concurrency error while handling command", err);
@@ -270,34 +251,78 @@ export class AggregateDomain implements IAggregateDomain {
       }
 
       if (err instanceof DomainError && err.permanent) {
-        await this.rejectCommand(command, err);
+        await this.publishError(message, command, err);
       }
 
       throw err;
     }
   }
 
-  private async rejectCommand(command: HermesCommand, error: Error): Promise<void> {
-    this.logger.debug("Rejecting command", { command, error });
+  private async handleError(message: IHermesMessage<HermesErrorData>): Promise<void> {
+    this.logger.debug("Handling error", { message });
+
+    const error = recoverError(message);
+    const command = recoverCommand(message.data.message);
+
+    const errorHandler = this.registry.aggregateErrorHandlers.find(
+      (x) =>
+        x.aggregate.name === message.aggregate.name &&
+        x.aggregate.context === message.aggregate.context &&
+        x.error === message.name,
+    );
+
+    if (!(errorHandler instanceof HermesAggregateErrorHandler)) {
+      throw new HandlerNotRegisteredError();
+    }
+
+    const ctx: AggregateErrorCtx<typeof error> = {
+      command,
+      error,
+      logger: this.logger.child(["AggregateErrorHandler"]),
+      message,
+
+      dispatch: this.dispatchCommand.bind(this, message),
+    };
+
+    try {
+      await errorHandler.handler(ctx);
+
+      this.logger.verbose("Handled error message", { message, error, event });
+    } catch (err: any) {
+      this.logger.error("Failed to handle error", err);
+    }
+  }
+
+  private async publishError(
+    message: IHermesMessage,
+    command: ClassLike,
+    error: DomainError,
+  ): Promise<void> {
+    this.logger.debug("Publishing unrecoverable error", {
+      command,
+      error,
+      message,
+    });
 
     try {
       await this.errorBus.publish(
         this.errorBus.create({
           data: {
-            error,
-            message: command,
+            command,
+            error: error.toJSON ? error.toJSON() : { ...error },
+            message,
           },
-          aggregate: command.aggregate,
-          causationId: command.id,
+          aggregate: message.aggregate,
+          causationId: message.id,
           mandatory: true,
-          meta: command.meta,
+          meta: message.meta,
           name: snakeCase(error.name),
         }),
       );
 
-      this.logger.verbose("Rejected command", { command, error });
+      this.logger.verbose("Published unrecoverable error", { command, error });
     } catch (err: any) {
-      this.logger.error("Failed to reject command", err);
+      this.logger.warn("Failed to publish unrecoverable error", err);
 
       throw err;
     }
@@ -305,8 +330,7 @@ export class AggregateDomain implements IAggregateDomain {
 
   private async load(
     aggregateIdentifier: AggregateIdentifier,
-    eventHandlers: Array<IHermesAggregateEventHandler>,
-  ): Promise<IAggregate<Dict>> {
+  ): Promise<IAggregateModel<Dict>> {
     this.logger.debug("Loading aggregate", { aggregateIdentifier });
 
     const data = await this.eventStore.find(aggregateIdentifier);
@@ -315,14 +339,14 @@ export class AggregateDomain implements IAggregateDomain {
 
     const decrypted = await this.decryptAttributes(aggregateIdentifier, data);
 
-    const aggregate = new Aggregate({
+    const aggregate = new AggregateModel({
       ...aggregateIdentifier,
       eventBus: this.eventBus,
-      eventHandlers,
       logger: this.logger,
+      registry: this.registry,
     });
 
-    const events = decrypted.map(AggregateDomain.toHermesEvent);
+    const events = decrypted.map(this.toHermesEvent.bind(this));
 
     for (const event of events) {
       await aggregate.load(event);
@@ -334,10 +358,10 @@ export class AggregateDomain implements IAggregateDomain {
   }
 
   private async save(
-    aggregate: IAggregate,
-    causation: HermesCommand,
+    aggregate: IAggregateModel,
+    causation: IHermesMessage,
     encryption: boolean,
-  ): Promise<Array<HermesEvent>> {
+  ): Promise<Array<HermesEvent<Dict>>> {
     this.logger.debug("Saving aggregate", { aggregate: aggregate.toJSON(), causation });
 
     const events = await this.eventStore.find({
@@ -350,7 +374,7 @@ export class AggregateDomain implements IAggregateDomain {
     if (events?.length) {
       this.logger.debug("Found events matching causation", { events });
 
-      return events.map((item) => AggregateDomain.toHermesEvent(item));
+      return events.map((item) => this.toHermesEvent(item));
     }
 
     const causationEvents = aggregate.events.filter(
@@ -483,22 +507,8 @@ export class AggregateDomain implements IAggregateDomain {
     }
   }
 
-  // private static
-
-  private static getQueue<T extends ClassLike = ClassLike>(
-    commandHandler: HermesAggregateCommandHandler<T>,
-  ): string {
-    return `queue.aggregate.${commandHandler.aggregate.context}.${commandHandler.aggregate.name}.${commandHandler.commandName}`;
-  }
-
-  private static getTopic<T extends ClassLike = ClassLike>(
-    commandHandler: HermesAggregateCommandHandler<T>,
-  ): string {
-    return `${commandHandler.aggregate.context}.${commandHandler.aggregate.name}.${commandHandler.commandName}`;
-  }
-
-  private static toHermesEvent(data: EventStoreAttributes): HermesEvent {
-    return new MessageKit({ Message: HermesEvent }).create({
+  private toHermesEvent(data: EventStoreAttributes): IHermesMessage {
+    return this.messageKit.create({
       id: data.event_id,
       aggregate: {
         id: data.aggregate_id,
@@ -513,5 +523,23 @@ export class AggregateDomain implements IAggregateDomain {
       timestamp: data.event_timestamp,
       version: data.version,
     });
+  }
+
+  // private static
+
+  private static getCommandQueue(handler: IAggregateCommandHandler): string {
+    return `queue.aggregate.${handler.aggregate.context}.${handler.aggregate.name}.${handler.command}`;
+  }
+
+  private static getCommandTopic(handler: IAggregateCommandHandler): string {
+    return `${handler.aggregate.context}.${handler.aggregate.name}.${handler.command}`;
+  }
+
+  private static getErrorQueue(handler: IAggregateErrorHandler): string {
+    return `queue.aggregate.${handler.aggregate.context}.${handler.aggregate.name}.${handler.error}`;
+  }
+
+  private static getErrorTopic(handler: IAggregateErrorHandler): string {
+    return `${handler.aggregate.context}.${handler.aggregate.name}.${handler.error}`;
   }
 }

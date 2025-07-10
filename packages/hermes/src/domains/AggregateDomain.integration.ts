@@ -1,60 +1,42 @@
 import { createMockLogger } from "@lindorm/logger";
-import { MessageKit } from "@lindorm/message";
 import { IMongoSource, MongoSource } from "@lindorm/mongo";
 import { IRabbitSource, RabbitSource } from "@lindorm/rabbit";
+import { Dict } from "@lindorm/types";
 import { sleep } from "@lindorm/utils";
-import { randomUUID } from "crypto";
-import { TEST_AGGREGATE_IDENTIFIER } from "../__fixtures__/aggregate";
-import {
-  TEST_AGGREGATE_COMMAND_HANDLER,
-  TEST_AGGREGATE_COMMAND_HANDLER_CREATE,
-  TEST_AGGREGATE_COMMAND_HANDLER_DESTROY,
-  TEST_AGGREGATE_COMMAND_HANDLER_DESTROY_NEXT,
-  TEST_AGGREGATE_COMMAND_HANDLER_ENCRYPT,
-  TEST_AGGREGATE_COMMAND_HANDLER_MERGE_STATE,
-} from "../__fixtures__/aggregate-command-handler";
-import {
-  TEST_AGGREGATE_EVENT_HANDLER,
-  TEST_AGGREGATE_EVENT_HANDLER_CREATE,
-  TEST_AGGREGATE_EVENT_HANDLER_DESTROY,
-  TEST_AGGREGATE_EVENT_HANDLER_DESTROY_NEXT,
-  TEST_AGGREGATE_EVENT_HANDLER_ENCRYPT,
-  TEST_AGGREGATE_EVENT_HANDLER_MERGE_STATE,
-} from "../__fixtures__/aggregate-event-handler";
-import {
-  TEST_HERMES_COMMAND_CREATE,
-  TEST_HERMES_COMMAND_DESTROY,
-  TEST_HERMES_COMMAND_DESTROY_NEXT,
-  TEST_HERMES_COMMAND_ENCRYPT,
-  TEST_HERMES_COMMAND_MERGE_STATE,
-} from "../__fixtures__/hermes-command";
+import { createTestCommand } from "../__fixtures__/create-message";
+import { createTestAggregateIdentifier } from "../__fixtures__/create-test-aggregate-identifier";
+import { createTestRegistry } from "../__fixtures__/create-test-registry";
+import { TestCommandCreate } from "../__fixtures__/modules/commands/TestCommandCreate";
+import { TestCommandDestroy } from "../__fixtures__/modules/commands/TestCommandDestroy";
+import { TestCommandDestroyNext } from "../__fixtures__/modules/commands/TestCommandDestroyNext";
+import { TestCommandEncrypt } from "../__fixtures__/modules/commands/TestCommandEncrypt";
+import { TestCommandMergeState } from "../__fixtures__/modules/commands/TestCommandMergeState";
 import { EncryptionStore, EventStore, MessageBus } from "../infrastructure";
 import {
   IAggregateDomain,
   IEventStore,
-  IHermesAggregateCommandHandler,
-  IHermesAggregateEventHandler,
   IHermesEncryptionStore,
   IHermesMessageBus,
+  IHermesRegistry,
 } from "../interfaces";
 import { HermesCommand, HermesError, HermesEvent } from "../messages";
+import { AggregateIdentifier } from "../types";
 import { AggregateDomain } from "./AggregateDomain";
 
 describe("AggregateDomain", () => {
-  const commandKit = new MessageKit({ Message: HermesCommand });
-
+  const namespace = "agg_dom";
   const logger = createMockLogger();
 
-  let commandHandlers: Array<IHermesAggregateCommandHandler>;
+  let aggregate: AggregateIdentifier;
+  let commandBus: IHermesMessageBus<HermesCommand<Dict>>;
   let domain: IAggregateDomain;
   let encryptionStore: IHermesEncryptionStore;
-  let eventHandlers: Array<IHermesAggregateEventHandler>;
-  let eventStore: IEventStore;
-  let commandBus: IHermesMessageBus<HermesCommand>;
   let errorBus: IHermesMessageBus<HermesError>;
-  let eventBus: IHermesMessageBus<HermesEvent>;
+  let eventBus: IHermesMessageBus<HermesEvent<Dict>>;
+  let eventStore: IEventStore;
   let mongo: IMongoSource;
   let rabbit: IRabbitSource;
+  let registry: IHermesRegistry;
 
   beforeAll(async () => {
     mongo = new MongoSource({
@@ -77,40 +59,21 @@ describe("AggregateDomain", () => {
     encryptionStore = new EncryptionStore({ mongo, logger });
     eventStore = new EventStore({ mongo, logger });
 
+    aggregate = createTestAggregateIdentifier(namespace);
+
+    registry = createTestRegistry(namespace);
+
     domain = new AggregateDomain({
       commandBus,
+      encryptionStore,
       errorBus,
       eventBus,
-      encryptionStore,
       eventStore,
       logger,
+      registry,
     });
 
-    commandHandlers = [
-      TEST_AGGREGATE_COMMAND_HANDLER,
-      TEST_AGGREGATE_COMMAND_HANDLER_CREATE,
-      TEST_AGGREGATE_COMMAND_HANDLER_MERGE_STATE,
-      TEST_AGGREGATE_COMMAND_HANDLER_DESTROY,
-      TEST_AGGREGATE_COMMAND_HANDLER_DESTROY_NEXT,
-      TEST_AGGREGATE_COMMAND_HANDLER_ENCRYPT,
-    ];
-
-    for (const handler of commandHandlers) {
-      await domain.registerCommandHandler(handler);
-    }
-
-    eventHandlers = [
-      TEST_AGGREGATE_EVENT_HANDLER,
-      TEST_AGGREGATE_EVENT_HANDLER_CREATE,
-      TEST_AGGREGATE_EVENT_HANDLER_MERGE_STATE,
-      TEST_AGGREGATE_EVENT_HANDLER_DESTROY,
-      TEST_AGGREGATE_EVENT_HANDLER_DESTROY_NEXT,
-      TEST_AGGREGATE_EVENT_HANDLER_ENCRYPT,
-    ];
-
-    for (const handler of eventHandlers) {
-      await domain.registerEventHandler(handler);
-    }
+    await domain.registerHandlers();
   });
 
   afterAll(async () => {
@@ -119,99 +82,91 @@ describe("AggregateDomain", () => {
   });
 
   test("should handle multiple published commands", async () => {
-    const aggregate = { ...TEST_AGGREGATE_IDENTIFIER, id: randomUUID() };
-
-    const commandCreate = commandKit.create({ ...TEST_HERMES_COMMAND_CREATE, aggregate });
-
-    const commandMergeState = commandKit.create({
-      ...TEST_HERMES_COMMAND_MERGE_STATE,
+    const commandCreate = createTestCommand(new TestCommandCreate("create"), {
       aggregate,
     });
 
-    const commandEncrypt = commandKit.create({
-      ...TEST_HERMES_COMMAND_ENCRYPT,
+    const commandMergeState = createTestCommand(
+      new TestCommandMergeState("merge-state"),
+      { aggregate },
+    );
+
+    const commandEncrypt = createTestCommand(new TestCommandEncrypt("encrypt"), {
       aggregate,
     });
 
-    const commandDestroyNext = commandKit.create({
-      ...TEST_HERMES_COMMAND_DESTROY_NEXT,
-      aggregate,
-    });
+    const commandDestroyNext = createTestCommand(
+      new TestCommandDestroyNext("destroy-next"),
+      { aggregate },
+    );
 
-    const commandDestroy = commandKit.create({
-      ...TEST_HERMES_COMMAND_DESTROY,
+    const commandDestroy = createTestCommand(new TestCommandDestroy("destroy"), {
       aggregate,
     });
 
     await expect(commandBus.publish(commandCreate)).resolves.toBeUndefined();
-    await sleep(250);
+    await sleep(500);
 
     await expect(commandBus.publish(commandMergeState)).resolves.toBeUndefined();
-    await sleep(250);
+    await sleep(500);
 
     await expect(commandBus.publish(commandEncrypt)).resolves.toBeUndefined();
-    await sleep(250);
+    await sleep(500);
 
     await expect(commandBus.publish(commandDestroyNext)).resolves.toBeUndefined();
-    await sleep(250);
+    await sleep(500);
 
     await expect(commandBus.publish(commandDestroy)).resolves.toBeUndefined();
-    await sleep(250);
+    await sleep(500);
 
     await expect(domain.inspect(aggregate)).resolves.toEqual(
       expect.objectContaining({
         id: aggregate.id,
-        name: "aggregate_name",
-        context: "default",
+        name: "test_aggregate",
+        context: namespace,
         destroyed: true,
         events: [
           expect.objectContaining({
             causationId: commandCreate.id,
             correlationId: commandCreate.correlationId,
-            name: "hermes_event_create",
+            name: "test_event_create",
           }),
           expect.objectContaining({
             causationId: commandMergeState.id,
             correlationId: commandMergeState.correlationId,
-            name: "hermes_event_merge_state",
+            name: "test_event_merge_state",
           }),
           expect.objectContaining({
             causationId: commandEncrypt.id,
             correlationId: commandEncrypt.correlationId,
-            name: "hermes_event_encrypt",
+            name: "test_event_encrypt",
           }),
           expect.objectContaining({
             causationId: commandDestroyNext.id,
             correlationId: commandDestroyNext.correlationId,
-            name: "hermes_event_destroy_next",
+            name: "test_event_destroy_next",
           }),
           expect.objectContaining({
             causationId: commandDestroy.id,
             correlationId: commandDestroy.correlationId,
-            name: "hermes_event_destroy",
+            name: "test_event_destroy",
           }),
         ],
         numberOfLoadedEvents: 5,
         state: {
-          created: true,
-          encrypted: {
-            encryptedData: {
-              commandData: true,
-            },
-          },
-          merge: {
-            dataFromCommand: {
-              commandData: true,
-            },
-          },
+          create: "create",
+          destroy: "destroy",
+          destroyNext: "destroy next",
+          encrypt: "encrypt",
+          mergeState: "merge state",
         },
       }),
     );
 
     await expect(encryptionStore.inspect(aggregate)).resolves.toEqual({
       id: aggregate.id,
-      name: "aggregate_name",
-      context: "default",
+      name: "test_aggregate",
+      context: namespace,
       key_algorithm: "dir",
       key_curve: null,
       key_encryption: null,
@@ -226,17 +181,17 @@ describe("AggregateDomain", () => {
       expect.objectContaining({
         causation_id: commandCreate.id,
         correlation_id: commandCreate.correlationId,
-        event_name: "hermes_event_create",
+        event_name: "test_event_create",
       }),
       expect.objectContaining({
         causation_id: commandMergeState.id,
         correlation_id: commandMergeState.correlationId,
-        event_name: "hermes_event_merge_state",
+        event_name: "test_event_merge_state",
       }),
       expect.objectContaining({
         causation_id: commandEncrypt.id,
         correlation_id: commandEncrypt.correlationId,
-        event_name: "hermes_event_encrypt",
+        event_name: "test_event_encrypt",
         data: {
           algorithm: "dir",
           authTag: expect.any(String),
@@ -251,12 +206,12 @@ describe("AggregateDomain", () => {
       expect.objectContaining({
         causation_id: commandDestroyNext.id,
         correlation_id: commandDestroyNext.correlationId,
-        event_name: "hermes_event_destroy_next",
+        event_name: "test_event_destroy_next",
       }),
       expect.objectContaining({
         causation_id: commandDestroy.id,
         correlation_id: commandDestroy.correlationId,
-        event_name: "hermes_event_destroy",
+        event_name: "test_event_destroy",
       }),
     ]);
   }, 30000);

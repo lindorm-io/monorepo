@@ -1,13 +1,12 @@
 import { JsonKit } from "@lindorm/json-kit";
 import { createMockLogger } from "@lindorm/logger";
-import { MessageKit } from "@lindorm/message";
 import { IRedisSource, RedisSource } from "@lindorm/redis";
 import { randomUUID } from "crypto";
-import { TEST_AGGREGATE_IDENTIFIER } from "../../__fixtures__/aggregate";
-import { TEST_HERMES_COMMAND } from "../../__fixtures__/hermes-command";
-import { TEST_VIEW_IDENTIFIER } from "../../__fixtures__/view";
+import { createTestEvent } from "../../__fixtures__/create-message";
+import { createTestAggregateIdentifier } from "../../__fixtures__/create-test-aggregate-identifier";
+import { createTestViewIdentifier } from "../../__fixtures__/create-test-view-identifier";
+import { TestEventCreate } from "../../__fixtures__/modules/events/TestEventCreate";
 import { IViewStore } from "../../interfaces";
-import { HermesEvent } from "../../messages";
 import {
   AggregateIdentifier,
   ViewCausationAttributes,
@@ -60,8 +59,7 @@ const findView = async (
 };
 
 describe("RedisViewStore", () => {
-  const eventKit = new MessageKit({ Message: HermesEvent });
-
+  const namespace = "red_vie_sto";
   const logger = createMockLogger();
 
   let aggregateIdentifier: AggregateIdentifier;
@@ -82,8 +80,11 @@ describe("RedisViewStore", () => {
   }, 10000);
 
   beforeEach(() => {
-    aggregateIdentifier = { ...TEST_AGGREGATE_IDENTIFIER, id: randomUUID() };
-    viewIdentifier = { ...TEST_VIEW_IDENTIFIER, id: aggregateIdentifier.id };
+    aggregateIdentifier = createTestAggregateIdentifier(namespace);
+    viewIdentifier = {
+      ...createTestViewIdentifier(namespace),
+      id: aggregateIdentifier.id,
+    };
     attributes = {
       ...viewIdentifier,
       destroyed: false,
@@ -101,7 +102,7 @@ describe("RedisViewStore", () => {
   });
 
   test("should find causation ids", async () => {
-    const event = eventKit.create(TEST_HERMES_COMMAND);
+    const event = createTestEvent(new TestEventCreate("create"));
 
     await insertCausation(source, {
       id: viewIdentifier.id,

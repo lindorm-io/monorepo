@@ -6,6 +6,8 @@ import { Dict } from "@lindorm/types";
 import { IViewStore } from "../../interfaces";
 import { ViewIdentifier } from "../identifiers";
 
+export type ViewStoreSource = "custom" | "mongo" | "postgres" | "redis";
+
 export type ViewStoreOptions = {
   custom?: IViewStore;
   mongo?: IMongoSource;

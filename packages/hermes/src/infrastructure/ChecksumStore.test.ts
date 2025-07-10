@@ -5,6 +5,7 @@ import { sortKeys } from "@lindorm/utils";
 import { randomUUID } from "crypto";
 import MockDate from "mockdate";
 import { ChecksumError } from "../errors";
+import { IHermesMessage } from "../interfaces";
 import { HermesEvent } from "../messages";
 import { ChecksumStore } from "./ChecksumStore";
 
@@ -19,7 +20,7 @@ describe("ChecksumStore", () => {
   let checksum: string;
   let mock: any;
   let store: ChecksumStore;
-  let event: HermesEvent;
+  let event: IHermesMessage;
 
   beforeAll(async () => {
     mock = {

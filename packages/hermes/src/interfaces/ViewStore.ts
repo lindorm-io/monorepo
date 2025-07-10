@@ -1,29 +1,26 @@
 import {
   ViewData,
-  ViewEventHandlerAdapter,
   ViewIdentifier,
   ViewStoreAttributes,
+  ViewStoreSource,
   ViewUpdateAttributes,
   ViewUpdateFilter,
 } from "../types";
 import { IHermesMessage } from "./HermesMessage";
-import { IView } from "./View";
+import { IViewModel } from "./ViewModel";
 
 export interface IHermesViewStore {
-  load(
-    viewIdentifier: ViewIdentifier,
-    adapter: ViewEventHandlerAdapter,
-  ): Promise<ViewData>;
+  load(viewIdentifier: ViewIdentifier, source: ViewStoreSource): Promise<ViewData>;
   loadCausations(
     viewIdentifier: ViewIdentifier,
-    adapter: ViewEventHandlerAdapter,
+    source: ViewStoreSource,
   ): Promise<Array<string>>;
   save(
-    view: IView,
+    view: IViewModel,
     causation: IHermesMessage,
-    adapter: ViewEventHandlerAdapter,
+    source: ViewStoreSource,
   ): Promise<ViewData>;
-  saveCausations(view: IView, adapter: ViewEventHandlerAdapter): Promise<ViewData>;
+  saveCausations(view: IViewModel, source: ViewStoreSource): Promise<ViewData>;
 }
 
 export interface IViewStore {

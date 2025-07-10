@@ -1,43 +1,36 @@
 import { createMockLogger } from "@lindorm/logger";
-import { MessageKit } from "@lindorm/message";
 import { IMongoSource, MongoSource } from "@lindorm/mongo";
 import { IRabbitSource, RabbitSource } from "@lindorm/rabbit";
+import { Dict } from "@lindorm/types";
 import { sleep } from "@lindorm/utils";
-import { randomUUID } from "crypto";
-import { TEST_AGGREGATE_IDENTIFIER } from "../__fixtures__/aggregate";
-import {
-  TEST_HERMES_EVENT_CREATE,
-  TEST_HERMES_EVENT_DESTROY,
-  TEST_HERMES_EVENT_MERGE_STATE,
-  TEST_HERMES_EVENT_SET_STATE,
-} from "../__fixtures__/hermes-event";
-import { TEST_VIEW_IDENTIFIER } from "../__fixtures__/view";
-import {
-  TEST_VIEW_EVENT_HANDLER,
-  TEST_VIEW_EVENT_HANDLER_CREATE,
-  TEST_VIEW_EVENT_HANDLER_DESTROY,
-  TEST_VIEW_EVENT_HANDLER_MERGE_STATE,
-  TEST_VIEW_EVENT_HANDLER_SET_STATE,
-} from "../__fixtures__/view-event-handler";
-import { ViewStoreType } from "../enums";
-import { HermesViewEventHandler } from "../handlers";
+import { createTestEvent } from "../__fixtures__/create-message";
+import { createTestAggregateIdentifier } from "../__fixtures__/create-test-aggregate-identifier";
+import { createTestRegistry } from "../__fixtures__/create-test-registry";
+import { createTestViewIdentifier } from "../__fixtures__/create-test-view-identifier";
+import { TestEventCreate } from "../__fixtures__/modules/events/TestEventCreate";
+import { TestEventDestroy } from "../__fixtures__/modules/events/TestEventDestroy";
+import { TestEventMergeState } from "../__fixtures__/modules/events/TestEventMergeState";
+import { TestEventSetState } from "../__fixtures__/modules/events/TestEventSetState";
 import { MessageBus, ViewStore } from "../infrastructure";
-import { IHermesViewEventHandler } from "../interfaces";
-import { HermesError, HermesEvent } from "../messages";
+import { IHermesRegistry } from "../interfaces";
+import { HermesCommand, HermesError, HermesEvent } from "../messages";
+import { AggregateIdentifier, ViewIdentifier } from "../types";
 import { ViewDomain } from "./ViewDomain";
 
 describe("ViewDomain", () => {
-  const eventKit = new MessageKit({ Message: HermesEvent });
-
+  const namespace = "vie_dom";
   const logger = createMockLogger();
 
+  let aggregate: AggregateIdentifier;
+  let commandBus: MessageBus<HermesCommand<Dict>>;
+  let domain: ViewDomain;
+  let errorBus: MessageBus<HermesError>;
+  let eventBus: MessageBus<HermesEvent<Dict>>;
   let mongo: IMongoSource;
   let rabbit: IRabbitSource;
-  let domain: ViewDomain;
-  let eventHandlers: Array<IHermesViewEventHandler>;
-  let errorBus: MessageBus<HermesError>;
-  let eventBus: MessageBus<HermesEvent>;
+  let registry: IHermesRegistry;
   let store: ViewStore;
+  let view: ViewIdentifier;
 
   beforeAll(async () => {
     mongo = new MongoSource({
@@ -53,37 +46,27 @@ describe("ViewDomain", () => {
     });
     await rabbit.setup();
 
+    commandBus = new MessageBus({ Message: HermesCommand, rabbit, logger });
     errorBus = new MessageBus({ Message: HermesError, rabbit, logger });
     eventBus = new MessageBus({ Message: HermesEvent, rabbit, logger });
+
     store = new ViewStore({ mongo, logger });
-    domain = new ViewDomain({ errorBus, eventBus, store, logger });
 
-    eventHandlers = [
-      new HermesViewEventHandler({
-        ...TEST_VIEW_EVENT_HANDLER,
-        adapter: { type: ViewStoreType.Mongo },
-      }),
-      new HermesViewEventHandler({
-        ...TEST_VIEW_EVENT_HANDLER_CREATE,
-        adapter: { type: ViewStoreType.Mongo },
-      }),
-      new HermesViewEventHandler({
-        ...TEST_VIEW_EVENT_HANDLER_DESTROY,
-        adapter: { type: ViewStoreType.Mongo },
-      }),
-      new HermesViewEventHandler({
-        ...TEST_VIEW_EVENT_HANDLER_MERGE_STATE,
-        adapter: { type: ViewStoreType.Mongo },
-      }),
-      new HermesViewEventHandler({
-        ...TEST_VIEW_EVENT_HANDLER_SET_STATE,
-        adapter: { type: ViewStoreType.Mongo },
-      }),
-    ];
+    aggregate = createTestAggregateIdentifier(namespace);
+    view = { ...createTestViewIdentifier(namespace), id: aggregate.id };
 
-    for (const handler of eventHandlers) {
-      await domain.registerEventHandler(handler);
-    }
+    registry = createTestRegistry(namespace);
+
+    domain = new ViewDomain({
+      commandBus,
+      errorBus,
+      eventBus,
+      logger,
+      registry,
+      store,
+    });
+
+    await domain.registerHandlers();
   });
 
   afterAll(async () => {
@@ -92,79 +75,70 @@ describe("ViewDomain", () => {
   });
 
   test("should handle multiple published events", async () => {
-    const aggregate = { ...TEST_AGGREGATE_IDENTIFIER, id: randomUUID() };
-    const view = { ...TEST_VIEW_IDENTIFIER, id: aggregate.id };
-
-    const eventCreate = eventKit.create({
-      ...TEST_HERMES_EVENT_CREATE,
+    const eventCreate = createTestEvent(new TestEventCreate("create"), {
       aggregate,
       timestamp: new Date("2022-01-01T08:00:00.000Z"),
     });
-    const eventAddField = eventKit.create({
-      ...TEST_HERMES_EVENT_MERGE_STATE,
+    const eventMergeState = createTestEvent(new TestEventMergeState("merge-state"), {
       aggregate,
       timestamp: new Date("2022-01-02T08:00:00.000Z"),
     });
-    const eventSetState = eventKit.create({
-      ...TEST_HERMES_EVENT_SET_STATE,
+    const eventSetState = createTestEvent(new TestEventSetState("set-state"), {
       aggregate,
       timestamp: new Date("2022-01-03T08:00:00.000Z"),
     });
-    const eventDestroy = eventKit.create({
-      ...TEST_HERMES_EVENT_DESTROY,
+    const eventDestroy = createTestEvent(new TestEventDestroy("destroy"), {
       aggregate,
       timestamp: new Date("2022-01-04T08:00:00.000Z"),
     });
 
     await expect(eventBus.publish(eventCreate)).resolves.toBeUndefined();
-    await sleep(250);
+    await sleep(500);
 
-    await expect(eventBus.publish(eventAddField)).resolves.toBeUndefined();
-    await sleep(250);
+    await expect(eventBus.publish(eventMergeState)).resolves.toBeUndefined();
+    await sleep(500);
 
     await expect(eventBus.publish(eventSetState)).resolves.toBeUndefined();
-    await sleep(250);
+    await sleep(500);
 
     await expect(eventBus.publish(eventDestroy)).resolves.toBeUndefined();
-    await sleep(250);
+    await sleep(500);
 
-    await expect(store.load(view, { type: ViewStoreType.Mongo })).resolves.toEqual(
+    await expect(store.load(view, "mongo")).resolves.toEqual(
       expect.objectContaining({
         id: aggregate.id,
-        name: "name",
-        context: "default",
+        name: "test_mongo_view",
+        context: namespace,
         destroyed: true,
         meta: {
-          created: {
+          create: {
             destroyed: false,
             timestamp: new Date("2022-01-01T08:00:00.000Z"),
-            value: true,
+            value: "create",
           },
-          merge: {
-            hermesEventData: {
-              destroyed: false,
-              timestamp: new Date("2022-01-02T08:00:00.000Z"),
-              value: true,
-            },
+          destroy: {
+            destroyed: false,
+            timestamp: new Date("2022-01-04T08:00:00.000Z"),
+            value: "destroy",
           },
-          set: {
-            hermesEventData: {
-              destroyed: false,
-              timestamp: new Date("2022-01-03T08:00:00.000Z"),
-              value: true,
-            },
+          mergeState: {
+            destroyed: false,
+            timestamp: new Date("2022-01-02T08:00:00.000Z"),
+            value: "merge-state",
+          },
+          setState: {
+            destroyed: false,
+            timestamp: new Date("2022-01-03T08:00:00.000Z"),
+            value: "set-state",
           },
         },
         processedCausationIds: [],
         revision: 8,
         state: {
-          created: true,
-          merge: {
-            hermesEventData: true,
-          },
-          set: {
-            hermesEventData: true,
-          },
+          create: "create",
+          destroy: "destroy",
+          mergeState: "merge-state",
+          setState: "set-state",
         },
       }),
     );

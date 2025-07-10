@@ -1,9 +1,15 @@
 import { ILogger } from "@lindorm/logger";
-import { IHermesChecksumStore, IHermesMessageBus } from "../../interfaces";
+import {
+  IHermesChecksumStore,
+  IHermesMessageBus,
+  IHermesRegistry,
+} from "../../interfaces";
+import { HermesError, HermesEvent } from "../../messages";
 
 export type ChecksumDomainOptions = {
+  errorBus: IHermesMessageBus<HermesError>;
+  eventBus: IHermesMessageBus<HermesEvent>;
   logger: ILogger;
-  errorBus: IHermesMessageBus;
-  eventBus: IHermesMessageBus;
+  registry: IHermesRegistry;
   store: IHermesChecksumStore;
 };

@@ -1,17 +1,19 @@
 import { createMockLogger } from "@lindorm/logger";
 import { IMongoSource, MongoSource } from "@lindorm/mongo";
 import { randomUUID } from "crypto";
+import { createTestViewIdentifier } from "../../__fixtures__/create-test-view-identifier";
 import { IMongoViewRepository } from "../../interfaces";
 import { ViewIdentifier, ViewStoreAttributes } from "../../types";
 import { getViewStoreName } from "../../utils/private";
 import { MongoViewRepository } from "./MongoViewRepository";
 
 describe("MongoViewRepository", () => {
+  const namespace = "mon_vie_rep";
   const logger = createMockLogger();
 
-  let identifier: ViewIdentifier;
   let repository: IMongoViewRepository;
   let source: IMongoSource;
+  let view: ViewIdentifier;
 
   let view1: string;
   let view2: string;
@@ -26,12 +28,12 @@ describe("MongoViewRepository", () => {
 
     await source.setup();
 
-    identifier = { context: "view_repository", name: "name", id: randomUUID() };
+    view = createTestViewIdentifier(namespace);
 
-    repository = new MongoViewRepository(source, identifier, logger);
+    repository = new MongoViewRepository(source, view, logger);
 
     const collection = source.database.collection<ViewStoreAttributes>(
-      getViewStoreName(identifier),
+      getViewStoreName(view),
     );
 
     view1 = randomUUID();
@@ -42,7 +44,7 @@ describe("MongoViewRepository", () => {
       {
         id: view1,
         name: "name",
-        context: "view_repository",
+        context: namespace,
         destroyed: false,
         processed_causation_ids: [],
         meta: {},
@@ -54,7 +56,7 @@ describe("MongoViewRepository", () => {
       {
         id: view2,
         name: "name",
-        context: "view_repository",
+        context: namespace,
         destroyed: false,
         processed_causation_ids: [],
         meta: {},
@@ -66,7 +68,7 @@ describe("MongoViewRepository", () => {
       {
         id: view3,
         name: "name",
-        context: "view_repository",
+        context: namespace,
         destroyed: false,
         processed_causation_ids: [],
         meta: {},
@@ -78,7 +80,7 @@ describe("MongoViewRepository", () => {
       {
         id: randomUUID(),
         name: "name",
-        context: "view_repository",
+        context: namespace,
         destroyed: true,
         processed_causation_ids: [],
         meta: {},

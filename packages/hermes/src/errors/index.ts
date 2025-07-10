@@ -8,6 +8,7 @@ export * from "./CommandSchemaValidationError";
 export * from "./ConcurrencyError";
 export * from "./DomainError";
 export * from "./HandlerNotRegisteredError";
+export * from "./HermesScannerError";
 export * from "./InvalidMessageTypeError";
 export * from "./MongoDuplicateKeyError";
 export * from "./MongoNotUpdatedError";

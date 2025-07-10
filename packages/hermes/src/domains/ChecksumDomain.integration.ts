@@ -1,44 +1,39 @@
 import { createMockLogger } from "@lindorm/logger";
-import { MessageKit } from "@lindorm/message";
 import { IMongoSource, MongoSource } from "@lindorm/mongo";
 import { IRabbitSource, RabbitSource } from "@lindorm/rabbit";
+import { Dict } from "@lindorm/types";
 import { sleep } from "@lindorm/utils";
-import { randomUUID } from "crypto";
-import { TEST_AGGREGATE_IDENTIFIER } from "../__fixtures__/aggregate";
-import {
-  TEST_CHECKSUM_EVENT_HANDLER,
-  TEST_CHECKSUM_EVENT_HANDLER_CREATE,
-  TEST_CHECKSUM_EVENT_HANDLER_DESTROY,
-  TEST_CHECKSUM_EVENT_HANDLER_DESTROY_NEXT,
-  TEST_CHECKSUM_EVENT_HANDLER_MERGE_STATE,
-  TEST_CHECKSUM_EVENT_HANDLER_SET_STATE,
-  TEST_CHECKSUM_EVENT_HANDLER_THROWS,
-} from "../__fixtures__/checksum-event-handler";
-import {
-  TEST_HERMES_EVENT_CREATE,
-  TEST_HERMES_EVENT_DESTROY,
-  TEST_HERMES_EVENT_MERGE_STATE,
-  TEST_HERMES_EVENT_SET_STATE,
-} from "../__fixtures__/hermes-event";
+import { createTestEvent } from "../__fixtures__/create-message";
+import { createTestAggregateIdentifier } from "../__fixtures__/create-test-aggregate-identifier";
+import { createTestRegistry } from "../__fixtures__/create-test-registry";
+import { TestEventCreate } from "../__fixtures__/modules/events/TestEventCreate";
+import { TestEventDestroy } from "../__fixtures__/modules/events/TestEventDestroy";
+import { TestEventMergeState } from "../__fixtures__/modules/events/TestEventMergeState";
+import { TestEventSetState } from "../__fixtures__/modules/events/TestEventSetState";
 import { CHECKSUM_STORE } from "../constants/private";
 import { MessageBus } from "../infrastructure";
 import { ChecksumStore } from "../infrastructure/ChecksumStore";
-import { IChecksumDomain, IHermesChecksumStore, IHermesMessageBus } from "../interfaces";
+import {
+  IChecksumDomain,
+  IHermesChecksumStore,
+  IHermesMessageBus,
+  IHermesRegistry,
+} from "../interfaces";
 import { HermesError, HermesEvent } from "../messages";
 import { AggregateIdentifier } from "../types";
 import { ChecksumDomain } from "./ChecksumDomain";
 
 describe("ChecksumDomain", () => {
-  const eventKit = new MessageKit({ Message: HermesEvent });
-
+  const namespace = "che_dom";
   const logger = createMockLogger();
 
-  let mongo: IMongoSource;
-  let rabbit: IRabbitSource;
   let aggregate: AggregateIdentifier;
   let domain: IChecksumDomain;
   let errorBus: IHermesMessageBus<HermesError>;
-  let eventBus: IHermesMessageBus<HermesEvent>;
+  let eventBus: IHermesMessageBus<HermesEvent<Dict>>;
+  let mongo: IMongoSource;
+  let rabbit: IRabbitSource;
+  let registry: IHermesRegistry;
   let store: IHermesChecksumStore;
 
   beforeAll(async () => {
@@ -55,25 +50,24 @@ describe("ChecksumDomain", () => {
     });
     await rabbit.setup();
 
-    aggregate = { ...TEST_AGGREGATE_IDENTIFIER, id: randomUUID() };
     errorBus = new MessageBus({ Message: HermesError, rabbit, logger });
     eventBus = new MessageBus({ Message: HermesEvent, rabbit, logger });
+
     store = new ChecksumStore({ mongo, logger });
-    domain = new ChecksumDomain({ errorBus, eventBus, store, logger });
 
-    const eventHandlers = [
-      TEST_CHECKSUM_EVENT_HANDLER,
-      TEST_CHECKSUM_EVENT_HANDLER_CREATE,
-      TEST_CHECKSUM_EVENT_HANDLER_DESTROY,
-      TEST_CHECKSUM_EVENT_HANDLER_DESTROY_NEXT,
-      TEST_CHECKSUM_EVENT_HANDLER_MERGE_STATE,
-      TEST_CHECKSUM_EVENT_HANDLER_SET_STATE,
-      TEST_CHECKSUM_EVENT_HANDLER_THROWS,
-    ];
+    aggregate = createTestAggregateIdentifier(namespace);
 
-    for (const handler of eventHandlers) {
-      await domain.registerEventHandler(handler);
-    }
+    registry = createTestRegistry(namespace);
+
+    domain = new ChecksumDomain({
+      errorBus,
+      eventBus,
+      logger,
+      registry,
+      store,
+    });
+
+    await domain.registerHandlers();
   });
 
   afterAll(async () => {
@@ -82,57 +76,62 @@ describe("ChecksumDomain", () => {
   });
 
   test("should handle multiple published events", async () => {
-    const eventCreate = eventKit.create({ ...TEST_HERMES_EVENT_CREATE, aggregate });
-    const eventMergeState = eventKit.create({
-      ...TEST_HERMES_EVENT_MERGE_STATE,
+    const eventCreate = createTestEvent(new TestEventCreate("create"), {
       aggregate,
     });
-    const eventSetState = eventKit.create({ ...TEST_HERMES_EVENT_SET_STATE, aggregate });
-    const eventDestroy = eventKit.create({ ...TEST_HERMES_EVENT_DESTROY, aggregate });
+    const eventMergeState = createTestEvent(new TestEventMergeState("merge-state"), {
+      aggregate,
+    });
+    const eventSetState = createTestEvent(new TestEventSetState("set-state"), {
+      aggregate,
+    });
+    const eventDestroy = createTestEvent(new TestEventDestroy("destroy"), {
+      aggregate,
+    });
 
     await expect(eventBus.publish(eventCreate)).resolves.toBeUndefined();
-    await sleep(250);
+    await sleep(500);
 
     await expect(eventBus.publish(eventMergeState)).resolves.toBeUndefined();
-    await sleep(250);
+    await sleep(500);
 
     await expect(eventBus.publish(eventSetState)).resolves.toBeUndefined();
-    await sleep(250);
+    await sleep(500);
 
     await expect(eventBus.publish(eventDestroy)).resolves.toBeUndefined();
-    await sleep(250);
+    await sleep(500);
 
     await expect(
       mongo.collection(CHECKSUM_STORE).find({ id: aggregate.id }).toArray(),
     ).resolves.toEqual([
       expect.objectContaining({
         id: aggregate.id,
-        name: "aggregate_name",
-        context: "default",
+        name: "test_aggregate",
+        context: namespace,
         checksum: expect.any(String),
         event_id: eventCreate.id,
         created_at: expect.any(Date),
       }),
       expect.objectContaining({
         id: aggregate.id,
-        name: "aggregate_name",
-        context: "default",
+        name: "test_aggregate",
+        context: namespace,
         checksum: expect.any(String),
         event_id: eventMergeState.id,
         created_at: expect.any(Date),
       }),
       expect.objectContaining({
         id: aggregate.id,
-        name: "aggregate_name",
-        context: "default",
+        name: "test_aggregate",
+        context: namespace,
         checksum: expect.any(String),
         event_id: eventSetState.id,
         created_at: expect.any(Date),
       }),
       expect.objectContaining({
         id: aggregate.id,
-        name: "aggregate_name",
-        context: "default",
+        name: "test_aggregate",
+        context: namespace,
         checksum: expect.any(String),
         event_id: eventDestroy.id,
         created_at: expect.any(Date),

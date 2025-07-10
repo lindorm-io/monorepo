@@ -1,6 +1,6 @@
 import { LindormError } from "@lindorm/errors";
 import { ILogger } from "@lindorm/logger";
-import { IHermesMessage, IHermesSagaStore, ISaga, ISagaStore } from "../interfaces";
+import { IHermesMessage, IHermesSagaStore, ISagaModel, ISagaStore } from "../interfaces";
 import {
   HermesSagaStoreOptions,
   SagaData,
@@ -32,7 +32,7 @@ export class SagaStore implements IHermesSagaStore {
 
   // public
 
-  public async clearMessages(saga: ISaga): Promise<SagaData> {
+  public async clearMessages(saga: ISagaModel): Promise<SagaData> {
     this.logger.debug("Clearing messages", { saga: saga.toJSON() });
 
     const filter: SagaUpdateFilter = {
@@ -95,7 +95,7 @@ export class SagaStore implements IHermesSagaStore {
     return await this.store.findCausationIds(sagaIdentifier);
   }
 
-  public async save(saga: ISaga, causation: IHermesMessage): Promise<SagaData> {
+  public async save(saga: ISagaModel, causation: IHermesMessage): Promise<SagaData> {
     this.logger.debug("Saving saga", { saga: saga.toJSON(), causation });
 
     const sagaIdentifier: SagaIdentifier = {
@@ -161,7 +161,7 @@ export class SagaStore implements IHermesSagaStore {
     };
   }
 
-  public async saveCausations(saga: ISaga): Promise<SagaData> {
+  public async saveCausations(saga: ISagaModel): Promise<SagaData> {
     this.logger.debug("Saving causations", { saga: saga.toJSON() });
 
     if (!saga.processedCausationIds.length) {

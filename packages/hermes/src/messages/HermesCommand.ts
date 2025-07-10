@@ -7,4 +7,6 @@ import { HermesMessage } from "./HermesMessage";
 @OnCreate((message) => {
   (message as IMessage).mandatory = true;
 })
-export class HermesCommand extends HermesMessage<Dict> implements IHermesMessage<Dict> {}
+export class HermesCommand<C extends Dict>
+  extends HermesMessage<C>
+  implements IHermesMessage<C> {}

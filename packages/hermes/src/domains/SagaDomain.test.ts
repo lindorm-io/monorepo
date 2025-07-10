@@ -1,60 +1,34 @@
-import { LindormError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger";
-import { MessageKit } from "@lindorm/message";
 import { createMockRabbitMessageBus } from "@lindorm/rabbit";
+import { Dict } from "@lindorm/types";
 import { randomUUID } from "crypto";
-import { TEST_AGGREGATE_IDENTIFIER } from "../__fixtures__/aggregate";
-import { TEST_AGGREGATE_EVENT_HANDLER } from "../__fixtures__/aggregate-event-handler";
+import { createTestEvent } from "../__fixtures__/create-message";
+import { createTestAggregateIdentifier } from "../__fixtures__/create-test-aggregate-identifier";
+import { createTestRegistry } from "../__fixtures__/create-test-registry";
+import { createTestSagaIdentifier } from "../__fixtures__/create-test-saga-identifier";
+import { TestEventCreate } from "../__fixtures__/modules/events/TestEventCreate";
+import { TestEventDestroy } from "../__fixtures__/modules/events/TestEventDestroy";
+import { TestEventDispatch } from "../__fixtures__/modules/events/TestEventDispatch";
+import { TestEventMergeState } from "../__fixtures__/modules/events/TestEventMergeState";
+import { TestEventThrows } from "../__fixtures__/modules/events/TestEventThrows";
+import { SagaNotCreatedError } from "../errors";
 import {
-  TEST_HERMES_EVENT,
-  TEST_HERMES_EVENT_CREATE,
-  TEST_HERMES_EVENT_DISPATCH,
-  TEST_HERMES_EVENT_MERGE_STATE,
-  TEST_HERMES_EVENT_THROWS,
-} from "../__fixtures__/hermes-event";
-import { TEST_SAGA_IDENTIFIER } from "../__fixtures__/saga";
-import {
-  TEST_SAGA_EVENT_HANDLER,
-  TEST_SAGA_EVENT_HANDLER_CREATE,
-  TEST_SAGA_EVENT_HANDLER_DESTROY,
-  TEST_SAGA_EVENT_HANDLER_DISPATCH,
-  TEST_SAGA_EVENT_HANDLER_MERGE_STATE,
-  TEST_SAGA_EVENT_HANDLER_SET_STATE,
-  TEST_SAGA_EVENT_HANDLER_THROWS,
-  TEST_SAGA_EVENT_HANDLER_TIMEOUT,
-} from "../__fixtures__/saga-event-handler";
-import {
-  HandlerNotRegisteredError,
-  SagaAlreadyCreatedError,
-  SagaDestroyedError,
-  SagaNotCreatedError,
-} from "../errors";
-import { HermesSagaEventHandler } from "../handlers";
-import { IHermesMessage, IHermesMessageBus, ISaga, ISagaDomain } from "../interfaces";
+  IHermesMessage,
+  IHermesMessageBus,
+  ISagaDomain,
+  ISagaModel,
+} from "../interfaces";
 import { HermesCommand, HermesError, HermesEvent, HermesTimeout } from "../messages";
 import { SagaIdentifier } from "../types";
 import { SagaDomain } from "./SagaDomain";
 
 describe("SagaDomain", () => {
-  const commandKit = new MessageKit({ Message: HermesCommand });
-  const eventKit = new MessageKit({ Message: HermesEvent });
-
   const logger = createMockLogger();
-  const eventHandlers = [
-    TEST_SAGA_EVENT_HANDLER,
-    TEST_SAGA_EVENT_HANDLER_CREATE,
-    TEST_SAGA_EVENT_HANDLER_DESTROY,
-    TEST_SAGA_EVENT_HANDLER_DISPATCH,
-    TEST_SAGA_EVENT_HANDLER_MERGE_STATE,
-    TEST_SAGA_EVENT_HANDLER_SET_STATE,
-    TEST_SAGA_EVENT_HANDLER_TIMEOUT,
-    TEST_SAGA_EVENT_HANDLER_THROWS,
-  ];
 
   let domain: ISagaDomain;
-  let commandBus: IHermesMessageBus<HermesCommand>;
+  let commandBus: IHermesMessageBus<HermesCommand<Dict>>;
   let errorBus: IHermesMessageBus<HermesError>;
-  let eventBus: IHermesMessageBus<HermesEvent>;
+  let eventBus: IHermesMessageBus<HermesEvent<Dict>>;
   let timeoutBus: IHermesMessageBus<HermesTimeout>;
   let store: any;
 
@@ -65,7 +39,7 @@ describe("SagaDomain", () => {
     timeoutBus = createMockRabbitMessageBus(HermesTimeout);
 
     store = {
-      clearMessages: jest.fn().mockImplementation(async (saga: ISaga) => ({
+      clearMessages: jest.fn().mockImplementation(async (saga: ISagaModel) => ({
         ...saga.toJSON(),
         revision: saga.revision + 1,
         messagesToDispatch: [],
@@ -76,12 +50,12 @@ describe("SagaDomain", () => {
       loadCausations: jest.fn().mockResolvedValue([]),
       save: jest
         .fn()
-        .mockImplementation(async (saga: ISaga, causation: IHermesMessage) => ({
+        .mockImplementation(async (saga: ISagaModel, causation: IHermesMessage) => ({
           ...saga.toJSON(),
           revision: saga.revision + 1,
           processedCausationIds: [...saga.processedCausationIds, causation.id],
         })),
-      saveCausations: jest.fn().mockImplementation(async (saga: ISaga) => ({
+      saveCausations: jest.fn().mockImplementation(async (saga: ISagaModel) => ({
         ...saga.toJSON(),
         revision: saga.revision + 1,
         processedCausationIds: [],
@@ -92,136 +66,48 @@ describe("SagaDomain", () => {
       commandBus,
       errorBus,
       eventBus,
-      timeoutBus,
-      store: store as any,
       logger,
+      registry: createTestRegistry(),
+      store: store as any,
+      timeoutBus,
     });
 
-    for (const handler of eventHandlers) {
-      await domain.registerEventHandler(handler);
-    }
+    await domain.registerHandlers();
   });
 
   test("should register event handler", async () => {
-    eventBus = createMockRabbitMessageBus(HermesEvent);
-    domain = new SagaDomain({
-      commandBus,
-      errorBus,
-      eventBus,
-      timeoutBus,
-      store: store as any,
-      logger,
-    });
-
-    await expect(
-      domain.registerEventHandler(TEST_SAGA_EVENT_HANDLER),
-    ).resolves.toBeUndefined();
-
     expect(eventBus.subscribe).toHaveBeenCalledWith({
       callback: expect.any(Function),
-      queue: "queue.saga.default.aggregate_name.hermes_event_default.default.name",
-      topic: "default.aggregate_name.hermes_event_default",
+      queue: "queue.saga.hermes.test_aggregate.test_event_create.hermes.test_saga",
+      topic: "hermes.test_aggregate.test_event_create",
     });
-  });
-
-  test("should register multiple event handlers", async () => {
-    eventBus = createMockRabbitMessageBus(HermesEvent);
-    domain = new SagaDomain({
-      commandBus,
-      errorBus,
-      eventBus,
-      timeoutBus,
-      store: store as any,
-      logger,
-    });
-
-    await expect(
-      domain.registerEventHandler(
-        new HermesSagaEventHandler({
-          ...TEST_SAGA_EVENT_HANDLER,
-          aggregate: {
-            ...TEST_SAGA_EVENT_HANDLER.aggregate,
-            context: ["one", "two"],
-          },
-        }),
-      ),
-    ).resolves.toBeUndefined();
-
-    expect(eventBus.subscribe).toHaveBeenCalledTimes(2);
-
-    expect(eventBus.subscribe).toHaveBeenNthCalledWith(1, {
-      callback: expect.any(Function),
-      queue: "queue.saga.one.aggregate_name.hermes_event_default.default.name",
-      topic: "one.aggregate_name.hermes_event_default",
-    });
-
-    expect(eventBus.subscribe).toHaveBeenNthCalledWith(2, {
-      callback: expect.any(Function),
-      queue: "queue.saga.two.aggregate_name.hermes_event_default.default.name",
-      topic: "two.aggregate_name.hermes_event_default",
-    });
-  });
-
-  test("should throw on existing event handler", async () => {
-    domain = new SagaDomain({
-      commandBus,
-      errorBus,
-      eventBus,
-      timeoutBus,
-      store: store as any,
-      logger,
-    });
-
-    await domain.registerEventHandler(TEST_SAGA_EVENT_HANDLER);
-
-    await expect(domain.registerEventHandler(TEST_SAGA_EVENT_HANDLER)).rejects.toThrow(
-      LindormError,
-    );
-  });
-
-  test("should throw on invalid event handler", async () => {
-    domain = new SagaDomain({
-      commandBus,
-      errorBus,
-      eventBus,
-      timeoutBus,
-      store: store as any,
-      logger,
-    });
-
-    await expect(
-      // @ts-expect-error
-      domain.registerEventHandler(TEST_AGGREGATE_EVENT_HANDLER),
-    ).rejects.toThrow(LindormError);
   });
 
   test("should handle event", async () => {
-    const aggregate = { ...TEST_AGGREGATE_IDENTIFIER, id: randomUUID() };
-    const event = eventKit.create({ ...TEST_HERMES_EVENT_CREATE, aggregate });
+    const aggregate = createTestAggregateIdentifier();
+    const event = createTestEvent(new TestEventCreate("create"), { aggregate });
 
     await expect(
       // @ts-expect-error
-      domain.handleEvent(event, TEST_SAGA_IDENTIFIER),
+      domain.handleEvent(event, createTestSagaIdentifier()),
     ).resolves.toBeUndefined();
 
     expect(store.load).toHaveBeenCalledWith({
       id: event.aggregate.id,
-      name: "name",
-      context: "default",
+      name: "test_saga",
+      context: "hermes",
     });
 
     expect(store.save).toHaveBeenCalledWith(
       expect.objectContaining({
         id: event.aggregate.id,
-        name: "name",
-        context: "default",
+        name: "test_saga",
+        context: "hermes",
         processedCausationIds: [],
         destroyed: false,
         messagesToDispatch: [],
         revision: 0,
-        state: {
-          created: true,
-        },
+        state: { create: "create" },
       }),
       event,
     );
@@ -234,32 +120,31 @@ describe("SagaDomain", () => {
   });
 
   test("should handle event and dispatch commands", async () => {
-    const aggregate = { ...TEST_AGGREGATE_IDENTIFIER, id: randomUUID() };
+    const aggregate = createTestAggregateIdentifier();
     const causationId = randomUUID();
-    const event = eventKit.create({ ...TEST_HERMES_EVENT_DISPATCH, aggregate });
+    const event = createTestEvent(new TestEventDispatch("dispatch"), { aggregate });
 
     store.load.mockImplementation(async (s: SagaIdentifier) => ({
       ...s,
       revision: 1,
       processedCausationIds: [causationId],
-      logger,
     }));
 
     await expect(
       // @ts-expect-error
-      domain.handleEvent(event, TEST_SAGA_IDENTIFIER),
+      domain.handleEvent(event, createTestSagaIdentifier()),
     ).resolves.toBeUndefined();
 
     expect(store.save).toHaveBeenCalledWith(
       expect.objectContaining({
         id: event.aggregate.id,
-        name: "name",
-        context: "default",
+        name: "test_saga",
+        context: "hermes",
         processedCausationIds: [causationId],
         destroyed: false,
         messagesToDispatch: [expect.any(HermesCommand)],
         revision: 1,
-        state: {},
+        state: { dispatch: "dispatch" },
       }),
       event,
     );
@@ -270,11 +155,11 @@ describe("SagaDomain", () => {
         aggregate: event.aggregate,
         causationId: expect.any(String),
         correlationId: event.correlationId,
-        data: { commandData: true },
+        data: { input: "dispatch" },
         delay: 0,
         mandatory: true,
         meta: { origin: "test" },
-        name: "command_default",
+        name: "test_command_merge_state",
         version: 1,
       }),
     ]);
@@ -283,19 +168,18 @@ describe("SagaDomain", () => {
   });
 
   test("should skip handler when saga causations matches event id", async () => {
-    const aggregate = { ...TEST_AGGREGATE_IDENTIFIER, id: randomUUID() };
-    const event = eventKit.create({ ...TEST_HERMES_EVENT_MERGE_STATE, aggregate });
+    const aggregate = createTestAggregateIdentifier();
+    const event = createTestEvent(new TestEventMergeState("merge-state"), { aggregate });
 
     store.load.mockImplementation(async (s: SagaIdentifier) => ({
       ...s,
       revision: 1,
       processedCausationIds: [event.id],
-      logger,
     }));
 
     await expect(
       // @ts-expect-error
-      domain.handleEvent(event, TEST_SAGA_IDENTIFIER),
+      domain.handleEvent(event, createTestSagaIdentifier()),
     ).resolves.toBeUndefined();
 
     expect(store.save).not.toHaveBeenCalled();
@@ -305,14 +189,14 @@ describe("SagaDomain", () => {
   });
 
   test("should skip handler when loaded causations matches event id", async () => {
-    const aggregate = { ...TEST_AGGREGATE_IDENTIFIER, id: randomUUID() };
-    const event = eventKit.create({ ...TEST_HERMES_EVENT_MERGE_STATE, aggregate });
+    const aggregate = createTestAggregateIdentifier();
+    const event = createTestEvent(new TestEventMergeState("merge-state"), { aggregate });
 
     store.loadCausations.mockImplementation(async () => [event.id]);
 
     await expect(
       // @ts-expect-error
-      domain.handleEvent(event, TEST_SAGA_IDENTIFIER),
+      domain.handleEvent(event, createTestSagaIdentifier()),
     ).resolves.toBeUndefined();
 
     expect(store.save).not.toHaveBeenCalled();
@@ -321,199 +205,98 @@ describe("SagaDomain", () => {
     expect(store.saveCausations).not.toHaveBeenCalled();
   });
 
-  test("should throw on missing handler", async () => {
-    domain = new SagaDomain({
-      commandBus,
-      errorBus,
-      eventBus,
-      timeoutBus,
-      store: store as any,
-      logger,
-    });
-
-    const event = eventKit.create(TEST_HERMES_EVENT);
-
-    await expect(
-      // @ts-expect-error
-      domain.handleEvent(event, TEST_SAGA_IDENTIFIER),
-    ).rejects.toThrow(HandlerNotRegisteredError);
-  });
-
   test("should dispatch error on destroyed saga", async () => {
-    const event = eventKit.create(TEST_HERMES_EVENT);
+    const event = createTestEvent(new TestEventCreate("create"));
 
     store.load.mockImplementation(async (s: SagaIdentifier) => ({
       ...s,
       destroyed: true,
-      logger,
     }));
 
     await expect(
       // @ts-expect-error
-      domain.handleEvent(event, TEST_SAGA_IDENTIFIER),
+      domain.handleEvent(event, createTestSagaIdentifier()),
     ).resolves.toBeUndefined();
 
-    expect(errorBus.publish).toHaveBeenCalledWith([
+    expect(errorBus.publish).toHaveBeenCalledWith(
       expect.objectContaining({
         name: "saga_destroyed_error",
         data: {
-          error: expect.any(SagaDestroyedError),
+          error: expect.objectContaining({ name: "SagaDestroyedError" }),
+          event: expect.objectContaining({
+            input: "create",
+          }),
           message: event,
           saga: {
             id: expect.any(String),
-            name: "name",
-            context: "default",
+            name: "test_saga",
+            context: "hermes",
           },
         },
       }),
-    ]);
+    );
   });
 
   test("should throw on not created saga", async () => {
-    const event = eventKit.create(TEST_HERMES_EVENT_MERGE_STATE);
+    const event = createTestEvent(new TestEventDestroy("destroy"));
 
     store.load.mockImplementation(async (s: SagaIdentifier) => ({
       ...s,
       revision: 0,
-      logger,
     }));
 
     await expect(
       // @ts-expect-error
-      domain.handleEvent(event, TEST_SAGA_IDENTIFIER),
+      domain.handleEvent(event, createTestSagaIdentifier()),
     ).rejects.toThrow(SagaNotCreatedError);
 
     expect(commandBus.publish).not.toHaveBeenCalled();
   });
 
-  test("should dispatch error on not created saga", async () => {
-    domain = new SagaDomain({
-      commandBus,
-      errorBus,
-      eventBus,
-      timeoutBus,
-      store: store as any,
-      logger,
-    });
-
-    await domain.registerEventHandler(
-      new HermesSagaEventHandler({
-        ...TEST_SAGA_EVENT_HANDLER_MERGE_STATE,
-        conditions: {
-          created: true,
-          permanent: true,
-        },
-      }),
-    );
-
-    const event = eventKit.create(TEST_HERMES_EVENT_MERGE_STATE);
-
-    store.load.mockImplementation(async (s: SagaIdentifier) => ({
-      ...s,
-      revision: 0,
-      logger,
-    }));
-
-    await expect(
-      // @ts-expect-error
-      domain.handleEvent(event, TEST_SAGA_IDENTIFIER),
-    ).resolves.toBeUndefined();
-
-    expect(errorBus.publish).toHaveBeenCalledWith([
-      expect.objectContaining({
-        name: "saga_not_created_error",
-        data: {
-          error: expect.any(SagaNotCreatedError),
-          message: event,
-          saga: {
-            id: expect.any(String),
-            name: "name",
-            context: "default",
-          },
-        },
-      }),
-    ]);
-  });
-
-  test("should throw on already created saga", async () => {
-    domain = new SagaDomain({
-      commandBus,
-      errorBus,
-      eventBus,
-      timeoutBus,
-      store: store as any,
-      logger,
-    });
-
-    await domain.registerEventHandler(
-      new HermesSagaEventHandler({
-        ...TEST_SAGA_EVENT_HANDLER_CREATE,
-        conditions: {
-          created: false,
-          permanent: false,
-        },
-      }),
-    );
-
-    const event = eventKit.create(TEST_HERMES_EVENT_CREATE);
-
-    store.load.mockImplementation(async (s: SagaIdentifier) => ({
-      ...s,
-      revision: 1,
-      logger,
-    }));
-
-    await expect(
-      // @ts-expect-error
-      domain.handleEvent(event, TEST_SAGA_IDENTIFIER),
-    ).rejects.toThrow(SagaAlreadyCreatedError);
-
-    expect(commandBus.publish).not.toHaveBeenCalled();
-  });
-
   test("should dispatch error on already created saga", async () => {
-    const event = eventKit.create(TEST_HERMES_EVENT_CREATE);
+    const event = createTestEvent(new TestEventCreate("create"));
 
     store.load.mockImplementation(async (s: SagaIdentifier) => ({
       ...s,
       revision: 1,
-      logger,
     }));
 
     await expect(
       // @ts-expect-error
-      domain.handleEvent(event, TEST_SAGA_IDENTIFIER),
+      domain.handleEvent(event, createTestSagaIdentifier()),
     ).resolves.toBeUndefined();
 
-    expect(errorBus.publish).toHaveBeenCalledWith([
+    expect(errorBus.publish).toHaveBeenCalledWith(
       expect.objectContaining({
         name: "saga_already_created_error",
         data: {
-          error: expect.any(SagaAlreadyCreatedError),
+          error: expect.objectContaining({ name: "SagaAlreadyCreatedError" }),
+          event: expect.objectContaining({
+            input: "create",
+          }),
           message: event,
           saga: {
             id: expect.any(String),
-            name: "name",
-            context: "default",
+            name: "test_saga",
+            context: "hermes",
           },
         },
       }),
-    ]);
+    );
   });
 
   test("should throw from event handler", async () => {
-    const event = eventKit.create(TEST_HERMES_EVENT_THROWS);
+    const event = createTestEvent(new TestEventThrows("throws"));
 
     store.load.mockImplementation(async (s: SagaIdentifier) => ({
       ...s,
       revision: 1,
-      logger,
     }));
 
     await expect(
       // @ts-expect-error
-      domain.handleEvent(event, TEST_SAGA_IDENTIFIER),
-    ).rejects.toThrow(new Error("throw"));
+      domain.handleEvent(event, createTestSagaIdentifier()),
+    ).rejects.toThrow(new Error("throws"));
 
     expect(commandBus.publish).not.toHaveBeenCalled();
   });

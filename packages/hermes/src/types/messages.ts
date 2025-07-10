@@ -1,4 +1,5 @@
 import { Dict } from "@lindorm/types";
+import { DomainError } from "../errors";
 import { IHermesMessage } from "../interfaces";
 import { AggregateIdentifier, SagaIdentifier, ViewIdentifier } from "./identifiers";
 
@@ -16,7 +17,7 @@ export type HermesMessageOptions<
 };
 
 export type HermesErrorData = {
-  error: Error;
+  error: DomainError;
   message: IHermesMessage;
   saga?: SagaIdentifier;
   view?: ViewIdentifier;

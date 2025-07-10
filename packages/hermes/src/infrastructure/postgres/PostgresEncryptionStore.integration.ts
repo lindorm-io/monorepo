@@ -1,7 +1,7 @@
 import { createMockLogger } from "@lindorm/logger";
 import { IPostgresSource, PostgresSource } from "@lindorm/postgres";
 import { randomUUID } from "crypto";
-import { TEST_AGGREGATE_IDENTIFIER } from "../../__fixtures__/aggregate";
+import { createTestAggregateIdentifier } from "../../__fixtures__/create-test-aggregate-identifier";
 import { ENCRYPTION_STORE } from "../../constants/private";
 import { IEncryptionStore } from "../../interfaces";
 import { AggregateIdentifier, EncryptionStoreAttributes } from "../../types";
@@ -31,12 +31,13 @@ const find = async (
 };
 
 describe("PostgresEncryptionStore", () => {
+  const namespace = "pg_enc_sto";
   const logger = createMockLogger();
 
+  let aggregate: AggregateIdentifier;
   let attributes: EncryptionStoreAttributes;
-  let source: IPostgresSource;
   let eventId: string;
-  let identifier: AggregateIdentifier;
+  let source: IPostgresSource;
   let store: IEncryptionStore;
 
   beforeAll(async () => {
@@ -55,9 +56,9 @@ describe("PostgresEncryptionStore", () => {
 
   beforeEach(() => {
     eventId = randomUUID();
-    identifier = { ...TEST_AGGREGATE_IDENTIFIER, id: randomUUID() };
+    aggregate = createTestAggregateIdentifier(namespace);
     attributes = {
-      ...identifier,
+      ...aggregate,
       key_id: randomUUID(),
       key_algorithm: "ECDH-ES+A256KW",
       key_curve: "P-256",
@@ -76,7 +77,7 @@ describe("PostgresEncryptionStore", () => {
   test("should find encryption", async () => {
     await insert(source, attributes);
 
-    await expect(store.find(identifier)).resolves.toEqual(
+    await expect(store.find(aggregate)).resolves.toEqual(
       expect.objectContaining({
         ...attributes,
         key_algorithm: "ECDH-ES+A256KW",
@@ -92,7 +93,7 @@ describe("PostgresEncryptionStore", () => {
   test("should insert encryption", async () => {
     await expect(store.insert(attributes)).resolves.toBeUndefined();
 
-    await expect(find(source, identifier)).resolves.toEqual([
+    await expect(find(source, aggregate)).resolves.toEqual([
       expect.objectContaining({
         key_algorithm: "ECDH-ES+A256KW",
         key_curve: "P-256",

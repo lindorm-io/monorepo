@@ -1,99 +1,54 @@
-import { LindormError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger";
-import { MessageKit } from "@lindorm/message";
 import { createMockRabbitMessageBus } from "@lindorm/rabbit";
-import { randomUUID } from "crypto";
-import { TEST_AGGREGATE_IDENTIFIER } from "../__fixtures__/aggregate";
-import { TEST_AGGREGATE_EVENT_HANDLER } from "../__fixtures__/aggregate-event-handler";
-import {
-  TEST_CHECKSUM_EVENT_HANDLER,
-  TEST_CHECKSUM_EVENT_HANDLER_CREATE,
-  TEST_CHECKSUM_EVENT_HANDLER_DESTROY,
-  TEST_CHECKSUM_EVENT_HANDLER_DESTROY_NEXT,
-  TEST_CHECKSUM_EVENT_HANDLER_MERGE_STATE,
-  TEST_CHECKSUM_EVENT_HANDLER_SET_STATE,
-  TEST_CHECKSUM_EVENT_HANDLER_THROWS,
-} from "../__fixtures__/checksum-event-handler";
-import {
-  TEST_HERMES_EVENT,
-  TEST_HERMES_EVENT_CREATE,
-} from "../__fixtures__/hermes-event";
-import { ChecksumError, HandlerNotRegisteredError } from "../errors";
+import { Dict } from "@lindorm/types";
+import { createTestEvent } from "../__fixtures__/create-message";
+import { createTestAggregateIdentifier } from "../__fixtures__/create-test-aggregate-identifier";
+import { createTestRegistry } from "../__fixtures__/create-test-registry";
+import { TestEventCreate } from "../__fixtures__/modules/events/TestEventCreate";
+import { ChecksumError } from "../errors";
 import { IChecksumDomain, IHermesMessageBus } from "../interfaces";
 import { HermesError, HermesEvent } from "../messages";
 import { AggregateIdentifier } from "../types";
 import { ChecksumDomain } from "./ChecksumDomain";
 
 describe("ChecksumDomain", () => {
-  const eventKit = new MessageKit({ Message: HermesEvent });
-
   const logger = createMockLogger();
-  const eventHandlers = [
-    TEST_CHECKSUM_EVENT_HANDLER,
-    TEST_CHECKSUM_EVENT_HANDLER_CREATE,
-    TEST_CHECKSUM_EVENT_HANDLER_DESTROY,
-    TEST_CHECKSUM_EVENT_HANDLER_DESTROY_NEXT,
-    TEST_CHECKSUM_EVENT_HANDLER_MERGE_STATE,
-    TEST_CHECKSUM_EVENT_HANDLER_SET_STATE,
-    TEST_CHECKSUM_EVENT_HANDLER_THROWS,
-  ];
 
   let aggregate: AggregateIdentifier;
   let domain: IChecksumDomain;
   let errorBus: IHermesMessageBus<HermesError>;
-  let eventBus: IHermesMessageBus<HermesEvent>;
+  let eventBus: IHermesMessageBus<HermesEvent<Dict>>;
   let store: any;
 
   beforeEach(async () => {
-    aggregate = { ...TEST_AGGREGATE_IDENTIFIER, id: randomUUID() };
+    aggregate = createTestAggregateIdentifier();
     errorBus = createMockRabbitMessageBus(HermesError);
     eventBus = createMockRabbitMessageBus(HermesEvent);
     store = {
       verify: jest.fn(),
     };
 
-    domain = new ChecksumDomain({ errorBus, eventBus, store, logger });
+    domain = new ChecksumDomain({
+      errorBus,
+      eventBus,
+      logger,
+      registry: createTestRegistry(),
+      store,
+    });
 
-    for (const handler of eventHandlers) {
-      await domain.registerEventHandler(handler);
-    }
+    await domain.registerHandlers();
   });
 
   test("should register event handler", async () => {
-    eventBus = createMockRabbitMessageBus(HermesEvent);
-    domain = new ChecksumDomain({ errorBus, eventBus, store, logger });
-
-    await expect(
-      domain.registerEventHandler(TEST_CHECKSUM_EVENT_HANDLER),
-    ).resolves.toBeUndefined();
-
     expect(eventBus.subscribe).toHaveBeenCalledWith({
       callback: expect.any(Function),
-      queue: "queue.checksum.default.aggregate_name.hermes_event_default",
-      topic: "default.aggregate_name.hermes_event_default",
+      queue: "queue.checksum.hermes.test_aggregate.test_event_create",
+      topic: "hermes.test_aggregate.test_event_create",
     });
   });
 
-  test("should throw on existing event handler", async () => {
-    domain = new ChecksumDomain({ errorBus, eventBus, store, logger });
-
-    domain.registerEventHandler(TEST_CHECKSUM_EVENT_HANDLER);
-
-    await expect(
-      domain.registerEventHandler(TEST_CHECKSUM_EVENT_HANDLER),
-    ).rejects.toThrow(LindormError);
-  });
-
-  test("should throw on invalid event handler", async () => {
-    domain = new ChecksumDomain({ errorBus, eventBus, store, logger });
-
-    await expect(
-      domain.registerEventHandler(TEST_AGGREGATE_EVENT_HANDLER),
-    ).rejects.toThrow(LindormError);
-  });
-
   test("should handle event", async () => {
-    const event = eventKit.create({ ...TEST_HERMES_EVENT_CREATE, aggregate });
+    const event = createTestEvent(new TestEventCreate("create"), { aggregate });
 
     await expect(
       // @ts-expect-error
@@ -106,7 +61,7 @@ describe("ChecksumDomain", () => {
   test("should dispatch error event on invalid checksum", async () => {
     store.verify.mockRejectedValue(new ChecksumError("test"));
 
-    const event = eventKit.create({ ...TEST_HERMES_EVENT_CREATE, aggregate });
+    const event = createTestEvent(new TestEventCreate("create"), { aggregate });
 
     await expect(
       // @ts-expect-error
@@ -117,7 +72,8 @@ describe("ChecksumDomain", () => {
       expect.objectContaining({
         name: "checksum_error",
         data: {
-          error: expect.any(ChecksumError),
+          error: expect.objectContaining({ name: "ChecksumError" }),
+          event: expect.objectContaining({ input: "create" }),
           message: event,
         },
       }),
@@ -131,7 +87,7 @@ describe("ChecksumDomain", () => {
 
     domain.on("checksum", listener);
 
-    const event = eventKit.create({ ...TEST_HERMES_EVENT_CREATE, aggregate });
+    const event = createTestEvent(new TestEventCreate("create"), { aggregate });
 
     await expect(
       // @ts-expect-error
@@ -140,20 +96,10 @@ describe("ChecksumDomain", () => {
 
     expect(listener).toHaveBeenCalledWith(
       expect.objectContaining({
-        error: expect.any(ChecksumError),
-        event,
+        error: expect.objectContaining({ name: "ChecksumError" }),
+        event: expect.objectContaining({ input: "create" }),
+        message: event,
       }),
     );
-  });
-
-  test("should throw on missing handler", async () => {
-    domain = new ChecksumDomain({ errorBus, eventBus, store, logger });
-
-    const event = eventKit.create(TEST_HERMES_EVENT);
-
-    await expect(
-      // @ts-expect-error
-      domain.handleEvent(event),
-    ).rejects.toThrow(HandlerNotRegisteredError);
   });
 });

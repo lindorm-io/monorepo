@@ -1,11 +1,10 @@
 import { LindormError } from "@lindorm/errors";
-import { isArray } from "@lindorm/is";
 import {
   MAX_CONTEXT_LENGTH,
   MAX_NAME_LENGTH,
   MAX_VIEW_LENGTH,
 } from "../../constants/private";
-import { HandlerIdentifier, HandlerIdentifierMultipleContexts } from "../../types";
+import { HandlerIdentifier } from "../../types";
 
 const verifyNameLength = (name: string): void => {
   if (name.length <= MAX_NAME_LENGTH) return;
@@ -35,13 +34,8 @@ const verifyContextLength = (context: string): void => {
   });
 };
 
-export const verifyIdentifierLength = (
-  handler: HandlerIdentifierMultipleContexts,
-): void => {
-  const context = isArray(handler.context) ? handler.context : [handler.context];
-  for (const c of context) {
-    verifyContextLength(c);
-  }
+export const verifyIdentifierLength = (handler: HandlerIdentifier): void => {
+  verifyContextLength(handler.context);
   verifyNameLength(handler.name);
 };
 

@@ -1,0 +1,22 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`AggregateEventHandler Decorator should add metadata 1`] = `
+{
+  "encryption": false,
+  "handlers": [
+    {
+      "conditions": null,
+      "decorator": "AggregateEventHandler",
+      "encryption": false,
+      "handler": [Function],
+      "key": "onTestAggregateDomainEvent",
+      "schema": null,
+      "target": [Function],
+      "trigger": [Function],
+    },
+  ],
+  "name": "test_aggregate_event_handler_aggregate",
+  "namespace": null,
+  "target": [Function],
+}
+`;

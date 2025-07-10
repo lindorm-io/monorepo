@@ -2,18 +2,19 @@ import { createMockLogger } from "@lindorm/logger";
 import { IMongoSource, MongoSource } from "@lindorm/mongo";
 import { randomUUID } from "crypto";
 import { Collection } from "mongodb";
-import { TEST_AGGREGATE_IDENTIFIER } from "../../__fixtures__/aggregate";
+import { createTestAggregateIdentifier } from "../../__fixtures__/create-test-aggregate-identifier";
 import { ENCRYPTION_STORE } from "../../constants/private";
 import { IEncryptionStore } from "../../interfaces";
 import { AggregateIdentifier, EncryptionStoreAttributes } from "../../types";
 import { MongoEncryptionStore } from "./MongoEncryptionStore";
 
 describe("MongoEncryptionStore", () => {
+  const namespace = "mon_enc_sto";
   const logger = createMockLogger();
 
+  let aggregate: AggregateIdentifier;
   let collection: Collection<EncryptionStoreAttributes>;
   let source: IMongoSource;
-  let identifier: AggregateIdentifier;
   let store: IEncryptionStore;
 
   beforeAll(async () => {
@@ -31,7 +32,7 @@ describe("MongoEncryptionStore", () => {
   }, 10000);
 
   beforeEach(() => {
-    identifier = { ...TEST_AGGREGATE_IDENTIFIER, id: randomUUID() };
+    aggregate = createTestAggregateIdentifier(namespace);
   });
 
   afterAll(async () => {
@@ -40,7 +41,7 @@ describe("MongoEncryptionStore", () => {
 
   test("should find encryption", async () => {
     await collection.insertOne({
-      ...identifier,
+      ...aggregate,
       key_id: randomUUID(),
       key_algorithm: "ECDH-ES+A256KW",
       key_curve: "P-256",
@@ -51,7 +52,7 @@ describe("MongoEncryptionStore", () => {
       created_at: new Date(),
     });
 
-    await expect(store.find(identifier)).resolves.toEqual(
+    await expect(store.find(aggregate)).resolves.toEqual(
       expect.objectContaining({
         key_algorithm: "ECDH-ES+A256KW",
         key_curve: "P-256",
@@ -66,7 +67,7 @@ describe("MongoEncryptionStore", () => {
   test("should insert encryption", async () => {
     await expect(
       store.insert({
-        ...identifier,
+        ...aggregate,
         key_id: randomUUID(),
         key_algorithm: "ECDH-ES+A256KW",
         key_curve: "P-256",
@@ -78,7 +79,7 @@ describe("MongoEncryptionStore", () => {
       }),
     ).resolves.toBeUndefined();
 
-    expect(await collection.findOne({ ...identifier })).toEqual(
+    expect(await collection.findOne({ ...aggregate })).toEqual(
       expect.objectContaining({
         key_algorithm: "ECDH-ES+A256KW",
         key_curve: "P-256",

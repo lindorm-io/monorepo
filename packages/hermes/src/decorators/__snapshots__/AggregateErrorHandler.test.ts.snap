@@ -1,0 +1,22 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`AggregateErrorHandler Decorator should add metadata 1`] = `
+{
+  "encryption": false,
+  "handlers": [
+    {
+      "conditions": null,
+      "decorator": "AggregateErrorHandler",
+      "encryption": false,
+      "handler": [Function],
+      "key": "onTestAggregateDomainError",
+      "schema": null,
+      "target": [Function],
+      "trigger": [Function],
+    },
+  ],
+  "name": "test_aggregate_error_handler_aggregate",
+  "namespace": null,
+  "target": [Function],
+}
+`;

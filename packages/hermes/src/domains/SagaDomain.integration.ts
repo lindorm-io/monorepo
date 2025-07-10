@@ -1,45 +1,37 @@
 import { createMockLogger } from "@lindorm/logger";
-import { MessageKit } from "@lindorm/message";
 import { IMongoSource, MongoSource } from "@lindorm/mongo";
 import { IRabbitSource, RabbitSource } from "@lindorm/rabbit";
+import { Dict } from "@lindorm/types";
 import { sleep } from "@lindorm/utils";
-import { randomUUID } from "crypto";
-import { TEST_AGGREGATE_IDENTIFIER } from "../__fixtures__/aggregate";
-import {
-  TEST_HERMES_EVENT_CREATE,
-  TEST_HERMES_EVENT_DESTROY,
-  TEST_HERMES_EVENT_MERGE_STATE,
-  TEST_HERMES_EVENT_SET_STATE,
-} from "../__fixtures__/hermes-event";
-import { TEST_SAGA_IDENTIFIER } from "../__fixtures__/saga";
-import {
-  TEST_SAGA_EVENT_HANDLER,
-  TEST_SAGA_EVENT_HANDLER_CREATE,
-  TEST_SAGA_EVENT_HANDLER_DESTROY,
-  TEST_SAGA_EVENT_HANDLER_DISPATCH,
-  TEST_SAGA_EVENT_HANDLER_MERGE_STATE,
-  TEST_SAGA_EVENT_HANDLER_SET_STATE,
-  TEST_SAGA_EVENT_HANDLER_TIMEOUT,
-} from "../__fixtures__/saga-event-handler";
+import { createTestEvent } from "../__fixtures__/create-message";
+import { createTestAggregateIdentifier } from "../__fixtures__/create-test-aggregate-identifier";
+import { createTestRegistry } from "../__fixtures__/create-test-registry";
+import { createTestSagaIdentifier } from "../__fixtures__/create-test-saga-identifier";
+import { TestEventCreate } from "../__fixtures__/modules/events/TestEventCreate";
+import { TestEventDestroy } from "../__fixtures__/modules/events/TestEventDestroy";
+import { TestEventMergeState } from "../__fixtures__/modules/events/TestEventMergeState";
+import { TestEventSetState } from "../__fixtures__/modules/events/TestEventSetState";
 import { MessageBus, SagaStore } from "../infrastructure";
-import { IHermesSagaEventHandler } from "../interfaces";
+import { IHermesRegistry } from "../interfaces";
 import { HermesCommand, HermesError, HermesEvent, HermesTimeout } from "../messages";
+import { AggregateIdentifier, SagaIdentifier } from "../types";
 import { SagaDomain } from "./SagaDomain";
 
 describe("SagaDomain", () => {
-  const eventKit = new MessageKit({ Message: HermesEvent });
-
+  const namespace = "sag_dom";
   const logger = createMockLogger();
 
+  let aggregate: AggregateIdentifier;
+  let commandBus: MessageBus<HermesCommand<Dict>>;
+  let domain: SagaDomain;
+  let errorBus: MessageBus<HermesError>;
+  let eventBus: MessageBus<HermesEvent<Dict>>;
   let mongo: IMongoSource;
   let rabbit: IRabbitSource;
-  let domain: SagaDomain;
-  let eventHandlers: Array<IHermesSagaEventHandler>;
-  let commandBus: MessageBus<HermesCommand>;
-  let errorBus: MessageBus<HermesError>;
-  let eventBus: MessageBus<HermesEvent>;
-  let timeoutBus: MessageBus<HermesTimeout>;
+  let registry: IHermesRegistry;
+  let saga: SagaIdentifier;
   let store: SagaStore;
+  let timeoutBus: MessageBus<HermesTimeout>;
 
   beforeAll(async () => {
     mongo = new MongoSource({
@@ -61,28 +53,23 @@ describe("SagaDomain", () => {
     timeoutBus = new MessageBus({ Message: HermesTimeout, rabbit, logger });
 
     store = new SagaStore({ mongo, logger });
+
+    aggregate = createTestAggregateIdentifier(namespace);
+    saga = { ...createTestSagaIdentifier(namespace), id: aggregate.id };
+
+    registry = createTestRegistry(namespace);
+
     domain = new SagaDomain({
       commandBus,
       errorBus,
       eventBus,
-      timeoutBus,
-      store,
       logger,
+      registry,
+      store,
+      timeoutBus,
     });
 
-    eventHandlers = [
-      TEST_SAGA_EVENT_HANDLER,
-      TEST_SAGA_EVENT_HANDLER_CREATE,
-      TEST_SAGA_EVENT_HANDLER_DESTROY,
-      TEST_SAGA_EVENT_HANDLER_DISPATCH,
-      TEST_SAGA_EVENT_HANDLER_MERGE_STATE,
-      TEST_SAGA_EVENT_HANDLER_SET_STATE,
-      TEST_SAGA_EVENT_HANDLER_TIMEOUT,
-    ];
-
-    for (const handler of eventHandlers) {
-      await domain.registerEventHandler(handler);
-    }
+    await domain.registerHandlers();
   });
 
   afterAll(async () => {
@@ -91,42 +78,45 @@ describe("SagaDomain", () => {
   });
 
   test("should handle multiple published events", async () => {
-    const aggregate = { ...TEST_AGGREGATE_IDENTIFIER, id: randomUUID() };
-    const saga = { ...TEST_SAGA_IDENTIFIER, id: aggregate.id };
-
-    const eventCreate = eventKit.create({ ...TEST_HERMES_EVENT_CREATE, aggregate });
-    const eventMergeState = eventKit.create({
-      ...TEST_HERMES_EVENT_MERGE_STATE,
+    const eventCreate = createTestEvent(new TestEventCreate("create"), {
       aggregate,
     });
-    const eventSetState = eventKit.create({ ...TEST_HERMES_EVENT_SET_STATE, aggregate });
-    const eventDestroy = eventKit.create({ ...TEST_HERMES_EVENT_DESTROY, aggregate });
+    const eventMergeState = createTestEvent(new TestEventMergeState("merge-state"), {
+      aggregate,
+    });
+    const eventSetState = createTestEvent(new TestEventSetState("set-state"), {
+      aggregate,
+    });
+    const eventDestroy = createTestEvent(new TestEventDestroy("destroy"), {
+      aggregate,
+    });
 
     await expect(eventBus.publish(eventCreate)).resolves.toBeUndefined();
-    await sleep(250);
+    await sleep(500);
 
     await expect(eventBus.publish(eventMergeState)).resolves.toBeUndefined();
-    await sleep(250);
+    await sleep(500);
 
     await expect(eventBus.publish(eventSetState)).resolves.toBeUndefined();
-    await sleep(250);
+    await sleep(500);
 
     await expect(eventBus.publish(eventDestroy)).resolves.toBeUndefined();
-    await sleep(250);
+    await sleep(500);
 
     await expect(store.load(saga)).resolves.toEqual(
       expect.objectContaining({
         id: aggregate.id,
-        name: "name",
-        context: "default",
+        name: "test_saga",
+        context: namespace,
         processedCausationIds: [],
         destroyed: true,
         messagesToDispatch: [],
         revision: 8,
         state: {
-          created: true,
-          merge: { hermesEventData: true },
-          set: "state",
+          create: "create",
+          destroy: "destroy",
+          mergeState: "merge-state",
+          setState: "set-state",
         },
       }),
     );

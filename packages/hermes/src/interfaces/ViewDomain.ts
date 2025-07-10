@@ -1,14 +1,14 @@
-import { Dict } from "@lindorm/types";
-import { ViewEventHandlerAdapter, ViewIdentifier } from "../types";
+import { ClassLike, Dict } from "@lindorm/types";
+import { ViewIdentifier, ViewStoreSource } from "../types";
 import { EventEmitterListener } from "../types/event-emitter";
-import { IView } from "./View";
-import { IHermesViewEventHandler } from "./ViewEventHandler";
+import { IViewModel } from "./ViewModel";
 
 export interface IViewDomain {
   on<D extends Dict = Dict>(evt: string, listener: EventEmitterListener<D>): void;
-  registerEventHandler(eventHandler: IHermesViewEventHandler): Promise<void>;
+  registerHandlers(): Promise<void>;
   inspect<S extends Dict = Dict>(
     viewIdentifier: ViewIdentifier,
-    adapter: ViewEventHandlerAdapter,
-  ): Promise<IView<S>>;
+    source: ViewStoreSource,
+  ): Promise<IViewModel<S>>;
+  query<R>(query: ClassLike): Promise<R>;
 }

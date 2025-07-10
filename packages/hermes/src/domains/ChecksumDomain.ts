@@ -1,37 +1,35 @@
 import { snakeCase } from "@lindorm/case";
-import { LindormError } from "@lindorm/errors";
 import { ILogger } from "@lindorm/logger";
 import { Dict } from "@lindorm/types";
 import EventEmitter from "events";
-import { HandlerNotRegisteredError } from "../errors";
-import { HermesChecksumEventHandler } from "../handlers";
 import {
   IChecksumDomain,
-  IHermesChecksumEventHandler,
   IHermesChecksumStore,
+  IHermesMessage,
   IHermesMessageBus,
+  IHermesRegistry,
 } from "../interfaces";
-import { HermesEvent } from "../messages";
-import { ChecksumDomainOptions } from "../types";
+import { ChecksumDomainOptions, RegistryEvent } from "../types";
 import { EventEmitterListener } from "../types/event-emitter";
+import { recoverEvent } from "../utils/private";
 
 export class ChecksumDomain implements IChecksumDomain {
   private readonly eventEmitter: EventEmitter;
-  private readonly eventHandlers: Array<IHermesChecksumEventHandler>;
   private readonly logger: ILogger;
+
   private readonly errorBus: IHermesMessageBus;
   private readonly eventBus: IHermesMessageBus;
+  private readonly registry: IHermesRegistry;
   private readonly store: IHermesChecksumStore;
 
   public constructor(options: ChecksumDomainOptions) {
+    this.eventEmitter = new EventEmitter();
     this.logger = options.logger.child(["ChecksumDomain"]);
 
     this.errorBus = options.errorBus;
     this.eventBus = options.eventBus;
+    this.registry = options.registry;
     this.store = options.store;
-
-    this.eventEmitter = new EventEmitter();
-    this.eventHandlers = [];
   }
 
   // public
@@ -40,96 +38,57 @@ export class ChecksumDomain implements IChecksumDomain {
     this.eventEmitter.on(evt, listener);
   }
 
-  public async registerEventHandler(
-    eventHandler: IHermesChecksumEventHandler,
-  ): Promise<void> {
-    this.logger.debug("Registering event handler", {
-      name: eventHandler.eventName,
-      aggregate: eventHandler.aggregate,
-    });
+  public async registerHandlers(): Promise<void> {
+    for (const event of this.registry.events) {
+      this.logger.debug("Registering checksum event handler", {
+        aggregate: event.aggregate,
+        name: event.name,
+        version: event.version,
+      });
 
-    if (!(eventHandler instanceof HermesChecksumEventHandler)) {
-      throw new LindormError("Invalid handler type", {
-        data: {
-          expect: HermesChecksumEventHandler.name,
-          actual: typeof eventHandler,
-        },
+      await this.eventBus.subscribe({
+        callback: (event: IHermesMessage) => this.handleEvent(event),
+        queue: ChecksumDomain.getQueue(event),
+        topic: ChecksumDomain.getTopic(event),
+      });
+
+      this.logger.verbose("Event handler registered", {
+        aggregate: event.aggregate,
+        name: event.name,
+        version: event.version,
       });
     }
-
-    const existingHandler = this.eventHandlers.some(
-      (x) =>
-        x.eventName === eventHandler.eventName &&
-        x.aggregate.name === eventHandler.aggregate.name &&
-        x.aggregate.context === eventHandler.aggregate.context,
-    );
-
-    if (existingHandler) {
-      throw new LindormError("Event handler already registered", {
-        debug: {
-          eventName: eventHandler.eventName,
-          aggregate: {
-            name: eventHandler.aggregate.name,
-            context: eventHandler.aggregate.context,
-          },
-        },
-      });
-    }
-
-    this.eventHandlers.push(eventHandler);
-
-    await this.eventBus.subscribe({
-      callback: (event: HermesEvent) => this.handleEvent(event),
-      queue: ChecksumDomain.getQueue(eventHandler),
-      topic: ChecksumDomain.getTopic(eventHandler),
-    });
-
-    this.logger.verbose("Event handler registered", {
-      eventName: eventHandler.eventName,
-      aggregate: {
-        name: eventHandler.aggregate.name,
-        context: eventHandler.aggregate.context,
-      },
-    });
   }
 
   // private
 
-  private async handleEvent(event: HermesEvent): Promise<void> {
-    this.logger.debug("Handling event", { event });
+  private async handleEvent(message: IHermesMessage): Promise<void> {
+    this.logger.debug("Handling event", { message });
 
-    const eventHandler = this.eventHandlers.find(
-      (x) =>
-        x.eventName === event.name &&
-        x.aggregate.name === event.aggregate.name &&
-        x.aggregate.context === event.aggregate.context,
-    );
-
-    if (!(eventHandler instanceof HermesChecksumEventHandler)) {
-      throw new HandlerNotRegisteredError();
-    }
+    const event = recoverEvent(message);
 
     try {
-      await this.store.verify(event);
+      await this.store.verify(message);
 
-      this.logger.debug("Event checksum verified", { event });
-    } catch (err: any) {
-      this.logger.warn("Event failed checksum verification", err);
+      this.logger.debug("Event checksum verified", { message });
+    } catch (error: any) {
+      this.logger.warn("Event failed checksum verification", error);
 
-      this.eventEmitter.emit("checksum", { error: err, event });
+      this.eventEmitter.emit("checksum", { error, event, message });
 
       await this.errorBus.publish(
         this.errorBus.create({
           data: {
-            error: err,
-            message: event,
+            event,
+            error: error.toJSON ? error.toJSON() : { ...error },
+            message,
           },
-          aggregate: event.aggregate,
-          causationId: event.id,
-          correlationId: event.correlationId,
+          aggregate: message.aggregate,
+          causationId: message.id,
+          correlationId: message.correlationId,
           mandatory: false,
-          meta: event.meta,
-          name: snakeCase(err.name),
+          meta: message.meta,
+          name: snakeCase(error.name),
         }),
       );
     }
@@ -137,11 +96,11 @@ export class ChecksumDomain implements IChecksumDomain {
 
   // private static
 
-  private static getQueue(handler: IHermesChecksumEventHandler): string {
-    return `queue.checksum.${handler.aggregate.context}.${handler.aggregate.name}.${handler.eventName}`;
+  private static getQueue(event: RegistryEvent): string {
+    return `queue.checksum.${event.aggregate.context}.${event.aggregate.name}.${event.name}`;
   }
 
-  private static getTopic(handler: IHermesChecksumEventHandler): string {
-    return `${handler.aggregate.context}.${handler.aggregate.name}.${handler.eventName}`;
+  private static getTopic(event: RegistryEvent): string {
+    return `${event.aggregate.context}.${event.aggregate.name}.${event.name}`;
   }
 }

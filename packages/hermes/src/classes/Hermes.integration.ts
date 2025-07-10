@@ -1,49 +1,23 @@
-import { createMockLogger } from "@lindorm/logger";
+import { Logger, LogLevel } from "@lindorm/logger";
 import { IMongoSource, MongoSource } from "@lindorm/mongo";
 import { IPostgresSource, PostgresSource } from "@lindorm/postgres";
 import { IRabbitSource, RabbitSource } from "@lindorm/rabbit";
 import { IRedisSource, RedisSource } from "@lindorm/redis";
+import { sleep } from "@lindorm/utils";
 import { randomUUID } from "crypto";
-import { z } from "zod";
-import { ViewStoreType } from "../enums";
-import {
-  HermesAggregateCommandHandler,
-  HermesAggregateEventHandler,
-  HermesChecksumEventHandler,
-  HermesQueryHandler,
-  HermesSagaEventHandler,
-  HermesViewEventHandler,
-} from "../handlers";
+import { join } from "path";
+import { TestCommandCreate } from "../__fixtures__/modules/commands/TestCommandCreate";
+import { TestCommandDispatch } from "../__fixtures__/modules/commands/TestCommandDispatch";
+import { TestMongoQuery } from "../__fixtures__/modules/queries/TestQueryMongo";
+import { TestPostgresQuery } from "../__fixtures__/modules/queries/TestQueryPostgres";
+import { TestRedisQuery } from "../__fixtures__/modules/queries/TestQueryRedis";
 import { IHermes } from "../interfaces";
 import { HermesEvent } from "../messages";
 import { Hermes } from "./Hermes";
 
-export class CreateGreeting {
-  public constructor(public readonly create: boolean) {}
-}
-export class GreetingCreated {
-  public constructor(public readonly created: boolean) {}
-}
-
-export class UpdateGreeting {
-  public constructor(public readonly update: boolean) {}
-}
-export class GreetingUpdated {
-  public constructor(public readonly updated: boolean) {}
-}
-
-export class QueryGreetingMongo {
-  public constructor(public readonly id: string) {}
-}
-export class QueryGreetingPostgres {
-  public constructor(public readonly id: string) {}
-}
-export class QueryGreetingRedis {
-  public constructor(public readonly id: string) {}
-}
-
 describe("Hermes", () => {
-  const logger = createMockLogger();
+  const namespace = "hermes_int";
+  const logger = new Logger({ level: LogLevel.Warn, readable: true });
 
   let mongo: IMongoSource;
   let postgres: IPostgresSource;
@@ -51,15 +25,8 @@ describe("Hermes", () => {
   let redis: IRedisSource;
   let hermes: IHermes;
 
-  let onSagaSpyAll: jest.Mock;
-  let onSagaSpyContext: jest.Mock;
-  let onSagaSpyName: jest.Mock;
-  let onSagaSpyId: jest.Mock;
-
-  let onViewSpyAll: jest.Mock;
-  let onViewSpyContext: jest.Mock;
-  let onViewSpyName: jest.Mock;
-  let onViewSpyId: jest.Mock;
+  let onSagaSpy: jest.Mock;
+  let onViewSpy: jest.Mock;
 
   beforeAll(async () => {
     mongo = new MongoSource({
@@ -92,231 +59,13 @@ describe("Hermes", () => {
       messageBus: { rabbit },
       sagaStore: { mongo },
       viewStore: { mongo, postgres, redis },
-      context: "hermes",
-      dangerouslyRegisterHandlersManually: true,
       logger,
+      modules: [join(__dirname, "..", "__fixtures__", "modules")],
+      namespace,
     });
 
-    onSagaSpyAll = jest.fn();
-    onSagaSpyContext = jest.fn();
-    onSagaSpyName = jest.fn();
-    onSagaSpyId = jest.fn();
-
-    onViewSpyAll = jest.fn();
-    onViewSpyContext = jest.fn();
-    onViewSpyName = jest.fn();
-    onViewSpyId = jest.fn();
-
-    await hermes.admin.register.aggregateCommandHandler(
-      new HermesAggregateCommandHandler<CreateGreeting, GreetingCreated>({
-        commandName: "create_greeting",
-        aggregate: { name: "test_aggregate", context: "hermes" },
-        conditions: { created: false },
-        schema: z.object({
-          create: z.boolean(),
-        }),
-        handler: async (ctx) => {
-          await ctx.apply(new GreetingCreated(ctx.command.create));
-        },
-      }),
-    );
-    await hermes.admin.register.aggregateCommandHandler(
-      new HermesAggregateCommandHandler<UpdateGreeting, GreetingUpdated>({
-        commandName: "update_greeting",
-        aggregate: { name: "test_aggregate", context: "hermes" },
-        conditions: { created: true },
-        schema: z.object({
-          update: z.boolean(),
-        }),
-        handler: async (ctx) => {
-          await ctx.apply(new GreetingUpdated(ctx.command.update));
-        },
-      }),
-    );
-
-    await hermes.admin.register.aggregateEventHandler(
-      new HermesAggregateEventHandler<GreetingCreated>({
-        eventName: "greeting_created",
-        aggregate: { name: "test_aggregate", context: "hermes" },
-        handler: async (ctx) => {
-          ctx.mergeState(ctx.event);
-        },
-      }),
-    );
-    await hermes.admin.register.aggregateEventHandler(
-      new HermesAggregateEventHandler<GreetingUpdated>({
-        eventName: "greeting_updated",
-        aggregate: { name: "test_aggregate", context: "hermes" },
-        handler: async (ctx) => {
-          ctx.mergeState(ctx.event);
-        },
-      }),
-    );
-
-    await hermes.admin.register.checksumEventHandler(
-      new HermesChecksumEventHandler({
-        eventName: "greeting_created",
-        aggregate: { name: "test_aggregate", context: "hermes" },
-      }),
-    );
-    await hermes.admin.register.checksumEventHandler(
-      new HermesChecksumEventHandler({
-        eventName: "greeting_updated",
-        aggregate: { name: "test_aggregate", context: "hermes" },
-      }),
-    );
-
-    hermes.admin.register.queryHandler(
-      new HermesQueryHandler<QueryGreetingMongo, unknown>({
-        queryName: "query_greeting_mongo",
-        view: { name: "test_view_mongo", context: "hermes" },
-        handler: (ctx) => ctx.repositories.mongo.findById(ctx.query.id),
-      }),
-    );
-
-    hermes.admin.register.queryHandler(
-      new HermesQueryHandler<QueryGreetingPostgres, unknown>({
-        queryName: "query_greeting_postgres",
-        view: { name: "test_view_postgres", context: "hermes" },
-        handler: (ctx) => ctx.repositories.postgres.findById(ctx.query.id),
-      }),
-    );
-
-    hermes.admin.register.queryHandler(
-      new HermesQueryHandler<QueryGreetingRedis, unknown>({
-        queryName: "query_greeting_redis",
-        view: { name: "test_view_redis", context: "hermes" },
-        handler: (ctx) => ctx.repositories.redis.findById(ctx.query.id),
-      }),
-    );
-
-    await hermes.admin.register.sagaEventHandler(
-      new HermesSagaEventHandler<GreetingCreated>({
-        eventName: "greeting_created",
-        aggregate: { name: "test_aggregate", context: "hermes" },
-        saga: { name: "test_saga", context: "hermes" },
-        conditions: { created: false },
-        getSagaId: (event) => event.aggregate.id,
-        handler: async (ctx) => {
-          ctx.mergeState(ctx.event);
-          ctx.logger.info("GreetingCreatedEvent", { event: ctx.event });
-
-          ctx.dispatch(new UpdateGreeting(true), { delay: 500 });
-        },
-      }),
-    );
-    await hermes.admin.register.sagaEventHandler(
-      new HermesSagaEventHandler<GreetingUpdated>({
-        eventName: "greeting_updated",
-        aggregate: { name: "test_aggregate", context: "hermes" },
-        saga: { name: "test_saga", context: "hermes" },
-        conditions: { created: true },
-        getSagaId: (event) => event.aggregate.id,
-        handler: async (ctx) => {
-          ctx.mergeState(ctx.event);
-          ctx.logger.info("GreetingUpdatedEvent", { event: ctx.event });
-        },
-      }),
-    );
-
-    await hermes.admin.register.viewEventHandler(
-      new HermesViewEventHandler<GreetingCreated>({
-        eventName: "greeting_created",
-        adapter: { type: ViewStoreType.Mongo },
-        aggregate: { name: "test_aggregate", context: "hermes" },
-        conditions: { created: false },
-        view: { name: "test_view_mongo", context: "hermes" },
-        getViewId: (event) => event.aggregate.id,
-        handler: async (ctx) => {
-          ctx.setState({ created: ctx.event.created });
-        },
-      }),
-    );
-    await hermes.admin.register.viewEventHandler(
-      new HermesViewEventHandler<GreetingUpdated>({
-        eventName: "greeting_updated",
-        adapter: { type: ViewStoreType.Mongo },
-        aggregate: { name: "test_aggregate", context: "hermes" },
-        conditions: { created: true },
-        view: { name: "test_view_mongo", context: "hermes" },
-        getViewId: (event) => event.aggregate.id,
-        handler: async (ctx) => {
-          ctx.mergeState({ updated: ctx.event.updated });
-        },
-      }),
-    );
-
-    await hermes.admin.register.viewEventHandler(
-      new HermesViewEventHandler<GreetingCreated>({
-        eventName: "greeting_created",
-        adapter: { type: ViewStoreType.Postgres },
-        aggregate: { name: "test_aggregate", context: "hermes" },
-        conditions: { created: false },
-        view: { name: "test_view_postgres", context: "hermes" },
-        getViewId: (event) => event.aggregate.id,
-        handler: async (ctx) => {
-          ctx.setState({ created: ctx.event.created });
-        },
-      }),
-    );
-    await hermes.admin.register.viewEventHandler(
-      new HermesViewEventHandler<GreetingUpdated>({
-        eventName: "greeting_updated",
-        adapter: { type: ViewStoreType.Postgres },
-        aggregate: { name: "test_aggregate", context: "hermes" },
-        conditions: { created: true },
-        view: { name: "test_view_postgres", context: "hermes" },
-        getViewId: (event) => event.aggregate.id,
-        handler: async (ctx) => {
-          ctx.mergeState({ updated: ctx.event.updated });
-        },
-      }),
-    );
-
-    await hermes.admin.register.viewEventHandler(
-      new HermesViewEventHandler<GreetingCreated>({
-        eventName: "greeting_created",
-        adapter: { type: ViewStoreType.Redis },
-        aggregate: { name: "test_aggregate", context: "hermes" },
-        conditions: { created: false },
-        view: { name: "test_view_redis", context: "hermes" },
-        getViewId: (event) => event.aggregate.id,
-        handler: async (ctx) => {
-          ctx.setState({ created: ctx.event.created });
-        },
-      }),
-    );
-    await hermes.admin.register.viewEventHandler(
-      new HermesViewEventHandler<GreetingUpdated>({
-        eventName: "greeting_updated",
-        adapter: { type: ViewStoreType.Redis },
-        aggregate: { name: "test_aggregate", context: "hermes" },
-        conditions: { created: true },
-        view: { name: "test_view_redis", context: "hermes" },
-        getViewId: (event) => event.aggregate.id,
-        handler: async (ctx) => {
-          ctx.mergeState({ updated: ctx.event.updated });
-        },
-      }),
-    );
-
-    hermes.admin.register.commandAggregate("create_greeting", "test_aggregate");
-    hermes.admin.register.commandAggregate("update_greeting", "test_aggregate");
-    hermes.admin.register.viewAdapter({
-      name: "test_view_mongo",
-      context: "hermes",
-      type: ViewStoreType.Mongo,
-    });
-    hermes.admin.register.viewAdapter({
-      name: "test_view_postgres",
-      context: "hermes",
-      type: ViewStoreType.Postgres,
-    });
-    hermes.admin.register.viewAdapter({
-      name: "test_view_redis",
-      context: "hermes",
-      type: ViewStoreType.Redis,
-    });
+    onSagaSpy = jest.fn();
+    onViewSpy = jest.fn();
 
     await hermes.setup();
   }, 30000);
@@ -337,45 +86,67 @@ describe("Hermes", () => {
     let viewChangeCount = 0;
 
     hermes.on("saga", () => {
-      onSagaSpyAll();
+      onSagaSpy();
       sagaChangeCount += 1;
     });
-    hermes.on("saga.hermes", onSagaSpyContext);
-    hermes.on("saga.hermes.test_saga", onSagaSpyName);
-    hermes.on(`saga.hermes.test_saga.${id}`, onSagaSpyId);
 
     hermes.on("view", () => {
-      onViewSpyAll();
+      onViewSpy();
       viewChangeCount += 1;
     });
-    hermes.on("view.hermes", onViewSpyContext);
-    hermes.on("view.hermes.test_view_mongo", onViewSpyName);
-    hermes.on(`view.hermes.test_view_mongo.${id}`, onViewSpyId);
 
-    await hermes.command(new CreateGreeting(true), { aggregate: { id } });
+    await hermes.command(new TestCommandCreate("create"), { id });
 
-    await new Promise((resolve) => {
-      const interval = setInterval(() => {
-        if (sagaChangeCount >= 2 && viewChangeCount >= 6) {
-          clearInterval(interval);
-          resolve(undefined);
-        }
-      }, 50);
-    });
+    await sleep(500);
+
+    await hermes.command(new TestCommandDispatch("dispatch"), { id });
+
+    let running = true;
+
+    while (running) {
+      if (sagaChangeCount >= 3 && viewChangeCount >= 9) {
+        const [s, m, p, r] = await Promise.all([
+          hermes.admin.inspect.saga({ id, name: "test_saga", context: namespace }),
+          hermes.admin.inspect.view({ id, name: "test_mongo_view", context: namespace }),
+          hermes.admin.inspect.view({
+            id,
+            name: "test_postgres_view",
+            context: namespace,
+          }),
+          hermes.admin.inspect.view({ id, name: "test_redis_view", context: namespace }),
+        ]);
+
+        const done =
+          s.revision >= 7 && m.revision >= 6 && p.revision >= 6 && r.revision >= 6;
+
+        running = !done;
+      }
+
+      if (!running) {
+        break;
+      }
+
+      await sleep(1000);
+    }
 
     await expect(
-      hermes.admin.inspect.aggregate({ id, name: "test_aggregate" }),
+      hermes.admin.inspect.aggregate({ id, name: "test_aggregate", context: namespace }),
     ).resolves.toEqual(
       expect.objectContaining({
         id,
         name: "test_aggregate",
-        context: "hermes",
+        context: namespace,
         destroyed: false,
-        events: [expect.any(HermesEvent), expect.any(HermesEvent)],
-        numberOfLoadedEvents: 2,
+        events: [
+          expect.any(HermesEvent),
+          expect.any(HermesEvent),
+          expect.any(HermesEvent),
+        ],
+        numberOfLoadedEvents: 3,
         state: {
-          created: true,
-          updated: true,
+          create: "create",
+          dispatch: "dispatch",
+          mergeState: "merge state",
         },
       }),
     );
@@ -384,143 +155,158 @@ describe("Hermes", () => {
       expect.objectContaining({
         id: id,
         name: "test_saga",
-        context: "hermes",
+        context: namespace,
         processedCausationIds: [],
         destroyed: false,
         messagesToDispatch: [],
-        revision: 5,
+        revision: 7,
         state: {
-          created: true,
-          updated: true,
+          create: "create",
+          dispatch: "dispatch",
+          mergeState: "merge state",
         },
       }),
     );
 
     await expect(
-      hermes.admin.inspect.view({ id, name: "test_view_mongo" }),
+      hermes.admin.inspect.view({ id, name: "test_mongo_view" }),
     ).resolves.toEqual(
       expect.objectContaining({
         id,
-        name: "test_view_mongo",
-        context: "hermes",
+        name: "test_mongo_view",
+        context: namespace,
         destroyed: false,
         meta: {
-          created: {
+          create: {
             destroyed: false,
             timestamp: expect.any(Date),
-            value: true,
+            value: "create",
           },
-          updated: {
+          dispatch: {
             destroyed: false,
             timestamp: expect.any(Date),
-            value: true,
+            value: "dispatch",
+          },
+          mergeState: {
+            destroyed: false,
+            timestamp: expect.any(Date),
+            value: "merge state",
           },
         },
         processedCausationIds: [],
-        revision: 4,
+        revision: 6,
         state: {
-          created: true,
-          updated: true,
+          create: "create",
+          dispatch: "dispatch",
+          mergeState: "merge state",
         },
       }),
     );
 
     await expect(
-      hermes.admin.inspect.view({ id, name: "test_view_postgres" }),
+      hermes.admin.inspect.view({ id, name: "test_postgres_view" }),
     ).resolves.toEqual(
       expect.objectContaining({
         id,
-        name: "test_view_postgres",
-        context: "hermes",
+        name: "test_postgres_view",
+        context: namespace,
         destroyed: false,
         meta: {
-          created: {
+          create: {
             destroyed: false,
             timestamp: expect.any(Date),
-            value: true,
+            value: "create",
           },
-          updated: {
+          dispatch: {
             destroyed: false,
             timestamp: expect.any(Date),
-            value: true,
+            value: "dispatch",
+          },
+          mergeState: {
+            destroyed: false,
+            timestamp: expect.any(Date),
+            value: "merge state",
           },
         },
         processedCausationIds: [],
-        revision: 4,
+        revision: 6,
         state: {
-          created: true,
-          updated: true,
+          create: "create",
+          dispatch: "dispatch",
+          mergeState: "merge state",
         },
       }),
     );
 
     await expect(
-      hermes.admin.inspect.view({ id, name: "test_view_redis" }),
+      hermes.admin.inspect.view({ id, name: "test_redis_view" }),
     ).resolves.toEqual(
       expect.objectContaining({
         id,
-        name: "test_view_redis",
-        context: "hermes",
+        name: "test_redis_view",
+        context: namespace,
         destroyed: false,
         meta: {
-          created: {
+          create: {
             destroyed: false,
             timestamp: expect.any(Date),
-            value: true,
+            value: "create",
           },
-          updated: {
+          dispatch: {
             destroyed: false,
             timestamp: expect.any(Date),
-            value: true,
+            value: "dispatch",
+          },
+          mergeState: {
+            destroyed: false,
+            timestamp: expect.any(Date),
+            value: "merge state",
           },
         },
         processedCausationIds: [],
-        revision: 4,
+        revision: 6,
         state: {
-          created: true,
-          updated: true,
+          create: "create",
+          dispatch: "dispatch",
+          mergeState: "merge state",
         },
       }),
     );
 
-    await expect(hermes.query(new QueryGreetingMongo(id))).resolves.toEqual({
+    await expect(hermes.query(new TestMongoQuery(id))).resolves.toEqual({
       id,
       state: {
-        created: true,
-        updated: true,
+        create: "create",
+        dispatch: "dispatch",
+        mergeState: "merge state",
       },
       created_at: expect.any(Date),
       updated_at: expect.any(Date),
     });
 
-    await expect(hermes.query(new QueryGreetingPostgres(id))).resolves.toEqual({
+    await expect(hermes.query(new TestPostgresQuery(id))).resolves.toEqual({
       id,
       state: {
-        created: true,
-        updated: true,
+        create: "create",
+        dispatch: "dispatch",
+        mergeState: "merge state",
       },
       created_at: expect.any(Date),
       updated_at: expect.any(Date),
     });
 
-    await expect(hermes.query(new QueryGreetingRedis(id))).resolves.toEqual({
+    await expect(hermes.query(new TestRedisQuery(id))).resolves.toEqual({
       id,
       state: {
-        created: true,
-        updated: true,
+        create: "create",
+        dispatch: "dispatch",
+        mergeState: "merge state",
       },
       created_at: expect.any(Date),
       updated_at: expect.any(Date),
     });
 
-    expect(onSagaSpyAll).toHaveBeenCalledTimes(2);
-    expect(onSagaSpyContext).toHaveBeenCalledTimes(2);
-    expect(onSagaSpyName).toHaveBeenCalledTimes(2);
-    expect(onSagaSpyId).toHaveBeenCalledTimes(2);
-
-    expect(onViewSpyAll).toHaveBeenCalledTimes(6);
-    expect(onViewSpyContext).toHaveBeenCalledTimes(6);
-    expect(onViewSpyName).toHaveBeenCalledTimes(2);
-    expect(onViewSpyId).toHaveBeenCalledTimes(2);
+    expect(onSagaSpy).toHaveBeenCalledTimes(3);
+    expect(onViewSpy).toHaveBeenCalledTimes(9);
   }, 30000);
 });

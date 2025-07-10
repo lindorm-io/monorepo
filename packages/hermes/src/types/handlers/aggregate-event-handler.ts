@@ -1,26 +1,22 @@
 import { ILogger } from "@lindorm/logger";
-import { ClassLike, Dict } from "@lindorm/types";
+import { ClassLike, DeepPartial, Dict } from "@lindorm/types";
+import { NameData } from "../../utils/private";
 import { HandlerIdentifier } from "../identifiers";
 
-export type AggregateEventHandlerContext<
-  E extends ClassLike = ClassLike,
-  S extends Dict = Dict,
-> = {
+export type AggregateEventCtx<E extends ClassLike, S extends Dict> = {
   event: E;
   logger: ILogger;
+  meta: Dict;
   state: S;
   destroy(): void;
   destroyNext(): void;
-  mergeState(data: Partial<S>): void;
+  mergeState(data: DeepPartial<S>): void;
   setState(state: S): void;
 };
 
-export type AggregateEventHandlerOptions<
-  E extends ClassLike = ClassLike,
-  S extends Dict = Dict,
-> = {
+export type AggregateEventHandlerOptions<C extends ClassLike, S extends Dict> = {
   aggregate: HandlerIdentifier;
-  eventName: string;
-  version?: number;
-  handler(ctx: AggregateEventHandlerContext<E, S>): Promise<void>;
+  event: NameData;
+  key: string;
+  handler(ctx: AggregateEventCtx<C, S>): Promise<void>;
 };

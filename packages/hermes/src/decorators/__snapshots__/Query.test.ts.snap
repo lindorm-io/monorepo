@@ -1,0 +1,8 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Query Decorator should add metadata 1`] = `
+{
+  "name": "TestQuery",
+  "target": [Function],
+}
+`;

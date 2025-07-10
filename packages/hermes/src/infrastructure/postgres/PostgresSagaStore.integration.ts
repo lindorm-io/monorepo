@@ -1,13 +1,13 @@
 import { createMockLogger } from "@lindorm/logger";
-import { MessageKit } from "@lindorm/message";
 import { IPostgresSource, PostgresSource } from "@lindorm/postgres";
 import { randomUUID } from "crypto";
-import { TEST_AGGREGATE_IDENTIFIER } from "../../__fixtures__/aggregate";
-import { TEST_HERMES_COMMAND } from "../../__fixtures__/hermes-command";
-import { TEST_SAGA_IDENTIFIER } from "../../__fixtures__/saga";
+import { createTestCommand, createTestEvent } from "../../__fixtures__/create-message";
+import { createTestAggregateIdentifier } from "../../__fixtures__/create-test-aggregate-identifier";
+import { createTestSagaIdentifier } from "../../__fixtures__/create-test-saga-identifier";
+import { TestCommandCreate } from "../../__fixtures__/modules/commands/TestCommandCreate";
+import { TestEventCreate } from "../../__fixtures__/modules/events/TestEventCreate";
 import { SAGA_CAUSATION, SAGA_STORE } from "../../constants/private";
 import { ISagaStore } from "../../interfaces";
-import { HermesCommand, HermesEvent } from "../../messages";
 import {
   AggregateIdentifier,
   SagaCausationAttributes,
@@ -65,15 +65,13 @@ const findSaga = async (
 };
 
 describe("PostgresSagaStore", () => {
-  const commandKit = new MessageKit({ Message: HermesCommand });
-  const eventKit = new MessageKit({ Message: HermesEvent });
-
+  const namespace = "pg_sag_sto";
   const logger = createMockLogger();
 
-  let aggregateIdentifier: AggregateIdentifier;
+  let aggregate: AggregateIdentifier;
   let attributes: SagaStoreAttributes;
+  let saga: SagaIdentifier;
   let source: IPostgresSource;
-  let sagaIdentifier: SagaIdentifier;
   let store: ISagaStore;
 
   beforeAll(async () => {
@@ -89,12 +87,12 @@ describe("PostgresSagaStore", () => {
   }, 10000);
 
   beforeEach(() => {
-    aggregateIdentifier = { ...TEST_AGGREGATE_IDENTIFIER, id: randomUUID() };
-    sagaIdentifier = { ...TEST_SAGA_IDENTIFIER, id: aggregateIdentifier.id };
+    aggregate = createTestAggregateIdentifier(namespace);
+    saga = { ...createTestSagaIdentifier(namespace), id: aggregate.id };
     attributes = {
-      ...sagaIdentifier,
+      ...saga,
       destroyed: false,
-      messages_to_dispatch: [commandKit.create(TEST_HERMES_COMMAND)],
+      messages_to_dispatch: [createTestCommand(new TestCommandCreate("create"))],
       processed_causation_ids: [randomUUID()],
       revision: 1,
       state: { data: "state" },
@@ -108,7 +106,7 @@ describe("PostgresSagaStore", () => {
   });
 
   test("should find causation ids", async () => {
-    const event = eventKit.create(TEST_HERMES_COMMAND);
+    const event = createTestEvent(new TestEventCreate("create"));
 
     await insertCausation(source, {
       id: attributes.id,
@@ -118,15 +116,13 @@ describe("PostgresSagaStore", () => {
       created_at: new Date(),
     });
 
-    await expect(store.findCausationIds(sagaIdentifier)).resolves.toEqual([
-      event.causationId,
-    ]);
+    await expect(store.findCausationIds(saga)).resolves.toEqual([event.causationId]);
   });
 
   test("should find saga", async () => {
     await insertSaga(source, attributes);
 
-    await expect(store.findSaga(sagaIdentifier)).resolves.toEqual(
+    await expect(store.findSaga(saga)).resolves.toEqual(
       expect.objectContaining({
         state: { data: "state" },
       }),
@@ -139,14 +135,14 @@ describe("PostgresSagaStore", () => {
     const three = randomUUID();
 
     await expect(
-      store.insertCausationIds(sagaIdentifier, [one, two, three]),
+      store.insertCausationIds(saga, [one, two, three]),
     ).resolves.toBeUndefined();
 
     await expect(
       findCausations(source, {
-        id: sagaIdentifier.id,
-        name: sagaIdentifier.name,
-        context: sagaIdentifier.context,
+        id: saga.id,
+        name: saga.name,
+        context: saga.context,
       }),
     ).resolves.toEqual(
       expect.arrayContaining([

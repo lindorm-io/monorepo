@@ -2,6 +2,7 @@ import { JsonKit } from "@lindorm/json-kit";
 import { createMockLogger } from "@lindorm/logger";
 import { IRedisSource, RedisSource } from "@lindorm/redis";
 import { randomUUID } from "crypto";
+import { createTestViewIdentifier } from "../../__fixtures__/create-test-view-identifier";
 import { IRedisViewRepository } from "../../interfaces";
 import { ViewIdentifier } from "../../types";
 import { RedisViewRepository } from "./RedisViewRepository";
@@ -11,11 +12,12 @@ const redisKey = (viewIdentifier: ViewIdentifier): string => {
 };
 
 describe("RedisViewRepository", () => {
+  const namespace = "red_vie_rep";
   const logger = createMockLogger();
 
-  let source: IRedisSource;
-  let identifier: ViewIdentifier;
   let repository: IRedisViewRepository;
+  let source: IRedisSource;
+  let view: ViewIdentifier;
 
   let view1: string;
   let view2: string;
@@ -29,9 +31,9 @@ describe("RedisViewRepository", () => {
 
     await source.setup();
 
-    identifier = { context: "view_repository", name: "name", id: randomUUID() };
+    view = createTestViewIdentifier(namespace);
 
-    repository = new RedisViewRepository(source, identifier, logger);
+    repository = new RedisViewRepository(source, view, logger);
 
     view1 = randomUUID();
     view2 = randomUUID();
@@ -40,8 +42,8 @@ describe("RedisViewRepository", () => {
     const attributes = [
       {
         id: view1,
-        name: "name",
-        context: "view_repository",
+        name: "test_mongo_view",
+        context: namespace,
         destroyed: false,
         processed_causation_ids: [],
         meta: {},
@@ -52,8 +54,8 @@ describe("RedisViewRepository", () => {
       },
       {
         id: view2,
-        name: "name",
-        context: "view_repository",
+        name: "test_mongo_view",
+        context: namespace,
         destroyed: false,
         processed_causation_ids: [],
         meta: {},
@@ -64,8 +66,8 @@ describe("RedisViewRepository", () => {
       },
       {
         id: view3,
-        name: "name",
-        context: "view_repository",
+        name: "test_mongo_view",
+        context: namespace,
         destroyed: false,
         processed_causation_ids: [],
         meta: {},
@@ -76,8 +78,8 @@ describe("RedisViewRepository", () => {
       },
       {
         id: randomUUID(),
-        name: "name",
-        context: "view_repository",
+        name: "test_mongo_view",
+        context: namespace,
         destroyed: true,
         processed_causation_ids: [],
         meta: {},

@@ -1,0 +1,1422 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`HermesRegistry should add 1`] = `
+HermesRegistry {
+  "aggregateCommandHandlers": [
+    HermesAggregateCommandHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "command": "test_command_create",
+      "conditions": {
+        "created": false,
+      },
+      "encryption": false,
+      "handler": [Function],
+      "key": "onCreate",
+      "schema": ZodObject {
+        "_cached": null,
+        "_def": {
+          "catchall": ZodNever {
+            "_def": {
+              "typeName": "ZodNever",
+            },
+            "and": [Function],
+            "array": [Function],
+            "brand": [Function],
+            "catch": [Function],
+            "default": [Function],
+            "describe": [Function],
+            "isNullable": [Function],
+            "isOptional": [Function],
+            "nullable": [Function],
+            "nullish": [Function],
+            "optional": [Function],
+            "or": [Function],
+            "parse": [Function],
+            "parseAsync": [Function],
+            "pipe": [Function],
+            "promise": [Function],
+            "readonly": [Function],
+            "refine": [Function],
+            "refinement": [Function],
+            "safeParse": [Function],
+            "safeParseAsync": [Function],
+            "spa": [Function],
+            "superRefine": [Function],
+            "transform": [Function],
+            "~standard": {
+              "validate": [Function],
+              "vendor": "zod",
+              "version": 1,
+            },
+          },
+          "shape": [Function],
+          "typeName": "ZodObject",
+          "unknownKeys": "strip",
+        },
+        "and": [Function],
+        "array": [Function],
+        "augment": [Function],
+        "brand": [Function],
+        "catch": [Function],
+        "default": [Function],
+        "describe": [Function],
+        "isNullable": [Function],
+        "isOptional": [Function],
+        "nonstrict": [Function],
+        "nullable": [Function],
+        "nullish": [Function],
+        "optional": [Function],
+        "or": [Function],
+        "parse": [Function],
+        "parseAsync": [Function],
+        "pipe": [Function],
+        "promise": [Function],
+        "readonly": [Function],
+        "refine": [Function],
+        "refinement": [Function],
+        "safeParse": [Function],
+        "safeParseAsync": [Function],
+        "spa": [Function],
+        "superRefine": [Function],
+        "transform": [Function],
+        "~standard": {
+          "validate": [Function],
+          "vendor": "zod",
+          "version": 1,
+        },
+      },
+    },
+    HermesAggregateCommandHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "command": "test_command_destroy",
+      "conditions": {
+        "created": true,
+      },
+      "encryption": false,
+      "handler": [Function],
+      "key": "onDestroy",
+      "schema": undefined,
+    },
+    HermesAggregateCommandHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "command": "test_command_destroy_next",
+      "conditions": {},
+      "encryption": false,
+      "handler": [Function],
+      "key": "onDestroyNext",
+      "schema": undefined,
+    },
+    HermesAggregateCommandHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "command": "test_command_dispatch",
+      "conditions": {},
+      "encryption": false,
+      "handler": [Function],
+      "key": "onDispatch",
+      "schema": undefined,
+    },
+    HermesAggregateCommandHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "command": "test_command_encrypt",
+      "conditions": {},
+      "encryption": true,
+      "handler": [Function],
+      "key": "onEncrypt",
+      "schema": undefined,
+    },
+    HermesAggregateCommandHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "command": "test_command_merge_state",
+      "conditions": {},
+      "encryption": false,
+      "handler": [Function],
+      "key": "onMergeState",
+      "schema": undefined,
+    },
+    HermesAggregateCommandHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "command": "test_command_set_state",
+      "conditions": {},
+      "encryption": false,
+      "handler": [Function],
+      "key": "onSetState",
+      "schema": undefined,
+    },
+    HermesAggregateCommandHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "command": "test_command_throws",
+      "conditions": {},
+      "encryption": false,
+      "handler": [Function],
+      "key": "onThrows",
+      "schema": undefined,
+    },
+    HermesAggregateCommandHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "command": "test_command_timeout",
+      "conditions": {},
+      "encryption": false,
+      "handler": [Function],
+      "key": "onTimeout",
+      "schema": undefined,
+    },
+  ],
+  "aggregateErrorHandlers": [],
+  "aggregateEventHandlers": [
+    HermesAggregateEventHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "event": {
+        "name": "test_event_create",
+        "version": 1,
+      },
+      "handler": [Function],
+      "key": "onCreateEvent",
+    },
+    HermesAggregateEventHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "event": {
+        "name": "test_event_destroy",
+        "version": 1,
+      },
+      "handler": [Function],
+      "key": "onDestroyEvent",
+    },
+    HermesAggregateEventHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "event": {
+        "name": "test_event_destroy_next",
+        "version": 1,
+      },
+      "handler": [Function],
+      "key": "onDestroyNextEvent",
+    },
+    HermesAggregateEventHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "event": {
+        "name": "test_event_dispatch",
+        "version": 1,
+      },
+      "handler": [Function],
+      "key": "onDispatchEvent",
+    },
+    HermesAggregateEventHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "event": {
+        "name": "test_event_encrypt",
+        "version": 1,
+      },
+      "handler": [Function],
+      "key": "onEncryptEvent",
+    },
+    HermesAggregateEventHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "event": {
+        "name": "test_event_merge_state",
+        "version": 1,
+      },
+      "handler": [Function],
+      "key": "onMergeStateEvent",
+    },
+    HermesAggregateEventHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "event": {
+        "name": "test_event_set_state",
+        "version": 1,
+      },
+      "handler": [Function],
+      "key": "onSetStateEvent",
+    },
+    HermesAggregateEventHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "event": {
+        "name": "test_event_throws",
+        "version": 1,
+      },
+      "handler": [Function],
+      "key": "onThrowsEvent",
+    },
+    HermesAggregateEventHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "event": {
+        "name": "test_event_timeout",
+        "version": 1,
+      },
+      "handler": [Function],
+      "key": "onTimeoutEvent",
+    },
+  ],
+  "aggregates": [
+    {
+      "encryption": false,
+      "name": "test_aggregate",
+      "namespace": "hermes",
+      "target": [Function],
+    },
+  ],
+  "commandCtors": [
+    [Function],
+    [Function],
+    [Function],
+    [Function],
+    [Function],
+    [Function],
+    [Function],
+    [Function],
+    [Function],
+  ],
+  "commands": [
+    {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "name": "test_command_create",
+      "target": [Function],
+    },
+    {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "name": "test_command_destroy",
+      "target": [Function],
+    },
+    {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "name": "test_command_destroy_next",
+      "target": [Function],
+    },
+    {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "name": "test_command_dispatch",
+      "target": [Function],
+    },
+    {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "name": "test_command_encrypt",
+      "target": [Function],
+    },
+    {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "name": "test_command_merge_state",
+      "target": [Function],
+    },
+    {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "name": "test_command_set_state",
+      "target": [Function],
+    },
+    {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "name": "test_command_throws",
+      "target": [Function],
+    },
+    {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "name": "test_command_timeout",
+      "target": [Function],
+    },
+  ],
+  "eventCtors": [
+    [Function],
+    [Function],
+    [Function],
+    [Function],
+    [Function],
+    [Function],
+    [Function],
+    [Function],
+    [Function],
+  ],
+  "events": [
+    {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "name": "test_event_create",
+      "target": [Function],
+      "version": 1,
+    },
+    {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "name": "test_event_destroy",
+      "target": [Function],
+      "version": 1,
+    },
+    {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "name": "test_event_destroy_next",
+      "target": [Function],
+      "version": 1,
+    },
+    {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "name": "test_event_dispatch",
+      "target": [Function],
+      "version": 1,
+    },
+    {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "name": "test_event_encrypt",
+      "target": [Function],
+      "version": 1,
+    },
+    {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "name": "test_event_merge_state",
+      "target": [Function],
+      "version": 1,
+    },
+    {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "name": "test_event_set_state",
+      "target": [Function],
+      "version": 1,
+    },
+    {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "name": "test_event_throws",
+      "target": [Function],
+      "version": 1,
+    },
+    {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "name": "test_event_timeout",
+      "target": [Function],
+      "version": 1,
+    },
+  ],
+  "namespace": "hermes",
+  "queries": [
+    {
+      "name": "TestMongoQuery",
+      "target": [Function],
+      "view": {
+        "context": "hermes",
+        "name": "test_mongo_view",
+      },
+    },
+    {
+      "name": "TestPostgresQuery",
+      "target": [Function],
+      "view": {
+        "context": "hermes",
+        "name": "test_postgres_view",
+      },
+    },
+    {
+      "name": "TestRedisQuery",
+      "target": [Function],
+      "view": {
+        "context": "hermes",
+        "name": "test_redis_view",
+      },
+    },
+  ],
+  "queryCtors": [
+    [Function],
+    [Function],
+    [Function],
+  ],
+  "sagaErrorHandlers": [],
+  "sagaEventHandlers": [
+    HermesSagaEventHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "conditions": {
+        "created": false,
+      },
+      "event": {
+        "name": "test_event_create",
+        "version": 1,
+      },
+      "handler": [Function],
+      "key": "onCreateEvent",
+      "saga": {
+        "context": "hermes",
+        "name": "test_saga",
+      },
+    },
+    HermesSagaEventHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "conditions": {
+        "created": true,
+      },
+      "event": {
+        "name": "test_event_destroy",
+        "version": 1,
+      },
+      "handler": [Function],
+      "key": "onDestroyEvent",
+      "saga": {
+        "context": "hermes",
+        "name": "test_saga",
+      },
+    },
+    HermesSagaEventHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "conditions": {},
+      "event": {
+        "name": "test_event_destroy_next",
+        "version": 1,
+      },
+      "handler": [Function],
+      "key": "onDestroyNextEvent",
+      "saga": {
+        "context": "hermes",
+        "name": "test_saga",
+      },
+    },
+    HermesSagaEventHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "conditions": {},
+      "event": {
+        "name": "test_event_dispatch",
+        "version": 1,
+      },
+      "handler": [Function],
+      "key": "onDispatchEvent",
+      "saga": {
+        "context": "hermes",
+        "name": "test_saga",
+      },
+    },
+    HermesSagaEventHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "conditions": {},
+      "event": {
+        "name": "test_event_encrypt",
+        "version": 1,
+      },
+      "handler": [Function],
+      "key": "onEncryptEvent",
+      "saga": {
+        "context": "hermes",
+        "name": "test_saga",
+      },
+    },
+    HermesSagaEventHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "conditions": {},
+      "event": {
+        "name": "test_event_merge_state",
+        "version": 1,
+      },
+      "handler": [Function],
+      "key": "onMergeStateEvent",
+      "saga": {
+        "context": "hermes",
+        "name": "test_saga",
+      },
+    },
+    HermesSagaEventHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "conditions": {},
+      "event": {
+        "name": "test_event_set_state",
+        "version": 1,
+      },
+      "handler": [Function],
+      "key": "onSetStateEvent",
+      "saga": {
+        "context": "hermes",
+        "name": "test_saga",
+      },
+    },
+    HermesSagaEventHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "conditions": {},
+      "event": {
+        "name": "test_event_throws",
+        "version": 1,
+      },
+      "handler": [Function],
+      "key": "onThrowsEvent",
+      "saga": {
+        "context": "hermes",
+        "name": "test_saga",
+      },
+    },
+    HermesSagaEventHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "conditions": {},
+      "event": {
+        "name": "test_event_timeout",
+        "version": 1,
+      },
+      "handler": [Function],
+      "key": "onTimeoutEvent",
+      "saga": {
+        "context": "hermes",
+        "name": "test_saga",
+      },
+    },
+  ],
+  "sagaIdHandlers": [],
+  "sagaTimeoutHandlers": [
+    HermesSagaTimeoutHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "handler": [Function],
+      "key": "onDestroyTimeout",
+      "saga": {
+        "context": "hermes",
+        "name": "test_saga",
+      },
+      "timeout": "test_timeout_destroy",
+    },
+    HermesSagaTimeoutHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "handler": [Function],
+      "key": "onDispatchTimeout",
+      "saga": {
+        "context": "hermes",
+        "name": "test_saga",
+      },
+      "timeout": "test_timeout_dispatch",
+    },
+    HermesSagaTimeoutHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "handler": [Function],
+      "key": "onMergeStateTimeout",
+      "saga": {
+        "context": "hermes",
+        "name": "test_saga",
+      },
+      "timeout": "test_timeout_merge_state",
+    },
+    HermesSagaTimeoutHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "handler": [Function],
+      "key": "onSetStateTimeout",
+      "saga": {
+        "context": "hermes",
+        "name": "test_saga",
+      },
+      "timeout": "test_timeout_set_state",
+    },
+    HermesSagaTimeoutHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "handler": [Function],
+      "key": "onThrowsTimeout",
+      "saga": {
+        "context": "hermes",
+        "name": "test_saga",
+      },
+      "timeout": "test_timeout_throws",
+    },
+  ],
+  "sagas": [
+    {
+      "aggregates": [
+        {
+          "context": "hermes",
+          "name": "test_aggregate",
+        },
+      ],
+      "name": "test_saga",
+      "namespace": "hermes",
+      "target": [Function],
+    },
+  ],
+  "timeoutCtors": [
+    [Function],
+    [Function],
+    [Function],
+    [Function],
+    [Function],
+  ],
+  "timeouts": [
+    {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "name": "test_timeout_destroy",
+      "saga": {
+        "context": "hermes",
+        "name": "test_saga",
+      },
+      "target": [Function],
+    },
+    {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "name": "test_timeout_dispatch",
+      "saga": {
+        "context": "hermes",
+        "name": "test_saga",
+      },
+      "target": [Function],
+    },
+    {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "name": "test_timeout_merge_state",
+      "saga": {
+        "context": "hermes",
+        "name": "test_saga",
+      },
+      "target": [Function],
+    },
+    {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "name": "test_timeout_set_state",
+      "saga": {
+        "context": "hermes",
+        "name": "test_saga",
+      },
+      "target": [Function],
+    },
+    {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "name": "test_timeout_throws",
+      "saga": {
+        "context": "hermes",
+        "name": "test_saga",
+      },
+      "target": [Function],
+    },
+  ],
+  "viewErrorHandlers": [],
+  "viewEventHandlers": [
+    HermesViewEventHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "conditions": {
+        "created": false,
+      },
+      "event": {
+        "name": "test_event_create",
+        "version": 1,
+      },
+      "handler": [Function],
+      "key": "onCreateEvent",
+      "source": "mongo",
+      "view": {
+        "context": "hermes",
+        "name": "test_mongo_view",
+      },
+    },
+    HermesViewEventHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "conditions": {
+        "created": true,
+      },
+      "event": {
+        "name": "test_event_destroy",
+        "version": 1,
+      },
+      "handler": [Function],
+      "key": "onDestroyEvent",
+      "source": "mongo",
+      "view": {
+        "context": "hermes",
+        "name": "test_mongo_view",
+      },
+    },
+    HermesViewEventHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "conditions": {
+        "created": true,
+      },
+      "event": {
+        "name": "test_event_destroy_next",
+        "version": 1,
+      },
+      "handler": [Function],
+      "key": "onDestroyNextEvent",
+      "source": "mongo",
+      "view": {
+        "context": "hermes",
+        "name": "test_mongo_view",
+      },
+    },
+    HermesViewEventHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "conditions": {},
+      "event": {
+        "name": "test_event_dispatch",
+        "version": 1,
+      },
+      "handler": [Function],
+      "key": "onDispatchEvent",
+      "source": "mongo",
+      "view": {
+        "context": "hermes",
+        "name": "test_mongo_view",
+      },
+    },
+    HermesViewEventHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "conditions": {},
+      "event": {
+        "name": "test_event_encrypt",
+        "version": 1,
+      },
+      "handler": [Function],
+      "key": "onEncryptEvent",
+      "source": "mongo",
+      "view": {
+        "context": "hermes",
+        "name": "test_mongo_view",
+      },
+    },
+    HermesViewEventHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "conditions": {},
+      "event": {
+        "name": "test_event_merge_state",
+        "version": 1,
+      },
+      "handler": [Function],
+      "key": "onMergeStateEvent",
+      "source": "mongo",
+      "view": {
+        "context": "hermes",
+        "name": "test_mongo_view",
+      },
+    },
+    HermesViewEventHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "conditions": {},
+      "event": {
+        "name": "test_event_set_state",
+        "version": 1,
+      },
+      "handler": [Function],
+      "key": "onSetStateEvent",
+      "source": "mongo",
+      "view": {
+        "context": "hermes",
+        "name": "test_mongo_view",
+      },
+    },
+    HermesViewEventHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "conditions": {},
+      "event": {
+        "name": "test_event_throws",
+        "version": 1,
+      },
+      "handler": [Function],
+      "key": "onThrowsEvent",
+      "source": "mongo",
+      "view": {
+        "context": "hermes",
+        "name": "test_mongo_view",
+      },
+    },
+    HermesViewEventHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "conditions": {},
+      "event": {
+        "name": "test_event_timeout",
+        "version": 1,
+      },
+      "handler": [Function],
+      "key": "onTimeoutEvent",
+      "source": "mongo",
+      "view": {
+        "context": "hermes",
+        "name": "test_mongo_view",
+      },
+    },
+    HermesViewEventHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "conditions": {
+        "created": false,
+      },
+      "event": {
+        "name": "test_event_create",
+        "version": 1,
+      },
+      "handler": [Function],
+      "key": "onCreateEvent",
+      "source": "postgres",
+      "view": {
+        "context": "hermes",
+        "name": "test_postgres_view",
+      },
+    },
+    HermesViewEventHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "conditions": {
+        "created": true,
+      },
+      "event": {
+        "name": "test_event_destroy",
+        "version": 1,
+      },
+      "handler": [Function],
+      "key": "onDestroyEvent",
+      "source": "postgres",
+      "view": {
+        "context": "hermes",
+        "name": "test_postgres_view",
+      },
+    },
+    HermesViewEventHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "conditions": {
+        "created": true,
+      },
+      "event": {
+        "name": "test_event_destroy_next",
+        "version": 1,
+      },
+      "handler": [Function],
+      "key": "onDestroyNextEvent",
+      "source": "postgres",
+      "view": {
+        "context": "hermes",
+        "name": "test_postgres_view",
+      },
+    },
+    HermesViewEventHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "conditions": {},
+      "event": {
+        "name": "test_event_dispatch",
+        "version": 1,
+      },
+      "handler": [Function],
+      "key": "onDispatchEvent",
+      "source": "postgres",
+      "view": {
+        "context": "hermes",
+        "name": "test_postgres_view",
+      },
+    },
+    HermesViewEventHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "conditions": {},
+      "event": {
+        "name": "test_event_encrypt",
+        "version": 1,
+      },
+      "handler": [Function],
+      "key": "onEncryptEvent",
+      "source": "postgres",
+      "view": {
+        "context": "hermes",
+        "name": "test_postgres_view",
+      },
+    },
+    HermesViewEventHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "conditions": {},
+      "event": {
+        "name": "test_event_merge_state",
+        "version": 1,
+      },
+      "handler": [Function],
+      "key": "onMergeStateEvent",
+      "source": "postgres",
+      "view": {
+        "context": "hermes",
+        "name": "test_postgres_view",
+      },
+    },
+    HermesViewEventHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "conditions": {},
+      "event": {
+        "name": "test_event_set_state",
+        "version": 1,
+      },
+      "handler": [Function],
+      "key": "onSetStateEvent",
+      "source": "postgres",
+      "view": {
+        "context": "hermes",
+        "name": "test_postgres_view",
+      },
+    },
+    HermesViewEventHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "conditions": {},
+      "event": {
+        "name": "test_event_throws",
+        "version": 1,
+      },
+      "handler": [Function],
+      "key": "onThrowsEvent",
+      "source": "postgres",
+      "view": {
+        "context": "hermes",
+        "name": "test_postgres_view",
+      },
+    },
+    HermesViewEventHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "conditions": {},
+      "event": {
+        "name": "test_event_timeout",
+        "version": 1,
+      },
+      "handler": [Function],
+      "key": "onTimeoutEvent",
+      "source": "postgres",
+      "view": {
+        "context": "hermes",
+        "name": "test_postgres_view",
+      },
+    },
+    HermesViewEventHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "conditions": {
+        "created": false,
+      },
+      "event": {
+        "name": "test_event_create",
+        "version": 1,
+      },
+      "handler": [Function],
+      "key": "onCreateEvent",
+      "source": "redis",
+      "view": {
+        "context": "hermes",
+        "name": "test_redis_view",
+      },
+    },
+    HermesViewEventHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "conditions": {
+        "created": true,
+      },
+      "event": {
+        "name": "test_event_destroy",
+        "version": 1,
+      },
+      "handler": [Function],
+      "key": "onDestroyEvent",
+      "source": "redis",
+      "view": {
+        "context": "hermes",
+        "name": "test_redis_view",
+      },
+    },
+    HermesViewEventHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "conditions": {
+        "created": true,
+      },
+      "event": {
+        "name": "test_event_destroy_next",
+        "version": 1,
+      },
+      "handler": [Function],
+      "key": "onDestroyNextEvent",
+      "source": "redis",
+      "view": {
+        "context": "hermes",
+        "name": "test_redis_view",
+      },
+    },
+    HermesViewEventHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "conditions": {},
+      "event": {
+        "name": "test_event_dispatch",
+        "version": 1,
+      },
+      "handler": [Function],
+      "key": "onDispatchEvent",
+      "source": "redis",
+      "view": {
+        "context": "hermes",
+        "name": "test_redis_view",
+      },
+    },
+    HermesViewEventHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "conditions": {},
+      "event": {
+        "name": "test_event_encrypt",
+        "version": 1,
+      },
+      "handler": [Function],
+      "key": "onEncryptEvent",
+      "source": "redis",
+      "view": {
+        "context": "hermes",
+        "name": "test_redis_view",
+      },
+    },
+    HermesViewEventHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "conditions": {},
+      "event": {
+        "name": "test_event_merge_state",
+        "version": 1,
+      },
+      "handler": [Function],
+      "key": "onMergeStateEvent",
+      "source": "redis",
+      "view": {
+        "context": "hermes",
+        "name": "test_redis_view",
+      },
+    },
+    HermesViewEventHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "conditions": {},
+      "event": {
+        "name": "test_event_set_state",
+        "version": 1,
+      },
+      "handler": [Function],
+      "key": "onSetStateEvent",
+      "source": "redis",
+      "view": {
+        "context": "hermes",
+        "name": "test_redis_view",
+      },
+    },
+    HermesViewEventHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "conditions": {},
+      "event": {
+        "name": "test_event_throws",
+        "version": 1,
+      },
+      "handler": [Function],
+      "key": "onThrowsEvent",
+      "source": "redis",
+      "view": {
+        "context": "hermes",
+        "name": "test_redis_view",
+      },
+    },
+    HermesViewEventHandler {
+      "aggregate": {
+        "context": "hermes",
+        "name": "test_aggregate",
+      },
+      "conditions": {},
+      "event": {
+        "name": "test_event_timeout",
+        "version": 1,
+      },
+      "handler": [Function],
+      "key": "onTimeoutEvent",
+      "source": "redis",
+      "view": {
+        "context": "hermes",
+        "name": "test_redis_view",
+      },
+    },
+  ],
+  "viewIdHandlers": [],
+  "viewQueryHandlers": [
+    HermesViewQueryHandler {
+      "handler": [Function],
+      "key": "onMongoQuery",
+      "query": "TestMongoQuery",
+      "source": "mongo",
+      "view": {
+        "context": "hermes",
+        "name": "test_mongo_view",
+      },
+    },
+    HermesViewQueryHandler {
+      "handler": [Function],
+      "key": "onPostgresQuery",
+      "query": "TestPostgresQuery",
+      "source": "postgres",
+      "view": {
+        "context": "hermes",
+        "name": "test_postgres_view",
+      },
+    },
+    HermesViewQueryHandler {
+      "handler": [Function],
+      "key": "onRedisQuery",
+      "query": "TestRedisQuery",
+      "source": "redis",
+      "view": {
+        "context": "hermes",
+        "name": "test_redis_view",
+      },
+    },
+  ],
+  "views": [
+    {
+      "aggregates": [
+        {
+          "context": "hermes",
+          "name": "test_aggregate",
+        },
+      ],
+      "name": "test_mongo_view",
+      "namespace": "hermes",
+      "source": "mongo",
+      "target": [Function],
+    },
+    {
+      "aggregates": [
+        {
+          "context": "hermes",
+          "name": "test_aggregate",
+        },
+        {
+          "context": "hermes",
+          "name": "test_aggregate",
+        },
+      ],
+      "name": "test_postgres_view",
+      "namespace": "hermes",
+      "source": "postgres",
+      "target": [Function],
+    },
+    {
+      "aggregates": [
+        {
+          "context": "hermes",
+          "name": "test_aggregate",
+        },
+        {
+          "context": "hermes",
+          "name": "test_aggregate",
+        },
+        {
+          "context": "hermes",
+          "name": "test_aggregate",
+        },
+      ],
+      "name": "test_redis_view",
+      "namespace": "hermes",
+      "source": "redis",
+      "target": [Function],
+    },
+  ],
+}
+`;

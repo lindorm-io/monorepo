@@ -8,19 +8,16 @@ import {
   HermesCommandOptions,
 } from "../types";
 
-export interface IHermes<
-  C extends ClassLike = ClassLike,
-  Q extends ClassLike = ClassLike,
-> {
+export interface IHermes {
   admin: HermesAdmin;
   status: HermesStatus;
 
   on<D extends Dict = Dict>(eventName: string, listener: EventEmitterListener<D>): void;
-  clone(options?: CloneHermesOptions): IHermes<C, Q>;
-  command<M extends Dict = Dict>(
+  clone(options?: CloneHermesOptions): IHermes;
+  command<C extends ClassLike = ClassLike, M extends Dict = Dict>(
     command: C,
     options: HermesCommandOptions<M>,
   ): Promise<AggregateIdentifier>;
-  query<R>(query: Q): Promise<R>;
+  query<R>(query: ClassLike): Promise<R>;
   setup(): Promise<void>;
 }

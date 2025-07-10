@@ -1,0 +1,24 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`SagaErrorHandler Decorator should add metadata 1`] = `
+{
+  "aggregates": [
+    [Function],
+  ],
+  "handlers": [
+    {
+      "conditions": null,
+      "decorator": "SagaErrorHandler",
+      "encryption": false,
+      "handler": [Function],
+      "key": "onTestSagaDomainError",
+      "schema": null,
+      "target": [Function],
+      "trigger": [Function],
+    },
+  ],
+  "name": "test_saga_error_handler_saga",
+  "namespace": null,
+  "target": [Function],
+}
+`;

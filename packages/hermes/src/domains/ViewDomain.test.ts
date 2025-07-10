@@ -1,56 +1,36 @@
-import { LindormError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger";
-import { MessageKit } from "@lindorm/message";
 import { createMockRabbitMessageBus } from "@lindorm/rabbit";
-import { randomUUID } from "crypto";
-import { TEST_AGGREGATE_IDENTIFIER } from "../__fixtures__/aggregate";
-import { TEST_AGGREGATE_EVENT_HANDLER } from "../__fixtures__/aggregate-event-handler";
+import { Dict } from "@lindorm/types";
+import { createTestEvent } from "../__fixtures__/create-message";
+import { createTestAggregateIdentifier } from "../__fixtures__/create-test-aggregate-identifier";
+import { createTestRegistry } from "../__fixtures__/create-test-registry";
+import { createTestViewIdentifier } from "../__fixtures__/create-test-view-identifier";
+import { TestEventCreate } from "../__fixtures__/modules/events/TestEventCreate";
+import { TestEventDestroy } from "../__fixtures__/modules/events/TestEventDestroy";
+import { TestEventMergeState } from "../__fixtures__/modules/events/TestEventMergeState";
+import { TestEventThrows } from "../__fixtures__/modules/events/TestEventThrows";
+import { ViewNotCreatedError } from "../errors";
 import {
-  TEST_HERMES_EVENT,
-  TEST_HERMES_EVENT_CREATE,
-  TEST_HERMES_EVENT_SET_STATE,
-  TEST_HERMES_EVENT_THROWS,
-} from "../__fixtures__/hermes-event";
-import { TEST_VIEW_IDENTIFIER } from "../__fixtures__/view";
-import {
-  TEST_VIEW_EVENT_HANDLER,
-  TEST_VIEW_EVENT_HANDLER_CREATE,
-  TEST_VIEW_EVENT_HANDLER_DESTROY,
-  TEST_VIEW_EVENT_HANDLER_MERGE_STATE,
-  TEST_VIEW_EVENT_HANDLER_SET_STATE,
-  TEST_VIEW_EVENT_HANDLER_THROWS,
-} from "../__fixtures__/view-event-handler";
-import {
-  HandlerNotRegisteredError,
-  ViewAlreadyCreatedError,
-  ViewDestroyedError,
-  ViewNotCreatedError,
-} from "../errors";
-import { HermesViewEventHandler } from "../handlers";
-import { IHermesMessage, IHermesMessageBus, IView, IViewDomain } from "../interfaces";
-import { HermesError, HermesEvent } from "../messages";
+  IHermesMessage,
+  IHermesMessageBus,
+  IViewDomain,
+  IViewModel,
+} from "../interfaces";
+import { HermesCommand, HermesError, HermesEvent } from "../messages";
 import { ViewIdentifier } from "../types";
 import { ViewDomain } from "./ViewDomain";
 
 describe("ViewDomain", () => {
-  const eventKit = new MessageKit({ Message: HermesEvent });
-
   const logger = createMockLogger();
-  const eventHandlers = [
-    TEST_VIEW_EVENT_HANDLER,
-    TEST_VIEW_EVENT_HANDLER_CREATE,
-    TEST_VIEW_EVENT_HANDLER_DESTROY,
-    TEST_VIEW_EVENT_HANDLER_MERGE_STATE,
-    TEST_VIEW_EVENT_HANDLER_SET_STATE,
-    TEST_VIEW_EVENT_HANDLER_THROWS,
-  ];
 
   let domain: IViewDomain;
+  let commandBus: IHermesMessageBus<HermesCommand<Dict>>;
   let errorBus: IHermesMessageBus<HermesError>;
-  let eventBus: IHermesMessageBus<HermesEvent>;
+  let eventBus: IHermesMessageBus<HermesEvent<Dict>>;
   let store: any;
 
   beforeEach(async () => {
+    commandBus = createMockRabbitMessageBus(HermesCommand);
     errorBus = createMockRabbitMessageBus(HermesError);
     eventBus = createMockRabbitMessageBus(HermesEvent);
     store = {
@@ -60,128 +40,74 @@ describe("ViewDomain", () => {
       loadCausations: jest.fn().mockResolvedValue([]),
       save: jest
         .fn()
-        .mockImplementation(async (view: IView, causation: IHermesMessage) => ({
+        .mockImplementation(async (view: IViewModel, causation: IHermesMessage) => ({
           ...view.toJSON(),
           revision: view.revision + 1,
           processedCausationIds: [...view.processedCausationIds, causation.id],
         })),
-      saveCausations: jest.fn().mockImplementation(async (view: IView) => ({
+      saveCausations: jest.fn().mockImplementation(async (view: IViewModel) => ({
         ...view.toJSON(),
         revision: view.revision + 1,
         processedCausationIds: [],
       })),
     };
 
-    domain = new ViewDomain({ errorBus, eventBus, store, logger });
+    domain = new ViewDomain({
+      commandBus,
+      errorBus,
+      eventBus,
+      logger,
+      registry: createTestRegistry(),
+      store,
+    });
 
-    for (const handler of eventHandlers) {
-      await domain.registerEventHandler(handler);
-    }
+    await domain.registerHandlers();
   });
 
   test("should register event handler", async () => {
-    eventBus = createMockRabbitMessageBus(HermesEvent);
-    domain = new ViewDomain({ errorBus, eventBus, store, logger });
-
-    await expect(
-      domain.registerEventHandler(TEST_VIEW_EVENT_HANDLER),
-    ).resolves.toBeUndefined();
-
     expect(eventBus.subscribe).toHaveBeenCalledWith({
       callback: expect.any(Function),
-      queue: "queue.view.default.aggregate_name.hermes_event_default.default.name",
-      topic: "default.aggregate_name.hermes_event_default",
+      queue: "queue.view.hermes.test_aggregate.test_event_create.hermes.test_mongo_view",
+      topic: "hermes.test_aggregate.test_event_create",
     });
-  });
-
-  test("should register multiple event handlers", async () => {
-    eventBus = createMockRabbitMessageBus(HermesEvent);
-    domain = new ViewDomain({ errorBus, eventBus, store, logger });
-
-    await expect(
-      domain.registerEventHandler(
-        new HermesViewEventHandler({
-          ...TEST_VIEW_EVENT_HANDLER,
-          aggregate: {
-            ...TEST_VIEW_EVENT_HANDLER.aggregate,
-            context: ["one", "two"],
-          },
-        }),
-      ),
-    ).resolves.toBeUndefined();
-
-    expect(eventBus.subscribe).toHaveBeenCalledTimes(2);
-
-    expect(eventBus.subscribe).toHaveBeenNthCalledWith(1, {
-      callback: expect.any(Function),
-      queue: "queue.view.one.aggregate_name.hermes_event_default.default.name",
-      topic: "one.aggregate_name.hermes_event_default",
-    });
-
-    expect(eventBus.subscribe).toHaveBeenNthCalledWith(2, {
-      callback: expect.any(Function),
-      queue: "queue.view.two.aggregate_name.hermes_event_default.default.name",
-      topic: "two.aggregate_name.hermes_event_default",
-    });
-  });
-
-  test("should throw on existing event handler", async () => {
-    domain = new ViewDomain({ errorBus, eventBus, store, logger });
-
-    await domain.registerEventHandler(TEST_VIEW_EVENT_HANDLER);
-
-    await expect(domain.registerEventHandler(TEST_VIEW_EVENT_HANDLER)).rejects.toThrow(
-      LindormError,
-    );
-  });
-
-  test("should throw on invalid event handler", async () => {
-    domain = new ViewDomain({ errorBus, eventBus, store, logger });
-
-    await domain.registerEventHandler(TEST_VIEW_EVENT_HANDLER);
-
-    await expect(
-      // @ts-expect-error
-      domain.registerEventHandler(TEST_AGGREGATE_EVENT_HANDLER),
-    ).rejects.toThrow(LindormError);
   });
 
   test("should handle event", async () => {
-    const aggregate = { ...TEST_AGGREGATE_IDENTIFIER, id: randomUUID() };
-    const event = eventKit.create({ ...TEST_HERMES_EVENT_CREATE, aggregate });
+    const aggregate = createTestAggregateIdentifier();
+    const event = createTestEvent(new TestEventCreate("create"), { aggregate });
 
     await expect(
       // @ts-expect-error
-      domain.handleEvent(event, TEST_VIEW_IDENTIFIER),
+      domain.handleEvent(event, createTestViewIdentifier()),
     ).resolves.toBeUndefined();
 
     expect(store.load).toHaveBeenCalledWith(
       {
         id: event.aggregate.id,
-        context: "default",
-        name: "name",
+        context: "hermes",
+        name: "test_mongo_view",
       },
-      { type: "custom" },
+      "mongo",
     );
 
     expect(store.save).toHaveBeenCalledWith(
       expect.objectContaining({
         id: event.aggregate.id,
-        name: "name",
-        context: "default",
+        name: "test_mongo_view",
+        context: "hermes",
         processedCausationIds: [],
         destroyed: false,
         revision: 0,
-        state: { created: true },
+        state: { create: "create" },
       }),
       event,
-      { type: "custom" },
+      "mongo",
     );
   });
 
   test("should skip handler when last causation matches event id", async () => {
-    const aggregate = { ...TEST_AGGREGATE_IDENTIFIER, id: randomUUID() };
-    const event = eventKit.create({ ...TEST_HERMES_EVENT_CREATE, aggregate });
+    const aggregate = createTestAggregateIdentifier();
+    const event = createTestEvent(new TestEventCreate("create"), { aggregate });
 
     store.load.mockImplementation(async (v: ViewIdentifier) => ({
       ...v,
@@ -192,25 +118,14 @@ describe("ViewDomain", () => {
 
     await expect(
       // @ts-expect-error
-      domain.handleEvent(event, TEST_VIEW_IDENTIFIER),
+      domain.handleEvent(event, createTestViewIdentifier()),
     ).resolves.toBeUndefined();
 
     expect(store.save).not.toHaveBeenCalled();
   });
 
-  test("should throw on missing handler", async () => {
-    domain = new ViewDomain({ errorBus, eventBus, store, logger });
-
-    const event = eventKit.create(TEST_HERMES_EVENT);
-
-    await expect(
-      // @ts-expect-error
-      domain.handleEvent(event, TEST_VIEW_IDENTIFIER),
-    ).rejects.toThrow(HandlerNotRegisteredError);
-  });
-
   test("should dispatch error on destroyed view", async () => {
-    const event = eventKit.create(TEST_HERMES_EVENT);
+    const event = createTestEvent(new TestEventMergeState("merge-state"));
 
     store.load.mockImplementation(async (v: ViewIdentifier) => ({
       ...v,
@@ -220,19 +135,22 @@ describe("ViewDomain", () => {
 
     await expect(
       // @ts-expect-error
-      domain.handleEvent(event, TEST_VIEW_IDENTIFIER),
+      domain.handleEvent(event, createTestViewIdentifier()),
     ).resolves.toBeUndefined();
 
     expect(errorBus.publish).toHaveBeenCalledWith(
       expect.objectContaining({
         name: "view_destroyed_error",
         data: {
-          error: expect.any(ViewDestroyedError),
+          error: expect.objectContaining({ name: "ViewDestroyedError" }),
+          event: expect.objectContaining({
+            input: "merge-state",
+          }),
           message: event,
           view: {
             id: expect.any(String),
-            name: "name",
-            context: "default",
+            name: "test_mongo_view",
+            context: "hermes",
           },
         },
       }),
@@ -240,7 +158,7 @@ describe("ViewDomain", () => {
   });
 
   test("should throw on not created view", async () => {
-    const event = eventKit.create(TEST_HERMES_EVENT_SET_STATE);
+    const event = createTestEvent(new TestEventDestroy("destroy"));
 
     store.load.mockImplementation(async (v: ViewIdentifier) => ({
       ...v,
@@ -250,85 +168,14 @@ describe("ViewDomain", () => {
 
     await expect(
       // @ts-expect-error
-      domain.handleEvent(event, TEST_VIEW_IDENTIFIER),
+      domain.handleEvent(event, createTestViewIdentifier()),
     ).rejects.toThrow(ViewNotCreatedError);
 
     expect(errorBus.publish).not.toHaveBeenCalled();
   });
 
-  test("should dispatch error on not created view", async () => {
-    domain = new ViewDomain({ errorBus, eventBus, store, logger });
-
-    await domain.registerEventHandler(
-      new HermesViewEventHandler({
-        ...TEST_VIEW_EVENT_HANDLER_SET_STATE,
-        conditions: {
-          created: true,
-          permanent: true,
-        },
-      }),
-    );
-
-    const event = eventKit.create(TEST_HERMES_EVENT_SET_STATE);
-
-    store.load.mockImplementation(async (v: ViewIdentifier) => ({
-      ...v,
-      revision: 0,
-      logger,
-    }));
-
-    await expect(
-      // @ts-expect-error
-      domain.handleEvent(event, TEST_VIEW_IDENTIFIER),
-    ).resolves.toBeUndefined();
-
-    expect(errorBus.publish).toHaveBeenCalledWith(
-      expect.objectContaining({
-        name: "view_not_created_error",
-        data: {
-          error: expect.any(ViewNotCreatedError),
-          message: event,
-          view: {
-            id: expect.any(String),
-            name: "name",
-            context: "default",
-          },
-        },
-      }),
-    );
-  });
-
-  test("should throw on already created view", async () => {
-    domain = new ViewDomain({ errorBus, eventBus, store, logger });
-
-    await domain.registerEventHandler(
-      new HermesViewEventHandler({
-        ...TEST_VIEW_EVENT_HANDLER_CREATE,
-        conditions: {
-          created: false,
-          permanent: false,
-        },
-      }),
-    );
-
-    const event = eventKit.create(TEST_HERMES_EVENT_CREATE);
-
-    store.load.mockImplementation(async (v: ViewIdentifier) => ({
-      ...v,
-      revision: 1,
-      logger,
-    }));
-
-    await expect(
-      // @ts-expect-error
-      domain.handleEvent(event, TEST_VIEW_IDENTIFIER),
-    ).rejects.toThrow(ViewAlreadyCreatedError);
-
-    expect(errorBus.publish).not.toHaveBeenCalled();
-  });
-
   test("should dispatch error on already created view", async () => {
-    const event = eventKit.create(TEST_HERMES_EVENT_CREATE);
+    const event = createTestEvent(new TestEventCreate("create"));
 
     store.load.mockImplementation(async (v: ViewIdentifier) => ({
       ...v,
@@ -338,19 +185,22 @@ describe("ViewDomain", () => {
 
     await expect(
       // @ts-expect-error
-      domain.handleEvent(event, TEST_VIEW_IDENTIFIER),
+      domain.handleEvent(event, createTestViewIdentifier()),
     ).resolves.toBeUndefined();
 
     expect(errorBus.publish).toHaveBeenCalledWith(
       expect.objectContaining({
         name: "view_already_created_error",
         data: {
-          error: expect.any(ViewAlreadyCreatedError),
+          error: expect.objectContaining({ name: "ViewAlreadyCreatedError" }),
+          event: expect.objectContaining({
+            input: "create",
+          }),
           message: event,
           view: {
             id: expect.any(String),
-            name: "name",
-            context: "default",
+            name: "test_mongo_view",
+            context: "hermes",
           },
         },
       }),
@@ -358,7 +208,7 @@ describe("ViewDomain", () => {
   });
 
   test("should throw from event handler", async () => {
-    const event = eventKit.create(TEST_HERMES_EVENT_THROWS);
+    const event = createTestEvent(new TestEventThrows("throws"));
 
     store.load.mockImplementation(async (v: ViewIdentifier) => ({
       ...v,
@@ -368,8 +218,8 @@ describe("ViewDomain", () => {
 
     await expect(
       // @ts-expect-error
-      domain.handleEvent(event, TEST_VIEW_IDENTIFIER),
-    ).rejects.toThrow(new Error("throw"));
+      domain.handleEvent(event, createTestViewIdentifier()),
+    ).rejects.toThrow(new Error("throws"));
 
     expect(errorBus.publish).not.toHaveBeenCalled();
   });
