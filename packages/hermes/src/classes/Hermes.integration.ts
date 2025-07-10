@@ -106,14 +106,22 @@ describe("Hermes", () => {
     while (running) {
       if (sagaChangeCount >= 3 && viewChangeCount >= 9) {
         const [s, m, p, r] = await Promise.all([
-          hermes.admin.inspect.saga({ id, name: "test_saga", context: namespace }),
-          hermes.admin.inspect.view({ id, name: "test_mongo_view", context: namespace }),
+          hermes.admin.inspect.saga({ id, name: "test_saga", namespace: namespace }),
+          hermes.admin.inspect.view({
+            id,
+            name: "test_mongo_view",
+            namespace: namespace,
+          }),
           hermes.admin.inspect.view({
             id,
             name: "test_postgres_view",
-            context: namespace,
+            namespace: namespace,
           }),
-          hermes.admin.inspect.view({ id, name: "test_redis_view", context: namespace }),
+          hermes.admin.inspect.view({
+            id,
+            name: "test_redis_view",
+            namespace: namespace,
+          }),
         ]);
 
         const done =
@@ -130,12 +138,16 @@ describe("Hermes", () => {
     }
 
     await expect(
-      hermes.admin.inspect.aggregate({ id, name: "test_aggregate", context: namespace }),
+      hermes.admin.inspect.aggregate({
+        id,
+        name: "test_aggregate",
+        namespace: namespace,
+      }),
     ).resolves.toEqual(
       expect.objectContaining({
         id,
         name: "test_aggregate",
-        context: namespace,
+        namespace: namespace,
         destroyed: false,
         events: [
           expect.any(HermesEvent),
@@ -155,7 +167,7 @@ describe("Hermes", () => {
       expect.objectContaining({
         id: id,
         name: "test_saga",
-        context: namespace,
+        namespace: namespace,
         processedCausationIds: [],
         destroyed: false,
         messagesToDispatch: [],
@@ -174,7 +186,7 @@ describe("Hermes", () => {
       expect.objectContaining({
         id,
         name: "test_mongo_view",
-        context: namespace,
+        namespace: namespace,
         destroyed: false,
         meta: {
           create: {
@@ -209,7 +221,7 @@ describe("Hermes", () => {
       expect.objectContaining({
         id,
         name: "test_postgres_view",
-        context: namespace,
+        namespace: namespace,
         destroyed: false,
         meta: {
           create: {
@@ -244,7 +256,7 @@ describe("Hermes", () => {
       expect.objectContaining({
         id,
         name: "test_redis_view",
-        context: namespace,
+        namespace: namespace,
         destroyed: false,
         meta: {
           create: {

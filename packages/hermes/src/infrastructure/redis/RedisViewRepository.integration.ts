@@ -8,7 +8,7 @@ import { ViewIdentifier } from "../../types";
 import { RedisViewRepository } from "./RedisViewRepository";
 
 const redisKey = (viewIdentifier: ViewIdentifier): string => {
-  return `view:${viewIdentifier.context}:${viewIdentifier.name}:${viewIdentifier.id}`;
+  return `view:${viewIdentifier.namespace}:${viewIdentifier.name}:${viewIdentifier.id}`;
 };
 
 describe("RedisViewRepository", () => {
@@ -43,7 +43,7 @@ describe("RedisViewRepository", () => {
       {
         id: view1,
         name: "test_mongo_view",
-        context: namespace,
+        namespace: namespace,
         destroyed: false,
         processed_causation_ids: [],
         meta: {},
@@ -55,7 +55,7 @@ describe("RedisViewRepository", () => {
       {
         id: view2,
         name: "test_mongo_view",
-        context: namespace,
+        namespace: namespace,
         destroyed: false,
         processed_causation_ids: [],
         meta: {},
@@ -67,7 +67,7 @@ describe("RedisViewRepository", () => {
       {
         id: view3,
         name: "test_mongo_view",
-        context: namespace,
+        namespace: namespace,
         destroyed: false,
         processed_causation_ids: [],
         meta: {},
@@ -79,7 +79,7 @@ describe("RedisViewRepository", () => {
       {
         id: randomUUID(),
         name: "test_mongo_view",
-        context: namespace,
+        namespace: namespace,
         destroyed: true,
         processed_causation_ids: [],
         meta: {},

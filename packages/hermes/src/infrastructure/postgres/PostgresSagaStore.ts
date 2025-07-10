@@ -42,7 +42,7 @@ export class PostgresSagaStore extends PostgresBase implements ISagaStore {
           {
             id: sagaIdentifier.id,
             name: sagaIdentifier.name,
-            context: sagaIdentifier.context,
+            namespace: sagaIdentifier.namespace,
           },
           {
             columns: ["causation_id"],
@@ -73,7 +73,7 @@ export class PostgresSagaStore extends PostgresBase implements ISagaStore {
         this.qbSaga.select({
           id: sagaIdentifier.id,
           name: sagaIdentifier.name,
-          context: sagaIdentifier.context,
+          namespace: sagaIdentifier.namespace,
         }),
       );
 
@@ -110,7 +110,7 @@ export class PostgresSagaStore extends PostgresBase implements ISagaStore {
           causationIds.map((causationId) => ({
             id: sagaIdentifier.id,
             name: sagaIdentifier.name,
-            context: sagaIdentifier.context,
+            namespace: sagaIdentifier.namespace,
             causation_id: causationId,
             created_at: new Date(),
           })),

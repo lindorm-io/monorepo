@@ -143,7 +143,7 @@ export class AggregateDomain implements IAggregateDomain {
     const aggregate: AggregateIdentifier = {
       id: options.id || causation.aggregate.id,
       name: metadata.aggregate.name,
-      context: metadata.aggregate.context,
+      namespace: metadata.aggregate.namespace,
     };
 
     const { name, data } = extractDataTransferObject(message);
@@ -173,7 +173,7 @@ export class AggregateDomain implements IAggregateDomain {
     const commandHandler = this.registry.aggregateCommandHandlers.find(
       (x) =>
         x.aggregate.name === message.aggregate.name &&
-        x.aggregate.context === message.aggregate.context &&
+        x.aggregate.namespace === message.aggregate.namespace &&
         x.command === message.name,
     );
 
@@ -267,7 +267,7 @@ export class AggregateDomain implements IAggregateDomain {
     const errorHandler = this.registry.aggregateErrorHandlers.find(
       (x) =>
         x.aggregate.name === message.aggregate.name &&
-        x.aggregate.context === message.aggregate.context &&
+        x.aggregate.namespace === message.aggregate.namespace &&
         x.error === message.name,
     );
 
@@ -367,7 +367,7 @@ export class AggregateDomain implements IAggregateDomain {
     const events = await this.eventStore.find({
       id: aggregate.id,
       name: aggregate.name,
-      context: aggregate.context,
+      namespace: aggregate.namespace,
       causation_id: causation.id,
     });
 
@@ -399,7 +399,7 @@ export class AggregateDomain implements IAggregateDomain {
     const initial: Array<EventStoreAttributes> = causationEvents.map((event) => ({
       aggregate_id: aggregate.id,
       aggregate_name: aggregate.name,
-      aggregate_context: aggregate.context,
+      aggregate_namespace: aggregate.namespace,
       causation_id: causation.id,
       checksum: "",
       correlation_id: causation.correlationId,
@@ -513,7 +513,7 @@ export class AggregateDomain implements IAggregateDomain {
       aggregate: {
         id: data.aggregate_id,
         name: data.aggregate_name,
-        context: data.aggregate_context,
+        namespace: data.aggregate_namespace,
       },
       causationId: data.causation_id,
       correlationId: data.correlation_id,
@@ -528,18 +528,18 @@ export class AggregateDomain implements IAggregateDomain {
   // private static
 
   private static getCommandQueue(handler: IAggregateCommandHandler): string {
-    return `queue.aggregate.${handler.aggregate.context}.${handler.aggregate.name}.${handler.command}`;
+    return `queue.aggregate.${handler.aggregate.namespace}.${handler.aggregate.name}.${handler.command}`;
   }
 
   private static getCommandTopic(handler: IAggregateCommandHandler): string {
-    return `${handler.aggregate.context}.${handler.aggregate.name}.${handler.command}`;
+    return `${handler.aggregate.namespace}.${handler.aggregate.name}.${handler.command}`;
   }
 
   private static getErrorQueue(handler: IAggregateErrorHandler): string {
-    return `queue.aggregate.${handler.aggregate.context}.${handler.aggregate.name}.${handler.error}`;
+    return `queue.aggregate.${handler.aggregate.namespace}.${handler.aggregate.name}.${handler.error}`;
   }
 
   private static getErrorTopic(handler: IAggregateErrorHandler): string {
-    return `${handler.aggregate.context}.${handler.aggregate.name}.${handler.error}`;
+    return `${handler.aggregate.namespace}.${handler.aggregate.name}.${handler.error}`;
   }
 }

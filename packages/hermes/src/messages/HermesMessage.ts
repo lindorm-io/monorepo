@@ -13,7 +13,7 @@ import { IHermesMessage } from "../interfaces";
 import { AggregateIdentifier } from "../types";
 
 @Topic(
-  (message) => `${message.aggregate.context}.${message.aggregate.name}.${message.name}`,
+  (message) => `${message.aggregate.namespace}.${message.aggregate.name}.${message.name}`,
 )
 export class HermesMessage<D = Dict, M extends Dict = Dict>
   extends MessageBase
@@ -29,7 +29,7 @@ export class HermesMessage<D = Dict, M extends Dict = Dict>
     schema: z.object({
       id: z.string().uuid(),
       name: z.string(),
-      context: z.string(),
+      namespace: z.string(),
     }),
   })
   public readonly aggregate!: AggregateIdentifier;

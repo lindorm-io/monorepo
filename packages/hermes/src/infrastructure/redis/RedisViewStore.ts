@@ -59,7 +59,7 @@ export class RedisViewStore extends RedisBase implements IViewStore {
       return {
         id: data.id,
         name: data.name,
-        context: data.context,
+        namespace: data.namespace,
         destroyed: data.destroyed,
         meta: data.meta,
         processed_causation_ids: data.processed_causation_ids,
@@ -165,10 +165,10 @@ export class RedisViewStore extends RedisBase implements IViewStore {
   // private
 
   private redisKey(viewIdentifier: ViewIdentifier): string {
-    return `view:${viewIdentifier.context}:${viewIdentifier.name}:${viewIdentifier.id}`;
+    return `view:${viewIdentifier.namespace}:${viewIdentifier.name}:${viewIdentifier.id}`;
   }
 
   private causationKey(viewIdentifier: ViewIdentifier): string {
-    return `causation:${viewIdentifier.context}:${viewIdentifier.name}:${viewIdentifier.id}`;
+    return `causation:${viewIdentifier.namespace}:${viewIdentifier.name}:${viewIdentifier.id}`;
   }
 }

@@ -9,6 +9,6 @@ export const createTestSagaIdentifier = (namespace?: string): SagaIdentifier => 
   return {
     id: randomUUID(),
     name: saga.name,
-    context: saga.namespace,
+    namespace: saga.namespace,
   };
 };

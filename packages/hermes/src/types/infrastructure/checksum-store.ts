@@ -14,6 +14,6 @@ export type HermesChecksumStoreOptions = ChecksumStoreOptions & { logger: ILogge
 export type ChecksumStoreFindFilter = {
   id: string;
   name: string;
-  context: string;
+  namespace: string;
   event_id: string;
 };

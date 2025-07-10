@@ -56,7 +56,7 @@ describe("PostgresViewRepository", () => {
     await insertView(source, {
       id: view1,
       name: identifier.name,
-      context: identifier.context,
+      namespace: identifier.namespace,
       destroyed: false,
       meta: {},
       processed_causation_ids: [],
@@ -69,7 +69,7 @@ describe("PostgresViewRepository", () => {
     await insertView(source, {
       id: view2,
       name: identifier.name,
-      context: identifier.context,
+      namespace: identifier.namespace,
       destroyed: false,
       meta: {},
       processed_causation_ids: [],
@@ -82,7 +82,7 @@ describe("PostgresViewRepository", () => {
     await insertView(source, {
       id: view3,
       name: identifier.name,
-      context: identifier.context,
+      namespace: identifier.namespace,
       destroyed: false,
       meta: {},
       processed_causation_ids: [],
@@ -95,7 +95,7 @@ describe("PostgresViewRepository", () => {
     await insertView(source, {
       id: view4,
       name: identifier.name,
-      context: identifier.context,
+      namespace: identifier.namespace,
       destroyed: true,
       meta: {},
       processed_causation_ids: [],

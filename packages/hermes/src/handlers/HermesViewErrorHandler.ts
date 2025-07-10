@@ -13,10 +13,13 @@ export class HermesViewErrorHandler<C extends Constructor<DomainError>>
   public readonly handler: ViewErrorCallback<C>;
 
   public constructor(options: ViewErrorHandlerOptions<C>) {
-    this.aggregate = { name: options.aggregate.name, context: options.aggregate.context };
+    this.aggregate = {
+      name: options.aggregate.name,
+      namespace: options.aggregate.namespace,
+    };
     this.error = options.error;
     this.key = options.key;
-    this.view = { name: options.view.name, context: options.view.context };
+    this.view = { name: options.view.name, namespace: options.view.namespace };
     this.handler = options.handler;
   }
 }

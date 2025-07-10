@@ -24,7 +24,7 @@ const find = async (
     queryBuilder.select({
       id: filter.id,
       name: filter.name,
-      context: filter.context,
+      namespace: filter.namespace,
     }),
   );
   return result.rows;

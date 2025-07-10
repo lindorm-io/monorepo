@@ -40,7 +40,7 @@ describe("ChecksumStore", () => {
       aggregate: {
         id: randomUUID(),
         name: "name",
-        context: "context",
+        namespace: "namespace",
       },
       causationId: randomUUID(),
       correlationId: randomUUID(),
@@ -68,7 +68,7 @@ describe("ChecksumStore", () => {
     expect(mock.insert).toHaveBeenCalledWith({
       id: event.aggregate.id,
       name: event.aggregate.name,
-      context: event.aggregate.context,
+      namespace: event.aggregate.namespace,
       event_id: event.id,
       checksum,
       created_at: MockedDate,
@@ -79,7 +79,7 @@ describe("ChecksumStore", () => {
     mock.find.mockResolvedValue({
       id: event.aggregate.id,
       name: event.aggregate.name,
-      context: event.aggregate.context,
+      namespace: event.aggregate.namespace,
       event_id: event.id,
       checksum,
       created_at: new Date(),
@@ -94,7 +94,7 @@ describe("ChecksumStore", () => {
     mock.find.mockResolvedValue({
       id: event.aggregate.id,
       name: event.aggregate.name,
-      context: event.aggregate.context,
+      namespace: event.aggregate.namespace,
       event_id: event.id,
       checksum: "invalid",
       created_at: expect.any(Date),

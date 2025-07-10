@@ -107,7 +107,7 @@ describe("SagaDomain", () => {
       expect.objectContaining({
         id: aggregate.id,
         name: "test_saga",
-        context: namespace,
+        namespace: namespace,
         processedCausationIds: [],
         destroyed: true,
         messagesToDispatch: [],

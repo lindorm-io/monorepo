@@ -13,6 +13,6 @@ export const createTestAggregateIdentifier = (
   return {
     id: randomUUID(),
     name: aggregate.name,
-    context: aggregate.namespace,
+    namespace: aggregate.namespace,
   };
 };

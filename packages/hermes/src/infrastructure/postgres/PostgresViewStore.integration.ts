@@ -45,7 +45,7 @@ const findCausations = async (
     queryBuilder.select({
       id: filter.id,
       name: filter.name,
-      context: filter.context,
+      namespace: filter.namespace,
     }),
   );
   return result.rows;
@@ -60,7 +60,7 @@ const findView = async (
     queryBuilder.select({
       id: filter.id,
       name: filter.name,
-      context: filter.context,
+      namespace: filter.namespace,
     }),
   );
   return result.rows;
@@ -116,7 +116,7 @@ describe("PostgresViewStore", () => {
     await insertCausation(source, {
       id: view.id,
       name: view.name,
-      context: view.context,
+      namespace: view.namespace,
       causation_id: event.causationId,
       created_at: new Date(),
     });
@@ -147,7 +147,7 @@ describe("PostgresViewStore", () => {
       findCausations(source, {
         id: view.id,
         name: view.name,
-        context: view.context,
+        namespace: view.namespace,
       }),
     ).resolves.toEqual(
       expect.arrayContaining([
@@ -175,7 +175,7 @@ describe("PostgresViewStore", () => {
     const filter: ViewUpdateFilter = {
       id: attributes.id,
       name: attributes.name,
-      context: attributes.context,
+      namespace: attributes.namespace,
       revision: attributes.revision,
     };
 

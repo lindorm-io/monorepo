@@ -20,7 +20,7 @@ export class HermesAggregateEventHandler<
   public constructor(options: AggregateEventHandlerOptions<C, S>) {
     this.aggregate = {
       name: options.aggregate.name,
-      context: options.aggregate.context,
+      namespace: options.aggregate.namespace,
     };
     this.event = options.event;
     this.key = options.key;

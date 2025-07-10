@@ -34,7 +34,7 @@ export class MongoEventStore extends MongoBase implements IEventStore {
         {
           aggregate_id: filter.id,
           aggregate_name: filter.name,
-          aggregate_context: filter.context,
+          aggregate_namespace: filter.namespace,
           ...(filter.causation_id ? { causation_id: filter.causation_id } : {}),
         },
         {
@@ -132,7 +132,7 @@ export class MongoEventStore extends MongoBase implements IEventStore {
     const result: MongoEventStoreDocument = {
       aggregate_id: first.aggregate_id,
       aggregate_name: first.aggregate_name,
-      aggregate_context: first.aggregate_context,
+      aggregate_namespace: first.aggregate_namespace,
       causation_id: first.causation_id,
       correlation_id: first.correlation_id,
       events: [],
@@ -167,7 +167,7 @@ export class MongoEventStore extends MongoBase implements IEventStore {
         result.push({
           aggregate_id: document.aggregate_id,
           aggregate_name: document.aggregate_name,
-          aggregate_context: document.aggregate_context,
+          aggregate_namespace: document.aggregate_namespace,
           causation_id: document.causation_id,
           checksum: event.checksum,
           correlation_id: document.correlation_id,

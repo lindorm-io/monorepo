@@ -23,12 +23,15 @@ export class HermesViewEventHandler<
   public readonly handler: ViewEventCallback<C, S>;
 
   public constructor(options: ViewEventHandlerOptions<C, S>) {
-    this.aggregate = { name: options.aggregate.name, context: options.aggregate.context };
+    this.aggregate = {
+      name: options.aggregate.name,
+      namespace: options.aggregate.namespace,
+    };
     this.conditions = options.conditions || {};
     this.event = { name: options.event.name, version: options.event.version };
     this.key = options.key;
     this.source = options.source;
-    this.view = { name: options.view.name, context: options.view.context };
+    this.view = { name: options.view.name, namespace: options.view.namespace };
 
     this.handler = options.handler;
 

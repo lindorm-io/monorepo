@@ -108,7 +108,7 @@ describe("ViewDomain", () => {
       expect.objectContaining({
         id: aggregate.id,
         name: "test_mongo_view",
-        context: namespace,
+        namespace: namespace,
         destroyed: true,
         meta: {
           create: {

@@ -24,7 +24,7 @@ export class SagaModel<S extends Dict = Dict> implements ISagaModel {
 
   public readonly id: string;
   public readonly name: string;
-  public readonly context: string;
+  public readonly namespace: string;
 
   private readonly commandBus: IHermesMessageBus;
   private readonly registry: IHermesRegistry;
@@ -41,7 +41,7 @@ export class SagaModel<S extends Dict = Dict> implements ISagaModel {
 
     this.id = options.id;
     this.name = options.name;
-    this.context = options.context;
+    this.namespace = options.namespace;
 
     this.commandBus = options.commandBus;
     this.registry = options.registry;
@@ -82,7 +82,7 @@ export class SagaModel<S extends Dict = Dict> implements ISagaModel {
     return {
       id: this.id,
       name: this.name,
-      context: this.context,
+      namespace: this.namespace,
       destroyed: this.destroyed,
       messagesToDispatch: this.messagesToDispatch,
       processedCausationIds: this.processedCausationIds,
@@ -91,7 +91,7 @@ export class SagaModel<S extends Dict = Dict> implements ISagaModel {
     };
   }
 
-  // public context
+  // public namespace
 
   public destroy(): void {
     this.logger.debug("Destroy");
@@ -131,7 +131,7 @@ export class SagaModel<S extends Dict = Dict> implements ISagaModel {
     const aggregate: AggregateIdentifier = {
       id: options.id || causation.aggregate.id,
       name: metadata.aggregate.name,
-      context: metadata.aggregate.context,
+      namespace: metadata.aggregate.namespace,
     };
 
     const { name, data } = extractDataTransferObject(message);
@@ -210,7 +210,7 @@ export class SagaModel<S extends Dict = Dict> implements ISagaModel {
         aggregate: {
           id: this.id,
           name: this.name,
-          context: this.context,
+          namespace: this.namespace,
         },
         causationId: causation.id,
         correlationId: causation.correlationId,

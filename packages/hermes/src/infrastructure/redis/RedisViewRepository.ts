@@ -75,11 +75,11 @@ export class RedisViewRepository<S extends Dict = Dict>
   // private
 
   private redisKey(id: string): string {
-    return `view:${this.view.context}:${this.view.name}:${id}`;
+    return `view:${this.view.namespace}:${this.view.name}:${id}`;
   }
 
   private async scanKeys(): Promise<Array<string>> {
-    const pattern = `view:${this.view.context}:${this.view.name}:*`;
+    const pattern = `view:${this.view.namespace}:${this.view.name}:*`;
 
     let cursor = "0";
     let keys: Array<string> = [];

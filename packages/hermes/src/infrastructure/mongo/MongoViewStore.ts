@@ -44,7 +44,7 @@ export class MongoViewStore extends MongoBase implements IViewStore {
         .find({
           id: viewIdentifier.id,
           name: viewIdentifier.name,
-          context: viewIdentifier.context,
+          namespace: viewIdentifier.namespace,
         })
         .toArray();
 
@@ -103,7 +103,7 @@ export class MongoViewStore extends MongoBase implements IViewStore {
         (causationId) => ({
           id: viewIdentifier.id,
           name: viewIdentifier.name,
-          context: viewIdentifier.context,
+          namespace: viewIdentifier.namespace,
           causation_id: causationId,
           created_at: new Date(),
         }),
@@ -127,7 +127,7 @@ export class MongoViewStore extends MongoBase implements IViewStore {
     try {
       const collection = await this.viewCollection({
         name: attributes.name,
-        context: attributes.context,
+        namespace: attributes.namespace,
       });
 
       const result = await collection.insertOne(attributes);
@@ -187,7 +187,8 @@ export class MongoViewStore extends MongoBase implements IViewStore {
     if (
       this.initialisedViews.find(
         (x) =>
-          x.name === handlerIdentifier.name && x.context === handlerIdentifier.context,
+          x.name === handlerIdentifier.name &&
+          x.namespace === handlerIdentifier.namespace,
       )
     )
       return;

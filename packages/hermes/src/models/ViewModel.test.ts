@@ -26,7 +26,7 @@ describe("ViewModel", () => {
     expect(view.toJSON()).toEqual({
       id: expect.any(String),
       name: "test_mongo_view",
-      context: "hermes",
+      namespace: "hermes",
       destroyed: false,
       meta: {},
       processedCausationIds: [],

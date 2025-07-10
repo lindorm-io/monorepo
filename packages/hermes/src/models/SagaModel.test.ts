@@ -33,7 +33,7 @@ describe("SagaModel", () => {
     expect(saga.toJSON()).toEqual({
       id: expect.any(String),
       name: "test_saga",
-      context: "hermes",
+      namespace: "hermes",
       destroyed: false,
       messagesToDispatch: [],
       processedCausationIds: [],

@@ -38,7 +38,7 @@ export class SagaStore implements IHermesSagaStore {
     const filter: SagaUpdateFilter = {
       id: saga.id,
       name: saga.name,
-      context: saga.context,
+      namespace: saga.namespace,
       revision: saga.revision,
     };
 
@@ -68,7 +68,7 @@ export class SagaStore implements IHermesSagaStore {
     const existing = await this.store.findSaga({
       id: sagaIdentifier.id,
       name: sagaIdentifier.name,
-      context: sagaIdentifier.context,
+      namespace: sagaIdentifier.namespace,
     });
 
     if (existing) {
@@ -101,7 +101,7 @@ export class SagaStore implements IHermesSagaStore {
     const sagaIdentifier: SagaIdentifier = {
       id: saga.id,
       name: saga.name,
-      context: saga.context,
+      namespace: saga.namespace,
     };
 
     const existing = await this.store.findSaga(sagaIdentifier);
@@ -137,7 +137,7 @@ export class SagaStore implements IHermesSagaStore {
     const filter: SagaUpdateFilter = {
       id: saga.id,
       name: saga.name,
-      context: saga.context,
+      namespace: saga.namespace,
       revision: saga.revision,
     };
 
@@ -172,7 +172,7 @@ export class SagaStore implements IHermesSagaStore {
     const sagaIdentifier: SagaIdentifier = {
       id: saga.id,
       name: saga.name,
-      context: saga.context,
+      namespace: saga.namespace,
     };
 
     const causations = await this.store.findCausationIds(sagaIdentifier);
@@ -189,7 +189,7 @@ export class SagaStore implements IHermesSagaStore {
     const filter: SagaUpdateFilter = {
       id: saga.id,
       name: saga.name,
-      context: saga.context,
+      namespace: saga.namespace,
       revision: saga.revision,
     };
 
@@ -219,7 +219,7 @@ export class SagaStore implements IHermesSagaStore {
     return {
       id: data.id,
       name: data.name,
-      context: data.context,
+      namespace: data.namespace,
       destroyed: data.destroyed,
       messages_to_dispatch: data.messagesToDispatch,
       processed_causation_ids: data.processedCausationIds,
@@ -234,7 +234,7 @@ export class SagaStore implements IHermesSagaStore {
     return {
       id: attributes.id,
       name: attributes.name,
-      context: attributes.context,
+      namespace: attributes.namespace,
       destroyed: attributes.destroyed,
       messagesToDispatch: attributes.messages_to_dispatch,
       processedCausationIds: attributes.processed_causation_ids,

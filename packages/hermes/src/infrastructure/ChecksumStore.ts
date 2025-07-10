@@ -37,7 +37,7 @@ export class ChecksumStore implements IHermesChecksumStore {
     const existing = await this.store.find({
       id: event.aggregate.id,
       name: event.aggregate.name,
-      context: event.aggregate.context,
+      namespace: event.aggregate.namespace,
       event_id: event.id,
     });
 
@@ -45,7 +45,7 @@ export class ChecksumStore implements IHermesChecksumStore {
       return await this.store.insert({
         id: event.aggregate.id,
         name: event.aggregate.name,
-        context: event.aggregate.context,
+        namespace: event.aggregate.namespace,
         event_id: event.id,
         checksum,
         created_at: event.timestamp,
@@ -58,7 +58,7 @@ export class ChecksumStore implements IHermesChecksumStore {
       event: {
         id: event.aggregate.id,
         name: event.aggregate.name,
-        context: event.aggregate.context,
+        namespace: event.aggregate.namespace,
         event_id: event.id,
         checksum,
         timestamp: event.timestamp,
@@ -66,7 +66,7 @@ export class ChecksumStore implements IHermesChecksumStore {
       existing: {
         id: existing.id,
         name: existing.name,
-        context: existing.context,
+        namespace: existing.namespace,
         event_id: existing.event_id,
         checksum: existing.checksum,
         created_at: existing.created_at,

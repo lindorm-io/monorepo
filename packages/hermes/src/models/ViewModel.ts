@@ -12,7 +12,7 @@ export class ViewModel<S extends Dict = Dict> implements IViewModel<S> {
 
   public readonly id: string;
   public readonly name: string;
-  public readonly context: string;
+  public readonly namespace: string;
 
   private readonly _processedCausationIds: Array<string>;
   private readonly _revision: number;
@@ -25,7 +25,7 @@ export class ViewModel<S extends Dict = Dict> implements IViewModel<S> {
 
     this.id = options.id;
     this.name = options.name;
-    this.context = options.context;
+    this.namespace = options.namespace;
 
     this._destroyed = options.destroyed || false;
     this._meta = options.meta || {};
@@ -62,7 +62,7 @@ export class ViewModel<S extends Dict = Dict> implements IViewModel<S> {
     return {
       id: this.id,
       name: this.name,
-      context: this.context,
+      namespace: this.namespace,
       destroyed: this.destroyed,
       meta: this._meta,
       processedCausationIds: this.processedCausationIds,
@@ -71,7 +71,7 @@ export class ViewModel<S extends Dict = Dict> implements IViewModel<S> {
     };
   }
 
-  // public context
+  // public namespace
 
   public destroy(causation: IHermesMessage): void {
     this.logger.debug("Destroy", { causation });

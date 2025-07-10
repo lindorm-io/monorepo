@@ -14,6 +14,6 @@ export type HermesEventStoreOptions = EventStoreOptions & { logger: ILogger };
 export type EventStoreFindFilter = {
   id: string;
   name: string;
-  context: string;
+  namespace: string;
   causation_id?: string;
 };

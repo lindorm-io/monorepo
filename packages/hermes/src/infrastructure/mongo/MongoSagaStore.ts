@@ -41,7 +41,7 @@ export class MongoSagaStore extends MongoBase implements ISagaStore {
         .find({
           id: sagaIdentifier.id,
           name: sagaIdentifier.name,
-          context: sagaIdentifier.context,
+          namespace: sagaIdentifier.namespace,
         })
         .toArray();
 
@@ -69,7 +69,7 @@ export class MongoSagaStore extends MongoBase implements ISagaStore {
       const result = await collection.findOne({
         id: sagaIdentifier.id,
         name: sagaIdentifier.name,
-        context: sagaIdentifier.context,
+        namespace: sagaIdentifier.namespace,
       });
 
       if (!result) {
@@ -101,7 +101,7 @@ export class MongoSagaStore extends MongoBase implements ISagaStore {
         (causationId) => ({
           id: sagaIdentifier.id,
           name: sagaIdentifier.name,
-          context: sagaIdentifier.context,
+          namespace: sagaIdentifier.namespace,
           causation_id: causationId,
           created_at: new Date(),
         }),
@@ -150,7 +150,7 @@ export class MongoSagaStore extends MongoBase implements ISagaStore {
         {
           id: filter.id,
           name: filter.name,
-          context: filter.context,
+          namespace: filter.namespace,
           revision: filter.revision,
         },
         {

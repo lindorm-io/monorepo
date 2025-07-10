@@ -34,7 +34,7 @@ const find = async (
       {
         aggregate_id: filter.id,
         aggregate_name: filter.name,
-        aggregate_context: filter.context,
+        aggregate_namespace: filter.namespace,
       },
       {
         sort: { expected_events: 1 },
@@ -74,7 +74,7 @@ describe("MongoEventStore", () => {
     const data: EventStoreAttributes = {
       aggregate_id: aggregate.id,
       aggregate_name: aggregate.name,
-      aggregate_context: aggregate.context,
+      aggregate_namespace: aggregate.namespace,
       causation_id: causationId,
       checksum: "",
       correlation_id: randomUUID(),
@@ -109,7 +109,7 @@ describe("MongoEventStore", () => {
       store.find({
         id: aggregate.id,
         name: aggregate.name,
-        context: aggregate.context,
+        namespace: aggregate.namespace,
         causation_id: causationId,
       }),
     ).resolves.toEqual([attributes]);

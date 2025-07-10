@@ -71,7 +71,7 @@ describe("MongoViewStore", () => {
     const document: ViewCausationAttributes = {
       id: view.id,
       name: view.name,
-      context: view.context,
+      namespace: view.namespace,
       causation_id: event.causationId,
       created_at: new Date(),
     };
@@ -110,7 +110,7 @@ describe("MongoViewStore", () => {
         .find({
           id: view.id,
           name: view.name,
-          context: view.context,
+          namespace: view.namespace,
         })
         .toArray(),
     ).resolves.toEqual(
@@ -138,7 +138,7 @@ describe("MongoViewStore", () => {
     const filter: ViewUpdateFilter = {
       id: attributes.id,
       name: view.name,
-      context: view.context,
+      namespace: view.namespace,
       revision: attributes.revision,
     };
 

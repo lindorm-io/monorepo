@@ -11,6 +11,6 @@ export const createTestViewIdentifier = (namespace?: string): ViewIdentifier => 
   return {
     id: randomUUID(),
     name: view.name,
-    context: view.namespace,
+    namespace: view.namespace,
   };
 };

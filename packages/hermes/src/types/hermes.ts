@@ -39,7 +39,7 @@ export type HermesCommandOptions<M extends Dict = Dict> = {
 export type HermesInspectOptions = {
   id: string;
   name: string;
-  context?: string;
+  namespace?: string;
 };
 
 export interface HermesAdmin {

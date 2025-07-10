@@ -95,14 +95,14 @@ describe("SagaDomain", () => {
     expect(store.load).toHaveBeenCalledWith({
       id: event.aggregate.id,
       name: "test_saga",
-      context: "hermes",
+      namespace: "hermes",
     });
 
     expect(store.save).toHaveBeenCalledWith(
       expect.objectContaining({
         id: event.aggregate.id,
         name: "test_saga",
-        context: "hermes",
+        namespace: "hermes",
         processedCausationIds: [],
         destroyed: false,
         messagesToDispatch: [],
@@ -139,7 +139,7 @@ describe("SagaDomain", () => {
       expect.objectContaining({
         id: event.aggregate.id,
         name: "test_saga",
-        context: "hermes",
+        namespace: "hermes",
         processedCausationIds: [causationId],
         destroyed: false,
         messagesToDispatch: [expect.any(HermesCommand)],
@@ -230,7 +230,7 @@ describe("SagaDomain", () => {
           saga: {
             id: expect.any(String),
             name: "test_saga",
-            context: "hermes",
+            namespace: "hermes",
           },
         },
       }),
@@ -278,7 +278,7 @@ describe("SagaDomain", () => {
           saga: {
             id: expect.any(String),
             name: "test_saga",
-            context: "hermes",
+            namespace: "hermes",
           },
         },
       }),

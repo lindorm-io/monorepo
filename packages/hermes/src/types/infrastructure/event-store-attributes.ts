@@ -3,7 +3,7 @@ import { Dict } from "@lindorm/types";
 export type EventStoreAttributes = {
   aggregate_id: string;
   aggregate_name: string;
-  aggregate_context: string;
+  aggregate_namespace: string;
   causation_id: string;
   checksum: string;
   correlation_id: string;
@@ -22,7 +22,7 @@ export type EventStoreAttributes = {
 export type MongoEventStoreDocument = {
   aggregate_id: string;
   aggregate_name: string;
-  aggregate_context: string;
+  aggregate_namespace: string;
   causation_id: string;
   correlation_id: string;
   events: Array<{

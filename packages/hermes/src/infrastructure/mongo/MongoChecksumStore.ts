@@ -57,7 +57,7 @@ export class MongoChecksumStore extends MongoBase implements IChecksumStore {
       const result = await collection.insertOne({
         id: attributes.id,
         name: attributes.name,
-        context: attributes.context,
+        namespace: attributes.namespace,
         event_id: attributes.event_id,
         checksum: attributes.checksum,
         created_at: attributes.created_at,
@@ -96,7 +96,7 @@ export class MongoChecksumStore extends MongoBase implements IChecksumStore {
     return {
       id: document.id,
       name: document.name,
-      context: document.context,
+      namespace: document.namespace,
       event_id: document.event_id,
       checksum: document.checksum,
       created_at: document.created_at,

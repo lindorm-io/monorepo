@@ -28,7 +28,7 @@ export class PostgresEventStore extends PostgresBase implements IEventStore {
           {
             aggregate_id: filter.id,
             aggregate_name: filter.name,
-            aggregate_context: filter.context,
+            aggregate_namespace: filter.namespace,
             ...(filter.causation_id ? { causation_id: filter.causation_id } : {}),
           },
           {

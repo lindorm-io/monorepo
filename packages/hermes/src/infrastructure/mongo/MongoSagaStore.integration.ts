@@ -69,7 +69,7 @@ describe("MongoSagaStore", () => {
     const document: SagaCausationAttributes = {
       id: saga.id,
       name: saga.name,
-      context: saga.context,
+      namespace: saga.namespace,
       causation_id: event.id,
       created_at: event.timestamp,
     };
@@ -108,7 +108,7 @@ describe("MongoSagaStore", () => {
         .find({
           id: saga.id,
           name: saga.name,
-          context: saga.context,
+          namespace: saga.namespace,
         })
         .toArray(),
     ).resolves.toEqual(
@@ -136,7 +136,7 @@ describe("MongoSagaStore", () => {
     const filter: SagaUpdateFilter = {
       id: attributes.id,
       name: attributes.name,
-      context: attributes.context,
+      namespace: attributes.namespace,
       revision: attributes.revision,
     };
 

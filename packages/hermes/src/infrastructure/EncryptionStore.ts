@@ -42,7 +42,7 @@ export class EncryptionStore implements IHermesEncryptionStore {
     return await this.store.find({
       id: aggregate.id,
       name: aggregate.name,
-      context: aggregate.context,
+      namespace: aggregate.namespace,
     });
   }
 
@@ -52,7 +52,7 @@ export class EncryptionStore implements IHermesEncryptionStore {
     const exists = await this.store.find({
       id: aggregate.id,
       name: aggregate.name,
-      context: aggregate.context,
+      namespace: aggregate.namespace,
     });
 
     if (exists) {
@@ -81,7 +81,7 @@ export class EncryptionStore implements IHermesEncryptionStore {
     await this.store.insert({
       id: aggregate.id,
       name: aggregate.name,
-      context: aggregate.context,
+      namespace: aggregate.namespace,
       key_id: kryptos.id,
       key_algorithm: algorithm,
       key_curve: curve ?? null,

@@ -41,7 +41,7 @@ describe("AggregateModel", () => {
 
   test("should return json object", async () => {
     expect(aggregate.toJSON()).toEqual({
-      context: "hermes",
+      namespace: "hermes",
       destroyed: false,
       events: [],
       id: expect.any(String),

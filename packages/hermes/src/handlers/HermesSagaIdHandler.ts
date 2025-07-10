@@ -13,13 +13,13 @@ export class HermesSagaIdHandler<C extends Constructor> implements ISagaIdHandle
   public constructor(options: SagaIdHandlerOptions<C>) {
     this.aggregate = {
       name: options.aggregate.name,
-      context: options.aggregate.context,
+      namespace: options.aggregate.namespace,
     };
     this.event = options.event;
     this.key = options.key;
     this.saga = {
       name: options.saga.name,
-      context: options.saga.context,
+      namespace: options.saga.namespace,
     };
     this.handler = options.handler;
   }

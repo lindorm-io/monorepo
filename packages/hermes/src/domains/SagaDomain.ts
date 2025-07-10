@@ -169,7 +169,7 @@ export class SagaDomain implements ISagaDomain {
     const aggregate: AggregateIdentifier = {
       id: options.id || causation.aggregate.id,
       name: metadata.aggregate.name,
-      context: metadata.aggregate.context,
+      namespace: metadata.aggregate.namespace,
     };
 
     const { name, data } = extractDataTransferObject(message);
@@ -199,11 +199,11 @@ export class SagaDomain implements ISagaDomain {
     const idHandler = this.registry.sagaIdHandlers.find(
       (x) =>
         x.aggregate.name === message.aggregate.name &&
-        x.aggregate.context === message.aggregate.context &&
+        x.aggregate.namespace === message.aggregate.namespace &&
         x.event.name === message.name &&
         x.event.version === message.version &&
         x.saga.name === handlerIdentifier.name &&
-        x.saga.context === handlerIdentifier.context,
+        x.saga.namespace === handlerIdentifier.namespace,
     );
 
     if (!idHandler) {
@@ -236,10 +236,10 @@ export class SagaDomain implements ISagaDomain {
     const errorHandler = this.registry.sagaErrorHandlers.find(
       (x) =>
         x.aggregate.name === message.aggregate.name &&
-        x.aggregate.context === message.aggregate.context &&
+        x.aggregate.namespace === message.aggregate.namespace &&
         x.error === message.name &&
         x.saga.name === handlerIdentifier.name &&
-        x.saga.context === handlerIdentifier.context,
+        x.saga.namespace === handlerIdentifier.namespace,
     );
 
     if (!(errorHandler instanceof HermesSagaErrorHandler)) {
@@ -279,11 +279,11 @@ export class SagaDomain implements ISagaDomain {
     const eventHandler = this.registry.sagaEventHandlers.find(
       (x) =>
         x.aggregate.name === message.aggregate.name &&
-        x.aggregate.context === message.aggregate.context &&
+        x.aggregate.namespace === message.aggregate.namespace &&
         x.event.name === message.name &&
         x.event.version === message.version &&
         x.saga.name === handlerIdentifier.name &&
-        x.saga.context === handlerIdentifier.context,
+        x.saga.namespace === handlerIdentifier.namespace,
     );
 
     if (!(eventHandler instanceof HermesSagaEventHandler)) {
@@ -320,7 +320,7 @@ export class SagaDomain implements ISagaDomain {
     const sagaIdentifier: SagaIdentifier = {
       id: this.getId(message, event, handlerIdentifier),
       name: handlerIdentifier.name,
-      context: handlerIdentifier.context,
+      namespace: handlerIdentifier.namespace,
     };
 
     const data = await this.store.load(sagaIdentifier);
@@ -392,10 +392,10 @@ export class SagaDomain implements ISagaDomain {
     const timeoutHandler = this.registry.sagaTimeoutHandlers.find(
       (x) =>
         x.aggregate.name === message.aggregate.name &&
-        x.aggregate.context === message.aggregate.context &&
+        x.aggregate.namespace === message.aggregate.namespace &&
         x.timeout === message.name &&
         x.saga.name === handlerIdentifier.name &&
-        x.saga.context === handlerIdentifier.context,
+        x.saga.namespace === handlerIdentifier.namespace,
     );
 
     if (!(timeoutHandler instanceof HermesSagaTimeoutHandler)) {
@@ -411,7 +411,7 @@ export class SagaDomain implements ISagaDomain {
     const sagaIdentifier: SagaIdentifier = {
       id: this.getId(message, timeout, handlerIdentifier),
       name: handlerIdentifier.name,
-      context: handlerIdentifier.context,
+      namespace: handlerIdentifier.namespace,
     };
 
     const data = await this.store.load(sagaIdentifier);
@@ -569,7 +569,7 @@ export class SagaDomain implements ISagaDomain {
     this.logger.debug("Published messages for saga", {
       id: saga.id,
       name: saga.name,
-      context: saga.context,
+      namespace: saga.namespace,
       messagesToDispatch: saga.messagesToDispatch,
     });
 
@@ -602,7 +602,7 @@ export class SagaDomain implements ISagaDomain {
     this.logger.debug("Processing causation ids for saga", {
       id: saga.id,
       name: saga.name,
-      context: saga.context,
+      namespace: saga.namespace,
       processedCausationIds: saga.processedCausationIds,
     });
 
@@ -637,7 +637,7 @@ export class SagaDomain implements ISagaDomain {
             error: error.toJSON ? error.toJSON() : { ...error },
             event,
             message,
-            saga: { id: saga.id, name: saga.name, context: saga.context },
+            saga: { id: saga.id, name: saga.name, namespace: saga.namespace },
           },
           aggregate: message.aggregate,
           causationId: message.id,
@@ -665,40 +665,40 @@ export class SagaDomain implements ISagaDomain {
     const data: EventEmitterSagaData<S> = {
       id: saga.id,
       name: saga.name,
-      context: saga.context,
+      namespace: saga.namespace,
       destroyed: saga.destroyed,
       state: saga.state,
     };
 
     this.eventEmitter.emit("saga", data);
-    this.eventEmitter.emit(`saga.${saga.context}`, data);
-    this.eventEmitter.emit(`saga.${saga.context}.${saga.name}`, data);
-    this.eventEmitter.emit(`saga.${saga.context}.${saga.name}.${saga.id}`, data);
+    this.eventEmitter.emit(`saga.${saga.namespace}`, data);
+    this.eventEmitter.emit(`saga.${saga.namespace}.${saga.name}`, data);
+    this.eventEmitter.emit(`saga.${saga.namespace}.${saga.name}.${saga.id}`, data);
   }
 
   // private static
 
   private static getErrorQueue(handler: ISagaErrorHandler): string {
-    return `queue.saga.${handler.aggregate.context}.${handler.aggregate.name}.${handler.error}.${handler.saga.context}.${handler.saga.name}`;
+    return `queue.saga.${handler.aggregate.namespace}.${handler.aggregate.name}.${handler.error}.${handler.saga.namespace}.${handler.saga.name}`;
   }
 
   private static getErrorTopic(handler: ISagaErrorHandler): string {
-    return `${handler.aggregate.context}.${handler.aggregate.name}.${handler.error}`;
+    return `${handler.aggregate.namespace}.${handler.aggregate.name}.${handler.error}`;
   }
 
   private static getEventQueue(handler: ISagaEventHandler): string {
-    return `queue.saga.${handler.aggregate.context}.${handler.aggregate.name}.${handler.event.name}.${handler.saga.context}.${handler.saga.name}`;
+    return `queue.saga.${handler.aggregate.namespace}.${handler.aggregate.name}.${handler.event.name}.${handler.saga.namespace}.${handler.saga.name}`;
   }
 
   private static getEventTopic(handler: ISagaEventHandler): string {
-    return `${handler.aggregate.context}.${handler.aggregate.name}.${handler.event.name}`;
+    return `${handler.aggregate.namespace}.${handler.aggregate.name}.${handler.event.name}`;
   }
 
   private static getTimeoutQueue(handler: ISagaTimeoutHandler): string {
-    return `queue.saga.${handler.aggregate.context}.${handler.aggregate.name}.${handler.timeout}.${handler.saga.context}.${handler.saga.name}`;
+    return `queue.saga.${handler.aggregate.namespace}.${handler.aggregate.name}.${handler.timeout}.${handler.saga.namespace}.${handler.saga.name}`;
   }
 
   private static getTimeoutTopic(handler: ISagaTimeoutHandler): string {
-    return `${handler.aggregate.context}.${handler.aggregate.name}.${handler.timeout}`;
+    return `${handler.aggregate.namespace}.${handler.aggregate.name}.${handler.timeout}`;
   }
 }

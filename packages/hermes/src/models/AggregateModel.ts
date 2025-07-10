@@ -24,7 +24,7 @@ export class AggregateModel<S extends Dict = Dict> implements IAggregateModel {
 
   public readonly id: string;
   public readonly name: string;
-  public readonly context: string;
+  public readonly namespace: string;
 
   private readonly eventBus: IHermesMessageBus<HermesEvent<Dict>>;
   private readonly registry: IHermesRegistry;
@@ -40,7 +40,7 @@ export class AggregateModel<S extends Dict = Dict> implements IAggregateModel {
 
     this.id = options.id;
     this.name = options.name;
-    this.context = options.context;
+    this.namespace = options.namespace;
 
     this.eventBus = options.eventBus;
     this.registry = options.registry;
@@ -87,7 +87,7 @@ export class AggregateModel<S extends Dict = Dict> implements IAggregateModel {
         aggregate: {
           id: this.id,
           name: this.name,
-          context: this.context,
+          namespace: this.namespace,
         },
         causationId: causation.id,
         correlationId: causation.correlationId,
@@ -111,7 +111,7 @@ export class AggregateModel<S extends Dict = Dict> implements IAggregateModel {
     return {
       id: this.id,
       name: this.name,
-      context: this.context,
+      namespace: this.namespace,
       destroyed: this.destroyed,
       events: this.events,
       numberOfLoadedEvents: this.numberOfLoadedEvents,
@@ -140,7 +140,7 @@ export class AggregateModel<S extends Dict = Dict> implements IAggregateModel {
       const eventHandler = this.registry.aggregateEventHandlers.find(
         (x) =>
           x.aggregate.name === message.aggregate.name &&
-          x.aggregate.context === message.aggregate.context &&
+          x.aggregate.namespace === message.aggregate.namespace &&
           x.event.name === message.name &&
           x.event.version === message.version,
       );
@@ -179,7 +179,7 @@ export class AggregateModel<S extends Dict = Dict> implements IAggregateModel {
     }
   }
 
-  // private context
+  // private namespace
 
   private destroy(): void {
     this.logger.debug("Destroy");

@@ -23,14 +23,14 @@ export class HermesSagaEventHandler<
   public constructor(options: SagaEventHandlerOptions<C, S>) {
     this.aggregate = {
       name: options.aggregate.name,
-      context: options.aggregate.context,
+      namespace: options.aggregate.namespace,
     };
     this.conditions = options.conditions || {};
     this.event = options.event;
     this.key = options.key;
     this.saga = {
       name: options.saga.name,
-      context: options.saga.context,
+      namespace: options.saga.namespace,
     };
     this.handler = options.handler;
 

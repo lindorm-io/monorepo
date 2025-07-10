@@ -44,7 +44,7 @@ describe("MongoViewRepository", () => {
       {
         id: view1,
         name: "name",
-        context: namespace,
+        namespace: namespace,
         destroyed: false,
         processed_causation_ids: [],
         meta: {},
@@ -56,7 +56,7 @@ describe("MongoViewRepository", () => {
       {
         id: view2,
         name: "name",
-        context: namespace,
+        namespace: namespace,
         destroyed: false,
         processed_causation_ids: [],
         meta: {},
@@ -68,7 +68,7 @@ describe("MongoViewRepository", () => {
       {
         id: view3,
         name: "name",
-        context: namespace,
+        namespace: namespace,
         destroyed: false,
         processed_causation_ids: [],
         meta: {},
@@ -80,7 +80,7 @@ describe("MongoViewRepository", () => {
       {
         id: randomUUID(),
         name: "name",
-        context: namespace,
+        namespace: namespace,
         destroyed: true,
         processed_causation_ids: [],
         meta: {},

@@ -20,12 +20,12 @@ export class HermesSagaTimeoutHandler<
   public constructor(options: SagaTimeoutHandlerOptions<C, S>) {
     this.aggregate = {
       name: options.aggregate.name,
-      context: options.aggregate.context,
+      namespace: options.aggregate.namespace,
     };
     this.key = options.key;
     this.saga = {
       name: options.saga.name,
-      context: options.saga.context,
+      namespace: options.saga.namespace,
     };
     this.timeout = options.timeout;
     this.handler = options.handler;

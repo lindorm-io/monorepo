@@ -97,10 +97,10 @@ export class ChecksumDomain implements IChecksumDomain {
   // private static
 
   private static getQueue(event: RegistryEvent): string {
-    return `queue.checksum.${event.aggregate.context}.${event.aggregate.name}.${event.name}`;
+    return `queue.checksum.${event.aggregate.namespace}.${event.aggregate.name}.${event.name}`;
   }
 
   private static getTopic(event: RegistryEvent): string {
-    return `${event.aggregate.context}.${event.aggregate.name}.${event.name}`;
+    return `${event.aggregate.namespace}.${event.aggregate.name}.${event.name}`;
   }
 }

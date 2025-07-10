@@ -18,11 +18,11 @@ import {
 import { RedisViewStore } from "./RedisViewStore";
 
 const redisKey = (viewIdentifier: ViewIdentifier): string => {
-  return `view:${viewIdentifier.context}:${viewIdentifier.name}:${viewIdentifier.id}`;
+  return `view:${viewIdentifier.namespace}:${viewIdentifier.name}:${viewIdentifier.id}`;
 };
 
 const causationKey = (viewIdentifier: ViewIdentifier): string => {
-  return `causation:${viewIdentifier.context}:${viewIdentifier.name}:${viewIdentifier.id}`;
+  return `causation:${viewIdentifier.namespace}:${viewIdentifier.name}:${viewIdentifier.id}`;
 };
 
 const insertCausation = async (
@@ -107,7 +107,7 @@ describe("RedisViewStore", () => {
     await insertCausation(source, {
       id: viewIdentifier.id,
       name: viewIdentifier.name,
-      context: viewIdentifier.context,
+      namespace: viewIdentifier.namespace,
       causation_id: event.causationId,
       created_at: new Date(),
     });
@@ -140,7 +140,7 @@ describe("RedisViewStore", () => {
       findCausations(source, {
         id: viewIdentifier.id,
         name: viewIdentifier.name,
-        context: viewIdentifier.context,
+        namespace: viewIdentifier.namespace,
       }),
     ).resolves.toEqual(expect.arrayContaining([one, two, three]));
   });
@@ -162,7 +162,7 @@ describe("RedisViewStore", () => {
     const filter: ViewUpdateFilter = {
       id: attributes.id,
       name: attributes.name,
-      context: attributes.context,
+      namespace: attributes.namespace,
       revision: attributes.revision,
     };
 

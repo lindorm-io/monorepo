@@ -1,5 +1,5 @@
 import { QueryConfig } from "pg";
-import { MAX_CONTEXT_LENGTH, MAX_NAME_LENGTH } from "../../../constants/private";
+import { MAX_NAMESPACE_LENGTH, MAX_NAME_LENGTH } from "../../../constants/private";
 import { HandlerIdentifier } from "../../../types";
 import { getViewStoreName } from "../../../utils/private";
 
@@ -8,7 +8,7 @@ export const createViewStoreTable = (view: HandlerIdentifier): QueryConfig => {
     CREATE TABLE IF NOT EXISTS ${getViewStoreName(view)} (
       id VARCHAR ( ${MAX_NAME_LENGTH} ) NOT NULL,
       name VARCHAR ( ${MAX_NAME_LENGTH} ) NOT NULL,
-      context VARCHAR ( ${MAX_CONTEXT_LENGTH} ) NOT NULL,
+      namespace VARCHAR ( ${MAX_NAMESPACE_LENGTH} ) NOT NULL,
       destroyed BOOLEAN NOT NULL,
       meta JSONB NOT NULL,
       processed_causation_ids JSONB NOT NULL,
@@ -20,7 +20,7 @@ export const createViewStoreTable = (view: HandlerIdentifier): QueryConfig => {
       PRIMARY KEY (
         id,
         name,
-        context
+        namespace
       )
     )
   `;

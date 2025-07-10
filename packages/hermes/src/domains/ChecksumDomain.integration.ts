@@ -107,7 +107,7 @@ describe("ChecksumDomain", () => {
       expect.objectContaining({
         id: aggregate.id,
         name: "test_aggregate",
-        context: namespace,
+        namespace: namespace,
         checksum: expect.any(String),
         event_id: eventCreate.id,
         created_at: expect.any(Date),
@@ -115,7 +115,7 @@ describe("ChecksumDomain", () => {
       expect.objectContaining({
         id: aggregate.id,
         name: "test_aggregate",
-        context: namespace,
+        namespace: namespace,
         checksum: expect.any(String),
         event_id: eventMergeState.id,
         created_at: expect.any(Date),
@@ -123,7 +123,7 @@ describe("ChecksumDomain", () => {
       expect.objectContaining({
         id: aggregate.id,
         name: "test_aggregate",
-        context: namespace,
+        namespace: namespace,
         checksum: expect.any(String),
         event_id: eventSetState.id,
         created_at: expect.any(Date),
@@ -131,7 +131,7 @@ describe("ChecksumDomain", () => {
       expect.objectContaining({
         id: aggregate.id,
         name: "test_aggregate",
-        context: namespace,
+        namespace: namespace,
         checksum: expect.any(String),
         event_id: eventDestroy.id,
         created_at: expect.any(Date),

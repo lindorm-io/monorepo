@@ -1,6 +1,6 @@
 import {
   EVENT_STORE,
-  MAX_CONTEXT_LENGTH,
+  MAX_NAMESPACE_LENGTH,
   MAX_NAME_LENGTH,
 } from "../../../constants/private";
 
@@ -8,7 +8,7 @@ export const CREATE_TABLE_EVENT_STORE = `
   CREATE TABLE IF NOT EXISTS ${EVENT_STORE} (
     aggregate_id UUID NOT NULL,
     aggregate_name VARCHAR ( ${MAX_NAME_LENGTH} ) NOT NULL,
-    aggregate_context VARCHAR ( ${MAX_CONTEXT_LENGTH} ) NOT NULL,
+    aggregate_namespace VARCHAR ( ${MAX_NAMESPACE_LENGTH} ) NOT NULL,
     causation_id UUID NOT NULL,
     checksum VARCHAR ( 256 ) NOT NULL,
     correlation_id UUID NOT NULL,
@@ -26,21 +26,21 @@ export const CREATE_TABLE_EVENT_STORE = `
     PRIMARY KEY (
       aggregate_id,
       aggregate_name,
-      aggregate_context,
+      aggregate_namespace,
       causation_id,
       event_id
     ),
     UNIQUE (
       aggregate_id,
       aggregate_name,
-      aggregate_context,
+      aggregate_namespace,
       expected_events,
       event_id
     ),
     UNIQUE (
       aggregate_id,
       aggregate_name,
-      aggregate_context,
+      aggregate_namespace,
       previous_event_id,
       event_id
     )

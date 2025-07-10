@@ -43,7 +43,7 @@ const findCausations = async (
     queryBuilder.select({
       id: filter.id,
       name: filter.name,
-      context: filter.context,
+      namespace: filter.namespace,
     }),
   );
   return result.rows;
@@ -58,7 +58,7 @@ const findSaga = async (
     queryBuilder.select({
       id: filter.id,
       name: filter.name,
-      context: filter.context,
+      namespace: filter.namespace,
     }),
   );
   return result.rows;
@@ -111,7 +111,7 @@ describe("PostgresSagaStore", () => {
     await insertCausation(source, {
       id: attributes.id,
       name: attributes.name,
-      context: attributes.context,
+      namespace: attributes.namespace,
       causation_id: event.causationId,
       created_at: new Date(),
     });
@@ -142,7 +142,7 @@ describe("PostgresSagaStore", () => {
       findCausations(source, {
         id: saga.id,
         name: saga.name,
-        context: saga.context,
+        namespace: saga.namespace,
       }),
     ).resolves.toEqual(
       expect.arrayContaining([
@@ -169,7 +169,7 @@ describe("PostgresSagaStore", () => {
     const filter: SagaUpdateFilter = {
       id: attributes.id,
       name: attributes.name,
-      context: attributes.context,
+      namespace: attributes.namespace,
       revision: attributes.revision,
     };
 

@@ -84,7 +84,7 @@ describe("ViewDomain", () => {
     expect(store.load).toHaveBeenCalledWith(
       {
         id: event.aggregate.id,
-        context: "hermes",
+        namespace: "hermes",
         name: "test_mongo_view",
       },
       "mongo",
@@ -94,7 +94,7 @@ describe("ViewDomain", () => {
       expect.objectContaining({
         id: event.aggregate.id,
         name: "test_mongo_view",
-        context: "hermes",
+        namespace: "hermes",
         processedCausationIds: [],
         destroyed: false,
         revision: 0,
@@ -150,7 +150,7 @@ describe("ViewDomain", () => {
           view: {
             id: expect.any(String),
             name: "test_mongo_view",
-            context: "hermes",
+            namespace: "hermes",
           },
         },
       }),
@@ -200,7 +200,7 @@ describe("ViewDomain", () => {
           view: {
             id: expect.any(String),
             name: "test_mongo_view",
-            context: "hermes",
+            namespace: "hermes",
           },
         },
       }),

@@ -57,7 +57,7 @@ export class MongoEncryptionStore extends MongoBase implements IEncryptionStore 
       const result = await collection.insertOne({
         id: attributes.id,
         name: attributes.name,
-        context: attributes.context,
+        namespace: attributes.namespace,
         key_id: attributes.key_id,
         key_algorithm: attributes.key_algorithm,
         key_curve: attributes.key_curve,
@@ -101,7 +101,7 @@ export class MongoEncryptionStore extends MongoBase implements IEncryptionStore 
     return {
       id: document.id,
       name: document.name,
-      context: document.context,
+      namespace: document.namespace,
       key_id: document.key_id,
       key_algorithm: document.key_algorithm,
       key_curve: document.key_curve,

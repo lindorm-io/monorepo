@@ -276,7 +276,7 @@ export class HermesRegistry implements IHermesRegistry {
       this.sagas.push({
         aggregates: aggregates.map((a) => ({
           name: a.name,
-          context: a.namespace ?? this.namespace,
+          namespace: a.namespace ?? this.namespace,
         })),
         name: saga.name,
         namespace: saga.namespace ?? this.namespace,
@@ -332,7 +332,7 @@ export class HermesRegistry implements IHermesRegistry {
       this.views.push({
         aggregates: aggregates.map((a) => ({
           name: a.name,
-          context: a.namespace ?? this.namespace,
+          namespace: a.namespace ?? this.namespace,
         })),
         name: view.name,
         namespace: view.namespace ?? this.namespace,
@@ -406,7 +406,10 @@ export class HermesRegistry implements IHermesRegistry {
     }
 
     this.commands.push({
-      aggregate: { name: aggregate.name, context: aggregate.namespace ?? this.namespace },
+      aggregate: {
+        name: aggregate.name,
+        namespace: aggregate.namespace ?? this.namespace,
+      },
       name: command.name,
       target: command.target,
     });
@@ -422,7 +425,10 @@ export class HermesRegistry implements IHermesRegistry {
     }
 
     this.events.push({
-      aggregate: { name: aggregate.name, context: aggregate.namespace ?? this.namespace },
+      aggregate: {
+        name: aggregate.name,
+        namespace: aggregate.namespace ?? this.namespace,
+      },
       name: event.name,
       target: event.target,
       version: event.version,
@@ -441,7 +447,7 @@ export class HermesRegistry implements IHermesRegistry {
     this.queries.push({
       name: query.name,
       target: query.target,
-      view: { name: view.name, context: view.namespace ?? this.namespace },
+      view: { name: view.name, namespace: view.namespace ?? this.namespace },
     });
   }
 
@@ -459,9 +465,12 @@ export class HermesRegistry implements IHermesRegistry {
     }
 
     this.timeouts.push({
-      aggregate: { name: aggregate.name, context: aggregate.namespace ?? this.namespace },
+      aggregate: {
+        name: aggregate.name,
+        namespace: aggregate.namespace ?? this.namespace,
+      },
       name: timeout.name,
-      saga: { name: saga.name, context: saga.namespace ?? this.namespace },
+      saga: { name: saga.name, namespace: saga.namespace ?? this.namespace },
       target: timeout.target,
     });
   }
@@ -487,7 +496,7 @@ export class HermesRegistry implements IHermesRegistry {
         (h) =>
           h.command === command.name &&
           h.aggregate.name === aggregate.name &&
-          h.aggregate.context === aggregate.namespace,
+          h.aggregate.namespace === aggregate.namespace,
       )
     ) {
       return;
@@ -499,7 +508,7 @@ export class HermesRegistry implements IHermesRegistry {
       new HermesAggregateCommandHandler({
         aggregate: {
           name: aggregate.name,
-          context: aggregate.namespace ?? this.namespace,
+          namespace: aggregate.namespace ?? this.namespace,
         },
         command: command.name,
         conditions: handler.conditions ?? undefined,
@@ -520,7 +529,7 @@ export class HermesRegistry implements IHermesRegistry {
         (h) =>
           h.error === handler.trigger.name &&
           h.aggregate.name === aggregate.name &&
-          h.aggregate.context === aggregate.namespace,
+          h.aggregate.namespace === aggregate.namespace,
       )
     ) {
       return;
@@ -530,7 +539,7 @@ export class HermesRegistry implements IHermesRegistry {
       new HermesAggregateErrorHandler({
         aggregate: {
           name: aggregate.name,
-          context: aggregate.namespace ?? this.namespace,
+          namespace: aggregate.namespace ?? this.namespace,
         },
         error: snakeCase(handler.trigger.name),
         key: handler.key,
@@ -559,7 +568,7 @@ export class HermesRegistry implements IHermesRegistry {
           h.event.name === event.name &&
           h.event.version === event.version &&
           h.aggregate.name === aggregate.name &&
-          h.aggregate.context === aggregate.namespace,
+          h.aggregate.namespace === aggregate.namespace,
       )
     ) {
       return;
@@ -571,7 +580,7 @@ export class HermesRegistry implements IHermesRegistry {
       new HermesAggregateEventHandler({
         aggregate: {
           name: aggregate.name,
-          context: aggregate.namespace ?? this.namespace,
+          namespace: aggregate.namespace ?? this.namespace,
         },
         event: { name: event.name, version: event.version },
         key: handler.key,
@@ -592,9 +601,9 @@ export class HermesRegistry implements IHermesRegistry {
         (h) =>
           h.error === handler.trigger.name &&
           h.aggregate.name === aggregate.name &&
-          h.aggregate.context === aggregate.namespace &&
+          h.aggregate.namespace === aggregate.namespace &&
           h.saga.name === saga.name &&
-          h.saga.context === saga.namespace,
+          h.saga.namespace === saga.namespace,
       )
     ) {
       return;
@@ -604,11 +613,11 @@ export class HermesRegistry implements IHermesRegistry {
       new HermesSagaErrorHandler({
         aggregate: {
           name: aggregate.name,
-          context: aggregate.namespace ?? this.namespace,
+          namespace: aggregate.namespace ?? this.namespace,
         },
         error: snakeCase(handler.trigger.name),
         key: handler.key,
-        saga: { name: saga.name, context: saga.namespace ?? this.namespace },
+        saga: { name: saga.name, namespace: saga.namespace ?? this.namespace },
         handler: handler.handler,
       }),
     );
@@ -635,9 +644,9 @@ export class HermesRegistry implements IHermesRegistry {
           h.event.name === event.name &&
           h.event.version === event.version &&
           h.aggregate.name === aggregate.name &&
-          h.aggregate.context === aggregate.namespace &&
+          h.aggregate.namespace === aggregate.namespace &&
           h.saga.name === saga.name &&
-          h.saga.context === saga.namespace,
+          h.saga.namespace === saga.namespace,
       )
     ) {
       return;
@@ -649,12 +658,12 @@ export class HermesRegistry implements IHermesRegistry {
       new HermesSagaEventHandler({
         aggregate: {
           name: aggregate.name,
-          context: aggregate.namespace ?? this.namespace,
+          namespace: aggregate.namespace ?? this.namespace,
         },
         conditions: handler.conditions ?? undefined,
         event: { name: event.name, version: event.version },
         key: handler.key,
-        saga: { name: saga.name, context: saga.namespace ?? this.namespace },
+        saga: { name: saga.name, namespace: saga.namespace ?? this.namespace },
         handler: handler.handler,
       }),
     );
@@ -681,9 +690,9 @@ export class HermesRegistry implements IHermesRegistry {
           h.event.name === event.name &&
           h.event.version === event.version &&
           h.aggregate.name === aggregate.name &&
-          h.aggregate.context === aggregate.namespace &&
+          h.aggregate.namespace === aggregate.namespace &&
           h.saga.name === saga.name &&
-          h.saga.context === saga.namespace,
+          h.saga.namespace === saga.namespace,
       )
     ) {
       return;
@@ -695,11 +704,11 @@ export class HermesRegistry implements IHermesRegistry {
       new HermesSagaIdHandler({
         aggregate: {
           name: aggregate.name,
-          context: aggregate.namespace ?? this.namespace,
+          namespace: aggregate.namespace ?? this.namespace,
         },
         event: { name: event.name, version: event.version },
         key: handler.key,
-        saga: { name: saga.name, context: saga.namespace ?? this.namespace },
+        saga: { name: saga.name, namespace: saga.namespace ?? this.namespace },
         handler: handler.handler,
       }),
     );
@@ -725,9 +734,9 @@ export class HermesRegistry implements IHermesRegistry {
         (h) =>
           h.timeout === timeout.name &&
           h.aggregate.name === aggregate.name &&
-          h.aggregate.context === aggregate.namespace &&
+          h.aggregate.namespace === aggregate.namespace &&
           h.saga.name === saga.name &&
-          h.saga.context === saga.namespace,
+          h.saga.namespace === saga.namespace,
       )
     ) {
       return;
@@ -739,10 +748,10 @@ export class HermesRegistry implements IHermesRegistry {
       new HermesSagaTimeoutHandler({
         aggregate: {
           name: aggregate.name,
-          context: aggregate.namespace ?? this.namespace,
+          namespace: aggregate.namespace ?? this.namespace,
         },
         key: handler.key,
-        saga: { name: saga.name, context: saga.namespace ?? this.namespace },
+        saga: { name: saga.name, namespace: saga.namespace ?? this.namespace },
         timeout: timeout.name,
         handler: handler.handler,
       }),
@@ -761,9 +770,9 @@ export class HermesRegistry implements IHermesRegistry {
         (h) =>
           h.error === handler.trigger.name &&
           h.aggregate.name === aggregate.name &&
-          h.aggregate.context === aggregate.namespace &&
+          h.aggregate.namespace === aggregate.namespace &&
           h.view.name === view.name &&
-          h.view.context === view.namespace,
+          h.view.namespace === view.namespace,
       )
     ) {
       return;
@@ -773,11 +782,11 @@ export class HermesRegistry implements IHermesRegistry {
       new HermesViewErrorHandler({
         aggregate: {
           name: aggregate.name,
-          context: aggregate.namespace ?? this.namespace,
+          namespace: aggregate.namespace ?? this.namespace,
         },
         error: snakeCase(handler.trigger.name),
         key: handler.key,
-        view: { name: view.name, context: view.namespace ?? this.namespace },
+        view: { name: view.name, namespace: view.namespace ?? this.namespace },
         handler: handler.handler,
       }),
     );
@@ -804,9 +813,9 @@ export class HermesRegistry implements IHermesRegistry {
           h.event.name === event.name &&
           h.event.version === event.version &&
           h.aggregate.name === aggregate.name &&
-          h.aggregate.context === aggregate.namespace &&
+          h.aggregate.namespace === aggregate.namespace &&
           h.view.name === view.name &&
-          h.view.context === view.namespace,
+          h.view.namespace === view.namespace,
       )
     ) {
       return;
@@ -818,13 +827,13 @@ export class HermesRegistry implements IHermesRegistry {
       new HermesViewEventHandler({
         aggregate: {
           name: aggregate.name,
-          context: aggregate.namespace ?? this.namespace,
+          namespace: aggregate.namespace ?? this.namespace,
         },
         conditions: handler.conditions ?? undefined,
         event: { name: event.name, version: event.version },
         key: handler.key,
         source: view.source,
-        view: { name: view.name, context: view.namespace ?? this.namespace },
+        view: { name: view.name, namespace: view.namespace ?? this.namespace },
         handler: handler.handler,
       }),
     );
@@ -851,9 +860,9 @@ export class HermesRegistry implements IHermesRegistry {
           h.event.name === event.name &&
           h.event.version === event.version &&
           h.aggregate.name === aggregate.name &&
-          h.aggregate.context === aggregate.namespace &&
+          h.aggregate.namespace === aggregate.namespace &&
           h.view.name === view.name &&
-          h.view.context === view.namespace,
+          h.view.namespace === view.namespace,
       )
     ) {
       return;
@@ -865,11 +874,11 @@ export class HermesRegistry implements IHermesRegistry {
       new HermesViewIdHandler({
         aggregate: {
           name: aggregate.name,
-          context: aggregate.namespace ?? this.namespace,
+          namespace: aggregate.namespace ?? this.namespace,
         },
         event: { name: event.name, version: event.version },
         key: handler.key,
-        view: { name: view.name, context: view.namespace ?? this.namespace },
+        view: { name: view.name, namespace: view.namespace ?? this.namespace },
         handler: handler.handler,
       }),
     );
@@ -891,7 +900,7 @@ export class HermesRegistry implements IHermesRegistry {
           h.query === query.name &&
           h.source === view.source &&
           h.view.name === view.name &&
-          h.view.context === view.namespace,
+          h.view.namespace === view.namespace,
       )
     ) {
       return;
@@ -904,7 +913,7 @@ export class HermesRegistry implements IHermesRegistry {
         key: handler.key,
         query: query.name,
         source: view.source,
-        view: { name: view.name, context: view.namespace ?? this.namespace },
+        view: { name: view.name, namespace: view.namespace ?? this.namespace },
         handler: handler.handler,
       }),
     );

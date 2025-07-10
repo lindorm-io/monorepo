@@ -29,7 +29,7 @@ export class PostgresChecksumStore extends PostgresBase implements IChecksumStor
         this.qb.select({
           id: filter.id,
           name: filter.name,
-          context: filter.context,
+          namespace: filter.namespace,
           event_id: filter.event_id,
         }),
       );

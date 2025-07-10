@@ -18,7 +18,7 @@ export class HermesAggregateErrorHandler<C extends Constructor<DomainError>>
   public constructor(options: AggregateErrorHandlerOptions<C>) {
     this.aggregate = {
       name: options.aggregate.name,
-      context: options.aggregate.context,
+      namespace: options.aggregate.namespace,
     };
     this.error = options.error;
     this.key = options.key;

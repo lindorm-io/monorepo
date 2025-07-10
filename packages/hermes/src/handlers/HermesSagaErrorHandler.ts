@@ -13,10 +13,13 @@ export class HermesSagaErrorHandler<C extends Constructor<DomainError>>
   public readonly handler: SagaErrorCallback<C>;
 
   public constructor(options: SagaErrorHandlerOptions<C>) {
-    this.aggregate = { name: options.aggregate.name, context: options.aggregate.context };
+    this.aggregate = {
+      name: options.aggregate.name,
+      namespace: options.aggregate.namespace,
+    };
     this.error = options.error;
     this.key = options.key;
-    this.saga = { name: options.saga.name, context: options.saga.context };
+    this.saga = { name: options.saga.name, namespace: options.saga.namespace };
     this.handler = options.handler;
   }
 }

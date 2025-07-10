@@ -43,7 +43,7 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
           {
             id: viewIdentifier.id,
             name: viewIdentifier.name,
-            context: viewIdentifier.context,
+            namespace: viewIdentifier.namespace,
           },
           {
             columns: ["causation_id"],
@@ -77,7 +77,7 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
           {
             id: viewIdentifier.id,
             name: viewIdentifier.name,
-            context: viewIdentifier.context,
+            namespace: viewIdentifier.namespace,
             causation_id: causation.id,
           },
           {
@@ -140,7 +140,7 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
           causationIds.map((causationId) => ({
             id: viewIdentifier.id,
             name: viewIdentifier.name,
-            context: viewIdentifier.context,
+            namespace: viewIdentifier.namespace,
             causation_id: causationId,
             created_at: new Date(),
           })),

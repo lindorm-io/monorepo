@@ -5,7 +5,7 @@ export const HermesMessageSchema = z.object({
   aggregate: z.object({
     id: z.string(),
     name: z.string(),
-    context: z.string(),
+    namespace: z.string(),
   }),
   causationId: z.string().uuid(),
   correlationId: z.string().uuid(),

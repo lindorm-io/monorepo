@@ -23,7 +23,7 @@ describe("recoverCommand", () => {
       aggregate: {
         id: "679b860f-05b0-5f4a-98bf-913d8d9a9ddf",
         name: "test_aggregate",
-        context: "hermes",
+        namespace: "hermes",
       },
       causationId: "773d51e9-b185-5d1f-b00e-e960edeb6f27",
       correlationId: "c0caa8b9-b741-550b-9481-92cd17325136",
@@ -61,7 +61,7 @@ describe("recoverEvent", () => {
       aggregate: {
         id: "679b860f-05b0-5f4a-98bf-913d8d9a9ddf",
         name: "test_aggregate",
-        context: "hermes",
+        namespace: "hermes",
       },
       causationId: "773d51e9-b185-5d1f-b00e-e960edeb6f27",
       correlationId: "c0caa8b9-b741-550b-9481-92cd17325136",

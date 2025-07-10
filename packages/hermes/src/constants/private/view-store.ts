@@ -12,17 +12,17 @@ export const getViewStoreIndexes = (
   const storeName = getViewStoreName(view);
   return [
     {
-      fields: ["id", "name", "context"],
+      fields: ["id", "name", "namespace"],
       name: `${storeName}_pkey`,
       unique: true,
     },
     {
-      fields: ["id", "name", "context", "destroyed"],
+      fields: ["id", "name", "namespace", "destroyed"],
       name: `${storeName}_idx1`,
       unique: false,
     },
     {
-      fields: ["id", "name", "context", "revision"],
+      fields: ["id", "name", "namespace", "revision"],
       name: `${storeName}_idx2`,
       unique: false,
     },
@@ -32,12 +32,12 @@ export const getViewStoreIndexes = (
 export const VIEW_CAUSATION = "view_causation";
 export const VIEW_CAUSATION_INDEXES: StoreIndexes<ViewCausationAttributes> = [
   {
-    fields: ["id", "name", "context", "causation_id"],
+    fields: ["id", "name", "namespace", "causation_id"],
     name: "view_causation_pkey",
     unique: true,
   },
   {
-    fields: ["id", "name", "context"],
+    fields: ["id", "name", "namespace"],
     name: "view_causation_idx",
     unique: false,
   },

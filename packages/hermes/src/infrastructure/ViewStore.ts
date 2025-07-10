@@ -50,7 +50,7 @@ export class ViewStore implements IHermesViewStore {
     const existing = await this.store(source).findView({
       id: viewIdentifier.id,
       name: viewIdentifier.name,
-      context: viewIdentifier.context,
+      namespace: viewIdentifier.namespace,
     });
 
     if (existing) {
@@ -90,7 +90,7 @@ export class ViewStore implements IHermesViewStore {
     const viewIdentifier: ViewIdentifier = {
       id: view.id,
       name: view.name,
-      context: view.context,
+      namespace: view.namespace,
     };
 
     const existing = await this.store(source).findView(viewIdentifier);
@@ -126,7 +126,7 @@ export class ViewStore implements IHermesViewStore {
     const filter: ViewUpdateFilter = {
       id: view.id,
       name: view.name,
-      context: view.context,
+      namespace: view.namespace,
       revision: view.revision,
     };
 
@@ -164,7 +164,7 @@ export class ViewStore implements IHermesViewStore {
     const viewIdentifier: ViewIdentifier = {
       id: view.id,
       name: view.name,
-      context: view.context,
+      namespace: view.namespace,
     };
 
     const causations = await this.store(source).findCausationIds(viewIdentifier);
@@ -178,7 +178,7 @@ export class ViewStore implements IHermesViewStore {
     const filter: ViewUpdateFilter = {
       id: view.id,
       name: view.name,
-      context: view.context,
+      namespace: view.namespace,
       revision: view.revision,
     };
 
@@ -245,7 +245,7 @@ export class ViewStore implements IHermesViewStore {
     return {
       id: data.id,
       name: data.name,
-      context: data.context,
+      namespace: data.namespace,
       destroyed: data.destroyed,
       meta: data.meta,
       processed_causation_ids: data.processedCausationIds,
@@ -260,7 +260,7 @@ export class ViewStore implements IHermesViewStore {
     return {
       id: attributes.id,
       name: attributes.name,
-      context: attributes.context,
+      namespace: attributes.namespace,
       destroyed: attributes.destroyed,
       meta: attributes.meta,
       processedCausationIds: attributes.processed_causation_ids,

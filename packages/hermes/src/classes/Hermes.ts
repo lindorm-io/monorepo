@@ -235,7 +235,7 @@ export class Hermes implements IHermes {
     const aggregate: AggregateIdentifier = {
       id: data.aggregateId || options.id || randomUUID(),
       name: metadata.aggregate.name,
-      context: metadata.aggregate.context,
+      namespace: metadata.aggregate.namespace,
     };
 
     const id = randomUUID();
@@ -328,7 +328,7 @@ export class Hermes implements IHermes {
     return this.aggregateDomain.inspect<S>({
       id: inspect.id,
       name: inspect.name,
-      context: inspect.context ?? this.namespace,
+      namespace: inspect.namespace ?? this.namespace,
     });
   }
 
@@ -338,7 +338,7 @@ export class Hermes implements IHermes {
     return this.sagaDomain.inspect<S>({
       id: inspect.id,
       name: inspect.name,
-      context: inspect.context ?? this.namespace,
+      namespace: inspect.namespace ?? this.namespace,
     });
   }
 
@@ -348,16 +348,16 @@ export class Hermes implements IHermes {
     const viewIdentifier = {
       id: inspect.id,
       name: inspect.name,
-      context: inspect.context ?? this.namespace,
+      namespace: inspect.namespace ?? this.namespace,
     };
 
     const registry = this.registry.views.find(
-      (v) => v.name === viewIdentifier.name && v.namespace === viewIdentifier.context,
+      (v) => v.name === viewIdentifier.name && v.namespace === viewIdentifier.namespace,
     );
 
     if (!registry) {
       throw new Error(
-        `View not found: ${viewIdentifier.name} (${viewIdentifier.context})`,
+        `View not found: ${viewIdentifier.name} (${viewIdentifier.namespace})`,
       );
     }
 

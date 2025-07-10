@@ -25,7 +25,7 @@ export class HermesAggregateCommandHandler<
   public constructor(options: AggregateCommandHandlerOptions<C, S>) {
     this.aggregate = {
       name: options.aggregate.name,
-      context: options.aggregate.context,
+      namespace: options.aggregate.namespace,
     };
     this.key = options.key;
     this.command = options.command;

@@ -123,7 +123,7 @@ describe("AggregateDomain", () => {
       expect.objectContaining({
         id: aggregate.id,
         name: "test_aggregate",
-        context: namespace,
+        namespace: namespace,
         destroyed: true,
         events: [
           expect.objectContaining({
@@ -166,7 +166,7 @@ describe("AggregateDomain", () => {
     await expect(encryptionStore.inspect(aggregate)).resolves.toEqual({
       id: aggregate.id,
       name: "test_aggregate",
-      context: namespace,
+      namespace: namespace,
       key_algorithm: "dir",
       key_curve: null,
       key_encryption: null,

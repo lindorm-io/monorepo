@@ -197,7 +197,7 @@ export class ViewDomain implements IViewDomain {
     const aggregate: AggregateIdentifier = {
       id: options.id || causation.aggregate.id,
       name: metadata.aggregate.name,
-      context: metadata.aggregate.context,
+      namespace: metadata.aggregate.namespace,
     };
 
     const { name, data } = extractDataTransferObject(message);
@@ -227,11 +227,11 @@ export class ViewDomain implements IViewDomain {
     const idHandler = this.registry.viewIdHandlers.find(
       (x) =>
         x.aggregate.name === message.aggregate.name &&
-        x.aggregate.context === message.aggregate.context &&
+        x.aggregate.namespace === message.aggregate.namespace &&
         x.event.name === message.name &&
         x.event.version === message.version &&
         x.view.name === handlerIdentifier.name &&
-        x.view.context === handlerIdentifier.context,
+        x.view.namespace === handlerIdentifier.namespace,
     );
 
     if (!idHandler) {
@@ -264,10 +264,10 @@ export class ViewDomain implements IViewDomain {
     const errorHandler = this.registry.viewErrorHandlers.find(
       (x) =>
         x.aggregate.name === message.aggregate.name &&
-        x.aggregate.context === message.aggregate.context &&
+        x.aggregate.namespace === message.aggregate.namespace &&
         x.error === message.name &&
         x.view.name === handlerIdentifier.name &&
-        x.view.context === handlerIdentifier.context,
+        x.view.namespace === handlerIdentifier.namespace,
     );
 
     if (!(errorHandler instanceof HermesViewErrorHandler)) {
@@ -309,11 +309,11 @@ export class ViewDomain implements IViewDomain {
     const eventHandler = this.registry.viewEventHandlers.find(
       (x) =>
         x.aggregate.name === message.aggregate.name &&
-        x.aggregate.context === message.aggregate.context &&
+        x.aggregate.namespace === message.aggregate.namespace &&
         x.event.name === message.name &&
         x.event.version === message.version &&
         x.view.name === handlerIdentifier.name &&
-        x.view.context === handlerIdentifier.context,
+        x.view.namespace === handlerIdentifier.namespace,
     );
 
     if (!(eventHandler instanceof HermesViewEventHandler)) {
@@ -348,7 +348,7 @@ export class ViewDomain implements IViewDomain {
     const viewIdentifier: ViewIdentifier = {
       id: this.getId(message, event, handlerIdentifier),
       name: handlerIdentifier.name,
-      context: handlerIdentifier.context,
+      namespace: handlerIdentifier.namespace,
     };
 
     const data = await this.store.load(viewIdentifier, eventHandler.source);
@@ -436,7 +436,7 @@ export class ViewDomain implements IViewDomain {
     this.logger.debug("Saved view at new revision", {
       id: data.id,
       name: data.name,
-      context: data.context,
+      namespace: data.namespace,
       revision: data.revision,
     });
 
@@ -458,7 +458,7 @@ export class ViewDomain implements IViewDomain {
     this.logger.debug("Processing causation ids for view", {
       id: view.id,
       name: view.name,
-      context: view.context,
+      namespace: view.namespace,
       processedCausationIds: view.processedCausationIds,
     });
 
@@ -482,7 +482,7 @@ export class ViewDomain implements IViewDomain {
             error: error.toJSON ? error.toJSON() : { ...error },
             event,
             message: message,
-            view: { id: view.id, name: view.name, context: view.context },
+            view: { id: view.id, name: view.name, namespace: view.namespace },
           },
           aggregate: message.aggregate,
           causationId: message.id,
@@ -505,33 +505,33 @@ export class ViewDomain implements IViewDomain {
     const data: EventEmitterViewData<S> = {
       id: view.id,
       name: view.name,
-      context: view.context,
+      namespace: view.namespace,
       destroyed: view.destroyed,
       revision: view.revision,
       state: view.state,
     };
 
     this.eventEmitter.emit("view", data);
-    this.eventEmitter.emit(`view.${view.context}`, data);
-    this.eventEmitter.emit(`view.${view.context}.${view.name}`, data);
-    this.eventEmitter.emit(`view.${view.context}.${view.name}.${view.id}`, data);
+    this.eventEmitter.emit(`view.${view.namespace}`, data);
+    this.eventEmitter.emit(`view.${view.namespace}.${view.name}`, data);
+    this.eventEmitter.emit(`view.${view.namespace}.${view.name}.${view.id}`, data);
   }
 
   // private static
 
   private static getErrorQueue(handler: IViewErrorHandler): string {
-    return `queue.view.${handler.aggregate.context}.${handler.aggregate.name}.${handler.error}.${handler.view.context}.${handler.view.name}`;
+    return `queue.view.${handler.aggregate.namespace}.${handler.aggregate.name}.${handler.error}.${handler.view.namespace}.${handler.view.name}`;
   }
 
   private static getErrorTopic(handler: IViewErrorHandler): string {
-    return `${handler.aggregate.context}.${handler.aggregate.name}.${handler.error}`;
+    return `${handler.aggregate.namespace}.${handler.aggregate.name}.${handler.error}`;
   }
 
   private static getEventQueue(handler: IViewEventHandler): string {
-    return `queue.view.${handler.aggregate.context}.${handler.aggregate.name}.${handler.event.name}.${handler.view.context}.${handler.view.name}`;
+    return `queue.view.${handler.aggregate.namespace}.${handler.aggregate.name}.${handler.event.name}.${handler.view.namespace}.${handler.view.name}`;
   }
 
   private static getEventTopic(handler: IViewEventHandler): string {
-    return `${handler.aggregate.context}.${handler.aggregate.name}.${handler.event.name}`;
+    return `${handler.aggregate.namespace}.${handler.aggregate.name}.${handler.event.name}`;
   }
 }

@@ -23,7 +23,7 @@ export class HermesViewQueryHandler<
     this.key = options.key;
     this.query = options.query;
     this.source = options.source;
-    this.view = { name: options.view.name, context: options.view.context };
+    this.view = { name: options.view.name, namespace: options.view.namespace };
     this.handler = options.handler;
   }
 }

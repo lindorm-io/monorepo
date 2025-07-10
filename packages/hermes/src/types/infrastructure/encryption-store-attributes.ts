@@ -8,7 +8,7 @@ import {
 export interface EncryptionStoreAttributes {
   id: string;
   name: string;
-  context: string;
+  namespace: string;
   key_id: string;
   key_algorithm: KryptosAlgorithm;
   key_curve: KryptosCurve | null;

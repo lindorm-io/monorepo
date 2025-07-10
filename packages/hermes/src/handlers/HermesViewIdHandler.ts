@@ -13,13 +13,13 @@ export class HermesViewIdHandler<C extends Constructor> implements IViewIdHandle
   public constructor(options: ViewIdHandlerOptions<C>) {
     this.aggregate = {
       name: options.aggregate.name,
-      context: options.aggregate.context,
+      namespace: options.aggregate.namespace,
     };
     this.event = options.event;
     this.key = options.key;
     this.view = {
       name: options.view.name,
-      context: options.view.context,
+      namespace: options.view.namespace,
     };
     this.handler = options.handler;
   }

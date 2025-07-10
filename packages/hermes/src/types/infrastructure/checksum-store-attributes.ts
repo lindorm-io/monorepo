@@ -1,7 +1,7 @@
 export interface ChecksumStoreAttributes {
   id: string;
   name: string;
-  context: string;
+  namespace: string;
   event_id: string;
   checksum: string;
   created_at: Date;

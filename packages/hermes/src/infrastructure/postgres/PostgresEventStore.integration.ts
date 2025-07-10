@@ -27,7 +27,7 @@ const find = async (
       {
         aggregate_id: filter.id,
         aggregate_name: filter.name,
-        aggregate_context: filter.context,
+        aggregate_namespace: filter.namespace,
       },
       {
         order: { expected_events: "ASC" },
@@ -66,7 +66,7 @@ describe("PostgresEventStore", () => {
     const data: EventStoreAttributes = {
       aggregate_id: aggregate.id,
       aggregate_name: aggregate.name,
-      aggregate_context: aggregate.context,
+      aggregate_namespace: aggregate.namespace,
       causation_id: causationId,
       checksum: "",
       correlation_id: randomUUID(),

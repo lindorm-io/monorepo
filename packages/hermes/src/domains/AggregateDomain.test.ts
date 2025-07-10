@@ -83,7 +83,7 @@ describe("AggregateDomain", () => {
       {
         aggregate_id: expect.any(String),
         aggregate_name: "test_aggregate",
-        aggregate_context: "hermes",
+        aggregate_namespace: "hermes",
         causation_id: expect.any(String),
         checksum: expect.any(String),
         correlation_id: expect.any(String),
@@ -132,7 +132,7 @@ describe("AggregateDomain", () => {
       {
         aggregate_id: expect.any(String),
         aggregate_name: "test_aggregate",
-        aggregate_context: "hermes",
+        aggregate_namespace: "hermes",
         causation_id: expect.any(String),
         checksum: expect.any(String),
         correlation_id: expect.any(String),
@@ -181,7 +181,7 @@ describe("AggregateDomain", () => {
       {
         aggregate_id: aggregate.id,
         aggregate_name: aggregate.name,
-        aggregate_context: aggregate.context,
+        aggregate_namespace: aggregate.namespace,
         causation_id: randomUUID(),
         checksum: "checksum",
         correlation_id: randomUUID(),
@@ -199,7 +199,7 @@ describe("AggregateDomain", () => {
       {
         aggregate_id: aggregate.id,
         aggregate_name: aggregate.name,
-        aggregate_context: aggregate.context,
+        aggregate_namespace: aggregate.namespace,
         causation_id: "e6abb357-57da-564e-a7f6-6ff665db7834",
         checksum: "checksum",
         correlation_id: randomUUID(),
@@ -239,7 +239,7 @@ describe("AggregateDomain", () => {
       aggregate: {
         id: expect.any(String),
         name: "test_aggregate",
-        context: "hermes",
+        namespace: "hermes",
       },
       causationId: expect.any(String),
       correlationId: expect.any(String),
@@ -269,7 +269,7 @@ describe("AggregateDomain", () => {
       {
         aggregate_id: aggregate.id,
         aggregate_name: aggregate.name,
-        aggregate_context: aggregate.context,
+        aggregate_namespace: aggregate.namespace,
         causation_id: randomUUID(),
         checksum: "checksum",
         correlation_id: randomUUID(),
@@ -338,7 +338,7 @@ describe("AggregateDomain", () => {
       {
         aggregate_id: aggregate.id,
         aggregate_name: aggregate.name,
-        aggregate_context: aggregate.context,
+        aggregate_namespace: aggregate.namespace,
         causation_id: randomUUID(),
         checksum: "checksum",
         correlation_id: randomUUID(),
@@ -382,7 +382,7 @@ describe("AggregateDomain", () => {
       {
         aggregate_id: aggregate.id,
         aggregate_name: aggregate.name,
-        aggregate_context: aggregate.context,
+        aggregate_namespace: aggregate.namespace,
         causation_id: randomUUID(),
         checksum: "checksum",
         correlation_id: randomUUID(),
