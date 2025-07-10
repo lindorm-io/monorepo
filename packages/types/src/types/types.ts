@@ -1,6 +1,6 @@
-export type ClassLike = { constructor: { name: string } };
+export type ClassLike<T = any> = InstanceType<Constructor<T>>;
 
-export type Constructor<T> = new (...args: any) => T;
+export type Constructor<T = any> = new (...args: any) => T;
 
 export type DeepPartial<T> = {
   [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P];

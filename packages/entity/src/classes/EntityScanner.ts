@@ -59,7 +59,7 @@ export class EntityScanner {
       throw new EntityScannerError(`No entities found in file: ${data.fullPath}`);
     }
 
-    let result: Partial<Constructor<T>> | null = null;
+    let result: Constructor<T> | null = null;
 
     for (const value of Object.values(module)) {
       if (result) break;
