@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/okp@0.2.1...@lindorm/okp@0.2.2) (2025-07-10)
+
+**Note:** Version bump only for package @lindorm/okp
+
 ## [0.2.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/okp@0.2.0...@lindorm/okp@0.2.1) (2025-07-02)
 
 **Note:** Version bump only for package @lindorm/okp

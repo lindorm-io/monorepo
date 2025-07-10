@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/pkce",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -30,6 +30,6 @@
   },
   "dependencies": {
     "@lindorm/enums": "^0.1.5",
-    "@lindorm/errors": "^0.1.9"
+    "@lindorm/errors": "^0.1.10"
   }
 }

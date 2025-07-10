@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/message",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -27,13 +27,13 @@
     "update": "ncu -u"
   },
   "dependencies": {
-    "@lindorm/errors": "^0.1.9",
-    "@lindorm/is": "^0.1.8",
-    "@lindorm/scanner": "^0.3.4",
-    "@lindorm/types": "^0.3.0",
+    "@lindorm/errors": "^0.1.10",
+    "@lindorm/is": "^0.1.9",
+    "@lindorm/scanner": "^0.3.5",
+    "@lindorm/types": "^0.3.1",
     "zod": "^3.25.67"
   },
   "devDependencies": {
-    "@lindorm/logger": "^0.3.1"
+    "@lindorm/logger": "^0.3.2"
   }
 }

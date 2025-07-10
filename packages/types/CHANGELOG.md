@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/types@0.3.0...@lindorm/types@0.3.1) (2025-07-10)
+
+### Bug Fixes
+
+- amend types ([f3a93c8](https://github.com/lindorm-io/monorepo/commit/f3a93c899decb91826555bdd1edd35d561c4506a))
+
 # [0.3.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/types@0.2.1...@lindorm/types@0.3.0) (2025-06-17)
 
 ### Bug Fixes

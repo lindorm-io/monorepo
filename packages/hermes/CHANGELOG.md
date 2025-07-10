@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.3.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/hermes@0.2.4...@lindorm/hermes@0.3.0) (2025-07-10)
+
+### Features
+
+- add decorator architecture ([43004a2](https://github.com/lindorm-io/monorepo/commit/43004a24de8556f972e95e9ccb47bbdb56d2b948))
+- rename context to namespace ([70f0c4c](https://github.com/lindorm-io/monorepo/commit/70f0c4c6a62008302e7172621dc247fdb34b9055))
+- use improved messages ([bc83850](https://github.com/lindorm-io/monorepo/commit/bc8385051231b60e1b82dc133fa6de0e14194a43))
+
 ## [0.2.4](https://github.com/lindorm-io/monorepo/compare/@lindorm/hermes@0.2.3...@lindorm/hermes@0.2.4) (2025-07-02)
 
 **Note:** Version bump only for package @lindorm/hermes

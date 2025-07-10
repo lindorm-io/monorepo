@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.3](https://github.com/lindorm-io/monorepo/compare/@lindorm/entity@0.2.2...@lindorm/entity@0.2.3) (2025-07-10)
+
+### Bug Fixes
+
+- amend types ([f3a93c8](https://github.com/lindorm-io/monorepo/commit/f3a93c899decb91826555bdd1edd35d561c4506a))
+- make logger optional for kit ([635b1e3](https://github.com/lindorm-io/monorepo/commit/635b1e397130adbf114e9d20ce3356225ffb027d))
+
 ## [0.2.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/entity@0.2.1...@lindorm/entity@0.2.2) (2025-07-02)
 
 ### Bug Fixes

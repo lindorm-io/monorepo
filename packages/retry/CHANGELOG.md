@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.7](https://github.com/lindorm-io/monorepo/compare/@lindorm/retry@0.1.6...@lindorm/retry@0.1.7) (2025-07-10)
+
+**Note:** Version bump only for package @lindorm/retry
+
 ## [0.1.6](https://github.com/lindorm-io/monorepo/compare/@lindorm/retry@0.1.5...@lindorm/retry@0.1.6) (2025-06-17)
 
 **Note:** Version bump only for package @lindorm/retry
