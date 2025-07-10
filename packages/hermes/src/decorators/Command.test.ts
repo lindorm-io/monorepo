@@ -10,7 +10,11 @@ describe("Command Decorator", () => {
   });
 
   test("should add metadata with custom options", () => {
-    @Command({ name: "custom_command" })
+    @Command({
+      aggregate: { name: "external_aggregate", namespace: "external_namespace" },
+      name: "custom_command",
+      version: 2,
+    })
     class TestCommandOptions {}
 
     expect(globalHermesMetadata.getCommand(TestCommandOptions)).toMatchSnapshot();

@@ -6,6 +6,7 @@ export type RegistryCommand = {
   aggregate: HandlerIdentifier;
   name: string;
   target: Constructor;
+  version: number;
 };
 
 export type RegistryEvent = {
@@ -26,6 +27,7 @@ export type RegistryTimeout = {
   name: string;
   saga: HandlerIdentifier;
   target: Constructor;
+  version: number;
 };
 
 export type RegistryAggregate = {

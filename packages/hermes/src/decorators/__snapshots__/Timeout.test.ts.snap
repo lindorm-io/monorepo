@@ -4,6 +4,7 @@ exports[`Timeout Decorator should add metadata 1`] = `
 {
   "name": "test_timeout",
   "target": [Function],
+  "version": 1,
 }
 `;
 
@@ -11,5 +12,6 @@ exports[`Timeout Decorator should add metadata with custom options 1`] = `
 {
   "name": "custom_name",
   "target": [Function],
+  "version": 2,
 }
 `;

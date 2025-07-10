@@ -160,35 +160,33 @@ export class SagaDomain implements ISagaDomain {
 
     const metadata = this.registry.getCommand(message.constructor);
 
-    if (!metadata) {
-      throw new Error(
-        `Cannot dispatch message of type ${message.constructor.name} - not registered`,
-      );
-    }
-
     const aggregate: AggregateIdentifier = {
       id: options.id || causation.aggregate.id,
       name: metadata.aggregate.name,
       namespace: metadata.aggregate.namespace,
     };
 
-    const { name, data } = extractDataTransferObject(message);
+    const { name, version } = metadata;
+    const { data } = extractDataTransferObject(message);
     const { delay, mandatory, meta = {} } = options;
 
-    await this.commandBus.publish(
-      this.commandBus.create(
-        merge<HermesMessageOptions, SagaErrorDispatchOptions>(
-          {
-            aggregate,
-            correlationId: causation.correlationId,
-            data,
-            meta: { ...causation.meta, ...meta },
-            name,
-          },
-          { delay, mandatory },
-        ),
+    const command = this.commandBus.create(
+      merge<HermesMessageOptions, SagaErrorDispatchOptions>(
+        {
+          aggregate,
+          correlationId: causation.correlationId,
+          data,
+          meta: { ...causation.meta, ...meta },
+          name,
+          version,
+        },
+        { delay, mandatory },
       ),
     );
+
+    this.logger.verbose("Dispatching command", { command });
+
+    await this.commandBus.publish(command);
   }
 
   private getId(
@@ -618,37 +616,39 @@ export class SagaDomain implements ISagaDomain {
   }
 
   private async publishError(
-    message: IHermesMessage,
+    causation: IHermesMessage,
     event: ClassLike,
     saga: ISagaModel,
     error: DomainError,
   ): Promise<void> {
-    try {
-      this.logger.debug("Publishing unrecoverable error", {
-        error,
+    const message = this.errorBus.create({
+      data: {
+        error: error.toJSON ? error.toJSON() : { ...error },
         event,
-        message,
-        saga,
-      });
+        message: causation,
+        saga: { id: saga.id, name: saga.name, namespace: saga.namespace },
+      },
+      aggregate: causation.aggregate,
+      causationId: causation.id,
+      correlationId: causation.correlationId,
+      mandatory: false,
+      meta: causation.meta,
+      name: snakeCase(error.name),
+    });
 
-      await this.errorBus.publish(
-        this.errorBus.create({
-          data: {
-            error: error.toJSON ? error.toJSON() : { ...error },
-            event,
-            message,
-            saga: { id: saga.id, name: saga.name, namespace: saga.namespace },
-          },
-          aggregate: message.aggregate,
-          causationId: message.id,
-          correlationId: message.correlationId,
-          mandatory: false,
-          meta: message.meta,
-          name: snakeCase(error.name),
-        }),
-      );
+    this.logger.debug("Publishing unrecoverable error", {
+      causation,
+      error,
+      event,
+      message,
+      saga,
+    });
+
+    try {
+      await this.errorBus.publish(message);
 
       this.logger.verbose("Published unrecoverable error", {
+        causation,
         error,
         event,
         message,

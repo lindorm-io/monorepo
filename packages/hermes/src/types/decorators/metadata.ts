@@ -25,8 +25,10 @@ export type MetaAggregate = {
 };
 
 export type MetaCommand = {
+  aggregate: { name: string | null; namespace: string | null };
   name: string;
   target: Constructor;
+  version: number;
 };
 
 export type MetaEvent = {
@@ -61,6 +63,7 @@ export type MetaSaga = {
 export type MetaTimeout = {
   name: string;
   target: Constructor;
+  version: number;
 };
 
 export type MetaView = {

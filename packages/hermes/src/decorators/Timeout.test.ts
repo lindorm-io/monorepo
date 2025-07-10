@@ -12,6 +12,7 @@ describe("Timeout Decorator", () => {
   test("should add metadata with custom options", () => {
     @Timeout({
       name: "custom_name",
+      version: 2,
     })
     class TestSagaTimeoutOptions {}
 

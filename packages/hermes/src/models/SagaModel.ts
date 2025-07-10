@@ -134,7 +134,8 @@ export class SagaModel<S extends Dict = Dict> implements ISagaModel {
       namespace: metadata.aggregate.namespace,
     };
 
-    const { name, data } = extractDataTransferObject(message);
+    const { name, version } = metadata;
+    const { data } = extractDataTransferObject(message);
     const { delay, mandatory, meta = {} } = options;
 
     const opts = merge<HermesMessageOptions, SagaDispatchOptions>(
@@ -145,6 +146,7 @@ export class SagaModel<S extends Dict = Dict> implements ISagaModel {
         data,
         meta: { ...causation.meta, ...meta },
         name,
+        version,
       },
       { delay, mandatory },
     );

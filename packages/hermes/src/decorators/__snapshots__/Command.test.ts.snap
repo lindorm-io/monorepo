@@ -2,14 +2,24 @@
 
 exports[`Command Decorator should add metadata 1`] = `
 {
+  "aggregate": {
+    "name": null,
+    "namespace": null,
+  },
   "name": "test_command",
   "target": [Function],
+  "version": 1,
 }
 `;
 
 exports[`Command Decorator should add metadata with custom options 1`] = `
 {
+  "aggregate": {
+    "name": "external_aggregate",
+    "namespace": "external_namespace",
+  },
   "name": "custom_command",
   "target": [Function],
+  "version": 2,
 }
 `;

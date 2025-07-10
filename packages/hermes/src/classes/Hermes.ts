@@ -227,16 +227,17 @@ export class Hermes implements IHermes {
       });
     }
 
-    const { name, data } = extractDataTransferObject(Command);
-    const { correlationId, delay, meta } = options;
-
     const metadata = this.registry.getCommand(Command.constructor);
 
     const aggregate: AggregateIdentifier = {
-      id: data.aggregateId || options.id || randomUUID(),
+      id: options.id || randomUUID(),
       name: metadata.aggregate.name,
       namespace: metadata.aggregate.namespace,
     };
+
+    const { name, version } = metadata;
+    const { data } = extractDataTransferObject(Command);
+    const { correlationId, delay, meta = {} } = options;
 
     const id = randomUUID();
 
@@ -249,6 +250,7 @@ export class Hermes implements IHermes {
       delay,
       meta,
       name,
+      version,
     });
 
     this.logger.verbose("Publishing command", { command });

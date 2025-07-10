@@ -11,7 +11,7 @@ describe("SagaTimeoutHandler Decorator", () => {
   class TestSagaAggregate {}
 
   test("should add metadata", () => {
-    @Timeout(TestSagaAggregate)
+    @Timeout()
     class TestSagaTimeoutHandlerTimeout {}
 
     @Saga(TestSagaAggregate)

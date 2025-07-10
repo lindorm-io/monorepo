@@ -336,6 +336,7 @@ HermesRegistry {
       },
       "name": "test_command_create",
       "target": [Function],
+      "version": 1,
     },
     {
       "aggregate": {
@@ -344,6 +345,7 @@ HermesRegistry {
       },
       "name": "test_command_destroy",
       "target": [Function],
+      "version": 1,
     },
     {
       "aggregate": {
@@ -352,6 +354,7 @@ HermesRegistry {
       },
       "name": "test_command_destroy_next",
       "target": [Function],
+      "version": 1,
     },
     {
       "aggregate": {
@@ -360,6 +363,7 @@ HermesRegistry {
       },
       "name": "test_command_dispatch",
       "target": [Function],
+      "version": 1,
     },
     {
       "aggregate": {
@@ -368,6 +372,7 @@ HermesRegistry {
       },
       "name": "test_command_encrypt",
       "target": [Function],
+      "version": 1,
     },
     {
       "aggregate": {
@@ -376,6 +381,7 @@ HermesRegistry {
       },
       "name": "test_command_merge_state",
       "target": [Function],
+      "version": 1,
     },
     {
       "aggregate": {
@@ -384,6 +390,7 @@ HermesRegistry {
       },
       "name": "test_command_set_state",
       "target": [Function],
+      "version": 1,
     },
     {
       "aggregate": {
@@ -392,6 +399,7 @@ HermesRegistry {
       },
       "name": "test_command_throws",
       "target": [Function],
+      "version": 1,
     },
     {
       "aggregate": {
@@ -400,6 +408,7 @@ HermesRegistry {
       },
       "name": "test_command_timeout",
       "target": [Function],
+      "version": 1,
     },
   ],
   "eventCtors": [
@@ -802,6 +811,7 @@ HermesRegistry {
         "namespace": "hermes",
       },
       "target": [Function],
+      "version": 1,
     },
     {
       "aggregate": {
@@ -814,6 +824,7 @@ HermesRegistry {
         "namespace": "hermes",
       },
       "target": [Function],
+      "version": 1,
     },
     {
       "aggregate": {
@@ -826,6 +837,7 @@ HermesRegistry {
         "namespace": "hermes",
       },
       "target": [Function],
+      "version": 1,
     },
     {
       "aggregate": {
@@ -838,6 +850,7 @@ HermesRegistry {
         "namespace": "hermes",
       },
       "target": [Function],
+      "version": 1,
     },
     {
       "aggregate": {
@@ -850,6 +863,7 @@ HermesRegistry {
         "namespace": "hermes",
       },
       "target": [Function],
+      "version": 1,
     },
   ],
   "viewErrorHandlers": [

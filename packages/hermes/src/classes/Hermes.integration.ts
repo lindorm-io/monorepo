@@ -1,4 +1,4 @@
-import { Logger, LogLevel } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger";
 import { IMongoSource, MongoSource } from "@lindorm/mongo";
 import { IPostgresSource, PostgresSource } from "@lindorm/postgres";
 import { IRabbitSource, RabbitSource } from "@lindorm/rabbit";
@@ -17,7 +17,7 @@ import { Hermes } from "./Hermes";
 
 describe("Hermes", () => {
   const namespace = "hermes_int";
-  const logger = new Logger({ level: LogLevel.Warn, readable: true });
+  const logger = createMockLogger();
 
   let mongo: IMongoSource;
   let postgres: IPostgresSource;

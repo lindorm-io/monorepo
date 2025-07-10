@@ -148,6 +148,13 @@ export class HermesRegistry implements IHermesRegistry {
       if (!metadata) continue;
 
       this.commandCtors.push(Command);
+
+      if (metadata.aggregate.name && metadata.aggregate.namespace) {
+        this.registerCommand(metadata, {
+          name: metadata.aggregate.name,
+          namespace: metadata.aggregate.namespace,
+        });
+      }
     }
   }
 
@@ -396,7 +403,10 @@ export class HermesRegistry implements IHermesRegistry {
 
   // private dtos
 
-  private registerCommand(command: MetaCommand, aggregate: MetaAggregate): void {
+  private registerCommand(
+    command: MetaCommand,
+    aggregate: Pick<MetaAggregate, "name" | "namespace">,
+  ): void {
     if (!this.commandCtors.includes(command.target)) {
       throw new Error(`Command not found: ${command.target.name}`);
     }
@@ -412,6 +422,7 @@ export class HermesRegistry implements IHermesRegistry {
       },
       name: command.name,
       target: command.target,
+      version: command.version,
     });
   }
 
@@ -472,6 +483,7 @@ export class HermesRegistry implements IHermesRegistry {
       name: timeout.name,
       saga: { name: saga.name, namespace: saga.namespace ?? this.namespace },
       target: timeout.target,
+      version: timeout.version,
     });
   }
 

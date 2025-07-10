@@ -4,16 +4,19 @@ import { HandlerConditions } from "../handlers";
 // dtos
 
 export type CommandDecoratorOptions = {
-  name: string;
+  aggregate?: { name: string; namespace: string };
+  name?: string;
+  version?: number;
 };
 
 export type EventDecoratorOptions = {
-  name: string;
-  version: number;
+  name?: string;
+  version?: number;
 };
 
 export type TimeoutDecoratorOptions = {
-  name: string;
+  name?: string;
+  version?: number;
 };
 
 // models

@@ -2,8 +2,13 @@
 
 exports[`recoverCommand should recover an exact copy of the command 1`] = `
 {
+  "aggregate": {
+    "name": null,
+    "namespace": null,
+  },
   "name": "test_recover_command",
   "target": [Function],
+  "version": 1,
 }
 `;
 

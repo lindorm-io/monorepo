@@ -188,35 +188,33 @@ export class ViewDomain implements IViewDomain {
 
     const metadata = this.registry.getCommand(message.constructor);
 
-    if (!metadata) {
-      throw new Error(
-        `Cannot dispatch message of type ${message.constructor.name} - not registered`,
-      );
-    }
-
     const aggregate: AggregateIdentifier = {
       id: options.id || causation.aggregate.id,
       name: metadata.aggregate.name,
       namespace: metadata.aggregate.namespace,
     };
 
-    const { name, data } = extractDataTransferObject(message);
+    const { name, version } = metadata;
+    const { data } = extractDataTransferObject(message);
     const { delay, mandatory, meta = {} } = options;
 
-    await this.commandBus.publish(
-      this.commandBus.create(
-        merge<HermesMessageOptions, ViewErrorDispatchOptions>(
-          {
-            aggregate,
-            correlationId: causation.correlationId,
-            data,
-            meta: { ...causation.meta, ...meta },
-            name,
-          },
-          { delay, mandatory },
-        ),
+    const command = this.commandBus.create(
+      merge<HermesMessageOptions, ViewErrorDispatchOptions>(
+        {
+          aggregate,
+          correlationId: causation.correlationId,
+          data,
+          meta: { ...causation.meta, ...meta },
+          name,
+          version,
+        },
+        { delay, mandatory },
       ),
     );
+
+    this.logger.verbose("Publishing command", { command });
+
+    await this.commandBus.publish(command);
   }
 
   private getId(
@@ -468,34 +466,46 @@ export class ViewDomain implements IViewDomain {
   }
 
   private async publishError(
-    message: IHermesMessage,
+    causation: IHermesMessage,
     event: ClassLike,
     view: IViewModel,
     error: DomainError,
   ): Promise<void> {
+    const message = this.errorBus.create({
+      data: {
+        error: error.toJSON ? error.toJSON() : { ...error },
+        event,
+        message: causation,
+        view: { id: view.id, name: view.name, namespace: view.namespace },
+      },
+      aggregate: causation.aggregate,
+      causationId: causation.id,
+      correlationId: causation.correlationId,
+      mandatory: false,
+      meta: causation.meta,
+      name: snakeCase(error.name),
+    });
+
+    this.logger.debug("Publishing unrecoverable error", {
+      causation,
+      error,
+      event,
+      message,
+      view,
+    });
+
     try {
-      this.logger.debug("Rejecting event", { event: message, view, error });
+      await this.errorBus.publish(message);
 
-      await this.errorBus.publish(
-        this.errorBus.create({
-          data: {
-            error: error.toJSON ? error.toJSON() : { ...error },
-            event,
-            message: message,
-            view: { id: view.id, name: view.name, namespace: view.namespace },
-          },
-          aggregate: message.aggregate,
-          causationId: message.id,
-          correlationId: message.correlationId,
-          mandatory: false,
-          meta: message.meta,
-          name: snakeCase(error.name),
-        }),
-      );
-
-      this.logger.verbose("Rejected event", { event: message, view, error });
+      this.logger.verbose("Published unrecoverable error", {
+        causation,
+        error,
+        event,
+        message: causation,
+        view,
+      });
     } catch (err: any) {
-      this.logger.warn("Failed to reject event", err);
+      this.logger.warn("Failed to publish unrecoverable error", err);
 
       throw err;
     }
