@@ -1,15 +1,16 @@
 import { createMockLogger } from "@lindorm/logger";
+import { SubscribeOptions } from "@lindorm/message";
+import { wait } from "@lindorm/utils";
 import { TestMessageOne } from "../__fixtures__/messages/test-message-one";
 import { TestMessageThree } from "../__fixtures__/messages/test-message-three";
 import { TestMessageTwo } from "../__fixtures__/messages/test-message-two";
-import { IRabbitSubscription } from "../interfaces";
 import { RabbitSource } from "./RabbitSource";
 
 describe("RabbitMessageBus", () => {
   let source: RabbitSource;
-  let subscriptionOne: IRabbitSubscription<TestMessageOne>;
-  let subscriptionTwo: IRabbitSubscription<TestMessageTwo>;
-  let subscriptionThree: IRabbitSubscription<TestMessageThree>;
+  let subscriptionOne: SubscribeOptions<TestMessageOne>;
+  let subscriptionTwo: SubscribeOptions<TestMessageTwo>;
+  let subscriptionThree: SubscribeOptions<TestMessageThree>;
 
   beforeAll(async () => {
     source = new RabbitSource({
@@ -56,15 +57,28 @@ describe("RabbitMessageBus", () => {
     const busThree = source.messageBus(TestMessageThree);
 
     const messageOne = busOne.create({ data: { json: 1 }, meta: { test: 2 } });
-    const messageTwo = busTwo.create({ name: "test" });
-    const messageThree = busThree.create({ topic: "whimsy" });
-
     await busOne.publish(messageOne);
+
+    await wait(() => (subscriptionOne.callback as any).mock.calls.length >= 1);
+
+    const messageTwo = busTwo.create({ name: "test" });
     await busTwo.publish(messageTwo);
+
+    await wait(() => (subscriptionTwo.callback as any).mock.calls.length >= 1);
+
+    const messageThree = busThree.create({ input: "immediate", topic: "whimsy" });
     await busThree.publish(messageThree);
+
+    await wait(() => (subscriptionThree.callback as any).mock.calls.length >= 1);
+
+    const messageThreeDelayed = busThree.create({ input: "delayed", topic: "whimsy" });
+    await busThree.publish(messageThreeDelayed, { delay: 1000 });
+
+    await wait(() => (subscriptionThree.callback as any).mock.calls.length >= 2);
 
     expect(subscriptionOne.callback).toHaveBeenCalledWith(messageOne);
     expect(subscriptionTwo.callback).toHaveBeenCalledWith(messageTwo);
-    expect(subscriptionThree.callback).toHaveBeenCalledWith(messageThree);
+    expect(subscriptionThree.callback).toHaveBeenNthCalledWith(1, messageThree);
+    expect(subscriptionThree.callback).toHaveBeenNthCalledWith(2, messageThreeDelayed);
   });
 });

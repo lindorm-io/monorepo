@@ -1,6 +1,12 @@
 import { JsonKit } from "@lindorm/json-kit";
 import { ILogger } from "@lindorm/logger";
-import { globalMessageMetadata, IMessage, MessageScanner } from "@lindorm/message";
+import {
+  globalMessageMetadata,
+  IMessage,
+  IMessageSubscriptions,
+  MessageScanner,
+  MessageSubscriptions,
+} from "@lindorm/message";
 import { Constructor } from "@lindorm/types";
 import { sleep } from "@lindorm/utils";
 import amqplib, { ChannelModel, ConfirmChannel, ConsumeMessage } from "amqplib";
@@ -15,7 +21,6 @@ import {
 import { FromClone } from "../types/private";
 import { bindQueue } from "../utils";
 import { RabbitMessageBus } from "./RabbitMessageBus";
-import { SubscriptionList } from "./private";
 
 export class RabbitSource implements IRabbitSource {
   public readonly name = "RabbitSource";
@@ -26,7 +31,7 @@ export class RabbitSource implements IRabbitSource {
   private readonly messages: Array<Constructor<IMessage>>;
   private readonly nackTimeout: number;
   private readonly promise: Promise<ChannelModel>;
-  private readonly subscriptions: SubscriptionList;
+  private readonly subscriptions: IMessageSubscriptions;
 
   private confirmChannel: ConfirmChannel | undefined;
   private channelModel: ChannelModel | undefined;
@@ -52,7 +57,7 @@ export class RabbitSource implements IRabbitSource {
 
       this.messages = opts.messages ? MessageScanner.scan(opts.messages) : [];
       this.promise = this.connectWithRetry(opts);
-      this.subscriptions = new SubscriptionList();
+      this.subscriptions = new MessageSubscriptions();
     }
   }
 

@@ -1,7 +1,6 @@
-import { IMessage } from "@lindorm/message";
+import { IMessage, SubscribeOptions, UnsubscribeOptions } from "@lindorm/message";
 import { DeepPartial } from "@lindorm/types";
-import { PublishOptions, UnsubscribeOptions } from "../types";
-import { IRabbitSubscription } from "./RabbitSubscription";
+import { PublishOptions } from "../types";
 
 export interface IRabbitMessageBus<
   M extends IMessage,
@@ -10,7 +9,7 @@ export interface IRabbitMessageBus<
   create(options: O | M): M;
   publish(message: M | Array<M>, options?: PublishOptions): Promise<void>;
   subscribe(
-    subscription: IRabbitSubscription<M> | Array<IRabbitSubscription<M>>,
+    subscription: SubscribeOptions<M> | Array<SubscribeOptions<M>>,
   ): Promise<void>;
   unsubscribe(
     subscription: UnsubscribeOptions | Array<UnsubscribeOptions>,

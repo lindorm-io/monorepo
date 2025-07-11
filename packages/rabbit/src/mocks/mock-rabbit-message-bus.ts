@@ -1,6 +1,6 @@
-import { IMessage, MessageKit } from "@lindorm/message";
+import { IMessage, IMessageSubscription, MessageKit } from "@lindorm/message";
 import { Constructor } from "@lindorm/types";
-import { IRabbitMessageBus, IRabbitSubscription } from "../interfaces";
+import { IRabbitMessageBus } from "../interfaces";
 
 export const createMockRabbitMessageBus = <M extends IMessage>(
   Message: Constructor<M>,
@@ -8,7 +8,7 @@ export const createMockRabbitMessageBus = <M extends IMessage>(
 ): IRabbitMessageBus<M> => {
   const kit = new MessageKit({ Message });
 
-  let array: Array<IRabbitSubscription<M>> = [];
+  let array: Array<IMessageSubscription<M>> = [];
 
   return {
     create: jest.fn().mockImplementation((args) => kit.create(args)),

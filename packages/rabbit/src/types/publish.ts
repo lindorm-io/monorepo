@@ -5,7 +5,6 @@ export type PublishOptions = Options.Publish & {
   topic?: string;
 };
 
-export type PublishWithDelayOptions = Options.Publish & {
+export type PublishWithDelayOptions = Omit<PublishOptions, "delay"> & {
   delay: number;
-  topic?: string;
 };

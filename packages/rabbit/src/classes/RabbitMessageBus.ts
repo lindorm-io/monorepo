@@ -1,18 +1,20 @@
 import { isArray } from "@lindorm/is";
 import { JsonKit } from "@lindorm/json-kit";
 import { ILogger } from "@lindorm/logger";
-import { IMessage, MessageKit } from "@lindorm/message";
+import {
+  IMessage,
+  IMessageSubscription,
+  IMessageSubscriptions,
+  MessageKit,
+  SubscribeOptions,
+  UnsubscribeOptions,
+} from "@lindorm/message";
 import { Constructor, DeepPartial } from "@lindorm/types";
 import { ConfirmChannel } from "amqplib";
-import { IRabbitMessageBus, IRabbitSubscription } from "../interfaces";
-import {
-  PublishOptions,
-  PublishWithDelayOptions,
-  RabbitBusOptions,
-  UnsubscribeOptions,
-} from "../types";
+import { randomBytes } from "crypto";
+import { IRabbitMessageBus } from "../interfaces";
+import { PublishOptions, PublishWithDelayOptions, RabbitBusOptions } from "../types";
 import { bindQueue, sanitizeRouteKey } from "../utils";
-import { SubscriptionList } from "./private";
 
 export class RabbitMessageBus<
   M extends IMessage,
@@ -26,7 +28,7 @@ export class RabbitMessageBus<
   private readonly kit: MessageKit<M, O>;
   private readonly logger: ILogger;
   private readonly nackTimeout: number;
-  private readonly subscriptions: SubscriptionList;
+  private readonly subscriptions: IMessageSubscriptions;
 
   public constructor(options: RabbitBusOptions<M>) {
     this.logger = options.logger.child(["RabbitMessageBus", options.Message.name]);
@@ -70,7 +72,7 @@ export class RabbitMessageBus<
   }
 
   public async subscribe(
-    subscription: IRabbitSubscription<M> | Array<IRabbitSubscription<M>>,
+    subscription: SubscribeOptions<M> | Array<SubscribeOptions<M>>,
   ): Promise<void> {
     const array = isArray(subscription) ? subscription : [subscription];
 
@@ -168,7 +170,15 @@ export class RabbitMessageBus<
     });
   }
 
-  private async handleSubscribe(subscription: IRabbitSubscription<M>): Promise<void> {
+  private async handleSubscribe(options: SubscribeOptions<M>): Promise<void> {
+    const subscription: IMessageSubscription = {
+      callback: options.callback,
+      consumerTag: options.consumerTag ?? randomBytes(16).toString("base64url"),
+      queue: options.queue ?? `queue.${options.topic}`,
+      target: this.MessageConstructor,
+      topic: options.topic,
+    };
+
     await bindQueue(
       {
         channel: this.channel,
@@ -183,13 +193,13 @@ export class RabbitMessageBus<
       },
     );
 
-    const { consumerTag } = await this.channel.consume(subscription.queue, (msg) => {
+    await this.channel.consume(subscription.queue, (msg) => {
       if (!msg) return;
 
       const parsed = JsonKit.parse<M>(msg.content);
 
       this.logger.debug("Subscription consuming parsed message", {
-        subscription,
+        subscription: subscription,
         parsed,
       });
 
@@ -229,13 +239,13 @@ export class RabbitMessageBus<
         });
     });
 
-    this.logger.debug("Subscription created", { consumerTag, subscription });
-
-    this.subscriptions.add({
-      Message: this.MessageConstructor,
-      consumerTag,
-      subscription,
+    this.logger.debug("Subscription created", {
+      consumerTag: subscription.consumerTag,
+      queue: subscription.queue,
+      topic: subscription.topic,
     });
+
+    this.subscriptions.add(subscription);
   }
 
   private async handleUnsubscribe(subscription: UnsubscribeOptions): Promise<void> {
@@ -260,7 +270,7 @@ export class RabbitMessageBus<
   private async handleUnsubscribeAll(): Promise<void> {
     this.logger.verbose("Removing all subscriptions");
 
-    for (const { subscription } of this.subscriptions.all(this.MessageConstructor)) {
+    for (const subscription of this.subscriptions.all(this.MessageConstructor)) {
       await this.handleUnsubscribe(subscription);
     }
   }
@@ -313,7 +323,7 @@ export class RabbitMessageBus<
       result.timestamp = message[timestamp.key]?.getTime();
     }
 
-    result.type = this.MessageConstructor.name;
+    result.type = this.kit.metadata.message.name;
 
     return { ...result, ...options };
   }

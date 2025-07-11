@@ -4,4 +4,3 @@ export * from "./publish";
 export * from "./rabbit-message-bus";
 export * from "./rabbit-source";
 export * from "./scanner";
-export * from "./subscription-list";
