@@ -103,9 +103,14 @@ export class GlobalMessageMetadata {
 
     if (cached) return cached as unknown as MessageMetadata<M, T>;
 
-    const [message] = this.getMeta<MetaMessage>(target, "messages").map(
-      ({ target: _, ...rest }) => rest,
-    );
+    const [message] = this.getMeta<MetaMessage>(target, "messages");
+
+    if (!message) {
+      throw new MessageMetadataError("Message metadata not found", {
+        debug: { Message: target.name },
+      });
+    }
+
     const [priority] = this.getMeta<MetaPriority>(target, "priorities").map(
       ({ target: _, priority }) => priority,
     );
@@ -115,12 +120,6 @@ export class GlobalMessageMetadata {
     const [topic] = this.getMeta<MetaTopic>(target, "topics").map(
       ({ target: _, ...rest }) => rest,
     );
-
-    if (!message) {
-      throw new MessageMetadataError("Message metadata not found", {
-        debug: { Message: target.name },
-      });
-    }
 
     const fields = this.getMeta<MetaField<T>>(target, "fields").map(
       ({ target: _, ...rest }) => rest,
@@ -177,6 +176,17 @@ export class GlobalMessageMetadata {
     this.setCache(target, final);
 
     return final as unknown as MessageMetadata<M, T>;
+  }
+
+  public find<
+    M extends IMessage = IMessage,
+    T extends MetaFieldDecorator = MetaFieldDecorator,
+  >(name: string): MessageMetadata<M, T> | undefined {
+    const found = this.messages.find((m) => m.name === name);
+
+    if (!found) return;
+
+    return this.get<M, T>(found.target);
   }
 
   // private

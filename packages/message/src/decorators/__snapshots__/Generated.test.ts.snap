@@ -142,8 +142,9 @@ exports[`Generated Decorator should add metadata 1`] = `
   "hooks": [],
   "message": {
     "decorator": "Message",
-    "name": null,
+    "name": "GeneratedDecoratorMessage",
     "namespace": null,
+    "target": [Function],
     "topic": null,
   },
   "priority": undefined,

@@ -20,8 +20,9 @@ exports[`CorrelationField Decorator should add metadata 1`] = `
   "hooks": [],
   "message": {
     "decorator": "Message",
-    "name": null,
+    "name": "CorrelationFieldDecoratorMessage",
     "namespace": null,
+    "target": [Function],
     "topic": null,
   },
   "priority": undefined,

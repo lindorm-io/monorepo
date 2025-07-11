@@ -6,7 +6,7 @@ export function Message(options: MessageDecoratorOptions = {}): ClassDecorator {
     globalMessageMetadata.addMessage({
       target,
       decorator: "Message",
-      name: options?.name || null,
+      name: options?.name || target.name,
       namespace: options?.namespace || null,
       topic: options?.topic || null,
     });

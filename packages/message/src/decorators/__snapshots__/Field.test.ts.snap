@@ -83,8 +83,9 @@ exports[`Field Decorator should add metadata 1`] = `
   "hooks": [],
   "message": {
     "decorator": "Message",
-    "name": null,
+    "name": "FieldDecoratorMessage",
     "namespace": null,
+    "target": [Function],
     "topic": null,
   },
   "priority": undefined,

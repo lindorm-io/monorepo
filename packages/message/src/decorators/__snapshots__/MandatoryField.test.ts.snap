@@ -20,8 +20,9 @@ exports[`MandatoryField Decorator should add metadata 1`] = `
   "hooks": [],
   "message": {
     "decorator": "Message",
-    "name": null,
+    "name": "MandatoryFieldDecoratorMessage",
     "namespace": null,
+    "target": [Function],
     "topic": null,
   },
   "priority": undefined,

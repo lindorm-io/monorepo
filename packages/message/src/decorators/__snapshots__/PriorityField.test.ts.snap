@@ -20,8 +20,9 @@ exports[`PriorityField Decorator should add metadata 1`] = `
   "hooks": [],
   "message": {
     "decorator": "Message",
-    "name": null,
+    "name": "PriorityFieldDecoratorMessage",
     "namespace": null,
+    "target": [Function],
     "topic": null,
   },
   "priority": undefined,

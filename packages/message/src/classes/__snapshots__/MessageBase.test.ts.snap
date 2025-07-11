@@ -39,8 +39,9 @@ exports[`MessageBase should have expected properties 2`] = `
   "hooks": [],
   "message": {
     "decorator": "Message",
-    "name": null,
+    "name": "TestMessageBase",
     "namespace": null,
+    "target": [Function],
     "topic": null,
   },
   "priority": undefined,

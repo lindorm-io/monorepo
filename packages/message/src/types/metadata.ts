@@ -56,7 +56,7 @@ export type MetaField<D extends MetaFieldDecorator = MetaFieldDecorator> = {
 export type MetaMessage = {
   target: Function;
   decorator: string;
-  name: string | null;
+  name: string;
   namespace: string | null;
   topic: string | null;
 };
@@ -108,7 +108,7 @@ export type MessageMetadata<
   fields: Array<Omit<MetaField<T>, "target">>;
   generated: Array<Omit<MetaGenerated, "target">>;
   hooks: Array<Omit<MetaHook<M>, "target">>;
-  message: Omit<MetaMessage, "target">;
+  message: MetaMessage;
   priority: number | null;
   schema: ZodObject<M>;
   topic: Omit<MetaTopic<M>, "target"> | null;

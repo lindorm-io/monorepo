@@ -7,8 +7,27 @@ exports[`Message Decorator should add metadata 1`] = `
   "hooks": [],
   "message": {
     "decorator": "Message",
+    "name": "MessageDecoratorMessage",
+    "namespace": null,
+    "target": [Function],
+    "topic": null,
+  },
+  "priority": undefined,
+  "schema": undefined,
+  "topic": undefined,
+}
+`;
+
+exports[`Message Decorator should add metadata with options 1`] = `
+{
+  "fields": [],
+  "generated": [],
+  "hooks": [],
+  "message": {
+    "decorator": "Message",
     "name": "name",
     "namespace": "namespace",
+    "target": [Function],
     "topic": "topic",
   },
   "priority": undefined,

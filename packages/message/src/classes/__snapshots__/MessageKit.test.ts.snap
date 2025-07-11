@@ -371,8 +371,9 @@ exports[`MessageKit should calculate message 1`] = `
   ],
   "message": {
     "decorator": "Message",
-    "name": null,
+    "name": "TestMessageKit",
     "namespace": null,
+    "target": [Function],
     "topic": null,
   },
   "priority": undefined,

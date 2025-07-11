@@ -25,8 +25,9 @@ exports[`OnCreate Decorator should add metadata 1`] = `
   ],
   "message": {
     "decorator": "Message",
-    "name": null,
+    "name": "OnCreateDecoratorMessage",
     "namespace": null,
+    "target": [Function],
     "topic": null,
   },
   "priority": undefined,
