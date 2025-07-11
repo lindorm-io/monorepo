@@ -12,3 +12,4 @@ export * from "./safely-parse";
 export * from "./sleep";
 export * from "./sort-keys";
 export * from "./uniq";
+export * from "./wait";
