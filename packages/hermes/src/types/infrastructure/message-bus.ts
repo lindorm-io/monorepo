@@ -1,11 +1,13 @@
 import { ILogger } from "@lindorm/logger";
-import { IRabbitMessageBus, IRabbitSource } from "@lindorm/rabbit";
+import { IRabbitSource } from "@lindorm/rabbit";
+import { IRedisSource } from "@lindorm/redis";
 import { Constructor } from "@lindorm/types";
-import { IHermesMessage } from "../../interfaces";
+import { IHermesMessage, IHermesMessageBus } from "../../interfaces";
 
 export type MessageBusOptions<M extends IHermesMessage = IHermesMessage> = {
-  custom?: IRabbitMessageBus<M>;
+  custom?: IHermesMessageBus<M>;
   rabbit?: IRabbitSource;
+  redis?: IRedisSource;
 };
 
 export type HermesMessageBusOptions<M extends IHermesMessage = IHermesMessage> =
