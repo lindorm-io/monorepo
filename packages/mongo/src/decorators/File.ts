@@ -12,7 +12,7 @@ export function File(options: FileDecoratorOptions = {}): ClassDecorator {
       cache: null,
       database: options?.database || null,
       decorator: "File",
-      name: options?.name || null,
+      name: options?.name || target.name,
       namespace: options?.namespace || null,
     });
     if (options.chunkSizeBytes) {
