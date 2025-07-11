@@ -8,7 +8,7 @@ export function Entity(options: EntityDecoratorOptions = {}): ClassDecorator {
       decorator: "Entity",
       cache: options?.cache || null,
       database: options?.database || null,
-      name: options?.name || null,
+      name: options?.name || target.name,
       namespace: options?.namespace || null,
     });
   };

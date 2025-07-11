@@ -63,7 +63,7 @@ export type MetaEntity = {
   decorator: string;
   cache: string | null;
   database: string | null;
-  name: string | null;
+  name: string;
   namespace: string | null;
 };
 
@@ -185,7 +185,7 @@ export type EntityMetadata<
   TSource extends MetaSource = MetaSource,
 > = {
   columns: Array<Omit<MetaColumn<TDecorator>, "target">>;
-  entity: Omit<MetaEntity, "target">;
+  entity: MetaEntity;
   extras: Array<Omit<MetaExtra<TExtra>, "target">>;
   generated: Array<Omit<MetaGenerated, "target">>;
   hooks: Array<Omit<MetaHook, "target">>;

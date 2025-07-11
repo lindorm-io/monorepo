@@ -23,6 +23,7 @@ exports[`Entity Decorator should add metadata 1`] = `
     "decorator": "Entity",
     "name": "name",
     "namespace": "namespace",
+    "target": [Function],
   },
   "extras": [],
   "generated": [],

@@ -132,15 +132,13 @@ export class GlobalEntityMetadata {
     const cached = this.getCache<TExtra, TDecorator, TSource>(target);
     if (cached) return cached;
 
-    const [foundEntity] = this.getMeta<MetaEntity>(target, "entities");
+    const [entity] = this.getMeta<MetaEntity>(target, "entities");
 
-    if (!foundEntity) {
+    if (!entity) {
       throw new EntityMetadataError("Entity metadata not found", {
         debug: { Entity: target.name },
       });
     }
-
-    const { target: _, ...entity } = foundEntity;
 
     const columns = this.getMeta<MetaColumn<TDecorator>>(target, "columns").map(
       ({ target, ...rest }) => rest,
@@ -396,6 +394,18 @@ export class GlobalEntityMetadata {
     this.setCache(target, final);
 
     return final;
+  }
+
+  public find<
+    TExtra extends Dict = Dict,
+    TDecorator extends MetaColumnDecorator = MetaColumnDecorator,
+    TSource extends MetaSource = MetaSource,
+  >(name: string): EntityMetadata<TExtra, TDecorator, TSource> | undefined {
+    const found = this.entities.find((e) => e.name === name);
+
+    if (!found) return;
+
+    return this.get<TExtra, TDecorator, TSource>(found.target);
   }
 
   // private
