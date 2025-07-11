@@ -35,6 +35,7 @@
     "@lindorm/errors": "^0.1.10",
     "@lindorm/is": "^0.1.9",
     "@lindorm/json-kit": "^0.5.1",
+    "@lindorm/message": "^0.1.1",
     "@lindorm/scanner": "^0.3.5",
     "@lindorm/utils": "^0.5.1",
     "ioredis": "^5.4.1",

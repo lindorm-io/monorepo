@@ -1,7 +1,13 @@
 import { EntityScannerInput, IEntity } from "@lindorm/entity";
+import { IMessage, MessageScannerInput } from "@lindorm/message";
 import { Constructor } from "@lindorm/types";
 import { Redis } from "ioredis";
-import { CloneRedisSourceOptions, RedisSourceRepositoryOptions } from "../types";
+import {
+  CloneRedisSourceOptions,
+  RedisSourceMessageBusOptions,
+  RedisSourceRepositoryOptions,
+} from "../types";
+import { IRedisMessageBus } from "./RedisMessageBus";
 import { IRedisRepository } from "./RedisRepository";
 
 export interface IRedisSource {
@@ -19,4 +25,10 @@ export interface IRedisSource {
     Entity: Constructor<E>,
     options?: RedisSourceRepositoryOptions,
   ): IRedisRepository<E>;
+
+  addMessages(messages: MessageScannerInput): void;
+  messageBus<M extends IMessage>(
+    Message: Constructor<M>,
+    options?: RedisSourceMessageBusOptions,
+  ): IRedisMessageBus<M>;
 }
