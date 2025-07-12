@@ -4,7 +4,7 @@ import { Constructor } from "@lindorm/types";
 import { IMnemosCache } from "../interfaces";
 
 export type MnemosRepositoryOptions<E extends IEntity = IEntity> = {
-  Entity: Constructor<E>;
+  target: Constructor<E>;
   cache: IMnemosCache;
   logger: ILogger;
   namespace?: string;

@@ -8,11 +8,11 @@ export const defaultCreateEntity = <
   E extends IEntity,
   O extends DeepPartial<E> = DeepPartial<E>,
 >(
-  Entity: Constructor<E>,
+  target: Constructor<E>,
   options: O | E = {} as O,
 ): E => {
-  const metadata = globalEntityMetadata.get(Entity);
-  const entity = new Entity();
+  const metadata = globalEntityMetadata.get(target);
+  const entity = new target();
 
   for (const column of metadata.columns) {
     (entity as any)[column.key] = parseColumn(column, entity, options);

@@ -5,6 +5,6 @@ import { TestEntity, TestEntityOptions } from "./test-entity";
 
 export class TestRepository extends MnemosRepository<TestEntity, TestEntityOptions> {
   public constructor(cache: IMnemosCache, logger: ILogger) {
-    super({ Entity: TestEntity, cache, logger });
+    super({ target: TestEntity, cache, logger });
   }
 }

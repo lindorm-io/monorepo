@@ -135,13 +135,13 @@ describe("EntityKit", () => {
 
   beforeEach(() => {
     kit = new EntityKit({
-      Entity: TestEntityUtility,
+      target: TestEntityUtility,
       logger: createMockLogger(),
       source: "external",
       getNextIncrement: jest.fn().mockResolvedValue(999),
     });
     kitVer = new EntityKit({
-      Entity: TestEntityUtilityVersioned,
+      target: TestEntityUtilityVersioned,
       logger: createMockLogger(),
       source: "mongo",
       getNextIncrement: jest.fn().mockResolvedValue(999),
@@ -162,7 +162,7 @@ describe("EntityKit", () => {
 
   test("should calculate primary source", () => {
     kit = new EntityKit({
-      Entity: TestEntityUtility,
+      target: TestEntityUtility,
       logger: createMockLogger(),
       source: "redis",
       getNextIncrement: jest.fn().mockResolvedValue(999),

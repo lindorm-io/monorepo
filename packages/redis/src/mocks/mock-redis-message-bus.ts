@@ -1,14 +1,14 @@
-import { IMessage, MessageKit } from "@lindorm/message";
+import { IMessage, IMessageSubscription, MessageKit } from "@lindorm/message";
 import { Constructor } from "@lindorm/types";
-import { IRedisMessageBus, IRedisSubscription } from "../interfaces";
+import { IRedisMessageBus } from "../interfaces";
 
 export const createMockRedisMessageBus = <M extends IMessage>(
-  Message: Constructor<M>,
+  target: Constructor<M>,
   log = false,
 ): IRedisMessageBus<M> => {
-  const kit = new MessageKit({ Message });
+  const kit = new MessageKit({ target });
 
-  let array: Array<IRedisSubscription<M>> = [];
+  let array: Array<IMessageSubscription<M>> = [];
 
   return {
     create: jest.fn().mockImplementation((args) => kit.create(args)),

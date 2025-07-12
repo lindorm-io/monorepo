@@ -8,11 +8,11 @@ export const defaultCreateMessage = <
   M extends IMessage,
   O extends DeepPartial<M> = DeepPartial<M>,
 >(
-  Message: Constructor<M>,
+  target: Constructor<M>,
   options: O | M = {} as O,
 ): M => {
-  const metadata = globalMessageMetadata.get(Message);
-  const message = new Message();
+  const metadata = globalMessageMetadata.get(target);
+  const message = new target();
 
   for (const field of metadata.fields) {
     (message as any)[field.key] = parseField(field, message, options);

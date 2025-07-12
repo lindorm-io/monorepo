@@ -3,10 +3,10 @@ import { IEntity } from "../interfaces";
 import { globalEntityMetadata } from "./global";
 
 export const defaultUpdateEntity = <E extends IEntity>(
-  Entity: Constructor<E>,
+  target: Constructor<E>,
   entity: E,
 ): E => {
-  const metadata = globalEntityMetadata.get(Entity);
+  const metadata = globalEntityMetadata.get(target);
 
   const updateDate = metadata.columns.find((c) => c.decorator === "UpdateDateColumn");
   if (updateDate) {

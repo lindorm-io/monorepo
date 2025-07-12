@@ -13,7 +13,7 @@ const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate);
 
 describe("ChecksumStore", () => {
-  const eventKit = new MessageKit({ Message: HermesEvent });
+  const eventKit = new MessageKit({ target: HermesEvent });
 
   const logger = createMockLogger();
 

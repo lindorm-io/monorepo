@@ -70,10 +70,10 @@ const validator = (
 };
 
 export const defaultGenerateEntity = <E extends IEntity>(
-  Entity: Constructor<E>,
+  target: Constructor<E>,
   entity: DeepPartial<E>,
 ): E => {
-  const metadata = globalEntityMetadata.get(Entity);
+  const metadata = globalEntityMetadata.get(target);
 
   for (const config of metadata.generated) {
     if (entity[config.key]) continue;

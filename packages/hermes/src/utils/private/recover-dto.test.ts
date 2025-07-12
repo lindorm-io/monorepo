@@ -16,7 +16,7 @@ describe("recoverCommand", () => {
 
     const evt = new TestRecoverCommand("test", 123);
 
-    const kit = new MessageKit({ Message: HermesCommand<TestRecoverCommand> });
+    const kit = new MessageKit({ target: HermesCommand<TestRecoverCommand> });
 
     const msg = kit.create({
       id: "330b2d1b-b9c9-5b03-91af-ea3f94b655b6",
@@ -54,7 +54,7 @@ describe("recoverEvent", () => {
 
     const evt = new TestRecoverEvent("test", 123);
 
-    const kit = new MessageKit({ Message: HermesEvent<TestRecoverEvent> });
+    const kit = new MessageKit({ target: HermesEvent<TestRecoverEvent> });
 
     const msg = kit.create({
       id: "330b2d1b-b9c9-5b03-91af-ea3f94b655b6",

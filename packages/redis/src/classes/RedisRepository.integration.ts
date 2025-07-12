@@ -69,7 +69,7 @@ describe("RedisRepository", () => {
 
   test("should validate an entity", async () => {
     const repo = new RedisRepository({
-      Entity: TestEntityOne,
+      target: TestEntityOne,
       client: client,
       logger: createMockLogger(),
       namespace: "ns",
@@ -332,7 +332,7 @@ describe("RedisRepository", () => {
 
   test("should not automatically update entity from another source", async () => {
     const repository = new RedisRepository({
-      Entity: TestEntityOne,
+      target: TestEntityOne,
       client,
       logger: createMockLogger(),
     });
@@ -363,7 +363,7 @@ describe("RedisRepository", () => {
 
   test("should handle entity scoping", async () => {
     const repository = new RedisRepository({
-      Entity: TestEntityThree,
+      target: TestEntityThree,
       client,
       logger: createMockLogger(),
     });

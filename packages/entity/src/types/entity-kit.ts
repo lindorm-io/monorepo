@@ -5,10 +5,10 @@ import { IEntity } from "../interfaces";
 export type GetIncrementFn = (key: string) => Promise<number>;
 
 export type EntityKitOptions<E extends IEntity> = {
-  Entity: Constructor<E>;
+  getNextIncrement?: GetIncrementFn;
   logger?: ILogger;
   source: string;
-  getNextIncrement?: GetIncrementFn;
+  target: Constructor<E>;
 };
 
 export type NamespaceOptions = {

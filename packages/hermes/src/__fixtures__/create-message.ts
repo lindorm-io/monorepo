@@ -5,10 +5,10 @@ import { HermesCommand, HermesError, HermesEvent, HermesTimeout } from "../messa
 import { extractDataTransferObject } from "../utils/private";
 import { createTestAggregateIdentifier } from "./create-test-aggregate-identifier";
 
-const commandKit = new MessageKit({ Message: HermesCommand });
-const errorKit = new MessageKit({ Message: HermesError });
-const eventKit = new MessageKit({ Message: HermesEvent });
-const timeoutKit = new MessageKit({ Message: HermesTimeout });
+const commandKit = new MessageKit({ target: HermesCommand });
+const errorKit = new MessageKit({ target: HermesError });
+const eventKit = new MessageKit({ target: HermesEvent });
+const timeoutKit = new MessageKit({ target: HermesTimeout });
 
 export const createTestCommand = (
   dto: ClassLike,

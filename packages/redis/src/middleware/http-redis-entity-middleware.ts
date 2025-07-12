@@ -21,11 +21,11 @@ export const createHttpRedisEntityMiddleware =
     C extends RedisPylonHttpContext = RedisPylonHttpContext,
     E extends Constructor<IEntity> = Constructor<IEntity>,
   >(
-    Entity: E,
+    target: E,
     source?: IRedisSource,
   ) =>
   (path: Path<E>, options: Options = {}): RedisPylonHttpMiddleware<C> => {
-    const metadata = globalEntityMetadata.get(Entity);
+    const metadata = globalEntityMetadata.get(target);
     const primaryKey = metadata.columns.find((c) => c.decorator === "PrimaryKeyColumn");
 
     return async function httpRedisEntityMiddleware(ctx, next): Promise<void> {
@@ -62,10 +62,10 @@ export const createHttpRedisEntityMiddleware =
       }
 
       const repository = source
-        ? source.repository(Entity, { logger: ctx.logger })
-        : ctx.sources.redis.repository(Entity);
+        ? source.repository(target, { logger: ctx.logger })
+        : ctx.sources.redis.repository(target);
 
-      const name = camelCase(Entity.name);
+      const name = camelCase(target.name);
       const found = await repository.findOne(filter);
 
       if (found) {

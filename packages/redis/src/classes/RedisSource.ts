@@ -32,6 +32,7 @@ import { DelayedMessageWorker } from "./private";
 export class RedisSource implements IRedisSource {
   public readonly name = "RedisSource";
 
+  private readonly cache: Map<Constructor<IMessage>, IRedisMessageBus<IMessage>>;
   private readonly delayedMessageWorker: DelayedMessageWorker;
   private readonly entities: Array<Constructor<IEntity>>;
   private readonly logger: ILogger;
@@ -50,6 +51,7 @@ export class RedisSource implements IRedisSource {
     if ("_mode" in options && options._mode === "from_clone") {
       const opts = options as FromClone;
 
+      this.cache = opts.cache;
       this.delayedMessageWorker = opts.delayedMessageWorker;
       this.client = opts.client;
       this.entities = opts.entities;
@@ -58,6 +60,7 @@ export class RedisSource implements IRedisSource {
     } else {
       const opts = options as RedisSourceOptions;
 
+      this.cache = new Map();
       this.client = opts.config ? new Redis(opts.url, opts.config) : new Redis(opts.url);
       this.entities = opts.entities ? EntityScanner.scan<IEntity>(opts.entities) : [];
       this.messages = opts.messages ? MessageScanner.scan<IMessage>(opts.messages) : [];
@@ -75,6 +78,7 @@ export class RedisSource implements IRedisSource {
   public clone(options: CloneRedisSourceOptions = {}): IRedisSource {
     return new RedisSource({
       _mode: "from_clone",
+      cache: this.cache,
       client: this.client,
       delayedMessageWorker: this.delayedMessageWorker,
       entities: this.entities,
@@ -130,13 +134,13 @@ export class RedisSource implements IRedisSource {
   }
 
   public repository<E extends IEntity>(
-    Entity: Constructor<E>,
+    target: Constructor<E>,
     options: RedisSourceRepositoryOptions = {},
   ): IRedisRepository<E> {
-    this.entityExists(Entity);
+    this.entityExists(target);
 
     return new RedisRepository({
-      Entity,
+      target: target,
       client: this.client,
       logger: options.logger ?? this.logger,
       namespace: this.namespace,
@@ -144,53 +148,60 @@ export class RedisSource implements IRedisSource {
   }
 
   public messageBus<M extends IMessage>(
-    Message: Constructor<M>,
+    target: Constructor<M>,
     options: RedisSourceMessageBusOptions = {},
   ): IRedisMessageBus<M> {
-    this.messageExists(Message);
+    if (!this.cache.has(target)) {
+      this.messageExists(target);
 
-    return new RedisMessageBus({
-      Message,
-      client: this.client,
-      logger: options.logger ?? this.logger,
-      subscriptions: this.subscriptions,
-    });
+      this.cache.set(
+        target,
+        new RedisMessageBus({
+          target: target,
+          client: this.client,
+          logger: options.logger ?? this.logger,
+          subscriptions: this.subscriptions,
+        }),
+      );
+    }
+
+    return this.cache.get(target) as IRedisMessageBus<M>;
   }
 
   // private
 
-  private entityExists<E extends IEntity>(Entity: Constructor<E>): void {
-    const config = this.entities.find((e) => e === Entity);
+  private entityExists<E extends IEntity>(target: Constructor<E>): void {
+    const config = this.entities.find((e) => e === target);
 
     if (!config) {
       throw new RedisSourceError("Entity not found in entities list", {
-        debug: { Entity },
+        debug: { target },
       });
     }
 
-    const metadata = globalEntityMetadata.get(Entity);
+    const metadata = globalEntityMetadata.get(target);
 
     if (metadata.entity.decorator !== "Entity") {
       throw new RedisSourceError(`Entity is not decorated with @Entity`, {
-        debug: { Entity },
+        debug: { target },
       });
     }
   }
 
-  private messageExists<M extends IMessage>(Message: Constructor<M>): void {
-    const config = this.messages.find((m) => m === Message);
+  private messageExists<M extends IMessage>(target: Constructor<M>): void {
+    const config = this.messages.find((m) => m === target);
 
     if (!config) {
       throw new RedisSourceError("Message not found in messages list", {
-        debug: { Message },
+        debug: { target },
       });
     }
 
-    const metadata = globalMessageMetadata.get(Message);
+    const metadata = globalMessageMetadata.get(target);
 
     if (metadata.message.decorator !== "Message") {
       throw new RedisSourceError(`Message is not decorated with @Message`, {
-        debug: { Message },
+        debug: { target },
       });
     }
   }

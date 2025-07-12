@@ -13,8 +13,8 @@ export class MessageSubscriptions implements IMessageSubscriptions {
     return this._subscriptions;
   }
 
-  public all(Message: Constructor<IMessage>): Array<IMessageSubscription> {
-    return this._subscriptions.filter((x) => x.target === Message);
+  public all(target: Constructor<IMessage>): Array<IMessageSubscription> {
+    return this._subscriptions.filter((x) => x.target === target);
   }
 
   public add(subscription: IMessageSubscription): void {

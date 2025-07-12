@@ -4,8 +4,8 @@ import { Constructor } from "@lindorm/types";
 import { Redis } from "ioredis";
 
 export type RedisMessageBusOptions<M extends IMessage> = {
-  Message: Constructor<M>;
   client: Redis;
   logger: ILogger;
   subscriptions: IMessageSubscriptions;
+  target: Constructor<M>;
 };

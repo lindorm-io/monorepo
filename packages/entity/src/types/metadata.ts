@@ -59,7 +59,7 @@ export type MetaColumn<T extends MetaColumnDecorator = MetaColumnDecorator> = {
 };
 
 export type MetaEntity = {
-  target: Function;
+  target: Constructor<IEntity>;
   decorator: string;
   cache: string | null;
   database: string | null;

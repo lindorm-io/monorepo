@@ -1,7 +1,7 @@
 import { LindormError } from "@lindorm/errors";
-import { IRabbitSubscription, PublishOptions } from "@lindorm/rabbit";
+import { SubscribeOptions } from "@lindorm/message";
 import { DeepPartial } from "@lindorm/types";
-import { IHermesMessage, IHermesMessageBus } from "../interfaces";
+import { IHermesMessage, IHermesMessageBus, PublishOptions } from "../interfaces";
 import { HermesMessageBusOptions } from "../types";
 
 export class MessageBus<M extends IHermesMessage> implements IHermesMessageBus<M> {
@@ -38,7 +38,7 @@ export class MessageBus<M extends IHermesMessage> implements IHermesMessageBus<M
   }
 
   public subscribe(
-    subscription: IRabbitSubscription<M> | Array<IRabbitSubscription<M>>,
+    subscription: SubscribeOptions<M> | Array<SubscribeOptions<M>>,
   ): Promise<void> {
     return this.bus.subscribe(subscription);
   }

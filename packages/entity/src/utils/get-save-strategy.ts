@@ -4,10 +4,10 @@ import { SaveStrategy } from "../types";
 import { globalEntityMetadata } from "./global";
 
 export const getSaveStrategy = <E extends IEntity>(
-  Entity: Constructor<E>,
+  target: Constructor<E>,
   entity: E,
 ): SaveStrategy => {
-  const metadata = globalEntityMetadata.get(Entity);
+  const metadata = globalEntityMetadata.get(target);
 
   const generate = metadata.generated.map((g) => entity[g.key]);
   const version = metadata.columns.find((c) => c.decorator === "VersionColumn");

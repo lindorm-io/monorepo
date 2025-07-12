@@ -1,11 +1,7 @@
-import { IMessage } from "@lindorm/message";
+import { IMessage, MessageScannerInput } from "@lindorm/message";
 import { Constructor } from "@lindorm/types";
 import { ChannelModel } from "amqplib";
-import {
-  CloneRabbitSourceOptions,
-  MessageScannerInput,
-  RabbitSourceMessageBusOptions,
-} from "../types";
+import { CloneRabbitSourceOptions, RabbitSourceMessageBusOptions } from "../types";
 import { IRabbitMessageBus } from "./RabbitMessageBus";
 
 export interface IRabbitSource {
@@ -20,7 +16,7 @@ export interface IRabbitSource {
 
   addMessages(messages: MessageScannerInput): void;
   messageBus<M extends IMessage>(
-    Message: Constructor<M>,
+    target: Constructor<M>,
     options?: RabbitSourceMessageBusOptions,
   ): IRabbitMessageBus<M>;
 }

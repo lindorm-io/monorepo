@@ -19,7 +19,7 @@ export const createMockRedisSource = (): IRedisSource => ({
   addMessages: jest.fn(),
   messageBus: jest
     .fn()
-    .mockImplementation((Message: Constructor<IMessage>) =>
-      createMockRedisMessageBus(Message),
+    .mockImplementation((target: Constructor<IMessage>) =>
+      createMockRedisMessageBus(target),
     ),
 });

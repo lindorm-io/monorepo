@@ -4,11 +4,11 @@ import { Constructor } from "@lindorm/types";
 import { ConfirmChannel } from "amqplib";
 
 export type RabbitBusOptions<M extends IMessage> = {
-  Message: Constructor<M>;
   channel: ConfirmChannel;
   deadletters: string;
   exchange: string;
   logger: ILogger;
   nackTimeout: number;
   subscriptions: IMessageSubscriptions;
+  target: Constructor<M>;
 };

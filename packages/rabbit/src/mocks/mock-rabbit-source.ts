@@ -13,7 +13,7 @@ export const createMockRabbitSource = (): IRabbitSource => ({
   setup: jest.fn(),
   messageBus: jest
     .fn()
-    .mockImplementation((Message: Constructor<IMessage>) =>
-      createMockRabbitMessageBus(Message),
+    .mockImplementation((target: Constructor<IMessage>) =>
+      createMockRabbitMessageBus(target),
     ),
 });

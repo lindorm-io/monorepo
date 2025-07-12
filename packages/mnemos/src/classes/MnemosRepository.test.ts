@@ -201,7 +201,7 @@ describe("MnemosRepository", () => {
 
   test("should validate an entity when it exists", async () => {
     const repo = new MnemosRepository({
-      Entity: TestEntityOne,
+      target: TestEntityOne,
       logger: createMockLogger(),
       cache: cache,
     });

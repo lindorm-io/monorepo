@@ -136,7 +136,7 @@ export class GlobalEntityMetadata {
 
     if (!entity) {
       throw new EntityMetadataError("Entity metadata not found", {
-        debug: { Entity: target.name },
+        debug: { target: target.name },
       });
     }
 
@@ -173,21 +173,21 @@ export class GlobalEntityMetadata {
       if (!columns.find((a) => a.decorator === "PrimaryKeyColumn")) {
         throw new EntityMetadataError("Invalid @Entity versioning", {
           details: "@PrimaryKeyColumn not found",
-          debug: { Entity: target.name },
+          debug: { target: target.name },
         });
       }
 
       if (!columns.find((a) => a.decorator === "VersionStartDateColumn")) {
         throw new EntityMetadataError("Invalid @Entity versioning", {
           details: "@VersionStartDateColumn not found",
-          debug: { Entity: target.name },
+          debug: { target: target.name },
         });
       }
 
       if (!columns.find((a) => a.decorator === "VersionEndDateColumn")) {
         throw new EntityMetadataError("Invalid @Entity versioning", {
           details: "@VersionEndDateColumn not found",
-          debug: { Entity: target.name },
+          debug: { target: target.name },
         });
       }
     }
@@ -195,7 +195,7 @@ export class GlobalEntityMetadata {
     for (const column of columns) {
       if (columns.filter((a) => a.key === column.key).length > 1) {
         throw new EntityMetadataError("Duplicate column metadata", {
-          debug: { Entity: target.name, column: column.key },
+          debug: { target: target.name, column: column.key },
         });
       }
 
@@ -206,14 +206,14 @@ export class GlobalEntityMetadata {
         columns.filter((a) => a.decorator === decorator).length > 1
       ) {
         throw new EntityMetadataError("Duplicate unique column type", {
-          debug: { Entity: target.name, column: column.key, decorator: decorator },
+          debug: { target: target.name, column: column.key, decorator: decorator },
         });
       }
 
       if (decorator === "Column" && column.type === "enum" && !column.enum) {
         throw new EntityMetadataError("Invalid @Column enum", {
           details: "@Column enum type requires an enum option",
-          debug: { Entity: target.name, column: column.key },
+          debug: { target: target.name, column: column.key },
         });
       }
 
@@ -324,20 +324,20 @@ export class GlobalEntityMetadata {
     for (const index of indexes) {
       if (!index.keys.length) {
         throw new EntityMetadataError("Index columns not found", {
-          debug: { Entity: target.name, index: index.name },
+          debug: { target: target.name, index: index.name },
         });
       }
 
       if (indexes.filter((i) => i.name !== null && i.name === index.name).length > 1) {
         throw new EntityMetadataError("Duplicate index name", {
-          debug: { Entity: target.name, index: index.name },
+          debug: { target: target.name, index: index.name },
         });
       }
 
       for (const { key } of index.keys) {
         if (columns.find((a) => a.key === key)) continue;
         throw new EntityMetadataError("Index column not found", {
-          debug: { Entity: target.name, key, index: index.name },
+          debug: { target: target.name, key, index: index.name },
         });
       }
 
@@ -350,7 +350,7 @@ export class GlobalEntityMetadata {
         ).length > 1
       ) {
         throw new EntityMetadataError("Duplicate index keys", {
-          debug: { Entity: target.name, index: index.name },
+          debug: { target: target.name, index: index.name },
         });
       }
     }
@@ -360,21 +360,21 @@ export class GlobalEntityMetadata {
     if (!primaryKeys.length) {
       throw new EntityMetadataError("Invalid @Entity", {
         details: "Primary key not found",
-        debug: { Entity: target.name },
+        debug: { target: target.name },
       });
     }
 
     for (const column of primaryKeys) {
       if (columns.find((a) => a.key === column)) continue;
       throw new EntityMetadataError("Primary key column not found", {
-        debug: { Entity: target.name, column },
+        debug: { target: target.name, column },
       });
     }
 
     for (const generate of generated) {
       if (columns.find((a) => a.key === generate.key)) continue;
       throw new EntityMetadataError("Generate column not found", {
-        debug: { Entity: target.name, column: generate.key },
+        debug: { target: target.name, column: generate.key },
       });
     }
 

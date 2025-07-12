@@ -67,7 +67,7 @@ export class MnemosSource implements IMnemosSource {
     this.configExists(Entity);
 
     return new MnemosRepository({
-      Entity,
+      target: Entity,
       cache: this.client,
       logger: options.logger ?? this.logger,
       namespace: options.namespace,

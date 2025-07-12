@@ -8,7 +8,7 @@ export type FindOptions<E extends IEntity> = MongoFindOptions<E> & {
 };
 
 export type MongoRepositoryOptions<E extends IEntity> = {
-  Entity: Constructor<E>;
+  target: Constructor<E>;
   client: MongoClient;
   database?: string;
   logger: ILogger;

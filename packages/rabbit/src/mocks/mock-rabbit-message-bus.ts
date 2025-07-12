@@ -3,10 +3,10 @@ import { Constructor } from "@lindorm/types";
 import { IRabbitMessageBus } from "../interfaces";
 
 export const createMockRabbitMessageBus = <M extends IMessage>(
-  Message: Constructor<M>,
+  target: Constructor<M>,
   log = false,
 ): IRabbitMessageBus<M> => {
-  const kit = new MessageKit({ Message });
+  const kit = new MessageKit({ target });
 
   let array: Array<IMessageSubscription<M>> = [];
 

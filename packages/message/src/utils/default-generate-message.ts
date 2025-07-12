@@ -70,10 +70,10 @@ const validator = (
 };
 
 export const defaultGenerateMessage = <M extends IMessage>(
-  Message: Constructor<M>,
+  target: Constructor<M>,
   message: DeepPartial<M>,
 ): M => {
-  const metadata = globalMessageMetadata.get(Message);
+  const metadata = globalMessageMetadata.get(target);
 
   for (const config of metadata.generated) {
     if (message[config.key]) continue;

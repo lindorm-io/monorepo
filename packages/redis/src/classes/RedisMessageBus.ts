@@ -9,7 +9,7 @@ import {
   SubscribeOptions,
   UnsubscribeOptions,
 } from "@lindorm/message";
-import { Constructor, DeepPartial, Dict } from "@lindorm/types";
+import { DeepPartial, Dict } from "@lindorm/types";
 import { randomBytes } from "crypto";
 import { Redis } from "ioredis";
 import { IRedisMessageBus } from "../interfaces/RedisMessageBus";
@@ -20,17 +20,15 @@ export class RedisMessageBus<
   O extends DeepPartial<M> = DeepPartial<M>,
 > implements IRedisMessageBus<M, O>
 {
-  private readonly MessageConstructor: Constructor<M>;
   private readonly client: Redis;
   private readonly kit: MessageKit<M, O>;
   private readonly logger: ILogger;
   private readonly subscriptions: IMessageSubscriptions;
 
   public constructor(options: RedisMessageBusOptions<M>) {
-    this.logger = options.logger.child(["RedisMessageBus", options.Message.name]);
-    this.kit = new MessageKit<M, O>({ Message: options.Message, logger: this.logger });
+    this.logger = options.logger.child(["RedisMessageBus", options.target.name]);
+    this.kit = new MessageKit<M, O>({ target: options.target, logger: this.logger });
 
-    this.MessageConstructor = options.Message;
     this.client = options.client;
     this.subscriptions = options.subscriptions;
   }
@@ -50,7 +48,7 @@ export class RedisMessageBus<
     const array = isArray(message) ? message : [message];
 
     const messages = array.map((m) =>
-      m instanceof this.MessageConstructor ? m : this.create(m),
+      m instanceof this.kit.metadata.message.target ? m : this.create(m),
     );
 
     this.logger.verbose("Publishing messages", { messages });
@@ -144,7 +142,7 @@ export class RedisMessageBus<
       callback: options.callback,
       consumerTag: options.consumerTag ?? randomBytes(16).toString("base64url"),
       queue: options.queue ?? `queue.${options.topic}`,
-      target: this.MessageConstructor,
+      target: this.kit.metadata.message.target,
       topic: options.topic,
     };
 
@@ -254,7 +252,7 @@ export class RedisMessageBus<
   }
 
   private async handleUnsubscribeAll(): Promise<void> {
-    for (const subscription of this.subscriptions.all(this.MessageConstructor)) {
+    for (const subscription of this.subscriptions.all(this.kit.metadata.message.target)) {
       await this.handleUnsubscribe(subscription);
     }
   }

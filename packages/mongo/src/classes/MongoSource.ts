@@ -123,7 +123,7 @@ export class MongoSource implements IMongoSource {
     this.entityExists(Entity);
 
     return new MongoRepository({
-      Entity,
+      target: Entity,
       client: this.client,
       database: this.databaseName,
       logger: options.logger ?? this.logger,

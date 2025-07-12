@@ -5,6 +5,7 @@ import {
   IMessage,
   IMessageSubscriptions,
   MessageScanner,
+  MessageScannerInput,
   MessageSubscriptions,
 } from "@lindorm/message";
 import { Constructor } from "@lindorm/types";
@@ -14,7 +15,6 @@ import { RabbitSourceError } from "../errors";
 import { IRabbitMessageBus, IRabbitSource } from "../interfaces";
 import {
   CloneRabbitSourceOptions,
-  MessageScannerInput,
   RabbitSourceMessageBusOptions,
   RabbitSourceOptions,
 } from "../types";
@@ -25,6 +25,7 @@ import { RabbitMessageBus } from "./RabbitMessageBus";
 export class RabbitSource implements IRabbitSource {
   public readonly name = "RabbitSource";
 
+  private readonly cache: Map<Constructor<IMessage>, IRabbitMessageBus<IMessage>>;
   private readonly deadletters: string;
   private readonly exchange: string;
   private readonly logger: ILogger;
@@ -47,6 +48,7 @@ export class RabbitSource implements IRabbitSource {
     if ("_mode" in options && options._mode === "from_clone") {
       const opts = options as FromClone;
 
+      this.cache = opts.cache;
       this.confirmChannel = opts.confirmChannel;
       this.promise = Promise.resolve(opts.channelModel);
       this.channelModel = opts.channelModel;
@@ -55,6 +57,7 @@ export class RabbitSource implements IRabbitSource {
     } else {
       const opts = options as RabbitSourceOptions;
 
+      this.cache = new Map();
       this.messages = opts.messages ? MessageScanner.scan(opts.messages) : [];
       this.promise = this.connectWithRetry(opts);
       this.subscriptions = new MessageSubscriptions();
@@ -87,6 +90,7 @@ export class RabbitSource implements IRabbitSource {
     }
     return new RabbitSource({
       _mode: "from_clone",
+      cache: this.cache,
       channelModel: this.channelModel,
       confirmChannel: this.confirmChannel,
       deadletters: this.deadletters,
@@ -108,20 +112,27 @@ export class RabbitSource implements IRabbitSource {
   }
 
   public messageBus<M extends IMessage>(
-    Message: Constructor<M>,
+    target: Constructor<M>,
     options: RabbitSourceMessageBusOptions = {},
   ): IRabbitMessageBus<M> {
-    this.messageExists(Message);
+    if (!this.cache.has(target)) {
+      this.messageExists(target);
 
-    return new RabbitMessageBus<M>({
-      Message,
-      channel: this.channel,
-      deadletters: this.deadletters,
-      exchange: this.exchange,
-      logger: options.logger ?? this.logger,
-      nackTimeout: options.nackTimeout ?? this.nackTimeout,
-      subscriptions: this.subscriptions,
-    });
+      this.cache.set(
+        target,
+        new RabbitMessageBus<M>({
+          target: target,
+          channel: this.channel,
+          deadletters: this.deadletters,
+          exchange: this.exchange,
+          logger: options.logger ?? this.logger,
+          nackTimeout: options.nackTimeout ?? this.nackTimeout,
+          subscriptions: this.subscriptions,
+        }),
+      );
+    }
+
+    return this.cache.get(target) as IRabbitMessageBus<M>;
   }
 
   public async setup(): Promise<void> {
@@ -151,20 +162,20 @@ export class RabbitSource implements IRabbitSource {
     return this.confirmChannel;
   }
 
-  private messageExists<M extends IMessage>(Message: Constructor<M>): void {
-    const config = this.messages.find((m) => m === Message);
+  private messageExists<M extends IMessage>(target: Constructor<M>): void {
+    const config = this.messages.find((m) => m === target);
 
     if (!config) {
       throw new RabbitSourceError("Message not found in messages list", {
-        debug: { Message },
+        debug: { target },
       });
     }
 
-    const metadata = globalMessageMetadata.get(Message);
+    const metadata = globalMessageMetadata.get(target);
 
     if (metadata.message.decorator !== "Message") {
       throw new RabbitSourceError(`Message is not decorated with @Message`, {
-        debug: { Message },
+        debug: { target },
       });
     }
   }

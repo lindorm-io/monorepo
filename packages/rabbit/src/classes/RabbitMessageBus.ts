@@ -9,7 +9,7 @@ import {
   SubscribeOptions,
   UnsubscribeOptions,
 } from "@lindorm/message";
-import { Constructor, DeepPartial } from "@lindorm/types";
+import { DeepPartial } from "@lindorm/types";
 import { ConfirmChannel } from "amqplib";
 import { randomBytes } from "crypto";
 import { IRabbitMessageBus } from "../interfaces";
@@ -21,7 +21,6 @@ export class RabbitMessageBus<
   O extends DeepPartial<M> = DeepPartial<M>,
 > implements IRabbitMessageBus<M>
 {
-  private readonly MessageConstructor: Constructor<M>;
   private readonly channel: ConfirmChannel;
   private readonly deadletters: string;
   private readonly exchange: string;
@@ -31,11 +30,10 @@ export class RabbitMessageBus<
   private readonly subscriptions: IMessageSubscriptions;
 
   public constructor(options: RabbitBusOptions<M>) {
-    this.logger = options.logger.child(["RabbitMessageBus", options.Message.name]);
+    this.logger = options.logger.child(["RabbitMessageBus", options.target.name]);
 
-    this.kit = new MessageKit<M, O>({ Message: options.Message, logger: this.logger });
+    this.kit = new MessageKit<M, O>({ target: options.target, logger: this.logger });
 
-    this.MessageConstructor = options.Message;
     this.channel = options.channel;
     this.deadletters = options.deadletters;
     this.exchange = options.exchange;
@@ -60,7 +58,7 @@ export class RabbitMessageBus<
     const array = isArray(message) ? message : [message];
 
     const messages = array.map((m) =>
-      m instanceof this.MessageConstructor ? m : this.create(m),
+      m instanceof this.kit.metadata.message.target ? m : this.create(m),
     );
 
     this.logger.verbose("Publishing messages", { messages });
@@ -175,7 +173,7 @@ export class RabbitMessageBus<
       callback: options.callback,
       consumerTag: options.consumerTag ?? randomBytes(16).toString("base64url"),
       queue: options.queue ?? `queue.${options.topic}`,
-      target: this.MessageConstructor,
+      target: this.kit.metadata.message.target,
       topic: options.topic,
     };
 
@@ -204,14 +202,6 @@ export class RabbitMessageBus<
       });
 
       const message = this.create(parsed);
-
-      if (!(message instanceof this.MessageConstructor)) {
-        this.logger.error("Invalid message instance", {
-          actual: message.constructor.name,
-          expect: this.MessageConstructor.name,
-        });
-        return this.channel.nack(msg, false, false);
-      }
 
       return subscription
         .callback(message)
@@ -270,7 +260,7 @@ export class RabbitMessageBus<
   private async handleUnsubscribeAll(): Promise<void> {
     this.logger.verbose("Removing all subscriptions");
 
-    for (const subscription of this.subscriptions.all(this.MessageConstructor)) {
+    for (const subscription of this.subscriptions.all(this.kit.metadata.message.target)) {
       await this.handleUnsubscribe(subscription);
     }
   }

@@ -48,10 +48,10 @@ const getValidator = (column: Omit<MetaColumn, "target">): ZodType<any> | undefi
 };
 
 export const defaultValidateEntity = <E extends IEntity>(
-  Entity: Constructor<E>,
+  target: Constructor<E>,
   entity: E,
 ): void => {
-  const metadata = globalEntityMetadata.get(Entity);
+  const metadata = globalEntityMetadata.get(target);
   const validators: ZodRawShape = {};
 
   for (const column of metadata.columns) {

@@ -48,10 +48,10 @@ const getValidator = (field: Omit<MetaField, "target">): ZodType<any> | undefine
 };
 
 export const defaultValidateMessage = <M extends IMessage>(
-  Message: Constructor<M>,
+  target: Constructor<M>,
   message: M,
 ): void => {
-  const metadata = globalMessageMetadata.get(Message);
+  const metadata = globalMessageMetadata.get(target);
   const validators: ZodRawShape = {};
 
   for (const field of metadata.fields) {

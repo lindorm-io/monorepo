@@ -8,12 +8,12 @@ type Options = {
 };
 
 export const getIncrementName = <E extends IEntity>(
-  Entity: Constructor<E>,
+  target: Constructor<E>,
   options: Options,
 ): string => {
-  const metadata = globalEntityMetadata.get(Entity);
+  const metadata = globalEntityMetadata.get(target);
   const namespace = metadata.entity.namespace || options.namespace;
-  const entityName = metadata.entity.name || Entity.name;
+  const entityName = metadata.entity.name || target.name;
 
   if (namespace === "system") {
     throw new Error("The 'system' namespace is reserved for internal use");

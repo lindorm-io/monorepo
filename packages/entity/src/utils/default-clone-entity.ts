@@ -14,11 +14,11 @@ const reset: Array<MetaColumnDecorator> = [
 ];
 
 export const defaultCloneEntity = <E extends IEntity>(
-  Entity: Constructor<E>,
+  target: Constructor<E>,
   entity: E,
 ): E => {
-  const metadata = globalEntityMetadata.get(Entity);
-  const clone = new Entity();
+  const metadata = globalEntityMetadata.get(target);
+  const clone = new target();
 
   for (const column of metadata.columns) {
     if (metadata.generated.some((g) => g.key === column.key)) continue;

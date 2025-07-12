@@ -1,7 +1,6 @@
 import { ILogger } from "@lindorm/logger";
-import { IMessage } from "@lindorm/message";
+import { IMessage, MessageScannerInput } from "@lindorm/message";
 import { Options } from "amqplib";
-import { MessageScannerInput } from "./scanner";
 
 export type RabbitSourceMessageBusOptions = {
   logger?: ILogger;

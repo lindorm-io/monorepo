@@ -4,10 +4,10 @@ import { IEntity } from "../interfaces";
 import { globalEntityMetadata } from "./global";
 
 export const verifyReadonly = <E extends IEntity>(
-  Entity: Constructor<E>,
+  target: Constructor<E>,
   entity: DeepPartial<E>,
 ): void => {
-  const metadata = globalEntityMetadata.get(Entity);
+  const metadata = globalEntityMetadata.get(target);
 
   for (const key of Object.keys(entity)) {
     const column = metadata.columns.find((c) => c.key === key);

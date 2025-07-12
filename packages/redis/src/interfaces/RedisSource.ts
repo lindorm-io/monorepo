@@ -22,13 +22,13 @@ export interface IRedisSource {
 
   addEntities(entities: EntityScannerInput): void;
   repository<E extends IEntity>(
-    Entity: Constructor<E>,
+    target: Constructor<E>,
     options?: RedisSourceRepositoryOptions,
   ): IRedisRepository<E>;
 
   addMessages(messages: MessageScannerInput): void;
   messageBus<M extends IMessage>(
-    Message: Constructor<M>,
+    target: Constructor<M>,
     options?: RedisSourceMessageBusOptions,
   ): IRedisMessageBus<M>;
 }

@@ -4,7 +4,7 @@ import { Constructor } from "@lindorm/types";
 import { Redis } from "ioredis";
 
 export type RedisRepositoryOptions<E extends IEntity> = {
-  Entity: Constructor<E>;
+  target: Constructor<E>;
   client: Redis;
   logger: ILogger;
   namespace?: string;

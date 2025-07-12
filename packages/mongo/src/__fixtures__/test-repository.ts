@@ -6,7 +6,7 @@ import { TestEntity, TestEntityOptions } from "./test-entity";
 export class TestRepository extends MongoRepository<TestEntity, TestEntityOptions> {
   public constructor(client: MongoClient, logger: ILogger) {
     super({
-      Entity: TestEntity,
+      target: TestEntity,
       client,
       database: "test",
       logger,

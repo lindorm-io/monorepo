@@ -107,7 +107,7 @@ export class GlobalMessageMetadata {
 
     if (!message) {
       throw new MessageMetadataError("Message metadata not found", {
-        debug: { Message: target.name },
+        debug: { target: target.name },
       });
     }
 
@@ -134,7 +134,7 @@ export class GlobalMessageMetadata {
     for (const field of fields) {
       if (fields.filter((a) => a.key === field.key).length > 1) {
         throw new MessageMetadataError("Duplicate field metadata", {
-          debug: { Message: target.name, field: field.key },
+          debug: { target: target.name, field: field.key },
         });
       }
 
@@ -145,13 +145,13 @@ export class GlobalMessageMetadata {
         fields.filter((a) => a.decorator === decorator).length > 1
       ) {
         throw new MessageMetadataError(`Duplicate ${decorator} metadata`, {
-          debug: { Message: target.name, field: field.key },
+          debug: { target: target.name, field: field.key },
         });
       }
 
       if (decorator === "Field" && field.type === "enum" && !field.enum) {
         throw new MessageMetadataError("@Field enum type requires an enum option", {
-          debug: { Message: target.name, field: field.key },
+          debug: { target: target.name, field: field.key },
         });
       }
     }
@@ -159,7 +159,7 @@ export class GlobalMessageMetadata {
     for (const generate of generated) {
       if (fields.find((a) => a.key === generate.key)) continue;
       throw new MessageMetadataError("Generated metadata without field", {
-        debug: { Message: target.name, field: generate.key },
+        debug: { target: target.name, field: generate.key },
       });
     }
 

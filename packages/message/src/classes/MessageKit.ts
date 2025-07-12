@@ -16,28 +16,28 @@ export class MessageKit<
   O extends DeepPartial<M> = DeepPartial<M>,
   D extends MetaFieldDecorator = MetaFieldDecorator,
 > {
-  private readonly Message: Constructor<M>;
+  private readonly target: Constructor<M>;
   private readonly logger: ILogger | undefined;
 
   public readonly metadata: MessageMetadata<M, D>;
 
   public constructor(options: MessageKitOptions<M>) {
-    this.Message = options.Message;
+    this.target = options.target;
     this.logger = options.logger?.child(["MessageKit"]);
 
-    this.metadata = globalMessageMetadata.get(this.Message);
+    this.metadata = globalMessageMetadata.get(this.target);
   }
 
   public create(options: O | M = {} as O): M {
-    const message = defaultCreateMessage(this.Message, options);
+    const message = defaultCreateMessage(this.target, options);
 
     this.logger?.silly("Created message", { message });
 
-    return defaultGenerateMessage(this.Message, message);
+    return defaultGenerateMessage(this.target, message);
   }
 
   public copy(message: M): M {
-    const copy = new this.Message(message);
+    const copy = new this.target(message);
 
     this.logger?.silly("Copied message", { copy });
 
@@ -45,7 +45,7 @@ export class MessageKit<
   }
 
   public publish(message: M): M {
-    const result = defaultGenerateMessage(this.Message, message);
+    const result = defaultGenerateMessage(this.target, message);
 
     this.logger?.silly("Generated message", { message: result });
 
@@ -53,13 +53,13 @@ export class MessageKit<
   }
 
   public validate(message: M): void {
-    defaultValidateMessage(this.Message, message);
+    defaultValidateMessage(this.target, message);
 
     this.logger?.silly("Validated message", { message });
   }
 
   public getTopicName(message: M, options: TopicNameOptions = {}): string {
-    return getTopicName(this.Message, message, options);
+    return getTopicName(this.target, message, options);
   }
 
   // public hooks

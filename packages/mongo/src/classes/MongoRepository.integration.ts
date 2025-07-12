@@ -76,7 +76,7 @@ describe("MongoRepository", () => {
 
   test("should validate an entity", async () => {
     const repo = new MongoRepository({
-      Entity: TestEntityOne,
+      target: TestEntityOne,
       client: client,
       database: "test",
       logger: createMockLogger(),
@@ -420,7 +420,7 @@ describe("MongoRepository", () => {
 
   test("should not automatically update entity from another source", async () => {
     const repository = new MongoRepository({
-      Entity: TestEntityOne,
+      target: TestEntityOne,
       client,
       database: "test",
       logger: createMockLogger(),
@@ -452,7 +452,7 @@ describe("MongoRepository", () => {
 
   test("should update versioned entity", async () => {
     const repository = new MongoRepository({
-      Entity: TestEntityTwo,
+      target: TestEntityTwo,
       client,
       database: "test",
       logger: createMockLogger(),
@@ -503,7 +503,7 @@ describe("MongoRepository", () => {
 
   test("should get all versions of an entity", async () => {
     const repository = new MongoRepository({
-      Entity: TestEntityTwo,
+      target: TestEntityTwo,
       client,
       database: "test",
       logger: createMockLogger(),

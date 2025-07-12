@@ -1,7 +1,6 @@
-import { IMessage } from "@lindorm/message";
+import { IMessage, SubscribeOptions, UnsubscribeOptions } from "@lindorm/message";
 import { DeepPartial } from "@lindorm/types";
-import { PublishOptions, UnsubscribeOptions } from "../types";
-import { IRedisSubscription } from "./RedisSubscription";
+import { PublishOptions } from "../types";
 
 export interface IRedisMessageBus<
   M extends IMessage,
@@ -10,7 +9,7 @@ export interface IRedisMessageBus<
   create(options: O | M): M;
   publish(message: M | Array<M>, options?: PublishOptions): Promise<void>;
   subscribe(
-    subscription: IRedisSubscription<M> | Array<IRedisSubscription<M>>,
+    subscription: SubscribeOptions<M> | Array<SubscribeOptions<M>>,
   ): Promise<void>;
   unsubscribe(
     subscription: UnsubscribeOptions | Array<UnsubscribeOptions>,

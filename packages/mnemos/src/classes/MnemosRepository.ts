@@ -1,10 +1,4 @@
-import {
-  EntityKit,
-  EntityMetadata,
-  globalEntityMetadata,
-  IEntity,
-  MetaSource,
-} from "@lindorm/entity";
+import { EntityKit, IEntity, MetaSource } from "@lindorm/entity";
 import { isDate } from "@lindorm/is";
 import { ILogger } from "@lindorm/logger";
 import { DeepPartial } from "@lindorm/types";
@@ -26,15 +20,12 @@ export class MnemosRepository<
   private readonly incrementName: string;
   private readonly kit: EntityKit<E, O>;
   private readonly logger: ILogger;
-  private readonly metadata: EntityMetadata;
 
   public constructor(options: MnemosRepositoryOptions<E>) {
-    const metadata = globalEntityMetadata.get(options.Entity);
-
-    this.logger = options.logger.child(["MnemosRepository", options.Entity.name]);
+    this.logger = options.logger.child(["MnemosRepository", options.target.name]);
 
     this.kit = new EntityKit({
-      Entity: options.Entity,
+      target: options.target,
       logger: this.logger,
       source: PRIMARY_SOURCE,
       getNextIncrement: this.getNextIncrement.bind(this),
@@ -43,10 +34,9 @@ export class MnemosRepository<
     this.cache = options.cache;
     this.collectionName = this.kit.getCollectionName(options);
     this.incrementName = this.kit.getIncrementName(options);
-    this.metadata = metadata;
-    this.collection = this.cache.collection(this.collectionName, this.metadata);
+    this.collection = this.cache.collection(this.collectionName, this.kit.metadata);
 
-    if (this.metadata.relations.length > 0) {
+    if (this.kit.metadata.relations.length > 0) {
       this.logger.warn(
         "This version of @lindorm/mnemos does not support relations. Make sure to handle this manually or keep your eye open for updates.",
       );
@@ -236,7 +226,7 @@ export class MnemosRepository<
       throw new MnemosRepositoryError("Entity not found", { debug: { predicate } });
     }
 
-    const expiryDate = this.metadata.columns.find(
+    const expiryDate = this.kit.metadata.columns.find(
       (a) => a.decorator === "ExpiryDateColumn",
     );
     if (!expiryDate) {
@@ -261,7 +251,7 @@ export class MnemosRepository<
   private createPrimaryPredicate(entity: E): Predicate<E> {
     const result: Predicate<any> = {};
 
-    for (const key of this.metadata.primaryKeys) {
+    for (const key of this.kit.metadata.primaryKeys) {
       result[key] = entity[key];
     }
 
@@ -271,7 +261,7 @@ export class MnemosRepository<
   private createDefaultPredicate(predicate: Predicate<E> = {}): Predicate<E> {
     const result: Predicate<any> = { ...predicate };
 
-    const expiryDate = this.metadata.columns.find(
+    const expiryDate = this.kit.metadata.columns.find(
       (c) => c.decorator === "ExpiryDateColumn",
     );
     if (expiryDate) {
@@ -289,19 +279,19 @@ export class MnemosRepository<
 
     if (!this.kit.isPrimarySource) {
       this.logger.debug("Skipping update predicate for non-primary source", {
-        source: this.metadata.primarySource,
+        source: this.kit.metadata.primarySource,
       });
       return result;
     }
 
-    const deleteDate = this.metadata.columns.find(
+    const deleteDate = this.kit.metadata.columns.find(
       (c) => c.decorator === "DeleteDateColumn",
     );
     if (deleteDate) {
       result[deleteDate.key] = { $eq: null };
     }
 
-    const expiryDate = this.metadata.columns.find(
+    const expiryDate = this.kit.metadata.columns.find(
       (c) => c.decorator === "ExpiryDateColumn",
     );
     if (expiryDate) {
@@ -311,7 +301,9 @@ export class MnemosRepository<
       ];
     }
 
-    const version = this.metadata.columns.find((c) => c.decorator === "VersionColumn");
+    const version = this.kit.metadata.columns.find(
+      (c) => c.decorator === "VersionColumn",
+    );
     if (version) {
       result[version.key] = { $eq: entity[version.key] };
     }

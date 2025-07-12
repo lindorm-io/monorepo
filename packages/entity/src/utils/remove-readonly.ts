@@ -4,10 +4,10 @@ import { IEntity } from "../interfaces";
 import { globalEntityMetadata } from "./global";
 
 export const removeReadonly = <E extends IEntity>(
-  Entity: Constructor<E>,
+  target: Constructor<E>,
   entity: E,
 ): DeepPartial<E> => {
-  const metadata = globalEntityMetadata.get(Entity);
+  const metadata = globalEntityMetadata.get(target);
   const result: DeepPartial<E> = {};
 
   for (const [key, value] of Object.entries(entity)) {

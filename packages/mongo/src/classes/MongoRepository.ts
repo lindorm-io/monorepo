@@ -29,30 +29,30 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
   private readonly metadata: EntityMetadata;
 
   public constructor(options: MongoRepositoryOptions<E>) {
-    const metadata = globalEntityMetadata.get(options.Entity);
+    const metadata = globalEntityMetadata.get(options.target);
     const database = metadata.entity.database || options.database;
 
     if (!database) {
       throw new MongoRepositoryError("Database name not found", {
         debug: {
           metadata,
-          options: { Entity: options.Entity, database: options.database },
+          options: { Entity: options.target, database: options.database },
         },
       });
     }
 
     super({
       client: options.client,
-      collection: getCollectionName(options.Entity, options),
+      collection: getCollectionName(options.target, options),
       database,
       logger: options.logger,
       indexes: getIndexOptions(metadata),
     });
 
-    this.logger = options.logger.child(["MongoRepository", options.Entity.name]);
+    this.logger = options.logger.child(["MongoRepository", options.target.name]);
 
     this.kit = new EntityKit({
-      Entity: options.Entity,
+      target: options.target,
       logger: this.logger,
       source: PRIMARY_SOURCE,
       getNextIncrement: this.getNextIncrement.bind(this),

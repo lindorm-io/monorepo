@@ -3,8 +3,8 @@ import { Constructor } from "@lindorm/types";
 import { IMessage } from "../interfaces";
 
 export type MessageKitOptions<M extends IMessage> = {
-  Message: Constructor<M>;
   logger?: ILogger;
+  target: Constructor<M>;
 };
 
 export type TopicNameOptions = {

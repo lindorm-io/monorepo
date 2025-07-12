@@ -1,12 +1,6 @@
 import { snakeCase } from "@lindorm/case";
 import { expiresIn } from "@lindorm/date";
-import {
-  EntityKit,
-  EntityMetadata,
-  globalEntityMetadata,
-  IEntity,
-  MetaSource,
-} from "@lindorm/entity";
+import { EntityKit, IEntity, MetaSource } from "@lindorm/entity";
 import { isDate, isObjectLike } from "@lindorm/is";
 import { Primitive } from "@lindorm/json-kit";
 import { ILogger } from "@lindorm/logger";
@@ -27,15 +21,12 @@ export class RedisRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
   private readonly incrementName: string;
   private readonly kit: EntityKit<E, O>;
   private readonly logger: ILogger;
-  private readonly metadata: EntityMetadata;
 
   public constructor(options: RedisRepositoryOptions<E>) {
-    const metadata = globalEntityMetadata.get(options.Entity);
-
-    this.logger = options.logger.child(["RedisRepository", options.Entity.name]);
+    this.logger = options.logger.child(["RedisRepository", options.target.name]);
 
     this.kit = new EntityKit({
-      Entity: options.Entity,
+      target: options.target,
       logger: this.logger,
       source: PRIMARY_SOURCE,
       getNextIncrement: this.getNextIncrement.bind(this),
@@ -43,11 +34,10 @@ export class RedisRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
 
     this.collectionName = this.kit.getCollectionName(options);
     this.incrementName = this.kit.getIncrementName(options);
-    this.metadata = metadata;
 
     this.client = options.client;
 
-    if (this.metadata.relations.length > 0) {
+    if (this.kit.metadata.relations.length > 0) {
       this.logger.warn(
         "This version of @lindorm/redis does not support relations. Make sure to handle this manually or keep your eye open for updates.",
       );
@@ -120,7 +110,7 @@ export class RedisRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
   }
 
   public async delete(predicate: Predicate<E>): Promise<void> {
-    if (this.metadata.primaryKeys.every((key) => predicate[key])) {
+    if (this.kit.metadata.primaryKeys.every((key) => predicate[key])) {
       return this.deleteByKey(predicate);
     }
 
@@ -178,7 +168,7 @@ export class RedisRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
 
   public async find(predicate: Predicate<E> = {}): Promise<Array<E>> {
     if (
-      this.metadata.primaryKeys.every(
+      this.kit.metadata.primaryKeys.every(
         (key) => predicate[key] && !isObjectLike(predicate[key]),
       )
     ) {
@@ -200,7 +190,7 @@ export class RedisRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
 
   public async findOne(predicate: Predicate<E>): Promise<E | null> {
     if (
-      this.metadata.primaryKeys.every(
+      this.kit.metadata.primaryKeys.every(
         (key) => predicate[key] && !isObjectLike(predicate[key]),
       )
     ) {
@@ -369,14 +359,14 @@ export class RedisRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
   private createPrimaryKey(material: E | Predicate<E>): string {
     const result: Dict<string> = {};
 
-    const primaryKey = this.metadata.columns.find(
+    const primaryKey = this.kit.metadata.columns.find(
       (c) => c.decorator === "PrimaryKeyColumn",
     );
 
     if (primaryKey) {
       result[primaryKey.key] = material[primaryKey.key];
     } else {
-      for (const column of this.metadata.primaryKeys) {
+      for (const column of this.kit.metadata.primaryKeys) {
         result[column] = material[column];
       }
     }
@@ -459,7 +449,7 @@ export class RedisRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
   }
 
   private getScope(material: E | Predicate<E>): string {
-    const scope = this.metadata.columns.find((c) => c.decorator === "ScopeColumn");
+    const scope = this.kit.metadata.columns.find((c) => c.decorator === "ScopeColumn");
 
     if (!scope) return "";
 
@@ -477,7 +467,7 @@ export class RedisRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
   }
 
   private getTTL(entity: E): number | null {
-    const expiryDate = this.metadata.columns.find(
+    const expiryDate = this.kit.metadata.columns.find(
       (c) => c.decorator === "ExpiryDateColumn",
     );
 
@@ -534,7 +524,7 @@ export class RedisRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
     if (!this.kit.isPrimarySource) {
       this.logger.debug("Skipping update validation for non-primary source", {
         expect: PRIMARY_SOURCE,
-        actual: this.metadata.primarySource,
+        actual: this.kit.metadata.primarySource,
       });
 
       return;
@@ -547,7 +537,9 @@ export class RedisRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
       throw new RedisRepositoryError("Entity not found", { debug: { key } });
     }
 
-    const version = this.metadata.columns.find((c) => c.decorator === "VersionColumn");
+    const version = this.kit.metadata.columns.find(
+      (c) => c.decorator === "VersionColumn",
+    );
 
     if (version) {
       const found = new Primitive(exists).toJSON();

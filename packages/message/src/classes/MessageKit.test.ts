@@ -145,7 +145,7 @@ describe("MessageKit", () => {
 
   beforeEach(() => {
     kit = new MessageKit({
-      Message: TestMessageKit,
+      target: TestMessageKit,
       logger: createMockLogger(),
     });
   });

@@ -6,7 +6,7 @@ import { IMessageSubscription } from "./MessageSubscription";
 export interface IMessageSubscriptions {
   subscriptions: Array<IMessageSubscription>;
 
-  all(Message: Constructor<IMessage>): Array<IMessageSubscription>;
+  all(target: Constructor<IMessage>): Array<IMessageSubscription>;
   add(subscription: IMessageSubscription): void;
   find(criteria: FindSubscriptionFilter): IMessageSubscription | undefined;
   remove(criteria: RemoveSubscriptionFilter): void;

@@ -34,7 +34,7 @@ export class EntityKit<
   TDecorator extends MetaColumnDecorator = MetaColumnDecorator,
   TSource extends MetaSource = MetaSource,
 > {
-  private readonly Entity: Constructor<E>;
+  private readonly target: Constructor<E>;
   private readonly getNextIncrement: GetIncrementFn | undefined;
   private readonly logger: ILogger | undefined;
   private readonly source: string;
@@ -44,18 +44,18 @@ export class EntityKit<
   public readonly updateStrategy: UpdateStrategy;
 
   public constructor(options: EntityKitOptions<E>) {
-    this.Entity = options.Entity;
+    this.target = options.target;
     this.getNextIncrement = options.getNextIncrement;
     this.logger = options.logger?.child(["EntityKit"]);
     this.source = options.source;
 
-    this.metadata = globalEntityMetadata.get(this.Entity);
+    this.metadata = globalEntityMetadata.get(this.target);
     this.isPrimarySource = this.calculatePrimarySource();
     this.updateStrategy = this.calculateUpdateStrategy();
   }
 
   public create(options: O | E = {} as O): E {
-    const entity = defaultCreateEntity(this.Entity, options);
+    const entity = defaultCreateEntity(this.target, options);
 
     this.logger?.silly("Created entity", { entity });
 
@@ -63,7 +63,7 @@ export class EntityKit<
   }
 
   public copy(entity: E): E {
-    const copy = defaultCreateEntity(this.Entity, entity);
+    const copy = defaultCreateEntity(this.target, entity);
 
     this.logger?.silly("Copied entity", { entity });
 
@@ -73,7 +73,7 @@ export class EntityKit<
   public async clone(entity: E): Promise<E> {
     const version = this.metadata.columns.find((c) => c.decorator === "VersionColumn");
 
-    const clone = defaultCloneEntity(this.Entity, entity);
+    const clone = defaultCloneEntity(this.target, entity);
 
     if (version) {
       (clone as any)[version.key] = ((clone as any)[version.key] || 0) + 1;
@@ -113,7 +113,7 @@ export class EntityKit<
       return copy;
     }
 
-    return defaultUpdateEntity(this.Entity, copy);
+    return defaultUpdateEntity(this.target, copy);
   }
 
   public versionCopy(original: DeepPartial<E>, entity: E): E {
@@ -164,15 +164,15 @@ export class EntityKit<
   }
 
   public getCollectionName(options: NamespaceOptions): string {
-    return getCollectionName(this.Entity, options);
+    return getCollectionName(this.target, options);
   }
 
   public getIncrementName(options: NamespaceOptions): string {
-    return getIncrementName(this.Entity, options);
+    return getIncrementName(this.target, options);
   }
 
   public getSaveStrategy(entity: E): SaveStrategy {
-    return getSaveStrategy(this.Entity, entity);
+    return getSaveStrategy(this.target, entity);
   }
 
   public onInsert(entity: E): void {
@@ -200,17 +200,17 @@ export class EntityKit<
   }
 
   public removeReadonly(entity: E): DeepPartial<E> {
-    return removeReadonly(this.Entity, entity);
+    return removeReadonly(this.target, entity);
   }
 
   public validate(entity: E): void {
-    defaultValidateEntity(this.Entity, entity);
+    defaultValidateEntity(this.target, entity);
 
     this.logger?.silly("Validated entity", { entity });
   }
 
   public verifyReadonly(entity: DeepPartial<E>): void {
-    verifyReadonly(this.Entity, entity);
+    verifyReadonly(this.target, entity);
   }
 
   // private
@@ -238,7 +238,7 @@ export class EntityKit<
   }
 
   private async generate(entity: DeepPartial<E>): Promise<E> {
-    const result = defaultGenerateEntity(this.Entity, entity);
+    const result = defaultGenerateEntity(this.target, entity);
 
     if (!isFunction(this.getNextIncrement)) {
       return result;

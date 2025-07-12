@@ -24,6 +24,7 @@ describe("MnemosCollection", () => {
           },
         ],
         entity: {
+          target: {} as any,
           cache: null,
           database: null,
           decorator: "Entity",

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-function-type */
 
-import { Dict } from "@lindorm/types";
+import { Constructor, Dict } from "@lindorm/types";
 import { ZodObject, ZodType } from "zod";
 import { IMessage } from "../interfaces";
 import { HookDecoratorCallback, TopicDecoratorCallback } from "./decorators";
@@ -54,7 +54,7 @@ export type MetaField<D extends MetaFieldDecorator = MetaFieldDecorator> = {
 };
 
 export type MetaMessage = {
-  target: Function;
+  target: Constructor<IMessage>;
   decorator: string;
   name: string;
   namespace: string | null;

@@ -70,7 +70,7 @@ export class AggregateDomain implements IAggregateDomain {
     this.eventStore = options.eventStore;
     this.registry = options.registry;
 
-    this.messageKit = new MessageKit({ Message: HermesEvent, logger: this.logger });
+    this.messageKit = new MessageKit({ target: HermesEvent, logger: this.logger });
   }
 
   public async registerHandlers(): Promise<void> {

@@ -6,7 +6,7 @@ import { TestEntity, TestEntityOptions } from "./test-entity";
 export class TestRepository extends RedisRepository<TestEntity, TestEntityOptions> {
   public constructor(client: Redis, logger: ILogger) {
     super({
-      Entity: TestEntity,
+      target: TestEntity,
       client,
       logger,
       namespace: "ns",
