@@ -10,6 +10,12 @@ export class MessageBus<M extends IHermesMessage> implements IHermesMessageBus<M
   public constructor(options: HermesMessageBusOptions<M>) {
     if (options.custom) {
       this.bus = options.custom;
+    } else if (options.kafka?.name === "KafkaSource") {
+      options.kafka.addMessages([options.Message]);
+
+      this.bus = options.kafka.messageBus(options.Message, {
+        logger: options.logger,
+      });
     } else if (options.rabbit?.name === "RabbitSource") {
       options.rabbit.addMessages([options.Message]);
 

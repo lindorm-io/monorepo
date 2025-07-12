@@ -36,18 +36,19 @@
     "@lindorm/json-kit": "^0.5.1",
     "@lindorm/kryptos": "^0.4.3",
     "@lindorm/message": "^0.1.2",
-    "@lindorm/mongo": "^0.6.5",
-    "@lindorm/postgres": "^0.3.5",
-    "@lindorm/rabbit": "^0.5.1",
     "@lindorm/random": "^0.2.0",
-    "@lindorm/redis": "^0.7.0",
     "@lindorm/scanner": "^0.3.5",
     "@lindorm/sha": "^0.2.2",
     "deepmerge": "^4.3.1",
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@lindorm/kafka": "^0.1.0",
     "@lindorm/logger": "^0.3.2",
-    "@lindorm/pylon": "^0.4.4"
+    "@lindorm/mongo": "^0.6.5",
+    "@lindorm/postgres": "^0.3.5",
+    "@lindorm/pylon": "^0.4.4",
+    "@lindorm/rabbit": "^0.5.1",
+    "@lindorm/redis": "^0.7.0"
   }
 }
