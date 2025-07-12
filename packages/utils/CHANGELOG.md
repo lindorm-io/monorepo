@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.5.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/utils@0.5.1...@lindorm/utils@0.5.2) (2025-07-12)
+
+### Bug Fixes
+
+- add wait utility ([49422f3](https://github.com/lindorm-io/monorepo/commit/49422f39b950de84f1402a20378370d3f70fdc55))
+
 ## [0.5.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/utils@0.5.0...@lindorm/utils@0.5.1) (2025-07-10)
 
 **Note:** Version bump only for package @lindorm/utils

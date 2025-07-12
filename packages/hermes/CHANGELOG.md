@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/hermes@0.3.0...@lindorm/hermes@0.3.1) (2025-07-12)
+
+### Bug Fixes
+
+- add redis message bus to infrastructure ([569c526](https://github.com/lindorm-io/monorepo/commit/569c526fb434afaa3b010172d12ce601e441631a))
+- amend issues with metadata ([abd603c](https://github.com/lindorm-io/monorepo/commit/abd603cc45c2dea428697a071a3345cb5739d7c6))
+- update kit target nomenclature ([7358ebc](https://github.com/lindorm-io/monorepo/commit/7358ebcbe11ed4a4ed5c581ebeebefd64637c1e5))
+
 # [0.3.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/hermes@0.2.4...@lindorm/hermes@0.3.0) (2025-07-10)
 
 ### Features

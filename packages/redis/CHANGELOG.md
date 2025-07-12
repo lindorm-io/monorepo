@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.7.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/redis@0.6.3...@lindorm/redis@0.7.0) (2025-07-12)
+
+### Bug Fixes
+
+- update kit target nomenclature ([7358ebc](https://github.com/lindorm-io/monorepo/commit/7358ebcbe11ed4a4ed5c581ebeebefd64637c1e5))
+
+### Features
+
+- add message bus to redis ([d6d43bf](https://github.com/lindorm-io/monorepo/commit/d6d43bf42abded268543f50a2357cd920733c04d))
+
 ## [0.6.3](https://github.com/lindorm-io/monorepo/compare/@lindorm/redis@0.6.2...@lindorm/redis@0.6.3) (2025-07-10)
 
 ### Bug Fixes

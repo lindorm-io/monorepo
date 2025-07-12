@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.5.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/rabbit@0.5.0...@lindorm/rabbit@0.5.1) (2025-07-12)
+
+### Bug Fixes
+
+- update kit target nomenclature ([7358ebc](https://github.com/lindorm-io/monorepo/commit/7358ebcbe11ed4a4ed5c581ebeebefd64637c1e5))
+- use subscription from message dependency ([4283f0b](https://github.com/lindorm-io/monorepo/commit/4283f0bb282757043b3755aa55b7427a9fff6b0e))
+
 # [0.5.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/rabbit@0.4.3...@lindorm/rabbit@0.5.0) (2025-07-10)
 
 ### Features

@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/worker",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -33,7 +33,7 @@
     "@lindorm/is": "^0.1.9",
     "@lindorm/retry": "^0.1.7",
     "@lindorm/scanner": "^0.3.5",
-    "@lindorm/utils": "^0.5.1"
+    "@lindorm/utils": "^0.5.2"
   },
   "devDependencies": {
     "@lindorm/logger": "^0.3.2"

@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/aegis",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -29,21 +29,21 @@
     "update:auto": "ncu -u"
   },
   "dependencies": {
-    "@lindorm/aes": "^0.5.2",
+    "@lindorm/aes": "^0.5.3",
     "@lindorm/b64": "^0.1.6",
     "@lindorm/date": "^0.3.1",
-    "@lindorm/ec": "^0.2.2",
+    "@lindorm/ec": "^0.2.3",
     "@lindorm/errors": "^0.1.10",
     "@lindorm/is": "^0.1.9",
-    "@lindorm/kryptos": "^0.4.2",
-    "@lindorm/oct": "^0.2.2",
-    "@lindorm/okp": "^0.2.2",
-    "@lindorm/rsa": "^0.2.2",
-    "@lindorm/utils": "^0.5.1",
+    "@lindorm/kryptos": "^0.4.3",
+    "@lindorm/oct": "^0.2.3",
+    "@lindorm/okp": "^0.2.3",
+    "@lindorm/rsa": "^0.2.3",
+    "@lindorm/utils": "^0.5.2",
     "cbor": "^10.0.3"
   },
   "devDependencies": {
-    "@lindorm/amphora": "^0.2.3",
+    "@lindorm/amphora": "^0.2.4",
     "@lindorm/logger": "^0.3.2",
     "@lindorm/types": "^0.3.1",
     "@types/jsonwebtoken": "^9.0.6",

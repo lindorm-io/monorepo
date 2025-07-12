@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/enigma",
-  "version": "0.2.10",
+  "version": "0.2.11",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -29,10 +29,10 @@
     "update:auto": "ncu -u"
   },
   "dependencies": {
-    "@lindorm/aes": "^0.5.2",
+    "@lindorm/aes": "^0.5.3",
     "@lindorm/errors": "^0.1.10",
-    "@lindorm/kryptos": "^0.4.2",
-    "@lindorm/oct": "^0.2.2",
+    "@lindorm/kryptos": "^0.4.3",
+    "@lindorm/oct": "^0.2.3",
     "argon2": "^0.40.3"
   }
 }

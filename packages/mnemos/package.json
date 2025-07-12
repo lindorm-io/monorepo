@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/mnemos",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -29,16 +29,16 @@
     "update:auto": "ncu -u"
   },
   "dependencies": {
-    "@lindorm/entity": "^0.2.3",
+    "@lindorm/entity": "^0.2.4",
     "@lindorm/errors": "^0.1.10",
     "@lindorm/is": "^0.1.9",
     "@lindorm/scanner": "^0.3.5",
-    "@lindorm/utils": "^0.5.1",
+    "@lindorm/utils": "^0.5.2",
     "zod": "^3.23.8"
   },
   "devDependencies": {
     "@lindorm/logger": "^0.3.2",
-    "@lindorm/pylon": "^0.4.3",
+    "@lindorm/pylon": "^0.4.4",
     "@lindorm/types": "^0.3.1"
   }
 }

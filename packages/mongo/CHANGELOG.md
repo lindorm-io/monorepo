@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.6.5](https://github.com/lindorm-io/monorepo/compare/@lindorm/mongo@0.6.4...@lindorm/mongo@0.6.5) (2025-07-12)
+
+### Bug Fixes
+
+- amend bug ([2ca3503](https://github.com/lindorm-io/monorepo/commit/2ca350317e43cbb0d84c0c626d29140fc2e3752b))
+- update kit target nomenclature ([7358ebc](https://github.com/lindorm-io/monorepo/commit/7358ebcbe11ed4a4ed5c581ebeebefd64637c1e5))
+
 ## [0.6.4](https://github.com/lindorm-io/monorepo/compare/@lindorm/mongo@0.6.3...@lindorm/mongo@0.6.4) (2025-07-10)
 
 ### Bug Fixes
