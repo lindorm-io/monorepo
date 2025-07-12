@@ -24,3 +24,6 @@ Thumbs.db
 
 # Build
 tsconfig.build.tsbuildinfo
+
+# Test
+*.db

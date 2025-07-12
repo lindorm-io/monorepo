@@ -1,0 +1,10 @@
+/example
+/node_modules
+/src
+
+docker-compose.yml
+jest.config.integration.js
+jest.config.js
+kafka.db
+tsconfig.build.json
+tsconfig.json
