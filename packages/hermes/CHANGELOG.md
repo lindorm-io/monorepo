@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/hermes@0.3.1...@lindorm/hermes@0.3.2) (2025-07-13)
+
+### Bug Fixes
+
+- add kafka source to message bus options ([180e719](https://github.com/lindorm-io/monorepo/commit/180e7190efded2464046ec94ef99e9e917a2b5f5))
+
 ## [0.3.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/hermes@0.3.0...@lindorm/hermes@0.3.1) (2025-07-12)
 
 ### Bug Fixes

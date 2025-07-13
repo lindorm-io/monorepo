@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.2.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/kafka@0.1.0...@lindorm/kafka@0.2.0) (2025-07-13)
+
+### Features
+
+- add multiple delay stores to kafka ([d5255e6](https://github.com/lindorm-io/monorepo/commit/d5255e6fd03ae1fdefdcca36cb54920492b32308))
+
 # 0.1.0 (2025-07-12)
 
 ### Features
