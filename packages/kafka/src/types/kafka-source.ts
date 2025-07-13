@@ -1,6 +1,7 @@
 import { ILogger } from "@lindorm/logger";
 import { IMessage, MessageScannerInput } from "@lindorm/message";
 import { KafkaConfig } from "kafkajs";
+import { KafkaDelayServiceOptions } from "./delay";
 
 export type KafkaSourceMessageBusOptions = {
   logger?: ILogger;
@@ -11,6 +12,7 @@ export type CloneKafkaSourceOptions = {
 };
 
 export type KafkaSourceOptions = {
+  delay?: Omit<KafkaDelayServiceOptions, "logger">;
   config?: Omit<KafkaConfig, "brokers">;
   logger: ILogger;
   messages?: MessageScannerInput<IMessage>;

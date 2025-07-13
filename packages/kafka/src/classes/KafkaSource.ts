@@ -10,7 +10,7 @@ import {
 import { Constructor } from "@lindorm/types";
 import { Kafka, Partitioners, Producer } from "kafkajs";
 import { KafkaSourceError } from "../errors";
-import { IKafkaMessageBus, IKafkaSource } from "../interfaces";
+import { IKafkaDelayService, IKafkaMessageBus, IKafkaSource } from "../interfaces";
 import {
   CloneKafkaSourceOptions,
   KafkaSourceMessageBusOptions,
@@ -18,7 +18,7 @@ import {
 } from "../types";
 import { FromClone } from "../types/private";
 import { KafkaMessageBus } from "./KafkaMessageBus";
-import { Sqlite } from "./private";
+import { KafkaDelayService } from "./private";
 
 export class KafkaSource implements IKafkaSource {
   public readonly name = "KafkaSource";
@@ -28,7 +28,7 @@ export class KafkaSource implements IKafkaSource {
   private readonly logger: ILogger;
   private readonly messages: Array<Constructor<IMessage>>;
   private readonly producer: Producer;
-  private readonly sqlite: Sqlite;
+  private readonly delayService: IKafkaDelayService;
   private readonly subscriptions: IMessageSubscriptions;
 
   public constructor(options: KafkaSourceOptions);
@@ -40,17 +40,22 @@ export class KafkaSource implements IKafkaSource {
       const opts = options as FromClone;
 
       this.cache = opts.buses;
+      this.delayService = opts.delayService;
       this.kafka = opts.kafka;
       this.messages = opts.messages;
       this.producer = opts.producer;
-      this.sqlite = opts.sqlite;
       this.subscriptions = opts.subscriptions;
     } else {
       const opts = options as KafkaSourceOptions;
 
       this.cache = new Map();
+
+      this.delayService = new KafkaDelayService({
+        ...(opts.delay ?? {}),
+        logger: this.logger,
+      });
+
       this.messages = opts.messages ? MessageScanner.scan(opts.messages) : [];
-      this.sqlite = new Sqlite(process.cwd());
       this.subscriptions = new MessageSubscriptions();
 
       this.kafka = new Kafka({
@@ -87,7 +92,7 @@ export class KafkaSource implements IKafkaSource {
       logger: options.logger ?? this.logger,
       messages: this.messages,
       producer: this.producer,
-      sqlite: this.sqlite,
+      delayService: this.delayService,
       subscriptions: this.subscriptions,
     });
   }
@@ -97,11 +102,11 @@ export class KafkaSource implements IKafkaSource {
   }
 
   public async disconnect(): Promise<void> {
+    this.delayService.disconnect();
+
     for (const target of this.messages) {
       await this.messageBus(target).disconnect();
     }
-
-    this.sqlite.disconnect();
 
     await this.producer.disconnect();
   }
@@ -116,10 +121,10 @@ export class KafkaSource implements IKafkaSource {
       this.cache.set(
         target,
         new KafkaMessageBus<M>({
+          delayService: this.delayService,
           kafka: this.kafka,
           logger: options.logger ?? this.logger,
           producer: this.producer,
-          sqlite: this.sqlite,
           subscriptions: this.subscriptions,
           target,
         }),

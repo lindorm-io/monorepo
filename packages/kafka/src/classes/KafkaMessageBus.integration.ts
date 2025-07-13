@@ -1,21 +1,23 @@
 import { createMockLogger } from "@lindorm/logger";
 import { SubscribeOptions } from "@lindorm/message";
 import { wait } from "@lindorm/utils";
-import { existsSync, unlinkSync } from "fs";
-import { join } from "path";
+import Db, { Database } from "better-sqlite3";
 import { TestMessageOne } from "../__fixtures__/messages/test-message-one";
 import { TestMessageThree } from "../__fixtures__/messages/test-message-three";
 import { TestMessageTwo } from "../__fixtures__/messages/test-message-two";
 import { KafkaSource } from "./KafkaSource";
 
 describe("KafkaMessageBus", () => {
+  let sqlite: Database;
   let source: KafkaSource;
   let subscriptionOne: SubscribeOptions<TestMessageOne>;
   let subscriptionTwo: SubscribeOptions<TestMessageTwo>;
   let subscriptionThree: SubscribeOptions<TestMessageThree>;
 
   beforeAll(async () => {
+    sqlite = new Db(":memory:");
     source = new KafkaSource({
+      delay: { sqlite },
       messages: [TestMessageOne, TestMessageTwo, TestMessageThree],
       logger: createMockLogger(),
       brokers: ["localhost:9092"],
@@ -25,9 +27,7 @@ describe("KafkaMessageBus", () => {
 
   afterAll(async () => {
     await source.disconnect();
-    if (existsSync(join(process.cwd(), "kafka.db"))) {
-      unlinkSync(join(process.cwd(), "kafka.db"));
-    }
+    sqlite.close();
   }, 30000);
 
   test("should subscribe", async () => {

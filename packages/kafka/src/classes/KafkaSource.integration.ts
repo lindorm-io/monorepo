@@ -1,7 +1,7 @@
 import { createMockLogger } from "@lindorm/logger";
 import { randomUUID } from "crypto";
-import { join } from "path";
 import { existsSync, unlinkSync } from "fs";
+import { join } from "path";
 import { TestMessageOne } from "../__fixtures__/messages/test-message-one";
 import { TestMessageTwo } from "../__fixtures__/messages/test-message-two";
 import { IKafkaSource } from "../interfaces";

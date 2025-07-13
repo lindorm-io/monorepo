@@ -12,9 +12,8 @@ import {
 import { DeepPartial } from "@lindorm/types";
 import { randomBytes } from "crypto";
 import { Consumer, Kafka, Producer } from "kafkajs";
-import { IKafkaMessageBus } from "../interfaces";
+import { IKafkaDelayService, IKafkaMessageBus } from "../interfaces";
 import { KafkaBusOptions, PublishOptions, PublishWithDelayOptions } from "../types";
-import { Sqlite } from "./private";
 
 export class KafkaMessageBus<
   M extends IMessage,
@@ -26,7 +25,7 @@ export class KafkaMessageBus<
   private readonly kit: MessageKit<M, O>;
   private readonly logger: ILogger;
   private readonly producer: Producer;
-  private readonly sqlite: Sqlite;
+  private readonly delayService: IKafkaDelayService;
   private readonly subscriptions: IMessageSubscriptions;
 
   public constructor(options: KafkaBusOptions<M>) {
@@ -34,10 +33,10 @@ export class KafkaMessageBus<
 
     this.kit = new MessageKit<M, O>({ target: options.target, logger: this.logger });
 
-    this.kafka = options.kafka;
     this.consumers = new Map();
+    this.delayService = options.delayService;
+    this.kafka = options.kafka;
     this.producer = options.producer;
-    this.sqlite = options.sqlite;
     this.subscriptions = options.subscriptions;
   }
 
@@ -139,7 +138,7 @@ export class KafkaMessageBus<
     const topic = this.kit.getTopicName(message, options);
     const config = this.getPublishConfig(message, options);
 
-    this.sqlite.delay({
+    this.delayService.delay({
       delay: options.delay,
       key: config.key,
       topic,
@@ -190,7 +189,7 @@ export class KafkaMessageBus<
       topic: subscription.topic,
     });
 
-    this.sqlite.poll(subscription.topic, async (envelope) => {
+    this.delayService.poll(subscription.topic, async (envelope) => {
       await this.producer.connect();
       await this.producer.send({
         topic: envelope.topic,
@@ -218,7 +217,7 @@ export class KafkaMessageBus<
       return;
     }
 
-    this.sqlite.stop(topic);
+    this.delayService.stop(topic);
 
     const { consumerTag } = found;
 

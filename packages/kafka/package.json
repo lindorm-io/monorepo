@@ -34,14 +34,21 @@
     "@lindorm/message": "^0.1.2",
     "@lindorm/scanner": "^0.3.5",
     "@lindorm/utils": "^0.5.2",
-    "better-sqlite3": "^12.2.0",
     "kafkajs": "^2.2.4",
     "zod": "^3.25.67"
   },
   "devDependencies": {
     "@lindorm/logger": "^0.3.2",
+    "@lindorm/mongo": "^0.6.5",
+    "@lindorm/postgres": "^0.3.5",
     "@lindorm/pylon": "^0.4.4",
+    "@lindorm/redis": "^0.7.0",
     "@lindorm/types": "^0.3.1",
-    "@types/better-sqlite3": "^7.6.13"
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/pg": "^8.15.4",
+    "better-sqlite3": "^12.2.0",
+    "ioredis": "^5.6.1",
+    "mongodb": "^6.17.0",
+    "pg": "^8.16.3"
   }
 }
