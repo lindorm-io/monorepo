@@ -22,7 +22,7 @@ describe("RabbitSource", () => {
     source.disconnect();
   });
 
-  test("should return a functioning repository for directly registered message", async () => {
+  test("should return a functioning message bus for directly registered message", async () => {
     const messageBus = source.messageBus(TestMessageTwo);
 
     expect(messageBus).toBeDefined();
@@ -32,7 +32,7 @@ describe("RabbitSource", () => {
     ).resolves.not.toThrow();
   });
 
-  test("should return a repository for directory registered message", () => {
+  test("should return a message bus for directory registered message", () => {
     expect(source.messageBus(TestMessageOne)).toBeDefined();
     expect(source.messageBus(TestMessageTwo)).toBeDefined();
   });

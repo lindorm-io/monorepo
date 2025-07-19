@@ -12,15 +12,16 @@ import { Constructor } from "@lindorm/types";
 import { sleep } from "@lindorm/utils";
 import amqplib, { ChannelModel, ConfirmChannel, ConsumeMessage } from "amqplib";
 import { RabbitSourceError } from "../errors";
-import { IRabbitMessageBus, IRabbitSource } from "../interfaces";
+import { IRabbitMessageBus, IRabbitPublisher, IRabbitSource } from "../interfaces";
 import {
-  CloneRabbitSourceOptions,
   RabbitSourceMessageBusOptions,
   RabbitSourceOptions,
+  WithLoggerOptions,
 } from "../types";
 import { FromClone } from "../types/private";
 import { bindQueue } from "../utils";
 import { RabbitMessageBus } from "./RabbitMessageBus";
+import { RabbitPublisher } from "./RabbitPublisher";
 
 export class RabbitSource implements IRabbitSource {
   public readonly name = "RabbitSource";
@@ -73,15 +74,7 @@ export class RabbitSource implements IRabbitSource {
     return this.channelModel;
   }
 
-  public addMessages(messages: MessageScannerInput): void {
-    this.messages.push(
-      ...MessageScanner.scan(messages).filter(
-        (Message) => !this.messages.includes(Message),
-      ),
-    );
-  }
-
-  public clone(options: CloneRabbitSourceOptions = {}): IRabbitSource {
+  public clone(options: WithLoggerOptions = {}): IRabbitSource {
     if (!this.channelModel) {
       throw new RabbitSourceError("Connection not established");
     }
@@ -111,30 +104,6 @@ export class RabbitSource implements IRabbitSource {
     await this.channelModel?.close();
   }
 
-  public messageBus<M extends IMessage>(
-    target: Constructor<M>,
-    options: RabbitSourceMessageBusOptions = {},
-  ): IRabbitMessageBus<M> {
-    if (!this.cache.has(target)) {
-      this.messageExists(target);
-
-      this.cache.set(
-        target,
-        new RabbitMessageBus<M>({
-          target: target,
-          channel: this.channel,
-          deadletters: this.deadletters,
-          exchange: this.exchange,
-          logger: options.logger ?? this.logger,
-          nackTimeout: options.nackTimeout ?? this.nackTimeout,
-          subscriptions: this.subscriptions,
-        }),
-      );
-    }
-
-    return this.cache.get(target) as IRabbitMessageBus<M>;
-  }
-
   public async setup(): Promise<void> {
     if (!this.channelModel) {
       await this.connect();
@@ -150,6 +119,56 @@ export class RabbitSource implements IRabbitSource {
       logger: this.logger,
       queue: this.deadletters,
       topic: this.deadletters,
+    });
+  }
+
+  public addMessages(messages: MessageScannerInput): void {
+    this.messages.push(
+      ...MessageScanner.scan(messages).filter(
+        (Message) => !this.messages.includes(Message),
+      ),
+    );
+  }
+
+  public hasMessage(target: Constructor<IMessage>): boolean {
+    return this.messages.includes(target);
+  }
+
+  public messageBus<M extends IMessage>(
+    target: Constructor<M>,
+    options: RabbitSourceMessageBusOptions = {},
+  ): IRabbitMessageBus<M> {
+    if (!this.cache.has(target)) {
+      this.messageExists(target);
+
+      this.cache.set(
+        target,
+        new RabbitMessageBus<M>({
+          channel: this.channel,
+          deadletters: this.deadletters,
+          exchange: this.exchange,
+          logger: options.logger ?? this.logger,
+          nackTimeout: options.nackTimeout ?? this.nackTimeout,
+          subscriptions: this.subscriptions,
+          target: target,
+        }),
+      );
+    }
+
+    return this.cache.get(target) as IRabbitMessageBus<M>;
+  }
+
+  public publisher<M extends IMessage>(
+    target: Constructor<M>,
+    options: WithLoggerOptions = {},
+  ): IRabbitPublisher<M> {
+    this.messageExists(target);
+
+    return new RabbitPublisher<M>({
+      channel: this.channel,
+      exchange: this.exchange,
+      logger: options.logger ?? this.logger,
+      target: target,
     });
   }
 

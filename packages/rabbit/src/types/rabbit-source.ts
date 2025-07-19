@@ -2,13 +2,12 @@ import { ILogger } from "@lindorm/logger";
 import { IMessage, MessageScannerInput } from "@lindorm/message";
 import { Options } from "amqplib";
 
-export type RabbitSourceMessageBusOptions = {
+export type WithLoggerOptions = {
   logger?: ILogger;
-  nackTimeout?: number;
 };
 
-export type CloneRabbitSourceOptions = {
-  logger?: ILogger;
+export type RabbitSourceMessageBusOptions = WithLoggerOptions & {
+  nackTimeout?: number;
 };
 
 export type RabbitSourceOptions = {

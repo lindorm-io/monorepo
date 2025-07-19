@@ -12,9 +12,10 @@ import {
 import { DeepPartial } from "@lindorm/types";
 import { ConfirmChannel } from "amqplib";
 import { randomBytes } from "crypto";
-import { IRabbitMessageBus } from "../interfaces";
-import { PublishOptions, PublishWithDelayOptions, RabbitBusOptions } from "../types";
-import { bindQueue, sanitizeRouteKey } from "../utils";
+import { IRabbitMessageBus, IRabbitPublisher } from "../interfaces";
+import { PublishOptions, RabbitMessageBusOptions } from "../types";
+import { bindQueue } from "../utils";
+import { RabbitPublisher } from "./RabbitPublisher";
 
 export class RabbitMessageBus<
   M extends IMessage,
@@ -27,10 +28,18 @@ export class RabbitMessageBus<
   private readonly kit: MessageKit<M, O>;
   private readonly logger: ILogger;
   private readonly nackTimeout: number;
+  private readonly publisher: IRabbitPublisher<M>;
   private readonly subscriptions: IMessageSubscriptions;
 
-  public constructor(options: RabbitBusOptions<M>) {
+  public constructor(options: RabbitMessageBusOptions<M>) {
     this.logger = options.logger.child(["RabbitMessageBus", options.target.name]);
+
+    this.publisher = new RabbitPublisher<M, O>({
+      channel: options.channel,
+      exchange: options.exchange,
+      logger: options.logger,
+      target: options.target,
+    });
 
     this.kit = new MessageKit<M, O>({ target: options.target, logger: this.logger });
 
@@ -44,29 +53,18 @@ export class RabbitMessageBus<
   // public
 
   public create(options: O | M): M {
-    return this.kit.create(options);
+    return this.publisher.create(options);
   }
 
   public copy(message: M): M {
-    return this.kit.copy(message);
+    return this.publisher.copy(message);
   }
 
   public async publish(
-    message: M | Array<M>,
+    message: O | M | Array<O | M>,
     options: PublishOptions = {},
   ): Promise<void> {
-    const array = isArray(message) ? message : [message];
-
-    const messages = array.map((m) =>
-      m instanceof this.kit.metadata.message.target ? m : this.create(m),
-    );
-
-    this.logger.verbose("Publishing messages", { messages });
-
-    for (const msg of messages) {
-      this.kit.validate(msg);
-      await this.handlePublish(this.kit.publish(msg), options);
-    }
+    return this.publisher.publish(message, options);
   }
 
   public async subscribe(
@@ -98,75 +96,6 @@ export class RabbitMessageBus<
   }
 
   // private
-
-  private async handlePublish(message: M, options: PublishOptions = {}): Promise<void> {
-    const delayField = this.kit.metadata.fields.find((f) => f.decorator === "DelayField");
-    const delay: number = delayField ? message[delayField.key] : options.delay;
-
-    if (delay && delay > 0) {
-      return this.handlePublishMessageWithDelay(message, { ...options, delay });
-    }
-
-    return this.handlePublishMessage(message, options);
-  }
-
-  private async handlePublishMessage(
-    message: M,
-    options: PublishOptions = {},
-  ): Promise<void> {
-    const content = JsonKit.buffer(message);
-    const topic = this.kit.getTopicName(message, options);
-    const config = this.getPublishConfig(message, options);
-
-    return new Promise((resolve, reject) => {
-      this.channel.publish(this.exchange, topic, content, config, (err) => {
-        if (err) {
-          this.logger.error("Channel Publish failed", err);
-          reject(err);
-        } else {
-          this.logger.debug("Message published", { message, topic });
-          this.kit.onPublish(message);
-          resolve();
-        }
-      });
-    });
-  }
-
-  private async handlePublishMessageWithDelay(
-    message: M,
-    options: PublishWithDelayOptions,
-  ): Promise<void> {
-    const content = JsonKit.buffer(message);
-    const topic = this.kit.getTopicName(message, options);
-    const topicDelayed = sanitizeRouteKey(`${topic}.delayed`);
-    const config = this.getPublishConfig(message, {
-      ...options,
-      expiration: options.delay,
-    });
-
-    await this.channel.assertQueue(topicDelayed, {
-      durable: true,
-      deadLetterExchange: this.exchange,
-      deadLetterRoutingKey: topic,
-    });
-
-    return new Promise((resolve, reject) => {
-      this.channel.publish("", topicDelayed, content, config, (err) => {
-        if (err) {
-          this.logger.error("Channel Publish failed", err);
-          reject(err);
-        } else {
-          this.logger.debug("Message published with delay", {
-            message,
-            topicDelayed,
-            topic,
-          });
-          this.kit.onPublish(message);
-          resolve();
-        }
-      });
-    });
-  }
 
   private async handleSubscribe(options: SubscribeOptions<M>): Promise<void> {
     const subscription: IMessageSubscription = {
@@ -263,58 +192,5 @@ export class RabbitMessageBus<
     for (const subscription of this.subscriptions.all(this.kit.metadata.message.target)) {
       await this.handleUnsubscribe(subscription);
     }
-  }
-
-  private getPublishConfig(message: M, options: PublishOptions = {}): PublishOptions {
-    const result: PublishOptions = {};
-
-    const correlation = this.kit.metadata.fields.find(
-      (f) => f.decorator === "CorrelationField",
-    );
-    if (correlation) {
-      result.correlationId = message[correlation.key];
-    }
-
-    const identifier = this.kit.metadata.fields.find(
-      (f) => f.decorator === "IdentifierField",
-    );
-    if (identifier) {
-      result.messageId = message[identifier.key];
-    }
-
-    if (this.kit.metadata.priority) {
-      result.priority = this.kit.metadata.priority;
-    }
-    const priorityField = this.kit.metadata.fields.find(
-      (f) => f.decorator === "PriorityField",
-    );
-    if (priorityField) {
-      result.priority = message[priorityField.key];
-    }
-
-    const persistent = this.kit.metadata.fields.find(
-      (f) => f.decorator === "PersistentField",
-    );
-    if (persistent) {
-      result.persistent = message[persistent.key] !== false;
-    }
-
-    const mandatory = this.kit.metadata.fields.find(
-      (f) => f.decorator === "MandatoryField",
-    );
-    if (mandatory) {
-      result.mandatory = message[mandatory.key] === true;
-    }
-
-    const timestamp = this.kit.metadata.fields.find(
-      (f) => f.decorator === "TimestampField",
-    );
-    if (timestamp) {
-      result.timestamp = message[timestamp.key]?.getTime();
-    }
-
-    result.type = this.kit.metadata.message.name;
-
-    return { ...result, ...options };
   }
 }
