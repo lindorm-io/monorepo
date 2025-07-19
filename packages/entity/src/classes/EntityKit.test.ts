@@ -41,7 +41,7 @@ describe("EntityKit", () => {
   let kitVer: EntityKit<IEntity>;
 
   @Entity()
-  @PrimarySource("external")
+  @PrimarySource("RedisSource")
   @OnCreate((entity) => {
     entity.OnCreate = "OnCreate";
   })
@@ -109,7 +109,7 @@ describe("EntityKit", () => {
   }
 
   @Entity()
-  @PrimarySource("mongo")
+  @PrimarySource("MongoSource")
   class TestEntityUtilityVersioned {
     @PrimaryKeyColumn()
     primaryKey!: string;
@@ -137,13 +137,13 @@ describe("EntityKit", () => {
     kit = new EntityKit({
       target: TestEntityUtility,
       logger: createMockLogger(),
-      source: "external",
+      source: "RedisSource",
       getNextIncrement: jest.fn().mockResolvedValue(999),
     });
     kitVer = new EntityKit({
       target: TestEntityUtilityVersioned,
       logger: createMockLogger(),
-      source: "mongo",
+      source: "MongoSource",
       getNextIncrement: jest.fn().mockResolvedValue(999),
     });
   });
@@ -164,7 +164,7 @@ describe("EntityKit", () => {
     kit = new EntityKit({
       target: TestEntityUtility,
       logger: createMockLogger(),
-      source: "redis",
+      source: "MnemosSource",
       getNextIncrement: jest.fn().mockResolvedValue(999),
     });
     expect(kit.isPrimarySource).toEqual(false);

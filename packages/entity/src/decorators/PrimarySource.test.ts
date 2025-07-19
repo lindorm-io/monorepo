@@ -6,7 +6,7 @@ import { PrimarySource } from "./PrimarySource";
 describe("PrimarySource Decorator", () => {
   test("should add metadata", () => {
     @Entity()
-    @PrimarySource("elastic")
+    @PrimarySource("MongoSource")
     class PrimarySourceDecoratorEntity {
       @PrimaryKeyColumn()
       id!: string;

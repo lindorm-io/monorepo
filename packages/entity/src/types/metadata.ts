@@ -161,13 +161,7 @@ export type MetaRelation = {
   type: "ManyToMany" | "ManyToOne" | "OneToMany" | "OneToOne";
 };
 
-export type MetaSource =
-  | "elastic"
-  | "external"
-  | "mnemos"
-  | "mongo"
-  | "postgres"
-  | "redis";
+export type MetaSource = "MnemosSource" | "MongoSource" | "RedisSource";
 
 export type MetaPrimarySource<T extends MetaSource = MetaSource> = {
   target: Function;
