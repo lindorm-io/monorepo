@@ -1,31 +1,27 @@
 import { Aegis } from "@lindorm/aegis";
 import { IAmphora } from "@lindorm/amphora";
 import { Conduit } from "@lindorm/conduit";
-import { Priority } from "@lindorm/enums";
 import { ClientError, ServerError } from "@lindorm/errors";
 import { ILogger } from "@lindorm/logger";
-import { Dict } from "@lindorm/types";
+import { Dict, Priority } from "@lindorm/types";
 import { PylonMetric } from "../../classes/private";
-import {
-  OptionsQueueHandler,
-  OptionsWebhookHandler,
-  PylonHttpContext,
-  PylonHttpMiddleware,
-} from "../../types";
+import { PylonHttpMiddleware, PylonQueueOptions, PylonWebhookOptions } from "../../types";
+import { createQueueCallback, createWebhookCallback } from "../../utils/private";
 
-type Options<C extends PylonHttpContext = PylonHttpContext> = {
+type Options = {
   amphora: IAmphora;
   logger: ILogger;
-  queue?: OptionsQueueHandler<C>;
-  webhook?: OptionsWebhookHandler<C>;
+  queue?: PylonQueueOptions<any>;
+  webhook?: PylonWebhookOptions<any>;
 };
 
-export const createHttpContextInitialisationMiddleware = <
-  C extends PylonHttpContext = PylonHttpContext,
->(
-  options: Options<C>,
-): PylonHttpMiddleware<C> =>
-  async function httpContextInitialisationMiddleware(ctx, next) {
+export const createHttpContextInitialisationMiddleware = (
+  options: Options,
+): PylonHttpMiddleware => {
+  const queue = createQueueCallback(options.queue);
+  const webhook = createWebhookCallback(options.webhook);
+
+  return async function httpContextInitialisationMiddleware(ctx, next) {
     ctx.body = {};
     ctx.status = ClientError.Status.NotFound;
 
@@ -46,17 +42,24 @@ export const createHttpContextInitialisationMiddleware = <
       conduit: new Conduit(),
     };
 
+    ctx.entities = {};
+
+    ctx.files = [];
+
+    ctx.metric = (name: string): PylonMetric =>
+      new PylonMetric({ logger: ctx.logger, name });
+
     ctx.queue = async (
-      name: string,
-      data: Dict = {},
-      priority: Priority = Priority.Default,
+      event: string,
+      payload: Dict = {},
+      priority: Priority = "default",
       optional = false,
     ): Promise<void> => {
-      if (!options.queue) {
-        throw new ServerError("Queue handler is not configured");
+      if (!queue) {
+        throw new ServerError("Queue callback is not configured");
       }
       try {
-        await options.queue(ctx, name, data, priority);
+        await queue(ctx, event, payload, priority);
       } catch (err: any) {
         if (optional) {
           ctx.logger.warn("Failed to handle queue", err);
@@ -66,19 +69,16 @@ export const createHttpContextInitialisationMiddleware = <
       }
     };
 
-    ctx.metric = (name: string): PylonMetric =>
-      new PylonMetric({ logger: ctx.logger, name });
-
     ctx.webhook = async (
       event: string,
       payload: Dict = {},
       optional = false,
     ): Promise<void> => {
-      if (!options.webhook) {
-        throw new ServerError("Webhook handler is not configured");
+      if (!webhook) {
+        throw new ServerError("Webhook callback is not configured");
       }
       try {
-        await options.webhook(ctx, event, payload);
+        await webhook(ctx, event, payload);
       } catch (err: any) {
         if (optional) {
           ctx.logger.warn("Failed to handle webhook", err);
@@ -90,3 +90,4 @@ export const createHttpContextInitialisationMiddleware = <
 
     await next();
   };
+};

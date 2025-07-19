@@ -1,3 +1,4 @@
+export * from "./common-sources-middleware";
 export * from "./event-context-initialisation-middleware";
 export * from "./event-error-handler-middleware";
 export * from "./event-logger-middleware";

@@ -1,4 +1,3 @@
-import { BodyType } from "../../../enums";
 import { getBodyType } from "./get-body-type";
 
 describe("isBodyMimeType", () => {
@@ -13,13 +12,13 @@ describe("isBodyMimeType", () => {
   test("should return json if body is json", () => {
     ctx.is.mockReturnValueOnce(true);
 
-    expect(getBodyType(ctx)).toEqual(BodyType.Json);
+    expect(getBodyType(ctx)).toEqual("json");
   });
 
   test("should return urlencoded if body is urlencoded", () => {
     ctx.is.mockReturnValueOnce(false).mockReturnValueOnce(true);
 
-    expect(getBodyType(ctx)).toEqual(BodyType.UrlEncoded);
+    expect(getBodyType(ctx)).toEqual("urlencoded");
   });
 
   test("should return text if body is text", () => {
@@ -28,7 +27,7 @@ describe("isBodyMimeType", () => {
       .mockReturnValueOnce(false)
       .mockReturnValueOnce(true);
 
-    expect(getBodyType(ctx)).toEqual(BodyType.Text);
+    expect(getBodyType(ctx)).toEqual("text");
   });
 
   test("should return multipart if body is multipart", () => {
@@ -38,12 +37,12 @@ describe("isBodyMimeType", () => {
       .mockReturnValueOnce(false)
       .mockReturnValueOnce(true);
 
-    expect(getBodyType(ctx)).toEqual(BodyType.Multipart);
+    expect(getBodyType(ctx)).toEqual("multipart");
   });
 
   test("should return unknown if body is unknown", () => {
     ctx.is.mockReturnValue(false);
 
-    expect(getBodyType(ctx)).toEqual(BodyType.Unknown);
+    expect(getBodyType(ctx)).toEqual("unknown");
   });
 });

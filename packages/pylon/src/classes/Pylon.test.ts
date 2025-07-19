@@ -1,10 +1,9 @@
 import { Amphora, IAmphora } from "@lindorm/amphora";
 import { B64 } from "@lindorm/b64";
-import { Environment, Priority } from "@lindorm/enums";
 import { ServerError } from "@lindorm/errors";
 import { isArray, isObject } from "@lindorm/is";
 import { KryptosKit } from "@lindorm/kryptos";
-import { ILogger, Logger, LogLevel } from "@lindorm/logger";
+import { ILogger, Logger } from "@lindorm/logger";
 import { randomBytes } from "crypto";
 import { readFileSync } from "fs";
 import MockDate from "mockdate";
@@ -59,7 +58,7 @@ describe("Pylon", () => {
   });
 
   beforeAll(() => {
-    logger = new Logger({ level: LogLevel.Error, readable: true });
+    logger = new Logger({ level: "error", readable: true });
 
     amphora = new Amphora({
       domain: "http://test.lindorm.io",
@@ -268,7 +267,7 @@ describe("Pylon", () => {
     });
 
     router.post("/queue", async (ctx) => {
-      ctx.queue("event", { payload: "payload" }, Priority.Background);
+      ctx.queue("event", { payload: "payload" }, "background");
 
       ctx.status = 204;
     });
@@ -295,21 +294,23 @@ describe("Pylon", () => {
           subject: true,
         },
       },
-      environment: Environment.Test,
-      handlers: {
+
+      callbacks: {
         health: () => handlerSpy("health"),
         rightToBeForgotten: () => handlerSpy("rightToBeForgotten"),
-        queue: (...args) => handlerSpy(...args),
-        webhook: (...args) => handlerSpy(...args),
       },
+
+      environment: "test",
       httpMiddleware: [middlewareSpy],
       httpRouters: [{ path: "/test", router }],
       name: "@lindorm/pylon",
       openIdConfiguration: { jwksUri: "http://test.lindorm.io/.well-known/jwks.json" },
       parseBody: { formidable: true },
       port: 55555,
-      session: { encrypted: true, signed: true },
+      queue: { use: "custom", custom: handlerSpy },
+      session: { use: "cookie", encrypted: true, signed: true },
       version: "0.0.1",
+      webhook: { use: "custom", custom: handlerSpy },
     });
 
     await pylon.setup();
@@ -445,6 +446,7 @@ describe("Pylon", () => {
 
     expect(response.body).toEqual({
       domain: "http://test.lindorm.io",
+      name: "@lindorm/pylon",
       environment: "test",
       version: "0.0.1",
     });
@@ -717,7 +719,7 @@ describe("Pylon", () => {
       __meta: {
         app: "Pylon",
         environment: "test",
-        name: "unknown",
+        name: "@lindorm/pylon",
         version: "0.0.1",
       },
       error: {
@@ -751,7 +753,7 @@ describe("Pylon", () => {
       expect.any(Object),
       "event",
       { payload: "payload" },
-      "urn:lindorm:priority:background",
+      "background",
     );
   });
 

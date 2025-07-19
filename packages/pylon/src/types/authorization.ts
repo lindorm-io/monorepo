@@ -1,17 +1,17 @@
-import { AuthorizationType } from "../enums";
+export type AuthorizationType = "basic" | "bearer" | "none";
 
 type AuthorizationNone = {
-  type: AuthorizationType.None;
+  type: "none";
   value: null;
 };
 
 type AuthorizationBasic = {
-  type: AuthorizationType.Basic;
+  type: "basic";
   value: string;
 };
 
 type AuthorizationBearer = {
-  type: AuthorizationType.Bearer;
+  type: "bearer";
   value: string;
 };
 

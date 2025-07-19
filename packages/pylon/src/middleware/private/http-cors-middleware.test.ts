@@ -1,5 +1,3 @@
-import { HttpMethod } from "@lindorm/conduit";
-import { EmbedderPolicy, OpenerPolicy } from "../../enums";
 import { CorsOptions } from "../../types";
 import { createHttpCorsMiddleware } from "./http-cors-middleware";
 
@@ -20,12 +18,12 @@ describe("httpCorsMiddleware", () => {
     options = {
       allowCredentials: true,
       allowHeaders: ["allowed-header-1", "allowed-header-2", "allowed-header-3"],
-      allowMethods: [HttpMethod.Get, HttpMethod.Post, HttpMethod.Options],
+      allowMethods: ["GET", "POST", "OPTIONS"],
       allowOrigins: ["http://localhost:3000", "http://localhost:3001"],
-      embedderPolicy: EmbedderPolicy.RequireCorp,
+      embedderPolicy: "require-corp",
       exposeHeaders: ["exposed-header-1", "exposed-header-2"],
       maxAge: 600,
-      openerPolicy: OpenerPolicy.SameOrigin,
+      openerPolicy: "same-origin",
       privateNetworkAccess: true,
     };
 
@@ -140,7 +138,7 @@ describe("httpCorsMiddleware", () => {
   });
 
   test("should throw on invalid method in preflight", async () => {
-    options.allowMethods = [HttpMethod.Get];
+    options.allowMethods = ["GET"];
 
     await expect(createHttpCorsMiddleware(options)(ctx, next)).resolves.not.toThrow();
 

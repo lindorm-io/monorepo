@@ -1,4 +1,3 @@
-import { Environment } from "@lindorm/enums";
 import { randomUUID as _randomUUID } from "crypto";
 import MockDate from "mockdate";
 import { getAuthorization as _getAuthorization } from "../../utils/private";
@@ -24,7 +23,7 @@ describe("createHttpStateMiddleware", () => {
     };
 
     options = {
-      environment: Environment.Test,
+      environment: "test",
       name: "test_name",
       minRequestAge: "10s",
       maxRequestAge: "10s",

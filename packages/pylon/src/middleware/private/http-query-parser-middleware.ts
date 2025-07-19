@@ -1,4 +1,4 @@
-import { ChangeCase, changeKeys } from "@lindorm/case";
+import { changeKeys } from "@lindorm/case";
 import { isObject } from "@lindorm/is";
 import { parseStringRecord } from "@lindorm/utils";
 import { PylonHttpMiddleware } from "../../types";
@@ -10,7 +10,7 @@ export const httpQueryParserMiddleware: PylonHttpMiddleware = async (ctx, next) 
 
   ctx.data = {
     ...ctx.data,
-    ...parseStringRecord(changeKeys(ctx.query, ChangeCase.Camel)),
+    ...parseStringRecord(changeKeys(ctx.query, "camel")),
   };
 
   await next();

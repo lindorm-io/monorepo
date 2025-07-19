@@ -1,5 +1,5 @@
 import { IAmphora } from "@lindorm/amphora";
-import { Environment } from "@lindorm/enums";
+import { ConduitClientCredentialsCache } from "@lindorm/conduit";
 import { ILogger } from "@lindorm/logger";
 import { ILindormWorker } from "@lindorm/worker";
 import { Server as HttpServer, createServer } from "http";
@@ -10,22 +10,37 @@ import {
   PylonOptions,
   PylonSetup,
   PylonSocketContext,
+  PylonSource,
+  PylonSubscribeOptions,
   PylonTeardown,
 } from "../types";
-import { scanWorkers } from "../utils/private";
+import {
+  addQueueEntities,
+  addQueueMessages,
+  addSessionEntities,
+  addWebhookEntities,
+  addWebhookMessages,
+  calculateSubscriptions,
+  calculateWorkers,
+  scanWorkers,
+} from "../utils/private";
 import { PylonHttp } from "./PylonHttp";
 import { PylonIo } from "./PylonIo";
 
 export class Pylon<
-  C extends PylonHttpContext = PylonHttpContext,
-  E extends PylonSocketContext = PylonSocketContext,
+  H extends PylonHttpContext = PylonHttpContext,
+  S extends PylonSocketContext = PylonSocketContext,
 > {
   private readonly amphora: IAmphora;
-  private readonly http: PylonHttp<C>;
-  private readonly io: PylonIo<E> | undefined;
+  private readonly http: PylonHttp<H>;
+  private readonly io: PylonIo<S> | undefined;
   private readonly logger: ILogger;
+  private readonly options: PylonOptions<H, S>;
   private readonly port: number;
   private readonly server: HttpServer;
+  private readonly sources: Map<string, PylonSource>;
+  private readonly subscriptions: Array<PylonSubscribeOptions>;
+  private readonly webhookCache: ConduitClientCredentialsCache;
   private readonly workers: Array<ILindormWorker>;
 
   private isStarted: boolean;
@@ -35,10 +50,29 @@ export class Pylon<
   private readonly _setup: PylonSetup | undefined;
   private readonly _teardown: PylonTeardown | undefined;
 
-  public constructor(options: PylonOptions<C, E>) {
-    options.environment = options.environment ?? Environment.Development;
+  public constructor(options: PylonOptions<H, S>) {
+    this.isSetup = false;
+    this.isStarted = false;
+    this.isTeardown = false;
+    this.webhookCache = [];
+
+    options.environment = options.environment ?? "development";
     options.version = options.version ?? "0.0.0";
     options.domain = options.domain ?? options.amphora.domain ?? "unknown";
+
+    this.sources = new Map(
+      (options.sources ?? []).map((source) => [source.name, source]),
+    );
+
+    options.subscriptions = options.subscriptions ?? [];
+    options.subscriptions.push(
+      ...calculateSubscriptions(options, this.sources, this.webhookCache),
+    );
+
+    options.workers = options.workers ?? [];
+    options.workers.push(...calculateWorkers(options, this.sources, this.webhookCache));
+
+    this.options = options;
 
     this.logger = options.logger.child(["Pylon"], {
       domain: options.domain,
@@ -47,33 +81,20 @@ export class Pylon<
       version: options.version,
     });
 
-    this.isSetup = false;
-    this.isStarted = false;
-    this.isTeardown = false;
-
     this.amphora = options.amphora;
     this.port = options.port ?? 3000;
+
+    this.subscriptions = options.subscriptions;
+
     this.workers = scanWorkers(options);
 
     this._setup = options.setup;
     this._teardown = options.teardown;
 
     this.http = new PylonHttp({
+      ...options,
       amphora: this.amphora,
-      auth: options.auth,
-      cookies: options.cookies,
-      cors: options.cors,
-      domain: options.domain,
-      environment: options.environment,
-      handlers: options.handlers,
-      httpMiddleware: options.httpMiddleware,
-      httpRouters: options.httpRouters,
       logger: this.logger,
-      maxRequestAge: options.maxRequestAge,
-      openIdConfiguration: options.openIdConfiguration,
-      parseBody: options.parseBody,
-      session: options.session,
-      version: options.version,
     });
 
     this.server = createServer(this.http.server.callback());
@@ -82,12 +103,9 @@ export class Pylon<
 
     if (options.socketListeners) {
       this.io = new PylonIo(this.server, {
+        ...options,
         amphora: this.amphora,
-        socketListeners: options.socketListeners,
         logger: this.logger,
-        socketMiddleware: options.socketMiddleware,
-        socketOptions: options.socketOptions,
-        socketRedis: options.socketRedis,
       });
 
       this.http.use([httpSocketIoMiddleware(this.io.server)]);
@@ -112,15 +130,23 @@ export class Pylon<
 
     await this.amphora.setup();
 
+    this.loadSources();
+
     if (this._setup) {
       try {
         const result = await this._setup();
-        this.logger.verbose("Pylon setup", { result });
+        this.logger.verbose("Pylon setup done", { result });
       } catch (error: any) {
         this.logger.error("Pylon failed to setup", error);
         process.exit(1);
       }
     }
+
+    for (const source of this.sources.values()) {
+      await source.setup();
+    }
+
+    await this.subscribe();
 
     this.isSetup = true;
     this.isTeardown = false;
@@ -173,6 +199,10 @@ export class Pylon<
     if (this._teardown) {
       const result = await this._teardown();
       this.logger.verbose("Pylon teardown", { result });
+    }
+
+    for (const source of this.sources.values()) {
+      await source.disconnect();
     }
 
     this.isSetup = false;
@@ -231,5 +261,46 @@ export class Pylon<
       this.logger.warn("Forcing shutdown due to timeout");
       process.exit(1);
     }, 10000).unref();
+  }
+
+  private loadSources(): void {
+    if (this.options.queue?.use === "entity") {
+      addQueueEntities(this.options.queue, this.sources);
+    }
+
+    if (this.options.queue?.use === "message") {
+      addQueueMessages(this.options.queue, this.sources);
+    }
+
+    if (this.options.session?.use === "stored") {
+      addSessionEntities(this.options.session, this.sources);
+    }
+
+    if (this.options.webhook?.use === "entity") {
+      addWebhookEntities(this.options.webhook, this.sources);
+    }
+
+    if (this.options.webhook?.use === "message") {
+      addWebhookMessages(this.options.webhook, this.sources);
+    }
+  }
+
+  private async subscribe(): Promise<void> {
+    const sources = this.sources
+      .values()
+      .filter(
+        (source) =>
+          source.name === "KafkaSource" ||
+          source.name === "RabbitSource" ||
+          source.name === "RedisSource",
+      );
+
+    for (const { target, ...subscribe } of this.subscriptions) {
+      for (const source of sources) {
+        if (!source.hasMessage(target)) continue;
+
+        await source.messageBus(target).subscribe(subscribe);
+      }
+    }
   }
 }

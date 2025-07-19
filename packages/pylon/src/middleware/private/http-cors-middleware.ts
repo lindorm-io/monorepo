@@ -1,5 +1,5 @@
-import { HttpMethod } from "@lindorm/conduit";
 import { isArray } from "@lindorm/is";
+import { HttpMethod } from "@lindorm/types";
 import { CorsError } from "../../errors";
 import { CorsOptions, PylonHttpMiddleware } from "../../types";
 import {

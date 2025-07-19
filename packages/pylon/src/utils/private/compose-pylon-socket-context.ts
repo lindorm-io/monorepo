@@ -1,4 +1,4 @@
-import { ChangeCase, changeKeys } from "@lindorm/case";
+import { changeKeys } from "@lindorm/case";
 import { isObject } from "@lindorm/is";
 import { randomUUID } from "crypto";
 import {
@@ -21,7 +21,7 @@ export const composePylonSocketContextBase = (
   let args: any;
 
   if (options.args.length === 1 && isObject(options.args[0])) {
-    args = changeKeys(options.args[0], ChangeCase.Camel);
+    args = changeKeys(options.args[0], "camel");
   } else {
     args = options.args;
   }

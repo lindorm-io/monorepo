@@ -1,4 +1,4 @@
-import { ChangeCase, changeKeys } from "@lindorm/case";
+import { changeKeys } from "@lindorm/case";
 import { ClientError } from "@lindorm/errors";
 import { isObject } from "@lindorm/is";
 import { parseStringRecord } from "@lindorm/utils";
@@ -12,7 +12,7 @@ export const httpParamsParserMiddleware: PylonHttpMiddleware = async (ctx, next)
   try {
     ctx.data = {
       ...ctx.data,
-      ...parseStringRecord(changeKeys(ctx.params, ChangeCase.Camel)),
+      ...parseStringRecord(changeKeys(ctx.params, "camel")),
     };
   } catch (err: any) {
     ctx.status = ClientError.Status.BadRequest;

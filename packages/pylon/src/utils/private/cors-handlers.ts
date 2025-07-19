@@ -1,6 +1,6 @@
-import { HttpMethod } from "@lindorm/conduit";
 import { sec } from "@lindorm/date";
 import { isArray, isBoolean, isFinite, isString } from "@lindorm/is";
+import { HttpMethod } from "@lindorm/types";
 import { CorsError } from "../../errors";
 import { CorsOptions, PylonHttpContext } from "../../types";
 

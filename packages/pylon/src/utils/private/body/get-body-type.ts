@@ -1,5 +1,4 @@
-import { BodyType } from "../../../enums";
-import { PylonHttpContext } from "../../../types";
+import { BodyType, PylonHttpContext } from "../../../types";
 
 const JSON_TYPES = [
   "application/csp-report",
@@ -23,10 +22,10 @@ const isTextBody = (ctx: PylonHttpContext): boolean => Boolean(ctx.is("text/*"))
 const isMultipartBody = (ctx: PylonHttpContext): boolean => Boolean(ctx.is("multipart"));
 
 export const getBodyType = (ctx: PylonHttpContext): BodyType => {
-  if (isJsonBody(ctx)) return BodyType.Json;
-  if (isUrlEncodedBody(ctx)) return BodyType.UrlEncoded;
-  if (isTextBody(ctx)) return BodyType.Text;
-  if (isMultipartBody(ctx)) return BodyType.Multipart;
+  if (isJsonBody(ctx)) return "json";
+  if (isUrlEncodedBody(ctx)) return "urlencoded";
+  if (isTextBody(ctx)) return "text";
+  if (isMultipartBody(ctx)) return "multipart";
 
-  return BodyType.Unknown;
+  return "unknown";
 };

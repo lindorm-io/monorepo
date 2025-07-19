@@ -1,8 +1,7 @@
 import { ClientError } from "@lindorm/errors";
 import CoBody from "co-body";
 import { Files } from "formidable";
-import { BodyType } from "../../../enums";
-import { ParseBodyConfig, PylonHttpContext } from "../../../types";
+import { BodyType, ParseBodyConfig, PylonHttpContext } from "../../../types";
 import { getContentEncoding } from "./get-content-encoding";
 import { parseWithFormidable } from "./parse-with-formidable";
 
@@ -31,7 +30,7 @@ export const parseBody = async (
   const encoding = getContentEncoding(ctx.get("content-type")) ?? UTF8;
 
   switch (bodyType) {
-    case BodyType.Json:
+    case "json":
       return await CoBody.json(ctx, {
         encoding,
         limit: json,
@@ -39,21 +38,21 @@ export const parseBody = async (
         returnRawBody,
       });
 
-    case BodyType.UrlEncoded:
+    case "urlencoded":
       return await CoBody.form(ctx, {
         encoding,
         limit: form,
         returnRawBody,
       });
 
-    case BodyType.Text:
+    case "text":
       return await CoBody.text(ctx, {
         encoding,
         limit: text,
         returnRawBody,
       });
 
-    case BodyType.Multipart:
+    case "multipart":
       if (!multipart) {
         throw new ClientError("Multipart body is not supported", {
           status: ClientError.Status.BadRequest,

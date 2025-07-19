@@ -1,9 +1,8 @@
-import { PkceMethod } from "@lindorm/enums";
 import { merge } from "@lindorm/utils";
 import { PylonAuthConfig, PylonAuthOptions } from "../../../types";
 
 const DEFAULT: Omit<PylonAuthConfig, "clientId" | "clientSecret" | "issuer"> = {
-  codeChallengeMethod: PkceMethod.S256,
+  codeChallengeMethod: "S256",
   errorRedirect: "/error",
   pathPrefix: "/auth",
   tokenExpiry: "1d",

@@ -3,7 +3,8 @@ import { ms } from "@lindorm/date";
 import { ClientError } from "@lindorm/errors";
 import { OpenIdAuthorizeResponseQuery, OpenIdTokenResponse } from "@lindorm/types";
 import { randomUUID } from "crypto";
-import { PylonAuthConfig, PylonHttpContext, PylonSession } from "../../../types";
+import { IPylonSession } from "../../../interfaces";
+import { PylonAuthConfig, PylonHttpContext } from "../../../types";
 
 type Data = OpenIdTokenResponse | OpenIdAuthorizeResponseQuery;
 
@@ -11,10 +12,10 @@ export const parseTokenData = (
   ctx: PylonHttpContext,
   config: PylonAuthConfig,
   data: Data,
-): PylonSession => {
+): IPylonSession => {
   const tdata = data as OpenIdTokenResponse;
 
-  const session: PylonSession = ctx.state.session ?? {
+  const session: IPylonSession = ctx.state.session ?? {
     id: randomUUID(),
     accessToken: "",
     expiresAt: 0,

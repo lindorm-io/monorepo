@@ -1,4 +1,4 @@
-import { Environment } from "@lindorm/enums";
+import { Environment } from "@lindorm/types";
 import { randomUUID } from "crypto";
 import { PylonHttpMiddleware } from "../../types";
 import { getAuthorization } from "../../utils/private";
@@ -6,11 +6,13 @@ import { getAuthorization } from "../../utils/private";
 type Options = {
   environment?: Environment;
   name?: string;
+  domain?: string;
   version?: string;
 };
 
 export const createHttpStateMiddleware = (options: Options): PylonHttpMiddleware => {
-  const environment = options.environment || Environment.Unknown;
+  const domain = options.domain ?? "unknown";
+  const environment = options.environment || "unknown";
   const name = options.name ?? "unknown";
   const version = options.version ?? "0.0.0";
 
@@ -19,12 +21,12 @@ export const createHttpStateMiddleware = (options: Options): PylonHttpMiddleware
       const requestDate = ctx.get("date");
 
       ctx.state = {
-        app: { environment, name, version },
+        app: { domain, environment, name, version },
         authorization: getAuthorization(ctx),
         metadata: {
           correlationId: ctx.get("x-correlation-id") || randomUUID(),
           date: requestDate ? new Date(requestDate) : new Date(),
-          environment: (ctx.get("x-environment") as Environment) || Environment.Unknown,
+          environment: (ctx.get("x-environment") as Environment) || "unknown",
           origin: ctx.get("x-origin") || ctx.get("origin") || null,
           requestId: ctx.get("x-request-id") || randomUUID(),
           responseId: randomUUID(),

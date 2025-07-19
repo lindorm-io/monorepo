@@ -1,6 +1,4 @@
-import { HttpMethod } from "@lindorm/enums";
 import MockDate from "mockdate";
-import { BodyType } from "../../enums";
 import { PylonError } from "../../errors";
 import {
   composeParseBodyConfig as _composeParseBodyConfig,
@@ -50,10 +48,10 @@ describe("createHttpBodyParserMiddleware", () => {
         json: "1mb",
         text: "1mb",
       },
-      methods: [HttpMethod.Post, HttpMethod.Put, HttpMethod.Patch],
+      methods: ["POST", "PUT", "PATCH"],
       multipart: true,
     });
-    getBodyType.mockReturnValue(BodyType.Json);
+    getBodyType.mockReturnValue("json");
     parseBody.mockResolvedValue({
       parsed: {
         value: "parsed",
@@ -86,7 +84,7 @@ describe("createHttpBodyParserMiddleware", () => {
   });
 
   test("should change case and set on data when body type is urlencoded", async () => {
-    getBodyType.mockReturnValue(BodyType.UrlEncoded);
+    getBodyType.mockReturnValue("urlencoded");
 
     await expect(
       createHttpBodyParserMiddleware()(ctx, jest.fn()),
@@ -99,7 +97,7 @@ describe("createHttpBodyParserMiddleware", () => {
   });
 
   test("should not change case of body when multipart", async () => {
-    getBodyType.mockReturnValue(BodyType.Multipart);
+    getBodyType.mockReturnValue("multipart");
 
     await expect(
       createHttpBodyParserMiddleware()(ctx, jest.fn()),
@@ -109,7 +107,7 @@ describe("createHttpBodyParserMiddleware", () => {
   });
 
   test("should not change case of body when text", async () => {
-    getBodyType.mockReturnValue(BodyType.Text);
+    getBodyType.mockReturnValue("text");
 
     await expect(
       createHttpBodyParserMiddleware()(ctx, jest.fn()),

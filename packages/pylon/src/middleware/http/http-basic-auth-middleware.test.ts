@@ -1,7 +1,6 @@
 import { B64 } from "@lindorm/b64";
 import { ClientError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger";
-import { AuthorizationType } from "../../enums";
 import { Credentials } from "../../types";
 import { createHttpBasicAuthMiddleware } from "./http-basic-auth-middleware";
 
@@ -22,7 +21,7 @@ describe("createHttpBasicAuthMiddleware", () => {
       logger: createMockLogger(),
       state: {
         authorization: {
-          type: AuthorizationType.Basic,
+          type: "basic",
           value: B64.encode("user:pass"),
         },
       },
@@ -46,7 +45,7 @@ describe("createHttpBasicAuthMiddleware", () => {
   });
 
   test("should reject invalid authorization header", async () => {
-    ctx.state.authorization.type = AuthorizationType.None;
+    ctx.state.authorization.type = "none";
 
     await expect(
       createHttpBasicAuthMiddleware(credentials)(ctx, jest.fn()),

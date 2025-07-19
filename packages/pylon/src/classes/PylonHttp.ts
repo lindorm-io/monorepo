@@ -9,6 +9,7 @@ import {
   createHttpDateValidationMiddleware,
   createHttpSessionMiddleware,
   createHttpStateMiddleware,
+  createSourcesMiddleware,
   httpErrorHandlerMiddleware,
   httpQueryParserMiddleware,
   httpRequestLoggerMiddleware,
@@ -83,8 +84,8 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
       createHttpContextInitialisationMiddleware({
         amphora: this.options.amphora,
         logger: this.logger,
-        queue: this.options.handlers?.queue,
-        webhook: this.options.handlers?.webhook,
+        queue: this.options.queue,
+        webhook: this.options.webhook,
       }),
       createHttpDateValidationMiddleware({
         minRequestAge: this.options.minRequestAge,
@@ -98,6 +99,12 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
       httpQueryParserMiddleware,
       httpRequestLoggerMiddleware,
       httpResponseBodyMiddleware,
+      createSourcesMiddleware({
+        hermes: this.options.hermes,
+        entities: this.options.entities,
+        messages: this.options.messages,
+        sources: this.options.sources,
+      }),
     ]);
 
     this.logger.debug("Middleware loaded");
@@ -108,7 +115,7 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
 
     this.router.use(...this.middleware);
 
-    this.addRouter("/health", createHealthRouter(this.options.handlers?.health));
+    this.addRouter("/health", createHealthRouter(this.options.callbacks?.health));
     this.addRouter("/.well-known", createWellKnownRouter(this.options));
 
     if (this.options.auth) {

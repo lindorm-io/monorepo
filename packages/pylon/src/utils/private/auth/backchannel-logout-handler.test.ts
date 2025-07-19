@@ -1,4 +1,4 @@
-import { ClientError, ServerError } from "@lindorm/errors";
+import { ClientError } from "@lindorm/errors";
 import { backchannelLogoutHandler } from "./backchannel-logout-handler";
 
 describe("backchannelLogoutHandler", () => {
@@ -24,9 +24,7 @@ describe("backchannelLogoutHandler", () => {
         logoutToken: "logoutToken",
       },
       session: {
-        store: {
-          logout: jest.fn(),
-        },
+        logout: jest.fn(),
       },
       state: {
         session: {
@@ -44,12 +42,6 @@ describe("backchannelLogoutHandler", () => {
 
     expect(ctx.body).toBeUndefined();
     expect(ctx.status).toBe(204);
-  });
-
-  test("should throw on missing session store", async () => {
-    ctx.session.store = undefined;
-
-    await expect(backchannelLogoutHandler(ctx, jest.fn())).rejects.toThrow(ServerError);
   });
 
   test("should throw on invalid backchannel logout token", async () => {

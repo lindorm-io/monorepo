@@ -1,5 +1,5 @@
 import { ReadableTime } from "@lindorm/date";
-import { PkceMethod } from "@lindorm/enums";
+import { PkceMethod } from "@lindorm/types";
 import {
   DeepPartial,
   OpenIdPromptMode,

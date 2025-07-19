@@ -1,8 +1,7 @@
-import { AuthorizationType } from "../../enums";
-import { AuthorizationState, PylonHttpContext } from "../../types";
+import { AuthorizationState, AuthorizationType, PylonHttpContext } from "../../types";
 
 const DEFAULT: AuthorizationState = {
-  type: AuthorizationType.None,
+  type: "none",
   value: null,
 } as const;
 
@@ -10,7 +9,7 @@ export const getAuthorization = (ctx: PylonHttpContext): AuthorizationState => {
   const [t, value] = ctx.get("authorization")?.split(" ") ?? [];
   const type = t?.toLowerCase() as AuthorizationType;
 
-  if (![AuthorizationType.Basic, AuthorizationType.Bearer].includes(type)) {
+  if (!["basic", "bearer"].includes(type)) {
     return DEFAULT;
   }
 

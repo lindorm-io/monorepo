@@ -1,22 +1,11 @@
-import { OpenIdScope } from "@lindorm/types";
+import { IPylonSession } from "../interfaces";
 import { PylonSetCookie } from "./cookies";
 
-export type PylonSessionStore = {
-  set: (session: PylonSession) => Promise<string>;
-  get: (id: string) => Promise<PylonSession | null>;
-  del: (id: string) => Promise<void>;
-  logout: (subject: string) => Promise<void>;
-};
-
-export type PylonSession = {
-  id: string;
-  accessToken: string;
-  expiresAt: number;
-  idToken?: string;
-  issuedAt: number;
-  refreshToken?: string;
-  scope: Array<OpenIdScope | string>;
-  subject: string;
+export type PylonSessionOnContext = {
+  set(session: IPylonSession): Promise<void>;
+  get(): Promise<IPylonSession | null>;
+  del(): Promise<void>;
+  logout(subject: string): Promise<void>;
 };
 
 export type PylonSessionConfig = Pick<
@@ -33,5 +22,4 @@ export type PylonSessionConfig = Pick<
   | "signed"
 > & {
   name?: string;
-  store?: PylonSessionStore;
 };

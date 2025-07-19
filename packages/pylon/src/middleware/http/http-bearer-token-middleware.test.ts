@@ -1,7 +1,6 @@
 import { createMockAegis } from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger";
-import { AuthorizationType } from "../../enums";
 import { createHttpBearerTokenMiddleware } from "./http-bearer-token-middleware";
 
 describe("createHttpBearerTokenMiddleware", () => {
@@ -14,7 +13,7 @@ describe("createHttpBearerTokenMiddleware", () => {
       logger: createMockLogger(),
       state: {
         authorization: {
-          type: AuthorizationType.Bearer,
+          type: "bearer",
           value: "token",
         },
         tokens: {},
@@ -42,7 +41,7 @@ describe("createHttpBearerTokenMiddleware", () => {
   });
 
   test("should reject invalid authorization header", async () => {
-    ctx.state.authorization.type = AuthorizationType.None;
+    ctx.state.authorization.type = "none";
 
     await expect(
       createHttpBearerTokenMiddleware(options)(ctx, jest.fn()),

@@ -6,6 +6,7 @@ import { Server } from "http";
 import { Server as SocketIoServer } from "socket.io";
 import {
   createEventContextInitialisationMiddleware,
+  createSourcesMiddleware,
   eventErrorHandlerMiddleware,
   eventLoggerMiddleware,
 } from "../middleware/private";
@@ -31,7 +32,14 @@ export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
   public constructor(http: Server, options: PylonIoOptions<T>) {
     this.logger = options.logger.child(["PylonSocket"]);
 
-    this.middleware = [];
+    this.middleware = [
+      createSourcesMiddleware({
+        hermes: options.hermes,
+        entities: options.entities,
+        messages: options.messages,
+        sources: options.sources,
+      }),
+    ];
     this.options = options;
     this.server = new SocketIoServer(http, {
       ...(options.socketOptions ?? {}),
@@ -127,7 +135,7 @@ export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
     middleware: Array<PylonSocketMiddleware<T>>,
     listeners: Array<PylonListener<T>>,
   ): void {
-    socket.data = initialisePylonSocketData();
+    socket.data = initialisePylonSocketData(this.options);
 
     loadPylonListeners(io, socket as PylonSocket, middleware, listeners);
 

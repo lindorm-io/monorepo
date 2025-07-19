@@ -1,7 +1,6 @@
 import { B64 } from "@lindorm/b64";
 import { ClientError } from "@lindorm/errors";
 import { isArray, isFunction } from "@lindorm/is";
-import { AuthorizationType } from "../../enums";
 import { PylonError } from "../../errors";
 import { Credentials, PylonHttpMiddleware } from "../../types";
 
@@ -40,9 +39,9 @@ export const createHttpBasicAuthMiddleware = (
   const verify = isFunction(credentials) ? credentials : defaultCallback(array);
 
   return async function httpBasicAuthMiddleware(ctx, next) {
-    if (ctx.state.authorization.type !== AuthorizationType.Basic) {
+    if (ctx.state.authorization.type !== "basic") {
       throw new ClientError("Invalid Authorization header", {
-        details: "Authorization header must be of type Basic",
+        details: "Authorization header must be of type basic",
         debug: {
           header: ctx.get("authorization"),
           state: ctx.state.authorization,

@@ -1,6 +1,9 @@
 import { ReadableTime } from "@lindorm/date";
-import { HttpMethod } from "@lindorm/enums";
-import { EmbedderPolicy, OpenerPolicy } from "../enums";
+import { HttpMethod } from "@lindorm/types";
+
+export type EmbedderPolicy = "credentialless" | "require-corp" | "unsafe-none";
+
+export type OpenerPolicy = "same-origin" | "same-origin-allow-popups" | "unsafe-none";
 
 export type CorsOptions = {
   allowCredentials?: boolean;

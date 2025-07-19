@@ -1,4 +1,3 @@
-import { ChangeCase } from "@lindorm/case";
 import {
   Conduit,
   ConduitOptions,
@@ -39,7 +38,7 @@ export const createHttpConduitMiddleware = <
           ...(ctx.state.metadata.sessionId
             ? [conduitSessionMiddleware(ctx.state.metadata.sessionId)]
             : []),
-          conduitChangeResponseDataMiddleware(ChangeCase.Camel),
+          conduitChangeResponseDataMiddleware("camel"),
           ...(options.middleware ?? []),
         ],
         logger: ctx.logger,

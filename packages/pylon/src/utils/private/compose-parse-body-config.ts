@@ -1,4 +1,4 @@
-import { HttpMethod } from "@lindorm/enums";
+import { HttpMethod } from "@lindorm/types";
 import { ParseBodyConfig, ParseBodyOptions } from "../../types";
 
 export const composeParseBodyConfig = (options?: ParseBodyOptions): ParseBodyConfig => {
@@ -9,11 +9,7 @@ export const composeParseBodyConfig = (options?: ParseBodyOptions): ParseBodyCon
   const formidable =
     options?.formidable ?? options?.formidableOptions !== undefined ?? false;
 
-  const methods = (options?.methods as Array<HttpMethod>) ?? [
-    HttpMethod.Post,
-    HttpMethod.Put,
-    HttpMethod.Patch,
-  ];
+  const methods = (options?.methods as Array<HttpMethod>) ?? ["POST", "PUT", "PATCH"];
 
   const multipart = options?.multipart ?? formidable ?? false;
 

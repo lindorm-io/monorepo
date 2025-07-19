@@ -2,11 +2,12 @@ import { Aegis } from "@lindorm/aegis";
 import { createMockAmphora } from "@lindorm/amphora";
 import { Conduit } from "@lindorm/conduit";
 import { createMockLogger } from "@lindorm/logger";
+import { PylonOptions } from "../../types";
 import { createHttpContextInitialisationMiddleware } from "./http-context-initialisation-middleware";
 
 describe("createHttpContextInitialisationMiddleware", () => {
   let ctx: any;
-  let options: any;
+  let options: PylonOptions;
 
   beforeEach(() => {
     ctx = {
@@ -47,7 +48,7 @@ describe("createHttpContextInitialisationMiddleware", () => {
   test("should handle queues", async () => {
     const queueHandler = jest.fn();
 
-    options.queue = queueHandler;
+    options.queue = { use: "custom", custom: queueHandler };
 
     await createHttpContextInitialisationMiddleware(options)(ctx, jest.fn());
 
@@ -57,14 +58,14 @@ describe("createHttpContextInitialisationMiddleware", () => {
       expect.any(Object),
       "event",
       { key: "value" },
-      "urn:lindorm:priority:default",
+      "default",
     );
   });
 
   test("should handle optional queues", async () => {
     const queueHandler = jest.fn().mockRejectedValue(new Error("Queue error"));
 
-    options.queue = queueHandler;
+    options.queue = { use: "custom", custom: queueHandler };
 
     await createHttpContextInitialisationMiddleware(options)(ctx, jest.fn());
 
@@ -76,7 +77,7 @@ describe("createHttpContextInitialisationMiddleware", () => {
   test("should throw on queue error if not optional", async () => {
     const queueHandler = jest.fn().mockRejectedValue(new Error("Queue error"));
 
-    options.queue = queueHandler;
+    options.queue = { use: "custom", custom: queueHandler };
 
     await createHttpContextInitialisationMiddleware(options)(ctx, jest.fn());
 
@@ -86,7 +87,7 @@ describe("createHttpContextInitialisationMiddleware", () => {
   test("should handle webhooks", async () => {
     const webhookHandler = jest.fn();
 
-    options.webhook = webhookHandler;
+    options.webhook = { use: "custom", custom: webhookHandler };
 
     await createHttpContextInitialisationMiddleware(options)(ctx, jest.fn());
 
@@ -100,7 +101,7 @@ describe("createHttpContextInitialisationMiddleware", () => {
   test("should handle optional webhooks", async () => {
     const webhookHandler = jest.fn().mockRejectedValue(new Error("Webhook error"));
 
-    options.webhook = webhookHandler;
+    options.webhook = { use: "custom", custom: webhookHandler };
 
     await createHttpContextInitialisationMiddleware(options)(ctx, jest.fn());
 
@@ -112,7 +113,7 @@ describe("createHttpContextInitialisationMiddleware", () => {
   test("should throw on webhook error if not optional", async () => {
     const webhookHandler = jest.fn().mockRejectedValue(new Error("Webhook error"));
 
-    options.webhook = webhookHandler;
+    options.webhook = { use: "custom", custom: webhookHandler };
 
     await createHttpContextInitialisationMiddleware(options)(ctx, jest.fn());
 

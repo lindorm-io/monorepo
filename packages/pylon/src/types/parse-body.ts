@@ -1,4 +1,4 @@
-import { HttpMethod } from "@lindorm/enums";
+import { HttpMethod } from "@lindorm/types";
 import { DeepPartial } from "@lindorm/types";
 import { Options as FormidableOptions } from "formidable";
 

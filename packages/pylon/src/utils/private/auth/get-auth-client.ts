@@ -1,4 +1,3 @@
-import { ChangeCase } from "@lindorm/case";
 import {
   Conduit,
   conduitBasicAuthMiddleware,
@@ -9,7 +8,6 @@ import {
   conduitCorrelationMiddleware,
 } from "@lindorm/conduit";
 import { sec } from "@lindorm/date";
-import { PkceMethod } from "@lindorm/enums";
 import { isNumberString } from "@lindorm/is";
 import { PKCE } from "@lindorm/pkce";
 import {
@@ -19,6 +17,7 @@ import {
   OpenIdResponseType,
   OpenIdTokenRequest,
   OpenIdTokenResponse,
+  PkceMethod,
 } from "@lindorm/types";
 import { createUrl } from "@lindorm/url";
 import { merge, sortKeys } from "@lindorm/utils";
@@ -123,7 +122,7 @@ export const getAuthClient = (
 
     const redirect = createUrl(openid.authorizationEndpoint, {
       query,
-      changeQueryCase: ChangeCase.Snake,
+      changeQueryCase: "snake",
     });
 
     return {
@@ -153,7 +152,7 @@ export const getAuthClient = (
 
     const redirect = createUrl(openid.logoutEndpoint, {
       query: sortKeys(merge(logout, input)),
-      changeQueryCase: ChangeCase.Snake,
+      changeQueryCase: "snake",
     });
 
     return { redirect, state };

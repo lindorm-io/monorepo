@@ -1,6 +1,6 @@
 import { ClientError } from "@lindorm/errors";
 import _CoBody from "co-body";
-import { BodyType } from "../../../enums";
+import { BodyType } from "../../../types";
 import { composeParseBodyConfig } from "../compose-parse-body-config";
 import { parseBody } from "./parse-body";
 import { parseWithFormidable as _parseWithFormidable } from "./parse-with-formidable";
@@ -26,7 +26,7 @@ describe("parseBody", () => {
 
     config = composeParseBodyConfig();
 
-    bodyType = BodyType.Json;
+    bodyType = "json";
 
     parseWithFormidable.mockResolvedValue("FormidableResult");
 
@@ -40,19 +40,19 @@ describe("parseBody", () => {
   });
 
   test("should parse url encoded body", async () => {
-    bodyType = BodyType.UrlEncoded;
+    bodyType = "urlencoded";
 
     expect(await parseBody(ctx, config, bodyType)).toEqual("CoBodyForm");
   });
 
   test("should parse text body", async () => {
-    bodyType = BodyType.Text;
+    bodyType = "text";
 
     expect(await parseBody(ctx, config, bodyType)).toEqual("CoBodyText");
   });
 
   test("should parse multipart body", async () => {
-    bodyType = BodyType.Multipart;
+    bodyType = "multipart";
 
     config.multipart = true;
 
@@ -60,7 +60,7 @@ describe("parseBody", () => {
   });
 
   test("should parse multipart body with formidable", async () => {
-    bodyType = BodyType.Multipart;
+    bodyType = "multipart";
 
     config.multipart = true;
     config.formidable = true;
@@ -69,7 +69,7 @@ describe("parseBody", () => {
   });
 
   test("should throw error if multipart body is not supported", async () => {
-    bodyType = BodyType.Multipart;
+    bodyType = "multipart";
 
     await expect(parseBody(ctx, config, bodyType)).rejects.toThrow(ClientError);
   });

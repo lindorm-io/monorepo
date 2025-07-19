@@ -1,8 +1,7 @@
-import { ChangeCase, changeKeys } from "@lindorm/case";
-import { HttpMethod } from "@lindorm/enums";
+import { changeKeys } from "@lindorm/case";
 import { isObject } from "@lindorm/is";
+import { HttpMethod } from "@lindorm/types";
 import { existsSync, mkdirSync } from "fs-extra";
-import { BodyType } from "../../enums";
 import { ParseBodyOptions, PylonHttpMiddleware } from "../../types";
 import { composeParseBodyConfig, getBodyType, parseBody } from "../../utils/private";
 
@@ -34,8 +33,8 @@ export const createHttpBodyParserMiddleware = (
     ctx.request.files = files;
     ctx.request.raw = raw;
 
-    if ([BodyType.Json, BodyType.UrlEncoded].includes(bodyType) && isObject(parsed)) {
-      ctx.data = changeKeys(parsed, ChangeCase.Camel);
+    if (["json", "urlencoded"].includes(bodyType) && isObject(parsed)) {
+      ctx.data = changeKeys(parsed, "camel");
     }
 
     metric.end();

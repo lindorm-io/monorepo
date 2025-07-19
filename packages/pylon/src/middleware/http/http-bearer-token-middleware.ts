@@ -1,6 +1,5 @@
 import { VerifyJwtOptions } from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
-import { AuthorizationType } from "../../enums";
 import { PylonHttpContext, PylonHttpMiddleware } from "../../types";
 
 type Options = Omit<VerifyJwtOptions, "issuer "> & {
@@ -16,7 +15,7 @@ export const createHttpBearerTokenMiddleware = <
     const metric = ctx.metric("httpBearerTokenMiddleware");
 
     try {
-      if (ctx.state.authorization.type !== AuthorizationType.Bearer) {
+      if (ctx.state.authorization.type !== "bearer") {
         throw new ClientError("Invalid Authorization header", {
           details: "Authorization header must be of type Bearer",
           debug: {

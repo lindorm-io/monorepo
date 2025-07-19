@@ -1,4 +1,3 @@
-import { ChangeCase } from "@lindorm/case";
 import {
   Conduit,
   ConduitOptions,
@@ -34,7 +33,7 @@ export const createSocketConduitMiddleware = <
         ...options,
         middleware: [
           // conduitCorrelationMiddleware(socket.metadata.correlationId),
-          conduitChangeResponseDataMiddleware(ChangeCase.Camel),
+          conduitChangeResponseDataMiddleware("camel"),
           ...(options.middleware ?? []),
         ],
         logger: ctx.logger,

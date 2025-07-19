@@ -1,4 +1,3 @@
-import { PkceMethod } from "@lindorm/enums";
 import { parseAuthConfig } from "./parse-auth-config";
 
 describe("parseAuthConfig", () => {
@@ -19,7 +18,7 @@ describe("parseAuthConfig", () => {
         clientSecret: "test-client-secret",
         issuer: "https://issuer.com",
 
-        codeChallengeMethod: PkceMethod.Plain,
+        codeChallengeMethod: "plain",
         tokenExpiry: "1d",
 
         dynamicRedirectDomains: ["https://client.com"],
