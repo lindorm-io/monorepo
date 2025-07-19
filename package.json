@@ -57,10 +57,7 @@
     "@nx/nx-win32-x64-msvc": "19.6.2"
   },
   "engines": {
-    "node": ">=20.11.0"
-  },
-  "volta": {
-    "node": "20.11.0"
+    "node": ">=24.4.0"
   },
   "workspaces": [
     "packages/*"
