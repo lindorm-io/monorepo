@@ -1,13 +1,12 @@
 import { IMessage, IMessageSubscription, MessageKit } from "@lindorm/message";
 import { Constructor } from "@lindorm/types";
-import { IRedisMessageBus } from "../interfaces";
+import { IRedisPublisher } from "../interfaces";
 
-export const createMockRedisMessageBus = <M extends IMessage>(
+export const createMockRedisPublisher = <M extends IMessage>(
   target: Constructor<M>,
-): IRedisMessageBus<M> => {
+  array: Array<IMessageSubscription<M>> = [],
+): IRedisPublisher<M> => {
   const kit = new MessageKit({ target });
-
-  let array: Array<IMessageSubscription<M>> = [];
 
   return {
     create: jest.fn().mockImplementation((args) => kit.create(args)),
@@ -27,19 +26,6 @@ export const createMockRedisMessageBus = <M extends IMessage>(
           }
         }
       }
-    }),
-    subscribe: jest.fn().mockImplementation(async (args) => {
-      array = [array, args].flat();
-    }),
-    unsubscribe: jest.fn().mockImplementation(async (args) => {
-      const list = Array.isArray(args) ? args : [args];
-
-      for (const sub of list) {
-        array = array.filter((x) => x.topic !== sub.topic && x.queue !== sub.queue);
-      }
-    }),
-    unsubscribeAll: jest.fn().mockImplementation(async () => {
-      array = [];
     }),
   };
 };

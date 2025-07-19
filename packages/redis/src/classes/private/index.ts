@@ -1,1 +1,1 @@
-export * from "./DelayedMessageWorker";
+export * from "./RedisDelayService";

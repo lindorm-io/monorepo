@@ -16,24 +16,20 @@ import {
 import { Constructor } from "@lindorm/types";
 import { Redis } from "ioredis";
 import { RedisSourceError } from "../errors";
-import { IRedisRepository, IRedisSource } from "../interfaces";
+import { IRedisPublisher, IRedisRepository, IRedisSource } from "../interfaces";
 import { IRedisMessageBus } from "../interfaces/RedisMessageBus";
-import {
-  CloneRedisSourceOptions,
-  RedisSourceMessageBusOptions,
-  RedisSourceOptions,
-  RedisSourceRepositoryOptions,
-} from "../types";
+import { RedisSourceOptions, WithLoggerOptions } from "../types";
 import { FromClone } from "../types/private";
+import { RedisDelayService } from "./private";
 import { RedisMessageBus } from "./RedisMessageBus";
+import { RedisPublisher } from "./RedisPublisher";
 import { RedisRepository } from "./RedisRepository";
-import { DelayedMessageWorker } from "./private";
 
 export class RedisSource implements IRedisSource {
   public readonly name = "RedisSource";
 
   private readonly cache: Map<Constructor<IMessage>, IRedisMessageBus<IMessage>>;
-  private readonly delayedMessageWorker: DelayedMessageWorker;
+  private readonly delayService: RedisDelayService;
   private readonly entities: Array<Constructor<IEntity>>;
   private readonly logger: ILogger;
   private readonly messages: Array<Constructor<IMessage>>;
@@ -52,7 +48,7 @@ export class RedisSource implements IRedisSource {
       const opts = options as FromClone;
 
       this.cache = opts.cache;
-      this.delayedMessageWorker = opts.delayedMessageWorker;
+      this.delayService = opts.delayService;
       this.client = opts.client;
       this.entities = opts.entities;
       this.messages = opts.messages;
@@ -65,7 +61,7 @@ export class RedisSource implements IRedisSource {
       this.entities = opts.entities ? EntityScanner.scan<IEntity>(opts.entities) : [];
       this.messages = opts.messages ? MessageScanner.scan<IMessage>(opts.messages) : [];
 
-      this.delayedMessageWorker = new DelayedMessageWorker({
+      this.delayService = new RedisDelayService({
         client: this.client,
         logger: this.logger,
       });
@@ -75,12 +71,12 @@ export class RedisSource implements IRedisSource {
 
   // public
 
-  public clone(options: CloneRedisSourceOptions = {}): IRedisSource {
+  public clone(options: WithLoggerOptions = {}): IRedisSource {
     return new RedisSource({
       _mode: "from_clone",
       cache: this.cache,
       client: this.client,
-      delayedMessageWorker: this.delayedMessageWorker,
+      delayService: this.delayService,
       entities: this.entities,
       logger: options.logger ?? this.logger,
       messages: this.messages,
@@ -98,7 +94,7 @@ export class RedisSource implements IRedisSource {
   }
 
   public async disconnect(): Promise<void> {
-    this.delayedMessageWorker.stop();
+    this.delayService.stop();
 
     for (const Message of this.messages) {
       await this.messageBus(Message).unsubscribeAll();
@@ -115,7 +111,7 @@ export class RedisSource implements IRedisSource {
     }
 
     if (this.messages.length) {
-      this.delayedMessageWorker.start();
+      this.delayService.start();
     }
   }
 
@@ -133,9 +129,51 @@ export class RedisSource implements IRedisSource {
     );
   }
 
+  public hasEntity(target: Constructor<IEntity>): boolean {
+    return this.entities.some((Entity) => Entity === target);
+  }
+
+  public hasMessage(target: Constructor<IMessage>): boolean {
+    return this.messages.some((Message) => Message === target);
+  }
+
+  public messageBus<M extends IMessage>(
+    target: Constructor<M>,
+    options: WithLoggerOptions = {},
+  ): IRedisMessageBus<M> {
+    if (!this.cache.has(target)) {
+      this.messageExists(target);
+
+      this.cache.set(
+        target,
+        new RedisMessageBus({
+          client: this.client,
+          logger: options.logger ?? this.logger,
+          subscriptions: this.subscriptions,
+          target: target,
+        }),
+      );
+    }
+
+    return this.cache.get(target) as IRedisMessageBus<M>;
+  }
+
+  public publisher<M extends IMessage>(
+    target: Constructor<M>,
+    options: WithLoggerOptions = {},
+  ): IRedisPublisher<M> {
+    this.messageExists(target);
+
+    return new RedisPublisher({
+      target: target,
+      client: this.client,
+      logger: options.logger ?? this.logger,
+    });
+  }
+
   public repository<E extends IEntity>(
     target: Constructor<E>,
-    options: RedisSourceRepositoryOptions = {},
+    options: WithLoggerOptions = {},
   ): IRedisRepository<E> {
     this.entityExists(target);
 
@@ -145,27 +183,6 @@ export class RedisSource implements IRedisSource {
       logger: options.logger ?? this.logger,
       namespace: this.namespace,
     });
-  }
-
-  public messageBus<M extends IMessage>(
-    target: Constructor<M>,
-    options: RedisSourceMessageBusOptions = {},
-  ): IRedisMessageBus<M> {
-    if (!this.cache.has(target)) {
-      this.messageExists(target);
-
-      this.cache.set(
-        target,
-        new RedisMessageBus({
-          target: target,
-          client: this.client,
-          logger: options.logger ?? this.logger,
-          subscriptions: this.subscriptions,
-        }),
-      );
-    }
-
-    return this.cache.get(target) as IRedisMessageBus<M>;
   }
 
   // private

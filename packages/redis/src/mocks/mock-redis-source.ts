@@ -1,7 +1,6 @@
-import { IMessage } from "@lindorm/message";
-import { Constructor } from "@lindorm/types";
 import { IRedisSource } from "../interfaces";
 import { createMockRedisMessageBus } from "./mock-redis-message-bus";
+import { createMockRedisPublisher } from "./mock-redis-publisher";
 import { createMockRedisRepository } from "./mock-redis-repository";
 
 export const createMockRedisSource = (): IRedisSource => ({
@@ -14,12 +13,12 @@ export const createMockRedisSource = (): IRedisSource => ({
   setup: jest.fn(),
 
   addEntities: jest.fn(),
-  repository: jest.fn().mockImplementation(createMockRedisRepository),
-
   addMessages: jest.fn(),
-  messageBus: jest
-    .fn()
-    .mockImplementation((target: Constructor<IMessage>) =>
-      createMockRedisMessageBus(target),
-    ),
+
+  hasEntity: jest.fn().mockReturnValue(true),
+  hasMessage: jest.fn().mockReturnValue(true),
+
+  messageBus: jest.fn().mockImplementation((target) => createMockRedisMessageBus(target)),
+  publisher: jest.fn().mockImplementation((target) => createMockRedisPublisher(target)),
+  repository: jest.fn().mockImplementation((target) => createMockRedisRepository(target)),
 });

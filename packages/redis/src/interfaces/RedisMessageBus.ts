@@ -7,7 +7,8 @@ export interface IRedisMessageBus<
   O extends DeepPartial<M> = DeepPartial<M>,
 > {
   create(options: O | M): M;
-  publish(message: M | Array<M>, options?: PublishOptions): Promise<void>;
+  copy(message: M): M;
+  publish(message: O | M | Array<O | M>, options?: PublishOptions): Promise<void>;
   subscribe(
     subscription: SubscribeOptions<M> | Array<SubscribeOptions<M>>,
   ): Promise<void>;

@@ -17,7 +17,7 @@ export type TestEntityOptions = {
 };
 
 @Entity()
-@PrimarySource("redis")
+@PrimarySource("RedisSource")
 export class TestEntity extends EntityBase {
   @DeleteDateColumn()
   public readonly deletedAt!: Date | null;

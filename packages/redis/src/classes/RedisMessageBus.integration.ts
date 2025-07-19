@@ -19,11 +19,11 @@ describe("RedisMessageBus", () => {
       url: "redis://localhost:6379",
     });
     await source.setup();
-  });
+  }, 10000);
 
   afterAll(async () => {
     await source.disconnect();
-  });
+  }, 10000);
 
   test("should subscribe and publish", async () => {
     subscriptionOne = {

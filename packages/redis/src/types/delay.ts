@@ -1,7 +1,7 @@
 import { ILogger } from "@lindorm/logger";
 import Redis from "ioredis";
 
-export type DelayedMessageWorkerOptions = {
+export type RedisDelayServiceOptions = {
   client: Redis;
   logger: ILogger;
 };

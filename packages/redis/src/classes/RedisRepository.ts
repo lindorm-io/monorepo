@@ -11,7 +11,7 @@ import { RedisRepositoryError } from "../errors";
 import { IRedisRepository } from "../interfaces";
 import { RedisRepositoryOptions } from "../types";
 
-const PRIMARY_SOURCE: MetaSource = "redis" as const;
+const PRIMARY_SOURCE: MetaSource = "RedisSource" as const;
 
 export class RedisRepository<E extends IEntity, O extends DeepPartial<E> = DeepPartial<E>>
   implements IRedisRepository<E, O>
@@ -222,8 +222,11 @@ export class RedisRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
     return this.save(this.create({ ...predicate, ...options } as O));
   }
 
-  public async insert(entity: E): Promise<E> {
+  public async insert(entity: O | E): Promise<E> {
     const start = Date.now();
+
+    entity =
+      entity instanceof this.kit.metadata.entity.target ? entity : this.create(entity);
 
     try {
       const insert = await this.kit.insert(entity);
@@ -266,11 +269,14 @@ export class RedisRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
     }
   }
 
-  public async insertBulk(entities: Array<E>): Promise<Array<E>> {
+  public async insertBulk(entities: Array<O | E>): Promise<Array<E>> {
     return Promise.all(entities.map((entity) => this.insert(entity)));
   }
 
-  public async save(entity: E): Promise<E> {
+  public async save(entity: O | E): Promise<E> {
+    entity =
+      entity instanceof this.kit.metadata.entity.target ? entity : this.create(entity);
+
     const strategy = this.kit.getSaveStrategy(entity);
 
     switch (strategy) {
@@ -296,7 +302,7 @@ export class RedisRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
     }
   }
 
-  public async saveBulk(entities: Array<E>): Promise<Array<E>> {
+  public async saveBulk(entities: Array<O | E>): Promise<Array<E>> {
     return Promise.all(entities.map((entity) => this.save(entity)));
   }
 

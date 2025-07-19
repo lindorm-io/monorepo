@@ -16,7 +16,7 @@ export type TestEntityThreeOptions = {
 };
 
 @Entity()
-@PrimarySource("redis")
+@PrimarySource("RedisSource")
 export class TestEntityThree extends EntityBase {
   @UpdateDateColumn()
   public readonly updatedAt!: Date;

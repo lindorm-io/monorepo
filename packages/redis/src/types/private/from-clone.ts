@@ -3,14 +3,14 @@ import { ILogger } from "@lindorm/logger";
 import { IMessage, IMessageSubscriptions } from "@lindorm/message";
 import { Constructor } from "@lindorm/types";
 import { Redis } from "ioredis";
-import { DelayedMessageWorker } from "../../classes/private";
+import { RedisDelayService } from "../../classes/private";
 import { IRedisMessageBus } from "../../interfaces";
 
 export type FromClone = {
   _mode: "from_clone";
   cache: Map<Constructor<IMessage>, IRedisMessageBus<IMessage>>;
   client: Redis;
-  delayedMessageWorker: DelayedMessageWorker;
+  delayService: RedisDelayService;
   entities: Array<Constructor<IEntity>>;
   logger: ILogger;
   messages: Array<Constructor<IMessage>>;

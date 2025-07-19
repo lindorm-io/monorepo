@@ -19,7 +19,7 @@ export type TestEntityOneOptions = {
     throw new Error("Name must be at least 3 characters long");
   }
 })
-@PrimarySource("postgres")
+@PrimarySource("MongoSource")
 export class TestEntityOne extends EntityBase {
   @VersionColumn()
   public version!: number;

@@ -1,16 +1,16 @@
 import { JsonKit } from "@lindorm/json-kit";
 import { ILogger } from "@lindorm/logger";
 import Redis from "ioredis";
-import { DelayedMessageWorkerOptions } from "../../types";
+import { RedisDelayServiceOptions } from "../../types";
 
-export class DelayedMessageWorker {
+export class RedisDelayService {
   private readonly client: Redis;
   private readonly logger: ILogger;
 
   private isRunning: boolean;
   private ref: NodeJS.Immediate | null;
 
-  public constructor(options: DelayedMessageWorkerOptions) {
+  public constructor(options: RedisDelayServiceOptions) {
     this.client = options.client;
     this.logger = options.logger.child(["DelayedMessageWorker"]);
 

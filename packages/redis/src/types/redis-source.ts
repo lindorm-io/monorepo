@@ -3,15 +3,7 @@ import { ILogger } from "@lindorm/logger";
 import { IMessage, MessageScannerInput } from "@lindorm/message";
 import { RedisOptions } from "ioredis";
 
-export type RedisSourceMessageBusOptions = {
-  logger?: ILogger;
-};
-
-export type RedisSourceRepositoryOptions = {
-  logger?: ILogger;
-};
-
-export type CloneRedisSourceOptions = {
+export type WithLoggerOptions = {
   logger?: ILogger;
 };
 
