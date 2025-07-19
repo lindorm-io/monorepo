@@ -1,6 +1,5 @@
 import { LindormError } from "@lindorm/errors";
 import { ILogger } from "@lindorm/logger";
-import { ViewStoreType } from "../enums";
 import { IHermesMessage, IHermesViewStore, IViewModel, IViewStore } from "../interfaces";
 import {
   HermesViewStoreOptions,
@@ -206,28 +205,28 @@ export class ViewStore implements IHermesViewStore {
 
   private store(source: ViewStoreSource): IViewStore {
     switch (source) {
-      case ViewStoreType.Custom:
+      case "custom":
         if (!this.custom) {
           this.logger.error("Custom ViewStore not provided");
           throw new LindormError("Custom ViewStore not provided");
         }
         return this.custom;
 
-      case ViewStoreType.Mongo:
+      case "mongo":
         if (!this.mongo) {
           this.logger.error("Custom ViewStore not provided");
           throw new LindormError("Mongo connection not provided");
         }
         return this.mongo;
 
-      case ViewStoreType.Postgres:
+      case "postgres":
         if (!this.postgres) {
           this.logger.error("Custom ViewStore not provided");
           throw new LindormError("Postgres connection not provided");
         }
         return this.postgres;
 
-      case ViewStoreType.Redis:
+      case "redis":
         if (!this.redis) {
           this.logger.error("Custom ViewStore not provided");
           throw new LindormError("Redis connection not provided");

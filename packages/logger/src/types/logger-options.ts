@@ -1,4 +1,4 @@
-import { LogLevel } from "../enums";
+import { LogLevel } from "../types";
 
 export type LoggerOptions = {
   level?: LogLevel;

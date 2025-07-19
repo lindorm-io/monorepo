@@ -1,4 +1,4 @@
-import { RetryOptions, RetryStrategy } from "@lindorm/retry";
+import { RetryOptions } from "@lindorm/retry";
 import { LindormWorkerCallback } from "../../types";
 
 export const callback: LindormWorkerCallback = async (ctx) => {
@@ -7,7 +7,7 @@ export const callback: LindormWorkerCallback = async (ctx) => {
 
 export const retry: RetryOptions = {
   maxAttempts: 10,
-  strategy: RetryStrategy.Linear,
+  strategy: "linear",
   timeout: 1000,
   timeoutMax: 10000,
 };

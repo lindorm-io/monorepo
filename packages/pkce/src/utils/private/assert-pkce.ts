@@ -1,4 +1,4 @@
-import { PkceMethod } from "@lindorm/enums";
+import { PkceMethod } from "@lindorm/types";
 import { PkceError } from "../../errors";
 import { verifyPkce } from "./verify-pkce";
 

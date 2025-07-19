@@ -1,4 +1,3 @@
-import { RetryStrategy } from "@lindorm/retry";
 import { RequestContext } from "../../types";
 import { composeFetchConfig } from "./compose-fetch-config";
 
@@ -43,7 +42,7 @@ describe("composeFetchConfig", () => {
       retryCallback: () => true,
       retryConfig: {
         maxAttempts: 3,
-        strategy: RetryStrategy.Linear,
+        strategy: "linear",
         timeout: 25,
         timeoutMax: 3000,
       },

@@ -32,7 +32,7 @@ describe("composeAxiosConfig", () => {
       retryCallback: () => true,
       retryConfig: {
         maxAttempts: 3,
-        strategy: RetryStrategy.Linear,
+        strategy: "linear",
         timeout: 25,
         timeoutMax: 3000,
       },

@@ -1,4 +1,4 @@
-import { PkceMethod } from "@lindorm/enums";
+import { PkceMethod } from "@lindorm/types";
 
 export type PkceResult = {
   challenge: string;

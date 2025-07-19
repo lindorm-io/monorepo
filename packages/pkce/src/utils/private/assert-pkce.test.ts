@@ -1,4 +1,4 @@
-import { PkceMethod } from "@lindorm/enums";
+import { PkceMethod } from "@lindorm/types";
 import { createHash } from "crypto";
 import { assertPkce } from "./assert-pkce";
 
@@ -12,20 +12,18 @@ describe("assertPkce", () => {
   });
 
   test("should resolve for S256", async () => {
-    expect(() => assertPkce(pkceChallenge, pkceVerifier, PkceMethod.S256)).not.toThrow();
+    expect(() => assertPkce(pkceChallenge, pkceVerifier, "S256")).not.toThrow();
   });
 
   test("should fail for S256", async () => {
-    expect(() => assertPkce(pkceChallenge, "wrong", PkceMethod.S256)).toThrow();
+    expect(() => assertPkce(pkceChallenge, "wrong", "S256")).toThrow();
   });
 
-  test("should resolve for Plain", async () => {
-    expect(() =>
-      assertPkce(pkceChallenge, pkceChallenge, PkceMethod.Plain),
-    ).not.toThrow();
+  test("should resolve for plain", async () => {
+    expect(() => assertPkce(pkceChallenge, pkceChallenge, "plain")).not.toThrow();
   });
 
-  test("should fail for Plain", async () => {
-    expect(() => assertPkce(pkceChallenge, "wrong", PkceMethod.Plain)).toThrow();
+  test("should fail for plain", async () => {
+    expect(() => assertPkce(pkceChallenge, "wrong", "plain")).toThrow();
   });
 });

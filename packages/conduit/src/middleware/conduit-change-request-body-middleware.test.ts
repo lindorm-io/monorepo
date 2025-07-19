@@ -32,7 +32,7 @@ describe("conduitChangeRequestBodyMiddleware", () => {
     ctx.req.body = [ctx.req.body, ctx.req.body];
 
     await expect(
-      conduitChangeRequestBodyMiddleware(ChangeCase.Camel)(ctx, jest.fn()),
+      conduitChangeRequestBodyMiddleware("camel")(ctx, jest.fn()),
     ).resolves.toBeUndefined();
 
     expect(ctx.req.body).toEqual([
@@ -51,7 +51,7 @@ describe("conduitChangeRequestBodyMiddleware", () => {
 
   test("should resolve with camelCase for request object", async () => {
     await expect(
-      conduitChangeRequestBodyMiddleware(ChangeCase.Camel)(ctx, jest.fn()),
+      conduitChangeRequestBodyMiddleware("camel")(ctx, jest.fn()),
     ).resolves.toBeUndefined();
 
     expect(ctx.req.body).toEqual({

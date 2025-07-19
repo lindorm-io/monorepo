@@ -1,4 +1,4 @@
-import { RetryConfig, RetryStrategy } from "@lindorm/retry";
+import { RetryConfig } from "@lindorm/retry";
 import { ConduitResponse } from "../../types";
 
 export const CONDUIT_RESPONSE: ConduitResponse = {
@@ -12,7 +12,7 @@ export const REPLACE_URL = "https://lindorm.temporary.replace.url" as const;
 
 export const RETRY_CONFIG: RetryConfig = {
   maxAttempts: 5,
-  strategy: RetryStrategy.Exponential,
+  strategy: "exponential",
   timeout: 250,
   timeoutMax: 10000,
 };

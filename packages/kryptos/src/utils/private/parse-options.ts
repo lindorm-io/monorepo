@@ -1,11 +1,11 @@
-import { ChangeCase, changeKeys } from "@lindorm/case";
+import { changeKeys } from "@lindorm/case";
 import { KryptosError } from "../../errors";
 import { KryptosOptions, KryptosPurpose, KryptosType, UnknownJwk } from "../../types";
 
 const TYPES: Array<KryptosType> = ["EC", "oct", "OKP", "RSA"] as const;
 
 export const parseJwkOptions = (options: UnknownJwk): KryptosOptions => {
-  const jwk = changeKeys(options, ChangeCase.Snake);
+  const jwk = changeKeys(options, "snake");
 
   if (!TYPES.includes(jwk.kty)) {
     throw new KryptosError("Invalid key type", { data: { valid: TYPES } });

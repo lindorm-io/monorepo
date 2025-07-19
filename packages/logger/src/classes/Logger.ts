@@ -3,7 +3,6 @@ import { isArray, isError, isObject } from "@lindorm/is";
 import { Dict } from "@lindorm/types";
 import { get, set } from "object-path";
 import winston, { Logger as WinstonLogger } from "winston";
-import { LogLevel } from "../enums";
 import { ILogger } from "../interfaces";
 import {
   FilterRecord,
@@ -36,7 +35,7 @@ export class Logger implements ILogger {
       this._scope = [];
       this.winston = winston.createLogger();
 
-      const level = (options as LoggerOptions).level ?? LogLevel.Info;
+      const level = (options as LoggerOptions).level ?? "info";
       const readable = (options as LoggerOptions).readable ?? false;
 
       this.winston.add(
@@ -92,7 +91,7 @@ export class Logger implements ILogger {
     this.logToWinston({
       context: isArg1Error ? arg1 : isArg2Error ? arg2 : {},
       extra: extra ?? [],
-      level: LogLevel.Error,
+      level: "error",
       message: isArg1Error ? arg1.message : arg1,
     });
   }
@@ -101,7 +100,7 @@ export class Logger implements ILogger {
     this.logToWinston({
       context: context ?? {},
       extra: extra ?? [],
-      level: LogLevel.Warn,
+      level: "warn",
       message,
     });
   }
@@ -110,7 +109,7 @@ export class Logger implements ILogger {
     this.logToWinston({
       context: context ?? {},
       extra: extra ?? [],
-      level: LogLevel.Info,
+      level: "info",
       message,
     });
   }
@@ -119,7 +118,7 @@ export class Logger implements ILogger {
     this.logToWinston({
       context: context ?? {},
       extra: extra ?? [],
-      level: LogLevel.Verbose,
+      level: "verbose",
       message,
     });
   }
@@ -128,7 +127,7 @@ export class Logger implements ILogger {
     this.logToWinston({
       context: context ?? {},
       extra: extra ?? [],
-      level: LogLevel.Debug,
+      level: "debug",
       message,
     });
   }
@@ -137,7 +136,7 @@ export class Logger implements ILogger {
     this.logToWinston({
       context: context ?? {},
       extra: extra ?? [],
-      level: LogLevel.Silly,
+      level: "silly",
       message,
     });
   }
@@ -146,7 +145,7 @@ export class Logger implements ILogger {
     this.logToWinston({
       context: log.context ?? {},
       extra: log.extra ?? [],
-      level: log.level ?? LogLevel.Info,
+      level: log.level ?? "info",
       message: log.message,
     });
   }

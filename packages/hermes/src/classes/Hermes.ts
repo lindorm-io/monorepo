@@ -3,7 +3,6 @@ import { ILogger } from "@lindorm/logger";
 import { ClassLike, Dict } from "@lindorm/types";
 import { randomUUID } from "crypto";
 import { AggregateDomain, ChecksumDomain, SagaDomain, ViewDomain } from "../domains";
-import { HermesStatus } from "../enums";
 import {
   ChecksumStore,
   EncryptionStore,
@@ -22,6 +21,7 @@ import {
   HermesCommandOptions,
   HermesInspectOptions,
   HermesOptions,
+  HermesStatus,
 } from "../types";
 import { FromClone } from "../types/private";
 import { extractDataTransferObject } from "../utils/private";
@@ -89,7 +89,7 @@ export class Hermes implements IHermes {
       const opts = options as HermesOptions;
 
       this.namespace = opts.namespace ?? "hermes";
-      this._status = HermesStatus.Created;
+      this._status = "created";
 
       this.options = opts;
       this.registry = new HermesRegistry({ namespace: this.namespace });
@@ -221,7 +221,7 @@ export class Hermes implements IHermes {
     Command: ClassLike,
     options: HermesCommandOptions<M> = {},
   ): Promise<AggregateIdentifier> {
-    if (this.status !== HermesStatus.Ready) {
+    if (this.status !== "ready") {
       throw new LindormError("Invalid operation", {
         data: { status: this.status },
       });
@@ -275,7 +275,7 @@ export class Hermes implements IHermes {
   }
 
   public async setup(): Promise<void> {
-    this._status = HermesStatus.Initialising;
+    this._status = "initialising";
 
     if (this.options.messageBus.rabbit) {
       await this.options.messageBus.rabbit.setup();
@@ -319,7 +319,7 @@ export class Hermes implements IHermes {
     await this.sagaDomain.registerHandlers();
     await this.viewDomain.registerHandlers();
 
-    this._status = HermesStatus.Ready;
+    this._status = "ready";
   }
 
   // private admin

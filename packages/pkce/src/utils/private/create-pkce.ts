@@ -1,4 +1,4 @@
-import { PkceMethod } from "@lindorm/enums";
+import { PkceMethod } from "@lindorm/types";
 import { PkceResult } from "../../types";
 import { createBaseHash } from "./create-base-hash";
 import { randomBaseString } from "./random-base-string";

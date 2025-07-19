@@ -1,11 +1,9 @@
-import { ChangeCase } from "@lindorm/case";
 import { isArray, isString } from "@lindorm/is";
 import { ILogger } from "@lindorm/logger";
 import { Dict, OpenIdConfigurationResponse, OpenIdTokenResponse } from "@lindorm/types";
 import { Conduit } from "../classes";
-import { ConduitUsing } from "../enums";
 import { ConduitError } from "../errors";
-import { ConduitMiddleware, RequestOptions } from "../types";
+import { ConduitMiddleware, ConduitUsing, RequestOptions } from "../types";
 import { conduitBasicAuthMiddleware } from "./conduit-basic-auth-middleware";
 import { conduitBearerAuthMiddleware } from "./conduit-bearer-auth-middleware";
 import { conduitChangeRequestBodyMiddleware } from "./conduit-change-request-body-middleware";
@@ -108,8 +106,8 @@ export const conduitClientCredentialsMiddlewareFactory = (
       baseURL: issuer,
       logger,
       middleware: [
-        conduitChangeRequestBodyMiddleware(ChangeCase.Snake),
-        conduitChangeResponseDataMiddleware(ChangeCase.Camel),
+        conduitChangeRequestBodyMiddleware("snake"),
+        conduitChangeResponseDataMiddleware("camel"),
       ],
       using,
     });

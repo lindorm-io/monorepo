@@ -1,4 +1,4 @@
-import { ChangeCase } from "../../enums";
+import { ChangeCase } from "../../types";
 import {
   camelCase,
   capitalCase,
@@ -13,42 +13,42 @@ import {
   snakeCase,
 } from "../specific";
 
-export const changeCase = (input: string, mode: ChangeCase = ChangeCase.None): string => {
+export const changeCase = (input: string, mode: ChangeCase = "none"): string => {
   switch (mode) {
-    case ChangeCase.Camel:
+    case "camel":
       return camelCase(input);
 
-    case ChangeCase.Capital:
+    case "capital":
       return capitalCase(input);
 
-    case ChangeCase.Constant:
+    case "constant":
       return constantCase(input);
 
-    case ChangeCase.Dot:
+    case "dot":
       return dotCase(input);
 
-    case ChangeCase.Header:
+    case "header":
       return headerCase(input);
 
-    case ChangeCase.Kebab:
+    case "kebab":
       return kebabCase(input);
 
-    case ChangeCase.Lower:
+    case "lower":
       return lowerCase(input);
 
-    case ChangeCase.Pascal:
+    case "pascal":
       return pascalCase(input);
 
-    case ChangeCase.Path:
+    case "path":
       return pathCase(input);
 
-    case ChangeCase.Sentence:
+    case "sentence":
       return sentenceCase(input);
 
-    case ChangeCase.Snake:
+    case "snake":
       return snakeCase(input);
 
-    case ChangeCase.None:
+    case "none":
       return input;
 
     default:

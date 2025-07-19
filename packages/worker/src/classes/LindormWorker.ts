@@ -6,13 +6,13 @@ import { calculateRetry, RetryConfig } from "@lindorm/retry";
 import { noopAsync, sleep } from "@lindorm/utils";
 import { EventEmitter } from "events";
 import { RETRY_CONFIG } from "../constants/private";
-import { LindormWorkerEvent } from "../enums";
 import { ILindormWorker } from "../interfaces";
 import {
   LindormWorkerCallback,
   LindormWorkerContext,
   LindormWorkerErrorCallback,
   LindormWorkerErrorListener,
+  LindormWorkerEvent,
   LindormWorkerListener,
   LindormWorkerOptions,
 } from "../types";
@@ -104,11 +104,11 @@ export class LindormWorker implements ILindormWorker {
     return this._started;
   }
 
-  public on(evt: LindormWorkerEvent.Start, listener: LindormWorkerListener): void;
-  public on(evt: LindormWorkerEvent.Stop, listener: LindormWorkerListener): void;
-  public on(evt: LindormWorkerEvent.Success, listener: LindormWorkerListener): void;
-  public on(evt: LindormWorkerEvent.Error, listener: LindormWorkerErrorListener): void;
-  public on(evt: LindormWorkerEvent.Warning, listener: LindormWorkerErrorListener): void;
+  public on(evt: "start", listener: LindormWorkerListener): void;
+  public on(evt: "stop", listener: LindormWorkerListener): void;
+  public on(evt: "success", listener: LindormWorkerListener): void;
+  public on(evt: "error", listener: LindormWorkerErrorListener): void;
+  public on(evt: "warning", listener: LindormWorkerErrorListener): void;
   public on(evt: LindormWorkerEvent, listener: (...args: any[]) => void): void {
     this.emitter.on(evt, listener);
   }
@@ -118,7 +118,7 @@ export class LindormWorker implements ILindormWorker {
     if (this._timeout) return;
 
     this.logger.debug("Starting worker");
-    this.emitter.emit(LindormWorkerEvent.Start);
+    this.emitter.emit("start");
 
     this._started = true;
     this._latestStart = new Date();
@@ -130,7 +130,7 @@ export class LindormWorker implements ILindormWorker {
     if (!this._timeout) return;
 
     this.logger.debug("Stopping worker");
-    this.emitter.emit(LindormWorkerEvent.Stop);
+    this.emitter.emit("stop");
 
     clearTimeout(this._timeout);
 
@@ -161,7 +161,7 @@ export class LindormWorker implements ILindormWorker {
     return this.callback(this.ctx())
       .then(() => {
         this.logger.debug("Worker callback success");
-        this.emitter.emit(LindormWorkerEvent.Success);
+        this.emitter.emit("success");
 
         this._latestSuccess = new Date();
 
@@ -176,13 +176,13 @@ export class LindormWorker implements ILindormWorker {
         this.logger.debug("Worker callback error", err);
 
         if (attempt < this.retry.maxAttempts) {
-          this.emitter.emit(LindormWorkerEvent.Warning, err);
+          this.emitter.emit("warning", err);
 
           return sleep(calculateRetry(attempt, this.retry)).then(() =>
             this.run(attempt + 1),
           );
         } else {
-          this.emitter.emit(LindormWorkerEvent.Error, err);
+          this.emitter.emit("error", err);
 
           this._latestError = new Date();
 

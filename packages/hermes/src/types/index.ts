@@ -9,6 +9,6 @@ export * from "./event-emitter";
 export * from "./hermes";
 export * from "./identifiers";
 export * from "./messages";
-export * from "./middleware";
 export * from "./registry";
 export * from "./scanner";
+export * from "./status";

@@ -1,4 +1,3 @@
-import { PkceMethod } from "@lindorm/enums";
 import { createHash } from "crypto";
 import { verifyPkce } from "./verify-pkce";
 
@@ -12,19 +11,19 @@ describe("verifyPkce", () => {
   });
 
   test("should resolve for S256", () => {
-    expect(verifyPkce(pkceChallenge, pkceVerifier, PkceMethod.S256)).toEqual(true);
+    expect(verifyPkce(pkceChallenge, pkceVerifier, "S256")).toEqual(true);
   });
 
   test("should fail for S256", () => {
-    expect(verifyPkce(pkceChallenge, "wrong", PkceMethod.S256)).toEqual(false);
+    expect(verifyPkce(pkceChallenge, "wrong", "S256")).toEqual(false);
   });
 
   test("should resolve for Plain", () => {
-    expect(verifyPkce(pkceChallenge, pkceChallenge, PkceMethod.Plain)).toEqual(true);
+    expect(verifyPkce(pkceChallenge, pkceChallenge, "plain")).toEqual(true);
   });
 
   test("should fail for Plain", () => {
-    expect(verifyPkce(pkceChallenge, "wrong", PkceMethod.Plain)).toEqual(false);
+    expect(verifyPkce(pkceChallenge, "wrong", "plain")).toEqual(false);
   });
 
   test("should throw on invalid method", () => {

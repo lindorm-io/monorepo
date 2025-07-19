@@ -1,8 +1,7 @@
-import { HttpMethod } from "@lindorm/enums";
 import { RetryOptions } from "@lindorm/retry";
-import { Dict, Param, Query } from "@lindorm/types";
+import { Dict, HttpMethod, Param, Query } from "@lindorm/types";
 import { Readable } from "stream";
-import { ConduitUsing, ExpectedResponse } from "../enums";
+import { ConduitUsing, ExpectedResponse } from "../types";
 import { ConduitMiddleware } from "./conduit";
 import { ConfigOptions } from "./overrides";
 import { RetryCallback } from "./retry";

@@ -1,6 +1,4 @@
-import { RetryStrategy } from "@lindorm/retry";
 import { join } from "path";
-import { LindormWorkerEvent } from "../enums";
 import { LindormWorkerConfig } from "../types";
 import { LindormWorkerScanner } from "./LindormWorkerScanner";
 
@@ -8,11 +6,11 @@ const workerConfig: LindormWorkerConfig = {
   alias: "CustomWorker",
   callback: async () => {},
   interval: 1000,
-  listeners: [{ event: LindormWorkerEvent.Start, listener: () => {} }],
+  listeners: [{ event: "start", listener: () => {} }],
   randomize: 100,
   retry: {
     maxAttempts: 10,
-    strategy: RetryStrategy.Exponential,
+    strategy: "exponential",
     timeout: 1000,
     timeoutMax: 10000,
   },

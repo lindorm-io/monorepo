@@ -1,4 +1,4 @@
-import { DurationString } from "../../enums";
+import { DurationString } from "../../types";
 
 export const getDuration = (string: string): DurationString => {
   switch (string) {
@@ -7,50 +7,50 @@ export const getDuration = (string: string): DurationString => {
     case "yrs":
     case "yr":
     case "y":
-      return DurationString.Years;
+      return "years";
 
     case "months":
     case "month":
     case "mo":
-      return DurationString.Months;
+      return "months";
 
     case "weeks":
     case "week":
     case "w":
-      return DurationString.Weeks;
+      return "weeks";
 
     case "days":
     case "day":
     case "d":
-      return DurationString.Days;
+      return "days";
 
     case "hours":
     case "hour":
     case "hrs":
     case "hr":
     case "h":
-      return DurationString.Hours;
+      return "hours";
 
     case "minutes":
     case "minute":
     case "mins":
     case "min":
     case "m":
-      return DurationString.Minutes;
+      return "minutes";
 
     case "seconds":
     case "second":
     case "secs":
     case "sec":
     case "s":
-      return DurationString.Seconds;
+      return "seconds";
 
     case "milliseconds":
     case "millisecond":
     case "msecs":
     case "msec":
     case "ms":
-      return DurationString.Milliseconds;
+      return "milliseconds";
 
     default:
       throw new Error(`Invalid string time value [ ${string} ]`);

@@ -1,8 +1,7 @@
-import { HttpMethod } from "@lindorm/enums";
 import { ILogger } from "@lindorm/logger";
 import { composeMiddleware } from "@lindorm/middleware";
 import { RetryConfig } from "@lindorm/retry";
-import { Dict } from "@lindorm/types";
+import { Dict, HttpMethod } from "@lindorm/types";
 import { extractSearchParams, getPlainUrl, getValidUrl } from "@lindorm/url";
 import { v4 as uuid } from "uuid";
 import {
@@ -11,7 +10,6 @@ import {
   RETRY_CONFIG,
   TIMEOUT,
 } from "../constants/private";
-import { ConduitUsing } from "../enums";
 import { IConduit } from "../interfaces";
 import {
   axiosRequestHandler,
@@ -26,6 +24,7 @@ import {
   ConduitMiddleware,
   ConduitOptions,
   ConduitResponse,
+  ConduitUsing,
   ConfigContext,
   MethodOptions,
   RequestContext,
@@ -72,7 +71,7 @@ export class Conduit implements IConduit {
       ...(options.retryOptions ?? {}),
     };
 
-    this.using = options.using ?? ConduitUsing.Axios;
+    this.using = options.using ?? "axios";
   }
 
   public async delete<
@@ -86,7 +85,7 @@ export class Conduit implements IConduit {
   ): Promise<ConduitResponse<ResponseData>> {
     return this.composeRequest<ResponseData, RequestBody, RequestParams, RequestQuery>(
       pathOrUrl,
-      HttpMethod.Delete,
+      "DELETE",
       options,
     );
   }
@@ -102,7 +101,7 @@ export class Conduit implements IConduit {
   ): Promise<ConduitResponse<ResponseData>> {
     return this.composeRequest<ResponseData, RequestBody, RequestParams, RequestQuery>(
       pathOrUrl,
-      HttpMethod.Get,
+      "GET",
       options,
     );
   }
@@ -118,7 +117,7 @@ export class Conduit implements IConduit {
   ): Promise<ConduitResponse<ResponseData>> {
     return this.composeRequest<ResponseData, RequestBody, RequestParams, RequestQuery>(
       pathOrUrl,
-      HttpMethod.Head,
+      "HEAD",
       options,
     );
   }
@@ -134,7 +133,7 @@ export class Conduit implements IConduit {
   ): Promise<ConduitResponse<ResponseData>> {
     return this.composeRequest<ResponseData, RequestBody, RequestParams, RequestQuery>(
       pathOrUrl,
-      HttpMethod.Options,
+      "OPTIONS",
       options,
     );
   }
@@ -150,7 +149,7 @@ export class Conduit implements IConduit {
   ): Promise<ConduitResponse<ResponseData>> {
     return this.composeRequest<ResponseData, RequestBody, RequestParams, RequestQuery>(
       pathOrUrl,
-      HttpMethod.Patch,
+      "PATCH",
       options,
     );
   }
@@ -166,7 +165,7 @@ export class Conduit implements IConduit {
   ): Promise<ConduitResponse<ResponseData>> {
     return this.composeRequest<ResponseData, RequestBody, RequestParams, RequestQuery>(
       pathOrUrl,
-      HttpMethod.Post,
+      "POST",
       options,
     );
   }
@@ -182,7 +181,7 @@ export class Conduit implements IConduit {
   ): Promise<ConduitResponse<ResponseData>> {
     return this.composeRequest<ResponseData, RequestBody, RequestParams, RequestQuery>(
       pathOrUrl,
-      HttpMethod.Put,
+      "PUT",
       options,
     );
   }
@@ -288,7 +287,7 @@ export class Conduit implements IConduit {
       ...this.middleware,
       ...middleware,
       ...(this.logger ? [requestLogger] : []),
-      ...(using === ConduitUsing.Axios ? [axiosRequestHandler] : [fetchRequestHandler]),
+      ...(using === "axios" ? [axiosRequestHandler] : [fetchRequestHandler]),
     ]);
 
     return result.res;

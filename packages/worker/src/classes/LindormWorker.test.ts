@@ -1,7 +1,5 @@
 import { LindormError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger";
-import { RetryStrategy } from "@lindorm/retry";
-import { LindormWorkerEvent } from "../enums";
 import { LindormWorkerCallback, LindormWorkerErrorCallback } from "../types";
 import { LindormWorker } from "./LindormWorker";
 
@@ -23,11 +21,11 @@ describe("LindormWorker", () => {
       callback,
       errorCallback,
       interval: 40,
-      listeners: [{ event: LindormWorkerEvent.Error, listener }],
+      listeners: [{ event: "error", listener }],
       logger: createMockLogger(),
       retry: {
         maxAttempts: 5,
-        strategy: RetryStrategy.Linear,
+        strategy: "linear",
         timeout: 25,
         timeoutMax: 5000,
       },

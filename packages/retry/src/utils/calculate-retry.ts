@@ -1,19 +1,18 @@
-import { RetryStrategy } from "../enums";
 import { RetryOptions } from "../types";
 
 export const calculateRetry = (
   attempt: number,
   options: Partial<RetryOptions> = {},
 ): number => {
-  const {
-    strategy = RetryStrategy.Exponential,
-    timeout = 100,
-    timeoutMax = 10000,
-  } = options;
+  const { strategy = "exponential", timeout = 100, timeoutMax = 10000 } = options;
 
-  if (strategy === RetryStrategy.Linear) {
+  if (strategy === "linear") {
     const value = timeout * attempt;
     return value > timeoutMax ? timeoutMax : value;
+  }
+
+  if (strategy === "constant") {
+    return timeout > timeoutMax ? timeoutMax : timeout;
   }
 
   let value = timeout;

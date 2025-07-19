@@ -1,9 +1,8 @@
-import { Environment } from "@lindorm/enums";
 import { ILogger } from "@lindorm/logger";
 import { Middleware } from "@lindorm/middleware";
 import { RetryOptions } from "@lindorm/retry";
-import { Dict } from "@lindorm/types";
-import { ConduitUsing } from "../enums";
+import { Dict, Environment } from "@lindorm/types";
+import { ConduitUsing } from "../types";
 import { AppContext, RequestContext } from "./context";
 import { ConfigOptions } from "./overrides";
 import { ConduitResponse } from "./response";

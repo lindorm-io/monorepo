@@ -1,5 +1,5 @@
 import { ReadableTime } from "@lindorm/date";
-import { RetryOptions, RetryStrategy } from "@lindorm/retry";
+import { RetryOptions } from "@lindorm/retry";
 import { LindormWorkerCallback } from "../../types";
 
 export const callback: LindormWorkerCallback = async (ctx) => {
@@ -12,7 +12,7 @@ export const randomize: ReadableTime = "1h";
 
 export const retry: RetryOptions = {
   maxAttempts: 10,
-  strategy: RetryStrategy.Linear,
+  strategy: "linear",
   timeout: 1000,
   timeoutMax: 10000,
 };

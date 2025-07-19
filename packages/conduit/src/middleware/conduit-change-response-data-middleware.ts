@@ -3,7 +3,7 @@ import { isArray, isObject } from "@lindorm/is";
 import { ConduitMiddleware } from "../types";
 
 export const conduitChangeResponseDataMiddleware = (
-  mode: ChangeCase = ChangeCase.Camel,
+  mode: ChangeCase = "camel",
 ): ConduitMiddleware =>
   async function conduitChangeResponseDataMiddleware(ctx, next) {
     await next();

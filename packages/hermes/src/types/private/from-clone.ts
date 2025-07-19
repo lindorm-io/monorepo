@@ -2,7 +2,6 @@ import { ILogger } from "@lindorm/logger";
 import { Dict } from "@lindorm/types";
 import { HermesRegistry } from "../../classes/private";
 import { AggregateDomain, ChecksumDomain, SagaDomain, ViewDomain } from "../../domains";
-import { HermesStatus } from "../../enums";
 import {
   ChecksumStore,
   EncryptionStore,
@@ -12,6 +11,7 @@ import {
   ViewStore,
 } from "../../infrastructure";
 import { HermesCommand, HermesError, HermesEvent, HermesTimeout } from "../../messages";
+import { HermesStatus } from "../../types";
 import { HermesOptions } from "../hermes";
 
 export type FromClone = {

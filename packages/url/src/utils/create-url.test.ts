@@ -1,4 +1,3 @@
-import { ChangeCase } from "@lindorm/case";
 import { createUrl } from "./create-url";
 
 describe("createUrl", () => {
@@ -113,7 +112,7 @@ describe("createUrl", () => {
           queryFour: "string with spaces",
           queryFive: ["array", 987, false],
         },
-        changeQueryCase: ChangeCase.Snake,
+        changeQueryCase: "snake",
       }).toString(),
     ).toEqual(
       "https://lindorm.io/url/path?query_one=string&query_two=123456&query_three=true&query_four=string+with+spaces&query_five=array+987+false",
@@ -142,7 +141,7 @@ describe("createUrl", () => {
         query: {
           QueryOne: "string",
         },
-        changeQueryCase: ChangeCase.Camel,
+        changeQueryCase: "camel",
       }).toString(),
     ).toEqual("https://lindorm.io/?queryOne=string");
   });

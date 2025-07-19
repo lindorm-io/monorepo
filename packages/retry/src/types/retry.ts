@@ -1,5 +1,6 @@
 import { Optional } from "@lindorm/types";
-import { RetryStrategy } from "../enums";
+
+export type RetryStrategy = "exponential" | "linear" | "constant";
 
 export type RetryConfig = {
   maxAttempts: number;

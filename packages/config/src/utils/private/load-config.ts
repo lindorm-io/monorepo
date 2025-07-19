@@ -1,4 +1,4 @@
-import { ChangeCase, changeKeys } from "@lindorm/case";
+import { changeKeys } from "@lindorm/case";
 import { Dict } from "@lindorm/types";
 import c from "config";
 import { ProcessEnv } from "../../types";
@@ -8,5 +8,5 @@ export const loadConfig = (processEnv: ProcessEnv): Dict => {
   const config = c.util.toObject();
   const merged = mergeObjectWithProcessEnv(processEnv, config);
 
-  return changeKeys(merged, ChangeCase.Camel);
+  return changeKeys(merged, "camel");
 };

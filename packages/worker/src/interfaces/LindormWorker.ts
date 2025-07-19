@@ -1,4 +1,3 @@
-import { LindormWorkerEvent } from "../enums";
 import { LindormWorkerErrorListener, LindormWorkerListener } from "../types";
 
 export interface ILindormWorker {
@@ -12,11 +11,11 @@ export interface ILindormWorker {
   seq: number;
   started: boolean;
 
-  on(evt: LindormWorkerEvent.Start, listener: LindormWorkerListener): void;
-  on(evt: LindormWorkerEvent.Stop, listener: LindormWorkerListener): void;
-  on(evt: LindormWorkerEvent.Success, listener: LindormWorkerListener): void;
-  on(evt: LindormWorkerEvent.Error, listener: LindormWorkerErrorListener): void;
-  on(evt: LindormWorkerEvent.Warning, listener: LindormWorkerErrorListener): void;
+  on(evt: "start", listener: LindormWorkerListener): void;
+  on(evt: "stop", listener: LindormWorkerListener): void;
+  on(evt: "success", listener: LindormWorkerListener): void;
+  on(evt: "error", listener: LindormWorkerErrorListener): void;
+  on(evt: "warning", listener: LindormWorkerErrorListener): void;
 
   start(): void;
   stop(): void;

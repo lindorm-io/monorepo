@@ -1,4 +1,4 @@
-import { DurationString } from "../../enums";
+import { DurationString } from "../../types";
 import { getDuration } from "./get-duration";
 
 type MatchString = {

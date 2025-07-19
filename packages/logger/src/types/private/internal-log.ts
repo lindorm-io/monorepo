@@ -1,5 +1,5 @@
 import { Dict } from "@lindorm/types";
-import { LogLevel } from "../../enums";
+import { LogLevel } from "../../types";
 import { LogContent, LogCorrelation } from "../types";
 
 export type InternalLog = {

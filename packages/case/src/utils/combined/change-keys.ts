@@ -1,5 +1,4 @@
-import { ChangeCase } from "../../enums";
-import { KeysInput } from "../../types";
+import { ChangeCase, KeysInput } from "../../types";
 import {
   camelKeys,
   capitalKeys,
@@ -16,43 +15,43 @@ import {
 
 export const changeKeys = <T extends KeysInput = KeysInput>(
   input: T,
-  mode: ChangeCase = ChangeCase.None,
+  mode: ChangeCase = "none",
 ): T => {
   switch (mode) {
-    case ChangeCase.Camel:
+    case "camel":
       return camelKeys(input);
 
-    case ChangeCase.Capital:
+    case "capital":
       return capitalKeys(input);
 
-    case ChangeCase.Constant:
+    case "constant":
       return constantKeys(input);
 
-    case ChangeCase.Dot:
+    case "dot":
       return dotKeys(input);
 
-    case ChangeCase.Header:
+    case "header":
       return headerKeys(input);
 
-    case ChangeCase.Kebab:
+    case "kebab":
       return kebabKeys(input);
 
-    case ChangeCase.Lower:
+    case "lower":
       return lowerKeys(input);
 
-    case ChangeCase.Pascal:
+    case "pascal":
       return pascalKeys(input);
 
-    case ChangeCase.Path:
+    case "path":
       return pathKeys(input);
 
-    case ChangeCase.Sentence:
+    case "sentence":
       return sentenceKeys(input);
 
-    case ChangeCase.Snake:
+    case "snake":
       return snakeKeys(input);
 
-    case ChangeCase.None:
+    case "none":
       return input;
 
     default:

@@ -1,6 +1,5 @@
 import type { RawAxiosRequestConfig } from "axios";
 import axios from "axios";
-import { ExpectedResponse } from "../../enums";
 import { ConduitResponse } from "../../types";
 
 export const useAxios = async (
@@ -8,7 +7,7 @@ export const useAxios = async (
 ): Promise<ConduitResponse> => {
   const response = await axios.request(config);
 
-  if (config.responseType === ExpectedResponse.ArrayBuffer) {
+  if (config.responseType === "arraybuffer") {
     response.data = Buffer.from(response.data);
   }
 

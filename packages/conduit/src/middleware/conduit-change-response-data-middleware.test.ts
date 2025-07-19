@@ -30,7 +30,7 @@ describe("conduitChangeResponseDataMiddleware", () => {
 
   test("should resolve with snake_case for response object", async () => {
     await expect(
-      conduitChangeResponseDataMiddleware(ChangeCase.Snake)(ctx, jest.fn()),
+      conduitChangeResponseDataMiddleware("snake")(ctx, jest.fn()),
     ).resolves.toBeUndefined();
 
     expect(ctx.res.data).toEqual({
@@ -44,7 +44,7 @@ describe("conduitChangeResponseDataMiddleware", () => {
     ctx.res.data = [ctx.res.data, ctx.res.data];
 
     await expect(
-      conduitChangeResponseDataMiddleware(ChangeCase.Snake)(ctx, jest.fn()),
+      conduitChangeResponseDataMiddleware("snake")(ctx, jest.fn()),
     ).resolves.toBeUndefined();
 
     expect(ctx.res.data).toEqual([

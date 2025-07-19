@@ -1,4 +1,4 @@
-import { PkceMethod } from "@lindorm/enums";
+import { PkceMethod } from "@lindorm/types";
 import { createBaseHash as _createBaseHash } from "./create-base-hash";
 import { createPkce } from "./create-pkce";
 import { randomBaseString as _randomBaseString } from "./random-base-string";
@@ -16,7 +16,7 @@ describe("createPkce", () => {
   });
 
   test("should resolve S256", () => {
-    expect(createPkce(PkceMethod.S256, 43)).toEqual({
+    expect(createPkce("S256", 43)).toEqual({
       challenge: "createBaseHash",
       method: "S256",
       verifier: "randomBaseString",
@@ -24,7 +24,7 @@ describe("createPkce", () => {
   });
 
   test("should resolve plain", () => {
-    expect(createPkce(PkceMethod.Plain, 43)).toEqual({
+    expect(createPkce("plain", 43)).toEqual({
       challenge: "randomBaseString",
       method: "plain",
       verifier: "randomBaseString",

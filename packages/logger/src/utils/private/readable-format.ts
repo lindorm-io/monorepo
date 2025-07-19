@@ -2,8 +2,7 @@ import { isArray, isObject } from "@lindorm/is";
 import fastSafeStringify from "fast-safe-stringify";
 import { blue, cyan, gray, green, red, white, yellow } from "picocolors";
 import { Formatter } from "picocolors/types";
-import { LogLevel } from "../../enums";
-import { LogContent } from "../../types";
+import { LogContent, LogLevel } from "../../types";
 import { InternalLog } from "../../types/private";
 import { inspectDictionary } from "../inspect-dictionary";
 
@@ -15,17 +14,17 @@ const colourise = (
 
 const formatLevel = (level: LogLevel, colours: boolean = true): string => {
   switch (level) {
-    case LogLevel.Error:
+    case "error":
       return colourise(red, level.toUpperCase(), colours);
-    case LogLevel.Warn:
+    case "warn":
       return colourise(yellow, level.toUpperCase(), colours);
-    case LogLevel.Info:
+    case "info":
       return colourise(green, level.toUpperCase(), colours);
-    case LogLevel.Verbose:
+    case "verbose":
       return colourise(cyan, level.toUpperCase(), colours);
-    case LogLevel.Debug:
+    case "debug":
       return colourise(blue, level.toUpperCase(), colours);
-    case LogLevel.Silly:
+    case "silly":
       return colourise(gray, level.toUpperCase(), colours);
 
     default:
@@ -35,11 +34,11 @@ const formatLevel = (level: LogLevel, colours: boolean = true): string => {
 
 const levelColor = (level: LogLevel, input: string, colours: boolean = true): string => {
   switch (level) {
-    case LogLevel.Error:
+    case "error":
       return colourise(red, input, colours);
-    case LogLevel.Warn:
+    case "warn":
       return colourise(yellow, input, colours);
-    case LogLevel.Silly:
+    case "silly":
       return colourise(gray, input, colours);
 
     default:

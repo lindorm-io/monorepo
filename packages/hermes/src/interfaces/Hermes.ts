@@ -1,11 +1,11 @@
 import { ClassLike, Dict } from "@lindorm/types";
-import { HermesStatus } from "../enums";
 import {
   AggregateIdentifier,
   CloneHermesOptions,
   EventEmitterListener,
   HermesAdmin,
   HermesCommandOptions,
+  HermesStatus,
 } from "../types";
 
 export interface IHermes {

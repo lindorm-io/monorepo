@@ -1,4 +1,4 @@
-import { Environment } from "@lindorm/enums";
+import { Environment } from "@lindorm/types";
 import { RetryConfig } from "@lindorm/retry";
 import { Dict } from "@lindorm/types";
 import { Readable } from "stream";

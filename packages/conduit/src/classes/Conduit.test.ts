@@ -1,5 +1,5 @@
 import { ChangeCase } from "@lindorm/case";
-import { HttpMethod } from "@lindorm/enums";
+import { HttpMethod } from "@lindorm/types";
 import { createMockLogger } from "@lindorm/logger";
 import { RetryStrategy } from "@lindorm/retry";
 import nock from "nock";
@@ -51,7 +51,7 @@ describe("Conduit", () => {
         baseURL: "http://test.lindorm.io",
         retryOptions: {
           maxAttempts: 3,
-          strategy: RetryStrategy.Linear,
+          strategy: "linear",
           timeout: 25,
           timeoutMax: 3000,
         },
@@ -85,7 +85,7 @@ describe("Conduit", () => {
           query: {
             snakeQuery: "one",
           },
-          middleware: [conduitChangeRequestQueryMiddleware(ChangeCase.Snake)],
+          middleware: [conduitChangeRequestQueryMiddleware("snake")],
         }),
       ).resolves.toEqual(
         expect.objectContaining({
@@ -155,7 +155,7 @@ describe("Conduit", () => {
 
       await expect(
         conduit.request({
-          method: HttpMethod.Get,
+          method: "GET",
           path: "/test/path",
         }),
       ).resolves.toEqual(expect.objectContaining({ status: 204 }));
@@ -167,14 +167,14 @@ describe("Conduit", () => {
 
       await expect(
         conduit.request({
-          method: HttpMethod.Get,
+          method: "GET",
           url: "http://test.lindorm.io/test/path",
         }),
       ).resolves.toEqual(expect.objectContaining({ status: 204 }));
     });
 
     test("should throw on invalid request params", async () => {
-      await expect(conduit.request({ method: HttpMethod.Get })).rejects.toThrow();
+      await expect(conduit.request({ method: "GET" })).rejects.toThrow();
     });
   });
 
@@ -187,7 +187,7 @@ describe("Conduit", () => {
         baseURL: "http://test.lindorm.io",
         retryOptions: {
           maxAttempts: 3,
-          strategy: RetryStrategy.Linear,
+          strategy: "linear",
           timeout: 25,
           timeoutMax: 3000,
         },
@@ -232,7 +232,7 @@ describe("Conduit", () => {
         middleware: [mw],
         retryOptions: {
           maxAttempts: 3,
-          strategy: RetryStrategy.Linear,
+          strategy: "linear",
           timeout: 25,
           timeoutMax: 3000,
         },

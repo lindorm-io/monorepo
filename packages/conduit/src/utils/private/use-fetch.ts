@@ -1,6 +1,5 @@
 import { isFunction } from "@lindorm/is";
 import { Dict, Header } from "@lindorm/types";
-import { ExpectedResponse } from "../../enums";
 import { ConduitError } from "../../errors";
 import { ConduitResponse, ConfigContext } from "../../types";
 
@@ -12,20 +11,20 @@ const parseResponseData = async (
 
   try {
     if (
-      config?.responseType === ExpectedResponse.ArrayBuffer ||
+      config?.responseType === "arraybuffer" ||
       contentType?.includes("application/octet-stream")
     ) {
       return Buffer.from(await response.arrayBuffer());
     }
 
-    if (config?.responseType === ExpectedResponse.Blob) {
+    if (config?.responseType === "blob") {
       return await response.blob();
     }
 
     if (
       isFunction(response.formData) &&
       (contentType?.includes("multipart/form-data") ||
-        config?.responseType === ExpectedResponse.FormData)
+        config?.responseType === "formdata")
     ) {
       return await response.formData();
     }

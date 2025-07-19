@@ -7,35 +7,35 @@ import {
   WEEKS,
   YEARS,
 } from "../../constants/private";
-import { DurationString } from "../../enums";
+import { DurationString } from "../../types";
 
 export const calculateCurrentDuration = (
   milliseconds: number,
   duration: DurationString,
 ): number => {
   switch (duration) {
-    case DurationString.Years:
+    case "years":
       return milliseconds / YEARS;
 
-    case DurationString.Months:
+    case "months":
       return milliseconds / MONTHS;
 
-    case DurationString.Weeks:
+    case "weeks":
       return milliseconds / WEEKS;
 
-    case DurationString.Days:
+    case "days":
       return milliseconds / DAYS;
 
-    case DurationString.Hours:
+    case "hours":
       return milliseconds / HOURS;
 
-    case DurationString.Minutes:
+    case "minutes":
       return milliseconds / MINUTES;
 
-    case DurationString.Seconds:
+    case "seconds":
       return milliseconds / SECONDS;
 
-    case DurationString.Milliseconds:
+    case "milliseconds":
       return milliseconds;
 
     default:
@@ -48,28 +48,28 @@ export const calculateRemainingDuration = (
   duration: DurationString,
 ): number => {
   switch (duration) {
-    case DurationString.Years:
+    case "years":
       return Math.floor(milliseconds) * YEARS;
 
-    case DurationString.Months:
+    case "months":
       return Math.floor(milliseconds) * MONTHS;
 
-    case DurationString.Weeks:
+    case "weeks":
       return Math.floor(milliseconds) * WEEKS;
 
-    case DurationString.Days:
+    case "days":
       return Math.floor(milliseconds) * DAYS;
 
-    case DurationString.Hours:
+    case "hours":
       return Math.floor(milliseconds) * HOURS;
 
-    case DurationString.Minutes:
+    case "minutes":
       return Math.floor(milliseconds) * MINUTES;
 
-    case DurationString.Seconds:
+    case "seconds":
       return Math.floor(milliseconds) * SECONDS;
 
-    case DurationString.Milliseconds:
+    case "milliseconds":
       return milliseconds;
 
     default:

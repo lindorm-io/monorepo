@@ -1,4 +1,4 @@
-import { PkceMethod } from "@lindorm/enums";
+import { PkceMethod } from "@lindorm/types";
 import { PkceError } from "../../errors";
 import { createBaseHash } from "./create-base-hash";
 import { stringComparison } from "./string-comparison";
@@ -9,11 +9,11 @@ export const verifyPkce = (
   method: PkceMethod,
 ): boolean => {
   switch (method) {
-    case PkceMethod.Plain:
-      return stringComparison(challenge, verifier);
-
-    case PkceMethod.S256:
+    case "S256":
       return stringComparison(challenge, createBaseHash(verifier));
+
+    case "plain":
+      return stringComparison(challenge, verifier);
 
     default:
       throw new PkceError("Invalid PKCE method", {

@@ -30,7 +30,7 @@ describe("conduitChangeRequestHeadersMiddleware", () => {
 
   test("should resolve with camelCase for request object", async () => {
     await expect(
-      conduitChangeRequestHeadersMiddleware(ChangeCase.Camel)(ctx, jest.fn()),
+      conduitChangeRequestHeadersMiddleware("camel")(ctx, jest.fn()),
     ).resolves.toBeUndefined();
 
     expect(ctx.req.headers).toEqual({
