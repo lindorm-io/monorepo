@@ -7,11 +7,13 @@ describe("DelayPostgres Integration", () => {
   let postgres: IPostgresSource;
   let store: DelayPostgres;
 
-  beforeEach(() => {
+  beforeAll(async () => {
     postgres = new PostgresSource({
       logger: createMockLogger(),
       url: "postgres://root:example@localhost:5432/default",
     });
+    await postgres.connect();
+
     store = new DelayPostgres(postgres);
   });
 

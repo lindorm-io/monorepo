@@ -3,11 +3,7 @@ import { IMessage, MessageScannerInput } from "@lindorm/message";
 import { KafkaConfig } from "kafkajs";
 import { KafkaDelayServiceOptions } from "./delay";
 
-export type KafkaSourceMessageBusOptions = {
-  logger?: ILogger;
-};
-
-export type CloneKafkaSourceOptions = {
+export type WithLoggerOptions = {
   logger?: ILogger;
 };
 

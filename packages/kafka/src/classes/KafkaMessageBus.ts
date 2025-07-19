@@ -12,8 +12,9 @@ import {
 import { DeepPartial } from "@lindorm/types";
 import { randomBytes } from "crypto";
 import { Consumer, Kafka, Producer } from "kafkajs";
-import { IKafkaDelayService, IKafkaMessageBus } from "../interfaces";
-import { KafkaBusOptions, PublishOptions, PublishWithDelayOptions } from "../types";
+import { IKafkaDelayService, IKafkaMessageBus, IKafkaPublisher } from "../interfaces";
+import { KafkaMessageBusOptions, PublishOptions } from "../types";
+import { KafkaPublisher } from "./KafkaPublisher";
 
 export class KafkaMessageBus<
   M extends IMessage,
@@ -21,15 +22,23 @@ export class KafkaMessageBus<
 > implements IKafkaMessageBus<M>
 {
   private readonly consumers: Map<string, Consumer>;
+  private readonly delayService: IKafkaDelayService;
   private readonly kafka: Kafka;
   private readonly kit: MessageKit<M, O>;
   private readonly logger: ILogger;
   private readonly producer: Producer;
-  private readonly delayService: IKafkaDelayService;
+  private readonly publisher: IKafkaPublisher<M>;
   private readonly subscriptions: IMessageSubscriptions;
 
-  public constructor(options: KafkaBusOptions<M>) {
+  public constructor(options: KafkaMessageBusOptions<M>) {
     this.logger = options.logger.child(["KafkaMessageBus", options.target.name]);
+
+    this.publisher = new KafkaPublisher<M, O>({
+      delayService: options.delayService,
+      logger: options.logger,
+      producer: options.producer,
+      target: options.target,
+    });
 
     this.kit = new MessageKit<M, O>({ target: options.target, logger: this.logger });
 
@@ -43,29 +52,18 @@ export class KafkaMessageBus<
   // public
 
   public create(options: O | M): M {
-    return this.kit.create(options);
+    return this.publisher.create(options);
   }
 
   public copy(message: M): M {
-    return this.kit.copy(message);
+    return this.publisher.copy(message);
   }
 
   public async publish(
-    message: M | Array<M>,
+    message: O | M | Array<O | M>,
     options: PublishOptions = {},
   ): Promise<void> {
-    const array = isArray(message) ? message : [message];
-
-    const messages = array.map((m) =>
-      m instanceof this.kit.metadata.message.target ? m : this.create(m),
-    );
-
-    this.logger.verbose("Publishing messages", { messages });
-
-    for (const msg of messages) {
-      this.kit.validate(msg);
-      await this.handlePublish(this.kit.publish(msg), options);
-    }
+    return this.publisher.publish(message, options);
   }
 
   public async subscribe(
@@ -101,52 +99,6 @@ export class KafkaMessageBus<
   }
 
   // private
-
-  private async handlePublish(message: M, options: PublishOptions = {}): Promise<void> {
-    const delayField = this.kit.metadata.fields.find((f) => f.decorator === "DelayField");
-    const delay: number = delayField ? message[delayField.key] : options.delay;
-
-    if (delay && delay > 0) {
-      return this.handlePublishMessageWithDelay(message, { ...options, delay });
-    }
-
-    return this.handlePublishMessage(message, options);
-  }
-
-  private async handlePublishMessage(
-    message: M,
-    options: PublishOptions = {},
-  ): Promise<void> {
-    const value = JsonKit.buffer(message);
-    const topic = this.kit.getTopicName(message, options);
-    const config = this.getPublishConfig(message, options);
-
-    await this.producer.connect();
-    await this.producer.send({
-      topic,
-      messages: [{ ...config, value }],
-    });
-
-    this.kit.onPublish(message);
-  }
-
-  private async handlePublishMessageWithDelay(
-    message: M,
-    options: PublishWithDelayOptions,
-  ): Promise<void> {
-    const value = JsonKit.buffer(message);
-    const topic = this.kit.getTopicName(message, options);
-    const config = this.getPublishConfig(message, options);
-
-    this.delayService.delay({
-      delay: options.delay,
-      key: config.key,
-      topic,
-      value,
-    });
-
-    this.kit.onPublish(message);
-  }
 
   private async handleSubscribe(options: SubscribeOptions<M>): Promise<void> {
     const subscription: IMessageSubscription = {
@@ -241,25 +193,5 @@ export class KafkaMessageBus<
     for (const subscription of this.subscriptions.all(this.kit.metadata.message.target)) {
       await this.handleUnsubscribe(subscription);
     }
-  }
-
-  private getPublishConfig(message: M, options: PublishOptions = {}): PublishOptions {
-    const result: PublishOptions = {};
-
-    const identifier = this.kit.metadata.fields.find(
-      (f) => f.decorator === "IdentifierField",
-    );
-    if (identifier) {
-      result.key = message[identifier.key];
-    }
-
-    const timestamp = this.kit.metadata.fields.find(
-      (f) => f.decorator === "TimestampField",
-    );
-    if (timestamp) {
-      result.timestamp = message[timestamp.key]?.getTime().toString();
-    }
-
-    return { ...result, ...options };
   }
 }

@@ -1,19 +1,21 @@
-import { IMessage } from "@lindorm/message";
-import { Constructor } from "@lindorm/types";
 import { IKafkaSource } from "../interfaces";
 import { createMockKafkaMessageBus } from "./mock-kafka-message-bus";
+import { createMockKafkaPublisher } from "./mock-kafka-publisher";
 
 export const createMockKafkaSource = (): IKafkaSource => ({
   name: "KafkaSource",
+
   client: {} as any,
-  addMessages: jest.fn(),
+
   clone: jest.fn().mockImplementation(() => createMockKafkaSource()),
   connect: jest.fn(),
   disconnect: jest.fn(),
   setup: jest.fn(),
-  messageBus: jest
-    .fn()
-    .mockImplementation((target: Constructor<IMessage>) =>
-      createMockKafkaMessageBus(target),
-    ),
+
+  addMessages: jest.fn(),
+  hasMessage: jest.fn().mockReturnValue(true),
+
+  messageBus: jest.fn().mockImplementation((target) => createMockKafkaMessageBus(target)),
+
+  publisher: jest.fn().mockImplementation((target) => createMockKafkaPublisher(target)),
 });

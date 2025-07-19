@@ -7,11 +7,13 @@ describe("DelayRedis Integration", () => {
   let redis: IRedisSource;
   let store: DelayRedis;
 
-  beforeEach(() => {
+  beforeAll(async () => {
     redis = new RedisSource({
       logger: createMockLogger(),
       url: "redis://localhost:6379",
     });
+    await redis.connect();
+
     store = new DelayRedis(redis);
   });
 

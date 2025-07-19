@@ -10,14 +10,16 @@ import {
 import { Constructor } from "@lindorm/types";
 import { Kafka, Partitioners, Producer } from "kafkajs";
 import { KafkaSourceError } from "../errors";
-import { IKafkaDelayService, IKafkaMessageBus, IKafkaSource } from "../interfaces";
 import {
-  CloneKafkaSourceOptions,
-  KafkaSourceMessageBusOptions,
-  KafkaSourceOptions,
-} from "../types";
+  IKafkaDelayService,
+  IKafkaMessageBus,
+  IKafkaPublisher,
+  IKafkaSource,
+} from "../interfaces";
+import { KafkaSourceOptions, WithLoggerOptions } from "../types";
 import { FromClone } from "../types/private";
 import { KafkaMessageBus } from "./KafkaMessageBus";
+import { KafkaPublisher } from "./KafkaPublisher";
 import { KafkaDelayService } from "./private";
 
 export class KafkaSource implements IKafkaSource {
@@ -76,15 +78,7 @@ export class KafkaSource implements IKafkaSource {
     return this.kafka;
   }
 
-  public addMessages(messages: MessageScannerInput): void {
-    this.messages.push(
-      ...MessageScanner.scan(messages).filter(
-        (Message) => !this.messages.includes(Message),
-      ),
-    );
-  }
-
-  public clone(options: CloneKafkaSourceOptions = {}): IKafkaSource {
+  public clone(options: WithLoggerOptions = {}): IKafkaSource {
     return new KafkaSource({
       _mode: "from_clone",
       buses: this.cache,
@@ -111,9 +105,25 @@ export class KafkaSource implements IKafkaSource {
     await this.producer.disconnect();
   }
 
+  public async setup(): Promise<void> {
+    await this.connect();
+  }
+
+  public addMessages(messages: MessageScannerInput): void {
+    this.messages.push(
+      ...MessageScanner.scan(messages).filter(
+        (Message) => !this.messages.includes(Message),
+      ),
+    );
+  }
+
+  public hasMessage(target: Constructor<IMessage>): boolean {
+    return this.messages.includes(target);
+  }
+
   public messageBus<M extends IMessage>(
     target: Constructor<M>,
-    options: KafkaSourceMessageBusOptions = {},
+    options: WithLoggerOptions = {},
   ): IKafkaMessageBus<M> {
     if (!this.cache.has(target)) {
       this.messageExists(target);
@@ -134,8 +144,18 @@ export class KafkaSource implements IKafkaSource {
     return this.cache.get(target) as IKafkaMessageBus<M>;
   }
 
-  public async setup(): Promise<void> {
-    await this.connect();
+  public publisher<M extends IMessage>(
+    target: Constructor<M>,
+    options: WithLoggerOptions = {},
+  ): IKafkaPublisher<M> {
+    this.messageExists(target);
+
+    return new KafkaPublisher<M>({
+      delayService: this.delayService,
+      logger: options.logger ?? this.logger,
+      producer: this.producer,
+      target,
+    });
   }
 
   // private

@@ -1,14 +1,12 @@
 import { ILogger } from "@lindorm/logger";
-import { IMessage, IMessageSubscriptions } from "@lindorm/message";
+import { IMessage } from "@lindorm/message";
 import { Constructor } from "@lindorm/types";
-import { Kafka, Producer } from "kafkajs";
+import { Producer } from "kafkajs";
 import { IKafkaDelayService } from "../interfaces";
 
-export type KafkaMessageBusOptions<M extends IMessage> = {
-  kafka: Kafka;
+export type KafkaPublisherOptions<M extends IMessage> = {
   logger: ILogger;
   producer: Producer;
   delayService: IKafkaDelayService;
-  subscriptions: IMessageSubscriptions;
   target: Constructor<M>;
 };

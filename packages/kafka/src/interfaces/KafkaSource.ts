@@ -1,22 +1,30 @@
 import { IMessage, MessageScannerInput } from "@lindorm/message";
 import { Constructor } from "@lindorm/types";
 import { Kafka } from "kafkajs";
-import { CloneKafkaSourceOptions, KafkaSourceMessageBusOptions } from "../types";
+import { WithLoggerOptions } from "../types";
 import { IKafkaMessageBus } from "./KafkaMessageBus";
+import { IKafkaPublisher } from "./KafkaPublisher";
 
 export interface IKafkaSource {
   name: "KafkaSource";
 
   client: Kafka;
 
-  clone(options?: CloneKafkaSourceOptions): IKafkaSource;
+  clone(options?: WithLoggerOptions): IKafkaSource;
   connect(): Promise<void>;
   disconnect(): Promise<void>;
   setup(): Promise<void>;
 
   addMessages(messages: MessageScannerInput): void;
+  hasMessage(target: Constructor<IMessage>): boolean;
+
   messageBus<M extends IMessage>(
     target: Constructor<M>,
-    options?: KafkaSourceMessageBusOptions,
+    options?: WithLoggerOptions,
   ): IKafkaMessageBus<M>;
+
+  publisher<M extends IMessage>(
+    target: Constructor<M>,
+    options?: WithLoggerOptions,
+  ): IKafkaPublisher<M>;
 }

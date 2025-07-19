@@ -7,12 +7,14 @@ describe("DelayMongo Integration", () => {
   let mongo: IMongoSource;
   let store: DelayMongo;
 
-  beforeEach(() => {
+  beforeAll(async () => {
     mongo = new MongoSource({
       database: "Hermes",
       logger: createMockLogger(),
       url: "mongodb://root:example@localhost/admin?authSource=admin",
     });
+    await mongo.connect();
+
     store = new DelayMongo(mongo);
   });
 
