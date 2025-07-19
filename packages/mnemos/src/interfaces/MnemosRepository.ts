@@ -19,10 +19,10 @@ export interface IMnemosRepository<
   findOne(predicate: Predicate<E>): Promise<E | null>;
   findOneOrFail(predicate: Predicate<E>): Promise<E>;
   findOneOrSave(predicate: Predicate<E>, options?: O): Promise<E>;
-  insert(entity: E): Promise<E>;
-  insertBulk(entities: Array<E>): Promise<Array<E>>;
-  save(entity: E): Promise<E>;
-  saveBulk(entities: Array<E>): Promise<Array<E>>;
+  insert(entity: O | E): Promise<E>;
+  insertBulk(entities: Array<O | E>): Promise<Array<E>>;
+  save(entity: O | E): Promise<E>;
+  saveBulk(entities: Array<O | E>): Promise<Array<E>>;
   update(entity: E): Promise<E>;
   updateBulk(entities: Array<E>): Promise<Array<E>>;
   ttl(predicate: Predicate<E>): Promise<number>;

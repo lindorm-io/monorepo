@@ -17,8 +17,6 @@ overkill.
 * Fully **typed** – repositories preserve your entity type, including primary keys & columns.
 * Supports TTL & version columns, automatic primary key increments, soft deletes, …
 * Identical repository/collection API to the production drivers → swap databases without hassle.
-* Bundles HTTP / WebSocket **middleware** helpers for the
-  [`@lindorm/pylon`](https://github.com/fhitc/lindorm-monorepo/tree/main/packages/pylon) framework.
 
 ---
 
@@ -116,25 +114,6 @@ repo.ttl(predicate)       // seconds until expiry (requires @ExpiryDateColumn)
 
 All predicate parameters use the tiny `@lindorm/utils` _Predicated_ DSL which supports `$and`,
 `$or`, comparison operators (`$gt`, `$lte` …) and nested paths.
-
----
-
-## Middleware helpers
-
-Adding a Mnemos source / repository / single entity to a
-[`@lindorm/pylon`](../pylon) HTTP or WebSocket context is a one-liner:
-
-```ts
-import {
-  createHttpMnemosSourceMiddleware,
-  createHttpMnemosRepositoryMiddleware,
-} from '@lindorm/mnemos';
-
-app.use(createHttpMnemosSourceMiddleware(source));
-app.use(createHttpMnemosRepositoryMiddleware(User, {
-  repository: source.repository(User),
-}));
-```
 
 ---
 

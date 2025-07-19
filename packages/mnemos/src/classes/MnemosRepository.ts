@@ -7,7 +7,7 @@ import { MnemosRepositoryError } from "../errors";
 import { IMnemosCache, IMnemosCollection, IMnemosRepository } from "../interfaces";
 import { MnemosRepositoryOptions } from "../types";
 
-const PRIMARY_SOURCE: MetaSource = "mnemos" as const;
+const PRIMARY_SOURCE: MetaSource = "MnemosSource" as const;
 
 export class MnemosRepository<
   E extends IEntity = IEntity,
@@ -140,12 +140,15 @@ export class MnemosRepository<
     return this.save(this.create({ ...predicate, ...options } as O));
   }
 
-  public async insert(entity: E): Promise<E> {
-    this.validate(entity);
+  public async insert(entity: O | E): Promise<E> {
+    entity =
+      entity instanceof this.kit.metadata.entity.target ? entity : this.create(entity);
 
     const insert = await this.kit.insert(entity);
 
     try {
+      this.validate(insert);
+
       this.collection.insertOne(insert);
 
       this.logger.debug("Repository done: insert", { input: { insert } });
@@ -159,11 +162,14 @@ export class MnemosRepository<
     }
   }
 
-  public async insertBulk(entities: Array<E>): Promise<Array<E>> {
+  public async insertBulk(entities: Array<O | E>): Promise<Array<E>> {
     return Promise.all(entities.map((entity) => this.insert(entity)));
   }
 
-  public async save(entity: E): Promise<E> {
+  public async save(entity: O | E): Promise<E> {
+    entity =
+      entity instanceof this.kit.metadata.entity.target ? entity : this.create(entity);
+
     const strategy = this.kit.getSaveStrategy(entity);
 
     switch (strategy) {
@@ -185,7 +191,7 @@ export class MnemosRepository<
     }
   }
 
-  public async saveBulk(entities: Array<E>): Promise<Array<E>> {
+  public async saveBulk(entities: Array<O | E>): Promise<Array<E>> {
     return Promise.all(entities.map((entity) => this.save(entity)));
   }
 

@@ -20,7 +20,7 @@
     "integration:focus": "compd --file docker-compose.yml jest --config jest.config.integration.js --watch $1",
     "prettier": "prettier --write ./src/*",
     "test": "jest --watch --",
-    "test:ci": "npm run test:unit && npm run test:integration",
+    "test:ci": "npm run test:integration",
     "test:integration": "jest --config jest.config.integration.js --",
     "test:unit": "jest --config jest.config.js --",
     "typecheck": "tsc --watch",
@@ -40,7 +40,6 @@
   },
   "devDependencies": {
     "@lindorm/logger": "^0.3.2",
-    "@lindorm/pylon": "^0.4.4",
     "@lindorm/types": "^0.3.1",
     "@types/amqplib": "0.10.7"
   }

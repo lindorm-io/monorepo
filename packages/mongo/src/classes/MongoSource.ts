@@ -77,6 +77,14 @@ export class MongoSource implements IMongoSource {
     );
   }
 
+  public hasEntity(target: Constructor<IEntity>): boolean {
+    return this.entities.some((Entity) => Entity === target);
+  }
+
+  public hasFile(target: Constructor<IMongoFile>): boolean {
+    return this.files.some((File) => File === target);
+  }
+
   public clone(options: CloneMongoSourceOptions = {}): IMongoSource {
     return new MongoSource({
       _mode: "from_clone",

@@ -25,10 +25,10 @@ export interface IMongoRepository<
   findOne(criteria: Filter<E>, options?: FindOptions<E>): Promise<E | null>;
   findOneOrFail(criteria: Filter<E>, options?: FindOptions<E>): Promise<E>;
   findOneOrSave(criteria: DeepPartial<E>, options?: O): Promise<E>;
-  insert(entity: E): Promise<E>;
-  insertBulk(entities: Array<E>): Promise<Array<E>>;
-  save(entity: E): Promise<E>;
-  saveBulk(entities: Array<E>): Promise<Array<E>>;
+  insert(entity: O | E): Promise<E>;
+  insertBulk(entities: Array<O | E>): Promise<Array<E>>;
+  save(entity: O | E): Promise<E>;
+  saveBulk(entities: Array<O | E>): Promise<Array<E>>;
   softDelete(criteria: Filter<E>, options?: DeleteOptions): Promise<void>;
   softDestroy(entity: E): Promise<void>;
   softDestroyBulk(entities: Array<E>): Promise<void>;

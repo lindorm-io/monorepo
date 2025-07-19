@@ -36,7 +36,6 @@
   },
   "devDependencies": {
     "@lindorm/logger": "^0.3.2",
-    "@lindorm/pylon": "^0.4.4",
     "@types/pg": "^8.11.10"
   }
 }

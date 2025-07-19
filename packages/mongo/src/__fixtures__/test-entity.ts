@@ -17,7 +17,7 @@ export type TestEntityOptions = {
 };
 
 @Entity()
-@PrimarySource("mongo")
+@PrimarySource("MongoSource")
 export class TestEntity extends EntityBase {
   @DeleteDateColumn()
   public readonly deletedAt!: Date | null;

@@ -10,8 +10,14 @@ export interface IMnemosSource {
   client: IMnemosCache;
 
   clone(options?: CloneMnemosSourceOptions): IMnemosSource;
+  connect(): Promise<void>;
+  disconnect(): Promise<void>;
+  setup(): Promise<void>;
 
   addEntities(entities: EntityScannerInput): void;
+
+  hasEntity(target: Constructor<IEntity>): boolean;
+
   repository<E extends IEntity>(
     Entity: Constructor<E>,
     options?: MnemosSourceRepositoryOptions,

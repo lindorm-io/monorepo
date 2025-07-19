@@ -11,9 +11,9 @@ const defaultCallback =
     defaultCreateEntity(Entity, options);
 
 export const createMockMnemosRepository = <E extends IEntity = IEntity>(
-  Entity: Constructor<E>,
-  callback: Callback<E> = defaultCallback(Entity),
-): IMnemosRepository<E> => ({
+  target: Constructor<E>,
+  callback: Callback<E> = defaultCallback(target),
+): jest.Mocked<IMnemosRepository<E>> => ({
   create: jest.fn().mockImplementation((args) => callback(args)),
   copy: jest.fn().mockImplementation((args) => callback(args)),
   validate: jest.fn(),

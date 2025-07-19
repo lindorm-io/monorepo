@@ -51,6 +51,10 @@ export class MnemosSource implements IMnemosSource {
     );
   }
 
+  public hasEntity(target: Constructor<IEntity>): boolean {
+    return this.entities.some((Entity) => Entity === target);
+  }
+
   public clone(options: CloneMnemosSourceOptions = {}): IMnemosSource {
     return new MnemosSource({
       _mode: "from_clone",
@@ -58,6 +62,18 @@ export class MnemosSource implements IMnemosSource {
       entities: this.entities,
       logger: options.logger ?? this.logger,
     });
+  }
+
+  public async connect(): Promise<void> {
+    this.logger.silly("MnemosSource connect done");
+  }
+
+  public async disconnect(): Promise<void> {
+    this.logger.silly("MnemosSource disconnect done");
+  }
+
+  public async setup(): Promise<void> {
+    this.logger.silly("MnemosSource setup done");
   }
 
   public repository<E extends IEntity = IEntity>(

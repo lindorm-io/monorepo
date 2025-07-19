@@ -15,8 +15,11 @@ export const createMockMongoSource = (): IMongoSource => ({
   collection: jest.fn(),
 
   addEntities: jest.fn(),
-  repository: jest.fn().mockImplementation(createMockMongoRepository),
-
   addFiles: jest.fn(),
-  bucket: jest.fn().mockImplementation(createMockMongoBucket),
+
+  hasEntity: jest.fn().mockReturnValue(true),
+  hasFile: jest.fn().mockReturnValue(true),
+
+  repository: jest.fn().mockImplementation((target) => createMockMongoRepository(target)),
+  bucket: jest.fn().mockImplementation((target) => createMockMongoBucket(target)),
 });

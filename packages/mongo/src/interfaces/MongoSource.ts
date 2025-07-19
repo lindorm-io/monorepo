@@ -25,12 +25,16 @@ export interface IMongoSource {
   collection<D extends Document>(name: string): Collection<D>;
 
   addEntities(entities: EntityScannerInput): void;
+  addFiles(files: FileScannerInput): void;
+
+  hasEntity(target: Constructor<IEntity>): boolean;
+  hasFile(target: Constructor<IMongoFile>): boolean;
+
   repository<E extends IEntity, O extends DeepPartial<E> = DeepPartial<E>>(
     Entity: Constructor<E>,
     options?: MongoSourceRepositoryOptions,
   ): IMongoRepository<E, O>;
 
-  addFiles(files: FileScannerInput): void;
   bucket<F extends IMongoFile>(
     File: Constructor<F>,
     options?: MongoSourceBucketOptions,

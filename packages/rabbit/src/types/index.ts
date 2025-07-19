@@ -1,5 +1,4 @@
 export * from "./bind-queue";
-export * from "./middleware";
 export * from "./publish";
 export * from "./rabbit-message-bus";
 export * from "./rabbit-publisher";

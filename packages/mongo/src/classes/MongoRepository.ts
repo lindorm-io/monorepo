@@ -16,7 +16,7 @@ import { FindOptions, MongoRepositoryOptions } from "../types";
 import { getIndexOptions } from "../utils/private";
 import { MongoBase } from "./MongoBase";
 
-const PRIMARY_SOURCE: MetaSource = "mongo" as const;
+const PRIMARY_SOURCE: MetaSource = "MongoSource" as const;
 
 export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepPartial<E>>
   extends MongoBase<E>
@@ -352,14 +352,17 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
     return this.insert(this.create({ ...criteria, ...options } as O));
   }
 
-  public async insert(entity: E): Promise<E> {
+  public async insert(entity: O | E): Promise<E> {
     const start = Date.now();
 
-    this.validate(entity);
-
-    const insert = await this.kit.insert(entity);
+    entity =
+      entity instanceof this.kit.metadata.entity.target ? entity : this.create(entity);
 
     try {
+      const insert = await this.kit.insert(entity);
+
+      this.validate(insert);
+
       const result = await this.collection.insertOne(insert);
 
       this.logger.debug("Repository done: insert", {
@@ -379,13 +382,19 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
     }
   }
 
-  public async insertBulk(entities: Array<E>): Promise<Array<E>> {
+  public async insertBulk(entities: Array<O | E>): Promise<Array<E>> {
     const start = Date.now();
 
     const inserts: Array<E> = [];
 
     for (const entity of entities) {
-      inserts.push(await this.kit.insert(entity));
+      inserts.push(
+        await this.kit.insert(
+          entity instanceof this.kit.metadata.entity.target
+            ? entity
+            : this.create(entity),
+        ),
+      );
     }
 
     for (const entity of inserts) {
@@ -417,7 +426,10 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
     }
   }
 
-  public async save(entity: E): Promise<E> {
+  public async save(entity: O | E): Promise<E> {
+    entity =
+      entity instanceof this.kit.metadata.entity.target ? entity : this.create(entity);
+
     switch (this.kit.getSaveStrategy(entity)) {
       case "insert":
         return await this.insert(entity);
@@ -437,7 +449,7 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
     }
   }
 
-  public async saveBulk(entities: Array<E>): Promise<Array<E>> {
+  public async saveBulk(entities: Array<O | E>): Promise<Array<E>> {
     return await Promise.all(entities.map((entity) => this.save(entity)));
   }
 

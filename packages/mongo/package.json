@@ -43,7 +43,6 @@
   "devDependencies": {
     "@lindorm/amphora": "^0.2.4",
     "@lindorm/logger": "^0.3.2",
-    "@lindorm/pylon": "^0.4.4",
     "@lindorm/types": "^0.3.1",
     "@types/busboy": "^1.5.4",
     "@types/object-path": "^0.11.4"
