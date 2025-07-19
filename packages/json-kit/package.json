@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/json-kit",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -29,9 +29,9 @@
     "update:auto": "ncu -u"
   },
   "dependencies": {
-    "@lindorm/is": "^0.1.9"
+    "@lindorm/is": "^0.1.10"
   },
   "devDependencies": {
-    "@lindorm/types": "^0.3.1"
+    "@lindorm/types": "^0.3.2"
   }
 }

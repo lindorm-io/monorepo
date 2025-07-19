@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.10](https://github.com/lindorm-io/monorepo/compare/@lindorm/case@0.1.9...@lindorm/case@0.1.10) (2025-07-19)
+
+### Bug Fixes
+
+- remove unnecessary enums ([d0364d9](https://github.com/lindorm-io/monorepo/commit/d0364d97ad0dc621a1020d4ddba8d3a87959838d))
+
 ## [0.1.9](https://github.com/lindorm-io/monorepo/compare/@lindorm/case@0.1.8...@lindorm/case@0.1.9) (2025-07-10)
 
 **Note:** Version bump only for package @lindorm/case

@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.3](https://github.com/lindorm-io/monorepo/compare/@lindorm/hermes@0.3.2...@lindorm/hermes@0.3.3) (2025-07-19)
+
+### Bug Fixes
+
+- move middleware to pylon ([a31f6c2](https://github.com/lindorm-io/monorepo/commit/a31f6c20c35629f6c905d657fd53d5b423636c60))
+- remove unnecessary enums ([d0364d9](https://github.com/lindorm-io/monorepo/commit/d0364d97ad0dc621a1020d4ddba8d3a87959838d))
+
 ## [0.3.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/hermes@0.3.1...@lindorm/hermes@0.3.2) (2025-07-13)
 
 ### Bug Fixes

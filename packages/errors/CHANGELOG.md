@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.11](https://github.com/lindorm-io/monorepo/compare/@lindorm/errors@0.1.10...@lindorm/errors@0.1.11) (2025-07-19)
+
+**Note:** Version bump only for package @lindorm/errors
+
 ## [0.1.10](https://github.com/lindorm-io/monorepo/compare/@lindorm/errors@0.1.9...@lindorm/errors@0.1.10) (2025-07-10)
 
 **Note:** Version bump only for package @lindorm/errors

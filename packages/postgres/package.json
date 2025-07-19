@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/postgres",
-  "version": "0.3.5",
+  "version": "0.3.6",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -29,13 +29,13 @@
     "update:auto": "ncu -u"
   },
   "dependencies": {
-    "@lindorm/errors": "^0.1.10",
-    "@lindorm/is": "^0.1.9",
-    "@lindorm/json-kit": "^0.5.1",
+    "@lindorm/errors": "^0.1.11",
+    "@lindorm/is": "^0.1.10",
+    "@lindorm/json-kit": "^0.5.2",
     "pg": "^8.13.0"
   },
   "devDependencies": {
-    "@lindorm/logger": "^0.3.2",
+    "@lindorm/logger": "^0.3.3",
     "@types/pg": "^8.11.10"
   }
 }

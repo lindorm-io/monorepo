@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.8.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/redis@0.7.0...@lindorm/redis@0.8.0) (2025-07-19)
+
+### Bug Fixes
+
+- move middleware to pylon ([a31f6c2](https://github.com/lindorm-io/monorepo/commit/a31f6c20c35629f6c905d657fd53d5b423636c60))
+
+### Features
+
+- add publisher to redis ([bd82535](https://github.com/lindorm-io/monorepo/commit/bd82535a524e72b82b4ec52cad67a27347f630ff))
+
 # [0.7.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/redis@0.6.3...@lindorm/redis@0.7.0) (2025-07-12)
 
 ### Bug Fixes

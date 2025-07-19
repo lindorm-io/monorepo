@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.5.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/pylon@0.4.4...@lindorm/pylon@0.5.0) (2025-07-19)
+
+### Features
+
+- add infrastructure to pylon ([9ef0244](https://github.com/lindorm-io/monorepo/commit/9ef0244b1de2d3c2bf872aff2656bbe6970483f4))
+
 ## [0.4.4](https://github.com/lindorm-io/monorepo/compare/@lindorm/pylon@0.4.3...@lindorm/pylon@0.4.4) (2025-07-12)
 
 **Note:** Version bump only for package @lindorm/pylon

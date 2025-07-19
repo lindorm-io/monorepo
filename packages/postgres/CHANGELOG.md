@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.6](https://github.com/lindorm-io/monorepo/compare/@lindorm/postgres@0.3.5...@lindorm/postgres@0.3.6) (2025-07-19)
+
+### Bug Fixes
+
+- move middleware to pylon ([a31f6c2](https://github.com/lindorm-io/monorepo/commit/a31f6c20c35629f6c905d657fd53d5b423636c60))
+
 ## [0.3.5](https://github.com/lindorm-io/monorepo/compare/@lindorm/postgres@0.3.4...@lindorm/postgres@0.3.5) (2025-07-12)
 
 **Note:** Version bump only for package @lindorm/postgres

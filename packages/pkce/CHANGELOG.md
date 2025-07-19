@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.7](https://github.com/lindorm-io/monorepo/compare/@lindorm/pkce@0.1.6...@lindorm/pkce@0.1.7) (2025-07-19)
+
+### Bug Fixes
+
+- remove unnecessary enums ([d0364d9](https://github.com/lindorm-io/monorepo/commit/d0364d97ad0dc621a1020d4ddba8d3a87959838d))
+
 ## [0.1.6](https://github.com/lindorm-io/monorepo/compare/@lindorm/pkce@0.1.5...@lindorm/pkce@0.1.6) (2025-07-10)
 
 **Note:** Version bump only for package @lindorm/pkce

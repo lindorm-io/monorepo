@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.3](https://github.com/lindorm-io/monorepo/compare/@lindorm/message@0.1.2...@lindorm/message@0.1.3) (2025-07-19)
+
+**Note:** Version bump only for package @lindorm/message
+
 ## [0.1.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/message@0.1.1...@lindorm/message@0.1.2) (2025-07-12)
 
 ### Bug Fixes
