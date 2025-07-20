@@ -6,6 +6,7 @@ export * from "./aes-key-length";
 export * from "./crypto";
 export * from "./environment";
 export * from "./http-method";
-export * from "./types";
 export * from "./pkce-method";
+export * from "./predicate";
 export * from "./priority";
+export * from "./types";

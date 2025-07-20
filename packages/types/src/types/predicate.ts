@@ -1,19 +1,33 @@
-import { DeepPartial, Dict } from "@lindorm/types";
+import { DeepPartial, Dict } from "./types";
 
 export type PredicateOperator<T> = {
+  // existence
+  $exists?: boolean;
   $eq?: T | null;
   $neq?: T | null;
+
+  // comparisons
   $gt?: T;
   $gte?: T;
   $lt?: T;
   $lte?: T;
+  $between?: [T, T];
+
+  // fuzzy finding
   $like?: T;
   $ilike?: T;
-  $in?: T extends Array<infer U> ? Array<U> : Array<T>;
-  $nin?: T extends Array<infer U> ? Array<U> : Array<T>;
-  $between?: [T, T];
   $regex?: RegExp;
 
+  // arrays
+  $in?: T extends Array<infer U> ? Array<U> : Array<T>;
+  $nin?: T extends Array<infer U> ? Array<U> : Array<T>;
+  $all?: T extends Array<infer U> ? Array<U> : Array<T>;
+  $length?: number;
+
+  // numbers
+  $mod?: [number, number]; // value % [0] === [1]
+
+  // logical
   $and?: Array<
     T | null | PredicateOperator<DeepPartial<T>> | RootPredicate<DeepPartial<T>>
   >;

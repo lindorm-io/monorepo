@@ -1,5 +1,4 @@
-import { DeepPartial, Dict } from "@lindorm/types";
-import { Predicate } from "@lindorm/utils";
+import { DeepPartial, Dict, Predicate } from "@lindorm/types";
 
 export interface IMnemosCollection<T extends Dict = Dict> {
   delete(criteria: Predicate<T>): void;

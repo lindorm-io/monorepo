@@ -1,8 +1,7 @@
 import { EntityKit, IEntity, MetaSource } from "@lindorm/entity";
 import { isDate } from "@lindorm/is";
 import { ILogger } from "@lindorm/logger";
-import { DeepPartial } from "@lindorm/types";
-import { Predicate } from "@lindorm/utils";
+import { DeepPartial, Predicate } from "@lindorm/types";
 import { MnemosRepositoryError } from "../errors";
 import { IMnemosCache, IMnemosCollection, IMnemosRepository } from "../interfaces";
 import { MnemosRepositoryOptions } from "../types";

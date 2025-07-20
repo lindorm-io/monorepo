@@ -1,7 +1,6 @@
 import { KryptosAttributes, KryptosMetadata, LindormJwk } from "@lindorm/kryptos";
 import { ILogger } from "@lindorm/logger";
-import { OpenIdConfiguration } from "@lindorm/types";
-import { Predicate } from "@lindorm/utils";
+import { OpenIdConfiguration, Predicate } from "@lindorm/types";
 
 export type AmphoraConfig = Partial<OpenIdConfiguration> & {
   issuer: string;

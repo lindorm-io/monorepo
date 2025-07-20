@@ -1,5 +1,4 @@
-import { Dict } from "@lindorm/types";
-import { Predicate } from "../types";
+import { Dict, Predicate } from "@lindorm/types";
 import { advancedMatch } from "../utils/private";
 
 export class Predicated {

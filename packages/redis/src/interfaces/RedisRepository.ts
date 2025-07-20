@@ -1,6 +1,5 @@
 import { IEntity } from "@lindorm/entity";
-import { DeepPartial } from "@lindorm/types";
-import { Predicate } from "@lindorm/utils";
+import { DeepPartial, Predicate } from "@lindorm/types";
 
 export interface IRedisRepository<
   E extends IEntity,

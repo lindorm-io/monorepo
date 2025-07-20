@@ -1,6 +1,5 @@
 import { Criteria, SelectOptions } from "@lindorm/postgres";
-import { Dict } from "@lindorm/types";
-import { Predicate } from "@lindorm/utils";
+import { Dict, Predicate } from "@lindorm/types";
 import { Filter, FindOptions } from "mongodb";
 
 export type ViewRepositoryAttributes<S extends Dict = Dict> = {

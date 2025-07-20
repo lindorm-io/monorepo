@@ -1,6 +1,6 @@
 import { EntityMetadata } from "@lindorm/entity";
-import { DeepPartial, Dict } from "@lindorm/types";
-import { Predicate, Predicated, remove } from "@lindorm/utils";
+import { DeepPartial, Dict, Predicate } from "@lindorm/types";
+import { Predicated, remove } from "@lindorm/utils";
 import { MnemosCollectionError } from "../errors";
 import { IMnemosCollection } from "../interfaces";
 import { MnemosCollectionOptions } from "../types";

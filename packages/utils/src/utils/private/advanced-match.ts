@@ -1,22 +1,43 @@
-import { isAfter, isBefore, isEqual } from "@lindorm/date";
-import { isArray, isDate, isNumber, isObject, isString, isUndefined } from "@lindorm/is";
-import { Dict } from "@lindorm/types";
+import { isAfter, isBefore } from "@lindorm/date";
+import {
+  isArray,
+  isBoolean,
+  isDate,
+  isEqual,
+  isNumber,
+  isObject,
+  isString,
+  isUndefined,
+} from "@lindorm/is";
+import { Dict, Predicate, PredicateOperator } from "@lindorm/types";
 import { isRegExp } from "util/types";
-import { Predicate, PredicateOperator } from "../../types";
 
 const PREDICATE_OPERATORS = [
+  // existence
+  "$exists",
   "$eq",
   "$neq",
+
+  // comparisons
   "$gt",
   "$gte",
   "$lt",
   "$lte",
+  "$between",
+
+  // fuzzy finding
   "$like",
   "$ilike",
+  "$regex",
+
+  // arrays
   "$in",
   "$nin",
-  "$between",
-  "$regex",
+  "$all",
+  "$length",
+
+  // numbers
+  "$mod",
 ];
 
 const LOGICAL_OPERATORS = ["$and", "$or", "$not"];
@@ -28,14 +49,16 @@ const hasLogicalOperator = (predicate: Dict): boolean =>
   LOGICAL_OPERATORS.some((operator) => operator in predicate);
 
 const matchPredicateOperator = <T>(value: T, operator: PredicateOperator<T>): boolean => {
+  if (isBoolean(operator.$exists)) {
+    return operator.$exists ? !isUndefined(value) : isUndefined(value);
+  }
+
   if (!isUndefined(operator.$eq)) {
-    if (isDate(value) && isDate(operator.$eq)) return isEqual(value, operator.$eq);
-    return value === operator.$eq;
+    return isEqual(value, operator.$eq);
   }
 
   if (!isUndefined(operator.$neq)) {
-    if (isDate(value) && isDate(operator.$neq)) return !isEqual(value, operator.$neq);
-    return value !== operator.$neq;
+    return !isEqual(value, operator.$neq);
   }
 
   if (!isUndefined(operator.$gt)) {
@@ -72,26 +95,6 @@ const matchPredicateOperator = <T>(value: T, operator: PredicateOperator<T>): bo
     );
   }
 
-  if (!isUndefined(operator.$like) && isString(value) && isString(operator.$like)) {
-    return value.includes(operator.$like);
-  }
-
-  if (!isUndefined(operator.$ilike) && isString(value) && isString(operator.$ilike)) {
-    return value.toLowerCase().includes(operator.$ilike.toLowerCase());
-  }
-
-  if (isArray(operator.$in)) {
-    return isArray<any>(value)
-      ? value.some((v) => operator.$in!.includes(v))
-      : operator.$in.includes(value);
-  }
-
-  if (isArray(operator.$nin)) {
-    return isArray<any>(value)
-      ? value.every((v) => !operator.$nin!.includes(v))
-      : !operator.$nin.includes(value);
-  }
-
   if (!isUndefined(operator.$between)) {
     if (isDate(value) && isDate(operator.$between[0]) && isDate(operator.$between[1])) {
       return (
@@ -113,9 +116,66 @@ const matchPredicateOperator = <T>(value: T, operator: PredicateOperator<T>): bo
     );
   }
 
+  if (!isUndefined(operator.$like) && isString(value) && isString(operator.$like)) {
+    return value.includes(operator.$like);
+  }
+
+  if (!isUndefined(operator.$ilike) && isString(value) && isString(operator.$ilike)) {
+    return value.toLowerCase().includes(operator.$ilike.toLowerCase());
+  }
+
   if (isRegExp(operator.$regex) && isString(value)) {
     const regex = new RegExp(operator.$regex);
     return regex.test(value);
+  }
+
+  if (isArray(operator.$in)) {
+    return isArray<any>(value)
+      ? value.some((v) => operator.$in!.includes(v))
+      : operator.$in.includes(value);
+  }
+
+  if (isArray(operator.$nin)) {
+    return isArray<any>(value)
+      ? value.every((v) => !operator.$nin!.includes(v))
+      : !operator.$nin.includes(value);
+  }
+
+  if (isArray(operator.$all)) {
+    return isArray<any>(value) ? operator.$all.every((v) => value.includes(v)) : false;
+  }
+
+  if (isNumber(operator.$length)) {
+    if (isArray(value)) {
+      return value.length === operator.$length;
+    }
+    if (isString(value)) {
+      return value.length === operator.$length;
+    }
+    if (isObject(value)) {
+      return Object.keys(value).length === operator.$length;
+    }
+    throw new TypeError(
+      `Operator $length is not supported for value type [ ${typeof value} ]`,
+    );
+  }
+
+  if (isArray(operator.$mod) && operator.$mod.length === 2) {
+    if (isNumber(value)) {
+      const [divisor, remainder] = operator.$mod;
+      if (!isNumber(divisor) || !isNumber(remainder)) {
+        throw new TypeError(
+          `Operator $mod requires both divisor and remainder to be numbers, got [ ${typeof divisor}, ${typeof remainder} ]`,
+        );
+      }
+      if (divisor === 0) {
+        throw new Error("Division by zero is not allowed in $mod operator");
+      }
+      return value % divisor === remainder;
+    }
+    throw new TypeError(
+      `Operator $mod is not supported for value type [ ${typeof value} ]`,
+    );
   }
 
   throw new TypeError(`Unknown operator in predicate: ${JSON.stringify(operator)}`);
@@ -193,9 +253,6 @@ export const advancedMatch = <T extends Dict>(
 
     const objectValue = object[key as keyof T];
 
-    if (isUndefined(predicateValue)) return true;
-    if (isUndefined(objectValue)) return false;
-
     // Handle field-level predicates
     if (isArray(predicateValue)) {
       if (!isArray(objectValue)) return false;
@@ -225,6 +282,9 @@ export const advancedMatch = <T extends Dict>(
         return advancedMatch(objectValue, predicateValue as Predicate<any>);
       }
     }
+
+    if (isUndefined(predicateValue)) return true;
+    if (isUndefined(objectValue)) return false;
 
     return predicateValue === objectValue;
   });
