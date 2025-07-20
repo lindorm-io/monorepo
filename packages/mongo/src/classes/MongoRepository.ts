@@ -8,12 +8,17 @@ import {
 } from "@lindorm/entity";
 import { isDate } from "@lindorm/is";
 import { ILogger } from "@lindorm/logger";
-import { DeepPartial } from "@lindorm/types";
-import { CountDocumentsOptions, DeleteOptions, Filter, FindCursor } from "mongodb";
+import { DeepPartial, Predicate } from "@lindorm/types";
+import { Filter, FindCursor } from "mongodb";
 import { MongoRepositoryError } from "../errors";
 import { IMongoRepository } from "../interfaces";
-import { FindOptions, MongoRepositoryOptions } from "../types";
-import { getIndexOptions } from "../utils/private";
+import {
+  CountDocumentsOptions,
+  DeleteOptions,
+  FindOptions,
+  MongoRepositoryOptions,
+} from "../types";
+import { getIndexOptions, predicateToMongo } from "../utils/private";
 import { MongoBase } from "./MongoBase";
 
 const PRIMARY_SOURCE: MetaSource = "MongoSource" as const;
@@ -157,8 +162,8 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
   }
 
   public async count(
-    criteria: Filter<E> = {},
-    options: CountDocumentsOptions = {},
+    criteria: Predicate<E> = {},
+    options: CountDocumentsOptions<E> = {},
   ): Promise<number> {
     const start = Date.now();
 
@@ -181,7 +186,7 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
   }
 
   public cursor(
-    criteria?: Filter<E>,
+    criteria?: Predicate<E>,
     options?: FindOptions<E>,
   ): FindCursor<DeepPartial<E>> {
     const start = Date.now();
@@ -203,11 +208,14 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
     }
   }
 
-  public async delete(criteria: Filter<E>, options?: DeleteOptions): Promise<void> {
+  public async delete(criteria: Predicate<E>, options?: DeleteOptions<E>): Promise<void> {
     const start = Date.now();
 
     try {
-      const result = await this.collection.deleteMany(criteria, options);
+      const result = await this.collection.deleteMany(
+        this.combineFilter(criteria, options),
+        options,
+      );
 
       this.logger.debug("Repository done: delete", {
         input: { criteria, options },
@@ -258,7 +266,10 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
     await Promise.all(entities.map((entity) => this.destroy(entity)));
   }
 
-  public async exists(criteria: Filter<E>, options?: FindOptions<E>): Promise<boolean> {
+  public async exists(
+    criteria: Predicate<E>,
+    options?: FindOptions<E>,
+  ): Promise<boolean> {
     const start = Date.now();
 
     const filter = this.createDefaultFilter(criteria, options);
@@ -289,7 +300,10 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
     }
   }
 
-  public async find(criteria?: Filter<E>, options?: FindOptions<E>): Promise<Array<E>> {
+  public async find(
+    criteria?: Predicate<E>,
+    options?: FindOptions<E>,
+  ): Promise<Array<E>> {
     const start = Date.now();
 
     const filter = this.createDefaultFilter(criteria, options);
@@ -310,7 +324,10 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
     }
   }
 
-  public async findOne(criteria: Filter<E>, options?: FindOptions<E>): Promise<E | null> {
+  public async findOne(
+    criteria: Predicate<E>,
+    options?: FindOptions<E>,
+  ): Promise<E | null> {
     const start = Date.now();
 
     const filter = this.createDefaultFilter(criteria, options);
@@ -333,7 +350,10 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
     }
   }
 
-  public async findOneOrFail(criteria: Filter<E>, options?: FindOptions<E>): Promise<E> {
+  public async findOneOrFail(
+    criteria: Predicate<E>,
+    options?: FindOptions<E>,
+  ): Promise<E> {
     const entity = await this.findOne(criteria, options);
 
     if (!entity) {
@@ -453,7 +473,10 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
     return await Promise.all(entities.map((entity) => this.save(entity)));
   }
 
-  public async softDelete(criteria: Filter<E>, options?: DeleteOptions): Promise<void> {
+  public async softDelete(
+    criteria: Predicate<E>,
+    options?: DeleteOptions<E>,
+  ): Promise<void> {
     const deleteDate = this.metadata.columns.find(
       (c) => c.decorator === "DeleteDateColumn",
     );
@@ -467,7 +490,7 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
 
     try {
       const result = await this.collection.updateMany(
-        criteria,
+        this.combineFilter(criteria, options),
         { $set: { [deleteDate.key]: new Date() } },
         options,
       );
@@ -496,7 +519,10 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
     await Promise.all(entities.map((entity) => this.softDestroy(entity)));
   }
 
-  public async ttl(criteria: Filter<E>): Promise<number> {
+  public async ttl(
+    criteria: Predicate<E>,
+    options: FindOptions<E> = {},
+  ): Promise<number> {
     const expiryDate = this.metadata.columns.find(
       (c) => c.decorator === "ExpiryDateColumn",
     );
@@ -510,9 +536,12 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
     const start = Date.now();
 
     try {
-      const document = await this.collection.findOne(this.createDefaultFilter(criteria), {
-        projection: { [expiryDate.key]: 1 },
-      });
+      const document = await this.collection.findOne(
+        this.createDefaultFilter(criteria, options),
+        {
+          projection: { [expiryDate.key]: 1 },
+        },
+      );
 
       this.logger.debug("Repository done: ttl", {
         input: { criteria },
@@ -557,7 +586,7 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
     return await Promise.all(entities.map((entity) => this.update(entity)));
   }
 
-  public async updateMany(criteria: Filter<E>, update: DeepPartial<E>): Promise<void> {
+  public async updateMany(criteria: Predicate<E>, update: DeepPartial<E>): Promise<void> {
     const start = Date.now();
 
     this.kit.verifyReadonly(update);
@@ -604,7 +633,7 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
   }
 
   public async versions(
-    criteria: Filter<E>,
+    criteria: Predicate<E>,
     options?: FindOptions<E>,
   ): Promise<Array<E>> {
     const start = Date.now();
@@ -703,8 +732,15 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
 
   // private
 
+  private combineFilter(criteria: Predicate<E>, options: FindOptions<E> = {}): Filter<E> {
+    return {
+      ...predicateToMongo(criteria),
+      ...(options.mongoFilter ?? {}),
+    };
+  }
+
   private createPrimaryFilter(entity: E): Filter<E> {
-    const result: Filter<any> = {};
+    const result: Predicate<any> = {};
 
     for (const key of this.metadata.primaryKeys) {
       result[key] = entity[key];
@@ -714,10 +750,10 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
   }
 
   private createDefaultFilter(
-    criteria: Filter<E> = {},
+    criteria: Predicate<E> = {},
     options: FindOptions<E> = {},
   ): Filter<E> {
-    const result: Filter<any> = { ...criteria };
+    const result: Filter<any> = this.combineFilter(criteria, options);
 
     const versionDate = options.versionTimestamp ?? new Date();
 
@@ -762,7 +798,7 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
   }
 
   private createUpdateFilter(entity: E): Filter<E> {
-    const result: Filter<any> = this.createPrimaryFilter(entity);
+    const result: Predicate<any> = this.createPrimaryFilter(entity);
 
     if (!this.kit.isPrimarySource) {
       this.logger.debug("Skipping update filter for non-primary source", {
@@ -796,8 +832,8 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
     return result;
   }
 
-  private createFindVersionsFilter(criteria: Filter<E>): Filter<E> {
-    const result: Filter<any> = { ...criteria };
+  private createFindVersionsFilter(criteria: Predicate<E>): Filter<E> {
+    const result: Filter<any> = this.combineFilter(criteria);
 
     const deleteDate = this.metadata.columns.find(
       (c) => c.decorator === "DeleteDateColumn",
