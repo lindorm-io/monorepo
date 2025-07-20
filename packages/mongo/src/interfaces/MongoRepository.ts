@@ -15,7 +15,7 @@ export interface IMongoRepository<
   clone(entity: E): Promise<E>;
   cloneBulk(entities: Array<E>): Promise<Array<E>>;
   count(criteria?: Predicate<E>, options?: CountDocumentsOptions<E>): Promise<number>;
-  cursor(criteria?: Predicate<E>, options?: FindOptions<E>): FindCursor<DeepPartial<E>>;
+  cursor(criteria?: Predicate<E>, options?: FindOptions<E>): FindCursor<E>;
   delete(criteria: Predicate<E>, options?: DeleteOptions<E>): Promise<void>;
   deleteExpired(): Promise<void>;
   destroy(entity: E): Promise<void>;

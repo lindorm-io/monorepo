@@ -185,10 +185,7 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
     }
   }
 
-  public cursor(
-    criteria?: Predicate<E>,
-    options?: FindOptions<E>,
-  ): FindCursor<DeepPartial<E>> {
+  public cursor(criteria?: Predicate<E>, options?: FindOptions<E>): FindCursor<E> {
     const start = Date.now();
 
     const filter = this.createDefaultFilter(criteria, options);
@@ -200,6 +197,8 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
         input: { criteria, filter, options },
         time: Date.now() - start,
       });
+
+      cursor.map<E>((doc) => this.kit.create(doc));
 
       return cursor;
     } catch (error: any) {

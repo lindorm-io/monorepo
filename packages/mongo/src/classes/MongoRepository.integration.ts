@@ -123,11 +123,11 @@ describe("MongoRepository", () => {
 
     const c1 = repository.cursor({ name: entity.name });
     await expect(c1.hasNext()).resolves.toEqual(true);
-    await expect(c1.next()).resolves.toEqual(expect.objectContaining(entity));
+    await expect(c1.next()).resolves.toEqual(entity);
     await expect(c1.close()).resolves.toBeUndefined();
 
     const c2 = repository.cursor({ name: entity.name });
-    await expect(c2.toArray()).resolves.toEqual([expect.objectContaining(entity)]);
+    await expect(c2.toArray()).resolves.toEqual([entity]);
   });
 
   test("should delete entities by criteria", async () => {
