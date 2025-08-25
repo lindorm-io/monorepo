@@ -1,7 +1,7 @@
 import { LindormError } from "@lindorm/errors";
-import { Logger, LogLevel } from "../src";
+import { Logger } from "../src";
 
-const logger = new Logger({ level: LogLevel.Silly, readable: true });
+const logger = new Logger({ level: "silly", readable: true });
 
 const data = { one: 1, two: "two" };
 
@@ -39,18 +39,18 @@ logger.info("this will be displayed with multiple extra objects", { context: "da
 logger.log({
   context: { data: "context" },
   extra: [{ extra: "extra" }],
-  level: LogLevel.Debug,
+  level: "debug",
   message: "this is a log with everything",
 });
 
 logger.log({
   context: { data: "context" },
-  level: LogLevel.Debug,
+  level: "debug",
   message: "this is a log without extra",
 });
 
 logger.log({
-  level: LogLevel.Debug,
+  level: "debug",
   message: "this is a log without context",
 });
 
@@ -67,7 +67,7 @@ child2.info("this is a log from child 2");
 const child3 = child2.child(["extra", "stuff"]);
 child3.info("this will be displayed with a scope array");
 
-const logger2 = new Logger({ level: LogLevel.Info, readable: true });
+const logger2 = new Logger({ level: "info", readable: true });
 
 logger2.info("this will not have any colour", { details: "data" });
 
@@ -79,7 +79,7 @@ logger.info("this will be filtered", data);
 
 logger.info("data will not be changed", { readable: data });
 
-const logger3 = new Logger({ level: LogLevel.Info });
+const logger3 = new Logger({ level: "info" });
 
 logger.child({ id: "session-id" });
 
@@ -87,7 +87,7 @@ logger3.info("this is a log from session logger with data", data);
 
 logger3.info("this is a log from session");
 
-const json = new Logger({ level: LogLevel.Silly });
+const json = new Logger({ level: "silly" });
 
 json.info("this is a log from json");
 
