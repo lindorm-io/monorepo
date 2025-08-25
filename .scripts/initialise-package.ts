@@ -39,15 +39,16 @@ const main = async () => {
   const answer = await input({
     message: "Enter package name",
   });
+  const name = answer.trim().toLowerCase();
 
   const srcDir = path.join(__dirname, "..", ".init", "package");
-  const destDir = path.join(__dirname, "..", "packages", answer);
+  const destDir = path.join(__dirname, "..", "packages", name);
   const placeholder = new RegExp("{{NAME}}", "g");
 
   await copyFiles(srcDir, destDir);
-  await replaceInFiles(destDir, placeholder, answer);
+  await replaceInFiles(destDir, placeholder, name);
 
-  console.log(`Package ${answer} initialised in /packages/${answer}`);
+  console.log(`Package ${name} initialised in /packages/${name}`);
 };
 
 main()
