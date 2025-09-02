@@ -9,7 +9,7 @@ import { createWorkerQueueCallback } from "../worker-queue-callback";
 import { createWorkerQueueErrorCallback } from "../worker-queue-error-callback";
 
 const getTarget = (source: PylonEntitySource): Constructor<IJobEntity> => {
-  switch (source.name) {
+  switch (source.__instanceof) {
     case "MnemosSource":
       return MnemosJobEntity;
 

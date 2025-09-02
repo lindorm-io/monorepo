@@ -8,9 +8,9 @@ import { IRedisMessageBus, IRedisRepository, IRedisSource } from "@lindorm/redis
 
 export type PylonMessageSource = IKafkaSource | IRabbitSource | IRedisSource;
 export type PylonMessageSourceName =
-  | IKafkaSource["name"]
-  | IRabbitSource["name"]
-  | IRedisSource["name"];
+  | IKafkaSource["__instanceof"]
+  | IRabbitSource["__instanceof"]
+  | IRedisSource["__instanceof"];
 export type PylonMessageBus<M extends IMessage> =
   | IKafkaMessageBus<M>
   | IRabbitMessageBus<M>
@@ -18,9 +18,9 @@ export type PylonMessageBus<M extends IMessage> =
 
 export type PylonEntitySource = IMnemosSource | IMongoSource | IRedisSource;
 export type PylonEntitySourceName =
-  | IMnemosSource["name"]
-  | IMongoSource["name"]
-  | IRedisSource["name"];
+  | IMnemosSource["__instanceof"]
+  | IMongoSource["__instanceof"]
+  | IRedisSource["__instanceof"];
 export type PylonEntityRepository<E extends IEntity> =
   | IMnemosRepository<E>
   | IMongoRepository<E>

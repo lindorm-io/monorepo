@@ -2,7 +2,8 @@ import { IMnemosSource } from "../interfaces";
 import { createMockMnemosRepository } from "./mock-mnemos-repository";
 
 export const createMockMnemosSource = (): jest.Mocked<IMnemosSource> => ({
-  name: "MnemosSource",
+  __instanceof: "MnemosSource",
+
   client: {} as any,
 
   clone: jest.fn().mockImplementation(createMockMnemosSource),

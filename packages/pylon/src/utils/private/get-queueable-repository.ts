@@ -9,7 +9,7 @@ export const getQueueableRepository = <T extends IQueueableEntity>(
   logger: ILogger,
   target: Constructor<T>,
 ): PylonEntityRepository<any> => {
-  switch (source.name) {
+  switch (source.__instanceof) {
     case "MnemosSource":
       return source.repository(target, { logger });
 

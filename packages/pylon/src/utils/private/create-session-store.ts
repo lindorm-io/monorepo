@@ -22,7 +22,7 @@ export const addSessionEntities = (
 ): void => {
   const source = getSource(sources, options.source);
 
-  switch (source.name) {
+  switch (source.__instanceof) {
     case "MnemosSource":
       source.addEntities([MnemosSessionEntity]);
       break;

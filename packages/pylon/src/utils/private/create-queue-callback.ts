@@ -21,7 +21,7 @@ export const addQueueEntities = (
 ): void => {
   const source = getSource(sources, options.source);
 
-  switch (source.name) {
+  switch (source.__instanceof) {
     case "MnemosSource":
       source.addEntities([MnemosJobEntity]);
       break;
@@ -45,7 +45,7 @@ export const addQueueMessages = (
 ): void => {
   const source = getSource(sources, options.source);
 
-  switch (source.name) {
+  switch (source.__instanceof) {
     case "KafkaSource":
     case "RabbitSource":
     case "RedisSource":

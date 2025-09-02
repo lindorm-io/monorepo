@@ -21,7 +21,7 @@ import { MongoBucket } from "./MongoBucket";
 import { MongoRepository } from "./MongoRepository";
 
 export class MongoSource implements IMongoSource {
-  public readonly name = "MongoSource";
+  public readonly __instanceof = "MongoSource";
 
   private readonly databaseName: string | undefined;
   private readonly entities: Array<Constructor<IEntity>>;

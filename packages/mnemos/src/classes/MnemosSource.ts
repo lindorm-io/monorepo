@@ -18,7 +18,7 @@ import { MnemosCache } from "./MnemosCache";
 import { MnemosRepository } from "./MnemosRepository";
 
 export class MnemosSource implements IMnemosSource {
-  public readonly name = "MnemosSource";
+  public readonly __instanceof = "MnemosSource";
 
   private readonly entities: Array<Constructor<IEntity>>;
   private readonly logger: ILogger;

@@ -8,7 +8,7 @@ import { IRedisPublisher } from "./RedisPublisher";
 import { IRedisRepository } from "./RedisRepository";
 
 export interface IRedisSource {
-  name: "RedisSource";
+  __instanceof: "RedisSource";
 
   client: Redis;
 

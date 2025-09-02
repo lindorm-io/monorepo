@@ -61,7 +61,7 @@ export class Pylon<
     options.domain = options.domain ?? options.amphora.domain ?? "unknown";
 
     this.sources = new Map(
-      (options.sources ?? []).map((source) => [source.name, source]),
+      (options.sources ?? []).map((source) => [source.__instanceof, source]),
     );
 
     options.subscriptions = options.subscriptions ?? [];
@@ -290,9 +290,9 @@ export class Pylon<
       .values()
       .filter(
         (source) =>
-          source.name === "KafkaSource" ||
-          source.name === "RabbitSource" ||
-          source.name === "RedisSource",
+          source.__instanceof === "KafkaSource" ||
+          source.__instanceof === "RabbitSource" ||
+          source.__instanceof === "RedisSource",
       );
 
     for (const { target, ...subscribe } of this.subscriptions) {

@@ -5,7 +5,7 @@ import { IMnemosCache } from "./MnemosCache";
 import { IMnemosRepository } from "./MnemosRepository";
 
 export interface IMnemosSource {
-  name: "MnemosSource";
+  __instanceof: "MnemosSource";
 
   client: IMnemosCache;
 

@@ -3,7 +3,7 @@ import { createMockRabbitMessageBus } from "./mock-rabbit-message-bus";
 import { createMockRabbitPublisher } from "./mock-rabbit-publisher";
 
 export const createMockRabbitSource = (): IRabbitSource => ({
-  name: "RabbitSource",
+  __instanceof: "RabbitSource",
 
   client: {} as any,
 

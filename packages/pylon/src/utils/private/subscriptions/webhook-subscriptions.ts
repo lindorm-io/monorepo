@@ -29,7 +29,7 @@ import { createDispatchWebhook } from "../dispatch-webhook";
 import { getSource } from "../get-source";
 
 const getMessageBus = (source: PylonMessageSource): PylonMessageBus<IWebhookDispatch> => {
-  switch (source.name) {
+  switch (source.__instanceof) {
     case "KafkaSource":
     case "RabbitSource":
     case "RedisSource":
@@ -43,7 +43,7 @@ const getMessageBus = (source: PylonMessageSource): PylonMessageBus<IWebhookDisp
 const getSubscriptionRepository = (
   source: PylonEntitySource,
 ): PylonEntityRepository<IWebhookSubscription> => {
-  switch (source.name) {
+  switch (source.__instanceof) {
     case "MnemosSource":
       return source.repository(MnemosWebhookSubscriptionEntity);
 

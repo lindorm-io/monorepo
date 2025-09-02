@@ -27,13 +27,13 @@ export class ViewStore implements IHermesViewStore {
     if (options.custom) {
       this.custom = options.custom;
     }
-    if (options.mongo?.name === "MongoSource") {
+    if (options.mongo?.__instanceof === "MongoSource") {
       this.mongo = new MongoViewStore(options.mongo, this.logger);
     }
-    if (options.postgres?.name === "PostgresSource") {
+    if (options.postgres?.__instanceof === "PostgresSource") {
       this.postgres = new PostgresViewStore(options.postgres, this.logger);
     }
-    if (options.redis?.name === "RedisSource") {
+    if (options.redis?.__instanceof === "RedisSource") {
       this.redis = new RedisViewStore(options.redis, this.logger);
     }
   }

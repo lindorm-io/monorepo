@@ -6,7 +6,7 @@ import { IKafkaMessageBus } from "./KafkaMessageBus";
 import { IKafkaPublisher } from "./KafkaPublisher";
 
 export interface IKafkaSource {
-  name: "KafkaSource";
+  __instanceof: "KafkaSource";
 
   client: Kafka;
 

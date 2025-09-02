@@ -24,7 +24,7 @@ import { RabbitMessageBus } from "./RabbitMessageBus";
 import { RabbitPublisher } from "./RabbitPublisher";
 
 export class RabbitSource implements IRabbitSource {
-  public readonly name = "RabbitSource";
+  public readonly __instanceof = "RabbitSource";
 
   private readonly cache: Map<Constructor<IMessage>, IRabbitMessageBus<IMessage>>;
   private readonly deadletters: string;

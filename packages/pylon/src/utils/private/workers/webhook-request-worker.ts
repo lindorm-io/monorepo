@@ -30,7 +30,7 @@ import { createWorkerQueueErrorCallback } from "../worker-queue-error-callback";
 const getDispatchRepository = (
   source: PylonEntitySource,
 ): PylonEntityRepository<IWebhookDispatchEntity> => {
-  switch (source.name) {
+  switch (source.__instanceof) {
     case "MnemosSource":
       return source.repository(MnemosWebhookDispatchEntity);
 
@@ -48,7 +48,7 @@ const getDispatchRepository = (
 const getSubscriptionRepository = (
   source: PylonEntitySource,
 ): PylonEntityRepository<IWebhookSubscription> => {
-  switch (source.name) {
+  switch (source.__instanceof) {
     case "MnemosSource":
       return source.repository(MnemosWebhookSubscriptionEntity);
 
@@ -66,7 +66,7 @@ const getSubscriptionRepository = (
 const getRequestTarget = (
   source: PylonEntitySource,
 ): Constructor<IWebhookRequestEntity> => {
-  switch (source.name) {
+  switch (source.__instanceof) {
     case "MnemosSource":
       return MnemosWebhookRequestEntity;
 

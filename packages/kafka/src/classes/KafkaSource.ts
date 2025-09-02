@@ -23,7 +23,7 @@ import { KafkaPublisher } from "./KafkaPublisher";
 import { KafkaDelayService } from "./private";
 
 export class KafkaSource implements IKafkaSource {
-  public readonly name = "KafkaSource";
+  public readonly __instanceof = "KafkaSource";
 
   private readonly cache: Map<Constructor<IMessage>, IKafkaMessageBus<IMessage>>;
   private readonly kafka: Kafka;

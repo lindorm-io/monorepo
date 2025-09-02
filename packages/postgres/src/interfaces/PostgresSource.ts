@@ -8,7 +8,7 @@ import {
 import { IPostgresQueryBuilder } from "./PostgresQueryBuilder";
 
 export interface IPostgresSource {
-  name: "PostgresSource";
+  __instanceof: "PostgresSource";
 
   client: Pool;
 

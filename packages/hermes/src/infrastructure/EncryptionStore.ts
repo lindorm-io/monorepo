@@ -23,9 +23,9 @@ export class EncryptionStore implements IHermesEncryptionStore {
 
     if (options.custom) {
       this.store = options.custom;
-    } else if (options.mongo?.name === "MongoSource") {
+    } else if (options.mongo?.__instanceof === "MongoSource") {
       this.store = new MongoEncryptionStore(options.mongo, this.logger);
-    } else if (options.postgres?.name === "PostgresSource") {
+    } else if (options.postgres?.__instanceof === "PostgresSource") {
       this.store = new PostgresEncryptionStore(options.postgres, this.logger);
     } else {
       throw new Error("Invalid EncryptionStore configuration");

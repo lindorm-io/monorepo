@@ -25,11 +25,15 @@ const repositoryName = (target: Constructor<IEntity>): string => {
 export const createSourcesMiddleware = <C extends PylonCommonContext>(
   options: Options,
 ): Middleware<C> => {
-  const kafka = options.sources?.find((source) => source.name === "KafkaSource");
-  const mnemos = options.sources?.find((source) => source.name === "MnemosSource");
-  const mongo = options.sources?.find((source) => source.name === "MongoSource");
-  const rabbit = options.sources?.find((source) => source.name === "RabbitSource");
-  const redis = options.sources?.find((source) => source.name === "RedisSource");
+  const kafka = options.sources?.find((source) => source.__instanceof === "KafkaSource");
+  const mnemos = options.sources?.find(
+    (source) => source.__instanceof === "MnemosSource",
+  );
+  const mongo = options.sources?.find((source) => source.__instanceof === "MongoSource");
+  const rabbit = options.sources?.find(
+    (source) => source.__instanceof === "RabbitSource",
+  );
+  const redis = options.sources?.find((source) => source.__instanceof === "RedisSource");
 
   const entities = options.entities || [];
   const messages = options.messages || [];

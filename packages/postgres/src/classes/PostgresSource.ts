@@ -14,7 +14,7 @@ import { parseQuery, parseQueryResult } from "../utils/private";
 import { PostgresQueryBuilder } from "./PostgresQueryBuilder";
 
 export class PostgresSource implements IPostgresSource {
-  public readonly name = "PostgresSource";
+  public readonly __instanceof = "PostgresSource";
 
   private readonly logger: ILogger;
 

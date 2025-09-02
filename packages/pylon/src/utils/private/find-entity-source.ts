@@ -31,13 +31,13 @@ export const findEntitySource = <C extends PylonCommonContext>(
   const sources: Array<PylonEntitySourceName> = [];
 
   if (ctx.mnemos?.source.hasEntity(target)) {
-    sources.push(ctx.mnemos.source.name);
+    sources.push(ctx.mnemos.source.__instanceof);
   }
   if (ctx.mongo?.source.hasEntity(target)) {
-    sources.push(ctx.mongo.source.name);
+    sources.push(ctx.mongo.source.__instanceof);
   }
   if (ctx.redis?.source.hasEntity(target)) {
-    sources.push(ctx.redis.source.name);
+    sources.push(ctx.redis.source.__instanceof);
   }
 
   if (sources.length === 0) {

@@ -32,7 +32,7 @@ export const addWebhookEntities = (
 ): void => {
   const source = getSource(sources, options.source);
 
-  switch (source.name) {
+  switch (source.__instanceof) {
     case "MnemosSource":
       source.addEntities([MnemosWebhookDispatchEntity, MnemosWebhookRequestEntity]);
       break;
@@ -51,7 +51,7 @@ export const addWebhookEntities = (
 
   const subscriptions = getSource(sources, options.subscriptions);
 
-  switch (subscriptions.name) {
+  switch (subscriptions.__instanceof) {
     case "MnemosSource":
       subscriptions.addEntities([MnemosWebhookSubscriptionEntity]);
       break;

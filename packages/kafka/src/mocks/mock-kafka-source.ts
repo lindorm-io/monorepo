@@ -3,7 +3,7 @@ import { createMockKafkaMessageBus } from "./mock-kafka-message-bus";
 import { createMockKafkaPublisher } from "./mock-kafka-publisher";
 
 export const createMockKafkaSource = (): IKafkaSource => ({
-  name: "KafkaSource",
+  __instanceof: "KafkaSource",
 
   client: {} as any,
 

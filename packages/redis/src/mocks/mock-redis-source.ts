@@ -4,7 +4,7 @@ import { createMockRedisPublisher } from "./mock-redis-publisher";
 import { createMockRedisRepository } from "./mock-redis-repository";
 
 export const createMockRedisSource = (): IRedisSource => ({
-  name: "RedisSource",
+  __instanceof: "RedisSource",
   client: {} as any,
 
   clone: jest.fn().mockImplementation(() => createMockRedisSource()),

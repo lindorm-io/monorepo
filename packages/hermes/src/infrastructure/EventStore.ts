@@ -14,9 +14,9 @@ export class EventStore implements IEventStore {
   public constructor(options: HermesEventStoreOptions) {
     if (options.custom) {
       this.store = options.custom;
-    } else if (options.mongo?.name === "MongoSource") {
+    } else if (options.mongo?.__instanceof === "MongoSource") {
       this.store = new MongoEventStore(options.mongo, options.logger);
-    } else if (options.postgres?.name === "PostgresSource") {
+    } else if (options.postgres?.__instanceof === "PostgresSource") {
       this.store = new PostgresEventStore(options.postgres, options.logger);
     } else {
       throw new LindormError("Invalid EventStore configuration");

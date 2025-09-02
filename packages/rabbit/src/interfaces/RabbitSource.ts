@@ -6,7 +6,7 @@ import { IRabbitMessageBus } from "./RabbitMessageBus";
 import { IRabbitPublisher } from "./RabbitPublisher";
 
 export interface IRabbitSource {
-  name: "RabbitSource";
+  __instanceof: "RabbitSource";
 
   client: ChannelModel;
 

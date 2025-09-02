@@ -26,7 +26,7 @@ import { RedisPublisher } from "./RedisPublisher";
 import { RedisRepository } from "./RedisRepository";
 
 export class RedisSource implements IRedisSource {
-  public readonly name = "RedisSource";
+  public readonly __instanceof = "RedisSource";
 
   private readonly cache: Map<Constructor<IMessage>, IRedisMessageBus<IMessage>>;
   private readonly delayService: RedisDelayService;
