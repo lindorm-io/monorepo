@@ -1,6 +1,8 @@
 import { FilterCallback, Log, LogContent, LogCorrelation, LogScope } from "../types";
 
 export interface ILogger {
+  __instanceof: "Logger";
+
   child(): ILogger;
   child(scope: LogScope): ILogger;
   child(correlation: LogCorrelation): ILogger;

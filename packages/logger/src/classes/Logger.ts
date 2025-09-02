@@ -5,10 +5,10 @@ import { get, set } from "object-path";
 import winston, { Logger as WinstonLogger } from "winston";
 import { ILogger } from "../interfaces";
 import {
-  FilterRecord,
   Log,
   LogContent,
   LogCorrelation,
+  LogFilters,
   LoggerOptions,
   LogScope,
 } from "../types";
@@ -16,7 +16,9 @@ import { FromLogger, InternalLog } from "../types/private";
 import { defaultFilterCallback, readableFormat } from "../utils/private";
 
 export class Logger implements ILogger {
-  private readonly filters: FilterRecord;
+  public readonly __instanceof = "Logger";
+
+  private readonly filters: LogFilters;
   private readonly winston: WinstonLogger;
   private _correlation: LogCorrelation;
   private _scope: LogScope;
@@ -26,13 +28,13 @@ export class Logger implements ILogger {
   public constructor(options: LoggerOptions | FromLogger = {}) {
     if ("_mode" in options && options._mode === "from_logger") {
       this._correlation = this.getCorrelation(options.correlation);
-      this.filters = options.filters;
       this._scope = this.getScope(options.scope);
+      this.filters = options.filters;
       this.winston = options.winston;
     } else {
-      this._correlation = {};
-      this.filters = {};
-      this._scope = [];
+      this._correlation = options.correlation ?? {};
+      this._scope = options.scope ?? [];
+      this.filters = options.filters ?? {};
       this.winston = winston.createLogger();
 
       const level = (options as LoggerOptions).level ?? "info";

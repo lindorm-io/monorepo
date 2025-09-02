@@ -2,30 +2,22 @@ import { ILogger } from "../interfaces";
 
 type LogFn = (...args: any) => void;
 
-export const createMockLogger = (logFn?: LogFn): ILogger => {
-  const logger = {
-    child: jest.fn().mockImplementation((): ILogger => createMockLogger(logFn)),
+export const createMockLogger = (logFn?: LogFn): ILogger => ({
+  __instanceof: "Logger",
 
-    correlation: jest.fn(),
-    filter: jest.fn(),
-    scope: jest.fn(),
+  child: jest.fn().mockImplementation((): ILogger => createMockLogger(logFn)),
 
-    error: jest
-      .fn()
-      .mockImplementation((...args) => (logFn ? logFn(...args) : undefined)),
-    warn: jest.fn().mockImplementation((...args) => (logFn ? logFn(...args) : undefined)),
-    info: jest.fn().mockImplementation((...args) => (logFn ? logFn(...args) : undefined)),
-    verbose: jest
-      .fn()
-      .mockImplementation((...args) => (logFn ? logFn(...args) : undefined)),
-    debug: jest
-      .fn()
-      .mockImplementation((...args) => (logFn ? logFn(...args) : undefined)),
-    silly: jest
-      .fn()
-      .mockImplementation((...args) => (logFn ? logFn(...args) : undefined)),
-    log: jest.fn().mockImplementation((arg) => (logFn ? logFn(arg) : undefined)),
-  };
+  correlation: jest.fn(),
+  filter: jest.fn(),
+  scope: jest.fn(),
 
-  return logger;
-};
+  error: jest.fn().mockImplementation((...args) => (logFn ? logFn(...args) : undefined)),
+  warn: jest.fn().mockImplementation((...args) => (logFn ? logFn(...args) : undefined)),
+  info: jest.fn().mockImplementation((...args) => (logFn ? logFn(...args) : undefined)),
+  verbose: jest
+    .fn()
+    .mockImplementation((...args) => (logFn ? logFn(...args) : undefined)),
+  debug: jest.fn().mockImplementation((...args) => (logFn ? logFn(...args) : undefined)),
+  silly: jest.fn().mockImplementation((...args) => (logFn ? logFn(...args) : undefined)),
+  log: jest.fn().mockImplementation((arg) => (logFn ? logFn(arg) : undefined)),
+});

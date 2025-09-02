@@ -1,6 +1,8 @@
 import { Dict } from "@lindorm/types";
 import { LogLevel } from "../types";
 
+export type FilterCallback = (data: any) => string;
+
 export type Log = {
   context?: LogContent;
   extra?: Array<LogContent>;
@@ -12,8 +14,6 @@ export type LogContent = Dict | Error | null | undefined;
 
 export type LogCorrelation = Dict<string | number | boolean>;
 
+export type LogFilters = Dict<FilterCallback | undefined>;
+
 export type LogScope = Array<string>;
-
-export type FilterCallback = (data: any) => string;
-
-export type FilterRecord = Dict<FilterCallback | undefined>;

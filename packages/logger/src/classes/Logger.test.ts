@@ -25,6 +25,11 @@ describe("Logger", () => {
 
   afterEach(jest.clearAllMocks);
 
+  test("should be an instance of ILogger", () => {
+    expect(logger).toBeInstanceOf(Logger);
+    expect(logger.__instanceof).toBe("Logger");
+  });
+
   test("should log error", () => {
     logger.error("hello", new Error("error message"), [{ extra: "1" }, { extra: 2 }]);
 
