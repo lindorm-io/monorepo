@@ -12,16 +12,23 @@ export type MethodOptions = {
   url?: URL | string;
 };
 
-export type RequestOptions<D = any, B = Dict, P = Dict<Param>, Q = Dict<Query>> = {
-  body?: B;
+export type RequestOptions<
+  ResponseData = any,
+  RequestBody = Dict,
+  RequestParams = Dict<Param>,
+  RequestQuery = Dict<Query>,
+> = {
+  body?: RequestBody;
   config?: ConfigOptions;
   expectedResponse?: ExpectedResponse;
   filename?: string;
   form?: FormData;
   headers?: Dict<string>;
-  middleware?: Array<ConduitMiddleware<D, B, P, Q>>;
-  params?: P;
-  query?: Q;
+  middleware?: Array<
+    ConduitMiddleware<ResponseData, RequestBody, RequestParams, RequestQuery>
+  >;
+  params?: RequestParams;
+  query?: RequestQuery;
   retryCallback?: RetryCallback;
   retryOptions?: RetryOptions;
   stream?: Readable;
