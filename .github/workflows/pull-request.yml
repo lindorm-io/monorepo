@@ -27,7 +27,8 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Install Dependencies
-        run: npm ci
+        run: |
+          npm ci
 
       - name: Lint
         run: |
@@ -41,11 +42,15 @@ jobs:
         run: |
           npm run typecheck
 
-      - name: Use Docker
-        uses: isbang/compose-action@v1.5.1
-        with:
-          compose-file: "./docker-compose.yml"
-          down-flags: "--volumes"
+      - name: Start services
+        run: |
+          docker compose -f docker-compose.yml up -d
 
       - name: Test
-        run: npm run test:ci
+        run: |
+          npm run test:ci
+
+      - name: Stop services
+        if: always()
+        run: |
+          docker compose -f docker-compose.yml down -v
