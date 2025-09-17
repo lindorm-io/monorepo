@@ -1,0 +1,29 @@
+env: test
+
+twoParent:
+  withObject:
+    withString: "string"
+    withNoReplacement: "two still here"
+
+three_array:
+  - "one"
+  - "two"
+  - "three"
+
+FourArray:
+  - 123
+  - 456
+  - 789
+
+five_array:
+  - "one"
+  - "two"
+  - "three"
+
+six_number_string: "987"
+
+seven:
+  boolean: false
+  nope: true
+
+with_dot_env_replacement: "one"

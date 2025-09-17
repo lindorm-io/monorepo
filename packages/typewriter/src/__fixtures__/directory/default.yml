@@ -1,0 +1,11 @@
+env: default
+
+one_parent:
+  with_number: 123
+  with_string: "string"
+  with_no_replacement: "one still here"
+
+two_array:
+  - "one"
+  - "two"
+  - "three"

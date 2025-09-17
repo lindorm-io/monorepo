@@ -1,0 +1,219 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`typewriter should generate types from JSON input 1`] = `
+"export interface TestTypeJSON {
+  employee: Employee;
+}
+
+export interface Employee {
+  department: Department;
+  id:         string;
+  name:       string;
+  position:   string;
+  projects:   Project[];
+}
+
+export interface Department {
+  id:      string;
+  manager: Manager;
+  name:    string;
+}
+
+export interface Manager {
+  contact: Contact;
+  id:      string;
+  name:    string;
+}
+
+export interface Contact {
+  email: string;
+  phone: string;
+}
+
+export interface Project {
+  projectId:   string;
+  projectName: string;
+  startDate:   Date;
+  tasks:       Task[];
+}
+
+export interface Task {
+  details: Details;
+  status:  Status;
+  taskId:  string;
+  title:   string;
+}
+
+export interface Details {
+  completionDate?:     Date;
+  expectedCompletion?: Date;
+  hoursSpent:          number;
+  technologiesUsed:    TechnologiesUsed[];
+}
+
+export enum TechnologiesUsed {
+  Java = "Java",
+  JavaScript = "JavaScript",
+  Kubernetes = "Kubernetes",
+  NumPy = "NumPy",
+  Pandas = "Pandas",
+  PyTorch = "PyTorch",
+  Python = "Python",
+  SQL = "SQL",
+  ScikitLearn = "Scikit-learn",
+  TensorFlow = "TensorFlow",
+}
+
+export enum Status {
+  Completed = "Completed",
+  InProgress = "In Progress",
+  Pending = "Pending",
+}
+"
+`;
+
+exports[`typewriter should generate types from JSON input 2`] = `
+"export interface TestTypeJSON {
+  employee: Employee;
+}
+
+export interface Employee {
+  department: Department;
+  id:         string;
+  name:       string;
+  position:   string;
+  projects:   Project[];
+}
+
+export interface Department {
+  id:      string;
+  manager: Manager;
+  name:    string;
+}
+
+export interface Manager {
+  contact: Contact;
+  id:      string;
+  name:    string;
+}
+
+export interface Contact {
+  email: string;
+  phone: string;
+}
+
+export interface Project {
+  projectId:   string;
+  projectName: string;
+  startDate:   Date;
+  tasks:       Task[];
+}
+
+export interface Task {
+  details: Details;
+  status:  Status;
+  taskId:  string;
+  title:   string;
+}
+
+export interface Details {
+  completionDate?:     Date;
+  expectedCompletion?: Date;
+  hoursSpent:          number;
+  technologiesUsed:    TechnologiesUsed[];
+}
+
+export enum TechnologiesUsed {
+  Java = "Java",
+  JavaScript = "JavaScript",
+  Kubernetes = "Kubernetes",
+  NumPy = "NumPy",
+  Pandas = "Pandas",
+  PyTorch = "PyTorch",
+  Python = "Python",
+  SQL = "SQL",
+  ScikitLearn = "Scikit-learn",
+  TensorFlow = "TensorFlow",
+}
+
+export enum Status {
+  Completed = "Completed",
+  InProgress = "In Progress",
+  Pending = "Pending",
+}
+
+"
+`;
+
+exports[`typewriter should generate types from YAML input 1`] = `
+"export interface TestTypeYAML {
+  FourArray?:                number[];
+  env:                       string;
+  five_array?:               string[];
+  one_parent?:               OneParent;
+  seven?:                    Seven;
+  six_number_string?:        string;
+  three_array?:              string[];
+  twoParent?:                TwoParent;
+  two_array?:                string[];
+  with_dot_env_replacement?: string;
+}
+
+export interface OneParent {
+  with_no_replacement: string;
+  with_number:         number;
+  with_string:         string;
+}
+
+export interface Seven {
+  boolean: boolean;
+  nope:    boolean;
+}
+
+export interface TwoParent {
+  withObject: WithObject;
+}
+
+export interface WithObject {
+  withNoReplacement: string;
+  withString:        string;
+}
+"
+`;
+
+exports[`typewriter should generate types from YAML input 2`] = `
+"export interface TestTypeYAML {
+  FourArray?:                number[];
+  env:                       string;
+  five_array?:               string[];
+  one_parent?:               OneParent;
+  seven?:                    Seven;
+  six_number_string?:        string;
+  three_array?:              string[];
+  twoParent?:                TwoParent;
+  two_array?:                string[];
+  with_dot_env_replacement?: string;
+}
+
+export interface OneParent {
+  with_no_replacement: string;
+  with_number:         number;
+  with_string:         string;
+}
+
+export interface Seven {
+  boolean: boolean;
+  nope:    boolean;
+}
+
+export interface TwoParent {
+  withObject: WithObject;
+}
+
+export interface WithObject {
+  withNoReplacement: string;
+  withString:        string;
+}
+
+"
+`;
