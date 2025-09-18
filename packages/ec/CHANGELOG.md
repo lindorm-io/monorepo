@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.5](https://github.com/lindorm-io/monorepo/compare/@lindorm/ec@0.2.4...@lindorm/ec@0.2.5) (2025-09-18)
+
+**Note:** Version bump only for package @lindorm/ec
+
 ## [0.2.4](https://github.com/lindorm-io/monorepo/compare/@lindorm/ec@0.2.3...@lindorm/ec@0.2.4) (2025-07-19)
 
 **Note:** Version bump only for package @lindorm/ec

@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/typewriter",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -32,9 +32,9 @@
     "typewriter": "dist/cli.js"
   },
   "dependencies": {
-    "@lindorm/case": "^0.1.10",
-    "@lindorm/is": "^0.1.10",
-    "@lindorm/logger": "^0.3.3",
+    "@lindorm/case": "^0.1.11",
+    "@lindorm/is": "^0.1.11",
+    "@lindorm/logger": "^0.3.4",
     "commander": "^13.1.0",
     "js-yaml": "^4.1.0",
     "quicktype-core": "^23.2.6"

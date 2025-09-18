@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.4](https://github.com/lindorm-io/monorepo/compare/@lindorm/logger@0.3.3...@lindorm/logger@0.3.4) (2025-09-18)
+
+### Bug Fixes
+
+- add more options to logger ([b8cb3ba](https://github.com/lindorm-io/monorepo/commit/b8cb3ba9dcf3a8eeabbe780d2c0f6fc4f69b9b40))
+
 ## [0.3.3](https://github.com/lindorm-io/monorepo/compare/@lindorm/logger@0.3.2...@lindorm/logger@0.3.3) (2025-07-19)
 
 ### Bug Fixes

@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/aegis",
-  "version": "0.3.5",
+  "version": "0.3.6",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -29,23 +29,23 @@
     "update:auto": "ncu -u"
   },
   "dependencies": {
-    "@lindorm/aes": "^0.5.4",
+    "@lindorm/aes": "^0.5.5",
     "@lindorm/b64": "^0.1.6",
-    "@lindorm/date": "^0.3.2",
-    "@lindorm/ec": "^0.2.4",
-    "@lindorm/errors": "^0.1.11",
-    "@lindorm/is": "^0.1.10",
-    "@lindorm/kryptos": "^0.4.4",
-    "@lindorm/oct": "^0.2.4",
-    "@lindorm/okp": "^0.2.4",
-    "@lindorm/rsa": "^0.2.4",
-    "@lindorm/utils": "^0.5.3",
+    "@lindorm/date": "^0.3.3",
+    "@lindorm/ec": "^0.2.5",
+    "@lindorm/errors": "^0.1.12",
+    "@lindorm/is": "^0.1.11",
+    "@lindorm/kryptos": "^0.4.5",
+    "@lindorm/oct": "^0.2.5",
+    "@lindorm/okp": "^0.2.5",
+    "@lindorm/rsa": "^0.2.5",
+    "@lindorm/utils": "^0.5.4",
     "cbor": "^10.0.3"
   },
   "devDependencies": {
-    "@lindorm/amphora": "^0.2.5",
-    "@lindorm/logger": "^0.3.3",
-    "@lindorm/types": "^0.3.2",
+    "@lindorm/amphora": "^0.2.6",
+    "@lindorm/logger": "^0.3.4",
+    "@lindorm/types": "^0.3.3",
     "@types/jsonwebtoken": "^9.0.6",
     "jsonwebtoken": "^9.0.2"
   }

@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.5.4](https://github.com/lindorm-io/monorepo/compare/@lindorm/utils@0.5.3...@lindorm/utils@0.5.4) (2025-09-18)
+
+### Bug Fixes
+
+- add more predicate operators and move to types ([c86a27a](https://github.com/lindorm-io/monorepo/commit/c86a27a9640ee5a014fc8d65ff556dc5feaff4bb))
+- remove undefined on object like structures ([f551430](https://github.com/lindorm-io/monorepo/commit/f551430711e0a87106b4944d94d7ba6c68e09387))
+
 ## [0.5.3](https://github.com/lindorm-io/monorepo/compare/@lindorm/utils@0.5.2...@lindorm/utils@0.5.3) (2025-07-19)
 
 **Note:** Version bump only for package @lindorm/utils

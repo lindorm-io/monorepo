@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/date",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -28,7 +28,7 @@
     "update:auto": "ncu -u"
   },
   "dependencies": {
-    "@lindorm/is": "^0.1.10",
+    "@lindorm/is": "^0.1.11",
     "date-fns": "^3.6.0"
   }
 }

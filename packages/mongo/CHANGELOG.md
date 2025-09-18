@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.6.7](https://github.com/lindorm-io/monorepo/compare/@lindorm/mongo@0.6.6...@lindorm/mongo@0.6.7) (2025-09-18)
+
+### Bug Fixes
+
+- update cursor with transform ([142822e](https://github.com/lindorm-io/monorepo/commit/142822e8da11fb1cff690fca23d0c99851fa931c))
+- use instanceof instead of name ([32d7e31](https://github.com/lindorm-io/monorepo/commit/32d7e31a81a0766f2165afc5c1a9106c957b5d6e))
+- use predicate for mongo ([1666e0d](https://github.com/lindorm-io/monorepo/commit/1666e0d15176915db758fbe106faf5b58a2e6531))
+
 ## [0.6.6](https://github.com/lindorm-io/monorepo/compare/@lindorm/mongo@0.6.5...@lindorm/mongo@0.6.6) (2025-07-19)
 
 ### Bug Fixes

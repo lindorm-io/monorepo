@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/sha",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -29,7 +29,7 @@
     "update:auto": "ncu -u"
   },
   "dependencies": {
-    "@lindorm/errors": "^0.1.11",
-    "@lindorm/types": "^0.3.2"
+    "@lindorm/errors": "^0.1.12",
+    "@lindorm/types": "^0.3.3"
   }
 }

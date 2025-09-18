@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.6.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/rabbit@0.6.0...@lindorm/rabbit@0.6.1) (2025-09-18)
+
+### Bug Fixes
+
+- use instanceof instead of name ([32d7e31](https://github.com/lindorm-io/monorepo/commit/32d7e31a81a0766f2165afc5c1a9106c957b5d6e))
+
 # [0.6.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/rabbit@0.5.1...@lindorm/rabbit@0.6.0) (2025-07-19)
 
 ### Bug Fixes
