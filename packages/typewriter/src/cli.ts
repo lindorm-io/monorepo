@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import { pascalCase } from "@lindorm/case";
 import { isArray, isString } from "@lindorm/is";
 import { program } from "commander";
