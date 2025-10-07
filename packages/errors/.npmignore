@@ -1,8 +1,8 @@
 /node_modules
 /src
 
-jest.config.integration.js
-jest.config.js
+jest.config.integration.mjs
+jest.config.mjs
 tsconfig.build.json
 tsconfig.build.tsbuildinfo
 tsconfig.json

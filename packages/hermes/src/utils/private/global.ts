@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-function-type */
-
 import { HermesMetadata } from "../../classes/private";
 import { GlobalThisHermes } from "../../types";
 

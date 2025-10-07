@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-function-type */
-
 import { GlobalMessageMetadata as GlobalMessageMetadataImpl } from "../classes/private";
 import {
   MetaField,

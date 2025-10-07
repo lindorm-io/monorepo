@@ -97,7 +97,7 @@ export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
     this.logger.debug("Creating connection handler", { listeners: stdListeners });
 
     this.server.on("connection", (socket) => {
-      this.createSocketConnectionHandler(this.server!, socket, middleware, stdListeners);
+      this.createSocketConnectionHandler(this.server, socket, middleware, stdListeners);
     });
 
     for (const namespace of uniq(namespaces)) {
@@ -111,7 +111,7 @@ export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
       });
 
       this.server.of(namespace).on("connection", (socket) => {
-        this.createSocketConnectionHandler(this.server!, socket, middleware, nsListeners);
+        this.createSocketConnectionHandler(this.server, socket, middleware, nsListeners);
       });
     }
 

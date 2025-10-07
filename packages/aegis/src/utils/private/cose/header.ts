@@ -27,7 +27,7 @@ export const mapCoseHeader = (claims: RawTokenHeaderClaims): Dict => {
     if (key === "alg") {
       const alg = findCoseByKey(COSE_ALGORITHM, value);
       if (!alg) {
-        throw new AegisError(`Unsupported COSE algorithm: ${value}`);
+        throw new AegisError(`Unsupported COSE algorithm: ${value as any}`);
       }
       result[claim.label] = alg.label;
       continue;
@@ -37,7 +37,7 @@ export const mapCoseHeader = (claims: RawTokenHeaderClaims): Dict => {
       const enc = findCoseByKey(COSE_ENCRYPTION, value);
       if (!enc) {
         console.error("map", { key, value, claim, alg: enc });
-        throw new AegisError(`Unsupported COSE algorithm: ${value}`);
+        throw new AegisError(`Unsupported COSE algorithm: ${value as any}`);
       }
       result[claim.label] = enc.label;
       continue;

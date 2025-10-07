@@ -223,7 +223,7 @@ export class CwtKit implements ICwtKit {
     return {
       protected: decodeCoseHeader(protectedCose) as any,
       unprotected: decodeCoseHeader(unprotectedHeader) as any,
-      payload: decodeCoseClaims(payloadCose) as any,
+      payload: decodeCoseClaims(payloadCose),
       signature: signature.toString("base64url"),
     };
   }

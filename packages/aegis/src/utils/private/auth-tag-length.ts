@@ -17,6 +17,6 @@ export const authTagLength = (encryption: KryptosEncryption): number => {
       return 16;
 
     default:
-      throw new Error(`Unsupported encryption algorithm: ${encryption}`);
+      throw new Error(`Unsupported encryption algorithm: ${encryption as any}`);
   }
 };

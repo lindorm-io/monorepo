@@ -20,7 +20,7 @@ const parseFile = (file: string): Dict => {
   throw new Error("Unsupported file type");
 };
 
-const parseJson = (file: string): Dict => JSON.parse(readFileSync(file, "utf-8"));
+const parseJson = (file: string): Dict => JSON.parse(readFileSync(file, "utf-8")) as Dict;
 
 const parseYaml = (file: string): Dict => load(readFileSync(file, "utf-8")) as Dict;
 

@@ -148,7 +148,7 @@ export class RabbitMessageBus<
                   this.channel.nack(msg, false, true);
                   resolve();
                 } catch (err) {
-                  reject(err);
+                  reject(err as Error);
                 }
               }, this.nackTimeout);
             }),

@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-function-type */
-
 import { isArray } from "@lindorm/is";
 import { Constructor } from "@lindorm/types";
 import { ViewDecoratorOptions, ViewStoreSource } from "../types";

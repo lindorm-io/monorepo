@@ -26,9 +26,7 @@ export class PostgresSource implements IPostgresSource {
     this.logger = options.logger.child(["PostgresSource"]);
 
     if ("_mode" in options && options._mode === "from_clone") {
-      const opts = options as FromClone;
-
-      this.client = opts.client;
+      this.client = options.client;
     } else {
       const opts = options as PostgresSourceOptions;
 

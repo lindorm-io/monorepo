@@ -169,7 +169,7 @@ export class KafkaMessageBus<
       return;
     }
 
-    this.delayService.stop(topic);
+    await this.delayService.stop(topic);
 
     const { consumerTag } = found;
 

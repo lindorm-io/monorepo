@@ -339,7 +339,7 @@ export class AggregateDomain implements IAggregateDomain {
 
     const data = await this.eventStore.find(aggregateIdentifier);
 
-    this.warnIfChecksumMismatch(data);
+    await this.warnIfChecksumMismatch(data);
 
     const decrypted = await this.decryptAttributes(aggregateIdentifier, data);
 

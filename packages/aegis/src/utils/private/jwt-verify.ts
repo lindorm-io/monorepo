@@ -54,7 +54,7 @@ const mapVerify = (key: keyof VerifyJwtOptions): keyof JwtClaims => {
     case "tokenType":
       return "token_type";
     default:
-      throw new Error(`Unsupported key: ${key}`);
+      throw new Error(`Unsupported key: ${key as any} for JWT verification`);
   }
 };
 
@@ -106,11 +106,11 @@ export const createJwtVerify = (
       continue;
     }
     if (isObject(value)) {
-      ops[mapped] = value as Operators;
+      ops[mapped] = value;
       continue;
     }
 
-    throw new Error(`Unsupported value: ${value} for key: ${key}`);
+    throw new Error(`Unsupported value: ${value as any} for key: ${key}`);
   }
 
   return ops;

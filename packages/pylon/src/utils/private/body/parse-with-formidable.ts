@@ -15,10 +15,9 @@ export const parseWithFormidable = async (
   const form = formidable({ multiples: true, ...options });
 
   return new Promise((resolve, reject) => {
-    form.parse(ctx.req, (error, fields, files) => {
-      if (error) {
-        reject(error);
-        return;
+    form.parse(ctx.req, (err, fields, files) => {
+      if (err) {
+        return reject(err as Error);
       }
       resolve({ parsed: fields, files, raw: ctx.request.body });
     });

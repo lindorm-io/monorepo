@@ -1,4 +1,4 @@
-import { EcCurve, IKryptosEc } from "@lindorm/kryptos";
+import { IKryptosEc } from "@lindorm/kryptos";
 
 const KEY_SIZES = {
   "P-256": 32,
@@ -7,7 +7,7 @@ const KEY_SIZES = {
 };
 
 export const derToRaw = (kryptos: IKryptosEc, derSignature: Buffer): Buffer => {
-  const keySize = KEY_SIZES[kryptos.curve as EcCurve];
+  const keySize = KEY_SIZES[kryptos.curve];
 
   if (derSignature[0] !== 0x30) {
     throw new Error("Invalid DER format");
@@ -52,7 +52,7 @@ export const derToRaw = (kryptos: IKryptosEc, derSignature: Buffer): Buffer => {
 };
 
 export const rawToDer = (kryptos: IKryptosEc, rawSignature: Buffer): Buffer => {
-  const keySize = KEY_SIZES[kryptos.curve as EcCurve];
+  const keySize = KEY_SIZES[kryptos.curve];
 
   if (rawSignature.length !== 2 * keySize) {
     throw new Error("Invalid raw signature length");

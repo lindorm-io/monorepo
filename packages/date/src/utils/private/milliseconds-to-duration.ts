@@ -30,7 +30,7 @@ export const millisecondsToDuration = (milliseconds: number): DurationDict => {
   let remaining: number = milliseconds;
 
   for (const key of array) {
-    const duration = key as DurationString;
+    const duration = key as unknown as DurationString;
     const value = calculateCurrentDuration(remaining, duration);
 
     if (value < 1) continue;

@@ -138,7 +138,7 @@ export class GlobalMessageMetadata {
         });
       }
 
-      const decorator = field.decorator as MetaFieldDecorator;
+      const decorator = field.decorator;
 
       if (
         UNIQUE_FIELDS.includes(decorator) &&

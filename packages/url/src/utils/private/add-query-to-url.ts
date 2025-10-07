@@ -1,5 +1,5 @@
 import { ChangeCase, changeCase } from "@lindorm/case";
-import { isArray, isObject } from "@lindorm/is";
+import { isArray, isFunction, isObject } from "@lindorm/is";
 import { Dict, Query } from "@lindorm/types";
 
 export const addQueryToURL = <Q = Dict<Query>>(
@@ -16,8 +16,10 @@ export const addQueryToURL = <Q = Dict<Query>>(
 
     if (isArray(value)) {
       url.searchParams.append(transformed, value.join(" "));
-    } else if (value) {
+    } else if (value && isFunction(value.toString)) {
       url.searchParams.append(transformed, value.toString());
+    } else if (value) {
+      url.searchParams.append(transformed, String(value));
     }
   }
 

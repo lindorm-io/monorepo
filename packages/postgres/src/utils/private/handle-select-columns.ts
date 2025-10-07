@@ -21,7 +21,7 @@ export const handleSelectColumns = <T extends Dict>(
           if (alias === true || alias === 1) {
             return quotation(col);
           } else if (isString(alias)) {
-            return `${quotation(col)} AS ${quotation(alias as string)}`;
+            return `${quotation(col)} AS ${quotation(alias)}`;
           } else {
             throw new TypeError(
               "Columns must be an array of strings or an object with string (alias) | true | 1 values",

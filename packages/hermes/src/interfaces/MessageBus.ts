@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-empty-object-type */
-
 import { SubscribeOptions } from "@lindorm/message";
 import { DeepPartial } from "@lindorm/types";
 import { IHermesMessage } from "./HermesMessage";

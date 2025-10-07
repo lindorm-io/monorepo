@@ -47,14 +47,12 @@ export class RabbitSource implements IRabbitSource {
     this.nackTimeout = options.nackTimeout ?? 3000;
 
     if ("_mode" in options && options._mode === "from_clone") {
-      const opts = options as FromClone;
-
-      this.cache = opts.cache;
-      this.confirmChannel = opts.confirmChannel;
-      this.promise = Promise.resolve(opts.channelModel);
-      this.channelModel = opts.channelModel;
-      this.messages = opts.messages;
-      this.subscriptions = opts.subscriptions;
+      this.cache = options.cache;
+      this.confirmChannel = options.confirmChannel;
+      this.promise = Promise.resolve(options.channelModel);
+      this.channelModel = options.channelModel;
+      this.messages = options.messages;
+      this.subscriptions = options.subscriptions;
     } else {
       const opts = options as RabbitSourceOptions;
 

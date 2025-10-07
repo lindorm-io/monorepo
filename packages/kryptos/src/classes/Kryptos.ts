@@ -190,7 +190,7 @@ export class Kryptos implements IKryptos {
     this._updatedAt = new Date();
   }
 
-  public get purpose(): KryptosPurpose | null | null {
+  public get purpose(): KryptosPurpose | null {
     return this._purpose;
   }
 

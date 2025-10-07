@@ -74,7 +74,7 @@ export class HermesScanner {
       throw new HermesScannerError(`No classes found in file: ${data.fullPath}`);
     }
 
-    return result as Constructor<T>;
+    return result;
   }
 
   private static get scanner(): Scanner {

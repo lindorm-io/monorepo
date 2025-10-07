@@ -186,7 +186,7 @@ export class RedisMessageBus<
       }
     };
 
-    poll("0");
+    await poll("0");
   }
 
   private async handleUnsubscribe(subscription: UnsubscribeOptions): Promise<void> {

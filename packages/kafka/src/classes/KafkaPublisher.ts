@@ -90,7 +90,7 @@ export class KafkaPublisher<M extends IMessage, O extends DeepPartial<M> = DeepP
     const topic = this.kit.getTopicName(message, options);
     const config = this.getPublishConfig(message, options);
 
-    this.delayService.delay({
+    await this.delayService.delay({
       delay: options.delay,
       key: config.key,
       topic,

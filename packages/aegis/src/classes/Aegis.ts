@@ -167,7 +167,7 @@ export class Aegis implements IAegis {
     }
     if (Aegis.isJwe(token)) {
       const decrypt = await this.jweDecrypt(token);
-      return (await this.verify(decrypt.payload)) as T;
+      return await this.verify(decrypt.payload);
     }
     if (Aegis.isJws(token)) {
       return (await this.jwsVerify(token)) as T;
@@ -177,7 +177,7 @@ export class Aegis implements IAegis {
     }
     if (Aegis.isCwe(token)) {
       const decrypt = await this.coseDecrypt(token);
-      return (await this.verify(decrypt.payload)) as T;
+      return await this.verify(decrypt.payload);
     }
     if (Aegis.isCws(token)) {
       return (await this.coseVerify(token)) as T;

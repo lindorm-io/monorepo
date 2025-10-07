@@ -74,7 +74,7 @@ export class MessageScanner {
       throw new MessageScannerError(`No messages found in file: ${data.fullPath}`);
     }
 
-    return result as Constructor<T>;
+    return result;
   }
 
   private static get scanner(): Scanner {

@@ -62,29 +62,27 @@ export class Hermes implements IHermes {
     this.logger = options.logger.child(["Hermes"]);
 
     if ("_mode" in options && options._mode === "from_clone") {
-      const opts = options as FromClone;
+      this.aggregateDomain = options.aggregateDomain;
+      this.checksumDomain = options.checksumDomain;
+      this.sagaDomain = options.sagaDomain;
+      this.viewDomain = options.viewDomain;
 
-      this.aggregateDomain = opts.aggregateDomain;
-      this.checksumDomain = opts.checksumDomain;
-      this.sagaDomain = opts.sagaDomain;
-      this.viewDomain = opts.viewDomain;
+      this.checksumStore = options.checksumStore;
+      this.encryptionStore = options.encryptionStore;
+      this.eventStore = options.eventStore;
+      this.sagaStore = options.sagaStore;
+      this.viewStore = options.viewStore;
 
-      this.checksumStore = opts.checksumStore;
-      this.encryptionStore = opts.encryptionStore;
-      this.eventStore = opts.eventStore;
-      this.sagaStore = opts.sagaStore;
-      this.viewStore = opts.viewStore;
+      this.commandBus = options.commandBus;
+      this.errorBus = options.errorBus;
+      this.eventBus = options.eventBus;
+      this.timeoutBus = options.timeoutBus;
 
-      this.commandBus = opts.commandBus;
-      this.errorBus = opts.errorBus;
-      this.eventBus = opts.eventBus;
-      this.timeoutBus = opts.timeoutBus;
+      this.options = options.options;
+      this.registry = options.registry;
 
-      this.options = opts.options;
-      this.registry = opts.registry;
-
-      this.namespace = opts.namespace;
-      this._status = opts.status;
+      this.namespace = options.namespace;
+      this._status = options.status;
     } else {
       const opts = options as HermesOptions;
 

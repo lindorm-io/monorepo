@@ -52,6 +52,6 @@ export const changeCase = (input: string, mode: ChangeCase = "none"): string => 
       return input;
 
     default:
-      throw new Error(`Invalid transform case [ ${mode} ]`);
+      throw new Error(`Invalid transform case [ ${mode as any} ]`);
   }
 };

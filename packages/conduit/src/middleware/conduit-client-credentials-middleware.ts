@@ -139,7 +139,7 @@ export const conduitClientCredentialsMiddlewareFactory = (
       const form = new FormData();
 
       for (const [key, value] of Object.entries(requestContent)) {
-        form.append(key, value as string);
+        form.append(key, value);
       }
 
       requestOptions.form = form;

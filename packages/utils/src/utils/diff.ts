@@ -32,7 +32,7 @@ export const diffObject = <T extends Dict = Dict>(
     }
 
     if (!inSrc && inTgt) {
-      patch[key] = tVal as any;
+      patch[key] = tVal;
       continue;
     }
 
@@ -48,7 +48,7 @@ export const diffObject = <T extends Dict = Dict>(
       continue;
     }
 
-    patch[key] = tVal as any;
+    patch[key] = tVal;
   }
 
   return patch;
@@ -64,7 +64,7 @@ export function diff<T extends Dict | Array<any>>(
     return diffArray(source, target) as DeepPartial<T>;
   }
   if (isObject(source) && isObject(target)) {
-    return diffObject(source as Dict, target as DeepPartial<T>) as DeepPartial<T>;
+    return diffObject(source as Dict, target as DeepPartial<T>);
   }
   throw new TypeError("Source and target must be of the same type (array or object)");
 }

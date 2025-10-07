@@ -116,7 +116,7 @@ export class CwsKit implements ICwsKit {
     const decoded: DecodedCws<T> = {
       protected: protectedDict as any,
       unprotected: unprotectedDict as any,
-      payload: payloadBuffer as any,
+      payload: payloadBuffer,
       signature: signature,
     };
 

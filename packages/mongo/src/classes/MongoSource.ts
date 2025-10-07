@@ -39,11 +39,9 @@ export class MongoSource implements IMongoSource {
     this.namespace = options.namespace;
 
     if ("_mode" in options && options._mode === "from_clone") {
-      const opts = options as FromClone;
-
-      this.client = opts.client;
-      this.entities = opts.entities;
-      this.files = opts.files;
+      this.client = options.client;
+      this.entities = options.entities;
+      this.files = options.files;
     } else {
       const opts = options as MongoSourceOptions;
 

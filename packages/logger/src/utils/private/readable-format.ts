@@ -95,7 +95,7 @@ export const readableFormat = (log: InternalLog): string => {
     const extra = isArray(log.extra) && log.extra.length ? log.extra : [];
     const contentArray = [context, ...extra]
       .filter((d) => d)
-      .map((d) => readableContent(d!));
+      .map((d) => readableContent(d));
 
     const content = contentArray.length ? `\n${contentArray.join("\n")}` : "";
 

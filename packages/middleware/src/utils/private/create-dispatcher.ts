@@ -25,7 +25,7 @@ export const createDispatcher =
       try {
         return Promise.resolve(mw(context, dispatch.bind(null, i + 1)));
       } catch (err) {
-        return Promise.reject(err);
+        return Promise.reject(err as Error);
       }
     };
 

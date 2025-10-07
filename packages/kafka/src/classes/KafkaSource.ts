@@ -39,14 +39,12 @@ export class KafkaSource implements IKafkaSource {
     this.logger = options.logger.child(["KafkaSource"]);
 
     if ("_mode" in options && options._mode === "from_clone") {
-      const opts = options as FromClone;
-
-      this.cache = opts.buses;
-      this.delayService = opts.delayService;
-      this.kafka = opts.kafka;
-      this.messages = opts.messages;
-      this.producer = opts.producer;
-      this.subscriptions = opts.subscriptions;
+      this.cache = options.buses;
+      this.delayService = options.delayService;
+      this.kafka = options.kafka;
+      this.messages = options.messages;
+      this.producer = options.producer;
+      this.subscriptions = options.subscriptions;
     } else {
       const opts = options as KafkaSourceOptions;
 
@@ -96,7 +94,7 @@ export class KafkaSource implements IKafkaSource {
   }
 
   public async disconnect(): Promise<void> {
-    this.delayService.disconnect();
+    await this.delayService.disconnect();
 
     for (const target of this.messages) {
       await this.messageBus(target).disconnect();

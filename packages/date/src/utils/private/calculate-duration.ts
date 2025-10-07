@@ -39,7 +39,7 @@ export const calculateCurrentDuration = (
       return milliseconds;
 
     default:
-      throw new Error(`Invalid duration [ ${duration} ]`);
+      throw new Error(`Invalid duration [ ${duration as any} ]`);
   }
 };
 
@@ -73,6 +73,6 @@ export const calculateRemainingDuration = (
       return milliseconds;
 
     default:
-      throw new Error(`Invalid duration [ ${duration} ]`);
+      throw new Error(`Invalid duration [ ${duration as any} ]`);
   }
 };

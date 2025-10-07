@@ -15,5 +15,5 @@ export const getMetaArray = (input: Array<any>): Array<string> => {
     }
   }
 
-  return result;
+  return result as Array<string>;
 };

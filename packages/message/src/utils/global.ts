@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-function-type */
-
 import { GlobalMessageMetadata } from "../classes/private";
 import { GlobalThisMessage } from "../types";
 

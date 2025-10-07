@@ -53,10 +53,10 @@ export class KafkaDelayService implements IKafkaDelayService {
     await this.db.add(options);
   }
 
-  public poll(topic: string, callback: KafkaDelayPollCallback): void {
+  public async poll(topic: string, callback: KafkaDelayPollCallback): Promise<void> {
     if (this.polls.has(topic)) return;
 
-    this.scheduleNextPoll(topic, callback);
+    await this.scheduleNextPoll(topic, callback);
   }
 
   public async stop(topic: string): Promise<void> {

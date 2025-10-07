@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-function-type */
 import { Constructor } from "@lindorm/types";
 import { ZodObject } from "zod";
 import { HandlerConditions } from "../handlers";

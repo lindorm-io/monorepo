@@ -1,10 +1,10 @@
-import { KryptosAlgorithm, KryptosCurve, KryptosEncryption } from "@lindorm/kryptos";
+import { KryptosCurve, KryptosEncryption } from "@lindorm/kryptos";
+import { Dict } from "@lindorm/types";
 import { removeEmpty } from "@lindorm/utils";
 import { B64U } from "../../constants/private";
 import { AesError } from "../../errors";
 import { AesEncryptionRecord } from "../../types";
 import { AesStringValues } from "../../types/private";
-import { Dict } from "@lindorm/types";
 
 const regex = /(?<key>[a-z0-9]+)=(?<value>.+)/g;
 
@@ -109,7 +109,7 @@ export const parseTokenisedAesString = (data: string): AesEncryptionRecord => {
   const kty = keyType as "EC" | "OKP";
 
   return {
-    algorithm: alg as KryptosAlgorithm,
+    algorithm: alg,
     authTag: Buffer.from(tag, B64U),
     content: Buffer.from(content, B64U),
     contentType: cty,

@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`File should have expected properties 1`] = `
 TestFile {
@@ -169,7 +169,6 @@ exports[`File should have expected properties 2`] = `
     "decorator": "File",
     "name": "TestFile",
     "namespace": null,
-    "target": [Function],
   },
   "extras": [],
   "generated": [],
@@ -204,5 +203,6 @@ exports[`File should have expected properties 2`] = `
   "primarySource": null,
   "relations": [],
   "schemas": [],
+  "target": [Function],
 }
 `;

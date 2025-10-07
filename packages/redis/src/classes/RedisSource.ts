@@ -45,14 +45,12 @@ export class RedisSource implements IRedisSource {
     this.namespace = options.namespace;
 
     if ("_mode" in options && options._mode === "from_clone") {
-      const opts = options as FromClone;
-
-      this.cache = opts.cache;
-      this.delayService = opts.delayService;
-      this.client = opts.client;
-      this.entities = opts.entities;
-      this.messages = opts.messages;
-      this.subscriptions = opts.subscriptions;
+      this.cache = options.cache;
+      this.delayService = options.delayService;
+      this.client = options.client;
+      this.entities = options.entities;
+      this.messages = options.messages;
+      this.subscriptions = options.subscriptions;
     } else {
       const opts = options as RedisSourceOptions;
 

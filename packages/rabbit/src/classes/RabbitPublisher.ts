@@ -84,7 +84,7 @@ export class RabbitPublisher<
       this.channel.publish(this.exchange, topic, content, config, (err) => {
         if (err) {
           this.logger.error("Channel Publish failed", err);
-          reject(err);
+          reject(err as Error);
         } else {
           this.logger.debug("Message published", { message, topic });
           this.kit.onPublish(message);
@@ -116,7 +116,7 @@ export class RabbitPublisher<
       this.channel.publish("", topicDelayed, content, config, (err) => {
         if (err) {
           this.logger.error("Channel Publish failed", err);
-          reject(err);
+          reject(err as Error);
         } else {
           this.logger.debug("Message published with delay", {
             message,

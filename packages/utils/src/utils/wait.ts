@@ -7,7 +7,6 @@ export const wait = async (
 ): Promise<void> => {
   const start = Date.now();
 
-  // eslint-disable-next-line no-constant-condition
   while (true) {
     if (callback()) return;
     if (Date.now() - start > timeout) throw new Error("Timeout waiting for condition");

@@ -35,11 +35,11 @@ export const createJwtValidate = (validate: ValidateJwtOptions): Dict<Operators>
       continue;
     }
     if (isObject(value)) {
-      ops[key] = value as Operators;
+      ops[key] = value;
       continue;
     }
 
-    throw new Error(`Unsupported value: ${value} for key: ${key}`);
+    throw new Error(`Unsupported value: ${value as any} for key: ${key}`);
   }
 
   return ops;

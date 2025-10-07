@@ -55,6 +55,6 @@ export const changeKeys = <T extends KeysInput = KeysInput>(
       return input;
 
     default:
-      throw new Error(`Invalid transform case [ ${mode} ]`);
+      throw new Error(`Invalid transform case [ ${mode as any} ]`);
   }
 };
