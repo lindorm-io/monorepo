@@ -16,6 +16,15 @@ describe("getJoinCollectionName", () => {
     ).toEqual("my_ns.join.test_relation_one_x_test_relation_five");
   });
 
+  test("should get join collection name with custom separator", () => {
+    expect(
+      getJoinCollectionName("test_relation_one_x_test_relation_five", {
+        namespace: "ns",
+        separator: ":",
+      }),
+    ).toEqual("ns:join:test_relation_one_x_test_relation_five");
+  });
+
   test("should throw EntityKitError for reserved 'system' namespace", () => {
     expect(() => getJoinCollectionName("test_table", { namespace: "system" })).toThrow(
       EntityKitError,

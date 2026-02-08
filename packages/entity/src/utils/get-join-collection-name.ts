@@ -2,6 +2,7 @@ import { EntityKitError } from "../errors";
 
 type Options = {
   namespace?: string | null;
+  separator?: string;
 };
 
 export const getJoinCollectionName = (joinTable: string, options: Options): string => {
@@ -11,8 +12,9 @@ export const getJoinCollectionName = (joinTable: string, options: Options): stri
     throw new EntityKitError("The 'system' namespace is reserved for internal use");
   }
 
-  const n = namespace ? `${namespace}.` : "";
-  const name = `${n}join.${joinTable}`;
+  const sep = options.separator ?? ".";
+  const n = namespace ? `${namespace}${sep}` : "";
+  const name = `${n}join${sep}${joinTable}`;
 
   if (name.length > 120) {
     throw new EntityKitError(`Join collection name exceeds 120 characters: ${name}`);

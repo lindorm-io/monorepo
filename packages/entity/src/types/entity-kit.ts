@@ -13,6 +13,7 @@ export type EntityKitOptions<E extends IEntity> = {
 
 export type NamespaceOptions = {
   namespace?: string | null;
+  separator?: string;
 };
 
 export type SaveStrategy = "insert" | "update" | "unknown";

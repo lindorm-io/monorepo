@@ -39,6 +39,18 @@ describe("getIncrementName", () => {
     );
   });
 
+  test("should get increment name with custom separator", () => {
+    @Entity({ namespace: "ns" })
+    class TestNameEntitySep {
+      @PrimaryKeyColumn()
+      primaryKey!: string;
+    }
+
+    expect(getIncrementName(TestNameEntitySep, { separator: ":" })).toEqual(
+      "ns:increment:test_name_entity_sep",
+    );
+  });
+
   test("should throw EntityKitError for reserved 'system' namespace", () => {
     @Entity({ namespace: "system" })
     class TestNameEntitySystem {

@@ -39,6 +39,18 @@ describe("getCollectionName", () => {
     );
   });
 
+  test("should get collection name with custom separator", () => {
+    @Entity({ namespace: "ns" })
+    class TestNameEntitySep {
+      @PrimaryKeyColumn()
+      id!: string;
+    }
+
+    expect(getCollectionName(TestNameEntitySep, { separator: ":" })).toEqual(
+      "ns:entity:test_name_entity_sep",
+    );
+  });
+
   test("should throw EntityKitError for reserved 'system' namespace", () => {
     @Entity({ namespace: "system" })
     class TestNameEntitySystem {

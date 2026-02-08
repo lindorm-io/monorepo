@@ -6,6 +6,7 @@ import { globalEntityMetadata } from "./global";
 
 type Options = {
   namespace?: string | null;
+  separator?: string;
 };
 
 export const getCollectionName = <E extends IEntity>(
@@ -21,8 +22,9 @@ export const getCollectionName = <E extends IEntity>(
     throw new EntityKitError("The 'system' namespace is reserved for internal use");
   }
 
-  const n = namespace ? `${snakeCase(namespace)}.` : "";
-  const d = decorator ? `${snakeCase(decorator)}.` : "";
+  const sep = options.separator ?? ".";
+  const n = namespace ? `${snakeCase(namespace)}${sep}` : "";
+  const d = decorator ? `${snakeCase(decorator)}${sep}` : "";
   const e = snakeCase(entityName);
 
   const name = `${n}${d}${e}`;
