@@ -52,6 +52,20 @@ export class PostgresSource implements IPostgresSource {
     await this.client.end();
   }
 
+  public async ping(): Promise<void> {
+    try {
+      const client = await this.client.connect();
+      try {
+        await client.query("SELECT 1");
+      } finally {
+        client.release();
+      }
+      this.logger.debug("Ping successful");
+    } catch (error: any) {
+      throw new PostgresError("Ping failed", { error });
+    }
+  }
+
   public async setup(): Promise<void> {}
 
   public async query<R extends Dict = any, V = Array<any>>(

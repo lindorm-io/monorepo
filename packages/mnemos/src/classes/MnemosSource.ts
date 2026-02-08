@@ -31,10 +31,8 @@ export class MnemosSource implements IMnemosSource {
     this.logger = options.logger.child(["MnemosSource"]);
 
     if ("_mode" in options && options._mode === "from_clone") {
-      const opts = options as FromClone;
-
-      this.client = opts.client;
-      this.entities = opts.entities;
+      this.client = options.client;
+      this.entities = options.entities;
     } else {
       const opts = options as MnemosSourceOptions;
 
@@ -70,6 +68,10 @@ export class MnemosSource implements IMnemosSource {
 
   public async disconnect(): Promise<void> {
     this.logger.silly("MnemosSource disconnect done");
+  }
+
+  public async ping(): Promise<void> {
+    this.logger.silly("MnemosSource ping done");
   }
 
   public async setup(): Promise<void> {

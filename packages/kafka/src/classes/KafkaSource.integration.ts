@@ -40,4 +40,8 @@ describe("KafkaSource", () => {
     expect(source.messageBus(TestMessageOne)).toBeDefined();
     expect(source.messageBus(TestMessageTwo)).toBeDefined();
   });
+
+  test("should ping the producer", async () => {
+    await expect(source.ping()).resolves.not.toThrow();
+  });
 });

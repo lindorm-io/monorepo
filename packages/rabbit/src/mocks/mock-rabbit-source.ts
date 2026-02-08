@@ -10,6 +10,7 @@ export const createMockRabbitSource = (): IRabbitSource => ({
   clone: jest.fn().mockImplementation(() => createMockRabbitSource()),
   connect: jest.fn(),
   disconnect: jest.fn(),
+  ping: jest.fn(),
   setup: jest.fn(),
 
   addMessages: jest.fn(),

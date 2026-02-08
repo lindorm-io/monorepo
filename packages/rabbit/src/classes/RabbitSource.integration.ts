@@ -36,4 +36,8 @@ describe("RabbitSource", () => {
     expect(source.messageBus(TestMessageOne)).toBeDefined();
     expect(source.messageBus(TestMessageTwo)).toBeDefined();
   });
+
+  test("should ping", async () => {
+    await expect(source.ping()).resolves.not.toThrow();
+  });
 });

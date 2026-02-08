@@ -9,6 +9,7 @@ export const createMockMnemosSource = (): jest.Mocked<IMnemosSource> => ({
   clone: jest.fn().mockImplementation(createMockMnemosSource),
   connect: jest.fn(),
   disconnect: jest.fn(),
+  ping: jest.fn(),
   setup: jest.fn(),
 
   addEntities: jest.fn(),

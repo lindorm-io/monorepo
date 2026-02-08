@@ -13,6 +13,7 @@ export interface IKafkaSource {
   clone(options?: WithLoggerOptions): IKafkaSource;
   connect(): Promise<void>;
   disconnect(): Promise<void>;
+  ping(): Promise<void>;
   setup(): Promise<void>;
 
   addMessages(messages: MessageScannerInput): void;

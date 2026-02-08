@@ -11,6 +11,7 @@ export const createMockMongoSource = (): IMongoSource => ({
   clone: jest.fn().mockImplementation(createMockMongoSource),
   connect: jest.fn(),
   disconnect: jest.fn(),
+  ping: jest.fn(),
   setup: jest.fn(),
 
   collection: jest.fn(),

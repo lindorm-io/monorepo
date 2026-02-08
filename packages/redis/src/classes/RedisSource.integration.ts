@@ -36,4 +36,8 @@ describe("RedisSource", () => {
     expect(source.repository(TestEntityOne)).toBeDefined();
     expect(source.repository(TestEntityTwo)).toBeDefined();
   });
+
+  test("should ping", async () => {
+    await expect(source.ping()).resolves.toBeUndefined();
+  });
 });

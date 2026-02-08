@@ -10,6 +10,7 @@ export const createMockKafkaSource = (): IKafkaSource => ({
   clone: jest.fn().mockImplementation(() => createMockKafkaSource()),
   connect: jest.fn(),
   disconnect: jest.fn(),
+  ping: jest.fn(),
   setup: jest.fn(),
 
   addMessages: jest.fn(),

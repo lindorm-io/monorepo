@@ -84,7 +84,7 @@ export class MnemosRepository<
 
   public async destroyBulk(entities: Array<E>): Promise<void> {
     for (const entity of entities) {
-      this.destroy(entity);
+      await this.destroy(entity);
     }
   }
 
@@ -140,8 +140,7 @@ export class MnemosRepository<
   }
 
   public async insert(entity: O | E): Promise<E> {
-    entity =
-      entity instanceof this.kit.metadata.entity.target ? entity : this.create(entity);
+    entity = entity instanceof this.kit.metadata.target ? entity : this.create(entity);
 
     const insert = await this.kit.insert(entity);
 
@@ -166,8 +165,7 @@ export class MnemosRepository<
   }
 
   public async save(entity: O | E): Promise<E> {
-    entity =
-      entity instanceof this.kit.metadata.entity.target ? entity : this.create(entity);
+    entity = entity instanceof this.kit.metadata.target ? entity : this.create(entity);
 
     const strategy = this.kit.getSaveStrategy(entity);
 

@@ -10,6 +10,7 @@ export const createMockRedisSource = (): IRedisSource => ({
   clone: jest.fn().mockImplementation(() => createMockRedisSource()),
   connect: jest.fn(),
   disconnect: jest.fn(),
+  ping: jest.fn(),
   setup: jest.fn(),
 
   addEntities: jest.fn(),

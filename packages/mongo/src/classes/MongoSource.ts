@@ -56,6 +56,47 @@ export class MongoSource implements IMongoSource {
 
   // public
 
+  public clone(options: CloneMongoSourceOptions = {}): IMongoSource {
+    return new MongoSource({
+      _mode: "from_clone",
+      client: this.client,
+      database: this.databaseName,
+      entities: this.entities,
+      files: this.files,
+      logger: options.logger ?? this.logger,
+      namespace: this.namespace,
+    });
+  }
+
+  public async connect(): Promise<void> {
+    await this.client.connect();
+  }
+
+  public async disconnect(): Promise<void> {
+    await this.client.close();
+  }
+
+  public async ping(): Promise<void> {
+    try {
+      await this.client.db().admin().ping();
+      this.logger.debug("Ping successful", { context: "MongoSource" });
+    } catch (error: any) {
+      throw new MongoSourceError("Ping failed", { error });
+    }
+  }
+
+  public async setup(): Promise<void> {
+    await this.client.connect();
+
+    for (const entity of this.entities) {
+      await this.repository(entity).setup();
+    }
+
+    for (const file of this.files) {
+      await this.bucket(file).setup();
+    }
+  }
+
   public get database(): Db {
     if (!this.databaseName) {
       throw new MongoSourceError("Database name not set");
@@ -83,28 +124,8 @@ export class MongoSource implements IMongoSource {
     return this.files.some((File) => File === target);
   }
 
-  public clone(options: CloneMongoSourceOptions = {}): IMongoSource {
-    return new MongoSource({
-      _mode: "from_clone",
-      client: this.client,
-      database: this.databaseName,
-      entities: this.entities,
-      files: this.files,
-      logger: options.logger ?? this.logger,
-      namespace: this.namespace,
-    });
-  }
-
   public collection<D extends Document>(name: string): Collection<D> {
     return this.database.collection(name);
-  }
-
-  public async connect(): Promise<void> {
-    await this.client.connect();
-  }
-
-  public async disconnect(): Promise<void> {
-    await this.client.close();
   }
 
   public bucket<F extends IMongoFile>(
@@ -135,18 +156,6 @@ export class MongoSource implements IMongoSource {
       logger: options.logger ?? this.logger,
       namespace: this.namespace,
     });
-  }
-
-  public async setup(): Promise<void> {
-    await this.client.connect();
-
-    for (const entity of this.entities) {
-      await this.repository(entity).setup();
-    }
-
-    for (const file of this.files) {
-      await this.bucket(file).setup();
-    }
   }
 
   // private

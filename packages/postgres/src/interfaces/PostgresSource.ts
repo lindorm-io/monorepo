@@ -15,6 +15,7 @@ export interface IPostgresSource {
   clone(options?: ClonePostgresSourceOptions): IPostgresSource;
   connect(): Promise<void>;
   disconnect(): Promise<void>;
+  ping(): Promise<void>;
   setup(): Promise<void>;
 
   query<R extends Dict = any, V = Array<any>>(

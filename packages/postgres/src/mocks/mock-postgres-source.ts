@@ -9,7 +9,9 @@ export const createMockPostgresSource = (): IPostgresSource => ({
   clone: jest.fn().mockImplementation(() => createMockPostgresSource()),
   connect: jest.fn(),
   disconnect: jest.fn(),
+  ping: jest.fn(),
   setup: jest.fn(),
+
   query: jest.fn(),
   queryBuilder: jest
     .fn()

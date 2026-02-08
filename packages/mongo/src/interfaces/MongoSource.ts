@@ -20,6 +20,7 @@ export interface IMongoSource {
   clone(options?: CloneMongoSourceOptions): IMongoSource;
   connect(): Promise<void>;
   disconnect(): Promise<void>;
+  ping(): Promise<void>;
   setup(): Promise<void>;
 
   collection<D extends Document>(name: string): Collection<D>;

@@ -47,4 +47,8 @@ describe("MongoSource", () => {
     expect(source.repository(TestEntityOne)).toBeDefined();
     expect(source.repository(TestEntityTwo)).toBeDefined();
   });
+
+  test("should ping the database", async () => {
+    await expect(source.ping()).resolves.not.toThrow();
+  });
 });

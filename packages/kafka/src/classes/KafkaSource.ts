@@ -103,6 +103,16 @@ export class KafkaSource implements IKafkaSource {
     await this.producer.disconnect();
   }
 
+  public async ping(): Promise<void> {
+    await this.producer.send({
+      acks: -1,
+      messages: [],
+      topic: "ping",
+    });
+
+    this.logger.debug("Ping successful", { context: "KafkaSource" });
+  }
+
   public async setup(): Promise<void> {
     await this.connect();
   }

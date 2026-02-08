@@ -13,6 +13,7 @@ export interface IRabbitSource {
   clone(options?: WithLoggerOptions): IRabbitSource;
   connect(): Promise<void>;
   disconnect(): Promise<void>;
+  ping(): Promise<void>;
   setup(): Promise<void>;
 
   addMessages(messages: MessageScannerInput): void;

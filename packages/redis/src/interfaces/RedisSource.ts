@@ -15,6 +15,7 @@ export interface IRedisSource {
   clone(options?: WithLoggerOptions): IRedisSource;
   connect(): Promise<void>;
   disconnect(): Promise<void>;
+  ping(): Promise<void>;
   setup(): Promise<void>;
 
   addEntities(entities: EntityScannerInput): void;

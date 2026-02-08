@@ -102,6 +102,23 @@ export class RabbitSource implements IRabbitSource {
     await this.channelModel?.close();
   }
 
+  public async ping(): Promise<void> {
+    if (!this.channelModel) {
+      throw new RabbitSourceError("Connection not established");
+    }
+    if (!this.confirmChannel) {
+      throw new RabbitSourceError("Channel not established");
+    }
+
+    try {
+      await this.confirmChannel.checkQueue(this.deadletters);
+      this.logger.debug("Ping successful");
+    } catch (error: any) {
+      this.logger.warn("Ping failed", { error });
+      throw new RabbitSourceError("Ping failed", { error });
+    }
+  }
+
   public async setup(): Promise<void> {
     if (!this.channelModel) {
       await this.connect();

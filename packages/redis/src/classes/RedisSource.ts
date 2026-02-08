@@ -101,6 +101,22 @@ export class RedisSource implements IRedisSource {
     await this.client.quit();
   }
 
+  public async ping(): Promise<void> {
+    if (this.client.status !== "ready") {
+      throw new RedisSourceError("Redis client is not connected", {
+        debug: { status: this.client.status },
+      });
+    }
+
+    const result = await this.client.ping();
+
+    if (result !== "PONG") {
+      throw new RedisSourceError("Redis client ping failed", {
+        debug: { result },
+      });
+    }
+  }
+
   public async setup(): Promise<void> {
     await this.connect();
 

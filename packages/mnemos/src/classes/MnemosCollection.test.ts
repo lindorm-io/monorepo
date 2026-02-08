@@ -24,7 +24,6 @@ describe("MnemosCollection", () => {
           },
         ],
         entity: {
-          target: {} as any,
           cache: null,
           database: null,
           decorator: "Entity",
@@ -52,6 +51,7 @@ describe("MnemosCollection", () => {
         primarySource: null,
         relations: [],
         schemas: [],
+        target: {} as any,
       },
     });
     collection.insertOne(TEST_PEOPLE[0]);
