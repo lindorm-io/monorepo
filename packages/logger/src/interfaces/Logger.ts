@@ -1,7 +1,17 @@
-import { FilterCallback, Log, LogContent, LogCorrelation, LogScope } from "../types";
+import {
+  FilterCallback,
+  Log,
+  LogContent,
+  LogCorrelation,
+  LogLevel,
+  LogScope,
+} from "../types";
+import { ILoggerTimer } from "./LoggerTimer";
 
 export interface ILogger {
   __instanceof: "Logger";
+
+  level: LogLevel;
 
   child(): ILogger;
   child(scope: LogScope): ILogger;
@@ -9,8 +19,21 @@ export interface ILogger {
   child(scope: LogScope, correlation: LogCorrelation): ILogger;
 
   correlation(correlation: LogCorrelation): void;
-  filter(path: string, callback?: FilterCallback): void;
+  filterPath(path: string, callback?: FilterCallback): void;
+  filterKey(key: string, callback?: FilterCallback): void;
+  filterKey(pattern: RegExp, callback?: FilterCallback): void;
+  isLevelEnabled(level: LogLevel): boolean;
   scope(scope: LogScope): void;
+
+  time(): ILoggerTimer;
+  time(label: string): void;
+  timeEnd(label: string, context?: LogContent, extra?: Array<LogContent>): void;
+  timeEnd(
+    label: string,
+    level: LogLevel,
+    context?: LogContent,
+    extra?: Array<LogContent>,
+  ): void;
 
   error(error: Error): void;
   error(message: string, context?: LogContent, extra?: Array<LogContent>): void;

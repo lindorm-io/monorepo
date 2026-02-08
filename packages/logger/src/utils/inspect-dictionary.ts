@@ -6,11 +6,16 @@ export const inspectDictionary = (
   dict: Dict,
   colors: boolean = true,
   depth = Infinity,
-): string =>
-  inspect(JSON.parse(fastSafeStringify(dict)), {
-    colors,
-    depth,
-    compact: 5,
-    breakLength: process.stdout.columns ? process.stdout.columns - 10 : 140,
-    sorted: true,
-  });
+): string => {
+  try {
+    return inspect(dict, {
+      colors,
+      depth,
+      compact: 5,
+      breakLength: process.stdout.columns ? process.stdout.columns - 10 : 140,
+      sorted: true,
+    });
+  } catch {
+    return fastSafeStringify(dict);
+  }
+};

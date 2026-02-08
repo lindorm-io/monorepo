@@ -78,6 +78,24 @@ const readableContent = (
   }
 };
 
+const formatDuration = (ms: number): string => {
+  const µs = Math.round((ms % 1) * 1000);
+  const totalMs = Math.floor(ms);
+  const s = Math.floor(totalMs / 1000);
+  const m = Math.floor(s / 60);
+  const h = Math.floor(m / 60);
+
+  const parts: string[] = [];
+
+  if (h > 0) parts.push(`${h}h `);
+  if (m % 60 > 0) parts.push(`${m % 60}m `);
+  if (s % 60 > 0) parts.push(`${s % 60}s `);
+  if (s < 60 && totalMs % 1000 > 0) parts.push(`${totalMs % 1000}ms `);
+  if (s === 0 && µs > 0) parts.push(`${µs}µs `);
+
+  return parts.length ? parts.join("").trim() : "0µs";
+};
+
 export const readableFormat = (log: InternalLog): string => {
   try {
     const time = colourise(gray, log.time.toISOString()) + " ";
@@ -87,8 +105,12 @@ export const readableFormat = (log: InternalLog): string => {
 
     const scopeString = log.scope.length ? `[ ${log.scope.join(" | ")} ]` : undefined;
     const scope = scopeString ? " " + colourise(gray, scopeString) : "";
+    const duration =
+      log.duration !== undefined
+        ? " " + colourise(gray, `(${formatDuration(log.duration)})`)
+        : "";
 
-    const pre = `${time}${level}${colon}${message}${scope}`;
+    const pre = `${time}${level}${colon}${message}${duration}${scope}`;
 
     const context =
       log.context && Object.keys(log.context).length ? log.context : undefined;

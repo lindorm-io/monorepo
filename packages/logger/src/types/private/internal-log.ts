@@ -5,6 +5,7 @@ import { LogContent, LogCorrelation } from "../types";
 export type InternalLog = {
   context: Dict | Error;
   correlation: LogCorrelation;
+  duration?: number;
   extra: Array<LogContent>;
   level: LogLevel;
   message: string;
