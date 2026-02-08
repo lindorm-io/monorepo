@@ -1,5 +1,6 @@
 import {
   isArray,
+  isBigInt,
   isBuffer,
   isDate,
   isNull,
@@ -13,7 +14,9 @@ export const stringifyArrayValues = (input: Array<any>): Array<any> => {
   const result: Array<any> = [];
 
   for (const value of input) {
-    if (isDate(value)) {
+    if (isBigInt(value)) {
+      result.push(value.toString());
+    } else if (isDate(value)) {
       result.push(value.toISOString());
     } else if (isObject(value)) {
       result.push(stringifyObjectValues(value));

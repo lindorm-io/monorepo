@@ -1,5 +1,6 @@
 export enum MetaType {
   Array = "A",
+  BigInt = "I",
   Boolean = "B",
   Buffer = "F",
   Date = "D",

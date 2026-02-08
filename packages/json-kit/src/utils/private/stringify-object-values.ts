@@ -1,5 +1,6 @@
 import {
   isArray,
+  isBigInt,
   isBuffer,
   isDate,
   isNull,
@@ -14,7 +15,9 @@ export const stringifyObjectValues = (dict: Dict): Dict => {
   const result: Dict = {};
 
   for (const [key, value] of Object.entries(dict)) {
-    if (isDate(value)) {
+    if (isBigInt(value)) {
+      result[key] = value.toString();
+    } else if (isDate(value)) {
       result[key] = value.toISOString();
     } else if (isObject(value)) {
       result[key] = stringifyObjectValues(value);

@@ -12,12 +12,14 @@ export const parseArrayValues = (input: any, meta: Dict): Array<any> => {
       result.push(parseObjectValues(val, meta[index]));
     } else if (isArray(meta[index])) {
       result.push(parseArrayValues(val, meta[index]));
+    } else if (meta[index] === MetaType.BigInt) {
+      result.push(BigInt(val));
     } else if (meta[index] === MetaType.Boolean) {
       result.push(JSON.parse(val));
     } else if (meta[index] === MetaType.Date) {
       result.push(new Date(val));
     } else if (meta[index] === MetaType.Number) {
-      result.push(parseInt(val, 10));
+      result.push(Number(val));
     } else if (meta[index] === MetaType.String) {
       result.push(val);
     } else if (meta[index] === MetaType.Null) {

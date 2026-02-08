@@ -11,12 +11,14 @@ export const parseObjectValues = (dict: Dict, meta: Dict): Dict => {
       result[key] = parseObjectValues(dict[key], meta[key]);
     } else if (isArray(meta[key])) {
       result[key] = parseArrayValues(dict[key], meta[key]);
+    } else if (meta[key] === MetaType.BigInt) {
+      result[key] = BigInt(value);
     } else if (meta[key] === MetaType.Boolean) {
       result[key] = JSON.parse(value);
     } else if (meta[key] === MetaType.Date) {
       result[key] = new Date(value);
     } else if (meta[key] === MetaType.Number) {
-      result[key] = parseInt(value, 10);
+      result[key] = Number(value);
     } else if (meta[key] === MetaType.String) {
       result[key] = value;
     } else if (meta[key] === MetaType.Null) {
