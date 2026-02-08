@@ -76,6 +76,18 @@ describe("LindormError", () => {
         }),
       );
     });
+
+    test("should set numeric code", () => {
+      expect(
+        new LindormError("message", {
+          code: -11000,
+        }),
+      ).toEqual(
+        expect.objectContaining({
+          code: -11000,
+        }),
+      );
+    });
   });
 
   describe("inheritance", () => {

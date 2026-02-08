@@ -1,10 +1,18 @@
-import { isArray, isDate, isFinite, isFunction, isObject, isString } from "@lindorm/is";
+import {
+  isArray,
+  isDate,
+  isFinite,
+  isFunction,
+  isNumber,
+  isObject,
+  isString,
+} from "@lindorm/is";
 import { Dict } from "@lindorm/types";
 import { v4 as uuid } from "uuid";
 
 export type LindormErrorAttributes = {
   id: string;
-  code: string | null;
+  code: string | number | null;
   data: Dict;
   debug: Dict;
   details: string | null;
@@ -20,7 +28,7 @@ export type LindormErrorAttributes = {
 
 export type LindormErrorOptions = {
   id?: string;
-  code?: string;
+  code?: string | number;
   data?: Dict;
   debug?: Dict;
   details?: string;
@@ -32,7 +40,7 @@ export type LindormErrorOptions = {
 
 export class LindormError extends Error {
   public readonly id: string;
-  public readonly code: string | null;
+  public readonly code: string | number | null;
   public readonly data: Dict;
   public readonly debug: Dict;
   public readonly details: string | null;
@@ -99,7 +107,7 @@ export class LindormError extends Error {
   private static destruct(error?: any): Partial<LindormErrorAttributes> {
     return {
       id: isString(error?.id) ? error.id : undefined,
-      code: isString(error?.code) ? error.code : undefined,
+      code: isString(error?.code) || isNumber(error?.code) ? error.code : undefined,
       data: isObject(error?.data) ? error.data : {},
       debug: isObject(error?.debug) ? error.debug : {},
       details: isString(error?.details) ? error.details : undefined,
