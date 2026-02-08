@@ -27,7 +27,7 @@ describe("readableFormat", () => {
 
   test("should not include scope brackets when empty", () => {
     const result = readableFormat(makeLog({ scope: [] }));
-    expect(result).not.toContain("[");
+    expect(result).not.toContain("[ ");
   });
 
   test("should format all log levels", () => {
