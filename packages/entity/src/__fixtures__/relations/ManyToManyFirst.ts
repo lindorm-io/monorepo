@@ -6,6 +6,9 @@ export class ManyToManyFirstDecoratorEntity {
   @PrimaryKeyColumn()
   id!: string;
 
-  @ManyToMany(() => ManyToManySecondDecoratorEntity, "first", true)
+  @ManyToMany(() => ManyToManySecondDecoratorEntity, "first", {
+    hasJoinTable: true,
+    joinKeys: ["id"],
+  })
   second!: Array<ManyToManySecondDecoratorEntity>;
 }

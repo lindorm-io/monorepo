@@ -1,6 +1,10 @@
 # @lindorm/entity
 
-Decorator-based entity management system with ORM-like features, validation, relationships, and versioning support.
+Decorator-based entity metadata system with ORM-like features. Defines entities, columns, relations,
+validation, versioning, and lifecycle hooks via TypeScript decorators. Persistence packages
+(`@lindorm/mongo`, `@lindorm/redis`, `@lindorm/postgres`) consume the metadata at runtime.
+
+---
 
 ## Installation
 
@@ -8,259 +12,226 @@ Decorator-based entity management system with ORM-like features, validation, rel
 npm install @lindorm/entity
 ```
 
-## Features
+---
 
-- **Decorator-Based Configuration**: Define entities using TypeScript decorators
-- **Automatic Field Management**: Built-in timestamp, version, and ID handling
-- **Relationship Support**: One-to-One, One-to-Many, Many-to-One, Many-to-Many
-- **Lifecycle Hooks**: OnCreate, OnUpdate, OnInsert, OnValidate, OnDestroy
-- **Schema Validation**: Integrated Zod validation
-- **Versioning**: Built-in entity versioning support
-- **Auto-Generation**: Automatic value generation for fields
-- **Type-Safe**: Full TypeScript support
-- **Multi-Tenancy**: Scope column support
-- **Soft Deletes**: Delete date column support
+## Quick start
 
-## Quick Start
-
-### Basic Entity
-
-```typescript
-import { EntityBase, Column, Entity } from "@lindorm/entity";
+```ts
+import { EntityBase, EntityKit, Column, Entity } from "@lindorm/entity";
 
 @Entity()
 export class User extends EntityBase {
   @Column("string")
-  public email!: string;
-
-  @Column("string")
   public name!: string;
 
-  @Column("integer", { min: 0, max: 150 })
+  @Column("email")
+  public email!: string;
+
+  @Column("integer", { min: 0 })
   public age!: number;
 
   @Column("boolean", { fallback: true })
   public isActive!: boolean;
 }
+
+const kit = new EntityKit({ target: User, source: "MongoSource" });
+
+const user = kit.create({ name: "Alice", email: "alice@example.com", age: 30 });
 ```
 
-### Using EntityKit
+---
 
-```typescript
-import { EntityKit } from "@lindorm/entity";
+## Base classes
 
-const userKit = new EntityKit(User);
+### `EntityBase`
 
-// Create new entity
-const user = userKit.create({
-  email: "john@example.com",
-  name: "John Doe",
-  age: 30
-});
+Abstract base class providing:
 
-// Validate entity
-await userKit.validate(user);
+- `id: string` -- UUID primary key (auto-generated)
+- `createdAt: Date` -- creation timestamp
 
-// Prepare for database insert
-const insertData = await userKit.insert(user);
-```
-
-## Base Classes
-
-### EntityBase
-
-Abstract base class that provides:
-- `id: string` - Primary key (UUID)
-- `createdAt: Date` - Creation timestamp
-
-```typescript
-import { EntityBase, Entity, Column } from "@lindorm/entity";
-
+```ts
 @Entity()
 export class Product extends EntityBase {
   @Column("string")
   public name!: string;
-
-  @Column("float", { min: 0 })
-  public price!: number;
 }
 ```
 
-### VersionedEntityBase
+### `VersionedEntityBase`
 
-Extends EntityBase with versioning support:
-- `version: number` - Version number
-- `versionId: string` - Unique version identifier
-- `versionStartAt: Date` - When version became active
-- `versionEndAt: Date | null` - When version ended
+Extends `EntityBase` with versioning columns:
 
-```typescript
-import { VersionedEntityBase, Entity, Column } from "@lindorm/entity";
+- `version: number` -- version counter
+- `versionId: string` -- unique version identifier
+- `versionStartAt: Date` -- when this version became active
+- `versionEndAt: Date | null` -- when this version was superseded
 
+```ts
 @Entity()
 export class Document extends VersionedEntityBase {
   @Column("string")
   public content!: string;
-
-  @Column("string")
-  public author!: string;
 }
 ```
+
+---
 
 ## Decorators
 
-### Entity Configuration
+### Entity configuration
 
-#### @Entity(options?)
+#### `@Entity(options?)`
 
-```typescript
+Marks a class as a managed entity and registers it in the global metadata registry.
+
+```ts
 @Entity({
-  name: "users",           // Collection/table name
-  namespace: "auth",       // Database namespace
-  database: "postgres",    // Database identifier
-  cache: true             // Enable caching
+  name: "users",        // collection/table name override
+  namespace: "auth",    // namespace prefix
 })
-export class User extends EntityBase {
-  // ...
-}
+export class User extends EntityBase {}
 ```
 
-### Column Decorators
+#### `@PrimarySource(source)`
 
-#### @Column(type?, options?)
+Specifies which data source is the primary owner of this entity. Affects which repository runs
+version increments and lifecycle hooks.
 
-```typescript
-export class Product extends EntityBase {
-  @Column("string", { 
-    min: 1, 
-    max: 255, 
-    nullable: false 
-  })
-  public name!: string;
-
-  @Column("float", { 
-    min: 0, 
-    fallback: 0 
-  })
-  public price!: number;
-
-  @Column("array", { 
-    fallback: [] 
-  })
-  public tags!: string[];
-
-  @Column("enum", { 
-    enum: ["active", "inactive", "pending"] 
-  })
-  public status!: string;
-
-  @Column("email")
-  public contactEmail!: string;
-
-  @Column("url", { 
-    nullable: true 
-  })
-  public website!: string | null;
-
-  @Column("uuid")
-  public externalId!: string;
-
-  @Column("date", { 
-    fallback: () => new Date() 
-  })
-  public publishedAt!: Date;
-
-  @Column("object", { 
-    optional: true 
-  })
-  public metadata?: Record<string, any>;
-}
+```ts
+@Entity()
+@PrimarySource("MongoSource")
+export class User extends EntityBase {}
 ```
 
-### Special Column Decorators
+#### `@PrimaryKey(columns?)`
 
-```typescript
-export class Article extends EntityBase {
-  @PrimaryKeyColumn()
-  public readonly id!: string;
+Marks one or more properties as the composite primary key. Can be used as a property decorator
+(single column) or class decorator (multiple columns).
 
-  @CreateDateColumn()
-  public readonly createdAt!: Date;
-
-  @UpdateDateColumn()
-  public updatedAt!: Date;
-
-  @DeleteDateColumn()
-  public deletedAt!: Date | null;
-
-  @ExpiryDateColumn()
-  public expiresAt!: Date | null;
-
-  @ScopeColumn()
+```ts
+// Class decorator for composite keys
+@Entity()
+@PrimaryKey(["tenantId", "email"])
+export class TenantUser {
+  @Column("string")
   public tenantId!: string;
 
-  @VersionColumn()
-  public version!: number;
-}
-```
-
-### Generated Values
-
-```typescript
-export class Order extends EntityBase {
-  @Generated("uuid")
-  public orderId!: string;
-
-  @Generated("increment")
-  public orderNumber!: number;
-
-  @Generated("date")
-  public orderDate!: Date;
-
-  @Generated("integer", { min: 1000, max: 9999 })
-  public confirmationCode!: number;
-
-  @Generated("string", { length: 8, prefix: "ORD-" })
-  public referenceCode!: string;
-
-  @Generated("float", { min: 0, max: 1, decimals: 4 })
-  public randomValue!: number;
-}
-```
-
-### Indexes
-
-```typescript
-@Entity()
-export class User extends EntityBase {
-  @Column("string")
-  @Index_({ unique: true })
+  @Column("email")
   public email!: string;
+}
 
-  @Column("string")
-  @Index_({ direction: "desc" })
-  public lastName!: string;
-
-  @Column("date")
-  @Index_({ 
-    name: "idx_created_date",
-    direction: "desc",
-    sparse: true
-  })
-  public createdAt!: Date;
+// Or property decorator for single key
+@Entity()
+export class Item {
+  @PrimaryKey()
+  @Column("uuid")
+  public itemId!: string;
 }
 ```
 
-### Validation
+### Column decorators
 
-```typescript
+#### `@Column(type?, options?)`
+
+Defines a data column with type metadata.
+
+```ts
+@Column("string", { min: 1, max: 255, nullable: false })
+public name!: string;
+
+@Column("float", { min: 0, fallback: 0 })
+public price!: number;
+
+@Column("array", { fallback: [] })
+public tags!: string[];
+
+@Column("enum", { enum: ["active", "inactive", "pending"] })
+public status!: string;
+
+@Column("object", { optional: true })
+public metadata?: Record<string, any>;
+```
+
+**Column types:** `string`, `uuid`, `email`, `url`, `enum`, `integer`, `float`, `bigint`,
+`boolean`, `date`, `array`, `object`
+
+**Column options:**
+
+| Option | Type | Description |
+|---|---|---|
+| `enum` | `string[]` | Allowed values for enum type |
+| `fallback` | `any \| () => any` | Default value or factory |
+| `max` | `number` | Maximum value/length |
+| `min` | `number` | Minimum value/length |
+| `nullable` | `boolean` | Can be `null` |
+| `optional` | `boolean` | Can be `undefined` |
+| `readonly` | `boolean` | Cannot be modified after creation |
+| `schema` | `ZodType` | Custom Zod validation schema |
+
+### Special column decorators
+
+All auto-configured with appropriate types and defaults:
+
+| Decorator | Type | Description |
+|---|---|---|
+| `@PrimaryKeyColumn()` | `uuid` | Auto-generated UUID primary key |
+| `@CreateDateColumn()` | `date` | Set once on creation |
+| `@UpdateDateColumn()` | `date` | Updated on every save |
+| `@DeleteDateColumn()` | `date` | Soft delete timestamp (nullable) |
+| `@ExpiryDateColumn()` | `date` | TTL expiration (nullable) |
+| `@ScopeColumn()` | `string` | Multi-tenancy scope |
+| `@VersionColumn()` | `integer` | Optimistic locking counter |
+| `@VersionKeyColumn()` | `uuid` | Unique version identifier |
+| `@VersionStartDateColumn()` | `date` | Version start timestamp |
+| `@VersionEndDateColumn()` | `date` | Version end timestamp (nullable) |
+
+### `@Generated(strategy, options?)`
+
+Auto-generates values on entity creation.
+
+```ts
+@Generated("uuid")
+public externalId!: string;
+
+@Generated("increment")
+public orderNumber!: number;
+
+@Generated("date")
+public orderDate!: Date;
+
+@Generated("integer", { min: 1000, max: 9999 })
+public confirmationCode!: number;
+
+@Generated("string", { length: 8, prefix: "ORD-" })
+public referenceCode!: string;
+```
+
+### `@Index_(options?)`
+
+Marks a column for database indexing.
+
+```ts
+@Column("string")
+@Index_({ unique: true })
+public email!: string;
+
+@Column("date")
+@Index_({ direction: "desc", sparse: true, name: "idx_created" })
+public createdAt!: Date;
+```
+
+### `@Schema(zodSchema)`
+
+Adds Zod validation that runs on `validate()`.
+
+```ts
 import { z } from "zod";
 
 @Entity()
 @Schema(z.object({
   email: z.string().email(),
   age: z.number().int().positive(),
-  website: z.string().url().optional()
 }))
 export class User extends EntityBase {
   @Column("email")
@@ -268,56 +239,69 @@ export class User extends EntityBase {
 
   @Column("integer")
   public age!: number;
-
-  @Column("url", { optional: true })
-  public website?: string;
 }
 ```
 
-### Lifecycle Hooks
+### Lifecycle hooks
 
-```typescript
-@Entity()
+```ts
 @OnCreate((entity) => {
-  entity.slug = entity.title.toLowerCase().replace(/\s+/g, '-');
+  entity.slug = entity.title.toLowerCase().replace(/\s+/g, "-");
 })
 @OnValidate((entity) => {
-  if (entity.startDate > entity.endDate) {
-    throw new Error("Start date must be before end date");
-  }
+  if (entity.startDate > entity.endDate) throw new Error("Invalid date range");
 })
-@OnInsert((entity) => {
-  console.log("Entity inserted:", entity.id);
-})
-@OnUpdate((entity) => {
-  console.log("Entity updated:", entity.id);
-})
-@OnDestroy((entity) => {
-  console.log("Entity destroyed:", entity.id);
-})
-export class Event extends EntityBase {
-  @Column("string")
-  public title!: string;
+@OnInsert((entity) => { /* after first persistence */ })
+@OnUpdate((entity) => { /* after update persistence */ })
+@OnDestroy((entity) => { /* after deletion */ })
+```
 
-  @Column("string")
-  public slug!: string;
+---
 
-  @Column("date")
-  public startDate!: Date;
+## Relations
 
-  @Column("date")
-  public endDate!: Date;
+Relations use thunks (`() => Constructor`) to avoid circular import issues. The second argument
+is the **mirror property** on the foreign entity -- the property that points back to this entity.
+
+### OneToMany / ManyToOne
+
+```ts
+@Entity()
+export class Author extends EntityBase {
+  @OneToMany(() => Book, "author", {
+    loading: "eager",
+    onInsert: "cascade",
+    onUpdate: "cascade",
+    onOrphan: "delete",
+  })
+  public books!: Book[];
+}
+
+@Entity()
+export class Book extends EntityBase {
+  @Column("uuid")
+  public authorId!: string;  // FK column (auto-inferred from Author's PK)
+
+  @ManyToOne(() => Author, "books")
+  public author!: Author;
 }
 ```
 
-## Relationships
+The ManyToOne side is the **owning side** -- it has the FK column. By default, `joinKeys` are
+auto-inferred from the foreign entity's primary key columns. Use explicit `joinKeys` for custom FK
+column names:
 
-### One-to-One
+```ts
+@ManyToOne(() => Author, "books", { joinKeys: { customAuthorId: "id" } })
+public author!: Author;
+```
 
-```typescript
+### OneToOne
+
+```ts
 @Entity()
 export class User extends EntityBase {
-  @OneToOne(() => Profile, "userId")
+  @OneToOne(() => Profile, "user")        // inverse side (no FK)
   public profile!: Profile;
 }
 
@@ -326,363 +310,159 @@ export class Profile extends EntityBase {
   @Column("uuid")
   public userId!: string;
 
-  @OneToOne(() => User, "id", true)
+  @OneToOne(() => User, "profile", { joinKeys: { userId: "id" } })  // owning side
   public user!: User;
 }
 ```
 
-### One-to-Many & Many-to-One
+### ManyToMany
 
-```typescript
-@Entity()
-export class Author extends EntityBase {
-  @OneToMany(() => Book, "authorId")
-  public books!: Book[];
-}
+Both sides need the decorator. One side must declare `hasJoinTable: true` (creates the join
+table), the other declares `joinKeys` (the owning FK columns).
 
-@Entity()
-export class Book extends EntityBase {
-  @Column("uuid")
-  public authorId!: string;
-
-  @ManyToOne(() => Author, "id", true)
-  public author!: Author;
-}
-```
-
-### Many-to-Many
-
-```typescript
+```ts
 @Entity()
 export class Student extends EntityBase {
-  @ManyToMany(() => Course, "id", true, {
-    joinTable: "student_courses"
-  })
+  @ManyToMany(() => Course, "students", { hasJoinTable: true })
   public courses!: Course[];
 }
 
 @Entity()
 export class Course extends EntityBase {
-  @ManyToMany(() => Student, "id", true, {
-    joinTable: "student_courses"
-  })
+  @Column("uuid", { fallback: () => randomUUID() })
+  public courseKey!: string;
+
+  @ManyToMany(() => Student, "courses", { joinKeys: ["courseKey"] })
   public students!: Student[];
 }
 ```
 
-### Relationship Options
+### Relation options
 
-```typescript
-@Entity()
-export class Order extends EntityBase {
-  @OneToMany(() => OrderItem, "orderId", {
-    loading: "eager",           // Load automatically
-    onDelete: "cascade",        // Delete items when order deleted
-    onUpdate: "cascade",        // Update items when order updated
-    onOrphan: "delete",        // Delete orphaned items
-    strategy: "join"           // Query strategy
-  })
-  public items!: OrderItem[];
+| Option | Values | Description |
+|---|---|---|
+| `loading` | `"eager"` / `"lazy"` / `"ignore"` | When to load the relation |
+| `nullable` | `boolean` | Allow null for the relation |
+| `onInsert` | `"cascade"` / `"ignore"` | Save related entities on insert |
+| `onUpdate` | `"cascade"` / `"ignore"` | Save related entities on update |
+| `onDestroy` | `"cascade"` / `"ignore"` | Delete related entities on destroy |
+| `onOrphan` | `"delete"` / `"ignore"` | Delete unlinked entities on update |
+| `joinKeys` | `Dict<string>` / `string[]` | Custom FK column mapping |
+| `hasJoinTable` | `boolean` | This side creates the M2M join table |
+| `hasJoinKey` | `boolean` | This side has the FK (OneToOne) |
 
-  @ManyToOne(() => Customer, "id", true, {
-    loading: "lazy",           // Load on demand
-    nullable: true,            // Relationship is optional
-    onDelete: "restrict"       // Prevent deletion if referenced
-  })
-  public customer?: Customer;
-}
-```
+---
 
-## EntityKit Usage
+## EntityKit
 
-### Basic Operations
+The runtime interface for entity operations. Used by persistence packages internally.
 
-```typescript
-const userKit = new EntityKit(User);
-
-// Create entity
-const user = userKit.create({
-  email: "john@example.com",
-  name: "John Doe"
+```ts
+const kit = new EntityKit({
+  target: User,
+  source: "MongoSource",
+  logger: myLogger,
+  getNextIncrement: async (name) => nextVal(name),  // for @Generated("increment")
 });
-
-// Copy entity
-const userCopy = userKit.copy(existingUser);
-
-// Validate
-await userKit.validate(user);
-
-// Prepare for insert
-const insertData = await userKit.insert(user);
-
-// Update entity
-const updatedData = await userKit.update(user);
-
-// Remove readonly fields
-const writableData = userKit.removeReadonly(user);
-
-// Verify readonly constraints
-userKit.verifyReadonly(originalUser, modifiedUser);
 ```
 
-### Versioned Entity Operations
+### Key methods
 
-```typescript
-const docKit = new EntityKit(Document);
+| Method | Description |
+|---|---|
+| `create(data?)` | Instantiate entity with defaults and generated values |
+| `copy(entity)` | Shallow copy |
+| `clone(entity)` | Deep clone with new ID/version |
+| `validate(entity)` | Run `@Schema` and `@OnValidate` hooks |
+| `insert(entity)` | Prepare for first persistence (set version=1, run `@OnInsert`) |
+| `update(entity)` | Prepare for update (increment version, run `@OnUpdate`) |
+| `document(entity)` | Convert to plain document for storage |
+| `relationFilter(relation, entity)` | Build query predicate for loading relations |
+| `onDestroy(entity)` | Run `@OnDestroy` hook |
+| `getSaveStrategy(entity)` | Returns `"insert"`, `"update"`, or `"version"` |
+| `getCollectionName(opts?)` | Computed collection/table name |
+| `getIncrementName()` | Sequence name for auto-increment fields |
 
-// Create new version
-const newVersion = docKit.clone(existingDocument);
+### Metadata access
 
-// Copy as new version
-const versionCopy = docKit.versionCopy(original, modified);
-
-// Update version end date
-const closedVersion = docKit.versionUpdate(existingVersion);
-
-// Get save strategy
-const strategy = docKit.getSaveStrategy(document);
-// Returns: "update" or "version"
+```ts
+kit.metadata.columns;      // Array<MetaColumn> -- all column definitions
+kit.metadata.relations;    // Array<MetaRelation> -- all relation definitions
+kit.metadata.primaryKeys;  // string[] -- primary key column names
+kit.metadata.indexes;      // Array<MetaIndex> -- index definitions
+kit.metadata.entity;       // MetaEntity -- entity-level config
+kit.isPrimarySource;       // boolean -- is this the primary source?
+kit.updateStrategy;        // "update" | "version"
 ```
 
-### Metadata Access
-
-```typescript
-const kit = new EntityKit(User);
-
-// Get collection name
-const collection = kit.getCollectionName();
-// Or with options
-const collection2 = kit.getCollectionName({
-  database: "postgres",
-  namespace: "auth"
-});
-
-// Get increment sequence name
-const sequence = kit.getIncrementName();
-```
+---
 
 ## EntityScanner
 
-Automatically discover entities from the file system:
+Discovers entity classes from the filesystem at startup.
 
-```typescript
+```ts
 import { EntityScanner } from "@lindorm/entity";
 
 const scanner = new EntityScanner();
-
-// Scan directories and files
 const entities = await scanner.scan([
-  "./src/entities",           // Directory path
-  "./src/models/User.ts",     // File path
-  Customer,                   // Entity constructor
+  "./src/entities",         // directory path
+  "./src/models/User.ts",  // file path
+  Customer,                // constructor directly
 ]);
-
-// entities is an array of entity constructors
-for (const Entity of entities) {
-  console.log(Entity.name);
-}
 ```
 
-## Advanced Examples
+---
 
-### Multi-Tenant Entity
+## VersionManager
 
-```typescript
-@Entity({ namespace: "tenant" })
-export class TenantEntity extends EntityBase {
-  @ScopeColumn()
-  public tenantId!: string;
+Manages version column lifecycle for optimistic locking.
 
-  @Column("string")
-  public name!: string;
-}
+```ts
+import { VersionManager } from "@lindorm/entity";
 
-// Usage
-const kit = new EntityKit(TenantEntity);
-const entity = kit.create({
-  tenantId: "tenant-123",
-  name: "Product A"
-});
+const vm = new VersionManager(kit.metadata);
+
+vm.isVersioned();           // true if entity has @VersionColumn
+vm.getVersion(entity);      // current version number
+vm.prepareForInsert(entity); // sets version to 1
+vm.prepareForUpdate(entity); // increments version
 ```
 
-### Soft Delete Pattern
+---
 
-```typescript
-@Entity()
-export class SoftDeletableEntity extends EntityBase {
-  @Column("string")
-  public name!: string;
+## Utility functions
 
-  @DeleteDateColumn()
-  public deletedAt!: Date | null;
+| Function | Description |
+|---|---|
+| `defaultCreateEntity(Target, data)` | Create entity instance with relation handling |
+| `defaultCreateDocument(entity, metadata)` | Convert entity to storage document |
+| `defaultCloneEntity(Target, entity, metadata)` | Deep clone with new identity |
+| `defaultUpdateEntity(entity, data, metadata)` | Apply partial update to entity |
+| `defaultGenerateEntity(entity, metadata, getIncrement)` | Run `@Generated` strategies |
+| `defaultValidateEntity(entity, metadata)` | Run validation hooks and schemas |
+| `defaultRelationFilter(relation, entity)` | Build find predicate from relation metadata |
+| `getCollectionName(Target, opts?)` | Compute collection name from metadata |
+| `getIncrementName(Target, opts?)` | Compute increment sequence name |
+| `getJoinCollectionName(joinTable, opts?)` | Compute M2M join collection name |
+| `getSaveStrategy(entity, metadata)` | Determine insert/update/version strategy |
+| `removeReadonly(entity, metadata)` | Strip readonly fields for updates |
+| `verifyReadonly(original, modified, metadata)` | Throw if readonly fields changed |
+| `globalEntityMetadata` | Singleton metadata registry |
 
-  @Column("boolean", { fallback: false })
-  public isDeleted!: boolean;
-}
+---
 
-// Soft delete
-entity.deletedAt = new Date();
-entity.isDeleted = true;
-```
+## Error classes
 
-### Complex Validation
+| Class | Description |
+|---|---|
+| `EntityKitError` | General entity operation errors |
+| `EntityMetadataError` | Metadata configuration/registration errors |
+| `EntityScannerError` | File scanning errors |
 
-```typescript
-import { z } from "zod";
+All extend `LindormError` from `@lindorm/errors`.
 
-const addressSchema = z.object({
-  street: z.string(),
-  city: z.string(),
-  zipCode: z.string().regex(/^\d{5}$/),
-  country: z.string().length(2)
-});
-
-@Entity()
-@Schema(z.object({
-  email: z.string().email(),
-  phone: z.string().regex(/^\+?[\d\s-()]+$/),
-  addresses: z.array(addressSchema).min(1)
-}))
-@OnValidate((entity) => {
-  if (entity.addresses.length > 5) {
-    throw new Error("Maximum 5 addresses allowed");
-  }
-})
-export class Contact extends EntityBase {
-  @Column("email")
-  public email!: string;
-
-  @Column("string")
-  public phone!: string;
-
-  @Column("array", { schema: addressSchema })
-  public addresses!: Array<{
-    street: string;
-    city: string;
-    zipCode: string;
-    country: string;
-  }>;
-}
-```
-
-### Audit Trail with Versioning
-
-```typescript
-@Entity()
-@PrimarySource("postgres")
-export class AuditedDocument extends VersionedEntityBase {
-  @Column("string")
-  public title!: string;
-
-  @Column("string")
-  public content!: string;
-
-  @Column("string")
-  public modifiedBy!: string;
-
-  @Column("string", { nullable: true })
-  public changeReason!: string | null;
-}
-
-// Create new version
-const kit = new EntityKit(AuditedDocument);
-const newVersion = kit.clone(currentDocument);
-newVersion.content = "Updated content";
-newVersion.modifiedBy = "user-123";
-newVersion.changeReason = "Typo correction";
-
-const versionData = await kit.insert(newVersion);
-```
-
-### Custom Generated Values
-
-```typescript
-@Entity()
-export class Invoice extends EntityBase {
-  @Generated((entity) => {
-    const year = new Date().getFullYear();
-    const month = String(new Date().getMonth() + 1).padStart(2, '0');
-    return `INV-${year}${month}-${entity.invoiceNumber}`;
-  })
-  public invoiceId!: string;
-
-  @Generated("increment")
-  public invoiceNumber!: number;
-
-  @Generated(() => {
-    const date = new Date();
-    date.setDate(date.getDate() + 30);
-    return date;
-  })
-  public dueDate!: Date;
-}
-```
-
-## Type Definitions
-
-### Column Types
-
-- `array` - Array of values
-- `bigint` - Large integers
-- `boolean` - True/false
-- `date` - Date/time values
-- `email` - Email strings (validated)
-- `enum` - Enumerated values
-- `float` - Decimal numbers
-- `integer` - Whole numbers
-- `object` - JSON objects
-- `string` - Text strings
-- `url` - URL strings (validated)
-- `uuid` - UUID strings (validated)
-
-### Column Options
-
-```typescript
-interface ColumnOptions {
-  enum?: string[];              // Allowed values
-  fallback?: any | (() => any); // Default value
-  max?: number;                 // Maximum value/length
-  min?: number;                 // Minimum value/length
-  nullable?: boolean;           // Can be null
-  optional?: boolean;           // Can be undefined
-  readonly?: boolean;           // Cannot be updated
-  schema?: z.ZodType;          // Custom Zod schema
-  type?: ColumnType;           // Override type
-}
-```
-
-## Error Handling
-
-```typescript
-import { 
-  EntityMetadataError, 
-  EntityScannerError, 
-  EntityUtilityError 
-} from "@lindorm/entity";
-
-try {
-  await kit.validate(entity);
-} catch (error) {
-  if (error instanceof EntityMetadataError) {
-    // Metadata configuration error
-  } else if (error instanceof EntityUtilityError) {
-    // Validation or utility error
-  }
-}
-```
-
-## Best Practices
-
-1. **Always extend base classes** - Use EntityBase or VersionedEntityBase
-2. **Use appropriate column types** - Match database types
-3. **Add validation** - Use @Schema and @OnValidate decorators
-4. **Handle relationships carefully** - Consider loading strategies
-5. **Use EntityKit** - For all entity operations
-6. **Implement soft deletes** - For data retention
-7. **Version sensitive data** - Use VersionedEntityBase for audit trails
-8. **Index frequently queried fields** - Use @Index_ decorator
-9. **Set appropriate defaults** - Use fallback option
-10. **Validate early** - Call validate() before persistence
+---
 
 ## License
 

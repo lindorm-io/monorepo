@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-function-type */
-
 import { Constructor, Dict } from "@lindorm/types";
 import { ZodObject, ZodType } from "zod";
 import { IEntity } from "../interfaces";
@@ -44,7 +42,6 @@ export type ColumnFallbackComplex =
 export type MetaColumnFallback = (() => ColumnFallbackComplex) | ColumnFallbackComplex;
 
 export type MetaColumn<T extends MetaColumnDecorator = MetaColumnDecorator> = {
-  target: Function;
   key: string;
   decorator: T;
   enum: any | null; // enum corresponds to the type "enum" property
@@ -59,7 +56,6 @@ export type MetaColumn<T extends MetaColumnDecorator = MetaColumnDecorator> = {
 };
 
 export type MetaEntity = {
-  target: Constructor<IEntity>;
   decorator: string;
   cache: string | null;
   database: string | null;
@@ -68,7 +64,6 @@ export type MetaEntity = {
 };
 
 export type MetaExtra<T extends Dict = Dict> = {
-  target: Function;
   type: string;
 } & T;
 
@@ -83,7 +78,6 @@ export type MetaGeneratedStrategy =
   | "increment";
 
 export type MetaGenerated = {
-  target: Function;
   key: string;
   length: number | null;
   max: number | null;
@@ -101,7 +95,6 @@ export type MetaHookDecorator =
   | "OnDestroy";
 
 export type MetaHook = {
-  target: Function;
   decorator: MetaHookDecorator;
   callback: (entity: any) => void;
 };
@@ -124,7 +117,6 @@ export type MetaIndexOptions = {
 };
 
 export type MetaIndex = {
-  target: Function;
   keys: Array<MetaIndexItem>;
   name: string | null;
   options: MetaIndexOptions;
@@ -132,44 +124,43 @@ export type MetaIndex = {
 };
 
 export type MetaPrimaryKey = {
-  target: Function;
   key: string;
 };
 
-export type RelationChange = "cascade" | "default" | "restrict";
-export type RelationLoading = "eager" | "lazy";
+export type RelationDestroy = "cascade" | "restrict" | "ignore";
+export type RelationChange = "cascade" | "ignore";
+export type RelationLoading = "eager" | "lazy" | "ignore";
 export type RelationOrphan = "delete" | "ignore";
 export type RelationStrategy = "join" | "query";
 
 export type MetaRelationOptions = {
-  joinKey: boolean | string | null;
-  joinTable: boolean | string | null;
-  loading: RelationLoading | null;
+  loading: RelationLoading;
   nullable: boolean;
-  onDelete: RelationChange | null;
-  onOrphan: RelationOrphan | null;
-  onUpdate: RelationChange | null;
+  onDestroy: RelationDestroy;
+  onInsert: RelationChange;
+  onOrphan: RelationOrphan;
+  onUpdate: RelationChange;
   strategy: RelationStrategy | null;
 };
 
 export type MetaRelation = {
-  target: Function;
   key: string;
-  options: MetaRelationOptions;
   foreignConstructor: () => Constructor<IEntity>;
-  foreignKey: string | null;
+  foreignKey: string;
+  findKeys: Dict<string> | null;
+  joinKeys: Dict<string> | null;
+  joinTable: string | boolean | null;
+  options: MetaRelationOptions;
   type: "ManyToMany" | "ManyToOne" | "OneToMany" | "OneToOne";
 };
 
 export type MetaSource = "MnemosSource" | "MongoSource" | "RedisSource";
 
 export type MetaPrimarySource<T extends MetaSource = MetaSource> = {
-  target: Function;
   source: T;
 };
 
 export type MetaSchema = {
-  target: Function;
   schema: ZodObject<IEntity>;
 };
 
@@ -178,14 +169,15 @@ export type EntityMetadata<
   TDecorator extends MetaColumnDecorator = MetaColumnDecorator,
   TSource extends MetaSource = MetaSource,
 > = {
-  columns: Array<Omit<MetaColumn<TDecorator>, "target">>;
+  target: Constructor<IEntity>;
+  columns: Array<MetaColumn<TDecorator>>;
   entity: MetaEntity;
-  extras: Array<Omit<MetaExtra<TExtra>, "target">>;
-  generated: Array<Omit<MetaGenerated, "target">>;
-  hooks: Array<Omit<MetaHook, "target">>;
-  indexes: Array<Omit<MetaIndex, "target">>;
+  extras: Array<MetaExtra<TExtra>>;
+  generated: Array<MetaGenerated>;
+  hooks: Array<MetaHook>;
+  indexes: Array<MetaIndex>;
   primaryKeys: Array<string>;
   primarySource: TSource | null;
-  relations: Array<Omit<MetaRelation, "target">>;
+  relations: Array<MetaRelation>;
   schemas: Array<ZodObject<IEntity>>;
 };

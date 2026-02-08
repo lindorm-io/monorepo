@@ -7,8 +7,8 @@ import {
   UpdateDateColumn,
   VersionColumn,
 } from "../decorators";
-import { defaultCloneEntity } from "./default-clone-entity";
 import { defaultCreateEntity } from "./default-create-entity";
+import { defaultUpdateEntity } from "./default-update-entity";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate);
@@ -61,6 +61,14 @@ describe("defaultUpdateEntity", () => {
       object: { key: "value" },
     });
 
-    expect(defaultCloneEntity(TestUpdateEntity, original)).toMatchSnapshot();
+    const updated = defaultUpdateEntity(TestUpdateEntity, original);
+
+    expect(updated.id).toEqual(original.id);
+    expect(updated.version).toEqual(9);
+    expect(updated.updateDate).toEqual(MockedDate);
+    expect(updated.array).toEqual([1, 2, 3]);
+    expect(updated.bigint).toEqual(BigInt(1));
+    expect(updated.boolean).toEqual(true);
+    expect(updated.object).toEqual({ key: "value" });
   });
 });

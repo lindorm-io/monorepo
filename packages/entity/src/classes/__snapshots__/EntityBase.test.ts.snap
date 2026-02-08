@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`EntityBase should have expected properties 1`] = `
 TestEntityBase {
@@ -43,7 +43,6 @@ exports[`EntityBase should have expected properties 2`] = `
     "decorator": "Entity",
     "name": "TestEntityBase",
     "namespace": null,
-    "target": [Function],
   },
   "extras": [],
   "generated": [],
@@ -55,5 +54,6 @@ exports[`EntityBase should have expected properties 2`] = `
   "primarySource": null,
   "relations": [],
   "schemas": [],
+  "target": [Function],
 }
 `;

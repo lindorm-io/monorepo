@@ -2,12 +2,14 @@ import { isFunction } from "@lindorm/is";
 import { ILogger } from "@lindorm/logger";
 import { Constructor, DeepPartial, Dict } from "@lindorm/types";
 import { randomUUID } from "crypto";
+import { EntityKitError } from "../errors";
 import { IEntity } from "../interfaces";
 import {
   EntityKitOptions,
   EntityMetadata,
   GetIncrementFn,
   MetaColumnDecorator,
+  MetaRelation,
   MetaSource,
   NamespaceOptions,
   SaveStrategy,
@@ -15,8 +17,10 @@ import {
 } from "../types";
 import {
   defaultCloneEntity,
+  defaultCreateDocument,
   defaultCreateEntity,
   defaultGenerateEntity,
+  defaultRelationFilter,
   defaultUpdateEntity,
   defaultValidateEntity,
   getCollectionName,
@@ -26,6 +30,7 @@ import {
   removeReadonly,
   verifyReadonly,
 } from "../utils";
+import { VersionManager } from "./VersionManager";
 
 export class EntityKit<
   E extends IEntity,
@@ -34,22 +39,69 @@ export class EntityKit<
   TDecorator extends MetaColumnDecorator = MetaColumnDecorator,
   TSource extends MetaSource = MetaSource,
 > {
-  private readonly target: Constructor<E>;
   private readonly getNextIncrement: GetIncrementFn | undefined;
   private readonly logger: ILogger | undefined;
   private readonly source: string;
+  private readonly versionManager: VersionManager<E>;
 
+  public readonly target: Constructor<E>;
   public readonly isPrimarySource: boolean;
   public readonly metadata: EntityMetadata<TExtra, TDecorator, TSource>;
   public readonly updateStrategy: UpdateStrategy;
 
   public constructor(options: EntityKitOptions<E>) {
+    // Validate required fields
+    if (!options.target) {
+      throw new EntityKitError("EntityKit requires a target constructor", {
+        debug: { options },
+      });
+    }
+
+    if (!options.source) {
+      throw new EntityKitError("EntityKit requires a source parameter", {
+        debug: { target: options.target.name },
+      });
+    }
+
+    // Assign values
     this.target = options.target;
+    this.source = options.source;
     this.getNextIncrement = options.getNextIncrement;
     this.logger = options.logger?.child(["EntityKit"]);
-    this.source = options.source;
 
-    this.metadata = globalEntityMetadata.get(this.target);
+    // Attempt metadata retrieval with better error handling
+    try {
+      this.metadata = globalEntityMetadata.get(this.target);
+    } catch (error) {
+      throw new EntityKitError(
+        `Failed to retrieve metadata for entity "${this.target.name}". Did you forget the @Entity() decorator?`,
+        {
+          debug: { target: this.target.name },
+          error: error instanceof Error ? error : undefined,
+        },
+      );
+    }
+
+    // Initialize version manager
+    this.versionManager = new VersionManager<E>(this.metadata);
+
+    // Validate getNextIncrement if entity has increment strategy columns
+    const incrementColumns = this.metadata.generated.filter(
+      (g) => g.strategy === "increment",
+    );
+
+    if (incrementColumns.length > 0 && !this.getNextIncrement) {
+      throw new EntityKitError(
+        `Entity "${this.target.name}" has @Generated columns with strategy "increment" but no getNextIncrement function was provided`,
+        {
+          debug: {
+            target: this.target.name,
+            incrementColumns: incrementColumns.map((g) => g.key),
+          },
+        },
+      );
+    }
+
     this.isPrimarySource = this.calculatePrimarySource();
     this.updateStrategy = this.calculateUpdateStrategy();
   }
@@ -70,14 +122,19 @@ export class EntityKit<
     return copy;
   }
 
-  public async clone(entity: E): Promise<E> {
-    const version = this.metadata.columns.find((c) => c.decorator === "VersionColumn");
+  public document(entity: E): Dict {
+    const document = defaultCreateDocument(this.target, entity);
 
+    this.logger?.silly("Created document", { document });
+
+    return document;
+  }
+
+  public async clone(entity: E): Promise<E> {
     const clone = defaultCloneEntity(this.target, entity);
 
-    if (version) {
-      (clone as any)[version.key] = ((clone as any)[version.key] || 0) + 1;
-    }
+    // Use version manager
+    this.versionManager.prepareForInsert(clone);
 
     return await this.generate(clone);
   }
@@ -93,11 +150,8 @@ export class EntityKit<
       return copy;
     }
 
-    const version = this.metadata.columns.find((c) => c.decorator === "VersionColumn");
-
-    if (version) {
-      (copy as any)[version.key] = ((copy as any)[version.key] || 0) + 1;
-    }
+    // Use version manager - clean and simple!
+    this.versionManager.prepareForInsert(copy);
 
     return await this.generate(copy);
   }
@@ -120,7 +174,6 @@ export class EntityKit<
     const updateDate = this.metadata.columns.find(
       (c) => c.decorator === "UpdateDateColumn",
     );
-    const version = this.metadata.columns.find((c) => c.decorator === "VersionColumn");
     const versionKey = this.metadata.columns.find(
       (c) => c.decorator === "VersionKeyColumn",
     );
@@ -137,9 +190,8 @@ export class EntityKit<
       (copy as any)[updateDate.key] = new Date();
     }
 
-    if (version) {
-      (copy as any)[version.key] = ((copy as any)[version.key] || 0) + 1;
-    }
+    // Use version manager - increment version for new version record
+    this.versionManager.prepareForUpdate(copy);
 
     if (versionKey) {
       (copy as any)[versionKey.key] = isFunction(versionKey.fallback)
@@ -147,8 +199,20 @@ export class EntityKit<
         : randomUUID();
     }
 
-    (copy as any)[versionStartDate!.key] = original[versionEndDate!.key];
-    (copy as any)[versionEndDate!.key] = null;
+    if (!versionStartDate) {
+      throw new EntityKitError("versionCopy requires @VersionStartDateColumn decorator", {
+        debug: { target: this.target.name },
+      });
+    }
+
+    if (!versionEndDate) {
+      throw new EntityKitError("versionCopy requires @VersionEndDateColumn decorator", {
+        debug: { target: this.target.name },
+      });
+    }
+
+    (copy as any)[versionStartDate.key] = original[versionEndDate.key];
+    (copy as any)[versionEndDate.key] = null;
 
     return copy;
   }
@@ -197,6 +261,10 @@ export class EntityKit<
     for (const hook of this.metadata.hooks.filter((h) => h.decorator === "OnDestroy")) {
       hook.callback(entity);
     }
+  }
+
+  public relationFilter(relation: MetaRelation, entity: E): Dict {
+    return defaultRelationFilter(relation, entity);
   }
 
   public removeReadonly(entity: E): DeepPartial<E> {

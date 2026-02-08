@@ -1,3 +1,4 @@
+import { EntityKitError } from "../errors";
 import { Entity, PrimaryKeyColumn } from "../decorators";
 import { getCollectionName } from "./get-collection-name";
 
@@ -35,6 +36,19 @@ describe("getCollectionName", () => {
 
     expect(getCollectionName(TestNameEntityThree, { namespace: "namespace" })).toEqual(
       "namespace.entity.test_name_entity_three",
+    );
+  });
+
+  test("should throw EntityKitError for reserved 'system' namespace", () => {
+    @Entity({ namespace: "system" })
+    class TestNameEntitySystem {
+      @PrimaryKeyColumn()
+      id!: string;
+    }
+
+    expect(() => getCollectionName(TestNameEntitySystem, {})).toThrow(EntityKitError);
+    expect(() => getCollectionName(TestNameEntitySystem, {})).toThrow(
+      "reserved for internal use",
     );
   });
 });

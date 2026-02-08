@@ -1,5 +1,6 @@
 import MockDate from "mockdate";
 import { Column, Entity, PrimaryKeyColumn } from "../decorators";
+import { EntityKitError } from "../errors";
 import { Generated } from "../decorators/Generated";
 import { defaultCreateEntity } from "./default-create-entity";
 import { defaultGenerateEntity } from "./default-generate-entity";
@@ -58,5 +59,24 @@ describe("defaultGenerateEntity", () => {
         defaultCreateEntity(TestGenerateEntityOptions),
       ),
     ).toMatchSnapshot();
+  });
+
+  test("should throw EntityKitError for mismatched column type", () => {
+    @Entity()
+    class TestGenerateEntityMismatch {
+      @PrimaryKeyColumn()
+      id!: string;
+
+      @Column("string")
+      @Generated("integer")
+      mismatch!: string;
+    }
+
+    expect(() =>
+      defaultGenerateEntity(
+        TestGenerateEntityMismatch,
+        defaultCreateEntity(TestGenerateEntityMismatch),
+      ),
+    ).toThrow(EntityKitError);
   });
 });

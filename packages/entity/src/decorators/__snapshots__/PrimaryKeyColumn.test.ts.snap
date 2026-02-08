@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`PrimaryKeyColumn Decorator should add metadata 1`] = `
 {
@@ -62,7 +62,6 @@ exports[`PrimaryKeyColumn Decorator should add metadata 1`] = `
     "decorator": "Entity",
     "name": "PrimaryKeyColumnDecoratorEntity",
     "namespace": null,
-    "target": [Function],
   },
   "extras": [],
   "generated": [],
@@ -166,5 +165,6 @@ exports[`PrimaryKeyColumn Decorator should add metadata 1`] = `
   "primarySource": null,
   "relations": [],
   "schemas": [],
+  "target": [Function],
 }
 `;

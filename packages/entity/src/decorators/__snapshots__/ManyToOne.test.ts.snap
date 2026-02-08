@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`ManyToOne Decorator should add metadata 1`] = `
 {
@@ -23,7 +23,6 @@ exports[`ManyToOne Decorator should add metadata 1`] = `
     "decorator": "Entity",
     "name": "OneToManyFirstDecoratorEntity",
     "namespace": null,
-    "target": [Function],
   },
   "extras": [],
   "generated": [],
@@ -35,23 +34,28 @@ exports[`ManyToOne Decorator should add metadata 1`] = `
   "primarySource": null,
   "relations": [
     {
+      "findKeys": {
+        "testId": "id",
+      },
       "foreignConstructor": [Function],
       "foreignKey": "first",
+      "joinKeys": null,
+      "joinTable": null,
       "key": "second",
       "options": {
-        "joinKey": null,
-        "joinTable": null,
-        "loading": null,
+        "loading": "ignore",
         "nullable": false,
-        "onDelete": null,
-        "onOrphan": null,
-        "onUpdate": null,
+        "onDestroy": "ignore",
+        "onInsert": "ignore",
+        "onOrphan": "ignore",
+        "onUpdate": "ignore",
         "strategy": null,
       },
       "type": "OneToMany",
     },
   ],
   "schemas": [],
+  "target": [Function],
 }
 `;
 
@@ -71,6 +75,19 @@ exports[`ManyToOne Decorator should add metadata 2`] = `
       "schema": null,
       "type": "uuid",
     },
+    {
+      "decorator": "Column",
+      "enum": null,
+      "fallback": null,
+      "key": "testId",
+      "max": null,
+      "min": null,
+      "nullable": false,
+      "optional": false,
+      "readonly": false,
+      "schema": null,
+      "type": null,
+    },
   ],
   "entity": {
     "cache": null,
@@ -78,7 +95,6 @@ exports[`ManyToOne Decorator should add metadata 2`] = `
     "decorator": "Entity",
     "name": "ManyToOneSecondDecoratorEntity",
     "namespace": null,
-    "target": [Function],
   },
   "extras": [],
   "generated": [],
@@ -90,22 +106,29 @@ exports[`ManyToOne Decorator should add metadata 2`] = `
   "primarySource": null,
   "relations": [
     {
+      "findKeys": {
+        "id": "testId",
+      },
       "foreignConstructor": [Function],
       "foreignKey": "second",
+      "joinKeys": {
+        "testId": "id",
+      },
+      "joinTable": null,
       "key": "first",
       "options": {
-        "joinKey": true,
-        "joinTable": null,
-        "loading": null,
+        "loading": "ignore",
         "nullable": false,
-        "onDelete": null,
-        "onOrphan": null,
-        "onUpdate": null,
+        "onDestroy": "ignore",
+        "onInsert": "ignore",
+        "onOrphan": "ignore",
+        "onUpdate": "ignore",
         "strategy": null,
       },
       "type": "ManyToOne",
     },
   ],
   "schemas": [],
+  "target": [Function],
 }
 `;

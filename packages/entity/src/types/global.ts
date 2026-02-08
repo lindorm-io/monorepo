@@ -1,6 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-function-type */
-
-import { GlobalEntityMetadata as GlobalEntityMetadataImpl } from "../classes/private";
 import {
   MetaColumn,
   MetaEntity,
@@ -23,8 +20,4 @@ export type GlobalEntityMetadata = {
   primaryKeys: Array<MetaPrimaryKey>;
   primarySources: Array<MetaPrimarySource>;
   schemas: Array<MetaSchema>;
-};
-
-export type GlobalThisEntity = typeof globalThis & {
-  __lindorm_entity__: GlobalEntityMetadataImpl;
 };

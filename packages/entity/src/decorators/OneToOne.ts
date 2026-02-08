@@ -1,29 +1,32 @@
-import { isString } from "@lindorm/is";
+import { isObject } from "@lindorm/is";
 import { Constructor } from "@lindorm/types";
 import { IEntity } from "../interfaces";
-import { OneToOneOptions } from "../types";
+import { OneToOneOptions, TypedPropertyDecorator } from "../types";
 import { globalEntityMetadata } from "../utils";
 
-export const OneToOne = <E extends IEntity>(
-  entityFn: () => Constructor<E>,
-  entityKey: keyof E,
-  hasJoinKey: boolean = false,
-  options: OneToOneOptions<E> = {},
-): PropertyDecorator =>
+export const OneToOne = <T extends IEntity, F extends IEntity>(
+  entityFn: () => Constructor<F>,
+  entityKey: keyof F,
+  options: OneToOneOptions<T, F> = {},
+): TypedPropertyDecorator<T> =>
   function OneToOne(target, key) {
     globalEntityMetadata.addRelation({
       target: target.constructor,
       key: key.toString(),
+      findKeys: null,
       foreignConstructor: entityFn,
       foreignKey: entityKey.toString(),
+      joinKeys: isObject(options.joinKeys)
+        ? options.joinKeys
+        : (options.hasJoinKey ?? false),
+      joinTable: null,
       options: {
-        joinKey: hasJoinKey && isString(options.joinKey) ? options.joinKey : hasJoinKey,
-        joinTable: null,
-        loading: options.loading ?? null,
+        loading: options.loading ?? "ignore",
         nullable: options.nullable ?? false,
-        onDelete: options.onDelete ?? null,
-        onOrphan: options.onOrphan ?? null,
-        onUpdate: options.onUpdate ?? null,
+        onDestroy: options.onDestroy ?? "ignore",
+        onInsert: options.onInsert ?? "ignore",
+        onOrphan: options.onOrphan ?? "ignore",
+        onUpdate: options.onUpdate ?? "ignore",
         strategy: options.strategy ?? null,
       },
       type: "OneToOne",

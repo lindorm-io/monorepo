@@ -18,3 +18,5 @@ describe("ManyToOne Decorator", () => {
     expect(new First()).toBeInstanceOf(OneToManyFirstDecoratorEntity);
   });
 });
+
+// this also tests OneToMany

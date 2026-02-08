@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`EntityKit should calculate entity 1`] = `
 {
@@ -66,7 +66,7 @@ exports[`EntityKit should calculate entity 1`] = `
       "optional": false,
       "readonly": false,
       "schema": null,
-      "type": null,
+      "type": "integer",
     },
     {
       "decorator": "UpdateDateColumn",
@@ -218,7 +218,6 @@ exports[`EntityKit should calculate entity 1`] = `
     "decorator": "Entity",
     "name": "TestEntityUtility",
     "namespace": null,
-    "target": [Function],
   },
   "extras": [],
   "generated": [
@@ -351,6 +350,7 @@ exports[`EntityKit should calculate entity 1`] = `
   "primarySource": "RedisSource",
   "relations": [],
   "schemas": [],
+  "target": [Function],
 }
 `;
 
@@ -455,7 +455,6 @@ exports[`EntityKit should calculate versioned entity 1`] = `
     "decorator": "Entity",
     "name": "TestEntityUtilityVersioned",
     "namespace": null,
-    "target": [Function],
   },
   "extras": [],
   "generated": [],
@@ -518,6 +517,7 @@ exports[`EntityKit should calculate versioned entity 1`] = `
   "primarySource": "MongoSource",
   "relations": [],
   "schemas": [],
+  "target": [Function],
 }
 `;
 

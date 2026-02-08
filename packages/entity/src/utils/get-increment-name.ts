@@ -1,5 +1,6 @@
 import { snakeCase } from "@lindorm/case";
 import { Constructor } from "@lindorm/types";
+import { EntityKitError } from "../errors";
 import { IEntity } from "../interfaces";
 import { globalEntityMetadata } from "./global";
 
@@ -16,7 +17,7 @@ export const getIncrementName = <E extends IEntity>(
   const entityName = metadata.entity.name || target.name;
 
   if (namespace === "system") {
-    throw new Error("The 'system' namespace is reserved for internal use");
+    throw new EntityKitError("The 'system' namespace is reserved for internal use");
   }
 
   const n = namespace ? `${snakeCase(namespace)}.` : "";
@@ -25,7 +26,7 @@ export const getIncrementName = <E extends IEntity>(
   const name = `${n}increment.${e}`;
 
   if (name.length > 120) {
-    throw new Error(`Increment name exceeds 120 characters: ${name}`);
+    throw new EntityKitError(`Increment name exceeds 120 characters: ${name}`);
   }
 
   return name;

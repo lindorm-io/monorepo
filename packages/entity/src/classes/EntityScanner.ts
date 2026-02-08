@@ -74,7 +74,7 @@ export class EntityScanner {
       throw new EntityScannerError(`No entities found in file: ${data.fullPath}`);
     }
 
-    return result as Constructor<T>;
+    return result;
   }
 
   private static get scanner(): Scanner {

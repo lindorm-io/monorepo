@@ -6,6 +6,6 @@ export class OneToOneFirstDecoratorEntity {
   @PrimaryKeyColumn()
   id!: string;
 
-  @OneToOne(() => OneToOneSecondDecoratorEntity, "first", true)
+  @OneToOne(() => OneToOneSecondDecoratorEntity, "first", { hasJoinKey: true })
   second!: OneToOneSecondDecoratorEntity;
 }

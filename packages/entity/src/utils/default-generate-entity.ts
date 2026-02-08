@@ -1,5 +1,6 @@
 import { Constructor, DeepPartial } from "@lindorm/types";
 import { randomBytes, randomInt, randomUUID } from "crypto";
+import { EntityKitError } from "../errors";
 import { IEntity } from "../interfaces";
 import { EntityMetadata, MetaGenerated } from "../types";
 import { globalEntityMetadata } from "./global";
@@ -38,7 +39,7 @@ const validator = (
   const column = metadata.columns.find((item) => item.key === config.key);
 
   if (!column) {
-    throw new Error(`Column not found for key: ${config.key}`);
+    throw new EntityKitError(`Column not found for key: ${config.key}`);
   }
 
   if (!column.type) return;
@@ -46,23 +47,27 @@ const validator = (
   switch (config.strategy) {
     case "date":
       if (column.type === "date") break;
-      throw new Error(`Invalid column type for date generation: ${column.type}`);
+      throw new EntityKitError(`Invalid column type for date generation: ${column.type}`);
 
     case "float":
       if (column.type === "float") break;
-      throw new Error(`Invalid column type for int generation: ${column.type}`);
+      throw new EntityKitError(
+        `Invalid column type for float generation: ${column.type}`,
+      );
 
     case "integer":
       if (column.type === "integer") break;
-      throw new Error(`Invalid column type for int generation: ${column.type}`);
+      throw new EntityKitError(`Invalid column type for int generation: ${column.type}`);
 
     case "string":
       if (column.type === "string") break;
-      throw new Error(`Invalid column type for string generation: ${column.type}`);
+      throw new EntityKitError(
+        `Invalid column type for string generation: ${column.type}`,
+      );
 
     case "uuid":
       if (column.type === "uuid") break;
-      throw new Error(`Invalid column type for uuid generation: ${column.type}`);
+      throw new EntityKitError(`Invalid column type for uuid generation: ${column.type}`);
 
     default:
       break;

@@ -1,27 +1,28 @@
 /* eslint-disable @typescript-eslint/no-unsafe-function-type */
 
-import { Dict } from "@lindorm/types";
+import { camelCase, snakeCase } from "@lindorm/case";
+import { isArray, isObject, isString, isTrue } from "@lindorm/is";
+import { Constructor, Dict } from "@lindorm/types";
 import { EntityMetadataError } from "../../errors";
+import { IEntity } from "../../interfaces";
 import {
   EntityMetadata,
-  MetaColumn,
   MetaColumnDecorator,
-  MetaEntity,
+  MetaColumnInternal,
+  MetaEntityInternal,
   MetaExtra,
-  MetaGenerated,
-  MetaHook,
-  MetaIndex,
-  MetaPrimaryKey,
-  MetaPrimarySource,
+  MetaExtraInternal,
+  MetaGeneratedInternal,
+  MetaHookInternal,
+  MetaIndexInternal,
+  MetaPrimaryKeyInternal,
+  MetaPrimarySourceInternal,
   MetaRelation,
-  MetaSchema,
+  MetaRelationInternal,
+  MetaSchemaInternal,
   MetaSource,
 } from "../../types";
-
-type Cache = {
-  target: Function;
-  metadata: EntityMetadata;
-};
+import { calculateJoinKeys, reverseDictValues } from "../../utils/private";
 
 type InternalArray =
   | "columns"
@@ -52,21 +53,23 @@ const UNIQUE_COLUMNS: Array<MetaColumnDecorator> = [
 ];
 
 export class GlobalEntityMetadata {
-  private readonly cache: Array<Cache>;
+  private readonly primaryCache: Map<Function, Omit<EntityMetadata, "relations">>;
+  private readonly finalCache: Map<Function, EntityMetadata>;
 
-  private readonly columns: Array<MetaColumn>;
-  private readonly entities: Array<MetaEntity>;
-  private readonly extras: Array<MetaExtra>;
-  private readonly generated: Array<MetaGenerated>;
-  private readonly hooks: Array<MetaHook>;
-  private readonly indexes: Array<MetaIndex>;
-  private readonly primaryKeys: Array<MetaPrimaryKey>;
-  private readonly primarySources: Array<MetaPrimarySource>;
-  private readonly relations: Array<MetaRelation>;
-  private readonly schemas: Array<MetaSchema>;
+  private readonly columns: Array<MetaColumnInternal>;
+  private readonly entities: Array<MetaEntityInternal>;
+  private readonly extras: Array<MetaExtraInternal>;
+  private readonly generated: Array<MetaGeneratedInternal>;
+  private readonly hooks: Array<MetaHookInternal>;
+  private readonly indexes: Array<MetaIndexInternal>;
+  private readonly primaryKeys: Array<MetaPrimaryKeyInternal>;
+  private readonly primarySources: Array<MetaPrimarySourceInternal>;
+  private readonly relations: Array<MetaRelationInternal>;
+  private readonly schemas: Array<MetaSchemaInternal>;
 
   public constructor() {
-    this.cache = [];
+    this.primaryCache = new Map();
+    this.finalCache = new Map();
 
     this.columns = [];
     this.entities = [];
@@ -83,44 +86,46 @@ export class GlobalEntityMetadata {
   // public
 
   public addColumn<T extends MetaColumnDecorator = MetaColumnDecorator>(
-    metadata: MetaColumn<T>,
+    metadata: MetaColumnInternal<T>,
   ): void {
     this.addMetadata("columns", metadata);
   }
 
-  public addEntity(metadata: MetaEntity): void {
+  public addEntity(metadata: MetaEntityInternal): void {
     this.addMetadata("entities", metadata);
   }
 
-  public addExtra<T extends Dict>(metadata: MetaExtra<T>): void {
+  public addExtra<T extends Dict>(metadata: MetaExtraInternal<T>): void {
     this.addMetadata("extras", metadata);
   }
 
-  public addGenerated(metadata: MetaGenerated): void {
+  public addGenerated(metadata: MetaGeneratedInternal): void {
     this.addMetadata("generated", metadata);
   }
 
-  public addHook(metadata: MetaHook): void {
+  public addHook(metadata: MetaHookInternal): void {
     this.addMetadata("hooks", metadata);
   }
 
-  public addIndex(metadata: MetaIndex): void {
+  public addIndex(metadata: MetaIndexInternal): void {
     this.addMetadata("indexes", metadata);
   }
 
-  public addPrimaryKey(metadata: MetaPrimaryKey): void {
+  public addPrimaryKey(metadata: MetaPrimaryKeyInternal): void {
     this.addMetadata("primaryKeys", metadata);
   }
 
-  public addPrimarySource<T extends MetaSource>(metadata: MetaPrimarySource<T>): void {
+  public addPrimarySource<T extends MetaSource>(
+    metadata: MetaPrimarySourceInternal<T>,
+  ): void {
     this.addMetadata("primarySources", metadata);
   }
 
-  public addRelation(metadata: MetaRelation): void {
+  public addRelation(metadata: MetaRelationInternal): void {
     this.addMetadata("relations", metadata);
   }
 
-  public addSchema(metadata: MetaSchema): void {
+  public addSchema(metadata: MetaSchemaInternal): void {
     this.addMetadata("schemas", metadata);
   }
 
@@ -129,10 +134,251 @@ export class GlobalEntityMetadata {
     TDecorator extends MetaColumnDecorator = MetaColumnDecorator,
     TSource extends MetaSource = MetaSource,
   >(target: Function): EntityMetadata<TExtra, TDecorator, TSource> {
-    const cached = this.getCache<TExtra, TDecorator, TSource>(target);
+    const cached = this.finalCache.get(target) as EntityMetadata<
+      TExtra,
+      TDecorator,
+      TSource
+    >;
+
     if (cached) return cached;
 
-    const [entity] = this.getMeta<MetaEntity>(target, "entities");
+    const primaryMeta = this.primary<TExtra, TDecorator, TSource>(target);
+
+    const found = this.getMeta<MetaRelationInternal>(target, "relations").map(
+      ({ target, ...rest }) => rest,
+    );
+
+    const relations: Array<MetaRelation> = [];
+
+    for (const relation of found) {
+      const foreignMeta = this.primary(relation.foreignConstructor());
+
+      const foreign = this.getMeta<MetaRelationInternal>(
+        relation.foreignConstructor(),
+        "relations",
+      ).find((r) => r.key === relation.foreignKey && r.foreignKey === relation.key);
+
+      if (!foreignMeta) {
+        throw new EntityMetadataError("Foreign entity metadata not found", {
+          debug: { target: target.name, relation: relation.key },
+        });
+      }
+
+      if (!foreign) {
+        throw new EntityMetadataError("Foreign relation metadata not found", {
+          debug: { target: target.name, relation: relation.key },
+        });
+      }
+
+      if (!relation.joinKeys && !foreign.joinKeys) {
+        throw new EntityMetadataError("Join keys not found", {
+          debug: { target: target.name, relation: relation.key },
+        });
+      }
+
+      if (isObject(relation.joinKeys)) {
+        for (const key of Object.keys(relation.joinKeys)) {
+          const column = primaryMeta.columns.find((c) => c.key === key);
+          if (column) continue;
+          throw new EntityMetadataError("Join key column not found", {
+            debug: { target: target.name, relation: relation.key, key },
+          });
+        }
+
+        for (const key of Object.values(relation.joinKeys)) {
+          const column = foreignMeta.columns.find((c) => c.key === key);
+          if (column) continue;
+          throw new EntityMetadataError("Foreign join key column not found", {
+            debug: { target: target.name, relation: relation.key, key },
+          });
+        }
+      }
+
+      if (isArray(relation.joinKeys)) {
+        for (const key of relation.joinKeys) {
+          const column = primaryMeta.columns.find((c) => c.key === key);
+          if (column) continue;
+          throw new EntityMetadataError("Join key column not found", {
+            debug: { target: target.name, relation: relation.key, key },
+          });
+        }
+      }
+
+      switch (relation.type) {
+        case "ManyToMany":
+          // verify join table can at least be inferred
+          if (!relation.joinTable && !foreign.joinTable) {
+            throw new EntityMetadataError("Join table not found", {
+              debug: { target: target.name, relation: relation.key },
+            });
+          }
+          // infer join keys if not array
+          if (isArray<string>(relation.joinKeys)) {
+            relation.joinKeys = relation.joinKeys.reduce(
+              (acc, key) => ({
+                ...acc,
+                [camelCase(`${primaryMeta.entity.name}_${key}`)]: key,
+              }),
+              {} as Dict<string>,
+            );
+          } else if (primaryMeta.target === foreignMeta.target) {
+            // self-referencing ManyToMany - use source/target semantics
+            const joinKeys: Dict<string> = {};
+            for (const key of primaryMeta.primaryKeys) {
+              const entityName = primaryMeta.entity.name;
+              joinKeys[camelCase(`source_${entityName}_${key}`)] = key;
+              joinKeys[camelCase(`target_${entityName}_${key}`)] = key;
+            }
+            relation.joinKeys = joinKeys;
+          } else {
+            relation.joinKeys = primaryMeta.primaryKeys.reduce(
+              (acc, key) => ({
+                ...acc,
+                [camelCase(`${primaryMeta.entity.name}_${key}`)]: key,
+              }),
+              {} as Dict<string>,
+            );
+          }
+          // set join table
+          if (isString(relation.joinTable) || isString(foreign.joinTable)) {
+            relation.joinTable = relation.joinTable || foreign.joinTable;
+          } else if (isTrue(relation.joinTable)) {
+            relation.joinTable = snakeCase(
+              `${primaryMeta.entity.name}_x_${foreignMeta.entity.name}`,
+            );
+          } else if (isTrue(foreign.joinTable)) {
+            relation.joinTable = snakeCase(
+              `${foreignMeta.entity.name}_x_${primaryMeta.entity.name}`,
+            );
+          }
+          // set find keys
+          if (primaryMeta.target === foreignMeta.target) {
+            // Self-referencing: distinguish by ownership
+            const isOwner = Boolean(relation.joinTable);
+            const side = isOwner ? "source" : "target";
+            relation.findKeys = {};
+            for (const key of primaryMeta.primaryKeys) {
+              const entityName = primaryMeta.entity.name;
+              relation.findKeys[camelCase(`${side}_${entityName}_${key}`)] = key;
+            }
+          } else {
+            relation.findKeys = relation.joinKeys;
+          }
+          break;
+
+        case "ManyToOne":
+          // infer join keys if not object
+          if (isTrue(relation.joinKeys)) {
+            relation.joinKeys = calculateJoinKeys(relation, foreignMeta);
+          }
+          // set find keys
+          if (isObject(relation.joinKeys)) {
+            relation.findKeys = reverseDictValues(relation.joinKeys as Dict<string>);
+          } else {
+            relation.findKeys = reverseDictValues(
+              calculateJoinKeys(relation, foreignMeta),
+            );
+          }
+          break;
+
+        case "OneToMany":
+          // set find keys
+          if (isObject(foreign.joinKeys)) {
+            relation.findKeys = foreign.joinKeys;
+          } else {
+            relation.findKeys = calculateJoinKeys(foreign, primaryMeta);
+          }
+          break;
+
+        case "OneToOne":
+          // verify join keys can be inferred
+          if (relation.joinKeys && foreign.joinKeys) {
+            throw new EntityMetadataError("Join keys cannot be set on both decorators", {
+              debug: { target: target.name, relation: relation.key },
+            });
+          }
+          // infer join keys if not object
+          if (isTrue(relation.joinKeys)) {
+            relation.joinKeys = calculateJoinKeys(relation, foreignMeta);
+          }
+          // set find keys
+          if (isObject(relation.joinKeys)) {
+            relation.findKeys = reverseDictValues(relation.joinKeys as Dict<string>);
+          } else if (isTrue(relation.joinKeys)) {
+            relation.findKeys = reverseDictValues(
+              calculateJoinKeys(relation, foreignMeta),
+            );
+          } else if (isObject(foreign.joinKeys)) {
+            relation.findKeys = foreign.joinKeys;
+          } else if (isTrue(foreign.joinKeys)) {
+            relation.findKeys = calculateJoinKeys(foreign, primaryMeta);
+          } else {
+            relation.findKeys = null;
+          }
+          break;
+      }
+
+      if (!isObject(relation.joinKeys)) {
+        relation.joinKeys = null;
+      }
+
+      if (!isObject(relation.findKeys)) {
+        relation.findKeys = null;
+      }
+
+      if (!relation.findKeys) {
+        throw new EntityMetadataError("Unable to calculate find keys for relation", {
+          debug: { target: target.name, relation: relation.key },
+        });
+      }
+
+      relations.push(relation as MetaRelation);
+    }
+
+    const final: EntityMetadata<TExtra, TDecorator, TSource> = {
+      ...primaryMeta,
+      relations,
+    };
+
+    // cache the result
+    this.finalCache.set(target, final);
+
+    return final;
+  }
+
+  public find<
+    TExtra extends Dict = Dict,
+    TDecorator extends MetaColumnDecorator = MetaColumnDecorator,
+    TSource extends MetaSource = MetaSource,
+  >(name: string): EntityMetadata<TExtra, TDecorator, TSource> | undefined {
+    const found = this.entities.find((e) => e.name === name);
+
+    if (!found) return;
+
+    return this.get<TExtra, TDecorator, TSource>(found.target);
+  }
+
+  // private
+
+  private addMetadata(key: InternalArray, metadata: any): void {
+    this[key].push(metadata);
+  }
+
+  private primary<
+    TExtra extends Dict = Dict,
+    TDecorator extends MetaColumnDecorator = MetaColumnDecorator,
+    TSource extends MetaSource = MetaSource,
+  >(target: Function): Omit<EntityMetadata<TExtra, TDecorator, TSource>, "relations"> {
+    const cached = this.primaryCache.get(target) as Omit<
+      EntityMetadata<TExtra, TDecorator, TSource>,
+      "relations"
+    >;
+
+    if (cached) return cached;
+
+    const [entity] = this.getMeta<MetaEntityInternal>(target, "entities").map(
+      ({ target, ...rest }) => rest,
+    );
 
     if (!entity) {
       throw new EntityMetadataError("Entity metadata not found", {
@@ -140,32 +386,29 @@ export class GlobalEntityMetadata {
       });
     }
 
-    const columns = this.getMeta<MetaColumn<TDecorator>>(target, "columns").map(
+    const columns = this.getMeta<MetaColumnInternal<TDecorator>>(target, "columns").map(
       ({ target, ...rest }) => rest,
     );
-    const hooks = this.getMeta<MetaHook>(target, "hooks").map(
+    const hooks = this.getMeta<MetaHookInternal>(target, "hooks").map(
       ({ target, ...rest }) => rest,
     );
-    const extras = this.getMeta<MetaExtra<TExtra>>(target, "extras").map(
+    const extras = this.getMeta<MetaExtraInternal<TExtra>>(target, "extras").map(
       ({ target, ...rest }) => rest,
     );
-    const generated = this.getMeta<MetaGenerated>(target, "generated").map(
+    const generated = this.getMeta<MetaGeneratedInternal>(target, "generated").map(
       ({ target, ...rest }) => rest,
     );
-    const indexes = this.getMeta<MetaIndex>(target, "indexes").map(
+    const indexes = this.getMeta<MetaIndexInternal>(target, "indexes").map(
       ({ target, ...rest }) => rest,
     );
-    const primaryK = this.getMeta<MetaPrimaryKey>(target, "primaryKeys").map(
+    const primaryK = this.getMeta<MetaPrimaryKeyInternal>(target, "primaryKeys").map(
       ({ target, ...rest }) => rest,
     );
-    const [primarySource] = this.getMeta<MetaPrimarySource<TSource>>(
+    const [primarySource] = this.getMeta<MetaPrimarySourceInternal<TSource>>(
       target,
       "primarySources",
     ).map(({ target, ...rest }) => rest);
-    const relations = this.getMeta<MetaRelation>(target, "relations").map(
-      ({ target, ...rest }) => rest,
-    );
-    const schemas = this.getMeta<MetaSchema>(target, "schemas").map(
+    const schemas = this.getMeta<MetaSchemaInternal>(target, "schemas").map(
       ({ target: _, schema }) => schema,
     );
 
@@ -199,7 +442,7 @@ export class GlobalEntityMetadata {
         });
       }
 
-      const decorator = column.decorator as MetaColumnDecorator;
+      const decorator = column.decorator;
 
       if (
         UNIQUE_COLUMNS.includes(decorator) &&
@@ -372,58 +615,52 @@ export class GlobalEntityMetadata {
     }
 
     for (const generate of generated) {
-      if (columns.find((a) => a.key === generate.key)) continue;
-      throw new EntityMetadataError("Generate column not found", {
-        debug: { target: target.name, column: generate.key },
-      });
+      const column = columns.find((a) => a.key === generate.key);
+      if (!column) {
+        throw new EntityMetadataError("Generate column not found", {
+          debug: { target: target.name, column: generate.key },
+        });
+      }
+
+      // Infer column type from @Generated strategy when @Column has no explicit type
+      if (column.type === null) {
+        switch (generate.strategy) {
+          case "increment":
+          case "integer":
+            column.type = "integer";
+            break;
+          case "float":
+            column.type = "float";
+            break;
+          case "uuid":
+            column.type = "uuid";
+            break;
+          case "string":
+            column.type = "string";
+            break;
+          case "date":
+            column.type = "date";
+            break;
+        }
+      }
     }
 
-    const final: EntityMetadata<TExtra, TDecorator, TSource> = {
+    const final: Omit<EntityMetadata<TExtra, TDecorator, TSource>, "relations"> = {
+      target: target as Constructor<IEntity>,
       columns,
       entity,
-      extras,
+      extras: extras as Array<MetaExtra<TExtra>>,
       generated,
       hooks,
       indexes,
       primaryKeys,
       primarySource: primarySource?.source || null,
-      relations,
       schemas,
     };
 
-    this.setCache(target, final);
+    this.primaryCache.set(target, final);
 
     return final;
-  }
-
-  public find<
-    TExtra extends Dict = Dict,
-    TDecorator extends MetaColumnDecorator = MetaColumnDecorator,
-    TSource extends MetaSource = MetaSource,
-  >(name: string): EntityMetadata<TExtra, TDecorator, TSource> | undefined {
-    const found = this.entities.find((e) => e.name === name);
-
-    if (!found) return;
-
-    return this.get<TExtra, TDecorator, TSource>(found.target);
-  }
-
-  // private
-
-  private addMetadata(key: InternalArray, metadata: any): void {
-    this[key].push(metadata);
-  }
-
-  private getCache<
-    TExtra extends Dict = Dict,
-    TDecorator extends MetaColumnDecorator = MetaColumnDecorator,
-    TSource extends MetaSource = MetaSource,
-  >(target: Function): EntityMetadata<TExtra, TDecorator, TSource> | undefined {
-    return this.cache.find((item) => item.target === target)?.metadata as EntityMetadata<
-      TExtra,
-      TDecorator,
-      TSource
-    >;
   }
 
   private getMeta<T>(target: Function, key: InternalArray): Array<T> {
@@ -437,9 +674,5 @@ export class GlobalEntityMetadata {
     }
 
     return collected;
-  }
-
-  private setCache(target: Function, metadata: EntityMetadata): void {
-    this.cache.push({ target, metadata });
   }
 }

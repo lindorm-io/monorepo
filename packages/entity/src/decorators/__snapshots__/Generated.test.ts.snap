@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`Generated Decorator should add metadata 1`] = `
 {
@@ -27,7 +27,7 @@ exports[`Generated Decorator should add metadata 1`] = `
       "optional": false,
       "readonly": false,
       "schema": null,
-      "type": null,
+      "type": "integer",
     },
     {
       "decorator": "Column",
@@ -40,7 +40,7 @@ exports[`Generated Decorator should add metadata 1`] = `
       "optional": false,
       "readonly": false,
       "schema": null,
-      "type": null,
+      "type": "integer",
     },
     {
       "decorator": "Column",
@@ -53,7 +53,7 @@ exports[`Generated Decorator should add metadata 1`] = `
       "optional": false,
       "readonly": false,
       "schema": null,
-      "type": null,
+      "type": "string",
     },
   ],
   "entity": {
@@ -62,7 +62,6 @@ exports[`Generated Decorator should add metadata 1`] = `
     "decorator": "Entity",
     "name": "GeneratedDecoratorEntity",
     "namespace": null,
-    "target": [Function],
   },
   "extras": [],
   "generated": [
@@ -96,5 +95,6 @@ exports[`Generated Decorator should add metadata 1`] = `
   "primarySource": null,
   "relations": [],
   "schemas": [],
+  "target": [Function],
 }
 `;

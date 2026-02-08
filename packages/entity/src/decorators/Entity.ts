@@ -1,12 +1,10 @@
-import { Constructor } from "@lindorm/types";
-import { IEntity } from "../interfaces";
 import { EntityDecoratorOptions } from "../types";
 import { globalEntityMetadata } from "../utils";
 
 export function Entity(options: EntityDecoratorOptions = {}): ClassDecorator {
   return function (target) {
     globalEntityMetadata.addEntity({
-      target: target as unknown as Constructor<IEntity>,
+      target,
       decorator: "Entity",
       cache: options?.cache || null,
       database: options?.database || null,

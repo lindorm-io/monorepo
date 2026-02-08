@@ -6,3 +6,5 @@ export type IndexDirection =
   | "geoHaystack"
   | "hashed"
   | "text";
+
+export type TypedPropertyDecorator<T> = (target: T, propertyKey: string) => void;

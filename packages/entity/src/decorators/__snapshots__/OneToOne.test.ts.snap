@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`OneToOne Decorator should add metadata 1`] = `
 {
@@ -23,7 +23,6 @@ exports[`OneToOne Decorator should add metadata 1`] = `
     "decorator": "Entity",
     "name": "OneToOneFirstDecoratorEntity",
     "namespace": null,
-    "target": [Function],
   },
   "extras": [],
   "generated": [],
@@ -35,23 +34,30 @@ exports[`OneToOne Decorator should add metadata 1`] = `
   "primarySource": null,
   "relations": [
     {
+      "findKeys": {
+        "id": "secondId",
+      },
       "foreignConstructor": [Function],
       "foreignKey": "first",
+      "joinKeys": {
+        "secondId": "id",
+      },
+      "joinTable": null,
       "key": "second",
       "options": {
-        "joinKey": true,
-        "joinTable": null,
-        "loading": null,
+        "loading": "ignore",
         "nullable": false,
-        "onDelete": null,
-        "onOrphan": null,
-        "onUpdate": null,
+        "onDestroy": "ignore",
+        "onInsert": "ignore",
+        "onOrphan": "ignore",
+        "onUpdate": "ignore",
         "strategy": null,
       },
       "type": "OneToOne",
     },
   ],
   "schemas": [],
+  "target": [Function],
 }
 `;
 
@@ -78,7 +84,6 @@ exports[`OneToOne Decorator should add metadata 2`] = `
     "decorator": "Entity",
     "name": "OneToOneSecondDecoratorEntity",
     "namespace": null,
-    "target": [Function],
   },
   "extras": [],
   "generated": [],
@@ -90,22 +95,27 @@ exports[`OneToOne Decorator should add metadata 2`] = `
   "primarySource": null,
   "relations": [
     {
+      "findKeys": {
+        "secondId": "id",
+      },
       "foreignConstructor": [Function],
       "foreignKey": "second",
+      "joinKeys": null,
+      "joinTable": null,
       "key": "first",
       "options": {
-        "joinKey": false,
-        "joinTable": null,
-        "loading": null,
+        "loading": "ignore",
         "nullable": false,
-        "onDelete": null,
-        "onOrphan": null,
-        "onUpdate": null,
+        "onDestroy": "ignore",
+        "onInsert": "ignore",
+        "onOrphan": "ignore",
+        "onUpdate": "ignore",
         "strategy": null,
       },
       "type": "OneToOne",
     },
   ],
   "schemas": [],
+  "target": [Function],
 }
 `;

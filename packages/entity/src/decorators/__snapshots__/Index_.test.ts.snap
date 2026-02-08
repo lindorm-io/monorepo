@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`Index Decorator should add metadata 1`] = `
 {
@@ -62,7 +62,6 @@ exports[`Index Decorator should add metadata 1`] = `
     "decorator": "Entity",
     "name": "IndexDecoratorEntity",
     "namespace": null,
-    "target": [Function],
   },
   "extras": [],
   "generated": [],
@@ -110,5 +109,6 @@ exports[`Index Decorator should add metadata 1`] = `
   "primarySource": null,
   "relations": [],
   "schemas": [],
+  "target": [Function],
 }
 `;

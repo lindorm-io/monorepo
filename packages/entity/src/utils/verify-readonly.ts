@@ -11,9 +11,14 @@ export const verifyReadonly = <E extends IEntity>(
 
   for (const key of Object.keys(entity)) {
     const column = metadata.columns.find((c) => c.key === key);
+
+    // Skip non-column properties (relations, computed fields, etc.)
+    // These are not subject to readonly validation
     if (!column) {
-      throw new EntityMetadataError("Column not found", { debug: { key, entity } });
+      continue;
     }
+
+    // Only throw if trying to modify a readonly column
     if (column.readonly) {
       throw new EntityMetadataError("Column is readonly", { debug: { key, entity } });
     }

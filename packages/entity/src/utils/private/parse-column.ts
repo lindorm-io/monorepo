@@ -1,4 +1,6 @@
+import { deserialise } from "@lindorm/json-kit";
 import { DeepPartial } from "@lindorm/types";
+import { EntityKitError } from "../../errors";
 import { IEntity } from "../../interfaces";
 import { MetaColumn } from "../../types";
 
@@ -11,23 +13,21 @@ export const parseColumn = <E extends IEntity, O extends DeepPartial<E> = DeepPa
 ): any => {
   const value = (options as any)[column.key] ?? (entity as any)[column.key];
 
-  switch (column.type) {
-    case "bigint":
-      return value instanceof BigInt ? value : BigInt(value ?? 0);
+  if (value === null || value === undefined) {
+    if (column.nullable || column.optional) return value;
+    if (column.fallback !== null) {
+      return typeof column.fallback === "function" ? column.fallback() : column.fallback;
+    }
+  }
 
-    case "boolean":
-      return typeof value === "boolean" ? value : Boolean(value);
-
-    case "date":
-      return value && value instanceof Date ? value : value ? new Date(value) : value;
-
-    case "float":
-      return typeof value === "number" ? value : parseFloat(value);
-
-    case "integer":
-      return typeof value === "number" ? value : parseInt(value, 10);
-
-    default:
-      return value;
+  try {
+    return deserialise(value, column.type);
+  } catch (error) {
+    throw new EntityKitError(
+      `Failed to parse column "${column.key}" of type ${column.type}`,
+      {
+        debug: { column: column.key, value, type: typeof value, error },
+      },
+    );
   }
 };

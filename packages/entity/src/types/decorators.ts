@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-function-type */
-
 import { ZodType } from "zod";
 import { IEntity } from "../interfaces";
 import {
@@ -8,6 +6,7 @@ import {
   MetaGeneratedStrategy,
   MetaIndexOptions,
   RelationChange,
+  RelationDestroy,
   RelationLoading,
   RelationOrphan,
   RelationStrategy,
@@ -49,20 +48,24 @@ export type IndexDecoratorOptions = {
   unique?: boolean;
 };
 
-export type ManyToManyOptions<E extends IEntity> = {
-  joinKey?: keyof E;
-  joinTable?: boolean | string;
+export type ManyToManyOptions<T extends IEntity> = {
+  hasJoinTable?: boolean;
+  joinKeys?: Array<keyof T>;
+  joinTable?: string;
   loading?: RelationLoading;
-  onDelete?: RelationChange;
+  onDestroy?: RelationDestroy;
+  onInsert?: RelationChange;
   onOrphan?: RelationOrphan;
   onUpdate?: RelationChange;
   strategy?: RelationStrategy;
 };
 
-export type ManyToOneOptions<E extends IEntity> = {
-  joinKey?: keyof E;
+export type ManyToOneOptions<T extends IEntity, F extends IEntity> = {
+  joinKeys?: { [K in keyof T]?: keyof F };
   loading?: RelationLoading;
-  onDelete?: RelationChange;
+  nullable?: boolean;
+  onDestroy?: RelationDestroy;
+  onInsert?: RelationChange;
   onOrphan?: RelationOrphan;
   onUpdate?: RelationChange;
   strategy?: RelationStrategy;
@@ -70,17 +73,20 @@ export type ManyToOneOptions<E extends IEntity> = {
 
 export type OneToManyOptions = {
   loading?: RelationLoading;
-  onDelete?: RelationChange;
+  onDestroy?: RelationDestroy;
+  onInsert?: RelationChange;
   onOrphan?: RelationOrphan;
   onUpdate?: RelationChange;
   strategy?: RelationStrategy;
 };
 
-export type OneToOneOptions<E extends IEntity> = {
-  joinKey?: boolean | keyof E;
+export type OneToOneOptions<T extends IEntity, F extends IEntity> = {
+  hasJoinKey?: boolean;
+  joinKeys?: { [K in keyof T]?: keyof F };
   loading?: RelationLoading;
   nullable?: boolean;
-  onDelete?: RelationChange;
+  onDestroy?: RelationDestroy;
+  onInsert?: RelationChange;
   onOrphan?: RelationOrphan;
   onUpdate?: RelationChange;
   strategy?: RelationStrategy;

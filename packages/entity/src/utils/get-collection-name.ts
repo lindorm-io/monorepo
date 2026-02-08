@@ -1,5 +1,6 @@
 import { snakeCase } from "@lindorm/case";
 import { Constructor } from "@lindorm/types";
+import { EntityKitError } from "../errors";
 import { IEntity } from "../interfaces";
 import { globalEntityMetadata } from "./global";
 
@@ -17,7 +18,7 @@ export const getCollectionName = <E extends IEntity>(
   const decorator = metadata.entity.decorator;
 
   if (namespace === "system") {
-    throw new Error("The 'system' namespace is reserved for internal use");
+    throw new EntityKitError("The 'system' namespace is reserved for internal use");
   }
 
   const n = namespace ? `${snakeCase(namespace)}.` : "";
@@ -27,7 +28,7 @@ export const getCollectionName = <E extends IEntity>(
   const name = `${n}${d}${e}`;
 
   if (name.length > 120) {
-    throw new Error(`Collection name exceeds 120 characters: ${name}`);
+    throw new EntityKitError(`Collection name exceeds 120 characters: ${name}`);
   }
 
   return name;

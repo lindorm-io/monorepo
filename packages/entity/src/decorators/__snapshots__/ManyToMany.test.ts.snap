@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`ManyToMany Decorator should add metadata 1`] = `
 {
@@ -23,7 +23,6 @@ exports[`ManyToMany Decorator should add metadata 1`] = `
     "decorator": "Entity",
     "name": "ManyToManyFirstDecoratorEntity",
     "namespace": null,
-    "target": [Function],
   },
   "extras": [],
   "generated": [],
@@ -35,23 +34,30 @@ exports[`ManyToMany Decorator should add metadata 1`] = `
   "primarySource": null,
   "relations": [
     {
+      "findKeys": {
+        "manyToManyFirstDecoratorEntityId": "id",
+      },
       "foreignConstructor": [Function],
       "foreignKey": "first",
+      "joinKeys": {
+        "manyToManyFirstDecoratorEntityId": "id",
+      },
+      "joinTable": "many_to_many_first_decorator_entity_x_many_to_many_second_decorator_entity",
       "key": "second",
       "options": {
-        "joinKey": null,
-        "joinTable": true,
-        "loading": null,
+        "loading": "ignore",
         "nullable": false,
-        "onDelete": null,
-        "onOrphan": null,
-        "onUpdate": null,
+        "onDestroy": "ignore",
+        "onInsert": "ignore",
+        "onOrphan": "ignore",
+        "onUpdate": "ignore",
         "strategy": null,
       },
       "type": "ManyToMany",
     },
   ],
   "schemas": [],
+  "target": [Function],
 }
 `;
 
@@ -78,7 +84,6 @@ exports[`ManyToMany Decorator should add metadata 2`] = `
     "decorator": "Entity",
     "name": "ManyToManySecondDecoratorEntity",
     "namespace": null,
-    "target": [Function],
   },
   "extras": [],
   "generated": [],
@@ -90,22 +95,29 @@ exports[`ManyToMany Decorator should add metadata 2`] = `
   "primarySource": null,
   "relations": [
     {
+      "findKeys": {
+        "manyToManySecondDecoratorEntityId": "id",
+      },
       "foreignConstructor": [Function],
       "foreignKey": "second",
+      "joinKeys": {
+        "manyToManySecondDecoratorEntityId": "id",
+      },
+      "joinTable": "many_to_many_first_decorator_entity_x_many_to_many_second_decorator_entity",
       "key": "first",
       "options": {
-        "joinKey": null,
-        "joinTable": false,
-        "loading": null,
+        "loading": "ignore",
         "nullable": false,
-        "onDelete": null,
-        "onOrphan": null,
-        "onUpdate": null,
+        "onDestroy": "ignore",
+        "onInsert": "ignore",
+        "onOrphan": "ignore",
+        "onUpdate": "ignore",
         "strategy": null,
       },
       "type": "ManyToMany",
     },
   ],
   "schemas": [],
+  "target": [Function],
 }
 `;

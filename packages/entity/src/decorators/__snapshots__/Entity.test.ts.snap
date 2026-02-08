@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`Entity Decorator should add metadata 1`] = `
 {
@@ -23,7 +23,6 @@ exports[`Entity Decorator should add metadata 1`] = `
     "decorator": "Entity",
     "name": "name",
     "namespace": "namespace",
-    "target": [Function],
   },
   "extras": [],
   "generated": [],
@@ -35,5 +34,6 @@ exports[`Entity Decorator should add metadata 1`] = `
   "primarySource": null,
   "relations": [],
   "schemas": [],
+  "target": [Function],
 }
 `;

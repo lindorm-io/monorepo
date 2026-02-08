@@ -1,30 +1,32 @@
 import { isString } from "@lindorm/is";
 import { Constructor } from "@lindorm/types";
 import { IEntity } from "../interfaces";
-import { ManyToManyOptions } from "../types";
+import { ManyToManyOptions, TypedPropertyDecorator } from "../types";
 import { globalEntityMetadata } from "../utils";
 
-export const ManyToMany = <E extends IEntity>(
-  entityFn: () => Constructor<E>,
-  entityKey: keyof E,
-  hasJoinTable: boolean = false,
-  options: ManyToManyOptions<E> = {},
-): PropertyDecorator =>
+export const ManyToMany = <T extends IEntity, F extends IEntity>(
+  entityFn: () => Constructor<F>,
+  entityKey: keyof F,
+  options: ManyToManyOptions<T> = {},
+): TypedPropertyDecorator<T> =>
   function ManyToMany(target, key) {
     globalEntityMetadata.addRelation({
       target: target.constructor,
       key: key.toString(),
+      findKeys: null,
       foreignConstructor: entityFn,
       foreignKey: entityKey.toString(),
+      joinKeys: options.joinKeys ?? true,
+      joinTable: isString(options.joinTable)
+        ? options.joinTable
+        : (options.hasJoinTable ?? false),
       options: {
-        joinKey: null,
-        joinTable:
-          hasJoinTable && isString(options.joinTable) ? options.joinTable : hasJoinTable,
-        loading: options.loading ?? null,
+        loading: options.loading ?? "ignore",
         nullable: false,
-        onDelete: options.onDelete ?? null,
-        onOrphan: options.onOrphan ?? null,
-        onUpdate: options.onUpdate ?? null,
+        onDestroy: options.onDestroy ?? "ignore",
+        onInsert: options.onInsert ?? "ignore",
+        onOrphan: options.onOrphan ?? "ignore",
+        onUpdate: options.onUpdate ?? "ignore",
         strategy: options.strategy ?? null,
       },
       type: "ManyToMany",
