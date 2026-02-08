@@ -1,4 +1,5 @@
 export * from "./is-array";
+export * from "./is-bigint";
 export * from "./is-boolean";
 export * from "./is-boolean-string";
 export * from "./is-buffer";

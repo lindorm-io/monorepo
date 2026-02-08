@@ -3,6 +3,7 @@ class TestClass {
 }
 
 export const TEST_ARRAY: any = ["array"];
+export const TEST_BIGINT: any = BigInt("9007199254740993");
 export const TEST_BOOLEAN_STRING: any = "false";
 export const TEST_BOOLEAN: any = true;
 export const TEST_BUFFER: any = Buffer.from("test", "utf8");
@@ -38,6 +39,7 @@ export const TEST_URL: any = new URL(TEST_URL_STRING);
 
 export const TEST_FIXTURES = {
   TEST_ARRAY,
+  TEST_BIGINT,
   TEST_BOOLEAN_STRING,
   TEST_BOOLEAN,
   TEST_BUFFER,

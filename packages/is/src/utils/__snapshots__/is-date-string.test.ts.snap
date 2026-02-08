@@ -2,6 +2,8 @@
 
 exports[`isDateString should resolve TEST_ARRAY 1`] = `false`;
 
+exports[`isDateString should resolve TEST_BIGINT 1`] = `false`;
+
 exports[`isDateString should resolve TEST_BOOLEAN 1`] = `false`;
 
 exports[`isDateString should resolve TEST_BOOLEAN_STRING 1`] = `false`;

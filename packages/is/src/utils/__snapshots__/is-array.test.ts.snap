@@ -2,6 +2,8 @@
 
 exports[`isArray should resolve TEST_ARRAY 1`] = `true`;
 
+exports[`isArray should resolve TEST_BIGINT 1`] = `false`;
+
 exports[`isArray should resolve TEST_BOOLEAN 1`] = `false`;
 
 exports[`isArray should resolve TEST_BOOLEAN_STRING 1`] = `false`;
