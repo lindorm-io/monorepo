@@ -24,6 +24,7 @@ export type DeleteOptions<E extends IEntity> = MongoDeleteOptions & {
 
 export type MongoRepositoryOptions<E extends IEntity> = {
   target: Constructor<E>;
+  parent?: Constructor<E>;
   client: MongoClient;
   database?: string;
   logger: ILogger;

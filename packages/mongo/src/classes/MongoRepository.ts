@@ -2,14 +2,16 @@ import {
   EntityKit,
   EntityMetadata,
   getCollectionName,
+  getJoinCollectionName,
   globalEntityMetadata,
   IEntity,
+  MetaRelation,
   MetaSource,
 } from "@lindorm/entity";
 import { isDate } from "@lindorm/is";
 import { ILogger } from "@lindorm/logger";
-import { DeepPartial, Predicate } from "@lindorm/types";
-import { Filter, FindCursor } from "mongodb";
+import { Constructor, DeepPartial, Predicate } from "@lindorm/types";
+import { Collection, Filter, FindCursor } from "mongodb";
 import { MongoRepositoryError } from "../errors";
 import { IMongoRepository } from "../interfaces";
 import {
@@ -32,6 +34,7 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
   private readonly incrementName: string;
   private readonly kit: EntityKit<E, O>;
   private readonly metadata: EntityMetadata;
+  private readonly parent: Constructor<E> | undefined;
 
   public constructor(options: MongoRepositoryOptions<E>) {
     const metadata = globalEntityMetadata.get(options.target);
@@ -65,6 +68,7 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
 
     this.metadata = metadata;
     this.incrementName = this.kit.getIncrementName(options);
+    this.parent = options.parent;
 
     if (
       this.metadata.columns.find((c) => c.decorator === "VersionKeyColumn") &&
@@ -74,15 +78,14 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
         "Versioned entities with readonly @Column() are not supported. Mongo will not be able to handle readonly filtering automatically. Make sure to handle this manually.",
       );
     }
-
-    if (this.metadata.relations.length > 0) {
-      this.logger.warn(
-        "This version of @lindorm/mongo does not support relations. Make sure to handle this manually or keep your eye open for updates.",
-      );
-    }
   }
 
   // public
+
+  public async setup(): Promise<void> {
+    await super.setup();
+    await this.setupJoinCollectionIndexes();
+  }
 
   public create(options?: O | E): E {
     return this.kit.create(options);
@@ -198,7 +201,7 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
         time: Date.now() - start,
       });
 
-      cursor.map<E>((doc) => this.kit.create(doc));
+      cursor.map<E>((doc) => this.create(doc));
 
       return cursor;
     } catch (error: any) {
@@ -211,14 +214,15 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
     const start = Date.now();
 
     try {
-      const result = await this.collection.deleteMany(
-        this.combineFilter(criteria, options),
-        options,
-      );
+      const entities = await this.find(criteria, options);
+
+      for (const entity of entities) {
+        await this.destroy(entity);
+      }
 
       this.logger.debug("Repository done: delete", {
         input: { criteria, options },
-        result,
+        result: { count: entities.length },
         time: Date.now() - start,
       });
     } catch (error: any) {
@@ -256,7 +260,8 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
   }
 
   public async destroy(entity: E): Promise<void> {
-    await this.delete(this.createPrimaryFilter(entity));
+    await this.destroyRelations(entity);
+    await this.collection.deleteOne(this.createPrimaryFilter(entity));
 
     this.kit.onDestroy(entity);
   }
@@ -316,7 +321,13 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
         time: Date.now() - start,
       });
 
-      return documents.map((document) => this.create(document));
+      const result: Array<E> = [];
+
+      for (const document of documents) {
+        result.push(await this.loadRelations(document));
+      }
+
+      return result;
     } catch (error: any) {
       this.logger.error("Repository error", error);
       throw new MongoRepositoryError("Unable to find entities", { error });
@@ -342,7 +353,7 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
 
       if (!document) return null;
 
-      return this.create(document);
+      return await this.loadRelations(document);
     } catch (error: any) {
       this.logger.error("Repository error", error);
       throw new MongoRepositoryError("Unable to find entity", { error });
@@ -374,15 +385,15 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
   public async insert(entity: O | E): Promise<E> {
     const start = Date.now();
 
-    entity =
-      entity instanceof this.kit.metadata.entity.target ? entity : this.create(entity);
+    entity = entity instanceof this.kit.target ? entity : this.create(entity);
 
     try {
       const insert = await this.kit.insert(entity);
 
       this.validate(insert);
 
-      const result = await this.collection.insertOne(insert);
+      const document = this.kit.document(insert);
+      const result = await this.collection.insertOne(document);
 
       this.logger.debug("Repository done: insert", {
         input: { entity: insert },
@@ -390,11 +401,11 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
         time: Date.now() - start,
       });
 
-      const copy = this.copy(insert);
+      this.kit.onInsert(insert);
 
-      this.kit.onInsert(copy);
+      await this.saveRelations(insert, "insert");
 
-      return copy;
+      return insert;
     } catch (error: any) {
       this.logger.error("Repository error", error);
       throw new MongoRepositoryError("Failed to insert entity", { error });
@@ -402,52 +413,11 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
   }
 
   public async insertBulk(entities: Array<O | E>): Promise<Array<E>> {
-    const start = Date.now();
-
-    const inserts: Array<E> = [];
-
-    for (const entity of entities) {
-      inserts.push(
-        await this.kit.insert(
-          entity instanceof this.kit.metadata.entity.target
-            ? entity
-            : this.create(entity),
-        ),
-      );
-    }
-
-    for (const entity of inserts) {
-      this.validate(entity);
-    }
-
-    try {
-      const result = await this.collection.insertMany(inserts);
-
-      this.logger.debug("Repository done: insertBulk", {
-        input: { entities: inserts },
-        result: {
-          acknowledged: result.acknowledged,
-          insertedCount: result.insertedCount,
-        },
-        time: Date.now() - start,
-      });
-
-      const copies = inserts.map((entity) => this.copy(entity));
-
-      for (const copy of copies) {
-        this.kit.onInsert(copy);
-      }
-
-      return copies;
-    } catch (error: any) {
-      this.logger.error("Repository error", error);
-      throw new MongoRepositoryError("Failed to insert entities", { error });
-    }
+    return await Promise.all(entities.map((entity) => this.insert(entity)));
   }
 
   public async save(entity: O | E): Promise<E> {
-    entity =
-      entity instanceof this.kit.metadata.entity.target ? entity : this.create(entity);
+    entity = entity instanceof this.kit.target ? entity : this.create(entity);
 
     switch (this.kit.getSaveStrategy(entity)) {
       case "insert":
@@ -459,7 +429,7 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
     }
 
     try {
-      return this.insert(entity);
+      return await this.insert(entity);
     } catch (err: any) {
       if (err.code === 11000) {
         return this.update(entity);
@@ -667,7 +637,11 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
     try {
       const result = await this.collection.updateOne(filter, { $set: set });
 
-      if (result.modifiedCount !== 1 && result.upsertedCount !== 1) {
+      if (
+        result.matchedCount !== 1 &&
+        result.modifiedCount !== 1 &&
+        result.upsertedCount !== 1
+      ) {
         throw new MongoRepositoryError("Entity not updated", {
           debug: { filter, result },
         });
@@ -683,6 +657,8 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
         },
         time: Date.now() - start,
       });
+
+      await this.saveRelations(update, "update");
 
       return update;
     } catch (error: any) {
@@ -722,11 +698,471 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
         time: Date.now() - start,
       });
 
-      return this.copy(insert);
+      await this.saveRelations(insert, "update");
+
+      return insert;
     } catch (error: any) {
       this.logger.error("Repository error", error);
       throw new MongoRepositoryError("Unable to update entity", { error });
     }
+  }
+
+  // private relations
+
+  private async destroyRelations(entity: E): Promise<void> {
+    if (!this.metadata.relations.length) return;
+
+    for (const relation of this.kit.metadata.relations) {
+      if (relation.foreignConstructor() === this.parent) continue;
+      if (relation.options.onDestroy !== "cascade") continue;
+
+      if (relation.type === "ManyToMany") {
+        const joinCollection = this.getJoinCollection(relation);
+        const joinFilter: Record<string, any> = {};
+        for (const [joinCol, entityCol] of Object.entries(relation.findKeys!)) {
+          joinFilter[joinCol] = (entity as any)[entityCol];
+        }
+        await joinCollection.deleteMany(joinFilter);
+        continue;
+      }
+
+      if (relation.joinKeys) continue;
+
+      const { repository } = this.commonRelation(relation);
+
+      switch (relation.type) {
+        case "OneToMany": {
+          const children = await repository.find(
+            this.kit.relationFilter(relation, entity),
+          );
+          await repository.destroyBulk(children);
+          break;
+        }
+
+        case "OneToOne": {
+          const child = await repository.findOne(
+            this.kit.relationFilter(relation, entity),
+          );
+          if (child) {
+            await repository.destroy(child);
+          }
+          break;
+        }
+
+        default:
+          break;
+      }
+    }
+  }
+
+  private async saveRelations(entity: E, mode: "insert" | "update"): Promise<void> {
+    if (!this.metadata.relations.length) return;
+
+    this.logger.debug("Inserting relations", { entity });
+
+    for (const relation of this.kit.metadata.relations) {
+      if (relation.foreignConstructor() === this.parent) continue;
+
+      const shouldSave =
+        (mode === "insert" && relation.options.onInsert === "cascade") ||
+        (mode === "update" && relation.options.onUpdate === "cascade");
+
+      const shouldOrphan =
+        relation.options.onOrphan === "delete" &&
+        mode === "update" &&
+        (relation.type === "ManyToMany" || !relation.joinKeys);
+
+      if (!shouldSave && !shouldOrphan) continue;
+
+      if (relation.type === "ManyToMany") {
+        const joinCollection = this.getJoinCollection(relation);
+        const { mirror, repository } = this.commonRelation(relation);
+        const targetKeys = this.getTargetFindKeys(relation, mirror);
+
+        if (shouldSave) {
+          await repository.saveBulk(entity[relation.key] ?? []);
+        }
+
+        if (shouldSave || shouldOrphan) {
+          const joinFilter: Record<string, any> = {};
+          for (const [joinCol, entityCol] of Object.entries(relation.findKeys!)) {
+            joinFilter[joinCol] = (entity as any)[entityCol];
+          }
+
+          const existingJoins = await joinCollection.find(joinFilter).toArray();
+
+          const desiredJoins = (entity[relation.key] ?? []).map((related: any) => {
+            const joinDoc: Record<string, any> = {};
+            for (const [joinCol, entityCol] of Object.entries(relation.findKeys!)) {
+              const value = (entity as any)[entityCol];
+              if (value == null) {
+                throw new MongoRepositoryError(
+                  "Cannot create join document with null key",
+                  {
+                    debug: { joinCol, entityCol, value },
+                  },
+                );
+              }
+              joinDoc[joinCol] = value;
+            }
+            for (const [joinCol, entityCol] of Object.entries(targetKeys)) {
+              const value = related[entityCol];
+              if (value == null) {
+                throw new MongoRepositoryError(
+                  "Cannot create join document with null key",
+                  {
+                    debug: { joinCol, entityCol, value },
+                  },
+                );
+              }
+              joinDoc[joinCol] = value;
+            }
+            return joinDoc;
+          });
+
+          const serializeJoin = (doc: Record<string, any>): string => {
+            const { _id, ...rest } = doc;
+            return JSON.stringify(rest);
+          };
+
+          const existingSet = new Set(existingJoins.map(serializeJoin));
+          const desiredSet = new Set(desiredJoins.map((j: any) => JSON.stringify(j)));
+
+          const toInsert = desiredJoins.filter(
+            (j: any) => !existingSet.has(JSON.stringify(j)),
+          );
+          if (toInsert.length) {
+            await joinCollection.insertMany(toInsert);
+          }
+
+          if (shouldOrphan) {
+            const toRemove = existingJoins.filter(
+              (j) => !desiredSet.has(serializeJoin(j)),
+            );
+            for (const orphan of toRemove) {
+              await joinCollection.deleteOne({ _id: orphan._id });
+            }
+          }
+        }
+
+        continue;
+      }
+
+      const { repository } = this.commonRelation(relation);
+
+      switch (relation.type) {
+        case "OneToMany": {
+          if (shouldSave) {
+            await repository.saveBulk(entity[relation.key]);
+          }
+          if (shouldOrphan) {
+            const existing = await repository.find(
+              this.kit.relationFilter(relation, entity),
+            );
+            const currentIds = new Set(
+              (entity[relation.key] ?? []).map((e: any) =>
+                this.serializePrimaryKey(repository, e),
+              ),
+            );
+            for (const orphan of existing) {
+              if (!currentIds.has(this.serializePrimaryKey(repository, orphan))) {
+                await repository.destroy(orphan);
+              }
+            }
+          }
+          break;
+        }
+
+        case "ManyToOne":
+        case "OneToOne": {
+          if (shouldSave && entity[relation.key]) {
+            await repository.save(entity[relation.key]);
+          }
+          if (shouldOrphan) {
+            const existing = await repository.findOne(
+              this.kit.relationFilter(relation, entity),
+            );
+            if (existing && entity[relation.key]) {
+              const oldKey = this.serializePrimaryKey(repository, existing);
+              const newKey = this.serializePrimaryKey(repository, entity[relation.key]);
+              if (oldKey !== newKey) {
+                await repository.destroy(existing);
+              }
+            } else if (existing && !entity[relation.key]) {
+              await repository.destroy(existing);
+            }
+          }
+          break;
+        }
+      }
+    }
+  }
+
+  private async loadRelations(document: any): Promise<E> {
+    const entity = this.create(document);
+
+    if (!this.metadata.relations.length) return entity;
+
+    this.logger.debug("Loading relations", { entity });
+
+    for (const relation of this.kit.metadata.relations) {
+      if (relation.foreignConstructor() === this.parent) continue;
+
+      switch (relation.options.loading) {
+        case "eager":
+          await this.loadEagerRelation(entity, relation);
+          break;
+
+        case "lazy":
+          await this.loadLazyRelation(entity, relation);
+          break;
+
+        default:
+          break;
+      }
+
+      if (
+        relation.options.loading !== "ignore" &&
+        (entity as any)[relation.key] === null &&
+        relation.options.nullable === false
+      ) {
+        throw new MongoRepositoryError(`Relation [ ${relation.key} ] cannot be null`, {
+          debug: { entity, relation },
+        });
+      }
+    }
+
+    return entity;
+  }
+
+  private async loadEagerRelation(entity: E, relation: MetaRelation): Promise<void> {
+    const { mirror, repository } = this.commonRelation(relation);
+
+    switch (relation.type) {
+      case "OneToMany": {
+        const found = await repository.find(this.kit.relationFilter(relation, entity));
+        for (const item of found) {
+          (item as any)[mirror.key] = entity;
+        }
+        (entity as any)[relation.key] = found;
+        break;
+      }
+
+      case "OneToOne":
+      case "ManyToOne": {
+        const found = await repository.findOne(this.kit.relationFilter(relation, entity));
+        if (found && !relation.joinKeys) {
+          (found as any)[mirror.key] = entity;
+        }
+        (entity as any)[relation.key] = found;
+        break;
+      }
+
+      case "ManyToMany": {
+        const found = await this.loadManyToMany(entity, relation, mirror, repository);
+        (entity as any)[relation.key] = found;
+        break;
+      }
+
+      default:
+        break;
+    }
+  }
+
+  private async loadLazyRelation(entity: E, relation: MetaRelation): Promise<void> {
+    const { mirror, repository } = this.commonRelation(relation);
+
+    switch (relation.type) {
+      case "OneToMany": {
+        (entity as any)[relation.key] = this.lazyProxy(
+          async (): Promise<Array<IEntity>> => {
+            const found = await repository.find(
+              this.kit.relationFilter(relation, entity),
+            );
+            for (const item of found) {
+              (item as any)[mirror.key] = entity;
+            }
+            return found;
+          },
+        );
+        break;
+      }
+
+      case "OneToOne":
+      case "ManyToOne": {
+        (entity as any)[relation.key] = this.lazyProxy(
+          async (): Promise<IEntity | null> => {
+            const found = await repository.findOne(
+              this.kit.relationFilter(relation, entity),
+            );
+            if (found && !relation.joinKeys) {
+              (found as any)[mirror.key] = entity;
+            }
+            return found;
+          },
+        );
+        break;
+      }
+
+      case "ManyToMany": {
+        (entity as any)[relation.key] = this.lazyProxy(
+          async (): Promise<Array<IEntity>> => {
+            return this.loadManyToMany(entity, relation, mirror, repository);
+          },
+        );
+        break;
+      }
+
+      default:
+        break;
+    }
+  }
+
+  private async loadManyToMany(
+    entity: E,
+    relation: MetaRelation,
+    mirror: MetaRelation,
+    repository: MongoRepository<IEntity>,
+  ): Promise<Array<IEntity>> {
+    const joinCollection = this.getJoinCollection(relation);
+    const targetKeys = this.getTargetFindKeys(relation, mirror);
+
+    const joinFilter: Record<string, any> = {};
+    for (const [joinCol, entityCol] of Object.entries(relation.findKeys!)) {
+      joinFilter[joinCol] = (entity as any)[entityCol];
+    }
+
+    const joinDocs = await joinCollection.find(joinFilter).toArray();
+    if (!joinDocs.length) return [];
+
+    const foreignIds: Array<Record<string, any>> = joinDocs.map((doc) => {
+      const ids: Record<string, any> = {};
+      for (const [joinCol, entityCol] of Object.entries(targetKeys)) {
+        ids[entityCol] = doc[joinCol];
+      }
+      return ids;
+    });
+
+    const found = await repository.find({ $or: foreignIds } as any);
+
+    const isSelfReferencing =
+      relation.key === mirror.key && relation.foreignKey === mirror.foreignKey;
+
+    if (!isSelfReferencing) {
+      for (const item of found) {
+        (item as any)[mirror.key] = entity;
+      }
+    }
+
+    return found;
+  }
+
+  private async setupJoinCollectionIndexes(): Promise<void> {
+    for (const relation of this.kit.metadata.relations) {
+      if (relation.type !== "ManyToMany") continue;
+      if (!relation.joinTable) continue;
+
+      const { mirror } = this.commonRelation(relation);
+      const joinCollection = this.getJoinCollection(relation);
+      const targetKeys = this.getTargetFindKeys(relation, mirror);
+
+      const indexSpec: Record<string, 1> = {};
+
+      for (const joinCol of Object.keys(relation.findKeys!)) {
+        indexSpec[joinCol] = 1;
+      }
+      for (const joinCol of Object.keys(targetKeys)) {
+        indexSpec[joinCol] = 1;
+      }
+
+      try {
+        await joinCollection.createIndex(indexSpec, { unique: true });
+
+        this.logger.debug("Join collection index created", {
+          collection: joinCollection.collectionName,
+          index: indexSpec,
+        });
+      } catch (error: any) {
+        this.logger.error("Join collection index error", error);
+
+        throw new MongoRepositoryError(error.message, {
+          debug: {
+            collection: joinCollection.collectionName,
+            index: indexSpec,
+          },
+          error,
+        });
+      }
+    }
+  }
+
+  // Self-referencing ManyToMany: mirror is the same relation, so mirror.findKeys
+  // equals relation.findKeys. Derive target keys from joinKeys minus findKeys.
+  private getTargetFindKeys(
+    relation: MetaRelation,
+    mirror: MetaRelation,
+  ): Record<string, string> {
+    if (relation.key === mirror.key && relation.foreignKey === mirror.foreignKey) {
+      const findKeySet = new Set(Object.keys(relation.findKeys!));
+      return Object.fromEntries(
+        Object.entries(relation.joinKeys!).filter(([k]) => !findKeySet.has(k)),
+      );
+    }
+    return mirror.findKeys as Record<string, string>;
+  }
+
+  private getJoinCollection(relation: MetaRelation): Collection {
+    const name = getJoinCollectionName(relation.joinTable as string, {
+      namespace: this.metadata.entity.namespace,
+    });
+    return this.database.collection(name);
+  }
+
+  private commonRelation(relation: MetaRelation): {
+    mirror: MetaRelation;
+    repository: MongoRepository<IEntity>;
+  } {
+    const repository = new MongoRepository({
+      target: relation.foreignConstructor(),
+      parent: this.kit.target,
+      database: this.databaseName,
+      client: this.client,
+      logger: this.logger,
+    });
+
+    const mirror = repository.kit.metadata.relations.find(
+      (r) => r.key === relation.foreignKey,
+    );
+
+    if (!mirror) {
+      throw new MongoRepositoryError("Mirror relation not found", {
+        debug: { relation },
+      });
+    }
+
+    return {
+      mirror,
+      repository,
+    };
+  }
+
+  private lazyProxy<T>(callback: () => Promise<T>): Promise<T> {
+    let cached: Promise<T> | undefined;
+
+    return new Proxy(
+      {},
+      {
+        get: (_, prop): any => {
+          if (prop === "then") {
+            if (!cached) {
+              cached = callback();
+            }
+            return cached.then.bind(cached);
+          }
+          return undefined;
+        },
+      },
+    ) as unknown as Promise<T>;
   }
 
   // private
@@ -880,5 +1316,12 @@ export class MongoRepository<E extends IEntity, O extends DeepPartial<E> = DeepP
       this.logger.error("Repository error", error);
       throw new MongoRepositoryError("Unable to get next increment", { error });
     }
+  }
+
+  private serializePrimaryKey(
+    repository: MongoRepository<IEntity>,
+    entity: IEntity,
+  ): string {
+    return repository.metadata.primaryKeys.map((k) => String(entity[k])).join("|");
   }
 }

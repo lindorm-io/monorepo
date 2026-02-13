@@ -1,20 +1,8 @@
 # @lindorm/mongo
 
-Type-safe **MongoDB data-layer** that integrates tightly with the Lindorm entity metadata system. It
-provides a high-level repository abstraction similar to TypeORM / MikroORM but focuses on
-immutability, event sourcing and security.
-
----
-
-## Key features
-
-* `MongoSource` – central factory that keeps a single `MongoClient` instance and maps entities /
-  files to repositories and GridFS buckets
-* `MongoRepository` – CRUD, optimistic locking, TTL / soft delete helpers, auto-index creation
-* `MongoBucket` – tiny wrapper around [`GridFSBucket`](https://www.mongodb.com/docs/manual/core/gridfs/)
-  with typed `File` entities
-* Identical API to the in-memory / Redis / Postgres drivers – swap databases without hassle
-* Full logger integration via `@lindorm/logger`
+Type-safe MongoDB data layer built on the `@lindorm/entity` decorator system. Provides a
+high-level repository abstraction with optimistic locking, relations, GridFS file storage, and
+automatic index management.
 
 ---
 
@@ -22,11 +10,9 @@ immutability, event sourcing and security.
 
 ```bash
 npm install @lindorm/mongo
-# or
-yarn add @lindorm/mongo
 ```
 
-You obviously need a running MongoDB instance. For local development you can spin one up with
+Requires a running MongoDB instance. For local development:
 
 ```bash
 docker compose -f ./packages/mongo/docker-compose.yml up -d
@@ -37,85 +23,292 @@ docker compose -f ./packages/mongo/docker-compose.yml up -d
 ## Quick start
 
 ```ts
-import { MongoSource } from '@lindorm/mongo';
-import { Logger } from '@lindorm/logger';
-import { Entity, PrimaryKeyColumn, VersionColumn } from '@lindorm/entity';
+import { MongoSource } from "@lindorm/mongo";
+import { EntityBase, Entity, Column, VersionColumn } from "@lindorm/entity";
+import { Logger } from "@lindorm/logger";
 
 @Entity()
-class BlogPost {
-  @PrimaryKeyColumn()
-  id!: string;
+class BlogPost extends EntityBase {
+  @Column("string")
+  public title!: string;
+
+  @Column("string")
+  public body!: string;
 
   @VersionColumn()
-  version!: number;
-
-  title!: string;
-  body!: string;
+  public version!: number;
 }
 
 const source = new MongoSource({
-  url: 'mongodb://localhost:27017',
-  database: 'blog',
+  url: "mongodb://localhost:27017",
+  database: "blog",
   entities: [BlogPost],
-  logger: new Logger({ readable: true }),
+  logger: new Logger(),
 });
 
-await source.connect();
-await source.setup(); // creates collections + indexes
+await source.setup();
 
 const posts = source.repository(BlogPost);
+const post = posts.create({ title: "Hello", body: "World" });
+await posts.insert(post);
 
-const first = posts.create({ id: 'p1', title: 'Hello', body: 'World' });
-
-await posts.insert(first);
+const found = await posts.findOneOrFail({ title: "Hello" });
 ```
 
 ---
 
-## API surface (excerpt)
+## MongoSource
 
-### Source
+Central factory that manages the MongoDB client connection and creates repositories and buckets.
 
 ```ts
-new MongoSource({
-  url: 'mongodb://…',
-  database: 'name',
-  entities: [User, …],
-  files: [AvatarImage, …],
-  namespace?: 'prod' | 'test', // prefixes collection names
-  logger,
-  config?: MongoClientOptions,  // forwarded to mongodb driver
+const source = new MongoSource({
+  url: "mongodb://localhost:27017",
+  database: "mydb",
+  entities: [User, Order, Product],
+  files: [Avatar, Attachment],
+  namespace: "prod",              // optional key prefix
+  logger: myLogger,
+  config: { /* MongoClientOptions */ },
 });
-
-source.connect();
-source.disconnect();
-source.setup(); // create collections, indexes, buckets
-
-source.repository(Entity, opts?) → MongoRepository
-source.bucket(File, opts?)      → MongoBucket
 ```
 
-### Repository highlights
+### Connection lifecycle
 
-* **Optimistic locking** based on `@VersionColumn`
-* Automatic predicates that respect `@DeleteDateColumn` and `@ExpiryDateColumn`
-* `getNextIncrement` helper for numeric ids (uses a separate collection under the hood)
+```ts
+await source.connect();     // connect to MongoDB
+await source.setup();       // connect + create collections + indexes
+await source.ping();        // verify connection is alive
+await source.disconnect();  // close connection
+```
+
+### Factory methods
+
+```ts
+// Repository for entity CRUD
+const repo = source.repository(User);
+
+// GridFS bucket for file storage
+const bucket = source.bucket(Avatar);
+
+// Raw MongoDB collection access
+const col = source.collection<Document>("raw_collection");
+
+// Clone source (shares connection, override logger)
+const cloned = source.clone({ logger: requestLogger });
+```
+
+### Runtime registration
+
+```ts
+source.addEntities([NewEntity, "./path/to/entities"]);
+source.addFiles([NewFile]);
+
+source.hasEntity(User);  // true
+source.hasFile(Avatar);  // true
+```
+
+---
+
+## MongoRepository
+
+Full CRUD repository with relation support, optimistic locking, and lifecycle hooks.
+
+### Entity lifecycle
+
+```ts
+const repo = source.repository(User);
+
+const user = repo.create({ name: "Alice", email: "alice@example.com" });
+repo.validate(user);
+
+await repo.insert(user);                    // first persistence
+await repo.update(user);                    // subsequent updates
+await repo.save(user);                      // auto-detects insert vs update
+await repo.destroy(user);                   // delete with cascade
+```
+
+### Query methods
+
+```ts
+// Find multiple
+const users = await repo.find({ isActive: true });
+const count = await repo.count({ isActive: true });
+const exists = await repo.exists({ email: "alice@example.com" });
+
+// Find single
+const user = await repo.findOne({ email: "alice@example.com" });     // null if missing
+const user = await repo.findOneOrFail({ email: "alice@example.com" }); // throws if missing
+const user = await repo.findOneOrSave({ email: "alice@example.com" }, defaults); // upsert
+
+// MongoDB cursor (for streaming large result sets)
+const cursor = repo.cursor({ isActive: true }, { sort: { createdAt: -1 }, limit: 100 });
+
+// TTL (seconds until expiry, requires @ExpiryDateColumn)
+const seconds = await repo.ttl({ id: "abc" });
+
+// Version history (requires VersionedEntityBase)
+const versions = await repo.versions({ id: "abc" });
+```
+
+### Bulk operations
+
+```ts
+await repo.insertBulk([user1, user2, user3]);
+await repo.saveBulk([user1, user2]);
+await repo.updateBulk([user1, user2]);
+await repo.destroyBulk([user1, user2]);
+await repo.cloneBulk([user1, user2]);
+```
+
+### Delete operations
+
+```ts
+// Hard delete (cascades via destroy)
+await repo.delete({ isActive: false });
+await repo.destroy(user);
+
+// Soft delete (sets @DeleteDateColumn, entity remains in DB)
+await repo.softDelete({ isActive: false });
+await repo.softDestroy(user);
+
+// Clean up expired entities (@ExpiryDateColumn)
+await repo.deleteExpired();
+
+// Bulk update
+await repo.updateMany({ isActive: false }, { deletedAt: new Date() });
+```
+
+### Clone (versioned entities)
+
+```ts
+const clone = await repo.clone(originalDocument);
+// New ID, new version, persisted as separate entity
+```
+
+### Optimistic locking
+
+Entities with `@VersionColumn` are automatically version-checked on update. If the stored version
+doesn't match the entity's version, the update throws `MongoRepositoryError`.
+
+---
+
+## Relations
+
+Relations defined via `@lindorm/entity` decorators are automatically loaded and cascaded.
+
+### Loading strategies
+
+```ts
+// Eager: loaded immediately on find/findOne
+@OneToMany(() => OrderItem, "order", { loading: "eager" })
+public items!: OrderItem[];
+
+// Lazy: loaded on first access (returns Promise-like proxy)
+@ManyToOne(() => Customer, "orders", { loading: "lazy" })
+public customer!: Customer;
+
+// Ignore: not loaded automatically
+@OneToMany(() => AuditLog, "entity", { loading: "ignore" })
+public logs!: AuditLog[];
+```
+
+### Cascade operations
+
+```ts
+@OneToMany(() => OrderItem, "order", {
+  loading: "eager",
+  onInsert: "cascade",   // save items when order is inserted
+  onUpdate: "cascade",   // save items when order is updated
+  onDestroy: "cascade",  // delete items when order is destroyed
+  onOrphan: "delete",    // delete items removed from the array on update
+})
+public items!: OrderItem[];
+```
+
+### ManyToMany
+
+Uses a MongoDB join collection. The join collection name is auto-generated from the entity names
+and join table option.
+
+```ts
+@Entity()
+class User extends EntityBase {
+  @ManyToMany(() => Role, "users", { hasJoinTable: true, loading: "eager" })
+  public roles!: Role[];
+}
+
+@Entity()
+class Role extends EntityBase {
+  @ManyToMany(() => User, "roles", { joinKeys: ["roleKey"], loading: "eager" })
+  public users!: User[];
+}
+```
+
+---
+
+## MongoBucket (GridFS)
+
+Wrapper around MongoDB GridFS for storing and retrieving files.
+
+```ts
+import { MongoFileBase } from "@lindorm/mongo";
+import { Entity } from "@lindorm/entity";
+
+@Entity()
+class Avatar extends MongoFileBase {
+  @Column("uuid")
+  public userId!: string;
+}
+
+const bucket = source.bucket(Avatar);
+
+// Upload
+const file = await bucket.upload(readableStream, {
+  filename: "avatar.png",
+  mimeType: "image/png",
+  userId: "user-123",
+});
+
+// Download
+const { stream, file } = await bucket.download("avatar.png");
+
+// Query
+const files = await bucket.find({ userId: "user-123" });
+const file = await bucket.findOneOrFail({ filename: "avatar.png" });
+
+// Delete
+await bucket.delete({ filename: "avatar.png" });
+```
+
+`MongoFileBase` provides standard file metadata fields: `filename`, `uploadDate`, `chunkSize`,
+`length`, `mimeType`, `originalName`, `encoding`, `hash`, `hashAlgorithm`, `size`, `strategy`.
 
 ---
 
 ## Testing
 
-The package ships with an extensive integration test-suite. You can run it locally via:
+Mock factories for unit testing without a real MongoDB connection:
 
-```bash
-cd packages/mongo
-docker compose up -d   # start MongoDB
-npm test
+```ts
+import { createMockMongoSource, createMockMongoRepository } from "@lindorm/mongo";
+
+const source = createMockMongoSource();
+const repo = createMockMongoRepository(User);
+
+// All methods are jest.fn() mocks with sensible defaults
+repo.create({ name: "test" });         // returns entity instance
+await repo.find({ isActive: true });   // returns [entity]
+await repo.insert(entity);            // resolves with entity
 ```
+
+Available mocks:
+- `createMockMongoSource()` -- full source mock with repository/bucket factories
+- `createMockMongoRepository(Target, callback?)` -- repository mock
+- `createMockMongoBucket(Target, callback?)` -- bucket mock
 
 ---
 
 ## License
 
-AGPL-3.0-or-later – see the root [`LICENSE`](../../LICENSE).
-
+AGPL-3.0-or-later
