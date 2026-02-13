@@ -1,4 +1,5 @@
 import { ServerError } from "@lindorm/errors";
+import { isNumber, isString } from "@lindorm/is";
 import { randomBytes, randomUUID } from "crypto";
 import { RedirectError } from "../../errors";
 import { PylonHttpMiddleware } from "../../types";
@@ -14,8 +15,8 @@ export const httpErrorHandlerMiddleware: PylonHttpMiddleware = async (ctx, next)
       if (err instanceof RedirectError) {
         const url = new URL(err.redirect);
 
-        if (err.code?.length) {
-          url.searchParams.append("error", err.code);
+        if (isNumber(err.code) || (isString(err.code) && err.code.length)) {
+          url.searchParams.append("error", String(err.code));
         }
         if (err.uri?.length) {
           url.searchParams.append("error_uri", err.uri);

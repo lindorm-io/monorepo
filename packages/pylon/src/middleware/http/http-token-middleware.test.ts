@@ -15,8 +15,6 @@ describe("createHttpTokenMiddleware", () => {
       },
 
       request: { body: { id_token: "value" } },
-
-      metric: jest.fn().mockReturnValue({ end: jest.fn() }),
     };
 
     options = {

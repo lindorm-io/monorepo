@@ -21,7 +21,6 @@ describe("useHandler", () => {
       logger: createMockLogger(),
       redirect: jest.fn(),
       set: jest.fn(),
-      metric: jest.fn().mockReturnValue({ end: jest.fn() }),
     };
 
     handler = jest.fn();

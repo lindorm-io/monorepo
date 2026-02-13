@@ -2,7 +2,6 @@ import { IAegis } from "@lindorm/aegis";
 import { IAmphora } from "@lindorm/amphora";
 import { IConduit } from "@lindorm/conduit";
 import { IEntity } from "@lindorm/entity";
-import { Environment, Priority } from "@lindorm/types";
 import { IHermes } from "@lindorm/hermes";
 import { IKafkaPublisher, IKafkaSource } from "@lindorm/kafka";
 import { ILogger } from "@lindorm/logger";
@@ -11,8 +10,7 @@ import { IMnemosRepository, IMnemosSource } from "@lindorm/mnemos";
 import { IMongoRepository, IMongoSource } from "@lindorm/mongo";
 import { IRabbitPublisher, IRabbitSource } from "@lindorm/rabbit";
 import { IRedisPublisher, IRedisRepository, IRedisSource } from "@lindorm/redis";
-import { Dict } from "@lindorm/types";
-import { PylonMetric } from "../classes/private";
+import { Dict, Environment, Priority } from "@lindorm/types";
 
 export type AppState = {
   domain: string;
@@ -57,7 +55,6 @@ export type PylonCommonContext = {
     repositories: Dict<IRedisRepository<IEntity>>;
   };
 
-  metric: (name: string) => PylonMetric;
   queue: (
     event: string,
     payload: Dict,

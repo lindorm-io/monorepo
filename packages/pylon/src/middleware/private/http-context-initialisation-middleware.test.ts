@@ -40,7 +40,6 @@ describe("createHttpContextInitialisationMiddleware", () => {
     expect(ctx.aegis).toEqual(expect.any(Aegis));
     expect(ctx.conduits.conduit).toEqual(expect.any(Conduit));
 
-    expect(ctx.metric).toEqual(expect.any(Function));
     expect(ctx.queue).toEqual(expect.any(Function));
     expect(ctx.webhook).toEqual(expect.any(Function));
   });

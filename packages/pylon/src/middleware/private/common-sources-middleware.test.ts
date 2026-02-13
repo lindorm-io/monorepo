@@ -16,7 +16,6 @@ describe("createSourcesMiddleware", () => {
   beforeEach(() => {
     ctx = {
       logger: createMockLogger(),
-      metric: jest.fn().mockReturnValue({ end: jest.fn() }),
     };
   });
 

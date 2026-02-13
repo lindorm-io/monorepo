@@ -13,7 +13,7 @@ export const createHttpTokenMiddleware =
   <C extends PylonHttpContext = PylonHttpContext>(options: Options) =>
   (path: string, optional: boolean = false): PylonHttpMiddleware<C> =>
     async function httpTokenMiddleware(ctx, next): Promise<void> {
-      const metric = ctx.metric("httpTokenMiddleware");
+      const timer = ctx.logger.time();
 
       try {
         const token = get(ctx, path);
@@ -29,7 +29,7 @@ export const createHttpTokenMiddleware =
         if (token) {
           const verified = await ctx.aegis.jwt.verify(token, options);
 
-          ctx.logger.debug("Token verified", { verified });
+          timer.debug("Token verified", { verified });
 
           ctx.logger.info("Token verification successful", {
             subject: verified.payload.subject,
@@ -40,14 +40,12 @@ export const createHttpTokenMiddleware =
           ctx.state.tokens[options.contextKey] = verified;
         }
       } catch (error: any) {
-        ctx.logger.debug("Token verification failed", error);
+        timer.debug("Token verification failed", error);
 
         throw new ClientError(error.message, {
           error,
           status: ClientError.Status.Unauthorized,
         });
-      } finally {
-        metric.end();
       }
 
       await next();

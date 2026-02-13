@@ -18,7 +18,7 @@ export const createHttpBodyParserMiddleware = (
   }
 
   return async function httpBodyParserMiddleware(ctx, next) {
-    const metric = ctx.metric("httpBodyParserMiddleware");
+    const timer = ctx.logger.time();
 
     ctx.data = {};
 
@@ -37,7 +37,7 @@ export const createHttpBodyParserMiddleware = (
       ctx.data = changeKeys(parsed, "camel");
     }
 
-    metric.end();
+    timer.debug("Body parsed");
 
     await next();
   };

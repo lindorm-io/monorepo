@@ -54,7 +54,7 @@ export const createSourcesMiddleware = <C extends PylonCommonContext>(
     : [];
 
   return async function sourcesMiddleware(ctx, next) {
-    const metric = ctx.metric("sourcesMiddleware");
+    const timer = ctx.logger.time();
 
     try {
       ctx.hermes = options.hermes?.clone({ logger: ctx.logger });
@@ -141,10 +141,12 @@ export const createSourcesMiddleware = <C extends PylonCommonContext>(
           repositories: Object.keys(ctx.redis.repositories),
         });
       }
+
+      timer.debug("Sources added to context");
     } catch (error: any) {
+      timer.debug("Failed to add sources to context");
+
       throw new ServerError("Failed to add sources to context", { error });
-    } finally {
-      metric.end();
     }
 
     await next();

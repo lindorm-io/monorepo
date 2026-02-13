@@ -4,7 +4,6 @@ import { Conduit } from "@lindorm/conduit";
 import { ClientError, ServerError } from "@lindorm/errors";
 import { ILogger } from "@lindorm/logger";
 import { Dict, Priority } from "@lindorm/types";
-import { PylonMetric } from "../../classes/private";
 import { PylonHttpMiddleware, PylonQueueOptions, PylonWebhookOptions } from "../../types";
 import { createQueueCallback, createWebhookCallback } from "../../utils/private";
 
@@ -45,9 +44,6 @@ export const createHttpContextInitialisationMiddleware = (
     ctx.entities = {};
 
     ctx.files = [];
-
-    ctx.metric = (name: string): PylonMetric =>
-      new PylonMetric({ logger: ctx.logger, name });
 
     ctx.queue = async (
       event: string,

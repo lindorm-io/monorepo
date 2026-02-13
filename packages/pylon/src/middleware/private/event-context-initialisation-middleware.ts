@@ -4,7 +4,6 @@ import { Conduit } from "@lindorm/conduit";
 import { ServerError } from "@lindorm/errors";
 import { ILogger } from "@lindorm/logger";
 import { Dict, Priority } from "@lindorm/types";
-import { PylonMetric } from "../../classes/private";
 import {
   PylonQueueOptions,
   PylonSocketMiddleware,
@@ -43,9 +42,6 @@ export const createEventContextInitialisationMiddleware = (
     };
 
     ctx.entities = {};
-
-    ctx.metric = (name: string): PylonMetric =>
-      new PylonMetric({ logger: ctx.logger, name });
 
     ctx.queue = async (
       event: string,

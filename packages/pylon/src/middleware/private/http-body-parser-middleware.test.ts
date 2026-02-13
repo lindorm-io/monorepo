@@ -1,3 +1,4 @@
+import { createMockLogger } from "@lindorm/logger";
 import MockDate from "mockdate";
 import { PylonError } from "../../errors";
 import {
@@ -35,9 +36,9 @@ describe("createHttpBodyParserMiddleware", () => {
         error,
         string,
       },
+      logger: createMockLogger(),
       method: "POST",
       request: {},
-      metric: jest.fn().mockReturnValue({ end: jest.fn() }),
     };
 
     composeParseBodyConfig.mockReturnValue({

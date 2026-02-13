@@ -10,7 +10,6 @@ describe("useValidation", () => {
       state: {
         tokens: { jwt: { audience: "value" } },
       },
-      metric: jest.fn().mockReturnValue({ end: jest.fn() }),
     };
   });
 

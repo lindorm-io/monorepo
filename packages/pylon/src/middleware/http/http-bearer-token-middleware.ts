@@ -12,7 +12,7 @@ export const createHttpBearerTokenMiddleware = <
   options: Options,
 ): PylonHttpMiddleware<C> =>
   async function httpBearerTokenMiddleware(ctx, next): Promise<void> {
-    const metric = ctx.metric("httpBearerTokenMiddleware");
+    const timer = ctx.logger.time();
 
     try {
       if (ctx.state.authorization.type !== "bearer") {
@@ -31,7 +31,7 @@ export const createHttpBearerTokenMiddleware = <
         ...options,
       });
 
-      ctx.logger.debug("Token verified", { verified });
+      timer.debug("Token verified", { verified });
 
       ctx.logger.info("Bearer token verification successful", {
         subject: verified.payload.subject,
@@ -41,15 +41,13 @@ export const createHttpBearerTokenMiddleware = <
 
       ctx.state.tokens.accessToken = verified;
     } catch (error: any) {
-      ctx.logger.debug("Bearer token verification failed", error);
+      timer.debug("Bearer token verification failed", error);
 
       throw new ClientError("Invalid credentials", {
         error,
         debug: { token: ctx.state.authorization.value },
         status: ClientError.Status.Unauthorized,
       });
-    } finally {
-      metric.end();
     }
 
     await next();

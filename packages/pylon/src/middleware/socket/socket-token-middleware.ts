@@ -13,7 +13,7 @@ export const socketTokenMiddleware =
   <C extends PylonSocketContext = PylonSocketContext>(options: Options) =>
   (path: string, optional: boolean = false): PylonSocketMiddleware<C> =>
     async function socketTokenMiddleware(ctx, next): Promise<void> {
-      const metric = ctx.metric("socketTokenMiddleware");
+      const timer = ctx.logger.time();
 
       try {
         const token = get(ctx, path);
@@ -29,7 +29,7 @@ export const socketTokenMiddleware =
         if (token) {
           const verified = await ctx.aegis.jwt.verify(token, options);
 
-          ctx.logger.debug("Token verified", { verified });
+          timer.debug("Token verified", { verified });
 
           ctx.logger.info("Token verification successful", {
             subject: verified.payload.subject,
@@ -40,14 +40,12 @@ export const socketTokenMiddleware =
           ctx.socket.data.tokens[options.contextKey] = verified;
         }
       } catch (error: any) {
-        ctx.logger.debug("Token verification failed", error);
+        timer.debug("Token verification failed", error);
 
         throw new ClientError(error.message, {
           error,
           status: ClientError.Status.Unauthorized,
         });
-      } finally {
-        metric.end();
       }
 
       await next();

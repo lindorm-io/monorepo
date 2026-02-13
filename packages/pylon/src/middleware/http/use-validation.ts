@@ -8,7 +8,7 @@ export const useValidation = (
   options: ValidateJwtOptions,
 ): PylonHttpMiddleware =>
   async function httpValidationMiddleware(ctx, next) {
-    const metric = ctx.metric("httpValidationMiddleware");
+    const timer = ctx.logger.time();
 
     try {
       const token = get(ctx.state.tokens, tokenPath);
@@ -19,16 +19,14 @@ export const useValidation = (
 
       JwtKit.validate(token, options);
 
-      ctx.logger.debug("Token validation successful");
+      timer.debug("Token validation successful");
     } catch (err: any) {
-      ctx.logger.debug("Token validation failed", err);
+      timer.debug("Token validation failed", err);
 
       throw new ClientError(err.message, {
         error: err,
         status: ClientError.Status.Forbidden,
       });
-    } finally {
-      metric.end();
     }
 
     await next();
