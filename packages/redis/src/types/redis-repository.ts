@@ -5,6 +5,7 @@ import { Redis } from "ioredis";
 
 export type RedisRepositoryOptions<E extends IEntity> = {
   target: Constructor<E>;
+  parent?: Constructor<E>;
   client: Redis;
   logger: ILogger;
   namespace?: string;
