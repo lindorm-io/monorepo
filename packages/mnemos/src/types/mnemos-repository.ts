@@ -5,6 +5,7 @@ import { IMnemosCache } from "../interfaces";
 
 export type MnemosRepositoryOptions<E extends IEntity = IEntity> = {
   target: Constructor<E>;
+  parent?: Constructor<E>;
   cache: IMnemosCache;
   logger: ILogger;
   namespace?: string;

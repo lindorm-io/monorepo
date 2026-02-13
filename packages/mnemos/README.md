@@ -16,6 +16,9 @@ overkill.
   `@PrimaryKeyColumn`, `@VersionColumn`, `@ExpiryDateColumn` …
 * Fully **typed** – repositories preserve your entity type, including primary keys & columns.
 * Supports TTL & version columns, automatic primary key increments, soft deletes, …
+* Full **relation support** – `@OneToOne`, `@OneToMany`, `@ManyToOne`, `@ManyToMany` with eager/lazy
+  loading, cascade insert/update/destroy, and orphan deletion – matching `@lindorm/mongo` and
+  `@lindorm/redis`.
 * Identical repository/collection API to the production drivers → swap databases without hassle.
 
 ---
