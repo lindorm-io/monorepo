@@ -2,10 +2,10 @@ import { Optional } from "@lindorm/types";
 import { KryptosError } from "../../errors";
 import { EcBuffer, KryptosAlgorithm, OctBuffer, OkpBuffer, RsaBuffer } from "../../types";
 import { KryptosGenerate } from "../../types/private";
-import { generateEcKey } from "./ec";
-import { generateOctKey } from "./oct";
-import { generateOkpKey } from "./okp";
-import { generateRsaKey } from "./rsa";
+import { generateEcKey, generateEcKeyAsync } from "./ec";
+import { generateOctKey, generateOctKeyAsync } from "./oct";
+import { generateOkpKey, generateOkpKeyAsync } from "./okp";
+import { generateRsaKey, generateRsaKeyAsync } from "./rsa";
 
 type GenerateResult =
   | Omit<EcBuffer, "id" | "algorithm" | "type" | "use">
@@ -26,6 +26,27 @@ export const generateKey = (options: KryptosGenerate): GenerateResult => {
 
     case "RSA":
       return generateRsaKey(options);
+
+    default:
+      throw new KryptosError("Invalid key type");
+  }
+};
+
+export const generateKeyAsync = async (
+  options: KryptosGenerate,
+): Promise<GenerateResult> => {
+  switch (options.type) {
+    case "EC":
+      return generateEcKeyAsync(options);
+
+    case "oct":
+      return generateOctKeyAsync(options);
+
+    case "OKP":
+      return generateOkpKeyAsync(options);
+
+    case "RSA":
+      return generateRsaKeyAsync(options);
 
     default:
       throw new KryptosError("Invalid key type");
@@ -63,7 +84,7 @@ export const autoGenerateConfig = (algorithm: KryptosAlgorithm): AutoResult => {
     case "ECDH-ES":
       return {
         algorithm,
-        curve: "X448",
+        curve: "X25519",
         encryption: "A256GCM",
         type: "OKP",
         use: "enc",

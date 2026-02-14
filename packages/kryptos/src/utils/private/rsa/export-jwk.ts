@@ -23,28 +23,30 @@ export const exportRsaToJwk = (options: Options): Result => {
     const { n, e, d, p, q, dp, dq, qi } = keyObject.export({ format: "jwk" });
 
     if (!e) {
-      throw new KryptosError("Key export failed [ e ]");
+      throw new KryptosError("Key export failed [e]: missing public exponent");
     }
     if (!n) {
-      throw new KryptosError("Key export failed [ n ]");
+      throw new KryptosError("Key export failed [n]: missing modulus");
     }
     if (!d) {
-      throw new KryptosError("Key export failed [ d ]");
+      throw new KryptosError("Key export failed [d]: missing private exponent");
     }
     if (!p) {
-      throw new KryptosError("Key export failed [ p ]");
+      throw new KryptosError("Key export failed [p]: missing first prime factor");
     }
     if (!q) {
-      throw new KryptosError("Key export failed [ q ]");
+      throw new KryptosError("Key export failed [q]: missing second prime factor");
     }
     if (!dp) {
-      throw new KryptosError("Key export failed [ dp ]");
+      throw new KryptosError("Key export failed [dp]: missing first factor CRT exponent");
     }
     if (!dq) {
-      throw new KryptosError("Key export failed [ dq ]");
+      throw new KryptosError(
+        "Key export failed [dq]: missing second factor CRT exponent",
+      );
     }
     if (!qi) {
-      throw new KryptosError("Key export failed [ qi ]");
+      throw new KryptosError("Key export failed [qi]: missing first CRT coefficient");
     }
 
     result.e = e;
@@ -70,10 +72,10 @@ export const exportRsaToJwk = (options: Options): Result => {
     const { e, n } = keyObject.export({ format: "jwk" });
 
     if (!e) {
-      throw new KryptosError("Key export failed [ e ]");
+      throw new KryptosError("Key export failed [e]: missing public exponent");
     }
     if (!n) {
-      throw new KryptosError("Key export failed [ n ]");
+      throw new KryptosError("Key export failed [n]: missing modulus");
     }
 
     result.e = e;

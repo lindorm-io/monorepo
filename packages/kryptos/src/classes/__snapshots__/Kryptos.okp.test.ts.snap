@@ -259,4 +259,4 @@ exports[`Kryptos (OKP) to should return jwk with public key 1`] = `
 }
 `;
 
-exports[`Kryptos (OKP) to should return kryptos string 1`] = `"kryptos:eyJjcnYiOiJFZDI1NTE5IiwieCI6IkdSQ3dDQTZsQ2hvc0ZHTVF3eEdpSENkemJsZnZDejBGTmlSdFRubTFxcWMiLCJkIjoiSEFvbVctaUhXZUIzMHRGM3QyMjhZNUtwYmk1bHFaMjhpN1FBRVBZQ1RFcyIsImtpZCI6IjNiOWEwNTFmLWUxZWMtNTYyYi1iZjkyLTdjZjkyZWM0NjViYSIsImFsZyI6IkVkRFNBIiwidXNlIjoic2lnIiwia3R5IjoiT0tQIiwiZXhwIjo0MDcwOTM3NjAwLCJpYXQiOjE2NzI1NjAwMDAsImlzcyI6Imh0dHBzOi8vZXhhbXBsZS5jb20iLCJqa3UiOiJodHRwczovL2V4YW1wbGUuY29tLy53ZWxsLWtub3duL2p3a3MuanNvbiIsImtleV9vcHMiOlsic2lnbiIsInZlcmlmeSJdLCJuYmYiOjE2NzI1NjAwMDAsIm93bmVyX2lkIjoiZjAyYzJkMGMtNDRlZS01ZTRlLThiM2ItMzlkNDY5MjRkMjI3IiwicHVycG9zZSI6InRlc3QiLCJ1YXQiOjE3MDE0MTc2MDB9"`;
+exports[`Kryptos (OKP) to should return kryptos string 1`] = `"Kryptos<OKP:EdDSA:3b9a051f-e1ec-562b-bf92-7cf92ec465ba>"`;

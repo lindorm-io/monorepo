@@ -167,7 +167,7 @@ describe("KryptosKit (OKP)", () => {
       expect(kryptos.export("b64")).toEqual({
         id: "6e6f84b0-e125-5e3f-90ae-c65269668d98",
         algorithm: "EdDSA",
-        curve: "Ed448",
+        curve: "Ed25519",
         privateKey: expect.any(String),
         publicKey: expect.any(String),
         type: "OKP",

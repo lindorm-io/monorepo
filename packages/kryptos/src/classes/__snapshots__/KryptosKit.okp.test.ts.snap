@@ -442,7 +442,7 @@ exports[`KryptosKit (OKP) generate sig 1`] = `
 {
   "algorithm": "EdDSA",
   "createdAt": 2024-01-01T08:00:00.000Z,
-  "curve": "Ed448",
+  "curve": "Ed25519",
   "encryption": null,
   "expiresAt": null,
   "expiresIn": -1,

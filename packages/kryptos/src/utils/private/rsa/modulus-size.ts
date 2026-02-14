@@ -3,6 +3,10 @@ import { RsaBuffer, RsaModulus } from "../../../types";
 
 type Options = Omit<RsaBuffer, "id" | "algorithm" | "type" | "use">;
 
+// DER-encoded RSA key sizes (in bytes) by modulus length.
+// Private key sizes vary slightly due to ASN.1 integer encoding
+// (leading zero bytes are added/omitted based on the high bit).
+// Public key sizes are fixed for a given modulus length.
 const SIZES = [
   {
     private: { min: 606, max: 611 },

@@ -30,10 +30,10 @@ export const exportEcToPem = (options: Options): Result => {
     const publicKey = publicObject.export({ format: "pem", type: "spki" });
 
     if (!isString(privateKey)) {
-      throw new KryptosError("Key export failed [ private ]");
+      throw new KryptosError("Key export failed [private]: expected PEM string");
     }
     if (!isString(publicKey)) {
-      throw new KryptosError("Key export failed [ public ]");
+      throw new KryptosError("Key export failed [public]: expected PEM string");
     }
 
     result.privateKey = privateKey;
@@ -49,14 +49,14 @@ export const exportEcToPem = (options: Options): Result => {
     const publicKey = publicObject.export({ format: "pem", type: "spki" });
 
     if (!isString(publicKey)) {
-      throw new KryptosError("Key export failed [ public ]");
+      throw new KryptosError("Key export failed [public]: expected PEM string");
     }
 
     result.publicKey = publicKey;
   }
 
   if (!result.publicKey.length) {
-    throw new KryptosError("Key export failed ");
+    throw new KryptosError("Key export failed: no public key available");
   }
 
   return result;

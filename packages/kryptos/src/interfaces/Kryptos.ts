@@ -10,8 +10,11 @@ import {
   LindormJwk,
 } from "../types";
 
-export interface IKryptos extends KryptosAttributes, KryptosMetadata {
+export interface IKryptos extends Disposable, KryptosAttributes, KryptosMetadata {
+  dispose(): void;
+
   toDB(): KryptosDB;
+  toEnvString(): string;
   toJSON(): KryptosJSON;
   toJWK(mode?: KryptosExportMode): LindormJwk;
   toString(): string;

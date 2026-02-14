@@ -32,6 +32,7 @@ import {
   calculateKeyOps,
   fromOptions,
   generateKey,
+  generateKeyAsync,
   isB64,
   isDer,
   isJwk,
@@ -72,6 +73,26 @@ type Generate = {
   auto(options: KryptosAuto): IKryptos;
   enc: Encryption;
   sig: Signature;
+};
+
+type AsyncEncryption = {
+  ec(options: KryptosGenerateEcEnc): Promise<IKryptos>;
+  oct(options: KryptosGenerateOctEnc): Promise<IKryptos>;
+  okp(options: KryptosGenerateOkpEnc): Promise<IKryptos>;
+  rsa(options: KryptosGenerateRsaEnc): Promise<IKryptos>;
+};
+
+type AsyncSignature = {
+  ec(options: KryptosGenerateEcSig): Promise<IKryptos>;
+  oct(options: KryptosGenerateOctSig): Promise<IKryptos>;
+  okp(options: KryptosGenerateOkpSig): Promise<IKryptos>;
+  rsa(options: KryptosGenerateRsaSig): Promise<IKryptos>;
+};
+
+type GenerateAsync = {
+  auto(options: KryptosAuto): Promise<IKryptos>;
+  enc: AsyncEncryption;
+  sig: AsyncSignature;
 };
 
 export class KryptosKit {
@@ -132,6 +153,16 @@ export class KryptosKit {
     };
   }
 
+  // generateAsync
+
+  public static get generateAsync(): GenerateAsync {
+    return {
+      auto: this.generateAutoAsync,
+      enc: this.encryptionAsync,
+      sig: this.signatureAsync,
+    };
+  }
+
   // private env
 
   private static envImport(string: string): IKryptos {
@@ -145,7 +176,7 @@ export class KryptosKit {
   }
 
   private static envExport(kryptos: IKryptos): string {
-    return kryptos.toString();
+    return kryptos.toEnvString();
   }
 
   // private from
@@ -225,7 +256,7 @@ export class KryptosKit {
 
   private static get signature(): Signature {
     return {
-      ec: this.GenerateEcSig,
+      ec: this.generateEcSig,
       oct: this.generateOctSig,
       okp: this.generateOkpSig,
       rsa: this.generateRsaSig,
@@ -258,7 +289,7 @@ export class KryptosKit {
     return KryptosKit.generateKryptos(generate);
   }
 
-  private static GenerateEcSig(options: KryptosGenerateEcSig): IKryptos {
+  private static generateEcSig(options: KryptosGenerateEcSig): IKryptos {
     const generate: KryptosGenerate = {
       ...options,
       type: "EC",
@@ -329,6 +360,104 @@ export class KryptosKit {
         ? generate.operations
         : calculateKeyOps(generate),
       ...generateKey(generate),
+    });
+  }
+
+  // private generateAsync
+
+  private static get encryptionAsync(): AsyncEncryption {
+    return {
+      ec: this.generateEcEncAsync,
+      oct: this.generateOctEncAsync,
+      okp: this.generateOkpEncAsync,
+      rsa: this.generateRsaEncAsync,
+    };
+  }
+
+  private static get signatureAsync(): AsyncSignature {
+    return {
+      ec: this.generateEcSigAsync,
+      oct: this.generateOctSigAsync,
+      okp: this.generateOkpSigAsync,
+      rsa: this.generateRsaSigAsync,
+    };
+  }
+
+  private static async generateAutoAsync(options: KryptosAuto): Promise<IKryptos> {
+    const config = autoGenerateConfig(options.algorithm);
+    const operations = calculateKeyOps(config);
+
+    if (config.purpose && ["cookie", "session"].includes(config.purpose)) {
+      config.hidden = config.hidden ?? true;
+    }
+
+    const generate: KryptosGenerate = {
+      ...config,
+      ...options,
+      operations,
+    };
+
+    return new Kryptos({ ...generate, ...(await generateKeyAsync(generate)) });
+  }
+
+  private static async generateEcEncAsync(
+    options: KryptosGenerateEcEnc,
+  ): Promise<IKryptos> {
+    return KryptosKit.generateKryptosAsync({ ...options, type: "EC", use: "enc" });
+  }
+
+  private static async generateEcSigAsync(
+    options: KryptosGenerateEcSig,
+  ): Promise<IKryptos> {
+    return KryptosKit.generateKryptosAsync({ ...options, type: "EC", use: "sig" });
+  }
+
+  private static async generateOctEncAsync(
+    options: KryptosGenerateOctEnc,
+  ): Promise<IKryptos> {
+    return KryptosKit.generateKryptosAsync({ ...options, type: "oct", use: "enc" });
+  }
+
+  private static async generateOctSigAsync(
+    options: KryptosGenerateOctSig,
+  ): Promise<IKryptos> {
+    return KryptosKit.generateKryptosAsync({ ...options, type: "oct", use: "sig" });
+  }
+
+  private static async generateOkpEncAsync(
+    options: KryptosGenerateOkpEnc,
+  ): Promise<IKryptos> {
+    return KryptosKit.generateKryptosAsync({ ...options, type: "OKP", use: "enc" });
+  }
+
+  private static async generateOkpSigAsync(
+    options: KryptosGenerateOkpSig,
+  ): Promise<IKryptos> {
+    return KryptosKit.generateKryptosAsync({ ...options, type: "OKP", use: "sig" });
+  }
+
+  private static async generateRsaEncAsync(
+    options: KryptosGenerateRsaEnc,
+  ): Promise<IKryptos> {
+    return KryptosKit.generateKryptosAsync({ ...options, type: "RSA", use: "enc" });
+  }
+
+  private static async generateRsaSigAsync(
+    options: KryptosGenerateRsaSig,
+  ): Promise<IKryptos> {
+    return KryptosKit.generateKryptosAsync({ ...options, type: "RSA", use: "sig" });
+  }
+
+  private static async generateKryptosAsync(
+    generate: KryptosGenerate,
+  ): Promise<IKryptos> {
+    return new Kryptos({
+      ...generate,
+      encryption: generate.use === "enc" ? (generate.encryption ?? "A256GCM") : null,
+      operations: generate.operations?.length
+        ? generate.operations
+        : calculateKeyOps(generate),
+      ...(await generateKeyAsync(generate)),
     });
   }
 }

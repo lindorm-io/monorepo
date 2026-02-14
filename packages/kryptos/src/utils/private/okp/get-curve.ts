@@ -25,7 +25,7 @@ export const getOkpCurve = (options: Options): OkpCurve => {
       return "X448";
 
     case "EdDSA":
-      return "Ed448";
+      return "Ed25519";
 
     default:
       throw new KryptosError("Unsupported curve");

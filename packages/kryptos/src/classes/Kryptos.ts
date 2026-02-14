@@ -28,6 +28,7 @@ import {
   LindormJwk,
   RsaModulus,
 } from "../types";
+import { ExportCache } from "../types/private";
 import {
   createDerFromDer,
   exportToB64,
@@ -44,11 +45,14 @@ export class Kryptos implements IKryptos {
   private readonly _createdAt: Date;
   private readonly _curve: KryptosCurve | null;
   private readonly _isExternal: boolean;
+  private readonly _modulus: RsaModulus | null;
   private readonly _privateKey: Buffer | undefined;
   private readonly _publicKey: Buffer | undefined;
   private readonly _type: KryptosType;
   private readonly _use: KryptosUse;
 
+  private _cache: ExportCache = {};
+  private _disposed: boolean = false;
   private _encryption: KryptosEncryption | null;
   private _expiresAt: Date | null;
   private _hidden: boolean;
@@ -94,6 +98,11 @@ export class Kryptos implements IKryptos {
         "Kryptos must be initialised with private key, public key, or both",
       );
     }
+
+    this._modulus =
+      this._type === "RSA" && (this._privateKey || this._publicKey)
+        ? modulusSize({ privateKey: this._privateKey, publicKey: this._publicKey! })
+        : null;
   }
 
   // getters and setters
@@ -240,8 +249,23 @@ export class Kryptos implements IKryptos {
   }
 
   public get modulus(): RsaModulus | null {
-    if (this._type !== "RSA") return null;
-    return modulusSize({ privateKey: this._privateKey, publicKey: this._publicKey! });
+    return this._modulus;
+  }
+
+  // dispose
+
+  public dispose(): void {
+    if (this._disposed) return;
+
+    if (this._privateKey) this._privateKey.fill(0);
+    if (this._publicKey) this._publicKey.fill(0);
+
+    this._cache = {};
+    this._disposed = true;
+  }
+
+  public [Symbol.dispose](): void {
+    this.dispose();
   }
 
   // public methods
@@ -251,51 +275,72 @@ export class Kryptos implements IKryptos {
   public export<K extends KryptosJwk>(format: "jwk"): K;
   public export<K extends KryptosString>(format: "pem"): K;
   public export(format: KryptosFormat): KryptosKey {
+    this.assertNotDisposed();
+
+    const exportOptions = {
+      id: this.id,
+      algorithm: this.algorithm,
+      curve: this.curve ?? undefined,
+      privateKey: this._privateKey,
+      publicKey: this._publicKey,
+      type: this.type,
+      use: this.use,
+    };
+
+    const metadata = {
+      id: this.id,
+      algorithm: this.algorithm,
+      ...(this.curve ? { curve: this.curve } : {}),
+      type: this.type,
+      use: this.use,
+    };
+
     switch (format) {
-      case "b64":
-        return exportToB64({
-          id: this.id,
-          algorithm: this.algorithm,
-          curve: this.curve ?? undefined,
-          privateKey: this._privateKey,
-          publicKey: this._publicKey,
-          type: this.type,
-          use: this.use,
-        });
+      case "b64": {
+        if (!this._cache.b64) {
+          const result = exportToB64(exportOptions);
+          this._cache.b64 = Object.freeze(
+            removeUndefined({
+              privateKey: result.privateKey,
+              publicKey: result.publicKey,
+            }),
+          );
+        }
+        return { ...metadata, ...this._cache.b64 } as KryptosString;
+      }
 
       case "der":
-        return exportToDer({
-          id: this.id,
-          algorithm: this.algorithm,
-          curve: this.curve ?? undefined,
-          privateKey: this._privateKey,
-          publicKey: this._publicKey,
-          type: this.type,
-          use: this.use,
-        });
+        return exportToDer(exportOptions);
 
-      case "jwk":
-        return exportToJwk({
-          id: this.id,
-          algorithm: this.algorithm,
-          curve: this.curve ?? undefined,
-          mode: "private",
-          privateKey: this._privateKey,
-          publicKey: this._publicKey,
-          type: this.type,
+      case "jwk": {
+        if (!this._cache.jwkPrivate) {
+          const { kid, alg, kty, use, ...keys } = exportToJwk({
+            ...exportOptions,
+            mode: "private",
+          });
+          this._cache.jwkPrivate = Object.freeze(keys);
+        }
+        return {
+          ...this._cache.jwkPrivate,
+          kid: this.id,
+          alg: this.algorithm,
           use: this.use,
-        });
+          kty: this.type,
+        } as KryptosJwk;
+      }
 
-      case "pem":
-        return exportToPem({
-          id: this.id,
-          algorithm: this.algorithm,
-          curve: this.curve ?? undefined,
-          privateKey: this._privateKey,
-          publicKey: this._publicKey,
-          type: this.type,
-          use: this.use,
-        });
+      case "pem": {
+        if (!this._cache.pem) {
+          const result = exportToPem(exportOptions);
+          this._cache.pem = Object.freeze(
+            removeUndefined({
+              privateKey: result.privateKey,
+              publicKey: result.publicKey,
+            }),
+          );
+        }
+        return { ...metadata, ...this._cache.pem } as KryptosString;
+      }
 
       default:
         throw new KryptosError(`Invalid key format: ${format}`);
@@ -305,13 +350,15 @@ export class Kryptos implements IKryptos {
   // to types
 
   public toDB(): KryptosDB {
+    this.assertNotDisposed();
+
     const { privateKey, publicKey } = this.export("b64");
     return {
       id: this.id,
       algorithm: this.algorithm,
       createdAt: this.createdAt,
-      curve: this.curve!,
-      encryption: this.encryption!,
+      curve: this.curve,
+      encryption: this.encryption,
       expiresAt: this.expiresAt,
       hidden: this.hidden,
       isExternal: this.isExternal,
@@ -327,6 +374,12 @@ export class Kryptos implements IKryptos {
       privateKey,
       publicKey,
     };
+  }
+
+  public toEnvString(): string {
+    this.assertNotDisposed();
+
+    return "kryptos:" + B64.encode(JSON.stringify(this.toJWK("private")), "b64u");
   }
 
   public toJSON(): KryptosJSON {
@@ -358,19 +411,29 @@ export class Kryptos implements IKryptos {
   }
 
   public toJWK(mode: KryptosExportMode = "public"): LindormJwk {
-    const keys = exportToJwk({
-      id: this.id,
-      algorithm: this.algorithm,
-      curve: this.curve ?? undefined,
-      mode: mode,
-      privateKey: this._privateKey,
-      publicKey: this._publicKey,
-      type: this.type,
-      use: this.use,
-    });
+    this.assertNotDisposed();
+
+    const cacheKey = mode === "private" ? "jwkPrivate" : "jwkPublic";
+    if (!this._cache[cacheKey]) {
+      const { kid, alg, kty, use, ...keys } = exportToJwk({
+        id: this.id,
+        algorithm: this.algorithm,
+        curve: this.curve ?? undefined,
+        mode: mode,
+        privateKey: this._privateKey,
+        publicKey: this._publicKey,
+        type: this.type,
+        use: this.use,
+      });
+      this._cache[cacheKey] = Object.freeze(keys);
+    }
 
     return removeEmpty({
-      ...keys,
+      ...this._cache[cacheKey],
+      kid: this.id,
+      alg: this.algorithm,
+      use: this.use,
+      kty: this.type,
       enc: this.encryption ?? undefined,
       exp: this.expiresAt ? getUnixTime(this.expiresAt) : undefined,
       iat: getUnixTime(this.createdAt),
@@ -385,10 +448,16 @@ export class Kryptos implements IKryptos {
   }
 
   public toString(): string {
-    return "kryptos:" + B64.encode(JSON.stringify(this.toJWK("private")), "b64u");
+    return `Kryptos<${this._type}:${this._algorithm}:${this._id}>`;
   }
 
   // private methods
+
+  private assertNotDisposed(): void {
+    if (this._disposed) {
+      throw new KryptosError("Key has been disposed");
+    }
+  }
 
   private generateKeys(options: KryptosOptions): KryptosKeys {
     const keys = createDerFromDer(options as KryptosBuffer);

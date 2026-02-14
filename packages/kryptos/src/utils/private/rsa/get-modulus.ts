@@ -8,7 +8,7 @@ type Options = {
 export const getRsaModulus = (options: Options): RsaModulus => {
   switch (options.algorithm) {
     case "RSA-OAEP":
-      return 1024;
+      return 2048;
 
     case "PS256":
     case "RS256":

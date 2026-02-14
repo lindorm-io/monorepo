@@ -1,3 +1,4 @@
+import { KryptosError } from "../../../errors";
 import { KryptosFromBuffer, OctString } from "../../../types";
 
 type Options = Omit<KryptosFromBuffer, "id" | "algorithm" | "type" | "use">;
@@ -16,7 +17,7 @@ const splitStringIntoChunks = (input: string, size: number): Array<string> => {
 
 export const exportOctToPem = (options: Options): Result => {
   if (!options.privateKey) {
-    throw new Error("Private key is required");
+    throw new KryptosError("Private key is required");
   }
 
   const string = options.privateKey.toString("base64");

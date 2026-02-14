@@ -29,16 +29,18 @@ export const exportEcToJwk = (options: Options): Result => {
     const { crv, d, x, y } = keyObject.export({ format: "jwk" });
 
     if (crv !== options.curve) {
-      throw new KryptosError("Key export failed [ crv ]");
+      throw new KryptosError(
+        `Key export failed [crv]: expected ${options.curve}, got ${crv}`,
+      );
     }
     if (!d) {
-      throw new KryptosError("Key export failed [ d ]");
+      throw new KryptosError("Key export failed [d]: missing private key component");
     }
     if (!x) {
-      throw new KryptosError("Key export failed [ x ]");
+      throw new KryptosError("Key export failed [x]: missing x coordinate");
     }
     if (!y) {
-      throw new KryptosError("Key export failed [ y ]");
+      throw new KryptosError("Key export failed [y]: missing y coordinate");
     }
 
     result.d = d;
@@ -59,13 +61,15 @@ export const exportEcToJwk = (options: Options): Result => {
     const { crv, x, y } = keyObject.export({ format: "jwk" });
 
     if (crv !== options.curve) {
-      throw new KryptosError("Key export failed [ crv ]");
+      throw new KryptosError(
+        `Key export failed [crv]: expected ${options.curve}, got ${crv}`,
+      );
     }
     if (!x) {
-      throw new KryptosError("Key export failed [ x ]");
+      throw new KryptosError("Key export failed [x]: missing x coordinate");
     }
     if (!y) {
-      throw new KryptosError("Key export failed [ y ]");
+      throw new KryptosError("Key export failed [y]: missing y coordinate");
     }
 
     result.x = x;
