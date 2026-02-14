@@ -397,4 +397,148 @@ describe("Amphora", () => {
       }
     });
   });
+
+  describe("refresh deduplication", () => {
+    test("should deduplicate concurrent refresh calls", async () => {
+      nock("https://external.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, { keys: [TEST_EC_KEY_SIG.toJWK("private")] });
+
+      amphora = new Amphora({
+        domain: issuer,
+        logger: createMockLogger(),
+        external: [
+          {
+            issuer: "https://external.lindorm.io/",
+            jwksUri: "https://external.lindorm.io/.well-known/jwks.json",
+          },
+        ],
+      });
+
+      await Promise.all([amphora.refresh(), amphora.refresh(), amphora.refresh()]);
+
+      expect(nock.isDone()).toBe(true);
+      expect(amphora.vault).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: TEST_EC_KEY_SIG.id,
+            type: "EC",
+          }),
+        ]),
+      );
+    });
+  });
+
+  describe("setup deduplication", () => {
+    test("should deduplicate concurrent setup calls", async () => {
+      nock("https://external.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, { keys: [TEST_EC_KEY_SIG.toJWK("private")] });
+
+      amphora = new Amphora({
+        domain: issuer,
+        logger: createMockLogger(),
+        external: [
+          {
+            issuer: "https://external.lindorm.io/",
+            jwksUri: "https://external.lindorm.io/.well-known/jwks.json",
+          },
+        ],
+      });
+
+      await Promise.all([amphora.setup(), amphora.setup(), amphora.setup()]);
+
+      expect(nock.isDone()).toBe(true);
+      expect(amphora.vault).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: TEST_EC_KEY_SIG.id,
+            type: "EC",
+          }),
+        ]),
+      );
+    });
+  });
+
+  describe("lazy setup", () => {
+    test("should auto-setup on first filter() call with external providers", async () => {
+      const jwk = TEST_EC_KEY_SIG.toJWK("private");
+      delete jwk.iss;
+
+      nock("https://external.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, { keys: [jwk] });
+
+      amphora = new Amphora({
+        domain: issuer,
+        logger: createMockLogger(),
+        external: [
+          {
+            issuer: "https://external.lindorm.io/",
+            jwksUri: "https://external.lindorm.io/.well-known/jwks.json",
+          },
+        ],
+      });
+
+      const result = await amphora.filter({ issuer: "https://external.lindorm.io/" });
+
+      expect(nock.isDone()).toBe(true);
+      expect(result.length).toBeGreaterThan(0);
+      expect(result).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            type: "EC",
+            issuer: "https://external.lindorm.io/",
+          }),
+        ]),
+      );
+    });
+
+    test("should throw from filterSync when setup not called with external providers", () => {
+      amphora = new Amphora({
+        domain: issuer,
+        logger: createMockLogger(),
+        external: [
+          {
+            issuer: "https://external.lindorm.io/",
+            jwksUri: "https://external.lindorm.io/.well-known/jwks.json",
+          },
+        ],
+      });
+
+      expect(() => amphora.filterSync({ issuer })).toThrow(AmphoraError);
+      expect(() => amphora.filterSync({ issuer })).toThrow(
+        "setup() must be called before using sync methods with external providers",
+      );
+    });
+
+    test("should throw from findSync when setup not called with external providers", () => {
+      amphora = new Amphora({
+        domain: issuer,
+        logger: createMockLogger(),
+        external: [
+          {
+            issuer: "https://external.lindorm.io/",
+            jwksUri: "https://external.lindorm.io/.well-known/jwks.json",
+          },
+        ],
+      });
+
+      expect(() => amphora.findSync({ issuer, id: "some-id" })).toThrow(AmphoraError);
+      expect(() => amphora.findSync({ issuer, id: "some-id" })).toThrow(
+        "setup() must be called before using sync methods with external providers",
+      );
+    });
+
+    test("should not require setup for filter with no external providers", async () => {
+      amphora.add(TEST_EC_KEY_SIG);
+
+      await expect(amphora.filter({ issuer, id: TEST_EC_KEY_SIG.id })).resolves.toEqual([
+        TEST_EC_KEY_SIG,
+      ]);
+    });
+  });
 });

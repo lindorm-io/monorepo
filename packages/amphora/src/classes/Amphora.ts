@@ -25,7 +25,9 @@ export class Amphora implements IAmphora {
   private _config: Array<AmphoraConfig>;
   private _external: Array<AmphoraExternalOption>;
   private _jwks: Array<LindormJwk>;
+  private _refreshPromise: Promise<void> | null = null;
   private _setup: boolean;
+  private _setupPromise: Promise<void> | null = null;
   private _vault: Array<IKryptos>;
 
   public constructor(options: AmphoraOptions) {
@@ -78,12 +80,19 @@ export class Amphora implements IAmphora {
 
   public async setup(): Promise<void> {
     if (this._setup) return;
+    if (this._setupPromise) return this._setupPromise;
 
-    this.mapExternalOptions();
+    this._setupPromise = (async () => {
+      this.mapExternalOptions();
+      await this.refresh();
+      this._setup = true;
+    })();
 
-    await this.refresh();
-
-    this._setup = true;
+    try {
+      await this._setupPromise;
+    } finally {
+      this._setupPromise = null;
+    }
   }
 
   // public methods
@@ -140,6 +149,10 @@ export class Amphora implements IAmphora {
   }
 
   public async filter(query: AmphoraQuery): Promise<Array<IKryptos>> {
+    if (!this._setup && this._external.length) {
+      await this.setup();
+    }
+
     const filtered = this.filteredKeys(query);
 
     if (filtered.length) return filtered;
@@ -150,6 +163,14 @@ export class Amphora implements IAmphora {
   }
 
   public filterSync(query: AmphoraQuery): Array<IKryptos> {
+    if (!this._setup && this._external.length) {
+      throw new AmphoraError(
+        this._setupPromise
+          ? "setup() is in progress; await setup() before using sync methods"
+          : "setup() must be called before using sync methods with external providers",
+      );
+    }
+
     return this.filteredKeys(query);
   }
 
@@ -167,6 +188,14 @@ export class Amphora implements IAmphora {
   }
 
   public findSync(query: AmphoraQuery): IKryptos {
+    if (!this._setup && this._external.length) {
+      throw new AmphoraError(
+        this._setupPromise
+          ? "setup() is in progress; await setup() before using sync methods"
+          : "setup() must be called before using sync methods with external providers",
+      );
+    }
+
     const [key] = this.filterSync(query);
     if (key) return key;
 
@@ -180,6 +209,18 @@ export class Amphora implements IAmphora {
   }
 
   public async refresh(): Promise<void> {
+    if (this._refreshPromise) return this._refreshPromise;
+
+    this._refreshPromise = this._refresh();
+
+    try {
+      await this._refreshPromise;
+    } finally {
+      this._refreshPromise = null;
+    }
+  }
+
+  private async _refresh(): Promise<void> {
     this.logger.silly("Refreshing vault");
 
     await this.refreshExternalConfig();
