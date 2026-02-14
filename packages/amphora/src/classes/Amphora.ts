@@ -21,6 +21,7 @@ export class Amphora implements IAmphora {
 
   private readonly conduit: Conduit;
   private readonly logger: ILogger;
+  private readonly maxExternalKeys: number;
 
   private _config: Array<AmphoraConfig>;
   private _external: Array<AmphoraExternalOption>;
@@ -48,6 +49,7 @@ export class Amphora implements IAmphora {
     this._vault = [];
 
     this.domain = options.domain ?? null;
+    this.maxExternalKeys = options.maxExternalKeys ?? 100;
 
     if (this.domain && !isUrlLike(this.domain)) {
       throw new AmphoraError("Domain must be a valid URL", {
@@ -305,19 +307,77 @@ export class Amphora implements IAmphora {
       data: { keys },
     } = await this.conduit.get<OpenIdJwksResponse>(config.jwksUri);
 
+    if (keys.length === 0) {
+      this.logger.warn("External JWKS response contains no keys", {
+        issuer: config.issuer,
+      });
+      return [];
+    }
+
+    if (keys.length > this.maxExternalKeys) {
+      this.logger.warn("External JWKS response exceeds key limit, truncating", {
+        issuer: config.issuer,
+        count: keys.length,
+        limit: this.maxExternalKeys,
+      });
+      keys.length = this.maxExternalKeys;
+    }
+
     const result: Array<IKryptos> = [];
+    let rejectedCount = 0;
+    let expiredCount = 0;
 
     for (const jwk of keys) {
-      const iss = jwk.iss ?? config.issuer;
-      const jku = jwk.jku ?? config.jwksUri;
+      if (jwk.iss && jwk.iss !== config.issuer) {
+        this.logger.warn("External JWK issuer mismatch, skipping key", {
+          expected: config.issuer,
+          actual: jwk.iss,
+          kid: jwk.kid,
+        });
+        rejectedCount++;
+        continue;
+      }
 
-      const kryptos = KryptosKit.from.jwk({ ...jwk, iss, jku });
+      const kryptos = KryptosKit.from.jwk({
+        ...jwk,
+        iss: config.issuer,
+        jku: jwk.jku ?? config.jwksUri,
+      });
 
-      if (kryptos.isExpired) continue;
+      if (kryptos.isExpired) {
+        expiredCount++;
+        continue;
+      }
 
       this.logger.silly("Adding Kryptos from external source", { kryptos });
-
       result.push(kryptos);
+    }
+
+    if (rejectedCount > 0 || expiredCount > 0) {
+      this.logger.silly("External JWKS key summary", {
+        issuer: config.issuer,
+        total: keys.length,
+        valid: result.length,
+        rejected: rejectedCount,
+        expired: expiredCount,
+      });
+    }
+
+    if (result.length === 0 && keys.length > 0) {
+      if (rejectedCount === keys.length) {
+        throw new AmphoraError("All external JWK keys rejected due to issuer mismatch", {
+          debug: { issuer: config.issuer, keyCount: keys.length },
+        });
+      } else if (expiredCount + rejectedCount === keys.length) {
+        throw new AmphoraError("No valid external JWK keys (expired or rejected)", {
+          debug: {
+            issuer: config.issuer,
+            total: keys.length,
+            rejected: rejectedCount,
+            expired: expiredCount,
+          },
+        });
+      }
     }
 
     return result;
@@ -377,10 +437,31 @@ export class Amphora implements IAmphora {
   private async refreshExternalKeys(): Promise<void> {
     this.logger.silly("Refreshing external keys");
 
-    for (const config of this._config) {
-      const keys = await this.getExternalJwks(config);
+    const results = await Promise.allSettled(
+      this._config.map(async (config) => {
+        const keys = await this.getExternalJwks(config);
+        return { config, keys };
+      }),
+    );
 
-      this._vault = this._vault.filter((i) => i.issuer !== config.issuer).concat(keys);
+    let failures = 0;
+
+    for (const result of results) {
+      if (result.status === "fulfilled") {
+        const { config, keys } = result.value;
+        this._vault = this._vault
+          .filter((i) => !(i.issuer === config.issuer && i.isExternal))
+          .concat(keys);
+      } else {
+        failures++;
+        this.logger.error("Failed to refresh external JWKS", {
+          error: result.reason,
+        });
+      }
+    }
+
+    if (this._config.length > 0 && failures === this._config.length) {
+      throw new AmphoraError("All external JWKS providers failed during refresh");
     }
   }
 

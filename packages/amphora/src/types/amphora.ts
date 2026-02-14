@@ -19,6 +19,7 @@ export type AmphoraOptions = {
   domain?: string;
   external?: Array<AmphoraExternalOption>;
   logger: ILogger;
+  maxExternalKeys?: number;
 };
 
 export type AmphoraQuery = Predicate<

@@ -261,15 +261,21 @@ describe("Amphora", () => {
           jwksUri: "https://lindorm.jp.auth0.com/.well-known/jwks.json",
         });
 
+      const okpJwk = TEST_OKP_KEY_ENC.toJWK();
+      delete okpJwk.iss;
+
       nock("https://lindorm.jp.auth0.com")
         .get("/.well-known/jwks.json")
         .times(1)
-        .reply(200, { keys: [TEST_OKP_KEY_ENC.toJWK()] });
+        .reply(200, { keys: [okpJwk] });
+
+      const ecJwk = TEST_EC_KEY_SIG.toJWK("private");
+      delete ecJwk.iss;
 
       nock("https://external.lindorm.io")
         .get("/.well-known/jwks.json")
         .times(1)
-        .reply(200, { keys: [TEST_EC_KEY_SIG.toJWK("private")] });
+        .reply(200, { keys: [ecJwk] });
 
       amphora = new Amphora({
         domain: issuer,
@@ -312,10 +318,13 @@ describe("Amphora", () => {
     });
 
     test("should add use external config when vault is unable to find key", async () => {
+      const jwk = TEST_EC_KEY_SIG.toJWK("private");
+      delete jwk.iss;
+
       nock("https://external.lindorm.io")
         .get("/.well-known/jwks.json")
         .times(1)
-        .reply(200, { keys: [TEST_EC_KEY_SIG.toJWK("private")] });
+        .reply(200, { keys: [jwk] });
 
       amphora = new Amphora({
         domain: issuer,
@@ -400,10 +409,13 @@ describe("Amphora", () => {
 
   describe("refresh deduplication", () => {
     test("should deduplicate concurrent refresh calls", async () => {
+      const jwk = TEST_EC_KEY_SIG.toJWK("private");
+      delete jwk.iss;
+
       nock("https://external.lindorm.io")
         .get("/.well-known/jwks.json")
         .times(1)
-        .reply(200, { keys: [TEST_EC_KEY_SIG.toJWK("private")] });
+        .reply(200, { keys: [jwk] });
 
       amphora = new Amphora({
         domain: issuer,
@@ -432,10 +444,13 @@ describe("Amphora", () => {
 
   describe("setup deduplication", () => {
     test("should deduplicate concurrent setup calls", async () => {
+      const jwk = TEST_EC_KEY_SIG.toJWK("private");
+      delete jwk.iss;
+
       nock("https://external.lindorm.io")
         .get("/.well-known/jwks.json")
         .times(1)
-        .reply(200, { keys: [TEST_EC_KEY_SIG.toJWK("private")] });
+        .reply(200, { keys: [jwk] });
 
       amphora = new Amphora({
         domain: issuer,
@@ -544,10 +559,13 @@ describe("Amphora", () => {
 
   describe("config deduplication", () => {
     test("should not duplicate config on repeated refresh", async () => {
+      const jwk = TEST_EC_KEY_SIG.toJWK("private");
+      delete jwk.iss;
+
       nock("https://external.lindorm.io")
         .get("/.well-known/jwks.json")
         .times(2)
-        .reply(200, { keys: [TEST_EC_KEY_SIG.toJWK("private")] });
+        .reply(200, { keys: [jwk] });
 
       amphora = new Amphora({
         domain: issuer,
@@ -589,6 +607,164 @@ describe("Amphora", () => {
       await expect(amphora.setup()).rejects.toThrow(
         "All external config providers failed during refresh",
       );
+    });
+  });
+
+  describe("external JWKS resilience", () => {
+    test("should continue refreshing when one JWKS provider fails", async () => {
+      const goodJwk = TEST_EC_KEY_SIG.toJWK("private");
+      delete goodJwk.iss;
+
+      nock("https://good-provider.com")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, { keys: [goodJwk] });
+
+      nock("https://bad-provider.com")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(500, { error: "Internal Server Error" });
+
+      amphora = new Amphora({
+        domain: issuer,
+        logger: createMockLogger(),
+        external: [
+          {
+            issuer: "https://good-provider.com/",
+            jwksUri: "https://good-provider.com/.well-known/jwks.json",
+          },
+          {
+            issuer: "https://bad-provider.com/",
+            jwksUri: "https://bad-provider.com/.well-known/jwks.json",
+          },
+        ],
+      });
+
+      await amphora.setup();
+
+      expect(amphora.vault).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: TEST_EC_KEY_SIG.id,
+            type: "EC",
+            issuer: "https://good-provider.com/",
+          }),
+        ]),
+      );
+
+      const badProviderKeys = amphora.vault.filter(
+        (k) => k.issuer === "https://bad-provider.com/",
+      );
+      expect(badProviderKeys).toHaveLength(0);
+    });
+
+    test("should reject keys with mismatched issuer", async () => {
+      const jwkWithWrongIssuer = TEST_EC_KEY_SIG.toJWK("private");
+      jwkWithWrongIssuer.iss = "https://attacker.com/";
+
+      nock("https://external.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, { keys: [jwkWithWrongIssuer] });
+
+      amphora = new Amphora({
+        domain: issuer,
+        logger: createMockLogger(),
+        external: [
+          {
+            issuer: "https://external.lindorm.io/",
+            jwksUri: "https://external.lindorm.io/.well-known/jwks.json",
+          },
+        ],
+      });
+
+      await expect(amphora.setup()).rejects.toThrow(AmphoraError);
+      await expect(amphora.setup()).rejects.toThrow(
+        "All external JWKS providers failed during refresh",
+      );
+
+      const externalKeys = amphora.vault.filter(
+        (k) => k.issuer === "https://external.lindorm.io/",
+      );
+      expect(externalKeys).toHaveLength(0);
+    });
+
+    test("should truncate when provider returns too many keys", async () => {
+      const jwk1 = { ...TEST_EC_KEY_SIG.toJWK("private"), kid: "key-1" };
+      const jwk2 = { ...TEST_EC_KEY_SIG.toJWK("private"), kid: "key-2" };
+      const jwk3 = { ...TEST_EC_KEY_SIG.toJWK("private"), kid: "key-3" };
+      const jwk4 = { ...TEST_EC_KEY_SIG.toJWK("private"), kid: "key-4" };
+      const jwk5 = { ...TEST_EC_KEY_SIG.toJWK("private"), kid: "key-5" };
+
+      delete jwk1.iss;
+      delete jwk2.iss;
+      delete jwk3.iss;
+      delete jwk4.iss;
+      delete jwk5.iss;
+
+      nock("https://external.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, { keys: [jwk1, jwk2, jwk3, jwk4, jwk5] });
+
+      amphora = new Amphora({
+        domain: issuer,
+        logger: createMockLogger(),
+        maxExternalKeys: 2,
+        external: [
+          {
+            issuer: "https://external.lindorm.io/",
+            jwksUri: "https://external.lindorm.io/.well-known/jwks.json",
+          },
+        ],
+      });
+
+      await amphora.setup();
+
+      const externalKeys = amphora.vault.filter(
+        (k) => k.issuer === "https://external.lindorm.io/",
+      );
+      expect(externalKeys).toHaveLength(2);
+    });
+
+    test("should preserve locally-added keys during external refresh", async () => {
+      const localKey = KryptosKit.generate.sig.ec({
+        algorithm: "ES256",
+        issuer: "https://external.lindorm.io/",
+      });
+
+      const externalJwk = TEST_EC_KEY_SIG.toJWK("private");
+      delete externalJwk.iss;
+
+      nock("https://external.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, { keys: [externalJwk] });
+
+      amphora = new Amphora({
+        domain: issuer,
+        logger: createMockLogger(),
+        external: [
+          {
+            issuer: "https://external.lindorm.io/",
+            jwksUri: "https://external.lindorm.io/.well-known/jwks.json",
+          },
+        ],
+      });
+
+      amphora.add(localKey);
+
+      await amphora.setup();
+
+      const localKeyInVault = amphora.vault.find((k) => k.id === localKey.id);
+      expect(localKeyInVault).toBeDefined();
+      expect(localKeyInVault?.issuer).toBe("https://external.lindorm.io/");
+      expect(localKeyInVault?.isExternal).toBe(false);
+
+      const externalKeyInVault = amphora.vault.find((k) => k.id === TEST_EC_KEY_SIG.id);
+      expect(externalKeyInVault).toBeDefined();
+      expect(externalKeyInVault?.issuer).toBe("https://external.lindorm.io/");
+      expect(externalKeyInVault?.isExternal).toBe(true);
     });
   });
 });
