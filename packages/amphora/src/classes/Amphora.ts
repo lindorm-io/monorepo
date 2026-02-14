@@ -37,7 +37,8 @@ export class Amphora implements IAmphora {
       alias: "Amphora",
       logger: this.logger,
       middleware: [conduitChangeResponseDataMiddleware()],
-      retryOptions: { maxAttempts: 10 },
+      retryOptions: { maxAttempts: 3 },
+      timeout: 10000,
     });
 
     this._config = [];
@@ -353,8 +354,23 @@ export class Amphora implements IAmphora {
   private async refreshExternalConfig(): Promise<void> {
     this.logger.silly("Loading external config");
 
+    this._config = [];
+    let failures = 0;
+
     for (const options of this._external) {
-      await this.addExternalConfig(options);
+      try {
+        await this.addExternalConfig(options);
+      } catch (error) {
+        failures++;
+        this.logger.error("Failed to load external config", {
+          error,
+          issuer: options.issuer ?? options.openIdConfigurationUri,
+        });
+      }
+    }
+
+    if (this._external.length > 0 && failures === this._external.length) {
+      throw new AmphoraError("All external config providers failed during refresh");
     }
   }
 

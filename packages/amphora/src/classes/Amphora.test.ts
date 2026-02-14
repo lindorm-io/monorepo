@@ -541,4 +541,54 @@ describe("Amphora", () => {
       ]);
     });
   });
+
+  describe("config deduplication", () => {
+    test("should not duplicate config on repeated refresh", async () => {
+      nock("https://external.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(2)
+        .reply(200, { keys: [TEST_EC_KEY_SIG.toJWK("private")] });
+
+      amphora = new Amphora({
+        domain: issuer,
+        logger: createMockLogger(),
+        external: [
+          {
+            issuer: "https://external.lindorm.io/",
+            jwksUri: "https://external.lindorm.io/.well-known/jwks.json",
+          },
+        ],
+      });
+
+      await amphora.setup();
+
+      expect(amphora.config.length).toBe(1);
+
+      await amphora.refresh();
+
+      expect(amphora.config.length).toBe(1);
+    });
+
+    test("should throw when all providers fail", async () => {
+      nock("https://external.lindorm.io")
+        .get("/.well-known/openid-configuration")
+        .times(1)
+        .reply(500, { error: "Internal Server Error" });
+
+      amphora = new Amphora({
+        domain: issuer,
+        logger: createMockLogger(),
+        external: [
+          {
+            issuer: "https://external.lindorm.io/",
+          },
+        ],
+      });
+
+      await expect(amphora.setup()).rejects.toThrow(AmphoraError);
+      await expect(amphora.setup()).rejects.toThrow(
+        "All external config providers failed during refresh",
+      );
+    });
+  });
 });
