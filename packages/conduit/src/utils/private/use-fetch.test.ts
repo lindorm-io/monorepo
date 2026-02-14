@@ -132,4 +132,43 @@ describe("useFetch", () => {
     expect(result.status).toBe(200);
     expect(result.data).toBeDefined();
   });
+
+  test("should handle network error (fetch throws TypeError)", async () => {
+    nock("https://test.lindorm.io").get("/").replyWithError({
+      message: "Network error",
+      code: "ECONNREFUSED",
+    });
+
+    await expect(
+      useFetch("https://test.lindorm.io", { method: "get" }),
+    ).rejects.toThrow();
+  });
+
+  test("should handle response with no content-type header", async () => {
+    nock("https://test.lindorm.io").get("/").reply(200, "plain response");
+
+    await expect(useFetch("https://test.lindorm.io", { method: "get" })).resolves.toEqual(
+      expect.objectContaining({ status: 200, data: undefined }),
+    );
+  });
+
+  test("should handle non-ok response (!response.ok) with json parsing", async () => {
+    nock("https://test.lindorm.io")
+      .get("/")
+      .reply(400, { error: "Bad Request" }, { "content-type": "application/json" });
+
+    await expect(
+      useFetch("https://test.lindorm.io", { method: "get" }),
+    ).rejects.toThrow();
+  });
+
+  test("should handle non-ok response with text parsing", async () => {
+    nock("https://test.lindorm.io")
+      .get("/")
+      .reply(500, "Internal Server Error", { "content-type": "text/plain" });
+
+    await expect(
+      useFetch("https://test.lindorm.io", { method: "get" }),
+    ).rejects.toThrow();
+  });
 });

@@ -17,7 +17,7 @@ describe("fetchRequestHandler", () => {
   beforeEach(() => {
     ctx = { req: "ctx" };
 
-    composeFetchConfig.mockResolvedValueOnce({ config: true });
+    composeFetchConfig.mockReturnValueOnce({ config: true });
     useFetch.mockResolvedValueOnce({ response: true });
     requestWithRetry.mockResolvedValueOnce({ response: true });
   });

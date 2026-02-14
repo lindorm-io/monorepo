@@ -315,4 +315,54 @@ describe("conduit-client-credentials-middleware", () => {
       );
     });
   });
+
+  describe("concurrent factory calls token deduplication", () => {
+    test("should share same in-flight token promise when called concurrently", async () => {
+      const cache: ConduitClientCredentialsCache = [];
+
+      nock("https://lindorm.dk.auth0.com")
+        .get("/.well-known/openid-configuration")
+        .times(1)
+        .reply(200, {
+          ...OPEN_ID_CONFIGURATION_RESPONSE,
+          token_endpoint: "https://lindorm.dk.auth0.com/oauth/token",
+        });
+
+      // Only mock ONE token request - if deduplication works, both calls share this request
+      nock("https://lindorm.dk.auth0.com").post("/oauth/token").times(1).reply(200, {
+        access_token: "shared_token",
+        expires_in: 300,
+        token_type: "Bearer",
+      });
+
+      const factory = conduitClientCredentialsMiddlewareFactory(
+        {
+          clientId: "clientId",
+          clientSecret: "clientSecret",
+          clockTolerance: 0,
+          issuer: "https://lindorm.dk.auth0.com/",
+        },
+        cache,
+      );
+
+      // Call factory twice concurrently with same audience
+      const [middleware1, middleware2] = await Promise.all([
+        factory({ audience: "https://shared.audience" }),
+        factory({ audience: "https://shared.audience" }),
+      ]);
+
+      const ctx1: any = { req: { headers: {} } };
+      const ctx2: any = { req: { headers: {} } };
+
+      await middleware1(ctx1, jest.fn());
+      await middleware2(ctx2, jest.fn());
+
+      // Both should have the same token
+      expect(ctx1.req.headers.Authorization).toBe("Bearer shared_token");
+      expect(ctx2.req.headers.Authorization).toBe("Bearer shared_token");
+
+      // Cache should only have one entry
+      expect(cache.length).toBe(1);
+    });
+  });
 });
