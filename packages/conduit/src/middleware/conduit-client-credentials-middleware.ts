@@ -133,6 +133,12 @@ export const conduitClientCredentialsMiddlewareFactory = (
         } = await client.get<OpenIdConfigurationResponse>(OIDCONF);
 
         tokenUri = tokenEndpoint;
+
+        if (!tokenUri) {
+          throw new ConduitError("Token endpoint not found in OpenID configuration", {
+            debug: { issuer },
+          });
+        }
       }
 
       const requestOptions: RequestOptions = {};

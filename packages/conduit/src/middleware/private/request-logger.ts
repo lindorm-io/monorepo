@@ -1,4 +1,5 @@
 import { ConduitMiddleware } from "../../types";
+import { redactHeaders } from "../../utils/private";
 
 export const requestLogger: ConduitMiddleware = async (ctx, next) => {
   ctx.logger?.verbose("Conduit request sent", {
@@ -7,7 +8,7 @@ export const requestLogger: ConduitMiddleware = async (ctx, next) => {
       body: ctx.req.body ? ctx.req.body : {},
       config: ctx.req.config,
       form: ctx.req.form ? ctx.req.form : {},
-      headers: ctx.req.headers,
+      headers: redactHeaders(ctx.req.headers),
       metadata: ctx.req.metadata,
       params: ctx.req.params,
       query: ctx.req.query,

@@ -292,4 +292,27 @@ describe("conduit-client-credentials-middleware", () => {
       expect(cache.length).toEqual(1);
     });
   });
+
+  describe("missing tokenEndpoint validation", () => {
+    test("should throw ConduitError when OIDC discovery does not return tokenEndpoint", async () => {
+      nock("https://lindorm.fi.auth0.com")
+        .get("/.well-known/openid-configuration")
+        .times(1)
+        .reply(200, {
+          ...OPEN_ID_CONFIGURATION_RESPONSE,
+          token_endpoint: undefined,
+        });
+
+      const factory = conduitClientCredentialsMiddlewareFactory({
+        clientId: "clientId",
+        clientSecret: "clientSecret",
+        clockTolerance: 0,
+        issuer: "https://lindorm.fi.auth0.com/",
+      });
+
+      await expect(factory()).rejects.toThrow(
+        "Token endpoint not found in OpenID configuration",
+      );
+    });
+  });
 });

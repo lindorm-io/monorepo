@@ -1,6 +1,7 @@
 import { isObject, isObjectLike, isString } from "@lindorm/is";
 import { ConduitError } from "../../errors";
 import { ConduitMiddleware } from "../../types";
+import { redactHeaders } from "../../utils/private";
 
 export const responseLogger: ConduitMiddleware = async (ctx, next) => {
   const start = Date.now();
@@ -14,7 +15,7 @@ export const responseLogger: ConduitMiddleware = async (ctx, next) => {
         body: ctx.req.body ? ctx.req.body : {},
         config: ctx.req.config,
         form: ctx.req.form ? ctx.req.form : {},
-        headers: ctx.req.headers,
+        headers: redactHeaders(ctx.req.headers),
         metadata: ctx.req.metadata,
         params: ctx.req.params,
         query: ctx.req.query,
@@ -29,7 +30,7 @@ export const responseLogger: ConduitMiddleware = async (ctx, next) => {
             : isObjectLike(ctx.res?.data)
               ? "[Stream]"
               : ctx.res?.data,
-        headers: ctx.res?.headers,
+        headers: ctx.res?.headers ? redactHeaders(ctx.res.headers) : undefined,
         status: ctx.res?.status,
         statusText: ctx.res?.statusText,
       },
@@ -43,7 +44,7 @@ export const responseLogger: ConduitMiddleware = async (ctx, next) => {
           body: ctx.req.body ? ctx.req.body : {},
           config: ctx.req.config,
           form: ctx.req.form ? ctx.req.form : {},
-          headers: ctx.req.headers,
+          headers: redactHeaders(ctx.req.headers),
           metadata: ctx.req.metadata,
           params: ctx.req.params,
           query: ctx.req.query,
@@ -55,7 +56,9 @@ export const responseLogger: ConduitMiddleware = async (ctx, next) => {
         config: err.config,
         response: {
           data: err.response?.data,
-          headers: err.response?.headers,
+          headers: err.response?.headers
+            ? redactHeaders(err.response.headers)
+            : undefined,
           status: err.response?.status || err.status,
           statusText: err.response?.statusText,
         },
