@@ -163,4 +163,31 @@ describe("conduitCircuitBreakerMiddleware", () => {
 
     expect(next).toHaveBeenCalled();
   });
+
+  test("concurrent probe race condition prevented by isProbing guard", async () => {
+    cache.set(origin, {
+      origin,
+      state: "open",
+      errors: [],
+      timestamp: Date.now() - 20000, // Expired
+      isProbing: true, // Already probing
+    });
+
+    await expect(middleware(ctx, next)).rejects.toThrow("Circuit breaker is open");
+
+    // Should wait for probe instead of calling next
+    expect(waitForProbe).toHaveBeenCalled();
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  test("non-ConduitError exceptions pass through without opening circuit", async () => {
+    const regularError = new Error("Not a ConduitError");
+    next.mockRejectedValue(regularError);
+
+    await expect(middleware(ctx, next)).rejects.toThrow("Not a ConduitError");
+
+    // Circuit should not be affected - no entry should be created
+    const breaker = cache.get(origin);
+    expect(breaker).toBeUndefined();
+  });
 });
