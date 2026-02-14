@@ -20,6 +20,7 @@ export type AmphoraOptions = {
   external?: Array<AmphoraExternalOption>;
   logger: ILogger;
   maxExternalKeys?: number;
+  refreshInterval?: number;
 };
 
 export type AmphoraQuery = Predicate<

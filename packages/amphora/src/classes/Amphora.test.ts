@@ -811,4 +811,122 @@ describe("Amphora", () => {
       expect(amphora.jwks.keys).toHaveLength(1);
     });
   });
+
+  describe("cache freshness", () => {
+    afterEach(() => {
+      MockDate.set(MockedDate);
+    });
+
+    test("should refresh stale vault even on cache hit", async () => {
+      const jwk = TEST_EC_KEY_SIG.toJWK("private");
+      delete jwk.iss;
+
+      nock("https://external.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(2)
+        .reply(200, { keys: [jwk] });
+
+      amphora = new Amphora({
+        domain: issuer,
+        logger: createMockLogger(),
+        refreshInterval: 100,
+        external: [
+          {
+            issuer: "https://external.lindorm.io/",
+            jwksUri: "https://external.lindorm.io/.well-known/jwks.json",
+          },
+        ],
+      });
+
+      await amphora.setup();
+
+      MockDate.set(new Date("2024-01-01T08:00:00.200Z"));
+
+      const result = await amphora.filter({ issuer: "https://external.lindorm.io/" });
+
+      expect(nock.isDone()).toBe(true);
+      expect(result).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: TEST_EC_KEY_SIG.id,
+            type: "EC",
+          }),
+        ]),
+      );
+    });
+
+    test("should not refresh non-stale cache on hit", async () => {
+      const jwk = TEST_EC_KEY_SIG.toJWK("private");
+      delete jwk.iss;
+
+      nock("https://external.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, { keys: [jwk] });
+
+      amphora = new Amphora({
+        domain: issuer,
+        logger: createMockLogger(),
+        refreshInterval: 300_000,
+        external: [
+          {
+            issuer: "https://external.lindorm.io/",
+            jwksUri: "https://external.lindorm.io/.well-known/jwks.json",
+          },
+        ],
+      });
+
+      await amphora.setup();
+
+      const result = await amphora.filter({ issuer: "https://external.lindorm.io/" });
+
+      expect(nock.isDone()).toBe(true);
+      expect(result).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: TEST_EC_KEY_SIG.id,
+            type: "EC",
+          }),
+        ]),
+      );
+    });
+
+    test("should return stale results from filterSync without refreshing", async () => {
+      const jwk = TEST_EC_KEY_SIG.toJWK("private");
+      delete jwk.iss;
+
+      nock("https://external.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, { keys: [jwk] });
+
+      amphora = new Amphora({
+        domain: issuer,
+        logger: createMockLogger(),
+        refreshInterval: 100,
+        external: [
+          {
+            issuer: "https://external.lindorm.io/",
+            jwksUri: "https://external.lindorm.io/.well-known/jwks.json",
+          },
+        ],
+      });
+
+      await amphora.setup();
+
+      MockDate.set(new Date("2024-01-01T08:00:00.200Z"));
+
+      const result = amphora.filterSync({ issuer: "https://external.lindorm.io/" });
+
+      expect(nock.isDone()).toBe(true);
+      expect(result).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: TEST_EC_KEY_SIG.id,
+            type: "EC",
+          }),
+        ]),
+      );
+    });
+  });
 });

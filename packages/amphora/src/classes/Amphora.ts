@@ -22,10 +22,12 @@ export class Amphora implements IAmphora {
   private readonly conduit: Conduit;
   private readonly logger: ILogger;
   private readonly maxExternalKeys: number;
+  private readonly refreshInterval: number;
 
   private _config: Array<AmphoraConfig>;
   private _external: Array<AmphoraExternalOption>;
   private _jwks: Array<LindormJwk>;
+  private _lastRefresh: Date | null = null;
   private _refreshPromise: Promise<void> | null = null;
   private _setup: boolean;
   private _setupPromise: Promise<void> | null = null;
@@ -50,6 +52,7 @@ export class Amphora implements IAmphora {
 
     this.domain = options.domain ?? null;
     this.maxExternalKeys = options.maxExternalKeys ?? 100;
+    this.refreshInterval = options.refreshInterval ?? 300_000;
 
     if (this.domain && !isUrlLike(this.domain)) {
       throw new AmphoraError("Domain must be a valid URL", {
@@ -77,6 +80,13 @@ export class Amphora implements IAmphora {
 
   public get vault(): Array<IKryptos> {
     return [...this._vault];
+  }
+
+  // private getters
+
+  private get isStale(): boolean {
+    if (!this._lastRefresh) return true;
+    return Date.now() - this._lastRefresh.getTime() > this.refreshInterval;
   }
 
   // public setup
@@ -158,7 +168,7 @@ export class Amphora implements IAmphora {
 
     const filtered = this.filteredKeys(query);
 
-    if (filtered.length) return filtered;
+    if (filtered.length && !this.isStale) return filtered;
 
     await this.refresh();
 
@@ -229,6 +239,8 @@ export class Amphora implements IAmphora {
     await this.refreshExternalConfig();
     await this.refreshExternalKeys();
     this.pruneExpiredKeys();
+
+    this._lastRefresh = new Date();
   }
 
   private pruneExpiredKeys(): void {
