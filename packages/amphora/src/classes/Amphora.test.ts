@@ -14,6 +14,7 @@ import {
   TEST_OKP_KEY_SIG,
   TEST_RSA_KEY_SIG,
 } from "../__fixtures__/keys";
+import { AmphoraError } from "../errors";
 import { Amphora } from "./Amphora";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
@@ -330,6 +331,70 @@ describe("Amphora", () => {
       await expect(amphora.find({ issuer, id: TEST_EC_KEY_SIG.id })).resolves.toEqual(
         expect.objectContaining({ id: TEST_EC_KEY_SIG.id }),
       );
+    });
+  });
+
+  describe("domain validation", () => {
+    test("should throw AmphoraError when domain is not a valid URL", () => {
+      expect(
+        () =>
+          new Amphora({
+            domain: "not-a-url",
+            logger: createMockLogger(),
+          }),
+      ).toThrow(AmphoraError);
+    });
+
+    test("should throw AmphoraError with debug context when domain is invalid", () => {
+      expect(
+        () =>
+          new Amphora({
+            domain: "not-a-url",
+            logger: createMockLogger(),
+          }),
+      ).toThrow("Domain must be a valid URL");
+    });
+  });
+
+  describe("error context for find()", () => {
+    test("should include debug context in error when key not found", async () => {
+      amphora.add([TEST_EC_KEY_SIG, TEST_OCT_KEY_SIG]);
+
+      try {
+        await amphora.find({ issuer, id: "non-existent-id" });
+        fail("Expected find() to throw");
+      } catch (error) {
+        expect(error).toBeInstanceOf(AmphoraError);
+        expect((error as AmphoraError).message).toBe(
+          "Kryptos not found using query after refresh",
+        );
+        expect((error as AmphoraError).debug).toEqual({
+          queryKeys: ["issuer", "id"],
+          totalKeys: 2,
+          activeKeys: 2,
+        });
+      }
+    });
+  });
+
+  describe("error context for findSync()", () => {
+    test("should include debug context in error when key not found", () => {
+      amphora.add([TEST_EC_KEY_SIG, TEST_OCT_KEY_SIG]);
+
+      try {
+        amphora.findSync({ issuer, id: "non-existent-id" });
+        fail("Expected findSync() to throw");
+      } catch (error) {
+        expect(error).toBeInstanceOf(AmphoraError);
+        expect((error as AmphoraError).message).toBe(
+          "Kryptos not found using query (sync, no refresh)",
+        );
+        expect((error as AmphoraError).debug).toEqual({
+          queryKeys: ["issuer", "id"],
+          totalKeys: 2,
+          activeKeys: 2,
+        });
+      }
     });
   });
 });

@@ -10,7 +10,7 @@ export const createMockAmphora = (): IAmphora => ({
 
   add: jest.fn(),
   env: jest.fn(),
-  filter: jest.fn().mockRejectedValue([]),
+  filter: jest.fn().mockResolvedValue([]),
   filterSync: jest.fn().mockReturnValue([]),
   find: jest.fn().mockResolvedValue("mock_kryptos"),
   findSync: jest.fn().mockReturnValue("mock_kryptos"),

@@ -45,6 +45,12 @@ export class Amphora implements IAmphora {
     this._vault = [];
 
     this.domain = options.domain ?? null;
+
+    if (this.domain && !isUrlLike(this.domain)) {
+      throw new AmphoraError("Domain must be a valid URL", {
+        debug: { domain: this.domain },
+      });
+    }
   }
 
   // public getters
@@ -91,11 +97,20 @@ export class Amphora implements IAmphora {
       }
 
       if (!item.issuer && this.domain) {
+        this.logger.silly("Setting issuer on Kryptos from domain", {
+          id: item.id,
+          issuer: this.domain,
+        });
         item.issuer = this.domain;
       }
 
       if (!item.jwksUri && this.domain) {
-        item.jwksUri = new URL("/.well-known/jwks.json", this.domain).toString();
+        const jwksUri = new URL("/.well-known/jwks.json", this.domain).toString();
+        this.logger.silly("Setting jwksUri on Kryptos from domain", {
+          id: item.id,
+          jwksUri,
+        });
+        item.jwksUri = jwksUri;
       }
 
       if (!item.issuer) {
@@ -142,14 +157,26 @@ export class Amphora implements IAmphora {
     const [key] = await this.filter(query);
     if (key) return key;
 
-    throw new AmphoraError("Kryptos not found using query");
+    throw new AmphoraError("Kryptos not found using query after refresh", {
+      debug: {
+        queryKeys: Object.keys(query),
+        totalKeys: this._vault.length,
+        activeKeys: this._vault.filter((i) => i.isActive).length,
+      },
+    });
   }
 
   public findSync(query: AmphoraQuery): IKryptos {
     const [key] = this.filterSync(query);
     if (key) return key;
 
-    throw new AmphoraError("Kryptos not found using query");
+    throw new AmphoraError("Kryptos not found using query (sync, no refresh)", {
+      debug: {
+        queryKeys: Object.keys(query),
+        totalKeys: this._vault.length,
+        activeKeys: this._vault.filter((i) => i.isActive).length,
+      },
+    });
   }
 
   public async refresh(): Promise<void> {
