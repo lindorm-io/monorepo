@@ -23,7 +23,12 @@ export const createConduitCircuitBreakerMiddleware = (
   const verifier = config.verifier ?? defaultCircuitBreakerVerifier(config);
 
   return async function conduitCircuitBreakerMiddleware(ctx, next) {
-    const origin = new URL(ctx.req.url).origin;
+    let origin: string;
+    try {
+      origin = new URL(ctx.req.url, ctx.app?.baseURL ?? undefined).origin;
+    } catch {
+      origin = ctx.req.url;
+    }
 
     await waitForProbe(cache, origin);
 
@@ -34,7 +39,11 @@ export const createConduitCircuitBreakerMiddleware = (
     }
 
     const fresh = cache.get(origin);
-    if (fresh?.state === "open" && Date.now() > fresh.timestamp + expirationMs) {
+    if (
+      fresh?.state === "open" &&
+      !fresh.isProbing &&
+      Date.now() > fresh.timestamp + expirationMs
+    ) {
       fresh.isProbing = true;
       fresh.state = "half-open";
       cache.set(origin, fresh);
@@ -68,6 +77,7 @@ export const createConduitCircuitBreakerMiddleware = (
       };
 
       init.errors.push(error);
+      while (init.errors.length > 100) init.errors.shift();
 
       if (init.errors.length === 1) {
         ctx.logger?.debug("Circuit breaker initialised", {

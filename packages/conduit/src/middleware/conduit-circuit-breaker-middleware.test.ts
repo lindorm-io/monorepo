@@ -116,4 +116,51 @@ describe("conduitCircuitBreakerMiddleware", () => {
 
     expect(breaker.state).toBe("open");
   });
+
+  test("caps errors array at 100 entries", async () => {
+    // Pre-populate with 100 errors
+    const existingErrors = Array.from(
+      { length: 100 },
+      (_, i) => new ConduitError(`error-${i}`),
+    );
+
+    cache.set(origin, {
+      origin,
+      state: "closed",
+      errors: [...existingErrors],
+      timestamp: Date.now(),
+      isProbing: false,
+    });
+
+    verifier.mockResolvedValue("closed");
+    const newError = new ConduitError("overflow");
+    next.mockRejectedValue(newError);
+
+    await expect(middleware(ctx, next)).rejects.toThrow("overflow");
+
+    const updated = cache.get(origin)!;
+    expect(updated.errors.length).toBe(100);
+    // First error should have been shifted out, second error is now first
+    expect(updated.errors[0]).toEqual(existingErrors[1]);
+    // Last error should be the new one
+    expect(updated.errors[99]).toEqual(newError);
+  });
+
+  test("handles relative URLs without crashing", async () => {
+    ctx.req.url = "/api/test";
+    ctx.app = { baseURL: "https://api.test" };
+
+    await expect(middleware(ctx, next)).resolves.toBeUndefined();
+
+    expect(next).toHaveBeenCalled();
+  });
+
+  test("handles relative URLs without baseURL fallback", async () => {
+    ctx.req.url = "/api/test";
+    ctx.app = undefined;
+
+    await expect(middleware(ctx, next)).resolves.toBeUndefined();
+
+    expect(next).toHaveBeenCalled();
+  });
 });

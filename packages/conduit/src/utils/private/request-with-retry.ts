@@ -8,34 +8,39 @@ export type CommonRequestFunction<T = any> = () => Promise<ConduitResponse<T>>;
 export const requestWithRetry = async <T = any>(
   fn: CommonRequestFunction<T>,
   ctx: ConduitContext,
-  attempt = 1,
 ): Promise<ConduitResponse<T>> => {
-  try {
-    return await fn();
-  } catch (raw: any) {
-    const err =
-      raw instanceof ConduitError
-        ? raw
-        : raw.isAxiosError
-          ? ConduitError.fromAxiosError(raw)
-          : new ConduitError(raw.message || "Unknown error", { error: raw });
+  let attempt = 1;
 
-    if (!ctx.req.retryCallback(err, attempt, ctx.req.retryConfig)) {
-      ctx.logger?.debug("Conduit retry callback returned false, not retrying");
+  for (;;) {
+    try {
+      return await fn();
+    } catch (raw: any) {
+      const err =
+        raw instanceof ConduitError
+          ? raw
+          : raw.isAxiosError
+            ? ConduitError.fromAxiosError(raw)
+            : new ConduitError(raw.message || "Unknown error", { error: raw });
 
-      throw err;
+      if (attempt >= 100) throw err;
+
+      if (!ctx.req.retryCallback(err, attempt, ctx.req.retryConfig)) {
+        ctx.logger?.debug("Conduit retry callback returned false, not retrying");
+
+        throw err;
+      }
+
+      const timeout = calculateRetry(attempt, ctx.req.retryConfig);
+      const nextAttempt = attempt + 1;
+
+      ctx.logger?.debug("Conduit request failed, retrying after timeout", {
+        nextAttempt,
+        timeout,
+      });
+
+      await sleep(timeout);
+
+      attempt = nextAttempt;
     }
-
-    const timeout = calculateRetry(attempt, ctx.req.retryConfig);
-    const nextAttempt = attempt + 1;
-
-    ctx.logger?.debug("Conduit request failed, retrying after timeout", {
-      nextAttempt,
-      timeout,
-    });
-
-    await sleep(timeout);
-
-    return requestWithRetry(fn, ctx, nextAttempt);
   }
 };

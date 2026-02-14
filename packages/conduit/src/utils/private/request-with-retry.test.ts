@@ -42,4 +42,18 @@ describe("requestWithRetry", () => {
     expect(sleep).toHaveBeenCalledWith(1000);
     expect(fn).toHaveBeenCalledTimes(2);
   });
+
+  test("should enforce hard ceiling of 100 attempts", async () => {
+    // Mock callback to always return true (retry forever)
+    ctx.req.retryCallback = jest.fn().mockReturnValue(true);
+
+    // Mock fn to always fail
+    fn.mockRejectedValue(new Error("persistent failure"));
+
+    await expect(requestWithRetry(fn, ctx)).rejects.toThrow("persistent failure");
+
+    // Should stop at 100 attempts, not continue infinitely
+    expect(fn).toHaveBeenCalledTimes(100);
+    expect(ctx.req.retryCallback).toHaveBeenCalledTimes(99); // Callback checked 99 times (not on attempt 100)
+  });
 });
