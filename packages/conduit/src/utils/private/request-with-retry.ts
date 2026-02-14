@@ -32,6 +32,8 @@ export const requestWithRetry = async <T = any>(
         throw err;
       }
 
+      ctx.req.onRetry?.(err, attempt, ctx.req.retryConfig);
+
       const timeout = calculateRetry(attempt, ctx.req.retryConfig);
       const nextAttempt = attempt + 1;
 

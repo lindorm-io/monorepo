@@ -1,5 +1,6 @@
 export * from "./conduit-basic-auth-middleware";
 export * from "./conduit-bearer-auth-middleware";
+export * from "./conduit-cache-middleware";
 export * from "./conduit-change-request-body-middleware";
 export * from "./conduit-change-request-headers-middleware";
 export * from "./conduit-change-request-query-middleware";
@@ -7,7 +8,9 @@ export * from "./conduit-change-response-data-middleware";
 export * from "./conduit-circuit-breaker-middleware";
 export * from "./conduit-client-credentials-middleware";
 export * from "./conduit-correlation-middleware";
+export * from "./conduit-deduplication-middleware";
 export * from "./conduit-header-middleware";
 export * from "./conduit-headers-middleware";
+export * from "./conduit-rate-limit-middleware";
 export * from "./conduit-schema-middleware";
 export * from "./conduit-session-middleware";

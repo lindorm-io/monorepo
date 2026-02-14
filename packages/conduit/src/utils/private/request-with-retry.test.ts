@@ -15,9 +15,13 @@ describe("requestWithRetry", () => {
   beforeEach(() => {
     ctx = {
       req: {
-        retryOptions: { options: true },
+        retryConfig: { options: true },
         retryCallback: () => true,
+        onRetry: undefined,
         signal: undefined,
+      },
+      logger: {
+        debug: jest.fn(),
       },
     };
 
@@ -79,6 +83,37 @@ describe("requestWithRetry", () => {
   test("should continue retrying if signal is not aborted", async () => {
     const controller = new AbortController();
     ctx.req.signal = controller.signal;
+
+    fn.mockRejectedValueOnce(new Error("failure")).mockResolvedValue("success");
+
+    await expect(requestWithRetry(fn, ctx)).resolves.toEqual("success");
+
+    expect(fn).toHaveBeenCalledTimes(2);
+  });
+
+  test("should call onRetry callback with correct arguments before each retry", async () => {
+    const onRetry = jest.fn();
+    ctx.req.onRetry = onRetry;
+    ctx.req.retryConfig = {
+      maxAttempts: 3,
+      strategy: "linear",
+      timeout: 100,
+    };
+
+    fn.mockRejectedValueOnce(new Error("first failure"))
+      .mockRejectedValueOnce(new Error("second failure"))
+      .mockResolvedValue("success");
+
+    await expect(requestWithRetry(fn, ctx)).resolves.toEqual("success");
+
+    expect(onRetry).toHaveBeenCalledTimes(2);
+    expect(onRetry).toHaveBeenNthCalledWith(1, expect.any(Error), 1, ctx.req.retryConfig);
+    expect(onRetry).toHaveBeenNthCalledWith(2, expect.any(Error), 2, ctx.req.retryConfig);
+    expect(fn).toHaveBeenCalledTimes(3);
+  });
+
+  test("should not fail if onRetry is undefined", async () => {
+    ctx.req.onRetry = undefined;
 
     fn.mockRejectedValueOnce(new Error("failure")).mockResolvedValue("success");
 

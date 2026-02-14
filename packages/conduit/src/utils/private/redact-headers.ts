@@ -1,4 +1,4 @@
-import { Dict } from "@lindorm/types";
+import { Dict, Header } from "@lindorm/types";
 
 const SENSITIVE_HEADERS = new Set([
   "authorization",
@@ -7,11 +7,12 @@ const SENSITIVE_HEADERS = new Set([
   "proxy-authorization",
 ]);
 
-export const redactHeaders = (headers: Dict<string>): Dict<string> => {
+export const redactHeaders = (headers: Dict<Header>): Dict<string> => {
   const result: Dict<string> = {};
 
   for (const [key, value] of Object.entries(headers)) {
-    result[key] = SENSITIVE_HEADERS.has(key.toLowerCase()) ? "[REDACTED]" : value;
+    const stringValue = String(value);
+    result[key] = SENSITIVE_HEADERS.has(key.toLowerCase()) ? "[REDACTED]" : stringValue;
   }
 
   return result;

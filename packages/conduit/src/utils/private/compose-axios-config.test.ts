@@ -21,6 +21,7 @@ describe("composeAxiosConfig", () => {
         sessionId: "sessionId",
       },
       onDownloadProgress: undefined,
+      onRetry: undefined,
       onUploadProgress: undefined,
       params: {
         answer: "there",

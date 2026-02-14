@@ -130,4 +130,20 @@ describe("redactHeaders", () => {
       "X-Custom": "value",
     });
   });
+
+  test("converts numeric header values to strings", () => {
+    const headers = {
+      "Content-Length": 1234,
+      "X-Retry-Count": 3,
+      "Content-Type": "application/json",
+    };
+
+    const result = redactHeaders(headers);
+
+    expect(result).toEqual({
+      "Content-Length": "1234",
+      "X-Retry-Count": "3",
+      "Content-Type": "application/json",
+    });
+  });
 });

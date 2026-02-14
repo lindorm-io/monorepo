@@ -4,7 +4,7 @@ import { Readable } from "stream";
 import { ConduitUsing, ExpectedResponse } from "../types";
 import { ConduitMiddleware } from "./conduit";
 import { ConfigOptions } from "./overrides";
-import { RetryCallback } from "./retry";
+import { OnRetryCallback, RetryCallback } from "./retry";
 
 export type MethodOptions = {
   method: HttpMethod;
@@ -28,6 +28,7 @@ export type RequestOptions<
     ConduitMiddleware<ResponseData, RequestBody, RequestParams, RequestQuery>
   >;
   onDownloadProgress?: (event: { loaded: number; total?: number }) => void;
+  onRetry?: OnRetryCallback;
   onUploadProgress?: (event: { loaded: number; total?: number }) => void;
   params?: RequestParams;
   query?: RequestQuery;

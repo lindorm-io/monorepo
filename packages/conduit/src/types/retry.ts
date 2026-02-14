@@ -6,3 +6,9 @@ export type RetryCallback = (
   attempt: number,
   config: RetryConfig,
 ) => boolean;
+
+export type OnRetryCallback = (
+  err: ConduitError,
+  attempt: number,
+  config: RetryConfig,
+) => void;
