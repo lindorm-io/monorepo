@@ -55,7 +55,7 @@ describe("useFetch", () => {
       useFetch(
         "https://test.lindorm.io",
         { method: "get" },
-        { responseType: "arraybuffer" },
+        { config: { responseType: "arraybuffer" } },
       ),
     ).resolves.toEqual(
       expect.objectContaining({ status: 200, data: Buffer.from("hello") }),
@@ -68,7 +68,11 @@ describe("useFetch", () => {
       .reply(200, Buffer.from("hello"), { "content-type": "image/jpeg" });
 
     await expect(
-      useFetch("https://test.lindorm.io", { method: "get" }, { responseType: "blob" }),
+      useFetch(
+        "https://test.lindorm.io",
+        { method: "get" },
+        { config: { responseType: "blob" } },
+      ),
     ).resolves.toEqual(
       expect.objectContaining({ status: 200, data: expect.any(Object) }),
     );
@@ -112,5 +116,20 @@ describe("useFetch", () => {
     await expect(useFetch("https://test.lindorm.io", { method: "put" })).resolves.toEqual(
       expect.objectContaining({ status: 204 }),
     );
+  });
+
+  test("should return response body when stream option is true", async () => {
+    nock("https://test.lindorm.io")
+      .get("/")
+      .reply(200, "streaming data", { "content-type": "text/plain" });
+
+    const result = await useFetch(
+      "https://test.lindorm.io",
+      { method: "get" },
+      { stream: true },
+    );
+
+    expect(result.status).toBe(200);
+    expect(result.data).toBeDefined();
   });
 });

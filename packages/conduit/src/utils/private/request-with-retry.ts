@@ -24,6 +24,8 @@ export const requestWithRetry = async <T = any>(
 
       if (attempt >= 100) throw err;
 
+      if (ctx.req.signal?.aborted) throw err;
+
       if (!ctx.req.retryCallback(err, attempt, ctx.req.retryConfig)) {
         ctx.logger?.debug("Conduit retry callback returned false, not retrying");
 

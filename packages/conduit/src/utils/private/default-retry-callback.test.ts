@@ -62,4 +62,33 @@ describe("defaultRetryCallback", () => {
     expect((err as any).response).toBeUndefined();
     expect(defaultRetryCallback(err, 1, options)).toBe(true);
   });
+
+  test("should return true for network errors (status <= 0, no response)", () => {
+    const err = new ConduitError("Network error", {
+      status: -1,
+      response: undefined,
+    });
+
+    expect(err.isNetworkError).toBe(true);
+    expect(defaultRetryCallback(err, 1, options)).toBe(true);
+  });
+
+  test("should return true for network errors (status 0, no response)", () => {
+    const err = new ConduitError("Connection failed", {
+      status: 0,
+      response: undefined,
+    });
+
+    expect(err.isNetworkError).toBe(true);
+    expect(defaultRetryCallback(err, 1, options)).toBe(true);
+  });
+
+  test("should retry network errors even when attempt count is high", () => {
+    const err = new ConduitError("Network error", {
+      status: -1,
+      response: undefined,
+    });
+
+    expect(defaultRetryCallback(err, 2, options)).toBe(true);
+  });
 });

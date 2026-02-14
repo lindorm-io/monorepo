@@ -20,6 +20,8 @@ describe("composeAxiosConfig", () => {
         requestId: "id",
         sessionId: "sessionId",
       },
+      onDownloadProgress: undefined,
+      onUploadProgress: undefined,
       params: {
         answer: "there",
         general: "kenobi",
@@ -36,6 +38,7 @@ describe("composeAxiosConfig", () => {
         timeout: 25,
         timeoutMax: 3000,
       },
+      signal: undefined,
       stream: undefined,
       url: "https://lindorm.io:3000/test/path/hello/:answer/:general",
     };

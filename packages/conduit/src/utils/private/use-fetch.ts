@@ -53,19 +53,82 @@ const parseResponseHeaders = (response: Response): Dict<Header> => {
   return headers;
 };
 
+type UseFetchOptions = {
+  config?: ConfigContext;
+  onDownloadProgress?: (event: { loaded: number; total?: number }) => void;
+  stream?: boolean;
+};
+
 export const useFetch = async (
   input: string,
   init: RequestInit,
-  config?: ConfigContext,
+  options?: UseFetchOptions,
 ): Promise<ConduitResponse> => {
   const response = await fetch(input, init);
 
-  const data = await parseResponseData(response, config);
-  const headers = parseResponseHeaders(response);
-
   if (!response.ok) {
-    throw ConduitError.fromFetchError(response, input, init, config, data, headers);
+    const data = await parseResponseData(response, options?.config);
+    const headers = parseResponseHeaders(response);
+    throw ConduitError.fromFetchError(
+      response,
+      input,
+      init,
+      options?.config,
+      data,
+      headers,
+    );
   }
+
+  if (options?.stream) {
+    return {
+      data: response.body,
+      headers: parseResponseHeaders(response),
+      status: response.status,
+      statusText: response.statusText,
+    };
+  }
+
+  if (options?.onDownloadProgress && response.body) {
+    const reader = response.body.getReader();
+    const contentLength = response.headers.get("content-length");
+    const total = contentLength ? parseInt(contentLength, 10) : undefined;
+    const chunks: Array<Uint8Array> = [];
+    let loaded = 0;
+
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      chunks.push(value);
+      loaded += value.byteLength;
+      options.onDownloadProgress({ loaded, total });
+    }
+
+    const combined = new Uint8Array(loaded);
+    let offset = 0;
+    for (const chunk of chunks) {
+      combined.set(chunk, offset);
+      offset += chunk.byteLength;
+    }
+
+    const reconstructed = new Response(combined, {
+      headers: response.headers,
+      status: response.status,
+      statusText: response.statusText,
+    });
+
+    const data = await parseResponseData(reconstructed, options?.config);
+    const headers = parseResponseHeaders(response);
+
+    return {
+      data,
+      headers,
+      status: response.status,
+      statusText: response.statusText,
+    };
+  }
+
+  const data = await parseResponseData(response, options?.config);
+  const headers = parseResponseHeaders(response);
 
   return {
     data,

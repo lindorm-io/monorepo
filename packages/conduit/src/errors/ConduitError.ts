@@ -25,6 +25,10 @@ export class ConduitError extends LindormError {
     return this.status >= 400 && this.status < 500;
   }
 
+  public get isNetworkError(): boolean {
+    return this.status <= 0 && !this.response;
+  }
+
   public get isServerError(): boolean {
     return this.status >= 500 && this.status < 600;
   }

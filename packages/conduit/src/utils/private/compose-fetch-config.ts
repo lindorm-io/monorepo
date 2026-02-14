@@ -10,10 +10,27 @@ type Composed = {
 
 export const composeFetchConfig = (ctx: ConduitContext): Composed => {
   if (ctx.req.stream) {
-    throw new Error("Stream requests are not supported when using fetch");
+    throw new Error("Stream upload requests are not supported when using fetch");
   }
 
   const { body, headers } = composeFetchData(ctx);
+
+  const signals: Array<AbortSignal> = [];
+
+  if (ctx.req.config.timeout) {
+    signals.push(AbortSignal.timeout(ctx.req.config.timeout));
+  }
+
+  if (ctx.req.signal) {
+    signals.push(ctx.req.signal);
+  }
+
+  const signal =
+    signals.length > 1
+      ? AbortSignal.any(signals)
+      : signals.length === 1
+        ? signals[0]
+        : undefined;
 
   return {
     input: createUrl(ctx.req.url, {
@@ -36,6 +53,7 @@ export const composeFetchConfig = (ctx: ConduitContext): Composed => {
       redirect: ctx.req.config.redirect,
       referrer: ctx.req.config.referrer,
       referrerPolicy: ctx.req.config.referrerPolicy,
+      signal,
       window: ctx.req.config.window,
     },
   };

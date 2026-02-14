@@ -27,10 +27,13 @@ export type RequestOptions<
   middleware?: Array<
     ConduitMiddleware<ResponseData, RequestBody, RequestParams, RequestQuery>
   >;
+  onDownloadProgress?: (event: { loaded: number; total?: number }) => void;
+  onUploadProgress?: (event: { loaded: number; total?: number }) => void;
   params?: RequestParams;
   query?: RequestQuery;
   retryCallback?: RetryCallback;
   retryOptions?: RetryOptions;
+  signal?: AbortSignal;
   stream?: Readable;
   timeout?: number;
   using?: ConduitUsing;

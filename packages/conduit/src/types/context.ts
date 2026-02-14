@@ -24,10 +24,13 @@ export type RequestContext<Body = Dict, Params = Dict, Query = Dict> = {
   form: FormData | undefined;
   headers: Dict<string>;
   metadata: RequestMetadata;
+  onDownloadProgress: ((event: { loaded: number; total?: number }) => void) | undefined;
+  onUploadProgress: ((event: { loaded: number; total?: number }) => void) | undefined;
   params: Params;
   query: Query;
   retryCallback: RetryCallback;
   retryConfig: RetryConfig;
+  signal: AbortSignal | undefined;
   stream: Readable | undefined;
   url: string;
 };

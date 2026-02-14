@@ -13,6 +13,8 @@ export const composeAxiosConfig = async (
     ...ctx.req.config,
     data,
     headers: { ...headers, ...ctx.req.headers },
+    onDownloadProgress: ctx.req.onDownloadProgress,
+    onUploadProgress: ctx.req.onUploadProgress,
     url: createUrl(ctx.req.url, {
       baseUrl: ctx.app.baseURL ?? REPLACE_URL,
       params: ctx.req.params,

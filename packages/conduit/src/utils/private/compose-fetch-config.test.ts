@@ -8,8 +8,6 @@ describe("composeFetchConfig", () => {
     const req: RequestContext = {
       body: { body: "body" },
       config: {
-        timeout: 250,
-        withCredentials: true,
         cache: "force-cache",
         credentials: "omit",
         integrity: "integrity",
@@ -29,6 +27,8 @@ describe("composeFetchConfig", () => {
         requestId: "id",
         sessionId: "sessionId",
       },
+      onDownloadProgress: undefined,
+      onUploadProgress: undefined,
       params: {
         answer: "there",
         general: "kenobi",
@@ -38,7 +38,6 @@ describe("composeFetchConfig", () => {
         force: "be",
         with: "you",
       },
-      stream: undefined,
       retryCallback: () => true,
       retryConfig: {
         maxAttempts: 3,
@@ -46,6 +45,8 @@ describe("composeFetchConfig", () => {
         timeout: 25,
         timeoutMax: 3000,
       },
+      signal: undefined,
+      stream: undefined,
       url: "https://lindorm.io:3000/test/path/hello/:answer/:general",
     };
 
@@ -120,5 +121,41 @@ describe("composeFetchConfig", () => {
         referrerPolicy: "no-referrer",
       },
     });
+  });
+
+  test("should include AbortSignal when timeout is set", () => {
+    ctx.req.config.timeout = 5000;
+
+    const result = composeFetchConfig(ctx);
+
+    expect(result.init.signal).toBeDefined();
+    expect(result.init.signal).toBeInstanceOf(AbortSignal);
+  });
+
+  test("should include user-provided signal", () => {
+    const controller = new AbortController();
+    ctx.req.signal = controller.signal;
+
+    const result = composeFetchConfig(ctx);
+
+    expect(result.init.signal).toBe(controller.signal);
+  });
+
+  test("should combine timeout signal and user signal with AbortSignal.any", () => {
+    const controller = new AbortController();
+    ctx.req.config.timeout = 5000;
+    ctx.req.signal = controller.signal;
+
+    const result = composeFetchConfig(ctx);
+
+    expect(result.init.signal).toBeDefined();
+    expect(result.init.signal).toBeInstanceOf(AbortSignal);
+    expect(result.init.signal).not.toBe(controller.signal);
+  });
+
+  test("should not include signal when no timeout or user signal", () => {
+    const result = composeFetchConfig(ctx);
+
+    expect(result.init.signal).toBeUndefined();
   });
 });
