@@ -7,6 +7,8 @@ export const conduitSchemaMiddleware = <T extends ZodRawShape>(
   schema: ZodObject<T> | ZodArray<ZodTypeAny>,
 ): ConduitMiddleware =>
   async function conduitSchemaMiddleware(ctx, next) {
+    await next();
+
     try {
       if (schema instanceof ZodObject) {
         ctx.res.data = schema.passthrough().parse(ctx.res.data);
@@ -21,6 +23,4 @@ export const conduitSchemaMiddleware = <T extends ZodRawShape>(
         data: err.details,
       });
     }
-
-    await next();
   };

@@ -276,7 +276,7 @@ export class Conduit implements IConduit {
       app: this.context,
       logger: this.logger,
       req,
-      res: CONDUIT_RESPONSE,
+      res: { ...CONDUIT_RESPONSE, data: {} as ResponseData, headers: {} },
     };
 
     const result = await composeMiddleware<

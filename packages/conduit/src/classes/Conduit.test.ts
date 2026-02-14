@@ -268,5 +268,33 @@ describe("Conduit", () => {
         expect.objectContaining({ status: 999, statusText: "general kenobi" }),
       );
     });
+
+    test("should not share response objects between requests", async () => {
+      scope = nock("http://test.lindorm.io")
+        .post("/test/path1")
+        .times(1)
+        .reply(200, { result: "first" })
+        .post("/test/path2")
+        .times(1)
+        .reply(200, { result: "second" });
+
+      const capturedContexts: any[] = [];
+
+      const captureMw: ConduitMiddleware = async (ctx, next) => {
+        await next();
+        capturedContexts.push(ctx);
+      };
+
+      const [response1, response2] = await Promise.all([
+        conduit.post("/test/path1", { middleware: [captureMw] }),
+        conduit.post("/test/path2", { middleware: [captureMw] }),
+      ]);
+
+      expect(response1.data).toEqual({ result: "first" });
+      expect(response2.data).toEqual({ result: "second" });
+
+      expect(capturedContexts).toHaveLength(2);
+      expect(capturedContexts[0].res).not.toBe(capturedContexts[1].res);
+    });
   });
 });

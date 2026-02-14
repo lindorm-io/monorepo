@@ -16,6 +16,32 @@ describe("conduitSchemaMiddleware", () => {
     };
   });
 
+  test("should validate response data populated by next()", async () => {
+    const next = jest.fn(async () => {
+      ctx.res.data = {
+        key: "value",
+        number: "123",
+      };
+    });
+
+    ctx.res.data = {};
+
+    await expect(
+      conduitSchemaMiddleware(
+        z.object({
+          key: z.string(),
+          number: z.coerce.number(),
+        }),
+      )(ctx, next),
+    ).resolves.toBeUndefined();
+
+    expect(next).toHaveBeenCalledTimes(1);
+    expect(ctx.res.data).toEqual({
+      key: "value",
+      number: 123,
+    });
+  });
+
   test("should resolve object", async () => {
     await expect(
       conduitSchemaMiddleware(

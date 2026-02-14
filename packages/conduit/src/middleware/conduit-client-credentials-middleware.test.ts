@@ -216,4 +216,80 @@ describe("conduit-client-credentials-middleware", () => {
       });
     });
   });
+
+  describe("defaultExpiration TTL calculation", () => {
+    test("should calculate TTL as future timestamp when using defaultExpiration", async () => {
+      const cache: ConduitClientCredentialsCache = [];
+
+      nock("https://lindorm.se.auth0.com")
+        .get("/.well-known/openid-configuration")
+        .times(1)
+        .reply(200, {
+          ...OPEN_ID_CONFIGURATION_RESPONSE,
+          token_endpoint: "https://lindorm.se.auth0.com/oauth/token",
+        });
+
+      nock("https://lindorm.se.auth0.com").post("/oauth/token").times(1).reply(200, {
+        access_token: "access_token_default",
+        token_type: "Bearer",
+      });
+
+      const factory = conduitClientCredentialsMiddlewareFactory(
+        {
+          clientId: "clientId",
+          clientSecret: "clientSecret",
+          clockTolerance: 0,
+          issuer: "https://lindorm.se.auth0.com/",
+          defaultExpiration: 300,
+        },
+        cache,
+      );
+
+      const middleware = await factory();
+
+      expect(cache.length).toEqual(1);
+      expect(cache[0].ttl).toBeGreaterThan(Date.now());
+      expect(cache[0].ttl).toBeLessThanOrEqual(Date.now() + 300 * 1000);
+    });
+  });
+
+  describe("replaceInCache removes expired entries", () => {
+    test("should remove expired cache entries during iteration", async () => {
+      const cache: ConduitClientCredentialsCache = [];
+
+      nock("https://lindorm.no.auth0.com")
+        .get("/.well-known/openid-configuration")
+        .times(1)
+        .reply(200, {
+          ...OPEN_ID_CONFIGURATION_RESPONSE,
+          token_endpoint: "https://lindorm.no.auth0.com/oauth/token",
+        });
+
+      nock("https://lindorm.no.auth0.com").post("/oauth/token").times(2).reply(200, {
+        access_token: "access_token_test",
+        expires_in: 1,
+        token_type: "Bearer",
+      });
+
+      const factory = conduitClientCredentialsMiddlewareFactory(
+        {
+          clientId: "clientId",
+          clientSecret: "clientSecret",
+          clockTolerance: 0,
+          issuer: "https://lindorm.no.auth0.com/",
+        },
+        cache,
+      );
+
+      await factory({ audience: "https://test.audience" });
+
+      expect(cache.length).toEqual(1);
+
+      MockDate.set(new Date("2024-01-01T00:00:05.000Z"));
+
+      await factory({ audience: "https://test.audience" });
+
+      expect(cache.length).toEqual(1);
+    });
+  });
 });

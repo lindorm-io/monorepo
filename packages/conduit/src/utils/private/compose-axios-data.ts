@@ -47,5 +47,5 @@ export const composeAxiosData = async (ctx: ConduitContext): Promise<Result> => 
     };
   }
 
-  return { data: {}, headers: {} };
+  return { data: undefined, headers: {} };
 };

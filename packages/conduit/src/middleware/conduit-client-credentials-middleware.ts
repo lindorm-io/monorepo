@@ -56,13 +56,14 @@ const OIDCONF = "/.well-known/openid-configuration" as const;
 const replaceInCache = (cache: ConduitClientCredentialsCache, item: CacheItem): void => {
   const now = Date.now();
 
-  for (const [index, entry] of cache.entries()) {
+  for (let i = cache.length - 1; i >= 0; i--) {
+    const entry = cache[i];
     if (
       entry.audience === item.audience &&
       entry.issuer === item.issuer &&
       entry.ttl <= now
     ) {
-      cache.splice(index, 1);
+      cache.splice(i, 1);
     }
   }
 
@@ -169,7 +170,7 @@ export const conduitClientCredentialsMiddlewareFactory = (
       : data.expiresIn
         ? Date.now() + data.expiresIn * 1000
         : config.defaultExpiration
-          ? config.defaultExpiration * 1000
+          ? Date.now() + config.defaultExpiration * 1000
           : undefined;
 
     if (!data.accessToken) {

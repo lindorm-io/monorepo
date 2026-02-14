@@ -29,7 +29,9 @@
     "update:auto": "ncu -u"
   },
   "dependencies": {
+    "@lindorm/case": "^0.1.11",
     "@lindorm/enums": "^0.1.5",
+    "@lindorm/errors": "^0.1.12",
     "@lindorm/is": "^0.1.11",
     "@lindorm/middleware": "^0.1.5",
     "@lindorm/retry": "^0.1.9",
@@ -44,6 +46,7 @@
     "form-data": "^4.0.0"
   },
   "peerDependencies": {
+    "axios": "^1.0.0",
     "form-data": "^4.0.0"
   }
 }
