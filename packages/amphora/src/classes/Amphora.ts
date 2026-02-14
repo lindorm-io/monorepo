@@ -61,7 +61,7 @@ export class Amphora implements IAmphora {
   // public getters
 
   public get config(): Array<AmphoraConfig> {
-    return this._config;
+    return [...this._config];
   }
 
   public get jwks(): AmphoraJwks {
@@ -72,11 +72,11 @@ export class Amphora implements IAmphora {
       });
     }
 
-    return { keys: this._jwks };
+    return { keys: [...this._jwks] };
   }
 
   public get vault(): Array<IKryptos> {
-    return this._vault;
+    return [...this._vault];
   }
 
   // public setup
@@ -228,6 +228,20 @@ export class Amphora implements IAmphora {
 
     await this.refreshExternalConfig();
     await this.refreshExternalKeys();
+    this.pruneExpiredKeys();
+  }
+
+  private pruneExpiredKeys(): void {
+    const before = this._vault.length;
+
+    this._vault = this._vault.filter((k) => !k.isExpired || k.isExternal);
+
+    const removed = before - this._vault.length;
+
+    if (removed > 0) {
+      this.logger.silly("Pruned expired internal keys from vault", { removed });
+      this.refreshJwks();
+    }
   }
 
   public canEncrypt(): boolean {

@@ -767,4 +767,48 @@ describe("Amphora", () => {
       expect(externalKeyInVault?.isExternal).toBe(true);
     });
   });
+
+  describe("encapsulation", () => {
+    test("should not allow mutation of vault via getter", () => {
+      amphora.add(TEST_EC_KEY_SIG);
+      const vault = amphora.vault;
+      vault.push(TEST_OKP_KEY_SIG);
+      expect(amphora.vault).toHaveLength(1);
+    });
+
+    test("should not allow mutation of config via getter", async () => {
+      const jwk = TEST_EC_KEY_SIG.toJWK("private");
+      delete jwk.iss;
+
+      nock("https://external.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, { keys: [jwk] });
+
+      amphora = new Amphora({
+        domain: issuer,
+        logger: createMockLogger(),
+        external: [
+          {
+            issuer: "https://external.lindorm.io/",
+            jwksUri: "https://external.lindorm.io/.well-known/jwks.json",
+          },
+        ],
+      });
+
+      await amphora.setup();
+
+      const config = amphora.config;
+      config.length = 0;
+
+      expect(amphora.config).toHaveLength(1);
+    });
+
+    test("should not allow mutation of jwks keys via getter", () => {
+      amphora.add(TEST_EC_KEY_SIG);
+      const jwks = amphora.jwks;
+      jwks.keys.length = 0;
+      expect(amphora.jwks.keys).toHaveLength(1);
+    });
+  });
 });
