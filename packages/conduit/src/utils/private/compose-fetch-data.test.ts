@@ -1,7 +1,7 @@
 import { ConduitContext } from "../../types";
-import { composeAxiosData } from "./compose-axios-data";
+import { composeFetchData } from "./compose-fetch-data";
 
-describe("composeAxiosData", () => {
+describe("composeFetchData", () => {
   let ctx: ConduitContext;
 
   beforeEach(() => {
@@ -46,99 +46,111 @@ describe("composeAxiosData", () => {
     } as any;
   });
 
-  test("should return undefined data when no body, form, or stream", async () => {
-    const result = await composeAxiosData(ctx);
+  test("should return undefined body when no body or form", () => {
+    const result = composeFetchData(ctx);
 
     expect(result).toEqual({
-      data: undefined,
+      body: undefined,
       headers: {},
     });
   });
 
-  test("should return body data with content-type header", async () => {
+  test("should return JSON body with content-type header for object", () => {
     ctx.req.body = { key: "value" };
 
-    const result = await composeAxiosData(ctx);
+    const result = composeFetchData(ctx);
 
     expect(result).toEqual({
-      data: { key: "value" },
+      body: JSON.stringify({ key: "value" }),
       headers: {
         "Content-Type": "application/json",
       },
     });
   });
 
-  test("should return undefined data when body is empty object", async () => {
+  test("should return undefined body when body is empty object", () => {
     ctx.req.body = {};
 
-    const result = await composeAxiosData(ctx);
+    const result = composeFetchData(ctx);
 
     expect(result).toEqual({
-      data: undefined,
+      body: undefined,
       headers: {},
     });
   });
 
-  test("should return form data with content-type header", async () => {
+  test("should return URLSearchParams for form without files", () => {
     const form = new FormData();
     form.append("test", "value");
+    form.append("another", "field");
     ctx.req.form = form;
 
-    const result = await composeAxiosData(ctx);
+    const result = composeFetchData(ctx);
 
-    expect(result).toEqual({
-      data: form,
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
+    expect(result.body).toBe("test=value&another=field");
+    expect(result.headers).toEqual({
+      "Content-Type": "application/x-www-form-urlencoded",
     });
   });
 
-  test("should return form data with files and empty headers", async () => {
+  test("should return FormData with files and empty headers", () => {
     const form = new FormData();
     const file = new File(["content"], "test.txt", { type: "text/plain" });
     form.append("file", file);
     form.append("field", "value");
     ctx.req.form = form;
 
-    const result = await composeAxiosData(ctx);
+    const result = composeFetchData(ctx);
 
     expect(result).toEqual({
-      data: form,
+      body: form,
       headers: {},
     });
   });
 
-  test("should handle string body without JSON serialization", async () => {
+  test("should handle string body without JSON serialization", () => {
     ctx.req.body = "plain text" as any;
 
-    const result = await composeAxiosData(ctx);
+    const result = composeFetchData(ctx);
 
     expect(result).toEqual({
-      data: "plain text",
+      body: "plain text",
       headers: {},
     });
   });
 
-  test("should handle number body without JSON serialization", async () => {
+  test("should handle number body as string", () => {
     ctx.req.body = 42 as any;
 
-    const result = await composeAxiosData(ctx);
+    const result = composeFetchData(ctx);
 
     expect(result).toEqual({
-      data: 42,
+      body: "42",
       headers: {},
     });
   });
 
-  test("should handle boolean body without JSON serialization", async () => {
-    ctx.req.body = true as any;
+  test("should handle boolean body as string", () => {
+    ctx.req.body = false as any;
 
-    const result = await composeAxiosData(ctx);
+    const result = composeFetchData(ctx);
 
     expect(result).toEqual({
-      data: true,
+      body: "false",
       headers: {},
+    });
+  });
+
+  test("should handle array body with JSON serialization", () => {
+    ctx.req.body = [1, 2, 3] as any;
+
+    const result = composeFetchData(ctx);
+
+    expect(result).toEqual({
+      body: JSON.stringify([1, 2, 3]),
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
   });
 });

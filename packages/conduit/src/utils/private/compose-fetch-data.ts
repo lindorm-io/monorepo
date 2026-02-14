@@ -1,3 +1,4 @@
+import { isObject } from "@lindorm/is";
 import { Dict } from "@lindorm/types";
 import { ConduitContext } from "../../types";
 
@@ -13,9 +14,7 @@ export const composeFetchData = (ctx: ConduitContext): Result => {
 
       return {
         body: ctx.req.form,
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+        headers: {},
       };
     }
 
@@ -33,13 +32,31 @@ export const composeFetchData = (ctx: ConduitContext): Result => {
     };
   }
 
-  if (ctx.req.body && Object.keys(ctx.req.body).length) {
-    return {
-      body: JSON.stringify(ctx.req.body),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    };
+  if (ctx.req.body !== undefined && ctx.req.body !== null) {
+    if (isObject(ctx.req.body) && Object.keys(ctx.req.body).length) {
+      return {
+        body: JSON.stringify(ctx.req.body),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      };
+    }
+
+    if (!isObject(ctx.req.body)) {
+      if (Array.isArray(ctx.req.body)) {
+        return {
+          body: JSON.stringify(ctx.req.body),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        };
+      }
+
+      return {
+        body: String(ctx.req.body),
+        headers: {},
+      };
+    }
   }
 
   return { body: undefined, headers: {} };

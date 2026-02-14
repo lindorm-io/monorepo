@@ -12,7 +12,7 @@ export const composeAxiosConfig = async (
   return {
     ...ctx.req.config,
     data,
-    headers: { ...ctx.req.headers, ...headers },
+    headers: { ...headers, ...ctx.req.headers },
     url: createUrl(ctx.req.url, {
       baseUrl: ctx.app.baseURL ?? REPLACE_URL,
       params: ctx.req.params,

@@ -86,4 +86,18 @@ describe("composeAxiosConfig", () => {
       withCredentials: true,
     });
   });
+
+  test("should allow user headers to override computed Content-Type", async () => {
+    ctx.req.headers = { "Content-Type": "application/xml" };
+
+    await expect(composeAxiosConfig(ctx)).resolves.toEqual({
+      data: {
+        body: "body",
+      },
+      headers: { "Content-Type": "application/xml" },
+      timeout: 250,
+      url: "https://lindorm.io:3000/test/path/hello/there/kenobi?may=the&force=be&with=you",
+      withCredentials: true,
+    });
+  });
 });
