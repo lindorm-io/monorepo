@@ -13,14 +13,12 @@ describe("getOctKeyWrap", () => {
 
       expect(result).toEqual({
         contentEncryptionKey: expect.any(Buffer),
-        hkdfSalt: expect.any(Buffer),
         publicEncryptionKey: expect.any(Buffer),
       });
 
       expect(
         getOctKeyWrapDecryptionKey({
           encryption: "A128GCM",
-          hkdfSalt: result.hkdfSalt,
           kryptos,
           publicEncryptionKey: result.publicEncryptionKey,
         }),
@@ -34,14 +32,12 @@ describe("getOctKeyWrap", () => {
 
       expect(result).toEqual({
         contentEncryptionKey: expect.any(Buffer),
-        hkdfSalt: expect.any(Buffer),
         publicEncryptionKey: expect.any(Buffer),
       });
 
       expect(
         getOctKeyWrapDecryptionKey({
           encryption: "A192GCM",
-          hkdfSalt: result.hkdfSalt,
           kryptos,
           publicEncryptionKey: result.publicEncryptionKey,
         }),
@@ -55,14 +51,12 @@ describe("getOctKeyWrap", () => {
 
       expect(result).toEqual({
         contentEncryptionKey: expect.any(Buffer),
-        hkdfSalt: expect.any(Buffer),
         publicEncryptionKey: expect.any(Buffer),
       });
 
       expect(
         getOctKeyWrapDecryptionKey({
           encryption: "A256GCM",
-          hkdfSalt: result.hkdfSalt,
           kryptos,
           publicEncryptionKey: result.publicEncryptionKey,
         }),
@@ -78,7 +72,6 @@ describe("getOctKeyWrap", () => {
 
       expect(result).toEqual({
         contentEncryptionKey: expect.any(Buffer),
-        hkdfSalt: expect.any(Buffer),
         publicEncryptionIv: expect.any(Buffer),
         publicEncryptionKey: expect.any(Buffer),
         publicEncryptionTag: expect.any(Buffer),
@@ -87,7 +80,6 @@ describe("getOctKeyWrap", () => {
       expect(
         getOctKeyWrapDecryptionKey({
           encryption: "A128GCM",
-          hkdfSalt: result.hkdfSalt,
           kryptos,
           publicEncryptionIv: result.publicEncryptionIv,
           publicEncryptionKey: result.publicEncryptionKey,
@@ -103,7 +95,6 @@ describe("getOctKeyWrap", () => {
 
       expect(result).toEqual({
         contentEncryptionKey: expect.any(Buffer),
-        hkdfSalt: expect.any(Buffer),
         publicEncryptionIv: expect.any(Buffer),
         publicEncryptionKey: expect.any(Buffer),
         publicEncryptionTag: expect.any(Buffer),
@@ -112,7 +103,6 @@ describe("getOctKeyWrap", () => {
       expect(
         getOctKeyWrapDecryptionKey({
           encryption: "A192GCM",
-          hkdfSalt: result.hkdfSalt,
           kryptos,
           publicEncryptionIv: result.publicEncryptionIv,
           publicEncryptionKey: result.publicEncryptionKey,
@@ -128,7 +118,6 @@ describe("getOctKeyWrap", () => {
 
       expect(result).toEqual({
         contentEncryptionKey: expect.any(Buffer),
-        hkdfSalt: expect.any(Buffer),
         publicEncryptionIv: expect.any(Buffer),
         publicEncryptionKey: expect.any(Buffer),
         publicEncryptionTag: expect.any(Buffer),
@@ -137,7 +126,6 @@ describe("getOctKeyWrap", () => {
       expect(
         getOctKeyWrapDecryptionKey({
           encryption: "A256GCM",
-          hkdfSalt: result.hkdfSalt,
           kryptos,
           publicEncryptionIv: result.publicEncryptionIv,
           publicEncryptionKey: result.publicEncryptionKey,

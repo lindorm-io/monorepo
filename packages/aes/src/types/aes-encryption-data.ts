@@ -8,7 +8,6 @@ export type AesEncryptionRecord = {
   content: Buffer;
   contentType: AesContentType;
   encryption: KryptosEncryption;
-  hkdfSalt: Buffer | undefined;
   initialisationVector: Buffer;
   keyId: string;
   pbkdfIterations: number | undefined;
@@ -26,7 +25,6 @@ export type SerialisedAesEncryption = {
   content: string;
   contentType: AesContentType;
   encryption: KryptosEncryption;
-  hkdfSalt: string | undefined;
   initialisationVector: string;
   keyId: string;
   pbkdfIterations: number | undefined;

@@ -1,1 +1,1 @@
-export type AesKeyDerivation = "dir" | "hkdf" | "pbkdf2";
+export type AesKeyDerivation = "dir" | "pbkdf2";

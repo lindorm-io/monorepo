@@ -71,7 +71,7 @@
 
       subgraph "Encryption Metadata"
           RECORD_TYPE["AesEncryptionRecord<br/>• algorithm<br/>• encryption<br/>• keyId<br/>• content<br/>•
-  authTag<br/>• IV<br/>• contentType<br/>• hkdfSalt<br/>• pbkdfSalt/Iterations<br/>• publicEncryptionKey/Jwk"]
+  authTag<br/>• IV<br/>• contentType<br/>• pbkdfSalt/Iterations<br/>• publicEncryptionKey/Jwk"]
       end
 
       %% Main flow connections

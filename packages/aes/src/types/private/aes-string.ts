@@ -6,7 +6,6 @@ export type AesStringValues = {
   alg: KryptosAlgorithm; // encryption key algorithm
   cty: AesContentType; // content type
   crv: KryptosCurve | undefined; // epk curve
-  hks: string | undefined; // hkdf salt
   iv: string; // initialisation vector
   kid: string; // key id
   kty: KryptosType | undefined; // epk key type

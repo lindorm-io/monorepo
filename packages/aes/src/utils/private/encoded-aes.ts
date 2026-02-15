@@ -29,13 +29,6 @@ export const createEncodedAesString = (data: AesEncryptionRecord): string => {
 
   const optionalFields: Buffer[] = [];
 
-  if (data.hkdfSalt) {
-    optionalFields.push(Buffer.from([1]));
-    optionalFields.push(Buffer.from([data.hkdfSalt.length]), data.hkdfSalt);
-  } else {
-    optionalFields.push(Buffer.from([0]));
-  }
-
   if (data.pbkdfSalt) {
     const pbkdfIterations = Buffer.alloc(4);
     pbkdfIterations.writeUInt32BE(data.pbkdfIterations || 0);
@@ -192,7 +185,6 @@ export const parseEncodedAesString = (encoded: string): AesEncryptionRecord => {
 
   const optionalFieldsStart = offset;
 
-  const hkdfSalt = readOptionalFieldWithLength();
   let pbkdfIterations: number | undefined;
   const pbkdfIterationsExists = buffer.readUInt8(offset);
   offset += 1;
@@ -230,7 +222,6 @@ export const parseEncodedAesString = (encoded: string): AesEncryptionRecord => {
     content,
     contentType,
     encryption,
-    hkdfSalt,
     initialisationVector,
     keyId,
     pbkdfIterations,

@@ -19,7 +19,6 @@ describe("is-aes", () => {
         encryption: "A256GCM",
         initialisationVector: Buffer.from("iv"),
         authTag: Buffer.from("tag"),
-        hkdfSalt: Buffer.from("salt"),
       };
 
       expect(isAesBufferData(data)).toBe(true);
@@ -41,7 +40,6 @@ describe("is-aes", () => {
         encryption: "A256GCM",
         initialisationVector: "aXY=",
         authTag: "dGFn",
-        hkdfSalt: "c2FsdA==",
       };
 
       expect(isAesBufferData(data)).toBe(false);
@@ -53,7 +51,6 @@ describe("is-aes", () => {
         encryption: "A256GCM",
         initialisationVector: "aXY=",
         authTag: undefined,
-        hkdfSalt: undefined,
       };
 
       expect(isAesBufferData(data)).toBe(false);
@@ -77,7 +74,6 @@ describe("is-aes", () => {
         encryption: "A256GCM",
         initialisationVector: "aXY=",
         authTag: "dGFn",
-        hkdfSalt: undefined,
       };
 
       expect(isAesSerialisedData(data)).toBe(true);

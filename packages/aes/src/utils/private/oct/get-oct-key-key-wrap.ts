@@ -8,7 +8,6 @@ import {
   DecryptCekResult,
 } from "../../../types/private";
 import { calculateContentEncryptionKeySize, calculateKeyWrapSize } from "../calculate";
-import { hkdf } from "../key-derivation";
 import { keyUnwrap, keyWrap } from "../key-wrap";
 
 export const getOctKeyWrapEncryptionKey = ({
@@ -24,20 +23,17 @@ export const getOctKeyWrapEncryptionKey = ({
   const cekSize = calculateContentEncryptionKeySize(encryption);
   const contentEncryptionKey = randomBytes(cekSize);
 
-  const { derivedKey, hkdfSalt } = hkdf({
-    derivationKey: der.privateKey,
-    keyLength: calculateKeyWrapSize(kryptos.algorithm),
-  });
+  const keyWrapSize = calculateKeyWrapSize(kryptos.algorithm);
+  const keyEncryptionKey = der.privateKey.subarray(0, keyWrapSize);
 
   const { publicEncryptionKey, publicEncryptionIv, publicEncryptionTag } = keyWrap({
     contentEncryptionKey,
     kryptos,
-    keyEncryptionKey: derivedKey,
+    keyEncryptionKey,
   });
 
   return {
     contentEncryptionKey,
-    hkdfSalt,
     publicEncryptionKey,
     publicEncryptionIv,
     publicEncryptionTag,
@@ -45,7 +41,6 @@ export const getOctKeyWrapEncryptionKey = ({
 };
 
 export const getOctKeyWrapDecryptionKey = ({
-  hkdfSalt,
   kryptos,
   publicEncryptionIv,
   publicEncryptionKey,
@@ -60,14 +55,11 @@ export const getOctKeyWrapDecryptionKey = ({
 
   const der = kryptos.export("der");
 
-  const { derivedKey } = hkdf({
-    derivationKey: der.privateKey,
-    hkdfSalt,
-    keyLength: calculateKeyWrapSize(kryptos.algorithm),
-  });
+  const keyWrapSize = calculateKeyWrapSize(kryptos.algorithm);
+  const keyEncryptionKey = der.privateKey.subarray(0, keyWrapSize);
 
   return keyUnwrap({
-    keyEncryptionKey: derivedKey,
+    keyEncryptionKey,
     kryptos,
     publicEncryptionIv,
     publicEncryptionKey,

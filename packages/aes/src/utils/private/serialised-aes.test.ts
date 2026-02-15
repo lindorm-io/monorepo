@@ -15,7 +15,6 @@ describe("serialised-aes", () => {
         content: Buffer.from("encrypted-content"),
         contentType: "text/plain",
         encryption: "A256GCM",
-        hkdfSalt: Buffer.from("hkdf-salt-data"),
         initialisationVector: Buffer.from("iv-data"),
         keyId: "key-id-123",
         pbkdfIterations: 10000,
@@ -40,7 +39,6 @@ describe("serialised-aes", () => {
         content: B64.encode(input.content),
         contentType: "text/plain",
         encryption: "A256GCM",
-        hkdfSalt: B64.encode(input.hkdfSalt!),
         initialisationVector: B64.encode(input.initialisationVector),
         keyId: "key-id-123",
         pbkdfIterations: 10000,
@@ -65,7 +63,6 @@ describe("serialised-aes", () => {
         content: Buffer.from("content"),
         contentType: "application/json",
         encryption: "A128GCM",
-        hkdfSalt: undefined,
         initialisationVector: Buffer.from("iv"),
         keyId: "key-123",
         pbkdfIterations: undefined,
@@ -85,7 +82,6 @@ describe("serialised-aes", () => {
         content: B64.encode(input.content),
         contentType: "application/json",
         encryption: "A128GCM",
-        hkdfSalt: undefined,
         initialisationVector: B64.encode(input.initialisationVector),
         keyId: "key-123",
         pbkdfIterations: undefined,
@@ -97,7 +93,6 @@ describe("serialised-aes", () => {
         version: 2,
       });
 
-      expect(result.hkdfSalt).toBeUndefined();
       expect(result.pbkdfIterations).toBeUndefined();
       expect(result.pbkdfSalt).toBeUndefined();
       expect(result.publicEncryptionIv).toBeUndefined();
@@ -114,7 +109,6 @@ describe("serialised-aes", () => {
         content: testBuffer,
         contentType: "text/plain",
         encryption: "A256GCM",
-        hkdfSalt: undefined,
         initialisationVector: testBuffer,
         keyId: "key",
         pbkdfIterations: undefined,
@@ -142,7 +136,6 @@ describe("serialised-aes", () => {
     it("should convert SerialisedAesDecryption to AesDecryptionRecord with all fields", () => {
       const authTagBuffer = Buffer.from("auth-tag-data");
       const contentBuffer = Buffer.from("encrypted-content");
-      const hkdfSaltBuffer = Buffer.from("hkdf-salt-data");
       const ivBuffer = Buffer.from("iv-data");
       const pbkdfSaltBuffer = Buffer.from("pbkdf-salt-data");
       const publicIvBuffer = Buffer.from("public-iv");
@@ -155,7 +148,6 @@ describe("serialised-aes", () => {
         content: B64.encode(contentBuffer),
         contentType: "text/plain",
         encryption: "A256GCM",
-        hkdfSalt: B64.encode(hkdfSaltBuffer),
         initialisationVector: B64.encode(ivBuffer),
         keyId: "key-id-123",
         pbkdfIterations: 10000,
@@ -181,8 +173,6 @@ describe("serialised-aes", () => {
       expect(result.content).toEqual(contentBuffer);
       expect(result.contentType).toBe("text/plain");
       expect(result.encryption).toBe("A256GCM");
-      expect(result.hkdfSalt).toBeInstanceOf(Buffer);
-      expect(result.hkdfSalt).toEqual(hkdfSaltBuffer);
       expect(result.initialisationVector).toBeInstanceOf(Buffer);
       expect(result.initialisationVector).toEqual(ivBuffer);
       expect(result.keyId).toBe("key-id-123");
@@ -211,7 +201,6 @@ describe("serialised-aes", () => {
         content: B64.encode(Buffer.from("content")),
         contentType: undefined,
         encryption: "A128GCM",
-        hkdfSalt: undefined,
         initialisationVector: B64.encode(Buffer.from("iv")),
         keyId: undefined,
         pbkdfIterations: undefined,
@@ -230,7 +219,6 @@ describe("serialised-aes", () => {
       expect(result.content).toBeInstanceOf(Buffer);
       expect(result.contentType).toBeUndefined();
       expect(result.encryption).toBe("A128GCM");
-      expect(result.hkdfSalt).toBeUndefined();
       expect(result.initialisationVector).toBeInstanceOf(Buffer);
       expect(result.keyId).toBeUndefined();
       expect(result.pbkdfIterations).toBeUndefined();
@@ -269,7 +257,6 @@ describe("serialised-aes", () => {
         content: Buffer.from("content-round-trip"),
         contentType: "application/octet-stream",
         encryption: "A192GCM",
-        hkdfSalt: Buffer.from("hkdf-salt-round-trip"),
         initialisationVector: Buffer.from("iv-round-trip"),
         keyId: "round-trip-key",
         pbkdfIterations: 5000,
@@ -294,7 +281,6 @@ describe("serialised-aes", () => {
       expect(parsed.content).toEqual(original.content);
       expect(parsed.contentType).toBe(original.contentType);
       expect(parsed.encryption).toBe(original.encryption);
-      expect(parsed.hkdfSalt).toEqual(original.hkdfSalt);
       expect(parsed.initialisationVector).toEqual(original.initialisationVector);
       expect(parsed.keyId).toBe(original.keyId);
       expect(parsed.pbkdfIterations).toBe(original.pbkdfIterations);
@@ -313,7 +299,6 @@ describe("serialised-aes", () => {
         content: Buffer.from("content"),
         contentType: "text/plain",
         encryption: "A256GCM",
-        hkdfSalt: undefined,
         initialisationVector: Buffer.from("iv"),
         keyId: "key",
         pbkdfIterations: undefined,
@@ -333,7 +318,6 @@ describe("serialised-aes", () => {
       expect(parsed.content).toEqual(original.content);
       expect(parsed.contentType).toBe(original.contentType);
       expect(parsed.encryption).toBe(original.encryption);
-      expect(parsed.hkdfSalt).toBeUndefined();
       expect(parsed.initialisationVector).toEqual(original.initialisationVector);
       expect(parsed.keyId).toBe(original.keyId);
       expect(parsed.pbkdfIterations).toBeUndefined();
@@ -353,7 +337,6 @@ describe("serialised-aes", () => {
         content: contentBuffer,
         contentType: "application/json",
         encryption: "A128GCM",
-        hkdfSalt: undefined,
         initialisationVector: Buffer.from("initialization-vector"),
         keyId: "test-key",
         pbkdfIterations: undefined,

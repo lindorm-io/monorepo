@@ -23,7 +23,6 @@ describe("diffieHellman", () => {
           y: expect.any(String),
         },
         publicEncryptionKey: expect.any(Buffer),
-        hkdfSalt: undefined,
       });
 
       expect(
@@ -53,7 +52,6 @@ describe("diffieHellman", () => {
           y: expect.any(String),
         },
         publicEncryptionKey: expect.any(Buffer),
-        hkdfSalt: undefined,
       });
 
       expect(
@@ -83,7 +81,6 @@ describe("diffieHellman", () => {
           y: expect.any(String),
         },
         publicEncryptionKey: expect.any(Buffer),
-        hkdfSalt: undefined,
       });
 
       expect(
@@ -117,7 +114,6 @@ describe("diffieHellman", () => {
         publicEncryptionIv: expect.any(Buffer),
         publicEncryptionKey: expect.any(Buffer),
         publicEncryptionTag: expect.any(Buffer),
-        hkdfSalt: undefined,
       });
 
       expect(
@@ -151,7 +147,6 @@ describe("diffieHellman", () => {
         publicEncryptionIv: expect.any(Buffer),
         publicEncryptionKey: expect.any(Buffer),
         publicEncryptionTag: expect.any(Buffer),
-        hkdfSalt: undefined,
       });
 
       expect(
@@ -185,7 +180,6 @@ describe("diffieHellman", () => {
         publicEncryptionIv: expect.any(Buffer),
         publicEncryptionKey: expect.any(Buffer),
         publicEncryptionTag: expect.any(Buffer),
-        hkdfSalt: undefined,
       });
 
       expect(
@@ -223,7 +217,6 @@ describe("diffieHellman", () => {
         publicEncryptionIv: expect.any(Buffer),
         publicEncryptionKey: expect.any(Buffer),
         publicEncryptionTag: expect.any(Buffer),
-        hkdfSalt: undefined,
       });
 
       expect(
@@ -257,7 +250,6 @@ describe("diffieHellman", () => {
           x: expect.any(String),
         },
         publicEncryptionKey: expect.any(Buffer),
-        hkdfSalt: undefined,
       });
 
       expect(
