@@ -2,6 +2,7 @@ import { KryptosEncryption } from "@lindorm/kryptos";
 import { CipherGCM, Cipheriv, DecipherGCM, Decipheriv } from "crypto";
 
 export type GetAuthTagOptions = {
+  aad?: Buffer;
   cipher: Cipheriv | CipherGCM;
   content: Buffer;
   hashKey: Buffer;
@@ -10,6 +11,7 @@ export type GetAuthTagOptions = {
 };
 
 export type SetAuthTagOptions = {
+  aad?: Buffer;
   authTag?: Buffer;
   content: Buffer;
   hashKey: Buffer;
@@ -19,6 +21,7 @@ export type SetAuthTagOptions = {
 };
 
 export type CreateHmacAuthTag = {
+  aad?: Buffer;
   content: Buffer;
   encryption: KryptosEncryption;
   hashKey: Buffer;

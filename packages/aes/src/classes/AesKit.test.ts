@@ -249,4 +249,67 @@ describe("AesKit", () => {
       );
     });
   });
+
+  describe("AAD (Additional Authenticated Data)", () => {
+    const aad = Buffer.from("test-additional-authenticated-data");
+
+    describe.each(["A128GCM", "A128CBC-HS256"] as const)(
+      "encryption: %s",
+      (encryption) => {
+        let aesKit: IAesKit;
+
+        beforeEach(() => {
+          const kryptos = KryptosKit.generate.auto({ algorithm: "A128KW" });
+          aesKit = new AesKit({ kryptos, encryption });
+        });
+
+        test("should encrypt and decrypt with AAD", () => {
+          const encrypted = aesKit.encrypt("secret data", "encoded", { aad });
+          const decrypted = aesKit.decrypt(encrypted, { aad });
+          expect(decrypted).toEqual("secret data");
+        });
+
+        test("should fail to decrypt with wrong AAD", () => {
+          const encrypted = aesKit.encrypt("secret data", "encoded", { aad });
+          const wrongAad = Buffer.from("wrong-aad");
+          expect(() => aesKit.decrypt(encrypted, { aad: wrongAad })).toThrow();
+        });
+
+        test("should fail to decrypt with missing AAD when encrypted with AAD", () => {
+          const encrypted = aesKit.encrypt("secret data", "encoded", { aad });
+          expect(() => aesKit.decrypt(encrypted)).toThrow();
+        });
+
+        test("should verify with matching AAD", () => {
+          const encrypted = aesKit.encrypt("secret data", "encoded", { aad });
+          expect(aesKit.verify("secret data", encrypted, { aad })).toBe(true);
+        });
+
+        test("should fail to verify with wrong AAD", () => {
+          const encrypted = aesKit.encrypt("secret data", "encoded", { aad });
+          expect(
+            aesKit.verify("secret data", encrypted, { aad: Buffer.from("wrong") }),
+          ).toBe(false);
+        });
+
+        test("should assert with matching AAD", () => {
+          const encrypted = aesKit.encrypt("secret data", "encoded", { aad });
+          expect(() => aesKit.assert("secret data", encrypted, { aad })).not.toThrow();
+        });
+
+        test("should assert fails with wrong AAD", () => {
+          const encrypted = aesKit.encrypt("secret data", "encoded", { aad });
+          expect(() =>
+            aesKit.assert("secret data", encrypted, { aad: Buffer.from("wrong") }),
+          ).toThrow();
+        });
+
+        test("should work without AAD (backward compatibility)", () => {
+          const encrypted = aesKit.encrypt("secret data");
+          const decrypted = aesKit.decrypt(encrypted);
+          expect(decrypted).toEqual("secret data");
+        });
+      },
+    );
+  });
 });

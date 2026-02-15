@@ -7,12 +7,12 @@ export const createMockAesKit = (): IAesKit => ({
 
   decrypt: jest
     .fn()
-    .mockImplementation((data: Dict | string) =>
+    .mockImplementation((data: Dict | string, _options?: any) =>
       Buffer.from(JSON.stringify(data), "base64").toString(),
     ),
   encrypt: jest
     .fn()
-    .mockImplementation((data: string, mode: any) =>
+    .mockImplementation((data: string, mode: any, _options?: any) =>
       mode === "encoded"
         ? Buffer.from(data).toString("base64")
         : { content: Buffer.from(data).toString("base64") },

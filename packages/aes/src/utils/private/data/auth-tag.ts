@@ -4,6 +4,7 @@ import { GetAuthTagOptions, SetAuthTagOptions } from "../../../types/private";
 import { assertHmacAuthTag, createHmacAuthTag } from "./auth-tag-hmac";
 
 export const createAuthTag = ({
+  aad,
   encryption,
   cipher,
   content,
@@ -15,6 +16,7 @@ export const createAuthTag = ({
     case "A192CBC-HS384":
     case "A256CBC-HS512":
       return createHmacAuthTag({
+        aad,
         content,
         encryption,
         hashKey,
@@ -32,6 +34,7 @@ export const createAuthTag = ({
 };
 
 export const assertAuthTag = ({
+  aad,
   authTag,
   content,
   hashKey,
@@ -48,6 +51,7 @@ export const assertAuthTag = ({
     case "A192CBC-HS384":
     case "A256CBC-HS512":
       assertHmacAuthTag({
+        aad,
         authTag,
         content,
         encryption,
