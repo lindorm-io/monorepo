@@ -1,4 +1,5 @@
 import { IKryptos } from "@lindorm/kryptos";
+import { AesError } from "../../../errors";
 
 type KeywrapEncryption =
   | "aes-128-ecb"
@@ -38,6 +39,6 @@ export const calculateKeyWrapEncryption = (kryptos: IKryptos): KeywrapEncryption
       return "aes-256-gcm";
 
     default:
-      throw new Error("Unsupported keywrap encryption");
+      throw new AesError("Unsupported keywrap encryption");
   }
 };
