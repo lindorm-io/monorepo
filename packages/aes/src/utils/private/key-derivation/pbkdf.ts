@@ -1,5 +1,5 @@
 import { AesKeyLength, ShaAlgorithm } from "@lindorm/types";
-import { pbkdf2Sync, randomBytes } from "crypto";
+import { pbkdf2Sync, randomBytes, randomInt } from "crypto";
 import { AesError } from "../../../errors";
 
 type Options = {
@@ -18,7 +18,7 @@ type Result = {
 };
 
 // get random iterations from 90000 to 110000
-const randomIterations = (): number => Math.floor(Math.random() * 20000) + 90000;
+const randomIterations = (): number => randomInt(90000, 110001);
 
 export const pbkdf = (options: Options): Result => {
   const pbkdfSalt = options.pbkdfSalt ?? randomBytes(16);
