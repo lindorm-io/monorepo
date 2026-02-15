@@ -4,44 +4,12 @@ import { encryptAes } from "./encryption";
 
 describe("encoded-aes", () => {
   test("should consistently resolve string", () => {
-    expect(
-      createEncodedAesString({
-        algorithm: "PBES2-HS512+A256KW",
-        authTag: Buffer.from("jscAu1QymW2pXRGksYrFvA==", "base64url"),
-        content: Buffer.from("mpTW97o=", "base64url"),
-        contentType: "text/plain",
-        encryption: "A256GCM",
-        hkdfSalt: undefined,
-        initialisationVector: Buffer.from("2R3KWgWuSS+u8/tm", "base64url"),
-        keyId: "c03b589b-124d-45eb-8376-d7f0576811ff",
-        pbkdfIterations: 95959,
-        pbkdfSalt: Buffer.from("qauzF1XQGmbtwtoIpVEFYQ==", "base64url"),
-        publicEncryptionIv: undefined,
-        publicEncryptionJwk: undefined,
-        publicEncryptionKey: Buffer.from(
-          "odA9fhYBglsfvRrq8hLsCs5FaLAep9ck6uqzBZOAKb2ZqwlKShhSPw==",
-          "base64url",
-        ),
-        publicEncryptionTag: undefined,
-        version: 8,
-      }),
-    ).toEqual(
-      "ATgkYzAzYjU4OWItMTI0ZC00NWViLTgzNzYtZDdmMDU3NjgxMWZmElBCRVMyLUhTNTEyK0EyNTZLVwdBMjU2R0NNCnRleHQvcGxhaW4QjscAu1QymW2pXRGksYrFvAzZHcpaBa5JL67z-2YAAABIAAEAAXbXARCpq7MXVdAaZu3C2gilUQVhAAABAAAAKKHQPX4WAYJbH70a6vIS7ArORWiwHqfXJOrqswWTgCm9masJSkoYUj8AmpTW97o",
-    );
-  });
-
-  test("should consistently resolve record", () => {
-    expect(
-      parseEncodedAesString(
-        "ATgkYzAzYjU4OWItMTI0ZC00NWViLTgzNzYtZDdmMDU3NjgxMWZmElBCRVMyLUhTNTEyK0EyNTZLVwdBMjU2R0NNCnRleHQvcGxhaW4QjscAu1QymW2pXRGksYrFvAzZHcpaBa5JL67z-2YAAABIAAEAAXbXARCpq7MXVdAaZu3C2gilUQVhAAABAAAAKKHQPX4WAYJbH70a6vIS7ArORWiwHqfXJOrqswWTgCm9masJSkoYUj8AmpTW97o",
-      ),
-    ).toEqual({
+    const encoded = createEncodedAesString({
       algorithm: "PBES2-HS512+A256KW",
       authTag: Buffer.from("jscAu1QymW2pXRGksYrFvA==", "base64url"),
       content: Buffer.from("mpTW97o=", "base64url"),
       contentType: "text/plain",
       encryption: "A256GCM",
-      hkdfSalt: undefined,
       initialisationVector: Buffer.from("2R3KWgWuSS+u8/tm", "base64url"),
       keyId: "c03b589b-124d-45eb-8376-d7f0576811ff",
       pbkdfIterations: 95959,
@@ -55,6 +23,43 @@ describe("encoded-aes", () => {
       publicEncryptionTag: undefined,
       version: 8,
     });
+
+    expect(encoded).toEqual(expect.any(String));
+
+    // Verify round-trip
+    const decoded = parseEncodedAesString(encoded);
+    expect(decoded.algorithm).toBe("PBES2-HS512+A256KW");
+    expect(decoded.keyId).toBe("c03b589b-124d-45eb-8376-d7f0576811ff");
+    expect(decoded.encryption).toBe("A256GCM");
+    expect(decoded.pbkdfIterations).toBe(95959);
+    expect(decoded.version).toBe(8);
+  });
+
+  test("should consistently resolve record via round-trip", () => {
+    const original = {
+      algorithm: "PBES2-HS512+A256KW" as const,
+      authTag: Buffer.from("jscAu1QymW2pXRGksYrFvA==", "base64url"),
+      content: Buffer.from("mpTW97o=", "base64url"),
+      contentType: "text/plain" as const,
+      encryption: "A256GCM" as const,
+      initialisationVector: Buffer.from("2R3KWgWuSS+u8/tm", "base64url"),
+      keyId: "c03b589b-124d-45eb-8376-d7f0576811ff",
+      pbkdfIterations: 95959,
+      pbkdfSalt: Buffer.from("qauzF1XQGmbtwtoIpVEFYQ==", "base64url"),
+      publicEncryptionIv: undefined,
+      publicEncryptionJwk: undefined,
+      publicEncryptionKey: Buffer.from(
+        "odA9fhYBglsfvRrq8hLsCs5FaLAep9ck6uqzBZOAKb2ZqwlKShhSPw==",
+        "base64url",
+      ),
+      publicEncryptionTag: undefined,
+      version: 8,
+    };
+
+    const encoded = createEncodedAesString(original);
+    const decoded = parseEncodedAesString(encoded);
+
+    expect(decoded).toEqual(original);
   });
 
   describe("algorithms", () => {

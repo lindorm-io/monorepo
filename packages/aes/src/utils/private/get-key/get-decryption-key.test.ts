@@ -35,7 +35,6 @@ describe("getDecryptionKey", () => {
         encryption: "A256GCM",
         kryptos: TEST_EC_KEY,
         publicEncryptionJwk: { crv: "P-521", x: "x", y: "y", kty: "EC" },
-        hkdfSalt: Buffer.from("hkdfSalt"),
       }),
     ).toEqual("getEcDecryptionKey");
   });
@@ -44,7 +43,6 @@ describe("getDecryptionKey", () => {
     expect(
       getDecryptionKey({
         encryption: "A256GCM",
-        hkdfSalt: Buffer.from("hkdfSalt"),
         kryptos: TEST_OCT_KEY,
       }),
     ).toEqual("getOctDecryptionKey");
@@ -56,7 +54,6 @@ describe("getDecryptionKey", () => {
         encryption: "A256GCM",
         kryptos: TEST_OKP_KEY,
         publicEncryptionJwk: { crv: "P-521", x: "x", y: "y", kty: "EC" },
-        hkdfSalt: Buffer.from("hkdfSalt"),
       }),
     ).toEqual("getOkpDecryptionKey");
   });

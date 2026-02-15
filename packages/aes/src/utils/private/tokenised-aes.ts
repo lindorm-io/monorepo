@@ -14,7 +14,6 @@ export const createTokenisedAesString = ({
   content,
   contentType,
   encryption,
-  hkdfSalt,
   initialisationVector,
   keyId,
   pbkdfIterations,
@@ -36,7 +35,6 @@ export const createTokenisedAesString = ({
     tag: authTag.toString(B64U),
 
     // Key Derivation
-    hks: hkdfSalt?.toString(B64U),
     p2c: pbkdfIterations?.toString(),
     p2s: pbkdfSalt?.toString(B64U),
 
@@ -89,7 +87,6 @@ export const parseTokenisedAesString = (data: string): AesEncryptionRecord => {
     tag,
 
     // Key Derivation
-    hks,
     p2c,
     p2s,
 
@@ -114,7 +111,6 @@ export const parseTokenisedAesString = (data: string): AesEncryptionRecord => {
     content: Buffer.from(content, B64U),
     contentType: cty,
     encryption: encryption,
-    hkdfSalt: hks ? Buffer.from(hks, B64U) : undefined,
     initialisationVector: Buffer.from(iv, B64U),
     keyId: kid,
     pbkdfIterations: p2c ? parseInt(p2c, 10) : undefined,

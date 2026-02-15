@@ -29,7 +29,6 @@ export const getDiffieHellmanEncryptionKey = ({
 
   return {
     contentEncryptionKey: derivedKey,
-    hkdfSalt: undefined,
     publicEncryptionJwk,
   };
 };

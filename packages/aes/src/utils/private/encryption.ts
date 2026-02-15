@@ -21,7 +21,6 @@ export const encryptAes = (options: PrivateAesEncryptionOptions): AesEncryptionR
 
   const {
     contentEncryptionKey,
-    hkdfSalt,
     pbkdfIterations,
     pbkdfSalt,
     publicEncryptionIv,
@@ -68,7 +67,6 @@ export const encryptAes = (options: PrivateAesEncryptionOptions): AesEncryptionR
     content,
     contentType,
     encryption,
-    hkdfSalt,
     initialisationVector,
     keyId: kryptos.id,
     pbkdfIterations,
@@ -89,7 +87,6 @@ export const decryptAes = <T extends AesContent = string>(
     content,
     contentType,
     encryption,
-    hkdfSalt,
     initialisationVector,
     kryptos,
     pbkdfIterations,
@@ -102,7 +99,6 @@ export const decryptAes = <T extends AesContent = string>(
 
   const { contentEncryptionKey } = getDecryptionKey({
     encryption,
-    hkdfSalt,
     kryptos,
     pbkdfIterations,
     pbkdfSalt,

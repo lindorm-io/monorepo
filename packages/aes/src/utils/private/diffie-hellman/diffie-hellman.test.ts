@@ -19,7 +19,6 @@ describe("diffieHellman", () => {
         x: expect.any(String),
         y: expect.any(String),
       },
-      hkdfSalt: undefined,
     });
 
     expect(
@@ -44,7 +43,6 @@ describe("diffieHellman", () => {
         kty: "OKP",
         x: expect.any(String),
       },
-      hkdfSalt: undefined,
     });
 
     expect(

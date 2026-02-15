@@ -10,7 +10,6 @@ export type CreateCekOptions = {
 
 export type CreateCekResult = {
   contentEncryptionKey: Buffer;
-  hkdfSalt?: Buffer;
   pbkdfIterations?: number;
   pbkdfSalt?: Buffer;
   publicEncryptionIv?: Buffer;
@@ -23,7 +22,6 @@ export type DecryptCekOptions = {
   apu?: Buffer;
   apv?: Buffer;
   encryption: KryptosEncryption;
-  hkdfSalt?: Buffer;
   kryptos: IKryptos;
   pbkdfIterations?: number;
   pbkdfSalt?: Buffer;

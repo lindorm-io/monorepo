@@ -9,7 +9,6 @@ describe("tokenised-aes", () => {
       content: Buffer.from("encryption"),
       contentType: "text/plain",
       encryption: "A256GCM",
-      hkdfSalt: Buffer.from("hkdfSalt"),
       initialisationVector: Buffer.from("initialisationVector"),
       keyId: "2e36ee7d-8423-59ad-a3f4-379e6b487c64",
       pbkdfIterations: 1000,
@@ -32,7 +31,6 @@ describe("tokenised-aes", () => {
     expect(string).toContain("alg=RSA-OAEP-256");
     expect(string).toContain("cty=text/plain");
     expect(string).toContain("crv=P-521");
-    expect(string).toContain("hks=aGtkZlNhbHQ");
     expect(string).toContain("iv=aW5pdGlhbGlzYXRpb25WZWN0b3I");
     expect(string).toContain("kid=2e36ee7d-8423-59ad-a3f4-379e6b487c64");
     expect(string).toContain("p2c=1000");
@@ -50,13 +48,15 @@ describe("tokenised-aes", () => {
 
     expect(string).toContain("$ZW5jcnlwdGlvbg$");
 
+    expect(string).not.toContain("hks=");
+
     expect(isAesTokenised(string)).toEqual(true);
   });
 
   test("should resolve decoded data", () => {
     expect(
       parseTokenisedAesString(
-        "$A256GCM$v=1,f=base64url,kid=2e36ee7d-8423-59ad-a3f4-379e6b487c64,alg=RSA-OAEP-256,cty=text/plain,iv=aW5pdGlhbGlzYXRpb25WZWN0b3I,tag=YXV0aFRhZw,hks=aGtkZlNhbHQ,p2c=1000,p2s=cGJrZGZTYWx0,pei=cHVibGljRW5jcnlwdGlvbkl2,pek=cHVibGljRW5jcnlwdGlvbktleQ,pet=cHVibGljRW5jcnlwdGlvblRhZw,crv=P-521,kty=EC,x=Af3ZdH3XBQFqC4qISUyAPW9WrCDe36KuTFcLz0dIhoh8LeCk4PGt2HEs9pQyxlEVS9fm1tecb9Wk+83nUNBLDet7,y=ATdzYQHx4ZS1DJYb27bRy+NouEm53Jmpdk0Z00B1PIZcRwBEoYVPUQAmYsEt18MX1nLDdwKXV2dONaytvbkdRIMH$ZW5jcnlwdGlvbg$",
+        "$A256GCM$v=1,f=base64url,kid=2e36ee7d-8423-59ad-a3f4-379e6b487c64,alg=RSA-OAEP-256,cty=text/plain,iv=aW5pdGlhbGlzYXRpb25WZWN0b3I,tag=YXV0aFRhZw,p2c=1000,p2s=cGJrZGZTYWx0,pei=cHVibGljRW5jcnlwdGlvbkl2,pek=cHVibGljRW5jcnlwdGlvbktleQ,pet=cHVibGljRW5jcnlwdGlvblRhZw,crv=P-521,kty=EC,x=Af3ZdH3XBQFqC4qISUyAPW9WrCDe36KuTFcLz0dIhoh8LeCk4PGt2HEs9pQyxlEVS9fm1tecb9Wk+83nUNBLDet7,y=ATdzYQHx4ZS1DJYb27bRy+NouEm53Jmpdk0Z00B1PIZcRwBEoYVPUQAmYsEt18MX1nLDdwKXV2dONaytvbkdRIMH$ZW5jcnlwdGlvbg$",
       ),
     ).toEqual({
       authTag: Buffer.from("authTag"),
@@ -64,7 +64,6 @@ describe("tokenised-aes", () => {
       contentType: "text/plain",
       encryption: "A256GCM",
       algorithm: "RSA-OAEP-256",
-      hkdfSalt: Buffer.from("hkdfSalt"),
       initialisationVector: Buffer.from("initialisationVector"),
       keyId: "2e36ee7d-8423-59ad-a3f4-379e6b487c64",
       publicEncryptionJwk: {
