@@ -79,7 +79,11 @@ export const calculateSharedSecret = ({
     throw new AesError("Missing publicEncryptionJwk");
   }
 
-  const pek = KryptosKit.from.jwk({ alg: "ECDH-ES", use: "enc", ...publicEncryptionJwk });
+  const pek = KryptosKit.from.jwk({
+    alg: kryptos.algorithm,
+    use: "enc",
+    ...publicEncryptionJwk,
+  });
   const der = kryptos.export("der");
   const receiver = pek.export("der");
 

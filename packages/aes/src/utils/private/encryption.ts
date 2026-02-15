@@ -1,5 +1,6 @@
-import { createCipheriv, createDecipheriv } from "crypto";
+import { CipherGCMOptions, createCipheriv, createDecipheriv } from "crypto";
 import { LATEST_AES_VERSION } from "../../constants/private";
+import { AesError } from "../../errors";
 import { AesContent, AesEncryptionRecord } from "../../types";
 import {
   PrivateAesDecryptionOptions,
@@ -39,7 +40,15 @@ export const encryptAes = (options: PrivateAesEncryptionOptions): AesEncryptionR
 
   const aesEncryption = calculateAesEncryption(encryption);
   const initialisationVector = getInitialisationVector(encryption);
-  const cipher = createCipheriv(aesEncryption, encryptionKey, initialisationVector);
+  const cipherOptions: CipherGCMOptions | undefined = encryption.includes("GCM")
+    ? { authTagLength: 16 }
+    : undefined;
+  const cipher = createCipheriv(
+    aesEncryption,
+    encryptionKey,
+    initialisationVector,
+    cipherOptions as CipherGCMOptions,
+  );
 
   const contentType = calculateContentType(data);
   const buffer = contentToBuffer(data, contentType);
@@ -109,7 +118,19 @@ export const decryptAes = <T extends AesContent = string>(
   );
 
   const aesEncryption = calculateAesEncryption(encryption);
-  const decipher = createDecipheriv(aesEncryption, encryptionKey, initialisationVector);
+  const decipherOptions: CipherGCMOptions | undefined = encryption.includes("GCM")
+    ? { authTagLength: 16 }
+    : undefined;
+  const decipher = createDecipheriv(
+    aesEncryption,
+    encryptionKey,
+    initialisationVector,
+    decipherOptions as CipherGCMOptions,
+  );
+
+  if (encryption.includes("GCM") && authTag && authTag.length !== 16) {
+    throw new AesError("Invalid GCM auth tag length");
+  }
 
   assertAuthTag({
     authTag,
