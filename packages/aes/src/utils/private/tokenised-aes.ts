@@ -6,7 +6,7 @@ import { AesError } from "../../errors";
 import { AesEncryptionRecord } from "../../types";
 import { AesStringValues } from "../../types/private";
 
-const regex = /(?<key>[a-z0-9]+)=(?<value>.+)/g;
+const regex = /(?<key>[a-z0-9]+)=(?<value>.+)/;
 
 export const createTokenisedAesString = ({
   algorithm,
@@ -67,7 +67,7 @@ export const parseTokenisedAesString = (data: string): AesEncryptionRecord => {
   const values: Dict<string> = {};
 
   for (const item of items) {
-    const match = new RegExp(regex).exec(item);
+    const match = regex.exec(item);
 
     if (!match?.groups?.key || !match?.groups?.value) {
       throw new AesError("Invalid AES cipher string", {
