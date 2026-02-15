@@ -1,15 +1,19 @@
-import { IKryptosEc, KryptosKit } from "@lindorm/kryptos";
+import { EC_SIG_ALGORITHMS, EcSigAlgorithm, IKryptosEc } from "@lindorm/kryptos";
 import { ShaAlgorithm } from "@lindorm/types";
 import { EcError } from "../../errors";
 
+const EC_SIG_ALGORITHM_MAP: Record<EcSigAlgorithm, ShaAlgorithm> = {
+  ES256: "SHA256",
+  ES384: "SHA384",
+  ES512: "SHA512",
+};
+
 export const mapEcAlgorithm = (kryptos: IKryptosEc): ShaAlgorithm => {
-  if (!KryptosKit.isEc(kryptos)) {
-    throw new EcError("Invalid kryptos type", { debug: { kryptos } });
+  if (!EC_SIG_ALGORITHMS.includes(kryptos.algorithm as EcSigAlgorithm)) {
+    throw new EcError("Unsupported EC algorithm for signing", {
+      debug: { algorithm: kryptos.algorithm },
+    });
   }
 
-  if (kryptos.algorithm.endsWith("256")) return "SHA256";
-  if (kryptos.algorithm.endsWith("384")) return "SHA384";
-  if (kryptos.algorithm.endsWith("512")) return "SHA512";
-
-  throw new EcError("Unsupported EC algorithm", { debug: { kryptos } });
+  return EC_SIG_ALGORITHM_MAP[kryptos.algorithm as EcSigAlgorithm];
 };

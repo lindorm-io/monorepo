@@ -1,4 +1,4 @@
-import { IKryptosOkp, KryptosKit } from "@lindorm/kryptos";
+import { IKryptosOkp, KryptosKit, OKP_SIG_CURVES, OkpSigCurve } from "@lindorm/kryptos";
 import { DsaEncoding, IKeyKit, KeyData } from "@lindorm/types";
 import { OkpError } from "../errors";
 import { OkpKitOptions } from "../types";
@@ -19,6 +19,10 @@ export class OkpKit implements IKeyKit {
 
     if (!KryptosKit.isOkp(options.kryptos)) {
       throw new OkpError("Invalid Kryptos instance");
+    }
+
+    if (!OKP_SIG_CURVES.includes(options.kryptos.curve as OkpSigCurve)) {
+      throw new OkpError("OkpKit only supports signing curves (Ed25519, Ed448)");
     }
 
     this.kryptos = options.kryptos;

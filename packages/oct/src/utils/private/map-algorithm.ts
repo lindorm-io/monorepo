@@ -1,11 +1,19 @@
-import { IKryptosOct } from "@lindorm/kryptos";
+import { IKryptosOct, OCT_SIG_ALGORITHMS, OctSigAlgorithm } from "@lindorm/kryptos";
 import { ShaAlgorithm } from "@lindorm/types";
 import { OctError } from "../../errors";
 
-export const mapOctAlgorithm = (kryptos: IKryptosOct): ShaAlgorithm => {
-  if (kryptos.algorithm.endsWith("256")) return "SHA256";
-  if (kryptos.algorithm.endsWith("384")) return "SHA384";
-  if (kryptos.algorithm.endsWith("512")) return "SHA512";
+const OCT_SIG_ALGORITHM_MAP: Record<OctSigAlgorithm, ShaAlgorithm> = {
+  HS256: "SHA256",
+  HS384: "SHA384",
+  HS512: "SHA512",
+};
 
-  throw new OctError("Unsupported OCT algorithm", { debug: { kryptos } });
+export const mapOctAlgorithm = (kryptos: IKryptosOct): ShaAlgorithm => {
+  if (!OCT_SIG_ALGORITHMS.includes(kryptos.algorithm as OctSigAlgorithm)) {
+    throw new OctError("Unsupported OCT algorithm for signing", {
+      debug: { algorithm: kryptos.algorithm },
+    });
+  }
+
+  return OCT_SIG_ALGORITHM_MAP[kryptos.algorithm as OctSigAlgorithm];
 };

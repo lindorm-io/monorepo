@@ -1,4 +1,9 @@
-import { IKryptosOct, KryptosKit } from "@lindorm/kryptos";
+import {
+  IKryptosOct,
+  KryptosKit,
+  OCT_SIG_ALGORITHMS,
+  OctSigAlgorithm,
+} from "@lindorm/kryptos";
 import { IKeyKit, KeyData } from "@lindorm/types";
 import { OctError } from "../errors";
 import { OctKitOptions } from "../types";
@@ -17,6 +22,10 @@ export class OctKit implements IKeyKit {
 
     if (!KryptosKit.isOct(options.kryptos)) {
       throw new OctError("Invalid Kryptos instance");
+    }
+
+    if (!OCT_SIG_ALGORITHMS.includes(options.kryptos.algorithm as OctSigAlgorithm)) {
+      throw new OctError("OctKit only supports signing algorithms (HS256, HS384, HS512)");
     }
 
     this.kryptos = options.kryptos;
