@@ -19,6 +19,7 @@
     "prettier": "prettier --write ./src/*",
     "test": "jest --",
     "test:ci": "jest",
+    "test:interop": "NODE_OPTIONS='--experimental-vm-modules' jest --config jest.config.interop.mjs --no-coverage",
     "test:watch": "jest --watch --",
     "typecheck": "tsc",
     "typecheck:watch": "tsc --watch --",
@@ -33,6 +34,8 @@
     "@lindorm/utils": "^0.5.4"
   },
   "devDependencies": {
-    "@lindorm/types": "^0.3.3"
+    "@lindorm/types": "^0.3.3",
+    "@noble/ciphers": "^1.2.1",
+    "jose": "^6.1.3"
   }
 }
