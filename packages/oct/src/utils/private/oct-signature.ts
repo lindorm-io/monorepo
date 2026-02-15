@@ -1,5 +1,5 @@
 import { isString } from "@lindorm/is";
-import { createHmac } from "crypto";
+import { createHmac, timingSafeEqual } from "crypto";
 import { OctError } from "../../errors";
 import { CreateOctSignatureOptions, VerifyOctSignatureOptions } from "../../types";
 import { assertKeySize } from "./assert-key-size";
@@ -23,10 +23,14 @@ export const verifyOctSignature = ({
   encoding,
   kryptos,
   signature,
-}: VerifyOctSignatureOptions): boolean =>
-  createOctSignature({ data, kryptos }).equals(
-    isString(signature) ? Buffer.from(signature, encoding) : signature,
-  );
+}: VerifyOctSignatureOptions): boolean => {
+  const expected = createOctSignature({ data, kryptos });
+  const actual = isString(signature) ? Buffer.from(signature, encoding) : signature;
+
+  if (expected.length !== actual.length) return false;
+
+  return timingSafeEqual(expected, actual);
+};
 
 export const assertOctSignature = (options: VerifyOctSignatureOptions): void => {
   if (verifyOctSignature(options)) return;

@@ -15,7 +15,7 @@ export const getVerifyKey = (kryptos: IKryptosEc): string => {
   const { publicKey } = kryptos.export("pem");
 
   if (!publicKey) {
-    throw new EcError("Missing private key");
+    throw new EcError("Missing public key");
   }
 
   return publicKey;

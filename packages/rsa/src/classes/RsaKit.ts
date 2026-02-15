@@ -1,4 +1,9 @@
-import { IKryptosRsa, KryptosKit } from "@lindorm/kryptos";
+import {
+  IKryptosRsa,
+  KryptosKit,
+  RSA_SIG_ALGORITHMS,
+  RsaSigAlgorithm,
+} from "@lindorm/kryptos";
 import { DsaEncoding, IKeyKit, KeyData } from "@lindorm/types";
 import { RsaError } from "../errors";
 import { RsaKitOptions } from "../types";
@@ -19,6 +24,12 @@ export class RsaKit implements IKeyKit {
 
     if (!KryptosKit.isRsa(options.kryptos)) {
       throw new RsaError("Invalid Kryptos instance");
+    }
+
+    if (!RSA_SIG_ALGORITHMS.includes(options.kryptos.algorithm as RsaSigAlgorithm)) {
+      throw new RsaError(
+        "RsaKit only supports signing algorithms (RS256, RS384, RS512, PS256, PS384, PS512)",
+      );
     }
 
     this.kryptos = options.kryptos;

@@ -1,4 +1,9 @@
-import { IKryptosEc, KryptosKit } from "@lindorm/kryptos";
+import {
+  EC_SIG_ALGORITHMS,
+  EcSigAlgorithm,
+  IKryptosEc,
+  KryptosKit,
+} from "@lindorm/kryptos";
 import { DsaEncoding, IKeyKit, KeyData } from "@lindorm/types";
 import { EcError } from "../errors";
 import { EcKitOptions } from "../types";
@@ -21,6 +26,10 @@ export class EcKit implements IKeyKit {
 
     if (!KryptosKit.isEc(options.kryptos)) {
       throw new EcError("Invalid Kryptos instance");
+    }
+
+    if (!EC_SIG_ALGORITHMS.includes(options.kryptos.algorithm as EcSigAlgorithm)) {
+      throw new EcError("EcKit only supports signing algorithms (ES256, ES384, ES512)");
     }
 
     this.kryptos = options.kryptos;
