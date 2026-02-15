@@ -1,4 +1,10 @@
-import { CipherGCMOptions, createCipheriv, createDecipheriv } from "crypto";
+import {
+  CipherGCM,
+  CipherGCMOptions,
+  DecipherGCM,
+  createCipheriv,
+  createDecipheriv,
+} from "crypto";
 import { LATEST_AES_VERSION } from "../../constants/private";
 import { AesError } from "../../errors";
 import { AesContent, AesEncryptionRecord } from "../../types";
@@ -17,7 +23,7 @@ import {
 import { getDecryptionKey, getEncryptionKey } from "./get-key";
 
 export const encryptAes = (options: PrivateAesEncryptionOptions): AesEncryptionRecord => {
-  const { data, encryption = "A256GCM", kryptos } = options;
+  const { aad, data, encryption = "A256GCM", kryptos } = options;
 
   const {
     contentEncryptionKey,
@@ -39,7 +45,8 @@ export const encryptAes = (options: PrivateAesEncryptionOptions): AesEncryptionR
 
   const aesEncryption = calculateAesEncryption(encryption);
   const initialisationVector = getInitialisationVector(encryption);
-  const cipherOptions: CipherGCMOptions | undefined = encryption.includes("GCM")
+  const isGcm = encryption.includes("GCM");
+  const cipherOptions: CipherGCMOptions | undefined = isGcm
     ? { authTagLength: 16 }
     : undefined;
   const cipher = createCipheriv(
@@ -49,11 +56,16 @@ export const encryptAes = (options: PrivateAesEncryptionOptions): AesEncryptionR
     cipherOptions as CipherGCMOptions,
   );
 
+  if (isGcm && aad) {
+    (cipher as CipherGCM).setAAD(aad);
+  }
+
   const contentType = calculateContentType(data);
   const buffer = contentToBuffer(data, contentType);
   const content = Buffer.concat([cipher.update(buffer), cipher.final()]);
 
   const authTag = createAuthTag({
+    aad,
     cipher,
     content,
     hashKey,
@@ -83,6 +95,7 @@ export const decryptAes = <T extends AesContent = string>(
   options: PrivateAesDecryptionOptions,
 ): T => {
   const {
+    aad,
     authTag,
     content,
     contentType,
@@ -114,7 +127,8 @@ export const decryptAes = <T extends AesContent = string>(
   );
 
   const aesEncryption = calculateAesEncryption(encryption);
-  const decipherOptions: CipherGCMOptions | undefined = encryption.includes("GCM")
+  const isGcm = encryption.includes("GCM");
+  const decipherOptions: CipherGCMOptions | undefined = isGcm
     ? { authTagLength: 16 }
     : undefined;
   const decipher = createDecipheriv(
@@ -124,11 +138,16 @@ export const decryptAes = <T extends AesContent = string>(
     decipherOptions as CipherGCMOptions,
   );
 
-  if (encryption.includes("GCM") && authTag && authTag.length !== 16) {
+  if (isGcm && authTag && authTag.length !== 16) {
     throw new AesError("Invalid GCM auth tag length");
   }
 
+  if (isGcm && aad) {
+    (decipher as DecipherGCM).setAAD(aad);
+  }
+
   assertAuthTag({
+    aad,
     authTag,
     content,
     hashKey,

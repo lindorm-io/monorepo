@@ -21,6 +21,7 @@ const shaHash = (encryption: KryptosEncryption): ShaAlgorithm => {
 };
 
 export const createHmacAuthTag = ({
+  aad,
   content,
   hashKey,
   initialisationVector,
@@ -29,11 +30,15 @@ export const createHmacAuthTag = ({
   const hmac = createHmac(shaHash(encryption), hashKey);
 
   // RFC 7518 Section 5.2.2.1: M = MAC(MAC_KEY, A || IV || E || AL)
-  // A (AAD) is empty in this implementation
-  // AL = bit length of A as 64-bit big-endian integer = 0
+  // A = Additional Authenticated Data (optional, may be empty)
+  // AL = bit length of A as 64-bit big-endian integer
+  if (aad) {
+    hmac.update(aad);
+  }
   hmac.update(initialisationVector);
   hmac.update(content);
-  const al = Buffer.alloc(8); // 64-bit zero for empty AAD bit length
+  const al = Buffer.alloc(8);
+  al.writeBigUInt64BE(BigInt((aad?.length ?? 0) * 8));
   hmac.update(al);
 
   const fullTag = hmac.digest();
@@ -41,6 +46,7 @@ export const createHmacAuthTag = ({
 };
 
 export const assertHmacAuthTag = ({
+  aad,
   authTag,
   content,
   encryption,
@@ -48,6 +54,7 @@ export const assertHmacAuthTag = ({
   initialisationVector,
 }: VerifyHmacAuthTag): void => {
   const generated = createHmacAuthTag({
+    aad,
     content,
     encryption,
     hashKey,

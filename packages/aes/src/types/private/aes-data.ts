@@ -7,7 +7,10 @@ import {
 
 export type PrivateAesEncryptionOptions = AesEncryptionOptions & { kryptos: IKryptos };
 
-export type PrivateAesDecryptionOptions = AesDecryptionRecord & { kryptos: IKryptos };
+export type PrivateAesDecryptionOptions = AesDecryptionRecord & {
+  aad?: Buffer;
+  kryptos: IKryptos;
+};
 
 export type PrivateSerialisedAesDecryptionOptions = SerialisedAesDecryption & {
   kryptos: IKryptos;

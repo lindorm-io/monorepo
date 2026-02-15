@@ -5,6 +5,7 @@ import { PublicEncryptionJwk } from "./types";
 export type AesEncryptionMode = "encoded" | "record" | "serialised" | "tokenised";
 
 export type AesEncryptionOptions = {
+  aad?: Buffer;
   data: AesContent;
   encryption?: KryptosEncryption;
 };
