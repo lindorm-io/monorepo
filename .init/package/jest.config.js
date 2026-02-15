@@ -1,7 +1,7 @@
-const base = require("../../jest.config.unit.base");
-const packageJson = require("./package");
+import base from "../../jest.config.base.mjs";
+import packageJson from "./package.json" with { type: "json" };
 
-module.exports = {
+export default {
   ...base,
   displayName: packageJson.name,
 };
