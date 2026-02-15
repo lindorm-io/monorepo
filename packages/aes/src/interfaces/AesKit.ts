@@ -19,11 +19,11 @@ export interface IAesKit {
     data: AesDecryptionRecord | SerialisedAesDecryption | string,
   ): T;
   verify(
-    input: string,
+    input: AesContent,
     data: AesDecryptionRecord | SerialisedAesDecryption | string,
   ): boolean;
   assert(
-    input: string,
+    input: AesContent,
     data: AesDecryptionRecord | SerialisedAesDecryption | string,
   ): void;
 }

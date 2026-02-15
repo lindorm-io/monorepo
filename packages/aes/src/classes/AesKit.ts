@@ -1,3 +1,4 @@
+import { isEqual } from "@lindorm/is";
 import { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
 import { AesError } from "../errors";
 import { IAesKit } from "../interfaces";
@@ -85,14 +86,18 @@ export class AesKit implements IAesKit {
   }
 
   public verify(
-    input: string,
+    input: AesContent,
     data: AesDecryptionRecord | SerialisedAesDecryption | string,
   ): boolean {
-    return this.decrypt(data) === input;
+    try {
+      return isEqual(input, this.decrypt(data));
+    } catch {
+      return false;
+    }
   }
 
   public assert(
-    input: string,
+    input: AesContent,
     data: AesDecryptionRecord | SerialisedAesDecryption | string,
   ): void {
     if (this.verify(input, data)) return;
