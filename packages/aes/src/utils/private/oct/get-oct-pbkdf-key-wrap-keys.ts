@@ -32,6 +32,7 @@ export const getOctPbkdfKeyWrapEncryptionKey = ({
     derivationKey: der.privateKey,
     keyLength: calculateKeyWrapSize(kryptos.algorithm),
     algorithm: calculatePbkdfAlgorithm(kryptos),
+    kryptosAlgorithm: kryptos.algorithm,
   });
 
   const { publicEncryptionKey } = ecbKeyWrap({
@@ -67,6 +68,7 @@ export const getOctPbkdfKeyWrapDecryptionKey = ({
     derivationKey: der.privateKey,
     keyLength: calculateKeyWrapSize(kryptos.algorithm),
     algorithm: calculatePbkdfAlgorithm(kryptos),
+    kryptosAlgorithm: kryptos.algorithm,
     pbkdfIterations,
     pbkdfSalt,
   });
