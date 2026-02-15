@@ -1,5 +1,5 @@
+import { MOCK_KRYPTOS_OCT_ENC, MOCK_KRYPTOS_OCT_SIG_HS256 } from "@lindorm/kryptos";
 import { randomBytes } from "crypto";
-import { TEST_OCT_KEY_HS256 } from "../__fixtures__/keys";
 import { OctError } from "../errors";
 import { OctKit } from "./OctKit";
 
@@ -9,7 +9,7 @@ describe("OctKit", () => {
   let signature: Buffer;
 
   beforeEach(() => {
-    kit = new OctKit({ kryptos: TEST_OCT_KEY_HS256 });
+    kit = new OctKit({ kryptos: MOCK_KRYPTOS_OCT_SIG_HS256 });
     data = randomBytes(32);
     signature = kit.sign(data);
   });
@@ -28,5 +28,12 @@ describe("OctKit", () => {
 
   test("should throw error", () => {
     expect(() => kit.assert("wrong", signature)).toThrow(OctError);
+  });
+
+  test("should throw on encryption algorithm", () => {
+    expect(() => new OctKit({ kryptos: MOCK_KRYPTOS_OCT_ENC as any })).toThrow(OctError);
+    expect(() => new OctKit({ kryptos: MOCK_KRYPTOS_OCT_ENC as any })).toThrow(
+      "OctKit only supports signing algorithms",
+    );
   });
 });

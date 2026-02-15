@@ -38,7 +38,7 @@ describe("okp-signature", () => {
       ).toEqual(true);
     });
 
-    test("should sign and verify with X448", async () => {
+    test("should sign and verify with Ed448", async () => {
       const kryptos = TEST_OKP_KEY_ED448;
 
       const signature = createOkpSignature({
