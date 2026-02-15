@@ -1,162 +1,301 @@
 # @lindorm/conduit
 
-A powerful HTTP client with middleware support, built on top of Axios/Fetch with automatic retries, OAuth2 support, and comprehensive error handling.
+Middleware-based HTTP client supporting Axios and Fetch engines with automatic retries, circuit breaking, rate limiting, request deduplication, response caching, OAuth2 client credentials, and Zod schema validation.
 
 ## Installation
 
 ```bash
-npm install @lindorm/conduit
+npm install @lindorm/conduit axios form-data
 ```
 
-## Features
-
-- **Dual HTTP Engine Support**: Choose between Axios or Fetch implementations
-- **Middleware Pipeline**: Composable middleware for request/response transformation
-- **Automatic Retries**: Configurable retry strategies with exponential/linear backoff
-- **OAuth2 Support**: Built-in client credentials flow with token caching
-- **Response Transformation**: Automatic case conversion for requests/responses
-- **Schema Validation**: Validate responses with Zod schemas
-- **Comprehensive Logging**: Built-in request/response logging
-- **TypeScript First**: Full TypeScript support with strict typing
-- **Streaming Support**: Handle file uploads/downloads and streaming responses
+Axios and form-data are peer dependencies. If you only use the Fetch engine, you can skip them.
 
 ## Quick Start
 
 ```typescript
 import { Conduit } from "@lindorm/conduit";
 
-const client = new Conduit({
-  baseUrl: "https://api.example.com",
-  timeout: 30000
-});
+const client = new Conduit({ baseURL: "https://api.example.com" });
 
-// Simple GET request
-const users = await client.get("/users");
+// GET
+const { data } = await client.get<User[]>("/users");
 
 // POST with body
-const newUser = await client.post("/users", {
-  body: { name: "John Doe", email: "john@example.com" }
+const { data: created } = await client.post<User>("/users", {
+  body: { name: "Jane", email: "jane@example.com" },
 });
 
-// With custom headers
-const data = await client.get("/protected", {
-  headers: { "X-API-Key": "secret-key" }
+// Path parameters and query
+const { data: user } = await client.get<User>("/users/:id/posts", {
+  params: { id: "123" },
+  query: { limit: 10, offset: 0 },
+});
+// Resolves to: /users/123/posts?limit=10&offset=0
+```
+
+## Constructor Options
+
+```typescript
+const client = new Conduit({
+  alias: "MyAPI",                 // Human-readable name for logging
+  baseURL: "https://api.example.com", // Base URL for all requests
+  config: {},                     // Native Axios/Fetch config pass-through
+  environment: "production",      // Added as X-Environment header
+  headers: { "X-Client": "v1" }, // Default headers for all requests
+  logger: myLogger,               // ILogger instance (enables request/response logging)
+  middleware: [],                  // Middleware pipeline
+  retryCallback: myCallback,      // Custom retry predicate
+  retryOptions: {                 // Retry configuration
+    maxAttempts: 5,
+    strategy: "exponential",
+    timeout: 250,
+    timeoutMax: 10000,
+  },
+  timeout: 30000,                 // Request timeout in ms (default: 30000)
+  using: "axios",                 // "axios" (default) or "fetch"
+  withCredentials: false,         // Include credentials
 });
 ```
 
-## Configuration
+## Request Options
 
-### Constructor Options
+Every HTTP method (`get`, `post`, `put`, `patch`, `delete`, `head`, `options`) accepts a path and an optional options object:
 
 ```typescript
-interface ConduitConfig {
-  baseUrl?: string | URL;           // Base URL for all requests
-  alias?: string;                   // Human-readable name for logging
-  environment?: Environment;        // Environment context
-  headers?: Headers;                // Default headers
-  logger?: ILogger;                 // Logger instance
-  middleware?: Middleware[];        // Middleware pipeline
-  timeout?: number;                 // Request timeout (default: 30000ms)
-  withCredentials?: boolean;        // Include credentials
-  using?: ConduitUsing;            // Axios or Fetch (default: Axios)
-  retryOptions?: RetryOptions;      // Retry configuration
-  retryCallback?: RetryCallback;    // Custom retry logic
-}
+const { data, status, headers } = await client.get<ResponseType>("/path", {
+  body: { key: "value" },             // Request body (POST/PUT/PATCH)
+  config: {},                          // Native engine config overrides
+  expectedResponse: "json",            // "json" | "text" | "blob" | "arraybuffer" | "stream" | "formdata" | "document"
+  filename: "upload.zip",              // Filename for stream uploads
+  form: formData,                      // FormData for multipart uploads
+  headers: { "X-Custom": "value" },   // Per-request headers
+  middleware: [myMiddleware],          // Per-request middleware
+  onDownloadProgress: (e) => {},       // Download progress callback
+  onRetry: (err, attempt, config) => {},// Called before each retry attempt
+  onUploadProgress: (e) => {},         // Upload progress callback (Axios only)
+  params: { id: "123" },              // URL path parameters (:id substitution)
+  query: { search: "foo" },           // Query string parameters
+  retryCallback: myCallback,          // Per-request retry predicate
+  retryOptions: { maxAttempts: 3 },   // Per-request retry config
+  signal: abortController.signal,      // AbortSignal for cancellation
+  stream: readableStream,             // Readable stream for uploads (Axios only)
+  timeout: 5000,                       // Per-request timeout
+  using: "fetch",                      // Per-request engine override
+  withCredentials: true,               // Per-request credentials
+});
 ```
 
-### Request Options
+You can also use the generic `request()` method:
 
 ```typescript
-interface RequestOptions {
-  body?: any;                       // Request body
-  form?: FormData;                  // FormData for multipart
-  stream?: ReadableStream;          // Stream for uploads
-  headers?: Headers;                // Request headers
-  params?: Record<string, string>;  // URL path parameters
-  query?: Record<string, any>;      // Query parameters
-  expectedResponse?: ExpectedResponse; // Response type
-  filename?: string;                // For downloads
-  middleware?: Middleware[];        // Request-specific middleware
-  retryOptions?: RetryOptions;      // Request-specific retry config
-}
+const result = await client.request<Data>({
+  method: "POST",
+  path: "/items",
+  // or: url: "https://other-api.com/items"
+}, { body: { name: "item" } });
+```
+
+## Response Shape
+
+All methods return a `ConduitResponse<D>`:
+
+```typescript
+type ConduitResponse<D> = {
+  data: D;
+  status: number;
+  statusText: string;
+  headers: Dict<Header>;
+};
 ```
 
 ## Middleware
 
+Conduit uses a Koa-style middleware pipeline. Each middleware receives `(ctx, next)` and can modify the request before `next()` and/or the response after `next()`.
+
+Instance middleware runs before per-request middleware. When a logger is provided, request/response logging middleware wraps the entire pipeline automatically.
+
+### Writing Custom Middleware
+
+```typescript
+import { ConduitMiddleware } from "@lindorm/conduit";
+
+const timingMiddleware: ConduitMiddleware = async (ctx, next) => {
+  // Before request
+  const start = Date.now();
+  ctx.req.headers["X-Request-Start"] = String(start);
+
+  await next();
+
+  // After response
+  const elapsed = Date.now() - start;
+  console.log(`${ctx.req.config.method} ${ctx.req.url} took ${elapsed}ms`);
+};
+```
+
 ### Authentication
 
 ```typescript
-import { 
-  conduitBearerAuthMiddleware,
+import {
   conduitBasicAuthMiddleware,
-  conduitClientCredentialsMiddlewareFactory 
+  conduitBearerAuthMiddleware,
 } from "@lindorm/conduit";
 
-// Bearer token
-const bearerClient = new Conduit({
-  baseUrl: "https://api.example.com",
-  middleware: [conduitBearerAuthMiddleware("your-token")]
-});
+// Basic auth - sets Authorization: Basic <base64(user:pass)>
+conduitBasicAuthMiddleware("username", "password");
 
-// Basic auth
-const basicClient = new Conduit({
-  baseUrl: "https://api.example.com",
-  middleware: [conduitBasicAuthMiddleware("username", "password")]
-});
+// Bearer token - sets Authorization: Bearer <token>
+conduitBearerAuthMiddleware("my-access-token");
 
-// OAuth2 client credentials
-const oauth2Middleware = await conduitClientCredentialsMiddlewareFactory({
-  clientId: "your-client-id",
-  clientSecret: "your-client-secret",
-  openIdConfigurationUri: "https://auth.example.com/.well-known/openid-configuration",
-  scope: ["read", "write"]
-});
-
-const oauthClient = new Conduit({
-  baseUrl: "https://api.example.com",
-  middleware: [oauth2Middleware]
-});
+// Custom token type
+conduitBearerAuthMiddleware("my-token", "DPoP");
 ```
 
-### Response Transformation
+### OAuth2 Client Credentials
+
+Factory pattern that handles OIDC discovery, token fetching, caching, and automatic refresh:
 
 ```typescript
-import { conduitChangeResponseDataMiddleware } from "@lindorm/conduit";
-import { ChangeCase } from "@lindorm/case";
+import { conduitClientCredentialsMiddlewareFactory } from "@lindorm/conduit";
 
-// Convert snake_case API responses to camelCase
-const client = new Conduit({
-  baseUrl: "https://api.example.com",
-  middleware: [conduitChangeResponseDataMiddleware(ChangeCase.Camel)]
+const getAuthMiddleware = conduitClientCredentialsMiddlewareFactory({
+  clientId: "my-client-id",
+  clientSecret: "my-client-secret",
+  issuer: "https://auth.example.com",
+  // Optional:
+  authLocation: "body",                    // "body" (default) or "header" (Basic auth)
+  contentType: "application/json",          // or "application/x-www-form-urlencoded"
+  clockTolerance: 10,                       // Seconds before expiry to refresh (default: 10)
+  defaultExpiration: 3600,                  // Fallback TTL in seconds
+  tokenUri: "https://auth.example.com/token", // Skip OIDC discovery
+  using: "fetch",                           // Engine for token requests
 });
 
-// Response: { user_name: "John" } → { userName: "John" }
-```
-
-### Request Transformation
-
-```typescript
-import { 
-  conduitChangeRequestBodyMiddleware,
-  conduitChangeRequestQueryMiddleware,
-  conduitChangeRequestHeadersMiddleware 
-} from "@lindorm/conduit";
-import { ChangeCase } from "@lindorm/case";
-
+// Per-request: fetches/caches tokens automatically
 const client = new Conduit({
-  baseUrl: "https://api.example.com",
+  baseURL: "https://api.example.com",
   middleware: [
-    // Convert camelCase to snake_case for API
-    conduitChangeRequestBodyMiddleware(ChangeCase.Snake),
-    conduitChangeRequestQueryMiddleware(ChangeCase.Snake),
-    conduitChangeRequestHeadersMiddleware(ChangeCase.Header)
-  ]
+    await getAuthMiddleware(
+      { audience: "https://api.example.com", scope: ["read", "write"] },
+      logger,
+    ),
+  ],
+});
+```
+
+Tokens are cached and reused across calls. Concurrent token requests for the same audience/issuer are deduplicated.
+
+### Case Conversion
+
+```typescript
+import {
+  conduitChangeRequestBodyMiddleware,
+  conduitChangeRequestHeadersMiddleware,
+  conduitChangeRequestQueryMiddleware,
+  conduitChangeResponseDataMiddleware,
+} from "@lindorm/conduit";
+
+const client = new Conduit({
+  baseURL: "https://api.example.com",
+  middleware: [
+    conduitChangeRequestBodyMiddleware("snake"),    // { userName } -> { user_name }
+    conduitChangeRequestQueryMiddleware("snake"),    // ?userName -> ?user_name
+    conduitChangeRequestHeadersMiddleware("header"), // xCustom -> X-Custom
+    conduitChangeResponseDataMiddleware("camel"),    // { user_name } -> { userName }
+  ],
+});
+```
+
+Supported modes: `"camel"`, `"snake"`, `"pascal"`, `"header"`.
+
+### Response Caching
+
+In-memory cache for GET requests:
+
+```typescript
+import { createConduitCacheMiddleware } from "@lindorm/conduit";
+
+const client = new Conduit({
+  baseURL: "https://api.example.com",
+  middleware: [
+    createConduitCacheMiddleware({
+      maxAge: 300000,    // TTL in ms (default: 300000 = 5 minutes)
+      maxEntries: 1000,  // Max cached responses (default: 1000, FIFO eviction)
+    }),
+  ],
+});
+```
+
+- Only caches GET requests with 2xx responses
+- Respects `Cache-Control: no-cache` and `no-store` response headers
+- Returns shallow copies to prevent cache mutation
+
+### Request Deduplication
+
+Deduplicates concurrent identical GET/HEAD requests:
+
+```typescript
+import { createConduitDeduplicationMiddleware } from "@lindorm/conduit";
+
+const client = new Conduit({
+  baseURL: "https://api.example.com",
+  middleware: [createConduitDeduplicationMiddleware()],
 });
 
-// Request body: { userName: "John" } → { user_name: "John" }
+// These fire only ONE HTTP request; both resolve with the same response
+const [a, b] = await Promise.all([
+  client.get("/expensive-data"),
+  client.get("/expensive-data"),
+]);
 ```
+
+### Rate Limiting
+
+Client-side token bucket rate limiter:
+
+```typescript
+import { createConduitRateLimitMiddleware } from "@lindorm/conduit";
+
+const client = new Conduit({
+  baseURL: "https://api.example.com",
+  middleware: [
+    createConduitRateLimitMiddleware({
+      maxRequests: 100,   // Tokens per window (default: 100)
+      windowMs: 60000,    // Window in ms (default: 60000)
+      perOrigin: true,    // Separate buckets per origin (default: true)
+    }),
+  ],
+});
+```
+
+Throws a `ConduitError` with status 429 when the limit is exceeded. Tokens refill continuously.
+
+### Circuit Breaker
+
+Per-origin circuit breaker that prevents cascading failures:
+
+```typescript
+import { createConduitCircuitBreakerMiddleware } from "@lindorm/conduit";
+
+const client = new Conduit({
+  baseURL: "https://api.example.com",
+  middleware: [
+    createConduitCircuitBreakerMiddleware({
+      expiration: 120,            // Seconds before re-probing (default: 120)
+      serverErrorThreshold: 5,    // 5xx errors before opening (default: 5)
+      clientErrorThreshold: 1000, // 4xx errors before opening (default: 1000)
+      verifier: customVerifier,   // Custom state transition logic (optional)
+    }),
+  ],
+});
+```
+
+States: **closed** (normal) -> **open** (blocking requests) -> **half-open** (probing with one request) -> **closed** (recovered).
+
+Unrecoverable status codes (501, 505, 506, 510, 511) immediately open the circuit.
 
 ### Schema Validation
+
+Validate responses with Zod schemas:
 
 ```typescript
 import { conduitSchemaMiddleware } from "@lindorm/conduit";
@@ -165,131 +304,156 @@ import { z } from "zod";
 const userSchema = z.object({
   id: z.string(),
   name: z.string(),
-  email: z.string().email()
+  email: z.string().email(),
 });
 
 const client = new Conduit({
-  baseUrl: "https://api.example.com",
-  middleware: [conduitSchemaMiddleware(userSchema)]
+  baseURL: "https://api.example.com",
+  middleware: [conduitSchemaMiddleware(userSchema)],
 });
 
-// Responses will be validated against the schema
+// Throws ConduitError if response doesn't match schema
+const { data } = await client.get("/user/123");
+// data is validated against userSchema
 ```
 
-### Custom Headers
+Works with both `ZodObject` (uses `.passthrough()` to preserve extra keys) and `ZodArray`.
+
+### Headers
 
 ```typescript
-import { conduitHeaderMiddleware, conduitHeadersMiddleware } from "@lindorm/conduit";
+import {
+  conduitHeaderMiddleware,
+  conduitHeadersMiddleware,
+} from "@lindorm/conduit";
 
 // Single header
-const client1 = new Conduit({
-  baseUrl: "https://api.example.com",
-  middleware: [conduitHeaderMiddleware("X-API-Version", "v2")]
-});
+conduitHeaderMiddleware("X-API-Version", "v2");
 
 // Multiple headers
-const client2 = new Conduit({
-  baseUrl: "https://api.example.com",
-  middleware: [conduitHeadersMiddleware({
-    "X-API-Version": "v2",
-    "X-Client-ID": "my-app"
-  })]
-});
+conduitHeadersMiddleware({ "X-API-Version": "v2", "X-Client-ID": "my-app" });
 ```
 
 ### Correlation and Session Tracking
 
 ```typescript
-import { conduitCorrelationMiddleware, conduitSessionMiddleware } from "@lindorm/conduit";
+import {
+  conduitCorrelationMiddleware,
+  conduitSessionMiddleware,
+} from "@lindorm/conduit";
 
-const client = new Conduit({
-  baseUrl: "https://api.example.com",
-  middleware: [
-    conduitCorrelationMiddleware("correlation-id-123"),
-    conduitSessionMiddleware("session-id-456")
-  ]
-});
+// Sets ctx.req.metadata.correlationId (also sent as X-Correlation-Id header)
+conduitCorrelationMiddleware("correlation-id-123");
+
+// Sets ctx.req.metadata.sessionId
+conduitSessionMiddleware("session-id-456");
 ```
 
-## Retry Configuration
+## Retry
+
+By default, requests retry up to 5 times with exponential backoff (250ms base, 10s max) on:
+- Network errors (connection failures, DNS errors)
+- Status 502 (Bad Gateway), 503 (Service Unavailable), 504 (Gateway Timeout)
 
 ```typescript
-import { RetryStrategy } from "@lindorm/retry";
+import { RetryStrategy } from "@lindorm/conduit";
 
 const client = new Conduit({
-  baseUrl: "https://api.example.com",
+  baseURL: "https://api.example.com",
   retryOptions: {
-    maxAttempts: 5,
-    strategy: RetryStrategy.Exponential,
-    baseTimeout: 250,
-    maxTimeout: 10000,
-    factor: 2,
-    jitter: true
-  }
+    maxAttempts: 3,
+    strategy: "exponential",  // or "linear"
+    timeout: 500,
+    timeoutMax: 15000,
+  },
+  // Custom retry predicate
+  retryCallback: (error, attempt, config) => {
+    if (error.isClientError) return false;
+    return attempt < config.maxAttempts;
+  },
 });
 
-// Custom retry logic
-const customRetryClient = new Conduit({
-  baseUrl: "https://api.example.com",
-  retryCallback: (error, attempt, options) => {
-    // Only retry on network errors or 5xx responses
-    if (error.statusCode && error.statusCode < 500) {
-      return false;
-    }
-    return attempt < options.maxAttempts;
-  }
+// Per-request retry notification
+await client.get("/flaky-endpoint", {
+  onRetry: (error, attempt, config) => {
+    console.log(`Retry ${attempt}/${config.maxAttempts}: ${error.message}`);
+  },
 });
 ```
 
-## Response Types
+## Abort / Cancellation
 
 ```typescript
-// JSON (default)
-const json = await client.get("/data");
+const controller = new AbortController();
 
-// Text
-const text = await client.get("/text", {
-  expectedResponse: ExpectedResponse.Text
-});
+// Cancel after 5 seconds
+setTimeout(() => controller.abort(), 5000);
 
-// Binary data
-const blob = await client.get("/image", {
-  expectedResponse: ExpectedResponse.Blob
-});
-
-// Streaming
-const stream = await client.get("/large-file", {
-  expectedResponse: ExpectedResponse.Stream
-});
-
-// File download
-const file = await client.get("/report.pdf", {
-  expectedResponse: ExpectedResponse.Blob,
-  filename: "report.pdf"
+const { data } = await client.get("/slow-endpoint", {
+  signal: controller.signal,
 });
 ```
+
+When using the Fetch engine, the abort signal is combined with the timeout signal via `AbortSignal.any()`. Aborted requests stop retrying immediately.
 
 ## File Uploads
 
 ```typescript
-// Using FormData
-const formData = new FormData();
-formData.append("file", fileBlob, "document.pdf");
-formData.append("description", "Important document");
+// FormData (both engines)
+const form = new FormData();
+form.append("file", blob, "document.pdf");
+form.append("description", "Important document");
 
-const response = await client.post("/upload", {
-  form: formData
-});
+await client.post("/upload", { form });
 
-// Using streams
-const fileStream = fs.createReadStream("large-file.zip");
-const uploaded = await client.post("/upload-stream", {
-  stream: fileStream,
-  headers: {
-    "Content-Type": "application/zip"
-  }
+// Stream upload (Axios only)
+import { createReadStream } from "fs";
+
+await client.post("/upload", {
+  stream: createReadStream("large-file.zip"),
+  filename: "large-file.zip",
 });
 ```
+
+## Streaming and Progress
+
+```typescript
+// Download streaming (Fetch only)
+const { data: stream } = await client.get("/large-file", {
+  expectedResponse: "stream",
+  using: "fetch",
+});
+// data is a ReadableStream
+
+// Download progress (Fetch)
+await client.get("/large-file", {
+  using: "fetch",
+  onDownloadProgress: ({ loaded, total }) => {
+    console.log(`Downloaded ${loaded}/${total ?? "unknown"} bytes`);
+  },
+});
+
+// Upload progress (Axios only)
+await client.post("/upload", {
+  form: formData,
+  onUploadProgress: ({ loaded, total }) => {
+    console.log(`Uploaded ${loaded}/${total ?? "unknown"} bytes`);
+  },
+});
+```
+
+## Engine Differences
+
+| Feature | Axios | Fetch |
+|---------|-------|-------|
+| Stream upload | Yes | No |
+| Download streaming | No | Yes (`expectedResponse: "stream"`) |
+| Upload progress | Yes | No |
+| Download progress | Yes (native) | Yes (manual ReadableStream reader) |
+| Timeout mechanism | Axios native | `AbortSignal.timeout()` |
+| Default | Yes | Opt-in via `using: "fetch"` |
+
+Both engines support all HTTP methods, path parameters, query parameters, FormData, abort signals, and the full middleware pipeline.
 
 ## Error Handling
 
@@ -297,147 +461,57 @@ const uploaded = await client.post("/upload-stream", {
 import { ConduitError } from "@lindorm/conduit";
 
 try {
-  const data = await client.get("/protected");
+  await client.get("/not-found");
 } catch (error) {
   if (error instanceof ConduitError) {
-    console.error("Status:", error.statusCode);
-    console.error("Message:", error.message);
-    console.error("Request ID:", error.data.request.id);
-    console.error("Response:", error.data.response.data);
+    error.status;         // HTTP status code
+    error.message;        // Error message
+    error.isClientError;  // true for 4xx
+    error.isServerError;  // true for 5xx
+    error.isNetworkError; // true for connection failures (status <= 0, no response)
+    error.config;         // Request configuration at time of error
+    error.request;        // Request details
+    error.response;       // Response details (headers, data, status)
   }
 }
 ```
 
-## Advanced Usage
+`ConduitError` automatically detects Pylon (Lindorm server framework) error responses and extracts structured error fields (`id`, `code`, `data`, `message`, `support`, `title`).
 
-### Path Parameters
+## Automatic Headers
 
-```typescript
-// Path with parameters
-const user = await client.get("/users/:id/posts/:postId", {
-  params: {
-    id: "123",
-    postId: "456"
-  }
-});
-// Resolves to: /users/123/posts/456
-```
+When a logger is provided, every request automatically includes:
+- `Date` -- current timestamp
+- `X-Correlation-Id` -- unique correlation ID (UUID)
+- `X-Request-Id` -- unique request ID (UUID)
+- `X-Environment` -- environment string (if configured)
 
-### Query Parameters
+## Full Example
 
 ```typescript
-const results = await client.get("/search", {
-  query: {
-    q: "typescript",
-    limit: 10,
-    offset: 0
-  }
-});
-// Resolves to: /search?q=typescript&limit=10&offset=0
-```
-
-### Switching HTTP Engines
-
-```typescript
-import { ConduitUsing } from "@lindorm/conduit";
-
-// Use Fetch instead of Axios
-const fetchClient = new Conduit({
-  baseUrl: "https://api.example.com",
-  using: ConduitUsing.Fetch
-});
-```
-
-### Custom Middleware
-
-```typescript
-const timingMiddleware: Middleware = async (ctx, next) => {
-  const start = Date.now();
-  
-  await next();
-  
-  const duration = Date.now() - start;
-  console.log(`Request took ${duration}ms`);
-};
+import { Conduit, createConduitCacheMiddleware, createConduitCircuitBreakerMiddleware, createConduitDeduplicationMiddleware, createConduitRateLimitMiddleware, conduitChangeRequestBodyMiddleware, conduitChangeResponseDataMiddleware, conduitBearerAuthMiddleware } from "@lindorm/conduit";
 
 const client = new Conduit({
-  baseUrl: "https://api.example.com",
-  middleware: [timingMiddleware]
-});
-```
-
-### With Logger
-
-```typescript
-import { Logger } from "@lindorm/logger";
-
-const logger = new Logger();
-
-const client = new Conduit({
-  baseUrl: "https://api.example.com",
-  logger,
-  alias: "ExampleAPI"
-});
-
-// All requests and responses will be logged
-```
-
-## Examples
-
-### API Client with Full Configuration
-
-```typescript
-import { Conduit } from "@lindorm/conduit";
-import { Logger, LogLevel } from "@lindorm/logger";
-import { ChangeCase } from "@lindorm/case";
-import { RetryStrategy } from "@lindorm/retry";
-
-const logger = new Logger({ level: LogLevel.Debug });
-
-const apiClient = new Conduit({
-  alias: "MyAPI",
-  baseUrl: "https://api.example.com",
+  alias: "ExampleAPI",
+  baseURL: "https://api.example.com",
   logger,
   timeout: 15000,
-  headers: {
-    "X-Client-Version": "1.0.0"
-  },
+  headers: { "X-Client-Version": "1.0.0" },
   middleware: [
-    conduitBearerAuthMiddleware(process.env.API_TOKEN),
-    conduitChangeRequestBodyMiddleware(ChangeCase.Snake),
-    conduitChangeResponseDataMiddleware(ChangeCase.Camel)
+    createConduitCircuitBreakerMiddleware(),
+    createConduitRateLimitMiddleware({ maxRequests: 50 }),
+    createConduitDeduplicationMiddleware(),
+    createConduitCacheMiddleware({ maxAge: 60000 }),
+    conduitBearerAuthMiddleware(process.env.API_TOKEN!),
+    conduitChangeRequestBodyMiddleware("snake"),
+    conduitChangeResponseDataMiddleware("camel"),
   ],
-  retryOptions: {
-    maxAttempts: 3,
-    strategy: RetryStrategy.Exponential
-  }
+  retryOptions: { maxAttempts: 3, strategy: "exponential" },
 });
 
-// Use the configured client
-const users = await apiClient.get("/v1/users");
-const newUser = await apiClient.post("/v1/users", {
-  body: { firstName: "John", lastName: "Doe" }
+const { data } = await client.get<User[]>("/v1/users", {
+  query: { active: true },
 });
-```
-
-### OAuth2 Protected API
-
-```typescript
-const oauthMiddleware = await conduitClientCredentialsMiddlewareFactory({
-  clientId: process.env.CLIENT_ID,
-  clientSecret: process.env.CLIENT_SECRET,
-  openIdConfigurationUri: "https://auth.example.com/.well-known/openid-configuration",
-  scope: ["api:read", "api:write"],
-  audience: "https://api.example.com"
-});
-
-const protectedClient = new Conduit({
-  baseUrl: "https://api.example.com",
-  middleware: [oauthMiddleware()]
-});
-
-// Token is automatically fetched and refreshed
-const data = await protectedClient.get("/protected-resource");
 ```
 
 ## License
