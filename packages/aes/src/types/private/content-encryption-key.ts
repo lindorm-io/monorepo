@@ -2,6 +2,8 @@ import { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
 import { PublicEncryptionJwk } from "../types";
 
 export type CreateCekOptions = {
+  apu?: Buffer;
+  apv?: Buffer;
   encryption: KryptosEncryption;
   kryptos: IKryptos;
 };
@@ -18,6 +20,8 @@ export type CreateCekResult = {
 };
 
 export type DecryptCekOptions = {
+  apu?: Buffer;
+  apv?: Buffer;
   encryption: KryptosEncryption;
   hkdfSalt?: Buffer;
   kryptos: IKryptos;
