@@ -1,6 +1,6 @@
 import { KryptosEncryption } from "@lindorm/kryptos";
 import { ShaAlgorithm } from "@lindorm/types";
-import { createHmac } from "crypto";
+import { createHmac, timingSafeEqual } from "crypto";
 import { AesError } from "../../../errors";
 import { CreateHmacAuthTag, VerifyHmacAuthTag } from "../../../types/private";
 
@@ -48,7 +48,7 @@ export const assertHmacAuthTag = ({
     initialisationVector,
   });
 
-  if (Buffer.compare(generated, authTag) === 0) return;
+  if (generated.length === authTag.length && timingSafeEqual(generated, authTag)) return;
 
   throw new AesError("Auth tag verification failed");
 };
