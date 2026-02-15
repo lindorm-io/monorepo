@@ -32,13 +32,18 @@ export const splitContentEncryptionKey = (
 ): Result => {
   const keyLength = encryptionKeyLength(encryption);
 
+  if (encryption.includes("CBC")) {
+    // RFC 7518 Section 5.2.2: MAC_KEY = initial octets, ENC_KEY = final octets
+    const hashKey = contentEncryptionKey.subarray(0, keyLength);
+    const encryptionKey = contentEncryptionKey.subarray(keyLength);
+    return { encryptionKey, hashKey };
+  }
+
+  // GCM: encryptionKey = full CEK, hashKey = empty
   const encryptionKey = contentEncryptionKey.subarray(0, keyLength);
   const hashKey = contentEncryptionKey.subarray(keyLength);
 
-  if (
-    hashKey.length &&
-    (encryption === "A128GCM" || encryption === "A192GCM" || encryption === "A256GCM")
-  ) {
+  if (hashKey.length) {
     throw new AesError("Unexpected hash key");
   }
 

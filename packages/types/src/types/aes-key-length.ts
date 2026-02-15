@@ -2,9 +2,9 @@ export const AES_KEY_LENGTH_A128GCM = 16 as const;
 export const AES_KEY_LENGTH_A192GCM = 24 as const;
 export const AES_KEY_LENGTH_A256GCM = 32 as const;
 
-export const AES_KEY_LENGTH_A128CBC_HS256 = 48 as const;
-export const AES_KEY_LENGTH_A192CBC_HS384 = 72 as const;
-export const AES_KEY_LENGTH_A256CBC_HS512 = 96 as const;
+export const AES_KEY_LENGTH_A128CBC_HS256 = 32 as const;
+export const AES_KEY_LENGTH_A192CBC_HS384 = 48 as const;
+export const AES_KEY_LENGTH_A256CBC_HS512 = 64 as const;
 
 export const AES_KEY_LENGTHS = [
   AES_KEY_LENGTH_A128GCM,
