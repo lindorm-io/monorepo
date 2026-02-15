@@ -1,4 +1,5 @@
 import { KryptosAlgorithm, KryptosEncryption } from "@lindorm/kryptos";
+import { AesError } from "../../errors";
 import { AesContentType, AesEncryptionRecord, PublicEncryptionJwk } from "../../types";
 
 export const createEncodedAesString = (data: AesEncryptionRecord): string => {
@@ -64,6 +65,11 @@ export const createEncodedAesString = (data: AesEncryptionRecord): string => {
   const publicEncryptionJwkStr = data.publicEncryptionJwk
     ? JSON.stringify(data.publicEncryptionJwk)
     : "";
+  if (publicEncryptionJwkStr.length > 255) {
+    throw new AesError(
+      "Public encryption JWK exceeds maximum encoded length (255 bytes)",
+    );
+  }
   if (publicEncryptionJwkStr.length > 0) {
     optionalFields.push(Buffer.from([1]));
     optionalFields.push(
@@ -107,37 +113,67 @@ export const parseEncodedAesString = (encoded: string): AesEncryptionRecord => {
   let offset = 0;
 
   const readFieldWithLength = (): Buffer => {
+    if (offset >= buffer.length) {
+      throw new AesError("Unexpected end of encoded AES data");
+    }
     const length = buffer.readUInt8(offset);
     offset += 1;
+    if (offset + length > buffer.length) {
+      throw new AesError("Encoded AES field exceeds buffer length");
+    }
     const field = buffer.subarray(offset, offset + length);
     offset += length;
     return field;
   };
 
   const readOptionalFieldWithLength = (): Buffer | undefined => {
+    if (offset >= buffer.length) {
+      throw new AesError("Unexpected end of encoded AES data");
+    }
     const exists = buffer.readUInt8(offset);
     offset += 1;
     if (exists === 0) return undefined;
+    if (offset >= buffer.length) {
+      throw new AesError("Unexpected end of encoded AES data");
+    }
     const length = buffer.readUInt8(offset);
     offset += 1;
+    if (offset + length > buffer.length) {
+      throw new AesError("Encoded AES field exceeds buffer length");
+    }
     const field = buffer.subarray(offset, offset + length);
     offset += length;
     return field;
   };
 
   const readOptionalFieldWithLargeLength = (): Buffer | undefined => {
+    if (offset >= buffer.length) {
+      throw new AesError("Unexpected end of encoded AES data");
+    }
     const exists = buffer.readUInt8(offset);
     offset += 1;
     if (exists === 0) return undefined;
+    if (offset + 4 > buffer.length) {
+      throw new AesError("Unexpected end of encoded AES data");
+    }
     const length = buffer.readUInt32BE(offset);
     offset += 4;
+    if (offset + length > buffer.length) {
+      throw new AesError("Encoded AES field exceeds buffer length");
+    }
     const field = buffer.subarray(offset, offset + length);
     offset += length;
     return field;
   };
 
+  if (offset >= buffer.length) {
+    throw new AesError("Unexpected end of encoded AES data");
+  }
   const versionLength = buffer.readUInt8(offset);
   offset += 1;
+  if (offset + versionLength > buffer.length) {
+    throw new AesError("Encoded AES field exceeds buffer length");
+  }
   const version = parseInt(
     buffer.subarray(offset, offset + versionLength).toString(),
     10,
@@ -174,7 +210,7 @@ export const parseEncodedAesString = (encoded: string): AesEncryptionRecord => {
     try {
       publicEncryptionJwk = JSON.parse(jwkString);
     } catch {
-      throw new SyntaxError(`Invalid JSON in publicEncryptionJwk: ${jwkString}`);
+      throw new AesError(`Invalid JSON in publicEncryptionJwk: ${jwkString}`);
     }
   }
 
@@ -183,7 +219,7 @@ export const parseEncodedAesString = (encoded: string): AesEncryptionRecord => {
 
   const optionalFieldsEnd = offset;
   if (optionalFieldsEnd - optionalFieldsStart !== optionalFieldsLength) {
-    throw new Error("Optional fields length mismatch");
+    throw new AesError("Optional fields length mismatch");
   }
 
   const content = buffer.subarray(offset);
