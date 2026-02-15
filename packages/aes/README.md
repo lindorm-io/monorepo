@@ -1,290 +1,385 @@
 # @lindorm/aes
 
-A comprehensive TypeScript library for AES encryption and decryption with support for multiple key algorithms, encryption modes, and flexible output formats.
+High-level **AES encryption & decryption** for Node.js with first-class
+TypeScript support. `@lindorm/aes` wraps key derivation, key wrapping, and
+authenticated content encryption behind a single `AesKit` class — so you can
+encrypt any data type in one call and get back a string, a structured record, or
+a compact token.
+
+It includes:
+
+- `AesKit` — encrypt / decrypt / verify / assert in four output formats
+- **28 algorithm × encryption combinations** out of the box (EC, OKP, RSA, oct)
+- JWE-aligned key derivation: ECDH-ES, AES-KW, AES-GCM-KW, PBKDF2, RSA-OAEP
+- Automatic content-type detection (string, Buffer, object, array, number)
+- Static helpers for format detection and parsing
+
+---
 
 ## Installation
 
 ```bash
 npm install @lindorm/aes
+# or
+yarn add @lindorm/aes
 ```
 
-## Features
+Requires Node >= 18 and `@lindorm/kryptos` for key management.
 
-- **Multiple Key Algorithms**: Support for EC, OKP, RSA, and symmetric keys
-- **Key Derivation**: Concat KDF (ECDH-ES), PBKDF2, and direct key usage
-- **Key Wrapping**: ECB and GCM key wrapping modes
-- **Multiple Encryption Modes**: CBC-HMAC and GCM authenticated encryption
-- **Flexible Output Formats**: Encoded strings, structured records, serialized objects, and tokenized strings
-- **Type Safety**: Full TypeScript support with comprehensive type definitions
-- **Content Type Detection**: Automatic detection and handling of different data types
-- **Verification Methods**: Built-in verification and assertion utilities
+---
 
-## Supported Algorithms
+## Quick start
 
-### Key Algorithms
+### Encrypt and decrypt
 
-- **ECDH-ES**: Elliptic Curve Diffie-Hellman Ephemeral Static
-- **ECDH-ES+A128KW**: ECDH-ES with AES-128 Key Wrap
-- **ECDH-ES+A128GCMKW**: ECDH-ES with AES-128 GCM Key Wrap
-- **A128KW**: AES-128 Key Wrap
-- **A128GCMKW**: AES-128 GCM Key Wrap
-- **PBES2-HS256+A128KW**: PBKDF2 with HMAC SHA-256 and AES-128 Key Wrap
-- **RSA-OAEP-256**: RSA OAEP with SHA-256
-
-### Encryption Modes
-
-- **A128CBC-HS256**: AES-128 CBC with HMAC SHA-256
-- **A128GCM**: AES-128 GCM (default)
-- **A192GCM**: AES-192 GCM
-- **A256GCM**: AES-256 GCM
-
-## Basic Usage
-
-### Setup
-
-```typescript
+```ts
 import { AesKit } from "@lindorm/aes";
 import { KryptosKit } from "@lindorm/kryptos";
 
-// Generate or load a cryptographic key
-const kryptos = KryptosKit.generate.auto({ algorithm: "ECDH-ES" });
+// Generate an encryption key — Kryptos defaults to A256GCM content encryption
+const kryptos = KryptosKit.generate.enc.oct({ algorithm: "A256KW" });
+const aes = new AesKit({ kryptos });
 
-// Create AES kit instance
-const aesKit = new AesKit({
-  kryptos,
-  encryption: "A256GCM", // Optional: defaults to A256GCM or kryptos.encryption
-});
+const encrypted = aes.encrypt("Hello World"); // base64url string
+const decrypted = aes.decrypt(encrypted); // "Hello World"
 ```
 
-### Encryption Modes
+### Choose an output format
 
-The AES kit supports four different output formats:
+```ts
+// Encoded — single base64url string (default)
+const encoded = aes.encrypt("secret");
 
-#### 1. Encoded (Default)
+// Record — object with raw Buffer values
+const record = aes.encrypt("secret", "record");
 
-Returns a base64-encoded string - simplest format for storage/transmission:
+// Serialised — object with base64 strings (JSON-safe)
+const serialised = aes.encrypt("secret", "serialised");
+const json = JSON.stringify(serialised);
 
-```typescript
-const encrypted = aesKit.encrypt("Hello World"); // Returns base64 string
-const decrypted = aesKit.decrypt(encrypted); // 'Hello World'
+// Tokenised — human-readable $-delimited string
+const token = aes.encrypt("secret", "tokenised");
+// "$A256GCM$v=11,kid=...,alg=A256KW,cty=text/plain,iv=...,tag=...$<content>$"
 ```
 
-#### 2. Record
+All four formats are accepted by `decrypt`, `verify`, and `assert`:
 
-Returns a structured object with Buffer values - useful for direct manipulation:
-
-```typescript
-const encrypted = aesKit.encrypt("Hello World", "record");
-// Returns: AesEncryptionRecord with Buffer properties
-
-console.log(encrypted.keyId); // Key identifier
-console.log(encrypted.algorithm); // 'ECDH-ES'
-console.log(encrypted.encryption); // 'A256GCM'
-console.log(encrypted.content); // Buffer containing encrypted data
-
-const decrypted = aesKit.decrypt(encrypted); // 'Hello World'
+```ts
+aes.decrypt(encoded); // works
+aes.decrypt(record); // works
+aes.decrypt(JSON.parse(json)); // works
+aes.decrypt(token); // works
 ```
 
-#### 3. Serialised
+### Encrypt any content type
 
-Returns a structured object with string values - JSON-serializable:
+```ts
+aes.encrypt("plain text"); // string
+aes.encrypt(Buffer.from("binary")); // Buffer
+aes.encrypt({ user: "alice", role: "admin" }); // object
+aes.encrypt([1, 2, 3]); // array
+aes.encrypt(42); // number
 
-```typescript
-const encrypted = aesKit.encrypt("Hello World", "serialised");
-// Returns: SerialisedAesEncryption with base64 string properties
-
-const json = JSON.stringify(encrypted); // Can be serialized
-const parsed = JSON.parse(json);
-const decrypted = aesKit.decrypt(parsed); // 'Hello World'
+// Content type is tracked — decrypt returns the original type
+const obj = aes.decrypt<{ user: string }>(cipher); // { user: "alice", ... }
 ```
 
-#### 4. Tokenised
+### Verify and assert
 
-Returns a compact token format with embedded metadata:
+```ts
+const cipher = aes.encrypt("secret");
 
-```typescript
-const encrypted = aesKit.encrypt("Hello World", "tokenised");
-// Returns: '$A256GCM$v=1&alg=ECDH-ES&...$base64content$'
+aes.verify("secret", cipher); // true
+aes.verify("wrong", cipher); // false
 
-const decrypted = aesKit.decrypt(encrypted); // 'Hello World'
+aes.assert("secret", cipher); // void — passes silently
+aes.assert("wrong", cipher); // throws AesError("Invalid AES cipher")
 ```
 
-### Content Types
+### Additional Authenticated Data (AAD)
 
-The library automatically handles different content types:
+```ts
+const aad = Buffer.from("request-id:abc-123");
 
-```typescript
-// String content
-const text = aesKit.encrypt("Hello World");
+const cipher = aes.encrypt("payload", "encoded", { aad });
 
-// JSON objects
-const obj = aesKit.encrypt({ message: "Hello", count: 42 });
-
-// Arrays
-const arr = aesKit.encrypt([1, 2, 3]);
-
-// Buffers
-const buf = aesKit.encrypt(Buffer.from("binary data"));
-
-// Numbers
-const num = aesKit.encrypt(42);
+aes.decrypt(cipher, { aad }); // "payload"
+aes.decrypt(cipher); // throws — AAD mismatch
+aes.decrypt(cipher, { aad: Buffer.from("wrong") }); // throws
 ```
 
-### Verification and Assertion
+---
 
-```typescript
-const encrypted = aesKit.encrypt("Hello World");
+## Supported algorithms
 
-// Verify without throwing
-const isValid = aesKit.verify("Hello World", encrypted); // true
-const isInvalid = aesKit.verify("Wrong data", encrypted); // false
+### Content encryption
 
-// Assert with exception on failure
-aesKit.assert("Hello World", encrypted); // Passes
-aesKit.assert("Wrong data", encrypted); // Throws AesError
-```
+| Encryption      | Mode | Key bits | Auth                        |
+| --------------- | ---- | -------- | --------------------------- |
+| `A128GCM`       | GCM  | 128      | built-in auth tag           |
+| `A192GCM`       | GCM  | 192      | built-in auth tag           |
+| `A256GCM`       | GCM  | 256      | built-in auth tag (default) |
+| `A128CBC-HS256` | CBC  | 128      | HMAC-SHA256                 |
+| `A192CBC-HS384` | CBC  | 192      | HMAC-SHA384                 |
+| `A256CBC-HS512` | CBC  | 256      | HMAC-SHA512                 |
 
-## Advanced Usage
+### Key algorithms
 
-### Custom Encryption Configuration
+| Key type        | Algorithms                                                                                                                     |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| EC              | `ECDH-ES`, `ECDH-ES+A128KW`, `ECDH-ES+A192KW`, `ECDH-ES+A256KW`, `ECDH-ES+A128GCMKW`, `ECDH-ES+A192GCMKW`, `ECDH-ES+A256GCMKW` |
+| OKP             | `ECDH-ES`, `ECDH-ES+A128KW`, `ECDH-ES+A192KW`, `ECDH-ES+A256KW`, `ECDH-ES+A128GCMKW`, `ECDH-ES+A192GCMKW`, `ECDH-ES+A256GCMKW` |
+| RSA             | `RSA-OAEP-256`, `RSA-OAEP-384`, `RSA-OAEP-512`                                                                                 |
+| oct (symmetric) | `A128KW`, `A192KW`, `A256KW`, `A128GCMKW`, `A192GCMKW`, `A256GCMKW`, `dir`                                                     |
+| oct (password)  | `PBES2-HS256+A128KW`, `PBES2-HS384+A192KW`, `PBES2-HS512+A256KW`                                                               |
 
-```typescript
+Every key algorithm can be combined with every content encryption — giving you
+28+ working combinations.
+
+---
+
+## API reference
+
+### `new AesKit(options)`
+
+```ts
 import { AesKit } from "@lindorm/aes";
-import { KryptosKit } from "@lindorm/kryptos";
 
-// RSA with OAEP padding
-const rsaKey = KryptosKit.generate.rsa({
-  algorithm: "RSA-OAEP-256",
-  modulusLength: 2048,
-});
+const aes = new AesKit({ kryptos });
 
-const aesKit = new AesKit({
-  kryptos: rsaKey,
-  encryption: "A256GCM",
-});
-
-// PBKDF2-based key derivation
-const pbkdfKey = KryptosKit.generate.oct({
-  algorithm: "PBES2-HS256+A128KW",
-  length: 256,
-});
-
-const pbkdfAes = new AesKit({
-  kryptos: pbkdfKey,
-  encryption: "A128CBC-HS256",
-});
+aes.kryptos; // the IKryptos instance (public readonly)
 ```
 
-### Working with Different Key Types
+The content encryption algorithm is read from `kryptos.encryption` (defaults to
+`A256GCM` for generated enc keys). You can override it for imported keys that
+lack an encryption preference:
 
-```typescript
-// Elliptic Curve keys
-const ecKey = KryptosKit.generate.ec({
-  algorithm: "ECDH-ES+A128GCMKW",
-  curve: "P-256",
-});
-
-// Edwards Curve keys (OKP)
-const okpKey = KryptosKit.generate.okp({
-  algorithm: "ECDH-ES",
-  curve: "X25519",
-});
-
-// Symmetric keys
-const symmetricKey = KryptosKit.generate.oct({
-  algorithm: "A128GCMKW",
-  length: 256,
-});
+```ts
+const imported = KryptosKit.from.jwk(externalJwk);
+const aes = new AesKit({ kryptos: imported, encryption: "A128GCM" });
 ```
 
-### Utility Functions
+### `aes.encrypt(data, mode?, options?)`
 
-```typescript
-import { parseAes, isAesTokenised } from "@lindorm/aes";
+Encrypts data and returns one of four formats depending on `mode`:
 
-// Parse any AES format to standard record
-const record = parseAes(encryptedData); // Works with any format
+| Mode                  | Return type               | Description                            |
+| --------------------- | ------------------------- | -------------------------------------- |
+| `"encoded"` (default) | `string`                  | Base64url-encoded binary blob          |
+| `"record"`            | `AesEncryptionRecord`     | Object with raw `Buffer` values        |
+| `"serialised"`        | `SerialisedAesEncryption` | Object with base64 strings — JSON-safe |
+| `"tokenised"`         | `string`                  | `$`-delimited human-readable token     |
 
-// Check if string is tokenised format
-const isToken = isAesTokenised("$A256GCM$v=1&alg=ECDH-ES$...$"); // true
-const isNotToken = isAesTokenised("base64string"); // false
+```ts
+encrypt(data: AesContent, mode?: "encoded", options?: AesOperationOptions): string;
+encrypt(data: AesContent, mode: "record", options?: AesOperationOptions): AesEncryptionRecord;
+encrypt(data: AesContent, mode: "serialised", options?: AesOperationOptions): SerialisedAesEncryption;
+encrypt(data: AesContent, mode: "tokenised", options?: AesOperationOptions): string;
 ```
 
-## Type Definitions
+### `aes.decrypt<T>(data, options?)`
 
-### Core Types
+Decrypts any supported format back to the original content.
 
-```typescript
-interface AesKitOptions {
-  kryptos: IKryptos; // Cryptographic key instance
-  encryption?: KryptosEncryption; // Encryption mode (defaults to A256GCM)
-}
+```ts
+decrypt<T extends AesContent = string>(
+  data: AesDecryptionRecord | SerialisedAesDecryption | string,
+  options?: AesOperationOptions,
+): T;
+```
 
+Format is auto-detected: encoded string, tokenised string, record object, or
+serialised object all work transparently.
+
+### `aes.verify(input, data, options?)`
+
+Returns `true` if decrypted data deeply equals `input`, `false` otherwise.
+Never throws.
+
+```ts
+verify(
+  input: AesContent,
+  data: AesDecryptionRecord | SerialisedAesDecryption | string,
+  options?: AesOperationOptions,
+): boolean;
+```
+
+### `aes.assert(input, data, options?)`
+
+Throws `AesError("Invalid AES cipher")` if decrypted data does not match
+`input`.
+
+```ts
+assert(
+  input: AesContent,
+  data: AesDecryptionRecord | SerialisedAesDecryption | string,
+  options?: AesOperationOptions,
+): void;
+```
+
+### Static methods
+
+```ts
+// Detect content type of any input
+AesKit.contentType("hello"); // "text/plain"
+AesKit.contentType(Buffer.from("")); // "application/octet-stream"
+AesKit.contentType({ a: 1 }); // "application/json"
+
+// Check if a string is in tokenised format
+AesKit.isAesTokenised("$A256GCM$v=11,alg=...$...$"); // true
+AesKit.isAesTokenised("base64string"); // false
+
+// Parse any format into an AesDecryptionRecord (Buffer values)
+const record = AesKit.parse(encodedString);
+const record2 = AesKit.parse(tokenisedString);
+const record3 = AesKit.parse(serialisedObject);
+```
+
+---
+
+## Output formats
+
+### Encoded
+
+A single base64url string containing version, metadata, and ciphertext in a
+compact binary layout. Best for storage and transmission where a single opaque
+string is ideal.
+
+### Record
+
+A plain object with raw `Buffer` values for all binary fields (`authTag`,
+`content`, `initialisationVector`, etc.). Useful when you need programmatic
+access to individual encryption components.
+
+### Serialised
+
+Same structure as record, but all `Buffer` fields are base64-encoded strings.
+Safe for `JSON.stringify` / `JSON.parse` round-trips.
+
+### Tokenised
+
+A human-readable `$`-delimited string:
+
+```
+$<encryption>$<key=value pairs>$<base64url content>$
+```
+
+Metadata fields: `v` (version), `kid` (key ID), `alg` (algorithm),
+`cty` (content type), `iv`, `tag`, and optional `p2c`, `p2s`, `pei`, `pek`,
+`pet`, `crv`, `kty`, `x`, `y` for key exchange parameters.
+
+---
+
+## Type definitions
+
+### Core types
+
+```ts
 type AesContent = Array<any> | Buffer | Dict | number | string;
 
+type AesContentType = "application/json" | "application/octet-stream" | "text/plain";
+
 type AesEncryptionMode = "encoded" | "record" | "serialised" | "tokenised";
+
+type AesKitOptions = {
+  encryption?: KryptosEncryption;
+  kryptos: IKryptos;
+};
+
+type AesOperationOptions = {
+  aad?: Buffer;
+};
 ```
 
-### Record Types
+### Encryption record
 
-```typescript
-interface AesEncryptionRecord {
-  algorithm: KryptosAlgorithm; // Key algorithm used
-  authTag: Buffer; // Authentication tag
-  content: Buffer; // Encrypted content
-  contentType: AesContentType; // Original content type
-  encryption: KryptosEncryption; // Encryption mode
-  initialisationVector: Buffer; // IV for encryption
-  keyId: string; // Key identifier
-  pbkdfIterations?: number; // PBKDF2 iterations (if applicable)
-  pbkdfSalt?: Buffer; // PBKDF2 salt (if applicable)
-  publicEncryptionJwk?: PublicEncryptionJwk; // Public key (for ECDH)
-  version: number; // Format version
-}
-
-interface SerialisedAesEncryption {
-  // Same as AesEncryptionRecord but with base64 strings instead of Buffers
-}
+```ts
+type AesEncryptionRecord = {
+  algorithm: KryptosAlgorithm;
+  authTag: Buffer;
+  content: Buffer;
+  contentType: AesContentType;
+  encryption: KryptosEncryption;
+  initialisationVector: Buffer;
+  keyId: string;
+  pbkdfIterations: number | undefined;
+  pbkdfSalt: Buffer | undefined;
+  publicEncryptionIv: Buffer | undefined;
+  publicEncryptionJwk: PublicEncryptionJwk | undefined;
+  publicEncryptionKey: Buffer | undefined;
+  publicEncryptionTag: Buffer | undefined;
+  version: number;
+};
 ```
 
-## Error Handling
+### Serialised record
 
-```typescript
+Same shape as `AesEncryptionRecord`, but all `Buffer` fields are `string`
+(base64-encoded).
+
+### Decryption records
+
+`AesDecryptionRecord` and `SerialisedAesDecryption` mirror their encryption
+counterparts, with most fields optional — only `content`, `encryption`, and
+`initialisationVector` are required.
+
+---
+
+## Utility functions
+
+```ts
+import {
+  isAesBufferData,
+  isAesSerialisedData,
+  isAesTokenised,
+  parseAes,
+} from "@lindorm/aes";
+
+// Type guard — record with Buffer values
+isAesBufferData(data); // data is AesDecryptionRecord
+
+// Type guard — record with string values
+isAesSerialisedData(data); // data is SerialisedAesDecryption
+
+// Format check — tokenised string
+isAesTokenised(str); // boolean
+
+// Parse any format → AesDecryptionRecord
+const record = parseAes(anyEncryptedData);
+```
+
+---
+
+## Error handling
+
+```ts
 import { AesError } from "@lindorm/aes";
 
 try {
-  const decrypted = aesKit.decrypt(invalidData);
+  aes.decrypt(corruptedData);
 } catch (error) {
   if (error instanceof AesError) {
-    console.log("AES operation failed:", error.message);
+    console.error("AES operation failed:", error.message);
   }
 }
 ```
 
-## Integration with Kryptos
+`AesError` extends `LindormError` from `@lindorm/errors`.
 
-The AES library integrates seamlessly with `@lindorm/kryptos` for key management:
+---
 
-```typescript
-import { AesKit } from "@lindorm/aes";
-import { Amphora } from "@lindorm/amphora";
+## Testing helpers
 
-// Use with key storage
-const amphora = new Amphora({ domain: "https://example.com", logger });
-await amphora.setup();
+A mock factory is exported for unit tests:
 
-// Find encryption key
-const kryptos = await amphora.find({ use: "enc", algorithm: "ECDH-ES" });
+```ts
+import { createMockAesKit } from "@lindorm/aes";
 
-const aesKit = new AesKit({ kryptos });
+const mock = createMockAesKit();
+// mock.encrypt, mock.decrypt, mock.verify, mock.assert — all jest.fn()
 ```
 
-## Performance Considerations
-
-- **Encoded mode**: Fastest for simple use cases
-- **Record mode**: Best for direct Buffer manipulation
-- **Serialised mode**: Optimal for JSON storage/transmission
-- **Tokenised mode**: Most compact for URL-safe tokens
+---
 
 ## License
 
