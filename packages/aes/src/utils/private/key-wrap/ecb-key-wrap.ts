@@ -19,6 +19,10 @@ export const ecbKeyWrap = ({
 }: KeyWrapOptions): KeyWrapResult => {
   const algorithm = calculateKeyWrapEncryption(kryptos);
 
+  if (contentEncryptionKey.length < 16 || contentEncryptionKey.length % 8 !== 0) {
+    throw new AesError("Key wrap input must be at least 16 bytes and a multiple of 8");
+  }
+
   const n = contentEncryptionKey.length / BLOCK_SIZE;
   let a = Buffer.from(AIV_BUFFER);
   const r = [];

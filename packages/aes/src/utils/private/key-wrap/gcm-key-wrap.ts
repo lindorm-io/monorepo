@@ -51,6 +51,12 @@ export const gcmKeyUnwrap = ({
   if (!publicEncryptionTag) {
     throw new AesError("Invalid public encryption tag");
   }
+  if (publicEncryptionIv.length !== 12) {
+    throw new AesError("Invalid GCM key wrap IV length");
+  }
+  if (publicEncryptionTag.length !== 16) {
+    throw new AesError("Invalid GCM key wrap auth tag length");
+  }
 
   const algorithm = calculateKeyWrapEncryption(kryptos);
 
