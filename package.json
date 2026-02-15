@@ -14,7 +14,7 @@
     "release": "lerna publish",
     "test": "compd --file docker-compose.yml lerna run test:ci",
     "test:ci": "lerna run test:ci",
-    "typecheck": "lerna run typecheck:ci",
+    "typecheck": "lerna run typecheck",
     "update": "ncu -i",
     "update:auto": "ncu -u && lerna run update:auto && npm install && npm audit fix"
   },
