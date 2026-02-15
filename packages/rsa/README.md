@@ -1,82 +1,79 @@
 # @lindorm/rsa
 
-Lightweight **RSA signing / verification kit** that wraps a `RSxxx` key from
-[`@lindorm/kryptos`](../kryptos).  Provides a convenient `RsaKit` class that fulfils the `IKeyKit`
-contract used by the Lindorm crypto packages.
-
----
+RSA signature kit built on Node's `crypto` module and [`@lindorm/kryptos`](../kryptos). Provides an `RsaKit` class that implements the `IKeyKit` contract used across the Lindorm cryptography packages.
 
 ## Installation
 
 ```bash
 npm install @lindorm/rsa
-# or
-yarn add @lindorm/rsa
 ```
 
-Generate or import a key via Kryptos:
+## Quick Start
 
-```ts
-import { KryptosKit } from '@lindorm/kryptos';
+```typescript
+import { RsaKit } from "@lindorm/rsa";
+import { KryptosKit } from "@lindorm/kryptos";
 
-const RS256 = KryptosKit.generate.rsa({ alg: 'RS256', use: 'sig', modulusLength: 2048 });
+const kryptos = KryptosKit.generate.sig.rsa({ algorithm: "PS256" });
+const kit = new RsaKit({ kryptos });
+
+// Sign
+const signature = kit.sign("hello world");
+
+// Verify
+kit.verify("hello world", signature); // true
+
+// Assert (throws RsaError if invalid)
+kit.assert("hello world", signature);
+
+// Format Buffer to string
+kit.format(signature); // base64 string
 ```
 
----
+## Constructor Options
 
-## Example
-
-```ts
-import { RsaKit } from '@lindorm/rsa';
-
-const kit = new RsaKit({ kryptos: RS256, encoding: 'base64url' });
-
-const signature = kit.sign('hello');
-
-kit.assert('hello', signature); // throws RsaError if invalid
-
-console.log(kit.format(signature)); // string representation
+```typescript
+new RsaKit({
+  kryptos, // IKryptos — must be an RSA key with a signing algorithm
+  dsa: "der", // DsaEncoding — "der" | "ieee-p1363" (default: "der")
+  encoding: "base64", // BufferEncoding — output encoding (default: "base64")
+});
 ```
 
-### DSA encoding
-
-Set `dsa: 'ieee-p1363'` when you need raw concatenated r||s encoding instead of DER:
-
-```ts
-const kit = new RsaKit({ kryptos: RS256, dsa: 'ieee-p1363' });
-```
-
----
+The constructor validates that the key is an RSA type with a supported signing algorithm (RS256, RS384, RS512, PS256, PS384, PS512). Encryption keys (RSA-OAEP etc.) are rejected with an `RsaError`.
 
 ## API
 
-```ts
+```typescript
 class RsaKit implements IKeyKit {
-  constructor(options: {
-    kryptos: IKryptosRsa;
-    dsa?: DsaEncoding;          // 'der' | 'ieee-p1363' (default 'der')
-    encoding?: BufferEncoding;  // default 'base64'
-  });
-
   sign(data: KeyData): Buffer;
   verify(data: KeyData, signature: KeyData): boolean;
   assert(data: KeyData, signature: KeyData): void; // throws RsaError
-  format(buf: Buffer): string;                      // encode Buffer → string
+  format(data: Buffer): string;
 }
 ```
 
-`KeyData` accepts `Buffer`, `string` or `Uint8Array`.
+`KeyData` is `Buffer | string`.
 
----
+## Supported Algorithms
 
-## TypeScript
+| Algorithm | Padding     | Hash    |
+| --------- | ----------- | ------- |
+| RS256     | PKCS#1 v1.5 | SHA-256 |
+| RS384     | PKCS#1 v1.5 | SHA-384 |
+| RS512     | PKCS#1 v1.5 | SHA-512 |
+| PS256     | PSS         | SHA-256 |
+| PS384     | PSS         | SHA-384 |
+| PS512     | PSS         | SHA-512 |
 
-Written in TS; declaration files included. Runtime dependencies are limited to Node’s `crypto`
-module plus Lindorm utilities.
+## Error Handling
 
----
+All errors are `RsaError` instances:
+
+```typescript
+import { RsaError } from "@lindorm/rsa";
+```
 
 ## License
 
-AGPL-3.0-or-later – see the root [`LICENSE`](../../LICENSE).
-
+AGPL-3.0-or-later
