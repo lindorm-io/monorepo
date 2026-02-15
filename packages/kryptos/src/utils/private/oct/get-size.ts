@@ -19,13 +19,13 @@ export const getOctSize = (options: Options): OctSize => {
         return 32;
 
       case "A128CBC-HS256":
-        return 48;
+        return 32;
 
       case "A192CBC-HS384":
-        return 72;
+        return 48;
 
       case "A256CBC-HS512":
-        return 96;
+        return 64;
 
       default:
         throw new KryptosError("Unsupported size");
