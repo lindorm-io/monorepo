@@ -1,13 +1,15 @@
-import { createCipheriv, createDecipheriv } from "crypto";
+import { createCipheriv, createDecipheriv, timingSafeEqual } from "crypto";
 import {
   KeyUnwrapOptions,
   KeyUnwrapResult,
   KeyWrapOptions,
   KeyWrapResult,
 } from "../../../types/private";
+import { AesError } from "../../../errors";
 import { calculateKeyWrapEncryption } from "../calculate";
 
 const AIV = "A6A6A6A6A6A6A6A6" as const;
+const AIV_BUFFER = Buffer.from(AIV, "hex");
 const BLOCK_SIZE = 8 as const;
 
 export const ecbKeyWrap = ({
@@ -18,7 +20,7 @@ export const ecbKeyWrap = ({
   const algorithm = calculateKeyWrapEncryption(kryptos);
 
   const n = contentEncryptionKey.length / BLOCK_SIZE;
-  let a = Buffer.from(AIV, "hex");
+  let a = Buffer.from(AIV_BUFFER);
   const r = [];
 
   for (let i = 0; i < n; i++) {
@@ -42,6 +44,8 @@ export const ecbKeyWrap = ({
       r[i] = encrypted.subarray(BLOCK_SIZE);
     }
   }
+
+  cipher.final();
 
   return { publicEncryptionKey: Buffer.concat([a, ...r]) };
 };
@@ -80,8 +84,10 @@ export const ecbKeyUnwrap = ({
     }
   }
 
-  if (!a.equals(Buffer.from(AIV, "hex"))) {
-    throw new Error("Integrity check failed");
+  decipher.final();
+
+  if (!timingSafeEqual(a, AIV_BUFFER)) {
+    throw new AesError("Integrity check failed");
   }
 
   return { contentEncryptionKey: Buffer.concat(r) };
