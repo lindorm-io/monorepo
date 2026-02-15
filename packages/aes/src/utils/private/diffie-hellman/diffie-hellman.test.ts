@@ -19,7 +19,7 @@ describe("diffieHellman", () => {
         x: expect.any(String),
         y: expect.any(String),
       },
-      hkdfSalt: expect.any(Buffer),
+      hkdfSalt: undefined,
     });
 
     expect(
@@ -27,7 +27,6 @@ describe("diffieHellman", () => {
         encryption: "A256GCM",
         publicEncryptionJwk: result.publicEncryptionJwk,
         kryptos: TEST_EC_KEY,
-        hkdfSalt: result.hkdfSalt,
       }),
     ).toEqual({ contentEncryptionKey: result.contentEncryptionKey });
   });
@@ -45,7 +44,7 @@ describe("diffieHellman", () => {
         kty: "OKP",
         x: expect.any(String),
       },
-      hkdfSalt: expect.any(Buffer),
+      hkdfSalt: undefined,
     });
 
     expect(
@@ -53,7 +52,28 @@ describe("diffieHellman", () => {
         encryption: "A256GCM",
         publicEncryptionJwk: result.publicEncryptionJwk,
         kryptos: TEST_OKP_KEY,
-        hkdfSalt: result.hkdfSalt,
+      }),
+    ).toEqual({ contentEncryptionKey: result.contentEncryptionKey });
+  });
+
+  test("should produce matching keys when apu and apv are provided", () => {
+    const apu = Buffer.from("alice");
+    const apv = Buffer.from("bob");
+
+    const result = getDiffieHellmanEncryptionKey({
+      apu,
+      apv,
+      encryption: "A256GCM",
+      kryptos: TEST_EC_KEY,
+    });
+
+    expect(
+      getDiffieHellmanDecryptionKey({
+        apu,
+        apv,
+        encryption: "A256GCM",
+        publicEncryptionJwk: result.publicEncryptionJwk,
+        kryptos: TEST_EC_KEY,
       }),
     ).toEqual({ contentEncryptionKey: result.contentEncryptionKey });
   });

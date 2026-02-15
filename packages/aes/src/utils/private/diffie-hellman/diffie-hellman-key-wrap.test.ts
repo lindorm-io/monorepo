@@ -23,7 +23,7 @@ describe("diffieHellman", () => {
           y: expect.any(String),
         },
         publicEncryptionKey: expect.any(Buffer),
-        hkdfSalt: expect.any(Buffer),
+        hkdfSalt: undefined,
       });
 
       expect(
@@ -32,7 +32,6 @@ describe("diffieHellman", () => {
           publicEncryptionJwk: result.publicEncryptionJwk,
           publicEncryptionKey: result.publicEncryptionKey,
           kryptos,
-          hkdfSalt: result.hkdfSalt,
         }),
       ).toEqual({ contentEncryptionKey: result.contentEncryptionKey });
     });
@@ -54,7 +53,7 @@ describe("diffieHellman", () => {
           y: expect.any(String),
         },
         publicEncryptionKey: expect.any(Buffer),
-        hkdfSalt: expect.any(Buffer),
+        hkdfSalt: undefined,
       });
 
       expect(
@@ -63,7 +62,6 @@ describe("diffieHellman", () => {
           publicEncryptionJwk: result.publicEncryptionJwk,
           publicEncryptionKey: result.publicEncryptionKey,
           kryptos,
-          hkdfSalt: result.hkdfSalt,
         }),
       ).toEqual({ contentEncryptionKey: result.contentEncryptionKey });
     });
@@ -85,7 +83,7 @@ describe("diffieHellman", () => {
           y: expect.any(String),
         },
         publicEncryptionKey: expect.any(Buffer),
-        hkdfSalt: expect.any(Buffer),
+        hkdfSalt: undefined,
       });
 
       expect(
@@ -94,7 +92,6 @@ describe("diffieHellman", () => {
           publicEncryptionJwk: result.publicEncryptionJwk,
           publicEncryptionKey: result.publicEncryptionKey,
           kryptos,
-          hkdfSalt: result.hkdfSalt,
         }),
       ).toEqual({ contentEncryptionKey: result.contentEncryptionKey });
     });
@@ -120,7 +117,7 @@ describe("diffieHellman", () => {
         publicEncryptionIv: expect.any(Buffer),
         publicEncryptionKey: expect.any(Buffer),
         publicEncryptionTag: expect.any(Buffer),
-        hkdfSalt: expect.any(Buffer),
+        hkdfSalt: undefined,
       });
 
       expect(
@@ -131,7 +128,6 @@ describe("diffieHellman", () => {
           publicEncryptionKey: result.publicEncryptionKey,
           publicEncryptionTag: result.publicEncryptionTag,
           kryptos,
-          hkdfSalt: result.hkdfSalt,
         }),
       ).toEqual({ contentEncryptionKey: result.contentEncryptionKey });
     });
@@ -155,7 +151,7 @@ describe("diffieHellman", () => {
         publicEncryptionIv: expect.any(Buffer),
         publicEncryptionKey: expect.any(Buffer),
         publicEncryptionTag: expect.any(Buffer),
-        hkdfSalt: expect.any(Buffer),
+        hkdfSalt: undefined,
       });
 
       expect(
@@ -166,7 +162,6 @@ describe("diffieHellman", () => {
           publicEncryptionKey: result.publicEncryptionKey,
           publicEncryptionTag: result.publicEncryptionTag,
           kryptos,
-          hkdfSalt: result.hkdfSalt,
         }),
       ).toEqual({ contentEncryptionKey: result.contentEncryptionKey });
     });
@@ -190,7 +185,7 @@ describe("diffieHellman", () => {
         publicEncryptionIv: expect.any(Buffer),
         publicEncryptionKey: expect.any(Buffer),
         publicEncryptionTag: expect.any(Buffer),
-        hkdfSalt: expect.any(Buffer),
+        hkdfSalt: undefined,
       });
 
       expect(
@@ -201,7 +196,6 @@ describe("diffieHellman", () => {
           publicEncryptionKey: result.publicEncryptionKey,
           publicEncryptionTag: result.publicEncryptionTag,
           kryptos,
-          hkdfSalt: result.hkdfSalt,
         }),
       ).toEqual({ contentEncryptionKey: result.contentEncryptionKey });
     });
@@ -229,7 +223,7 @@ describe("diffieHellman", () => {
         publicEncryptionIv: expect.any(Buffer),
         publicEncryptionKey: expect.any(Buffer),
         publicEncryptionTag: expect.any(Buffer),
-        hkdfSalt: expect.any(Buffer),
+        hkdfSalt: undefined,
       });
 
       expect(
@@ -240,7 +234,6 @@ describe("diffieHellman", () => {
           publicEncryptionKey: result.publicEncryptionKey,
           publicEncryptionTag: result.publicEncryptionTag,
           kryptos,
-          hkdfSalt: result.hkdfSalt,
         }),
       ).toEqual({ contentEncryptionKey: result.contentEncryptionKey });
     });
@@ -264,7 +257,7 @@ describe("diffieHellman", () => {
           x: expect.any(String),
         },
         publicEncryptionKey: expect.any(Buffer),
-        hkdfSalt: expect.any(Buffer),
+        hkdfSalt: undefined,
       });
 
       expect(
@@ -273,7 +266,32 @@ describe("diffieHellman", () => {
           publicEncryptionJwk: result.publicEncryptionJwk,
           publicEncryptionKey: result.publicEncryptionKey,
           kryptos,
-          hkdfSalt: result.hkdfSalt,
+        }),
+      ).toEqual({ contentEncryptionKey: result.contentEncryptionKey });
+    });
+  });
+
+  describe("apu/apv", () => {
+    test("should produce matching keys with apu and apv for key wrap", () => {
+      const kryptos = KryptosKit.generate.enc.ec({ algorithm: "ECDH-ES+A256KW" });
+      const apu = Buffer.from("sender");
+      const apv = Buffer.from("receiver");
+
+      const result = getDiffieHellmanKeyWrapEncryptionKey({
+        apu,
+        apv,
+        encryption: "A256GCM",
+        kryptos,
+      });
+
+      expect(
+        getDiffieHellmanKeyWrapDecryptionKey({
+          apu,
+          apv,
+          encryption: "A256GCM",
+          publicEncryptionJwk: result.publicEncryptionJwk,
+          publicEncryptionKey: result.publicEncryptionKey,
+          kryptos,
         }),
       ).toEqual({ contentEncryptionKey: result.contentEncryptionKey });
     });
