@@ -29,7 +29,8 @@
     "@lindorm/b64": "^0.1.6",
     "@lindorm/errors": "^0.1.12",
     "@lindorm/is": "^0.1.11",
-    "@lindorm/kryptos": "^0.4.5"
+    "@lindorm/kryptos": "^0.4.5",
+    "@lindorm/utils": "^0.5.4"
   },
   "devDependencies": {
     "@lindorm/types": "^0.3.3"
