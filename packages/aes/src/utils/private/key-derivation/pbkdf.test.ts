@@ -7,6 +7,7 @@ describe("pbkdf", () => {
       algorithm: "SHA256",
       derivationKey: TEST_OCT_KEY.export("der").privateKey!,
       keyLength: 16,
+      kryptosAlgorithm: "PBES2-HS256+A128KW",
     });
 
     expect(result).toEqual({
@@ -23,6 +24,7 @@ describe("pbkdf", () => {
         algorithm: "SHA256",
         derivationKey: TEST_OCT_KEY.export("der").privateKey!,
         keyLength: 16,
+        kryptosAlgorithm: "PBES2-HS256+A128KW",
         pbkdfIterations: result.pbkdfIterations,
         pbkdfSalt: result.pbkdfSalt,
       }),
