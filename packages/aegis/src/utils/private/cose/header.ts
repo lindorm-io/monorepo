@@ -1,7 +1,7 @@
 import { Dict } from "@lindorm/types";
 import { COSE_ALGORITHM, COSE_HEADER } from "../../../constants/private";
 import { AegisError } from "../../../errors";
-import { RawTokenHeaderClaims } from "../../../types";
+import { CoseTarget, RawTokenHeaderClaims } from "../../../types";
 import { fromBstr, toBstr } from "./bstr";
 import { decodeCoseCrit, mapCoseCrit } from "./crit";
 import { findCoseByKey, findCoseByLabel } from "./find";
@@ -9,6 +9,7 @@ import { decodeCoseKey, mapCoseKey } from "./key";
 
 export const mapCoseHeader = (
   claims: RawTokenHeaderClaims,
+  target: CoseTarget = "internal",
 ): Map<number | string, unknown> => {
   const result = new Map<number | string, unknown>();
 
@@ -18,6 +19,11 @@ export const mapCoseHeader = (
     const claim = findCoseByKey(COSE_HEADER, key);
 
     if (!claim) {
+      result.set(key, value);
+      continue;
+    }
+
+    if (target === "external" && claim.label >= 400) {
       result.set(key, value);
       continue;
     }

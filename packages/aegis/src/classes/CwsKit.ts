@@ -38,6 +38,8 @@ export class CwsKit implements ICwsKit {
 
     this.logger.debug("Signing token", { options });
 
+    const target = options.target ?? "internal";
+
     const protectedHeader = mapCoseHeader(
       mapTokenHeader({
         algorithm: this.kryptos.algorithm,
@@ -48,6 +50,7 @@ export class CwsKit implements ICwsKit {
             : "application/octet-stream",
         headerType: "application/cose; cose-type=cose-sign",
       }),
+      target,
     );
     const protectedCbor = encode(protectedHeader);
 
@@ -57,6 +60,7 @@ export class CwsKit implements ICwsKit {
         keyId: this.kryptos.id,
         objectId,
       }),
+      target,
     );
 
     const payloadBuffer = isBuffer(data) ? data : Buffer.from(data, "utf-8");

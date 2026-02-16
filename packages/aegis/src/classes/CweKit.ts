@@ -41,6 +41,7 @@ export class CweKit implements ICweKit {
     this.logger.debug("Encrypting token", { options });
 
     const objectId = options.objectId ?? randomBytes(20).toString("base64url");
+    const target = options.target ?? "internal";
 
     // Step 1: Prepare encryption (key management only — no content encrypted yet)
     const prepared = kit.prepareEncryption();
@@ -53,6 +54,7 @@ export class CweKit implements ICweKit {
         contentType: this.contentType(data),
         headerType: "application/cose; cose-type=cose-encrypt",
       }),
+      target,
     );
     const protectedCbor = encode(protectedHeader);
 
@@ -69,6 +71,7 @@ export class CweKit implements ICweKit {
         initialisationVector,
         objectId,
       }),
+      target,
     );
 
     const ciphertext = Buffer.concat([content, authTag]);
@@ -80,6 +83,7 @@ export class CweKit implements ICweKit {
         keyId: this.kryptos.id,
         publicEncryptionJwk: prepared.headerParams.publicEncryptionJwk,
       }),
+      target,
     );
     const recipientPublicKey = prepared.publicEncryptionKey ?? null;
     const recipients = [[encode(new Map()), recipientHeader, recipientPublicKey]];

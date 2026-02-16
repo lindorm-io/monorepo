@@ -61,6 +61,7 @@ export class CwtKit implements ICwtKit {
 
     const objectId =
       options.objectId ?? content.subject ?? randomBytes(20).toString("base64url");
+    const target = options.target ?? "internal";
 
     const protectedDict = mapCoseHeader(
       mapTokenHeader({
@@ -68,6 +69,7 @@ export class CwtKit implements ICwtKit {
         contentType: "application/json",
         headerType: "application/cwt",
       }),
+      target,
     );
     const protectedCbor = encode(protectedDict);
 
@@ -77,6 +79,7 @@ export class CwtKit implements ICwtKit {
         keyId: this.kryptos.id,
         objectId,
       }),
+      target,
     );
 
     const claims = mapJwtContentToClaims(
@@ -84,7 +87,7 @@ export class CwtKit implements ICwtKit {
       content,
       { tokenId: randomBytes(20).toString("base64url"), ...options },
     );
-    const payloadDict = mapCoseClaims({ ...claims, ...(content.claims ?? {}) });
+    const payloadDict = mapCoseClaims({ ...claims, ...(content.claims ?? {}) }, target);
     const payloadCbor = encode(payloadDict);
 
     const signature = createCoseSignature({
