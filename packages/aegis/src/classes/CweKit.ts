@@ -141,6 +141,13 @@ export class CweKit implements ICweKit {
       oid: decoded.unprotected.oid,
     });
 
+    // RFC 7515 Section 4.1.11: reject any critical extension params we don't understand
+    if (header.critical?.length) {
+      for (const param of header.critical) {
+        throw new CoseEncryptError(`Unsupported critical header parameter: ${param}`);
+      }
+    }
+
     const payload = kit.decrypt<T>({
       authTag: decoded.authTag,
       content: decoded.content,

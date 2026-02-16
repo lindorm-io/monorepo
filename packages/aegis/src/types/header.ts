@@ -9,7 +9,7 @@ export type TokenHeaderType = (typeof TOKEN_HEADER_TYPES)[number];
 // https://www.rfc-editor.org/rfc/rfc7515.html#section-4.1
 export type TokenHeaderClaims = {
   alg: TokenHeaderAlgorithm; // algorithm
-  crit?: Array<Exclude<keyof TokenHeaderClaims, "crit">>;
+  crit?: Array<string>;
   cty?: string; // content type
   enc?: KryptosEncryption; // encryption
   epk?: PublicEncryptionJwk; // public encryption jwk
@@ -30,7 +30,7 @@ export type TokenHeaderClaims = {
 
 export type RawTokenHeaderClaims = {
   alg?: TokenHeaderAlgorithm;
-  crit?: Array<Exclude<keyof TokenHeaderOptions, "critical">>;
+  crit?: Array<string>;
   cty?: string;
   enc?: KryptosEncryption;
   epk?: PublicEncryptionJwk;
@@ -54,7 +54,7 @@ export type DecodedTokenHeader = TokenHeaderClaims;
 export type ParsedTokenHeader = {
   algorithm: TokenHeaderAlgorithm;
   contentType: string | undefined;
-  critical: Array<Exclude<keyof ParsedTokenHeader, "critical">>;
+  critical: Array<string>;
   encryption: KryptosEncryption | undefined;
   headerType: string | undefined;
   initialisationVector: string | undefined;
@@ -75,7 +75,7 @@ export type ParsedTokenHeader = {
 export type TokenHeaderOptions = {
   algorithm?: TokenHeaderAlgorithm;
   contentType?: string;
-  critical?: Array<Exclude<keyof TokenHeaderOptions, "critical">>;
+  critical?: Array<string>;
   encryption?: KryptosEncryption;
   headerType?: TokenHeaderType;
   initialisationVector?: Buffer;

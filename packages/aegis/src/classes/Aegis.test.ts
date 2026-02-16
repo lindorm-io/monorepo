@@ -205,7 +205,6 @@ describe("Aegis", () => {
         content: expect.any(String),
         header: {
           alg: "ECDH-ES",
-          crit: ["alg", "enc", "epk"],
           cty: "text/plain; charset=utf-8",
           enc: "A256GCM",
           epk: {
@@ -224,7 +223,7 @@ describe("Aegis", () => {
       header: {
         algorithm: "ECDH-ES",
         contentType: "text/plain; charset=utf-8",
-        critical: ["algorithm", "encryption", "publicEncryptionJwk"],
+        critical: [],
         encryption: "A256GCM",
         headerType: "JWE",
         jwksUri: "https://test.lindorm.io/.well-known/jwks.json",

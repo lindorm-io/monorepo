@@ -65,7 +65,6 @@ describe("JweKit", () => {
           content: expect.any(String),
           header: {
             alg: "ECDH-ES",
-            crit: ["alg", "enc", "epk"],
             cty: "text/plain; charset=utf-8",
             enc: "A256GCM",
             epk: {
@@ -85,7 +84,7 @@ describe("JweKit", () => {
         header: {
           algorithm: "ECDH-ES",
           contentType: "text/plain; charset=utf-8",
-          critical: ["algorithm", "encryption", "publicEncryptionJwk"],
+          critical: [],
           encryption: "A256GCM",
           headerType: "JWE",
           jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
@@ -116,7 +115,6 @@ describe("JweKit", () => {
           content: expect.any(String),
           header: {
             alg: "dir",
-            crit: ["alg", "enc"],
             cty: "text/plain; charset=utf-8",
             enc: "A256GCM",
             jku: "https://test.lindorm.io/.well-known/jwks.json",
@@ -130,7 +128,7 @@ describe("JweKit", () => {
         header: {
           algorithm: "dir",
           contentType: "text/plain; charset=utf-8",
-          critical: ["algorithm", "encryption"],
+          critical: [],
           encryption: "A256GCM",
           headerType: "JWE",
           jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
@@ -160,7 +158,6 @@ describe("JweKit", () => {
           content: expect.any(String),
           header: {
             alg: "A128KW",
-            crit: ["alg", "enc"],
             cty: "text/plain; charset=utf-8",
             enc: "A256GCM",
             jku: "https://test.lindorm.io/.well-known/jwks.json",
@@ -174,7 +171,7 @@ describe("JweKit", () => {
         header: {
           algorithm: "A128KW",
           contentType: "text/plain; charset=utf-8",
-          critical: ["algorithm", "encryption"],
+          critical: [],
           encryption: "A256GCM",
           headerType: "JWE",
           jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
@@ -201,7 +198,6 @@ describe("JweKit", () => {
           content: expect.any(String),
           header: {
             alg: "PBES2-HS512+A256KW",
-            crit: ["alg", "enc", "p2c", "p2s"],
             cty: "text/plain; charset=utf-8",
             enc: "A256GCM",
             kid: kryptos.id,
@@ -216,7 +212,7 @@ describe("JweKit", () => {
         header: {
           algorithm: "PBES2-HS512+A256KW",
           contentType: "text/plain; charset=utf-8",
-          critical: ["algorithm", "encryption", "pbkdfIterations", "pbkdfSalt"],
+          critical: [],
           encryption: "A256GCM",
           headerType: "JWE",
           keyId: kryptos.id,
@@ -244,7 +240,6 @@ describe("JweKit", () => {
           content: expect.any(String),
           header: {
             alg: "A128GCMKW",
-            crit: ["alg", "enc", "iv", "tag"],
             cty: "text/plain; charset=utf-8",
             enc: "A256GCM",
             iv: expect.any(String),
@@ -259,12 +254,7 @@ describe("JweKit", () => {
         header: {
           algorithm: "A128GCMKW",
           contentType: "text/plain; charset=utf-8",
-          critical: [
-            "algorithm",
-            "encryption",
-            "initialisationVector",
-            "publicEncryptionTag",
-          ],
+          critical: [],
           encryption: "A256GCM",
           headerType: "JWE",
           initialisationVector: expect.any(String),
@@ -290,7 +280,6 @@ describe("JweKit", () => {
           content: expect.any(String),
           header: {
             alg: "ECDH-ES",
-            crit: ["alg", "enc", "epk"],
             cty: "text/plain; charset=utf-8",
             enc: "A256GCM",
             epk: {
@@ -309,7 +298,7 @@ describe("JweKit", () => {
         header: {
           algorithm: "ECDH-ES",
           contentType: "text/plain; charset=utf-8",
-          critical: ["algorithm", "encryption", "publicEncryptionJwk"],
+          critical: [],
           encryption: "A256GCM",
           headerType: "JWE",
           jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
@@ -339,7 +328,6 @@ describe("JweKit", () => {
           content: expect.any(String),
           header: {
             alg: "RSA-OAEP-256",
-            crit: ["alg", "enc"],
             cty: "text/plain; charset=utf-8",
             enc: "A256GCM",
             jku: "https://test.lindorm.io/.well-known/jwks.json",
@@ -353,7 +341,7 @@ describe("JweKit", () => {
         header: {
           algorithm: "RSA-OAEP-256",
           contentType: "text/plain; charset=utf-8",
-          critical: ["algorithm", "encryption"],
+          critical: [],
           encryption: "A256GCM",
           headerType: "JWE",
           jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
@@ -377,7 +365,6 @@ describe("JweKit", () => {
         content: expect.any(String),
         header: {
           alg: "ECDH-ES",
-          crit: ["alg", "enc", "epk"],
           cty: "text/plain; charset=utf-8",
           enc: "A256GCM",
           epk: {
@@ -430,6 +417,60 @@ describe("JweKit", () => {
       const { token } = jweKit.encrypt("data");
 
       expect(jweKit.decrypt(token)).toBeDefined();
+    });
+  });
+
+  describe("critical header parameter rejection", () => {
+    test("should reject token with unknown critical parameter", () => {
+      const { token } = kit.encrypt("data", {
+        objectId: "5b63e7ec-5ca4-4083-8de9-de0d6e2ddd03",
+      });
+
+      const decoded = JweKit.decode(token);
+      const headerWithCrit = {
+        ...decoded.header,
+        crit: ["unknownParam"],
+      };
+
+      const parts = token.split(".");
+      const modifiedHeader = Buffer.from(JSON.stringify(headerWithCrit))
+        .toString("base64url")
+        .replace(/=/g, "");
+      const modifiedToken = [modifiedHeader, ...parts.slice(1)].join(".");
+
+      expect(() => kit.decrypt(modifiedToken)).toThrow(
+        "Unsupported critical header parameter: unknownParam",
+      );
+    });
+
+    test("should reject token with multiple unknown critical parameters", () => {
+      const { token } = kit.encrypt("data", {
+        objectId: "5b63e7ec-5ca4-4083-8de9-de0d6e2ddd03",
+      });
+
+      const decoded = JweKit.decode(token);
+      const headerWithCrit = {
+        ...decoded.header,
+        crit: ["unknownParam1", "unknownParam2"],
+      };
+
+      const parts = token.split(".");
+      const modifiedHeader = Buffer.from(JSON.stringify(headerWithCrit))
+        .toString("base64url")
+        .replace(/=/g, "");
+      const modifiedToken = [modifiedHeader, ...parts.slice(1)].join(".");
+
+      expect(() => kit.decrypt(modifiedToken)).toThrow(
+        "Unsupported critical header parameter: unknownParam1",
+      );
+    });
+
+    test("should accept token with empty critical array", () => {
+      const { token } = kit.encrypt("data", {
+        objectId: "5b63e7ec-5ca4-4083-8de9-de0d6e2ddd03",
+      });
+
+      expect(() => kit.decrypt(token)).not.toThrow();
     });
   });
 });
