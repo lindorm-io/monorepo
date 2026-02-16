@@ -4,28 +4,37 @@ import { JwtClaims } from "../../../types";
 import { fromBstr, toBstr } from "./bstr";
 import { findCoseByKey, findCoseByLabel } from "./find";
 
-export const mapCoseClaims = (claims: JwtClaims): Dict => {
-  const result: Dict = {};
+export const mapCoseClaims = (claims: JwtClaims): Map<number | string, unknown> => {
+  const result = new Map<number | string, unknown>();
 
   for (const [key, value] of Object.entries(claims)) {
     const claim = findCoseByKey(COSE_CLAIMS, key);
 
     if (!claim) {
-      result[key] = value;
+      result.set(key, value);
       continue;
     }
 
-    result[claim.label] = toBstr(claim, value);
+    result.set(claim.label, toBstr(claim, value));
     continue;
   }
 
   return result;
 };
 
-export const decodeCoseClaims = <C extends Dict = Dict>(cose: Dict): JwtClaims & C => {
+const iterateEntries = (
+  cose: Dict | Map<number | string, unknown>,
+): Array<[string, unknown]> =>
+  cose instanceof Map
+    ? Array.from(cose.entries()).map(([k, v]) => [String(k), v])
+    : Object.entries(cose);
+
+export const decodeCoseClaims = <C extends Dict = Dict>(
+  cose: Dict | Map<number | string, unknown>,
+): JwtClaims & C => {
   const result: Dict = {};
 
-  for (const [label, value] of Object.entries(cose)) {
+  for (const [label, value] of iterateEntries(cose)) {
     const claim = findCoseByLabel(COSE_CLAIMS, label);
 
     if (!claim) {

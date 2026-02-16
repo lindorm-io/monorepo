@@ -1,9 +1,8 @@
-import { Dict } from "@lindorm/types";
 import { encode } from "cbor";
 
 type SignOptions = {
   protectedHeader: Buffer;
-  unprotectedHeader: Dict;
+  unprotectedHeader: Map<number | string, unknown>;
   payload: Buffer;
   signature: Buffer;
 };

@@ -5,7 +5,7 @@ import { AegisError } from "../../../errors";
 import { fromBstr, toBstr } from "./bstr";
 import { findCoseByKey, findCoseByLabel, findSpecificCoseKey } from "./find";
 
-export const mapCoseKey = (jwk: any): Dict => {
+export const mapCoseKey = (jwk: any): Map<number | string, unknown> => {
   if (!isObject(jwk)) {
     throw new AegisError(`Invalid COSE key: ${jwk}`);
   }
@@ -18,52 +18,60 @@ export const mapCoseKey = (jwk: any): Dict => {
 
   const coseKey = findSpecificCoseKey(kty);
 
-  const result: Dict = {};
+  const result = new Map<number | string, unknown>();
 
   for (const [key, value] of Object.entries(jwk)) {
     const claim = findCoseByKey(coseKey, key);
 
     if (!claim) {
-      result[key] = value;
+      result.set(key, value);
       continue;
     }
 
     if (key === "crv") {
       const crv = findCoseByKey(COSE_KEY_CURVE, value);
       if (!crv) {
-        throw new AegisError(`Unsupported COSE key curve: ${value}`);
+        throw new AegisError(`Unsupported COSE key curve: ${String(value)}`);
       }
-      result[claim.label] = crv.label;
+      result.set(claim.label, crv.label);
       continue;
     }
 
     if (key === "kty") {
       const kty = findCoseByKey(COSE_KEY_TYPE, value);
       if (!kty) {
-        throw new AegisError(`Unsupported COSE key type: ${value}`);
+        throw new AegisError(`Unsupported COSE key type: ${String(value)}`);
       }
-      result[claim?.label ?? key] = kty.label;
+      result.set(claim?.label ?? key, kty.label);
       continue;
     }
 
-    result[claim.label] = toBstr(claim, value);
+    result.set(claim.label, toBstr(claim, value));
     continue;
   }
 
   return result;
 };
 
+const iterateKeyEntries = (cose: any): Array<[string, unknown]> =>
+  cose instanceof Map
+    ? Array.from(cose.entries()).map(([k, v]) => [String(k), v])
+    : Object.entries(cose);
+
+const getKeyTypeValue = (cose: any): unknown =>
+  cose instanceof Map ? cose.get(1) : cose[1];
+
 export const decodeCoseKey = (cose: any): Dict => {
-  if (!isObject(cose)) {
+  if (!isObject(cose) && !(cose instanceof Map)) {
     throw new AegisError(`Invalid COSE key: ${cose}`);
   }
 
   const result: Dict = {};
 
-  const kty = findCoseByLabel(COSE_KEY_TYPE, cose[1]);
+  const kty = findCoseByLabel(COSE_KEY_TYPE, getKeyTypeValue(cose));
   const coseKey = findSpecificCoseKey(kty!.key);
 
-  for (const [label, value] of Object.entries(cose)) {
+  for (const [label, value] of iterateKeyEntries(cose)) {
     const claim = findCoseByLabel(coseKey, label);
 
     if (!claim) {
@@ -74,7 +82,7 @@ export const decodeCoseKey = (cose: any): Dict => {
     if (claim.key === "crv") {
       const crv = findCoseByLabel(COSE_KEY_CURVE, value);
       if (!crv) {
-        throw new AegisError(`Unsupported COSE key curve: ${value}`);
+        throw new AegisError(`Unsupported COSE key curve: ${String(value)}`);
       }
       result[claim.key] = crv.key;
       continue;
@@ -83,7 +91,7 @@ export const decodeCoseKey = (cose: any): Dict => {
     if (claim.key === "kty") {
       const kty = findCoseByLabel(COSE_KEY_TYPE, value);
       if (!kty) {
-        throw new AegisError(`Unsupported COSE key type: ${value}`);
+        throw new AegisError(`Unsupported COSE key type: ${String(value)}`);
       }
       result[claim.key] = kty.key;
       continue;
