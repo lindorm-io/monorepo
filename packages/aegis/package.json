@@ -41,6 +41,7 @@
     "cbor": "^10.0.3"
   },
   "devDependencies": {
+    "@auth0/cose": "^1.0.2",
     "@lindorm/amphora": "^0.2.6",
     "@lindorm/logger": "^0.3.4",
     "@lindorm/types": "^0.3.3",

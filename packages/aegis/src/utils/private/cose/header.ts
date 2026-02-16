@@ -7,8 +7,10 @@ import { decodeCoseCrit, mapCoseCrit } from "./crit";
 import { findCoseByKey, findCoseByLabel } from "./find";
 import { decodeCoseKey, mapCoseKey } from "./key";
 
-export const mapCoseHeader = (claims: RawTokenHeaderClaims): Dict => {
-  const result: Dict = {};
+export const mapCoseHeader = (
+  claims: RawTokenHeaderClaims,
+): Map<number | string, unknown> => {
+  const result = new Map<number | string, unknown>();
 
   for (const [key, value] of Object.entries(claims)) {
     if (!value) continue;
@@ -16,7 +18,7 @@ export const mapCoseHeader = (claims: RawTokenHeaderClaims): Dict => {
     const claim = findCoseByKey(COSE_HEADER, key);
 
     if (!claim) {
-      result[key] = value;
+      result.set(key, value);
       continue;
     }
 
@@ -25,31 +27,40 @@ export const mapCoseHeader = (claims: RawTokenHeaderClaims): Dict => {
       if (!alg) {
         throw new AegisError(`Unsupported COSE algorithm: ${value as any}`);
       }
-      result[claim.label] = alg.label;
+      result.set(claim.label, alg.label);
       continue;
     }
 
     if (key === "crit") {
-      result[claim.label] = mapCoseCrit(value);
+      result.set(claim.label, mapCoseCrit(value));
       continue;
     }
 
     if (key === "epk" || key === "jwk") {
-      result[claim.label] = mapCoseKey(value);
+      result.set(claim.label, mapCoseKey(value));
       continue;
     }
 
-    result[claim.label] = toBstr(claim, value);
+    result.set(claim.label, toBstr(claim, value));
     continue;
   }
 
   return result;
 };
 
-export const decodeCoseHeader = (cose: Dict): RawTokenHeaderClaims => {
+const iterateEntries = (
+  cose: Dict | Map<number | string, unknown>,
+): Array<[string, unknown]> =>
+  cose instanceof Map
+    ? Array.from(cose.entries()).map(([k, v]) => [String(k), v])
+    : Object.entries(cose);
+
+export const decodeCoseHeader = (
+  cose: Dict | Map<number | string, unknown>,
+): RawTokenHeaderClaims => {
   const result: Dict = {};
 
-  for (const [label, value] of Object.entries(cose)) {
+  for (const [label, value] of iterateEntries(cose)) {
     if (!value) continue;
 
     const claim = findCoseByLabel(COSE_HEADER, label);
@@ -62,7 +73,7 @@ export const decodeCoseHeader = (cose: Dict): RawTokenHeaderClaims => {
     if (claim.key === "alg") {
       const alg = findCoseByLabel(COSE_ALGORITHM, value);
       if (!alg) {
-        throw new AegisError(`Unsupported COSE algorithm: ${value}`);
+        throw new AegisError(`Unsupported COSE algorithm: ${String(value)}`);
       }
       result["alg"] = alg.key;
       continue;

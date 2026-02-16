@@ -82,7 +82,7 @@ export class CweKit implements ICweKit {
       }),
     );
     const recipientPublicKey = prepared.publicEncryptionKey ?? null;
-    const recipients = [[encode({}), recipientHeader, recipientPublicKey]];
+    const recipients = [[encode(new Map()), recipientHeader, recipientPublicKey]];
 
     const buffer = encode([protectedCbor, unprotectedHeader, ciphertext, recipients]);
     const token = buffer.toString("base64url");
