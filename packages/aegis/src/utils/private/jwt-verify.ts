@@ -1,8 +1,8 @@
 import { addSeconds, subSeconds } from "@lindorm/date";
 import { isArray, isNumber, isObject, isString } from "@lindorm/is";
 import { KryptosAlgorithm } from "@lindorm/kryptos";
-import { Dict } from "@lindorm/types";
-import { JwtClaims, Operators, VerifyJwtOptions } from "../../types";
+import { Dict, Predicate, PredicateOperator } from "@lindorm/types";
+import { JwtClaims, VerifyJwtOptions } from "../../types";
 import { createAccessTokenHash, createCodeHash, createStateHash } from "./create-hash";
 
 const mapVerify = (key: keyof VerifyJwtOptions): keyof JwtClaims => {
@@ -62,19 +62,19 @@ export const createJwtVerify = (
   algorithm: KryptosAlgorithm,
   verify: VerifyJwtOptions,
   clockTolerance: number,
-): Dict<Operators> => {
-  const ops: Partial<Record<keyof JwtClaims, Operators>> = {
+): Predicate<Dict> => {
+  const predicate: Partial<Record<keyof JwtClaims, PredicateOperator<any>>> = {
     iat: {
-      $or: [{ $exists: false }, { $beforeOrEq: addSeconds(new Date(), clockTolerance) }],
+      $or: [{ $exists: false }, { $lte: addSeconds(new Date(), clockTolerance) }],
     },
     nbf: {
-      $or: [{ $exists: false }, { $beforeOrEq: addSeconds(new Date(), clockTolerance) }],
+      $or: [{ $exists: false }, { $lte: addSeconds(new Date(), clockTolerance) }],
     },
     exp: {
-      $or: [{ $exists: false }, { $afterOrEq: subSeconds(new Date(), clockTolerance) }],
+      $or: [{ $exists: false }, { $gte: subSeconds(new Date(), clockTolerance) }],
     },
     auth_time: {
-      $or: [{ $exists: false }, { $beforeOrEq: addSeconds(new Date(), clockTolerance) }],
+      $or: [{ $exists: false }, { $lte: addSeconds(new Date(), clockTolerance) }],
     },
   };
 
@@ -82,36 +82,36 @@ export const createJwtVerify = (
     const mapped = mapVerify(key as keyof VerifyJwtOptions);
 
     if (mapped === "at_hash" && isString(value)) {
-      ops[mapped] = { $eq: createAccessTokenHash(algorithm, value) };
+      predicate[mapped] = { $eq: createAccessTokenHash(algorithm, value) };
       continue;
     }
     if (mapped === "c_hash" && isString(value)) {
-      ops[mapped] = { $eq: createCodeHash(algorithm, value) };
+      predicate[mapped] = { $eq: createCodeHash(algorithm, value) };
       continue;
     }
     if (mapped === "s_hash" && isString(value)) {
-      ops[mapped] = { $eq: createStateHash(algorithm, value) };
+      predicate[mapped] = { $eq: createStateHash(algorithm, value) };
       continue;
     }
     if (isArray<string>(value)) {
-      ops[mapped] = { $all: value };
+      predicate[mapped] = { $all: value };
       continue;
     }
     if (isNumber(value)) {
-      ops[mapped] = { $eq: value };
+      predicate[mapped] = { $eq: value };
       continue;
     }
     if (isString(value)) {
-      ops[mapped] = { $eq: value };
+      predicate[mapped] = { $eq: value };
       continue;
     }
     if (isObject(value)) {
-      ops[mapped] = value;
+      predicate[mapped] = value as PredicateOperator<any>;
       continue;
     }
 
     throw new Error(`Unsupported value: ${value as any} for key: ${key}`);
   }
 
-  return ops;
+  return predicate as Predicate<Dict>;
 };

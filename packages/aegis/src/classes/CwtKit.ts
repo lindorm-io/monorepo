@@ -10,7 +10,6 @@ import { ICwtKit } from "../interfaces";
 import {
   CwtKitOptions,
   DecodedCwt,
-  Operators,
   ParsedCwt,
   ParsedCwtPayload,
   SignCwtContent,
@@ -33,7 +32,6 @@ import {
   parseTokenHeader,
   parseTokenPayload,
   validate,
-  validateValue,
   verifyCoseSignature,
 } from "../utils/private";
 
@@ -58,7 +56,7 @@ export class CwtKit implements ICwtKit {
     this.logger.debug("Signing token", { content, options });
 
     if (!this.issuer) {
-      throw new Error("Issuer is required to sign CWT");
+      throw new CwtError("Issuer is required to sign CWT");
     }
 
     const objectId =
@@ -152,13 +150,11 @@ export class CwtKit implements ICwtKit {
       });
     }
 
-    const operators = createJwtVerify(
+    const predicate = createJwtVerify(
       this.kryptos.algorithm,
       verify,
       this.clockTolerance,
     );
-
-    const invalid: Array<{ key: string; value: any; ops: Operators }> = [];
 
     const withDates = {
       ...payloadDict,
@@ -170,14 +166,10 @@ export class CwtKit implements ICwtKit {
         : undefined,
     };
 
-    for (const [key, ops] of Object.entries(operators)) {
-      const value = withDates[key];
-      if (validateValue(value, ops)) continue;
-      invalid.push({ key, value, ops });
-    }
-
-    if (invalid.length) {
-      throw new CwtError("Invalid token", { data: { invalid } });
+    try {
+      validate(withDates, predicate);
+    } catch (err) {
+      throw new CwtError("Invalid token", { data: (err as any).data });
     }
 
     const decoded: DecodedCwt<C> = {

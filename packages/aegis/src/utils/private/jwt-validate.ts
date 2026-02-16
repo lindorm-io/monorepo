@@ -1,46 +1,46 @@
 import { isArray, isNumber, isObject, isString } from "@lindorm/is";
-import { Dict } from "@lindorm/types";
-import { Operators, ValidateJwtOptions } from "../../types";
+import { Dict, Predicate, PredicateOperator } from "@lindorm/types";
+import { ValidateJwtOptions } from "../../types";
 import { createAccessTokenHash, createCodeHash, createStateHash } from "./create-hash";
 
-export const createJwtValidate = (validate: ValidateJwtOptions): Dict<Operators> => {
+export const createJwtValidate = (validate: ValidateJwtOptions): Predicate<Dict> => {
   const algorithm = validate.algorithm;
-  const ops: Dict<Operators> = {};
+  const predicate: Predicate<Dict> = {};
 
   for (const [key, value] of Object.entries(validate)) {
     if (key === "algorithm") continue;
 
     if (key === "accessToken" && algorithm && isString(value)) {
-      ops[key] = { $eq: createAccessTokenHash(algorithm, value) };
+      predicate[key] = { $eq: createAccessTokenHash(algorithm, value) };
       continue;
     }
     if (key === "authCode" && algorithm && isString(value)) {
-      ops[key] = { $eq: createCodeHash(algorithm, value) };
+      predicate[key] = { $eq: createCodeHash(algorithm, value) };
       continue;
     }
     if (key === "authState" && algorithm && isString(value)) {
-      ops[key] = { $eq: createStateHash(algorithm, value) };
+      predicate[key] = { $eq: createStateHash(algorithm, value) };
       continue;
     }
     if (isArray<string>(value)) {
-      ops[key] = { $all: value };
+      predicate[key] = { $all: value };
       continue;
     }
     if (isNumber(value)) {
-      ops[key] = { $eq: value };
+      predicate[key] = { $eq: value };
       continue;
     }
     if (isString(value)) {
-      ops[key] = { $eq: value };
+      predicate[key] = { $eq: value };
       continue;
     }
     if (isObject(value)) {
-      ops[key] = value;
+      predicate[key] = value as PredicateOperator<any>;
       continue;
     }
 
     throw new Error(`Unsupported value: ${value as any} for key: ${key}`);
   }
 
-  return ops;
+  return predicate;
 };

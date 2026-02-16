@@ -8,7 +8,6 @@ import { IJwtKit } from "../interfaces";
 import {
   DecodedJwt,
   JwtKitOptions,
-  Operators,
   ParsedJwt,
   ParsedJwtHeader,
   ParsedJwtPayload,
@@ -30,7 +29,6 @@ import {
   parseTokenHeader,
   parseTokenPayload,
   validate,
-  validateValue,
   verifyJoseSignature,
 } from "../utils/private";
 
@@ -114,13 +112,11 @@ export class JwtKit implements IJwtKit {
       });
     }
 
-    const operators = createJwtVerify(
+    const predicate = createJwtVerify(
       this.kryptos.algorithm,
       verify,
       this.clockTolerance,
     );
-
-    const invalid: Array<{ key: string; value: any; ops: Operators }> = [];
 
     const {
       decoded: { payload },
@@ -134,14 +130,10 @@ export class JwtKit implements IJwtKit {
       auth_time: payload.auth_time ? new Date(payload.auth_time * 1000) : undefined,
     };
 
-    for (const [key, ops] of Object.entries(operators)) {
-      const value = withDates[key];
-      if (validateValue(value, ops)) continue;
-      invalid.push({ key, value, ops });
-    }
-
-    if (invalid.length) {
-      throw new JwtError("Invalid token", { data: { invalid } });
+    try {
+      validate(withDates, predicate);
+    } catch (err) {
+      throw new JwtError("Invalid token", { data: (err as any).data });
     }
 
     this.logger.debug("Token verified");
