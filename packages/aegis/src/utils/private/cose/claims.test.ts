@@ -46,4 +46,54 @@ describe("mapCoseClaims", () => {
   test("should decode mapped COSE claims", () => {
     expect(decodeCoseClaims(mapCoseClaims(claims as any))).toEqual(claims);
   });
+
+  describe("custom numeric claim labels", () => {
+    test("should encode numeric key 900 as integer label in internal mode", () => {
+      const result = mapCoseClaims({ 900: "user-abc" } as any);
+      expect(result.get(900)).toBe("user-abc");
+      expect(result.has("900")).toBe(false);
+    });
+
+    test("should encode numeric key 900 as string key in external mode", () => {
+      const result = mapCoseClaims({ 900: "user-abc" } as any, "external");
+      expect(result.get("900")).toBe("user-abc");
+      expect(result.has(900)).toBe(false);
+    });
+
+    test("should throw for numeric key below 900", () => {
+      expect(() => mapCoseClaims({ 899: "val" } as any)).toThrow(
+        "Custom COSE claim label must be >= 900, got 899",
+      );
+    });
+
+    test("should throw for numeric key 1 (IANA range)", () => {
+      expect(() => mapCoseClaims({ 1: "val" } as any)).toThrow(
+        "Custom COSE claim label must be >= 900, got 1",
+      );
+    });
+
+    test("should throw for numeric key 500 (Lindorm range)", () => {
+      expect(() => mapCoseClaims({ 500: "val" } as any)).toThrow(
+        "Custom COSE claim label must be >= 900, got 500",
+      );
+    });
+
+    test("should not affect non-numeric string keys", () => {
+      const result = mapCoseClaims({ customClaim: "hello" } as any);
+      expect(result.get("customClaim")).toBe("hello");
+    });
+
+    test("should round-trip custom claims through encode and decode", () => {
+      const input = { 900: "user-abc", 901: 42 } as any;
+      const encoded = mapCoseClaims(input);
+      const decoded = decodeCoseClaims(encoded);
+      expect(decoded["900"]).toBe("user-abc");
+      expect(decoded["901"]).toBe(42);
+    });
+
+    test("should handle large labels correctly", () => {
+      const result = mapCoseClaims({ 10000: "large" } as any);
+      expect(result.get(10000)).toBe("large");
+    });
+  });
 });

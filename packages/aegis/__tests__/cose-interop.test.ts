@@ -983,3 +983,145 @@ describe("COSE interop: external target mode", () => {
     });
   });
 });
+
+// ===========================================================================
+// Custom COSE claim labels (>= 900) for CWT payloads
+// ===========================================================================
+
+describe("COSE interop: custom claim labels (>= 900)", () => {
+  test("CWT with custom claims produces integer labels in CBOR payload", () => {
+    const kryptos = createEcSigKey();
+    const kit = new CwtKit({ issuer: ISSUER, logger, kryptos });
+
+    const { buffer } = kit.sign({
+      expires: "1h",
+      subject: SUBJECT,
+      tokenType: "access_token",
+      claims: { 900: "user-abc", 901: 42 },
+    });
+
+    const decoded = cborEncoder.decode(buffer);
+    const [, , payloadCbor] = decoded;
+
+    const payloadMap: Map<number | string, unknown> = cborEncoder.decode(payloadCbor);
+    expect(payloadMap).toBeInstanceOf(Map);
+
+    // Custom claims use integer keys
+    expect(payloadMap.get(900)).toBe("user-abc");
+    expect(payloadMap.get(901)).toBe(42);
+
+    // Standard claims still present
+    expect(payloadMap.get(COSE_CLAIM.ISS)).toBe(ISSUER);
+  });
+
+  test("CWT with custom claims verifiable by @auth0/cose Sign1", async () => {
+    const kryptos = createEcSigKey();
+    const kit = new CwtKit({ issuer: ISSUER, logger, kryptos });
+
+    const { buffer } = kit.sign({
+      expires: "1h",
+      subject: SUBJECT,
+      tokenType: "access_token",
+      claims: { 900: "user-abc", 901: 42 },
+    });
+
+    const sign1 = Sign1.decode(buffer);
+    expect(sign1.protectedHeaders.get(Headers.Algorithm)).toBe(Algorithms.ES256);
+
+    const publicKey = await getJoseKey(kryptos, "public");
+    await expect(sign1.verify(publicKey)).resolves.toBeUndefined();
+  });
+
+  test("round-trip sign -> verify preserves custom claims", () => {
+    const kryptos = createEcSigKey();
+    const kit = new CwtKit({ issuer: ISSUER, logger, kryptos });
+
+    const { token } = kit.sign({
+      expires: "1h",
+      subject: SUBJECT,
+      tokenType: "access_token",
+      claims: { 900: "user-abc", 901: 42 },
+    });
+
+    const result = kit.verify(token);
+    expect(result.payload.claims["900"]).toBe("user-abc");
+    expect(result.payload.claims["901"]).toBe(42);
+    expect(result.payload.issuer).toBe(ISSUER);
+  });
+
+  test("external target: custom claims use string keys, no integer labels >= 900", () => {
+    const kryptos = createEcSigKey();
+    const kit = new CwtKit({ issuer: ISSUER, logger, kryptos });
+
+    const { buffer } = kit.sign(
+      {
+        expires: "1h",
+        subject: SUBJECT,
+        tokenType: "access_token",
+        claims: { 900: "user-abc" },
+      },
+      { target: "external" },
+    );
+
+    const decoded = cborEncoder.decode(buffer);
+    const [, , payloadCbor] = decoded;
+
+    const payloadMap: Map<number | string, unknown> = cborEncoder.decode(payloadCbor);
+    expect(payloadMap).toBeInstanceOf(Map);
+
+    // No integer keys >= 900
+    for (const key of payloadMap.keys()) {
+      if (typeof key === "number") {
+        expect(key).toBeLessThan(900);
+      }
+    }
+
+    // Custom claim present as string key
+    expect(payloadMap.get("900")).toBe("user-abc");
+  });
+
+  test("large custom labels (e.g. 10000) work correctly", () => {
+    const kryptos = createEcSigKey();
+    const kit = new CwtKit({ issuer: ISSUER, logger, kryptos });
+
+    const { buffer, token } = kit.sign({
+      expires: "1h",
+      subject: SUBJECT,
+      tokenType: "access_token",
+      claims: { 10000: "large-label" },
+    });
+
+    const decoded = cborEncoder.decode(buffer);
+    const [, , payloadCbor] = decoded;
+    const payloadMap: Map<number | string, unknown> = cborEncoder.decode(payloadCbor);
+    expect(payloadMap.get(10000)).toBe("large-label");
+
+    const result = kit.verify(token);
+    expect(result.payload.claims["10000"]).toBe("large-label");
+  });
+
+  test("token with integer custom claims is smaller than string key equivalent", () => {
+    const kryptos = createEcSigKey();
+    const kit = new CwtKit({ issuer: ISSUER, logger, kryptos });
+
+    const internalResult = kit.sign({
+      expires: "1h",
+      subject: SUBJECT,
+      tokenType: "access_token",
+      claims: { 900: "user-abc", 901: 42 },
+    });
+
+    const externalResult = kit.sign(
+      {
+        expires: "1h",
+        subject: SUBJECT,
+        tokenType: "access_token",
+        claims: { 900: "user-abc", 901: 42 },
+      },
+      { target: "external" },
+    );
+
+    // Internal (integer labels) should be smaller than external (string keys)
+    expect(internalResult.buffer.length).toBeLessThan(externalResult.buffer.length);
+  });
+});
