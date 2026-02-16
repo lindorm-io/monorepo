@@ -2,6 +2,7 @@ import { RawTokenHeaderClaims, TokenHeaderClaims } from "../header";
 
 export type DecodedCwe = {
   protected: Pick<TokenHeaderClaims, "alg" | "cty" | "typ">;
+  protectedCbor: Buffer;
   unprotected: Pick<RawTokenHeaderClaims, "iv" | "oid">;
   recipient: {
     unprotected: Pick<

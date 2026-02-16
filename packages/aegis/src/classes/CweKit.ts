@@ -41,18 +41,10 @@ export class CweKit implements ICweKit {
 
     const objectId = options.objectId ?? randomBytes(20).toString("base64url");
 
-    const {
-      authTag,
-      content,
-      initialisationVector,
-      pbkdfIterations,
-      pbkdfSalt,
-      publicEncryptionIv,
-      publicEncryptionJwk,
-      publicEncryptionKey,
-      publicEncryptionTag,
-    } = kit.encrypt(data, "record");
+    // Step 1: Prepare encryption (key management only — no content encrypted yet)
+    const prepared = kit.prepareEncryption();
 
+    // Step 2: Build the CBOR-encoded protected header
     const protectedHeader = mapCoseHeader(
       mapTokenHeader({
         algorithm: this.kryptos.algorithm,
@@ -62,6 +54,13 @@ export class CweKit implements ICweKit {
     );
     const protectedCbor = encode(protectedHeader);
 
+    // Step 3: Compute AAD from the CBOR-encoded protected header
+    const aad = protectedCbor;
+
+    // Step 4: Encrypt content with AAD
+    const { authTag, content, initialisationVector } = prepared.encrypt(data, { aad });
+
+    // Step 5: Assemble the COSE structure
     const unprotectedHeader = mapCoseHeader(
       mapTokenHeader({
         ...(options.header ?? {}),
@@ -75,16 +74,16 @@ export class CweKit implements ICweKit {
     const recipientHeader = mapCoseHeader(
       mapTokenHeader({
         encryption: this.encryption,
-        initialisationVector: publicEncryptionIv,
+        initialisationVector: prepared.headerParams.publicEncryptionIv,
         jwksUri: this.kryptos.jwksUri ?? undefined,
         keyId: this.kryptos.id,
-        pbkdfIterations,
-        pbkdfSalt,
-        publicEncryptionJwk,
-        publicEncryptionTag,
+        pbkdfIterations: prepared.headerParams.pbkdfIterations,
+        pbkdfSalt: prepared.headerParams.pbkdfSalt,
+        publicEncryptionJwk: prepared.headerParams.publicEncryptionJwk,
+        publicEncryptionTag: prepared.headerParams.publicEncryptionTag,
       }),
     );
-    const recipientPublicKey = publicEncryptionKey ?? null;
+    const recipientPublicKey = prepared.publicEncryptionKey ?? null;
     const recipients = [[encode({}), recipientHeader, recipientPublicKey]];
 
     const buffer = encode([protectedCbor, unprotectedHeader, ciphertext, recipients]);
@@ -148,19 +147,25 @@ export class CweKit implements ICweKit {
       }
     }
 
-    const payload = kit.decrypt<T>({
-      authTag: decoded.authTag,
-      content: decoded.content,
-      contentType: (decoded.protected.cty as AesContentType) ?? "text/plain",
-      encryption: this.encryption,
-      initialisationVector,
-      pbkdfIterations,
-      pbkdfSalt,
-      publicEncryptionIv,
-      publicEncryptionJwk,
-      publicEncryptionKey,
-      publicEncryptionTag,
-    } satisfies AesDecryptionRecord);
+    // Reconstruct AAD from the CBOR-encoded protected header
+    const aad = decoded.protectedCbor;
+
+    const payload = kit.decrypt<T>(
+      {
+        authTag: decoded.authTag,
+        content: decoded.content,
+        contentType: (decoded.protected.cty as AesContentType) ?? "text/plain",
+        encryption: this.encryption,
+        initialisationVector,
+        pbkdfIterations,
+        pbkdfSalt,
+        publicEncryptionIv,
+        publicEncryptionJwk,
+        publicEncryptionKey,
+        publicEncryptionTag,
+      } satisfies AesDecryptionRecord,
+      { aad },
+    );
 
     this.logger.debug("Token decrypted");
 
@@ -201,6 +206,9 @@ export class CweKit implements ICweKit {
 
     return {
       protected: protectedDict as any,
+      protectedCbor: Buffer.isBuffer(protectedCbor)
+        ? protectedCbor
+        : Buffer.from(protectedCbor),
       unprotected: unprotectedDict as any,
       recipient: {
         unprotected: recipientDict as any,

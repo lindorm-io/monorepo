@@ -43,6 +43,7 @@ describe("Aegis", () => {
           cty: "text/plain",
           typ: "application/cose; cose-type=cose-encrypt",
         },
+        protectedCbor: expect.any(Buffer),
         recipient: {
           initialisationVector: undefined,
           publicEncryptionKey: null,

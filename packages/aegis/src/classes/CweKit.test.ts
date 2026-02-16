@@ -60,6 +60,7 @@ describe("CweKit", () => {
             cty: "text/plain",
             typ: "application/cose; cose-type=cose-encrypt",
           },
+          protectedCbor: expect.any(Buffer),
           unprotected: {
             iv: expect.any(Buffer),
             oid: "5b63e7ec-5ca4-4083-8de9-de0d6e2ddd03",
@@ -118,6 +119,7 @@ describe("CweKit", () => {
             cty: "text/plain",
             typ: "application/cose; cose-type=cose-encrypt",
           },
+          protectedCbor: expect.any(Buffer),
           unprotected: {
             iv: expect.any(Buffer),
             oid: "19a0c0cc-3eec-4ece-a5a1-4d93a457c3a6",
@@ -169,6 +171,7 @@ describe("CweKit", () => {
             cty: "text/plain",
             typ: "application/cose; cose-type=cose-encrypt",
           },
+          protectedCbor: expect.any(Buffer),
           unprotected: {
             iv: expect.any(Buffer),
             oid: "19a0c0cc-3eec-4ece-a5a1-4d93a457c3a6",
@@ -217,6 +220,7 @@ describe("CweKit", () => {
             cty: "text/plain",
             typ: "application/cose; cose-type=cose-encrypt",
           },
+          protectedCbor: expect.any(Buffer),
           unprotected: {
             iv: expect.any(Buffer),
             oid: "19a0c0cc-3eec-4ece-a5a1-4d93a457c3a6",
@@ -263,6 +267,7 @@ describe("CweKit", () => {
             cty: "text/plain",
             typ: "application/cose; cose-type=cose-encrypt",
           },
+          protectedCbor: expect.any(Buffer),
           unprotected: {
             iv: expect.any(Buffer),
             oid: "540061f3-aea2-4625-b034-c48a7a9ac114",
@@ -318,6 +323,7 @@ describe("CweKit", () => {
           cty: "text/plain",
           typ: "application/cose; cose-type=cose-encrypt",
         },
+        protectedCbor: expect.any(Buffer),
         unprotected: {
           iv: expect.any(Buffer),
           oid: "e5d4ed15-3350-4fdc-a9cf-d8270d637e99",
