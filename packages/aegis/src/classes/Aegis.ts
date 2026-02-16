@@ -57,7 +57,6 @@ import {
   SignedCwt,
   SignedJws,
   SignedJwt,
-  TokenHeaderAlgorithm,
   TokenHeaderClaims,
   VerifyCwtOptions,
   VerifyJwtOptions,
@@ -78,13 +77,13 @@ type FilterOptions = {
 
 type EncOptions = FilterOptions & {
   id?: string;
-  algorithm?: TokenHeaderAlgorithm;
+  algorithm?: KryptosEncAlgorithm;
   encrypt?: boolean;
 };
 
 type SigOptions = FilterOptions & {
   id?: string;
-  algorithm?: TokenHeaderAlgorithm;
+  algorithm?: KryptosSigAlgorithm;
   sign?: boolean;
 };
 
@@ -286,7 +285,10 @@ export class Aegis implements IAegis {
   ): Promise<string> {
     const parsed = AesKit.parse(data);
 
-    const kit = await this.aesKit({ id: parsed.keyId, algorithm: parsed.algorithm });
+    const kit = await this.aesKit({
+      id: parsed.keyId,
+      algorithm: parsed.algorithm as KryptosEncAlgorithm | undefined,
+    });
 
     return kit.decrypt(data);
   }
@@ -319,7 +321,7 @@ export class Aegis implements IAegis {
 
     const kit = await this.coseEncryptKit({
       id: decode.recipient.unprotected.kid,
-      algorithm: decode.protected.alg,
+      algorithm: decode.protected.alg as KryptosEncAlgorithm,
     });
 
     return kit.decrypt(token);
@@ -350,7 +352,7 @@ export class Aegis implements IAegis {
 
     const kit = await this.coseSignKit({
       id: decode.unprotected.kid,
-      algorithm: decode.protected.alg,
+      algorithm: decode.protected.alg as KryptosSigAlgorithm,
     });
 
     return kit.verify(token);
@@ -386,7 +388,7 @@ export class Aegis implements IAegis {
 
     const kit = await this.cwtKit({
       id: decode.unprotected.kid,
-      algorithm: decode.protected.alg,
+      algorithm: decode.protected.alg as KryptosSigAlgorithm,
     });
 
     return kit.verify(cwt, verify);
@@ -418,7 +420,7 @@ export class Aegis implements IAegis {
 
     const kit = await this.jweKit({
       id: decode.header.kid,
-      algorithm: decode.header.alg,
+      algorithm: decode.header.alg as KryptosEncAlgorithm,
     });
 
     return kit.decrypt(jwe);
@@ -446,7 +448,7 @@ export class Aegis implements IAegis {
 
     const kit = await this.jwsKit({
       id: decode.header.kid,
-      algorithm: decode.header.alg,
+      algorithm: decode.header.alg as KryptosSigAlgorithm,
     });
 
     return kit.verify(jws);
@@ -482,7 +484,7 @@ export class Aegis implements IAegis {
 
     const kit = await this.jwtKit({
       id: decode.header.kid,
-      algorithm: decode.header.alg,
+      algorithm: decode.header.alg as KryptosSigAlgorithm,
     });
 
     return kit.verify(jwt, verify);
