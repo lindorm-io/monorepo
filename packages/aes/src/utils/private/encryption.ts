@@ -1,10 +1,4 @@
-import {
-  CipherGCM,
-  CipherGCMOptions,
-  DecipherGCM,
-  createCipheriv,
-  createDecipheriv,
-} from "crypto";
+import { CipherGCMOptions, DecipherGCM, createDecipheriv } from "crypto";
 import { LATEST_AES_VERSION } from "../../constants/private";
 import { AesError } from "../../errors";
 import { AesContent, AesEncryptionRecord } from "../../types";
@@ -13,64 +7,21 @@ import {
   PrivateAesEncryptionOptions,
 } from "../../types/private";
 import { calculateAesEncryption } from "./calculate";
-import { calculateContentType, contentToBuffer, parseContent } from "./content";
-import {
-  assertAuthTag,
-  createAuthTag,
-  getInitialisationVector,
-  splitContentEncryptionKey,
-} from "./data";
+import { parseContent } from "./content";
+import { assertAuthTag, splitContentEncryptionKey } from "./data";
 import { getDecryptionKey, getEncryptionKey } from "./get-key";
+import { encryptAesContent } from "./encrypt-content";
 
 export const encryptAes = (options: PrivateAesEncryptionOptions): AesEncryptionRecord => {
   const { aad, data, encryption = "A256GCM", kryptos } = options;
 
-  const {
-    contentEncryptionKey,
-    pbkdfIterations,
-    pbkdfSalt,
-    publicEncryptionIv,
-    publicEncryptionJwk,
-    publicEncryptionKey,
-    publicEncryptionTag,
-  } = getEncryptionKey({
-    encryption,
-    kryptos,
-  });
+  const keyResult = getEncryptionKey({ encryption, kryptos });
 
-  const { encryptionKey, hashKey } = splitContentEncryptionKey(
-    encryption,
-    contentEncryptionKey,
-  );
-
-  const aesEncryption = calculateAesEncryption(encryption);
-  const initialisationVector = getInitialisationVector(encryption);
-  const isGcm = encryption.includes("GCM");
-  const cipherOptions: CipherGCMOptions | undefined = isGcm
-    ? { authTagLength: 16 }
-    : undefined;
-  const cipher = createCipheriv(
-    aesEncryption,
-    encryptionKey,
-    initialisationVector,
-    cipherOptions as CipherGCMOptions,
-  );
-
-  if (isGcm && aad) {
-    (cipher as CipherGCM).setAAD(aad);
-  }
-
-  const contentType = calculateContentType(data);
-  const buffer = contentToBuffer(data, contentType);
-  const content = Buffer.concat([cipher.update(buffer), cipher.final()]);
-
-  const authTag = createAuthTag({
+  const { authTag, content, contentType, initialisationVector } = encryptAesContent({
     aad,
-    cipher,
-    content,
-    hashKey,
+    contentEncryptionKey: keyResult.contentEncryptionKey,
+    data,
     encryption,
-    initialisationVector,
   });
 
   return {
@@ -81,12 +32,12 @@ export const encryptAes = (options: PrivateAesEncryptionOptions): AesEncryptionR
     encryption,
     initialisationVector,
     keyId: kryptos.id,
-    pbkdfIterations,
-    pbkdfSalt,
-    publicEncryptionIv,
-    publicEncryptionJwk,
-    publicEncryptionKey,
-    publicEncryptionTag,
+    pbkdfIterations: keyResult.pbkdfIterations,
+    pbkdfSalt: keyResult.pbkdfSalt,
+    publicEncryptionIv: keyResult.publicEncryptionIv,
+    publicEncryptionJwk: keyResult.publicEncryptionJwk,
+    publicEncryptionKey: keyResult.publicEncryptionKey,
+    publicEncryptionTag: keyResult.publicEncryptionTag,
     version: LATEST_AES_VERSION,
   };
 };

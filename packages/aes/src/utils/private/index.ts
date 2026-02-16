@@ -8,6 +8,8 @@ export * from "./key-wrap";
 export * from "./oct";
 
 export * from "./encoded-aes";
+export * from "./encrypt-content";
 export * from "./encryption";
+export * from "./prepare-encryption";
 export * from "./serialised-aes";
 export * from "./tokenised-aes";

@@ -6,6 +6,7 @@ import {
   SerialisedAesDecryption,
   SerialisedAesEncryption,
 } from "../types";
+import { PreparedEncryption } from "../types/private";
 
 export type AesOperationOptions = {
   aad?: Buffer;
@@ -41,4 +42,6 @@ export interface IAesKit {
     data: AesDecryptionRecord | SerialisedAesDecryption | string,
     options?: AesOperationOptions,
   ): void;
+
+  prepareEncryption(): PreparedEncryption;
 }
