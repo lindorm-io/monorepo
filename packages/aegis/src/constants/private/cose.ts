@@ -12,17 +12,20 @@ const array = true;
 const bstr = true;
 
 // COSE label ranges (Lindorm-proprietary extensions):
-//   400-499: Kryptos Algorithms (non-RFC algorithms mapped to custom labels)
+//   400-499: Lindorm-proprietary header params (only oid at 400)
 //   500-599: Token Payload Claims (Lindorm-specific JWT-like claims)
-//   600-699: Kryptos Encryption (non-RFC content encryption algorithms)
-//   700-799: Token Header Claims (Lindorm-specific JOSE-like header params)
 //
 // NOTE: These COSE tokens use custom CBOR labels and are NOT interoperable
 // with standard COSE implementations (RFC 8152/9052). They are a Lindorm-
 // proprietary binary token format that mirrors JOSE semantics in CBOR encoding.
 
 export const COSE_ALGORITHM: Array<CoseItem<KryptosAlgorithm | KryptosEncryption>> = [
-  // RFC Encryption
+  // RFC Content Encryption
+  { key: "A128GCM", label: 1 },
+  { key: "A192GCM", label: 2 },
+  { key: "A256GCM", label: 3 },
+
+  // RFC Key Management
   { key: "dir", label: -6 },
   { key: "A128KW", label: -3 },
   { key: "A192KW", label: -4 },
@@ -31,14 +34,6 @@ export const COSE_ALGORITHM: Array<CoseItem<KryptosAlgorithm | KryptosEncryption
   { key: "ECDH-ES+A128KW", label: -29 },
   { key: "ECDH-ES+A192KW", label: -30 },
   { key: "ECDH-ES+A256KW", label: -31 },
-
-  // Lindorm Encryption
-  { key: "ECDH-ES+A128GCMKW", label: 401 },
-  { key: "ECDH-ES+A192GCMKW", label: 402 },
-  { key: "ECDH-ES+A256GCMKW", label: 403 },
-  { key: "A128GCMKW", label: 404 },
-  { key: "A192GCMKW", label: 405 },
-  { key: "A256GCMKW", label: 406 },
 
   // RFC Signatures
   { key: "EdDSA", label: -8 },
@@ -83,18 +78,6 @@ export const COSE_CLAIMS: Array<CoseItem> = [
   { key: "token_type", label: 511, bstr },
 ] as const;
 
-export const COSE_ENCRYPTION: Array<CoseItem<KryptosAlgorithm | KryptosEncryption>> = [
-  // RFC Encryption
-  { key: "A128GCM", label: 1 },
-  { key: "A192GCM", label: 2 },
-  { key: "A256GCM", label: 3 },
-
-  // Lindorm Encryption
-  { key: "A128CBC-HS256", label: 600 },
-  { key: "A192CBC-HS384", label: 601 },
-  { key: "A256CBC-HS512", label: 602 },
-] as const;
-
 export const COSE_HEADER: Array<CoseItem> = [
   // RFC
   { key: "alg", label: 1 },
@@ -104,12 +87,6 @@ export const COSE_HEADER: Array<CoseItem> = [
   { key: "c5u", label: 23 },
   { key: "crit", label: 2 },
   { key: "cty", label: 3 },
-  // COSE label 1 = "Algorithm" which serves dual purpose:
-  // For signing (CWS/CWT): encodes the signature algorithm (alg)
-  // For encryption (CWE): encodes the content encryption algorithm (enc)
-  // Both map to label 1 because COSE uses a single "alg" header for both.
-  // When encoding CWE, enc takes precedence (later entry overwrites alg in map).
-  { key: "enc", label: 1 },
   { key: "epk", label: -1 },
   { key: "iv", label: 5 },
   { key: "kid", label: 4, bstr },
@@ -119,12 +96,7 @@ export const COSE_HEADER: Array<CoseItem> = [
   { key: "x5u", label: 35 },
 
   // Lindorm
-  { key: "jku", label: 701 },
-  { key: "jwk", label: 702 },
-  { key: "oid", label: 703, bstr },
-  { key: "p2c", label: 704 },
-  { key: "p2s", label: 705 },
-  { key: "tag", label: 706 },
+  { key: "oid", label: 400, bstr },
 ] as const;
 
 export const COSE_KEY: Array<CoseItem> = [
