@@ -39,11 +39,8 @@ export const decodeJoseHeader = (header: string): DecodedTokenHeader => {
   const string = B64.toString(header);
   const json = JSON.parse(string) as Partial<TokenHeaderClaims>;
 
-  if (!json.alg) {
-    throw new Error("Missing token header: alg");
-  }
-  if (!TOKEN_HEADER_ALGORITHMS.includes(json.alg)) {
-    throw new Error(`Invalid token header: alg: ${json.alg}`);
+  if (!json.alg || typeof json.alg !== "string") {
+    throw new Error("Missing or invalid token header: alg");
   }
   // typ is OPTIONAL per RFC 7515 Section 4.1.9
   if (json.typ !== undefined && typeof json.typ !== "string") {
