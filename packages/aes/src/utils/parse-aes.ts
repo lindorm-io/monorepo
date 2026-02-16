@@ -11,12 +11,12 @@ import {
 export const parseAes = (
   data: AesDecryptionRecord | SerialisedAesDecryption | string,
 ): AesDecryptionRecord => {
-  if (isString(data) && !isAesTokenised(data)) {
-    return parseEncodedAesString(data);
-  }
-
   if (isString(data) && isAesTokenised(data)) {
     return parseTokenisedAesString(data);
+  }
+
+  if (isString(data) && !isAesTokenised(data)) {
+    return parseEncodedAesString(data);
   }
 
   if (isObject(data) && isAesBufferData(data)) {

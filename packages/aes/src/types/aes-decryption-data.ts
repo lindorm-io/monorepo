@@ -11,6 +11,7 @@ export type AesEncryptionOptions = {
 };
 
 export type AesDecryptionRecord = {
+  aad?: Buffer;
   algorithm?: KryptosAlgorithm;
   authTag?: Buffer;
   content: Buffer;
@@ -33,6 +34,7 @@ export type AesDecryptionRecord = {
  * records; this type reflects that guarantee at the type level.
  */
 export type ParsedAesDecryptionRecord = {
+  aad: Buffer;
   algorithm: KryptosAlgorithm;
   authTag: Buffer;
   content: Buffer;
@@ -50,18 +52,10 @@ export type ParsedAesDecryptionRecord = {
 };
 
 export type SerialisedAesDecryption = {
-  algorithm?: KryptosAlgorithm;
-  authTag?: string;
-  content: string;
-  contentType?: AesContentType;
-  encryption: KryptosEncryption;
-  initialisationVector: string;
-  keyId?: string;
-  pbkdfIterations?: number;
-  pbkdfSalt?: string;
-  publicEncryptionIv?: string;
-  publicEncryptionJwk?: PublicEncryptionJwk;
-  publicEncryptionKey?: string;
-  publicEncryptionTag?: string;
-  version?: string;
+  cek?: string;
+  ciphertext: string;
+  header: string;
+  iv: string;
+  tag: string;
+  v: string;
 };

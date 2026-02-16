@@ -18,7 +18,8 @@ export const encryptAesContent = (
     contentEncryptionKey,
   );
   const aesEncryption = calculateAesEncryption(encryption);
-  const initialisationVector = getInitialisationVector(encryption);
+  const initialisationVector =
+    options.initialisationVector ?? getInitialisationVector(encryption);
   const isGcm = encryption.includes("GCM");
   const cipherOptions: CipherGCMOptions | undefined = isGcm
     ? { authTagLength: 16 }

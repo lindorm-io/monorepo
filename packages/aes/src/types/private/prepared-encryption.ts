@@ -12,6 +12,7 @@ export type EncryptContentOptions = {
   contentEncryptionKey: Buffer;
   data: AesContent;
   encryption: KryptosEncryption;
+  initialisationVector?: Buffer;
 };
 
 export type EncryptContentResult = {

@@ -14,15 +14,11 @@ import {
 } from "../types";
 import { PreparedEncryption } from "../types/private";
 import { isAesTokenised, parseAes } from "../utils";
-import {
-  createEncodedAesString,
-  createSerialisedAesRecord,
-  createTokenisedAesString,
-  decryptAes,
-  encryptAes,
-  prepareAesEncryption,
-} from "../utils/private";
+import { decryptAes, encryptAes, prepareAesEncryption } from "../utils/private";
 import { calculateContentType } from "../utils/private/content";
+import { encryptEncoded } from "../utils/private/encrypt-encoded";
+import { encryptSerialised } from "../utils/private/encrypt-serialised";
+import { encryptTokenised } from "../utils/private/encrypt-tokenised";
 
 export class AesKit implements IAesKit {
   private readonly encryption: KryptosEncryption;
@@ -56,28 +52,37 @@ export class AesKit implements IAesKit {
   public encrypt(
     data: AesContent,
     mode: AesEncryptionMode = "encoded",
-    options?: AesOperationOptions,
+    _options?: AesOperationOptions,
   ): string | AesEncryptionRecord | SerialisedAesEncryption {
     try {
-      const encryptionOptions = {
-        aad: options?.aad,
-        data,
-        encryption: this.encryption,
-        kryptos: this.kryptos,
-      };
-
       switch (mode) {
         case "encoded":
-          return createEncodedAesString(encryptAes(encryptionOptions));
+          return encryptEncoded({
+            data,
+            encryption: this.encryption,
+            kryptos: this.kryptos,
+          });
 
         case "record":
-          return encryptAes(encryptionOptions);
+          return encryptAes({
+            data,
+            encryption: this.encryption,
+            kryptos: this.kryptos,
+          });
 
         case "serialised":
-          return createSerialisedAesRecord(encryptAes(encryptionOptions));
+          return encryptSerialised({
+            data,
+            encryption: this.encryption,
+            kryptos: this.kryptos,
+          });
 
         case "tokenised":
-          return createTokenisedAesString(encryptAes(encryptionOptions));
+          return encryptTokenised({
+            data,
+            encryption: this.encryption,
+            kryptos: this.kryptos,
+          });
 
         default:
           throw new AesError("Invalid encryption mode");
@@ -93,9 +98,17 @@ export class AesKit implements IAesKit {
     options?: AesOperationOptions,
   ): T {
     try {
+      const parsed = parseAes(data);
+
+      // For string formats and serialised records, the AAD comes from the parsed header.
+      // For raw record mode, the caller may provide AAD via options.
+      // If the parsed data already has AAD (from format parsing), use it.
+      // If the caller provides AAD (raw record mode), use that instead.
+      const aad = parsed.aad ?? options?.aad;
+
       return decryptAes<T>({
-        ...parseAes(data),
-        aad: options?.aad,
+        ...parsed,
+        aad,
         kryptos: this.kryptos,
       });
     } catch (error) {
