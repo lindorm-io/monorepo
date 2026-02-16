@@ -12,6 +12,7 @@ import {
   SerialisedAesDecryption,
   SerialisedAesEncryption,
 } from "../types";
+import { PreparedEncryption } from "../types/private";
 import { isAesTokenised, parseAes } from "../utils";
 import {
   createEncodedAesString,
@@ -19,6 +20,7 @@ import {
   createTokenisedAesString,
   decryptAes,
   encryptAes,
+  prepareAesEncryption,
 } from "../utils/private";
 import { calculateContentType } from "../utils/private/content";
 
@@ -107,6 +109,10 @@ export class AesKit implements IAesKit {
   ): void {
     if (this.verify(input, data, options)) return;
     throw new AesError("Invalid AES cipher");
+  }
+
+  public prepareEncryption(): PreparedEncryption {
+    return prepareAesEncryption({ encryption: this.encryption, kryptos: this.kryptos });
   }
 
   // public static

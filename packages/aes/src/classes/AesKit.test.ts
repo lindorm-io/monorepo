@@ -312,4 +312,124 @@ describe("AesKit", () => {
       },
     );
   });
+
+  describe("prepareEncryption()", () => {
+    let kryptos: IKryptos;
+    let aesKit: IAesKit;
+
+    beforeEach(() => {
+      kryptos = KryptosKit.generate.enc.oct({ algorithm: "A128KW" });
+      aesKit = new AesKit({ kryptos, encryption: "A128GCM" });
+    });
+
+    test("should return object with headerParams, publicEncryptionKey, and encrypt function", () => {
+      const prepared = aesKit.prepareEncryption();
+
+      expect(prepared).toEqual({
+        headerParams: expect.any(Object),
+        publicEncryptionKey: expect.any(Buffer),
+        encrypt: expect.any(Function),
+      });
+    });
+
+    test("should have headerParams as object", () => {
+      const prepared = aesKit.prepareEncryption();
+
+      expect(prepared.headerParams).toHaveProperty("publicEncryptionJwk");
+      expect(prepared.headerParams).toHaveProperty("pbkdfIterations");
+      expect(prepared.headerParams).toHaveProperty("pbkdfSalt");
+      expect(prepared.headerParams).toHaveProperty("publicEncryptionIv");
+      expect(prepared.headerParams).toHaveProperty("publicEncryptionTag");
+    });
+
+    test("should produce valid ciphertext from encrypt closure", () => {
+      const prepared = aesKit.prepareEncryption();
+      const result = prepared.encrypt("test data");
+
+      expect(result).toEqual({
+        authTag: expect.any(Buffer),
+        content: expect.any(Buffer),
+        contentType: "text/plain",
+        initialisationVector: expect.any(Buffer),
+      });
+    });
+
+    test("should round-trip with decrypt", () => {
+      const prepared = aesKit.prepareEncryption();
+      const encryptResult = prepared.encrypt("test data");
+
+      const decryptionRecord = {
+        ...encryptResult,
+        ...prepared.headerParams,
+        publicEncryptionKey: prepared.publicEncryptionKey,
+        encryption: "A128GCM" as const,
+      };
+
+      const decrypted = aesKit.decrypt(decryptionRecord);
+
+      expect(decrypted).toEqual("test data");
+    });
+
+    test("should support AAD through prepareEncryption", () => {
+      const prepared = aesKit.prepareEncryption();
+      const aad = Buffer.from("additional-authenticated-data");
+
+      const encryptResult = prepared.encrypt("test data", { aad });
+
+      const decryptionRecord = {
+        ...encryptResult,
+        ...prepared.headerParams,
+        publicEncryptionKey: prepared.publicEncryptionKey,
+        encryption: "A128GCM" as const,
+      };
+
+      const decrypted = aesKit.decrypt(decryptionRecord, { aad });
+
+      expect(decrypted).toEqual("test data");
+    });
+
+    test("should fail to decrypt without AAD when encrypted with AAD", () => {
+      const prepared = aesKit.prepareEncryption();
+      const aad = Buffer.from("additional-authenticated-data");
+
+      const encryptResult = prepared.encrypt("test data", { aad });
+
+      const decryptionRecord = {
+        ...encryptResult,
+        ...prepared.headerParams,
+        publicEncryptionKey: prepared.publicEncryptionKey,
+        encryption: "A128GCM" as const,
+      };
+
+      expect(() => aesKit.decrypt(decryptionRecord)).toThrow();
+    });
+
+    test("should work with different algorithms", () => {
+      const algorithms: Array<KryptosEncAlgorithm> = [
+        "dir",
+        "ECDH-ES",
+        "RSA-OAEP-256",
+        "PBES2-HS256+A128KW",
+      ];
+
+      algorithms.forEach((algorithm) => {
+        const k = KryptosKit.generate.auto({ algorithm });
+        const kit = new AesKit({ kryptos: k, encryption: "A256GCM" });
+        const prepared = kit.prepareEncryption();
+
+        const encryptResult = prepared.encrypt("test");
+
+        const decryptionRecord = {
+          ...encryptResult,
+          ...prepared.headerParams,
+          publicEncryptionKey: prepared.publicEncryptionKey,
+          encryption: "A256GCM" as const,
+        };
+
+        const decrypted = kit.decrypt(decryptionRecord);
+
+        expect(decrypted).toEqual("test");
+      });
+    });
+  });
 });

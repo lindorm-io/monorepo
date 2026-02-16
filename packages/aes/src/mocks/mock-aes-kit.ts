@@ -19,4 +19,14 @@ export const createMockAesKit = (): IAesKit => ({
     ),
   assert: jest.fn(),
   verify: jest.fn().mockReturnValue(true),
+  prepareEncryption: jest.fn().mockReturnValue({
+    headerParams: {},
+    publicEncryptionKey: undefined,
+    encrypt: jest.fn().mockReturnValue({
+      authTag: Buffer.alloc(16),
+      content: Buffer.alloc(0),
+      contentType: "text/plain",
+      initialisationVector: Buffer.alloc(12),
+    }),
+  }),
 });
