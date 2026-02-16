@@ -1,5 +1,5 @@
 import { Dict } from "@lindorm/types";
-import { COSE_ALGORITHM, COSE_ENCRYPTION, COSE_HEADER } from "../../../constants/private";
+import { COSE_ALGORITHM, COSE_HEADER } from "../../../constants/private";
 import { AegisError } from "../../../errors";
 import { RawTokenHeaderClaims } from "../../../types";
 import { fromBstr, toBstr } from "./bstr";
@@ -9,10 +9,6 @@ import { decodeCoseKey, mapCoseKey } from "./key";
 
 export const mapCoseHeader = (claims: RawTokenHeaderClaims): Dict => {
   const result: Dict = {};
-
-  if (claims["alg"] && claims["enc"]) {
-    throw new AegisError("COSE header cannot contain both alg and enc");
-  }
 
   for (const [key, value] of Object.entries(claims)) {
     if (!value) continue;
@@ -30,15 +26,6 @@ export const mapCoseHeader = (claims: RawTokenHeaderClaims): Dict => {
         throw new AegisError(`Unsupported COSE algorithm: ${value as any}`);
       }
       result[claim.label] = alg.label;
-      continue;
-    }
-
-    if (key === "enc") {
-      const enc = findCoseByKey(COSE_ENCRYPTION, value);
-      if (!enc) {
-        throw new AegisError(`Unsupported COSE algorithm: ${value as any}`);
-      }
-      result[claim.label] = enc.label;
       continue;
     }
 
@@ -72,14 +59,12 @@ export const decodeCoseHeader = (cose: Dict): RawTokenHeaderClaims => {
       continue;
     }
 
-    if (claim.key === "alg" || claim.key === "enc") {
+    if (claim.key === "alg") {
       const alg = findCoseByLabel(COSE_ALGORITHM, value);
-      const enc = findCoseByLabel(COSE_ENCRYPTION, value);
-      if (!alg && !enc) {
-        throw new AegisError(`Unsupported COSE algorithm/encryption: ${value}`);
+      if (!alg) {
+        throw new AegisError(`Unsupported COSE algorithm: ${value}`);
       }
-      const calc = alg ? "alg" : "enc";
-      result[calc] = alg?.key ?? enc?.key;
+      result["alg"] = alg.key;
       continue;
     }
 

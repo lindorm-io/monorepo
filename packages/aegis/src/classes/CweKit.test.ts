@@ -204,55 +204,6 @@ describe("CweKit", () => {
       });
     });
 
-    test("should decrypt data using OCT A128GCMKW", () => {
-      const kryptos = KryptosKit.generate.enc.oct({ algorithm: "A128GCMKW" });
-
-      kit = new CweKit({ logger, kryptos });
-
-      const { token } = kit.encrypt("data", {
-        objectId: "19a0c0cc-3eec-4ece-a5a1-4d93a457c3a6",
-      });
-
-      expect(kit.decrypt(token)).toEqual({
-        decoded: {
-          protected: {
-            alg: "A128GCMKW",
-            cty: "text/plain",
-            typ: "application/cose; cose-type=cose-encrypt",
-          },
-          protectedCbor: expect.any(Buffer),
-          unprotected: {
-            iv: expect.any(Buffer),
-            oid: "19a0c0cc-3eec-4ece-a5a1-4d93a457c3a6",
-          },
-          recipient: {
-            initialisationVector: expect.any(Buffer),
-            publicEncryptionKey: expect.any(Buffer),
-            unprotected: {
-              enc: "A256GCM",
-              iv: expect.any(Buffer),
-              kid: kryptos.id,
-              tag: expect.any(Buffer),
-            },
-          },
-          authTag: expect.any(Buffer),
-          content: expect.any(Buffer),
-          initialisationVector: expect.any(Buffer),
-        },
-        header: {
-          algorithm: "A128GCMKW",
-          contentType: "text/plain",
-          critical: [],
-          encryption: "A256GCM",
-          headerType: "application/cose; cose-type=cose-encrypt",
-          keyId: kryptos.id,
-          objectId: "19a0c0cc-3eec-4ece-a5a1-4d93a457c3a6",
-        },
-        payload: "data",
-        token: expect.any(String),
-      });
-    });
-
     test("should decrypt data using OKP", () => {
       kit = new CweKit({ logger, kryptos: TEST_OKP_KEY_ENC });
 
@@ -352,19 +303,13 @@ describe("CweKit", () => {
 
   describe("algorithms", () => {
     const algorithms: Array<KryptosAlgorithm> = [
-      "A128GCMKW",
       "A128KW",
-      "A192GCMKW",
       "A192KW",
-      "A256GCMKW",
       "A256KW",
       "dir",
       "ECDH-ES",
-      "ECDH-ES+A128GCMKW",
       "ECDH-ES+A128KW",
-      "ECDH-ES+A192GCMKW",
       "ECDH-ES+A192KW",
-      "ECDH-ES+A256GCMKW",
       "ECDH-ES+A256KW",
     ];
 
