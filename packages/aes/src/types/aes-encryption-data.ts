@@ -16,7 +16,7 @@ export type AesEncryptionRecord = {
   publicEncryptionJwk: PublicEncryptionJwk | undefined;
   publicEncryptionKey: Buffer | undefined;
   publicEncryptionTag: Buffer | undefined;
-  version: number;
+  version: string;
 };
 
 export type SerialisedAesEncryption = {
@@ -33,5 +33,5 @@ export type SerialisedAesEncryption = {
   publicEncryptionJwk: PublicEncryptionJwk | undefined;
   publicEncryptionKey: string | undefined;
   publicEncryptionTag: string | undefined;
-  version: number;
+  version: string;
 };

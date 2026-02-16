@@ -58,28 +58,33 @@ export class AesKit implements IAesKit {
     mode: AesEncryptionMode = "encoded",
     options?: AesOperationOptions,
   ): string | AesEncryptionRecord | SerialisedAesEncryption {
-    const encryptionOptions = {
-      aad: options?.aad,
-      data,
-      encryption: this.encryption,
-      kryptos: this.kryptos,
-    };
+    try {
+      const encryptionOptions = {
+        aad: options?.aad,
+        data,
+        encryption: this.encryption,
+        kryptos: this.kryptos,
+      };
 
-    switch (mode) {
-      case "encoded":
-        return createEncodedAesString(encryptAes(encryptionOptions));
+      switch (mode) {
+        case "encoded":
+          return createEncodedAesString(encryptAes(encryptionOptions));
 
-      case "record":
-        return encryptAes(encryptionOptions);
+        case "record":
+          return encryptAes(encryptionOptions);
 
-      case "serialised":
-        return createSerialisedAesRecord(encryptAes(encryptionOptions));
+        case "serialised":
+          return createSerialisedAesRecord(encryptAes(encryptionOptions));
 
-      case "tokenised":
-        return createTokenisedAesString(encryptAes(encryptionOptions));
+        case "tokenised":
+          return createTokenisedAesString(encryptAes(encryptionOptions));
 
-      default:
-        throw new AesError("Invalid encryption mode");
+        default:
+          throw new AesError("Invalid encryption mode");
+      }
+    } catch (error) {
+      if (error instanceof AesError) throw error;
+      throw new AesError("AES encryption failed", { error: error as Error });
     }
   }
 
@@ -87,7 +92,16 @@ export class AesKit implements IAesKit {
     data: AesDecryptionRecord | SerialisedAesDecryption | string,
     options?: AesOperationOptions,
   ): T {
-    return decryptAes<T>({ ...parseAes(data), aad: options?.aad, kryptos: this.kryptos });
+    try {
+      return decryptAes<T>({
+        ...parseAes(data),
+        aad: options?.aad,
+        kryptos: this.kryptos,
+      });
+    } catch (error) {
+      if (error instanceof AesError) throw error;
+      throw new AesError("AES decryption failed", { error: error as Error });
+    }
   }
 
   public verify(
@@ -97,7 +111,7 @@ export class AesKit implements IAesKit {
   ): boolean {
     try {
       return isEqual(input, this.decrypt(data, options));
-    } catch {
+    } catch (_error) {
       return false;
     }
   }
@@ -112,7 +126,12 @@ export class AesKit implements IAesKit {
   }
 
   public prepareEncryption(): PreparedEncryption {
-    return prepareAesEncryption({ encryption: this.encryption, kryptos: this.kryptos });
+    try {
+      return prepareAesEncryption({ encryption: this.encryption, kryptos: this.kryptos });
+    } catch (error) {
+      if (error instanceof AesError) throw error;
+      throw new AesError("AES prepare encryption failed", { error: error as Error });
+    }
   }
 
   // public static

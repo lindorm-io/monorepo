@@ -5,6 +5,7 @@ import {
   SerialisedAesDecryption,
   SerialisedAesEncryption,
 } from "../../types";
+import { validateAesVersion } from "./validate-version";
 
 export const createSerialisedAesRecord = (
   data: AesEncryptionRecord,
@@ -33,25 +34,31 @@ export const createSerialisedAesRecord = (
 
 export const parseSerialisedAesRecord = (
   options: SerialisedAesDecryption,
-): AesDecryptionRecord => ({
-  algorithm: options.algorithm,
-  authTag: options.authTag ? B64.toBuffer(options.authTag) : undefined,
-  content: B64.toBuffer(options.content),
-  contentType: options.contentType,
-  encryption: options.encryption,
-  initialisationVector: B64.toBuffer(options.initialisationVector),
-  keyId: options.keyId,
-  pbkdfIterations: options.pbkdfIterations,
-  pbkdfSalt: options.pbkdfSalt ? B64.toBuffer(options.pbkdfSalt) : undefined,
-  publicEncryptionIv: options.publicEncryptionIv
-    ? B64.toBuffer(options.publicEncryptionIv)
-    : undefined,
-  publicEncryptionJwk: options.publicEncryptionJwk,
-  publicEncryptionKey: options.publicEncryptionKey
-    ? B64.toBuffer(options.publicEncryptionKey)
-    : undefined,
-  publicEncryptionTag: options.publicEncryptionTag
-    ? B64.toBuffer(options.publicEncryptionTag)
-    : undefined,
-  version: options.version,
-});
+): AesDecryptionRecord => {
+  if (options.version !== undefined) {
+    validateAesVersion(options.version);
+  }
+
+  return {
+    algorithm: options.algorithm,
+    authTag: options.authTag ? B64.toBuffer(options.authTag) : undefined,
+    content: B64.toBuffer(options.content),
+    contentType: options.contentType,
+    encryption: options.encryption,
+    initialisationVector: B64.toBuffer(options.initialisationVector),
+    keyId: options.keyId,
+    pbkdfIterations: options.pbkdfIterations,
+    pbkdfSalt: options.pbkdfSalt ? B64.toBuffer(options.pbkdfSalt) : undefined,
+    publicEncryptionIv: options.publicEncryptionIv
+      ? B64.toBuffer(options.publicEncryptionIv)
+      : undefined,
+    publicEncryptionJwk: options.publicEncryptionJwk,
+    publicEncryptionKey: options.publicEncryptionKey
+      ? B64.toBuffer(options.publicEncryptionKey)
+      : undefined,
+    publicEncryptionTag: options.publicEncryptionTag
+      ? B64.toBuffer(options.publicEncryptionTag)
+      : undefined,
+    version: options.version,
+  };
+};
