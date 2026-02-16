@@ -56,7 +56,7 @@ describe("CweKit", () => {
       expect(kit.decrypt(token)).toEqual({
         decoded: {
           protected: {
-            alg: "ECDH-ES",
+            alg: "A256GCM",
             cty: "text/plain",
             typ: "application/cose; cose-type=cose-encrypt",
           },
@@ -69,14 +69,13 @@ describe("CweKit", () => {
             initialisationVector: undefined,
             publicEncryptionKey: null,
             unprotected: {
-              enc: "A256GCM",
+              alg: "ECDH-ES",
               epk: {
                 crv: "P-521",
                 kty: "EC",
                 x: expect.any(String),
                 y: expect.any(String),
               },
-              jku: "https://test.lindorm.io/.well-known/jwks.json",
               kid: "43bd1720-5dab-5d52-ae1e-e9dbbe6adfe4",
             },
           },
@@ -85,12 +84,10 @@ describe("CweKit", () => {
           initialisationVector: expect.any(Buffer),
         },
         header: {
-          algorithm: "ECDH-ES",
+          algorithm: "A256GCM",
           contentType: "text/plain",
           critical: [],
-          encryption: "A256GCM",
           headerType: "application/cose; cose-type=cose-encrypt",
-          jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
           keyId: "43bd1720-5dab-5d52-ae1e-e9dbbe6adfe4",
           publicEncryptionJwk: {
             crv: "P-521",
@@ -115,7 +112,7 @@ describe("CweKit", () => {
       expect(kit.decrypt(token)).toEqual({
         decoded: {
           protected: {
-            alg: "dir",
+            alg: "A256GCM",
             cty: "text/plain",
             typ: "application/cose; cose-type=cose-encrypt",
           },
@@ -128,8 +125,7 @@ describe("CweKit", () => {
             initialisationVector: undefined,
             publicEncryptionKey: null,
             unprotected: {
-              enc: "A256GCM",
-              jku: "https://test.lindorm.io/.well-known/jwks.json",
+              alg: "dir",
               kid: "ae26175f-961d-5947-8318-6299e4576b83",
             },
           },
@@ -138,12 +134,10 @@ describe("CweKit", () => {
           initialisationVector: expect.any(Buffer),
         },
         header: {
-          algorithm: "dir",
+          algorithm: "A256GCM",
           contentType: "text/plain",
           critical: [],
-          encryption: "A256GCM",
           headerType: "application/cose; cose-type=cose-encrypt",
-          jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
           keyId: "ae26175f-961d-5947-8318-6299e4576b83",
           objectId: "19a0c0cc-3eec-4ece-a5a1-4d93a457c3a6",
         },
@@ -167,7 +161,7 @@ describe("CweKit", () => {
       expect(kit.decrypt(token)).toEqual({
         decoded: {
           protected: {
-            alg: "A128KW",
+            alg: "A256GCM",
             cty: "text/plain",
             typ: "application/cose; cose-type=cose-encrypt",
           },
@@ -180,8 +174,7 @@ describe("CweKit", () => {
             initialisationVector: undefined,
             publicEncryptionKey: expect.any(Buffer),
             unprotected: {
-              enc: "A256GCM",
-              jku: "https://test.lindorm.io/.well-known/jwks.json",
+              alg: "A128KW",
               kid: kryptos.id,
             },
           },
@@ -190,12 +183,10 @@ describe("CweKit", () => {
           initialisationVector: expect.any(Buffer),
         },
         header: {
-          algorithm: "A128KW",
+          algorithm: "A256GCM",
           contentType: "text/plain",
           critical: [],
-          encryption: "A256GCM",
           headerType: "application/cose; cose-type=cose-encrypt",
-          jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
           keyId: kryptos.id,
           objectId: "19a0c0cc-3eec-4ece-a5a1-4d93a457c3a6",
         },
@@ -214,7 +205,7 @@ describe("CweKit", () => {
       expect(kit.decrypt(token)).toEqual({
         decoded: {
           protected: {
-            alg: "ECDH-ES",
+            alg: "A256GCM",
             cty: "text/plain",
             typ: "application/cose; cose-type=cose-encrypt",
           },
@@ -227,13 +218,12 @@ describe("CweKit", () => {
             initialisationVector: undefined,
             publicEncryptionKey: null,
             unprotected: {
-              enc: "A256GCM",
+              alg: "ECDH-ES",
               epk: {
                 crv: "X25519",
                 kty: "OKP",
                 x: expect.any(String),
               },
-              jku: "https://test.lindorm.io/.well-known/jwks.json",
               kid: "035f7f00-8101-5387-a935-e92f57347309",
             },
           },
@@ -242,12 +232,10 @@ describe("CweKit", () => {
           initialisationVector: expect.any(Buffer),
         },
         header: {
-          algorithm: "ECDH-ES",
+          algorithm: "A256GCM",
           contentType: "text/plain",
           critical: [],
-          encryption: "A256GCM",
           headerType: "application/cose; cose-type=cose-encrypt",
-          jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
           keyId: "035f7f00-8101-5387-a935-e92f57347309",
           objectId: "540061f3-aea2-4625-b034-c48a7a9ac114",
           publicEncryptionJwk: {
@@ -270,7 +258,7 @@ describe("CweKit", () => {
 
       expect(CweKit.decode(token)).toEqual({
         protected: {
-          alg: "ECDH-ES",
+          alg: "A256GCM",
           cty: "text/plain",
           typ: "application/cose; cose-type=cose-encrypt",
         },
@@ -283,14 +271,13 @@ describe("CweKit", () => {
           initialisationVector: undefined,
           publicEncryptionKey: null,
           unprotected: {
-            enc: "A256GCM",
+            alg: "ECDH-ES",
             epk: {
               crv: "P-521",
               kty: "EC",
               x: expect.any(String),
               y: expect.any(String),
             },
-            jku: "https://test.lindorm.io/.well-known/jwks.json",
             kid: "43bd1720-5dab-5d52-ae1e-e9dbbe6adfe4",
           },
         },

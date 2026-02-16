@@ -14,6 +14,7 @@ import {
   DecryptedCwe,
   DecryptedCweHeader,
   EncryptedCwe,
+  TokenHeaderAlgorithm,
 } from "../types";
 import {
   authTagLength,
@@ -45,9 +46,10 @@ export class CweKit implements ICweKit {
     const prepared = kit.prepareEncryption();
 
     // Step 2: Build the CBOR-encoded protected header
+    // RFC 9052: protected header alg = content encryption algorithm
     const protectedHeader = mapCoseHeader(
       mapTokenHeader({
-        algorithm: this.kryptos.algorithm,
+        algorithm: this.encryption as TokenHeaderAlgorithm,
         contentType: this.contentType(data),
         headerType: "application/cose; cose-type=cose-encrypt",
       }),
@@ -71,16 +73,12 @@ export class CweKit implements ICweKit {
 
     const ciphertext = Buffer.concat([content, authTag]);
 
+    // RFC 9052: recipient header alg = key management algorithm
     const recipientHeader = mapCoseHeader(
       mapTokenHeader({
-        encryption: this.encryption,
-        initialisationVector: prepared.headerParams.publicEncryptionIv,
-        jwksUri: this.kryptos.jwksUri ?? undefined,
+        algorithm: this.kryptos.algorithm,
         keyId: this.kryptos.id,
-        pbkdfIterations: prepared.headerParams.pbkdfIterations,
-        pbkdfSalt: prepared.headerParams.pbkdfSalt,
         publicEncryptionJwk: prepared.headerParams.publicEncryptionJwk,
-        publicEncryptionTag: prepared.headerParams.publicEncryptionTag,
       }),
     );
     const recipientPublicKey = prepared.publicEncryptionKey ?? null;
@@ -101,44 +99,42 @@ export class CweKit implements ICweKit {
 
     const decoded = CweKit.decode(token);
 
-    if (this.kryptos.algorithm !== decoded.protected.alg) {
-      throw new CoseEncryptError("Invalid token", {
+    // RFC 9052: protected alg = content encryption algorithm
+    if (this.encryption !== decoded.protected.alg) {
+      throw new CoseEncryptError("Invalid content encryption", {
         debug: {
-          expect: this.kryptos.algorithm,
+          expect: this.encryption,
           actual: decoded.protected.alg,
         },
       });
     }
 
-    if (decoded.recipient.unprotected.enc !== this.encryption) {
-      throw new CoseEncryptError("Unexpected encryption", {
+    // RFC 9052: recipient alg = key management algorithm
+    if (this.kryptos.algorithm !== decoded.recipient.unprotected.alg) {
+      throw new CoseEncryptError("Invalid key management algorithm", {
         debug: {
-          expect: this.encryption,
-          actual: decoded.recipient.unprotected.enc,
+          expect: this.kryptos.algorithm,
+          actual: decoded.recipient.unprotected.alg,
         },
       });
     }
 
     const initialisationVector = decoded.unprotected.iv;
-    const pbkdfIterations = decoded.recipient.unprotected.p2c;
-    const pbkdfSalt = decoded.recipient.unprotected.p2s;
-    const publicEncryptionIv = decoded.recipient.unprotected.iv;
     const publicEncryptionJwk = decoded.recipient.unprotected.epk;
-    const publicEncryptionTag = decoded.recipient.unprotected.tag;
     const publicEncryptionKey = decoded.recipient.publicEncryptionKey;
 
     if (!initialisationVector) {
       throw new CoseEncryptError("Missing iv");
     }
 
-    const header = parseTokenHeader<DecryptedCweHeader>({
-      ...decoded.protected,
-      enc: decoded.recipient.unprotected.enc,
+    // RFC 9052: protected alg is content encryption (KryptosEncryption), which
+    // is outside TokenHeaderAlgorithm. We cast the input/output across the boundary.
+    const header = parseTokenHeader({
+      ...(decoded.protected as any),
       epk: decoded.recipient.unprotected.epk,
-      jku: decoded.recipient.unprotected.jku,
       kid: decoded.recipient.unprotected.kid,
       oid: decoded.unprotected.oid,
-    });
+    }) as unknown as DecryptedCweHeader;
 
     // RFC 7515 Section 4.1.11: reject any critical extension params we don't understand
     if (header.critical?.length) {
@@ -150,19 +146,16 @@ export class CweKit implements ICweKit {
     // Reconstruct AAD from the CBOR-encoded protected header
     const aad = decoded.protectedCbor;
 
+    // RFC 9052: protected alg is content encryption, use it for the decryption record
     const payload = kit.decrypt<T>(
       {
         authTag: decoded.authTag,
         content: decoded.content,
         contentType: (decoded.protected.cty as AesContentType) ?? "text/plain",
-        encryption: this.encryption,
+        encryption: decoded.protected.alg,
         initialisationVector,
-        pbkdfIterations,
-        pbkdfSalt,
-        publicEncryptionIv,
         publicEncryptionJwk,
         publicEncryptionKey,
-        publicEncryptionTag,
       } satisfies AesDecryptionRecord,
       { aad },
     );
@@ -200,7 +193,8 @@ export class CweKit implements ICweKit {
     const [_, recipientHeader, publicEncryptionKey] = recipient;
     const recipientDict = decodeCoseHeader(recipientHeader);
 
-    const length = authTagLength(recipientDict.enc!);
+    // RFC 9052: content encryption algorithm is in the protected header
+    const length = authTagLength(protectedDict.alg as KryptosEncryption);
     const authTag = ciphertext.slice(-length);
     const content = ciphertext.slice(0, -length);
 

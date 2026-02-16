@@ -1,14 +1,16 @@
+import { KryptosEncryption } from "@lindorm/kryptos";
 import { RawTokenHeaderClaims, TokenHeaderClaims } from "../header";
 
+// RFC 9052: protected alg = content encryption (KryptosEncryption),
+// recipient alg = key management (TokenHeaderAlgorithm via RawTokenHeaderClaims)
 export type DecodedCwe = {
-  protected: Pick<TokenHeaderClaims, "alg" | "cty" | "typ">;
+  protected: Omit<Pick<TokenHeaderClaims, "alg" | "cty" | "typ">, "alg"> & {
+    alg: KryptosEncryption;
+  };
   protectedCbor: Buffer;
   unprotected: Pick<RawTokenHeaderClaims, "iv" | "oid">;
   recipient: {
-    unprotected: Pick<
-      RawTokenHeaderClaims,
-      "enc" | "epk" | "iv" | "jku" | "kid" | "p2c" | "p2s" | "tag"
-    >;
+    unprotected: Pick<RawTokenHeaderClaims, "alg" | "epk" | "kid">;
     initialisationVector: Buffer | undefined;
     publicEncryptionKey: Buffer | undefined;
   };
