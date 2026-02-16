@@ -19,8 +19,6 @@ export const mapTokenHeader = (options: TokenHeaderOptions): RawTokenHeaderClaim
           return "enc";
         case "headerType":
           return "typ";
-        case "hkdfSalt":
-          return "hkdf_salt";
         case "jwk":
           return "jwk";
         case "jwksUri":
@@ -60,7 +58,6 @@ export const mapTokenHeader = (options: TokenHeaderOptions): RawTokenHeaderClaim
     cty: options.contentType,
     enc: isString(options.encryption) ? options.encryption : undefined,
     epk: isObject(options.publicEncryptionJwk) ? options.publicEncryptionJwk : undefined,
-    hkdf_salt: options.hkdfSalt,
     iv: options.initialisationVector,
     jku: isUrlLike(options.jwksUri) ? options.jwksUri : undefined,
     jwk: isObject(options.jwk) ? options.jwk : undefined,
@@ -92,8 +89,6 @@ export const parseTokenHeader = <T extends ParsedTokenHeader = ParsedTokenHeader
             return "encryption";
           case "epk":
             return "publicEncryptionJwk";
-          case "hkdf_salt":
-            return "hkdfSalt";
           case "iv":
             return "initialisationVector";
           case "jku":
@@ -133,7 +128,6 @@ export const parseTokenHeader = <T extends ParsedTokenHeader = ParsedTokenHeader
     critical,
     encryption: decoded.enc,
     headerType: decoded.typ,
-    hkdfSalt: decoded.hkdf_salt,
     initialisationVector: decoded.iv,
     jwk: decoded.jwk,
     jwksUri: decoded.jku,

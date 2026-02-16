@@ -41,7 +41,6 @@ exports[`mapCoseHeader should map COSE header with alg 1`] = `
     },
     "1": 1,
   },
-  "-20": "salt",
   "1": -25,
   "16": "application/cwt",
   "2": [
@@ -286,7 +285,6 @@ exports[`mapCoseHeader should map COSE header with enc 1`] = `
     },
     "1": 1,
   },
-  "-20": "salt",
   "1": 1,
   "16": "application/cwt",
   "2": [

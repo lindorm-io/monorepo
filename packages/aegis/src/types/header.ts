@@ -13,7 +13,6 @@ export type TokenHeaderClaims = {
   cty?: string; // content type
   enc?: KryptosEncryption; // encryption
   epk?: PublicEncryptionJwk; // public encryption jwk
-  hkdf_salt?: string; // salt
   iv?: string; // public encryption iv
   jku?: string; // jwks uri
   jwk?: KryptosJwk; // jwk
@@ -35,7 +34,6 @@ export type RawTokenHeaderClaims = {
   cty?: string;
   enc?: KryptosEncryption;
   epk?: PublicEncryptionJwk;
-  hkdf_salt?: Buffer;
   iv?: Buffer;
   jku?: string;
   jwk?: KryptosJwk;
@@ -59,7 +57,6 @@ export type ParsedTokenHeader = {
   critical: Array<Exclude<keyof ParsedTokenHeader, "critical">>;
   encryption: KryptosEncryption | undefined;
   headerType: TokenHeaderType;
-  hkdfSalt: string | undefined;
   initialisationVector: string | undefined;
   jwk: KryptosJwk | undefined;
   jwksUri: string | undefined;
@@ -81,7 +78,6 @@ export type TokenHeaderOptions = {
   critical?: Array<Exclude<keyof TokenHeaderOptions, "critical">>;
   encryption?: KryptosEncryption;
   headerType?: TokenHeaderType;
-  hkdfSalt?: Buffer;
   initialisationVector?: Buffer;
   jwk?: KryptosJwk;
   jwksUri?: string;

@@ -6,7 +6,7 @@ export type DecodedCwe = {
   recipient: {
     unprotected: Pick<
       RawTokenHeaderClaims,
-      "enc" | "epk" | "hkdf_salt" | "iv" | "jku" | "kid" | "p2c" | "p2s" | "tag"
+      "enc" | "epk" | "iv" | "jku" | "kid" | "p2c" | "p2s" | "tag"
     >;
     initialisationVector: Buffer | undefined;
     publicEncryptionKey: Buffer | undefined;

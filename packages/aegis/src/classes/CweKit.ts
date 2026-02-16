@@ -44,7 +44,6 @@ export class CweKit implements ICweKit {
     const {
       authTag,
       content,
-      hkdfSalt,
       initialisationVector,
       pbkdfIterations,
       pbkdfSalt,
@@ -76,7 +75,6 @@ export class CweKit implements ICweKit {
     const recipientHeader = mapCoseHeader(
       mapTokenHeader({
         encryption: this.encryption,
-        hkdfSalt,
         initialisationVector: publicEncryptionIv,
         jwksUri: this.kryptos.jwksUri ?? undefined,
         keyId: this.kryptos.id,
@@ -122,7 +120,6 @@ export class CweKit implements ICweKit {
       });
     }
 
-    const hkdfSalt = decoded.recipient.unprotected.hkdf_salt;
     const initialisationVector = decoded.unprotected.iv;
     const pbkdfIterations = decoded.recipient.unprotected.p2c;
     const pbkdfSalt = decoded.recipient.unprotected.p2s;
@@ -149,7 +146,6 @@ export class CweKit implements ICweKit {
       content: decoded.content,
       contentType: (decoded.protected.cty as AesContentType) ?? "text/plain",
       encryption: this.encryption,
-      hkdfSalt,
       initialisationVector,
       pbkdfIterations,
       pbkdfSalt,

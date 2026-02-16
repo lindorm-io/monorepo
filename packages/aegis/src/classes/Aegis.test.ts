@@ -53,7 +53,6 @@ describe("Aegis", () => {
               kty: "OKP",
               x: expect.any(String),
             },
-            hkdf_salt: expect.any(Buffer),
             jku: "https://test.lindorm.io/.well-known/jwks.json",
             kid: "035f7f00-8101-5387-a935-e92f57347309",
           },
@@ -206,7 +205,7 @@ describe("Aegis", () => {
         content: expect.any(String),
         header: {
           alg: "ECDH-ES",
-          crit: ["alg", "enc", "epk", "hkdf_salt"],
+          crit: ["alg", "enc", "epk"],
           cty: "text/plain; charset=utf-8",
           enc: "A256GCM",
           epk: {
@@ -214,7 +213,6 @@ describe("Aegis", () => {
             kty: "OKP",
             x: expect.any(String),
           },
-          hkdf_salt: expect.any(String),
           jku: "https://test.lindorm.io/.well-known/jwks.json",
           kid: "035f7f00-8101-5387-a935-e92f57347309",
           oid: "33100373-9769-4389-94dd-1b1d738f0fc4",
@@ -226,10 +224,9 @@ describe("Aegis", () => {
       header: {
         algorithm: "ECDH-ES",
         contentType: "text/plain; charset=utf-8",
-        critical: ["algorithm", "encryption", "hkdfSalt", "publicEncryptionJwk"],
+        critical: ["algorithm", "encryption", "publicEncryptionJwk"],
         encryption: "A256GCM",
         headerType: "JWE",
-        hkdfSalt: expect.any(String),
         jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
         keyId: "035f7f00-8101-5387-a935-e92f57347309",
         objectId: "33100373-9769-4389-94dd-1b1d738f0fc4",
