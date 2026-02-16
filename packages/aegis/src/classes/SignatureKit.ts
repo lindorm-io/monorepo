@@ -3,6 +3,7 @@ import { OctKit } from "@lindorm/oct";
 import { OkpKit } from "@lindorm/okp";
 import { RsaKit } from "@lindorm/rsa";
 import { IKeyKit, KeyData } from "@lindorm/types";
+import { AegisError } from "../errors";
 import { SignatureOptions } from "../types";
 
 export class SignatureKit implements IKeyKit {
@@ -47,7 +48,7 @@ export class SignatureKit implements IKeyKit {
         return new OctKit(options);
 
       default:
-        throw new Error("Unsupported kryptos type");
+        throw new AegisError("Unsupported kryptos type");
     }
   }
 }

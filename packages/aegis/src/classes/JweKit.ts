@@ -180,8 +180,12 @@ export class JweKit implements IJweKit {
   }
 
   public static decode(jwe: string): DecodedJwe {
-    const [header, publicEncryptionKey, initialisationVector, content, authTag] =
-      jwe.split(".");
+    const parts = jwe.split(".");
+    if (parts.length !== 5) {
+      throw new JweError("Invalid JWE format: expected 5 parts");
+    }
+
+    const [header, publicEncryptionKey, initialisationVector, content, authTag] = parts;
 
     return {
       header: decodeJoseHeader(header),

@@ -11,4 +11,3 @@ export * from "./jwt-validate";
 export * from "./jwt-verify";
 export * from "./token-header";
 export * from "./validate";
-export * from "./validate-value";

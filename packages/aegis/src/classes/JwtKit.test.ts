@@ -506,7 +506,7 @@ describe("JwtKit", () => {
           audience: ["427d8455-7d5a-59d3-afb6-7ef2b5bba226"],
           authCode: options.authCode,
           authState: options.authState,
-          authTime: { $beforeOrEq: new Date("2022-01-01T08:00:00.000Z") },
+          authTime: { $lte: new Date("2022-01-01T08:00:00.000Z") },
         }),
       ).not.toThrow();
     });
