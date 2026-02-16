@@ -6,6 +6,7 @@ export * from "./jws";
 export * from "./jwt";
 
 export * from "./aegis";
+export * from "./cose-target";
 export * from "./header";
 export * from "./level-of-assurance";
 

@@ -1,16 +1,24 @@
 import { Dict } from "@lindorm/types";
 import { COSE_CLAIMS } from "../../../constants/private/cose";
-import { JwtClaims } from "../../../types";
+import { CoseTarget, JwtClaims } from "../../../types";
 import { fromBstr, toBstr } from "./bstr";
 import { findCoseByKey, findCoseByLabel } from "./find";
 
-export const mapCoseClaims = (claims: JwtClaims): Map<number | string, unknown> => {
+export const mapCoseClaims = (
+  claims: JwtClaims,
+  target: CoseTarget = "internal",
+): Map<number | string, unknown> => {
   const result = new Map<number | string, unknown>();
 
   for (const [key, value] of Object.entries(claims)) {
     const claim = findCoseByKey(COSE_CLAIMS, key);
 
     if (!claim) {
+      result.set(key, value);
+      continue;
+    }
+
+    if (target === "external" && claim.label >= 400) {
       result.set(key, value);
       continue;
     }

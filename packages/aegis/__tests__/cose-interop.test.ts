@@ -731,3 +731,255 @@ describe("COSE interop: header label mappings match RFC 9052", () => {
     },
   );
 });
+
+// ===========================================================================
+// External target mode: proprietary labels as string keys
+// ===========================================================================
+
+describe("COSE interop: external target mode", () => {
+  describe("CWS with target: external", () => {
+    test("no integer labels >= 400 in unprotected header", () => {
+      const kryptos = createEcSigKey();
+      const kit = new CwsKit({ logger, kryptos });
+
+      const { buffer } = kit.sign(PLAINTEXT, {
+        objectId: "ext-test-oid",
+        target: "external",
+      });
+
+      const decoded = cborEncoder.decode(buffer);
+      const [, unprotectedMap] = decoded;
+
+      expect(unprotectedMap).toBeInstanceOf(Map);
+
+      // No integer keys >= 400 should exist
+      for (const key of unprotectedMap.keys()) {
+        if (typeof key === "number") {
+          expect(key).toBeLessThan(400);
+        }
+      }
+
+      // oid should be present as string key with raw value (not bstr)
+      expect(unprotectedMap.get("oid")).toBe("ext-test-oid");
+    });
+
+    test("standard RFC labels still use integers", () => {
+      const kryptos = createEcSigKey();
+      const kit = new CwsKit({ logger, kryptos });
+
+      const { buffer } = kit.sign(PLAINTEXT, { target: "external" });
+
+      const decoded = cborEncoder.decode(buffer);
+      const [protectedCbor, unprotectedMap] = decoded;
+
+      // Protected header still has integer labels
+      const protectedMap: Map<number, unknown> = cborEncoder.decode(protectedCbor);
+      expect(protectedMap.get(COSE_LABEL.ALG)).toBe(COSE_ALG_LABEL["ES256"]);
+      expect(protectedMap.get(COSE_LABEL.CTY)).toBe("text/plain; charset=utf-8");
+      expect(protectedMap.get(COSE_LABEL.TYP)).toBe(
+        "application/cose; cose-type=cose-sign",
+      );
+
+      // Unprotected header: kid still uses integer label 4
+      const kidValue = unprotectedMap.get(COSE_LABEL.KID);
+      expect(kidValue).toBeDefined();
+    });
+
+    test("aegis sign (external) -> @auth0/cose decode + verify", async () => {
+      const kryptos = createEcSigKey();
+      const kit = new CwsKit({ logger, kryptos });
+
+      const { buffer } = kit.sign(PLAINTEXT, { target: "external" });
+
+      const sign1 = Sign1.decode(buffer);
+      expect(sign1.protectedHeaders.get(Headers.Algorithm)).toBe(Algorithms.ES256);
+
+      const publicKey = await getJoseKey(kryptos, "public");
+      await expect(sign1.verify(publicKey)).resolves.toBeUndefined();
+    });
+
+    test("round-trip: external CWS sign -> aegis verify", () => {
+      const kryptos = createEcSigKey();
+      const kit = new CwsKit({ logger, kryptos });
+
+      const { buffer } = kit.sign(PLAINTEXT, {
+        objectId: "roundtrip-ext",
+        target: "external",
+      });
+
+      // Decode path handles both formats
+      const result = kit.verify(buffer);
+      expect(result.payload).toBe(PLAINTEXT);
+      expect(result.header.objectId).toBe("roundtrip-ext");
+    });
+  });
+
+  describe("CWE with target: external", () => {
+    test("no integer labels >= 400 in unprotected header", () => {
+      const kryptos = createOctDirKey();
+      const kit = new CweKit({ logger, kryptos, encryption: "A256GCM" });
+
+      const { buffer } = kit.encrypt(PLAINTEXT, {
+        objectId: "cwe-ext-oid",
+        target: "external",
+      });
+
+      const decoded = cborEncoder.decode(buffer);
+      const [, unprotectedMap] = decoded;
+
+      expect(unprotectedMap).toBeInstanceOf(Map);
+
+      for (const key of unprotectedMap.keys()) {
+        if (typeof key === "number") {
+          expect(key).toBeLessThan(400);
+        }
+      }
+
+      // oid present as string key
+      expect(unprotectedMap.get("oid")).toBe("cwe-ext-oid");
+    });
+
+    test("round-trip: external CWE encrypt -> decrypt", () => {
+      const kryptos = createOctDirKey();
+      const kit = new CweKit({ logger, kryptos, encryption: "A256GCM" });
+
+      const { token } = kit.encrypt(PLAINTEXT, {
+        objectId: "cwe-ext-rt",
+        target: "external",
+      });
+
+      const result = kit.decrypt(token);
+      expect(result.payload).toBe(PLAINTEXT);
+    });
+  });
+
+  describe("CWT with target: external", () => {
+    test("no integer labels >= 400 in payload or headers", () => {
+      const kryptos = createEcSigKey();
+      const kit = new CwtKit({ issuer: ISSUER, logger, kryptos });
+
+      const { buffer } = kit.sign(
+        {
+          expires: "1h",
+          subject: SUBJECT,
+          tokenType: "access_token",
+        },
+        { target: "external" },
+      );
+
+      const decoded = cborEncoder.decode(buffer);
+      const [, unprotectedMap, payloadCbor] = decoded;
+
+      // Unprotected header: no integer keys >= 400
+      expect(unprotectedMap).toBeInstanceOf(Map);
+      for (const key of unprotectedMap.keys()) {
+        if (typeof key === "number") {
+          expect(key).toBeLessThan(400);
+        }
+      }
+
+      // Payload: no integer keys >= 400
+      const payloadMap: Map<number | string, unknown> = cborEncoder.decode(payloadCbor);
+      expect(payloadMap).toBeInstanceOf(Map);
+      for (const key of payloadMap.keys()) {
+        if (typeof key === "number") {
+          expect(key).toBeLessThan(400);
+        }
+      }
+
+      // Proprietary claims present as string keys
+      expect(payloadMap.get("token_type")).toBe("access_token");
+    });
+
+    test("standard CWT claims still use integer labels", () => {
+      const kryptos = createEcSigKey();
+      const kit = new CwtKit({ issuer: ISSUER, logger, kryptos });
+
+      const { buffer } = kit.sign(
+        {
+          expires: "1h",
+          subject: SUBJECT,
+          tokenType: "access_token",
+        },
+        { target: "external" },
+      );
+
+      const decoded = cborEncoder.decode(buffer);
+      const [protectedCbor, , payloadCbor] = decoded;
+
+      // Protected header: standard labels
+      const protectedMap: Map<number, unknown> = cborEncoder.decode(protectedCbor);
+      expect(protectedMap.get(COSE_LABEL.ALG)).toBe(COSE_ALG_LABEL["ES256"]);
+      expect(protectedMap.get(COSE_LABEL.TYP)).toBe("application/cwt");
+
+      // Payload: standard claims use integer labels
+      const payloadMap: Map<number | string, unknown> = cborEncoder.decode(payloadCbor);
+      expect(payloadMap.get(COSE_CLAIM.ISS)).toBe(ISSUER);
+      expect(typeof payloadMap.get(COSE_CLAIM.EXP)).toBe("number");
+      expect(typeof payloadMap.get(COSE_CLAIM.IAT)).toBe("number");
+    });
+
+    test("aegis CWT (external) verifiable by @auth0/cose Sign1", async () => {
+      const kryptos = createEcSigKey();
+      const kit = new CwtKit({ issuer: ISSUER, logger, kryptos });
+
+      const { buffer } = kit.sign(
+        {
+          expires: "1h",
+          subject: SUBJECT,
+          tokenType: "access_token",
+        },
+        { target: "external" },
+      );
+
+      const sign1 = Sign1.decode(buffer);
+      expect(sign1.protectedHeaders.get(Headers.Algorithm)).toBe(Algorithms.ES256);
+
+      const publicKey = await getJoseKey(kryptos, "public");
+      await expect(sign1.verify(publicKey)).resolves.toBeUndefined();
+    });
+
+    test("round-trip: external CWT sign -> aegis verify", () => {
+      const kryptos = createEcSigKey();
+      const kit = new CwtKit({ issuer: ISSUER, logger, kryptos });
+
+      const { token } = kit.sign(
+        {
+          expires: "1h",
+          subject: SUBJECT,
+          tokenType: "access_token",
+        },
+        { target: "external" },
+      );
+
+      const result = kit.verify(token);
+      expect(result.payload.issuer).toBe(ISSUER);
+      expect(result.payload.subject).toBe(SUBJECT);
+      expect(result.payload.tokenType).toBe("access_token");
+    });
+
+    test("decode of external token produces same parsed output as internal", () => {
+      const kryptos = createEcSigKey();
+      const kit = new CwtKit({ issuer: ISSUER, logger, kryptos });
+
+      const content = {
+        expires: "1h",
+        subject: SUBJECT,
+        tokenType: "access_token",
+      } as const;
+
+      const internal = kit.sign(content);
+      const external = kit.sign(content, { target: "external" });
+
+      const parsedInternal = CwtKit.parse(internal.token);
+      const parsedExternal = CwtKit.parse(external.token);
+
+      // Same parsed payload fields
+      expect(parsedExternal.payload.issuer).toBe(parsedInternal.payload.issuer);
+      expect(parsedExternal.payload.subject).toBe(parsedInternal.payload.subject);
+      expect(parsedExternal.payload.tokenType).toBe(parsedInternal.payload.tokenType);
+      expect(parsedExternal.header.algorithm).toBe(parsedInternal.header.algorithm);
+      expect(parsedExternal.header.headerType).toBe(parsedInternal.header.headerType);
+    });
+  });
+});
