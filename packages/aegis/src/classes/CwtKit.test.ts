@@ -142,7 +142,6 @@ describe("CwtKit", () => {
             typ: "application/cwt",
           },
           unprotected: {
-            jku: "https://test.lindorm.io/.well-known/jwks.json",
             kid: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
             oid: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
           },
@@ -184,7 +183,7 @@ describe("CwtKit", () => {
           critical: [],
           contentType: "application/json",
           headerType: "application/cwt",
-          jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
+
           keyId: TEST_EC_KEY_SIG.id,
           objectId: expect.any(String),
         },
@@ -241,7 +240,6 @@ describe("CwtKit", () => {
           typ: "application/cwt",
         },
         unprotected: {
-          jku: "https://test.lindorm.io/.well-known/jwks.json",
           kid: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
           oid: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
         },
@@ -301,7 +299,6 @@ describe("CwtKit", () => {
             typ: "application/cwt",
           },
           unprotected: {
-            jku: "https://test.lindorm.io/.well-known/jwks.json",
             kid: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
             oid: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
           },
@@ -343,7 +340,7 @@ describe("CwtKit", () => {
           critical: [],
           contentType: "application/json",
           headerType: "application/cwt",
-          jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
+
           keyId: TEST_EC_KEY_SIG.id,
           objectId: expect.any(String),
         },

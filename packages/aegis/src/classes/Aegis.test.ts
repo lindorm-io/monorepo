@@ -99,7 +99,6 @@ describe("Aegis", () => {
           typ: "application/cose; cose-type=cose-sign",
         },
         unprotected: {
-          jku: "https://test.lindorm.io/.well-known/jwks.json",
           kid: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
           oid: "09172fab-dbff-40ef-bb86-94d9d4ed37dc",
         },
@@ -111,7 +110,6 @@ describe("Aegis", () => {
         contentType: "text/plain; charset=utf-8",
         critical: [],
         headerType: "application/cose; cose-type=cose-sign",
-        jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
         keyId: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
         objectId: "09172fab-dbff-40ef-bb86-94d9d4ed37dc",
       },
@@ -145,7 +143,6 @@ describe("Aegis", () => {
           typ: "application/cwt",
         },
         unprotected: {
-          jku: "https://test.lindorm.io/.well-known/jwks.json",
           kid: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
           oid: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
         },
@@ -165,7 +162,6 @@ describe("Aegis", () => {
         contentType: "application/json",
         critical: [],
         headerType: "application/cwt",
-        jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
         keyId: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
         objectId: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
       },

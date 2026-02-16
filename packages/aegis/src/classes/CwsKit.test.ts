@@ -48,7 +48,6 @@ describe("CwsKit", () => {
             typ: "application/cose; cose-type=cose-sign",
           },
           unprotected: {
-            jku: "https://test.lindorm.io/.well-known/jwks.json",
             kid: "2fa52a91-7f63-5731-a55d-30d36350c642",
             oid: "ba63b8d4-500a-4646-9aac-cb45543c966d",
           },
@@ -60,7 +59,7 @@ describe("CwsKit", () => {
           contentType: "text/plain; charset=utf-8",
           critical: [],
           headerType: "application/cose; cose-type=cose-sign",
-          jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
+
           keyId: "2fa52a91-7f63-5731-a55d-30d36350c642",
           objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
         },
@@ -82,7 +81,6 @@ describe("CwsKit", () => {
             typ: "application/cose; cose-type=cose-sign",
           },
           unprotected: {
-            jku: "https://test.lindorm.io/.well-known/jwks.json",
             kid: "2fa52a91-7f63-5731-a55d-30d36350c642",
             oid: "ba63b8d4-500a-4646-9aac-cb45543c966d",
           },
@@ -94,7 +92,7 @@ describe("CwsKit", () => {
           contentType: "application/octet-stream",
           critical: [],
           headerType: "application/cose; cose-type=cose-sign",
-          jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
+
           keyId: "2fa52a91-7f63-5731-a55d-30d36350c642",
           objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
         },
@@ -117,7 +115,6 @@ describe("CwsKit", () => {
           typ: "application/cose; cose-type=cose-sign",
         },
         unprotected: {
-          jku: "https://test.lindorm.io/.well-known/jwks.json",
           kid: "2fa52a91-7f63-5731-a55d-30d36350c642",
           oid: "ba63b8d4-500a-4646-9aac-cb45543c966d",
         },
@@ -138,7 +135,6 @@ describe("CwsKit", () => {
           typ: "application/cose; cose-type=cose-sign",
         },
         unprotected: {
-          jku: "https://test.lindorm.io/.well-known/jwks.json",
           kid: "2fa52a91-7f63-5731-a55d-30d36350c642",
           oid: "ba63b8d4-500a-4646-9aac-cb45543c966d",
         },
@@ -162,7 +158,6 @@ describe("CwsKit", () => {
             typ: "application/cose; cose-type=cose-sign",
           },
           unprotected: {
-            jku: "https://test.lindorm.io/.well-known/jwks.json",
             kid: "2fa52a91-7f63-5731-a55d-30d36350c642",
             oid: "ba63b8d4-500a-4646-9aac-cb45543c966d",
           },
@@ -174,7 +169,7 @@ describe("CwsKit", () => {
           contentType: "text/plain; charset=utf-8",
           critical: [],
           headerType: "application/cose; cose-type=cose-sign",
-          jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
+
           keyId: "2fa52a91-7f63-5731-a55d-30d36350c642",
           objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
         },
@@ -196,7 +191,6 @@ describe("CwsKit", () => {
             typ: "application/cose; cose-type=cose-sign",
           },
           unprotected: {
-            jku: "https://test.lindorm.io/.well-known/jwks.json",
             kid: "2fa52a91-7f63-5731-a55d-30d36350c642",
             oid: "ba63b8d4-500a-4646-9aac-cb45543c966d",
           },
@@ -208,7 +202,7 @@ describe("CwsKit", () => {
           contentType: "application/octet-stream",
           critical: [],
           headerType: "application/cose; cose-type=cose-sign",
-          jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
+
           keyId: "2fa52a91-7f63-5731-a55d-30d36350c642",
           objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
         },
