@@ -1,6 +1,13 @@
+import { B64 } from "@lindorm/b64";
 import { KryptosAlgorithm, KryptosEncryption } from "@lindorm/kryptos";
 import { AesError } from "../../errors";
-import { AesContentType, AesEncryptionRecord, PublicEncryptionJwk } from "../../types";
+import {
+  AesContentType,
+  AesEncryptionRecord,
+  ParsedAesDecryptionRecord,
+  PublicEncryptionJwk,
+} from "../../types";
+import { validateAesVersion } from "./validate-version";
 
 export const createEncodedAesString = (data: AesEncryptionRecord): string => {
   const buffers: Buffer[] = [];
@@ -98,11 +105,11 @@ export const createEncodedAesString = (data: AesEncryptionRecord): string => {
 
   buffers.push(data.content);
 
-  return Buffer.concat(buffers).toString("base64url");
+  return B64.encode(Buffer.concat(buffers), "b64u");
 };
 
-export const parseEncodedAesString = (encoded: string): AesEncryptionRecord => {
-  const buffer = Buffer.from(encoded, "base64url");
+export const parseEncodedAesString = (encoded: string): ParsedAesDecryptionRecord => {
+  const buffer = B64.toBuffer(encoded, "b64u");
   let offset = 0;
 
   const readFieldWithLength = (): Buffer => {
@@ -167,9 +174,8 @@ export const parseEncodedAesString = (encoded: string): AesEncryptionRecord => {
   if (offset + versionLength > buffer.length) {
     throw new AesError("Encoded AES field exceeds buffer length");
   }
-  const version = parseInt(
+  const version = validateAesVersion(
     buffer.subarray(offset, offset + versionLength).toString(),
-    10,
   );
   offset += versionLength;
 

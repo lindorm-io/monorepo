@@ -28,7 +28,7 @@ describe("serialised-aes", () => {
         },
         publicEncryptionKey: Buffer.from("public-key"),
         publicEncryptionTag: Buffer.from("public-tag"),
-        version: 1,
+        version: "1.0",
       };
 
       const result = createSerialisedAesRecord(input);
@@ -52,7 +52,7 @@ describe("serialised-aes", () => {
         },
         publicEncryptionKey: B64.encode(input.publicEncryptionKey!),
         publicEncryptionTag: B64.encode(input.publicEncryptionTag!),
-        version: 1,
+        version: "1.0",
       });
     });
 
@@ -71,7 +71,7 @@ describe("serialised-aes", () => {
         publicEncryptionJwk: undefined,
         publicEncryptionKey: undefined,
         publicEncryptionTag: undefined,
-        version: 2,
+        version: "1.0",
       };
 
       const result = createSerialisedAesRecord(input);
@@ -90,7 +90,7 @@ describe("serialised-aes", () => {
         publicEncryptionJwk: undefined,
         publicEncryptionKey: undefined,
         publicEncryptionTag: undefined,
-        version: 2,
+        version: "1.0",
       });
 
       expect(result.pbkdfIterations).toBeUndefined();
@@ -117,7 +117,7 @@ describe("serialised-aes", () => {
         publicEncryptionJwk: undefined,
         publicEncryptionKey: undefined,
         publicEncryptionTag: undefined,
-        version: 1,
+        version: "1.0",
       };
 
       const result = createSerialisedAesRecord(input);
@@ -161,7 +161,7 @@ describe("serialised-aes", () => {
         },
         publicEncryptionKey: B64.encode(publicKeyBuffer),
         publicEncryptionTag: B64.encode(publicTagBuffer),
-        version: 1,
+        version: "1.0",
       };
 
       const result = parseSerialisedAesRecord(input);
@@ -191,7 +191,7 @@ describe("serialised-aes", () => {
       expect(result.publicEncryptionKey).toEqual(publicKeyBuffer);
       expect(result.publicEncryptionTag).toBeInstanceOf(Buffer);
       expect(result.publicEncryptionTag).toEqual(publicTagBuffer);
-      expect(result.version).toBe(1);
+      expect(result.version).toBe("1.0");
     });
 
     it("should handle undefined optional fields", () => {
@@ -270,7 +270,7 @@ describe("serialised-aes", () => {
         },
         publicEncryptionKey: Buffer.from("pub-key-round-trip"),
         publicEncryptionTag: Buffer.from("pub-tag-round-trip"),
-        version: 3,
+        version: "1.0",
       };
 
       const serialised = createSerialisedAesRecord(original);
@@ -307,7 +307,7 @@ describe("serialised-aes", () => {
         publicEncryptionJwk: undefined,
         publicEncryptionKey: undefined,
         publicEncryptionTag: undefined,
-        version: 1,
+        version: "1.0",
       };
 
       const serialised = createSerialisedAesRecord(original);
@@ -345,7 +345,7 @@ describe("serialised-aes", () => {
         publicEncryptionJwk: undefined,
         publicEncryptionKey: undefined,
         publicEncryptionTag: undefined,
-        version: 1,
+        version: "1.0",
       };
 
       const serialised = createSerialisedAesRecord(original);

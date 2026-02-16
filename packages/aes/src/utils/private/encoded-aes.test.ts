@@ -21,7 +21,7 @@ describe("encoded-aes", () => {
         "base64url",
       ),
       publicEncryptionTag: undefined,
-      version: 8,
+      version: "1.0",
     });
 
     expect(encoded).toEqual(expect.any(String));
@@ -32,7 +32,7 @@ describe("encoded-aes", () => {
     expect(decoded.keyId).toBe("c03b589b-124d-45eb-8376-d7f0576811ff");
     expect(decoded.encryption).toBe("A256GCM");
     expect(decoded.pbkdfIterations).toBe(95959);
-    expect(decoded.version).toBe(8);
+    expect(decoded.version).toBe("1.0");
   });
 
   test("should consistently resolve record via round-trip", () => {
@@ -53,7 +53,7 @@ describe("encoded-aes", () => {
         "base64url",
       ),
       publicEncryptionTag: undefined,
-      version: 8,
+      version: "1.0",
     };
 
     const encoded = createEncodedAesString(original);
