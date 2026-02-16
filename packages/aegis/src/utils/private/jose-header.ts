@@ -1,5 +1,4 @@
 import { B64 } from "@lindorm/b64";
-import { isBuffer } from "@lindorm/is";
 import {
   B64U,
   TOKEN_HEADER_ALGORITHMS,
@@ -25,12 +24,19 @@ export const encodeJoseHeader = (options: TokenHeaderOptions): string => {
     throw new Error("Key ID is required");
   }
 
-  const claims = mapTokenHeader(options);
+  const raw = mapTokenHeader(options);
 
-  for (const [key, value] of Object.entries(claims)) {
-    if (!isBuffer(value)) continue;
-    (claims as any)[key] = B64.encode(value, B64U);
-  }
+  // Convert Buffer fields (iv, p2s, tag) to base64url strings for JSON serialization.
+  // RawTokenHeaderClaims uses Buffer for these fields; TokenHeaderClaims uses string.
+  // alg is required in TokenHeaderClaims but optional in RawTokenHeaderClaims —
+  // we've already validated options.algorithm above so raw.alg is guaranteed to be set.
+  const claims: TokenHeaderClaims = {
+    ...raw,
+    alg: options.algorithm,
+    iv: raw.iv ? B64.encode(raw.iv, B64U) : undefined,
+    p2s: raw.p2s ? B64.encode(raw.p2s, B64U) : undefined,
+    tag: raw.tag ? B64.encode(raw.tag, B64U) : undefined,
+  };
 
   return B64.encode(JSON.stringify(claims), B64U);
 };
