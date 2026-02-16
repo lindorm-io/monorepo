@@ -36,18 +36,10 @@ export class JweKit implements IJweKit {
 
     const objectId = options.objectId ?? randomUUID();
 
-    const {
-      authTag,
-      content,
-      initialisationVector,
-      pbkdfIterations,
-      pbkdfSalt,
-      publicEncryptionIv,
-      publicEncryptionJwk,
-      publicEncryptionKey,
-      publicEncryptionTag,
-    } = kit.encrypt(data, "record");
+    // Step 1: Prepare encryption (key management only — no content encrypted yet)
+    const prepared = kit.prepareEncryption();
 
+    // Step 2: Build the protected header with key management output
     // RFC 7515 Section 4.1.11: crit MUST NOT include registered Header Parameter names.
     // All params used here (alg, enc, epk, iv, tag, p2c, p2s) are registered JOSE params.
     // Only genuinely non-standard extension params would go in critical.
@@ -61,25 +53,33 @@ export class JweKit implements IJweKit {
       ...(critical.length ? { critical } : {}),
       encryption: this.encryption,
       headerType: "JWE",
-      initialisationVector: publicEncryptionIv,
+      initialisationVector: prepared.headerParams.publicEncryptionIv,
       jwksUri: this.kryptos.jwksUri ?? undefined,
       keyId: this.kryptos.id,
       objectId,
-      pbkdfIterations,
-      pbkdfSalt,
-      publicEncryptionJwk,
-      publicEncryptionTag,
+      pbkdfIterations: prepared.headerParams.pbkdfIterations,
+      pbkdfSalt: prepared.headerParams.pbkdfSalt,
+      publicEncryptionJwk: prepared.headerParams.publicEncryptionJwk,
+      publicEncryptionTag: prepared.headerParams.publicEncryptionTag,
     };
 
+    // Step 3: Encode header as base64url
     const header = encodeJoseHeader(headerOptions);
+
+    // Step 4: Compute AAD from the encoded protected header per RFC 7516 Section 5.1 step 14
+    const aad = Buffer.from(header, "ascii");
+
+    // Step 5: Encrypt content with AAD
+    const { authTag, content, initialisationVector } = prepared.encrypt(data, { aad });
 
     if (!authTag) {
       throw new JweError("Missing auth tag");
     }
 
+    // Step 6: Assemble the JWE compact serialisation
     const token = [
       header,
-      publicEncryptionKey ? B64.encode(publicEncryptionKey, B64U) : "",
+      prepared.publicEncryptionKey ? B64.encode(prepared.publicEncryptionKey, B64U) : "",
       B64.encode(initialisationVector, B64U),
       B64.encode(content, B64U),
       B64.encode(authTag, B64U),
@@ -125,6 +125,10 @@ export class JweKit implements IJweKit {
       }
     }
 
+    // Reconstruct AAD from the encoded protected header per RFC 7516 Section 5.1 step 14
+    const [headerB64] = token.split(".");
+    const aad = Buffer.from(headerB64, "ascii");
+
     const authTag = B64.toBuffer(decoded.authTag);
     const content = B64.toBuffer(decoded.content);
     const initialisationVector = B64.toBuffer(decoded.initialisationVector);
@@ -141,18 +145,21 @@ export class JweKit implements IJweKit {
       ? B64.toBuffer(header.publicEncryptionTag)
       : undefined;
 
-    const payload = kit.decrypt({
-      authTag,
-      content,
-      encryption: this.encryption,
-      initialisationVector,
-      pbkdfIterations,
-      pbkdfSalt,
-      publicEncryptionIv,
-      publicEncryptionJwk,
-      publicEncryptionKey,
-      publicEncryptionTag,
-    });
+    const payload = kit.decrypt(
+      {
+        authTag,
+        content,
+        encryption: this.encryption,
+        initialisationVector,
+        pbkdfIterations,
+        pbkdfSalt,
+        publicEncryptionIv,
+        publicEncryptionJwk,
+        publicEncryptionKey,
+        publicEncryptionTag,
+      },
+      { aad },
+    );
 
     this.logger.debug("Token decrypted");
 
