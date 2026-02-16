@@ -45,12 +45,11 @@ export const decodeJoseHeader = (header: string): DecodedTokenHeader => {
   if (!TOKEN_HEADER_ALGORITHMS.includes(json.alg)) {
     throw new Error(`Invalid token header: alg: ${json.alg}`);
   }
-  if (!json.typ) {
-    throw new Error("Missing token header: typ");
+  // typ is OPTIONAL per RFC 7515 Section 4.1.9
+  if (json.typ !== undefined && typeof json.typ !== "string") {
+    throw new Error("Invalid token header: typ must be a string");
   }
-  if (!TOKEN_HEADER_TYPES.includes(json.typ)) {
-    throw new Error(`Invalid token header: typ: ${json.typ}`);
-  }
+  // Pass through as-is; individual Kit classes validate specific values if needed
 
   return json as DecodedTokenHeader;
 };

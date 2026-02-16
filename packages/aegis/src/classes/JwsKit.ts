@@ -119,10 +119,14 @@ export class JwsKit implements IJwsKit {
   public static parse<T extends Buffer | string>(token: string): ParsedJws<T> {
     const decoded = JwsKit.decode(token);
 
-    if (decoded.header.typ !== "JWS") {
+    if (
+      decoded.header.typ !== undefined &&
+      decoded.header.typ !== "JWS" &&
+      decoded.header.typ !== "JOSE"
+    ) {
       throw new JwsError("Invalid token", {
         data: { typ: decoded.header.typ },
-        details: "Header type must be JWS",
+        details: "Header type must be JWS, JOSE, or undefined",
       });
     }
 

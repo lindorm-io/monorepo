@@ -523,7 +523,7 @@ export class Aegis implements IAegis {
   private async kryptosSig(options: SigOptions = {}): Promise<IKryptos> {
     const query: AmphoraQuery = options.sign
       ? {
-          algorithm: this.encAlgorithm,
+          algorithm: this.sigAlgorithm,
           issuer: this.issuer ?? undefined,
           operations: ["sign"],
           ...(options.keyFilter ? { purpose: options.keyFilter.purpose } : {}),
