@@ -203,4 +203,58 @@ describe("JwsKit", () => {
       });
     });
   });
+
+  describe("critical header parameter rejection", () => {
+    test("should reject token with unknown critical parameter", () => {
+      const { token } = kit.sign("test data", {
+        objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
+      });
+
+      const decoded = JwsKit.decode(token);
+      const headerWithCrit = {
+        ...decoded.header,
+        crit: ["unknownParam"],
+      };
+
+      const parts = token.split(".");
+      const modifiedHeader = Buffer.from(JSON.stringify(headerWithCrit))
+        .toString("base64url")
+        .replace(/=/g, "");
+      const modifiedToken = [modifiedHeader, parts[1], parts[2]].join(".");
+
+      expect(() => kit.verify(modifiedToken)).toThrow(
+        "Unsupported critical header parameter: unknownParam",
+      );
+    });
+
+    test("should reject token with multiple unknown critical parameters", () => {
+      const { token } = kit.sign("test data", {
+        objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
+      });
+
+      const decoded = JwsKit.decode(token);
+      const headerWithCrit = {
+        ...decoded.header,
+        crit: ["unknownParam1", "unknownParam2"],
+      };
+
+      const parts = token.split(".");
+      const modifiedHeader = Buffer.from(JSON.stringify(headerWithCrit))
+        .toString("base64url")
+        .replace(/=/g, "");
+      const modifiedToken = [modifiedHeader, parts[1], parts[2]].join(".");
+
+      expect(() => kit.verify(modifiedToken)).toThrow(
+        "Unsupported critical header parameter: unknownParam1",
+      );
+    });
+
+    test("should accept token with empty critical array", () => {
+      const { token } = kit.sign("test data", {
+        objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
+      });
+
+      expect(() => kit.verify(token)).not.toThrow();
+    });
+  });
 });

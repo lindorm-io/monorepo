@@ -29,7 +29,7 @@ export const encodeJoseHeader = (options: TokenHeaderOptions): string => {
 
   for (const [key, value] of Object.entries(claims)) {
     if (!isBuffer(value)) continue;
-    (claims as any)[key] = B64.encode(value);
+    (claims as any)[key] = B64.encode(value, B64U);
   }
 
   return B64.encode(JSON.stringify(claims), B64U);

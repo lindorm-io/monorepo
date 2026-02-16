@@ -9,7 +9,7 @@ import {
 
 export const mapTokenHeader = (options: TokenHeaderOptions): RawTokenHeaderClaims => {
   const crit = options.critical
-    ?.map((key): Exclude<keyof RawTokenHeaderClaims, "crit"> | undefined => {
+    ?.map((key): string => {
       switch (key) {
         case "algorithm":
           return "alg";
@@ -46,11 +46,10 @@ export const mapTokenHeader = (options: TokenHeaderOptions): RawTokenHeaderClaim
         case "x5tS256":
           return "x5t#S256";
         default:
-          return undefined;
+          return key; // Pass through unknown params for rejection by the Kit class
       }
     })
-    .filter(isString)
-    .sort() as RawTokenHeaderClaims["crit"];
+    .sort();
 
   return removeUndefined({
     alg: options.algorithm,
@@ -79,7 +78,7 @@ export const parseTokenHeader = <T extends ParsedTokenHeader = ParsedTokenHeader
 ): T => {
   const critical =
     (decoded.crit
-      ?.map((key): Exclude<keyof ParsedTokenHeader, "crit"> | undefined => {
+      ?.map((key): string => {
         switch (key) {
           case "alg":
             return "algorithm";
@@ -116,10 +115,9 @@ export const parseTokenHeader = <T extends ParsedTokenHeader = ParsedTokenHeader
           case "x5t#S256":
             return "x5tS256";
           default:
-            return undefined;
+            return key; // Pass through unknown params for rejection by the Kit class
         }
       })
-      .filter(isString)
       .sort() as ParsedTokenHeader["critical"]) ?? [];
 
   return removeUndefined({

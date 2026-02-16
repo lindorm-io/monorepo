@@ -125,6 +125,13 @@ export class CwsKit implements ICwsKit {
       ...unprotectedDict,
     } as any);
 
+    // RFC 7515 Section 4.1.11: reject any critical extension params we don't understand
+    if (header.critical?.length) {
+      for (const param of header.critical) {
+        throw new CoseSignError(`Unsupported critical header parameter: ${param}`);
+      }
+    }
+
     const payload =
       header.contentType === "text/plain; charset=utf-8"
         ? (payloadBuffer.toString("utf-8") as T)

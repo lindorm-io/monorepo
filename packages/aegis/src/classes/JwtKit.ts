@@ -97,6 +97,13 @@ export class JwtKit implements IJwtKit {
 
     const parsed = JwtKit.parse<C>(token);
 
+    // RFC 7515 Section 4.1.11: reject any critical extension params we don't understand
+    if (parsed.header.critical?.length) {
+      for (const param of parsed.header.critical) {
+        throw new JwtError(`Unsupported critical header parameter: ${param}`);
+      }
+    }
+
     if (this.kryptos.algorithm !== parsed.header.algorithm) {
       throw new JwtError("Invalid token", {
         data: { algorithm: parsed.header.algorithm },

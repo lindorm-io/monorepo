@@ -76,6 +76,13 @@ export class JwsKit implements IJwsKit {
 
     const parsed = JwsKit.parse<T>(token);
 
+    // RFC 7515 Section 4.1.11: reject any critical extension params we don't understand
+    if (parsed.header.critical?.length) {
+      for (const param of parsed.header.critical) {
+        throw new JwsError(`Unsupported critical header parameter: ${param}`);
+      }
+    }
+
     if (this.kryptos.algorithm !== parsed.header.algorithm) {
       throw new JwsError("Invalid token", {
         data: { algorithm: parsed.header.algorithm },

@@ -665,4 +665,64 @@ describe("JwtKit", () => {
       });
     });
   });
+
+  describe("critical header parameter rejection", () => {
+    test("should reject token with unknown critical parameter", () => {
+      const { token } = kit.sign({
+        expires: "1h",
+        subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
+        tokenType: "test_token",
+      });
+
+      const decoded = JwtKit.decode(token);
+      const headerWithCrit = {
+        ...decoded.header,
+        crit: ["unknownParam"],
+      };
+
+      const parts = token.split(".");
+      const modifiedHeader = Buffer.from(JSON.stringify(headerWithCrit))
+        .toString("base64url")
+        .replace(/=/g, "");
+      const modifiedToken = [modifiedHeader, parts[1], parts[2]].join(".");
+
+      expect(() => kit.verify(modifiedToken)).toThrow(
+        "Unsupported critical header parameter: unknownParam",
+      );
+    });
+
+    test("should reject token with multiple unknown critical parameters", () => {
+      const { token } = kit.sign({
+        expires: "1h",
+        subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
+        tokenType: "test_token",
+      });
+
+      const decoded = JwtKit.decode(token);
+      const headerWithCrit = {
+        ...decoded.header,
+        crit: ["unknownParam1", "unknownParam2"],
+      };
+
+      const parts = token.split(".");
+      const modifiedHeader = Buffer.from(JSON.stringify(headerWithCrit))
+        .toString("base64url")
+        .replace(/=/g, "");
+      const modifiedToken = [modifiedHeader, parts[1], parts[2]].join(".");
+
+      expect(() => kit.verify(modifiedToken)).toThrow(
+        "Unsupported critical header parameter: unknownParam1",
+      );
+    });
+
+    test("should accept token with empty critical array", () => {
+      const { token } = kit.sign({
+        expires: "1h",
+        subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
+        tokenType: "test_token",
+      });
+
+      expect(() => kit.verify(token)).not.toThrow();
+    });
+  });
 });

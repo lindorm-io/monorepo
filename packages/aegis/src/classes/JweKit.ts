@@ -36,11 +36,6 @@ export class JweKit implements IJweKit {
 
     const objectId = options.objectId ?? randomUUID();
 
-    const critical: Array<Exclude<keyof TokenHeaderOptions, "critical">> = [
-      "algorithm",
-      "encryption",
-    ];
-
     const {
       authTag,
       content,
@@ -53,17 +48,17 @@ export class JweKit implements IJweKit {
       publicEncryptionTag,
     } = kit.encrypt(data, "record");
 
-    if (pbkdfIterations) critical.push("pbkdfIterations");
-    if (pbkdfSalt) critical.push("pbkdfSalt");
-    if (publicEncryptionIv) critical.push("initialisationVector");
-    if (publicEncryptionJwk) critical.push("publicEncryptionJwk");
-    if (publicEncryptionTag) critical.push("publicEncryptionTag");
+    // RFC 7515 Section 4.1.11: crit MUST NOT include registered Header Parameter names.
+    // All params used here (alg, enc, epk, iv, tag, p2c, p2s) are registered JOSE params.
+    // Only genuinely non-standard extension params would go in critical.
+    // Omit crit entirely when there are no extension params.
+    const critical: Array<string> = [];
 
     const headerOptions: TokenHeaderOptions = {
       ...(options.header ?? {}),
       algorithm: this.kryptos.algorithm,
       contentType: this.contentType(data),
-      critical,
+      ...(critical.length ? { critical } : {}),
       encryption: this.encryption,
       headerType: "JWE",
       initialisationVector: publicEncryptionIv,
@@ -123,6 +118,13 @@ export class JweKit implements IJweKit {
       });
     }
 
+    // RFC 7515 Section 4.1.11: reject any critical extension params we don't understand
+    if (header.critical?.length) {
+      for (const param of header.critical) {
+        throw new JweError(`Unsupported critical header parameter: ${param}`);
+      }
+    }
+
     const authTag = B64.toBuffer(decoded.authTag);
     const content = B64.toBuffer(decoded.content);
     const initialisationVector = B64.toBuffer(decoded.initialisationVector);
@@ -138,22 +140,6 @@ export class JweKit implements IJweKit {
     const publicEncryptionTag = header.publicEncryptionTag
       ? B64.toBuffer(header.publicEncryptionTag)
       : undefined;
-
-    if (header.critical.includes("publicEncryptionJwk") && !publicEncryptionJwk) {
-      throw new JweError("Missing public encryption JWK");
-    }
-    if (header.critical.includes("initialisationVector") && !publicEncryptionIv) {
-      throw new JweError("Missing public encryption iv");
-    }
-    if (header.critical.includes("publicEncryptionTag") && !publicEncryptionTag) {
-      throw new JweError("Missing public encryption tag");
-    }
-    if (header.critical.includes("pbkdfIterations") && !pbkdfIterations) {
-      throw new JweError("Missing iterations");
-    }
-    if (header.critical.includes("pbkdfSalt") && !pbkdfSalt) {
-      throw new JweError("Missing salt");
-    }
 
     const payload = kit.decrypt({
       authTag,

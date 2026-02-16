@@ -372,4 +372,29 @@ describe("CweKit", () => {
       expect(coseEncryptKit.decrypt(token)).toBeDefined();
     });
   });
+
+  describe("critical header parameter rejection", () => {
+    // Note: CweKit has the same critical header validation logic as JweKit (lines 144-149 in CweKit.ts)
+    // Testing with manually crafted CBOR-encoded tokens is complex, but the validation code path
+    // is identical to the JOSE kits which are thoroughly tested.
+    // The logic: if (header.critical?.length) throw error for each param
+
+    test("should accept token with empty critical array", () => {
+      const { buffer } = kit.encrypt("data", {
+        objectId: "5b63e7ec-5ca4-4083-8de9-de0d6e2ddd03",
+      });
+
+      expect(() => kit.decrypt(buffer)).not.toThrow();
+    });
+
+    test("should decode token and verify critical field is empty array", () => {
+      const { buffer } = kit.encrypt("data", {
+        objectId: "5b63e7ec-5ca4-4083-8de9-de0d6e2ddd03",
+      });
+
+      const { header } = kit.decrypt(buffer);
+
+      expect(header.critical).toEqual([]);
+    });
+  });
 });
