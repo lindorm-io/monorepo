@@ -44,7 +44,6 @@ export class JweKit implements IJweKit {
     const {
       authTag,
       content,
-      hkdfSalt,
       initialisationVector,
       pbkdfIterations,
       pbkdfSalt,
@@ -54,7 +53,6 @@ export class JweKit implements IJweKit {
       publicEncryptionTag,
     } = kit.encrypt(data, "record");
 
-    if (hkdfSalt) critical.push("hkdfSalt");
     if (pbkdfIterations) critical.push("pbkdfIterations");
     if (pbkdfSalt) critical.push("pbkdfSalt");
     if (publicEncryptionIv) critical.push("initialisationVector");
@@ -68,7 +66,6 @@ export class JweKit implements IJweKit {
       critical,
       encryption: this.encryption,
       headerType: "JWE",
-      hkdfSalt,
       initialisationVector: publicEncryptionIv,
       jwksUri: this.kryptos.jwksUri ?? undefined,
       keyId: this.kryptos.id,
@@ -128,7 +125,6 @@ export class JweKit implements IJweKit {
 
     const authTag = B64.toBuffer(decoded.authTag);
     const content = B64.toBuffer(decoded.content);
-    const hkdfSalt = header.hkdfSalt ? B64.toBuffer(header.hkdfSalt, B64U) : undefined;
     const initialisationVector = B64.toBuffer(decoded.initialisationVector);
     const pbkdfIterations = header.pbkdfIterations;
     const pbkdfSalt = header.pbkdfSalt ? B64.toBuffer(header.pbkdfSalt, B64U) : undefined;
@@ -152,9 +148,6 @@ export class JweKit implements IJweKit {
     if (header.critical.includes("publicEncryptionTag") && !publicEncryptionTag) {
       throw new JweError("Missing public encryption tag");
     }
-    if (header.critical.includes("hkdfSalt") && !hkdfSalt) {
-      throw new JweError("Missing salt");
-    }
     if (header.critical.includes("pbkdfIterations") && !pbkdfIterations) {
       throw new JweError("Missing iterations");
     }
@@ -166,7 +159,6 @@ export class JweKit implements IJweKit {
       authTag,
       content,
       encryption: this.encryption,
-      hkdfSalt,
       initialisationVector,
       pbkdfIterations,
       pbkdfSalt,

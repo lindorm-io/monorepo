@@ -16,7 +16,6 @@ describe("mapCoseHeader", () => {
         kty: "OKP",
         x: "x-coordinate",
       },
-      hkdf_salt: "salt",
       iv: "iv",
       jku: "https://example.com/jwks.json",
       jwk: {

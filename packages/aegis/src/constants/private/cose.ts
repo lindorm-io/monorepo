@@ -101,7 +101,6 @@ export const COSE_HEADER: Array<CoseItem> = [
   { key: "cty", label: 3 },
   { key: "enc", label: 1 }, // overwrites "alg"
   { key: "epk", label: -1 },
-  { key: "hkdf_salt", label: -20 }, // translated from "salt"
   { key: "iv", label: 5 },
   { key: "kid", label: 4, bstr },
   { key: "typ", label: 16 },
