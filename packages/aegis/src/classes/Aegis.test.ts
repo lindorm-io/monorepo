@@ -39,7 +39,7 @@ describe("Aegis", () => {
         content: expect.any(Buffer),
         initialisationVector: expect.any(Buffer),
         protected: {
-          alg: "ECDH-ES",
+          alg: "A256GCM",
           cty: "text/plain",
           typ: "application/cose; cose-type=cose-encrypt",
         },
@@ -48,13 +48,12 @@ describe("Aegis", () => {
           initialisationVector: undefined,
           publicEncryptionKey: null,
           unprotected: {
-            enc: "A256GCM",
+            alg: "ECDH-ES",
             epk: {
               crv: "X25519",
               kty: "OKP",
               x: expect.any(String),
             },
-            jku: "https://test.lindorm.io/.well-known/jwks.json",
             kid: "035f7f00-8101-5387-a935-e92f57347309",
           },
         },
@@ -64,12 +63,10 @@ describe("Aegis", () => {
         },
       },
       header: {
-        algorithm: "ECDH-ES",
+        algorithm: "A256GCM",
         contentType: "text/plain",
         critical: [],
-        encryption: "A256GCM",
         headerType: "application/cose; cose-type=cose-encrypt",
-        jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
         keyId: "035f7f00-8101-5387-a935-e92f57347309",
         objectId: "33100373-9769-4389-94dd-1b1d738f0fc4",
         publicEncryptionJwk: {

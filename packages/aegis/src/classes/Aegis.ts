@@ -319,9 +319,10 @@ export class Aegis implements IAegis {
   ): Promise<DecryptedCwe<T>> {
     const decode = CweKit.decode(token);
 
+    // RFC 9052: recipient alg = key management algorithm (used for Amphora key lookup)
     const kit = await this.coseEncryptKit({
       id: decode.recipient.unprotected.kid,
-      algorithm: decode.protected.alg as KryptosEncAlgorithm,
+      algorithm: decode.recipient.unprotected.alg as KryptosEncAlgorithm,
     });
 
     return kit.decrypt(token);
