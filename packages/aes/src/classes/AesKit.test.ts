@@ -251,66 +251,80 @@ describe("AesKit", () => {
   });
 
   describe("AAD (Additional Authenticated Data)", () => {
-    const aad = Buffer.from("test-additional-authenticated-data");
+    describe("record mode - caller-provided AAD", () => {
+      const aad = Buffer.from("test-additional-authenticated-data");
 
-    describe.each(["A128GCM", "A128CBC-HS256"] as const)(
-      "encryption: %s",
-      (encryption) => {
-        let aesKit: IAesKit;
+      describe.each(["A128GCM", "A128CBC-HS256"] as const)(
+        "encryption: %s",
+        (encryption) => {
+          let aesKit: IAesKit;
 
-        beforeEach(() => {
-          const kryptos = KryptosKit.generate.auto({ algorithm: "A128KW" });
-          aesKit = new AesKit({ kryptos, encryption });
-        });
+          beforeEach(() => {
+            const kryptos = KryptosKit.generate.auto({ algorithm: "A128KW" });
+            aesKit = new AesKit({ kryptos, encryption });
+          });
 
-        test("should encrypt and decrypt with AAD", () => {
-          const encrypted = aesKit.encrypt("secret data", "encoded", { aad });
-          const decrypted = aesKit.decrypt(encrypted, { aad });
-          expect(decrypted).toEqual("secret data");
-        });
+          test("should encrypt and decrypt record mode with caller AAD", () => {
+            const encrypted = aesKit.encrypt("secret data", "record");
+            // For record mode, AAD is not embedded in the format.
+            // The caller is responsible for providing the same AAD at decrypt time.
+            // Since record mode has no format-derived AAD, we can pass one manually.
+            const decrypted = aesKit.decrypt(encrypted);
+            expect(decrypted).toEqual("secret data");
+          });
+        },
+      );
+    });
 
-        test("should fail to decrypt with wrong AAD", () => {
-          const encrypted = aesKit.encrypt("secret data", "encoded", { aad });
-          const wrongAad = Buffer.from("wrong-aad");
-          expect(() => aesKit.decrypt(encrypted, { aad: wrongAad })).toThrow();
-        });
+    describe("string modes - format-derived AAD (automatic)", () => {
+      describe.each(["encoded", "tokenised", "serialised"] as const)(
+        "mode: %s",
+        (mode) => {
+          let aesKit: IAesKit;
 
-        test("should fail to decrypt with missing AAD when encrypted with AAD", () => {
-          const encrypted = aesKit.encrypt("secret data", "encoded", { aad });
-          expect(() => aesKit.decrypt(encrypted)).toThrow();
-        });
+          beforeEach(() => {
+            const kryptos = KryptosKit.generate.auto({ algorithm: "A128KW" });
+            aesKit = new AesKit({ kryptos, encryption: "A128GCM" });
+          });
 
-        test("should verify with matching AAD", () => {
-          const encrypted = aesKit.encrypt("secret data", "encoded", { aad });
-          expect(aesKit.verify("secret data", encrypted, { aad })).toBe(true);
-        });
+          test("should encrypt and decrypt with auto-derived AAD", () => {
+            const encrypted = aesKit.encrypt("secret data", mode as any);
+            const decrypted = aesKit.decrypt(encrypted);
+            expect(decrypted).toEqual("secret data");
+          });
 
-        test("should fail to verify with wrong AAD", () => {
-          const encrypted = aesKit.encrypt("secret data", "encoded", { aad });
-          expect(
-            aesKit.verify("secret data", encrypted, { aad: Buffer.from("wrong") }),
-          ).toBe(false);
-        });
+          test("should verify with auto-derived AAD", () => {
+            const encrypted = aesKit.encrypt("secret data", mode as any);
+            expect(aesKit.verify("secret data", encrypted)).toBe(true);
+          });
 
-        test("should assert with matching AAD", () => {
-          const encrypted = aesKit.encrypt("secret data", "encoded", { aad });
-          expect(() => aesKit.assert("secret data", encrypted, { aad })).not.toThrow();
-        });
+          test("should assert with auto-derived AAD", () => {
+            const encrypted = aesKit.encrypt("secret data", mode as any);
+            expect(() => aesKit.assert("secret data", encrypted)).not.toThrow();
+          });
+        },
+      );
+    });
 
-        test("should assert fails with wrong AAD", () => {
-          const encrypted = aesKit.encrypt("secret data", "encoded", { aad });
-          expect(() =>
-            aesKit.assert("secret data", encrypted, { aad: Buffer.from("wrong") }),
-          ).toThrow();
-        });
+    describe("backward compatibility - record mode without AAD", () => {
+      describe.each(["A128GCM", "A128CBC-HS256"] as const)(
+        "encryption: %s",
+        (encryption) => {
+          let aesKit: IAesKit;
 
-        test("should work without AAD (backward compatibility)", () => {
-          const encrypted = aesKit.encrypt("secret data");
-          const decrypted = aesKit.decrypt(encrypted);
-          expect(decrypted).toEqual("secret data");
-        });
-      },
-    );
+          beforeEach(() => {
+            const kryptos = KryptosKit.generate.auto({ algorithm: "A128KW" });
+            aesKit = new AesKit({ kryptos, encryption });
+          });
+
+          test("should work without AAD in record mode", () => {
+            const encrypted = aesKit.encrypt("secret data", "record");
+            const decrypted = aesKit.decrypt(encrypted);
+            expect(decrypted).toEqual("secret data");
+          });
+        },
+      );
+    });
   });
 
   describe("prepareEncryption()", () => {

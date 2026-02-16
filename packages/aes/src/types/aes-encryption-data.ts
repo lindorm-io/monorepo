@@ -20,18 +20,10 @@ export type AesEncryptionRecord = {
 };
 
 export type SerialisedAesEncryption = {
-  algorithm: KryptosAlgorithm;
-  authTag: string;
-  content: string;
-  contentType: AesContentType;
-  encryption: KryptosEncryption;
-  initialisationVector: string;
-  keyId: string;
-  pbkdfIterations: number | undefined;
-  pbkdfSalt: string | undefined;
-  publicEncryptionIv: string | undefined;
-  publicEncryptionJwk: PublicEncryptionJwk | undefined;
-  publicEncryptionKey: string | undefined;
-  publicEncryptionTag: string | undefined;
-  version: string;
+  cek: string | undefined;
+  ciphertext: string;
+  header: string;
+  iv: string;
+  tag: string;
+  v: string;
 };

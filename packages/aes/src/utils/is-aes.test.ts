@@ -3,7 +3,7 @@ import { AesDecryptionRecord, SerialisedAesDecryption } from "../types";
 
 describe("is-aes", () => {
   describe("isAesBufferData", () => {
-    it("should return true when any value is a Buffer", () => {
+    test("should return true when any value is a Buffer", () => {
       const data: AesDecryptionRecord = {
         content: Buffer.from("test"),
         encryption: "A256GCM",
@@ -13,7 +13,7 @@ describe("is-aes", () => {
       expect(isAesBufferData(data)).toBe(true);
     });
 
-    it("should return true when multiple values are Buffers", () => {
+    test("should return true when multiple values are Buffers", () => {
       const data: AesDecryptionRecord = {
         content: Buffer.from("test"),
         encryption: "A256GCM",
@@ -24,33 +24,39 @@ describe("is-aes", () => {
       expect(isAesBufferData(data)).toBe(true);
     });
 
-    it("should return false when no values are Buffers", () => {
+    test("should return false when no values are Buffers", () => {
       const data: SerialisedAesDecryption = {
-        content: "dGVzdA==",
-        encryption: "A256GCM",
-        initialisationVector: "aXY=",
+        ciphertext: "dGVzdA",
+        header: "eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIiwidiI6IjEuMCJ9",
+        iv: "aXY",
+        tag: "dGFn",
+        v: "1.0",
       };
 
       expect(isAesBufferData(data)).toBe(false);
     });
 
-    it("should return false when all values are strings", () => {
+    test("should return false when all values are strings", () => {
       const data: SerialisedAesDecryption = {
-        content: "dGVzdA==",
-        encryption: "A256GCM",
-        initialisationVector: "aXY=",
-        authTag: "dGFn",
+        cek: "Y2Vr",
+        ciphertext: "dGVzdA",
+        header: "eyJhbGciOiJkaXIifQ",
+        iv: "aXY",
+        tag: "dGFn",
+        v: "1.0",
       };
 
       expect(isAesBufferData(data)).toBe(false);
     });
 
-    it("should return false when values are undefined or other types", () => {
+    test("should return false when values are undefined or other types", () => {
       const data: SerialisedAesDecryption = {
-        content: "dGVzdA==",
-        encryption: "A256GCM",
-        initialisationVector: "aXY=",
-        authTag: undefined,
+        cek: undefined,
+        ciphertext: "dGVzdA",
+        header: "eyJhbGciOiJkaXIifQ",
+        iv: "aXY",
+        tag: "dGFn",
+        v: "1.0",
       };
 
       expect(isAesBufferData(data)).toBe(false);
@@ -58,28 +64,32 @@ describe("is-aes", () => {
   });
 
   describe("isAesSerialisedData", () => {
-    it("should return true when no values are Buffers", () => {
+    test("should return true when no values are Buffers", () => {
       const data: SerialisedAesDecryption = {
-        content: "dGVzdA==",
-        encryption: "A256GCM",
-        initialisationVector: "aXY=",
+        ciphertext: "dGVzdA",
+        header: "eyJhbGciOiJkaXIifQ",
+        iv: "aXY",
+        tag: "dGFn",
+        v: "1.0",
       };
 
       expect(isAesSerialisedData(data)).toBe(true);
     });
 
-    it("should return true when all values are strings or undefined", () => {
+    test("should return true when all values are strings or undefined", () => {
       const data: SerialisedAesDecryption = {
-        content: "dGVzdA==",
-        encryption: "A256GCM",
-        initialisationVector: "aXY=",
-        authTag: "dGFn",
+        cek: "Y2Vr",
+        ciphertext: "dGVzdA",
+        header: "eyJhbGciOiJkaXIifQ",
+        iv: "aXY",
+        tag: "dGFn",
+        v: "1.0",
       };
 
       expect(isAesSerialisedData(data)).toBe(true);
     });
 
-    it("should return false when any value is a Buffer", () => {
+    test("should return false when any value is a Buffer", () => {
       const data: AesDecryptionRecord = {
         content: Buffer.from("test"),
         encryption: "A256GCM",
@@ -89,11 +99,13 @@ describe("is-aes", () => {
       expect(isAesSerialisedData(data)).toBe(false);
     });
 
-    it("should return false when at least one value is a Buffer", () => {
+    test("should return false when at least one value is a Buffer", () => {
       const data = {
-        content: "dGVzdA==",
-        encryption: "A256GCM" as const,
-        initialisationVector: Buffer.from("iv"),
+        ciphertext: "dGVzdA",
+        header: "eyJhbGciOiJkaXIifQ",
+        iv: Buffer.from("iv"),
+        tag: "dGFn",
+        v: "1.0",
       };
 
       expect(isAesSerialisedData(data as any)).toBe(false);
@@ -101,59 +113,31 @@ describe("is-aes", () => {
   });
 
   describe("isAesTokenised", () => {
-    it("should return true for valid tokenised string", () => {
-      const validToken = "$v=1$alg=A256GCM$data$";
-
-      expect(isAesTokenised(validToken)).toBe(true);
+    test("should return true for string starting with 'aes:'", () => {
+      expect(isAesTokenised("aes:header$iv$tag$ciphertext")).toBe(true);
     });
 
-    it("should return true when string starts with $, ends with $, and contains v= and alg=", () => {
-      const validToken = "$v=2$alg=A128GCM$other=value$";
-
-      expect(isAesTokenised(validToken)).toBe(true);
+    test("should return true for any string starting with 'aes:'", () => {
+      expect(isAesTokenised("aes:something")).toBe(true);
     });
 
-    it("should return false when string does not start with $", () => {
-      const invalidToken = "v=1$alg=A256GCM$data$";
-
-      expect(isAesTokenised(invalidToken)).toBe(false);
+    test("should return false when string does not start with 'aes:'", () => {
+      expect(isAesTokenised("$v=1$alg=A256GCM$data$")).toBe(false);
     });
 
-    it("should return false when string does not end with $", () => {
-      const invalidToken = "$v=1$alg=A256GCM$data";
-
-      expect(isAesTokenised(invalidToken)).toBe(false);
-    });
-
-    it("should return false when string does not contain v=", () => {
-      const invalidToken = "$alg=A256GCM$data$";
-
-      expect(isAesTokenised(invalidToken)).toBe(false);
-    });
-
-    it("should return false when string does not contain alg=", () => {
-      const invalidToken = "$v=1$data$";
-
-      expect(isAesTokenised(invalidToken)).toBe(false);
-    });
-
-    it("should return false for empty string", () => {
+    test("should return false for empty string", () => {
       expect(isAesTokenised("")).toBe(false);
     });
 
-    it("should return false for non-string input", () => {
+    test("should return false for non-string input", () => {
       expect(isAesTokenised(null as any)).toBe(false);
       expect(isAesTokenised(undefined as any)).toBe(false);
       expect(isAesTokenised(123 as any)).toBe(false);
       expect(isAesTokenised({} as any)).toBe(false);
     });
 
-    it("should return false when string contains only $", () => {
-      expect(isAesTokenised("$")).toBe(false);
-    });
-
-    it("should return false when string is $$", () => {
-      expect(isAesTokenised("$$")).toBe(false);
+    test("should return false for base64url-encoded string (no aes: prefix)", () => {
+      expect(isAesTokenised("eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIn0")).toBe(false);
     });
   });
 });

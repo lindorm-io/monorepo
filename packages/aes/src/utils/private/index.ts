@@ -7,8 +7,12 @@ export * from "./key-types";
 export * from "./key-wrap";
 export * from "./oct";
 
+export * from "./aes-header";
 export * from "./encoded-aes";
 export * from "./encrypt-content";
+export * from "./encrypt-encoded";
+export * from "./encrypt-serialised";
+export * from "./encrypt-tokenised";
 export * from "./encryption";
 export * from "./prepare-encryption";
 export * from "./serialised-aes";

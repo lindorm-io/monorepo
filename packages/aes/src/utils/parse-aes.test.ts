@@ -33,29 +33,9 @@ describe("parseAes", () => {
     jest.clearAllMocks();
   });
 
-  describe("encoded string (non-tokenised)", () => {
-    it("should parse encoded string when input is string and not tokenised", () => {
-      const encodedString = "ATgkYzAzYjU4OWItMTI0ZC00NWViLTgzNzY=";
-      const expectedRecord: AesDecryptionRecord = {
-        content: Buffer.from("test"),
-        encryption: "A256GCM",
-        initialisationVector: Buffer.from("iv"),
-      };
-
-      mockIsAesTokenised.mockReturnValue(false);
-      mockParseEncodedAesString.mockReturnValue(expectedRecord as any);
-
-      const result = parseAes(encodedString);
-
-      expect(mockIsAesTokenised).toHaveBeenCalledWith(encodedString);
-      expect(mockParseEncodedAesString).toHaveBeenCalledWith(encodedString);
-      expect(result).toEqual(expectedRecord);
-    });
-  });
-
   describe("tokenised string", () => {
-    it("should parse tokenised string when input is string and tokenised", () => {
-      const tokenisedString = "$v=1$alg=A256GCM$data$";
+    test("should parse tokenised string when input starts with 'aes:'", () => {
+      const tokenisedString = "aes:header$iv$tag$ciphertext";
       const expectedRecord: AesDecryptionRecord = {
         content: Buffer.from("test"),
         encryption: "A256GCM",
@@ -73,8 +53,28 @@ describe("parseAes", () => {
     });
   });
 
+  describe("encoded string (non-tokenised)", () => {
+    test("should parse encoded string when input is string and not tokenised", () => {
+      const encodedString = "ATgkYzAzYjU4OWItMTI0ZC00NWViLTgzNzY";
+      const expectedRecord: AesDecryptionRecord = {
+        content: Buffer.from("test"),
+        encryption: "A256GCM",
+        initialisationVector: Buffer.from("iv"),
+      };
+
+      mockIsAesTokenised.mockReturnValue(false);
+      mockParseEncodedAesString.mockReturnValue(expectedRecord as any);
+
+      const result = parseAes(encodedString);
+
+      expect(mockIsAesTokenised).toHaveBeenCalledWith(encodedString);
+      expect(mockParseEncodedAesString).toHaveBeenCalledWith(encodedString);
+      expect(result).toEqual(expectedRecord);
+    });
+  });
+
   describe("buffer data object", () => {
-    it("should return buffer data object when input is object with buffers", () => {
+    test("should return buffer data object when input is object with buffers", () => {
       const bufferData: AesDecryptionRecord = {
         content: Buffer.from("test"),
         encryption: "A256GCM",
@@ -91,11 +91,13 @@ describe("parseAes", () => {
   });
 
   describe("serialised data object", () => {
-    it("should parse serialised data object when input is object without buffers", () => {
+    test("should parse serialised data object when input is object without buffers", () => {
       const serialisedData: SerialisedAesDecryption = {
-        content: "dGVzdA==",
-        encryption: "A256GCM",
-        initialisationVector: "aXY=",
+        ciphertext: "dGVzdA",
+        header: "eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIiwidiI6IjEuMCJ9",
+        iv: "aXY",
+        tag: "dGFn",
+        v: "1.0",
       };
       const expectedRecord: AesDecryptionRecord = {
         content: Buffer.from("test"),
@@ -117,7 +119,7 @@ describe("parseAes", () => {
   });
 
   describe("invalid data", () => {
-    it("should throw AesError when input is a number", () => {
+    test("should throw AesError when input is a number", () => {
       mockIsAesBufferData.mockReturnValue(false);
       mockIsAesSerialisedData.mockReturnValue(false);
 
@@ -125,7 +127,7 @@ describe("parseAes", () => {
       expect(() => parseAes(123 as any)).toThrow("Invalid AES data");
     });
 
-    it("should throw AesError when input is null", () => {
+    test("should throw AesError when input is null", () => {
       mockIsAesBufferData.mockReturnValue(false);
       mockIsAesSerialisedData.mockReturnValue(false);
 
@@ -133,7 +135,7 @@ describe("parseAes", () => {
       expect(() => parseAes(null as any)).toThrow("Invalid AES data");
     });
 
-    it("should throw AesError when input is undefined", () => {
+    test("should throw AesError when input is undefined", () => {
       mockIsAesBufferData.mockReturnValue(false);
       mockIsAesSerialisedData.mockReturnValue(false);
 
@@ -141,7 +143,7 @@ describe("parseAes", () => {
       expect(() => parseAes(undefined as any)).toThrow("Invalid AES data");
     });
 
-    it("should throw AesError when input is an array", () => {
+    test("should throw AesError when input is an array", () => {
       mockIsAesBufferData.mockReturnValue(false);
       mockIsAesSerialisedData.mockReturnValue(false);
 
@@ -149,7 +151,7 @@ describe("parseAes", () => {
       expect(() => parseAes([] as any)).toThrow("Invalid AES data");
     });
 
-    it("should throw AesError when input object does not match any type", () => {
+    test("should throw AesError when input object does not match any type", () => {
       const invalidObject = { foo: "bar" };
 
       mockIsAesBufferData.mockReturnValue(false);
