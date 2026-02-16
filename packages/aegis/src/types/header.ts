@@ -21,7 +21,7 @@ export type TokenHeaderClaims = {
   p2c?: number; // p2c
   p2s?: string; // p2s
   tag?: string; // public encryption tag
-  typ: TokenHeaderType; // header type
+  typ?: string; // header type (optional per RFC 7515 Section 4.1.9)
   x5c?: Array<string>;
   x5t?: string;
   x5u?: string;
@@ -56,7 +56,7 @@ export type ParsedTokenHeader = {
   contentType: string | undefined;
   critical: Array<Exclude<keyof ParsedTokenHeader, "critical">>;
   encryption: KryptosEncryption | undefined;
-  headerType: TokenHeaderType;
+  headerType: string | undefined;
   initialisationVector: string | undefined;
   jwk: KryptosJwk | undefined;
   jwksUri: string | undefined;
