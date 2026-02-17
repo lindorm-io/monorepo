@@ -11,8 +11,7 @@ import { NameData, verifyIdentifierLength } from "../utils/private";
 export class HermesSagaEventHandler<
   C extends Constructor = Constructor,
   S extends Dict = Dict,
-> implements ISagaEventHandler<C, S>
-{
+> implements ISagaEventHandler<C, S> {
   public readonly aggregate: HandlerIdentifier;
   public readonly conditions: HandlerConditions;
   public readonly event: NameData;

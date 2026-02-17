@@ -3,9 +3,9 @@ import { Dict } from "@lindorm/types";
 import { IMongoViewRepository } from "../../interfaces";
 import { ViewRepositoryAttributes } from "../../types";
 
-export class NoopMongoViewRepository<S extends Dict = Dict>
-  implements IMongoViewRepository<S>
-{
+export class NoopMongoViewRepository<
+  S extends Dict = Dict,
+> implements IMongoViewRepository<S> {
   public find(): Promise<Array<ViewRepositoryAttributes<S>>> {
     throw new LindormError("Mongo Connection not found");
   }

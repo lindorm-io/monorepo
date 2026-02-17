@@ -9,8 +9,7 @@ import {
 export class HermesSagaTimeoutHandler<
   C extends Constructor = Constructor,
   S extends Dict = Dict,
-> implements ISagaTimeoutHandler<C, S>
-{
+> implements ISagaTimeoutHandler<C, S> {
   public readonly aggregate: HandlerIdentifier;
   public readonly timeout: string;
   public readonly key: string;

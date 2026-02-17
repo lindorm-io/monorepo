@@ -19,8 +19,7 @@ import { KafkaPublisher } from "./KafkaPublisher";
 export class KafkaMessageBus<
   M extends IMessage,
   O extends DeepPartial<M> = DeepPartial<M>,
-> implements IKafkaMessageBus<M>
-{
+> implements IKafkaMessageBus<M> {
   private readonly consumers: Map<string, Consumer>;
   private readonly delayService: IKafkaDelayService;
   private readonly kafka: Kafka;

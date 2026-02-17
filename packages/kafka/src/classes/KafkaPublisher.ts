@@ -7,9 +7,10 @@ import { Producer } from "kafkajs";
 import { IKafkaDelayService, IKafkaPublisher } from "../interfaces";
 import { KafkaPublisherOptions, PublishOptions, PublishWithDelayOptions } from "../types";
 
-export class KafkaPublisher<M extends IMessage, O extends DeepPartial<M> = DeepPartial<M>>
-  implements IKafkaPublisher<M>
-{
+export class KafkaPublisher<
+  M extends IMessage,
+  O extends DeepPartial<M> = DeepPartial<M>,
+> implements IKafkaPublisher<M> {
   private readonly kit: MessageKit<M, O>;
   private readonly logger: ILogger;
   private readonly producer: Producer;

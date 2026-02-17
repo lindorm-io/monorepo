@@ -10,8 +10,7 @@ import { NameData, verifyIdentifierLength } from "../utils/private";
 export class HermesAggregateEventHandler<
   C extends Constructor = Constructor,
   S extends Dict = Dict,
-> implements IAggregateEventHandler<C, S>
-{
+> implements IAggregateEventHandler<C, S> {
   public readonly aggregate: HandlerIdentifier;
   public readonly event: NameData;
   public readonly key: string;

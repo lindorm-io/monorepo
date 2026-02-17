@@ -3,9 +3,9 @@ import { DomainError } from "../errors";
 import { IViewErrorHandler } from "../interfaces";
 import { HandlerIdentifier, ViewErrorCallback, ViewErrorHandlerOptions } from "../types";
 
-export class HermesViewErrorHandler<C extends Constructor<DomainError>>
-  implements IViewErrorHandler<C>
-{
+export class HermesViewErrorHandler<
+  C extends Constructor<DomainError>,
+> implements IViewErrorHandler<C> {
   public readonly aggregate: HandlerIdentifier;
   public readonly error: string;
   public readonly key: string;

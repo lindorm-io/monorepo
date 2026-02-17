@@ -12,8 +12,7 @@ import { NameData, verifyIdentifierLength, verifyViewIdentifier } from "../utils
 export class HermesViewEventHandler<
   C extends Constructor = Constructor,
   S extends Dict = Dict,
-> implements IViewEventHandler<C, S>
-{
+> implements IViewEventHandler<C, S> {
   public readonly aggregate: HandlerIdentifier;
   public readonly conditions: HandlerConditions;
   public readonly event: NameData;

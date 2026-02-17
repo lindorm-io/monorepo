@@ -11,8 +11,7 @@ export class HermesViewQueryHandler<
   Q extends Constructor = Constructor,
   S extends Dict = Dict,
   R = any,
-> implements IViewQueryHandler<Q, S, R>
-{
+> implements IViewQueryHandler<Q, S, R> {
   public readonly key: string;
   public readonly query: string;
   public readonly source: ViewStoreSource;

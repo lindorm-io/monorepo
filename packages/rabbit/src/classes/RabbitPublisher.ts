@@ -15,8 +15,7 @@ import { sanitizeRouteKey } from "../utils";
 export class RabbitPublisher<
   M extends IMessage,
   O extends DeepPartial<M> = DeepPartial<M>,
-> implements IRabbitPublisher<M>
-{
+> implements IRabbitPublisher<M> {
   private readonly channel: ConfirmChannel;
   private readonly exchange: string;
   private readonly kit: MessageKit<M, O>;

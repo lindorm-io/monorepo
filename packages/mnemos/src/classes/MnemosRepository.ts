@@ -18,8 +18,7 @@ const PRIMARY_SOURCE: MetaSource = "MnemosSource" as const;
 export class MnemosRepository<
   E extends IEntity = IEntity,
   O extends DeepPartial<E> = DeepPartial<E>,
-> implements IMnemosRepository<E, O>
-{
+> implements IMnemosRepository<E, O> {
   private readonly cache: IMnemosCache;
   private readonly collection: IMnemosCollection<E>;
   private readonly collectionName: string;
