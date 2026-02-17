@@ -95,7 +95,7 @@ export class Amphora implements IAmphora {
     if (this._setup) return;
     if (this._setupPromise) return this._setupPromise;
 
-    this._setupPromise = (async () => {
+    this._setupPromise = (async (): Promise<void> => {
       this.mapExternalOptions();
       await this.refresh();
       this._setup = true;
