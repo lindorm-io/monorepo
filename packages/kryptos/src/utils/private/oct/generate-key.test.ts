@@ -28,21 +28,21 @@ describe("generateOctKey", () => {
         const res = generateOctKey({ algorithm: "dir", encryption: "A128CBC-HS256" });
 
         expect(res.privateKey).toEqual(expect.any(Buffer));
-        expect(res.privateKey.length).toEqual(48);
+        expect(res.privateKey.length).toEqual(32);
       });
 
       test("should generate A192CBC-HS384", () => {
         const res = generateOctKey({ algorithm: "dir", encryption: "A192CBC-HS384" });
 
         expect(res.privateKey).toEqual(expect.any(Buffer));
-        expect(res.privateKey.length).toEqual(72);
+        expect(res.privateKey.length).toEqual(48);
       });
 
       test("should generate A256CBC-HS512", () => {
         const res = generateOctKey({ algorithm: "dir", encryption: "A256CBC-HS512" });
 
         expect(res.privateKey).toEqual(expect.any(Buffer));
-        expect(res.privateKey.length).toEqual(96);
+        expect(res.privateKey.length).toEqual(64);
       });
 
       test("should generate A128KW", () => {
