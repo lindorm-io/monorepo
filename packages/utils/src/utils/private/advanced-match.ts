@@ -195,7 +195,7 @@ const handleLogicalOperators = <T>(
             subPredicate as PredicateOperator<any>,
           );
         } else {
-          return matchesFn(objectValue, subPredicate as any);
+          return matchesFn(objectValue, subPredicate);
         }
       } else {
         return objectValue === subPredicate;
@@ -212,7 +212,7 @@ const handleLogicalOperators = <T>(
             subPredicate as PredicateOperator<any>,
           );
         } else {
-          return matchesFn(objectValue, subPredicate as any);
+          return matchesFn(objectValue, subPredicate);
         }
       } else {
         return objectValue === subPredicate;

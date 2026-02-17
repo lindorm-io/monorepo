@@ -167,13 +167,11 @@ export class Logger implements ILogger {
 
     const isLevel = typeof levelOrContext === "string";
     const level: LogLevel = isLevel ? levelOrContext : "debug";
-    const context: LogContent = isLevel
-      ? (contextOrExtra as LogContent)
-      : (levelOrContext as LogContent);
+    const context: LogContent = isLevel ? contextOrExtra : levelOrContext;
     const extraArr: Array<LogContent> = isLevel
       ? (extra ?? [])
       : isArray(contextOrExtra)
-        ? (contextOrExtra as Array<LogContent>)
+        ? contextOrExtra
         : [];
 
     this.logToWinston({
@@ -326,7 +324,7 @@ export class Logger implements ILogger {
         const item = obj[i];
         const path = prefix ? `${prefix}.${i}` : `${i}`;
         if (isArray(item) || isObject(item)) {
-          this.collectKeyMatches(item as Dict, path, matches);
+          this.collectKeyMatches(item, path, matches);
         }
       }
       return;
@@ -357,7 +355,7 @@ export class Logger implements ILogger {
       }
 
       if (isArray(value) || isObject(value)) {
-        this.collectKeyMatches(value as Dict, path, matches);
+        this.collectKeyMatches(value, path, matches);
       }
     }
   }
