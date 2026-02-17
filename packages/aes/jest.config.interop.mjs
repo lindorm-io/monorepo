@@ -18,9 +18,7 @@ export default {
       },
     ],
   },
-  transformIgnorePatterns: [
-    "node_modules/(?!(@noble/ciphers|jose)/)",
-  ],
+  transformIgnorePatterns: ["node_modules/(?!(@noble/ciphers|jose)/)"],
   collectCoverageFrom: [],
   coverageThreshold: {},
 };
