@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.5.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/kryptos@0.4.5...@lindorm/kryptos@0.5.0) (2026-02-17)
+
+### Bug Fixes
+
+- **aes:** make CBC HMAC auth tag compliant with RFC 7518 ([7877022](https://github.com/lindorm-io/monorepo/commit/7877022bebdf902ff13996b1032a991356f3760c))
+- **kryptos:** rewrite RSA modulus detection and add encryption to autoGenerateConfig ([b57a86a](https://github.com/lindorm-io/monorepo/commit/b57a86a79c7ce885c1142d1801bdd9484f17fb97))
+- **kryptos:** update CBC-HS key size test expectations ([b3614f9](https://github.com/lindorm-io/monorepo/commit/b3614f91a70e01a36132dc919d10dc8194ec81ff))
+- **lint:** resolve eslint warnings and errors ([210ef3c](https://github.com/lindorm-io/monorepo/commit/210ef3c91c82521c4cec57bc2256324ba9c3f45a))
+- resolve bugs and weaknesses in kryptos ([a078855](https://github.com/lindorm-io/monorepo/commit/a078855cdf367c84c0187416f8ed2b9d626a21a4))
+
+### Features
+
+- **kryptos:** add static mock key fixtures for all key types ([f81168b](https://github.com/lindorm-io/monorepo/commit/f81168bf975b10b472787e264c569c47c276f1c0))
+
 ## [0.4.5](https://github.com/lindorm-io/monorepo/compare/@lindorm/kryptos@0.4.4...@lindorm/kryptos@0.4.5) (2025-09-18)
 
 **Note:** Version bump only for package @lindorm/kryptos

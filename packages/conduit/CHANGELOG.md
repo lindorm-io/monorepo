@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/conduit@0.3.3...@lindorm/conduit@0.4.0) (2026-02-17)
+
+### Bug Fixes
+
+- **conduit:** add sensitive header redaction and OIDC token endpoint validation ([4c3778a](https://github.com/lindorm-io/monorepo/commit/4c3778a2f0b2a6428de8c174880b7d191cb1063b))
+- **conduit:** resolve circuit breaker and retry reliability issues ([9997e8f](https://github.com/lindorm-io/monorepo/commit/9997e8fe981d884ce0457652eb5238041a206486))
+- **conduit:** resolve critical bugs in schema validation, token caching, and request composition ([6a425f1](https://github.com/lindorm-io/monorepo/commit/6a425f19df9fc5ec46092210c343fb2e31f49d27))
+- **conduit:** resolve OAuth2 token stampede and data composition bugs ([8816da9](https://github.com/lindorm-io/monorepo/commit/8816da941b65b71775083b2365bda175a132aa32))
+
+### Features
+
+- **conduit:** add fetch engine parity with abort, streaming, progress, and network retry ([dfa0b5f](https://github.com/lindorm-io/monorepo/commit/dfa0b5fd8a080cdad5923be3dcb08d84ae327860))
+- **conduit:** add rate limiting, response caching, request deduplication, and retry hook ([fcda644](https://github.com/lindorm-io/monorepo/commit/fcda644132a4ef36139942642b1ada08279f452f))
+
 ## [0.3.3](https://github.com/lindorm-io/monorepo/compare/@lindorm/conduit@0.3.2...@lindorm/conduit@0.3.3) (2025-09-18)
 
 **Note:** Version bump only for package @lindorm/conduit

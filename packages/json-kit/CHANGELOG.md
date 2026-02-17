@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.5.4](https://github.com/lindorm-io/monorepo/compare/@lindorm/json-kit@0.5.3...@lindorm/json-kit@0.5.4) (2026-02-17)
+
+### Bug Fixes
+
+- add bigint to json-kit ([0a41cd8](https://github.com/lindorm-io/monorepo/commit/0a41cd88aef1c076b8fc3dc6545e89972c9e0a89))
+- add deserialisation to json-kit ([3de4808](https://github.com/lindorm-io/monorepo/commit/3de48080c4dce65507fb0f0328474b2871a23783))
+
 ## [0.5.3](https://github.com/lindorm-io/monorepo/compare/@lindorm/json-kit@0.5.2...@lindorm/json-kit@0.5.3) (2025-09-18)
 
 **Note:** Version bump only for package @lindorm/json-kit

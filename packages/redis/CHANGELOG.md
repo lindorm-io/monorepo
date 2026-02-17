@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.9.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/redis@0.8.1...@lindorm/redis@0.9.0) (2026-02-17)
+
+### Bug Fixes
+
+- add ping to sources ([b021dd8](https://github.com/lindorm-io/monorepo/commit/b021dd877964b117e3dfb8fbfaed12d4da1f1d5a))
+
+### Features
+
+- add relations to redis ([bf5b92f](https://github.com/lindorm-io/monorepo/commit/bf5b92f1d52df2bf361263ec720d6a46c8c057b9))
+
 ## [0.8.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/redis@0.8.0...@lindorm/redis@0.8.1) (2025-09-18)
 
 ### Bug Fixes

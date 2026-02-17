@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.5.5](https://github.com/lindorm-io/monorepo/compare/@lindorm/utils@0.5.4...@lindorm/utils@0.5.5) (2026-02-17)
+
+### Bug Fixes
+
+- **lint:** remove unnecessary type assertions ([77e30f9](https://github.com/lindorm-io/monorepo/commit/77e30f9587d53323a578ffd9e3d3ba4f401d59c3))
+- **lint:** restore type assertions needed for build ([22928e6](https://github.com/lindorm-io/monorepo/commit/22928e6a9f8ceeea8572959d0d5ee37b730344e5))
+
 ## [0.5.4](https://github.com/lindorm-io/monorepo/compare/@lindorm/utils@0.5.3...@lindorm/utils@0.5.4) (2025-09-18)
 
 ### Bug Fixes

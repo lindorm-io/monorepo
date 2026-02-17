@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.12](https://github.com/lindorm-io/monorepo/compare/@lindorm/is@0.1.11...@lindorm/is@0.1.12) (2026-02-17)
+
+### Bug Fixes
+
+- add bigint to is ([115ca45](https://github.com/lindorm-io/monorepo/commit/115ca455359cbfc48d188e44115517d0e64a4f79))
+
 ## [0.1.11](https://github.com/lindorm-io/monorepo/compare/@lindorm/is@0.1.10...@lindorm/is@0.1.11) (2025-09-18)
 
 ### Bug Fixes

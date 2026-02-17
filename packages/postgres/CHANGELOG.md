@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.8](https://github.com/lindorm-io/monorepo/compare/@lindorm/postgres@0.3.7...@lindorm/postgres@0.3.8) (2026-02-17)
+
+### Bug Fixes
+
+- add ping to sources ([b021dd8](https://github.com/lindorm-io/monorepo/commit/b021dd877964b117e3dfb8fbfaed12d4da1f1d5a))
+
 ## [0.3.7](https://github.com/lindorm-io/monorepo/compare/@lindorm/postgres@0.3.6...@lindorm/postgres@0.3.7) (2025-09-18)
 
 ### Bug Fixes

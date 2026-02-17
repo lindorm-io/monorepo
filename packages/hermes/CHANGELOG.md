@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.5](https://github.com/lindorm-io/monorepo/compare/@lindorm/hermes@0.3.4...@lindorm/hermes@0.3.5) (2026-02-17)
+
+### Bug Fixes
+
+- **hermes:** update decryptAttributes for AES v1.0 format and fix integration test race condition ([7239c46](https://github.com/lindorm-io/monorepo/commit/7239c4661a22f82b71de316b90edaa44b16ffa6f))
+
 ## [0.3.4](https://github.com/lindorm-io/monorepo/compare/@lindorm/hermes@0.3.3...@lindorm/hermes@0.3.4) (2025-09-18)
 
 ### Bug Fixes

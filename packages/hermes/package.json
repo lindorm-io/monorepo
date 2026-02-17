@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/hermes",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -26,25 +26,25 @@
     "update:auto": "ncu -u"
   },
   "dependencies": {
-    "@lindorm/aes": "^0.5.5",
-    "@lindorm/case": "^0.1.11",
-    "@lindorm/date": "^0.3.3",
-    "@lindorm/is": "^0.1.11",
-    "@lindorm/json-kit": "^0.5.3",
-    "@lindorm/kryptos": "^0.4.5",
-    "@lindorm/message": "^0.1.4",
-    "@lindorm/random": "^0.2.0",
-    "@lindorm/scanner": "^0.3.7",
-    "@lindorm/sha": "^0.2.4",
+    "@lindorm/aes": "^0.6.0",
+    "@lindorm/case": "^0.1.12",
+    "@lindorm/date": "^0.3.4",
+    "@lindorm/is": "^0.1.12",
+    "@lindorm/json-kit": "^0.5.4",
+    "@lindorm/kryptos": "^0.5.0",
+    "@lindorm/message": "^0.1.5",
+    "@lindorm/random": "^0.2.1",
+    "@lindorm/scanner": "^0.3.8",
+    "@lindorm/sha": "^0.2.5",
     "deepmerge": "^4.3.1",
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@lindorm/kafka": "^0.3.1",
-    "@lindorm/logger": "^0.3.4",
-    "@lindorm/mongo": "^0.6.7",
-    "@lindorm/postgres": "^0.3.7",
-    "@lindorm/rabbit": "^0.6.1",
-    "@lindorm/redis": "^0.8.1"
+    "@lindorm/kafka": "^0.3.2",
+    "@lindorm/logger": "^0.4.0",
+    "@lindorm/mongo": "^0.7.0",
+    "@lindorm/postgres": "^0.3.8",
+    "@lindorm/rabbit": "^0.6.2",
+    "@lindorm/redis": "^0.9.0"
   }
 }

@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.7.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/mongo@0.6.7...@lindorm/mongo@0.7.0) (2026-02-17)
+
+### Bug Fixes
+
+- add ping to sources ([b021dd8](https://github.com/lindorm-io/monorepo/commit/b021dd877964b117e3dfb8fbfaed12d4da1f1d5a))
+
+### Features
+
+- add relations to mongo ([27bb940](https://github.com/lindorm-io/monorepo/commit/27bb940bf4b3fd3a9023780789a7e639db86fa4d))
+
 ## [0.6.7](https://github.com/lindorm-io/monorepo/compare/@lindorm/mongo@0.6.6...@lindorm/mongo@0.6.7) (2025-09-18)
 
 ### Bug Fixes
