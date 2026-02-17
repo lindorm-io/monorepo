@@ -3,54 +3,127 @@ name: pull-request
 on:
   pull_request:
     types:
-      - "opened"
-      - "reopened"
-      - "synchronize"
+      - opened
+      - reopened
+      - synchronize
 
-env:
-  NODE_VERSION: 25.x
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
-  test:
-    name: Test
+  validate:
+    name: Validate
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      mongo:
+        image: mongo:8
+        ports:
+          - 27017:27017
+        env:
+          MONGO_INITDB_ROOT_USERNAME: root
+          MONGO_INITDB_ROOT_PASSWORD: example
+        options: >-
+          --health-cmd "mongosh --eval 'db.runCommand({ping:1})' --quiet"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      postgres:
+        image: postgres:17
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_USER: root
+          POSTGRES_PASSWORD: example
+          POSTGRES_DB: default
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:8
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      rabbitmq:
+        image: rabbitmq:4
+        ports:
+          - 5672:5672
+        options: >-
+          --health-cmd "rabbitmq-diagnostics -q check_running"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      zookeeper:
+        image: confluentinc/cp-zookeeper:7.8.6
+        ports:
+          - 2181:2181
+        env:
+          ZOOKEEPER_CLIENT_PORT: 2181
+          ZOOKEEPER_TICK_TIME: 2000
+        options: >-
+          --health-cmd "echo ruok | nc localhost 2181"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      kafka:
+        image: confluentinc/cp-kafka:7.8.6
+        ports:
+          - 9092:9092
+          - 29092:29092
+        env:
+          KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka:29092
+          KAFKA_BROKER_ID: 1
+          KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
+          KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+          KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_INTERNAL://0.0.0.0:29092
+          KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+          KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+          KAFKAJS_NO_PARTITIONER_WARNING: 1
+        options: >-
+          --health-cmd "kafka-broker-api-versions --bootstrap-server localhost:9092"
+          --health-interval 10s
+          --health-timeout 10s
+          --health-retries 10
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Use Node
-        uses: actions/setup-node@v3
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version: 25.x
+          cache: npm
 
-      - name: Install Dependencies
-        run: |
-          npm ci
+      - name: Install
+        run: npm ci
 
       - name: Build
-        run: |
-          npm run build
+        run: npm run build
 
       - name: Typecheck
-        run: |
-          npm run typecheck
+        run: npm run typecheck
 
       - name: Lint
-        run: |
-          npm run lint
-
-      - name: Start services
-        run: |
-          docker compose -f docker-compose.yml up -d
+        run: npm run lint
 
       - name: Test
-        run: |
-          npm run test:ci
-
-      - name: Stop services
-        if: always()
-        run: |
-          docker compose -f docker-compose.yml down -v
+        run: npm run test:ci
