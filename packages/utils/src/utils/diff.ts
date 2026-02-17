@@ -41,7 +41,7 @@ export const diffObject = <T extends Dict = Dict>(
     }
 
     if (isObject(sVal) && isObject(tVal)) {
-      const nested = diffObject(sVal, tVal, visited);
+      const nested = diffObject(sVal as any, tVal as any, visited);
       if (Object.keys(nested).length > 0) {
         patch[key] = nested as any;
       }
