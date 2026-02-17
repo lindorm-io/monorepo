@@ -1,4 +1,4 @@
-import { SerialisedAesDecryption } from "@lindorm/aes";
+import { parseAes, SerialisedAesDecryption } from "@lindorm/aes";
 import { snakeCase } from "@lindorm/case";
 import { JsonKit } from "@lindorm/json-kit";
 import { ILogger } from "@lindorm/logger";
@@ -479,15 +479,17 @@ export class AggregateDomain implements IAggregateDomain {
         continue;
       }
 
-      if (item.data.keyId !== aes.kryptos.id) {
-        this.logger.info("Encryption key mismatch", {
-          expect: item.data.keyId,
-          actual: aes.kryptos.id,
-        });
-        continue;
-      }
-
       try {
+        const parsed = parseAes(item.data as SerialisedAesDecryption);
+
+        if (parsed.keyId && parsed.keyId !== aes.kryptos.id) {
+          this.logger.info("Encryption key mismatch", {
+            expect: parsed.keyId,
+            actual: aes.kryptos.id,
+          });
+          continue;
+        }
+
         const data = JsonKit.parse(aes.decrypt(item.data as SerialisedAesDecryption));
 
         result.push({ ...item, data });
