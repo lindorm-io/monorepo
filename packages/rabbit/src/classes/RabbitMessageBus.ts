@@ -20,8 +20,7 @@ import { RabbitPublisher } from "./RabbitPublisher";
 export class RabbitMessageBus<
   M extends IMessage,
   O extends DeepPartial<M> = DeepPartial<M>,
-> implements IRabbitMessageBus<M>
-{
+> implements IRabbitMessageBus<M> {
   private readonly channel: ConfirmChannel;
   private readonly deadletters: string;
   private readonly exchange: string;

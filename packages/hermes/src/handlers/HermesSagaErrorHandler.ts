@@ -3,9 +3,9 @@ import { DomainError } from "../errors";
 import { ISagaErrorHandler } from "../interfaces";
 import { HandlerIdentifier, SagaErrorCallback, SagaErrorHandlerOptions } from "../types";
 
-export class HermesSagaErrorHandler<C extends Constructor<DomainError>>
-  implements ISagaErrorHandler<C>
-{
+export class HermesSagaErrorHandler<
+  C extends Constructor<DomainError>,
+> implements ISagaErrorHandler<C> {
   public readonly aggregate: HandlerIdentifier;
   public readonly error: string;
   public readonly saga: HandlerIdentifier;

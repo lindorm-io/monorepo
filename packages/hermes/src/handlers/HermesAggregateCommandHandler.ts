@@ -12,8 +12,7 @@ import { verifyIdentifierLength } from "../utils/private";
 export class HermesAggregateCommandHandler<
   C extends Constructor = Constructor,
   S extends Dict = Dict,
-> implements IAggregateCommandHandler<C, S>
-{
+> implements IAggregateCommandHandler<C, S> {
   public readonly aggregate: HandlerIdentifier;
   public readonly command: string;
   public readonly conditions: HandlerConditions;

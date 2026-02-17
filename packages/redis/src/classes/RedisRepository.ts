@@ -21,9 +21,10 @@ import { deserializeHash, serializeHash } from "../utils/private";
 
 const PRIMARY_SOURCE: MetaSource = "RedisSource" as const;
 
-export class RedisRepository<E extends IEntity, O extends DeepPartial<E> = DeepPartial<E>>
-  implements IRedisRepository<E, O>
-{
+export class RedisRepository<
+  E extends IEntity,
+  O extends DeepPartial<E> = DeepPartial<E>,
+> implements IRedisRepository<E, O> {
   private readonly client: Redis;
   private readonly collectionName: string;
   private readonly incrementName: string;

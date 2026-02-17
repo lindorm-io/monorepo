@@ -20,8 +20,7 @@ import { RedisPublisher } from "./RedisPublisher";
 export class RedisMessageBus<
   M extends IMessage,
   O extends DeepPartial<M> = DeepPartial<M>,
-> implements IRedisMessageBus<M, O>
-{
+> implements IRedisMessageBus<M, O> {
   private readonly client: Redis;
   private readonly kit: MessageKit<M, O>;
   private readonly logger: ILogger;

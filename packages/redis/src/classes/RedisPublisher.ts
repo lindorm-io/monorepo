@@ -7,9 +7,10 @@ import { Redis } from "ioredis";
 import { IRedisPublisher } from "../interfaces/RedisPublisher";
 import { PublishOptions, RedisPublisherOptions } from "../types";
 
-export class RedisPublisher<M extends IMessage, O extends DeepPartial<M> = DeepPartial<M>>
-  implements IRedisPublisher<M, O>
-{
+export class RedisPublisher<
+  M extends IMessage,
+  O extends DeepPartial<M> = DeepPartial<M>,
+> implements IRedisPublisher<M, O> {
   private readonly client: Redis;
   private readonly kit: MessageKit<M, O>;
   private readonly logger: ILogger;

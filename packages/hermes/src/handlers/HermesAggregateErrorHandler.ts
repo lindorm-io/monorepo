@@ -7,9 +7,9 @@ import {
   HandlerIdentifier,
 } from "../types";
 
-export class HermesAggregateErrorHandler<C extends Constructor<DomainError>>
-  implements IAggregateErrorHandler<C>
-{
+export class HermesAggregateErrorHandler<
+  C extends Constructor<DomainError>,
+> implements IAggregateErrorHandler<C> {
   public readonly aggregate: HandlerIdentifier;
   public readonly error: string;
   public readonly key: string;
