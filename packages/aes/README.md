@@ -9,9 +9,10 @@ a compact token.
 It includes:
 
 - `AesKit` — encrypt / decrypt / verify / assert in four output formats
-- **28 algorithm × encryption combinations** out of the box (EC, OKP, RSA, oct)
+- **28 algorithm x encryption combinations** out of the box (EC, OKP, RSA, oct)
 - JWE-aligned key derivation: ECDH-ES, AES-KW, AES-GCM-KW, PBKDF2, RSA-OAEP
 - Automatic content-type detection (string, Buffer, object, array, number)
+- Unified header model with always-on AAD across all formats
 - Static helpers for format detection and parsing
 
 ---
@@ -53,13 +54,13 @@ const encoded = aes.encrypt("secret");
 // Record — object with raw Buffer values
 const record = aes.encrypt("secret", "record");
 
-// Serialised — object with base64 strings (JSON-safe)
+// Serialised — JWE-like object with base64url strings (JSON-safe)
 const serialised = aes.encrypt("secret", "serialised");
 const json = JSON.stringify(serialised);
 
 // Tokenised — human-readable $-delimited string
 const token = aes.encrypt("secret", "tokenised");
-// "$A256GCM$v=11,kid=...,alg=A256KW,cty=text/plain,iv=...,tag=...$<content>$"
+// "aes:<base64url(header)>$<iv>$<tag>$<ciphertext>"
 ```
 
 All four formats are accepted by `decrypt`, `verify`, and `assert`:
@@ -98,10 +99,14 @@ aes.assert("wrong", cipher); // throws AesError("Invalid AES cipher")
 
 ### Additional Authenticated Data (AAD)
 
+All formats automatically compute AAD from the base64url-encoded header,
+ensuring metadata integrity. For the raw record format you can also supply
+custom AAD:
+
 ```ts
 const aad = Buffer.from("request-id:abc-123");
 
-const cipher = aes.encrypt("payload", "encoded", { aad });
+const cipher = aes.encrypt("payload", "record", { aad });
 
 aes.decrypt(cipher, { aad }); // "payload"
 aes.decrypt(cipher); // throws — AAD mismatch
@@ -163,12 +168,12 @@ const aes = new AesKit({ kryptos: imported, encryption: "A128GCM" });
 
 Encrypts data and returns one of four formats depending on `mode`:
 
-| Mode                  | Return type               | Description                            |
-| --------------------- | ------------------------- | -------------------------------------- |
-| `"encoded"` (default) | `string`                  | Base64url-encoded binary blob          |
-| `"record"`            | `AesEncryptionRecord`     | Object with raw `Buffer` values        |
-| `"serialised"`        | `SerialisedAesEncryption` | Object with base64 strings — JSON-safe |
-| `"tokenised"`         | `string`                  | `$`-delimited human-readable token     |
+| Mode                  | Return type               | Description                               |
+| --------------------- | ------------------------- | ----------------------------------------- |
+| `"encoded"` (default) | `string`                  | Base64url-encoded binary blob             |
+| `"record"`            | `AesEncryptionRecord`     | Object with raw `Buffer` values           |
+| `"serialised"`        | `SerialisedAesEncryption` | Object with base64url strings (JSON-safe) |
+| `"tokenised"`         | `string`                  | `$`-delimited human-readable token        |
 
 ```ts
 encrypt(data: AesContent, mode?: "encoded", options?: AesOperationOptions): string;
@@ -217,6 +222,19 @@ assert(
 ): void;
 ```
 
+### `aes.prepareEncryption()`
+
+Two-step JWE-compliant encryption. Returns key management parameters and an
+`encrypt()` closure that can be called later with the plaintext.
+
+```ts
+const prepared = aes.prepareEncryption();
+
+// prepared.headerParams — key exchange / PBKDF2 params for the header
+// prepared.publicEncryptionKey — wrapped CEK (if applicable)
+// prepared.encrypt(data, { aad? }) — encrypts with the pre-derived key
+```
+
 ### Static methods
 
 ```ts
@@ -226,7 +244,7 @@ AesKit.contentType(Buffer.from("")); // "application/octet-stream"
 AesKit.contentType({ a: 1 }); // "application/json"
 
 // Check if a string is in tokenised format
-AesKit.isAesTokenised("$A256GCM$v=11,alg=...$...$"); // true
+AesKit.isAesTokenised("aes:eyJhbGci...$...$...$..."); // true
 AesKit.isAesTokenised("base64string"); // false
 
 // Parse any format into an AesDecryptionRecord (Buffer values)
@@ -237,36 +255,72 @@ const record3 = AesKit.parse(serialisedObject);
 
 ---
 
-## Output formats
+## Format version 1.0
+
+All output formats share a **unified header model** — a JSON object containing
+the algorithm, encryption, content type, key ID, version, and any key-exchange
+parameters. The header is base64url-encoded and used as AAD for authenticated
+encryption, binding the metadata to the ciphertext.
+
+### Header structure
+
+```ts
+type AesHeader = {
+  alg: KryptosAlgorithm; // key management algorithm
+  cty: AesContentType; // content type
+  enc: KryptosEncryption; // content encryption
+  epk?: PublicEncryptionJwk; // ephemeral public key (ECDH)
+  iv?: string; // public encryption IV (base64url, GCMKW)
+  kid: string; // key ID
+  p2c?: number; // PBKDF2 iterations
+  p2s?: string; // PBKDF2 salt (base64url)
+  tag?: string; // public encryption tag (base64url, GCMKW)
+  v: string; // format version ("1.0")
+};
+```
 
 ### Encoded
 
-A single base64url string containing version, metadata, and ciphertext in a
-compact binary layout. Best for storage and transmission where a single opaque
-string is ideal.
+A single base64url string wrapping a binary layout:
 
-### Record
+```
+[2B header length][header JSON][2B CEK length][CEK][IV][Tag][Ciphertext]
+```
 
-A plain object with raw `Buffer` values for all binary fields (`authTag`,
-`content`, `initialisationVector`, etc.). Useful when you need programmatic
-access to individual encryption components.
+IV and tag sizes are derived from the encryption algorithm (e.g. 12B IV + 16B
+tag for GCM).
 
 ### Serialised
 
-Same structure as record, but all `Buffer` fields are base64-encoded strings.
-Safe for `JSON.stringify` / `JSON.parse` round-trips.
+A JSON-safe object with base64url-encoded fields:
+
+```ts
+{
+  header: string;       // base64url(JSON(header))
+  cek?: string;         // base64url — undefined for dir/ECDH-ES
+  iv: string;           // base64url
+  tag: string;          // base64url
+  ciphertext: string;   // base64url
+  v: string;            // "1.0"
+}
+```
 
 ### Tokenised
 
 A human-readable `$`-delimited string:
 
 ```
-$<encryption>$<key=value pairs>$<base64url content>$
+aes:<header>$[<cek>$]<iv>$<tag>$<ciphertext>
 ```
 
-Metadata fields: `v` (version), `kid` (key ID), `alg` (algorithm),
-`cty` (content type), `iv`, `tag`, and optional `p2c`, `p2s`, `pei`, `pek`,
-`pet`, `crv`, `kty`, `x`, `y` for key exchange parameters.
+All segments are base64url-encoded. The CEK segment is present for key-wrap
+algorithms and omitted for `dir` and `ECDH-ES`.
+
+### Record
+
+A plain object with raw `Buffer` values for all binary fields (`authTag`,
+`content`, `initialisationVector`, etc.). Useful when you need programmatic
+access to individual encryption components.
 
 ---
 
@@ -308,20 +362,32 @@ type AesEncryptionRecord = {
   publicEncryptionJwk: PublicEncryptionJwk | undefined;
   publicEncryptionKey: Buffer | undefined;
   publicEncryptionTag: Buffer | undefined;
-  version: number;
+  version: string;
 };
 ```
 
-### Serialised record
+### Serialised encryption
 
-Same shape as `AesEncryptionRecord`, but all `Buffer` fields are `string`
-(base64-encoded).
+```ts
+type SerialisedAesEncryption = {
+  cek: string | undefined;
+  ciphertext: string;
+  header: string;
+  iv: string;
+  tag: string;
+  v: string;
+};
+```
 
 ### Decryption records
 
-`AesDecryptionRecord` and `SerialisedAesDecryption` mirror their encryption
-counterparts, with most fields optional — only `content`, `encryption`, and
-`initialisationVector` are required.
+`AesDecryptionRecord` mirrors `AesEncryptionRecord` with most fields optional —
+only `content`, `encryption`, and `initialisationVector` are required.
+
+`SerialisedAesDecryption` mirrors `SerialisedAesEncryption` with `cek` optional.
+
+`ParsedAesDecryptionRecord` is a stricter variant returned by parsers where all
+parsed fields are guaranteed non-optional.
 
 ---
 
@@ -341,10 +407,10 @@ isAesBufferData(data); // data is AesDecryptionRecord
 // Type guard — record with string values
 isAesSerialisedData(data); // data is SerialisedAesDecryption
 
-// Format check — tokenised string
+// Format check — tokenised string (starts with "aes:")
 isAesTokenised(str); // boolean
 
-// Parse any format → AesDecryptionRecord
+// Parse any format into AesDecryptionRecord
 const record = parseAes(anyEncryptedData);
 ```
 
