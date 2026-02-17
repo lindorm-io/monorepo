@@ -19,7 +19,7 @@
     "example:jwks": "ts-node example/jwks",
     "example:socket": "ts-node example/socket",
     "prettier": "prettier --write ./src/*",
-    "test": "compd --file docker-compose.yml jest --runInBand --",
+    "test": "compd --file docker-compose.yml jest --detectOpenHandles --runInBand --",
     "test:ci": "jest --runInBand",
     "test:watch": "compd --file docker-compose.yml jest --runInBand --watch --",
     "typecheck": "tsc",
