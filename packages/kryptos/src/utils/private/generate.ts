@@ -1,6 +1,13 @@
 import { Optional } from "@lindorm/types";
 import { KryptosError } from "../../errors";
-import { EcBuffer, KryptosAlgorithm, OctBuffer, OkpBuffer, RsaBuffer } from "../../types";
+import {
+  EcBuffer,
+  KryptosAlgorithm,
+  OctBuffer,
+  OkpBuffer,
+  RsaBuffer,
+  RsaModulus,
+} from "../../types";
 import { KryptosGenerate } from "../../types/private";
 import { generateEcKey, generateEcKeyAsync } from "./ec";
 import { generateOctKey, generateOctKeyAsync } from "./oct";
@@ -11,7 +18,7 @@ type GenerateResult =
   | Omit<EcBuffer, "id" | "algorithm" | "type" | "use">
   | Omit<OctBuffer, "id" | "algorithm" | "type" | "use">
   | Omit<OkpBuffer, "id" | "algorithm" | "type" | "use">
-  | Omit<RsaBuffer, "id" | "algorithm" | "type" | "use">;
+  | (Omit<RsaBuffer, "id" | "algorithm" | "type" | "use"> & { modulus: RsaModulus });
 
 export const generateKey = (options: KryptosGenerate): GenerateResult => {
   switch (options.type) {
@@ -69,6 +76,7 @@ export const autoGenerateConfig = (algorithm: KryptosAlgorithm): AutoResult => {
     case "PBES2-HS512+A256KW":
       return {
         algorithm,
+        encryption: "A256GCM",
         type: "oct",
         use: "enc",
       };

@@ -3,65 +3,69 @@ import { RsaBuffer, RsaModulus } from "../../../types";
 
 type Options = Omit<RsaBuffer, "id" | "algorithm" | "type" | "use">;
 
-// DER-encoded RSA key sizes (in bytes) by modulus length.
-// Private key sizes vary slightly due to ASN.1 integer encoding
-// (leading zero bytes are added/omitted based on the high bit).
-// Public key sizes are fixed for a given modulus length.
-const SIZES = [
-  {
-    private: { min: 606, max: 611 },
-    public: { min: 140, max: 140 },
-    modulus: 1024,
-  },
-  {
-    private: { min: 1188, max: 1193 },
-    public: { min: 270, max: 270 },
-    modulus: 2048,
-  },
-  {
-    private: { min: 1765, max: 1769 },
-    public: { min: 398, max: 398 },
-    modulus: 3072,
-  },
-  {
-    private: { min: 2345, max: 2350 },
-    public: { min: 526, max: 526 },
-    modulus: 4096,
-  },
-] as const;
+const VALID_MODULUS = new Set<number>([1024, 2048, 3072, 4096]);
+
+// Read ASN.1 TLV header: returns tag, content length, and header byte count
+const readAsn1 = (
+  buf: Buffer,
+  offset: number,
+): { tag: number; length: number; headerSize: number } => {
+  const tag = buf[offset];
+  const first = buf[offset + 1];
+
+  if (first < 0x80) {
+    return { tag, length: first, headerSize: 2 };
+  }
+
+  const numBytes = first & 0x7f;
+  let length = 0;
+  for (let i = 0; i < numBytes; i++) {
+    length = (length << 8) | buf[offset + 2 + i];
+  }
+  return { tag, length, headerSize: 2 + numBytes };
+};
+
+// Extract modulus bit length from PKCS#1 DER-encoded RSA key.
+// Private: SEQUENCE { INTEGER(version), INTEGER(modulus), ... }
+// Public:  SEQUENCE { INTEGER(modulus), INTEGER(exponent) }
+const extractModulusBits = (der: Buffer, isPrivate: boolean): number => {
+  let offset = 0;
+
+  // Outer SEQUENCE
+  const seq = readAsn1(der, offset);
+  offset += seq.headerSize;
+
+  // Private keys have a version INTEGER first — skip it
+  if (isPrivate) {
+    const version = readAsn1(der, offset);
+    offset += version.headerSize + version.length;
+  }
+
+  // Modulus INTEGER
+  const modulus = readAsn1(der, offset);
+  offset += modulus.headerSize;
+
+  // ASN.1 integers may have a leading 0x00 for sign padding
+  let modulusBytes = modulus.length;
+  if (der[offset] === 0x00) {
+    modulusBytes -= 1;
+  }
+
+  return modulusBytes * 8;
+};
 
 export const modulusSize = (options: Options): RsaModulus => {
   if (!options.privateKey && !options.publicKey) {
     throw new KryptosError("Missing RSA key");
   }
 
-  const privateLength = options.privateKey?.length;
-  const privateSize = privateLength
-    ? SIZES.find(
-        (size) => size.private.min <= privateLength && size.private.max >= privateLength,
-      )
-    : undefined;
+  const bits = options.privateKey
+    ? extractModulusBits(options.privateKey, true)
+    : extractModulusBits(options.publicKey, false);
 
-  if (privateLength && !privateSize) {
-    throw new KryptosError("Invalid RSA private key length");
+  if (!VALID_MODULUS.has(bits)) {
+    throw new KryptosError(`Unsupported RSA modulus size: ${bits}`);
   }
 
-  const publicLength = options.publicKey?.length;
-  const publicSize = publicLength
-    ? SIZES.find(
-        (size) => size.public.min <= publicLength && size.public.max >= publicLength,
-      )
-    : undefined;
-
-  if (publicLength && !publicSize) {
-    throw new KryptosError("Invalid RSA public key length");
-  }
-
-  const size = privateSize ?? publicSize;
-
-  if (!size) {
-    throw new KryptosError("Invalid RSA key length");
-  }
-
-  return size.modulus;
+  return bits as RsaModulus;
 };

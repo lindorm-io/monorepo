@@ -1,6 +1,6 @@
 import { generateKeyPair, generateKeyPairSync } from "crypto";
 import { promisify } from "util";
-import { KryptosAlgorithm } from "../../../types";
+import { KryptosAlgorithm, RsaModulus } from "../../../types";
 import { getRsaModulus } from "./get-modulus";
 
 const generateKeyPairAsync = promisify(generateKeyPair);
@@ -12,28 +12,29 @@ type Options = {
 type Result = {
   privateKey: Buffer;
   publicKey: Buffer;
+  modulus: RsaModulus;
 };
 
 export const generateRsaKey = (options: Options): Result => {
-  const modulusLength = getRsaModulus(options);
+  const modulus = getRsaModulus(options);
 
   const { privateKey, publicKey } = generateKeyPairSync("rsa", {
-    modulusLength,
+    modulusLength: modulus,
     publicKeyEncoding: { format: "der", type: "pkcs1" },
     privateKeyEncoding: { format: "der", type: "pkcs1" },
   });
 
-  return { privateKey, publicKey };
+  return { privateKey, publicKey, modulus };
 };
 
 export const generateRsaKeyAsync = async (options: Options): Promise<Result> => {
-  const modulusLength = getRsaModulus(options);
+  const modulus = getRsaModulus(options);
 
   const { privateKey, publicKey } = await generateKeyPairAsync("rsa", {
-    modulusLength,
+    modulusLength: modulus,
     publicKeyEncoding: { format: "der", type: "pkcs1" },
     privateKeyEncoding: { format: "der", type: "pkcs1" },
   });
 
-  return { privateKey: privateKey, publicKey: publicKey };
+  return { privateKey, publicKey, modulus };
 };
