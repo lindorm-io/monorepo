@@ -19,7 +19,9 @@ export default {
       },
     ],
   },
-  transformIgnorePatterns: ["node_modules/(?!(jose|@auth0/cose|cbor-x|@jfromaniello/typedmap|cbor|nofilter)/)"],
+  transformIgnorePatterns: [
+    "node_modules/(?!(jose|@auth0/cose|cbor-x|@jfromaniello/typedmap|cbor|nofilter)/)",
+  ],
   collectCoverageFrom: [],
   coverageThreshold: {},
 };
