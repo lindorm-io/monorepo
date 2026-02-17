@@ -3,6 +3,32 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.6.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/aes@0.5.5...@lindorm/aes@0.6.0) (2026-02-17)
+
+### Bug Fixes
+
+- **aes:** add buffer boundary validation in encoded string parser ([579e8f7](https://github.com/lindorm-io/monorepo/commit/579e8f7eb40570f978cd52d1f87f7f8570474d6d))
+- **aes:** add GCM auth tag enforcement and key-wrap input validation ([1a8fd3c](https://github.com/lindorm-io/monorepo/commit/1a8fd3cb6f83cf59a3089a777fba4c8b7f1828fb))
+- **aes:** add missing @lindorm/utils dependency ([6d0ee2a](https://github.com/lindorm-io/monorepo/commit/6d0ee2ae68f91fb9eb04529c96e05ff1d843dfd0))
+- **aes:** make CBC HMAC auth tag compliant with RFC 7518 ([7877022](https://github.com/lindorm-io/monorepo/commit/7877022bebdf902ff13996b1032a991356f3760c))
+- **aes:** make PBES2 salt compliant with RFC 7518 ([2693afa](https://github.com/lindorm-io/monorepo/commit/2693afa88db535aeaff7fd5537885dd3a45bc09a))
+- **aes:** make verify/assert work with non-string content ([aa94c66](https://github.com/lindorm-io/monorepo/commit/aa94c66511326f70fdfc0245ce12953025aa4236))
+- **aes:** remove unnecessary g flag from tokenised regex ([5a989b1](https://github.com/lindorm-io/monorepo/commit/5a989b1d96b025b3180339294e8ea072d215c7d3))
+- **aes:** replace generic Error with AesError in all locations ([ff7a08d](https://github.com/lindorm-io/monorepo/commit/ff7a08d55e9b39755e059e31e99fb45b687bdde2))
+- **aes:** use Concat KDF per RFC 7518 for ECDH-ES key agreement ([8e92b8f](https://github.com/lindorm-io/monorepo/commit/8e92b8f60ee46c99f0c66af244fd1e7648130a9c))
+- **aes:** use crypto.randomInt for PBKDF2 iterations, fix RSA test fixture ([a5457aa](https://github.com/lindorm-io/monorepo/commit/a5457aa5973e4eab662dbc6e62c9470f7d6fabf2))
+- **aes:** use oct keys directly for AES key wrap per RFC 7518 ([c65ca49](https://github.com/lindorm-io/monorepo/commit/c65ca49d758f21e868e96512a96fc8df0559947e))
+- **aes:** use timingSafeEqual for ECB key unwrap integrity check ([dd27a65](https://github.com/lindorm-io/monorepo/commit/dd27a65c84eed068d6e9e5de34d0eaca6cda67fc))
+- **aes:** use timingSafeEqual for HMAC auth tag verification ([757bef5](https://github.com/lindorm-io/monorepo/commit/757bef5657a6d1366c222c9205a8f4cfe563e77d))
+- **lint:** add missing eslint-config-prettier and fix prettier formatting ([6899e39](https://github.com/lindorm-io/monorepo/commit/6899e39ad7700e373173b0a61b429b5536c13934))
+- **lint:** resolve eslint warnings and errors ([210ef3c](https://github.com/lindorm-io/monorepo/commit/210ef3c91c82521c4cec57bc2256324ba9c3f45a))
+
+### Features
+
+- **aes:** accept optional AAD parameter for authenticated encryption ([011b67f](https://github.com/lindorm-io/monorepo/commit/011b67fb8ba18a361e2c31fd0e78298a89f89cd2))
+- **aes:** add prepareEncryption() for two-step JWE-compliant encryption ([56b3c54](https://github.com/lindorm-io/monorepo/commit/56b3c5435722b2b94f05d6483c7651ccdd5ea9dd))
+- **aes:** rewrite formats with unified model and always-on AAD ([bc1da71](https://github.com/lindorm-io/monorepo/commit/bc1da719d5ee5ee151d9220e6e738a9431e036b6))
+
 ## [0.5.5](https://github.com/lindorm-io/monorepo/compare/@lindorm/aes@0.5.4...@lindorm/aes@0.5.5) (2025-09-18)
 
 **Note:** Version bump only for package @lindorm/aes

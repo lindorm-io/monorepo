@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/okp",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -26,11 +26,11 @@
     "update:auto": "ncu -u"
   },
   "dependencies": {
-    "@lindorm/errors": "^0.1.12",
-    "@lindorm/is": "^0.1.11",
-    "@lindorm/kryptos": "^0.4.5"
+    "@lindorm/errors": "^0.1.13",
+    "@lindorm/is": "^0.1.12",
+    "@lindorm/kryptos": "^0.5.0"
   },
   "devDependencies": {
-    "@lindorm/types": "^0.3.3"
+    "@lindorm/types": "^0.3.4"
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/conduit",
-  "version": "0.3.3",
+  "version": "0.4.0",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -26,19 +26,19 @@
     "update:auto": "ncu -u"
   },
   "dependencies": {
-    "@lindorm/case": "^0.1.11",
-    "@lindorm/enums": "^0.1.5",
-    "@lindorm/errors": "^0.1.12",
-    "@lindorm/is": "^0.1.11",
-    "@lindorm/middleware": "^0.1.5",
-    "@lindorm/retry": "^0.1.9",
-    "@lindorm/url": "^0.1.11",
+    "@lindorm/case": "^0.1.12",
+    "@lindorm/enums": "^0.1.6",
+    "@lindorm/errors": "^0.1.13",
+    "@lindorm/is": "^0.1.12",
+    "@lindorm/middleware": "^0.1.6",
+    "@lindorm/retry": "^0.1.10",
+    "@lindorm/url": "^0.1.12",
     "uuid": "^10.0.0",
     "zod": "^3.25.23"
   },
   "devDependencies": {
-    "@lindorm/logger": "^0.3.4",
-    "@lindorm/types": "^0.3.3",
+    "@lindorm/logger": "^0.4.0",
+    "@lindorm/types": "^0.3.4",
     "@types/uuid": "^10.0.0",
     "form-data": "^4.0.0"
   },

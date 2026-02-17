@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.3.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/entity@0.2.6...@lindorm/entity@0.3.0) (2026-02-17)
+
+### Bug Fixes
+
+- add separator option to name generation ([cda64c5](https://github.com/lindorm-io/monorepo/commit/cda64c5d17f2bcf9b31a6f2852799b3dd18a125b))
+
+### Features
+
+- add functioning relations to entity ([3861595](https://github.com/lindorm-io/monorepo/commit/386159590842146e9d576ef1c5aea4a6530edab5))
+
 ## [0.2.6](https://github.com/lindorm-io/monorepo/compare/@lindorm/entity@0.2.5...@lindorm/entity@0.2.6) (2025-09-18)
 
 **Note:** Version bump only for package @lindorm/entity

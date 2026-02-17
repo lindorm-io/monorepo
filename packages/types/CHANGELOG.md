@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.4](https://github.com/lindorm-io/monorepo/compare/@lindorm/types@0.3.3...@lindorm/types@0.3.4) (2026-02-17)
+
+### Bug Fixes
+
+- **aes:** make CBC HMAC auth tag compliant with RFC 7518 ([7877022](https://github.com/lindorm-io/monorepo/commit/7877022bebdf902ff13996b1032a991356f3760c))
+
 ## [0.3.3](https://github.com/lindorm-io/monorepo/compare/@lindorm/types@0.3.2...@lindorm/types@0.3.3) (2025-09-18)
 
 ### Bug Fixes

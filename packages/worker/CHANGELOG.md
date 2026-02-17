@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.7](https://github.com/lindorm-io/monorepo/compare/@lindorm/worker@0.2.6...@lindorm/worker@0.2.7) (2026-02-17)
+
+### Bug Fixes
+
+- **lint:** resolve eslint warnings and errors ([210ef3c](https://github.com/lindorm-io/monorepo/commit/210ef3c91c82521c4cec57bc2256324ba9c3f45a))
+
 ## [0.2.6](https://github.com/lindorm-io/monorepo/compare/@lindorm/worker@0.2.5...@lindorm/worker@0.2.6) (2025-09-18)
 
 **Note:** Version bump only for package @lindorm/worker

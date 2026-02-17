@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.6](https://github.com/lindorm-io/monorepo/compare/@lindorm/rsa@0.2.5...@lindorm/rsa@0.2.6) (2026-02-17)
+
+### Bug Fixes
+
+- **ec,oct,okp,rsa:** harden signing kits with validation and security fixes ([910f016](https://github.com/lindorm-io/monorepo/commit/910f01669aefcb4e6eb69c0297291fe2404232f8))
+
 ## [0.2.5](https://github.com/lindorm-io/monorepo/compare/@lindorm/rsa@0.2.4...@lindorm/rsa@0.2.5) (2025-09-18)
 
 **Note:** Version bump only for package @lindorm/rsa

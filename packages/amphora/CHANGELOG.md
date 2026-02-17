@@ -3,6 +3,21 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.3.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/amphora@0.2.6...@lindorm/amphora@0.3.0) (2026-02-17)
+
+### Bug Fixes
+
+- **amphora:** add JWKS resilience, issuer validation, key limits, preserve local keys ([464292d](https://github.com/lindorm-io/monorepo/commit/464292dc7b4824fbe7c31de06a8cd3f212b5c7be))
+- **amphora:** clear-and-rebuild config on refresh, reduce retries ([f93cdf8](https://github.com/lindorm-io/monorepo/commit/f93cdf87ab1c891b72cb76eeb5847e1eef64d74b))
+- **amphora:** deduplicate concurrent refresh/setup, add lazy setup ([dfd645a](https://github.com/lindorm-io/monorepo/commit/dfd645a2e67eaed088cd1f9da81feee33df44f43))
+- **amphora:** fix mock, improve error context, validate domain, log mutations ([2768479](https://github.com/lindorm-io/monorepo/commit/2768479ec253f41eb07a6d064419c59a2a7d89df))
+- **amphora:** return defensive copies from getters, prune expired keys ([5a79419](https://github.com/lindorm-io/monorepo/commit/5a7941992573ff2ddffcd43c12021000601ed89a))
+- **lint:** resolve eslint warnings and errors ([210ef3c](https://github.com/lindorm-io/monorepo/commit/210ef3c91c82521c4cec57bc2256324ba9c3f45a))
+
+### Features
+
+- **amphora:** add configurable TTL for cached external keys ([6d10743](https://github.com/lindorm-io/monorepo/commit/6d10743f8cad38a97796be5a36099f48b9fc41fd))
+
 ## [0.2.6](https://github.com/lindorm-io/monorepo/compare/@lindorm/amphora@0.2.5...@lindorm/amphora@0.2.6) (2025-09-18)
 
 ### Bug Fixes

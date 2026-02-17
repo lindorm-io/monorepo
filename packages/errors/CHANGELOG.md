@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.13](https://github.com/lindorm-io/monorepo/compare/@lindorm/errors@0.1.12...@lindorm/errors@0.1.13) (2026-02-17)
+
+### Bug Fixes
+
+- add number to error code ([8f19fd3](https://github.com/lindorm-io/monorepo/commit/8f19fd3a316feedc42afe47a453881c2819880c0))
+
 ## [0.1.12](https://github.com/lindorm-io/monorepo/compare/@lindorm/errors@0.1.11...@lindorm/errors@0.1.12) (2025-09-18)
 
 **Note:** Version bump only for package @lindorm/errors

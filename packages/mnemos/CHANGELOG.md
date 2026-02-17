@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/mnemos@0.3.6...@lindorm/mnemos@0.4.0) (2026-02-17)
+
+### Bug Fixes
+
+- add ping to sources ([b021dd8](https://github.com/lindorm-io/monorepo/commit/b021dd877964b117e3dfb8fbfaed12d4da1f1d5a))
+
+### Features
+
+- add relations to mnemos ([3c9f946](https://github.com/lindorm-io/monorepo/commit/3c9f9464b752afea2772f6764ee1c7a4b3c90472))
+
 ## [0.3.6](https://github.com/lindorm-io/monorepo/compare/@lindorm/mnemos@0.3.5...@lindorm/mnemos@0.3.6) (2025-09-18)
 
 ### Bug Fixes

@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/rabbit",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -26,18 +26,18 @@
     "update:auto": "ncu -u"
   },
   "dependencies": {
-    "@lindorm/case": "^0.1.11",
-    "@lindorm/errors": "^0.1.12",
-    "@lindorm/is": "^0.1.11",
-    "@lindorm/json-kit": "^0.5.3",
-    "@lindorm/message": "^0.1.4",
-    "@lindorm/utils": "^0.5.4",
+    "@lindorm/case": "^0.1.12",
+    "@lindorm/errors": "^0.1.13",
+    "@lindorm/is": "^0.1.12",
+    "@lindorm/json-kit": "^0.5.4",
+    "@lindorm/message": "^0.1.5",
+    "@lindorm/utils": "^0.5.5",
     "amqplib": "0.10.8",
     "zod": "^3.25.67"
   },
   "devDependencies": {
-    "@lindorm/logger": "^0.3.4",
-    "@lindorm/types": "^0.3.3",
+    "@lindorm/logger": "^0.4.0",
+    "@lindorm/types": "^0.3.4",
     "@types/amqplib": "0.10.7"
   }
 }

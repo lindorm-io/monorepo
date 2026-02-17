@@ -3,6 +3,27 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/aegis@0.3.6...@lindorm/aegis@0.4.0) (2026-02-17)
+
+### Bug Fixes
+
+- **aegis:** align header parsing types with AES decryption record types ([8d6539d](https://github.com/lindorm-io/monorepo/commit/8d6539d41657343edce4c94c884fe592c9bb12e6))
+- **aegis:** relax algorithm validation in header decoding ([fbc6edc](https://github.com/lindorm-io/monorepo/commit/fbc6edc003849963827c483ff2d995cd5b66eada))
+- **aegis:** relax typ validation and fix kryptosSig algorithm bug ([cb1bb60](https://github.com/lindorm-io/monorepo/commit/cb1bb601e2004de4b0a6454dd60a35be7770f59c))
+- **aegis:** remove hkdfSalt references after aes package refactor ([30c008a](https://github.com/lindorm-io/monorepo/commit/30c008a99a364928ed83fbb7ee6b496691646f80))
+- **aegis:** remove jwksUri from COSE sign/encrypt headers ([2c47fd4](https://github.com/lindorm-io/monorepo/commit/2c47fd43297db43e8f6b98df4b25ee93e93415af))
+- **aegis:** restructure CweKit header layout per RFC 9052 ([43f2616](https://github.com/lindorm-io/monorepo/commit/43f2616b34de529e968f75714a2222ed4d02a509))
+- **aegis:** rFC 7515 crit compliance and base64url header encoding ([f3fa30b](https://github.com/lindorm-io/monorepo/commit/f3fa30b89f10518efa86ad69577e1d1c35faf030))
+- **aegis:** use Map-based COSE encoding for RFC 9052 integer labels ([e2eb229](https://github.com/lindorm-io/monorepo/commit/e2eb229b053c9c91ba8b4b43d8ad9e1731ec53b4))
+- **lint:** add missing eslint-config-prettier and fix prettier formatting ([6899e39](https://github.com/lindorm-io/monorepo/commit/6899e39ad7700e373173b0a61b429b5536c13934))
+
+### Features
+
+- **aegis:** add COSE target mode for internal/external encoding ([0be6874](https://github.com/lindorm-io/monorepo/commit/0be687457cea0266cefdff8fc504b05175aa8bbf))
+- **aegis:** integrate prepareEncryption for JWE AAD support ([0b5a607](https://github.com/lindorm-io/monorepo/commit/0b5a60749b935068a02c6ae9fa1a637e0bfa8764))
+- **aegis:** narrow AmphoraQuery type by operation ([e908b40](https://github.com/lindorm-io/monorepo/commit/e908b405f5269aaa864f2da5b19879f9d999e485))
+- **aegis:** support custom COSE claim labels (>= 900) in CWT payloads ([a5f30c0](https://github.com/lindorm-io/monorepo/commit/a5f30c09d6ca21dc029a6d2a601ff3cf35b8dff4))
+
 ## [0.3.6](https://github.com/lindorm-io/monorepo/compare/@lindorm/aegis@0.3.5...@lindorm/aegis@0.3.6) (2025-09-18)
 
 **Note:** Version bump only for package @lindorm/aegis
