@@ -1,4 +1,4 @@
-import { input } from "@inquirer/prompts";
+import { input, select } from "@inquirer/prompts";
 import fs from "fs-extra";
 import path from "path";
 
@@ -7,6 +7,24 @@ const copyFiles = async (srcDir: string, destDir: string): Promise<void> => {
     await fs.copy(srcDir, destDir);
   } catch (error) {
     console.error(`Error during copy: ${error}`);
+  }
+};
+
+const cleanup = async (dir: string, withCompose: boolean) => {
+  try {
+    if (withCompose) {
+      await fs.unlink(path.join(dir, "package.json"));
+      await fs.rename(
+        path.join(dir, "package-compose.json"),
+        path.join(dir, "package.json"),
+      );
+    }
+    if (!withCompose) {
+      await fs.unlink(path.join(dir, "docker-compose.yml"));
+      await fs.unlink(path.join(dir, "package-compose.json"));
+    }
+  } catch (error) {
+    console.error(`Error during cleanup: ${error}`);
   }
 };
 
@@ -41,11 +59,20 @@ const main = async () => {
   });
   const name = answer.trim().toLowerCase();
 
+  const type = await select({
+    message: "Will you be using docker compose?",
+    choices: [
+      { value: true, name: "Yes" },
+      { value: false, name: "No" },
+    ],
+  });
+
   const srcDir = path.join(__dirname, "..", ".init", "package");
   const destDir = path.join(__dirname, "..", "packages", name);
   const placeholder = new RegExp("{{NAME}}", "g");
 
   await copyFiles(srcDir, destDir);
+  await cleanup(destDir, type);
   await replaceInFiles(destDir, placeholder, name);
 
   console.log(`Package ${name} initialised in /packages/${name}`);

@@ -3,7 +3,7 @@
 /src
 
 docker-compose.yml
-jest.config.integration.js
-jest.config.js
+jest.config.mjs
 tsconfig.build.json
+tsconfig.build.tsbuildinfo
 tsconfig.json
