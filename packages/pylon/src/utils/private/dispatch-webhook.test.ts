@@ -82,9 +82,7 @@ describe("createDispatchWebhook", () => {
     options.encryptionKey = kryptos;
     dispatch.subscription.clientSecret = aes.encrypt("secret", "tokenised");
 
-    expect(dispatch.subscription.clientSecret).toEqual(
-      expect.stringContaining("$A128GCM$"),
-    );
+    expect(dispatch.subscription.clientSecret).toEqual(expect.stringContaining("aes:ey"));
 
     await expect(
       createDispatchWebhook(options, logger)(dispatch),
