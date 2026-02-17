@@ -1,6 +1,6 @@
 services:
   mongo:
-    image: mongo
+    image: mongo:8
     ports:
       - "27017:27017"
     environment:
@@ -8,7 +8,7 @@ services:
       - MONGO_INITDB_ROOT_PASSWORD=example
 
   postgres:
-    image: postgres
+    image: postgres:17
     ports:
       - "5432:5432"
     environment:
@@ -17,12 +17,12 @@ services:
       POSTGRES_DB: default
 
   redis:
-    image: redis
+    image: redis:8
     ports:
       - "6379:6379"
 
   zookeeper:
-    image: confluentinc/cp-zookeeper:7.6.1
+    image: confluentinc/cp-zookeeper:7.8.6
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
@@ -30,7 +30,7 @@ services:
       - "2181:2181"
 
   kafka:
-    image: confluentinc/cp-kafka:7.6.1
+    image: confluentinc/cp-kafka:7.8.6
     ports:
       - "9092:9092"
       - "29092:29092"
