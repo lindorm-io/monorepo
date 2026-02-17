@@ -17,7 +17,7 @@
     "build": "rimraf dist && tsc -b ./tsconfig.build.json",
     "example": "ts-node example/hermes.ts",
     "prettier": "prettier --write ./src/*",
-    "test": "compd --file docker-compose.yml jest --runInBand --",
+    "test": "compd --file docker-compose.yml jest --detectOpenHandles --runInBand --",
     "test:ci": "jest --runInBand",
     "test:watch": "compd --file docker-compose.yml jest --runInBand --watch --",
     "typecheck": "tsc",
