@@ -13,8 +13,8 @@ permissions:
   contents: write
 
 jobs:
-  release:
-    name: Test and Release
+  test:
+    name: Test
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -126,11 +126,35 @@ jobs:
       - name: Test
         run: npm run test:ci
 
-      - name: Authenticate Package Registry
-        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_AUTH_TOKEN }}" > .npmrc
+  release:
+    name: Release
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 25.x
+          cache: npm
+          registry-url: https://registry.npmjs.org
+
+      - name: Install
+        run: npm ci
+
+      - name: Build
+        run: npm run build
 
       - name: Release
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
         run: |
           git config user.name "${{ github.actor }}"
-          git config user.email "${{ github.actor}}@users.noreply.github.com"
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
           npm run release
