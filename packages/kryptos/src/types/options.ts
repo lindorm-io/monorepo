@@ -1,5 +1,6 @@
 import { Optional } from "@lindorm/types";
 import { KryptosAttributes } from "./attributes";
+import { RsaModulus } from "./key-types";
 
 type StdOptions = Optional<
   KryptosAttributes,
@@ -24,4 +25,7 @@ export type KryptosKeys = {
   publicKey?: Buffer;
 };
 
-export type KryptosOptions = StdOptions & KryptosKeys;
+export type KryptosOptions = StdOptions &
+  KryptosKeys & {
+    modulus?: RsaModulus | null;
+  };

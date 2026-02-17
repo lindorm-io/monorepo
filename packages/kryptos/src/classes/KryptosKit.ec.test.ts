@@ -36,6 +36,7 @@ describe("KryptosKit (EC)", () => {
         id: "136171c5-7b76-5e14-9bb8-c60551977c59",
         algorithm: "ECDH-ES+A256GCMKW",
         curve: "P-521",
+        encryption: "A256GCM",
         privateKey:
           "MIHuAgEAMBAGByqGSM49AgEGBSuBBAAjBIHWMIHTAgEBBEIATAYo3DQYroDV5EgJSUs_kOIvnEScZen73gXa5oQkub0ekQmgOJdPQjINUsdYRn67QK_oBdNUhVbtG_qdxqIgarehgYkDgYYABACN2PIVpRTdfXLmNxkg8Bk2m5netqYsNW2Lefhklr2jfJiVUJUDPoZoGfabGzHEgsKjP2HRbPsEI_tND3x4N9VW0QAID2UYXa7GN0izHWIFRdjVYuR5-0jywFtd-o_N2POdrvlV8xumdVK-TiSPEIdfKoL_Iu0e7IKTsJsj-UmE8rDJnw",
         publicKey:
@@ -178,6 +179,7 @@ describe("KryptosKit (EC)", () => {
         id: "6e6f84b0-e125-5e3f-90ae-c65269668d98",
         algorithm: "ECDH-ES+A192GCMKW",
         curve: "P-384",
+        encryption: "A256GCM",
         privateKey: expect.any(String),
         publicKey: expect.any(String),
         type: "EC",

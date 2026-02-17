@@ -100,9 +100,10 @@ export class Kryptos implements IKryptos {
     }
 
     this._modulus =
-      this._type === "RSA" && (this._privateKey || this._publicKey)
+      options.modulus ??
+      (this._type === "RSA" && (this._privateKey || this._publicKey)
         ? modulusSize({ privateKey: this._privateKey, publicKey: this._publicKey! })
-        : null;
+        : null);
   }
 
   // getters and setters
@@ -291,6 +292,7 @@ export class Kryptos implements IKryptos {
       id: this.id,
       algorithm: this.algorithm,
       ...(this.curve ? { curve: this.curve } : {}),
+      ...(this.encryption ? { encryption: this.encryption } : {}),
       type: this.type,
       use: this.use,
     };
@@ -309,12 +311,14 @@ export class Kryptos implements IKryptos {
         return { ...metadata, ...this._cache.b64 } as KryptosString;
       }
 
-      case "der":
-        return exportToDer(exportOptions);
+      case "der": {
+        const result = exportToDer(exportOptions);
+        return { ...metadata, ...result } as KryptosBuffer;
+      }
 
       case "jwk": {
         if (!this._cache.jwkPrivate) {
-          const { kid, alg, kty, use, ...keys } = exportToJwk({
+          const { kid, alg, kty, use, enc, ...keys } = exportToJwk({
             ...exportOptions,
             mode: "private",
           });
@@ -324,6 +328,7 @@ export class Kryptos implements IKryptos {
           ...this._cache.jwkPrivate,
           kid: this.id,
           alg: this.algorithm,
+          ...(this.encryption ? { enc: this.encryption } : {}),
           use: this.use,
           kty: this.type,
         } as KryptosJwk;
