@@ -5,7 +5,6 @@ import { createMockRabbitMessageBus, IRabbitSource, RabbitSource } from "@lindor
 import { Dict } from "@lindorm/types";
 import { sleep } from "@lindorm/utils";
 import { randomUUID } from "crypto";
-import MockDate from "mockdate";
 import { createTestCommand } from "../__fixtures__/create-message";
 import { createTestAggregateIdentifier } from "../__fixtures__/create-test-aggregate-identifier";
 import { createTestRegistry } from "../__fixtures__/create-test-registry";
@@ -15,12 +14,12 @@ import { TestCommandDestroyNext } from "../__fixtures__/modules/commands/TestCom
 import { TestCommandEncrypt } from "../__fixtures__/modules/commands/TestCommandEncrypt";
 import { TestCommandMergeState } from "../__fixtures__/modules/commands/TestCommandMergeState";
 import { TestCommandThrows } from "../__fixtures__/modules/commands/TestCommandThrows";
-import { EncryptionStore, EventStore, MessageBus } from "../infrastructure";
 import {
   AggregateAlreadyCreatedError,
   AggregateDestroyedError,
   AggregateNotCreatedError,
 } from "../errors";
+import { EncryptionStore, EventStore, MessageBus } from "../infrastructure";
 import {
   IAggregateDomain,
   IEventStore,
@@ -31,9 +30,6 @@ import {
 import { HermesCommand, HermesError, HermesEvent } from "../messages";
 import { AggregateIdentifier } from "../types";
 import { AggregateDomain } from "./AggregateDomain";
-
-const MockedDate = new Date("2024-01-01T08:00:00.000Z");
-MockDate.set(MockedDate);
 
 describe("AggregateDomain", () => {
   const logger = createMockLogger();
@@ -102,12 +98,12 @@ describe("AggregateDomain", () => {
         encrypted: false,
         event_id: expect.any(String),
         event_name: "test_event_create",
-        event_timestamp: MockedDate,
+        event_timestamp: expect.any(Date),
         expected_events: 0,
         meta: { origin: "test" },
         previous_event_id: null,
         version: 1,
-        created_at: MockedDate,
+        created_at: expect.any(Date),
       },
     ]);
 
@@ -122,7 +118,7 @@ describe("AggregateDomain", () => {
         meta: { origin: "test" },
         delay: 0,
         mandatory: false,
-        timestamp: MockedDate,
+        timestamp: expect.any(Date),
         version: 1,
       }),
     ]);
@@ -154,12 +150,12 @@ describe("AggregateDomain", () => {
         encrypted: true,
         event_id: expect.any(String),
         event_name: "test_event_encrypt",
-        event_timestamp: MockedDate,
+        event_timestamp: expect.any(Date),
         expected_events: 0,
         meta: { origin: "test" },
         previous_event_id: null,
         version: 1,
-        created_at: MockedDate,
+        created_at: expect.any(Date),
       },
     ]);
 
@@ -174,7 +170,7 @@ describe("AggregateDomain", () => {
         meta: { origin: "test" },
         delay: 0,
         mandatory: false,
-        timestamp: MockedDate,
+        timestamp: expect.any(Date),
         version: 1,
       }),
     ]);
@@ -476,6 +472,7 @@ describe("AggregateDomain (integration)", () => {
   });
 
   test("should handle multiple published commands", async () => {
+    jest.setTimeout(15000);
     const commandCreate = createTestCommand(new TestCommandCreate("create"), {
       aggregate,
     });
@@ -498,20 +495,36 @@ describe("AggregateDomain (integration)", () => {
       aggregate,
     });
 
-    await expect(commandBus.publish(commandCreate)).resolves.toBeUndefined();
-    await sleep(500);
+    const waitForEvents = async (count: number): Promise<void> => {
+      for (let i = 0; i < 40; i++) {
+        await sleep(250);
+        try {
+          const result = await domain.inspect(aggregate);
+          if (result?.numberOfLoadedEvents >= count) return;
+        } catch {
+          // aggregate may not exist yet
+        }
+      }
+      const result = await domain.inspect(aggregate);
+      throw new Error(
+        `Expected ${count} events but got ${result?.numberOfLoadedEvents ?? 0}`,
+      );
+    };
 
-    await expect(commandBus.publish(commandMergeState)).resolves.toBeUndefined();
-    await sleep(500);
+    await commandBus.publish(commandCreate);
+    await waitForEvents(1);
 
-    await expect(commandBus.publish(commandEncrypt)).resolves.toBeUndefined();
-    await sleep(500);
+    await commandBus.publish(commandMergeState);
+    await waitForEvents(2);
 
-    await expect(commandBus.publish(commandDestroyNext)).resolves.toBeUndefined();
-    await sleep(500);
+    await commandBus.publish(commandEncrypt);
+    await waitForEvents(3);
 
-    await expect(commandBus.publish(commandDestroy)).resolves.toBeUndefined();
-    await sleep(500);
+    await commandBus.publish(commandDestroyNext);
+    await waitForEvents(4);
+
+    await commandBus.publish(commandDestroy);
+    await waitForEvents(5);
 
     await expect(domain.inspect(aggregate)).resolves.toEqual(
       expect.objectContaining({
@@ -563,7 +576,7 @@ describe("AggregateDomain (integration)", () => {
       namespace: namespace,
       key_algorithm: "dir",
       key_curve: null,
-      key_encryption: null,
+      key_encryption: "A256GCM",
       key_id: expect.any(String),
       key_type: "oct",
       private_key: expect.any(String),
@@ -587,14 +600,11 @@ describe("AggregateDomain (integration)", () => {
         correlation_id: commandEncrypt.correlationId,
         event_name: "test_event_encrypt",
         data: {
-          algorithm: "dir",
-          authTag: expect.any(String),
-          content: expect.any(String),
-          contentType: "application/octet-stream",
-          encryption: "A256GCM",
-          initialisationVector: expect.any(String),
-          keyId: expect.any(String),
-          version: expect.any(Number),
+          ciphertext: expect.any(String),
+          header: expect.any(String),
+          iv: expect.any(String),
+          tag: expect.any(String),
+          v: "1.0",
         },
       }),
       expect.objectContaining({

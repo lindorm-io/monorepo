@@ -62,7 +62,7 @@ export class EncryptionStore implements IHermesEncryptionStore {
         curve: exists.key_curve ?? undefined,
         encryption: exists.key_encryption,
         privateKey: exists.private_key,
-        publicKey: exists.public_key,
+        publicKey: exists.public_key || undefined,
         type: exists.key_type,
         use: "enc",
       });
@@ -85,10 +85,10 @@ export class EncryptionStore implements IHermesEncryptionStore {
       key_id: kryptos.id,
       key_algorithm: algorithm,
       key_curve: curve ?? null,
-      key_encryption: encryption!,
+      key_encryption: encryption ?? this.encryption,
       key_type: type,
-      private_key: privateKey!,
-      public_key: publicKey!,
+      private_key: privateKey ?? "",
+      public_key: publicKey ?? "",
       created_at: new Date(),
     });
 
