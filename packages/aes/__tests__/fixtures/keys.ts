@@ -1,5 +1,10 @@
 import { randomUUID } from "crypto";
-import { KryptosAlgorithm, KryptosEncryption, KryptosKit } from "@lindorm/kryptos";
+import {
+  Kryptos,
+  KryptosAlgorithm,
+  KryptosEncryption,
+  KryptosKit,
+} from "@lindorm/kryptos";
 
 // Fixed raw symmetric keys for dir mode (CEK = key)
 export const RAW_KEY_128 = Buffer.from("000102030405060708090a0b0c0d0e0f", "hex");
@@ -44,7 +49,7 @@ export const createOctKryptos = (
   raw: Buffer,
   algorithm: KryptosAlgorithm,
   encryption?: KryptosEncryption,
-) =>
+): Kryptos =>
   KryptosKit.from.der({
     id: randomUUID(),
     algorithm,

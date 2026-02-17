@@ -43,7 +43,10 @@ const selectUse = async (): Promise<KryptosUse> =>
     ],
   });
 
-const switchAlgorithmChoices = (type: KryptosType, use: KryptosUse) => {
+const switchAlgorithmChoices = (
+  type: KryptosType,
+  use: KryptosUse,
+): readonly string[] => {
   switch (use) {
     case "enc":
       switch (type) {

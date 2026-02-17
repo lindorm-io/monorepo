@@ -123,7 +123,7 @@ export class LindormWorker implements ILindormWorker {
     this._started = true;
     this._latestStart = new Date();
 
-    this.run();
+    void this.run();
   }
 
   public stop(): void {
