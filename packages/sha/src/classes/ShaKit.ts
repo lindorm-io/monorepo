@@ -12,6 +12,34 @@ export class ShaKit {
     this.encoding = options.encoding ?? "base64";
   }
 
+  // public static
+
+  public static S256(data: string): string {
+    return createShaHash({
+      algorithm: "SHA256",
+      data,
+      encoding: "base64url",
+    });
+  }
+
+  public static S384(data: string): string {
+    return createShaHash({
+      algorithm: "SHA384",
+      data,
+      encoding: "base64url",
+    });
+  }
+
+  public static S512(data: string): string {
+    return createShaHash({
+      algorithm: "SHA512",
+      data,
+      encoding: "base64url",
+    });
+  }
+
+  // public
+
   public hash(data: string): string {
     return createShaHash({
       algorithm: this.algorithm,
