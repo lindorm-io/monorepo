@@ -21,9 +21,10 @@
     "test:ci": "jest",
     "test:watch": "jest --watch --",
     "typecheck": "tsc",
-    "typecheck:watch": "tsc --watch --",
+    "typecheck:watch": "tsc --watch",
     "update": "ncu -i",
-    "update:auto": "ncu -u"
+    "update:auto": "ncu -u",
+    "verify": "npm run typecheck; npm run build; npm test"
   },
   "dependencies": {
     "@lindorm/is": "^0.1.12"
