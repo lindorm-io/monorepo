@@ -7,6 +7,10 @@ import { TestMessageTwo } from "../__fixtures__/messages/test-message-two";
 import { IKafkaSource } from "../interfaces";
 import { KafkaSource } from "./KafkaSource";
 
+jest.mock("tsx/cjs/api", () => ({
+  require: jest.fn((id: string) => jest.requireActual(id)),
+}));
+
 describe("KafkaSource", () => {
   let source: IKafkaSource;
 

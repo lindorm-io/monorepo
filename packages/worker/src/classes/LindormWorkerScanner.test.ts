@@ -2,6 +2,10 @@ import { join } from "path";
 import { LindormWorkerConfig } from "../types";
 import { LindormWorkerScanner } from "./LindormWorkerScanner";
 
+jest.mock("tsx/cjs/api", () => ({
+  require: jest.fn((id: string) => jest.requireActual(id)),
+}));
+
 const workerConfig: LindormWorkerConfig = {
   alias: "CustomWorker",
   callback: async () => {},
