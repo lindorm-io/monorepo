@@ -19,6 +19,7 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 .certs
 .claude
 .jest
+.plan
 .tmp
 dist
 node_modules
