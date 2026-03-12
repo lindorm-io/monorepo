@@ -60,6 +60,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await client.quit();
+  client.disconnect();
 });
 
 beforeEach(async () => {
@@ -237,6 +238,10 @@ describe("RedisCacheAdapter: full CachingRepository integration", () => {
 
     await source.connect();
     await source.setup();
+  });
+
+  afterAll(async () => {
+    await source.disconnect();
   });
 
   it("should serve a cache miss on first find, cache hit on second, and miss again after insert", async () => {
