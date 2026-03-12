@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-function-type */
-
 import { MessageMetadataError } from "../../errors";
 import { IMessage } from "../../interfaces";
 import {

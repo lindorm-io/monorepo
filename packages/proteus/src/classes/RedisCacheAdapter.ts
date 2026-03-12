@@ -125,7 +125,7 @@ export class RedisCacheAdapter implements ICacheAdapter {
     if (this._client) return this._client;
 
     if (!this._ownedClientPromise) {
-      this._ownedClientPromise = (async () => {
+      this._ownedClientPromise = (async (): Promise<Redis> => {
         const { default: Redis } = await import("ioredis");
         const opts = this._connectionOptions!;
         return opts.url

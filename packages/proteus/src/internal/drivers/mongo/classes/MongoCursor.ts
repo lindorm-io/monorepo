@@ -101,7 +101,7 @@ export class MongoCursor<E extends IEntity> implements IProteusCursor<E> {
         await this.close();
         return { done: true, value: undefined };
       },
-      [Symbol.asyncIterator]() {
+      [Symbol.asyncIterator](): AsyncIterableIterator<E> {
         return this;
       },
     };
