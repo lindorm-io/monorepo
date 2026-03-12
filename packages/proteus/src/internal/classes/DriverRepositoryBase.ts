@@ -595,6 +595,7 @@ export abstract class DriverRepositoryBase<
   // ─── Stream ───────────────────────────────────────────────────────
 
   public stream(options?: CursorOptions<E>): AsyncIterable<E> {
+    const createCursor = (): Promise<IProteusCursor<E>> => this.cursor(options);
     return {
       [Symbol.asyncIterator]: () => {
         let cursor: IProteusCursor<E> | null = null;
@@ -610,7 +611,7 @@ export abstract class DriverRepositoryBase<
         return {
           async next(): Promise<IteratorResult<E>> {
             if (!cursor) {
-              cursor = await this.cursor(options);
+              cursor = await createCursor();
               iterator = cursor[Symbol.asyncIterator]();
             }
             return iterator!.next();
