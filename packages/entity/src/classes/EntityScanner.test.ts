@@ -4,10 +4,6 @@ import TestEntityThree from "../__fixtures__/entities/test-entity-three";
 import { TestEntityTwo } from "../__fixtures__/entities/test-entity-two";
 import { EntityScanner } from "./EntityScanner";
 
-jest.mock("tsx/cjs/api", () => ({
-  require: jest.fn((id: string) => jest.requireActual(id)),
-}));
-
 describe("EntityScanner", () => {
   test("should return with array of entity constructors", () => {
     expect(EntityScanner.scan([TestEntityOne, TestEntityTwo, TestEntityThree])).toEqual([

@@ -1,10 +1,6 @@
 import { join } from "path";
 import { Scanner } from "./Scanner";
 
-jest.mock("tsx/cjs/api", () => ({
-  require: jest.fn((id: string) => jest.requireActual(id)),
-}));
-
 describe("Scanner", () => {
   const path = join(__dirname, "..", "..", "example");
 
