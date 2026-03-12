@@ -1,0 +1,9 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`compileGroupBy should compile multiple fields 1`] = `"GROUP BY "t0"."status", "t0"."amount""`;
+
+exports[`compileGroupBy should compile single field 1`] = `"GROUP BY "t0"."status""`;
+
+exports[`compileGroupBy should use column name when key differs from column name 1`] = `"GROUP BY "t0"."category_name""`;
+
+exports[`compileGroupBy should use the provided table alias 1`] = `"GROUP BY "orders"."status""`;

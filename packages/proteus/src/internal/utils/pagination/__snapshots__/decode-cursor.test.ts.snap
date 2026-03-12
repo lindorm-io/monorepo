@@ -1,0 +1,35 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`decodeCursor should accept valid cursor with null values 1`] = `
+{
+  "columns": [
+    "name",
+    "id",
+  ],
+  "directions": [
+    "DESC",
+    "ASC",
+  ],
+  "values": [
+    null,
+    "abc",
+  ],
+}
+`;
+
+exports[`decodeCursor should decode a valid cursor token 1`] = `
+{
+  "columns": [
+    "createdAt",
+    "id",
+  ],
+  "directions": [
+    "ASC",
+    "ASC",
+  ],
+  "values": [
+    "2024-01-01T00:00:00.000Z",
+    "abc-123",
+  ],
+}
+`;

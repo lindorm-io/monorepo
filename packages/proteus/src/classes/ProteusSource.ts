@@ -1,0 +1,506 @@
+import type { IAmphora } from "@lindorm/amphora";
+import { ms } from "@lindorm/date";
+import { ILogger } from "@lindorm/logger";
+import type { Constructor, Dict } from "@lindorm/types";
+import { NotSupportedError, ProteusError } from "../errors";
+import { IEntity, IProteusQueryBuilder, IProteusRepository } from "../interfaces";
+import type { ICacheAdapter } from "../interfaces/CacheAdapter";
+import type { IEntitySubscriber } from "../interfaces/EntitySubscriber";
+import type {
+  EntityScannerInput,
+  NamingStrategy,
+  ProteusSourceOptions,
+  TransactionCallback,
+  TransactionOptions,
+} from "../types";
+import { CachingRepository } from "#internal/classes/CachingRepository";
+import { EntityScanner } from "#internal/entity/classes/EntityScanner";
+import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
+import { resolveInheritanceHierarchies } from "#internal/entity/metadata/resolve-inheritance";
+import { clearPrimaryCache } from "#internal/entity/metadata/build-primary";
+import { clearMetadataCache } from "#internal/entity/metadata/registry";
+import { validateEncryptedFields } from "#internal/entity/utils/validate-encrypted-fields";
+import { applyNamingStrategy } from "#internal/utils/naming/apply-naming-strategy";
+import type { MetaInheritance } from "#internal/entity/types/inheritance";
+import type {
+  IProteusDriver,
+  MetadataResolver,
+} from "#internal/interfaces/ProteusDriver";
+import {
+  type FilterRegistry,
+  createFilterRegistry,
+  cloneFilterRegistry,
+  setFilterParams as setFilterParamsUtil,
+  enableFilter as enableFilterUtil,
+  disableFilter as disableFilterUtil,
+} from "#internal/utils/query/filter-registry";
+import type { EntityMetadata } from "#internal/entity/types/metadata";
+
+/**
+ * Options for cloning a ProteusSource.
+ */
+export type CloneOptions = {
+  /** Override the logger on the cloned source. */
+  logger?: ILogger;
+  /** Override the context on the cloned source. */
+  context?: unknown;
+};
+
+/**
+ * All private fields of ProteusSource. Used by `fromFields` to create
+ * instances without the constructor while maintaining compile-time safety
+ * (no `as any` casts). Keys must match the private field names exactly
+ * so TypeScript catches missing or mistyped fields.
+ */
+interface ProteusSourceInit {
+  _driver: IProteusDriver | undefined;
+  _options: ProteusSourceOptions;
+  _amphora: IAmphora | undefined;
+  logger: ILogger;
+  context: unknown;
+  _entities: Array<Constructor<IEntity>>;
+  resolveMetadata: MetadataResolver;
+  cacheAdapter: ICacheAdapter | undefined;
+  sourceTtlMs: number | undefined;
+  _namespace: string | null;
+  _driverType: string;
+  _migrationsTable: string | undefined;
+  _registryRef: { current: FilterRegistry };
+  _subscribersRef: { current: Array<IEntitySubscriber> };
+  _inheritanceMap: Map<Function, MetaInheritance> | undefined;
+  _namingCache: Map<Function, EntityMetadata> | null;
+  _settingUpPromise: Promise<void> | null;
+  isSetUp: boolean;
+}
+
+/**
+ * Central entry point for the Proteus ORM.
+ *
+ * Create one ProteusSource per application (or per tenant) and use it to
+ * obtain repositories, query builders, and run transactions. The source
+ * manages connection pooling, entity metadata resolution, and caching.
+ */
+export class ProteusSource {
+  private _driver: IProteusDriver | undefined;
+  private readonly _options: ProteusSourceOptions;
+  private readonly _amphora: IAmphora | undefined;
+  private readonly logger: ILogger;
+  private readonly context: unknown;
+  private readonly _entities: Array<Constructor<IEntity>>;
+  private readonly resolveMetadata: MetadataResolver;
+  private readonly cacheAdapter: ICacheAdapter | undefined;
+  private readonly sourceTtlMs: number | undefined;
+  private readonly _namespace: string | null;
+  private readonly _driverType: string;
+  private readonly _migrationsTable: string | undefined;
+  private _registryRef: { current: FilterRegistry };
+  private _subscribersRef: { current: Array<IEntitySubscriber> };
+  private _inheritanceMap: Map<Function, MetaInheritance> | undefined;
+  private _namingCache: Map<Function, EntityMetadata> | null = null;
+  private _settingUpPromise: Promise<void> | null = null;
+  private isSetUp = false;
+
+  /**
+   * Create a ProteusSource from an init object, bypassing the constructor.
+   * Object.assign is used to write all fields (including readonly ones)
+   * onto the bare prototype instance in one shot.
+   */
+  private static fromFields(fields: ProteusSourceInit): ProteusSource {
+    return Object.assign(Object.create(ProteusSource.prototype) as ProteusSource, fields);
+  }
+
+  public constructor(options: ProteusSourceOptions) {
+    this._options = options;
+    this._amphora = options.amphora;
+    this.logger = options.logger.child(["ProteusSource"]);
+    this.context = options.context;
+    this._entities = options.entities ? EntityScanner.scan(options.entities) : [];
+
+    const namespace = options.namespace ?? null;
+    this._namespace = namespace;
+    this._driverType = options.driver;
+    this._migrationsTable =
+      "migrationsTable" in options ? options.migrationsTable : undefined;
+    this._registryRef = { current: createFilterRegistry() };
+    this._subscribersRef = { current: [] };
+    const resolver = createMetadataResolver(
+      options.naming ?? "none",
+      () => this._inheritanceMap,
+    );
+    this.resolveMetadata = resolver.resolve;
+    this._namingCache = resolver.cache;
+
+    if (options.cache) {
+      this.cacheAdapter = options.cache.adapter;
+      this.sourceTtlMs = options.cache.ttl ? ms(options.cache.ttl) : undefined;
+    }
+
+    // Validate driver name eagerly — fail fast on typos or unimplemented drivers
+    // without importing any driver modules.
+    switch (options.driver) {
+      case "postgres":
+      case "memory":
+      case "redis":
+      case "sqlite":
+      case "mysql":
+        break;
+
+      case "mongo":
+        break;
+
+      default: {
+        const _exhaustive: never = options;
+        throw new NotSupportedError(`Unknown driver "${(_exhaustive as any).driver}"`);
+      }
+    }
+  }
+
+  private requireDriver(): IProteusDriver {
+    if (!this._driver) {
+      throw new ProteusError("ProteusSource is not connected. Call connect() first.");
+    }
+    return this._driver;
+  }
+
+  public get namespace(): string | null {
+    return this._namespace;
+  }
+  public get driverType(): string {
+    return this._driverType;
+  }
+  public get migrationsTable(): string | undefined {
+    return this._migrationsTable;
+  }
+  public get log(): ILogger {
+    return this.logger;
+  }
+
+  /** Create a lightweight copy of this source sharing the same connection pool but with a new logger and/or context. */
+  public clone(options?: CloneOptions): ProteusSource {
+    // Reference cell pattern: create new ref cells with cloned data so the
+    // clone's filter/subscriber state is fully isolated from the original.
+    const registryRef = { current: cloneFilterRegistry(this._registryRef.current) };
+    const subscribersRef = { current: [...this._subscribersRef.current] };
+
+    return ProteusSource.fromFields({
+      logger: options?.logger?.child(["ProteusSource"]) ?? this.logger,
+      context: options?.context ?? this.context,
+      _entities: this._entities,
+      _amphora: this._amphora,
+      resolveMetadata: this.resolveMetadata,
+      isSetUp: this.isSetUp,
+      cacheAdapter: this.cacheAdapter,
+      sourceTtlMs: this.sourceTtlMs,
+      _namespace: this._namespace,
+      _driverType: this._driverType,
+      _migrationsTable: this._migrationsTable,
+      _inheritanceMap: this._inheritanceMap,
+      _namingCache: this._namingCache,
+      _settingUpPromise: null,
+      _registryRef: registryRef,
+      _subscribersRef: subscribersRef,
+      _options: this._options,
+      // Clone the driver with new getters that read from the clone's ref cells.
+      // This ensures repositories/executors created from the clone use the
+      // clone's filter registry, not the original's.
+      _driver: this._driver
+        ? this._driver.cloneWithGetters(
+            () => registryRef.current,
+            () => subscribersRef.current,
+          )
+        : undefined,
+    });
+  }
+
+  /** Register parameter values for a named filter. Creates the filter entry if it does not exist. */
+  public setFilterParams(name: string, params: Dict<unknown>): void {
+    setFilterParamsUtil(this._registryRef.current, name, params);
+  }
+
+  /** Enable a named filter so it is applied to queries. */
+  public enableFilter(name: string): void {
+    enableFilterUtil(this._registryRef.current, name);
+  }
+
+  /** Disable a named filter so it is no longer applied to queries. */
+  public disableFilter(name: string): void {
+    disableFilterUtil(this._registryRef.current, name);
+  }
+
+  /**
+   * Returns the live filter registry. Callers should treat it as read-only;
+   * direct mutation will affect subsequent queries.
+   */
+  public getFilterRegistry(): FilterRegistry {
+    return this._registryRef.current;
+  }
+
+  /** Register an event subscriber to observe entity lifecycle events across all entity types. */
+  public addSubscriber(subscriber: IEntitySubscriber): void {
+    this._subscribersRef.current.push(subscriber);
+  }
+
+  /** Register additional entity classes or glob patterns after construction. */
+  public addEntities(entities: EntityScannerInput): void {
+    if (this.isSetUp) {
+      throw new ProteusError(
+        "Cannot add entities after setup() has been called. Create a new ProteusSource instance instead.",
+      );
+    }
+    this._entities.push(
+      ...EntityScanner.scan(entities).filter(
+        (Entity) => !this._entities.includes(Entity),
+      ),
+    );
+  }
+
+  /** Return resolved metadata for all registered entities. */
+  public getEntityMetadata(): Array<EntityMetadata> {
+    return this._entities.map((target) => this.resolveMetadata(target));
+  }
+
+  /** Open the database connection (or connection pool). */
+  public async connect(): Promise<void> {
+    if (this._driver) return; // idempotent
+
+    const getFilterRegistry = () => this._registryRef.current;
+    const getSubscribers = () => this._subscribersRef.current;
+    const opts = this._options;
+
+    switch (opts.driver) {
+      case "postgres": {
+        const { PostgresDriver } =
+          await import("#internal/drivers/postgres/classes/PostgresDriver");
+        this._driver = new PostgresDriver(
+          opts,
+          this.logger,
+          this._namespace,
+          this.resolveMetadata,
+          getFilterRegistry,
+          getSubscribers,
+          this._amphora,
+        );
+        break;
+      }
+      case "memory": {
+        const { MemoryDriver } =
+          await import("#internal/drivers/memory/classes/MemoryDriver");
+        this._driver = new MemoryDriver(
+          opts,
+          this.logger,
+          this._namespace,
+          this.resolveMetadata,
+          getFilterRegistry,
+          getSubscribers,
+          this._amphora,
+        );
+        break;
+      }
+      case "redis": {
+        const { RedisDriver } =
+          await import("#internal/drivers/redis/classes/RedisDriver");
+        this._driver = new RedisDriver(
+          opts,
+          this.logger,
+          this._namespace,
+          this.resolveMetadata,
+          getFilterRegistry,
+          getSubscribers,
+          this._amphora,
+        );
+        break;
+      }
+      case "sqlite": {
+        const { SqliteDriver } =
+          await import("#internal/drivers/sqlite/classes/SqliteDriver");
+        this._driver = new SqliteDriver(
+          opts,
+          this.logger,
+          this._namespace,
+          this.resolveMetadata,
+          getFilterRegistry,
+          getSubscribers,
+          this._amphora,
+        );
+        break;
+      }
+      case "mysql": {
+        const { MySqlDriver } =
+          await import("#internal/drivers/mysql/classes/MySqlDriver");
+        this._driver = new MySqlDriver(
+          opts,
+          this.logger,
+          this._namespace,
+          this.resolveMetadata,
+          getFilterRegistry,
+          getSubscribers,
+          this._amphora,
+        );
+        break;
+      }
+      case "mongo": {
+        const { MongoDriver } =
+          await import("#internal/drivers/mongo/classes/MongoDriver");
+        this._driver = new MongoDriver(
+          opts,
+          this.logger,
+          this._namespace,
+          this.resolveMetadata,
+          getFilterRegistry,
+          getSubscribers,
+          this._amphora,
+        );
+        break;
+      }
+    }
+
+    await this._driver.connect();
+
+    try {
+      await this.cacheAdapter?.connect?.();
+    } catch (error) {
+      try {
+        await this._driver.disconnect();
+      } catch {
+        /* swallow */
+      }
+      this._driver = undefined;
+      throw error;
+    }
+  }
+
+  /** Close the database connection and drain the pool. */
+  public async disconnect(): Promise<void> {
+    if (!this._driver) return;
+
+    try {
+      await this._driver.disconnect();
+    } finally {
+      this._driver = undefined;
+      this.isSetUp = false;
+      try {
+        await this.cacheAdapter?.disconnect?.();
+      } catch {
+        /* swallow — driver disconnect is the primary operation */
+      }
+    }
+  }
+
+  /** Check whether the database is reachable. Returns `true` on success. */
+  public async ping(): Promise<boolean> {
+    return this.requireDriver().ping();
+  }
+
+  /** Run schema synchronization, migrations, and index creation for all registered entities. Idempotent. */
+  public async setup(): Promise<void> {
+    if (this.isSetUp) return;
+    if (this._settingUpPromise) return this._settingUpPromise;
+
+    this._settingUpPromise = this._doSetup();
+    try {
+      await this._settingUpPromise;
+    } finally {
+      this._settingUpPromise = null;
+    }
+  }
+
+  private async _doSetup(): Promise<void> {
+    // Invalidate any metadata that may have been cached before setup() was called.
+    clearPrimaryCache();
+    clearMetadataCache();
+    this._namingCache?.clear();
+
+    // Resolve inheritance hierarchies across all entities before building metadata.
+    // This must happen before any metadata is cached so that inheritance-aware
+    // metadata (e.g. single-table field merging) is produced correctly.
+    const inheritanceMap = resolveInheritanceHierarchies(this._entities);
+    if (inheritanceMap.size > 0) {
+      this._inheritanceMap = inheritanceMap;
+    }
+
+    // Filter out abstract entities — they have no tables of their own.
+    // Use Object.hasOwn to check only the target's OWN __abstract flag,
+    // not inherited from a parent (concrete subtypes of abstract parents
+    // must not be filtered out).
+    const concreteEntities = this._entities.filter((target) => {
+      const meta = (target as any)[Symbol.metadata];
+      return !meta || !Object.hasOwn(meta, "__abstract");
+    });
+
+    // Validate that any entity using @Encrypted has an amphora instance available.
+    const resolvedMetadata = concreteEntities.map((target) =>
+      this.resolveMetadata(target),
+    );
+    validateEncryptedFields(resolvedMetadata, this._amphora);
+
+    await this.requireDriver().setup(concreteEntities);
+    this.isSetUp = true;
+  }
+
+  /** Obtain a repository for the given entity class. Wraps with caching if a cache adapter is configured. */
+  public repository<E extends IEntity>(target: Constructor<E>): IProteusRepository<E> {
+    const inner = this.requireDriver().createRepository(target, undefined, this.context);
+    if (!this.cacheAdapter) return inner;
+
+    const metadata = this.resolveMetadata(target);
+    return new CachingRepository<E>({
+      inner,
+      adapter: this.cacheAdapter,
+      metadata,
+      namespace: this._namespace,
+      sourceTtlMs: this.sourceTtlMs,
+      logger: this.logger,
+    });
+  }
+
+  /** Create a query builder for the given entity class. */
+  public queryBuilder<E extends IEntity>(
+    target: Constructor<E>,
+  ): IProteusQueryBuilder<E> {
+    return this.requireDriver().createQueryBuilder(target);
+  }
+
+  /** Acquire the underlying driver client (e.g. a pg PoolClient) for advanced use cases. */
+  public async client<T>(): Promise<T> {
+    return this.requireDriver().acquireClient() as Promise<T>;
+  }
+
+  /** Execute a callback within a database transaction. Commits on success, rolls back on error. */
+  public async transaction<T>(
+    callback: TransactionCallback<T>,
+    options?: TransactionOptions,
+  ): Promise<T> {
+    return this.requireDriver().withTransaction(callback, options);
+  }
+}
+
+Object.defineProperty(ProteusSource, Symbol.for("ProteusSource"), { value: true });
+
+const createMetadataResolver = (
+  naming: NamingStrategy,
+  getInheritanceMap: () => Map<Function, MetaInheritance> | undefined,
+): { resolve: MetadataResolver; cache: Map<Function, EntityMetadata> | null } => {
+  if (naming === "none") {
+    return {
+      resolve: (target) => getEntityMetadata(target, getInheritanceMap()),
+      cache: null,
+    };
+  }
+
+  const cache = new Map<Function, EntityMetadata>();
+
+  return {
+    resolve: (target) => {
+      let resolved = cache.get(target);
+      if (!resolved) {
+        resolved = applyNamingStrategy(
+          getEntityMetadata(target, getInheritanceMap()),
+          naming,
+        );
+        cache.set(target, resolved);
+      }
+      return resolved;
+    },
+    cache,
+  };
+};

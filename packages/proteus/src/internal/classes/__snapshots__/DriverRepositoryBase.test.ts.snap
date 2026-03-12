@@ -1,0 +1,71 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`DriverRepositoryBase findPaginated returns correct result for empty dataset 1`] = `
+{
+  "data": [],
+  "hasMore": false,
+  "page": 1,
+  "pageSize": 10,
+  "total": 0,
+  "totalPages": 0,
+}
+`;
+
+exports[`DriverRepositoryBase findPaginated returns correct result with default page and pageSize 1`] = `
+{
+  "data": [
+    TestEntity {
+      "createdAt": 2024-01-01T00:00:00.000Z,
+      "id": "entity-id-1",
+      "name": "Entity A",
+      "updatedAt": 2024-01-01T00:00:00.000Z,
+      "version": 1,
+    },
+    {
+      "createdAt": 2024-01-01T00:00:00.000Z,
+      "id": "id-2",
+      "name": "Entity A",
+      "updatedAt": 2024-01-01T00:00:00.000Z,
+      "version": 1,
+    },
+    {
+      "createdAt": 2024-01-01T00:00:00.000Z,
+      "id": "id-3",
+      "name": "Entity A",
+      "updatedAt": 2024-01-01T00:00:00.000Z,
+      "version": 1,
+    },
+  ],
+  "hasMore": false,
+  "page": 1,
+  "pageSize": 10,
+  "total": 10,
+  "totalPages": 1,
+}
+`;
+
+exports[`DriverRepositoryBase findPaginated uses custom page and pageSize 1`] = `
+{
+  "data": [
+    TestEntity {
+      "createdAt": 2024-01-01T00:00:00.000Z,
+      "id": "entity-id-1",
+      "name": "Entity A",
+      "updatedAt": 2024-01-01T00:00:00.000Z,
+      "version": 1,
+    },
+    {
+      "createdAt": 2024-01-01T00:00:00.000Z,
+      "id": "id-2",
+      "name": "Entity A",
+      "updatedAt": 2024-01-01T00:00:00.000Z,
+      "version": 1,
+    },
+  ],
+  "hasMore": true,
+  "page": 2,
+  "pageSize": 5,
+  "total": 12,
+  "totalPages": 3,
+}
+`;

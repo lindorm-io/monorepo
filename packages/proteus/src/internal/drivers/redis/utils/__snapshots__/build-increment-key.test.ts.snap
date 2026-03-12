@@ -1,0 +1,7 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`buildIncrementKey should build increment key for different field names 1`] = `"seq:test_entity:sequence"`;
+
+exports[`buildIncrementKey should build increment key with namespace 1`] = `"myapp:seq:test_entity:id"`;
+
+exports[`buildIncrementKey should build increment key without namespace 1`] = `"seq:test_entity:id"`;

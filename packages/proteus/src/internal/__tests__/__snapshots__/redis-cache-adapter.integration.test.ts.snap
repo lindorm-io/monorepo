@@ -1,0 +1,24 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`RedisCacheAdapter stored values snapshot should store and retrieve complex JSON strings faithfully 1`] = `
+[
+  {
+    "id": "abc-123",
+    "name": "Widget",
+    "stock": 42,
+    "version": 1,
+  },
+  {
+    "id": "def-456",
+    "name": "Gadget",
+    "stock": null,
+    "version": 3,
+  },
+]
+`;
+
+exports[`RedisCacheAdapter: full CachingRepository integration should serve a cache miss on first find, cache hit on second, and miss again after insert 1`] = `"cache:RedisCachedProduct:find:2486c2c22479caff"`;
+
+exports[`RedisCacheAdapter: full CachingRepository integration should serve a cache miss on first find, cache hit on second, and miss again after insert 2`] = `[]`;
+
+exports[`RedisCacheAdapter: full CachingRepository integration should serve a cache miss on first find, cache hit on second, and miss again after insert 3`] = `"cache:RedisCachedProduct:"`;

@@ -1,0 +1,5 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`buildScanPattern should build pattern with namespace 1`] = `"myapp:entity:test_entity:*"`;
+
+exports[`buildScanPattern should build pattern without namespace 1`] = `"entity:test_entity:*"`;

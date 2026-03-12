@@ -1,0 +1,11 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`MemoryDriver.createRepository returns a functioning repository 1`] = `
+{
+  "createdAt": Any<Date>,
+  "id": Any<String>,
+  "name": "Repo Test",
+  "updatedAt": Any<Date>,
+  "version": 1,
+}
+`;

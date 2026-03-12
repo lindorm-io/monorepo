@@ -1,0 +1,28 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`buildSimpleIn — composite field keys should produce a ROW IN clause for two keys 1`] = `"ROW("tenant_id", "user_id") IN (($1, $2), ($3, $4))"`;
+
+exports[`buildSimpleIn — composite field keys should produce a ROW IN clause for two keys 2`] = `
+[
+  "t1",
+  "u1",
+  "t1",
+  "u2",
+]
+`;
+
+exports[`buildSimpleIn — composite field keys should resolve composite column names from metadata 1`] = `"ROW("tenant_id", "org_id") IN (($1, $2))"`;
+
+exports[`buildSimpleIn — single field key should produce a simple IN clause with multiple values 1`] = `""id" IN ($1, $2, $3)"`;
+
+exports[`buildSimpleIn — single field key should produce a simple IN clause with one value 1`] = `""id" IN ($1)"`;
+
+exports[`buildSimpleIn — single field key should produce a simple IN clause with one value 2`] = `
+[
+  "uuid-1",
+]
+`;
+
+exports[`buildSimpleIn — single field key should produce correct parameter placeholders for many values 1`] = `""id" IN ($1, $2, $3, $4, $5)"`;
+
+exports[`buildSimpleIn — single field key should resolve column name from metadata when metadata is provided 1`] = `""user_id" IN ($1)"`;

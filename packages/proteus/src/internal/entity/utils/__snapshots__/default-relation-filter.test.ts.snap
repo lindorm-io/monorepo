@@ -1,0 +1,20 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`defaultRelationFilter should build filter from findKeys and entity values 1`] = `
+{
+  "userId": "abc-123",
+}
+`;
+
+exports[`defaultRelationFilter should handle multiple findKeys 1`] = `
+{
+  "tenantId": "tenant-1",
+  "userId": "user-1",
+}
+`;
+
+exports[`defaultRelationFilter should set null for missing entity key 1`] = `
+{
+  "userId": null,
+}
+`;

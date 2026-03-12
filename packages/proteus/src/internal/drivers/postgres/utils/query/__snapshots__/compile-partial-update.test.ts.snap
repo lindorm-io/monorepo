@@ -1,0 +1,66 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`compilePartialUpdate Version/UpdateDate deduplication — no double-write params count is correct without duplicates 1`] = `
+{
+  "params": [
+    "Bob",
+    5,
+    2024-06-01T00:00:00.000Z,
+    "abc-123",
+    4,
+  ],
+  "text": "UPDATE "app"."users" AS "t0" SET "name" = $1, "version" = $2, "updated_at" = $3 WHERE "t0"."id" = $4 AND "t0"."version" = $5 RETURNING *",
+}
+`;
+
+exports[`compilePartialUpdate Version/UpdateDate deduplication — no double-write updated_at column in changed dict appears exactly once in SET clause 1`] = `
+{
+  "params": [
+    "Bob",
+    2024-06-01T00:00:00.000Z,
+    4,
+    "abc-123",
+    3,
+  ],
+  "text": "UPDATE "app"."users" AS "t0" SET "name" = $1, "updated_at" = $2, "version" = $3 WHERE "t0"."id" = $4 AND "t0"."version" = $5 RETURNING *",
+}
+`;
+
+exports[`compilePartialUpdate Version/UpdateDate deduplication — no double-write version and updatedAt both in changed — no extra params 1`] = `
+{
+  "params": [
+    "Charlie",
+    10,
+    2024-07-01T00:00:00.000Z,
+    "id-999",
+    9,
+  ],
+  "text": "UPDATE "app"."users" AS "t0" SET "name" = $1, "version" = $2, "updated_at" = $3 WHERE "t0"."id" = $4 AND "t0"."version" = $5 RETURNING *",
+}
+`;
+
+exports[`compilePartialUpdate Version/UpdateDate deduplication — no double-write version column in changed dict appears exactly once in SET clause 1`] = `
+{
+  "params": [
+    "Bob",
+    4,
+    2024-06-01T00:00:00.000Z,
+    "abc-123",
+    3,
+  ],
+  "text": "UPDATE "app"."users" AS "t0" SET "name" = $1, "version" = $2, "updated_at" = $3 WHERE "t0"."id" = $4 AND "t0"."version" = $5 RETURNING *",
+}
+`;
+
+exports[`compilePartialUpdate should compile UPDATE with only changed columns 1`] = `
+{
+  "params": [
+    "Bob",
+    3,
+    2024-06-01T00:00:00.000Z,
+    "abc-123",
+    2,
+  ],
+  "text": "UPDATE "app"."users" AS "t0" SET "name" = $1, "version" = $2, "updated_at" = $3 WHERE "t0"."id" = $4 AND "t0"."version" = $5 RETURNING *",
+}
+`;

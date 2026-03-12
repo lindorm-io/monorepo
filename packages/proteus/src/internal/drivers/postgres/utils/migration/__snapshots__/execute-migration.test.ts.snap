@@ -1,0 +1,3 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`executeMigrationUp should preserve the original PostgresMigrationError when deleteMigrationRecord also throws during cleanup 1`] = `"Migration up() failed"`;

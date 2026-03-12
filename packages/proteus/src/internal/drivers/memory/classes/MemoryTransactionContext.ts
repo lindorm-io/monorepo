@@ -1,0 +1,92 @@
+import type { Constructor } from "@lindorm/types";
+import type {
+  IEntity,
+  IProteusQueryBuilder,
+  IProteusRepository,
+  ITransactionContext,
+} from "../../../../interfaces";
+import type { RepositoryFactory } from "#internal/types/repository-factory";
+import type { MemoryTransactionHandle } from "../types/memory-store";
+import type { MemoryDriver } from "./MemoryDriver";
+import { MemoryDriverError } from "../errors/MemoryDriverError";
+
+export class MemoryTransactionContext implements ITransactionContext {
+  private readonly handle: MemoryTransactionHandle;
+  private readonly driver: MemoryDriver;
+  private readonly repoFactory: RepositoryFactory | undefined;
+
+  public constructor(
+    handle: MemoryTransactionHandle,
+    driver: MemoryDriver,
+    repositoryFactory?: RepositoryFactory,
+  ) {
+    this.handle = handle;
+    this.driver = driver;
+    this.repoFactory = repositoryFactory;
+  }
+
+  public repository<E extends IEntity>(target: Constructor<E>): IProteusRepository<E> {
+    if (!this.repoFactory) {
+      throw new MemoryDriverError("Transactional repositories are not configured");
+    }
+    return this.repoFactory(target);
+  }
+
+  public queryBuilder<E extends IEntity>(
+    target: Constructor<E>,
+  ): IProteusQueryBuilder<E> {
+    return this.driver.createTransactionalQueryBuilder(target, this.handle);
+  }
+
+  public async transaction<T>(
+    fn: (ctx: MemoryTransactionContext) => Promise<T>,
+  ): Promise<T> {
+    // Push savepoint
+    const savepoint = {
+      tables: new Map(
+        [...this.handle.store.tables].map(([k, t]) => [
+          k,
+          new Map([...t].map(([pk, row]) => [pk, structuredClone(row)])),
+        ]),
+      ),
+      joinTables: new Map(
+        [...this.handle.store.joinTables].map(([k, t]) => [
+          k,
+          new Map([...t].map(([pk, row]) => [pk, structuredClone(row)])),
+        ]),
+      ),
+      collectionTables: new Map(
+        [...this.handle.store.collectionTables].map(([k, ct]) => [
+          k,
+          new Map([...ct].map(([fk, rows]) => [fk, structuredClone(rows)])),
+        ]),
+      ),
+      incrementCounters: new Map(this.handle.store.incrementCounters),
+    };
+    this.handle.savepointStack.push(savepoint);
+
+    try {
+      const result = await fn(this);
+      this.handle.savepointStack.pop();
+      return result;
+    } catch (error) {
+      // Restore from savepoint
+      const restored = this.handle.savepointStack.pop();
+      if (restored) {
+        this.handle.store.tables = restored.tables;
+        this.handle.store.joinTables = restored.joinTables;
+        this.handle.store.collectionTables = restored.collectionTables;
+        this.handle.store.incrementCounters = restored.incrementCounters;
+      }
+      throw error;
+    }
+  }
+
+  public async commit(): Promise<void> {
+    await this.driver.commitTransaction(this.handle);
+  }
+
+  public async rollback(): Promise<void> {
+    await this.driver.rollbackTransaction(this.handle);
+  }
+}

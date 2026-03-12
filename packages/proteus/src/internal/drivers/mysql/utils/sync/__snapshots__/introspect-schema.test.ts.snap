@@ -1,0 +1,120 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`introspectSchema (MySQL) introspects check constraints 1`] = `
+[
+  {
+    "checkClause": "\`age\` >= 0",
+    "constraintName": "chk_age_positive",
+  },
+  {
+    "checkClause": "\`age\` < 200",
+    "constraintName": "chk_age_max",
+  },
+]
+`;
+
+exports[`introspectSchema (MySQL) introspects composite unique constraints 1`] = `
+[
+  {
+    "columns": [
+      {
+        "name": "tenant_id",
+        "ordinalPosition": 1,
+        "subPart": null,
+      },
+      {
+        "name": "email",
+        "ordinalPosition": 2,
+        "subPart": 191,
+      },
+    ],
+    "constraintName": "uq_tenant_email",
+  },
+]
+`;
+
+exports[`introspectSchema (MySQL) introspects foreign keys 1`] = `
+{
+  "columns": [
+    "author_id",
+  ],
+  "constraintName": "fk_posts_author",
+  "deleteRule": "CASCADE",
+  "referencedColumns": [
+    "id",
+  ],
+  "referencedTable": "users",
+  "updateRule": "CASCADE",
+}
+`;
+
+exports[`introspectSchema (MySQL) introspects indexes 1`] = `
+{
+  "columns": [
+    {
+      "direction": "asc",
+      "name": "name",
+      "seq": 1,
+      "subPart": null,
+    },
+  ],
+  "indexType": "BTREE",
+  "name": "idx_name",
+  "unique": false,
+}
+`;
+
+exports[`introspectSchema (MySQL) introspects tables with columns 1`] = `
+{
+  "tables": Map {
+    "users" => {
+      "checkConstraints": [],
+      "columns": [
+        {
+          "columnType": "char(36)",
+          "dataType": "char",
+          "defaultValue": null,
+          "extra": "",
+          "maxLength": 36,
+          "name": "id",
+          "nullable": false,
+          "numericPrecision": null,
+          "numericScale": null,
+          "ordinalPosition": 1,
+        },
+        {
+          "columnType": "varchar(255)",
+          "dataType": "varchar",
+          "defaultValue": null,
+          "extra": "",
+          "maxLength": 255,
+          "name": "name",
+          "nullable": true,
+          "numericPrecision": null,
+          "numericScale": null,
+          "ordinalPosition": 2,
+        },
+      ],
+      "foreignKeys": [],
+      "indexes": [],
+      "name": "users",
+      "uniqueConstraints": [],
+    },
+  },
+}
+`;
+
+exports[`introspectSchema (MySQL) introspects unique constraints 1`] = `
+[
+  {
+    "columns": [
+      {
+        "name": "email",
+        "ordinalPosition": 1,
+        "subPart": null,
+      },
+    ],
+    "constraintName": "uq_email",
+  },
+]
+`;

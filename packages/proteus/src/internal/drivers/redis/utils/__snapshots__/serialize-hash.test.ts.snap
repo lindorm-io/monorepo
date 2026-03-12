@@ -1,0 +1,121 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`serializeHash FK columns from relations should not serialize FK for ManyToMany relations 1`] = `
+{
+  "name": "test",
+}
+`;
+
+exports[`serializeHash FK columns from relations should not serialize FK when relation has no joinKeys 1`] = `
+{
+  "name": "test",
+}
+`;
+
+exports[`serializeHash FK columns from relations should omit null FK values 1`] = `
+{
+  "name": "test",
+}
+`;
+
+exports[`serializeHash FK columns from relations should serialize FK column from owning relation 1`] = `
+{
+  "authorId": "author-1",
+  "name": "test",
+}
+`;
+
+exports[`serializeHash FK columns from relations should skip FK column already handled by fields 1`] = `
+{
+  "authorId": "author-1",
+  "name": "test",
+}
+`;
+
+exports[`serializeHash basic types should serialize Date value 1`] = `
+{
+  "createdAt": "2024-01-15T10:30:00.000Z",
+}
+`;
+
+exports[`serializeHash basic types should serialize bigint value 1`] = `
+{
+  "count": "9007199254740992",
+}
+`;
+
+exports[`serializeHash basic types should serialize boolean value 1`] = `
+{
+  "active": "true",
+}
+`;
+
+exports[`serializeHash basic types should serialize false boolean 1`] = `
+{
+  "active": "false",
+}
+`;
+
+exports[`serializeHash basic types should serialize number value 1`] = `
+{
+  "age": "42",
+}
+`;
+
+exports[`serializeHash basic types should serialize string value 1`] = `
+{
+  "name": "hello",
+}
+`;
+
+exports[`serializeHash basic types should serialize uuid value 1`] = `
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+}
+`;
+
+exports[`serializeHash computed fields should skip computed fields 1`] = `
+{
+  "name": "test",
+}
+`;
+
+exports[`serializeHash multiple fields should serialize multiple fields of different types 1`] = `
+{
+  "active": "true",
+  "age": "30",
+  "createdAt": "2024-06-01T00:00:00.000Z",
+  "id": "abc-123",
+  "name": "Test User",
+}
+`;
+
+exports[`serializeHash null/undefined handling should omit null values 1`] = `
+{
+  "name": "test",
+}
+`;
+
+exports[`serializeHash null/undefined handling should omit undefined values 1`] = `
+{
+  "name": "test",
+}
+`;
+
+exports[`serializeHash structured types should serialize array value as JSON 1`] = `
+{
+  "tags": "["a","b","c"]",
+}
+`;
+
+exports[`serializeHash structured types should serialize json value as JSON 1`] = `
+{
+  "config": "{"nested":{"value":1}}",
+}
+`;
+
+exports[`serializeHash structured types should serialize object value as JSON 1`] = `
+{
+  "meta": "{"foo":"bar"}",
+}
+`;

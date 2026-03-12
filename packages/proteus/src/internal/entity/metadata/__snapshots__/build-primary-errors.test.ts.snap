@@ -1,0 +1,15 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`build-primary — @EmbeddedList / @Field key collision guard (C9) error message includes the colliding property name 1`] = `"Property "items" is declared as both @Field and @EmbeddedList — use one or the other"`;
+
+exports[`build-primary — duplicate @EmbeddedList table name guard (B11) error message should include the duplicate table name 1`] = `"Duplicate collection table name "dup_table" — two @EmbeddedList fields resolve to the same table"`;
+
+exports[`build-primary — nested @Embeddable guard (B7) error message should include the referencing field key and embeddable class name 1`] = `"@Embedded property "profile" references class "NestedOuter" which contains nested @Embedded fields. Nested embeddables are not supported — use a flat @Embeddable class or inline the fields directly."`;
+
+exports[`build-primary — parentFkColumn uses column name not property key (C7) parentFkColumn reflects column name override across different pk property key names 1`] = `"c7_alpha_entity_record_id"`;
+
+exports[`build-primary — parentFkColumn uses column name not property key (C7) parentFkColumn uses property key as fallback when field has no explicit name override 1`] = `"c7_default_name_entity_id"`;
+
+exports[`build-primary — parentFkColumn uses column name not property key (C7) parentFkColumn uses the pk field column name when @Field has an explicit name override 1`] = `"c7_custom_pk_entity_id"`;
+
+exports[`build-primary — reject structured @EmbeddedList element types (B13) error message should include the element type and mention @Embeddable alternative 1`] = `"@EmbeddedList property "configs" uses element type "json" which is not supported. Use an @Embeddable class for structured elements, or a primitive type (string, integer, etc.) for scalar elements."`;

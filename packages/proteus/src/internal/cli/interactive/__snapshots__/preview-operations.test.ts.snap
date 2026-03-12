@@ -1,0 +1,28 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`previewOperations should produce all-destructive output as snapshot 1`] = `
+"Operations (1):
+
+  destructive  drop column legacy_id
+
+  Summary: 0 safe, 0 warning, 1 destructive"
+`;
+
+exports[`previewOperations should produce all-safe output as snapshot 1`] = `
+"Operations (2):
+
+  safe         add column created_at
+  safe         add index on user_id
+
+  Summary: 2 safe, 0 warning, 0 destructive"
+`;
+
+exports[`previewOperations should produce the correct output for a mix of severities 1`] = `
+"Operations (3):
+
+  safe         add column id
+  warning      alter column type
+  destructive  drop column old_name
+
+  Summary: 1 safe, 1 warning, 1 destructive"
+`;

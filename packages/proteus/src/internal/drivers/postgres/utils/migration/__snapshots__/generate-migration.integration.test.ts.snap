@@ -1,0 +1,12 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`generate-migration (integration) should generate migration from empty DB and capture all operations 1`] = `
+[
+  "id",
+  "version",
+  "createdAt",
+  "updatedAt",
+  "age",
+  "score",
+]
+`;

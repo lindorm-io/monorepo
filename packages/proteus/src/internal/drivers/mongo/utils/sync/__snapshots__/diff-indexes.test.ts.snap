@@ -1,0 +1,187 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`diffIndexes should create new index when not in existing 1`] = `
+{
+  "collectionsToCreate": [],
+  "indexesToCreate": [
+    {
+      "collection": "users",
+      "expireAfterSeconds": null,
+      "keys": {
+        "email": 1,
+      },
+      "name": "idx_email",
+      "sparse": false,
+      "unique": false,
+    },
+  ],
+  "indexesToDrop": [],
+}
+`;
+
+exports[`diffIndexes should detect new collections to create 1`] = `
+[
+  "orders",
+]
+`;
+
+exports[`diffIndexes should drop and recreate when TTL changes 1`] = `
+{
+  "collectionsToCreate": [],
+  "indexesToCreate": [
+    {
+      "collection": "users",
+      "expireAfterSeconds": 7200,
+      "keys": {
+        "name": 1,
+      },
+      "name": "idx_name",
+      "sparse": false,
+      "unique": false,
+    },
+  ],
+  "indexesToDrop": [
+    {
+      "collection": "users",
+      "name": "idx_name",
+    },
+  ],
+}
+`;
+
+exports[`diffIndexes should drop and recreate when keys differ 1`] = `
+{
+  "collectionsToCreate": [],
+  "indexesToCreate": [
+    {
+      "collection": "users",
+      "expireAfterSeconds": null,
+      "keys": {
+        "name": -1,
+      },
+      "name": "idx_a",
+      "sparse": false,
+      "unique": false,
+    },
+  ],
+  "indexesToDrop": [
+    {
+      "collection": "users",
+      "name": "idx_a",
+    },
+  ],
+}
+`;
+
+exports[`diffIndexes should drop and recreate when sparse flag changes 1`] = `
+{
+  "collectionsToCreate": [],
+  "indexesToCreate": [
+    {
+      "collection": "users",
+      "expireAfterSeconds": null,
+      "keys": {
+        "name": 1,
+      },
+      "name": "idx_name",
+      "sparse": true,
+      "unique": false,
+    },
+  ],
+  "indexesToDrop": [
+    {
+      "collection": "users",
+      "name": "idx_name",
+    },
+  ],
+}
+`;
+
+exports[`diffIndexes should drop and recreate when unique flag changes 1`] = `
+{
+  "collectionsToCreate": [],
+  "indexesToCreate": [
+    {
+      "collection": "users",
+      "expireAfterSeconds": null,
+      "keys": {
+        "name": 1,
+      },
+      "name": "idx_name",
+      "sparse": false,
+      "unique": true,
+    },
+  ],
+  "indexesToDrop": [
+    {
+      "collection": "users",
+      "name": "idx_name",
+    },
+  ],
+}
+`;
+
+exports[`diffIndexes should drop existing index when not in desired 1`] = `
+{
+  "collectionsToCreate": [],
+  "indexesToCreate": [],
+  "indexesToDrop": [
+    {
+      "collection": "users",
+      "name": "idx_old",
+    },
+  ],
+}
+`;
+
+exports[`diffIndexes should handle multiple indexes across collections 1`] = `
+{
+  "collectionsToCreate": [
+    "products",
+  ],
+  "indexesToCreate": [
+    {
+      "collection": "orders",
+      "expireAfterSeconds": null,
+      "keys": {
+        "status": 1,
+      },
+      "name": "idx_status",
+      "sparse": false,
+      "unique": false,
+    },
+    {
+      "collection": "products",
+      "expireAfterSeconds": null,
+      "keys": {
+        "sku": 1,
+      },
+      "name": "idx_sku",
+      "sparse": false,
+      "unique": false,
+    },
+  ],
+  "indexesToDrop": [
+    {
+      "collection": "orders",
+      "name": "idx_total",
+    },
+  ],
+}
+`;
+
+exports[`diffIndexes should keep index unchanged when it matches 1`] = `
+{
+  "collectionsToCreate": [],
+  "indexesToCreate": [],
+  "indexesToDrop": [],
+}
+`;
+
+exports[`diffIndexes should return empty plan when no indexes exist and none desired 1`] = `
+{
+  "collectionsToCreate": [],
+  "indexesToCreate": [],
+  "indexesToDrop": [],
+}
+`;

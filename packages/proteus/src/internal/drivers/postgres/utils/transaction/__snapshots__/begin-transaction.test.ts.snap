@@ -1,0 +1,7 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`beginTransaction should wrap pool.connect() failure in PostgresTransactionError 1`] = `
+[
+  "Error: connection pool exhausted",
+]
+`;

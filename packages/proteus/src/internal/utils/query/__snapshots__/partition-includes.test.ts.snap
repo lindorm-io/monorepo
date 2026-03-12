@@ -1,0 +1,89 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`partitionIncludes should put all join includes in joinIncludes 1`] = `
+{
+  "joinIncludes": [
+    {
+      "relation": "author",
+      "required": false,
+      "select": null,
+      "strategy": "join",
+      "where": null,
+    },
+    {
+      "relation": "profile",
+      "required": false,
+      "select": null,
+      "strategy": "join",
+      "where": null,
+    },
+  ],
+  "queryIncludes": [],
+}
+`;
+
+exports[`partitionIncludes should put all query includes in queryIncludes 1`] = `
+{
+  "joinIncludes": [],
+  "queryIncludes": [
+    {
+      "relation": "posts",
+      "required": false,
+      "select": null,
+      "strategy": "query",
+      "where": null,
+    },
+    {
+      "relation": "tags",
+      "required": false,
+      "select": null,
+      "strategy": "query",
+      "where": null,
+    },
+  ],
+}
+`;
+
+exports[`partitionIncludes should return empty arrays for empty includes 1`] = `
+{
+  "joinIncludes": [],
+  "queryIncludes": [],
+}
+`;
+
+exports[`partitionIncludes should split mixed includes correctly 1`] = `
+{
+  "joinIncludes": [
+    {
+      "relation": "author",
+      "required": false,
+      "select": null,
+      "strategy": "join",
+      "where": null,
+    },
+    {
+      "relation": "profile",
+      "required": false,
+      "select": null,
+      "strategy": "join",
+      "where": null,
+    },
+  ],
+  "queryIncludes": [
+    {
+      "relation": "posts",
+      "required": false,
+      "select": null,
+      "strategy": "query",
+      "where": null,
+    },
+    {
+      "relation": "tags",
+      "required": false,
+      "select": null,
+      "strategy": "query",
+      "where": null,
+    },
+  ],
+}
+`;

@@ -1,0 +1,77 @@
+import type { MetaHook } from "../types/metadata";
+import { runHooksAsync } from "./run-hooks-async";
+
+describe("runHooksAsync", () => {
+  const hooks: Array<MetaHook> = [
+    { decorator: "BeforeInsert", callback: jest.fn().mockResolvedValue(undefined) },
+    { decorator: "AfterInsert", callback: jest.fn().mockResolvedValue(undefined) },
+    { decorator: "BeforeInsert", callback: jest.fn().mockResolvedValue(undefined) },
+  ];
+
+  beforeEach(() => {
+    for (const h of hooks) {
+      (h.callback as jest.Mock).mockClear();
+    }
+  });
+
+  test("should call only hooks matching the decorator", async () => {
+    const entity = { id: "1" };
+    await runHooksAsync("BeforeInsert", hooks, entity);
+
+    expect(hooks[0].callback).toHaveBeenCalledTimes(1);
+    expect(hooks[1].callback).not.toHaveBeenCalled();
+    expect(hooks[2].callback).toHaveBeenCalledTimes(1);
+  });
+
+  test("should pass context and entity to callbacks", async () => {
+    const entity = { id: "1" };
+    const ctx = { user: "admin" };
+    await runHooksAsync("BeforeInsert", hooks, entity, ctx);
+
+    expect(hooks[0].callback).toHaveBeenCalledWith(ctx, entity);
+  });
+
+  test("should execute hooks sequentially", async () => {
+    const order: Array<number> = [];
+    const seqHooks: Array<MetaHook> = [
+      {
+        decorator: "BeforeInsert",
+        callback: jest.fn(async () => {
+          await new Promise((r) => setTimeout(r, 10));
+          order.push(1);
+        }),
+      },
+      {
+        decorator: "BeforeInsert",
+        callback: jest.fn(async () => {
+          order.push(2);
+        }),
+      },
+    ];
+
+    await runHooksAsync("BeforeInsert", seqHooks, { id: "1" });
+
+    expect(order).toEqual([1, 2]);
+  });
+
+  test("should be a no-op when no hooks match", async () => {
+    await runHooksAsync("AfterDestroy", hooks, { id: "1" });
+
+    for (const h of hooks) {
+      expect(h.callback).not.toHaveBeenCalled();
+    }
+  });
+
+  test("should propagate async errors", async () => {
+    const errorHooks: Array<MetaHook> = [
+      {
+        decorator: "BeforeInsert",
+        callback: jest.fn().mockRejectedValue(new Error("hook failed")),
+      },
+    ];
+
+    await expect(runHooksAsync("BeforeInsert", errorHooks, { id: "1" })).rejects.toThrow(
+      "hook failed",
+    );
+  });
+});

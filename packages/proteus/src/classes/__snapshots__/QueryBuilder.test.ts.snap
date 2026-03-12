@@ -1,0 +1,228 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`QueryBuilder andWhere should append with AND conjunction 1`] = `
+[
+  {
+    "conjunction": "and",
+    "predicate": {
+      "name": "test",
+    },
+  },
+  {
+    "conjunction": "and",
+    "predicate": {
+      "age": {
+        "$gt": 18,
+      },
+    },
+  },
+]
+`;
+
+exports[`QueryBuilder chaining should support fluent chaining 1`] = `
+{
+  "cteFrom": null,
+  "ctes": [],
+  "distinct": true,
+  "filterOverrides": {},
+  "groupBy": null,
+  "having": [],
+  "includes": [
+    {
+      "relation": "posts",
+      "required": false,
+      "select": null,
+      "strategy": "query",
+      "where": null,
+    },
+  ],
+  "lock": null,
+  "orderBy": {
+    "name": "ASC",
+  },
+  "predicates": [
+    {
+      "conjunction": "and",
+      "predicate": {
+        "name": "test",
+      },
+    },
+    {
+      "conjunction": "and",
+      "predicate": {
+        "age": {
+          "$gte": 18,
+        },
+      },
+    },
+  ],
+  "rawHaving": [],
+  "rawSelections": [],
+  "rawWhere": [],
+  "resolvedFilters": [],
+  "selections": [
+    "id",
+    "name",
+  ],
+  "setOperations": [],
+  "skip": 0,
+  "subqueryPredicates": [],
+  "take": 10,
+  "versionTimestamp": null,
+  "windows": [],
+  "withAllVersions": false,
+  "withDeleted": true,
+  "withoutScope": false,
+}
+`;
+
+exports[`QueryBuilder having should set having predicates 1`] = `
+[
+  {
+    "conjunction": "and",
+    "predicate": {
+      "age": {
+        "$gt": 18,
+      },
+    },
+  },
+]
+`;
+
+exports[`QueryBuilder havingRaw should set rawHaving 1`] = `
+[
+  {
+    "conjunction": "and",
+    "params": [
+      5,
+    ],
+    "sql": "COUNT(*) > $1",
+  },
+]
+`;
+
+exports[`QueryBuilder include should add include spec with all options 1`] = `
+[
+  {
+    "relation": "posts",
+    "required": true,
+    "select": [
+      "id",
+    ],
+    "strategy": "join",
+    "where": {
+      "status": {
+        "$in": [
+          "published",
+          "draft",
+        ],
+      },
+    },
+  },
+]
+`;
+
+exports[`QueryBuilder include should add include spec with defaults 1`] = `
+[
+  {
+    "relation": "posts",
+    "required": false,
+    "select": null,
+    "strategy": "query",
+    "where": null,
+  },
+]
+`;
+
+exports[`QueryBuilder include should add include spec with options 1`] = `
+[
+  {
+    "relation": "posts",
+    "required": true,
+    "select": [
+      "id",
+      "title",
+    ],
+    "strategy": "join",
+    "where": null,
+  },
+]
+`;
+
+exports[`QueryBuilder include should add include spec with where predicate 1`] = `
+[
+  {
+    "relation": "posts",
+    "required": false,
+    "select": null,
+    "strategy": "query",
+    "where": {
+      "status": "published",
+    },
+  },
+]
+`;
+
+exports[`QueryBuilder orWhere should append with OR conjunction 1`] = `
+[
+  {
+    "conjunction": "and",
+    "predicate": {
+      "name": "test",
+    },
+  },
+  {
+    "conjunction": "or",
+    "predicate": {
+      "email": {
+        "$exists": true,
+      },
+    },
+  },
+]
+`;
+
+exports[`QueryBuilder selectRaw should add raw selection 1`] = `
+[
+  {
+    "alias": "total",
+    "expression": "COUNT(*)",
+    "params": [],
+  },
+]
+`;
+
+exports[`QueryBuilder where should set predicates 1`] = `
+[
+  {
+    "conjunction": "and",
+    "predicate": {
+      "name": "test",
+    },
+  },
+]
+`;
+
+exports[`QueryBuilder whereRaw should set rawWhere with AND conjunction 1`] = `
+[
+  {
+    "conjunction": "and",
+    "params": [
+      18,
+    ],
+    "sql": "age > $1",
+  },
+]
+`;
+
+exports[`QueryBuilder window should add window spec 1`] = `
+[
+  {
+    "alias": "rn",
+    "fn": "ROW_NUMBER",
+    "orderBy": {
+      "name": "ASC",
+    },
+  },
+]
+`;

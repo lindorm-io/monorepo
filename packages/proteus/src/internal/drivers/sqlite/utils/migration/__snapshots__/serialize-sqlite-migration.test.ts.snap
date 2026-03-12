@@ -1,0 +1,511 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`serializeSqliteMigration SQL escaping should escape backslashes in DDL 1`] = `
+"import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
+
+export class Generated20250615103045 implements MigrationInterface {
+  public readonly id = "00000000-0000-0000-0000-000000000000";
+  public readonly ts = "2025-06-15T10:30:45.000Z";
+  public readonly driver = "sqlite";
+
+  public async up(runner: SqlMigrationRunner): Promise<void> {
+    // Create table "test"
+    await runner.query(\`CREATE TABLE "test" ("path" TEXT DEFAULT 'C:\\\\data');\`);
+  }
+
+  public async down(runner: SqlMigrationRunner): Promise<void> {
+    await runner.query(\`DROP TABLE IF EXISTS "test"\`);
+  }
+}
+"
+`;
+
+exports[`serializeSqliteMigration SQL escaping should escape backticks in DDL 1`] = `
+"import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
+
+export class Generated20250615103045 implements MigrationInterface {
+  public readonly id = "00000000-0000-0000-0000-000000000000";
+  public readonly ts = "2025-06-15T10:30:45.000Z";
+  public readonly driver = "sqlite";
+
+  public async up(runner: SqlMigrationRunner): Promise<void> {
+    // Create table "test"
+    await runner.query(\`CREATE TABLE "test" ("col\\\`name" TEXT);\`);
+  }
+
+  public async down(runner: SqlMigrationRunner): Promise<void> {
+    await runner.query(\`DROP TABLE IF EXISTS "test"\`);
+  }
+}
+"
+`;
+
+exports[`serializeSqliteMigration SQL escaping should escape dollar signs in DDL 1`] = `
+"import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
+
+export class Generated20250615103045 implements MigrationInterface {
+  public readonly id = "00000000-0000-0000-0000-000000000000";
+  public readonly ts = "2025-06-15T10:30:45.000Z";
+  public readonly driver = "sqlite";
+
+  public async up(runner: SqlMigrationRunner): Promise<void> {
+    // Create table "test"
+    await runner.query(\`CREATE TABLE "test" ("price" TEXT DEFAULT '\\$0.00');\`);
+  }
+
+  public async down(runner: SqlMigrationRunner): Promise<void> {
+    await runner.query(\`DROP TABLE IF EXISTS "test"\`);
+  }
+}
+"
+`;
+
+exports[`serializeSqliteMigration add_column operation should generate up body for add_column with irreversible down warning 1`] = `
+"import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
+
+export class Generated20250615103045 implements MigrationInterface {
+  public readonly id = "00000000-0000-0000-0000-000000000000";
+  public readonly ts = "2025-06-15T10:30:45.000Z";
+  public readonly driver = "sqlite";
+
+  public async up(runner: SqlMigrationRunner): Promise<void> {
+    // Add column on "users"
+    await runner.query(\`ALTER TABLE "users" ADD COLUMN "email" TEXT;\`);
+  }
+
+  public async down(runner: SqlMigrationRunner): Promise<void> {
+    // WARN: irreversible — SQLite does not support DROP COLUMN via ALTER TABLE in all versions
+  }
+}
+"
+`;
+
+exports[`serializeSqliteMigration create_index operation should emit warning when index name cannot be extracted 1`] = `
+"import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
+
+export class Generated20250615103045 implements MigrationInterface {
+  public readonly id = "00000000-0000-0000-0000-000000000000";
+  public readonly ts = "2025-06-15T10:30:45.000Z";
+  public readonly driver = "sqlite";
+
+  public async up(runner: SqlMigrationRunner): Promise<void> {
+    // Create index
+    await runner.query(\`CREATE INDEX ON users (email);\`);
+  }
+
+  public async down(runner: SqlMigrationRunner): Promise<void> {
+    // WARN: irreversible — could not extract index name from DDL
+  }
+}
+"
+`;
+
+exports[`serializeSqliteMigration create_index operation should generate up and down bodies for create_index 1`] = `
+"import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
+
+export class Generated20250615103045 implements MigrationInterface {
+  public readonly id = "00000000-0000-0000-0000-000000000000";
+  public readonly ts = "2025-06-15T10:30:45.000Z";
+  public readonly driver = "sqlite";
+
+  public async up(runner: SqlMigrationRunner): Promise<void> {
+    // Create index
+    await runner.query(\`CREATE INDEX "idx_users_email" ON "users" ("email");\`);
+  }
+
+  public async down(runner: SqlMigrationRunner): Promise<void> {
+    await runner.query(\`DROP INDEX IF EXISTS "idx_users_email"\`);
+  }
+}
+"
+`;
+
+exports[`serializeSqliteMigration create_index operation should generate up and down bodies for unique index 1`] = `
+"import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
+
+export class Generated20250615103045 implements MigrationInterface {
+  public readonly id = "00000000-0000-0000-0000-000000000000";
+  public readonly ts = "2025-06-15T10:30:45.000Z";
+  public readonly driver = "sqlite";
+
+  public async up(runner: SqlMigrationRunner): Promise<void> {
+    // Create index
+    await runner.query(\`CREATE UNIQUE INDEX IF NOT EXISTS "idx_users_email_unique" ON "users" ("email");\`);
+  }
+
+  public async down(runner: SqlMigrationRunner): Promise<void> {
+    await runner.query(\`DROP INDEX IF EXISTS "idx_users_email_unique"\`);
+  }
+}
+"
+`;
+
+exports[`serializeSqliteMigration create_table operation should generate up and down bodies for create_table 1`] = `
+"import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
+
+export class Generated20250615103045 implements MigrationInterface {
+  public readonly id = "00000000-0000-0000-0000-000000000000";
+  public readonly ts = "2025-06-15T10:30:45.000Z";
+  public readonly driver = "sqlite";
+
+  public async up(runner: SqlMigrationRunner): Promise<void> {
+    // Create table "users"
+    await runner.query(\`CREATE TABLE "users" ( "id" TEXT PRIMARY KEY, "name" TEXT NOT NULL );\`);
+  }
+
+  public async down(runner: SqlMigrationRunner): Promise<void> {
+    await runner.query(\`DROP TABLE IF EXISTS "users"\`);
+  }
+}
+"
+`;
+
+exports[`serializeSqliteMigration create_table operation should handle multiple create_table operations 1`] = `
+"import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
+
+export class Generated20250615103045 implements MigrationInterface {
+  public readonly id = "00000000-0000-0000-0000-000000000000";
+  public readonly ts = "2025-06-15T10:30:45.000Z";
+  public readonly driver = "sqlite";
+
+  public async up(runner: SqlMigrationRunner): Promise<void> {
+    // Create table "users"
+    await runner.query(\`CREATE TABLE "users" ("id" TEXT PRIMARY KEY);\`);
+
+    // Create table "posts"
+    await runner.query(\`CREATE TABLE "posts" ("id" TEXT PRIMARY KEY, "user_id" TEXT NOT NULL);\`);
+  }
+
+  public async down(runner: SqlMigrationRunner): Promise<void> {
+    await runner.query(\`DROP TABLE IF EXISTS "posts"\`);
+    await runner.query(\`DROP TABLE IF EXISTS "users"\`);
+  }
+}
+"
+`;
+
+exports[`serializeSqliteMigration drop_index operation should generate up body for drop_index with irreversible down warning 1`] = `
+"import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
+
+export class Generated20250615103045 implements MigrationInterface {
+  public readonly id = "00000000-0000-0000-0000-000000000000";
+  public readonly ts = "2025-06-15T10:30:45.000Z";
+  public readonly driver = "sqlite";
+
+  public async up(runner: SqlMigrationRunner): Promise<void> {
+    // Drop index "idx_users_email"
+    await runner.query(\`DROP INDEX IF EXISTS "idx_users_email"\`);
+  }
+
+  public async down(runner: SqlMigrationRunner): Promise<void> {
+    // WARN: irreversible — original index DDL not available for recreation
+  }
+}
+"
+`;
+
+exports[`serializeSqliteMigration drop_table operation should generate up body for drop_table with irreversible down warning 1`] = `
+"import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
+
+export class Generated20250615103045 implements MigrationInterface {
+  public readonly id = "00000000-0000-0000-0000-000000000000";
+  public readonly ts = "2025-06-15T10:30:45.000Z";
+  public readonly driver = "sqlite";
+
+  public async up(runner: SqlMigrationRunner): Promise<void> {
+    // Drop table "legacy_data"
+    await runner.query(\`DROP TABLE IF EXISTS "legacy_data"\`);
+  }
+
+  public async down(runner: SqlMigrationRunner): Promise<void> {
+    // WARN: irreversible — original table DDL not available for recreation
+  }
+}
+"
+`;
+
+exports[`serializeSqliteMigration empty plan should generate valid migration with empty up and down bodies 1`] = `
+"import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
+
+export class Generated20250615103045 implements MigrationInterface {
+  public readonly id = "00000000-0000-0000-0000-000000000000";
+  public readonly ts = "2025-06-15T10:30:45.000Z";
+  public readonly driver = "sqlite";
+
+  public async up(runner: SqlMigrationRunner): Promise<void> {
+  }
+
+  public async down(runner: SqlMigrationRunner): Promise<void> {
+  }
+}
+"
+`;
+
+exports[`serializeSqliteMigration metadata should produce deterministic filename, id, ts, and checksum 1`] = `"20250615103045-generated.ts"`;
+
+exports[`serializeSqliteMigration metadata should produce deterministic filename, id, ts, and checksum 2`] = `"00000000-0000-0000-0000-000000000000"`;
+
+exports[`serializeSqliteMigration metadata should produce deterministic filename, id, ts, and checksum 3`] = `"2025-06-15T10:30:45.000Z"`;
+
+exports[`serializeSqliteMigration metadata should produce deterministic filename, id, ts, and checksum 4`] = `"mocked-checksum-sha256"`;
+
+exports[`serializeSqliteMigration metadata should sanitize custom name 1`] = `"20250615103045-add-user-table.ts"`;
+
+exports[`serializeSqliteMigration metadata should sanitize custom name 2`] = `
+"import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
+
+export class AddUserTable implements MigrationInterface {
+  public readonly id = "00000000-0000-0000-0000-000000000000";
+  public readonly ts = "2025-06-15T10:30:45.000Z";
+  public readonly driver = "sqlite";
+
+  public async up(runner: SqlMigrationRunner): Promise<void> {
+  }
+
+  public async down(runner: SqlMigrationRunner): Promise<void> {
+  }
+}
+"
+`;
+
+exports[`serializeSqliteMigration metadata should use 'generated' slug when no name is provided 1`] = `"20250615103045-generated.ts"`;
+
+exports[`serializeSqliteMigration metadata should use 'generated' slug when no name is provided 2`] = `
+"import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
+
+export class Generated20250615103045 implements MigrationInterface {
+  public readonly id = "00000000-0000-0000-0000-000000000000";
+  public readonly ts = "2025-06-15T10:30:45.000Z";
+  public readonly driver = "sqlite";
+
+  public async up(runner: SqlMigrationRunner): Promise<void> {
+  }
+
+  public async down(runner: SqlMigrationRunner): Promise<void> {
+  }
+}
+"
+`;
+
+exports[`serializeSqliteMigration metadata should use custom name for filename and class name 1`] = `"20250615103045-add-user-table.ts"`;
+
+exports[`serializeSqliteMigration metadata should use custom name for filename and class name 2`] = `
+"import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
+
+export class AddUserTable implements MigrationInterface {
+  public readonly id = "00000000-0000-0000-0000-000000000000";
+  public readonly ts = "2025-06-15T10:30:45.000Z";
+  public readonly driver = "sqlite";
+
+  public async up(runner: SqlMigrationRunner): Promise<void> {
+  }
+
+  public async down(runner: SqlMigrationRunner): Promise<void> {
+  }
+}
+"
+`;
+
+exports[`serializeSqliteMigration mixed operations should handle a plan with multiple operation types 1`] = `
+"import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
+
+export class BigMigration implements MigrationInterface {
+  public readonly id = "00000000-0000-0000-0000-000000000000";
+  public readonly ts = "2025-06-15T10:30:45.000Z";
+  public readonly driver = "sqlite";
+
+  public async up(runner: SqlMigrationRunner): Promise<void> {
+    // Create table "categories"
+    await runner.query(\`CREATE TABLE "categories" ("id" TEXT PRIMARY KEY, "name" TEXT NOT NULL);\`);
+
+    // Add column on "posts"
+    await runner.query(\`ALTER TABLE "posts" ADD COLUMN "category_id" TEXT;\`);
+
+    // Create index
+    await runner.query(\`CREATE INDEX "idx_posts_category_id" ON "posts" ("category_id");\`);
+
+    // Drop index "idx_posts_legacy"
+    await runner.query(\`DROP INDEX IF EXISTS "idx_posts_legacy"\`);
+
+    // Recreate table "users"
+    await runner.query(\`PRAGMA foreign_keys = OFF\`);
+    await runner.transaction(async (ctx) => {
+      await ctx.query(\`CREATE TABLE "_new_users" ("id" TEXT PRIMARY KEY, "name" TEXT NOT NULL, "email" TEXT UNIQUE);\`);
+      await ctx.query(\`INSERT INTO "_new_users" SELECT "id", "name" FROM "users"\`);
+      await ctx.query(\`DROP TABLE "users"\`);
+      await ctx.query(\`ALTER TABLE "_new_users" RENAME TO "users"\`);
+      await ctx.query(\`CREATE UNIQUE INDEX "idx_users_email" ON "users" ("email");\`);
+    });
+    await runner.query(\`PRAGMA foreign_keys = ON\`);
+    await runner.query(\`PRAGMA foreign_key_check\`);
+  }
+
+  public async down(runner: SqlMigrationRunner): Promise<void> {
+    // WARN: irreversible — recreate_table for "users" cannot be automatically reversed
+    // WARN: irreversible — original index DDL not available for recreation
+    await runner.query(\`DROP INDEX IF EXISTS "idx_posts_category_id"\`);
+    // WARN: irreversible — SQLite does not support DROP COLUMN via ALTER TABLE in all versions
+    await runner.query(\`DROP TABLE IF EXISTS "categories"\`);
+  }
+}
+"
+`;
+
+exports[`serializeSqliteMigration mixed operations should reverse operations in down body 1`] = `
+"import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
+
+export class Generated20250615103045 implements MigrationInterface {
+  public readonly id = "00000000-0000-0000-0000-000000000000";
+  public readonly ts = "2025-06-15T10:30:45.000Z";
+  public readonly driver = "sqlite";
+
+  public async up(runner: SqlMigrationRunner): Promise<void> {
+    // Create table "first"
+    await runner.query(\`CREATE TABLE "first" ("id" TEXT PRIMARY KEY);\`);
+
+    // Create table "second"
+    await runner.query(\`CREATE TABLE "second" ("id" TEXT PRIMARY KEY);\`);
+  }
+
+  public async down(runner: SqlMigrationRunner): Promise<void> {
+    await runner.query(\`DROP TABLE IF EXISTS "second"\`);
+    await runner.query(\`DROP TABLE IF EXISTS "first"\`);
+  }
+}
+"
+`;
+
+exports[`serializeSqliteMigration recreate_table operation should fallback to _new_ prefix when temp table name cannot be extracted 1`] = `
+"import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
+
+export class Generated20250615103045 implements MigrationInterface {
+  public readonly id = "00000000-0000-0000-0000-000000000000";
+  public readonly ts = "2025-06-15T10:30:45.000Z";
+  public readonly driver = "sqlite";
+
+  public async up(runner: SqlMigrationRunner): Promise<void> {
+    // Recreate table "items"
+    await runner.query(\`PRAGMA foreign_keys = OFF\`);
+    await runner.transaction(async (ctx) => {
+      await ctx.query(\`CREATE TABLE items_temp (id TEXT PRIMARY KEY);\`);
+      await ctx.query(\`INSERT INTO "_new_items" SELECT "id" FROM "items"\`);
+      await ctx.query(\`DROP TABLE "items"\`);
+      await ctx.query(\`ALTER TABLE "_new_items" RENAME TO "items"\`);
+    });
+    await runner.query(\`PRAGMA foreign_keys = ON\`);
+    await runner.query(\`PRAGMA foreign_key_check\`);
+  }
+
+  public async down(runner: SqlMigrationRunner): Promise<void> {
+    // WARN: irreversible — recreate_table for "items" cannot be automatically reversed
+  }
+}
+"
+`;
+
+exports[`serializeSqliteMigration recreate_table operation should generate full recreate_table migration with transaction 1`] = `
+"import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
+
+export class Generated20250615103045 implements MigrationInterface {
+  public readonly id = "00000000-0000-0000-0000-000000000000";
+  public readonly ts = "2025-06-15T10:30:45.000Z";
+  public readonly driver = "sqlite";
+
+  public async up(runner: SqlMigrationRunner): Promise<void> {
+    // Recreate table "users"
+    await runner.query(\`PRAGMA foreign_keys = OFF\`);
+    await runner.transaction(async (ctx) => {
+      await ctx.query(\`CREATE TABLE "_new_users" ( "id" TEXT PRIMARY KEY, "name" TEXT NOT NULL, "email" TEXT );\`);
+      await ctx.query(\`INSERT INTO "_new_users" SELECT "id", "name" FROM "users"\`);
+      await ctx.query(\`DROP TABLE "users"\`);
+      await ctx.query(\`ALTER TABLE "_new_users" RENAME TO "users"\`);
+      await ctx.query(\`CREATE INDEX "idx_users_name" ON "users" ("name");\`);
+    });
+    await runner.query(\`PRAGMA foreign_keys = ON\`);
+    await runner.query(\`PRAGMA foreign_key_check\`);
+  }
+
+  public async down(runner: SqlMigrationRunner): Promise<void> {
+    // WARN: irreversible — recreate_table for "users" cannot be automatically reversed
+  }
+}
+"
+`;
+
+exports[`serializeSqliteMigration recreate_table operation should handle recreate_table with multiple indexes 1`] = `
+"import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
+
+export class Generated20250615103045 implements MigrationInterface {
+  public readonly id = "00000000-0000-0000-0000-000000000000";
+  public readonly ts = "2025-06-15T10:30:45.000Z";
+  public readonly driver = "sqlite";
+
+  public async up(runner: SqlMigrationRunner): Promise<void> {
+    // Recreate table "orders"
+    await runner.query(\`PRAGMA foreign_keys = OFF\`);
+    await runner.transaction(async (ctx) => {
+      await ctx.query(\`CREATE TABLE "_new_orders" ("id" TEXT PRIMARY KEY, "user_id" TEXT, "status" TEXT);\`);
+      await ctx.query(\`INSERT INTO "_new_orders" SELECT "id", "user_id", "status" FROM "orders"\`);
+      await ctx.query(\`DROP TABLE "orders"\`);
+      await ctx.query(\`ALTER TABLE "_new_orders" RENAME TO "orders"\`);
+      await ctx.query(\`CREATE INDEX "idx_orders_user_id" ON "orders" ("user_id");\`);
+      await ctx.query(\`CREATE INDEX "idx_orders_status" ON "orders" ("status");\`);
+    });
+    await runner.query(\`PRAGMA foreign_keys = ON\`);
+    await runner.query(\`PRAGMA foreign_key_check\`);
+  }
+
+  public async down(runner: SqlMigrationRunner): Promise<void> {
+    // WARN: irreversible — recreate_table for "orders" cannot be automatically reversed
+  }
+}
+"
+`;
+
+exports[`serializeSqliteMigration recreate_table operation should handle recreate_table with no indexes 1`] = `
+"import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
+
+export class Generated20250615103045 implements MigrationInterface {
+  public readonly id = "00000000-0000-0000-0000-000000000000";
+  public readonly ts = "2025-06-15T10:30:45.000Z";
+  public readonly driver = "sqlite";
+
+  public async up(runner: SqlMigrationRunner): Promise<void> {
+    // Recreate table "posts"
+    await runner.query(\`PRAGMA foreign_keys = OFF\`);
+    await runner.transaction(async (ctx) => {
+      await ctx.query(\`CREATE TABLE "_new_posts" ("id" TEXT PRIMARY KEY, "title" TEXT);\`);
+      await ctx.query(\`INSERT INTO "_new_posts" SELECT "id" FROM "posts"\`);
+      await ctx.query(\`DROP TABLE "posts"\`);
+      await ctx.query(\`ALTER TABLE "_new_posts" RENAME TO "posts"\`);
+    });
+    await runner.query(\`PRAGMA foreign_keys = ON\`);
+    await runner.query(\`PRAGMA foreign_key_check\`);
+  }
+
+  public async down(runner: SqlMigrationRunner): Promise<void> {
+    // WARN: irreversible — recreate_table for "posts" cannot be automatically reversed
+  }
+}
+"
+`;
+
+exports[`serializeSqliteMigration whitespace normalization should collapse multiline DDL into single-line SQL in up body 1`] = `
+"import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
+
+export class Generated20250615103045 implements MigrationInterface {
+  public readonly id = "00000000-0000-0000-0000-000000000000";
+  public readonly ts = "2025-06-15T10:30:45.000Z";
+  public readonly driver = "sqlite";
+
+  public async up(runner: SqlMigrationRunner): Promise<void> {
+    // Create table "items"
+    await runner.query(\`CREATE TABLE "items" ( "id" TEXT PRIMARY KEY, "name" TEXT NOT NULL, "count" INTEGER DEFAULT 0 );\`);
+  }
+
+  public async down(runner: SqlMigrationRunner): Promise<void> {
+    await runner.query(\`DROP TABLE IF EXISTS "items"\`);
+  }
+}
+"
+`;

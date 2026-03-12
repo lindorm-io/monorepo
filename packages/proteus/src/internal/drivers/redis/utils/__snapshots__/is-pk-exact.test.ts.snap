@@ -1,0 +1,28 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`extractExactPk composite PK should extract all PK values in order 1`] = `
+[
+  "t1",
+  "u1",
+]
+`;
+
+exports[`extractExactPk edge cases should handle boolean PK value 1`] = `
+[
+  true,
+]
+`;
+
+exports[`extractExactPk edge cases should handle empty primaryKeys array 1`] = `[]`;
+
+exports[`extractExactPk single PK should extract scalar number PK 1`] = `
+[
+  42,
+]
+`;
+
+exports[`extractExactPk single PK should extract scalar string PK 1`] = `
+[
+  "abc",
+]
+`;

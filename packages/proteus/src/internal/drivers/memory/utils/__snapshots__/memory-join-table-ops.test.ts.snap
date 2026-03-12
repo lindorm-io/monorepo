@@ -1,0 +1,14 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`createMemoryJoinTableOps sync inserts join rows for new relationships 1`] = `
+[
+  {
+    "post_id": "post-1",
+    "tag_id": "tag-1",
+  },
+  {
+    "post_id": "post-1",
+    "tag_id": "tag-2",
+  },
+]
+`;

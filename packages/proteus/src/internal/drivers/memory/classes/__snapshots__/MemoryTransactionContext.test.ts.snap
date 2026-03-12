@@ -1,0 +1,8 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`MemoryTransactionContext.transaction (nested) nested success: inner changes survive 1`] = `
+[
+  "Inner",
+  "Outer",
+]
+`;

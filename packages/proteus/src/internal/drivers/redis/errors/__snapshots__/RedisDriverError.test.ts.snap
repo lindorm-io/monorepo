@@ -1,0 +1,67 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`RedisDriverError snapshot accepts debug metadata 1`] = `
+{
+  "code": null,
+  "data": {},
+  "debug": {
+    "state": "committed",
+  },
+  "details": null,
+  "errors": [],
+  "id": "00000000-0000-0000-0000-000000000001",
+  "message": "Cannot commit: transaction is committed",
+  "name": "RedisDriverError",
+  "stack": "RedisDriverError: Cannot commit: transaction is committed
+    at Object.<anonymous> (/Users/jonn/Projects/lindorm-monorepo/packages/proteus/src/internal/drivers/redis/errors/RedisDriverError.test.ts:67:19)
+    at Promise.finally.completed (/Users/jonn/Projects/lindorm-monorepo/node_modules/jest-circus/build/jestAdapterInit.js:1557:28)
+    at new Promise (<anonymous>)
+    at callAsyncCircusFn (/Users/jonn/Projects/lindorm-monorepo/node_modules/jest-circus/build/jestAdapterInit.js:1497:10)
+    at _callCircusTest (/Users/jonn/Projects/lindorm-monorepo/node_modules/jest-circus/build/jestAdapterInit.js:1007:40)
+    at _runTest (/Users/jonn/Projects/lindorm-monorepo/node_modules/jest-circus/build/jestAdapterInit.js:947:3)
+    at /Users/jonn/Projects/lindorm-monorepo/node_modules/jest-circus/build/jestAdapterInit.js:849:7
+    at _runTestsForDescribeBlock (/Users/jonn/Projects/lindorm-monorepo/node_modules/jest-circus/build/jestAdapterInit.js:862:11)
+    at _runTestsForDescribeBlock (/Users/jonn/Projects/lindorm-monorepo/node_modules/jest-circus/build/jestAdapterInit.js:857:11)
+    at run (/Users/jonn/Projects/lindorm-monorepo/node_modules/jest-circus/build/jestAdapterInit.js:761:3)
+    at runAndTransformResultsToJestFormat (/Users/jonn/Projects/lindorm-monorepo/node_modules/jest-circus/build/jestAdapterInit.js:1918:21)
+    at jestAdapter (/Users/jonn/Projects/lindorm-monorepo/node_modules/jest-circus/build/runner.js:101:19)
+    at runTestInternal (/Users/jonn/Projects/lindorm-monorepo/node_modules/jest-runner/build/index.js:275:16)
+    at runTest (/Users/jonn/Projects/lindorm-monorepo/node_modules/jest-runner/build/index.js:343:7)",
+  "status": -1,
+  "support": null,
+  "timestamp": 2024-01-01T00:00:00.000Z,
+  "title": null,
+}
+`;
+
+exports[`RedisDriverError snapshot serialises to JSON with expected shape 1`] = `
+{
+  "code": null,
+  "data": {},
+  "debug": {},
+  "details": null,
+  "errors": [],
+  "id": "00000000-0000-0000-0000-000000000001",
+  "message": "Redis client is not connected. Call connect() first.",
+  "name": "RedisDriverError",
+  "stack": "RedisDriverError: Redis client is not connected. Call connect() first.
+    at Object.<anonymous> (/Users/jonn/Projects/lindorm-monorepo/packages/proteus/src/internal/drivers/redis/errors/RedisDriverError.test.ts:59:19)
+    at Promise.finally.completed (/Users/jonn/Projects/lindorm-monorepo/node_modules/jest-circus/build/jestAdapterInit.js:1557:28)
+    at new Promise (<anonymous>)
+    at callAsyncCircusFn (/Users/jonn/Projects/lindorm-monorepo/node_modules/jest-circus/build/jestAdapterInit.js:1497:10)
+    at _callCircusTest (/Users/jonn/Projects/lindorm-monorepo/node_modules/jest-circus/build/jestAdapterInit.js:1007:40)
+    at _runTest (/Users/jonn/Projects/lindorm-monorepo/node_modules/jest-circus/build/jestAdapterInit.js:947:3)
+    at /Users/jonn/Projects/lindorm-monorepo/node_modules/jest-circus/build/jestAdapterInit.js:849:7
+    at _runTestsForDescribeBlock (/Users/jonn/Projects/lindorm-monorepo/node_modules/jest-circus/build/jestAdapterInit.js:862:11)
+    at _runTestsForDescribeBlock (/Users/jonn/Projects/lindorm-monorepo/node_modules/jest-circus/build/jestAdapterInit.js:857:11)
+    at run (/Users/jonn/Projects/lindorm-monorepo/node_modules/jest-circus/build/jestAdapterInit.js:761:3)
+    at runAndTransformResultsToJestFormat (/Users/jonn/Projects/lindorm-monorepo/node_modules/jest-circus/build/jestAdapterInit.js:1918:21)
+    at jestAdapter (/Users/jonn/Projects/lindorm-monorepo/node_modules/jest-circus/build/runner.js:101:19)
+    at runTestInternal (/Users/jonn/Projects/lindorm-monorepo/node_modules/jest-runner/build/index.js:275:16)
+    at runTest (/Users/jonn/Projects/lindorm-monorepo/node_modules/jest-runner/build/index.js:343:7)",
+  "status": -1,
+  "support": null,
+  "timestamp": 2024-01-01T00:00:00.000Z,
+  "title": null,
+}
+`;

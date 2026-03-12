@@ -1,0 +1,112 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`buildDiscriminatorPredicateQualified [mysql] should build discriminator predicate for inheritance entity 1`] = `"\`t0\`.\`discriminator_type\` = ?"`;
+
+exports[`buildDiscriminatorPredicateQualified [postgres] should build discriminator predicate for inheritance entity 1`] = `""t0"."discriminator_type" = $1"`;
+
+exports[`buildDiscriminatorPredicateQualified [sqlite] should build discriminator predicate for inheritance entity 1`] = `""t0"."discriminator_type" = ?"`;
+
+exports[`buildDiscriminatorPredicateUnqualified [mysql] should build unqualified discriminator predicate 1`] = `"\`discriminator_type\` = ?"`;
+
+exports[`buildDiscriminatorPredicateUnqualified [postgres] should build unqualified discriminator predicate 1`] = `""discriminator_type" = $1"`;
+
+exports[`buildDiscriminatorPredicateUnqualified [sqlite] should build unqualified discriminator predicate 1`] = `""discriminator_type" = ?"`;
+
+exports[`buildPrimaryKeyConditions (unqualified) [mysql] should build unqualified PK conditions for composite key 1`] = `
+[
+  "\`order_id\` = ?",
+  "\`item_id\` = ?",
+]
+`;
+
+exports[`buildPrimaryKeyConditions (unqualified) [mysql] should build unqualified PK conditions for single key 1`] = `
+[
+  "\`id\` = ?",
+]
+`;
+
+exports[`buildPrimaryKeyConditions (unqualified) [postgres] should build unqualified PK conditions for composite key 1`] = `
+[
+  ""order_id" = $1",
+  ""item_id" = $2",
+]
+`;
+
+exports[`buildPrimaryKeyConditions (unqualified) [postgres] should build unqualified PK conditions for single key 1`] = `
+[
+  ""id" = $1",
+]
+`;
+
+exports[`buildPrimaryKeyConditions (unqualified) [sqlite] should build unqualified PK conditions for composite key 1`] = `
+[
+  ""order_id" = ?",
+  ""item_id" = ?",
+]
+`;
+
+exports[`buildPrimaryKeyConditions (unqualified) [sqlite] should build unqualified PK conditions for single key 1`] = `
+[
+  ""id" = ?",
+]
+`;
+
+exports[`buildPrimaryKeyConditionsQualified [mysql] should build qualified PK conditions for composite key 1`] = `
+[
+  "\`t0\`.\`order_id\` = ?",
+  "\`t0\`.\`item_id\` = ?",
+]
+`;
+
+exports[`buildPrimaryKeyConditionsQualified [mysql] should build qualified PK conditions for single key 1`] = `
+[
+  "\`t0\`.\`id\` = ?",
+]
+`;
+
+exports[`buildPrimaryKeyConditionsQualified [mysql] should use column name mapping for PK fields 1`] = `
+[
+  "\`t0\`.\`order_id\` = ?",
+  "\`t0\`.\`item_id\` = ?",
+]
+`;
+
+exports[`buildPrimaryKeyConditionsQualified [postgres] should build qualified PK conditions for composite key 1`] = `
+[
+  ""t0"."order_id" = $1",
+  ""t0"."item_id" = $2",
+]
+`;
+
+exports[`buildPrimaryKeyConditionsQualified [postgres] should build qualified PK conditions for single key 1`] = `
+[
+  ""t0"."id" = $1",
+]
+`;
+
+exports[`buildPrimaryKeyConditionsQualified [postgres] should use column name mapping for PK fields 1`] = `
+[
+  ""t0"."order_id" = $1",
+  ""t0"."item_id" = $2",
+]
+`;
+
+exports[`buildPrimaryKeyConditionsQualified [sqlite] should build qualified PK conditions for composite key 1`] = `
+[
+  ""t0"."order_id" = ?",
+  ""t0"."item_id" = ?",
+]
+`;
+
+exports[`buildPrimaryKeyConditionsQualified [sqlite] should build qualified PK conditions for single key 1`] = `
+[
+  ""t0"."id" = ?",
+]
+`;
+
+exports[`buildPrimaryKeyConditionsQualified [sqlite] should use column name mapping for PK fields 1`] = `
+[
+  ""t0"."order_id" = ?",
+  ""t0"."item_id" = ?",
+]
+`;

@@ -1,0 +1,42 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`resolveInheritanceHierarchies single-table with two concrete subtypes MetaInheritance for root and children matches snapshot 1`] = `
+[
+  {
+    "childrenKeys": [
+      "car",
+      "truck",
+    ],
+    "discriminatorField": "type",
+    "discriminatorValue": null,
+    "name": "RIVehicle",
+    "parentName": null,
+    "rootName": "RIVehicle",
+    "strategy": "single-table",
+  },
+  {
+    "childrenKeys": [
+      "car",
+      "truck",
+    ],
+    "discriminatorField": "type",
+    "discriminatorValue": "car",
+    "name": "RICar",
+    "parentName": "RIVehicle",
+    "rootName": "RIVehicle",
+    "strategy": "single-table",
+  },
+  {
+    "childrenKeys": [
+      "car",
+      "truck",
+    ],
+    "discriminatorField": "type",
+    "discriminatorValue": "truck",
+    "name": "RITruck",
+    "parentName": "RIVehicle",
+    "rootName": "RIVehicle",
+    "strategy": "single-table",
+  },
+]
+`;

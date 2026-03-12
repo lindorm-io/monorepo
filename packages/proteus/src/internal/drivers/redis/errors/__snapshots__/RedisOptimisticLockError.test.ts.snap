@@ -1,0 +1,34 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`RedisOptimisticLockError snapshot matches snapshot for composite primary key 1`] = `
+{
+  "code": null,
+  "debug": {
+    "entityName": "Order",
+    "primaryKey": {
+      "orderId": 99,
+      "tenantId": "t-42",
+    },
+  },
+  "message": "Optimistic lock failed for "Order"",
+  "name": "OptimisticLockError",
+  "status": -1,
+  "timestamp": 2024-01-01T00:00:00.000Z,
+}
+`;
+
+exports[`RedisOptimisticLockError snapshot serialises to JSON with expected shape 1`] = `
+{
+  "code": null,
+  "debug": {
+    "entityName": "User",
+    "primaryKey": {
+      "id": "abc-123",
+    },
+  },
+  "message": "Optimistic lock failed for "User"",
+  "name": "OptimisticLockError",
+  "status": -1,
+  "timestamp": 2024-01-01T00:00:00.000Z,
+}
+`;

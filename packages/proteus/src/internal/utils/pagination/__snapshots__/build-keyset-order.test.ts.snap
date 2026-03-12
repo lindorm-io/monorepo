@@ -1,0 +1,33 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`buildKeysetOrder should preserve user-provided order 1`] = `
+[
+  {
+    "column": "createdAt",
+    "direction": "ASC",
+  },
+  {
+    "column": "name",
+    "direction": "DESC",
+  },
+  {
+    "column": "id",
+    "direction": "ASC",
+  },
+]
+`;
+
+exports[`keysetOrderToRecord should convert entries to record 1`] = `
+{
+  "createdAt": "ASC",
+  "id": "ASC",
+}
+`;
+
+exports[`keysetOrderToRecord should flip directions when backward=true 1`] = `
+{
+  "createdAt": "DESC",
+  "id": "DESC",
+  "name": "ASC",
+}
+`;

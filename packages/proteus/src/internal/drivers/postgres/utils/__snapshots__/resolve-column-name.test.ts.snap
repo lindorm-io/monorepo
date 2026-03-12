@@ -1,0 +1,23 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`resolveColumnName empty fields array returns key from joinKeys even with empty fields array 1`] = `"tenantId"`;
+
+exports[`resolveColumnName field found in metadata returns mapped column name for email field 1`] = `"email_address"`;
+
+exports[`resolveColumnName field found in metadata returns mapped column name when key differs from column name 1`] = `"first_name"`;
+
+exports[`resolveColumnName field found in metadata returns the column name for a field with a matching key 1`] = `"id"`;
+
+exports[`resolveColumnName field not found — relations provided checks joinKeys across multiple relations 1`] = `"categoryId"`;
+
+exports[`resolveColumnName field not found — relations provided returns the key itself when it matches a joinKey in a relation 1`] = `"profileId"`;
+
+exports[`resolveColumnNameSafe returns mapped name for email field 1`] = `"email_address"`;
+
+exports[`resolveColumnNameSafe returns the column name for a known field key 1`] = `"first_name"`;
+
+exports[`resolveColumnNameSafe returns the column name for id field (key equals name) 1`] = `"id"`;
+
+exports[`resolveColumnNameSafe returns the key itself when no matching field is found 1`] = `"unknownColumn"`;
+
+exports[`resolveColumnNameSafe returns the key itself with empty fields array 1`] = `"anyKey"`;

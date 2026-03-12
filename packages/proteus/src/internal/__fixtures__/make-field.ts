@@ -1,0 +1,30 @@
+import type { MetaField } from "../entity/types/metadata";
+
+export const makeField = (
+  key: string,
+  overrides: Partial<MetaField> = {},
+): MetaField => ({
+  key,
+  decorator: "Field",
+  arrayType: null,
+  collation: null,
+  comment: null,
+  computed: null,
+  embedded: null,
+  encrypted: null,
+  enum: null,
+  default: null,
+  hideOn: [],
+  max: null,
+  min: null,
+  name: key,
+  nullable: false,
+  order: null,
+  precision: null,
+  readonly: false,
+  scale: null,
+  schema: null,
+  transform: null,
+  type: "string",
+  ...overrides,
+});

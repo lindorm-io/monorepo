@@ -1,0 +1,15 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`compileUpsert should compile MySQL ON DUPLICATE KEY UPDATE with AS _new 1`] = `
+{
+  "params": [
+    "abc-123",
+    "Alice",
+    "alice@example.com",
+    1,
+    "2024-01-01 00:00:00.000",
+    "2024-01-01 00:00:00.000",
+  ],
+  "text": "INSERT INTO \`app\`.\`users\` (\`id\`, \`name\`, \`email_address\`, \`version\`, \`updated_at\`, \`created_at\`) VALUES (?, ?, ?, ?, ?, ?) AS \`_new\` ON DUPLICATE KEY UPDATE \`name\` = \`_new\`.\`name\`, \`email_address\` = \`_new\`.\`email_address\`, \`version\` = \`app\`.\`users\`.\`version\` + 1, \`updated_at\` = NOW(3)",
+}
+`;
