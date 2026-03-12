@@ -64,6 +64,7 @@ export default defineConfig(
       "@typescript-eslint/explicit-member-accessibility": "error",
       "@typescript-eslint/no-base-to-string": "off",
       "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unsafe-function-type": "off",
       "@typescript-eslint/no-floating-promises": "warn",
       "@typescript-eslint/no-misused-promises": "off",
       "@typescript-eslint/no-redundant-type-constituents": "off",
