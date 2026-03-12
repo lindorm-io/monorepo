@@ -3,7 +3,7 @@ import { KryptosCurve } from "./curve";
 import { KryptosEncryption } from "./encryption";
 import { RsaModulus } from "./key-types";
 import { KryptosOperation } from "./operation";
-import { KryptosPurpose, KryptosType, KryptosUse } from "./types";
+import { KryptosType, KryptosUse } from "./types";
 
 export type KryptosAttributes = {
   id: string;
@@ -19,7 +19,7 @@ export type KryptosAttributes = {
   notBefore: Date;
   operations: Array<KryptosOperation>;
   ownerId: string | null;
-  purpose: KryptosPurpose | null;
+  purpose: string | null;
   type: KryptosType;
   updatedAt: Date;
   use: KryptosUse;
