@@ -1,5 +1,5 @@
 export const uniq = <T = any>(array: Array<any>): Array<T> =>
-  [...new Set(array)].sort() as Array<T>;
+  [...new Set(array)] as Array<T>;
 
 export const uniqFlat = <T = any>(
   ...args:
@@ -7,5 +7,4 @@ export const uniqFlat = <T = any>(
     | Array<Array<any>>
     | Array<Array<Array<any>>>
     | Array<Array<Array<Array<any>>>>
-): Array<T> =>
-  [...new Set([...args.flat().flat().flat().flat().flat()])].sort() as Array<T>;
+): Array<T> => [...new Set([...args.flat().flat().flat().flat().flat()])] as Array<T>;

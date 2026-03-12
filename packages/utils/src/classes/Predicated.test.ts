@@ -166,16 +166,29 @@ describe("Predicated", () => {
       ]);
     });
 
-    // Test $like operator (case-sensitive partial match)
+    // Test $like operator (SQL wildcard match)
     test("should filter using $like operator", () => {
-      expect(Predicated.filter(TEST_PEOPLE, { name: { $like: "John" } })).toEqual([
+      expect(Predicated.filter(TEST_PEOPLE, { name: { $like: "John%" } })).toEqual([
         expect.objectContaining({ id: "1" }),
       ]);
     });
 
-    // Test $ilike operator (case-insensitive partial match)
+    test("should filter using $like exact match (no wildcards)", () => {
+      expect(Predicated.filter(TEST_PEOPLE, { name: { $like: "John Doe" } })).toEqual([
+        expect.objectContaining({ id: "1" }),
+      ]);
+      expect(Predicated.filter(TEST_PEOPLE, { name: { $like: "John" } })).toEqual([]);
+    });
+
+    test("should filter using $like _ wildcard", () => {
+      expect(Predicated.filter(TEST_PEOPLE, { name: { $like: "J_ne Black" } })).toEqual([
+        expect.objectContaining({ id: "2" }),
+      ]);
+    });
+
+    // Test $ilike operator (case-insensitive SQL wildcard match)
     test("should filter using $ilike operator", () => {
-      expect(Predicated.filter(TEST_PEOPLE, { name: { $ilike: "john" } })).toEqual([
+      expect(Predicated.filter(TEST_PEOPLE, { name: { $ilike: "john%" } })).toEqual([
         expect.objectContaining({ id: "1" }),
       ]);
     });
@@ -254,7 +267,7 @@ describe("Predicated", () => {
       ]);
     });
 
-    // Test $exists false
+    // Test $exists false (undefined)
     test("should filter using $exists: false", () => {
       const extended = [
         ...TEST_PEOPLE,
@@ -271,6 +284,51 @@ describe("Predicated", () => {
 
       expect(Predicated.filter(extended, { age: { $exists: false } })).toEqual([
         expect.objectContaining({ id: "5" }),
+      ]);
+    });
+
+    // Test $exists false (null treated as not existing)
+    test("should treat null as not existing for $exists: false", () => {
+      const extended = [
+        ...TEST_PEOPLE,
+        {
+          id: "5",
+          name: "Null Age",
+          common: "common",
+          address: { street: "N/A", city: "N/A" },
+          joinedAt: new Date("2022-01-01"),
+          hobbies: [],
+          friends: [],
+          age: null,
+        } as any,
+      ];
+
+      expect(Predicated.filter(extended, { age: { $exists: false } })).toEqual([
+        expect.objectContaining({ id: "5" }),
+      ]);
+    });
+
+    // Test $exists true rejects null
+    test("should treat null as not existing for $exists: true", () => {
+      const extended = [
+        ...TEST_PEOPLE,
+        {
+          id: "5",
+          name: "Null Age",
+          common: "common",
+          address: { street: "N/A", city: "N/A" },
+          joinedAt: new Date("2022-01-01"),
+          hobbies: [],
+          friends: [],
+          age: null,
+        } as any,
+      ];
+
+      expect(Predicated.filter(extended, { age: { $exists: true } })).toEqual([
+        expect.objectContaining({ id: "1" }),
+        expect.objectContaining({ id: "2" }),
+        expect.objectContaining({ id: "3" }),
+        expect.objectContaining({ id: "4" }),
       ]);
     });
 
@@ -390,7 +448,7 @@ describe("Predicated", () => {
           friends: [],
         },
       ];
-      expect(Predicated.filter(extended, { name: { $ilike: "åsa" } })).toEqual([
+      expect(Predicated.filter(extended, { name: { $ilike: "åsa%" } })).toEqual([
         expect.objectContaining({ id: "5" }),
       ]);
     });
@@ -606,7 +664,7 @@ describe("Predicated", () => {
     test("should filter by deep nested objects", () => {
       expect(
         Predicated.filter(TEST_PEOPLE, {
-          address: { street: { $like: "Main" }, city: { $eq: "New York" } },
+          address: { street: { $like: "%Main%" }, city: { $eq: "New York" } },
         }),
       ).toEqual([expect.objectContaining({ id: "1" })]);
     });
@@ -622,6 +680,56 @@ describe("Predicated", () => {
         expect.objectContaining({ id: "3" }),
         expect.objectContaining({ id: "4" }),
       ]);
+    });
+
+    // Test $overlap operator (arrays share at least one element)
+    test("should filter using $overlap — at least one common element", () => {
+      expect(
+        Predicated.filter(TEST_PEOPLE, { hobbies: { $overlap: ["reading", "dancing"] } }),
+      ).toEqual([
+        expect.objectContaining({ id: "1" }), // has "reading"
+        expect.objectContaining({ id: "2" }), // has "dancing"
+      ]);
+    });
+
+    test("should return empty when $overlap has no intersection", () => {
+      expect(
+        Predicated.filter(TEST_PEOPLE, { hobbies: { $overlap: ["skiing", "surfing"] } }),
+      ).toEqual([]);
+    });
+
+    test("should return false for $overlap on non-array value", () => {
+      expect(
+        Predicated.filter(TEST_PEOPLE, { name: { $overlap: ["John Doe"] } }),
+      ).toEqual([]);
+    });
+
+    // Test $contained operator (value is subset of given array)
+    test("should filter using $contained — value is subset of operand", () => {
+      // Person 2 has hobbies ["music", "dancing"]
+      // Person 4 has hobbies ["cooking", "traveling"]
+      expect(
+        Predicated.filter(TEST_PEOPLE, {
+          hobbies: { $contained: ["music", "dancing", "cooking", "traveling", "extra"] },
+        }),
+      ).toEqual([
+        expect.objectContaining({ id: "2" }), // ["music", "dancing"] is subset
+        expect.objectContaining({ id: "4" }), // ["cooking", "traveling"] is subset
+      ]);
+    });
+
+    test("should return false for $contained when value has elements not in operand", () => {
+      expect(
+        Predicated.filter(TEST_PEOPLE, {
+          hobbies: { $contained: ["reading"] }, // Person 1 has ["reading", "coding", "gaming"] — not a subset
+        }),
+      ).toEqual([]);
+    });
+
+    test("should return false for $contained on non-array value", () => {
+      expect(
+        Predicated.filter(TEST_PEOPLE, { name: { $contained: ["John Doe"] } }),
+      ).toEqual([]);
     });
   });
 });

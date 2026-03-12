@@ -34,7 +34,12 @@ const PREDICATE_OPERATORS = [
   "$in",
   "$nin",
   "$all",
+  "$overlap",
+  "$contained",
   "$length",
+
+  // json/object containment
+  "$has",
 
   // numbers
   "$mod",
@@ -48,9 +53,21 @@ const hasPredicateOperator = (predicate: Dict): boolean =>
 const hasLogicalOperator = (predicate: Dict): boolean =>
   LOGICAL_OPERATORS.some((operator) => operator in predicate);
 
+const likeToRegex = (pattern: string, caseInsensitive: boolean): RegExp => {
+  let regexStr = "";
+  for (let i = 0; i < pattern.length; i++) {
+    const char = pattern[i];
+    if (char === "%") regexStr += ".*";
+    else if (char === "_") regexStr += ".";
+    else if (/[\\^$.|?*+()[\]{}]/.test(char)) regexStr += `\\${char}`;
+    else regexStr += char;
+  }
+  return new RegExp(`^${regexStr}$`, caseInsensitive ? "i" : "");
+};
+
 const matchPredicateOperator = <T>(value: T, operator: PredicateOperator<T>): boolean => {
   if (isBoolean(operator.$exists)) {
-    return operator.$exists ? !isUndefined(value) : isUndefined(value);
+    return operator.$exists ? value != null : value == null;
   }
 
   if (!isUndefined(operator.$eq)) {
@@ -117,11 +134,11 @@ const matchPredicateOperator = <T>(value: T, operator: PredicateOperator<T>): bo
   }
 
   if (!isUndefined(operator.$like) && isString(value) && isString(operator.$like)) {
-    return value.includes(operator.$like);
+    return likeToRegex(operator.$like, false).test(value);
   }
 
   if (!isUndefined(operator.$ilike) && isString(value) && isString(operator.$ilike)) {
-    return value.toLowerCase().includes(operator.$ilike.toLowerCase());
+    return likeToRegex(operator.$ilike, true).test(value);
   }
 
   if (isRegExp(operator.$regex) && isString(value)) {
@@ -145,7 +162,18 @@ const matchPredicateOperator = <T>(value: T, operator: PredicateOperator<T>): bo
     return isArray<any>(value) ? operator.$all.every((v) => value.includes(v)) : false;
   }
 
+  if (isArray(operator.$overlap)) {
+    return isArray<any>(value) ? operator.$overlap.some((v) => value.includes(v)) : false;
+  }
+
+  if (isArray(operator.$contained)) {
+    return isArray<any>(value)
+      ? value.every((v) => operator.$contained!.includes(v))
+      : false;
+  }
+
   if (isNumber(operator.$length)) {
+    if (value == null) return false;
     if (isArray(value)) {
       return value.length === operator.$length;
     }
@@ -176,6 +204,18 @@ const matchPredicateOperator = <T>(value: T, operator: PredicateOperator<T>): bo
     throw new TypeError(
       `Operator $mod is not supported for value type [ ${typeof value} ]`,
     );
+  }
+
+  if (!isUndefined(operator.$has)) {
+    if (isArray(value)) {
+      return (value as Array<unknown>).some(
+        (v) => isObject(v) && advancedMatch(v, operator.$has as Predicate<any>),
+      );
+    }
+    if (isObject(value)) {
+      return advancedMatch(value as Dict, operator.$has as Predicate<any>);
+    }
+    return false;
   }
 
   throw new TypeError(`Unknown operator in predicate: ${JSON.stringify(operator)}`);
