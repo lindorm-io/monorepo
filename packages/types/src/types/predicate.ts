@@ -22,7 +22,12 @@ export type PredicateOperator<T> = {
   $in?: T extends Array<infer U> ? Array<U> : Array<T>;
   $nin?: T extends Array<infer U> ? Array<U> : Array<T>;
   $all?: T extends Array<infer U> ? Array<U> : Array<T>;
+  $overlap?: T extends Array<infer U> ? Array<U> : Array<T>;
+  $contained?: T extends Array<infer U> ? Array<U> : Array<T>;
   $length?: number;
+
+  // json/object containment
+  $has?: DeepPartial<T>;
 
   // numbers
   $mod?: [number, number]; // value % [0] === [1]
