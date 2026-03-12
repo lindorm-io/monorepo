@@ -6,6 +6,10 @@ import { TestEntityTwo } from "../__fixtures__/entities/test-entity-two";
 import { TestEntity } from "../__fixtures__/test-entity";
 import { MnemosSource } from "./MnemosSource";
 
+jest.mock("tsx/cjs/api", () => ({
+  require: jest.fn((id: string) => jest.requireActual(id)),
+}));
+
 describe("MnemosSource", () => {
   let source: MnemosSource;
 
