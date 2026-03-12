@@ -11,7 +11,7 @@ import {
   AmphoraExternalOption,
   AmphoraJwks,
   AmphoraOptions,
-  AmphoraQuery,
+  AmphoraPredicate,
 } from "../types";
 
 const OIDCONF = "/.well-known/openid-configuration" as const;
@@ -161,21 +161,21 @@ export class Amphora implements IAmphora {
     this.add(result);
   }
 
-  public async filter(query: AmphoraQuery): Promise<Array<IKryptos>> {
+  public async filter(predicate: AmphoraPredicate): Promise<Array<IKryptos>> {
     if (!this._setup && this._external.length) {
       await this.setup();
     }
 
-    const filtered = this.filteredKeys(query);
+    const filtered = this.filteredKeys(predicate);
 
     if (filtered.length && !this.isStale) return filtered;
 
     await this.refresh();
 
-    return this.filteredKeys(query);
+    return this.filteredKeys(predicate);
   }
 
-  public filterSync(query: AmphoraQuery): Array<IKryptos> {
+  public filterSync(predicate: AmphoraPredicate): Array<IKryptos> {
     if (!this._setup && this._external.length) {
       throw new AmphoraError(
         this._setupPromise
@@ -184,23 +184,23 @@ export class Amphora implements IAmphora {
       );
     }
 
-    return this.filteredKeys(query);
+    return this.filteredKeys(predicate);
   }
 
-  public async find(query: AmphoraQuery): Promise<IKryptos> {
-    const [key] = await this.filter(query);
+  public async find(predicate: AmphoraPredicate): Promise<IKryptos> {
+    const [key] = await this.filter(predicate);
     if (key) return key;
 
     throw new AmphoraError("Kryptos not found using query after refresh", {
       debug: {
-        queryKeys: Object.keys(query),
+        queryKeys: Object.keys(predicate),
         totalKeys: this._vault.length,
         activeKeys: this._vault.filter((i) => i.isActive).length,
       },
     });
   }
 
-  public findSync(query: AmphoraQuery): IKryptos {
+  public findSync(predicate: AmphoraPredicate): IKryptos {
     if (!this._setup && this._external.length) {
       throw new AmphoraError(
         this._setupPromise
@@ -209,12 +209,12 @@ export class Amphora implements IAmphora {
       );
     }
 
-    const [key] = this.filterSync(query);
+    const [key] = this.filterSync(predicate);
     if (key) return key;
 
     throw new AmphoraError("Kryptos not found using query (sync, no refresh)", {
       debug: {
-        queryKeys: Object.keys(query),
+        queryKeys: Object.keys(predicate),
         totalKeys: this._vault.length,
         activeKeys: this._vault.filter((i) => i.isActive).length,
       },
@@ -318,10 +318,10 @@ export class Amphora implements IAmphora {
     throw new AmphoraError("Invalid issuer options");
   }
 
-  private filteredKeys(query: AmphoraQuery): Array<IKryptos> {
+  private filteredKeys(predicate: AmphoraPredicate): Array<IKryptos> {
     const vault = this._vault.filter((i) => i.isActive);
 
-    return Predicated.filter<IKryptos>(vault, query).sort(
+    return Predicated.filter<IKryptos>(vault, predicate).sort(
       (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
     );
   }
