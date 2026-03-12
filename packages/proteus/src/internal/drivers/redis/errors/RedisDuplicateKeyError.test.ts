@@ -66,6 +66,8 @@ describe("RedisDuplicateKeyError snapshot", () => {
       debug: { entityName: "User", key: "id:abc-123" },
     });
 
-    expect(error.toJSON()).toMatchSnapshot();
+    const { stack, ...json } = error.toJSON();
+    expect(json).toMatchSnapshot();
+    expect(stack).toEqual(expect.stringContaining("DuplicateKeyError"));
   });
 });

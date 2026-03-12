@@ -63,7 +63,9 @@ describe("RedisDriverError snapshot", () => {
       },
     );
 
-    expect(error.toJSON()).toMatchSnapshot();
+    const { stack, ...json } = error.toJSON();
+    expect(json).toMatchSnapshot();
+    expect(stack).toEqual(expect.stringContaining("RedisDriverError"));
   });
 
   test("accepts debug metadata", () => {
@@ -72,6 +74,8 @@ describe("RedisDriverError snapshot", () => {
       debug: { state: "committed" },
     });
 
-    expect(error.toJSON()).toMatchSnapshot();
+    const { stack, ...json } = error.toJSON();
+    expect(json).toMatchSnapshot();
+    expect(stack).toEqual(expect.stringContaining("RedisDriverError"));
   });
 });

@@ -13,21 +13,6 @@ exports[`RedisDuplicateKeyError snapshot serialises to JSON with expected shape 
   "id": "00000000-0000-0000-0000-000000000002",
   "message": "Duplicate key for entity User",
   "name": "DuplicateKeyError",
-  "stack": "DuplicateKeyError: Duplicate key for entity User
-    at Object.<anonymous> (/Users/jonn/Projects/lindorm-monorepo/packages/proteus/src/internal/drivers/redis/errors/RedisDuplicateKeyError.test.ts:64:19)
-    at Promise.finally.completed (/Users/jonn/Projects/lindorm-monorepo/node_modules/jest-circus/build/jestAdapterInit.js:1557:28)
-    at new Promise (<anonymous>)
-    at callAsyncCircusFn (/Users/jonn/Projects/lindorm-monorepo/node_modules/jest-circus/build/jestAdapterInit.js:1497:10)
-    at _callCircusTest (/Users/jonn/Projects/lindorm-monorepo/node_modules/jest-circus/build/jestAdapterInit.js:1007:40)
-    at _runTest (/Users/jonn/Projects/lindorm-monorepo/node_modules/jest-circus/build/jestAdapterInit.js:947:3)
-    at /Users/jonn/Projects/lindorm-monorepo/node_modules/jest-circus/build/jestAdapterInit.js:849:7
-    at _runTestsForDescribeBlock (/Users/jonn/Projects/lindorm-monorepo/node_modules/jest-circus/build/jestAdapterInit.js:862:11)
-    at _runTestsForDescribeBlock (/Users/jonn/Projects/lindorm-monorepo/node_modules/jest-circus/build/jestAdapterInit.js:857:11)
-    at run (/Users/jonn/Projects/lindorm-monorepo/node_modules/jest-circus/build/jestAdapterInit.js:761:3)
-    at runAndTransformResultsToJestFormat (/Users/jonn/Projects/lindorm-monorepo/node_modules/jest-circus/build/jestAdapterInit.js:1918:21)
-    at jestAdapter (/Users/jonn/Projects/lindorm-monorepo/node_modules/jest-circus/build/runner.js:101:19)
-    at runTestInternal (/Users/jonn/Projects/lindorm-monorepo/node_modules/jest-runner/build/index.js:275:16)
-    at runTest (/Users/jonn/Projects/lindorm-monorepo/node_modules/jest-runner/build/index.js:343:7)",
   "status": -1,
   "support": null,
   "timestamp": 2024-01-01T00:00:00.000Z,
