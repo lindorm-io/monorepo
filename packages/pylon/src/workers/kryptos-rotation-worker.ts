@@ -1,19 +1,13 @@
 import { AesKit } from "@lindorm/aes";
 import { add, duration, ms, ReadableTime, sub } from "@lindorm/date";
-import {
-  IKryptos,
-  KryptosAlgorithm,
-  KryptosDB,
-  KryptosKit,
-  KryptosPurpose,
-} from "@lindorm/kryptos";
+import { IKryptos, KryptosAlgorithm, KryptosDB, KryptosKit } from "@lindorm/kryptos";
 import { IMongoSource } from "@lindorm/mongo";
 import { Constructor } from "@lindorm/types";
 import { CreateLindormWorkerOptions, LindormWorkerConfig } from "@lindorm/worker";
 
 type KeyOption = {
   algorithm: KryptosAlgorithm;
-  purpose: KryptosPurpose | null;
+  purpose: string | null;
 };
 
 type Options = CreateLindormWorkerOptions & {
