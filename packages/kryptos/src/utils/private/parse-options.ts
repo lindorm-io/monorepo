@@ -1,6 +1,6 @@
 import { changeKeys } from "@lindorm/case";
 import { KryptosError } from "../../errors";
-import { KryptosOptions, KryptosPurpose, KryptosType, UnknownJwk } from "../../types";
+import { KryptosOptions, KryptosType, UnknownJwk } from "../../types";
 
 const TYPES: Array<KryptosType> = ["EC", "oct", "OKP", "RSA"] as const;
 
@@ -23,7 +23,7 @@ export const parseJwkOptions = (options: UnknownJwk): KryptosOptions => {
     notBefore: jwk.nbf ? new Date(jwk.nbf * 1000) : undefined,
     operations: jwk.key_ops,
     ownerId: jwk.owner_id,
-    purpose: jwk.purpose as KryptosPurpose,
+    purpose: jwk.purpose,
     type: jwk.kty,
     updatedAt: jwk.uat ? new Date(jwk.uat * 1000) : undefined,
     use: jwk.use,
