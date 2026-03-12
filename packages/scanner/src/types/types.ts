@@ -3,7 +3,6 @@ export type StructureScannerConfig = {
   deniedExtensions: Array<RegExp>;
   deniedFilenames: Array<RegExp>;
   deniedTypes: Array<RegExp>;
-  requireFn: NodeJS.Require;
 };
 
 export type StructureScannerOptions = Partial<StructureScannerConfig>;

@@ -1,6 +1,7 @@
 import { isArray, isString } from "@lindorm/is";
 import { readdirSync, statSync } from "fs";
 import { basename, extname, join, relative, sep } from "path";
+import { require as tsxRequire } from "tsx/cjs/api";
 import { ScannerError } from "../errors";
 import { IScanData, IScanner } from "../interfaces";
 import { StructureScannerOptions } from "../types";
@@ -11,15 +12,12 @@ export class Scanner implements IScanner {
   private readonly deniedExtensions: Array<RegExp>;
   private readonly deniedFilenames: Array<RegExp>;
   private readonly deniedTypes: Array<RegExp>;
-  private readonly requireFn: NodeJS.Require;
 
   public constructor(options: StructureScannerOptions = {}) {
     this.deniedDirectories = options.deniedDirectories || [];
     this.deniedExtensions = options.deniedExtensions || [];
     this.deniedFilenames = options.deniedFilenames || [];
     this.deniedTypes = options.deniedTypes || [];
-
-    this.requireFn = options.requireFn || require;
   }
 
   // public
@@ -34,11 +32,13 @@ export class Scanner implements IScanner {
   }
 
   public async import<T>(fileOrPath: IScanData | string): Promise<T> {
-    return await import(isString(fileOrPath) ? fileOrPath : fileOrPath.fullPath);
+    // TODO: Use tsImport from "tsx/esm/api" when packages are upgraded to ESM
+    return this.require(fileOrPath);
   }
 
   public require<T>(fileOrPath: IScanData | string): T {
-    return this.requireFn(isString(fileOrPath) ? fileOrPath : fileOrPath.fullPath);
+    const filePath = isString(fileOrPath) ? fileOrPath : fileOrPath.fullPath;
+    return tsxRequire(filePath, filePath) as T;
   }
 
   // public static
