@@ -1,0 +1,14 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`spawnCommand should spawn command with stdio inherit 1`] = `
+[
+  "jest",
+  [
+    "--runInBand",
+    "--no-coverage",
+  ],
+  {
+    "stdio": "inherit",
+  },
+]
+`;
