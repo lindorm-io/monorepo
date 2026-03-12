@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { select } from "@inquirer/prompts";
+import { input, select } from "@inquirer/prompts";
 import { AES_ENCRYPTION_ALGORITHMS } from "@lindorm/types";
 import { program } from "commander";
 import { KryptosKit } from "./classes";
@@ -9,7 +9,6 @@ import {
   EC_SIG_ALGORITHMS,
   KryptosAlgorithm,
   KryptosEncryption,
-  KryptosPurpose,
   KryptosType,
   KryptosUse,
   OCT_ENC_DIR_ALGORITHMS,
@@ -97,17 +96,13 @@ const selectEncryption = async (): Promise<KryptosEncryption> =>
     default: AES_ENCRYPTION_ALGORITHMS[AES_ENCRYPTION_ALGORITHMS.length - 1],
   });
 
-const selectPurpose = async (): Promise<KryptosPurpose | null> =>
-  await select({
-    message: "Purpose",
-    choices: [
-      { value: null, name: "any" },
-      { value: "cookie", name: "cookie" },
-      { value: "session", name: "session" },
-      { value: "token", name: "token" },
-    ],
-    default: null,
+const inputPurpose = async (): Promise<string | null> => {
+  const value = await input({
+    message: "Purpose (leave empty for any)",
+    default: "",
   });
+  return value.trim() || null;
+};
 
 export const generate = async (): Promise<void> => {
   console.log("This script will generate a Kryptos key for you.\n\n");
@@ -123,7 +118,7 @@ export const generate = async (): Promise<void> => {
     encryption = await selectEncryption();
   }
 
-  const purpose = await selectPurpose();
+  const purpose = await inputPurpose();
 
   const kryptos = KryptosKit.generate.auto({
     algorithm,

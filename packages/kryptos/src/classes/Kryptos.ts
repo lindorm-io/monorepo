@@ -21,7 +21,6 @@ import {
   KryptosMetadata,
   KryptosOperation,
   KryptosOptions,
-  KryptosPurpose,
   KryptosString,
   KryptosType,
   KryptosUse,
@@ -61,7 +60,7 @@ export class Kryptos implements IKryptos {
   private _notBefore: Date;
   private _operations: Array<KryptosOperation>;
   private _ownerId: string | null;
-  private _purpose: KryptosPurpose | null;
+  private _purpose: string | null;
   private _updatedAt: Date;
 
   public constructor(options: KryptosOptions) {
@@ -200,11 +199,11 @@ export class Kryptos implements IKryptos {
     this._updatedAt = new Date();
   }
 
-  public get purpose(): KryptosPurpose | null {
+  public get purpose(): string | null {
     return this._purpose;
   }
 
-  public set purpose(purpose: KryptosPurpose | null) {
+  public set purpose(purpose: string | null) {
     this._purpose = purpose;
     this._updatedAt = new Date();
   }
