@@ -20,11 +20,11 @@ export type ExecuteMigrationResult = {
 };
 
 const createRunner = (client: SqliteQueryClient): MigrationQueryRunner => ({
-  transaction: async (fn) => {
+  transaction: async (fn): Promise<void> => {
     client.exec("BEGIN IMMEDIATE");
     try {
       const ctx: MigrationQueryContext = {
-        query: async (sql, params) => {
+        query: async (sql, params): Promise<void> => {
           if (params && params.length > 0) {
             client.run(sql, params);
           } else {
@@ -43,7 +43,7 @@ const createRunner = (client: SqliteQueryClient): MigrationQueryRunner => ({
       throw err;
     }
   },
-  query: async (sql, params) => {
+  query: async (sql, params): Promise<void> => {
     if (params && params.length > 0) {
       client.run(sql, params);
     } else {

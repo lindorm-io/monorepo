@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-function-type */
-
 import { Dict } from "@lindorm/types";
 import {
   MetaColumn,

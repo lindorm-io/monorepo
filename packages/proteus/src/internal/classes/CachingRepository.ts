@@ -433,7 +433,7 @@ export class CachingRepository<
     });
 
     this.inflight.set(key, promise);
-    promise.finally(() => this.inflight.delete(key));
+    void promise.finally(() => this.inflight.delete(key));
 
     return promise;
   }
@@ -490,7 +490,7 @@ export class CachingRepository<
     });
 
     this.inflight.set(key, promise);
-    promise.finally(() => this.inflight.delete(key));
+    void promise.finally(() => this.inflight.delete(key));
 
     return promise;
   }
@@ -536,7 +536,7 @@ export class CachingRepository<
     });
 
     this.inflight.set(key, promise);
-    promise.finally(() => this.inflight.delete(key));
+    void promise.finally(() => this.inflight.delete(key));
 
     return promise;
   }

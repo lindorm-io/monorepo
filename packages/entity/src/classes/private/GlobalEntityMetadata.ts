@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-function-type */
-
 import { camelCase, snakeCase } from "@lindorm/case";
 import { isArray, isObject, isString, isTrue } from "@lindorm/is";
 import { Constructor, Dict } from "@lindorm/types";

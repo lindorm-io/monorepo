@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-function-type */
-
 import { Constructor, Dict } from "@lindorm/types";
 import { ZodObject, ZodType } from "zod";
 import { IMessage } from "../interfaces";

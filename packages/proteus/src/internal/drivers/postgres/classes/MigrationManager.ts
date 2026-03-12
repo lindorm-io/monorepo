@@ -3,6 +3,7 @@ import type {
   IMigrationManager,
   MigrationStatusResult,
 } from "#internal/interfaces/MigrationManager";
+import type { MigrationRecord } from "#internal/types/migration";
 import type { NamespaceOptions } from "#internal/types/types";
 import { hashNamespaceToInt32 } from "#internal/utils/advisory-lock-name";
 import { computeHash } from "#internal/utils/migration/compute-hash";
@@ -372,7 +373,7 @@ export class MigrationManager implements IMigrationManager {
     await markMigrationRolledBack(this.client, match.id, this.tableOptions);
   }
 
-  public async getRecords() {
+  public async getRecords(): Promise<Array<MigrationRecord>> {
     await ensureMigrationTable(this.client, this.tableOptions);
     return getAllMigrationRecords(this.client, this.tableOptions);
   }

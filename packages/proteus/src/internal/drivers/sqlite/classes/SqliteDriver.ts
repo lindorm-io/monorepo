@@ -33,6 +33,8 @@ import { SqliteMigrationManager } from "./SqliteMigrationManager";
 import { SqliteExecutor } from "./SqliteExecutor";
 import { SqliteQueryBuilder } from "./SqliteQueryBuilder";
 import type { RepositoryFactory } from "#internal/types/repository-factory";
+import type { FilterRegistry } from "#internal/utils/query/filter-registry";
+import type { IEntitySubscriber } from "../../../../interfaces/EntitySubscriber";
 import { SqliteRepository, type WithImplicitTransaction } from "./SqliteRepository";
 import { SqliteTransactionContext } from "./SqliteTransactionContext";
 
@@ -59,8 +61,8 @@ export class SqliteDriver implements IProteusDriver {
     this.logger = logger.child(["SqliteDriver"]);
     this.namespace = namespace;
     this.resolveMetadata = resolveMetadata;
-    this.getFilterRegistry = getFilterRegistry ?? (() => new Map());
-    this.getSubscribers = getSubscribers ?? (() => []);
+    this.getFilterRegistry = getFilterRegistry ?? ((): FilterRegistry => new Map());
+    this.getSubscribers = getSubscribers ?? ((): ReadonlyArray<IEntitySubscriber> => []);
     this.amphora = amphora;
   }
 
@@ -441,10 +443,10 @@ export class SqliteDriver implements IProteusDriver {
       exec: (sql) => database.exec(sql),
       iterate: (sql, params) => database.prepare(sql).iterate(params ?? []),
       close: () => database.close(),
-      get open() {
+      get open(): boolean {
         return database.open;
       },
-      get name() {
+      get name(): string {
         return database.name;
       },
     };

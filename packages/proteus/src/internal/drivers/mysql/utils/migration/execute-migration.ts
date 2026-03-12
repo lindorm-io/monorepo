@@ -21,11 +21,11 @@ export type ExecuteMigrationResult = {
 };
 
 const createRunner = (client: MysqlQueryClient): MigrationQueryRunner => ({
-  transaction: async (fn) => {
+  transaction: async (fn): Promise<void> => {
     await client.query("START TRANSACTION");
     try {
       const ctx: MigrationQueryContext = {
-        query: async (sql, params) => {
+        query: async (sql, params): Promise<void> => {
           await client.query(sql, params);
         },
       };
@@ -40,7 +40,7 @@ const createRunner = (client: MysqlQueryClient): MigrationQueryRunner => ({
       throw err;
     }
   },
-  query: async (sql, params) => {
+  query: async (sql, params): Promise<void> => {
     await client.query(sql, params);
   },
 });

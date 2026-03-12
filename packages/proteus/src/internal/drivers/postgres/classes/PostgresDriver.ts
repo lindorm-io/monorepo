@@ -36,6 +36,8 @@ import { MigrationManager } from "./MigrationManager";
 import { PostgresExecutor } from "./PostgresExecutor";
 import { PostgresQueryBuilder } from "./PostgresQueryBuilder";
 import type { RepositoryFactory } from "#internal/types/repository-factory";
+import type { FilterRegistry } from "#internal/utils/query/filter-registry";
+import type { IEntitySubscriber } from "../../../../interfaces/EntitySubscriber";
 import { validateConnectionMutualExclusivity } from "#internal/utils/validate-connection-options";
 import {
   PostgresRepository,
@@ -68,8 +70,8 @@ export class PostgresDriver implements IProteusDriver {
     this.logger = logger.child(["PostgresDriver"]);
     this.namespace = namespace;
     this.resolveMetadata = resolveMetadata;
-    this.getFilterRegistry = getFilterRegistry ?? (() => new Map());
-    this.getSubscribers = getSubscribers ?? (() => []);
+    this.getFilterRegistry = getFilterRegistry ?? ((): FilterRegistry => new Map());
+    this.getSubscribers = getSubscribers ?? ((): ReadonlyArray<IEntitySubscriber> => []);
     this.amphora = amphora;
   }
 
@@ -453,7 +455,7 @@ export class PostgresDriver implements IProteusDriver {
         ...options.retry,
         onRetry:
           options.retry.onRetry ??
-          ((attempt: number, error: unknown) => {
+          ((attempt: number, error: unknown): void => {
             this.logger.warn("Transaction retry", {
               attempt,
               error: error instanceof Error ? error.message : String(error),
@@ -487,7 +489,7 @@ export class PostgresDriver implements IProteusDriver {
       query: async <R = Record<string, unknown>>(
         sql: string,
         params?: Array<unknown>,
-      ) => {
+      ): Promise<{ rows: Array<R>; rowCount: number }> => {
         const start = this.options.slowQueryThresholdMs ? performance.now() : 0;
         const result = await queryFn(sql, params);
 

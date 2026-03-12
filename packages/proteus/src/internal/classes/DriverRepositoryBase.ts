@@ -26,6 +26,7 @@ import type { RepositoryFactory } from "#internal/types/repository-factory";
 import type { AggregateFunction } from "#internal/types/aggregate";
 import type { LazyRelationLoader } from "#internal/entity/utils/install-lazy-relations";
 import type { SubscriberRegistryGetter } from "../interfaces/ProteusDriver";
+import type { IEntitySubscriber } from "../../interfaces/EntitySubscriber";
 import type { SubscriberEventName } from "../utils/subscriber/dispatch-subscribers";
 import { buildPrimaryKeyPredicate } from "#internal/utils/repository/build-pk-predicate";
 import {
@@ -87,7 +88,8 @@ export abstract class DriverRepositoryBase<
     this.logger = options.logger.child([options.driverLabel, options.target.name]);
     this.parent = options.parent;
     this.repositoryFactory = options.repositoryFactory;
-    this.getSubscribers = options.getSubscribers ?? (() => []);
+    this.getSubscribers =
+      options.getSubscribers ?? ((): ReadonlyArray<IEntitySubscriber> => []);
     this.metadata = getEntityMetadata(options.target);
     this.hasRelations = this.metadata.relations.length > 0;
     this.hasAsyncRelationIds = (this.metadata.relationIds ?? []).some((ri) => {
@@ -201,8 +203,10 @@ export abstract class DriverRepositoryBase<
     criteria?: Predicate<E>,
     options?: FindOptions<E>,
   ): Promise<[Array<E>, number]> {
-    const countOptions = options
-      ? ((({ limit, offset, ...rest }) => rest)(options as any) as FindOptions<E>)
+    const countOptions: FindOptions<E> | undefined = options
+      ? ((({ limit, offset, ...rest }): Record<string, unknown> => rest)(
+          options as any,
+        ) as FindOptions<E>)
       : undefined;
 
     const [entities, count] = await Promise.all([
@@ -597,7 +601,7 @@ export abstract class DriverRepositoryBase<
   public stream(options?: CursorOptions<E>): AsyncIterable<E> {
     const createCursor = (): Promise<IProteusCursor<E>> => this.cursor(options);
     return {
-      [Symbol.asyncIterator]: () => {
+      [Symbol.asyncIterator]: (): AsyncIterator<E> => {
         let cursor: IProteusCursor<E> | null = null;
         let iterator: AsyncIterableIterator<E> | null = null;
 

@@ -26,6 +26,8 @@ import type {
   TransactionOptions,
 } from "../../../../types";
 import type { RepositoryFactory } from "#internal/types/repository-factory";
+import type { FilterRegistry } from "#internal/utils/query/filter-registry";
+import type { IEntitySubscriber } from "../../../../interfaces/EntitySubscriber";
 import type { MongoTransactionHandle } from "../types/mongo-types";
 import { detectReplicaSet } from "../utils/detect-replica-set";
 import { createMongoJoinTableOps } from "../utils/mongo-join-table-ops";
@@ -86,8 +88,8 @@ export class MongoDriver implements IProteusDriver {
     this.logger = logger.child(["MongoDriver"]);
     this.namespace = namespace;
     this.resolveMetadata = resolveMetadata;
-    this.getFilterRegistry = getFilterRegistry ?? (() => new Map());
-    this.getSubscribers = getSubscribers ?? (() => []);
+    this.getFilterRegistry = getFilterRegistry ?? ((): FilterRegistry => new Map());
+    this.getSubscribers = getSubscribers ?? ((): ReadonlyArray<IEntitySubscriber> => []);
     this.amphora = amphora;
     this.connectionConfig = {
       url: options.url,
@@ -614,7 +616,7 @@ export class MongoDriver implements IProteusDriver {
         ...options.retry,
         onRetry:
           options.retry.onRetry ??
-          ((attempt: number, error: unknown) => {
+          ((attempt: number, error: unknown): void => {
             this.logger.warn("Retrying MongoDB transaction", {
               attempt,
               error: error instanceof Error ? error.message : String(error),

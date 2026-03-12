@@ -21,6 +21,8 @@ import type {
   TransactionOptions,
 } from "../../../../types";
 import type { RepositoryFactory } from "#internal/types/repository-factory";
+import type { FilterRegistry } from "#internal/utils/query/filter-registry";
+import type { IEntitySubscriber } from "../../../../interfaces/EntitySubscriber";
 import type { RedisTransactionHandle } from "../types/redis-types";
 import { RedisDriverError } from "../errors/RedisDriverError";
 import { validateConnectionMutualExclusivity } from "#internal/utils/validate-connection-options";
@@ -68,8 +70,8 @@ export class RedisDriver implements IProteusDriver {
     this.logger = logger.child(["RedisDriver"]);
     this.namespace = namespace;
     this.resolveMetadata = resolveMetadata;
-    this.getFilterRegistry = getFilterRegistry ?? (() => new Map());
-    this.getSubscribers = getSubscribers ?? (() => []);
+    this.getFilterRegistry = getFilterRegistry ?? ((): FilterRegistry => new Map());
+    this.getSubscribers = getSubscribers ?? ((): ReadonlyArray<IEntitySubscriber> => []);
     this.amphora = amphora;
     this.connectionConfig = {
       url: options.url,
