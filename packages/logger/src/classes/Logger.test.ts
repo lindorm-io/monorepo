@@ -884,6 +884,81 @@ describe("Logger", () => {
     expect(callArg.context).not.toHaveProperty("cause");
   });
 
+  // Logger.std
+
+  describe("Logger.std", () => {
+    let consoleSpy: {
+      log: jest.SpyInstance;
+      info: jest.SpyInstance;
+      warn: jest.SpyInstance;
+      error: jest.SpyInstance;
+      debug: jest.SpyInstance;
+    };
+
+    beforeEach(() => {
+      consoleSpy = {
+        log: jest.spyOn(console, "log").mockImplementation(),
+        info: jest.spyOn(console, "info").mockImplementation(),
+        warn: jest.spyOn(console, "warn").mockImplementation(),
+        error: jest.spyOn(console, "error").mockImplementation(),
+        debug: jest.spyOn(console, "debug").mockImplementation(),
+      };
+    });
+
+    afterEach(() => {
+      consoleSpy.log.mockRestore();
+      consoleSpy.info.mockRestore();
+      consoleSpy.warn.mockRestore();
+      consoleSpy.error.mockRestore();
+      consoleSpy.debug.mockRestore();
+    });
+
+    test("should expose std as a static property", () => {
+      expect(Logger.std).toBeDefined();
+      expect(typeof Logger.std.log).toBe("function");
+      expect(typeof Logger.std.info).toBe("function");
+      expect(typeof Logger.std.success).toBe("function");
+      expect(typeof Logger.std.warn).toBe("function");
+      expect(typeof Logger.std.error).toBe("function");
+      expect(typeof Logger.std.debug).toBe("function");
+    });
+
+    test("should call console.log for log()", () => {
+      Logger.std.log("hello");
+      expect(consoleSpy.log).toHaveBeenCalledWith("hello");
+    });
+
+    test("should call console.info for info()", () => {
+      Logger.std.info("info message");
+      expect(consoleSpy.info).toHaveBeenCalledTimes(1);
+      expect(consoleSpy.info.mock.calls[0][0]).toContain("info message");
+    });
+
+    test("should call console.log for success()", () => {
+      Logger.std.success("success message");
+      expect(consoleSpy.log).toHaveBeenCalledTimes(1);
+      expect(consoleSpy.log.mock.calls[0][0]).toContain("success message");
+    });
+
+    test("should call console.warn for warn()", () => {
+      Logger.std.warn("warn message");
+      expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
+      expect(consoleSpy.warn.mock.calls[0][0]).toContain("warn message");
+    });
+
+    test("should call console.error for error()", () => {
+      Logger.std.error("error message");
+      expect(consoleSpy.error).toHaveBeenCalledTimes(1);
+      expect(consoleSpy.error.mock.calls[0][0]).toContain("error message");
+    });
+
+    test("should call console.debug for debug()", () => {
+      Logger.std.debug("debug message");
+      expect(consoleSpy.debug).toHaveBeenCalledTimes(1);
+      expect(consoleSpy.debug.mock.calls[0][0]).toContain("debug message");
+    });
+  });
+
   // extra array processing
 
   test("should filter null/falsy values in extra array", () => {

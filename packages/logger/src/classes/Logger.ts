@@ -1,12 +1,12 @@
 import { camelCase, camelKeys } from "@lindorm/case";
 import { isArray, isError, isObject } from "@lindorm/is";
-import { Dict } from "@lindorm/types";
+import type { Dict } from "@lindorm/types";
 import fastSafeStringify from "fast-safe-stringify";
 import { get, set } from "object-path";
+import { blue, green, red, yellow } from "picocolors";
 import winston, { Logger as WinstonLogger } from "winston";
-import { ILogger } from "../interfaces";
-import { ILoggerTimer } from "../interfaces/LoggerTimer";
-import {
+import { ILogger, ILoggerTimer } from "../interfaces";
+import type {
   FilterCallback,
   Log,
   LogContent,
@@ -16,7 +16,8 @@ import {
   LogScope,
   LoggerOptions,
 } from "../types";
-import {
+import { StdLogger } from "../types";
+import type {
   FilterEntriesRef,
   FromLogger,
   InternalLog,
@@ -70,6 +71,17 @@ export class Logger implements ILogger {
       );
     }
   }
+
+  // static
+
+  public static std: StdLogger = {
+    log: (msg: string) => console.log(msg),
+    info: (msg: string) => console.info(green(msg)),
+    success: (msg: string) => console.log(green(msg)),
+    warn: (msg: string) => console.warn(yellow(msg)),
+    error: (msg: string) => console.error(red(msg)),
+    debug: (msg: string) => console.debug(blue(msg)),
+  };
 
   // level
 
