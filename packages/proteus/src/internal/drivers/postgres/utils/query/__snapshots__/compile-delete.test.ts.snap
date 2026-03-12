@@ -1,0 +1,35 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`compileDelete should compile hard delete with criteria 1`] = `
+{
+  "params": [
+    "abc-123",
+  ],
+  "text": "DELETE FROM "app"."users" AS "t0" WHERE "t0"."id" = $1",
+}
+`;
+
+exports[`compileDeleteExpired should compile delete expired with NOW() 1`] = `
+{
+  "params": [],
+  "text": "DELETE FROM "app"."users" AS "t0" WHERE "t0"."expires_at" <= NOW()",
+}
+`;
+
+exports[`compileRestore should compile restore setting DeleteDate to NULL 1`] = `
+{
+  "params": [
+    "abc-123",
+  ],
+  "text": "UPDATE "app"."users" AS "t0" SET "deleted_at" = NULL WHERE "t0"."id" = $1",
+}
+`;
+
+exports[`compileSoftDelete should compile soft delete with NOW() 1`] = `
+{
+  "params": [
+    "abc-123",
+  ],
+  "text": "UPDATE "app"."users" AS "t0" SET "deleted_at" = NOW() WHERE "t0"."id" = $1",
+}
+`;

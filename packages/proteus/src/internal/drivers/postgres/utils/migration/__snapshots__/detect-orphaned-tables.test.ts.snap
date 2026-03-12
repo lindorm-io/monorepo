@@ -1,0 +1,23 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`detectOrphanedTables should detect orphaned tables not in desired schema 1`] = `
+[
+  {
+    "name": "old_table",
+    "schema": "app",
+  },
+]
+`;
+
+exports[`detectOrphanedTables should handle empty desired (all tables are orphaned) 1`] = `
+[
+  {
+    "name": "users",
+    "schema": "app",
+  },
+  {
+    "name": "posts",
+    "schema": "app",
+  },
+]
+`;

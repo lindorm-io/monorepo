@@ -1,0 +1,124 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`Encrypted should match full metadata snapshot for entity with encrypted field 1`] = `
+{
+  "cache": null,
+  "checks": [],
+  "defaultOrder": null,
+  "embeddedLists": [],
+  "entity": {
+    "comment": null,
+    "decorator": "Entity",
+    "name": "EncryptedWithPurpose",
+    "namespace": null,
+  },
+  "extras": [],
+  "fields": [
+    {
+      "arrayType": null,
+      "collation": null,
+      "comment": null,
+      "computed": null,
+      "decorator": "Field",
+      "default": null,
+      "embedded": null,
+      "encrypted": null,
+      "enum": null,
+      "hideOn": [],
+      "key": "id",
+      "max": null,
+      "min": null,
+      "name": "id",
+      "nullable": false,
+      "order": null,
+      "precision": null,
+      "readonly": true,
+      "scale": null,
+      "schema": null,
+      "transform": null,
+      "type": "uuid",
+    },
+    {
+      "arrayType": null,
+      "collation": null,
+      "comment": null,
+      "computed": null,
+      "decorator": "Field",
+      "default": null,
+      "embedded": null,
+      "encrypted": {
+        "predicate": {
+          "purpose": "pii",
+        },
+      },
+      "enum": null,
+      "hideOn": [],
+      "key": "ssn",
+      "max": null,
+      "min": null,
+      "name": "ssn",
+      "nullable": false,
+      "order": null,
+      "precision": null,
+      "readonly": false,
+      "scale": null,
+      "schema": null,
+      "transform": null,
+      "type": "string",
+    },
+  ],
+  "filters": [],
+  "generated": [
+    {
+      "key": "id",
+      "length": null,
+      "max": null,
+      "min": null,
+      "strategy": "uuid",
+    },
+  ],
+  "hooks": [],
+  "indexes": [],
+  "inheritance": null,
+  "primaryKeys": [
+    "id",
+  ],
+  "relationCounts": [],
+  "relationIds": [],
+  "relations": [],
+  "schemas": [],
+  "scopeKeys": [],
+  "target": [Function],
+  "uniques": [],
+  "versionKeys": [],
+}
+`;
+
+exports[`Encrypted should stage encrypted with multiple predicate keys 1`] = `
+{
+  "predicate": {
+    "id": "key-id",
+    "purpose": "pii",
+  },
+}
+`;
+
+exports[`Encrypted should stage encrypted with null predicate when all option values are undefined 1`] = `
+{
+  "predicate": null,
+}
+`;
+
+exports[`Encrypted should stage encrypted with null predicate when no options provided 1`] = `
+{
+  "predicate": null,
+}
+`;
+
+exports[`Encrypted should stage encrypted with purpose predicate 1`] = `
+{
+  "predicate": {
+    "purpose": "pii",
+  },
+}
+`;

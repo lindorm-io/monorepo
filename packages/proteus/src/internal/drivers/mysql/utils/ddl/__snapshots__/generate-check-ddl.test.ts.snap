@@ -1,0 +1,27 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`generateCheckDDL (MySQL) accepts a named constraint of exactly 64 characters 1`] = `
+[
+  "CONSTRAINT \`aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\` CHECK (x > 0)",
+]
+`;
+
+exports[`generateCheckDDL (MySQL) auto-generates hash-based constraint name when name is null 1`] = `
+[
+  "CONSTRAINT \`chk_hvQN5agtmhF\` CHECK (score BETWEEN 0 AND 100)",
+]
+`;
+
+exports[`generateCheckDDL (MySQL) generates multiple check constraints in order 1`] = `
+[
+  "CONSTRAINT \`chk_age\` CHECK (age >= 0)",
+  "CONSTRAINT \`chk_KabvVwgFC22\` CHECK (score <= 100)",
+  "CONSTRAINT \`chk_YHqua8RUI_7\` CHECK (name IS NOT NULL)",
+]
+`;
+
+exports[`generateCheckDDL (MySQL) generates named check constraint when name is provided 1`] = `
+[
+  "CONSTRAINT \`age_positive\` CHECK (age >= 0)",
+]
+`;

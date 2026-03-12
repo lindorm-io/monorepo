@@ -1,0 +1,29 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`introspectComments should return column-level comments 1`] = `
+[
+  {
+    "column": "email",
+    "comment": "Primary email address",
+    "schema": "public",
+    "table": "users",
+  },
+  {
+    "column": "name",
+    "comment": "Display name",
+    "schema": "public",
+    "table": "users",
+  },
+]
+`;
+
+exports[`introspectComments should return table-level comment 1`] = `
+[
+  {
+    "column": null,
+    "comment": "Main users table",
+    "schema": "public",
+    "table": "users",
+  },
+]
+`;

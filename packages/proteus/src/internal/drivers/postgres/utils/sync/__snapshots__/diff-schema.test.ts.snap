@@ -1,0 +1,99 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`diffSchema should create new table 1`] = `
+{
+  "operations": [
+    {
+      "autocommit": false,
+      "description": "Create table "public"."users"",
+      "schema": "public",
+      "severity": "safe",
+      "sql": "CREATE TABLE "public"."users" (
+  "id" UUID DEFAULT gen_random_uuid() NOT NULL,
+  "name" TEXT NOT NULL,
+  CONSTRAINT "users_pkey" PRIMARY KEY ("id")
+);",
+      "table": "users",
+      "type": "create_table",
+    },
+  ],
+  "summary": {
+    "destructive": 0,
+    "safe": 1,
+    "total": 1,
+    "warning": 0,
+  },
+}
+`;
+
+exports[`diffSchema should include DEFERRABLE INITIALLY DEFERRED for FK on new table 1`] = `
+{
+  "operations": [
+    {
+      "autocommit": false,
+      "description": "Create table "public"."orders"",
+      "schema": "public",
+      "severity": "safe",
+      "sql": "CREATE TABLE "public"."orders" (
+  "id" UUID DEFAULT gen_random_uuid() NOT NULL,
+  "user_id" UUID NOT NULL,
+  CONSTRAINT "orders_pkey" PRIMARY KEY ("id")
+);",
+      "table": "orders",
+      "type": "create_table",
+    },
+    {
+      "autocommit": false,
+      "constraintType": "FOREIGN KEY",
+      "description": "Add FOREIGN KEY "orders_user_id_fkey" on "public"."orders"",
+      "schema": "public",
+      "severity": "safe",
+      "sql": "ALTER TABLE "public"."orders" ADD CONSTRAINT "orders_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."users" ("id") ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;",
+      "table": "orders",
+      "type": "add_constraint",
+    },
+  ],
+  "summary": {
+    "destructive": 0,
+    "safe": 2,
+    "total": 2,
+    "warning": 0,
+  },
+}
+`;
+
+exports[`diffSchema should include DEFERRABLE INITIALLY IMMEDIATE for FK on new table when initiallyDeferred is false 1`] = `
+{
+  "operations": [
+    {
+      "autocommit": false,
+      "description": "Create table "public"."items"",
+      "schema": "public",
+      "severity": "safe",
+      "sql": "CREATE TABLE "public"."items" (
+  "id" UUID DEFAULT gen_random_uuid() NOT NULL,
+  "order_id" UUID NOT NULL,
+  CONSTRAINT "items_pkey" PRIMARY KEY ("id")
+);",
+      "table": "items",
+      "type": "create_table",
+    },
+    {
+      "autocommit": false,
+      "constraintType": "FOREIGN KEY",
+      "description": "Add FOREIGN KEY "items_order_id_fkey" on "public"."items"",
+      "schema": "public",
+      "severity": "safe",
+      "sql": "ALTER TABLE "public"."items" ADD CONSTRAINT "items_order_id_fkey" FOREIGN KEY ("order_id") REFERENCES "public"."orders" ("id") DEFERRABLE INITIALLY IMMEDIATE;",
+      "table": "items",
+      "type": "add_constraint",
+    },
+  ],
+  "summary": {
+    "destructive": 0,
+    "safe": 2,
+    "total": 2,
+    "warning": 0,
+  },
+}
+`;

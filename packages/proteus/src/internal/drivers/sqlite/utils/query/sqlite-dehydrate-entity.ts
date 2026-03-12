@@ -1,0 +1,32 @@
+import type { IAmphora } from "@lindorm/amphora";
+import type { IEntity } from "../../../../../interfaces";
+import type { EntityMetadata } from "#internal/entity/types/metadata";
+import { defaultDehydrateEntity } from "#internal/entity/utils/default-dehydrate-entity";
+import type { DehydrateMode } from "#internal/entity/utils/default-dehydrate-entity";
+import { coerceWriteValue } from "./coerce-value";
+import type { DehydratedColumn } from "./dehydrate-entity";
+
+/**
+ * SQLite-specific dehydration adapter.
+ * 1. Calls defaultDehydrateEntity -> gets Dict (column-name keyed)
+ * 2. Applies coerceWriteValue to each value (boolean -> 0/1, Date -> ISO string, etc.)
+ * 3. Converts to Array<DehydratedColumn> (format compileInsert/compileUpdate consume)
+ */
+export const sqliteDehydrateEntity = <E extends IEntity>(
+  entity: E,
+  metadata: EntityMetadata,
+  mode: DehydrateMode,
+  amphora?: IAmphora,
+): Array<DehydratedColumn> => {
+  const dict = defaultDehydrateEntity(entity, metadata, mode, amphora);
+
+  const columns: Array<DehydratedColumn> = [];
+
+  for (const [column, value] of Object.entries(dict)) {
+    // Look up field type for SQLite-specific coercion
+    const field = metadata.fields.find((f) => f.name === column);
+    columns.push({ column, value: coerceWriteValue(value, field?.type ?? null) });
+  }
+
+  return columns;
+};

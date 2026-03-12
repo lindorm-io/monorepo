@@ -1,0 +1,37 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`introspectEnums should handle multiple enums 1`] = `
+[
+  {
+    "name": "enum_users_status",
+    "schema": "public",
+    "values": [
+      "active",
+      "inactive",
+    ],
+  },
+  {
+    "name": "enum_posts_category",
+    "schema": "public",
+    "values": [
+      "news",
+      "blog",
+      "tutorial",
+    ],
+  },
+]
+`;
+
+exports[`introspectEnums should map enum type with ordered values 1`] = `
+[
+  {
+    "name": "enum_users_status",
+    "schema": "public",
+    "values": [
+      "active",
+      "inactive",
+      "banned",
+    ],
+  },
+]
+`;

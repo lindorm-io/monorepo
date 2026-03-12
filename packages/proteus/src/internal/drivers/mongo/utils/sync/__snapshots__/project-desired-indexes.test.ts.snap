@@ -1,0 +1,246 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`projectDesiredIndexes should map single PK field to _id in index keys 1`] = `
+{
+  "_id": 1,
+}
+`;
+
+exports[`projectDesiredIndexes should prefix collection name with namespace 1`] = `
+[
+  {
+    "collection": "User",
+    "expireAfterSeconds": null,
+    "keys": {
+      "name": 1,
+    },
+    "name": "proteus_idx_ZYxIuooP_q8",
+    "sparse": false,
+    "unique": false,
+  },
+]
+`;
+
+exports[`projectDesiredIndexes should project @Index decorator index 1`] = `
+[
+  {
+    "collection": "TestEntity",
+    "expireAfterSeconds": null,
+    "keys": {
+      "name": 1,
+    },
+    "name": "proteus_idx_oabWpIAacbw",
+    "sparse": false,
+    "unique": false,
+  },
+]
+`;
+
+exports[`projectDesiredIndexes should project @Unique decorator as unique index 1`] = `
+[
+  {
+    "collection": "TestEntity",
+    "expireAfterSeconds": null,
+    "keys": {
+      "email": 1,
+    },
+    "name": "proteus_uniq_l6I8FaQrzAk",
+    "sparse": false,
+    "unique": true,
+  },
+]
+`;
+
+exports[`projectDesiredIndexes should project FK index from owning relation 1`] = `
+[
+  {
+    "collection": "TestEntity",
+    "expireAfterSeconds": null,
+    "keys": {
+      "profileId": 1,
+    },
+    "name": "proteus_idx_NoWwJDxlPRn",
+    "sparse": false,
+    "unique": false,
+  },
+]
+`;
+
+exports[`projectDesiredIndexes should project TTL index from @ExpiryDate field 1`] = `
+[
+  {
+    "collection": "TestEntity",
+    "expireAfterSeconds": 0,
+    "keys": {
+      "expiresAt": 1,
+    },
+    "name": "proteus_ttl_hcQHeGiTYDi",
+    "sparse": false,
+    "unique": false,
+  },
+]
+`;
+
+exports[`projectDesiredIndexes should project compound @Unique 1`] = `
+[
+  {
+    "collection": "TestEntity",
+    "expireAfterSeconds": null,
+    "keys": {
+      "email": 1,
+      "tenantId": 1,
+    },
+    "name": "proteus_uniq_W1Ggpd1-_NK",
+    "sparse": false,
+    "unique": true,
+  },
+]
+`;
+
+exports[`projectDesiredIndexes should project compound index 1`] = `
+[
+  {
+    "collection": "TestEntity",
+    "expireAfterSeconds": null,
+    "keys": {
+      "name": 1,
+      "tenantId": 1,
+    },
+    "name": "proteus_idx_ks68_wU9qP7",
+    "sparse": false,
+    "unique": false,
+  },
+]
+`;
+
+exports[`projectDesiredIndexes should project descending index 1`] = `
+[
+  {
+    "collection": "TestEntity",
+    "expireAfterSeconds": null,
+    "keys": {
+      "createdAt": -1,
+    },
+    "name": "proteus_idx_l_31NUtme2j",
+    "sparse": false,
+    "unique": false,
+  },
+]
+`;
+
+exports[`projectDesiredIndexes should project discriminator index for single-table parent 1`] = `
+[
+  {
+    "collection": "TestEntity",
+    "expireAfterSeconds": null,
+    "keys": {
+      "__type": 1,
+    },
+    "name": "proteus_idx_wkp0QriHpIa",
+    "sparse": false,
+    "unique": false,
+  },
+]
+`;
+
+exports[`projectDesiredIndexes should project named @Unique 1`] = `
+[
+  {
+    "collection": "TestEntity",
+    "expireAfterSeconds": null,
+    "keys": {
+      "email": 1,
+    },
+    "name": "proteus_uniq_email_uniq",
+    "sparse": false,
+    "unique": true,
+  },
+]
+`;
+
+exports[`projectDesiredIndexes should project named index 1`] = `
+[
+  {
+    "collection": "TestEntity",
+    "expireAfterSeconds": null,
+    "keys": {
+      "name": 1,
+    },
+    "name": "proteus_idx_my_idx",
+    "sparse": false,
+    "unique": false,
+  },
+]
+`;
+
+exports[`projectDesiredIndexes should project sparse index 1`] = `
+[
+  {
+    "collection": "TestEntity",
+    "expireAfterSeconds": null,
+    "keys": {
+      "name": 1,
+    },
+    "name": "proteus_idx_oabWpIAacbw",
+    "sparse": true,
+    "unique": false,
+  },
+]
+`;
+
+exports[`projectDesiredIndexes should project unique index 1`] = `
+[
+  {
+    "collection": "TestEntity",
+    "expireAfterSeconds": null,
+    "keys": {
+      "name": 1,
+    },
+    "name": "proteus_idx_oabWpIAacbw",
+    "sparse": false,
+    "unique": true,
+  },
+]
+`;
+
+exports[`projectDesiredIndexes should return empty array for entity with no indexes 1`] = `[]`;
+
+exports[`projectDesiredIndexes should skip ManyToMany relations for FK indexes 1`] = `
+[
+  {
+    "collection": "user_tags",
+    "expireAfterSeconds": null,
+    "keys": {
+      "userId": 1,
+    },
+    "name": "proteus_uniq_Ur-G5C0sZxp",
+    "sparse": false,
+    "unique": true,
+  },
+]
+`;
+
+exports[`projectDesiredIndexes should skip inheritance children (no duplicate indexes) 1`] = `
+[
+  {
+    "collection": "Parent",
+    "expireAfterSeconds": null,
+    "keys": {
+      "name": 1,
+    },
+    "name": "proteus_idx_2WHcpa5rf7v",
+    "sparse": false,
+    "unique": false,
+  },
+  {
+    "collection": "Parent",
+    "expireAfterSeconds": null,
+    "keys": {
+      "__type": 1,
+    },
+    "name": "proteus_idx_SaBqwagx3YR",
+    "sparse": false,
+    "unique": false,
+  },
+]
+`;

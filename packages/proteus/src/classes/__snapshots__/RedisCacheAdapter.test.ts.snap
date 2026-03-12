@@ -1,0 +1,58 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`RedisCacheAdapter delByPrefix calls client.eval with Lua script, numkeys=1, pattern with wildcard, and scanCount 1`] = `
+[MockFunction] {
+  "calls": [
+    [
+      "
+local cursor = "0"
+local total = 0
+repeat
+  local result = redis.call("SCAN", cursor, "MATCH", KEYS[1], "COUNT", ARGV[1])
+  cursor = result[1]
+  local keys = result[2]
+  if #keys > 0 then
+    for i = 1, #keys, 1000 do
+      local batch = {}
+      for j = i, math.min(i + 999, #keys) do
+        batch[#batch + 1] = keys[j]
+      end
+      redis.call("UNLINK", unpack(batch))
+    end
+    total = total + #keys
+  end
+until cursor == "0"
+return total
+",
+      1,
+      "cache:User:*",
+      200,
+    ],
+  ],
+  "results": [
+    {
+      "type": "return",
+      "value": Promise {},
+    },
+  ],
+}
+`;
+
+exports[`RedisCacheAdapter set calls client.set with key, value, PX flag, and ttlMs 1`] = `
+[MockFunction] {
+  "calls": [
+    [
+      "cache:User:123",
+      "{"id":"123"}",
+      "PX",
+      60000,
+    ],
+  ],
+  "results": [
+    {
+      "type": "return",
+      "value": Promise {},
+    },
+  ],
+}
+`;

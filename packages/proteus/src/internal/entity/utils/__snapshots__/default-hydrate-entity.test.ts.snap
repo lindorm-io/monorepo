@@ -1,0 +1,11 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`defaultHydrateEntity should assign field values from data dict 1`] = `
+TestEntity {
+  "age": 30,
+  "deletedAt": null,
+  "id": "abc",
+  "name": "Alice",
+  "score": 0n,
+}
+`;

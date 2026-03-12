@@ -1,0 +1,32 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`reindexParams SQL with no $N placeholders should return SQL unchanged when there are no placeholders and offset is zero 1`] = `"SELECT NOW()"`;
+
+exports[`reindexParams SQL with no $N placeholders should return SQL unchanged when there are no placeholders even with a non-zero offset 1`] = `"SELECT NOW()"`;
+
+exports[`reindexParams chaining multiple fragments should correctly reindex three chained fragments 1`] = `
+{
+  "sql1": "x = $1",
+  "sql2": "y = $2",
+  "sql3": "z = $3",
+}
+`;
+
+exports[`reindexParams chaining multiple fragments should correctly reindex two fragments appended sequentially 1`] = `
+{
+  "sql1": "a = $1 AND b = $2",
+  "sql2": "c = $3 AND d = $4",
+}
+`;
+
+exports[`reindexParams double-digit and large placeholders should correctly reindex $10 and beyond 1`] = `"WHERE a = $6 AND b = $15 AND c = $17"`;
+
+exports[`reindexParams empty fragmentParams should return SQL unchanged even with non-zero offset when fragmentParams is empty 1`] = `"SELECT 1"`;
+
+exports[`reindexParams empty fragmentParams should return SQL unchanged when fragmentParams is empty and globalParams is empty 1`] = `"SELECT 1"`;
+
+exports[`reindexParams when globalParams has existing entries (offset > 0) should reindex a single $N placeholder by the offset 1`] = `"WHERE id = $2"`;
+
+exports[`reindexParams when globalParams has existing entries (offset > 0) should reindex multiple $N placeholders by the offset 1`] = `"WHERE a = $3 AND b = $4 AND c = $5"`;
+
+exports[`reindexParams when globalParams is empty (offset = 0) should return SQL unchanged 1`] = `"SELECT * FROM t WHERE id = $1"`;

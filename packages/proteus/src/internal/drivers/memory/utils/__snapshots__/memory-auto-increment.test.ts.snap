@@ -1,0 +1,73 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`applyAutoIncrement empty generated array no-op when generated is empty 1`] = `
+{
+  "id": "manual",
+}
+`;
+
+exports[`applyAutoIncrement multiple generated fields applies all increment generators independently 1`] = `
+{
+  "seq1": 1,
+  "seq2": 1,
+}
+`;
+
+exports[`applyAutoIncrement multiple generated fields applies all increment generators independently 2`] = `
+Map {
+  "TestEntity.seq1" => 1,
+  "TestEntity.seq2" => 1,
+}
+`;
+
+exports[`applyAutoIncrement multiple generated fields skips non-increment alongside increment 1`] = `
+{
+  "seq": 1,
+}
+`;
+
+exports[`applyAutoIncrement strategy: identity assigns values for identity strategy the same as increment 1`] = `
+{
+  "seq": 1,
+}
+`;
+
+exports[`applyAutoIncrement strategy: increment assigns 1 on first call 1`] = `
+{
+  "id": 1,
+}
+`;
+
+exports[`applyAutoIncrement strategy: increment counter key is scoped by entity name + field key 1`] = `
+{
+  "rowA": {
+    "id": 1,
+  },
+  "rowB": {
+    "id": 1,
+  },
+}
+`;
+
+exports[`applyAutoIncrement strategy: increment counter key is scoped by entity name + field key 2`] = `
+Map {
+  "EntityA.id" => 1,
+  "OtherEntity.id" => 1,
+}
+`;
+
+exports[`applyAutoIncrement strategy: increment increments counter on subsequent calls 1`] = `
+{
+  "row1": {
+    "id": 1,
+  },
+  "row2": {
+    "id": 2,
+  },
+  "row3": {
+    "id": 3,
+  },
+}
+`;
+
+exports[`applyAutoIncrement strategy: other (uuid, custom) skips generators with non-increment strategies 1`] = `{}`;

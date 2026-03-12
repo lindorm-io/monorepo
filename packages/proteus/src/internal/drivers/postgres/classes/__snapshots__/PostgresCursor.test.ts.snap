@@ -1,0 +1,66 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`PostgresCursor [Symbol.asyncIterator]() matches snapshot for single-batch iteration 1`] = `
+[
+  ItemEntity {
+    "count": 10,
+    "id": "a1",
+    "name": "alpha",
+  },
+  ItemEntity {
+    "count": 20,
+    "id": "a2",
+    "name": "beta",
+  },
+]
+`;
+
+exports[`PostgresCursor [Symbol.asyncIterator]() yields all entities across multiple batches 1`] = `
+[
+  ItemEntity {
+    "count": 1,
+    "id": "id-1",
+    "name": "a",
+  },
+  ItemEntity {
+    "count": 2,
+    "id": "id-2",
+    "name": "b",
+  },
+  ItemEntity {
+    "count": 3,
+    "id": "id-3",
+    "name": "c",
+  },
+]
+`;
+
+exports[`PostgresCursor next() returns hydrated entity from first row when rows present 1`] = `
+ItemEntity {
+  "count": 42,
+  "id": "uuid-abc",
+  "name": "widget",
+}
+`;
+
+exports[`PostgresCursor nextBatch() returns array of hydrated entities 1`] = `
+[
+  ItemEntity {
+    "count": 1,
+    "id": "id-1",
+    "name": "alpha",
+  },
+  ItemEntity {
+    "count": 2,
+    "id": "id-2",
+    "name": "beta",
+  },
+  ItemEntity {
+    "count": 3,
+    "id": "id-3",
+    "name": "gamma",
+  },
+]
+`;
+
+exports[`PostgresCursor nextBatch() returns empty array when no rows are returned 1`] = `[]`;
