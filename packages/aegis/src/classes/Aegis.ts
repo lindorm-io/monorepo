@@ -5,12 +5,11 @@ import {
   SerialisedAesDecryption,
   SerialisedAesEncryption,
 } from "@lindorm/aes";
-import { AmphoraQuery, IAmphora } from "@lindorm/amphora";
+import { AmphoraPredicate, IAmphora } from "@lindorm/amphora";
 import {
   IKryptos,
   KryptosEncAlgorithm,
   KryptosEncryption,
-  KryptosPurpose,
   KryptosSigAlgorithm,
 } from "@lindorm/kryptos";
 import { ILogger } from "@lindorm/logger";
@@ -28,6 +27,7 @@ import {
 } from "../interfaces";
 import {
   AegisOptions,
+  AegisPredicate,
   CweContent,
   CweEncryptOptions,
   CwsContent,
@@ -69,19 +69,17 @@ import { JweKit } from "./JweKit";
 import { JwsKit } from "./JwsKit";
 import { JwtKit } from "./JwtKit";
 
-type FilterOptions = {
-  keyFilter?: {
-    purpose?: KryptosPurpose;
-  };
+type PredicateOptions = {
+  predicate?: AegisPredicate;
 };
 
-type EncOptions = FilterOptions & {
+type EncOptions = PredicateOptions & {
   id?: string;
   algorithm?: KryptosEncAlgorithm;
   encrypt?: boolean;
 };
 
-type SigOptions = FilterOptions & {
+type SigOptions = PredicateOptions & {
   id?: string;
   algorithm?: KryptosSigAlgorithm;
   sign?: boolean;
@@ -307,7 +305,7 @@ export class Aegis implements IAegis {
 
   private async coseEncrypt(
     data: CweContent,
-    options: CweEncryptOptions & FilterOptions = {},
+    options: CweEncryptOptions & PredicateOptions = {},
   ): Promise<EncryptedCwe> {
     const kit = await this.coseEncryptKit({ encrypt: true });
 
@@ -339,7 +337,7 @@ export class Aegis implements IAegis {
 
   private async coseSign<T extends CwsContent>(
     content: T,
-    options: SignCwsOptions & FilterOptions = {},
+    options: SignCwsOptions & PredicateOptions = {},
   ): Promise<SignedCws> {
     const kit = await this.coseSignKit({ sign: true });
 
@@ -374,7 +372,7 @@ export class Aegis implements IAegis {
 
   private async cwtSign<T extends Dict = Dict>(
     content: SignCwtContent<T>,
-    options: SignCwtOptions & FilterOptions = {},
+    options: SignCwtOptions & PredicateOptions = {},
   ): Promise<SignedCwt> {
     const kit = await this.cwtKit({ sign: true });
 
@@ -409,7 +407,7 @@ export class Aegis implements IAegis {
 
   private async jweEncrypt(
     data: string,
-    options: JweEncryptOptions & FilterOptions = {},
+    options: JweEncryptOptions & PredicateOptions = {},
   ): Promise<EncryptedJwe> {
     const kit = await this.jweKit({ encrypt: true });
 
@@ -437,7 +435,7 @@ export class Aegis implements IAegis {
 
   private async jwsSign<T extends JwsContent>(
     data: T,
-    options: SignJwsOptions & FilterOptions = {},
+    options: SignJwsOptions & PredicateOptions = {},
   ): Promise<SignedJws> {
     const kit = await this.jwsKit({ sign: true });
 
@@ -470,7 +468,7 @@ export class Aegis implements IAegis {
 
   private async jwtSign<T extends Dict = Dict>(
     content: SignJwtContent<T>,
-    options: SignJwtOptions & FilterOptions = {},
+    options: SignJwtOptions & PredicateOptions = {},
   ): Promise<SignedJwt> {
     const kit = await this.jwtKit({ sign: true });
 
@@ -494,7 +492,7 @@ export class Aegis implements IAegis {
   // private kryptos
 
   private async kryptosEnc(options: EncOptions = {}): Promise<IKryptos> {
-    const query: AmphoraQuery = options.encrypt
+    const query: AmphoraPredicate = options.encrypt
       ? {
           $or: [
             { operations: ["encrypt"] },
@@ -503,7 +501,7 @@ export class Aegis implements IAegis {
           ],
           algorithm: this.encAlgorithm,
           issuer: this.issuer ?? undefined,
-          ...(options.keyFilter ? { purpose: options.keyFilter.purpose } : {}),
+          ...(options.predicate ?? {}),
         }
       : {
           $or: [
@@ -512,6 +510,7 @@ export class Aegis implements IAegis {
             { operations: ["unwrapKey"] },
           ],
           algorithm: options.algorithm ?? this.encAlgorithm,
+          ...(options.predicate ?? {}),
         };
 
     const kryptos = await this.amphora.find(
@@ -524,16 +523,17 @@ export class Aegis implements IAegis {
   }
 
   private async kryptosSig(options: SigOptions = {}): Promise<IKryptos> {
-    const query: AmphoraQuery = options.sign
+    const query: AmphoraPredicate = options.sign
       ? {
           algorithm: this.sigAlgorithm,
           issuer: this.issuer ?? undefined,
           operations: ["sign"],
-          ...(options.keyFilter ? { purpose: options.keyFilter.purpose } : {}),
+          ...(options.predicate ?? {}),
         }
       : {
           algorithm: options.algorithm ?? this.sigAlgorithm,
           operations: ["verify"],
+          ...(options.predicate ?? {}),
         };
 
     const kryptos = await this.amphora.find(
