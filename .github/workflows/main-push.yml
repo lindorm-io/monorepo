@@ -13,8 +13,8 @@ permissions:
   contents: write
 
 jobs:
-  build:
-    name: Build
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -36,44 +36,11 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Upload workspace
-        uses: actions/upload-artifact@v4
-        with:
-          name: workspace
-          path: |
-            node_modules
-            packages/*/dist
-            packages/*/node_modules
-          retention-days: 1
-
-  lint:
-    name: Lint
-    needs: build
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 25.x
-
-      - name: Download workspace
-        uses: actions/download-artifact@v4
-        with:
-          name: workspace
-
       - name: Lint
         run: npm run lint
 
   typecheck:
     name: Typecheck
-    needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -87,18 +54,19 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 25.x
+          cache: npm
 
-      - name: Download workspace
-        uses: actions/download-artifact@v4
-        with:
-          name: workspace
+      - name: Install
+        run: npm ci
+
+      - name: Build
+        run: npm run build
 
       - name: Typecheck
         run: npm run typecheck
 
   test:
     name: Test
-    needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -193,11 +161,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 25.x
+          cache: npm
 
-      - name: Download workspace
-        uses: actions/download-artifact@v4
-        with:
-          name: workspace
+      - name: Install
+        run: npm ci
+
+      - name: Build
+        run: npm run build
 
       - name: Test
         run: npm run test:ci
