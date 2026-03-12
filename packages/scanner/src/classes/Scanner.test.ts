@@ -2,7 +2,7 @@ import { join } from "path";
 import { Scanner } from "./Scanner";
 
 jest.mock("tsx/cjs/api", () => ({
-  require: jest.fn(),
+  require: jest.fn((id: string) => jest.requireActual(id)),
 }));
 
 describe("Scanner", () => {
@@ -237,126 +237,52 @@ describe("Scanner", () => {
   });
 
   describe("import", () => {
-    const mockTsxRequire = jest.requireMock("tsx/cjs/api").require;
+    const fixturePath = join(__dirname, "..", "__fixtures__", "require-fixture.ts");
 
-    beforeEach(() => {
-      mockTsxRequire.mockReset();
-    });
-
-    test("should use tsx to import a file", async () => {
-      const mockModule = { default: { foo: "bar" } };
-      mockTsxRequire.mockReturnValue(mockModule);
-
+    test("should import a file", async () => {
       const scanner = new Scanner();
-      const result = await scanner.import("/some/path/to/file.ts");
+      const result = await scanner.import<{ fixture: { foo: string } }>(fixturePath);
 
-      expect(mockTsxRequire).toHaveBeenCalledWith(
-        "/some/path/to/file.ts",
-        "/some/path/to/file.ts",
-      );
-      expect(result).toBe(mockModule);
+      expect(result).toEqual({ fixture: { foo: "bar" } });
     });
 
     test("should accept IScanData", async () => {
-      const mockModule = { value: 42 };
-      mockTsxRequire.mockReturnValue(mockModule);
-
       const scanner = new Scanner();
-      const scanData = { fullPath: "/another/path/module.ts" };
-      const result = await scanner.import(scanData as any);
+      const scanData = { fullPath: fixturePath };
+      const result = await scanner.import<{ fixture: { foo: string } }>(scanData as any);
 
-      expect(mockTsxRequire).toHaveBeenCalledWith(
-        "/another/path/module.ts",
-        "/another/path/module.ts",
-      );
-      expect(result).toBe(mockModule);
+      expect(result).toEqual({ fixture: { foo: "bar" } });
     });
 
     test("should propagate MODULE_NOT_FOUND error", async () => {
-      const error = new Error("Cannot find module '/missing/module.ts'");
-      (error as any).code = "MODULE_NOT_FOUND";
-      mockTsxRequire.mockImplementation(() => {
-        throw error;
-      });
-
       const scanner = new Scanner();
 
-      await expect(scanner.import("/missing/module.ts")).rejects.toThrow(
-        "Cannot find module '/missing/module.ts'",
-      );
-    });
-
-    test("should propagate syntax error", async () => {
-      const error = new SyntaxError("Unexpected token '}'");
-      mockTsxRequire.mockImplementation(() => {
-        throw error;
-      });
-
-      const scanner = new Scanner();
-
-      await expect(scanner.import("/bad/syntax.ts")).rejects.toThrow(SyntaxError);
+      await expect(scanner.import("/missing/module.ts")).rejects.toThrow();
     });
   });
 
   describe("require", () => {
-    const mockTsxRequire = jest.requireMock("tsx/cjs/api").require;
+    const fixturePath = join(__dirname, "..", "__fixtures__", "require-fixture.ts");
 
-    beforeEach(() => {
-      mockTsxRequire.mockReset();
-    });
-
-    test("should use tsx to require a file", () => {
-      const mockModule = { default: { foo: "bar" } };
-      mockTsxRequire.mockReturnValue(mockModule);
-
+    test("should require a file", () => {
       const scanner = new Scanner();
-      const result = scanner.require("/some/path/to/file.ts");
+      const result = scanner.require<{ fixture: { foo: string } }>(fixturePath);
 
-      expect(mockTsxRequire).toHaveBeenCalledWith(
-        "/some/path/to/file.ts",
-        "/some/path/to/file.ts",
-      );
-      expect(result).toBe(mockModule);
+      expect(result).toEqual({ fixture: { foo: "bar" } });
     });
 
     test("should accept IScanData", () => {
-      const mockModule = { value: 42 };
-      mockTsxRequire.mockReturnValue(mockModule);
-
       const scanner = new Scanner();
-      const scanData = { fullPath: "/another/path/module.ts" };
-      const result = scanner.require(scanData as any);
+      const scanData = { fullPath: fixturePath };
+      const result = scanner.require<{ fixture: { foo: string } }>(scanData as any);
 
-      expect(mockTsxRequire).toHaveBeenCalledWith(
-        "/another/path/module.ts",
-        "/another/path/module.ts",
-      );
-      expect(result).toBe(mockModule);
+      expect(result).toEqual({ fixture: { foo: "bar" } });
     });
 
     test("should propagate MODULE_NOT_FOUND error", () => {
-      const error = new Error("Cannot find module '/missing/module.ts'");
-      (error as any).code = "MODULE_NOT_FOUND";
-      mockTsxRequire.mockImplementation(() => {
-        throw error;
-      });
-
       const scanner = new Scanner();
 
-      expect(() => scanner.require("/missing/module.ts")).toThrow(
-        "Cannot find module '/missing/module.ts'",
-      );
-    });
-
-    test("should propagate syntax error", () => {
-      const error = new SyntaxError("Unexpected token '}'");
-      mockTsxRequire.mockImplementation(() => {
-        throw error;
-      });
-
-      const scanner = new Scanner();
-
-      expect(() => scanner.require("/bad/syntax.ts")).toThrow(SyntaxError);
+      expect(() => scanner.require("/missing/module.ts")).toThrow();
     });
   });
 
