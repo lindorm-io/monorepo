@@ -36,7 +36,7 @@ describe("writeMigrationFile", () => {
 describe("writeMigrationFile — error propagation", () => {
   it("should propagate mkdir error (unwritable path)", async () => {
     await expect(
-      writeMigrationFile("/proc/nonexistent/deeply/nested", "test.ts", "content"),
+      writeMigrationFile("/dev/null/impossible", "test.ts", "content"),
     ).rejects.toThrow();
   });
 
