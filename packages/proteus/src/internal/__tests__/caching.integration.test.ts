@@ -102,6 +102,10 @@ beforeAll(async () => {
   await source.setup();
 });
 
+afterAll(async () => {
+  await source.disconnect();
+});
+
 afterEach(() => {
   jest.restoreAllMocks();
   afterLoadSpy.mockClear();
