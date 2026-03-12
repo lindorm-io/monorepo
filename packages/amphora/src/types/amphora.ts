@@ -23,23 +23,23 @@ export type AmphoraOptions = {
   refreshInterval?: number;
 };
 
-export type AmphoraQuery = Predicate<
-  Pick<
-    KryptosAttributes & KryptosMetadata,
-    | "id"
-    | "algorithm"
-    | "curve"
-    | "encryption"
-    | "hasPrivateKey"
-    | "hasPublicKey"
-    | "isExternal"
-    | "issuer"
-    | "operations"
-    | "ownerId"
-    | "purpose"
-    | "type"
-    | "use"
-  >
+export type AmphoraPredicate = Predicate<AmphoraQuery>;
+
+export type AmphoraQuery = Pick<
+  KryptosAttributes & KryptosMetadata,
+  | "id"
+  | "algorithm"
+  | "curve"
+  | "encryption"
+  | "hasPrivateKey"
+  | "hasPublicKey"
+  | "isExternal"
+  | "issuer"
+  | "operations"
+  | "ownerId"
+  | "purpose"
+  | "type"
+  | "use"
 >;
 
 export type AmphoraJwks = {
