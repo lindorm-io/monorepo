@@ -15,6 +15,10 @@ import { IHermes } from "../interfaces";
 import { HermesEvent } from "../messages";
 import { Hermes } from "./Hermes";
 
+jest.mock("tsx/cjs/api", () => ({
+  require: jest.fn((id: string) => jest.requireActual(id)),
+}));
+
 describe("Hermes", () => {
   const namespace = "hermes_int";
   const logger = createMockLogger();
