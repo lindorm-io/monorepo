@@ -14,7 +14,6 @@ import {
   KryptosDB,
   KryptosEncryption,
   KryptosOperation,
-  KryptosPurpose,
   KryptosType,
   KryptosUse,
 } from "@lindorm/kryptos";
@@ -73,7 +72,7 @@ export abstract class KryptosEntity implements KryptosDB {
   public publicKey!: string | null;
 
   @Column("string", { nullable: true })
-  public purpose!: KryptosPurpose | null;
+  public purpose!: string | null;
 
   @Column("string")
   public type!: KryptosType;
