@@ -12,6 +12,7 @@
     "**/__fixtures__/**/*",
     "**/__mocks__/**/*",
     "**/__snapshots__/**/*",
+    "**/__tests__/**/*",
     "**/*.fixture.ts",
     "**/*.integration.ts",
     "**/*.snap",
