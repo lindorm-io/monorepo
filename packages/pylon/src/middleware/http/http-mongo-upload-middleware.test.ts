@@ -24,7 +24,7 @@ describe("createHttpMongoUploadMiddleware", () => {
     source = new MongoSource({
       files: [TestUploadOne],
       logger,
-      url: "mongodb://root:example@localhost/admin?authSource=admin",
+      url: "mongodb://localhost:27017/?directConnection=true",
       database: "test_database",
     });
 

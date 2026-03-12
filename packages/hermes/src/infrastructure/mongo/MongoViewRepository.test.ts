@@ -23,7 +23,7 @@ describe("MongoViewRepository", () => {
     source = new MongoSource({
       database: "MongoViewRepository",
       logger,
-      url: "mongodb://root:example@localhost/admin?authSource=admin",
+      url: "mongodb://localhost:27017/?directConnection=true",
     });
 
     await source.setup();
