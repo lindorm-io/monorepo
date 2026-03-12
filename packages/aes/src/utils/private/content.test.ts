@@ -6,6 +6,8 @@ describe("content", () => {
       expect(calculateContentType(["string"])).toEqual("application/json");
       expect(calculateContentType({ test: "data" })).toEqual("application/json");
       expect(calculateContentType(1)).toEqual("application/json");
+      expect(calculateContentType(true)).toEqual("application/json");
+      expect(calculateContentType(false)).toEqual("application/json");
     });
 
     test("should resolve application/octet-stream", () => {
@@ -21,7 +23,6 @@ describe("content", () => {
     test("should throw error", () => {
       expect(() => calculateContentType(undefined)).toThrow("Invalid content type");
       expect(() => calculateContentType(null)).toThrow("Invalid content type");
-      expect(() => calculateContentType(true)).toThrow("Invalid content type");
     });
   });
 
@@ -60,6 +61,12 @@ describe("content", () => {
       expect(
         parseContent(Buffer.from(JSON.stringify(123456789), "utf8"), "application/json"),
       ).toEqual(123456789);
+      expect(
+        parseContent(Buffer.from(JSON.stringify(true), "utf8"), "application/json"),
+      ).toEqual(true);
+      expect(
+        parseContent(Buffer.from(JSON.stringify(false), "utf8"), "application/json"),
+      ).toEqual(false);
     });
 
     test("should parse application/octet-stream", () => {

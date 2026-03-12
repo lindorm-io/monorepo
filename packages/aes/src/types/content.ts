@@ -1,6 +1,6 @@
 import { Dict } from "@lindorm/types";
 
-export type AesContent = Array<any> | Buffer | Dict | number | string;
+export type AesContent = Array<any> | boolean | Buffer | Dict | number | string;
 
 export type AesContentType =
   | "application/json"

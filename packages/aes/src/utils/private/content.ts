@@ -1,4 +1,4 @@
-import { isArray, isBuffer, isNumber, isObject, isString } from "@lindorm/is";
+import { isArray, isBoolean, isBuffer, isNumber, isObject, isString } from "@lindorm/is";
 import { AesError } from "../../errors";
 import { AesContent, AesContentType } from "../../types";
 
@@ -11,7 +11,7 @@ export const calculateContentType = (content: any): AesContentType => {
     return "application/octet-stream";
   }
 
-  if (isArray(content) || isNumber(content) || isObject(content)) {
+  if (isArray(content) || isBoolean(content) || isNumber(content) || isObject(content)) {
     return "application/json";
   }
 
