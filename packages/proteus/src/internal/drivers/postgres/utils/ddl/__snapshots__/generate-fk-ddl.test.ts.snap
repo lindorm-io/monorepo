@@ -1,0 +1,55 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`generateFkDDL generates FK constraint for OneToOne owning side 1`] = `
+[
+  "DO $$ BEGIN ALTER TABLE "FkOneToOneUser" ADD CONSTRAINT "fk_qGSDNei6gX3" FOREIGN KEY ("profileId") REFERENCES "FkOneToOneProfile" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION; EXCEPTION WHEN duplicate_object THEN NULL; END $$;",
+]
+`;
+
+exports[`generateFkDDL generates FK constraint with DEFERRABLE INITIALLY DEFERRED when deferrable and initially are set 1`] = `
+[
+  "DO $$ BEGIN ALTER TABLE "FkDeferrableDeferredChild" ADD CONSTRAINT "fk_dH5M_56lHLv" FOREIGN KEY ("parentId") REFERENCES "FkDeferrableDeferredParent" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION DEFERRABLE INITIALLY DEFERRED; EXCEPTION WHEN duplicate_object THEN NULL; END $$;",
+]
+`;
+
+exports[`generateFkDDL generates FK constraint with DEFERRABLE INITIALLY IMMEDIATE when deferrable is set without initially 1`] = `
+[
+  "DO $$ BEGIN ALTER TABLE "FkDeferrableImmediateChild" ADD CONSTRAINT "fk_O7w9lZyadzT" FOREIGN KEY ("parentId") REFERENCES "FkDeferrableImmediateParent" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION DEFERRABLE INITIALLY IMMEDIATE; EXCEPTION WHEN duplicate_object THEN NULL; END $$;",
+]
+`;
+
+exports[`generateFkDDL generates FK constraint with ON DELETE CASCADE ON UPDATE CASCADE 1`] = `
+[
+  "DO $$ BEGIN ALTER TABLE "FkCascadeChild" ADD CONSTRAINT "fk_eAiBC8-npX1" FOREIGN KEY ("parentId") REFERENCES "FkCascadeParent" ("id") ON DELETE CASCADE ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$;",
+]
+`;
+
+exports[`generateFkDDL generates FK constraint with ON DELETE RESTRICT 1`] = `
+[
+  "DO $$ BEGIN ALTER TABLE "FkRestrictChild" ADD CONSTRAINT "fk_6kUkH9AGl6z" FOREIGN KEY ("parentId") REFERENCES "FkRestrictParent" ("id") ON DELETE RESTRICT ON UPDATE NO ACTION; EXCEPTION WHEN duplicate_object THEN NULL; END $$;",
+]
+`;
+
+exports[`generateFkDDL generates FK constraint with ON DELETE SET DEFAULT ON UPDATE SET DEFAULT 1`] = `
+[
+  "DO $$ BEGIN ALTER TABLE "FkSetDefaultChild" ADD CONSTRAINT "fk_djrWTL_1Fjr" FOREIGN KEY ("parentId") REFERENCES "FkSetDefaultParent" ("id") ON DELETE SET DEFAULT ON UPDATE SET DEFAULT; EXCEPTION WHEN duplicate_object THEN NULL; END $$;",
+]
+`;
+
+exports[`generateFkDDL generates FK constraint with ON DELETE SET NULL ON UPDATE SET NULL 1`] = `
+[
+  "DO $$ BEGIN ALTER TABLE "FkSetNullChild" ADD CONSTRAINT "fk_Q-ZJC3JEaUZ" FOREIGN KEY ("parentId") REFERENCES "FkSetNullParent" ("id") ON DELETE SET NULL ON UPDATE SET NULL; EXCEPTION WHEN duplicate_object THEN NULL; END $$;",
+]
+`;
+
+exports[`generateFkDDL generates FK constraint with default ON DELETE NO ACTION ON UPDATE NO ACTION 1`] = `
+[
+  "DO $$ BEGIN ALTER TABLE "FkDefaultChild" ADD CONSTRAINT "fk_KwOPfxbSm6L" FOREIGN KEY ("parentId") REFERENCES "FkDefaultParent" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION; EXCEPTION WHEN duplicate_object THEN NULL; END $$;",
+]
+`;
+
+exports[`generateFkDDL uses schema-qualified table name when namespace is provided 1`] = `
+[
+  "DO $$ BEGIN ALTER TABLE "crm"."FkDefaultChild" ADD CONSTRAINT "fk_KwOPfxbSm6L" FOREIGN KEY ("parentId") REFERENCES "crm"."FkDefaultParent" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION; EXCEPTION WHEN duplicate_object THEN NULL; END $$;",
+]
+`;

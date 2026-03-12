@@ -1,0 +1,106 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`buildPrimaryMetadata — @Cache decorator wires cache metadata with explicit TTL 1`] = `300000`;
+
+exports[`buildPrimaryMetadata — @DefaultOrder decorator wires defaultOrder from decorator 1`] = `
+{
+  "createdAt": "DESC",
+}
+`;
+
+exports[`buildPrimaryMetadata — full metadata snapshot snapshot of complete metadata for a standard entity 1`] = `
+{
+  "cache": null,
+  "defaultOrder": null,
+  "entity": {
+    "comment": null,
+    "decorator": "Entity",
+    "name": "BpSnapshotEntity",
+    "namespace": null,
+  },
+  "fields": [
+    {
+      "arrayType": null,
+      "collation": null,
+      "comment": null,
+      "computed": null,
+      "decorator": "Field",
+      "default": null,
+      "embedded": null,
+      "encrypted": null,
+      "enum": null,
+      "hideOn": [],
+      "key": "id",
+      "max": null,
+      "min": null,
+      "name": "id",
+      "nullable": false,
+      "order": null,
+      "precision": null,
+      "readonly": true,
+      "scale": null,
+      "schema": null,
+      "transform": null,
+      "type": "uuid",
+    },
+    {
+      "arrayType": null,
+      "collation": null,
+      "comment": null,
+      "computed": null,
+      "decorator": "Field",
+      "default": null,
+      "embedded": null,
+      "encrypted": null,
+      "enum": null,
+      "hideOn": [],
+      "key": "name",
+      "max": null,
+      "min": null,
+      "name": "name",
+      "nullable": false,
+      "order": null,
+      "precision": null,
+      "readonly": false,
+      "scale": null,
+      "schema": null,
+      "transform": null,
+      "type": "string",
+    },
+    {
+      "arrayType": null,
+      "collation": null,
+      "comment": null,
+      "computed": null,
+      "decorator": "Field",
+      "default": null,
+      "embedded": null,
+      "encrypted": null,
+      "enum": null,
+      "hideOn": [],
+      "key": "age",
+      "max": null,
+      "min": null,
+      "name": "age",
+      "nullable": true,
+      "order": null,
+      "precision": null,
+      "readonly": false,
+      "scale": null,
+      "schema": null,
+      "transform": null,
+      "type": "integer",
+    },
+  ],
+  "primaryKeys": [
+    "id",
+  ],
+}
+`;
+
+exports[`buildPrimaryMetadata — mergeFieldModifiers duplicate detection merges multiple @Hide scopes into hideOn array 1`] = `
+[
+  "multiple",
+  "single",
+]
+`;

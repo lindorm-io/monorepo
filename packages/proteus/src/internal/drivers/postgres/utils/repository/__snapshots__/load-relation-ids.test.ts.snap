@@ -1,0 +1,11 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`loadRelationIds — OneToMany should build SQL with SELECT of FK and target columns 1`] = `"SELECT "article_id", "id" FROM "public"."comments" WHERE "article_id" IN ($1)"`;
+
+exports[`loadRelationIds — OneToMany should build SQL with SELECT of FK and target columns 2`] = `
+[
+  "a1",
+]
+`;
+
+exports[`loadRelationIds — inverse OneToOne should build a SELECT SQL for inverse OneToOne 1`] = `"SELECT "user_id", "id" FROM "public"."profiles" WHERE "user_id" IN ($1)"`;

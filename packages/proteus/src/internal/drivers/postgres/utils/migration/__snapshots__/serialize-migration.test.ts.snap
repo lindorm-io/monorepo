@@ -1,0 +1,171 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`serializeMigration — autocommit operations should use runner.query for autocommit ops with description comments 1`] = `
+"import type { MigrationInterface, MigrationQueryRunner } from "@lindorm/proteus";
+
+export class Generated20260220090000 implements MigrationInterface {
+  public readonly id = "00000000-0000-0000-0000-000000000001";
+  public readonly ts = "2026-02-20T09:00:00.000Z";
+
+  public async up(runner: MigrationQueryRunner): Promise<void> {
+    // Add value 'moderator' to enum "app"."enum_role"
+    await runner.query(\`ALTER TYPE "app"."enum_role" ADD VALUE IF NOT EXISTS 'moderator';\`);
+  }
+
+  public async down(runner: MigrationQueryRunner): Promise<void> {
+    // WARN: irreversible — Add value 'moderator' to enum "app"."enum_role"
+  }
+}
+"
+`;
+
+exports[`serializeMigration — empty plan should produce valid empty migration 1`] = `
+"import type { MigrationInterface, MigrationQueryRunner } from "@lindorm/proteus";
+
+export class Generated20260220090000 implements MigrationInterface {
+  public readonly id = "00000000-0000-0000-0000-000000000001";
+  public readonly ts = "2026-02-20T09:00:00.000Z";
+
+  public async up(runner: MigrationQueryRunner): Promise<void> {
+  }
+
+  public async down(runner: MigrationQueryRunner): Promise<void> {
+  }
+}
+"
+`;
+
+exports[`serializeMigration — empty plan should produce valid empty migration 2`] = `"MW3usoiSsc3r_lwSws1iC1uPKSicH_49T1_Bsuak6n0"`;
+
+exports[`serializeMigration — escaping should escape \${ sequences to prevent template literal interpolation 1`] = `
+"import type { MigrationInterface, MigrationQueryRunner } from "@lindorm/proteus";
+
+export class Generated20260220090000 implements MigrationInterface {
+  public readonly id = "00000000-0000-0000-0000-000000000001";
+  public readonly ts = "2026-02-20T09:00:00.000Z";
+
+  public async up(runner: MigrationQueryRunner): Promise<void> {
+    await runner.transaction(async (ctx) => {
+      // Add CHECK "chk_json" on "app"."events"
+      await ctx.query(\`ALTER TABLE "app"."events" ADD CONSTRAINT "chk_json" CHECK (payload->>\\\${jsonb_path});\`);
+    });
+  }
+
+  public async down(runner: MigrationQueryRunner): Promise<void> {
+    await runner.transaction(async (ctx) => {
+      await ctx.query(\`ALTER TABLE "app"."users" DROP CONSTRAINT "chk_json";\`);
+    });
+  }
+}
+"
+`;
+
+exports[`serializeMigration — irreversible ops should emit warning comments for irreversible down operations 1`] = `
+"import type { MigrationInterface, MigrationQueryRunner } from "@lindorm/proteus";
+
+export class Generated20260220090000 implements MigrationInterface {
+  public readonly id = "00000000-0000-0000-0000-000000000001";
+  public readonly ts = "2026-02-20T09:00:00.000Z";
+
+  public async up(runner: MigrationQueryRunner): Promise<void> {
+    await runner.transaction(async (ctx) => {
+      // Create table "app"."users"
+      await ctx.query(\`CREATE TABLE "app"."users" ("id" UUID NOT NULL);\`);
+      // Add column "email" to "app"."users"
+      await ctx.query(\`ALTER TABLE "app"."users" ADD COLUMN "email" TEXT;\`);
+    });
+  }
+
+  public async down(runner: MigrationQueryRunner): Promise<void> {
+    // WARN: irreversible — Create table "app"."users"
+
+    await runner.transaction(async (ctx) => {
+      await ctx.query(\`ALTER TABLE "app"."users" DROP COLUMN "email";\`);
+    });
+  }
+}
+"
+`;
+
+exports[`serializeMigration — irreversible ops should note when all tx ops are irreversible 1`] = `
+"import type { MigrationInterface, MigrationQueryRunner } from "@lindorm/proteus";
+
+export class Generated20260220090000 implements MigrationInterface {
+  public readonly id = "00000000-0000-0000-0000-000000000001";
+  public readonly ts = "2026-02-20T09:00:00.000Z";
+
+  public async up(runner: MigrationQueryRunner): Promise<void> {
+    await runner.transaction(async (ctx) => {
+      // Create table "app"."users"
+      await ctx.query(\`CREATE TABLE "app"."users" ("id" UUID NOT NULL);\`);
+      // Create table "app"."orgs"
+      await ctx.query(\`CREATE TABLE "app"."orgs" ("id" UUID NOT NULL);\`);
+    });
+  }
+
+  public async down(runner: MigrationQueryRunner): Promise<void> {
+    // NOTE: all transactional operations in up() are irreversible
+    // WARN: irreversible — Create table "app"."orgs"
+    // WARN: irreversible — Create table "app"."users"
+  }
+}
+"
+`;
+
+exports[`serializeMigration — mixed operations should separate tx and autocommit in up, reverse in down 1`] = `
+"import type { MigrationInterface, MigrationQueryRunner } from "@lindorm/proteus";
+
+export class AddRoleColumn implements MigrationInterface {
+  public readonly id = "00000000-0000-0000-0000-000000000001";
+  public readonly ts = "2026-02-20T09:00:00.000Z";
+
+  public async up(runner: MigrationQueryRunner): Promise<void> {
+    await runner.transaction(async (ctx) => {
+      // Add column "role" to "app"."users"
+      await ctx.query(\`ALTER TABLE "app"."users" ADD COLUMN "role" TEXT NOT NULL DEFAULT 'user';\`);
+      // Drop temporary default from "role" on "app"."users"
+      await ctx.query(\`ALTER TABLE "app"."users" ALTER COLUMN "role" DROP DEFAULT;\`);
+    });
+
+    // Add value 'admin' to enum "app"."enum_role"
+    await runner.query(\`ALTER TYPE "app"."enum_role" ADD VALUE IF NOT EXISTS 'admin';\`);
+  }
+
+  public async down(runner: MigrationQueryRunner): Promise<void> {
+    // WARN: irreversible — Add value 'admin' to enum "app"."enum_role"
+
+    // WARN: irreversible — Drop temporary default from "role" on "app"."users"
+
+    await runner.transaction(async (ctx) => {
+      await ctx.query(\`ALTER TABLE "app"."users" DROP COLUMN "role";\`);
+    });
+  }
+}
+"
+`;
+
+exports[`serializeMigration — transactional operations should wrap tx ops in runner.transaction for up and down 1`] = `
+"import type { MigrationInterface, MigrationQueryRunner } from "@lindorm/proteus";
+
+export class Generated20260220090000 implements MigrationInterface {
+  public readonly id = "00000000-0000-0000-0000-000000000001";
+  public readonly ts = "2026-02-20T09:00:00.000Z";
+
+  public async up(runner: MigrationQueryRunner): Promise<void> {
+    await runner.transaction(async (ctx) => {
+      // Add column "email" to "app"."users"
+      await ctx.query(\`ALTER TABLE "app"."users" ADD COLUMN "email" TEXT NOT NULL;\`);
+      // Add column "name" to "app"."users"
+      await ctx.query(\`ALTER TABLE "app"."users" ADD COLUMN "name" TEXT;\`);
+    });
+  }
+
+  public async down(runner: MigrationQueryRunner): Promise<void> {
+    await runner.transaction(async (ctx) => {
+      await ctx.query(\`ALTER TABLE "app"."users" DROP COLUMN "name";\`);
+      await ctx.query(\`ALTER TABLE "app"."users" DROP COLUMN "email";\`);
+    });
+  }
+}
+"
+`;

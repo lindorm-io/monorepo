@@ -1,0 +1,8 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`registerMigrateCommands migrate generate should pass --name option 1`] = `
+{
+  "name": "my-migration",
+  "source": "./proteus.config.ts",
+}
+`;

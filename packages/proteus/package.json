@@ -1,0 +1,96 @@
+{
+  "name": "@lindorm/proteus",
+  "version": "0.1.0",
+  "license": "AGPL-3.0-or-later",
+  "author": "Jonn Nilsson",
+  "repository": {
+    "url": "https://github.com/lindorm-io/monorepo",
+    "directory": "packages/proteus"
+  },
+  "bugs": "https://github.com/lindorm-io/monorepo/issues",
+  "publishConfig": {
+    "access": "public"
+  },
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "bin": {
+    "proteus": "dist/cli.js"
+  },
+  "imports": {
+    "#internal/*": "./dist/internal/*.js"
+  },
+  "scripts": {
+    "build": "rimraf dist && tsc -b ./tsconfig.build.json && chmod +x dist/cli.js",
+    "example:cli": "cd example && tsx ../src/cli.ts",
+    "prettier": "prettier --write ./src/*",
+    "test": "composed --file docker-compose.yml jest --detectOpenHandles --runInBand",
+    "test:ci": "jest --runInBand",
+    "test:watch": "composed --file docker-compose.yml jest --detectOpenHandles --runInBand --watch",
+    "typecheck": "tsc",
+    "typecheck:watch": "tsc --watch",
+    "update": "ncu -i",
+    "update:auto": "ncu -u",
+    "verify": "npm run typecheck; npm run build; npm test"
+  },
+  "dependencies": {
+    "@inquirer/prompts": "^7.5.0",
+    "@lindorm/case": "^0.1.12",
+    "@lindorm/date": "^0.3.4",
+    "@lindorm/errors": "^0.1.13",
+    "@lindorm/is": "^0.1.12",
+    "@lindorm/json-kit": "^0.5.4",
+    "@lindorm/logger": "^0.4.0",
+    "@lindorm/scanner": "^0.3.8",
+    "@lindorm/sha": "^0.2.5",
+    "@lindorm/utils": "^0.5.5",
+    "commander": "^13.1.0",
+    "pg-cursor": "^2.17.0",
+    "zod": "^3.25.67"
+  },
+  "devDependencies": {
+    "@lindorm/aes": "^0.6.0",
+    "@lindorm/amphora": "^0.3.0",
+    "@lindorm/kryptos": "^0.5.0",
+    "@lindorm/types": "^0.3.4",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/pg": "^8.16.0",
+    "@types/pg-cursor": "^2.7.2",
+    "better-sqlite3": "^12.6.2",
+    "ioredis": "^5.10.0",
+    "mongodb": "^6.17.0",
+    "mysql2": "^3.19.0",
+    "pg": "^8.18.0"
+  },
+  "peerDependencies": {
+    "@lindorm/aes": "^0.6.0",
+    "@lindorm/amphora": "^0.3.0",
+    "better-sqlite3": ">=12.6.0",
+    "ioredis": ">=5.10.0",
+    "mongodb": ">=6.17.0",
+    "mysql2": ">=3.19.0",
+    "pg": ">=8.18.0"
+  },
+  "peerDependenciesMeta": {
+    "@lindorm/aes": {
+      "optional": true
+    },
+    "@lindorm/amphora": {
+      "optional": true
+    },
+    "better-sqlite3": {
+      "optional": true
+    },
+    "ioredis": {
+      "optional": true
+    },
+    "mongodb": {
+      "optional": true
+    },
+    "mysql2": {
+      "optional": true
+    },
+    "pg": {
+      "optional": true
+    }
+  }
+}

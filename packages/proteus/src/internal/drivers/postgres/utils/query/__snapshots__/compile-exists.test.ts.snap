@@ -1,0 +1,47 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`compileExists namespace override uses explicit namespace when metadata.namespace is null 1`] = `
+{
+  "params": [
+    "abc-123",
+  ],
+  "text": "SELECT EXISTS(SELECT 1 FROM "public"."users" AS "t0" WHERE "t0"."id" = $1 LIMIT 1) AS "exists"",
+}
+`;
+
+exports[`compileExists should compile exists query 1`] = `
+{
+  "params": [
+    "abc-123",
+  ],
+  "text": "SELECT EXISTS(SELECT 1 FROM "app"."users" AS "t0" WHERE "t0"."id" = $1 LIMIT 1) AS "exists"",
+}
+`;
+
+exports[`compileExists should compile with multiple criteria 1`] = `
+{
+  "params": [
+    "Alice",
+    "abc",
+  ],
+  "text": "SELECT EXISTS(SELECT 1 FROM "app"."users" AS "t0" WHERE ("t0"."name" = $1 AND "t0"."id" = $2) LIMIT 1) AS "exists"",
+}
+`;
+
+exports[`compileExists soft-delete entity includes deleted_at IS NULL system filter 1`] = `
+{
+  "params": [
+    "abc-123",
+  ],
+  "text": "SELECT EXISTS(SELECT 1 FROM "app"."invoices" AS "t0" WHERE "t0"."id" = $1 AND "t0"."deleted_at" IS NULL LIMIT 1) AS "exists"",
+}
+`;
+
+exports[`compileExists versioned entity includes version_end_date IS NULL system filter 1`] = `
+{
+  "params": [
+    "abc-123",
+  ],
+  "text": "SELECT EXISTS(SELECT 1 FROM "app"."prices" AS "t0" WHERE "t0"."id" = $1 AND "t0"."version_end_date" IS NULL LIMIT 1) AS "exists"",
+}
+`;

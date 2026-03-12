@@ -1,0 +1,30 @@
+import type { EntityMetadata } from "#internal/entity/types/metadata";
+import {
+  type InheritanceAliasMap,
+  buildInheritanceAliases as sharedBuildAliases,
+  compileInheritanceFrom as sharedCompileFrom,
+  compileInheritanceJoin as sharedCompileJoin,
+} from "#internal/utils/sql/compile-inheritance-join";
+import { sqliteDialect } from "../sqlite-dialect";
+
+export type { InheritanceAliasMap };
+
+export const buildInheritanceAliases = (
+  metadata: EntityMetadata,
+  namespace: string | null,
+  startCounter: number,
+): { aliases: Array<InheritanceAliasMap>; nextCounter: number } =>
+  sharedBuildAliases(metadata, namespace, startCounter, sqliteDialect);
+
+export const compileInheritanceJoin = (
+  metadata: EntityMetadata,
+  inheritanceAliases: Array<InheritanceAliasMap>,
+  rootAlias: string,
+): string => sharedCompileJoin(metadata, inheritanceAliases, rootAlias, sqliteDialect);
+
+export const compileInheritanceFrom = (
+  metadata: EntityMetadata,
+  inheritanceAliases: Array<InheritanceAliasMap>,
+  rootAlias: string,
+): { fromClause: string; joinConditions: Array<string> } =>
+  sharedCompileFrom(metadata, inheritanceAliases, rootAlias, sqliteDialect);

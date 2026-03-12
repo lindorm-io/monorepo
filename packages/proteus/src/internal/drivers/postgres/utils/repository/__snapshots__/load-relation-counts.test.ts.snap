@@ -1,0 +1,39 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`loadRelationCounts — ManyToMany should query join table with GROUP BY and COUNT 1`] = `"SELECT "article_id", COUNT(*) AS "count" FROM "public"."articles_x_tags" WHERE "article_id" IN ($1) GROUP BY "article_id""`;
+
+exports[`loadRelationCounts — ManyToMany should query join table with GROUP BY and COUNT 2`] = `
+[
+  "a1",
+]
+`;
+
+exports[`loadRelationCounts — ManyToMany should query join table with GROUP BY and COUNT for composite joinKeys 1`] = `"SELECT "article_ns", "article_id", COUNT(*) AS "count" FROM "public"."articles_x_tags" WHERE ROW("article_ns", "article_id") IN (($1, $2), ($3, $4)) GROUP BY "article_ns", "article_id""`;
+
+exports[`loadRelationCounts — ManyToMany should query join table with GROUP BY and COUNT for composite joinKeys 2`] = `
+[
+  "t1",
+  "a1",
+  "t1",
+  "a2",
+]
+`;
+
+exports[`loadRelationCounts — OneToMany should handle composite PK entities with multi-column findKeys 1`] = `"SELECT "tenant_id", "article_id", COUNT(*) AS "count" FROM "public"."comments" WHERE ROW("tenant_id", "article_id") IN (($1, $2), ($3, $4)) GROUP BY "tenant_id", "article_id""`;
+
+exports[`loadRelationCounts — OneToMany should handle composite PK entities with multi-column findKeys 2`] = `
+[
+  "t1",
+  "a1",
+  "t1",
+  "a2",
+]
+`;
+
+exports[`loadRelationCounts — OneToMany should query foreign table with GROUP BY and COUNT 1`] = `"SELECT "article_id", COUNT(*) AS "count" FROM "public"."comments" WHERE "article_id" IN ($1) GROUP BY "article_id""`;
+
+exports[`loadRelationCounts — OneToMany should query foreign table with GROUP BY and COUNT 2`] = `
+[
+  "a1",
+]
+`;

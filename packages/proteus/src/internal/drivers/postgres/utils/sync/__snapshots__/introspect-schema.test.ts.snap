@@ -1,0 +1,33 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`introspectSchema should call all sub-introspectors in parallel 1`] = `
+{
+  "enums": [],
+  "schemas": [
+    "public",
+  ],
+  "tables": [
+    {
+      "columnComments": {},
+      "columns": [
+        {
+          "collation": null,
+          "defaultExpr": null,
+          "generationExpr": null,
+          "identityGeneration": null,
+          "isGenerated": false,
+          "isIdentity": false,
+          "name": "id",
+          "nullable": false,
+          "type": "uuid",
+        },
+      ],
+      "comment": null,
+      "constraints": [],
+      "indexes": [],
+      "name": "users",
+      "schema": "public",
+    },
+  ],
+}
+`;

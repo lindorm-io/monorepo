@@ -1,0 +1,14 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`DefaultOrder should stage multi-field default order 1`] = `
+{
+  "firstName": "ASC",
+  "lastName": "ASC",
+}
+`;
+
+exports[`DefaultOrder should stage single-field default order 1`] = `
+{
+  "createdAt": "DESC",
+}
+`;

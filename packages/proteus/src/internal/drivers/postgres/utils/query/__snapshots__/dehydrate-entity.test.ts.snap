@@ -1,0 +1,68 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`dehydrateEntity should dehydrate entity for insert 1`] = `
+[
+  {
+    "column": "id",
+    "value": "abc-123",
+  },
+  {
+    "column": "name",
+    "value": "Alice",
+  },
+  {
+    "column": "email_address",
+    "value": "alice@example.com",
+  },
+  {
+    "column": "created_at",
+    "value": 2024-01-01T00:00:00.000Z,
+  },
+  {
+    "column": "updated_at",
+    "value": 2024-06-01T00:00:00.000Z,
+  },
+  {
+    "column": "version",
+    "value": 2,
+  },
+]
+`;
+
+exports[`dehydrateEntity should dehydrate entity for update 1`] = `
+[
+  {
+    "column": "name",
+    "value": "Alice",
+  },
+  {
+    "column": "email_address",
+    "value": "alice@example.com",
+  },
+  {
+    "column": "updated_at",
+    "value": 2024-06-01T00:00:00.000Z,
+  },
+  {
+    "column": "version",
+    "value": 2,
+  },
+]
+`;
+
+exports[`dehydrateEntity — embedded fields should mix embedded and non-embedded fields correctly 1`] = `
+[
+  {
+    "column": "id",
+    "value": "abc-123",
+  },
+  {
+    "column": "name",
+    "value": "Alice",
+  },
+  {
+    "column": "address_street",
+    "value": "456 Oak Ave",
+  },
+]
+`;

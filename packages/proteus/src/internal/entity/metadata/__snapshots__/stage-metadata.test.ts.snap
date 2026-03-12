@@ -1,0 +1,21 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`stage-metadata stageDiscriminator should set __discriminator with fieldName 'kind' 1`] = `
+{
+  "fieldName": "kind",
+}
+`;
+
+exports[`stage-metadata stageDiscriminator should set __discriminator with fieldName 'type' 1`] = `
+{
+  "fieldName": "type",
+}
+`;
+
+exports[`stage-metadata stageDiscriminatorValue should set __discriminatorValue with numeric value 1`] = `1`;
+
+exports[`stage-metadata stageDiscriminatorValue should set __discriminatorValue with string value 1`] = `"car"`;
+
+exports[`stage-metadata stageInheritance should set __inheritance to 'joined' strategy 1`] = `"joined"`;
+
+exports[`stage-metadata stageInheritance should set __inheritance to 'single-table' strategy 1`] = `"single-table"`;

@@ -1,0 +1,33 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`generateUniqueDDL accepts a named constraint of exactly 63 characters 1`] = `
+[
+  "CONSTRAINT "ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc" UNIQUE ("code")",
+]
+`;
+
+exports[`generateUniqueDDL auto-generates hash-based constraint name when name is null 1`] = `
+[
+  "CONSTRAINT "uq_SiPEz2n-nCP" UNIQUE ("sku")",
+]
+`;
+
+exports[`generateUniqueDDL generates composite unique constraint with multiple columns 1`] = `
+[
+  "CONSTRAINT "uq_cs8RgW3uIH1" UNIQUE ("tenant_id", "email")",
+]
+`;
+
+exports[`generateUniqueDDL generates multiple unique constraints in order 1`] = `
+[
+  "CONSTRAINT "uq_email" UNIQUE ("email")",
+  "CONSTRAINT "uq_qoTt9mzRT_1" UNIQUE ("slug")",
+  "CONSTRAINT "uq_tenant_name" UNIQUE ("tenant_id", "name")",
+]
+`;
+
+exports[`generateUniqueDDL generates named unique constraint when name is provided 1`] = `
+[
+  "CONSTRAINT "uq_email" UNIQUE ("email")",
+]
+`;

@@ -1,0 +1,31 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`withAdvisoryLock — lock acquired should call pg_try_advisory_lock with the given keys 1`] = `
+{
+  "params": [
+    1347571540,
+    1398361667,
+  ],
+  "sql": "SELECT pg_try_advisory_lock($1, $2) AS locked",
+}
+`;
+
+exports[`withAdvisoryLock — lock acquired should release lock via pg_advisory_unlock after callback completes 1`] = `
+{
+  "params": [
+    1347571540,
+    1398361667,
+  ],
+  "sql": "SELECT pg_advisory_unlock($1, $2)",
+}
+`;
+
+exports[`withAdvisoryLock — lock acquired should work with async callback that returns a complex value 1`] = `
+{
+  "count": 42,
+  "items": [
+    "a",
+    "b",
+  ],
+}
+`;

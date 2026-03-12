@@ -1,0 +1,87 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`compileWhere $nin: [] is a no-op (never filters anything) empty $nin combined with another operator does not add extra clause 1`] = `"WHERE "t0"."age" >= $1"`;
+
+exports[`compileWhere $nin: [] is a no-op (never filters anything) non-empty $nin still produces NOT IN clause 1`] = `"WHERE "t0"."name" NOT IN ($1, $2)"`;
+
+exports[`compileWhere $regex flags handling case-insensitive regex (i flag) uses ~* operator 1`] = `"WHERE "t0"."name" ~* $1"`;
+
+exports[`compileWhere $regex flags handling case-sensitive regex uses ~ operator (no flags) 1`] = `"WHERE "t0"."name" ~ $1"`;
+
+exports[`compileWhere $regex flags handling regex with global flag (g) alongside i flag uses ~* operator 1`] = `"WHERE "t0"."name" ~* $1"`;
+
+exports[`compileWhere $regex flags handling regex with only global flag (g, no i) uses case-sensitive ~ operator 1`] = `"WHERE "t0"."name" ~ $1"`;
+
+exports[`compileWhere empty first-entry conjunction bug (clauses.length === 0 guard) should handle third entry normally when first two are empty 1`] = `"WHERE "t0"."name" = $1"`;
+
+exports[`compileWhere empty first-entry conjunction bug (clauses.length === 0 guard) should not emit OR prefix when first entry compiles to empty and second uses or conjunction 1`] = `"WHERE "t0"."age" >= $1"`;
+
+exports[`compileWhere empty first-entry conjunction bug (clauses.length === 0 guard) should not emit conjunction when first entry compiles to empty 1`] = `"WHERE "t0"."name" = $1"`;
+
+exports[`compileWhere isObject boundary — Date and RegExp as direct values should treat Date value as direct equality (not operator object) 1`] = `"WHERE "t0"."created_at" = $1"`;
+
+exports[`compileWhere isObject boundary — Date and RegExp as direct values should treat RegExp value as direct equality (RegExp excluded from operator path by !(value instanceof RegExp)) 1`] = `"WHERE "t0"."name" = $1"`;
+
+exports[`compileWhere isObject boundary — Date and RegExp as direct values should treat null predicate value as IS NULL (null is not isObject) 1`] = `"WHERE "t0"."age" IS NULL"`;
+
+exports[`compileWhere should compile $all (array containment) 1`] = `"WHERE "t0"."tags" @> $1::jsonb"`;
+
+exports[`compileWhere should compile $and at root level 1`] = `"WHERE ("t0"."name" = $1 AND "t0"."age" >= $2)"`;
+
+exports[`compileWhere should compile $between 1`] = `"WHERE "t0"."age" BETWEEN $1 AND $2"`;
+
+exports[`compileWhere should compile $contained (array contained-by) 1`] = `"WHERE "t0"."tags" <@ $1::jsonb"`;
+
+exports[`compileWhere should compile $eq: null to IS NULL 1`] = `"WHERE "t0"."name" IS NULL"`;
+
+exports[`compileWhere should compile $exists 1`] = `"WHERE "t0"."email_address" IS NOT NULL"`;
+
+exports[`compileWhere should compile $ilike 1`] = `"WHERE "t0"."name" ILIKE $1"`;
+
+exports[`compileWhere should compile $in with values 1`] = `"WHERE "t0"."name" IN ($1, $2, $3)"`;
+
+exports[`compileWhere should compile $length 1`] = `"WHERE ("t0"."tags" IS NOT NULL AND COALESCE(array_length("t0"."tags", 1), 0) = $1)"`;
+
+exports[`compileWhere should compile $like 1`] = `"WHERE "t0"."name" LIKE $1"`;
+
+exports[`compileWhere should compile $mod 1`] = `"WHERE ("t0"."age" % $1) = $2"`;
+
+exports[`compileWhere should compile $neq: null to IS NOT NULL 1`] = `"WHERE "t0"."name" IS NOT NULL"`;
+
+exports[`compileWhere should compile $nin 1`] = `"WHERE "t0"."name" NOT IN ($1)"`;
+
+exports[`compileWhere should compile $not at root level 1`] = `"WHERE NOT ("t0"."name" = $1)"`;
+
+exports[`compileWhere should compile $or at root level 1`] = `"WHERE ("t0"."name" = $1 OR "t0"."name" = $2)"`;
+
+exports[`compileWhere should compile $overlap (array overlap) 1`] = `"WHERE "t0"."tags" && $1::jsonb"`;
+
+exports[`compileWhere should compile $regex (case-insensitive) 1`] = `"WHERE "t0"."name" ~* $1"`;
+
+exports[`compileWhere should compile $regex (case-sensitive) 1`] = `"WHERE "t0"."name" ~ $1"`;
+
+exports[`compileWhere should compile andWhere conjunction 1`] = `"WHERE "t0"."name" = $1 AND "t0"."age" >= $2"`;
+
+exports[`compileWhere should compile comparison operators 1`] = `"WHERE ("t0"."age" > $1 AND "t0"."age" <= $2)"`;
+
+exports[`compileWhere should compile complex nested predicates 1`] = `"WHERE (("t0"."name" = $1 AND "t0"."age" >= $2) OR ("t0"."name" = $3 AND "t0"."age" < $4))"`;
+
+exports[`compileWhere should compile direct null value to IS NULL 1`] = `"WHERE "t0"."email_address" IS NULL"`;
+
+exports[`compileWhere should compile empty $in to FALSE 1`] = `"WHERE FALSE"`;
+
+exports[`compileWhere should compile orWhere conjunction 1`] = `"WHERE "t0"."name" = $1 OR "t0"."name" = $2"`;
+
+exports[`compileWhere should compile simple equality 1`] = `"WHERE "t0"."name" = $1"`;
+
+exports[`compileWhere should handle multiple fields in one predicate 1`] = `"WHERE ("t0"."name" = $1 AND "t0"."age" = $2)"`;
+
+exports[`compileWhere should use column name mapping 1`] = `"WHERE "t0"."email_address" = $1"`;
+
+exports[`compileWhere tableAlias = null — column references without alias prefix omits alias prefix for IS NULL when tableAlias is null 1`] = `""name" IS NULL"`;
+
+exports[`compileWhere tableAlias = null — column references without alias prefix omits alias prefix for column name mapping when tableAlias is null 1`] = `""email_address" = $1"`;
+
+exports[`compileWhere tableAlias = null — column references without alias prefix omits alias prefix for operator clauses when tableAlias is null 1`] = `""age" > $1"`;
+
+exports[`compileWhere tableAlias = null — column references without alias prefix omits table alias prefix when tableAlias is null (compilePredicate) 1`] = `""name" = $1"`;

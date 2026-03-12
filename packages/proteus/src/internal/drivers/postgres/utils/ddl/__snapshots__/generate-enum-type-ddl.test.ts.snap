@@ -1,0 +1,38 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`generateEnumTypeDDL escapes single quotes in enum values 1`] = `
+[
+  "DO $$ BEGIN CREATE TYPE "enum_orders_label" AS ENUM ('it''s here'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;",
+]
+`;
+
+exports[`generateEnumTypeDDL generates DDL for multiple enum fields 1`] = `
+[
+  "DO $$ BEGIN CREATE TYPE "enum_orders_status" AS ENUM ('active', 'inactive', 'pending'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;",
+  "DO $$ BEGIN CREATE TYPE "enum_orders_priority" AS ENUM ('Low', 'Medium', 'High'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;",
+]
+`;
+
+exports[`generateEnumTypeDDL generates correct enum type for a numeric (non-string-valued) enum 1`] = `
+[
+  "DO $$ BEGIN CREATE TYPE "enum_orders_priority" AS ENUM ('Low', 'Medium', 'High'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;",
+]
+`;
+
+exports[`generateEnumTypeDDL generates idempotent DO $$ block for a string enum 1`] = `
+[
+  "DO $$ BEGIN CREATE TYPE "enum_orders_status" AS ENUM ('active', 'inactive', 'pending'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;",
+]
+`;
+
+exports[`generateEnumTypeDDL generates schema-qualified enum type name when namespace is provided 1`] = `
+[
+  "DO $$ BEGIN CREATE TYPE "billing"."enum_orders_status" AS ENUM ('active', 'inactive', 'pending'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;",
+]
+`;
+
+exports[`generateEnumTypeDDL skips non-enum fields in a mixed list 1`] = `
+[
+  "DO $$ BEGIN CREATE TYPE "enum_orders_status" AS ENUM ('active', 'inactive', 'pending'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;",
+]
+`;

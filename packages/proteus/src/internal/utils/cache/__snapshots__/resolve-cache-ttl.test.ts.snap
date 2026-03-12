@@ -1,0 +1,75 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`resolveCacheTtl should disable when cache option is false regardless of decorator and source 1`] = `
+{
+  "enabled": false,
+}
+`;
+
+exports[`resolveCacheTtl should disable when cache option is true but no TTL anywhere 1`] = `
+{
+  "enabled": false,
+}
+`;
+
+exports[`resolveCacheTtl should disable when no cache option and no decorator and no source default 1`] = `
+{
+  "enabled": false,
+}
+`;
+
+exports[`resolveCacheTtl should handle cache object with no ttl property 1`] = `
+{
+  "enabled": true,
+  "ttlMs": 60000,
+}
+`;
+
+exports[`resolveCacheTtl should use decorator TTL when cache option is true 1`] = `
+{
+  "enabled": true,
+  "ttlMs": 60000,
+}
+`;
+
+exports[`resolveCacheTtl should use decorator TTL when metaCache has null ttlMs 1`] = `
+{
+  "enabled": true,
+  "ttlMs": 120000,
+}
+`;
+
+exports[`resolveCacheTtl should use decorator TTL when no cache option is provided 1`] = `
+{
+  "enabled": true,
+  "ttlMs": 60000,
+}
+`;
+
+exports[`resolveCacheTtl should use explicit per-query TTL over decorator TTL 1`] = `
+{
+  "enabled": true,
+  "ttlMs": 30000,
+}
+`;
+
+exports[`resolveCacheTtl should use explicit per-query TTL over source default 1`] = `
+{
+  "enabled": true,
+  "ttlMs": 30000,
+}
+`;
+
+exports[`resolveCacheTtl should use source default TTL when cache option is true and no decorator 1`] = `
+{
+  "enabled": true,
+  "ttlMs": 120000,
+}
+`;
+
+exports[`resolveCacheTtl should use source default TTL when no cache option and no decorator 1`] = `
+{
+  "enabled": true,
+  "ttlMs": 120000,
+}
+`;

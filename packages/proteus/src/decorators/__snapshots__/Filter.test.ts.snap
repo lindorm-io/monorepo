@@ -1,0 +1,69 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`Filter should register a default-on filter 1`] = `
+{
+  "cond": {
+    "status": "active",
+  },
+  "default": true,
+  "name": "active",
+}
+`;
+
+exports[`Filter should register a parameterized filter with default off 1`] = `
+{
+  "cond": {
+    "tenantId": "$tenantId",
+  },
+  "default": false,
+  "name": "tenant",
+}
+`;
+
+exports[`Filter should register filter with $or condition 1`] = `
+{
+  "cond": {
+    "$or": [
+      {
+        "status": "published",
+      },
+      {
+        "status": "featured",
+      },
+    ],
+  },
+  "default": true,
+  "name": "visible",
+}
+`;
+
+exports[`Filter should register filter with nested operator condition 1`] = `
+{
+  "cond": {
+    "createdAt": {
+      "$gte": "$since",
+    },
+  },
+  "default": false,
+  "name": "recent",
+}
+`;
+
+exports[`Filter should register multiple filters 1`] = `
+[
+  {
+    "cond": {
+      "tenantId": "$tenantId",
+    },
+    "default": false,
+    "name": "tenant",
+  },
+  {
+    "cond": {
+      "deletedAt": null,
+    },
+    "default": true,
+    "name": "active",
+  },
+]
+`;
