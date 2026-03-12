@@ -19,13 +19,14 @@
     "example:jwks": "ts-node example/jwks",
     "example:socket": "ts-node example/socket",
     "prettier": "prettier --write ./src/*",
-    "test": "compd --file docker-compose.yml jest --detectOpenHandles --runInBand --",
+    "test": "composed --file docker-compose.yml jest --detectOpenHandles --runInBand --",
     "test:ci": "jest --runInBand",
-    "test:watch": "compd --file docker-compose.yml jest --runInBand --watch --",
+    "test:watch": "composed --file docker-compose.yml jest --runInBand --watch --",
     "typecheck": "tsc",
-    "typecheck:watch": "tsc --watch --",
+    "typecheck:watch": "tsc --watch",
     "update": "ncu -i",
-    "update:auto": "ncu -u"
+    "update:auto": "ncu -u",
+    "verify": "npm run typecheck; npm run build; npm test"
   },
   "dependencies": {
     "@lindorm/aegis": "^0.4.0",
