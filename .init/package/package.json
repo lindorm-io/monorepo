@@ -13,17 +13,22 @@
   },
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
+  "imports": {
+    "#internal/*": "./dist/internal/*.js"
+  },
   "scripts": {
     "build": "rimraf dist && tsc -b ./tsconfig.build.json",
     "example": "ts-node example",
     "prettier": "prettier --write ./src/*",
     "test": "jest --",
     "test:ci": "jest",
+    "test:update": "jest -u --",
     "test:watch": "jest --watch --",
     "typecheck": "tsc",
-    "typecheck:watch": "tsc --watch --",
+    "typecheck:watch": "tsc -w",
     "update": "ncu -i",
-    "update:auto": "ncu -u"
+    "update:auto": "ncu -u",
+    "verify": "npm run typecheck; npm run build; npm test"
   },
   "dependencies": {},
   "devDependencies": {},
