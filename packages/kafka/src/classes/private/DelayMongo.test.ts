@@ -11,7 +11,7 @@ describe("DelayMongo Integration", () => {
     mongo = new MongoSource({
       database: "Hermes",
       logger: createMockLogger(),
-      url: "mongodb://root:example@localhost/admin?authSource=admin",
+      url: "mongodb://localhost:27017/?directConnection=true",
     });
     await mongo.connect();
 

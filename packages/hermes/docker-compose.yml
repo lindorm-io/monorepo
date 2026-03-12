@@ -3,9 +3,6 @@ services:
     image: mongo:8
     ports:
       - "27017:27017"
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=root
-      - MONGO_INITDB_ROOT_PASSWORD=example
     healthcheck:
       test: ["CMD", "mongosh", "--eval", "db.runCommand({ping:1})", "--quiet"]
       interval: 1s

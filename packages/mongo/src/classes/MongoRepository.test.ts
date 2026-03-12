@@ -26,7 +26,7 @@ describe("MongoRepository", () => {
   let collection: Collection;
 
   beforeAll(async () => {
-    client = new MongoClient("mongodb://root:example@localhost/admin?authSource=admin");
+    client = new MongoClient("mongodb://localhost:27017/?directConnection=true");
     await client.connect();
     repository = new TestRepository(client, createMockLogger());
     collection = client.db("test").collection("test_test_entity");

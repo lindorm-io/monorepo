@@ -32,7 +32,7 @@ describe("Hermes", () => {
     mongo = new MongoSource({
       database: "Hermes",
       logger,
-      url: "mongodb://root:example@localhost/admin?authSource=admin",
+      url: "mongodb://localhost:27017/?directConnection=true",
     });
 
     postgres = new PostgresSource({

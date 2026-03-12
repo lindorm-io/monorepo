@@ -120,7 +120,7 @@ describe("EncryptionStore", () => {
       mongo = new MongoSource({
         database: "EncryptionStoreTest",
         logger,
-        url: "mongodb://root:example@localhost/admin?authSource=admin",
+        url: "mongodb://localhost:27017/?directConnection=true",
       });
       await mongo.setup();
     }, 10000);
