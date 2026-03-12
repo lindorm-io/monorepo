@@ -1,0 +1,41 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`composeDown should omit -f when file is empty 1`] = `
+[
+  "docker",
+  [
+    "compose",
+    "down",
+    "--remove-orphans",
+    "--volumes",
+  ],
+  {
+    "stdio": [
+      "ignore",
+      "ignore",
+      "inherit",
+    ],
+  },
+]
+`;
+
+exports[`composeDown should spawn with correct args 1`] = `
+[
+  "docker",
+  [
+    "compose",
+    "-f",
+    "/path/compose.yml",
+    "down",
+    "--remove-orphans",
+    "--volumes",
+  ],
+  {
+    "stdio": [
+      "ignore",
+      "ignore",
+      "inherit",
+    ],
+  },
+]
+`;
