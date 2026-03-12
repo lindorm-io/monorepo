@@ -5,10 +5,6 @@ import { TestMessageThree } from "../__fixtures__/messages/test-message-three";
 import { TestMessageTwo } from "../__fixtures__/messages/test-message-two";
 import { MessageScanner } from "./MessageScanner";
 
-jest.mock("tsx/cjs/api", () => ({
-  require: jest.fn((id: string) => jest.requireActual(id)),
-}));
-
 describe("MessageScanner", () => {
   test("should return with array of message constructors", () => {
     expect(

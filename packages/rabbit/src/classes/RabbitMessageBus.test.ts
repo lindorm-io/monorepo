@@ -6,10 +6,6 @@ import { TestMessageThree } from "../__fixtures__/messages/test-message-three";
 import { TestMessageTwo } from "../__fixtures__/messages/test-message-two";
 import { RabbitSource } from "./RabbitSource";
 
-jest.mock("tsx/cjs/api", () => ({
-  require: jest.fn((id: string) => jest.requireActual(id)),
-}));
-
 describe("RabbitMessageBus", () => {
   let source: RabbitSource;
   let subscriptionOne: SubscribeOptions<TestMessageOne>;
