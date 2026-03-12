@@ -67,7 +67,7 @@ export const introspectIndexes = async (
 
     const columns = allNames.slice(0, numKey).map((name, i) => ({
       name: unquote(name),
-      direction: options[i] & 1 ? "desc" : "asc",
+      direction: options[i] & 1 ? ("desc" as const) : ("asc" as const),
     }));
 
     const include = allNames.slice(numKey).map(unquote);
