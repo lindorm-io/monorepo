@@ -34,7 +34,7 @@ describe("MongoSagaStore", () => {
     source = new MongoSource({
       database: "MongoSagaStore",
       logger,
-      url: "mongodb://root:example@localhost/admin?authSource=admin",
+      url: "mongodb://localhost:27017/?directConnection=true",
     });
 
     await source.setup();

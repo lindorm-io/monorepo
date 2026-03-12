@@ -21,7 +21,7 @@ describe("MongoChecksumStore", () => {
     source = new MongoSource({
       database: "MongoChecksumStore",
       logger,
-      url: "mongodb://root:example@localhost/admin?authSource=admin",
+      url: "mongodb://localhost:27017/?directConnection=true",
     });
 
     await source.setup();

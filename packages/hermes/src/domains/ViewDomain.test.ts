@@ -249,7 +249,7 @@ describe("ViewDomain (integration)", () => {
     mongo = new MongoSource({
       database: "MongoViewDomain",
       logger,
-      url: "mongodb://root:example@localhost/admin?authSource=admin",
+      url: "mongodb://localhost:27017/?directConnection=true",
     });
     await mongo.setup();
 

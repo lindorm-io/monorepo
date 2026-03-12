@@ -21,7 +21,7 @@ describe("MongoBucket", () => {
   let metadata: FileUpload<TestFile>;
 
   beforeAll(async () => {
-    client = new MongoClient("mongodb://root:example@localhost/admin?authSource=admin");
+    client = new MongoClient("mongodb://localhost:27017/?directConnection=true");
     await client.connect();
     bucket = new TestBucket(client, createMockLogger());
   });

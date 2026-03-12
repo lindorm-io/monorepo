@@ -71,19 +71,6 @@ jobs:
     timeout-minutes: 30
 
     services:
-      mongo:
-        image: mongo:8
-        ports:
-          - 27017:27017
-        env:
-          MONGO_INITDB_ROOT_USERNAME: root
-          MONGO_INITDB_ROOT_PASSWORD: example
-        options: >-
-          --health-cmd "mongosh --eval 'db.runCommand({ping:1})' --quiet"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
       postgres:
         image: postgres:17
         ports:
@@ -97,6 +84,21 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+
+      mysql:
+        image: mysql:9
+        ports:
+          - 3306:3306
+        env:
+          MYSQL_ROOT_PASSWORD: example
+          MYSQL_DATABASE: default
+          MYSQL_USER: proteus
+          MYSQL_PASSWORD: example
+        options: >-
+          --health-cmd "mysqladmin ping -h localhost -u root -pexample"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
 
       redis:
         image: redis:8
@@ -152,6 +154,12 @@ jobs:
           --health-retries 10
 
     steps:
+      - name: Start MongoDB Replica Set
+        uses: supercharge/mongodb-github-action@1.12.0
+        with:
+          mongodb-version: "8.0"
+          mongodb-replica-set: rs0
+
       - name: Checkout
         uses: actions/checkout@v4
         with:

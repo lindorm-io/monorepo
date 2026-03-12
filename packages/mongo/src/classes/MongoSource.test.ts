@@ -15,7 +15,7 @@ describe("MongoSource", () => {
       entities: [TestEntity, join(__dirname, "..", "__fixtures__", "entities")],
       files: [TestFile, join(__dirname, "..", "__fixtures__", "files")],
       logger: createMockLogger(),
-      url: "mongodb://root:example@localhost/admin?authSource=admin",
+      url: "mongodb://localhost:27017/?directConnection=true",
       database: "test_database",
     });
     await source.setup();
