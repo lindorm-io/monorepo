@@ -1,35 +1,41 @@
-import { CreateRandomStringOptions } from "../../types/private";
-import { getAmount } from "./get-amount";
-import { getSymbols } from "./get-symbols";
-import { randomSort } from "./random-sort";
+const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+const DIGITS = "0123456789";
+const SYMBOLS = "!#$%&()*+,-./:;<=>?@[]^_{|}~";
 
-const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-const NUMBERS = "0123456789";
-
-export const createRandomString = (
-  length: number,
-  options: CreateRandomStringOptions = {},
-): string => {
-  const { custom = "default", numbersMax = 0, symbolsMax = 0 } = options;
-
-  const lengthInt = Math.round(length);
-  const numbersAmount = getAmount(lengthInt, numbersMax);
-  const symbolsAmount = getAmount(lengthInt, symbolsMax);
-  const symbols = getSymbols(custom);
-
+const pickChars = (alphabet: string, count: number): string[] => {
   const result: string[] = [];
-
-  for (let i = 0; i < numbersAmount; i++) {
-    result.push(NUMBERS.charAt(Math.floor(Math.random() * NUMBERS.length)));
+  const limit = 256 - (256 % alphabet.length);
+  while (result.length < count) {
+    const batch = new Uint8Array(Math.ceil((count - result.length) * 1.5) + 8);
+    globalThis.crypto.getRandomValues(batch);
+    for (const byte of batch) {
+      if (byte < limit && result.length < count) {
+        result.push(alphabet[byte % alphabet.length]);
+      }
+    }
   }
+  return result;
+};
 
-  for (let i = 0; i < symbolsAmount; i++) {
-    result.push(symbols.charAt(Math.floor(Math.random() * symbols.length)));
+const shuffle = (arr: string[]): void => {
+  const randoms = new Uint32Array(arr.length);
+  globalThis.crypto.getRandomValues(randoms);
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = randoms[i] % (i + 1);
+    [arr[i], arr[j]] = [arr[j], arr[i]];
   }
+};
 
-  while (result.length < lengthInt) {
-    result.push(CHARS.charAt(Math.floor(Math.random() * CHARS.length)));
+export const createRandomString = (length: number, numbers = 0, symbols = 0): string => {
+  const letterCount = length - numbers - symbols;
+  if (letterCount < 0) {
+    throw new Error("numbers + symbols cannot exceed length");
   }
-
-  return result.sort(randomSort).join("");
+  const result = [
+    ...pickChars(DIGITS, numbers),
+    ...pickChars(SYMBOLS, symbols),
+    ...pickChars(LETTERS, letterCount),
+  ];
+  shuffle(result);
+  return result.join("");
 };
