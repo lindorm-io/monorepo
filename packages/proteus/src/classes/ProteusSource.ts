@@ -263,8 +263,8 @@ export class ProteusSource {
   public async connect(): Promise<void> {
     if (this._driver) return; // idempotent
 
-    const getFilterRegistry = () => this._registryRef.current;
-    const getSubscribers = () => this._subscribersRef.current;
+    const getFilterRegistry = (): FilterRegistry => this._registryRef.current;
+    const getSubscribers = (): Array<IEntitySubscriber> => this._subscribersRef.current;
     const opts = this._options;
 
     switch (opts.driver) {
@@ -490,7 +490,7 @@ const createMetadataResolver = (
   const cache = new Map<Function, EntityMetadata>();
 
   return {
-    resolve: (target) => {
+    resolve: (target): EntityMetadata => {
       let resolved = cache.get(target);
       if (!resolved) {
         resolved = applyNamingStrategy(

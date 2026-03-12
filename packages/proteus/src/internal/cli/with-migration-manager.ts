@@ -17,7 +17,10 @@ export type MigrationManagerContext = {
 };
 
 export const wrapPoolClient = (poolClient: PoolClient): PostgresQueryClient => ({
-  query: async <R = Record<string, unknown>>(sql: string, params?: Array<unknown>) => {
+  query: async <R = Record<string, unknown>>(
+    sql: string,
+    params?: Array<unknown>,
+  ): Promise<{ rows: Array<R>; rowCount: number }> => {
     const r = await poolClient.query(sql, params);
     return { rows: r.rows as Array<R>, rowCount: r.rowCount ?? 0 };
   },
@@ -29,7 +32,10 @@ type MysqlPoolConnection = {
 };
 
 const wrapMysqlConnection = (connection: MysqlPoolConnection): MysqlQueryClient => ({
-  query: async <R = Record<string, unknown>>(sql: string, params?: Array<unknown>) => {
+  query: async <R = Record<string, unknown>>(
+    sql: string,
+    params?: Array<unknown>,
+  ): Promise<{ rows: Array<R>; rowCount: number; insertId: number }> => {
     const [rows] = await connection.query(sql, params);
 
     if (Array.isArray(rows)) {
@@ -73,7 +79,7 @@ export const withMigrationManager = async (
       const poolClient = await source.client<PoolClient>();
       let released = false;
 
-      const release = () => {
+      const release = (): void => {
         if (!released) {
           released = true;
           poolClient.release();
@@ -100,7 +106,7 @@ export const withMigrationManager = async (
       const connection = await source.client<MysqlPoolConnection>();
       let released = false;
 
-      const release = () => {
+      const release = (): void => {
         if (!released) {
           released = true;
           connection.release();

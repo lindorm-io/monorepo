@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-function-type */
-
 import { globalEntityMetadata } from "../utils";
 
 export function PrimaryKey(columns: Array<string>): ClassDecorator;

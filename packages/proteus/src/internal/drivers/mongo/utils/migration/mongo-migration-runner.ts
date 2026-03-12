@@ -31,7 +31,7 @@ export const createMongoMigrationRunner = (
   db: () => database,
   collection: (name: string) => database.collection(name),
 
-  transaction: async (fn) => {
+  transaction: async (fn): Promise<void> => {
     if (!isReplicaSet) {
       // Standalone — run without transaction
       const ctx: MongoMigrationContext = {

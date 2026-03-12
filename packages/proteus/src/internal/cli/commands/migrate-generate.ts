@@ -29,7 +29,7 @@ export const migrateGenerate = async (options: GenerateOptions): Promise<void> =
       const poolClient = await source.client<PoolClient>();
       let released = false;
 
-      const release = () => {
+      const release = (): void => {
         if (!released) {
           released = true;
           poolClient.release();

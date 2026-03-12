@@ -20,7 +20,13 @@ import type {
   TransactionOptions,
 } from "../../../../types";
 import type { RepositoryFactory } from "#internal/types/repository-factory";
-import type { MemoryStore, MemoryTransactionHandle } from "../types/memory-store";
+import type { FilterRegistry } from "#internal/utils/query/filter-registry";
+import type { IEntitySubscriber } from "../../../../interfaces/EntitySubscriber";
+import type {
+  MemoryStore,
+  MemoryTable,
+  MemoryTransactionHandle,
+} from "../types/memory-store";
 import { getEntityName } from "#internal/entity/utils/get-entity-name";
 import { getJoinName } from "#internal/entity/utils/get-join-name";
 import { resolveInheritanceRoot } from "#internal/entity/utils/resolve-inheritance-root";
@@ -83,8 +89,8 @@ export class MemoryDriver implements IProteusDriver {
     this.logger = logger.child(["MemoryDriver"]);
     this.namespace = namespace;
     this.resolveMetadata = resolveMetadata;
-    this.getFilterRegistry = getFilterRegistry ?? (() => new Map());
-    this.getSubscribers = getSubscribers ?? (() => []);
+    this.getFilterRegistry = getFilterRegistry ?? ((): FilterRegistry => new Map());
+    this.getSubscribers = getSubscribers ?? ((): ReadonlyArray<IEntitySubscriber> => []);
     this.amphora = amphora;
     this.store = createEmptyStore();
   }
@@ -268,14 +274,14 @@ export class MemoryDriver implements IProteusDriver {
 
     return new MemoryQueryBuilder<E>(
       metadata,
-      () =>
+      (): MemoryTable =>
         store.tables.get(tableKey) ??
-        (() => {
-          const t = new Map();
+        ((): MemoryTable => {
+          const t: MemoryTable = new Map();
           store.tables.set(tableKey, t);
           return t;
         })(),
-      () => store,
+      (): MemoryStore => store,
       this.namespace,
       this.logger,
       this.amphora,
@@ -292,14 +298,14 @@ export class MemoryDriver implements IProteusDriver {
 
     return new MemoryQueryBuilder<E>(
       metadata,
-      () =>
+      (): MemoryTable =>
         txHandle.store.tables.get(tableKey) ??
-        (() => {
-          const t = new Map();
+        ((): MemoryTable => {
+          const t: MemoryTable = new Map();
           txHandle.store.tables.set(tableKey, t);
           return t;
         })(),
-      () => txHandle.store,
+      (): MemoryStore => txHandle.store,
       this.namespace,
       this.logger,
       this.amphora,
@@ -407,14 +413,14 @@ export class MemoryDriver implements IProteusDriver {
 
     return new MemoryExecutor<E>(
       metadata,
-      () =>
+      (): MemoryTable =>
         store.tables.get(tableKey) ??
-        (() => {
-          const t = new Map();
+        ((): MemoryTable => {
+          const t: MemoryTable = new Map();
           store.tables.set(tableKey, t);
           return t;
         })(),
-      () => store,
+      (): MemoryStore => store,
       this.getFilterRegistry(),
       this.amphora,
     );

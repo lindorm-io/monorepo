@@ -20,6 +20,8 @@ import type {
   SubscriberRegistryGetter,
 } from "#internal/interfaces/ProteusDriver";
 import type { RepositoryFactory } from "#internal/types/repository-factory";
+import type { FilterRegistry } from "#internal/utils/query/filter-registry";
+import type { IEntitySubscriber } from "../../../../interfaces/EntitySubscriber";
 import type { IProteusRepository } from "../../../../interfaces/ProteusRepository";
 import { MySqlDriverError } from "../errors/MySqlDriverError";
 import { MySqlMigrationError } from "../errors/MySqlMigrationError";
@@ -65,8 +67,8 @@ export class MySqlDriver implements IProteusDriver {
     this.logger = logger.child(["MySqlDriver"]);
     this.namespace = namespace;
     this.resolveMetadata = resolveMetadata;
-    this.getFilterRegistry = getFilterRegistry ?? (() => new Map());
-    this.getSubscribers = getSubscribers ?? (() => []);
+    this.getFilterRegistry = getFilterRegistry ?? ((): FilterRegistry => new Map());
+    this.getSubscribers = getSubscribers ?? ((): ReadonlyArray<IEntitySubscriber> => []);
     this.amphora = amphora;
   }
 
@@ -494,7 +496,7 @@ export class MySqlDriver implements IProteusDriver {
         ...options.retry,
         onRetry:
           options.retry.onRetry ??
-          ((attemptNum: number, error: unknown) => {
+          ((attemptNum: number, error: unknown): void => {
             this.logger.warn("Transaction retry", {
               attempt: attemptNum,
               error: error instanceof Error ? error.message : String(error),
@@ -525,7 +527,7 @@ export class MySqlDriver implements IProteusDriver {
       query: async <R = Record<string, unknown>>(
         sql: string,
         params?: Array<unknown>,
-      ) => {
+      ): Promise<{ rows: Array<R>; rowCount: number; insertId: number }> => {
         const start = this.options.slowQueryThresholdMs ? performance.now() : 0;
         const [rows] = await queryFn(sql, params);
 

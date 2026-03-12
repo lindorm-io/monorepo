@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-function-type */
-
 import { isArray, isObject } from "@lindorm/is";
 import { Dict } from "@lindorm/types";
 import { IndexDecoratorOptions, IndexDirection } from "../types";

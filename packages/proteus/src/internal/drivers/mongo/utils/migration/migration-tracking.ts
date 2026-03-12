@@ -1,10 +1,10 @@
-import type { ClientSession, Db } from "mongodb";
+import type { ClientSession, Collection, Db } from "mongodb";
 import type { MigrationRecord } from "#internal/types/migration";
 import { MongoMigrationError } from "../../errors/MongoMigrationError";
 
 const COLLECTION_NAME = "_proteus_migrations";
 
-const getCollection = (db: Db, tableName?: string) =>
+const getCollection = (db: Db, tableName?: string): Collection =>
   db.collection(tableName ?? COLLECTION_NAME);
 
 type MigrationDoc = {
