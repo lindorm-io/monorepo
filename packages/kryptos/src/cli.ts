@@ -84,10 +84,10 @@ const selectAlgorithm = async (
   type: KryptosType,
   use: KryptosUse,
 ): Promise<KryptosAlgorithm> =>
-  await select({
+  (await select({
     message: "Algorithm",
     choices: switchAlgorithmChoices(type, use),
-  });
+  })) as KryptosAlgorithm;
 
 const selectEncryption = async (): Promise<KryptosEncryption> =>
   await select({

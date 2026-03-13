@@ -1,5 +1,5 @@
 import type { Dict } from "@lindorm/types";
-import type { ZodObject, ZodType } from "zod";
+import type { z } from "zod/v4";
 import type { IEntity } from "../../../interfaces";
 import type { DiscriminatorValue, InheritanceStrategy } from "./inheritance";
 import type {
@@ -52,7 +52,7 @@ export type StagedFieldModifier = {
   transform?: { to: (value: unknown) => unknown; from: (raw: unknown) => unknown };
   encrypted?: { predicate: Dict | null };
   hideOn?: Array<QueryScope>;
-  schema?: ZodType;
+  schema?: z.ZodType;
 };
 
 // Relation modifier — partial metadata staged by relation modifier decorators
@@ -149,5 +149,5 @@ export type StagedMetadata = {
   filters?: Array<MetaFilter>;
   hooks?: Array<MetaHook>;
   namespace?: string;
-  schemas?: Array<ZodObject<IEntity>>;
+  schemas?: Array<z.ZodObject<IEntity>>;
 };

@@ -1,7 +1,7 @@
 import { ILogger } from "@lindorm/logger";
 import { DeepPartial, Dict } from "@lindorm/types";
 import merge from "deepmerge";
-import { z } from "zod";
+import { z } from "zod/v4";
 import { ViewDestroyedError } from "../errors";
 import { IHermesMessage, IViewModel } from "../interfaces";
 import { ViewData, ViewModelOptions } from "../types";
@@ -86,7 +86,7 @@ export class ViewModel<S extends Dict = Dict> implements IViewModel<S> {
   public mergeState(causation: IHermesMessage, data: DeepPartial<S>): void {
     this.logger.debug("Merge state", { data });
 
-    z.record(z.any()).parse(data);
+    z.record(z.string(), z.any()).parse(data);
 
     if (this._destroyed) {
       throw new ViewDestroyedError();
@@ -106,7 +106,7 @@ export class ViewModel<S extends Dict = Dict> implements IViewModel<S> {
   public setState(causation: IHermesMessage, data: S): void {
     this.logger.debug("Set state", { data });
 
-    z.record(z.any()).parse(data);
+    z.record(z.string(), z.any()).parse(data);
 
     if (this._destroyed) {
       throw new ViewDestroyedError();

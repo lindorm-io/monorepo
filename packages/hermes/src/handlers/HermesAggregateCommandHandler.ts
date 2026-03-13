@@ -1,5 +1,5 @@
 import { Constructor, Dict } from "@lindorm/types";
-import { ZodSchema } from "zod";
+import { z } from "zod/v4";
 import { IAggregateCommandHandler } from "../interfaces";
 import {
   AggregateCommandCallback,
@@ -18,7 +18,7 @@ export class HermesAggregateCommandHandler<
   public readonly conditions: HandlerConditions;
   public readonly encryption: boolean;
   public readonly key: string;
-  public readonly schema: ZodSchema | undefined;
+  public readonly schema: z.ZodType | undefined;
   public readonly handler: AggregateCommandCallback<C, S>;
 
   public constructor(options: AggregateCommandHandlerOptions<C, S>) {

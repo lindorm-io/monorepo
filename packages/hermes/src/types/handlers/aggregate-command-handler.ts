@@ -1,6 +1,6 @@
 import { ILogger } from "@lindorm/logger";
 import { ClassLike, Dict } from "@lindorm/types";
-import { ZodSchema } from "zod";
+import { z } from "zod/v4";
 import { HandlerIdentifier } from "../identifiers";
 import { HandlerConditions } from "./conditions";
 
@@ -18,6 +18,6 @@ export type AggregateCommandHandlerOptions<C extends ClassLike, S extends Dict> 
   conditions?: HandlerConditions;
   encryption?: boolean;
   key: string;
-  schema?: ZodSchema;
+  schema?: z.ZodType;
   handler(ctx: AggregateCommandCtx<C, S>): Promise<void>;
 };

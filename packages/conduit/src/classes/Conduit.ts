@@ -1,9 +1,9 @@
 import { ILogger } from "@lindorm/logger";
 import { composeMiddleware } from "@lindorm/middleware";
+import { randomUUID } from "@lindorm/random";
 import { RetryConfig } from "@lindorm/retry";
 import { Dict, HttpMethod } from "@lindorm/types";
 import { extractSearchParams, getPlainUrl, getValidUrl } from "@lindorm/url";
-import { v4 as uuid } from "uuid";
 import {
   CONDUIT_RESPONSE,
   REPLACE_URL,
@@ -259,8 +259,8 @@ export class Conduit implements IConduit {
       form,
       headers: { ...this.headers, ...headers },
       metadata: {
-        correlationId: uuid(),
-        requestId: uuid(),
+        correlationId: randomUUID(),
+        requestId: randomUUID(),
         sessionId: null,
       },
       onDownloadProgress,

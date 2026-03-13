@@ -1,4 +1,4 @@
-import { ZodType } from "zod";
+import { z } from "zod/v4";
 import { IMessage } from "../interfaces";
 import { MetaFieldFallback, MetaFieldType, MetaGeneratedStrategy } from "./metadata";
 
@@ -9,7 +9,7 @@ export type FieldDecoratorOptions = {
   min?: number;
   nullable?: boolean;
   optional?: boolean;
-  schema?: ZodType;
+  schema?: z.ZodType;
   type?: MetaFieldType;
 };
 

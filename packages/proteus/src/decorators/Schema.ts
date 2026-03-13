@@ -1,4 +1,4 @@
-import { ZodObject } from "zod";
+import { z } from "zod/v4";
 import { IEntity } from "../interfaces";
 import { stageSchema } from "#internal/entity/metadata/stage-metadata";
 
@@ -9,7 +9,7 @@ import { stageSchema } from "#internal/entity/metadata/stage-metadata";
  * insert/update. Validation errors are surfaced as ProteusErrors.
  */
 export const Schema =
-  (schema: ZodObject<IEntity>) =>
+  (schema: z.ZodObject<IEntity>) =>
   (_target: Function, context: ClassDecoratorContext): void => {
     stageSchema(context.metadata, schema);
   };

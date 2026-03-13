@@ -1,4 +1,4 @@
-import type { Constructor, DeepPartial, Dict, Predicate } from "@lindorm/types";
+import type { Constructor, DeepPartial, Predicate } from "@lindorm/types";
 import type {
   IEntity,
   IProteusCursor,
@@ -257,26 +257,16 @@ export class MemoryRepository<
     // For inheritance children, the store table is always keyed by the ROOT entity name.
     const isInheritanceChild = this.metadata.inheritance?.discriminatorValue != null;
 
-    let tableKey: string;
-    let entityNamespace: string | null = null;
-    if (isInheritanceChild) {
-      const rootMeta = getEntityMetadata(this.metadata.inheritance!.root);
-      const rootEntityName = getEntityName(rootMeta.target, {
-        namespace: this.namespace,
-      });
-      entityNamespace = rootEntityName.namespace ?? null;
-      tableKey = rootEntityName.namespace
-        ? `${rootEntityName.namespace}.${rootEntityName.name}`
-        : rootEntityName.name;
-    } else {
-      const entityName = getEntityName(this.metadata.target, {
-        namespace: this.namespace,
-      });
-      entityNamespace = entityName.namespace ?? null;
-      tableKey = entityName.namespace
-        ? `${entityName.namespace}.${entityName.name}`
-        : entityName.name;
-    }
+    const resolvedName = isInheritanceChild
+      ? getEntityName(getEntityMetadata(this.metadata.inheritance!.root).target, {
+          namespace: this.namespace,
+        })
+      : getEntityName(this.metadata.target, { namespace: this.namespace });
+
+    const entityNamespace = resolvedName.namespace ?? null;
+    const tableKey = resolvedName.namespace
+      ? `${resolvedName.namespace}.${resolvedName.name}`
+      : resolvedName.name;
 
     const table = this.store.tables.get(tableKey);
     if (!table) return;
@@ -414,10 +404,8 @@ export class MemoryRepository<
   ): Promise<E> {
     const snapshot = getSnapshot(entity);
 
-    let changed: Dict | null = null;
-
     if (snapshot) {
-      changed = diffColumns(entity, this.metadata, snapshot);
+      const changed = diffColumns(entity, this.metadata, snapshot);
 
       if (changed === null && !this.hasRelations && !this.hasEmbeddedLists) {
         return entity;

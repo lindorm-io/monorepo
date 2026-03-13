@@ -1,6 +1,6 @@
 import type { Db, ClientSession } from "mongodb";
 import type { ILogger } from "@lindorm/logger";
-import type { Constructor, DeepPartial, Dict, Predicate } from "@lindorm/types";
+import type { Constructor, DeepPartial, Predicate } from "@lindorm/types";
 import type {
   IEntity,
   IProteusCursor,
@@ -379,10 +379,8 @@ export class MongoRepository<
   ): Promise<E> {
     const snapshot = getSnapshot(entity);
 
-    let changed: Dict | null = null;
-
     if (snapshot) {
-      changed = diffColumns(entity, this.metadata, snapshot);
+      const changed = diffColumns(entity, this.metadata, snapshot);
 
       if (changed === null && !this.hasRelations && !this.hasEmbeddedLists) {
         return entity;

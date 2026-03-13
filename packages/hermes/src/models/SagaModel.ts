@@ -1,7 +1,7 @@
 import { ILogger } from "@lindorm/logger";
 import { ClassLike, Dict } from "@lindorm/types";
 import merge from "deepmerge";
-import { z } from "zod";
+import { z } from "zod/v4";
 import { SagaDestroyedError } from "../errors";
 import {
   IHermesMessage,
@@ -167,7 +167,7 @@ export class SagaModel<S extends Dict = Dict> implements ISagaModel {
   public mergeState(state: Partial<S>): void {
     this.logger.debug("Merge state", { state });
 
-    z.record(z.any()).parse(state);
+    z.record(z.string(), z.any()).parse(state);
 
     if (this._destroyed) {
       throw new SagaDestroyedError();
@@ -179,7 +179,7 @@ export class SagaModel<S extends Dict = Dict> implements ISagaModel {
   public setState(state: S): void {
     this.logger.debug("Set state", { state });
 
-    z.record(z.any()).parse(state);
+    z.record(z.string(), z.any()).parse(state);
 
     if (this._destroyed) {
       throw new SagaDestroyedError();
@@ -199,7 +199,7 @@ export class SagaModel<S extends Dict = Dict> implements ISagaModel {
     z.object({
       causation: HermesMessageSchema,
       name: z.string(),
-      data: z.record(z.any()),
+      data: z.record(z.string(), z.any()),
       delay: z.number(),
     }).parse({ causation, name, data, delay });
 

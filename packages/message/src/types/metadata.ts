@@ -1,5 +1,5 @@
 import { Constructor, Dict } from "@lindorm/types";
-import { ZodObject, ZodType } from "zod";
+import { z } from "zod/v4";
 import { IMessage } from "../interfaces";
 import { HookDecoratorCallback, TopicDecoratorCallback } from "./decorators";
 
@@ -47,7 +47,7 @@ export type MetaField<D extends MetaFieldDecorator = MetaFieldDecorator> = {
   min: number | null;
   nullable: boolean;
   optional: boolean;
-  schema: ZodType | null;
+  schema: z.ZodType | null;
   type: MetaFieldType | null;
 };
 
@@ -91,7 +91,7 @@ export type MetaPriority = {
 
 export type MetaSchema<M extends IMessage = IMessage> = {
   target: Function;
-  schema: ZodObject<M>;
+  schema: z.ZodType<M>;
 };
 
 export type MetaTopic<M extends IMessage = IMessage> = {
@@ -108,6 +108,6 @@ export type MessageMetadata<
   hooks: Array<Omit<MetaHook<M>, "target">>;
   message: MetaMessage;
   priority: number | null;
-  schema: ZodObject<M>;
+  schema: z.ZodType<M>;
   topic: Omit<MetaTopic<M>, "target"> | null;
 };

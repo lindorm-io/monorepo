@@ -1,5 +1,5 @@
 import type { Constructor } from "@lindorm/types";
-import { z, ZodArray, ZodNumber, ZodObject, ZodRawShape, ZodString, ZodType } from "zod";
+import { z } from "zod/v4";
 import { IEntity } from "../../../interfaces";
 import type { MetaField } from "../types/metadata";
 import { getEntityMetadata } from "../metadata/get-entity-metadata";
@@ -14,9 +14,9 @@ const fieldWithMinMax = [
   "text",
 ];
 
-const schemaCache = new WeakMap<Constructor<any>, ZodObject<any>>();
+const schemaCache = new WeakMap<Constructor<any>, z.ZodObject<any>>();
 
-const getValidator = (field: MetaField): ZodType<any> | undefined => {
+const getValidator = (field: MetaField): z.ZodType | undefined => {
   switch (field.type) {
     case "boolean":
       return z.boolean();
@@ -46,13 +46,13 @@ const getValidator = (field: MetaField): ZodType<any> | undefined => {
       return z.string();
 
     case "uuid":
-      return z.string().uuid();
+      return z.uuid();
 
     case "email":
-      return z.string().email();
+      return z.email();
 
     case "url":
-      return z.string().url();
+      return z.url();
 
     case "enum":
       return z.nativeEnum(
@@ -68,19 +68,19 @@ const getValidator = (field: MetaField): ZodType<any> | undefined => {
 
     case "object":
     case "json":
-      return z.object({}).passthrough();
+      return z.looseObject({});
 
     case "binary":
-      return z.instanceof(Buffer);
+      return z.custom<Buffer>((val) => Buffer.isBuffer(val));
 
     default:
       return;
   }
 };
 
-const buildSchema = (target: Constructor<any>): ZodObject<any> => {
+const buildSchema = (target: Constructor<any>): z.ZodObject<any> => {
   const metadata = getEntityMetadata(target);
-  const validators: ZodRawShape = {};
+  const validators: Record<string, z.ZodType> = {};
 
   // Group embedded fields by parentKey for nested validation
   const embeddedGroups = new Map<string, Array<MetaField>>();
@@ -104,22 +104,26 @@ const buildSchema = (target: Constructor<any>): ZodObject<any> => {
     if (field.type === "decimal") {
       if (field.min != null) {
         const min = field.min;
-        validator = (validator as ZodString).refine((val) => parseFloat(val) >= min, {
-          message: `Value must be >= ${min}`,
+        validator = (validator as z.ZodString).refine((val) => parseFloat(val) >= min, {
+          error: `Value must be >= ${min}`,
         });
       }
       if (field.max != null) {
         const max = field.max;
-        validator = (validator as ZodString).refine((val) => parseFloat(val) <= max, {
-          message: `Value must be <= ${max}`,
+        validator = (validator as z.ZodString).refine((val) => parseFloat(val) <= max, {
+          error: `Value must be <= ${max}`,
         });
       }
     }
     if (field.type && fieldWithMinMax.includes(field.type) && field.min != null) {
-      validator = (validator as ZodArray<any> | ZodNumber | ZodString).min(field.min);
+      validator = (validator as z.ZodArray<any> | z.ZodNumber | z.ZodString).min(
+        field.min,
+      );
     }
     if (field.type && fieldWithMinMax.includes(field.type) && field.max != null) {
-      validator = (validator as ZodArray<any> | ZodNumber | ZodString).max(field.max);
+      validator = (validator as z.ZodArray<any> | z.ZodNumber | z.ZodString).max(
+        field.max,
+      );
     }
     if (field.nullable) {
       validator = validator.nullish();
@@ -129,7 +133,7 @@ const buildSchema = (target: Constructor<any>): ZodObject<any> => {
 
   // Build nested validators for embedded objects
   for (const [parentKey, fields] of embeddedGroups) {
-    const nestedShape: ZodRawShape = {};
+    const nestedShape: Record<string, z.ZodType> = {};
     for (const field of fields) {
       const nestedKey = field.key.split(".")[1];
       let validator = getValidator(field);
@@ -137,22 +141,26 @@ const buildSchema = (target: Constructor<any>): ZodObject<any> => {
       if (field.type === "decimal") {
         if (field.min != null) {
           const min = field.min;
-          validator = (validator as ZodString).refine((val) => parseFloat(val) >= min, {
-            message: `Value must be >= ${min}`,
+          validator = (validator as z.ZodString).refine((val) => parseFloat(val) >= min, {
+            error: `Value must be >= ${min}`,
           });
         }
         if (field.max != null) {
           const max = field.max;
-          validator = (validator as ZodString).refine((val) => parseFloat(val) <= max, {
-            message: `Value must be <= ${max}`,
+          validator = (validator as z.ZodString).refine((val) => parseFloat(val) <= max, {
+            error: `Value must be <= ${max}`,
           });
         }
       }
       if (field.type && fieldWithMinMax.includes(field.type) && field.min != null) {
-        validator = (validator as ZodArray<any> | ZodNumber | ZodString).min(field.min);
+        validator = (validator as z.ZodArray<any> | z.ZodNumber | z.ZodString).min(
+          field.min,
+        );
       }
       if (field.type && fieldWithMinMax.includes(field.type) && field.max != null) {
-        validator = (validator as ZodArray<any> | ZodNumber | ZodString).max(field.max);
+        validator = (validator as z.ZodArray<any> | z.ZodNumber | z.ZodString).max(
+          field.max,
+        );
       }
       if (field.nullable) {
         validator = validator.nullish();
@@ -160,14 +168,14 @@ const buildSchema = (target: Constructor<any>): ZodObject<any> => {
       nestedShape[nestedKey] = validator;
     }
     // The embedded object itself can be null
-    validators[parentKey] = z.object(nestedShape).passthrough().nullish();
+    validators[parentKey] = z.looseObject(nestedShape).nullish();
   }
 
   // Add validators for @EmbeddedList fields
   for (const el of metadata.embeddedLists) {
     if (el.elementFields && el.elementConstructor) {
       // Embeddable element type: array of objects with typed fields
-      const elementShape: ZodRawShape = {};
+      const elementShape: Record<string, z.ZodType> = {};
       for (const field of el.elementFields) {
         let validator = getValidator(field);
         if (!validator) continue;
@@ -176,7 +184,7 @@ const buildSchema = (target: Constructor<any>): ZodObject<any> => {
         }
         elementShape[field.key] = validator;
       }
-      validators[el.key] = z.array(z.object(elementShape).passthrough());
+      validators[el.key] = z.array(z.looseObject(elementShape));
     } else if (el.elementType) {
       // Primitive element type — create a minimal field-like object for getValidator
       const elementValidator = getValidator({
@@ -193,21 +201,21 @@ const buildSchema = (target: Constructor<any>): ZodObject<any> => {
     }
   }
 
-  return z.object(validators).passthrough();
+  return z.looseObject(validators) as z.ZodObject<any>;
 };
 
 export const defaultValidateEntity = <E extends IEntity>(
   target: Constructor<E>,
   entity: E,
 ): void => {
-  let schema = schemaCache.get(target);
-  if (!schema) {
-    schema = buildSchema(target);
-    schemaCache.set(target, schema);
+  let cached = schemaCache.get(target);
+  if (!cached) {
+    cached = buildSchema(target);
+    schemaCache.set(target, cached);
   }
-  schema.parse(entity);
+  cached.parse(entity);
   const metadata = getEntityMetadata(target);
-  for (const schema of metadata.schemas) {
-    schema.parse(entity);
+  for (const s of metadata.schemas) {
+    s.parse(entity);
   }
 };

@@ -32,6 +32,7 @@ export type PylonHttpState = {
   app: AppState;
   authorization: AuthorizationState;
   metadata: MetadataState;
+  origin: string;
   session: IPylonSession | null;
   tokens: Dict<ParsedJwt | ParsedJws<any> | ParsedCwt | ParsedCws<any>>;
 };

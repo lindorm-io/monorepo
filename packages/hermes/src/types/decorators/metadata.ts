@@ -1,5 +1,5 @@
 import { Constructor } from "@lindorm/types";
-import { ZodObject } from "zod";
+import { z } from "zod/v4";
 import { HandlerConditions } from "../handlers";
 import { ViewStoreSource } from "../infrastructure";
 
@@ -42,7 +42,7 @@ export type MetaHandler<T = any> = {
   encryption: boolean;
   handler: T;
   key: string;
-  schema: ZodObject<any> | null;
+  schema: z.ZodType | null;
   target: Constructor;
   trigger: Constructor;
 };

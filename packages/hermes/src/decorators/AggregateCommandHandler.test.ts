@@ -1,5 +1,5 @@
 import { Dict } from "@lindorm/types";
-import z from "zod";
+import { z } from "zod/v4";
 import { AggregateCommandCtx } from "../types/handlers/aggregate-command-handler";
 import { globalHermesMetadata } from "../utils/private";
 import { Aggregate } from "./Aggregate";

@@ -8,7 +8,7 @@ import {
 } from "@lindorm/message";
 import { Dict } from "@lindorm/types";
 import { randomUUID } from "crypto";
-import z from "zod";
+import { z } from "zod/v4";
 import { IHermesMessage } from "../interfaces";
 import { AggregateIdentifier } from "../types";
 
@@ -27,10 +27,10 @@ export class HermesMessage<D = Dict, M extends Dict = Dict>
 
   @Field("object", {
     schema: z.object({
-      id: z.string().uuid(),
+      id: z.uuid(),
       name: z.string(),
       namespace: z.string(),
-    }),
+    }) as any,
   })
   public readonly aggregate!: AggregateIdentifier;
 

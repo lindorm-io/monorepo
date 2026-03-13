@@ -42,7 +42,7 @@ export const createWellKnownRouter = <C extends PylonHttpContext>(
 
     for (const [key, value] of Object.entries(result)) {
       if (isString(value) && value.includes("<ORIGIN>")) {
-        (result as any)[key] = value.replace("<ORIGIN>", ctx.request.origin);
+        (result as any)[key] = value.replace("<ORIGIN>", ctx.state.origin);
         continue;
       }
     }

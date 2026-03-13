@@ -373,7 +373,7 @@ describe("Pylon", () => {
       ip: "::ffff:127.0.0.1",
       ips: [],
       method: "GET",
-      origin: expect.stringMatching(/http:\/\/127\.0\.0\.1:\d+/),
+      origin: null,
       path: "/test/request",
       protocol: "http",
       query: {},

@@ -1,6 +1,6 @@
 import { ClientError } from "@lindorm/errors";
 import { OpenIdAuthorizeRequestQuery } from "@lindorm/types";
-import { z } from "zod";
+import { z } from "zod/v4";
 import {
   PylonAuthConfig,
   PylonHttpContext,
@@ -17,7 +17,7 @@ export const loginSchema = z.object({
   loginHint: z.string().optional(),
   maxAge: z.coerce.number().optional(),
   prompt: z.string().optional(),
-  redirectUri: z.string().url().optional(),
+  redirectUri: z.url().optional(),
   scope: z.string().optional(),
   uiLocales: z.string().optional(),
 });

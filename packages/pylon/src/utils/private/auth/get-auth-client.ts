@@ -107,7 +107,7 @@ export const getAuthClient = (
     const authorize: OpenIdAuthorizeRequestQuery = {
       clientId,
       nonce,
-      redirectUri: new URL("/auth/login/callback", ctx.request.origin).toString(),
+      redirectUri: new URL("/auth/login/callback", ctx.state.origin).toString(),
       responseType,
       scope: scope.join(" "),
       state,
@@ -145,7 +145,7 @@ export const getAuthClient = (
       clientId,
       postLogoutRedirectUri: new URL(
         "/auth/logout/callback",
-        ctx.request.origin,
+        ctx.state.origin,
       ).toString(),
       state,
     };

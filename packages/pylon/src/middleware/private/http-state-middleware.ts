@@ -32,6 +32,7 @@ export const createHttpStateMiddleware = (options: Options): PylonHttpMiddleware
           responseId: randomUUID(),
           sessionId: ctx.get("x-session-id") || null,
         },
+        origin: ctx.request.origin || `${ctx.protocol}://${ctx.host}`,
         session: null,
         tokens: {},
       };

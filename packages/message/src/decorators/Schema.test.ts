@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v4";
 import { globalMessageMetadata } from "../utils";
 import { Field } from "./Field";
 import { Message } from "./Message";
