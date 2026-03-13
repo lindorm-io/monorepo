@@ -47,11 +47,11 @@
     "busboy": "^1.6.0",
     "co-body": "^6.2.0",
     "formidable": "^3.5.4",
-    "koa": "^2.16.1",
-    "koa-router": "^12.0.1",
+    "koa": "^3.1.2",
+    "koa-router": "^14.0.0",
     "object-path": "^0.11.8",
-    "socket.io": "^4.8.1",
-    "zod": "^3.25.67"
+    "socket.io": "^4.8.3",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@lindorm/amphora": "^0.3.1",
@@ -69,12 +69,12 @@
     "@lindorm/worker": "^0.2.8",
     "@types/busboy": "^1.5.4",
     "@types/co-body": "^6.1.3",
-    "@types/formidable": "^3.4.5",
+    "@types/formidable": "^3.5.0",
     "@types/ioredis": "^5.0.0",
     "@types/keygrip": "^1.0.6",
-    "@types/koa": "^2.15.0",
-    "@types/koa-router": "^7.4.8",
+    "@types/koa": "^3.0.1",
+    "@types/koa-router": "^7.4.9",
     "@types/object-path": "^0.11.4",
-    "socket.io-client": "^4.8.1"
+    "socket.io-client": "^4.8.3"
   }
 }

@@ -1,18 +1,9 @@
 {
   "$schema": "node_modules/lerna/schemas/lerna-schema.json",
-  "command": {
-    "version": {
-      "ignoreChanges": ["*.md"],
-      "npmClient": "npm",
-      "message": "chore(release): publish"
-    },
-    "publish": {
-      "conventionalCommits": true,
-      "npmClient": "npm",
-      "yes": true
-    }
-  },
+  "version": "independent",
   "npmClient": "npm",
   "packages": ["packages/*"],
-  "version": "independent"
+  "conventionalCommits": true,
+  "ignoreChanges": ["*.md"],
+  "message": "chore(release): publish"
 }
