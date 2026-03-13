@@ -1,5 +1,5 @@
 import { Dict } from "@lindorm/types";
-import z from "zod";
+import { z } from "zod/v4";
 import {
   CorrelationField,
   DelayField,
@@ -114,14 +114,14 @@ describe("defaultValidateMessage", () => {
         bigint: z.bigint(),
         boolean: z.boolean(),
         date: z.date(),
-        email: z.string().email(),
-        enum: z.nativeEnum(TestEnum),
+        email: z.email(),
+        enum: z.enum(TestEnum),
         float: z.number(),
         integer: z.number().int(),
-        object: z.record(z.any()),
+        object: z.record(z.string(), z.any()),
         string: z.string(),
-        url: z.string().url(),
-        uuid: z.string().uuid(),
+        url: z.url(),
+        uuid: z.uuid(),
       }),
     )
     class TestSchemaMessage {

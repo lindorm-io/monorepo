@@ -7,8 +7,8 @@ import {
   isObject,
   isString,
 } from "@lindorm/is";
+import { randomUUID } from "@lindorm/random";
 import { Dict } from "@lindorm/types";
-import { v4 as uuid } from "uuid";
 
 export type LindormErrorAttributes = {
   id: string;
@@ -66,7 +66,7 @@ export class LindormError extends Error {
     const { id, code, data = {}, debug = {}, status, support, title } = options;
     const destruct = LindormError.destruct(options.error);
 
-    this.id = id ?? destruct.id ?? uuid();
+    this.id = id ?? destruct.id ?? randomUUID();
     this.code = code ?? destruct?.code ?? null;
     this.data = { ...destruct.data, ...data };
     this.debug = { ...destruct.debug, ...debug };

@@ -4,7 +4,7 @@ export const findAllMatches = (input: string): Array<Match> => {
   const regex = new RegExp(/(:[a-zA-Z0-9]+)|({[a-zA-Z0-9]+})/g);
   const matches: Array<Match> = [];
 
-  let match: RegExpExecArray | null = null;
+  let match: RegExpExecArray | null;
   let timeout = 100;
 
   do {

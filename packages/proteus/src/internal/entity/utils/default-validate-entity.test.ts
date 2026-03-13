@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v4";
 import { defaultValidateEntity } from "./default-validate-entity";
 import { Embeddable } from "../../../decorators/Embeddable";
 import { Embedded } from "../../../decorators/Embedded";

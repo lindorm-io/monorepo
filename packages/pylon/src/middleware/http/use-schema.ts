@@ -1,7 +1,7 @@
 import { ClientError } from "@lindorm/errors";
 import { Dict } from "@lindorm/types";
 import { get, set } from "object-path";
-import { ZodObject, ZodRawShape } from "zod";
+import { ZodObject, ZodRawShape } from "zod/v4";
 import { PylonHttpContext, PylonHttpMiddleware } from "../../types";
 
 type From = "data" | "body" | "headers" | "params" | "query" | string;
@@ -23,7 +23,7 @@ export const useSchema = <T extends ZodRawShape>(
   async function httpSchemaMiddleware(ctx, next): Promise<void> {
     try {
       const input = path === "headers" ? destructHeaders(ctx) : get(ctx, path);
-      const output = schema.passthrough().parse(input);
+      const output = schema.loose().parse(input);
 
       set(ctx, path, output);
     } catch (error: any) {

@@ -1,10 +1,10 @@
 import { Constructor } from "@lindorm/types";
-import { z, ZodArray, ZodNumber, ZodRawShape, ZodString, ZodType } from "zod";
+import { z } from "zod/v4";
 import { IMessage } from "../interfaces";
 import { MetaField } from "../types";
 import { globalMessageMetadata } from "./global";
 
-const getValidator = (field: Omit<MetaField, "target">): ZodType<any> | undefined => {
+const getValidator = (field: Omit<MetaField, "target">): z.ZodType<any> | undefined => {
   switch (field.type) {
     case "array":
       return z.array(z.any());
@@ -19,10 +19,10 @@ const getValidator = (field: Omit<MetaField, "target">): ZodType<any> | undefine
       return z.date();
 
     case "email":
-      return z.string().email();
+      return z.email();
 
     case "enum":
-      return z.nativeEnum(field.enum);
+      return z.enum(field.enum);
 
     case "float":
       return z.number();
@@ -31,16 +31,16 @@ const getValidator = (field: Omit<MetaField, "target">): ZodType<any> | undefine
       return z.number().int();
 
     case "object":
-      return z.object({}).passthrough();
+      return z.looseObject({});
 
     case "string":
       return z.string();
 
     case "url":
-      return z.string().url();
+      return z.url();
 
     case "uuid":
-      return z.string().uuid();
+      return z.uuid();
 
     default:
       return;
@@ -52,7 +52,7 @@ export const defaultValidateMessage = <M extends IMessage>(
   message: M,
 ): void => {
   const metadata = globalMessageMetadata.get(target);
-  const validators: ZodRawShape = {};
+  const validators: Record<string, z.ZodType> = {};
 
   for (const field of metadata.fields) {
     let validator = getValidator(field);
@@ -60,11 +60,15 @@ export const defaultValidateMessage = <M extends IMessage>(
     if (!validator) continue;
 
     if (field.type && ["array", "number", "string"].includes(field.type) && field.min) {
-      validator = (validator as ZodArray<any> | ZodNumber | ZodString).min(field.min);
+      validator = (validator as z.ZodArray<any> | z.ZodNumber | z.ZodString).min(
+        field.min,
+      );
     }
 
     if (field.type && ["array", "number", "string"].includes(field.type) && field.max) {
-      validator = (validator as ZodArray<any> | ZodNumber | ZodString).max(field.max);
+      validator = (validator as z.ZodArray<any> | z.ZodNumber | z.ZodString).max(
+        field.max,
+      );
     }
 
     if (field.nullable) {
@@ -78,7 +82,7 @@ export const defaultValidateMessage = <M extends IMessage>(
     validators[field.key] = validator;
   }
 
-  z.object(validators).passthrough().parse(message);
+  z.looseObject(validators).parse(message);
 
   if (metadata.schema) {
     metadata.schema.parse(message);

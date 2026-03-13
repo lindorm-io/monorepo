@@ -1,5 +1,5 @@
 import { ClientError } from "@lindorm/errors";
-import { z } from "zod";
+import { z } from "zod/v4";
 import {
   PylonAuthConfig,
   PylonHttpContext,
@@ -11,7 +11,7 @@ import { getAuthClient } from "./get-auth-client";
 export const logoutSchema = z.object({
   idTokenHint: z.string().optional(),
   logoutHint: z.string().optional(),
-  redirectUri: z.string().url().optional(),
+  redirectUri: z.url().optional(),
 });
 
 export const createLogoutHandler = <C extends PylonHttpContext>(

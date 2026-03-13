@@ -51,6 +51,7 @@ describe("getAuthClient", () => {
         metadata: {
           correlationId: "d63f8a93-307e-5282-90fb-6795a0866a5e",
         },
+        origin: "https://client.com",
       },
     };
 

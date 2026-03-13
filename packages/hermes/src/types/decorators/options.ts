@@ -1,4 +1,4 @@
-import { ZodObject } from "zod";
+import { z } from "zod/v4";
 import { HandlerConditions } from "../handlers";
 
 // dtos
@@ -42,7 +42,7 @@ export type ViewDecoratorOptions = {
 export type AggregateCommandHandlerDecoratorOptions = {
   conditions?: HandlerConditions;
   encryption?: boolean;
-  schema?: ZodObject<any>;
+  schema?: z.ZodType;
 };
 
 export type SagaEventHandlerDecoratorOptions = {

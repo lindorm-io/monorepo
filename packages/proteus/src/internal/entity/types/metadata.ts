@@ -1,5 +1,5 @@
 import { Constructor, Dict, Predicate } from "@lindorm/types";
-import { ZodObject, ZodType } from "zod";
+import { z } from "zod/v4";
 import { IEntity } from "../../../interfaces";
 import { IndexDirection } from "../../types/types";
 import { MetaInheritance } from "./inheritance";
@@ -111,7 +111,7 @@ export type MetaField<T extends MetaFieldDecorator = MetaFieldDecorator> = {
   precision: number | null;
   readonly: boolean;
   scale: number | null;
-  schema: ZodType | null;
+  schema: z.ZodType | null;
   transform: MetaTransform | null;
   type: MetaFieldType | null;
 };
@@ -260,7 +260,7 @@ export type MetaRelation = {
 export type MetaDriver = "memory" | "mongo" | "mysql" | "postgres" | "redis" | "sqlite";
 
 export type MetaSchema = {
-  schema: ZodObject<IEntity>;
+  schema: z.ZodObject<IEntity>;
 };
 
 export type MetaRelationId = {
@@ -315,7 +315,7 @@ export type EntityMetadata<
   relationIds: Array<MetaRelationId>;
   relationCounts: Array<MetaRelationCount>;
   relations: Array<MetaRelation>;
-  schemas: Array<ZodObject<IEntity>>;
+  schemas: Array<z.ZodObject<IEntity>>;
   scopeKeys: Array<string>;
   uniques: Array<MetaUnique>;
   versionKeys: Array<string>;

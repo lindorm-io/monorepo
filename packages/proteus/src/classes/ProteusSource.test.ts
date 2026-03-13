@@ -133,11 +133,11 @@ describe("ProteusSource", () => {
       // Insert test data via the original source
       const originalRepo = source.repository(CloneTestEntity);
       await originalRepo.insert({
-        id: "00000000-0000-0000-0000-000000000001",
+        id: "00000000-0000-4000-8000-000000000001",
         tenantId: "tenant-a",
       } as any);
       await originalRepo.insert({
-        id: "00000000-0000-0000-0000-000000000002",
+        id: "00000000-0000-4000-8000-000000000002",
         tenantId: "tenant-b",
       } as any);
 

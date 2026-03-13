@@ -17,7 +17,7 @@ import {
   KryptosType,
   KryptosUse,
 } from "@lindorm/kryptos";
-import { z } from "zod";
+import { z } from "zod/v4";
 
 export abstract class KryptosEntity implements KryptosDB {
   @PrimaryKeyColumn()
@@ -53,13 +53,13 @@ export abstract class KryptosEntity implements KryptosDB {
   @Column("string")
   public issuer!: string | null;
 
-  @Column("string", { nullable: true, schema: z.string().url() })
+  @Column("string", { nullable: true, schema: z.url() as any })
   public jwksUri!: string | null;
 
   @Column("date")
   public notBefore!: Date;
 
-  @Column("array", { schema: z.array(z.string()) })
+  @Column("array", { schema: z.array(z.string()) as any })
   public operations!: Array<KryptosOperation>;
 
   @Column("string", { nullable: true })

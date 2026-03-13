@@ -39,7 +39,7 @@ export const createLoginCallbackHandler = (
         ...(audience && { audience }),
         code: ctx.data.code,
         grantType: "authorization_code",
-        redirectUri: new URL("/auth/login/callback", ctx.request.origin).toString(),
+        redirectUri: new URL("/auth/login/callback", ctx.state.origin).toString(),
         codeVerifier: cookie.codeVerifier,
         scope: cookie.scope,
       });
