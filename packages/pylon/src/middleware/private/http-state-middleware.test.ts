@@ -20,6 +20,9 @@ describe("createHttpStateMiddleware", () => {
     ctx = {
       get: jest.fn(),
       set: jest.fn(),
+      protocol: "https",
+      host: "test.lindorm.io",
+      request: { origin: "https://test.lindorm.io" },
     };
 
     options = {

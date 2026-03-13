@@ -58,7 +58,9 @@ describe("createLoginCallbackHandler", () => {
         set: jest.fn(),
         del: jest.fn(),
       },
-      state: {},
+      state: {
+        origin: "http://localhost",
+      },
     };
 
     getAuthClient.mockReturnValue({

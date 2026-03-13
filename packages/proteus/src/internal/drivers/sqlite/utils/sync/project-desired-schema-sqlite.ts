@@ -77,7 +77,6 @@ const projectFieldColumn = (
 
   let defaultExpr: string | null = null;
   let isAutoincrement = false;
-  let checkExpr: string | null = null;
 
   if (field.computed) {
     // Computed columns are stored as GENERATED ALWAYS AS ... STORED
@@ -98,7 +97,7 @@ const projectFieldColumn = (
   }
 
   // Inline CHECK for enum fields
-  checkExpr = buildEnumCheckExpr(field, field.name);
+  const checkExpr = buildEnumCheckExpr(field, field.name);
 
   return {
     name: field.name,

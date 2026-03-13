@@ -1,10 +1,12 @@
 import dotenvx from "@dotenvx/dotenvx";
 import { merge } from "@lindorm/utils";
-import { z, ZodRawShape } from "zod";
+import { z } from "zod/v4";
 import { NpmInformation } from "../types";
 import { coerceAll, loadConfig, loadNodeConfig } from "./private";
 
-export const configuration = <T extends ZodRawShape>(schema: T): NpmInformation & T => {
+export const configuration = <T extends Record<string, z.ZodType>>(
+  schema: T,
+): NpmInformation & z.infer<z.ZodObject<T>> => {
   dotenvx.config({
     path: process.env.NODE_ENV ? [`.env.${process.env.NODE_ENV}`, ".env"] : ".env",
     quiet: true,
@@ -26,5 +28,5 @@ export const configuration = <T extends ZodRawShape>(schema: T): NpmInformation 
     },
   };
 
-  return merge<NpmInformation & T>(parsed, npm as any);
+  return merge(parsed as any, npm as any);
 };

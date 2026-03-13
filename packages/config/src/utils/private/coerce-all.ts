@@ -1,36 +1,45 @@
 import { Dict } from "@lindorm/types";
-import { z, ZodFirstPartyTypeKind, ZodTypeAny } from "zod";
+import { z } from "zod/v4";
 
-export const coerceAll = <T extends ZodTypeAny>(schema: T): T => {
-  const def = schema._def;
+export const coerceAll = <T extends z.ZodType>(schema: T): T => {
+  const def = (schema as any)._zod?.def ?? (schema as any)._def;
 
-  switch (def.typeName) {
-    case ZodFirstPartyTypeKind.ZodString:
-      return z.coerce.string(def) as any;
+  switch (def.type) {
+    case "string":
+      return z.coerce.string() as any;
 
-    case ZodFirstPartyTypeKind.ZodNumber:
-      return z.coerce.number(def) as any;
+    case "number":
+      return z.coerce.number() as any;
 
-    case ZodFirstPartyTypeKind.ZodBoolean:
-      return z.coerce.boolean(def) as any;
+    case "boolean":
+      return z.coerce.boolean() as any;
 
-    case ZodFirstPartyTypeKind.ZodDate:
-      return z.coerce.date(def) as any;
+    case "date":
+      return z.coerce.date() as any;
 
-    case ZodFirstPartyTypeKind.ZodBigInt:
-      return z.coerce.bigint(def) as any;
+    case "bigint":
+      return z.coerce.bigint() as any;
 
-    case ZodFirstPartyTypeKind.ZodArray:
-      return z.array(coerceAll(def.type), def) as any;
+    case "array":
+      return z.array(coerceAll(def.element)) as any;
 
-    case ZodFirstPartyTypeKind.ZodObject: {
-      const shape = (def.shape as () => Dict<ZodTypeAny>)();
-      const newShape: Dict<ZodTypeAny> = {};
+    case "object": {
+      const shape = def.shape as Dict<z.ZodType>;
+      const newShape: Dict<z.ZodType> = {};
       for (const key in shape) {
         newShape[key] = coerceAll(shape[key]);
       }
-      return z.object(newShape, def) as any;
+      return z.object(newShape) as any;
     }
+
+    case "optional":
+      return coerceAll(def.innerType).optional();
+
+    case "nullable":
+      return coerceAll(def.innerType).nullable();
+
+    case "default":
+      return coerceAll(def.innerType).default(def.defaultValue);
 
     default:
       return schema;

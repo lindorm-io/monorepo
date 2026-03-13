@@ -1,5 +1,5 @@
 import { ClassLike, Dict } from "@lindorm/types";
-import { ZodSchema } from "zod";
+import { z } from "zod/v4";
 import { AggregateCommandCtx, HandlerConditions, HandlerIdentifier } from "../types";
 
 export interface IAggregateCommandHandler<
@@ -10,6 +10,6 @@ export interface IAggregateCommandHandler<
   command: string;
   conditions: HandlerConditions;
   encryption: boolean;
-  schema: ZodSchema | undefined;
+  schema: z.ZodType | undefined;
   handler(ctx: AggregateCommandCtx<C, S>): Promise<void>;
 }

@@ -1,7 +1,7 @@
 import { ILogger } from "@lindorm/logger";
 import { ClassLike, Dict } from "@lindorm/types";
 import merge from "deepmerge";
-import { z } from "zod";
+import { z } from "zod/v4";
 import {
   AggregateDestroyedError,
   AggregateNotDestroyedError,
@@ -76,8 +76,8 @@ export class AggregateModel<S extends Dict = Dict> implements IAggregateModel {
     this.logger.debug("Apply Command", { causation, event });
 
     z.object({
-      causation: z.object({ meta: z.record(z.any()) }),
-      event: z.record(z.any()),
+      causation: z.object({ meta: z.record(z.string(), z.any()) }),
+      event: z.looseObject({}),
     }).parse({ causation, event });
 
     const { name, version, data } = extractDataTransferObject(event);
@@ -205,7 +205,7 @@ export class AggregateModel<S extends Dict = Dict> implements IAggregateModel {
   private mergeState(state: Partial<S>): void {
     this.logger.debug("Merge state", { state });
 
-    z.record(z.any()).parse(state);
+    z.record(z.string(), z.any()).parse(state);
 
     if (this._destroyed) {
       throw new AggregateDestroyedError();
@@ -217,7 +217,7 @@ export class AggregateModel<S extends Dict = Dict> implements IAggregateModel {
   private setState(state: S): void {
     this.logger.debug("Set state", { state });
 
-    z.record(z.any()).parse(state);
+    z.record(z.string(), z.any()).parse(state);
 
     if (this._destroyed) {
       throw new AggregateDestroyedError();
