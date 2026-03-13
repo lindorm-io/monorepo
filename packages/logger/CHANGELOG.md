@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.5.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/logger@0.5.0...@lindorm/logger@0.5.1) (2026-03-13)
+
+**Note:** Version bump only for package @lindorm/logger
+
 # [0.5.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/logger@0.4.0...@lindorm/logger@0.5.0) (2026-03-13)
 
 ### Features
