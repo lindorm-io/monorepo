@@ -11,7 +11,7 @@
     "lint": "eslint packages/*/src/",
     "prepare": "husky",
     "prettier": "prettier --write packages/*/src/",
-    "release": "lerna publish",
+    "release": "lerna publish --yes",
     "test": "composed --file docker-compose.yml lerna run test:ci",
     "test:ci": "lerna run test:ci",
     "typecheck": "lerna run typecheck",
