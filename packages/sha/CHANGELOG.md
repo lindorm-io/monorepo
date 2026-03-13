@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.3.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/sha@0.2.5...@lindorm/sha@0.3.0) (2026-03-13)
+
+### Features
+
+- **sha:** add ShaKit.equal method ([8673a99](https://github.com/lindorm-io/monorepo/commit/8673a9978286a4c1c3db12637857c7c0859a41ec))
+
 ## [0.2.5](https://github.com/lindorm-io/monorepo/compare/@lindorm/sha@0.2.4...@lindorm/sha@0.2.5) (2026-02-17)
 
 **Note:** Version bump only for package @lindorm/sha

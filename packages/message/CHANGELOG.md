@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.6](https://github.com/lindorm-io/monorepo/compare/@lindorm/message@0.1.5...@lindorm/message@0.1.6) (2026-03-13)
+
+### Bug Fixes
+
+- mock tsx/cjs/api in scanner tests to prevent Jest namespace conflicts ([cae3ffb](https://github.com/lindorm-io/monorepo/commit/cae3ffbd1df651d574c34647ca695e312efd4280))
+- resolve all eslint warnings across entity, message, hermes, and proteus ([a7aaefc](https://github.com/lindorm-io/monorepo/commit/a7aaefcd2ae48901b546fa191e23edf90ecc22c4))
+
 ## [0.1.5](https://github.com/lindorm-io/monorepo/compare/@lindorm/message@0.1.4...@lindorm/message@0.1.5) (2026-02-17)
 
 **Note:** Version bump only for package @lindorm/message

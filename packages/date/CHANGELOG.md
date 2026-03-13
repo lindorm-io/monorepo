@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/date@0.3.4...@lindorm/date@0.4.0) (2026-03-13)
+
+### Features
+
+- **date:** add TtlMap and TtlSet classes ([6772396](https://github.com/lindorm-io/monorepo/commit/677239670a22458270b1ff8d4c8eddccc23f36bf))
+
 ## [0.3.4](https://github.com/lindorm-io/monorepo/compare/@lindorm/date@0.3.3...@lindorm/date@0.3.4) (2026-02-17)
 
 **Note:** Version bump only for package @lindorm/date

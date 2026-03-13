@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/rsa",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -27,11 +27,11 @@
     "verify": "npm run typecheck; npm run build; npm test"
   },
   "dependencies": {
-    "@lindorm/errors": "^0.1.13",
-    "@lindorm/is": "^0.1.12",
-    "@lindorm/kryptos": "^0.5.0"
+    "@lindorm/errors": "^0.1.14",
+    "@lindorm/is": "^0.1.13",
+    "@lindorm/kryptos": "^0.5.1"
   },
   "devDependencies": {
-    "@lindorm/types": "^0.3.4"
+    "@lindorm/types": "^0.4.0"
   }
 }

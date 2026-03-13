@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.6.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/utils@0.5.5...@lindorm/utils@0.6.0) (2026-03-13)
+
+### Features
+
+- **utils:** improve Predicated matching and uniq ([b5ba623](https://github.com/lindorm-io/monorepo/commit/b5ba623eef64a15bf969f50ba2da2879ff60ac63))
+
 ## [0.5.5](https://github.com/lindorm-io/monorepo/compare/@lindorm/utils@0.5.4...@lindorm/utils@0.5.5) (2026-02-17)
 
 ### Bug Fixes

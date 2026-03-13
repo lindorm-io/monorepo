@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.6.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/pylon@0.6.0...@lindorm/pylon@0.6.1) (2026-03-13)
+
+### Bug Fixes
+
+- add missing MySQL service, fix MongoDB replica set and auth config ([4af2231](https://github.com/lindorm-io/monorepo/commit/4af223104c7e5e88b0b28e9ff9fa40600282c676))
+- remove deleted KryptosPurpose type from pylon package ([d27b170](https://github.com/lindorm-io/monorepo/commit/d27b17021d6493715881b566cf87c92f745bbf2a))
+
 # [0.6.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/pylon@0.5.1...@lindorm/pylon@0.6.0) (2026-02-17)
 
 ### Features

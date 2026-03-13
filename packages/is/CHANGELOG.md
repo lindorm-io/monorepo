@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.13](https://github.com/lindorm-io/monorepo/compare/@lindorm/is@0.1.12...@lindorm/is@0.1.13) (2026-03-13)
+
+**Note:** Version bump only for package @lindorm/is
+
 ## [0.1.12](https://github.com/lindorm-io/monorepo/compare/@lindorm/is@0.1.11...@lindorm/is@0.1.12) (2026-02-17)
 
 ### Bug Fixes

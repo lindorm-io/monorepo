@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/types@0.3.4...@lindorm/types@0.4.0) (2026-03-13)
+
+### Features
+
+- **types:** add PredicateBase type ([82a109c](https://github.com/lindorm-io/monorepo/commit/82a109cacfa4a6b81ff1523037c3ea329d0493a6))
+
 ## [0.3.4](https://github.com/lindorm-io/monorepo/compare/@lindorm/types@0.3.3...@lindorm/types@0.3.4) (2026-02-17)
 
 ### Bug Fixes
