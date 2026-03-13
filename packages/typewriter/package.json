@@ -33,8 +33,8 @@
     "@lindorm/case": "^0.1.13",
     "@lindorm/is": "^0.1.13",
     "@lindorm/logger": "^0.5.0",
-    "commander": "^13.1.0",
-    "js-yaml": "^4.1.0",
+    "commander": "^14.0.3",
+    "js-yaml": "^4.1.1",
     "quicktype-core": "^23.2.6"
   }
 }
