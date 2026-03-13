@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.9](https://github.com/lindorm-io/monorepo/compare/@lindorm/postgres@0.3.8...@lindorm/postgres@0.3.9) (2026-03-13)
+
+### Bug Fixes
+
+- add missing MySQL service, fix MongoDB replica set and auth config ([4af2231](https://github.com/lindorm-io/monorepo/commit/4af223104c7e5e88b0b28e9ff9fa40600282c676))
+
 ## [0.3.8](https://github.com/lindorm-io/monorepo/compare/@lindorm/postgres@0.3.7...@lindorm/postgres@0.3.8) (2026-02-17)
 
 ### Bug Fixes

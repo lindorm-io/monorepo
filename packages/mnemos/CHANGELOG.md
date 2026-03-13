@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.4.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/mnemos@0.4.0...@lindorm/mnemos@0.4.1) (2026-03-13)
+
+### Bug Fixes
+
+- mock tsx/cjs/api in mnemos source test to prevent Jest namespace conflicts ([a9f1ed8](https://github.com/lindorm-io/monorepo/commit/a9f1ed818037bd440d24de1af22ea87afb0958b1))
+
 # [0.4.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/mnemos@0.3.6...@lindorm/mnemos@0.4.0) (2026-02-17)
 
 ### Bug Fixes

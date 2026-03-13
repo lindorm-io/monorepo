@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.5.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/logger@0.4.0...@lindorm/logger@0.5.0) (2026-03-13)
+
+### Features
+
+- **logger:** add session method and improve child logger ([868e673](https://github.com/lindorm-io/monorepo/commit/868e6730bf517d352ea60bdc35a5fadab7fbd1f8))
+
 # [0.4.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/logger@0.3.4...@lindorm/logger@0.4.0) (2026-02-17)
 
 ### Bug Fixes

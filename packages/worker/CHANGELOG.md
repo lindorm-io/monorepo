@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.8](https://github.com/lindorm-io/monorepo/compare/@lindorm/worker@0.2.7...@lindorm/worker@0.2.8) (2026-03-13)
+
+### Bug Fixes
+
+- mock tsx/cjs/api in remaining tests and stabilise error snapshots ([5e12e6a](https://github.com/lindorm-io/monorepo/commit/5e12e6a3ad52c4cee5359e37fa9fff39533f64d2))
+
 ## [0.2.7](https://github.com/lindorm-io/monorepo/compare/@lindorm/worker@0.2.6...@lindorm/worker@0.2.7) (2026-02-17)
 
 ### Bug Fixes

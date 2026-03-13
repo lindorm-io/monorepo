@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.3](https://github.com/lindorm-io/monorepo/compare/@lindorm/kafka@0.3.2...@lindorm/kafka@0.3.3) (2026-03-13)
+
+### Bug Fixes
+
+- add missing MySQL service, fix MongoDB replica set and auth config ([4af2231](https://github.com/lindorm-io/monorepo/commit/4af223104c7e5e88b0b28e9ff9fa40600282c676))
+- mock tsx/cjs/api in remaining tests and stabilise error snapshots ([5e12e6a](https://github.com/lindorm-io/monorepo/commit/5e12e6a3ad52c4cee5359e37fa9fff39533f64d2))
+
 ## [0.3.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/kafka@0.3.1...@lindorm/kafka@0.3.2) (2026-02-17)
 
 ### Bug Fixes

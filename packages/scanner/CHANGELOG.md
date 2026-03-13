@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/scanner@0.3.8...@lindorm/scanner@0.4.0) (2026-03-13)
+
+### Bug Fixes
+
+- mock tsx/cjs/api in scanner tests to prevent Jest namespace conflicts ([cae3ffb](https://github.com/lindorm-io/monorepo/commit/cae3ffbd1df651d574c34647ca695e312efd4280))
+
+### Features
+
+- **scanner:** add CJS interop via tsx and improve Scanner ([bed20cc](https://github.com/lindorm-io/monorepo/commit/bed20cc838a731ac98da3e11be66953302bb87ea))
+
 ## [0.3.8](https://github.com/lindorm-io/monorepo/compare/@lindorm/scanner@0.3.7...@lindorm/scanner@0.3.8) (2026-02-17)
 
 **Note:** Version bump only for package @lindorm/scanner
