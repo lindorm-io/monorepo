@@ -30,7 +30,7 @@
     "kryptos": "dist/cli.js"
   },
   "dependencies": {
-    "@inquirer/prompts": "^7.4.1",
+    "@inquirer/prompts": "^8.3.0",
     "@lindorm/b64": "^0.1.8",
     "@lindorm/case": "^0.1.13",
     "@lindorm/date": "^0.4.0",
@@ -38,7 +38,7 @@
     "@lindorm/is": "^0.1.13",
     "@lindorm/random": "^0.2.2",
     "@lindorm/utils": "^0.6.0",
-    "commander": "^13.1.0"
+    "commander": "^14.0.3"
   },
   "devDependencies": {
     "@lindorm/types": "^0.4.0"
