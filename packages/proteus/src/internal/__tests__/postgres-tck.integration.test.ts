@@ -3,6 +3,7 @@
 // Runs the full TCK suite against a real PostgreSQL instance.
 // Uses a random schema for isolation; teardown drops the schema.
 
+import { randomBytes } from "node:crypto";
 import { createMockLogger } from "@lindorm/logger";
 import { Client } from "pg";
 import type { Constructor } from "@lindorm/types";
@@ -17,7 +18,7 @@ jest.setTimeout(120_000);
 
 const PG_CONNECTION = "postgres://root:example@localhost:5432/default";
 
-const namespace = "tck_proteus";
+const namespace = `tck_${randomBytes(6).toString("hex")}`;
 
 let source: ProteusSource;
 let clearClient: Client | null = null;

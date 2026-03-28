@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import { createMockLogger } from "@lindorm/logger";
 import { Client } from "pg";
 import {
@@ -22,6 +23,7 @@ import type { PostgresQueryClient } from "../types/postgres-query-client";
 import { PostgresDriver } from "./PostgresDriver";
 
 const PG_CONNECTION = "postgres://root:example@localhost:5432/default";
+const schema = `test_drv_${randomBytes(6).toString("hex")}`;
 
 describe("PostgresDriver (integration)", () => {
   let raw: Client;
@@ -29,15 +31,17 @@ describe("PostgresDriver (integration)", () => {
   beforeAll(async () => {
     raw = new Client({ connectionString: PG_CONNECTION });
     await raw.connect();
+    await raw.query(`CREATE SCHEMA "${schema}"`);
   });
 
   afterAll(async () => {
+    await raw.query(`DROP SCHEMA IF EXISTS "${schema}" CASCADE`);
     await raw.end();
   });
 
   beforeEach(async () => {
-    await raw.query("DROP SCHEMA IF EXISTS public CASCADE");
-    await raw.query("CREATE SCHEMA public");
+    await raw.query(`DROP SCHEMA IF EXISTS "${schema}" CASCADE`);
+    await raw.query(`CREATE SCHEMA "${schema}"`);
   });
 
   test("should create tables for all entities when synchronize is true", async () => {
@@ -64,7 +68,7 @@ describe("PostgresDriver (integration)", () => {
         logger: createMockLogger(),
       },
       createMockLogger(),
-      null,
+      schema,
       getEntityMetadata,
     );
 
@@ -75,8 +79,9 @@ describe("PostgresDriver (integration)", () => {
 
       const result = await raw.query(
         `SELECT table_name FROM information_schema.tables
-         WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
+         WHERE table_schema = $1 AND table_type = 'BASE TABLE'
          ORDER BY table_name`,
+        [schema],
       );
 
       const tables = result.rows.map((r: any) => r.table_name);
@@ -98,7 +103,7 @@ describe("PostgresDriver (integration)", () => {
         logger: createMockLogger(),
       },
       createMockLogger(),
-      null,
+      schema,
       getEntityMetadata,
     );
 
@@ -110,8 +115,9 @@ describe("PostgresDriver (integration)", () => {
 
       const result = await raw.query(
         `SELECT table_name FROM information_schema.tables
-         WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
+         WHERE table_schema = $1 AND table_type = 'BASE TABLE'
          ORDER BY table_name`,
+        [schema],
       );
 
       const tables = result.rows.map((r: any) => r.table_name);
@@ -130,7 +136,7 @@ describe("PostgresDriver (integration)", () => {
         logger: createMockLogger(),
       },
       createMockLogger(),
-      null,
+      schema,
       getEntityMetadata,
     );
 
@@ -141,7 +147,8 @@ describe("PostgresDriver (integration)", () => {
 
       const result = await raw.query(
         `SELECT table_name FROM information_schema.tables
-         WHERE table_schema = 'public' AND table_type = 'BASE TABLE'`,
+         WHERE table_schema = $1 AND table_type = 'BASE TABLE'`,
+        [schema],
       );
 
       expect(result.rows).toHaveLength(0);
@@ -159,7 +166,7 @@ describe("PostgresDriver (integration)", () => {
         logger: createMockLogger(),
       },
       createMockLogger(),
-      null,
+      schema,
       getEntityMetadata,
     );
 
@@ -170,7 +177,8 @@ describe("PostgresDriver (integration)", () => {
 
       const result = await raw.query(
         `SELECT table_name FROM information_schema.tables
-         WHERE table_schema = 'public' AND table_type = 'BASE TABLE'`,
+         WHERE table_schema = $1 AND table_type = 'BASE TABLE'`,
+        [schema],
       );
 
       expect(result.rows).toHaveLength(0);
@@ -190,7 +198,7 @@ describe("PostgresDriver (integration)", () => {
         logger: createMockLogger(),
       },
       createMockLogger(),
-      null,
+      schema,
       getEntityMetadata,
     );
 
@@ -204,9 +212,10 @@ describe("PostgresDriver (integration)", () => {
          FROM pg_constraint
          JOIN pg_class ON pg_constraint.conrelid = pg_class.oid
          JOIN pg_namespace ON pg_class.relnamespace = pg_namespace.oid
-         WHERE pg_namespace.nspname = 'public'
+         WHERE pg_namespace.nspname = $1
            AND contype = 'f'
          ORDER BY conname`,
+        [schema],
       );
 
       expect(fkResult.rows.length).toBeGreaterThan(0);
@@ -227,7 +236,7 @@ describe("PostgresDriver (integration)", () => {
         logger: createMockLogger(),
       },
       createMockLogger(),
-      null,
+      schema,
       getEntityMetadata,
     );
 
@@ -238,8 +247,9 @@ describe("PostgresDriver (integration)", () => {
 
       const result = await raw.query(
         `SELECT table_name FROM information_schema.tables
-         WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
+         WHERE table_schema = $1 AND table_type = 'BASE TABLE'
          ORDER BY table_name`,
+        [schema],
       );
 
       const tables = result.rows.map((r: any) => r.table_name);
@@ -274,7 +284,7 @@ describe("PostgresDriver (integration)", () => {
         logger: createMockLogger(),
       },
       createMockLogger(),
-      null,
+      schema,
       getEntityMetadata,
     );
 
@@ -285,7 +295,7 @@ describe("PostgresDriver (integration)", () => {
       await driver.setup(entities);
 
       // Now run the pipeline manually to verify zero drift
-      const nsOptions = { namespace: null };
+      const nsOptions = { namespace: schema };
       const metadatas = entities.map((e) => getEntityMetadata(e));
       const desired = projectDesiredSchema(metadatas, nsOptions);
       const managedTables = desired.tables.map((t) => ({

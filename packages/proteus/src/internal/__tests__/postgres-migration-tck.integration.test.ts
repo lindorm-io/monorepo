@@ -65,7 +65,7 @@ afterAll(async () => {
 
 const getCtx = (): MigrationTckContext => ({
   createManager: (directory: string) =>
-    new MigrationManager({ client, directory, logger, tableOptions }),
+    new MigrationManager({ client, directory, logger, namespace: schema, tableOptions }),
 
   tableExists: async (tableName: string) => {
     const { rows } = await raw.query(
