@@ -1,5 +1,5 @@
 import { createMockLogger } from "@lindorm/logger";
-import { randomUUID } from "crypto";
+import { randomBytes, randomUUID } from "crypto";
 import { mkdtemp, rm, writeFile } from "fs/promises";
 import { tmpdir } from "os";
 import { join } from "path";
@@ -11,21 +11,43 @@ import { PostgresDriver } from "./PostgresDriver";
 mockScannerImport();
 
 const PG_CONNECTION = "postgres://root:example@localhost:5432/default";
+const schema = `test_drv_mig_${randomBytes(6).toString("hex")}`;
 
 let raw: Client;
 
 beforeAll(async () => {
   raw = new Client({ connectionString: PG_CONNECTION });
   await raw.connect();
+  await raw.query(`CREATE SCHEMA "${schema}"`);
 });
 
 afterAll(async () => {
+  await raw.query(`DROP SCHEMA IF EXISTS "${schema}" CASCADE`);
   await raw.end();
 });
 
 beforeEach(async () => {
-  await raw.query("DROP SCHEMA IF EXISTS public CASCADE");
-  await raw.query("CREATE SCHEMA public");
+  // Clean all tables in the isolated schema between tests
+  const result = await raw.query(
+    `SELECT table_name FROM information_schema.tables
+     WHERE table_schema = $1 AND table_type = 'BASE TABLE'`,
+    [schema],
+  );
+  if (result.rows.length > 0) {
+    await raw.query(`SET session_replication_role = 'replica'`);
+    for (const row of result.rows) {
+      await raw.query(
+        `DROP TABLE IF EXISTS "${schema}"."${(row as any).table_name}" CASCADE`,
+      );
+    }
+    await raw.query(`SET session_replication_role = 'origin'`);
+  }
+
+  // Also drop the migration tracking table in the schema (MigrationManager defaults to
+  // creating it in the namespace schema when namespace is set via ensureMigrationTable).
+  // Drop the public-schema migration table too, since some configurations may place it there.
+  await raw.query(`DROP TABLE IF EXISTS "public"."proteus_migrations" CASCADE`);
+  await raw.query(`DROP TABLE IF EXISTS "public"."custom_mig_tracking" CASCADE`);
 });
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -62,20 +84,21 @@ describe("PostgresDriver migration (integration)", () => {
         "20260220090000-create-users.js",
         randomUUID(),
         "2026-02-20T09:00:00.000Z",
-        `CREATE TABLE "public"."e1_users" (id UUID PRIMARY KEY, name TEXT)`,
-        `DROP TABLE IF EXISTS "public"."e1_users"`,
+        `CREATE TABLE "${schema}"."e1_users" (id UUID PRIMARY KEY, name TEXT)`,
+        `DROP TABLE IF EXISTS "${schema}"."e1_users"`,
       );
 
       const driver = new PostgresDriver(
         {
           driver: "postgres",
           url: PG_CONNECTION,
+
           runMigrations: true,
           migrations: [dir],
           logger: createMockLogger(),
         },
         createMockLogger(),
-        null,
+        schema,
         getEntityMetadata,
       );
 
@@ -87,11 +110,12 @@ describe("PostgresDriver migration (integration)", () => {
         // Table created by migration
         const tables = await raw.query(
           `SELECT table_name FROM information_schema.tables
-           WHERE table_schema = 'public' AND table_name = 'e1_users'`,
+           WHERE table_schema = $1 AND table_name = 'e1_users'`,
+          [schema],
         );
         expect(tables.rows).toHaveLength(1);
 
-        // Tracking record exists
+        // Tracking record exists (migration table defaults to public schema)
         const tracking = await raw.query(
           `SELECT name, finished_at FROM "public"."proteus_migrations"`,
         );
@@ -116,28 +140,29 @@ describe("PostgresDriver migration (integration)", () => {
         "20260220090000-create-alpha.js",
         randomUUID(),
         "2026-02-20T09:00:00.000Z",
-        `CREATE TABLE "public"."e5_alpha" (id UUID PRIMARY KEY)`,
-        `DROP TABLE IF EXISTS "public"."e5_alpha"`,
+        `CREATE TABLE "${schema}"."e5_alpha" (id UUID PRIMARY KEY)`,
+        `DROP TABLE IF EXISTS "${schema}"."e5_alpha"`,
       );
       await writeMig(
         dir2,
         "20260221090000-create-beta.js",
         randomUUID(),
         "2026-02-21T09:00:00.000Z",
-        `CREATE TABLE "public"."e5_beta" (id UUID PRIMARY KEY)`,
-        `DROP TABLE IF EXISTS "public"."e5_beta"`,
+        `CREATE TABLE "${schema}"."e5_beta" (id UUID PRIMARY KEY)`,
+        `DROP TABLE IF EXISTS "${schema}"."e5_beta"`,
       );
 
       const driver = new PostgresDriver(
         {
           driver: "postgres",
           url: PG_CONNECTION,
+
           runMigrations: true,
           migrations: [dir1, dir2],
           logger: createMockLogger(),
         },
         createMockLogger(),
-        null,
+        schema,
         getEntityMetadata,
       );
 
@@ -148,9 +173,10 @@ describe("PostgresDriver migration (integration)", () => {
 
         const tables = await raw.query(
           `SELECT table_name FROM information_schema.tables
-           WHERE table_schema = 'public'
+           WHERE table_schema = $1
              AND table_name IN ('e5_alpha', 'e5_beta')
            ORDER BY table_name`,
+          [schema],
         );
         expect(tables.rows).toHaveLength(2);
         expect(tables.rows[0].table_name).toBe("e5_alpha");
@@ -181,13 +207,14 @@ describe("PostgresDriver migration (integration)", () => {
         {
           driver: "postgres",
           url: PG_CONNECTION,
+
           runMigrations: true,
           migrations: [dir],
           migrationsTable: "custom_mig_tracking",
           logger: createMockLogger(),
         },
         createMockLogger(),
-        null,
+        schema,
         getEntityMetadata,
       );
 
@@ -196,7 +223,7 @@ describe("PostgresDriver migration (integration)", () => {
       try {
         await driver.setup([]);
 
-        // Custom tracking table should exist
+        // Custom tracking table should exist (in public schema by default)
         const custom = await raw.query(
           `SELECT table_name FROM information_schema.tables
            WHERE table_schema = 'public' AND table_name = 'custom_mig_tracking'`,

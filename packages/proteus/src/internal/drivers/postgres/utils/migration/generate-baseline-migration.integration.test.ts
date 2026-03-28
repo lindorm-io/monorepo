@@ -68,7 +68,7 @@ describe("generate-baseline-migration (integration)", () => {
       }));
       const snapshot = await introspectSchema(client, managedTables);
       const plan = diffSchema(snapshot, desired);
-      await new SyncPlanExecutor().execute(client, plan);
+      await new SyncPlanExecutor(undefined, schema).execute(client, plan);
 
       // Generate baseline — should detect match and mark as applied
       const result = await generateBaselineMigration(client, [metadata], nsOptions, {

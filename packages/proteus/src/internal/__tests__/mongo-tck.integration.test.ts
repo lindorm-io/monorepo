@@ -3,6 +3,7 @@
 // Runs the full TCK suite against a real MongoDB 8 replica set.
 // Uses a dedicated database for isolation; teardown drops all collections.
 
+import { randomBytes } from "node:crypto";
 import { createMockLogger } from "@lindorm/logger";
 import { MongoClient, type Db } from "mongodb";
 import type { Constructor } from "@lindorm/types";
@@ -14,9 +15,10 @@ import { runTck } from "../__fixtures__/tck/run-tck";
 
 jest.setTimeout(120_000);
 
+const MONGO_DB = `tck_${randomBytes(6).toString("hex")}`;
 const MONGO_URL =
   process.env["MONGO_URL"] ??
-  "mongodb://localhost:27017/proteus_tck?replicaSet=rs0&directConnection=true";
+  `mongodb://localhost:27017/${MONGO_DB}?replicaSet=rs0&directConnection=true`;
 
 let source: ProteusSource;
 const amphora = createTckAmphora();
@@ -85,21 +87,12 @@ const factory: TckDriverFactory = {
       },
 
       async teardown() {
-        // Drop all collections before disconnecting
         try {
           const db = await source.client<Db>();
-          const collections = await db.listCollections().toArray();
-          for (const col of collections) {
-            if (col.name.startsWith("system.")) continue;
-            await db
-              .collection(col.name)
-              .drop()
-              .catch(() => {});
-          }
+          await db.dropDatabase();
         } catch {
           // Ignore errors during teardown
         }
-
         await source.disconnect();
       },
     };

@@ -16,9 +16,9 @@ import { MigrationManager } from "./MigrationManager";
 
 mockScannerImport();
 
-// Advisory lock key pair (must match MigrationManager internals)
+// Advisory lock key pair — computed after schema is known (see beforeAll)
 const MIGRATION_LOCK_KEY1 = 0x50524f54;
-const MIGRATION_LOCK_KEY2 = 0x4d494752 ^ hashNamespaceToInt32(null);
+let MIGRATION_LOCK_KEY2: number;
 
 let client: PostgresQueryClient;
 let raw: Client;
@@ -30,6 +30,7 @@ let logger: ILogger;
 beforeAll(async () => {
   ({ client, raw } = await createTestPgClient());
   schema = `test_mgr_${randomBytes(6).toString("hex")}`;
+  MIGRATION_LOCK_KEY2 = 0x4d494752 ^ hashNamespaceToInt32(schema);
   logger = createMockLogger();
 });
 
@@ -93,6 +94,7 @@ const createManager = (directory?: string, opts?: MigrationTableOptions) =>
     client,
     directory: directory ?? dir,
     logger,
+    namespace: schema,
     tableOptions: opts ?? tableOptions,
   });
 
@@ -635,6 +637,7 @@ describe("MigrationManager (integration)", () => {
             client: clientB,
             directory: dir,
             logger,
+            namespace: schema,
             tableOptions,
           });
 
