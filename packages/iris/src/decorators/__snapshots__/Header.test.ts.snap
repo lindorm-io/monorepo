@@ -1,0 +1,23 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`Header should accumulate multiple headers 1`] = `
+[
+  {
+    "headerName": "x-user-id",
+    "key": "userId",
+  },
+  {
+    "headerName": "x-trace-id",
+    "key": "traceId",
+  },
+]
+`;
+
+exports[`Header should stage header with explicit name 1`] = `
+[
+  {
+    "headerName": "x-user-id",
+    "key": "userId",
+  },
+]
+`;

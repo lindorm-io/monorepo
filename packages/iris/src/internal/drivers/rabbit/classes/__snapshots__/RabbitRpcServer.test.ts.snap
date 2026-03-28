@@ -1,0 +1,14 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`RabbitRpcServer serve should register consumer in state.consumerRegistrations 1`] = `
+{
+  "consumerTag": "srv-ctag",
+  "exchange": "test-exchange",
+  "onMessage": [Function],
+  "queue": "test-exchange.rpc.TckRabbitRpcSrvReq",
+  "queueOptions": {
+    "durable": true,
+  },
+  "routingKey": "TckRabbitRpcSrvReq",
+}
+`;

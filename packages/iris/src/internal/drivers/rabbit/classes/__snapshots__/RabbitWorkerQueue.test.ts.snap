@@ -1,0 +1,17 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`RabbitWorkerQueue consume should register consumer in state.consumerRegistrations 1`] = `
+{
+  "consumerTag": "ctag-1",
+  "exchange": "test-exchange",
+  "onMessage": [MockFunction],
+  "queue": "test-exchange.wq.my-queue",
+  "queueOptions": {
+    "arguments": {
+      "x-dead-letter-exchange": "test-exchange.dlx",
+    },
+    "durable": true,
+  },
+  "routingKey": "my-queue",
+}
+`;

@@ -1,0 +1,9 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`multiple hooks on one class should accumulate hooks in order 1`] = `
+[
+  "AfterConsume",
+  "BeforePublish",
+  "OnCreate",
+]
+`;

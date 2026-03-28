@@ -1,0 +1,9 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`Min should stage field modifier with min value 1`] = `
+{
+  "decorator": "Min",
+  "key": "count",
+  "min": 5,
+}
+`;

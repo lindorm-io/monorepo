@@ -1,0 +1,50 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`runHooksAsync should await async hooks sequentially 1`] = `
+[
+  1,
+  2,
+]
+`;
+
+exports[`runHooksAsync should pass message and context to the callback 1`] = `
+[
+  [
+    {
+      "type": "event",
+    },
+    {
+      "correlationId": "c1",
+    },
+  ],
+]
+`;
+
+exports[`runHooksAsync should run multiple hooks of the same type in array order 1`] = `
+[
+  1,
+  2,
+  3,
+]
+`;
+
+exports[`runHooksSync should pass message and context to the callback 1`] = `
+[
+  [
+    {
+      "payload": "data",
+    },
+    {
+      "traceId": "123",
+    },
+  ],
+]
+`;
+
+exports[`runHooksSync should run multiple hooks of the same type in array order 1`] = `
+[
+  1,
+  2,
+  3,
+]
+`;

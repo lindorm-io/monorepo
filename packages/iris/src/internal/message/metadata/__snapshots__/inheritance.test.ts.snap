@@ -1,0 +1,154 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`inheritance with real decorators collectAll for fields should snapshot all merged fields 1`] = `
+[
+  {
+    "decorator": "Field",
+    "default": null,
+    "enum": null,
+    "key": "name",
+    "max": null,
+    "min": null,
+    "nullable": false,
+    "optional": false,
+    "schema": null,
+    "transform": null,
+    "type": "string",
+  },
+  {
+    "decorator": "Field",
+    "default": null,
+    "enum": null,
+    "key": "email",
+    "max": null,
+    "min": null,
+    "nullable": false,
+    "optional": false,
+    "schema": null,
+    "transform": null,
+    "type": "email",
+  },
+  {
+    "decorator": "IdentifierField",
+    "default": "[function]",
+    "enum": null,
+    "key": "id",
+    "max": null,
+    "min": null,
+    "nullable": false,
+    "optional": false,
+    "schema": null,
+    "transform": null,
+    "type": "uuid",
+  },
+  {
+    "decorator": "TimestampField",
+    "default": "[function]",
+    "enum": null,
+    "key": "createdAt",
+    "max": null,
+    "min": null,
+    "nullable": false,
+    "optional": false,
+    "schema": null,
+    "transform": null,
+    "type": "date",
+  },
+  {
+    "decorator": "Field",
+    "default": null,
+    "enum": null,
+    "key": "source",
+    "max": null,
+    "min": null,
+    "nullable": false,
+    "optional": false,
+    "schema": null,
+    "transform": null,
+    "type": "string",
+  },
+]
+`;
+
+exports[`inheritance with real decorators collectAll for generated should snapshot merged generated metadata 1`] = `
+[
+  {
+    "key": "shortCode",
+    "length": 8,
+    "max": null,
+    "min": null,
+    "strategy": "string",
+  },
+  {
+    "key": "correlationId",
+    "length": null,
+    "max": null,
+    "min": null,
+    "strategy": "uuid",
+  },
+]
+`;
+
+exports[`inheritance with real decorators collectAll for headers should snapshot merged headers 1`] = `
+[
+  {
+    "headerName": "x-user-id",
+    "key": "userId",
+  },
+  {
+    "headerName": "x-trace-id",
+    "key": "traceId",
+  },
+]
+`;
+
+exports[`inheritance with real decorators collectSingular for message should find child Message metadata 1`] = `
+{
+  "decorator": "Message",
+  "name": "UserCreatedEvent",
+}
+`;
+
+exports[`inheritance with real decorators three-level inheritance should snapshot the full field chain 1`] = `
+[
+  {
+    "decorator": "Field",
+    "default": null,
+    "enum": null,
+    "key": "age",
+    "max": null,
+    "min": null,
+    "nullable": false,
+    "optional": false,
+    "schema": null,
+    "transform": null,
+    "type": "integer",
+  },
+  {
+    "decorator": "Field",
+    "default": null,
+    "enum": null,
+    "key": "name",
+    "max": null,
+    "min": null,
+    "nullable": false,
+    "optional": false,
+    "schema": null,
+    "transform": null,
+    "type": "string",
+  },
+  {
+    "decorator": "IdentifierField",
+    "default": "[function]",
+    "enum": null,
+    "key": "id",
+    "max": null,
+    "min": null,
+    "nullable": false,
+    "optional": false,
+    "schema": null,
+    "transform": null,
+    "type": "uuid",
+  },
+]
+`;

@@ -1,0 +1,32 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`createMockWorkerQueue create should return empty object by default 1`] = `{}`;
+
+exports[`createMockWorkerQueue hydrate should return data as message 1`] = `
+{
+  "body": "hello",
+  "id": "1",
+}
+`;
+
+exports[`createMockWorkerQueue publish should record a single message 1`] = `
+[
+  {
+    "body": "hello",
+    "id": "1",
+  },
+]
+`;
+
+exports[`createMockWorkerQueue publish should record an array of messages 1`] = `
+[
+  {
+    "body": "a",
+    "id": "1",
+  },
+  {
+    "body": "b",
+    "id": "2",
+  },
+]
+`;

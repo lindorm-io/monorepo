@@ -1,0 +1,11 @@
+import { DeadLetter } from "./DeadLetter";
+
+describe("DeadLetter", () => {
+  it("should stage dead letter metadata as true", () => {
+    @DeadLetter()
+    class TestMsg {}
+
+    const meta = (TestMsg as any)[Symbol.metadata];
+    expect(meta.deadLetter).toBe(true);
+  });
+});

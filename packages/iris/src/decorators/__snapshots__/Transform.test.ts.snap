@@ -1,0 +1,11 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`Transform should stage transform data without creating a field entry 1`] = `
+{
+  "key": "payload",
+  "transform": {
+    "from": Any<Function>,
+    "to": Any<Function>,
+  },
+}
+`;

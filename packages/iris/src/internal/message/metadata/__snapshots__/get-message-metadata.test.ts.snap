@@ -1,0 +1,54 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`getMessageMetadata should return correct metadata 1`] = `
+{
+  "broadcast": false,
+  "compressed": null,
+  "deadLetter": false,
+  "delay": null,
+  "encrypted": null,
+  "expiry": null,
+  "fields": [
+    {
+      "decorator": "IdentifierField",
+      "default": "[function]",
+      "enum": null,
+      "key": "id",
+      "max": null,
+      "min": null,
+      "nullable": false,
+      "optional": false,
+      "schema": null,
+      "transform": null,
+      "type": "uuid",
+    },
+    {
+      "decorator": "Field",
+      "default": null,
+      "enum": null,
+      "key": "name",
+      "max": null,
+      "min": null,
+      "nullable": false,
+      "optional": false,
+      "schema": null,
+      "transform": null,
+      "type": "string",
+    },
+  ],
+  "generated": [],
+  "headers": [],
+  "hooks": [],
+  "message": {
+    "decorator": "Message",
+    "name": "CachedMsg",
+  },
+  "namespace": null,
+  "persistent": false,
+  "priority": null,
+  "retry": null,
+  "target": "CachedMsg",
+  "topic": null,
+  "version": 1,
+}
+`;

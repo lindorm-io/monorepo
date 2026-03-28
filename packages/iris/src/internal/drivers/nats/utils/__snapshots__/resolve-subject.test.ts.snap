@@ -1,0 +1,7 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`resolveSubject should build subject from prefix and topic 1`] = `"iris.orders.created"`;
+
+exports[`resolveSubject should handle custom prefix 1`] = `"myapp.users.updated"`;
+
+exports[`resolveSubject should handle empty prefix 1`] = `".test-topic"`;

@@ -1,0 +1,49 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`Generated should stage generated with date strategy 1`] = `
+[
+  {
+    "key": "createdAt",
+    "length": null,
+    "max": null,
+    "min": null,
+    "strategy": "date",
+  },
+]
+`;
+
+exports[`Generated should stage generated with integer strategy and range 1`] = `
+[
+  {
+    "key": "sequence",
+    "length": null,
+    "max": 1000,
+    "min": 1,
+    "strategy": "integer",
+  },
+]
+`;
+
+exports[`Generated should stage generated with string strategy and length 1`] = `
+[
+  {
+    "key": "code",
+    "length": 12,
+    "max": null,
+    "min": null,
+    "strategy": "string",
+  },
+]
+`;
+
+exports[`Generated should stage generated with uuid strategy 1`] = `
+[
+  {
+    "key": "id",
+    "length": null,
+    "max": null,
+    "min": null,
+    "strategy": "uuid",
+  },
+]
+`;

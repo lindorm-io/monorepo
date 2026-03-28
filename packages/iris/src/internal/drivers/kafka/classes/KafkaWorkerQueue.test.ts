@@ -1,0 +1,194 @@
+import type { IMessage } from "../../../../interfaces";
+import { Field } from "../../../../decorators/Field";
+import { Message } from "../../../../decorators/Message";
+import { clearRegistry } from "../../../message/metadata/registry";
+import type { KafkaSharedState } from "../types/kafka-types";
+import { KafkaWorkerQueue } from "./KafkaWorkerQueue";
+
+// --- Mocks ---
+const mockPublishKafkaMessages = jest.fn().mockResolvedValue(undefined);
+jest.mock("../utils/publish-kafka-messages", () => ({
+  publishKafkaMessages: (...args: Array<unknown>) => mockPublishKafkaMessages(...args),
+}));
+
+const mockWrapKafkaConsumer = jest.fn().mockReturnValue(jest.fn());
+jest.mock("../utils/wrap-kafka-consumer", () => ({
+  wrapKafkaConsumer: (...args: Array<unknown>) => mockWrapKafkaConsumer(...args),
+}));
+
+let mockGetOrCreateResult: { consumerTag: string };
+const mockGetOrCreatePooledConsumer = jest
+  .fn()
+  .mockImplementation(async () => mockGetOrCreateResult);
+jest.mock("../utils/create-kafka-consumer", () => ({
+  getOrCreatePooledConsumer: (...args: Array<unknown>) =>
+    mockGetOrCreatePooledConsumer(...args),
+}));
+
+const mockReleasePooledConsumer = jest.fn().mockResolvedValue(undefined);
+jest.mock("../utils/stop-kafka-consumer", () => ({
+  releasePooledConsumer: (...args: Array<unknown>) => mockReleasePooledConsumer(...args),
+}));
+
+// --- Test message ---
+
+@Message({ name: "TckKafkaWqBasic" })
+class TckKafkaWqBasic implements IMessage {
+  @Field("string") data!: string;
+}
+
+// --- Helpers ---
+
+const createMockLogger = () => ({
+  child: jest.fn().mockReturnThis(),
+  debug: jest.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+  silly: jest.fn(),
+  verbose: jest.fn(),
+});
+
+const createMockState = (): KafkaSharedState => ({
+  kafka: {
+    producer: jest.fn(),
+    consumer: jest.fn(),
+    admin: jest.fn(),
+  } as any,
+  admin: null,
+  producer: { send: jest.fn(), connect: jest.fn(), disconnect: jest.fn() } as any,
+  connectionConfig: { brokers: ["localhost:9092"] },
+  prefix: "iris",
+  consumers: [],
+  consumerRegistrations: [],
+  consumerPool: new Map(),
+  inFlightCount: 0,
+  prefetch: 10,
+  sessionTimeoutMs: 30000,
+  acks: -1,
+  createdTopics: new Set(),
+  publishedTopics: new Set(),
+  abortController: new AbortController(),
+  resetGeneration: 0,
+});
+
+const createQueue = () => {
+  const state = createMockState();
+  const queue = new KafkaWorkerQueue<TckKafkaWqBasic>({
+    target: TckKafkaWqBasic as any,
+    logger: createMockLogger() as any,
+    getSubscribers: () => [],
+    state,
+  });
+  return { queue, state };
+};
+
+// --- Tests ---
+
+beforeEach(() => {
+  clearRegistry();
+  mockPublishKafkaMessages.mockClear();
+  mockWrapKafkaConsumer.mockClear();
+  mockGetOrCreatePooledConsumer.mockClear();
+  mockReleasePooledConsumer.mockClear();
+  mockGetOrCreateResult = {
+    consumerTag: "ctag-1",
+  };
+});
+
+describe("KafkaWorkerQueue", () => {
+  describe("publish", () => {
+    it("should call publishKafkaMessages", async () => {
+      const { queue } = createQueue();
+      const msg = queue.create({ data: "test" });
+      await queue.publish(msg);
+      expect(mockPublishKafkaMessages).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("consume", () => {
+    it("should create pooled consumer with string queue argument", async () => {
+      const { queue } = createQueue();
+
+      await queue.consume("my-queue", async () => {});
+
+      // Creates 2 pooled consumers: main + broadcast
+      expect(mockGetOrCreatePooledConsumer).toHaveBeenCalledTimes(2);
+      const mainOpts = mockGetOrCreatePooledConsumer.mock.calls[0][0];
+      expect(mainOpts.topic).toBe("iris.my-queue");
+      expect(mainOpts.groupId).toBe("iris.wq.my-queue");
+
+      const broadcastOpts = mockGetOrCreatePooledConsumer.mock.calls[1][0];
+      expect(broadcastOpts.topic).toBe("iris.my-queue.broadcast");
+    });
+
+    it("should create pooled consumer with options object", async () => {
+      const { queue } = createQueue();
+
+      await queue.consume({
+        queue: "my-queue",
+        callback: async () => {},
+      });
+
+      // Creates 2 pooled consumers: main + broadcast
+      expect(mockGetOrCreatePooledConsumer).toHaveBeenCalledTimes(2);
+    });
+
+    it("should throw when callback is missing", async () => {
+      const { queue } = createQueue();
+      await expect(queue.consume("my-queue")).rejects.toThrow(
+        "consume() requires a callback",
+      );
+    });
+
+    it("should throw when kafka client is not available", async () => {
+      const { queue, state } = createQueue();
+      state.kafka = null;
+
+      await expect(queue.consume("my-queue", async () => {})).rejects.toThrow(
+        "Cannot consume: Kafka client is not connected",
+      );
+    });
+  });
+
+  describe("unconsume", () => {
+    it("should release pooled consumer for specified queue", async () => {
+      const { queue } = createQueue();
+      await queue.consume("my-queue", async () => {});
+
+      await queue.unconsume("my-queue");
+
+      // Releases 2 pooled consumers: main + broadcast
+      expect(mockReleasePooledConsumer).toHaveBeenCalledTimes(2);
+      const mainOpts = mockReleasePooledConsumer.mock.calls[0][0];
+      expect(mainOpts.groupId).toBe("iris.wq.my-queue");
+      expect(mainOpts.topic).toBe("iris.my-queue");
+
+      const broadcastOpts = mockReleasePooledConsumer.mock.calls[1][0];
+      expect(broadcastOpts.topic).toBe("iris.my-queue.broadcast");
+    });
+
+    it("should be a no-op for unknown queue", async () => {
+      const { queue } = createQueue();
+      await expect(queue.unconsume("unknown")).resolves.toBeUndefined();
+      expect(mockReleasePooledConsumer).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("unconsumeAll", () => {
+    it("should release all owned consumers", async () => {
+      const { queue } = createQueue();
+
+      mockGetOrCreateResult = { consumerTag: "ctag-a" };
+      await queue.consume("q1", async () => {});
+
+      mockGetOrCreateResult = { consumerTag: "ctag-b" };
+      await queue.consume("q2", async () => {});
+
+      await queue.unconsumeAll();
+
+      // 2 queues x 2 consumers each (main + broadcast) = 4 releases
+      expect(mockReleasePooledConsumer).toHaveBeenCalledTimes(4);
+    });
+  });
+});

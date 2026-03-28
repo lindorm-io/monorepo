@@ -1,0 +1,31 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`parseField explicit null in options should apply default when null in options and not nullable but has default 1`] = `"fallback"`;
+
+exports[`parseField explicit null in options should preserve null when nullable 1`] = `null`;
+
+exports[`parseField function default should call function default when value is null and not nullable 1`] = `"fallback"`;
+
+exports[`parseField function default should call function default when value is undefined 1`] = `"generated-value"`;
+
+exports[`parseField no value, no default, not nullable (edge case) should return undefined when value is missing with no default and not nullable 1`] = `undefined`;
+
+exports[`parseField nullable field with no default should return null when value is null and field is nullable 1`] = `null`;
+
+exports[`parseField nullable field with no default should return null when value is undefined and field is nullable 1`] = `null`;
+
+exports[`parseField static default should return boolean static default 1`] = `false`;
+
+exports[`parseField static default should return numeric static default 1`] = `0`;
+
+exports[`parseField static default should return static default when value is undefined 1`] = `"active"`;
+
+exports[`parseField value from message (not in options) should deserialise the message value 1`] = `99`;
+
+exports[`parseField value from message (not in options) should use message value when not present in options 1`] = `"from-message"`;
+
+exports[`parseField value provided in options should deserialise the value according to field type 1`] = `42`;
+
+exports[`parseField value provided in options should prefer options over message 1`] = `"from-options"`;
+
+exports[`parseField value provided in options should return deserialised value from options 1`] = `"hello"`;

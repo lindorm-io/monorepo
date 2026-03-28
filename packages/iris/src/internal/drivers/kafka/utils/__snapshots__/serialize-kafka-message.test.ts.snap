@@ -1,0 +1,49 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`serializeKafkaMessage should serialize a fully populated envelope 1`] = `
+{
+  "headers": {
+    "x-iris-attempt": "3",
+    "x-iris-broadcast": "true",
+    "x-iris-correlation-id": "corr-456",
+    "x-iris-expiry": "60000",
+    "x-iris-headers": "{"x-trace-id":"abc-123"}",
+    "x-iris-max-retries": "5",
+    "x-iris-priority": "7",
+    "x-iris-reply-to": "reply-queue",
+    "x-iris-retry-delay": "500",
+    "x-iris-retry-delay-max": "10000",
+    "x-iris-retry-jitter": "true",
+    "x-iris-retry-multiplier": "3",
+    "x-iris-retry-strategy": "exponential",
+    "x-iris-timestamp": "1700000000000",
+    "x-iris-topic": "orders.created",
+  },
+  "key": null,
+  "value": Any<Buffer>,
+}
+`;
+
+exports[`serializeKafkaMessage should serialize a minimal envelope 1`] = `
+{
+  "headers": {
+    "x-iris-attempt": "0",
+    "x-iris-broadcast": "false",
+    "x-iris-correlation-id": "",
+    "x-iris-expiry": "",
+    "x-iris-headers": "{"x-trace-id":"abc-123"}",
+    "x-iris-max-retries": "0",
+    "x-iris-priority": "0",
+    "x-iris-reply-to": "",
+    "x-iris-retry-delay": "1000",
+    "x-iris-retry-delay-max": "30000",
+    "x-iris-retry-jitter": "false",
+    "x-iris-retry-multiplier": "2",
+    "x-iris-retry-strategy": "constant",
+    "x-iris-timestamp": "1700000000000",
+    "x-iris-topic": "orders.created",
+  },
+  "key": null,
+  "value": Any<Buffer>,
+}
+`;

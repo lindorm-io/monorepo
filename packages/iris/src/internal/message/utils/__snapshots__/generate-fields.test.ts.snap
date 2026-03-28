@@ -1,0 +1,11 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`generateFields multiple fields should generate all fields in a single pass 1`] = `
+{
+  "createdAt": Any<Date>,
+  "id": Any<String>,
+  "seq": Any<Number>,
+  "token": Any<String>,
+  "weight": Any<Number>,
+}
+`;

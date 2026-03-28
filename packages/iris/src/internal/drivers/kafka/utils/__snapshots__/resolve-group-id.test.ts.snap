@@ -1,0 +1,15 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`resolveGroupId rpc should ignore topic for rpc type 1`] = `"iris.rpc.user-service"`;
+
+exports[`resolveGroupId rpc should use queue name 1`] = `"iris.rpc.user-service"`;
+
+exports[`resolveGroupId should handle custom prefix 1`] = `"myapp.events.handler"`;
+
+exports[`resolveGroupId subscribe should include topic when provided 1`] = `"iris.orders.created.order-service"`;
+
+exports[`resolveGroupId subscribe should omit topic when not provided 1`] = `"iris.undefined.order-service"`;
+
+exports[`resolveGroupId worker should ignore topic for worker type 1`] = `"iris.wq.worker-pool"`;
+
+exports[`resolveGroupId worker should use queue name 1`] = `"iris.wq.worker-pool"`;
