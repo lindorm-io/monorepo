@@ -45,14 +45,12 @@ const createMockState = (): NatsSharedState => ({
       delete: jest.fn().mockResolvedValue(true),
     },
   } as any,
-  headersInit: jest
-    .fn()
-    .mockReturnValue({
-      get: jest.fn(),
-      set: jest.fn(),
-      has: jest.fn(),
-      values: jest.fn(),
-    }) as any,
+  headersInit: jest.fn().mockReturnValue({
+    get: jest.fn(),
+    set: jest.fn(),
+    has: jest.fn(),
+    values: jest.fn(),
+  }) as any,
   prefix: "iris",
   streamName: "IRIS_IRIS",
   consumerLoops: [],
