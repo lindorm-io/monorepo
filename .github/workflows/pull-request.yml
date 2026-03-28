@@ -70,7 +70,7 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 35
 
     services:
       postgres:
@@ -122,38 +122,38 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
-      zookeeper:
-        image: confluentinc/cp-zookeeper:7.8.6
-        ports:
-          - 2181:2181
-        env:
-          ZOOKEEPER_CLIENT_PORT: 2181
-          ZOOKEEPER_TICK_TIME: 2000
-        options: >-
-          --health-cmd "echo ruok | nc localhost 2181"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
       kafka:
-        image: confluentinc/cp-kafka:7.8.6
+        image: apache/kafka:3.9.0
         ports:
           - 9092:9092
-          - 29092:29092
         env:
-          KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka:29092
-          KAFKA_BROKER_ID: 1
-          KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
-          KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
-          KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_INTERNAL://0.0.0.0:29092
+          KAFKA_NODE_ID: 1
+          KAFKA_PROCESS_ROLES: broker,controller
+          KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://localhost:9093
+          KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+          KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+          KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+          KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
           KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-          KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-          KAFKAJS_NO_PARTITIONER_WARNING: 1
+          KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+          KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+          KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
         options: >-
-          --health-cmd "kafka-broker-api-versions --bootstrap-server localhost:9092"
-          --health-interval 10s
+          --health-cmd "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 || exit 1"
+          --health-interval 5s
           --health-timeout 10s
+          --health-retries 15
+
+      nats:
+        image: nats:2-alpine
+        ports:
+          - 4222:4222
+        options: >-
+          --health-cmd "wget -qO- http://localhost:8222/healthz || exit 1"
+          --health-interval 2s
+          --health-timeout 3s
           --health-retries 10
+          -js -m 8222
 
     steps:
       - name: Start MongoDB Replica Set
