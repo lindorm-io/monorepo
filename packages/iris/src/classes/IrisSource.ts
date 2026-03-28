@@ -66,21 +66,22 @@ export class IrisSource implements IIrisSource {
         break;
 
       case "rabbit": {
-        const opts = options as IrisRabbitOptions;
-        if (!opts.url) throw new IrisSourceError('Rabbit driver requires a "url" option');
+        if (!options.url)
+          throw new IrisSourceError('Rabbit driver requires a "url" option');
         break;
       }
 
       case "kafka": {
-        const opts = options as IrisKafkaOptions;
-        if (!opts.brokers?.length)
+        if (!options.brokers?.length)
           throw new IrisSourceError('Kafka driver requires a non-empty "brokers" array');
         break;
       }
 
       case "nats": {
-        const opts = options as IrisNatsOptions;
-        if (!opts.servers || (Array.isArray(opts.servers) && opts.servers.length === 0))
+        if (
+          !options.servers ||
+          (Array.isArray(options.servers) && options.servers.length === 0)
+        )
           throw new IrisSourceError('NATS driver requires a "servers" option');
         break;
       }
