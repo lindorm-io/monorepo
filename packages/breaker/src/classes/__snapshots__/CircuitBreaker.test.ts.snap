@@ -1,0 +1,43 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`CircuitBreaker edge cases should handle rapid transitions: closed -> open -> half-open -> closed 1`] = `
+[
+  "closed->open",
+  "open->half-open",
+  "half-open->closed",
+]
+`;
+
+exports[`CircuitBreaker onStateChange callback should be called with correct event data on transitions 1`] = `
+[
+  {
+    "failures": 3,
+    "from": "closed",
+    "name": "test-breaker",
+    "timestamp": 1000000,
+    "to": "open",
+  },
+  {
+    "failures": 3,
+    "from": "open",
+    "name": "test-breaker",
+    "timestamp": 1001000,
+    "to": "half-open",
+  },
+  {
+    "failures": 3,
+    "from": "half-open",
+    "name": "test-breaker",
+    "timestamp": 1001000,
+    "to": "closed",
+  },
+]
+`;
+
+exports[`CircuitBreaker open state should include debug info in CircuitOpenError 1`] = `
+{
+  "failures": 3,
+  "name": "test-breaker",
+  "state": "open",
+}
+`;
