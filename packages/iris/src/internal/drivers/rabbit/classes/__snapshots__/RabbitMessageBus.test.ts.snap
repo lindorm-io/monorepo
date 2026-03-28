@@ -1,0 +1,14 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`RabbitMessageBus subscribe should register consumer in state.consumerRegistrations 1`] = `
+{
+  "consumerTag": "ctag-1",
+  "exchange": "test-exchange",
+  "onMessage": [MockFunction],
+  "queue": "test-exchange.TckRabbitBusBasic.q1",
+  "queueOptions": {
+    "durable": true,
+  },
+  "routingKey": "TckRabbitBusBasic",
+}
+`;

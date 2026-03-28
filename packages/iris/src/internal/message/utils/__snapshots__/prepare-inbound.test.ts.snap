@@ -1,0 +1,15 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`prepareInbound should deserialize plain payload 1`] = `
+{
+  "count": 42,
+  "name": "hello",
+}
+`;
+
+exports[`prepareInbound should deserialize plain string payload 1`] = `
+{
+  "count": 7,
+  "name": "world",
+}
+`;

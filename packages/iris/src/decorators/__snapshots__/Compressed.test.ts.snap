@@ -1,0 +1,19 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`Compressed should stage compressed metadata with brotli 1`] = `
+{
+  "algorithm": "brotli",
+}
+`;
+
+exports[`Compressed should stage compressed metadata with default gzip 1`] = `
+{
+  "algorithm": "gzip",
+}
+`;
+
+exports[`Compressed should stage compressed metadata with deflate 1`] = `
+{
+  "algorithm": "deflate",
+}
+`;

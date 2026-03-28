@@ -1,0 +1,143 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`deserialise array should parse JSON string to array 1`] = `
+[
+  1,
+  2,
+  3,
+]
+`;
+
+exports[`deserialise array should passthrough non-string non-array values 1`] = `42`;
+
+exports[`deserialise array should passthrough null (no null guard) 1`] = `null`;
+
+exports[`deserialise array should passthrough undefined (no null guard) 1`] = `undefined`;
+
+exports[`deserialise array should return array when already an array 1`] = `
+[
+  1,
+  2,
+  3,
+]
+`;
+
+exports[`deserialise bigint should convert number to bigint 1`] = `99n`;
+
+exports[`deserialise bigint should convert numeric string to bigint 1`] = `123n`;
+
+exports[`deserialise bigint should return bigint when already bigint 1`] = `42n`;
+
+exports[`deserialise bigint should return null for null input 1`] = `null`;
+
+exports[`deserialise bigint should return null for undefined input 1`] = `null`;
+
+exports[`deserialise boolean should convert non-empty string to true via Boolean() 1`] = `false`;
+
+exports[`deserialise boolean should convert number 0 to false 1`] = `false`;
+
+exports[`deserialise boolean should convert number 1 to true 1`] = `true`;
+
+exports[`deserialise boolean should convert string 'false' to false 1`] = `false`;
+
+exports[`deserialise boolean should convert string 'true' to true 1`] = `true`;
+
+exports[`deserialise boolean should return boolean when already boolean false 1`] = `false`;
+
+exports[`deserialise boolean should return boolean when already boolean true 1`] = `true`;
+
+exports[`deserialise boolean should return null for null input 1`] = `null`;
+
+exports[`deserialise boolean should return null for undefined input 1`] = `null`;
+
+exports[`deserialise date should convert ISO string to Date 1`] = `"2024-06-15T12:00:00.000Z"`;
+
+exports[`deserialise date should convert numeric timestamp to Date 1`] = `"2024-06-15T12:00:00.000Z"`;
+
+exports[`deserialise date should return Date when already a valid Date 1`] = `2024-06-15T12:00:00.000Z`;
+
+exports[`deserialise date should return null for null input 1`] = `null`;
+
+exports[`deserialise date should return null for undefined input 1`] = `null`;
+
+exports[`deserialise email should convert number to string 1`] = `"42"`;
+
+exports[`deserialise email should return null for null input 1`] = `null`;
+
+exports[`deserialise email should return null for undefined input 1`] = `null`;
+
+exports[`deserialise email should return string for string input 1`] = `"user@example.com"`;
+
+exports[`deserialise enum should passthrough null 1`] = `null`;
+
+exports[`deserialise enum should passthrough number value 1`] = `1`;
+
+exports[`deserialise enum should passthrough string value 1`] = `"active"`;
+
+exports[`deserialise enum should passthrough undefined 1`] = `undefined`;
+
+exports[`deserialise float should convert string number to float 1`] = `3.14`;
+
+exports[`deserialise float should return integer number as-is 1`] = `42`;
+
+exports[`deserialise float should return null for null input 1`] = `null`;
+
+exports[`deserialise float should return null for undefined input 1`] = `null`;
+
+exports[`deserialise float should return number when already a number 1`] = `3.14`;
+
+exports[`deserialise integer should convert string number to integer 1`] = `42`;
+
+exports[`deserialise integer should parse string float as integer (parseInt behaviour) 1`] = `3`;
+
+exports[`deserialise integer should return integer when already an integer 1`] = `42`;
+
+exports[`deserialise integer should return null for null input 1`] = `null`;
+
+exports[`deserialise integer should return null for undefined input 1`] = `null`;
+
+exports[`deserialise integer should truncate float to integer 1`] = `3`;
+
+exports[`deserialise object should parse JSON string to object 1`] = `
+{
+  "a": 1,
+}
+`;
+
+exports[`deserialise object should passthrough non-string non-object values 1`] = `42`;
+
+exports[`deserialise object should passthrough null (no null guard) 1`] = `null`;
+
+exports[`deserialise object should passthrough undefined (no null guard) 1`] = `undefined`;
+
+exports[`deserialise object should return object when already an object 1`] = `
+{
+  "a": 1,
+}
+`;
+
+exports[`deserialise string should convert boolean to string 1`] = `"true"`;
+
+exports[`deserialise string should convert number to string 1`] = `"42"`;
+
+exports[`deserialise string should return null for null input 1`] = `null`;
+
+exports[`deserialise string should return null for undefined input 1`] = `null`;
+
+exports[`deserialise string should return string when already a string 1`] = `"hello"`;
+
+exports[`deserialise url should convert number to string 1`] = `"123"`;
+
+exports[`deserialise url should return null for null input 1`] = `null`;
+
+exports[`deserialise url should return null for undefined input 1`] = `null`;
+
+exports[`deserialise url should return string for string input 1`] = `"https://example.com"`;
+
+exports[`deserialise uuid should convert number to string 1`] = `"42"`;
+
+exports[`deserialise uuid should return null for null input 1`] = `null`;
+
+exports[`deserialise uuid should return null for undefined input 1`] = `null`;
+
+exports[`deserialise uuid should return string for string input 1`] = `"550e8400-e29b-41d4-a716-446655440000"`;
