@@ -1,0 +1,64 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`createMockRepository should create a mock with all methods as jest.fn() 1`] = `
+{
+  "average": [MockFunction],
+  "clear": [MockFunction],
+  "clone": [MockFunction],
+  "copy": [MockFunction],
+  "count": [MockFunction],
+  "create": [MockFunction],
+  "cursor": [MockFunction],
+  "decrement": [MockFunction],
+  "delete": [MockFunction],
+  "deleteExpired": [MockFunction],
+  "destroy": [MockFunction],
+  "exists": [MockFunction],
+  "find": [MockFunction],
+  "findAndCount": [MockFunction],
+  "findOne": [MockFunction],
+  "findOneOrFail": [MockFunction],
+  "findOneOrSave": [MockFunction],
+  "findPaginated": [MockFunction],
+  "increment": [MockFunction],
+  "insert": [MockFunction],
+  "maximum": [MockFunction],
+  "minimum": [MockFunction],
+  "paginate": [MockFunction],
+  "queryBuilder": [MockFunction],
+  "restore": [MockFunction],
+  "save": [MockFunction],
+  "setup": [MockFunction],
+  "softDelete": [MockFunction],
+  "softDestroy": [MockFunction],
+  "stream": [MockFunction],
+  "sum": [MockFunction],
+  "ttl": [MockFunction],
+  "update": [MockFunction],
+  "updateMany": [MockFunction],
+  "upsert": [MockFunction],
+  "validate": [MockFunction],
+  "versions": [MockFunction],
+}
+`;
+
+exports[`createMockRepository should return sensible defaults for pagination methods 1`] = `
+{
+  "data": [],
+  "endCursor": null,
+  "hasNextPage": false,
+  "hasPreviousPage": false,
+  "startCursor": null,
+}
+`;
+
+exports[`createMockRepository should return sensible defaults for pagination methods 2`] = `
+{
+  "data": [],
+  "hasMore": false,
+  "page": 1,
+  "pageSize": 10,
+  "total": 0,
+  "totalPages": 0,
+}
+`;
