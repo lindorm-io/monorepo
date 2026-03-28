@@ -44,7 +44,7 @@ beforeAll(async () => {
   const managedTables = desired.tables.map((t) => ({ schema: t.schema, name: t.name }));
   const snapshot = await introspectSchema(client, managedTables);
   const plan = diffSchema(snapshot, desired);
-  await new SyncPlanExecutor().execute(client, plan, {});
+  await new SyncPlanExecutor(undefined, schema).execute(client, plan, {});
 });
 
 afterAll(async () => {

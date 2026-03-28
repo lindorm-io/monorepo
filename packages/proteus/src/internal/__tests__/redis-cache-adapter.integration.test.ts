@@ -1,7 +1,7 @@
 // Redis Cache Adapter Integration Tests
 //
 // Exercises RedisCacheAdapter against a real Redis instance (via docker-compose).
-// Uses FLUSHDB between tests to ensure clean state.
+// Uses Redis DB 1 (isolated from other tests on DB 0) and FLUSHDB for clean state.
 
 import Redis from "ioredis";
 import { createMockLogger } from "@lindorm/logger";
@@ -53,6 +53,7 @@ beforeAll(async () => {
   client = new Redis({
     host: process.env.REDIS_HOST ?? "127.0.0.1",
     port: Number(process.env.REDIS_PORT ?? 6379),
+    db: 1,
     lazyConnect: true,
   });
   await client.connect();

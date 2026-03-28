@@ -1,10 +1,11 @@
 // MySQL Migration TCK Harness
 //
 // Runs the migration TCK suite against a real MySQL 8.4 instance.
-// Uses the `default` database; teardown drops all tables.
+// Creates a randomized database per run for parallel-safe execution.
 
 import { createMockLogger } from "@lindorm/logger";
 import type { ILogger } from "@lindorm/logger";
+import { randomBytes } from "node:crypto";
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import mysql from "mysql2/promise";
@@ -30,8 +31,8 @@ jest.setTimeout(120_000);
 
 const MYSQL_HOST = process.env["MYSQL_HOST"] ?? "127.0.0.1";
 const MYSQL_PORT = Number(process.env["MYSQL_PORT"] ?? 3306);
-const MYSQL_DATABASE = "default";
-const MYSQL_USER = "proteus";
+const MYSQL_DATABASE = `tck_${randomBytes(6).toString("hex")}`;
+const MYSQL_USER = "root";
 const MYSQL_PASSWORD = "example";
 
 let client: MysqlQueryClient;
@@ -71,7 +72,6 @@ beforeAll(async () => {
         port: MYSQL_PORT,
         user: MYSQL_USER,
         password: MYSQL_PASSWORD,
-        database: MYSQL_DATABASE,
         connectTimeout: 2000,
       });
       await probe.execute("SELECT 1");
@@ -86,6 +86,16 @@ beforeAll(async () => {
     throw new Error("MySQL not ready after 30 connection attempts");
   }
 
+  // Create isolated database for this test file
+  const adminConn = await mysql.createConnection({
+    host: MYSQL_HOST,
+    port: MYSQL_PORT,
+    user: MYSQL_USER,
+    password: MYSQL_PASSWORD,
+  });
+  await adminConn.execute(`CREATE DATABASE \`${MYSQL_DATABASE}\``);
+  await adminConn.end();
+
   conn = await mysql.createConnection({
     host: MYSQL_HOST,
     port: MYSQL_PORT,
@@ -98,18 +108,17 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  // Drop all tables
-  await conn.execute("SET FOREIGN_KEY_CHECKS = 0");
-  const [rows] = await conn.execute(
-    `SELECT TABLE_NAME FROM information_schema.tables
-     WHERE table_schema = ? AND table_type = 'BASE TABLE'`,
-    [MYSQL_DATABASE],
-  );
-  for (const row of rows as Array<{ TABLE_NAME: string }>) {
-    await conn.execute(`DROP TABLE IF EXISTS \`${row.TABLE_NAME}\``);
-  }
-  await conn.execute("SET FOREIGN_KEY_CHECKS = 1");
   await conn.end();
+
+  // Drop the isolated database
+  const adminConn = await mysql.createConnection({
+    host: MYSQL_HOST,
+    port: MYSQL_PORT,
+    user: MYSQL_USER,
+    password: MYSQL_PASSWORD,
+  });
+  await adminConn.execute(`DROP DATABASE IF EXISTS \`${MYSQL_DATABASE}\``);
+  await adminConn.end();
 });
 
 // ─── Context ──────────────────────────────────────────────────────────────────

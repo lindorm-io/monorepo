@@ -12,7 +12,7 @@ const executeSyncPlan = (
   client: PostgresQueryClient,
   plan: SyncPlan,
   options: SyncOptions = {},
-) => new SyncPlanExecutor().execute(client, plan, options);
+) => new SyncPlanExecutor(undefined, schema).execute(client, plan, options);
 
 let client: PostgresQueryClient;
 let raw: Client;

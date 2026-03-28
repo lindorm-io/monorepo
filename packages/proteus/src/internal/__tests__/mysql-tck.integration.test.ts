@@ -1,9 +1,10 @@
 // MySQL Driver Conformance Test (TCK) Harness
 //
 // Runs the full TCK suite against a real MySQL 8.4 instance.
-// Uses the `default` database; teardown drops all tables.
+// Creates a randomized database per run for parallel-safe execution.
 
 import { createMockLogger } from "@lindorm/logger";
+import { randomBytes } from "node:crypto";
 import mysql from "mysql2/promise";
 import type { Constructor } from "@lindorm/types";
 import type { IEntity } from "../../interfaces";
@@ -16,8 +17,8 @@ jest.setTimeout(120_000);
 
 const MYSQL_HOST = process.env["MYSQL_HOST"] ?? "127.0.0.1";
 const MYSQL_PORT = Number(process.env["MYSQL_PORT"] ?? 3306);
-const MYSQL_DATABASE = "default";
-const MYSQL_USER = "proteus";
+const MYSQL_DATABASE = `tck_${randomBytes(6).toString("hex")}`;
+const MYSQL_USER = "root";
 const MYSQL_PASSWORD = "example";
 
 let source: ProteusSource;
@@ -52,7 +53,6 @@ const factory: TckDriverFactory = {
           port: MYSQL_PORT,
           user: MYSQL_USER,
           password: MYSQL_PASSWORD,
-          database: MYSQL_DATABASE,
           connectTimeout: 2000,
         });
         await probe.execute("SELECT 1");
@@ -62,6 +62,16 @@ const factory: TckDriverFactory = {
         await new Promise((r) => setTimeout(r, 1000));
       }
     }
+
+    // Create isolated database for this test file
+    const adminConn = await mysql.createConnection({
+      host: MYSQL_HOST,
+      port: MYSQL_PORT,
+      user: MYSQL_USER,
+      password: MYSQL_PASSWORD,
+    });
+    await adminConn.execute(`CREATE DATABASE \`${MYSQL_DATABASE}\``);
+    await adminConn.end();
 
     source = new ProteusSource({
       driver: "mysql",
@@ -122,29 +132,16 @@ const factory: TckDriverFactory = {
 
         await source.disconnect();
 
-        // Drop all tables in the database
+        // Drop the isolated database
         const conn = await mysql.createConnection({
           host: MYSQL_HOST,
           port: MYSQL_PORT,
-          database: MYSQL_DATABASE,
           user: MYSQL_USER,
           password: MYSQL_PASSWORD,
         });
 
         try {
-          await conn.execute("SET FOREIGN_KEY_CHECKS = 0");
-
-          const [rows] = await conn.execute(
-            `SELECT TABLE_NAME FROM information_schema.tables
-             WHERE table_schema = ? AND table_type = 'BASE TABLE'`,
-            [MYSQL_DATABASE],
-          );
-
-          for (const row of rows as Array<{ TABLE_NAME: string }>) {
-            await conn.execute(`DROP TABLE IF EXISTS \`${row.TABLE_NAME}\``);
-          }
-
-          await conn.execute("SET FOREIGN_KEY_CHECKS = 1");
+          await conn.execute(`DROP DATABASE IF EXISTS \`${MYSQL_DATABASE}\``);
         } finally {
           await conn.end();
         }

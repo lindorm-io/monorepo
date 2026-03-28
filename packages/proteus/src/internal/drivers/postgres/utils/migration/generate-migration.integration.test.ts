@@ -58,7 +58,7 @@ describe("generate-migration (integration)", () => {
       }));
       const snapshot = await introspectSchema(client, managedTables);
       const plan = diffSchema(snapshot, desired);
-      await new SyncPlanExecutor().execute(client, plan);
+      await new SyncPlanExecutor(undefined, schema).execute(client, plan);
 
       // Verify table exists with expected columns
       const { rows } = await raw.query(
@@ -87,7 +87,7 @@ describe("generate-migration (integration)", () => {
       const managed1 = desired1.tables.map((t) => ({ schema: t.schema, name: t.name }));
       const snap1 = await introspectSchema(client, managed1);
       const plan1 = diffSchema(snap1, desired1);
-      await new SyncPlanExecutor().execute(client, plan1);
+      await new SyncPlanExecutor(undefined, schema).execute(client, plan1);
 
       // Generate migration for TestChecked + TestIndexed (delta = TestIndexed only)
       const metaIndexed = getEntityMetadata(TestIndexed);
@@ -111,7 +111,7 @@ describe("generate-migration (integration)", () => {
       const managed2 = desired2.tables.map((t) => ({ schema: t.schema, name: t.name }));
       const snap2 = await introspectSchema(client, managed2);
       const plan2 = diffSchema(snap2, desired2);
-      await new SyncPlanExecutor().execute(client, plan2);
+      await new SyncPlanExecutor(undefined, schema).execute(client, plan2);
 
       // Both tables should exist
       const { rows } = await raw.query(
@@ -140,7 +140,7 @@ describe("generate-migration (integration)", () => {
       const managed = desired.tables.map((t) => ({ schema: t.schema, name: t.name }));
       const snap1 = await introspectSchema(client, managed);
       const plan1 = diffSchema(snap1, desired);
-      await new SyncPlanExecutor().execute(client, plan1);
+      await new SyncPlanExecutor(undefined, schema).execute(client, plan1);
 
       // Generate migration — should be empty
       const result = await generateMigration(client, [metadata], nsOptions, {
