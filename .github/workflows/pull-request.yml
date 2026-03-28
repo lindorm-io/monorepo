@@ -144,18 +144,17 @@ jobs:
           --health-timeout 10s
           --health-retries 15
 
-      nats:
-        image: nats:2-alpine
-        ports:
-          - 4222:4222
-        options: >-
-          --health-cmd "wget -qO- http://localhost:8222/healthz || exit 1"
-          --health-interval 2s
-          --health-timeout 3s
-          --health-retries 10
-          -js -m 8222
-
     steps:
+      - name: Start NATS with JetStream
+        run: |
+          docker run -d --name nats \
+            -p 4222:4222 -p 8222:8222 \
+            nats:2-alpine -js -m 8222
+          for i in $(seq 1 30); do
+            wget -qO- http://localhost:8222/healthz && break
+            sleep 1
+          done
+
       - name: Start MongoDB Replica Set
         uses: supercharge/mongodb-github-action@1.12.0
         with:
