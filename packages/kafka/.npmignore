@@ -1,9 +1,0 @@
-/example
-/node_modules
-/src
-
-docker-compose.yml
-jest.config.mjs
-kafka.db
-tsconfig.build.json
-tsconfig.json
