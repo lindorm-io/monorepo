@@ -1,0 +1,25 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`createMockProteusSource should create a mock source with all methods as jest.fn() 1`] = `
+{
+  "addEntities": [MockFunction],
+  "addSubscriber": [MockFunction],
+  "client": [MockFunction],
+  "clone": [MockFunction],
+  "connect": [MockFunction],
+  "disableFilter": [MockFunction],
+  "disconnect": [MockFunction],
+  "driverType": "memory",
+  "enableFilter": [MockFunction],
+  "getEntityMetadata": [MockFunction],
+  "getFilterRegistry": [MockFunction],
+  "migrationsTable": undefined,
+  "namespace": null,
+  "ping": [MockFunction],
+  "queryBuilder": [MockFunction],
+  "repository": [MockFunction],
+  "setFilterParams": [MockFunction],
+  "setup": [MockFunction],
+  "transaction": [MockFunction],
+}
+`;
