@@ -7,6 +7,7 @@ import {
   preparePublishBatch,
   type PublishDriverLike,
 } from "../../../utils/prepare-publish-batch";
+import { ensureKafkaTopicFromState } from "./ensure-kafka-topic";
 import { resolveTopicName } from "./resolve-topic-name";
 import { serializeKafkaMessage } from "./serialize-kafka-message";
 
@@ -37,6 +38,9 @@ export const publishKafkaMessages = async <M extends IMessage>(
       // messages go to the shared topic for competing-consumer distribution.
       const baseTopic = resolveTopicName(state.prefix, topic);
       const topicName = envelope.broadcast ? `${baseTopic}.broadcast` : baseTopic;
+
+      await ensureKafkaTopicFromState(state, topicName, _logger);
+
       const kafkaMessage = serializeKafkaMessage(envelope);
 
       await state.producer.send({

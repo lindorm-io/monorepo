@@ -6,6 +6,10 @@ import type { KafkaSharedState } from "../types/kafka-types";
 import { IrisPublishError } from "../../../../errors/IrisPublishError";
 import { publishKafkaMessages, type KafkaPublishDriver } from "./publish-kafka-messages";
 
+jest.mock("./ensure-kafka-topic", () => ({
+  ensureKafkaTopicFromState: jest.fn().mockResolvedValue(undefined),
+}));
+
 const createMockLogger = () => ({
   child: jest.fn().mockReturnThis(),
   debug: jest.fn(),
