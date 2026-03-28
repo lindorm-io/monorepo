@@ -1,4 +1,5 @@
 import { RetryOptions } from "../types";
+import { computeDelay } from "./compute-delay";
 
 export const calculateRetry = (
   attempt: number,
@@ -6,20 +7,11 @@ export const calculateRetry = (
 ): number => {
   const { strategy = "exponential", timeout = 100, timeoutMax = 10000 } = options;
 
-  if (strategy === "linear") {
-    const value = timeout * attempt;
-    return value > timeoutMax ? timeoutMax : value;
-  }
-
-  if (strategy === "constant") {
-    return timeout > timeoutMax ? timeoutMax : timeout;
-  }
-
-  let value = timeout;
-
-  for (let i = 1; i < attempt; i++) {
-    value = value * 2;
-  }
-
-  return value > timeoutMax ? timeoutMax : value;
+  return computeDelay(attempt, {
+    strategy,
+    delay: timeout,
+    delayMax: timeoutMax,
+    multiplier: 2,
+    jitter: false,
+  });
 };
