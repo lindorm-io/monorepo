@@ -13,3 +13,22 @@ export type RetryOptions = Optional<
   RetryConfig,
   "maxAttempts" | "strategy" | "timeout" | "timeoutMax"
 >;
+
+export type DelayOptions = {
+  strategy?: RetryStrategy;
+  delay?: number;
+  delayMax?: number;
+  multiplier?: number;
+  jitter?: boolean;
+};
+
+export type WithRetryOptions = {
+  maxAttempts?: number;
+  strategy?: RetryStrategy;
+  delay?: number;
+  delayMax?: number;
+  multiplier?: number;
+  jitter?: boolean;
+  isRetryable?: (error: unknown) => boolean;
+  onRetry?: (attempt: number, error: unknown) => void;
+};
