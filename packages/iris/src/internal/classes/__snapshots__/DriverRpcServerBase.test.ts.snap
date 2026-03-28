@@ -1,0 +1,30 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`DriverRpcServerBase buildErrorEnvelope should include the error message in the payload 1`] = `
+{
+  "error": "Payload error",
+}
+`;
+
+exports[`DriverRpcServerBase buildErrorEnvelope should produce a well-structured envelope 1`] = `
+{
+  "attempt": 0,
+  "broadcast": false,
+  "correlationId": "corr-abc",
+  "expiry": null,
+  "headers": {
+    "x-iris-rpc-error": "true",
+    "x-iris-rpc-error-message": "Structured test",
+  },
+  "identifierValue": null,
+  "maxRetries": 0,
+  "priority": 0,
+  "replyTo": null,
+  "retryDelay": 1000,
+  "retryDelayMax": 30000,
+  "retryJitter": false,
+  "retryMultiplier": 2,
+  "retryStrategy": "constant",
+  "topic": "my-queue",
+}
+`;

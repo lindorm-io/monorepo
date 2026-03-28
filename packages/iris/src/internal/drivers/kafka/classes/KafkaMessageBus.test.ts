@@ -1,0 +1,207 @@
+import type { IMessage } from "../../../../interfaces";
+import { Field } from "../../../../decorators/Field";
+import { Message } from "../../../../decorators/Message";
+import { clearRegistry } from "../../../message/metadata/registry";
+import type { KafkaSharedState } from "../types/kafka-types";
+import { KafkaMessageBus } from "./KafkaMessageBus";
+
+// --- Mocks ---
+const mockPublishKafkaMessages = jest.fn().mockResolvedValue(undefined);
+jest.mock("../utils/publish-kafka-messages", () => ({
+  publishKafkaMessages: (...args: Array<unknown>) => mockPublishKafkaMessages(...args),
+}));
+
+const mockWrapKafkaConsumer = jest.fn().mockReturnValue(jest.fn());
+jest.mock("../utils/wrap-kafka-consumer", () => ({
+  wrapKafkaConsumer: (...args: Array<unknown>) => mockWrapKafkaConsumer(...args),
+}));
+
+let mockGetOrCreateResult: { consumerTag: string };
+const mockGetOrCreatePooledConsumer = jest
+  .fn()
+  .mockImplementation(async () => mockGetOrCreateResult);
+jest.mock("../utils/create-kafka-consumer", () => ({
+  getOrCreatePooledConsumer: (...args: Array<unknown>) =>
+    mockGetOrCreatePooledConsumer(...args),
+}));
+
+const mockReleasePooledConsumer = jest.fn().mockResolvedValue(undefined);
+jest.mock("../utils/stop-kafka-consumer", () => ({
+  releasePooledConsumer: (...args: Array<unknown>) => mockReleasePooledConsumer(...args),
+}));
+
+// --- Test message ---
+
+@Message({ name: "TckKafkaBusBasic" })
+class TckKafkaBusBasic implements IMessage {
+  @Field("string") body!: string;
+}
+
+// --- Helpers ---
+
+const createMockLogger = () => ({
+  child: jest.fn().mockReturnThis(),
+  debug: jest.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+  silly: jest.fn(),
+  verbose: jest.fn(),
+});
+
+const createMockState = (): KafkaSharedState => ({
+  kafka: {
+    producer: jest.fn(),
+    consumer: jest.fn(),
+    admin: jest.fn(),
+  } as any,
+  admin: null,
+  producer: { send: jest.fn(), connect: jest.fn(), disconnect: jest.fn() } as any,
+  connectionConfig: { brokers: ["localhost:9092"] },
+  prefix: "iris",
+  consumers: [],
+  consumerRegistrations: [],
+  consumerPool: new Map(),
+  inFlightCount: 0,
+  prefetch: 10,
+  sessionTimeoutMs: 30000,
+  acks: -1,
+  createdTopics: new Set(),
+  publishedTopics: new Set(),
+  abortController: new AbortController(),
+  resetGeneration: 0,
+});
+
+const createBus = () => {
+  const state = createMockState();
+  const bus = new KafkaMessageBus<TckKafkaBusBasic>({
+    target: TckKafkaBusBasic as any,
+    logger: createMockLogger() as any,
+    getSubscribers: () => [],
+    state,
+  });
+  return { bus, state };
+};
+
+// --- Tests ---
+
+beforeEach(() => {
+  clearRegistry();
+  mockPublishKafkaMessages.mockClear();
+  mockWrapKafkaConsumer.mockClear();
+  mockGetOrCreatePooledConsumer.mockClear();
+  mockReleasePooledConsumer.mockClear();
+
+  mockGetOrCreateResult = {
+    consumerTag: "ctag-1",
+  };
+});
+
+describe("KafkaMessageBus", () => {
+  describe("publish", () => {
+    it("should call publishKafkaMessages", async () => {
+      const { bus } = createBus();
+      const msg = bus.create({ body: "hello" });
+      await bus.publish(msg);
+      expect(mockPublishKafkaMessages).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("subscribe", () => {
+    it("should create pooled consumer with correct topic and group", async () => {
+      const { bus } = createBus();
+
+      await bus.subscribe({
+        topic: "TckKafkaBusBasic",
+        queue: "q1",
+        callback: async () => {},
+      });
+
+      // Creates 2 pooled consumers: main + broadcast
+      expect(mockGetOrCreatePooledConsumer).toHaveBeenCalledTimes(2);
+      const mainOpts = mockGetOrCreatePooledConsumer.mock.calls[0][0];
+      expect(mainOpts.topic).toBe("iris.TckKafkaBusBasic");
+      expect(mainOpts.groupId).toBe("iris.TckKafkaBusBasic.q1");
+
+      const broadcastOpts = mockGetOrCreatePooledConsumer.mock.calls[1][0];
+      expect(broadcastOpts.topic).toBe("iris.TckKafkaBusBasic.broadcast");
+    });
+
+    it("should create ephemeral group when no queue specified", async () => {
+      const { bus } = createBus();
+
+      await bus.subscribe({
+        topic: "TckKafkaBusBasic",
+        callback: async () => {},
+      });
+
+      // Creates 2 pooled consumers: main + broadcast
+      expect(mockGetOrCreatePooledConsumer).toHaveBeenCalledTimes(2);
+      const mainOpts = mockGetOrCreatePooledConsumer.mock.calls[0][0];
+      expect(mainOpts.groupId).toMatch(/^iris\.sub\.ephemeral\./);
+    });
+
+    it("should throw when kafka client is not available", async () => {
+      const { bus, state } = createBus();
+      state.kafka = null;
+
+      await expect(
+        bus.subscribe({ topic: "TckKafkaBusBasic", callback: async () => {} }),
+      ).rejects.toThrow("Cannot subscribe: Kafka client is not connected");
+    });
+  });
+
+  describe("unsubscribe", () => {
+    it("should release the pooled consumer", async () => {
+      const { bus } = createBus();
+
+      await bus.subscribe({
+        topic: "TckKafkaBusBasic",
+        queue: "q1",
+        callback: async () => {},
+      });
+
+      await bus.unsubscribe({ topic: "TckKafkaBusBasic", queue: "q1" });
+
+      // Releases 2 pooled consumers: main + broadcast
+      expect(mockReleasePooledConsumer).toHaveBeenCalledTimes(2);
+      const mainOpts = mockReleasePooledConsumer.mock.calls[0][0];
+      expect(mainOpts.groupId).toBe("iris.TckKafkaBusBasic.q1");
+      expect(mainOpts.topic).toBe("iris.TckKafkaBusBasic");
+
+      const broadcastOpts = mockReleasePooledConsumer.mock.calls[1][0];
+      expect(broadcastOpts.topic).toBe("iris.TckKafkaBusBasic.broadcast");
+    });
+
+    it("should be a no-op for unknown subscription", async () => {
+      const { bus } = createBus();
+      await expect(bus.unsubscribe({ topic: "unknown" })).resolves.toBeUndefined();
+      expect(mockReleasePooledConsumer).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("unsubscribeAll", () => {
+    it("should release all owned consumers", async () => {
+      const { bus } = createBus();
+
+      mockGetOrCreateResult = { consumerTag: "ctag-a" };
+      await bus.subscribe({
+        topic: "TckKafkaBusBasic",
+        queue: "q1",
+        callback: async () => {},
+      });
+
+      mockGetOrCreateResult = { consumerTag: "ctag-b" };
+      await bus.subscribe({
+        topic: "TckKafkaBusBasic",
+        queue: "q2",
+        callback: async () => {},
+      });
+
+      await bus.unsubscribeAll();
+
+      // 2 subscriptions x 2 consumers each (main + broadcast) = 4 releases
+      expect(mockReleasePooledConsumer).toHaveBeenCalledTimes(4);
+    });
+  });
+});

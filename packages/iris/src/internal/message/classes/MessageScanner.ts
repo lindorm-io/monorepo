@@ -1,0 +1,81 @@
+import { isObject, isString } from "@lindorm/is";
+import { IScanData, Scanner } from "@lindorm/scanner";
+import { Constructor, Dict } from "@lindorm/types";
+import type { MessageScannerInput } from "../../../types/source-options";
+import { IrisScannerError } from "../errors/IrisScannerError";
+
+export class MessageScanner {
+  public static scan<T extends Dict = Dict>(
+    input: MessageScannerInput,
+  ): Array<Constructor<T>> {
+    const messages = input.filter(
+      (a) => !isObject(a) && !isString(a) && (a as unknown as T).prototype,
+    ) as Array<Constructor<T>>;
+    const strings = input.filter((a) => isString(a));
+    const result: Array<Constructor<T>> = [...messages];
+    if (!strings.length) return result;
+    for (const path of strings) {
+      const item = MessageScanner.scanner.scan(path);
+      if (item.isDirectory) {
+        result.push(...MessageScanner.scanDirectory<T>(item));
+      }
+      if (item.isFile) {
+        result.push(...MessageScanner.scanFile<T>(item));
+      }
+    }
+    return result;
+  }
+
+  // private
+
+  private static scanDirectory<T extends Dict = Dict>(
+    data: IScanData,
+  ): Array<Constructor<T>> {
+    const result: Array<Constructor<T>> = [];
+    for (const child of data.children) {
+      if (child.isDirectory) {
+        result.push(...MessageScanner.scanDirectory<T>(child));
+      }
+      if (child.isFile) {
+        result.push(...MessageScanner.scanFile<T>(child));
+      }
+    }
+    return result;
+  }
+
+  private static scanFile<T extends Dict = Dict>(data: IScanData): Array<Constructor<T>> {
+    let module: Record<string, unknown>;
+    try {
+      module = MessageScanner.scanner.require<Record<string, unknown>>(data.fullPath);
+    } catch (err) {
+      throw new IrisScannerError(
+        `Failed to load message from "${data.fullPath}": ${err instanceof Error ? err.message : String(err)}`,
+        {
+          error: err instanceof Error ? err : undefined,
+          debug: { filePath: data.fullPath },
+        },
+      );
+    }
+    const values = Object.values(module);
+    if (values.length === 0) {
+      throw new IrisScannerError(`No messages found in file: ${data.fullPath}`);
+    }
+    const result: Array<Constructor<T>> = [];
+    for (const value of values) {
+      if ((value as Constructor<T>).prototype) {
+        result.push(value as Constructor<T>);
+      }
+    }
+    if (result.length === 0) {
+      throw new IrisScannerError(`No messages found in file: ${data.fullPath}`);
+    }
+    return result;
+  }
+
+  private static get scanner(): Scanner {
+    return new Scanner({
+      deniedFilenames: [/^index$/],
+      deniedTypes: [/^fixture$/, /^spec$/, /^test$/, /^integration$/],
+    });
+  }
+}

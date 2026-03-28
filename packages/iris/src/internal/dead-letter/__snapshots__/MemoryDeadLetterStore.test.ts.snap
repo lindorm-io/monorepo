@@ -1,0 +1,25 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`MemoryDeadLetterStore list should filter by topic 1`] = `
+[
+  "a",
+  "c",
+]
+`;
+
+exports[`MemoryDeadLetterStore list should list all entries sorted by timestamp 1`] = `
+[
+  "a",
+  "b",
+  "c",
+]
+`;
+
+exports[`MemoryDeadLetterStore list should return empty array when no entries 1`] = `[]`;
+
+exports[`MemoryDeadLetterStore list should support pagination with limit and offset 1`] = `
+[
+  "b",
+  "c",
+]
+`;
