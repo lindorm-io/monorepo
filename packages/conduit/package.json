@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/conduit",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -33,7 +33,7 @@
     "@lindorm/is": "^0.1.13",
     "@lindorm/middleware": "^0.1.7",
     "@lindorm/random": "^0.2.2",
-    "@lindorm/retry": "^0.1.11",
+    "@lindorm/retry": "^0.2.0",
     "@lindorm/url": "^0.1.14",
     "zod": "^4.3.6"
   },

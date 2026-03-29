@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.2.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/retry@0.1.11...@lindorm/retry@0.2.0) (2026-03-29)
+
+### Features
+
+- **retry:** add compute-delay, sleep, and with-retry utilities ([8038d0f](https://github.com/lindorm-io/monorepo/commit/8038d0f11ad125d58998e457815cbe1bb67b8f93))
+
 ## [0.1.11](https://github.com/lindorm-io/monorepo/compare/@lindorm/retry@0.1.10...@lindorm/retry@0.1.11) (2026-03-13)
 
 **Note:** Version bump only for package @lindorm/retry
