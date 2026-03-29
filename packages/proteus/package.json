@@ -34,7 +34,7 @@
     "example:cli": "cd example && tsx ../src/cli.ts",
     "prettier": "prettier --write ./src/*",
     "test": "composed --file docker-compose.yml jest --workerIdleMemoryLimit=512MB",
-    "test:ci": "jest --workerIdleMemoryLimit=512MB",
+    "test:ci": "jest --forceExit --workerIdleMemoryLimit=512MB",
     "test:update": "composed --file docker-compose.yml jest -u",
     "test:watch": "composed --file docker-compose.yml jest --detectOpenHandles --watch",
     "typecheck": "tsc",
