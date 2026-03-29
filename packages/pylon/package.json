@@ -20,7 +20,7 @@
     "example:socket": "ts-node example/socket",
     "prettier": "prettier --write ./src/*",
     "test": "composed --file docker-compose.yml jest --runInBand --",
-    "test:ci": "jest --runInBand",
+    "test:ci": "jest --forceExit --runInBand",
     "test:watch": "composed --file docker-compose.yml jest --runInBand --watch --",
     "typecheck": "tsc",
     "typecheck:watch": "tsc --watch",

@@ -24,7 +24,7 @@
     "example": "ts-node example",
     "prettier": "prettier --write ./src/*",
     "test": "jest --",
-    "test:ci": "jest",
+    "test:ci": "jest --forceExit",
     "test:smoke": "composed --file docker-compose.yml jest --config jest.config.smoke.mjs --runInBand --no-coverage",
     "test:update": "jest -u --",
     "test:watch": "jest --watch --",
