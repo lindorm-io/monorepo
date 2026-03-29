@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/composed@0.1.1...@lindorm/composed@0.1.2) (2026-03-29)
+
+**Note:** Version bump only for package @lindorm/composed
+
 ## [0.1.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/composed@0.1.0...@lindorm/composed@0.1.1) (2026-03-13)
 
 **Note:** Version bump only for package @lindorm/composed

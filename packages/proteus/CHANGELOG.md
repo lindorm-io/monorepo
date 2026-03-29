@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.3.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/proteus@0.2.1...@lindorm/proteus@0.3.0) (2026-03-29)
+
+### Features
+
+- **proteus:** add mock factories for ProteusSource and Repository ([f542a04](https://github.com/lindorm-io/monorepo/commit/f542a041bf65193dd24a753ff41bc5f0b943546d))
+
 ## [0.2.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/proteus@0.2.0...@lindorm/proteus@0.2.1) (2026-03-13)
 
 **Note:** Version bump only for package @lindorm/proteus

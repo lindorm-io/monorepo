@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/proteus",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -51,7 +51,7 @@
     "@lindorm/is": "^0.1.13",
     "@lindorm/json-kit": "^0.5.5",
     "@lindorm/logger": "^0.5.1",
-    "@lindorm/retry": "^0.1.11",
+    "@lindorm/retry": "^0.2.0",
     "@lindorm/scanner": "^0.4.1",
     "@lindorm/sha": "^0.3.1",
     "@lindorm/utils": "^0.6.1",
@@ -61,7 +61,7 @@
   },
   "devDependencies": {
     "@lindorm/aes": "^0.6.2",
-    "@lindorm/amphora": "^0.3.2",
+    "@lindorm/amphora": "^0.3.3",
     "@lindorm/kryptos": "^0.5.2",
     "@lindorm/types": "^0.4.0",
     "@types/better-sqlite3": "^7.6.13",

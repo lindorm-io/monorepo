@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/iris",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -45,13 +45,13 @@
   },
   "dependencies": {
     "@lindorm/aes": "^0.6.1",
-    "@lindorm/amphora": "^0.3.1",
+    "@lindorm/amphora": "^0.3.3",
     "@lindorm/errors": "^0.1.14",
     "@lindorm/is": "^0.1.13",
     "@lindorm/json-kit": "^0.5.5",
     "@lindorm/logger": "^0.5.0",
     "@lindorm/random": "^0.2.2",
-    "@lindorm/retry": "^0.1.11",
+    "@lindorm/retry": "^0.2.0",
     "@lindorm/scanner": "^0.4.0",
     "zod": "^4.3.6"
   },
