@@ -1,5 +1,6 @@
 import Redis from "ioredis";
 import type { IAmphora } from "@lindorm/amphora";
+import type { ICircuitBreaker } from "@lindorm/breaker";
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
 import type {
@@ -24,6 +25,7 @@ import type { RepositoryFactory } from "#internal/types/repository-factory";
 import type { FilterRegistry } from "#internal/utils/query/filter-registry";
 import type { IEntitySubscriber } from "../../../../interfaces/EntitySubscriber";
 import type { RedisTransactionHandle } from "../types/redis-types";
+import { BreakerExecutor } from "#internal/classes/BreakerExecutor";
 import { RedisDriverError } from "../errors/RedisDriverError";
 import { validateConnectionMutualExclusivity } from "#internal/utils/validate-connection-options";
 import { RedisExecutor } from "./RedisExecutor";
@@ -39,6 +41,7 @@ export class RedisDriver implements IProteusDriver {
   private readonly getFilterRegistry: FilterRegistryGetter;
   private readonly getSubscribers: SubscriberRegistryGetter;
   private readonly amphora: IAmphora | undefined;
+  private readonly breaker: ICircuitBreaker | null;
   private readonly connectionConfig: {
     url?: string;
     host?: string;
@@ -66,6 +69,7 @@ export class RedisDriver implements IProteusDriver {
     getFilterRegistry?: FilterRegistryGetter,
     getSubscribers?: SubscriberRegistryGetter,
     amphora?: IAmphora,
+    breaker?: ICircuitBreaker | null,
   ) {
     this.logger = logger.child(["RedisDriver"]);
     this.namespace = namespace;
@@ -73,6 +77,7 @@ export class RedisDriver implements IProteusDriver {
     this.getFilterRegistry = getFilterRegistry ?? ((): FilterRegistry => new Map());
     this.getSubscribers = getSubscribers ?? ((): ReadonlyArray<IEntitySubscriber> => []);
     this.amphora = amphora;
+    this.breaker = breaker ?? null;
     this.connectionConfig = {
       url: options.url,
       host: options.host,
@@ -169,13 +174,15 @@ export class RedisDriver implements IProteusDriver {
 
     return new RedisRepository<E>({
       target,
-      executor: new RedisExecutor<E>(
-        metadata,
-        client,
-        this.namespace,
-        this.getFilterRegistry(),
-        undefined,
-        this.amphora,
+      executor: this.wrapExecutor(
+        new RedisExecutor<E>(
+          metadata,
+          client,
+          this.namespace,
+          this.getFilterRegistry(),
+          undefined,
+          this.amphora,
+        ),
       ),
       queryBuilderFactory: () => this.createQueryBuilder(target),
       client,
@@ -205,13 +212,15 @@ export class RedisDriver implements IProteusDriver {
   ): IRepositoryExecutor<E> {
     const metadata = this.resolveMetadata(target);
 
-    return new RedisExecutor<E>(
-      metadata,
-      this.requireClient(),
-      this.namespace,
-      this.getFilterRegistry(),
-      undefined,
-      this.amphora,
+    return this.wrapExecutor(
+      new RedisExecutor<E>(
+        metadata,
+        this.requireClient(),
+        this.namespace,
+        this.getFilterRegistry(),
+        undefined,
+        this.amphora,
+      ),
     );
   }
 
@@ -338,6 +347,7 @@ export class RedisDriver implements IProteusDriver {
     (cloned as any).getSubscribers = getSubscribers;
     (cloned as any).connectionConfig = this.connectionConfig;
     (cloned as any).amphora = this.amphora;
+    (cloned as any).breaker = this.breaker;
     (cloned as any).client = this.client; // Share the same ioredis client
     (cloned as any).connectingPromise = null;
     return cloned;
@@ -389,7 +399,19 @@ export class RedisDriver implements IProteusDriver {
 
     await client.connect();
     this.client = client;
+
+    if (this.breaker) {
+      client.on("close", () => this.breaker!.open());
+      client.on("ready", () => this.breaker!.close());
+    }
+
     this.logger.debug("Redis driver connected");
+  }
+
+  private wrapExecutor<E extends IEntity>(
+    executor: IRepositoryExecutor<E>,
+  ): IRepositoryExecutor<E> {
+    return this.breaker ? new BreakerExecutor(executor, this.breaker) : executor;
   }
 
   private requireClient(): Redis {

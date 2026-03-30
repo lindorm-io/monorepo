@@ -3,8 +3,10 @@ import {
   type Db,
   type CreateIndexesOptions,
   type IndexSpecification,
+  type TopologyDescriptionChangedEvent,
 } from "mongodb";
 import type { IAmphora } from "@lindorm/amphora";
+import type { ICircuitBreaker } from "@lindorm/breaker";
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
 import type {
@@ -38,6 +40,7 @@ import { validateConnectionMutualExclusivity } from "#internal/utils/validate-co
 import { MongoDriverError } from "../errors/MongoDriverError";
 import { MongoMigrationError } from "../errors/MongoMigrationError";
 import { MongoExecutor } from "./MongoExecutor";
+import { BreakerExecutor } from "#internal/classes/BreakerExecutor";
 import { MongoMigrationManager } from "./MongoMigrationManager";
 import { MongoQueryBuilder } from "./MongoQueryBuilder";
 import { MongoRepository } from "./MongoRepository";
@@ -58,6 +61,7 @@ export class MongoDriver implements IProteusDriver {
   private readonly getFilterRegistry: FilterRegistryGetter;
   private readonly getSubscribers: SubscriberRegistryGetter;
   private readonly amphora: IAmphora | undefined;
+  private readonly breaker: ICircuitBreaker | null;
   private readonly connectionConfig: {
     url?: string;
     host?: string;
@@ -83,6 +87,7 @@ export class MongoDriver implements IProteusDriver {
     getFilterRegistry?: FilterRegistryGetter,
     getSubscribers?: SubscriberRegistryGetter,
     amphora?: IAmphora,
+    breaker?: ICircuitBreaker | null,
   ) {
     this.options = options;
     this.logger = logger.child(["MongoDriver"]);
@@ -91,6 +96,7 @@ export class MongoDriver implements IProteusDriver {
     this.getFilterRegistry = getFilterRegistry ?? ((): FilterRegistry => new Map());
     this.getSubscribers = getSubscribers ?? ((): ReadonlyArray<IEntitySubscriber> => []);
     this.amphora = amphora;
+    this.breaker = breaker ?? null;
     this.connectionConfig = {
       url: options.url,
       host: options.host,
@@ -341,13 +347,15 @@ export class MongoDriver implements IProteusDriver {
 
     return new MongoRepository<E>({
       target,
-      executor: new MongoExecutor<E>(
-        metadata,
-        db,
-        this.namespace,
-        this.getFilterRegistry(),
-        undefined,
-        this.amphora,
+      executor: this.wrapExecutor(
+        new MongoExecutor<E>(
+          metadata,
+          db,
+          this.namespace,
+          this.getFilterRegistry(),
+          undefined,
+          this.amphora,
+        ),
       ),
       queryBuilderFactory: () => this.createQueryBuilder(target),
       db,
@@ -406,13 +414,15 @@ export class MongoDriver implements IProteusDriver {
   ): IRepositoryExecutor<E> {
     const metadata = this.resolveMetadata(target);
 
-    return new MongoExecutor<E>(
-      metadata,
-      this.requireDb(),
-      this.namespace,
-      this.getFilterRegistry(),
-      undefined,
-      this.amphora,
+    return this.wrapExecutor(
+      new MongoExecutor<E>(
+        metadata,
+        this.requireDb(),
+        this.namespace,
+        this.getFilterRegistry(),
+        undefined,
+        this.amphora,
+      ),
     );
   }
 
@@ -644,6 +654,7 @@ export class MongoDriver implements IProteusDriver {
     (cloned as any).getSubscribers = getSubscribers;
     (cloned as any).connectionConfig = this.connectionConfig;
     (cloned as any).amphora = this.amphora;
+    (cloned as any).breaker = this.breaker;
     (cloned as any).client = this.client;
     (cloned as any).db = this.db;
     (cloned as any).isReplicaSet = this.isReplicaSet;
@@ -652,6 +663,12 @@ export class MongoDriver implements IProteusDriver {
   }
 
   // ─── Private ──────────────────────────────────────────────────────────
+
+  private wrapExecutor<E extends IEntity>(
+    executor: IRepositoryExecutor<E>,
+  ): IRepositoryExecutor<E> {
+    return this.breaker ? new BreakerExecutor(executor, this.breaker) : executor;
+  }
 
   private async synchronize(entities: Array<Constructor<IEntity>>): Promise<void> {
     if (!this.options.synchronize) return;
@@ -770,6 +787,22 @@ export class MongoDriver implements IProteusDriver {
     this.client = mongoClient;
     this.db = db;
     this.isReplicaSet = isReplicaSet;
+
+    if (this.breaker) {
+      mongoClient.on(
+        "topologyDescriptionChanged",
+        (event: TopologyDescriptionChangedEvent) => {
+          const hasUsableServer = Array.from(event.newDescription.servers.values()).some(
+            (server) => server.type !== "Unknown" && server.type !== "PossiblePrimary",
+          );
+          if (hasUsableServer) {
+            this.breaker!.close();
+          } else {
+            this.breaker!.open();
+          }
+        },
+      );
+    }
 
     if (!this.isReplicaSet) {
       this.logger.warn(

@@ -1,7 +1,7 @@
 import { camelCase } from "@lindorm/case";
 import { IEntity } from "@lindorm/entity";
 import { ServerError } from "@lindorm/errors";
-import { IHermes } from "@lindorm/hermes";
+import { IHermes } from "@lindorm/hermes/__previous_src";
 import { IMessage } from "@lindorm/message";
 import { Middleware } from "@lindorm/middleware";
 import { Constructor } from "@lindorm/types";

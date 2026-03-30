@@ -1,3 +1,4 @@
+import { EventEmitter } from "events";
 import { CircuitOpenError } from "../errors/CircuitOpenError";
 import type { ICircuitBreaker } from "../interfaces/CircuitBreaker";
 import { calculateBackoff, SlidingWindow } from "#internal/index";
@@ -6,7 +7,7 @@ import type {
   CircuitBreakerState,
   ErrorClassification,
   ErrorClassifier,
-  StateChangeCallback,
+  StateChangeListener,
 } from "../types/circuit-breaker";
 
 const DEFAULT_THRESHOLD = 5;
@@ -20,11 +21,11 @@ const DEFAULT_CLASSIFIER: ErrorClassifier = (): ErrorClassification => "transien
 export class CircuitBreaker implements ICircuitBreaker {
   private readonly _name: string;
   private readonly classifier: ErrorClassifier;
+  private readonly emitter: EventEmitter;
   private readonly threshold: number;
   private readonly halfOpenDelay: number;
   private readonly halfOpenBackoff: number;
   private readonly halfOpenMaxDelay: number;
-  private readonly onStateChange: StateChangeCallback | undefined;
   private readonly window: SlidingWindow;
 
   private _state: CircuitBreakerState = "closed";
@@ -36,11 +37,11 @@ export class CircuitBreaker implements ICircuitBreaker {
   public constructor(options: CircuitBreakerOptions) {
     this._name = options.name;
     this.classifier = options.classifier ?? DEFAULT_CLASSIFIER;
+    this.emitter = new EventEmitter();
     this.threshold = options.threshold ?? DEFAULT_THRESHOLD;
     this.halfOpenDelay = options.halfOpenDelay ?? DEFAULT_HALF_OPEN_DELAY;
     this.halfOpenBackoff = options.halfOpenBackoff ?? DEFAULT_HALF_OPEN_BACKOFF;
     this.halfOpenMaxDelay = options.halfOpenMaxDelay ?? DEFAULT_HALF_OPEN_MAX_DELAY;
-    this.onStateChange = options.onStateChange;
     this.window = new SlidingWindow(options.window ?? DEFAULT_WINDOW);
   }
 
@@ -73,9 +74,34 @@ export class CircuitBreaker implements ICircuitBreaker {
       return this.executeOpen(fn);
     }
 
-    // half-open: a probe is already in-flight, wait for it then retry
+    // half-open: claim probe if none in-flight, otherwise wait
+    if (this.probePromise === null) {
+      return this.claimAndRunProbe(fn);
+    }
+
     return this.awaitProbeAndRetry(fn);
   };
+
+  public open = (): void => {
+    if (this._state === "open") return;
+    this.transitionTo("open");
+    this.openedAt = Date.now();
+    this.halfOpenAttempts = 0;
+    this.window.reset();
+  };
+
+  public close = (): void => {
+    if (this._state !== "open") return;
+    this.transitionTo("half-open");
+    this.halfOpenAttempts = 0;
+  };
+
+  public on(event: "open", listener: StateChangeListener): void;
+  public on(event: "half-open", listener: StateChangeListener): void;
+  public on(event: "closed", listener: StateChangeListener): void;
+  public on(event: string, listener: StateChangeListener): void {
+    this.emitter.on(event, listener);
+  }
 
   public reset = (): void => {
     this.transitionTo("closed");
@@ -137,30 +163,33 @@ export class CircuitBreaker implements ICircuitBreaker {
 
     // Probe claim must be synchronous — no await between check and set
     if (this.probePromise === null) {
-      this.probePromise = new Promise<void>((resolve) => {
-        this.resolveProbe = resolve;
-      });
-
       this.transitionTo("half-open");
-
-      try {
-        const result = await fn();
-        this.transitionTo("closed");
-        this.halfOpenAttempts = 0;
-        this.window.reset();
-        return result;
-      } catch (error) {
-        this.transitionTo("open");
-        this.openedAt = Date.now();
-        this.halfOpenAttempts += 1;
-        throw error;
-      } finally {
-        this.resolveProbeIfPending();
-      }
+      return this.claimAndRunProbe(fn);
     }
 
     // A probe is already in-flight
     return this.awaitProbeAndRetry(fn);
+  };
+
+  private claimAndRunProbe = async <T>(fn: () => Promise<T>): Promise<T> => {
+    this.probePromise = new Promise<void>((resolve) => {
+      this.resolveProbe = resolve;
+    });
+
+    try {
+      const result = await fn();
+      this.transitionTo("closed");
+      this.halfOpenAttempts = 0;
+      this.window.reset();
+      return result;
+    } catch (error) {
+      this.transitionTo("open");
+      this.openedAt = Date.now();
+      this.halfOpenAttempts += 1;
+      throw error;
+    } finally {
+      this.resolveProbeIfPending();
+    }
   };
 
   private awaitProbeAndRetry = async <T>(fn: () => Promise<T>): Promise<T> => {
@@ -170,17 +199,17 @@ export class CircuitBreaker implements ICircuitBreaker {
 
   private transitionTo = (to: CircuitBreakerState): void => {
     const from = this._state;
+    if (from === to) return;
+
     this._state = to;
 
-    if (from !== to && this.onStateChange) {
-      this.onStateChange({
-        name: this._name,
-        from,
-        to,
-        failures: this.window.count(),
-        timestamp: Date.now(),
-      });
-    }
+    this.emitter.emit(to, {
+      name: this._name,
+      from,
+      to,
+      failures: this.window.count(),
+      timestamp: Date.now(),
+    });
   };
 
   private resolveProbeIfPending = (): void => {

@@ -1,4 +1,9 @@
 import type { IAmphora } from "@lindorm/amphora";
+import {
+  CircuitBreaker,
+  type CircuitBreakerOptions,
+  type ICircuitBreaker,
+} from "@lindorm/breaker";
 import { ms } from "@lindorm/date";
 import { ILogger } from "@lindorm/logger";
 import type { Constructor, Dict } from "@lindorm/types";
@@ -9,10 +14,15 @@ import type { IEntitySubscriber } from "../interfaces/EntitySubscriber";
 import type {
   EntityScannerInput,
   NamingStrategy,
+  ProteusBreakerOptions,
   ProteusSourceOptions,
   TransactionCallback,
   TransactionOptions,
 } from "../types";
+import { classifyMongoError } from "#internal/drivers/mongo/utils/classify-breaker-error";
+import { classifyMysqlError } from "#internal/drivers/mysql/utils/classify-breaker-error";
+import { classifyPostgresError } from "#internal/drivers/postgres/utils/classify-breaker-error";
+import { classifyRedisError } from "#internal/drivers/redis/utils/classify-breaker-error";
 import { CachingRepository } from "#internal/classes/CachingRepository";
 import { EntityScanner } from "#internal/entity/classes/EntityScanner";
 import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
@@ -54,6 +64,7 @@ export type CloneOptions = {
  */
 interface ProteusSourceInit {
   _driver: IProteusDriver | undefined;
+  _breaker: ICircuitBreaker | null;
   _options: ProteusSourceOptions;
   _amphora: IAmphora | undefined;
   logger: ILogger;
@@ -82,6 +93,7 @@ interface ProteusSourceInit {
  */
 export class ProteusSource {
   private _driver: IProteusDriver | undefined;
+  private readonly _breaker: ICircuitBreaker | null;
   private readonly _options: ProteusSourceOptions;
   private readonly _amphora: IAmphora | undefined;
   private readonly logger: ILogger;
@@ -153,6 +165,8 @@ export class ProteusSource {
         throw new NotSupportedError(`Unknown driver "${(_exhaustive as any).driver}"`);
       }
     }
+
+    this._breaker = this.createBreaker(options);
   }
 
   private requireDriver(): IProteusDriver {
@@ -185,6 +199,7 @@ export class ProteusSource {
     return ProteusSource.fromFields({
       logger: options?.logger?.child(["ProteusSource"]) ?? this.logger,
       context: options?.context ?? this.context,
+      _breaker: this._breaker,
       _entities: this._entities,
       _amphora: this._amphora,
       resolveMetadata: this.resolveMetadata,
@@ -279,6 +294,7 @@ export class ProteusSource {
           getFilterRegistry,
           getSubscribers,
           this._amphora,
+          this._breaker,
         );
         break;
       }
@@ -307,6 +323,7 @@ export class ProteusSource {
           getFilterRegistry,
           getSubscribers,
           this._amphora,
+          this._breaker,
         );
         break;
       }
@@ -335,6 +352,7 @@ export class ProteusSource {
           getFilterRegistry,
           getSubscribers,
           this._amphora,
+          this._breaker,
         );
         break;
       }
@@ -349,6 +367,7 @@ export class ProteusSource {
           getFilterRegistry,
           getSubscribers,
           this._amphora,
+          this._breaker,
         );
         break;
       }
@@ -472,9 +491,64 @@ export class ProteusSource {
   ): Promise<T> {
     return this.requireDriver().withTransaction(callback, options);
   }
+
+  /** The circuit breaker protecting this source's database operations, or `null` if disabled. */
+  public get breaker(): ICircuitBreaker | null {
+    return this._breaker;
+  }
+
+  private createBreaker(options: ProteusSourceOptions): ICircuitBreaker | null {
+    // No breaker for drivers without network I/O
+    if (options.driver === "memory" || options.driver === "sqlite") return null;
+
+    // Explicitly disabled
+    if (options.breaker === false) return null;
+
+    const userOpts: ProteusBreakerOptions =
+      typeof options.breaker === "object" ? options.breaker : {};
+
+    const breakerOptions: CircuitBreakerOptions = {
+      name: `proteus:${options.driver}`,
+      classifier: userOpts.classifier ?? resolveDefaultClassifier(options.driver),
+      threshold: userOpts.threshold,
+      window: userOpts.window,
+      halfOpenDelay: userOpts.halfOpenDelay,
+      halfOpenBackoff: userOpts.halfOpenBackoff,
+      halfOpenMaxDelay: userOpts.halfOpenMaxDelay,
+      onStateChange: (event) => {
+        userOpts.onStateChange?.(event);
+
+        if (event.to === "open") {
+          this.logger.warn("Circuit breaker opened", {
+            name: event.name,
+            from: event.from,
+            failures: event.failures,
+          });
+        } else if (event.to === "closed") {
+          this.logger.info("Circuit breaker closed", { name: event.name });
+        } else if (event.to === "half-open") {
+          this.logger.info("Circuit breaker half-open — probing", {
+            name: event.name,
+          });
+        }
+      },
+    };
+
+    return new CircuitBreaker(breakerOptions);
+  }
 }
 
 Object.defineProperty(ProteusSource, Symbol.for("ProteusSource"), { value: true });
+
+const driverClassifiers: Record<string, CircuitBreakerOptions["classifier"]> = {
+  postgres: classifyPostgresError,
+  mysql: classifyMysqlError,
+  redis: classifyRedisError,
+  mongo: classifyMongoError,
+};
+
+const resolveDefaultClassifier = (driver: string): CircuitBreakerOptions["classifier"] =>
+  driverClassifiers[driver];
 
 const createMetadataResolver = (
   naming: NamingStrategy,

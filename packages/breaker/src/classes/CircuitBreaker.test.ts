@@ -38,6 +38,15 @@ describe("CircuitBreaker", () => {
     return "transient";
   };
 
+  const collectEvents = (breaker: CircuitBreaker): StateChangeEvent[] => {
+    const events: StateChangeEvent[] = [];
+    const listener = (e: StateChangeEvent) => events.push(e);
+    breaker.on("open", listener);
+    breaker.on("half-open", listener);
+    breaker.on("closed", listener);
+    return events;
+  };
+
   const failN = async (
     breaker: CircuitBreaker,
     n: number,
@@ -307,10 +316,10 @@ describe("CircuitBreaker", () => {
     });
   });
 
-  describe("onStateChange callback", () => {
-    test("should be called with correct event data on transitions", async () => {
-      const events: StateChangeEvent[] = [];
-      const breaker = makeBreaker({ onStateChange: (e) => events.push(e) });
+  describe("events", () => {
+    test("should emit events with correct data on transitions", async () => {
+      const breaker = makeBreaker();
+      const events = collectEvents(breaker);
 
       await failN(breaker, 3);
 
@@ -320,14 +329,271 @@ describe("CircuitBreaker", () => {
       expect(events).toMatchSnapshot();
     });
 
-    test("should not be called when state does not change", () => {
-      const events: StateChangeEvent[] = [];
-      const breaker = makeBreaker({ onStateChange: (e) => events.push(e) });
+    test("should not emit when state does not change", () => {
+      const breaker = makeBreaker();
+      const events = collectEvents(breaker);
 
       // Already closed — resetting should not fire
       breaker.reset();
 
       expect(events).toEqual([]);
+    });
+  });
+
+  describe("open()", () => {
+    test("should force transition from closed to open", () => {
+      const breaker = makeBreaker();
+
+      breaker.open();
+
+      expect(breaker.state).toBe("open");
+      expect(breaker.isOpen).toBe(true);
+    });
+
+    test("should force transition from half-open to open", async () => {
+      const breaker = makeBreaker();
+      await failN(breaker, 3);
+      jest.advanceTimersByTime(1_000);
+
+      // Start a probe to enter half-open
+      let resolveProbe!: (v: string) => void;
+      const p1 = breaker.execute(
+        () =>
+          new Promise<string>((r) => {
+            resolveProbe = r;
+          }),
+      );
+
+      expect(breaker.state).toBe("half-open");
+
+      breaker.open();
+      expect(breaker.state).toBe("open");
+
+      // Resolve the in-flight probe so it settles
+      resolveProbe("done");
+      await p1;
+    });
+
+    test("should be a no-op when already open", async () => {
+      const breaker = makeBreaker();
+      const events = collectEvents(breaker);
+      await failN(breaker, 3);
+
+      events.length = 0;
+      breaker.open();
+
+      expect(events).toEqual([]);
+    });
+
+    test("should reset sliding window and halfOpenAttempts", async () => {
+      const breaker = makeBreaker();
+      await failN(breaker, 3);
+
+      // Fail a probe to increment halfOpenAttempts
+      jest.advanceTimersByTime(1_000);
+      await breaker.execute(() => Promise.reject(transientError)).catch(() => {});
+
+      breaker.reset();
+      breaker.open();
+
+      // After open(), backoff starts fresh — baseDelay should suffice
+      jest.advanceTimersByTime(1_000);
+      const result = await breaker.execute(() => Promise.resolve("fresh"));
+      expect(result).toBe("fresh");
+    });
+
+    test("should emit open event", async () => {
+      const breaker = makeBreaker();
+      const events = collectEvents(breaker);
+
+      breaker.open();
+
+      expect(events).toMatchSnapshot();
+    });
+
+    test("should set openedAt so backoff delay applies", async () => {
+      const breaker = makeBreaker();
+
+      breaker.open();
+
+      // Immediately after open(), delay has not elapsed
+      const error = await breaker.execute(() => Promise.resolve("nope")).catch((e) => e);
+
+      expect(error).toBeInstanceOf(CircuitOpenError);
+
+      // After delay, probe should work
+      jest.advanceTimersByTime(1_000);
+      const result = await breaker.execute(() => Promise.resolve("ok"));
+      expect(result).toBe("ok");
+    });
+  });
+
+  describe("close()", () => {
+    test("should transition from open to half-open", async () => {
+      const breaker = makeBreaker();
+      await failN(breaker, 3);
+      expect(breaker.state).toBe("open");
+
+      breaker.close();
+
+      expect(breaker.state).toBe("half-open");
+      expect(breaker.isHalfOpen).toBe(true);
+    });
+
+    test("should be a no-op when already closed", () => {
+      const breaker = makeBreaker();
+      const events = collectEvents(breaker);
+
+      breaker.close();
+
+      expect(events).toEqual([]);
+      expect(breaker.state).toBe("closed");
+    });
+
+    test("should be a no-op when already half-open", async () => {
+      const breaker = makeBreaker();
+      const events = collectEvents(breaker);
+      await failN(breaker, 3);
+      jest.advanceTimersByTime(1_000);
+
+      // Start probe to enter half-open
+      let resolveProbe!: (v: string) => void;
+      const p1 = breaker.execute(
+        () =>
+          new Promise<string>((r) => {
+            resolveProbe = r;
+          }),
+      );
+      expect(breaker.state).toBe("half-open");
+
+      events.length = 0;
+
+      breaker.close();
+      expect(events).toEqual([]);
+      expect(breaker.state).toBe("half-open");
+
+      resolveProbe("done");
+      await p1;
+    });
+
+    test("should allow next execute() to run as probe", async () => {
+      const breaker = makeBreaker();
+      await failN(breaker, 3);
+
+      breaker.close();
+
+      const result = await breaker.execute(() => Promise.resolve("probed"));
+
+      expect(result).toBe("probed");
+      expect(breaker.state).toBe("closed");
+    });
+
+    test("should re-open if probe fails after close()", async () => {
+      const breaker = makeBreaker();
+      await failN(breaker, 3);
+
+      breaker.close();
+
+      await breaker.execute(() => Promise.reject(transientError)).catch(() => {});
+
+      expect(breaker.state).toBe("open");
+    });
+
+    test("should reset halfOpenAttempts so backoff starts fresh", async () => {
+      const breaker = makeBreaker();
+      await failN(breaker, 3);
+
+      // Fail probes to escalate backoff: attempt 0 (1s), 1 (2s), 2 (4s)
+      for (const delay of [1_000, 2_000, 4_000]) {
+        jest.advanceTimersByTime(delay);
+        await breaker.execute(() => Promise.reject(transientError)).catch(() => {});
+      }
+      // halfOpenAttempts is 3, next delay would be 8_000
+
+      // close() resets — probe runs immediately from half-open (no delay)
+      breaker.close();
+      await breaker.execute(() => Promise.reject(transientError)).catch(() => {});
+      // halfOpenAttempts is now 1 (not 4), delay is 2_000 (not 8_000)
+
+      jest.advanceTimersByTime(2_000);
+      const result = await breaker.execute(() => Promise.resolve("ok"));
+      expect(result).toBe("ok");
+    });
+
+    test("should emit half-open event", async () => {
+      const breaker = makeBreaker();
+      const events = collectEvents(breaker);
+      await failN(breaker, 3);
+      events.length = 0;
+
+      breaker.close();
+
+      expect(events).toMatchSnapshot();
+    });
+
+    test("should handle concurrent execute() calls after close()", async () => {
+      const breaker = makeBreaker();
+      await failN(breaker, 3);
+
+      breaker.close();
+
+      const calls: string[] = [];
+
+      let resolveProbe!: (v: string) => void;
+      const probeFn = () =>
+        new Promise<string>((r) => {
+          calls.push("probe");
+          resolveProbe = r;
+        });
+
+      const waiterFn = () => {
+        calls.push("waiter");
+        return Promise.resolve("waiter-result");
+      };
+
+      const p1 = breaker.execute(probeFn);
+      const p2 = breaker.execute(waiterFn);
+
+      expect(calls).toEqual(["probe"]);
+
+      resolveProbe("probe-result");
+
+      const [r1, r2] = await Promise.all([p1, p2]);
+
+      expect(r1).toBe("probe-result");
+      expect(r2).toBe("waiter-result");
+      expect(breaker.state).toBe("closed");
+    });
+
+    test("should work in cycle: open() -> close() -> probe success -> closed", async () => {
+      const breaker = makeBreaker();
+      const events = collectEvents(breaker);
+
+      // Simulate driver disconnect
+      breaker.open();
+      expect(breaker.state).toBe("open");
+
+      // Simulate driver reconnect
+      breaker.close();
+      expect(breaker.state).toBe("half-open");
+
+      // Next call probes
+      const result = await breaker.execute(() => Promise.resolve("recovered"));
+      expect(result).toBe("recovered");
+      expect(breaker.state).toBe("closed");
+
+      expect(events.map((e) => `${e.from}->${e.to}`)).toMatchSnapshot();
+    });
+
+    test("should work in cycle: open() -> close() -> probe failure -> open", async () => {
+      const breaker = makeBreaker();
+
+      breaker.open();
+      breaker.close();
+
+      await breaker.execute(() => Promise.reject(transientError)).catch(() => {});
+
+      expect(breaker.state).toBe("open");
     });
   });
 
@@ -493,8 +759,8 @@ describe("CircuitBreaker", () => {
     });
 
     test("should handle rapid transitions: closed -> open -> half-open -> closed", async () => {
-      const events: StateChangeEvent[] = [];
-      const breaker = makeBreaker({ onStateChange: (e) => events.push(e) });
+      const breaker = makeBreaker();
+      const events = collectEvents(breaker);
 
       // closed -> open
       await failN(breaker, 3);

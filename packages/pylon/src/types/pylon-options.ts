@@ -1,12 +1,11 @@
 import { IAmphora } from "@lindorm/amphora";
 import { ReadableTime } from "@lindorm/date";
 import { IEntity } from "@lindorm/entity";
-import { Environment } from "@lindorm/types";
-import { IHermes } from "@lindorm/hermes";
+import { IHermes } from "@lindorm/hermes/__previous_src";
 import { ILogger } from "@lindorm/logger";
 import { IMessage } from "@lindorm/message";
 import { RetryOptions } from "@lindorm/retry";
-import { Constructor } from "@lindorm/types";
+import { Constructor, Environment } from "@lindorm/types";
 import { ILindormWorker, LindormWorkerConfig } from "@lindorm/worker";
 import Redis from "ioredis";
 import { ServerOptions as SocketOptions } from "socket.io";

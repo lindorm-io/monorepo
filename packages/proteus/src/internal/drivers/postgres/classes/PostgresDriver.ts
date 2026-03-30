@@ -1,4 +1,5 @@
 import type { IAmphora } from "@lindorm/amphora";
+import type { ICircuitBreaker } from "@lindorm/breaker";
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
 import { Pool, PoolClient } from "pg";
@@ -19,6 +20,7 @@ import type {
   MetadataResolver,
   SubscriberRegistryGetter,
 } from "#internal/interfaces/ProteusDriver";
+import { BreakerExecutor } from "#internal/classes/BreakerExecutor";
 import { PostgresDriverError } from "../errors/PostgresDriverError";
 import { PostgresMigrationError } from "../errors/PostgresMigrationError";
 import type { PostgresQueryClient } from "../types/postgres-query-client";
@@ -54,6 +56,7 @@ export class PostgresDriver implements IProteusDriver {
   private readonly getFilterRegistry: FilterRegistryGetter;
   private readonly getSubscribers: SubscriberRegistryGetter;
   private readonly amphora: IAmphora | undefined;
+  private readonly breaker: ICircuitBreaker | null;
   private pool: Pool | null = null;
   private connectingPromise: Promise<void> | null = null;
 
@@ -65,6 +68,7 @@ export class PostgresDriver implements IProteusDriver {
     getFilterRegistry?: FilterRegistryGetter,
     getSubscribers?: SubscriberRegistryGetter,
     amphora?: IAmphora,
+    breaker?: ICircuitBreaker | null,
   ) {
     this.options = options;
     this.logger = logger.child(["PostgresDriver"]);
@@ -73,6 +77,7 @@ export class PostgresDriver implements IProteusDriver {
     this.getFilterRegistry = getFilterRegistry ?? ((): FilterRegistry => new Map());
     this.getSubscribers = getSubscribers ?? ((): ReadonlyArray<IEntitySubscriber> => []);
     this.amphora = amphora;
+    this.breaker = breaker ?? null;
   }
 
   public async connect(): Promise<void> {
@@ -110,6 +115,7 @@ export class PostgresDriver implements IProteusDriver {
 
     pool.on("error", (err) => {
       this.logger.error("Idle pool client error", { error: err });
+      this.breaker?.open();
     });
 
     // Verify connection before assigning — prevents pool leak on failure
@@ -197,12 +203,14 @@ export class PostgresDriver implements IProteusDriver {
       const txClient = this.createPgClient(poolClient);
       try {
         await txClient.query("BEGIN");
-        const txExecutor = new PostgresExecutor<E>(
-          txClient,
-          metadata,
-          namespace,
-          this.getFilterRegistry(),
-          this.amphora,
+        const txExecutor = this.wrapExecutor(
+          new PostgresExecutor<E>(
+            txClient,
+            metadata,
+            namespace,
+            this.getFilterRegistry(),
+            this.amphora,
+          ),
         );
 
         // Build tx-scoped repository factory via inline PostgresTransactionHandle
@@ -272,12 +280,14 @@ export class PostgresDriver implements IProteusDriver {
     const namespace = this.namespace;
     const metadata = this.resolveMetadata(target);
     const txClient = pgHandle.client;
-    const txExecutor = new PostgresExecutor<E>(
-      txClient,
-      metadata,
-      namespace,
-      this.getFilterRegistry(),
-      this.amphora,
+    const txExecutor = this.wrapExecutor(
+      new PostgresExecutor<E>(
+        txClient,
+        metadata,
+        namespace,
+        this.getFilterRegistry(),
+        this.amphora,
+      ),
     );
 
     const factory: RepositoryFactory = <C extends IEntity>(
@@ -311,12 +321,14 @@ export class PostgresDriver implements IProteusDriver {
     const pool = this.getPool();
     const metadata = this.resolveMetadata(target);
     const client = this.createPgClientFromPool(pool);
-    return new PostgresExecutor<E>(
-      client,
-      metadata,
-      this.namespace,
-      this.getFilterRegistry(),
-      this.amphora,
+    return this.wrapExecutor(
+      new PostgresExecutor<E>(
+        client,
+        metadata,
+        this.namespace,
+        this.getFilterRegistry(),
+        this.amphora,
+      ),
     );
   }
 
@@ -326,12 +338,14 @@ export class PostgresDriver implements IProteusDriver {
   ): IRepositoryExecutor<E> {
     const metadata = this.resolveMetadata(target);
     const pgHandle = handle as PostgresTransactionHandle;
-    return new PostgresExecutor<E>(
-      pgHandle.client,
-      metadata,
-      this.namespace,
-      this.getFilterRegistry(),
-      this.amphora,
+    return this.wrapExecutor(
+      new PostgresExecutor<E>(
+        pgHandle.client,
+        metadata,
+        this.namespace,
+        this.getFilterRegistry(),
+        this.amphora,
+      ),
     );
   }
 
@@ -374,6 +388,7 @@ export class PostgresDriver implements IProteusDriver {
     (cloned as any).getFilterRegistry = getFilterRegistry;
     (cloned as any).getSubscribers = getSubscribers;
     (cloned as any).amphora = this.amphora;
+    (cloned as any).breaker = this.breaker;
     (cloned as any).pool = this.pool; // Share the same connection pool
     return cloned;
   }
@@ -469,6 +484,12 @@ export class PostgresDriver implements IProteusDriver {
   }
 
   // Private
+
+  private wrapExecutor<E extends IEntity>(
+    executor: IRepositoryExecutor<E>,
+  ): IRepositoryExecutor<E> {
+    return this.breaker ? new BreakerExecutor(executor, this.breaker) : executor;
+  }
 
   private getPool(): Pool {
     if (!this.pool) {

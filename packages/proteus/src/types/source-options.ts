@@ -1,10 +1,19 @@
 import type { IAmphora } from "@lindorm/amphora";
+import type { CircuitBreakerOptions } from "@lindorm/breaker";
 import type { ReadableTime } from "@lindorm/date";
 import { ILogger } from "@lindorm/logger";
 import { ConnectionOptions } from "node:tls";
 import { IEntity } from "../interfaces";
 import type { ICacheAdapter } from "../interfaces/CacheAdapter";
 import { EntityScannerInput } from "./scanner";
+
+/**
+ * Circuit breaker configuration for ProteusSource.
+ *
+ * All fields from CircuitBreakerOptions are available except `name`
+ * (auto-generated from the driver type).
+ */
+export type ProteusBreakerOptions = Partial<Omit<CircuitBreakerOptions, "name">>;
 
 /**
  * Control how entity field names are transformed to database column names.
@@ -43,6 +52,17 @@ export type ProteusSourceOptionsBase = {
   logger: ILogger;
   /** Amphora key store for field-level encryption. When provided, @Encrypted fields are encrypted/decrypted transparently. */
   amphora?: IAmphora;
+  /**
+   * Circuit breaker for database operations. Protects against cascading failures
+   * when the database is unreachable by failing fast instead of waiting for timeouts.
+   *
+   * - `true` — enabled with driver-appropriate defaults (default for network drivers)
+   * - `false` — disabled
+   * - `ProteusBreakerOptions` — enabled with custom overrides
+   *
+   * Automatically disabled for `memory` and `sqlite` drivers (no network I/O).
+   */
+  breaker?: boolean | ProteusBreakerOptions;
 };
 
 /**

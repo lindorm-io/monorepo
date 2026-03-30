@@ -35,4 +35,20 @@ describe("createMockCircuitBreaker", () => {
 
     expect(mock.reset).toHaveBeenCalledTimes(2);
   });
+
+  test("should track open calls", () => {
+    const mock = createMockCircuitBreaker();
+
+    mock.open();
+
+    expect(mock.open).toHaveBeenCalledTimes(1);
+  });
+
+  test("should track close calls", () => {
+    const mock = createMockCircuitBreaker();
+
+    mock.close();
+
+    expect(mock.close).toHaveBeenCalledTimes(1);
+  });
 });
