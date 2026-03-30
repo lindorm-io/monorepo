@@ -1,0 +1,77 @@
+import {
+  CipherGCM,
+  DecipherGCM,
+  createCipheriv,
+  createDecipheriv,
+  randomBytes,
+} from "crypto";
+import { AesError } from "../../../errors";
+import {
+  KeyUnwrapOptions,
+  KeyUnwrapResult,
+  KeyWrapOptions,
+  KeyWrapResult,
+} from "#internal/types/key-wrap";
+import { calculateKeyWrapEncryption } from "#internal/utils/calculate/calculate-key-wrap-encryption";
+
+export const gcmKeyWrap = ({
+  contentEncryptionKey,
+  keyEncryptionKey,
+  kryptos,
+}: KeyWrapOptions): KeyWrapResult => {
+  const algorithm = calculateKeyWrapEncryption(kryptos);
+
+  const publicEncryptionIv = randomBytes(12);
+  const cipher = createCipheriv(
+    algorithm,
+    keyEncryptionKey,
+    publicEncryptionIv,
+  ) as CipherGCM;
+
+  const publicEncryptionKey = Buffer.concat([
+    cipher.update(contentEncryptionKey),
+    cipher.final(),
+  ]);
+
+  const publicEncryptionTag = cipher.getAuthTag();
+
+  return { publicEncryptionKey, publicEncryptionIv, publicEncryptionTag };
+};
+
+export const gcmKeyUnwrap = ({
+  keyEncryptionKey,
+  kryptos,
+  publicEncryptionIv,
+  publicEncryptionKey,
+  publicEncryptionTag,
+}: KeyUnwrapOptions): KeyUnwrapResult => {
+  if (!publicEncryptionIv) {
+    throw new AesError("Invalid public encryption iv");
+  }
+  if (!publicEncryptionTag) {
+    throw new AesError("Invalid public encryption tag");
+  }
+  if (publicEncryptionIv.length !== 12) {
+    throw new AesError("Invalid GCM key wrap IV length");
+  }
+  if (publicEncryptionTag.length !== 16) {
+    throw new AesError("Invalid GCM key wrap auth tag length");
+  }
+
+  const algorithm = calculateKeyWrapEncryption(kryptos);
+
+  const decipher = createDecipheriv(
+    algorithm,
+    keyEncryptionKey,
+    publicEncryptionIv,
+  ) as DecipherGCM;
+
+  decipher.setAuthTag(publicEncryptionTag);
+
+  const contentEncryptionKey = Buffer.concat([
+    decipher.update(publicEncryptionKey),
+    decipher.final(),
+  ]);
+
+  return { contentEncryptionKey };
+};

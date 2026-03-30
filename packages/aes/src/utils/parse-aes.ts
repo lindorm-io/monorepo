@@ -2,11 +2,9 @@ import { isObject, isString } from "@lindorm/is";
 import { AesError } from "../errors";
 import { AesDecryptionRecord, SerialisedAesDecryption } from "../types";
 import { isAesBufferData, isAesSerialisedData, isAesTokenised } from "./is-aes";
-import {
-  parseEncodedAesString,
-  parseSerialisedAesRecord,
-  parseTokenisedAesString,
-} from "./private";
+import { parseEncodedAesString } from "#internal/utils/encoded-aes";
+import { parseSerialisedAesRecord } from "#internal/utils/serialised-aes";
+import { parseTokenisedAesString } from "#internal/utils/tokenised-aes";
 
 export const parseAes = (
   data: AesDecryptionRecord | SerialisedAesDecryption | string,

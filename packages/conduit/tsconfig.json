@@ -1,6 +1,10 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "#internal/*": ["./src/internal/*"]
+    },
     "rootDir": "./src"
   },
   "include": ["src/**/*"]

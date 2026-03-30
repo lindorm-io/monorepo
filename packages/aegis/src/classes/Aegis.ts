@@ -61,7 +61,7 @@ import {
   VerifyCwtOptions,
   VerifyJwtOptions,
 } from "../types";
-import { decodeJoseHeader } from "../utils/private";
+import { decodeJoseHeader } from "#internal/utils/jose-header";
 import { CweKit } from "./CweKit";
 import { CwsKit } from "./CwsKit";
 import { CwtKit } from "./CwtKit";

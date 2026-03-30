@@ -27,16 +27,14 @@ import {
   LindormJwk,
   RsaModulus,
 } from "../types";
-import { ExportCache } from "../types/private";
-import {
-  createDerFromDer,
-  exportToB64,
-  exportToDer,
-  exportToJwk,
-  exportToPem,
-  isOctDer,
-  modulusSize,
-} from "../utils/private";
+import { ExportCache } from "#internal/types/export-cache";
+import { createDerFromDer } from "#internal/utils/from/der-from-der";
+import { exportToB64 } from "#internal/utils/export/export-b64";
+import { exportToDer } from "#internal/utils/export/export-der";
+import { exportToJwk } from "#internal/utils/export/export-jwk";
+import { exportToPem } from "#internal/utils/export/export-pem";
+import { isOctDer } from "#internal/utils/oct/is";
+import { modulusSize } from "#internal/utils/rsa/modulus-size";
 
 export class Kryptos implements IKryptos {
   private readonly _id: string;

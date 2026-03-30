@@ -16,13 +16,9 @@ import {
   EncryptedCwe,
   TokenHeaderAlgorithm,
 } from "../types";
-import {
-  authTagLength,
-  decodeCoseHeader,
-  mapCoseHeader,
-  mapTokenHeader,
-  parseTokenHeader,
-} from "../utils/private";
+import { authTagLength } from "#internal/utils/auth-tag-length";
+import { decodeCoseHeader, mapCoseHeader } from "#internal/utils/cose/header";
+import { mapTokenHeader, parseTokenHeader } from "#internal/utils/token-header";
 
 export class CweKit implements ICweKit {
   private readonly encryption: KryptosEncryption;

@@ -1,7 +1,7 @@
 import { LindormError, LindormErrorOptions } from "@lindorm/errors";
 import { Dict } from "@lindorm/types";
 import { AxiosError } from "axios";
-import { isPylonError } from "../utils/private";
+import { isPylonError } from "#internal/utils/is-pylon-error";
 
 type ConduitErrorOptions = LindormErrorOptions & {
   config?: any;

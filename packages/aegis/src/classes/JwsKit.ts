@@ -3,7 +3,7 @@ import { isBuffer, isJws, isString } from "@lindorm/is";
 import { IKryptos } from "@lindorm/kryptos";
 import { ILogger } from "@lindorm/logger";
 import { randomUUID } from "crypto";
-import { B64U } from "../constants/private";
+import { B64U } from "#internal/constants/format";
 import { JwsError } from "../errors";
 import { IJwsKit } from "../interfaces";
 import {
@@ -15,13 +15,9 @@ import {
   SignedJws,
   TokenHeaderOptions,
 } from "../types";
-import {
-  createJoseSignature,
-  decodeJoseHeader,
-  encodeJoseHeader,
-  parseTokenHeader,
-  verifyJoseSignature,
-} from "../utils/private";
+import { decodeJoseHeader, encodeJoseHeader } from "#internal/utils/jose-header";
+import { createJoseSignature, verifyJoseSignature } from "#internal/utils/jose-signature";
+import { parseTokenHeader } from "#internal/utils/token-header";
 
 export class JwsKit implements IJwsKit {
   private readonly logger: ILogger;

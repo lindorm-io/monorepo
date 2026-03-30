@@ -18,19 +18,17 @@ import {
   ValidateJwtOptions,
   VerifyJwtOptions,
 } from "../types";
+import { decodeJoseHeader, encodeJoseHeader } from "#internal/utils/jose-header";
+import { createJoseSignature, verifyJoseSignature } from "#internal/utils/jose-signature";
+import { createJwtValidate } from "#internal/utils/jwt-validate";
 import {
-  createJoseSignature,
-  createJwtValidate,
-  createJwtVerify,
-  decodeJoseHeader,
   decodeJwtPayload,
-  encodeJoseHeader,
   encodeJwtPayload,
-  parseTokenHeader,
   parseTokenPayload,
-  validate,
-  verifyJoseSignature,
-} from "../utils/private";
+} from "#internal/utils/jwt-payload";
+import { createJwtVerify } from "#internal/utils/jwt-verify";
+import { parseTokenHeader } from "#internal/utils/token-header";
+import { validate } from "#internal/utils/validate";
 
 export class JwtKit implements IJwtKit {
   private readonly clockTolerance: number;

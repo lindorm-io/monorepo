@@ -135,7 +135,7 @@ describe("Conduit", () => {
 
       const form = new FormData();
 
-      form.append("file", join(__dirname, "..", "__fixtures__", "upload.txt"));
+      form.append("file", join(__dirname, "..", "internal", "fixtures", "upload.txt"));
 
       await expect(conduit.post("/test/path", { form })).resolves.toEqual(
         expect.objectContaining({ status: 204 }),
