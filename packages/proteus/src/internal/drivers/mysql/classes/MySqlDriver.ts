@@ -1,3 +1,4 @@
+import type { ICircuitBreaker } from "@lindorm/breaker";
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
 import type { Pool, PoolConnection } from "mysql2/promise";
@@ -41,6 +42,7 @@ import { SyncPlanExecutor } from "../utils/sync/execute-sync-plan";
 import { buildMysqlLockName } from "#internal/utils/advisory-lock-name";
 import { MySqlMigrationManager } from "./MySqlMigrationManager";
 import { MySqlQueryBuilder } from "./MySqlQueryBuilder";
+import { BreakerExecutor } from "#internal/classes/BreakerExecutor";
 import { validateConnectionMutualExclusivity } from "#internal/utils/validate-connection-options";
 
 export class MySqlDriver implements IProteusDriver {
@@ -51,6 +53,7 @@ export class MySqlDriver implements IProteusDriver {
   private readonly getFilterRegistry: FilterRegistryGetter;
   private readonly getSubscribers: SubscriberRegistryGetter;
   private readonly amphora: IAmphora | undefined;
+  private readonly breaker: ICircuitBreaker | null;
   private pool: Pool | null = null;
   private connectingPromise: Promise<void> | null = null;
 
@@ -62,6 +65,7 @@ export class MySqlDriver implements IProteusDriver {
     getFilterRegistry?: FilterRegistryGetter,
     getSubscribers?: SubscriberRegistryGetter,
     amphora?: IAmphora,
+    breaker?: ICircuitBreaker | null,
   ) {
     this.options = options;
     this.logger = logger.child(["MySqlDriver"]);
@@ -70,6 +74,7 @@ export class MySqlDriver implements IProteusDriver {
     this.getFilterRegistry = getFilterRegistry ?? ((): FilterRegistry => new Map());
     this.getSubscribers = getSubscribers ?? ((): ReadonlyArray<IEntitySubscriber> => []);
     this.amphora = amphora;
+    this.breaker = breaker ?? null;
   }
 
   public async connect(): Promise<void> {
@@ -146,9 +151,10 @@ export class MySqlDriver implements IProteusDriver {
     // Prevent Node.js unhandled EventEmitter crashes when idle connections drop
     // mysql2's Pool type definition does not expose .on() for the "error" event,
     // but the underlying EventEmitter supports it at runtime.
-    (pool as unknown as import("events").EventEmitter).on("error", (err: Error) =>
-      this.logger.error(err),
-    );
+    (pool as unknown as import("events").EventEmitter).on("error", (err: Error) => {
+      this.logger.error(err);
+      this.breaker?.open();
+    });
 
     this.pool = pool;
 
@@ -233,12 +239,14 @@ export class MySqlDriver implements IProteusDriver {
       const txClient = this.createMysqlClient(connection);
       try {
         await txClient.query("START TRANSACTION");
-        const txExecutor = new MySqlExecutor<E>(
-          txClient,
-          metadata,
-          namespace,
-          this.getFilterRegistry(),
-          this.amphora,
+        const txExecutor = this.wrapExecutor(
+          new MySqlExecutor<E>(
+            txClient,
+            metadata,
+            namespace,
+            this.getFilterRegistry(),
+            this.amphora,
+          ),
         );
 
         // Build tx-scoped repository factory via inline MysqlTransactionHandle
@@ -299,12 +307,14 @@ export class MySqlDriver implements IProteusDriver {
     const namespace = this.namespace;
     const metadata = this.resolveMetadata(target);
     const txClient = mysqlHandle.client;
-    const txExecutor = new MySqlExecutor<E>(
-      txClient,
-      metadata,
-      namespace,
-      this.getFilterRegistry(),
-      this.amphora,
+    const txExecutor = this.wrapExecutor(
+      new MySqlExecutor<E>(
+        txClient,
+        metadata,
+        namespace,
+        this.getFilterRegistry(),
+        this.amphora,
+      ),
     );
 
     const factory: RepositoryFactory = <C extends IEntity>(
@@ -338,12 +348,14 @@ export class MySqlDriver implements IProteusDriver {
     const pool = this.getPool();
     const metadata = this.resolveMetadata(target);
     const client = this.createMysqlClientFromPool(pool);
-    return new MySqlExecutor<E>(
-      client,
-      metadata,
-      this.namespace,
-      this.getFilterRegistry(),
-      this.amphora,
+    return this.wrapExecutor(
+      new MySqlExecutor<E>(
+        client,
+        metadata,
+        this.namespace,
+        this.getFilterRegistry(),
+        this.amphora,
+      ),
     );
   }
 
@@ -353,12 +365,14 @@ export class MySqlDriver implements IProteusDriver {
   ): IRepositoryExecutor<E> {
     const metadata = this.resolveMetadata(target);
     const mysqlHandle = handle as MysqlTransactionHandle;
-    return new MySqlExecutor<E>(
-      mysqlHandle.client,
-      metadata,
-      this.namespace,
-      this.getFilterRegistry(),
-      this.amphora,
+    return this.wrapExecutor(
+      new MySqlExecutor<E>(
+        mysqlHandle.client,
+        metadata,
+        this.namespace,
+        this.getFilterRegistry(),
+        this.amphora,
+      ),
     );
   }
 
@@ -403,6 +417,7 @@ export class MySqlDriver implements IProteusDriver {
     (cloned as any).getFilterRegistry = getFilterRegistry ?? this.getFilterRegistry;
     (cloned as any).getSubscribers = getSubscribers ?? this.getSubscribers;
     (cloned as any).amphora = this.amphora;
+    (cloned as any).breaker = this.breaker;
     (cloned as any).pool = this.pool; // Share the same connection pool
     return cloned;
   }
@@ -510,6 +525,12 @@ export class MySqlDriver implements IProteusDriver {
   }
 
   // Private
+
+  private wrapExecutor<E extends IEntity>(
+    executor: IRepositoryExecutor<E>,
+  ): IRepositoryExecutor<E> {
+    return this.breaker ? new BreakerExecutor(executor, this.breaker) : executor;
+  }
 
   private getPool(): Pool {
     if (!this.pool) {

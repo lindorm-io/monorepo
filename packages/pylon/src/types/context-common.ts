@@ -2,7 +2,7 @@ import { IAegis } from "@lindorm/aegis";
 import { IAmphora } from "@lindorm/amphora";
 import { IConduit } from "@lindorm/conduit";
 import { IEntity } from "@lindorm/entity";
-import { IHermes } from "@lindorm/hermes";
+import { IHermes } from "@lindorm/hermes/__previous_src";
 import { IKafkaPublisher, IKafkaSource } from "@lindorm/kafka";
 import { ILogger } from "@lindorm/logger";
 import { IMessage } from "@lindorm/message";

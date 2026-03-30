@@ -2,6 +2,7 @@ export * from "#internal/entity/errors/EntityManagerError";
 export * from "#internal/entity/errors/EntityMetadataError";
 export * from "#internal/entity/errors/EntityScannerError";
 export * from "./CheckConstraintError";
+export * from "./CircuitOpenError";
 export * from "./DeadlockError";
 export * from "./DriverError";
 export * from "./DuplicateKeyError";

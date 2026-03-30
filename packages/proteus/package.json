@@ -23,6 +23,13 @@
       "default": "./dist/mocks/index.js"
     }
   },
+  "typesVersions": {
+    "*": {
+      "mocks": [
+        "dist/mocks/index.d.ts"
+      ]
+    }
+  },
   "bin": {
     "proteus": "dist/cli.js"
   },
@@ -45,6 +52,7 @@
   },
   "dependencies": {
     "@inquirer/prompts": "^8.3.0",
+    "@lindorm/breaker": "^0.1.0",
     "@lindorm/case": "^0.1.13",
     "@lindorm/date": "^0.4.1",
     "@lindorm/errors": "^0.1.15",
