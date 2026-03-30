@@ -1,4 +1,9 @@
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
+const resolverPath = require.resolve("./jest.resolver.cjs");
+
 export default {
+  resolver: resolverPath,
   cacheDirectory: "../../.jest/cache",
   collectCoverageFrom: [
     "**/*.test.{ts,tsx}",

@@ -5,9 +5,6 @@ export default {
   ...base,
   displayName: packageJson.name,
   setupFilesAfterEnv: ["jest-extended", "<rootDir>/jest.setup.ts"],
-  moduleNameMapper: {
-    "^#internal/(.*)$": "<rootDir>/src/internal/$1",
-  },
   transform: {
     "^.+\\.tsx?$": [
       "ts-jest",
