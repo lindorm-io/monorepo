@@ -23,6 +23,13 @@
       "default": "./dist/mocks/index.js"
     }
   },
+  "typesVersions": {
+    "*": {
+      "mocks": [
+        "dist/mocks/index.d.ts"
+      ]
+    }
+  },
   "imports": {
     "#internal/*": "./dist/internal/*.js"
   },

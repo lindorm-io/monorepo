@@ -12,7 +12,7 @@ export type StateChangeEvent = {
   timestamp: number;
 };
 
-export type StateChangeCallback = (event: StateChangeEvent) => void;
+export type StateChangeListener = (event: StateChangeEvent) => void;
 
 export type CircuitBreakerOptions = {
   name: string;
@@ -22,5 +22,4 @@ export type CircuitBreakerOptions = {
   halfOpenDelay?: number;
   halfOpenBackoff?: number;
   halfOpenMaxDelay?: number;
-  onStateChange?: StateChangeCallback;
 };
