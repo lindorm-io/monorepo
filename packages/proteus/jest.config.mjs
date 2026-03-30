@@ -6,9 +6,6 @@ export default {
   displayName: packageJson.name,
   // Polyfill Symbol.metadata for stage-3 decorator support
   setupFilesAfterEnv: ["jest-extended", "<rootDir>/jest.setup.ts"],
-  moduleNameMapper: {
-    "^#internal/(.*)$": "<rootDir>/src/internal/$1",
-  },
   transform: {
     "^.+\\.tsx?$": [
       "ts-jest",
