@@ -20,10 +20,11 @@ import { StdLogger } from "../types";
 import type {
   FilterEntriesRef,
   FromLogger,
-  InternalLog,
   KeyFilterRef,
-} from "../types/private";
-import { defaultFilterCallback, readableFormat } from "../utils/private";
+} from "#internal/types/from-logger";
+import type { InternalLog } from "#internal/types/internal-log";
+import { defaultFilterCallback } from "#internal/utils/default-filter-callback";
+import { readableFormat } from "#internal/utils/readable-format";
 import { LoggerTimer } from "./LoggerTimer";
 
 export class Logger implements ILogger {

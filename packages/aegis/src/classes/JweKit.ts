@@ -4,7 +4,7 @@ import { isJwe, isJws, isJwt, isString } from "@lindorm/is";
 import { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
 import { ILogger } from "@lindorm/logger";
 import { randomUUID } from "crypto";
-import { B64U } from "../constants/private";
+import { B64U } from "#internal/constants/format";
 import { JweError } from "../errors";
 import { IJweKit } from "../interfaces";
 import {
@@ -16,7 +16,8 @@ import {
   JweKitOptions,
   TokenHeaderOptions,
 } from "../types";
-import { decodeJoseHeader, encodeJoseHeader, parseTokenHeader } from "../utils/private";
+import { decodeJoseHeader, encodeJoseHeader } from "#internal/utils/jose-header";
+import { parseTokenHeader } from "#internal/utils/token-header";
 
 export class JweKit implements IJweKit {
   private readonly encryption: KryptosEncryption;

@@ -1,23 +1,24 @@
+import {
+  CONDUIT_RESPONSE,
+  REPLACE_URL,
+  RETRY_CONFIG,
+  TIMEOUT,
+} from "#internal/constants/defaults";
+import { axiosRequestHandler } from "#internal/middleware/axios-request-handler";
+import { defaultHeaders } from "#internal/middleware/default-headers";
+import { fetchRequestHandler } from "#internal/middleware/fetch-request-handler";
+import { requestLogger } from "#internal/middleware/request-logger";
+import { responseLogger } from "#internal/middleware/response-logger";
+import { defaultRetryCallback } from "#internal/utils/default-retry-callback";
+import { defaultValidateStatus } from "#internal/utils/default-validate-status";
+import { getOrigin } from "#internal/utils/get-origin";
 import { ILogger } from "@lindorm/logger";
 import { composeMiddleware } from "@lindorm/middleware";
 import { randomUUID } from "@lindorm/random";
 import { RetryConfig } from "@lindorm/retry";
 import { Dict, HttpMethod } from "@lindorm/types";
 import { extractSearchParams, getPlainUrl, getValidUrl } from "@lindorm/url";
-import {
-  CONDUIT_RESPONSE,
-  REPLACE_URL,
-  RETRY_CONFIG,
-  TIMEOUT,
-} from "../constants/private";
 import { IConduit } from "../interfaces";
-import {
-  axiosRequestHandler,
-  defaultHeaders,
-  fetchRequestHandler,
-  requestLogger,
-  responseLogger,
-} from "../middleware/private";
 import {
   AppContext,
   ConduitContext,
@@ -31,7 +32,6 @@ import {
   RequestOptions,
   RetryCallback,
 } from "../types";
-import { defaultRetryCallback, defaultValidateStatus } from "../utils/private";
 
 export class Conduit implements IConduit {
   private readonly baseURL: URL | undefined;
@@ -266,6 +266,7 @@ export class Conduit implements IConduit {
       onDownloadProgress,
       onRetry,
       onUploadProgress,
+      origin: getOrigin(url, this.baseURL),
       params: params as RequestParams,
       query: { ...searchParams, ...query },
       retryCallback,

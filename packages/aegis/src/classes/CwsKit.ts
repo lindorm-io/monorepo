@@ -14,15 +14,10 @@ import {
   SignCwsOptions,
   SignedCws,
 } from "../types";
-import {
-  createCoseSignToken,
-  createCoseSignature,
-  decodeCoseHeader,
-  mapCoseHeader,
-  mapTokenHeader,
-  parseTokenHeader,
-  verifyCoseSignature,
-} from "../utils/private";
+import { createCoseSignToken } from "#internal/utils/cose-sign-token";
+import { createCoseSignature, verifyCoseSignature } from "#internal/utils/cose-signature";
+import { decodeCoseHeader, mapCoseHeader } from "#internal/utils/cose/header";
+import { mapTokenHeader, parseTokenHeader } from "#internal/utils/token-header";
 
 export class CwsKit implements ICwsKit {
   private readonly logger: ILogger;

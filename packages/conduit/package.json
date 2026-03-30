@@ -11,6 +11,9 @@
   "publishConfig": {
     "access": "public"
   },
+  "imports": {
+    "#internal/*": "./dist/internal/*.js"
+  },
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "scripts": {
@@ -27,6 +30,7 @@
     "verify": "npm run typecheck; npm run build; npm test"
   },
   "dependencies": {
+    "@lindorm/breaker": "^0.1.0",
     "@lindorm/case": "^0.1.13",
     "@lindorm/enums": "^0.1.7",
     "@lindorm/errors": "^0.1.15",

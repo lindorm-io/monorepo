@@ -26,18 +26,15 @@ import {
   KryptosGenerateRsaSig,
   KryptosLike,
 } from "../types";
-import { KryptosGenerate } from "../types/private";
+import { KryptosGenerate } from "#internal/types/generate";
 import {
   autoGenerateConfig,
-  calculateKeyOps,
-  fromOptions,
   generateKey,
   generateKeyAsync,
-  isB64,
-  isDer,
-  isJwk,
-  isPem,
-} from "../utils/private";
+} from "#internal/utils/generate";
+import { calculateKeyOps } from "#internal/utils/key-ops";
+import { fromOptions } from "#internal/utils/from-options";
+import { isB64, isDer, isJwk, isPem } from "#internal/utils/is";
 import { Kryptos } from "./Kryptos";
 
 type Env = {

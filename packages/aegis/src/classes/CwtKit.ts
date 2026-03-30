@@ -18,22 +18,15 @@ import {
   ValidateCwtOptions,
   VerifyCwtOptions,
 } from "../types";
-import {
-  createCoseSignToken,
-  createCoseSignature,
-  createJwtValidate,
-  createJwtVerify,
-  decodeCoseClaims,
-  decodeCoseHeader,
-  mapCoseClaims,
-  mapCoseHeader,
-  mapJwtContentToClaims,
-  mapTokenHeader,
-  parseTokenHeader,
-  parseTokenPayload,
-  validate,
-  verifyCoseSignature,
-} from "../utils/private";
+import { decodeCoseClaims, mapCoseClaims } from "#internal/utils/cose/claims";
+import { decodeCoseHeader, mapCoseHeader } from "#internal/utils/cose/header";
+import { createCoseSignToken } from "#internal/utils/cose-sign-token";
+import { createCoseSignature, verifyCoseSignature } from "#internal/utils/cose-signature";
+import { createJwtValidate } from "#internal/utils/jwt-validate";
+import { mapJwtContentToClaims, parseTokenPayload } from "#internal/utils/jwt-payload";
+import { createJwtVerify } from "#internal/utils/jwt-verify";
+import { mapTokenHeader, parseTokenHeader } from "#internal/utils/token-header";
+import { validate } from "#internal/utils/validate";
 
 export class CwtKit implements ICwtKit {
   private readonly clockTolerance: number;

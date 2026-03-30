@@ -1,0 +1,130 @@
+import { isArray, isObject } from "@lindorm/is";
+import fastSafeStringify from "fast-safe-stringify";
+import { blue, cyan, gray, green, red, white, yellow } from "picocolors";
+import { Formatter } from "picocolors/types";
+import { LogContent, LogLevel } from "../../types";
+import { InternalLog } from "#internal/types/internal-log";
+import { inspectDictionary } from "../../utils/inspect-dictionary";
+
+const colourise = (
+  formatter: Formatter,
+  input: string,
+  colours: boolean = true,
+): string => (colours ? formatter(input) : input);
+
+const formatLevel = (level: LogLevel, colours: boolean = true): string => {
+  switch (level) {
+    case "error":
+      return colourise(red, level.toUpperCase(), colours);
+    case "warn":
+      return colourise(yellow, level.toUpperCase(), colours);
+    case "info":
+      return colourise(green, level.toUpperCase(), colours);
+    case "verbose":
+      return colourise(cyan, level.toUpperCase(), colours);
+    case "debug":
+      return colourise(blue, level.toUpperCase(), colours);
+    case "silly":
+      return colourise(gray, level.toUpperCase(), colours);
+
+    default:
+      return colourise(white, "UNKNOWN", colours);
+  }
+};
+
+const levelColor = (level: LogLevel, input: string, colours: boolean = true): string => {
+  switch (level) {
+    case "error":
+      return colourise(red, input, colours);
+    case "warn":
+      return colourise(yellow, input, colours);
+    case "silly":
+      return colourise(gray, input, colours);
+
+    default:
+      return colourise(white, input, colours);
+  }
+};
+
+const colouriseError = (error: Error, colours: boolean = true): string => {
+  const { errors, stack, ...rest } = error as any;
+
+  if (Object.keys(rest).length) {
+    const content = inspectDictionary(rest, false);
+    return `${colourise(red, stack, colours)}\n${colourise(red, content, colours)}`;
+  }
+
+  const content = error.stack ? error.stack : error;
+
+  return `${colourise(red, content as string, colours)}`;
+};
+
+const readableContent = (
+  content: LogContent,
+  colours: boolean = true,
+): string | undefined => {
+  if (!content) return;
+
+  if (content instanceof Error) {
+    return colouriseError(content, colours);
+  }
+
+  if (content.error instanceof Error) {
+    return colouriseError(content.error, colours);
+  }
+
+  if (isObject(content)) {
+    return inspectDictionary(content, colours);
+  }
+};
+
+const formatDuration = (ms: number): string => {
+  const us = Math.round((ms % 1) * 1000);
+  const totalMs = Math.floor(ms);
+  const s = Math.floor(totalMs / 1000);
+  const m = Math.floor(s / 60);
+  const h = Math.floor(m / 60);
+
+  const parts: string[] = [];
+
+  if (h > 0) parts.push(`${h}h `);
+  if (m % 60 > 0) parts.push(`${m % 60}m `);
+  if (s % 60 > 0) parts.push(`${s % 60}s `);
+  if (s < 60 && totalMs % 1000 > 0) parts.push(`${totalMs % 1000}ms `);
+  if (s === 0 && us > 0) parts.push(`${us}µs `);
+
+  return parts.length ? parts.join("").trim() : "0µs";
+};
+
+export const readableFormat = (log: InternalLog): string => {
+  try {
+    const time = colourise(gray, log.time.toISOString()) + " ";
+    const colon = colourise(gray, ": ");
+    const level = formatLevel(log.level);
+    const message = levelColor(log.level, log.message);
+
+    const scopeString = log.scope.length ? `[ ${log.scope.join(" | ")} ]` : undefined;
+    const scope = scopeString ? " " + colourise(gray, scopeString) : "";
+    const duration =
+      log.duration !== undefined
+        ? " " + colourise(gray, `(${formatDuration(log.duration)})`)
+        : "";
+
+    const pre = `${time}${level}${colon}${message}${duration}${scope}`;
+
+    const context =
+      log.context && Object.keys(log.context).length ? log.context : undefined;
+    const extra = isArray(log.extra) && log.extra.length ? log.extra : [];
+    const contentArray = [context, ...extra]
+      .filter((d) => d)
+      .map((d) => readableContent(d));
+
+    const content = contentArray.length ? `\n${contentArray.join("\n")}` : "";
+
+    return `${pre}${content}`;
+  } catch (err) {
+    console.error("error when formatting message", err);
+
+    return fastSafeStringify(log);
+  }
+};
