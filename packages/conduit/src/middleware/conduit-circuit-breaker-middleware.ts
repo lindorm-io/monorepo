@@ -1,112 +1,64 @@
-import { ConduitError } from "../errors";
+import { defaultConduitClassifier } from "#internal/utils/default-conduit-classifier";
 import {
-  Breaker,
-  CircuitBreakerVerifier,
-  ConduitCircuitBreakerCache,
-  ConduitMiddleware,
-} from "../types";
-import { defaultCircuitBreakerVerifier, waitForProbe } from "../utils/private";
+  CircuitBreaker,
+  CircuitOpenError,
+  type CircuitBreakerOptions,
+  type ICircuitBreaker,
+} from "@lindorm/breaker";
+import { ILogger } from "@lindorm/logger";
+import { ConduitError } from "../errors";
+import type { ConduitMiddleware } from "../types";
 
-type Config = {
-  verifier?: CircuitBreakerVerifier;
-  expiration?: number;
-  serverErrorThreshold?: number;
-  clientErrorThreshold?: number;
+export type ConduitCircuitBreakerCache = Map<string, ICircuitBreaker>;
+
+export type ConduitCircuitBreakerConfig = Partial<
+  Omit<CircuitBreakerOptions, "name" | "classifier">
+> & {
+  classifier?: CircuitBreakerOptions["classifier"];
 };
 
 export const createConduitCircuitBreakerMiddleware = (
-  config: Config = {},
+  config: ConduitCircuitBreakerConfig = {},
+  logger?: ILogger,
   cache: ConduitCircuitBreakerCache = new Map(),
 ): ConduitMiddleware => {
-  const expirationMs = (config.expiration ?? 60 * 2) * 1000;
-
-  const verifier = config.verifier ?? defaultCircuitBreakerVerifier(config);
-
   return async function conduitCircuitBreakerMiddleware(ctx, next) {
-    let origin: string;
-    try {
-      origin = new URL(ctx.req.url, ctx.app?.baseURL ?? undefined).origin;
-    } catch {
-      origin = ctx.req.url;
-    }
+    let breaker = cache.get(ctx.req.origin);
+    if (!breaker) {
+      const origin = ctx.req.origin;
 
-    await waitForProbe(cache, origin);
+      breaker = new CircuitBreaker({
+        name: `conduit:${origin}`,
+        classifier: config.classifier ?? defaultConduitClassifier,
+        threshold: config.threshold,
+        window: config.window,
+        halfOpenDelay: config.halfOpenDelay,
+        halfOpenBackoff: config.halfOpenBackoff,
+        halfOpenMaxDelay: config.halfOpenMaxDelay,
+      });
 
-    const existing = cache.get(origin);
-    if (existing?.state === "closed" && Date.now() > existing.timestamp + expirationMs) {
-      ctx.logger?.debug("Circuit breaker cleared", { origin });
-      cache.delete(origin);
-    }
-
-    const fresh = cache.get(origin);
-    if (
-      fresh?.state === "open" &&
-      !fresh.isProbing &&
-      Date.now() > fresh.timestamp + expirationMs
-    ) {
-      fresh.isProbing = true;
-      fresh.state = "half-open";
-      cache.set(origin, fresh);
-    }
-
-    const current = cache.get(origin);
-    if (current?.state === "open") {
-      throw new ConduitError("Circuit breaker is open", { debug: { origin } });
-    }
-
-    try {
-      await next();
-
-      const breaker = cache.get(origin);
-
-      if (breaker?.state === "half-open") {
-        ctx.logger?.debug("Circuit breaker cleared", { origin });
-        cache.delete(origin);
-      }
-    } catch (error) {
-      if (!(error instanceof ConduitError)) {
-        throw error;
-      }
-
-      const init = cache.get(origin) ?? {
-        origin,
-        errors: [],
-        isProbing: false,
-        state: "closed",
-        timestamp: Date.now(),
-      };
-
-      init.errors.push(error);
-      while (init.errors.length > 100) init.errors.shift();
-
-      if (init.errors.length === 1) {
-        ctx.logger?.debug("Circuit breaker initialised", {
-          origin: init.origin,
-          status: error.status,
-          message: error.message,
-          amount: init.errors.length,
+      if (logger) {
+        breaker.on("open", (event) => {
+          logger.warn("Circuit breaker opened", { origin, failures: event.failures });
+        });
+        breaker.on("half-open", (event) => {
+          logger.debug("Circuit breaker half-open", { origin, failures: event.failures });
+        });
+        breaker.on("closed", () => {
+          logger.info("Circuit breaker closed", { origin });
         });
       }
 
-      cache.set(origin, init);
-
-      const breaker = cache.get(origin) as Breaker;
-      const state = await verifier(ctx, { ...breaker }, error);
-
-      breaker.isProbing = false;
-      breaker.state = state;
-
-      switch (state) {
-        case "open":
-          breaker.timestamp = Date.now();
-          break;
-
-        default:
-          break;
-      }
-
       cache.set(origin, breaker);
-
+    }
+    try {
+      await breaker.execute(() => next());
+    } catch (error) {
+      if (error instanceof CircuitOpenError) {
+        throw new ConduitError("Circuit breaker is open", {
+          debug: { origin: ctx.req.origin },
+        });
+      }
       throw error;
     }
   };

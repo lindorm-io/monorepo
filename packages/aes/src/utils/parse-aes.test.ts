@@ -2,14 +2,14 @@ import { parseAes } from "./parse-aes";
 import { AesError } from "../errors";
 import { AesDecryptionRecord, SerialisedAesDecryption } from "../types";
 import { isAesBufferData, isAesSerialisedData, isAesTokenised } from "./is-aes";
-import {
-  parseEncodedAesString,
-  parseSerialisedAesRecord,
-  parseTokenisedAesString,
-} from "./private";
+import { parseEncodedAesString } from "#internal/utils/encoded-aes";
+import { parseSerialisedAesRecord } from "#internal/utils/serialised-aes";
+import { parseTokenisedAesString } from "#internal/utils/tokenised-aes";
 
 jest.mock("./is-aes");
-jest.mock("./private");
+jest.mock("#internal/utils/encoded-aes");
+jest.mock("#internal/utils/serialised-aes");
+jest.mock("#internal/utils/tokenised-aes");
 
 const mockIsAesBufferData = isAesBufferData as jest.MockedFunction<
   typeof isAesBufferData

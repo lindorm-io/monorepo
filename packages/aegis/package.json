@@ -13,6 +13,26 @@
   },
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./mocks": {
+      "types": "./dist/mocks/index.d.ts",
+      "default": "./dist/mocks/index.js"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "mocks": [
+        "dist/mocks/index.d.ts"
+      ]
+    }
+  },
+  "imports": {
+    "#internal/*": "./dist/internal/*.js"
+  },
   "scripts": {
     "build": "rimraf dist && tsc -b ./tsconfig.build.json",
     "example": "ts-node example",

@@ -1,6 +1,5 @@
-import { Environment } from "@lindorm/types";
 import { RetryConfig } from "@lindorm/retry";
-import { Dict } from "@lindorm/types";
+import { Dict, Environment } from "@lindorm/types";
 import { Readable } from "stream";
 import { ConfigContext } from "./overrides";
 import { OnRetryCallback, RetryCallback } from "./retry";
@@ -27,6 +26,7 @@ export type RequestContext<Body = Dict, Params = Dict, Query = Dict> = {
   onDownloadProgress: ((event: { loaded: number; total?: number }) => void) | undefined;
   onRetry: OnRetryCallback | undefined;
   onUploadProgress: ((event: { loaded: number; total?: number }) => void) | undefined;
+  origin: string;
   params: Params;
   query: Query;
   retryCallback: RetryCallback;

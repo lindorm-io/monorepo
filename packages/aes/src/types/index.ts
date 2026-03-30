@@ -9,4 +9,4 @@ export type {
   EncryptContentResult,
   PreparedEncryption,
   PreparedEncryptionHeaderParams,
-} from "./private/prepared-encryption";
+} from "#internal/types/prepared-encryption";

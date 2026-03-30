@@ -1,149 +1,139 @@
-import MockDate from "mockdate";
+import { CircuitBreaker, CircuitOpenError, type ICircuitBreaker } from "@lindorm/breaker";
 import { ConduitError } from "../errors";
-import { ConduitCircuitBreakerCache, ConduitMiddleware } from "../types";
-import { waitForProbe as _waitForProbe } from "../utils/private";
-import { createConduitCircuitBreakerMiddleware } from "./conduit-circuit-breaker-middleware";
-
-const MockedDate = new Date("2024-01-01T08:00:00.000Z");
-MockDate.set(MockedDate);
-
-jest.mock("../utils/private", () => ({
-  waitForProbe: jest.fn(),
-  defaultCircuitBreakerVerifier: jest.fn(),
-}));
-
-const waitForProbe = _waitForProbe as jest.Mock;
+import {
+  ConduitCircuitBreakerCache,
+  createConduitCircuitBreakerMiddleware,
+} from "./conduit-circuit-breaker-middleware";
+import type { ConduitMiddleware } from "../types";
 
 describe("conduitCircuitBreakerMiddleware", () => {
   let ctx: any;
   let next: jest.Mock;
   let cache: ConduitCircuitBreakerCache;
   let middleware: ConduitMiddleware;
-  let verifier: jest.Mock;
 
   const origin = "https://api.test";
   const url = `${origin}/resource`;
-  const error = new ConduitError("fail");
 
   beforeEach(() => {
     ctx = {
       req: { url },
-      logger: { debug: jest.fn() },
+      logger: { warn: jest.fn(), info: jest.fn(), debug: jest.fn() },
     };
 
     cache = new Map();
-    verifier = jest.fn().mockResolvedValue("closed");
-    middleware = createConduitCircuitBreakerMiddleware(
-      { expiration: 10, verifier },
-      cache,
-    );
-
+    middleware = createConduitCircuitBreakerMiddleware({}, cache);
     next = jest.fn().mockResolvedValue(undefined);
-    waitForProbe.mockResolvedValue(undefined);
   });
 
   afterEach(jest.clearAllMocks);
 
-  test("allows through when closed and next succeeds", async () => {
+  test("allows through when breaker is closed and next succeeds", async () => {
     await expect(middleware(ctx, next)).resolves.toBeUndefined();
 
     expect(next).toHaveBeenCalled();
   });
 
-  test("opens circuit on first ConduitError and throws", async () => {
-    verifier.mockResolvedValue("open");
-    next.mockRejectedValue(error);
+  test("creates a breaker per origin", async () => {
+    await middleware(ctx, next);
 
-    await expect(middleware(ctx, next)).rejects.toThrow("fail");
-
-    expect(verifier).toHaveBeenCalled();
+    expect(cache.has(origin)).toBe(true);
+    expect(cache.get(origin)!.name).toBe(`conduit:${origin}`);
   });
 
-  test("blocks when state is open", async () => {
-    cache.set(origin, {
-      origin,
-      state: "open",
-      errors: [],
-      timestamp: Date.now() - 1000,
-      isProbing: false,
-    });
+  test("reuses existing breaker for same origin", async () => {
+    await middleware(ctx, next);
 
+    const breaker = cache.get(origin);
+
+    await middleware(ctx, next);
+
+    expect(cache.get(origin)).toBe(breaker);
+  });
+
+  test("CircuitOpenError becomes ConduitError", async () => {
+    const mockBreaker: ICircuitBreaker = {
+      name: `conduit:${origin}`,
+      state: "open",
+      isOpen: true,
+      isClosed: false,
+      isHalfOpen: false,
+      execute: jest.fn().mockRejectedValue(new CircuitOpenError("open")),
+      open: jest.fn(),
+      close: jest.fn(),
+      reset: jest.fn(),
+      on: jest.fn(),
+    };
+    cache.set(origin, mockBreaker);
+
+    await expect(middleware(ctx, next)).rejects.toThrow(ConduitError);
     await expect(middleware(ctx, next)).rejects.toThrow("Circuit breaker is open");
   });
 
-  test("half-opens after expiration and probes", async () => {
-    cache.set(origin, {
-      origin,
-      state: "half-open",
-      errors: [],
-      timestamp: Date.now() - 20000,
-      isProbing: false,
-    });
+  test("non-ConduitError passes through unchanged", async () => {
+    const regularError = new Error("Not a ConduitError");
+    next.mockRejectedValue(regularError);
 
-    await expect(middleware(ctx, next)).resolves.toBeUndefined();
-
-    expect(cache.has(origin)).toBe(false);
+    await expect(middleware(ctx, next)).rejects.toThrow("Not a ConduitError");
+    await expect(middleware(ctx, next)).rejects.toThrow(Error);
   });
 
-  test("resets open after successful probe", async () => {
-    cache.set(origin, {
-      origin,
-      state: "open",
-      errors: [],
-      timestamp: Date.now() - 20000,
-      isProbing: false,
-    });
-
-    await expect(middleware(ctx, next)).resolves.toBeUndefined();
-
-    expect(cache.has(origin)).toBe(false);
-  });
-
-  test("re-opens if error on half-open", async () => {
-    cache.set(origin, {
-      origin,
-      state: "half-open",
-      errors: [],
-      timestamp: Date.now() - 20000,
-      isProbing: false,
-    });
-
-    verifier.mockResolvedValue("open");
-    next.mockRejectedValue(error);
-
-    await expect(middleware(ctx, next)).rejects.toThrow("fail");
-    const breaker = cache.get(origin)!;
-
-    expect(breaker.state).toBe("open");
-  });
-
-  test("caps errors array at 100 entries", async () => {
-    // Pre-populate with 100 errors
-    const existingErrors = Array.from(
-      { length: 100 },
-      (_, i) => new ConduitError(`error-${i}`),
+  test("ConduitError server errors count toward threshold", async () => {
+    middleware = createConduitCircuitBreakerMiddleware(
+      { threshold: 2, window: 60000 },
+      cache,
     );
 
-    cache.set(origin, {
-      origin,
-      state: "closed",
-      errors: [...existingErrors],
-      timestamp: Date.now(),
-      isProbing: false,
-    });
+    const serverError = new ConduitError("fail", { status: 500 });
+    next.mockRejectedValue(serverError);
 
-    verifier.mockResolvedValue("closed");
-    const newError = new ConduitError("overflow");
-    next.mockRejectedValue(newError);
+    // First failure
+    await expect(middleware(ctx, next)).rejects.toThrow("fail");
+    expect(cache.get(origin)!.state).toBe("closed");
 
-    await expect(middleware(ctx, next)).rejects.toThrow("overflow");
+    // Second failure should trip breaker
+    await expect(middleware(ctx, next)).rejects.toThrow("fail");
+    expect(cache.get(origin)!.state).toBe("open");
+  });
 
-    const updated = cache.get(origin)!;
-    expect(updated.errors.length).toBe(100);
-    // First error should have been shifted out, second error is now first
-    expect(updated.errors[0]).toEqual(existingErrors[1]);
-    // Last error should be the new one
-    expect(updated.errors[99]).toEqual(newError);
+  test("ConduitError client errors are ignorable", async () => {
+    middleware = createConduitCircuitBreakerMiddleware(
+      { threshold: 2, window: 60000 },
+      cache,
+    );
+
+    const clientError = new ConduitError("not found", { status: 404 });
+    next.mockRejectedValue(clientError);
+
+    // Many client errors should not trip breaker
+    for (let i = 0; i < 5; i++) {
+      await expect(middleware(ctx, next)).rejects.toThrow("not found");
+    }
+
+    expect(cache.get(origin)!.state).toBe("closed");
+  });
+
+  test("per-origin isolation", async () => {
+    middleware = createConduitCircuitBreakerMiddleware(
+      { threshold: 1, window: 60000 },
+      cache,
+    );
+
+    const serverError = new ConduitError("fail", { status: 500 });
+
+    // Trip origin A
+    const ctxA = { ...ctx, req: { url: "https://a.test/path" } };
+    next.mockRejectedValue(serverError);
+    await expect(middleware(ctxA, next)).rejects.toThrow("fail");
+
+    expect(cache.get("https://a.test")!.state).toBe("open");
+
+    // Origin B should still be closed
+    const ctxB = { ...ctx, req: { url: "https://b.test/path" } };
+    next.mockResolvedValue(undefined);
+    await expect(middleware(ctxB, next)).resolves.toBeUndefined();
+
+    expect(cache.get("https://b.test")!.state).toBe("closed");
   });
 
   test("handles relative URLs without crashing", async () => {
@@ -162,32 +152,5 @@ describe("conduitCircuitBreakerMiddleware", () => {
     await expect(middleware(ctx, next)).resolves.toBeUndefined();
 
     expect(next).toHaveBeenCalled();
-  });
-
-  test("concurrent probe race condition prevented by isProbing guard", async () => {
-    cache.set(origin, {
-      origin,
-      state: "open",
-      errors: [],
-      timestamp: Date.now() - 20000, // Expired
-      isProbing: true, // Already probing
-    });
-
-    await expect(middleware(ctx, next)).rejects.toThrow("Circuit breaker is open");
-
-    // Should wait for probe instead of calling next
-    expect(waitForProbe).toHaveBeenCalled();
-    expect(next).not.toHaveBeenCalled();
-  });
-
-  test("non-ConduitError exceptions pass through without opening circuit", async () => {
-    const regularError = new Error("Not a ConduitError");
-    next.mockRejectedValue(regularError);
-
-    await expect(middleware(ctx, next)).rejects.toThrow("Not a ConduitError");
-
-    // Circuit should not be affected - no entry should be created
-    const breaker = cache.get(origin);
-    expect(breaker).toBeUndefined();
   });
 });
