@@ -1,7 +1,7 @@
 import { IAmphora } from "@lindorm/amphora";
 import { ReadableTime } from "@lindorm/date";
 import { IEntity } from "@lindorm/entity";
-import { IHermes } from "@lindorm/hermes/__previous_src";
+import { IHermes } from "@lindorm/hermes";
 import { ILogger } from "@lindorm/logger";
 import { IMessage } from "@lindorm/message";
 import { RetryOptions } from "@lindorm/retry";
