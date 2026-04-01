@@ -507,6 +507,8 @@ export class ProteusSource {
     const userOpts: ProteusBreakerOptions =
       typeof options.breaker === "object" ? options.breaker : {};
 
+    // TODO: rework to expose breaker as EventEmitter on ProteusSource (like hermes)
+    //       instead of this internal wiring — let consumers subscribe directly
     const breakerOptions: CircuitBreakerOptions = {
       name: `proteus:${options.driver}`,
       classifier: userOpts.classifier ?? resolveDefaultClassifier(options.driver),
@@ -515,26 +517,29 @@ export class ProteusSource {
       halfOpenDelay: userOpts.halfOpenDelay,
       halfOpenBackoff: userOpts.halfOpenBackoff,
       halfOpenMaxDelay: userOpts.halfOpenMaxDelay,
-      onStateChange: (event) => {
-        userOpts.onStateChange?.(event);
-
-        if (event.to === "open") {
-          this.logger.warn("Circuit breaker opened", {
-            name: event.name,
-            from: event.from,
-            failures: event.failures,
-          });
-        } else if (event.to === "closed") {
-          this.logger.info("Circuit breaker closed", { name: event.name });
-        } else if (event.to === "half-open") {
-          this.logger.info("Circuit breaker half-open — probing", {
-            name: event.name,
-          });
-        }
-      },
     };
 
-    return new CircuitBreaker(breakerOptions);
+    const breaker = new CircuitBreaker(breakerOptions);
+
+    breaker.on("open", (event) => {
+      this.logger.warn("Circuit breaker opened", {
+        name: event.name,
+        from: event.from,
+        failures: event.failures,
+      });
+    });
+
+    breaker.on("closed", (event) => {
+      this.logger.info("Circuit breaker closed", { name: event.name });
+    });
+
+    breaker.on("half-open", (event) => {
+      this.logger.info("Circuit breaker half-open — probing", {
+        name: event.name,
+      });
+    });
+
+    return breaker;
   }
 }
 
