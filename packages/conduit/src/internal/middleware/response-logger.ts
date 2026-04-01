@@ -16,6 +16,7 @@ export const responseLogger: ConduitMiddleware = async (ctx, next) => {
         form: ctx.req.form ? ctx.req.form : {},
         headers: ctx.req.headers,
         metadata: ctx.req.metadata,
+        origin: ctx.req.origin,
         params: ctx.req.params,
         query: ctx.req.query,
         retryConfig: ctx.req.retryConfig,
