@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.4](https://github.com/lindorm-io/monorepo/compare/@lindorm/amphora@0.3.3...@lindorm/amphora@0.3.4) (2026-04-01)
+
+### Bug Fixes
+
+- **aes,amphora:** use relative imports for test fixtures ([5ebc484](https://github.com/lindorm-io/monorepo/commit/5ebc484e7dd664b85f40a57db0057364e8883ce9))
+
 ## [0.3.3](https://github.com/lindorm-io/monorepo/compare/@lindorm/amphora@0.3.2...@lindorm/amphora@0.3.3) (2026-03-29)
 
 **Note:** Version bump only for package @lindorm/amphora

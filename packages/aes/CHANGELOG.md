@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.6.3](https://github.com/lindorm-io/monorepo/compare/@lindorm/aes@0.6.2...@lindorm/aes@0.6.3) (2026-04-01)
+
+### Bug Fixes
+
+- **aes,amphora:** use relative imports for test fixtures ([5ebc484](https://github.com/lindorm-io/monorepo/commit/5ebc484e7dd664b85f40a57db0057364e8883ce9))
+
 ## [0.6.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/aes@0.6.1...@lindorm/aes@0.6.2) (2026-03-13)
 
 **Note:** Version bump only for package @lindorm/aes

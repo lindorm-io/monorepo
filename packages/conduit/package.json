@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/conduit",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -30,20 +30,20 @@
     "verify": "npm run typecheck; npm run build; npm test"
   },
   "dependencies": {
-    "@lindorm/breaker": "^0.1.0",
-    "@lindorm/case": "^0.1.13",
+    "@lindorm/breaker": "^0.2.0",
+    "@lindorm/case": "^0.1.14",
     "@lindorm/enums": "^0.1.7",
-    "@lindorm/errors": "^0.1.15",
-    "@lindorm/is": "^0.1.13",
+    "@lindorm/errors": "^0.1.16",
+    "@lindorm/is": "^0.1.14",
     "@lindorm/middleware": "^0.1.7",
     "@lindorm/random": "^0.2.2",
-    "@lindorm/retry": "^0.2.0",
-    "@lindorm/url": "^0.1.14",
+    "@lindorm/retry": "^0.2.1",
+    "@lindorm/url": "^0.1.15",
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@lindorm/logger": "^0.5.1",
-    "@lindorm/types": "^0.4.0",
+    "@lindorm/logger": "^0.5.2",
+    "@lindorm/types": "^0.4.1",
     "form-data": "^4.0.5"
   },
   "peerDependencies": {

@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/url",
-  "version": "0.1.14",
+  "version": "0.1.15",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -26,10 +26,10 @@
     "verify": "npm run typecheck; npm run build; npm test"
   },
   "dependencies": {
-    "@lindorm/case": "^0.1.13",
-    "@lindorm/is": "^0.1.13"
+    "@lindorm/case": "^0.1.14",
+    "@lindorm/is": "^0.1.14"
   },
   "devDependencies": {
-    "@lindorm/types": "^0.4.0"
+    "@lindorm/types": "^0.4.1"
   }
 }
