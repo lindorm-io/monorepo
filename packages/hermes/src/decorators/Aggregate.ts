@@ -1,15 +1,15 @@
-import { Constructor } from "@lindorm/types";
-import { AggregateDecoratorOptions } from "../types";
-import { extractNameData, globalHermesMetadata } from "../utils/private";
+import { snakeCase } from "@lindorm/case";
+import { stageAggregate } from "#internal/metadata";
 
-export function Aggregate(options: AggregateDecoratorOptions = {}): ClassDecorator {
-  return function (target) {
-    const { name } = extractNameData(target.name);
-    globalHermesMetadata.addAggregate({
-      encryption: options.encryption || false,
-      name: options.name || name,
-      namespace: options.namespace || null,
-      target: target as unknown as Constructor,
+/**
+ * Registers a class as an aggregate handler. A new instance is created for
+ * each handler invocation -- do not rely on constructor injection or instance
+ * state persisting between calls.
+ */
+export const Aggregate =
+  (name?: string) =>
+  (target: Function, context: ClassDecoratorContext): void => {
+    stageAggregate(context.metadata, {
+      name: name ?? snakeCase(target.name),
     });
   };
-}

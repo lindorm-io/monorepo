@@ -1,27 +1,27 @@
-import { Dict } from "@lindorm/types";
-import { SagaEventCtx } from "../types/handlers/saga-event-handler";
-import { globalHermesMetadata } from "../utils/private";
-import { Aggregate } from "./Aggregate";
-import { Event } from "./Event";
-import { Saga } from "./Saga";
+import type { StagedMetadata } from "#internal/metadata";
 import { SagaEventHandler } from "./SagaEventHandler";
 
-describe("SagaEventHandler Decorator", () => {
-  @Aggregate()
-  class TestSagaAggregate {}
+const createMockMethodContext = (
+  metadata: DecoratorMetadataObject,
+  methodName: string,
+): ClassMethodDecoratorContext =>
+  ({ metadata, name: methodName }) as ClassMethodDecoratorContext;
 
-  test("should add metadata", () => {
-    @Event()
-    class TestSagaEventHandlerEvent {}
+describe("SagaEventHandler", () => {
+  test("should stage handler with correct kind, trigger, and methodName", () => {
+    const metadata: DecoratorMetadataObject = Object.create(
+      null,
+    ) as DecoratorMetadataObject;
 
-    @Saga(TestSagaAggregate)
-    class TestSagaEventHandlerSaga {
-      @SagaEventHandler(TestSagaEventHandlerEvent)
-      public async onTestSagaEventHandlerEvent(
-        ctx: SagaEventCtx<TestSagaEventHandlerEvent, Dict>,
-      ) {}
-    }
+    class FakeEvent {}
 
-    expect(globalHermesMetadata.getSaga(TestSagaEventHandlerSaga)).toMatchSnapshot();
+    const fn = () => {};
+    SagaEventHandler(FakeEvent)(fn, createMockMethodContext(metadata, "onCreateEvent"));
+
+    const staged = metadata as StagedMetadata;
+    expect(staged.handlers).toHaveLength(1);
+    expect(staged.handlers![0].kind).toBe("SagaEventHandler");
+    expect(staged.handlers![0].methodName).toBe("onCreateEvent");
+    expect(staged.handlers![0].trigger).toBe(FakeEvent);
   });
 });

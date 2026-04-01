@@ -1,30 +1,27 @@
-import { ViewIdCtx } from "../types";
-import { globalHermesMetadata } from "../utils/private";
-import { Aggregate } from "./Aggregate";
-import { Event } from "./Event";
-import { View } from "./View";
+import type { StagedMetadata } from "#internal/metadata";
 import { ViewIdHandler } from "./ViewIdHandler";
 
-describe("ViewIdHandler Decorator", () => {
-  @Aggregate()
-  class TestViewAggregate {}
+const createMockMethodContext = (
+  metadata: DecoratorMetadataObject,
+  methodName: string,
+): ClassMethodDecoratorContext =>
+  ({ metadata, name: methodName }) as ClassMethodDecoratorContext;
 
-  test("should add metadata", () => {
-    @Event()
-    class TestViewIdentityHandlerEvent {
-      public constructor(public readonly one: string) {}
-    }
+describe("ViewIdHandler", () => {
+  test("should stage handler with correct kind, trigger, and methodName", () => {
+    const metadata: DecoratorMetadataObject = Object.create(
+      null,
+    ) as DecoratorMetadataObject;
 
-    @View(TestViewAggregate, "mongo")
-    class TestViewIdentityHandlerView {
-      @ViewIdHandler(TestViewIdentityHandlerEvent)
-      public getIdTestViewIdentityHandlerEvent(
-        ctx: ViewIdCtx<TestViewIdentityHandlerEvent>,
-      ) {
-        return ctx.event.one;
-      }
-    }
+    class FakeEvent {}
 
-    expect(globalHermesMetadata.getView(TestViewIdentityHandlerView)).toMatchSnapshot();
+    const fn = () => {};
+    ViewIdHandler(FakeEvent)(fn, createMockMethodContext(metadata, "resolveId"));
+
+    const staged = metadata as StagedMetadata;
+    expect(staged.handlers).toHaveLength(1);
+    expect(staged.handlers![0].kind).toBe("ViewIdHandler");
+    expect(staged.handlers![0].methodName).toBe("resolveId");
+    expect(staged.handlers![0].trigger).toBe(FakeEvent);
   });
 });

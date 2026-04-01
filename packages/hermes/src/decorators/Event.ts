@@ -1,14 +1,21 @@
-import { Constructor } from "@lindorm/types";
-import { EventDecoratorOptions } from "../types";
-import { extractNameData, globalHermesMetadata } from "../utils/private";
+import { extractNameData, stageDto } from "#internal/metadata";
 
-export function Event(options: EventDecoratorOptions = {}): ClassDecorator {
-  return function (target) {
-    const { name, version } = extractNameData(target.name);
-    globalHermesMetadata.addEvent({
-      name: options.name || name,
-      target: target as unknown as Constructor,
-      version: options.version ?? version,
+type EventOptions = {
+  name?: string;
+  version?: number;
+};
+
+export const Event =
+  (nameOrOptions?: string | EventOptions) =>
+  (target: Function, context: ClassDecoratorContext): void => {
+    const opts =
+      typeof nameOrOptions === "string" ? { name: nameOrOptions } : (nameOrOptions ?? {});
+
+    const { name: defaultName, version: defaultVersion } = extractNameData(target.name);
+
+    stageDto(context.metadata, {
+      kind: "event",
+      name: opts.name ?? defaultName,
+      version: opts.version ?? defaultVersion,
     });
   };
-}

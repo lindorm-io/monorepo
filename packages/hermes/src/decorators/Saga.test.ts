@@ -1,25 +1,68 @@
-import { globalHermesMetadata } from "../utils/private";
-import { Aggregate } from "./Aggregate";
+import type { StagedMetadata } from "#internal/metadata";
 import { Saga } from "./Saga";
 
-describe("Saga Decorator", () => {
-  @Aggregate()
-  class TestSagaAggregate {}
+const createMockContext = (metadata: DecoratorMetadataObject): ClassDecoratorContext =>
+  ({ metadata }) as ClassDecoratorContext;
 
-  test("should add metadata", () => {
-    @Saga(TestSagaAggregate)
+describe("Saga", () => {
+  test("should stage saga metadata with single aggregate constructor", () => {
+    const metadata: DecoratorMetadataObject = Object.create(
+      null,
+    ) as DecoratorMetadataObject;
+
+    class FakeAggregate {}
     class TestSaga {}
 
-    expect(globalHermesMetadata.getSaga(TestSaga)).toMatchSnapshot();
+    Saga(FakeAggregate)(TestSaga, createMockContext(metadata));
+
+    const staged = metadata as StagedMetadata;
+    expect(staged.saga!.aggregates).toHaveLength(1);
+    expect(staged.saga!.aggregates[0]).toBe(FakeAggregate);
+    expect(metadata).toMatchSnapshot();
   });
 
-  test("should add metadata with custom options", () => {
-    @Saga(TestSagaAggregate, {
-      name: "custom_name",
-      namespace: "custom_namespace",
-    })
-    class TestSagaOptions {}
+  test("should stage saga metadata with array of aggregate constructors", () => {
+    const metadata: DecoratorMetadataObject = Object.create(
+      null,
+    ) as DecoratorMetadataObject;
 
-    expect(globalHermesMetadata.getSaga(TestSagaOptions)).toMatchSnapshot();
+    class FakeAggregateA {}
+    class FakeAggregateB {}
+    class TestSaga {}
+
+    Saga([FakeAggregateA, FakeAggregateB])(TestSaga, createMockContext(metadata));
+
+    const staged = metadata as StagedMetadata;
+    expect(staged.saga!.aggregates).toHaveLength(2);
+    expect(staged.saga!.aggregates[0]).toBe(FakeAggregateA);
+    expect(staged.saga!.aggregates[1]).toBe(FakeAggregateB);
+  });
+
+  test("should stage saga metadata with custom name via options", () => {
+    const metadata: DecoratorMetadataObject = Object.create(
+      null,
+    ) as DecoratorMetadataObject;
+
+    class FakeAggregate {}
+    class TestSaga {}
+
+    Saga(FakeAggregate, { name: "custom_saga" })(TestSaga, createMockContext(metadata));
+
+    const staged = metadata as StagedMetadata;
+    expect(staged.saga!.name).toBe("custom_saga");
+  });
+
+  test("should default name to snake_case of class name", () => {
+    const metadata: DecoratorMetadataObject = Object.create(
+      null,
+    ) as DecoratorMetadataObject;
+
+    class FakeAggregate {}
+    class OrderProcessingSaga {}
+
+    Saga(FakeAggregate)(OrderProcessingSaga, createMockContext(metadata));
+
+    const staged = metadata as StagedMetadata;
+    expect(staged.saga!.name).toBe("order_processing_saga");
   });
 });

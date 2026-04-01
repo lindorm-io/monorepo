@@ -1,21 +1,27 @@
-import { DomainError } from "../errors";
-import { ViewErrorCtx } from "../types/handlers/view-error-handler";
-import { globalHermesMetadata } from "../utils/private";
-import { Aggregate } from "./Aggregate";
-import { View } from "./View";
+import type { StagedMetadata } from "#internal/metadata";
 import { ViewErrorHandler } from "./ViewErrorHandler";
 
-describe("ViewErrorHandler Decorator", () => {
-  @Aggregate()
-  class TestViewAggregate {}
+const createMockMethodContext = (
+  metadata: DecoratorMetadataObject,
+  methodName: string,
+): ClassMethodDecoratorContext =>
+  ({ metadata, name: methodName }) as ClassMethodDecoratorContext;
 
-  test("should add metadata", () => {
-    @View(TestViewAggregate, "mongo")
-    class TestViewErrorHandlerView {
-      @ViewErrorHandler(DomainError)
-      public async onTestViewDomainError(ctx: ViewErrorCtx<DomainError>) {}
-    }
+describe("ViewErrorHandler", () => {
+  test("should stage handler with correct kind, trigger, and methodName", () => {
+    const metadata: DecoratorMetadataObject = Object.create(
+      null,
+    ) as DecoratorMetadataObject;
 
-    expect(globalHermesMetadata.getView(TestViewErrorHandlerView)).toMatchSnapshot();
+    class FakeError {}
+
+    const fn = () => {};
+    ViewErrorHandler(FakeError)(fn, createMockMethodContext(metadata, "onError"));
+
+    const staged = metadata as StagedMetadata;
+    expect(staged.handlers).toHaveLength(1);
+    expect(staged.handlers![0].kind).toBe("ViewErrorHandler");
+    expect(staged.handlers![0].methodName).toBe("onError");
+    expect(staged.handlers![0].trigger).toBe(FakeError);
   });
 });

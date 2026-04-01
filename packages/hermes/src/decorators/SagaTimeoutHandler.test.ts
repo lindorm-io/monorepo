@@ -1,27 +1,27 @@
-import { Dict } from "@lindorm/types";
-import { SagaTimeoutCtx } from "../types/handlers/saga-timeout-handler";
-import { globalHermesMetadata } from "../utils/private";
-import { Aggregate } from "./Aggregate";
-import { Saga } from "./Saga";
+import type { StagedMetadata } from "#internal/metadata";
 import { SagaTimeoutHandler } from "./SagaTimeoutHandler";
-import { Timeout } from "./Timeout";
 
-describe("SagaTimeoutHandler Decorator", () => {
-  @Aggregate()
-  class TestSagaAggregate {}
+const createMockMethodContext = (
+  metadata: DecoratorMetadataObject,
+  methodName: string,
+): ClassMethodDecoratorContext =>
+  ({ metadata, name: methodName }) as ClassMethodDecoratorContext;
 
-  test("should add metadata", () => {
-    @Timeout()
-    class TestSagaTimeoutHandlerTimeout {}
+describe("SagaTimeoutHandler", () => {
+  test("should stage handler with correct kind, trigger, and methodName", () => {
+    const metadata: DecoratorMetadataObject = Object.create(
+      null,
+    ) as DecoratorMetadataObject;
 
-    @Saga(TestSagaAggregate)
-    class TestSagaTimeoutHandlerSaga {
-      @SagaTimeoutHandler(TestSagaTimeoutHandlerTimeout)
-      public async onTestSagaTimeoutHandlerTimeout(
-        ctx: SagaTimeoutCtx<TestSagaTimeoutHandlerTimeout, Dict>,
-      ) {}
-    }
+    class FakeTimeout {}
 
-    expect(globalHermesMetadata.getSaga(TestSagaTimeoutHandlerSaga)).toMatchSnapshot();
+    const fn = () => {};
+    SagaTimeoutHandler(FakeTimeout)(fn, createMockMethodContext(metadata, "onTimeout"));
+
+    const staged = metadata as StagedMetadata;
+    expect(staged.handlers).toHaveLength(1);
+    expect(staged.handlers![0].kind).toBe("SagaTimeoutHandler");
+    expect(staged.handlers![0].methodName).toBe("onTimeout");
+    expect(staged.handlers![0].trigger).toBe(FakeTimeout);
   });
 });

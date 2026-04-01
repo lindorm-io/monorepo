@@ -1,0 +1,687 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`scanModules should handle empty input 1`] = `
+{
+  "aggregates": [],
+  "commands": [],
+  "events": [],
+  "queries": [],
+  "sagas": [],
+  "timeouts": [],
+  "views": [],
+}
+`;
+
+exports[`scanModules should resolve @RequireCreated condition on destroy command handler 1`] = `
+{
+  "requireCreated": true,
+}
+`;
+
+exports[`scanModules should resolve @RequireCreated on saga merge state event handler 1`] = `
+{
+  "requireCreated": true,
+}
+`;
+
+exports[`scanModules should resolve @RequireNotCreated condition on create command handler 1`] = `
+{
+  "requireNotCreated": true,
+}
+`;
+
+exports[`scanModules should resolve @RequireNotCreated on saga create event handler 1`] = `
+{
+  "requireNotCreated": true,
+}
+`;
+
+exports[`scanModules should return complete scanned modules structure 1`] = `
+{
+  "aggregates": [
+    {
+      "commandHandlers": [
+        {
+          "conditions": {
+            "requireNotCreated": true,
+          },
+          "kind": "AggregateCommandHandler",
+          "methodName": "onCreate",
+          "schema": ZodObject {
+            "_cached": null,
+            "_def": {
+              "catchall": ZodNever {
+                "_def": {
+                  "typeName": "ZodNever",
+                },
+                "and": [Function],
+                "array": [Function],
+                "brand": [Function],
+                "catch": [Function],
+                "default": [Function],
+                "describe": [Function],
+                "isNullable": [Function],
+                "isOptional": [Function],
+                "nullable": [Function],
+                "nullish": [Function],
+                "optional": [Function],
+                "or": [Function],
+                "parse": [Function],
+                "parseAsync": [Function],
+                "pipe": [Function],
+                "promise": [Function],
+                "readonly": [Function],
+                "refine": [Function],
+                "refinement": [Function],
+                "safeParse": [Function],
+                "safeParseAsync": [Function],
+                "spa": [Function],
+                "superRefine": [Function],
+                "transform": [Function],
+                "~standard": {
+                  "validate": [Function],
+                  "vendor": "zod",
+                  "version": 1,
+                },
+              },
+              "shape": [Function],
+              "typeName": "ZodObject",
+              "unknownKeys": "strip",
+            },
+            "and": [Function],
+            "array": [Function],
+            "augment": [Function],
+            "brand": [Function],
+            "catch": [Function],
+            "default": [Function],
+            "describe": [Function],
+            "isNullable": [Function],
+            "isOptional": [Function],
+            "nonstrict": [Function],
+            "nullable": [Function],
+            "nullish": [Function],
+            "optional": [Function],
+            "or": [Function],
+            "parse": [Function],
+            "parseAsync": [Function],
+            "pipe": [Function],
+            "promise": [Function],
+            "readonly": [Function],
+            "refine": [Function],
+            "refinement": [Function],
+            "safeParse": [Function],
+            "safeParseAsync": [Function],
+            "spa": [Function],
+            "superRefine": [Function],
+            "transform": [Function],
+            "~standard": {
+              "validate": [Function],
+              "vendor": "zod",
+              "version": 1,
+            },
+          },
+          "trigger": [Function],
+        },
+        {
+          "conditions": {
+            "requireCreated": true,
+          },
+          "kind": "AggregateCommandHandler",
+          "methodName": "onDestroy",
+          "schema": null,
+          "trigger": [Function],
+        },
+        {
+          "conditions": {
+            "requireCreated": true,
+          },
+          "kind": "AggregateCommandHandler",
+          "methodName": "onDestroyNext",
+          "schema": null,
+          "trigger": [Function],
+        },
+        {
+          "conditions": {
+            "requireCreated": true,
+          },
+          "kind": "AggregateCommandHandler",
+          "methodName": "onDispatch",
+          "schema": null,
+          "trigger": [Function],
+        },
+        {
+          "conditions": {
+            "requireCreated": true,
+          },
+          "kind": "AggregateCommandHandler",
+          "methodName": "onEncrypt",
+          "schema": null,
+          "trigger": [Function],
+        },
+        {
+          "conditions": {
+            "requireCreated": true,
+          },
+          "kind": "AggregateCommandHandler",
+          "methodName": "onMergeState",
+          "schema": null,
+          "trigger": [Function],
+        },
+        {
+          "conditions": {
+            "requireCreated": true,
+          },
+          "kind": "AggregateCommandHandler",
+          "methodName": "onSetState",
+          "schema": null,
+          "trigger": [Function],
+        },
+        {
+          "conditions": {
+            "requireCreated": true,
+          },
+          "kind": "AggregateCommandHandler",
+          "methodName": "onThrows",
+          "schema": null,
+          "trigger": [Function],
+        },
+        {
+          "conditions": {
+            "requireCreated": true,
+          },
+          "kind": "AggregateCommandHandler",
+          "methodName": "onTimeout",
+          "schema": null,
+          "trigger": [Function],
+        },
+      ],
+      "errorHandlers": [
+        {
+          "conditions": {},
+          "kind": "AggregateErrorHandler",
+          "methodName": "onDomainError",
+          "schema": null,
+          "trigger": [Function],
+        },
+      ],
+      "eventHandlers": [
+        {
+          "conditions": {},
+          "kind": "AggregateEventHandler",
+          "methodName": "onCreateEvent",
+          "schema": null,
+          "trigger": [Function],
+        },
+        {
+          "conditions": {},
+          "kind": "AggregateEventHandler",
+          "methodName": "onDestroyEvent",
+          "schema": null,
+          "trigger": [Function],
+        },
+        {
+          "conditions": {},
+          "kind": "AggregateEventHandler",
+          "methodName": "onDestroyNextEvent",
+          "schema": null,
+          "trigger": [Function],
+        },
+        {
+          "conditions": {},
+          "kind": "AggregateEventHandler",
+          "methodName": "onDispatchEvent",
+          "schema": null,
+          "trigger": [Function],
+        },
+        {
+          "conditions": {},
+          "kind": "AggregateEventHandler",
+          "methodName": "onEncryptEvent",
+          "schema": null,
+          "trigger": [Function],
+        },
+        {
+          "conditions": {},
+          "kind": "AggregateEventHandler",
+          "methodName": "onMergeStateEvent",
+          "schema": null,
+          "trigger": [Function],
+        },
+        {
+          "conditions": {},
+          "kind": "AggregateEventHandler",
+          "methodName": "onSetStateEvent",
+          "schema": null,
+          "trigger": [Function],
+        },
+        {
+          "conditions": {},
+          "kind": "AggregateEventHandler",
+          "methodName": "onThrowsEvent",
+          "schema": null,
+          "trigger": [Function],
+        },
+        {
+          "conditions": {},
+          "kind": "AggregateEventHandler",
+          "methodName": "onTimeoutEvent",
+          "schema": null,
+          "trigger": [Function],
+        },
+      ],
+      "forgettable": false,
+      "name": "test_aggregate",
+      "namespace": "hermes",
+      "target": [Function],
+      "upcasters": [],
+    },
+    {
+      "commandHandlers": [
+        {
+          "conditions": {
+            "requireNotCreated": true,
+          },
+          "kind": "AggregateCommandHandler",
+          "methodName": "onCreate",
+          "schema": null,
+          "trigger": [Function],
+        },
+      ],
+      "errorHandlers": [],
+      "eventHandlers": [
+        {
+          "conditions": {},
+          "kind": "AggregateEventHandler",
+          "methodName": "onCreateEvent",
+          "schema": null,
+          "trigger": [Function],
+        },
+      ],
+      "forgettable": true,
+      "name": "test_forgettable_aggregate",
+      "namespace": "billing",
+      "target": [Function],
+      "upcasters": [],
+    },
+    {
+      "commandHandlers": [
+        {
+          "conditions": {},
+          "kind": "AggregateCommandHandler",
+          "methodName": "onCreate",
+          "schema": null,
+          "trigger": [Function],
+        },
+      ],
+      "errorHandlers": [],
+      "eventHandlers": [
+        {
+          "conditions": {},
+          "kind": "AggregateEventHandler",
+          "methodName": "onCreateEvent",
+          "schema": null,
+          "trigger": [Function],
+        },
+        {
+          "conditions": {},
+          "kind": "AggregateEventHandler",
+          "methodName": "onUpcastEvent",
+          "schema": null,
+          "trigger": [Function],
+        },
+      ],
+      "forgettable": false,
+      "name": "test_upcaster_aggregate",
+      "namespace": "hermes",
+      "target": [Function],
+      "upcasters": [
+        {
+          "from": [Function],
+          "fromName": "test_event_upcast",
+          "fromVersion": 1,
+          "method": "upcastV1toV2",
+          "to": [Function],
+          "toVersion": 2,
+        },
+        {
+          "from": [Function],
+          "fromName": "test_event_upcast",
+          "fromVersion": 2,
+          "method": "upcastV2toV3",
+          "to": [Function],
+          "toVersion": 3,
+        },
+      ],
+    },
+  ],
+  "commands": [
+    {
+      "kind": "command",
+      "name": "test_command_create",
+      "target": [Function],
+      "version": 1,
+    },
+    {
+      "kind": "command",
+      "name": "test_command_destroy",
+      "target": [Function],
+      "version": 1,
+    },
+    {
+      "kind": "command",
+      "name": "test_command_destroy_next",
+      "target": [Function],
+      "version": 1,
+    },
+    {
+      "kind": "command",
+      "name": "test_command_dispatch",
+      "target": [Function],
+      "version": 1,
+    },
+    {
+      "kind": "command",
+      "name": "test_command_encrypt",
+      "target": [Function],
+      "version": 1,
+    },
+    {
+      "kind": "command",
+      "name": "test_command_merge_state",
+      "target": [Function],
+      "version": 1,
+    },
+    {
+      "kind": "command",
+      "name": "test_command_set_state",
+      "target": [Function],
+      "version": 1,
+    },
+    {
+      "kind": "command",
+      "name": "test_command_throws",
+      "target": [Function],
+      "version": 1,
+    },
+    {
+      "kind": "command",
+      "name": "test_command_timeout",
+      "target": [Function],
+      "version": 1,
+    },
+  ],
+  "events": [
+    {
+      "kind": "event",
+      "name": "test_event_create",
+      "target": [Function],
+      "version": 1,
+    },
+    {
+      "kind": "event",
+      "name": "test_event_destroy",
+      "target": [Function],
+      "version": 1,
+    },
+    {
+      "kind": "event",
+      "name": "test_event_destroy_next",
+      "target": [Function],
+      "version": 1,
+    },
+    {
+      "kind": "event",
+      "name": "test_event_dispatch",
+      "target": [Function],
+      "version": 1,
+    },
+    {
+      "kind": "event",
+      "name": "test_event_encrypt",
+      "target": [Function],
+      "version": 1,
+    },
+    {
+      "kind": "event",
+      "name": "test_event_merge_state",
+      "target": [Function],
+      "version": 1,
+    },
+    {
+      "kind": "event",
+      "name": "test_event_set_state",
+      "target": [Function],
+      "version": 1,
+    },
+    {
+      "kind": "event",
+      "name": "test_event_throws",
+      "target": [Function],
+      "version": 1,
+    },
+    {
+      "kind": "event",
+      "name": "test_event_timeout",
+      "target": [Function],
+      "version": 1,
+    },
+    {
+      "kind": "event",
+      "name": "test_event_upcast",
+      "target": [Function],
+      "version": 1,
+    },
+    {
+      "kind": "event",
+      "name": "test_event_upcast",
+      "target": [Function],
+      "version": 2,
+    },
+    {
+      "kind": "event",
+      "name": "test_event_upcast",
+      "target": [Function],
+      "version": 3,
+    },
+  ],
+  "queries": [
+    {
+      "kind": "query",
+      "name": "test_view_query",
+      "target": [Function],
+      "version": 1,
+    },
+  ],
+  "sagas": [
+    {
+      "aggregates": [
+        {
+          "name": "test_aggregate",
+          "namespace": "hermes",
+        },
+      ],
+      "errorHandlers": [
+        {
+          "conditions": {},
+          "kind": "SagaErrorHandler",
+          "methodName": "onDomainError",
+          "schema": null,
+          "trigger": [Function],
+        },
+      ],
+      "eventHandlers": [
+        {
+          "conditions": {
+            "requireNotCreated": true,
+          },
+          "kind": "SagaEventHandler",
+          "methodName": "onCreateEvent",
+          "schema": null,
+          "trigger": [Function],
+        },
+        {
+          "conditions": {
+            "requireCreated": true,
+          },
+          "kind": "SagaEventHandler",
+          "methodName": "onMergeStateEvent",
+          "schema": null,
+          "trigger": [Function],
+        },
+        {
+          "conditions": {
+            "requireCreated": true,
+          },
+          "kind": "SagaEventHandler",
+          "methodName": "onDispatchEvent",
+          "schema": null,
+          "trigger": [Function],
+        },
+        {
+          "conditions": {
+            "requireCreated": true,
+          },
+          "kind": "SagaEventHandler",
+          "methodName": "onThrowsEvent",
+          "schema": null,
+          "trigger": [Function],
+        },
+        {
+          "conditions": {
+            "requireCreated": true,
+          },
+          "kind": "SagaEventHandler",
+          "methodName": "onDestroyEvent",
+          "schema": null,
+          "trigger": [Function],
+        },
+      ],
+      "idHandlers": [
+        {
+          "conditions": {},
+          "kind": "SagaIdHandler",
+          "methodName": "resolveId",
+          "schema": null,
+          "trigger": [Function],
+        },
+      ],
+      "name": "test_saga",
+      "namespace": "hermes",
+      "target": [Function],
+      "timeoutHandlers": [
+        {
+          "conditions": {},
+          "kind": "SagaTimeoutHandler",
+          "methodName": "onTimeout",
+          "schema": null,
+          "trigger": [Function],
+        },
+      ],
+    },
+  ],
+  "timeouts": [
+    {
+      "kind": "timeout",
+      "name": "test_timeout_reminder",
+      "target": [Function],
+      "version": 1,
+    },
+  ],
+  "views": [
+    {
+      "aggregates": [
+        {
+          "name": "test_aggregate",
+          "namespace": "hermes",
+        },
+      ],
+      "driverType": null,
+      "entity": [Function],
+      "errorHandlers": [
+        {
+          "conditions": {},
+          "kind": "ViewErrorHandler",
+          "methodName": "onAlreadyCreatedError",
+          "schema": null,
+          "trigger": [Function],
+        },
+        {
+          "conditions": {},
+          "kind": "ViewErrorHandler",
+          "methodName": "onDomainError",
+          "schema": null,
+          "trigger": [Function],
+        },
+      ],
+      "eventHandlers": [
+        {
+          "conditions": {
+            "requireNotCreated": true,
+          },
+          "kind": "ViewEventHandler",
+          "methodName": "onCreateEvent",
+          "schema": null,
+          "trigger": [Function],
+        },
+        {
+          "conditions": {
+            "requireCreated": true,
+          },
+          "kind": "ViewEventHandler",
+          "methodName": "onMergeStateEvent",
+          "schema": null,
+          "trigger": [Function],
+        },
+        {
+          "conditions": {
+            "requireCreated": true,
+          },
+          "kind": "ViewEventHandler",
+          "methodName": "onSetStateEvent",
+          "schema": null,
+          "trigger": [Function],
+        },
+        {
+          "conditions": {
+            "requireCreated": true,
+          },
+          "kind": "ViewEventHandler",
+          "methodName": "onThrowsEvent",
+          "schema": null,
+          "trigger": [Function],
+        },
+        {
+          "conditions": {
+            "requireCreated": true,
+          },
+          "kind": "ViewEventHandler",
+          "methodName": "onDestroyEvent",
+          "schema": null,
+          "trigger": [Function],
+        },
+      ],
+      "idHandlers": [
+        {
+          "conditions": {},
+          "kind": "ViewIdHandler",
+          "methodName": "resolveId",
+          "schema": null,
+          "trigger": [Function],
+        },
+      ],
+      "name": "test_view",
+      "namespace": "hermes",
+      "queryHandlers": [
+        {
+          "conditions": {},
+          "kind": "ViewQueryHandler",
+          "methodName": "onQuery",
+          "schema": null,
+          "trigger": [Function],
+        },
+      ],
+      "target": [Function],
+    },
+  ],
+}
+`;
