@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.5.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/hermes@0.3.7...@lindorm/hermes@0.5.0) (2026-04-01)
+
+### Features
+
+- **hermes:** implement v2 decorator-based CQRS/ES architecture ([db34177](https://github.com/lindorm-io/monorepo/commit/db341774f4c0c73dcfe7a478aad226d23d74a895))
+
 ## [0.3.7](https://github.com/lindorm-io/monorepo/compare/@lindorm/hermes@0.3.6...@lindorm/hermes@0.3.7) (2026-03-13)
 
 **Note:** Version bump only for package @lindorm/hermes

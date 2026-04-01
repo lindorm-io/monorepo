@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.11](https://github.com/lindorm-io/monorepo/compare/@lindorm/worker@0.2.10...@lindorm/worker@0.2.11) (2026-04-01)
+
+**Note:** Version bump only for package @lindorm/worker
+
 ## [0.2.10](https://github.com/lindorm-io/monorepo/compare/@lindorm/worker@0.2.9...@lindorm/worker@0.2.10) (2026-03-29)
 
 **Note:** Version bump only for package @lindorm/worker

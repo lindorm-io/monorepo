@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.4.4](https://github.com/lindorm-io/monorepo/compare/@lindorm/conduit@0.4.3...@lindorm/conduit@0.4.4) (2026-04-01)
+
+### Bug Fixes
+
+- **conduit:** add origin to RequestContext fixtures and fix breaker middleware test args ([70ad1f8](https://github.com/lindorm-io/monorepo/commit/70ad1f8ee5f7e215fe589e5a32a3e255173b0aae))
+
 ## [0.4.3](https://github.com/lindorm-io/monorepo/compare/@lindorm/conduit@0.4.2...@lindorm/conduit@0.4.3) (2026-03-29)
 
 **Note:** Version bump only for package @lindorm/conduit

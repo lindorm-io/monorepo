@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/oct",
-  "version": "0.2.8",
+  "version": "0.2.9",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -27,11 +27,11 @@
     "verify": "npm run typecheck; npm run build; npm test"
   },
   "dependencies": {
-    "@lindorm/errors": "^0.1.15",
-    "@lindorm/is": "^0.1.13",
-    "@lindorm/kryptos": "^0.5.2"
+    "@lindorm/errors": "^0.1.16",
+    "@lindorm/is": "^0.1.14",
+    "@lindorm/kryptos": "^0.5.3"
   },
   "devDependencies": {
-    "@lindorm/types": "^0.4.0"
+    "@lindorm/types": "^0.4.1"
   }
 }

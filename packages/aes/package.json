@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/aes",
-  "version": "0.6.2",
+  "version": "0.6.3",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -49,13 +49,13 @@
   },
   "dependencies": {
     "@lindorm/b64": "^0.1.8",
-    "@lindorm/errors": "^0.1.15",
-    "@lindorm/is": "^0.1.13",
-    "@lindorm/kryptos": "^0.5.2",
-    "@lindorm/utils": "^0.6.1"
+    "@lindorm/errors": "^0.1.16",
+    "@lindorm/is": "^0.1.14",
+    "@lindorm/kryptos": "^0.5.3",
+    "@lindorm/utils": "^0.6.2"
   },
   "devDependencies": {
-    "@lindorm/types": "^0.4.0",
+    "@lindorm/types": "^0.4.1",
     "@noble/ciphers": "^2.1.1",
     "jose": "^6.2.1"
   }

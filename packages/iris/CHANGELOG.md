@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/iris@0.1.0...@lindorm/iris@0.1.1) (2026-04-01)
+
+**Note:** Version bump only for package @lindorm/iris
+
 # 0.1.0 (2026-03-29)
 
 ### Bug Fixes
