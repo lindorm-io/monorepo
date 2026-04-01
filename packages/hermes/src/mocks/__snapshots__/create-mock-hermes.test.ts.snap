@@ -1,0 +1,26 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`createMockHermes should create a mock hermes with all methods as jest.fn() 1`] = `
+{
+  "admin": {
+    "inspect": {
+      "aggregate": [MockFunction],
+      "saga": [MockFunction],
+      "view": [MockFunction],
+    },
+    "purgeCausations": [MockFunction],
+    "replay": {
+      "aggregate": [MockFunction],
+      "view": [MockFunction],
+    },
+  },
+  "clone": [MockFunction],
+  "command": [MockFunction],
+  "off": [MockFunction],
+  "on": [MockFunction],
+  "query": [MockFunction],
+  "setup": [MockFunction],
+  "status": "ready",
+  "teardown": [MockFunction],
+}
+`;

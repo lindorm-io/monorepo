@@ -1,20 +1,12 @@
-import { Constructor, Dict } from "@lindorm/types";
-import { SagaTimeoutHandlerDescriptor } from "../types";
-import { globalHermesMetadata } from "../utils/private";
+import type { Constructor } from "@lindorm/types";
+import { stageHandler } from "#internal/metadata";
 
-export function SagaTimeoutHandler<C extends Constructor, S extends Dict>(
-  TimeoutClass: C,
-): SagaTimeoutHandlerDescriptor<C, S> {
-  return function (target, key, descriptor) {
-    globalHermesMetadata.addHandler({
-      conditions: null,
-      decorator: "SagaTimeoutHandler",
-      encryption: false,
-      handler: descriptor.value,
-      key: key.toString(),
-      schema: null,
-      target: target.constructor as Constructor,
+export const SagaTimeoutHandler =
+  (TimeoutClass: Constructor) =>
+  (_target: Function, context: ClassMethodDecoratorContext): void => {
+    stageHandler(context.metadata, {
+      kind: "SagaTimeoutHandler",
+      methodName: String(context.name),
       trigger: TimeoutClass,
     });
   };
-}

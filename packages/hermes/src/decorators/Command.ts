@@ -1,18 +1,21 @@
-import { Constructor } from "@lindorm/types";
-import { CommandDecoratorOptions } from "../types";
-import { extractNameData, globalHermesMetadata } from "../utils/private";
+import { extractNameData, stageDto } from "#internal/metadata";
 
-export function Command(options: CommandDecoratorOptions = {}): ClassDecorator {
-  return function (target) {
-    const { name, version } = extractNameData(target.name);
-    globalHermesMetadata.addCommand({
-      aggregate: {
-        name: options.aggregate?.name || null,
-        namespace: options.aggregate?.namespace || null,
-      },
-      name: options.name || name,
-      target: target as unknown as Constructor,
-      version: options.version ?? version,
+type CommandOptions = {
+  name?: string;
+  version?: number;
+};
+
+export const Command =
+  (nameOrOptions?: string | CommandOptions) =>
+  (target: Function, context: ClassDecoratorContext): void => {
+    const opts =
+      typeof nameOrOptions === "string" ? { name: nameOrOptions } : (nameOrOptions ?? {});
+
+    const { name: defaultName, version: defaultVersion } = extractNameData(target.name);
+
+    stageDto(context.metadata, {
+      kind: "command",
+      name: opts.name ?? defaultName,
+      version: opts.version ?? defaultVersion,
     });
   };
-}

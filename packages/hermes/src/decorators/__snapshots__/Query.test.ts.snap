@@ -1,8 +1,21 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
-exports[`Query Decorator should add metadata 1`] = `
+exports[`Query should stage dto metadata with custom name when provided as string 1`] = `
 {
-  "name": "TestQuery",
-  "target": [Function],
+  "dto": {
+    "kind": "query",
+    "name": "custom_query_name",
+    "version": 1,
+  },
+}
+`;
+
+exports[`Query should stage dto metadata with snake_case name derived from class name 1`] = `
+{
+  "dto": {
+    "kind": "query",
+    "name": "test_view_query",
+    "version": 1,
+  },
 }
 `;

@@ -1,21 +1,12 @@
-import { Constructor, Dict } from "@lindorm/types";
-import { SagaEventHandlerDecoratorOptions, SagaEventHandlerDescriptor } from "../types";
-import { globalHermesMetadata } from "../utils/private";
+import type { Constructor } from "@lindorm/types";
+import { stageHandler } from "#internal/metadata";
 
-export function SagaEventHandler<C extends Constructor, S extends Dict>(
-  EventClass: C,
-  options: SagaEventHandlerDecoratorOptions = {},
-): SagaEventHandlerDescriptor<C, S> {
-  return function (target, key, descriptor) {
-    globalHermesMetadata.addHandler({
-      conditions: options.conditions || null,
-      decorator: "SagaEventHandler",
-      encryption: false,
-      handler: descriptor.value,
-      key: key.toString(),
-      schema: null,
-      target: target.constructor as Constructor,
+export const SagaEventHandler =
+  (EventClass: Constructor) =>
+  (_target: Function, context: ClassMethodDecoratorContext): void => {
+    stageHandler(context.metadata, {
+      kind: "SagaEventHandler",
+      methodName: String(context.name),
       trigger: EventClass,
     });
   };
-}

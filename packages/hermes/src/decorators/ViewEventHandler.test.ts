@@ -1,27 +1,27 @@
-import { Dict } from "@lindorm/types";
-import { ViewEventCtx } from "../types/handlers/view-event-handler";
-import { globalHermesMetadata } from "../utils/private";
-import { Aggregate } from "./Aggregate";
-import { Event } from "./Event";
-import { View } from "./View";
+import type { StagedMetadata } from "#internal/metadata";
 import { ViewEventHandler } from "./ViewEventHandler";
 
-describe("ViewEventHandler Decorator", () => {
-  @Aggregate()
-  class TestViewAggregate {}
+const createMockMethodContext = (
+  metadata: DecoratorMetadataObject,
+  methodName: string,
+): ClassMethodDecoratorContext =>
+  ({ metadata, name: methodName }) as ClassMethodDecoratorContext;
 
-  test("should add metadata", () => {
-    @Event()
-    class TestViewEventHandlerEvent {}
+describe("ViewEventHandler", () => {
+  test("should stage handler with correct kind, trigger, and methodName", () => {
+    const metadata: DecoratorMetadataObject = Object.create(
+      null,
+    ) as DecoratorMetadataObject;
 
-    @View(TestViewAggregate, "mongo")
-    class TestViewEventHandlerView {
-      @ViewEventHandler(TestViewEventHandlerEvent)
-      public async onTestViewEventHandlerEvent(
-        ctx: ViewEventCtx<TestViewEventHandlerEvent, Dict>,
-      ) {}
-    }
+    class FakeEvent {}
 
-    expect(globalHermesMetadata.getView(TestViewEventHandlerView)).toMatchSnapshot();
+    const fn = () => {};
+    ViewEventHandler(FakeEvent)(fn, createMockMethodContext(metadata, "onCreateEvent"));
+
+    const staged = metadata as StagedMetadata;
+    expect(staged.handlers).toHaveLength(1);
+    expect(staged.handlers![0].kind).toBe("ViewEventHandler");
+    expect(staged.handlers![0].methodName).toBe("onCreateEvent");
+    expect(staged.handlers![0].trigger).toBe(FakeEvent);
   });
 });

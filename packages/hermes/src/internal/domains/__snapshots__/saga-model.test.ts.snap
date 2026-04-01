@@ -1,0 +1,47 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`SagaModel should dispatch command and accumulate in messagesToDispatch 1`] = `
+{
+  "data": {
+    "aggregate": {
+      "id": "test-saga-id",
+      "name": "test_aggregate",
+      "namespace": "hermes",
+    },
+    "causationId": "causation-id",
+    "correlationId": "correlation-id",
+    "data": {
+      "input": "dispatched-merge",
+    },
+    "meta": {
+      "origin": "test",
+    },
+    "name": "test_command_merge_state",
+    "version": 1,
+  },
+  "kind": "command",
+}
+`;
+
+exports[`SagaModel should mergeState() with deep merge 1`] = `
+{
+  "added": "new",
+  "existing": "value",
+  "nested": {
+    "a": 1,
+    "b": 2,
+  },
+}
+`;
+
+exports[`SagaModel should return toJSON() snapshot 1`] = `
+{
+  "destroyed": false,
+  "id": "test-saga-id",
+  "messagesToDispatch": [],
+  "name": "test_saga",
+  "namespace": "hermes",
+  "revision": 0,
+  "state": {},
+}
+`;

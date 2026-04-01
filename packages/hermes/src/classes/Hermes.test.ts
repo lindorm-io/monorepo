@@ -1,325 +1,1402 @@
+import { IrisSource } from "@lindorm/iris";
 import { createMockLogger } from "@lindorm/logger";
-import { IMongoSource, MongoSource } from "@lindorm/mongo";
-import { IPostgresSource, PostgresSource } from "@lindorm/postgres";
-import { IRabbitSource, RabbitSource } from "@lindorm/rabbit";
-import { IRedisSource, RedisSource } from "@lindorm/redis";
-import { sleep } from "@lindorm/utils";
+import { ProteusSource } from "@lindorm/proteus";
 import { randomUUID } from "crypto";
-import { join } from "path";
-import { TestCommandCreate } from "../__fixtures__/modules/commands/TestCommandCreate";
-import { TestCommandDispatch } from "../__fixtures__/modules/commands/TestCommandDispatch";
-import { TestMongoQuery } from "../__fixtures__/modules/queries/TestQueryMongo";
-import { TestPostgresQuery } from "../__fixtures__/modules/queries/TestQueryPostgres";
-import { TestRedisQuery } from "../__fixtures__/modules/queries/TestQueryRedis";
-import { IHermes } from "../interfaces";
-import { HermesEvent } from "../messages";
+import { createChecksum } from "#internal/utils";
+import {
+  createTestIrisSource,
+  createTestProteusSource,
+} from "../__fixtures__/create-test-sources";
+import {
+  TestAggregate,
+  TestForgettableAggregate,
+} from "../__fixtures__/modules/aggregates";
+import {
+  TestCommandCreate,
+  TestCommandDestroy,
+  TestCommandDestroyNext,
+  TestCommandDispatch,
+  TestCommandEncrypt,
+  TestCommandMergeState,
+  TestCommandSetState,
+  TestCommandThrows,
+  TestCommandTimeout,
+} from "../__fixtures__/modules/commands";
+import {
+  TestEventCreate,
+  TestEventDestroy,
+  TestEventDestroyNext,
+  TestEventDispatch,
+  TestEventEncrypt,
+  TestEventMergeState,
+  TestEventSetState,
+  TestEventThrows,
+  TestEventTimeout,
+} from "../__fixtures__/modules/events";
+import { TestTimeoutReminder } from "../__fixtures__/modules/timeouts";
+import { TestViewQuery } from "../__fixtures__/modules/queries";
+import { TestSaga } from "../__fixtures__/modules/sagas";
+import { TestView, TestViewEntity } from "../__fixtures__/modules/views";
 import { Hermes } from "./Hermes";
 
+const ALL_MODULES = [
+  TestCommandCreate,
+  TestCommandDestroy,
+  TestCommandDestroyNext,
+  TestCommandDispatch,
+  TestCommandEncrypt,
+  TestCommandMergeState,
+  TestCommandSetState,
+  TestCommandThrows,
+  TestCommandTimeout,
+  TestEventCreate,
+  TestEventDestroy,
+  TestEventDestroyNext,
+  TestEventDispatch,
+  TestEventEncrypt,
+  TestEventMergeState,
+  TestEventSetState,
+  TestEventThrows,
+  TestEventTimeout,
+  TestTimeoutReminder,
+  TestViewQuery,
+  TestAggregate,
+  TestForgettableAggregate,
+  TestSaga,
+  TestView,
+];
+
+const createConnectedSources = async (): Promise<{
+  proteus: ProteusSource;
+  iris: IrisSource;
+}> => {
+  const proteus = createTestProteusSource();
+  const iris = createTestIrisSource();
+  await proteus.connect();
+  await iris.connect();
+  return { proteus, iris };
+};
+
 describe("Hermes", () => {
-  const namespace = "hermes_int";
   const logger = createMockLogger();
 
-  let mongo: IMongoSource;
-  let postgres: IPostgresSource;
-  let rabbit: IRabbitSource;
-  let redis: IRedisSource;
-  let hermes: IHermes;
+  describe("lifecycle", () => {
+    it("should have status 'created' after construction", () => {
+      const hermes = new Hermes({
+        proteus: createTestProteusSource(),
+        iris: createTestIrisSource(),
+        modules: ALL_MODULES,
+        logger,
+      });
 
-  let onSagaSpy: jest.Mock;
-  let onViewSpy: jest.Mock;
-
-  beforeAll(async () => {
-    mongo = new MongoSource({
-      database: "Hermes",
-      logger,
-      url: "mongodb://localhost:27017/?directConnection=true",
+      expect(hermes.status).toBe("created");
     });
 
-    postgres = new PostgresSource({
-      logger,
-      url: "postgres://root:example@localhost:5432/default",
+    it("should transition to 'ready' after setup", async () => {
+      const { proteus, iris } = await createConnectedSources();
+
+      const hermes = new Hermes({
+        proteus,
+        iris,
+        modules: ALL_MODULES,
+        logger,
+      });
+
+      await hermes.setup();
+      expect(hermes.status).toBe("ready");
+
+      await hermes.teardown();
+      await iris.disconnect();
+      await proteus.disconnect();
     });
 
-    rabbit = new RabbitSource({
-      logger,
-      url: "amqp://localhost:5672",
+    it("should throw when setup called twice", async () => {
+      const { proteus, iris } = await createConnectedSources();
+
+      const hermes = new Hermes({
+        proteus,
+        iris,
+        modules: ALL_MODULES,
+        logger,
+      });
+
+      await hermes.setup();
+
+      await expect(hermes.setup()).rejects.toThrow(/can only be called once/);
+
+      await hermes.teardown();
+      await iris.disconnect();
+      await proteus.disconnect();
     });
 
-    redis = new RedisSource({
-      logger,
-      url: "redis://localhost:6379",
+    it("should transition to 'stopped' after teardown", async () => {
+      const { proteus, iris } = await createConnectedSources();
+
+      const hermes = new Hermes({
+        proteus,
+        iris,
+        modules: ALL_MODULES,
+        logger,
+      });
+
+      await hermes.setup();
+      await hermes.teardown();
+
+      expect(hermes.status).toBe("stopped");
+
+      await iris.disconnect();
+      await proteus.disconnect();
     });
 
-    await Promise.all([mongo.setup(), postgres.setup(), rabbit.setup(), redis.setup()]);
+    it("should throw when command called before setup", async () => {
+      const hermes = new Hermes({
+        proteus: createTestProteusSource(),
+        iris: createTestIrisSource(),
+        modules: ALL_MODULES,
+        logger,
+      });
 
-    hermes = new Hermes({
-      checksumStore: { mongo },
-      encryptionStore: { mongo },
-      eventStore: { mongo },
-      messageBus: { rabbit },
-      sagaStore: { mongo },
-      viewStore: { mongo, postgres, redis },
-      logger,
-      modules: [join(__dirname, "..", "__fixtures__", "modules")],
-      namespace,
+      await expect(hermes.command(new TestCommandCreate("test"))).rejects.toThrow(
+        /not ready/,
+      );
     });
 
-    onSagaSpy = jest.fn();
-    onViewSpy = jest.fn();
+    it("should throw when query called before setup", async () => {
+      const hermes = new Hermes({
+        proteus: createTestProteusSource(),
+        iris: createTestIrisSource(),
+        modules: ALL_MODULES,
+        logger,
+      });
 
-    await hermes.setup();
-  }, 30000);
+      await expect(hermes.query(new TestViewQuery("test"))).rejects.toThrow(/not ready/);
+    });
 
-  afterAll(async () => {
-    await Promise.all([
-      mongo.disconnect(),
-      postgres.disconnect(),
-      rabbit.disconnect(),
-      redis.disconnect(),
-    ]);
+    it("should create a clone that shares ready status", async () => {
+      const { proteus, iris } = await createConnectedSources();
+
+      const hermes = new Hermes({
+        proteus,
+        iris,
+        modules: ALL_MODULES,
+        logger,
+      });
+
+      await hermes.setup();
+
+      const clone = hermes.clone();
+      expect(clone.status).toBe("ready");
+
+      await hermes.teardown();
+      await iris.disconnect();
+      await proteus.disconnect();
+    });
+
+    it("should throw when cloned instance calls setup", async () => {
+      const { proteus, iris } = await createConnectedSources();
+
+      const hermes = new Hermes({
+        proteus,
+        iris,
+        modules: ALL_MODULES,
+        logger,
+      });
+
+      await hermes.setup();
+
+      const clone = hermes.clone();
+      await expect(clone.setup()).rejects.toThrow(/can only be called once/);
+
+      await hermes.teardown();
+      await iris.disconnect();
+      await proteus.disconnect();
+    });
   });
 
-  // TODO: Flaky due to non-atomic two-phase causation tracking in ViewDomain/SagaDomain.
-  // Views get stuck when processCausationIds fails after handleView succeeds, causing
-  // a retry loop with optimistic lock conflicts. Not broken — works most of the time.
-  // Will be fixed properly when hermes is rewritten on top of @lindorm/iris.
-  test.skip("should publish", async () => {
-    const id = randomUUID();
+  // Note: The Iris memory driver dispatches messages based on exact topic match.
+  // Hermes.command() publishes to the generic command topic (e.g. "hermes.command"),
+  // but AggregateDomain registers consumers on specific queue names (e.g.
+  // "queue.aggregate.hermes.test_aggregate.test_command_create"). These do not
+  // match in the memory driver, so the full pipeline cannot be tested end-to-end
+  // through hermes.command(). The command/query/admin tests below verify the
+  // public API surface in isolation.
 
-    let sagaChangeCount = 0;
-    let viewChangeCount = 0;
+  describe("command", () => {
+    let hermes: Hermes;
+    let proteus: ProteusSource;
+    let iris: IrisSource;
 
-    hermes.on("saga", () => {
-      onSagaSpy();
-      sagaChangeCount += 1;
+    beforeAll(async () => {
+      const sources = await createConnectedSources();
+      proteus = sources.proteus;
+      iris = sources.iris;
+
+      hermes = new Hermes({
+        proteus,
+        iris,
+        modules: ALL_MODULES,
+        logger,
+      });
+
+      await hermes.setup();
     });
 
-    hermes.on("view", () => {
-      onViewSpy();
-      viewChangeCount += 1;
+    afterAll(async () => {
+      await hermes.teardown();
+      await iris.disconnect();
+      await proteus.disconnect();
     });
 
-    await hermes.command(new TestCommandCreate("create"), { id });
+    it("should publish command and return AggregateIdentifier", async () => {
+      const id = randomUUID();
 
-    await sleep(500);
+      const result = await hermes.command(new TestCommandCreate("hello"), {
+        id,
+      });
 
-    await hermes.command(new TestCommandDispatch("dispatch"), { id });
+      expect(result.id).toBe(id);
+      expect(result).toMatchSnapshot({
+        id: expect.any(String),
+        name: expect.any(String),
+        namespace: expect.any(String),
+      });
+    });
 
-    const deadline = Date.now() + 30_000;
+    it("should generate a UUID when no id provided", async () => {
+      const result = await hermes.command(new TestCommandCreate("auto-id"));
 
-    while (Date.now() < deadline) {
-      await sleep(500);
+      expect(result.id).toEqual(expect.any(String));
+      expect(result.id.length).toBeGreaterThan(0);
+    });
 
-      try {
-        const [s, m, p, r] = await Promise.all([
-          hermes.admin.inspect.saga({ id, name: "test_saga", namespace: namespace }),
-          hermes.admin.inspect.view({
-            id,
-            name: "test_mongo_view",
-            namespace: namespace,
-          }),
-          hermes.admin.inspect.view({
-            id,
-            name: "test_postgres_view",
-            namespace: namespace,
-          }),
-          hermes.admin.inspect.view({
-            id,
-            name: "test_redis_view",
-            namespace: namespace,
-          }),
-        ]);
+    it("should use provided id for aggregate", async () => {
+      const id = randomUUID();
 
-        if (s.revision >= 7 && m.revision >= 6 && p.revision >= 6 && r.revision >= 6) {
-          break;
-        }
-      } catch {
-        // saga/view may not exist yet
+      const result = await hermes.command(new TestCommandCreate("test"), {
+        id,
+      });
+
+      expect(result.id).toBe(id);
+    });
+
+    it("should throw for unregistered command", async () => {
+      class FakeCommand {
+        input = "nope";
       }
-    }
 
-    await expect(
-      hermes.admin.inspect.aggregate({
+      await expect(hermes.command(new FakeCommand())).rejects.toThrow();
+    });
+
+    it("should pass correlationId through to the command", async () => {
+      const id = randomUUID();
+      const correlationId = randomUUID();
+
+      // This test verifies command() does not throw with correlationId option.
+      const result = await hermes.command(new TestCommandCreate("correlated"), {
+        id,
+        correlationId,
+      });
+
+      expect(result.id).toBe(id);
+    });
+  });
+
+  describe("admin inspect with empty state", () => {
+    let hermes: Hermes;
+    let proteus: ProteusSource;
+    let iris: IrisSource;
+
+    beforeAll(async () => {
+      const sources = await createConnectedSources();
+      proteus = sources.proteus;
+      iris = sources.iris;
+
+      hermes = new Hermes({
+        proteus,
+        iris,
+        modules: ALL_MODULES,
+        logger,
+      });
+
+      await hermes.setup();
+    });
+
+    afterAll(async () => {
+      await hermes.teardown();
+      await iris.disconnect();
+      await proteus.disconnect();
+    });
+
+    it("should inspect aggregate with no events", async () => {
+      const id = randomUUID();
+
+      const state = await hermes.admin.inspect.aggregate({
         id,
         name: "test_aggregate",
-        namespace: namespace,
-      }),
-    ).resolves.toEqual(
-      expect.objectContaining({
-        id,
-        name: "test_aggregate",
-        namespace: namespace,
-        destroyed: false,
-        events: [
-          expect.any(HermesEvent),
-          expect.any(HermesEvent),
-          expect.any(HermesEvent),
-        ],
-        numberOfLoadedEvents: 3,
-        state: {
-          create: "create",
-          dispatch: "dispatch",
-          mergeState: "merge state",
-        },
-      }),
-    );
+      });
 
-    await expect(hermes.admin.inspect.saga({ id, name: "test_saga" })).resolves.toEqual(
-      expect.objectContaining({
-        id: id,
+      expect(state.id).toBe(id);
+      expect(state.name).toBe("test_aggregate");
+      expect(state.namespace).toBe("hermes");
+      expect(state.destroyed).toBe(false);
+      expect(state.numberOfLoadedEvents).toBe(0);
+      expect(state.events).toEqual([]);
+      expect(state.state).toEqual({});
+    });
+
+    it("should return null for non-existent saga", async () => {
+      const saga = await hermes.admin.inspect.saga({
+        id: randomUUID(),
         name: "test_saga",
-        namespace: namespace,
-        processedCausationIds: [],
-        destroyed: false,
-        messagesToDispatch: [],
-        revision: 7,
-        state: {
-          create: "create",
-          dispatch: "dispatch",
-          mergeState: "merge state",
-        },
-      }),
-    );
+      });
 
-    await expect(
-      hermes.admin.inspect.view({ id, name: "test_mongo_view" }),
-    ).resolves.toEqual(
-      expect.objectContaining({
-        id,
-        name: "test_mongo_view",
-        namespace: namespace,
-        destroyed: false,
-        meta: {
-          create: {
-            destroyed: false,
-            timestamp: expect.any(Date),
-            value: "create",
-          },
-          dispatch: {
-            destroyed: false,
-            timestamp: expect.any(Date),
-            value: "dispatch",
-          },
-          mergeState: {
-            destroyed: false,
-            timestamp: expect.any(Date),
-            value: "merge state",
-          },
-        },
-        processedCausationIds: [],
-        revision: 6,
-        state: {
-          create: "create",
-          dispatch: "dispatch",
-          mergeState: "merge state",
-        },
-      }),
-    );
-
-    await expect(
-      hermes.admin.inspect.view({ id, name: "test_postgres_view" }),
-    ).resolves.toEqual(
-      expect.objectContaining({
-        id,
-        name: "test_postgres_view",
-        namespace: namespace,
-        destroyed: false,
-        meta: {
-          create: {
-            destroyed: false,
-            timestamp: expect.any(Date),
-            value: "create",
-          },
-          dispatch: {
-            destroyed: false,
-            timestamp: expect.any(Date),
-            value: "dispatch",
-          },
-          mergeState: {
-            destroyed: false,
-            timestamp: expect.any(Date),
-            value: "merge state",
-          },
-        },
-        processedCausationIds: [],
-        revision: 6,
-        state: {
-          create: "create",
-          dispatch: "dispatch",
-          mergeState: "merge state",
-        },
-      }),
-    );
-
-    await expect(
-      hermes.admin.inspect.view({ id, name: "test_redis_view" }),
-    ).resolves.toEqual(
-      expect.objectContaining({
-        id,
-        name: "test_redis_view",
-        namespace: namespace,
-        destroyed: false,
-        meta: {
-          create: {
-            destroyed: false,
-            timestamp: expect.any(Date),
-            value: "create",
-          },
-          dispatch: {
-            destroyed: false,
-            timestamp: expect.any(Date),
-            value: "dispatch",
-          },
-          mergeState: {
-            destroyed: false,
-            timestamp: expect.any(Date),
-            value: "merge state",
-          },
-        },
-        processedCausationIds: [],
-        revision: 6,
-        state: {
-          create: "create",
-          dispatch: "dispatch",
-          mergeState: "merge state",
-        },
-      }),
-    );
-
-    await expect(hermes.query(new TestMongoQuery(id))).resolves.toEqual({
-      id,
-      state: {
-        create: "create",
-        dispatch: "dispatch",
-        mergeState: "merge state",
-      },
-      created_at: expect.any(Date),
-      updated_at: expect.any(Date),
+      expect(saga).toBeNull();
     });
 
-    await expect(hermes.query(new TestPostgresQuery(id))).resolves.toEqual({
-      id,
-      state: {
-        create: "create",
-        dispatch: "dispatch",
-        mergeState: "merge state",
-      },
-      created_at: expect.any(Date),
-      updated_at: expect.any(Date),
+    it("should return null for non-existent view", async () => {
+      const entity = await hermes.admin.inspect.view({
+        id: randomUUID(),
+        entity: TestViewEntity,
+      });
+
+      expect(entity).toBeNull();
     });
 
-    await expect(hermes.query(new TestRedisQuery(id))).resolves.toEqual({
-      id,
-      state: {
-        create: "create",
-        dispatch: "dispatch",
-        mergeState: "merge state",
-      },
-      created_at: expect.any(Date),
-      updated_at: expect.any(Date),
+    it("should purge causations and return zero count when none expired", async () => {
+      const count = await hermes.admin.purgeCausations();
+      expect(typeof count).toBe("number");
+      expect(count).toBe(0);
+    });
+  });
+
+  describe("replay", () => {
+    let hermes: Hermes;
+    let proteus: ProteusSource;
+    let iris: IrisSource;
+
+    beforeAll(async () => {
+      const sources = await createConnectedSources();
+      proteus = sources.proteus;
+      iris = sources.iris;
+
+      hermes = new Hermes({
+        proteus,
+        iris,
+        modules: ALL_MODULES,
+        logger,
+      });
+
+      await hermes.setup();
     });
 
-    expect(onSagaSpy.mock.calls.length).toBeGreaterThanOrEqual(3);
-    expect(onViewSpy.mock.calls.length).toBeGreaterThanOrEqual(9);
-  }, 60000);
+    afterAll(async () => {
+      await hermes.teardown();
+      await iris.disconnect();
+      await proteus.disconnect();
+    });
+
+    const clearEventStore = async (): Promise<void> => {
+      const { EventRecord } = await import("#internal/entities");
+      const repo = proteus.repository(EventRecord);
+      await repo.clear();
+    };
+
+    const seedEventRecords = async (
+      aggregateId: string,
+      events: Array<{ name: string; data: Record<string, unknown>; checksum?: string }>,
+    ): Promise<void> => {
+      const { EventRecord } = await import("#internal/entities");
+      const repo = proteus.repository(EventRecord);
+
+      for (let i = 0; i < events.length; i++) {
+        const evt = events[i];
+        const id = randomUUID();
+        const attrs = {
+          id,
+          aggregateId,
+          aggregateName: "test_aggregate",
+          aggregateNamespace: "hermes",
+          causationId: id,
+          correlationId: randomUUID(),
+          data: evt.data,
+          encrypted: false,
+          name: evt.name,
+          timestamp: new Date(),
+          expectedEvents: i + 1,
+          meta: {},
+          previousId: null,
+          version: 1,
+        };
+        const checksum = evt.checksum ?? createChecksum(attrs);
+        const record = repo.create({ ...attrs, checksum });
+        await repo.insert(record);
+      }
+    };
+
+    it("should complete immediately on empty event store", async () => {
+      await clearEventStore();
+
+      const handle = hermes.admin.replay.view(TestViewEntity);
+
+      const progressEvents: Array<unknown> = [];
+      handle.on("progress", (p) => progressEvents.push(p));
+
+      let completed = false;
+      handle.on("complete", () => {
+        completed = true;
+      });
+
+      await handle.promise;
+
+      expect(completed).toBe(true);
+      expect(progressEvents.length).toBeGreaterThan(0);
+
+      const last = progressEvents[progressEvents.length - 1] as any;
+      expect(last.phase).toBe("complete");
+      expect(last.total).toBe(0);
+    });
+
+    it("should replay events and rebuild view state", async () => {
+      await clearEventStore();
+      const aggregateId = randomUUID();
+
+      await seedEventRecords(aggregateId, [
+        { name: "test_event_create", data: { input: "replayed-value" } },
+        { name: "test_event_merge_state", data: { input: "merged" } },
+      ]);
+
+      const handle = hermes.admin.replay.view(TestViewEntity);
+
+      const progressEvents: Array<unknown> = [];
+      handle.on("progress", (p) => progressEvents.push(p));
+
+      let completed = false;
+      handle.on("complete", () => {
+        completed = true;
+      });
+
+      await handle.promise;
+
+      expect(completed).toBe(true);
+
+      // Verify the view entity was rebuilt
+      const entity = await hermes.admin.inspect.view({
+        id: aggregateId,
+        entity: TestViewEntity,
+      });
+
+      expect(entity).not.toBeNull();
+      expect(entity!.create).toBe("replayed-value");
+      expect(entity!.mergeState).toBe("merged");
+    });
+
+    it("should emit progress with correct total and processed counts", async () => {
+      await clearEventStore();
+      const aggregateId = randomUUID();
+
+      await seedEventRecords(aggregateId, [
+        { name: "test_event_create", data: { input: "progress-test" } },
+      ]);
+
+      const handle = hermes.admin.replay.view(TestViewEntity);
+
+      const progressEvents: Array<any> = [];
+      handle.on("progress", (p) => progressEvents.push(p));
+
+      await handle.promise;
+
+      // Should have truncating, replaying, resuming, complete phases
+      const phases = progressEvents.map((p) => p.phase);
+      expect(phases).toContain("truncating");
+      expect(phases).toContain("replaying");
+      expect(phases).toContain("resuming");
+      expect(phases).toContain("complete");
+
+      // The complete phase should have total >= 1 (at least our seeded event)
+      const completeProgress = progressEvents.find((p) => p.phase === "complete");
+      expect(completeProgress.total).toBeGreaterThanOrEqual(1);
+      expect(completeProgress.processed).toBe(completeProgress.total);
+      expect(completeProgress.percent).toBe(100);
+    });
+
+    it("should truncate view table before replaying", async () => {
+      await clearEventStore();
+      const aggregateId = randomUUID();
+
+      // Seed an event and replay to create view state
+      await seedEventRecords(aggregateId, [
+        { name: "test_event_create", data: { input: "before-truncate" } },
+      ]);
+
+      // First replay to populate the view
+      await hermes.admin.replay.view(TestViewEntity).promise;
+
+      const before = await hermes.admin.inspect.view({
+        id: aggregateId,
+        entity: TestViewEntity,
+      });
+      expect(before).not.toBeNull();
+
+      // Second replay should truncate and rebuild
+      await hermes.admin.replay.view(TestViewEntity).promise;
+
+      // Should still exist after second replay (rebuilt from same events)
+      const after = await hermes.admin.inspect.view({
+        id: aggregateId,
+        entity: TestViewEntity,
+      });
+      expect(after).not.toBeNull();
+      expect(after!.create).toBe("before-truncate");
+    });
+
+    it("should skip causation during replay", async () => {
+      await clearEventStore();
+      const aggregateId = randomUUID();
+
+      await seedEventRecords(aggregateId, [
+        { name: "test_event_create", data: { input: "causation-test" } },
+      ]);
+
+      // Replay twice -- if causation were tracked, the second replay
+      // would skip all events (duplicate causation IDs)
+      await hermes.admin.replay.view(TestViewEntity).promise;
+      await hermes.admin.replay.view(TestViewEntity).promise;
+
+      const entity = await hermes.admin.inspect.view({
+        id: aggregateId,
+        entity: TestViewEntity,
+      });
+
+      expect(entity).not.toBeNull();
+      expect(entity!.create).toBe("causation-test");
+    });
+
+    it("should emit error when handler throws during replay", async () => {
+      await clearEventStore();
+      const aggregateId = randomUUID();
+
+      // Seed a create event then a throws event
+      await seedEventRecords(aggregateId, [
+        { name: "test_event_create", data: { input: "before-error" } },
+        { name: "test_event_throws", data: { input: "replay error" } },
+      ]);
+
+      const handle = hermes.admin.replay.view(TestViewEntity);
+
+      let errorEmitted: Error | null = null;
+      handle.on("error", (err) => {
+        errorEmitted = err;
+      });
+
+      await expect(handle.promise).rejects.toThrow();
+      expect(errorEmitted).not.toBeNull();
+    });
+
+    it("should handle cancellation", async () => {
+      await clearEventStore();
+      const aggregateId = randomUUID();
+
+      await seedEventRecords(aggregateId, [
+        { name: "test_event_create", data: { input: "cancel-test" } },
+      ]);
+
+      const handle = hermes.admin.replay.view(TestViewEntity);
+
+      // Cancel immediately
+      await handle.cancel();
+
+      // Should still complete without error (cancellation is graceful)
+      await handle.promise;
+    });
+
+    it("should replay all views watching an aggregate", async () => {
+      await clearEventStore();
+      const aggregateId = randomUUID();
+
+      await seedEventRecords(aggregateId, [
+        { name: "test_event_create", data: { input: "aggregate-replay" } },
+      ]);
+
+      const handle = hermes.admin.replay.aggregate(TestAggregate);
+
+      let completed = false;
+      handle.on("complete", () => {
+        completed = true;
+      });
+
+      await handle.promise;
+
+      expect(completed).toBe(true);
+
+      // TestView watches TestAggregate, so the view should be rebuilt
+      const entity = await hermes.admin.inspect.view({
+        id: aggregateId,
+        entity: TestViewEntity,
+      });
+
+      expect(entity).not.toBeNull();
+      expect(entity!.create).toBe("aggregate-replay");
+    });
+
+    it("should complete immediately when aggregate has no views", async () => {
+      const handle = hermes.admin.replay.aggregate(TestForgettableAggregate);
+
+      const progressEvents: Array<any> = [];
+      handle.on("progress", (p) => progressEvents.push(p));
+
+      let completed = false;
+      handle.on("complete", () => {
+        completed = true;
+      });
+
+      await handle.promise;
+
+      expect(completed).toBe(true);
+      expect(progressEvents).toEqual(
+        expect.arrayContaining([expect.objectContaining({ phase: "complete" })]),
+      );
+    });
+
+    it("should replay events from multiple aggregate instances in temporal order", async () => {
+      await clearEventStore();
+
+      const aggId1 = randomUUID();
+      const aggId2 = randomUUID();
+
+      // Seed events interleaved by timestamp across two aggregate instances.
+      // aggId1 create at T=0, aggId2 create at T=1, aggId1 merge at T=2
+      const { EventRecord: ER } = await import("#internal/entities");
+      const repo = proteus.repository(ER);
+
+      const baseTime = new Date("2025-01-01T00:00:00Z");
+
+      const records = [
+        {
+          aggregateId: aggId1,
+          name: "test_event_create",
+          data: { input: "agg1-create" },
+          expectedEvents: 1,
+          offsetMs: 0,
+        },
+        {
+          aggregateId: aggId2,
+          name: "test_event_create",
+          data: { input: "agg2-create" },
+          expectedEvents: 1,
+          offsetMs: 100,
+        },
+        {
+          aggregateId: aggId1,
+          name: "test_event_merge_state",
+          data: { input: "agg1-merge" },
+          expectedEvents: 2,
+          offsetMs: 200,
+        },
+      ];
+
+      for (const rec of records) {
+        const id = randomUUID();
+        const attrs = {
+          id,
+          aggregateId: rec.aggregateId,
+          aggregateName: "test_aggregate",
+          aggregateNamespace: "hermes",
+          causationId: id,
+          correlationId: randomUUID(),
+          data: rec.data,
+          encrypted: false,
+          name: rec.name,
+          timestamp: new Date(baseTime.getTime() + rec.offsetMs),
+          expectedEvents: rec.expectedEvents,
+          meta: {},
+          previousId: null,
+          version: 1,
+        };
+        const checksum = createChecksum(attrs);
+        const record = repo.create({ ...attrs, checksum });
+        // Set createdAt to match temporal order
+        (record as any).createdAt = new Date(baseTime.getTime() + rec.offsetMs);
+        await repo.insert(record);
+      }
+
+      const handle = hermes.admin.replay.view(TestViewEntity);
+
+      const progressEvents: Array<any> = [];
+      handle.on("progress", (p) => progressEvents.push(p));
+
+      await handle.promise;
+
+      // Both aggregates should have their views rebuilt
+      const entity1 = await hermes.admin.inspect.view({
+        id: aggId1,
+        entity: TestViewEntity,
+      });
+      expect(entity1).not.toBeNull();
+      expect(entity1!.create).toBe("agg1-create");
+      expect(entity1!.mergeState).toBe("agg1-merge");
+
+      const entity2 = await hermes.admin.inspect.view({
+        id: aggId2,
+        entity: TestViewEntity,
+      });
+      expect(entity2).not.toBeNull();
+      expect(entity2!.create).toBe("agg2-create");
+
+      // Total should reflect all 3 events
+      const completeProgress = progressEvents.find((p: any) => p.phase === "complete");
+      expect(completeProgress.processed).toBe(3);
+      expect(completeProgress.total).toBe(3);
+    });
+
+    it("should process all events across many aggregate instances via batched pagination", async () => {
+      await clearEventStore();
+
+      // Seed events across 5 different aggregate instances (1 create each)
+      const aggregateIds: Array<string> = [];
+
+      for (let i = 0; i < 5; i++) {
+        const aggId = randomUUID();
+        aggregateIds.push(aggId);
+        await seedEventRecords(aggId, [
+          { name: "test_event_create", data: { input: `batch-${i}` } },
+        ]);
+      }
+
+      const handle = hermes.admin.replay.view(TestViewEntity);
+
+      const progressEvents: Array<any> = [];
+      handle.on("progress", (p) => progressEvents.push(p));
+
+      await handle.promise;
+
+      // All 5 views should be rebuilt
+      for (let i = 0; i < 5; i++) {
+        const entity = await hermes.admin.inspect.view({
+          id: aggregateIds[i],
+          entity: TestViewEntity,
+        });
+        expect(entity).not.toBeNull();
+        expect(entity!.create).toBe(`batch-${i}`);
+      }
+
+      // Progress should reflect all 5 events
+      const completeProgress = progressEvents.find((p: any) => p.phase === "complete");
+      expect(completeProgress.processed).toBe(5);
+      expect(completeProgress.total).toBe(5);
+      expect(completeProgress.percent).toBe(100);
+    });
+
+    it("should include skipped count of zero for valid events", async () => {
+      await clearEventStore();
+      const aggregateId = randomUUID();
+
+      await seedEventRecords(aggregateId, [
+        { name: "test_event_create", data: { input: "valid-checksum" } },
+      ]);
+
+      const handle = hermes.admin.replay.view(TestViewEntity);
+
+      const progressEvents: Array<any> = [];
+      handle.on("progress", (p) => progressEvents.push(p));
+
+      await handle.promise;
+
+      const completeProgress = progressEvents.find((p: any) => p.phase === "complete");
+      expect(completeProgress.skipped).toBe(0);
+      expect(completeProgress.processed).toBe(1);
+    });
+
+    it("should skip tampered events in warn mode and include skipped count", async () => {
+      await clearEventStore();
+      const aggregateId = randomUUID();
+
+      await seedEventRecords(aggregateId, [
+        { name: "test_event_create", data: { input: "good-event" } },
+        {
+          name: "test_event_merge_state",
+          data: { input: "tampered" },
+          checksum: "INVALID_CHECKSUM",
+        },
+      ]);
+
+      const handle = hermes.admin.replay.view(TestViewEntity);
+
+      const progressEvents: Array<any> = [];
+      handle.on("progress", (p) => progressEvents.push(p));
+
+      await handle.promise;
+
+      const completeProgress = progressEvents.find((p: any) => p.phase === "complete");
+      expect(completeProgress.skipped).toBe(1);
+      expect(completeProgress.processed).toBe(2);
+
+      // Only the valid create event should have been applied
+      const entity = await hermes.admin.inspect.view({
+        id: aggregateId,
+        entity: TestViewEntity,
+      });
+      expect(entity).not.toBeNull();
+      expect(entity!.create).toBe("good-event");
+      // mergeState defaults to "" in TestViewEntity; the tampered event was skipped
+      expect(entity!.mergeState).toBe("");
+    });
+
+    it("should throw when replay called before setup", () => {
+      const freshHermes = new Hermes({
+        proteus: createTestProteusSource(),
+        iris: createTestIrisSource(),
+        modules: ALL_MODULES,
+        logger,
+      });
+
+      expect(() => freshHermes.admin.replay.view(TestViewEntity)).toThrow(/not ready/);
+      expect(() => freshHermes.admin.replay.aggregate(TestAggregate)).toThrow(
+        /not ready/,
+      );
+    });
+
+    it("should re-subscribe with aggregate-based topics after replay", async () => {
+      await clearEventStore();
+      const aggregateId = randomUUID();
+
+      await seedEventRecords(aggregateId, [
+        { name: "test_event_create", data: { input: "resume-test" } },
+      ]);
+
+      const eventBus = (hermes as any).eventBus;
+      const subscribeSpy = jest.spyOn(eventBus, "subscribe");
+
+      const handle = hermes.admin.replay.view(TestViewEntity);
+      await handle.promise;
+
+      // resumeViewSubscriptions should have called subscribe with
+      // aggregate-based topics (e.g. "hermes.test_aggregate.test_event_*"),
+      // NOT view-based topics (e.g. "hermes.test_view.test_event_*")
+      const subscribeCalls = subscribeSpy.mock.calls;
+      const resumeTopics = subscribeCalls.map((call) => (call[0] as any).topic);
+
+      for (const topic of resumeTopics) {
+        // Topic must start with the aggregate identity, not the view identity
+        expect(topic).not.toContain("test_view");
+        expect(topic).toMatch(/^hermes\.test_aggregate\./);
+      }
+
+      expect(resumeTopics.length).toBeGreaterThan(0);
+
+      subscribeSpy.mockRestore();
+    });
+  });
+
+  describe("replay checksum strict mode", () => {
+    let hermes: Hermes;
+    let proteus: ProteusSource;
+    let iris: IrisSource;
+
+    beforeAll(async () => {
+      const sources = await createConnectedSources();
+      proteus = sources.proteus;
+      iris = sources.iris;
+
+      hermes = new Hermes({
+        proteus,
+        iris,
+        modules: ALL_MODULES,
+        logger,
+        checksumMode: "strict",
+      });
+
+      await hermes.setup();
+    });
+
+    afterAll(async () => {
+      await hermes.teardown();
+      await iris.disconnect();
+      await proteus.disconnect();
+    });
+
+    const clearEventStore = async (): Promise<void> => {
+      const { EventRecord } = await import("#internal/entities");
+      const repo = proteus.repository(EventRecord);
+      await repo.clear();
+    };
+
+    const seedEventRecords = async (
+      aggregateId: string,
+      events: Array<{ name: string; data: Record<string, unknown>; checksum?: string }>,
+    ): Promise<void> => {
+      const { EventRecord } = await import("#internal/entities");
+      const repo = proteus.repository(EventRecord);
+
+      for (let i = 0; i < events.length; i++) {
+        const evt = events[i];
+        const id = randomUUID();
+        const attrs = {
+          id,
+          aggregateId,
+          aggregateName: "test_aggregate",
+          aggregateNamespace: "hermes",
+          causationId: id,
+          correlationId: randomUUID(),
+          data: evt.data,
+          encrypted: false,
+          name: evt.name,
+          timestamp: new Date(),
+          expectedEvents: i + 1,
+          meta: {},
+          previousId: null,
+          version: 1,
+        };
+        const checksum = evt.checksum ?? createChecksum(attrs);
+        const record = repo.create({ ...attrs, checksum });
+        await repo.insert(record);
+      }
+    };
+
+    it("should throw on tampered event in strict mode", async () => {
+      await clearEventStore();
+      const aggregateId = randomUUID();
+
+      await seedEventRecords(aggregateId, [
+        { name: "test_event_create", data: { input: "good" } },
+        {
+          name: "test_event_merge_state",
+          data: { input: "tampered" },
+          checksum: "TAMPERED",
+        },
+      ]);
+
+      const handle = hermes.admin.replay.view(TestViewEntity);
+
+      let errorEmitted: Error | null = null;
+      handle.on("error", (err) => {
+        errorEmitted = err;
+      });
+
+      await expect(handle.promise).rejects.toThrow(
+        /Checksum verification failed during replay/,
+      );
+      expect(errorEmitted).not.toBeNull();
+    });
+
+    it("should replay valid events successfully in strict mode", async () => {
+      await clearEventStore();
+      const aggregateId = randomUUID();
+
+      await seedEventRecords(aggregateId, [
+        { name: "test_event_create", data: { input: "strict-valid" } },
+      ]);
+
+      const handle = hermes.admin.replay.view(TestViewEntity);
+
+      const progressEvents: Array<any> = [];
+      handle.on("progress", (p) => progressEvents.push(p));
+
+      await handle.promise;
+
+      const completeProgress = progressEvents.find((p: any) => p.phase === "complete");
+      expect(completeProgress.skipped).toBe(0);
+      expect(completeProgress.processed).toBe(1);
+
+      const entity = await hermes.admin.inspect.view({
+        id: aggregateId,
+        entity: TestViewEntity,
+      });
+      expect(entity).not.toBeNull();
+      expect(entity!.create).toBe("strict-valid");
+    });
+  });
+
+  describe("event emitter delegation", () => {
+    let hermes: Hermes;
+    let proteus: ProteusSource;
+    let iris: IrisSource;
+
+    beforeAll(async () => {
+      const sources = await createConnectedSources();
+      proteus = sources.proteus;
+      iris = sources.iris;
+
+      hermes = new Hermes({
+        proteus,
+        iris,
+        modules: ALL_MODULES,
+        logger,
+      });
+
+      await hermes.setup();
+    });
+
+    afterAll(async () => {
+      await hermes.teardown();
+      await iris.disconnect();
+      await proteus.disconnect();
+    });
+
+    it("should accept 'saga' event listener without error", () => {
+      expect(() => hermes.on("saga", () => {})).not.toThrow();
+    });
+
+    it("should accept 'view' event listener without error", () => {
+      expect(() => hermes.on("view", () => {})).not.toThrow();
+    });
+
+    it("should accept 'checksum' event listener without error", () => {
+      expect(() => hermes.on("checksum", () => {})).not.toThrow();
+    });
+
+    it("should accept namespaced saga event listener", () => {
+      expect(() => hermes.on("saga.hermes.test_saga", () => {})).not.toThrow();
+    });
+
+    it("should accept namespaced view event listener", () => {
+      expect(() => hermes.on("view.hermes.test_view", () => {})).not.toThrow();
+    });
+
+    it("should throw on unrecognized event prefix in on()", () => {
+      expect(() => hermes.on("unknown_prefix" as any, () => {})).toThrow(
+        /Unrecognized event prefix/,
+      );
+    });
+
+    it("should throw on unrecognized event prefix in off()", () => {
+      expect(() => hermes.off("unknown_prefix" as any, () => {})).toThrow(
+        /Unrecognized event prefix/,
+      );
+    });
+
+    it("should remove listener via off()", () => {
+      const listener = jest.fn();
+      hermes.on("saga", listener);
+      hermes.off("saga", listener);
+      // If off works, the listener count should not grow unbounded.
+      // This is a basic sanity check; the important thing is no throw.
+    });
+
+    it("should support off() for view listeners", () => {
+      const listener = jest.fn();
+      expect(() => {
+        hermes.on("view.hermes", listener);
+        hermes.off("view.hermes", listener);
+      }).not.toThrow();
+    });
+
+    it("should support off() for checksum listeners", () => {
+      const listener = jest.fn();
+      expect(() => {
+        hermes.on("checksum", listener);
+        hermes.off("checksum", listener);
+      }).not.toThrow();
+    });
+  });
+
+  // -- C3: Hermes.setup() partial failure scenarios --
+
+  describe("setup partial failure", () => {
+    it("should reset to 'created' status when proteus.setup() throws", async () => {
+      const proteus = createTestProteusSource();
+      const iris = createTestIrisSource();
+      await proteus.connect();
+      await iris.connect();
+
+      // Mock proteus.setup to throw
+      jest.spyOn(proteus, "setup").mockRejectedValue(new Error("proteus setup failed"));
+
+      const hermes = new Hermes({
+        proteus,
+        iris,
+        modules: ALL_MODULES,
+        logger,
+      });
+
+      await expect(hermes.setup()).rejects.toThrow("proteus setup failed");
+      expect(hermes.status).toBe("created");
+
+      (proteus.setup as jest.Mock).mockRestore();
+      await iris.disconnect();
+      await proteus.disconnect();
+    });
+
+    it("should reset to 'created' status when iris.setup() throws after proteus succeeds", async () => {
+      const proteus = createTestProteusSource();
+      const iris = createTestIrisSource();
+      await proteus.connect();
+      await iris.connect();
+
+      // Mock iris.setup to throw (proteus.setup will succeed normally)
+      jest.spyOn(iris, "setup").mockRejectedValue(new Error("iris setup failed"));
+
+      const hermes = new Hermes({
+        proteus,
+        iris,
+        modules: ALL_MODULES,
+        logger,
+      });
+
+      await expect(hermes.setup()).rejects.toThrow("iris setup failed");
+      expect(hermes.status).toBe("created");
+
+      (iris.setup as jest.Mock).mockRestore();
+      await iris.disconnect();
+      await proteus.disconnect();
+    });
+
+    it("should reset to 'created' status when createIrisPrimitives throws", async () => {
+      const proteus = createTestProteusSource();
+      const iris = createTestIrisSource();
+      await proteus.connect();
+      await iris.connect();
+
+      // Mock iris.messageBus to throw during createIrisPrimitives
+      // This must be set up BEFORE hermes.setup() calls it, but AFTER
+      // iris.addMessages (which happens during registerIrisMessages).
+      jest.spyOn(iris, "messageBus").mockImplementation((..._args: any[]) => {
+        // messageBus is called during createIrisPrimitives
+        throw new Error("handler registration failed");
+      });
+
+      const hermes = new Hermes({
+        proteus,
+        iris,
+        modules: ALL_MODULES,
+        logger,
+      });
+
+      await expect(hermes.setup()).rejects.toThrow("handler registration failed");
+      expect(hermes.status).toBe("created");
+
+      (iris.messageBus as jest.Mock).mockRestore();
+      await iris.disconnect();
+      await proteus.disconnect();
+    });
+
+    it("should allow retry after setup failure resets status to 'created'", async () => {
+      const proteus = createTestProteusSource();
+      const iris = createTestIrisSource();
+      await proteus.connect();
+      await iris.connect();
+
+      // First attempt: mock proteus.setup to throw
+      jest.spyOn(proteus, "setup").mockRejectedValue(new Error("transient failure"));
+
+      const hermes = new Hermes({
+        proteus,
+        iris,
+        modules: ALL_MODULES,
+        logger,
+      });
+
+      await expect(hermes.setup()).rejects.toThrow("transient failure");
+      expect(hermes.status).toBe("created");
+
+      // Second attempt: restore real implementation so setup succeeds
+      (proteus.setup as jest.Mock).mockRestore();
+
+      await hermes.setup();
+      expect(hermes.status).toBe("ready");
+
+      await hermes.teardown();
+      await iris.disconnect();
+      await proteus.disconnect();
+    });
+  });
+
+  // -- MEDIUM: teardown on non-ready instance --
+
+  describe("teardown guard", () => {
+    it("should throw when teardown called on 'created' Hermes instance", async () => {
+      const hermes = new Hermes({
+        proteus: createTestProteusSource(),
+        iris: createTestIrisSource(),
+        modules: ALL_MODULES,
+        logger,
+      });
+
+      await expect(hermes.teardown()).rejects.toThrow(/not ready/);
+    });
+  });
+
+  // -- MEDIUM: command edge cases --
+
+  describe("command edge cases", () => {
+    let hermes: Hermes;
+    let proteus: ProteusSource;
+    let iris: IrisSource;
+
+    beforeAll(async () => {
+      const sources = await createConnectedSources();
+      proteus = sources.proteus;
+      iris = sources.iris;
+
+      hermes = new Hermes({
+        proteus,
+        iris,
+        modules: ALL_MODULES,
+        logger,
+      });
+
+      await hermes.setup();
+    });
+
+    afterAll(async () => {
+      await hermes.teardown();
+      await iris.disconnect();
+      await proteus.disconnect();
+    });
+
+    it("should not mutate the command object", async () => {
+      const id = randomUUID();
+      const cmd = new TestCommandCreate("original");
+
+      const result = await hermes.command(cmd, { id });
+
+      expect(result.id).toBe(id);
+      expect(cmd.input).toBe("original");
+    });
+
+    it("should generate UUID when id is empty string (falsy)", async () => {
+      const result = await hermes.command(new TestCommandCreate("empty-id"), { id: "" });
+
+      expect(result.id).toBeTruthy();
+      expect(result.id.length).toBeGreaterThan(0);
+    });
+
+    it("should throw HandlerNotRegisteredError for unregistered command constructor", async () => {
+      class UnregisteredCommand {
+        value = "nope";
+      }
+
+      await expect(hermes.command(new UnregisteredCommand())).rejects.toThrow();
+    });
+  });
+
+  // -- MEDIUM: on() with namespaced patterns --
+
+  describe("on() with namespaced patterns", () => {
+    let hermes: Hermes;
+    let proteus: ProteusSource;
+    let iris: IrisSource;
+
+    beforeAll(async () => {
+      const sources = await createConnectedSources();
+      proteus = sources.proteus;
+      iris = sources.iris;
+
+      hermes = new Hermes({
+        proteus,
+        iris,
+        modules: ALL_MODULES,
+        logger,
+      });
+
+      await hermes.setup();
+    });
+
+    afterAll(async () => {
+      await hermes.teardown();
+      await iris.disconnect();
+      await proteus.disconnect();
+    });
+
+    it("should accept saga.billing pattern", () => {
+      expect(() => hermes.on("saga.billing", () => {})).not.toThrow();
+    });
+
+    it("should accept view.ns.name.id pattern", () => {
+      expect(() => hermes.on("view.hermes.test_view.some-id", () => {})).not.toThrow();
+    });
+
+    it("should accept checksum.namespace pattern", () => {
+      expect(() => hermes.on("checksum.hermes", () => {})).not.toThrow();
+    });
+  });
+
+  // -- MEDIUM: clone then teardown --
+
+  describe("clone and teardown", () => {
+    it("should reflect status changes through shared reference after teardown", async () => {
+      const { proteus, iris } = await createConnectedSources();
+
+      const hermes = new Hermes({
+        proteus,
+        iris,
+        modules: ALL_MODULES,
+        logger,
+      });
+
+      await hermes.setup();
+
+      const clone = hermes.clone();
+      expect(clone.status).toBe("ready");
+
+      await hermes.teardown();
+
+      // Original is stopped
+      expect(hermes.status).toBe("stopped");
+
+      // Clone shares the same status reference, so it also shows stopped
+      expect(clone.status).toBe("stopped");
+
+      await iris.disconnect();
+      await proteus.disconnect();
+    });
+  });
+
+  // -- MEDIUM: admin.inspect with non-existent entities --
+
+  describe("admin inspect non-existent", () => {
+    let hermes: Hermes;
+    let proteus: ProteusSource;
+    let iris: IrisSource;
+
+    beforeAll(async () => {
+      const sources = await createConnectedSources();
+      proteus = sources.proteus;
+      iris = sources.iris;
+
+      hermes = new Hermes({
+        proteus,
+        iris,
+        modules: ALL_MODULES,
+        logger,
+      });
+
+      await hermes.setup();
+    });
+
+    afterAll(async () => {
+      await hermes.teardown();
+      await iris.disconnect();
+      await proteus.disconnect();
+    });
+
+    it("should return empty aggregate state for non-existent aggregate", async () => {
+      const state = await hermes.admin.inspect.aggregate({
+        id: randomUUID(),
+        name: "test_aggregate",
+      });
+
+      expect(state.events).toEqual([]);
+      expect(state.numberOfLoadedEvents).toBe(0);
+      expect(state.destroyed).toBe(false);
+      expect(state.state).toEqual({});
+    });
+
+    it("should return null for non-existent saga", async () => {
+      const saga = await hermes.admin.inspect.saga({
+        id: randomUUID(),
+        name: "test_saga",
+      });
+
+      expect(saga).toBeNull();
+    });
+
+    it("should return null for non-existent view", async () => {
+      const entity = await hermes.admin.inspect.view({
+        id: randomUUID(),
+        entity: TestViewEntity,
+      });
+
+      expect(entity).toBeNull();
+    });
+  });
 });

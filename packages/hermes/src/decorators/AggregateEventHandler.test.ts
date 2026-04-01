@@ -1,23 +1,30 @@
-import { Dict } from "@lindorm/types";
-import { AggregateEventCtx } from "../types/handlers/aggregate-event-handler";
-import { globalHermesMetadata } from "../utils/private";
-import { Aggregate } from "./Aggregate";
+import type { StagedMetadata } from "#internal/metadata";
 import { AggregateEventHandler } from "./AggregateEventHandler";
-import { Event } from "./Event";
 
-describe("AggregateEventHandler Decorator", () => {
-  test("should add metadata", () => {
-    @Event()
-    class TestEvent {}
+const createMockMethodContext = (
+  metadata: DecoratorMetadataObject,
+  methodName: string,
+): ClassMethodDecoratorContext =>
+  ({ metadata, name: methodName }) as ClassMethodDecoratorContext;
 
-    @Aggregate()
-    class TestAggregateEventHandlerAggregate {
-      @AggregateEventHandler(TestEvent)
-      public async onTestAggregateDomainEvent(ctx: AggregateEventCtx<TestEvent, Dict>) {}
-    }
+describe("AggregateEventHandler", () => {
+  test("should stage handler with correct kind, trigger, and methodName", () => {
+    const metadata: DecoratorMetadataObject = Object.create(
+      null,
+    ) as DecoratorMetadataObject;
 
-    expect(
-      globalHermesMetadata.getAggregate(TestAggregateEventHandlerAggregate),
-    ).toMatchSnapshot();
+    class FakeEvent {}
+
+    const fn = () => {};
+    AggregateEventHandler(FakeEvent)(
+      fn,
+      createMockMethodContext(metadata, "onCreateEvent"),
+    );
+
+    const staged = metadata as StagedMetadata;
+    expect(staged.handlers).toHaveLength(1);
+    expect(staged.handlers![0].kind).toBe("AggregateEventHandler");
+    expect(staged.handlers![0].methodName).toBe("onCreateEvent");
+    expect(staged.handlers![0].trigger).toBe(FakeEvent);
   });
 });

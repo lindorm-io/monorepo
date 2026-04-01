@@ -1,366 +1,927 @@
+import type { IIrisMessageBus, IIrisSource, IIrisWorkerQueue } from "@lindorm/iris";
+import type { ILogger } from "@lindorm/logger";
+import type { ProteusSource } from "@lindorm/proteus";
+import type { ClassLike, Constructor, Dict } from "@lindorm/types";
+import EventEmitter from "events";
+import { ms } from "@lindorm/date";
 import { LindormError } from "@lindorm/errors";
-import { ILogger } from "@lindorm/logger";
-import { ClassLike, Dict } from "@lindorm/types";
-import { randomUUID } from "crypto";
-import { AggregateDomain, ChecksumDomain, SagaDomain, ViewDomain } from "../domains";
+import { randomUUID } from "@lindorm/random";
+import { HermesViewEntity } from "../entities/HermesViewEntity";
+import { ChecksumError, HandlerNotRegisteredError } from "../errors";
+import type { IHermes } from "../interfaces/IHermes";
+import type { HermesEventName } from "../types/hermes-event-name";
+import type { AggregateIdentifier } from "../types/aggregate-identifier";
+import type { AggregateState } from "../types/aggregate-state";
+import type { ChecksumMode, HermesOptions } from "../types/hermes-options";
+import type { HermesStatus } from "../types/hermes-status";
+import type { ReplayHandle, ReplayOptions, ReplayProgress } from "../types/replay-types";
+import type { SagaState } from "../types/saga-state";
 import {
-  ChecksumStore,
-  EncryptionStore,
-  EventStore,
-  MessageBus,
-  SagaStore,
-  ViewStore,
-} from "../infrastructure";
-import { IAggregateModel, IHermes, ISagaModel, IViewModel } from "../interfaces";
-import { HermesCommand, HermesError, HermesEvent, HermesTimeout } from "../messages";
+  AggregateDomain,
+  ChecksumDomain,
+  SagaDomain,
+  ViewDomain,
+} from "#internal/domains";
 import {
-  AggregateIdentifier,
-  CloneHermesOptions,
-  EventEmitterListener,
-  HermesAdmin,
-  HermesCommandOptions,
-  HermesInspectOptions,
-  HermesOptions,
-  HermesStatus,
-} from "../types";
-import { FromClone } from "../types/private";
-import { extractDataTransferObject } from "../utils/private";
-import { HermesRegistry } from "./private";
+  CausationRecord,
+  ChecksumRecord,
+  EncryptionRecord,
+  EventRecord,
+  SagaRecord,
+} from "#internal/entities";
+import {
+  HermesCommandMessage,
+  HermesErrorMessage,
+  HermesEventMessage,
+  HermesTimeoutMessage,
+} from "#internal/messages";
+import { HermesRegistry } from "#internal/registry";
+import { scanModules } from "#internal/registry";
+import { assertChecksum, extractDto } from "#internal/utils";
 
+const DEFAULT_NAMESPACE = "hermes";
+
+type StatusRef = { current: HermesStatus };
+
+type CloneInput = {
+  _mode: "from_clone";
+  logger: ILogger;
+  namespace: string;
+  statusRef: StatusRef;
+  causationExpiryMs: number;
+  checksumMode: ChecksumMode;
+  proteus: ProteusSource;
+  viewSources: Map<string, ProteusSource>;
+  iris: IIrisSource;
+  registry: HermesRegistry;
+  aggregateDomain: AggregateDomain;
+  checksumDomain: ChecksumDomain;
+  sagaDomain: SagaDomain;
+  viewDomain: ViewDomain;
+  commandQueue: IIrisWorkerQueue<HermesCommandMessage>;
+  eventBus: IIrisMessageBus<HermesEventMessage>;
+  errorQueue: IIrisWorkerQueue<HermesErrorMessage>;
+  timeoutQueue: IIrisWorkerQueue<HermesTimeoutMessage>;
+  encryption?: {
+    algorithm?: string;
+    encryption?: string;
+  };
+};
+
+/**
+ * Hermes delegates message retry and dead-letter queue (DLQ) handling entirely
+ * to Iris. Configure retry limits and DLQ behaviour via Iris source options,
+ * not through Hermes.
+ */
 export class Hermes implements IHermes {
-  private readonly namespace: string;
-
-  // domains
-  private readonly aggregateDomain: AggregateDomain;
-  private readonly checksumDomain: ChecksumDomain;
-  private readonly sagaDomain: SagaDomain;
-  private readonly viewDomain: ViewDomain;
-
-  // infrastructure
-  private readonly checksumStore: ChecksumStore;
-  private readonly encryptionStore: EncryptionStore;
-  private readonly eventStore: EventStore;
-  private readonly sagaStore: SagaStore;
-  private readonly viewStore: ViewStore;
-
-  // messages
-  private readonly commandBus: MessageBus<HermesCommand<Dict>>;
-  private readonly errorBus: MessageBus<HermesError>;
-  private readonly eventBus: MessageBus<HermesEvent<Dict>>;
-  private readonly timeoutBus: MessageBus<HermesTimeout>;
-
-  // primary
-  private readonly registry: HermesRegistry;
-  private readonly options: HermesOptions;
   private readonly logger: ILogger;
+  private readonly namespace: string;
+  private readonly causationExpiryMs: number;
+  private readonly checksumMode: ChecksumMode;
 
-  private _status: HermesStatus;
+  private readonly proteus: ProteusSource;
+  private readonly viewSourceMap: Map<string, ProteusSource>;
+  private readonly iris: IIrisSource;
+  private readonly options: HermesOptions | null;
+
+  private registry!: HermesRegistry;
+  private aggregateDomain!: AggregateDomain;
+  private checksumDomain!: ChecksumDomain;
+  private sagaDomain!: SagaDomain;
+  private viewDomain!: ViewDomain;
+
+  private commandQueue!: IIrisWorkerQueue<HermesCommandMessage>;
+  private eventBus!: IIrisMessageBus<HermesEventMessage>;
+  private errorQueue!: IIrisWorkerQueue<HermesErrorMessage>;
+  private timeoutQueue!: IIrisWorkerQueue<HermesTimeoutMessage>;
+
+  private readonly _statusRef: StatusRef;
 
   public constructor(options: HermesOptions);
-  public constructor(options: FromClone);
-  public constructor(options: HermesOptions | FromClone) {
-    this.logger = options.logger.child(["Hermes"]);
-
+  public constructor(options: CloneInput);
+  public constructor(options: HermesOptions | CloneInput) {
     if ("_mode" in options && options._mode === "from_clone") {
+      this.logger = options.logger.child(["Hermes"]);
+      this.namespace = options.namespace;
+      this.causationExpiryMs = options.causationExpiryMs;
+      this.checksumMode = options.checksumMode;
+      this._statusRef = options.statusRef;
+      this.options = null;
+
+      this.proteus = options.proteus;
+      this.viewSourceMap = options.viewSources;
+      this.iris = options.iris;
+
+      this.registry = options.registry;
       this.aggregateDomain = options.aggregateDomain;
       this.checksumDomain = options.checksumDomain;
       this.sagaDomain = options.sagaDomain;
       this.viewDomain = options.viewDomain;
 
-      this.checksumStore = options.checksumStore;
-      this.encryptionStore = options.encryptionStore;
-      this.eventStore = options.eventStore;
-      this.sagaStore = options.sagaStore;
-      this.viewStore = options.viewStore;
-
-      this.commandBus = options.commandBus;
-      this.errorBus = options.errorBus;
+      this.commandQueue = options.commandQueue;
       this.eventBus = options.eventBus;
-      this.timeoutBus = options.timeoutBus;
-
-      this.options = options.options;
-      this.registry = options.registry;
-
-      this.namespace = options.namespace;
-      this._status = options.status;
+      this.errorQueue = options.errorQueue;
+      this.timeoutQueue = options.timeoutQueue;
     } else {
       const opts = options as HermesOptions;
 
-      this.namespace = opts.namespace ?? "hermes";
-      this._status = "created";
-
+      this.logger = opts.logger.child(["Hermes"]);
+      this.namespace = opts.namespace ?? DEFAULT_NAMESPACE;
+      this.checksumMode = opts.checksumMode ?? "warn";
+      this._statusRef = { current: "created" };
       this.options = opts;
-      this.registry = new HermesRegistry({ namespace: this.namespace });
 
-      // infrastructure
+      this.proteus = opts.proteus;
+      this.iris = opts.iris;
 
-      this.checksumStore = new ChecksumStore({
-        ...this.options.checksumStore,
-        logger: this.logger,
-      });
-      this.encryptionStore = new EncryptionStore({
-        ...this.options.encryptionStore,
-        logger: this.logger,
-      });
-      this.eventStore = new EventStore({
-        ...this.options.eventStore,
-        logger: this.logger,
-      });
-      this.sagaStore = new SagaStore({
-        ...this.options.sagaStore,
-        logger: this.logger,
-      });
-      this.viewStore = new ViewStore({
-        ...this.options.viewStore,
-        logger: this.logger,
-      });
+      this.viewSourceMap = new Map();
 
-      this.commandBus = new MessageBus<HermesCommand<Dict>>({
-        ...this.options.messageBus,
-        Message: HermesCommand,
-        logger: this.logger,
-      });
-      this.errorBus = new MessageBus<HermesError>({
-        ...(this.options.messageBus as any),
-        Message: HermesError,
-        logger: this.logger,
-      });
-      this.eventBus = new MessageBus<HermesEvent<Dict>>({
-        ...this.options.messageBus,
-        Message: HermesEvent,
-        logger: this.logger,
-      });
-      this.timeoutBus = new MessageBus<HermesTimeout>({
-        ...this.options.messageBus,
-        Message: HermesTimeout,
-        logger: this.logger,
-      });
+      if (opts.viewSources) {
+        for (const source of opts.viewSources) {
+          this.viewSourceMap.set(source.driverType, source);
+        }
+      }
 
-      // domains
-
-      this.aggregateDomain = new AggregateDomain({
-        commandBus: this.commandBus,
-        encryptionStore: this.encryptionStore,
-        errorBus: this.errorBus,
-        eventBus: this.eventBus,
-        eventStore: this.eventStore,
-        logger: this.logger,
-        registry: this.registry,
-      });
-      this.checksumDomain = new ChecksumDomain({
-        errorBus: this.errorBus,
-        eventBus: this.eventBus,
-        store: this.checksumStore,
-        logger: this.logger,
-        registry: this.registry,
-      });
-      this.sagaDomain = new SagaDomain({
-        commandBus: this.commandBus,
-        errorBus: this.errorBus,
-        eventBus: this.eventBus,
-        timeoutBus: this.timeoutBus,
-        store: this.sagaStore,
-        logger: this.logger,
-        registry: this.registry,
-      });
-      this.viewDomain = new ViewDomain({
-        ...this.options.viewStore,
-        commandBus: this.commandBus,
-        errorBus: this.errorBus,
-        eventBus: this.eventBus,
-        logger: this.logger,
-        registry: this.registry,
-        store: this.viewStore,
-      });
+      this.causationExpiryMs = opts.causationExpiry
+        ? ms(opts.causationExpiry)
+        : ms("30 Days");
     }
   }
 
-  // public
+  // -- Public getters --
 
-  public get admin(): HermesAdmin {
+  public get status(): HermesStatus {
+    return this._statusRef.current;
+  }
+
+  public get admin(): IHermes["admin"] {
     return {
       inspect: {
         aggregate: this.inspectAggregate.bind(this),
         saga: this.inspectSaga.bind(this),
         view: this.inspectView.bind(this),
       },
+      purgeCausations: this.purgeCausations.bind(this),
+      replay: {
+        view: this.replayView.bind(this),
+        aggregate: this.replayAggregate.bind(this),
+      },
     };
   }
 
-  public get status(): HermesStatus {
-    return this._status;
-  }
+  // -- Lifecycle --
 
-  public clone(options: CloneHermesOptions = {}): IHermes {
-    return new Hermes({
-      _mode: "from_clone",
-      aggregateDomain: this.aggregateDomain,
-      checksumDomain: this.checksumDomain,
-      checksumStore: this.checksumStore,
-      commandBus: this.commandBus,
-      encryptionStore: this.encryptionStore,
-      errorBus: this.errorBus,
-      eventBus: this.eventBus,
-      eventStore: this.eventStore,
-      logger: options.logger ?? this.logger,
-      namespace: this.namespace,
-      options: this.options,
-      registry: this.registry,
-      sagaDomain: this.sagaDomain,
-      sagaStore: this.sagaStore,
-      status: this.status,
-      timeoutBus: this.timeoutBus,
-      viewDomain: this.viewDomain,
-      viewStore: this.viewStore,
-    });
-  }
-
-  public async command<M extends Dict = Dict>(
-    Command: ClassLike,
-    options: HermesCommandOptions<M> = {},
-  ): Promise<AggregateIdentifier> {
-    if (this.status !== "ready") {
-      throw new LindormError("Invalid operation", {
-        data: { status: this.status },
+  public async setup(): Promise<void> {
+    if (this._statusRef.current !== "created") {
+      throw new LindormError("Hermes.setup() can only be called once", {
+        data: { status: this._statusRef.current },
       });
     }
 
-    const metadata = this.registry.getCommand(Command.constructor);
+    if (!this.options) {
+      throw new LindormError("Cannot setup a cloned Hermes instance");
+    }
+
+    this._statusRef.current = "initialising";
+
+    try {
+      this.logger.debug("Scanning modules");
+
+      const scanned = scanModules(this.options.modules);
+      this.registry = new HermesRegistry(scanned);
+
+      this.logger.debug("Registry built", {
+        aggregates: this.registry.allAggregates.length,
+        sagas: this.registry.allSagas.length,
+        views: this.registry.allViews.length,
+        commands: this.registry.allCommands.length,
+        events: this.registry.allEvents.length,
+        queries: this.registry.allQueries.length,
+        timeouts: this.registry.allTimeouts.length,
+      });
+
+      this.registry.validate(this.logger);
+
+      this.registerEntities();
+      this.registerIrisMessages();
+
+      await this.setupSources();
+      await this.setupIris();
+
+      this.createIrisPrimitives();
+      this.createDomains();
+
+      await this.registerDomainHandlers();
+
+      this._statusRef.current = "ready";
+
+      this.logger.verbose("Hermes ready");
+    } catch (err) {
+      this._statusRef.current = "created";
+      throw err;
+    }
+  }
+
+  public async teardown(): Promise<void> {
+    this.assertReady();
+
+    this._statusRef.current = "stopping";
+
+    this.logger.debug("Tearing down");
+
+    await this.commandQueue.unconsumeAll();
+    await this.eventBus.unsubscribeAll();
+    await this.errorQueue.unconsumeAll();
+    await this.timeoutQueue.unconsumeAll();
+
+    this.sagaDomain.removeAllListeners();
+    this.viewDomain.removeAllListeners();
+    this.checksumDomain.removeAllListeners();
+
+    this._statusRef.current = "stopped";
+
+    this.logger.verbose("Hermes stopped");
+  }
+
+  public clone(options: { logger?: ILogger } = {}): IHermes {
+    return new Hermes({
+      _mode: "from_clone",
+      logger: options.logger ?? this.logger,
+      namespace: this.namespace,
+      statusRef: this._statusRef,
+      causationExpiryMs: this.causationExpiryMs,
+      checksumMode: this.checksumMode,
+      proteus: this.proteus,
+      viewSources: this.viewSourceMap,
+      iris: this.iris,
+      registry: this.registry,
+      aggregateDomain: this.aggregateDomain,
+      checksumDomain: this.checksumDomain,
+      sagaDomain: this.sagaDomain,
+      viewDomain: this.viewDomain,
+      commandQueue: this.commandQueue,
+      eventBus: this.eventBus,
+      errorQueue: this.errorQueue,
+      timeoutQueue: this.timeoutQueue,
+    });
+  }
+
+  // -- Command --
+
+  public async command(
+    command: ClassLike,
+    options: { id?: string; correlationId?: string; delay?: number; meta?: Dict } = {},
+  ): Promise<AggregateIdentifier> {
+    this.assertReady();
+
+    const metadata = this.registry.getCommand(command.constructor as Constructor);
+    const commandHandler = this.registry.getCommandHandler(
+      command.constructor as Constructor,
+    );
+
+    if (!commandHandler) {
+      throw new HandlerNotRegisteredError();
+    }
 
     const aggregate: AggregateIdentifier = {
       id: options.id || randomUUID(),
-      name: metadata.aggregate.name,
-      namespace: metadata.aggregate.namespace,
+      name: commandHandler.aggregate.name,
+      namespace: commandHandler.aggregate.namespace,
     };
 
     const { name, version } = metadata;
-    const { data } = extractDataTransferObject(Command);
+    const { data: dtoData } = extractDto(command);
     const { correlationId, delay, meta = {} } = options;
 
     const id = randomUUID();
 
-    const command = this.commandBus.create({
+    const message = this.commandQueue.create({
       id,
       aggregate,
       causationId: id,
-      correlationId,
-      data,
-      delay,
+      correlationId: correlationId ?? null,
+      data: dtoData,
       meta,
       name,
       version,
+    } as Partial<HermesCommandMessage>);
+
+    this.logger.verbose("Publishing command", {
+      command: name,
+      aggregate,
     });
 
-    this.logger.verbose("Publishing command", { command });
-
-    await this.commandBus.publish(command);
+    await this.commandQueue.publish(message, delay ? { delay } : undefined);
 
     return aggregate;
   }
 
-  public on<D extends Dict = Dict>(evt: string, listener: EventEmitterListener<D>): void {
-    if (evt.startsWith("saga")) {
-      this.sagaDomain.on(evt, listener);
-    }
-
-    if (evt.startsWith("view")) {
-      this.viewDomain.on(evt, listener);
-    }
-  }
+  // -- Query --
 
   public async query<R>(query: ClassLike): Promise<R> {
-    return this.viewDomain.query(query);
+    this.assertReady();
+
+    return this.viewDomain.query<R>(query);
   }
 
-  public async setup(): Promise<void> {
-    this._status = "initialising";
+  // -- Event emitter delegation --
 
-    if (this.options.messageBus.rabbit) {
-      await this.options.messageBus.rabbit.setup();
+  public on(evt: HermesEventName, callback: (data: unknown) => void): void {
+    if (evt.startsWith("saga")) {
+      this.sagaDomain.on(evt, callback as any);
+    } else if (evt.startsWith("view")) {
+      this.viewDomain.on(evt, callback as any);
+    } else if (evt.startsWith("checksum")) {
+      this.checksumDomain.on(evt, callback as any);
+    } else {
+      throw new LindormError(
+        `Unrecognized event prefix: "${evt}". Expected "saga", "view", or "checksum".`,
+      );
+    }
+  }
+
+  public off(evt: HermesEventName, callback: (data: unknown) => void): void {
+    if (evt.startsWith("saga")) {
+      this.sagaDomain.off(evt, callback as any);
+    } else if (evt.startsWith("view")) {
+      this.viewDomain.off(evt, callback as any);
+    } else if (evt.startsWith("checksum")) {
+      this.checksumDomain.off(evt, callback as any);
+    } else {
+      throw new LindormError(
+        `Unrecognized event prefix: "${evt}". Expected "saga", "view", or "checksum".`,
+      );
+    }
+  }
+
+  // -- Admin inspect --
+
+  private async inspectAggregate<S extends Dict = Dict>(opts: {
+    id: string;
+    name: string;
+    namespace?: string;
+  }): Promise<AggregateState<S>> {
+    this.assertReady();
+
+    const model = await this.aggregateDomain.inspect<S>({
+      id: opts.id,
+      name: opts.name,
+      namespace: opts.namespace ?? this.namespace,
+    });
+
+    return model.toJSON() as AggregateState<S>;
+  }
+
+  private async inspectSaga<S extends Dict = Dict>(opts: {
+    id: string;
+    name: string;
+    namespace?: string;
+  }): Promise<SagaState<S> | null> {
+    this.assertReady();
+
+    const record = await this.sagaDomain.inspect({
+      id: opts.id,
+      name: opts.name,
+      namespace: opts.namespace ?? this.namespace,
+    });
+
+    if (!record) return null;
+
+    return {
+      id: record.id,
+      name: record.name,
+      namespace: record.namespace,
+      destroyed: record.destroyed,
+      messagesToDispatch: record.messagesToDispatch,
+      revision: record.revision,
+      state: record.state as S,
+      createdAt: record.createdAt,
+      updatedAt: record.updatedAt,
+    };
+  }
+
+  private async inspectView<V extends HermesViewEntity>(opts: {
+    id: string;
+    entity: Constructor<V>;
+  }): Promise<V | null> {
+    this.assertReady();
+
+    return this.viewDomain.inspect<V>(opts.id, opts.entity);
+  }
+
+  // -- Admin purge --
+
+  private async purgeCausations(): Promise<number> {
+    this.assertReady();
+
+    let totalPurged = 0;
+
+    const mainRepo = this.proteus.repository(CausationRecord);
+    const mainBefore = await mainRepo.count();
+    await mainRepo.deleteExpired();
+    const mainAfter = await mainRepo.count();
+    totalPurged += mainBefore - mainAfter;
+
+    for (const [, source] of this.viewSourceMap) {
+      const viewRepo = source.repository(CausationRecord);
+      const viewBefore = await viewRepo.count();
+      await viewRepo.deleteExpired();
+      const viewAfter = await viewRepo.count();
+      totalPurged += viewBefore - viewAfter;
     }
 
-    if (this.options.checksumStore.mongo) {
-      await this.options.checksumStore.mongo.setup();
-    }
-    if (this.options.checksumStore.postgres) {
-      await this.options.checksumStore.postgres.setup();
-    }
+    return totalPurged;
+  }
 
-    if (this.options.eventStore.mongo) {
-      await this.options.eventStore.mongo.setup();
-    }
-    if (this.options.eventStore.postgres) {
-      await this.options.eventStore.postgres.setup();
-    }
+  // -- Admin replay --
 
-    if (this.options.sagaStore.mongo) {
-      await this.options.sagaStore.mongo.setup();
-    }
-    if (this.options.sagaStore.postgres) {
-      await this.options.sagaStore.postgres.setup();
-    }
+  /**
+   * Replays all events for the given view entity by truncating the view table
+   * and re-processing every stored event in temporal order. Cancelling
+   * mid-replay leaves the view in a partially populated state -- the only
+   * recovery is to re-run the replay to completion.
+   */
+  private replayView<V extends HermesViewEntity>(
+    entity: Constructor<V>,
+    _options: ReplayOptions = {},
+  ): ReplayHandle {
+    this.assertReady();
 
-    if (this.options.viewStore.mongo) {
-      await this.options.viewStore.mongo.setup();
-    }
-    if (this.options.viewStore.postgres) {
-      await this.options.viewStore.postgres.setup();
-    }
-    if (this.options.viewStore.redis) {
-      await this.options.viewStore.redis.setup();
-    }
+    const emitter = new EventEmitter();
+    let cancelled = false;
 
-    this.registry.add(this.options.modules);
+    const cancel = async (): Promise<void> => {
+      cancelled = true;
+    };
+
+    const work = async (): Promise<void> => {
+      // Yield to let callers register listeners before events fire
+      await Promise.resolve();
+
+      const view = this.registry.getViewByEntity(entity as unknown as Constructor);
+      const viewSource = this.resolveSourceForView(view);
+
+      this.logger.verbose("Starting view replay", {
+        view: { name: view.name, namespace: view.namespace },
+      });
+
+      // 1. Pause: unsubscribe view from event bus
+      const subscriptions = this.viewDomain.getSubscriptionTopicsForView(view);
+
+      for (const sub of subscriptions) {
+        await this.eventBus.unsubscribe({ topic: sub.topic, queue: sub.queue });
+      }
+
+      emitter.emit("progress", {
+        phase: "truncating",
+        processed: 0,
+        total: 0,
+        percent: 0,
+        skipped: 0,
+      } satisfies ReplayProgress);
+
+      // 2. Build combined filter for all aggregates (cross-aggregate temporal ordering)
+      const eventRepo = this.proteus.repository(EventRecord);
+      const aggregateFilters = view.aggregates.map((a) => ({
+        aggregateName: a.name,
+        aggregateNamespace: a.namespace,
+      }));
+
+      const combinedFilter =
+        aggregateFilters.length === 1 ? aggregateFilters[0] : { $or: aggregateFilters };
+
+      const total = await eventRepo.count(combinedFilter as any);
+
+      // 3. Truncate the view table
+      const viewRepo = viewSource.repository(view.entity);
+      await viewRepo.clear();
+
+      // 4. Delete related causation records from the source that stores them
+      const causationSource = viewSource === this.proteus ? this.proteus : viewSource;
+      const causationRepo = causationSource.repository(CausationRecord);
+      const ownerName = `${view.namespace}.${view.name}`;
+      await causationRepo.delete({ ownerName } as any);
+
+      if (cancelled) {
+        await this.resumeViewSubscriptions(view, subscriptions);
+        emitter.emit("progress", {
+          phase: "complete",
+          processed: 0,
+          total,
+          percent: 0,
+          skipped: 0,
+        } satisfies ReplayProgress);
+        emitter.emit("complete");
+        return;
+      }
+
+      // 5 + 6. Stream events in batches and process through handlers
+      emitter.emit("progress", {
+        phase: "replaying",
+        processed: 0,
+        total,
+        percent: 0,
+        skipped: 0,
+      } satisfies ReplayProgress);
+
+      const BATCH_SIZE = 1000;
+      let processed = 0;
+      let skipped = 0;
+      let offset = 0;
+      let batch: Array<EventRecord>;
+
+      do {
+        batch = await eventRepo.find(combinedFilter as any, {
+          order: { createdAt: "ASC" },
+          limit: BATCH_SIZE,
+          offset,
+        });
+
+        for (const eventRecord of batch) {
+          if (cancelled) break;
+
+          try {
+            assertChecksum(eventRecord);
+          } catch (checksumErr: any) {
+            if (this.checksumMode === "strict") {
+              throw new ChecksumError(
+                `Checksum verification failed during replay for event ${eventRecord.id} ` +
+                  `(aggregate ${eventRecord.aggregateId}): ${checksumErr.message}`,
+              );
+            }
+
+            this.logger.warn("Skipping tampered event during replay", checksumErr, [
+              {
+                eventId: eventRecord.id,
+                aggregateId: eventRecord.aggregateId,
+                eventName: eventRecord.name,
+              },
+            ]);
+
+            skipped++;
+            processed++;
+
+            const percent = total > 0 ? Math.round((processed / total) * 100) : 100;
+            const interval = total >= 100 ? Math.max(1, Math.floor(total / 100)) : 10;
+
+            if (processed % interval === 0 || processed === total) {
+              emitter.emit("progress", {
+                phase: "replaying",
+                processed,
+                total,
+                percent,
+                skipped,
+              } satisfies ReplayProgress);
+            }
+
+            continue;
+          }
+
+          const message = this.eventBus.create({
+            id: eventRecord.id,
+            aggregate: {
+              id: eventRecord.aggregateId,
+              name: eventRecord.aggregateName,
+              namespace: eventRecord.aggregateNamespace,
+            },
+            causationId: eventRecord.causationId,
+            correlationId: eventRecord.correlationId,
+            data: eventRecord.data,
+            meta: eventRecord.meta,
+            name: eventRecord.name,
+            version: eventRecord.version,
+          } as Partial<HermesEventMessage>);
+
+          await this.viewDomain.replayEvent(message, view);
+          processed++;
+
+          const percent = total > 0 ? Math.round((processed / total) * 100) : 100;
+          const interval = total >= 100 ? Math.max(1, Math.floor(total / 100)) : 10;
+
+          if (processed % interval === 0 || processed === total) {
+            emitter.emit("progress", {
+              phase: "replaying",
+              processed,
+              total,
+              percent,
+              skipped,
+            } satisfies ReplayProgress);
+          }
+        }
+
+        offset += batch.length;
+      } while (batch.length === BATCH_SIZE && !cancelled);
+
+      // 7. Resume event consumption
+      emitter.emit("progress", {
+        phase: "resuming",
+        processed,
+        total,
+        percent: total > 0 ? Math.round((processed / total) * 100) : 100,
+        skipped,
+      } satisfies ReplayProgress);
+
+      await this.resumeViewSubscriptions(view, subscriptions);
+
+      // 8. Complete
+      emitter.emit("progress", {
+        phase: "complete",
+        processed,
+        total,
+        percent: total > 0 ? Math.round((processed / total) * 100) : 100,
+        skipped,
+      } satisfies ReplayProgress);
+
+      emitter.emit("complete");
+
+      this.logger.verbose("View replay complete", {
+        view: { name: view.name, namespace: view.namespace },
+        processed,
+        total,
+        skipped,
+      });
+    };
+
+    const promise = work().catch((err) => {
+      emitter.emit("error", err);
+      throw err;
+    });
+
+    return {
+      on: (event: string, callback: (...args: any[]) => void) => {
+        emitter.on(event, callback);
+      },
+      cancel,
+      promise,
+    };
+  }
+
+  /**
+   * Replays all views associated with the given aggregate class. Each view is
+   * replayed via {@link replayView}, which truncates the view table first.
+   * Cancelling mid-replay leaves affected views partially populated -- re-run
+   * the replay to recover.
+   */
+  private replayAggregate(
+    aggregate: Constructor,
+    options: ReplayOptions = {},
+  ): ReplayHandle {
+    this.assertReady();
+
+    const emitter = new EventEmitter();
+    let cancelled = false;
+
+    const cancel = async (): Promise<void> => {
+      cancelled = true;
+    };
+
+    const work = async (): Promise<void> => {
+      // Yield to let callers register listeners before events fire
+      await Promise.resolve();
+
+      const registeredAggregate = this.registry.getAggregateByTarget(aggregate);
+
+      const views = this.registry.allViews.filter((v) =>
+        v.aggregates.some(
+          (a) =>
+            a.name === registeredAggregate.name &&
+            a.namespace === registeredAggregate.namespace,
+        ),
+      );
+
+      if (views.length === 0) {
+        emitter.emit("progress", {
+          phase: "complete",
+          processed: 0,
+          total: 0,
+          percent: 100,
+          skipped: 0,
+        } satisfies ReplayProgress);
+        emitter.emit("complete");
+        return;
+      }
+
+      for (const view of views) {
+        if (cancelled) break;
+
+        const handle = this.replayView(view.entity, options);
+
+        handle.on("progress", (p: ReplayProgress) => {
+          emitter.emit("progress", p);
+        });
+
+        handle.on("error", (err: Error) => {
+          emitter.emit("error", err);
+        });
+
+        await handle.promise;
+      }
+
+      if (!cancelled) {
+        emitter.emit("complete");
+      }
+    };
+
+    const promise = work().catch((err) => {
+      emitter.emit("error", err);
+      throw err;
+    });
+
+    return {
+      on: (event: string, callback: (...args: any[]) => void) => {
+        emitter.on(event, callback);
+      },
+      cancel,
+      promise,
+    };
+  }
+
+  private async resumeViewSubscriptions(
+    view: { name: string; namespace: string; target: Constructor },
+    subscriptions: Array<{ topic: string; queue: string }>,
+  ): Promise<void> {
+    const registeredView = this.registry.getView(view.namespace, view.name);
+
+    for (const sub of subscriptions) {
+      const handler = registeredView.eventHandlers.find((h) => {
+        const eventDto = this.registry.getEvent(h.trigger);
+        const aggregate = this.registry.getAggregateForEvent(
+          h.trigger,
+          registeredView.aggregates,
+        );
+        return sub.topic === `${aggregate.namespace}.${aggregate.name}.${eventDto.name}`;
+      });
+
+      if (handler) {
+        await this.eventBus.subscribe({
+          topic: sub.topic,
+          queue: sub.queue,
+          callback: async (message) =>
+            (this.viewDomain as any).handleEvent(message, registeredView, handler),
+        });
+      }
+    }
+  }
+
+  // -- Setup helpers --
+
+  private registerEntities(): void {
+    this.logger.debug("Registering internal entities with proteus");
+
+    this.proteus.addEntities([
+      EventRecord,
+      SagaRecord,
+      CausationRecord,
+      ChecksumRecord,
+      EncryptionRecord,
+    ]);
+
+    const viewSourcesWithCausation = new Set<ProteusSource>();
+
+    for (const view of this.registry.allViews) {
+      const source = this.resolveSourceForView(view);
+
+      this.logger.debug("Registering view entity", {
+        view: view.name,
+        entity: view.entity.name,
+        source: view.driverType ?? "default",
+      });
+
+      source.addEntities([view.entity]);
+
+      if (source !== this.proteus && !viewSourcesWithCausation.has(source)) {
+        viewSourcesWithCausation.add(source);
+        source.addEntities([CausationRecord]);
+
+        this.logger.debug("Registering CausationRecord on view source", {
+          driverType: view.driverType,
+        });
+      }
+    }
+  }
+
+  private registerIrisMessages(): void {
+    this.logger.debug("Registering Iris messages");
+
+    this.iris.addMessages([
+      HermesCommandMessage,
+      HermesErrorMessage,
+      HermesEventMessage,
+      HermesTimeoutMessage,
+    ]);
+  }
+
+  private async setupSources(): Promise<void> {
+    this.logger.debug("Setting up proteus sources");
+
+    await this.proteus.setup();
+
+    for (const [driverType, source] of this.viewSourceMap) {
+      this.logger.debug("Setting up view source", { driverType });
+      await source.setup();
+    }
+  }
+
+  private async setupIris(): Promise<void> {
+    this.logger.debug("Setting up iris");
+
+    await this.iris.setup();
+  }
+
+  private createIrisPrimitives(): void {
+    this.logger.debug("Creating Iris primitives");
+
+    this.commandQueue = this.iris.workerQueue(HermesCommandMessage);
+    this.eventBus = this.iris.messageBus(HermesEventMessage);
+    this.errorQueue = this.iris.workerQueue(HermesErrorMessage);
+    this.timeoutQueue = this.iris.workerQueue(HermesTimeoutMessage);
+  }
+
+  private createDomains(): void {
+    this.logger.debug("Creating domains");
+
+    this.aggregateDomain = new AggregateDomain({
+      registry: this.registry,
+      proteus: this.proteus,
+      iris: {
+        commandQueue: this.commandQueue,
+        eventBus: this.eventBus,
+        errorQueue: this.errorQueue,
+      },
+      encryption: this.options?.encryption,
+      checksumMode: this.options?.checksumMode,
+      logger: this.logger,
+    });
+
+    this.checksumDomain = new ChecksumDomain({
+      registry: this.registry,
+      proteus: this.proteus,
+      iris: {
+        eventBus: this.eventBus,
+        errorQueue: this.errorQueue,
+      },
+      logger: this.logger,
+    });
+
+    this.sagaDomain = new SagaDomain({
+      registry: this.registry,
+      proteusSource: this.proteus,
+      eventBus: this.eventBus,
+      commandQueue: this.commandQueue,
+      timeoutQueue: this.timeoutQueue,
+      errorQueue: this.errorQueue,
+      causationExpiryMs: this.causationExpiryMs,
+      logger: this.logger,
+    });
+
+    this.viewDomain = new ViewDomain({
+      registry: this.registry,
+      proteusSource: this.proteus,
+      viewSources: this.viewSourceMap,
+      eventBus: this.eventBus,
+      commandQueue: this.commandQueue,
+      errorQueue: this.errorQueue,
+      causationExpiryMs: this.causationExpiryMs,
+      logger: this.logger,
+    });
+  }
+
+  private async registerDomainHandlers(): Promise<void> {
+    this.logger.debug("Registering domain handlers");
 
     await this.aggregateDomain.registerHandlers();
     await this.checksumDomain.registerHandlers();
     await this.sagaDomain.registerHandlers();
     await this.viewDomain.registerHandlers();
-
-    this._status = "ready";
   }
 
-  // private admin
+  private resolveSourceForView(view: {
+    name: string;
+    namespace: string;
+    driverType: string | null;
+  }): ProteusSource {
+    if (!view.driverType) {
+      return this.proteus;
+    }
 
-  private async inspectAggregate<S extends Dict = Dict>(
-    inspect: HermesInspectOptions,
-  ): Promise<IAggregateModel<S>> {
-    return this.aggregateDomain.inspect<S>({
-      id: inspect.id,
-      name: inspect.name,
-      namespace: inspect.namespace ?? this.namespace,
-    });
-  }
+    const source = this.viewSourceMap.get(view.driverType);
 
-  private async inspectSaga<S extends Dict = Dict>(
-    inspect: HermesInspectOptions,
-  ): Promise<ISagaModel<S>> {
-    return this.sagaDomain.inspect<S>({
-      id: inspect.id,
-      name: inspect.name,
-      namespace: inspect.namespace ?? this.namespace,
-    });
-  }
-
-  private async inspectView<S extends Dict = Dict>(
-    inspect: HermesInspectOptions,
-  ): Promise<IViewModel<S>> {
-    const viewIdentifier = {
-      id: inspect.id,
-      name: inspect.name,
-      namespace: inspect.namespace ?? this.namespace,
-    };
-
-    const registry = this.registry.views.find(
-      (v) => v.name === viewIdentifier.name && v.namespace === viewIdentifier.namespace,
-    );
-
-    if (!registry) {
-      throw new Error(
-        `View not found: ${viewIdentifier.name} (${viewIdentifier.namespace})`,
+    if (!source) {
+      throw new LindormError(
+        `No ProteusSource found for driver type "${view.driverType}" (required by view "${view.namespace}.${view.name}")`,
       );
     }
 
-    return this.viewDomain.inspect<S>(viewIdentifier, registry.source);
+    return source;
+  }
+
+  // -- Guard --
+
+  private assertReady(): void {
+    if (this._statusRef.current !== "ready") {
+      throw new LindormError("Hermes is not ready", {
+        data: { status: this._statusRef.current },
+      });
+    }
   }
 }

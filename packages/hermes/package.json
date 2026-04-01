@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/hermes",
-  "version": "0.3.7",
+  "version": "0.4.0",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -13,13 +13,32 @@
   },
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./mocks": {
+      "types": "./dist/mocks/index.d.ts",
+      "default": "./dist/mocks/index.js"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "mocks": [
+        "dist/mocks/index.d.ts"
+      ]
+    }
+  },
+  "imports": {
+    "#internal/*": "./dist/internal/*.js"
+  },
   "scripts": {
     "build": "rimraf dist && tsc -b ./tsconfig.build.json",
-    "example": "ts-node example/hermes.ts",
+    "example": "jest --forceExit -- banking-example",
     "prettier": "prettier --write ./src/*",
-    "test": "composed --file docker-compose.yml jest --forceExit --runInBand --",
-    "test:ci": "jest --forceExit --runInBand",
-    "test:watch": "composed --file docker-compose.yml jest --runInBand --watch --",
+    "test": "jest --forceExit --",
+    "test:ci": "jest --forceExit",
     "typecheck": "tsc",
     "typecheck:watch": "tsc --watch",
     "update": "ncu -i",
@@ -30,22 +49,25 @@
     "@lindorm/aes": "^0.6.2",
     "@lindorm/case": "^0.1.13",
     "@lindorm/date": "^0.4.1",
+    "@lindorm/errors": "^0.1.15",
     "@lindorm/is": "^0.1.13",
     "@lindorm/json-kit": "^0.5.5",
     "@lindorm/kryptos": "^0.5.2",
-    "@lindorm/message": "^0.1.7",
     "@lindorm/random": "^0.2.2",
     "@lindorm/scanner": "^0.4.1",
     "@lindorm/sha": "^0.3.1",
+    "@lindorm/utils": "^0.6.1",
     "deepmerge": "^4.3.1",
     "zod": "^3.23.8"
   },
+  "peerDependencies": {
+    "@lindorm/proteus": "^0.3.0",
+    "@lindorm/iris": "^0.1.0",
+    "@lindorm/logger": "^0.5.1"
+  },
   "devDependencies": {
-    "@lindorm/kafka": "^0.3.4",
-    "@lindorm/logger": "^0.5.1",
-    "@lindorm/mongo": "^0.7.1",
-    "@lindorm/postgres": "^0.3.9",
-    "@lindorm/rabbit": "^0.6.4",
-    "@lindorm/redis": "^0.9.1"
+    "@lindorm/proteus": "^0.3.0",
+    "@lindorm/iris": "^0.1.0",
+    "@lindorm/logger": "^0.5.1"
   }
 }

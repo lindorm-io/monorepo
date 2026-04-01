@@ -1,19 +1,24 @@
+import { snakeCase } from "@lindorm/case";
 import { isArray } from "@lindorm/is";
-import { Constructor } from "@lindorm/types";
-import { SagaDecoratorOptions } from "../types";
-import { extractNameData, globalHermesMetadata } from "../utils/private";
+import type { Constructor } from "@lindorm/types";
+import { stageSaga } from "#internal/metadata";
 
-export function Saga(
-  AggregateClass: Constructor | Array<Constructor>,
-  options: SagaDecoratorOptions = {},
-): ClassDecorator {
-  return function (target) {
-    const { name } = extractNameData(target.name);
-    globalHermesMetadata.addSaga({
-      aggregates: isArray(AggregateClass) ? AggregateClass : [AggregateClass],
-      name: options.name || name,
-      namespace: options.namespace || null,
-      target: target as unknown as Constructor,
+type SagaOptions = {
+  name?: string;
+};
+
+/**
+ * Registers a class as a saga handler. A new instance is created for each
+ * handler invocation -- do not rely on constructor injection or instance state
+ * persisting between calls.
+ */
+export const Saga =
+  (aggregateOrArray: Constructor | Array<Constructor>, options?: SagaOptions) =>
+  (target: Function, context: ClassDecoratorContext): void => {
+    const aggregates = isArray(aggregateOrArray) ? aggregateOrArray : [aggregateOrArray];
+
+    stageSaga(context.metadata, {
+      name: options?.name ?? snakeCase(target.name),
+      aggregates,
     });
   };
-}

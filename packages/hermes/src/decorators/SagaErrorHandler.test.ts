@@ -1,21 +1,27 @@
-import { DomainError } from "../errors";
-import { SagaErrorCtx } from "../types/handlers/saga-error-handler";
-import { globalHermesMetadata } from "../utils/private";
-import { Aggregate } from "./Aggregate";
-import { Saga } from "./Saga";
+import type { StagedMetadata } from "#internal/metadata";
 import { SagaErrorHandler } from "./SagaErrorHandler";
 
-describe("SagaErrorHandler Decorator", () => {
-  @Aggregate()
-  class TestSagaAggregate {}
+const createMockMethodContext = (
+  metadata: DecoratorMetadataObject,
+  methodName: string,
+): ClassMethodDecoratorContext =>
+  ({ metadata, name: methodName }) as ClassMethodDecoratorContext;
 
-  test("should add metadata", () => {
-    @Saga(TestSagaAggregate)
-    class TestSagaErrorHandlerSaga {
-      @SagaErrorHandler(DomainError)
-      public async onTestSagaDomainError(ctx: SagaErrorCtx<DomainError>) {}
-    }
+describe("SagaErrorHandler", () => {
+  test("should stage handler with correct kind, trigger, and methodName", () => {
+    const metadata: DecoratorMetadataObject = Object.create(
+      null,
+    ) as DecoratorMetadataObject;
 
-    expect(globalHermesMetadata.getSaga(TestSagaErrorHandlerSaga)).toMatchSnapshot();
+    class FakeError {}
+
+    const fn = () => {};
+    SagaErrorHandler(FakeError)(fn, createMockMethodContext(metadata, "onError"));
+
+    const staged = metadata as StagedMetadata;
+    expect(staged.handlers).toHaveLength(1);
+    expect(staged.handlers![0].kind).toBe("SagaErrorHandler");
+    expect(staged.handlers![0].methodName).toBe("onError");
+    expect(staged.handlers![0].trigger).toBe(FakeError);
   });
 });

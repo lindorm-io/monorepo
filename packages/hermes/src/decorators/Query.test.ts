@@ -1,11 +1,44 @@
-import { globalHermesMetadata } from "../utils/private";
+import type { StagedMetadata } from "#internal/metadata";
 import { Query } from "./Query";
 
-describe("Query Decorator", () => {
-  test("should add metadata", () => {
-    @Query()
-    class TestQuery {}
+const createMockContext = (metadata: DecoratorMetadataObject): ClassDecoratorContext =>
+  ({ metadata }) as ClassDecoratorContext;
 
-    expect(globalHermesMetadata.getQuery(TestQuery)).toMatchSnapshot();
+describe("Query", () => {
+  test("should stage dto metadata with snake_case name derived from class name", () => {
+    const metadata: DecoratorMetadataObject = Object.create(
+      null,
+    ) as DecoratorMetadataObject;
+
+    class TestViewQuery {}
+
+    Query()(TestViewQuery, createMockContext(metadata));
+
+    expect(metadata).toMatchSnapshot();
+  });
+
+  test("should stage dto metadata with custom name when provided as string", () => {
+    const metadata: DecoratorMetadataObject = Object.create(
+      null,
+    ) as DecoratorMetadataObject;
+
+    class TestViewQuery {}
+
+    Query("custom_query_name")(TestViewQuery, createMockContext(metadata));
+
+    expect(metadata).toMatchSnapshot();
+  });
+
+  test("should always set version to 1", () => {
+    const metadata: DecoratorMetadataObject = Object.create(
+      null,
+    ) as DecoratorMetadataObject;
+
+    class TestQueryCreate_V2 {}
+
+    Query()(TestQueryCreate_V2, createMockContext(metadata));
+
+    // Query does not support version option -- always 1
+    expect((metadata as StagedMetadata).dto!.version).toBe(1);
   });
 });

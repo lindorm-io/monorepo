@@ -1,0 +1,47 @@
+import {
+  CreateDateField,
+  Default,
+  Entity,
+  Field,
+  Namespace,
+  PrimaryKey,
+  UpdateDateField,
+  VersionField,
+} from "@lindorm/proteus";
+
+@Entity({ name: "saga" })
+@Namespace("hermes")
+export class SagaRecord {
+  @PrimaryKey()
+  @Field("string")
+  public id: string = "";
+
+  @PrimaryKey()
+  @Field("string")
+  public name: string = "";
+
+  @PrimaryKey()
+  @Field("string")
+  public namespace: string = "";
+
+  @Field("boolean")
+  @Default(false)
+  public destroyed: boolean = false;
+
+  @Field("jsonb")
+  @Default(() => [])
+  public messagesToDispatch: Array<unknown> = [];
+
+  @Field("jsonb")
+  @Default(() => ({}))
+  public state: Record<string, unknown> = {};
+
+  @VersionField()
+  public revision: number = 0;
+
+  @CreateDateField()
+  public createdAt: Date = new Date();
+
+  @UpdateDateField()
+  public updatedAt: Date = new Date();
+}

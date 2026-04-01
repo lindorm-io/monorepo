@@ -1,0 +1,5 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`getHermesMetadata should return empty object for a class with null metadata 1`] = `{}`;
+
+exports[`getHermesMetadata should return empty object for a class without Symbol.metadata 1`] = `{}`;

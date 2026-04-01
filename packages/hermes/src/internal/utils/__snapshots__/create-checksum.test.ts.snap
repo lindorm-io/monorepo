@@ -1,0 +1,3 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`createChecksum should produce a deterministic base64 SHA256 checksum from event record attributes 1`] = `"zObLMPRVI4KJXxTqfKZcl1YtGELXiasQT9Bbcwp7034="`;

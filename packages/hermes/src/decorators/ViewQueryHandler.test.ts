@@ -1,27 +1,27 @@
-import { Dict } from "@lindorm/types";
-import { ViewQueryCtx } from "../types/handlers/view-query-handler";
-import { globalHermesMetadata } from "../utils/private";
-import { Aggregate } from "./Aggregate";
-import { Query } from "./Query";
-import { View } from "./View";
+import type { StagedMetadata } from "#internal/metadata";
 import { ViewQueryHandler } from "./ViewQueryHandler";
 
-describe("ViewQueryHandler Decorator", () => {
-  @Aggregate()
-  class TestViewAggregate {}
+const createMockMethodContext = (
+  metadata: DecoratorMetadataObject,
+  methodName: string,
+): ClassMethodDecoratorContext =>
+  ({ metadata, name: methodName }) as ClassMethodDecoratorContext;
 
-  test("should add metadata", () => {
-    @Query()
-    class TestViewQueryHandlerQuery {}
+describe("ViewQueryHandler", () => {
+  test("should stage handler with correct kind, trigger, and methodName", () => {
+    const metadata: DecoratorMetadataObject = Object.create(
+      null,
+    ) as DecoratorMetadataObject;
 
-    @View(TestViewAggregate, "mongo")
-    class TestViewQueryHandlerView {
-      @ViewQueryHandler(TestViewQueryHandlerQuery)
-      public async onTestViewQueryHandlerQuery(
-        ctx: ViewQueryCtx<TestViewQueryHandlerQuery, Dict>,
-      ) {}
-    }
+    class FakeQuery {}
 
-    expect(globalHermesMetadata.getView(TestViewQueryHandlerView)).toMatchSnapshot();
+    const fn = () => {};
+    ViewQueryHandler(FakeQuery)(fn, createMockMethodContext(metadata, "onQuery"));
+
+    const staged = metadata as StagedMetadata;
+    expect(staged.handlers).toHaveLength(1);
+    expect(staged.handlers![0].kind).toBe("ViewQueryHandler");
+    expect(staged.handlers![0].methodName).toBe("onQuery");
+    expect(staged.handlers![0].trigger).toBe(FakeQuery);
   });
 });

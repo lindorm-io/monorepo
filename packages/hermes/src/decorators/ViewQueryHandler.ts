@@ -1,20 +1,12 @@
-import { Constructor, Dict } from "@lindorm/types";
-import { ViewQueryHandlerDescriptor } from "../types";
-import { globalHermesMetadata } from "../utils/private";
+import type { Constructor } from "@lindorm/types";
+import { stageHandler } from "#internal/metadata";
 
-export function ViewQueryHandler<C extends Constructor, S extends Dict>(
-  QueryClass: C,
-): ViewQueryHandlerDescriptor<C, S> {
-  return function (target, key, descriptor) {
-    globalHermesMetadata.addHandler({
-      conditions: null,
-      decorator: "ViewQueryHandler",
-      encryption: false,
-      handler: descriptor.value,
-      key: key.toString(),
-      schema: null,
-      target: target.constructor as Constructor,
+export const ViewQueryHandler =
+  (QueryClass: Constructor) =>
+  (_target: Function, context: ClassMethodDecoratorContext): void => {
+    stageHandler(context.metadata, {
+      kind: "ViewQueryHandler",
+      methodName: String(context.name),
       trigger: QueryClass,
     });
   };
-}

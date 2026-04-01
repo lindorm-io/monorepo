@@ -1,11 +1,13 @@
-import { Constructor } from "@lindorm/types";
-import { globalHermesMetadata } from "../utils/private";
+import { extractNameData, stageDto } from "#internal/metadata";
 
-export function Query(): ClassDecorator {
-  return function (target) {
-    globalHermesMetadata.addQuery({
-      name: target.name,
-      target: target as unknown as Constructor,
+export const Query =
+  (name?: string) =>
+  (target: Function, context: ClassDecoratorContext): void => {
+    const { name: defaultName } = extractNameData(target.name);
+
+    stageDto(context.metadata, {
+      kind: "query",
+      name: name ?? defaultName,
+      version: 1,
     });
   };
-}

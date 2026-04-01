@@ -1,47 +1,30 @@
-import { Dict } from "@lindorm/types";
-import { z } from "zod/v4";
-import { AggregateCommandCtx } from "../types/handlers/aggregate-command-handler";
-import { globalHermesMetadata } from "../utils/private";
-import { Aggregate } from "./Aggregate";
+import type { StagedMetadata } from "#internal/metadata";
 import { AggregateCommandHandler } from "./AggregateCommandHandler";
-import { Command } from "./Command";
 
-describe("AggregateCommandHandler Decorator", () => {
-  test("should add metadata", () => {
-    @Command()
-    class TestCommand {}
+const createMockMethodContext = (
+  metadata: DecoratorMetadataObject,
+  methodName: string,
+): ClassMethodDecoratorContext =>
+  ({ metadata, name: methodName }) as ClassMethodDecoratorContext;
 
-    @Aggregate()
-    class TestAggregateCommandHandlerAggregate {
-      @AggregateCommandHandler(TestCommand)
-      public async onTestAggregateDomainCommand(
-        ctx: AggregateCommandCtx<TestCommand, Dict>,
-      ) {}
-    }
+describe("AggregateCommandHandler", () => {
+  test("should stage handler with correct kind, trigger, and methodName", () => {
+    const metadata: DecoratorMetadataObject = Object.create(
+      null,
+    ) as DecoratorMetadataObject;
 
-    expect(
-      globalHermesMetadata.getAggregate(TestAggregateCommandHandlerAggregate),
-    ).toMatchSnapshot();
-  });
+    class FakeCommand {}
 
-  test("should add metadata with custom options", () => {
-    @Command()
-    class TestCommand {}
+    const fn = () => {};
+    AggregateCommandHandler(FakeCommand)(
+      fn,
+      createMockMethodContext(metadata, "handleCreate"),
+    );
 
-    @Aggregate()
-    class TestAggregateCommandHandlerAggregate {
-      @AggregateCommandHandler(TestCommand, {
-        conditions: { created: true },
-        encryption: true,
-        schema: z.object({}),
-      })
-      public async onTestAggregateDomainCommand(
-        ctx: AggregateCommandCtx<TestCommand, Dict>,
-      ) {}
-    }
-
-    expect(
-      globalHermesMetadata.getAggregate(TestAggregateCommandHandlerAggregate),
-    ).toMatchSnapshot();
+    const staged = metadata as StagedMetadata;
+    expect(staged.handlers).toHaveLength(1);
+    expect(staged.handlers![0].kind).toBe("AggregateCommandHandler");
+    expect(staged.handlers![0].methodName).toBe("handleCreate");
+    expect(staged.handlers![0].trigger).toBe(FakeCommand);
   });
 });
