@@ -1,4 +1,4 @@
-import { TEST_EC_KEY, TEST_OKP_KEY } from "src/__fixtures__/keys";
+import { TEST_EC_KEY, TEST_OKP_KEY } from "../../../__fixtures__/keys";
 import {
   getDiffieHellmanDecryptionKey,
   getDiffieHellmanEncryptionKey,

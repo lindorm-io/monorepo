@@ -7,7 +7,7 @@ import {
   TEST_OCT_KEY,
   TEST_OKP_KEY,
   TEST_RSA_KEY,
-} from "src/__fixtures__/keys";
+} from "../../../__fixtures__/keys";
 import { getDecryptionKey } from "./get-decryption-key";
 
 jest.mock("#internal/utils/key-types/get-ec-keys");

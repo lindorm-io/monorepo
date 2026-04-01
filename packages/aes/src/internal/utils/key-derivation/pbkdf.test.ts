@@ -1,4 +1,4 @@
-import { TEST_OCT_KEY } from "src/__fixtures__/keys";
+import { TEST_OCT_KEY } from "../../../__fixtures__/keys";
 import { pbkdf } from "./pbkdf";
 
 describe("pbkdf", () => {
