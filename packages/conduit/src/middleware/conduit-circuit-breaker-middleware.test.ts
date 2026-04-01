@@ -1,4 +1,5 @@
 import { CircuitBreaker, CircuitOpenError, type ICircuitBreaker } from "@lindorm/breaker";
+import { createMockLogger } from "@lindorm/logger/mocks";
 import { ConduitError } from "../errors";
 import {
   ConduitCircuitBreakerCache,
@@ -11,18 +12,17 @@ describe("conduitCircuitBreakerMiddleware", () => {
   let next: jest.Mock;
   let cache: ConduitCircuitBreakerCache;
   let middleware: ConduitMiddleware;
-
   const origin = "https://api.test";
   const url = `${origin}/resource`;
 
   beforeEach(() => {
     ctx = {
-      req: { url },
-      logger: { warn: jest.fn(), info: jest.fn(), debug: jest.fn() },
+      req: { url, origin },
+      logger: createMockLogger(),
     };
 
     cache = new Map();
-    middleware = createConduitCircuitBreakerMiddleware({}, cache);
+    middleware = createConduitCircuitBreakerMiddleware({}, createMockLogger(), cache);
     next = jest.fn().mockResolvedValue(undefined);
   });
 
@@ -81,6 +81,7 @@ describe("conduitCircuitBreakerMiddleware", () => {
   test("ConduitError server errors count toward threshold", async () => {
     middleware = createConduitCircuitBreakerMiddleware(
       { threshold: 2, window: 60000 },
+      createMockLogger(),
       cache,
     );
 
@@ -99,6 +100,7 @@ describe("conduitCircuitBreakerMiddleware", () => {
   test("ConduitError client errors are ignorable", async () => {
     middleware = createConduitCircuitBreakerMiddleware(
       { threshold: 2, window: 60000 },
+      createMockLogger(),
       cache,
     );
 
@@ -116,20 +118,27 @@ describe("conduitCircuitBreakerMiddleware", () => {
   test("per-origin isolation", async () => {
     middleware = createConduitCircuitBreakerMiddleware(
       { threshold: 1, window: 60000 },
+      createMockLogger(),
       cache,
     );
 
     const serverError = new ConduitError("fail", { status: 500 });
 
     // Trip origin A
-    const ctxA = { ...ctx, req: { url: "https://a.test/path" } };
+    const ctxA = {
+      ...ctx,
+      req: { url: "https://a.test/path", origin: "https://a.test" },
+    };
     next.mockRejectedValue(serverError);
     await expect(middleware(ctxA, next)).rejects.toThrow("fail");
 
     expect(cache.get("https://a.test")!.state).toBe("open");
 
     // Origin B should still be closed
-    const ctxB = { ...ctx, req: { url: "https://b.test/path" } };
+    const ctxB = {
+      ...ctx,
+      req: { url: "https://b.test/path", origin: "https://b.test" },
+    };
     next.mockResolvedValue(undefined);
     await expect(middleware(ctxB, next)).resolves.toBeUndefined();
 
