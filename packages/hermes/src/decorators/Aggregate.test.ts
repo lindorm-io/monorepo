@@ -1,22 +1,30 @@
-import { globalHermesMetadata } from "../utils/private";
 import { Aggregate } from "./Aggregate";
 
-describe("Aggregate Decorator", () => {
-  test("should add metadata", () => {
-    @Aggregate()
+const createMockContext = (metadata: DecoratorMetadataObject): ClassDecoratorContext =>
+  ({ metadata }) as ClassDecoratorContext;
+
+describe("Aggregate", () => {
+  test("should stage aggregate metadata with snake_case name from class name", () => {
+    const metadata: DecoratorMetadataObject = Object.create(
+      null,
+    ) as DecoratorMetadataObject;
+
     class TestAggregate {}
 
-    expect(globalHermesMetadata.getAggregate(TestAggregate)).toMatchSnapshot();
+    Aggregate()(TestAggregate, createMockContext(metadata));
+
+    expect(metadata).toMatchSnapshot();
   });
 
-  test("should add metadata with custom options", () => {
-    @Aggregate({
-      encryption: true,
-      name: "custom_name",
-      namespace: "custom_namespace",
-    })
-    class TestAggregateOptions {}
+  test("should stage aggregate metadata with custom name", () => {
+    const metadata: DecoratorMetadataObject = Object.create(
+      null,
+    ) as DecoratorMetadataObject;
 
-    expect(globalHermesMetadata.getAggregate(TestAggregateOptions)).toMatchSnapshot();
+    class TestAggregate {}
+
+    Aggregate("my_custom_aggregate")(TestAggregate, createMockContext(metadata));
+
+    expect(metadata).toMatchSnapshot();
   });
 });

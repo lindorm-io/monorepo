@@ -1,13 +1,16 @@
-import { Dict } from "@lindorm/types";
-import { z } from "zod/v4";
+import type { Dict } from "@lindorm/types";
+import { z } from "zod";
 import {
   Aggregate,
   AggregateCommandHandler,
   AggregateErrorHandler,
   AggregateEventHandler,
+  RequireCreated,
+  RequireNotCreated,
+  Validate,
 } from "../../../decorators";
 import { DomainError } from "../../../errors";
-import {
+import type {
   AggregateCommandCtx,
   AggregateErrorCtx,
   AggregateEventCtx,
@@ -37,70 +40,78 @@ export type TestAggregateState = Dict;
 export class TestAggregate {
   // command handlers
 
-  @AggregateCommandHandler(TestCommandCreate, {
-    conditions: { created: false },
-    schema: z.object({ input: z.string() }),
-  })
+  @AggregateCommandHandler(TestCommandCreate)
+  @RequireNotCreated()
+  @Validate(z.object({ input: z.string() }))
   public async onCreate(
     ctx: AggregateCommandCtx<TestCommandCreate, TestAggregateState>,
   ): Promise<void> {
-    await ctx.apply(new TestEventCreate("create"));
+    await ctx.apply(new TestEventCreate(ctx.command.input));
   }
 
-  @AggregateCommandHandler(TestCommandDestroy, { conditions: { created: true } })
+  @AggregateCommandHandler(TestCommandDestroy)
+  @RequireCreated()
   public async onDestroy(
     ctx: AggregateCommandCtx<TestCommandDestroy, TestAggregateState>,
   ): Promise<void> {
-    await ctx.apply(new TestEventDestroy("destroy"));
+    await ctx.apply(new TestEventDestroy(ctx.command.input));
   }
 
   @AggregateCommandHandler(TestCommandDestroyNext)
+  @RequireCreated()
   public async onDestroyNext(
     ctx: AggregateCommandCtx<TestCommandDestroyNext, TestAggregateState>,
   ): Promise<void> {
-    await ctx.apply(new TestEventDestroyNext("destroy next"));
+    await ctx.apply(new TestEventDestroyNext(ctx.command.input));
+    await ctx.apply(new TestEventDestroy(ctx.command.input));
   }
 
   @AggregateCommandHandler(TestCommandDispatch)
+  @RequireCreated()
   public async onDispatch(
     ctx: AggregateCommandCtx<TestCommandDispatch, TestAggregateState>,
   ): Promise<void> {
-    await ctx.apply(new TestEventDispatch("dispatch"));
+    await ctx.apply(new TestEventDispatch(ctx.command.input));
   }
 
-  @AggregateCommandHandler(TestCommandEncrypt, { encryption: true })
+  @AggregateCommandHandler(TestCommandEncrypt)
+  @RequireCreated()
   public async onEncrypt(
     ctx: AggregateCommandCtx<TestCommandEncrypt, TestAggregateState>,
   ): Promise<void> {
-    await ctx.apply(new TestEventEncrypt("encrypt"));
+    await ctx.apply(new TestEventEncrypt(ctx.command.input));
   }
 
   @AggregateCommandHandler(TestCommandMergeState)
+  @RequireCreated()
   public async onMergeState(
     ctx: AggregateCommandCtx<TestCommandMergeState, TestAggregateState>,
   ): Promise<void> {
-    await ctx.apply(new TestEventMergeState("merge state"));
+    await ctx.apply(new TestEventMergeState(ctx.command.input));
   }
 
   @AggregateCommandHandler(TestCommandSetState)
+  @RequireCreated()
   public async onSetState(
     ctx: AggregateCommandCtx<TestCommandSetState, TestAggregateState>,
   ): Promise<void> {
-    await ctx.apply(new TestEventSetState("set state"));
+    await ctx.apply(new TestEventSetState(ctx.command.input));
   }
 
   @AggregateCommandHandler(TestCommandThrows)
+  @RequireCreated()
   public async onThrows(
     ctx: AggregateCommandCtx<TestCommandThrows, TestAggregateState>,
   ): Promise<void> {
-    await ctx.apply(new TestEventThrows("throws"));
+    await ctx.apply(new TestEventThrows(ctx.command.input));
   }
 
   @AggregateCommandHandler(TestCommandTimeout)
+  @RequireCreated()
   public async onTimeout(
     ctx: AggregateCommandCtx<TestCommandTimeout, TestAggregateState>,
   ): Promise<void> {
-    await ctx.apply(new TestEventTimeout("timeout"));
+    await ctx.apply(new TestEventTimeout(ctx.command.input));
   }
 
   // event handlers
@@ -153,10 +164,7 @@ export class TestAggregate {
   public async onSetStateEvent(
     ctx: AggregateEventCtx<TestEventSetState, TestAggregateState>,
   ): Promise<void> {
-    ctx.setState({
-      ...ctx.state,
-      setState: ctx.event.input,
-    });
+    ctx.setState({ ...ctx.state, setState: ctx.event.input });
   }
 
   @AggregateEventHandler(TestEventThrows)
@@ -176,11 +184,7 @@ export class TestAggregate {
   // error handlers
 
   @AggregateErrorHandler(DomainError)
-  public async onDomainError(ctx: AggregateErrorCtx<DomainError>): Promise<void> {
-    ctx.logger.warn("DomainError", {
-      command: ctx.command,
-      error: ctx.error,
-      message: ctx.message,
-    });
+  public async onDomainError(ctx: AggregateErrorCtx): Promise<void> {
+    ctx.dispatch(new TestCommandCreate("retry"));
   }
 }

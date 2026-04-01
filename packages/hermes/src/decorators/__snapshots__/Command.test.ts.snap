@@ -1,25 +1,41 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
-exports[`Command Decorator should add metadata 1`] = `
+exports[`Command should extract version from class name _V2 suffix 1`] = `
 {
-  "aggregate": {
-    "name": null,
-    "namespace": null,
+  "dto": {
+    "kind": "command",
+    "name": "test_command_create",
+    "version": 2,
   },
-  "name": "test_command",
-  "target": [Function],
-  "version": 1,
 }
 `;
 
-exports[`Command Decorator should add metadata with custom options 1`] = `
+exports[`Command should stage dto metadata with custom name and version when provided as options 1`] = `
 {
-  "aggregate": {
-    "name": "external_aggregate",
-    "namespace": "external_namespace",
+  "dto": {
+    "kind": "command",
+    "name": "my_command",
+    "version": 3,
   },
-  "name": "custom_command",
-  "target": [Function],
-  "version": 2,
+}
+`;
+
+exports[`Command should stage dto metadata with custom name when provided as string 1`] = `
+{
+  "dto": {
+    "kind": "command",
+    "name": "custom_command_name",
+    "version": 1,
+  },
+}
+`;
+
+exports[`Command should stage dto metadata with snake_case name derived from class name 1`] = `
+{
+  "dto": {
+    "kind": "command",
+    "name": "test_command_create",
+    "version": 1,
+  },
 }
 `;

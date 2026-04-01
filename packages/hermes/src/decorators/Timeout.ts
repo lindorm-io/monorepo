@@ -1,14 +1,21 @@
-import { Constructor } from "@lindorm/types";
-import { TimeoutDecoratorOptions } from "../types";
-import { extractNameData, globalHermesMetadata } from "../utils/private";
+import { extractNameData, stageDto } from "#internal/metadata";
 
-export function Timeout(options: TimeoutDecoratorOptions = {}): ClassDecorator {
-  return function (target) {
-    const { name, version } = extractNameData(target.name);
-    globalHermesMetadata.addTimeout({
-      name: options.name || name,
-      target: target as unknown as Constructor,
-      version: options.version ?? version,
+type TimeoutOptions = {
+  name?: string;
+  version?: number;
+};
+
+export const Timeout =
+  (nameOrOptions?: string | TimeoutOptions) =>
+  (target: Function, context: ClassDecoratorContext): void => {
+    const opts =
+      typeof nameOrOptions === "string" ? { name: nameOrOptions } : (nameOrOptions ?? {});
+
+    const { name: defaultName, version: defaultVersion } = extractNameData(target.name);
+
+    stageDto(context.metadata, {
+      kind: "timeout",
+      name: opts.name ?? defaultName,
+      version: opts.version ?? defaultVersion,
     });
   };
-}

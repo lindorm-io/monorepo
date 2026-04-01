@@ -1,27 +1,14 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
-exports[`View Decorator should add metadata 1`] = `
+exports[`View should stage view metadata with single aggregate, entity, and null driverType 1`] = `
 {
-  "aggregates": [
-    [Function],
-  ],
-  "handlers": [],
-  "name": "test_view",
-  "namespace": null,
-  "source": "mongo",
-  "target": [Function],
-}
-`;
-
-exports[`View Decorator should add metadata with custom options 1`] = `
-{
-  "aggregates": [
-    [Function],
-  ],
-  "handlers": [],
-  "name": "custom_name",
-  "namespace": "custom_namespace",
-  "source": "mongo",
-  "target": [Function],
+  "view": {
+    "aggregates": [
+      [Function],
+    ],
+    "driverType": null,
+    "entity": [Function],
+    "name": "fake_entity",
+  },
 }
 `;

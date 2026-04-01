@@ -1,0 +1,8 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`RequireCreated should add requireCreated modifier for the decorated method name 1`] = `
+{
+  "methodName": "handleMerge",
+  "modifier": "requireCreated",
+}
+`;

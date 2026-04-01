@@ -1,21 +1,18 @@
-import { Constructor } from "@lindorm/types";
-import { DomainError } from "../errors";
-import { ViewErrorHandlerDescriptor } from "../types";
-import { globalHermesMetadata } from "../utils/private";
+import type { Constructor } from "@lindorm/types";
+import { stageHandler } from "#internal/metadata";
 
-export function ViewErrorHandler<C extends Constructor<DomainError>>(
-  ErrorClass: C,
-): ViewErrorHandlerDescriptor<C> {
-  return function (target, key, descriptor) {
-    globalHermesMetadata.addHandler({
-      conditions: null,
-      decorator: "ViewErrorHandler",
-      encryption: false,
-      handler: descriptor.value,
-      key: key.toString(),
-      schema: null,
-      target: target.constructor as Constructor,
+/**
+ * Registers a method as an error handler for the given error class within a
+ * view. If this handler throws or permanently fails, the message will be
+ * retried by Iris until its dead-letter queue policy takes effect. Configure
+ * retry limits and DLQ via Iris source options.
+ */
+export const ViewErrorHandler =
+  (ErrorClass: Constructor) =>
+  (_target: Function, context: ClassMethodDecoratorContext): void => {
+    stageHandler(context.metadata, {
+      kind: "ViewErrorHandler",
+      methodName: String(context.name),
       trigger: ErrorClass,
     });
   };
-}
