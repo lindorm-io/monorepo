@@ -5,7 +5,7 @@ import nock from "nock";
 import {
   OPEN_ID_CONFIGURATION_RESPONSE,
   OPEN_ID_JWKS_RESPONSE,
-} from "src/__fixtures__/auth0";
+} from "../__fixtures__/auth0";
 import {
   TEST_EC_KEY_SIG,
   TEST_OCT_KEY_ENC,
@@ -13,7 +13,7 @@ import {
   TEST_OKP_KEY_ENC,
   TEST_OKP_KEY_SIG,
   TEST_RSA_KEY_SIG,
-} from "src/__fixtures__/keys";
+} from "../__fixtures__/keys";
 import { AmphoraError } from "../errors";
 import { Amphora } from "./Amphora";
 
