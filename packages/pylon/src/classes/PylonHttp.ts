@@ -84,6 +84,8 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
       createHttpContextInitialisationMiddleware({
         amphora: this.options.amphora,
         logger: this.logger,
+        queue: (this.options as any).queue,
+        webhook: (this.options as any).webhook,
       }),
       createHttpDateValidationMiddleware({
         minRequestAge: this.options.minRequestAge,

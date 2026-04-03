@@ -19,6 +19,7 @@ export * from "./get-body";
 export * from "./get-file";
 
 export * from "./get-status";
+export * from "./resolve-iris";
 export * from "./initialise-pylon-socket-data";
 export * from "./load-pylon-listener";
 export * from "./noop-handler";

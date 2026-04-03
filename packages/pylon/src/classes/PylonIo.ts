@@ -85,6 +85,8 @@ export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
       createSocketContextInitialisationMiddleware({
         amphora: this.options.amphora,
         logger: this.logger,
+        queue: (this.options as any).queue,
+        webhook: (this.options as any).webhook,
       }),
       socketLoggerMiddleware,
       socketErrorHandlerMiddleware,

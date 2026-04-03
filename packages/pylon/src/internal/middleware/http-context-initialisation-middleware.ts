@@ -1,11 +1,12 @@
 import { Aegis } from "@lindorm/aegis";
 import { IAmphora } from "@lindorm/amphora";
 import { Conduit } from "@lindorm/conduit";
-import { ClientError, ServerError } from "@lindorm/errors";
+import { ClientError } from "@lindorm/errors";
 import { ILogger } from "@lindorm/logger";
 import { Dict, Priority } from "@lindorm/types";
 import { PylonJob, PylonWebhookRequest } from "../../messages";
-import { PylonHttpMiddleware } from "../../types";
+import { PylonHttpMiddleware, PylonQueueOptions, PylonWebhookOptions } from "../../types";
+import { resolveIris } from "../utils";
 
 const PRIORITY_MAP: Record<Priority, number> = {
   background: 0,
@@ -19,6 +20,8 @@ const PRIORITY_MAP: Record<Priority, number> = {
 type Options = {
   amphora: IAmphora;
   logger: ILogger;
+  queue?: PylonQueueOptions;
+  webhook?: PylonWebhookOptions;
 };
 
 export const createHttpContextInitialisationMiddleware = (
@@ -55,11 +58,9 @@ export const createHttpContextInitialisationMiddleware = (
       priority: Priority = "default",
       optional = false,
     ): Promise<void> => {
-      if (!ctx.iris) {
-        throw new ServerError("IrisSource is not configured for queue");
-      }
       try {
-        const wq = ctx.iris.workerQueue(PylonJob);
+        const iris = resolveIris(ctx, options.queue?.iris);
+        const wq = iris.workerQueue(PylonJob);
         const job = wq.create({
           correlationId: ctx.state.metadata.correlationId,
           event,
@@ -80,11 +81,9 @@ export const createHttpContextInitialisationMiddleware = (
       payload: Dict = {},
       optional = false,
     ): Promise<void> => {
-      if (!ctx.iris) {
-        throw new ServerError("IrisSource is not configured for webhook");
-      }
       try {
-        const wq = ctx.iris.workerQueue(PylonWebhookRequest);
+        const iris = resolveIris(ctx, options.webhook?.iris);
+        const wq = iris.workerQueue(PylonWebhookRequest);
         const msg = wq.create({
           correlationId: ctx.state.metadata.correlationId,
           event,
