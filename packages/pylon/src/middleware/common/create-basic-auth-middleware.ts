@@ -2,7 +2,7 @@ import { B64 } from "@lindorm/b64";
 import { ClientError } from "@lindorm/errors";
 import { isArray, isFunction } from "@lindorm/is";
 import { PylonError } from "../../errors";
-import { Credentials, PylonHttpMiddleware } from "../../types";
+import { Credentials, PylonMiddleware } from "../../types";
 
 type VerifyCredentialsFn = (username: string, password: string) => Promise<void>;
 
@@ -28,9 +28,9 @@ const defaultCallback =
     }
   };
 
-export const createHttpBasicAuthMiddleware = (
+export const createBasicAuthMiddleware = (
   credentials: Array<Credentials> | VerifyCredentialsFn,
-): PylonHttpMiddleware => {
+): PylonMiddleware => {
   if (isArray(credentials) && !credentials.length) {
     throw new PylonError("No credentials provided");
   }
@@ -38,14 +38,11 @@ export const createHttpBasicAuthMiddleware = (
   const array = isArray(credentials) ? credentials : [];
   const verify = isFunction(credentials) ? credentials : defaultCallback(array);
 
-  return async function httpBasicAuthMiddleware(ctx, next) {
+  return async function basicAuthMiddleware(ctx, next) {
     if (ctx.state.authorization.type !== "basic") {
       throw new ClientError("Invalid Authorization header", {
         details: "Authorization header must be of type basic",
-        debug: {
-          header: ctx.get("authorization"),
-          state: ctx.state.authorization,
-        },
+        debug: { state: ctx.state.authorization },
         status: ClientError.Status.Unauthorized,
       });
     }

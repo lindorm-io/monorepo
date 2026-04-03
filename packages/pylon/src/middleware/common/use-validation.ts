@@ -1,13 +1,13 @@
 import { JwtKit, ValidateJwtOptions } from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
 import { get } from "object-path";
-import { PylonHttpMiddleware } from "../../types";
+import { PylonMiddleware } from "../../types";
 
 export const useValidation = (
   tokenPath: string,
   options: ValidateJwtOptions,
-): PylonHttpMiddleware =>
-  async function httpValidationMiddleware(ctx, next) {
+): PylonMiddleware =>
+  async function validationMiddleware(ctx, next) {
     const timer = ctx.logger.time();
 
     try {

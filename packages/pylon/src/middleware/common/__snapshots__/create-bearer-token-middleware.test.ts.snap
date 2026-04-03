@@ -1,0 +1,37 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`createBearerTokenMiddleware HTTP context should throw 401 when authorization type is not bearer 1`] = `"Invalid credentials"`;
+
+exports[`createBearerTokenMiddleware HTTP context should verify and store on ctx.state.tokens.accessToken 1`] = `
+{
+  "decoded": {},
+  "header": {},
+  "payload": {
+    "subject": "verified_subject",
+  },
+}
+`;
+
+exports[`createBearerTokenMiddleware Socket context should throw 401 when handshake bearer is not a string 1`] = `"Invalid credentials"`;
+
+exports[`createBearerTokenMiddleware Socket context should verify and store on both ctx.state.tokens.accessToken and ctx.socket.data.tokens.bearer 1`] = `
+{
+  "decoded": {},
+  "header": {},
+  "payload": {
+    "subject": "verified_subject",
+  },
+}
+`;
+
+exports[`createBearerTokenMiddleware Socket context should verify and store on both ctx.state.tokens.accessToken and ctx.socket.data.tokens.bearer 2`] = `
+{
+  "decoded": {},
+  "header": {},
+  "payload": {
+    "subject": "verified_subject",
+  },
+}
+`;
+
+exports[`createBearerTokenMiddleware common should throw 401 when verification fails 1`] = `"Invalid credentials"`;

@@ -1,0 +1,9 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`usePermissions should throw ClientError 401 when token is missing 1`] = `"Token not found"`;
+
+exports[`usePermissions should throw ClientError 401 when token is missing 2`] = `"Expected token [accessToken] on context"`;
+
+exports[`usePermissions should throw ClientError 403 when a permission is missing 1`] = `"Insufficient permissions"`;
+
+exports[`usePermissions should throw ClientError 403 when a permission is missing 2`] = `"Missing required permissions: users:delete"`;
