@@ -30,7 +30,7 @@ import { TestSaga } from "../../__fixtures__/modules/sagas";
 import { TestTimeoutReminder } from "../../__fixtures__/modules/timeouts";
 import { TestView } from "../../__fixtures__/modules/views/TestView";
 import { SagaDestroyedError } from "../../errors";
-import { HermesRegistry, scanModules } from "#internal/registry";
+import { HermesRegistry, HermesScanner } from "#internal/registry";
 import { SagaModel } from "./saga-model";
 import type { SagaPendingMessage } from "./saga-model";
 
@@ -65,7 +65,7 @@ describe("SagaModel", () => {
   let registry: HermesRegistry;
 
   beforeAll(() => {
-    const scanned = scanModules(ALL_CONSTRUCTORS);
+    const scanned = HermesScanner.scan(ALL_CONSTRUCTORS);
     registry = new HermesRegistry(scanned);
   });
 

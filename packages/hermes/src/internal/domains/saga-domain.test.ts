@@ -57,7 +57,7 @@ import {
   HermesErrorMessage,
   HermesTimeoutMessage,
 } from "#internal/messages";
-import { scanModules } from "#internal/registry/hermes-scanner";
+import { HermesScanner } from "#internal/registry/HermesScanner";
 import { HermesRegistry } from "#internal/registry/hermes-registry";
 import type { RegisteredSaga, HandlerRegistration } from "#internal/registry/types";
 import { SagaDomain } from "./saga-domain";
@@ -78,7 +78,7 @@ describe("SagaDomain", () => {
     proteus = createTestProteusSource();
     iris = createTestIrisSource();
 
-    const scanned = scanModules([
+    const scanned = HermesScanner.scan([
       TestCommandCreate,
       TestCommandDestroy,
       TestCommandDestroyNext,

@@ -40,7 +40,7 @@ import {
   UpcasterChainError,
 } from "../../errors";
 import { HermesEventMessage } from "#internal/messages";
-import { HermesRegistry, scanModules } from "#internal/registry";
+import { HermesRegistry, HermesScanner } from "#internal/registry";
 import { AggregateModel } from "./aggregate-model";
 
 const ALL_CONSTRUCTORS = [
@@ -99,7 +99,7 @@ describe("AggregateModel", () => {
   let registry: HermesRegistry;
 
   beforeAll(() => {
-    const scanned = scanModules(ALL_CONSTRUCTORS);
+    const scanned = HermesScanner.scan(ALL_CONSTRUCTORS);
     registry = new HermesRegistry(scanned);
   });
 
@@ -374,7 +374,7 @@ describe("AggregateModel upcasting", () => {
   let registry: HermesRegistry;
 
   beforeAll(() => {
-    const scanned = scanModules(ALL_CONSTRUCTORS);
+    const scanned = HermesScanner.scan(ALL_CONSTRUCTORS);
     registry = new HermesRegistry(scanned);
   });
 
@@ -475,7 +475,7 @@ describe("AggregateModel upcasting", () => {
     // We'll manually construct a registry with incomplete upcasters
 
     // Build a custom scanned modules with a broken upcaster chain
-    const scanned = scanModules(ALL_CONSTRUCTORS);
+    const scanned = HermesScanner.scan(ALL_CONSTRUCTORS);
 
     // Find the upcaster aggregate and remove the V1->V2 step
     const upcasterAgg = scanned.aggregates.find(

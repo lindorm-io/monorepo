@@ -50,7 +50,7 @@ import {
   HermesErrorMessage,
   HermesTimeoutMessage,
 } from "#internal/messages";
-import { scanModules } from "#internal/registry/hermes-scanner";
+import { HermesScanner } from "#internal/registry/HermesScanner";
 import { HermesRegistry } from "#internal/registry/hermes-registry";
 import type {
   RegisteredAggregate,
@@ -129,7 +129,7 @@ describe("Full Pipeline Integration", () => {
     proteus = createTestProteusSource();
     iris = createTestIrisSource();
 
-    const scanned = scanModules(ALL_MODULES);
+    const scanned = HermesScanner.scan(ALL_MODULES);
     registry = new HermesRegistry(scanned);
 
     proteus.addEntities([

@@ -1,5 +1,5 @@
 export { HermesRegistry } from "./hermes-registry";
-export { scanModules } from "./hermes-scanner";
+export { HermesScanner } from "./HermesScanner";
 export type {
   HandlerConditions,
   HandlerRegistration,

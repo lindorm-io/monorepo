@@ -34,7 +34,7 @@ import { TestTimeoutReminder } from "../../__fixtures__/modules/timeouts";
 import { TestView } from "../../__fixtures__/modules/views/TestView";
 import { TestViewEntity } from "../../__fixtures__/modules/views/TestViewEntity";
 import { HermesRegistry } from "./hermes-registry";
-import { scanModules } from "./hermes-scanner";
+import { HermesScanner } from "./HermesScanner";
 
 const ALL_CONSTRUCTORS = [
   TestCommandCreate,
@@ -71,7 +71,7 @@ describe("HermesRegistry", () => {
   let registry: HermesRegistry;
 
   beforeAll(() => {
-    const scanned = scanModules(ALL_CONSTRUCTORS);
+    const scanned = HermesScanner.scan(ALL_CONSTRUCTORS);
     registry = new HermesRegistry(scanned);
   });
 
@@ -606,7 +606,11 @@ describe("HermesRegistry", () => {
         ],
       };
 
-      const scanned = scanModules([DuplicateEvent_V1, DuplicateEvent_V2, DuplicateAgg]);
+      const scanned = HermesScanner.scan([
+        DuplicateEvent_V1,
+        DuplicateEvent_V2,
+        DuplicateAgg,
+      ]);
       expect(() => new HermesRegistry(scanned)).toThrow(
         'Duplicate upcaster: event "duplicate_event" v1 is already registered',
       );
@@ -709,7 +713,7 @@ describe("HermesRegistry", () => {
         ],
       };
 
-      const scanned = scanModules([
+      const scanned = HermesScanner.scan([
         GapEvent_V1,
         GapEvent_V2,
         GapEvent_V4,
