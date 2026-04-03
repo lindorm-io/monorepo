@@ -1,5 +1,5 @@
 import { createMockLogger } from "@lindorm/logger";
-import { createWebhookMiddleware } from "./webhook-middleware";
+import { createWebhookMiddleware } from "./common-webhook-middleware";
 
 describe("createWebhookMiddleware", () => {
   let ctx: any;

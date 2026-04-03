@@ -7,7 +7,9 @@ import {
   PylonHandlerStream,
   PylonHttpContext,
 } from "../../types";
-import { fileExists, fileStat, fileType } from "./file";
+import { fileExists } from "./file/file-exists";
+import { fileStat } from "./file/file-stat";
+import { fileType } from "./file/file-type";
 
 const BROTLI = ".br";
 const GZIP = ".gz";

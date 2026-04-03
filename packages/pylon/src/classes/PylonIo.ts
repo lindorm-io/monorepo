@@ -1,17 +1,19 @@
+import { PylonListenerScanner } from "#internal/classes/PylonListenerScanner";
+import { createCommonContextInitialisationMiddleware } from "#internal/middleware/common-context-initialisation-middleware";
+import { createQueueMiddleware } from "#internal/middleware/common-queue-middleware";
+import { createSourcesMiddleware } from "#internal/middleware/common-sources-middleware";
+import { createWebhookMiddleware } from "#internal/middleware/common-webhook-middleware";
+import { createSocketContextInitialisationMiddleware } from "#internal/middleware/socket-context-initialisation-middleware";
+import { socketErrorHandlerMiddleware } from "#internal/middleware/socket-error-handler-middleware";
+import { socketLoggerMiddleware } from "#internal/middleware/socket-logger-middleware";
+import { initialisePylonSocketData } from "#internal/utils/initialise-pylon-socket-data";
+import { loadPylonListeners } from "#internal/utils/load-pylon-listener";
 import { isArray, isString } from "@lindorm/is";
 import { ILogger } from "@lindorm/logger";
 import { uniq } from "@lindorm/utils";
 import { createAdapter } from "@socket.io/redis-adapter";
 import { Server } from "http";
 import { Server as SocketIoServer } from "socket.io";
-import {
-  createQueueMiddleware,
-  createSocketContextInitialisationMiddleware,
-  createSourcesMiddleware,
-  createWebhookMiddleware,
-  socketErrorHandlerMiddleware,
-  socketLoggerMiddleware,
-} from "#internal/middleware";
 import {
   IoServer,
   IoSocket,
@@ -20,8 +22,6 @@ import {
   PylonSocketContext,
   PylonSocketMiddleware,
 } from "../types";
-import { initialisePylonSocketData, loadPylonListeners } from "#internal/utils";
-import { PylonListenerScanner } from "#internal/classes";
 import { PylonListener } from "./PylonListener";
 
 export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
@@ -86,10 +86,8 @@ export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
     }
 
     const middleware = [
-      createSocketContextInitialisationMiddleware({
-        amphora: this.options.amphora,
-        logger: this.logger,
-      }),
+      createSocketContextInitialisationMiddleware(this.logger),
+      createCommonContextInitialisationMiddleware(this.options.amphora),
       socketLoggerMiddleware,
       socketErrorHandlerMiddleware,
       ...(this.middleware ?? []),

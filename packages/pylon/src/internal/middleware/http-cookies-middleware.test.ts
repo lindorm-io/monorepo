@@ -1,14 +1,14 @@
 import { createMockAegis } from "@lindorm/aegis";
 import { B64 } from "@lindorm/b64";
 import { PylonCookieConfig } from "../../types";
-import {
-  parseCookieHeader as _parseCookieHeader,
-  signCookie as _signCookie,
-  verifyCookie as _verifyCookie,
-} from "../utils";
+import { parseCookieHeader as _parseCookieHeader } from "../utils/cookies/parse-cookie-header";
+import { signCookie as _signCookie } from "../utils/cookies/sign-cookie";
+import { verifyCookie as _verifyCookie } from "../utils/cookies/verify-cookie";
 import { createHttpCookiesMiddleware } from "./http-cookies-middleware";
 
-jest.mock("../utils");
+jest.mock("../utils/cookies/parse-cookie-header");
+jest.mock("../utils/cookies/sign-cookie");
+jest.mock("../utils/cookies/verify-cookie");
 
 const parseCookieHeader = _parseCookieHeader as jest.Mock;
 const signCookie = _signCookie as jest.Mock;

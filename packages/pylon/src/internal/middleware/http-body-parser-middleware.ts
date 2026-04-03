@@ -3,7 +3,9 @@ import { isObject } from "@lindorm/is";
 import { HttpMethod } from "@lindorm/types";
 import { existsSync, mkdirSync } from "fs-extra";
 import { ParseBodyOptions, PylonHttpMiddleware } from "../../types";
-import { composeParseBodyConfig, getBodyType, parseBody } from "../utils";
+import { getBodyType } from "../utils/body/get-body-type";
+import { parseBody } from "../utils/body/parse-body";
+import { composeParseBodyConfig } from "../utils/compose-parse-body-config";
 
 export const createHttpBodyParserMiddleware = (
   options?: ParseBodyOptions,
