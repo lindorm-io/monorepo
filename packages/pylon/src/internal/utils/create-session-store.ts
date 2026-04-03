@@ -4,18 +4,17 @@ import { SessionEntity } from "../../entities";
 import { IPylonSession } from "../../interfaces";
 import { IPylonSessionStore } from "../../interfaces/PylonSessionStore";
 import { PylonCommonContext, PylonSessionOptions } from "../../types";
+import { resolveProteus } from "./resolve-proteus";
 
 const getRepository = (
   ctx: PylonCommonContext,
   options: PylonSessionOptions,
 ): IProteusRepository<SessionEntity> | null => {
-  if (options.proteus) {
-    return options.proteus.clone({ logger: ctx.logger }).repository(SessionEntity);
+  try {
+    return resolveProteus(ctx, options.proteus).repository(SessionEntity);
+  } catch {
+    return null;
   }
-  if (ctx.proteus) {
-    return ctx.proteus.repository(SessionEntity);
-  }
-  return null;
 };
 
 export const createSessionStore = (
