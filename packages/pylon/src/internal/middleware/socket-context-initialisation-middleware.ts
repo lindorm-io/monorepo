@@ -1,13 +1,16 @@
 import { Aegis } from "@lindorm/aegis";
 import { IAmphora } from "@lindorm/amphora";
 import { Conduit } from "@lindorm/conduit";
-import { ServerError } from "@lindorm/errors";
 import { ILogger } from "@lindorm/logger";
 import { Dict, Environment, Priority } from "@lindorm/types";
 import { randomUUID } from "crypto";
 import { PylonJob, PylonWebhookRequest } from "../../messages";
-import { PylonSocketMiddleware } from "../../types";
-import { getSocketAuthorization } from "../utils";
+import {
+  PylonQueueOptions,
+  PylonSocketMiddleware,
+  PylonWebhookOptions,
+} from "../../types";
+import { getSocketAuthorization, resolveIris } from "../utils";
 
 const PRIORITY_MAP: Record<Priority, number> = {
   background: 0,
@@ -21,6 +24,8 @@ const PRIORITY_MAP: Record<Priority, number> = {
 type Options = {
   amphora: IAmphora;
   logger: ILogger;
+  queue?: PylonQueueOptions;
+  webhook?: PylonWebhookOptions;
 };
 
 export const createSocketContextInitialisationMiddleware = (
@@ -64,11 +69,9 @@ export const createSocketContextInitialisationMiddleware = (
       priority: Priority = "default",
       optional = false,
     ): Promise<void> => {
-      if (!ctx.iris) {
-        throw new ServerError("IrisSource is not configured for queue");
-      }
       try {
-        const wq = ctx.iris.workerQueue(PylonJob);
+        const iris = resolveIris(ctx, options.queue?.iris);
+        const wq = iris.workerQueue(PylonJob);
         const job = wq.create({
           correlationId: ctx.state.metadata.correlationId,
           event,
@@ -89,11 +92,9 @@ export const createSocketContextInitialisationMiddleware = (
       payload: Dict = {},
       optional = false,
     ): Promise<void> => {
-      if (!ctx.iris) {
-        throw new ServerError("IrisSource is not configured for webhook");
-      }
       try {
-        const wq = ctx.iris.workerQueue(PylonWebhookRequest);
+        const iris = resolveIris(ctx, options.webhook?.iris);
+        const wq = iris.workerQueue(PylonWebhookRequest);
         const msg = wq.create({
           correlationId: ctx.state.metadata.correlationId,
           event,
