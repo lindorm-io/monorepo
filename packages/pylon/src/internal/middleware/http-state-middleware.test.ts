@@ -7,7 +7,7 @@ const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate);
 
 jest.mock("crypto");
-jest.mock("../../utils/private");
+jest.mock("../utils");
 
 const randomUUID = _randomUUID as jest.Mock;
 const getAuthorization = _getAuthorization as jest.Mock;
@@ -62,11 +62,11 @@ describe("createHttpStateMiddleware", () => {
     ).resolves.toBeUndefined();
 
     expect(ctx.state.metadata).toEqual({
+      id: "aa9a627d-8296-598c-9589-4ec91d27d056",
       correlationId: "8b39eafc-7e31-501b-ab7b-58514b14856a",
       date: MockedDate,
       environment: "test",
       origin: "test-origin",
-      requestId: "aa9a627d-8296-598c-9589-4ec91d27d056",
       responseId: "2f881f6e-f7ce-554f-a5cd-cb80266ff3ec",
       sessionId: "d8a044f5-5b49-5456-829a-b57b44caa785",
     });
@@ -93,11 +93,11 @@ describe("createHttpStateMiddleware", () => {
     ).resolves.toBeUndefined();
 
     expect(ctx.state.metadata).toEqual({
+      id: "2f881f6e-f7ce-554f-a5cd-cb80266ff3ec",
       correlationId: "2f881f6e-f7ce-554f-a5cd-cb80266ff3ec",
       date: MockedDate,
       environment: "unknown",
       origin: null,
-      requestId: "2f881f6e-f7ce-554f-a5cd-cb80266ff3ec",
       responseId: "2f881f6e-f7ce-554f-a5cd-cb80266ff3ec",
       sessionId: null,
     });

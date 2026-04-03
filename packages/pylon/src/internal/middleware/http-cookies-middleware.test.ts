@@ -8,7 +8,7 @@ import {
 } from "../utils";
 import { createHttpCookiesMiddleware } from "./http-cookies-middleware";
 
-jest.mock("../../utils/private");
+jest.mock("../utils");
 
 const parseCookieHeader = _parseCookieHeader as jest.Mock;
 const signCookie = _signCookie as jest.Mock;

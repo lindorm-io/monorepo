@@ -11,7 +11,7 @@ import { createHttpBodyParserMiddleware } from "./http-body-parser-middleware";
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate);
 
-jest.mock("../../utils/private");
+jest.mock("../utils");
 
 const composeParseBodyConfig = _composeParseBodyConfig as jest.Mock;
 const getBodyType = _getBodyType as jest.Mock;

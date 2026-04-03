@@ -340,11 +340,10 @@ describe("Pylon", () => {
     expect(mwSpy).toHaveBeenCalledWith({
       data: {},
       metadata: {
+        id: "request-id",
         correlationId: "correlation-id",
         date: MockedDate,
-        environment: "test",
         origin: "test-origin",
-        requestId: "request-id",
         responseId: expect.any(String),
         sessionId: null,
       },

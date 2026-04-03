@@ -20,6 +20,7 @@ export * from "./dispatch-webhook";
 export * from "./find-entity";
 export * from "./find-entity-source";
 export * from "./get-authorization";
+export * from "./get-socket-authorization";
 export * from "./get-body";
 export * from "./get-ctx-repository";
 export * from "./get-file";

@@ -1,8 +1,8 @@
 import { ClientError, ServerError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger";
-import { eventErrorHandlerMiddleware } from "./event-error-handler-middleware";
+import { socketErrorHandlerMiddleware } from "./socket-error-handler-middleware";
 
-describe("eventErrorHandlerMiddleware", () => {
+describe("socketErrorHandlerMiddleware", () => {
   let ctx: any;
 
   beforeEach(() => {
@@ -15,7 +15,7 @@ describe("eventErrorHandlerMiddleware", () => {
   });
 
   test("should do nothing when no errors are thrown", async () => {
-    await expect(eventErrorHandlerMiddleware(ctx, jest.fn())).resolves.toBeUndefined();
+    await expect(socketErrorHandlerMiddleware(ctx, jest.fn())).resolves.toBeUndefined();
 
     expect(ctx.socket.emit).not.toHaveBeenCalled();
   });
@@ -23,7 +23,7 @@ describe("eventErrorHandlerMiddleware", () => {
   test("should handle thrown errors", async () => {
     const next = () => Promise.reject(new Error("error message"));
 
-    await expect(eventErrorHandlerMiddleware(ctx, next)).resolves.toBeUndefined();
+    await expect(socketErrorHandlerMiddleware(ctx, next)).resolves.toBeUndefined();
 
     expect(ctx.socket.emit).toHaveBeenCalledWith("error", {
       code: "unknown_error",
@@ -48,7 +48,7 @@ describe("eventErrorHandlerMiddleware", () => {
         }),
       );
 
-    await expect(eventErrorHandlerMiddleware(ctx, next)).resolves.toBeUndefined();
+    await expect(socketErrorHandlerMiddleware(ctx, next)).resolves.toBeUndefined();
 
     expect(ctx.socket.emit).toHaveBeenCalledWith("error", {
       code: "custom_error_code",
@@ -73,7 +73,7 @@ describe("eventErrorHandlerMiddleware", () => {
         }),
       );
 
-    await expect(eventErrorHandlerMiddleware(ctx, next)).resolves.toBeUndefined();
+    await expect(socketErrorHandlerMiddleware(ctx, next)).resolves.toBeUndefined();
 
     expect(ctx.socket.emit).toHaveBeenCalledWith("error", {
       code: "custom_error_code",
@@ -93,7 +93,7 @@ describe("eventErrorHandlerMiddleware", () => {
       throw new Error("unexpected");
     });
 
-    await expect(eventErrorHandlerMiddleware(ctx, next)).resolves.toBeUndefined();
+    await expect(socketErrorHandlerMiddleware(ctx, next)).resolves.toBeUndefined();
 
     expect(ctx.socket.emit).toHaveBeenCalledWith("error", {
       code: "unexpected_exception",

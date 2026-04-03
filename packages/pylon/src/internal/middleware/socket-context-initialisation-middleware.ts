@@ -3,13 +3,18 @@ import { IAmphora } from "@lindorm/amphora";
 import { Conduit } from "@lindorm/conduit";
 import { ServerError } from "@lindorm/errors";
 import { ILogger } from "@lindorm/logger";
-import { Dict, Priority } from "@lindorm/types";
+import { Dict, Environment, Priority } from "@lindorm/types";
+import { randomUUID } from "crypto";
 import {
   PylonQueueOptions,
   PylonSocketMiddleware,
   PylonWebhookOptions,
 } from "../../types";
-import { createQueueCallback, createWebhookCallback } from "../utils";
+import {
+  createQueueCallback,
+  createWebhookCallback,
+  getSocketAuthorization,
+} from "../utils";
 
 type Options = {
   amphora: IAmphora;
@@ -18,13 +23,26 @@ type Options = {
   webhook?: PylonWebhookOptions<any>;
 };
 
-export const createEventContextInitialisationMiddleware = (
+export const createSocketContextInitialisationMiddleware = (
   options: Options,
 ): PylonSocketMiddleware => {
   const queue = createQueueCallback(options.queue);
   const webhook = createWebhookCallback(options.webhook);
 
-  return async function eventContextInitialisationMiddleware(ctx, next) {
+  return async function socketContextInitialisationMiddleware(ctx, next) {
+    ctx.state = {
+      app: ctx.socket.data.app,
+      authorization: getSocketAuthorization(ctx.socket),
+      metadata: {
+        id: ctx.eventId,
+        correlationId: randomUUID(),
+        date: new Date(),
+        environment:
+          (ctx.socket.handshake?.headers?.["x-environment"] as Environment) || "unknown",
+      },
+      tokens: ctx.socket.data.tokens ?? {},
+    };
+
     ctx.logger = options.logger.child(["Event"], {
       eventId: ctx.eventId,
       socketId: ctx.socket.id,

@@ -1,4 +1,4 @@
-import { ParsedJws, ParsedJwt } from "@lindorm/aegis";
+import { ParsedCws, ParsedCwt, ParsedJws, ParsedJwt } from "@lindorm/aegis";
 import { Dict } from "@lindorm/types";
 import { AppState } from "./context-common";
 import { IoSocket } from "./socket";
@@ -13,7 +13,7 @@ export type PylonListenerMethod =
 
 export type PylonSocketData = {
   app: AppState;
-  tokens: Dict<ParsedJwt | ParsedJws<any>>;
+  tokens: Dict<ParsedJwt | ParsedJws<any> | ParsedCwt | ParsedCws<any>>;
 };
 
 export type PylonSocket<D extends PylonSocketData = PylonSocketData> = IoSocket<D>;

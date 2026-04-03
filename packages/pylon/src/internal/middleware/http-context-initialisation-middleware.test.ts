@@ -14,7 +14,7 @@ describe("createHttpContextInitialisationMiddleware", () => {
       state: {
         metadata: {
           correlationId: "8b39eafc-7e31-501b-ab7b-58514b14856a",
-          requestId: "aa9a627d-8296-598c-9589-4ec91d27d056",
+          id: "aa9a627d-8296-598c-9589-4ec91d27d056",
           responseId: "ee576e4a-c30c-5138-bfa8-51ca832bdaec",
         },
       },

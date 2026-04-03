@@ -1,7 +1,7 @@
 import { createMockLogger } from "@lindorm/logger";
-import { eventLoggerMiddleware } from "./event-logger-middleware";
+import { socketLoggerMiddleware } from "./socket-logger-middleware";
 
-describe("eventLoggerMiddleware", () => {
+describe("socketLoggerMiddleware", () => {
   let ctx: any;
 
   beforeEach(() => {
@@ -14,7 +14,7 @@ describe("eventLoggerMiddleware", () => {
   });
 
   test("should log  information", async () => {
-    await expect(eventLoggerMiddleware(ctx, jest.fn())).resolves.toBeUndefined();
+    await expect(socketLoggerMiddleware(ctx, jest.fn())).resolves.toBeUndefined();
 
     expect(ctx.logger.info).toHaveBeenCalledWith("Socket event received", {
       event: "event",
@@ -31,7 +31,7 @@ describe("eventLoggerMiddleware", () => {
   test("should log  error", async () => {
     const next = () => Promise.reject(new Error("error"));
 
-    await expect(eventLoggerMiddleware(ctx, next)).resolves.toBeUndefined();
+    await expect(socketLoggerMiddleware(ctx, next)).resolves.toBeUndefined();
 
     expect(ctx.logger.error).toHaveBeenCalledWith(new Error("error"));
   });
