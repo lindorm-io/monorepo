@@ -11,7 +11,8 @@ import {
   PylonSocketContext,
   PylonTeardown,
 } from "../types";
-import { SessionEntity } from "../entities";
+import { KryptosEntity, SessionEntity, WebhookSubscriptionEntity } from "../entities";
+import { PylonJob, PylonWebhookDispatch, PylonWebhookRequest } from "../messages";
 import { calculateSubscriptions, calculateWorkers, scanWorkers } from "#internal/utils";
 import { PylonHttp } from "./PylonHttp";
 import { PylonIo } from "./PylonIo";
@@ -226,11 +227,23 @@ export class Pylon<
   }
 
   private loadSources(): void {
+    if (this.options.proteus) {
+      this.options.proteus.addEntities([KryptosEntity, WebhookSubscriptionEntity]);
+    }
+
     if (this.options.session?.use === "stored") {
       const sessionSource = this.options.session.proteus ?? this.options.proteus;
       if (sessionSource) {
         sessionSource.addEntities([SessionEntity]);
       }
+    }
+
+    if (this.options.iris) {
+      this.options.iris.addMessages([
+        PylonJob,
+        PylonWebhookRequest,
+        PylonWebhookDispatch,
+      ]);
     }
   }
 
