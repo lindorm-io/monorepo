@@ -17,7 +17,8 @@ const mockRepository = jest.fn().mockReturnValue({
   create: mockCreate,
   insert: mockInsert,
 });
-const mockLogger = { debug: jest.fn() };
+import { createMockLogger } from "@lindorm/logger";
+const mockLogger = createMockLogger();
 
 jest.mock("@lindorm/aes", () => ({
   AesKit: class AesKit {
@@ -132,10 +133,13 @@ describe("createKryptosRotationWorker", () => {
 
       await config.callback({ logger: mockLogger } as any);
 
-      expect(mockLogger.debug).toHaveBeenCalledWith("No existing keys found", {
-        algorithm: "ES512",
-        purpose: "token",
-      });
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        "No existing keys found, generating initial key",
+        {
+          algorithm: "ES512",
+          purpose: "token",
+        },
+      );
       expect(mockCreate).toHaveBeenCalled();
       expect(mockInsert).toHaveBeenCalled();
     });
@@ -156,10 +160,13 @@ describe("createKryptosRotationWorker", () => {
 
       await config.callback({ logger: mockLogger } as any);
 
-      expect(mockLogger.debug).toHaveBeenCalledWith("Only one existing key found", {
-        algorithm: "ES512",
-        purpose: "token",
-      });
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        "Only one key found, generating rotation key",
+        {
+          algorithm: "ES512",
+          purpose: "token",
+        },
+      );
     });
 
     test("should not create keys when two or more existing keys found", async () => {

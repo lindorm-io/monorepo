@@ -1,8 +1,10 @@
+import { createMockLogger } from "@lindorm/logger";
 import { createAmphoraRefreshWorker } from "./amphora-refresh-worker";
 
 describe("createAmphoraRefreshWorker", () => {
   const mockRefresh = jest.fn().mockResolvedValue(undefined);
   const amphora: any = { refresh: mockRefresh };
+  const ctx: any = { logger: createMockLogger() };
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -53,7 +55,7 @@ describe("createAmphoraRefreshWorker", () => {
   test("should bind amphora.refresh as callback", async () => {
     const config = createAmphoraRefreshWorker({ amphora });
 
-    await config.callback({} as any);
+    await config.callback(ctx);
 
     expect(mockRefresh).toHaveBeenCalledTimes(1);
   });

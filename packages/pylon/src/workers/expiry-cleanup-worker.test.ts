@@ -1,9 +1,11 @@
+import { createMockLogger } from "@lindorm/logger";
 import { createExpiryCleanupWorker } from "./expiry-cleanup-worker";
 
 describe("createExpiryCleanupWorker", () => {
   const mockDeleteExpired = jest.fn().mockResolvedValue(undefined);
   const mockRepository = jest.fn().mockReturnValue({ deleteExpired: mockDeleteExpired });
   const proteus: any = { repository: mockRepository };
+  const ctx: any = { logger: createMockLogger() };
 
   class EntityA {}
   class EntityB {}
@@ -67,7 +69,7 @@ describe("createExpiryCleanupWorker", () => {
         targets: [EntityA as any, EntityB as any],
       });
 
-      await config.callback({} as any);
+      await config.callback(ctx);
 
       expect(mockRepository).toHaveBeenCalledTimes(2);
       expect(mockRepository).toHaveBeenCalledWith(EntityA);
@@ -81,7 +83,7 @@ describe("createExpiryCleanupWorker", () => {
         targets: [],
       });
 
-      await config.callback({} as any);
+      await config.callback(ctx);
 
       expect(mockRepository).not.toHaveBeenCalled();
       expect(mockDeleteExpired).not.toHaveBeenCalled();
@@ -93,11 +95,36 @@ describe("createExpiryCleanupWorker", () => {
         targets: [EntityA as any],
       });
 
-      await config.callback({} as any);
+      await config.callback(ctx);
 
       expect(mockRepository).toHaveBeenCalledTimes(1);
       expect(mockRepository).toHaveBeenCalledWith(EntityA);
       expect(mockDeleteExpired).toHaveBeenCalledTimes(1);
+    });
+
+    test("should continue processing remaining targets when one fails", async () => {
+      const failingDelete = jest.fn().mockRejectedValue(new Error("DB error"));
+      const succeedingDelete = jest.fn().mockResolvedValue(undefined);
+
+      const failProteus: any = {
+        repository: jest
+          .fn()
+          .mockImplementation((target: any) =>
+            target === EntityA
+              ? { deleteExpired: failingDelete }
+              : { deleteExpired: succeedingDelete },
+          ),
+      };
+
+      const config = createExpiryCleanupWorker({
+        proteus: failProteus,
+        targets: [EntityA as any, EntityB as any],
+      });
+
+      await config.callback(ctx);
+
+      expect(failingDelete).toHaveBeenCalledTimes(1);
+      expect(succeedingDelete).toHaveBeenCalledTimes(1);
     });
   });
 });

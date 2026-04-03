@@ -17,11 +17,13 @@ jest.mock("@lindorm/kryptos", () => ({
   KryptosKit: { from: { db: mockFromDb } },
 }));
 
+import { createMockLogger } from "@lindorm/logger";
 import { createAmphoraEntityWorker } from "./amphora-entity-worker";
 
 describe("createAmphoraEntityWorker", () => {
   const amphora: any = { refresh: mockRefresh, add: mockAdd };
   const proteus: any = { repository: mockRepository };
+  const ctx: any = { logger: createMockLogger() };
 
   class FakeKryptosDB {}
 
@@ -105,7 +107,7 @@ describe("createAmphoraEntityWorker", () => {
         target: FakeKryptosDB as any,
       });
 
-      await config.callback({} as any);
+      await config.callback(ctx);
 
       expect(mockRefresh).toHaveBeenCalledTimes(1);
       expect(mockRepository).toHaveBeenCalledWith(FakeKryptosDB);
@@ -123,7 +125,7 @@ describe("createAmphoraEntityWorker", () => {
         target: FakeKryptosDB as any,
       });
 
-      await config.callback({} as any);
+      await config.callback(ctx);
 
       expect(mockFromDb).toHaveBeenCalledWith(entity);
       expect(mockAdd).toHaveBeenCalledWith([{ id: "key-1" }]);
@@ -141,7 +143,7 @@ describe("createAmphoraEntityWorker", () => {
         encryptionKey: {} as any,
       });
 
-      await config.callback({} as any);
+      await config.callback(ctx);
 
       expect(mockDecrypt).toHaveBeenCalledWith("encrypted-data");
       expect(entity.privateKey).toBe("decrypted_encrypted-data");
@@ -159,7 +161,7 @@ describe("createAmphoraEntityWorker", () => {
         encryptionKey: {} as any,
       });
 
-      await config.callback({} as any);
+      await config.callback(ctx);
 
       expect(mockDecrypt).not.toHaveBeenCalled();
       expect(entity.privateKey).toBe("plain-data");
@@ -176,7 +178,7 @@ describe("createAmphoraEntityWorker", () => {
         target: FakeKryptosDB as any,
       });
 
-      await config.callback({} as any);
+      await config.callback(ctx);
 
       expect(mockDecrypt).not.toHaveBeenCalled();
     });
@@ -192,7 +194,7 @@ describe("createAmphoraEntityWorker", () => {
         encryptionKey: {} as any,
       });
 
-      await config.callback({} as any);
+      await config.callback(ctx);
 
       expect(mockDecrypt).not.toHaveBeenCalled();
     });
@@ -211,7 +213,7 @@ describe("createAmphoraEntityWorker", () => {
         target: FakeKryptosDB as any,
       });
 
-      await config.callback({} as any);
+      await config.callback(ctx);
 
       expect(mockFromDb).toHaveBeenCalledTimes(3);
       expect(mockAdd).toHaveBeenCalledWith([

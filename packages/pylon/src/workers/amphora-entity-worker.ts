@@ -18,7 +18,9 @@ export const createAmphoraEntityWorker = (options: Options): LindormWorkerConfig
   listeners: options.listeners ?? [],
   jitter: options.jitter,
   retry: options.retry,
-  callback: async (_ctx): Promise<void> => {
+  callback: async (ctx): Promise<void> => {
+    ctx.logger.debug("Refreshing amphora from external sources");
+
     await options.amphora.refresh();
 
     const aes = options.encryptionKey
@@ -26,8 +28,9 @@ export const createAmphoraEntityWorker = (options: Options): LindormWorkerConfig
       : undefined;
 
     const repository = options.proteus.repository(options.target);
-
     const existing = await repository.find();
+
+    ctx.logger.debug("Loaded kryptos entities from database", { count: existing.length });
 
     const keys: Array<IKryptos> = [];
 
@@ -40,5 +43,7 @@ export const createAmphoraEntityWorker = (options: Options): LindormWorkerConfig
     }
 
     options.amphora.add(keys);
+
+    ctx.logger.info("Amphora entity sync complete", { keys: keys.length });
   },
 });
