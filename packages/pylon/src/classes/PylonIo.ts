@@ -36,10 +36,7 @@ export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
       createSourcesMiddleware({
         hermes: options.hermes,
         iris: options.iris,
-        entities: options.entities,
-        messages: options.messages,
         proteus: options.proteus,
-        sources: options.sources,
       }),
     ];
     this.options = options;

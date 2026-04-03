@@ -17,5 +17,4 @@ export * from "./pylon-socket";
 export * from "./session";
 export * from "./setup";
 export * from "./socket";
-export * from "./sources";
 export * from "./types";

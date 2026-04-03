@@ -1,13 +1,6 @@
-import { createMockKafkaSource } from "@lindorm/kafka";
+import { createMockIrisSource } from "@lindorm/iris/mocks";
 import { createMockLogger } from "@lindorm/logger";
-import { createMockMnemosSource } from "@lindorm/mnemos";
-import { createMockMongoSource } from "@lindorm/mongo";
-import { createMockRabbitSource } from "@lindorm/rabbit";
-import { createMockRedisSource } from "@lindorm/redis";
-import { TestEntityOne } from "../../__fixtures__/entities/test-entity-one";
-import { TestEntityTwo } from "../../__fixtures__/entities/test-entity-two";
-import { TestMessageOne } from "../../__fixtures__/messages/test-message-one";
-import { TestMessageTwo } from "../../__fixtures__/messages/test-message-two";
+import { createMockProteusSource } from "@lindorm/proteus/mocks";
 import { createSourcesMiddleware } from "./common-sources-middleware";
 
 describe("createSourcesMiddleware", () => {
@@ -19,41 +12,46 @@ describe("createSourcesMiddleware", () => {
     };
   });
 
-  test("should add sources to context", async () => {
-    await expect(
-      createSourcesMiddleware({
-        entities: [TestEntityOne, TestEntityTwo],
-        messages: [TestMessageOne, TestMessageTwo],
-        sources: [
-          createMockKafkaSource(),
-          createMockMnemosSource(),
-          createMockMongoSource(),
-          createMockRabbitSource(),
-          createMockRedisSource(),
-        ],
-      })(ctx, jest.fn()),
-    ).resolves.toBeUndefined();
+  test("should clone proteus source onto context", async () => {
+    const proteus = createMockProteusSource();
 
-    expect(ctx.kafka.source).toBeDefined();
-    expect(ctx.kafka.publishers.testMessageOnePublisher).toBeDefined();
-    expect(ctx.kafka.publishers.testMessageTwoPublisher).toBeDefined();
+    const middleware = createSourcesMiddleware({ proteus: proteus as any });
 
-    expect(ctx.mnemos.source).toBeDefined();
-    expect(ctx.mnemos.repositories.testEntityOneRepository).toBeDefined();
-    expect(ctx.mnemos.repositories.testEntityTwoRepository).toBeDefined();
+    await middleware(ctx, jest.fn());
 
-    expect(ctx.mongo.source).toBeDefined();
-    expect(ctx.mongo.repositories.testEntityOneRepository).toBeDefined();
-    expect(ctx.mongo.repositories.testEntityTwoRepository).toBeDefined();
+    expect(proteus.clone).toHaveBeenCalledWith({ logger: ctx.logger });
+    expect(ctx.proteus).toBeDefined();
+  });
 
-    expect(ctx.rabbit.source).toBeDefined();
-    expect(ctx.rabbit.publishers.testMessageOnePublisher).toBeDefined();
-    expect(ctx.rabbit.publishers.testMessageTwoPublisher).toBeDefined();
+  test("should clone iris source onto context", async () => {
+    const iris = createMockIrisSource();
 
-    expect(ctx.redis.source).toBeDefined();
-    expect(ctx.redis.repositories.testEntityOneRepository).toBeDefined();
-    expect(ctx.redis.repositories.testEntityTwoRepository).toBeDefined();
-    expect(ctx.redis.publishers.testMessageOnePublisher).toBeDefined();
-    expect(ctx.redis.publishers.testMessageTwoPublisher).toBeDefined();
+    const middleware = createSourcesMiddleware({ iris: iris as any });
+
+    await middleware(ctx, jest.fn());
+
+    expect(iris.clone).toHaveBeenCalledWith({ logger: ctx.logger });
+    expect(ctx.iris).toBeDefined();
+  });
+
+  test("should clone hermes onto context", async () => {
+    const hermes = { clone: jest.fn().mockReturnValue("cloned") };
+
+    const middleware = createSourcesMiddleware({ hermes: hermes as any });
+
+    await middleware(ctx, jest.fn());
+
+    expect(hermes.clone).toHaveBeenCalledWith({ logger: ctx.logger });
+    expect(ctx.hermes).toEqual("cloned");
+  });
+
+  test("should handle no sources configured", async () => {
+    const middleware = createSourcesMiddleware({});
+
+    await expect(middleware(ctx, jest.fn())).resolves.toBeUndefined();
+
+    expect(ctx.proteus).toBeUndefined();
+    expect(ctx.iris).toBeUndefined();
+    expect(ctx.hermes).toBeUndefined();
   });
 });

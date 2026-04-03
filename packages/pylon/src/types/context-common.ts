@@ -1,18 +1,11 @@
 import { IAegis, ParsedCws, ParsedCwt, ParsedJws, ParsedJwt } from "@lindorm/aegis";
 import { IAmphora } from "@lindorm/amphora";
 import { IConduit } from "@lindorm/conduit";
-import { IEntity } from "@lindorm/entity";
 import { IHermes } from "@lindorm/hermes";
 import { IIrisSource } from "@lindorm/iris";
-import { IKafkaPublisher, IKafkaSource } from "@lindorm/kafka";
 import { ILogger } from "@lindorm/logger";
-import { IMessage } from "@lindorm/message";
 import { Middleware } from "@lindorm/middleware";
-import { IProteusSource } from "@lindorm/proteus";
-import { IMnemosRepository, IMnemosSource } from "@lindorm/mnemos";
-import { IMongoRepository, IMongoSource } from "@lindorm/mongo";
-import { IRabbitPublisher, IRabbitSource } from "@lindorm/rabbit";
-import { IRedisPublisher, IRedisRepository, IRedisSource } from "@lindorm/redis";
+import { IEntity, IProteusSource } from "@lindorm/proteus";
 import { Dict, Environment, Priority } from "@lindorm/types";
 import { AuthorizationState } from "./authorization";
 import { IoServer } from "./socket";
@@ -59,28 +52,6 @@ export type PylonCommonContext = {
   hermes?: IHermes;
   iris?: IIrisSource;
   proteus?: IProteusSource;
-
-  kafka?: {
-    source: IKafkaSource;
-    publishers: Dict<IKafkaPublisher<IMessage>>;
-  };
-  mnemos?: {
-    source: IMnemosSource;
-    repositories: Dict<IMnemosRepository<IEntity>>;
-  };
-  mongo?: {
-    source: IMongoSource;
-    repositories: Dict<IMongoRepository<IEntity>>;
-  };
-  rabbit?: {
-    source: IRabbitSource;
-    publishers: Dict<IRabbitPublisher<IMessage>>;
-  };
-  redis?: {
-    source: IRedisSource;
-    publishers: Dict<IRedisPublisher<IMessage>>;
-    repositories: Dict<IRedisRepository<IEntity>>;
-  };
 
   queue: (
     event: string,
