@@ -7,7 +7,9 @@ import {
   createHttpDateValidationMiddleware,
   createHttpSessionMiddleware,
   createHttpStateMiddleware,
+  createQueueMiddleware,
   createSourcesMiddleware,
+  createWebhookMiddleware,
   httpErrorHandlerMiddleware,
   httpQueryParserMiddleware,
   httpRequestLoggerMiddleware,
@@ -84,8 +86,6 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
       createHttpContextInitialisationMiddleware({
         amphora: this.options.amphora,
         logger: this.logger,
-        queue: this.options.queue,
-        webhook: this.options.webhook,
       }),
       createHttpDateValidationMiddleware({
         minRequestAge: this.options.minRequestAge,
@@ -104,6 +104,8 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
         iris: this.options.iris,
         proteus: this.options.proteus,
       }),
+      createQueueMiddleware(this.options.queue),
+      createWebhookMiddleware(this.options.webhook),
     ]);
 
     this.logger.debug("Middleware loaded");

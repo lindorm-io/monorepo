@@ -5,8 +5,10 @@ import { createAdapter } from "@socket.io/redis-adapter";
 import { Server } from "http";
 import { Server as SocketIoServer } from "socket.io";
 import {
+  createQueueMiddleware,
   createSocketContextInitialisationMiddleware,
   createSourcesMiddleware,
+  createWebhookMiddleware,
   socketErrorHandlerMiddleware,
   socketLoggerMiddleware,
 } from "#internal/middleware";
@@ -38,6 +40,8 @@ export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
         iris: options.iris,
         proteus: options.proteus,
       }),
+      createQueueMiddleware(options.queue),
+      createWebhookMiddleware(options.webhook),
     ];
     this.options = options;
     this.server = new SocketIoServer(http, {
@@ -85,8 +89,6 @@ export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
       createSocketContextInitialisationMiddleware({
         amphora: this.options.amphora,
         logger: this.logger,
-        queue: this.options.queue,
-        webhook: this.options.webhook,
       }),
       socketLoggerMiddleware,
       socketErrorHandlerMiddleware,
