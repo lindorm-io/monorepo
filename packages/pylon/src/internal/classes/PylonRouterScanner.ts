@@ -2,7 +2,7 @@ import { ILogger } from "@lindorm/logger";
 import { IScanData, IScanner, Scanner } from "@lindorm/scanner";
 import { PylonError } from "../../errors";
 import { PylonHttpContext } from "../../types";
-import { PylonRouter } from "../PylonRouter";
+import { PylonRouter } from "../../classes/PylonRouter";
 
 type File<C extends PylonHttpContext> = {
   default?: PylonRouter<C>;

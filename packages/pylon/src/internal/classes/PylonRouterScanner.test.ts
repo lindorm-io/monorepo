@@ -1,6 +1,6 @@
 import { createMockLogger, ILogger } from "@lindorm/logger";
 import { join } from "path";
-import { PylonRouter } from "../PylonRouter";
+import { PylonRouter } from "../../classes/PylonRouter";
 import { PylonRouterScanner } from "./PylonRouterScanner";
 
 describe("PylonRouterScanner", () => {

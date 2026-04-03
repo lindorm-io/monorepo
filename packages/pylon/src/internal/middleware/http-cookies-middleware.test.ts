@@ -5,7 +5,7 @@ import {
   parseCookieHeader as _parseCookieHeader,
   signCookie as _signCookie,
   verifyCookie as _verifyCookie,
-} from "../../utils/private";
+} from "../utils";
 import { createHttpCookiesMiddleware } from "./http-cookies-middleware";
 
 jest.mock("../../utils/private");

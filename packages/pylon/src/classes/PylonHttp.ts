@@ -16,7 +16,7 @@ import {
   httpResponseBodyMiddleware,
   httpResponseLoggerMiddleware,
   httpResponseTimeMiddleware,
-} from "../middleware/private";
+} from "#internal/middleware";
 import {
   HttpCallback,
   PylonHttpContext,
@@ -27,10 +27,10 @@ import {
   createAuthRouter,
   createHealthRouter,
   createWellKnownRouter,
-} from "../utils/private";
-import { parseAuthConfig } from "../utils/private/auth";
+} from "#internal/utils";
+import { parseAuthConfig } from "#internal/utils/auth";
 import { PylonRouter } from "./PylonRouter";
-import { PylonRouterScanner } from "./private";
+import { PylonRouterScanner } from "#internal/classes";
 
 export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
   private readonly logger: ILogger;

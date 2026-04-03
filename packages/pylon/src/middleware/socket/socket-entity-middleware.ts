@@ -4,7 +4,7 @@ import { ClientError } from "@lindorm/errors";
 import { Middleware } from "@lindorm/middleware";
 import { Constructor } from "@lindorm/types";
 import { PylonCommonContext, PylonEntitySourceName, SearchPath } from "../../types";
-import { findEntity } from "../../utils/private";
+import { findEntity } from "#internal/utils";
 
 type Options = {
   mandatory?: boolean;

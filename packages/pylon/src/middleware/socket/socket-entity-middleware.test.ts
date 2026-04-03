@@ -1,13 +1,13 @@
 import { createMockLogger } from "@lindorm/logger";
 import MockDate from "mockdate";
 import { TestEntityOne } from "../../__fixtures__/entities/test-entity-one";
-import { findEntity as _findEntity } from "../../utils/private";
+import { findEntity as _findEntity } from "#internal/utils";
 import { createSocketEntityMiddleware } from "./socket-entity-middleware";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate);
 
-jest.mock("../../utils/private");
+jest.mock("#internal/utils");
 
 const findEntity = _findEntity as jest.Mock;
 

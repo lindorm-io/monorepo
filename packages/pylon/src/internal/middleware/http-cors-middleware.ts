@@ -12,7 +12,7 @@ import {
   handleAccessControlPrivateNetwork,
   handleCrossOriginEmbedderPolicy,
   handleCrossOriginOpenerPolicy,
-} from "../../utils/private";
+} from "../utils";
 
 export const createHttpCorsMiddleware = (
   options: CorsOptions = {},

@@ -1,7 +1,7 @@
 import { Environment } from "@lindorm/types";
 import { randomUUID } from "crypto";
 import { PylonHttpMiddleware } from "../../types";
-import { getAuthorization } from "../../utils/private";
+import { getAuthorization } from "../utils";
 
 type Options = {
   environment?: Environment;

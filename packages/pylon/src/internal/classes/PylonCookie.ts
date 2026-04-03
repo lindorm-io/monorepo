@@ -8,7 +8,7 @@ import {
   RESTRICTED_NAMES_REGEXP,
   RESTRICTED_VALUE_CHARS_REGEXP,
   SAME_SITE_REGEXP,
-} from "../../constants/private";
+} from "../constants";
 import { CookiePriority, CookieSameSite, PylonCookieOptions } from "../../types";
 
 export class PylonCookie {

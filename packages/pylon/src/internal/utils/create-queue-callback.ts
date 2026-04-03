@@ -1,5 +1,5 @@
 import { LindormError, ServerError } from "@lindorm/errors";
-import { NUMERIC_PRIORITY } from "../../constants/private";
+import { NUMERIC_PRIORITY } from "../constants";
 import { MnemosJobEntity, MongoJobEntity, RedisJobEntity } from "../../entities";
 import { IJob, IJobEntity } from "../../interfaces";
 import { PylonJob } from "../../messages";
