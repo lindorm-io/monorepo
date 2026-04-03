@@ -1,0 +1,32 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`createWellKnownRouter openid-configuration should return openid configuration with domain replaced 1`] = `
+{
+  "authorization_endpoint": "https://test.lindorm.io/auth",
+  "issuer": "https://test.lindorm.io",
+  "token_endpoint": "<ORIGIN>/token",
+}
+`;
+
+exports[`createWellKnownRouter pylon-configuration should return pylon configuration 1`] = `
+{
+  "cors": {
+    "origin": "*",
+  },
+  "domain": "https://test.lindorm.io",
+  "environment": "test",
+  "maxRequestAge": 30000,
+  "name": "test-service",
+  "version": "1.0.0",
+}
+`;
+
+exports[`createWellKnownRouter should create a router with expected routes 1`] = `
+[
+  "/change-password",
+  "/jwks.json",
+  "/openid-configuration",
+  "/pylon-configuration",
+  "/right-to-be-forgotten",
+]
+`;

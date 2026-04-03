@@ -1,0 +1,37 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`initialisePylonSocketData should initialize with all options provided 1`] = `
+{
+  "app": {
+    "domain": "test.lindorm.io",
+    "environment": "development",
+    "name": "test-service",
+    "version": "1.2.3",
+  },
+  "tokens": {},
+}
+`;
+
+exports[`initialisePylonSocketData should use defaults for missing options 1`] = `
+{
+  "app": {
+    "domain": "unknown",
+    "environment": "unknown",
+    "name": "unknown",
+    "version": "0.0.0",
+  },
+  "tokens": {},
+}
+`;
+
+exports[`initialisePylonSocketData should use defaults for undefined values 1`] = `
+{
+  "app": {
+    "domain": "unknown",
+    "environment": "unknown",
+    "name": "unknown",
+    "version": "0.0.0",
+  },
+  "tokens": {},
+}
+`;

@@ -92,14 +92,12 @@ describe("httpSessionMiddleware", () => {
     });
   });
 
-  test("should fall back to cookie when no proteus", async () => {
+  test("should return null session when no proteus source", async () => {
     ctx.proteus = undefined;
-
-    ctx.cookies.get.mockReturnValue("cookie_value");
 
     await createHttpSessionMiddleware(options)(ctx, next);
 
-    expect(ctx.state.session).toEqual("cookie_value");
+    expect(ctx.state.session).toBeNull();
   });
 
   test("should delete session", async () => {

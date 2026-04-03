@@ -1,7 +1,8 @@
 export const GET = async (ctx: any) => {
   ctx.body = {
-    route: "v1/dashboard",
+    route: "api/optional-catch-all",
     method: "GET",
+    params: ctx.params,
     middlewareChain: ctx.state.middlewareChain,
   };
   ctx.status = 200;

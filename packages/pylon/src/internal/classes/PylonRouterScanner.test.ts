@@ -3,17 +3,6 @@ import { join } from "path";
 import { PylonRouter } from "../../classes/PylonRouter";
 import { PylonRouterScanner } from "./PylonRouterScanner";
 import { rootMiddleware } from "../../__fixtures__/routes/_middleware";
-import { v1Middleware } from "../../__fixtures__/routes/v1/_middleware";
-import { adminMiddleware } from "../../__fixtures__/routes/v1/(admin)/_middleware";
-import { healthGet } from "../../__fixtures__/routes/health";
-import {
-  listUsers,
-  createUserSchema,
-  createUser,
-} from "../../__fixtures__/routes/v1/users/index";
-import { getUser, updateUser, deleteUser } from "../../__fixtures__/routes/v1/users/[id]";
-import { getDashboard } from "../../__fixtures__/routes/v1/(admin)/dashboard";
-import { proxyGet } from "../../__fixtures__/routes/proxy/[...path]";
 
 describe("PylonRouterScanner", () => {
   const logger = createMockLogger();
