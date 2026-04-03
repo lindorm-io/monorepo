@@ -2,14 +2,18 @@ import { Aegis } from "@lindorm/aegis";
 import { createMockAmphora } from "@lindorm/amphora";
 import { Conduit } from "@lindorm/conduit";
 import { createMockLogger } from "@lindorm/logger";
-import { PylonOptions } from "../../types";
 import { createHttpContextInitialisationMiddleware } from "./http-context-initialisation-middleware";
 
 describe("createHttpContextInitialisationMiddleware", () => {
   let ctx: any;
-  let options: PylonOptions;
+  let options: any;
+  let mockPublish: jest.Mock;
+  let mockCreate: jest.Mock;
 
   beforeEach(() => {
+    mockPublish = jest.fn();
+    mockCreate = jest.fn().mockImplementation((data: any) => data);
+
     ctx = {
       state: {
         metadata: {
@@ -17,6 +21,12 @@ describe("createHttpContextInitialisationMiddleware", () => {
           id: "aa9a627d-8296-598c-9589-4ec91d27d056",
           responseId: "ee576e4a-c30c-5138-bfa8-51ca832bdaec",
         },
+      },
+      iris: {
+        workerQueue: jest.fn().mockReturnValue({
+          create: mockCreate,
+          publish: mockPublish,
+        }),
       },
       set: jest.fn(),
     };
@@ -44,27 +54,23 @@ describe("createHttpContextInitialisationMiddleware", () => {
     expect(ctx.webhook).toEqual(expect.any(Function));
   });
 
-  test("should handle queues", async () => {
-    const queueHandler = jest.fn();
-
-    options.queue = { use: "custom", custom: queueHandler };
-
+  test("should publish queue job via iris", async () => {
     await createHttpContextInitialisationMiddleware(options)(ctx, jest.fn());
 
     await ctx.queue("event", { key: "value" });
 
-    expect(queueHandler).toHaveBeenCalledWith(
-      expect.any(Object),
-      "event",
-      { key: "value" },
-      "default",
+    expect(mockCreate).toHaveBeenCalledWith({
+      event: "event",
+      payload: { key: "value" },
+    });
+    expect(mockPublish).toHaveBeenCalledWith(
+      { event: "event", payload: { key: "value" } },
+      { priority: 5 },
     );
   });
 
-  test("should handle optional queues", async () => {
-    const queueHandler = jest.fn().mockRejectedValue(new Error("Queue error"));
-
-    options.queue = { use: "custom", custom: queueHandler };
+  test("should handle optional queue errors", async () => {
+    mockPublish.mockRejectedValue(new Error("Queue error"));
 
     await createHttpContextInitialisationMiddleware(options)(ctx, jest.fn());
 
@@ -74,33 +80,37 @@ describe("createHttpContextInitialisationMiddleware", () => {
   });
 
   test("should throw on queue error if not optional", async () => {
-    const queueHandler = jest.fn().mockRejectedValue(new Error("Queue error"));
-
-    options.queue = { use: "custom", custom: queueHandler };
+    mockPublish.mockRejectedValue(new Error("Queue error"));
 
     await createHttpContextInitialisationMiddleware(options)(ctx, jest.fn());
 
     await expect(ctx.queue("event", { key: "value" })).rejects.toThrow("Queue error");
   });
 
-  test("should handle webhooks", async () => {
-    const webhookHandler = jest.fn();
+  test("should throw if iris not configured for queue", async () => {
+    ctx.iris = undefined;
 
-    options.webhook = { use: "custom", custom: webhookHandler };
+    await createHttpContextInitialisationMiddleware(options)(ctx, jest.fn());
 
+    await expect(ctx.queue("event", {})).rejects.toThrow(
+      "IrisSource is not configured for queue",
+    );
+  });
+
+  test("should publish webhook request via iris", async () => {
     await createHttpContextInitialisationMiddleware(options)(ctx, jest.fn());
 
     await ctx.webhook("event_name", { data: "test" });
 
-    expect(webhookHandler).toHaveBeenCalledWith(expect.any(Object), "event_name", {
-      data: "test",
+    expect(mockCreate).toHaveBeenCalledWith({
+      event: "event_name",
+      payload: { data: "test" },
     });
+    expect(mockPublish).toHaveBeenCalled();
   });
 
-  test("should handle optional webhooks", async () => {
-    const webhookHandler = jest.fn().mockRejectedValue(new Error("Webhook error"));
-
-    options.webhook = { use: "custom", custom: webhookHandler };
+  test("should handle optional webhook errors", async () => {
+    mockPublish.mockRejectedValue(new Error("Webhook error"));
 
     await createHttpContextInitialisationMiddleware(options)(ctx, jest.fn());
 
@@ -110,14 +120,22 @@ describe("createHttpContextInitialisationMiddleware", () => {
   });
 
   test("should throw on webhook error if not optional", async () => {
-    const webhookHandler = jest.fn().mockRejectedValue(new Error("Webhook error"));
-
-    options.webhook = { use: "custom", custom: webhookHandler };
+    mockPublish.mockRejectedValue(new Error("Webhook error"));
 
     await createHttpContextInitialisationMiddleware(options)(ctx, jest.fn());
 
     await expect(ctx.webhook("event_name", { data: "test" })).rejects.toThrow(
       "Webhook error",
+    );
+  });
+
+  test("should throw if iris not configured for webhook", async () => {
+    ctx.iris = undefined;
+
+    await createHttpContextInitialisationMiddleware(options)(ctx, jest.fn());
+
+    await expect(ctx.webhook("event_name")).rejects.toThrow(
+      "IrisSource is not configured for webhook",
     );
   });
 });

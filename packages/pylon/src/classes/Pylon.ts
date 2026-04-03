@@ -15,15 +15,7 @@ import {
   PylonTeardown,
 } from "../types";
 import { SessionEntity } from "../entities";
-import {
-  addQueueEntities,
-  addQueueMessages,
-  addWebhookEntities,
-  addWebhookMessages,
-  calculateSubscriptions,
-  calculateWorkers,
-  scanWorkers,
-} from "#internal/utils";
+import { calculateSubscriptions, calculateWorkers, scanWorkers } from "#internal/utils";
 import { PylonHttp } from "./PylonHttp";
 import { PylonIo } from "./PylonIo";
 
@@ -65,12 +57,10 @@ export class Pylon<
     );
 
     options.subscriptions = options.subscriptions ?? [];
-    options.subscriptions.push(
-      ...calculateSubscriptions(options, this.sources, this.webhookCache),
-    );
+    options.subscriptions.push(...calculateSubscriptions());
 
     options.workers = options.workers ?? [];
-    options.workers.push(...calculateWorkers(options, this.sources, this.webhookCache));
+    options.workers.push(...calculateWorkers());
 
     this.options = options;
 
@@ -264,46 +254,16 @@ export class Pylon<
   }
 
   private loadSources(): void {
-    if (this.options.queue?.use === "entity") {
-      addQueueEntities(this.options.queue, this.sources);
-    }
-
-    if (this.options.queue?.use === "message") {
-      addQueueMessages(this.options.queue, this.sources);
-    }
-
     if (this.options.session?.use === "stored") {
       const sessionSource = this.options.session.proteus ?? this.options.proteus;
       if (sessionSource) {
         sessionSource.addEntities([SessionEntity]);
       }
     }
-
-    if (this.options.webhook?.use === "entity") {
-      addWebhookEntities(this.options.webhook, this.sources);
-    }
-
-    if (this.options.webhook?.use === "message") {
-      addWebhookMessages(this.options.webhook, this.sources);
-    }
   }
 
   private async subscribe(): Promise<void> {
-    const sources = this.sources
-      .values()
-      .filter(
-        (source) =>
-          source.__instanceof === "KafkaSource" ||
-          source.__instanceof === "RabbitSource" ||
-          source.__instanceof === "RedisSource",
-      );
-
-    for (const { target, ...subscribe } of this.subscriptions) {
-      for (const source of sources) {
-        if (!source.hasMessage(target)) continue;
-
-        await source.messageBus(target).subscribe(subscribe);
-      }
-    }
+    // Subscriptions are now handled by Iris WorkerQueue consume()
+    // Old message bus subscription system removed in Phase 3
   }
 }

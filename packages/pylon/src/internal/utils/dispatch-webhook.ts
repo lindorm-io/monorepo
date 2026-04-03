@@ -2,7 +2,7 @@ import { AesKit } from "@lindorm/aes";
 import { Conduit, ConduitClientCredentialsCache } from "@lindorm/conduit";
 import { IKryptos } from "@lindorm/kryptos";
 import { ILogger } from "@lindorm/logger";
-import { IWebhookDispatch } from "../../interfaces";
+import { IWebhookSubscription } from "../../interfaces";
 import { createConduitWebhookAuthMiddleware } from "../../middleware";
 
 type Options = {
@@ -20,7 +20,11 @@ export const createDispatchWebhook = (
 
   const conduit = new Conduit({ logger });
 
-  return async function dispatchWebhook(dispatch: IWebhookDispatch): Promise<void> {
+  return async function dispatchWebhook(dispatch: {
+    event: string;
+    payload: any;
+    subscription: IWebhookSubscription;
+  }): Promise<void> {
     if (
       aes &&
       dispatch.subscription.clientSecret &&

@@ -5,30 +5,27 @@ import { ServerError } from "@lindorm/errors";
 import { ILogger } from "@lindorm/logger";
 import { Dict, Environment, Priority } from "@lindorm/types";
 import { randomUUID } from "crypto";
-import {
-  PylonQueueOptions,
-  PylonSocketMiddleware,
-  PylonWebhookOptions,
-} from "../../types";
-import {
-  createQueueCallback,
-  createWebhookCallback,
-  getSocketAuthorization,
-} from "../utils";
+import { PylonJob, PylonWebhookRequest } from "../../messages";
+import { PylonSocketMiddleware } from "../../types";
+import { getSocketAuthorization } from "../utils";
+
+const PRIORITY_MAP: Record<Priority, number> = {
+  background: 0,
+  low: 1,
+  default: 5,
+  medium: 6,
+  high: 8,
+  critical: 10,
+};
 
 type Options = {
   amphora: IAmphora;
   logger: ILogger;
-  queue?: PylonQueueOptions<any>;
-  webhook?: PylonWebhookOptions<any>;
 };
 
 export const createSocketContextInitialisationMiddleware = (
   options: Options,
 ): PylonSocketMiddleware => {
-  const queue = createQueueCallback(options.queue);
-  const webhook = createWebhookCallback(options.webhook);
-
   return async function socketContextInitialisationMiddleware(ctx, next) {
     ctx.state = {
       app: ctx.socket.data.app,
@@ -67,11 +64,17 @@ export const createSocketContextInitialisationMiddleware = (
       priority: Priority = "default",
       optional = false,
     ): Promise<void> => {
-      if (!queue) {
-        throw new ServerError("Queue callback is not configured");
+      if (!ctx.iris) {
+        throw new ServerError("IrisSource is not configured for queue");
       }
       try {
-        await queue(ctx, event, payload, priority);
+        const wq = ctx.iris.workerQueue(PylonJob);
+        const job = wq.create({
+          correlationId: ctx.state.metadata.correlationId,
+          event,
+          payload,
+        });
+        await wq.publish(job, { priority: PRIORITY_MAP[priority] });
       } catch (err: any) {
         if (optional) {
           ctx.logger.warn("Failed to handle queue", err);
@@ -86,11 +89,17 @@ export const createSocketContextInitialisationMiddleware = (
       payload: Dict = {},
       optional = false,
     ): Promise<void> => {
-      if (!webhook) {
-        throw new ServerError("Webhook callback is not configured");
+      if (!ctx.iris) {
+        throw new ServerError("IrisSource is not configured for webhook");
       }
       try {
-        await webhook(ctx, event, payload);
+        const wq = ctx.iris.workerQueue(PylonWebhookRequest);
+        const msg = wq.create({
+          correlationId: ctx.state.metadata.correlationId,
+          event,
+          payload,
+        });
+        await wq.publish(msg);
       } catch (err: any) {
         if (optional) {
           ctx.logger.warn("Failed to handle webhook", err);

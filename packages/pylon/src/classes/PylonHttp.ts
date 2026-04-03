@@ -84,8 +84,6 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
       createHttpContextInitialisationMiddleware({
         amphora: this.options.amphora,
         logger: this.logger,
-        queue: this.options.queue,
-        webhook: this.options.webhook,
       }),
       createHttpDateValidationMiddleware({
         minRequestAge: this.options.minRequestAge,
@@ -101,6 +99,7 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
       httpResponseBodyMiddleware,
       createSourcesMiddleware({
         hermes: this.options.hermes,
+        iris: this.options.iris,
         entities: this.options.entities,
         messages: this.options.messages,
         proteus: this.options.proteus,

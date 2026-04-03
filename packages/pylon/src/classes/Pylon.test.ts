@@ -307,10 +307,8 @@ describe("Pylon", () => {
       openIdConfiguration: { jwksUri: "http://test.lindorm.io/.well-known/jwks.json" },
       parseBody: { formidable: true },
       port: 55555,
-      queue: { use: "custom", custom: handlerSpy },
       session: { use: "cookie", encrypted: true, signed: true },
       version: "0.0.1",
-      webhook: { use: "custom", custom: handlerSpy },
     });
 
     await pylon.setup();
