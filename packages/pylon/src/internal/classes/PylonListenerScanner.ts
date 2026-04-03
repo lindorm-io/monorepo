@@ -1,54 +1,46 @@
 import { ILogger } from "@lindorm/logger";
-import { IScanData, IScanner, Scanner } from "@lindorm/scanner";
 import { uniq } from "@lindorm/utils";
-import { PylonError } from "../../errors";
-import { PylonSocketContext } from "../../types";
 import { PylonListener } from "../../classes/PylonListener";
+import { PylonError } from "../../errors";
+import { PylonSocketContext, PylonSocketMiddleware } from "../../types";
+import { PylonScannerBase, ScannedFile } from "./PylonScannerBase";
 
-type File<S extends PylonSocketContext> = {
-  default?: PylonListener<S>;
-  listener?: PylonListener<S>;
-};
+const LISTENER_METHODS = ["ON", "ONCE"] as const;
+type ListenerMethod = (typeof LISTENER_METHODS)[number];
 
-type Result<S extends PylonSocketContext> = {
-  namespaces: Array<string>;
+export type ListenerScanResult<S extends PylonSocketContext> = {
   listeners: Array<PylonListener<S>>;
+  namespaces: Array<string>;
 };
 
-export class PylonListenerScanner<S extends PylonSocketContext> {
-  private readonly logger: ILogger;
-  private readonly scanner: IScanner;
-
+export class PylonListenerScanner<
+  S extends PylonSocketContext = PylonSocketContext,
+> extends PylonScannerBase {
   public constructor(logger: ILogger) {
-    this.logger = logger;
-    this.scanner = new Scanner({
-      deniedTypes: [/^fixture$/, /^spec$/, /^test$/, /^integration$/],
-    });
+    super(logger.child(["PylonListenerScanner"]));
   }
 
-  // public
-
-  public scan(socketListenersDirectory: string): Result<S> {
+  public scan(directory: string): ListenerScanResult<S> {
     const start = Date.now();
 
-    this.logger.debug("Finding listeners automatically", { socketListenersDirectory });
+    this.logger.debug("Scanning listeners", { directory });
 
-    if (!Scanner.hasFiles(socketListenersDirectory)) {
-      throw new PylonError(
-        `Listeners directory [ ${socketListenersDirectory} ] is empty`,
-      );
+    const files = this.scanDirectory(directory);
+    const listeners: Array<PylonListener<S>> = [];
+
+    for (const file of files) {
+      const listener = this.processFile(file);
+      if (listener) {
+        listeners.push(listener);
+      }
     }
 
-    const scan = this.scanner.scan(socketListenersDirectory);
+    const namespaces = uniq(
+      listeners.map((l) => l.namespace).filter(Boolean) as Array<string>,
+    );
 
-    const listeners = this.mapScanData(scan)
-      .flat()
-      .filter((item) => Boolean(item.listeners.length));
-
-    const namespaces = uniq(listeners.map((item) => item.namespace).filter(Boolean));
-
-    this.logger.debug("Listeners found automatically", {
-      directory: socketListenersDirectory,
+    this.logger.debug("Listeners scanned", {
+      directory,
       listeners: listeners.length,
       namespaces,
       time: Date.now() - start,
@@ -57,101 +49,92 @@ export class PylonListenerScanner<S extends PylonSocketContext> {
     return { listeners, namespaces };
   }
 
-  // private
+  private processFile(file: ScannedFile): PylonListener<S> | null {
+    const listenerInstance = this.findListenerInstance(file);
 
-  private findIndexInDirectory(
-    scan: IScanData,
-    parent?: PylonListener<S>,
-  ): PylonListener<S> | undefined {
-    this.logger.silly("Finding index in directory", { relative: scan.relativePath });
+    if (listenerInstance) {
+      if (file.middleware.length) {
+        listenerInstance.use(...(file.middleware as Array<PylonSocketMiddleware<S>>));
+      }
 
-    const index = scan.children.find((item) => item.baseName === "index");
-
-    this.logger.silly("Found index in directory", { index: Boolean(index) });
-
-    if (!index) return;
-
-    return this.findListenerInFile(index, parent);
-  }
-
-  private findListenersInDirectory(
-    scan: IScanData,
-    parent?: PylonListener<S>,
-  ): Array<PylonListener<S>> {
-    this.logger.silly("Finding listeners in directory", { relative: scan.relativePath });
-
-    const index = this.findIndexInDirectory(scan, parent);
-    const result: Array<PylonListener<S>> = [];
-
-    for (const item of scan.children) {
-      const isIndex = item.baseName === "index";
-      const children = this.mapScanData(item, isIndex ? parent : index);
-
-      result.push(...children);
-    }
-
-    this.logger.silly("Returning listener from directory", {
-      relative: scan.relativePath,
-    });
-
-    return result;
-  }
-
-  private findListenerInFile(
-    scan: IScanData,
-    parent?: PylonListener<S>,
-  ): PylonListener<S> {
-    this.logger.silly("Finding listener in file", { relative: scan.relativePath });
-
-    const file = this.scanner.require<File<S>>(scan.fullPath);
-    const listener = file.listener ? file.listener : file.default;
-
-    this.logger.silly("Listener found in file", { listener });
-
-    if (!listener) {
-      throw new PylonError(
-        `File [ ${scan.relativePath} ] has no exported listener from [ default | listener ]`,
-      );
-    }
-
-    if (parent) {
-      this.logger.silly("Setting parent listener", {
-        namespace: parent.namespace,
-        prefix: parent.prefix,
+      this.logger.debug("Registered listener instance", {
+        file: file.scan.relativePath,
       });
 
-      listener.parent(parent);
+      return listenerInstance;
     }
 
-    listener.namespace = scan.parents.slice(1).join("/");
-    listener.prefix = scan.baseName;
+    const methods = this.findListenerMethods(file);
 
-    this.logger.silly("Returning listener from file", {
-      namespace: listener.namespace,
-      listeners: listener.listeners,
-      prefix: listener.prefix,
-      relative: scan.relativePath,
-    });
+    if (methods.length) {
+      const event = this.buildEventName(file);
+      const listener = new PylonListener<S>();
 
-    return listener;
+      if (file.middleware.length) {
+        listener.use(...(file.middleware as Array<PylonSocketMiddleware<S>>));
+      }
+
+      for (const { method, handlers } of methods) {
+        switch (method) {
+          case "ON":
+            listener.on(event, ...handlers);
+            break;
+          case "ONCE":
+            listener.once(event, ...handlers);
+            break;
+        }
+
+        this.logger.debug("Registered listener", {
+          method,
+          event,
+          file: file.scan.relativePath,
+        });
+      }
+
+      return listener;
+    }
+
+    throw new PylonError(
+      `File [ ${file.scan.relativePath} ] has no valid exports (expected PylonListener instance or listener method exports: ON, ONCE)`,
+    );
   }
 
-  private mapScanData(
-    scan: IScanData,
-    parent?: PylonListener<S>,
-  ): Array<PylonListener<S>> {
-    this.logger.silly("Mapping scan data", { scan });
-
-    const result: Array<PylonListener<S>> = [];
-
-    if (scan.isDirectory) {
-      result.push(...this.findListenersInDirectory(scan, parent));
+  private findListenerInstance(file: ScannedFile): PylonListener<S> | null {
+    for (const value of Object.values(file.module)) {
+      if (value instanceof PylonListener) {
+        return value as PylonListener<S>;
+      }
     }
+    return null;
+  }
 
-    if (scan.isFile) {
-      result.push(this.findListenerInFile(scan, parent));
+  private findListenerMethods(
+    file: ScannedFile,
+  ): Array<{ method: ListenerMethod; handlers: Array<PylonSocketMiddleware<S>> }> {
+    const result: Array<{
+      method: ListenerMethod;
+      handlers: Array<PylonSocketMiddleware<S>>;
+    }> = [];
+
+    for (const method of LISTENER_METHODS) {
+      const exported = file.module[method];
+      if (!exported) continue;
+
+      const handlers = Array.isArray(exported)
+        ? (exported as Array<PylonSocketMiddleware<S>>)
+        : [exported as PylonSocketMiddleware<S>];
+
+      result.push({ method, handlers });
     }
 
     return result;
+  }
+
+  private buildEventName(file: ScannedFile): string {
+    const segments = file.pathSegments
+      .filter((s) => !s.isGroup && s.path)
+      .map((s) => s.path);
+
+    return segments.join(":");
   }
 }

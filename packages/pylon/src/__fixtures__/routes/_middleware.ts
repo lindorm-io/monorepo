@@ -1,0 +1,4 @@
+export const rootMiddleware = async (_ctx: any, next: any) => {
+  await next();
+};
+export const MIDDLEWARE = [rootMiddleware];
