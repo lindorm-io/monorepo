@@ -3,10 +3,10 @@ import {
   getBody as _getBody,
   getFile as _getFile,
   getStatus as _getStatus,
-} from "../../utils/private";
+} from "#internal/utils";
 import { useHandler } from "./use-handler";
 
-jest.mock("../../utils/private");
+jest.mock("#internal/utils");
 
 const getBody = _getBody as jest.Mock;
 const getFile = _getFile as jest.Mock;

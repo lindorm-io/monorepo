@@ -1,6 +1,6 @@
 import { Field, Message, MessageBase, PriorityField, Topic } from "@lindorm/message";
 import { Dict } from "@lindorm/types";
-import { QUEUE_JOB_TOPIC } from "../constants/private";
+import { QUEUE_JOB_TOPIC } from "#internal/constants";
 import { IJob } from "../interfaces";
 
 @Message()

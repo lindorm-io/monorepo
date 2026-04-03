@@ -2,14 +2,14 @@ import { ServerError } from "@lindorm/errors";
 import { isObject, isString } from "@lindorm/is";
 import { Dict } from "@lindorm/types";
 import { safelyParse } from "@lindorm/utils";
-import { PylonCookie } from "../../classes/private/PylonCookie";
+import { PylonCookie } from "../classes/PylonCookie";
 import {
   PylonCookieConfig,
   PylonGetCookie,
   PylonHttpMiddleware,
   PylonSetCookie,
 } from "../../types";
-import { parseCookieHeader, signCookie, verifyCookie } from "../../utils/private";
+import { parseCookieHeader, signCookie, verifyCookie } from "../utils";
 
 export const createHttpCookiesMiddleware = (
   config: PylonCookieConfig = {},

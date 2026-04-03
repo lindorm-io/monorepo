@@ -3,7 +3,7 @@ import { IScanData, IScanner, Scanner } from "@lindorm/scanner";
 import { uniq } from "@lindorm/utils";
 import { PylonError } from "../../errors";
 import { PylonSocketContext } from "../../types";
-import { PylonListener } from "../PylonListener";
+import { PylonListener } from "../../classes/PylonListener";
 
 type File<S extends PylonSocketContext> = {
   default?: PylonListener<S>;

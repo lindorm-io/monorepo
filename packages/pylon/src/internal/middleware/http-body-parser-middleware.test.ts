@@ -5,7 +5,7 @@ import {
   composeParseBodyConfig as _composeParseBodyConfig,
   getBodyType as _getBodyType,
   parseBody as _parseBody,
-} from "../../utils/private";
+} from "../utils";
 import { createHttpBodyParserMiddleware } from "./http-body-parser-middleware";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");

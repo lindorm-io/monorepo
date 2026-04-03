@@ -9,7 +9,7 @@ import {
   createSourcesMiddleware,
   eventErrorHandlerMiddleware,
   eventLoggerMiddleware,
-} from "../middleware/private";
+} from "#internal/middleware";
 import {
   IoServer,
   IoSocket,
@@ -18,8 +18,8 @@ import {
   PylonSocketContext,
   PylonSocketMiddleware,
 } from "../types";
-import { initialisePylonSocketData, loadPylonListeners } from "../utils/private";
-import { PylonListenerScanner } from "./private";
+import { initialisePylonSocketData, loadPylonListeners } from "#internal/utils";
+import { PylonListenerScanner } from "#internal/classes";
 import { PylonListener } from "./PylonListener";
 
 export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {

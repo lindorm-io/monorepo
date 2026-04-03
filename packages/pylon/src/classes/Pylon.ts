@@ -3,7 +3,7 @@ import { ConduitClientCredentialsCache } from "@lindorm/conduit";
 import { ILogger } from "@lindorm/logger";
 import { ILindormWorker } from "@lindorm/worker";
 import { Server as HttpServer, createServer } from "http";
-import { httpSocketIoMiddleware } from "../middleware/private";
+import { httpSocketIoMiddleware } from "#internal/middleware";
 import {
   HttpCallback,
   PylonHttpContext,
@@ -23,7 +23,7 @@ import {
   calculateSubscriptions,
   calculateWorkers,
   scanWorkers,
-} from "../utils/private";
+} from "#internal/utils";
 import { PylonHttp } from "./PylonHttp";
 import { PylonIo } from "./PylonIo";
 

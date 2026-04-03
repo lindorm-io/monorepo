@@ -1,10 +1,7 @@
 import { ConduitClientCredentialsCache } from "@lindorm/conduit";
 import { LindormError } from "@lindorm/errors";
 import { ILogger } from "@lindorm/logger";
-import {
-  WEBHOOK_DISPATCH_TOPIC,
-  WEBHOOK_REQUEST_TOPIC,
-} from "../../../constants/private";
+import { WEBHOOK_DISPATCH_TOPIC, WEBHOOK_REQUEST_TOPIC } from "../../constants";
 import {
   MnemosWebhookSubscriptionEntity,
   MongoWebhookSubscriptionEntity,

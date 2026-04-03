@@ -1,11 +1,15 @@
 import { Aegis } from "@lindorm/aegis";
 import { IAmphora } from "@lindorm/amphora";
 import { Conduit } from "@lindorm/conduit";
-import { ClientError, ServerError } from "@lindorm/errors";
+import { ServerError } from "@lindorm/errors";
 import { ILogger } from "@lindorm/logger";
 import { Dict, Priority } from "@lindorm/types";
-import { PylonHttpMiddleware, PylonQueueOptions, PylonWebhookOptions } from "../../types";
-import { createQueueCallback, createWebhookCallback } from "../../utils/private";
+import {
+  PylonQueueOptions,
+  PylonSocketMiddleware,
+  PylonWebhookOptions,
+} from "../../types";
+import { createQueueCallback, createWebhookCallback } from "../utils";
 
 type Options = {
   amphora: IAmphora;
@@ -14,20 +18,16 @@ type Options = {
   webhook?: PylonWebhookOptions<any>;
 };
 
-export const createHttpContextInitialisationMiddleware = (
+export const createEventContextInitialisationMiddleware = (
   options: Options,
-): PylonHttpMiddleware => {
+): PylonSocketMiddleware => {
   const queue = createQueueCallback(options.queue);
   const webhook = createWebhookCallback(options.webhook);
 
-  return async function httpContextInitialisationMiddleware(ctx, next) {
-    ctx.body = {};
-    ctx.status = ClientError.Status.NotFound;
-
-    ctx.logger = options.logger.child(["Request"], {
-      correlationId: ctx.state.metadata.correlationId,
-      requestId: ctx.state.metadata.requestId,
-      responseId: ctx.state.metadata.responseId,
+  return async function eventContextInitialisationMiddleware(ctx, next) {
+    ctx.logger = options.logger.child(["Event"], {
+      eventId: ctx.eventId,
+      socketId: ctx.socket.id,
     });
 
     ctx.amphora = options.amphora;
@@ -42,8 +42,6 @@ export const createHttpContextInitialisationMiddleware = (
     };
 
     ctx.entities = {};
-
-    ctx.files = [];
 
     ctx.queue = async (
       event: string,

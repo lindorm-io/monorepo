@@ -1,6 +1,6 @@
 import { ServerError } from "@lindorm/errors";
 import { PylonHandler, PylonHttpContext, PylonHttpMiddleware } from "../../types";
-import { getBody, getFile, getStatus } from "../../utils/private";
+import { getBody, getFile, getStatus } from "#internal/utils";
 
 export const useHandler = <C extends PylonHttpContext = PylonHttpContext>(
   handler: PylonHandler<C>,

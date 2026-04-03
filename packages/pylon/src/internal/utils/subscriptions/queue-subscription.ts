@@ -1,5 +1,5 @@
 import { LindormError } from "@lindorm/errors";
-import { QUEUE_JOB_TOPIC } from "../../../constants/private";
+import { QUEUE_JOB_TOPIC } from "../../constants";
 import { IJob } from "../../../interfaces";
 import { PylonJob } from "../../../messages";
 import { PylonMessageQueueOptions, PylonSubscribeOptions } from "../../../types";

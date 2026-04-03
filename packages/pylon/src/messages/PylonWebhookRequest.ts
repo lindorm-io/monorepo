@@ -1,6 +1,6 @@
 import { Field, Message, MessageBase, Topic } from "@lindorm/message";
 import { Dict } from "@lindorm/types";
-import { WEBHOOK_REQUEST_TOPIC } from "../constants/private";
+import { WEBHOOK_REQUEST_TOPIC } from "#internal/constants";
 import { IWebhookRequest } from "../interfaces";
 
 @Message()
