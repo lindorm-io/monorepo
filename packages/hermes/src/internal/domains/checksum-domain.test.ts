@@ -49,7 +49,7 @@ import {
   HermesErrorMessage,
   HermesTimeoutMessage,
 } from "#internal/messages";
-import { scanModules } from "#internal/registry/hermes-scanner";
+import { HermesScanner } from "#internal/registry/HermesScanner";
 import { HermesRegistry } from "#internal/registry/hermes-registry";
 import { ChecksumDomain } from "./checksum-domain";
 
@@ -65,7 +65,7 @@ describe("ChecksumDomain", () => {
     proteus = createTestProteusSource();
     iris = createTestIrisSource();
 
-    const scanned = scanModules([
+    const scanned = HermesScanner.scan([
       TestCommandCreate,
       TestCommandDestroy,
       TestCommandDestroyNext,

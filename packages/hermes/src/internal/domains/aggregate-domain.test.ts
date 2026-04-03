@@ -60,7 +60,7 @@ import {
   HermesErrorMessage,
   HermesTimeoutMessage,
 } from "#internal/messages";
-import { scanModules } from "#internal/registry/hermes-scanner";
+import { HermesScanner } from "#internal/registry/HermesScanner";
 import { HermesRegistry } from "#internal/registry/hermes-registry";
 import type { RegisteredAggregate, HandlerRegistration } from "#internal/registry/types";
 import { AggregateDomain } from "./aggregate-domain";
@@ -81,7 +81,7 @@ describe("AggregateDomain", () => {
     proteus = createTestProteusSource();
     iris = createTestIrisSource();
 
-    const scanned = scanModules([
+    const scanned = HermesScanner.scan([
       TestCommandCreate,
       TestCommandDestroy,
       TestCommandDestroyNext,

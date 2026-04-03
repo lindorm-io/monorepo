@@ -71,16 +71,6 @@ export class HermesRegistry {
     this.populate(modules);
   }
 
-  // -- Compound key helpers --
-
-  private static domainKey(namespace: string, name: string): string {
-    return `${namespace}.${name}`;
-  }
-
-  private static dtoKey(name: string, version: number): string {
-    return `${name}:${version}`;
-  }
-
   // -- DTO getters --
 
   public getCommand(target: Constructor): RegisteredDto {
@@ -323,6 +313,16 @@ export class HermesRegistry {
     }
 
     this.validateUpcasters(logger);
+  }
+
+  // -- Compound key helpers --
+
+  private static domainKey(namespace: string, name: string): string {
+    return `${namespace}.${name}`;
+  }
+
+  private static dtoKey(name: string, version: number): string {
+    return `${name}:${version}`;
   }
 
   private validateUpcasters(logger: ILogger): void {

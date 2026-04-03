@@ -35,8 +35,7 @@ import {
   HermesEventMessage,
   HermesTimeoutMessage,
 } from "#internal/messages";
-import { HermesRegistry } from "#internal/registry";
-import { scanModules } from "#internal/registry";
+import { HermesRegistry, HermesScanner } from "#internal/registry";
 import { assertChecksum, extractDto } from "#internal/utils";
 
 const DEFAULT_NAMESPACE = "hermes";
@@ -187,7 +186,7 @@ export class Hermes implements IHermes {
     try {
       this.logger.debug("Scanning modules");
 
-      const scanned = scanModules(this.options.modules);
+      const scanned = HermesScanner.scan(this.options.modules);
       this.registry = new HermesRegistry(scanned);
 
       this.logger.debug("Registry built", {
