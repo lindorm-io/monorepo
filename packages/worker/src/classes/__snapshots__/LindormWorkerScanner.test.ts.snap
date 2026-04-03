@@ -6,7 +6,7 @@ exports[`LindormWorkerScanner should return with array of worker config 1`] = `
     "alias": "WorkerOne",
     "callback": [Function],
     "interval": "1w",
-    "randomize": "1h",
+    "jitter": "1h",
     "retry": {
       "maxAttempts": 10,
       "strategy": "linear",

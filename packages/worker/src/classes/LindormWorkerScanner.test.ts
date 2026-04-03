@@ -7,7 +7,7 @@ const workerConfig: LindormWorkerConfig = {
   callback: async () => {},
   interval: 1000,
   listeners: [{ event: "start", listener: () => {} }],
-  randomize: 100,
+  jitter: 100,
   retry: {
     maxAttempts: 10,
     strategy: "exponential",
