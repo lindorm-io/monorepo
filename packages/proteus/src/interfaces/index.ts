@@ -6,5 +6,6 @@ export * from "./InsertQueryBuilder";
 export * from "./ProteusCursor";
 export * from "./ProteusQueryBuilder";
 export * from "./ProteusRepository";
+export * from "./ProteusSource";
 export * from "./TransactionContext";
 export * from "./UpdateQueryBuilder";

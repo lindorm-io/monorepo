@@ -4,6 +4,8 @@ export type MockProteusSource = {
   namespace: string | null;
   driverType: string;
   migrationsTable: string | undefined;
+  log: Record<string, jest.Mock>;
+  breaker: null;
 
   clone: jest.Mock;
   connect: jest.Mock;
@@ -30,6 +32,16 @@ export const createMockProteusSource = (): MockProteusSource => ({
   namespace: null,
   driverType: "memory",
   migrationsTable: undefined,
+  log: {
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+    debug: jest.fn(),
+    verbose: jest.fn(),
+    child: jest.fn(),
+    time: jest.fn(),
+  },
+  breaker: null,
 
   clone: jest.fn().mockImplementation(() => createMockProteusSource()),
   connect: jest.fn(),
