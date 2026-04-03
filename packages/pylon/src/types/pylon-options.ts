@@ -1,13 +1,11 @@
 import { IAmphora } from "@lindorm/amphora";
 import { ReadableTime } from "@lindorm/date";
-import { IEntity } from "@lindorm/entity";
 import { IHermes } from "@lindorm/hermes";
 import { IIrisSource } from "@lindorm/iris";
 import { ILogger } from "@lindorm/logger";
-import { IMessage } from "@lindorm/message";
 import { IProteusSource } from "@lindorm/proteus";
 import { RetryOptions } from "@lindorm/retry";
-import { Constructor, Environment } from "@lindorm/types";
+import { Environment } from "@lindorm/types";
 import { ILindormWorker, LindormWorkerConfig } from "@lindorm/worker";
 import Redis from "ioredis";
 import { ServerOptions as SocketOptions } from "socket.io";
@@ -21,7 +19,6 @@ import { OpenIdConfigurationOptions } from "./open-id-configuration";
 import { ParseBodyOptions } from "./parse-body";
 import { PylonHttpCallback, PylonSessionOptions } from "./pylon-callback-options";
 import { PylonSetup, PylonTeardown } from "./setup";
-import { PylonSource } from "./sources";
 import { PylonSubscribeOptions } from "./types";
 
 export type PylonHttpRouters<C extends PylonHttpContext> = {
@@ -32,15 +29,12 @@ export type PylonHttpRouters<C extends PylonHttpContext> = {
 type CommonOptions = {
   amphora: IAmphora;
   domain?: string;
-  entities?: Array<Constructor<IEntity>>;
   environment?: Environment;
   hermes?: IHermes;
   iris?: IIrisSource;
   logger: ILogger;
-  messages?: Array<Constructor<IMessage>>;
   name?: string;
   proteus?: IProteusSource;
-  sources?: Array<PylonSource>;
   version?: string;
 };
 

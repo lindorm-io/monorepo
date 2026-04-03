@@ -1,5 +1,4 @@
 import { IAmphora } from "@lindorm/amphora";
-import { ConduitClientCredentialsCache } from "@lindorm/conduit";
 import { ILogger } from "@lindorm/logger";
 import { ILindormWorker } from "@lindorm/worker";
 import { Server as HttpServer, createServer } from "http";
@@ -10,8 +9,6 @@ import {
   PylonOptions,
   PylonSetup,
   PylonSocketContext,
-  PylonSource,
-  PylonSubscribeOptions,
   PylonTeardown,
 } from "../types";
 import { SessionEntity } from "../entities";
@@ -30,9 +27,6 @@ export class Pylon<
   private readonly options: PylonOptions<H, S>;
   private readonly port: number;
   private readonly server: HttpServer;
-  private readonly sources: Map<string, PylonSource>;
-  private readonly subscriptions: Array<PylonSubscribeOptions>;
-  private readonly webhookCache: ConduitClientCredentialsCache;
   private readonly workers: Array<ILindormWorker>;
 
   private isStarted: boolean;
@@ -46,15 +40,10 @@ export class Pylon<
     this.isSetup = false;
     this.isStarted = false;
     this.isTeardown = false;
-    this.webhookCache = [];
 
     options.environment = options.environment ?? "development";
     options.version = options.version ?? "0.0.0";
     options.domain = options.domain ?? options.amphora.domain ?? "unknown";
-
-    this.sources = new Map(
-      (options.sources ?? []).map((source) => [source.__instanceof, source]),
-    );
 
     options.subscriptions = options.subscriptions ?? [];
     options.subscriptions.push(...calculateSubscriptions());
@@ -72,55 +61,46 @@ export class Pylon<
     });
 
     this.amphora = options.amphora;
+
+    this.server = createServer();
+    this.http = new PylonHttp<H>(options as any);
+
+    if (options.socketListeners || options.socketMiddleware) {
+      this.io = new PylonIo<S>(this.server, options as any);
+    }
+
     this.port = options.port ?? 3000;
-
-    this.subscriptions = options.subscriptions;
-
-    this.workers = scanWorkers(options);
 
     this._setup = options.setup;
     this._teardown = options.teardown;
-
-    this.http = new PylonHttp({
-      ...options,
-      amphora: this.amphora,
-      logger: this.logger,
-    });
-
-    this.server = createServer(this.http.server.callback());
-
-    this.http.loadMiddleware();
-
-    if (options.socketListeners) {
-      this.io = new PylonIo(this.server, {
-        ...options,
-        amphora: this.amphora,
-        logger: this.logger,
-      });
-
-      this.http.use([httpSocketIoMiddleware(this.io.server)]);
-    }
-
-    this.http.use(options.httpMiddleware ?? []);
-
-    this.http.loadRouters();
-    this.io?.load();
+    this.workers = [];
   }
 
-  // public getters
+  // public
 
   public get callback(): HttpCallback {
     return this.http.callback;
   }
 
-  // public
-
   public async setup(): Promise<void> {
     if (this.isSetup) return;
 
-    await this.amphora.setup();
+    this.logger.verbose("Pylon setup");
 
     this.loadSources();
+
+    await this.amphora.setup();
+
+    this.http.loadMiddleware();
+    this.http.loadRouters();
+
+    if (this.io) {
+      this.io.load();
+      this.http.server.use(httpSocketIoMiddleware(this.io.server));
+    }
+
+    const workers = scanWorkers(this.options);
+    this.workers.push(...workers);
 
     if (this._setup) {
       try {
@@ -132,11 +112,13 @@ export class Pylon<
       }
     }
 
-    for (const source of this.sources.values()) {
-      await source.setup();
+    if (this.options.proteus) {
+      await this.options.proteus.setup();
     }
 
-    await this.subscribe();
+    if (this.options.iris) {
+      await this.options.iris.setup();
+    }
 
     this.isSetup = true;
     this.isTeardown = false;
@@ -191,8 +173,12 @@ export class Pylon<
       this.logger.verbose("Pylon teardown", { result });
     }
 
-    for (const source of this.sources.values()) {
-      await source.disconnect();
+    if (this.options.iris) {
+      await this.options.iris.disconnect();
+    }
+
+    if (this.options.proteus) {
+      await this.options.proteus.disconnect();
     }
 
     this.isSetup = false;
@@ -202,50 +188,36 @@ export class Pylon<
   public async work(): Promise<void> {
     if (this.isStarted) return;
 
-    this.logger.verbose("Pylon workers starting");
+    this.logger.verbose("Pylon working");
 
     await this.setup();
 
     for (const worker of this.workers) {
       worker.start();
     }
-
-    this.isStarted = true;
-
-    this.logger.info("Pylon workers started");
   }
 
   // private
 
-  private async close(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      this.server.close((err): void => {
-        if (err) {
-          this.logger.error("Pylon failed to close", err);
-          return reject(err);
-        } else {
-          this.logger.verbose("Pylon closed");
-          return resolve();
-        }
-      });
+  private listen(): Promise<void> {
+    return new Promise((resolve) => {
+      this.server.on("request", this.http.callback);
+      this.server.listen(this.port, resolve);
     });
   }
 
-  private async listen(): Promise<void> {
-    return new Promise((resolve) => {
-      this.server.listen(this.port, (): void => {
-        this.logger.verbose("Pylon listening");
-        return resolve();
+  private close(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.server.close((err) => {
+        if (err) reject(err);
+        else resolve();
       });
     });
   }
 
   private handleSignal(signal: string): void {
-    this.logger.info("Pylon received signal", { signal });
-
-    this.stop()
-      .then(() => process.exit(0))
-      .catch(() => process.exit(1));
+    this.logger.info("Received signal", { signal });
+    void this.stop();
 
     setTimeout(() => {
       this.logger.warn("Forcing shutdown due to timeout");
@@ -264,6 +236,5 @@ export class Pylon<
 
   private async subscribe(): Promise<void> {
     // Subscriptions are now handled by Iris WorkerQueue consume()
-    // Old message bus subscription system removed in Phase 3
   }
 }

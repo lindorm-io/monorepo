@@ -100,10 +100,7 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
       createSourcesMiddleware({
         hermes: this.options.hermes,
         iris: this.options.iris,
-        entities: this.options.entities,
-        messages: this.options.messages,
         proteus: this.options.proteus,
-        sources: this.options.sources,
       }),
     ]);
 
