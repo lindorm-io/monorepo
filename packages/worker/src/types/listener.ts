@@ -1,8 +1,8 @@
-import { LindormError } from "@lindorm/errors";
+import { LindormWorkerError } from "../errors";
 
 export type LindormWorkerListener = () => void;
 
-export type LindormWorkerErrorListener = (error: LindormError) => void;
+export type LindormWorkerErrorListener = (error: LindormWorkerError) => void;
 
 type DefaultListenerConfig = {
   event: "start" | "stop" | "success";

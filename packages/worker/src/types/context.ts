@@ -1,5 +1,5 @@
 import { ILogger } from "@lindorm/logger";
-import { LindormWorkerError } from "../errors/LindormWorkerError";
+import { LindormWorkerError } from "../errors";
 
 export type LindormWorkerContext = {
   latestError: Date | null;

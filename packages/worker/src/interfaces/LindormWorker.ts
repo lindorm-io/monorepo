@@ -1,4 +1,8 @@
-import { LindormWorkerErrorListener, LindormWorkerListener } from "../types";
+import {
+  LindormWorkerErrorListener,
+  LindormWorkerHealth,
+  LindormWorkerListener,
+} from "../types";
 
 export interface ILindormWorker {
   alias: string;
@@ -17,7 +21,21 @@ export interface ILindormWorker {
   on(evt: "error", listener: LindormWorkerErrorListener): void;
   on(evt: "warning", listener: LindormWorkerErrorListener): void;
 
+  off(evt: "start", listener: LindormWorkerListener): void;
+  off(evt: "stop", listener: LindormWorkerListener): void;
+  off(evt: "success", listener: LindormWorkerListener): void;
+  off(evt: "error", listener: LindormWorkerErrorListener): void;
+  off(evt: "warning", listener: LindormWorkerErrorListener): void;
+
+  once(evt: "start", listener: LindormWorkerListener): void;
+  once(evt: "stop", listener: LindormWorkerListener): void;
+  once(evt: "success", listener: LindormWorkerListener): void;
+  once(evt: "error", listener: LindormWorkerErrorListener): void;
+  once(evt: "warning", listener: LindormWorkerErrorListener): void;
+
+  destroy(): Promise<void>;
+  health(): LindormWorkerHealth;
   start(): void;
-  stop(): void;
+  stop(): Promise<void>;
   trigger(): Promise<void>;
 }

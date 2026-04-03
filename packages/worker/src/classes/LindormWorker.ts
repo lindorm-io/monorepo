@@ -1,18 +1,19 @@
 import { isReadableTime, ms } from "@lindorm/date";
-import { LindormError } from "@lindorm/errors";
 import { isNumber } from "@lindorm/is";
 import { ILogger } from "@lindorm/logger";
 import { calculateRetry, RetryConfig } from "@lindorm/retry";
 import { noopAsync, sleep } from "@lindorm/utils";
 import { EventEmitter } from "events";
-import { RETRY_CONFIG } from "../constants/private";
+import { LindormWorkerError } from "../errors";
 import { ILindormWorker } from "../interfaces";
+import { RETRY_CONFIG } from "../internal";
 import {
   LindormWorkerCallback,
   LindormWorkerContext,
   LindormWorkerErrorCallback,
   LindormWorkerErrorListener,
   LindormWorkerEvent,
+  LindormWorkerHealth,
   LindormWorkerListener,
   LindormWorkerOptions,
 } from "../types";
@@ -21,20 +22,23 @@ export class LindormWorker implements ILindormWorker {
   public readonly alias: string;
 
   private readonly callback: LindormWorkerCallback;
+  private readonly callbackTimeout: number;
   private readonly errorCallback: LindormWorkerErrorCallback;
 
   private readonly emitter: EventEmitter;
   private readonly interval: number;
   private readonly logger: ILogger;
-  private readonly randomize: number;
+  private readonly jitter: number;
   private readonly retry: RetryConfig;
 
+  private _destroyed: boolean;
   private _latestError: Date | null;
   private _latestStart: Date | null;
   private _latestStop: Date | null;
   private _latestSuccess: Date | null;
   private _latestTry: Date | null;
   private _running: boolean;
+  private _runPromise: Promise<void> | null;
   private _seq: number;
   private _started: boolean;
   private _timeout: NodeJS.Timeout | null;
@@ -48,21 +52,38 @@ export class LindormWorker implements ILindormWorker {
 
     this.alias = options.alias;
     this.retry = { ...RETRY_CONFIG, ...(options.retry ?? {}) };
-    this.randomize = isReadableTime(options.randomize)
-      ? ms(options.randomize)
-      : isNumber(options.randomize)
-        ? options.randomize
+    this.jitter = isReadableTime(options.jitter)
+      ? ms(options.jitter)
+      : isNumber(options.jitter)
+        ? options.jitter
         : 0;
     this.interval = isReadableTime(options.interval)
       ? ms(options.interval)
       : options.interval;
+    this.callbackTimeout = isReadableTime(options.callbackTimeout)
+      ? ms(options.callbackTimeout)
+      : isNumber(options.callbackTimeout)
+        ? options.callbackTimeout
+        : 0;
 
+    if (this.interval <= 0) {
+      throw new LindormWorkerError("Interval must be a positive number");
+    }
+    if (this.jitter < 0) {
+      throw new LindormWorkerError("Jitter must be a non-negative number");
+    }
+    if (this.callbackTimeout < 0) {
+      throw new LindormWorkerError("Callback timeout must be a non-negative number");
+    }
+
+    this._destroyed = false;
     this._latestError = null;
     this._latestStart = null;
     this._latestStop = null;
     this._latestSuccess = null;
     this._latestTry = null;
     this._running = false;
+    this._runPromise = null;
     this._seq = 0;
     this._started = false;
     this._timeout = null;
@@ -110,10 +131,46 @@ export class LindormWorker implements ILindormWorker {
   public on(evt: "error", listener: LindormWorkerErrorListener): void;
   public on(evt: "warning", listener: LindormWorkerErrorListener): void;
   public on(evt: LindormWorkerEvent, listener: (...args: any[]) => void): void {
+    this.assertNotDestroyed();
     this.emitter.on(evt, listener);
   }
 
+  public off(evt: "start", listener: LindormWorkerListener): void;
+  public off(evt: "stop", listener: LindormWorkerListener): void;
+  public off(evt: "success", listener: LindormWorkerListener): void;
+  public off(evt: "error", listener: LindormWorkerErrorListener): void;
+  public off(evt: "warning", listener: LindormWorkerErrorListener): void;
+  public off(evt: LindormWorkerEvent, listener: (...args: any[]) => void): void {
+    this.assertNotDestroyed();
+    this.emitter.off(evt, listener);
+  }
+
+  public once(evt: "start", listener: LindormWorkerListener): void;
+  public once(evt: "stop", listener: LindormWorkerListener): void;
+  public once(evt: "success", listener: LindormWorkerListener): void;
+  public once(evt: "error", listener: LindormWorkerErrorListener): void;
+  public once(evt: "warning", listener: LindormWorkerErrorListener): void;
+  public once(evt: LindormWorkerEvent, listener: (...args: any[]) => void): void {
+    this.assertNotDestroyed();
+    this.emitter.once(evt, listener);
+  }
+
+  public health(): LindormWorkerHealth {
+    return {
+      alias: this.alias,
+      started: this._started,
+      running: this._running,
+      destroyed: this._destroyed,
+      seq: this._seq,
+      latestSuccess: this._latestSuccess,
+      latestError: this._latestError,
+      latestTry: this._latestTry,
+    };
+  }
+
   public start(): void {
+    this.assertNotDestroyed();
+
     if (this._started) return;
     if (this._timeout) return;
 
@@ -126,20 +183,38 @@ export class LindormWorker implements ILindormWorker {
     void this.run();
   }
 
-  public stop(): void {
-    if (!this._timeout) return;
+  public async stop(): Promise<void> {
+    if (!this._timeout && !this._running) return;
 
     this.logger.debug("Stopping worker");
     this.emitter.emit("stop");
 
-    clearTimeout(this._timeout);
+    if (this._timeout) {
+      clearTimeout(this._timeout);
+      this._timeout = null;
+    }
 
-    this._timeout = null;
     this._started = false;
+
+    if (this._runPromise) {
+      await this._runPromise;
+    }
+
+    this._running = false;
     this._latestStop = new Date();
   }
 
+  public async destroy(): Promise<void> {
+    this.assertNotDestroyed();
+
+    await this.stop();
+    this.emitter.removeAllListeners();
+    this._destroyed = true;
+  }
+
   public async trigger(): Promise<void> {
+    this.assertNotDestroyed();
+
     return this.run();
   }
 
@@ -158,7 +233,12 @@ export class LindormWorker implements ILindormWorker {
       this.logger.debug("Retrying worker callback", { attempt });
     }
 
-    return this.callback(this.ctx())
+    this._runPromise = this.executeRun(attempt);
+    return this._runPromise;
+  }
+
+  private async executeRun(attempt: number): Promise<void> {
+    return this.invokeCallback()
       .then(() => {
         this.logger.debug("Worker callback success");
         this.emitter.emit("success");
@@ -169,9 +249,9 @@ export class LindormWorker implements ILindormWorker {
       })
       .catch((error: any) => {
         const err =
-          error instanceof LindormError
+          error instanceof LindormWorkerError
             ? error
-            : new LindormError(error.message, { error });
+            : new LindormWorkerError(error.message, { error });
 
         this.logger.debug("Worker callback error", err);
 
@@ -200,11 +280,27 @@ export class LindormWorker implements ILindormWorker {
       });
   }
 
+  private async invokeCallback(): Promise<void> {
+    const callbackPromise = this.callback(this.ctx());
+
+    if (this.callbackTimeout > 0) {
+      const timeoutPromise = sleep(this.callbackTimeout).then(() => {
+        throw new LindormWorkerError("Callback timed out", {
+          data: { timeout: this.callbackTimeout },
+        });
+      });
+      await Promise.race([callbackPromise, timeoutPromise]);
+    } else {
+      await callbackPromise;
+    }
+  }
+
   private cleanup(): void {
     this._running = false;
+    this._runPromise = null;
 
     if (this._started) {
-      this._timeout = setTimeout(() => this.run(), this.randomizeInterval());
+      this._timeout = setTimeout(() => this.run(), this.jitterInterval());
     }
   }
 
@@ -218,7 +314,13 @@ export class LindormWorker implements ILindormWorker {
     };
   }
 
-  private randomizeInterval(): number {
-    return this.interval + Math.floor(Math.random() * this.randomize);
+  private jitterInterval(): number {
+    return this.interval + Math.floor((Math.random() - 0.5) * 2 * this.jitter);
+  }
+
+  private assertNotDestroyed(): void {
+    if (this._destroyed) {
+      throw new LindormWorkerError("Worker has been destroyed");
+    }
   }
 }
