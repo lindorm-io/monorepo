@@ -1,6 +1,4 @@
-import { isArray, isString } from "@lindorm/is";
-import { ILogger } from "@lindorm/logger";
-import Koa from "koa";
+import { PylonRouterScanner } from "#internal/classes";
 import {
   createHttpBodyParserMiddleware,
   createHttpContextInitialisationMiddleware,
@@ -18,19 +16,21 @@ import {
   httpResponseTimeMiddleware,
 } from "#internal/middleware";
 import {
-  HttpCallback,
-  PylonHttpContext,
-  PylonHttpMiddleware,
-  PylonHttpOptions,
-} from "../types";
-import {
   createAuthRouter,
   createHealthRouter,
   createWellKnownRouter,
 } from "#internal/utils";
 import { parseAuthConfig } from "#internal/utils/auth";
+import { isArray, isString } from "@lindorm/is";
+import { ILogger } from "@lindorm/logger";
+import Koa from "koa";
+import {
+  HttpCallback,
+  PylonHttpContext,
+  PylonHttpMiddleware,
+  PylonHttpOptions,
+} from "../types";
 import { PylonRouter } from "./PylonRouter";
-import { PylonRouterScanner } from "#internal/classes";
 
 export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
   private readonly logger: ILogger;
@@ -84,8 +84,8 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
       createHttpContextInitialisationMiddleware({
         amphora: this.options.amphora,
         logger: this.logger,
-        queue: (this.options as any).queue,
-        webhook: (this.options as any).webhook,
+        queue: this.options.queue,
+        webhook: this.options.webhook,
       }),
       createHttpDateValidationMiddleware({
         minRequestAge: this.options.minRequestAge,

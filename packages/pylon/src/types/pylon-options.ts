@@ -24,6 +24,7 @@ import {
   PylonSessionOptions,
   PylonWebhookOptions,
 } from "./pylon-callback-options";
+
 import { PylonSetup, PylonTeardown } from "./setup";
 import { PylonSubscribeOptions } from "./types";
 
@@ -41,7 +42,9 @@ type CommonOptions = {
   logger: ILogger;
   name?: string;
   proteus?: IProteusSource;
+  queue?: PylonQueueOptions;
   version?: string;
+  webhook?: PylonWebhookOptions;
 };
 
 export type PylonHttpCallbacksOptions<C extends PylonHttpContext = PylonHttpContext> = {
@@ -81,11 +84,9 @@ export type PylonOptions<
   PylonIoOptions<S> & {
     kryptos?: PylonKryptosOptions;
     port?: number;
-    queue?: PylonQueueOptions;
     setup?: PylonSetup;
     teardown?: PylonTeardown;
     subscriptions?: Array<PylonSubscribeOptions>;
-    webhook?: PylonWebhookOptions;
     workers?: Array<ILindormWorker | LindormWorkerConfig | string>;
     workersInterval?: ReadableTime;
     workersRetry?: RetryOptions;
