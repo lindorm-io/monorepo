@@ -1,7 +1,7 @@
 import { ServerError } from "@lindorm/errors";
 import { PylonSocketMiddleware } from "../../types";
 
-export const eventErrorHandlerMiddleware: PylonSocketMiddleware = async (ctx, next) => {
+export const socketErrorHandlerMiddleware: PylonSocketMiddleware = async (ctx, next) => {
   try {
     await next();
   } catch (err: any) {

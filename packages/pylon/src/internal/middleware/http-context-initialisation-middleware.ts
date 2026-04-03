@@ -26,7 +26,7 @@ export const createHttpContextInitialisationMiddleware = (
 
     ctx.logger = options.logger.child(["Request"], {
       correlationId: ctx.state.metadata.correlationId,
-      requestId: ctx.state.metadata.requestId,
+      requestId: ctx.state.metadata.id,
       responseId: ctx.state.metadata.responseId,
     });
 

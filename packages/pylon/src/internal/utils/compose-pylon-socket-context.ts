@@ -28,9 +28,11 @@ export const composePylonSocketContextBase = (
 
   return {
     args,
+    data: args,
     event: options.event,
     eventId: randomUUID(),
     io,
+    params: {},
     socket,
   };
 };

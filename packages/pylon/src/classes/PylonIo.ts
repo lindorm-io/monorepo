@@ -5,10 +5,10 @@ import { createAdapter } from "@socket.io/redis-adapter";
 import { Server } from "http";
 import { Server as SocketIoServer } from "socket.io";
 import {
-  createEventContextInitialisationMiddleware,
+  createSocketContextInitialisationMiddleware,
   createSourcesMiddleware,
-  eventErrorHandlerMiddleware,
-  eventLoggerMiddleware,
+  socketErrorHandlerMiddleware,
+  socketLoggerMiddleware,
 } from "#internal/middleware";
 import {
   IoServer,
@@ -83,12 +83,12 @@ export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
     }
 
     const middleware = [
-      createEventContextInitialisationMiddleware({
+      createSocketContextInitialisationMiddleware({
         amphora: this.options.amphora,
         logger: this.logger,
       }),
-      eventLoggerMiddleware,
-      eventErrorHandlerMiddleware,
+      socketLoggerMiddleware,
+      socketErrorHandlerMiddleware,
       ...(this.middleware ?? []),
     ];
 
