@@ -16,7 +16,7 @@ export const createAmphoraEntityWorker = (options: Options): LindormWorkerConfig
   alias: "AmphoraEntityWorker",
   interval: options.interval ?? "3m",
   listeners: options.listeners ?? [],
-  randomize: options.randomize,
+  jitter: options.jitter,
   retry: options.retry,
   callback: async (ctx): Promise<void> => {
     await options.amphora.refresh();

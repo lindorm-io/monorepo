@@ -22,7 +22,7 @@ export const createKryptosRotationWorker = (options: Options): LindormWorkerConf
   alias: "KryptosRotationWorker",
   interval: options.interval ?? "1d",
   listeners: options.listeners ?? [],
-  randomize: options.randomize,
+  jitter: options.jitter,
   retry: options.retry,
   callback: async (ctx): Promise<void> => {
     const keys = options.keys ?? [

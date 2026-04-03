@@ -15,7 +15,7 @@ describe("scanWorkers", () => {
       callback: async () => {},
       interval: "1m",
       listeners: [],
-      randomize: "10s",
+      jitter: "10s",
       retry: {},
     };
 

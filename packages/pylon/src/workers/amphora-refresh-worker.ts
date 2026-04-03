@@ -9,7 +9,7 @@ export const createAmphoraRefreshWorker = (options: Options): LindormWorkerConfi
   alias: "AmphoraRefreshWorker",
   interval: options.interval ?? "15m",
   listeners: options.listeners ?? [],
-  randomize: options.randomize,
+  jitter: options.jitter,
   retry: options.retry,
   callback: options.amphora.refresh.bind(options.amphora),
 });
