@@ -76,6 +76,7 @@
   "devDependencies": {
     "@lindorm/amphora": "^0.3.4",
     "@lindorm/entity": "^0.3.1",
+    "@lindorm/proteus": "^0.4.0",
     "@lindorm/hermes": "^0.3.7",
     "@lindorm/kafka": "^0.3.4",
     "@lindorm/kryptos": "^0.5.3",

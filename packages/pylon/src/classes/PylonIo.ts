@@ -37,6 +37,7 @@ export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
         hermes: options.hermes,
         entities: options.entities,
         messages: options.messages,
+        proteus: options.proteus,
         sources: options.sources,
       }),
     ];

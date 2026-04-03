@@ -1,41 +1,33 @@
-import { Column, Entity, PrimaryKeyColumn, PrimarySource } from "@lindorm/entity";
+import { Entity, Field, Namespace, Nullable, PrimaryKeyField } from "@lindorm/proteus";
 import { OpenIdScope } from "@lindorm/types";
 import { IPylonSession } from "../interfaces";
 
-export abstract class SessionEntity implements IPylonSession {
-  @PrimaryKeyColumn()
-  public readonly id!: string;
+@Namespace("pylon")
+@Entity({ name: "session" })
+export class SessionEntity implements IPylonSession {
+  @PrimaryKeyField()
+  public id!: string;
 
-  @Column("string")
+  @Field("string")
   public accessToken!: string;
 
-  @Column("integer")
+  @Field("integer")
   public expiresAt!: number;
 
-  @Column("string", { nullable: true })
+  @Nullable()
+  @Field("string")
   public idToken?: string;
 
-  @Column("integer")
+  @Field("integer")
   public issuedAt!: number;
 
-  @Column("string", { nullable: true })
+  @Nullable()
+  @Field("string")
   public refreshToken?: string;
 
-  @Column("array")
+  @Field("array", { arrayType: "string" })
   public scope!: Array<OpenIdScope | string>;
 
-  @Column("string")
+  @Field("string")
   public subject!: string;
 }
-
-@Entity()
-@PrimarySource("MnemosSource")
-export class MnemosSessionEntity extends SessionEntity {}
-
-@Entity()
-@PrimarySource("MongoSource")
-export class MongoSessionEntity extends SessionEntity {}
-
-@Entity()
-@PrimarySource("RedisSource")
-export class RedisSessionEntity extends SessionEntity {}

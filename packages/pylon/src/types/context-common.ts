@@ -7,6 +7,7 @@ import { IKafkaPublisher, IKafkaSource } from "@lindorm/kafka";
 import { ILogger } from "@lindorm/logger";
 import { IMessage } from "@lindorm/message";
 import { Middleware } from "@lindorm/middleware";
+import { IProteusSource } from "@lindorm/proteus";
 import { IMnemosRepository, IMnemosSource } from "@lindorm/mnemos";
 import { IMongoRepository, IMongoSource } from "@lindorm/mongo";
 import { IRabbitPublisher, IRabbitSource } from "@lindorm/rabbit";
@@ -55,6 +56,7 @@ export type PylonCommonContext = {
   logger: ILogger;
 
   hermes?: IHermes;
+  proteus?: IProteusSource;
 
   kafka?: {
     source: IKafkaSource;

@@ -1,14 +1,14 @@
 import { AesKit } from "@lindorm/aes";
 import { IAmphora } from "@lindorm/amphora";
 import { IKryptos, KryptosDB, KryptosKit } from "@lindorm/kryptos";
-import { IMongoSource } from "@lindorm/mongo";
+import { IProteusSource } from "@lindorm/proteus";
 import { Constructor } from "@lindorm/types";
 import { CreateLindormWorkerOptions, LindormWorkerConfig } from "@lindorm/worker";
 
 type Options = CreateLindormWorkerOptions & {
   amphora: IAmphora;
   encryptionKey?: IKryptos;
-  source: IMongoSource;
+  proteus: IProteusSource;
   target: Constructor<KryptosDB>;
 };
 
@@ -18,16 +18,14 @@ export const createAmphoraEntityWorker = (options: Options): LindormWorkerConfig
   listeners: options.listeners ?? [],
   jitter: options.jitter,
   retry: options.retry,
-  callback: async (ctx): Promise<void> => {
+  callback: async (_ctx): Promise<void> => {
     await options.amphora.refresh();
 
     const aes = options.encryptionKey
       ? new AesKit({ kryptos: options.encryptionKey })
       : undefined;
 
-    const repository = options.source.repository(options.target, {
-      logger: ctx.logger,
-    });
+    const repository = options.proteus.repository(options.target);
 
     const existing = await repository.find();
 

@@ -4,6 +4,7 @@ import { IEntity } from "@lindorm/entity";
 import { IHermes } from "@lindorm/hermes";
 import { ILogger } from "@lindorm/logger";
 import { IMessage } from "@lindorm/message";
+import { IProteusSource } from "@lindorm/proteus";
 import { RetryOptions } from "@lindorm/retry";
 import { Constructor, Environment } from "@lindorm/types";
 import { ILindormWorker, LindormWorkerConfig } from "@lindorm/worker";
@@ -41,6 +42,7 @@ type CommonOptions = {
   logger: ILogger;
   messages?: Array<Constructor<IMessage>>;
   name?: string;
+  proteus?: IProteusSource;
   sources?: Array<PylonSource>;
   version?: string;
 };
