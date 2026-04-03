@@ -26,15 +26,10 @@ export const createKryptosRotationWorker = (options: Options): LindormWorkerConf
   retry: options.retry,
   callback: async (ctx): Promise<void> => {
     const keys = options.keys ?? [
-      // cookie signature & encryption
       { algorithm: "dir", purpose: "cookie" },
       { algorithm: "HS256", purpose: "cookie" },
-
-      // session signature & encryption
       { algorithm: "EdDSA", purpose: "session" },
       { algorithm: "ECDH-ES", purpose: "session" },
-
-      // token signature & encryption
       { algorithm: "ES512", purpose: "token" },
       { algorithm: "ECDH-ES+A128GCMKW", purpose: "token" },
     ];
@@ -44,7 +39,6 @@ export const createKryptosRotationWorker = (options: Options): LindormWorkerConf
       : undefined;
 
     const repository = options.proteus.repository(options.target);
-
     const existing = await repository.find();
 
     const expiry = options.expiry ?? "6m";
@@ -53,13 +47,15 @@ export const createKryptosRotationWorker = (options: Options): LindormWorkerConf
     const notBefore = new Date();
     const expiresAt = add(notBefore, duration(expiry));
 
+    let generated = 0;
+
     for (const opts of keys) {
       const existingKeys = existing.filter(
         (k) => k.algorithm === opts.algorithm && k.purpose === opts.purpose,
       );
 
       if (existingKeys.length === 0) {
-        ctx.logger.debug("No existing keys found", {
+        ctx.logger.debug("No existing keys found, generating initial key", {
           algorithm: opts.algorithm,
           purpose: opts.purpose,
         });
@@ -81,10 +77,11 @@ export const createKryptosRotationWorker = (options: Options): LindormWorkerConf
         const inserted = await repository.insert(entity);
 
         existingKeys.push(inserted);
+        generated++;
       }
 
       if (existingKeys.length === 1) {
-        ctx.logger.debug("Only one existing key found", {
+        ctx.logger.debug("Only one key found, generating rotation key", {
           algorithm: opts.algorithm,
           purpose: opts.purpose,
         });
@@ -106,7 +103,14 @@ export const createKryptosRotationWorker = (options: Options): LindormWorkerConf
 
         const entity = repository.create(data);
         await repository.insert(entity);
+        generated++;
       }
     }
+
+    ctx.logger.info("Kryptos rotation complete", {
+      checked: keys.length,
+      existing: existing.length,
+      generated,
+    });
   },
 });

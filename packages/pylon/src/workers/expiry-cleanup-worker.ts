@@ -13,10 +13,33 @@ export const createExpiryCleanupWorker = (options: Options): LindormWorkerConfig
   listeners: options.listeners ?? [],
   jitter: options.jitter,
   retry: options.retry,
-  callback: async (_ctx): Promise<void> => {
+  callback: async (ctx): Promise<void> => {
+    const errors: Array<{ target: string; error: Error }> = [];
+
     for (const target of options.targets) {
-      const repository = options.proteus.repository(target);
-      await repository.deleteExpired();
+      try {
+        ctx.logger.debug("Deleting expired entities", { target: target.name });
+
+        const repository = options.proteus.repository(target);
+        await repository.deleteExpired();
+
+        ctx.logger.debug("Expired entities deleted", { target: target.name });
+      } catch (error: any) {
+        ctx.logger.warn("Failed to delete expired entities", {
+          target: target.name,
+          error,
+        });
+        errors.push({ target: target.name, error });
+      }
+    }
+
+    if (errors.length) {
+      ctx.logger.warn("Expiry cleanup completed with errors", {
+        total: options.targets.length,
+        failed: errors.length,
+      });
+    } else {
+      ctx.logger.info("Expiry cleanup complete", { targets: options.targets.length });
     }
   },
 });
