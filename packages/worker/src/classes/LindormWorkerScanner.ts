@@ -49,44 +49,50 @@ export class LindormWorkerScanner {
   }
 
   private static scanFile(data: IScanData): LindormWorkerConfig {
-    const module = LindormWorkerScanner.scanner.require<LindormWorkerConfig>(
-      data.fullPath,
-    );
+    const module: any = LindormWorkerScanner.scanner.require(data.fullPath);
 
-    if (!module.callback) {
-      throw new LindormWorkerScannerError(`No callback found in file: ${data.fullPath}`);
+    if (!module.CALLBACK) {
+      throw new LindormWorkerScannerError(`No CALLBACK found in file: ${data.fullPath}`);
     }
 
     const result: Partial<LindormWorkerConfig> = {};
 
-    if (isString(module.alias)) {
-      result.alias = module.alias;
+    if (isString(module.ALIAS)) {
+      result.alias = module.ALIAS;
     }
 
-    if (isFunction(module.callback)) {
-      result.callback = module.callback;
+    if (isFunction(module.CALLBACK)) {
+      result.callback = module.CALLBACK;
     }
 
-    if (isReadableTime(module.interval) || isNumber(module.interval)) {
-      result.interval = module.interval;
+    if (isReadableTime(module.INTERVAL) || isNumber(module.INTERVAL)) {
+      result.interval = module.INTERVAL;
     }
 
-    if (isArray(module.listeners)) {
-      result.listeners = module.listeners;
+    if (isArray(module.LISTENERS)) {
+      result.listeners = module.LISTENERS;
     }
 
-    if (isReadableTime(module.randomize) || isNumber(module.randomize)) {
-      result.randomize = module.randomize;
+    if (isReadableTime(module.JITTER) || isNumber(module.JITTER)) {
+      result.jitter = module.JITTER;
+    }
+
+    if (isReadableTime(module.CALLBACK_TIMEOUT) || isNumber(module.CALLBACK_TIMEOUT)) {
+      result.callbackTimeout = module.CALLBACK_TIMEOUT;
+    }
+
+    if (isFunction(module.ERROR_CALLBACK)) {
+      result.errorCallback = module.ERROR_CALLBACK;
     }
 
     if (
-      isObject(module.retry) &&
-      (module.retry.maxAttempts ||
-        module.retry.strategy ||
-        module.retry.timeout ||
-        module.retry.timeoutMax)
+      isObject(module.RETRY) &&
+      (module.RETRY.maxAttempts ||
+        module.RETRY.strategy ||
+        module.RETRY.timeout ||
+        module.RETRY.timeoutMax)
     ) {
-      result.retry = module.retry;
+      result.retry = module.RETRY;
     }
 
     if (!result.alias) {
