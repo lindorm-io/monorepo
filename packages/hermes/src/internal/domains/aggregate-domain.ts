@@ -10,7 +10,7 @@ import {
 } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import { DuplicateKeyError } from "@lindorm/proteus";
-import type { ProteusSource } from "@lindorm/proteus";
+import type { IProteusSource } from "@lindorm/proteus";
 import type { ClassLike, Dict } from "@lindorm/types";
 import { removeUndefined } from "@lindorm/utils";
 import { randomUUID } from "@lindorm/random";
@@ -52,7 +52,7 @@ import { AggregateModel } from "./aggregate-model";
 
 export type AggregateDomainOptions = {
   registry: HermesRegistry;
-  proteus: ProteusSource;
+  proteus: IProteusSource;
   iris: {
     commandQueue: IIrisWorkerQueue<HermesCommandMessage>;
     eventBus: IIrisMessageBus<HermesEventMessage>;
@@ -69,7 +69,7 @@ export type AggregateDomainOptions = {
 export class AggregateDomain {
   private readonly logger: ILogger;
   private readonly registry: HermesRegistry;
-  private readonly proteus: ProteusSource;
+  private readonly proteus: IProteusSource;
   private readonly commandQueue: IIrisWorkerQueue<HermesCommandMessage>;
   private readonly eventBus: IIrisMessageBus<HermesEventMessage>;
   private readonly errorQueue: IIrisWorkerQueue<HermesErrorMessage>;

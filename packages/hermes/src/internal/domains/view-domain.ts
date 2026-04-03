@@ -2,7 +2,7 @@ import { snakeCase } from "@lindorm/case";
 import type { ILogger } from "@lindorm/logger";
 import type { IIrisMessageBus, IIrisWorkerQueue } from "@lindorm/iris";
 import { OptimisticLockError } from "@lindorm/proteus";
-import type { ProteusSource } from "@lindorm/proteus";
+import type { IProteusSource } from "@lindorm/proteus";
 import type { ClassLike, Constructor, Dict } from "@lindorm/types";
 import EventEmitter from "events";
 import {
@@ -28,8 +28,8 @@ import { applyUpcasters } from "#internal/utils";
 
 export type ViewDomainOptions = {
   registry: HermesRegistry;
-  proteusSource: ProteusSource;
-  viewSources: Map<string, ProteusSource>;
+  proteusSource: IProteusSource;
+  viewSources: Map<string, IProteusSource>;
   eventBus: IIrisMessageBus<HermesEventMessage>;
   commandQueue: IIrisWorkerQueue<HermesCommandMessage>;
   errorQueue: IIrisWorkerQueue<HermesErrorMessage>;
@@ -49,8 +49,8 @@ export class ViewDomain {
   private readonly eventEmitter: EventEmitter;
   private readonly logger: ILogger;
   private readonly registry: HermesRegistry;
-  private readonly proteusSource: ProteusSource;
-  private readonly viewSources: Map<string, ProteusSource>;
+  private readonly proteusSource: IProteusSource;
+  private readonly viewSources: Map<string, IProteusSource>;
   private readonly eventBus: IIrisMessageBus<HermesEventMessage>;
   private readonly commandQueue: IIrisWorkerQueue<HermesCommandMessage>;
   private readonly errorQueue: IIrisWorkerQueue<HermesErrorMessage>;
@@ -461,7 +461,7 @@ export class ViewDomain {
   // -- Persistence --
 
   private async saveViewWithCausation(
-    source: ProteusSource,
+    source: IProteusSource,
     entity: HermesViewEntity,
     isNew: boolean,
     ownerId: string,
@@ -495,7 +495,7 @@ export class ViewDomain {
 
   // -- Source resolution --
 
-  private resolveSource(view: RegisteredView): ProteusSource {
+  private resolveSource(view: RegisteredView): IProteusSource {
     if (!view.driverType) {
       return this.proteusSource;
     }
