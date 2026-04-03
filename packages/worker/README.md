@@ -1,109 +1,220 @@
 # @lindorm/worker
 
-Robust **interval worker** with built-in retry strategy, jitter, lifecycle events and rich logging.
-Perfect for background tasks like polling APIs, sending emails, cleaning up data, etc.
-
----
-
-## Features
-
-* Simple `callback(ctx)` executed on an interval (readable time strings or ms)
-* Exponential / linear back-off **retry** with maximum attempts
-* Optional **randomisation** (jitter) to avoid thundering-herd problem
-* Emits lifecycle events (`start`, `stop`, `success`, `warning`, `error`)
-* Supports custom **error handler** that runs after final failed retry
-* Exposes latest timestamps & sequence counter for monitoring
-
----
+Interval-based background worker with retry, jitter, lifecycle events, graceful shutdown, and structured logging.
 
 ## Installation
 
 ```bash
 npm install @lindorm/worker
-# or
-yarn add @lindorm/worker
 ```
 
----
-
-## Quick example
+## Quick Start
 
 ```ts
-import { LindormWorker } from '@lindorm/worker';
-import { Logger } from '@lindorm/logger';
+import { LindormWorker } from "@lindorm/worker";
 
 const worker = new LindormWorker({
-  alias: 'cleanup',
-  interval: '10m',            // human readable – parsed by @lindorm/date
-  randomize: '30s',           // +/- 30s jitter
-  retry: {                    // optional
-    strategy: 'exponential',
-    timeout: 500,             // initial delay
-    timeoutMax: 10000,
-    maxAttempts: 5,
-  },
-  logger: new Logger({ readable: true }),
+  alias: "cleanup",
+  interval: "10m",
+  jitter: "30s",
+  logger,
 
   callback: async (ctx) => {
-    // Your business logic
-    await ctx.logger.info('Running cleanup');
-  },
-
-  errorCallback: async (ctx, err) => {
-    ctx.logger.error('Cleanup failed permanently', err);
+    ctx.logger.info("Running cleanup", { seq: ctx.seq });
+    await db.deleteExpired();
   },
 });
 
-worker.on('warning', (err) => console.warn('retrying after error', err.message));
-worker.on('error', (err) => console.error('fatal worker error', err));
-
 worker.start();
-
-// Later …
-// worker.stop();
 ```
 
----
-
-## API
-
-### Constructor options (partial)
+## Options
 
 ```ts
-type LindormWorkerOptions = {
-  alias: string;                       // identifier used in logs & metrics
-  interval: number | string;           // ms or e.g. '5m'
-  randomize?: number | string;         // optional jitter
-  retry?: {
-    strategy?: 'exponential' | 'linear';
-    timeout?: number;                  // base delay
-    timeoutMax?: number;               // cap
-    maxAttempts?: number;              // default 10
-  };
-  callback(ctx): Promise<void>;        // main work
-  errorCallback?(ctx, err): Promise<void>;
-  listeners?: Array<{ event: 'start' | 'stop' | 'success' | 'warning' | 'error'; listener: Function }>;
-  logger: ILogger;
+const worker = new LindormWorker({
+  // Required
+  alias: "my-worker",                 // identifier used in logs
+  interval: "5m",                     // execution interval (ms or readable time)
+  callback: async (ctx) => { ... },   // main work
+  logger: ILogger,                    // @lindorm/logger instance
+
+  // Optional
+  jitter: "30s",                      // +/- spread around interval (default: 0)
+  callbackTimeout: "2m",              // abort callback after this duration (default: disabled)
+  errorCallback: async (ctx, err) => { ... },  // runs after all retries exhausted
+  retry: {                            // override retry defaults
+    strategy: "exponential",          // "exponential" | "linear" (default: "exponential")
+    timeout: 250,                     // initial retry delay ms (default: 250)
+    timeoutMax: 30_000,               // retry delay cap ms (default: 30000)
+    maxAttempts: 10,                  // retries per interval (default: 10)
+  },
+  listeners: [                        // pre-register event listeners
+    { event: "error", listener: (err) => alerting.notify(err) },
+  ],
+});
+```
+
+All time values accept milliseconds or human-readable strings (`"30s"`, `"5m"`, `"1h"`, `"1d"`, `"1w"`).
+
+## Lifecycle
+
+```
+start() ──> callback ──> [success] ──> wait(interval +/- jitter) ──> callback ──> ...
+                │
+                └── [error] ──> retry(1) ──> retry(2) ──> ... ──> retry(max)
+                        │            │                                │
+                     warning      warning                           error
+                     emitted      emitted                          emitted
+                                                                      │
+                                                                errorCallback
+                                                                      │
+                                                          wait(interval +/- jitter)
+```
+
+### Jitter
+
+Jitter is centered around the base interval: `interval + random(-jitter, +jitter)`. With `interval: "10m"` and `jitter: "30s"`, the actual wait is between 9m30s and 10m30s.
+
+### Retry
+
+When the callback throws, the worker retries with configurable backoff before moving to the next interval. Each retry emits a `warning` event. When all retries are exhausted, an `error` event is emitted and the optional `errorCallback` runs.
+
+### Callback Timeout
+
+When `callbackTimeout` is set, the callback is raced against a deadline. If the callback exceeds the timeout, it is treated as a failure and enters the retry flow.
+
+## Events
+
+```ts
+worker.on("start", () => { ... });            // worker started
+worker.on("stop", () => { ... });             // worker stopped
+worker.on("success", () => { ... });          // callback succeeded
+worker.on("warning", (err) => { ... });       // callback failed, retrying
+worker.on("error", (err) => { ... });         // all retries exhausted
+```
+
+Use `off()` to remove a listener and `once()` for one-shot listeners.
+
+## Callback Context
+
+The callback receives a context object:
+
+```ts
+type LindormWorkerContext = {
+  logger: ILogger; // child logger scoped to this execution
+  seq: number; // monotonic counter (1, 2, 3, ...)
+  latestSuccess: Date | null;
+  latestError: Date | null;
+  latestTry: Date | null;
 };
 ```
 
-### Instance methods & properties
+## Methods
 
-* `start()` / `stop()` / `trigger()`
-* `on(event, listener)` – subscribe to lifecycle events
-* `latestStart`, `latestStop`, `latestSuccess`, `latestError`, `latestTry` – `Date | null`
-* `running` – boolean, `seq` – incremented on each interval
+| Method      | Description                                               |
+| ----------- | --------------------------------------------------------- |
+| `start()`   | Begin interval execution. No-op if already started.       |
+| `stop()`    | Graceful shutdown. Awaits running callback, then stops.   |
+| `destroy()` | Stop + remove all listeners. Methods throw after destroy. |
+| `trigger()` | Run the callback immediately (outside the interval).      |
+| `health()`  | Returns a `LindormWorkerHealth` snapshot.                 |
 
----
+### Health Check
 
-## TypeScript
+```ts
+const h = worker.health();
+// {
+//   alias: "cleanup",
+//   started: true,
+//   running: false,
+//   destroyed: false,
+//   seq: 42,
+//   latestSuccess: Date,
+//   latestError: null,
+//   latestTry: Date,
+// }
+```
 
-Full typings for context and listener signatures are included.  The worker depends only on other
-Lindorm utility packages and Node built-ins.
+## State Getters
 
----
+```ts
+worker.alias; // string
+worker.started; // boolean
+worker.running; // boolean — true while callback is executing
+worker.seq; // number — incremented each interval
+worker.latestStart; // Date | null
+worker.latestStop; // Date | null
+worker.latestSuccess; // Date | null
+worker.latestError; // Date | null
+worker.latestTry; // Date | null
+```
+
+## File Scanner
+
+`LindormWorkerScanner` discovers worker configs from files. Each file exports uppercase named constants:
+
+```ts
+// workers/CleanupWorker.ts
+import type { LindormWorkerCallback } from "@lindorm/worker";
+
+export const CALLBACK: LindormWorkerCallback = async (ctx) => {
+  await db.deleteExpired();
+};
+
+export const INTERVAL = "15m";
+export const JITTER = "1m";
+export const RETRY = { maxAttempts: 3, strategy: "linear" };
+```
+
+Scan a directory to get an array of `LindormWorkerConfig`:
+
+```ts
+import { LindormWorkerScanner } from "@lindorm/worker";
+
+const configs = LindormWorkerScanner.scan([
+  "./src/workers", // directories are scanned recursively
+  existingConfig, // LindormWorkerConfig objects pass through
+]);
+```
+
+### Recognised Exports
+
+| Export             | Type                            | Required                  |
+| ------------------ | ------------------------------- | ------------------------- |
+| `CALLBACK`         | `LindormWorkerCallback`         | Yes                       |
+| `ALIAS`            | `string`                        | No (defaults to filename) |
+| `INTERVAL`         | `ReadableTime \| number`        | No                        |
+| `JITTER`           | `ReadableTime \| number`        | No                        |
+| `CALLBACK_TIMEOUT` | `ReadableTime \| number`        | No                        |
+| `ERROR_CALLBACK`   | `LindormWorkerErrorCallback`    | No                        |
+| `LISTENERS`        | `LindormWorkerListenerConfig[]` | No                        |
+| `RETRY`            | `RetryOptions`                  | No                        |
+
+## Errors
+
+| Error                       | Thrown when                                                          |
+| --------------------------- | -------------------------------------------------------------------- |
+| `LindormWorkerError`        | Validation failure, callback timeout, or method called after destroy |
+| `LindormWorkerScannerError` | Scanner finds a file without a `CALLBACK` export                     |
+
+Both extend `LindormError` from `@lindorm/errors`.
+
+## Testing
+
+A mock factory is available at `@lindorm/worker/mocks`:
+
+```ts
+import { createMockWorker } from "@lindorm/worker/mocks";
+
+const mock = createMockWorker();
+
+mock.trigger.mockResolvedValue(undefined);
+expect(mock.start).toHaveBeenCalled();
+expect(mock.health).toHaveReturnedWith(expect.objectContaining({ started: false }));
+```
+
+All methods are `jest.fn()` instances. `trigger()`, `stop()`, and `destroy()` return resolved promises.
 
 ## License
 
-AGPL-3.0-or-later – see the root [`LICENSE`](../../LICENSE).
-
+AGPL-3.0-or-later
