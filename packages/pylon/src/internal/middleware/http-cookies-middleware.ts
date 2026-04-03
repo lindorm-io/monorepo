@@ -9,7 +9,9 @@ import {
   PylonHttpMiddleware,
   PylonSetCookie,
 } from "../../types";
-import { parseCookieHeader, signCookie, verifyCookie } from "../utils";
+import { parseCookieHeader } from "../utils/cookies/parse-cookie-header";
+import { signCookie } from "../utils/cookies/sign-cookie";
+import { verifyCookie } from "../utils/cookies/verify-cookie";
 
 export const createHttpCookiesMiddleware = (
   config: PylonCookieConfig = {},

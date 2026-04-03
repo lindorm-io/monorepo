@@ -1,28 +1,25 @@
-import { PylonRouterScanner } from "#internal/classes";
-import {
-  createHttpBodyParserMiddleware,
-  createHttpContextInitialisationMiddleware,
-  createHttpCookiesMiddleware,
-  createHttpCorsMiddleware,
-  createHttpDateValidationMiddleware,
-  createHttpSessionMiddleware,
-  createHttpStateMiddleware,
-  createQueueMiddleware,
-  createSourcesMiddleware,
-  createWebhookMiddleware,
-  httpErrorHandlerMiddleware,
-  httpQueryParserMiddleware,
-  httpRequestLoggerMiddleware,
-  httpResponseBodyMiddleware,
-  httpResponseLoggerMiddleware,
-  httpResponseTimeMiddleware,
-} from "#internal/middleware";
-import {
-  createAuthRouter,
-  createHealthRouter,
-  createWellKnownRouter,
-} from "#internal/utils";
-import { parseAuthConfig } from "#internal/utils/auth";
+import { PylonRouterScanner } from "#internal/classes/PylonRouterScanner";
+import { createCommonContextInitialisationMiddleware } from "#internal/middleware/common-context-initialisation-middleware";
+import { createQueueMiddleware } from "#internal/middleware/common-queue-middleware";
+import { createSourcesMiddleware } from "#internal/middleware/common-sources-middleware";
+import { createWebhookMiddleware } from "#internal/middleware/common-webhook-middleware";
+import { createHttpBodyParserMiddleware } from "#internal/middleware/http-body-parser-middleware";
+import { createHttpContextInitialisationMiddleware } from "#internal/middleware/http-context-initialisation-middleware";
+import { createHttpCookiesMiddleware } from "#internal/middleware/http-cookies-middleware";
+import { createHttpCorsMiddleware } from "#internal/middleware/http-cors-middleware";
+import { createHttpDateValidationMiddleware } from "#internal/middleware/http-date-validation-middleware";
+import { httpErrorHandlerMiddleware } from "#internal/middleware/http-error-handler-middleware";
+import { httpQueryParserMiddleware } from "#internal/middleware/http-query-parser-middleware";
+import { httpRequestLoggerMiddleware } from "#internal/middleware/http-request-logger-middleware";
+import { httpResponseBodyMiddleware } from "#internal/middleware/http-response-body-middleware";
+import { httpResponseLoggerMiddleware } from "#internal/middleware/http-response-logger-middleware";
+import { httpResponseTimeMiddleware } from "#internal/middleware/http-response-time-middleware";
+import { createHttpSessionMiddleware } from "#internal/middleware/http-session-middleware";
+import { createHttpStateMiddleware } from "#internal/middleware/http-state-middleware";
+import { parseAuthConfig } from "#internal/utils/auth/parse-auth-config";
+import { createAuthRouter } from "#internal/utils/create-auth-router";
+import { createHealthRouter } from "#internal/utils/create-health-router";
+import { createWellKnownRouter } from "#internal/utils/create-well-known-router";
 import { isArray, isString } from "@lindorm/is";
 import { ILogger } from "@lindorm/logger";
 import Koa from "koa";
@@ -83,10 +80,8 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
         name: this.options.name,
         version: this.options.version,
       }),
-      createHttpContextInitialisationMiddleware({
-        amphora: this.options.amphora,
-        logger: this.logger,
-      }),
+      createHttpContextInitialisationMiddleware(this.logger),
+      createCommonContextInitialisationMiddleware(this.options.amphora),
       createHttpDateValidationMiddleware({
         minRequestAge: this.options.minRequestAge,
         maxRequestAge: this.options.maxRequestAge,

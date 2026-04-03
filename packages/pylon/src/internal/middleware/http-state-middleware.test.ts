@@ -1,6 +1,6 @@
 import { randomUUID as _randomUUID } from "crypto";
 import MockDate from "mockdate";
-import { getAuthorization as _getAuthorization } from "../utils";
+import { getAuthorization as _getAuthorization } from "../utils/get-authorization";
 import { createHttpStateMiddleware } from "./http-state-middleware";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");

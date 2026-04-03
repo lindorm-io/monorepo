@@ -3,7 +3,7 @@ import { Middleware } from "@lindorm/middleware";
 import { Dict, Priority } from "@lindorm/types";
 import { PylonJob } from "../../messages";
 import { PylonContext, PylonQueueOptions } from "../../types";
-import { resolveIris } from "../utils";
+import { resolveIris } from "../utils/resolve-iris";
 
 const PRIORITY_MAP: Record<Priority, number> = {
   background: 0,

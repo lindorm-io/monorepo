@@ -7,7 +7,7 @@ import {
   PylonSessionConfig,
   PylonSessionOptions,
 } from "../../types";
-import { createSessionStore } from "../utils";
+import { createSessionStore } from "../utils/create-session-store";
 
 export const createHttpSessionMiddleware = (
   options: PylonSessionOptions,

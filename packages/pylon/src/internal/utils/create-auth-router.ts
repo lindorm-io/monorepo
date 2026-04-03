@@ -2,21 +2,17 @@ import { merge } from "@lindorm/utils";
 import { PylonRouter } from "../../classes";
 import { useSchema } from "../../middleware";
 import { PylonAuthConfig, PylonHttpContext } from "../../types";
-import {
-  backchannelLogoutHandler,
-  createAuthHandler,
-  createLoginCallbackHandler,
-  createLoginHandler,
-  createLogoutHandler,
-  createRefreshMiddleware,
-  createUserinfoHandler,
-  errorHandler,
-  identityHandler,
-  loginSchema,
-  logoutSchema,
-  noopHandler,
-} from "./auth";
+import { createAuthHandler } from "./auth/auth-handler";
+import { backchannelLogoutHandler } from "./auth/backchannel-logout-handler";
+import { errorHandler } from "./auth/error-handler";
+import { identityHandler } from "./auth/identity-handler";
+import { createLoginCallbackHandler } from "./auth/login-callback-handler";
+import { createLoginHandler, loginSchema } from "./auth/login-handler";
 import { createLogoutCallbackHandler } from "./auth/logout-callback-handler";
+import { createLogoutHandler, logoutSchema } from "./auth/logout-handler";
+import { createRefreshMiddleware } from "./auth/refresh-middleware";
+import { createUserinfoHandler } from "./auth/userinfo-handler";
+import { noopHandler } from "./noop-handler";
 
 export const createAuthRouter = <C extends PylonHttpContext>(
   config: PylonAuthConfig,

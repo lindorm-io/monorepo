@@ -1,5 +1,5 @@
 import { createMockLogger } from "@lindorm/logger";
-import { createQueueMiddleware } from "./queue-middleware";
+import { createQueueMiddleware } from "./common-queue-middleware";
 
 describe("createQueueMiddleware", () => {
   let ctx: any;

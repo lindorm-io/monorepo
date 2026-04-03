@@ -3,7 +3,7 @@ import { Middleware } from "@lindorm/middleware";
 import { Dict } from "@lindorm/types";
 import { PylonWebhookRequest } from "../../messages";
 import { PylonContext, PylonWebhookOptions } from "../../types";
-import { resolveIris } from "../utils";
+import { resolveIris } from "../utils/resolve-iris";
 
 export const createWebhookMiddleware = <C extends PylonContext>(
   options?: PylonWebhookOptions,

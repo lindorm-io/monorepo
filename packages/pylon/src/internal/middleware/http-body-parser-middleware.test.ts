@@ -1,17 +1,17 @@
 import { createMockLogger } from "@lindorm/logger";
 import MockDate from "mockdate";
 import { PylonError } from "../../errors";
-import {
-  composeParseBodyConfig as _composeParseBodyConfig,
-  getBodyType as _getBodyType,
-  parseBody as _parseBody,
-} from "../utils";
+import { getBodyType as _getBodyType } from "../utils/body/get-body-type";
+import { parseBody as _parseBody } from "../utils/body/parse-body";
+import { composeParseBodyConfig as _composeParseBodyConfig } from "../utils/compose-parse-body-config";
 import { createHttpBodyParserMiddleware } from "./http-body-parser-middleware";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate);
 
-jest.mock("../utils");
+jest.mock("../utils/body/get-body-type");
+jest.mock("../utils/body/parse-body");
+jest.mock("../utils/compose-parse-body-config");
 
 const composeParseBodyConfig = _composeParseBodyConfig as jest.Mock;
 const getBodyType = _getBodyType as jest.Mock;

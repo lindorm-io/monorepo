@@ -2,7 +2,7 @@ import { IAmphora } from "@lindorm/amphora";
 import { ILogger } from "@lindorm/logger";
 import { ILindormWorker } from "@lindorm/worker";
 import { Server as HttpServer, createServer } from "http";
-import { httpSocketIoMiddleware } from "#internal/middleware";
+import { httpSocketIoMiddleware } from "#internal/middleware/http-socket-io-middleware";
 import {
   HttpCallback,
   PylonHttpContext,
@@ -13,7 +13,9 @@ import {
 } from "../types";
 import { KryptosEntity, SessionEntity, WebhookSubscriptionEntity } from "../entities";
 import { PylonJob, PylonWebhookDispatch, PylonWebhookRequest } from "../messages";
-import { calculateSubscriptions, calculateWorkers, scanWorkers } from "#internal/utils";
+import { calculateSubscriptions } from "#internal/utils/calculate-subscriptions";
+import { calculateWorkers } from "#internal/utils/calculate-workers";
+import { scanWorkers } from "#internal/utils/scan-workers";
 import { PylonHttp } from "./PylonHttp";
 import { PylonIo } from "./PylonIo";
 
