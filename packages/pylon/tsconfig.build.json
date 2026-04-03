@@ -4,6 +4,8 @@
     "rootDir": "./src",
     "outDir": "./dist",
     "baseUrl": ".",
+    "experimentalDecorators": false,
+    "emitDecoratorMetadata": false,
     "paths": {
       "#internal/*": ["./src/internal/*"]
     }

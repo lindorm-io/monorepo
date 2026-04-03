@@ -1,14 +1,4 @@
 import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  ExpiryDateColumn,
-  PrimaryKeyColumn,
-  PrimarySource,
-  UpdateDateColumn,
-  VersionColumn,
-} from "@lindorm/entity";
-import {
   KryptosAlgorithm,
   KryptosCurve,
   KryptosDB,
@@ -17,70 +7,86 @@ import {
   KryptosType,
   KryptosUse,
 } from "@lindorm/kryptos";
-import { z } from "zod/v4";
+import {
+  CreateDateField,
+  Entity,
+  ExpiryDateField,
+  Field,
+  Namespace,
+  Nullable,
+  PrimaryKeyField,
+  UpdateDateField,
+  VersionField,
+} from "@lindorm/proteus";
 
-export abstract class KryptosEntity implements KryptosDB {
-  @PrimaryKeyColumn()
-  public readonly id!: string;
+@Namespace("pylon")
+@Entity({ name: "kryptos" })
+export class KryptosEntity implements KryptosDB {
+  @PrimaryKeyField()
+  public id!: string;
 
-  @VersionColumn()
-  public readonly version!: number;
+  @VersionField()
+  public version!: number;
 
-  @CreateDateColumn()
-  public readonly createdAt!: Date;
+  @CreateDateField()
+  public createdAt!: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateField()
   public updatedAt!: Date;
 
-  @ExpiryDateColumn()
+  @ExpiryDateField()
   public expiresAt!: Date | null;
 
-  @Column("string")
+  @Field("string")
   public algorithm!: KryptosAlgorithm;
 
-  @Column("string", { nullable: true })
+  @Nullable()
+  @Field("string")
   public curve!: KryptosCurve | null;
 
-  @Column("string", { nullable: true })
+  @Nullable()
+  @Field("string")
   public encryption!: KryptosEncryption | null;
 
-  @Column("boolean")
+  @Field("boolean")
   public hidden!: boolean;
 
-  @Column("boolean")
+  @Field("boolean")
   public isExternal!: boolean;
 
-  @Column("string")
+  @Nullable()
+  @Field("string")
   public issuer!: string | null;
 
-  @Column("string", { nullable: true, schema: z.url() as any })
+  @Nullable()
+  @Field("url")
   public jwksUri!: string | null;
 
-  @Column("date")
+  @Field("timestamp")
   public notBefore!: Date;
 
-  @Column("array", { schema: z.array(z.string()) as any })
+  @Field("array", { arrayType: "string" })
   public operations!: Array<KryptosOperation>;
 
-  @Column("string", { nullable: true })
+  @Nullable()
+  @Field("string")
   public ownerId!: string | null;
 
-  @Column("string", { nullable: true })
+  @Nullable()
+  @Field("string")
   public privateKey!: string | null;
 
-  @Column("string", { nullable: true })
+  @Nullable()
+  @Field("string")
   public publicKey!: string | null;
 
-  @Column("string", { nullable: true })
+  @Nullable()
+  @Field("string")
   public purpose!: string | null;
 
-  @Column("string")
+  @Field("string")
   public type!: KryptosType;
 
-  @Column("string")
+  @Field("string")
   public use!: KryptosUse;
 }
-
-@Entity()
-@PrimarySource("MongoSource")
-export class MongoKryptosEntity extends KryptosEntity {}

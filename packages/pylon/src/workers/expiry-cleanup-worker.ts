@@ -1,10 +1,9 @@
-import { IEntity } from "@lindorm/entity";
-import { IMongoSource } from "@lindorm/mongo";
+import { IEntity, IProteusSource } from "@lindorm/proteus";
 import { Constructor } from "@lindorm/types";
 import { CreateLindormWorkerOptions, LindormWorkerConfig } from "@lindorm/worker";
 
 type Options = CreateLindormWorkerOptions & {
-  source: IMongoSource;
+  proteus: IProteusSource;
   targets: Array<Constructor<IEntity>>;
 };
 
@@ -14,9 +13,9 @@ export const createExpiryCleanupWorker = (options: Options): LindormWorkerConfig
   listeners: options.listeners ?? [],
   jitter: options.jitter,
   retry: options.retry,
-  callback: async (ctx): Promise<void> => {
+  callback: async (_ctx): Promise<void> => {
     for (const target of options.targets) {
-      const repository = options.source.repository(target, { logger: ctx.logger });
+      const repository = options.proteus.repository(target);
       await repository.deleteExpired();
     }
   },

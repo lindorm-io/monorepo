@@ -1,26 +1,24 @@
 import { createMockAegis } from "@lindorm/aegis";
 import { createMockAmphora } from "@lindorm/amphora";
-import { createMockKafkaSource } from "@lindorm/kafka";
-import { createMockMnemosSource } from "@lindorm/mnemos";
-import { createMockMongoSource } from "@lindorm/mongo";
-import { createMockRabbitSource } from "@lindorm/rabbit";
-import { createMockRedisSource } from "@lindorm/redis";
+import { createMockProteusSource, createMockRepository } from "@lindorm/proteus/mocks";
 import { IPylonSession } from "../../interfaces";
 import { createSessionStore } from "./create-session-store";
 
 describe("createSessionStore", () => {
   let ctx: any;
   let session: IPylonSession;
+  let mockRepo: ReturnType<typeof createMockRepository>;
 
   beforeEach(() => {
+    mockRepo = createMockRepository();
+
+    const mockProteus = createMockProteusSource();
+    mockProteus.repository.mockReturnValue(mockRepo);
+
     ctx = {
       aegis: createMockAegis(),
       amphora: createMockAmphora(),
-      kafka: { source: createMockKafkaSource() },
-      mnemos: { source: createMockMnemosSource() },
-      mongo: { source: createMockMongoSource() },
-      rabbit: { source: createMockRabbitSource() },
-      redis: { source: createMockRedisSource() },
+      proteus: mockProteus,
     };
 
     session = {
@@ -33,6 +31,10 @@ describe("createSessionStore", () => {
       scope: ["openid", "profile", "email", "offline_access"],
       subject: "643881f8-f6b0-5a18-9396-6fbe29ebfec8",
     };
+
+    (mockRepo.insert as jest.Mock).mockResolvedValue(session);
+    (mockRepo.findOne as jest.Mock).mockResolvedValue(session);
+    (mockRepo.delete as jest.Mock).mockResolvedValue(undefined);
   });
 
   test("should resolve undefined when cookie is used", () => {
@@ -53,7 +55,7 @@ describe("createSessionStore", () => {
   });
 
   test("should resolve stored store", async () => {
-    const store = createSessionStore({ use: "stored", source: "MnemosSource" });
+    const store = createSessionStore({ use: "stored" });
 
     expect(store).toBeDefined();
 

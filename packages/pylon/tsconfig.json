@@ -3,6 +3,8 @@
   "compilerOptions": {
     "rootDir": "./src",
     "baseUrl": ".",
+    "experimentalDecorators": false,
+    "emitDecoratorMetadata": false,
     "paths": {
       "#internal/*": ["./src/internal/*"]
     }

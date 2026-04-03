@@ -103,6 +103,7 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
         hermes: this.options.hermes,
         entities: this.options.entities,
         messages: this.options.messages,
+        proteus: this.options.proteus,
         sources: this.options.sources,
       }),
     ]);

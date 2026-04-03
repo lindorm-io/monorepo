@@ -1,7 +1,7 @@
 import { AesKit } from "@lindorm/aes";
 import { add, duration, ms, ReadableTime, sub } from "@lindorm/date";
 import { IKryptos, KryptosAlgorithm, KryptosDB, KryptosKit } from "@lindorm/kryptos";
-import { IMongoSource } from "@lindorm/mongo";
+import { IProteusSource } from "@lindorm/proteus";
 import { Constructor } from "@lindorm/types";
 import { CreateLindormWorkerOptions, LindormWorkerConfig } from "@lindorm/worker";
 
@@ -14,7 +14,7 @@ type Options = CreateLindormWorkerOptions & {
   encryptionKey?: IKryptos;
   expiry?: ReadableTime;
   keys?: Array<KeyOption>;
-  source: IMongoSource;
+  proteus: IProteusSource;
   target: Constructor<KryptosDB>;
 };
 
@@ -43,9 +43,7 @@ export const createKryptosRotationWorker = (options: Options): LindormWorkerConf
       ? new AesKit({ kryptos: options.encryptionKey })
       : undefined;
 
-    const repository = options.source.repository(options.target, {
-      logger: ctx.logger,
-    });
+    const repository = options.proteus.repository(options.target);
 
     const existing = await repository.find();
 

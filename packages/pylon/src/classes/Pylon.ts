@@ -14,10 +14,10 @@ import {
   PylonSubscribeOptions,
   PylonTeardown,
 } from "../types";
+import { SessionEntity } from "../entities";
 import {
   addQueueEntities,
   addQueueMessages,
-  addSessionEntities,
   addWebhookEntities,
   addWebhookMessages,
   calculateSubscriptions,
@@ -273,7 +273,10 @@ export class Pylon<
     }
 
     if (this.options.session?.use === "stored") {
-      addSessionEntities(this.options.session, this.sources);
+      const sessionSource = this.options.session.proteus ?? this.options.proteus;
+      if (sessionSource) {
+        sessionSource.addEntities([SessionEntity]);
+      }
     }
 
     if (this.options.webhook?.use === "entity") {

@@ -3,94 +3,98 @@ import {
   ClientCredentialsContentType,
 } from "@lindorm/conduit";
 import {
-  Column,
-  CreateDateColumn,
+  CreateDateField,
+  Default,
   Entity,
-  PrimaryKeyColumn,
-  PrimarySource,
-  UpdateDateColumn,
-  VersionColumn,
-} from "@lindorm/entity";
+  Enum,
+  Field,
+  Namespace,
+  Nullable,
+  PrimaryKeyField,
+  UpdateDateField,
+  VersionField,
+} from "@lindorm/proteus";
 import { Dict } from "@lindorm/types";
 import { WebhookAuth } from "../enums";
 import { IWebhookSubscription } from "../interfaces";
 
-export abstract class WebhookSubscriptionEntity implements IWebhookSubscription {
-  @PrimaryKeyColumn()
-  public readonly id!: string;
+@Namespace("pylon")
+@Entity({ name: "webhook_subscription" })
+export class WebhookSubscriptionEntity implements IWebhookSubscription {
+  @PrimaryKeyField()
+  public id!: string;
 
-  @VersionColumn()
-  public readonly version!: number;
+  @VersionField()
+  public version!: number;
 
-  @CreateDateColumn()
-  public readonly createdAt!: Date;
+  @CreateDateField()
+  public createdAt!: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateField()
   public updatedAt!: Date;
 
-  @Column("enum", { enum: WebhookAuth })
+  @Enum(WebhookAuth)
+  @Field("string")
   public auth!: WebhookAuth;
 
-  @Column("string")
-  public readonly event!: string;
+  @Field("string")
+  public event!: string;
 
-  @Column("object")
+  @Field("json")
   public headers!: Dict<string>;
 
-  @Column("string")
-  public readonly ownerId!: string;
+  @Field("string")
+  public ownerId!: string;
 
-  @Column("url")
+  @Field("url")
   public url!: string;
 
   // auth headers
 
-  @Column("object")
+  @Field("json")
   public authHeaders!: Dict<string>;
 
   // basic auth
 
-  @Column("string", { nullable: true })
+  @Nullable()
+  @Field("string")
   public username!: string | null;
 
-  @Column("string", { nullable: true })
+  @Nullable()
+  @Field("string")
   public password!: string | null;
 
   // client credentials
 
-  @Column("string", { nullable: true })
+  @Nullable()
+  @Field("string")
   public audience!: string | null;
 
-  @Column("string", { nullable: true })
+  @Nullable()
+  @Field("string")
   public authLocation!: ClientCredentialsAuthLocation | null;
 
-  @Column("string", { nullable: true })
+  @Nullable()
+  @Field("string")
   public clientId!: string | null;
 
-  @Column("string", { nullable: true })
+  @Nullable()
+  @Field("string")
   public clientSecret!: string | null;
 
-  @Column("string", { nullable: true })
+  @Nullable()
+  @Field("string")
   public contentType!: ClientCredentialsContentType | null;
 
-  @Column("string", { nullable: true })
+  @Nullable()
+  @Field("string")
   public issuer!: string | null;
 
-  @Column("array", { fallback: [] })
+  @Default([])
+  @Field("array", { arrayType: "string" })
   public scope!: Array<string>;
 
-  @Column("url", { nullable: true })
+  @Nullable()
+  @Field("url")
   public tokenUri!: string | null;
 }
-
-@Entity()
-@PrimarySource("MnemosSource")
-export class MnemosWebhookSubscriptionEntity extends WebhookSubscriptionEntity {}
-
-@Entity()
-@PrimarySource("MongoSource")
-export class MongoWebhookSubscriptionEntity extends WebhookSubscriptionEntity {}
-
-@Entity()
-@PrimarySource("RedisSource")
-export class RedisWebhookSubscriptionEntity extends WebhookSubscriptionEntity {}

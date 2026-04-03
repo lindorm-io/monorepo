@@ -4,6 +4,7 @@ import { ServerError } from "@lindorm/errors";
 import { IHermes } from "@lindorm/hermes";
 import { IMessage } from "@lindorm/message";
 import { Middleware } from "@lindorm/middleware";
+import { IProteusSource } from "@lindorm/proteus";
 import { Constructor } from "@lindorm/types";
 import { PylonCommonContext, PylonSource } from "../../types";
 
@@ -11,6 +12,7 @@ type Options = {
   hermes?: IHermes;
   entities?: Array<Constructor<IEntity>>;
   messages?: Array<Constructor<IMessage>>;
+  proteus?: IProteusSource;
   sources?: Array<PylonSource>;
 };
 
@@ -58,6 +60,11 @@ export const createSourcesMiddleware = <C extends PylonCommonContext>(
 
     try {
       ctx.hermes = options.hermes?.clone({ logger: ctx.logger });
+
+      if (options.proteus) {
+        ctx.proteus = options.proteus.clone({ logger: ctx.logger });
+        ctx.logger.debug("ProteusSource added to context");
+      }
 
       if (kafka) {
         ctx.kafka = {

@@ -1,6 +1,6 @@
-import { Priority } from "@lindorm/types";
 import { IKryptos } from "@lindorm/kryptos";
-import { Dict } from "@lindorm/types";
+import { IProteusSource } from "@lindorm/proteus";
+import { Dict, Priority } from "@lindorm/types";
 import { CreateLindormWorkerOptions } from "@lindorm/worker";
 import { IPylonSessionStore } from "../interfaces/PylonSessionStore";
 import { PylonCommonContext } from "./context-common";
@@ -67,7 +67,7 @@ export type PylonCookieSessionOptions = PylonSessionConfig & {
 
 export type PylonStoredSessionOptions = PylonSessionConfig & {
   use: "stored";
-  source: PylonEntitySourceName;
+  proteus?: IProteusSource;
 };
 
 export type PylonSessionOptions<C extends PylonHttpContext = PylonHttpContext> =
