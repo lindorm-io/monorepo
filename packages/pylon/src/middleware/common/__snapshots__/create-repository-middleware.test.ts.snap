@@ -1,0 +1,8 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`createRepositoryMiddleware should set ctx.repositories with correct camelCased keys 1`] = `
+[
+  "userEntity",
+  "orderEntity",
+]
+`;

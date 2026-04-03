@@ -49,6 +49,11 @@ export type PylonCommonContext = {
   entities: Dict<IEntity>;
   logger: ILogger;
 
+  repositories?: Dict;
+  caches?: Dict;
+  publishers?: Dict;
+  workerQueues?: Dict;
+
   hermes?: IHermes;
   iris?: IIrisSource;
   proteus?: IProteusSource;
@@ -59,6 +64,7 @@ export type PylonCommonContext = {
     priority?: Priority,
     optional?: boolean,
   ) => Promise<void>;
+
   webhook: (event: string, data?: any, optional?: boolean) => Promise<void>;
 };
 

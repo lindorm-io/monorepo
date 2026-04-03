@@ -1,18 +1,19 @@
+import { isSocketContext } from "#internal/utils/is-context";
 import { VerifyJwtOptions } from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
 import { isString } from "@lindorm/is";
 import { get } from "object-path";
-import { PylonSocketContext, PylonSocketMiddleware } from "../../types";
+import { PylonContext, PylonMiddleware } from "../../types";
 
 type Options = Omit<VerifyJwtOptions, "issuer"> & {
   contextKey: string;
   issuer: string;
 };
 
-export const socketTokenMiddleware =
-  <C extends PylonSocketContext = PylonSocketContext>(options: Options) =>
-  (path: string, optional: boolean = false): PylonSocketMiddleware<C> =>
-    async function socketTokenMiddleware(ctx, next): Promise<void> {
+export const createTokenMiddleware =
+  <C extends PylonContext = PylonContext>(options: Options) =>
+  (path: string, optional: boolean = false): PylonMiddleware<C> =>
+    async function tokenMiddleware(ctx, next): Promise<void> {
       const timer = ctx.logger.time();
 
       try {
@@ -37,7 +38,11 @@ export const socketTokenMiddleware =
             tokenType: verified.payload.tokenType,
           });
 
-          ctx.socket.data.tokens[options.contextKey] = verified;
+          ctx.state.tokens[options.contextKey] = verified;
+
+          if (isSocketContext(ctx)) {
+            ctx.socket.data.tokens[options.contextKey] = verified;
+          }
         }
       } catch (error: any) {
         timer.debug("Token verification failed", error);

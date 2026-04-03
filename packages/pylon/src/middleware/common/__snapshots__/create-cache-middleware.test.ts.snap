@@ -1,0 +1,8 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`createCacheMiddleware should set ctx.caches with correct camelCased keys 1`] = `
+[
+  "sessionEntity",
+  "tokenEntity",
+]
+`;

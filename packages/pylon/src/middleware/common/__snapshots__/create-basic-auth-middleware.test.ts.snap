@@ -1,0 +1,9 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`createBasicAuthMiddleware array mode should throw 401 when password does not match 1`] = `"Invalid credentials"`;
+
+exports[`createBasicAuthMiddleware array mode should throw 401 when username not found 1`] = `"Invalid credentials"`;
+
+exports[`createBasicAuthMiddleware authorization type should throw 401 when authorization type is not basic 1`] = `"Invalid Authorization header"`;
+
+exports[`createBasicAuthMiddleware credentials format should throw 401 when credentials format is invalid (no colon) 1`] = `"Invalid credentials"`;

@@ -1,0 +1,8 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`createPublisherMiddleware should set ctx.publishers with correct camelCased keys 1`] = `
+[
+  "orderCreatedEvent",
+  "userUpdatedEvent",
+]
+`;

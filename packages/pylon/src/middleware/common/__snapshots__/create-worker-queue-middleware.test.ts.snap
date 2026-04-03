@@ -1,0 +1,8 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`createWorkerQueueMiddleware should set ctx.workerQueues with correct camelCased keys 1`] = `
+[
+  "orderCreatedEvent",
+  "userUpdatedEvent",
+]
+`;
