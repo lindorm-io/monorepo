@@ -37,25 +37,16 @@ describe("createSessionStore", () => {
     (mockRepo.delete as jest.Mock).mockResolvedValue(undefined);
   });
 
-  test("should resolve undefined when cookie is used", () => {
-    expect(createSessionStore({ use: "cookie" })).toBeUndefined();
+  test("should resolve undefined when not enabled", () => {
+    expect(createSessionStore({ enabled: false })).toBeUndefined();
   });
 
-  test("should resolve custom store", async () => {
-    const custom = {
-      set: jest.fn(),
-      get: jest.fn(),
-      del: jest.fn(),
-      logout: jest.fn(),
-    };
-
-    const store = createSessionStore({ use: "custom", custom });
-
-    expect(store).toBe(custom);
+  test("should resolve undefined when no options", () => {
+    expect(createSessionStore()).toBeUndefined();
   });
 
-  test("should resolve stored store", async () => {
-    const store = createSessionStore({ use: "stored" });
+  test("should resolve store when enabled with proteus on context", async () => {
+    const store = createSessionStore({ enabled: true });
 
     expect(store).toBeDefined();
 
@@ -71,6 +62,24 @@ describe("createSessionStore", () => {
 
     await expect(store!.del(ctx, session.id)).resolves.toBeUndefined();
 
+    await expect(store!.logout(ctx, session.subject)).resolves.toBeUndefined();
+  });
+
+  test("should fall back to cookie when no proteus available", async () => {
+    ctx.proteus = undefined;
+
+    const store = createSessionStore({ enabled: true });
+
+    expect(store).toBeDefined();
+
+    // set returns the session id (no repo to insert into)
+    await expect(store!.set(ctx, session)).resolves.toEqual(session.id);
+
+    // get returns null (no repo to query)
+    await expect(store!.get(ctx, session.id)).resolves.toBeNull();
+
+    // del and logout are no-ops
+    await expect(store!.del(ctx, session.id)).resolves.toBeUndefined();
     await expect(store!.logout(ctx, session.subject)).resolves.toBeUndefined();
   });
 });

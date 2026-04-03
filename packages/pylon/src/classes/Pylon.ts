@@ -227,23 +227,37 @@ export class Pylon<
   }
 
   private loadSources(): void {
-    if (this.options.proteus) {
-      this.options.proteus.addEntities([KryptosEntity, WebhookSubscriptionEntity]);
-    }
-
-    if (this.options.session?.use === "stored") {
-      const sessionSource = this.options.session.proteus ?? this.options.proteus;
-      if (sessionSource) {
-        sessionSource.addEntities([SessionEntity]);
+    if (this.options.session?.enabled) {
+      const source = this.options.session.proteus ?? this.options.proteus;
+      if (source) {
+        source.addEntities([SessionEntity]);
       }
     }
 
-    if (this.options.iris) {
-      this.options.iris.addMessages([
-        PylonJob,
-        PylonWebhookRequest,
-        PylonWebhookDispatch,
-      ]);
+    if (this.options.kryptos?.enabled) {
+      const source = this.options.kryptos.proteus ?? this.options.proteus;
+      if (source) {
+        source.addEntities([KryptosEntity]);
+      }
+    }
+
+    if (this.options.queue?.enabled) {
+      const source = this.options.queue.iris ?? this.options.iris;
+      if (source) {
+        source.addMessages([PylonJob]);
+      }
+    }
+
+    if (this.options.webhook?.enabled) {
+      const proteusSource = this.options.webhook.proteus ?? this.options.proteus;
+      if (proteusSource) {
+        proteusSource.addEntities([WebhookSubscriptionEntity]);
+      }
+
+      const irisSource = this.options.webhook.iris ?? this.options.iris;
+      if (irisSource) {
+        irisSource.addMessages([PylonWebhookRequest, PylonWebhookDispatch]);
+      }
     }
   }
 

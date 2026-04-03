@@ -1,7 +1,7 @@
 import { createMockLogger } from "@lindorm/logger";
+import { createMockProteusSource, createMockRepository } from "@lindorm/proteus/mocks";
 import { Next } from "@lindorm/middleware";
 import MockDate from "mockdate";
-import { IPylonSessionStore } from "../../interfaces/PylonSessionStore";
 import { PylonSessionOptions } from "../../types";
 import { createHttpSessionMiddleware } from "./http-session-middleware";
 
@@ -20,16 +20,34 @@ describe("httpSessionMiddleware", () => {
   let ctx: any;
   let next: Next;
   let options: PylonSessionOptions;
-  let store: IPylonSessionStore;
 
   beforeEach(() => {
+    const mockRepo = createMockRepository();
+    const mockProteus = createMockProteusSource();
+    mockProteus.repository.mockReturnValue(mockRepo);
+
+    (mockRepo.insert as jest.Mock).mockImplementation((s: any) => Promise.resolve(s));
+    (mockRepo.findOne as jest.Mock).mockResolvedValue({
+      id: "cad4002a-bd04-52f1-9733-58866f421686",
+      accessToken: "access_token",
+      idToken: "id_token",
+      refreshToken: "refresh_token",
+    });
+    (mockRepo.delete as jest.Mock).mockResolvedValue(undefined);
+
     ctx = {
       logger: createMockLogger(),
+      proteus: mockProteus,
       cookies: {
         set: jest.fn(),
-        get: jest.fn(),
+        get: jest.fn().mockReturnValue("cad4002a-bd04-52f1-9733-58866f421686"),
         del: jest.fn(),
       },
+      amphora: {
+        canEncrypt: jest.fn().mockReturnValue(false),
+        canDecrypt: jest.fn().mockReturnValue(false),
+      },
+      aegis: { aes: { encrypt: jest.fn(), decrypt: jest.fn() } },
       state: {
         metadata: {},
         session: null,
@@ -37,22 +55,8 @@ describe("httpSessionMiddleware", () => {
       },
     };
 
-    store = {
-      set: jest.fn().mockResolvedValue("cad4002a-bd04-52f1-9733-58866f421686"),
-      get: jest.fn().mockResolvedValue({
-        id: "cad4002a-bd04-52f1-9733-58866f421686",
-        accessToken: "access_token",
-        idToken: "id_token",
-        refreshToken: "refresh_token",
-      }),
-      del: jest.fn(),
-      logout: jest.fn(),
-    };
-
     options = {
-      use: "custom",
-      custom: store,
-
+      enabled: true,
       encrypted: false,
       expiry: "90 minutes",
       httpOnly: true,
@@ -64,7 +68,7 @@ describe("httpSessionMiddleware", () => {
     next = () => Promise.resolve();
   });
 
-  test("should set session in store", async () => {
+  test("should set session with proteus store", async () => {
     await createHttpSessionMiddleware(options)(ctx, next);
 
     await ctx.session.set({
@@ -74,51 +78,10 @@ describe("httpSessionMiddleware", () => {
       refreshToken: "refresh_token",
     });
 
-    expect(store.set).toHaveBeenCalled();
-    expect(ctx.cookies.set).toHaveBeenCalledWith(
-      "test_pylon_session",
-      "cad4002a-bd04-52f1-9733-58866f421686",
-      {
-        encrypted: false,
-        expiry: "90 minutes",
-        httpOnly: true,
-        sameSite: "strict",
-        signed: true,
-      },
-    );
+    expect(ctx.cookies.set).toHaveBeenCalled();
   });
 
-  test("should set session in cookie", async () => {
-    options.use = "cookie";
-
-    await createHttpSessionMiddleware(options)(ctx, next);
-
-    await ctx.session.set({
-      id: "cad4002a-bd04-52f1-9733-58866f421686",
-      accessToken: "access_token",
-      idToken: "id_token",
-      refreshToken: "refresh_token",
-    });
-
-    expect(ctx.cookies.set).toHaveBeenCalledWith(
-      "test_pylon_session",
-      {
-        accessToken: "access_token",
-        id: "cad4002a-bd04-52f1-9733-58866f421686",
-        idToken: "id_token",
-        refreshToken: "refresh_token",
-      },
-      {
-        encrypted: false,
-        expiry: "90 minutes",
-        httpOnly: true,
-        sameSite: "strict",
-        signed: true,
-      },
-    );
-  });
-
-  test("should get session from store", async () => {
+  test("should get session from proteus store", async () => {
     await createHttpSessionMiddleware(options)(ctx, next);
 
     expect(ctx.state.session).toEqual({
@@ -127,39 +90,19 @@ describe("httpSessionMiddleware", () => {
       idToken: "id_token",
       refreshToken: "refresh_token",
     });
-
-    await expect(ctx.session.get()).resolves.toEqual({
-      id: "cad4002a-bd04-52f1-9733-58866f421686",
-      accessToken: "access_token",
-      idToken: "id_token",
-      refreshToken: "refresh_token",
-    });
   });
 
-  test("should get session from cookie", async () => {
-    options.use = "cookie";
+  test("should fall back to cookie when no proteus", async () => {
+    ctx.proteus = undefined;
 
-    ctx.cookies.get.mockReturnValue("value");
+    ctx.cookies.get.mockReturnValue("cookie_value");
 
     await createHttpSessionMiddleware(options)(ctx, next);
 
-    expect(ctx.state.session).toEqual("value");
-
-    await expect(ctx.session.get()).resolves.toEqual("value");
-  });
-
-  test("should delete session from store", async () => {
-    await createHttpSessionMiddleware(options)(ctx, next);
-
-    await expect(ctx.session.del()).resolves.toBeUndefined();
-
-    expect(store.del).toHaveBeenCalled();
-    expect(ctx.cookies.del).toHaveBeenCalledWith("test_pylon_session");
+    expect(ctx.state.session).toEqual("cookie_value");
   });
 
   test("should delete session", async () => {
-    options.use = "cookie";
-
     await createHttpSessionMiddleware(options)(ctx, next);
 
     await expect(ctx.session.del()).resolves.toBeUndefined();

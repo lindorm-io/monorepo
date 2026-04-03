@@ -10,7 +10,7 @@ import {
 import { createSessionStore } from "../utils";
 
 export const createHttpSessionMiddleware = (
-  options: PylonSessionOptions<any>,
+  options: PylonSessionOptions,
 ): PylonHttpMiddleware => {
   const name = options.name ?? "pylon_session";
 
