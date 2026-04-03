@@ -8,7 +8,12 @@ import { ms } from "@lindorm/date";
 import { ILogger } from "@lindorm/logger";
 import type { Constructor, Dict } from "@lindorm/types";
 import { NotSupportedError, ProteusError } from "../errors";
-import { IEntity, IProteusQueryBuilder, IProteusRepository } from "../interfaces";
+import {
+  IEntity,
+  IProteusQueryBuilder,
+  IProteusRepository,
+  IProteusSource,
+} from "../interfaces";
 import type { ICacheAdapter } from "../interfaces/CacheAdapter";
 import type { IEntitySubscriber } from "../interfaces/EntitySubscriber";
 import type {
@@ -91,7 +96,7 @@ interface ProteusSourceInit {
  * obtain repositories, query builders, and run transactions. The source
  * manages connection pooling, entity metadata resolution, and caching.
  */
-export class ProteusSource {
+export class ProteusSource implements IProteusSource {
   private _driver: IProteusDriver | undefined;
   private readonly _breaker: ICircuitBreaker | null;
   private readonly _options: ProteusSourceOptions;
