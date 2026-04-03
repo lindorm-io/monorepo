@@ -1,11 +1,13 @@
-import { Field, Message, MessageBase, Topic } from "@lindorm/message";
+import { CorrelationField, Field, Message, Namespace, Topic } from "@lindorm/iris";
 import { Dict } from "@lindorm/types";
-import { WEBHOOK_REQUEST_TOPIC } from "#internal/constants";
-import { IWebhookRequest } from "../interfaces";
 
+@Namespace("pylon")
 @Message()
-@Topic((_) => WEBHOOK_REQUEST_TOPIC)
-export class PylonWebhookRequest extends MessageBase implements IWebhookRequest {
+@Topic(() => "pylon.webhook.request")
+export class PylonWebhookRequest {
+  @CorrelationField()
+  public readonly correlationId!: string;
+
   @Field("string")
   public readonly event!: string;
 

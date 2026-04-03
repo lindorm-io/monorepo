@@ -3,7 +3,7 @@ import { KryptosKit } from "@lindorm/kryptos";
 import { createMockLogger } from "@lindorm/logger";
 import nock from "nock";
 import { WebhookAuth } from "../../enums";
-import { IWebhookDispatch } from "../../interfaces";
+import { IWebhookSubscription } from "../../interfaces";
 import { createDispatchWebhook } from "./dispatch-webhook";
 
 jest.mock("../../middleware", () => ({
@@ -17,7 +17,7 @@ jest.mock("../../middleware", () => ({
 describe("createDispatchWebhook", () => {
   let options: any;
   let logger: any;
-  let dispatch: IWebhookDispatch;
+  let dispatch: { event: string; payload: any; subscription: IWebhookSubscription };
   let scope: nock.Scope;
 
   beforeEach(() => {

@@ -3,6 +3,7 @@ import { IAmphora } from "@lindorm/amphora";
 import { IConduit } from "@lindorm/conduit";
 import { IEntity } from "@lindorm/entity";
 import { IHermes } from "@lindorm/hermes";
+import { IIrisSource } from "@lindorm/iris";
 import { IKafkaPublisher, IKafkaSource } from "@lindorm/kafka";
 import { ILogger } from "@lindorm/logger";
 import { IMessage } from "@lindorm/message";
@@ -56,6 +57,7 @@ export type PylonCommonContext = {
   logger: ILogger;
 
   hermes?: IHermes;
+  iris?: IIrisSource;
   proteus?: IProteusSource;
 
   kafka?: {

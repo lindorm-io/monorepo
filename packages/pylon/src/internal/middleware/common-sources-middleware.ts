@@ -2,6 +2,7 @@ import { camelCase } from "@lindorm/case";
 import { IEntity } from "@lindorm/entity";
 import { ServerError } from "@lindorm/errors";
 import { IHermes } from "@lindorm/hermes";
+import { IIrisSource } from "@lindorm/iris";
 import { IMessage } from "@lindorm/message";
 import { Middleware } from "@lindorm/middleware";
 import { IProteusSource } from "@lindorm/proteus";
@@ -10,6 +11,7 @@ import { PylonCommonContext, PylonSource } from "../../types";
 
 type Options = {
   hermes?: IHermes;
+  iris?: IIrisSource;
   entities?: Array<Constructor<IEntity>>;
   messages?: Array<Constructor<IMessage>>;
   proteus?: IProteusSource;
@@ -64,6 +66,11 @@ export const createSourcesMiddleware = <C extends PylonCommonContext>(
       if (options.proteus) {
         ctx.proteus = options.proteus.clone({ logger: ctx.logger });
         ctx.logger.debug("ProteusSource added to context");
+      }
+
+      if (options.iris) {
+        ctx.iris = options.iris.clone({ logger: ctx.logger });
+        ctx.logger.debug("IrisSource added to context");
       }
 
       if (kafka) {
