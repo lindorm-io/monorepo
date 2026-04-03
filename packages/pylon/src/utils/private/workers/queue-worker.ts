@@ -35,7 +35,7 @@ export const createQueueWorker = (
     alias: "QueueWorker",
     interval: options.worker?.interval ?? "2s",
     listeners: options.worker?.listeners,
-    randomize: options.worker?.randomize ?? "1s",
+    jitter: options.worker?.jitter ?? "1s",
     retry: options.worker?.retry,
     callback: createWorkerQueueCallback({
       source,

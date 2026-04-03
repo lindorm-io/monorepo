@@ -12,7 +12,7 @@ export const createExpiryCleanupWorker = (options: Options): LindormWorkerConfig
   alias: "ExpiryCleanupWorker",
   interval: options.interval ?? "15m",
   listeners: options.listeners ?? [],
-  randomize: options.randomize,
+  jitter: options.jitter,
   retry: options.retry,
   callback: async (ctx): Promise<void> => {
     for (const target of options.targets) {
