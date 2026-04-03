@@ -1,20 +1,18 @@
 import { AesKit } from "@lindorm/aes";
-import { IProteusRepository } from "@lindorm/proteus";
+import { IProteusSource } from "@lindorm/proteus";
 import { SessionEntity } from "../../entities";
 import { IPylonSession } from "../../interfaces";
 import { IPylonSessionStore } from "../../interfaces/PylonSessionStore";
 import { PylonCommonContext, PylonSessionOptions } from "../../types";
-import { resolveProteus } from "./resolve-proteus";
 
-const getRepository = (
+const getSource = (
   ctx: PylonCommonContext,
-  options: PylonSessionOptions,
-): IProteusRepository<SessionEntity> | null => {
-  try {
-    return resolveProteus(ctx, options.proteus).repository(SessionEntity);
-  } catch {
-    return null;
+  override?: IProteusSource,
+): IProteusSource | null => {
+  if (override) {
+    return override.clone({ logger: ctx.logger });
   }
+  return ctx.proteus ?? null;
 };
 
 export const createSessionStore = (
@@ -24,8 +22,8 @@ export const createSessionStore = (
 
   return {
     set: async (ctx, session): Promise<string> => {
-      const repo = getRepository(ctx, options);
-      if (!repo) return session.id;
+      const source = getSource(ctx, options.proteus);
+      if (!source) return session.id;
 
       if (ctx.amphora.canEncrypt()) {
         session.accessToken = await ctx.aegis.aes.encrypt(
@@ -43,15 +41,15 @@ export const createSessionStore = (
         }
       }
 
-      const result = await repo.insert(session);
+      const result = await source.repository(SessionEntity).insert(session);
       return result.id;
     },
 
     get: async (ctx, id): Promise<IPylonSession | null> => {
-      const repo = getRepository(ctx, options);
-      if (!repo) return null;
+      const source = getSource(ctx, options.proteus);
+      if (!source) return null;
 
-      const session = await repo.findOne({ id });
+      const session = await source.repository(SessionEntity).findOne({ id });
 
       if (!session) return null;
 
@@ -71,17 +69,17 @@ export const createSessionStore = (
     },
 
     del: async (ctx, id): Promise<void> => {
-      const repo = getRepository(ctx, options);
-      if (!repo) return;
+      const source = getSource(ctx, options.proteus);
+      if (!source) return;
 
-      await repo.delete({ id });
+      await source.repository(SessionEntity).delete({ id });
     },
 
     logout: async (ctx, subject): Promise<void> => {
-      const repo = getRepository(ctx, options);
-      if (!repo) return;
+      const source = getSource(ctx, options.proteus);
+      if (!source) return;
 
-      await repo.delete({ subject });
+      await source.repository(SessionEntity).delete({ subject });
     },
   };
 };
