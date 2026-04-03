@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "ignoreDeprecations": "6.0",
     "emitDecoratorMetadata": true,
     "esModuleInterop": true,
     "experimentalDecorators": true,
@@ -12,6 +13,7 @@
     "skipLibCheck": true,
     "strict": true,
     "strictPropertyInitialization": true,
-    "target": "ESNEXT"
+    "target": "ESNEXT",
+    "types": ["node", "jest"]
   }
 }
