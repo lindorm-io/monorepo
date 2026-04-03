@@ -1,88 +1,88 @@
 import { AesKit } from "@lindorm/aes";
-import { ServerError } from "@lindorm/errors";
 import { IProteusRepository } from "@lindorm/proteus";
 import { SessionEntity } from "../../entities";
 import { IPylonSession } from "../../interfaces";
 import { IPylonSessionStore } from "../../interfaces/PylonSessionStore";
-import {
-  PylonCommonContext,
-  PylonSessionOptions,
-  PylonStoredSessionOptions,
-} from "../../types";
+import { PylonCommonContext, PylonSessionOptions } from "../../types";
 
 const getRepository = (
   ctx: PylonCommonContext,
-  options: PylonStoredSessionOptions,
-): IProteusRepository<SessionEntity> => {
+  options: PylonSessionOptions,
+): IProteusRepository<SessionEntity> | null => {
   if (options.proteus) {
     return options.proteus.clone({ logger: ctx.logger }).repository(SessionEntity);
   }
   if (ctx.proteus) {
     return ctx.proteus.repository(SessionEntity);
   }
-  throw new ServerError("ProteusSource is not configured for session storage");
+  return null;
 };
 
 export const createSessionStore = (
   options?: PylonSessionOptions,
 ): IPylonSessionStore | undefined => {
-  switch (options?.use) {
-    case "custom":
-      return options.custom;
+  if (!options?.enabled) return;
 
-    case "stored":
-      return {
-        set: async (ctx, session): Promise<string> => {
-          if (ctx.amphora.canEncrypt()) {
-            session.accessToken = await ctx.aegis.aes.encrypt(
-              session.accessToken,
-              "tokenised",
-            );
-            if (session.idToken) {
-              session.idToken = await ctx.aegis.aes.encrypt(session.idToken, "tokenised");
-            }
-            if (session.refreshToken) {
-              session.refreshToken = await ctx.aegis.aes.encrypt(
-                session.refreshToken,
-                "tokenised",
-              );
-            }
-          }
+  return {
+    set: async (ctx, session): Promise<string> => {
+      const repo = getRepository(ctx, options);
+      if (!repo) return session.id;
 
-          const result = await getRepository(ctx, options).insert(session);
-          return result.id;
-        },
+      if (ctx.amphora.canEncrypt()) {
+        session.accessToken = await ctx.aegis.aes.encrypt(
+          session.accessToken,
+          "tokenised",
+        );
+        if (session.idToken) {
+          session.idToken = await ctx.aegis.aes.encrypt(session.idToken, "tokenised");
+        }
+        if (session.refreshToken) {
+          session.refreshToken = await ctx.aegis.aes.encrypt(
+            session.refreshToken,
+            "tokenised",
+          );
+        }
+      }
 
-        get: async (ctx, id): Promise<IPylonSession | null> => {
-          const session = await getRepository(ctx, options).findOne({ id });
+      const result = await repo.insert(session);
+      return result.id;
+    },
 
-          if (!session) return null;
+    get: async (ctx, id): Promise<IPylonSession | null> => {
+      const repo = getRepository(ctx, options);
+      if (!repo) return null;
 
-          if (ctx.amphora.canDecrypt()) {
-            if (AesKit.isAesTokenised(session.accessToken)) {
-              session.accessToken = await ctx.aegis.aes.decrypt(session.accessToken);
-            }
-            if (AesKit.isAesTokenised(session.idToken)) {
-              session.idToken = await ctx.aegis.aes.decrypt(session.idToken);
-            }
-            if (AesKit.isAesTokenised(session.refreshToken)) {
-              session.refreshToken = await ctx.aegis.aes.decrypt(session.refreshToken);
-            }
-          }
+      const session = await repo.findOne({ id });
 
-          return session;
-        },
+      if (!session) return null;
 
-        del: async (ctx, id): Promise<void> => {
-          await getRepository(ctx, options).delete({ id });
-        },
+      if (ctx.amphora.canDecrypt()) {
+        if (AesKit.isAesTokenised(session.accessToken)) {
+          session.accessToken = await ctx.aegis.aes.decrypt(session.accessToken);
+        }
+        if (AesKit.isAesTokenised(session.idToken)) {
+          session.idToken = await ctx.aegis.aes.decrypt(session.idToken);
+        }
+        if (AesKit.isAesTokenised(session.refreshToken)) {
+          session.refreshToken = await ctx.aegis.aes.decrypt(session.refreshToken);
+        }
+      }
 
-        logout: async (ctx, subject): Promise<void> => {
-          await getRepository(ctx, options).delete({ subject });
-        },
-      };
+      return session;
+    },
 
-    default:
-      return;
-  }
+    del: async (ctx, id): Promise<void> => {
+      const repo = getRepository(ctx, options);
+      if (!repo) return;
+
+      await repo.delete({ id });
+    },
+
+    logout: async (ctx, subject): Promise<void> => {
+      const repo = getRepository(ctx, options);
+      if (!repo) return;
+
+      await repo.delete({ subject });
+    },
+  };
 };

@@ -1,6 +1,6 @@
+import { IIrisSource } from "@lindorm/iris";
 import { IProteusSource } from "@lindorm/proteus";
 import { Dict, Priority } from "@lindorm/types";
-import { IPylonSessionStore } from "../interfaces/PylonSessionStore";
 import { PylonCommonContext } from "./context-common";
 import { PylonHttpContext } from "./context-http";
 import { PylonSessionConfig } from "./session";
@@ -24,24 +24,25 @@ export type PylonWebhookCallback<C extends PylonCommonContext = PylonCommonConte
   payload: Dict,
 ) => Promise<void>;
 
-// session options
+// feature options
 
-export type PylonCustomSessionOptions<C extends PylonHttpContext = PylonHttpContext> =
-  PylonSessionConfig & {
-    use: "custom";
-    custom: IPylonSessionStore<C>;
-  };
-
-export type PylonCookieSessionOptions = PylonSessionConfig & {
-  use: "cookie";
-};
-
-export type PylonStoredSessionOptions = PylonSessionConfig & {
-  use: "stored";
+export type PylonSessionOptions = PylonSessionConfig & {
+  enabled: boolean;
   proteus?: IProteusSource;
 };
 
-export type PylonSessionOptions<C extends PylonHttpContext = PylonHttpContext> =
-  | PylonCustomSessionOptions<C>
-  | PylonCookieSessionOptions
-  | PylonStoredSessionOptions;
+export type PylonKryptosOptions = {
+  enabled: boolean;
+  proteus?: IProteusSource;
+};
+
+export type PylonQueueOptions = {
+  enabled: boolean;
+  iris?: IIrisSource;
+};
+
+export type PylonWebhookOptions = {
+  enabled: boolean;
+  proteus?: IProteusSource;
+  iris?: IIrisSource;
+};

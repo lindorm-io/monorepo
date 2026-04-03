@@ -17,7 +17,13 @@ import { PylonCookieConfig } from "./cookies";
 import { CorsOptions } from "./cors";
 import { OpenIdConfigurationOptions } from "./open-id-configuration";
 import { ParseBodyOptions } from "./parse-body";
-import { PylonHttpCallback, PylonSessionOptions } from "./pylon-callback-options";
+import {
+  PylonHttpCallback,
+  PylonKryptosOptions,
+  PylonQueueOptions,
+  PylonSessionOptions,
+  PylonWebhookOptions,
+} from "./pylon-callback-options";
 import { PylonSetup, PylonTeardown } from "./setup";
 import { PylonSubscribeOptions } from "./types";
 
@@ -57,7 +63,7 @@ export type PylonHttpOptions<C extends PylonHttpContext = PylonHttpContext> =
     openIdConfiguration?: Partial<OpenIdConfigurationOptions>;
     parseBody?: ParseBodyOptions;
     proxy?: boolean;
-    session?: PylonSessionOptions<C>;
+    session?: PylonSessionOptions;
   };
 
 export type PylonIoOptions<T extends PylonSocketContext = PylonSocketContext> =
@@ -73,10 +79,13 @@ export type PylonOptions<
   S extends PylonSocketContext = PylonSocketContext,
 > = PylonHttpOptions<C> &
   PylonIoOptions<S> & {
+    kryptos?: PylonKryptosOptions;
     port?: number;
+    queue?: PylonQueueOptions;
     setup?: PylonSetup;
     teardown?: PylonTeardown;
     subscriptions?: Array<PylonSubscribeOptions>;
+    webhook?: PylonWebhookOptions;
     workers?: Array<ILindormWorker | LindormWorkerConfig | string>;
     workersInterval?: ReadableTime;
     workersRetry?: RetryOptions;
