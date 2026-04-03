@@ -1,151 +1,154 @@
 import { ILogger } from "@lindorm/logger";
-import { IScanData, IScanner, Scanner } from "@lindorm/scanner";
-import { PylonError } from "../../errors";
-import { PylonHttpContext } from "../../types";
 import { PylonRouter } from "../../classes/PylonRouter";
+import { PylonError } from "../../errors";
+import { PylonHttpContext, PylonHttpMiddleware } from "../../types";
+import { PylonScannerBase, ScannedFile } from "./PylonScannerBase";
 
-type File<C extends PylonHttpContext> = {
-  default?: PylonRouter<C>;
-  router?: PylonRouter<C>;
-};
+const HTTP_METHODS = [
+  "GET",
+  "POST",
+  "PUT",
+  "PATCH",
+  "DELETE",
+  "HEAD",
+  "OPTIONS",
+] as const;
+type HttpMethod = (typeof HTTP_METHODS)[number];
 
-type Result<C extends PylonHttpContext> = {
-  path: string;
-  router: PylonRouter<C>;
-};
-
-export class PylonRouterScanner<C extends PylonHttpContext> {
-  private readonly logger: ILogger;
-  private readonly scanner: IScanner;
-
+export class PylonRouterScanner<
+  C extends PylonHttpContext = PylonHttpContext,
+> extends PylonScannerBase {
   public constructor(logger: ILogger) {
-    this.logger = logger;
-    this.scanner = new Scanner({
-      deniedTypes: [/^fixture$/, /^spec$/, /^test$/, /^integration$/],
-    });
+    super(logger.child(["PylonRouterScanner"]));
   }
 
-  // public
-
-  public scan(httpRoutersDirectory: string): PylonRouter<C> {
+  public scan(directory: string): PylonRouter<C> {
     const start = Date.now();
 
-    this.logger.debug("Finding routers automatically", { httpRoutersDirectory });
+    this.logger.debug("Scanning routes", { directory });
 
-    if (!Scanner.hasFiles(httpRoutersDirectory)) {
-      throw new PylonError(`Routers directory [ ${httpRoutersDirectory} ] is empty`);
+    const files = this.scanDirectory(directory);
+    const root = new PylonRouter<C>();
+
+    for (const file of files) {
+      this.processFile(root, file);
     }
 
-    const scan = this.scanner.scan(httpRoutersDirectory);
-
-    const { router } = this.mapScanData(scan);
-
-    this.logger.debug("Found routers automatically", {
-      directory: httpRoutersDirectory,
+    this.logger.debug("Routes scanned", {
+      directory,
+      routes: files.length,
       time: Date.now() - start,
     });
 
-    return router;
+    return root;
   }
 
-  // private
+  private processFile(root: PylonRouter<C>, file: ScannedFile): void {
+    const routerInstance = this.findRouterInstance(file);
 
-  private createRoutePath(scan: IScanData): string {
-    const path = "/" + scan.baseName.replace(/index/, "");
+    if (routerInstance) {
+      const path = this.buildRoutePath(file);
 
-    if (path.startsWith("[") && path.endsWith("]")) {
-      const replaced = path.replace("[", ":").replace("]", "");
+      if (file.middleware.length) {
+        routerInstance.use(...(file.middleware as Array<PylonHttpMiddleware<C>>));
+      }
 
-      this.logger.silly("Created route path", {
-        baseName: scan.baseName,
-        path: replaced,
-        from: path,
-      });
+      root.use(path, routerInstance.routes(), routerInstance.allowedMethods());
 
-      return replaced;
+      this.logger.debug("Registered router", { path, file: file.scan.relativePath });
+      return;
     }
 
-    this.logger.silly("Created route path", { baseName: scan.baseName, path });
+    const methods = this.findHttpMethods(file);
 
-    return path;
+    if (methods.length) {
+      const path = this.buildRoutePath(file);
+      const router = new PylonRouter<C>();
+
+      for (const { method, handlers } of methods) {
+        const allHandlers = [
+          ...(file.middleware as Array<PylonHttpMiddleware<C>>),
+          ...handlers,
+        ];
+
+        switch (method) {
+          case "GET":
+            router.get(path, ...allHandlers);
+            break;
+          case "POST":
+            router.post(path, ...allHandlers);
+            break;
+          case "PUT":
+            router.put(path, ...allHandlers);
+            break;
+          case "PATCH":
+            router.patch(path, ...allHandlers);
+            break;
+          case "DELETE":
+            router.delete(path, ...allHandlers);
+            break;
+          case "HEAD":
+            router.head(path, ...allHandlers);
+            break;
+          case "OPTIONS":
+            router.options(path, ...allHandlers);
+            break;
+        }
+
+        this.logger.debug("Registered route", {
+          method,
+          path,
+          file: file.scan.relativePath,
+        });
+      }
+
+      root.use(router.routes(), router.allowedMethods());
+      return;
+    }
+
+    throw new PylonError(
+      `File [ ${file.scan.relativePath} ] has no valid exports (expected PylonRouter instance or HTTP method exports: GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS)`,
+    );
   }
 
-  private findIndexInDirectory(scan: IScanData): Result<C> | undefined {
-    this.logger.silly("Finding index in directory", { relative: scan.relativePath });
-
-    const index = scan.children.find((file) => file.baseName === "index");
-
-    this.logger.silly("Found index in directory", { index: Boolean(index) });
-
-    if (!index) return;
-
-    return this.findRouterInFile(index);
+  private findRouterInstance(file: ScannedFile): PylonRouter<C> | null {
+    for (const value of Object.values(file.module)) {
+      if (value instanceof PylonRouter) {
+        return value as PylonRouter<C>;
+      }
+    }
+    return null;
   }
 
-  private findRoutersInDirectory(scan: IScanData): Result<C> {
-    this.logger.silly("Finding routers in directory", { relative: scan.relativePath });
+  private findHttpMethods(
+    file: ScannedFile,
+  ): Array<{ method: HttpMethod; handlers: Array<PylonHttpMiddleware<C>> }> {
+    const result: Array<{
+      method: HttpMethod;
+      handlers: Array<PylonHttpMiddleware<C>>;
+    }> = [];
 
-    const index = this.findIndexInDirectory(scan);
-    const router = index ? index.router : new PylonRouter<C>();
-    const path = this.createRoutePath(scan);
+    for (const method of HTTP_METHODS) {
+      const exported = file.module[method];
+      if (!exported) continue;
 
-    if (!index) {
-      this.logger.silly("Created new router from directory without index file", { path });
+      const handlers = Array.isArray(exported)
+        ? (exported as Array<PylonHttpMiddleware<C>>)
+        : [exported as PylonHttpMiddleware<C>];
+
+      result.push({ method, handlers });
     }
 
-    for (const item of scan.children) {
-      if (item.baseName === "index") continue;
-
-      const child = this.mapScanData(item);
-
-      this.logger.silly("Adding child to router", {
-        path: child.path,
-        relative: scan.relativePath,
-      });
-
-      router.use(child.path, child.router.routes(), child.router.allowedMethods());
-    }
-
-    this.logger.silly("Returning router from directory", {
-      path,
-      relative: scan.relativePath,
-    });
-
-    return { path, router };
+    return result;
   }
 
-  private findRouterInFile(scan: IScanData): Result<C> {
-    this.logger.silly("Finding router in file", { relative: scan.relativePath });
+  private buildRoutePath(file: ScannedFile): string {
+    const segments = file.pathSegments
+      .filter((s) => !s.isGroup && s.path)
+      .map((s) => s.path);
 
-    const file = this.scanner.require<File<C>>(scan.fullPath);
-    const router = file.router ? file.router : file.default;
-    const path = this.createRoutePath(scan);
+    const path = "/" + segments.join("/");
 
-    if (!router) {
-      throw new PylonError(
-        `File [ ${scan.relativePath} ] has no exported router from [ default | router ]`,
-      );
-    }
-
-    this.logger.silly("Returning router from file", {
-      path,
-      relative: scan.relativePath,
-    });
-
-    return { path, router };
-  }
-
-  private mapScanData(scan: IScanData): Result<C> {
-    this.logger.silly("Mapping scan data", { scan });
-
-    if (scan.isDirectory) {
-      return this.findRoutersInDirectory(scan);
-    }
-
-    if (scan.isFile) {
-      return this.findRouterInFile(scan);
-    }
-
-    throw new PylonError("Invalid scan data");
+    return path === "/" ? "/" : path;
   }
 }
