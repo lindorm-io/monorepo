@@ -1,4 +1,9 @@
-export const proxyGet = async (_ctx: any, next: any) => {
-  await next();
+export const GET = async (ctx: any) => {
+  ctx.body = {
+    route: "proxy/catch-all",
+    method: "GET",
+    params: ctx.params,
+    middlewareChain: ctx.state.middlewareChain,
+  };
+  ctx.status = 200;
 };
-export const GET = proxyGet;

@@ -1,7 +1,10 @@
 import { AesKit } from "@lindorm/aes";
 import { KryptosKit } from "@lindorm/kryptos";
 import { createMockLogger } from "@lindorm/logger";
+import axios from "axios";
 import nock from "nock";
+
+axios.defaults.proxy = false;
 import { WebhookAuth } from "../../enums";
 import { IWebhookSubscription } from "../../interfaces";
 import { createDispatchWebhook } from "./dispatch-webhook";

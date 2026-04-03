@@ -7,7 +7,7 @@ const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate);
 
 jest.mock("crypto");
-jest.mock("../utils");
+jest.mock("../utils/get-authorization");
 
 const randomUUID = _randomUUID as jest.Mock;
 const getAuthorization = _getAuthorization as jest.Mock;

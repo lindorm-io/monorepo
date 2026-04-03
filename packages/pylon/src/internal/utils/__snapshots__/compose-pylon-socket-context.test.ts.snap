@@ -1,0 +1,111 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`composePylonSocketContextBase should compose context with a single object arg (camelCased) 1`] = `
+{
+  "args": {
+    "anotherKey": 42,
+    "someKey": "value",
+  },
+  "data": {
+    "anotherKey": 42,
+    "someKey": "value",
+  },
+  "event": "test:event",
+  "eventId": "00000000-0000-0000-0000-000000000000",
+  "io": {
+    "fake": "io",
+  },
+  "params": {},
+  "socket": {
+    "fake": "socket",
+  },
+}
+`;
+
+exports[`composePylonSocketContextBase should handle empty args array 1`] = `
+{
+  "args": [],
+  "data": [],
+  "event": "empty:event",
+  "eventId": "00000000-0000-0000-0000-000000000000",
+  "io": {
+    "fake": "io",
+  },
+  "params": {},
+  "socket": {
+    "fake": "socket",
+  },
+}
+`;
+
+exports[`composePylonSocketContextBase should pass args through when multiple args are provided 1`] = `
+{
+  "args": [
+    "arg1",
+    "arg2",
+    "arg3",
+  ],
+  "data": [
+    "arg1",
+    "arg2",
+    "arg3",
+  ],
+  "event": "multi:args",
+  "eventId": "00000000-0000-0000-0000-000000000000",
+  "io": {
+    "fake": "io",
+  },
+  "params": {},
+  "socket": {
+    "fake": "socket",
+  },
+}
+`;
+
+exports[`composePylonSocketContextBase should pass args through when single arg is an array 1`] = `
+{
+  "args": [
+    [
+      1,
+      2,
+      3,
+    ],
+  ],
+  "data": [
+    [
+      1,
+      2,
+      3,
+    ],
+  ],
+  "event": "array:event",
+  "eventId": "00000000-0000-0000-0000-000000000000",
+  "io": {
+    "fake": "io",
+  },
+  "params": {},
+  "socket": {
+    "fake": "socket",
+  },
+}
+`;
+
+exports[`composePylonSocketContextBase should pass args through when single arg is not an object 1`] = `
+{
+  "args": [
+    "string-arg",
+  ],
+  "data": [
+    "string-arg",
+  ],
+  "event": "string:event",
+  "eventId": "00000000-0000-0000-0000-000000000000",
+  "io": {
+    "fake": "io",
+  },
+  "params": {},
+  "socket": {
+    "fake": "socket",
+  },
+}
+`;

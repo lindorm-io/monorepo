@@ -1,14 +1,13 @@
-import { Aegis } from "@lindorm/aegis";
-import { createMockAmphora } from "@lindorm/amphora";
-import { Conduit } from "@lindorm/conduit";
 import { createMockLogger } from "@lindorm/logger";
 import { createSocketContextInitialisationMiddleware } from "./socket-context-initialisation-middleware";
 
 describe("createSocketContextInitialisationMiddleware", () => {
   let ctx: any;
-  let options: any;
+  let logger: any;
 
   beforeEach(() => {
+    logger = createMockLogger();
+
     ctx = {
       eventId: "aa9a627d-8296-598c-9589-4ec91d27d056",
       socket: {
@@ -28,27 +27,12 @@ describe("createSocketContextInitialisationMiddleware", () => {
         },
       },
     };
-
-    options = {
-      amphora: createMockAmphora(),
-      issuer: "issuer",
-      logger: createMockLogger(),
-    };
   });
 
-  test("should initialise context", async () => {
+  test("should initialise context state", async () => {
     await expect(
-      createSocketContextInitialisationMiddleware(options)(ctx, jest.fn()),
+      createSocketContextInitialisationMiddleware(logger)(ctx, jest.fn()),
     ).resolves.toBeUndefined();
-
-    expect(ctx.logger).toEqual(expect.any(Object));
-    expect(ctx.amphora).toEqual(options.amphora);
-    expect(ctx.aegis).toEqual(expect.any(Aegis));
-    expect(ctx.conduits.conduit).toEqual(expect.any(Conduit));
-  });
-
-  test("should populate state", async () => {
-    await createSocketContextInitialisationMiddleware(options)(ctx, jest.fn());
 
     expect(ctx.state).toEqual({
       app: {
@@ -68,10 +52,20 @@ describe("createSocketContextInitialisationMiddleware", () => {
     });
   });
 
+  test("should create child logger with event metadata", async () => {
+    await createSocketContextInitialisationMiddleware(logger)(ctx, jest.fn());
+
+    expect(ctx.logger).toEqual(expect.any(Object));
+    expect(logger.child).toHaveBeenCalledWith(["Event"], {
+      eventId: "aa9a627d-8296-598c-9589-4ec91d27d056",
+      socketId: "009aecca-3bc0-500f-8e67-6dae90188c7d",
+    });
+  });
+
   test("should extract bearer authorization from handshake", async () => {
     ctx.socket.handshake.headers.authorization = "Bearer test-token";
 
-    await createSocketContextInitialisationMiddleware(options)(ctx, jest.fn());
+    await createSocketContextInitialisationMiddleware(logger)(ctx, jest.fn());
 
     expect(ctx.state.authorization).toEqual({
       type: "bearer",

@@ -1,7 +1,10 @@
+import axios from "axios";
 import { createMockLogger } from "@lindorm/logger";
 import nock from "nock";
 import { getAuthClient } from "./get-auth-client";
 import { getOpenIdConfiguration as _getOpenIdConfiguration } from "./get-open-id-configuration";
+
+axios.defaults.proxy = false;
 
 jest.mock("./get-open-id-configuration");
 
