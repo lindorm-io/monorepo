@@ -1,6 +1,6 @@
 import type { IIrisMessageBus, IIrisSource, IIrisWorkerQueue } from "@lindorm/iris";
 import type { ILogger } from "@lindorm/logger";
-import type { ProteusSource } from "@lindorm/proteus";
+import type { IProteusSource } from "@lindorm/proteus";
 import type { ClassLike, Constructor, Dict } from "@lindorm/types";
 import EventEmitter from "events";
 import { ms } from "@lindorm/date";
@@ -49,8 +49,8 @@ type CloneInput = {
   statusRef: StatusRef;
   causationExpiryMs: number;
   checksumMode: ChecksumMode;
-  proteus: ProteusSource;
-  viewSources: Map<string, ProteusSource>;
+  proteus: IProteusSource;
+  viewSources: Map<string, IProteusSource>;
   iris: IIrisSource;
   registry: HermesRegistry;
   aggregateDomain: AggregateDomain;
@@ -78,8 +78,8 @@ export class Hermes implements IHermes {
   private readonly causationExpiryMs: number;
   private readonly checksumMode: ChecksumMode;
 
-  private readonly proteus: ProteusSource;
-  private readonly viewSourceMap: Map<string, ProteusSource>;
+  private readonly proteus: IProteusSource;
+  private readonly viewSourceMap: Map<string, IProteusSource>;
   private readonly iris: IIrisSource;
   private readonly options: HermesOptions | null;
 
@@ -775,7 +775,7 @@ export class Hermes implements IHermes {
       EncryptionRecord,
     ]);
 
-    const viewSourcesWithCausation = new Set<ProteusSource>();
+    const viewSourcesWithCausation = new Set<IProteusSource>();
 
     for (const view of this.registry.allViews) {
       const source = this.resolveSourceForView(view);
@@ -898,7 +898,7 @@ export class Hermes implements IHermes {
     name: string;
     namespace: string;
     driverType: string | null;
-  }): ProteusSource {
+  }): IProteusSource {
     if (!view.driverType) {
       return this.proteus;
     }

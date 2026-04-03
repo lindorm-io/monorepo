@@ -1,7 +1,7 @@
 import { ShaKit } from "@lindorm/sha";
 import type { IIrisMessageBus, IIrisWorkerQueue } from "@lindorm/iris";
 import type { ILogger } from "@lindorm/logger";
-import type { ProteusSource } from "@lindorm/proteus";
+import type { IProteusSource } from "@lindorm/proteus";
 import type { Dict } from "@lindorm/types";
 import { sortKeys } from "@lindorm/utils";
 import { randomUUID } from "@lindorm/random";
@@ -14,7 +14,7 @@ import { findChecksum, insertChecksum } from "#internal/stores";
 
 export type ChecksumDomainOptions = {
   registry: HermesRegistry;
-  proteus: ProteusSource;
+  proteus: IProteusSource;
   iris: {
     eventBus: IIrisMessageBus<HermesEventMessage>;
     errorQueue: IIrisWorkerQueue<HermesErrorMessage>;
@@ -28,7 +28,7 @@ export class ChecksumDomain {
   private readonly eventEmitter: EventEmitter;
   private readonly logger: ILogger;
   private readonly registry: HermesRegistry;
-  private readonly proteus: ProteusSource;
+  private readonly proteus: IProteusSource;
   private readonly eventBus: IIrisMessageBus<HermesEventMessage>;
   private readonly errorQueue: IIrisWorkerQueue<HermesErrorMessage>;
 

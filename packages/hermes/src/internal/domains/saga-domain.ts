@@ -2,7 +2,7 @@ import { snakeCase } from "@lindorm/case";
 import type { ILogger } from "@lindorm/logger";
 import type { IIrisMessageBus, IIrisWorkerQueue } from "@lindorm/iris";
 import { DuplicateKeyError, OptimisticLockError } from "@lindorm/proteus";
-import type { IProteusRepository, ProteusSource } from "@lindorm/proteus";
+import type { IProteusRepository, IProteusSource } from "@lindorm/proteus";
 import type { ClassLike, Dict } from "@lindorm/types";
 import EventEmitter from "events";
 import {
@@ -29,7 +29,7 @@ import type { SagaPendingMessage } from "./saga-model";
 
 export type SagaDomainOptions = {
   registry: HermesRegistry;
-  proteusSource: ProteusSource;
+  proteusSource: IProteusSource;
   eventBus: IIrisMessageBus<HermesEventMessage>;
   commandQueue: IIrisWorkerQueue<HermesCommandMessage>;
   timeoutQueue: IIrisWorkerQueue<HermesTimeoutMessage>;
@@ -50,7 +50,7 @@ export class SagaDomain {
   private readonly eventEmitter: EventEmitter;
   private readonly logger: ILogger;
   private readonly registry: HermesRegistry;
-  private readonly proteusSource: ProteusSource;
+  private readonly proteusSource: IProteusSource;
   private readonly eventBus: IIrisMessageBus<HermesEventMessage>;
   private readonly commandQueue: IIrisWorkerQueue<HermesCommandMessage>;
   private readonly timeoutQueue: IIrisWorkerQueue<HermesTimeoutMessage>;
