@@ -23,6 +23,7 @@ import { createWellKnownRouter } from "#internal/utils/create-well-known-router"
 import { isArray, isString } from "@lindorm/is";
 import { ILogger } from "@lindorm/logger";
 import Koa from "koa";
+import { useRateLimit } from "../middleware/common/use-rate-limit";
 import {
   HttpCallback,
   PylonHttpContext,
@@ -98,9 +99,28 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
         hermes: this.options.hermes,
         iris: this.options.iris,
         proteus: this.options.proteus,
+        rateLimitProteus: this.options.rateLimit?.enabled
+          ? (this.options.rateLimit.proteus ?? this.options.proteus)
+          : undefined,
+        roomsProteus: this.options.rooms?.presence
+          ? (this.options.rooms.proteus ?? this.options.proteus)
+          : undefined,
       }),
       createQueueMiddleware(this.options.queue),
       createWebhookMiddleware(this.options.webhook),
+      ...(this.options.rateLimit?.enabled &&
+      this.options.rateLimit.window &&
+      this.options.rateLimit.max
+        ? [
+            useRateLimit({
+              window: this.options.rateLimit.window,
+              max: this.options.rateLimit.max,
+              strategy: this.options.rateLimit.strategy,
+              key: this.options.rateLimit.key,
+              skip: this.options.rateLimit.skip,
+            }),
+          ]
+        : []),
     ]);
 
     this.logger.debug("Middleware loaded");

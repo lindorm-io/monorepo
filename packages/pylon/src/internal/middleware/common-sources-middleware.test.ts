@@ -1,6 +1,7 @@
 import { createMockIrisSource } from "@lindorm/iris/mocks";
 import { createMockLogger } from "@lindorm/logger";
 import { createMockProteusSource } from "@lindorm/proteus/mocks";
+import { RATE_LIMIT_SOURCE, ROOMS_SOURCE } from "../constants/symbols";
 import { createSourcesMiddleware } from "./common-sources-middleware";
 
 describe("createSourcesMiddleware", () => {
@@ -19,7 +20,7 @@ describe("createSourcesMiddleware", () => {
 
     await middleware(ctx, jest.fn());
 
-    expect(proteus.clone).toHaveBeenCalledWith({ logger: ctx.logger });
+    expect(proteus.clone).toHaveBeenCalledWith({ logger: ctx.logger, context: ctx });
     expect(ctx.proteus).toBeDefined();
   });
 
@@ -30,7 +31,7 @@ describe("createSourcesMiddleware", () => {
 
     await middleware(ctx, jest.fn());
 
-    expect(iris.clone).toHaveBeenCalledWith({ logger: ctx.logger });
+    expect(iris.clone).toHaveBeenCalledWith({ logger: ctx.logger, context: ctx });
     expect(ctx.iris).toBeDefined();
   });
 
@@ -53,5 +54,51 @@ describe("createSourcesMiddleware", () => {
     expect(ctx.proteus).toBeUndefined();
     expect(ctx.iris).toBeUndefined();
     expect(ctx.hermes).toBeUndefined();
+  });
+
+  test("should clone rateLimitProteus onto context via symbol", async () => {
+    const rateLimitProteus = createMockProteusSource();
+
+    const middleware = createSourcesMiddleware({
+      rateLimitProteus: rateLimitProteus as any,
+    });
+
+    await middleware(ctx, jest.fn());
+
+    expect(rateLimitProteus.clone).toHaveBeenCalledWith({
+      logger: ctx.logger,
+      context: ctx,
+    });
+    expect(ctx[RATE_LIMIT_SOURCE]).toBeDefined();
+  });
+
+  test("should clone roomsProteus onto context via symbol", async () => {
+    const roomsProteus = createMockProteusSource();
+
+    const middleware = createSourcesMiddleware({ roomsProteus: roomsProteus as any });
+
+    await middleware(ctx, jest.fn());
+
+    expect(roomsProteus.clone).toHaveBeenCalledWith({
+      logger: ctx.logger,
+      context: ctx,
+    });
+    expect(ctx[ROOMS_SOURCE]).toBeDefined();
+  });
+
+  test("should not set rate limit symbol when rateLimitProteus not provided", async () => {
+    const middleware = createSourcesMiddleware({});
+
+    await middleware(ctx, jest.fn());
+
+    expect(ctx[RATE_LIMIT_SOURCE]).toBeUndefined();
+  });
+
+  test("should not set rooms symbol when roomsProteus not provided", async () => {
+    const middleware = createSourcesMiddleware({});
+
+    await middleware(ctx, jest.fn());
+
+    expect(ctx[ROOMS_SOURCE]).toBeUndefined();
   });
 });

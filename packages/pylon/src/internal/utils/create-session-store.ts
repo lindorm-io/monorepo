@@ -10,7 +10,7 @@ const getSource = (
   override?: IProteusSource,
 ): IProteusSource | null => {
   if (override) {
-    return override.clone({ logger: ctx.logger });
+    return override.clone({ logger: ctx.logger, context: ctx });
   }
   return ctx.proteus ?? null;
 };

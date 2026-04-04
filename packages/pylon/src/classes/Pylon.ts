@@ -11,7 +11,15 @@ import {
   PylonSocketContext,
   PylonTeardown,
 } from "../types";
-import { Kryptos, Session, WebhookSubscription } from "../entities";
+import {
+  Kryptos,
+  Presence,
+  RateLimitBucket,
+  RateLimitFixed,
+  RateLimitSliding,
+  Session,
+  WebhookSubscription,
+} from "../entities";
 import { Job, WebhookDispatch, WebhookRequest } from "../messages";
 import { calculateSubscriptions } from "#internal/utils/calculate-subscriptions";
 import { calculateWorkers } from "#internal/utils/calculate-workers";
@@ -259,6 +267,20 @@ export class Pylon<
       const irisSource = this.options.webhook.iris ?? this.options.iris;
       if (irisSource) {
         irisSource.addMessages([WebhookRequest, WebhookDispatch]);
+      }
+    }
+
+    if (this.options.rateLimit?.enabled) {
+      const source = this.options.rateLimit.proteus ?? this.options.proteus;
+      if (source) {
+        source.addEntities([RateLimitFixed, RateLimitSliding, RateLimitBucket]);
+      }
+    }
+
+    if (this.options.rooms?.presence) {
+      const source = this.options.rooms.proteus ?? this.options.proteus;
+      if (source) {
+        source.addEntities([Presence]);
       }
     }
   }

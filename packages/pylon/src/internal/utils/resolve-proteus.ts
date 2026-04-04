@@ -7,7 +7,7 @@ export const resolveProteus = (
   override?: IProteusSource,
 ): IProteusSource => {
   if (override) {
-    return override.clone({ logger: ctx.logger });
+    return override.clone({ logger: ctx.logger, context: ctx });
   }
   if (ctx.proteus) {
     return ctx.proteus;

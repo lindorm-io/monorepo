@@ -21,6 +21,8 @@ import {
   PylonHttpCallback,
   PylonKryptosOptions,
   PylonQueueOptions,
+  PylonRateLimitOptions,
+  PylonRoomsOptions,
   PylonSessionOptions,
   PylonWebhookOptions,
 } from "./pylon-callback-options";
@@ -43,6 +45,8 @@ type CommonOptions = {
   name?: string;
   proteus?: IProteusSource;
   queue?: PylonQueueOptions;
+  rateLimit?: PylonRateLimitOptions;
+  rooms?: PylonRoomsOptions;
   version?: string;
   webhook?: PylonWebhookOptions;
 };
