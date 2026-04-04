@@ -1,6 +1,6 @@
 import { AesKit } from "@lindorm/aes";
 import { IProteusSource } from "@lindorm/proteus";
-import { SessionEntity } from "../../entities";
+import { Session } from "../../entities";
 import { IPylonSession } from "../../interfaces";
 import { IPylonSessionStore } from "../../interfaces/PylonSessionStore";
 import { PylonCommonContext, PylonSessionOptions } from "../../types";
@@ -41,7 +41,7 @@ export const createSessionStore = (
         }
       }
 
-      const result = await source.repository(SessionEntity).insert(session);
+      const result = await source.repository(Session).insert(session);
       return result.id;
     },
 
@@ -49,7 +49,7 @@ export const createSessionStore = (
       const source = getSource(ctx, options.proteus);
       if (!source) return null;
 
-      const session = await source.repository(SessionEntity).findOne({ id });
+      const session = await source.repository(Session).findOne({ id });
 
       if (!session) return null;
 
@@ -72,14 +72,14 @@ export const createSessionStore = (
       const source = getSource(ctx, options.proteus);
       if (!source) return;
 
-      await source.repository(SessionEntity).delete({ id });
+      await source.repository(Session).delete({ id });
     },
 
     logout: async (ctx, subject): Promise<void> => {
       const source = getSource(ctx, options.proteus);
       if (!source) return;
 
-      await source.repository(SessionEntity).delete({ subject });
+      await source.repository(Session).delete({ subject });
     },
   };
 };

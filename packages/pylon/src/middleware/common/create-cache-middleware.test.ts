@@ -5,7 +5,7 @@ import { createCacheMiddleware } from "./create-cache-middleware";
 jest.mock("#internal/utils/resolve-proteus");
 import { resolveProteus } from "#internal/utils/resolve-proteus";
 
-class SessionEntity {}
+class Session {}
 class TokenEntity {}
 
 describe("createCacheMiddleware", () => {
@@ -26,35 +26,35 @@ describe("createCacheMiddleware", () => {
   });
 
   test("should call next", async () => {
-    await createCacheMiddleware([SessionEntity])(ctx, next);
+    await createCacheMiddleware([Session])(ctx, next);
 
     expect(next).toHaveBeenCalledTimes(1);
   });
 
   test("should set ctx.caches with correct camelCased keys", async () => {
-    await createCacheMiddleware([SessionEntity, TokenEntity])(ctx, next);
+    await createCacheMiddleware([Session, TokenEntity])(ctx, next);
 
     expect(ctx.caches).toBeDefined();
     expect(Object.keys(ctx.caches)).toMatchSnapshot();
   });
 
   test("should lazily create caches", async () => {
-    await createCacheMiddleware([SessionEntity])(ctx, next);
+    await createCacheMiddleware([Session])(ctx, next);
 
     expect(mockSource.repository).not.toHaveBeenCalled();
 
-    const cache = ctx.caches.sessionEntity;
+    const cache = ctx.caches.session;
 
     expect(mockSource.repository).toHaveBeenCalledTimes(1);
-    expect(mockSource.repository).toHaveBeenCalledWith(SessionEntity);
+    expect(mockSource.repository).toHaveBeenCalledWith(Session);
     expect(cache).toBe(mockRepository);
   });
 
   test("should cache on second access", async () => {
-    await createCacheMiddleware([SessionEntity])(ctx, next);
+    await createCacheMiddleware([Session])(ctx, next);
 
-    const cache1 = ctx.caches.sessionEntity;
-    const cache2 = ctx.caches.sessionEntity;
+    const cache1 = ctx.caches.session;
+    const cache2 = ctx.caches.session;
 
     expect(mockSource.repository).toHaveBeenCalledTimes(1);
     expect(cache1).toBe(cache2);
@@ -63,7 +63,7 @@ describe("createCacheMiddleware", () => {
   test("should pass the override source to resolveProteus when provided", async () => {
     const overrideSource: any = { repository: jest.fn() };
 
-    await createCacheMiddleware([SessionEntity], overrideSource)(ctx, next);
+    await createCacheMiddleware([Session], overrideSource)(ctx, next);
 
     expect(resolveProteus).toHaveBeenCalledWith(ctx, overrideSource);
   });
@@ -73,7 +73,7 @@ describe("createCacheMiddleware", () => {
       throw new ServerError("ProteusSource is not configured");
     });
 
-    await expect(createCacheMiddleware([SessionEntity])(ctx, next)).rejects.toThrow(
+    await expect(createCacheMiddleware([Session])(ctx, next)).rejects.toThrow(
       ServerError,
     );
   });
