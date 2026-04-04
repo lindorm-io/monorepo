@@ -4,7 +4,7 @@ import { Dict } from "@lindorm/types";
 @Namespace("pylon")
 @Message()
 @Topic(() => "pylon.webhook.request")
-export class PylonWebhookRequest {
+export class WebhookRequest {
   @CorrelationField()
   public readonly correlationId!: string;
 

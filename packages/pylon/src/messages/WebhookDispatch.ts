@@ -5,7 +5,7 @@ import { IWebhookSubscription } from "../interfaces";
 @Namespace("pylon")
 @Message()
 @Topic(() => "pylon.webhook.dispatch")
-export class PylonWebhookDispatch {
+export class WebhookDispatch {
   @CorrelationField()
   public readonly correlationId!: string;
 

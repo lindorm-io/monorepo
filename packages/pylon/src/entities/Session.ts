@@ -4,7 +4,7 @@ import { IPylonSession } from "../interfaces";
 
 @Namespace("pylon")
 @Entity({ name: "session" })
-export class SessionEntity implements IPylonSession {
+export class Session implements IPylonSession {
   @PrimaryKeyField()
   public id!: string;
 

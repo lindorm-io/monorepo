@@ -21,7 +21,7 @@ import {
 
 @Namespace("pylon")
 @Entity({ name: "kryptos" })
-export class KryptosEntity implements KryptosDB {
+export class Kryptos implements KryptosDB {
   @PrimaryKeyField()
   public id!: string;
 

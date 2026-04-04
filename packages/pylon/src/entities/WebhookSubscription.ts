@@ -20,7 +20,7 @@ import { IWebhookSubscription } from "../interfaces";
 
 @Namespace("pylon")
 @Entity({ name: "webhook_subscription" })
-export class WebhookSubscriptionEntity implements IWebhookSubscription {
+export class WebhookSubscription implements IWebhookSubscription {
   @PrimaryKeyField()
   public id!: string;
 

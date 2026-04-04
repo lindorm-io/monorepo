@@ -4,7 +4,7 @@ import { Dict } from "@lindorm/types";
 @Namespace("pylon")
 @Message()
 @Topic(() => "pylon.queue.job")
-export class PylonJob {
+export class Job {
   @CorrelationField()
   public readonly correlationId!: string;
 

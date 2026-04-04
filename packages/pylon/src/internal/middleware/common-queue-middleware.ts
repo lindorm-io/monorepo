@@ -1,7 +1,7 @@
 import { ServerError } from "@lindorm/errors";
 import { Middleware } from "@lindorm/middleware";
 import { Dict, Priority } from "@lindorm/types";
-import { PylonJob } from "../../messages";
+import { Job } from "../../messages";
 import { PylonContext, PylonQueueOptions } from "../../types";
 import { resolveIris } from "../utils/resolve-iris";
 
@@ -35,7 +35,7 @@ export const createQueueMiddleware = <C extends PylonContext>(
     ): Promise<void> => {
       try {
         const iris = resolveIris(ctx, options.iris);
-        const wq = iris.workerQueue(PylonJob);
+        const wq = iris.workerQueue(Job);
         const job = wq.create({
           correlationId: ctx.state.metadata.correlationId,
           event,

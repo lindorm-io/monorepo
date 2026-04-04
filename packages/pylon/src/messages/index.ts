@@ -1,3 +1,3 @@
-export * from "./PylonJob";
-export * from "./PylonWebhookDispatch";
-export * from "./PylonWebhookRequest";
+export * from "./Job";
+export * from "./WebhookDispatch";
+export * from "./WebhookRequest";

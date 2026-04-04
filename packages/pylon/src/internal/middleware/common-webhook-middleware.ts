@@ -1,7 +1,7 @@
 import { ServerError } from "@lindorm/errors";
 import { Middleware } from "@lindorm/middleware";
 import { Dict } from "@lindorm/types";
-import { PylonWebhookRequest } from "../../messages";
+import { WebhookRequest } from "../../messages";
 import { PylonContext, PylonWebhookOptions } from "../../types";
 import { resolveIris } from "../utils/resolve-iris";
 
@@ -25,7 +25,7 @@ export const createWebhookMiddleware = <C extends PylonContext>(
     ): Promise<void> => {
       try {
         const iris = resolveIris(ctx, options.iris);
-        const wq = iris.workerQueue(PylonWebhookRequest);
+        const wq = iris.workerQueue(WebhookRequest);
         const msg = wq.create({
           correlationId: ctx.state.metadata.correlationId,
           event,

@@ -1,0 +1,17 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`tokenBucketStrategy should create new bucket with max tokens and allow 1`] = `
+{
+  "allowed": true,
+  "remaining": 9,
+  "resetAt": 2026-01-01T00:01:00.000Z,
+}
+`;
+
+exports[`tokenBucketStrategy should deny when no tokens remain 1`] = `
+{
+  "allowed": false,
+  "remaining": 0,
+  "resetAt": 2026-01-01T00:01:06.000Z,
+}
+`;

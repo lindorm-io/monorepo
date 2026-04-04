@@ -2,7 +2,7 @@
 
 exports[`createCacheMiddleware should set ctx.caches with correct camelCased keys 1`] = `
 [
-  "sessionEntity",
+  "session",
   "tokenEntity",
 ]
 `;

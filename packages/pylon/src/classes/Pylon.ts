@@ -11,8 +11,8 @@ import {
   PylonSocketContext,
   PylonTeardown,
 } from "../types";
-import { KryptosEntity, SessionEntity, WebhookSubscriptionEntity } from "../entities";
-import { PylonJob, PylonWebhookDispatch, PylonWebhookRequest } from "../messages";
+import { Kryptos, Session, WebhookSubscription } from "../entities";
+import { Job, WebhookDispatch, WebhookRequest } from "../messages";
 import { calculateSubscriptions } from "#internal/utils/calculate-subscriptions";
 import { calculateWorkers } from "#internal/utils/calculate-workers";
 import { scanWorkers } from "#internal/utils/scan-workers";
@@ -232,33 +232,33 @@ export class Pylon<
     if (this.options.session?.enabled) {
       const source = this.options.session.proteus ?? this.options.proteus;
       if (source) {
-        source.addEntities([SessionEntity]);
+        source.addEntities([Session]);
       }
     }
 
     if (this.options.kryptos?.enabled) {
       const source = this.options.kryptos.proteus ?? this.options.proteus;
       if (source) {
-        source.addEntities([KryptosEntity]);
+        source.addEntities([Kryptos]);
       }
     }
 
     if (this.options.queue?.enabled) {
       const source = this.options.queue.iris ?? this.options.iris;
       if (source) {
-        source.addMessages([PylonJob]);
+        source.addMessages([Job]);
       }
     }
 
     if (this.options.webhook?.enabled) {
       const proteusSource = this.options.webhook.proteus ?? this.options.proteus;
       if (proteusSource) {
-        proteusSource.addEntities([WebhookSubscriptionEntity]);
+        proteusSource.addEntities([WebhookSubscription]);
       }
 
       const irisSource = this.options.webhook.iris ?? this.options.iris;
       if (irisSource) {
-        irisSource.addMessages([PylonWebhookRequest, PylonWebhookDispatch]);
+        irisSource.addMessages([WebhookRequest, WebhookDispatch]);
       }
     }
   }
