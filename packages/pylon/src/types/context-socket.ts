@@ -9,6 +9,17 @@ export type PylonEnvelopeHeader = {
   [key: string]: unknown;
 };
 
+export type PylonRoomContext = {
+  join: (room: string) => Promise<void>;
+  leave: (room: string) => Promise<void>;
+  broadcast: (room: string, event: string, data?: any) => void;
+  emit: (room: string, event: string, data?: any) => void;
+  members: (room: string) => Promise<Array<string>>;
+  presence?: (
+    room: string,
+  ) => Promise<Array<{ userId: string; socketId: string; joinedAt: Date }>>;
+};
+
 export type PylonSocketContextBase<
   Payload = any,
   Data extends PylonSocketData = PylonSocketData,
@@ -23,6 +34,7 @@ export type PylonSocketContextBase<
   io: IoServer;
   nack: ((error: any) => void) | null;
   params: Dict<string>;
+  rooms?: PylonRoomContext;
   socket: PylonSocket<Data>;
 };
 
