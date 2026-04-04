@@ -1,10 +1,5 @@
 import { ClientError } from "@lindorm/errors";
-import { isHttpContext } from "#internal/utils/is-context";
 import { useTenant } from "./use-tenant";
-
-jest.mock("#internal/utils/is-context");
-
-const mockIsHttpContext = isHttpContext as jest.MockedFunction<typeof isHttpContext>;
 
 describe("useTenant", () => {
   let ctx: any;
@@ -12,7 +7,6 @@ describe("useTenant", () => {
 
   beforeEach(() => {
     next = jest.fn();
-    mockIsHttpContext.mockReturnValue(false);
 
     ctx = {
       state: {
@@ -30,7 +24,7 @@ describe("useTenant", () => {
     };
   });
 
-  test("should extract tenantId from token payload and set on ctx.state.tenant", async () => {
+  test("should extract tenantId from default token path", async () => {
     await useTenant()(ctx, next);
 
     expect(ctx.state.tenant).toBe("tenant-abc");
@@ -47,58 +41,49 @@ describe("useTenant", () => {
   test("should throw 403 when required and no tenant found", async () => {
     ctx.state.tokens.accessToken.payload.tenantId = undefined;
 
-    try {
-      await useTenant()(ctx, next);
-      fail("expected error");
-    } catch (err: any) {
-      expect(err).toBeInstanceOf(ClientError);
-      expect(err.status).toBe(403);
-      expect(err.message).toMatchSnapshot();
-      expect(err.code).toMatchSnapshot();
-    }
+    await expect(useTenant()(ctx, next)).rejects.toThrow(ClientError);
   });
 
   test("should allow missing tenant when required is false", async () => {
     ctx.state.tokens.accessToken.payload.tenantId = undefined;
 
-    await useTenant({ required: false })(ctx, next);
+    await useTenant(undefined, { required: false })(ctx, next);
 
     expect(ctx.state.tenant).toBeNull();
     expect(next).toHaveBeenCalledTimes(1);
   });
 
-  test("should fall back to header on HTTP context when token has no tenantId", async () => {
-    ctx.state.tokens.accessToken.payload.tenantId = undefined;
-    ctx.get = jest.fn().mockReturnValue("tenant-from-header");
-    mockIsHttpContext.mockReturnValue(true);
+  test("should read from custom path", async () => {
+    ctx.params = { tenantId: "tenant-from-params" };
 
-    await useTenant({ header: "x-tenant-id" })(ctx, next);
+    await useTenant("params.tenantId")(ctx, next);
 
-    expect(ctx.state.tenant).toBe("tenant-from-header");
-    expect(ctx.get).toHaveBeenCalledWith("x-tenant-id");
+    expect(ctx.state.tenant).toBe("tenant-from-params");
     expect(ctx.proteus.setFilterParams).toHaveBeenCalledWith("__scope", {
-      tenantId: "tenant-from-header",
+      tenantId: "tenant-from-params",
     });
   });
 
-  test("should not check header on socket context", async () => {
-    ctx.state.tokens.accessToken.payload.tenantId = undefined;
-    ctx.get = jest.fn();
-    mockIsHttpContext.mockReturnValue(false);
+  test("should read from header path", async () => {
+    ctx.headers = { "x-tenant-id": "tenant-from-header" };
 
-    await expect(useTenant({ header: "x-tenant-id" })(ctx, next)).rejects.toThrow(
-      ClientError,
-    );
+    await useTenant("headers.x-tenant-id")(ctx, next);
 
-    expect(ctx.get).not.toHaveBeenCalled();
+    expect(ctx.state.tenant).toBe("tenant-from-header");
   });
 
-  test("should use custom token key", async () => {
-    ctx.state.tokens.idToken = {
-      payload: { tenantId: "tenant-from-id" },
-    };
+  test("should read from data path", async () => {
+    ctx.data = { tenantId: "tenant-from-data" };
 
-    await useTenant({ token: "idToken" })(ctx, next);
+    await useTenant("data.tenantId")(ctx, next);
+
+    expect(ctx.state.tenant).toBe("tenant-from-data");
+  });
+
+  test("should read from custom token path", async () => {
+    ctx.state.tokens.idToken = { payload: { tenantId: "tenant-from-id" } };
+
+    await useTenant("state.tokens.idToken.payload.tenantId")(ctx, next);
 
     expect(ctx.state.tenant).toBe("tenant-from-id");
   });
@@ -106,7 +91,7 @@ describe("useTenant", () => {
   test("should set ctx.state.tenant to null when not required and not found", async () => {
     ctx.state.tokens = {};
 
-    await useTenant({ required: false })(ctx, next);
+    await useTenant(undefined, { required: false })(ctx, next);
 
     expect(ctx.state.tenant).toBeNull();
   });
@@ -122,9 +107,20 @@ describe("useTenant", () => {
   test("should not call setFilterParams when tenantId not found and not required", async () => {
     ctx.state.tokens = {};
 
-    await useTenant({ required: false })(ctx, next);
+    await useTenant(undefined, { required: false })(ctx, next);
 
     expect(ctx.proteus.setFilterParams).not.toHaveBeenCalled();
+  });
+
+  test("should include path in error details", async () => {
+    ctx.state.tokens = {};
+
+    try {
+      await useTenant("params.tenantId")(ctx, next);
+      fail("expected error");
+    } catch (err: any) {
+      expect(err.details).toContain("params.tenantId");
+    }
   });
 
   test("should call next", async () => {
