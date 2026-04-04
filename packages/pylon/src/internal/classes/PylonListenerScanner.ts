@@ -3,6 +3,7 @@ import { uniq } from "@lindorm/utils";
 import { PylonListener } from "../../classes/PylonListener";
 import { PylonError } from "../../errors";
 import { PylonSocketContext, PylonSocketMiddleware } from "../../types";
+import { EventMatcher, EventSegment } from "./EventMatcher";
 import { PylonScannerBase, ScannedFile } from "./PylonScannerBase";
 
 const LISTENER_METHODS = ["ON", "ONCE"] as const;
@@ -67,7 +68,8 @@ export class PylonListenerScanner<
     const methods = this.findListenerMethods(file);
 
     if (methods.length) {
-      const event = this.buildEventName(file);
+      const segments = this.buildEventSegments(file);
+      const event = this.buildEventName(segments);
       const listener = new PylonListener<S>();
 
       if (file.middleware.length) {
@@ -75,14 +77,12 @@ export class PylonListenerScanner<
       }
 
       for (const { method, handlers } of methods) {
-        switch (method) {
-          case "ON":
-            listener.on(event, ...handlers);
-            break;
-          case "ONCE":
-            listener.once(event, ...handlers);
-            break;
-        }
+        listener._addScannedListener(
+          event,
+          method === "ON" ? "on" : "once",
+          segments,
+          handlers,
+        );
 
         this.logger.debug("Registered listener", {
           method,
@@ -130,11 +130,23 @@ export class PylonListenerScanner<
     return result;
   }
 
-  private buildEventName(file: ScannedFile): string {
-    const segments = file.pathSegments
-      .filter((s) => !s.isGroup && s.path)
-      .map((s) => s.path);
+  private buildEventSegments(file: ScannedFile): Array<EventSegment> {
+    const filtered = file.pathSegments.filter((s) => !s.isGroup && s.path);
+    return EventMatcher.parseSegments(filtered);
+  }
 
-    return segments.join(":");
+  private buildEventName(segments: Array<EventSegment>): string {
+    return segments
+      .map((s) => {
+        switch (s.type) {
+          case "literal":
+            return s.value;
+          case "param":
+            return `:${s.value}`;
+          case "catchAll":
+            return `*${s.value}`;
+        }
+      })
+      .join(":");
   }
 }

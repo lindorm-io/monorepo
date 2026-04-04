@@ -1,9 +1,11 @@
+import { EventSegment } from "../internal/classes/EventMatcher";
 import { PylonListenerMethod, PylonSocketContext, PylonSocketMiddleware } from "../types";
 
 type Listener<C extends PylonSocketContext> = {
   event: string;
   method: PylonListenerMethod;
   listeners: Array<PylonSocketMiddleware<C>>;
+  segments?: Array<EventSegment>;
 };
 
 type Options = {
@@ -88,6 +90,16 @@ export class PylonListener<C extends PylonSocketContext = PylonSocketContext> {
     ...listeners: Array<PylonSocketMiddleware<C>>
   ): void {
     this._listeners.push({ event, method: "prependAnyOutgoing", listeners });
+  }
+
+  /** @internal — used by PylonListenerScanner to register listeners with segment metadata */
+  public _addScannedListener(
+    event: string,
+    method: PylonListenerMethod,
+    segments: Array<EventSegment>,
+    handlers: Array<PylonSocketMiddleware<C>>,
+  ): void {
+    this._listeners.push({ event, method, listeners: handlers, segments });
   }
 
   // private

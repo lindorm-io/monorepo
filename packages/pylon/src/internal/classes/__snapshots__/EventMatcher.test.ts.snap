@@ -1,0 +1,162 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`EventMatcher catch-all matching should match a single remaining segment 1`] = `
+{
+  "data": [
+    "handler1",
+  ],
+  "params": {
+    "path": "x",
+  },
+}
+`;
+
+exports[`EventMatcher catch-all matching should match and capture all remaining segments 1`] = `
+{
+  "data": [
+    "handler1",
+  ],
+  "params": {
+    "path": "a:b:c",
+  },
+}
+`;
+
+exports[`EventMatcher catch-all matching should match any event when pattern is only a catch-all 1`] = `
+{
+  "data": [
+    "handler1",
+  ],
+  "params": {
+    "event": "anything:at:all",
+  },
+}
+`;
+
+exports[`EventMatcher literal matching should match a static event 1`] = `
+{
+  "data": [
+    "handler1",
+  ],
+  "params": {},
+}
+`;
+
+exports[`EventMatcher multiple handlers should return all handlers for a catch-all pattern 1`] = `
+{
+  "data": [
+    "handler1",
+    "handler2",
+  ],
+  "params": {
+    "path": "a:b",
+  },
+}
+`;
+
+exports[`EventMatcher multiple handlers should return all handlers registered at the same pattern 1`] = `
+{
+  "data": [
+    "handler1",
+    "handler2",
+  ],
+  "params": {},
+}
+`;
+
+exports[`EventMatcher param matching should match a single param 1`] = `
+{
+  "data": [
+    "handler1",
+  ],
+  "params": {
+    "roomId": "lobby",
+  },
+}
+`;
+
+exports[`EventMatcher param matching should match multiple params 1`] = `
+{
+  "data": [
+    "handler1",
+  ],
+  "params": {
+    "postId": "123",
+    "userId": "abc",
+  },
+}
+`;
+
+exports[`EventMatcher parseSegments should convert catch-all segments 1`] = `
+[
+  {
+    "type": "literal",
+    "value": "proxy",
+  },
+  {
+    "type": "catchAll",
+    "value": "path",
+  },
+]
+`;
+
+exports[`EventMatcher parseSegments should convert optional catch-all segments 1`] = `
+[
+  {
+    "type": "literal",
+    "value": "proxy",
+  },
+  {
+    "type": "catchAll",
+    "value": "path",
+  },
+]
+`;
+
+exports[`EventMatcher parseSegments should convert scanner segments correctly 1`] = `
+[
+  {
+    "type": "literal",
+    "value": "rooms",
+  },
+  {
+    "type": "param",
+    "value": "roomId",
+  },
+  {
+    "type": "literal",
+    "value": "join",
+  },
+]
+`;
+
+exports[`EventMatcher priority should fall back to catch-all when param path does not match 1`] = `
+{
+  "data": [
+    "catchAllHandler",
+  ],
+  "params": {
+    "rest": "lobby:other",
+  },
+}
+`;
+
+exports[`EventMatcher priority should prefer literal over param 1`] = `
+{
+  "data": [
+    "literalHandler",
+  ],
+  "params": {},
+}
+`;
+
+exports[`EventMatcher priority should prefer param over catch-all 1`] = `
+{
+  "data": [
+    "paramHandler",
+  ],
+  "params": {
+    "room": "lobby",
+  },
+}
+`;

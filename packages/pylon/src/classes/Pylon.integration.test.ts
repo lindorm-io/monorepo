@@ -280,7 +280,7 @@ describe("PylonScanner", () => {
       expect(response.middlewareChain).toEqual(["root", "chat"]);
     });
 
-    test("should handle rooms::roomId:join event (dynamic param in event name)", async () => {
+    test("should extract params from dynamic room event", async () => {
       const response = await new Promise<any>((resolve, reject) => {
         const timeout = setTimeout(
           () => reject(new Error("Timeout waiting for response")),
@@ -292,15 +292,34 @@ describe("PylonScanner", () => {
           resolve(data);
         });
 
-        client.emit("rooms::roomId:join", { user: "alice" });
+        client.emit("rooms:lobby:join", { user: "alice" });
       });
 
       expect(response).toEqual(
         expect.objectContaining({
-          event: "rooms::roomId:join",
+          event: "rooms:lobby:join",
+          params: { roomId: "lobby" },
           data: expect.objectContaining({ user: "alice" }),
         }),
       );
+    });
+
+    test("should extract different param values", async () => {
+      const response = await new Promise<any>((resolve, reject) => {
+        const timeout = setTimeout(
+          () => reject(new Error("Timeout waiting for response")),
+          5000,
+        );
+
+        client.on("rooms:join:response", (data: any) => {
+          clearTimeout(timeout);
+          resolve(data);
+        });
+
+        client.emit("rooms:abc123:join", { user: "bob" });
+      });
+
+      expect(response.params).toEqual({ roomId: "abc123" });
     });
 
     test("should apply root middleware for rooms events", async () => {
@@ -315,13 +334,13 @@ describe("PylonScanner", () => {
           resolve(data);
         });
 
-        client.emit("rooms::roomId:join", { user: "bob" });
+        client.emit("rooms:lobby:join", { user: "bob" });
       });
 
       expect(response.middlewareChain).toEqual(["root"]);
     });
 
-    test("should handle rooms::roomId:leave event (ONCE export) on first emit", async () => {
+    test("should handle ONCE with dynamic params on first emit", async () => {
       const response = await new Promise<any>((resolve, reject) => {
         const timeout = setTimeout(
           () => reject(new Error("Timeout waiting for response")),
@@ -333,12 +352,13 @@ describe("PylonScanner", () => {
           resolve(data);
         });
 
-        client.emit("rooms::roomId:leave", { user: "charlie" });
+        client.emit("rooms:lobby:leave", { user: "charlie" });
       });
 
       expect(response).toEqual(
         expect.objectContaining({
-          event: "rooms::roomId:leave",
+          event: "rooms:lobby:leave",
+          params: { roomId: "lobby" },
           data: expect.objectContaining({ user: "charlie" }),
         }),
       );
@@ -359,11 +379,11 @@ describe("PylonScanner", () => {
           resolve();
         });
 
-        client.emit("rooms::roomId:leave", { user: "first" });
+        client.emit("rooms:lobby:leave", { user: "first" });
       });
 
       // Emit a second time — the ONCE handler should not fire again
-      client.emit("rooms::roomId:leave", { user: "second" });
+      client.emit("rooms:lobby:leave", { user: "second" });
 
       // Wait briefly for any potential second response
       await new Promise((resolve) => setTimeout(resolve, 200));
