@@ -11,8 +11,10 @@ exports[`composePylonSocketContextBase should compose context with a single obje
     "anotherKey": 42,
     "someKey": "value",
   },
+  "envelope": false,
   "event": "test:event",
   "eventId": "00000000-0000-0000-0000-000000000000",
+  "header": {},
   "io": {
     "fake": "io",
   },
@@ -29,8 +31,10 @@ exports[`composePylonSocketContextBase should handle empty args array 1`] = `
   "ack": null,
   "args": [],
   "data": [],
+  "envelope": false,
   "event": "empty:event",
   "eventId": "00000000-0000-0000-0000-000000000000",
+  "header": {},
   "io": {
     "fake": "io",
   },
@@ -55,8 +59,10 @@ exports[`composePylonSocketContextBase should pass args through when multiple ar
     "arg2",
     "arg3",
   ],
+  "envelope": false,
   "event": "multi:args",
   "eventId": "00000000-0000-0000-0000-000000000000",
+  "header": {},
   "io": {
     "fake": "io",
   },
@@ -85,8 +91,10 @@ exports[`composePylonSocketContextBase should pass args through when single arg 
       3,
     ],
   ],
+  "envelope": false,
   "event": "array:event",
   "eventId": "00000000-0000-0000-0000-000000000000",
+  "header": {},
   "io": {
     "fake": "io",
   },
@@ -107,8 +115,10 @@ exports[`composePylonSocketContextBase should pass args through when single arg 
   "data": [
     "string-arg",
   ],
+  "envelope": false,
   "event": "string:event",
   "eventId": "00000000-0000-0000-0000-000000000000",
+  "header": {},
   "io": {
     "fake": "io",
   },

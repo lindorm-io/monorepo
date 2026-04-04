@@ -1,19 +1,36 @@
+import { isObject } from "@lindorm/is";
 import { ILogger } from "@lindorm/logger";
 import { Environment } from "@lindorm/types";
 import { randomUUID } from "crypto";
 import { PylonSocketMiddleware } from "../../types";
 import { getSocketAuthorization } from "../utils/get-socket-authorization";
 
+const extractCorrelationId = (ctx: any): string => {
+  if (typeof ctx.header?.correlationId === "string" && ctx.header.correlationId) {
+    return ctx.header.correlationId;
+  }
+  if (
+    isObject(ctx.data) &&
+    typeof ctx.data.correlationId === "string" &&
+    ctx.data.correlationId
+  ) {
+    return ctx.data.correlationId;
+  }
+  return randomUUID();
+};
+
 export const createSocketContextInitialisationMiddleware = (
   logger: ILogger,
 ): PylonSocketMiddleware => {
   return async function socketContextInitialisationMiddleware(ctx, next) {
+    const correlationId = extractCorrelationId(ctx);
+
     ctx.state = {
       app: ctx.socket.data.app,
       authorization: getSocketAuthorization(ctx.socket),
       metadata: {
         id: ctx.eventId,
-        correlationId: randomUUID(),
+        correlationId,
         date: new Date(),
         environment:
           (ctx.socket.handshake?.headers?.["x-environment"] as Environment) || "unknown",
@@ -22,6 +39,7 @@ export const createSocketContextInitialisationMiddleware = (
     };
 
     ctx.logger = logger.child(["Event"], {
+      correlationId,
       eventId: ctx.eventId,
       socketId: ctx.socket.id,
     });
