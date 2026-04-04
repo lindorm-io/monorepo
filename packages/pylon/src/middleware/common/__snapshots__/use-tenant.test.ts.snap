@@ -1,0 +1,5 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`useTenant should throw 403 when required and no tenant found 1`] = `"Tenant ID is required"`;
+
+exports[`useTenant should throw 403 when required and no tenant found 2`] = `"tenant_required"`;

@@ -11,5 +11,7 @@ export * from "./use-permissions";
 export * from "./use-rate-limit";
 export * from "./use-roles";
 export * from "./use-rooms";
+export * from "./use-scope";
+export * from "./use-tenant";
 export * from "./use-schema";
 export * from "./use-validation";
