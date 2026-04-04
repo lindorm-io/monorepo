@@ -3,6 +3,7 @@ import { isObject } from "@lindorm/is";
 import { randomUUID } from "crypto";
 import {
   IoServer,
+  PylonEnvelopeHeader,
   PylonSocket,
   PylonSocketContextBase,
   PylonSocketData,
@@ -12,6 +13,8 @@ type Options = {
   args: Array<any>;
   event: string;
 };
+
+const isPylonEnvelope = (data: any): boolean => isObject(data) && data.__pylon === true;
 
 export const composePylonSocketContextBase = (
   io: IoServer,
@@ -24,21 +27,32 @@ export const composePylonSocketContextBase = (
   const eventArgs = rawAck ? rawArgs.slice(0, -1) : rawArgs;
 
   let args: any;
+  let envelope = false;
+  let header: PylonEnvelopeHeader = {};
 
-  if (eventArgs.length === 1 && isObject(eventArgs[0])) {
-    args = changeKeys(eventArgs[0], "camel");
+  const firstArg = eventArgs[0];
+
+  if (eventArgs.length === 1 && isPylonEnvelope(firstArg)) {
+    envelope = true;
+    header = isObject(firstArg.header) ? changeKeys(firstArg.header, "camel") : {};
+    const payload = firstArg.payload;
+    args = isObject(payload) ? changeKeys(payload, "camel") : (payload ?? {});
+  } else if (eventArgs.length === 1 && isObject(firstArg)) {
+    args = changeKeys(firstArg, "camel");
   } else {
     args = eventArgs;
   }
 
   return {
-    ack: rawAck ? (data: any) => rawAck({ ok: true, data }) : null,
+    ack: rawAck ? (data: any) => rawAck({ __pylon: true, ok: true, data }) : null,
     args,
     data: args,
+    envelope,
     event: options.event,
     eventId: randomUUID(),
+    header,
     io,
-    nack: rawAck ? (error: any) => rawAck({ ok: false, error }) : null,
+    nack: rawAck ? (error: any) => rawAck({ __pylon: true, ok: false, error }) : null,
     params: {},
     socket,
   };

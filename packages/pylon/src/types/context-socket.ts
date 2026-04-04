@@ -4,12 +4,22 @@ import { PylonCommonContext, PylonState } from "./context-common";
 import { PylonSocket, PylonSocketData } from "./pylon-socket";
 import { IoServer } from "./socket";
 
-export type PylonSocketContextBase<Args, Data extends PylonSocketData> = {
+export type PylonEnvelopeHeader = {
+  correlationId?: string;
+  [key: string]: unknown;
+};
+
+export type PylonSocketContextBase<
+  Payload = any,
+  Data extends PylonSocketData = PylonSocketData,
+> = {
   ack: ((data: any) => void) | null;
-  args: Args;
-  data: any;
+  args: any;
+  data: Payload;
+  envelope: boolean;
   event: string;
   eventId: string;
+  header: PylonEnvelopeHeader;
   io: IoServer;
   nack: ((error: any) => void) | null;
   params: Dict<string>;
@@ -17,9 +27,9 @@ export type PylonSocketContextBase<Args, Data extends PylonSocketData> = {
 };
 
 export type PylonSocketContext<
-  Args = any,
+  Payload = any,
   Data extends PylonSocketData = PylonSocketData,
-> = PylonSocketContextBase<Args, Data> &
+> = PylonSocketContextBase<Payload, Data> &
   PylonCommonContext & {
     state: PylonState;
   };

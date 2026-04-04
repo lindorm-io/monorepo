@@ -7,7 +7,9 @@ import { createSocketContextInitialisationMiddleware } from "#internal/middlewar
 import { socketErrorHandlerMiddleware } from "#internal/middleware/socket-error-handler-middleware";
 import { socketLoggerMiddleware } from "#internal/middleware/socket-logger-middleware";
 import { initialisePylonSocketData } from "#internal/utils/initialise-pylon-socket-data";
+import { composePylonSocketContextBase } from "#internal/utils/compose-pylon-socket-context";
 import { loadPylonListeners } from "#internal/utils/load-pylon-listener";
+import { composeMiddleware } from "@lindorm/middleware";
 import { isArray, isString } from "@lindorm/is";
 import { ILogger } from "@lindorm/logger";
 import { uniq } from "@lindorm/utils";
@@ -136,12 +138,48 @@ export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
     middleware: Array<PylonSocketMiddleware<T>>,
     listeners: Array<PylonListener<T>>,
   ): void {
-    socket.data = initialisePylonSocketData(this.options);
+    socket.data = {
+      ...socket.data,
+      ...initialisePylonSocketData(this.options),
+    };
 
-    loadPylonListeners(io, socket as PylonSocket, middleware, listeners);
+    const disconnectListeners = listeners.filter((l) =>
+      l.listeners.some((item) => item.event === "disconnect"),
+    );
 
-    socket.on("disconnect", () => {
-      this.logger.verbose("Socket disconnected", { socket: socket.id });
+    const eventListeners = listeners.filter(
+      (l) => !l.listeners.every((item) => item.event === "disconnect"),
+    );
+
+    loadPylonListeners(io, socket as PylonSocket, middleware, eventListeners);
+
+    socket.on("disconnect", async (reason) => {
+      this.logger.verbose("Socket disconnected", { socket: socket.id, reason });
+
+      if (!disconnectListeners.length) return;
+
+      const ctx = composePylonSocketContextBase(io, socket as PylonSocket, {
+        args: [{ reason }],
+        event: "disconnect",
+      });
+
+      const disconnectMiddleware: Array<PylonSocketMiddleware<T>> = [];
+
+      for (const listener of disconnectListeners) {
+        for (const item of listener.listeners) {
+          if (item.event === "disconnect") {
+            disconnectMiddleware.push(...listener.middleware, ...item.listeners);
+          }
+        }
+      }
+
+      try {
+        await composeMiddleware<any>(ctx, [...middleware, ...disconnectMiddleware], {
+          useClone: false,
+        });
+      } catch (err: any) {
+        this.logger.error("Error in disconnect handler", err);
+      }
     });
   }
 }

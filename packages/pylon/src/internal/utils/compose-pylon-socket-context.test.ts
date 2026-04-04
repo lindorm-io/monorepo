@@ -114,7 +114,11 @@ describe("composePylonSocketContextBase", () => {
 
     result.ack!({ success: true });
 
-    expect(callback).toHaveBeenCalledWith({ ok: true, data: { success: true } });
+    expect(callback).toHaveBeenCalledWith({
+      __pylon: true,
+      ok: true,
+      data: { success: true },
+    });
   });
 
   test("should call rawAck with envelope { ok: false, error } when nack is called", () => {
@@ -127,6 +131,7 @@ describe("composePylonSocketContextBase", () => {
     result.nack!({ code: "not_found", message: "User not found" });
 
     expect(callback).toHaveBeenCalledWith({
+      __pylon: true,
       ok: false,
       error: { code: "not_found", message: "User not found" },
     });
@@ -141,5 +146,94 @@ describe("composePylonSocketContextBase", () => {
 
     expect(result.args).toEqual(["arg1", "arg2"]);
     expect(result.ack).toBeInstanceOf(Function);
+  });
+
+  describe("pylon envelope", () => {
+    test("should detect pylon envelope and extract header + payload", () => {
+      const result = composePylonSocketContextBase(io, socket, {
+        args: [
+          {
+            __pylon: true,
+            header: { correlationId: "trace-123" },
+            payload: { text: "hello" },
+          },
+        ],
+        event: "envelope:test",
+      });
+
+      expect(result.envelope).toBe(true);
+      expect(result.header).toEqual({ correlationId: "trace-123" });
+      expect(result.data).toEqual({ text: "hello" });
+    });
+
+    test("should camelCase envelope header and payload", () => {
+      const result = composePylonSocketContextBase(io, socket, {
+        args: [
+          {
+            __pylon: true,
+            header: { "correlation-id": "abc" },
+            payload: { "user-name": "alice" },
+          },
+        ],
+        event: "envelope:camel",
+      });
+
+      expect(result.header).toEqual({ correlationId: "abc" });
+      expect(result.data).toEqual({ userName: "alice" });
+    });
+
+    test("should handle envelope with empty header and payload", () => {
+      const result = composePylonSocketContextBase(io, socket, {
+        args: [{ __pylon: true }],
+        event: "envelope:empty",
+      });
+
+      expect(result.envelope).toBe(true);
+      expect(result.header).toEqual({});
+      expect(result.data).toEqual({});
+    });
+
+    test("should set envelope to false for non-envelope data", () => {
+      const result = composePylonSocketContextBase(io, socket, {
+        args: [{ text: "hello" }],
+        event: "no:envelope",
+      });
+
+      expect(result.envelope).toBe(false);
+      expect(result.header).toEqual({});
+      expect(result.data).toEqual({ text: "hello" });
+    });
+
+    test("should include __pylon flag in ack response", () => {
+      const callback = jest.fn();
+      const result = composePylonSocketContextBase(io, socket, {
+        args: [{ __pylon: true, payload: { id: 1 } }, callback],
+        event: "envelope:ack",
+      });
+
+      result.ack!({ success: true });
+
+      expect(callback).toHaveBeenCalledWith({
+        __pylon: true,
+        ok: true,
+        data: { success: true },
+      });
+    });
+
+    test("should include __pylon flag in nack response", () => {
+      const callback = jest.fn();
+      const result = composePylonSocketContextBase(io, socket, {
+        args: [{ __pylon: true, payload: { id: 1 } }, callback],
+        event: "envelope:nack",
+      });
+
+      result.nack!({ code: "error" });
+
+      expect(callback).toHaveBeenCalledWith({
+        __pylon: true,
+        ok: false,
+        error: { code: "error" },
+      });
+    });
   });
 });

@@ -57,9 +57,42 @@ describe("createSocketContextInitialisationMiddleware", () => {
 
     expect(ctx.logger).toEqual(expect.any(Object));
     expect(logger.child).toHaveBeenCalledWith(["Event"], {
+      correlationId: expect.any(String),
       eventId: "aa9a627d-8296-598c-9589-4ec91d27d056",
       socketId: "009aecca-3bc0-500f-8e67-6dae90188c7d",
     });
+  });
+
+  test("should extract correlationId from ctx.data when present", async () => {
+    ctx.data = { correlationId: "custom-correlation-id", text: "hello" };
+
+    await createSocketContextInitialisationMiddleware(logger)(ctx, jest.fn());
+
+    expect(ctx.state.metadata.correlationId).toBe("custom-correlation-id");
+    expect(logger.child).toHaveBeenCalledWith(
+      ["Event"],
+      expect.objectContaining({
+        correlationId: "custom-correlation-id",
+      }),
+    );
+  });
+
+  test("should generate random correlationId when not in payload", async () => {
+    ctx.data = { text: "hello" };
+
+    await createSocketContextInitialisationMiddleware(logger)(ctx, jest.fn());
+
+    expect(ctx.state.metadata.correlationId).toEqual(expect.any(String));
+    expect(ctx.state.metadata.correlationId).toHaveLength(36); // UUID format
+  });
+
+  test("should extract correlationId from envelope header (priority over data)", async () => {
+    ctx.header = { correlationId: "envelope-trace-id" };
+    ctx.data = { correlationId: "data-trace-id", text: "hello" };
+
+    await createSocketContextInitialisationMiddleware(logger)(ctx, jest.fn());
+
+    expect(ctx.state.metadata.correlationId).toBe("envelope-trace-id");
   });
 
   test("should extract bearer authorization from handshake", async () => {
