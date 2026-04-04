@@ -5,11 +5,13 @@ import { PylonSocket, PylonSocketData } from "./pylon-socket";
 import { IoServer } from "./socket";
 
 export type PylonSocketContextBase<Args, Data extends PylonSocketData> = {
+  ack: ((data: any) => void) | null;
   args: Args;
   data: any;
   event: string;
   eventId: string;
   io: IoServer;
+  nack: ((error: any) => void) | null;
   params: Dict<string>;
   socket: PylonSocket<Data>;
 };

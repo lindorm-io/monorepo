@@ -391,5 +391,49 @@ describe("PylonScanner", () => {
       expect(responses).toHaveLength(1);
       expect(responses[0].data).toEqual(expect.objectContaining({ user: "first" }));
     });
+
+    test("should support ack — handler responds via ctx.ack", async () => {
+      const response = await client.timeout(5000).emitWithAck("echo", { text: "hello" });
+
+      expect(response).toEqual({
+        ok: true,
+        data: { text: "hello", event: "echo" },
+      });
+    });
+
+    test("should support nack — handler responds with error via ctx.nack", async () => {
+      const response = await client
+        .timeout(5000)
+        .emitWithAck("nack-test", { value: "test" });
+
+      expect(response).toEqual({
+        ok: false,
+        error: { code: "test_error", message: "intentional nack" },
+      });
+    });
+
+    test("should emit error event on unhandled throw", async () => {
+      const error = await new Promise<any>((resolve, reject) => {
+        const timeout = setTimeout(
+          () => reject(new Error("Timeout waiting for error")),
+          5000,
+        );
+
+        client.on("error", (data: any) => {
+          clearTimeout(timeout);
+          resolve(data);
+        });
+
+        client.emit("throw-test", {});
+      });
+
+      expect(error).toEqual(
+        expect.objectContaining({
+          code: "test_throw",
+          message: "intentional error",
+          name: "ServerError",
+        }),
+      );
+    });
   });
 });

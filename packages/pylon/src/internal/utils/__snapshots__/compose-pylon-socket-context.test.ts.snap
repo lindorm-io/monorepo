@@ -2,6 +2,7 @@
 
 exports[`composePylonSocketContextBase should compose context with a single object arg (camelCased) 1`] = `
 {
+  "ack": null,
   "args": {
     "anotherKey": 42,
     "someKey": "value",
@@ -15,6 +16,7 @@ exports[`composePylonSocketContextBase should compose context with a single obje
   "io": {
     "fake": "io",
   },
+  "nack": null,
   "params": {},
   "socket": {
     "fake": "socket",
@@ -24,6 +26,7 @@ exports[`composePylonSocketContextBase should compose context with a single obje
 
 exports[`composePylonSocketContextBase should handle empty args array 1`] = `
 {
+  "ack": null,
   "args": [],
   "data": [],
   "event": "empty:event",
@@ -31,6 +34,7 @@ exports[`composePylonSocketContextBase should handle empty args array 1`] = `
   "io": {
     "fake": "io",
   },
+  "nack": null,
   "params": {},
   "socket": {
     "fake": "socket",
@@ -40,6 +44,7 @@ exports[`composePylonSocketContextBase should handle empty args array 1`] = `
 
 exports[`composePylonSocketContextBase should pass args through when multiple args are provided 1`] = `
 {
+  "ack": null,
   "args": [
     "arg1",
     "arg2",
@@ -55,6 +60,7 @@ exports[`composePylonSocketContextBase should pass args through when multiple ar
   "io": {
     "fake": "io",
   },
+  "nack": null,
   "params": {},
   "socket": {
     "fake": "socket",
@@ -64,6 +70,7 @@ exports[`composePylonSocketContextBase should pass args through when multiple ar
 
 exports[`composePylonSocketContextBase should pass args through when single arg is an array 1`] = `
 {
+  "ack": null,
   "args": [
     [
       1,
@@ -83,6 +90,7 @@ exports[`composePylonSocketContextBase should pass args through when single arg 
   "io": {
     "fake": "io",
   },
+  "nack": null,
   "params": {},
   "socket": {
     "fake": "socket",
@@ -92,6 +100,7 @@ exports[`composePylonSocketContextBase should pass args through when single arg 
 
 exports[`composePylonSocketContextBase should pass args through when single arg is not an object 1`] = `
 {
+  "ack": null,
   "args": [
     "string-arg",
   ],
@@ -103,6 +112,7 @@ exports[`composePylonSocketContextBase should pass args through when single arg 
   "io": {
     "fake": "io",
   },
+  "nack": null,
   "params": {},
   "socket": {
     "fake": "socket",
