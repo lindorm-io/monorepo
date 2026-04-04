@@ -82,4 +82,64 @@ describe("composePylonSocketContextBase", () => {
 
     expect(result.params).toEqual({});
   });
+
+  test("should set ack and nack to null when no callback provided", () => {
+    const result = composePylonSocketContextBase(io, socket, {
+      args: [{ key: "value" }],
+      event: "no:ack",
+    });
+
+    expect(result.ack).toBeNull();
+    expect(result.nack).toBeNull();
+  });
+
+  test("should extract ack callback from last arg when it is a function", () => {
+    const callback = jest.fn();
+    const result = composePylonSocketContextBase(io, socket, {
+      args: [{ key: "value" }, callback],
+      event: "with:ack",
+    });
+
+    expect(result.ack).toBeInstanceOf(Function);
+    expect(result.nack).toBeInstanceOf(Function);
+    expect(result.data).toEqual({ key: "value" });
+  });
+
+  test("should call rawAck with envelope { ok: true, data } when ack is called", () => {
+    const callback = jest.fn();
+    const result = composePylonSocketContextBase(io, socket, {
+      args: [{ key: "value" }, callback],
+      event: "ack:test",
+    });
+
+    result.ack!({ success: true });
+
+    expect(callback).toHaveBeenCalledWith({ ok: true, data: { success: true } });
+  });
+
+  test("should call rawAck with envelope { ok: false, error } when nack is called", () => {
+    const callback = jest.fn();
+    const result = composePylonSocketContextBase(io, socket, {
+      args: [{ key: "value" }, callback],
+      event: "nack:test",
+    });
+
+    result.nack!({ code: "not_found", message: "User not found" });
+
+    expect(callback).toHaveBeenCalledWith({
+      ok: false,
+      error: { code: "not_found", message: "User not found" },
+    });
+  });
+
+  test("should not include ack callback in args", () => {
+    const callback = jest.fn();
+    const result = composePylonSocketContextBase(io, socket, {
+      args: ["arg1", "arg2", callback],
+      event: "strip:ack",
+    });
+
+    expect(result.args).toEqual(["arg1", "arg2"]);
+    expect(result.ack).toBeInstanceOf(Function);
+  });
 });

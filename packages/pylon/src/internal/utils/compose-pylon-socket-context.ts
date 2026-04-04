@@ -18,20 +18,27 @@ export const composePylonSocketContextBase = (
   socket: PylonSocket,
   options: Options,
 ): PylonSocketContextBase<any, PylonSocketData> => {
+  const rawArgs = options.args;
+  const lastArg = rawArgs[rawArgs.length - 1];
+  const rawAck = typeof lastArg === "function" ? lastArg : undefined;
+  const eventArgs = rawAck ? rawArgs.slice(0, -1) : rawArgs;
+
   let args: any;
 
-  if (options.args.length === 1 && isObject(options.args[0])) {
-    args = changeKeys(options.args[0], "camel");
+  if (eventArgs.length === 1 && isObject(eventArgs[0])) {
+    args = changeKeys(eventArgs[0], "camel");
   } else {
-    args = options.args;
+    args = eventArgs;
   }
 
   return {
+    ack: rawAck ? (data: any) => rawAck({ ok: true, data }) : null,
     args,
     data: args,
     event: options.event,
     eventId: randomUUID(),
     io,
+    nack: rawAck ? (error: any) => rawAck({ ok: false, error }) : null,
     params: {},
     socket,
   };

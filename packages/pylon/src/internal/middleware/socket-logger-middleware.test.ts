@@ -7,13 +7,12 @@ describe("socketLoggerMiddleware", () => {
   beforeEach(() => {
     ctx = {
       logger: createMockLogger(),
-
       event: "event",
       args: "args",
     };
   });
 
-  test("should log  information", async () => {
+  test("should log event received and resolved", async () => {
     await expect(socketLoggerMiddleware(ctx, jest.fn())).resolves.toBeUndefined();
 
     expect(ctx.logger.info).toHaveBeenCalledWith("Socket event received", {
@@ -28,11 +27,17 @@ describe("socketLoggerMiddleware", () => {
     });
   });
 
-  test("should log  error", async () => {
-    const next = () => Promise.reject(new Error("error"));
+  test("should propagate errors without catching", async () => {
+    const next = () => Promise.reject(new Error("test error"));
 
-    await expect(socketLoggerMiddleware(ctx, next)).resolves.toBeUndefined();
+    await expect(socketLoggerMiddleware(ctx, next)).rejects.toThrow("test error");
+  });
 
-    expect(ctx.logger.error).toHaveBeenCalledWith(new Error("error"));
+  test("should call next", async () => {
+    const next = jest.fn();
+
+    await socketLoggerMiddleware(ctx, next);
+
+    expect(next).toHaveBeenCalledTimes(1);
   });
 });

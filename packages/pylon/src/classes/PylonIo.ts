@@ -86,10 +86,10 @@ export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
     }
 
     const middleware = [
+      socketErrorHandlerMiddleware,
       createSocketContextInitialisationMiddleware(this.logger),
       createCommonContextInitialisationMiddleware(this.options.amphora),
       socketLoggerMiddleware,
-      socketErrorHandlerMiddleware,
       ...(this.middleware ?? []),
     ];
 
