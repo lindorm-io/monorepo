@@ -1,0 +1,3 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`useScope should throw ServerError when proteus not on context 1`] = `"useScope requires ProteusSource on context"`;

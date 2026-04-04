@@ -34,6 +34,7 @@ export type PylonState = {
   app: AppState;
   authorization: AuthorizationState;
   metadata: PylonMetadata;
+  tenant?: string | null;
   tokens: Dict<ParsedJwt | ParsedJws<any> | ParsedCwt | ParsedCws<any>>;
 };
 
