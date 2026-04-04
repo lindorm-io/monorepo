@@ -7,7 +7,7 @@ export const resolveIris = (
   override?: IIrisSource,
 ): IIrisSource => {
   if (override) {
-    return override.clone({ logger: ctx.logger });
+    return override.clone({ logger: ctx.logger, context: ctx });
   }
   if (ctx.iris) {
     return ctx.iris;

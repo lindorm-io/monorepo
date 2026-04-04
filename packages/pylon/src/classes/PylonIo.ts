@@ -13,6 +13,7 @@ import { composeMiddleware } from "@lindorm/middleware";
 import { isArray, isString } from "@lindorm/is";
 import { ILogger } from "@lindorm/logger";
 import { uniq } from "@lindorm/utils";
+import { useRateLimit } from "../middleware/common/use-rate-limit";
 import { createAdapter } from "@socket.io/redis-adapter";
 import { Server } from "http";
 import { Server as SocketIoServer } from "socket.io";
@@ -41,9 +42,26 @@ export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
         hermes: options.hermes,
         iris: options.iris,
         proteus: options.proteus,
+        rateLimitProteus: options.rateLimit?.enabled
+          ? (options.rateLimit.proteus ?? options.proteus)
+          : undefined,
+        roomsProteus: options.rooms?.presence
+          ? (options.rooms.proteus ?? options.proteus)
+          : undefined,
       }),
       createQueueMiddleware(options.queue),
       createWebhookMiddleware(options.webhook),
+      ...(options.rateLimit?.enabled && options.rateLimit.window && options.rateLimit.max
+        ? [
+            useRateLimit({
+              window: options.rateLimit.window,
+              max: options.rateLimit.max,
+              strategy: options.rateLimit.strategy,
+              key: options.rateLimit.key,
+              skip: options.rateLimit.skip,
+            }),
+          ]
+        : []),
     ];
     this.options = options;
     this.server = new SocketIoServer(http, {

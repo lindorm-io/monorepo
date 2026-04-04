@@ -107,7 +107,7 @@ describe("createQueueMiddleware", () => {
 
     await ctx.queue("event", {});
 
-    expect(overrideIris.clone).toHaveBeenCalledWith({ logger: ctx.logger });
+    expect(overrideIris.clone).toHaveBeenCalledWith({ logger: ctx.logger, context: ctx });
   });
 
   test("should call next", async () => {

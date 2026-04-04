@@ -10,7 +10,7 @@ describe("resolveProteus", () => {
     const result = resolveProteus(ctx, override);
 
     expect(result).toBe(cloned);
-    expect(override.clone).toHaveBeenCalledWith({ logger: ctx.logger });
+    expect(override.clone).toHaveBeenCalledWith({ logger: ctx.logger, context: ctx });
   });
 
   test("should return ctx.proteus when no override and ctx.proteus exists", () => {

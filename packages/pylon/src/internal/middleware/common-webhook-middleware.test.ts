@@ -94,7 +94,7 @@ describe("createWebhookMiddleware", () => {
 
     await ctx.webhook("event", {});
 
-    expect(overrideIris.clone).toHaveBeenCalledWith({ logger: ctx.logger });
+    expect(overrideIris.clone).toHaveBeenCalledWith({ logger: ctx.logger, context: ctx });
   });
 
   test("should call next", async () => {

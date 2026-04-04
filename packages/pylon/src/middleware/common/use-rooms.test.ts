@@ -1,12 +1,11 @@
 import { ServerError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger";
+import { ROOMS_SOURCE } from "#internal/constants/symbols";
 import { useRooms } from "./use-rooms";
 
 jest.mock("#internal/utils/is-context");
-jest.mock("#internal/utils/resolve-proteus");
 
 import { isSocketContext } from "#internal/utils/is-context";
-import { resolveProteus } from "#internal/utils/resolve-proteus";
 
 describe("useRooms", () => {
   let ctx: any;
@@ -28,7 +27,6 @@ describe("useRooms", () => {
     };
 
     mockSource = { repository: jest.fn().mockReturnValue(mockRepository) };
-    (resolveProteus as jest.Mock).mockReturnValue(mockSource);
     (isSocketContext as unknown as jest.Mock).mockReturnValue(true);
 
     ctx = {
@@ -46,6 +44,7 @@ describe("useRooms", () => {
         }),
       },
       state: { tokens: {} },
+      [ROOMS_SOURCE]: mockSource,
     };
 
     next = jest.fn();
@@ -173,7 +172,7 @@ describe("useRooms", () => {
     await useRooms()(ctx, next);
     await ctx.rooms.join("lobby");
 
-    expect(resolveProteus).not.toHaveBeenCalled();
+    expect(mockSource.repository).not.toHaveBeenCalled();
   });
 
   test("should not destroy presence record on leave when presence disabled", async () => {
@@ -194,11 +193,19 @@ describe("useRooms", () => {
     expect(mockRepository.destroy).not.toHaveBeenCalled();
   });
 
-  test("should use custom proteus source", async () => {
-    const customSource: any = {};
+  test("should throw ServerError when rooms source is missing with presence enabled", async () => {
+    delete ctx[ROOMS_SOURCE];
 
-    await useRooms({ presence: true, proteus: customSource })(ctx, next);
+    await expect(useRooms({ presence: true })(ctx, next)).rejects.toThrow(ServerError);
+    expect(next).not.toHaveBeenCalled();
+  });
 
-    expect(resolveProteus).toHaveBeenCalledWith(ctx, customSource);
+  test("should work without rooms source when presence is disabled", async () => {
+    delete ctx[ROOMS_SOURCE];
+
+    await useRooms()(ctx, next);
+
+    expect(ctx.rooms).toBeDefined();
+    expect(next).toHaveBeenCalledTimes(1);
   });
 });

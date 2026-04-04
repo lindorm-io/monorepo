@@ -1,13 +1,12 @@
 import { ServerError } from "@lindorm/errors";
 import { IProteusSource } from "@lindorm/proteus";
+import { ROOMS_SOURCE } from "#internal/constants/symbols";
 import { isSocketContext } from "#internal/utils/is-context";
-import { resolveProteus } from "#internal/utils/resolve-proteus";
 import { Presence } from "../../entities";
 import { PylonContext, PylonMiddleware } from "../../types";
 
 type UseRoomsOptions = {
   presence?: boolean;
-  proteus?: IProteusSource;
 };
 
 const PRESENCE_TTL_MS = 24 * 60 * 60 * 1000;
@@ -19,7 +18,15 @@ export const useRooms = (options: UseRoomsOptions = {}): PylonMiddleware => {
     }
 
     const presenceRepo = options.presence
-      ? resolveProteus(ctx, options.proteus).repository(Presence)
+      ? (() => {
+          const source = (ctx as any)[ROOMS_SOURCE] as IProteusSource | undefined;
+          if (!source) {
+            throw new ServerError(
+              "Rooms presence requires rooms.proteus in PylonOptions or a default proteus source",
+            );
+          }
+          return source.repository(Presence);
+        })()
       : null;
 
     const userId =

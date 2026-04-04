@@ -1,3 +1,4 @@
+import { ReadableTime } from "@lindorm/date";
 import { IIrisSource } from "@lindorm/iris";
 import { IProteusSource } from "@lindorm/proteus";
 import { Dict, Priority } from "@lindorm/types";
@@ -45,4 +46,19 @@ export type PylonWebhookOptions = {
   enabled: boolean;
   proteus?: IProteusSource;
   iris?: IIrisSource;
+};
+
+export type PylonRateLimitOptions = {
+  enabled: boolean;
+  proteus?: IProteusSource;
+  strategy?: "fixed" | "sliding" | "token-bucket";
+  window?: ReadableTime | number;
+  max?: number;
+  key?: (ctx: any) => string;
+  skip?: (ctx: any) => boolean;
+};
+
+export type PylonRoomsOptions = {
+  presence?: boolean;
+  proteus?: IProteusSource;
 };

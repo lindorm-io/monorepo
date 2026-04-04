@@ -1,14 +1,13 @@
-import { ClientError } from "@lindorm/errors";
+import { ClientError, ServerError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger";
+import { RATE_LIMIT_SOURCE } from "#internal/constants/symbols";
 import { useRateLimit } from "./use-rate-limit";
 
-jest.mock("#internal/utils/resolve-proteus");
 jest.mock("#internal/utils/rate-limit/fixed-window-strategy");
 jest.mock("#internal/utils/rate-limit/sliding-window-strategy");
 jest.mock("#internal/utils/rate-limit/token-bucket-strategy");
 jest.mock("#internal/utils/is-context");
 
-import { resolveProteus } from "#internal/utils/resolve-proteus";
 import { fixedWindowStrategy } from "#internal/utils/rate-limit/fixed-window-strategy";
 import { slidingWindowStrategy } from "#internal/utils/rate-limit/sliding-window-strategy";
 import { tokenBucketStrategy } from "#internal/utils/rate-limit/token-bucket-strategy";
@@ -30,7 +29,6 @@ describe("useRateLimit", () => {
 
     mockRepository = {};
     mockSource = { repository: jest.fn().mockReturnValue(mockRepository) };
-    (resolveProteus as jest.Mock).mockReturnValue(mockSource);
 
     (fixedWindowStrategy as jest.Mock).mockResolvedValue(allowedResult);
     (slidingWindowStrategy as jest.Mock).mockResolvedValue(allowedResult);
@@ -43,6 +41,7 @@ describe("useRateLimit", () => {
       logger: createMockLogger(),
       request: { ip: "192.168.1.1" },
       set: jest.fn(),
+      [RATE_LIMIT_SOURCE]: mockSource,
     };
     next = jest.fn();
   });
@@ -100,6 +99,7 @@ describe("useRateLimit", () => {
       logger: createMockLogger(),
       socket: { id: "socket-123" },
       set: jest.fn(),
+      [RATE_LIMIT_SOURCE]: mockSource,
     };
 
     await useRateLimit({ window: "1m", max: 10 })(ctx, next);
@@ -128,7 +128,6 @@ describe("useRateLimit", () => {
     await useRateLimit({ window: "1m", max: 10, skip })(ctx, next);
 
     expect(skip).toHaveBeenCalledWith(ctx);
-    expect(resolveProteus).not.toHaveBeenCalled();
     expect(fixedWindowStrategy).not.toHaveBeenCalled();
     expect(next).toHaveBeenCalledTimes(1);
   });
@@ -165,12 +164,13 @@ describe("useRateLimit", () => {
     expect(fixedWindowStrategy).not.toHaveBeenCalled();
   });
 
-  test("should use custom proteus source", async () => {
-    const customSource: any = { repository: jest.fn() };
+  test("should throw ServerError when rate limit source is not configured", async () => {
+    delete ctx[RATE_LIMIT_SOURCE];
 
-    await useRateLimit({ window: "1m", max: 10, proteus: customSource })(ctx, next);
-
-    expect(resolveProteus).toHaveBeenCalledWith(ctx, customSource);
+    await expect(useRateLimit({ window: "1m", max: 10 })(ctx, next)).rejects.toThrow(
+      ServerError,
+    );
+    expect(next).not.toHaveBeenCalled();
   });
 
   test("should default key to request.ip for HTTP", async () => {
@@ -194,6 +194,7 @@ describe("useRateLimit", () => {
       logger: createMockLogger(),
       socket: { id: "sock-abc" },
       set: jest.fn(),
+      [RATE_LIMIT_SOURCE]: mockSource,
     };
 
     await useRateLimit({ window: "1m", max: 10 })(ctx, next);
@@ -228,6 +229,7 @@ describe("useRateLimit", () => {
       logger: createMockLogger(),
       socket: { id: "socket-123" },
       set: jest.fn(),
+      [RATE_LIMIT_SOURCE]: mockSource,
     };
 
     try {

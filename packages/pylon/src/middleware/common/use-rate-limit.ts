@@ -1,8 +1,8 @@
 import { ReadableTime, ms } from "@lindorm/date";
-import { ClientError } from "@lindorm/errors";
+import { ClientError, ServerError } from "@lindorm/errors";
 import { IProteusSource } from "@lindorm/proteus";
+import { RATE_LIMIT_SOURCE } from "#internal/constants/symbols";
 import { isHttpContext, isSocketContext } from "#internal/utils/is-context";
-import { resolveProteus } from "#internal/utils/resolve-proteus";
 import { fixedWindowStrategy } from "#internal/utils/rate-limit/fixed-window-strategy";
 import { RateLimitResult } from "#internal/utils/rate-limit/fixed-window-strategy";
 import { slidingWindowStrategy } from "#internal/utils/rate-limit/sliding-window-strategy";
@@ -18,7 +18,6 @@ type RateLimitOptions = {
   strategy?: RateLimitStrategy;
   key?: (ctx: PylonContext) => string;
   skip?: (ctx: PylonContext) => boolean;
-  proteus?: IProteusSource;
 };
 
 const resolveKey = (ctx: PylonContext): string => {
@@ -64,7 +63,13 @@ export const useRateLimit = (options: RateLimitOptions): PylonMiddleware => {
       return;
     }
 
-    const source = resolveProteus(ctx, options.proteus);
+    const source = (ctx as any)[RATE_LIMIT_SOURCE] as IProteusSource | undefined;
+    if (!source) {
+      throw new ServerError(
+        "Rate limiting is not configured. Enable it in PylonOptions with rateLimit: { enabled: true }",
+      );
+    }
+
     const key = options.key?.(ctx) ?? resolveKey(ctx);
     const result = await executeStrategy(source, strategy, key, windowMs, options.max);
 
