@@ -1,4 +1,5 @@
 import {
+  AppendOnly,
   CreateDateField,
   Default,
   Entity,
@@ -10,6 +11,7 @@ import {
   Unique,
 } from "@lindorm/proteus";
 
+@AppendOnly()
 @Entity({ name: "event" })
 @Namespace("hermes")
 @Unique<typeof EventRecord>([

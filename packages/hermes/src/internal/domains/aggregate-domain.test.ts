@@ -1290,16 +1290,18 @@ describe("AggregateDomain", () => {
     );
     await (domain as any).handleCommand(cmd, forgettableAggregate, handler);
 
-    const eventRepo = proteus.repository(EventRecord);
-    const events = await eventRepo.find({
+    // EventRecord is @AppendOnly so we can't corrupt event data via update.
+    // Instead, corrupt the encryption key's privateKey so that AES decryption
+    // fails — this exercises the same catch block in decryptRecords.
+    const encRepo = proteus.repository(EncryptionRecord);
+    const encRecord = await encRepo.findOne({
       aggregateId,
       aggregateName: "test_forgettable_aggregate",
       aggregateNamespace: "billing",
     });
-
-    expect(events).toHaveLength(1);
-    events[0].data = { corrupted: "not valid aes data" };
-    await eventRepo.update(events[0]);
+    expect(encRecord).not.toBeNull();
+    encRecord!.privateKey = "corrupted-key-data";
+    await encRepo.update(encRecord!);
 
     const model = await domain.inspect(aggregate);
     expect(model.numberOfLoadedEvents).toBe(1);

@@ -1,4 +1,5 @@
 import {
+  AppendOnly,
   CreateDateField,
   Entity,
   Field,
@@ -7,6 +8,7 @@ import {
   PrimaryKeyField,
 } from "@lindorm/proteus";
 
+@AppendOnly()
 @Entity({ name: "checksum" })
 @Namespace("hermes")
 export class ChecksumRecord {
