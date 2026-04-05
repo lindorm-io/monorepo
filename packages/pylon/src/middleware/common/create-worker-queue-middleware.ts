@@ -2,6 +2,7 @@ import { resolveIris } from "#internal/utils/resolve-iris";
 import { camelCase } from "@lindorm/case";
 import { IIrisSource, IMessage } from "@lindorm/iris";
 import { Constructor, Dict } from "@lindorm/types";
+import { lazyFactory } from "@lindorm/utils";
 import { PylonContext, PylonMiddleware } from "../../types";
 
 export const createWorkerQueueMiddleware = <C extends PylonContext = PylonContext>(
@@ -13,12 +14,7 @@ export const createWorkerQueueMiddleware = <C extends PylonContext = PylonContex
     const obj: Dict = {};
 
     for (const message of messages) {
-      let cached: any;
-      Object.defineProperty(obj, camelCase(message.name), {
-        get: () => (cached ??= source.workerQueue(message)),
-        enumerable: true,
-        configurable: true,
-      });
+      lazyFactory(obj, camelCase(message.name), () => source.workerQueue(message));
     }
 
     ctx.workerQueues = obj;
