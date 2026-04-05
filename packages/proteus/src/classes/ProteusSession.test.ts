@@ -193,29 +193,89 @@ describe("ProteusSession", () => {
 
       await source.disconnect();
     });
-  });
 
-  describe("logger override", () => {
-    test("should use overridden logger when provided", () => {
-      const source = createSource();
-      const newLogger = createMockLogger();
-      const session = source.session({ logger: newLogger });
-
-      expect(session.log).toBeDefined();
-    });
-  });
-
-  describe("context override", () => {
-    test("should accept context override", async () => {
+    test("should include session context in event payload", async () => {
       const source = createSource();
       await source.connect();
       await source.setup();
 
-      const session = source.session({ context: { requestId: "req-123" } });
+      const requestContext = { requestId: "req-456", actor: "user-1" };
+      const listener = jest.fn();
+      source.on("entity:after-insert", listener);
 
-      // The session should work with the new context
+      const session = source.session({ context: requestContext });
       const repo = session.repository(SessionEntity);
-      expect(repo).toBeDefined();
+      await repo.insert({
+        id: "00000000-0000-4000-8000-000000000003",
+        tenantId: "tenant-c",
+      } as any);
+
+      expect(listener).toHaveBeenCalledTimes(1);
+      expect(listener).toHaveBeenCalledWith(
+        expect.objectContaining({
+          context: requestContext,
+          entity: expect.objectContaining({ tenantId: "tenant-c" }),
+          metadata: expect.objectContaining({
+            entity: expect.objectContaining({ name: "SessionEntity" }),
+          }),
+        }),
+      );
+
+      await source.disconnect();
+    });
+
+    test("should include session context in destroy events", async () => {
+      const source = createSource();
+      await source.connect();
+      await source.setup();
+
+      const session = source.session();
+      const repo = session.repository(SessionEntity);
+      const entity = await repo.insert({
+        id: "00000000-0000-4000-8000-000000000004",
+        tenantId: "tenant-d",
+      } as any);
+
+      const destroyContext = { requestId: "req-789", actor: "user-2" };
+      const listener = jest.fn();
+      source.on("entity:after-destroy", listener);
+
+      const destroySession = source.session({ context: destroyContext });
+      const destroyRepo = destroySession.repository(SessionEntity);
+      await destroyRepo.destroy(entity);
+
+      expect(listener).toHaveBeenCalledTimes(1);
+      expect(listener).toHaveBeenCalledWith(
+        expect.objectContaining({
+          context: destroyContext,
+        }),
+      );
+
+      await source.disconnect();
+    });
+
+    test("should use source context when no session context provided", async () => {
+      const source = createSource();
+      await source.connect();
+      await source.setup();
+
+      const listener = jest.fn();
+      source.on("entity:after-insert", listener);
+
+      const session = source.session();
+      const repo = session.repository(SessionEntity);
+      await repo.insert({
+        id: "00000000-0000-4000-8000-000000000005",
+        tenantId: "tenant-e",
+      } as any);
+
+      expect(listener).toHaveBeenCalledTimes(1);
+      // Source has no context set, so it should be undefined
+      expect(listener).toHaveBeenCalledWith(
+        expect.objectContaining({
+          context: undefined,
+        }),
+      );
 
       await source.disconnect();
     });
