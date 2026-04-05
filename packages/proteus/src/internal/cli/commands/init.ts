@@ -11,15 +11,20 @@ type InitOptions = {
   dryRun?: boolean;
 };
 
-const sourceTemplate = (driver: string): string => {
+const sourceTemplate = (driver: string, isSql: boolean): string => {
   const lines = [
-    `import { Logger } from "@lindorm/logger";`,
+    `import { join } from "path";`,
     `import { ProteusSource } from "@lindorm/proteus";`,
     ``,
     `export const source = new ProteusSource({`,
     `  driver: "${driver}",`,
-    `  logger: Logger.for("proteus"),`,
+    `  logger: logger.child(["proteus"]), // TODO: import or create a Logger instance`,
+    `  entities: [join(__dirname, "entities")],`,
   ];
+
+  if (isSql) {
+    lines.push(`  migrations: [join(__dirname, "migrations")],`);
+  }
 
   switch (driver) {
     case "postgres":
@@ -76,7 +81,7 @@ export const init = async (options: InitOptions): Promise<void> => {
   const isSql = SQL_DRIVERS.includes(driver);
 
   const files: Array<{ path: string; content: string }> = [
-    { path: join(directory, "source.ts"), content: sourceTemplate(driver) },
+    { path: join(directory, "source.ts"), content: sourceTemplate(driver, isSql) },
     { path: join(directory, "entities", ".gitkeep"), content: "" },
   ];
 
