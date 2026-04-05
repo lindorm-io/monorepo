@@ -39,6 +39,15 @@ export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
 
     this.middleware = [
       createSourcesMiddleware({
+        auditConfig:
+          options.audit?.enabled && (options.audit.iris ?? options.iris)
+            ? {
+                iris: options.audit.iris ?? options.iris!,
+                actor: options.audit.actor,
+                sanitise: options.audit.sanitise,
+                skip: options.audit.skip,
+              }
+            : undefined,
         hermes: options.hermes,
         iris: options.iris,
         proteus: options.proteus,

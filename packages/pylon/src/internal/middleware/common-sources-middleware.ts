@@ -3,10 +3,18 @@ import { IHermes } from "@lindorm/hermes";
 import { IIrisSource } from "@lindorm/iris";
 import { Middleware } from "@lindorm/middleware";
 import { IProteusSource } from "@lindorm/proteus";
-import { RATE_LIMIT_SOURCE, ROOMS_SOURCE } from "../constants/symbols";
+import { AUDIT_SOURCE, RATE_LIMIT_SOURCE, ROOMS_SOURCE } from "../constants/symbols";
 import { PylonCommonContext } from "../../types";
 
+type AuditConfig = {
+  iris: IIrisSource;
+  actor: (ctx: any) => string;
+  sanitise?: (body: unknown) => unknown;
+  skip?: (ctx: any) => boolean;
+};
+
 type Options = {
+  auditConfig?: AuditConfig;
   hermes?: IHermes;
   iris?: IIrisSource;
   proteus?: IProteusSource;
@@ -31,6 +39,10 @@ export const createSourcesMiddleware = <C extends PylonCommonContext>(
       if (options.iris) {
         ctx.iris = options.iris.clone({ logger: ctx.logger, context: ctx });
         ctx.logger.debug("IrisSource added to context");
+      }
+
+      if (options.auditConfig) {
+        (ctx as any)[AUDIT_SOURCE] = options.auditConfig;
       }
 
       if (options.rateLimitProteus) {

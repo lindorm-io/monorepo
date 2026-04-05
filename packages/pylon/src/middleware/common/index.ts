@@ -7,6 +7,7 @@ export * from "./create-repository-middleware";
 export * from "./create-token-middleware";
 export * from "./create-worker-queue-middleware";
 export * from "./use-access";
+export * from "./use-audit-log";
 export * from "./use-permissions";
 export * from "./use-rate-limit";
 export * from "./use-roles";

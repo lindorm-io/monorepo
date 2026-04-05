@@ -17,10 +17,11 @@ import {
   RateLimitBucket,
   RateLimitFixed,
   RateLimitSliding,
+  RequestAuditLog,
   Session,
   WebhookSubscription,
 } from "../entities";
-import { Job, WebhookDispatch, WebhookRequest } from "../messages";
+import { Job, RequestAudit, WebhookDispatch, WebhookRequest } from "../messages";
 import { calculateSubscriptions } from "#internal/utils/calculate-subscriptions";
 import { calculateWorkers } from "#internal/utils/calculate-workers";
 import { scanWorkers } from "#internal/utils/scan-workers";
@@ -281,6 +282,18 @@ export class Pylon<
       const source = this.options.rooms.proteus ?? this.options.proteus;
       if (source) {
         source.addEntities([Presence]);
+      }
+    }
+
+    if (this.options.audit?.enabled) {
+      const proteusSource = this.options.audit.proteus ?? this.options.proteus;
+      if (proteusSource) {
+        proteusSource.addEntities([RequestAuditLog]);
+      }
+
+      const irisSource = this.options.audit.iris ?? this.options.iris;
+      if (irisSource) {
+        irisSource.addMessages([RequestAudit]);
       }
     }
   }
