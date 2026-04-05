@@ -395,10 +395,12 @@ describe("Hermes", () => {
       await proteus.disconnect();
     });
 
-    const clearEventStore = async (): Promise<void> => {
-      const { EventRecord } = await import("#internal/entities");
-      const repo = proteus.repository(EventRecord);
-      await repo.clear();
+    // EventRecord is @AppendOnly so repo.clear() is blocked.
+    // Disconnect + reconnect the memory driver to reset all tables instead.
+    const resetStore = async (): Promise<void> => {
+      await proteus.disconnect();
+      await proteus.connect();
+      await proteus.setup();
     };
 
     const seedEventRecords = async (
@@ -434,7 +436,7 @@ describe("Hermes", () => {
     };
 
     it("should complete immediately on empty event store", async () => {
-      await clearEventStore();
+      await resetStore();
 
       const handle = hermes.admin.replay.view(TestViewEntity);
 
@@ -457,7 +459,7 @@ describe("Hermes", () => {
     });
 
     it("should replay events and rebuild view state", async () => {
-      await clearEventStore();
+      await resetStore();
       const aggregateId = randomUUID();
 
       await seedEventRecords(aggregateId, [
@@ -491,7 +493,7 @@ describe("Hermes", () => {
     });
 
     it("should emit progress with correct total and processed counts", async () => {
-      await clearEventStore();
+      await resetStore();
       const aggregateId = randomUUID();
 
       await seedEventRecords(aggregateId, [
@@ -520,7 +522,7 @@ describe("Hermes", () => {
     });
 
     it("should truncate view table before replaying", async () => {
-      await clearEventStore();
+      await resetStore();
       const aggregateId = randomUUID();
 
       // Seed an event and replay to create view state
@@ -550,7 +552,7 @@ describe("Hermes", () => {
     });
 
     it("should skip causation during replay", async () => {
-      await clearEventStore();
+      await resetStore();
       const aggregateId = randomUUID();
 
       await seedEventRecords(aggregateId, [
@@ -572,7 +574,7 @@ describe("Hermes", () => {
     });
 
     it("should emit error when handler throws during replay", async () => {
-      await clearEventStore();
+      await resetStore();
       const aggregateId = randomUUID();
 
       // Seed a create event then a throws event
@@ -593,7 +595,7 @@ describe("Hermes", () => {
     });
 
     it("should handle cancellation", async () => {
-      await clearEventStore();
+      await resetStore();
       const aggregateId = randomUUID();
 
       await seedEventRecords(aggregateId, [
@@ -610,7 +612,7 @@ describe("Hermes", () => {
     });
 
     it("should replay all views watching an aggregate", async () => {
-      await clearEventStore();
+      await resetStore();
       const aggregateId = randomUUID();
 
       await seedEventRecords(aggregateId, [
@@ -658,7 +660,7 @@ describe("Hermes", () => {
     });
 
     it("should replay events from multiple aggregate instances in temporal order", async () => {
-      await clearEventStore();
+      await resetStore();
 
       const aggId1 = randomUUID();
       const aggId2 = randomUUID();
@@ -749,7 +751,7 @@ describe("Hermes", () => {
     });
 
     it("should process all events across many aggregate instances via batched pagination", async () => {
-      await clearEventStore();
+      await resetStore();
 
       // Seed events across 5 different aggregate instances (1 create each)
       const aggregateIds: Array<string> = [];
@@ -787,7 +789,7 @@ describe("Hermes", () => {
     });
 
     it("should include skipped count of zero for valid events", async () => {
-      await clearEventStore();
+      await resetStore();
       const aggregateId = randomUUID();
 
       await seedEventRecords(aggregateId, [
@@ -807,7 +809,7 @@ describe("Hermes", () => {
     });
 
     it("should skip tampered events in warn mode and include skipped count", async () => {
-      await clearEventStore();
+      await resetStore();
       const aggregateId = randomUUID();
 
       await seedEventRecords(aggregateId, [
@@ -856,7 +858,7 @@ describe("Hermes", () => {
     });
 
     it("should re-subscribe with aggregate-based topics after replay", async () => {
-      await clearEventStore();
+      await resetStore();
       const aggregateId = randomUUID();
 
       await seedEventRecords(aggregateId, [
@@ -914,10 +916,12 @@ describe("Hermes", () => {
       await proteus.disconnect();
     });
 
-    const clearEventStore = async (): Promise<void> => {
-      const { EventRecord } = await import("#internal/entities");
-      const repo = proteus.repository(EventRecord);
-      await repo.clear();
+    // EventRecord is @AppendOnly so repo.clear() is blocked.
+    // Disconnect + reconnect the memory driver to reset all tables instead.
+    const resetStore = async (): Promise<void> => {
+      await proteus.disconnect();
+      await proteus.connect();
+      await proteus.setup();
     };
 
     const seedEventRecords = async (
@@ -953,7 +957,7 @@ describe("Hermes", () => {
     };
 
     it("should throw on tampered event in strict mode", async () => {
-      await clearEventStore();
+      await resetStore();
       const aggregateId = randomUUID();
 
       await seedEventRecords(aggregateId, [
@@ -979,7 +983,7 @@ describe("Hermes", () => {
     });
 
     it("should replay valid events successfully in strict mode", async () => {
-      await clearEventStore();
+      await resetStore();
       const aggregateId = randomUUID();
 
       await seedEventRecords(aggregateId, [
