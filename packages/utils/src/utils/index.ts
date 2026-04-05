@@ -2,6 +2,7 @@ export * from "./diff";
 export * from "./filter";
 export * from "./find";
 export * from "./find-last";
+export * from "./lazy-factory";
 export * from "./merge";
 export * from "./noop";
 export * from "./parse-string-record";
