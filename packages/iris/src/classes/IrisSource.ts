@@ -18,6 +18,7 @@ import type {
   CloneOptions,
   IrisConnectionState,
   IrisDriverType,
+  IrisEvents,
   IrisSourceOptions,
   MessageScannerInput,
 } from "../types";
@@ -190,11 +191,25 @@ export class IrisSource implements IIrisSource {
     return this._driver.getConnectionState();
   }
 
-  public onConnectionStateChange(callback: (state: IrisConnectionState) => void): void {
-    const driver = this.requireDriver();
-    if (driver.onConnectionStateChange) {
-      driver.onConnectionStateChange(callback);
-    }
+  public on<K extends keyof IrisEvents>(
+    event: K,
+    listener: (...args: IrisEvents[K]) => void,
+  ): void {
+    this.requireDriver().on(event, listener);
+  }
+
+  public off<K extends keyof IrisEvents>(
+    event: K,
+    listener: (...args: IrisEvents[K]) => void,
+  ): void {
+    this.requireDriver().off(event, listener);
+  }
+
+  public once<K extends keyof IrisEvents>(
+    event: K,
+    listener: (...args: IrisEvents[K]) => void,
+  ): void {
+    this.requireDriver().once(event, listener);
   }
 
   public async setup(): Promise<void> {

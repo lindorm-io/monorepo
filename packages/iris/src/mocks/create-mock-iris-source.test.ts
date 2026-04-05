@@ -23,7 +23,9 @@ describe("createMockIrisSource", () => {
     expect(jest.isMockFunction(mock.ping)).toBe(true);
     expect(jest.isMockFunction(mock.setup)).toBe(true);
     expect(jest.isMockFunction(mock.getConnectionState)).toBe(true);
-    expect(jest.isMockFunction(mock.onConnectionStateChange)).toBe(true);
+    expect(jest.isMockFunction(mock.on)).toBe(true);
+    expect(jest.isMockFunction(mock.off)).toBe(true);
+    expect(jest.isMockFunction(mock.once)).toBe(true);
 
     expect(jest.isMockFunction(mock.messageBus)).toBe(true);
     expect(jest.isMockFunction(mock.publisher)).toBe(true);

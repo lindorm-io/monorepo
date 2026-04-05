@@ -220,7 +220,7 @@ describe("NatsDriver", () => {
     it("should notify listeners on state change", async () => {
       const driver = createDriver();
       const states: Array<IrisConnectionState> = [];
-      driver.onConnectionStateChange((s) => states.push(s));
+      driver.on("connection:state", (s) => states.push(s));
 
       await driver.connect();
 
@@ -313,7 +313,7 @@ describe("NatsDriver", () => {
 
       const driver = createDriver();
       const states: Array<IrisConnectionState> = [];
-      driver.onConnectionStateChange((s) => states.push(s));
+      driver.on("connection:state", (s) => states.push(s));
 
       await driver.connect();
 
@@ -328,7 +328,7 @@ describe("NatsDriver", () => {
 
       const driver = createDriver();
       const states: Array<IrisConnectionState> = [];
-      driver.onConnectionStateChange((s) => states.push(s));
+      driver.on("connection:state", (s) => states.push(s));
 
       await driver.connect();
 
@@ -343,7 +343,7 @@ describe("NatsDriver", () => {
 
       const driver = createDriver();
       const states: Array<IrisConnectionState> = [];
-      driver.onConnectionStateChange((s) => states.push(s));
+      driver.on("connection:state", (s) => states.push(s));
 
       await driver.connect();
       await driver.disconnect();

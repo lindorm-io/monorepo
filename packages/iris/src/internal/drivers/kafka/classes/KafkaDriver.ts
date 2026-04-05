@@ -1,3 +1,4 @@
+import { EventEmitter } from "node:events";
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
 import type { IIrisDriver } from "../../../../interfaces/IrisDriver";
@@ -9,7 +10,11 @@ import type {
   IMessage,
   IMessageSubscriber,
 } from "../../../../interfaces";
-import type { IrisConnectionState, KafkaConnectionOptions } from "../../../../types";
+import type {
+  IrisConnectionState,
+  IrisEvents,
+  KafkaConnectionOptions,
+} from "../../../../types";
 import type { IAmphora } from "@lindorm/amphora";
 import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager";
 import type { DelayManager } from "../../../delay/DelayManager";
@@ -54,7 +59,7 @@ export class KafkaDriver implements IIrisDriver {
   private readonly delayManager: DelayManager | undefined;
   private readonly deadLetterManager: DeadLetterManager | undefined;
   private _connectionState: IrisConnectionState = "disconnected";
-  private readonly _stateListeners: Array<(state: IrisConnectionState) => void> = [];
+  private readonly _emitter = new EventEmitter();
   private _replyQueueActive: boolean = false;
   private _deliberateDisconnect: boolean = false;
   private readonly _producerUnsubscribers: Array<() => void> = [];
@@ -345,8 +350,25 @@ export class KafkaDriver implements IIrisDriver {
     return this._connectionState;
   }
 
-  public onConnectionStateChange(callback: (state: IrisConnectionState) => void): void {
-    this._stateListeners.push(callback);
+  public on<K extends keyof IrisEvents>(
+    event: K,
+    listener: (...args: IrisEvents[K]) => void,
+  ): void {
+    this._emitter.on(event, listener);
+  }
+
+  public off<K extends keyof IrisEvents>(
+    event: K,
+    listener: (...args: IrisEvents[K]) => void,
+  ): void {
+    this._emitter.off(event, listener);
+  }
+
+  public once<K extends keyof IrisEvents>(
+    event: K,
+    listener: (...args: IrisEvents[K]) => void,
+  ): void {
+    this._emitter.once(event, listener);
   }
 
   public createPublisher<M extends IMessage>(target: Constructor<M>): IIrisPublisher<M> {
@@ -488,15 +510,6 @@ export class KafkaDriver implements IIrisDriver {
 
   private setConnectionState(state: IrisConnectionState): void {
     this._connectionState = state;
-    for (const listener of this._stateListeners) {
-      try {
-        listener(state);
-      } catch (error) {
-        this.logger.error("State listener threw an exception", {
-          state,
-          error: error instanceof Error ? error.message : String(error),
-        });
-      }
-    }
+    this._emitter.emit("connection:state", state);
   }
 }

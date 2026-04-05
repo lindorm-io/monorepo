@@ -194,30 +194,21 @@ describe("MemoryDriver", () => {
     it("should notify state listeners on connect", async () => {
       const driver = createDriver();
       const states: Array<string> = [];
-      driver.onConnectionStateChange((state) => states.push(state));
+      driver.on("connection:state", (state) => states.push(state));
 
       await driver.connect();
 
       expect(states).toEqual(["connecting", "connected"]);
     });
 
-    it("should not break state transition when a listener throws", async () => {
+    it("should propagate listener errors through EventEmitter", async () => {
       const driver = createDriver();
-      const states: Array<string> = [];
 
-      // First listener throws
-      driver.onConnectionStateChange(() => {
+      driver.on("connection:state", () => {
         throw new Error("listener boom");
       });
 
-      // Second listener should still fire
-      driver.onConnectionStateChange((state) => states.push(state));
-
-      await driver.connect();
-
-      // Second listener should have received both state changes
-      expect(states).toEqual(["connecting", "connected"]);
-      expect(driver.connected).toBe(true);
+      await expect(driver.connect()).rejects.toThrow("listener boom");
     });
   });
 

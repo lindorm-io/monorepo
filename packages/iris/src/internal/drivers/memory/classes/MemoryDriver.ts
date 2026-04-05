@@ -1,3 +1,4 @@
+import { EventEmitter } from "node:events";
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
 import type { IIrisDriver } from "../../../../interfaces/IrisDriver";
@@ -9,7 +10,7 @@ import type {
   IMessage,
   IMessageSubscriber,
 } from "../../../../interfaces";
-import type { IrisConnectionState } from "../../../../types";
+import type { IrisConnectionState, IrisEvents } from "../../../../types";
 import { IrisTransportError } from "../../../../errors/IrisTransportError";
 import type { DeadLetterEntry } from "../../../../types/dead-letter";
 import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager";
@@ -44,7 +45,7 @@ export class MemoryDriver implements IIrisDriver {
   private readonly delayManager: DelayManager | undefined;
   private readonly deadLetterManager: DeadLetterManager | undefined;
   private _connectionState: IrisConnectionState = "disconnected";
-  private readonly _stateListeners: Array<(state: IrisConnectionState) => void> = [];
+  private readonly _emitter = new EventEmitter();
   private _replyQueueActive: boolean = false;
 
   public constructor(options: MemoryDriverOptions, store?: MemorySharedState) {
@@ -161,8 +162,25 @@ export class MemoryDriver implements IIrisDriver {
     return this._connectionState;
   }
 
-  public onConnectionStateChange(callback: (state: IrisConnectionState) => void): void {
-    this._stateListeners.push(callback);
+  public on<K extends keyof IrisEvents>(
+    event: K,
+    listener: (...args: IrisEvents[K]) => void,
+  ): void {
+    this._emitter.on(event, listener);
+  }
+
+  public off<K extends keyof IrisEvents>(
+    event: K,
+    listener: (...args: IrisEvents[K]) => void,
+  ): void {
+    this._emitter.off(event, listener);
+  }
+
+  public once<K extends keyof IrisEvents>(
+    event: K,
+    listener: (...args: IrisEvents[K]) => void,
+  ): void {
+    this._emitter.once(event, listener);
   }
 
   public createPublisher<M extends IMessage>(target: Constructor<M>): IIrisPublisher<M> {
@@ -283,15 +301,6 @@ export class MemoryDriver implements IIrisDriver {
 
   private setConnectionState(state: IrisConnectionState): void {
     this._connectionState = state;
-    for (const listener of this._stateListeners) {
-      try {
-        listener(state);
-      } catch (error) {
-        this.logger.error("State listener threw an exception", {
-          state,
-          error: error instanceof Error ? error.message : String(error),
-        });
-      }
-    }
+    this._emitter.emit("connection:state", state);
   }
 }

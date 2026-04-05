@@ -1,3 +1,4 @@
+import { EventEmitter } from "node:events";
 import amqplib from "amqplib";
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
@@ -10,7 +11,11 @@ import type {
   IMessage,
   IMessageSubscriber,
 } from "../../../../interfaces";
-import type { IrisConnectionState, RabbitConnectionOptions } from "../../../../types";
+import type {
+  IrisConnectionState,
+  IrisEvents,
+  RabbitConnectionOptions,
+} from "../../../../types";
 import type { IAmphora } from "@lindorm/amphora";
 import type { RabbitSharedState } from "../types/rabbit-types";
 import { RabbitMessageBus } from "./RabbitMessageBus";
@@ -45,7 +50,7 @@ export class RabbitDriver implements IIrisDriver {
   private readonly connectionConfig: { url: string } & RabbitConnectionOptions;
   private readonly state: RabbitSharedState;
   private _connectionState: IrisConnectionState = "disconnected";
-  private readonly _stateListeners: Array<(state: IrisConnectionState) => void> = [];
+  private readonly _emitter = new EventEmitter();
   private _replyQueueActive: boolean = false;
   private _deliberateDisconnect: boolean = false;
   private _reconnectAttempt: number = 0;
@@ -251,8 +256,25 @@ export class RabbitDriver implements IIrisDriver {
     return this._connectionState;
   }
 
-  public onConnectionStateChange(callback: (state: IrisConnectionState) => void): void {
-    this._stateListeners.push(callback);
+  public on<K extends keyof IrisEvents>(
+    event: K,
+    listener: (...args: IrisEvents[K]) => void,
+  ): void {
+    this._emitter.on(event, listener);
+  }
+
+  public off<K extends keyof IrisEvents>(
+    event: K,
+    listener: (...args: IrisEvents[K]) => void,
+  ): void {
+    this._emitter.off(event, listener);
+  }
+
+  public once<K extends keyof IrisEvents>(
+    event: K,
+    listener: (...args: IrisEvents[K]) => void,
+  ): void {
+    this._emitter.once(event, listener);
   }
 
   public createPublisher<M extends IMessage>(target: Constructor<M>): IIrisPublisher<M> {
@@ -365,16 +387,7 @@ export class RabbitDriver implements IIrisDriver {
 
   private setConnectionState(state: IrisConnectionState): void {
     this._connectionState = state;
-    for (const listener of this._stateListeners) {
-      try {
-        listener(state);
-      } catch (error) {
-        this.logger.error("State listener threw an exception", {
-          state,
-          error: error instanceof Error ? error.message : String(error),
-        });
-      }
-    }
+    this._emitter.emit("connection:state", state);
   }
 
   private registerConnectionHandlers(connection: amqplib.ChannelModel): void {
