@@ -96,6 +96,15 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
       httpRequestLoggerMiddleware,
       httpResponseBodyMiddleware,
       createSourcesMiddleware({
+        auditConfig:
+          this.options.audit?.enabled && (this.options.audit.iris ?? this.options.iris)
+            ? {
+                iris: this.options.audit.iris ?? this.options.iris!,
+                actor: this.options.audit.actor,
+                sanitise: this.options.audit.sanitise,
+                skip: this.options.audit.skip,
+              }
+            : undefined,
         hermes: this.options.hermes,
         iris: this.options.iris,
         proteus: this.options.proteus,

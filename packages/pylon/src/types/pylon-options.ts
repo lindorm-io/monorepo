@@ -18,6 +18,7 @@ import { CorsOptions } from "./cors";
 import { OpenIdConfigurationOptions } from "./open-id-configuration";
 import { ParseBodyOptions } from "./parse-body";
 import {
+  PylonAuditOptions,
   PylonHttpCallback,
   PylonKryptosOptions,
   PylonQueueOptions,
@@ -37,6 +38,7 @@ export type PylonHttpRouters<C extends PylonHttpContext> = {
 
 type CommonOptions = {
   amphora: IAmphora;
+  audit?: PylonAuditOptions;
   domain?: string;
   environment?: Environment;
   hermes?: IHermes;

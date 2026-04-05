@@ -58,6 +58,15 @@ export type PylonRateLimitOptions = {
   skip?: (ctx: any) => boolean;
 };
 
+export type PylonAuditOptions = {
+  enabled: boolean;
+  proteus?: IProteusSource;
+  iris?: IIrisSource;
+  actor: (ctx: any) => string;
+  sanitise?: (body: unknown) => unknown;
+  skip?: (ctx: any) => boolean;
+};
+
 export type PylonRoomsOptions = {
   presence?: boolean;
   proteus?: IProteusSource;
