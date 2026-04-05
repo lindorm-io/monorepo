@@ -286,7 +286,7 @@ export type MetaEmbeddedList = {
 
 export type MetaFilter = {
   name: string;
-  cond: Predicate<Dict>;
+  condition: Predicate<Dict>;
   default: boolean;
 };
 

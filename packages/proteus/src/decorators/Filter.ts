@@ -12,7 +12,7 @@ export type FilterDecoratorOptions = {
    * Use `"$paramName"` string placeholders for parameterized values
    * that are resolved at query time via `setFilterParams()` or `FindOptions.filters`.
    */
-  cond: Predicate<Dict>;
+  condition: Predicate<Dict>;
   /**
    * When `true`, the filter is auto-enabled on every query.
    * When `false` (default), the filter must be explicitly enabled per query.
@@ -30,8 +30,8 @@ export type FilterDecoratorOptions = {
  * @example
  * ```ts
  * @Entity()
- * @Filter({ name: "active", cond: { deletedAt: null }, default: true })
- * @Filter({ name: "tenant", cond: { tenantId: "$tenantId" } })
+ * @Filter({ name: "active", condition: { deletedAt: null }, default: true })
+ * @Filter({ name: "tenant", condition: { tenantId: "$tenantId" } })
  * class Invoice {
  *   @PrimaryKeyField() id!: string;
  *   @Field("string") tenantId!: string;
@@ -44,7 +44,7 @@ export const Filter =
   (_target: Function, context: ClassDecoratorContext): void => {
     stageFilter(context.metadata, {
       name: options.name,
-      cond: options.cond,
+      condition: options.condition,
       default: options.default ?? false,
     });
   };

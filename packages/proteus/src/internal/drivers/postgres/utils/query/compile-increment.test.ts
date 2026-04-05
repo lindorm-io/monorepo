@@ -43,7 +43,7 @@ const noNamespaceMeta = {
 // Soft-delete metadata — has a DeleteDate field so __softDelete filter auto-generates
 const softDeleteFilter: MetaFilter = {
   name: SOFT_DELETE_FILTER_NAME,
-  cond: { deletedAt: null },
+  condition: { deletedAt: null },
   default: true,
 };
 

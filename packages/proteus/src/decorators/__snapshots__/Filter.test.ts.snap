@@ -2,7 +2,7 @@
 
 exports[`Filter should register a default-on filter 1`] = `
 {
-  "cond": {
+  "condition": {
     "status": "active",
   },
   "default": true,
@@ -12,7 +12,7 @@ exports[`Filter should register a default-on filter 1`] = `
 
 exports[`Filter should register a parameterized filter with default off 1`] = `
 {
-  "cond": {
+  "condition": {
     "tenantId": "$tenantId",
   },
   "default": false,
@@ -22,7 +22,7 @@ exports[`Filter should register a parameterized filter with default off 1`] = `
 
 exports[`Filter should register filter with $or condition 1`] = `
 {
-  "cond": {
+  "condition": {
     "$or": [
       {
         "status": "published",
@@ -39,7 +39,7 @@ exports[`Filter should register filter with $or condition 1`] = `
 
 exports[`Filter should register filter with nested operator condition 1`] = `
 {
-  "cond": {
+  "condition": {
     "createdAt": {
       "$gte": "$since",
     },
@@ -52,14 +52,14 @@ exports[`Filter should register filter with nested operator condition 1`] = `
 exports[`Filter should register multiple filters 1`] = `
 [
   {
-    "cond": {
+    "condition": {
       "tenantId": "$tenantId",
     },
     "default": false,
     "name": "tenant",
   },
   {
-    "cond": {
+    "condition": {
       "deletedAt": null,
     },
     "default": true,

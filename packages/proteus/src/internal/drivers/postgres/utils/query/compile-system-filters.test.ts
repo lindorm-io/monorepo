@@ -32,7 +32,7 @@ const metadata = {
 // Build the __softDelete filter the same way auto-filters does
 const softDeleteFilter: MetaFilter = {
   name: SOFT_DELETE_FILTER_NAME,
-  cond: { deletedAt: null },
+  condition: { deletedAt: null },
   default: true,
 };
 
@@ -92,7 +92,7 @@ const versionedMetadata = {
 // Scoped entity metadata — has __scope filter (default-on, requires params)
 const scopeFilter: MetaFilter = {
   name: SCOPE_FILTER_NAME,
-  cond: { scope: "$scope" },
+  condition: { scope: "$scope" },
   default: true,
 };
 
@@ -118,13 +118,13 @@ const scopedMetadata = {
 // Entity with both softDelete and scope filters
 const softDeleteFilter2: MetaFilter = {
   name: SOFT_DELETE_FILTER_NAME,
-  cond: { deletedAt: null },
+  condition: { deletedAt: null },
   default: true,
 };
 
 const tenantFilter: MetaFilter = {
   name: "tenant",
-  cond: { tenantId: "$tenantId" },
+  condition: { tenantId: "$tenantId" },
   default: false,
 };
 

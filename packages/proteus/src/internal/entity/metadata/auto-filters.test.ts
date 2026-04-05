@@ -25,7 +25,7 @@ describe("generateAutoFilters", () => {
     expect(result).toEqual([
       {
         name: "__softDelete",
-        cond: { deletedAt: null },
+        condition: { deletedAt: null },
         default: true,
       },
     ]);
@@ -39,7 +39,7 @@ describe("generateAutoFilters", () => {
     expect(result).toEqual([
       {
         name: SOFT_DELETE_FILTER_NAME,
-        cond: { removedAt: null },
+        condition: { removedAt: null },
         default: true,
       },
     ]);
@@ -82,7 +82,7 @@ describe("generateAutoFilters — __scope", () => {
     expect(result).toEqual([
       {
         name: SCOPE_FILTER_NAME,
-        cond: { tenantId: "$tenantId" },
+        condition: { tenantId: "$tenantId" },
         default: true,
       },
     ]);
@@ -99,7 +99,7 @@ describe("generateAutoFilters — __scope", () => {
 
     const scopeFilter = result.find((f) => f.name === SCOPE_FILTER_NAME);
     expect(scopeFilter).toBeDefined();
-    expect(scopeFilter!.cond).toEqual({
+    expect(scopeFilter!.condition).toEqual({
       $and: [{ region: "$region" }, { tenantId: "$tenantId" }],
     });
     expect(scopeFilter!.default).toBe(true);
@@ -116,7 +116,7 @@ describe("generateAutoFilters — __scope", () => {
     const result = generateAutoFilters(fields);
     const scopeFilter = result.find((f) => f.name === SCOPE_FILTER_NAME);
 
-    expect(scopeFilter!.cond).toEqual({
+    expect(scopeFilter!.condition).toEqual({
       $and: [{ region: "$region" }, { tenantId: "$tenantId" }, { env: "$env" }],
     });
   });

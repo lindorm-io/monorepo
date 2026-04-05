@@ -163,7 +163,7 @@ export const resolveFilters = (
       if (
         enabled &&
         Object.keys(params).length === 0 &&
-        conditionRequiresParams(filter.cond)
+        conditionRequiresParams(filter.condition)
       ) {
         continue;
       }
@@ -172,7 +172,7 @@ export const resolveFilters = (
     if (!enabled) continue;
 
     // Substitute $param placeholders
-    const predicate = substituteParams(filter.cond, params, filter.name);
+    const predicate = substituteParams(filter.condition, params, filter.name);
     resolved.push({ name: filter.name, predicate });
   }
 

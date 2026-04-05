@@ -6,7 +6,7 @@ import { Nullable } from "./Nullable";
 import { PrimaryKeyField } from "./PrimaryKeyField";
 
 @Entity({ name: "FilterActive" })
-@Filter({ name: "active", cond: { status: "active" }, default: true })
+@Filter({ name: "active", condition: { status: "active" }, default: true })
 class FilterActive {
   @PrimaryKeyField()
   id!: string;
@@ -16,7 +16,7 @@ class FilterActive {
 }
 
 @Entity({ name: "FilterTenant" })
-@Filter({ name: "tenant", cond: { tenantId: "$tenantId" } })
+@Filter({ name: "tenant", condition: { tenantId: "$tenantId" } })
 class FilterTenant {
   @PrimaryKeyField()
   id!: string;
@@ -26,8 +26,8 @@ class FilterTenant {
 }
 
 @Entity({ name: "FilterMultiple" })
-@Filter({ name: "active", cond: { deletedAt: null }, default: true })
-@Filter({ name: "tenant", cond: { tenantId: "$tenantId" } })
+@Filter({ name: "active", condition: { deletedAt: null }, default: true })
+@Filter({ name: "tenant", condition: { tenantId: "$tenantId" } })
 class FilterMultiple {
   @PrimaryKeyField()
   id!: string;
@@ -43,7 +43,7 @@ class FilterMultiple {
 @Entity({ name: "FilterNested" })
 @Filter({
   name: "recent",
-  cond: { createdAt: { $gte: "$since" } },
+  condition: { createdAt: { $gte: "$since" } },
   default: false,
 })
 class FilterNested {
@@ -57,7 +57,7 @@ class FilterNested {
 @Entity({ name: "FilterAndOr" })
 @Filter({
   name: "visible",
-  cond: { $or: [{ status: "published" }, { status: "featured" }] },
+  condition: { $or: [{ status: "published" }, { status: "featured" }] },
   default: true,
 })
 class FilterAndOr {

@@ -4,19 +4,19 @@ import { resolveFilters } from "./resolve-filters";
 
 const activeFilter: MetaFilter = {
   name: "active",
-  cond: { status: "active" },
+  condition: { status: "active" },
   default: true,
 };
 
 const tenantFilter: MetaFilter = {
   name: "tenant",
-  cond: { tenantId: "$tenantId" },
+  condition: { tenantId: "$tenantId" },
   default: false,
 };
 
 const rangeFilter: MetaFilter = {
   name: "highValue",
-  cond: { amount: { $gte: "$minAmount" } },
+  condition: { amount: { $gte: "$minAmount" } },
   default: false,
 };
 
@@ -121,7 +121,7 @@ describe("resolveFilters", () => {
     test("should not substitute non-param values (no $ prefix)", () => {
       const filter: MetaFilter = {
         name: "literal",
-        cond: { status: "active" },
+        condition: { status: "active" },
         default: true,
       };
       const result = resolveFilters([filter], new Map(), undefined);
@@ -131,7 +131,7 @@ describe("resolveFilters", () => {
     test("should substitute params in $and arrays", () => {
       const filter: MetaFilter = {
         name: "complex",
-        cond: { $and: [{ tenantId: "$tenantId" }, { status: "active" }] },
+        condition: { $and: [{ tenantId: "$tenantId" }, { status: "active" }] },
         default: false,
       };
       const result = resolveFilters([filter], new Map(), {
@@ -145,7 +145,7 @@ describe("resolveFilters", () => {
     test("should handle null values in condition", () => {
       const filter: MetaFilter = {
         name: "notDeleted",
-        cond: { deletedAt: null },
+        condition: { deletedAt: null },
         default: true,
       };
       const result = resolveFilters([filter], new Map(), undefined);
@@ -155,10 +155,10 @@ describe("resolveFilters", () => {
 
   describe("param-dependent default behavior", () => {
     test("should silently skip default-on filter with $params when no params are available", () => {
-      // This simulates __scope: default=true, cond has $params, no registry or override
+      // This simulates __scope: default=true, condition has $params, no registry or override
       const scopeFilter: MetaFilter = {
         name: "__scope",
-        cond: { tenantId: "$tenantId" },
+        condition: { tenantId: "$tenantId" },
         default: true,
       };
 
@@ -169,7 +169,7 @@ describe("resolveFilters", () => {
     test("should activate default-on filter with $params when registry provides params", () => {
       const scopeFilter: MetaFilter = {
         name: "__scope",
-        cond: { tenantId: "$tenantId" },
+        condition: { tenantId: "$tenantId" },
         default: true,
       };
 
@@ -185,7 +185,7 @@ describe("resolveFilters", () => {
     test("should activate default-on filter with $params when override provides params", () => {
       const scopeFilter: MetaFilter = {
         name: "__scope",
-        cond: { tenantId: "$tenantId" },
+        condition: { tenantId: "$tenantId" },
         default: true,
       };
 
@@ -199,7 +199,7 @@ describe("resolveFilters", () => {
     test("should still throw when registry enables filter but params are incomplete", () => {
       const scopeFilter: MetaFilter = {
         name: "__scope",
-        cond: { tenantId: "$tenantId" },
+        condition: { tenantId: "$tenantId" },
         default: true,
       };
 
@@ -215,7 +215,7 @@ describe("resolveFilters", () => {
     test("should still throw when override: true but no params registered", () => {
       const scopeFilter: MetaFilter = {
         name: "__scope",
-        cond: { tenantId: "$tenantId" },
+        condition: { tenantId: "$tenantId" },
         default: true,
       };
 
@@ -228,7 +228,7 @@ describe("resolveFilters", () => {
       // __softDelete has no $params — should always activate
       const softDeleteFilter: MetaFilter = {
         name: "__softDelete",
-        cond: { deletedAt: null },
+        condition: { deletedAt: null },
         default: true,
       };
 
@@ -240,7 +240,7 @@ describe("resolveFilters", () => {
     test("should handle $and conditions with $params in default-skip logic", () => {
       const multiScopeFilter: MetaFilter = {
         name: "__scope",
-        cond: { $and: [{ tenantId: "$tenantId" }, { region: "$region" }] },
+        condition: { $and: [{ tenantId: "$tenantId" }, { region: "$region" }] },
         default: true,
       };
 

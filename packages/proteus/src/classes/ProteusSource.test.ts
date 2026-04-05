@@ -7,7 +7,7 @@ import { Filter } from "../decorators/Filter";
 import type { IEntitySubscriber } from "../interfaces/EntitySubscriber";
 
 @Entity({ name: "CloneTestEntity" })
-@Filter({ name: "tenant", cond: { tenantId: "$tenantId" } })
+@Filter({ name: "tenant", condition: { tenantId: "$tenantId" } })
 class CloneTestEntity {
   @PrimaryKeyField()
   id!: string;

@@ -74,7 +74,7 @@ export const validateFilters = (
     seenNames.add(filter.name);
 
     // Extract and validate field references
-    const referencedKeys = extractFieldKeys(filter.cond);
+    const referencedKeys = extractFieldKeys(filter.condition);
     for (const key of referencedKeys) {
       if (!fieldKeys.has(key)) {
         throw new EntityMetadataError(
