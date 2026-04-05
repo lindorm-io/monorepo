@@ -12,12 +12,13 @@ type InitOptions = {
 
 const sourceTemplate = (driver: string): string => {
   const lines = [
-    `import { Logger } from "@lindorm/logger";`,
+    `import { join } from "path";`,
     `import { IrisSource } from "@lindorm/iris";`,
     ``,
     `export const source = new IrisSource({`,
     `  driver: "${driver}",`,
-    `  logger: Logger.for("iris"),`,
+    `  logger: logger.child(["iris"]), // TODO: import or create a Logger instance`,
+    `  messages: [join(__dirname, "messages")],`,
   ];
 
   switch (driver) {
