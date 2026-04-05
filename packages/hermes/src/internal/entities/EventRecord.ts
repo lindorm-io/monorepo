@@ -11,15 +11,15 @@ import {
   Unique,
 } from "@lindorm/proteus";
 
-@AppendOnly()
-@Entity({ name: "event" })
 @Namespace("hermes")
+@AppendOnly()
 @Unique<typeof EventRecord>([
   "aggregateId",
   "aggregateName",
   "aggregateNamespace",
   "expectedEvents",
 ])
+@Entity({ name: "event" })
 export class EventRecord {
   @PrimaryKeyField()
   public id: string = "";

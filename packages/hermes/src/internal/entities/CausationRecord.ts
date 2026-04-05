@@ -9,9 +9,9 @@ import {
   Unique,
 } from "@lindorm/proteus";
 
-@Entity({ name: "causation" })
 @Namespace("hermes")
 @Unique<typeof CausationRecord>(["ownerId", "ownerName", "causationId"])
+@Entity({ name: "causation" })
 export class CausationRecord {
   @PrimaryKeyField()
   public id: string = "";

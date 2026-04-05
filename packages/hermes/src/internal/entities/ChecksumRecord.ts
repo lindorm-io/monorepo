@@ -8,9 +8,9 @@ import {
   PrimaryKeyField,
 } from "@lindorm/proteus";
 
+@Namespace("hermes")
 @AppendOnly()
 @Entity({ name: "checksum" })
-@Namespace("hermes")
 export class ChecksumRecord {
   @PrimaryKeyField()
   public id: string = "";
