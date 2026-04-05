@@ -2,6 +2,7 @@ import { AesKit } from "@lindorm/aes";
 import { Conduit, ConduitClientCredentialsCache } from "@lindorm/conduit";
 import { IKryptos } from "@lindorm/kryptos";
 import { ILogger } from "@lindorm/logger";
+import { WebhookMethod } from "../../enums";
 import { IWebhookSubscription } from "../../interfaces";
 import { createConduitWebhookAuthMiddleware } from "../../middleware";
 
@@ -40,10 +41,26 @@ export const createDispatchWebhook = (
       cache,
     );
 
-    await conduit.post(dispatch.subscription.url, {
+    const method = dispatch.subscription.method ?? WebhookMethod.Post;
+    const requestOptions = {
       body: dispatch.payload,
       query: { event: dispatch.event },
       middleware: [middleware],
-    });
+    };
+
+    switch (method) {
+      case WebhookMethod.Put:
+        await conduit.put(dispatch.subscription.url, requestOptions);
+        break;
+
+      case WebhookMethod.Patch:
+        await conduit.patch(dispatch.subscription.url, requestOptions);
+        break;
+
+      case WebhookMethod.Post:
+      default:
+        await conduit.post(dispatch.subscription.url, requestOptions);
+        break;
+    }
   };
 };

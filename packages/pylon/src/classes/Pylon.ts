@@ -23,6 +23,8 @@ import {
 } from "../entities";
 import { Job, RequestAudit, WebhookDispatch, WebhookRequest } from "../messages";
 import { setupAuditConsumer } from "#internal/consumers/setup-audit-consumer";
+import { setupWebhookDispatchConsumer } from "#internal/consumers/setup-webhook-dispatch-consumer";
+import { setupWebhookRequestConsumer } from "#internal/consumers/setup-webhook-request-consumer";
 import { calculateSubscriptions } from "#internal/utils/calculate-subscriptions";
 import { calculateWorkers } from "#internal/utils/calculate-workers";
 import { scanWorkers } from "#internal/utils/scan-workers";
@@ -308,6 +310,18 @@ export class Pylon<
 
       if (iris && proteus) {
         await setupAuditConsumer(iris, proteus, this.logger);
+      }
+    }
+
+    if (this.options.webhook?.enabled) {
+      const iris = this.options.webhook.iris ?? this.options.iris;
+      const proteus = this.options.webhook.proteus ?? this.options.proteus;
+
+      if (iris && proteus) {
+        await setupWebhookRequestConsumer(iris, proteus, this.logger);
+        await setupWebhookDispatchConsumer(iris, this.logger, {
+          encryptionKey: this.options.webhook.encryptionKey,
+        });
       }
     }
   }

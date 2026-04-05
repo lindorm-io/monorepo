@@ -5,7 +5,7 @@ import axios from "axios";
 import nock from "nock";
 
 axios.defaults.proxy = false;
-import { WebhookAuth } from "../../enums";
+import { WebhookAuth, WebhookMethod } from "../../enums";
 import { IWebhookSubscription } from "../../interfaces";
 import { createDispatchWebhook } from "./dispatch-webhook";
 
@@ -39,6 +39,7 @@ describe("createDispatchWebhook", () => {
 
         auth: WebhookAuth.Basic,
         event: "test_event",
+        method: WebhookMethod.Post,
         headers: {},
         ownerId: "d5555606-ff30-5647-aa10-54be8d2a1086",
         url: "http://test.webhook.com/endpoint",
