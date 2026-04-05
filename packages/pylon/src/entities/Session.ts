@@ -1,4 +1,11 @@
-import { Entity, Field, Namespace, Nullable, PrimaryKeyField } from "@lindorm/proteus";
+import {
+  Entity,
+  ExpiryDateField,
+  Field,
+  Namespace,
+  Nullable,
+  PrimaryKeyField,
+} from "@lindorm/proteus";
 import { OpenIdScope } from "@lindorm/types";
 import { IPylonSession } from "../interfaces";
 
@@ -11,15 +18,15 @@ export class Session implements IPylonSession {
   @Field("string")
   public accessToken!: string;
 
-  @Field("integer")
-  public expiresAt!: number;
+  @ExpiryDateField()
+  public expiresAt!: Date | null;
 
   @Nullable()
   @Field("string")
   public idToken?: string;
 
-  @Field("integer")
-  public issuedAt!: number;
+  @Field("timestamp")
+  public issuedAt!: Date;
 
   @Nullable()
   @Field("string")

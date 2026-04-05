@@ -54,7 +54,13 @@ export const createLoginHandler = (
 
     if (
       ctx.data.redirectUri &&
-      !config.dynamicRedirectDomains.some((u) => ctx.data.redirectUri.startsWith(u))
+      !config.dynamicRedirectDomains.some((u) => {
+        try {
+          return new URL(ctx.data.redirectUri).origin === new URL(u).origin;
+        } catch {
+          return false;
+        }
+      })
     ) {
       throw new ClientError("Invalid redirect URI");
     }
@@ -80,7 +86,11 @@ export const createLoginHandler = (
       state,
     };
 
-    await ctx.cookies.set(config.cookies.login, cookie, { expiry: "15m" });
+    await ctx.cookies.set(config.cookies.login, cookie, {
+      encrypted: true,
+      httpOnly: true,
+      expiry: "15m",
+    });
 
     ctx.redirect(redirect.toString());
   };

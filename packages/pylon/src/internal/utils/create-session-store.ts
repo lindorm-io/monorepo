@@ -41,7 +41,7 @@ export const createSessionStore = (
         }
       }
 
-      const result = await source.repository(Session).insert(session);
+      const result = await source.repository(Session).upsert(session);
       return result.id;
     },
 

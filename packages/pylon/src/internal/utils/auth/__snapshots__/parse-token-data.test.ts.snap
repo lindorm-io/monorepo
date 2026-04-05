@@ -3,9 +3,9 @@
 exports[`parseTokenData should not parse access token if not jwt 1`] = `
 {
   "accessToken": "accessToken",
-  "expiresAt": 1704099600000,
+  "expiresAt": 2024-01-01T09:00:00.000Z,
   "id": "c8ff3952-8ba4-51a3-a4d5-2f0726c49524",
-  "issuedAt": 1704096000000,
+  "issuedAt": 2024-01-01T08:00:00.000Z,
   "scope": [
     "scope1",
     "scope2",
@@ -17,9 +17,9 @@ exports[`parseTokenData should not parse access token if not jwt 1`] = `
 exports[`parseTokenData should parse access token correctly 1`] = `
 {
   "accessToken": "accessToken",
-  "expiresAt": 1704182400000,
+  "expiresAt": 2024-01-02T08:00:00.000Z,
   "id": "85924874-c05c-5574-ad85-0cf2cf39be95",
-  "issuedAt": 1704096000000,
+  "issuedAt": 2024-01-01T08:00:00.000Z,
   "scope": [
     "scope1",
     "scope2",
@@ -31,10 +31,10 @@ exports[`parseTokenData should parse access token correctly 1`] = `
 exports[`parseTokenData should parse all tokens correctly 1`] = `
 {
   "accessToken": "accessToken",
-  "expiresAt": 1704099600000,
+  "expiresAt": 2024-01-01T09:00:00.000Z,
   "id": "85924874-c05c-5574-ad85-0cf2cf39be95",
   "idToken": "idToken",
-  "issuedAt": 1704096000000,
+  "issuedAt": 2024-01-01T08:00:00.000Z,
   "refreshToken": "refreshToken",
   "scope": [
     "scope1",
@@ -47,10 +47,10 @@ exports[`parseTokenData should parse all tokens correctly 1`] = `
 exports[`parseTokenData should parse id token correctly 1`] = `
 {
   "accessToken": "accessToken",
-  "expiresAt": 1704099600000,
+  "expiresAt": 2024-01-01T09:00:00.000Z,
   "id": "85924874-c05c-5574-ad85-0cf2cf39be95",
   "idToken": "idToken",
-  "issuedAt": 1704096000000,
+  "issuedAt": 2024-01-01T08:00:00.000Z,
   "scope": [
     "scope1",
     "scope2",
@@ -62,10 +62,10 @@ exports[`parseTokenData should parse id token correctly 1`] = `
 exports[`parseTokenData should parse when session exists 1`] = `
 {
   "accessToken": "accessToken",
-  "expiresAt": 1707696000000,
+  "expiresAt": 2024-01-01T09:00:00.000Z,
   "id": "35e8805b-2352-5c71-871a-19e8545540ce",
   "idToken": "existingIdToken",
-  "issuedAt": 1704096000000,
+  "issuedAt": 2024-01-01T08:00:00.000Z,
   "refreshToken": "existingRefreshToken",
   "scope": [
     "scope1",

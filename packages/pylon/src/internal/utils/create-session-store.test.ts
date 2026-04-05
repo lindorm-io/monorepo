@@ -24,15 +24,15 @@ describe("createSessionStore", () => {
     session = {
       id: "4f38fec0-70cb-53cb-b82b-42b41e7f986e",
       accessToken: "access-token",
-      expiresAt: Date.now() + 3600000,
+      expiresAt: new Date(Date.now() + 3600000),
       idToken: "id-token",
-      issuedAt: Date.now(),
+      issuedAt: new Date(),
       refreshToken: "refresh-token",
       scope: ["openid", "profile", "email", "offline_access"],
       subject: "643881f8-f6b0-5a18-9396-6fbe29ebfec8",
     };
 
-    (mockRepo.insert as jest.Mock).mockResolvedValue(session);
+    (mockRepo.upsert as jest.Mock).mockResolvedValue(session);
     (mockRepo.findOne as jest.Mock).mockResolvedValue(session);
     (mockRepo.delete as jest.Mock).mockResolvedValue(undefined);
   });

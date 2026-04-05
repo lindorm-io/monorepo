@@ -20,7 +20,7 @@ export const createLoginCallbackHandler = (
       throw new ClientError("No login cookie found");
     }
 
-    if (ctx.data.state && cookie.state !== ctx.data.state) {
+    if (cookie.state && cookie.state !== ctx.data.state) {
       throw new ClientError("Invalid state", {
         debug: { cookie, state: ctx.data.state },
       });
@@ -54,7 +54,7 @@ export const createLoginCallbackHandler = (
     if (ctx.state.session.idToken) {
       const parsed = Aegis.parse<ParsedJwt>(ctx.state.session.idToken);
 
-      if (parsed.payload.nonce && cookie.nonce !== parsed.payload.nonce) {
+      if (cookie.nonce && cookie.nonce !== parsed.payload.nonce) {
         throw new ClientError("Invalid nonce", {
           debug: { cookie, nonce: parsed.payload.nonce },
         });

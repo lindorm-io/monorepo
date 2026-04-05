@@ -74,7 +74,7 @@ describe("createLoginHandler", () => {
         scope: "scope",
         state: "state",
       },
-      { expiry: "15m" },
+      { encrypted: true, httpOnly: true, expiry: "15m" },
     );
     expect(ctx.redirect).toHaveBeenCalledWith("https://example.com/auth/login/callback");
   });
@@ -95,7 +95,7 @@ describe("createLoginHandler", () => {
         scope: "scope",
         state: "state",
       },
-      { expiry: "15m" },
+      { encrypted: true, httpOnly: true, expiry: "15m" },
     );
     expect(ctx.redirect).toHaveBeenCalledWith("https://example.com/auth/login/callback");
   });
