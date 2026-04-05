@@ -24,15 +24,15 @@ describe("createMockProteusSource", () => {
     expect(jest.isMockFunction(repo.find)).toBe(true);
   });
 
-  it("should return a new mock source from clone()", () => {
+  it("should return a new mock session from session()", () => {
     const source = createMockProteusSource();
-    const cloned = source.clone();
+    const session = source.session();
 
-    expect(cloned).toBeDefined();
-    expect(cloned).not.toBe(source);
-    expect(cloned.namespace).toBeNull();
-    expect(cloned.driverType).toBe("memory");
-    expect(jest.isMockFunction(cloned.repository)).toBe(true);
+    expect(session).toBeDefined();
+    expect(session).not.toBe(source);
+    expect(session.namespace).toBeNull();
+    expect(session.driverType).toBe("memory");
+    expect(jest.isMockFunction(session.repository)).toBe(true);
   });
 
   it("should resolve true for ping()", async () => {

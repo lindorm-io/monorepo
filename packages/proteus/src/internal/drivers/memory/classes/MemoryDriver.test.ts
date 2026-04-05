@@ -273,7 +273,7 @@ describe("MemoryDriver.cloneWithGetters", () => {
     await repo.insert(repo.create({ name: "Shared" }));
 
     // Clone the source — clones share store
-    const cloned = s.clone();
+    const cloned = s.session();
     const clonedRepo = cloned.repository(DriverTestUser);
     const results = await clonedRepo.find();
 

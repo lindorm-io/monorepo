@@ -1,25 +1,9 @@
-import { createMockProteusSession } from "./create-mock-proteus-session";
 import { createMockRepository } from "./create-mock-repository";
 
-export type MockProteusSource = {
+export type MockProteusSession = {
   namespace: string | null;
   driverType: string;
-  migrationsTable: string | undefined;
   log: Record<string, jest.Mock>;
-  breaker: null;
-
-  on: jest.Mock;
-  off: jest.Mock;
-  once: jest.Mock;
-
-  session: jest.Mock;
-  connect: jest.Mock;
-  disconnect: jest.Mock;
-  ping: jest.Mock;
-  setup: jest.Mock;
-
-  addEntities: jest.Mock;
-  getEntityMetadata: jest.Mock;
 
   setFilterParams: jest.Mock;
   enableFilter: jest.Mock;
@@ -30,12 +14,14 @@ export type MockProteusSource = {
   queryBuilder: jest.Mock;
   client: jest.Mock;
   transaction: jest.Mock;
+  ping: jest.Mock;
+
+  getEmitEntity: jest.Mock;
 };
 
-export const createMockProteusSource = (): MockProteusSource => ({
+export const createMockProteusSession = (): MockProteusSession => ({
   namespace: null,
   driverType: "memory",
-  migrationsTable: undefined,
   log: {
     info: jest.fn(),
     warn: jest.fn(),
@@ -45,20 +31,6 @@ export const createMockProteusSource = (): MockProteusSource => ({
     child: jest.fn(),
     time: jest.fn(),
   },
-  breaker: null,
-
-  on: jest.fn(),
-  off: jest.fn(),
-  once: jest.fn(),
-
-  session: jest.fn().mockImplementation(() => createMockProteusSession()),
-  connect: jest.fn(),
-  disconnect: jest.fn(),
-  ping: jest.fn().mockResolvedValue(true),
-  setup: jest.fn(),
-
-  addEntities: jest.fn(),
-  getEntityMetadata: jest.fn().mockReturnValue([]),
 
   setFilterParams: jest.fn(),
   enableFilter: jest.fn(),
@@ -69,4 +41,7 @@ export const createMockProteusSource = (): MockProteusSource => ({
   queryBuilder: jest.fn(),
   client: jest.fn(),
   transaction: jest.fn().mockImplementation(async (cb: Function) => cb({})),
+  ping: jest.fn().mockResolvedValue(true),
+
+  getEmitEntity: jest.fn().mockReturnValue(jest.fn()),
 });

@@ -15,7 +15,7 @@ import {
   IProteusRepository,
   IProteusSource,
 } from "../interfaces";
-import { ProteusClone } from "./ProteusClone";
+import { ProteusSession } from "./ProteusSession";
 import type { ICacheAdapter } from "../interfaces/CacheAdapter";
 import type {
   EntityEmitFn,
@@ -55,12 +55,12 @@ import {
 import type { EntityMetadata } from "#internal/entity/types/metadata";
 
 /**
- * Options for cloning a ProteusSource.
+ * Options for creating a session from a ProteusSource.
  */
-export type CloneOptions<C = unknown> = {
-  /** Override the logger on the cloned source. */
+export type SessionOptions<C = unknown> = {
+  /** Override the logger on the session. */
   logger?: ILogger;
-  /** Override the context on the cloned source. */
+  /** Override the context on the session. */
   context?: C;
 };
 
@@ -200,31 +200,27 @@ export class ProteusSource<C = unknown> implements IProteusSource<C> {
     }
   };
 
-  /** Create a lightweight copy of this source sharing the same connection pool but with a new logger and/or context. */
-  public clone(options?: CloneOptions<C>): ProteusClone<C> {
+  /** Create a lightweight, request-scoped session sharing the same connection pool but with a new logger and/or context. */
+  public session(options?: SessionOptions<C>): ProteusSession<C> {
     // Reference cell pattern: new ref cell for filter registry isolation.
     const registryRef = { current: cloneFilterRegistry(this._registryRef.current) };
 
-    // The clone's emit just bubbles to parent — can create before the clone itself.
+    // The session's emit just bubbles to parent — can create before the session itself.
     const parentEmit = this.emitEntity;
-    const cloneEmitEntity: EntityEmitFn = async (event, payload) => {
+    const sessionEmitEntity: EntityEmitFn = async (event, payload) => {
       await parentEmit(event, payload);
     };
 
     const clonedDriver = this._driver
-      ? this._driver.cloneWithGetters(() => registryRef.current, cloneEmitEntity)
+      ? this._driver.cloneWithGetters(() => registryRef.current, sessionEmitEntity)
       : undefined;
 
-    return new ProteusClone<C>({
+    return new ProteusSession<C>({
+      source: this,
       logger: options?.logger?.child(["ProteusSource"]) ?? this.logger,
       context: options?.context ?? this.context,
-      namespace: this._namespace,
-      driverType: this._driverType,
       registryRef,
       resolveMetadata: this.resolveMetadata,
-      entities: this._entities,
-      inheritanceMap: this._inheritanceMap,
-      namingCache: this._namingCache,
       cacheAdapter: this.cacheAdapter,
       sourceTtlMs: this.sourceTtlMs,
       parentEmitEntity: parentEmit,

@@ -1,5 +1,5 @@
 export * from "./MemoryCacheAdapter";
-export * from "./ProteusClone";
+export * from "./ProteusSession";
 export * from "./ProteusSource";
 export * from "./QueryBuilder";
 export * from "./RedisCacheAdapter";

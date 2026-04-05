@@ -1,14 +1,14 @@
 import { createMockLogger } from "@lindorm/logger";
-import { ProteusClone } from "./ProteusClone";
+import { ProteusSession } from "./ProteusSession";
 import { ProteusSource } from "./ProteusSource";
 import { Entity } from "../decorators/Entity";
 import { Field } from "../decorators/Field";
 import { PrimaryKeyField } from "../decorators/PrimaryKeyField";
 import { Filter } from "../decorators/Filter";
 
-@Entity({ name: "CloneTestEntity" })
+@Entity({ name: "SessionTestEntity" })
 @Filter({ name: "tenant", condition: { tenantId: "$tenantId" } })
-class CloneTestEntity {
+class SessionTestEntity {
   @PrimaryKeyField()
   id!: string;
 
@@ -19,32 +19,32 @@ class CloneTestEntity {
 const createSource = () =>
   new ProteusSource({
     driver: "memory",
-    entities: [CloneTestEntity],
+    entities: [SessionTestEntity],
     logger: createMockLogger(),
   });
 
 describe("ProteusSource", () => {
-  describe("clone", () => {
-    test("should produce a ProteusClone instance", () => {
+  describe("session", () => {
+    test("should produce a ProteusSession instance", () => {
       const source = createSource();
-      const cloned = source.clone();
+      const session = source.session();
 
-      expect(cloned).toBeInstanceOf(ProteusClone);
-      expect(cloned).not.toBe(source);
+      expect(session).toBeInstanceOf(ProteusSession);
+      expect(session).not.toBe(source);
     });
 
-    test("should isolate filter registry: clone mutations do not affect original", () => {
+    test("should isolate filter registry: session mutations do not affect original", () => {
       const source = createSource();
-      const cloned = source.clone();
+      const session = source.session();
 
-      cloned.setFilterParams("tenant", { tenantId: "tenant-a" });
-      cloned.enableFilter("tenant");
+      session.setFilterParams("tenant", { tenantId: "tenant-a" });
+      session.enableFilter("tenant");
 
       const originalRegistry = source.getFilterRegistry();
-      const clonedRegistry = cloned.getFilterRegistry();
+      const sessionRegistry = session.getFilterRegistry();
 
-      // Clone has the filter enabled with params
-      expect(clonedRegistry.get("tenant")).toEqual({
+      // Session has the filter enabled with params
+      expect(sessionRegistry.get("tenant")).toEqual({
         enabled: true,
         params: { tenantId: "tenant-a" },
       });
@@ -53,24 +53,24 @@ describe("ProteusSource", () => {
       expect(originalRegistry.has("tenant")).toBe(false);
     });
 
-    test("should isolate filter registry: original mutations do not affect clone", () => {
+    test("should isolate filter registry: original mutations do not affect session", () => {
       const source = createSource();
       source.setFilterParams("tenant", { tenantId: "tenant-x" });
       source.enableFilter("tenant");
 
-      const cloned = source.clone();
+      const session = source.session();
 
-      // Clone inherits the snapshot
-      expect(cloned.getFilterRegistry().get("tenant")).toEqual({
+      // Session inherits the snapshot
+      expect(session.getFilterRegistry().get("tenant")).toEqual({
         enabled: true,
         params: { tenantId: "tenant-x" },
       });
 
-      // Mutate original after cloning
+      // Mutate original after creating session
       source.setFilterParams("tenant", { tenantId: "tenant-y" });
 
-      // Clone should still have the snapshot value
-      expect(cloned.getFilterRegistry().get("tenant")).toEqual({
+      // Session should still have the snapshot value
+      expect(session.getFilterRegistry().get("tenant")).toEqual({
         enabled: true,
         params: { tenantId: "tenant-x" },
       });
@@ -82,16 +82,16 @@ describe("ProteusSource", () => {
       });
     });
 
-    test("should produce distinct clone instances", () => {
+    test("should produce distinct session instances", () => {
       const source = createSource();
 
-      const cloned = source.clone();
-      const cloned2 = source.clone();
-      const cloned3 = source.clone();
+      const session1 = source.session();
+      const session2 = source.session();
+      const session3 = source.session();
 
-      expect(cloned).not.toBe(cloned2);
-      expect(cloned).not.toBe(cloned3);
-      expect(cloned2).not.toBe(cloned3);
+      expect(session1).not.toBe(session2);
+      expect(session1).not.toBe(session3);
+      expect(session2).not.toBe(session3);
     });
 
     test("should share the same driver (connection pool)", async () => {
@@ -99,25 +99,25 @@ describe("ProteusSource", () => {
       await source.connect();
       await source.setup();
 
-      const cloned = source.clone();
+      const session = source.session();
 
       // Both should be able to create repositories against the same driver
-      const originalRepo = source.repository(CloneTestEntity);
-      const clonedRepo = cloned.repository(CloneTestEntity);
+      const originalRepo = source.repository(SessionTestEntity);
+      const sessionRepo = session.repository(SessionTestEntity);
 
       expect(originalRepo).toBeDefined();
-      expect(clonedRepo).toBeDefined();
+      expect(sessionRepo).toBeDefined();
 
       await source.disconnect();
     });
 
-    test("should isolate filters at the driver level: clone's repository uses clone's registry", async () => {
+    test("should isolate filters at the driver level: session's repository uses session's registry", async () => {
       const source = createSource();
       await source.connect();
       await source.setup();
 
       // Insert test data via the original source
-      const originalRepo = source.repository(CloneTestEntity);
+      const originalRepo = source.repository(SessionTestEntity);
       await originalRepo.insert({
         id: "00000000-0000-4000-8000-000000000001",
         tenantId: "tenant-a",
@@ -127,14 +127,14 @@ describe("ProteusSource", () => {
         tenantId: "tenant-b",
       } as any);
 
-      // Clone and set tenant filter on clone only
-      const cloned = source.clone();
-      cloned.setFilterParams("tenant", { tenantId: "tenant-a" });
-      cloned.enableFilter("tenant");
+      // Create session and set tenant filter on session only
+      const session = source.session();
+      session.setFilterParams("tenant", { tenantId: "tenant-a" });
+      session.enableFilter("tenant");
 
-      // The clone's repository should use the clone's filter registry
-      const clonedRepo = cloned.repository(CloneTestEntity);
-      const clonedResults = await clonedRepo.find({});
+      // The session's repository should use the session's filter registry
+      const sessionRepo = session.repository(SessionTestEntity);
+      const sessionResults = await sessionRepo.find({});
 
       // The original's repository should NOT have the tenant filter
       const originalResults = await originalRepo.find({});
@@ -142,45 +142,45 @@ describe("ProteusSource", () => {
       // Original should see all rows (no filter)
       expect(originalResults).toHaveLength(2);
 
-      // Clone should only see tenant-a rows (filter active)
-      expect(clonedResults).toHaveLength(1);
-      expect((clonedResults[0] as any).tenantId).toBe("tenant-a");
+      // Session should only see tenant-a rows (filter active)
+      expect(sessionResults).toHaveLength(1);
+      expect((sessionResults[0] as any).tenantId).toBe("tenant-a");
 
       await source.disconnect();
     });
 
-    test("should allow overriding logger on clone", () => {
+    test("should allow overriding logger on session", () => {
       const source = createSource();
       const newLogger = createMockLogger();
-      const cloned = source.clone({ logger: newLogger });
+      const session = source.session({ logger: newLogger });
 
-      expect(cloned).toBeInstanceOf(ProteusClone);
+      expect(session).toBeInstanceOf(ProteusSession);
     });
 
-    test("should allow overriding context on clone", () => {
+    test("should allow overriding context on session", () => {
       const source = createSource();
-      const cloned = source.clone({ context: { requestId: "abc-123" } });
+      const session = source.session({ context: { requestId: "abc-123" } });
 
-      expect(cloned).toBeInstanceOf(ProteusClone);
+      expect(session).toBeInstanceOf(ProteusSession);
     });
 
-    test("should clone filter registry with current state", () => {
+    test("should create session with filter registry snapshot of current state", () => {
       const source = createSource();
 
       // Set up some filter state
       source.setFilterParams("tenant", { tenantId: "base-tenant" });
       source.enableFilter("tenant");
 
-      // Clone inherits the state
-      const cloned = source.clone();
-      expect(cloned.getFilterRegistry().get("tenant")).toEqual({
+      // Session inherits the state
+      const session = source.session();
+      expect(session.getFilterRegistry().get("tenant")).toEqual({
         enabled: true,
         params: { tenantId: "base-tenant" },
       });
 
-      // Disable on clone
-      cloned.disableFilter("tenant");
-      expect(cloned.getFilterRegistry().get("tenant")).toEqual({
+      // Disable on session
+      session.disableFilter("tenant");
+      expect(session.getFilterRegistry().get("tenant")).toEqual({
         enabled: false,
         params: { tenantId: "base-tenant" },
       });

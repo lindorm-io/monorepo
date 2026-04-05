@@ -218,7 +218,7 @@ describe("MemoryExecutor — filter registry wiring (repository path)", () => {
   });
 
   test("source-level filter enabled — repository find() returns only matching rows", async () => {
-    const tenantSource = source.clone();
+    const tenantSource = source.session();
     tenantSource.setFilterParams("tenant", { tenantId: "tenant-a" });
     tenantSource.enableFilter("tenant");
 
@@ -231,8 +231,8 @@ describe("MemoryExecutor — filter registry wiring (repository path)", () => {
     }
   });
 
-  test("source-level filter isolation — original source unaffected by clone filter", async () => {
-    const tenantSource = source.clone();
+  test("source-level filter isolation — original source unaffected by session filter", async () => {
+    const tenantSource = source.session();
     tenantSource.setFilterParams("tenant", { tenantId: "tenant-b" });
     tenantSource.enableFilter("tenant");
 

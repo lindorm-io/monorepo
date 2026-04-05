@@ -1,15 +1,14 @@
 import { createMockLogger } from "@lindorm/logger";
-import { ProteusClone } from "./ProteusClone";
+import { ProteusSession } from "./ProteusSession";
 import { ProteusSource } from "./ProteusSource";
-import { NotSupportedError } from "../errors";
 import { Entity } from "../decorators/Entity";
 import { Field } from "../decorators/Field";
 import { PrimaryKeyField } from "../decorators/PrimaryKeyField";
 import { Filter } from "../decorators/Filter";
 
-@Entity({ name: "CloneEntity" })
+@Entity({ name: "SessionEntity" })
 @Filter({ name: "tenant", condition: { tenantId: "$tenantId" } })
-class CloneEntity {
+class SessionEntity {
   @PrimaryKeyField()
   id!: string;
 
@@ -20,19 +19,19 @@ class CloneEntity {
 const createSource = () =>
   new ProteusSource({
     driver: "memory",
-    entities: [CloneEntity],
+    entities: [SessionEntity],
     logger: createMockLogger(),
   });
 
-describe("ProteusClone", () => {
+describe("ProteusSession", () => {
   describe("data access", () => {
     test("should create repositories against the shared driver", async () => {
       const source = createSource();
       await source.connect();
       await source.setup();
 
-      const clone = source.clone();
-      const repo = clone.repository(CloneEntity);
+      const session = source.session();
+      const repo = session.repository(SessionEntity);
 
       expect(repo).toBeDefined();
 
@@ -44,8 +43,8 @@ describe("ProteusClone", () => {
       await source.connect();
       await source.setup();
 
-      const clone = source.clone();
-      const qb = clone.queryBuilder(CloneEntity);
+      const session = source.session();
+      const qb = session.queryBuilder(SessionEntity);
 
       expect(qb).toBeDefined();
 
@@ -57,9 +56,9 @@ describe("ProteusClone", () => {
       await source.connect();
       await source.setup();
 
-      const clone = source.clone();
+      const session = source.session();
 
-      await expect(clone.ping()).resolves.toBe(true);
+      await expect(session.ping()).resolves.toBe(true);
 
       await source.disconnect();
     });
@@ -69,10 +68,10 @@ describe("ProteusClone", () => {
       await source.connect();
       await source.setup();
 
-      const clone = source.clone();
+      const session = source.session();
 
       // Memory driver does not expose a client — verify it delegates correctly
-      await expect(clone.client()).rejects.toThrow(
+      await expect(session.client()).rejects.toThrow(
         "Memory driver does not expose a client",
       );
 
@@ -84,8 +83,8 @@ describe("ProteusClone", () => {
       await source.connect();
       await source.setup();
 
-      const clone = source.clone();
-      const result = await clone.transaction(async (tc) => {
+      const session = source.session();
+      const result = await session.transaction(async (tc) => {
         expect(tc).toBeDefined();
         return 42;
       });
@@ -97,51 +96,37 @@ describe("ProteusClone", () => {
   });
 
   describe("getters", () => {
-    test("should expose namespace from parent", () => {
+    test("should expose namespace from source", () => {
       const source = createSource();
-      const clone = source.clone();
+      const session = source.session();
 
-      expect(clone.namespace).toBe(source.namespace);
+      expect(session.namespace).toBe(source.namespace);
     });
 
-    test("should expose driverType from parent", () => {
+    test("should expose driverType from source", () => {
       const source = createSource();
-      const clone = source.clone();
+      const session = source.session();
 
-      expect(clone.driverType).toBe("memory");
+      expect(session.driverType).toBe("memory");
     });
 
     test("should expose log", () => {
       const source = createSource();
-      const clone = source.clone();
+      const session = source.session();
 
-      expect(clone.log).toBeDefined();
-    });
-
-    test("should return null for breaker", () => {
-      const source = createSource();
-      const clone = source.clone();
-
-      expect(clone.breaker).toBeNull();
-    });
-
-    test("should return undefined for migrationsTable", () => {
-      const source = createSource();
-      const clone = source.clone();
-
-      expect(clone.migrationsTable).toBeUndefined();
+      expect(session.log).toBeDefined();
     });
   });
 
   describe("filter isolation", () => {
     test("should isolate filter registry from parent", () => {
       const source = createSource();
-      const clone = source.clone();
+      const session = source.session();
 
-      clone.setFilterParams("tenant", { tenantId: "tenant-a" });
-      clone.enableFilter("tenant");
+      session.setFilterParams("tenant", { tenantId: "tenant-a" });
+      session.enableFilter("tenant");
 
-      expect(clone.getFilterRegistry().get("tenant")).toEqual({
+      expect(session.getFilterRegistry().get("tenant")).toEqual({
         enabled: true,
         params: { tenantId: "tenant-a" },
       });
@@ -155,10 +140,10 @@ describe("ProteusClone", () => {
       source.setFilterParams("tenant", { tenantId: "base" });
       source.enableFilter("tenant");
 
-      const clone = source.clone();
-      clone.disableFilter("tenant");
+      const session = source.session();
+      session.disableFilter("tenant");
 
-      expect(clone.getFilterRegistry().get("tenant")?.enabled).toBe(false);
+      expect(session.getFilterRegistry().get("tenant")?.enabled).toBe(false);
       expect(source.getFilterRegistry().get("tenant")?.enabled).toBe(true);
     });
   });
@@ -172,8 +157,8 @@ describe("ProteusClone", () => {
       const listener = jest.fn();
       source.on("entity:after-insert", listener);
 
-      const clone = source.clone();
-      const repo = clone.repository(CloneEntity);
+      const session = source.session();
+      const repo = session.repository(SessionEntity);
       await repo.insert({
         id: "00000000-0000-4000-8000-000000000001",
         tenantId: "tenant-a",
@@ -197,8 +182,8 @@ describe("ProteusClone", () => {
       const listener = jest.fn();
       source.on("entity:before-insert", listener);
 
-      const clone = source.clone();
-      const repo = clone.repository(CloneEntity);
+      const session = source.session();
+      const repo = session.repository(SessionEntity);
       await repo.insert({
         id: "00000000-0000-4000-8000-000000000002",
         tenantId: "tenant-b",
@@ -210,86 +195,13 @@ describe("ProteusClone", () => {
     });
   });
 
-  describe("unsupported operations", () => {
-    test("should throw on setup()", async () => {
-      const source = createSource();
-      const clone = source.clone();
-
-      await expect(clone.setup()).rejects.toThrow(NotSupportedError);
-      await expect(clone.setup()).rejects.toThrow(
-        "Cannot call setup() on a cloned ProteusSource",
-      );
-    });
-
-    test("should throw on connect()", async () => {
-      const source = createSource();
-      const clone = source.clone();
-
-      await expect(clone.connect()).rejects.toThrow(NotSupportedError);
-    });
-
-    test("should throw on disconnect()", async () => {
-      const source = createSource();
-      const clone = source.clone();
-
-      await expect(clone.disconnect()).rejects.toThrow(NotSupportedError);
-    });
-
-    test("should throw on on()", () => {
-      const source = createSource();
-      const clone = source.clone();
-
-      expect(() => clone.on("entity:after-insert", jest.fn())).toThrow(NotSupportedError);
-    });
-
-    test("should throw on off()", () => {
-      const source = createSource();
-      const clone = source.clone();
-
-      expect(() => clone.off("entity:after-insert", jest.fn())).toThrow(
-        NotSupportedError,
-      );
-    });
-
-    test("should throw on once()", () => {
-      const source = createSource();
-      const clone = source.clone();
-
-      expect(() => clone.once("entity:after-insert", jest.fn())).toThrow(
-        NotSupportedError,
-      );
-    });
-
-    test("should throw on clone()", () => {
-      const source = createSource();
-      const clone = source.clone();
-
-      expect(() => clone.clone()).toThrow(NotSupportedError);
-      expect(() => clone.clone()).toThrow("Cannot clone a cloned ProteusSource");
-    });
-
-    test("should throw on addEntities()", () => {
-      const source = createSource();
-      const clone = source.clone();
-
-      expect(() => clone.addEntities([CloneEntity])).toThrow(NotSupportedError);
-    });
-
-    test("should throw on getEntityMetadata()", () => {
-      const source = createSource();
-      const clone = source.clone();
-
-      expect(() => clone.getEntityMetadata()).toThrow(NotSupportedError);
-    });
-  });
-
   describe("logger override", () => {
     test("should use overridden logger when provided", () => {
       const source = createSource();
       const newLogger = createMockLogger();
-      const clone = source.clone({ logger: newLogger });
+      const session = source.session({ logger: newLogger });
 
-      expect(clone.log).toBeDefined();
+      expect(session.log).toBeDefined();
     });
   });
 
@@ -299,10 +211,10 @@ describe("ProteusClone", () => {
       await source.connect();
       await source.setup();
 
-      const clone = source.clone({ context: { requestId: "req-123" } });
+      const session = source.session({ context: { requestId: "req-123" } });
 
-      // The clone should work with the new context
-      const repo = clone.repository(CloneEntity);
+      // The session should work with the new context
+      const repo = session.repository(SessionEntity);
       expect(repo).toBeDefined();
 
       await source.disconnect();

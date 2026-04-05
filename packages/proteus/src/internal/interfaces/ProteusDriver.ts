@@ -56,7 +56,7 @@ export interface IProteusDriver {
   /**
    * Create a lightweight clone of this driver that shares the same
    * connection resources (pool, store) but uses different filter/emitEntity
-   * functions. Used by ProteusSource.clone() to achieve per-request isolation.
+   * functions. Used by ProteusSource.session() to achieve per-request isolation.
    */
   cloneWithGetters(
     getFilterRegistry: FilterRegistryGetter,
