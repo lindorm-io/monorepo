@@ -1,99 +1,1132 @@
 # @lindorm/pylon
 
-Full-stack **HTTP + WebSocket application framework** designed for Node.js projects that value
-strict typing, modularity and security.  It builds on top of
-[koa](https://koajs.com/) (HTTP) and [socket.io](https://socket.io/) but hides most of the
-boilerplate behind a cohesive, testable API that plays nicely with the rest of the Lindorm
-ecosystem (logger, middleware, repositories …).
-
----
-
-## Highlights
-
-* Unified **context object** shared across HTTP & WS handlers (logger, sources, user, …)
-* Pluggable **middleware** pipeline – reuse the same composition helper as
-  `@lindorm/middleware`
-* Built-in **routing** with type-safe path parameters and automatic body parsing (JSON, form-data)
-* Opinionated but flexible **error handling** – wraps thrown errors into consistent HTTP responses
-* **Environment aware**: dev mode auto-loads `.env`, production enables built-in security headers
-* Powerful **worker** abstraction for cron-style background jobs with retry logic
-
----
+Full-stack **HTTP + WebSocket application framework** for Node.js with strict typing, modularity, and security built in. It builds on [Koa](https://koajs.com/) (HTTP) and [Socket.io](https://socket.io/) but hides the boilerplate behind a cohesive, testable API that integrates with the Lindorm ecosystem.
 
 ## Installation
 
 ```bash
 npm install @lindorm/pylon
-# or
-yarn add @lindorm/pylon
 ```
 
-You will likely also want `@lindorm/logger`, `@lindorm/middleware` and a datasource driver.
+Peer dependencies vary by feature:
 
----
+| Feature     | Peer Dependency    | Required When                           |
+| ----------- | ------------------ | --------------------------------------- |
+| Persistence | `@lindorm/proteus` | Repositories, caches, rate limit, rooms |
+| Messaging   | `@lindorm/iris`    | Queues, audit log publishing            |
 
-## Quick HTTP example
+You will also need `@lindorm/logger` and `@lindorm/amphora` (key management) — both are required constructor arguments.
 
-```ts
-import { Pylon } from '@lindorm/pylon';
-import { Logger } from '@lindorm/logger';
+## Quick Start
+
+```typescript
+import { Pylon, PylonRouter, useHandler } from "@lindorm/pylon";
+import { Logger } from "@lindorm/logger";
+import { Amphora } from "@lindorm/amphora";
+
+const router = new PylonRouter();
+
+router.get(
+  "/hello/:name",
+  useHandler(async (ctx) => {
+    return { body: { greeting: `Hello, ${ctx.params.name}!` } };
+  }),
+);
 
 const app = new Pylon({
-  port: 4000,
+  port: 3000,
+  amphora: new Amphora(),
   logger: new Logger({ readable: true }),
+  httpRouters: [{ path: "/", router }],
 });
 
-await app.listen();
+await app.start();
 ```
 
-### Error handling
+## Table of Contents
 
-Throw any `LindormError` inside a route / middleware and Pylon will convert it into a JSON response
-with proper status code and `application/problem+json` media-type.
+- [Core Concepts](#core-concepts)
+  - [Pylon](#pylon)
+  - [PylonRouter](#pylonrouter)
+  - [PylonListener](#pylonlistener)
+  - [Context Object](#context-object)
+- [HTTP Routing](#http-routing)
+  - [File-Based Routing](#file-based-routing)
+  - [Path Conventions](#path-conventions)
+  - [Middleware Inheritance](#middleware-inheritance)
+  - [Manual Routers](#manual-routers)
+  - [Route Handlers](#route-handlers)
+  - [File Downloads & Streams](#file-downloads--streams)
+  - [Redirects](#redirects)
+- [Socket.io Integration](#socketio-integration)
+  - [File-Based Listeners](#file-based-listeners)
+  - [Manual Listeners](#manual-listeners)
+  - [Namespaces](#namespaces)
+  - [Room Management](#room-management)
+  - [Redis Adapter](#redis-adapter)
+- [Middleware](#middleware)
+  - [Authentication & Authorization](#authentication--authorization)
+  - [Validation](#validation)
+  - [Data Sources](#data-sources)
+  - [Multi-Tenancy](#multi-tenancy)
+  - [Rate Limiting](#rate-limiting)
+  - [Audit Logging](#audit-logging)
+  - [Conduit (HTTP Clients)](#conduit-http-clients)
+- [OpenID Connect Authentication](#openid-connect-authentication)
+- [Session Management](#session-management)
+- [Webhooks](#webhooks)
+- [Workers](#workers)
+  - [Custom Workers](#custom-workers)
+  - [Built-in Workers](#built-in-workers)
+- [Error Handling](#error-handling)
+- [CORS](#cors)
+- [Body Parsing](#body-parsing)
+- [Configuration Reference](#configuration-reference)
+- [Entities](#entities)
 
-```ts
-import { LindormError, PylonRouter } from '@lindorm/errors';
+## Core Concepts
 
-const router = new PylonRouter()
+### Pylon
 
-router.get('/secure', async (ctx) => {
-  if (!ctx.session) throw new LindormError('Not authenticated', { status: 401 });
+The main server class. Manages the HTTP server, optional Socket.io gateway, middleware pipeline, workers, and lifecycle hooks.
+
+```typescript
+const app = new Pylon({
+  // Required
+  amphora: myAmphora,
+  logger: myLogger,
+
+  // Server
+  port: 3000,
+  domain: "api.example.com",
+  name: "my-service",
+  version: "1.2.3",
+  environment: "production",
+  proxy: true,
+
+  // HTTP
+  httpRouters: [{ path: "/api", router: apiRouter }],
+  httpMiddleware: [myMiddleware],
+  cors: { allowOrigins: ["https://example.com"] },
+
+  // Socket.io
+  socketListeners: [chatListener],
+  socketMiddleware: [mySocketMiddleware],
+  socketRedis: redisClient,
+
+  // Integrations
+  proteus: myProteusSource,
+  iris: myIrisSource,
+
+  // Lifecycle
+  setup: async () => {
+    /* runs before listening */
+  },
+  teardown: async () => {
+    /* runs on shutdown */
+  },
+
+  // Workers
+  workers: [myWorker],
+  workersInterval: "30s",
 });
 ```
 
----
+**Lifecycle methods:**
 
-## Architecture overview
+| Method       | Description                                                                       |
+| ------------ | --------------------------------------------------------------------------------- |
+| `start()`    | Runs setup, starts HTTP server, starts workers, registers SIGINT/SIGTERM handlers |
+| `stop()`     | Closes server, runs teardown, stops workers                                       |
+| `setup()`    | Initializes Amphora, loads middleware and routers                                 |
+| `teardown()` | Runs teardown hook                                                                |
+| `callback`   | Property — returns the raw Node.js HTTP callback for testing                      |
+
+### PylonRouter
+
+HTTP router wrapping [koa-router](https://github.com/koajs/router) with automatic path-parameter parsing.
+
+```typescript
+import { PylonRouter } from "@lindorm/pylon";
+
+const router = new PylonRouter();
+
+router.get("/users", listUsers);
+router.get("/users/:id", getUser);
+router.post("/users", createUser);
+router.put("/users/:id", updateUser);
+router.patch("/users/:id", patchUser);
+router.delete("/users/:id", deleteUser);
+router.head("/users/:id", headUser);
+router.options("/users", optionsUsers);
+router.all("/health", healthCheck);
+
+// Global middleware on this router
+router.use(authMiddleware);
+```
+
+**Supported HTTP methods:** `get`, `post`, `put`, `patch`, `delete`, `head`, `options`, `link`, `unlink`, `all`
+
+Routes are chained — every method returns the router instance. The `routes()` and `allowedMethods()` getters expose the underlying Koa middleware for manual composition.
+
+### PylonListener
+
+Socket.io event listener builder with namespace support, middleware, and parent inheritance.
+
+```typescript
+import { PylonListener } from "@lindorm/pylon";
+
+const listener = new PylonListener({
+  namespace: "/chat",
+  prefix: "msg:",
+});
+
+listener.on("send", async (ctx) => {
+  ctx.rooms?.broadcast("general", "msg:receive", ctx.data);
+});
+
+listener.once("init", async (ctx) => {
+  await ctx.rooms?.join("general");
+});
+
+// Inherit middleware from a parent listener
+const child = new PylonListener({ namespace: "/chat/admin" });
+child.parent(listener);
+```
+
+**Event methods:** `on`, `once`, `onAny`, `onAnyOutgoing`, `prependAny`, `prependAnyOutgoing`
+
+### Context Object
+
+Pylon provides a unified context object shared across HTTP and Socket.io handlers. Both transports get the same core properties:
+
+```typescript
+// Available on every handler (HTTP and Socket)
+ctx.aegis; // JWT/JWS/CWT/CWS verification (via @lindorm/aegis)
+ctx.amphora; // Key management (via @lindorm/amphora)
+ctx.conduits; // HTTP clients (via @lindorm/conduit)
+ctx.entities; // Entity registry
+ctx.logger; // Per-request scoped logger
+
+ctx.repositories; // Proteus repositories (via middleware)
+ctx.caches; // Proteus caches (via middleware)
+ctx.publishers; // Iris publishers (via middleware)
+ctx.workerQueues; // Iris worker queues (via middleware)
+
+ctx.proteus; // Proteus session (if configured)
+ctx.iris; // Iris session (if configured)
+
+ctx.queue(event, payload); // Enqueue a job (if queue enabled)
+ctx.webhook(event, data); // Dispatch webhook (if webhook enabled)
+
+ctx.state.app; // { domain, environment, name, version }
+ctx.state.authorization; // { type: "basic"|"bearer"|"none", value }
+ctx.state.metadata; // { id, correlationId, date, environment }
+ctx.state.tenant; // Tenant ID (if useTenant middleware applied)
+ctx.state.tokens; // Parsed JWT/JWS tokens
+```
+
+**HTTP-specific:**
+
+```typescript
+ctx.data; // Parsed request body (camelCased)
+ctx.files; // Uploaded files (multipart)
+ctx.params; // URL path parameters
+ctx.session; // { set(), get(), del(), logout() }
+ctx.io; // Socket.io server instance
+```
+
+**Socket-specific:**
+
+```typescript
+ctx.data; // Event payload
+ctx.event; // Event name
+ctx.eventId; // Unique event ID
+ctx.header; // Envelope headers
+ctx.socket; // Socket.io socket instance
+ctx.ack; // Acknowledge callback
+ctx.nack; // Negative acknowledge callback
+ctx.rooms; // Room context (if useRooms middleware)
+ctx.args; // Raw event arguments
+```
+
+## HTTP Routing
+
+### File-Based Routing
+
+Pass a directory path to `httpRouters` and Pylon scans it recursively, mapping files to routes:
+
+```typescript
+const app = new Pylon({
+  httpRouters: "./src/routes",
+  // ...
+});
+```
+
+**Example directory:**
 
 ```
-┌──────────────────────────────────────────────────────┐
-│                       Pylon                          │
-│ ┌──────────┐   ┌────────────────┐  ┌──────────────┐  │
-│ │  Router  │─► │ Middleware     │▶ │  Context     │  │
-│ │ (HTTP)   │   │ Composition    │  │  (request)   │  │
-│ └──────────┘   └────────────────┘  └──────────────┘  │
-│        ▲                 ▲               ▲           │
-│        │                 │               │           │
-│        │         ┌───────┴───────┐       │           │
-│        │         │   Sources     │◄──────┘           │
-│        │         │ (mongo, etc.) │                   │
-│        ▼         └───────────────┘                   │
-│ ┌──────────┐                                         │
-│ │  PylonIo │  (socket.io gateway)                    │
-│ └──────────┘                                         │
-└──────────────────────────────────────────────────────┘
+routes/
+  _middleware.ts              → shared middleware for all routes
+  health.ts                   → GET /health
+  v1/
+    _middleware.ts            → shared middleware for /v1/*
+    users/
+      index.ts               → GET /v1/users, POST /v1/users
+      [id].ts                → GET /v1/users/:id, PUT /v1/users/:id, DELETE /v1/users/:id
+    proxy/
+      [...path].ts           → GET /v1/proxy/* (catch-all)
 ```
 
----
+**Route file exports:**
 
-## Testing
+Each file exports HTTP method handlers as named constants — either a single handler or an array of middleware + handler:
 
-Pylon ships with extensive Jest test utilities and 100% unit-test coverage.  The framework is
-agnostic regarding database choice – swap real drivers with `@lindorm/mnemos` in tests.
+```typescript
+// routes/v1/users/index.ts
 
----
+export const GET = async (ctx) => {
+  ctx.body = await listUsers();
+  ctx.status = 200;
+};
+
+const validateBody = async (ctx, next) => {
+  // validate ctx.data
+  await next();
+};
+
+const createUser = async (ctx) => {
+  ctx.body = await insertUser(ctx.data);
+  ctx.status = 201;
+};
+
+export const POST = [validateBody, createUser];
+```
+
+Supported exports: `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `HEAD`, `OPTIONS`
+
+Alternatively, export a `PylonRouter` instance for full control:
+
+```typescript
+// routes/custom.ts
+import { PylonRouter } from "@lindorm/pylon";
+
+export const router = new PylonRouter();
+router.get("/", handler);
+router.post("/nested", otherHandler);
+```
+
+### Path Conventions
+
+| File / Directory Name  | Route Segment | Description                                       |
+| ---------------------- | ------------- | ------------------------------------------------- |
+| `users.ts`             | `/users`      | Literal segment                                   |
+| `index.ts`             | (none)        | Directory root handler                            |
+| `[id].ts`              | `/:id`        | Dynamic parameter                                 |
+| `[...path].ts`         | `/*path`      | Catch-all parameter                               |
+| `[[...slug]].ts`       | `/*slug`      | Optional catch-all                                |
+| `(admin)/dashboard.ts` | `/dashboard`  | Group (stripped from path, for code organization) |
+| `_middleware.ts`       | (none)        | Middleware file, not a route                      |
+
+### Middleware Inheritance
+
+Place a `_middleware.ts` file at any directory level. It must export a `MIDDLEWARE` constant:
+
+```typescript
+// routes/_middleware.ts
+export const MIDDLEWARE = [corsMiddleware, loggingMiddleware];
+
+// routes/v1/_middleware.ts
+export const MIDDLEWARE = [bearerAuth];
+```
+
+Middleware is inherited top-down. A handler at `routes/v1/users/[id].ts` receives middleware from:
+
+1. `routes/_middleware.ts` (root)
+2. `routes/v1/_middleware.ts` (parent)
+3. The handler's own middleware array
+
+### Manual Routers
+
+For programmatic routing, pass an array of `{ path, router }` objects:
+
+```typescript
+const app = new Pylon({
+  httpRouters: [
+    { path: "/api", router: apiRouter },
+    { path: "/admin", router: adminRouter },
+  ],
+  // ...
+});
+```
+
+### Route Handlers
+
+Use `useHandler` to wrap route logic. It standardises response formatting and supports body, file, stream, and redirect responses:
+
+```typescript
+import { useHandler } from "@lindorm/pylon";
+
+router.post(
+  "/users",
+  useHandler(async (ctx) => {
+    const user = await createUser(ctx.data);
+
+    return {
+      status: 201,
+      body: { id: user.id, name: user.name },
+    };
+  }),
+);
+```
+
+Path parameters are automatically parsed from the URL and available on `ctx.params`:
+
+```typescript
+router.get(
+  "/users/:userId/posts/:postId",
+  useHandler(async (ctx) => {
+    const { userId, postId } = ctx.params;
+    // ...
+  }),
+);
+```
+
+### File Downloads & Streams
+
+```typescript
+// Static file
+router.get(
+  "/download",
+  useHandler(async (ctx) => {
+    return {
+      file: {
+        path: "/path/to/report.pdf",
+        options: { immutable: true, maxAge: 86400 },
+      },
+    };
+  }),
+);
+
+// Readable stream
+router.get(
+  "/export",
+  useHandler(async (ctx) => {
+    return {
+      stream: {
+        stream: fs.createReadStream("/data/export.csv"),
+        contentLength: 10240,
+        lastModified: new Date(),
+        mimeType: "text/csv",
+        filename: "export.csv",
+      },
+    };
+  }),
+);
+```
+
+### Redirects
+
+```typescript
+router.get(
+  "/old-page",
+  useHandler(async (ctx) => {
+    return { redirect: "https://example.com/new-page" };
+  }),
+);
+
+// Location header without redirect
+router.post(
+  "/resources",
+  useHandler(async (ctx) => {
+    return {
+      status: 201,
+      body: resource,
+      location: `/resources/${resource.id}`,
+    };
+  }),
+);
+```
+
+## Socket.io Integration
+
+### File-Based Listeners
+
+Pass a directory path to `socketListeners` for automatic event scanning:
+
+```typescript
+const app = new Pylon({
+  socketListeners: "./src/listeners",
+  // ...
+});
+```
+
+**Example directory:**
+
+```
+listeners/
+  _middleware.ts              → shared middleware for all events
+  echo.ts                     → event: "echo"
+  disconnect.ts               → event: "disconnect"
+  chat/
+    _middleware.ts            → shared middleware for chat:*
+    message.ts                → event: "chat:message"
+  rooms/
+    [roomId]/
+      join.ts                 → event: "rooms::roomId:join"
+      leave.ts                → event: "rooms::roomId:leave"
+```
+
+**Listener file exports:**
+
+Each file exports an `ON` or `ONCE` handler (single function or array):
+
+```typescript
+// listeners/echo.ts
+export const ON = async (ctx) => {
+  ctx.ack?.({ text: ctx.data?.text, event: ctx.event });
+};
+
+// listeners/chat/message.ts
+const validateMessage = async (ctx, next) => {
+  /* ... */ await next();
+};
+const handleMessage = async (ctx) => {
+  /* ... */
+};
+export const ON = [validateMessage, handleMessage];
+```
+
+Middleware files work identically to HTTP — export `MIDDLEWARE` from `_middleware.ts`, inherited top-down.
+
+### Manual Listeners
+
+For programmatic listener setup, pass an array of `PylonListener` instances:
+
+```typescript
+const app = new Pylon({
+  socketListeners: [chatListener, adminListener],
+  // ...
+});
+```
+
+### Namespaces
+
+```typescript
+const adminListener = new PylonListener({ namespace: "/admin" });
+
+adminListener.on("command", adminAuthMiddleware, async (ctx) => {
+  // Only reachable via io.connect("/admin")
+});
+```
+
+### Room Management
+
+Enable room support with the `useRooms` middleware or the global `rooms` option:
+
+```typescript
+// Global
+const app = new Pylon({
+  rooms: { presence: true },
+  proteus: mySource,
+  // ...
+});
+
+// Or per-route
+listener.use(useRooms({ presence: true }));
+
+listener.on("join", async (ctx) => {
+  await ctx.rooms.join("room-1");
+  const members = await ctx.rooms.members("room-1");
+  ctx.rooms.broadcast("room-1", "user:joined", { userId: ctx.socket.id });
+});
+```
+
+**Room context methods:** `join`, `leave`, `broadcast`, `emit`, `members`, `presence` (if enabled)
+
+### Redis Adapter
+
+For horizontal scaling across multiple server instances:
+
+```typescript
+import Redis from "ioredis";
+
+const app = new Pylon({
+  socketRedis: new Redis("redis://localhost:6379"),
+  // ...
+});
+```
+
+## Middleware
+
+### Authentication & Authorization
+
+**Bearer token verification:**
+
+```typescript
+import { createBearerTokenMiddleware } from "@lindorm/pylon";
+
+const bearerAuth = createBearerTokenMiddleware({
+  issuer: "https://auth.example.com",
+  audience: "my-api",
+});
+
+router.get(
+  "/protected",
+  bearerAuth,
+  useHandler(async (ctx) => {
+    const token = ctx.state.tokens.accessToken;
+    return { body: { subject: token.payload.sub } };
+  }),
+);
+```
+
+**Basic auth:**
+
+```typescript
+import { createBasicAuthMiddleware } from "@lindorm/pylon";
+
+const basicAuth = createBasicAuthMiddleware([{ username: "admin", password: "secret" }]);
+
+// Or with a custom verify function
+const basicAuth = createBasicAuthMiddleware(async (username, password) => {
+  return await verifyCredentials(username, password);
+});
+```
+
+**Role & permission checks:**
+
+```typescript
+import { useRoles, usePermissions, useAccess } from "@lindorm/pylon";
+
+// Require at least one role
+router.post("/admin", useRoles("admin", "superadmin"), handler);
+
+// Require all permissions
+router.delete("/users/:id", usePermissions("users:write", "users:delete"), handler);
+
+// Combined access check
+router.put(
+  "/sensitive",
+  useAccess({
+    roles: ["admin"],
+    permissions: ["data:write"],
+    scopes: ["openid", "profile"],
+    levelOfAssurance: 3,
+    adjustedAccessLevel: 2,
+  }),
+  handler,
+);
+```
+
+**Generic token validation:**
+
+```typescript
+import { useValidation, createTokenMiddleware } from "@lindorm/pylon";
+
+// Validate existing token at path
+router.use(useValidation("accessToken", { issuer: "https://auth.example.com" }));
+
+// Custom token from header/body/query
+const verifyApiKey = createTokenMiddleware({
+  contextKey: "apiKey",
+  issuer: "https://keys.example.com",
+});
+router.use(verifyApiKey("x-api-key"));
+```
+
+### Validation
+
+Validate and coerce request data with [Zod](https://zod.dev/):
+
+```typescript
+import { useSchema } from "@lindorm/pylon";
+import { z } from "zod/v4";
+
+const CreateUserSchema = z.object({
+  name: z.string().min(1),
+  email: z.email(),
+  age: z.number().int().min(0).optional(),
+});
+
+router.post(
+  "/users",
+  useSchema(CreateUserSchema), // validates ctx.data (default)
+  useHandler(async (ctx) => {
+    // ctx.data is typed and validated
+    return { status: 201, body: ctx.data };
+  }),
+);
+
+// Validate other targets
+router.get(
+  "/search",
+  useSchema(SearchParamsSchema, "query"), // validates ctx.query
+  useSchema(RequiredHeadersSchema, "headers"), // validates ctx.headers
+  handler,
+);
+```
+
+Supported paths: `"data"` (default), `"body"`, `"headers"`, `"params"`, `"query"`, or any dot-path on context.
+
+### Data Sources
+
+Lazily initialise Proteus repositories, caches, Iris publishers, or worker queues on the context:
+
+```typescript
+import {
+  createRepositoryMiddleware,
+  createCacheMiddleware,
+  createPublisherMiddleware,
+  createWorkerQueueMiddleware,
+} from "@lindorm/pylon";
+
+router.use(createRepositoryMiddleware([User, Post]));
+router.use(createCacheMiddleware([Session]));
+router.use(createPublisherMiddleware([OrderPlaced]));
+router.use(createWorkerQueueMiddleware([ProcessOrder]));
+
+router.get(
+  "/users",
+  useHandler(async (ctx) => {
+    // Repositories named by camelCased entity name
+    const users = await ctx.repositories.user.find();
+    return { body: users };
+  }),
+);
+```
+
+Each middleware accepts an optional second argument to override the global Proteus/Iris source.
+
+### Multi-Tenancy
+
+```typescript
+import { useTenant, useScope } from "@lindorm/pylon";
+
+// Extract tenant from access token (default path)
+router.use(useTenant());
+
+// Or from a custom token path
+router.use(useTenant("apiKey.payload.tenantId", { required: true }));
+
+// Apply scope filtering to Proteus queries
+router.use(
+  useScope({
+    params: (ctx) => ({ tenantId: ctx.state.tenant }),
+  }),
+);
+```
+
+### Rate Limiting
+
+Three strategies backed by Proteus storage:
+
+```typescript
+import { useRateLimit } from "@lindorm/pylon";
+
+// Fixed window (default)
+router.use(useRateLimit({ window: "1m", max: 60 }));
+
+// Sliding window
+router.use(useRateLimit({ window: "1m", max: 60, strategy: "sliding" }));
+
+// Token bucket
+router.use(useRateLimit({ window: "1m", max: 60, strategy: "token-bucket" }));
+
+// Custom key and skip
+router.use(
+  useRateLimit({
+    window: "15m",
+    max: 100,
+    key: (ctx) => ctx.state.tokens.accessToken?.payload.sub ?? ctx.request.ip,
+    skip: (ctx) => ctx.path === "/health",
+  }),
+);
+```
+
+Returns standard rate-limit headers: `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`, `Retry-After`.
+
+Enable globally via the `rateLimit` option on Pylon for both HTTP and Socket.io.
+
+### Audit Logging
+
+Publish request audit events via Iris:
+
+```typescript
+import { useAuditLog } from "@lindorm/pylon";
+
+router.use(
+  useAuditLog({
+    sanitise: (body) => ({ ...body, password: "[REDACTED]" }),
+    skip: (ctx) => ctx.path === "/health",
+  }),
+);
+```
+
+Captures: endpoint, method, transport (HTTP/socket), status code, duration, source IP, user agent, session ID, and request body.
+
+For data-level audit (entity change tracking), use the `audit` option on Pylon with entity targets.
+
+### Conduit (HTTP Clients)
+
+Create pre-configured HTTP clients with automatic correlation and session propagation:
+
+```typescript
+import { createConduitMiddleware } from "@lindorm/pylon";
+
+router.use(
+  createConduitMiddleware([
+    { alias: "userService", baseUrl: "http://user-service:4000" },
+    { alias: "paymentService", baseUrl: "http://payment-service:4001" },
+  ]),
+);
+
+router.post(
+  "/checkout",
+  useHandler(async (ctx) => {
+    const user = await ctx.conduits.userService.get("/users/me");
+    const payment = await ctx.conduits.paymentService.post("/charges", {
+      body: { amount: 100 },
+    });
+    return { body: { user, payment } };
+  }),
+);
+```
+
+Conduits automatically forward the correlation ID and session ID from the current request.
+
+## OpenID Connect Authentication
+
+Pylon can act as an OpenID Connect Relying Party with a single configuration block:
+
+```typescript
+const app = new Pylon({
+  auth: {
+    clientId: "my-client-id",
+    clientSecret: "my-client-secret",
+    issuer: "https://auth.example.com",
+    pathPrefix: "/auth",
+    codeChallengeMethod: "S256",
+    errorRedirect: "/error",
+    defaults: {
+      scope: ["openid", "profile", "email"],
+      responseType: "code",
+    },
+    expose: {
+      accessToken: true,
+      idToken: true,
+    },
+    refresh: {
+      mode: "half_life",
+    },
+  },
+  session: { enabled: true },
+  // ...
+});
+```
+
+**Auto-created routes:**
+
+| Route                              | Purpose                  |
+| ---------------------------------- | ------------------------ |
+| `GET /:prefix/login`               | Start authorization flow |
+| `GET /:prefix/login/callback`      | Handle OIDC callback     |
+| `GET /:prefix/logout`              | Start logout flow        |
+| `GET /:prefix/logout/callback`     | Handle logout callback   |
+| `GET /:prefix/userinfo`            | Fetch user info          |
+| `POST /:prefix/backchannel-logout` | RP-initiated logout      |
+
+## Session Management
+
+Cookie-based sessions with configurable encryption:
+
+```typescript
+const app = new Pylon({
+  session: {
+    enabled: true,
+    name: "sid",
+    domain: ".example.com",
+    encrypted: true,
+    httpOnly: true,
+    sameSite: "lax",
+    secure: true,
+    expiry: "7d",
+    priority: "high",
+  },
+  // ...
+});
+```
+
+**Session context methods:**
+
+```typescript
+await ctx.session.set({ id, accessToken, subject, issuedAt, expiresAt, scope });
+const session = await ctx.session.get();
+await ctx.session.del();
+await ctx.session.logout(subject);
+```
+
+## Webhooks
+
+Subscribe external URLs to application events:
+
+```typescript
+const app = new Pylon({
+  webhook: {
+    enabled: true,
+    proteus: mySource,
+    iris: myIrisSource,
+    encryptionKey: myKryptos,
+  },
+  // ...
+});
+```
+
+Pylon ships a `WebhookSubscription` entity with support for four authentication methods:
+
+| Auth Method          | Description                       |
+| -------------------- | --------------------------------- |
+| `none`               | No authentication                 |
+| `auth_headers`       | Custom headers per subscription   |
+| `basic`              | HTTP Basic with username/password |
+| `client_credentials` | OAuth2 client credentials flow    |
+
+**Dispatch from any handler:**
+
+```typescript
+await ctx.webhook("user.created", { userId: "abc-123", email: "alice@example.com" });
+```
+
+Pylon matches the event against all active subscriptions and dispatches with the configured auth.
+
+## Workers
+
+Background jobs with configurable intervals, retry logic, and jitter.
+
+### Custom Workers
+
+```typescript
+const app = new Pylon({
+  workers: [
+    {
+      alias: "SyncInventory",
+      interval: "5m",
+      jitter: true,
+      retry: { retries: 3, minTimeout: "1s" },
+      callback: async (ctx) => {
+        await syncExternalInventory(ctx.logger);
+      },
+    },
+  ],
+  workersInterval: "30s", // Default interval for workers without one
+  // ...
+});
+```
+
+### Built-in Workers
+
+Pylon provides factory functions for common operational tasks:
+
+```typescript
+import {
+  createAmphoraRefreshWorker,
+  createAmphoraEntityWorker,
+  createKryptosRotationWorker,
+  createExpiryCleanupWorker,
+} from "@lindorm/pylon";
+```
+
+**`createAmphoraRefreshWorker`** — Refreshes Amphora keys on an interval (default: 15 minutes). Keeps JWKS discovery in sync.
+
+**`createAmphoraEntityWorker`** — Loads cryptographic keys from a Proteus entity into Amphora. Optionally decrypts private keys with an AES encryption key.
+
+**`createKryptosRotationWorker`** — Generates and rotates cryptographic keys on a schedule (default: 1 day). Default key set:
+
+| Algorithm           | Purpose |
+| ------------------- | ------- |
+| `dir`               | cookie  |
+| `HS256`             | cookie  |
+| `EdDSA`             | session |
+| `ECDH-ES`           | session |
+| `ES512`             | token   |
+| `ECDH-ES+A128GCMKW` | token   |
+
+**`createExpiryCleanupWorker`** — Deletes expired entities from specified targets (default: every 15 minutes).
+
+```typescript
+const app = new Pylon({
+  workers: [
+    createAmphoraRefreshWorker({ amphora: myAmphora }),
+    createKryptosRotationWorker({ proteus: mySource, target: KryptosDB }),
+    createExpiryCleanupWorker({ proteus: mySource, targets: [Session, OtpCode] }),
+  ],
+  // ...
+});
+```
+
+## Error Handling
+
+Throw any `LindormError` inside a route or middleware and Pylon converts it into a structured JSON response:
+
+```typescript
+import { ClientError, ServerError } from "@lindorm/errors";
+
+router.get(
+  "/users/:id",
+  useHandler(async (ctx) => {
+    const user = await findUser(ctx.params.id);
+
+    if (!user) {
+      throw new ClientError("User not found", { status: 404 });
+    }
+
+    return { body: user };
+  }),
+);
+```
+
+**Response format** (`application/json`):
+
+```json
+{
+  "error": "ClientError",
+  "message": "User not found",
+  "statusCode": 404,
+  "timestamp": "2026-04-05T12:00:00.000Z"
+}
+```
+
+**Framework error classes:**
+
+| Class           | Purpose                                       |
+| --------------- | --------------------------------------------- |
+| `PylonError`    | Base framework error (extends `LindormError`) |
+| `RedirectError` | OAuth redirect with state and URI             |
+| `CorsError`     | CORS policy violation (extends `ClientError`) |
+
+## CORS
+
+```typescript
+const app = new Pylon({
+  cors: {
+    allowOrigins: ["https://example.com", "https://app.example.com"],
+    allowMethods: ["GET", "POST", "PUT", "DELETE"],
+    allowHeaders: ["Authorization", "Content-Type"],
+    allowCredentials: true,
+    exposeHeaders: ["X-Request-Id"],
+    maxAge: "1h",
+    embedderPolicy: "require-corp",
+    openerPolicy: "same-origin",
+    privateNetworkAccess: true,
+  },
+  // ...
+});
+```
+
+Use `"*"` for `allowOrigins`, `allowMethods`, or `allowHeaders` to allow everything.
+
+## Body Parsing
+
+Pylon parses JSON, URL-encoded forms, and multipart uploads out of the box:
+
+```typescript
+const app = new Pylon({
+  parseBody: {
+    json: "5Mb",
+    form: "100Kb",
+    text: "1Kb",
+    multipart: true,
+    formidable: true,
+    formidableOptions: {
+      maxFileSize: 50 * 1024 * 1024,
+    },
+    methods: ["POST", "PUT", "PATCH"],
+  },
+  // ...
+});
+```
+
+Parsed body is available as `ctx.data` (camelCased). Uploaded files are available as `ctx.files`.
+
+## Configuration Reference
+
+Full type signature of `PylonOptions`:
+
+```typescript
+type PylonOptions = {
+  // Required
+  amphora: IAmphora;
+  logger: ILogger;
+
+  // Server
+  port?: number; // Default: 3000
+  domain?: string;
+  name?: string;
+  version?: string; // Default: "0.0.0"
+  environment?: Environment;
+  proxy?: boolean; // Default: true
+
+  // HTTP
+  auth?: PylonAuthOptions;
+  callbacks?: { health?; rightToBeForgotten? };
+  changePasswordUri?: string;
+  cookies?: PylonCookieConfig;
+  cors?: CorsOptions;
+  httpMiddleware?: PylonHttpMiddleware[];
+  httpRouters?: string | PylonHttpRouters[];
+  maxRequestAge?: ReadableTime;
+  minRequestAge?: ReadableTime;
+  openIdConfiguration?: Partial<OpenIdConfigurationOptions>;
+  parseBody?: ParseBodyOptions;
+  session?: PylonSessionOptions;
+
+  // Socket.io
+  socketListeners?: string | PylonListener[];
+  socketMiddleware?: PylonSocketMiddleware[];
+  socketOptions?: Partial<SocketOptions>;
+  socketRedis?: Redis;
+
+  // Integrations
+  hermes?: IHermes;
+  iris?: IIrisSource;
+  proteus?: IProteusSource;
+
+  // Features
+  audit?: PylonAuditOptions;
+  kryptos?: PylonKryptosOptions;
+  queue?: PylonQueueOptions;
+  rateLimit?: PylonRateLimitOptions;
+  rooms?: PylonRoomsOptions;
+  webhook?: PylonWebhookOptions;
+
+  // Lifecycle
+  setup?: () => Promise<string | void>;
+  teardown?: () => Promise<string | void>;
+  subscriptions?: PylonSubscribeOptions[];
+
+  // Workers
+  workers?: Array<ILindormWorker | LindormWorkerConfig | string>;
+  workersInterval?: ReadableTime;
+  workersRetry?: RetryOptions;
+};
+```
+
+## Entities
+
+Pylon ships three Proteus entities for its built-in features:
+
+| Entity                | Purpose                                          |
+| --------------------- | ------------------------------------------------ |
+| `DataAuditLog`        | Tracks entity-level changes (field diffs)        |
+| `RequestAuditLog`     | Stores HTTP/socket request audit records         |
+| `WebhookSubscription` | Manages webhook targets and their authentication |
+
+Import them from the main entry point:
+
+```typescript
+import { DataAuditLog, RequestAuditLog, WebhookSubscription } from "@lindorm/pylon";
+```
 
 ## License
 
-AGPL-3.0-or-later – see the root [`LICENSE`](../../LICENSE).
-
+AGPL-3.0-or-later — see the root [`LICENSE`](../../LICENSE).
