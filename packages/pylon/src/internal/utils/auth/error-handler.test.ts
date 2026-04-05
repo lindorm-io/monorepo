@@ -13,7 +13,7 @@ describe("errorHandler", () => {
     };
   });
 
-  test("should resolve with OIDC error fields", async () => {
+  test("should resolve with query params as body", async () => {
     await expect(errorHandler(ctx, jest.fn())).resolves.toBeUndefined();
 
     expect(ctx.body).toEqual({
@@ -24,16 +24,12 @@ describe("errorHandler", () => {
     expect(ctx.status).toBe(400);
   });
 
-  test("should resolve with defaults when query is empty", async () => {
+  test("should resolve with empty body when query is empty", async () => {
     ctx.query = {};
 
     await expect(errorHandler(ctx, jest.fn())).resolves.toBeUndefined();
 
-    expect(ctx.body).toEqual({
-      error: "unknown_error",
-      error_description: null,
-      state: null,
-    });
+    expect(ctx.body).toEqual({});
     expect(ctx.status).toBe(400);
   });
 });
