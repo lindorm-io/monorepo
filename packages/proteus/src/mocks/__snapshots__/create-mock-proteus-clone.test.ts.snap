@@ -1,0 +1,38 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`createMockProteusClone should create a mock clone with all methods as jest.fn() 1`] = `
+{
+  "addEntities": [MockFunction],
+  "breaker": null,
+  "client": [MockFunction],
+  "clone": [MockFunction],
+  "connect": [MockFunction],
+  "disableFilter": [MockFunction],
+  "disconnect": [MockFunction],
+  "driverType": "memory",
+  "enableFilter": [MockFunction],
+  "getEmitEntity": [MockFunction],
+  "getEntityMetadata": [MockFunction],
+  "getFilterRegistry": [MockFunction],
+  "log": {
+    "child": [MockFunction],
+    "debug": [MockFunction],
+    "error": [MockFunction],
+    "info": [MockFunction],
+    "time": [MockFunction],
+    "verbose": [MockFunction],
+    "warn": [MockFunction],
+  },
+  "migrationsTable": undefined,
+  "namespace": null,
+  "off": [MockFunction],
+  "on": [MockFunction],
+  "once": [MockFunction],
+  "ping": [MockFunction],
+  "queryBuilder": [MockFunction],
+  "repository": [MockFunction],
+  "setFilterParams": [MockFunction],
+  "setup": [MockFunction],
+  "transaction": [MockFunction],
+}
+`;

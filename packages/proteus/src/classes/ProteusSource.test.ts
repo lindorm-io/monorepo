@@ -1,4 +1,5 @@
 import { createMockLogger } from "@lindorm/logger";
+import { ProteusClone } from "./ProteusClone";
 import { ProteusSource } from "./ProteusSource";
 import { Entity } from "../decorators/Entity";
 import { Field } from "../decorators/Field";
@@ -24,11 +25,11 @@ const createSource = () =>
 
 describe("ProteusSource", () => {
   describe("clone", () => {
-    test("should produce a new ProteusSource instance", () => {
+    test("should produce a ProteusClone instance", () => {
       const source = createSource();
       const cloned = source.clone();
 
-      expect(cloned).toBeInstanceOf(ProteusSource);
+      expect(cloned).toBeInstanceOf(ProteusClone);
       expect(cloned).not.toBe(source);
     });
 
@@ -81,26 +82,16 @@ describe("ProteusSource", () => {
       });
     });
 
-    test("should isolate event listeners: clone mutations do not affect original", () => {
+    test("should produce distinct clone instances", () => {
       const source = createSource();
-      const listener = jest.fn();
 
       const cloned = source.clone();
-      cloned.on("entity:after-insert", listener);
-
-      // Clone again from the original — should not inherit clone's listener
       const cloned2 = source.clone();
-
-      // Add a different listener to the original
-      const originalListener = jest.fn();
-      source.on("entity:after-update", originalListener);
-
-      // Clone from after the original listener was added
       const cloned3 = source.clone();
 
-      // All clones are distinct
       expect(cloned).not.toBe(cloned2);
       expect(cloned).not.toBe(cloned3);
+      expect(cloned2).not.toBe(cloned3);
     });
 
     test("should share the same driver (connection pool)", async () => {
@@ -163,14 +154,14 @@ describe("ProteusSource", () => {
       const newLogger = createMockLogger();
       const cloned = source.clone({ logger: newLogger });
 
-      expect(cloned).toBeInstanceOf(ProteusSource);
+      expect(cloned).toBeInstanceOf(ProteusClone);
     });
 
     test("should allow overriding context on clone", () => {
       const source = createSource();
       const cloned = source.clone({ context: { requestId: "abc-123" } });
 
-      expect(cloned).toBeInstanceOf(ProteusSource);
+      expect(cloned).toBeInstanceOf(ProteusClone);
     });
 
     test("should clone filter registry with current state", () => {

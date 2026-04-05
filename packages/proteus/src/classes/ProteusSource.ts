@@ -15,6 +15,7 @@ import {
   IProteusRepository,
   IProteusSource,
 } from "../interfaces";
+import { ProteusClone } from "./ProteusClone";
 import type { ICacheAdapter } from "../interfaces/CacheAdapter";
 import type {
   EntityEmitFn,
@@ -64,34 +65,6 @@ export type CloneOptions<C = unknown> = {
 };
 
 /**
- * All private fields of ProteusSource. Used by `fromFields` to create
- * instances without the constructor while maintaining compile-time safety
- * (no `as any` casts). Keys must match the private field names exactly
- * so TypeScript catches missing or mistyped fields.
- */
-interface ProteusSourceInit {
-  _driver: IProteusDriver | undefined;
-  _breaker: ICircuitBreaker | null;
-  _options: ProteusSourceOptions;
-  _amphora: IAmphora | undefined;
-  logger: ILogger;
-  context: unknown;
-  _entities: Array<Constructor<IEntity>>;
-  resolveMetadata: MetadataResolver;
-  cacheAdapter: ICacheAdapter | undefined;
-  sourceTtlMs: number | undefined;
-  _namespace: string | null;
-  _driverType: string;
-  _migrationsTable: string | undefined;
-  _registryRef: { current: FilterRegistry };
-  _emitter: EventEmitter;
-  _inheritanceMap: Map<Function, MetaInheritance> | undefined;
-  _namingCache: Map<Function, EntityMetadata> | null;
-  _settingUpPromise: Promise<void> | null;
-  isSetUp: boolean;
-}
-
-/**
  * Central entry point for the Proteus ORM.
  *
  * Create one ProteusSource per application (or per tenant) and use it to
@@ -118,18 +91,6 @@ export class ProteusSource<C = unknown> implements IProteusSource<C> {
   private _namingCache: Map<Function, EntityMetadata> | null = null;
   private _settingUpPromise: Promise<void> | null = null;
   private isSetUp = false;
-
-  /**
-   * Create a ProteusSource from an init object, bypassing the constructor.
-   * Object.assign is used to write all fields (including readonly ones)
-   * onto the bare prototype instance in one shot.
-   */
-  private static fromFields<C>(fields: ProteusSourceInit): ProteusSource<C> {
-    return Object.assign(
-      Object.create(ProteusSource.prototype) as ProteusSource<C>,
-      fields,
-    );
-  }
 
   public constructor(options: ProteusSourceOptions) {
     this._options = options;
@@ -240,43 +201,34 @@ export class ProteusSource<C = unknown> implements IProteusSource<C> {
   };
 
   /** Create a lightweight copy of this source sharing the same connection pool but with a new logger and/or context. */
-  public clone(options?: CloneOptions<C>): ProteusSource<C> {
+  public clone(options?: CloneOptions<C>): ProteusClone<C> {
     // Reference cell pattern: new ref cell for filter registry isolation.
     const registryRef = { current: cloneFilterRegistry(this._registryRef.current) };
-    // Each clone gets its own EventEmitter — listener isolation.
-    const emitter = new EventEmitter();
 
-    // Build a standalone emitEntity that closes over the clone's emitter.
+    // The clone's emit just bubbles to parent — can create before the clone itself.
+    const parentEmit = this.emitEntity;
     const cloneEmitEntity: EntityEmitFn = async (event, payload) => {
-      const listeners = emitter.listeners(event);
-      for (const listener of listeners) {
-        await (listener as (p: unknown) => void | Promise<void>)(payload);
-      }
+      await parentEmit(event, payload);
     };
 
-    return ProteusSource.fromFields<C>({
+    const clonedDriver = this._driver
+      ? this._driver.cloneWithGetters(() => registryRef.current, cloneEmitEntity)
+      : undefined;
+
+    return new ProteusClone<C>({
       logger: options?.logger?.child(["ProteusSource"]) ?? this.logger,
-      context: (options?.context ?? this.context) as unknown,
-      _breaker: this._breaker,
-      _entities: this._entities,
-      _amphora: this._amphora,
+      context: options?.context ?? this.context,
+      namespace: this._namespace,
+      driverType: this._driverType,
+      registryRef,
       resolveMetadata: this.resolveMetadata,
-      isSetUp: this.isSetUp,
+      entities: this._entities,
+      inheritanceMap: this._inheritanceMap,
+      namingCache: this._namingCache,
       cacheAdapter: this.cacheAdapter,
       sourceTtlMs: this.sourceTtlMs,
-      _namespace: this._namespace,
-      _driverType: this._driverType,
-      _migrationsTable: this._migrationsTable,
-      _inheritanceMap: this._inheritanceMap,
-      _namingCache: this._namingCache,
-      _settingUpPromise: null,
-      _registryRef: registryRef,
-      _emitter: emitter,
-      _options: this._options,
-      // Clone the driver with new filter getter and the clone's emitEntity.
-      _driver: this._driver
-        ? this._driver.cloneWithGetters(() => registryRef.current, cloneEmitEntity)
-        : undefined,
+      parentEmitEntity: parentEmit,
+      driver: clonedDriver!,
     });
   }
 
