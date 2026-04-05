@@ -320,10 +320,12 @@ export class SqliteQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   }
 
   public update(): IUpdateQueryBuilder<E> {
+    this.guardAppendOnlyWrite("update");
     return new SqliteUpdateQueryBuilder<E>(this.metadata, this.client, this.namespace);
   }
 
   public delete(): IDeleteQueryBuilder<E> {
+    this.guardAppendOnlyWrite("delete");
     return new SqliteDeleteQueryBuilder<E>(
       this.metadata,
       this.client,
@@ -333,6 +335,7 @@ export class SqliteQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   }
 
   public softDelete(): IDeleteQueryBuilder<E> {
+    this.guardAppendOnlyWrite("softDelete");
     return new SqliteDeleteQueryBuilder<E>(
       this.metadata,
       this.client,

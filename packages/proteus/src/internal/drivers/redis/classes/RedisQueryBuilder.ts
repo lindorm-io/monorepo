@@ -273,6 +273,7 @@ export class RedisQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
    * subscriber events. Use repository.save() for full lifecycle support.
    */
   public update(): IUpdateQueryBuilder<E> {
+    this.guardAppendOnlyWrite("update");
     return new RedisUpdateBuilder<E>(
       this.client,
       this.metadata,
@@ -289,6 +290,7 @@ export class RedisQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
    * and subscriber events. Use repository.destroy() for full lifecycle support.
    */
   public delete(): IDeleteQueryBuilder<E> {
+    this.guardAppendOnlyWrite("delete");
     return new RedisDeleteBuilder<E>(
       this.client,
       this.metadata,
@@ -306,6 +308,7 @@ export class RedisQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
    * Use repository.softDestroy() for full lifecycle support.
    */
   public softDelete(): IDeleteQueryBuilder<E> {
+    this.guardAppendOnlyWrite("softDelete");
     return new RedisDeleteBuilder<E>(
       this.client,
       this.metadata,

@@ -225,3 +225,7 @@ export const stageDiscriminatorValue = (
 ): void => {
   metadata.__discriminatorValue = value;
 };
+
+export const stageAppendOnly = (metadata: DecoratorMetadataObject): void => {
+  metadata.__appendOnly = true;
+};

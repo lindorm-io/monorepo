@@ -96,6 +96,81 @@ await source.disconnect();
 - [Entities](#entities)
 - [Field Types](#field-types)
 - [Decorators](#decorators)
+  - [Entity & Class-Level Decorators](#entity--class-level-decorators)
+    - [`@Entity`](#entity)
+    - [`@AbstractEntity`](#abstractentity)
+    - [`@Embeddable`](#embeddable)
+    - [`@Namespace`](#namespace)
+    - [`@Schema`](#schema-1)
+    - [`@Inheritance`](#inheritance-1)
+    - [`@Discriminator`](#discriminator)
+    - [`@DiscriminatorValue`](#discriminatorvalue)
+    - [`@DefaultOrder`](#defaultorder)
+    - [`@Cache`](#cache)
+    - [`@Filter`](#filter)
+    - [`@Check`](#check) (class-level)
+    - [`@Index`](#index) (class-level)
+    - [`@Unique`](#unique) (class-level)
+    - [`@PrimaryKey`](#primarykey) (class-level)
+  - [Field Decorators](#field-decorators)
+    - [`@Field`](#field)
+    - [`@PrimaryKeyField`](#primarykeyfield)
+    - [`@PrimaryKey`](#primarykey-1) (field-level)
+    - [`@ScopeField`](#scopefield)
+    - [`@CreateDateField`](#createdatefield)
+    - [`@UpdateDateField`](#updatedatefield)
+    - [`@DeleteDateField`](#deletedatefield)
+    - [`@VersionField`](#versionfield)
+    - [`@VersionKeyField`](#versionkeyfield)
+    - [`@VersionKey`](#versionkey)
+    - [`@VersionStartDateField`](#versionstartdatefield)
+    - [`@VersionEndDateField`](#versionenddatefield)
+    - [`@ExpiryDateField`](#expirydatefield)
+  - [Field Modifiers](#field-modifiers)
+    - [`@Nullable`](#nullable)
+    - [`@Default`](#default)
+    - [`@Generated`](#generated)
+    - [`@ReadOnly`](#readonly)
+    - [`@Enum`](#enum)
+    - [`@Precision`](#precision)
+    - [`@Min` / `@Max`](#min--max)
+    - [`@Comment`](#comment)
+    - [`@Computed`](#computed)
+    - [`@Transform`](#transform)
+    - [`@Encrypted`](#encrypted)
+    - [`@Hide`](#hide)
+    - [`@Unique`](#unique-1) (field-level)
+    - [`@Index`](#index-1) (field-level)
+    - [`@Check`](#check-1) (class-level applied to field)
+  - [Relation Decorators](#relation-decorators)
+    - [`@OneToOne`](#onetoone)
+    - [`@OneToMany`](#onetomany)
+    - [`@ManyToOne`](#manytoone)
+    - [`@ManyToMany`](#manytomany)
+    - [`@Embedded`](#embedded)
+    - [`@EmbeddedList`](#embeddedlist)
+    - [`@JoinKey`](#joinkey)
+    - [`@JoinTable`](#jointable)
+    - [`@RelationId`](#relationid)
+    - [`@RelationCount`](#relationcount)
+  - [Relation Modifiers](#relation-modifiers)
+    - [`@Cascade`](#cascade)
+    - [`@Eager`](#eager)
+    - [`@Lazy`](#lazy)
+    - [`@OnOrphan`](#onorphan)
+    - [`@Deferrable`](#deferrable)
+    - [`@OrderBy`](#orderby)
+  - [Lifecycle Hook Decorators](#lifecycle-hook-decorators)
+    - [`@OnCreate`](#oncreate)
+    - [`@OnValidate`](#onvalidate)
+    - [`@OnHydrate`](#onhydrate)
+    - [`@BeforeInsert` / `@AfterInsert`](#beforeinsert--afterinsert)
+    - [`@BeforeUpdate` / `@AfterUpdate`](#beforeupdate--afterupdate)
+    - [`@BeforeSave` / `@AfterSave`](#beforesave--aftersave)
+    - [`@BeforeDestroy` / `@AfterDestroy`](#beforedestroy--afterdestroy)
+    - [`@BeforeSoftDestroy` / `@AfterSoftDestroy`](#beforesoftdestroy--aftersoftdestroy)
+    - [`@BeforeRestore` / `@AfterRestore`](#beforerestore--afterrestore)
+    - [`@AfterLoad`](#afterload)
 - [Repository API](#repository-api)
 - [Query Builder](#query-builder)
 - [Predicates](#predicates)
@@ -452,8 +527,7 @@ metadata!: Record<string, unknown>;
 tags!: string[];
 
 @Field("decimal")
-@Precision(10)
-@Scale(2)
+@Precision(10, 2)
 price!: number;
 
 @Field("enum")
@@ -474,96 +548,1221 @@ embedding!: number[];
 
 ## Decorators
 
-### Entity & Class-Level
+All decorators use the TC39 (stage 3) decorator specification. Class decorators receive `ClassDecoratorContext`, field/property decorators receive `ClassFieldDecoratorContext`. Metadata flows through the `Symbol.metadata` prototype chain, so abstract base class decorators are inherited by concrete subclasses.
 
-| Decorator                      | Description                             |
-| ------------------------------ | --------------------------------------- |
-| `@Entity(options?)`            | Mark class as a persistent entity       |
-| `@AbstractEntity()`            | Mapped superclass — no table of its own |
-| `@Embeddable()`                | Embeddable value type                   |
-| `@Namespace(ns)`               | Set schema/database/prefix              |
-| `@Schema(zodSchema)`           | Attach Zod validation                   |
-| `@Cache(ttl?)`                 | Enable per-entity query caching         |
-| `@Filter(options)`             | Declare parameterized WHERE filter      |
-| `@Inheritance(strategy)`       | `"single-table"` or `"joined"`          |
-| `@Discriminator(key)`          | Discriminator column name               |
-| `@DiscriminatorValue(value)`   | Subclass discriminator value            |
-| `@DefaultOrder(order)`         | Default sort order for queries          |
-| `@Check(expression, options?)` | Class-level check constraint            |
-| `@Index(keys, options?)`       | Composite index                         |
-| `@Unique(keys, options?)`      | Composite unique constraint             |
-| `@PrimaryKey(keys)`            | Composite primary key                   |
+### Entity & Class-Level Decorators
+
+These decorators are applied to classes and configure entity-wide behavior.
+
+#### `@Entity`
+
+Marks a class as a persistent entity mapped to a database table or collection.
+
+```typescript
+@Entity()
+class User {
+  /* ... */
+}
+
+@Entity({ name: "app_users" }) // custom table name
+class User {
+  /* ... */
+}
+```
+
+**Options:** `{ name?: string }` — Override the table/collection name. Defaults to the class name. Must match `/^[a-zA-Z_][a-zA-Z0-9_]*$/`.
+
+#### `@AbstractEntity`
+
+Marks a class as a mapped superclass. It is **not** registered as a concrete table. Fields, hooks, and metadata are inherited by `@Entity()` subclasses via the `Symbol.metadata` prototype chain.
+
+```typescript
+@AbstractEntity()
+class BaseEntity {
+  @PrimaryKeyField()
+  id!: string;
+
+  @CreateDateField()
+  createdAt!: Date;
+
+  @UpdateDateField()
+  updatedAt!: Date;
+}
+
+@Entity()
+class User extends BaseEntity {
+  @Field("string")
+  name!: string;
+}
+```
+
+#### `@Embeddable`
+
+Marks a class as an embeddable value type with no primary key, table, or independent identity. Fields are flattened into the parent entity's table via `@Embedded()`.
+
+```typescript
+@Embeddable()
+class Address {
+  @Field("string")
+  street!: string;
+
+  @Field("string")
+  city!: string;
+}
+```
+
+#### `@Namespace`
+
+Places the entity in a specific namespace — mapped to schema (SQL), database (MongoDB), or key prefix (Redis).
+
+```typescript
+@Namespace("billing")
+@Entity()
+class Invoice {
+  /* ... */
+}
+```
+
+#### `@Schema`
+
+Attaches a Zod schema for runtime validation. Evaluated automatically before every insert/update and manually via `repository.validate()`.
+
+```typescript
+import { z } from "zod";
+
+@Schema(
+  z.object({
+    name: z.string().min(1),
+    email: z.string().email(),
+  }),
+)
+@Entity()
+class User {
+  /* ... */
+}
+```
+
+#### `@Inheritance`
+
+Declares the entity as the root of an inheritance hierarchy.
+
+```typescript
+@Entity()
+@Inheritance("single-table") // all subtypes in one table
+@Discriminator("type")
+class Vehicle {
+  /* ... */
+}
+
+@Entity()
+@Inheritance("joined") // separate table per subtype, joined by FK
+@Discriminator("type")
+class Vehicle {
+  /* ... */
+}
+```
+
+**Argument:** `"single-table"` (default) or `"joined"`.
+
+#### `@Discriminator`
+
+Specifies which property serves as the discriminator column for table inheritance. Applied on the inheritance root class.
+
+```typescript
+@Entity()
+@Inheritance("single-table")
+@Discriminator("type") // "type" property distinguishes subtypes
+class Vehicle {
+  @Field("string")
+  type!: string;
+}
+```
+
+#### `@DiscriminatorValue`
+
+Specifies the discriminator column value for a concrete subclass in a table inheritance hierarchy.
+
+```typescript
+@Entity()
+@DiscriminatorValue("car")
+class Car extends Vehicle {
+  @Field("integer")
+  doors!: number;
+}
+
+@Entity()
+@DiscriminatorValue("truck")
+class Truck extends Vehicle {
+  @Field("float")
+  payloadTons!: number;
+}
+```
+
+**Argument:** `string | number`.
+
+#### `@DefaultOrder`
+
+Sets the default sort order for queries against this entity. Applied when `FindOptions.order` is not provided. Explicit `order` in FindOptions or `.orderBy()` on QueryBuilder takes precedence.
+
+```typescript
+@DefaultOrder({ createdAt: "DESC" })
+@Entity()
+class Post {
+  /* ... */
+}
+
+@DefaultOrder({ lastName: "ASC", firstName: "ASC" })
+@Entity()
+class User {
+  /* ... */
+}
+```
+
+**Argument:** `Record<string, "ASC" | "DESC">`.
+
+#### `@Cache`
+
+Enables query-level caching for the entity. Requires a cache adapter configured on ProteusSource. Per-query caching can be overridden via `FindOptions.cache`.
+
+```typescript
+@Cache() // use source-level default TTL
+@Entity()
+class Config {
+  /* ... */
+}
+
+@Cache("30s") // entity-specific TTL
+@Entity()
+class Session {
+  /* ... */
+}
+```
+
+**Argument:** `ReadableTime?` — e.g. `"5m"`, `"1h"`, `"30s"`. Defaults to the source-level TTL.
+
+#### `@AppendOnly`
+
+Marks an entity as append-only. Insert and read operations are allowed; update, delete, and truncate are blocked at both the application layer (repository guards) and the database layer (SQL triggers).
+
+```typescript
+@AppendOnly()
+@Entity()
+class AuditLog {
+  @PrimaryKeyField()
+  id!: string;
+
+  @CreateDateField()
+  createdAt!: Date;
+
+  @Field("string")
+  action!: string;
+
+  @Field("json")
+  payload!: Record<string, unknown>;
+}
+```
+
+**Allowed:** `insert`, `insertBulk`, `clone`, `find*`, `count`, `exists`, `aggregate`, `cursor`, `paginate`.
+
+**Blocked:** `update`, `destroy`, `softDestroy`, `updateMany`, `softDelete`, `delete`, `upsert`, `clear`, `restore`.
+
+For SQL drivers (PostgreSQL, MySQL, SQLite), `setup()` generates `BEFORE UPDATE` / `BEFORE DELETE` triggers that enforce immutability at the database level. PostgreSQL additionally generates a `BEFORE TRUNCATE` trigger.
+
+#### `@Filter`
+
+Declares a parameterized WHERE-clause filter on the entity. Filters are named, reusable predicates that can be enabled/disabled per-source or per-query. Use `"$paramName"` string placeholders for runtime-supplied values.
+
+```typescript
+@Entity()
+@Filter({ name: "active", cond: { deletedAt: null }, default: true })
+@Filter({ name: "tenant", cond: { tenantId: "$tenantId" } })
+class Resource {
+  /* ... */
+}
+
+// Set parameters at runtime
+source.setFilterParams("tenant", { tenantId: "tenant-abc" });
+source.enableFilter("active");
+```
+
+**Options:**
+
+| Field     | Type              | Description                                   |
+| --------- | ----------------- | --------------------------------------------- |
+| `name`    | `string`          | Unique filter name                            |
+| `cond`    | `Predicate<Dict>` | Filter condition using Predicate operators    |
+| `default` | `boolean`         | Auto-enable on every query (default: `false`) |
+
+#### `@Check` (class-level)
+
+Declares a CHECK constraint on the entity's table using a raw SQL boolean expression.
+
+```typescript
+@Check("price >= 0")
+@Check("start_date < end_date", { name: "chk_date_range" })
+@Entity()
+class Product {
+  /* ... */
+}
+```
+
+**Arguments:** `(expression: string, options?: { name?: string })`. Constraint name is auto-generated if omitted.
+
+#### `@Index` (class-level)
+
+Declares a composite database index across multiple fields.
+
+```typescript
+// Simple composite index
+@Index<typeof User>(["lastName", "firstName"])
+@Entity()
+class User {
+  /* ... */
+}
+
+// Per-field direction
+@Index<typeof User>({ lastName: "asc", firstName: "asc", createdAt: "desc" })
+@Entity()
+class User {
+  /* ... */
+}
+
+// Partial index with custom method
+@Index<typeof User>(["email"], { unique: true, where: "deleted_at IS NULL" })
+@Entity()
+class User {
+  /* ... */
+}
+```
+
+**Options:**
+
+| Field        | Type      | Description                           |
+| ------------ | --------- | ------------------------------------- |
+| `unique`     | `boolean` | Create a unique index                 |
+| `concurrent` | `boolean` | Build index concurrently (Postgres)   |
+| `sparse`     | `boolean` | Sparse index (MongoDB)                |
+| `where`      | `string`  | Partial index SQL condition           |
+| `using`      | `string`  | Index method (e.g. `"gin"`, `"gist"`) |
+| `with`       | `string`  | Storage parameters                    |
+| `name`       | `string`  | Custom index name                     |
+
+#### `@Unique` (class-level)
+
+Declares a composite unique constraint across multiple fields.
+
+```typescript
+@Unique<typeof User>(["email", "tenantId"])
+@Unique<typeof User>(["email", "tenantId"], { name: "uq_tenant_email" })
+@Entity()
+class User {
+  /* ... */
+}
+```
+
+**Arguments:** `(keys: Array<keyof T>, options?: { name?: string })`.
+
+#### `@PrimaryKey` (class-level)
+
+Defines a composite primary key across multiple fields.
+
+```typescript
+@PrimaryKey<typeof OrderItem>(["orderId", "productId"])
+@Entity()
+class OrderItem {
+  @Field("uuid")
+  orderId!: string;
+
+  @Field("uuid")
+  productId!: string;
+}
+```
+
+---
 
 ### Field Decorators
 
-| Decorator                  | Description                       |
-| -------------------------- | --------------------------------- |
-| `@Field(type, options?)`   | General-purpose column            |
-| `@PrimaryKeyField()`       | UUID primary key (auto-generated) |
-| `@PrimaryKey()`            | Mark field as part of PK          |
-| `@ScopeField()`            | Scope/tenant discriminator        |
-| `@CreateDateField()`       | Auto-set on insert                |
-| `@UpdateDateField()`       | Auto-set on every update          |
-| `@DeleteDateField()`       | Soft-delete timestamp             |
-| `@VersionField()`          | Optimistic locking counter        |
-| `@VersionKeyField()`       | Temporal versioning key           |
-| `@VersionStartDateField()` | Temporal version start            |
-| `@VersionEndDateField()`   | Temporal version end              |
-| `@ExpiryDateField()`       | TTL expiration timestamp          |
+These decorators are applied to class properties and declare persistent columns.
 
-### Field Constraints
+#### `@Field`
 
-| Decorator                      | Description                            |
-| ------------------------------ | -------------------------------------- |
-| `@Nullable()`                  | Allow NULL values                      |
-| `@Default(value)`              | Set default value                      |
-| `@Generated(strategy)`         | `"uuid"`, `"increment"`, or `"string"` |
-| `@Unique(options?)`            | Unique constraint                      |
-| `@Index(direction?, options?)` | Database index                         |
-| `@Check(expression)`           | SQL check constraint                   |
-| `@Precision(n)` / `@Scale(n)`  | Numeric precision and scale            |
-| `@Min(n)` / `@Max(n)`          | Numeric bounds                         |
-| `@Enum(type)`                  | Restrict to enum values                |
-| `@ReadOnly()`                  | Prevent updates after insert           |
-| `@Comment(text)`               | Column comment                         |
-| `@Transform(fn)`               | Transform on hydration/dehydration     |
-| `@Computed(fn)`                | Read-only computed field               |
-| `@Encrypted(options?)`         | Field-level encryption at rest         |
-| `@Deferrable(initially?)`      | Deferrable FK constraint               |
-| `@Hide(event)`                 | Exclude from serialization             |
-| `@OrderBy(direction)`          | Default sort for relation collections  |
+The foundational field decorator. Declares a persistent column with an explicit type.
+
+```typescript
+@Field("string")
+name!: string;
+
+@Field("string", { name: "full_name" }) // custom column name
+name!: string;
+
+@Field("array", { arrayType: "string" })
+tags!: string[];
+```
+
+**Arguments:** `(type: MetaFieldType, options?: { name?: string, arrayType?: string })`. Column name defaults to the property name.
+
+#### `@PrimaryKeyField`
+
+Shorthand that combines `@Field`, `@PrimaryKey`, and `@Generated` in one decorator.
+
+```typescript
+@PrimaryKeyField()          // UUID primary key (default)
+id!: string;
+
+@PrimaryKeyField("integer") // auto-increment integer PK
+id!: number;
+
+@PrimaryKeyField("string")  // random string PK
+id!: string;
+
+@PrimaryKeyField("uuid", { name: "pk" }) // custom column name
+id!: string;
+```
+
+**Arguments:** `(type?: "uuid" | "integer" | "string", options?: { name?: string })`. Defaults to `"uuid"`. The field is automatically marked read-only and auto-generated.
+
+#### `@PrimaryKey` (field-level)
+
+Marks a single field as part of the primary key. Use this instead of `@PrimaryKeyField` when you need to control the field type, generation strategy, or other modifiers separately.
+
+```typescript
+@PrimaryKey()
+@Field("integer")
+@Generated("increment")
+id!: number;
+```
+
+#### `@ScopeField`
+
+Declares a scope field for multi-tenancy or logical partitioning. Scope fields are automatically non-nullable, read-only strings with a minimum length of 1.
+
+```typescript
+@ScopeField()
+tenantId!: string;
+
+@ScopeField({ order: 0 }) // explicit ordering for key composition
+region!: string;
+
+@ScopeField({ name: "tenant_id", order: 1 })
+tenantId!: string;
+```
+
+Scope fields serve two purposes:
+
+1. **Driver-level key composition** — in Redis and key-value drivers, scope fields determine the key prefix structure. The `order` option controls ordering (lowest first, alphabetical fallback).
+2. **Automatic query filtering** — scope fields are auto-registered as a `__scope` system filter. Queries are scoped by default. Bypass with `{ withoutScope: true }` in FindOptions.
+
+**Options:** `{ name?: string, order?: number }`.
+
+#### `@CreateDateField`
+
+Declares a timestamp field automatically set to the current time on insert. Read-only and immutable after creation.
+
+```typescript
+@CreateDateField()
+createdAt!: Date;
+
+@CreateDateField({ name: "created_at" })
+createdAt!: Date;
+```
+
+#### `@UpdateDateField`
+
+Declares a timestamp field automatically set to the current time on every update.
+
+```typescript
+@UpdateDateField()
+updatedAt!: Date;
+```
+
+#### `@DeleteDateField`
+
+Declares a nullable timestamp field for soft-delete tracking. When non-null, the entity is considered soft-deleted and excluded from queries by default.
+
+```typescript
+@DeleteDateField()
+deletedAt!: Date | null;
+```
+
+Use `{ withDeleted: true }` in FindOptions to include soft-deleted rows. See [Soft Deletes & Expiry](#soft-deletes--expiry).
+
+#### `@VersionField`
+
+Declares an integer field for optimistic locking. Automatically incremented on every update. The ORM checks the version matches before applying updates and throws `OptimisticLockError` on conflict.
+
+```typescript
+@VersionField()
+version!: number;
+```
+
+Read-only and non-nullable.
+
+#### `@VersionKeyField`
+
+Shorthand combining `@Field`, `@PrimaryKey`, `@VersionKey`, and `@Generated` for temporal/versioned tables. Part of the composite primary key alongside the regular primary key.
+
+```typescript
+@VersionKeyField()          // UUID version key (default)
+versionId!: string;
+
+@VersionKeyField("integer") // auto-increment version key
+versionId!: number;
+```
+
+**Arguments:** `(type?: "uuid" | "integer" | "string", options?: { name?: string })`.
+
+#### `@VersionKey`
+
+Marks a field as a version key for temporal tables. Can be used at field level or class level for composite version keys.
+
+```typescript
+// Field-level
+@VersionKey()
+@Field("uuid")
+@Generated("uuid")
+versionId!: string;
+
+// Class-level composite
+@VersionKey<typeof Product>(["versionId", "locale"])
+@Entity()
+class Product { /* ... */ }
+```
+
+#### `@VersionStartDateField`
+
+Declares the start timestamp for temporal/versioned tables. Set on insert and when a new version is created.
+
+```typescript
+@VersionStartDateField()
+validFrom!: Date;
+```
+
+Read-only, non-nullable, auto-generated.
+
+#### `@VersionEndDateField`
+
+Declares the end timestamp for temporal/versioned tables. Nullable — `null` means the version is the current active version.
+
+```typescript
+@VersionEndDateField()
+validTo!: Date | null;
+```
+
+Set automatically when a new version supersedes an existing one.
+
+#### `@ExpiryDateField`
+
+Declares a nullable timestamp field for TTL-based expiry. Use `repository.deleteExpired()` to purge expired entities and `repository.ttl()` to check remaining time.
+
+```typescript
+@ExpiryDateField()
+expiresAt!: Date | null;
+```
+
+MongoDB automatically creates TTL indexes for `@ExpiryDateField`. See [Soft Deletes & Expiry](#soft-deletes--expiry).
+
+---
+
+### Field Modifiers
+
+These decorators modify the behavior of a field declared with `@Field` or one of the shorthand field decorators. Stack them on the same property.
+
+#### `@Nullable`
+
+Marks a field as nullable, allowing `null` values. Affects both DDL generation and Zod validation. Without this, fields are non-nullable by default.
+
+```typescript
+@Nullable()
+@Field("string")
+email!: string | null;
+```
+
+#### `@Default`
+
+Sets a default value for a field, applied when creating new entities. Accepts a literal value or a function returning the default at creation time.
+
+```typescript
+@Default(0)
+@Field("integer")
+loginCount!: number;
+
+@Default(true)
+@Field("boolean")
+active!: boolean;
+
+@Default(() => new Date())
+@Field("timestamp")
+startedAt!: Date;
+```
+
+**Argument:** `value | () => value`.
+
+#### `@Generated`
+
+Marks a field as auto-generated by the ORM or database.
+
+```typescript
+@Generated("uuid")                   // UUID v4 on insert
+@Generated("increment")              // database auto-increment
+@Generated("string")                 // random string (default length)
+@Generated("string", { length: 12 }) // random string with custom length
+@Generated("date")                   // current timestamp on insert
+```
+
+**Strategies:**
+
+| Strategy      | Description                              |
+| ------------- | ---------------------------------------- |
+| `"uuid"`      | Generate UUID v4 on insert               |
+| `"increment"` | Database auto-increment sequence         |
+| `"string"`    | Random string with configurable `length` |
+| `"date"`      | Current timestamp                        |
+
+**Options:** `{ length?: number, max?: number, min?: number }`.
+
+#### `@ReadOnly`
+
+Marks a field as read-only. Excluded from UPDATE statements after initial insert. The value is still set during entity creation.
+
+```typescript
+@ReadOnly()
+@Field("string")
+createdBy!: string;
+```
+
+#### `@Enum`
+
+Restricts a field to a fixed set of allowed values. Pass a TypeScript enum or a plain `Record<string, string | number>`. Enforced during Zod validation and mapped to a CHECK constraint or native ENUM type depending on driver.
+
+```typescript
+enum Status {
+  Active = "active",
+  Inactive = "inactive",
+  Banned = "banned",
+}
+
+@Enum(Status)
+@Field("enum")
+status!: Status;
+```
+
+#### `@Precision`
+
+Sets precision and scale for numeric fields (decimal, float, real).
+
+```typescript
+@Precision(10)     // 10 significant digits, 0 decimal places
+@Field("decimal")
+total!: number;
+
+@Precision(10, 2)  // 10 significant digits, 2 decimal places → NUMERIC(10, 2)
+@Field("decimal")
+price!: number;
+```
+
+**Arguments:** `(precision: number, scale?: number)`. Scale defaults to `0`.
+
+> **Note:** There is no separate `@Scale` decorator — scale is the second argument to `@Precision`.
+
+#### `@Min` / `@Max`
+
+Set minimum/maximum bounds for numeric fields or minimum/maximum length for string fields. Enforced during Zod validation and reflected in DDL constraints where supported.
+
+```typescript
+@Min(0)
+@Max(150)
+@Field("integer")
+age!: number;
+
+@Min(1)
+@Max(255)
+@Field("string")
+username!: string;
+```
+
+#### `@Comment`
+
+Attaches a DDL comment to a column (e.g. PostgreSQL `COMMENT ON COLUMN`).
+
+```typescript
+@Comment("ISO 4217 currency code")
+@Field("string")
+currency!: string;
+```
+
+#### `@Computed`
+
+Marks a field as a computed/generated column with a SQL expression. Computed fields are excluded from INSERT/UPDATE statements and Zod validation. The database evaluates the expression.
+
+```typescript
+@Computed("first_name || ' ' || last_name")
+@Field("string")
+fullName!: string;
+
+@Computed("EXTRACT(YEAR FROM created_at)")
+@Field("integer")
+createdYear!: number;
+```
+
+**Argument:** SQL expression string. Read-only by definition.
+
+#### `@Transform`
+
+Applies a bidirectional transform to a field value. `to` runs during dehydration (entity -> database), `from` runs during hydration (database -> entity).
+
+```typescript
+@Transform({
+  to: (value: string[]) => value.join(","),
+  from: (raw: string) => raw.split(","),
+})
+@Field("string")
+tags!: string[];
+
+@Transform<Date, number>({
+  to: (date) => date.getTime(),
+  from: (ms) => new Date(ms),
+})
+@Field("bigint")
+timestamp!: Date;
+```
+
+**Options:** `{ to: (value: TFrom) => TTo, from: (raw: TTo) => TFrom }`.
+
+#### `@Encrypted`
+
+Marks a field for application-level encryption at rest. Values are encrypted before writing and decrypted after reading. Requires an `IAmphora` key store configured on ProteusSource.
+
+```typescript
+@Encrypted()
+@Field("string")
+ssn!: string;
+
+@Encrypted({ purpose: "pii", ownerId: "userId" })
+@Field("json")
+medicalRecord!: Record<string, unknown>;
+```
+
+**Options:** `{ id?, algorithm?, encryption?, purpose?, type?, ownerId? }` — metadata for encryption strategy and scope.
+
+#### `@Hide`
+
+Excludes a field from query results for a given scope. The field still exists in the database and entity; it is just excluded from SELECT projections.
+
+```typescript
+@Hide()           // hidden from both findOne and find results
+@Field("string")
+password!: string;
+
+@Hide("single")   // hidden only from findOne
+@Field("json")
+metadata!: Record<string, unknown>;
+
+@Hide("multiple") // hidden only from find (list queries)
+@Field("text")
+body!: string;
+```
+
+**Argument:** `"single" | "multiple"` or omit for both.
+
+#### `@Unique` (field-level)
+
+Declares a unique constraint on a single field.
+
+```typescript
+@Unique()
+@Field("string")
+email!: string;
+
+@Unique({ name: "uq_email" }) // custom constraint name
+@Field("string")
+email!: string;
+```
+
+#### `@Index` (field-level)
+
+Declares a database index on a single field.
+
+```typescript
+@Index()                          // ascending index (default)
+@Field("string")
+email!: string;
+
+@Index("desc")                    // descending index
+@Field("timestamp")
+createdAt!: Date;
+
+@Index({ unique: true })          // unique index
+@Field("string")
+slug!: string;
+
+@Index({ where: "active = true" }) // partial index
+@Field("string")
+email!: string;
+
+@Index({ using: "gin" })          // custom index method
+@Field("json")
+metadata!: Record<string, unknown>;
+```
+
+#### `@Check` (class-level applied to field)
+
+`@Check` is always a class-level decorator, but it can reference specific fields in its expression. See [`@Check`](#check) above.
+
+---
 
 ### Relation Decorators
 
-| Decorator                      | Description                         |
-| ------------------------------ | ----------------------------------- |
-| `@OneToOne(entity, backRef)`   | One-to-one relationship             |
-| `@OneToMany(entity, backRef)`  | One-to-many (inverse side)          |
-| `@ManyToOne(entity, backRef)`  | Many-to-one (owning side)           |
-| `@ManyToMany(entity, backRef)` | Many-to-many                        |
-| `@JoinKey(mapping?)`           | Mark as owning side (has FK column) |
-| `@JoinTable(options?)`         | Configure join table for M:N        |
-| `@RelationId(key)`             | Expose FK value as a field          |
-| `@RelationCount(key)`          | Expose relation count               |
-| `@Eager()`                     | Always load with parent             |
-| `@Lazy(scope?)`                | Load on first access                |
-| `@Cascade(options)`            | Cascade insert/update/destroy       |
-| `@OnOrphan(action)`            | Action when relation is removed     |
+Relation decorators define relationships between entities. Each relation has an **owning side** (stores the FK or join table reference) and an **inverse side**.
 
-### Lifecycle Hooks
+#### `@OneToOne`
 
-| Decorator                                          | Phase                          |
-| -------------------------------------------------- | ------------------------------ |
-| `@OnCreate(fn)`                                    | In-memory instantiation (sync) |
-| `@OnValidate(fn)`                                  | Validation (sync)              |
-| `@OnHydrate(fn)`                                   | Hydration from DB (sync)       |
-| `@BeforeInsert(fn)` / `@AfterInsert(fn)`           | Around INSERT                  |
-| `@BeforeUpdate(fn)` / `@AfterUpdate(fn)`           | Around UPDATE                  |
-| `@BeforeSave(fn)` / `@AfterSave(fn)`               | Around INSERT or UPDATE        |
-| `@BeforeDestroy(fn)` / `@AfterDestroy(fn)`         | Around hard DELETE             |
-| `@BeforeSoftDestroy(fn)` / `@AfterSoftDestroy(fn)` | Around soft delete             |
-| `@BeforeRestore(fn)` / `@AfterRestore(fn)`         | Around restore                 |
-| `@AfterLoad(fn)`                                   | After loading from DB          |
+Declares a one-to-one relation between two entities. Use `@JoinKey()` on the owning side to mark FK ownership.
+
+```typescript
+@Entity()
+class User {
+  @JoinKey() // owning side — stores the FK
+  @OneToOne(() => Profile, "user")
+  profile!: Profile | null;
+}
+
+@Entity()
+class Profile {
+  @OneToOne(() => User, "profile") // inverse side — no @JoinKey
+  user!: User | null;
+}
+```
+
+**Arguments:** `(entityFn: () => Constructor, entityKey: keyof F, options?: { strategy?: string })`.
+
+- `entityFn` — thunk returning the related entity constructor (avoids circular imports)
+- `entityKey` — property name on the related entity that holds the back-reference
+
+#### `@OneToMany`
+
+Declares a one-to-many relation (inverse side). This entity has no FK column; the related entity's `@ManyToOne` side owns the join key.
+
+```typescript
+@Entity()
+class Author {
+  @OneToMany(() => Article, "author")
+  articles!: Article[];
+}
+```
+
+#### `@ManyToOne`
+
+Declares a many-to-one relation (owning side). This entity's table gets the FK column(s).
+
+```typescript
+@Entity()
+class Article {
+  @ManyToOne(() => Author, "articles")
+  author!: Author | null;
+}
+```
+
+#### `@ManyToMany`
+
+Declares a many-to-many relation using a join table. Use `@JoinTable()` on the owning side.
+
+```typescript
+@Entity()
+class Course {
+  @JoinTable() // owning side
+  @ManyToMany(() => Student, "courses")
+  students!: Student[];
+}
+
+@Entity()
+class Student {
+  @ManyToMany(() => Course, "students") // inverse side
+  courses!: Course[];
+}
+```
+
+#### `@Embedded`
+
+Declares a field that embeds an `@Embeddable()` class as flat columns in the parent table. Column names are prefixed by default with `${fieldName}_`.
+
+```typescript
+@Embedded(() => Address)                     // prefix: "homeAddress_"
+homeAddress!: Address | null;
+
+@Embedded(() => Address, { prefix: "work_" }) // custom prefix
+workAddress!: Address | null;
+```
+
+**Arguments:** `(embeddableFn: () => Constructor, options?: { prefix?: string })`.
+
+#### `@EmbeddedList`
+
+Declares a field storing an array of primitives or embeddables in a separate owned collection table. The collection table has no PK and no independent lifecycle — deleting the parent cascades to collection rows.
+
+```typescript
+@EmbeddedList(() => Address)                           // array of embeddables
+addresses!: Address[];
+
+@EmbeddedList("string")                                // array of primitives
+tags!: string[];
+
+@EmbeddedList("string", { tableName: "user_tags" })    // custom table name
+tags!: string[];
+```
+
+**Arguments:** `(typeOrFn: MetaFieldType | (() => Constructor), options?: { tableName?: string })`.
+
+#### `@JoinKey`
+
+Marks a relation field as the owning side (has FK column) and optionally provides explicit join key mapping.
+
+```typescript
+@JoinKey()                              // auto-detect FK columns
+@OneToOne(() => Profile, "user")
+profile!: Profile | null;
+
+@JoinKey({ authorId: "id" })            // explicit: localCol → foreignCol
+@ManyToOne(() => Author, "articles")
+author!: Author | null;
+```
+
+**Argument:** `Dict<string>?` — `{ localColumn: "foreignColumn" }`. If omitted, columns are auto-calculated from property names and relation metadata.
+
+#### `@JoinTable`
+
+Configures the join table for a `@ManyToMany` relation. Place on the owning side only.
+
+```typescript
+@JoinTable()                                // auto-generated table name
+@ManyToMany(() => Tag, "posts")
+tags!: Tag[];
+
+@JoinTable({ name: "post_tags" })           // custom join table name
+@ManyToMany(() => Tag, "posts")
+tags!: Tag[];
+```
+
+**Options:** `{ name?: string }`. Only one side of a ManyToMany should have `@JoinTable`.
+
+#### `@RelationId`
+
+Exposes a relation's FK value as a read-only property on the entity.
+
+```typescript
+@RelationId("author")           // auto-detect FK column
+authorId!: string;
+
+@RelationId("author", { column: "author_id" }) // explicit column
+authorId!: string;
+```
+
+For `*ToOne` owning relations, the FK column is auto-detected. For composite FK or `*ToMany`, specify the `column` option. Multiple `@RelationId` decorators may target the same relation for composite keys.
+
+#### `@RelationCount`
+
+Populates a field with the count of a related collection, loaded via a batched `COUNT(*) ... GROUP BY` query. Avoids loading the full relation just to get the count. Supports OneToMany and ManyToMany relations, including composite keys.
+
+```typescript
+@Entity()
+class Blog {
+  @PrimaryKeyField()
+  id!: string;
+
+  @OneToMany(() => Comment, "blog")
+  comments!: Comment[];
+
+  @RelationCount<Blog>("comments")
+  @Field("integer")
+  commentCount!: number;
+}
+```
+
+**Arguments:** `(relationKey: keyof E & string)` — the property name of the relation to count. The field must also have `@Field("integer")`.
+
+Supported on PostgreSQL, MySQL, and SQLite. MongoDB, Redis, and Memory drivers load relation counts via their own relation-loading pipelines.
+
+---
+
+### Relation Modifiers
+
+These decorators modify the behavior of a relation declared with `@OneToOne`, `@OneToMany`, `@ManyToOne`, or `@ManyToMany`. Stack them on the same property.
+
+#### `@Cascade`
+
+Configures cascade behavior for a relation. Controls what happens to related entities when the parent is inserted, updated, destroyed, or soft-destroyed.
+
+```typescript
+@Cascade({ onInsert: "cascade", onUpdate: "cascade", onDestroy: "cascade" })
+@OneToMany(() => Article, "author")
+articles!: Article[];
+
+@Cascade({ onDestroy: "soft", onSoftDestroy: "cascade" })
+@OneToMany(() => Comment, "post")
+comments!: Comment[];
+```
+
+**Options:**
+
+| Field           | Values                  | Description                                   |
+| --------------- | ----------------------- | --------------------------------------------- |
+| `onInsert`      | `"cascade"`             | Auto-insert related entities with parent      |
+| `onUpdate`      | `"cascade"`             | Auto-update related entities with parent      |
+| `onDestroy`     | `"cascade"` \| `"soft"` | Delete or soft-delete related on hard delete  |
+| `onSoftDestroy` | `"cascade"` \| `"soft"` | Cascade or soft-delete related on soft delete |
+
+#### `@Eager`
+
+Automatically loads a relation alongside every query result (eager loading).
+
+```typescript
+@Eager()           // eager-load for both findOne and find
+@OneToMany(() => Article, "author")
+articles!: Article[];
+
+@Eager("single")   // only eager-load for findOne
+@OneToOne(() => Profile, "user")
+profile!: Profile | null;
+
+@Eager("multiple") // only eager-load for find (list queries)
+@OneToMany(() => Tag, "post")
+tags!: Tag[];
+```
+
+**Argument:** `"single" | "multiple"` or omit for both.
+
+#### `@Lazy`
+
+Loads a relation lazily — the property returns a `PromiseLike<T>` that resolves on first access.
+
+```typescript
+@Lazy()
+@OneToOne(() => Profile, "user")
+profile!: LazyType<Profile | null>;
+
+@Lazy("single")   // only lazy-load for findOne
+@Lazy("multiple") // only lazy-load for find
+```
+
+Use `LazyType<T>` as the property type for lazy-loaded relations.
+
+**Argument:** `"single" | "multiple"` or omit for both.
+
+#### `@OnOrphan`
+
+Configures what happens to related entities that are removed from a collection (e.g. when reassigning a `@OneToMany` array).
+
+```typescript
+@OnOrphan("destroy")       // permanently delete orphaned entities
+@OneToMany(() => Comment, "post")
+comments!: Comment[];
+
+@OnOrphan("soft-destroy")  // soft-delete orphaned entities
+@OnOrphan("nullify")       // set the FK to null
+@OnOrphan("ignore")        // do nothing (default)
+```
+
+**Argument:** `"destroy" | "soft-destroy" | "nullify" | "ignore"`.
+
+#### `@Deferrable`
+
+Marks a relation's FK constraint as `DEFERRABLE`, allowing constraint checks to be deferred until transaction end. Useful for circular dependencies.
+
+```typescript
+@Deferrable()                      // DEFERRABLE INITIALLY IMMEDIATE
+@ManyToOne(() => Category, "children")
+parent!: Category | null;
+
+@Deferrable({ initially: true })   // DEFERRABLE INITIALLY DEFERRED
+@ManyToOne(() => Node, "children")
+parent!: Node | null;
+```
+
+**Options:** `{ initially?: boolean }`. When `true`, the constraint is `INITIALLY DEFERRED`.
+
+#### `@OrderBy`
+
+Specifies default ordering for a relation's loaded results. Applied as an `ORDER BY` clause in SQL relation queries and as in-memory sorting during hydration. Supported across all six drivers.
+
+```typescript
+@OrderBy({ createdAt: "DESC" })
+@OneToMany(() => Comment, "post")
+comments!: Comment[];
+
+@OrderBy({ lastName: "ASC", firstName: "ASC" })
+@OneToMany(() => Player, "team")
+players!: Player[];
+```
+
+**Argument:** `Record<string, "ASC" | "DESC">`.
+
+---
+
+### Lifecycle Hook Decorators
+
+Lifecycle hooks are **class decorators** that register callbacks at specific points in the entity lifecycle. All hooks receive `(context, entity)` as arguments, where `context` is the source's context value (typed as `C`, defaults to `unknown`).
+
+**Async hooks** (`HookCallback<T, C>`) may return `void | Promise<void>`.
+**Sync hooks** (`SyncHookCallback<T, C>`) must return `void` — they cannot be async.
+
+#### `@OnCreate`
+
+Fires synchronously when `repository.create()` builds a new entity instance. **Must be synchronous.** Useful for setting computed defaults or derived fields.
+
+```typescript
+@OnCreate((_ctx, user) => {
+  user.slug = user.name.toLowerCase().replace(/\s+/g, "-");
+})
+@Entity()
+class User {
+  /* ... */
+}
+```
+
+#### `@OnValidate`
+
+Fires synchronously during `repository.validate()`, after the built-in Zod schema check. Throw to reject the entity. **Must be synchronous.**
+
+```typescript
+@OnValidate((_ctx, order) => {
+  if (order.startDate >= order.endDate) {
+    throw new Error("startDate must be before endDate");
+  }
+})
+@Entity()
+class Order {
+  /* ... */
+}
+```
+
+#### `@OnHydrate`
+
+Fires synchronously when an entity is hydrated from database results, after all fields and FK columns are populated but before the entity is returned. **Must be synchronous.** For async post-load enrichment, use `@AfterLoad` instead.
+
+```typescript
+@OnHydrate((_ctx, user) => {
+  user.fullName = `${user.firstName} ${user.lastName}`;
+})
+@Entity()
+class User {
+  /* ... */
+}
+```
+
+#### `@BeforeInsert` / `@AfterInsert`
+
+Fire around INSERT operations. `@BeforeInsert` runs after validation but before the INSERT statement. `@AfterInsert` runs after the entity is persisted. Both may be async.
+
+```typescript
+@BeforeInsert(async (_ctx, user) => {
+  user.password = await argon2.hash(user.password);
+})
+@AfterInsert(async (_ctx, user) => {
+  await sendWelcomeEmail(user.email);
+})
+@Entity()
+class User {
+  /* ... */
+}
+```
+
+#### `@BeforeUpdate` / `@AfterUpdate`
+
+Fire around UPDATE operations. `@BeforeUpdate` runs after validation and version check but before the UPDATE statement. Both may be async.
+
+```typescript
+@BeforeUpdate(async (_ctx, user) => {
+  if (user.passwordChanged) {
+    user.password = await argon2.hash(user.password);
+  }
+})
+@Entity()
+class User {
+  /* ... */
+}
+```
+
+#### `@BeforeSave` / `@AfterSave`
+
+Fire around both INSERT and UPDATE operations. `@BeforeSave` runs before `@BeforeInsert`/`@BeforeUpdate`. `@AfterSave` runs after `@AfterInsert`/`@AfterUpdate`. Both may be async.
+
+```typescript
+@BeforeSave((_ctx, entity) => {
+  entity.updatedBy = getCurrentUserId();
+})
+@Entity()
+class Document {
+  /* ... */
+}
+```
+
+#### `@BeforeDestroy` / `@AfterDestroy`
+
+Fire around hard DELETE operations. `@BeforeDestroy` runs before cascade deletes and the DELETE statement. Both may be async.
+
+```typescript
+@BeforeDestroy(async (_ctx, user) => {
+  await deleteUserFiles(user.id);
+})
+@Entity()
+class User {
+  /* ... */
+}
+```
+
+#### `@BeforeSoftDestroy` / `@AfterSoftDestroy`
+
+Fire around soft-delete operations. `@BeforeSoftDestroy` runs before the delete date is set and before cascade soft-deletes. Both may be async.
+
+```typescript
+@BeforeSoftDestroy(async (_ctx, post) => {
+  await notifyAuthor(post.authorId, "post archived");
+})
+@Entity()
+class Post {
+  /* ... */
+}
+```
+
+#### `@BeforeRestore` / `@AfterRestore`
+
+Fire around restore operations (un-soft-delete). `@BeforeRestore` runs before the delete date is cleared. Both may be async.
+
+```typescript
+@AfterRestore(async (_ctx, post) => {
+  await reindexPost(post.id);
+})
+@Entity()
+class Post {
+  /* ... */
+}
+```
+
+#### `@AfterLoad`
+
+Fires after an entity is loaded from the database, after hydration and relation loading. May be async. Use for post-load enrichment.
+
+```typescript
+@AfterLoad(async (_ctx, user) => {
+  user.avatarUrl = await resolveAvatarUrl(user.avatarKey);
+})
+@Entity()
+class User {
+  /* ... */
+}
+```
+
+### Hook Execution Order
+
+| Phase        | Hooks (in order)                                                              |
+| ------------ | ----------------------------------------------------------------------------- |
+| Construction | `@OnCreate` (sync)                                                            |
+| Validation   | `@OnValidate` (sync)                                                          |
+| Insert       | `@BeforeSave` -> `@BeforeInsert` -> persist -> `@AfterInsert` -> `@AfterSave` |
+| Update       | `@BeforeSave` -> `@BeforeUpdate` -> persist -> `@AfterUpdate` -> `@AfterSave` |
+| Destroy      | `@BeforeDestroy` -> delete -> `@AfterDestroy`                                 |
+| Soft Delete  | `@BeforeSoftDestroy` -> mark -> `@AfterSoftDestroy`                           |
+| Restore      | `@BeforeRestore` -> unmark -> `@AfterRestore`                                 |
+| Hydration    | `@OnHydrate` (sync) -> `@AfterLoad`                                           |
 
 ## Repository API
 
@@ -1187,16 +2386,7 @@ class User {
 
 ### Execution Order
 
-| Phase        | Hooks                                                                     |
-| ------------ | ------------------------------------------------------------------------- |
-| Construction | `@OnCreate` (sync)                                                        |
-| Validation   | `@OnValidate` (sync)                                                      |
-| Insert       | `@BeforeSave` → `@BeforeInsert` → persist → `@AfterInsert` → `@AfterSave` |
-| Update       | `@BeforeSave` → `@BeforeUpdate` → persist → `@AfterUpdate` → `@AfterSave` |
-| Destroy      | `@BeforeDestroy` → delete → `@AfterDestroy`                               |
-| Soft Delete  | `@BeforeSoftDestroy` → mark → `@AfterSoftDestroy`                         |
-| Restore      | `@BeforeRestore` → unmark → `@AfterRestore`                               |
-| Hydration    | `@OnHydrate` (sync) → `@AfterLoad`                                        |
+See [Hook Execution Order](#hook-execution-order) in the Decorators section for the complete execution order table.
 
 ## Soft Deletes & Expiry
 
@@ -1308,12 +2498,12 @@ Reusable, parameterized WHERE clauses at the entity level:
 @Entity()
 @Filter({
   name: "tenant",
-  condition: "tenantId = :tenantId",
+  cond: { tenantId: "$tenantId" },
   default: true, // enabled by default
 })
 @Filter({
   name: "active",
-  condition: "status = 'active'",
+  cond: { status: "active" },
 })
 class Resource {
   @PrimaryKeyField()

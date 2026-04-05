@@ -71,6 +71,7 @@ const makeMetadata = (
 ): EntityMetadata =>
   ({
     target,
+    appendOnly: false,
     cache: null,
     checks: [],
     defaultOrder: null,

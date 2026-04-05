@@ -328,14 +328,17 @@ export class MongoQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   }
 
   public update(): IUpdateQueryBuilder<E> {
+    this.guardAppendOnlyWrite("update");
     return new MongoUpdateQueryBuilder<E>(this.db, this.metadata, this.session);
   }
 
   public delete(): IDeleteQueryBuilder<E> {
+    this.guardAppendOnlyWrite("delete");
     return new MongoDeleteQueryBuilder<E>(this.db, this.metadata, false, this.session);
   }
 
   public softDelete(): IDeleteQueryBuilder<E> {
+    this.guardAppendOnlyWrite("softDelete");
     return new MongoDeleteQueryBuilder<E>(this.db, this.metadata, true, this.session);
   }
 

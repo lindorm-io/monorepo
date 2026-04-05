@@ -140,6 +140,7 @@ exports[`projectDesiredSchema should project a simple entity 1`] = `
       ],
       "name": "TestUser",
       "schema": "public",
+      "triggers": [],
     },
   ],
 }

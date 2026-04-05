@@ -2,6 +2,7 @@
 
 exports[`Lazy should match snapshot for lazy on both scopes 1`] = `
 {
+  "appendOnly": false,
   "cache": null,
   "checks": [],
   "defaultOrder": null,

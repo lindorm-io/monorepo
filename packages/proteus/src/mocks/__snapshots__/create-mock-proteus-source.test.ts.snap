@@ -4,6 +4,7 @@ exports[`createMockProteusSource should create a mock source with all methods as
 {
   "addEntities": [MockFunction],
   "addSubscriber": [MockFunction],
+  "breaker": null,
   "client": [MockFunction],
   "clone": [MockFunction],
   "connect": [MockFunction],
@@ -13,6 +14,15 @@ exports[`createMockProteusSource should create a mock source with all methods as
   "enableFilter": [MockFunction],
   "getEntityMetadata": [MockFunction],
   "getFilterRegistry": [MockFunction],
+  "log": {
+    "child": [MockFunction],
+    "debug": [MockFunction],
+    "error": [MockFunction],
+    "info": [MockFunction],
+    "time": [MockFunction],
+    "verbose": [MockFunction],
+    "warn": [MockFunction],
+  },
   "migrationsTable": undefined,
   "namespace": null,
   "ping": [MockFunction],

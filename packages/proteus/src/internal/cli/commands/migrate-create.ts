@@ -29,7 +29,7 @@ export const migrateCreate = async (options: CreateOptions): Promise<void> => {
     const filename = `${stamp}-${slug}.ts`;
     const driverType = source.driverType;
 
-    // TODO: use driver-specific runner type for non-SQL drivers (Phase 21)
+    // TODO: use driver-specific runner type for non-SQL drivers
     const content = [
       `import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";`,
       ``,

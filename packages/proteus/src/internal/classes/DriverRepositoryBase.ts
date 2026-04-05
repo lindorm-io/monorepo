@@ -30,6 +30,7 @@ import type { IEntitySubscriber } from "../../interfaces/EntitySubscriber";
 import type { SubscriberEventName } from "../utils/subscriber/dispatch-subscribers";
 import { buildPrimaryKeyPredicate } from "#internal/utils/repository/build-pk-predicate";
 import {
+  guardAppendOnly,
   guardDeleteDateField,
   guardExpiryDateField,
   guardUpsertBlocked,
@@ -223,6 +224,9 @@ export abstract class DriverRepositoryBase<
   ): Promise<E> {
     const existing = await this.findOne(criteria, options);
     if (existing) return existing;
+    if (this.metadata.appendOnly) {
+      return this.insert(entity);
+    }
     return this.save(entity);
   }
 
@@ -407,6 +411,13 @@ export abstract class DriverRepositoryBase<
   public save(entity: O | E): Promise<E>;
   public save(entities: Array<O | E>): Promise<Array<E>>;
   public async save(input: O | E | Array<O | E>): Promise<E | Array<E>> {
+    if (this.metadata.appendOnly) {
+      throw new ProteusRepositoryError(
+        `Cannot save an append-only entity "${this.metadata.entity.name}" — use insert() instead`,
+        { debug: { entityName: this.metadata.entity.name, method: "save" } },
+      );
+    }
+
     if (Array.isArray(input)) {
       const results: Array<E> = [];
       for (const item of input) {
@@ -420,6 +431,8 @@ export abstract class DriverRepositoryBase<
   public update(entity: E): Promise<E>;
   public update(entities: Array<E>): Promise<Array<E>>;
   public async update(input: E | Array<E>): Promise<E | Array<E>> {
+    guardAppendOnly(this.metadata, "update");
+
     if (Array.isArray(input)) {
       const results: Array<E> = [];
       for (const item of input) {
@@ -446,6 +459,8 @@ export abstract class DriverRepositoryBase<
   public destroy(entity: E): Promise<void>;
   public destroy(entities: Array<E>): Promise<void>;
   public async destroy(input: E | Array<E>): Promise<void> {
+    guardAppendOnly(this.metadata, "destroy");
+
     if (Array.isArray(input)) {
       for (const item of input) {
         await this.destroyOne(item);
@@ -462,6 +477,7 @@ export abstract class DriverRepositoryBase<
     property: keyof E,
     value: number,
   ): Promise<void> {
+    guardAppendOnly(this.metadata, "increment");
     await this.executor.executeIncrement(criteria, property, value);
   }
 
@@ -470,16 +486,21 @@ export abstract class DriverRepositoryBase<
     property: keyof E,
     value: number,
   ): Promise<void> {
+    guardAppendOnly(this.metadata, "decrement");
     await this.executor.executeDecrement(criteria, property, value);
   }
 
   // ─── With Criteria ────────────────────────────────────────────────
 
   public async delete(criteria: Predicate<E>, options?: DeleteOptions): Promise<void> {
+    guardAppendOnly(this.metadata, "delete");
+
     await this.executor.executeDelete(criteria, options);
   }
 
   public async updateMany(criteria: Predicate<E>, update: DeepPartial<E>): Promise<void> {
+    guardAppendOnly(this.metadata, "updateMany");
+
     if (this.entityManager.updateStrategy === "version") {
       throw new ProteusRepositoryError(
         `updateMany is not supported for versioned entity "${this.metadata.entity.name}". Use update() for individual version updates.`,
@@ -496,6 +517,7 @@ export abstract class DriverRepositoryBase<
   public softDestroy(entity: E): Promise<void>;
   public softDestroy(entities: Array<E>): Promise<void>;
   public async softDestroy(input: E | Array<E>): Promise<void> {
+    guardAppendOnly(this.metadata, "softDestroy");
     guardDeleteDateField(this.metadata, "softDestroy");
 
     if (Array.isArray(input)) {
@@ -519,6 +541,7 @@ export abstract class DriverRepositoryBase<
     criteria: Predicate<E>,
     _options?: DeleteOptions,
   ): Promise<void> {
+    guardAppendOnly(this.metadata, "softDelete");
     guardDeleteDateField(this.metadata, "softDelete");
     await this.executor.executeSoftDelete(criteria);
   }
@@ -531,6 +554,7 @@ export abstract class DriverRepositoryBase<
    * or subscriber events. Use individual entity restore workflows for per-entity lifecycle support.
    */
   public async restore(criteria: Predicate<E>, _options?: DeleteOptions): Promise<void> {
+    guardAppendOnly(this.metadata, "restore");
     guardDeleteDateField(this.metadata, "restore");
     await this.executor.executeRestore(criteria);
   }
@@ -553,6 +577,7 @@ export abstract class DriverRepositoryBase<
   }
 
   public async deleteExpired(): Promise<void> {
+    guardAppendOnly(this.metadata, "deleteExpired");
     guardExpiryDateField(this.metadata, "deleteExpired");
     await this.executor.executeDeleteExpired();
   }
@@ -565,6 +590,7 @@ export abstract class DriverRepositoryBase<
     input: E | Array<E>,
     options?: UpsertOptions<E>,
   ): Promise<E | Array<E>> {
+    guardAppendOnly(this.metadata, "upsert");
     guardUpsertBlocked(this.metadata);
 
     if (Array.isArray(input)) {

@@ -14,7 +14,9 @@ export type MysqlSyncOperation =
   | { type: "drop_fk"; tableName: string; constraintName: string; sql: string }
   | { type: "add_check"; tableName: string; constraintName: string; sql: string }
   | { type: "add_unique"; tableName: string; constraintName: string; sql: string }
-  | { type: "drop_constraint"; tableName: string; constraintName: string; sql: string };
+  | { type: "drop_constraint"; tableName: string; constraintName: string; sql: string }
+  | { type: "create_trigger"; tableName: string; triggerName: string; sql: string }
+  | { type: "drop_trigger"; tableName: string; triggerName: string; sql: string };
 
 export type MysqlSyncPlan = {
   operations: Array<MysqlSyncOperation>;

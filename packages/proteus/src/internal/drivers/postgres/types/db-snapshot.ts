@@ -39,6 +39,11 @@ export type DbEnum = {
   values: Array<string>;
 };
 
+export type DbTrigger = {
+  /** Trigger name (unquoted) */
+  name: string;
+};
+
 export type DbTable = {
   schema: string;
   name: string;
@@ -47,6 +52,7 @@ export type DbTable = {
   indexes: Array<DbIndex>;
   comment: string | null;
   columnComments: Record<string, string>;
+  triggers: Array<DbTrigger>;
 };
 
 export type DbSnapshot = {

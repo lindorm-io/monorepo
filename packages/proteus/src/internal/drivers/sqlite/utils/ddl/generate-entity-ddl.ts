@@ -1,6 +1,7 @@
 import type { EntityMetadata } from "#internal/entity/types/metadata";
 import type { NamespaceOptions } from "#internal/types/types";
 import { getEntityName } from "#internal/entity/utils/get-entity-name";
+import { generateAppendOnlyDDL } from "./generate-append-only-ddl";
 import { generateIndexDDL } from "./generate-index-ddl";
 import { generateJoinTableDDL } from "./generate-join-table-ddl";
 import { generateTableDDL } from "./generate-table-ddl";
@@ -8,6 +9,7 @@ import { generateTableDDL } from "./generate-table-ddl";
 export type SqliteDdlOutput = {
   tables: Array<string>;
   indexes: Array<string>;
+  triggers: Array<string>;
 };
 
 /**
@@ -27,6 +29,7 @@ export const generateEntityDDL = (
   const output: SqliteDdlOutput = {
     tables: [],
     indexes: [],
+    triggers: [],
   };
 
   // Table
@@ -39,6 +42,11 @@ export const generateEntityDDL = (
 
   // Indexes
   output.indexes.push(...generateIndexDDL(metadata.indexes, tableName, metadata.fields));
+
+  // Append-only triggers
+  if (metadata.appendOnly) {
+    output.triggers.push(...generateAppendOnlyDDL(tableName));
+  }
 
   return output;
 };

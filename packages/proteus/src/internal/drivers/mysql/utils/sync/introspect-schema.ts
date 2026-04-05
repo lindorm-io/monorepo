@@ -97,6 +97,7 @@ export const introspectSchema = async (
       foreignKeys: [],
       checkConstraints: [],
       uniqueConstraints: [],
+      triggers: [],
     });
   }
 
@@ -293,6 +294,25 @@ export const introspectSchema = async (
       checkClause: row.CHECK_CLAUSE,
     };
     table.checkConstraints.push(chk);
+  }
+
+  // Batch-query triggers (only proteus-managed triggers)
+  const { rows: triggerRows } = await client.query<{
+    TRIGGER_NAME: string;
+    EVENT_OBJECT_TABLE: string;
+  }>(
+    `SELECT TRIGGER_NAME, EVENT_OBJECT_TABLE
+     FROM information_schema.TRIGGERS
+     WHERE TRIGGER_SCHEMA = DATABASE() AND EVENT_OBJECT_TABLE IN (?)
+       AND TRIGGER_NAME LIKE 'proteus_%'
+     ORDER BY EVENT_OBJECT_TABLE, TRIGGER_NAME`,
+    [relevantTableNames],
+  );
+
+  for (const row of triggerRows) {
+    const table = tables.get(row.EVENT_OBJECT_TABLE);
+    if (!table) continue;
+    table.triggers.push({ name: row.TRIGGER_NAME });
   }
 
   return { tables };

@@ -26,6 +26,102 @@ exports[`diffSchema should create new table 1`] = `
 }
 `;
 
+exports[`diffSchema should create triggers for new table with triggers 1`] = `
+{
+  "operations": [
+    {
+      "autocommit": false,
+      "description": "Create table "public"."events"",
+      "schema": "public",
+      "severity": "safe",
+      "sql": "CREATE TABLE "public"."events" (
+  "id" UUID DEFAULT gen_random_uuid() NOT NULL,
+  CONSTRAINT "events_pkey" PRIMARY KEY ("id")
+);",
+      "table": "events",
+      "type": "create_table",
+    },
+    {
+      "autocommit": false,
+      "description": "Create trigger "trg_append_only_events" on "public"."events"",
+      "schema": "public",
+      "severity": "safe",
+      "sql": "CREATE OR REPLACE FUNCTION proteus_append_only() RETURNS TRIGGER AS $$ BEGIN RAISE EXCEPTION 'append-only: updates not allowed'; END; $$ LANGUAGE plpgsql;",
+      "table": "events",
+      "type": "create_trigger",
+    },
+    {
+      "autocommit": false,
+      "description": "Create trigger "trg_append_only_events" on "public"."events"",
+      "schema": "public",
+      "severity": "safe",
+      "sql": "CREATE TRIGGER "trg_append_only_events" BEFORE UPDATE OR DELETE ON "public"."events" FOR EACH ROW EXECUTE FUNCTION proteus_append_only();",
+      "table": "events",
+      "type": "create_trigger",
+    },
+  ],
+  "summary": {
+    "destructive": 0,
+    "safe": 3,
+    "total": 3,
+    "warning": 0,
+  },
+}
+`;
+
+exports[`diffSchema should create triggers when existing table gains triggers 1`] = `
+{
+  "operations": [
+    {
+      "autocommit": false,
+      "description": "Create trigger "trg_append_only_events" on "public"."events"",
+      "schema": "public",
+      "severity": "safe",
+      "sql": "CREATE OR REPLACE FUNCTION proteus_append_only() RETURNS TRIGGER AS $$ BEGIN RAISE EXCEPTION 'append-only: updates not allowed'; END; $$ LANGUAGE plpgsql;",
+      "table": "events",
+      "type": "create_trigger",
+    },
+    {
+      "autocommit": false,
+      "description": "Create trigger "trg_append_only_events" on "public"."events"",
+      "schema": "public",
+      "severity": "safe",
+      "sql": "CREATE TRIGGER "trg_append_only_events" BEFORE UPDATE OR DELETE ON "public"."events" FOR EACH ROW EXECUTE FUNCTION proteus_append_only();",
+      "table": "events",
+      "type": "create_trigger",
+    },
+  ],
+  "summary": {
+    "destructive": 0,
+    "safe": 2,
+    "total": 2,
+    "warning": 0,
+  },
+}
+`;
+
+exports[`diffSchema should drop triggers when existing table loses triggers 1`] = `
+{
+  "operations": [
+    {
+      "autocommit": false,
+      "description": "Drop trigger "trg_append_only_events" on "public"."events"",
+      "schema": "public",
+      "severity": "safe",
+      "sql": "DROP TRIGGER IF EXISTS "trg_append_only_events" ON "public"."events";",
+      "table": "events",
+      "type": "drop_trigger",
+    },
+  ],
+  "summary": {
+    "destructive": 0,
+    "safe": 1,
+    "total": 1,
+    "warning": 0,
+  },
+}
+`;
+
 exports[`diffSchema should include DEFERRABLE INITIALLY DEFERRED for FK on new table 1`] = `
 {
   "operations": [

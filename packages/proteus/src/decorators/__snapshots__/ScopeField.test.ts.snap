@@ -2,6 +2,7 @@
 
 exports[`ScopeField should register scope field with correct metadata 1`] = `
 {
+  "appendOnly": false,
   "cache": null,
   "checks": [],
   "defaultOrder": null,

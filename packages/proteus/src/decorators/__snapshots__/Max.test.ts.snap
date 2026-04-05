@@ -2,6 +2,7 @@
 
 exports[`Max should match snapshot 1`] = `
 {
+  "appendOnly": false,
   "cache": null,
   "checks": [],
   "defaultOrder": null,

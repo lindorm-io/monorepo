@@ -170,6 +170,7 @@ describe("generateMigration", () => {
           indexes: [],
           comment: null,
           columnComments: {},
+          triggers: [],
         },
         {
           schema: "app",
@@ -179,6 +180,7 @@ describe("generateMigration", () => {
           indexes: [],
           comment: null,
           columnComments: {},
+          triggers: [],
         },
       ],
       enums: [],

@@ -3,11 +3,13 @@ import type {
   SqliteDesiredTable,
   SqliteDesiredColumn,
   SqliteDesiredIndex,
+  SqliteDesiredTrigger,
 } from "../../types/desired-schema";
 import type {
   SqliteDbSnapshot,
   SqliteSnapshotTable,
   SqliteSnapshotIndex,
+  SqliteSnapshotTrigger,
 } from "../../types/db-snapshot";
 import type { SqliteSyncOperation, SqliteSyncPlan } from "../../types/sync-plan";
 import { quoteIdentifier } from "../quote-identifier";
@@ -318,6 +320,9 @@ export const diffSchema = (
         operations.push({ type: "create_index", ddl });
       }
 
+      // Triggers for new table
+      diffSqliteTriggers([], desiredTable.triggers, operations);
+
       continue;
     }
 
@@ -371,9 +376,46 @@ export const diffSchema = (
     if (!isRecreating) {
       diffIndexes(existingTable, desiredTable, operations);
     }
+
+    // Triggers (always diff, even during recreate — triggers are separate objects)
+    diffSqliteTriggers(existingTable.triggers, desiredTable.triggers, operations);
   }
 
   return { operations };
+};
+
+/**
+ * Diffs triggers between existing DB state and desired state for SQLite.
+ */
+const diffSqliteTriggers = (
+  existing: Array<SqliteSnapshotTrigger>,
+  desired: Array<SqliteDesiredTrigger>,
+  operations: Array<SqliteSyncOperation>,
+): void => {
+  const existingSet = new Set(existing.map((t) => t.name));
+  const desiredMap = new Map(desired.map((t) => [t.name, t]));
+  const desiredNames = new Set(desired.map((t) => t.name));
+
+  // Create triggers that are desired but don't exist
+  for (const [name, trigger] of desiredMap) {
+    if (!existingSet.has(name)) {
+      operations.push({
+        type: "create_trigger",
+        triggerName: name,
+        ddl: trigger.ddl,
+      });
+    }
+  }
+
+  // Drop proteus-managed triggers that exist but are no longer desired
+  for (const trigger of existing) {
+    if (!desiredNames.has(trigger.name)) {
+      operations.push({
+        type: "drop_trigger",
+        triggerName: trigger.name,
+      });
+    }
+  }
 };
 
 /**

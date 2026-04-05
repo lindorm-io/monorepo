@@ -90,6 +90,7 @@ const desiredWithTable: DesiredSchema = {
       indexes: [],
       comment: null,
       columnComments: {},
+      triggers: [],
     },
   ],
   enums: [],

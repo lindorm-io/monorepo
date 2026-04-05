@@ -15,7 +15,9 @@ export type SqliteSyncOperation =
   | { type: "add_column"; tableName: string; ddl: string }
   | { type: "create_index"; ddl: string }
   | { type: "drop_index"; indexName: string }
-  | { type: "drop_table"; tableName: string };
+  | { type: "drop_table"; tableName: string }
+  | { type: "create_trigger"; triggerName: string; ddl: string }
+  | { type: "drop_trigger"; triggerName: string };
 
 export type SqliteSyncPlan = {
   operations: Array<SqliteSyncOperation>;

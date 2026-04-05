@@ -23,7 +23,10 @@ import type { KeysetOrderEntry } from "#internal/utils/pagination/build-keyset-o
 import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
 import { DriverRepositoryBase } from "#internal/classes/DriverRepositoryBase";
 import { buildPrimaryKeyPredicate } from "#internal/utils/repository/build-pk-predicate";
-import { validateRelationNames } from "#internal/utils/repository/repository-guards";
+import {
+  guardAppendOnly,
+  validateRelationNames,
+} from "#internal/utils/repository/repository-guards";
 import { RelationPersister } from "#internal/utils/repository/RelationPersister";
 import { buildRelationFilter } from "#internal/utils/repository/build-relation-filter";
 import { filterHiddenSelections } from "#internal/utils/query/filter-hidden-selections";
@@ -220,6 +223,8 @@ export class RedisRepository<
   }
 
   public async clear(_options?: ClearOptions): Promise<void> {
+    guardAppendOnly(this.metadata, "clear");
+
     // NOTE: Auto-increment counter keys ({ns:}seq:*) are NOT deleted by clear() —
     // counters persist across clear() calls for monotonic correctness.
 

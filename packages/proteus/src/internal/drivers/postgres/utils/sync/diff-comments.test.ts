@@ -10,6 +10,7 @@ const makeDbTable = (overrides: Partial<DbTable> = {}): DbTable => ({
   indexes: [],
   comment: null,
   columnComments: {},
+  triggers: [],
   ...overrides,
 });
 
@@ -21,6 +22,7 @@ const makeDesiredTable = (overrides: Partial<DesiredTable> = {}): DesiredTable =
   indexes: [],
   comment: null,
   columnComments: {},
+  triggers: [],
   ...overrides,
 });
 

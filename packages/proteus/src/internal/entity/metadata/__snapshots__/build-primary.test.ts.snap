@@ -1,5 +1,9 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
+exports[`buildPrimaryMetadata — @AppendOnly contradictory decorators error message for @AppendOnly + @DeleteDateField matches snapshot 1`] = `"@AppendOnly and @DeleteDateField are contradictory — append-only entities cannot be soft-deleted"`;
+
+exports[`buildPrimaryMetadata — @AppendOnly contradictory decorators error message for @AppendOnly + @ExpiryDateField matches snapshot 1`] = `"@AppendOnly and @ExpiryDateField are contradictory — append-only entities cannot expire"`;
+
 exports[`buildPrimaryMetadata — @Cache decorator wires cache metadata with explicit TTL 1`] = `300000`;
 
 exports[`buildPrimaryMetadata — @DefaultOrder decorator wires defaultOrder from decorator 1`] = `

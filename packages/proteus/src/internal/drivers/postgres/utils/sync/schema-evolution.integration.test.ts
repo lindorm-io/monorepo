@@ -96,6 +96,7 @@ describe("schema evolution (integration)", () => {
             indexes: [],
             comment: null,
             columnComments: {},
+            triggers: [],
           },
         ],
       };
@@ -159,6 +160,7 @@ describe("schema evolution (integration)", () => {
             indexes: [],
             comment: null,
             columnComments: {},
+            triggers: [],
           },
         ],
       };
@@ -242,6 +244,7 @@ describe("schema evolution (integration)", () => {
             indexes: [],
             comment: null,
             columnComments: {},
+            triggers: [],
           },
         ],
       };
@@ -314,6 +317,7 @@ describe("schema evolution (integration)", () => {
             indexes: [],
             comment: null,
             columnComments: {},
+            triggers: [],
           },
         ],
       };
@@ -389,6 +393,7 @@ describe("schema evolution (integration)", () => {
             indexes: [],
             comment: null,
             columnComments: {},
+            triggers: [],
           },
         ],
       };
@@ -451,6 +456,7 @@ describe("schema evolution (integration)", () => {
             indexes: [],
             comment: null,
             columnComments: {},
+            triggers: [],
           },
         ],
       };
@@ -514,6 +520,7 @@ describe("schema evolution (integration)", () => {
             indexes: [],
             comment: null,
             columnComments: {},
+            triggers: [],
           },
         ],
       };
@@ -572,6 +579,7 @@ describe("schema evolution (integration)", () => {
             indexes: [],
             comment: null,
             columnComments: {},
+            triggers: [],
           },
           {
             schema,
@@ -631,6 +639,7 @@ describe("schema evolution (integration)", () => {
             indexes: [],
             comment: null,
             columnComments: {},
+            triggers: [],
           },
         ],
       };
@@ -690,6 +699,7 @@ describe("schema evolution (integration)", () => {
             indexes: [],
             comment: null,
             columnComments: {},
+            triggers: [],
           },
           {
             schema,
@@ -749,6 +759,7 @@ describe("schema evolution (integration)", () => {
             indexes: [],
             comment: null,
             columnComments: {},
+            triggers: [],
           },
         ],
       };
@@ -836,6 +847,7 @@ describe("schema evolution (integration)", () => {
             ],
             comment: null,
             columnComments: {},
+            triggers: [],
           },
         ],
       };
@@ -915,6 +927,7 @@ describe("schema evolution (integration)", () => {
             ],
             comment: null,
             columnComments: {},
+            triggers: [],
           },
         ],
       };
@@ -983,6 +996,7 @@ describe("schema evolution (integration)", () => {
             indexes: [],
             comment: null,
             columnComments: {},
+            triggers: [],
           },
         ],
       };
@@ -1073,6 +1087,7 @@ describe("schema evolution (integration)", () => {
             indexes: [],
             comment: null,
             columnComments: {},
+            triggers: [],
           },
         ],
       };

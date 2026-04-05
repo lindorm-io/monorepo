@@ -6,6 +6,7 @@ import type {
   MysqlDesiredIndex,
   MysqlDesiredSchema,
   MysqlDesiredTable,
+  MysqlDesiredTrigger,
   MysqlDesiredUnique,
 } from "../../types/desired-schema";
 import type { RelationChange, RelationDestroy } from "#internal/entity/types/metadata";
@@ -19,6 +20,7 @@ import { getEntityName } from "#internal/entity/utils/get-entity-name";
 import { getJoinName } from "#internal/entity/utils/get-join-name";
 import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
 import { extractEnumValues } from "#internal/utils/extract-enum-values";
+import { generateAppendOnlyDDL } from "../ddl/generate-append-only-ddl";
 import { hashIdentifier } from "../hash-identifier";
 import { mapFieldTypeMysql } from "../map-field-type-mysql";
 import {
@@ -397,6 +399,20 @@ export const projectDesiredSchemaMysql = (
       }
     }
 
+    // Triggers — append-only triggers when entity has @AppendOnly()
+    const triggers: Array<MysqlDesiredTrigger> = [];
+    if (metadata.appendOnly) {
+      const allStatements = generateAppendOnlyDDL(tableName);
+      // MySQL append-only DDL comes in pairs: DROP IF EXISTS + CREATE TRIGGER
+      for (let i = 0; i < allStatements.length; i += 2) {
+        const dropStmt = allStatements[i];
+        const createStmt = allStatements[i + 1];
+        const nameMatch = createStmt.match(/CREATE TRIGGER `([^`]+)`/);
+        const triggerName = nameMatch ? nameMatch[1] : `proteus_trigger_${i}`;
+        triggers.push({ name: triggerName, statements: [dropStmt, createStmt] });
+      }
+    }
+
     tables.push({
       name: tableName,
       columns,
@@ -405,6 +421,7 @@ export const projectDesiredSchemaMysql = (
       uniqueConstraints,
       checkConstraints,
       indexes,
+      triggers,
     });
 
     // Join tables (ManyToMany)
@@ -513,6 +530,7 @@ export const projectDesiredSchemaMysql = (
         uniqueConstraints: [],
         checkConstraints: [],
         indexes: joinIndexes,
+        triggers: [],
       });
     }
 
@@ -643,6 +661,7 @@ export const projectDesiredSchemaMysql = (
         uniqueConstraints: [],
         checkConstraints: [],
         indexes: collIndexes,
+        triggers: [],
       });
     }
   }

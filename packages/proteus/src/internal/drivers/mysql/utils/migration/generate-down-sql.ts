@@ -110,6 +110,18 @@ export const generateMysqlDownSql = (
       // Irreversible: would need to reconstruct constraint from snapshot
       return null;
 
+    case "create_trigger":
+      // Reverse a CREATE TRIGGER by dropping it
+      if (op.sql.includes("CREATE TRIGGER")) {
+        return `DROP TRIGGER IF EXISTS ${quoteIdentifier(op.triggerName)};`;
+      }
+      // DROP IF EXISTS is a setup step — irreversible
+      return null;
+
+    case "drop_trigger":
+      // Irreversible: we don't store the original CREATE TRIGGER DDL
+      return null;
+
     default:
       return null;
   }

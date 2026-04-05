@@ -404,6 +404,25 @@ export const buildPrimaryMetadata = <
     entity.namespace = namespace;
   }
 
+  const appendOnly = collectSingular(target, "__appendOnly") === true;
+
+  // Guard: @AppendOnly contradicts @DeleteDateField and @ExpiryDateField
+  if (appendOnly) {
+    const allFields = collectAll(target, "fields");
+    if (allFields.some((f) => f.decorator === "DeleteDate")) {
+      throw new EntityMetadataError(
+        "@AppendOnly and @DeleteDateField are contradictory — append-only entities cannot be soft-deleted",
+        { debug: { target: target.name } },
+      );
+    }
+    if (allFields.some((f) => f.decorator === "ExpiryDate")) {
+      throw new EntityMetadataError(
+        "@AppendOnly and @ExpiryDateField are contradictory — append-only entities cannot expire",
+        { debug: { target: target.name } },
+      );
+    }
+  }
+
   const stagedCache = collectSingular(target, "cache");
   const cache: MetaCache | null = stagedCache ? { ttlMs: stagedCache.ttlMs } : null;
 
@@ -514,6 +533,7 @@ export const buildPrimaryMetadata = <
 
   const final: Omit<EntityMetadata<TExtra, TDecorator>, "relations"> = {
     target: target as Constructor<IEntity>,
+    appendOnly,
     cache,
     checks,
     defaultOrder,

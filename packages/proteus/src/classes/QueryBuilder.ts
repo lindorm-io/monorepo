@@ -299,6 +299,15 @@ export abstract class QueryBuilder<E extends IEntity> implements IProteusQueryBu
 
   // --- Protected helpers ---
 
+  protected guardAppendOnlyWrite(method: string): void {
+    if (this.metadata.appendOnly) {
+      throw new ProteusError(
+        `Cannot ${method} an append-only entity "${this.metadata.entity.name}" via query builder`,
+        { debug: { entityName: this.metadata.entity.name, method } },
+      );
+    }
+  }
+
   /**
    * Creates a shallow copy of the current state. Predicate objects are shared
    * by reference -- callers must treat predicates as immutable after cloning.

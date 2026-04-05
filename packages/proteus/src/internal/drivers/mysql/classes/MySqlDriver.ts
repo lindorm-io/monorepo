@@ -35,10 +35,12 @@ import { isRetryableTransactionError } from "../utils/transaction/is-retryable-t
 import { MySqlTransactionContext } from "./MySqlTransactionContext";
 import { MySqlExecutor } from "./MySqlExecutor";
 import { MySqlRepository, type WithImplicitTransaction } from "./MySqlRepository";
+import { generateAppendOnlyDDL } from "../utils/ddl/generate-append-only-ddl";
 import { introspectSchema } from "../utils/sync/introspect-schema";
 import { projectDesiredSchemaMysql } from "../utils/sync/project-desired-schema-mysql";
 import { diffSchema } from "../utils/sync/diff-schema";
 import { SyncPlanExecutor } from "../utils/sync/execute-sync-plan";
+import { quoteIdentifier } from "../utils/quote-identifier";
 import { buildMysqlLockName } from "#internal/utils/advisory-lock-name";
 import { MySqlMigrationManager } from "./MySqlMigrationManager";
 import { MySqlQueryBuilder } from "./MySqlQueryBuilder";
@@ -654,6 +656,11 @@ export class MySqlDriver implements IProteusDriver {
             `Sync complete: ${result.statementsExecuted} statements executed`,
           );
         }
+
+        // Post-sync: apply or remove append-only triggers
+        if (!dryRun) {
+          await this.syncAppendOnlyTriggers(client, metadatas);
+        }
       } finally {
         try {
           await client.query(`SELECT RELEASE_LOCK(?)`, [syncLockName]);
@@ -663,6 +670,46 @@ export class MySqlDriver implements IProteusDriver {
       }
     } finally {
       connection.release();
+    }
+  }
+
+  private async syncAppendOnlyTriggers(
+    client: MysqlQueryClient,
+    metadatas: Array<import("#internal/entity/types/metadata").EntityMetadata>,
+  ): Promise<void> {
+    for (const metadata of metadatas) {
+      const tableName = metadata.entity.name;
+      const quotedTable = quoteIdentifier(tableName);
+
+      if (metadata.appendOnly) {
+        try {
+          const statements = generateAppendOnlyDDL(tableName);
+
+          for (const sql of statements) {
+            await client.query(sql);
+          }
+
+          this.logger.debug("Applied append-only triggers", {
+            table: quotedTable,
+          });
+        } catch (error) {
+          this.logger.warn("Failed to apply append-only triggers", {
+            table: quotedTable,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        }
+      } else {
+        // Drop any existing append-only triggers in case @AppendOnly was removed
+        try {
+          for (const op of ["update", "delete"] as const) {
+            await client.query(
+              `DROP TRIGGER IF EXISTS ${quoteIdentifier(`proteus_ao_${tableName}_no_${op}`)};`,
+            );
+          }
+        } catch {
+          // Best effort — triggers may not exist
+        }
+      }
     }
   }
 

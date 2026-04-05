@@ -2,6 +2,7 @@
 
 exports[`VersionKeyField should register uuid version key field (default) 1`] = `
 {
+  "appendOnly": false,
   "cache": null,
   "checks": [],
   "defaultOrder": null,

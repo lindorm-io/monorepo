@@ -6,12 +6,14 @@ import type {
   MysqlDesiredForeignKey,
   MysqlDesiredCheck,
   MysqlDesiredUnique,
+  MysqlDesiredTrigger,
 } from "../../types/desired-schema";
 import type {
   MysqlDbSnapshot,
   MysqlSnapshotTable,
   MysqlSnapshotIndex,
   MysqlSnapshotForeignKey,
+  MysqlSnapshotTrigger,
   MysqlSnapshotUnique,
 } from "../../types/db-snapshot";
 import type { MysqlSyncOperation, MysqlSyncPlan } from "../../types/sync-plan";
@@ -244,15 +246,24 @@ export const diffSchema = (
         });
       }
 
+      // Triggers for new table
+      diffMysqlTriggers([], desiredTable.triggers, desiredTable.name, operations);
+
       continue;
     }
 
-    // Existing table — diff columns, FKs, indexes, constraints
+    // Existing table — diff columns, FKs, indexes, constraints, triggers
     diffColumns(existingTable, desiredTable, operations);
     diffForeignKeys(existingTable, desiredTable, operations);
     diffUniqueConstraints(existingTable, desiredTable, operations);
     diffCheckConstraints(existingTable, desiredTable, operations);
     diffIndexes(existingTable, desiredTable, operations);
+    diffMysqlTriggers(
+      existingTable.triggers,
+      desiredTable.triggers,
+      desiredTable.name,
+      operations,
+    );
   }
 
   // Topologically sort create_table operations
@@ -609,6 +620,47 @@ const diffIndexes = (
         tableName: desired.name,
         indexName: desiredIdx.name,
         sql: `CREATE ${unique}INDEX ${quoteIdentifier(desiredIdx.name)} ON ${qt} (${cols});`,
+      });
+    }
+  }
+};
+
+// ---------------------------------------------------------------------------
+// Trigger diff
+// ---------------------------------------------------------------------------
+
+const diffMysqlTriggers = (
+  existing: Array<MysqlSnapshotTrigger>,
+  desired: Array<MysqlDesiredTrigger>,
+  tableName: string,
+  operations: Array<MysqlSyncOperation>,
+): void => {
+  const existingSet = new Set(existing.map((t) => t.name));
+  const desiredMap = new Map(desired.map((t) => [t.name, t]));
+  const desiredNames = new Set(desired.map((t) => t.name));
+
+  // Create triggers that are desired but don't exist
+  for (const [name, trigger] of desiredMap) {
+    if (!existingSet.has(name)) {
+      for (const stmt of trigger.statements) {
+        operations.push({
+          type: "create_trigger",
+          tableName,
+          triggerName: name,
+          sql: stmt,
+        });
+      }
+    }
+  }
+
+  // Drop proteus-managed triggers that exist but are no longer desired
+  for (const trigger of existing) {
+    if (!desiredNames.has(trigger.name)) {
+      operations.push({
+        type: "drop_trigger",
+        tableName,
+        triggerName: trigger.name,
+        sql: `DROP TRIGGER IF EXISTS ${quoteIdentifier(trigger.name)};`,
       });
     }
   }

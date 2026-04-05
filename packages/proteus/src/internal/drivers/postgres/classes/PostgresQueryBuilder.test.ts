@@ -5,6 +5,7 @@ import type { PostgresQueryClient } from "../types/postgres-query-client";
 import { PostgresQueryBuilder } from "./PostgresQueryBuilder";
 
 const metadata = {
+  appendOnly: false,
   cache: null,
   defaultOrder: null,
   embeddedLists: [],
@@ -192,6 +193,7 @@ describe("PostgresQueryBuilder", () => {
     // These tests verify that invariant for the non-IN variants.
 
     const subMetadata = {
+      appendOnly: false,
       cache: null,
       defaultOrder: null,
       embeddedLists: [],

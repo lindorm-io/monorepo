@@ -137,6 +137,7 @@ export type StagedMetadata = {
   versionKeys?: Array<MetaVersionKey>;
   // Class-level
   __abstract?: boolean;
+  __appendOnly?: boolean;
   __discriminator?: { fieldName: string };
   __discriminatorValue?: DiscriminatorValue;
   __embeddable?: boolean;

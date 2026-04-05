@@ -6,6 +6,7 @@ import type {
   DesiredIndex,
   DesiredSchema,
   DesiredTable,
+  DesiredTrigger,
 } from "../../types/desired-schema";
 import type { RelationChange, RelationDestroy } from "#internal/entity/types/metadata";
 import type {
@@ -17,6 +18,7 @@ import type { NamespaceOptions } from "#internal/types/types";
 import { getEntityName } from "#internal/entity/utils/get-entity-name";
 import { getJoinName } from "#internal/entity/utils/get-join-name";
 import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
+import { generateAppendOnlyDDL } from "../ddl/generate-append-only-ddl";
 import { extractEnumValues } from "../extract-enum-values";
 import { getEnumTypeName } from "../get-enum-type-name";
 import { hashIdentifier } from "../hash-identifier";
@@ -481,6 +483,31 @@ export const projectDesiredSchema = (
       }
     }
 
+    // Triggers — append-only triggers when entity has @AppendOnly()
+    const triggers: Array<DesiredTrigger> = [];
+    if (metadata.appendOnly) {
+      const allStatements = generateAppendOnlyDDL(tableName, namespace);
+      // First statement is the shared guard function (CREATE OR REPLACE FUNCTION).
+      // Remaining statements are per-trigger: DROP IF EXISTS + CREATE pairs.
+      const guardFunctionStmt = allStatements[0];
+      const perTriggerStmts = allStatements.slice(1);
+
+      // Per-trigger statements come in pairs: DROP IF EXISTS, then CREATE TRIGGER.
+      for (let i = 0; i < perTriggerStmts.length; i += 2) {
+        const dropStmt = perTriggerStmts[i];
+        const createStmt = perTriggerStmts[i + 1];
+        // Extract trigger name from CREATE TRIGGER "name"
+        const nameMatch = createStmt.match(/CREATE TRIGGER "([^"]+)"/);
+        const triggerName = nameMatch ? nameMatch[1] : `proteus_trigger_${i}`;
+
+        // Include guard function in first trigger's statements (idempotent)
+        const stmts =
+          i === 0 ? [guardFunctionStmt, dropStmt, createStmt] : [dropStmt, createStmt];
+
+        triggers.push({ name: triggerName, statements: stmts });
+      }
+    }
+
     tables.push({
       schema: namespace ?? "public",
       name: tableName,
@@ -489,6 +516,7 @@ export const projectDesiredSchema = (
       indexes,
       comment: metadata.entity.comment ?? null,
       columnComments,
+      triggers,
     });
 
     // Join tables (ManyToMany)
@@ -646,6 +674,7 @@ export const projectDesiredSchema = (
         indexes: joinIndexes,
         comment: null,
         columnComments: {},
+        triggers: [],
       });
     }
 
@@ -814,6 +843,7 @@ export const projectDesiredSchema = (
         indexes: collIndexes,
         comment: null,
         columnComments: {},
+        triggers: [],
       });
     }
   }

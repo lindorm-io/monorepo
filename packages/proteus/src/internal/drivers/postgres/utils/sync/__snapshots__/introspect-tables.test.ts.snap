@@ -22,6 +22,7 @@ exports[`introspectTables should handle generated columns 1`] = `
     "indexes": [],
     "name": "products",
     "schema": "public",
+    "triggers": [],
   },
 ]
 `;
@@ -48,6 +49,7 @@ exports[`introspectTables should handle identity columns 1`] = `
     "indexes": [],
     "name": "counters",
     "schema": "public",
+    "triggers": [],
   },
 ]
 `;
@@ -85,6 +87,7 @@ exports[`introspectTables should map column rows to DbTable structures 1`] = `
     "indexes": [],
     "name": "users",
     "schema": "public",
+    "triggers": [],
   },
 ]
 `;

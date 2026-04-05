@@ -265,6 +265,48 @@ describe("serializeMysqlMigration", () => {
     );
   });
 
+  it("should generate full migration content for trigger operations", () => {
+    const plan: MysqlSyncPlan = {
+      operations: [
+        {
+          type: "create_trigger",
+          tableName: "events",
+          triggerName: "trg_events_no_update",
+          sql: "CREATE TRIGGER `trg_events_no_update` BEFORE UPDATE ON `events` FOR EACH ROW BEGIN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Updates not allowed on append-only table'; END;",
+        },
+        {
+          type: "create_trigger",
+          tableName: "events",
+          triggerName: "trg_events_no_delete",
+          sql: "CREATE TRIGGER `trg_events_no_delete` BEFORE DELETE ON `events` FOR EACH ROW BEGIN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Deletes not allowed on append-only table'; END;",
+        },
+      ],
+    };
+    const result = serializeMysqlMigration(plan, emptySnapshot, {
+      name: "add-append-only-triggers",
+      timestamp: fixedDate,
+    });
+    expect(result.content).toMatchSnapshot();
+  });
+
+  it("should generate full migration content for drop_trigger operations", () => {
+    const plan: MysqlSyncPlan = {
+      operations: [
+        {
+          type: "drop_trigger",
+          tableName: "events",
+          triggerName: "trg_events_no_update",
+          sql: "DROP TRIGGER IF EXISTS `trg_events_no_update`;",
+        },
+      ],
+    };
+    const result = serializeMysqlMigration(plan, emptySnapshot, {
+      name: "drop-trigger",
+      timestamp: fixedDate,
+    });
+    expect(result.content).toMatchSnapshot();
+  });
+
   it("should use modify_column with snapshot-based down sql", () => {
     const snapshot: MysqlDbSnapshot = {
       tables: new Map([
@@ -290,6 +332,7 @@ describe("serializeMysqlMigration", () => {
             foreignKeys: [],
             checkConstraints: [],
             uniqueConstraints: [],
+            triggers: [],
           },
         ],
       ]),

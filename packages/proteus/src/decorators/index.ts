@@ -1,4 +1,5 @@
 export * from "./AbstractEntity";
+export * from "./AppendOnly";
 export * from "./AfterDestroy";
 export * from "./AfterInsert";
 export * from "./AfterLoad";

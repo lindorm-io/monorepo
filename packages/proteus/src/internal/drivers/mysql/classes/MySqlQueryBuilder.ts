@@ -365,10 +365,12 @@ export class MySqlQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   }
 
   public update(): IUpdateQueryBuilder<E> {
+    this.guardAppendOnlyWrite("update");
     return new MySqlUpdateQueryBuilder<E>(this.metadata, this.client, this.namespace);
   }
 
   public delete(): IDeleteQueryBuilder<E> {
+    this.guardAppendOnlyWrite("delete");
     return new MySqlDeleteQueryBuilder<E>(
       this.metadata,
       this.client,
@@ -378,6 +380,7 @@ export class MySqlQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   }
 
   public softDelete(): IDeleteQueryBuilder<E> {
+    this.guardAppendOnlyWrite("softDelete");
     return new MySqlDeleteQueryBuilder<E>(
       this.metadata,
       this.client,

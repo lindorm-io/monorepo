@@ -9,6 +9,7 @@ const fragment = (sql: string, params: Array<unknown> = []): SqlFragment =>
   ({ __brand: "SqlFragment", sql, params }) as SqlFragment;
 
 const metadata = {
+  appendOnly: false,
   cache: null,
   defaultOrder: null,
   embeddedLists: [],
@@ -219,6 +220,7 @@ describe("MySqlQueryBuilder", () => {
 
   describe("subquery predicate reset semantics", () => {
     const subMetadata = {
+      appendOnly: false,
       cache: null,
       defaultOrder: null,
       embeddedLists: [],
@@ -376,6 +378,7 @@ describe("MySqlQueryBuilder", () => {
 
   describe("whereInQuery / whereNotInQuery", () => {
     const subMetadata = {
+      appendOnly: false,
       cache: null,
       defaultOrder: null,
       embeddedLists: [],

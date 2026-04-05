@@ -5,6 +5,7 @@ import type {
   SqliteDesiredIndex,
   SqliteDesiredSchema,
   SqliteDesiredTable,
+  SqliteDesiredTrigger,
   SqliteDesiredUnique,
 } from "../../types/desired-schema";
 import type { RelationChange, RelationDestroy } from "#internal/entity/types/metadata";
@@ -18,6 +19,7 @@ import { getEntityName } from "#internal/entity/utils/get-entity-name";
 import { getJoinName } from "#internal/entity/utils/get-join-name";
 import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
 import { extractEnumValues } from "#internal/utils/extract-enum-values";
+import { generateAppendOnlyDDL } from "../ddl/generate-append-only-ddl";
 import { hashIdentifier } from "../hash-identifier";
 import { mapFieldTypeSqlite } from "../map-field-type-sqlite";
 import { SQLITE_IDENTIFIER_LIMIT } from "../../constants/sqlite-constants";
@@ -366,6 +368,18 @@ export const projectDesiredSchemaSqlite = (
       }
     }
 
+    // Triggers — append-only triggers when entity has @AppendOnly()
+    const triggers: Array<SqliteDesiredTrigger> = [];
+    if (metadata.appendOnly) {
+      const allStatements = generateAppendOnlyDDL(tableName);
+      // SQLite append-only DDL: each statement is a CREATE TRIGGER IF NOT EXISTS
+      for (const stmt of allStatements) {
+        const nameMatch = stmt.match(/CREATE TRIGGER IF NOT EXISTS "([^"]+)"/);
+        const triggerName = nameMatch ? nameMatch[1] : `proteus_trigger`;
+        triggers.push({ name: triggerName, ddl: stmt });
+      }
+    }
+
     tables.push({
       name: tableName,
       columns,
@@ -374,6 +388,7 @@ export const projectDesiredSchemaSqlite = (
       uniqueConstraints,
       checkConstraints,
       indexes,
+      triggers,
     });
 
     // Join tables (ManyToMany)
@@ -471,6 +486,7 @@ export const projectDesiredSchemaSqlite = (
         uniqueConstraints: [],
         checkConstraints: [],
         indexes: joinIndexes,
+        triggers: [],
       });
     }
 
@@ -589,6 +605,7 @@ export const projectDesiredSchemaSqlite = (
         uniqueConstraints: [],
         checkConstraints: [],
         indexes: collIndexes,
+        triggers: [],
       });
     }
   }

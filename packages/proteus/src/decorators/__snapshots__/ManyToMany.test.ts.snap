@@ -2,6 +2,7 @@
 
 exports[`ManyToMany should register inverse side metadata 1`] = `
 {
+  "appendOnly": false,
   "cache": null,
   "checks": [],
   "defaultOrder": null,
@@ -122,6 +123,7 @@ exports[`ManyToMany should register inverse side metadata 1`] = `
 
 exports[`ManyToMany should register owning side metadata 1`] = `
 {
+  "appendOnly": false,
   "cache": null,
   "checks": [],
   "defaultOrder": null,

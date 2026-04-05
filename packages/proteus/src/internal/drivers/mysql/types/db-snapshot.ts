@@ -42,6 +42,10 @@ export type MysqlSnapshotUnique = {
   columns: Array<{ name: string; ordinalPosition: number; subPart: number | null }>;
 };
 
+export type MysqlSnapshotTrigger = {
+  name: string;
+};
+
 export type MysqlSnapshotTable = {
   name: string;
   columns: Array<MysqlSnapshotColumn>;
@@ -49,6 +53,7 @@ export type MysqlSnapshotTable = {
   foreignKeys: Array<MysqlSnapshotForeignKey>;
   checkConstraints: Array<MysqlSnapshotCheck>;
   uniqueConstraints: Array<MysqlSnapshotUnique>;
+  triggers: Array<MysqlSnapshotTrigger>;
 };
 
 export type MysqlDbSnapshot = {

@@ -31,11 +31,16 @@ export type SqliteSnapshotIndexColumn = {
   name: string;
 };
 
+export type SqliteSnapshotTrigger = {
+  name: string;
+};
+
 export type SqliteSnapshotTable = {
   name: string;
   columns: Array<SqliteSnapshotColumn>;
   foreignKeys: Array<SqliteSnapshotForeignKey>;
   indexes: Array<SqliteSnapshotIndex>;
+  triggers: Array<SqliteSnapshotTrigger>;
   sql: string; // original CREATE TABLE statement from sqlite_master
 };
 

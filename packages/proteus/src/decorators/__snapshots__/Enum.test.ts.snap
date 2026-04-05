@@ -2,6 +2,7 @@
 
 exports[`Enum should match snapshot for TypeScript enum 1`] = `
 {
+  "appendOnly": false,
   "cache": null,
   "checks": [],
   "defaultOrder": null,

@@ -18,6 +18,7 @@ exports[`generateEntityDDL (MySQL) check constraints check constraints appear in
   CONSTRAINT \`age_positive\` CHECK (age >= 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;",
   ],
+  "triggers": [],
 }
 `;
 
@@ -40,6 +41,7 @@ exports[`generateEntityDDL (MySQL) indexes emits indexes for TestIndexed 1`] = `
   UNIQUE KEY \`unique_email\` (\`email\`(191))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;",
   ],
+  "triggers": [],
 }
 `;
 
@@ -66,6 +68,7 @@ exports[`generateEntityDDL (MySQL) many-to-many join tables emits join table DDL
   PRIMARY KEY (\`testCourseId\`, \`testStudentId\`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;",
   ],
+  "triggers": [],
 }
 `;
 
@@ -86,6 +89,7 @@ exports[`generateEntityDDL (MySQL) relation entities (full DDL) generates full D
   CONSTRAINT \`fk_k8iBfroD0WS\` FOREIGN KEY (\`authorId\`) REFERENCES \`TestAuthor\` (\`id\`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;",
   ],
+  "triggers": [],
 }
 `;
 
@@ -104,6 +108,7 @@ exports[`generateEntityDDL (MySQL) relation entities (full DDL) generates full D
   PRIMARY KEY (\`id\`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;",
   ],
+  "triggers": [],
 }
 `;
 
@@ -122,6 +127,7 @@ exports[`generateEntityDDL (MySQL) relation entities (full DDL) generates full D
   PRIMARY KEY (\`id\`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;",
   ],
+  "triggers": [],
 }
 `;
 
@@ -142,6 +148,7 @@ exports[`generateEntityDDL (MySQL) relation entities (full DDL) generates full D
   CONSTRAINT \`fk_1vUEfw_liWK\` FOREIGN KEY (\`profileId\`) REFERENCES \`TestProfile\` (\`id\`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;",
   ],
+  "triggers": [],
 }
 `;
 
@@ -162,6 +169,7 @@ exports[`generateEntityDDL (MySQL) simple entities generates full DDL for TestSc
   PRIMARY KEY (\`id\`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;",
   ],
+  "triggers": [],
 }
 `;
 
@@ -186,6 +194,7 @@ exports[`generateEntityDDL (MySQL) simple entities generates full DDL for TestSo
   PRIMARY KEY (\`id\`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;",
   ],
+  "triggers": [],
 }
 `;
 
@@ -206,6 +215,7 @@ exports[`generateEntityDDL (MySQL) simple entities generates full DDL for TestUs
   PRIMARY KEY (\`id\`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;",
   ],
+  "triggers": [],
 }
 `;
 
@@ -222,5 +232,6 @@ exports[`generateEntityDDL (MySQL) simple entities generates full DDL for TestVe
   PRIMARY KEY (\`id\`, \`versionId\`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;",
   ],
+  "triggers": [],
 }
 `;

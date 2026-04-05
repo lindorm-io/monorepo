@@ -110,6 +110,7 @@ const makeTable = (overrides?: Partial<MysqlSnapshotTable>): MysqlSnapshotTable 
       columns: [{ name: "email", ordinalPosition: 1, subPart: null }],
     },
   ],
+  triggers: [],
   ...overrides,
 });
 
@@ -397,6 +398,44 @@ describe("generateMysqlDownSql — drop_constraint", () => {
       sql: "ALTER TABLE `users` DROP CHECK `chk_age`;",
     };
     expect(generateMysqlDownSql(op, snapshotWithTable())).toBeNull();
+  });
+});
+
+// --- create_trigger ---
+
+describe("generateMysqlDownSql — create_trigger", () => {
+  it("should produce DROP TRIGGER IF EXISTS for a CREATE TRIGGER sql", () => {
+    const op: MysqlSyncOperation = {
+      type: "create_trigger",
+      tableName: "events",
+      triggerName: "trg_events_no_update",
+      sql: "CREATE TRIGGER `trg_events_no_update` BEFORE UPDATE ON `events` FOR EACH ROW BEGIN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Updates not allowed on append-only table'; END;",
+    };
+    expect(generateMysqlDownSql(op, emptySnapshot)).toMatchSnapshot();
+  });
+
+  it("should return null for a DROP TRIGGER IF EXISTS setup step", () => {
+    const op: MysqlSyncOperation = {
+      type: "create_trigger",
+      tableName: "events",
+      triggerName: "trg_events_no_update",
+      sql: "DROP TRIGGER IF EXISTS `trg_events_no_update`;",
+    };
+    expect(generateMysqlDownSql(op, emptySnapshot)).toBeNull();
+  });
+});
+
+// --- drop_trigger ---
+
+describe("generateMysqlDownSql — drop_trigger", () => {
+  it("should return null (irreversible)", () => {
+    const op: MysqlSyncOperation = {
+      type: "drop_trigger",
+      tableName: "events",
+      triggerName: "trg_events_no_update",
+      sql: "DROP TRIGGER IF EXISTS `trg_events_no_update`;",
+    };
+    expect(generateMysqlDownSql(op, emptySnapshot)).toBeNull();
   });
 });
 

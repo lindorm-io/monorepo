@@ -21,7 +21,7 @@ describe("generateEntityDDL (MySQL)", () => {
     test("returns an object with tables and indexes keys", () => {
       const meta = getEntityMetadata(TestUser);
       const result = generateEntityDDL(meta, OPTS);
-      expect(Object.keys(result).sort()).toEqual(["indexes", "tables"]);
+      expect(Object.keys(result).sort()).toEqual(["indexes", "tables", "triggers"]);
     });
 
     test("all output values are arrays", () => {

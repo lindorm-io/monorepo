@@ -2,6 +2,7 @@
 
 exports[`Entity should register all entity options 1`] = `
 {
+  "appendOnly": false,
   "cache": null,
   "checks": [],
   "defaultOrder": null,

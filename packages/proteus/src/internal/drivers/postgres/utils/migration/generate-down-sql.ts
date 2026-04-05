@@ -238,6 +238,23 @@ export const generateDownSql = (
     case "set_comment":
       return generateDownComment(operation, snapshot);
 
+    // --- Triggers ---
+    case "create_trigger":
+      // Drop trigger on down — but we can only reverse per-table triggers (not functions).
+      // If the SQL is a CREATE TRIGGER, reverse with DROP TRIGGER.
+      // If the SQL is a CREATE OR REPLACE FUNCTION, it's irreversible (shared function).
+      if (sql.includes("CREATE TRIGGER")) {
+        const triggerMatch = sql.match(/CREATE TRIGGER "([^"]+)"/);
+        if (triggerMatch && q) {
+          return `DROP TRIGGER IF EXISTS ${quoteIdentifier(triggerMatch[1])} ON ${q};`;
+        }
+      }
+      return null;
+
+    case "drop_trigger":
+      // Irreversible — we don't store the original CREATE TRIGGER DDL in the snapshot
+      return null;
+
     default:
       return null;
   }

@@ -55,6 +55,10 @@ const describeOp = (op: MysqlSyncOperation): string => {
       return `Add unique "${op.constraintName}" on "${op.tableName}"`;
     case "drop_constraint":
       return `Drop constraint "${op.constraintName}" on "${op.tableName}"`;
+    case "create_trigger":
+      return `Create trigger "${op.triggerName}" on "${op.tableName}"`;
+    case "drop_trigger":
+      return `Drop trigger "${op.triggerName}" on "${op.tableName}"`;
   }
 };
 

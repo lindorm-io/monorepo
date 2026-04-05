@@ -48,6 +48,7 @@ export const introspectTable = (
     columns,
     foreignKeys,
     indexes: [], // populated by introspect-indexes
+    triggers: [], // populated by introspect-schema
     sql: tableSql,
   };
 };

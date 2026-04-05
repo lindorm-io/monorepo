@@ -35,6 +35,7 @@ import { compileSelectByPk } from "../utils/query/compile-select-by-pk";
 import { hydrateReturning } from "../utils/query/hydrate-returning";
 import { buildPrimaryKeyPredicate } from "#internal/utils/repository/build-pk-predicate";
 import {
+  guardAppendOnly,
   guardDeleteDateField,
   guardVersionFields,
   validateRelationNames,
@@ -317,6 +318,8 @@ export class MySqlRepository<
   }
 
   public async clear(_options?: ClearOptions): Promise<void> {
+    guardAppendOnly(this.metadata, "clear");
+
     // For inheritance children, always use the ROOT entity's table.
     const isInheritanceChild = this.metadata.inheritance?.discriminatorValue != null;
     const rootEntityName = isInheritanceChild

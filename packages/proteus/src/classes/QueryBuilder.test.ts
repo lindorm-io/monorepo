@@ -11,6 +11,10 @@ class TestQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     return this.state;
   }
 
+  public exposeGuardAppendOnlyWrite(method: string): void {
+    this.guardAppendOnlyWrite(method);
+  }
+
   public clone(): TestQueryBuilder<E> {
     const cloned = new TestQueryBuilder<E>(this.metadata);
     cloned.state = this.cloneState();
@@ -582,6 +586,39 @@ describe("QueryBuilder", () => {
 
     test("should be chainable", () => {
       expect(qb.withAllVersions()).toBe(qb);
+    });
+  });
+
+  // --- guardAppendOnlyWrite ---
+
+  describe("guardAppendOnlyWrite", () => {
+    test("throws ProteusError when metadata.appendOnly is true", () => {
+      const appendOnlyMetadata = makeMetadata({ appendOnly: true } as any);
+      const appendOnlyQb = new TestQueryBuilder(appendOnlyMetadata);
+
+      expect(() => appendOnlyQb.exposeGuardAppendOnlyWrite("update")).toThrow(
+        ProteusError,
+      );
+    });
+
+    test("error message includes entity name and method", () => {
+      const appendOnlyMetadata = makeMetadata({ appendOnly: true } as any);
+      const appendOnlyQb = new TestQueryBuilder(appendOnlyMetadata);
+
+      expect(() => appendOnlyQb.exposeGuardAppendOnlyWrite("delete")).toThrow(
+        /Cannot delete an append-only entity "TestEntity" via query builder/,
+      );
+    });
+
+    test("does not throw when metadata.appendOnly is false", () => {
+      expect(() => qb.exposeGuardAppendOnlyWrite("update")).not.toThrow();
+    });
+
+    test("does not throw when metadata.appendOnly is undefined", () => {
+      const noAppendOnlyMeta = makeMetadata();
+      const noAppendOnlyQb = new TestQueryBuilder(noAppendOnlyMeta);
+
+      expect(() => noAppendOnlyQb.exposeGuardAppendOnlyWrite("update")).not.toThrow();
     });
   });
 

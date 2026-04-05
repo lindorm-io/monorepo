@@ -20,13 +20,16 @@
 
 import { buildPrimaryMetadata } from "./build-primary";
 import { AbstractEntity } from "../../../decorators/AbstractEntity";
+import { AppendOnly } from "../../../decorators/AppendOnly";
 import { Cache } from "../../../decorators/Cache";
 import { Computed } from "../../../decorators/Computed";
 import { DefaultOrder } from "../../../decorators/DefaultOrder";
+import { DeleteDateField } from "../../../decorators/DeleteDateField";
 import { Embeddable } from "../../../decorators/Embeddable";
 import { Embedded } from "../../../decorators/Embedded";
 import { EmbeddedList } from "../../../decorators/EmbeddedList";
 import { Entity } from "../../../decorators/Entity";
+import { ExpiryDateField } from "../../../decorators/ExpiryDateField";
 import { Field } from "../../../decorators/Field";
 import { Hide } from "../../../decorators/Hide";
 import { Namespace } from "../../../decorators/Namespace";
@@ -444,5 +447,89 @@ describe("buildPrimaryMetadata — full metadata snapshot", () => {
       cache: meta.cache,
       defaultOrder: meta.defaultOrder,
     }).toMatchSnapshot();
+  });
+});
+
+// ─── @AppendOnly contradictory decorator validation ──────────────────────────
+
+describe("buildPrimaryMetadata — @AppendOnly contradictory decorators", () => {
+  test("throws EntityMetadataError when @AppendOnly + @DeleteDateField", () => {
+    expect(() => {
+      @AppendOnly()
+      @Entity({ name: "BpAppendOnlyDeleteDate" })
+      class BpAppendOnlyDeleteDate {
+        @PrimaryKeyField()
+        id!: string;
+
+        @DeleteDateField()
+        deletedAt!: Date | null;
+      }
+
+      buildPrimaryMetadata(BpAppendOnlyDeleteDate);
+    }).toThrow(EntityMetadataError);
+  });
+
+  test("error message for @AppendOnly + @DeleteDateField matches snapshot", () => {
+    expect(() => {
+      @AppendOnly()
+      @Entity({ name: "BpAppendOnlyDeleteDate2" })
+      class BpAppendOnlyDeleteDate2 {
+        @PrimaryKeyField()
+        id!: string;
+
+        @DeleteDateField()
+        deletedAt!: Date | null;
+      }
+
+      buildPrimaryMetadata(BpAppendOnlyDeleteDate2);
+    }).toThrowErrorMatchingSnapshot();
+  });
+
+  test("throws EntityMetadataError when @AppendOnly + @ExpiryDateField", () => {
+    expect(() => {
+      @AppendOnly()
+      @Entity({ name: "BpAppendOnlyExpiryDate" })
+      class BpAppendOnlyExpiryDate {
+        @PrimaryKeyField()
+        id!: string;
+
+        @ExpiryDateField()
+        expiresAt!: Date | null;
+      }
+
+      buildPrimaryMetadata(BpAppendOnlyExpiryDate);
+    }).toThrow(EntityMetadataError);
+  });
+
+  test("error message for @AppendOnly + @ExpiryDateField matches snapshot", () => {
+    expect(() => {
+      @AppendOnly()
+      @Entity({ name: "BpAppendOnlyExpiryDate2" })
+      class BpAppendOnlyExpiryDate2 {
+        @PrimaryKeyField()
+        id!: string;
+
+        @ExpiryDateField()
+        expiresAt!: Date | null;
+      }
+
+      buildPrimaryMetadata(BpAppendOnlyExpiryDate2);
+    }).toThrowErrorMatchingSnapshot();
+  });
+
+  test("@AppendOnly without @DeleteDateField or @ExpiryDateField builds successfully", () => {
+    @AppendOnly()
+    @Entity({ name: "BpAppendOnlyClean" })
+    class BpAppendOnlyClean {
+      @PrimaryKeyField()
+      id!: string;
+
+      @Field("string")
+      data!: string;
+    }
+
+    const meta = buildPrimaryMetadata(BpAppendOnlyClean);
+    expect(meta.appendOnly).toBe(true);
+    expect(meta.entity.name).toBe("BpAppendOnlyClean");
   });
 });

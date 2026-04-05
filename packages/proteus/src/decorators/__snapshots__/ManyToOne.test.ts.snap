@@ -2,6 +2,7 @@
 
 exports[`ManyToOne should register ManyToOne metadata on child entity 1`] = `
 {
+  "appendOnly": false,
   "cache": null,
   "checks": [],
   "defaultOrder": null,
@@ -146,6 +147,7 @@ exports[`ManyToOne should register ManyToOne metadata on child entity 1`] = `
 
 exports[`ManyToOne should register with explicit joinKeys 1`] = `
 {
+  "appendOnly": false,
   "cache": null,
   "checks": [],
   "defaultOrder": null,

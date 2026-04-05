@@ -37,6 +37,11 @@ export type MysqlDesiredUnique = {
   columns: Array<{ name: string; prefixLength: number | null }>;
 };
 
+export type MysqlDesiredTrigger = {
+  name: string;
+  statements: Array<string>;
+};
+
 export type MysqlDesiredTable = {
   name: string;
   columns: Array<MysqlDesiredColumn>;
@@ -45,6 +50,7 @@ export type MysqlDesiredTable = {
   uniqueConstraints: Array<MysqlDesiredUnique>;
   checkConstraints: Array<MysqlDesiredCheck>;
   indexes: Array<MysqlDesiredIndex>;
+  triggers: Array<MysqlDesiredTrigger>;
 };
 
 export type MysqlDesiredSchema = {

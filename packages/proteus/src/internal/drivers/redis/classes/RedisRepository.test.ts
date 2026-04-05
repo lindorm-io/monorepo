@@ -34,6 +34,7 @@ jest.mock("#internal/utils/repository/build-pk-predicate", () => ({
 }));
 
 jest.mock("#internal/utils/repository/repository-guards", () => ({
+  guardAppendOnly: jest.fn(),
   validateRelationNames: jest.fn(),
   guardDeleteDateField: jest.fn(),
   guardExpiryDateField: jest.fn(),

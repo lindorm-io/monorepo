@@ -78,6 +78,7 @@ describe("introspectSchema", () => {
         indexes: [],
         comment: null,
         columnComments: {},
+        triggers: [],
       },
     ]);
     mockIntrospectConstraints.mockResolvedValue([]);
@@ -119,6 +120,7 @@ describe("introspectSchema", () => {
         indexes: [],
         comment: null,
         columnComments: {},
+        triggers: [],
       },
     ]);
     mockIntrospectConstraints.mockResolvedValue([
@@ -173,6 +175,7 @@ describe("introspectSchema", () => {
         indexes: [],
         comment: null,
         columnComments: {},
+        triggers: [],
       },
     ]);
     mockIntrospectConstraints.mockResolvedValue([]);
@@ -222,6 +225,7 @@ describe("introspectSchema", () => {
         indexes: [],
         comment: null,
         columnComments: {},
+        triggers: [],
       },
     ]);
     mockIntrospectConstraints.mockResolvedValue([]);

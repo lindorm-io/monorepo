@@ -2,6 +2,7 @@
 
 exports[`Unique should register class-level composite unique constraint 1`] = `
 {
+  "appendOnly": false,
   "cache": null,
   "checks": [],
   "defaultOrder": null,
