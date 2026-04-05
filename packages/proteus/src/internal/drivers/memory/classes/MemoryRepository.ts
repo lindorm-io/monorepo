@@ -44,7 +44,7 @@ import {
   deleteMemoryEmbeddedListRows,
 } from "../utils/memory-embedded-list-ops";
 import type { ILogger } from "@lindorm/logger";
-import type { SubscriberRegistryGetter } from "#internal/interfaces/ProteusDriver";
+import type { EntityEmitFn } from "../../../../types/event-map";
 import type { PaginateOptions } from "../../../../types/paginate-options";
 import type { KeysetOrderEntry } from "#internal/utils/pagination/build-keyset-order";
 import { executePaginateFindInMemory } from "#internal/utils/pagination/execute-paginate-find-in-memory";
@@ -68,7 +68,7 @@ export type MemoryRepositoryOptions<E extends IEntity> = {
   parent?: Constructor<IEntity>;
   repositoryFactory: RepositoryFactory;
   withImplicitTransaction: WithImplicitTransaction<E>;
-  getSubscribers?: SubscriberRegistryGetter;
+  emitEntity?: EntityEmitFn;
 };
 
 export class MemoryRepository<
@@ -92,7 +92,7 @@ export class MemoryRepository<
       context: options.context,
       parent: options.parent,
       repositoryFactory: options.repositoryFactory,
-      getSubscribers: options.getSubscribers,
+      emitEntity: options.emitEntity,
     });
 
     this.store = options.store;

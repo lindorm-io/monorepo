@@ -16,7 +16,6 @@ import type { IAmphora } from "@lindorm/amphora";
 import type {
   FilterRegistryGetter,
   MetadataResolver,
-  SubscriberRegistryGetter,
 } from "#internal/interfaces/ProteusDriver";
 import { SqliteDriverError } from "../errors/SqliteDriverError";
 import { SqliteMigrationError } from "../errors/SqliteMigrationError";
@@ -36,7 +35,7 @@ import { SqliteExecutor } from "./SqliteExecutor";
 import { SqliteQueryBuilder } from "./SqliteQueryBuilder";
 import type { RepositoryFactory } from "#internal/types/repository-factory";
 import type { FilterRegistry } from "#internal/utils/query/filter-registry";
-import type { IEntitySubscriber } from "../../../../interfaces/EntitySubscriber";
+import type { EntityEmitFn } from "../../../../types/event-map";
 import { SqliteRepository, type WithImplicitTransaction } from "./SqliteRepository";
 import { SqliteTransactionContext } from "./SqliteTransactionContext";
 
@@ -46,7 +45,7 @@ export class SqliteDriver implements IProteusDriver {
   private readonly namespace: string | null;
   private readonly resolveMetadata: MetadataResolver;
   private readonly getFilterRegistry: FilterRegistryGetter;
-  private readonly getSubscribers: SubscriberRegistryGetter;
+  private readonly emitEntity: EntityEmitFn;
   private readonly amphora: IAmphora | undefined;
   private db: SqliteQueryClient | null = null;
 
@@ -56,7 +55,7 @@ export class SqliteDriver implements IProteusDriver {
     namespace: string | null,
     resolveMetadata: MetadataResolver,
     getFilterRegistry?: FilterRegistryGetter,
-    getSubscribers?: SubscriberRegistryGetter,
+    emitEntity?: EntityEmitFn,
     amphora?: IAmphora,
   ) {
     this.options = options;
@@ -64,7 +63,7 @@ export class SqliteDriver implements IProteusDriver {
     this.namespace = namespace;
     this.resolveMetadata = resolveMetadata;
     this.getFilterRegistry = getFilterRegistry ?? ((): FilterRegistry => new Map());
-    this.getSubscribers = getSubscribers ?? ((): ReadonlyArray<IEntitySubscriber> => []);
+    this.emitEntity = emitEntity ?? (async () => {});
     this.amphora = amphora;
   }
 
@@ -206,7 +205,7 @@ export class SqliteDriver implements IProteusDriver {
       parent,
       repositoryFactory: factory,
       withImplicitTransaction,
-      getSubscribers: this.getSubscribers,
+      emitEntity: this.emitEntity,
       amphora: this.amphora,
     });
   }
@@ -249,7 +248,7 @@ export class SqliteDriver implements IProteusDriver {
       parent,
       repositoryFactory: factory,
       withImplicitTransaction,
-      getSubscribers: this.getSubscribers,
+      emitEntity: this.emitEntity,
       amphora: this.amphora,
     });
   }
@@ -311,7 +310,7 @@ export class SqliteDriver implements IProteusDriver {
 
   public cloneWithGetters(
     getFilterRegistry: FilterRegistryGetter,
-    getSubscribers: SubscriberRegistryGetter,
+    emitEntity: EntityEmitFn,
   ): SqliteDriver {
     const cloned = Object.create(SqliteDriver.prototype) as SqliteDriver;
     (cloned as any).options = this.options;
@@ -319,7 +318,7 @@ export class SqliteDriver implements IProteusDriver {
     (cloned as any).namespace = this.namespace;
     (cloned as any).resolveMetadata = this.resolveMetadata;
     (cloned as any).getFilterRegistry = getFilterRegistry;
-    (cloned as any).getSubscribers = getSubscribers;
+    (cloned as any).emitEntity = emitEntity;
     (cloned as any).amphora = this.amphora;
     (cloned as any).db = this.db; // Share the same database connection
     return cloned;

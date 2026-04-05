@@ -433,7 +433,7 @@ describe("RedisDriver", () => {
       const { driver } = createDriver();
       const cloned = driver.cloneWithGetters(
         () => new Map(),
-        () => [],
+        async () => {},
       );
 
       expect(cloned).toBeInstanceOf(RedisDriver);
@@ -446,7 +446,7 @@ describe("RedisDriver", () => {
 
       const cloned = driver.cloneWithGetters(
         () => new Map(),
-        () => [],
+        async () => {},
       );
 
       const originalClient = await driver.acquireClient();
@@ -463,7 +463,7 @@ describe("RedisDriver", () => {
 
       const cloned = driver.cloneWithGetters(
         () => customRegistry,
-        () => [],
+        async () => {},
       );
 
       // The cloned driver should use the new registry getter

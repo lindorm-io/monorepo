@@ -10,7 +10,6 @@ import type {
   FilterRegistryGetter,
   IProteusDriver,
   MetadataResolver,
-  SubscriberRegistryGetter,
   TransactionHandle,
 } from "../../../interfaces/ProteusDriver";
 import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor";
@@ -19,9 +18,9 @@ import type {
   TransactionCallback,
   TransactionOptions,
 } from "../../../../types";
+import type { EntityEmitFn } from "../../../../types/event-map";
 import type { RepositoryFactory } from "#internal/types/repository-factory";
 import type { FilterRegistry } from "#internal/utils/query/filter-registry";
-import type { IEntitySubscriber } from "../../../../interfaces/EntitySubscriber";
 import type {
   MemoryStore,
   MemoryTable,
@@ -73,7 +72,7 @@ export class MemoryDriver implements IProteusDriver {
   private readonly namespace: string | null;
   private readonly resolveMetadata: MetadataResolver;
   private readonly getFilterRegistry: FilterRegistryGetter;
-  private readonly getSubscribers: SubscriberRegistryGetter;
+  private readonly emitEntity: EntityEmitFn;
   private readonly amphora: IAmphora | undefined;
   private store: MemoryStore;
 
@@ -83,14 +82,14 @@ export class MemoryDriver implements IProteusDriver {
     namespace: string | null,
     resolveMetadata: MetadataResolver,
     getFilterRegistry?: FilterRegistryGetter,
-    getSubscribers?: SubscriberRegistryGetter,
+    emitEntity?: EntityEmitFn,
     amphora?: IAmphora,
   ) {
     this.logger = logger.child(["MemoryDriver"]);
     this.namespace = namespace;
     this.resolveMetadata = resolveMetadata;
     this.getFilterRegistry = getFilterRegistry ?? ((): FilterRegistry => new Map());
-    this.getSubscribers = getSubscribers ?? ((): ReadonlyArray<IEntitySubscriber> => []);
+    this.emitEntity = emitEntity ?? (async () => {});
     this.amphora = amphora;
     this.store = createEmptyStore();
   }
@@ -208,7 +207,7 @@ export class MemoryDriver implements IProteusDriver {
       parent,
       repositoryFactory: factory,
       withImplicitTransaction,
-      getSubscribers: this.getSubscribers,
+      emitEntity: this.emitEntity,
     });
   }
 
@@ -247,7 +246,7 @@ export class MemoryDriver implements IProteusDriver {
       parent,
       repositoryFactory: factory,
       withImplicitTransaction,
-      getSubscribers: this.getSubscribers,
+      emitEntity: this.emitEntity,
     });
   }
 
@@ -389,14 +388,14 @@ export class MemoryDriver implements IProteusDriver {
 
   public cloneWithGetters(
     getFilterRegistry: FilterRegistryGetter,
-    getSubscribers: SubscriberRegistryGetter,
+    emitEntity: EntityEmitFn,
   ): MemoryDriver {
     const cloned = Object.create(MemoryDriver.prototype) as MemoryDriver;
     (cloned as any).logger = this.logger;
     (cloned as any).namespace = this.namespace;
     (cloned as any).resolveMetadata = this.resolveMetadata;
     (cloned as any).getFilterRegistry = getFilterRegistry;
-    (cloned as any).getSubscribers = getSubscribers;
+    (cloned as any).emitEntity = emitEntity;
     (cloned as any).amphora = this.amphora;
     (cloned as any).store = this.store; // Share the same in-memory store
     return cloned;

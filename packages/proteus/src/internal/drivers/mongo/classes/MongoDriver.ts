@@ -18,7 +18,6 @@ import type {
   FilterRegistryGetter,
   IProteusDriver,
   MetadataResolver,
-  SubscriberRegistryGetter,
   TransactionHandle,
 } from "../../../interfaces/ProteusDriver";
 import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor";
@@ -29,7 +28,7 @@ import type {
 } from "../../../../types";
 import type { RepositoryFactory } from "#internal/types/repository-factory";
 import type { FilterRegistry } from "#internal/utils/query/filter-registry";
-import type { IEntitySubscriber } from "../../../../interfaces/EntitySubscriber";
+import type { EntityEmitFn } from "../../../../types/event-map";
 import type { MongoTransactionHandle } from "../types/mongo-types";
 import { detectReplicaSet } from "../utils/detect-replica-set";
 import { createMongoJoinTableOps } from "../utils/mongo-join-table-ops";
@@ -59,7 +58,7 @@ export class MongoDriver implements IProteusDriver {
   private readonly namespace: string | null;
   private readonly resolveMetadata: MetadataResolver;
   private readonly getFilterRegistry: FilterRegistryGetter;
-  private readonly getSubscribers: SubscriberRegistryGetter;
+  private readonly emitEntity: EntityEmitFn;
   private readonly amphora: IAmphora | undefined;
   private readonly breaker: ICircuitBreaker | null;
   private readonly connectionConfig: {
@@ -85,7 +84,7 @@ export class MongoDriver implements IProteusDriver {
     namespace: string | null,
     resolveMetadata: MetadataResolver,
     getFilterRegistry?: FilterRegistryGetter,
-    getSubscribers?: SubscriberRegistryGetter,
+    emitEntity?: EntityEmitFn,
     amphora?: IAmphora,
     breaker?: ICircuitBreaker | null,
   ) {
@@ -94,7 +93,7 @@ export class MongoDriver implements IProteusDriver {
     this.namespace = namespace;
     this.resolveMetadata = resolveMetadata;
     this.getFilterRegistry = getFilterRegistry ?? ((): FilterRegistry => new Map());
-    this.getSubscribers = getSubscribers ?? ((): ReadonlyArray<IEntitySubscriber> => []);
+    this.emitEntity = emitEntity ?? (async () => {});
     this.amphora = amphora;
     this.breaker = breaker ?? null;
     this.connectionConfig = {
@@ -364,7 +363,7 @@ export class MongoDriver implements IProteusDriver {
       context,
       parent,
       repositoryFactory: factory,
-      getSubscribers: this.getSubscribers,
+      emitEntity: this.emitEntity,
       joinTableOps: createMongoJoinTableOps(db),
     });
   }
@@ -401,7 +400,7 @@ export class MongoDriver implements IProteusDriver {
       context,
       parent,
       repositoryFactory: factory,
-      getSubscribers: this.getSubscribers,
+      emitEntity: this.emitEntity,
       joinTableOps: createMongoJoinTableOps(db, txHandle.session),
       session: txHandle.session,
     });
@@ -643,7 +642,7 @@ export class MongoDriver implements IProteusDriver {
 
   public cloneWithGetters(
     getFilterRegistry: FilterRegistryGetter,
-    getSubscribers: SubscriberRegistryGetter,
+    emitEntity: EntityEmitFn,
   ): MongoDriver {
     const cloned = Object.create(MongoDriver.prototype) as MongoDriver;
     (cloned as any).options = this.options;
@@ -651,7 +650,7 @@ export class MongoDriver implements IProteusDriver {
     (cloned as any).namespace = this.namespace;
     (cloned as any).resolveMetadata = this.resolveMetadata;
     (cloned as any).getFilterRegistry = getFilterRegistry;
-    (cloned as any).getSubscribers = getSubscribers;
+    (cloned as any).emitEntity = emitEntity;
     (cloned as any).connectionConfig = this.connectionConfig;
     (cloned as any).amphora = this.amphora;
     (cloned as any).breaker = this.breaker;

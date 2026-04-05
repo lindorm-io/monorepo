@@ -4,7 +4,6 @@ import { Entity } from "../decorators/Entity";
 import { Field } from "../decorators/Field";
 import { PrimaryKeyField } from "../decorators/PrimaryKeyField";
 import { Filter } from "../decorators/Filter";
-import type { IEntitySubscriber } from "../interfaces/EntitySubscriber";
 
 @Entity({ name: "CloneTestEntity" })
 @Filter({ name: "tenant", condition: { tenantId: "$tenantId" } })
@@ -82,28 +81,24 @@ describe("ProteusSource", () => {
       });
     });
 
-    test("should isolate subscribers: clone mutations do not affect original", () => {
+    test("should isolate event listeners: clone mutations do not affect original", () => {
       const source = createSource();
-      const subscriber: IEntitySubscriber = { afterInsert: jest.fn() };
+      const listener = jest.fn();
 
       const cloned = source.clone();
-      cloned.addSubscriber(subscriber);
+      cloned.on("entity:after-insert", listener);
 
-      // We can't directly access subscribers, but we can clone again and check
-      // the new clone doesn't inherit the subscriber added to the first clone.
-      // Use getFilterRegistry as a proxy — if ref cells work, subscribers do too.
-      // Actually, let's test by cloning the original again:
+      // Clone again from the original — should not inherit clone's listener
       const cloned2 = source.clone();
 
-      // Add a different subscriber to the original
-      const originalSubscriber: IEntitySubscriber = { afterUpdate: jest.fn() };
-      source.addSubscriber(originalSubscriber);
+      // Add a different listener to the original
+      const originalListener = jest.fn();
+      source.on("entity:after-update", originalListener);
 
-      // Clone from after the original subscriber was added
+      // Clone from after the original listener was added
       const cloned3 = source.clone();
 
-      // cloned3 should not have the subscriber added to cloned (first clone)
-      // This verifies subscriber isolation between clones
+      // All clones are distinct
       expect(cloned).not.toBe(cloned2);
       expect(cloned).not.toBe(cloned3);
     });

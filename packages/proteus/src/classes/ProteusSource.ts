@@ -1,3 +1,4 @@
+import { EventEmitter } from "events";
 import type { IAmphora } from "@lindorm/amphora";
 import {
   CircuitBreaker,
@@ -15,11 +16,12 @@ import {
   IProteusSource,
 } from "../interfaces";
 import type { ICacheAdapter } from "../interfaces/CacheAdapter";
-import type { IEntitySubscriber } from "../interfaces/EntitySubscriber";
 import type {
+  EntityEmitFn,
   EntityScannerInput,
   NamingStrategy,
   ProteusBreakerOptions,
+  ProteusSourceEventMap,
   ProteusSourceOptions,
   TransactionCallback,
   TransactionOptions,
@@ -54,11 +56,11 @@ import type { EntityMetadata } from "#internal/entity/types/metadata";
 /**
  * Options for cloning a ProteusSource.
  */
-export type CloneOptions = {
+export type CloneOptions<C = unknown> = {
   /** Override the logger on the cloned source. */
   logger?: ILogger;
   /** Override the context on the cloned source. */
-  context?: unknown;
+  context?: C;
 };
 
 /**
@@ -82,7 +84,7 @@ interface ProteusSourceInit {
   _driverType: string;
   _migrationsTable: string | undefined;
   _registryRef: { current: FilterRegistry };
-  _subscribersRef: { current: Array<IEntitySubscriber> };
+  _emitter: EventEmitter;
   _inheritanceMap: Map<Function, MetaInheritance> | undefined;
   _namingCache: Map<Function, EntityMetadata> | null;
   _settingUpPromise: Promise<void> | null;
@@ -96,13 +98,13 @@ interface ProteusSourceInit {
  * obtain repositories, query builders, and run transactions. The source
  * manages connection pooling, entity metadata resolution, and caching.
  */
-export class ProteusSource implements IProteusSource {
+export class ProteusSource<C = unknown> implements IProteusSource<C> {
   private _driver: IProteusDriver | undefined;
   private readonly _breaker: ICircuitBreaker | null;
   private readonly _options: ProteusSourceOptions;
   private readonly _amphora: IAmphora | undefined;
   private readonly logger: ILogger;
-  private readonly context: unknown;
+  private readonly context: C;
   private readonly _entities: Array<Constructor<IEntity>>;
   private readonly resolveMetadata: MetadataResolver;
   private readonly cacheAdapter: ICacheAdapter | undefined;
@@ -111,7 +113,7 @@ export class ProteusSource implements IProteusSource {
   private readonly _driverType: string;
   private readonly _migrationsTable: string | undefined;
   private _registryRef: { current: FilterRegistry };
-  private _subscribersRef: { current: Array<IEntitySubscriber> };
+  private readonly _emitter: EventEmitter = new EventEmitter();
   private _inheritanceMap: Map<Function, MetaInheritance> | undefined;
   private _namingCache: Map<Function, EntityMetadata> | null = null;
   private _settingUpPromise: Promise<void> | null = null;
@@ -122,15 +124,18 @@ export class ProteusSource implements IProteusSource {
    * Object.assign is used to write all fields (including readonly ones)
    * onto the bare prototype instance in one shot.
    */
-  private static fromFields(fields: ProteusSourceInit): ProteusSource {
-    return Object.assign(Object.create(ProteusSource.prototype) as ProteusSource, fields);
+  private static fromFields<C>(fields: ProteusSourceInit): ProteusSource<C> {
+    return Object.assign(
+      Object.create(ProteusSource.prototype) as ProteusSource<C>,
+      fields,
+    );
   }
 
   public constructor(options: ProteusSourceOptions) {
     this._options = options;
     this._amphora = options.amphora;
     this.logger = options.logger.child(["ProteusSource"]);
-    this.context = options.context;
+    this.context = options.context as C;
     this._entities = options.entities ? EntityScanner.scan(options.entities) : [];
 
     const namespace = options.namespace ?? null;
@@ -139,7 +144,6 @@ export class ProteusSource implements IProteusSource {
     this._migrationsTable =
       "migrationsTable" in options ? options.migrationsTable : undefined;
     this._registryRef = { current: createFilterRegistry() };
-    this._subscribersRef = { current: [] };
     const resolver = createMetadataResolver(
       options.naming ?? "none",
       () => this._inheritanceMap,
@@ -194,16 +198,65 @@ export class ProteusSource implements IProteusSource {
     return this.logger;
   }
 
-  /** Create a lightweight copy of this source sharing the same connection pool but with a new logger and/or context. */
-  public clone(options?: CloneOptions): ProteusSource {
-    // Reference cell pattern: create new ref cells with cloned data so the
-    // clone's filter/subscriber state is fully isolated from the original.
-    const registryRef = { current: cloneFilterRegistry(this._registryRef.current) };
-    const subscribersRef = { current: [...this._subscribersRef.current] };
+  // ─── Typed EventEmitter (composition) ──────────────────────────────
 
-    return ProteusSource.fromFields({
+  /** Subscribe to a source event. */
+  public on<K extends keyof ProteusSourceEventMap<C>>(
+    event: K,
+    listener: (payload: ProteusSourceEventMap<C>[K]) => void,
+  ): void {
+    this._emitter.on(event as string, listener);
+  }
+
+  /** Unsubscribe from a source event. */
+  public off<K extends keyof ProteusSourceEventMap<C>>(
+    event: K,
+    listener: (payload: ProteusSourceEventMap<C>[K]) => void,
+  ): void {
+    this._emitter.off(event as string, listener);
+  }
+
+  /** Subscribe to a source event, firing only once. */
+  public once<K extends keyof ProteusSourceEventMap<C>>(
+    event: K,
+    listener: (payload: ProteusSourceEventMap<C>[K]) => void,
+  ): void {
+    this._emitter.once(event as string, listener);
+  }
+
+  /**
+   * Async entity emit function passed to drivers/repositories.
+   * Listeners are awaited sequentially; errors propagate to the caller
+   * (enabling transaction rollback).
+   */
+  private readonly emitEntity: EntityEmitFn = async (
+    event: string,
+    payload: unknown,
+  ): Promise<void> => {
+    const listeners = this._emitter.listeners(event);
+    for (const listener of listeners) {
+      await (listener as (p: unknown) => void | Promise<void>)(payload);
+    }
+  };
+
+  /** Create a lightweight copy of this source sharing the same connection pool but with a new logger and/or context. */
+  public clone(options?: CloneOptions<C>): ProteusSource<C> {
+    // Reference cell pattern: new ref cell for filter registry isolation.
+    const registryRef = { current: cloneFilterRegistry(this._registryRef.current) };
+    // Each clone gets its own EventEmitter — listener isolation.
+    const emitter = new EventEmitter();
+
+    // Build a standalone emitEntity that closes over the clone's emitter.
+    const cloneEmitEntity: EntityEmitFn = async (event, payload) => {
+      const listeners = emitter.listeners(event);
+      for (const listener of listeners) {
+        await (listener as (p: unknown) => void | Promise<void>)(payload);
+      }
+    };
+
+    return ProteusSource.fromFields<C>({
       logger: options?.logger?.child(["ProteusSource"]) ?? this.logger,
-      context: options?.context ?? this.context,
+      context: (options?.context ?? this.context) as unknown,
       _breaker: this._breaker,
       _entities: this._entities,
       _amphora: this._amphora,
@@ -218,16 +271,11 @@ export class ProteusSource implements IProteusSource {
       _namingCache: this._namingCache,
       _settingUpPromise: null,
       _registryRef: registryRef,
-      _subscribersRef: subscribersRef,
+      _emitter: emitter,
       _options: this._options,
-      // Clone the driver with new getters that read from the clone's ref cells.
-      // This ensures repositories/executors created from the clone use the
-      // clone's filter registry, not the original's.
+      // Clone the driver with new filter getter and the clone's emitEntity.
       _driver: this._driver
-        ? this._driver.cloneWithGetters(
-            () => registryRef.current,
-            () => subscribersRef.current,
-          )
+        ? this._driver.cloneWithGetters(() => registryRef.current, cloneEmitEntity)
         : undefined,
     });
   }
@@ -255,11 +303,6 @@ export class ProteusSource implements IProteusSource {
     return this._registryRef.current;
   }
 
-  /** Register an event subscriber to observe entity lifecycle events across all entity types. */
-  public addSubscriber(subscriber: IEntitySubscriber): void {
-    this._subscribersRef.current.push(subscriber);
-  }
-
   /** Register additional entity classes or glob patterns after construction. */
   public addEntities(entities: EntityScannerInput): void {
     if (this.isSetUp) {
@@ -284,7 +327,7 @@ export class ProteusSource implements IProteusSource {
     if (this._driver) return; // idempotent
 
     const getFilterRegistry = (): FilterRegistry => this._registryRef.current;
-    const getSubscribers = (): Array<IEntitySubscriber> => this._subscribersRef.current;
+    const emitEntity = this.emitEntity;
     const opts = this._options;
 
     switch (opts.driver) {
@@ -297,7 +340,7 @@ export class ProteusSource implements IProteusSource {
           this._namespace,
           this.resolveMetadata,
           getFilterRegistry,
-          getSubscribers,
+          emitEntity,
           this._amphora,
           this._breaker,
         );
@@ -312,7 +355,7 @@ export class ProteusSource implements IProteusSource {
           this._namespace,
           this.resolveMetadata,
           getFilterRegistry,
-          getSubscribers,
+          emitEntity,
           this._amphora,
         );
         break;
@@ -326,7 +369,7 @@ export class ProteusSource implements IProteusSource {
           this._namespace,
           this.resolveMetadata,
           getFilterRegistry,
-          getSubscribers,
+          emitEntity,
           this._amphora,
           this._breaker,
         );
@@ -341,7 +384,7 @@ export class ProteusSource implements IProteusSource {
           this._namespace,
           this.resolveMetadata,
           getFilterRegistry,
-          getSubscribers,
+          emitEntity,
           this._amphora,
         );
         break;
@@ -355,7 +398,7 @@ export class ProteusSource implements IProteusSource {
           this._namespace,
           this.resolveMetadata,
           getFilterRegistry,
-          getSubscribers,
+          emitEntity,
           this._amphora,
           this._breaker,
         );
@@ -370,7 +413,7 @@ export class ProteusSource implements IProteusSource {
           this._namespace,
           this.resolveMetadata,
           getFilterRegistry,
-          getSubscribers,
+          emitEntity,
           this._amphora,
           this._breaker,
         );
@@ -391,6 +434,8 @@ export class ProteusSource implements IProteusSource {
       this._driver = undefined;
       throw error;
     }
+
+    this._emitter.emit("connection:state", { state: "connected" });
   }
 
   /** Close the database connection and drain the pool. */
@@ -407,6 +452,7 @@ export class ProteusSource implements IProteusSource {
       } catch {
         /* swallow — driver disconnect is the primary operation */
       }
+      this._emitter.emit("connection:state", { state: "disconnected" });
     }
   }
 
@@ -512,8 +558,6 @@ export class ProteusSource implements IProteusSource {
     const userOpts: ProteusBreakerOptions =
       typeof options.breaker === "object" ? options.breaker : {};
 
-    // TODO: rework to expose breaker as EventEmitter on ProteusSource (like hermes)
-    //       instead of this internal wiring — let consumers subscribe directly
     const breakerOptions: CircuitBreakerOptions = {
       name: `proteus:${options.driver}`,
       classifier: userOpts.classifier ?? resolveDefaultClassifier(options.driver),
@@ -526,22 +570,31 @@ export class ProteusSource implements IProteusSource {
 
     const breaker = new CircuitBreaker(breakerOptions);
 
+    const forwardBreakerEvent = (
+      event: import("@lindorm/breaker").StateChangeEvent,
+    ): void => {
+      this._emitter.emit("breaker:state", event);
+    };
+
     breaker.on("open", (event) => {
       this.logger.warn("Circuit breaker opened", {
         name: event.name,
         from: event.from,
         failures: event.failures,
       });
+      forwardBreakerEvent(event);
     });
 
     breaker.on("closed", (event) => {
       this.logger.info("Circuit breaker closed", { name: event.name });
+      forwardBreakerEvent(event);
     });
 
     breaker.on("half-open", (event) => {
       this.logger.info("Circuit breaker half-open — probing", {
         name: event.name,
       });
+      forwardBreakerEvent(event);
     });
 
     return breaker;

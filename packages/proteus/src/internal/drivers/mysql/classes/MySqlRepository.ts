@@ -44,7 +44,7 @@ import { wrapMysqlError } from "../utils/repository/wrap-mysql-error";
 import { RelationPersister } from "#internal/utils/repository/RelationPersister";
 import { createMysqlJoinTableOps } from "../utils/repository/mysql-join-table-ops";
 import type { LazyRelationLoader } from "#internal/entity/utils/install-lazy-relations";
-import type { SubscriberRegistryGetter } from "#internal/interfaces/ProteusDriver";
+import type { EntityEmitFn } from "../../../../types/event-map";
 import { buildRelationFilter } from "#internal/utils/repository/build-relation-filter";
 import { quoteIdentifier, quoteQualifiedName } from "../utils/quote-identifier";
 import { getJoinName } from "#internal/entity/utils/get-join-name";
@@ -81,7 +81,7 @@ export type MySqlRepositoryOptions<E extends IEntity> = {
   parent?: Constructor<IEntity>;
   repositoryFactory: RepositoryFactory;
   withImplicitTransaction: WithImplicitTransaction<E>;
-  getSubscribers?: SubscriberRegistryGetter;
+  emitEntity?: EntityEmitFn;
   amphora?: IAmphora;
 };
 
@@ -113,7 +113,7 @@ export class MySqlRepository<
       context: options.context,
       parent: options.parent,
       repositoryFactory: options.repositoryFactory,
-      getSubscribers: options.getSubscribers,
+      emitEntity: options.emitEntity,
     });
 
     this.client = options.client;
