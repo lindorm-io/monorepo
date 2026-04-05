@@ -9,11 +9,11 @@ import {
 } from "@lindorm/proteus";
 
 @Namespace("pylon")
-@Entity({ name: "request_audit_log" })
 @Index<typeof RequestAuditLog>(["actor"])
 @Index<typeof RequestAuditLog>(["endpoint"])
 @Index<typeof RequestAuditLog>(["correlationId"])
 @Index<typeof RequestAuditLog>(["requestId"])
+@Entity({ name: "request_audit_log" })
 export class RequestAuditLog {
   @PrimaryKeyField()
   public id!: string;

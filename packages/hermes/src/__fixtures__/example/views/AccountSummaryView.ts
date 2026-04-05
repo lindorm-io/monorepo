@@ -1,8 +1,8 @@
 import { Entity, Namespace, Field, Index, Default } from "@lindorm/proteus";
 import { HermesViewEntity } from "../../../entities/HermesViewEntity";
 
-@Entity({ name: "account_summary" })
 @Namespace("banking")
+@Entity({ name: "account_summary" })
 export class AccountSummaryView extends HermesViewEntity {
   @Field("string")
   @Index()

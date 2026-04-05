@@ -9,9 +9,9 @@ import {
   Unique,
 } from "@lindorm/proteus";
 
-@Entity({ name: "encryption" })
 @Namespace("hermes")
 @Unique<typeof EncryptionRecord>(["aggregateId", "aggregateName", "aggregateNamespace"])
+@Entity({ name: "encryption" })
 export class EncryptionRecord {
   @PrimaryKeyField()
   public id: string = "";

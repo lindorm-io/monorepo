@@ -1,8 +1,8 @@
 import { Default, Entity, Field, Namespace } from "@lindorm/proteus";
 import { HermesViewEntity } from "../../../entities/HermesViewEntity";
 
-@Entity({ name: "test_view" })
 @Namespace("test")
+@Entity({ name: "test_view" })
 export class TestViewEntity extends HermesViewEntity {
   @Field("string")
   @Default("")

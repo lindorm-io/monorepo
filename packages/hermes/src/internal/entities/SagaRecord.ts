@@ -9,8 +9,8 @@ import {
   VersionField,
 } from "@lindorm/proteus";
 
-@Entity({ name: "saga" })
 @Namespace("hermes")
+@Entity({ name: "saga" })
 export class SagaRecord {
   @PrimaryKey()
   @Field("string")
