@@ -93,7 +93,7 @@ describe("ScopeField — auto-generated __scope filter", () => {
     const scopeFilter = meta.filters.find((f) => f.name === SCOPE_FILTER_NAME);
 
     expect(scopeFilter).toBeDefined();
-    expect(scopeFilter!.cond).toEqual({ scope: "$scope" });
+    expect(scopeFilter!.condition).toEqual({ scope: "$scope" });
     expect(scopeFilter!.default).toBe(true);
   });
 
@@ -103,7 +103,7 @@ describe("ScopeField — auto-generated __scope filter", () => {
 
     expect(scopeFilter).toBeDefined();
     // Alphabetical order: region before tenantId
-    expect(scopeFilter!.cond).toEqual({
+    expect(scopeFilter!.condition).toEqual({
       $and: [{ region: "$region" }, { tenantId: "$tenantId" }],
     });
   });

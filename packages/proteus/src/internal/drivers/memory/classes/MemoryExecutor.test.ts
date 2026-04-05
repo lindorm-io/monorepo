@@ -42,7 +42,7 @@ class NullSortEntity {
 }
 
 @Entity({ name: "FilteredEntity" })
-@Filter({ name: "tenant", cond: { tenantId: "$tenantId" } })
+@Filter({ name: "tenant", condition: { tenantId: "$tenantId" } })
 class FilteredEntity {
   @PrimaryKeyField()
   id!: string;

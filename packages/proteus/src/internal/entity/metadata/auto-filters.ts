@@ -55,21 +55,21 @@ export const generateAutoFilters = (fields: Array<MetaField>): Array<MetaFilter>
   if (deleteField) {
     autoFilters.push({
       name: SOFT_DELETE_FILTER_NAME,
-      cond: { [deleteField.key]: null },
+      condition: { [deleteField.key]: null },
       default: true,
     });
   }
 
   const scopeFields = sortScopeFields(fields.filter((f) => f.decorator === "Scope"));
   if (scopeFields.length > 0) {
-    const cond =
+    const condition =
       scopeFields.length === 1
         ? { [scopeFields[0].key]: `$${scopeFields[0].key}` }
         : { $and: scopeFields.map((f) => ({ [f.key]: `$${f.key}` })) };
 
     autoFilters.push({
       name: SCOPE_FILTER_NAME,
-      cond,
+      condition,
       default: true,
     });
   }
@@ -99,7 +99,7 @@ export const generateDiscriminatorFilter = (
   return [
     {
       name: DISCRIMINATOR_FILTER_NAME,
-      cond: { [inheritance.discriminatorField]: inheritance.discriminatorValue },
+      condition: { [inheritance.discriminatorField]: inheritance.discriminatorValue },
       default: true,
     },
   ];

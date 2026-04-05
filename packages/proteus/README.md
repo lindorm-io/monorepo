@@ -774,8 +774,8 @@ Declares a parameterized WHERE-clause filter on the entity. Filters are named, r
 
 ```typescript
 @Entity()
-@Filter({ name: "active", cond: { deletedAt: null }, default: true })
-@Filter({ name: "tenant", cond: { tenantId: "$tenantId" } })
+@Filter({ name: "active", condition: { deletedAt: null }, default: true })
+@Filter({ name: "tenant", condition: { tenantId: "$tenantId" } })
 class Resource {
   /* ... */
 }
@@ -787,11 +787,11 @@ source.enableFilter("active");
 
 **Options:**
 
-| Field     | Type              | Description                                   |
-| --------- | ----------------- | --------------------------------------------- |
-| `name`    | `string`          | Unique filter name                            |
-| `cond`    | `Predicate<Dict>` | Filter condition using Predicate operators    |
-| `default` | `boolean`         | Auto-enable on every query (default: `false`) |
+| Field       | Type              | Description                                   |
+| ----------- | ----------------- | --------------------------------------------- |
+| `name`      | `string`          | Unique filter name                            |
+| `condition` | `Predicate<Dict>` | Filter condition using Predicate operators    |
+| `default`   | `boolean`         | Auto-enable on every query (default: `false`) |
 
 #### `@Check` (class-level)
 
@@ -2498,12 +2498,12 @@ Reusable, parameterized WHERE clauses at the entity level:
 @Entity()
 @Filter({
   name: "tenant",
-  cond: { tenantId: "$tenantId" },
+  condition: { tenantId: "$tenantId" },
   default: true, // enabled by default
 })
 @Filter({
   name: "active",
-  cond: { status: "active" },
+  condition: { status: "active" },
 })
 class Resource {
   @PrimaryKeyField()

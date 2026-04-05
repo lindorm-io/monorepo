@@ -12,21 +12,25 @@ const fields = [
 describe("validateFilters", () => {
   test("should pass with valid field references", () => {
     const filters: Array<MetaFilter> = [
-      { name: "active", cond: { status: "active" }, default: true },
+      { name: "active", condition: { status: "active" }, default: true },
     ];
     expect(() => validateFilters("TestEntity", filters, fields)).not.toThrow();
   });
 
   test("should pass with parameterized field references", () => {
     const filters: Array<MetaFilter> = [
-      { name: "tenant", cond: { tenantId: "$tenantId" }, default: false },
+      { name: "tenant", condition: { tenantId: "$tenantId" }, default: false },
     ];
     expect(() => validateFilters("TestEntity", filters, fields)).not.toThrow();
   });
 
   test("should pass with operator conditions", () => {
     const filters: Array<MetaFilter> = [
-      { name: "highValue", cond: { amount: { $gte: "$minAmount" } }, default: false },
+      {
+        name: "highValue",
+        condition: { amount: { $gte: "$minAmount" } },
+        default: false,
+      },
     ];
     expect(() => validateFilters("TestEntity", filters, fields)).not.toThrow();
   });
@@ -35,7 +39,7 @@ describe("validateFilters", () => {
     const filters: Array<MetaFilter> = [
       {
         name: "complex",
-        cond: {
+        condition: {
           $or: [{ status: "active" }, { amount: { $gt: 100 } }],
         },
         default: false,
@@ -46,7 +50,7 @@ describe("validateFilters", () => {
 
   test("should throw for unknown field reference", () => {
     const filters: Array<MetaFilter> = [
-      { name: "bad", cond: { unknownField: "value" }, default: false },
+      { name: "bad", condition: { unknownField: "value" }, default: false },
     ];
     expect(() => validateFilters("TestEntity", filters, fields)).toThrow(
       '@Filter("bad") references unknown field "unknownField"',
@@ -57,7 +61,7 @@ describe("validateFilters", () => {
     const filters: Array<MetaFilter> = [
       {
         name: "badNested",
-        cond: {
+        condition: {
           $or: [{ status: "active" }, { nonExistent: "value" }],
         },
         default: false,
@@ -70,8 +74,8 @@ describe("validateFilters", () => {
 
   test("should throw for duplicate filter names", () => {
     const filters: Array<MetaFilter> = [
-      { name: "active", cond: { status: "active" }, default: true },
-      { name: "active", cond: { status: "enabled" }, default: false },
+      { name: "active", condition: { status: "active" }, default: true },
+      { name: "active", condition: { status: "enabled" }, default: false },
     ];
     expect(() => validateFilters("TestEntity", filters, fields)).toThrow(
       'Duplicate @Filter name "active"',
@@ -84,16 +88,16 @@ describe("validateFilters", () => {
 
   test("should pass with multiple valid filters", () => {
     const filters: Array<MetaFilter> = [
-      { name: "active", cond: { status: "active" }, default: true },
-      { name: "tenant", cond: { tenantId: "$tenantId" }, default: false },
-      { name: "highValue", cond: { amount: { $gte: 1000 } }, default: false },
+      { name: "active", condition: { status: "active" }, default: true },
+      { name: "tenant", condition: { tenantId: "$tenantId" }, default: false },
+      { name: "highValue", condition: { amount: { $gte: 1000 } }, default: false },
     ];
     expect(() => validateFilters("TestEntity", filters, fields)).not.toThrow();
   });
 
   test("should pass with $not condition", () => {
     const filters: Array<MetaFilter> = [
-      { name: "notDraft", cond: { $not: { status: "draft" } }, default: true },
+      { name: "notDraft", condition: { $not: { status: "draft" } }, default: true },
     ];
     expect(() => validateFilters("TestEntity", filters, fields)).not.toThrow();
   });
