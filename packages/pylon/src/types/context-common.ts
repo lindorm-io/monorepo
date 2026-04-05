@@ -1,11 +1,11 @@
 import { IAegis, ParsedCws, ParsedCwt, ParsedJws, ParsedJwt } from "@lindorm/aegis";
 import { IAmphora } from "@lindorm/amphora";
 import { IConduit } from "@lindorm/conduit";
-import { IHermes } from "@lindorm/hermes";
-import { IIrisSource } from "@lindorm/iris";
+import { IHermesSession } from "@lindorm/hermes";
+import { IIrisSession } from "@lindorm/iris";
 import { ILogger } from "@lindorm/logger";
 import { Middleware } from "@lindorm/middleware";
-import { IEntity, IProteusSource } from "@lindorm/proteus";
+import { IEntity, IProteusSession } from "@lindorm/proteus";
 import { Dict, Environment, Priority } from "@lindorm/types";
 import { AuthorizationState } from "./authorization";
 import { IoServer } from "./socket";
@@ -55,9 +55,9 @@ export type PylonCommonContext = {
   publishers?: Dict;
   workerQueues?: Dict;
 
-  hermes?: IHermes;
-  iris?: IIrisSource;
-  proteus?: IProteusSource;
+  hermes?: IHermesSession;
+  iris?: IIrisSession;
+  proteus?: IProteusSession;
 
   queue: (
     event: string,

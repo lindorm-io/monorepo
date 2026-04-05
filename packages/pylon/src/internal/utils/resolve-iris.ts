@@ -1,13 +1,13 @@
 import { ServerError } from "@lindorm/errors";
-import { IIrisSource } from "@lindorm/iris";
+import { IIrisSession, IIrisSource } from "@lindorm/iris";
 import { PylonCommonContext } from "../../types";
 
 export const resolveIris = (
   ctx: PylonCommonContext,
   override?: IIrisSource,
-): IIrisSource => {
+): IIrisSession => {
   if (override) {
-    return override.clone({ logger: ctx.logger, context: ctx });
+    return override.session({ logger: ctx.logger, context: ctx });
   }
   if (ctx.iris) {
     return ctx.iris;

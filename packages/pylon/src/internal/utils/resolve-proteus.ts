@@ -1,13 +1,13 @@
 import { ServerError } from "@lindorm/errors";
-import { IProteusSource } from "@lindorm/proteus";
+import { IProteusSession, IProteusSource } from "@lindorm/proteus";
 import { PylonCommonContext } from "../../types";
 
 export const resolveProteus = (
   ctx: PylonCommonContext,
   override?: IProteusSource,
-): IProteusSource => {
+): IProteusSession => {
   if (override) {
-    return override.clone({ logger: ctx.logger, context: ctx });
+    return override.session({ logger: ctx.logger, context: ctx });
   }
   if (ctx.proteus) {
     return ctx.proteus;

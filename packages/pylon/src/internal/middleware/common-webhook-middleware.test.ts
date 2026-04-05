@@ -80,7 +80,7 @@ describe("createWebhookMiddleware", () => {
   test("should use iris override source", async () => {
     const overrideWq = { create: mockCreate, publish: mockPublish };
     const overrideIris = {
-      clone: jest
+      session: jest
         .fn()
         .mockReturnValue({ workerQueue: jest.fn().mockReturnValue(overrideWq) }),
     };
@@ -94,7 +94,10 @@ describe("createWebhookMiddleware", () => {
 
     await ctx.webhook("event", {});
 
-    expect(overrideIris.clone).toHaveBeenCalledWith({ logger: ctx.logger, context: ctx });
+    expect(overrideIris.session).toHaveBeenCalledWith({
+      logger: ctx.logger,
+      context: ctx,
+    });
   });
 
   test("should call next", async () => {

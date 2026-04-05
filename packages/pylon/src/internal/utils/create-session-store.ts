@@ -1,5 +1,5 @@
 import { AesKit } from "@lindorm/aes";
-import { IProteusSource } from "@lindorm/proteus";
+import { IProteusSession, IProteusSource } from "@lindorm/proteus";
 import { Session } from "../../entities";
 import { IPylonSession } from "../../interfaces";
 import { IPylonSessionStore } from "../../interfaces/PylonSessionStore";
@@ -8,9 +8,9 @@ import { PylonCommonContext, PylonSessionOptions } from "../../types";
 const getSource = (
   ctx: PylonCommonContext,
   override?: IProteusSource,
-): IProteusSource | null => {
+): IProteusSession | null => {
   if (override) {
-    return override.clone({ logger: ctx.logger, context: ctx });
+    return override.session({ logger: ctx.logger, context: ctx });
   }
   return ctx.proteus ?? null;
 };

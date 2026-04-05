@@ -28,8 +28,8 @@ describe("useRateLimit", () => {
     jest.clearAllMocks();
 
     mockRepository = {};
-    const clonedSource = { repository: jest.fn().mockReturnValue(mockRepository) };
-    mockSource = { clone: jest.fn().mockReturnValue(clonedSource) };
+    const sessionSource = { repository: jest.fn().mockReturnValue(mockRepository) };
+    mockSource = { session: jest.fn().mockReturnValue(sessionSource) };
 
     (fixedWindowStrategy as jest.Mock).mockResolvedValue(allowedResult);
     (slidingWindowStrategy as jest.Mock).mockResolvedValue(allowedResult);

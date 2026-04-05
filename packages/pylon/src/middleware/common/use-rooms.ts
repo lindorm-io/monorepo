@@ -25,7 +25,7 @@ export const useRooms = (options: UseRoomsOptions = {}): PylonMiddleware => {
               "Rooms presence requires rooms.proteus in PylonOptions or a default proteus source",
             );
           }
-          return rawSource.clone({ logger: ctx.logger }).repository(Presence);
+          return rawSource.session({ logger: ctx.logger }).repository(Presence);
         })()
       : null;
 

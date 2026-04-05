@@ -1,6 +1,6 @@
 import { ReadableTime, ms } from "@lindorm/date";
 import { ClientError, ServerError } from "@lindorm/errors";
-import { IProteusSource } from "@lindorm/proteus";
+import { IProteusSession, IProteusSource } from "@lindorm/proteus";
 import { RATE_LIMIT_SOURCE } from "#internal/constants/symbols";
 import { isHttpContext, isSocketContext } from "#internal/utils/is-context";
 import { fixedWindowStrategy } from "#internal/utils/rate-limit/fixed-window-strategy";
@@ -31,7 +31,7 @@ const resolveKey = (ctx: PylonContext): string => {
 };
 
 const executeStrategy = async (
-  source: IProteusSource,
+  source: IProteusSession,
   strategy: RateLimitStrategy,
   key: string,
   windowMs: number,
@@ -70,7 +70,7 @@ export const useRateLimit = (options: RateLimitOptions): PylonMiddleware => {
       );
     }
 
-    const source = rawSource.clone({ logger: ctx.logger });
+    const source = rawSource.session({ logger: ctx.logger });
     const key = options.key?.(ctx) ?? resolveKey(ctx);
     const result = await executeStrategy(source, strategy, key, windowMs, options.max);
 
