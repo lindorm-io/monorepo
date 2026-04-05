@@ -7,6 +7,7 @@ export * from "./ProteusCursor";
 export * from "./ProteusQueryBuilder";
 export * from "./ProteusRepository";
 export * from "./ProteusRepositoryProvider";
+export * from "./ProteusSession";
 export * from "./ProteusSource";
 export * from "./TransactionContext";
 export * from "./UpdateQueryBuilder";

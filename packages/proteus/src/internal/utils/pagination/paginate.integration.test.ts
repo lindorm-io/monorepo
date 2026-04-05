@@ -609,7 +609,7 @@ describe("paginate()", () => {
       await seedScoped();
 
       // Clone source with scope params configured
-      const tenantSource = source.clone();
+      const tenantSource = source.session();
       tenantSource.setFilterParams("__scope", { scope: "tenant-a" });
       tenantSource.enableFilter("__scope");
 

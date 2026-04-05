@@ -1,6 +1,7 @@
 import { ICircuitBreaker } from "@lindorm/breaker";
-import { CloneOptions } from "../classes/ProteusSource";
+import { SessionOptions } from "../classes/ProteusSource";
 import { IProteusRepositoryProvider } from "./ProteusRepositoryProvider";
+import { IProteusSession } from "./ProteusSession";
 import { EntityScannerInput, ProteusSourceEventMap } from "../types";
 import type { EntityMetadata } from "../internal/entity/types/metadata";
 
@@ -23,7 +24,7 @@ export interface IProteusSource<C = unknown> extends IProteusRepositoryProvider<
     listener: (payload: ProteusSourceEventMap<C>[K]) => void,
   ): void;
 
-  clone(options?: CloneOptions<C>): IProteusSource<C>;
+  session(options?: SessionOptions<C>): IProteusSession<C>;
 
   connect(): Promise<void>;
   disconnect(): Promise<void>;
