@@ -56,7 +56,7 @@ describe("createSourcesMiddleware", () => {
     expect(ctx.hermes).toBeUndefined();
   });
 
-  test("should clone rateLimitProteus onto context via symbol", async () => {
+  test("should store raw rateLimitProteus on context via symbol (lazy clone)", async () => {
     const rateLimitProteus = createMockProteusSource();
 
     const middleware = createSourcesMiddleware({
@@ -65,25 +65,19 @@ describe("createSourcesMiddleware", () => {
 
     await middleware(ctx, jest.fn());
 
-    expect(rateLimitProteus.clone).toHaveBeenCalledWith({
-      logger: ctx.logger,
-      context: ctx,
-    });
-    expect(ctx[RATE_LIMIT_SOURCE]).toBeDefined();
+    expect(rateLimitProteus.clone).not.toHaveBeenCalled();
+    expect(ctx[RATE_LIMIT_SOURCE]).toBe(rateLimitProteus);
   });
 
-  test("should clone roomsProteus onto context via symbol", async () => {
+  test("should store raw roomsProteus on context via symbol (lazy clone)", async () => {
     const roomsProteus = createMockProteusSource();
 
     const middleware = createSourcesMiddleware({ roomsProteus: roomsProteus as any });
 
     await middleware(ctx, jest.fn());
 
-    expect(roomsProteus.clone).toHaveBeenCalledWith({
-      logger: ctx.logger,
-      context: ctx,
-    });
-    expect(ctx[ROOMS_SOURCE]).toBeDefined();
+    expect(roomsProteus.clone).not.toHaveBeenCalled();
+    expect(ctx[ROOMS_SOURCE]).toBe(roomsProteus);
   });
 
   test("should not set rate limit symbol when rateLimitProteus not provided", async () => {

@@ -19,13 +19,13 @@ export const useRooms = (options: UseRoomsOptions = {}): PylonMiddleware => {
 
     const presenceRepo = options.presence
       ? (() => {
-          const source = (ctx as any)[ROOMS_SOURCE] as IProteusSource | undefined;
-          if (!source) {
+          const rawSource = (ctx as any)[ROOMS_SOURCE] as IProteusSource | undefined;
+          if (!rawSource) {
             throw new ServerError(
               "Rooms presence requires rooms.proteus in PylonOptions or a default proteus source",
             );
           }
-          return source.repository(Presence);
+          return rawSource.clone({ logger: ctx.logger }).repository(Presence);
         })()
       : null;
 

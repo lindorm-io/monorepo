@@ -26,7 +26,8 @@ describe("useRooms", () => {
       destroy: jest.fn().mockResolvedValue(undefined),
     };
 
-    mockSource = { repository: jest.fn().mockReturnValue(mockRepository) };
+    const clonedSource = { repository: jest.fn().mockReturnValue(mockRepository) };
+    mockSource = { clone: jest.fn().mockReturnValue(clonedSource) };
     (isSocketContext as unknown as jest.Mock).mockReturnValue(true);
 
     ctx = {
@@ -172,7 +173,8 @@ describe("useRooms", () => {
     await useRooms()(ctx, next);
     await ctx.rooms.join("lobby");
 
-    expect(mockSource.repository).not.toHaveBeenCalled();
+    expect(mockSource.clone).not.toHaveBeenCalled();
+    expect(mockRepository.findOneOrSave).not.toHaveBeenCalled();
   });
 
   test("should not destroy presence record on leave when presence disabled", async () => {
