@@ -16,7 +16,7 @@ export const createLogoutCallbackHandler = <C extends PylonHttpContext>(
       throw new ClientError("No logout cookie found");
     }
 
-    if (ctx.data.state && cookie.state !== ctx.data.state) {
+    if (cookie.state && cookie.state !== ctx.data.state) {
       throw new ClientError("Invalid state", {
         debug: { cookie, state: ctx.data.state },
       });

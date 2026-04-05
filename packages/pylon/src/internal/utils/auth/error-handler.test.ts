@@ -6,15 +6,34 @@ describe("errorHandler", () => {
   beforeEach(() => {
     ctx = {
       query: {
-        test: "test",
+        error: "access_denied",
+        error_description: "User cancelled",
+        state: "abc123",
       },
     };
   });
 
-  test("should resolve", async () => {
+  test("should resolve with OIDC error fields", async () => {
     await expect(errorHandler(ctx, jest.fn())).resolves.toBeUndefined();
 
-    expect(ctx.body).toEqual(ctx.query);
-    expect(ctx.status).toBe(500);
+    expect(ctx.body).toEqual({
+      error: "access_denied",
+      error_description: "User cancelled",
+      state: "abc123",
+    });
+    expect(ctx.status).toBe(400);
+  });
+
+  test("should resolve with defaults when query is empty", async () => {
+    ctx.query = {};
+
+    await expect(errorHandler(ctx, jest.fn())).resolves.toBeUndefined();
+
+    expect(ctx.body).toEqual({
+      error: "unknown_error",
+      error_description: null,
+      state: null,
+    });
+    expect(ctx.status).toBe(400);
   });
 });

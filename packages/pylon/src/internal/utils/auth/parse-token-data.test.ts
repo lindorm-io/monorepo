@@ -90,9 +90,9 @@ describe("parseTokenData", () => {
     ctx.state.session = {
       id: "35e8805b-2352-5c71-871a-19e8545540ce",
       accessToken: "existingAccessToken",
-      expiresAt: Date.now() + 4800 * 1000,
+      expiresAt: new Date(Date.now() + 4800 * 1000),
       idToken: "existingIdToken",
-      issuedAt: Date.now() - 360 * 1000,
+      issuedAt: new Date(Date.now() - 360 * 1000),
       refreshToken: "existingRefreshToken",
       scope: ["scope1", "scope2"],
       subject: "efd9178b-778b-53ce-b929-da87c320140e",

@@ -3,9 +3,9 @@ import { OpenIdScope } from "@lindorm/types";
 export interface IPylonSession {
   id: string;
   accessToken: string;
-  expiresAt: number;
+  expiresAt: Date | null;
   idToken?: string;
-  issuedAt: number;
+  issuedAt: Date;
   refreshToken?: string;
   scope: Array<OpenIdScope | string>;
   subject: string;

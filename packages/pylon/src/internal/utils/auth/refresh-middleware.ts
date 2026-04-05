@@ -9,11 +9,14 @@ const getAutoRefresh = (ctx: PylonHttpContext, config: PylonAuthConfig): number 
     case "force":
       return -1;
 
-    case "half_life":
-      return Math.floor((ctx.state.session!.issuedAt + ctx.state.session!.expiresAt) / 2);
+    case "half_life": {
+      const issuedAt = ctx.state.session!.issuedAt.getTime();
+      const expiresAt = ctx.state.session!.expiresAt?.getTime() ?? issuedAt;
+      return Math.floor((issuedAt + expiresAt) / 2);
+    }
 
     case "max_age":
-      return ctx.state.session!.issuedAt + ms(config.refresh.maxAge);
+      return ctx.state.session!.issuedAt.getTime() + ms(config.refresh.maxAge);
 
     default:
       throw new ServerError("Invalid refresh mode");
@@ -35,16 +38,22 @@ export const createRefreshMiddleware = <C extends PylonHttpContext>(
       const autoRefresh = getAutoRefresh(ctx, config);
 
       if (now >= autoRefresh) {
-        const client = getAuthClient(ctx, config);
+        try {
+          const client = getAuthClient(ctx, config);
 
-        const data = await client.token({
-          grantType: "refresh_token",
-          refreshToken: ctx.state.session.refreshToken,
-        });
+          const data = await client.token({
+            grantType: "refresh_token",
+            refreshToken: ctx.state.session.refreshToken,
+          });
 
-        ctx.state.session = parseTokenData(ctx, config, data);
+          ctx.state.session = parseTokenData(ctx, config, data);
 
-        await ctx.session.set(ctx.state.session);
+          await ctx.session.set(ctx.state.session);
+        } catch (error) {
+          ctx.logger.warn("Token refresh failed, clearing session", { error });
+          await ctx.session.del();
+          ctx.state.session = null;
+        }
       }
     }
 

@@ -35,9 +35,9 @@ describe("createRefreshMiddleware", () => {
         session: {
           id: "a6d36ab7-ab36-52a8-b366-5f5f21f8280e",
           accessToken: "accessToken",
-          expiresAt: Date.now() + 43200 * 1000,
+          expiresAt: new Date(Date.now() + 43200 * 1000),
           idToken: "idToken",
-          issuedAt: Date.now() - 43200 * 1000,
+          issuedAt: new Date(Date.now() - 43200 * 1000),
           refreshToken: "refreshToken",
           scope: ["scope"],
           subject: "9fb829a7-964e-56a3-9176-809cb357546c",

@@ -12,6 +12,7 @@ export const logoutSchema = z.object({
   idTokenHint: z.string().optional(),
   logoutHint: z.string().optional(),
   redirectUri: z.url().optional(),
+  uiLocales: z.string().optional(),
 });
 
 export const createLogoutHandler = <C extends PylonHttpContext>(
@@ -30,7 +31,13 @@ export const createLogoutHandler = <C extends PylonHttpContext>(
 
     if (
       ctx.data.redirectUri &&
-      !config.dynamicRedirectDomains.some((u) => ctx.data.redirectUri.startsWith(u))
+      !config.dynamicRedirectDomains.some((u) => {
+        try {
+          return new URL(ctx.data.redirectUri).origin === new URL(u).origin;
+        } catch {
+          return false;
+        }
+      })
     ) {
       throw new ClientError("Invalid redirect URI");
     }

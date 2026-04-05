@@ -15,21 +15,23 @@ export const parseTokenData = (
 ): IPylonSession => {
   const tdata = data as OpenIdTokenResponse;
 
+  const now = new Date();
+
   const session: IPylonSession = ctx.state.session ?? {
     id: randomUUID(),
     accessToken: "",
-    expiresAt: 0,
-    issuedAt: 0,
+    expiresAt: null,
+    issuedAt: now,
     scope: [],
     subject: "",
   };
 
   const expiresIn = data.expiresIn ? data.expiresIn * 1000 : ms(config.tokenExpiry);
 
-  session.issuedAt = Date.now();
+  session.issuedAt = now;
   session.expiresAt = data.expiresOn
-    ? data.expiresOn * 1000
-    : Date.now() + expiresIn * 1000;
+    ? new Date(data.expiresOn * 1000)
+    : new Date(Date.now() + expiresIn);
   session.scope = tdata.scope ? tdata.scope.split(" ") : session.scope;
 
   if (data.accessToken) {
@@ -41,8 +43,8 @@ export const parseTokenData = (
 
     if (parsed) {
       session.id = parsed.payload.sessionId || session.id;
-      session.issuedAt = parsed.payload.issuedAt?.getTime() ?? session.issuedAt;
-      session.expiresAt = parsed.payload.expiresAt?.getTime() ?? session.expiresAt;
+      session.issuedAt = parsed.payload.issuedAt ?? session.issuedAt;
+      session.expiresAt = parsed.payload.expiresAt ?? session.expiresAt;
       session.subject = parsed.payload.subject || session.subject;
     }
   }
@@ -53,7 +55,7 @@ export const parseTokenData = (
     const parsed = Aegis.parse<ParsedJwt>(data.idToken);
 
     session.id = parsed.payload.sessionId || session.id;
-    session.issuedAt = parsed.payload.issuedAt?.getTime() ?? session.issuedAt;
+    session.issuedAt = parsed.payload.issuedAt ?? session.issuedAt;
     session.subject = parsed.payload.subject || session.subject;
   }
 
