@@ -15,6 +15,7 @@ const makeMinimalMetadata = (
   overrides: Partial<EntityMetadata> = {},
 ): EntityMetadata => ({
   target: RIRRoot as any,
+  appendOnly: false,
   cache: null,
   checks: [],
   defaultOrder: null,

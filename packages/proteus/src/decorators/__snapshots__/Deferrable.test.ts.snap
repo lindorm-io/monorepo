@@ -2,6 +2,7 @@
 
 exports[`Deferrable should match snapshot for DEFERRABLE INITIALLY DEFERRED 1`] = `
 {
+  "appendOnly": false,
   "cache": null,
   "checks": [],
   "defaultOrder": null,
@@ -98,6 +99,7 @@ exports[`Deferrable should match snapshot for DEFERRABLE INITIALLY DEFERRED 1`] 
 
 exports[`Deferrable should match snapshot for DEFERRABLE INITIALLY IMMEDIATE 1`] = `
 {
+  "appendOnly": false,
   "cache": null,
   "checks": [],
   "defaultOrder": null,

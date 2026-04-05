@@ -27,8 +27,10 @@ import type { PostgresQueryClient } from "../types/postgres-query-client";
 import type { PostgresTransactionHandle } from "../types/postgres-transaction-handle";
 import { diffSchema } from "../utils/sync/diff-schema";
 import { SyncPlanExecutor } from "../utils/sync/execute-sync-plan";
+import { generateAppendOnlyDDL } from "../utils/ddl/generate-append-only-ddl";
 import { introspectSchema } from "../utils/sync/introspect-schema";
 import { projectDesiredSchema } from "../utils/sync/project-desired-schema";
+import { quoteQualifiedName } from "../utils/quote-identifier";
 import { beginTransaction } from "../utils/transaction/begin-transaction";
 import { commitTransaction } from "../utils/transaction/commit-transaction";
 import { rollbackTransaction } from "../utils/transaction/rollback-transaction";
@@ -591,8 +593,55 @@ export class PostgresDriver implements IProteusDriver {
           `Sync complete: ${result.statementsExecuted} statements executed`,
         );
       }
+
+      // Post-sync: apply or remove append-only triggers
+      if (!dryRun) {
+        await this.syncAppendOnlyTriggers(client, metadatas, nsOptions);
+      }
     } finally {
       poolClient.release();
+    }
+  }
+
+  private async syncAppendOnlyTriggers(
+    client: PostgresQueryClient,
+    metadatas: Array<import("#internal/entity/types/metadata").EntityMetadata>,
+    nsOptions: { namespace: string | null },
+  ): Promise<void> {
+    for (const metadata of metadatas) {
+      const tableName = metadata.entity.name;
+      const namespace = metadata.entity.namespace || nsOptions.namespace;
+      const qualifiedTable = quoteQualifiedName(namespace, tableName);
+
+      if (metadata.appendOnly) {
+        try {
+          const statements = generateAppendOnlyDDL(tableName, namespace);
+
+          for (const sql of statements) {
+            await client.query(sql);
+          }
+
+          this.logger.debug("Applied append-only triggers", {
+            table: qualifiedTable,
+          });
+        } catch (error) {
+          this.logger.warn("Failed to apply append-only triggers", {
+            table: qualifiedTable,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        }
+      } else {
+        // Drop any existing append-only triggers in case @AppendOnly was removed
+        try {
+          for (const op of ["update", "delete", "truncate"] as const) {
+            await client.query(
+              `DROP TRIGGER IF EXISTS "proteus_append_only_no_${op}" ON ${qualifiedTable};`,
+            );
+          }
+        } catch {
+          // Best effort — table may not exist yet during first sync
+        }
+      }
     }
   }
 

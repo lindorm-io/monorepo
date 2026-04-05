@@ -2,6 +2,7 @@
 
 exports[`Index should register class-level array index 1`] = `
 {
+  "appendOnly": false,
   "cache": null,
   "checks": [],
   "defaultOrder": null,
@@ -139,6 +140,7 @@ exports[`Index should register class-level array index 1`] = `
 
 exports[`Index should register field-level index with custom direction and name 1`] = `
 {
+  "appendOnly": false,
   "cache": null,
   "checks": [],
   "defaultOrder": null,

@@ -2,6 +2,7 @@
 
 exports[`JoinTable should match snapshot for auto join table 1`] = `
 {
+  "appendOnly": false,
   "cache": null,
   "checks": [],
   "defaultOrder": null,
@@ -122,6 +123,7 @@ exports[`JoinTable should match snapshot for auto join table 1`] = `
 
 exports[`JoinTable should match snapshot for custom join table name 1`] = `
 {
+  "appendOnly": false,
   "cache": null,
   "checks": [],
   "defaultOrder": null,

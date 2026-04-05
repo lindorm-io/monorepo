@@ -35,6 +35,7 @@ import {
 import { hydrateReturning } from "../utils/query/hydrate-returning";
 import { buildPrimaryKeyPredicate } from "#internal/utils/repository/build-pk-predicate";
 import {
+  guardAppendOnly,
   guardDeleteDateField,
   guardVersionFields,
   validateRelationNames,
@@ -335,6 +336,8 @@ export class PostgresRepository<
   }
 
   public async clear(options?: ClearOptions): Promise<void> {
+    guardAppendOnly(this.metadata, "clear");
+
     // For inheritance children, always use the ROOT entity's table.
     const { schema, name } = resolveTableName(this.metadata, this.namespace);
     const tableName = quoteQualifiedName(schema, name);

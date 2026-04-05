@@ -256,6 +256,7 @@ const getDesired = (): DesiredSchema => ({
       indexes: [],
       comment: null,
       columnComments: {},
+      triggers: [],
     },
   ],
 });

@@ -1,6 +1,7 @@
 import type { EntityMetadata } from "#internal/entity/types/metadata";
 import type { NamespaceOptions } from "#internal/types/types";
 import { getEntityName } from "#internal/entity/utils/get-entity-name";
+import { generateAppendOnlyDDL } from "./generate-append-only-ddl";
 import { generateEnumTypeDDL } from "./generate-enum-type-ddl";
 import { generateFkDDL } from "./generate-fk-ddl";
 import { generateIndexDDL } from "./generate-index-ddl";
@@ -17,6 +18,7 @@ export type DdlOutput = {
   constraints: Array<string>;
   indexes: Array<string>;
   comments: Array<string>;
+  triggers: Array<string>;
 };
 
 /**
@@ -39,6 +41,7 @@ export const generateEntityDDL = (
     constraints: [],
     indexes: [],
     comments: [],
+    triggers: [],
   };
 
   // Extensions — auto-detect from field types
@@ -75,6 +78,11 @@ export const generateEntityDDL = (
 
   // Comments
   output.comments.push(...generateCommentDDL(metadata, tableName, namespace));
+
+  // Append-only triggers
+  if (metadata.appendOnly) {
+    output.triggers.push(...generateAppendOnlyDDL(tableName, namespace));
+  }
 
   return output;
 };

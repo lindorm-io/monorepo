@@ -474,10 +474,12 @@ export class PostgresQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   }
 
   public update(): IUpdateQueryBuilder<E> {
+    this.guardAppendOnlyWrite("update");
     return new PostgresUpdateQueryBuilder<E>(this.metadata, this.client, this.namespace);
   }
 
   public delete(): IDeleteQueryBuilder<E> {
+    this.guardAppendOnlyWrite("delete");
     return new PostgresDeleteQueryBuilder<E>(
       this.metadata,
       this.client,
@@ -487,6 +489,7 @@ export class PostgresQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   }
 
   public softDelete(): IDeleteQueryBuilder<E> {
+    this.guardAppendOnlyWrite("softDelete");
     return new PostgresDeleteQueryBuilder<E>(
       this.metadata,
       this.client,

@@ -292,6 +292,10 @@ export class SyncPlanExecutor {
       case "recreate_table":
         // Handled separately
         return "";
+      case "create_trigger":
+        return op.ddl;
+      case "drop_trigger":
+        return `DROP TRIGGER IF EXISTS ${quoteIdentifier(op.triggerName)};`;
     }
   };
 
@@ -309,6 +313,10 @@ export class SyncPlanExecutor {
         return `Drop table "${op.tableName}"`;
       case "recreate_table":
         return `Recreate table "${op.tableName}"`;
+      case "create_trigger":
+        return `Create trigger "${op.triggerName}"`;
+      case "drop_trigger":
+        return `Drop trigger "${op.triggerName}"`;
     }
   };
 

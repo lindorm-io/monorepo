@@ -149,6 +149,7 @@ describe("executeSyncPlan (integration)", () => {
           ],
           comment: "User accounts table",
           columnComments: { email: "Primary email" },
+          triggers: [],
         },
       ],
     };
@@ -322,6 +323,7 @@ describe("executeSyncPlan (integration)", () => {
           ],
           comment: "User accounts table",
           columnComments: { email: "Primary email" },
+          triggers: [],
         },
       ],
     };
@@ -475,6 +477,7 @@ describe("executeSyncPlan (integration)", () => {
           ],
           comment: "User accounts table",
           columnComments: { email: "Primary email" },
+          triggers: [],
         },
       ],
     };
@@ -528,6 +531,7 @@ describe("executeSyncPlan (integration)", () => {
           indexes: [],
           comment: null,
           columnComments: {},
+          triggers: [],
         },
       ],
     };
@@ -667,6 +671,7 @@ describe("executeSyncPlan (integration)", () => {
           ],
           comment: "User accounts table",
           columnComments: { email: "Primary email" },
+          triggers: [],
         },
         // New table with FK
         {
@@ -759,6 +764,7 @@ describe("executeSyncPlan (integration)", () => {
           ],
           comment: null,
           columnComments: {},
+          triggers: [],
         },
       ],
     };

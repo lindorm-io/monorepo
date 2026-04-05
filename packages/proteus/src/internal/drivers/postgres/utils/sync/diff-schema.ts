@@ -1,5 +1,5 @@
-import type { DbSnapshot } from "../../types/db-snapshot";
-import type { DesiredSchema } from "../../types/desired-schema";
+import type { DbSnapshot, DbTrigger } from "../../types/db-snapshot";
+import type { DesiredSchema, DesiredTrigger } from "../../types/desired-schema";
 import type { SyncOperation, SyncPlan } from "../../types/sync-plan";
 import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier";
 import { diffColumns } from "./diff-columns";
@@ -32,9 +32,11 @@ const OPERATION_ORDER: Record<string, number> = {
   add_constraint_fk: 15,
   create_index: 16,
   set_comment: 17,
-  warn_only: 18,
+  create_trigger: 18,
+  drop_trigger: 18,
+  warn_only: 19,
   // Autocommit phase
-  add_enum_value: 19,
+  add_enum_value: 20,
 };
 
 const getOperationOrder = (op: SyncOperation): number => {
@@ -49,9 +51,62 @@ const getOperationOrder = (op: SyncOperation): number => {
 };
 
 /**
+ * Diffs triggers between existing DB state and desired state. Produces create_trigger
+ * ops for triggers that are desired but missing, and drop_trigger ops for proteus-managed
+ * triggers that exist but are no longer desired (e.g. @AppendOnly() removed).
+ */
+const diffTriggers = (
+  existing: Array<DbTrigger>,
+  desired: Array<DesiredTrigger>,
+  schema: string,
+  table: string,
+): Array<SyncOperation> => {
+  const ops: Array<SyncOperation> = [];
+  const q = quoteQualifiedName(schema, table);
+
+  const existingSet = new Set(existing.map((t) => t.name));
+  const desiredMap = new Map(desired.map((t) => [t.name, t]));
+  const desiredNames = new Set(desired.map((t) => t.name));
+
+  // Create triggers that are desired but don't exist
+  for (const [name, trigger] of desiredMap) {
+    if (!existingSet.has(name)) {
+      for (const stmt of trigger.statements) {
+        ops.push({
+          type: "create_trigger",
+          severity: "safe",
+          schema,
+          table,
+          description: `Create trigger "${name}" on ${q}`,
+          sql: stmt,
+          autocommit: false,
+        });
+      }
+    }
+  }
+
+  // Drop proteus-managed triggers that exist but are no longer desired
+  for (const existing_trigger of existing) {
+    if (!desiredNames.has(existing_trigger.name)) {
+      ops.push({
+        type: "drop_trigger",
+        severity: "safe",
+        schema,
+        table,
+        description: `Drop trigger "${existing_trigger.name}" on ${q}`,
+        sql: `DROP TRIGGER IF EXISTS ${quoteIdentifier(existing_trigger.name)} ON ${q};`,
+        autocommit: false,
+      });
+    }
+  }
+
+  return ops;
+};
+
+/**
  * Produces a sorted list of sync operations by diffing the current DB snapshot against
  * the desired schema. Covers extensions, schemas, enums, tables (create + alter columns/
- * constraints/indexes/comments). Operations are sorted by execution order to respect
+ * constraints/indexes/comments/triggers). Operations are sorted by execution order to respect
  * PostgreSQL dependency requirements (e.g. drop FKs before column changes, re-add after).
  */
 export const diffSchema = (snapshot: DbSnapshot, desired: DesiredSchema): SyncPlan => {
@@ -224,6 +279,16 @@ export const diffSchema = (snapshot: DbSnapshot, desired: DesiredSchema): SyncPl
         });
       }
 
+      // Triggers for new table
+      ops.push(
+        ...diffTriggers(
+          [],
+          desiredTable.triggers,
+          desiredTable.schema,
+          desiredTable.name,
+        ),
+      );
+
       continue;
     }
 
@@ -253,6 +318,14 @@ export const diffSchema = (snapshot: DbSnapshot, desired: DesiredSchema): SyncPl
       ),
     );
     ops.push(...diffComments(dbTable, desiredTable));
+    ops.push(
+      ...diffTriggers(
+        dbTable.triggers,
+        desiredTable.triggers,
+        desiredTable.schema,
+        desiredTable.name,
+      ),
+    );
   }
 
   // Sort operations by execution order

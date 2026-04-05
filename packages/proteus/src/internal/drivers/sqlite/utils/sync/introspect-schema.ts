@@ -37,6 +37,13 @@ export const introspectSchema = (
     // Introspect indexes separately
     table.indexes = introspectIndexes(client, tableName);
 
+    // Introspect proteus-managed triggers
+    const triggerRows = client.all(
+      `SELECT name FROM sqlite_master WHERE type = 'trigger' AND tbl_name = ? AND name LIKE 'proteus_%' ORDER BY name`,
+      [tableName],
+    );
+    table.triggers = triggerRows.map((row) => ({ name: row.name as string }));
+
     tables.set(tableName, table);
   }
 

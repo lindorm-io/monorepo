@@ -40,6 +40,16 @@ export type DesiredEnum = {
   values: Array<string>;
 };
 
+export type DesiredTrigger = {
+  /** Trigger name (unquoted) */
+  name: string;
+  /**
+   * Full DDL statements to create/replace the trigger, including any
+   * prerequisite function. Each entry is a standalone SQL statement.
+   */
+  statements: Array<string>;
+};
+
 export type DesiredTable = {
   schema: string;
   name: string;
@@ -48,6 +58,7 @@ export type DesiredTable = {
   indexes: Array<DesiredIndex>;
   comment: string | null;
   columnComments: Record<string, string>;
+  triggers: Array<DesiredTrigger>;
 };
 
 export type DesiredSchema = {

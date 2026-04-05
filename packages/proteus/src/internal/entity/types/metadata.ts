@@ -299,6 +299,7 @@ export type EntityMetadata<
   TDecorator extends MetaFieldDecorator = MetaFieldDecorator,
 > = {
   target: Constructor<IEntity>;
+  appendOnly: boolean;
   cache: MetaCache | null; // null = no @Cache decorator
   checks: Array<MetaCheck>;
   defaultOrder: Record<string, "ASC" | "DESC"> | null;

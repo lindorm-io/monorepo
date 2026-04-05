@@ -98,6 +98,7 @@ exports[`introspectSchema (MySQL) introspects tables with columns 1`] = `
       "foreignKeys": [],
       "indexes": [],
       "name": "users",
+      "triggers": [],
       "uniqueConstraints": [],
     },
   },

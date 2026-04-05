@@ -23,6 +23,7 @@ jest.mock("#internal/utils/repository/build-pk-predicate", () => ({
 }));
 
 jest.mock("#internal/utils/repository/repository-guards", () => ({
+  guardAppendOnly: jest.fn(),
   guardDeleteDateField: jest.fn(),
   guardExpiryDateField: jest.fn(),
   guardVersionFields: jest.fn(),
@@ -84,6 +85,7 @@ import { EntityManager } from "#internal/entity/classes/EntityManager";
 import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
 import { buildPrimaryKeyPredicate } from "#internal/utils/repository/build-pk-predicate";
 import {
+  guardAppendOnly,
   guardDeleteDateField,
   guardExpiryDateField,
   guardUpsertBlocked,
@@ -362,6 +364,7 @@ describe("DriverRepositoryBase", () => {
     }));
     (filterHiddenSelections as jest.Mock).mockReturnValue(null);
     (dispatchSubscribers as jest.Mock).mockResolvedValue(undefined);
+    (guardAppendOnly as jest.Mock).mockReturnValue(undefined);
     (guardDeleteDateField as jest.Mock).mockReturnValue(undefined);
     (guardExpiryDateField as jest.Mock).mockReturnValue(undefined);
     (guardUpsertBlocked as jest.Mock).mockReturnValue(undefined);
@@ -809,6 +812,36 @@ describe("DriverRepositoryBase", () => {
 
       expect(abstractMethods.updateOne).toHaveBeenCalledTimes(2);
     });
+
+    test("calls guardAppendOnly with metadata and 'update'", async () => {
+      const { repo } = createRepo();
+      abstractMethods.updateOne = jest.fn().mockResolvedValue(entityA);
+      (repo as any).updateOne = abstractMethods.updateOne;
+
+      await repo.update(entityA);
+
+      expect(guardAppendOnly).toHaveBeenCalledWith(mockMetadata, "update");
+    });
+  });
+
+  // ─── Save (appendOnly inline guard) ─────────────────────────────────
+
+  describe("save — appendOnly guard", () => {
+    test("throws ProteusRepositoryError when metadata.appendOnly is true", async () => {
+      const appendOnlyMeta = { ...mockMetadata, appendOnly: true } as any;
+      const { repo } = createRepo({ metadata: appendOnlyMeta });
+
+      await expect(repo.save(entityA)).rejects.toThrow(ProteusRepositoryError);
+    });
+
+    test("error message includes entity name and suggests insert()", async () => {
+      const appendOnlyMeta = { ...mockMetadata, appendOnly: true } as any;
+      const { repo } = createRepo({ metadata: appendOnlyMeta });
+
+      await expect(repo.save(entityA)).rejects.toThrow(
+        /Cannot save an append-only entity "TestEntity" — use insert\(\) instead/,
+      );
+    });
   });
 
   // ─── Clone ──────────────────────────────────────────────────────────
@@ -861,6 +894,16 @@ describe("DriverRepositoryBase", () => {
 
       expect(abstractMethods.destroyOne).toHaveBeenCalledTimes(2);
     });
+
+    test("calls guardAppendOnly with metadata and 'destroy'", async () => {
+      const { repo } = createRepo();
+      abstractMethods.destroyOne = jest.fn().mockResolvedValue(undefined);
+      (repo as any).destroyOne = abstractMethods.destroyOne;
+
+      await repo.destroy(entityA);
+
+      expect(guardAppendOnly).toHaveBeenCalledWith(mockMetadata, "destroy");
+    });
   });
 
   // ─── Increment / Decrement ───────────────────────────────────────────
@@ -874,6 +917,15 @@ describe("DriverRepositoryBase", () => {
 
       expect(executor.executeIncrement).toHaveBeenCalledWith({ id: "1" }, "version", 1);
     });
+
+    test("calls guardAppendOnly with metadata and 'increment'", async () => {
+      const { repo, executor } = createRepo();
+      (executor.executeIncrement as jest.Mock).mockResolvedValue(undefined);
+
+      await repo.increment({ id: "1" } as any, "version" as keyof TestEntity, 1);
+
+      expect(guardAppendOnly).toHaveBeenCalledWith(mockMetadata, "increment");
+    });
   });
 
   describe("decrement", () => {
@@ -884,6 +936,15 @@ describe("DriverRepositoryBase", () => {
       await repo.decrement({ id: "1" } as any, "version" as keyof TestEntity, 2);
 
       expect(executor.executeDecrement).toHaveBeenCalledWith({ id: "1" }, "version", 2);
+    });
+
+    test("calls guardAppendOnly with metadata and 'decrement'", async () => {
+      const { repo, executor } = createRepo();
+      (executor.executeDecrement as jest.Mock).mockResolvedValue(undefined);
+
+      await repo.decrement({ id: "1" } as any, "version" as keyof TestEntity, 2);
+
+      expect(guardAppendOnly).toHaveBeenCalledWith(mockMetadata, "decrement");
     });
   });
 
@@ -897,6 +958,15 @@ describe("DriverRepositoryBase", () => {
       await repo.delete({ id: "1" } as any);
 
       expect(executor.executeDelete).toHaveBeenCalledWith({ id: "1" }, undefined);
+    });
+
+    test("calls guardAppendOnly with metadata and 'delete'", async () => {
+      const { repo, executor } = createRepo();
+      (executor.executeDelete as jest.Mock).mockResolvedValue(undefined);
+
+      await repo.delete({ id: "1" } as any);
+
+      expect(guardAppendOnly).toHaveBeenCalledWith(mockMetadata, "delete");
     });
   });
 
@@ -921,6 +991,16 @@ describe("DriverRepositoryBase", () => {
       await expect(
         repo.updateMany({ name: "foo" } as any, { name: "bar" }),
       ).rejects.toThrow(ProteusRepositoryError);
+    });
+
+    test("calls guardAppendOnly with metadata and 'updateMany'", async () => {
+      const { repo, executor, mockEM } = createRepo();
+      mockEM.updateStrategy = "update";
+      (executor.executeUpdateMany as jest.Mock).mockResolvedValue(1);
+
+      await repo.updateMany({ name: "foo" } as any, { name: "bar" });
+
+      expect(guardAppendOnly).toHaveBeenCalledWith(mockMetadata, "updateMany");
     });
   });
 
@@ -948,6 +1028,19 @@ describe("DriverRepositoryBase", () => {
 
       expect(abstractMethods.softDestroyOne).toHaveBeenCalledTimes(2);
     });
+
+    test("calls guardAppendOnly with metadata and 'softDestroy'", async () => {
+      const { repo } = createRepo({ metadata: mockMetadataWithDeleteDate });
+      abstractMethods.softDestroyOne = jest.fn().mockResolvedValue(undefined);
+      (repo as any).softDestroyOne = abstractMethods.softDestroyOne;
+
+      await repo.softDestroy(entityA);
+
+      expect(guardAppendOnly).toHaveBeenCalledWith(
+        mockMetadataWithDeleteDate,
+        "softDestroy",
+      );
+    });
   });
 
   describe("softDelete", () => {
@@ -960,6 +1053,18 @@ describe("DriverRepositoryBase", () => {
       expect(guardDeleteDateField).toHaveBeenCalled();
       expect(executor.executeSoftDelete).toHaveBeenCalledWith({ id: "1" });
     });
+
+    test("calls guardAppendOnly with metadata and 'softDelete'", async () => {
+      const { repo, executor } = createRepo({ metadata: mockMetadataWithDeleteDate });
+      (executor.executeSoftDelete as jest.Mock).mockResolvedValue(undefined);
+
+      await repo.softDelete({ id: "1" } as any);
+
+      expect(guardAppendOnly).toHaveBeenCalledWith(
+        mockMetadataWithDeleteDate,
+        "softDelete",
+      );
+    });
   });
 
   describe("restore", () => {
@@ -971,6 +1076,15 @@ describe("DriverRepositoryBase", () => {
 
       expect(guardDeleteDateField).toHaveBeenCalled();
       expect(executor.executeRestore).toHaveBeenCalledWith({ id: "1" });
+    });
+
+    test("calls guardAppendOnly with metadata and 'restore'", async () => {
+      const { repo, executor } = createRepo({ metadata: mockMetadataWithDeleteDate });
+      (executor.executeRestore as jest.Mock).mockResolvedValue(undefined);
+
+      await repo.restore({ id: "1" } as any);
+
+      expect(guardAppendOnly).toHaveBeenCalledWith(mockMetadataWithDeleteDate, "restore");
     });
   });
 
@@ -1005,6 +1119,18 @@ describe("DriverRepositoryBase", () => {
       expect(guardExpiryDateField).toHaveBeenCalled();
       expect(executor.executeDeleteExpired).toHaveBeenCalled();
     });
+
+    test("calls guardAppendOnly with metadata and 'deleteExpired'", async () => {
+      const { repo, executor } = createRepo({ metadata: mockMetadataWithExpiryDate });
+      (executor.executeDeleteExpired as jest.Mock).mockResolvedValue(undefined);
+
+      await repo.deleteExpired();
+
+      expect(guardAppendOnly).toHaveBeenCalledWith(
+        mockMetadataWithExpiryDate,
+        "deleteExpired",
+      );
+    });
   });
 
   // ─── Upsert ──────────────────────────────────────────────────────────
@@ -1031,6 +1157,16 @@ describe("DriverRepositoryBase", () => {
       await repo.upsert([entityA, entityB]);
 
       expect(abstractMethods.upsertOne).toHaveBeenCalledTimes(2);
+    });
+
+    test("calls guardAppendOnly with metadata and 'upsert'", async () => {
+      const { repo } = createRepo();
+      abstractMethods.upsertOne = jest.fn().mockResolvedValue(entityA);
+      (repo as any).upsertOne = abstractMethods.upsertOne;
+
+      await repo.upsert(entityA);
+
+      expect(guardAppendOnly).toHaveBeenCalledWith(mockMetadata, "upsert");
     });
   });
 

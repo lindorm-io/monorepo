@@ -2,6 +2,7 @@
 
 exports[`Generated should register increment generation strategy 1`] = `
 {
+  "appendOnly": false,
   "cache": null,
   "checks": [],
   "defaultOrder": null,
@@ -68,6 +69,7 @@ exports[`Generated should register increment generation strategy 1`] = `
 
 exports[`Generated should register uuid generation strategy 1`] = `
 {
+  "appendOnly": false,
   "cache": null,
   "checks": [],
   "defaultOrder": null,

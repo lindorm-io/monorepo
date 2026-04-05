@@ -2,6 +2,7 @@
 
 exports[`JoinKey should match snapshot for auto join key 1`] = `
 {
+  "appendOnly": false,
   "cache": null,
   "checks": [],
   "defaultOrder": null,
@@ -98,6 +99,7 @@ exports[`JoinKey should match snapshot for auto join key 1`] = `
 
 exports[`JoinKey should match snapshot for explicit join key 1`] = `
 {
+  "appendOnly": false,
   "cache": null,
   "checks": [],
   "defaultOrder": null,

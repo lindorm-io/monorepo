@@ -209,10 +209,12 @@ export class MemoryQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   }
 
   public update(): IUpdateQueryBuilder<E> {
+    this.guardAppendOnlyWrite("update");
     return new MemoryUpdateBuilder<E>(this.getTable, this.metadata);
   }
 
   public delete(): IDeleteQueryBuilder<E> {
+    this.guardAppendOnlyWrite("delete");
     return new MemoryDeleteBuilder<E>(
       this.getTable,
       this.getStore,
@@ -223,6 +225,7 @@ export class MemoryQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   }
 
   public softDelete(): IDeleteQueryBuilder<E> {
+    this.guardAppendOnlyWrite("softDelete");
     return new MemoryDeleteBuilder<E>(
       this.getTable,
       this.getStore,

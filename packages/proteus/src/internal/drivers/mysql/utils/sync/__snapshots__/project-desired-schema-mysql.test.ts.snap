@@ -75,6 +75,7 @@ exports[`projectDesiredSchemaMysql projects ManyToMany join table 1`] = `
       "primaryKeys": [
         "id",
       ],
+      "triggers": [],
       "uniqueConstraints": [],
     },
     {
@@ -141,6 +142,7 @@ exports[`projectDesiredSchemaMysql projects ManyToMany join table 1`] = `
         "testCourseId",
         "testStudentId",
       ],
+      "triggers": [],
       "uniqueConstraints": [],
     },
     {
@@ -215,6 +217,7 @@ exports[`projectDesiredSchemaMysql projects ManyToMany join table 1`] = `
       "primaryKeys": [
         "id",
       ],
+      "triggers": [],
       "uniqueConstraints": [],
     },
   ],
@@ -314,6 +317,7 @@ exports[`projectDesiredSchemaMysql projects a simple entity with UUID PK 1`] = `
       "primaryKeys": [
         "id",
       ],
+      "triggers": [],
       "uniqueConstraints": [],
     },
   ],
@@ -413,6 +417,7 @@ exports[`projectDesiredSchemaMysql projects an entity with a ManyToOne FK 1`] = 
       "primaryKeys": [
         "id",
       ],
+      "triggers": [],
       "uniqueConstraints": [],
     },
     {
@@ -508,6 +513,7 @@ exports[`projectDesiredSchemaMysql projects an entity with a ManyToOne FK 1`] = 
       "primaryKeys": [
         "id",
       ],
+      "triggers": [],
       "uniqueConstraints": [],
     },
   ],
@@ -607,6 +613,7 @@ exports[`projectDesiredSchemaMysql projects entity with check constraints 1`] = 
       "primaryKeys": [
         "id",
       ],
+      "triggers": [],
       "uniqueConstraints": [],
     },
   ],
@@ -724,6 +731,7 @@ exports[`projectDesiredSchemaMysql projects entity with indexes and unique const
       "primaryKeys": [
         "id",
       ],
+      "triggers": [],
       "uniqueConstraints": [
         {
           "columns": [
@@ -837,6 +845,7 @@ exports[`projectDesiredSchemaMysql projects owning side of OneToOne with FK colu
       "primaryKeys": [
         "id",
       ],
+      "triggers": [],
       "uniqueConstraints": [],
     },
   ],
@@ -943,6 +952,7 @@ exports[`projectDesiredSchemaMysql projects with namespace 1`] = `
       "primaryKeys": [
         "id",
       ],
+      "triggers": [],
       "uniqueConstraints": [],
     },
   ],

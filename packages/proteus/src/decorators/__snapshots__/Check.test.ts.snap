@@ -2,6 +2,7 @@
 
 exports[`Check should register multiple check constraints 1`] = `
 {
+  "appendOnly": false,
   "cache": null,
   "checks": [
     {

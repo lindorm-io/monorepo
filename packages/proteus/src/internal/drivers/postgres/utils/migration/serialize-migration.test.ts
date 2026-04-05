@@ -45,6 +45,7 @@ const snapshotWithTable: DbSnapshot = {
       indexes: [],
       comment: null,
       columnComments: {},
+      triggers: [],
     },
   ],
   enums: [],

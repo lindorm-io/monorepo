@@ -61,6 +61,7 @@ describe("generateEntityDDL", () => {
           "indexes",
           "schemas",
           "tables",
+          "triggers",
           "types",
         ].sort(),
       );

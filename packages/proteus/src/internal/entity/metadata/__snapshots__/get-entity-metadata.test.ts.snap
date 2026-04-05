@@ -2,6 +2,7 @@
 
 exports[`getEntityMetadata should return full entity metadata snapshot 1`] = `
 {
+  "appendOnly": false,
   "cache": null,
   "checks": [],
   "defaultOrder": null,

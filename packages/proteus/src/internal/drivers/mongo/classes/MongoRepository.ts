@@ -25,6 +25,7 @@ import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata
 import { DriverRepositoryBase } from "#internal/classes/DriverRepositoryBase";
 import { buildPrimaryKeyPredicate } from "#internal/utils/repository/build-pk-predicate";
 import {
+  guardAppendOnly,
   guardVersionFields,
   validateRelationNames,
 } from "#internal/utils/repository/repository-guards";
@@ -253,6 +254,8 @@ export class MongoRepository<
   }
 
   public async clear(_options?: ClearOptions): Promise<void> {
+    guardAppendOnly(this.metadata, "clear");
+
     const collectionName = resolveCollectionName(this.metadata);
     const collection = this.db.collection(collectionName);
 

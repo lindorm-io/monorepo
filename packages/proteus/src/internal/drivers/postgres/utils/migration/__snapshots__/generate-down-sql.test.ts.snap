@@ -16,6 +16,8 @@ exports[`generateDownSql — alter_column_nullable should reverse SET NOT NULL t
 
 exports[`generateDownSql — create_index should produce DROP INDEX 1`] = `"DROP INDEX IF EXISTS "app"."idx_email";"`;
 
+exports[`generateDownSql — create_trigger should produce DROP TRIGGER for CREATE TRIGGER sql 1`] = `"DROP TRIGGER IF EXISTS "trg_append_only_users" ON "app"."users";"`;
+
 exports[`generateDownSql — drop_and_readd_column should produce DROP COLUMN for incompatible-type re-add phase 1`] = `"ALTER TABLE "app"."users" DROP COLUMN "geo";"`;
 
 exports[`generateDownSql — drop_and_readd_column should produce DROP COLUMN for re-add phase 1`] = `"ALTER TABLE "app"."users" DROP COLUMN "calc";"`;

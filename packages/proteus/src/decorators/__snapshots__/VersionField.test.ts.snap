@@ -2,6 +2,7 @@
 
 exports[`VersionField should register version field metadata 1`] = `
 {
+  "appendOnly": false,
   "cache": null,
   "checks": [],
   "defaultOrder": null,

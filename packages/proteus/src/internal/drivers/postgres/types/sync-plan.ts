@@ -17,6 +17,8 @@ export type SyncOperationType =
   | "create_index"
   | "drop_index"
   | "set_comment"
+  | "create_trigger"
+  | "drop_trigger"
   | "warn_only";
 
 export type SyncSeverity = "safe" | "warning" | "destructive";

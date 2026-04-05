@@ -2,6 +2,7 @@
 
 exports[`PrimaryKeyField should register uuid primary key field (default) 1`] = `
 {
+  "appendOnly": false,
   "cache": null,
   "checks": [],
   "defaultOrder": null,

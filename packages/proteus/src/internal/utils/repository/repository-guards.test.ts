@@ -1,6 +1,7 @@
 import type { EntityMetadata } from "#internal/entity/types/metadata";
 import { ProteusRepositoryError } from "../../../errors/ProteusRepositoryError";
 import {
+  guardAppendOnly,
   guardDeleteDateField,
   guardExpiryDateField,
   guardVersionFields,
@@ -144,6 +145,30 @@ describe("guardUpsertBlocked", () => {
       generated: [{ key: "seqNum", strategy: "increment" }] as any,
     });
     expect(() => guardUpsertBlocked(metadata)).not.toThrow();
+  });
+});
+
+describe("guardAppendOnly", () => {
+  test("throws ProteusRepositoryError when appendOnly is true", () => {
+    const metadata = makeMetadata({ appendOnly: true } as any);
+    expect(() => guardAppendOnly(metadata, "update")).toThrow(ProteusRepositoryError);
+  });
+
+  test("includes entity name and method in error message", () => {
+    const metadata = makeMetadata({ appendOnly: true } as any);
+    expect(() => guardAppendOnly(metadata, "destroy")).toThrow(
+      /Cannot destroy an append-only entity "TestEntity"/,
+    );
+  });
+
+  test("error message matches snapshot", () => {
+    const metadata = makeMetadata({ appendOnly: true } as any);
+    expect(() => guardAppendOnly(metadata, "delete")).toThrowErrorMatchingSnapshot();
+  });
+
+  test("does not throw when appendOnly is false", () => {
+    const metadata = makeMetadata({ appendOnly: false } as any);
+    expect(() => guardAppendOnly(metadata, "update")).not.toThrow();
   });
 });
 

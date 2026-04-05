@@ -118,6 +118,7 @@ const snapshotWithTable = (overrides?: Partial<DbSnapshot["tables"][0]>): DbSnap
       ],
       comment: "The users table",
       columnComments: { email: "User email address" },
+      triggers: [],
       ...overrides,
     },
   ],
@@ -644,5 +645,49 @@ describe("generateDownSql — set_comment", () => {
       snapshotWithTable({ columnComments: { email: "User's email address" } }),
     );
     expect(result).toMatchSnapshot();
+  });
+});
+
+// --- create_trigger ---
+
+describe("generateDownSql — create_trigger", () => {
+  it("should produce DROP TRIGGER for CREATE TRIGGER sql", () => {
+    const result = generateDownSql(
+      op({
+        type: "create_trigger",
+        description: 'Create trigger "trg_append_only_users" on "app"."users"',
+        sql: 'CREATE TRIGGER "trg_append_only_users" BEFORE UPDATE OR DELETE ON "app"."users" FOR EACH ROW EXECUTE FUNCTION proteus_append_only();',
+      }),
+      emptySnapshot,
+    );
+    expect(result).toMatchSnapshot();
+  });
+
+  it("should return null for CREATE OR REPLACE FUNCTION sql", () => {
+    const result = generateDownSql(
+      op({
+        type: "create_trigger",
+        description: 'Create trigger "trg_append_only_users" on "app"."users"',
+        sql: `CREATE OR REPLACE FUNCTION proteus_append_only() RETURNS TRIGGER AS $$ BEGIN RAISE EXCEPTION 'append-only: updates not allowed'; END; $$ LANGUAGE plpgsql;`,
+      }),
+      emptySnapshot,
+    );
+    expect(result).toBeNull();
+  });
+});
+
+// --- drop_trigger ---
+
+describe("generateDownSql — drop_trigger", () => {
+  it("should return null (irreversible)", () => {
+    const result = generateDownSql(
+      op({
+        type: "drop_trigger",
+        description: 'Drop trigger "trg_append_only_users" on "app"."users"',
+        sql: 'DROP TRIGGER IF EXISTS "trg_append_only_users" ON "app"."users";',
+      }),
+      emptySnapshot,
+    );
+    expect(result).toBeNull();
   });
 });

@@ -19,6 +19,7 @@ import type { MemoryStore } from "../types/memory-store";
 import { DriverRepositoryBase } from "#internal/classes/DriverRepositoryBase";
 import { buildPrimaryKeyPredicate } from "#internal/utils/repository/build-pk-predicate";
 import {
+  guardAppendOnly,
   guardVersionFields,
   validateRelationNames,
 } from "#internal/utils/repository/repository-guards";
@@ -254,6 +255,8 @@ export class MemoryRepository<
   }
 
   public async clear(_options?: ClearOptions): Promise<void> {
+    guardAppendOnly(this.metadata, "clear");
+
     // For inheritance children, the store table is always keyed by the ROOT entity name.
     const isInheritanceChild = this.metadata.inheritance?.discriminatorValue != null;
 

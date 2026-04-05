@@ -2,6 +2,7 @@
 
 exports[`EmbeddedList — full metadata snapshot should match snapshot for custom table name entity 1`] = `
 {
+  "appendOnly": false,
   "cache": null,
   "checks": [],
   "defaultOrder": null,
@@ -78,6 +79,7 @@ exports[`EmbeddedList — full metadata snapshot should match snapshot for custo
 
 exports[`EmbeddedList — full metadata snapshot should match snapshot for embeddable collection entity 1`] = `
 {
+  "appendOnly": false,
   "cache": null,
   "checks": [],
   "defaultOrder": null,
@@ -251,6 +253,7 @@ exports[`EmbeddedList — full metadata snapshot should match snapshot for embed
 
 exports[`EmbeddedList — full metadata snapshot should match snapshot for multiple lists entity 1`] = `
 {
+  "appendOnly": false,
   "cache": null,
   "checks": [],
   "defaultOrder": null,
@@ -418,6 +421,7 @@ exports[`EmbeddedList — full metadata snapshot should match snapshot for multi
 
 exports[`EmbeddedList — full metadata snapshot should match snapshot for primitive collection entity 1`] = `
 {
+  "appendOnly": false,
   "cache": null,
   "checks": [],
   "defaultOrder": null,

@@ -1,11 +1,10 @@
 import { stageRelationCount } from "#internal/entity/metadata/stage-metadata";
 
 /**
- * Marks a field as a computed relation array length.
- *
- * **Not yet implemented** — metadata is staged but no runtime pipeline
- * consumes it. The decorator compiles and stages data correctly; a future
- * release will wire consumption into the query/hydration layer.
+ * Populates a field with the count of a related collection via a batched
+ * COUNT(*) ... GROUP BY query. Avoids loading the full relation just to
+ * get the count. Supports OneToMany and ManyToMany relations, including
+ * composite keys.
  */
 export const RelationCount =
   <E>(relationKey: keyof E & string) =>

@@ -2,6 +2,7 @@
 
 exports[`PrimaryKey should register class-level composite primary key 1`] = `
 {
+  "appendOnly": false,
   "cache": null,
   "checks": [],
   "defaultOrder": null,
@@ -109,6 +110,7 @@ exports[`PrimaryKey should register class-level composite primary key 1`] = `
 
 exports[`PrimaryKey should register field-level primary key 1`] = `
 {
+  "appendOnly": false,
   "cache": null,
   "checks": [],
   "defaultOrder": null,

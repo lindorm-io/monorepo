@@ -22,6 +22,7 @@ exports[`generateEntityDDL check constraints check constraints appear inside the
   CONSTRAINT "age_positive" CHECK (age >= 0)
 );",
   ],
+  "triggers": [],
   "types": [],
 }
 `;
@@ -42,6 +43,7 @@ exports[`generateEntityDDL extensions auto-detection adds pgvector extension whe
   PRIMARY KEY ("id")
 );",
   ],
+  "triggers": [],
   "types": [],
 }
 `;
@@ -69,6 +71,7 @@ exports[`generateEntityDDL indexes emits indexes for TestIndexed 1`] = `
   CONSTRAINT "unique_email" UNIQUE ("email")
 );",
   ],
+  "triggers": [],
   "types": [],
 }
 `;
@@ -98,6 +101,7 @@ exports[`generateEntityDDL many-to-many join tables emits join table DDL for Tes
   PRIMARY KEY ("testCourseId", "testStudentId")
 );",
   ],
+  "triggers": [],
   "types": [],
 }
 `;
@@ -124,6 +128,7 @@ exports[`generateEntityDDL relation entities (full DDL) generates full DDL for T
   PRIMARY KEY ("id")
 );",
   ],
+  "triggers": [],
   "types": [],
 }
 `;
@@ -147,6 +152,7 @@ exports[`generateEntityDDL relation entities (full DDL) generates full DDL for T
   PRIMARY KEY ("id")
 );",
   ],
+  "triggers": [],
   "types": [],
 }
 `;
@@ -170,6 +176,7 @@ exports[`generateEntityDDL relation entities (full DDL) generates full DDL for T
   PRIMARY KEY ("id")
 );",
   ],
+  "triggers": [],
   "types": [],
 }
 `;
@@ -196,6 +203,7 @@ exports[`generateEntityDDL relation entities (full DDL) generates full DDL for T
   PRIMARY KEY ("id")
 );",
   ],
+  "triggers": [],
   "types": [],
 }
 `;
@@ -216,6 +224,7 @@ exports[`generateEntityDDL schema creation emits CREATE SCHEMA when entity has a
   PRIMARY KEY ("id")
 );",
   ],
+  "triggers": [],
   "types": [],
 }
 `;
@@ -243,6 +252,7 @@ exports[`generateEntityDDL schema creation emits CREATE SCHEMA when namespace is
   PRIMARY KEY ("id")
 );",
   ],
+  "triggers": [],
   "types": [],
 }
 `;
@@ -268,6 +278,7 @@ exports[`generateEntityDDL simple entities generates full DDL for TestScopedEnti
   PRIMARY KEY ("id")
 );",
   ],
+  "triggers": [],
   "types": [],
 }
 `;
@@ -297,6 +308,7 @@ exports[`generateEntityDDL simple entities generates full DDL for TestSoftDelete
   PRIMARY KEY ("id")
 );",
   ],
+  "triggers": [],
   "types": [],
 }
 `;
@@ -322,6 +334,7 @@ exports[`generateEntityDDL simple entities generates full DDL for TestUser 1`] =
   PRIMARY KEY ("id")
 );",
   ],
+  "triggers": [],
   "types": [],
 }
 `;
@@ -343,6 +356,7 @@ exports[`generateEntityDDL simple entities generates full DDL for TestVersionKey
   PRIMARY KEY ("id", "versionId")
 );",
   ],
+  "triggers": [],
   "types": [],
 }
 `;

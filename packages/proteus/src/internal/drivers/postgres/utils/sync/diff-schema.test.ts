@@ -86,6 +86,7 @@ describe("diffSchema", () => {
           indexes: [],
           comment: null,
           columnComments: {},
+          triggers: [],
         },
       ],
     };
@@ -129,6 +130,7 @@ describe("diffSchema", () => {
           indexes: [],
           comment: null,
           columnComments: {},
+          triggers: [],
         },
       ],
       enums: [],
@@ -169,6 +171,7 @@ describe("diffSchema", () => {
           indexes: [],
           comment: null,
           columnComments: {},
+          triggers: [],
         },
       ],
     };
@@ -224,6 +227,7 @@ describe("diffSchema", () => {
           ],
           comment: null,
           columnComments: {},
+          triggers: [],
         },
       ],
       enums: [],
@@ -291,6 +295,7 @@ describe("diffSchema", () => {
           ],
           comment: "User accounts",
           columnComments: {},
+          triggers: [],
         },
       ],
     };
@@ -380,6 +385,7 @@ describe("diffSchema", () => {
           indexes: [],
           comment: null,
           columnComments: {},
+          triggers: [],
         },
       ],
     };
@@ -457,6 +463,7 @@ describe("diffSchema", () => {
           indexes: [],
           comment: null,
           columnComments: {},
+          triggers: [],
         },
       ],
     };
@@ -471,6 +478,271 @@ describe("diffSchema", () => {
     expect(fkOp!.sql).toContain("DEFERRABLE INITIALLY IMMEDIATE");
     expect(fkOp!.sql).not.toContain("INITIALLY DEFERRED");
     expect(plan).toMatchSnapshot();
+  });
+
+  it("should create triggers for new table with triggers", () => {
+    const desired: DesiredSchema = {
+      ...emptyDesired,
+      tables: [
+        {
+          schema: "public",
+          name: "events",
+          columns: [
+            {
+              name: "id",
+              pgType: "UUID",
+              nullable: false,
+              defaultExpr: "gen_random_uuid()",
+              isIdentity: false,
+              identityGeneration: null,
+              isGenerated: false,
+              generationExpr: null,
+              collation: null,
+            },
+          ],
+          constraints: [
+            {
+              name: "events_pkey",
+              type: "PRIMARY KEY",
+              columns: ["id"],
+              foreignSchema: null,
+              foreignTable: null,
+              foreignColumns: null,
+              onDelete: null,
+              onUpdate: null,
+              checkExpr: null,
+              deferrable: false,
+              initiallyDeferred: false,
+            },
+          ],
+          indexes: [],
+          comment: null,
+          columnComments: {},
+          triggers: [
+            {
+              name: "trg_append_only_events",
+              statements: [
+                `CREATE OR REPLACE FUNCTION proteus_append_only() RETURNS TRIGGER AS $$ BEGIN RAISE EXCEPTION 'append-only: updates not allowed'; END; $$ LANGUAGE plpgsql;`,
+                `CREATE TRIGGER "trg_append_only_events" BEFORE UPDATE OR DELETE ON "public"."events" FOR EACH ROW EXECUTE FUNCTION proteus_append_only();`,
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    const plan = diffSchema(emptySnapshot, desired);
+    const triggerOps = plan.operations.filter((o) => o.type === "create_trigger");
+    expect(triggerOps).toHaveLength(2);
+    expect(plan).toMatchSnapshot();
+  });
+
+  it("should create triggers when existing table gains triggers", () => {
+    const snapshot: DbSnapshot = {
+      tables: [
+        {
+          schema: "public",
+          name: "events",
+          columns: [
+            {
+              name: "id",
+              type: "uuid",
+              nullable: false,
+              defaultExpr: "gen_random_uuid()",
+              isIdentity: false,
+              identityGeneration: null,
+              isGenerated: false,
+              generationExpr: null,
+              collation: null,
+            },
+          ],
+          constraints: [],
+          indexes: [],
+          comment: null,
+          columnComments: {},
+          triggers: [],
+        },
+      ],
+      enums: [],
+      schemas: ["public"],
+    };
+
+    const desired: DesiredSchema = {
+      ...emptyDesired,
+      tables: [
+        {
+          schema: "public",
+          name: "events",
+          columns: [
+            {
+              name: "id",
+              pgType: "UUID",
+              nullable: false,
+              defaultExpr: "gen_random_uuid()",
+              isIdentity: false,
+              identityGeneration: null,
+              isGenerated: false,
+              generationExpr: null,
+              collation: null,
+            },
+          ],
+          constraints: [],
+          indexes: [],
+          comment: null,
+          columnComments: {},
+          triggers: [
+            {
+              name: "trg_append_only_events",
+              statements: [
+                `CREATE OR REPLACE FUNCTION proteus_append_only() RETURNS TRIGGER AS $$ BEGIN RAISE EXCEPTION 'append-only: updates not allowed'; END; $$ LANGUAGE plpgsql;`,
+                `CREATE TRIGGER "trg_append_only_events" BEFORE UPDATE OR DELETE ON "public"."events" FOR EACH ROW EXECUTE FUNCTION proteus_append_only();`,
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    const plan = diffSchema(snapshot, desired);
+    const triggerOps = plan.operations.filter((o) => o.type === "create_trigger");
+    expect(triggerOps).toHaveLength(2);
+    expect(plan).toMatchSnapshot();
+  });
+
+  it("should drop triggers when existing table loses triggers", () => {
+    const snapshot: DbSnapshot = {
+      tables: [
+        {
+          schema: "public",
+          name: "events",
+          columns: [
+            {
+              name: "id",
+              type: "uuid",
+              nullable: false,
+              defaultExpr: "gen_random_uuid()",
+              isIdentity: false,
+              identityGeneration: null,
+              isGenerated: false,
+              generationExpr: null,
+              collation: null,
+            },
+          ],
+          constraints: [],
+          indexes: [],
+          comment: null,
+          columnComments: {},
+          triggers: [{ name: "trg_append_only_events" }],
+        },
+      ],
+      enums: [],
+      schemas: ["public"],
+    };
+
+    const desired: DesiredSchema = {
+      ...emptyDesired,
+      tables: [
+        {
+          schema: "public",
+          name: "events",
+          columns: [
+            {
+              name: "id",
+              pgType: "UUID",
+              nullable: false,
+              defaultExpr: "gen_random_uuid()",
+              isIdentity: false,
+              identityGeneration: null,
+              isGenerated: false,
+              generationExpr: null,
+              collation: null,
+            },
+          ],
+          constraints: [],
+          indexes: [],
+          comment: null,
+          columnComments: {},
+          triggers: [],
+        },
+      ],
+    };
+
+    const plan = diffSchema(snapshot, desired);
+    const triggerOps = plan.operations.filter((o) => o.type === "drop_trigger");
+    expect(triggerOps).toHaveLength(1);
+    expect(plan).toMatchSnapshot();
+  });
+
+  it("should emit no trigger ops when triggers match", () => {
+    const snapshot: DbSnapshot = {
+      tables: [
+        {
+          schema: "public",
+          name: "events",
+          columns: [
+            {
+              name: "id",
+              type: "uuid",
+              nullable: false,
+              defaultExpr: "gen_random_uuid()",
+              isIdentity: false,
+              identityGeneration: null,
+              isGenerated: false,
+              generationExpr: null,
+              collation: null,
+            },
+          ],
+          constraints: [],
+          indexes: [],
+          comment: null,
+          columnComments: {},
+          triggers: [{ name: "trg_append_only_events" }],
+        },
+      ],
+      enums: [],
+      schemas: ["public"],
+    };
+
+    const desired: DesiredSchema = {
+      ...emptyDesired,
+      tables: [
+        {
+          schema: "public",
+          name: "events",
+          columns: [
+            {
+              name: "id",
+              pgType: "UUID",
+              nullable: false,
+              defaultExpr: "gen_random_uuid()",
+              isIdentity: false,
+              identityGeneration: null,
+              isGenerated: false,
+              generationExpr: null,
+              collation: null,
+            },
+          ],
+          constraints: [],
+          indexes: [],
+          comment: null,
+          columnComments: {},
+          triggers: [
+            {
+              name: "trg_append_only_events",
+              statements: [
+                `CREATE TRIGGER "trg_append_only_events" BEFORE UPDATE OR DELETE ON "public"."events" FOR EACH ROW EXECUTE FUNCTION proteus_append_only();`,
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    const plan = diffSchema(snapshot, desired);
+    const triggerOps = plan.operations.filter(
+      (o) => o.type === "create_trigger" || o.type === "drop_trigger",
+    );
+    expect(triggerOps).toHaveLength(0);
   });
 
   it("should compute summary correctly", () => {
@@ -497,6 +769,7 @@ describe("diffSchema", () => {
           indexes: [],
           comment: null,
           columnComments: {},
+          triggers: [],
         },
       ],
     };

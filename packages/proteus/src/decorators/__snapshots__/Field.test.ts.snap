@@ -2,6 +2,7 @@
 
 exports[`Field should register integer field 1`] = `
 {
+  "appendOnly": false,
   "cache": null,
   "checks": [],
   "defaultOrder": null,

@@ -69,6 +69,7 @@ export const introspectTables = async (
         indexes: [],
         comment: null,
         columnComments: {},
+        triggers: [],
       });
     }
 

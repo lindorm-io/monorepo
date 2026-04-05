@@ -57,6 +57,15 @@ export const guardUpsertBlocked = (metadata: EntityMetadata): void => {
   }
 };
 
+export const guardAppendOnly = (metadata: EntityMetadata, method: string): void => {
+  if (metadata.appendOnly) {
+    throw new ProteusRepositoryError(
+      `Cannot ${method} an append-only entity "${metadata.entity.name}"`,
+      { debug: { entityName: metadata.entity.name, method } },
+    );
+  }
+};
+
 export const validateRelationNames = (
   metadata: EntityMetadata,
   names: Array<string>,

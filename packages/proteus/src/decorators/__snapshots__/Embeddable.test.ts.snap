@@ -2,6 +2,7 @@
 
 exports[`Embedded should flatten embeddable fields into parent entity metadata 1`] = `
 {
+  "appendOnly": false,
   "cache": null,
   "checks": [],
   "defaultOrder": null,

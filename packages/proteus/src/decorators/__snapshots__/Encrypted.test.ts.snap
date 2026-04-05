@@ -2,6 +2,7 @@
 
 exports[`Encrypted should match full metadata snapshot for entity with encrypted field 1`] = `
 {
+  "appendOnly": false,
   "cache": null,
   "checks": [],
   "defaultOrder": null,

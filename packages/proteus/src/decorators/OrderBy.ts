@@ -3,9 +3,8 @@ import { stageRelationModifier } from "#internal/entity/metadata/stage-metadata"
 /**
  * Specifies default ordering for a relation's loaded results.
  *
- * **Not yet implemented** — metadata is staged on the relation's `orderBy`
- * field but no relation-loading code applies ORDER BY based on it. A future
- * release will wire consumption into the relation loading pipeline.
+ * Applied as an ORDER BY clause in SQL relation queries and as in-memory
+ * sorting during hydration. Supported across all six drivers.
  */
 export const OrderBy =
   (spec: Record<string, "ASC" | "DESC">) =>

@@ -3,6 +3,7 @@ import { introspectComments } from "../../../../drivers/postgres/utils/sync/intr
 import { introspectConstraints } from "../../../../drivers/postgres/utils/sync/introspect-constraints";
 import { introspectEnums } from "../../../../drivers/postgres/utils/sync/introspect-enums";
 import { introspectIndexes } from "../../../../drivers/postgres/utils/sync/introspect-indexes";
+import { introspectTriggers } from "../../../../drivers/postgres/utils/sync/introspect-triggers";
 import type { DbSnapshot, DbTable } from "../../types/db-snapshot";
 import type { PostgresQueryClient } from "../../types/postgres-query-client";
 import { introspectTables } from "./introspect-tables";
@@ -28,13 +29,14 @@ export const introspectSchema = async (
   const schemas = uniq(managedTables.map((t) => t.schema));
   const tableNames = uniq(managedTables.map((t) => t.name));
 
-  const [tables, constraintRows, indexRows, enums, commentRows, schemaRows] =
+  const [tables, constraintRows, indexRows, enums, commentRows, triggerRows, schemaRows] =
     await Promise.all([
       introspectTables(client, schemas, tableNames),
       introspectConstraints(client, schemas, tableNames),
       introspectIndexes(client, schemas, tableNames),
       introspectEnums(client, schemas),
       introspectComments(client, schemas, tableNames),
+      introspectTriggers(client, schemas, tableNames),
       client.query<{ nspname: string }>(
         `SELECT nspname FROM pg_catalog.pg_namespace WHERE nspname = ANY($1)`,
         [schemas],
@@ -74,6 +76,14 @@ export const introspectSchema = async (
       t.comment = row.comment;
     } else {
       t.columnComments[row.column] = row.comment;
+    }
+  }
+
+  for (const row of triggerRows) {
+    const key = `${row.schema}.${row.table}`;
+    const t = tableMap.get(key);
+    if (t) {
+      t.triggers.push({ name: row.triggerName });
     }
   }
 

@@ -22,6 +22,7 @@ import { validateRedisEntity, isRedisCompatibleEntity } from "./validate-redis-e
 
 const createBaseMetadata = (overrides?: Partial<EntityMetadata>): EntityMetadata => ({
   target: class TestEntity {} as any,
+  appendOnly: false,
   cache: null,
   checks: [],
   defaultOrder: null,

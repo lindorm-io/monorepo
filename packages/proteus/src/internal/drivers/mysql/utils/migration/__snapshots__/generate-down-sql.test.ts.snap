@@ -12,6 +12,8 @@ exports[`generateMysqlDownSql — add_unique should produce DROP INDEX (MySQL un
 
 exports[`generateMysqlDownSql — create_table should produce DROP TABLE IF EXISTS 1`] = `"DROP TABLE IF EXISTS \`users\`;"`;
 
+exports[`generateMysqlDownSql — create_trigger should produce DROP TRIGGER IF EXISTS for a CREATE TRIGGER sql 1`] = `"DROP TRIGGER IF EXISTS \`trg_events_no_update\`;"`;
+
 exports[`generateMysqlDownSql — drop_fk should reconstruct FK with CASCADE delete rule from snapshot 1`] = `"ALTER TABLE \`users\` ADD CONSTRAINT \`fk_org\` FOREIGN KEY (\`org_id\`) REFERENCES \`orgs\` (\`id\`) ON DELETE CASCADE;"`;
 
 exports[`generateMysqlDownSql — drop_fk should reconstruct FK with CASCADE update rule from snapshot 1`] = `"ALTER TABLE \`users\` ADD CONSTRAINT \`fk_team\` FOREIGN KEY (\`team_id\`) REFERENCES \`teams\` (\`id\`) ON UPDATE CASCADE;"`;

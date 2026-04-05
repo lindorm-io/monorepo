@@ -2,6 +2,7 @@
 
 exports[`OneToOne should register inverse side 1`] = `
 {
+  "appendOnly": false,
   "cache": null,
   "checks": [],
   "defaultOrder": null,
@@ -120,6 +121,7 @@ exports[`OneToOne should register inverse side 1`] = `
 
 exports[`OneToOne should register owning side with @JoinKey 1`] = `
 {
+  "appendOnly": false,
   "cache": null,
   "checks": [],
   "defaultOrder": null,
@@ -240,6 +242,7 @@ exports[`OneToOne should register owning side with @JoinKey 1`] = `
 
 exports[`OneToOne should register with explicit joinKeys 1`] = `
 {
+  "appendOnly": false,
   "cache": null,
   "checks": [],
   "defaultOrder": null,

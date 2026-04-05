@@ -10,6 +10,7 @@ import type { EntityMetadata } from "../types/metadata";
 const makeMinimalMetadata = (): EntityMetadata =>
   ({
     target: class RegistryTestEntity {},
+    appendOnly: false,
     cache: null,
     checks: [],
     defaultOrder: null,

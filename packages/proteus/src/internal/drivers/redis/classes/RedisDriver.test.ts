@@ -28,6 +28,7 @@ jest.mock("ioredis", () => {
 
 const createBaseMetadata = (): EntityMetadata => ({
   target: class TestEntity {} as any,
+  appendOnly: false,
   cache: null,
   checks: [],
   defaultOrder: null,

@@ -2,6 +2,7 @@
 
 exports[`OneToMany should register parent entity with OneToMany metadata 1`] = `
 {
+  "appendOnly": false,
   "cache": null,
   "checks": [],
   "defaultOrder": null,

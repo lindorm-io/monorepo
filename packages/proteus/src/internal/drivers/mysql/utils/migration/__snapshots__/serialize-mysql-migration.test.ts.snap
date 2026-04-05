@@ -100,6 +100,26 @@ export class AddEmail implements MigrationInterface {
 "
 `;
 
+exports[`serializeMysqlMigration should generate full migration content for drop_trigger operations 1`] = `
+"import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
+
+export class DropTrigger implements MigrationInterface {
+  public readonly id = "00000000-0000-0000-0000-000000000001";
+  public readonly ts = "2026-02-20T09:00:00.000Z";
+  public readonly driver = "mysql";
+
+  public async up(runner: SqlMigrationRunner): Promise<void> {
+    // Drop trigger "trg_events_no_update" on "events"
+    await runner.query(\`DROP TRIGGER IF EXISTS \\\`trg_events_no_update\\\`;\`);
+  }
+
+  public async down(runner: SqlMigrationRunner): Promise<void> {
+    // WARN: irreversible — Drop trigger "trg_events_no_update" on "events"
+  }
+}
+"
+`;
+
 exports[`serializeMysqlMigration should generate full migration content for multiple operations 1`] = `
 "import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
 
@@ -124,6 +144,29 @@ export class CreateOrders implements MigrationInterface {
     await runner.query(\`DROP INDEX \\\`idx_total\\\` ON \\\`orders\\\`;\`);
     await runner.query(\`ALTER TABLE \\\`orders\\\` DROP COLUMN \\\`total\\\`;\`);
     await runner.query(\`DROP TABLE IF EXISTS \\\`orders\\\`;\`);
+  }
+}
+"
+`;
+
+exports[`serializeMysqlMigration should generate full migration content for trigger operations 1`] = `
+"import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
+
+export class AddAppendOnlyTriggers implements MigrationInterface {
+  public readonly id = "00000000-0000-0000-0000-000000000001";
+  public readonly ts = "2026-02-20T09:00:00.000Z";
+  public readonly driver = "mysql";
+
+  public async up(runner: SqlMigrationRunner): Promise<void> {
+    // Create trigger "trg_events_no_update" on "events"
+    await runner.query(\`CREATE TRIGGER \\\`trg_events_no_update\\\` BEFORE UPDATE ON \\\`events\\\` FOR EACH ROW BEGIN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Updates not allowed on append-only table'; END;\`);
+    // Create trigger "trg_events_no_delete" on "events"
+    await runner.query(\`CREATE TRIGGER \\\`trg_events_no_delete\\\` BEFORE DELETE ON \\\`events\\\` FOR EACH ROW BEGIN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Deletes not allowed on append-only table'; END;\`);
+  }
+
+  public async down(runner: SqlMigrationRunner): Promise<void> {
+    await runner.query(\`DROP TRIGGER IF EXISTS \\\`trg_events_no_delete\\\`;\`);
+    await runner.query(\`DROP TRIGGER IF EXISTS \\\`trg_events_no_update\\\`;\`);
   }
 }
 "

@@ -23,9 +23,11 @@ import { SqliteMigrationError } from "../errors/SqliteMigrationError";
 import type { SqliteQueryClient } from "../types/sqlite-query-client";
 import type { SqliteTransactionHandle } from "../types/sqlite-transaction-handle";
 import { diffSchema } from "../utils/sync/diff-schema";
+import { generateAppendOnlyDDL } from "../utils/ddl/generate-append-only-ddl";
 import { SyncPlanExecutor } from "../utils/sync/execute-sync-plan";
 import { introspectSchema } from "../utils/sync/introspect-schema";
 import { projectDesiredSchemaSqlite as projectDesiredSchema } from "../utils/sync/project-desired-schema-sqlite";
+import { quoteIdentifier } from "../utils/quote-identifier";
 import { beginTransaction } from "../utils/transaction/begin-transaction";
 import { commitTransaction } from "../utils/transaction/commit-transaction";
 import { rollbackTransaction } from "../utils/transaction/rollback-transaction";
@@ -481,6 +483,51 @@ export class SqliteDriver implements IProteusDriver {
       );
     } else {
       this.logger.info(`Sync complete: ${result.statementsExecuted} statements executed`);
+    }
+
+    // Post-sync: apply or remove append-only triggers
+    if (!dryRun) {
+      this.syncAppendOnlyTriggers(client, metadatas);
+    }
+  }
+
+  private syncAppendOnlyTriggers(
+    client: SqliteQueryClient,
+    metadatas: Array<import("#internal/entity/types/metadata").EntityMetadata>,
+  ): void {
+    for (const metadata of metadatas) {
+      const tableName = metadata.entity.name;
+      const quotedTable = quoteIdentifier(tableName);
+
+      if (metadata.appendOnly) {
+        try {
+          const statements = generateAppendOnlyDDL(tableName);
+
+          for (const sql of statements) {
+            client.exec(sql);
+          }
+
+          this.logger.debug("Applied append-only triggers", {
+            table: quotedTable,
+          });
+        } catch (error) {
+          this.logger.warn("Failed to apply append-only triggers", {
+            table: quotedTable,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        }
+      } else {
+        // Drop any existing append-only triggers in case @AppendOnly was removed
+        try {
+          for (const op of ["update", "delete"] as const) {
+            client.exec(
+              `DROP TRIGGER IF EXISTS ${quoteIdentifier(`proteus_ao_${tableName}_no_${op}`)};`,
+            );
+          }
+        } catch {
+          // Best effort — triggers may not exist
+        }
+      }
     }
   }
 

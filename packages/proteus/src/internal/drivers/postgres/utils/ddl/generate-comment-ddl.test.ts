@@ -9,6 +9,7 @@ import { generateCommentDDL } from "./generate-comment-ddl";
 const makeMetadata = (tableComment: string | null, fields: MetaField[]): EntityMetadata =>
   ({
     target: class {},
+    appendOnly: false,
     cache: null,
     checks: [],
     defaultOrder: null,

@@ -27,6 +27,11 @@ export type SqliteDesiredUnique = {
   columns: Array<string>;
 };
 
+export type SqliteDesiredTrigger = {
+  name: string;
+  ddl: string;
+};
+
 export type SqliteDesiredTable = {
   name: string;
   columns: Array<SqliteDesiredColumn>;
@@ -35,6 +40,7 @@ export type SqliteDesiredTable = {
   uniqueConstraints: Array<SqliteDesiredUnique>;
   checkConstraints: Array<string>; // CHECK (expr)
   indexes: Array<SqliteDesiredIndex>;
+  triggers: Array<SqliteDesiredTrigger>;
 };
 
 export type SqliteDesiredSchema = {

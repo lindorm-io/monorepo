@@ -81,6 +81,12 @@ const buildUpSqlStrings = (ops: Array<SqliteSyncOperation>): Array<string> => {
         sqls.push(`PRAGMA foreign_key_check`);
         break;
       }
+      case "create_trigger":
+        sqls.push(op.ddl);
+        break;
+      case "drop_trigger":
+        sqls.push(`DROP TRIGGER IF EXISTS "${op.triggerName}"`);
+        break;
     }
   }
 
@@ -140,6 +146,16 @@ const buildUpBody = (ops: Array<SqliteSyncOperation>): Array<string> => {
         lines.push(`await runner.query(\`PRAGMA foreign_key_check\`);`);
         break;
       }
+
+      case "create_trigger":
+        lines.push(`// Create trigger "${op.triggerName}"`);
+        lines.push(`await runner.query(\`${escapeBacktick(normalizeSql(op.ddl))}\`);`);
+        break;
+
+      case "drop_trigger":
+        lines.push(`// Drop trigger "${op.triggerName}"`);
+        lines.push(`await runner.query(\`DROP TRIGGER IF EXISTS "${op.triggerName}"\`);`);
+        break;
     }
 
     lines.push("");
@@ -175,8 +191,13 @@ const buildDownSqlStrings = (ops: Array<SqliteSyncOperation>): Array<string> => 
       case "drop_index":
       case "drop_table":
       case "recreate_table":
+      case "drop_trigger":
         // Irreversible — emit empty string for checksum slot (matches MySQL pattern)
         sqls.push("");
+        break;
+
+      case "create_trigger":
+        sqls.push(`DROP TRIGGER IF EXISTS "${op.triggerName}"`);
         break;
     }
   }
@@ -225,6 +246,16 @@ const buildDownBody = (ops: Array<SqliteSyncOperation>): Array<string> => {
       case "recreate_table":
         lines.push(
           `// WARN: irreversible — recreate_table for "${op.tableName}" cannot be automatically reversed`,
+        );
+        break;
+
+      case "create_trigger":
+        lines.push(`await runner.query(\`DROP TRIGGER IF EXISTS "${op.triggerName}"\`);`);
+        break;
+
+      case "drop_trigger":
+        lines.push(
+          `// WARN: irreversible — original trigger DDL not available for recreation`,
         );
         break;
     }
