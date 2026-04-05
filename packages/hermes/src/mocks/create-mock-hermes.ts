@@ -1,11 +1,12 @@
 import type { HermesStatus } from "../types/hermes-status";
+import { createMockHermesSession } from "./create-mock-hermes-session";
 
 export type MockHermes = {
   status: HermesStatus;
 
   setup: jest.Mock;
   teardown: jest.Mock;
-  clone: jest.Mock;
+  session: jest.Mock;
 
   command: jest.Mock;
   query: jest.Mock;
@@ -31,7 +32,7 @@ export const createMockHermes = (): MockHermes => ({
 
   setup: jest.fn(),
   teardown: jest.fn(),
-  clone: jest.fn().mockImplementation(() => createMockHermes()),
+  session: jest.fn().mockImplementation(() => createMockHermesSession()),
 
   command: jest
     .fn()

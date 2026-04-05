@@ -13,14 +13,14 @@ describe("createMockHermes", () => {
     expect(mock.status).toBe("ready");
   });
 
-  it("should return a new mock from clone()", () => {
+  it("should return a new mock session from session()", () => {
     const mock = createMockHermes();
-    const cloned = mock.clone();
+    const session = mock.session();
 
-    expect(cloned).toBeDefined();
-    expect(cloned).not.toBe(mock);
-    expect(cloned.status).toBe("ready");
-    expect(jest.isMockFunction(cloned.setup)).toBe(true);
+    expect(session).toBeDefined();
+    expect(session).not.toBe(mock);
+    expect(session.status).toBe("ready");
+    expect(jest.isMockFunction(session.command)).toBe(true);
   });
 
   it("should resolve an aggregate identifier from command()", async () => {

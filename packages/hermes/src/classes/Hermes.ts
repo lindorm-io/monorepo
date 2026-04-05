@@ -37,35 +37,11 @@ import {
 } from "#internal/messages";
 import { HermesRegistry, HermesScanner } from "#internal/registry";
 import { assertChecksum, extractDto } from "#internal/utils";
+import { HermesSession } from "./HermesSession";
 
 const DEFAULT_NAMESPACE = "hermes";
 
 type StatusRef = { current: HermesStatus };
-
-type CloneInput = {
-  _mode: "from_clone";
-  logger: ILogger;
-  namespace: string;
-  statusRef: StatusRef;
-  causationExpiryMs: number;
-  checksumMode: ChecksumMode;
-  proteus: IProteusSource;
-  viewSources: Map<string, IProteusSource>;
-  iris: IIrisSource;
-  registry: HermesRegistry;
-  aggregateDomain: AggregateDomain;
-  checksumDomain: ChecksumDomain;
-  sagaDomain: SagaDomain;
-  viewDomain: ViewDomain;
-  commandQueue: IIrisWorkerQueue<HermesCommandMessage>;
-  eventBus: IIrisMessageBus<HermesEventMessage>;
-  errorQueue: IIrisWorkerQueue<HermesErrorMessage>;
-  timeoutQueue: IIrisWorkerQueue<HermesTimeoutMessage>;
-  encryption?: {
-    algorithm?: string;
-    encryption?: string;
-  };
-};
 
 /**
  * Hermes delegates message retry and dead-letter queue (DLQ) handling entirely
@@ -81,7 +57,7 @@ export class Hermes implements IHermes {
   private readonly proteus: IProteusSource;
   private readonly viewSourceMap: Map<string, IProteusSource>;
   private readonly iris: IIrisSource;
-  private readonly options: HermesOptions | null;
+  private readonly options: HermesOptions;
 
   private registry!: HermesRegistry;
   private aggregateDomain!: AggregateDomain;
@@ -96,55 +72,27 @@ export class Hermes implements IHermes {
 
   private readonly _statusRef: StatusRef;
 
-  public constructor(options: HermesOptions);
-  public constructor(options: CloneInput);
-  public constructor(options: HermesOptions | CloneInput) {
-    if ("_mode" in options && options._mode === "from_clone") {
-      this.logger = options.logger.child(["Hermes"]);
-      this.namespace = options.namespace;
-      this.causationExpiryMs = options.causationExpiryMs;
-      this.checksumMode = options.checksumMode;
-      this._statusRef = options.statusRef;
-      this.options = null;
+  public constructor(options: HermesOptions) {
+    this.logger = options.logger.child(["Hermes"]);
+    this.namespace = options.namespace ?? DEFAULT_NAMESPACE;
+    this.checksumMode = options.checksumMode ?? "warn";
+    this._statusRef = { current: "created" };
+    this.options = options;
 
-      this.proteus = options.proteus;
-      this.viewSourceMap = options.viewSources;
-      this.iris = options.iris;
+    this.proteus = options.proteus;
+    this.iris = options.iris;
 
-      this.registry = options.registry;
-      this.aggregateDomain = options.aggregateDomain;
-      this.checksumDomain = options.checksumDomain;
-      this.sagaDomain = options.sagaDomain;
-      this.viewDomain = options.viewDomain;
+    this.viewSourceMap = new Map();
 
-      this.commandQueue = options.commandQueue;
-      this.eventBus = options.eventBus;
-      this.errorQueue = options.errorQueue;
-      this.timeoutQueue = options.timeoutQueue;
-    } else {
-      const opts = options as HermesOptions;
-
-      this.logger = opts.logger.child(["Hermes"]);
-      this.namespace = opts.namespace ?? DEFAULT_NAMESPACE;
-      this.checksumMode = opts.checksumMode ?? "warn";
-      this._statusRef = { current: "created" };
-      this.options = opts;
-
-      this.proteus = opts.proteus;
-      this.iris = opts.iris;
-
-      this.viewSourceMap = new Map();
-
-      if (opts.viewSources) {
-        for (const source of opts.viewSources) {
-          this.viewSourceMap.set(source.driverType, source);
-        }
+    if (options.viewSources) {
+      for (const source of options.viewSources) {
+        this.viewSourceMap.set(source.driverType, source);
       }
-
-      this.causationExpiryMs = opts.causationExpiry
-        ? ms(opts.causationExpiry)
-        : ms("30 Days");
     }
+
+    this.causationExpiryMs = options.causationExpiry
+      ? ms(options.causationExpiry)
+      : ms("30 Days");
   }
 
   // -- Public getters --
@@ -175,10 +123,6 @@ export class Hermes implements IHermes {
       throw new LindormError("Hermes.setup() can only be called once", {
         data: { status: this._statusRef.current },
       });
-    }
-
-    if (!this.options) {
-      throw new LindormError("Cannot setup a cloned Hermes instance");
     }
 
     this._statusRef.current = "initialising";
@@ -242,26 +186,13 @@ export class Hermes implements IHermes {
     this.logger.verbose("Hermes stopped");
   }
 
-  public clone(options: { logger?: ILogger } = {}): IHermes {
-    return new Hermes({
-      _mode: "from_clone",
+  public session(options: { logger?: ILogger } = {}): HermesSession {
+    return new HermesSession({
       logger: options.logger ?? this.logger,
-      namespace: this.namespace,
       statusRef: this._statusRef,
-      causationExpiryMs: this.causationExpiryMs,
-      checksumMode: this.checksumMode,
-      proteus: this.proteus,
-      viewSources: this.viewSourceMap,
-      iris: this.iris,
       registry: this.registry,
-      aggregateDomain: this.aggregateDomain,
-      checksumDomain: this.checksumDomain,
-      sagaDomain: this.sagaDomain,
       viewDomain: this.viewDomain,
       commandQueue: this.commandQueue,
-      eventBus: this.eventBus,
-      errorQueue: this.errorQueue,
-      timeoutQueue: this.timeoutQueue,
     });
   }
 
@@ -847,8 +778,8 @@ export class Hermes implements IHermes {
         eventBus: this.eventBus,
         errorQueue: this.errorQueue,
       },
-      encryption: this.options?.encryption,
-      checksumMode: this.options?.checksumMode,
+      encryption: this.options.encryption,
+      checksumMode: this.options.checksumMode,
       logger: this.logger,
     });
 

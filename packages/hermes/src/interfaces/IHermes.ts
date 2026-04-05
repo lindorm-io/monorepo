@@ -1,26 +1,17 @@
 import type { ILogger } from "@lindorm/logger";
-import type { ClassLike, Constructor, Dict } from "@lindorm/types";
+import type { Constructor, Dict } from "@lindorm/types";
 import type { HermesEventName } from "../types/hermes-event-name";
 import type { HermesViewEntity } from "../entities/HermesViewEntity";
-import type { AggregateIdentifier } from "../types/aggregate-identifier";
 import type { AggregateState } from "../types/aggregate-state";
-import type { HermesStatus } from "../types/hermes-status";
 import type { ReplayHandle, ReplayOptions } from "../types/replay-types";
 import type { SagaState } from "../types/saga-state";
+import type { IHermesProvider } from "./IHermesProvider";
+import type { IHermesSession } from "./IHermesSession";
 
-export interface IHermes {
-  readonly status: HermesStatus;
-
+export interface IHermes extends IHermesProvider {
   setup(): Promise<void>;
   teardown(): Promise<void>;
-  clone(options?: { logger?: ILogger }): IHermes;
-
-  command(
-    command: ClassLike,
-    options?: { id?: string; correlationId?: string; delay?: number; meta?: Dict },
-  ): Promise<AggregateIdentifier>;
-
-  query<R>(query: ClassLike): Promise<R>;
+  session(options?: { logger?: ILogger }): IHermesSession;
 
   on(event: HermesEventName, callback: (data: unknown) => void): void;
   off(event: HermesEventName, callback: (data: unknown) => void): void;
