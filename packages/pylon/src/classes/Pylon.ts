@@ -22,6 +22,7 @@ import {
   WebhookSubscription,
 } from "../entities";
 import { Job, RequestAudit, WebhookDispatch, WebhookRequest } from "../messages";
+import { setupAuditConsumer } from "#internal/consumers/setup-audit-consumer";
 import { calculateSubscriptions } from "#internal/utils/calculate-subscriptions";
 import { calculateWorkers } from "#internal/utils/calculate-workers";
 import { scanWorkers } from "#internal/utils/scan-workers";
@@ -131,6 +132,8 @@ export class Pylon<
     if (this.options.iris) {
       await this.options.iris.setup();
     }
+
+    await this.subscribe();
 
     this.isSetup = true;
     this.isTeardown = false;
@@ -299,6 +302,13 @@ export class Pylon<
   }
 
   private async subscribe(): Promise<void> {
-    // Subscriptions are now handled by Iris WorkerQueue consume()
+    if (this.options.audit?.enabled) {
+      const iris = this.options.audit.iris ?? this.options.iris;
+      const proteus = this.options.audit.proteus ?? this.options.proteus;
+
+      if (iris && proteus) {
+        await setupAuditConsumer(iris, proteus, this.logger);
+      }
+    }
   }
 }

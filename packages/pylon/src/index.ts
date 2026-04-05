@@ -5,4 +5,6 @@ export * from "./middleware";
 export * from "./types";
 export * from "./workers";
 
+export { RequestAuditLog } from "./entities/RequestAuditLog";
+
 export { Files } from "formidable";
