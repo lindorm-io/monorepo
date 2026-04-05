@@ -432,7 +432,8 @@ describe("PostgresDriver", () => {
 
       driver.createRepository(TestEntity);
 
-      const constructorCall = (PostgresRepository as jest.Mock).mock.calls[0][0];
+      const constructorCall = (PostgresRepository as unknown as jest.Mock).mock
+        .calls[0][0];
       expect(constructorCall.target).toBe(TestEntity);
     });
 
@@ -445,7 +446,8 @@ describe("PostgresDriver", () => {
       }
       driver.createRepository(TestEntity, ParentEntity);
 
-      const constructorCall = (PostgresRepository as jest.Mock).mock.calls[0][0];
+      const constructorCall = (PostgresRepository as unknown as jest.Mock).mock
+        .calls[0][0];
       expect(constructorCall.parent).toBe(ParentEntity);
     });
 
@@ -462,7 +464,8 @@ describe("PostgresDriver", () => {
 
       driver.createRepository(TestEntity);
 
-      const constructorCall = (PostgresRepository as jest.Mock).mock.calls[0][0];
+      const constructorCall = (PostgresRepository as unknown as jest.Mock).mock
+        .calls[0][0];
       expect(constructorCall.namespace).toBe("my_schema");
     });
   });
@@ -482,7 +485,8 @@ describe("PostgresDriver", () => {
       driver.createTransactionalRepository(TestEntity, mockHandle as any);
 
       expect(resolveMetadata).toHaveBeenCalledWith(TestEntity);
-      const constructorCall = (PostgresRepository as jest.Mock).mock.calls[0][0];
+      const constructorCall = (PostgresRepository as unknown as jest.Mock).mock
+        .calls[0][0];
       expect(constructorCall.target).toBe(TestEntity);
     });
   });
@@ -590,12 +594,12 @@ describe("PostgresDriver", () => {
       await driver.connect();
 
       const newFilterRegistry = jest.fn().mockReturnValue(new Map([["key", "value"]]));
-      const newSubscribers = jest.fn().mockReturnValue([]);
+      const newEmitEntity = jest.fn().mockResolvedValue(undefined);
 
-      const cloned = driver.cloneWithGetters(newFilterRegistry, newSubscribers);
+      const cloned = driver.cloneWithGetters(newFilterRegistry, newEmitEntity);
 
       expect((cloned as any).getFilterRegistry).toBe(newFilterRegistry);
-      expect((cloned as any).getSubscribers).toBe(newSubscribers);
+      expect((cloned as any).emitEntity).toBe(newEmitEntity);
     });
   });
 

@@ -25,9 +25,7 @@ import type { EntityMetadata, QueryScope } from "#internal/entity/types/metadata
 import type { RepositoryFactory } from "#internal/types/repository-factory";
 import type { AggregateFunction } from "#internal/types/aggregate";
 import type { LazyRelationLoader } from "#internal/entity/utils/install-lazy-relations";
-import type { SubscriberRegistryGetter } from "../interfaces/ProteusDriver";
-import type { IEntitySubscriber } from "../../interfaces/EntitySubscriber";
-import type { SubscriberEventName } from "../utils/subscriber/dispatch-subscribers";
+import type { EntityEmitFn } from "../../types/event-map";
 import { buildPrimaryKeyPredicate } from "#internal/utils/repository/build-pk-predicate";
 import {
   guardAppendOnly,
@@ -39,7 +37,6 @@ import { installLazyRelations } from "#internal/entity/utils/install-lazy-relati
 import { isLazyRelation } from "#internal/entity/utils/lazy-relation";
 import { isLazyCollection } from "#internal/entity/utils/lazy-collection";
 import { filterHiddenSelections } from "#internal/utils/query/filter-hidden-selections";
-import { dispatchSubscribers } from "../utils/subscriber/dispatch-subscribers";
 import { validatePaginateOptions } from "#internal/utils/pagination/validate-paginate-options";
 import {
   buildKeysetOrder,
@@ -62,7 +59,7 @@ export type DriverRepositoryBaseOptions<E extends IEntity> = {
   context?: unknown;
   parent?: Constructor<IEntity>;
   repositoryFactory: RepositoryFactory;
-  getSubscribers?: SubscriberRegistryGetter;
+  emitEntity?: EntityEmitFn;
 };
 
 export abstract class DriverRepositoryBase<
@@ -80,7 +77,8 @@ export abstract class DriverRepositoryBase<
   protected readonly hasRelations: boolean;
   protected readonly hasAsyncRelationIds: boolean;
   protected readonly hasRelationCounts: boolean;
-  private readonly getSubscribers: SubscriberRegistryGetter;
+  private readonly emitEntity: EntityEmitFn;
+  private readonly _context: unknown;
 
   protected constructor(options: DriverRepositoryBaseOptions<E>) {
     this.executor = options.executor;
@@ -89,8 +87,8 @@ export abstract class DriverRepositoryBase<
     this.logger = options.logger.child([options.driverLabel, options.target.name]);
     this.parent = options.parent;
     this.repositoryFactory = options.repositoryFactory;
-    this.getSubscribers =
-      options.getSubscribers ?? ((): ReadonlyArray<IEntitySubscriber> => []);
+    this.emitEntity = options.emitEntity ?? (async () => {});
+    this._context = options.context;
     this.metadata = getEntityMetadata(options.target);
     this.hasRelations = this.metadata.relations.length > 0;
     this.hasAsyncRelationIds = (this.metadata.relationIds ?? []).some((ri) => {
@@ -692,29 +690,45 @@ export abstract class DriverRepositoryBase<
     else await this.entityManager.afterSave(entity);
   }
 
-  // ─── Protected: Subscriber dispatch ─────────────────────────────
+  // ─── Protected: Entity event dispatch ────────────────────────────
+
+  private static readonly EVENT_NAME_MAP: Record<string, string> = {
+    beforeInsert: "entity:before-insert",
+    afterInsert: "entity:after-insert",
+    beforeUpdate: "entity:before-update",
+    afterUpdate: "entity:after-update",
+    beforeDestroy: "entity:before-destroy",
+    afterDestroy: "entity:after-destroy",
+    beforeSoftDestroy: "entity:before-soft-destroy",
+    afterSoftDestroy: "entity:after-soft-destroy",
+    beforeRestore: "entity:before-restore",
+    afterRestore: "entity:after-restore",
+    afterLoad: "entity:after-load",
+  };
 
   /**
-   * Dispatch a subscriber lifecycle event. Subscribers fire AFTER entity-level hooks.
-   * Errors propagate to the caller (no swallowing) to enable transaction rollback.
+   * Emit an entity lifecycle event via the source's EventEmitter.
+   * Listeners are awaited sequentially; errors propagate to the caller.
    */
-  protected async fireSubscriber(
-    eventName: SubscriberEventName,
-    event: unknown,
-  ): Promise<void> {
-    const subscribers = this.getSubscribers();
-    if (subscribers.length === 0) return;
-    await dispatchSubscribers(eventName, event, this.entityManager.target, subscribers);
+  protected async fireSubscriber(eventName: string, event: unknown): Promise<void> {
+    const mapped = DriverRepositoryBase.EVENT_NAME_MAP[eventName];
+    if (!mapped) return;
+    await this.emitEntity(mapped, event);
   }
 
   /**
-   * Build a subscriber event payload with standard fields.
+   * Build an entity event payload with standard fields.
    */
   protected buildSubscriberEvent(
     entity: E,
     connection?: unknown,
-  ): { entity: E; metadata: EntityMetadata; connection: unknown } {
-    return { entity, metadata: this.metadata, connection: connection ?? null };
+  ): { entity: E; metadata: EntityMetadata; connection: unknown; context: unknown } {
+    return {
+      entity,
+      metadata: this.metadata,
+      connection: connection ?? null,
+      context: this._context,
+    };
   }
 
   // ─── Protected: Helpers ───────────────────────────────────────────

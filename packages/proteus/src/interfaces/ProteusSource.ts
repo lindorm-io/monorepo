@@ -3,10 +3,14 @@ import { ILogger } from "@lindorm/logger";
 import { Constructor, Dict } from "@lindorm/types";
 import { CloneOptions } from "../classes/ProteusSource";
 import { IEntity } from "./Entity";
-import { IEntitySubscriber } from "./EntitySubscriber";
 import { IProteusQueryBuilder } from "./ProteusQueryBuilder";
 import { IProteusRepository } from "./ProteusRepository";
-import { EntityScannerInput, TransactionCallback, TransactionOptions } from "../types";
+import {
+  EntityScannerInput,
+  ProteusSourceEventMap,
+  TransactionCallback,
+  TransactionOptions,
+} from "../types";
 
 export type FilterRegistryEntry = {
   params: Dict<unknown>;
@@ -15,14 +19,27 @@ export type FilterRegistryEntry = {
 
 export type FilterRegistry = Map<string, FilterRegistryEntry>;
 
-export interface IProteusSource {
+export interface IProteusSource<C = unknown> {
   readonly namespace: string | null;
   readonly driverType: string;
   readonly migrationsTable: string | undefined;
   readonly log: ILogger;
   readonly breaker: ICircuitBreaker | null;
 
-  clone(options?: CloneOptions): IProteusSource;
+  on<K extends keyof ProteusSourceEventMap<C>>(
+    event: K,
+    listener: (payload: ProteusSourceEventMap<C>[K]) => void,
+  ): void;
+  off<K extends keyof ProteusSourceEventMap<C>>(
+    event: K,
+    listener: (payload: ProteusSourceEventMap<C>[K]) => void,
+  ): void;
+  once<K extends keyof ProteusSourceEventMap<C>>(
+    event: K,
+    listener: (payload: ProteusSourceEventMap<C>[K]) => void,
+  ): void;
+
+  clone(options?: CloneOptions<C>): IProteusSource<C>;
 
   connect(): Promise<void>;
   disconnect(): Promise<void>;
@@ -30,7 +47,6 @@ export interface IProteusSource {
   setup(): Promise<void>;
 
   addEntities(entities: EntityScannerInput): void;
-  addSubscriber(subscriber: IEntitySubscriber): void;
 
   setFilterParams(name: string, params: Dict<unknown>): void;
   enableFilter(name: string): void;

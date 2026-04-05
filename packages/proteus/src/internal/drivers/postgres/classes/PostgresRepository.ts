@@ -44,7 +44,7 @@ import { wrapPgError } from "../utils/repository/wrap-pg-error";
 import { RelationPersister } from "#internal/utils/repository/RelationPersister";
 import { createPostgresJoinTableOps } from "../utils/repository/postgres-join-table-ops";
 import type { LazyRelationLoader } from "#internal/entity/utils/install-lazy-relations";
-import type { SubscriberRegistryGetter } from "#internal/interfaces/ProteusDriver";
+import type { EntityEmitFn } from "../../../../types/event-map";
 import { buildRelationFilter } from "#internal/utils/repository/build-relation-filter";
 import { quoteIdentifier, quoteQualifiedName } from "../utils/quote-identifier";
 import { resolveTableName } from "../utils/query/resolve-table-name";
@@ -87,7 +87,7 @@ export type PostgresRepositoryOptions<E extends IEntity> = {
   repositoryFactory: RepositoryFactory;
   withImplicitTransaction: WithImplicitTransaction<E>;
   createCursorClient?: CreateCursorClient;
-  getSubscribers?: SubscriberRegistryGetter;
+  emitEntity?: EntityEmitFn;
   amphora?: IAmphora;
 };
 
@@ -120,7 +120,7 @@ export class PostgresRepository<
       context: options.context,
       parent: options.parent,
       repositoryFactory: options.repositoryFactory,
-      getSubscribers: options.getSubscribers,
+      emitEntity: options.emitEntity,
     });
 
     this.client = options.client;

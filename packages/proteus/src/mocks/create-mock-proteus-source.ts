@@ -7,6 +7,10 @@ export type MockProteusSource = {
   log: Record<string, jest.Mock>;
   breaker: null;
 
+  on: jest.Mock;
+  off: jest.Mock;
+  once: jest.Mock;
+
   clone: jest.Mock;
   connect: jest.Mock;
   disconnect: jest.Mock;
@@ -14,7 +18,6 @@ export type MockProteusSource = {
   setup: jest.Mock;
 
   addEntities: jest.Mock;
-  addSubscriber: jest.Mock;
   getEntityMetadata: jest.Mock;
 
   setFilterParams: jest.Mock;
@@ -43,6 +46,10 @@ export const createMockProteusSource = (): MockProteusSource => ({
   },
   breaker: null,
 
+  on: jest.fn(),
+  off: jest.fn(),
+  once: jest.fn(),
+
   clone: jest.fn().mockImplementation(() => createMockProteusSource()),
   connect: jest.fn(),
   disconnect: jest.fn(),
@@ -50,7 +57,6 @@ export const createMockProteusSource = (): MockProteusSource => ({
   setup: jest.fn(),
 
   addEntities: jest.fn(),
-  addSubscriber: jest.fn(),
   getEntityMetadata: jest.fn().mockReturnValue([]),
 
   setFilterParams: jest.fn(),

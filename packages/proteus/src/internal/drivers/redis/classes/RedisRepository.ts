@@ -17,7 +17,7 @@ import type { MetaRelation, QueryScope } from "#internal/entity/types/metadata";
 import type { RepositoryFactory } from "#internal/types/repository-factory";
 import type { AggregateFunction } from "#internal/types/aggregate";
 import type { LazyRelationLoader } from "#internal/entity/utils/install-lazy-relations";
-import type { SubscriberRegistryGetter } from "../../../interfaces/ProteusDriver";
+import type { EntityEmitFn } from "../../../../types/event-map";
 import type { PaginateOptions } from "../../../../types/paginate-options";
 import type { KeysetOrderEntry } from "#internal/utils/pagination/build-keyset-order";
 import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
@@ -62,7 +62,7 @@ export type RedisRepositoryOptions<E extends IEntity> = {
   context?: unknown;
   parent?: Constructor<IEntity>;
   repositoryFactory: RepositoryFactory;
-  getSubscribers?: SubscriberRegistryGetter;
+  emitEntity?: EntityEmitFn;
 };
 
 export class RedisRepository<
@@ -84,7 +84,7 @@ export class RedisRepository<
       context: options.context,
       parent: options.parent,
       repositoryFactory: options.repositoryFactory,
-      getSubscribers: options.getSubscribers,
+      emitEntity: options.emitEntity,
     });
 
     this.client = options.client;

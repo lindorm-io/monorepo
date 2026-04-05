@@ -1828,13 +1828,10 @@ describe("PostgresRepository", () => {
       expect(callOrder.indexOf("query")).toBeLessThan(callOrder.indexOf("afterInsert"));
     });
 
-    test("upsertOne fires beforeInsert and afterInsert subscriber events", async () => {
+    test("upsertOne fires beforeInsert and afterInsert entity events", async () => {
       const prepared = { ...entityA, id: "prepared-id" } as TestEntity;
       const hydrated = { ...entityA, id: "hydrated-id" } as TestEntity;
-      const beforeInsertSpy = jest.fn();
-      const afterInsertSpy = jest.fn();
-      const subscriber = { beforeInsert: beforeInsertSpy, afterInsert: afterInsertSpy };
-      const getSubscribers = jest.fn().mockReturnValue([subscriber]);
+      const emitEntity = jest.fn().mockResolvedValue(undefined);
 
       const meta = mockMetadata;
       const executor = createMockExecutor();
@@ -1864,7 +1861,7 @@ describe("PostgresRepository", () => {
         logger,
         repositoryFactory,
         withImplicitTransaction,
-        getSubscribers,
+        emitEntity,
       });
 
       mockEM.insert.mockResolvedValue(prepared);
@@ -1874,10 +1871,12 @@ describe("PostgresRepository", () => {
 
       await repo.upsert(entityA);
 
-      expect(beforeInsertSpy).toHaveBeenCalledWith(
+      expect(emitEntity).toHaveBeenCalledWith(
+        "entity:before-insert",
         expect.objectContaining({ entity: prepared }),
       );
-      expect(afterInsertSpy).toHaveBeenCalledWith(
+      expect(emitEntity).toHaveBeenCalledWith(
+        "entity:after-insert",
         expect.objectContaining({ entity: hydrated }),
       );
     });

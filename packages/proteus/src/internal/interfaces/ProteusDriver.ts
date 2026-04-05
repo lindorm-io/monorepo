@@ -1,9 +1,8 @@
 import type { Constructor } from "@lindorm/types";
-import type { TransactionCallback, TransactionOptions } from "../../types";
+import type { EntityEmitFn, TransactionCallback, TransactionOptions } from "../../types";
 import type { EntityMetadata } from "../entity/types/metadata";
 import type { FilterRegistry } from "../utils/query/filter-registry";
 import { IEntity } from "../../interfaces/Entity";
-import type { IEntitySubscriber } from "../../interfaces/EntitySubscriber";
 import { IProteusQueryBuilder } from "../../interfaces/ProteusQueryBuilder";
 import { IProteusRepository } from "../../interfaces/ProteusRepository";
 import { IRepositoryExecutor } from "./RepositoryExecutor";
@@ -17,14 +16,6 @@ export type MetadataResolver = (target: Constructor<IEntity>) => EntityMetadata;
  * re-creating the driver.
  */
 export type FilterRegistryGetter = () => FilterRegistry;
-
-/**
- * Getter function for the subscriber registry.
- * Drivers call this to get the current subscriber list from the source.
- * This indirection ensures clone() copies work correctly (same driver,
- * different subscriber array).
- */
-export type SubscriberRegistryGetter = () => ReadonlyArray<IEntitySubscriber>;
 
 export type TransactionHandle = unknown;
 
@@ -64,11 +55,11 @@ export interface IProteusDriver {
 
   /**
    * Create a lightweight clone of this driver that shares the same
-   * connection resources (pool, store) but uses different filter/subscriber
-   * getters. Used by ProteusSource.clone() to achieve per-request isolation.
+   * connection resources (pool, store) but uses different filter/emitEntity
+   * functions. Used by ProteusSource.clone() to achieve per-request isolation.
    */
   cloneWithGetters(
     getFilterRegistry: FilterRegistryGetter,
-    getSubscribers: SubscriberRegistryGetter,
+    emitEntity: EntityEmitFn,
   ): IProteusDriver;
 }

@@ -18,11 +18,10 @@ import type { IAmphora } from "@lindorm/amphora";
 import type {
   FilterRegistryGetter,
   MetadataResolver,
-  SubscriberRegistryGetter,
 } from "#internal/interfaces/ProteusDriver";
 import type { RepositoryFactory } from "#internal/types/repository-factory";
 import type { FilterRegistry } from "#internal/utils/query/filter-registry";
-import type { IEntitySubscriber } from "../../../../interfaces/EntitySubscriber";
+import type { EntityEmitFn } from "../../../../types/event-map";
 import type { IProteusRepository } from "../../../../interfaces/ProteusRepository";
 import { MySqlDriverError } from "../errors/MySqlDriverError";
 import { MySqlMigrationError } from "../errors/MySqlMigrationError";
@@ -53,7 +52,7 @@ export class MySqlDriver implements IProteusDriver {
   private readonly namespace: string | null;
   private readonly resolveMetadata: MetadataResolver;
   private readonly getFilterRegistry: FilterRegistryGetter;
-  private readonly getSubscribers: SubscriberRegistryGetter;
+  private readonly emitEntity: EntityEmitFn;
   private readonly amphora: IAmphora | undefined;
   private readonly breaker: ICircuitBreaker | null;
   private pool: Pool | null = null;
@@ -65,7 +64,7 @@ export class MySqlDriver implements IProteusDriver {
     namespace: string | null,
     resolveMetadata: MetadataResolver,
     getFilterRegistry?: FilterRegistryGetter,
-    getSubscribers?: SubscriberRegistryGetter,
+    emitEntity?: EntityEmitFn,
     amphora?: IAmphora,
     breaker?: ICircuitBreaker | null,
   ) {
@@ -74,7 +73,7 @@ export class MySqlDriver implements IProteusDriver {
     this.namespace = namespace;
     this.resolveMetadata = resolveMetadata;
     this.getFilterRegistry = getFilterRegistry ?? ((): FilterRegistry => new Map());
-    this.getSubscribers = getSubscribers ?? ((): ReadonlyArray<IEntitySubscriber> => []);
+    this.emitEntity = emitEntity ?? (async () => {});
     this.amphora = amphora;
     this.breaker = breaker ?? null;
   }
@@ -294,7 +293,7 @@ export class MySqlDriver implements IProteusDriver {
       parent,
       repositoryFactory: factory,
       withImplicitTransaction,
-      getSubscribers: this.getSubscribers,
+      emitEntity: this.emitEntity,
       amphora: this.amphora,
     });
   }
@@ -339,7 +338,7 @@ export class MySqlDriver implements IProteusDriver {
       parent,
       repositoryFactory: factory,
       withImplicitTransaction,
-      getSubscribers: this.getSubscribers,
+      emitEntity: this.emitEntity,
       amphora: this.amphora,
     });
   }
@@ -407,17 +406,17 @@ export class MySqlDriver implements IProteusDriver {
 
   public cloneWithGetters(
     getFilterRegistry: FilterRegistryGetter,
-    getSubscribers: SubscriberRegistryGetter,
+    emitEntity: EntityEmitFn,
   ): MySqlDriver {
     const cloned = Object.create(MySqlDriver.prototype) as MySqlDriver;
     (cloned as any).options = this.options;
     (cloned as any).logger = this.logger;
     (cloned as any).namespace = this.namespace;
     (cloned as any).resolveMetadata = this.resolveMetadata;
-    // Use the caller-supplied getters (not this.getFilterRegistry / this.getSubscribers)
+    // Use the caller-supplied getters (not this.getFilterRegistry / this.emitEntity)
     // so the clone reads from the cloned source's ref cells.
     (cloned as any).getFilterRegistry = getFilterRegistry ?? this.getFilterRegistry;
-    (cloned as any).getSubscribers = getSubscribers ?? this.getSubscribers;
+    (cloned as any).emitEntity = emitEntity ?? this.emitEntity;
     (cloned as any).amphora = this.amphora;
     (cloned as any).breaker = this.breaker;
     (cloned as any).pool = this.pool; // Share the same connection pool

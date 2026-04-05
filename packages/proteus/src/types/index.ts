@@ -1,4 +1,5 @@
 export * from "./clear-options";
+export * from "./event-map";
 export * from "./cursor-options";
 export * from "./delete-options";
 export * from "./find-options";

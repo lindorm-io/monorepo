@@ -373,7 +373,7 @@ const createRepositoryFor = <E extends object>(
     logger: createMockLogger(),
     parent: options.parent,
     repositoryFactory: factory,
-    getSubscribers: () => [],
+    emitEntity: async () => {},
   });
 
   return {

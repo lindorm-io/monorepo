@@ -47,10 +47,6 @@ jest.mock("#internal/utils/query/filter-hidden-selections", () => ({
   filterHiddenSelections: jest.fn().mockReturnValue(null),
 }));
 
-jest.mock("../utils/subscriber/dispatch-subscribers", () => ({
-  dispatchSubscribers: jest.fn().mockResolvedValue(undefined),
-}));
-
 jest.mock("#internal/utils/pagination/validate-paginate-options", () => ({
   validatePaginateOptions: jest.fn(),
 }));
@@ -91,7 +87,6 @@ import {
   guardUpsertBlocked,
 } from "#internal/utils/repository/repository-guards";
 import { filterHiddenSelections } from "#internal/utils/query/filter-hidden-selections";
-import { dispatchSubscribers } from "../utils/subscriber/dispatch-subscribers";
 import { makeField } from "../__fixtures__/make-field";
 import type { EntityMetadata } from "#internal/entity/types/metadata";
 import type { IRepositoryExecutor } from "../interfaces/RepositoryExecutor";
@@ -309,7 +304,7 @@ const createRepo = (
     metadata?: EntityMetadata;
     entityManagerOverrides?: Record<string, any>;
     executorOverrides?: Record<string, any>;
-    getSubscribers?: jest.Mock;
+    emitEntity?: jest.Mock;
   } = {},
 ) => {
   const meta = overrides.metadata ?? mockMetadata;
@@ -336,7 +331,7 @@ const createRepo = (
     driver: "postgres",
     driverLabel: "PostgresRepository",
     repositoryFactory,
-    getSubscribers: overrides.getSubscribers,
+    emitEntity: overrides.emitEntity,
   };
 
   const repo = new ConcreteRepository(options);
@@ -363,7 +358,6 @@ describe("DriverRepositoryBase", () => {
       id: entity.id,
     }));
     (filterHiddenSelections as jest.Mock).mockReturnValue(null);
-    (dispatchSubscribers as jest.Mock).mockResolvedValue(undefined);
     (guardAppendOnly as jest.Mock).mockReturnValue(undefined);
     (guardDeleteDateField as jest.Mock).mockReturnValue(undefined);
     (guardExpiryDateField as jest.Mock).mockReturnValue(undefined);
@@ -1430,35 +1424,29 @@ describe("DriverRepositoryBase", () => {
   // ─── fireSubscriber ───────────────────────────────────────────────────
 
   describe("fireSubscriber", () => {
-    test("does not call dispatchSubscribers when no subscribers registered", async () => {
-      const { repo } = createRepo({ getSubscribers: jest.fn().mockReturnValue([]) });
+    test("does not call emitEntity when event name is unknown", async () => {
+      const emitEntity = jest.fn();
+      const { repo } = createRepo({ emitEntity });
 
-      await repo.exposeFireSubscriber("afterInsert", { entity: entityA });
+      await repo.exposeFireSubscriber("unknownEvent", { entity: entityA });
 
-      expect(dispatchSubscribers).not.toHaveBeenCalled();
+      expect(emitEntity).not.toHaveBeenCalled();
     });
 
-    test("calls dispatchSubscribers when subscribers exist", async () => {
-      const subscriber = { afterInsert: jest.fn() };
-      const { repo } = createRepo({
-        getSubscribers: jest.fn().mockReturnValue([subscriber]),
-      });
+    test("calls emitEntity with mapped event name", async () => {
+      const emitEntity = jest.fn().mockResolvedValue(undefined);
+      const { repo } = createRepo({ emitEntity });
 
       await repo.exposeFireSubscriber("afterInsert", { entity: entityA });
 
-      expect(dispatchSubscribers).toHaveBeenCalledWith(
-        "afterInsert",
-        { entity: entityA },
-        TestEntity,
-        [subscriber],
-      );
+      expect(emitEntity).toHaveBeenCalledWith("entity:after-insert", { entity: entityA });
     });
   });
 
   // ─── buildSubscriberEvent ─────────────────────────────────────────────
 
   describe("buildSubscriberEvent", () => {
-    test("returns event with entity, metadata, and null connection by default", () => {
+    test("returns event with entity, metadata, context, and null connection by default", () => {
       const { repo } = createRepo();
 
       const event = repo.exposeBuildSubscriberEvent(entityA);
@@ -1466,6 +1454,7 @@ describe("DriverRepositoryBase", () => {
       expect(event.entity).toBe(entityA);
       expect(event.metadata).toBe(mockMetadata);
       expect(event.connection).toBeNull();
+      expect(event.context).toBeUndefined();
     });
 
     test("includes provided connection in event", () => {

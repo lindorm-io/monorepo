@@ -3,7 +3,6 @@
 exports[`createMockProteusSource should create a mock source with all methods as jest.fn() 1`] = `
 {
   "addEntities": [MockFunction],
-  "addSubscriber": [MockFunction],
   "breaker": null,
   "client": [MockFunction],
   "clone": [MockFunction],
@@ -25,6 +24,9 @@ exports[`createMockProteusSource should create a mock source with all methods as
   },
   "migrationsTable": undefined,
   "namespace": null,
+  "off": [MockFunction],
+  "on": [MockFunction],
+  "once": [MockFunction],
   "ping": [MockFunction],
   "queryBuilder": [MockFunction],
   "repository": [MockFunction],
