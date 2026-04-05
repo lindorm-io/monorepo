@@ -14,6 +14,9 @@
   "files": [
     "dist"
   ],
+  "bin": {
+    "iris": "dist/cli.js"
+  },
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "exports": {
@@ -60,7 +63,9 @@
     "@lindorm/random": "^0.2.2",
     "@lindorm/retry": "^0.2.1",
     "@lindorm/scanner": "^0.4.2",
-    "zod": "^4.3.6"
+    "zod": "^4.3.6",
+    "@inquirer/prompts": "^8.3.0",
+    "commander": "^14.0.3"
   },
   "devDependencies": {
     "@lindorm/kryptos": "^0.5.3",
