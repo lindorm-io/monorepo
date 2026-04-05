@@ -15,7 +15,7 @@ import {
   VersionField,
 } from "@lindorm/proteus";
 import { Dict } from "@lindorm/types";
-import { WebhookAuth } from "../enums";
+import { WebhookAuth, WebhookMethod } from "../enums";
 import { IWebhookSubscription } from "../interfaces";
 
 @Namespace("pylon")
@@ -39,6 +39,11 @@ export class WebhookSubscription implements IWebhookSubscription {
 
   @Field("string")
   public event!: string;
+
+  @Default(WebhookMethod.Post)
+  @Enum(WebhookMethod)
+  @Field("string")
+  public method!: WebhookMethod;
 
   @Field("json")
   public headers!: Dict<string>;

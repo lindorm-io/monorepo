@@ -1,5 +1,6 @@
 import { ReadableTime } from "@lindorm/date";
 import { IIrisSource } from "@lindorm/iris";
+import { IKryptos } from "@lindorm/kryptos";
 import { IProteusSource } from "@lindorm/proteus";
 import { Dict, Priority } from "@lindorm/types";
 import { PylonCommonContext } from "./context-common";
@@ -46,6 +47,7 @@ export type PylonWebhookOptions = {
   enabled: boolean;
   proteus?: IProteusSource;
   iris?: IIrisSource;
+  encryptionKey?: IKryptos;
 };
 
 export type PylonRateLimitOptions = {
