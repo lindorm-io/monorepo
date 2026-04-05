@@ -40,7 +40,7 @@
     "#internal/*": "./dist/internal/*.js"
   },
   "scripts": {
-    "build": "rimraf dist && tsc -b ./tsconfig.build.json",
+    "build": "rimraf dist && tsc -b ./tsconfig.build.json && chmod +x dist/cli.js",
     "example": "ts-node example",
     "prettier": "prettier --write ./src/*",
     "test": "composed --file docker-compose.yml jest --workerIdleMemoryLimit=512MB",
