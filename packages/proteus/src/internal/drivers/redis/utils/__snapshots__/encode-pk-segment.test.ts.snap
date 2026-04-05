@@ -1,9 +1,5 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
-exports[`decodePkSegment should decode a simple string unchanged 1`] = `"hello"`;
-
-exports[`decodePkSegment should decode an encoded colon 1`] = `"foo:bar"`;
-
 exports[`encodePkSegment should convert boolean to string 1`] = `"true"`;
 
 exports[`encodePkSegment should convert number to string 1`] = `"42"`;

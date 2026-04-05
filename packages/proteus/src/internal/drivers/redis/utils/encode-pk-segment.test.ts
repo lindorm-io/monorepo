@@ -1,4 +1,4 @@
-import { decodePkSegment, encodePkSegment } from "./encode-pk-segment";
+import { encodePkSegment } from "./encode-pk-segment";
 
 describe("encodePkSegment", () => {
   test("should pass through simple string", () => {
@@ -39,29 +39,5 @@ describe("encodePkSegment", () => {
 
   test("should handle UUID without encoding (no colons)", () => {
     expect(encodePkSegment("550e8400-e29b-41d4-a716-446655440000")).toMatchSnapshot();
-  });
-});
-
-describe("decodePkSegment", () => {
-  test("should decode a simple string unchanged", () => {
-    expect(decodePkSegment("hello")).toMatchSnapshot();
-  });
-
-  test("should decode an encoded colon", () => {
-    expect(decodePkSegment("foo%3Abar")).toMatchSnapshot();
-  });
-
-  test("should round-trip a string with colons", () => {
-    const original = "ns:entity:pk";
-    const encoded = encodePkSegment(original);
-    const decoded = decodePkSegment(encoded);
-    expect(decoded).toBe(original);
-  });
-
-  test("should round-trip a string without colons", () => {
-    const original = "simple-value";
-    const encoded = encodePkSegment(original);
-    const decoded = decodePkSegment(encoded);
-    expect(decoded).toBe(original);
   });
 });

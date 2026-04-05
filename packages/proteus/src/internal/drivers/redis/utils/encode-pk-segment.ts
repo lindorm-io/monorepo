@@ -4,5 +4,3 @@ export const encodePkSegment = (value: unknown): string => {
   }
   return encodeURIComponent(String(value));
 };
-
-export const decodePkSegment = (segment: string): string => decodeURIComponent(segment);
