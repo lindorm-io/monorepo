@@ -1,6 +1,7 @@
 import type { Constructor } from "@lindorm/types";
 import type { IIrisSource, IMessage } from "../interfaces";
 import type { IrisConnectionState } from "../types";
+import { createMockIrisSession } from "./create-mock-iris-session";
 import { createMockMessageBus } from "./create-mock-message-bus";
 import { createMockPublisher } from "./create-mock-publisher";
 import { createMockRpcClient } from "./create-mock-rpc-client";
@@ -14,7 +15,7 @@ export const createMockIrisSource = (): IIrisSource => ({
   hasMessage: jest.fn().mockReturnValue(true),
   addSubscriber: jest.fn(),
   removeSubscriber: jest.fn(),
-  clone: jest.fn().mockImplementation(() => createMockIrisSource()),
+  session: jest.fn().mockImplementation(() => createMockIrisSession()),
 
   connect: jest.fn(),
   disconnect: jest.fn(),

@@ -1,5 +1,7 @@
 export * from "./IrisDeadLetterStore";
 export * from "./IrisDelayStore";
+export * from "./IrisMessagingProvider";
+export * from "./IrisSession";
 export * from "./IrisSource";
 export * from "./IrisMessageBus";
 export * from "./IrisPublisher";

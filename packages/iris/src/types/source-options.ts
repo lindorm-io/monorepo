@@ -10,7 +10,7 @@ export type IrisDriverType = "memory" | "rabbit" | "kafka" | "nats" | "redis";
 
 export type MessageScannerInput = Array<Constructor<IMessage> | string>;
 
-export type CloneOptions = {
+export type SessionOptions = {
   logger?: ILogger;
   context?: unknown;
 };
