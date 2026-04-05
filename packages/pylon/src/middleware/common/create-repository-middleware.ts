@@ -2,6 +2,7 @@ import { resolveProteus } from "#internal/utils/resolve-proteus";
 import { camelCase } from "@lindorm/case";
 import { IEntity, IProteusSource } from "@lindorm/proteus";
 import { Constructor, Dict } from "@lindorm/types";
+import { lazyFactory } from "@lindorm/utils";
 import { PylonContext, PylonMiddleware } from "../../types";
 
 export const createRepositoryMiddleware = <C extends PylonContext = PylonContext>(
@@ -13,12 +14,7 @@ export const createRepositoryMiddleware = <C extends PylonContext = PylonContext
     const obj: Dict = {};
 
     for (const entity of entities) {
-      let cached: any;
-      Object.defineProperty(obj, camelCase(entity.name), {
-        get: () => (cached ??= source.repository(entity)),
-        enumerable: true,
-        configurable: true,
-      });
+      lazyFactory(obj, camelCase(entity.name), () => source.repository(entity));
     }
 
     ctx.repositories = obj;
