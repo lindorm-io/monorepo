@@ -1,6 +1,6 @@
 import { Amphora, IAmphora } from "@lindorm/amphora";
 import { KryptosKit } from "@lindorm/kryptos";
-import { ILogger, Logger } from "@lindorm/logger";
+import { createMockLogger, ILogger } from "@lindorm/logger";
 import { join } from "path";
 import { Socket as ClientSocket, io as ioClient } from "socket.io-client";
 import request from "supertest";
@@ -12,7 +12,7 @@ describe("PylonScanner", () => {
   let logger: ILogger;
 
   beforeAll(async () => {
-    logger = new Logger({ level: "error", readable: true });
+    logger = createMockLogger();
 
     amphora = new Amphora({
       domain: "http://test.lindorm.io",
