@@ -1,11 +1,13 @@
 // Main class
 export { Hermes } from "./classes/Hermes";
+export { HermesSession } from "./classes/HermesSession";
+export type { HermesSessionOptions } from "./classes/HermesSession";
 
 // Base entity
 export { HermesViewEntity } from "./entities/HermesViewEntity";
 
-// Interface
-export type { IHermes } from "./interfaces";
+// Interfaces
+export type { IHermes, IHermesProvider, IHermesSession } from "./interfaces";
 
 // Decorators — DTO
 export { Command, Event, Query, Timeout } from "./decorators";

@@ -172,7 +172,7 @@ describe("Hermes", () => {
       await expect(hermes.query(new TestViewQuery("test"))).rejects.toThrow(/not ready/);
     });
 
-    it("should create a clone that shares ready status", async () => {
+    it("should create a session that shares ready status", async () => {
       const { proteus, iris } = await createConnectedSources();
 
       const hermes = new Hermes({
@@ -184,28 +184,8 @@ describe("Hermes", () => {
 
       await hermes.setup();
 
-      const clone = hermes.clone();
-      expect(clone.status).toBe("ready");
-
-      await hermes.teardown();
-      await iris.disconnect();
-      await proteus.disconnect();
-    });
-
-    it("should throw when cloned instance calls setup", async () => {
-      const { proteus, iris } = await createConnectedSources();
-
-      const hermes = new Hermes({
-        proteus,
-        iris,
-        modules: ALL_MODULES,
-        logger,
-      });
-
-      await hermes.setup();
-
-      const clone = hermes.clone();
-      await expect(clone.setup()).rejects.toThrow(/can only be called once/);
+      const session = hermes.session();
+      expect(session.status).toBe("ready");
 
       await hermes.teardown();
       await iris.disconnect();
@@ -1314,9 +1294,9 @@ describe("Hermes", () => {
     });
   });
 
-  // -- MEDIUM: clone then teardown --
+  // -- MEDIUM: session then teardown --
 
-  describe("clone and teardown", () => {
+  describe("session and teardown", () => {
     it("should reflect status changes through shared reference after teardown", async () => {
       const { proteus, iris } = await createConnectedSources();
 
@@ -1329,16 +1309,16 @@ describe("Hermes", () => {
 
       await hermes.setup();
 
-      const clone = hermes.clone();
-      expect(clone.status).toBe("ready");
+      const session = hermes.session();
+      expect(session.status).toBe("ready");
 
       await hermes.teardown();
 
       // Original is stopped
       expect(hermes.status).toBe("stopped");
 
-      // Clone shares the same status reference, so it also shows stopped
-      expect(clone.status).toBe("stopped");
+      // Session shares the same status reference, so it also shows stopped
+      expect(session.status).toBe("stopped");
 
       await iris.disconnect();
       await proteus.disconnect();
