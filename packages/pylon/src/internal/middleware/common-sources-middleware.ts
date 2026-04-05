@@ -34,19 +34,11 @@ export const createSourcesMiddleware = <C extends PylonCommonContext>(
       }
 
       if (options.rateLimitProteus) {
-        (ctx as any)[RATE_LIMIT_SOURCE] = options.rateLimitProteus.clone({
-          logger: ctx.logger,
-          context: ctx,
-        });
-        ctx.logger.debug("RateLimit ProteusSource added to context");
+        (ctx as any)[RATE_LIMIT_SOURCE] = options.rateLimitProteus;
       }
 
       if (options.roomsProteus) {
-        (ctx as any)[ROOMS_SOURCE] = options.roomsProteus.clone({
-          logger: ctx.logger,
-          context: ctx,
-        });
-        ctx.logger.debug("Rooms ProteusSource added to context");
+        (ctx as any)[ROOMS_SOURCE] = options.roomsProteus;
       }
 
       timer.debug("Sources added to context");

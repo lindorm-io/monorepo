@@ -63,13 +63,14 @@ export const useRateLimit = (options: RateLimitOptions): PylonMiddleware => {
       return;
     }
 
-    const source = (ctx as any)[RATE_LIMIT_SOURCE] as IProteusSource | undefined;
-    if (!source) {
+    const rawSource = (ctx as any)[RATE_LIMIT_SOURCE] as IProteusSource | undefined;
+    if (!rawSource) {
       throw new ServerError(
         "Rate limiting is not configured. Enable it in PylonOptions with rateLimit: { enabled: true }",
       );
     }
 
+    const source = rawSource.clone({ logger: ctx.logger });
     const key = options.key?.(ctx) ?? resolveKey(ctx);
     const result = await executeStrategy(source, strategy, key, windowMs, options.max);
 
