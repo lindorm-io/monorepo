@@ -22,7 +22,9 @@ export const createMockIrisSource = (): IIrisSource => ({
   ping: jest.fn().mockResolvedValue(true),
   setup: jest.fn(),
   getConnectionState: jest.fn().mockReturnValue("connected" as IrisConnectionState),
-  onConnectionStateChange: jest.fn(),
+  on: jest.fn(),
+  off: jest.fn(),
+  once: jest.fn(),
 
   messageBus: jest.fn().mockImplementation(() => createMockMessageBus()),
   publisher: jest.fn().mockImplementation(() => createMockPublisher()),

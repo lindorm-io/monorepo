@@ -148,7 +148,7 @@ describe("RedisDriver", () => {
     it("should notify listeners on state change", async () => {
       const driver = createDriver();
       const states: Array<IrisConnectionState> = [];
-      driver.onConnectionStateChange((s) => states.push(s));
+      driver.on("connection:state", (s) => states.push(s));
 
       await driver.connect();
 
@@ -224,7 +224,7 @@ describe("RedisDriver", () => {
     it("should set state to reconnecting when ioredis emits reconnecting", async () => {
       const driver = createDriver();
       const states: Array<IrisConnectionState> = [];
-      driver.onConnectionStateChange((s) => states.push(s));
+      driver.on("connection:state", (s) => states.push(s));
 
       await driver.connect();
 
@@ -244,7 +244,7 @@ describe("RedisDriver", () => {
     it("should set state to connected when ioredis emits ready after reconnect", async () => {
       const driver = createDriver();
       const states: Array<IrisConnectionState> = [];
-      driver.onConnectionStateChange((s) => states.push(s));
+      driver.on("connection:state", (s) => states.push(s));
 
       await driver.connect();
 
@@ -298,7 +298,7 @@ describe("RedisDriver", () => {
     it("should not propagate ready event when deliberately disconnected", async () => {
       const driver = createDriver();
       const states: Array<IrisConnectionState> = [];
-      driver.onConnectionStateChange((s) => states.push(s));
+      driver.on("connection:state", (s) => states.push(s));
 
       await driver.connect();
 

@@ -3,6 +3,7 @@ import type {
   CloneOptions,
   IrisConnectionState,
   IrisDriverType,
+  IrisEvents,
   MessageScannerInput,
 } from "../types";
 import type { IIrisMessageBus } from "./IrisMessageBus";
@@ -30,7 +31,18 @@ export interface IIrisSource {
   ping(): Promise<boolean>;
   setup(): Promise<void>;
   getConnectionState(): IrisConnectionState;
-  onConnectionStateChange(callback: (state: IrisConnectionState) => void): void;
+  on<K extends keyof IrisEvents>(
+    event: K,
+    listener: (...args: IrisEvents[K]) => void,
+  ): void;
+  off<K extends keyof IrisEvents>(
+    event: K,
+    listener: (...args: IrisEvents[K]) => void,
+  ): void;
+  once<K extends keyof IrisEvents>(
+    event: K,
+    listener: (...args: IrisEvents[K]) => void,
+  ): void;
 
   messageBus<M extends IMessage>(target: Constructor<M>): IIrisMessageBus<M>;
   publisher<M extends IMessage>(target: Constructor<M>): IIrisPublisher<M>;

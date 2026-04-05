@@ -310,7 +310,7 @@ describe("RabbitDriver - reconnect logic", () => {
 
       const driver = new RabbitDriver(createDriverOptions());
       const states: Array<IrisConnectionState> = [];
-      driver.onConnectionStateChange((s) => states.push(s));
+      driver.on("connection:state", (s) => states.push(s));
 
       await driver.connect();
 

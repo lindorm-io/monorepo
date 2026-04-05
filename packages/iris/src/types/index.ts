@@ -1,6 +1,7 @@
 export * from "./decorator-options";
 export * from "./compression";
 export * from "./connection";
+export * from "./events";
 export * from "./consume-envelope";
 export * from "./dead-letter";
 export * from "./delay";

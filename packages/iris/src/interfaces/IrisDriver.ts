@@ -1,5 +1,5 @@
 import type { Constructor } from "@lindorm/types";
-import type { IrisConnectionState } from "../types";
+import type { IrisConnectionState, IrisEvents } from "../types";
 import type { IIrisMessageBus } from "./IrisMessageBus";
 import type { IIrisPublisher } from "./IrisPublisher";
 import type { IIrisRpcClient } from "./IrisRpcClient";
@@ -17,7 +17,18 @@ export interface IIrisDriver {
   setup(messages: Array<Constructor<IMessage>>): Promise<void>;
 
   getConnectionState(): IrisConnectionState;
-  onConnectionStateChange?(callback: (state: IrisConnectionState) => void): void;
+  on<K extends keyof IrisEvents>(
+    event: K,
+    listener: (...args: IrisEvents[K]) => void,
+  ): void;
+  off<K extends keyof IrisEvents>(
+    event: K,
+    listener: (...args: IrisEvents[K]) => void,
+  ): void;
+  once<K extends keyof IrisEvents>(
+    event: K,
+    listener: (...args: IrisEvents[K]) => void,
+  ): void;
 
   createMessageBus<M extends IMessage>(target: Constructor<M>): IIrisMessageBus<M>;
   createPublisher<M extends IMessage>(target: Constructor<M>): IIrisPublisher<M>;

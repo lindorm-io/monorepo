@@ -204,7 +204,7 @@ describe("KafkaDriver", () => {
     it("should notify listeners on state change", async () => {
       const driver = createDriver();
       const states: Array<IrisConnectionState> = [];
-      driver.onConnectionStateChange((s) => states.push(s));
+      driver.on("connection:state", (s) => states.push(s));
 
       await driver.connect();
 
@@ -380,7 +380,7 @@ describe("KafkaDriver", () => {
     it("should set state to reconnecting when producer emits disconnect", async () => {
       const driver = createDriver();
       const states: Array<IrisConnectionState> = [];
-      driver.onConnectionStateChange((s) => states.push(s));
+      driver.on("connection:state", (s) => states.push(s));
 
       await driver.connect();
 
@@ -399,7 +399,7 @@ describe("KafkaDriver", () => {
     it("should set state to connected when producer emits connect after disconnect", async () => {
       const driver = createDriver();
       const states: Array<IrisConnectionState> = [];
-      driver.onConnectionStateChange((s) => states.push(s));
+      driver.on("connection:state", (s) => states.push(s));
 
       await driver.connect();
 
@@ -459,7 +459,7 @@ describe("KafkaDriver", () => {
     it("should not transition to connected from connect event when not reconnecting", async () => {
       const driver = createDriver();
       const states: Array<IrisConnectionState> = [];
-      driver.onConnectionStateChange((s) => states.push(s));
+      driver.on("connection:state", (s) => states.push(s));
 
       await driver.connect();
       states.length = 0;
