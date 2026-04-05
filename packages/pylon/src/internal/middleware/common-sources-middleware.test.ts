@@ -1,3 +1,4 @@
+import { createMockHermes } from "@lindorm/hermes/mocks";
 import { createMockIrisSource } from "@lindorm/iris/mocks";
 import { createMockLogger } from "@lindorm/logger";
 import { createMockProteusSource } from "@lindorm/proteus/mocks";
@@ -13,37 +14,52 @@ describe("createSourcesMiddleware", () => {
     };
   });
 
-  test("should clone proteus source onto context", async () => {
+  test("should lazily create proteus session on first access", async () => {
     const proteus = createMockProteusSource();
 
     const middleware = createSourcesMiddleware({ proteus: proteus as any });
 
     await middleware(ctx, jest.fn());
 
-    expect(proteus.clone).toHaveBeenCalledWith({ logger: ctx.logger, context: ctx });
-    expect(ctx.proteus).toBeDefined();
+    expect(proteus.session).not.toHaveBeenCalled();
+
+    const session = ctx.proteus;
+
+    expect(session).toBeDefined();
+    expect(proteus.session).toHaveBeenCalledTimes(1);
+    expect(proteus.session).toHaveBeenCalledWith({ logger: ctx.logger, context: ctx });
   });
 
-  test("should clone iris source onto context", async () => {
+  test("should lazily create iris session on first access", async () => {
     const iris = createMockIrisSource();
 
     const middleware = createSourcesMiddleware({ iris: iris as any });
 
     await middleware(ctx, jest.fn());
 
-    expect(iris.clone).toHaveBeenCalledWith({ logger: ctx.logger, context: ctx });
-    expect(ctx.iris).toBeDefined();
+    expect(iris.session).not.toHaveBeenCalled();
+
+    const session = ctx.iris;
+
+    expect(session).toBeDefined();
+    expect(iris.session).toHaveBeenCalledTimes(1);
+    expect(iris.session).toHaveBeenCalledWith({ logger: ctx.logger, context: ctx });
   });
 
-  test("should clone hermes onto context", async () => {
-    const hermes = { clone: jest.fn().mockReturnValue("cloned") };
+  test("should lazily create hermes session on first access", async () => {
+    const hermes = createMockHermes();
 
     const middleware = createSourcesMiddleware({ hermes: hermes as any });
 
     await middleware(ctx, jest.fn());
 
-    expect(hermes.clone).toHaveBeenCalledWith({ logger: ctx.logger });
-    expect(ctx.hermes).toEqual("cloned");
+    expect(hermes.session).not.toHaveBeenCalled();
+
+    const session = ctx.hermes;
+
+    expect(session).toBeDefined();
+    expect(hermes.session).toHaveBeenCalledTimes(1);
+    expect(hermes.session).toHaveBeenCalledWith({ logger: ctx.logger });
   });
 
   test("should handle no sources configured", async () => {
@@ -56,7 +72,7 @@ describe("createSourcesMiddleware", () => {
     expect(ctx.hermes).toBeUndefined();
   });
 
-  test("should store raw rateLimitProteus on context via symbol (lazy clone)", async () => {
+  test("should store raw rateLimitProteus on context via symbol (lazy session)", async () => {
     const rateLimitProteus = createMockProteusSource();
 
     const middleware = createSourcesMiddleware({
@@ -65,18 +81,18 @@ describe("createSourcesMiddleware", () => {
 
     await middleware(ctx, jest.fn());
 
-    expect(rateLimitProteus.clone).not.toHaveBeenCalled();
+    expect(rateLimitProteus.session).not.toHaveBeenCalled();
     expect(ctx[RATE_LIMIT_SOURCE]).toBe(rateLimitProteus);
   });
 
-  test("should store raw roomsProteus on context via symbol (lazy clone)", async () => {
+  test("should store raw roomsProteus on context via symbol (lazy session)", async () => {
     const roomsProteus = createMockProteusSource();
 
     const middleware = createSourcesMiddleware({ roomsProteus: roomsProteus as any });
 
     await middleware(ctx, jest.fn());
 
-    expect(roomsProteus.clone).not.toHaveBeenCalled();
+    expect(roomsProteus.session).not.toHaveBeenCalled();
     expect(ctx[ROOMS_SOURCE]).toBe(roomsProteus);
   });
 

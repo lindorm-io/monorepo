@@ -23,7 +23,7 @@ describe("useAuditLog", () => {
     };
 
     mockIris = {
-      clone: jest.fn().mockReturnValue({
+      session: jest.fn().mockReturnValue({
         publisher: jest.fn().mockReturnValue(mockPublisher),
       }),
     };

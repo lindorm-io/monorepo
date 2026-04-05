@@ -2,15 +2,15 @@ import { ServerError } from "@lindorm/errors";
 import { resolveIris } from "./resolve-iris";
 
 describe("resolveIris", () => {
-  test("should return cloned override when override is provided", () => {
-    const cloned = { fake: "cloned" };
-    const override: any = { clone: jest.fn().mockReturnValue(cloned) };
+  test("should return session from override when override is provided", () => {
+    const session = { fake: "session" };
+    const override: any = { session: jest.fn().mockReturnValue(session) };
     const ctx: any = { logger: { fake: "logger" } };
 
     const result = resolveIris(ctx, override);
 
-    expect(result).toBe(cloned);
-    expect(override.clone).toHaveBeenCalledWith({ logger: ctx.logger, context: ctx });
+    expect(result).toBe(session);
+    expect(override.session).toHaveBeenCalledWith({ logger: ctx.logger, context: ctx });
   });
 
   test("should return ctx.iris when no override and ctx.iris exists", () => {
@@ -30,12 +30,12 @@ describe("resolveIris", () => {
   });
 
   test("should prefer override over ctx.iris", () => {
-    const cloned = { fake: "cloned" };
-    const override: any = { clone: jest.fn().mockReturnValue(cloned) };
+    const session = { fake: "session" };
+    const override: any = { session: jest.fn().mockReturnValue(session) };
     const ctx: any = { logger: {}, iris: { fake: "existing" } };
 
     const result = resolveIris(ctx, override);
 
-    expect(result).toBe(cloned);
+    expect(result).toBe(session);
   });
 });

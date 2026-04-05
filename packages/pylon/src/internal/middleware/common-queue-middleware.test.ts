@@ -93,7 +93,7 @@ describe("createQueueMiddleware", () => {
   test("should use iris override source", async () => {
     const overrideWq = { create: mockCreate, publish: mockPublish };
     const overrideIris = {
-      clone: jest
+      session: jest
         .fn()
         .mockReturnValue({ workerQueue: jest.fn().mockReturnValue(overrideWq) }),
     };
@@ -107,7 +107,10 @@ describe("createQueueMiddleware", () => {
 
     await ctx.queue("event", {});
 
-    expect(overrideIris.clone).toHaveBeenCalledWith({ logger: ctx.logger, context: ctx });
+    expect(overrideIris.session).toHaveBeenCalledWith({
+      logger: ctx.logger,
+      context: ctx,
+    });
   });
 
   test("should call next", async () => {

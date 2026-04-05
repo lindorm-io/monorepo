@@ -3,6 +3,7 @@ import { IHermes } from "@lindorm/hermes";
 import { IIrisSource } from "@lindorm/iris";
 import { Middleware } from "@lindorm/middleware";
 import { IProteusSource } from "@lindorm/proteus";
+import { lazyFactory } from "@lindorm/utils";
 import { AUDIT_SOURCE, RATE_LIMIT_SOURCE, ROOMS_SOURCE } from "../constants/symbols";
 import { PylonCommonContext } from "../../types";
 
@@ -29,16 +30,20 @@ export const createSourcesMiddleware = <C extends PylonCommonContext>(
     const timer = ctx.logger.time();
 
     try {
-      ctx.hermes = options.hermes?.clone({ logger: ctx.logger });
+      if (options.hermes) {
+        lazyFactory(ctx, "hermes", () => options.hermes!.session({ logger: ctx.logger }));
+      }
 
       if (options.proteus) {
-        ctx.proteus = options.proteus.clone({ logger: ctx.logger, context: ctx });
-        ctx.logger.debug("ProteusSource added to context");
+        lazyFactory(ctx, "proteus", () =>
+          options.proteus!.session({ logger: ctx.logger, context: ctx }),
+        );
       }
 
       if (options.iris) {
-        ctx.iris = options.iris.clone({ logger: ctx.logger, context: ctx });
-        ctx.logger.debug("IrisSource added to context");
+        lazyFactory(ctx, "iris", () =>
+          options.iris!.session({ logger: ctx.logger, context: ctx }),
+        );
       }
 
       if (options.auditConfig) {

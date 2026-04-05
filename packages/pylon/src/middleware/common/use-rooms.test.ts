@@ -26,8 +26,8 @@ describe("useRooms", () => {
       destroy: jest.fn().mockResolvedValue(undefined),
     };
 
-    const clonedSource = { repository: jest.fn().mockReturnValue(mockRepository) };
-    mockSource = { clone: jest.fn().mockReturnValue(clonedSource) };
+    const sessionSource = { repository: jest.fn().mockReturnValue(mockRepository) };
+    mockSource = { session: jest.fn().mockReturnValue(sessionSource) };
     (isSocketContext as unknown as jest.Mock).mockReturnValue(true);
 
     ctx = {
@@ -173,7 +173,7 @@ describe("useRooms", () => {
     await useRooms()(ctx, next);
     await ctx.rooms.join("lobby");
 
-    expect(mockSource.clone).not.toHaveBeenCalled();
+    expect(mockSource.session).not.toHaveBeenCalled();
     expect(mockRepository.findOneOrSave).not.toHaveBeenCalled();
   });
 
