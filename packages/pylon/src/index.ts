@@ -5,6 +5,7 @@ export * from "./middleware";
 export * from "./types";
 export * from "./workers";
 
+export { DataAuditLog } from "./entities/DataAuditLog";
 export { RequestAuditLog } from "./entities/RequestAuditLog";
 export { WebhookSubscription } from "./entities/WebhookSubscription";
 

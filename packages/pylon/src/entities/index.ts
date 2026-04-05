@@ -1,3 +1,4 @@
+export * from "./DataAuditLog";
 export * from "./Kryptos";
 export * from "./Presence";
 export * from "./RateLimitBucket";
