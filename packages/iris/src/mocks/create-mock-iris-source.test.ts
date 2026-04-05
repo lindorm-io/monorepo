@@ -15,7 +15,7 @@ describe("createMockIrisSource", () => {
     expect(jest.isMockFunction(mock.hasMessage)).toBe(true);
     expect(jest.isMockFunction(mock.addSubscriber)).toBe(true);
     expect(jest.isMockFunction(mock.removeSubscriber)).toBe(true);
-    expect(jest.isMockFunction(mock.clone)).toBe(true);
+    expect(jest.isMockFunction(mock.session)).toBe(true);
 
     expect(jest.isMockFunction(mock.connect)).toBe(true);
     expect(jest.isMockFunction(mock.disconnect)).toBe(true);
@@ -57,12 +57,12 @@ describe("createMockIrisSource", () => {
     expect(mock.rpcClient({} as any, {} as any)).toBeDefined();
   });
 
-  it("should return a new mock from clone", () => {
+  it("should return a new mock session from session()", () => {
     const mock = createMockIrisSource();
-    const cloned = mock.clone();
+    const session = mock.session();
 
-    expect(cloned).not.toBe(mock);
-    expect(cloned.driver).toBe("memory");
-    expect(jest.isMockFunction(cloned.connect)).toBe(true);
+    expect(session).not.toBe(mock);
+    expect(session.driver).toBe("memory");
+    expect(jest.isMockFunction(session.ping)).toBe(true);
   });
 });

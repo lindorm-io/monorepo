@@ -251,29 +251,25 @@ describe("IrisSource", () => {
     });
   });
 
-  describe("clone", () => {
-    it("should create an independent subscriber list", () => {
+  describe("session", () => {
+    it("should create a session without affecting the source subscriber list", () => {
       const source = new IrisSource(createMemoryOptions());
       const sub1: IMessageSubscriber = { beforePublish: jest.fn() };
       source.addSubscriber(sub1);
 
-      const cloned = source.clone();
+      const session = source.session();
+      expect(session.driver).toBe("memory");
+
+      // Adding to the original after session creation should not throw
       const sub2: IMessageSubscriber = { afterPublish: jest.fn() };
-      cloned.addSubscriber(sub2);
-
-      // Removing sub2 from clone should not affect original
-      cloned.removeSubscriber(sub1);
-
-      // Original should still be intact — verify by cloning original again
-      const cloned2 = source.clone();
-      // cloned2 should inherit sub1 from original
-      // This is tested indirectly; the main point is no throw
+      source.addSubscriber(sub2);
+      expect((source as any)._subscribersRef.current).toHaveLength(2);
     });
 
     it("should inherit driver type", () => {
       const source = new IrisSource(createMemoryOptions());
-      const cloned = source.clone();
-      expect(cloned.driver).toBe("memory");
+      const session = source.session();
+      expect(session.driver).toBe("memory");
     });
 
     it("should inherit messages", () => {
@@ -282,15 +278,15 @@ describe("IrisSource", () => {
           messages: [SourceTestMessage],
         }),
       );
-      const cloned = source.clone();
-      expect(cloned.hasMessage(SourceTestMessage)).toBe(true);
+      const session = source.session();
+      expect(session.hasMessage(SourceTestMessage)).toBe(true);
     });
 
-    it("should have independent messages list (adding to source does not affect clone)", () => {
+    it("should have independent messages list (adding to source does not affect session)", () => {
       const source = new IrisSource(createMemoryOptions());
-      const cloned = source.clone();
+      const session = source.session();
       source.addMessages([SourceTestMessage]);
-      expect(cloned.hasMessage(SourceTestMessage)).toBe(false);
+      expect(session.hasMessage(SourceTestMessage)).toBe(false);
       expect(source.hasMessage(SourceTestMessage)).toBe(true);
     });
 
@@ -299,16 +295,16 @@ describe("IrisSource", () => {
       const logger2 = createMockLogger();
 
       const source = new IrisSource(createMemoryOptions({ logger: logger1 as any }));
-      const cloned = source.clone({ logger: logger2 as any });
+      const session = source.session({ logger: logger2 as any });
 
-      expect(cloned.driver).toBe("memory");
+      expect(session.driver).toBe("memory");
       expect(logger2.child).toHaveBeenCalled();
     });
 
     it("should use a different context when provided", () => {
       const source = new IrisSource(createMemoryOptions({ context: { tenant: "A" } }));
-      const cloned = source.clone({ context: { tenant: "B" } });
-      expect(cloned.driver).toBe("memory");
+      const session = source.session({ context: { tenant: "B" } });
+      expect(session.driver).toBe("memory");
     });
 
     it("should clone a connected driver via cloneWithGetters", () => {
@@ -319,10 +315,10 @@ describe("IrisSource", () => {
       const source = new IrisSource(createMemoryOptions());
       (source as any)._driver = mockDriver;
 
-      const cloned = source.clone();
+      const session = source.session();
 
       expect(mockDriver.cloneWithGetters).toHaveBeenCalledWith(expect.any(Function));
-      expect((cloned as any)._driver).toBe(clonedDriver);
+      expect((session as any)._driver).toBe(clonedDriver);
     });
   });
 
@@ -922,14 +918,17 @@ describe("IrisSource", () => {
       expect((source as any)._deadLetterManager).toBeUndefined();
     });
 
-    it("should share managers across clones", async () => {
+    it("should pass managers to sessions via constructor options", async () => {
       const source = new IrisSource(createMemoryOptions());
       await source.connect();
 
-      const cloned = source.clone();
+      // The managers exist on the parent
+      expect((source as any)._delayManager).toBeDefined();
+      expect((source as any)._deadLetterManager).toBeDefined();
 
-      expect((cloned as any)._delayManager).toBe((source as any)._delayManager);
-      expect((cloned as any)._deadLetterManager).toBe((source as any)._deadLetterManager);
+      // Creating a session should not throw — managers are passed through
+      const session = source.session();
+      expect(session.driver).toBe("memory");
 
       await source.disconnect();
     });

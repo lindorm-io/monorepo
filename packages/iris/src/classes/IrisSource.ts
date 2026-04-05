@@ -15,12 +15,12 @@ import type {
   IMessageSubscriber,
 } from "../interfaces";
 import type {
-  CloneOptions,
   IrisConnectionState,
   IrisDriverType,
   IrisEvents,
   IrisSourceOptions,
   MessageScannerInput,
+  SessionOptions,
 } from "../types";
 import type { DeadLetterManager } from "#internal/dead-letter/DeadLetterManager";
 import type { DelayManager } from "#internal/delay/DelayManager";
@@ -28,8 +28,8 @@ import { MessageScanner } from "#internal/message/classes/MessageScanner";
 import { isAbstractMessage } from "#internal/message/metadata/abstract-message";
 import { clearMetadataCache } from "#internal/message/metadata/registry";
 import type { IAmphora } from "@lindorm/amphora";
-import type { IrisSourceInit } from "#internal/types";
 import { validateEncryptedMessages } from "#internal/utils/validate-encrypted-messages";
+import { IrisSession } from "./IrisSession";
 
 export class IrisSource implements IIrisSource {
   private _driver: IIrisDriver | undefined;
@@ -46,11 +46,6 @@ export class IrisSource implements IIrisSource {
   private _disconnectingPromise: Promise<void> | null = null;
   private _settingUpPromise: Promise<void> | null = null;
   private isSetUp = false;
-  private _isClone = false;
-
-  private static fromFields(fields: IrisSourceInit): IrisSource {
-    return Object.assign(Object.create(IrisSource.prototype) as IrisSource, fields);
-  }
 
   public constructor(options: IrisSourceOptions) {
     this._options = options;
@@ -130,27 +125,19 @@ export class IrisSource implements IIrisSource {
     );
   }
 
-  public clone(options?: CloneOptions): IIrisSource {
+  public session(options?: SessionOptions): IrisSession {
     const subscribersRef = { current: [...this._subscribersRef.current] };
 
-    return IrisSource.fromFields({
+    const clonedDriver = this._driver
+      ? this._driver.cloneWithGetters(() => subscribersRef.current)
+      : undefined;
+
+    return new IrisSession({
       logger: options?.logger?.child(["IrisSource"]) ?? this.logger,
       context: options?.context ?? this.context,
-      _messages: [...this._messages],
-      _amphora: this._amphora,
-      _delayManager: this._delayManager,
-      _deadLetterManager: this._deadLetterManager,
-      _driverType: this._driverType,
-      _subscribersRef: subscribersRef,
-      _connectingPromise: null,
-      _disconnectingPromise: null,
-      _settingUpPromise: null,
-      isSetUp: this.isSetUp,
-      _isClone: true,
-      _options: this._options,
-      _driver: this._driver
-        ? this._driver.cloneWithGetters(() => subscribersRef.current)
-        : undefined,
+      driver: clonedDriver!,
+      driverType: this._driverType,
+      messages: [...this._messages],
     });
   }
 
@@ -421,14 +408,6 @@ export class IrisSource implements IIrisSource {
       }
     }
     if (!this._driver) return;
-
-    if (this._isClone) {
-      this._driver = undefined;
-      this.isSetUp = false;
-      this._connectingPromise = null;
-      this._settingUpPromise = null;
-      return;
-    }
 
     try {
       await this._driver.disconnect();

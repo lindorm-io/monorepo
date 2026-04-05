@@ -1,3 +1,4 @@
+export * from "./create-mock-iris-session";
 export * from "./create-mock-iris-source";
 export * from "./create-mock-message-bus";
 export * from "./create-mock-publisher";

@@ -1,34 +1,26 @@
 import type { Constructor } from "@lindorm/types";
 import type {
-  CloneOptions,
   IrisConnectionState,
-  IrisDriverType,
   IrisEvents,
   MessageScannerInput,
+  SessionOptions,
 } from "../types";
-import type { IIrisMessageBus } from "./IrisMessageBus";
-import type { IIrisPublisher } from "./IrisPublisher";
-import type { IIrisRpcClient } from "./IrisRpcClient";
-import type { IIrisRpcServer } from "./IrisRpcServer";
-import type { IIrisStreamProcessor } from "./IrisStreamProcessor";
-import type { IIrisWorkerQueue } from "./IrisWorkerQueue";
 import type { IMessage } from "./Message";
 import type { IMessageSubscriber } from "./MessageSubscriber";
+import type { IIrisMessagingProvider } from "./IrisMessagingProvider";
+import type { IIrisSession } from "./IrisSession";
 
-export interface IIrisSource {
-  readonly driver: IrisDriverType;
+export interface IIrisSource extends IIrisMessagingProvider {
   readonly messages: ReadonlyArray<Constructor<IMessage>>;
 
   addMessages(input: MessageScannerInput): void;
-  hasMessage(target: Constructor<IMessage>): boolean;
   addSubscriber(subscriber: IMessageSubscriber): void;
   removeSubscriber(subscriber: IMessageSubscriber): void;
-  clone(options?: CloneOptions): IIrisSource;
+  session(options?: SessionOptions): IIrisSession;
 
   connect(): Promise<void>;
   disconnect(): Promise<void>;
   drain(timeout?: number): Promise<void>;
-  ping(): Promise<boolean>;
   setup(): Promise<void>;
   getConnectionState(): IrisConnectionState;
   on<K extends keyof IrisEvents>(
@@ -43,17 +35,4 @@ export interface IIrisSource {
     event: K,
     listener: (...args: IrisEvents[K]) => void,
   ): void;
-
-  messageBus<M extends IMessage>(target: Constructor<M>): IIrisMessageBus<M>;
-  publisher<M extends IMessage>(target: Constructor<M>): IIrisPublisher<M>;
-  workerQueue<M extends IMessage>(target: Constructor<M>): IIrisWorkerQueue<M>;
-  stream(): IIrisStreamProcessor;
-  rpcClient<Req extends IMessage, Res extends IMessage>(
-    requestTarget: Constructor<Req>,
-    responseTarget: Constructor<Res>,
-  ): IIrisRpcClient<Req, Res>;
-  rpcServer<Req extends IMessage, Res extends IMessage>(
-    requestTarget: Constructor<Req>,
-    responseTarget: Constructor<Res>,
-  ): IIrisRpcServer<Req, Res>;
 }
