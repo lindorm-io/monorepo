@@ -12,6 +12,7 @@ import {
   PylonTeardown,
 } from "../types";
 import {
+  DataAuditLog,
   Kryptos,
   Presence,
   RateLimitBucket,
@@ -21,8 +22,16 @@ import {
   Session,
   WebhookSubscription,
 } from "../entities";
-import { Job, RequestAudit, WebhookDispatch, WebhookRequest } from "../messages";
+import {
+  DataAuditChange,
+  Job,
+  RequestAudit,
+  WebhookDispatch,
+  WebhookRequest,
+} from "../messages";
 import { setupAuditConsumer } from "#internal/consumers/setup-audit-consumer";
+import { setupDataAuditConsumer } from "#internal/consumers/setup-data-audit-consumer";
+import { setupDataAuditListeners } from "#internal/listeners/setup-data-audit-listeners";
 import { setupWebhookDispatchConsumer } from "#internal/consumers/setup-webhook-dispatch-consumer";
 import { setupWebhookRequestConsumer } from "#internal/consumers/setup-webhook-request-consumer";
 import { calculateSubscriptions } from "#internal/utils/calculate-subscriptions";
@@ -294,11 +303,19 @@ export class Pylon<
       const proteusSource = this.options.audit.proteus ?? this.options.proteus;
       if (proteusSource) {
         proteusSource.addEntities([RequestAuditLog]);
+
+        if (this.options.audit.entities?.length) {
+          proteusSource.addEntities([DataAuditLog]);
+        }
       }
 
       const irisSource = this.options.audit.iris ?? this.options.iris;
       if (irisSource) {
         irisSource.addMessages([RequestAudit]);
+
+        if (this.options.audit.entities?.length) {
+          irisSource.addMessages([DataAuditChange]);
+        }
       }
     }
   }
@@ -310,6 +327,17 @@ export class Pylon<
 
       if (iris && proteus) {
         await setupAuditConsumer(iris, proteus, this.logger);
+
+        if (this.options.audit.entities?.length) {
+          setupDataAuditListeners(
+            proteus,
+            iris,
+            this.options.audit.actor,
+            this.options.audit.entities,
+            this.logger,
+          );
+          await setupDataAuditConsumer(iris, proteus, this.logger);
+        }
       }
     }
 
