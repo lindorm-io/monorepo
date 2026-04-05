@@ -11,6 +11,9 @@
   "publishConfig": {
     "access": "public"
   },
+  "bin": {
+    "hermes": "dist/cli.js"
+  },
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "exports": {
@@ -34,7 +37,7 @@
     "#internal/*": "./dist/internal/*.js"
   },
   "scripts": {
-    "build": "rimraf dist && tsc -b ./tsconfig.build.json",
+    "build": "rimraf dist && tsc -b ./tsconfig.build.json && chmod +x dist/cli.js",
     "example": "jest --forceExit -- banking-example",
     "prettier": "prettier --write ./src/*",
     "test": "jest --forceExit --",
@@ -58,7 +61,9 @@
     "@lindorm/sha": "^0.3.2",
     "@lindorm/utils": "^0.6.2",
     "deepmerge": "^4.3.1",
-    "zod": "^3.23.8"
+    "zod": "^3.23.8",
+    "@inquirer/prompts": "^8.3.0",
+    "commander": "^14.0.3"
   },
   "peerDependencies": {
     "@lindorm/iris": "^0.1.0",
