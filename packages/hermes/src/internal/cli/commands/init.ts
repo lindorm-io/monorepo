@@ -19,7 +19,7 @@ const sourceTemplate = (): string =>
     `  // proteus,`,
     `  // iris,`,
     `  modules: [__dirname],`,
-    `  logger: logger.child(["hermes"]), // TODO: import or create a Logger instance`,
+    `  logger: logger, // TODO: import or create a Logger instance`,
     `});`,
     ``,
   ].join("\n");

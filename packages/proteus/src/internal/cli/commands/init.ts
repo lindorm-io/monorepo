@@ -18,7 +18,7 @@ const sourceTemplate = (driver: string, isSql: boolean): string => {
     ``,
     `export const source = new ProteusSource({`,
     `  driver: "${driver}",`,
-    `  logger: logger.child(["proteus"]), // TODO: import or create a Logger instance`,
+    `  logger: logger, // TODO: import or create a Logger instance`,
     `  entities: [join(__dirname, "entities")],`,
   ];
 
