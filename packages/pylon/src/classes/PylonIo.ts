@@ -20,7 +20,7 @@ import { Server as SocketIoServer } from "socket.io";
 import {
   IoServer,
   IoSocket,
-  PylonIoOptions,
+  PylonOptions,
   PylonSocket,
   PylonSocketContext,
   PylonSocketMiddleware,
@@ -29,13 +29,15 @@ import { PylonListener } from "./PylonListener";
 
 export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
   private readonly logger: ILogger;
-  private readonly options: PylonIoOptions<T>;
+  private readonly options: PylonOptions<any, T>;
   private readonly middleware: Array<PylonSocketMiddleware<T>>;
 
   public readonly server: IoServer;
 
-  public constructor(http: Server, options: PylonIoOptions<T>) {
+  public constructor(http: Server, options: PylonOptions<any, T>) {
     this.logger = options.logger.child(["PylonSocket"]);
+
+    const socket = options.socket!;
 
     this.middleware = [
       createSourcesMiddleware({
@@ -71,16 +73,14 @@ export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
             }),
           ]
         : []),
+      ...(socket.middleware ?? []),
     ];
     this.options = options;
     this.server = new SocketIoServer(http, {
-      ...(options.socketOptions ?? {}),
-      ...(options.socketRedis
+      ...(socket.options ?? {}),
+      ...(socket.redis
         ? {
-            adapter: createAdapter(
-              options.socketRedis.duplicate(),
-              options.socketRedis.duplicate(),
-            ),
+            adapter: createAdapter(socket.redis.duplicate(), socket.redis.duplicate()),
           }
         : {}),
     });
@@ -98,14 +98,16 @@ export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
     const listeners: Array<PylonListener<T>> = [];
     const namespaces: Array<string> = [];
 
-    if (isString(this.options.socketListeners)) {
+    const socketListeners = this.options.socket?.listeners;
+
+    if (isString(socketListeners)) {
       const scanner = new PylonListenerScanner<T>(this.logger);
-      const result = scanner.scan(this.options.socketListeners);
+      const result = scanner.scan(socketListeners);
 
       listeners.push(...result.listeners);
       namespaces.push(...result.namespaces);
-    } else if (isArray(this.options.socketListeners)) {
-      for (const listener of this.options.socketListeners) {
+    } else if (isArray(socketListeners)) {
+      for (const listener of socketListeners) {
         listeners.push(listener);
 
         if (listener.namespace) {

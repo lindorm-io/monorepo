@@ -89,8 +89,8 @@ export class Pylon<
     this.server = createServer();
     this.http = new PylonHttp<H>(options as any);
 
-    if (options.socketListeners || options.socketMiddleware) {
-      this.io = new PylonIo<S>(this.server, options as any);
+    if (options.socket?.enabled) {
+      this.io = new PylonIo<S>(this.server, options);
     }
 
     this.port = options.port ?? 3000;
