@@ -17,7 +17,7 @@ const sourceTemplate = (driver: string): string => {
     ``,
     `export const source = new IrisSource({`,
     `  driver: "${driver}",`,
-    `  logger: logger.child(["iris"]), // TODO: import or create a Logger instance`,
+    `  logger: logger, // TODO: import or create a Logger instance`,
     `  messages: [join(__dirname, "messages")],`,
   ];
 
