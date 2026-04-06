@@ -38,8 +38,11 @@ describe("PylonScanner", () => {
       amphora,
       logger,
       environment: "test",
-      httpRouters: join(__dirname, "..", "__fixtures__", "routes"),
-      socketListeners: join(__dirname, "..", "__fixtures__", "listeners"),
+      routes: join(__dirname, "..", "__fixtures__", "routes"),
+      socket: {
+        enabled: true,
+        listeners: join(__dirname, "..", "__fixtures__", "listeners"),
+      },
       name: "@lindorm/pylon-scanner-test",
       port: 0,
       version: "0.0.1",

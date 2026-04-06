@@ -254,7 +254,7 @@ describe("Pylon", () => {
       },
 
       environment: "test",
-      httpRouters: [{ path: "/test", router }],
+      routes: [{ path: "/test", router }],
       name: "@lindorm/pylon",
       openIdConfiguration: { jwksUri: "http://test.lindorm.io/.well-known/jwks.json" },
       parseBody: { formidable: true },

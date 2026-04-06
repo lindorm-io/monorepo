@@ -66,7 +66,7 @@ export type PylonHttpOptions<C extends PylonHttpContext = PylonHttpContext> =
     cookies?: PylonCookieConfig;
     cors?: CorsOptions;
     httpMiddleware?: Array<PylonHttpMiddleware<C>>;
-    httpRouters?: string | Array<PylonHttpRouters<C>>;
+    routes?: string | Array<PylonHttpRouters<C>>;
     maxRequestAge?: ReadableTime;
     minRequestAge?: ReadableTime;
     openIdConfiguration?: Partial<OpenIdConfigurationOptions>;
@@ -75,25 +75,25 @@ export type PylonHttpOptions<C extends PylonHttpContext = PylonHttpContext> =
     session?: PylonSessionOptions;
   };
 
-export type PylonIoOptions<T extends PylonSocketContext = PylonSocketContext> =
-  CommonOptions & {
-    socketListeners?: string | Array<PylonListener<T>>;
-    socketMiddleware?: Array<PylonSocketMiddleware<T>>;
-    socketOptions?: Partial<SocketOptions>;
-    socketRedis?: Redis;
-  };
+export type PylonSocketOptions<T extends PylonSocketContext = PylonSocketContext> = {
+  enabled: boolean;
+  listeners?: string | Array<PylonListener<T>>;
+  middleware?: Array<PylonSocketMiddleware<T>>;
+  options?: Partial<SocketOptions>;
+  redis?: Redis;
+};
 
 export type PylonOptions<
   C extends PylonHttpContext = PylonHttpContext,
   S extends PylonSocketContext = PylonSocketContext,
-> = PylonHttpOptions<C> &
-  PylonIoOptions<S> & {
-    kryptos?: PylonKryptosOptions;
-    port?: number;
-    setup?: PylonSetup;
-    teardown?: PylonTeardown;
-    subscriptions?: Array<PylonSubscribeOptions>;
-    workers?: Array<ILindormWorker | LindormWorkerConfig | string>;
-    workersInterval?: ReadableTime;
-    workersRetry?: RetryOptions;
-  };
+> = PylonHttpOptions<C> & {
+  socket?: PylonSocketOptions<S>;
+  kryptos?: PylonKryptosOptions;
+  port?: number;
+  setup?: PylonSetup;
+  teardown?: PylonTeardown;
+  subscriptions?: Array<PylonSubscribeOptions>;
+  workers?: Array<ILindormWorker | LindormWorkerConfig | string>;
+  workersInterval?: ReadableTime;
+  workersRetry?: RetryOptions;
+};

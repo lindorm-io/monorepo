@@ -148,13 +148,13 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
       this.addRouter(config.pathPrefix, createAuthRouter(config));
     }
 
-    if (isString(this.options.httpRouters)) {
+    if (isString(this.options.routes)) {
       const scanner = new PylonRouterScanner<T>(this.logger);
-      const router = scanner.scan(this.options.httpRouters);
+      const router = scanner.scan(this.options.routes);
 
       this.router.use(router.routes(), router.allowedMethods());
-    } else if (isArray(this.options.httpRouters)) {
-      for (const router of this.options.httpRouters ?? []) {
+    } else if (isArray(this.options.routes)) {
+      for (const router of this.options.routes ?? []) {
         this.addRouter(router.path, router.router);
       }
     }
