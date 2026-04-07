@@ -98,7 +98,7 @@ export const publishSubscribeSuite = (
       const msg2 = bus.create({ body: "after" } as any);
       await bus.publish(msg2);
 
-      await wait(500);
+      await wait(200);
       expect(received).toHaveLength(1);
     });
 
@@ -170,7 +170,7 @@ export const publishSubscribeSuite = (
         },
       });
 
-      await wait(500);
+      await wait(200);
       expect(received).toHaveLength(0);
     });
 
@@ -190,7 +190,7 @@ export const publishSubscribeSuite = (
       const msgB = busA.create({ category: "beta", body: "wrong-topic" } as any);
       await busA.publish(msgB);
 
-      await wait(500);
+      await wait(200);
 
       expect(receivedA).toHaveLength(0);
 

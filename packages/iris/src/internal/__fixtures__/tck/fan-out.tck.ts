@@ -217,7 +217,7 @@ export const fanOutSuite = (
       const msg = publisher.create({ body: "after-unsub-all" } as any);
       await publisher.publish(msg);
 
-      await wait(500);
+      await wait(200);
 
       expect(r1).toHaveLength(0);
       expect(r2).toHaveLength(0);

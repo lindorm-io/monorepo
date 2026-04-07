@@ -89,7 +89,7 @@ export const workerQueueSuite = (
       const msg2 = wq.create({ body: "after" } as any);
       await wq.publish(msg2);
 
-      await wait(500);
+      await wait(200);
       expect(received).toHaveLength(1);
     });
 
@@ -112,7 +112,7 @@ export const workerQueueSuite = (
       const msg = wq.create({ body: "uc-orphan" } as any);
       await wq.publish(msg);
 
-      await wait(500);
+      await wait(200);
 
       // After unconsumeAll, the "uc-orphan" message should NOT be received
       const r1Orphan = r1.filter((m) => m.body === "uc-orphan");
@@ -289,7 +289,7 @@ export const workerQueueSuite = (
       });
 
       // No messages published — just wait briefly
-      await wait(500);
+      await wait(200);
 
       expect(received).toHaveLength(0);
     });

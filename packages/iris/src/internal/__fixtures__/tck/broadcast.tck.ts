@@ -33,7 +33,7 @@ export const broadcastSuite = (
       });
 
       // Allow all broadcast consumers to fully initialize their fetch loops
-      await wait(500);
+      await wait(200);
 
       const msg = wq.create({ body: "broadcast" } as any);
       await wq.publish(msg);
@@ -93,7 +93,7 @@ export const broadcastSuite = (
       });
 
       // Allow all broadcast consumers to fully initialize their fetch loops
-      await wait(500);
+      await wait(200);
 
       const msg = wq.create({ body: "identical-check" } as any);
       await wq.publish(msg);

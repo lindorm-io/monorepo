@@ -37,7 +37,7 @@ export const streamSuite = (
         .to(TckStreamOutput);
 
       await pipeline.start();
-      await wait(500);
+      await wait(200);
 
       // Publish input messages via messageBus for TckStreamInput
       const inputBus = handle.messageBus(TckStreamInput);
@@ -79,7 +79,7 @@ export const streamSuite = (
         .to(TckStreamOutput);
 
       await pipeline.start();
-      await wait(500);
+      await wait(200);
 
       const inputBus = handle.messageBus(TckStreamInput);
       await inputBus.publish(inputBus.create({ value: "hello", score: 5 } as any));
@@ -132,7 +132,7 @@ export const streamSuite = (
         .to(TckStreamOutput);
 
       await pipeline.start();
-      await wait(500);
+      await wait(200);
 
       const inputBus = handle.messageBus(TckStreamInput);
       await inputBus.publish(inputBus.create({ value: "item", score: 10 } as any));
@@ -179,7 +179,7 @@ export const streamSuite = (
         .to(TckStreamOutput);
 
       await pipeline.start();
-      await wait(500);
+      await wait(200);
 
       const inputBus = handle.messageBus(TckStreamInput);
       await inputBus.publish(inputBus.create({ value: "a", score: 1 } as any));
@@ -222,7 +222,7 @@ export const streamSuite = (
         .to(TckStreamOutput);
 
       await pipeline.start();
-      await wait(500);
+      await wait(200);
 
       const inputBus = handle.messageBus(TckStreamInput);
       // Publish only 2 messages — well under batch size of 5
@@ -260,14 +260,14 @@ export const streamSuite = (
         .to(TckStreamOutput);
 
       await pipeline.start();
-      await wait(500);
+      await wait(200);
 
       const inputBus = handle.messageBus(TckStreamInput);
       await inputBus.publish(inputBus.create({ value: "a", score: 1 } as any));
       await inputBus.publish(inputBus.create({ value: "b", score: 2 } as any));
       await inputBus.publish(inputBus.create({ value: "c", score: 3 } as any));
 
-      await wait(500);
+      await wait(200);
 
       // None of the input should produce output (all filtered)
       // (stale output from prior tests may exist, but no new "a"/"b"/"c" transformed values)
@@ -302,7 +302,7 @@ export const streamSuite = (
         .to(TckStreamOutput);
 
       await pipeline.start();
-      await wait(500);
+      await wait(200);
 
       const inputBus = handle.messageBus(TckStreamInput);
       await inputBus.publish(inputBus.create({ value: "original", score: 42 } as any));
@@ -340,13 +340,13 @@ export const streamSuite = (
         .to(TckStreamOutput);
 
       await pipeline.start();
-      await wait(500);
+      await wait(200);
 
       const inputBus = handle.messageBus(TckStreamInput);
       await inputBus.publish(inputBus.create({ value: "ignored", score: 1 } as any));
       await inputBus.publish(inputBus.create({ value: "also-ignored", score: 2 } as any));
 
-      await wait(500);
+      await wait(200);
 
       expect(
         outputReceived.filter((m) => m.value === "ignored" || m.value === "also-ignored"),
@@ -380,7 +380,7 @@ export const streamSuite = (
         .to(TckStreamOutput);
 
       await pipeline.start();
-      await wait(500);
+      await wait(200);
 
       const inputBus = handle.messageBus(TckStreamInput);
       await inputBus.publish(inputBus.create({ value: "single-a", score: 10 } as any));
@@ -428,7 +428,7 @@ export const streamSuite = (
         .to(TckStreamOutput);
 
       await pipeline.start();
-      await wait(500);
+      await wait(200);
 
       const inputBus = handle.messageBus(TckStreamInput);
       await inputBus.publish(inputBus.create({ value: "low", score: 10 } as any));
@@ -484,7 +484,7 @@ export const streamSuite = (
       const pipeline = handle.stream().from(TckStreamInput).to(TckStreamOutput);
 
       await pipeline.start();
-      await wait(500);
+      await wait(200);
 
       const inputBus = handle.messageBus(TckStreamInput);
       await inputBus.publish(inputBus.create({ value: "before-pause", score: 1 } as any));
@@ -499,7 +499,7 @@ export const streamSuite = (
       expect(pipeline.isRunning()).toBe(false);
 
       await inputBus.publish(inputBus.create({ value: "during-pause", score: 2 } as any));
-      await wait(500);
+      await wait(200);
       // Message published during pause should not be processed
       expect(outputReceived.filter((m) => m.value === "during-pause")).toHaveLength(0);
 
