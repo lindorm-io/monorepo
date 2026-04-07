@@ -4,7 +4,8 @@ import { IIrisSource } from "@lindorm/iris";
 import { Middleware } from "@lindorm/middleware";
 import { IProteusSource } from "@lindorm/proteus";
 import { lazyFactory } from "@lindorm/utils";
-import { AUDIT_SOURCE, RATE_LIMIT_SOURCE, ROOMS_SOURCE } from "../constants/symbols";
+import { AUDIT_SOURCE, RATE_LIMIT_SOURCE } from "../constants/symbols";
+import { createRoomContext } from "../utils/create-room-context";
 import { PylonCommonContext } from "../../types";
 
 type AuditConfig = {
@@ -20,6 +21,8 @@ type Options = {
   iris?: IIrisSource;
   proteus?: IProteusSource;
   rateLimitProteus?: IProteusSource;
+  roomsEnabled?: boolean;
+  roomsPresence?: boolean;
   roomsProteus?: IProteusSource;
 };
 
@@ -54,8 +57,16 @@ export const createSourcesMiddleware = <C extends PylonCommonContext>(
         (ctx as any)[RATE_LIMIT_SOURCE] = options.rateLimitProteus;
       }
 
-      if (options.roomsProteus) {
-        (ctx as any)[ROOMS_SOURCE] = options.roomsProteus;
+      if (options.roomsEnabled && "socket" in ctx && "io" in ctx) {
+        lazyFactory(ctx, "rooms", () =>
+          createRoomContext({
+            socket: (ctx as any).socket,
+            io: (ctx as any).io,
+            logger: ctx.logger,
+            proteusSource: options.roomsProteus,
+            presence: options.roomsPresence,
+          }),
+        );
       }
 
       timer.debug("Sources added to context");
