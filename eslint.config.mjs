@@ -18,6 +18,7 @@ export default defineConfig(
       "**/*.fixture.*",
       "**/*.integration.*",
       "**/*.test.ts",
+      "**/*.test.tsx",
       "eslint.config.mjs",
     ],
   },
@@ -45,7 +46,7 @@ export default defineConfig(
     },
   },
   {
-    files: ["**/*.ts"],
+    files: ["**/*.ts", "**/*.tsx"],
     languageOptions: {
       globals: {
         ...globals.node,
