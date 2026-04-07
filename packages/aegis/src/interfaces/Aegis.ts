@@ -1,4 +1,5 @@
 import {
+  AesContent,
   AesDecryptionRecord,
   AesEncryptionRecord,
   SerialisedAesDecryption,
@@ -34,11 +35,13 @@ import {
 } from "../types";
 
 export interface IAegisAes {
-  encrypt(data: string, mode?: "encoded"): Promise<string>;
-  encrypt(data: string, mode: "record"): Promise<AesEncryptionRecord>;
-  encrypt(data: string, mode: "serialised"): Promise<SerialisedAesEncryption>;
-  encrypt(data: string, mode: "tokenised"): Promise<string>;
-  decrypt(data: AesDecryptionRecord | SerialisedAesDecryption | string): Promise<string>;
+  encrypt(data: AesContent, mode?: "encoded"): Promise<string>;
+  encrypt(data: AesContent, mode: "record"): Promise<AesEncryptionRecord>;
+  encrypt(data: AesContent, mode: "serialised"): Promise<SerialisedAesEncryption>;
+  encrypt(data: AesContent, mode: "tokenised"): Promise<string>;
+  decrypt<T extends AesContent = string>(
+    data: AesDecryptionRecord | SerialisedAesDecryption | string,
+  ): Promise<T>;
 }
 
 export interface IAegisCwe {

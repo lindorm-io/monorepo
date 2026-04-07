@@ -1,4 +1,5 @@
 import {
+  AesContent,
   AesDecryptionRecord,
   AesEncryptionRecord,
   AesKit,
@@ -270,7 +271,7 @@ export class Aegis implements IAegis {
   }
 
   private async aesEncrypt(
-    data: string,
+    data: AesContent,
     mode: "encoded" | "record" | "serialised" | "tokenised" = "encoded",
   ): Promise<string | AesEncryptionRecord | SerialisedAesEncryption> {
     const kit = await this.aesKit({ encrypt: true });
@@ -278,9 +279,9 @@ export class Aegis implements IAegis {
     return kit.encrypt(data, mode as "encoded");
   }
 
-  private async aesDecrypt(
+  private async aesDecrypt<T extends AesContent = string>(
     data: AesDecryptionRecord | SerialisedAesDecryption | string,
-  ): Promise<string> {
+  ): Promise<T> {
     const parsed = AesKit.parse(data);
 
     const kit = await this.aesKit({
@@ -288,7 +289,7 @@ export class Aegis implements IAegis {
       algorithm: parsed.algorithm as KryptosEncAlgorithm | undefined,
     });
 
-    return kit.decrypt(data);
+    return kit.decrypt<T>(data);
   }
 
   // private coseSign
