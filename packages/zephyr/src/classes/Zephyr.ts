@@ -4,6 +4,7 @@ import { composeMiddleware } from "@lindorm/middleware";
 import type { Socket } from "socket.io-client";
 import { io } from "socket.io-client";
 import { ZephyrError } from "../errors/ZephyrError";
+import type { IZephyr, IZephyrRoom } from "../interfaces";
 import type { ListenerEntry } from "../internal/types/listener-entry";
 import { buildEnvelope } from "../internal/utils/build-envelope";
 import { createZephyrContext } from "../internal/utils/create-zephyr-context";
@@ -12,8 +13,9 @@ import { unwrapAckResponse } from "../internal/utils/unwrap-ack-response";
 import type { AppContext, ZephyrContext, ZephyrMiddleware } from "../types/context";
 import type { EventIncoming, EventOutgoing, ZephyrEventMap } from "../types/event-map";
 import type { AdvancedOptions, ZephyrAuth, ZephyrOptions } from "../types/options";
+import { ZephyrRoom } from "./ZephyrRoom";
 
-export class Zephyr<E extends ZephyrEventMap = ZephyrEventMap> {
+export class Zephyr<E extends ZephyrEventMap = ZephyrEventMap> implements IZephyr<E> {
   private readonly app: AppContext;
   private readonly auth: ZephyrAuth | undefined;
   private readonly autoConnect: boolean;
@@ -209,6 +211,10 @@ export class Zephyr<E extends ZephyrEventMap = ZephyrEventMap> {
     }
   }
 
+  public room(name: string): IZephyrRoom {
+    return new ZephyrRoom(this, name);
+  }
+
   public onConnect(handler: () => void): void {
     this.connectHandlers.push(handler);
   }
@@ -224,6 +230,8 @@ export class Zephyr<E extends ZephyrEventMap = ZephyrEventMap> {
   public onReconnect(handler: (attempt: number) => void): void {
     this.reconnectHandlers.push(handler);
   }
+
+  // Private
 
   private addListener(event: string, handler: (data: any) => void, once: boolean): void {
     const wrapped = this.wrapHandler(event, handler, once);
