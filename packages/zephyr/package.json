@@ -13,6 +13,30 @@
   },
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./react": {
+      "types": "./dist/react/index.d.ts",
+      "default": "./dist/react/index.js"
+    },
+    "./mocks": {
+      "types": "./dist/mocks/index.d.ts",
+      "default": "./dist/mocks/index.js"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "react": [
+        "dist/react/index.d.ts"
+      ],
+      "mocks": [
+        "dist/mocks/index.d.ts"
+      ]
+    }
+  },
   "imports": {
     "#internal/*": "./dist/internal/*.js"
   },
@@ -30,7 +54,24 @@
     "update:auto": "ncu -u",
     "verify": "npm run typecheck; npm run build; npm test"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@lindorm/errors": "^0.1.16",
+    "@lindorm/middleware": "^0.1.7",
+    "@lindorm/random": "^0.2.2",
+    "socket.io-client": "^4.8.3"
+  },
   "devDependencies": {},
-  "peerDependencies": {}
+  "peerDependencies": {
+    "@lindorm/logger": ">=0.5.0",
+    "@lindorm/types": ">=0.4.0",
+    "react": ">=18.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@lindorm/logger": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    }
+  }
 }
