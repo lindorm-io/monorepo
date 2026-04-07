@@ -246,7 +246,7 @@ ctx.header; // Envelope headers
 ctx.socket; // Socket.io socket instance
 ctx.ack; // Acknowledge callback
 ctx.nack; // Negative acknowledge callback
-ctx.rooms; // Room context (if useRooms middleware)
+ctx.rooms; // Room context (if rooms enabled in config)
 ctx.args; // Raw event arguments
 ```
 
@@ -471,11 +471,9 @@ listeners/
   chat/
     _middleware.ts            → shared middleware for chat:*
     message.ts                → event: "chat:message"
-  rooms/
-    [roomId]/
-      join.ts                 → event: "rooms::roomId:join"
-      leave.ts                → event: "rooms::roomId:leave"
 ```
+
+> **Note:** Room join/leave events (`rooms:{roomId}:join`, `rooms:{roomId}:leave`) are auto-registered when rooms are enabled — you don't need listener files for them. See [Room Management](#room-management).
 
 **Listener file exports:**
 
@@ -522,27 +520,69 @@ adminListener.on("command", adminAuthMiddleware, async (ctx) => {
 
 ### Room Management
 
-Enable room support with the `useRooms` middleware or the global `rooms` option:
+Enable room support with the `rooms` option on Pylon:
 
 ```typescript
-// Global
 const app = new Pylon({
   rooms: { presence: true },
   proteus: mySource,
   // ...
 });
+```
 
-// Or per-route
-listener.use(useRooms({ presence: true }));
+When rooms are enabled, Pylon provides two things automatically:
 
-listener.on("join", async (ctx) => {
-  await ctx.rooms.join("room-1");
-  const members = await ctx.rooms.members("room-1");
-  ctx.rooms.broadcast("room-1", "user:joined", { userId: ctx.socket.id });
+**1. `ctx.rooms` on all socket handlers** — lazily initialised, no middleware needed:
+
+```typescript
+listener.on("game:start", async (ctx) => {
+  await ctx.rooms.join("game-lobby");
+  const members = await ctx.rooms.members("game-lobby");
+  ctx.rooms.broadcast("game-lobby", "game:player-joined", { userId: ctx.socket.id });
 });
 ```
 
-**Room context methods:** `join`, `leave`, `broadcast`, `emit`, `members`, `presence` (if enabled)
+**2. Built-in join/leave handlers** — Pylon auto-registers parameterised listeners for room join and leave events:
+
+| Event Pattern          | Action                          | Response                        |
+| ---------------------- | ------------------------------- | ------------------------------- |
+| `rooms:{roomId}:join`  | Calls `ctx.rooms.join(roomId)`  | Ack on success, nack on failure |
+| `rooms:{roomId}:leave` | Calls `ctx.rooms.leave(roomId)` | Ack on success, nack on failure |
+
+Clients join/leave rooms by emitting these events. The response uses the Pylon ack/nack envelope, so `emitWithAck` resolves on success and rejects on failure:
+
+```typescript
+// Client-side (socket.io-client or @lindorm/zephyr)
+await socket.emitWithAck("rooms:lobby:join", {});
+// → { __pylon: true, ok: true, data: { room: "lobby" } }
+```
+
+**Overriding built-in handlers:** If you define your own listener for `rooms/[roomId]/join.ts`, it takes precedence over the built-in handler. This lets you add custom logic (e.g. authorisation checks) before joining:
+
+```typescript
+// listeners/rooms/[roomId]/join.ts
+export const ON = async (ctx) => {
+  if (!canJoinRoom(ctx.state.tokens, ctx.params.roomId)) {
+    ctx.nack?.({ code: "forbidden", message: "Not allowed to join this room" });
+    return;
+  }
+  await ctx.rooms.join(ctx.params.roomId);
+  ctx.ack?.({ room: ctx.params.roomId });
+};
+```
+
+**Room context methods:**
+
+| Method                          | Description                                                                  |
+| ------------------------------- | ---------------------------------------------------------------------------- |
+| `join(room)`                    | Add the socket to a Socket.IO room                                           |
+| `leave(room)`                   | Remove the socket from a room                                                |
+| `broadcast(room, event, data?)` | Emit to all sockets in the room **except** the sender                        |
+| `emit(room, event, data?)`      | Emit to all sockets in the room **including** the sender                     |
+| `members(room)`                 | Returns socket IDs of all members                                            |
+| `presence(room)`                | Returns `{ userId, socketId, joinedAt }` records (requires `presence: true`) |
+
+**Presence tracking** requires a Proteus source and stores presence records as entities. Enable with `rooms: { presence: true }`. The user ID is extracted from the access token (`subject` claim) when available, falling back to the socket ID.
 
 ### Redis Adapter
 
@@ -1115,11 +1155,12 @@ type PylonOptions = {
 
 Pylon ships three Proteus entities for its built-in features:
 
-| Entity                | Purpose                                          |
-| --------------------- | ------------------------------------------------ |
-| `DataAuditLog`        | Tracks entity-level changes (field diffs)        |
-| `RequestAuditLog`     | Stores HTTP/socket request audit records         |
-| `WebhookSubscription` | Manages webhook targets and their authentication |
+| Entity                | Purpose                                           |
+| --------------------- | ------------------------------------------------- |
+| `DataAuditLog`        | Tracks entity-level changes (field diffs)         |
+| `Presence`            | Room presence records (requires `rooms.presence`) |
+| `RequestAuditLog`     | Stores HTTP/socket request audit records          |
+| `WebhookSubscription` | Manages webhook targets and their authentication  |
 
 Import them from the main entry point:
 
