@@ -8,6 +8,7 @@ import { socketErrorHandlerMiddleware } from "#internal/middleware/socket-error-
 import { socketLoggerMiddleware } from "#internal/middleware/socket-logger-middleware";
 import { initialisePylonSocketData } from "#internal/utils/initialise-pylon-socket-data";
 import { composePylonSocketContextBase } from "#internal/utils/compose-pylon-socket-context";
+import { createBuiltInRoomListeners } from "#internal/utils/create-built-in-room-listeners";
 import { loadPylonListeners } from "#internal/utils/load-pylon-listener";
 import { composeMiddleware } from "@lindorm/middleware";
 import { isArray, isString } from "@lindorm/is";
@@ -56,6 +57,8 @@ export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
         rateLimitProteus: options.rateLimit?.enabled
           ? (options.rateLimit.proteus ?? options.proteus)
           : undefined,
+        roomsEnabled: !!options.rooms,
+        roomsPresence: options.rooms?.presence,
         roomsProteus: options.rooms?.presence
           ? (options.rooms.proteus ?? options.proteus)
           : undefined,
@@ -112,6 +115,46 @@ export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
 
         if (listener.namespace) {
           namespaces.push(listener.namespace);
+        }
+      }
+    }
+
+    if (this.options.rooms) {
+      const builtIn = createBuiltInRoomListeners<T>();
+
+      const userSegmentKeys = new Set<string>();
+      for (const l of listeners) {
+        for (const item of l.listeners) {
+          if (item.segments) {
+            userSegmentKeys.add(
+              item.segments
+                .map((s) => (s.type === "literal" ? s.value : `{${s.type}}`))
+                .join(":"),
+            );
+          }
+        }
+      }
+
+      for (const bl of builtIn) {
+        const filtered = bl.listeners.filter((item) => {
+          if (!item.segments) return true;
+          const key = item.segments
+            .map((s) => (s.type === "literal" ? s.value : `{${s.type}}`))
+            .join(":");
+          return !userSegmentKeys.has(key);
+        });
+
+        if (filtered.length > 0) {
+          const filteredListener = new PylonListener<T>();
+          for (const item of filtered) {
+            filteredListener._addScannedListener(
+              item.event,
+              item.method,
+              item.segments!,
+              item.listeners,
+            );
+          }
+          listeners.push(filteredListener);
         }
       }
     }

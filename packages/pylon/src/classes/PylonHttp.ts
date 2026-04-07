@@ -111,9 +111,6 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
         rateLimitProteus: this.options.rateLimit?.enabled
           ? (this.options.rateLimit.proteus ?? this.options.proteus)
           : undefined,
-        roomsProteus: this.options.rooms?.presence
-          ? (this.options.rooms.proteus ?? this.options.proteus)
-          : undefined,
       }),
       createQueueMiddleware(this.options.queue),
       createWebhookMiddleware(this.options.webhook),

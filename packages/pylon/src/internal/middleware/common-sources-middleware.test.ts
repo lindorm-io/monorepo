@@ -2,7 +2,7 @@ import { createMockHermes } from "@lindorm/hermes/mocks";
 import { createMockIrisSource } from "@lindorm/iris/mocks";
 import { createMockLogger } from "@lindorm/logger";
 import { createMockProteusSource } from "@lindorm/proteus/mocks";
-import { RATE_LIMIT_SOURCE, ROOMS_SOURCE } from "../constants/symbols";
+import { RATE_LIMIT_SOURCE } from "../constants/symbols";
 import { createSourcesMiddleware } from "./common-sources-middleware";
 
 describe("createSourcesMiddleware", () => {
@@ -85,17 +85,6 @@ describe("createSourcesMiddleware", () => {
     expect(ctx[RATE_LIMIT_SOURCE]).toBe(rateLimitProteus);
   });
 
-  test("should store raw roomsProteus on context via symbol (lazy session)", async () => {
-    const roomsProteus = createMockProteusSource();
-
-    const middleware = createSourcesMiddleware({ roomsProteus: roomsProteus as any });
-
-    await middleware(ctx, jest.fn());
-
-    expect(roomsProteus.session).not.toHaveBeenCalled();
-    expect(ctx[ROOMS_SOURCE]).toBe(roomsProteus);
-  });
-
   test("should not set rate limit symbol when rateLimitProteus not provided", async () => {
     const middleware = createSourcesMiddleware({});
 
@@ -104,11 +93,87 @@ describe("createSourcesMiddleware", () => {
     expect(ctx[RATE_LIMIT_SOURCE]).toBeUndefined();
   });
 
-  test("should not set rooms symbol when roomsProteus not provided", async () => {
-    const middleware = createSourcesMiddleware({});
+  describe("rooms", () => {
+    test("should lazily create rooms via lazyFactory when roomsEnabled and socket context", async () => {
+      const socketCtx: any = {
+        logger: createMockLogger(),
+        socket: {
+          id: "s1",
+          data: {},
+          join: jest.fn(),
+          leave: jest.fn(),
+          to: jest.fn().mockReturnValue({ emit: jest.fn() }),
+        },
+        io: {
+          to: jest.fn().mockReturnValue({ emit: jest.fn() }),
+          in: jest.fn().mockReturnValue({ fetchSockets: jest.fn() }),
+        },
+      };
 
-    await middleware(ctx, jest.fn());
+      const middleware = createSourcesMiddleware({ roomsEnabled: true });
 
-    expect(ctx[ROOMS_SOURCE]).toBeUndefined();
+      await middleware(socketCtx, jest.fn());
+
+      expect(socketCtx.rooms).toBeDefined();
+      expect(typeof socketCtx.rooms.join).toBe("function");
+      expect(typeof socketCtx.rooms.leave).toBe("function");
+      expect(typeof socketCtx.rooms.broadcast).toBe("function");
+      expect(typeof socketCtx.rooms.emit).toBe("function");
+      expect(typeof socketCtx.rooms.members).toBe("function");
+    });
+
+    test("should not set rooms on non-socket context even when roomsEnabled", async () => {
+      const middleware = createSourcesMiddleware({ roomsEnabled: true });
+
+      await middleware(ctx, jest.fn());
+
+      expect(ctx.rooms).toBeUndefined();
+    });
+
+    test("should not set rooms when roomsEnabled is false", async () => {
+      const socketCtx: any = {
+        logger: createMockLogger(),
+        socket: { id: "s1", data: {} },
+        io: {},
+      };
+
+      const middleware = createSourcesMiddleware({ roomsEnabled: false });
+
+      await middleware(socketCtx, jest.fn());
+
+      expect(socketCtx.rooms).toBeUndefined();
+    });
+
+    test("should pass roomsProteus and roomsPresence to room context factory", async () => {
+      const roomsProteus = createMockProteusSource();
+
+      const socketCtx: any = {
+        logger: createMockLogger(),
+        socket: {
+          id: "s1",
+          data: {},
+          join: jest.fn(),
+          leave: jest.fn(),
+          to: jest.fn().mockReturnValue({ emit: jest.fn() }),
+        },
+        io: {
+          to: jest.fn().mockReturnValue({ emit: jest.fn() }),
+          in: jest.fn().mockReturnValue({ fetchSockets: jest.fn() }),
+        },
+      };
+
+      const middleware = createSourcesMiddleware({
+        roomsEnabled: true,
+        roomsPresence: true,
+        roomsProteus: roomsProteus as any,
+      });
+
+      await middleware(socketCtx, jest.fn());
+
+      const rooms = socketCtx.rooms;
+
+      expect(rooms).toBeDefined();
+      expect(typeof rooms.presence).toBe("function");
+    });
   });
 });
