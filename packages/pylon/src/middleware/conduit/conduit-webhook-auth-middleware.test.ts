@@ -4,7 +4,7 @@ import {
   ConduitError,
   conduitHeadersMiddleware,
 } from "@lindorm/conduit";
-import { WebhookAuth } from "../../enums";
+import { WebhookAuth, WebhookMethod } from "../../enums";
 import { IWebhookSubscription } from "../../interfaces";
 import { createConduitWebhookAuthMiddleware } from "./conduit-webhook-auth-middleware";
 
@@ -35,22 +35,23 @@ describe("createConduitWebhookAuthMiddleware", () => {
     version: 1,
     createdAt: new Date(),
     updatedAt: new Date(),
-    auth: WebhookAuth.None,
-    event: "test.event",
-    headers: {},
-    ownerId: "owner-id",
-    url: "https://test.webhook.com/endpoint",
-    authHeaders: {},
-    username: null,
-    password: null,
     audience: null,
+    auth: WebhookAuth.None,
+    authHeaders: {},
     authLocation: null,
     clientId: null,
     clientSecret: null,
     contentType: null,
+    event: "test.event",
+    headers: {},
     issuer: null,
+    method: WebhookMethod.Post,
+    ownerId: "owner-id",
+    password: null,
     scope: [],
     tokenUri: null,
+    url: "https://test.webhook.com/endpoint",
+    username: null,
     ...overrides,
   });
 
