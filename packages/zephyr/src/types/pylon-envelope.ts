@@ -1,6 +1,8 @@
+import { Dict } from "@lindorm/types";
+
 export type PylonEnvelope = {
   __pylon: true;
-  header: Record<string, unknown>;
+  header: Dict;
   payload: unknown;
 };
 
@@ -15,7 +17,7 @@ export type PylonAckNack = {
   ok: false;
   error: {
     code?: string | number;
-    data?: Record<string, unknown>;
+    data?: Dict;
     message?: string;
     title?: string;
   };
