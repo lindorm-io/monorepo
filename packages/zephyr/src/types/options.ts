@@ -7,6 +7,10 @@ export type ZephyrAuth = {
   bearer: string | (() => string | Promise<string>);
 };
 
+export type AdvancedOptions = DeepPartial<
+  Omit<ManagerOptions, "autoConnect" | "timeout"> & Omit<SocketOptions, "auth">
+>;
+
 export type ZephyrOptions = {
   url: string;
   alias?: string;
@@ -16,8 +20,6 @@ export type ZephyrOptions = {
   logger?: ILogger;
   middleware?: Array<ZephyrMiddleware>;
   namespace?: string;
-  socketOptions?: DeepPartial<
-    Omit<ManagerOptions, "autoConnect" | "timeout"> & Omit<SocketOptions, "auth">
-  >;
+  socketOptions?: AdvancedOptions;
   timeout?: number;
 };
