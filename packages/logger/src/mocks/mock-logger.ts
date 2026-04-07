@@ -1,6 +1,8 @@
 import { ILogger } from "../interfaces";
 import { ILoggerTimer } from "../interfaces/LoggerTimer";
 
+export type MockLogger = jest.Mocked<ILogger>;
+
 type LogFn = (...args: any) => void;
 
 const createMockTimer = (): ILoggerTimer => ({
@@ -12,7 +14,7 @@ const createMockTimer = (): ILoggerTimer => ({
   silly: jest.fn(),
 });
 
-export const createMockLogger = (logFn?: LogFn): ILogger => ({
+export const createMockLogger = (logFn?: LogFn): MockLogger => ({
   __instanceof: "Logger",
 
   level: "info",

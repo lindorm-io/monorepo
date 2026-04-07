@@ -1,7 +1,9 @@
 import { createMockAesKit } from "@lindorm/aes";
 import { IAegis } from "../interfaces";
 
-export const createMockAegis = (): IAegis => {
+export type MockAegis = jest.Mocked<IAegis>;
+
+export const createMockAegis = (): MockAegis => {
   const mockAesKit = createMockAesKit();
 
   return {

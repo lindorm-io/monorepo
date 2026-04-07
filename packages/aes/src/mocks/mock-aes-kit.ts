@@ -2,13 +2,15 @@ import { createMockKryptos } from "@lindorm/kryptos";
 import { IAesKit } from "../interfaces";
 import { AesContent } from "../types";
 
+export type MockAesKit = jest.Mocked<IAesKit>;
+
 const encode = (data: AesContent): string =>
   Buffer.from(JSON.stringify(data)).toString("base64url");
 
 const decode = <T extends AesContent = string>(encoded: string): T =>
   JSON.parse(Buffer.from(encoded, "base64url").toString()) as T;
 
-export const createMockAesKit = (): IAesKit => ({
+export const createMockAesKit = (): MockAesKit => ({
   kryptos: createMockKryptos(),
 
   encrypt: jest.fn().mockImplementation((data: AesContent, mode?: string) => {

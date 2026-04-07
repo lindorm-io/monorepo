@@ -7,7 +7,9 @@ import { createMockPublisher } from "./create-mock-publisher";
 import { createMockRpcClient } from "./create-mock-rpc-client";
 import { createMockWorkerQueue } from "./create-mock-worker-queue";
 
-export const createMockIrisSource = (): IIrisSource => ({
+export type MockIrisSource = jest.Mocked<IIrisSource>;
+
+export const createMockIrisSource = (): MockIrisSource => ({
   driver: "memory" as const,
   messages: [] as ReadonlyArray<Constructor<IMessage>>,
 

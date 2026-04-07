@@ -1,1 +1,1 @@
-export * from "./create-mock-aegis";
+export { createMockAegis, type MockAegis } from "./create-mock-aegis";
