@@ -1,3 +1,4 @@
+import { AesContent, AesKit } from "@lindorm/aes";
 import { ServerError } from "@lindorm/errors";
 import { isObject, isString } from "@lindorm/is";
 import { Dict } from "@lindorm/types";
@@ -45,27 +46,23 @@ export const createHttpCookiesMiddleware = (
           });
         }
 
-        if (opts.encrypted && !opts.encoding) {
-          opts.encoding = "base64url";
-        }
-
-        if (!opts.encoding && isObject(value)) {
+        if (!opts.encoding && !opts.encrypted && isObject(value)) {
           throw new ServerError("Encoding required for object value", {
             code: "invalid_cookie_value",
             debug: { name, value, opts },
           });
         }
 
-        let final: any = value;
+        let final: any;
 
         if (opts.encrypted) {
-          final = await ctx.aegis.aes.encrypt(final, "serialised");
-        }
+          final = await ctx.aegis.aes.encrypt(value as AesContent, "tokenised");
+        } else {
+          final = isString(value) ? value : JSON.stringify(value);
 
-        final = isString(final) ? final : JSON.stringify(final);
-
-        if (opts.encoding) {
-          final = Buffer.from(final).toString(opts.encoding);
+          if (opts.encoding) {
+            final = Buffer.from(final).toString(opts.encoding);
+          }
         }
 
         removeExisting(name);
@@ -91,22 +88,18 @@ export const createHttpCookiesMiddleware = (
 
         const opts = { ...config, ...options };
 
-        if (opts.encrypted && !opts.encoding) {
-          opts.encoding = "base64url";
-        }
-
         if (opts.signed) {
           await verifyCookie(ctx, name, cookie.value, cookie.signature);
         }
 
-        if (opts.encoding) {
-          cookie.value = Buffer.from(cookie.value, opts.encoding).toString();
-        }
-
-        cookie.value = safelyParse(cookie.value);
-
-        if (opts.encrypted) {
+        if (AesKit.isAesTokenised(cookie.value)) {
           cookie.value = await ctx.aegis.aes.decrypt(cookie.value);
+        } else {
+          if (opts.encoding) {
+            cookie.value = Buffer.from(cookie.value, opts.encoding).toString();
+          }
+
+          cookie.value = safelyParse(cookie.value);
         }
 
         cache[name] = cookie.value;
