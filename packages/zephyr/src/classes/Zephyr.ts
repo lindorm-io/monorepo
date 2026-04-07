@@ -10,9 +10,10 @@ import { createZephyrContext } from "../internal/utils/create-zephyr-context";
 import { resolveBearer } from "../internal/utils/resolve-bearer";
 import { unwrapAckResponse } from "../internal/utils/unwrap-ack-response";
 import type { AppContext, ZephyrContext, ZephyrMiddleware } from "../types/context";
+import type { EventIncoming, EventOutgoing, ZephyrEventMap } from "../types/event-map";
 import type { AdvancedOptions, ZephyrAuth, ZephyrOptions } from "../types/options";
 
-export class Zephyr {
+export class Zephyr<E extends ZephyrEventMap = ZephyrEventMap> {
   private readonly app: AppContext;
   private readonly auth: ZephyrAuth | undefined;
   private readonly autoConnect: boolean;
@@ -114,7 +115,10 @@ export class Zephyr {
     });
   }
 
-  public async emit(event: string, data?: any): Promise<void> {
+  public async emit<K extends string & keyof E>(
+    event: K,
+    data?: EventOutgoing<E, K>,
+  ): Promise<void> {
     this.assertConnected();
 
     const ctx = createZephyrContext({
@@ -132,11 +136,11 @@ export class Zephyr {
     ]);
   }
 
-  public async request<T = any>(
-    event: string,
-    data?: any,
+  public async request<K extends string & keyof E>(
+    event: K,
+    data?: EventOutgoing<E, K>,
     options?: { timeout?: number },
-  ): Promise<T> {
+  ): Promise<EventIncoming<E, K>> {
     this.assertConnected();
 
     const timeout = options?.timeout ?? this.timeout;
@@ -160,24 +164,33 @@ export class Zephyr {
       },
     ]);
 
-    return result.incoming.data as T;
+    return result.incoming.data as EventIncoming<E, K>;
   }
 
-  public on(event: string, handler: (data: any) => void): void {
+  public on<K extends string & keyof E>(
+    event: K,
+    handler: (data: EventIncoming<E, K>) => void,
+  ): void {
     this.addListener(event, handler, false);
   }
 
-  public once(event: string, handler: (data: any) => void): void {
+  public once<K extends string & keyof E>(
+    event: K,
+    handler: (data: EventIncoming<E, K>) => void,
+  ): void {
     this.addListener(event, handler, true);
   }
 
-  public off(event: string, handler?: (data: any) => void): void {
+  public off<K extends string & keyof E>(
+    event: K,
+    handler?: (data: EventIncoming<E, K>) => void,
+  ): void {
     const entries = this.listeners.get(event);
     if (!entries) return;
 
     if (!handler) {
       for (const entry of entries) {
-        this.socket?.off(event, entry.wrapped);
+        this.socket?.off(event, entry.wrapped as any);
       }
       this.listeners.delete(event);
       return;
@@ -185,7 +198,7 @@ export class Zephyr {
 
     for (const entry of entries) {
       if (entry.handler === handler) {
-        this.socket?.off(event, entry.wrapped);
+        this.socket?.off(event, entry.wrapped as any);
         entries.delete(entry);
         break;
       }
