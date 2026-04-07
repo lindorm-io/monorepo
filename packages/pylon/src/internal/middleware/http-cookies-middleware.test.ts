@@ -1,3 +1,4 @@
+import { AesKit } from "@lindorm/aes";
 import { createMockAegis } from "@lindorm/aegis";
 import { B64 } from "@lindorm/b64";
 import { PylonCookieConfig } from "../../types";
@@ -73,9 +74,12 @@ describe("httpCookiesMiddleware", () => {
 
     await expect(createHttpCookiesMiddleware(config)(ctx, next)).resolves.toBeUndefined();
 
-    expect(ctx.set).toHaveBeenCalledWith("set-cookie", [
-      "new_cookie=bW9ja2VkX2VuY3J5cHRpb24; domain=http://lindorm.io; path=/; samesite=strict; secure; httponly",
-    ]);
+    expect(ctx.aegis.aes.encrypt).toHaveBeenCalledWith("new_value", "tokenised");
+
+    const setCookieHeader = ctx.set.mock.calls[0][1][0] as string;
+    const cookieValue = setCookieHeader.split("=")[1].split(";")[0];
+
+    expect(AesKit.isAesTokenised(cookieValue)).toBe(true);
   });
 
   test("should set cookie with signature", async () => {
@@ -128,17 +132,19 @@ describe("httpCookiesMiddleware", () => {
   });
 
   test("should get encrypted cookie", async () => {
+    const tokenised = `aes:${Buffer.from(JSON.stringify("secret_value")).toString("base64url")}`;
+
     parseCookieHeader.mockReturnValue([
-      { name: "cookie_name", signature: "cookie_signature", value: "Y29va2llX3ZhbHVl" },
+      { name: "cookie_name", signature: "cookie_signature", value: tokenised },
     ]);
 
     next.mockImplementation(async () => {
-      await expect(ctx.cookies.get("cookie_name", { encrypted: true })).resolves.toEqual(
-        "mocked_decryption",
-      );
+      await expect(ctx.cookies.get("cookie_name")).resolves.toEqual("secret_value");
     });
 
     await expect(createHttpCookiesMiddleware(config)(ctx, next)).resolves.toBeUndefined();
+
+    expect(ctx.aegis.aes.decrypt).toHaveBeenCalledWith(tokenised);
   });
 
   test("should get signed cookie", async () => {

@@ -1,5 +1,5 @@
 import { Amphora, IAmphora } from "@lindorm/amphora";
-import { B64 } from "@lindorm/b64";
+
 import { ServerError } from "@lindorm/errors";
 import { isArray, isObject } from "@lindorm/is";
 import { KryptosKit } from "@lindorm/kryptos";
@@ -414,14 +414,13 @@ describe("Pylon", () => {
       }),
     );
 
-    const loginJson = JSON.parse(
-      B64.decode(loginRes.headers["set-cookie"][0].split(";")[0].split("=")[1]),
-    );
+    const locationUrl = new URL(loginRes.headers["location"]);
+    const state = locationUrl.searchParams.get("state")!;
 
     const loginCallbackRes = await request(pylon.callback)
       .get("/auth/login/callback")
       .set("Cookie", loginRes.headers["set-cookie"])
-      .query({ code: "code", state: loginJson.state })
+      .query({ code: "code", state })
       .expect(302);
 
     expect(loginCallbackRes.headers).toEqual(
