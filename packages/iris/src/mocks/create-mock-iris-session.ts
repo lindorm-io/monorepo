@@ -4,7 +4,9 @@ import { createMockPublisher } from "./create-mock-publisher";
 import { createMockRpcClient } from "./create-mock-rpc-client";
 import { createMockWorkerQueue } from "./create-mock-worker-queue";
 
-export const createMockIrisSession = (): IIrisSession => ({
+export type MockIrisSession = jest.Mocked<IIrisSession>;
+
+export const createMockIrisSession = (): MockIrisSession => ({
   driver: "memory" as const,
 
   hasMessage: jest.fn().mockReturnValue(true),

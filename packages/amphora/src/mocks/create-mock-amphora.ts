@@ -1,6 +1,8 @@
 import { IAmphora } from "../interfaces";
 
-export const createMockAmphora = (): IAmphora => ({
+export type MockAmphora = jest.Mocked<IAmphora>;
+
+export const createMockAmphora = (): MockAmphora => ({
   config: [],
   domain: "mock_issuer",
   jwks: {

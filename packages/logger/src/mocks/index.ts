@@ -1,1 +1,1 @@
-export * from "./mock-logger";
+export { createMockLogger, type MockLogger } from "./mock-logger";

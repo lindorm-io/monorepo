@@ -1,1 +1,1 @@
-export * from "./create-mock-amphora";
+export { createMockAmphora, type MockAmphora } from "./create-mock-amphora";
