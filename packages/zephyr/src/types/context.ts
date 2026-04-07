@@ -11,7 +11,6 @@ export type AppContext = {
 export type MetadataContext = {
   correlationId: string;
   requestId: string;
-  sessionId: string | null;
 };
 
 export type OutgoingContext<T = any> = {

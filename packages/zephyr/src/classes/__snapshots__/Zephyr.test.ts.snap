@@ -1,0 +1,19 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`Zephyr emit should run middleware in correct order 1`] = `
+[
+  "before-1",
+  "before-2",
+  "after-2",
+  "after-1",
+]
+`;
+
+exports[`Zephyr on should wrap handler with middleware chain 1`] = `
+[
+  "middleware",
+  "handler",
+]
+`;
+
+exports[`Zephyr request should throw ZephyrError on nack 1`] = `[ZephyrError: Not found]`;

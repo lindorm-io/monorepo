@@ -1,0 +1,350 @@
+import { DEFAULT_TIMEOUT } from "#internal/constants/defaults";
+import { ILogger } from "@lindorm/logger";
+import { composeMiddleware } from "@lindorm/middleware";
+import type { Socket } from "socket.io-client";
+import { io } from "socket.io-client";
+import { ZephyrError } from "../errors/ZephyrError";
+import type { ListenerEntry } from "../internal/types/listener-entry";
+import { buildEnvelope } from "../internal/utils/build-envelope";
+import { createZephyrContext } from "../internal/utils/create-zephyr-context";
+import { resolveBearer } from "../internal/utils/resolve-bearer";
+import { unwrapAckResponse } from "../internal/utils/unwrap-ack-response";
+import type { AppContext, ZephyrContext, ZephyrMiddleware } from "../types/context";
+import type { AdvancedOptions, ZephyrAuth, ZephyrOptions } from "../types/options";
+
+export class Zephyr {
+  private readonly app: AppContext;
+  private readonly auth: ZephyrAuth | undefined;
+  private readonly autoConnect: boolean;
+  private readonly logger: ILogger | undefined;
+  private readonly middleware: Array<ZephyrMiddleware>;
+  private readonly namespace: string;
+  private readonly socketOptions: AdvancedOptions;
+  private readonly timeout: number;
+
+  private socket: Socket | undefined;
+  private readonly listeners: Map<string, Set<ListenerEntry>>;
+  private readonly connectHandlers: Array<() => void>;
+  private readonly disconnectHandlers: Array<(reason: string) => void>;
+  private readonly errorHandlers: Array<(error: ZephyrError) => void>;
+  private readonly reconnectHandlers: Array<(attempt: number) => void>;
+
+  public constructor(options: ZephyrOptions) {
+    this.app = {
+      alias: options.alias ?? null,
+      url: options.url,
+      environment: options.environment ?? null,
+    };
+
+    this.auth = options.auth;
+    this.autoConnect = options.autoConnect ?? false;
+    this.logger = options.logger?.child(["Zephyr"]);
+    this.middleware = options.middleware ?? [];
+    this.namespace = options.namespace ?? "";
+    this.socketOptions = options.socketOptions ?? {};
+    this.timeout = options.timeout ?? DEFAULT_TIMEOUT;
+
+    this.listeners = new Map();
+    this.connectHandlers = [];
+    this.disconnectHandlers = [];
+    this.errorHandlers = [];
+    this.reconnectHandlers = [];
+
+    if (this.autoConnect) {
+      this.connect().catch((err) => this.handleError(err));
+    }
+  }
+
+  public get id(): string | undefined {
+    return this.socket?.id;
+  }
+
+  public get connected(): boolean {
+    return this.socket?.connected ?? false;
+  }
+
+  public async connect(): Promise<void> {
+    if (this.socket?.connected) return;
+
+    const url = `${this.app.url}${this.namespace}`;
+
+    this.socket = io(url, {
+      ...this.socketOptions,
+      autoConnect: false,
+    });
+
+    if (this.auth) {
+      this.socket.auth = { bearer: await resolveBearer(this.auth) };
+    }
+
+    this.wireLifecycleEvents(this.socket);
+    this.registerQueuedListeners(this.socket);
+
+    return new Promise<void>((resolve, reject) => {
+      const onConnect = (): void => {
+        this.socket!.off("connect_error", onError);
+        resolve();
+      };
+
+      const onError = (error: Error): void => {
+        this.socket!.off("connect", onConnect);
+        reject(new ZephyrError(error.message, { error }));
+      };
+
+      this.socket!.once("connect", onConnect);
+      this.socket!.once("connect_error", onError);
+      this.socket!.connect();
+    });
+  }
+
+  public async disconnect(): Promise<void> {
+    if (!this.socket) return;
+
+    if (!this.socket.connected) {
+      this.socket = undefined;
+      return;
+    }
+
+    return new Promise<void>((resolve) => {
+      this.socket!.once("disconnect", () => {
+        resolve();
+      });
+
+      this.socket!.disconnect();
+    });
+  }
+
+  public async emit(event: string, data?: any): Promise<void> {
+    this.assertConnected();
+
+    const ctx = createZephyrContext({
+      app: this.app,
+      event,
+      logger: this.logger,
+      data,
+    });
+
+    await composeMiddleware<ZephyrContext>(ctx, [
+      ...this.middleware,
+      async (ctx): Promise<void> => {
+        this.socket!.emit(event, buildEnvelope(ctx));
+      },
+    ]);
+  }
+
+  public async request<T = any>(
+    event: string,
+    data?: any,
+    options?: { timeout?: number },
+  ): Promise<T> {
+    this.assertConnected();
+
+    const timeout = options?.timeout ?? this.timeout;
+
+    const ctx = createZephyrContext({
+      app: this.app,
+      event,
+      logger: this.logger,
+      data,
+    });
+
+    const result = await composeMiddleware<ZephyrContext>(ctx, [
+      ...this.middleware,
+      async (ctx): Promise<void> => {
+        const response = await this.socket!.timeout(timeout).emitWithAck(
+          event,
+          buildEnvelope(ctx),
+        );
+
+        unwrapAckResponse(ctx, response);
+      },
+    ]);
+
+    return result.incoming.data as T;
+  }
+
+  public on(event: string, handler: (data: any) => void): void {
+    this.addListener(event, handler, false);
+  }
+
+  public once(event: string, handler: (data: any) => void): void {
+    this.addListener(event, handler, true);
+  }
+
+  public off(event: string, handler?: (data: any) => void): void {
+    const entries = this.listeners.get(event);
+    if (!entries) return;
+
+    if (!handler) {
+      for (const entry of entries) {
+        this.socket?.off(event, entry.wrapped);
+      }
+      this.listeners.delete(event);
+      return;
+    }
+
+    for (const entry of entries) {
+      if (entry.handler === handler) {
+        this.socket?.off(event, entry.wrapped);
+        entries.delete(entry);
+        break;
+      }
+    }
+
+    if (entries.size === 0) {
+      this.listeners.delete(event);
+    }
+  }
+
+  public onConnect(handler: () => void): void {
+    this.connectHandlers.push(handler);
+  }
+
+  public onDisconnect(handler: (reason: string) => void): void {
+    this.disconnectHandlers.push(handler);
+  }
+
+  public onError(handler: (error: ZephyrError) => void): void {
+    this.errorHandlers.push(handler);
+  }
+
+  public onReconnect(handler: (attempt: number) => void): void {
+    this.reconnectHandlers.push(handler);
+  }
+
+  private addListener(event: string, handler: (data: any) => void, once: boolean): void {
+    const wrapped = this.wrapHandler(event, handler, once);
+
+    const entry: ListenerEntry = { handler, wrapped, once };
+
+    let entries = this.listeners.get(event);
+    if (!entries) {
+      entries = new Set();
+      this.listeners.set(event, entries);
+    }
+    entries.add(entry);
+
+    if (this.socket) {
+      if (once) {
+        this.socket.once(event, wrapped);
+      } else {
+        this.socket.on(event, wrapped);
+      }
+    }
+  }
+
+  private wrapHandler(
+    event: string,
+    handler: (data: any) => void,
+    once: boolean,
+  ): (...args: Array<any>) => void {
+    return (...args: Array<any>) => {
+      const serverData = args[0];
+
+      const ctx = createZephyrContext({
+        app: this.app,
+        event,
+        logger: this.logger,
+        data: serverData,
+        incoming: true,
+      });
+
+      composeMiddleware<ZephyrContext>(ctx, [
+        ...this.middleware,
+        async (ctx): Promise<void> => {
+          handler(ctx.incoming.data);
+        },
+      ]).catch((err) => {
+        this.handleError(err);
+      });
+
+      if (once) {
+        const entries = this.listeners.get(event);
+        if (entries) {
+          for (const entry of entries) {
+            if (entry.handler === handler) {
+              entries.delete(entry);
+              break;
+            }
+          }
+          if (entries.size === 0) {
+            this.listeners.delete(event);
+          }
+        }
+      }
+    };
+  }
+
+  private registerQueuedListeners(socket: Socket): void {
+    for (const [event, entries] of this.listeners) {
+      for (const entry of entries) {
+        if (entry.once) {
+          socket.once(event, entry.wrapped);
+        } else {
+          socket.on(event, entry.wrapped);
+        }
+      }
+    }
+  }
+
+  private wireLifecycleEvents(socket: Socket): void {
+    socket.on("connect", () => {
+      for (const handler of this.connectHandlers) {
+        handler();
+      }
+    });
+
+    socket.on("disconnect", (reason: string) => {
+      for (const handler of this.disconnectHandlers) {
+        handler(reason);
+      }
+    });
+
+    socket.on("connect_error", (err: Error) => {
+      this.handleError(new ZephyrError(err.message, { error: err }));
+    });
+
+    socket.io.on("reconnect", (attempt: number) => {
+      if (this.auth) {
+        resolveBearer(this.auth)
+          .then((token) => {
+            this.socket!.auth = { bearer: token };
+          })
+          .catch((err) => this.handleError(err));
+      }
+
+      for (const handler of this.reconnectHandlers) {
+        handler(attempt);
+      }
+    });
+  }
+
+  private handleError(err: unknown): void {
+    const error =
+      err instanceof ZephyrError
+        ? err
+        : new ZephyrError(err instanceof Error ? err.message : "Unknown error", {
+            error: err instanceof Error ? err : undefined,
+          });
+
+    if (this.errorHandlers.length > 0) {
+      for (const handler of this.errorHandlers) {
+        handler(error);
+      }
+      return;
+    }
+
+    if (this.logger) {
+      this.logger.error("Unhandled Zephyr error", { error });
+      return;
+    }
+
+    console.error("Unhandled Zephyr error:", error);
+  }
+
+  private assertConnected(): void {
+    if (!this.socket?.connected) {
+      throw new ZephyrError("Socket is not connected");
+    }
+  }
+}
