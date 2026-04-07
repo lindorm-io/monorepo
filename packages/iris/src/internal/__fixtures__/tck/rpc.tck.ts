@@ -31,7 +31,7 @@ export const rpcSuite = (
         return res;
       });
 
-      await wait(500);
+      await wait(200);
 
       const req = new TckRpcRequest();
       req.question = "meaning-of-life";
@@ -72,7 +72,7 @@ export const rpcSuite = (
         });
       });
 
-      await wait(500);
+      await wait(200);
 
       const req = new TckRpcRequest();
       req.question = "slow";
@@ -98,7 +98,7 @@ export const rpcSuite = (
         return res;
       });
 
-      await wait(500);
+      await wait(200);
 
       // Verify roundtrip works before unserve
       const req1 = new TckRpcRequest();
@@ -130,7 +130,7 @@ export const rpcSuite = (
         throw new Error("handler-exploded");
       });
 
-      await wait(500);
+      await wait(200);
 
       const req = new TckRpcRequest();
       req.question = "boom";
@@ -154,7 +154,7 @@ export const rpcSuite = (
         return res;
       });
 
-      await wait(500);
+      await wait(200);
 
       const questions = ["alpha", "beta", "gamma"];
       const answers: Array<string> = [];
@@ -186,7 +186,7 @@ export const rpcSuite = (
         return res;
       });
 
-      await wait(500);
+      await wait(200);
 
       const req = new TckRpcRequest();
       req.question = "field-with-special-chars-!@#$%";
@@ -210,7 +210,7 @@ export const rpcSuite = (
         throw new Error("specific-error-message-12345");
       });
 
-      await wait(500);
+      await wait(200);
 
       const req = new TckRpcRequest();
       req.question = "trigger-error";
@@ -261,7 +261,7 @@ export const rpcSuite = (
         });
       });
 
-      await wait(500);
+      await wait(200);
 
       const req = new TckRpcRequest();
       req.question = "closing";

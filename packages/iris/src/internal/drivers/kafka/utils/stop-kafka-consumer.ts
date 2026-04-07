@@ -5,9 +5,9 @@ import type {
 } from "../types/kafka-types";
 import { createPooledDispatcher } from "./create-kafka-consumer";
 
-const STOP_TIMEOUT_MS = 5_000;
+const STOP_TIMEOUT_MS = 2_000;
 
-const stopConsumerWithTimeout = async (consumer: KafkaConsumer): Promise<void> => {
+export const stopConsumerWithTimeout = async (consumer: KafkaConsumer): Promise<void> => {
   try {
     // Race both stop + disconnect against a single timeout.
     // KafkaJS's disconnect() internally calls runner.stop(), so it also

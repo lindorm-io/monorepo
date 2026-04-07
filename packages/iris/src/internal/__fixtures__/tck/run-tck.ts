@@ -32,11 +32,13 @@ const maybeDescribe = (flag: boolean, name: string, fn: () => void) => {
   }
 };
 
-export const runTck = (factory: TckDriverFactory) => {
+export const runTck = (factory: TckDriverFactory, suites?: Array<string>) => {
   const hookLog: Array<string> = [];
   const messages = createTckMessages(hookLog);
   const caps = factory.capabilities;
   const timeoutMs = factory.timeoutMs ?? 10000;
+
+  const shouldRun = (name: string) => !suites || suites.includes(name);
 
   let handle: TckDriverHandle;
 
@@ -84,38 +86,51 @@ export const runTck = (factory: TckDriverFactory) => {
   });
 
   afterAll(async () => {
-    await handle.teardown();
+    if (handle) await handle.teardown();
   });
 
   // Always-on suites
-  publishSubscribeSuite(getHandle, messages, timeoutMs);
-  fanOutSuite(getHandle, messages, timeoutMs);
-  topicResolutionSuite(getHandle, messages, timeoutMs);
-  hooksSuite(getHandle, messages, hookLog, timeoutMs);
+  if (shouldRun("publish-subscribe"))
+    publishSubscribeSuite(getHandle, messages, timeoutMs);
+  if (shouldRun("fan-out")) fanOutSuite(getHandle, messages, timeoutMs);
+  if (shouldRun("topic-resolution")) topicResolutionSuite(getHandle, messages, timeoutMs);
+  if (shouldRun("hooks")) hooksSuite(getHandle, messages, hookLog, timeoutMs);
 
   // Capability-gated suites
-  maybeDescribe(caps.workerQueue, "workerQueue", () =>
-    workerQueueSuite(getHandle, messages, timeoutMs),
-  );
-  maybeDescribe(caps.retry, "retry", () =>
-    retryDeadLetterSuite(getHandle, messages, timeoutMs, caps),
-  );
-  maybeDescribe(caps.rpc, "rpc", () => rpcSuite(getHandle, messages, timeoutMs));
-  maybeDescribe(caps.stream, "stream", () => streamSuite(getHandle, messages, timeoutMs));
-  maybeDescribe(caps.delay, "delay", () => delaySuite(getHandle, messages, timeoutMs));
-  maybeDescribe(caps.broadcast, "broadcast", () =>
-    broadcastSuite(getHandle, messages, timeoutMs),
-  );
-  maybeDescribe(caps.encryption, "encryption", () =>
-    encryptionSuite(getHandle, messages, timeoutMs),
-  );
-  maybeDescribe(caps.compression, "compression", () =>
-    compressionSuite(getHandle, messages, timeoutMs),
-  );
+  if (shouldRun("worker-queue"))
+    maybeDescribe(caps.workerQueue, "workerQueue", () =>
+      workerQueueSuite(getHandle, messages, timeoutMs),
+    );
+  if (shouldRun("retry-dead-letter"))
+    maybeDescribe(caps.retry, "retry", () =>
+      retryDeadLetterSuite(getHandle, messages, timeoutMs, caps),
+    );
+  if (shouldRun("rpc"))
+    maybeDescribe(caps.rpc, "rpc", () => rpcSuite(getHandle, messages, timeoutMs));
+  if (shouldRun("stream"))
+    maybeDescribe(caps.stream, "stream", () =>
+      streamSuite(getHandle, messages, timeoutMs),
+    );
+  if (shouldRun("delay"))
+    maybeDescribe(caps.delay, "delay", () => delaySuite(getHandle, messages, timeoutMs));
+  if (shouldRun("broadcast"))
+    maybeDescribe(caps.broadcast, "broadcast", () =>
+      broadcastSuite(getHandle, messages, timeoutMs),
+    );
+  if (shouldRun("encryption"))
+    maybeDescribe(caps.encryption, "encryption", () =>
+      encryptionSuite(getHandle, messages, timeoutMs),
+    );
+  if (shouldRun("compression"))
+    maybeDescribe(caps.compression, "compression", () =>
+      compressionSuite(getHandle, messages, timeoutMs),
+    );
 
   // Always-on: expiry, headers, decorator coverage, and error resilience require no special driver support
-  expirySuite(getHandle, messages, timeoutMs);
-  headersSuite(getHandle, messages, timeoutMs);
-  decoratorCoverageSuite(getHandle, messages, hookLog, timeoutMs);
-  errorResilienceSuite(getHandle, messages, timeoutMs, caps);
+  if (shouldRun("expiry")) expirySuite(getHandle, messages, timeoutMs);
+  if (shouldRun("headers")) headersSuite(getHandle, messages, timeoutMs);
+  if (shouldRun("decorator-coverage"))
+    decoratorCoverageSuite(getHandle, messages, hookLog, timeoutMs);
+  if (shouldRun("error-resilience"))
+    errorResilienceSuite(getHandle, messages, timeoutMs, caps);
 };

@@ -333,7 +333,6 @@ export class KafkaDriver implements IIrisDriver {
     // (each new consumer gets a fresh group that reads from latest).
 
     this.state.consumerRegistrations.length = 0;
-    this.state.consumerPool.clear();
     // Keep createdTopics so setup() doesn't try to re-create existing topics
     this.state.publishedTopics.clear();
     this._replyQueueActive = false;

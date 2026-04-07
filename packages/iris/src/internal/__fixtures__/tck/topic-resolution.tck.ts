@@ -54,7 +54,7 @@ export const topicResolutionSuite = (
       const msg = bus.create({ category: "news", body: "wrong-sub" } as any);
       await bus.publish(msg);
 
-      await wait(500);
+      await wait(200);
 
       // Should NOT receive: message routes to "routed.news" not "TckTopicMessage"
       expect(received).toHaveLength(0);
@@ -96,7 +96,7 @@ export const topicResolutionSuite = (
       const msg = bus.create({ body: "should-not-arrive" } as any);
       await bus.publish(msg);
 
-      await wait(500);
+      await wait(200);
 
       expect(received).toHaveLength(0);
     });

@@ -13,7 +13,7 @@ import { ensureKafkaTopic } from "./ensure-kafka-topic";
 
 export type { CreateKafkaConsumerOptions, GetOrCreatePooledConsumerOptions };
 
-const DEFAULT_GROUP_JOIN_TIMEOUT_MS = 30_000;
+const DEFAULT_GROUP_JOIN_TIMEOUT_MS = 10_000;
 
 const isUnknownTopicError = (error: unknown): boolean => {
   if (!(error instanceof Error)) return false;

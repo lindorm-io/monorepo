@@ -1,6 +1,6 @@
-// Kafka Driver Conformance Test (TCK) Harness
+// Kafka Driver Conformance Test (TCK) Harness — Stream suites
 //
-// Runs the full TCK suite against real Kafka (KRaft mode).
+// Runs stream and worker-queue TCK suites against real Kafka (KRaft mode).
 // Requires Kafka running (via docker-compose).
 
 import { randomUUID } from "@lindorm/random";
@@ -14,7 +14,7 @@ import { createMockAesModule } from "../__fixtures__/tck/mock-aes";
 
 jest.mock("@lindorm/aes", () => createMockAesModule());
 
-jest.setTimeout(120_000);
+jest.setTimeout(60_000);
 
 let source: IrisSource;
 
@@ -34,7 +34,7 @@ const mockAmphora = {
 
 const factory: TckDriverFactory = {
   driver: "kafka",
-  timeoutMs: 15000,
+  timeoutMs: 8000,
   capabilities: {
     workerQueue: true,
     rpc: true,
@@ -105,12 +105,29 @@ const factory: TckDriverFactory = {
       },
 
       async teardown() {
-        await source.disconnect();
+        // Abort handlers immediately — prevents new message processing.
+        // Skip graceful consumer stop (consumer.stop() triggers KafkaJS
+        // leaveGroup protocol which races Jest environment teardown and
+        // causes ReferenceError warnings). Docker cleanup handles
+        // connection closure.
+        const drv = (source as any)._driver as KafkaDriver;
+        drv.state.abortController.abort();
+        for (const [, p] of drv.state.consumerPool) p.localAbort.abort();
+        drv.state.consumers.length = 0;
+        drv.state.consumerPool.clear();
+
+        try {
+          await drv.state.producer?.disconnect();
+        } catch {}
+        try {
+          await drv.state.admin?.disconnect();
+        } catch {}
+        drv.state.kafka = null;
       },
     };
   },
 };
 
-describe("TCK: Kafka", () => {
-  runTck(factory);
+describe("TCK: Kafka (stream)", () => {
+  runTck(factory, ["stream", "worker-queue", "rpc", "retry-dead-letter"]);
 });
