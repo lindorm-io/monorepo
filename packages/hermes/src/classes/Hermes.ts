@@ -578,7 +578,7 @@ export class Hermes implements IHermes {
     });
 
     return {
-      on: (event: string, callback: (...args: any[]) => void) => {
+      on: (event: string, callback: (...args: any[]) => void): void => {
         emitter.on(event, callback);
       },
       cancel,
@@ -658,7 +658,7 @@ export class Hermes implements IHermes {
     });
 
     return {
-      on: (event: string, callback: (...args: any[]) => void) => {
+      on: (event: string, callback: (...args: any[]) => void): void => {
         emitter.on(event, callback);
       },
       cancel,

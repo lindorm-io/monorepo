@@ -207,7 +207,7 @@ export class ViewDomain {
       entity,
       logger: this.logger.child(["ReplayEventHandler"]),
       meta: message.meta,
-      destroy: () => {
+      destroy: (): void => {
         (entity as any).destroyed = true;
       },
     };
@@ -364,7 +364,7 @@ export class ViewDomain {
         entity,
         logger: this.logger.child(["ViewEventHandler"]),
         meta: message.meta,
-        destroy: () => {
+        destroy: (): void => {
           (entity as any).destroyed = true;
         },
       };
@@ -587,7 +587,7 @@ export class ViewDomain {
       error: err,
       entity,
       logger: this.logger.child(["ViewErrorHandler"]),
-      dispatch: (command: ClassLike, options?: ErrorDispatchOptions) => {
+      dispatch: (command: ClassLike, options?: ErrorDispatchOptions): void => {
         dispatched.push({ command, options: options ?? {} });
       },
     };
