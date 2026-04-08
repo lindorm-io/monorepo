@@ -178,7 +178,7 @@ export const createConsumerLoop = async (
     // already called disconnect(), putting ioredis in "end" state — quit() on
     // an ended connection hangs indefinitely.
     try {
-      connection.disconnect();
+      void connection.disconnect();
     } catch {
       // Already closed
     }

@@ -432,7 +432,7 @@ export class NatsDriver implements IIrisDriver {
     this._statusMonitorAbort = abortController;
 
     // nc.status() returns an async iterable of { type, data? }
-    (async (): Promise<void> => {
+    void (async (): Promise<void> => {
       try {
         for await (const status of nc.status()) {
           if (abortController.signal.aborted) break;

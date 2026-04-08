@@ -57,7 +57,7 @@ export class KafkaRpcServer<
       generation: this.state.resetGeneration,
     });
 
-    const onMessage = async (payload: KafkaEachMessagePayload) => {
+    const onMessage = async (payload: KafkaEachMessagePayload): Promise<void> => {
       const envelope = parseKafkaMessage(payload);
 
       try {

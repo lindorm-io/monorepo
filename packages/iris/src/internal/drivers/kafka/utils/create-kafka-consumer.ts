@@ -268,7 +268,7 @@ export const createPooledDispatcher = (
     pooled.roundRobinCounters.set(payload.topic, index + 1);
     const callback = callbacks[index];
 
-    const isAborted = () =>
+    const isAborted = (): boolean =>
       (globalAbortSignal?.aborted ?? false) || (localAbortSignal?.aborted ?? false);
 
     try {
