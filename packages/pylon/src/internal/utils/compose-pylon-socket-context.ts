@@ -44,7 +44,7 @@ export const composePylonSocketContextBase = (
   }
 
   return {
-    ack: rawAck ? (data: any) => rawAck({ __pylon: true, ok: true, data }) : null,
+    ack: rawAck ? (data: any): void => rawAck({ __pylon: true, ok: true, data }) : null,
     args,
     data: args,
     envelope,
@@ -52,7 +52,9 @@ export const composePylonSocketContextBase = (
     eventId: randomUUID(),
     header,
     io,
-    nack: rawAck ? (error: any) => rawAck({ __pylon: true, ok: false, error }) : null,
+    nack: rawAck
+      ? (error: any): void => rawAck({ __pylon: true, ok: false, error })
+      : null,
     params: {},
     socket,
   };

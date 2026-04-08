@@ -179,7 +179,7 @@ export class Pylon<
     await this.teardown();
 
     for (const worker of this.workers) {
-      worker.stop();
+      await worker.stop();
     }
 
     this.isStarted = false;
