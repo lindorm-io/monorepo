@@ -4,7 +4,7 @@ import type { PublishOptions, SubscribeOptions } from "../../../../types";
 import type { DriverBaseOptions } from "../../../classes/DriverBase";
 import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager";
 import type { DelayManager } from "../../../delay/DelayManager";
-import type { KafkaSharedState } from "../types/kafka-types";
+import type { KafkaConsumer, KafkaSharedState } from "../types/kafka-types";
 import { IrisDriverError } from "../../../../errors/IrisDriverError";
 import { DriverMessageBusBase } from "../../../classes/DriverMessageBusBase";
 import { publishKafkaMessages } from "../utils/publish-kafka-messages";
@@ -87,7 +87,7 @@ export class KafkaMessageBus<M extends IMessage> extends DriverMessageBusBase<M>
       groupId = `${this.state.prefix}.sub.ephemeral.${randomUUID()}`;
     }
 
-    const getConsumer = () => {
+    const getConsumer = (): KafkaConsumer => {
       const p = this.state.consumerPool.get(groupId);
       if (!p)
         throw new IrisDriverError("Pooled consumer not found for group: " + groupId);
@@ -116,7 +116,7 @@ export class KafkaMessageBus<M extends IMessage> extends DriverMessageBusBase<M>
     const broadcastTopic = `${kafkaTopic}.broadcast`;
     const broadcastGroupId = `${groupId}.bc.${randomUUID()}`;
 
-    const getBroadcastConsumer = () => {
+    const getBroadcastConsumer = (): KafkaConsumer => {
       const p = this.state.consumerPool.get(broadcastGroupId);
       if (!p)
         throw new IrisDriverError(
