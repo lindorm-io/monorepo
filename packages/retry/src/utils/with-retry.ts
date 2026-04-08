@@ -13,7 +13,7 @@ export const withRetry = async <T>(
     delayMax,
     multiplier,
     jitter = true,
-    isRetryable = () => true,
+    isRetryable = (): boolean => true,
     onRetry,
   } = options;
 
