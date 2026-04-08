@@ -8,6 +8,7 @@ import type { Constructor } from "@lindorm/types";
 import type { IMessage } from "../../interfaces";
 import { IrisSource } from "../../classes/IrisSource";
 import type { KafkaDriver } from "../drivers/kafka/classes/KafkaDriver";
+import type { KafkaSharedState } from "../drivers/kafka/types/kafka-types";
 import type { TckDriverFactory, TckDriverHandle } from "../__fixtures__/tck/types";
 import { runTck } from "../__fixtures__/tck/run-tck";
 import { createMockAesModule } from "../__fixtures__/tck/mock-aes";
@@ -111,18 +112,19 @@ const factory: TckDriverFactory = {
         // causes ReferenceError warnings). Docker cleanup handles
         // connection closure.
         const drv = (source as any)._driver as KafkaDriver;
-        drv.state.abortController.abort();
-        for (const [, p] of drv.state.consumerPool) p.localAbort.abort();
-        drv.state.consumers.length = 0;
-        drv.state.consumerPool.clear();
+        const state = (drv as any).state as KafkaSharedState;
+        state.abortController.abort();
+        for (const [, p] of state.consumerPool) p.localAbort.abort();
+        state.consumers.length = 0;
+        state.consumerPool.clear();
 
         try {
-          await drv.state.producer?.disconnect();
+          await state.producer?.disconnect();
         } catch {}
         try {
-          await drv.state.admin?.disconnect();
+          await state.admin?.disconnect();
         } catch {}
-        drv.state.kafka = null;
+        state.kafka = null;
       },
     };
   },
