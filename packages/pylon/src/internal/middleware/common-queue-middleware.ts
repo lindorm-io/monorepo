@@ -19,7 +19,7 @@ export const createQueueMiddleware = <C extends PylonContext>(
 ): Middleware<C> => {
   if (!options?.enabled) {
     return async function disabledQueueMiddleware(ctx, next) {
-      ctx.queue = async () => {
+      ctx.queue = async (): Promise<never> => {
         throw new ServerError("Queue is not enabled");
       };
       await next();

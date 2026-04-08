@@ -76,7 +76,9 @@ export const createRoomContext = (
 
     ...(presenceRepo
       ? {
-          presence: async (room: string) => {
+          presence: async (
+            room: string,
+          ): Promise<Array<{ userId: string; socketId: string; joinedAt: Date }>> => {
             const records = await presenceRepo.find({ room });
             return records.map((r) => ({
               userId: r.userId,

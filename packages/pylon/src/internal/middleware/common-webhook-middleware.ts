@@ -10,7 +10,7 @@ export const createWebhookMiddleware = <C extends PylonContext>(
 ): Middleware<C> => {
   if (!options?.enabled) {
     return async function disabledWebhookMiddleware(ctx, next) {
-      ctx.webhook = async () => {
+      ctx.webhook = async (): Promise<never> => {
         throw new ServerError("Webhook is not enabled");
       };
       await next();
