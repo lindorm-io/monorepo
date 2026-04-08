@@ -14,7 +14,7 @@ export const stopConsumerLoop = async (
   // This interrupts any pending blocking XREADGROUP call.
   loop.abortController.abort();
   try {
-    loop.connection.disconnect();
+    void loop.connection.disconnect();
   } catch {
     // Already closed
   }
@@ -32,7 +32,7 @@ export const stopAllConsumerLoops = async (state: RedisSharedState): Promise<voi
   for (const loop of state.consumerLoops) {
     loop.abortController.abort();
     try {
-      loop.connection.disconnect();
+      void loop.connection.disconnect();
     } catch {
       // Already closed
     }

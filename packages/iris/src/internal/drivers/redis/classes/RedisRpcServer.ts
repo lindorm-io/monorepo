@@ -50,7 +50,7 @@ export class RedisRpcServer<
       type: "rpc",
     });
 
-    const onEntry = async (entry: RedisStreamEntry) => {
+    const onEntry = async (entry: RedisStreamEntry): Promise<void> => {
       try {
         const { responseEnvelope } = await this.processRequest(
           handler,

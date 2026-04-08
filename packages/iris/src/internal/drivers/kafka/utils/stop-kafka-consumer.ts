@@ -14,7 +14,7 @@ export const stopConsumerWithTimeout = async (consumer: KafkaConsumer): Promise<
     // blocks when an eachMessage handler is stuck (e.g. never-resolving RPC).
     let timer: ReturnType<typeof setTimeout>;
     await Promise.race([
-      (async () => {
+      (async (): Promise<void> => {
         try {
           await consumer.stop();
         } catch {
