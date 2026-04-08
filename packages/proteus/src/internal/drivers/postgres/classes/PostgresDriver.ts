@@ -76,7 +76,7 @@ export class PostgresDriver implements IProteusDriver {
     this.namespace = namespace;
     this.resolveMetadata = resolveMetadata;
     this.getFilterRegistry = getFilterRegistry ?? ((): FilterRegistry => new Map());
-    this.emitEntity = emitEntity ?? (async () => {});
+    this.emitEntity = emitEntity ?? (async (): Promise<void> => {});
     this.amphora = amphora;
     this.breaker = breaker ?? null;
   }

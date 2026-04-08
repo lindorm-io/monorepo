@@ -87,7 +87,7 @@ export abstract class DriverRepositoryBase<
     this.logger = options.logger.child([options.driverLabel, options.target.name]);
     this.parent = options.parent;
     this.repositoryFactory = options.repositoryFactory;
-    this.emitEntity = options.emitEntity ?? (async () => {});
+    this.emitEntity = options.emitEntity ?? (async (): Promise<void> => {});
     this._context = options.context;
     this.metadata = getEntityMetadata(options.target);
     this.hasRelations = this.metadata.relations.length > 0;
