@@ -98,7 +98,8 @@ describe("useRateLimit", () => {
 
     ctx = {
       logger: createMockLogger(),
-      socket: { id: "socket-123" },
+      event: "test:event",
+      io: { socket: { id: "socket-123" } },
       set: jest.fn(),
       [RATE_LIMIT_SOURCE]: mockSource,
     };
@@ -193,7 +194,8 @@ describe("useRateLimit", () => {
 
     ctx = {
       logger: createMockLogger(),
-      socket: { id: "sock-abc" },
+      event: "test:event",
+      io: { socket: { id: "sock-abc" } },
       set: jest.fn(),
       [RATE_LIMIT_SOURCE]: mockSource,
     };
@@ -228,7 +230,8 @@ describe("useRateLimit", () => {
 
     ctx = {
       logger: createMockLogger(),
-      socket: { id: "socket-123" },
+      event: "test:event",
+      io: { socket: { id: "socket-123" } },
       set: jest.fn(),
       [RATE_LIMIT_SOURCE]: mockSource,
     };

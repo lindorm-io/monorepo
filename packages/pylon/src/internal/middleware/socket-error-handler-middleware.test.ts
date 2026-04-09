@@ -8,8 +8,10 @@ describe("socketErrorHandlerMiddleware", () => {
   beforeEach(() => {
     ctx = {
       logger: createMockLogger(),
-      socket: {
-        emit: jest.fn(),
+      io: {
+        socket: {
+          emit: jest.fn(),
+        },
       },
     };
   });
@@ -17,7 +19,7 @@ describe("socketErrorHandlerMiddleware", () => {
   test("should do nothing when no errors are thrown", async () => {
     await expect(socketErrorHandlerMiddleware(ctx, jest.fn())).resolves.toBeUndefined();
 
-    expect(ctx.socket.emit).not.toHaveBeenCalled();
+    expect(ctx.io.socket.emit).not.toHaveBeenCalled();
   });
 
   test("should handle thrown errors", async () => {
@@ -25,7 +27,7 @@ describe("socketErrorHandlerMiddleware", () => {
 
     await expect(socketErrorHandlerMiddleware(ctx, next)).resolves.toBeUndefined();
 
-    expect(ctx.socket.emit).toHaveBeenCalledWith("error", {
+    expect(ctx.io.socket.emit).toHaveBeenCalledWith("error", {
       code: "unknown_error",
       data: {},
       message: "error message",
@@ -50,7 +52,7 @@ describe("socketErrorHandlerMiddleware", () => {
 
     await expect(socketErrorHandlerMiddleware(ctx, next)).resolves.toBeUndefined();
 
-    expect(ctx.socket.emit).toHaveBeenCalledWith("error", {
+    expect(ctx.io.socket.emit).toHaveBeenCalledWith("error", {
       code: "custom_error_code",
       data: { value: "data" },
       message: "server error message",
@@ -75,7 +77,7 @@ describe("socketErrorHandlerMiddleware", () => {
 
     await expect(socketErrorHandlerMiddleware(ctx, next)).resolves.toBeUndefined();
 
-    expect(ctx.socket.emit).toHaveBeenCalledWith("error", {
+    expect(ctx.io.socket.emit).toHaveBeenCalledWith("error", {
       code: "custom_error_code",
       data: { value: "data" },
       message: "client error message",
@@ -95,7 +97,7 @@ describe("socketErrorHandlerMiddleware", () => {
 
     await expect(socketErrorHandlerMiddleware(ctx, next)).resolves.toBeUndefined();
 
-    expect(ctx.socket.emit).toHaveBeenCalledWith("error", {
+    expect(ctx.io.socket.emit).toHaveBeenCalledWith("error", {
       code: "unexpected_exception",
       data: {},
       message: "An unexpected exception occurred while handling thrown error",

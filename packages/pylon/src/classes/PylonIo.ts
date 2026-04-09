@@ -30,12 +30,12 @@ import { PylonListener } from "./PylonListener";
 
 export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
   private readonly logger: ILogger;
-  private readonly options: PylonOptions<any, T>;
+  private readonly options: PylonOptions<any, any, T>;
   private readonly middleware: Array<PylonSocketMiddleware<T>>;
 
   public readonly server: IoServer;
 
-  public constructor(http: Server, options: PylonOptions<any, T>) {
+  public constructor(http: Server, options: PylonOptions<any, any, T>) {
     this.logger = options.logger.child(["PylonSocket"]);
 
     const socket = options.socket!;

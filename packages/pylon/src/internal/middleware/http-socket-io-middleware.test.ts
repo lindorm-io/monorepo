@@ -14,6 +14,6 @@ describe("createHttpSocketIoMiddleware", () => {
       httpSocketIoMiddleware(socketIo)(ctx, jest.fn()),
     ).resolves.toBeUndefined();
 
-    expect(ctx.io).toEqual("socketIo");
+    expect(ctx.io).toEqual({ app: "socketIo" });
   });
 });

@@ -18,7 +18,7 @@ export const createBearerTokenMiddleware = <C extends PylonContext = PylonContex
       let token: unknown;
 
       if (isSocketContext(ctx)) {
-        token = ctx.socket.handshake.auth.bearer;
+        token = ctx.io.socket.handshake.auth.bearer;
       } else {
         if (ctx.state.authorization.type !== "bearer") {
           throw new ClientError("Invalid Authorization header", {
@@ -52,7 +52,7 @@ export const createBearerTokenMiddleware = <C extends PylonContext = PylonContex
       ctx.state.tokens.accessToken = verified;
 
       if (isSocketContext(ctx)) {
-        ctx.socket.data.tokens.bearer = verified;
+        ctx.io.socket.data.tokens.bearer = verified;
       }
     } catch (error: any) {
       timer.debug("Bearer token verification failed", error);

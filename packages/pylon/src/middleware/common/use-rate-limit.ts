@@ -25,7 +25,7 @@ const resolveKey = (ctx: PylonContext): string => {
     return ctx.request.ip ?? "unknown";
   }
   if (isSocketContext(ctx)) {
-    return ctx.socket.id ?? "unknown";
+    return ctx.io.socket.id ?? "unknown";
   }
   return "unknown";
 };
