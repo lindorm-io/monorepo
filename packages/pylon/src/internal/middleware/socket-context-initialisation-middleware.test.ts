@@ -10,20 +10,22 @@ describe("createSocketContextInitialisationMiddleware", () => {
 
     ctx = {
       eventId: "aa9a627d-8296-598c-9589-4ec91d27d056",
-      socket: {
-        id: "009aecca-3bc0-500f-8e67-6dae90188c7d",
-        data: {
-          app: {
-            domain: "test.lindorm.io",
-            environment: "test",
-            name: "test-app",
-            version: "1.0.0",
+      io: {
+        socket: {
+          id: "009aecca-3bc0-500f-8e67-6dae90188c7d",
+          data: {
+            app: {
+              domain: "test.lindorm.io",
+              environment: "test",
+              name: "test-app",
+              version: "1.0.0",
+            },
+            tokens: { accessToken: { type: "jwt", payload: {} } },
           },
-          tokens: { accessToken: { type: "jwt", payload: {} } },
-        },
-        handshake: {
-          auth: {},
-          headers: {},
+          handshake: {
+            auth: {},
+            headers: {},
+          },
         },
       },
     };
@@ -96,7 +98,7 @@ describe("createSocketContextInitialisationMiddleware", () => {
   });
 
   test("should extract bearer authorization from handshake", async () => {
-    ctx.socket.handshake.headers.authorization = "Bearer test-token";
+    ctx.io.socket.handshake.headers.authorization = "Bearer test-token";
 
     await createSocketContextInitialisationMiddleware(logger)(ctx, jest.fn());
 

@@ -86,9 +86,10 @@ describe("createTokenMiddleware", () => {
     beforeEach(() => {
       ctx = {
         aegis: createMockAegis(),
+        event: "test:event",
         logger: createMockLogger(),
         state: { tokens: {} },
-        socket: { data: { tokens: {} } },
+        io: { socket: { data: { tokens: {} } } },
         args: { id_token: "token_value" },
       };
     });
@@ -100,7 +101,7 @@ describe("createTokenMiddleware", () => {
 
       expect(ctx.aegis.jwt.verify).toHaveBeenCalledWith("token_value", options);
       expect(ctx.state.tokens.idToken).toMatchSnapshot();
-      expect(ctx.socket.data.tokens.idToken).toMatchSnapshot();
+      expect(ctx.io.socket.data.tokens.idToken).toMatchSnapshot();
     });
   });
 });

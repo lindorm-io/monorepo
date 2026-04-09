@@ -99,7 +99,7 @@ describe("useAuditLog", () => {
     ctx = {
       ...ctx,
       event: "chat:message",
-      socket: { handshake: { address: "192.168.1.1" } },
+      io: { socket: { handshake: { address: "192.168.1.1" } } },
     };
     delete ctx.request;
     delete ctx.status;

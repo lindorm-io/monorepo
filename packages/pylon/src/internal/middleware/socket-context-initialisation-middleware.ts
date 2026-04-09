@@ -26,22 +26,23 @@ export const createSocketContextInitialisationMiddleware = (
     const correlationId = extractCorrelationId(ctx);
 
     ctx.state = {
-      app: ctx.socket.data.app,
-      authorization: getSocketAuthorization(ctx.socket),
+      app: ctx.io.socket.data.app,
+      authorization: getSocketAuthorization(ctx.io.socket),
       metadata: {
         id: ctx.eventId,
         correlationId,
         date: new Date(),
         environment:
-          (ctx.socket.handshake?.headers?.["x-environment"] as Environment) || "unknown",
+          (ctx.io.socket.handshake?.headers?.["x-environment"] as Environment) ||
+          "unknown",
       },
-      tokens: ctx.socket.data.tokens ?? {},
+      tokens: ctx.io.socket.data.tokens ?? {},
     };
 
     ctx.logger = logger.child(["Event"], {
       correlationId,
       eventId: ctx.eventId,
-      socketId: ctx.socket.id,
+      socketId: ctx.io.socket.id,
     });
 
     await next();

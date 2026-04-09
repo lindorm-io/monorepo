@@ -2,7 +2,7 @@ import { IoServer, PylonHttpMiddleware } from "../../types";
 
 export const httpSocketIoMiddleware = (io: IoServer): PylonHttpMiddleware =>
   async function httpSocketIoMiddleware(ctx, next) {
-    ctx.io = io;
+    ctx.io = { app: io };
 
     await next();
   };

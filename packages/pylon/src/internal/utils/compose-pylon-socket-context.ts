@@ -51,11 +51,10 @@ export const composePylonSocketContextBase = (
     event: options.event,
     eventId: randomUUID(),
     header,
-    io,
+    io: { app: io, socket },
     nack: rawAck
       ? (error: any): void => rawAck({ __pylon: true, ok: false, error })
       : null,
     params: {},
-    socket,
   };
 };

@@ -1,6 +1,6 @@
 import { createMockLogger } from "@lindorm/logger";
 import { createMockProteusSource } from "@lindorm/proteus/mocks";
-import { createRoomContext } from "./create-room-context";
+import { createHttpRoomContext, createRoomContext } from "./create-room-context";
 
 describe("createRoomContext", () => {
   const createMockSocket = (overrides: Record<string, any> = {}) => ({
@@ -29,8 +29,6 @@ describe("createRoomContext", () => {
     expect(Object.keys(result).sort()).toMatchSnapshot();
     expect(typeof result.join).toBe("function");
     expect(typeof result.leave).toBe("function");
-    expect(typeof result.broadcast).toBe("function");
-    expect(typeof result.emit).toBe("function");
     expect(typeof result.members).toBe("function");
     expect(result.presence).toBeUndefined();
   });
@@ -61,39 +59,6 @@ describe("createRoomContext", () => {
     await ctx.leave("my-room");
 
     expect(socket.leave).toHaveBeenCalledWith("my-room");
-  });
-
-  test("should call socket.to().emit() when broadcast is invoked", () => {
-    const emitFn = jest.fn();
-    const socket = createMockSocket({ to: jest.fn().mockReturnValue({ emit: emitFn }) });
-
-    const ctx = createRoomContext({
-      socket: socket as any,
-      io: createMockIo() as any,
-      logger: createMockLogger(),
-    });
-
-    ctx.broadcast("my-room", "event-name", { foo: "bar" });
-
-    expect(socket.to).toHaveBeenCalledWith("my-room");
-    expect(emitFn).toHaveBeenCalledWith("event-name", { foo: "bar" });
-  });
-
-  test("should call io.to().emit() when emit is invoked", () => {
-    const emitFn = jest.fn();
-    const io = createMockIo();
-    io.to.mockReturnValue({ emit: emitFn });
-
-    const ctx = createRoomContext({
-      socket: createMockSocket() as any,
-      io: io as any,
-      logger: createMockLogger(),
-    });
-
-    ctx.emit("my-room", "event-name", { foo: "bar" });
-
-    expect(io.to).toHaveBeenCalledWith("my-room");
-    expect(emitFn).toHaveBeenCalledWith("event-name", { foo: "bar" });
   });
 
   test("should call io.in().fetchSockets() when members is invoked", async () => {
@@ -208,5 +173,65 @@ describe("createRoomContext", () => {
       { id: "room-1:socket-123" },
       expect.objectContaining({ userId: "socket-123" }),
     );
+  });
+});
+
+describe("createHttpRoomContext", () => {
+  const createMockIo = () => ({
+    to: jest.fn().mockReturnValue({ emit: jest.fn() }),
+    in: jest.fn().mockReturnValue({
+      fetchSockets: jest.fn().mockResolvedValue([{ id: "socket-a" }, { id: "socket-b" }]),
+    }),
+  });
+
+  test("should return an http room context with expected shape", () => {
+    const result = createHttpRoomContext({
+      io: createMockIo() as any,
+      logger: createMockLogger(),
+    });
+
+    expect(Object.keys(result).sort()).toMatchSnapshot();
+    expect(typeof result.members).toBe("function");
+    expect(result.presence).toBeUndefined();
+  });
+
+  test("should call io.in().fetchSockets() when members is invoked", async () => {
+    const io = createMockIo();
+
+    const ctx = createHttpRoomContext({
+      io: io as any,
+      logger: createMockLogger(),
+    });
+
+    const result = await ctx.members("my-room");
+
+    expect(io.in).toHaveBeenCalledWith("my-room");
+    expect(result).toEqual(["socket-a", "socket-b"]);
+  });
+
+  test("should include presence when proteusSource and presence are provided", () => {
+    const proteusSource = createMockProteusSource();
+
+    const ctx = createHttpRoomContext({
+      io: createMockIo() as any,
+      logger: createMockLogger(),
+      proteusSource: proteusSource as any,
+      presence: true,
+    });
+
+    expect(typeof ctx.presence).toBe("function");
+  });
+
+  test("should not include presence when presence is false", () => {
+    const proteusSource = createMockProteusSource();
+
+    const ctx = createHttpRoomContext({
+      io: createMockIo() as any,
+      logger: createMockLogger(),
+      proteusSource: proteusSource as any,
+      presence: false,
+    });
+
+    expect(ctx.presence).toBeUndefined();
   });
 });

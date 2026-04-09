@@ -67,7 +67,7 @@ export const useAuditLog = (options: UseAuditLogOptions = {}): PylonMiddleware =
         method = "event";
         transport = "socket";
         statusCode = 200;
-        sourceIp = ctx.socket.handshake?.address ?? "unknown";
+        sourceIp = ctx.io.socket.handshake?.address ?? "unknown";
         userAgent = null;
       } else {
         endpoint = "unknown";

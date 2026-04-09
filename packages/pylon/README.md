@@ -233,7 +233,9 @@ ctx.data; // Parsed request body (camelCased)
 ctx.files; // Uploaded files (multipart)
 ctx.params; // URL path parameters
 ctx.session; // { set(), get(), del(), logout() }
-ctx.io; // Socket.io server instance
+ctx.io.app; // Socket.io server instance (if socket enabled)
+ctx.rooms; // Room context: members(), presence() (if rooms enabled)
+ctx.socket; // Envelope emitter: emit(target, event, data) (if socket enabled)
 ```
 
 **Socket-specific:**
@@ -243,10 +245,12 @@ ctx.data; // Event payload
 ctx.event; // Event name
 ctx.eventId; // Unique event ID
 ctx.header; // Envelope headers
-ctx.socket; // Socket.io socket instance
+ctx.io.app; // Socket.io server instance
+ctx.io.socket; // Raw Socket.io socket instance
 ctx.ack; // Acknowledge callback
 ctx.nack; // Negative acknowledge callback
-ctx.rooms; // Room context (if rooms enabled in config)
+ctx.rooms; // Room context: join(), leave(), members(), presence() (if rooms enabled)
+ctx.socket; // Envelope emitter: emit(target, event, data), broadcast(target, event, data)
 ctx.args; // Raw event arguments
 ```
 
@@ -530,19 +534,33 @@ const app = new Pylon({
 });
 ```
 
-When rooms are enabled, Pylon provides two things automatically:
+When rooms are enabled, Pylon provides `ctx.rooms` and `ctx.socket` automatically on both HTTP and socket contexts — lazily initialised, no middleware needed.
 
-**1. `ctx.rooms` on all socket handlers** — lazily initialised, no middleware needed:
+**`ctx.rooms`** manages room membership and presence:
 
 ```typescript
 listener.on("game:start", async (ctx) => {
   await ctx.rooms.join("game-lobby");
   const members = await ctx.rooms.members("game-lobby");
-  ctx.rooms.broadcast("game-lobby", "game:player-joined", { userId: ctx.socket.id });
 });
 ```
 
-**2. Built-in join/leave handlers** — Pylon auto-registers parameterised listeners for room join and leave events:
+**`ctx.socket`** emits Pylon envelopes to targets (room names or socket IDs):
+
+```typescript
+// From a socket listener — emit to a room
+ctx.socket.emit("game-lobby", "game:player-joined", { userId: "abc" });
+
+// Broadcast excludes the sender (socket context only)
+ctx.socket.broadcast("game-lobby", "game:player-joined", { userId: "abc" });
+
+// From an HTTP handler — e.g. POST /v1/notify called by another service
+ctx.socket.emit(`user:${userId}`, "mfa:challenge", { challengeId, device, ip });
+```
+
+All emissions are automatically wrapped in the Pylon envelope format (`{ __pylon: true, header: { correlationId }, payload }`) so Zephyr clients receive them correctly.
+
+**Built-in join/leave handlers** — Pylon auto-registers parameterised listeners for room join and leave events:
 
 | Event Pattern          | Action                          | Response                        |
 | ---------------------- | ------------------------------- | ------------------------------- |
@@ -573,14 +591,21 @@ export const ON = async (ctx) => {
 
 **Room context methods:**
 
-| Method                          | Description                                                                  |
-| ------------------------------- | ---------------------------------------------------------------------------- |
-| `join(room)`                    | Add the socket to a Socket.IO room                                           |
-| `leave(room)`                   | Remove the socket from a room                                                |
-| `broadcast(room, event, data?)` | Emit to all sockets in the room **except** the sender                        |
-| `emit(room, event, data?)`      | Emit to all sockets in the room **including** the sender                     |
-| `members(room)`                 | Returns socket IDs of all members                                            |
-| `presence(room)`                | Returns `{ userId, socketId, joinedAt }` records (requires `presence: true`) |
+| Method           | HTTP | Socket | Description                                                                  |
+| ---------------- | ---- | ------ | ---------------------------------------------------------------------------- |
+| `join(room)`     | —    | yes    | Add the socket to a Socket.IO room                                           |
+| `leave(room)`    | —    | yes    | Remove the socket from a room                                                |
+| `members(room)`  | yes  | yes    | Returns socket IDs of all members                                            |
+| `presence(room)` | yes  | yes    | Returns `{ userId, socketId, joinedAt }` records (requires `presence: true`) |
+
+**Socket emitter methods:**
+
+| Method                            | HTTP | Socket | Description                                             |
+| --------------------------------- | ---- | ------ | ------------------------------------------------------- |
+| `emit(target, event, data?)`      | yes  | yes    | Emit Pylon envelope to all sockets in target            |
+| `broadcast(target, event, data?)` | —    | yes    | Emit Pylon envelope to target, **excluding** the sender |
+
+The `target` argument is a Socket.IO room name, a socket ID, or any named group — Socket.IO treats them all the same.
 
 **Presence tracking** requires a Proteus source and stores presence records as entities. Enable with `rooms: { presence: true }`. The user ID is extracted from the access token (`subject` claim) when available, falling back to the socket ID.
 
@@ -1090,10 +1115,33 @@ Parsed body is available as `ctx.data` (camelCased). Uploaded files are availabl
 
 ## Configuration Reference
 
+### Type-Safe Socket Emissions
+
+Use `PylonEventMap` to get type-safe `ctx.socket.emit()` calls:
+
+```typescript
+import { Pylon, PylonEventMap } from "@lindorm/pylon";
+
+type MyEvents = {
+  "mfa:challenge": { challengeId: string; device: string; ip: string };
+  "chat:message": { text: string; sender: string };
+};
+
+const app = new Pylon<MyEvents>({
+  // ...
+});
+
+// In handlers:
+ctx.socket.emit("user:abc", "mfa:challenge", { challengeId, device, ip }); // ✓ typed
+ctx.socket.emit("user:abc", "mfa:challenge", { wrong: "shape" }); // ✗ type error
+```
+
+The event map is a flat `Record<string, PayloadType>`. It types only emissions — listener handlers define their own incoming types via the handler signature.
+
 Full type signature of `PylonOptions`:
 
 ```typescript
-type PylonOptions = {
+type PylonOptions<E extends PylonEventMap = PylonEventMap> = {
   // Required
   amphora: IAmphora;
   logger: ILogger;

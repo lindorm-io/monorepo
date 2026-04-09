@@ -68,14 +68,17 @@ describe("createBearerTokenMiddleware", () => {
     beforeEach(() => {
       ctx = {
         aegis: createMockAegis(),
+        event: "test:event",
         logger: createMockLogger(),
         state: {
           authorization: { type: "none", value: "" },
           tokens: {},
         },
-        socket: {
-          handshake: { auth: { bearer: "jwt-token" } },
-          data: { tokens: {} },
+        io: {
+          socket: {
+            handshake: { auth: { bearer: "jwt-token" } },
+            data: { tokens: {} },
+          },
         },
       };
     });
@@ -90,11 +93,11 @@ describe("createBearerTokenMiddleware", () => {
         ...options,
       });
       expect(ctx.state.tokens.accessToken).toMatchSnapshot();
-      expect(ctx.socket.data.tokens.bearer).toMatchSnapshot();
+      expect(ctx.io.socket.data.tokens.bearer).toMatchSnapshot();
     });
 
     test("should throw 401 when handshake bearer is not a string", async () => {
-      ctx.socket.handshake.auth.bearer = 12345;
+      ctx.io.socket.handshake.auth.bearer = 12345;
 
       const middleware = createBearerTokenMiddleware(options);
 

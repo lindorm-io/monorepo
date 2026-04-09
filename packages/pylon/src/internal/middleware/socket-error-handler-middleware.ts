@@ -15,7 +15,7 @@ export const socketErrorHandlerMiddleware: PylonSocketMiddleware = async (ctx, n
         ctx.logger.warn("Client error", err);
       }
 
-      ctx.socket.emit("error", {
+      ctx.io.socket.emit("error", {
         code: err.code ?? "unknown_error",
         data: err.data ?? {},
         message: err.message,
@@ -23,7 +23,7 @@ export const socketErrorHandlerMiddleware: PylonSocketMiddleware = async (ctx, n
         title: err.title ?? "Error",
       });
     } catch {
-      ctx.socket.emit("error", {
+      ctx.io.socket.emit("error", {
         code: "unexpected_exception",
         data: {},
         name: "UnexpectedException",

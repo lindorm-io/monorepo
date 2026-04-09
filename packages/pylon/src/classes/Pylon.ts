@@ -5,6 +5,7 @@ import { Server as HttpServer, createServer } from "http";
 import { httpSocketIoMiddleware } from "#internal/middleware/http-socket-io-middleware";
 import {
   HttpCallback,
+  PylonEventMap,
   PylonHttpContext,
   PylonOptions,
   PylonSetup,
@@ -41,6 +42,7 @@ import { PylonHttp } from "./PylonHttp";
 import { PylonIo } from "./PylonIo";
 
 export class Pylon<
+  E extends PylonEventMap = PylonEventMap,
   H extends PylonHttpContext = PylonHttpContext,
   S extends PylonSocketContext = PylonSocketContext,
 > {
@@ -48,7 +50,7 @@ export class Pylon<
   private readonly http: PylonHttp<H>;
   private readonly io: PylonIo<S> | undefined;
   private readonly logger: ILogger;
-  private readonly options: PylonOptions<H, S>;
+  private readonly options: PylonOptions<E, H, S>;
   private readonly port: number;
   private readonly server: HttpServer;
   private readonly workers: Array<ILindormWorker>;
@@ -60,7 +62,7 @@ export class Pylon<
   private readonly _setup: PylonSetup | undefined;
   private readonly _teardown: PylonTeardown | undefined;
 
-  public constructor(options: PylonOptions<H, S>) {
+  public constructor(options: PylonOptions<E, H, S>) {
     this.isSetup = false;
     this.isStarted = false;
     this.isTeardown = false;

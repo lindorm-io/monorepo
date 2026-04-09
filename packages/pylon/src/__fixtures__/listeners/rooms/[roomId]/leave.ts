@@ -1,5 +1,5 @@
 export const roomLeaveHandler = async (ctx: any) => {
-  ctx.socket.emit("rooms:leave:response", {
+  ctx.io.socket.emit("rooms:leave:response", {
     event: ctx.event,
     params: ctx.params,
     middlewareChain: ctx.state?.middlewareChain,

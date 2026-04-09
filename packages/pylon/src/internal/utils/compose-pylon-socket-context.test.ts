@@ -70,8 +70,8 @@ describe("composePylonSocketContextBase", () => {
       event: "ref:test",
     });
 
-    expect(result.io).toBe(io);
-    expect(result.socket).toBe(socket);
+    expect(result.io.app).toBe(io);
+    expect(result.io.socket).toBe(socket);
   });
 
   test("should set params to empty object", () => {

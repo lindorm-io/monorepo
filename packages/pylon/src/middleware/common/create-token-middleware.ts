@@ -41,7 +41,7 @@ export const createTokenMiddleware =
           ctx.state.tokens[options.contextKey] = verified;
 
           if (isSocketContext(ctx)) {
-            ctx.socket.data.tokens[options.contextKey] = verified;
+            ctx.io.socket.data.tokens[options.contextKey] = verified;
           }
         }
       } catch (error: any) {

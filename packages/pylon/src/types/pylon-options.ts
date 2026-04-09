@@ -13,6 +13,7 @@ import { PylonListener, PylonRouter } from "../classes";
 import { PylonAuthOptions } from "./auth";
 import { PylonHttpContext, PylonHttpMiddleware } from "./context-http";
 import { PylonSocketContext, PylonSocketMiddleware } from "./context-socket";
+import { PylonEventMap } from "./pylon-event-map";
 import { PylonCookieConfig } from "./cookies";
 import { CorsOptions } from "./cors";
 import { OpenIdConfigurationOptions } from "./open-id-configuration";
@@ -84,6 +85,7 @@ export type PylonSocketOptions<T extends PylonSocketContext = PylonSocketContext
 };
 
 export type PylonOptions<
+  _E extends PylonEventMap = PylonEventMap,
   C extends PylonHttpContext = PylonHttpContext,
   S extends PylonSocketContext = PylonSocketContext,
 > = PylonHttpOptions<C> & {

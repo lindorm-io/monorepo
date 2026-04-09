@@ -1,9 +1,13 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
+exports[`createHttpRoomContext should return an http room context with expected shape 1`] = `
+[
+  "members",
+]
+`;
+
 exports[`createRoomContext should return a room context object with expected shape 1`] = `
 [
-  "broadcast",
-  "emit",
   "join",
   "leave",
   "members",

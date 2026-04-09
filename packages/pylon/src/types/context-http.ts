@@ -4,8 +4,10 @@ import { BaseRequest } from "koa";
 import { RouterContext } from "koa-router";
 import { IPylonCookies, IPylonFileUpload, IPylonSession } from "../interfaces";
 import { PylonCommonContext, PylonHttpMetadata, PylonState } from "./context-common";
+import { PylonRoomContextHttp } from "./context-socket";
+import { PylonIoContextHttp } from "./pylon-io-context";
 import { PylonSessionOnContext } from "./session";
-import { IoServer } from "./socket";
+import { PylonSocketEmitter } from "./pylon-socket-emitter";
 
 type KoaContext = Omit<RouterContext, "cookies" | "state">;
 
@@ -24,10 +26,12 @@ export type PylonHttpState = PylonState & {
 type Context<Data, State> = {
   cookies: IPylonCookies;
   data: Data;
-  io: IoServer;
+  io: PylonIoContextHttp;
   request: Request;
   session: PylonSessionOnContext;
   state: State;
+  rooms?: PylonRoomContextHttp;
+  socket?: PylonSocketEmitter;
 
   files: Array<IPylonFileUpload>;
 };

@@ -97,16 +97,19 @@ describe("createSourcesMiddleware", () => {
     test("should lazily create rooms via lazyFactory when roomsEnabled and socket context", async () => {
       const socketCtx: any = {
         logger: createMockLogger(),
-        socket: {
-          id: "s1",
-          data: {},
-          join: jest.fn(),
-          leave: jest.fn(),
-          to: jest.fn().mockReturnValue({ emit: jest.fn() }),
-        },
+        event: "test:event",
         io: {
-          to: jest.fn().mockReturnValue({ emit: jest.fn() }),
-          in: jest.fn().mockReturnValue({ fetchSockets: jest.fn() }),
+          app: {
+            to: jest.fn().mockReturnValue({ emit: jest.fn() }),
+            in: jest.fn().mockReturnValue({ fetchSockets: jest.fn() }),
+          },
+          socket: {
+            id: "s1",
+            data: {},
+            join: jest.fn(),
+            leave: jest.fn(),
+            to: jest.fn().mockReturnValue({ emit: jest.fn() }),
+          },
         },
       };
 
@@ -117,12 +120,29 @@ describe("createSourcesMiddleware", () => {
       expect(socketCtx.rooms).toBeDefined();
       expect(typeof socketCtx.rooms.join).toBe("function");
       expect(typeof socketCtx.rooms.leave).toBe("function");
-      expect(typeof socketCtx.rooms.broadcast).toBe("function");
-      expect(typeof socketCtx.rooms.emit).toBe("function");
       expect(typeof socketCtx.rooms.members).toBe("function");
     });
 
-    test("should not set rooms on non-socket context even when roomsEnabled", async () => {
+    test("should create rooms on HTTP context when roomsEnabled and io present", async () => {
+      const httpCtx: any = {
+        logger: createMockLogger(),
+        request: {},
+        io: {
+          app: {
+            to: jest.fn().mockReturnValue({ emit: jest.fn() }),
+            in: jest.fn().mockReturnValue({ fetchSockets: jest.fn() }),
+          },
+        },
+      };
+
+      const middleware = createSourcesMiddleware({ roomsEnabled: true });
+
+      await middleware(httpCtx, jest.fn());
+
+      expect(httpCtx.rooms).toBeDefined();
+    });
+
+    test("should not set rooms when no io present even when roomsEnabled", async () => {
       const middleware = createSourcesMiddleware({ roomsEnabled: true });
 
       await middleware(ctx, jest.fn());
@@ -133,8 +153,11 @@ describe("createSourcesMiddleware", () => {
     test("should not set rooms when roomsEnabled is false", async () => {
       const socketCtx: any = {
         logger: createMockLogger(),
-        socket: { id: "s1", data: {} },
-        io: {},
+        event: "test:event",
+        io: {
+          app: {},
+          socket: { id: "s1", data: {} },
+        },
       };
 
       const middleware = createSourcesMiddleware({ roomsEnabled: false });
@@ -149,16 +172,19 @@ describe("createSourcesMiddleware", () => {
 
       const socketCtx: any = {
         logger: createMockLogger(),
-        socket: {
-          id: "s1",
-          data: {},
-          join: jest.fn(),
-          leave: jest.fn(),
-          to: jest.fn().mockReturnValue({ emit: jest.fn() }),
-        },
+        event: "test:event",
         io: {
-          to: jest.fn().mockReturnValue({ emit: jest.fn() }),
-          in: jest.fn().mockReturnValue({ fetchSockets: jest.fn() }),
+          app: {
+            to: jest.fn().mockReturnValue({ emit: jest.fn() }),
+            in: jest.fn().mockReturnValue({ fetchSockets: jest.fn() }),
+          },
+          socket: {
+            id: "s1",
+            data: {},
+            join: jest.fn(),
+            leave: jest.fn(),
+            to: jest.fn().mockReturnValue({ emit: jest.fn() }),
+          },
         },
       };
 

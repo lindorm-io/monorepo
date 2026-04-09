@@ -8,7 +8,8 @@ import { Middleware } from "@lindorm/middleware";
 import { IEntity, IProteusSession } from "@lindorm/proteus";
 import { Dict, Environment, Priority } from "@lindorm/types";
 import { AuthorizationState } from "./authorization";
-import { IoServer } from "./socket";
+import { PylonIoContextHttp } from "./pylon-io-context";
+import { PylonSocketEmitter } from "./pylon-socket-emitter";
 
 export type AppState = {
   domain: string;
@@ -71,8 +72,9 @@ export type PylonCommonContext = {
 
 export type PylonContext = PylonCommonContext & {
   data: any;
-  io: IoServer;
+  io: PylonIoContextHttp;
   params: Dict<string>;
+  socket?: PylonSocketEmitter;
   state: PylonState;
 };
 

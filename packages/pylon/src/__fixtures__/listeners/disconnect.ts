@@ -1,5 +1,5 @@
 export const disconnectHandler = async (ctx: any) => {
-  ctx.socket.data.disconnectReason = ctx.data?.reason;
-  ctx.socket.data.disconnectHandlerFired = true;
+  ctx.io.socket.data.disconnectReason = ctx.data?.reason;
+  ctx.io.socket.data.disconnectHandlerFired = true;
 };
 export const ON = disconnectHandler;

@@ -5,7 +5,11 @@ import { Middleware } from "@lindorm/middleware";
 import { IProteusSource } from "@lindorm/proteus";
 import { lazyFactory } from "@lindorm/utils";
 import { AUDIT_SOURCE, RATE_LIMIT_SOURCE } from "../constants/symbols";
-import { createRoomContext } from "../utils/create-room-context";
+import { createHttpRoomContext, createRoomContext } from "../utils/create-room-context";
+import {
+  createHttpSocketEmitter,
+  createSocketEmitter,
+} from "../utils/create-socket-emitter";
 import { PylonCommonContext } from "../../types";
 
 type AuditConfig = {
@@ -57,11 +61,41 @@ export const createSourcesMiddleware = <C extends PylonCommonContext>(
         (ctx as any)[RATE_LIMIT_SOURCE] = options.rateLimitProteus;
       }
 
-      if (options.roomsEnabled && "socket" in ctx && "io" in ctx) {
+      // Socket emitter (available whenever io is present)
+      if ("io" in ctx && "event" in ctx) {
+        // Socket context
+        lazyFactory(ctx, "socket", () =>
+          createSocketEmitter({
+            io: (ctx as any).io.app,
+            socket: (ctx as any).io.socket,
+            correlationId: (ctx as any).state?.metadata?.correlationId ?? "unknown",
+          }),
+        );
+      } else if ("io" in ctx && "request" in ctx) {
+        // HTTP context
+        lazyFactory(ctx, "socket", () =>
+          createHttpSocketEmitter({
+            io: (ctx as any).io.app,
+            correlationId: (ctx as any).state?.metadata?.correlationId ?? "unknown",
+          }),
+        );
+      }
+
+      // Rooms (only when rooms enabled)
+      if (options.roomsEnabled && "io" in ctx && "event" in ctx) {
         lazyFactory(ctx, "rooms", () =>
           createRoomContext({
-            socket: (ctx as any).socket,
-            io: (ctx as any).io,
+            socket: (ctx as any).io.socket,
+            io: (ctx as any).io.app,
+            logger: ctx.logger,
+            proteusSource: options.roomsProteus,
+            presence: options.roomsPresence,
+          }),
+        );
+      } else if (options.roomsEnabled && "io" in ctx && "request" in ctx) {
+        lazyFactory(ctx, "rooms", () =>
+          createHttpRoomContext({
+            io: (ctx as any).io.app,
             logger: ctx.logger,
             proteusSource: options.roomsProteus,
             presence: options.roomsPresence,
