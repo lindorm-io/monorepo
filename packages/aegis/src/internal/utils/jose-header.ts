@@ -42,6 +42,14 @@ export const decodeJoseHeader = (header: string): DecodedTokenHeader => {
   if (!json.alg || typeof json.alg !== "string") {
     throw new Error("Missing or invalid token header: alg");
   }
+  // Allowlist enforcement: the only algorithms aegis will even attempt to
+  // decode are the ones kryptos currently supports. This catches `none`,
+  // RSA1_5, and any other weak or unsupported algorithm up front — well
+  // before the kryptos-match check in the Kit — and with a clearer error
+  // message than "algorithm mismatch".
+  if (!(TOKEN_HEADER_ALGORITHMS as ReadonlyArray<string>).includes(json.alg)) {
+    throw new Error(`Unsupported algorithm: ${json.alg}`);
+  }
   // typ is OPTIONAL per RFC 7515 Section 4.1.9
   if (json.typ !== undefined && typeof json.typ !== "string") {
     throw new Error("Invalid token header: typ must be a string");
