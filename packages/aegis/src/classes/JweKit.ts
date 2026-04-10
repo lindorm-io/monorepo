@@ -111,6 +111,15 @@ export class JweKit implements IJweKit {
       });
     }
 
+    // Aegis deliberately does not support compressed payloads (RFC 7516 §4.1.3).
+    // Compression-before-encryption enables oracle attacks (CVE-2016-1000031 class).
+    // Explicit rejection is safer than silent passthrough.
+    if ((decoded.header as { zip?: unknown }).zip !== undefined) {
+      throw new JweError("Compressed JWE payloads are not supported", {
+        data: { zip: (decoded.header as { zip?: unknown }).zip },
+      });
+    }
+
     const critError = validateCrit(decoded.header);
     if (critError) {
       throw new JweError(`Invalid crit header: ${critError}`, {

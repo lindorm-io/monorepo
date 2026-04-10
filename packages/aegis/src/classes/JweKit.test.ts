@@ -514,6 +514,29 @@ describe("JweKit", () => {
     });
   });
 
+  describe("zip (compression) rejection", () => {
+    test("rejects a JWE with zip: DEF to prevent compression oracle attacks", () => {
+      const { token } = kit.encrypt("data", {
+        objectId: "5b63e7ec-5ca4-4083-8de9-de0d6e2ddd03",
+      });
+
+      // Splice zip: "DEF" into the protected header to simulate an attacker
+      // attempting to compress-then-encrypt. Aegis must reject this outright.
+      const decoded = JweKit.decode(token);
+      const headerWithZip = { ...decoded.header, zip: "DEF" };
+
+      const parts = token.split(".");
+      const modifiedHeader = Buffer.from(JSON.stringify(headerWithZip))
+        .toString("base64url")
+        .replace(/=/g, "");
+      const modifiedToken = [modifiedHeader, ...parts.slice(1)].join(".");
+
+      expect(() => kit.decrypt(modifiedToken)).toThrow(
+        "Compressed JWE payloads are not supported",
+      );
+    });
+  });
+
   describe("tokenType round-trip", () => {
     test("should surface tokenType on decrypted header when signed with it", () => {
       const { token } = kit.encrypt("data", {
