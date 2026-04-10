@@ -28,6 +28,7 @@ import {
   RsaModulus,
 } from "../types";
 import { ExportCache } from "#internal/types/export-cache";
+import { computeThumbprint } from "#internal/utils/compute-thumbprint";
 import { createDerFromDer } from "#internal/utils/from/der-from-der";
 import { exportToB64 } from "#internal/utils/export/export-b64";
 import { exportToDer } from "#internal/utils/export/export-der";
@@ -248,6 +249,11 @@ export class Kryptos implements IKryptos {
 
   public get modulus(): RsaModulus | null {
     return this._modulus;
+  }
+
+  public get thumbprint(): string {
+    this.assertNotDisposed();
+    return computeThumbprint(this.export("jwk"));
   }
 
   // dispose
