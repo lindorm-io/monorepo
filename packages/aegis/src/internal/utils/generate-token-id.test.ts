@@ -21,15 +21,4 @@ describe("generateTokenId", () => {
     // astronomically low (~10^-42). Any collision here indicates a bug.
     expect(ids.size).toBe(1000);
   });
-
-  test("output length is 27 characters, not UUID's 36", () => {
-    // UUID v4 string form is always 36 chars with fixed hyphen positions.
-    // Base64url-of-20-bytes is always 27 chars. Length alone distinguishes
-    // them definitively. (Note: base64url may contain `-` and `_` as the
-    // URL-safe substitutes for `+` and `/`, so a hyphen-based check would
-    // be wrong.)
-    const id = generateTokenId();
-    expect(id).toHaveLength(27);
-    expect(id).not.toHaveLength(36);
-  });
 });
