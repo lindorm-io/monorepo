@@ -1,4 +1,5 @@
 import { RawAxiosRequestConfig } from "axios";
+import { HttpMethod } from "@lindorm/types";
 
 type FetchConfigOverride = {
   cache?:
@@ -42,6 +43,7 @@ type RawAxiosRequestConfigContext = Omit<
   | "baseURL"
   | "data"
   | "headers"
+  | "method"
   | "params"
   | "paramsSerializer"
   | "transformRequest"
@@ -51,4 +53,7 @@ type RawAxiosRequestConfigContext = Omit<
 
 export type ConfigOptions = RawAxiosRequestConfigOptions & FetchConfigOverride;
 
-export type ConfigContext = RawAxiosRequestConfigContext & FetchConfigOverride;
+export type ConfigContext = RawAxiosRequestConfigContext &
+  FetchConfigOverride & {
+    method: Uppercase<HttpMethod>;
+  };
