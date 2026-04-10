@@ -35,7 +35,7 @@ export const createTokenMiddleware =
           ctx.logger.info("Token verification successful", {
             subject: verified.payload.subject,
             subjectHint: verified.payload.subjectHint,
-            tokenType: verified.payload.tokenType,
+            tokenType: verified.header.tokenType,
           });
 
           ctx.state.tokens[options.contextKey] = verified;
