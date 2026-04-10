@@ -524,6 +524,16 @@ export class Aegis implements IAegis {
   }
 
   private async kryptosSig(options: SigOptions = {}): Promise<IKryptos> {
+    // SECURITY INVARIANT: verification keys are ALWAYS sourced from Amphora.
+    // The JOSE header parameters `jku`, `jwk`, `x5u`, `x5c`, `x5t`, and
+    // `x5t#S256` are never trusted as key sources during verification, even
+    // if present in the token header. This closes the "header-embedded key"
+    // attack class (CVE-class vulnerabilities that have hit multiple other
+    // JOSE libraries where the verifier naively used the header-supplied
+    // key to validate the signature).
+    //
+    // The only input the verifier accepts from the header is `kid`, which
+    // is used as a lookup key into Amphora — never as a key itself.
     const query: AmphoraPredicate = options.sign
       ? {
           algorithm: this.sigAlgorithm,
