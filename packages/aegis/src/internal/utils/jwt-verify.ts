@@ -83,7 +83,7 @@ export const createJwtVerify = (
   for (const [key, value] of Object.entries(verify)) {
     // tokenType is validated against the JOSE `typ` header by each Kit directly
     if (key === "tokenType") continue;
-    // actor is validated against the parsed TokenIdentity by each Kit directly
+    // actor is validated against the parsed TokenDelegation by each Kit directly
     if (key === "actor") continue;
 
     const mapped = mapVerify(key as keyof VerifyJwtOptions);

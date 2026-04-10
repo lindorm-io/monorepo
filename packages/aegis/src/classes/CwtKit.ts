@@ -23,7 +23,7 @@ import {
   computeTypHeader,
   decodeTokenTypeFromTyp,
 } from "#internal/utils/compute-typ-header";
-import { extractTokenIdentity } from "#internal/utils/extract-token-identity";
+import { extractTokenDelegation } from "#internal/utils/extract-token-delegation";
 import { validateActor } from "#internal/utils/validate-actor";
 import { validateCrit } from "#internal/utils/validate-crit";
 import { decodeCoseClaims, mapCoseClaims } from "#internal/utils/cose/claims";
@@ -191,11 +191,9 @@ export class CwtKit implements ICwtKit {
       throw new CwtError("Invalid token", { data: (err as any).data });
     }
 
-    const identity = extractTokenIdentity(
-      payloadDict as unknown as { sub?: string; act?: any },
-    );
+    const delegation = extractTokenDelegation(payloadDict as unknown as { act?: any });
 
-    const actorError = validateActor(identity, verify.actor);
+    const actorError = validateActor(delegation, verify.actor);
     if (actorError) {
       throw new CwtError(actorError);
     }
@@ -219,8 +217,8 @@ export class CwtKit implements ICwtKit {
 
     return {
       decoded,
+      delegation,
       header,
-      identity,
       payload,
       token: isBuffer(token) ? token.toString("base64url") : token,
     };
@@ -273,14 +271,14 @@ export class CwtKit implements ICwtKit {
     });
     header.tokenType = decodeTokenTypeFromTyp(decoded.protected.typ, "cwt");
 
-    const identity = extractTokenIdentity(
-      decoded.payload as unknown as { sub?: string; act?: any },
+    const delegation = extractTokenDelegation(
+      decoded.payload as unknown as { act?: any },
     );
 
     return {
       decoded,
+      delegation,
       header,
-      identity,
       payload,
       token: isBuffer(token) ? token.toString("base64url") : token,
     };

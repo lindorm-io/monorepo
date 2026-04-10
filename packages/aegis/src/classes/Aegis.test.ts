@@ -171,11 +171,10 @@ describe("Aegis", () => {
         objectId: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
         tokenType: "test_token",
       },
-      identity: {
+      delegation: {
         actorChain: [],
         currentActor: undefined,
         isDelegated: false,
-        subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
       },
       payload: {
         audience: [],
@@ -336,11 +335,10 @@ describe("Aegis", () => {
         objectId: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
         tokenType: "test_token",
       },
-      identity: {
+      delegation: {
         actorChain: [],
         currentActor: undefined,
         isDelegated: false,
-        subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
       },
       payload: {
         audience: [],

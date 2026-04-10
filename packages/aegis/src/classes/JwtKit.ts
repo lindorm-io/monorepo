@@ -6,7 +6,7 @@ import {
   computeTypHeader,
   decodeTokenTypeFromTyp,
 } from "#internal/utils/compute-typ-header";
-import { extractTokenIdentity } from "#internal/utils/extract-token-identity";
+import { extractTokenDelegation } from "#internal/utils/extract-token-delegation";
 import { validateActor } from "#internal/utils/validate-actor";
 import { validateCrit } from "#internal/utils/validate-crit";
 import { IJwtKit } from "../interfaces";
@@ -156,7 +156,7 @@ export class JwtKit implements IJwtKit {
       throw new JwtError("Invalid token", { data: (err as any).data });
     }
 
-    const actorError = validateActor(parsed.identity, verify.actor);
+    const actorError = validateActor(parsed.delegation, verify.actor);
     if (actorError) {
       throw new JwtError(actorError);
     }
@@ -222,9 +222,9 @@ export class JwtKit implements IJwtKit {
 
     const payload = parseTokenPayload<C>(decoded.payload);
 
-    const identity = extractTokenIdentity(decoded.payload as { sub?: string; act?: any });
+    const delegation = extractTokenDelegation(decoded.payload as { act?: any });
 
-    return { decoded, header, identity, payload, token };
+    return { decoded, delegation, header, payload, token };
   }
 
   public static validate<C extends Dict = Dict>(

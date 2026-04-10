@@ -208,11 +208,10 @@ describe("JwtKit", () => {
           keyId: TEST_EC_KEY_SIG.id,
           tokenType: "test_token",
         },
-        identity: {
+        delegation: {
           actorChain: [],
           currentActor: undefined,
           isDelegated: false,
-          subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
         },
         payload: {
           accessTokenHash: "ehXwFopDjJcovgdtD6uhQg",
@@ -382,11 +381,10 @@ describe("JwtKit", () => {
           keyId: TEST_EC_KEY_SIG.id,
           tokenType: "test_token",
         },
-        identity: {
+        delegation: {
           actorChain: [],
           currentActor: undefined,
           isDelegated: false,
-          subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
         },
         payload: {
           accessTokenHash: "ehXwFopDjJcovgdtD6uhQg",
@@ -507,18 +505,18 @@ describe("JwtKit", () => {
       tokenType: "test_token",
     };
 
-    test("identity is undelegated when act claim is absent", () => {
+    test("delegation is empty when act claim is absent", () => {
       const { token } = kit.sign(baseContent);
 
       const parsed = kit.verify(token);
 
-      expect(parsed.identity.isDelegated).toBe(false);
-      expect(parsed.identity.currentActor).toBeUndefined();
-      expect(parsed.identity.actorChain).toEqual([]);
-      expect(parsed.identity.subject).toBe("3f2ae79d-f1d1-556b-a8bc-305e6b2334ad");
+      expect(parsed.delegation.isDelegated).toBe(false);
+      expect(parsed.delegation.currentActor).toBeUndefined();
+      expect(parsed.delegation.actorChain).toEqual([]);
+      expect(parsed.payload.subject).toBe("3f2ae79d-f1d1-556b-a8bc-305e6b2334ad");
     });
 
-    test("identity reflects a single-level act claim", () => {
+    test("delegation reflects a single-level act claim", () => {
       const { token } = kit.sign({
         ...baseContent,
         act: { sub: "service-1" },
@@ -526,9 +524,9 @@ describe("JwtKit", () => {
 
       const parsed = kit.verify(token);
 
-      expect(parsed.identity.isDelegated).toBe(true);
-      expect(parsed.identity.currentActor).toBe("service-1");
-      expect(parsed.identity.actorChain).toEqual([{ sub: "service-1" }]);
+      expect(parsed.delegation.isDelegated).toBe(true);
+      expect(parsed.delegation.currentActor).toBe("service-1");
+      expect(parsed.delegation.actorChain).toEqual([{ sub: "service-1" }]);
     });
 
     test("actor.required throws when no act claim is present", () => {

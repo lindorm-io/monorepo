@@ -1,14 +1,13 @@
-import { extractTokenIdentity } from "./extract-token-identity";
+import { extractTokenDelegation } from "./extract-token-delegation";
 
-describe("extractTokenIdentity", () => {
-  test("should return undelegated identity when no act claim is present", () => {
-    expect(extractTokenIdentity({ sub: "user-1" })).toMatchSnapshot();
+describe("extractTokenDelegation", () => {
+  test("should return undelegated state when no act claim is present", () => {
+    expect(extractTokenDelegation({})).toMatchSnapshot();
   });
 
   test("should return single-level actor chain", () => {
     expect(
-      extractTokenIdentity({
-        sub: "user-1",
+      extractTokenDelegation({
         act: { sub: "service-1", iss: "https://issuer.example/" },
       }),
     ).toMatchSnapshot();
@@ -16,8 +15,7 @@ describe("extractTokenIdentity", () => {
 
   test("should walk three-level nested act chain outermost to deepest", () => {
     expect(
-      extractTokenIdentity({
-        sub: "user-1",
+      extractTokenDelegation({
         act: {
           sub: "service-1",
           act: {
@@ -29,9 +27,5 @@ describe("extractTokenIdentity", () => {
         },
       }),
     ).toMatchSnapshot();
-  });
-
-  test("should handle undefined subject", () => {
-    expect(extractTokenIdentity({})).toMatchSnapshot();
   });
 });

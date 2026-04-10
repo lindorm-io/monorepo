@@ -8,7 +8,7 @@ import {
   AuthFactor,
   SessionHint,
   SubjectHint,
-  TokenIdentity,
+  TokenDelegation,
 } from "./jwt-claims";
 
 export type ParsedJwtHeader = Omit<ParsedTokenHeader, "algorithm" | "headerType"> & {
@@ -53,8 +53,8 @@ export type ParsedJwtPayload<C extends Dict = Dict> = {
 
 export type ParsedJwt<C extends Dict = Dict> = {
   decoded: DecodedJwt<C>;
+  delegation: TokenDelegation;
   header: ParsedJwtHeader;
-  identity: TokenIdentity;
   payload: ParsedJwtPayload<C>;
   token: string;
 };
