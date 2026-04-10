@@ -16,7 +16,10 @@ import {
   TokenHeaderAlgorithm,
 } from "../types";
 import { authTagLength } from "#internal/utils/auth-tag-length";
-import { computeTypHeader } from "#internal/utils/compute-typ-header";
+import {
+  computeTypHeader,
+  decodeTokenTypeFromTyp,
+} from "#internal/utils/compute-typ-header";
 import { decodeCoseHeader, mapCoseHeader } from "#internal/utils/cose/header";
 import { mapTokenHeader, parseTokenHeader } from "#internal/utils/token-header";
 
@@ -135,6 +138,7 @@ export class CweKit implements ICweKit {
       kid: decoded.recipient.unprotected.kid,
       oid: decoded.unprotected.oid,
     }) as unknown as DecryptedCweHeader;
+    header.tokenType = decodeTokenTypeFromTyp(decoded.protected.typ, "cwe");
 
     // RFC 7515 Section 4.1.11: reject any critical extension params we don't understand
     if (header.critical?.length) {

@@ -14,7 +14,10 @@ import {
   SignedJws,
   TokenHeaderOptions,
 } from "../types";
-import { computeTypHeader } from "#internal/utils/compute-typ-header";
+import {
+  computeTypHeader,
+  decodeTokenTypeFromTyp,
+} from "#internal/utils/compute-typ-header";
 import { decodeJoseHeader, encodeJoseHeader } from "#internal/utils/jose-header";
 import { createJoseSignature, verifyJoseSignature } from "#internal/utils/jose-signature";
 import { parseTokenHeader } from "#internal/utils/token-header";
@@ -150,6 +153,7 @@ export class JwsKit implements IJwsKit {
     }
 
     const header = parseTokenHeader<ParsedJwsHeader>(decoded.header);
+    header.tokenType = decodeTokenTypeFromTyp(typ, "jws");
 
     const payload =
       header.contentType === "text/plain; charset=utf-8"

@@ -13,7 +13,10 @@ import {
   SignCwsOptions,
   SignedCws,
 } from "../types";
-import { computeTypHeader } from "#internal/utils/compute-typ-header";
+import {
+  computeTypHeader,
+  decodeTokenTypeFromTyp,
+} from "#internal/utils/compute-typ-header";
 import { createCoseSignToken } from "#internal/utils/cose-sign-token";
 import { createCoseSignature, verifyCoseSignature } from "#internal/utils/cose-signature";
 import { decodeCoseHeader, mapCoseHeader } from "#internal/utils/cose/header";
@@ -122,6 +125,7 @@ export class CwsKit implements ICwsKit {
       ...protectedDict,
       ...unprotectedDict,
     } as any);
+    header.tokenType = decodeTokenTypeFromTyp(protectedDict.typ, "cws");
 
     // RFC 7515 Section 4.1.11: reject any critical extension params we don't understand
     if (header.critical?.length) {
@@ -185,9 +189,15 @@ export class CwsKit implements ICwsKit {
   public static parse<T extends CwsContent>(token: CwsContent): ParsedCws<T> {
     const decoded = CwsKit.decode<T>(token);
 
+    const header = parseTokenHeader<ParsedCwsHeader>({
+      ...decoded.protected,
+      ...decoded.unprotected,
+    } as any);
+    header.tokenType = decodeTokenTypeFromTyp(decoded.protected.typ, "cws");
+
     return {
       decoded,
-      header: parseTokenHeader({ ...decoded.protected, ...decoded.unprotected } as any),
+      header,
       payload: decoded.payload,
       token: isBuffer(token) ? token.toString("base64url") : token,
     };

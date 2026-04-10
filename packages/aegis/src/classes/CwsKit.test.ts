@@ -250,4 +250,28 @@ describe("CwsKit", () => {
       expect(header.critical).toEqual([]);
     });
   });
+
+  describe("tokenType round-trip", () => {
+    test("should surface tokenType on verified header when signed with it", () => {
+      const { buffer } = kit.sign("data", {
+        objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
+        tokenType: "security_event",
+      });
+
+      const parsed = kit.verify(buffer);
+
+      expect(parsed.header.headerType).toBe("secevent+cws");
+      expect(parsed.header.tokenType).toBe("security_event");
+    });
+
+    test("should leave tokenType undefined when not supplied", () => {
+      const { buffer } = kit.sign("data", {
+        objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
+      });
+
+      const parsed = kit.verify(buffer);
+
+      expect(parsed.header.tokenType).toBeUndefined();
+    });
+  });
 });

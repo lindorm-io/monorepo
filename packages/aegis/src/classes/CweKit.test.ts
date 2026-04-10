@@ -335,4 +335,28 @@ describe("CweKit", () => {
       expect(header.critical).toEqual([]);
     });
   });
+
+  describe("tokenType round-trip", () => {
+    test("should surface tokenType on decrypted header when signed with it", () => {
+      const { buffer } = kit.encrypt("data", {
+        objectId: "5b63e7ec-5ca4-4083-8de9-de0d6e2ddd03",
+        tokenType: "dpop",
+      });
+
+      const decrypted = kit.decrypt(buffer);
+
+      expect(decrypted.header.headerType).toBe("dpop+cwe");
+      expect(decrypted.header.tokenType).toBe("dpop");
+    });
+
+    test("should leave tokenType undefined when not supplied", () => {
+      const { buffer } = kit.encrypt("data", {
+        objectId: "5b63e7ec-5ca4-4083-8de9-de0d6e2ddd03",
+      });
+
+      const decrypted = kit.decrypt(buffer);
+
+      expect(decrypted.header.tokenType).toBeUndefined();
+    });
+  });
 });
