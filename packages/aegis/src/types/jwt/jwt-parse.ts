@@ -8,6 +8,7 @@ import { ActClaim } from "./jwt-act";
 import { AuthFactor, SessionHint, SubjectHint } from "./jwt-claims";
 import { ConfirmationClaim } from "./jwt-confirmation";
 import { TokenDelegation } from "./jwt-delegation";
+import { ParsedDpopProof } from "./jwt-dpop";
 
 export type ParsedJwtHeader = Omit<ParsedTokenHeader, "algorithm" | "headerType"> & {
   algorithm: KryptosSigAlgorithm;
@@ -54,6 +55,7 @@ export type ParsedJwtPayload<C extends Dict = Dict> = {
 export type ParsedJwt<C extends Dict = Dict> = {
   decoded: DecodedJwt<C>;
   delegation: TokenDelegation;
+  dpop?: ParsedDpopProof;
   header: ParsedJwtHeader;
   payload: ParsedJwtPayload<C>;
   token: string;

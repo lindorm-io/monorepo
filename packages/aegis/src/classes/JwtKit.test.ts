@@ -1174,7 +1174,8 @@ describe("JwtKit", () => {
       const decoded = JwtKit.decode(token);
       expect(decoded.payload).toMatchSnapshot("wire payload — jkt only");
 
-      const parsed = kit.verify(token);
+      // parse (not verify) — verifying a DPoP-bound token requires a proof
+      const parsed = JwtKit.parse(token);
       expect(parsed.payload.confirmation).toMatchSnapshot("parsed — jkt only");
     });
 
@@ -1197,7 +1198,7 @@ describe("JwtKit", () => {
       const decoded = JwtKit.decode(token);
       expect(decoded.payload).toMatchSnapshot("wire payload — full cnf");
 
-      const parsed = kit.verify(token);
+      const parsed = JwtKit.parse(token);
       expect(parsed.payload.confirmation).toMatchSnapshot("parsed — full cnf");
     });
 
@@ -1213,6 +1214,112 @@ describe("JwtKit", () => {
 
       const parsed = kit.verify(token);
       expect(parsed.payload.confirmation).toBeUndefined();
+    });
+  });
+
+  describe("DPoP verification", () => {
+    // Use RSA key fixture as the client's proof key so its thumbprint is
+    // deterministic and differs from the server's EC signing key.
+    const proofKey = TEST_RSA_KEY_SIG;
+    const proofThumbprint = proofKey.thumbprint;
+
+    const signDpopProof = (
+      accessToken: string,
+      payloadOverrides: Record<string, unknown> = {},
+    ): string => {
+      const { B64 } = require("@lindorm/b64") as typeof import("@lindorm/b64");
+      const { ShaKit } = require("@lindorm/sha") as typeof import("@lindorm/sha");
+      const { createJoseSignature } =
+        require("#internal/utils/jose-signature") as typeof import("#internal/utils/jose-signature");
+      const header = B64.encode(
+        JSON.stringify({
+          alg: "RS512",
+          typ: "dpop+jwt",
+          jwk: proofKey.export("jwk"),
+        }),
+        "b64u",
+      );
+      const payload = B64.encode(
+        JSON.stringify({
+          jti: "proof-jti",
+          htm: "POST",
+          htu: "https://api.example.com/resource",
+          iat: 1704096000,
+          ath: ShaKit.S256(accessToken),
+          ...payloadOverrides,
+        }),
+        "b64u",
+      );
+      const signature = createJoseSignature({ header, payload, kryptos: proofKey });
+      return `${header}.${payload}.${signature}`;
+    };
+
+    test("should verify a DPoP-bound access token with a valid proof", () => {
+      const { token } = kit.sign(
+        {
+          expires: "1h",
+          subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
+          tokenType: "access_token",
+          confirmation: { thumbprint: proofThumbprint },
+        },
+        { tokenId: "stable-dpop-token" },
+      );
+      const proof = signDpopProof(token);
+
+      const parsed = kit.verify(token, { dpopProof: proof });
+
+      // accessTokenHash varies per run because ECDSA signatures are
+      // non-deterministic (random k), so the full access token string
+      // changes each sign — use expect.any instead of snapshot for it.
+      expect(parsed.dpop).toEqual({
+        thumbprint: proofThumbprint,
+        tokenId: "proof-jti",
+        httpMethod: "POST",
+        httpUri: "https://api.example.com/resource",
+        issuedAt: new Date("2024-01-01T08:00:00.000Z"),
+        accessTokenHash: expect.any(String),
+        nonce: undefined,
+      });
+    });
+
+    test("should throw when a DPoP-bound access token is verified without a proof", () => {
+      const { token } = kit.sign({
+        expires: "1h",
+        subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
+        tokenType: "access_token",
+        confirmation: { thumbprint: proofThumbprint },
+      });
+
+      expect(() => kit.verify(token)).toThrow(
+        /token is DPoP-bound but no DPoP proof was provided/,
+      );
+    });
+
+    test("should throw when a DPoP proof is provided for a non-bound token", () => {
+      const { token } = kit.sign({
+        expires: "1h",
+        subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
+        tokenType: "access_token",
+      });
+      const proof = signDpopProof(token);
+
+      expect(() => kit.verify(token, { dpopProof: proof })).toThrow(
+        /DPoP proof provided but token is not bound/,
+      );
+    });
+
+    test("should throw when the proof thumbprint does not match cnf.jkt", () => {
+      const { token } = kit.sign({
+        expires: "1h",
+        subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
+        tokenType: "access_token",
+        confirmation: { thumbprint: "unrelated-thumbprint-value" },
+      });
+      const proof = signDpopProof(token);
+
+      expect(() => kit.verify(token, { dpopProof: proof })).toThrow(
+        /thumbprint does not match cnf\.jkt/,
+      );
     });
   });
 });

@@ -4,6 +4,7 @@ export * from "./jwt-claims";
 export * from "./jwt-confirmation";
 export * from "./jwt-decode";
 export * from "./jwt-delegation";
+export * from "./jwt-dpop";
 export * from "./jwt-extended-claims";
 export * from "./jwt-lindorm-claims";
 export * from "./jwt-oidc-claims";

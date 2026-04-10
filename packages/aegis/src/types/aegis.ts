@@ -14,6 +14,7 @@ export type AegisPredicate = Predicate<
 export type AegisOptions = {
   amphora: IAmphora;
   clockTolerance?: number;
+  dpopMaxSkew?: number;
   encAlgorithm?: KryptosEncAlgorithm;
   encryption?: KryptosEncryption;
   issuer?: string;
