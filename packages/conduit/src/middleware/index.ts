@@ -9,6 +9,7 @@ export * from "./conduit-circuit-breaker-middleware";
 export * from "./conduit-client-credentials-middleware";
 export * from "./conduit-correlation-middleware";
 export * from "./conduit-deduplication-middleware";
+export * from "./conduit-dpop-auth-middleware";
 export * from "./conduit-header-middleware";
 export * from "./conduit-headers-middleware";
 export * from "./conduit-rate-limit-middleware";

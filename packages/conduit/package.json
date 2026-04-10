@@ -38,12 +38,12 @@
     "@lindorm/middleware": "^0.1.7",
     "@lindorm/random": "^0.2.2",
     "@lindorm/retry": "^0.2.1",
+    "@lindorm/types": "^0.4.1",
     "@lindorm/url": "^0.1.15",
     "zod": "^4.3.6"
   },
   "devDependencies": {
     "@lindorm/logger": "^0.5.2",
-    "@lindorm/types": "^0.4.1",
     "form-data": "^4.0.5"
   },
   "peerDependencies": {
