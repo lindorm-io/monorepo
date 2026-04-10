@@ -263,15 +263,20 @@ describe("JwsKit", () => {
   });
 
   describe("critical header parameter rejection", () => {
-    test("should reject token with unknown critical parameter", () => {
+    test("should reject RFC-valid token with an extension critical parameter aegis does not implement", () => {
       const { token } = kit.sign("test data", {
         objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
       });
 
+      // Craft a malicious header with a well-formed crit: the extension
+      // parameter 'lindorm_ext' is not IANA-registered and is present in
+      // the header, so it passes RFC 7515 §4.1.11 well-formedness. Aegis
+      // should still reject it because it does not understand the extension.
       const decoded = JwsKit.decode(token);
       const headerWithCrit = {
         ...decoded.header,
-        crit: ["unknownParam"],
+        crit: ["lindorm_ext"],
+        lindorm_ext: "some-value",
       };
 
       const parts = token.split(".");
@@ -281,19 +286,21 @@ describe("JwsKit", () => {
       const modifiedToken = [modifiedHeader, parts[1], parts[2]].join(".");
 
       expect(() => kit.verify(modifiedToken)).toThrow(
-        "Unsupported critical header parameter: unknownParam",
+        "Unsupported critical header parameter: lindorm_ext",
       );
     });
 
-    test("should reject token with multiple unknown critical parameters", () => {
+    test("should reject malformed crit listing a parameter not present in the header", () => {
       const { token } = kit.sign("test data", {
         objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
       });
 
+      // crit lists 'missing_ext' but the header does not contain it — violates
+      // RFC 7515 §4.1.11 well-formedness rules.
       const decoded = JwsKit.decode(token);
       const headerWithCrit = {
         ...decoded.header,
-        crit: ["unknownParam1", "unknownParam2"],
+        crit: ["missing_ext"],
       };
 
       const parts = token.split(".");
@@ -302,9 +309,42 @@ describe("JwsKit", () => {
         .replace(/=/g, "");
       const modifiedToken = [modifiedHeader, parts[1], parts[2]].join(".");
 
-      expect(() => kit.verify(modifiedToken)).toThrow(
-        "Unsupported critical header parameter: unknownParam1",
-      );
+      expect(() => kit.verify(modifiedToken)).toThrow(/not present/);
+    });
+
+    test("should reject crit containing an IANA-registered parameter name", () => {
+      const { token } = kit.sign("test data", {
+        objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
+      });
+
+      // crit must not contain registered params per RFC 7515 §4.1.11.
+      const decoded = JwsKit.decode(token);
+      const headerWithCrit = { ...decoded.header, crit: ["alg"] };
+
+      const parts = token.split(".");
+      const modifiedHeader = Buffer.from(JSON.stringify(headerWithCrit))
+        .toString("base64url")
+        .replace(/=/g, "");
+      const modifiedToken = [modifiedHeader, parts[1], parts[2]].join(".");
+
+      expect(() => kit.verify(modifiedToken)).toThrow(/IANA-registered/);
+    });
+
+    test("should reject crit that is an empty array", () => {
+      const { token } = kit.sign("test data", {
+        objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
+      });
+
+      const decoded = JwsKit.decode(token);
+      const headerWithCrit = { ...decoded.header, crit: [] };
+
+      const parts = token.split(".");
+      const modifiedHeader = Buffer.from(JSON.stringify(headerWithCrit))
+        .toString("base64url")
+        .replace(/=/g, "");
+      const modifiedToken = [modifiedHeader, parts[1], parts[2]].join(".");
+
+      expect(() => kit.verify(modifiedToken)).toThrow(/empty/);
     });
 
     test("should accept token with empty critical array", () => {

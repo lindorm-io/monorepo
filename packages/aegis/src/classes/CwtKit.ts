@@ -25,6 +25,7 @@ import {
 } from "#internal/utils/compute-typ-header";
 import { extractTokenIdentity } from "#internal/utils/extract-token-identity";
 import { validateActor } from "#internal/utils/validate-actor";
+import { validateCrit } from "#internal/utils/validate-crit";
 import { decodeCoseClaims, mapCoseClaims } from "#internal/utils/cose/claims";
 import { decodeCoseHeader, mapCoseHeader } from "#internal/utils/cose/header";
 import { createCoseSignToken } from "#internal/utils/cose-sign-token";
@@ -135,6 +136,13 @@ export class CwtKit implements ICwtKit {
       throw new CwtError("Invalid token", {
         data: { algorithm: protectedDict.alg },
         debug: { expected: this.kryptos.algorithm },
+      });
+    }
+
+    const critError = validateCrit(protectedDict as any);
+    if (critError) {
+      throw new CwtError(`Invalid crit header: ${critError}`, {
+        data: { crit: (protectedDict as any).crit },
       });
     }
 
@@ -249,6 +257,13 @@ export class CwtKit implements ICwtKit {
 
   public static parse<C extends Dict = Dict>(token: Buffer | string): ParsedCwt<C> {
     const decoded = CwtKit.decode<C>(token);
+
+    const critError = validateCrit(decoded.protected as any);
+    if (critError) {
+      throw new CwtError(`Invalid crit header: ${critError}`, {
+        data: { crit: (decoded.protected as any).crit },
+      });
+    }
 
     const payload = parseTokenPayload(decoded.payload);
 
