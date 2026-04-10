@@ -3,6 +3,7 @@ import { Dict } from "@lindorm/types";
 import { ParsedTokenHeader } from "../header";
 import { AdjustedAccessLevel, LevelOfAssurance } from "../level-of-assurance";
 import { DecodedJwt } from "./jwt-decode";
+import { AegisProfile } from "./aegis-profile";
 import {
   ActClaim,
   AuthFactor,
@@ -40,6 +41,7 @@ export type ParsedJwtPayload<C extends Dict = Dict> = {
   nonce: string | undefined;
   notBefore: Date | undefined;
   permissions: Array<string>;
+  profile: AegisProfile | undefined;
   roles: Array<string>;
   scope: Array<string>;
   sessionHint: SessionHint | undefined;
