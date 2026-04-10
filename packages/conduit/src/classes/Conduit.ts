@@ -35,7 +35,7 @@ import {
 
 export class Conduit implements IConduit {
   private readonly baseURL: URL | undefined;
-  private readonly config: ConfigContext;
+  private readonly config: Partial<ConfigContext>;
   private readonly context: AppContext;
   private readonly headers: Dict<string>;
   private readonly logger: ILogger | undefined;
@@ -250,7 +250,7 @@ export class Conduit implements IConduit {
       config: {
         ...this.config,
         ...config,
-        method,
+        method: method.toUpperCase() as Uppercase<HttpMethod>,
         responseType: expectedResponse,
         timeout,
         withCredentials,

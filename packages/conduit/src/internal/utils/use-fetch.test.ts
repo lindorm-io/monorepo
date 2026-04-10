@@ -55,7 +55,7 @@ describe("useFetch", () => {
       useFetch(
         "https://test.lindorm.io",
         { method: "get" },
-        { config: { responseType: "arraybuffer" } },
+        { config: { method: "GET", responseType: "arraybuffer" } },
       ),
     ).resolves.toEqual(
       expect.objectContaining({ status: 200, data: Buffer.from("hello") }),
@@ -71,7 +71,7 @@ describe("useFetch", () => {
       useFetch(
         "https://test.lindorm.io",
         { method: "get" },
-        { config: { responseType: "blob" } },
+        { config: { method: "GET", responseType: "blob" } },
       ),
     ).resolves.toEqual(
       expect.objectContaining({ status: 200, data: expect.any(Object) }),
