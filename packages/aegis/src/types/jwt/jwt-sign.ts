@@ -2,7 +2,7 @@ import { Expiry } from "@lindorm/date";
 import { Dict } from "@lindorm/types";
 import { TokenEncryptOrSignOptions } from "../header";
 import { AdjustedAccessLevel, LevelOfAssurance } from "../level-of-assurance";
-import { ActClaim } from "./jwt-claims";
+import { ActClaim, AuthFactor, SessionHint, SubjectHint } from "./jwt-claims";
 
 export type SignJwtContent<C extends Dict = Dict> = {
   accessToken?: string;
@@ -11,7 +11,7 @@ export type SignJwtContent<C extends Dict = Dict> = {
   audience?: Array<string>;
   authCode?: string;
   authContextClass?: string;
-  authFactor?: string;
+  authFactor?: Array<AuthFactor>;
   authMethods?: Array<string>;
   authorizedParty?: string;
   authState?: string;
@@ -29,10 +29,10 @@ export type SignJwtContent<C extends Dict = Dict> = {
   permissions?: Array<string>;
   roles?: Array<string>;
   scope?: Array<string>;
-  sessionHint?: string;
+  sessionHint?: SessionHint;
   sessionId?: string;
   subject: string;
-  subjectHint?: string;
+  subjectHint?: SubjectHint;
   tenantId?: string;
   tokenType: string;
 };

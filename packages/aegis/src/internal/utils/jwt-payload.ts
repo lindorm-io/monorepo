@@ -72,7 +72,7 @@ export const mapJwtContentToClaims = <C extends Dict = Dict>(
     aal: isFinite(content.adjustedAccessLevel) ? content.adjustedAccessLevel : undefined,
     acr: isString(content.authContextClass) ? content.authContextClass : undefined,
     act: isObject(content.act) ? content.act : undefined,
-    afr: isString(content.authFactor) ? content.authFactor : undefined,
+    afr: isArray(content.authFactor) ? content.authFactor : undefined,
     amr: isArray(content.authMethods) ? content.authMethods : undefined,
     at_hash,
     aud: isArray(content.audience) ? content.audience : undefined,

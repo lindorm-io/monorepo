@@ -65,7 +65,7 @@ export const COSE_CLAIMS: Array<CoseItem> = [
 
   // Lindorm
   { key: "aal", label: 500 },
-  { key: "afr", label: 501, bstr },
+  { key: "afr", label: 501 },
   { key: "cid", label: 502, bstr },
   { key: "gty", label: 503, bstr },
   { key: "loa", label: 504 },
