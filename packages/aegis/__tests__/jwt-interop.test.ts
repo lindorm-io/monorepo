@@ -65,7 +65,7 @@ describe("JWT interop: aegis <-> jose", () => {
 
       expect(result.payload.iss).toBe(ISSUER);
       expect(result.payload.sub).toBe(SUBJECT);
-      expect(result.payload.token_type).toBe("access_token");
+      expect(result.protectedHeader.typ).toBe("at+jwt");
       expect(result.payload.exp).toBeDefined();
     });
 
@@ -77,8 +77,8 @@ describe("JWT interop: aegis <-> jose", () => {
       const jwk = kryptos.export("jwk");
       const joseKey = await importJWK(jwk, jwk.alg);
 
-      const token = await new SignJWT({ token_type: "access_token" })
-        .setProtectedHeader({ alg: jwk.alg, typ: "JWT" })
+      const token = await new SignJWT({})
+        .setProtectedHeader({ alg: jwk.alg, typ: "at+jwt" })
         .setIssuer(ISSUER)
         .setSubject(SUBJECT)
         .setExpirationTime("1h")
@@ -116,7 +116,8 @@ describe("JWT interop: aegis <-> jsonwebtoken", () => {
 
       expect(result.iss).toBe(ISSUER);
       expect(result.sub).toBe(SUBJECT);
-      expect(result.token_type).toBe("access_token");
+      // token_type is no longer a claim; jsonwebtoken verify doesn't expose header
+      expect(jsonwebtoken.decode(token, { complete: true })?.header.typ).toBe("at+jwt");
       expect(result.exp).toBeDefined();
     });
 
@@ -126,9 +127,10 @@ describe("JWT interop: aegis <-> jsonwebtoken", () => {
 
       const { privateKey } = kryptos.export("pem");
 
-      const token = jsonwebtoken.sign({ token_type: "access_token" }, privateKey!, {
+      const token = jsonwebtoken.sign({}, privateKey!, {
         algorithm: "RS256",
         expiresIn: "1h",
+        header: { alg: "RS256", typ: "at+jwt" },
         issuer: ISSUER,
         subject: SUBJECT,
       });
@@ -157,7 +159,7 @@ describe("JWT interop: aegis <-> jsonwebtoken", () => {
 
       expect(result.iss).toBe(ISSUER);
       expect(result.sub).toBe(SUBJECT);
-      expect(result.token_type).toBe("access_token");
+      expect(jsonwebtoken.decode(token, { complete: true })?.header.typ).toBe("at+jwt");
     });
 
     test("jsonwebtoken sign -> aegis verify", () => {
@@ -166,9 +168,10 @@ describe("JWT interop: aegis <-> jsonwebtoken", () => {
 
       const { privateKey } = kryptos.export("der");
 
-      const token = jsonwebtoken.sign({ token_type: "access_token" }, privateKey!, {
+      const token = jsonwebtoken.sign({}, privateKey!, {
         algorithm: "HS256",
         expiresIn: "1h",
+        header: { alg: "HS256", typ: "at+jwt" },
         issuer: ISSUER,
         subject: SUBJECT,
       });

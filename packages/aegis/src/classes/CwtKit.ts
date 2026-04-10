@@ -18,6 +18,10 @@ import {
   ValidateCwtOptions,
   VerifyCwtOptions,
 } from "../types";
+import {
+  computeTypHeader,
+  decodeTokenTypeFromTyp,
+} from "#internal/utils/compute-typ-header";
 import { decodeCoseClaims, mapCoseClaims } from "#internal/utils/cose/claims";
 import { decodeCoseHeader, mapCoseHeader } from "#internal/utils/cose/header";
 import { createCoseSignToken } from "#internal/utils/cose-sign-token";
@@ -60,7 +64,7 @@ export class CwtKit implements ICwtKit {
       mapTokenHeader({
         algorithm: this.kryptos.algorithm,
         contentType: "application/json",
-        headerType: "application/cwt",
+        headerType: computeTypHeader(content.tokenType, "cwt"),
       }),
       target,
     );
@@ -132,6 +136,16 @@ export class CwtKit implements ICwtKit {
       });
     }
 
+    if (verify.tokenType !== undefined) {
+      const expectedTyp = computeTypHeader(verify.tokenType, "cwt");
+      if (protectedDict.typ !== expectedTyp) {
+        throw new CwtError("Invalid token", {
+          data: { typ: protectedDict.typ },
+          debug: { expected: expectedTyp },
+        });
+      }
+    }
+
     const verified = verifyCoseSignature({
       kryptos: this.kryptos,
       payload: payloadCbor,
@@ -175,6 +189,7 @@ export class CwtKit implements ICwtKit {
     };
 
     const payload = parseTokenPayload(payloadDict);
+    payload.tokenType = decodeTokenTypeFromTyp(protectedDict.typ, "cwt");
 
     this.logger.debug("Token verified");
 
@@ -194,7 +209,10 @@ export class CwtKit implements ICwtKit {
   public static isCwt(token: Buffer | string): boolean {
     try {
       const decode = CwtKit.decode(token);
-      return decode.protected.typ === "application/cwt";
+      const typ = decode.protected.typ;
+      return (
+        typ === "application/cwt" || (typeof typ === "string" && typ.endsWith("+cwt"))
+      );
     } catch {
       return false;
     }
@@ -218,10 +236,13 @@ export class CwtKit implements ICwtKit {
   public static parse<C extends Dict = Dict>(token: Buffer | string): ParsedCwt<C> {
     const decoded = CwtKit.decode<C>(token);
 
+    const payload = parseTokenPayload(decoded.payload);
+    payload.tokenType = decodeTokenTypeFromTyp(decoded.protected.typ, "cwt");
+
     return {
       decoded,
       header: parseTokenHeader({ ...decoded.protected, ...decoded.unprotected }),
-      payload: parseTokenPayload(decoded.payload),
+      payload,
       token: isBuffer(token) ? token.toString("base64url") : token,
     };
   }

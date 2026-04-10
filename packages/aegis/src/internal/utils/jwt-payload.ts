@@ -42,9 +42,6 @@ export const mapJwtContentToClaims = <C extends Dict = Dict>(
   if (!isString(content.subject)) {
     throw new JwtError("Subject is required");
   }
-  if (!isString(content.tokenType)) {
-    throw new JwtError("Token type is required");
-  }
 
   const { expiresOn } = expires(content.expires);
 
@@ -104,7 +101,6 @@ export const mapJwtContentToClaims = <C extends Dict = Dict>(
     sub: content.subject,
     suh: isString(content.subjectHint) ? content.subjectHint : undefined,
     tenant_id: isString(content.tenantId) ? content.tenantId : undefined,
-    token_type: content.tokenType,
   });
 };
 
@@ -173,7 +169,6 @@ export const parseTokenPayload = <C extends Dict = Dict<never>>(
     sub,
     suh,
     tenant_id,
-    token_type,
     ...rest
   } = decoded;
 
@@ -215,7 +210,6 @@ export const parseTokenPayload = <C extends Dict = Dict<never>>(
     subjectHint: suh,
     tenantId: tenant_id,
     tokenId: jti ? jti : "unknown",
-    tokenType: token_type ? token_type : "unknown",
     claims,
   });
 };

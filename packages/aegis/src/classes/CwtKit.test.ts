@@ -139,7 +139,7 @@ describe("CwtKit", () => {
           protected: {
             alg: "ES512",
             cty: "application/json",
-            typ: "application/cwt",
+            typ: "test_token+cwt",
           },
           unprotected: {
             kid: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
@@ -174,7 +174,6 @@ describe("CwtKit", () => {
             suh: "test_subject_hint",
             test_claim: "test_value",
             tenant_id: "55103fbe-a183-57ec-b553-13af34d83c23",
-            token_type: "test_token",
           },
           signature: expect.any(String),
         },
@@ -182,7 +181,7 @@ describe("CwtKit", () => {
           algorithm: "ES512",
           critical: [],
           contentType: "application/json",
-          headerType: "application/cwt",
+          headerType: "test_token+cwt",
 
           keyId: TEST_EC_KEY_SIG.id,
           objectId: expect.any(String),
@@ -239,7 +238,7 @@ describe("CwtKit", () => {
         protected: {
           alg: "ES512",
           cty: "application/json",
-          typ: "application/cwt",
+          typ: "test_token+cwt",
         },
         unprotected: {
           kid: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
@@ -252,7 +251,6 @@ describe("CwtKit", () => {
           jti: expect.any(String),
           nbf: 1704096000,
           sub: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
-          token_type: "test_token",
         },
         signature: expect.any(String),
       });
@@ -298,7 +296,7 @@ describe("CwtKit", () => {
           protected: {
             alg: "ES512",
             cty: "application/json",
-            typ: "application/cwt",
+            typ: "test_token+cwt",
           },
           unprotected: {
             kid: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
@@ -333,7 +331,6 @@ describe("CwtKit", () => {
             suh: "test_subject_hint",
             test_claim: "test_value",
             tenant_id: "55103fbe-a183-57ec-b553-13af34d83c23",
-            token_type: "test_token",
           },
           signature: expect.any(Buffer),
         },
@@ -341,7 +338,7 @@ describe("CwtKit", () => {
           algorithm: "ES512",
           critical: [],
           contentType: "application/json",
-          headerType: "application/cwt",
+          headerType: "test_token+cwt",
 
           keyId: TEST_EC_KEY_SIG.id,
           objectId: expect.any(String),

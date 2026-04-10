@@ -1,6 +1,6 @@
 import { B64 } from "@lindorm/b64";
 import { B64U } from "../constants/format";
-import { TOKEN_HEADER_ALGORITHMS, TOKEN_HEADER_TYPES } from "../constants/header";
+import { TOKEN_HEADER_ALGORITHMS } from "../constants/header";
 import { DecodedTokenHeader, TokenHeaderClaims, TokenHeaderOptions } from "../../types";
 import { mapTokenHeader } from "./token-header";
 
@@ -13,9 +13,6 @@ export const encodeJoseHeader = (options: TokenHeaderOptions): string => {
   }
   if (!options.headerType) {
     throw new Error("Header type is required");
-  }
-  if (!TOKEN_HEADER_TYPES.includes(options.headerType)) {
-    throw new Error(`Invalid header type: ${options.headerType}`);
   }
   if (!options.keyId) {
     throw new Error("Key ID is required");

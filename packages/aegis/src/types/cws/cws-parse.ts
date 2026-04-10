@@ -4,7 +4,7 @@ import { DecodedCws } from "./cws-decode";
 
 export type ParsedCwsHeader = Omit<ParsedTokenHeader, "algorithm" | "headerType"> & {
   algorithm: KryptosSigAlgorithm;
-  headerType: "application/cose; cose-type=cose-sign";
+  headerType: string;
 };
 
 export type ParsedCws<T extends Buffer | string> = {

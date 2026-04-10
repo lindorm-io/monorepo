@@ -55,8 +55,6 @@ const mapVerify = (key: keyof VerifyJwtOptions): keyof JwtClaims => {
       return "suh";
     case "tenantId":
       return "tenant_id";
-    case "tokenType":
-      return "token_type";
     default:
       throw new Error(`Unsupported key: ${key as any} for JWT verification`);
   }
@@ -83,6 +81,9 @@ export const createJwtVerify = (
   };
 
   for (const [key, value] of Object.entries(verify)) {
+    // tokenType is validated against the JOSE `typ` header by each Kit directly
+    if (key === "tokenType") continue;
+
     const mapped = mapVerify(key as keyof VerifyJwtOptions);
 
     if (mapped === "at_hash" && isString(value)) {

@@ -1,4 +1,5 @@
 import { PredicateOperator } from "@lindorm/types";
+import { TokenType } from "../../constants/token-type";
 
 export type VerifyJwtOptions = {
   accessToken?: string;
@@ -25,5 +26,5 @@ export type VerifyJwtOptions = {
   subject?: Array<string> | string | PredicateOperator<any>;
   subjectHint?: string | PredicateOperator<string>;
   tenantId?: Array<string> | string | PredicateOperator<any>;
-  tokenType?: string | PredicateOperator<string>;
+  tokenType?: TokenType;
 };

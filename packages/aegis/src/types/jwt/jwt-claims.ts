@@ -66,7 +66,6 @@ type LindormClaims = {
   sih?: SessionHint; // session hint
   suh?: SubjectHint; // subject hint
   tenant_id?: string; // tenant id
-  token_type?: string;
 };
 
 export type JwtClaims = StdClaims & OidcClaims & ExtendedClaims & LindormClaims;

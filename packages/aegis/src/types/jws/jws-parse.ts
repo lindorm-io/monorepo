@@ -4,7 +4,7 @@ import { DecodedJws } from "./jws-decode";
 
 export type ParsedJwsHeader = Omit<ParsedTokenHeader, "algorithm" | "headerType"> & {
   algorithm: KryptosSigAlgorithm;
-  headerType: "JWS";
+  headerType: string;
 };
 
 export type ParsedJws<T extends Buffer | string> = {

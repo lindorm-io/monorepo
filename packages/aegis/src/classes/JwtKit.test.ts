@@ -140,7 +140,7 @@ describe("JwtKit", () => {
             jku: "https://test.lindorm.io/.well-known/jwks.json",
             kid: TEST_EC_KEY_SIG.id,
             oid: expect.any(String),
-            typ: "JWT",
+            typ: "test_token+jwt",
           },
           payload: {
             aal: 4,
@@ -171,7 +171,6 @@ describe("JwtKit", () => {
             suh: "test_subject_hint",
             test_claim: "test_value",
             tenant_id: "55103fbe-a183-57ec-b553-13af34d83c23",
-            token_type: "test_token",
           },
           signature: expect.any(String),
         },
@@ -179,7 +178,7 @@ describe("JwtKit", () => {
           algorithm: "ES512",
           critical: [],
           contentType: "application/json",
-          headerType: "JWT",
+          headerType: "test_token+jwt",
           jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
           keyId: TEST_EC_KEY_SIG.id,
           objectId: expect.any(String),
@@ -310,7 +309,7 @@ describe("JwtKit", () => {
             jku: "https://test.lindorm.io/.well-known/jwks.json",
             kid: TEST_EC_KEY_SIG.id,
             oid: expect.any(String),
-            typ: "JWT",
+            typ: "test_token+jwt",
           },
           payload: {
             aal: 4,
@@ -341,7 +340,6 @@ describe("JwtKit", () => {
             suh: "test_subject_hint",
             test_claim: "test_value",
             tenant_id: "55103fbe-a183-57ec-b553-13af34d83c23",
-            token_type: "test_token",
           },
           signature: expect.any(String),
         },
@@ -349,7 +347,7 @@ describe("JwtKit", () => {
           algorithm: "ES512",
           critical: [],
           contentType: "application/json",
-          headerType: "JWT",
+          headerType: "test_token+jwt",
           jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
           keyId: TEST_EC_KEY_SIG.id,
           objectId: expect.any(String),
@@ -409,7 +407,7 @@ describe("JwtKit", () => {
           jku: "https://test.lindorm.io/.well-known/jwks.json",
           kid: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
           oid: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
-          typ: "JWT",
+          typ: "test_token+jwt",
         },
         payload: {
           exp: 1704099600,
@@ -418,7 +416,6 @@ describe("JwtKit", () => {
           jti: expect.any(String),
           nbf: 1704096000,
           sub: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
-          token_type: "test_token",
         },
         signature: expect.any(String),
       });
@@ -537,7 +534,7 @@ describe("JwtKit", () => {
             jku: "https://test.lindorm.io/.well-known/jwks.json",
             kid: TEST_EC_KEY_SIG.id,
             oid: expect.any(String),
-            typ: "JWT",
+            typ: "test_token+jwt",
           },
           payload: {
             exp: 1704099600,
@@ -546,7 +543,6 @@ describe("JwtKit", () => {
             jti: jti,
             nbf: 1704096000,
             sub: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
-            token_type: "test_token",
           },
           signature: signature,
         });
@@ -572,7 +568,6 @@ describe("JwtKit", () => {
           jti: jti,
           nbf: 1704096000,
           sub: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
-          token_type: "test_token",
         });
       });
 
@@ -596,7 +591,6 @@ describe("JwtKit", () => {
           jti: decoded.payload.jti,
           nbf: 1704096000,
           sub: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
-          token_type: "test_token",
         });
       });
 
@@ -622,7 +616,6 @@ describe("JwtKit", () => {
           jti: jti,
           nbf: 1704096000,
           sub: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
-          token_type: "test_token",
         });
       });
     });
