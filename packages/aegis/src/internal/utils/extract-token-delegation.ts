@@ -1,20 +1,30 @@
-import { ActClaim, TokenDelegation } from "../../types/jwt/jwt-claims";
+import { removeUndefined } from "@lindorm/utils";
+import { ActClaim, ActClaimWire } from "../../types/jwt/jwt-act";
+import { TokenDelegation } from "../../types/jwt/jwt-delegation";
 
-const walkActChain = (act: ActClaim | undefined): Array<ActClaim> => {
+const walkActChain = (act: ActClaimWire | undefined): Array<ActClaim> => {
   const chain: Array<ActClaim> = [];
   let current = act;
   while (current) {
-    const { act: next, ...rest } = current;
-    chain.push(rest);
-    current = next;
+    chain.push(
+      removeUndefined({
+        subject: current.sub,
+        issuer: current.iss,
+        audience: current.aud,
+        clientId: current.client_id,
+      }),
+    );
+    current = current.act;
   }
   return chain;
 };
 
-export const extractTokenDelegation = (payload: { act?: ActClaim }): TokenDelegation => {
+export const extractTokenDelegation = (payload: {
+  act?: ActClaimWire;
+}): TokenDelegation => {
   const actorChain = walkActChain(payload.act);
   return {
-    currentActor: actorChain[0]?.sub,
+    currentActor: actorChain[0]?.subject,
     actorChain,
     isDelegated: actorChain.length > 0,
   };

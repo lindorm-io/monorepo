@@ -8,7 +8,10 @@ import { removeUndefined } from "@lindorm/utils";
 import { B64U } from "../constants/format";
 import { JwtError } from "../../errors";
 import {
+  ActClaim,
+  ActClaimWire,
   AegisProfile,
+  ConfirmationClaim,
   JwtClaims,
   ParsedJwtPayload,
   SignJwtContent,
@@ -32,6 +35,24 @@ type Result = {
   payload: string;
   tokenId: string;
 };
+
+const actClaimToWire = (claim: ActClaim): ActClaimWire =>
+  removeUndefined({
+    sub: claim.subject,
+    iss: claim.issuer,
+    aud: claim.audience,
+    client_id: claim.clientId,
+    act: isObject(claim.act) ? actClaimToWire(claim.act) : undefined,
+  });
+
+const actClaimFromWire = (wire: ActClaimWire): ActClaim =>
+  removeUndefined({
+    subject: wire.sub,
+    issuer: wire.iss,
+    audience: wire.aud,
+    clientId: wire.client_id,
+    act: isObject(wire.act) ? actClaimFromWire(wire.act) : undefined,
+  });
 
 export const mapJwtContentToClaims = <C extends Dict = Dict>(
   config: Config,
@@ -73,10 +94,20 @@ export const mapJwtContentToClaims = <C extends Dict = Dict>(
 
   const tokenId = isString(options.tokenId) ? options.tokenId : generateTokenId();
 
+  const cnf = isObject(content.confirmation)
+    ? removeUndefined({
+        jkt: content.confirmation.thumbprint,
+        "x5t#S256": content.confirmation.mtlsCertThumbprint,
+        jwk: content.confirmation.key,
+        kid: content.confirmation.keyId,
+        jku: content.confirmation.jwkSetUri,
+      })
+    : undefined;
+
   return removeUndefined({
     aal: isFinite(content.adjustedAccessLevel) ? content.adjustedAccessLevel : undefined,
     acr: isString(content.authContextClass) ? content.authContextClass : undefined,
-    act: isObject(content.act) ? content.act : undefined,
+    act: isObject(content.act) ? actClaimToWire(content.act) : undefined,
     afr: isArray(content.authFactor) ? content.authFactor : undefined,
     amr: isArray(content.authMethods) ? content.authMethods : undefined,
     at_hash,
@@ -85,11 +116,12 @@ export const mapJwtContentToClaims = <C extends Dict = Dict>(
     azp: isString(content.authorizedParty) ? content.authorizedParty : undefined,
     c_hash,
     client_id: isString(content.clientId) ? content.clientId : undefined,
+    cnf: cnf && Object.keys(cnf).length > 0 ? cnf : undefined,
     entitlements: isArray(content.entitlements) ? content.entitlements : undefined,
     exp: expiresOn,
     groups: isArray(content.groups) ? content.groups : undefined,
     gty: isString(content.grantType) ? content.grantType : undefined,
-    may_act: isObject(content.mayAct) ? content.mayAct : undefined,
+    may_act: isObject(content.mayAct) ? actClaimToWire(content.mayAct) : undefined,
     iat: isDate(options.issuedAt)
       ? getUnixTime(options.issuedAt)
       : getUnixTime(new Date()),
@@ -163,6 +195,7 @@ export const parseTokenPayload = <C extends Dict = Dict<never>>(
     azp,
     c_hash,
     client_id,
+    cnf,
     entitlements,
     exp,
     groups,
@@ -207,9 +240,19 @@ export const parseTokenPayload = <C extends Dict = Dict<never>>(
 
   const claims = customClaims as C;
 
+  const confirmation: ConfirmationClaim | undefined = isObject(cnf)
+    ? removeUndefined({
+        thumbprint: cnf.jkt,
+        mtlsCertThumbprint: cnf["x5t#S256"],
+        key: cnf.jwk,
+        keyId: cnf.kid,
+        jwkSetUri: cnf.jku,
+      })
+    : undefined;
+
   return removeUndefined({
     accessTokenHash: at_hash,
-    act,
+    act: isObject(act) ? actClaimFromWire(act) : undefined,
     adjustedAccessLevel: aal,
     audience: aud ?? [],
     authContextClass: acr,
@@ -219,6 +262,8 @@ export const parseTokenPayload = <C extends Dict = Dict<never>>(
     authTime: auth_time ? new Date(auth_time * 1000) : undefined,
     clientId: client_id,
     codeHash: c_hash,
+    confirmation:
+      confirmation && Object.keys(confirmation).length > 0 ? confirmation : undefined,
     entitlements: isArray(entitlements) ? entitlements : [],
     expiresAt: exp ? new Date(exp * 1000) : undefined,
     grantType: gty,
@@ -226,7 +271,7 @@ export const parseTokenPayload = <C extends Dict = Dict<never>>(
     issuedAt: iat ? new Date(iat * 1000) : undefined,
     issuer: iss,
     levelOfAssurance: loa,
-    mayAct: may_act,
+    mayAct: isObject(may_act) ? actClaimFromWire(may_act) : undefined,
     nonce,
     notBefore: nbf ? new Date(nbf * 1000) : undefined,
     permissions: isArray(permissions)

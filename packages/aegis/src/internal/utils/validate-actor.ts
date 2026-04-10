@@ -23,8 +23,8 @@ export const validateActor = (
 
   if (options.allowedSubjects) {
     for (const entry of delegation.actorChain) {
-      if (!entry.sub || !options.allowedSubjects.includes(entry.sub)) {
-        return `Actor subject not allowed: ${entry.sub ?? "undefined"}`;
+      if (!entry.subject || !options.allowedSubjects.includes(entry.subject)) {
+        return `Actor subject not allowed: ${entry.subject ?? "undefined"}`;
       }
     }
   }
