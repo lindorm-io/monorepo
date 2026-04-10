@@ -22,6 +22,8 @@ import {
   computeTypHeader,
   decodeTokenTypeFromTyp,
 } from "#internal/utils/compute-typ-header";
+import { extractTokenIdentity } from "#internal/utils/extract-token-identity";
+import { validateActor } from "#internal/utils/validate-actor";
 import { decodeCoseClaims, mapCoseClaims } from "#internal/utils/cose/claims";
 import { decodeCoseHeader, mapCoseHeader } from "#internal/utils/cose/header";
 import { createCoseSignToken } from "#internal/utils/cose-sign-token";
@@ -180,6 +182,15 @@ export class CwtKit implements ICwtKit {
       throw new CwtError("Invalid token", { data: (err as any).data });
     }
 
+    const identity = extractTokenIdentity(
+      payloadDict as unknown as { sub?: string; act?: any },
+    );
+
+    const actorError = validateActor(identity, verify.actor);
+    if (actorError) {
+      throw new CwtError(actorError);
+    }
+
     const decoded: DecodedCwt<C> = {
       protected: protectedDict as any,
       unprotected: unprotectedDict as any,
@@ -198,6 +209,7 @@ export class CwtKit implements ICwtKit {
         ...protectedDict,
         ...unprotectedDict,
       } as any),
+      identity,
       payload,
       token: isBuffer(token) ? token.toString("base64url") : token,
     };
@@ -238,9 +250,14 @@ export class CwtKit implements ICwtKit {
     const payload = parseTokenPayload(decoded.payload);
     payload.tokenType = decodeTokenTypeFromTyp(decoded.protected.typ, "cwt");
 
+    const identity = extractTokenIdentity(
+      decoded.payload as unknown as { sub?: string; act?: any },
+    );
+
     return {
       decoded,
       header: parseTokenHeader({ ...decoded.protected, ...decoded.unprotected }),
+      identity,
       payload,
       token: isBuffer(token) ? token.toString("base64url") : token,
     };

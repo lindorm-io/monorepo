@@ -206,6 +206,12 @@ describe("CwtKit", () => {
 
           keyId: TEST_EC_KEY_SIG.id,
         },
+        identity: {
+          actorChain: [],
+          currentActor: undefined,
+          isDelegated: false,
+          subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
+        },
         payload: {
           accessTokenHash: "ehXwFopDjJcovgdtD6uhQg",
           adjustedAccessLevel: 4,
@@ -359,6 +365,12 @@ describe("CwtKit", () => {
           headerType: "test_token+cwt",
 
           keyId: TEST_EC_KEY_SIG.id,
+        },
+        identity: {
+          actorChain: [],
+          currentActor: undefined,
+          isDelegated: false,
+          subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
         },
         payload: {
           accessTokenHash: "ehXwFopDjJcovgdtD6uhQg",

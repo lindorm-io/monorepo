@@ -1,7 +1,15 @@
 import { PredicateOperator } from "@lindorm/types";
 import { TokenType } from "../../constants/token-type";
 
+export type VerifyActorOptions = {
+  required?: boolean;
+  forbidden?: boolean;
+  allowedSubjects?: Array<string>;
+  maxChainDepth?: number;
+};
+
 export type VerifyJwtOptions = {
+  actor?: VerifyActorOptions;
   accessToken?: string;
   adjustedAccessLevel?: PredicateOperator<number>;
   audience?: Array<string> | string | PredicateOperator<any>;
