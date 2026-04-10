@@ -62,4 +62,13 @@ describe("getAuthorization", () => {
       value: "dXNlcm5hbWU6cGFzc3dvcmQ=",
     });
   });
+
+  test("should return DPoP authorization", () => {
+    ctx.get.mockReturnValue("DPoP dXNlcm5hbWU6cGFzc3dvcmQ=");
+
+    expect(getAuthorization(ctx)).toEqual({
+      type: "dpop",
+      value: "dXNlcm5hbWU6cGFzc3dvcmQ=",
+    });
+  });
 });

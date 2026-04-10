@@ -19,6 +19,7 @@ describe("createAccessTokenMiddleware", () => {
       ctx = {
         aegis: createMockAegis(),
         logger: createMockLogger(),
+        request: {},
         state: {
           authorization: { type: "bearer", value: "jwt-token" },
           tokens: {},
@@ -112,11 +113,91 @@ describe("createAccessTokenMiddleware", () => {
     });
   });
 
+  describe("DPoP", () => {
+    let ctx: any;
+
+    beforeEach(() => {
+      ctx = {
+        aegis: createMockAegis(),
+        logger: createMockLogger(),
+        method: "POST",
+        origin: "https://api.example.com",
+        path: "/orders",
+        request: {},
+        get: jest.fn((header: string) =>
+          header.toLowerCase() === "dpop" ? "proof-jwt" : undefined,
+        ),
+        state: {
+          authorization: { type: "dpop", value: "jwt-token" },
+          tokens: {},
+        },
+      };
+
+      ctx.aegis.verify.mockResolvedValue({
+        header: { tokenType: "access_token" },
+        payload: {
+          subject: "verified_subject",
+          confirmation: { thumbprint: "proof-thumbprint" },
+        },
+        dpop: {
+          thumbprint: "proof-thumbprint",
+          tokenId: "proof-jti",
+          httpMethod: "POST",
+          httpUri: "https://api.example.com/orders",
+          issuedAt: new Date("2024-01-01T08:00:00.000Z"),
+        },
+      });
+    });
+
+    test("should pass the DPoP header to aegis and store the verified token", async () => {
+      const middleware = createAccessTokenMiddleware(options);
+
+      await expect(middleware(ctx, next)).resolves.toBeUndefined();
+
+      expect(ctx.aegis.verify).toHaveBeenCalledWith("jwt-token", {
+        tokenType: "access_token",
+        ...options,
+        dpopProof: "proof-jwt",
+      });
+      expect(ctx.state.tokens.accessToken).toMatchSnapshot();
+    });
+
+    test("should throw 401 when the DPoP header is missing", async () => {
+      ctx.get.mockReturnValue(undefined);
+      const middleware = createAccessTokenMiddleware(options);
+
+      await expect(middleware(ctx, next)).rejects.toThrow(ClientError);
+    });
+
+    test("should throw 401 when proof htm does not match request method", async () => {
+      ctx.method = "GET";
+      const middleware = createAccessTokenMiddleware(options);
+
+      await expect(middleware(ctx, next)).rejects.toThrow(ClientError);
+    });
+
+    test("should throw 401 when proof htu does not match request URI", async () => {
+      ctx.path = "/other-path";
+      const middleware = createAccessTokenMiddleware(options);
+
+      await expect(middleware(ctx, next)).rejects.toThrow(ClientError);
+    });
+
+    test("should normalize htu when comparing (default port, case)", async () => {
+      ctx.origin = "HTTPS://API.EXAMPLE.COM:443";
+      ctx.path = "/orders";
+      const middleware = createAccessTokenMiddleware(options);
+
+      await expect(middleware(ctx, next)).resolves.toBeUndefined();
+    });
+  });
+
   describe("common", () => {
     test("should throw 401 when verification fails", async () => {
       const ctx: any = {
         aegis: createMockAegis(),
         logger: createMockLogger(),
+        request: {},
         state: {
           authorization: { type: "bearer", value: "jwt-token" },
           tokens: {},

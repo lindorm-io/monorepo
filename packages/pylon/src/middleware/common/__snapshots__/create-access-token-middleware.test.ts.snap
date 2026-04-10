@@ -1,5 +1,26 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
+exports[`createAccessTokenMiddleware DPoP should pass the DPoP header to aegis and store the verified token 1`] = `
+{
+  "dpop": {
+    "httpMethod": "POST",
+    "httpUri": "https://api.example.com/orders",
+    "issuedAt": 2024-01-01T08:00:00.000Z,
+    "thumbprint": "proof-thumbprint",
+    "tokenId": "proof-jti",
+  },
+  "header": {
+    "tokenType": "access_token",
+  },
+  "payload": {
+    "confirmation": {
+      "thumbprint": "proof-thumbprint",
+    },
+    "subject": "verified_subject",
+  },
+}
+`;
+
 exports[`createAccessTokenMiddleware HTTP context should throw 401 when authorization type is not bearer 1`] = `"Invalid credentials"`;
 
 exports[`createAccessTokenMiddleware HTTP context should verify and store on ctx.state.tokens.accessToken 1`] = `

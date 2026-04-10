@@ -1,4 +1,4 @@
-export type AuthorizationType = "basic" | "bearer" | "none";
+export type AuthorizationType = "basic" | "bearer" | "dpop" | "none";
 
 type AuthorizationNone = {
   type: "none";
@@ -15,7 +15,13 @@ type AuthorizationBearer = {
   value: string;
 };
 
+type AuthorizationDpop = {
+  type: "dpop";
+  value: string;
+};
+
 export type AuthorizationState =
   | AuthorizationNone
   | AuthorizationBasic
-  | AuthorizationBearer;
+  | AuthorizationBearer
+  | AuthorizationDpop;

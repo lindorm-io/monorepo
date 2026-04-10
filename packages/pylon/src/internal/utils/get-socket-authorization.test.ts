@@ -17,6 +17,14 @@ describe("getSocketAuthorization", () => {
     expect(getSocketAuthorization(socket)).toMatchSnapshot();
   });
 
+  test("should return dpop authorization from auth.token", () => {
+    const socket: any = {
+      handshake: { auth: { token: "DPoP proof-token" }, headers: {} },
+    };
+
+    expect(getSocketAuthorization(socket)).toMatchSnapshot();
+  });
+
   test("should fall back to headers.authorization when auth.token is absent", () => {
     const socket: any = {
       handshake: { auth: {}, headers: { authorization: "Bearer xyz789" } },

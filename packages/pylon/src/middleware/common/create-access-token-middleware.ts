@@ -1,7 +1,8 @@
-import { isSocketContext } from "#internal/utils/is-context";
+import { assertDpopRequestMatch } from "#internal/utils/assert-dpop-request-match";
+import { extractAccessTokenInput } from "#internal/utils/extract-access-token-input";
+import { isHttpContext, isSocketContext } from "#internal/utils/is-context";
 import { VerifyJwtOptions } from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
-import { isString } from "@lindorm/is";
 import { PylonContext, PylonMiddleware } from "../../types";
 
 type Options = Omit<VerifyJwtOptions, "issuer"> & {
@@ -15,33 +16,19 @@ export const createAccessTokenMiddleware = <C extends PylonContext = PylonContex
     const timer = ctx.logger.time();
 
     try {
-      let token: unknown;
-
-      if (isSocketContext(ctx)) {
-        token = ctx.io.socket.handshake.auth.bearer;
-      } else {
-        if (ctx.state.authorization.type !== "bearer") {
-          throw new ClientError("Invalid Authorization header", {
-            details: "Authorization header must be of type Bearer",
-            debug: { state: ctx.state.authorization },
-            status: ClientError.Status.Unauthorized,
-          });
-        }
-        token = ctx.state.authorization.value;
-      }
-
-      if (!isString(token)) {
-        throw new ClientError("Token must be of type JWT", {
-          status: ClientError.Status.Unauthorized,
-        });
-      }
+      const { token, dpopProof } = extractAccessTokenInput(ctx);
 
       const verified = await ctx.aegis.verify(token, {
         tokenType: "access_token",
         ...options,
+        dpopProof,
       });
 
       timer.debug("Token verified", { verified });
+
+      if (verified.dpop && isHttpContext(ctx)) {
+        assertDpopRequestMatch(ctx, verified.dpop);
+      }
 
       ctx.logger.info("Access token verification successful", {
         subject: verified.payload.subject,

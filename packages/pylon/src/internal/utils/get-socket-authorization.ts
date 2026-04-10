@@ -15,7 +15,7 @@ export const getSocketAuthorization = (socket: PylonSocket): AuthorizationState 
   const [t, value] = auth.split(" ");
   const type = t?.toLowerCase() as AuthorizationType;
 
-  if (!["basic", "bearer"].includes(type)) {
+  if (!["basic", "bearer", "dpop"].includes(type)) {
     return DEFAULT;
   }
 
