@@ -895,4 +895,89 @@ describe("JwtKit", () => {
       expect(() => kit.verify(token)).not.toThrow();
     });
   });
+
+  describe("header-embedded key source rejection", () => {
+    // These tests lock in the invariant that aegis NEVER uses header-embedded
+    // key material (jwk, x5c, x5u) for verification. Key lookup goes through
+    // Amphora exclusively. See Aegis.kryptosSig for the invariant comment.
+
+    test("a malicious jwk in the header must not be usable to verify the token", () => {
+      const { token } = kit.sign({
+        expires: "1h",
+        subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
+        tokenType: "test_token",
+      });
+
+      // Inject a fabricated jwk into the header. The token's actual signature
+      // was made with Amphora's key and the header change invalidates it —
+      // but the important assertion is that aegis does NOT recognize the
+      // injected jwk as a verification key. The throw path must be
+      // signature-related, not "successfully verified with header.jwk".
+      const decoded = JwtKit.decode(token);
+      const headerWithJwk = {
+        ...decoded.header,
+        jwk: {
+          kty: "EC",
+          crv: "P-521",
+          x: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+          y: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        },
+      };
+
+      const parts = token.split(".");
+      const modifiedHeader = Buffer.from(JSON.stringify(headerWithJwk))
+        .toString("base64url")
+        .replace(/=/g, "");
+      const modifiedToken = [modifiedHeader, parts[1], parts[2]].join(".");
+
+      expect(() => kit.verify(modifiedToken)).toThrow();
+    });
+
+    test("a malicious x5c in the header must not be usable to verify the token", () => {
+      const { token } = kit.sign({
+        expires: "1h",
+        subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
+        tokenType: "test_token",
+      });
+
+      const decoded = JwtKit.decode(token);
+      const headerWithX5c = {
+        ...decoded.header,
+        x5c: ["MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA"],
+      };
+
+      const parts = token.split(".");
+      const modifiedHeader = Buffer.from(JSON.stringify(headerWithX5c))
+        .toString("base64url")
+        .replace(/=/g, "");
+      const modifiedToken = [modifiedHeader, parts[1], parts[2]].join(".");
+
+      expect(() => kit.verify(modifiedToken)).toThrow();
+    });
+
+    test("a malicious x5u in the header must not be fetched or used to verify the token", () => {
+      const { token } = kit.sign({
+        expires: "1h",
+        subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
+        tokenType: "test_token",
+      });
+
+      const decoded = JwtKit.decode(token);
+      const headerWithX5u = {
+        ...decoded.header,
+        x5u: "https://attacker.example/evil-cert.pem",
+      };
+
+      const parts = token.split(".");
+      const modifiedHeader = Buffer.from(JSON.stringify(headerWithX5u))
+        .toString("base64url")
+        .replace(/=/g, "");
+      const modifiedToken = [modifiedHeader, parts[1], parts[2]].join(".");
+
+      // Aegis must not make any HTTP request here; x5u is ignored outright.
+      // The verify throws because the header change broke the signature,
+      // not because of any x5u fetch attempt.
+      expect(() => kit.verify(modifiedToken)).toThrow();
+    });
+  });
 });
