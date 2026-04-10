@@ -24,7 +24,7 @@ describe("mapCoseClaims", () => {
       s_hash: "s_hash",
 
       aal: 3,
-      afr: "afr1",
+      afr: ["afr1"],
       cid: "4f325774-db23-5eb5-9a1f-60a82ca42c2b",
       gty: "grant_type",
       loa: 2,

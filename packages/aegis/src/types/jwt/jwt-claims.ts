@@ -55,7 +55,7 @@ type ExtendedClaims = {
 
 type LindormClaims = {
   aal?: AdjustedAccessLevel; // adjusted access level
-  afr?: string; // auth factor reference
+  afr?: Array<AuthFactor>; // auth factor references
   cid?: string; // client id
   gty?: string; // grant type
   loa?: LevelOfAssurance; // level of assurance
@@ -63,8 +63,8 @@ type LindormClaims = {
   rls?: Array<string> | string; // role(s)
   scope?: Array<string> | string; // scope(s)
   sid?: string; // session id
-  sih?: string; // session hint
-  suh?: string; // subject hint
+  sih?: SessionHint; // session hint
+  suh?: SubjectHint; // subject hint
   tid?: string; // tenant id
   token_type?: string;
 };
