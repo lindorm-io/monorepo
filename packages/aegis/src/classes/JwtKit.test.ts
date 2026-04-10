@@ -205,6 +205,7 @@ describe("JwtKit", () => {
           headerType: "test_token+jwt",
           jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
           keyId: TEST_EC_KEY_SIG.id,
+          tokenType: "test_token",
         },
         identity: {
           actorChain: [],
@@ -245,7 +246,6 @@ describe("JwtKit", () => {
           subjectHint: "test_subject_hint",
           tenantId: "55103fbe-a183-57ec-b553-13af34d83c23",
           tokenId: tokenId,
-          tokenType: "test_token",
         },
         token,
       });
@@ -378,6 +378,7 @@ describe("JwtKit", () => {
           headerType: "test_token+jwt",
           jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
           keyId: TEST_EC_KEY_SIG.id,
+          tokenType: "test_token",
         },
         identity: {
           actorChain: [],
@@ -418,7 +419,6 @@ describe("JwtKit", () => {
           subjectHint: "test_subject_hint",
           tenantId: "55103fbe-a183-57ec-b553-13af34d83c23",
           tokenId: tokenId,
-          tokenType: "test_token",
         },
         token,
       });

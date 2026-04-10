@@ -89,7 +89,7 @@ describe("JWT interop: aegis <-> jose", () => {
 
       expect(result.payload.issuer).toBe(ISSUER);
       expect(result.payload.subject).toBe(SUBJECT);
-      expect(result.payload.tokenType).toBe("access_token");
+      expect(result.header.tokenType).toBe("access_token");
       expect(result.payload.expiresAt).toBeInstanceOf(Date);
     });
   });
@@ -139,7 +139,7 @@ describe("JWT interop: aegis <-> jsonwebtoken", () => {
 
       expect(result.payload.issuer).toBe(ISSUER);
       expect(result.payload.subject).toBe(SUBJECT);
-      expect(result.payload.tokenType).toBe("access_token");
+      expect(result.header.tokenType).toBe("access_token");
     });
   });
 
@@ -180,7 +180,7 @@ describe("JWT interop: aegis <-> jsonwebtoken", () => {
 
       expect(result.payload.issuer).toBe(ISSUER);
       expect(result.payload.subject).toBe(SUBJECT);
-      expect(result.payload.tokenType).toBe("access_token");
+      expect(result.header.tokenType).toBe("access_token");
     });
   });
 });

@@ -210,9 +210,9 @@ export class JwtKit implements IJwtKit {
     }
 
     const header = parseTokenHeader<ParsedJwtHeader>(decoded.header);
+    header.tokenType = decodeTokenTypeFromTyp(typ, "jwt");
 
     const payload = parseTokenPayload<C>(decoded.payload);
-    payload.tokenType = decodeTokenTypeFromTyp(typ, "jwt");
 
     const identity = extractTokenIdentity(decoded.payload as { sub?: string; act?: any });
 

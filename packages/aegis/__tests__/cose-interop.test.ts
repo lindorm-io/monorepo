@@ -661,7 +661,7 @@ describe("COSE interop: CWT claim labels (RFC 8392)", () => {
     const result = kit.verify(token);
     expect(result.payload.issuer).toBe(ISSUER);
     expect(result.payload.subject).toBe(SUBJECT);
-    expect(result.payload.tokenType).toBe("access_token");
+    expect(result.header.tokenType).toBe("access_token");
     expect(result.payload.expiresAt).toBeInstanceOf(Date);
   });
 });
@@ -952,7 +952,7 @@ describe("COSE interop: external target mode", () => {
       const result = kit.verify(token);
       expect(result.payload.issuer).toBe(ISSUER);
       expect(result.payload.subject).toBe(SUBJECT);
-      expect(result.payload.tokenType).toBe("access_token");
+      expect(result.header.tokenType).toBe("access_token");
     });
 
     test("decode of external token produces same parsed output as internal", () => {
@@ -974,7 +974,7 @@ describe("COSE interop: external target mode", () => {
       // Same parsed payload fields
       expect(parsedExternal.payload.issuer).toBe(parsedInternal.payload.issuer);
       expect(parsedExternal.payload.subject).toBe(parsedInternal.payload.subject);
-      expect(parsedExternal.payload.tokenType).toBe(parsedInternal.payload.tokenType);
+      expect(parsedExternal.header.tokenType).toBe(parsedInternal.header.tokenType);
       expect(parsedExternal.header.algorithm).toBe(parsedInternal.header.algorithm);
       expect(parsedExternal.header.headerType).toBe(parsedInternal.header.headerType);
     });

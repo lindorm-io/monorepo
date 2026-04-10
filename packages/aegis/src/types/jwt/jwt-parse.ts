@@ -49,7 +49,6 @@ export type ParsedJwtPayload<C extends Dict = Dict> = {
   subjectHint: SubjectHint | undefined;
   tenantId: string | undefined;
   tokenId: string;
-  tokenType?: string;
 };
 
 export type ParsedJwt<C extends Dict = Dict> = {

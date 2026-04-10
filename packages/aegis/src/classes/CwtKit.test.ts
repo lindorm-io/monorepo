@@ -203,8 +203,8 @@ describe("CwtKit", () => {
           critical: [],
           contentType: "application/json",
           headerType: "test_token+cwt",
-
           keyId: TEST_EC_KEY_SIG.id,
+          tokenType: "test_token",
         },
         identity: {
           actorChain: [],
@@ -245,7 +245,6 @@ describe("CwtKit", () => {
           subjectHint: "test_subject_hint",
           tenantId: "55103fbe-a183-57ec-b553-13af34d83c23",
           tokenId: tokenId,
-          tokenType: "test_token",
         },
         token,
       });
@@ -363,8 +362,8 @@ describe("CwtKit", () => {
           critical: [],
           contentType: "application/json",
           headerType: "test_token+cwt",
-
           keyId: TEST_EC_KEY_SIG.id,
+          tokenType: "test_token",
         },
         identity: {
           actorChain: [],
@@ -405,7 +404,6 @@ describe("CwtKit", () => {
           subjectHint: "test_subject_hint",
           tenantId: "55103fbe-a183-57ec-b553-13af34d83c23",
           tokenId: tokenId,
-          tokenType: "test_token",
         },
         token,
       });
