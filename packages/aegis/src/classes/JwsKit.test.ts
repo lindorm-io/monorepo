@@ -18,17 +18,34 @@ describe("JwsKit", () => {
 
   describe("sign", () => {
     test("should sign token with plain text data", () => {
-      expect(kit.sign("test data in plain text")).toEqual({
-        objectId: expect.any(String),
+      expect(
+        kit.sign("test data in plain text", {
+          objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
+        }),
+      ).toEqual({
+        objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
         token: expect.any(String),
       });
     });
 
     test("should sign token with buffer data", () => {
-      expect(kit.sign(Buffer.from("test data in buffer", "utf8"))).toEqual({
-        objectId: expect.any(String),
+      expect(
+        kit.sign(Buffer.from("test data in buffer", "utf8"), {
+          objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
+        }),
+      ).toEqual({
+        objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
         token: expect.any(String),
       });
+    });
+
+    test("should sign token without objectId and omit oid from header", () => {
+      const { token, objectId } = kit.sign("test data in plain text");
+
+      expect(objectId).toBeUndefined();
+
+      const { header } = JwsKit.decode(token);
+      expect(header).not.toHaveProperty("oid");
     });
   });
 

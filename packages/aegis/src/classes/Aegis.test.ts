@@ -119,18 +119,21 @@ describe("Aegis", () => {
   });
 
   test("should sign and verify cwt", async () => {
-    const res = await aegis.cwt.sign({
-      expires: "1h",
-      subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
-      tokenType: "test_token",
-    });
+    const res = await aegis.cwt.sign(
+      {
+        expires: "1h",
+        subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
+        tokenType: "test_token",
+      },
+      { objectId: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad" },
+    );
 
     expect(res).toEqual({
       buffer: expect.any(Buffer),
       expiresAt: new Date("2024-01-01T09:00:00.000Z"),
       expiresIn: 3600,
       expiresOn: 1704099600,
-      objectId: expect.any(String),
+      objectId: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
       token: expect.any(String),
       tokenId: expect.any(String),
     });
@@ -273,17 +276,20 @@ describe("Aegis", () => {
   });
 
   test("should sign and verify jwt", async () => {
-    const res = await aegis.jwt.sign({
-      expires: "1h",
-      subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
-      tokenType: "test_token",
-    });
+    const res = await aegis.jwt.sign(
+      {
+        expires: "1h",
+        subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
+        tokenType: "test_token",
+      },
+      { objectId: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad" },
+    );
 
     expect(res).toEqual({
       expiresAt: new Date("2024-01-01T09:00:00.000Z"),
       expiresIn: 3600,
       expiresOn: 1704099600,
-      objectId: expect.any(String),
+      objectId: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
       token: expect.any(String),
       tokenId: expect.any(String),
     });

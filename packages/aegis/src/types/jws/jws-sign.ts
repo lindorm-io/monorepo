@@ -9,6 +9,6 @@ export type SignJwsOptions = {
 };
 
 export type SignedJws = {
-  objectId: string;
+  objectId: string | undefined;
   token: string;
 };

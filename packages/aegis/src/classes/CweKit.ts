@@ -3,7 +3,6 @@ import { isBuffer, isString } from "@lindorm/is";
 import { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
 import { ILogger } from "@lindorm/logger";
 import { decode, encode } from "cbor";
-import { randomBytes } from "crypto";
 import { CoseEncryptError } from "../errors";
 import { ICweKit } from "../interfaces";
 import {
@@ -37,7 +36,7 @@ export class CweKit implements ICweKit {
 
     this.logger.debug("Encrypting token", { options });
 
-    const objectId = options.objectId ?? randomBytes(20).toString("base64url");
+    const objectId = options.objectId;
     const target = options.target ?? "internal";
 
     // Step 1: Prepare encryption (key management only — no content encrypted yet)
