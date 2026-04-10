@@ -3,6 +3,7 @@ import { Dict } from "@lindorm/types";
 import { ParsedTokenHeader } from "../header";
 import { AdjustedAccessLevel, LevelOfAssurance } from "../level-of-assurance";
 import { DecodedJwt } from "./jwt-decode";
+import { ActClaim } from "./jwt-claims";
 
 export type ParsedJwtHeader = Omit<ParsedTokenHeader, "algorithm" | "headerType"> & {
   algorithm: KryptosSigAlgorithm;
@@ -11,6 +12,7 @@ export type ParsedJwtHeader = Omit<ParsedTokenHeader, "algorithm" | "headerType"
 
 export type ParsedJwtPayload<C extends Dict = Dict> = {
   accessTokenHash: string | undefined;
+  act: ActClaim | undefined;
   adjustedAccessLevel: AdjustedAccessLevel | undefined;
   audience: Array<string>;
   authContextClass: string | undefined;
@@ -21,11 +23,14 @@ export type ParsedJwtPayload<C extends Dict = Dict> = {
   claims: C;
   clientId: string | undefined;
   codeHash: string | undefined;
+  entitlements: Array<string>;
   expiresAt: Date | undefined;
   grantType: string | undefined;
+  groups: Array<string>;
   issuedAt: Date | undefined;
   issuer: string;
   levelOfAssurance: LevelOfAssurance | undefined;
+  mayAct: ActClaim | undefined;
   nonce: string | undefined;
   notBefore: Date | undefined;
   permissions: Array<string>;
