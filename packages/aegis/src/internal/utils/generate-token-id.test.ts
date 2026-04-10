@@ -1,13 +1,13 @@
 import { generateTokenId } from "./generate-token-id";
 
 describe("generateTokenId", () => {
-  test("returns a base64url string with 160 bits of entropy in 27 chars", () => {
+  test("returns a base64url string with 120 bits of entropy in 20 chars", () => {
     const id = generateTokenId();
 
-    // 20 bytes (160 bits) base64url-encoded without padding = 27 chars
-    expect(id).toHaveLength(27);
+    // 15 bytes (120 bits) base64url-encoded without padding = 20 chars
+    expect(id).toHaveLength(20);
     // base64url charset: A-Z a-z 0-9 - _
-    expect(id).toMatch(/^[A-Za-z0-9_-]{27}$/);
+    expect(id).toMatch(/^[A-Za-z0-9_-]{20}$/);
     // No padding on base64url output
     expect(id).not.toContain("=");
   });
