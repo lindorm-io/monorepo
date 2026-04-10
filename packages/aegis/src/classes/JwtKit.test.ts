@@ -519,14 +519,14 @@ describe("JwtKit", () => {
     test("delegation reflects a single-level act claim", () => {
       const { token } = kit.sign({
         ...baseContent,
-        act: { sub: "service-1" },
+        act: { subject: "service-1" },
       });
 
       const parsed = kit.verify(token);
 
       expect(parsed.delegation.isDelegated).toBe(true);
       expect(parsed.delegation.currentActor).toBe("service-1");
-      expect(parsed.delegation.actorChain).toEqual([{ sub: "service-1" }]);
+      expect(parsed.delegation.actorChain).toEqual([{ subject: "service-1" }]);
     });
 
     test("actor.required throws when no act claim is present", () => {
@@ -538,7 +538,7 @@ describe("JwtKit", () => {
     test("actor.required passes when act is present", () => {
       const { token } = kit.sign({
         ...baseContent,
-        act: { sub: "service-1" },
+        act: { subject: "service-1" },
       });
 
       expect(() => kit.verify(token, { actor: { required: true } })).not.toThrow();
@@ -547,7 +547,7 @@ describe("JwtKit", () => {
     test("actor.forbidden throws when act is present", () => {
       const { token } = kit.sign({
         ...baseContent,
-        act: { sub: "service-1" },
+        act: { subject: "service-1" },
       });
 
       expect(() => kit.verify(token, { actor: { forbidden: true } })).toThrow(
@@ -558,7 +558,7 @@ describe("JwtKit", () => {
     test("actor.allowedSubjects accepts a chain of whitelisted subjects", () => {
       const { token } = kit.sign({
         ...baseContent,
-        act: { sub: "service-1", act: { sub: "service-2" } },
+        act: { subject: "service-1", act: { subject: "service-2" } },
       });
 
       expect(() =>
@@ -571,7 +571,7 @@ describe("JwtKit", () => {
     test("actor.allowedSubjects rejects an unknown actor in the chain", () => {
       const { token } = kit.sign({
         ...baseContent,
-        act: { sub: "service-1", act: { sub: "rogue" } },
+        act: { subject: "service-1", act: { subject: "rogue" } },
       });
 
       expect(() =>
@@ -582,7 +582,7 @@ describe("JwtKit", () => {
     test("actor.maxChainDepth allows chains at or below the limit", () => {
       const { token } = kit.sign({
         ...baseContent,
-        act: { sub: "service-1", act: { sub: "service-2" } },
+        act: { subject: "service-1", act: { subject: "service-2" } },
       });
 
       expect(() => kit.verify(token, { actor: { maxChainDepth: 2 } })).not.toThrow();
@@ -592,8 +592,8 @@ describe("JwtKit", () => {
       const { token } = kit.sign({
         ...baseContent,
         act: {
-          sub: "service-1",
-          act: { sub: "service-2", act: { sub: "service-3" } },
+          subject: "service-1",
+          act: { subject: "service-2", act: { subject: "service-3" } },
         },
       });
 
@@ -1154,6 +1154,65 @@ describe("JwtKit", () => {
       // The verify throws because the header change broke the signature,
       // not because of any x5u fetch attempt.
       expect(() => kit.verify(modifiedToken)).toThrow();
+    });
+  });
+
+  describe("confirmation claim", () => {
+    test("should round-trip a DPoP thumbprint through sign and verify", () => {
+      const { token } = kit.sign(
+        {
+          expires: "1h",
+          subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
+          tokenType: "access_token",
+          confirmation: {
+            thumbprint: "0ZcOCORZNYy-DWpqq30jZyJGHTN0d2HglBV3uiguA4I",
+          },
+        },
+        { tokenId: "stable-token-id" },
+      );
+
+      const decoded = JwtKit.decode(token);
+      expect(decoded.payload).toMatchSnapshot("wire payload — jkt only");
+
+      const parsed = kit.verify(token);
+      expect(parsed.payload.confirmation).toMatchSnapshot("parsed — jkt only");
+    });
+
+    test("should round-trip all confirmation members", () => {
+      const { token } = kit.sign(
+        {
+          expires: "1h",
+          subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
+          tokenType: "access_token",
+          confirmation: {
+            thumbprint: "0ZcOCORZNYy-DWpqq30jZyJGHTN0d2HglBV3uiguA4I",
+            mtlsCertThumbprint: "A4DtL2JmUMhAsvJj5tKyn64SqzmuXbMrJa0n761y5v0",
+            keyId: "test-key-id",
+            jwkSetUri: "https://example.com/.well-known/jwks.json",
+          },
+        },
+        { tokenId: "stable-token-id-full" },
+      );
+
+      const decoded = JwtKit.decode(token);
+      expect(decoded.payload).toMatchSnapshot("wire payload — full cnf");
+
+      const parsed = kit.verify(token);
+      expect(parsed.payload.confirmation).toMatchSnapshot("parsed — full cnf");
+    });
+
+    test("should omit cnf entirely when confirmation is not provided", () => {
+      const { token } = kit.sign({
+        expires: "1h",
+        subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
+        tokenType: "access_token",
+      });
+
+      const decoded = JwtKit.decode(token);
+      expect(decoded.payload).not.toHaveProperty("cnf");
+
+      const parsed = kit.verify(token);
+      expect(parsed.payload.confirmation).toBeUndefined();
     });
   });
 });

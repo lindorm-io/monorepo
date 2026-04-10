@@ -3,7 +3,9 @@ import { Dict } from "@lindorm/types";
 import { TokenEncryptOrSignOptions } from "../header";
 import { AdjustedAccessLevel, LevelOfAssurance } from "../level-of-assurance";
 import { AegisProfile } from "./aegis-profile";
-import { ActClaim, AuthFactor, SessionHint, SubjectHint } from "./jwt-claims";
+import { ActClaim } from "./jwt-act";
+import { AuthFactor, SessionHint, SubjectHint } from "./jwt-claims";
+import { ConfirmationClaim } from "./jwt-confirmation";
 
 export type SignJwtContent<C extends Dict = Dict> = {
   accessToken?: string;
@@ -19,6 +21,7 @@ export type SignJwtContent<C extends Dict = Dict> = {
   authTime?: Date;
   claims?: C;
   clientId?: string;
+  confirmation?: ConfirmationClaim;
   entitlements?: Array<string>;
   expires: Expiry;
   grantType?: string;

@@ -4,13 +4,10 @@ import { ParsedTokenHeader } from "../header";
 import { AdjustedAccessLevel, LevelOfAssurance } from "../level-of-assurance";
 import { DecodedJwt } from "./jwt-decode";
 import { AegisProfile } from "./aegis-profile";
-import {
-  ActClaim,
-  AuthFactor,
-  SessionHint,
-  SubjectHint,
-  TokenDelegation,
-} from "./jwt-claims";
+import { ActClaim } from "./jwt-act";
+import { AuthFactor, SessionHint, SubjectHint } from "./jwt-claims";
+import { ConfirmationClaim } from "./jwt-confirmation";
+import { TokenDelegation } from "./jwt-delegation";
 
 export type ParsedJwtHeader = Omit<ParsedTokenHeader, "algorithm" | "headerType"> & {
   algorithm: KryptosSigAlgorithm;
@@ -30,6 +27,7 @@ export type ParsedJwtPayload<C extends Dict = Dict> = {
   claims: C;
   clientId: string | undefined;
   codeHash: string | undefined;
+  confirmation: ConfirmationClaim | undefined;
   entitlements: Array<string>;
   expiresAt: Date | undefined;
   grantType: string | undefined;

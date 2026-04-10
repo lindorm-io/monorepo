@@ -4,8 +4,8 @@ exports[`extractTokenDelegation should return single-level actor chain 1`] = `
 {
   "actorChain": [
     {
-      "iss": "https://issuer.example/",
-      "sub": "service-1",
+      "issuer": "https://issuer.example/",
+      "subject": "service-1",
     },
   ],
   "currentActor": "service-1",
@@ -25,13 +25,13 @@ exports[`extractTokenDelegation should walk three-level nested act chain outermo
 {
   "actorChain": [
     {
-      "sub": "service-1",
+      "subject": "service-1",
     },
     {
-      "sub": "service-2",
+      "subject": "service-2",
     },
     {
-      "sub": "service-3",
+      "subject": "service-3",
     },
   ],
   "currentActor": "service-1",
