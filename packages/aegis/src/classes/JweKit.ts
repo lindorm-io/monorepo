@@ -21,6 +21,7 @@ import {
 } from "#internal/utils/compute-typ-header";
 import { decodeJoseHeader, encodeJoseHeader } from "#internal/utils/jose-header";
 import { parseTokenHeader } from "#internal/utils/token-header";
+import { validateCrit } from "#internal/utils/validate-crit";
 import { JwsKit } from "./JwsKit";
 import { JwtKit } from "./JwtKit";
 
@@ -107,6 +108,13 @@ export class JweKit implements IJweKit {
     if (typ !== "JWE" && !(typeof typ === "string" && typ.endsWith("+jwe"))) {
       throw new JweError("Invalid token", {
         data: { typ },
+      });
+    }
+
+    const critError = validateCrit(decoded.header);
+    if (critError) {
+      throw new JweError(`Invalid crit header: ${critError}`, {
+        data: { crit: decoded.header.crit },
       });
     }
 

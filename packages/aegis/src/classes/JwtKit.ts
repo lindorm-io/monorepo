@@ -8,6 +8,7 @@ import {
 } from "#internal/utils/compute-typ-header";
 import { extractTokenIdentity } from "#internal/utils/extract-token-identity";
 import { validateActor } from "#internal/utils/validate-actor";
+import { validateCrit } from "#internal/utils/validate-crit";
 import { IJwtKit } from "../interfaces";
 import {
   DecodedJwt,
@@ -199,6 +200,13 @@ export class JwtKit implements IJwtKit {
       throw new JwtError("Invalid token", {
         data: { typ },
         details: "Header type must be JWT or <type>+jwt",
+      });
+    }
+
+    const critError = validateCrit(decoded.header);
+    if (critError) {
+      throw new JwtError(`Invalid crit header: ${critError}`, {
+        data: { crit: decoded.header.crit },
       });
     }
 

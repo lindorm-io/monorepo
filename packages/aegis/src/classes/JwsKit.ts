@@ -21,6 +21,7 @@ import {
 import { decodeJoseHeader, encodeJoseHeader } from "#internal/utils/jose-header";
 import { createJoseSignature, verifyJoseSignature } from "#internal/utils/jose-signature";
 import { parseTokenHeader } from "#internal/utils/token-header";
+import { validateCrit } from "#internal/utils/validate-crit";
 
 export class JwsKit implements IJwsKit {
   private readonly logger: ILogger;
@@ -149,6 +150,13 @@ export class JwsKit implements IJwsKit {
       throw new JwsError("Invalid token", {
         data: { typ },
         details: "Header type must be JWS, JOSE, <type>+jws, or undefined",
+      });
+    }
+
+    const critError = validateCrit(decoded.header);
+    if (critError) {
+      throw new JwsError(`Invalid crit header: ${critError}`, {
+        data: { crit: decoded.header.crit },
       });
     }
 

@@ -428,15 +428,19 @@ describe("JweKit", () => {
   });
 
   describe("critical header parameter rejection", () => {
-    test("should reject token with unknown critical parameter", () => {
+    test("should reject RFC-valid token with an extension critical parameter aegis does not implement", () => {
       const { token } = kit.encrypt("data", {
         objectId: "5b63e7ec-5ca4-4083-8de9-de0d6e2ddd03",
       });
 
+      // Well-formed header with a non-registered crit parameter that is
+      // present. Aegis should still reject — it doesn't implement any
+      // extension parameters.
       const decoded = JweKit.decode(token);
       const headerWithCrit = {
         ...decoded.header,
-        crit: ["unknownParam"],
+        crit: ["lindorm_ext"],
+        lindorm_ext: "some-value",
       };
 
       const parts = token.split(".");
@@ -446,20 +450,17 @@ describe("JweKit", () => {
       const modifiedToken = [modifiedHeader, ...parts.slice(1)].join(".");
 
       expect(() => kit.decrypt(modifiedToken)).toThrow(
-        "Unsupported critical header parameter: unknownParam",
+        "Unsupported critical header parameter: lindorm_ext",
       );
     });
 
-    test("should reject token with multiple unknown critical parameters", () => {
+    test("should reject malformed crit listing a parameter not present in the header", () => {
       const { token } = kit.encrypt("data", {
         objectId: "5b63e7ec-5ca4-4083-8de9-de0d6e2ddd03",
       });
 
       const decoded = JweKit.decode(token);
-      const headerWithCrit = {
-        ...decoded.header,
-        crit: ["unknownParam1", "unknownParam2"],
-      };
+      const headerWithCrit = { ...decoded.header, crit: ["missing_ext"] };
 
       const parts = token.split(".");
       const modifiedHeader = Buffer.from(JSON.stringify(headerWithCrit))
@@ -467,9 +468,41 @@ describe("JweKit", () => {
         .replace(/=/g, "");
       const modifiedToken = [modifiedHeader, ...parts.slice(1)].join(".");
 
-      expect(() => kit.decrypt(modifiedToken)).toThrow(
-        "Unsupported critical header parameter: unknownParam1",
-      );
+      expect(() => kit.decrypt(modifiedToken)).toThrow(/not present/);
+    });
+
+    test("should reject crit containing an IANA-registered parameter name", () => {
+      const { token } = kit.encrypt("data", {
+        objectId: "5b63e7ec-5ca4-4083-8de9-de0d6e2ddd03",
+      });
+
+      const decoded = JweKit.decode(token);
+      const headerWithCrit = { ...decoded.header, crit: ["enc"] };
+
+      const parts = token.split(".");
+      const modifiedHeader = Buffer.from(JSON.stringify(headerWithCrit))
+        .toString("base64url")
+        .replace(/=/g, "");
+      const modifiedToken = [modifiedHeader, ...parts.slice(1)].join(".");
+
+      expect(() => kit.decrypt(modifiedToken)).toThrow(/IANA-registered/);
+    });
+
+    test("should reject crit that is an empty array", () => {
+      const { token } = kit.encrypt("data", {
+        objectId: "5b63e7ec-5ca4-4083-8de9-de0d6e2ddd03",
+      });
+
+      const decoded = JweKit.decode(token);
+      const headerWithCrit = { ...decoded.header, crit: [] };
+
+      const parts = token.split(".");
+      const modifiedHeader = Buffer.from(JSON.stringify(headerWithCrit))
+        .toString("base64url")
+        .replace(/=/g, "");
+      const modifiedToken = [modifiedHeader, ...parts.slice(1)].join(".");
+
+      expect(() => kit.decrypt(modifiedToken)).toThrow(/empty/);
     });
 
     test("should accept token with empty critical array", () => {

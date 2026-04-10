@@ -22,6 +22,7 @@ import {
 } from "#internal/utils/compute-typ-header";
 import { decodeCoseHeader, mapCoseHeader } from "#internal/utils/cose/header";
 import { mapTokenHeader, parseTokenHeader } from "#internal/utils/token-header";
+import { validateCrit } from "#internal/utils/validate-crit";
 
 export class CweKit implements ICweKit {
   private readonly encryption: KryptosEncryption;
@@ -109,6 +110,13 @@ export class CweKit implements ICweKit {
           expect: this.encryption,
           actual: decoded.protected.alg,
         },
+      });
+    }
+
+    const critError = validateCrit(decoded.protected as any);
+    if (critError) {
+      throw new CoseEncryptError(`Invalid crit header: ${critError}`, {
+        data: { crit: (decoded.protected as any).crit },
       });
     }
 

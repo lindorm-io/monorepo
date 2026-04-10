@@ -21,6 +21,7 @@ import { createCoseSignToken } from "#internal/utils/cose-sign-token";
 import { createCoseSignature, verifyCoseSignature } from "#internal/utils/cose-signature";
 import { decodeCoseHeader, mapCoseHeader } from "#internal/utils/cose/header";
 import { mapTokenHeader, parseTokenHeader } from "#internal/utils/token-header";
+import { validateCrit } from "#internal/utils/validate-crit";
 
 export class CwsKit implements ICwsKit {
   private readonly logger: ILogger;
@@ -95,6 +96,13 @@ export class CwsKit implements ICwsKit {
       throw new CoseSignError("Invalid token", {
         data: { algorithm: protectedDict.alg },
         debug: { expected: this.kryptos.algorithm },
+      });
+    }
+
+    const critError = validateCrit(protectedDict as any);
+    if (critError) {
+      throw new CoseSignError(`Invalid crit header: ${critError}`, {
+        data: { crit: (protectedDict as any).crit },
       });
     }
 
@@ -188,6 +196,13 @@ export class CwsKit implements ICwsKit {
 
   public static parse<T extends CwsContent>(token: CwsContent): ParsedCws<T> {
     const decoded = CwsKit.decode<T>(token);
+
+    const critError = validateCrit(decoded.protected as any);
+    if (critError) {
+      throw new CoseSignError(`Invalid crit header: ${critError}`, {
+        data: { crit: (decoded.protected as any).crit },
+      });
+    }
 
     const header = parseTokenHeader<ParsedCwsHeader>({
       ...decoded.protected,
