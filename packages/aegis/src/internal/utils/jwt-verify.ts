@@ -28,7 +28,7 @@ const mapVerify = (key: keyof VerifyJwtOptions): keyof JwtClaims => {
     case "authTime":
       return "auth_time";
     case "clientId":
-      return "cid";
+      return "client_id";
     case "entitlements":
       return "entitlements";
     case "grantType":
@@ -42,9 +42,9 @@ const mapVerify = (key: keyof VerifyJwtOptions): keyof JwtClaims => {
     case "nonce":
       return "nonce";
     case "permissions":
-      return "per";
+      return "permissions";
     case "roles":
-      return "rls";
+      return "roles";
     case "scope":
       return "scope";
     case "sessionHint":
@@ -54,7 +54,7 @@ const mapVerify = (key: keyof VerifyJwtOptions): keyof JwtClaims => {
     case "subjectHint":
       return "suh";
     case "tenantId":
-      return "tid";
+      return "tenant_id";
     case "tokenType":
       return "token_type";
     default:
