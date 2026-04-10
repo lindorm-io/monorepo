@@ -12,6 +12,15 @@ export type SessionHint =
 
 export type SubjectHint = "user" | "client" | "service" | "device" | (string & {});
 
+// https://datatracker.ietf.org/doc/html/rfc8693#section-4.1
+export type ActClaim = {
+  sub?: string;
+  iss?: string;
+  aud?: Array<string>;
+  client_id?: string;
+  act?: ActClaim;
+};
+
 // https://datatracker.ietf.org/doc/html/rfc7519#section-4.1
 type StdClaims = {
   aud?: Array<string>; // audience
@@ -35,6 +44,15 @@ type OidcClaims = {
   s_hash?: string; // state hash
 };
 
+// https://datatracker.ietf.org/doc/html/rfc8693 (act, may_act)
+// https://datatracker.ietf.org/doc/html/rfc9068#section-2.2.3.1 (groups, entitlements)
+type ExtendedClaims = {
+  act?: ActClaim; // delegation chain
+  may_act?: ActClaim; // actor authorized to act on behalf of subject
+  groups?: Array<string>; // groups
+  entitlements?: Array<string>; // entitlements
+};
+
 type LindormClaims = {
   aal?: AdjustedAccessLevel; // adjusted access level
   afr?: string; // auth factor reference
@@ -51,4 +69,4 @@ type LindormClaims = {
   token_type?: string;
 };
 
-export type JwtClaims = StdClaims & OidcClaims & LindormClaims;
+export type JwtClaims = StdClaims & OidcClaims & ExtendedClaims & LindormClaims;

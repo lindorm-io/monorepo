@@ -12,7 +12,9 @@ export type VerifyJwtOptions = {
   authState?: string;
   authTime?: PredicateOperator<Date>;
   clientId?: Array<string> | string | PredicateOperator<any>;
+  entitlements?: Array<string> | string | PredicateOperator<any>;
   grantType?: string | PredicateOperator<string>;
+  groups?: Array<string> | string | PredicateOperator<any>;
   issuer?: string | PredicateOperator<string>;
   levelOfAssurance?: number | PredicateOperator<number>;
   nonce?: string | PredicateOperator<string>;

@@ -29,8 +29,12 @@ const mapVerify = (key: keyof VerifyJwtOptions): keyof JwtClaims => {
       return "auth_time";
     case "clientId":
       return "cid";
+    case "entitlements":
+      return "entitlements";
     case "grantType":
       return "gty";
+    case "groups":
+      return "groups";
     case "issuer":
       return "iss";
     case "levelOfAssurance":
