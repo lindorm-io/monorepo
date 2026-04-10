@@ -1,3 +1,4 @@
+export * from "./aegis-profile";
 export * from "./jwt-claims";
 export * from "./jwt-decode";
 export * from "./jwt-kit";

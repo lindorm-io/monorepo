@@ -1,4 +1,5 @@
 import { B64 } from "@lindorm/b64";
+import { camelKeys, snakeKeys } from "@lindorm/case";
 import { expires, getUnixTime } from "@lindorm/date";
 import { isArray, isDate, isFinite, isObject, isString, isUrlLike } from "@lindorm/is";
 import { KryptosAlgorithm } from "@lindorm/kryptos";
@@ -7,7 +8,14 @@ import { removeUndefined } from "@lindorm/utils";
 import { randomUUID } from "crypto";
 import { B64U } from "../constants/format";
 import { JwtError } from "../../errors";
-import { JwtClaims, ParsedJwtPayload, SignJwtContent, SignJwtOptions } from "../../types";
+import {
+  AegisProfile,
+  JwtClaims,
+  ParsedJwtPayload,
+  SignJwtContent,
+  SignJwtOptions,
+} from "../../types";
+import { AEGIS_PROFILE_WIRE_KEYS } from "../constants/aegis-profile-keys";
 import { createAccessTokenHash, createCodeHash, createStateHash } from "./create-hash";
 
 type Config = {
@@ -112,8 +120,14 @@ export const encodeJwtPayload = <C extends Dict = Dict>(
   const claims = mapJwtContentToClaims(config, content, options);
   const { expiresAt, expiresIn, expiresOn } = expires(content.expires);
 
+  // AegisProfile fields are spread into the top-level JSON payload via
+  // mechanical snake_case conversion. This keeps aegis-signed tokens
+  // OIDC-compliant (profile claims like given_name, family_name, etc.
+  // live at the top level of the token, not nested under a "profile" key).
+  const profileWire = isObject(content.profile) ? snakeKeys(content.profile) : {};
+
   const payload = B64.encode(
-    JSON.stringify({ ...claims, ...(content.claims ?? {}) }),
+    JSON.stringify({ ...claims, ...profileWire, ...(content.claims ?? {}) }),
     B64U,
   );
 
@@ -172,7 +186,26 @@ export const parseTokenPayload = <C extends Dict = Dict<never>>(
     ...rest
   } = decoded;
 
-  const claims = (isObject(rest) ? rest : {}) as C;
+  // Partition remaining claims into AegisProfile fields (which we'll
+  // camelCase and surface as payload.profile) and truly custom claims
+  // (passed through unchanged to payload.claims).
+  const profileWire: Dict = {};
+  const customClaims: Dict = {};
+
+  for (const [key, value] of Object.entries(rest)) {
+    if (AEGIS_PROFILE_WIRE_KEYS.has(key)) {
+      profileWire[key] = value;
+    } else {
+      customClaims[key] = value;
+    }
+  }
+
+  const profile =
+    Object.keys(profileWire).length > 0
+      ? (camelKeys(profileWire) as AegisProfile)
+      : undefined;
+
+  const claims = customClaims as C;
 
   return removeUndefined({
     accessTokenHash: at_hash,
@@ -201,6 +234,7 @@ export const parseTokenPayload = <C extends Dict = Dict<never>>(
       : isString(permissions)
         ? [permissions]
         : [],
+    profile,
     roles: isArray(roles) ? roles : isString(roles) ? [roles] : [],
     scope: isArray(scope) ? scope : isString(scope) ? [scope] : [],
     sessionHint: sih,

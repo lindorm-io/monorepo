@@ -987,6 +987,150 @@ describe("JwtKit", () => {
       expect(() => kit.verify(token, { audience: ["saga", "elsewhere"] })).toThrow();
     });
 
+    test("AegisProfile round-trips: camelCase input → snake_case wire → camelCase parsed output", () => {
+      const { token } = kit.sign({
+        expires: "1h",
+        subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
+        tokenType: "id_token",
+        profile: {
+          name: "Jonn Nilsson",
+          givenName: "Jonn",
+          familyName: "Nilsson",
+          preferredName: "Jonn",
+          displayName: "princejonn",
+          nickname: "princejonn",
+          email: "jonn@example.com",
+          emailVerified: true,
+          picture: "https://example.com/avatar.png",
+          profile: "https://example.com/users/jonn",
+          locale: "en-US",
+          zoneinfo: "Europe/Stockholm",
+          pronouns: "he/him",
+          honorific: "Mr.",
+          namingSystem: "given_family",
+          birthdate: "1990-05-15",
+          address: {
+            formatted: "123 Main St, Stockholm, 11122, Sweden",
+            streetAddress: "123 Main St",
+            locality: "Stockholm",
+            postalCode: "11122",
+            country: "Sweden",
+          },
+          jobTitle: "Principal Engineer",
+          organization: "Lindorm",
+          department: "Platform",
+          occupation: "Software Engineering",
+          legalName: "Jonn Nilsson",
+          legalNameVerified: true,
+        },
+      });
+
+      // Decode the raw wire payload to verify snake_case on the wire
+      const decoded = JwtKit.decode(token);
+      expect(decoded.payload).toMatchObject({
+        name: "Jonn Nilsson",
+        given_name: "Jonn",
+        family_name: "Nilsson",
+        preferred_name: "Jonn",
+        display_name: "princejonn",
+        nickname: "princejonn",
+        email: "jonn@example.com",
+        email_verified: true,
+        picture: "https://example.com/avatar.png",
+        profile: "https://example.com/users/jonn",
+        locale: "en-US",
+        zoneinfo: "Europe/Stockholm",
+        pronouns: "he/him",
+        honorific: "Mr.",
+        naming_system: "given_family",
+        birthdate: "1990-05-15",
+        address: {
+          formatted: "123 Main St, Stockholm, 11122, Sweden",
+          street_address: "123 Main St",
+          locality: "Stockholm",
+          postal_code: "11122",
+          country: "Sweden",
+        },
+        job_title: "Principal Engineer",
+        organization: "Lindorm",
+        department: "Platform",
+        occupation: "Software Engineering",
+        legal_name: "Jonn Nilsson",
+        legal_name_verified: true,
+      });
+
+      // Verify and confirm the parsed profile comes back camelCased
+      const parsed = kit.verify(token);
+      expect(parsed.payload.profile).toEqual({
+        name: "Jonn Nilsson",
+        givenName: "Jonn",
+        familyName: "Nilsson",
+        preferredName: "Jonn",
+        displayName: "princejonn",
+        nickname: "princejonn",
+        email: "jonn@example.com",
+        emailVerified: true,
+        picture: "https://example.com/avatar.png",
+        profile: "https://example.com/users/jonn",
+        locale: "en-US",
+        zoneinfo: "Europe/Stockholm",
+        pronouns: "he/him",
+        honorific: "Mr.",
+        namingSystem: "given_family",
+        birthdate: "1990-05-15",
+        address: {
+          formatted: "123 Main St, Stockholm, 11122, Sweden",
+          streetAddress: "123 Main St",
+          locality: "Stockholm",
+          postalCode: "11122",
+          country: "Sweden",
+        },
+        jobTitle: "Principal Engineer",
+        organization: "Lindorm",
+        department: "Platform",
+        occupation: "Software Engineering",
+        legalName: "Jonn Nilsson",
+        legalNameVerified: true,
+      });
+    });
+
+    test("profile is undefined when not supplied on sign", () => {
+      const { token } = kit.sign({
+        expires: "1h",
+        subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
+        tokenType: "test_token",
+      });
+
+      const parsed = kit.verify(token);
+      expect(parsed.payload.profile).toBeUndefined();
+    });
+
+    test("custom claims and profile claims are kept in separate buckets", () => {
+      const { token } = kit.sign({
+        expires: "1h",
+        subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
+        tokenType: "test_token",
+        profile: {
+          givenName: "Jonn",
+          email: "jonn@example.com",
+        },
+        claims: {
+          my_app_flag: "enabled",
+          some_custom_thing: 42,
+        },
+      });
+
+      const parsed = kit.verify(token);
+      expect(parsed.payload.profile).toEqual({
+        givenName: "Jonn",
+        email: "jonn@example.com",
+      });
+      expect(parsed.payload.claims).toEqual({
+        my_app_flag: "enabled",
+        some_custom_thing: 42,
+      });
+    });
+
     test("a malicious x5u in the header must not be fetched or used to verify the token", () => {
       const { token } = kit.sign({
         expires: "1h",

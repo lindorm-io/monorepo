@@ -2,6 +2,7 @@ import { Expiry } from "@lindorm/date";
 import { Dict } from "@lindorm/types";
 import { TokenEncryptOrSignOptions } from "../header";
 import { AdjustedAccessLevel, LevelOfAssurance } from "../level-of-assurance";
+import { AegisProfile } from "./aegis-profile";
 import { ActClaim, AuthFactor, SessionHint, SubjectHint } from "./jwt-claims";
 
 export type SignJwtContent<C extends Dict = Dict> = {
@@ -27,6 +28,7 @@ export type SignJwtContent<C extends Dict = Dict> = {
   nonce?: string;
   notBefore?: Date;
   permissions?: Array<string>;
+  profile?: AegisProfile;
   roles?: Array<string>;
   scope?: Array<string>;
   sessionHint?: SessionHint;
