@@ -25,16 +25,16 @@ describe("mapCoseClaims", () => {
 
       aal: 3,
       afr: ["afr1"],
-      cid: "4f325774-db23-5eb5-9a1f-60a82ca42c2b",
+      client_id: "4f325774-db23-5eb5-9a1f-60a82ca42c2b",
       gty: "grant_type",
       loa: 2,
-      per: ["permission1", "permission2"],
-      rls: ["role1", "role2"],
+      permissions: ["permission1", "permission2"],
+      roles: ["role1", "role2"],
       scope: ["scope1", "scope2"],
       sid: "60991f15-6ddf-5e0c-8b95-bebf3bca9724",
       sih: "session_hint",
       suh: "subject_hint",
-      tid: "097a9cf0-b70c-58ce-b97e-b7359daacc17",
+      tenant_id: "097a9cf0-b70c-58ce-b97e-b7359daacc17",
       token_type: "token_type",
     };
   });
