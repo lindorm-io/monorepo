@@ -1,9 +1,9 @@
 import { createMockAegis } from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger";
-import { createBearerTokenMiddleware } from "./create-bearer-token-middleware";
+import { createAccessTokenMiddleware } from "./create-access-token-middleware";
 
-describe("createBearerTokenMiddleware", () => {
+describe("createAccessTokenMiddleware", () => {
   let next: jest.Mock;
 
   const options: any = { issuer: "https://test.lindorm.io/" };
@@ -27,7 +27,7 @@ describe("createBearerTokenMiddleware", () => {
     });
 
     test("should verify and store on ctx.state.tokens.accessToken", async () => {
-      const middleware = createBearerTokenMiddleware(options);
+      const middleware = createAccessTokenMiddleware(options);
 
       await expect(middleware(ctx, next)).resolves.toBeUndefined();
 
@@ -41,7 +41,7 @@ describe("createBearerTokenMiddleware", () => {
     test("should throw 401 when authorization type is not bearer", async () => {
       ctx.state.authorization.type = "basic";
 
-      const middleware = createBearerTokenMiddleware(options);
+      const middleware = createAccessTokenMiddleware(options);
 
       await expect(middleware(ctx, next)).rejects.toThrow(ClientError);
 
@@ -54,7 +54,7 @@ describe("createBearerTokenMiddleware", () => {
     });
 
     test("should call next", async () => {
-      const middleware = createBearerTokenMiddleware(options);
+      const middleware = createAccessTokenMiddleware(options);
 
       await middleware(ctx, next);
 
@@ -84,7 +84,7 @@ describe("createBearerTokenMiddleware", () => {
     });
 
     test("should verify and store on both ctx.state.tokens.accessToken and ctx.socket.data.tokens.bearer", async () => {
-      const middleware = createBearerTokenMiddleware(options);
+      const middleware = createAccessTokenMiddleware(options);
 
       await expect(middleware(ctx, next)).resolves.toBeUndefined();
 
@@ -99,7 +99,7 @@ describe("createBearerTokenMiddleware", () => {
     test("should throw 401 when handshake bearer is not a string", async () => {
       ctx.io.socket.handshake.auth.bearer = 12345;
 
-      const middleware = createBearerTokenMiddleware(options);
+      const middleware = createAccessTokenMiddleware(options);
 
       await expect(middleware(ctx, next)).rejects.toThrow(ClientError);
 
@@ -125,7 +125,7 @@ describe("createBearerTokenMiddleware", () => {
 
       ctx.aegis.verify.mockRejectedValue(new Error("invalid signature"));
 
-      const middleware = createBearerTokenMiddleware(options);
+      const middleware = createAccessTokenMiddleware(options);
 
       await expect(middleware(ctx, next)).rejects.toThrow(ClientError);
 

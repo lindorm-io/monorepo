@@ -8,10 +8,10 @@ type Options = Omit<VerifyJwtOptions, "issuer"> & {
   issuer: string;
 };
 
-export const createBearerTokenMiddleware = <C extends PylonContext = PylonContext>(
+export const createAccessTokenMiddleware = <C extends PylonContext = PylonContext>(
   options: Options,
 ): PylonMiddleware<C> =>
-  async function bearerTokenMiddleware(ctx, next): Promise<void> {
+  async function accessTokenMiddleware(ctx, next): Promise<void> {
     const timer = ctx.logger.time();
 
     try {
@@ -43,10 +43,10 @@ export const createBearerTokenMiddleware = <C extends PylonContext = PylonContex
 
       timer.debug("Token verified", { verified });
 
-      ctx.logger.info("Bearer token verification successful", {
+      ctx.logger.info("Access token verification successful", {
         subject: verified.payload.subject,
         subjectHint: verified.payload.subjectHint,
-        tokenType: verified.payload.tokenType,
+        tokenType: verified.header.tokenType,
       });
 
       ctx.state.tokens.accessToken = verified;
@@ -55,7 +55,7 @@ export const createBearerTokenMiddleware = <C extends PylonContext = PylonContex
         ctx.io.socket.data.tokens.bearer = verified;
       }
     } catch (error: any) {
-      timer.debug("Bearer token verification failed", error);
+      timer.debug("Access token verification failed", error);
 
       throw new ClientError("Invalid credentials", {
         error,
