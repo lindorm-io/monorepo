@@ -1,6 +1,12 @@
+import { buildDpopProof } from "#internal/build-dpop-proof";
 import { isArray, isString } from "@lindorm/is";
 import { ILogger } from "@lindorm/logger";
-import { Dict, OpenIdConfigurationResponse, OpenIdTokenResponse } from "@lindorm/types";
+import {
+  Dict,
+  DpopSigner,
+  OpenIdConfigurationResponse,
+  OpenIdTokenResponse,
+} from "@lindorm/types";
 import { Conduit } from "../classes";
 import { ConduitError } from "../errors";
 import { ConduitMiddleware, ConduitUsing, RequestOptions } from "../types";
@@ -8,6 +14,7 @@ import { conduitBasicAuthMiddleware } from "./conduit-basic-auth-middleware";
 import { conduitBearerAuthMiddleware } from "./conduit-bearer-auth-middleware";
 import { conduitChangeRequestBodyMiddleware } from "./conduit-change-request-body-middleware";
 import { conduitChangeResponseDataMiddleware } from "./conduit-change-response-data-middleware";
+import { createConduitDpopAuthMiddleware } from "./conduit-dpop-auth-middleware";
 
 export type ClientCredentialsAuthLocation = "body" | "header";
 
@@ -22,6 +29,7 @@ type Config = {
   clockTolerance?: number;
   contentType?: ClientCredentialsContentType;
   defaultExpiration?: number;
+  dpopSigner?: DpopSigner;
   grantType?: "client_credentials";
   issuer: string;
   tokenUri?: string;
@@ -82,10 +90,16 @@ export const conduitClientCredentialsMiddlewareFactory = (
     clientSecret,
     clockTolerance = 10,
     contentType = "application/json",
+    dpopSigner,
     grantType = "client_credentials",
     issuer,
     using,
   } = config;
+
+  const bindAccessToken = (accessToken: string, tokenType?: string): ConduitMiddleware =>
+    dpopSigner
+      ? createConduitDpopAuthMiddleware(dpopSigner)(accessToken)
+      : conduitBearerAuthMiddleware(accessToken, tokenType);
 
   return async function conduitClientCredentialsMiddleware(
     options?: Options,
@@ -102,7 +116,7 @@ export const conduitClientCredentialsMiddlewareFactory = (
     );
 
     if (existing && existing.ttl > Date.now()) {
-      return conduitBearerAuthMiddleware(existing.accessToken, existing.tokenType);
+      return bindAccessToken(existing.accessToken, existing.tokenType);
     }
 
     const inFlightKey = `${audience}:${issuer}`;
@@ -166,12 +180,29 @@ export const conduitClientCredentialsMiddlewareFactory = (
         });
       }
 
+      // RFC 9449 §5: bind the access token to the client's DPoP key by
+      // presenting a proof on the token endpoint request. The proof
+      // carries htm/htu for the token endpoint itself and no `ath`
+      // (there's no access token yet).
+      const dpopMiddleware: ConduitMiddleware | null = dpopSigner
+        ? async function conduitDpopTokenEndpointProof(ctx, next) {
+            const proof = await buildDpopProof({
+              signer: dpopSigner,
+              httpMethod: ctx.req.config.method,
+              httpUri: ctx.req.url,
+            });
+            ctx.req.headers = { ...ctx.req.headers, DPoP: proof };
+            await next();
+          }
+        : null;
+
       const { data } = await client.post<OpenIdTokenResponse>(tokenUri, {
         ...requestOptions,
         middleware: [
           ...(authLocation === "header"
             ? [conduitBasicAuthMiddleware(clientId, clientSecret)]
             : []),
+          ...(dpopMiddleware ? [dpopMiddleware] : []),
         ],
       });
 
@@ -207,7 +238,7 @@ export const conduitClientCredentialsMiddlewareFactory = (
         ttl: ttl - clockTolerance * 1000,
       });
 
-      return conduitBearerAuthMiddleware(data.accessToken, data.tokenType);
+      return bindAccessToken(data.accessToken, data.tokenType);
     })().finally(() => {
       inFlightTokenRequests.delete(inFlightKey);
     });

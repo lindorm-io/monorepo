@@ -365,4 +365,65 @@ describe("conduit-client-credentials-middleware", () => {
       expect(cache.length).toBe(1);
     });
   });
+
+  describe("with dpop", () => {
+    const dpopSigner = {
+      algorithm: "ES256" as const,
+      publicJwk: { kty: "EC", crv: "P-256", x: "x-val", y: "y-val" } as any,
+      sign: jest.fn(async () => new Uint8Array([9, 9, 9, 9])),
+    };
+
+    test("should present a DPoP proof on the token endpoint request and return a DPoP-bound middleware", async () => {
+      const dpopCache: ConduitClientCredentialsCache = [];
+      const dpopFactory = conduitClientCredentialsMiddlewareFactory(
+        {
+          clientId: "clientId",
+          clientSecret: "clientSecret",
+          clockTolerance: 0,
+          dpopSigner,
+          issuer: "https://lindorm.dk.auth0.com/",
+          tokenUri: "https://lindorm.dk.auth0.com/oauth/token",
+        },
+        dpopCache,
+      );
+
+      let observedDpopHeader: string | undefined;
+      nock("https://lindorm.dk.auth0.com")
+        .post("/oauth/token")
+        .times(1)
+        .reply(200, function () {
+          observedDpopHeader = this.req.headers.dpop as string;
+          return {
+            access_token: "bound_access_token",
+            expires_in: 10,
+            token_type: "DPoP",
+          };
+        });
+
+      const middleware = await dpopFactory({ audience: "https://identity.lindorm-io" });
+
+      expect(observedDpopHeader).toEqual(expect.stringMatching(/^.+\..+\..+$/));
+
+      // The proof on the token endpoint should have htm=POST and htu=tokenUri,
+      // with NO ath claim (there's no access token yet).
+      const [, payloadB64] = observedDpopHeader!.split(".");
+      const payload = JSON.parse(Buffer.from(payloadB64, "base64url").toString("utf-8"));
+      expect(payload.htm).toEqual("POST");
+      expect(payload.htu).toEqual("https://lindorm.dk.auth0.com/oauth/token");
+      expect(payload).not.toHaveProperty("ath");
+
+      const ctx: any = {
+        req: {
+          config: { method: "GET" },
+          headers: {},
+          url: "https://api.example.com/orders",
+        },
+      };
+
+      await middleware(ctx, jest.fn());
+
+      expect(ctx.req.headers.Authorization).toEqual("DPoP bound_access_token");
+      expect(ctx.req.headers.DPoP).toEqual(expect.stringMatching(/^.+\..+\..+$/));
+    });
+  });
 });
