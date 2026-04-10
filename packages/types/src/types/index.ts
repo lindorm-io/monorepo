@@ -4,6 +4,7 @@ export * from "./open-id";
 export * from "./aes-encryption";
 export * from "./aes-key-length";
 export * from "./crypto";
+export * from "./dpop-signer";
 export * from "./environment";
 export * from "./http-method";
 export * from "./pkce-method";
