@@ -27,6 +27,7 @@ export const createMockKryptos = (): MockKryptos => ({
   isActive: true,
   isExpired: false,
   modulus: null,
+  thumbprint: "mock-thumbprint",
 
   dispose: jest.fn(),
   [Symbol.dispose]: jest.fn(),
