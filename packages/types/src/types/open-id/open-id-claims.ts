@@ -79,7 +79,7 @@ type StandardClaims = {
   phoneNumberVerified: boolean;
 
   // profile
-  birthDate: string | null;
+  birthdate: string | null;
   familyName: string | null;
   gender: string | null;
   givenName: string | null;
