@@ -4,7 +4,6 @@ import { IKryptos } from "@lindorm/kryptos";
 import { ILogger } from "@lindorm/logger";
 import { Dict } from "@lindorm/types";
 import { decode, encode } from "cbor";
-import { randomBytes } from "crypto";
 import { CwtError } from "../errors";
 import { ICwtKit } from "../interfaces";
 import {
@@ -24,6 +23,7 @@ import {
   decodeTokenTypeFromTyp,
 } from "#internal/utils/compute-typ-header";
 import { extractTokenDelegation } from "#internal/utils/extract-token-delegation";
+import { generateTokenId } from "#internal/utils/generate-token-id";
 import { validateActor } from "#internal/utils/validate-actor";
 import { validateCrit } from "#internal/utils/validate-crit";
 import { decodeCoseClaims, mapCoseClaims } from "#internal/utils/cose/claims";
@@ -85,7 +85,7 @@ export class CwtKit implements ICwtKit {
     const claims = mapJwtContentToClaims(
       { algorithm: this.kryptos.algorithm, issuer: this.issuer },
       content,
-      { tokenId: randomBytes(20).toString("base64url"), ...options },
+      { tokenId: generateTokenId(), ...options },
     );
     const payloadDict = mapCoseClaims({ ...claims, ...(content.claims ?? {}) }, target);
     const payloadCbor = encode(payloadDict);

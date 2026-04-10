@@ -5,7 +5,6 @@ import { isArray, isDate, isFinite, isObject, isString, isUrlLike } from "@lindo
 import { KryptosAlgorithm } from "@lindorm/kryptos";
 import { Dict } from "@lindorm/types";
 import { removeUndefined } from "@lindorm/utils";
-import { randomUUID } from "crypto";
 import { B64U } from "../constants/format";
 import { JwtError } from "../../errors";
 import {
@@ -17,6 +16,7 @@ import {
 } from "../../types";
 import { AEGIS_PROFILE_WIRE_KEYS } from "../constants/aegis-profile-keys";
 import { createAccessTokenHash, createCodeHash, createStateHash } from "./create-hash";
+import { generateTokenId } from "./generate-token-id";
 
 type Config = {
   algorithm: KryptosAlgorithm;
@@ -71,7 +71,7 @@ export const mapJwtContentToClaims = <C extends Dict = Dict>(
       ? createStateHash(config.algorithm, content.authState)
       : undefined;
 
-  const tokenId = isString(options.tokenId) ? options.tokenId : randomUUID();
+  const tokenId = isString(options.tokenId) ? options.tokenId : generateTokenId();
 
   return removeUndefined({
     aal: isFinite(content.adjustedAccessLevel) ? content.adjustedAccessLevel : undefined,
