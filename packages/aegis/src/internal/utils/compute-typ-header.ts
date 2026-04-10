@@ -26,6 +26,18 @@ export const computeTypHeader = (
 ): string => {
   if (tokenType === undefined) return FORMAT_FALLBACK[kitFormat];
 
+  if (tokenType === "") {
+    throw new Error("tokenType cannot be an empty string");
+  }
+  if (tokenType.trim() !== tokenType || /\s/.test(tokenType)) {
+    throw new Error("tokenType cannot contain whitespace");
+  }
+  if (tokenType.includes("+")) {
+    throw new Error(
+      'tokenType cannot contain \'+\' — pass the bare type (e.g. "access_token"), not the full typ header (e.g. "at+jwt")',
+    );
+  }
+
   const shortName =
     (TOKEN_TYPE_TO_SHORT_NAME as Record<string, string>)[tokenType] ?? tokenType;
 
