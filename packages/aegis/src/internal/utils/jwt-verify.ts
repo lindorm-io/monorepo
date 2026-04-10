@@ -80,6 +80,21 @@ export const createJwtVerify = (
     },
   };
 
+  // Claims whose payload value is always stored as an array.
+  // For these, a string verifier value means "at least this one must be
+  // present" — so the predicate must be $all over a single-element array,
+  // not $eq against the raw string (which would fail because array ≠ string).
+  const ARRAY_CLAIM_KEYS: ReadonlySet<string> = new Set([
+    "aud",
+    "amr",
+    "afr",
+    "scope",
+    "roles",
+    "permissions",
+    "groups",
+    "entitlements",
+  ]);
+
   for (const [key, value] of Object.entries(verify)) {
     // tokenType is validated against the JOSE `typ` header by each Kit directly
     if (key === "tokenType") continue;
@@ -109,6 +124,12 @@ export const createJwtVerify = (
       continue;
     }
     if (isString(value)) {
+      // For claims stored as arrays on the payload side, a string verifier
+      // must match "contained in the array" — lift to a single-element $all.
+      if (ARRAY_CLAIM_KEYS.has(mapped)) {
+        predicate[mapped] = { $all: [value] };
+        continue;
+      }
       predicate[mapped] = { $eq: value };
       continue;
     }
