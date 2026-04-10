@@ -1,4 +1,5 @@
 import { TOKEN_TYPE_TO_SHORT_NAME, TokenType } from "../../constants/token-type";
+import { BaseTokenFormat } from "../../types/header";
 
 export type KitFormat = "jwt" | "jws" | "jwe" | "cwt" | "cws" | "cwe";
 
@@ -68,6 +69,38 @@ export const decodeTokenTypeFromTyp = (
     }
     return shortName;
   }
+
+  return undefined;
+};
+
+/**
+ * Derive the base token format (JWT, JWS, JWE, CWT, CWS, CWE) from a JOSE/COSE
+ * `typ` header value. Returns undefined when the typ is absent or unrecognized.
+ *
+ * Handles both the bare conventional forms ("JWT", "JWS", "JOSE", "JWE",
+ * "application/cwt", "application/cose; cose-type=cose-sign", ...) and the
+ * short-name-plus-suffix forms ("at+jwt", "rt+jws", "dpop+cwe", etc.).
+ */
+export const getBaseFormat = (typ: string | undefined): BaseTokenFormat | undefined => {
+  if (!typ) return undefined;
+
+  // JOSE bare forms
+  if (typ === "JWT") return "JWT";
+  if (typ === "JWS" || typ === "JOSE") return "JWS";
+  if (typ === "JWE") return "JWE";
+
+  // COSE bare forms
+  if (typ === "application/cwt") return "CWT";
+  if (typ.startsWith("application/cose; cose-type=cose-sign")) return "CWS";
+  if (typ.startsWith("application/cose; cose-type=cose-encrypt")) return "CWE";
+
+  // Suffix forms
+  if (typ.endsWith("+jwt")) return "JWT";
+  if (typ.endsWith("+jws")) return "JWS";
+  if (typ.endsWith("+jwe")) return "JWE";
+  if (typ.endsWith("+cwt")) return "CWT";
+  if (typ.endsWith("+cws")) return "CWS";
+  if (typ.endsWith("+cwe")) return "CWE";
 
   return undefined;
 };

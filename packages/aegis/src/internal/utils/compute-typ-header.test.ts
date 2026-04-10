@@ -1,4 +1,8 @@
-import { computeTypHeader, decodeTokenTypeFromTyp } from "./compute-typ-header";
+import {
+  computeTypHeader,
+  decodeTokenTypeFromTyp,
+  getBaseFormat,
+} from "./compute-typ-header";
 
 describe("computeTypHeader", () => {
   describe("known token types", () => {
@@ -110,5 +114,79 @@ describe("decodeTokenTypeFromTyp", () => {
   test("returns undefined when typ doesn't match the kit format suffix", () => {
     expect(decodeTokenTypeFromTyp("at+jwt", "jws")).toBeUndefined();
     expect(decodeTokenTypeFromTyp("rt+jws", "jwt")).toBeUndefined();
+  });
+});
+
+describe("getBaseFormat", () => {
+  describe("bare conventional forms", () => {
+    test("recognizes JWT", () => {
+      expect(getBaseFormat("JWT")).toBe("JWT");
+    });
+
+    test("recognizes JWS", () => {
+      expect(getBaseFormat("JWS")).toBe("JWS");
+    });
+
+    test("recognizes JOSE as JWS (legacy)", () => {
+      expect(getBaseFormat("JOSE")).toBe("JWS");
+    });
+
+    test("recognizes JWE", () => {
+      expect(getBaseFormat("JWE")).toBe("JWE");
+    });
+
+    test("recognizes application/cwt", () => {
+      expect(getBaseFormat("application/cwt")).toBe("CWT");
+    });
+
+    test("recognizes COSE-sign media type", () => {
+      expect(getBaseFormat("application/cose; cose-type=cose-sign")).toBe("CWS");
+    });
+
+    test("recognizes COSE-encrypt media type", () => {
+      expect(getBaseFormat("application/cose; cose-type=cose-encrypt")).toBe("CWE");
+    });
+  });
+
+  describe("suffix forms", () => {
+    test("recognizes +jwt suffix", () => {
+      expect(getBaseFormat("at+jwt")).toBe("JWT");
+      expect(getBaseFormat("dpop+jwt")).toBe("JWT");
+      expect(getBaseFormat("my_custom+jwt")).toBe("JWT");
+    });
+
+    test("recognizes +jws suffix", () => {
+      expect(getBaseFormat("rt+jws")).toBe("JWS");
+    });
+
+    test("recognizes +jwe suffix", () => {
+      expect(getBaseFormat("logout+jwe")).toBe("JWE");
+    });
+
+    test("recognizes +cwt suffix", () => {
+      expect(getBaseFormat("custom+cwt")).toBe("CWT");
+    });
+
+    test("recognizes +cws suffix", () => {
+      expect(getBaseFormat("custom+cws")).toBe("CWS");
+    });
+
+    test("recognizes +cwe suffix", () => {
+      expect(getBaseFormat("custom+cwe")).toBe("CWE");
+    });
+  });
+
+  describe("unknown and undefined", () => {
+    test("returns undefined when typ is undefined", () => {
+      expect(getBaseFormat(undefined)).toBeUndefined();
+    });
+
+    test("returns undefined for unrecognized typ", () => {
+      expect(getBaseFormat("something-weird")).toBeUndefined();
+    });
+
+    test("returns undefined for empty string", () => {
+      expect(getBaseFormat("")).toBeUndefined();
+    });
   });
 });

@@ -6,6 +6,7 @@ import {
   RawTokenHeaderClaims,
   TokenHeaderOptions,
 } from "../../types";
+import { getBaseFormat } from "./compute-typ-header";
 
 export const mapTokenHeader = (options: TokenHeaderOptions): RawTokenHeaderClaims => {
   const crit = options.critical
@@ -122,6 +123,7 @@ export const parseTokenHeader = <T extends ParsedTokenHeader = ParsedTokenHeader
 
   return removeUndefined({
     algorithm: decoded.alg,
+    baseFormat: getBaseFormat(decoded.typ),
     contentType: decoded.cty,
     critical,
     encryption: decoded.enc,

@@ -85,6 +85,7 @@ describe("CweKit", () => {
         },
         header: {
           algorithm: "A256GCM",
+          baseFormat: "CWE",
           contentType: "text/plain",
           critical: [],
           headerType: "application/cose; cose-type=cose-encrypt",
@@ -135,6 +136,7 @@ describe("CweKit", () => {
         },
         header: {
           algorithm: "A256GCM",
+          baseFormat: "CWE",
           contentType: "text/plain",
           critical: [],
           headerType: "application/cose; cose-type=cose-encrypt",
@@ -184,6 +186,7 @@ describe("CweKit", () => {
         },
         header: {
           algorithm: "A256GCM",
+          baseFormat: "CWE",
           contentType: "text/plain",
           critical: [],
           headerType: "application/cose; cose-type=cose-encrypt",
@@ -233,6 +236,7 @@ describe("CweKit", () => {
         },
         header: {
           algorithm: "A256GCM",
+          baseFormat: "CWE",
           contentType: "text/plain",
           critical: [],
           headerType: "application/cose; cose-type=cose-encrypt",

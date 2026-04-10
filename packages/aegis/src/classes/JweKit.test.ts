@@ -83,6 +83,7 @@ describe("JweKit", () => {
         },
         header: {
           algorithm: "ECDH-ES",
+          baseFormat: "JWE",
           contentType: "text/plain; charset=utf-8",
           critical: [],
           encryption: "A256GCM",
@@ -127,6 +128,7 @@ describe("JweKit", () => {
         },
         header: {
           algorithm: "dir",
+          baseFormat: "JWE",
           contentType: "text/plain; charset=utf-8",
           critical: [],
           encryption: "A256GCM",
@@ -170,6 +172,7 @@ describe("JweKit", () => {
         },
         header: {
           algorithm: "A128KW",
+          baseFormat: "JWE",
           contentType: "text/plain; charset=utf-8",
           critical: [],
           encryption: "A256GCM",
@@ -211,6 +214,7 @@ describe("JweKit", () => {
         },
         header: {
           algorithm: "PBES2-HS512+A256KW",
+          baseFormat: "JWE",
           contentType: "text/plain; charset=utf-8",
           critical: [],
           encryption: "A256GCM",
@@ -253,6 +257,7 @@ describe("JweKit", () => {
         },
         header: {
           algorithm: "A128GCMKW",
+          baseFormat: "JWE",
           contentType: "text/plain; charset=utf-8",
           critical: [],
           encryption: "A256GCM",
@@ -297,6 +302,7 @@ describe("JweKit", () => {
         },
         header: {
           algorithm: "ECDH-ES",
+          baseFormat: "JWE",
           contentType: "text/plain; charset=utf-8",
           critical: [],
           encryption: "A256GCM",
@@ -340,6 +346,7 @@ describe("JweKit", () => {
         },
         header: {
           algorithm: "RSA-OAEP-256",
+          baseFormat: "JWE",
           contentType: "text/plain; charset=utf-8",
           critical: [],
           encryption: "A256GCM",
