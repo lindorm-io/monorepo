@@ -4,7 +4,7 @@ import { TOKEN_HEADER_ALGORITHMS, TOKEN_HEADER_TYPES } from "#internal/constants
 
 export type TokenHeaderAlgorithm = (typeof TOKEN_HEADER_ALGORITHMS)[number];
 
-export type TokenHeaderType = (typeof TOKEN_HEADER_TYPES)[number];
+export type TokenHeaderType = (typeof TOKEN_HEADER_TYPES)[number] | (string & {});
 
 // https://www.rfc-editor.org/rfc/rfc7515.html#section-4.1
 export type TokenHeaderClaims = {

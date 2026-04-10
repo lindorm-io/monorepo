@@ -7,7 +7,7 @@ import { ActClaim, AuthFactor, SessionHint, SubjectHint } from "./jwt-claims";
 
 export type ParsedJwtHeader = Omit<ParsedTokenHeader, "algorithm" | "headerType"> & {
   algorithm: KryptosSigAlgorithm;
-  headerType: "JWT";
+  headerType: string;
 };
 
 export type ParsedJwtPayload<C extends Dict = Dict> = {
@@ -43,7 +43,7 @@ export type ParsedJwtPayload<C extends Dict = Dict> = {
   subjectHint: SubjectHint | undefined;
   tenantId: string | undefined;
   tokenId: string;
-  tokenType: string;
+  tokenType?: string;
 };
 
 export type ParsedJwt<C extends Dict = Dict> = {

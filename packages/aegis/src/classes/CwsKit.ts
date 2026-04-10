@@ -14,6 +14,7 @@ import {
   SignCwsOptions,
   SignedCws,
 } from "../types";
+import { computeTypHeader } from "#internal/utils/compute-typ-header";
 import { createCoseSignToken } from "#internal/utils/cose-sign-token";
 import { createCoseSignature, verifyCoseSignature } from "#internal/utils/cose-signature";
 import { decodeCoseHeader, mapCoseHeader } from "#internal/utils/cose/header";
@@ -43,7 +44,7 @@ export class CwsKit implements ICwsKit {
           : isString(data)
             ? "text/plain; charset=utf-8"
             : "application/octet-stream",
-        headerType: "application/cose; cose-type=cose-sign",
+        headerType: computeTypHeader(options.tokenType, "cws"),
       }),
       target,
     );
@@ -150,7 +151,11 @@ export class CwsKit implements ICwsKit {
   public static isCws(token: Buffer | string): boolean {
     try {
       const decode = CwsKit.decode(token);
-      return decode.protected.typ === "application/cose; cose-type=cose-sign";
+      const typ = decode.protected.typ;
+      return (
+        typ === "application/cose; cose-type=cose-sign" ||
+        (typeof typ === "string" && typ.endsWith("+cws"))
+      );
     } catch {
       return false;
     }

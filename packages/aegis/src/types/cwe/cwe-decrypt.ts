@@ -5,7 +5,7 @@ import { CweContent } from "./cwe-kit";
 
 export type DecryptedCweHeader = Omit<ParsedTokenHeader, "algorithm" | "headerType"> & {
   algorithm: KryptosEncryption;
-  headerType: "application/cose; cose-type=cose-encrypt";
+  headerType: string;
 };
 
 export type DecryptedCwe<T extends CweContent = string> = {

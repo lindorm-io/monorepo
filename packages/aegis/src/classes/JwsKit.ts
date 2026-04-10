@@ -1,5 +1,5 @@
 import { B64 } from "@lindorm/b64";
-import { isBuffer, isJws, isString } from "@lindorm/is";
+import { isBuffer, isString } from "@lindorm/is";
 import { IKryptos } from "@lindorm/kryptos";
 import { ILogger } from "@lindorm/logger";
 import { randomUUID } from "crypto";
@@ -15,6 +15,7 @@ import {
   SignedJws,
   TokenHeaderOptions,
 } from "../types";
+import { computeTypHeader } from "#internal/utils/compute-typ-header";
 import { decodeJoseHeader, encodeJoseHeader } from "#internal/utils/jose-header";
 import { createJoseSignature, verifyJoseSignature } from "#internal/utils/jose-signature";
 import { parseTokenHeader } from "#internal/utils/token-header";
@@ -44,7 +45,7 @@ export class JwsKit implements IJwsKit {
         : isString(data)
           ? "text/plain; charset=utf-8"
           : "application/octet-stream",
-      headerType: "JWS",
+      headerType: computeTypHeader(options.tokenType, "jws"),
       jwksUri: this.kryptos.jwksUri ?? undefined,
       keyId: this.kryptos.id,
       objectId,
@@ -102,7 +103,21 @@ export class JwsKit implements IJwsKit {
   // public static
 
   public static isJws(jws: string): boolean {
-    return isJws(jws);
+    if (typeof jws !== "string") return false;
+    const parts = jws.split(".");
+    if (parts.length !== 3) return false;
+    try {
+      const header = decodeJoseHeader(parts[0]);
+      if (typeof header.alg !== "string") return false;
+      const typ = header.typ;
+      return (
+        typ === "JWS" ||
+        typ === "JOSE" ||
+        (typeof typ === "string" && typ.endsWith("+jws"))
+      );
+    } catch {
+      return false;
+    }
   }
 
   public static decode(jws: string): DecodedJws {
@@ -122,14 +137,16 @@ export class JwsKit implements IJwsKit {
   public static parse<T extends Buffer | string>(token: string): ParsedJws<T> {
     const decoded = JwsKit.decode(token);
 
+    const typ = decoded.header.typ;
     if (
-      decoded.header.typ !== undefined &&
-      decoded.header.typ !== "JWS" &&
-      decoded.header.typ !== "JOSE"
+      typ !== undefined &&
+      typ !== "JWS" &&
+      typ !== "JOSE" &&
+      !(typeof typ === "string" && typ.endsWith("+jws"))
     ) {
       throw new JwsError("Invalid token", {
-        data: { typ: decoded.header.typ },
-        details: "Header type must be JWS, JOSE, or undefined",
+        data: { typ },
+        details: "Header type must be JWS, JOSE, <type>+jws, or undefined",
       });
     }
 

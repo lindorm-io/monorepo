@@ -17,6 +17,7 @@ import {
   TokenHeaderAlgorithm,
 } from "../types";
 import { authTagLength } from "#internal/utils/auth-tag-length";
+import { computeTypHeader } from "#internal/utils/compute-typ-header";
 import { decodeCoseHeader, mapCoseHeader } from "#internal/utils/cose/header";
 import { mapTokenHeader, parseTokenHeader } from "#internal/utils/token-header";
 
@@ -48,7 +49,7 @@ export class CweKit implements ICweKit {
       mapTokenHeader({
         algorithm: this.encryption as TokenHeaderAlgorithm,
         contentType: this.contentType(data),
-        headerType: "application/cose; cose-type=cose-encrypt",
+        headerType: computeTypHeader(options.tokenType, "cwe"),
       }),
       target,
     );
@@ -175,7 +176,11 @@ export class CweKit implements ICweKit {
   public static isCwe(token: Buffer | string): boolean {
     try {
       const decode = CweKit.decode(token);
-      return decode.protected.typ === "application/cose; cose-type=cose-encrypt";
+      const typ = decode.protected.typ;
+      return (
+        typ === "application/cose; cose-type=cose-encrypt" ||
+        (typeof typ === "string" && typ.endsWith("+cwe"))
+      );
     } catch {
       return false;
     }

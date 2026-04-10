@@ -1,6 +1,6 @@
 import { AesKit } from "@lindorm/aes";
 import { B64 } from "@lindorm/b64";
-import { isJwe, isJws, isJwt, isString } from "@lindorm/is";
+import { isString } from "@lindorm/is";
 import { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
 import { ILogger } from "@lindorm/logger";
 import { randomUUID } from "crypto";
@@ -16,8 +16,11 @@ import {
   JweKitOptions,
   TokenHeaderOptions,
 } from "../types";
+import { computeTypHeader } from "#internal/utils/compute-typ-header";
 import { decodeJoseHeader, encodeJoseHeader } from "#internal/utils/jose-header";
 import { parseTokenHeader } from "#internal/utils/token-header";
+import { JwsKit } from "./JwsKit";
+import { JwtKit } from "./JwtKit";
 
 export class JweKit implements IJweKit {
   private readonly encryption: KryptosEncryption;
@@ -53,7 +56,7 @@ export class JweKit implements IJweKit {
       contentType: this.contentType(data),
       ...(critical.length ? { critical } : {}),
       encryption: this.encryption,
-      headerType: "JWE",
+      headerType: computeTypHeader(options.tokenType, "jwe"),
       initialisationVector: prepared.headerParams.publicEncryptionIv,
       jwksUri: this.kryptos.jwksUri ?? undefined,
       keyId: this.kryptos.id,
@@ -98,9 +101,10 @@ export class JweKit implements IJweKit {
 
     const decoded = JweKit.decode(token);
 
-    if (decoded.header.typ !== "JWE") {
+    const typ = decoded.header.typ;
+    if (typ !== "JWE" && !(typeof typ === "string" && typ.endsWith("+jwe"))) {
       throw new JweError("Invalid token", {
-        data: { typ: decoded.header.typ },
+        data: { typ },
       });
     }
 
@@ -170,7 +174,17 @@ export class JweKit implements IJweKit {
   // public static
 
   public static isJwe(jwe: string): boolean {
-    return isJwe(jwe);
+    if (typeof jwe !== "string") return false;
+    const parts = jwe.split(".");
+    if (parts.length !== 5) return false;
+    try {
+      const header = decodeJoseHeader(parts[0]);
+      if (typeof header.alg !== "string") return false;
+      const typ = header.typ;
+      return typ === "JWE" || (typeof typ === "string" && typ.endsWith("+jwe"));
+    } catch {
+      return false;
+    }
   }
 
   public static decode(jwe: string): DecodedJwe {
@@ -193,11 +207,11 @@ export class JweKit implements IJweKit {
   // private
 
   private contentType(input: string): string {
-    if (isJws(input)) {
+    if (JwsKit.isJws(input)) {
       return "application/jws";
     }
 
-    if (isJwt(input)) {
+    if (JwtKit.isJwt(input)) {
       return "application/jwt";
     }
 

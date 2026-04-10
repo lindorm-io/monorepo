@@ -8,7 +8,7 @@ export type DecryptedJweHeader = Omit<
 > & {
   algorithm: KryptosEncAlgorithm;
   encryption: KryptosEncryption;
-  headerType: "JWE";
+  headerType: string;
 };
 
 export type DecryptedJwe = {

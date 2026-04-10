@@ -1,3 +1,4 @@
+import { TokenType } from "../../constants/token-type";
 import { CoseTarget } from "../cose-target";
 import { TokenEncryptOrSignOptions } from "../header";
 
@@ -6,6 +7,7 @@ export type SignCwsOptions = {
   header?: TokenEncryptOrSignOptions;
   objectId?: string;
   target?: CoseTarget;
+  tokenType?: TokenType;
 };
 
 export type SignedCws = {

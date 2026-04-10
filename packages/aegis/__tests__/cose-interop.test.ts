@@ -571,8 +571,8 @@ describe("COSE interop: CWT claim labels (RFC 8392)", () => {
     // Algorithm label 1 = ES256 = -7
     expect(protectedMap.get(COSE_LABEL.ALG)).toBe(COSE_ALG_LABEL["ES256"]);
 
-    // Type label 16
-    expect(protectedMap.get(COSE_LABEL.TYP)).toBe("application/cwt");
+    // Type label 16 — computed from tokenType "access_token" -> "at+cwt"
+    expect(protectedMap.get(COSE_LABEL.TYP)).toBe("at+cwt");
 
     // Content type label 3
     expect(protectedMap.get(COSE_LABEL.CTY)).toBe("application/json");
@@ -886,9 +886,6 @@ describe("COSE interop: external target mode", () => {
           expect(key).toBeLessThan(400);
         }
       }
-
-      // Proprietary claims present as string keys
-      expect(payloadMap.get("token_type")).toBe("access_token");
     });
 
     test("standard CWT claims still use integer labels", () => {
@@ -910,7 +907,7 @@ describe("COSE interop: external target mode", () => {
       // Protected header: standard labels
       const protectedMap: Map<number, unknown> = cborEncoder.decode(protectedCbor);
       expect(protectedMap.get(COSE_LABEL.ALG)).toBe(COSE_ALG_LABEL["ES256"]);
-      expect(protectedMap.get(COSE_LABEL.TYP)).toBe("application/cwt");
+      expect(protectedMap.get(COSE_LABEL.TYP)).toBe("at+cwt");
 
       // Payload: standard claims use integer labels
       const payloadMap: Map<number | string, unknown> = cborEncoder.decode(payloadCbor);

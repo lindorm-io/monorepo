@@ -1,9 +1,12 @@
-import { isJwt } from "@lindorm/is";
 import { IKryptos } from "@lindorm/kryptos";
 import { ILogger } from "@lindorm/logger";
 import { Dict } from "@lindorm/types";
 import { randomUUID } from "crypto";
 import { JwtError } from "../errors";
+import {
+  computeTypHeader,
+  decodeTokenTypeFromTyp,
+} from "#internal/utils/compute-typ-header";
 import { IJwtKit } from "../interfaces";
 import {
   DecodedJwt,
@@ -60,7 +63,7 @@ export class JwtKit implements IJwtKit {
       ...(options.header ?? {}),
       algorithm: this.kryptos.algorithm,
       contentType: "application/json",
-      headerType: "JWT",
+      headerType: computeTypHeader(content.tokenType, "jwt"),
       jwksUri: this.kryptos.jwksUri ?? undefined,
       keyId: this.kryptos.id,
       objectId,
@@ -109,6 +112,16 @@ export class JwtKit implements IJwtKit {
       });
     }
 
+    if (verify.tokenType !== undefined) {
+      const expectedTyp = computeTypHeader(verify.tokenType, "jwt");
+      if (parsed.decoded.header.typ !== expectedTyp) {
+        throw new JwtError("Invalid token", {
+          data: { typ: parsed.decoded.header.typ },
+          debug: { expected: expectedTyp },
+        });
+      }
+    }
+
     const verified = verifyJoseSignature(this.kryptos, token);
 
     if (!verified) {
@@ -149,7 +162,17 @@ export class JwtKit implements IJwtKit {
   // public static
 
   public static isJwt(jwt: string): boolean {
-    return isJwt(jwt);
+    if (typeof jwt !== "string") return false;
+    const parts = jwt.split(".");
+    if (parts.length !== 3) return false;
+    try {
+      const header = decodeJoseHeader(parts[0]);
+      if (typeof header.alg !== "string") return false;
+      const typ = header.typ;
+      return typ === "JWT" || (typeof typ === "string" && typ.endsWith("+jwt"));
+    } catch {
+      return false;
+    }
   }
 
   public static decode<C extends Dict = Dict>(jwt: string): DecodedJwt<C> {
@@ -165,10 +188,11 @@ export class JwtKit implements IJwtKit {
   public static parse<C extends Dict = Dict>(token: string): ParsedJwt<C> {
     const decoded = JwtKit.decode<C>(token);
 
-    if (decoded.header.typ !== "JWT") {
+    const typ = decoded.header.typ;
+    if (typ !== "JWT" && !(typeof typ === "string" && typ.endsWith("+jwt"))) {
       throw new JwtError("Invalid token", {
-        data: { typ: decoded.header.typ },
-        details: "Header type must be JWT",
+        data: { typ },
+        details: "Header type must be JWT or <type>+jwt",
       });
     }
 
@@ -182,6 +206,7 @@ export class JwtKit implements IJwtKit {
     const header = parseTokenHeader<ParsedJwtHeader>(decoded.header);
 
     const payload = parseTokenPayload<C>(decoded.payload);
+    payload.tokenType = decodeTokenTypeFromTyp(typ, "jwt");
 
     return { decoded, header, payload, token };
   }
