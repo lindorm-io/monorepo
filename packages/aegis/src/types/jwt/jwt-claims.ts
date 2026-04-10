@@ -1,5 +1,17 @@
 import { AdjustedAccessLevel, LevelOfAssurance } from "../level-of-assurance";
 
+export type AuthFactor = "knowledge" | "possession" | "inherence" | (string & {});
+
+export type SessionHint =
+  | "web"
+  | "mobile"
+  | "cli"
+  | "service"
+  | "machine"
+  | (string & {});
+
+export type SubjectHint = "user" | "client" | "service" | "device" | (string & {});
+
 // https://datatracker.ietf.org/doc/html/rfc7519#section-4.1
 type StdClaims = {
   aud?: Array<string>; // audience
