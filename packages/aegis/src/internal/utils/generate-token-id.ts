@@ -7,11 +7,22 @@ import { B64U } from "../constants/format";
  * claim (RFC 7519 §4.1.7) or any other unique token identifier slot in
  * aegis.
  *
- * Implementation: 20 bytes of CSPRNG output, base64url-encoded without
- * padding. This gives 160 bits of entropy in 27 characters — strictly
- * more entropy than a UUID v4 (which has 122 random bits in 36 chars due
- * to the version/variant overhead) and ~25% shorter on the wire.
+ * Implementation: 15 bytes of CSPRNG output, base64url-encoded without
+ * padding. This gives 120 bits of entropy in exactly 20 characters.
  *
- * Consistent across every kit in aegis (JOSE and COSE).
+ * Why 15 bytes:
+ * - RFC 7519 §4.1.7 requires only collision resistance for jti ("negligible
+ *   probability that the same value will be accidentally assigned"), not
+ *   guess resistance. 120 bits gives a birthday bound at ~2^60 tokens,
+ *   which is astronomically safe for any realistic issuance rate.
+ * - Within 2 bits of UUID v4's 122 random bits, so functionally equivalent
+ *   to what Keycloak, ORY Hydra, and most OAuth providers use for jti.
+ * - 20 characters is ~26% shorter on the wire than 20-byte variants.
+ *
+ * Note on scope: `jti` is not an authenticating secret — the token's
+ * signature provides authentication, not knowledge of the jti. If you
+ * need a high-entropy secret (e.g. refresh token payload material where
+ * the bytes themselves authenticate against a stored hash), use a
+ * different helper with ≥128 bits per RFC 6749 §10.10.
  */
-export const generateTokenId = (): string => B64.encode(randomBytes(20), B64U);
+export const generateTokenId = (): string => B64.encode(randomBytes(15), B64U);
