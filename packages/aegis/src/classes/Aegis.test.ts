@@ -64,6 +64,7 @@ describe("Aegis", () => {
       },
       header: {
         algorithm: "A256GCM",
+        baseFormat: "CWE",
         contentType: "text/plain",
         critical: [],
         headerType: "application/cose; cose-type=cose-encrypt",
@@ -107,6 +108,7 @@ describe("Aegis", () => {
       },
       header: {
         algorithm: "ES512",
+        baseFormat: "CWS",
         contentType: "text/plain; charset=utf-8",
         critical: [],
         headerType: "application/cose; cose-type=cose-sign",
@@ -161,6 +163,7 @@ describe("Aegis", () => {
       },
       header: {
         algorithm: "ES512",
+        baseFormat: "CWT",
         contentType: "application/json",
         critical: [],
         headerType: "test_token+cwt",
@@ -226,6 +229,7 @@ describe("Aegis", () => {
       },
       header: {
         algorithm: "ECDH-ES",
+        baseFormat: "JWE",
         contentType: "text/plain; charset=utf-8",
         critical: [],
         encryption: "A256GCM",
@@ -269,6 +273,7 @@ describe("Aegis", () => {
       },
       header: {
         algorithm: "ES512",
+        baseFormat: "JWS",
         contentType: "text/plain; charset=utf-8",
         critical: [],
         headerType: "JWS",
@@ -322,6 +327,7 @@ describe("Aegis", () => {
       },
       header: {
         algorithm: "ES512",
+        baseFormat: "JWT",
         contentType: "application/json",
         critical: [],
         headerType: "test_token+jwt",

@@ -70,10 +70,10 @@ describe("CwsKit", () => {
         },
         header: {
           algorithm: "EdDSA",
+          baseFormat: "CWS",
           contentType: "text/plain; charset=utf-8",
           critical: [],
           headerType: "application/cose; cose-type=cose-sign",
-
           keyId: "2fa52a91-7f63-5731-a55d-30d36350c642",
           objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
         },
@@ -103,10 +103,10 @@ describe("CwsKit", () => {
         },
         header: {
           algorithm: "EdDSA",
+          baseFormat: "CWS",
           contentType: "application/octet-stream",
           critical: [],
           headerType: "application/cose; cose-type=cose-sign",
-
           keyId: "2fa52a91-7f63-5731-a55d-30d36350c642",
           objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
         },
@@ -180,10 +180,10 @@ describe("CwsKit", () => {
         },
         header: {
           algorithm: "EdDSA",
+          baseFormat: "CWS",
           contentType: "text/plain; charset=utf-8",
           critical: [],
           headerType: "application/cose; cose-type=cose-sign",
-
           keyId: "2fa52a91-7f63-5731-a55d-30d36350c642",
           objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
         },
@@ -213,10 +213,10 @@ describe("CwsKit", () => {
         },
         header: {
           algorithm: "EdDSA",
+          baseFormat: "CWS",
           contentType: "application/octet-stream",
           critical: [],
           headerType: "application/cose; cose-type=cose-sign",
-
           keyId: "2fa52a91-7f63-5731-a55d-30d36350c642",
           objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
         },

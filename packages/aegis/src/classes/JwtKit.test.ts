@@ -200,6 +200,7 @@ describe("JwtKit", () => {
         },
         header: {
           algorithm: "ES512",
+          baseFormat: "JWT",
           critical: [],
           contentType: "application/json",
           headerType: "test_token+jwt",
@@ -373,6 +374,7 @@ describe("JwtKit", () => {
         },
         header: {
           algorithm: "ES512",
+          baseFormat: "JWT",
           critical: [],
           contentType: "application/json",
           headerType: "test_token+jwt",

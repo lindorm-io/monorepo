@@ -70,6 +70,7 @@ describe("JwsKit", () => {
         },
         header: {
           algorithm: "ES512",
+          baseFormat: "JWS",
           contentType: "text/plain; charset=utf-8",
           critical: [],
           headerType: "JWS",
@@ -102,6 +103,7 @@ describe("JwsKit", () => {
         },
         header: {
           algorithm: "ES512",
+          baseFormat: "JWS",
           contentType: "application/octet-stream",
           critical: [],
           headerType: "JWS",
@@ -213,6 +215,7 @@ describe("JwsKit", () => {
         },
         header: {
           algorithm: "ES512",
+          baseFormat: "JWS",
           contentType: "text/plain; charset=utf-8",
           critical: [],
           headerType: "JWS",
@@ -245,6 +248,7 @@ describe("JwsKit", () => {
         },
         header: {
           algorithm: "ES512",
+          baseFormat: "JWS",
           contentType: "application/octet-stream",
           critical: [],
           headerType: "JWS",

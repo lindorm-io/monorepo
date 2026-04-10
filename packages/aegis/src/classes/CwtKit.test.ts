@@ -200,6 +200,7 @@ describe("CwtKit", () => {
         },
         header: {
           algorithm: "ES512",
+          baseFormat: "CWT",
           critical: [],
           contentType: "application/json",
           headerType: "test_token+cwt",
@@ -359,6 +360,7 @@ describe("CwtKit", () => {
         },
         header: {
           algorithm: "ES512",
+          baseFormat: "CWT",
           critical: [],
           contentType: "application/json",
           headerType: "test_token+cwt",
