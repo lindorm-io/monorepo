@@ -955,6 +955,38 @@ describe("JwtKit", () => {
       expect(() => kit.verify(modifiedToken)).toThrow();
     });
 
+    test("audience string verifier matches multi-value aud array", () => {
+      // Critical correctness test: verify.audience as a string must match
+      // any token whose `aud` claim includes that audience. Since aud is
+      // always stored as an array in the payload, a naive $eq check would
+      // incorrectly fail for this common case.
+      const { token } = kit.sign({
+        audience: ["saga", "mimir"],
+        expires: "1h",
+        subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
+        tokenType: "test_token",
+      });
+
+      expect(() => kit.verify(token, { audience: "saga" })).not.toThrow();
+      expect(() => kit.verify(token, { audience: "mimir" })).not.toThrow();
+      expect(() => kit.verify(token, { audience: "elsewhere" })).toThrow();
+    });
+
+    test("audience array verifier requires every listed audience to be present", () => {
+      const { token } = kit.sign({
+        audience: ["saga", "mimir"],
+        expires: "1h",
+        subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
+        tokenType: "test_token",
+      });
+
+      expect(() => kit.verify(token, { audience: ["saga", "mimir"] })).not.toThrow();
+      // Subset of the token's aud — every listed audience is present
+      expect(() => kit.verify(token, { audience: ["saga"] })).not.toThrow();
+      // One value not in the token's aud
+      expect(() => kit.verify(token, { audience: ["saga", "elsewhere"] })).toThrow();
+    });
+
     test("a malicious x5u in the header must not be fetched or used to verify the token", () => {
       const { token } = kit.sign({
         expires: "1h",
