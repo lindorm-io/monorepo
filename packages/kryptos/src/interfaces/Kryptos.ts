@@ -11,6 +11,8 @@ import {
 } from "../types";
 
 export interface IKryptos extends Disposable, KryptosAttributes, KryptosMetadata {
+  readonly thumbprint: string;
+
   dispose(): void;
 
   toDB(): KryptosDB;
