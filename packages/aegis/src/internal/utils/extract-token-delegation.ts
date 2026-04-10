@@ -1,4 +1,4 @@
-import { ActClaim, TokenIdentity } from "../../types/jwt/jwt-claims";
+import { ActClaim, TokenDelegation } from "../../types/jwt/jwt-claims";
 
 const walkActChain = (act: ActClaim | undefined): Array<ActClaim> => {
   const chain: Array<ActClaim> = [];
@@ -11,13 +11,9 @@ const walkActChain = (act: ActClaim | undefined): Array<ActClaim> => {
   return chain;
 };
 
-export const extractTokenIdentity = (payload: {
-  sub?: string;
-  act?: ActClaim;
-}): TokenIdentity => {
+export const extractTokenDelegation = (payload: { act?: ActClaim }): TokenDelegation => {
   const actorChain = walkActChain(payload.act);
   return {
-    subject: payload.sub,
     currentActor: actorChain[0]?.sub,
     actorChain,
     isDelegated: actorChain.length > 0,
