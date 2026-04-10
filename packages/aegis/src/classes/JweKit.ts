@@ -15,7 +15,10 @@ import {
   JweKitOptions,
   TokenHeaderOptions,
 } from "../types";
-import { computeTypHeader } from "#internal/utils/compute-typ-header";
+import {
+  computeTypHeader,
+  decodeTokenTypeFromTyp,
+} from "#internal/utils/compute-typ-header";
 import { decodeJoseHeader, encodeJoseHeader } from "#internal/utils/jose-header";
 import { parseTokenHeader } from "#internal/utils/token-header";
 import { JwsKit } from "./JwsKit";
@@ -115,6 +118,7 @@ export class JweKit implements IJweKit {
     }
 
     const header = parseTokenHeader<DecryptedJweHeader>(decoded.header);
+    header.tokenType = decodeTokenTypeFromTyp(typ, "jwe");
 
     if (header.encryption !== this.encryption) {
       throw new JweError("Unexpected encryption", {

@@ -115,6 +115,43 @@ describe("JwsKit", () => {
     });
   });
 
+  describe("tokenType round-trip", () => {
+    test("should surface tokenType on verified header when signed with it", () => {
+      const { token } = kit.sign("test data", {
+        objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
+        tokenType: "refresh_token",
+      });
+
+      const parsed = kit.verify(token);
+
+      expect(parsed.header.headerType).toBe("rt+jws");
+      expect(parsed.header.tokenType).toBe("refresh_token");
+    });
+
+    test("should round-trip a custom tokenType", () => {
+      const { token } = kit.sign("test data", {
+        objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
+        tokenType: "my_custom_thing",
+      });
+
+      const parsed = kit.verify(token);
+
+      expect(parsed.header.headerType).toBe("my_custom_thing+jws");
+      expect(parsed.header.tokenType).toBe("my_custom_thing");
+    });
+
+    test("should leave tokenType undefined when not supplied on sign", () => {
+      const { token } = kit.sign("test data", {
+        objectId: "ba63b8d4-500a-4646-9aac-cb45543c966d",
+      });
+
+      const parsed = kit.verify(token);
+
+      expect(parsed.header.headerType).toBe("JWS");
+      expect(parsed.header.tokenType).toBeUndefined();
+    });
+  });
+
   describe("decode", () => {
     test("should decode token with plain text data", () => {
       const { token } = kit.sign("test data in plain text", {

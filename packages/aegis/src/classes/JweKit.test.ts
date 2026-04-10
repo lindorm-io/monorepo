@@ -473,4 +473,29 @@ describe("JweKit", () => {
       expect(() => kit.decrypt(token)).not.toThrow();
     });
   });
+
+  describe("tokenType round-trip", () => {
+    test("should surface tokenType on decrypted header when signed with it", () => {
+      const { token } = kit.encrypt("data", {
+        objectId: "5b63e7ec-5ca4-4083-8de9-de0d6e2ddd03",
+        tokenType: "logout_token",
+      });
+
+      const decrypted = kit.decrypt(token);
+
+      expect(decrypted.header.headerType).toBe("logout+jwe");
+      expect(decrypted.header.tokenType).toBe("logout_token");
+    });
+
+    test("should leave tokenType undefined when not supplied", () => {
+      const { token } = kit.encrypt("data", {
+        objectId: "5b63e7ec-5ca4-4083-8de9-de0d6e2ddd03",
+      });
+
+      const decrypted = kit.decrypt(token);
+
+      expect(decrypted.header.headerType).toBe("JWE");
+      expect(decrypted.header.tokenType).toBeUndefined();
+    });
+  });
 });
