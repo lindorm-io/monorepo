@@ -66,6 +66,7 @@ export type ParsedTokenHeader = {
   pbkdfSalt: string | undefined;
   publicEncryptionJwk: PublicEncryptionJwk | undefined;
   publicEncryptionTag: string | undefined;
+  tokenType: string | undefined;
   x5c: Array<string> | undefined;
   x5t: string | undefined;
   x5u: string | undefined;

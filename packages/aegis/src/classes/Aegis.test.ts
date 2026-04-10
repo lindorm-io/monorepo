@@ -166,6 +166,7 @@ describe("Aegis", () => {
         headerType: "test_token+cwt",
         keyId: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
         objectId: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
+        tokenType: "test_token",
       },
       identity: {
         actorChain: [],
@@ -188,7 +189,6 @@ describe("Aegis", () => {
         scope: [],
         subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
         tokenId: expect.any(String),
-        tokenType: "test_token",
       },
       token: res.token,
     });
@@ -328,6 +328,7 @@ describe("Aegis", () => {
         jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
         keyId: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
         objectId: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
+        tokenType: "test_token",
       },
       identity: {
         actorChain: [],
@@ -350,7 +351,6 @@ describe("Aegis", () => {
         scope: [],
         subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
         tokenId: expect.any(String),
-        tokenType: "test_token",
       },
       token: res.token,
     });
@@ -383,9 +383,11 @@ describe("Aegis", () => {
 
     await expect(aegis.verify(jwe.token)).resolves.toEqual(
       expect.objectContaining({
+        header: expect.objectContaining({
+          tokenType: "test_token",
+        }),
         payload: expect.objectContaining({
           subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
-          tokenType: "test_token",
         }),
       }),
     );
@@ -410,9 +412,11 @@ describe("Aegis", () => {
 
     await expect(aegis.verify(jwt.token)).resolves.toEqual(
       expect.objectContaining({
+        header: expect.objectContaining({
+          tokenType: "test_token",
+        }),
         payload: expect.objectContaining({
           subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
-          tokenType: "test_token",
         }),
       }),
     );

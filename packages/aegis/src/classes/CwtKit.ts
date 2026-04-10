@@ -11,6 +11,7 @@ import {
   CwtKitOptions,
   DecodedCwt,
   ParsedCwt,
+  ParsedCwtHeader,
   ParsedCwtPayload,
   SignCwtContent,
   SignCwtOptions,
@@ -199,16 +200,18 @@ export class CwtKit implements ICwtKit {
     };
 
     const payload = parseTokenPayload(payloadDict);
-    payload.tokenType = decodeTokenTypeFromTyp(protectedDict.typ, "cwt");
+
+    const header = parseTokenHeader<ParsedCwtHeader>({
+      ...protectedDict,
+      ...unprotectedDict,
+    } as any);
+    header.tokenType = decodeTokenTypeFromTyp(protectedDict.typ, "cwt");
 
     this.logger.debug("Token verified");
 
     return {
       decoded,
-      header: parseTokenHeader({
-        ...protectedDict,
-        ...unprotectedDict,
-      } as any),
+      header,
       identity,
       payload,
       token: isBuffer(token) ? token.toString("base64url") : token,
@@ -248,7 +251,12 @@ export class CwtKit implements ICwtKit {
     const decoded = CwtKit.decode<C>(token);
 
     const payload = parseTokenPayload(decoded.payload);
-    payload.tokenType = decodeTokenTypeFromTyp(decoded.protected.typ, "cwt");
+
+    const header = parseTokenHeader<ParsedCwtHeader>({
+      ...decoded.protected,
+      ...decoded.unprotected,
+    });
+    header.tokenType = decodeTokenTypeFromTyp(decoded.protected.typ, "cwt");
 
     const identity = extractTokenIdentity(
       decoded.payload as unknown as { sub?: string; act?: any },
@@ -256,7 +264,7 @@ export class CwtKit implements ICwtKit {
 
     return {
       decoded,
-      header: parseTokenHeader({ ...decoded.protected, ...decoded.unprotected }),
+      header,
       identity,
       payload,
       token: isBuffer(token) ? token.toString("base64url") : token,
