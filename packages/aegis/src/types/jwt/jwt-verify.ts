@@ -11,6 +11,7 @@ export type VerifyActorOptions = {
 export type VerifyJwtOptions = {
   actor?: VerifyActorOptions;
   accessToken?: string;
+  dpopProof?: string;
   adjustedAccessLevel?: PredicateOperator<number>;
   audience?: Array<string> | string | PredicateOperator<any>;
   authCode?: string;

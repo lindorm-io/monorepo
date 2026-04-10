@@ -58,6 +58,7 @@
     "@lindorm/oct": "^0.2.9",
     "@lindorm/okp": "^0.2.9",
     "@lindorm/rsa": "^0.2.9",
+    "@lindorm/sha": "^0.3.2",
     "@lindorm/utils": "^0.6.2",
     "cbor": "^10.0.12"
   },

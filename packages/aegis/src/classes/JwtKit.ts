@@ -9,6 +9,7 @@ import {
 import { extractTokenDelegation } from "#internal/utils/extract-token-delegation";
 import { validateActor } from "#internal/utils/validate-actor";
 import { validateCrit } from "#internal/utils/validate-crit";
+import { verifyDpopProof } from "#internal/utils/verify-dpop-proof";
 import { IJwtKit } from "../interfaces";
 import {
   DecodedJwt,
@@ -35,8 +36,11 @@ import { createJwtVerify } from "#internal/utils/jwt-verify";
 import { parseTokenHeader } from "#internal/utils/token-header";
 import { validate } from "#internal/utils/validate";
 
+const DEFAULT_DPOP_MAX_SKEW = 60;
+
 export class JwtKit implements IJwtKit {
   private readonly clockTolerance: number;
+  private readonly dpopMaxSkew: number;
   private readonly issuer: string | null;
   private readonly logger: ILogger;
   private readonly kryptos: IKryptos;
@@ -47,6 +51,7 @@ export class JwtKit implements IJwtKit {
     this.issuer = options.issuer ?? null;
 
     this.clockTolerance = options.clockTolerance ?? 0;
+    this.dpopMaxSkew = options.dpopMaxSkew ?? DEFAULT_DPOP_MAX_SKEW;
   }
 
   public sign<C extends Dict = Dict>(
@@ -159,6 +164,26 @@ export class JwtKit implements IJwtKit {
     const actorError = validateActor(parsed.delegation, verify.actor);
     if (actorError) {
       throw new JwtError(actorError);
+    }
+
+    const boundThumbprint = parsed.payload.confirmation?.thumbprint;
+
+    if (verify.dpopProof !== undefined) {
+      if (!boundThumbprint) {
+        throw new JwtError("Invalid token: DPoP proof provided but token is not bound", {
+          debug: { confirmation: parsed.payload.confirmation },
+        });
+      }
+      parsed.dpop = verifyDpopProof({
+        proof: verify.dpopProof,
+        accessToken: token,
+        expectedThumbprint: boundThumbprint,
+        dpopMaxSkew: this.dpopMaxSkew,
+      });
+    } else if (boundThumbprint) {
+      throw new JwtError(
+        "Invalid token: token is DPoP-bound but no DPoP proof was provided",
+      );
     }
 
     this.logger.debug("Token verified");

@@ -91,6 +91,7 @@ export class Aegis implements IAegis {
 
   private readonly amphora: IAmphora;
   private readonly clockTolerance: number;
+  private readonly dpopMaxSkew: number | undefined;
   private readonly encAlgorithm: KryptosEncAlgorithm | undefined;
   private readonly encryption: KryptosEncryption;
   private readonly logger: ILogger;
@@ -102,6 +103,7 @@ export class Aegis implements IAegis {
     this.issuer = options.issuer ?? this.amphora.domain;
 
     this.clockTolerance = options.clockTolerance ?? 0;
+    this.dpopMaxSkew = options.dpopMaxSkew;
     this.encAlgorithm = options.encAlgorithm;
     this.encryption = options.encryption ?? "A256GCM";
     this.sigAlgorithm = options.sigAlgorithm;
@@ -461,6 +463,7 @@ export class Aegis implements IAegis {
 
     return new JwtKit({
       clockTolerance: this.clockTolerance,
+      dpopMaxSkew: this.dpopMaxSkew,
       issuer: this.issuer ?? undefined,
       kryptos,
       logger: this.logger,

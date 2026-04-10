@@ -100,6 +100,8 @@ export const createJwtVerify = (
     if (key === "tokenType") continue;
     // actor is validated against the parsed TokenDelegation by each Kit directly
     if (key === "actor") continue;
+    // dpopProof is validated against the cnf.jkt claim by each Kit directly
+    if (key === "dpopProof") continue;
 
     const mapped = mapVerify(key as keyof VerifyJwtOptions);
 
