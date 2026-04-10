@@ -56,8 +56,7 @@ export class CwtKit implements ICwtKit {
       throw new CwtError("Issuer is required to sign CWT");
     }
 
-    const objectId =
-      options.objectId ?? content.subject ?? randomBytes(20).toString("base64url");
+    const objectId = options.objectId;
     const target = options.target ?? "internal";
 
     const protectedDict = mapCoseHeader(

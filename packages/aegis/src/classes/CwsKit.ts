@@ -2,7 +2,6 @@ import { isBuffer, isString } from "@lindorm/is";
 import { IKryptos } from "@lindorm/kryptos";
 import { ILogger } from "@lindorm/logger";
 import { decode, encode } from "cbor";
-import { randomBytes } from "crypto";
 import { CoseSignError } from "../errors";
 import { ICwsKit } from "../interfaces";
 import {
@@ -30,7 +29,7 @@ export class CwsKit implements ICwsKit {
   }
 
   public sign(data: CwsContent, options: SignCwsOptions = {}): SignedCws {
-    const objectId = options.objectId ?? randomBytes(20).toString("base64url");
+    const objectId = options.objectId;
 
     this.logger.debug("Signing token", { options });
 

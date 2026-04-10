@@ -51,7 +51,7 @@ export type SignedJwt = {
   expiresAt: Date;
   expiresIn: number;
   expiresOn: number;
-  objectId: string;
+  objectId: string | undefined;
   token: string;
   tokenId: string;
 };

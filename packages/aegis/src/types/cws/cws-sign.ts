@@ -12,6 +12,6 @@ export type SignCwsOptions = {
 
 export type SignedCws = {
   buffer: Buffer;
-  objectId: string;
+  objectId: string | undefined;
   token: string;
 };

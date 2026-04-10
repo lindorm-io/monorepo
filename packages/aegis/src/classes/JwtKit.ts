@@ -1,7 +1,6 @@
 import { IKryptos } from "@lindorm/kryptos";
 import { ILogger } from "@lindorm/logger";
 import { Dict } from "@lindorm/types";
-import { randomUUID } from "crypto";
 import { JwtError } from "../errors";
 import {
   computeTypHeader,
@@ -57,7 +56,7 @@ export class JwtKit implements IJwtKit {
       throw new JwtError("Issuer is required to sign JWT");
     }
 
-    const objectId = options.objectId ?? content.subject ?? randomUUID();
+    const objectId = options.objectId;
 
     const headerOptions: TokenHeaderOptions = {
       ...(options.header ?? {}),

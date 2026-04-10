@@ -2,7 +2,6 @@ import { B64 } from "@lindorm/b64";
 import { isBuffer, isString } from "@lindorm/is";
 import { IKryptos } from "@lindorm/kryptos";
 import { ILogger } from "@lindorm/logger";
-import { randomUUID } from "crypto";
 import { B64U } from "#internal/constants/format";
 import { JwsError } from "../errors";
 import { IJwsKit } from "../interfaces";
@@ -35,7 +34,7 @@ export class JwsKit implements IJwsKit {
   ): SignedJws {
     this.logger.debug("Signing token", { options });
 
-    const objectId = options.objectId ?? randomUUID();
+    const objectId = options.objectId;
 
     const headerOptions: TokenHeaderOptions = {
       ...(options.header ?? {}),

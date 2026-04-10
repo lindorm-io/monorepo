@@ -27,16 +27,19 @@ describe("JwtKit", () => {
   describe("sign", () => {
     test("should sign token using EC", () => {
       expect(
-        kit.sign({
-          expires: "1h",
-          subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
-          tokenType: "test_token",
-        }),
+        kit.sign(
+          {
+            expires: "1h",
+            subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
+            tokenType: "test_token",
+          },
+          { objectId: "test-object-id" },
+        ),
       ).toEqual({
         expiresAt: new Date("2024-01-01T09:00:00.000Z"),
         expiresIn: 3600,
         expiresOn: 1704099600,
-        objectId: expect.any(String),
+        objectId: "test-object-id",
         token: expect.any(String),
         tokenId: expect.any(String),
       });
@@ -46,16 +49,19 @@ describe("JwtKit", () => {
       kit = new JwtKit({ issuer, logger, kryptos: TEST_OCT_KEY_SIG });
 
       expect(
-        kit.sign({
-          expires: "1h",
-          subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
-          tokenType: "test_token",
-        }),
+        kit.sign(
+          {
+            expires: "1h",
+            subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
+            tokenType: "test_token",
+          },
+          { objectId: "test-object-id" },
+        ),
       ).toEqual({
         expiresAt: new Date("2024-01-01T09:00:00.000Z"),
         expiresIn: 3600,
         expiresOn: 1704099600,
-        objectId: expect.any(String),
+        objectId: "test-object-id",
         token: expect.any(String),
         tokenId: expect.any(String),
       });
@@ -65,16 +71,19 @@ describe("JwtKit", () => {
       kit = new JwtKit({ issuer, logger, kryptos: TEST_OKP_KEY_SIG });
 
       expect(
-        kit.sign({
-          expires: "1h",
-          subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
-          tokenType: "test_token",
-        }),
+        kit.sign(
+          {
+            expires: "1h",
+            subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
+            tokenType: "test_token",
+          },
+          { objectId: "test-object-id" },
+        ),
       ).toEqual({
         expiresAt: new Date("2024-01-01T09:00:00.000Z"),
         expiresIn: 3600,
         expiresOn: 1704099600,
-        objectId: expect.any(String),
+        objectId: "test-object-id",
         token: expect.any(String),
         tokenId: expect.any(String),
       });
@@ -84,19 +93,35 @@ describe("JwtKit", () => {
       kit = new JwtKit({ issuer, logger, kryptos: TEST_RSA_KEY_SIG });
 
       expect(
-        kit.sign({
-          expires: "1h",
-          subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
-          tokenType: "test_token",
-        }),
+        kit.sign(
+          {
+            expires: "1h",
+            subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
+            tokenType: "test_token",
+          },
+          { objectId: "test-object-id" },
+        ),
       ).toEqual({
         expiresAt: new Date("2024-01-01T09:00:00.000Z"),
         expiresIn: 3600,
         expiresOn: 1704099600,
-        objectId: expect.any(String),
+        objectId: "test-object-id",
         token: expect.any(String),
         tokenId: expect.any(String),
       });
+    });
+
+    test("should sign token without objectId and omit oid from header", () => {
+      const { token, objectId } = kit.sign({
+        expires: "1h",
+        subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
+        tokenType: "test_token",
+      });
+
+      expect(objectId).toBeUndefined();
+
+      const { header } = JwtKit.decode(token);
+      expect(header).not.toHaveProperty("oid");
     });
   });
 
@@ -139,7 +164,6 @@ describe("JwtKit", () => {
             cty: "application/json",
             jku: "https://test.lindorm.io/.well-known/jwks.json",
             kid: TEST_EC_KEY_SIG.id,
-            oid: expect.any(String),
             typ: "test_token+jwt",
           },
           payload: {
@@ -181,7 +205,6 @@ describe("JwtKit", () => {
           headerType: "test_token+jwt",
           jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
           keyId: TEST_EC_KEY_SIG.id,
-          objectId: expect.any(String),
         },
         payload: {
           accessTokenHash: "ehXwFopDjJcovgdtD6uhQg",
@@ -308,7 +331,6 @@ describe("JwtKit", () => {
             cty: "application/json",
             jku: "https://test.lindorm.io/.well-known/jwks.json",
             kid: TEST_EC_KEY_SIG.id,
-            oid: expect.any(String),
             typ: "test_token+jwt",
           },
           payload: {
@@ -350,7 +372,6 @@ describe("JwtKit", () => {
           headerType: "test_token+jwt",
           jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
           keyId: TEST_EC_KEY_SIG.id,
-          objectId: expect.any(String),
         },
         payload: {
           accessTokenHash: "ehXwFopDjJcovgdtD6uhQg",
@@ -406,7 +427,6 @@ describe("JwtKit", () => {
           cty: "application/json",
           jku: "https://test.lindorm.io/.well-known/jwks.json",
           kid: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
-          oid: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
           typ: "test_token+jwt",
         },
         payload: {
@@ -533,7 +553,6 @@ describe("JwtKit", () => {
             cty: "application/json",
             jku: "https://test.lindorm.io/.well-known/jwks.json",
             kid: TEST_EC_KEY_SIG.id,
-            oid: expect.any(String),
             typ: "test_token+jwt",
           },
           payload: {

@@ -13,7 +13,7 @@ export type SignedCwt = {
   expiresAt: Date;
   expiresIn: number;
   expiresOn: number;
-  objectId: string;
+  objectId: string | undefined;
   token: string;
   tokenId: string;
 };

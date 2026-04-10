@@ -3,7 +3,6 @@ import { B64 } from "@lindorm/b64";
 import { isString } from "@lindorm/is";
 import { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
 import { ILogger } from "@lindorm/logger";
-import { randomUUID } from "crypto";
 import { B64U } from "#internal/constants/format";
 import { JweError } from "../errors";
 import { IJweKit } from "../interfaces";
@@ -38,7 +37,7 @@ export class JweKit implements IJweKit {
 
     this.logger.debug("Encrypting token", { options });
 
-    const objectId = options.objectId ?? randomUUID();
+    const objectId = options.objectId;
 
     // Step 1: Prepare encryption (key management only — no content encrypted yet)
     const prepared = kit.prepareEncryption();
