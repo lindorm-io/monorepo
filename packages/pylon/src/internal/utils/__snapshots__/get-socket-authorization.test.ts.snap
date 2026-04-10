@@ -62,3 +62,10 @@ exports[`getSocketAuthorization should return default when handshake has no auth
   "value": null,
 }
 `;
+
+exports[`getSocketAuthorization should return dpop authorization from auth.token 1`] = `
+{
+  "type": "dpop",
+  "value": "proof-token",
+}
+`;

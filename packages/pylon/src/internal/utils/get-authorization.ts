@@ -9,7 +9,7 @@ export const getAuthorization = (ctx: PylonHttpContext): AuthorizationState => {
   const [t, value] = ctx.get("authorization")?.split(" ") ?? [];
   const type = t?.toLowerCase() as AuthorizationType;
 
-  if (!["basic", "bearer"].includes(type)) {
+  if (!["basic", "bearer", "dpop"].includes(type)) {
     return DEFAULT;
   }
 
