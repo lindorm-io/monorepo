@@ -167,6 +167,12 @@ describe("Aegis", () => {
         keyId: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
         objectId: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
       },
+      identity: {
+        actorChain: [],
+        currentActor: undefined,
+        isDelegated: false,
+        subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
+      },
       payload: {
         audience: [],
         authMethods: [],
@@ -322,6 +328,12 @@ describe("Aegis", () => {
         jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
         keyId: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
         objectId: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
+      },
+      identity: {
+        actorChain: [],
+        currentActor: undefined,
+        isDelegated: false,
+        subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
       },
       payload: {
         audience: [],

@@ -206,6 +206,12 @@ describe("JwtKit", () => {
           jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
           keyId: TEST_EC_KEY_SIG.id,
         },
+        identity: {
+          actorChain: [],
+          currentActor: undefined,
+          isDelegated: false,
+          subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
+        },
         payload: {
           accessTokenHash: "ehXwFopDjJcovgdtD6uhQg",
           adjustedAccessLevel: 4,
@@ -373,6 +379,12 @@ describe("JwtKit", () => {
           jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
           keyId: TEST_EC_KEY_SIG.id,
         },
+        identity: {
+          actorChain: [],
+          currentActor: undefined,
+          isDelegated: false,
+          subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
+        },
         payload: {
           accessTokenHash: "ehXwFopDjJcovgdtD6uhQg",
           adjustedAccessLevel: 4,
@@ -483,6 +495,111 @@ describe("JwtKit", () => {
           subjectHint: { $eq: "test_subject_hint" },
         }),
       ).not.toThrow();
+    });
+  });
+
+  describe("actor verification", () => {
+    const baseContent: SignJwtContent = {
+      expires: "1h",
+      subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
+      tokenType: "test_token",
+    };
+
+    test("identity is undelegated when act claim is absent", () => {
+      const { token } = kit.sign(baseContent);
+
+      const parsed = kit.verify(token);
+
+      expect(parsed.identity.isDelegated).toBe(false);
+      expect(parsed.identity.currentActor).toBeUndefined();
+      expect(parsed.identity.actorChain).toEqual([]);
+      expect(parsed.identity.subject).toBe("3f2ae79d-f1d1-556b-a8bc-305e6b2334ad");
+    });
+
+    test("identity reflects a single-level act claim", () => {
+      const { token } = kit.sign({
+        ...baseContent,
+        act: { sub: "service-1" },
+      });
+
+      const parsed = kit.verify(token);
+
+      expect(parsed.identity.isDelegated).toBe(true);
+      expect(parsed.identity.currentActor).toBe("service-1");
+      expect(parsed.identity.actorChain).toEqual([{ sub: "service-1" }]);
+    });
+
+    test("actor.required throws when no act claim is present", () => {
+      const { token } = kit.sign(baseContent);
+
+      expect(() => kit.verify(token, { actor: { required: true } })).toThrow(/act claim/);
+    });
+
+    test("actor.required passes when act is present", () => {
+      const { token } = kit.sign({
+        ...baseContent,
+        act: { sub: "service-1" },
+      });
+
+      expect(() => kit.verify(token, { actor: { required: true } })).not.toThrow();
+    });
+
+    test("actor.forbidden throws when act is present", () => {
+      const { token } = kit.sign({
+        ...baseContent,
+        act: { sub: "service-1" },
+      });
+
+      expect(() => kit.verify(token, { actor: { forbidden: true } })).toThrow(
+        /non-delegated/,
+      );
+    });
+
+    test("actor.allowedSubjects accepts a chain of whitelisted subjects", () => {
+      const { token } = kit.sign({
+        ...baseContent,
+        act: { sub: "service-1", act: { sub: "service-2" } },
+      });
+
+      expect(() =>
+        kit.verify(token, {
+          actor: { allowedSubjects: ["service-1", "service-2"] },
+        }),
+      ).not.toThrow();
+    });
+
+    test("actor.allowedSubjects rejects an unknown actor in the chain", () => {
+      const { token } = kit.sign({
+        ...baseContent,
+        act: { sub: "service-1", act: { sub: "rogue" } },
+      });
+
+      expect(() =>
+        kit.verify(token, { actor: { allowedSubjects: ["service-1"] } }),
+      ).toThrow(/not allowed/);
+    });
+
+    test("actor.maxChainDepth allows chains at or below the limit", () => {
+      const { token } = kit.sign({
+        ...baseContent,
+        act: { sub: "service-1", act: { sub: "service-2" } },
+      });
+
+      expect(() => kit.verify(token, { actor: { maxChainDepth: 2 } })).not.toThrow();
+    });
+
+    test("actor.maxChainDepth rejects chains exceeding the limit", () => {
+      const { token } = kit.sign({
+        ...baseContent,
+        act: {
+          sub: "service-1",
+          act: { sub: "service-2", act: { sub: "service-3" } },
+        },
+      });
+
+      expect(() => kit.verify(token, { actor: { maxChainDepth: 2 } })).toThrow(
+        /maximum depth/,
+      );
     });
   });
 

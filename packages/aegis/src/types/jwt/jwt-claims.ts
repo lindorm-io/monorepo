@@ -21,6 +21,13 @@ export type ActClaim = {
   act?: ActClaim;
 };
 
+export type TokenIdentity = {
+  subject: string | undefined;
+  currentActor: string | undefined;
+  actorChain: Array<ActClaim>;
+  isDelegated: boolean;
+};
+
 // https://datatracker.ietf.org/doc/html/rfc7519#section-4.1
 type StdClaims = {
   aud?: Array<string>; // audience
