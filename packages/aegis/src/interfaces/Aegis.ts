@@ -7,30 +7,17 @@ import {
 } from "@lindorm/aes";
 import { Dict } from "@lindorm/types";
 import {
-  CweContent,
-  CweEncryptOptions,
-  CwsContent,
-  DecryptedCwe,
   DecryptedJwe,
-  EncryptedCwe,
   EncryptedJwe,
   JweEncryptOptions,
   JwsContent,
-  ParsedCws,
-  ParsedCwt,
   ParsedJws,
   ParsedJwt,
-  SignCwsOptions,
-  SignCwtContent,
-  SignCwtOptions,
   SignJwsOptions,
   SignJwtContent,
   SignJwtOptions,
-  SignedCws,
-  SignedCwt,
   SignedJws,
   SignedJwt,
-  VerifyCwtOptions,
   VerifyJwtOptions,
 } from "../types";
 
@@ -42,27 +29,6 @@ export interface IAegisAes {
   decrypt<T extends AesContent = string>(
     data: AesDecryptionRecord | SerialisedAesDecryption | string,
   ): Promise<T>;
-}
-
-export interface IAegisCwe {
-  encrypt(data: CweContent, options?: CweEncryptOptions): Promise<EncryptedCwe>;
-  decrypt<T extends CweContent = string>(token: CweContent): Promise<DecryptedCwe<T>>;
-}
-
-export interface IAegisCws {
-  sign(data: CwsContent, options?: SignCwsOptions): Promise<SignedCws>;
-  verify<T extends CwsContent>(token: CwsContent): Promise<ParsedCws<T>>;
-}
-
-export interface IAegisCwt {
-  sign<T extends Dict = Dict>(
-    content: SignCwtContent<T>,
-    options?: SignCwtOptions,
-  ): Promise<SignedCwt>;
-  verify<T extends Dict = Dict>(
-    token: string,
-    verify?: VerifyCwtOptions,
-  ): Promise<ParsedCwt<T>>;
 }
 
 export interface IAegisJwe {
@@ -90,10 +56,6 @@ export interface IAegis {
   issuer: string | null;
 
   aes: IAegisAes;
-
-  cwe: IAegisCwe;
-  cws: IAegisCws;
-  cwt: IAegisCwt;
 
   jwe: IAegisJwe;
   jws: IAegisJws;
