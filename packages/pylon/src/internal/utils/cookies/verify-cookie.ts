@@ -1,9 +1,9 @@
 import { SignatureKit } from "@lindorm/aegis";
+import { IAmphora } from "@lindorm/amphora";
 import { ClientError } from "@lindorm/errors";
-import { PylonHttpContext } from "../../../types";
 
 export const verifyCookie = async (
-  ctx: PylonHttpContext,
+  amphora: IAmphora,
   name: string,
   value: string,
   signature: string | null,
@@ -15,7 +15,7 @@ export const verifyCookie = async (
     });
   }
 
-  const array = await ctx.amphora.filter({
+  const array = await amphora.filter({
     isExternal: false,
     operations: ["verify"],
     use: "sig",
