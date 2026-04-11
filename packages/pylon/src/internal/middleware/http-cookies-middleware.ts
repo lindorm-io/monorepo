@@ -1,18 +1,11 @@
-import { AesContent, AesKit } from "@lindorm/aes";
+import { AesContent } from "@lindorm/aes";
 import { ServerError } from "@lindorm/errors";
 import { isObject, isString } from "@lindorm/is";
-import { Dict } from "@lindorm/types";
-import { safelyParse } from "@lindorm/utils";
 import { PylonCookie } from "../classes/PylonCookie";
-import {
-  PylonCookieConfig,
-  PylonGetCookie,
-  PylonHttpMiddleware,
-  PylonSetCookie,
-} from "../../types";
+import { PylonCookieConfig, PylonHttpMiddleware, PylonSetCookie } from "../../types";
+import { createCookieReader } from "../utils/cookies/create-cookie-reader";
 import { parseCookieHeader } from "../utils/cookies/parse-cookie-header";
 import { signCookie } from "../utils/cookies/sign-cookie";
-import { verifyCookie } from "../utils/cookies/verify-cookie";
 
 export const createHttpCookiesMiddleware = (
   config: PylonCookieConfig = {},
@@ -20,8 +13,14 @@ export const createHttpCookiesMiddleware = (
   config.encoding = config.encoding || "base64url";
 
   return async function httpCookiesMiddleware(ctx, next) {
-    const cache: Dict = {};
     const parsed = parseCookieHeader(ctx.get("cookie"));
+
+    const reader = createCookieReader({
+      aegis: ctx.aegis,
+      amphora: ctx.amphora,
+      config,
+      parsed,
+    });
 
     let cookies: Array<PylonCookie> = [];
 
@@ -70,42 +69,13 @@ export const createHttpCookiesMiddleware = (
         cookies.push(new PylonCookie(name, final, opts));
 
         if (opts.signed) {
-          const signature = await signCookie(ctx, final);
+          const signature = await signCookie(ctx.amphora, final);
 
           cookies.push(new PylonCookie(`${name}.sig`, signature, opts));
         }
       },
 
-      get: async <T = any>(
-        name: string,
-        options: PylonGetCookie = {},
-      ): Promise<T | null> => {
-        if (cache[name]) return cache[name];
-
-        const cookie = parsed.find((cookie) => cookie.name === name);
-
-        if (!cookie) return null;
-
-        const opts = { ...config, ...options };
-
-        if (opts.signed) {
-          await verifyCookie(ctx, name, cookie.value, cookie.signature);
-        }
-
-        if (AesKit.isAesTokenised(cookie.value)) {
-          cookie.value = await ctx.aegis.aes.decrypt(cookie.value);
-        } else {
-          if (opts.encoding) {
-            cookie.value = Buffer.from(cookie.value, opts.encoding).toString();
-          }
-
-          cookie.value = safelyParse(cookie.value);
-        }
-
-        cache[name] = cookie.value;
-
-        return cache[name];
-      },
+      get: reader.get,
 
       del: (name: string): void => {
         removeExisting(name);

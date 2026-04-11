@@ -1,5 +1,6 @@
 import { AesKit } from "@lindorm/aes";
 import { createMockAegis } from "@lindorm/aegis";
+import { createMockAmphora } from "@lindorm/amphora";
 import { B64 } from "@lindorm/b64";
 import { PylonCookieConfig } from "../../types";
 import { parseCookieHeader as _parseCookieHeader } from "../utils/cookies/parse-cookie-header";
@@ -23,6 +24,7 @@ describe("httpCookiesMiddleware", () => {
   beforeEach(() => {
     ctx = {
       aegis: createMockAegis(),
+      amphora: createMockAmphora(),
       get: jest.fn().mockReturnValue(""),
       set: jest.fn(),
     };
