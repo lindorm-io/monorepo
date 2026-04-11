@@ -11,6 +11,7 @@ import { createSocketContextInitialisationMiddleware } from "#internal/middlewar
 import { socketErrorHandlerMiddleware } from "#internal/middleware/socket-error-handler-middleware";
 import { socketLoggerMiddleware } from "#internal/middleware/socket-logger-middleware";
 import { composePylonHandshakeContext } from "#internal/utils/handshake/compose-pylon-handshake-context";
+import { registerAuthRefreshListener } from "#internal/utils/refresh/register-auth-refresh-listener";
 import { initialisePylonSocketData } from "#internal/utils/initialise-pylon-socket-data";
 import { composePylonSocketContextBase } from "#internal/utils/compose-pylon-socket-context";
 import { createBuiltInRoomListeners } from "#internal/utils/create-built-in-room-listeners";
@@ -264,6 +265,8 @@ export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
     const eventListeners = listeners.filter(
       (l) => !l.listeners.every((item) => item.event === "disconnect"),
     );
+
+    registerAuthRefreshListener(socket as PylonSocket, this.logger);
 
     loadPylonListeners(io, socket as PylonSocket, middleware, eventListeners);
 

@@ -1,0 +1,10 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`registerAuthRefreshListener acks failure when auth.refresh throws 1`] = `
+{
+  "code": "refresh_failed",
+  "message": "bad signature",
+  "name": "Error",
+  "status": 401,
+}
+`;
