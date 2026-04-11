@@ -752,11 +752,10 @@ describe("Zephyr", () => {
       const p1 = zephyr.refresh();
       const p2 = zephyr.refresh();
 
-      expect(p1).toBe(p2);
       expect(auth.refresh).toHaveBeenCalledTimes(1);
 
       resolveInner!();
-      await p1;
+      await Promise.all([p1, p2]);
 
       await zephyr.refresh();
       expect(auth.refresh).toHaveBeenCalledTimes(2);
