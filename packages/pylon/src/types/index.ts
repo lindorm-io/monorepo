@@ -4,6 +4,7 @@ export * from "./body";
 export * from "./context-common";
 export * from "./context-http";
 export * from "./context-socket";
+export * from "./context-socket-handshake";
 export * from "./cookies";
 export * from "./cors";
 export * from "./credentials";

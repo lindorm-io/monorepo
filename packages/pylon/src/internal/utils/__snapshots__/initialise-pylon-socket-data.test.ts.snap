@@ -8,6 +8,7 @@ exports[`initialisePylonSocketData should initialize with all options provided 1
     "name": "test-service",
     "version": "1.2.3",
   },
+  "pylon": {},
   "tokens": {},
 }
 `;
@@ -20,6 +21,7 @@ exports[`initialisePylonSocketData should use defaults for missing options 1`] =
     "name": "unknown",
     "version": "0.0.0",
   },
+  "pylon": {},
   "tokens": {},
 }
 `;
@@ -32,6 +34,7 @@ exports[`initialisePylonSocketData should use defaults for undefined values 1`] 
     "name": "unknown",
     "version": "0.0.0",
   },
+  "pylon": {},
   "tokens": {},
 }
 `;
