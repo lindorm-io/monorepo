@@ -1,4 +1,5 @@
 export * from "./create-access-token-middleware";
+export * from "./create-handshake-token-middleware";
 export * from "./create-basic-auth-middleware";
 export * from "./create-cache-middleware";
 export * from "./create-conduit-middleware";
