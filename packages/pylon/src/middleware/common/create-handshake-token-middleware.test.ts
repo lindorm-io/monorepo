@@ -22,7 +22,9 @@ const makeCtx = (overrides: any = {}): any => {
       socket: {
         handshake: {
           auth: {},
-          headers: {},
+          headers: { host: "api.example.com" },
+          secure: true,
+          url: "/socket.io/?EIO=4&transport=websocket",
         },
         data: {
           app: {},
@@ -35,6 +37,23 @@ const makeCtx = (overrides: any = {}): any => {
     },
   };
 };
+
+const makeDpopVerifyResult = (overrides: any = {}) => ({
+  payload: {
+    subject: "alice",
+    expiresAt: new Date("2026-04-11T12:05:00.000Z"),
+    confirmation: { thumbprint: "jkt-abc" },
+    ...overrides.payload,
+  },
+  header: { tokenType: "access_token" },
+  token: "jwt-token",
+  dpop: {
+    httpMethod: "GET",
+    httpUri: "https://api.example.com/socket.io/",
+    ...overrides.dpop,
+  },
+  ...overrides.top,
+});
 
 describe("createHandshakeTokenMiddleware", () => {
   let next: jest.Mock;
@@ -234,6 +253,212 @@ describe("createHandshakeTokenMiddleware", () => {
       await expect(ctx.io.socket.data.pylon.auth.refresh({})).rejects.toThrow(
         ClientError,
       );
+    });
+  });
+
+  describe("DPoP path", () => {
+    describe('dpop: "required"', () => {
+      test("rejects when DPoP header is missing", async () => {
+        const ctx = makeCtx();
+        ctx.io.socket.handshake.auth.bearer = "jwt-token";
+
+        const mw = createHandshakeTokenMiddleware({ ...options, dpop: "required" });
+        await expect(mw(ctx, next)).rejects.toThrow(ClientError);
+        expect(ctx.aegis.verify).not.toHaveBeenCalled();
+      });
+
+      test("rejects when bearer-only token (no cnf.jkt) is presented", async () => {
+        const ctx = makeCtx();
+        ctx.io.socket.handshake.auth.bearer = "jwt-token";
+        ctx.io.socket.handshake.headers.dpop = "proof-jwt";
+        (ctx.aegis.verify as jest.Mock).mockResolvedValue({
+          payload: { subject: "alice", expiresAt: new Date() },
+          header: {},
+          token: "jwt-token",
+          dpop: {
+            httpMethod: "GET",
+            httpUri: "https://api.example.com/socket.io/",
+          },
+        });
+
+        const mw = createHandshakeTokenMiddleware({ ...options, dpop: "required" });
+        await expect(mw(ctx, next)).rejects.toThrow(ClientError);
+      });
+
+      test("accepts jkt-bound token + valid proof, strategy = dpop-bearer", async () => {
+        const ctx = makeCtx();
+        ctx.io.socket.handshake.auth.bearer = "jwt-token";
+        ctx.io.socket.handshake.headers.dpop = "proof-jwt";
+        (ctx.aegis.verify as jest.Mock).mockResolvedValue(makeDpopVerifyResult());
+
+        const mw = createHandshakeTokenMiddleware({ ...options, dpop: "required" });
+        await mw(ctx, next);
+
+        expect(ctx.aegis.verify).toHaveBeenCalledWith("jwt-token", {
+          tokenType: "access_token",
+          ...options,
+          dpopProof: "proof-jwt",
+        });
+        expect(ctx.io.socket.data.pylon.auth.strategy).toBe("dpop-bearer");
+        expect(next).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe('dpop: "optional" (default)', () => {
+      test("accepts bearer-only token, strategy = bearer", async () => {
+        const ctx = makeCtx();
+        ctx.io.socket.handshake.auth.bearer = "jwt-token";
+        (ctx.aegis.verify as jest.Mock).mockResolvedValue({
+          payload: { subject: "alice", expiresAt: new Date() },
+          header: {},
+          token: "jwt-token",
+        });
+
+        const mw = createHandshakeTokenMiddleware(options);
+        await mw(ctx, next);
+
+        expect(ctx.io.socket.data.pylon.auth.strategy).toBe("bearer");
+      });
+
+      test("accepts jkt-bound token + valid proof, strategy = dpop-bearer", async () => {
+        const ctx = makeCtx();
+        ctx.io.socket.handshake.auth.bearer = "jwt-token";
+        ctx.io.socket.handshake.headers.dpop = "proof-jwt";
+        (ctx.aegis.verify as jest.Mock).mockResolvedValue(makeDpopVerifyResult());
+
+        const mw = createHandshakeTokenMiddleware(options);
+        await mw(ctx, next);
+
+        expect(ctx.io.socket.data.pylon.auth.strategy).toBe("dpop-bearer");
+      });
+
+      test("rejects jkt-bound token without proof (strict per token)", async () => {
+        const ctx = makeCtx();
+        ctx.io.socket.handshake.auth.bearer = "jwt-token";
+        (ctx.aegis.verify as jest.Mock).mockResolvedValue({
+          payload: {
+            subject: "alice",
+            expiresAt: new Date(),
+            confirmation: { thumbprint: "jkt-abc" },
+          },
+          header: {},
+          token: "jwt-token",
+        });
+
+        const mw = createHandshakeTokenMiddleware(options);
+        await expect(mw(ctx, next)).rejects.toThrow(ClientError);
+      });
+
+      test("rejects invalid DPoP proof (htu mismatch)", async () => {
+        const ctx = makeCtx();
+        ctx.io.socket.handshake.auth.bearer = "jwt-token";
+        ctx.io.socket.handshake.headers.dpop = "proof-jwt";
+        (ctx.aegis.verify as jest.Mock).mockResolvedValue(
+          makeDpopVerifyResult({
+            dpop: {
+              httpMethod: "GET",
+              httpUri: "https://evil.example.com/socket.io/",
+            },
+          }),
+        );
+
+        const mw = createHandshakeTokenMiddleware(options);
+        await expect(mw(ctx, next)).rejects.toThrow(ClientError);
+      });
+    });
+
+    describe('dpop: "disabled"', () => {
+      test("accepts jkt-bound token without proof as plain bearer", async () => {
+        const ctx = makeCtx();
+        ctx.io.socket.handshake.auth.bearer = "jwt-token";
+        (ctx.aegis.verify as jest.Mock).mockResolvedValue({
+          payload: {
+            subject: "alice",
+            expiresAt: new Date(),
+            confirmation: { thumbprint: "jkt-abc" },
+          },
+          header: {},
+          token: "jwt-token",
+        });
+
+        const mw = createHandshakeTokenMiddleware({ ...options, dpop: "disabled" });
+        await mw(ctx, next);
+
+        expect(ctx.io.socket.data.pylon.auth.strategy).toBe("bearer");
+      });
+    });
+
+    describe("refresh handler with captured jkt", () => {
+      const installDpopHandshake = async (ctx: any) => {
+        ctx.io.socket.handshake.auth.bearer = "jwt-token";
+        ctx.io.socket.handshake.headers.dpop = "proof-jwt";
+        (ctx.aegis.verify as jest.Mock).mockResolvedValueOnce(makeDpopVerifyResult());
+
+        const mw = createHandshakeTokenMiddleware(options);
+        await mw(ctx, next);
+      };
+
+      test("accepts refresh with same cnf.jkt", async () => {
+        const ctx = makeCtx();
+        await installDpopHandshake(ctx);
+
+        (ctx.aegis.verify as jest.Mock).mockResolvedValueOnce({
+          payload: {
+            subject: "alice",
+            expiresAt: new Date("2026-04-11T13:00:00.000Z"),
+            confirmation: { thumbprint: "jkt-abc" },
+          },
+          header: {},
+          token: "new-jwt",
+        });
+
+        await expect(
+          ctx.io.socket.data.pylon.auth.refresh({
+            bearer: "new-jwt",
+            expiresIn: 3600,
+          }),
+        ).resolves.toBeUndefined();
+      });
+
+      test("rejects refresh with a different cnf.jkt", async () => {
+        const ctx = makeCtx();
+        await installDpopHandshake(ctx);
+
+        (ctx.aegis.verify as jest.Mock).mockResolvedValueOnce({
+          payload: {
+            subject: "alice",
+            expiresAt: new Date(),
+            confirmation: { thumbprint: "jkt-xyz" },
+          },
+          header: {},
+          token: "new-jwt",
+        });
+
+        await expect(
+          ctx.io.socket.data.pylon.auth.refresh({
+            bearer: "new-jwt",
+            expiresIn: 3600,
+          }),
+        ).rejects.toThrow(ClientError);
+      });
+
+      test("rejects refresh when new token has no cnf.jkt", async () => {
+        const ctx = makeCtx();
+        await installDpopHandshake(ctx);
+
+        (ctx.aegis.verify as jest.Mock).mockResolvedValueOnce({
+          payload: { subject: "alice", expiresAt: new Date() },
+          header: {},
+          token: "new-jwt",
+        });
+
+        await expect(
+          ctx.io.socket.data.pylon.auth.refresh({
+            bearer: "new-jwt",
+            expiresIn: 3600,
+          }),
+        ).rejects.toThrow(ClientError);
+      });
     });
   });
 

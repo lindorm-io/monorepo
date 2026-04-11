@@ -1,7 +1,10 @@
 import { VerifyJwtOptions } from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
+import {
+  HandshakeDpopMode,
+  registerBearerHandshakeAuth,
+} from "#internal/utils/handshake/register-bearer-handshake-auth";
 import { resolveHandshakeTokenSource } from "#internal/utils/tokens/resolve-handshake-token-source";
-import { createBearerRefreshHandler } from "#internal/utils/refresh/create-bearer-refresh-handler";
 import { createSessionRefreshHandler } from "#internal/utils/refresh/create-session-refresh-handler";
 import { extractTokenFromSession } from "#internal/utils/tokens/extract-token-from-session";
 import {
@@ -12,58 +15,38 @@ import {
 
 type Options = Omit<VerifyJwtOptions, "issuer"> & {
   issuer: string;
-  // Phase 4: DPoP enforcement ("required" | "optional" | "disabled")
-  // is declared here for the type contract but not wired yet.
-  dpop?: "required" | "optional" | "disabled";
+  dpop?: HandshakeDpopMode;
 };
 
 export const createHandshakeTokenMiddleware = <
   C extends PylonSocketHandshakeContext = PylonSocketHandshakeContext,
 >(
   options: Options,
-): PylonConnectionMiddleware<C> =>
-  async function handshakeTokenMiddleware(ctx, next): Promise<void> {
+): PylonConnectionMiddleware<C> => {
+  const dpopMode: HandshakeDpopMode = options.dpop ?? "optional";
+  const { dpop: _dpop, ...verifyOptions } = options;
+
+  return async function handshakeTokenMiddleware(ctx, next): Promise<void> {
     const socket = ctx.io.socket;
     const source = resolveHandshakeTokenSource(socket);
 
     if (source.kind === "bearer" || source.kind === "dpop") {
-      // Phase 4 will branch on source.kind === "dpop" here to verify the
-      // proof against the handshake upgrade URL and capture cnf.jkt.
-      const verified = await ctx.aegis.verify(source.token, {
-        tokenType: "access_token",
-        ...options,
-      });
-
-      socket.data.tokens.bearer = verified;
-
-      const auth: PylonSocketAuth = {
-        strategy: "bearer",
-        getExpiresAt: () => verified.payload.expiresAt ?? new Date(0),
-        refresh: async () => {},
-        authExpiredEmittedAt: null,
-      };
-      auth.refresh = createBearerRefreshHandler({
+      await registerBearerHandshakeAuth({
         aegis: ctx.aegis,
+        dpopMode,
+        dpopProof: source.kind === "dpop" ? source.dpopProof : undefined,
         socket,
-        subject: verified.payload.subject,
-        verifyOptions: { tokenType: "access_token", ...options },
+        token: source.token,
+        verifyOptions,
       });
-      socket.data.pylon.auth = auth;
-
       return next();
     }
 
     if (source.kind === "session") {
-      if (socket.data.pylon.auth) {
-        // Connection session middleware has already registered a
-        // store-backed refresh handler — don't overwrite it.
-        return next();
-      }
+      if (socket.data.pylon.auth) return next();
 
       const parsed = extractTokenFromSession(source.session);
-      if (parsed) {
-        socket.data.tokens.bearer = parsed;
-      }
+      if (parsed) socket.data.tokens.bearer = parsed;
 
       const auth: PylonSocketAuth = {
         strategy: "session",
@@ -78,7 +61,6 @@ export const createHandshakeTokenMiddleware = <
         socket,
       });
       socket.data.pylon.auth = auth;
-
       return next();
     }
 
@@ -86,3 +68,4 @@ export const createHandshakeTokenMiddleware = <
       status: ClientError.Status.Unauthorized,
     });
   };
+};
