@@ -1,26 +1,31 @@
 import { ClientError } from "@lindorm/errors";
-import { PylonHttpContext } from "../../types";
-import { normalizeHtu } from "./normalize-htu";
+import { normalizeHtu } from "../normalize-htu";
 
-type DpopRequestClaims = {
+export type DpopProofClaims = {
   httpMethod: string;
   httpUri: string;
 };
 
-export const assertDpopRequestMatch = (
-  ctx: PylonHttpContext,
-  dpop: DpopRequestClaims,
+export type DpopMatchTarget = {
+  method: string;
+  origin: string;
+  path: string;
+};
+
+export const assertDpopMatch = (
+  target: DpopMatchTarget,
+  proof: DpopProofClaims,
 ): void => {
-  if (dpop.httpMethod !== ctx.method) {
+  if (proof.httpMethod !== target.method) {
     throw new ClientError("Invalid DPoP proof", {
       details: "DPoP proof htm does not match request method",
-      debug: { proof: dpop.httpMethod, request: ctx.method },
+      debug: { proof: proof.httpMethod, request: target.method },
       status: ClientError.Status.Unauthorized,
     });
   }
 
-  const expected = normalizeHtu(ctx.origin, ctx.path);
-  const actual = normalizeHtu(dpop.httpUri, "");
+  const expected = normalizeHtu(target.origin, target.path);
+  const actual = normalizeHtu(proof.httpUri, "");
 
   if (actual !== expected) {
     throw new ClientError("Invalid DPoP proof", {
