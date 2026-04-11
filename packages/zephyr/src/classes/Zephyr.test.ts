@@ -166,28 +166,26 @@ describe("Zephyr", () => {
       await expect(connectPromise).rejects.toThrow(ZephyrError);
     });
 
-    it("should resolve bearer string and set socket.auth", async () => {
-      const zephyr = new Zephyr(
-        createOptions({
-          auth: { bearer: "static-token" },
+    it("should call auth.prepareHandshake before socket.connect", async () => {
+      const order: Array<string> = [];
+      const auth = {
+        prepareHandshake: jest.fn(async (socket: any) => {
+          order.push("prepareHandshake");
+          socket.auth = { bearer: "static-token" };
         }),
-      );
+        refresh: jest.fn(),
+      };
+      mockSocket.connect.mockImplementation(() => {
+        order.push("socket.connect");
+      });
+
+      const zephyr = new Zephyr(createOptions({ auth }));
 
       await connectZephyr(zephyr);
 
+      expect(auth.prepareHandshake).toHaveBeenCalledTimes(1);
       expect(mockSocket.auth).toEqual({ bearer: "static-token" });
-    });
-
-    it("should resolve bearer function and set socket.auth", async () => {
-      const zephyr = new Zephyr(
-        createOptions({
-          auth: { bearer: async () => "dynamic-token" },
-        }),
-      );
-
-      await connectZephyr(zephyr);
-
-      expect(mockSocket.auth).toEqual({ bearer: "dynamic-token" });
+      expect(order).toEqual(["prepareHandshake", "socket.connect"]);
     });
 
     it("should not create a new socket if already connected", async () => {
@@ -689,28 +687,163 @@ describe("Zephyr", () => {
       expect(handler).toHaveBeenCalledWith(3);
     });
 
-    it("should refresh auth token on reconnect", async () => {
-      const bearerFn = jest
+    it("should call auth.prepareHandshake again on reconnect_attempt", async () => {
+      const prepareHandshake = jest
         .fn()
-        .mockResolvedValueOnce("token-1")
-        .mockResolvedValueOnce("token-2");
+        .mockImplementationOnce(async (socket: any) => {
+          socket.auth = { bearer: "token-1" };
+        })
+        .mockImplementationOnce(async (socket: any) => {
+          socket.auth = { bearer: "token-2" };
+        });
 
-      const zephyr = new Zephyr(
-        createOptions({
-          auth: { bearer: bearerFn },
-        }),
-      );
+      const auth = { prepareHandshake, refresh: jest.fn() };
+
+      const zephyr = new Zephyr(createOptions({ auth }));
 
       await connectZephyr(zephyr);
 
       expect(mockSocket.auth).toEqual({ bearer: "token-1" });
 
-      const call = findLastCall(mockSocket.io.on, "reconnect");
+      const call = findLastCall(mockSocket.io.on, "reconnect_attempt");
       call![1](1);
 
       await new Promise((resolve) => setTimeout(resolve, 10));
 
+      expect(prepareHandshake).toHaveBeenCalledTimes(2);
       expect(mockSocket.auth).toEqual({ bearer: "token-2" });
+    });
+  });
+
+  describe("refresh", () => {
+    it("should delegate to auth.refresh with the socket", async () => {
+      const auth = {
+        prepareHandshake: jest.fn().mockResolvedValue(undefined),
+        refresh: jest.fn().mockResolvedValue(undefined),
+      };
+
+      const zephyr = new Zephyr(createOptions({ auth }));
+      await connectZephyr(zephyr);
+
+      await zephyr.refresh();
+
+      expect(auth.refresh).toHaveBeenCalledTimes(1);
+      expect(auth.refresh).toHaveBeenCalledWith(mockSocket);
+    });
+
+    it("should debounce concurrent refresh calls", async () => {
+      let resolveInner: (() => void) | undefined;
+      const auth = {
+        prepareHandshake: jest.fn().mockResolvedValue(undefined),
+        refresh: jest
+          .fn()
+          .mockImplementationOnce(
+            () =>
+              new Promise<void>((resolve) => {
+                resolveInner = resolve;
+              }),
+          )
+          .mockResolvedValue(undefined),
+      };
+
+      const zephyr = new Zephyr(createOptions({ auth }));
+      await connectZephyr(zephyr);
+
+      const p1 = zephyr.refresh();
+      const p2 = zephyr.refresh();
+
+      expect(p1).toBe(p2);
+      expect(auth.refresh).toHaveBeenCalledTimes(1);
+
+      resolveInner!();
+      await p1;
+
+      await zephyr.refresh();
+      expect(auth.refresh).toHaveBeenCalledTimes(2);
+    });
+
+    it("should throw when no auth strategy is configured", async () => {
+      const zephyr = new Zephyr(createOptions());
+      await connectZephyr(zephyr);
+
+      await expect(zephyr.refresh()).rejects.toThrow("No auth strategy configured");
+    });
+  });
+
+  describe("onAuthExpired", () => {
+    const fireAuthExpired = (payload: any): void => {
+      const call = findLastCall(mockSocket.on, "$pylon/auth/expired");
+      call![1](payload);
+    };
+
+    it("should fire registered handlers on $pylon/auth/expired", async () => {
+      const auth = {
+        prepareHandshake: jest.fn().mockResolvedValue(undefined),
+        refresh: jest.fn().mockResolvedValue(undefined),
+      };
+
+      const zephyr = new Zephyr(createOptions({ auth }));
+      await connectZephyr(zephyr);
+
+      const handler1 = jest.fn();
+      const handler2 = jest.fn();
+      zephyr.onAuthExpired(handler1);
+      zephyr.onAuthExpired(handler2);
+
+      fireAuthExpired({ expiresAt: 12345 });
+
+      expect(handler1).toHaveBeenCalledWith({ expiresAt: 12345 });
+      expect(handler2).toHaveBeenCalledWith({ expiresAt: 12345 });
+    });
+
+    it("should unsubscribe via returned function", async () => {
+      const auth = {
+        prepareHandshake: jest.fn().mockResolvedValue(undefined),
+        refresh: jest.fn().mockResolvedValue(undefined),
+      };
+
+      const zephyr = new Zephyr(createOptions({ auth }));
+      await connectZephyr(zephyr);
+
+      const handler = jest.fn();
+      const unsub = zephyr.onAuthExpired(handler);
+      unsub();
+
+      fireAuthExpired({ expiresAt: 1 });
+
+      expect(handler).not.toHaveBeenCalled();
+    });
+
+    it("should auto-trigger refresh on $pylon/auth/expired by default", async () => {
+      const auth = {
+        prepareHandshake: jest.fn().mockResolvedValue(undefined),
+        refresh: jest.fn().mockResolvedValue(undefined),
+      };
+
+      const zephyr = new Zephyr(createOptions({ auth }));
+      await connectZephyr(zephyr);
+
+      fireAuthExpired({ expiresAt: 1 });
+
+      await new Promise((r) => setTimeout(r, 10));
+
+      expect(auth.refresh).toHaveBeenCalledTimes(1);
+    });
+
+    it("should not auto-refresh when autoRefreshOnExpiry is false", async () => {
+      const auth = {
+        prepareHandshake: jest.fn().mockResolvedValue(undefined),
+        refresh: jest.fn().mockResolvedValue(undefined),
+      };
+
+      const zephyr = new Zephyr(createOptions({ auth, autoRefreshOnExpiry: false }));
+      await connectZephyr(zephyr);
+
+      fireAuthExpired({ expiresAt: 1 });
+
+      await new Promise((r) => setTimeout(r, 10));
+
+      expect(auth.refresh).not.toHaveBeenCalled();
     });
   });
 });

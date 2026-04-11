@@ -3,22 +3,31 @@ import { ILogger } from "@lindorm/logger";
 import { composeMiddleware } from "@lindorm/middleware";
 import type { Socket } from "socket.io-client";
 import { io } from "socket.io-client";
+import type { ZephyrAuthStrategy } from "../auth/zephyr-auth-strategy";
 import { ZephyrError } from "../errors/ZephyrError";
-import type { IZephyr, IZephyrRoom } from "../interfaces";
+import type {
+  AuthExpiredEvent,
+  AuthExpiredHandler,
+  IZephyr,
+  IZephyrRoom,
+} from "../interfaces";
 import type { ListenerEntry } from "../internal/types/listener-entry";
 import { buildEnvelope } from "../internal/utils/build-envelope";
 import { createZephyrContext } from "../internal/utils/create-zephyr-context";
-import { resolveBearer } from "../internal/utils/resolve-bearer";
+import { dedupePromise } from "../internal/utils/dedupe-promise";
 import { unwrapAckResponse } from "../internal/utils/unwrap-ack-response";
 import type { AppContext, ZephyrContext, ZephyrMiddleware } from "../types/context";
 import type { EventIncoming, EventOutgoing, ZephyrEventMap } from "../types/event-map";
-import type { AdvancedOptions, ZephyrAuth, ZephyrOptions } from "../types/options";
+import type { AdvancedOptions, ZephyrOptions } from "../types/options";
 import { ZephyrRoom } from "./ZephyrRoom";
+
+const AUTH_EXPIRED_EVENT = "$pylon/auth/expired";
 
 export class Zephyr<E extends ZephyrEventMap = ZephyrEventMap> implements IZephyr<E> {
   private readonly app: AppContext;
-  private readonly auth: ZephyrAuth | undefined;
+  private readonly auth: ZephyrAuthStrategy | undefined;
   private readonly autoConnect: boolean;
+  private readonly autoRefreshOnExpiry: boolean;
   private readonly logger: ILogger | undefined;
   private readonly middleware: Array<ZephyrMiddleware>;
   private readonly namespace: string;
@@ -31,6 +40,8 @@ export class Zephyr<E extends ZephyrEventMap = ZephyrEventMap> implements IZephy
   private readonly disconnectHandlers: Array<(reason: string) => void>;
   private readonly errorHandlers: Array<(error: ZephyrError) => void>;
   private readonly reconnectHandlers: Array<(attempt: number) => void>;
+  private readonly authExpiredHandlers: Set<AuthExpiredHandler>;
+  private readonly refreshDeduped: () => Promise<void>;
 
   public constructor(options: ZephyrOptions) {
     this.app = {
@@ -41,6 +52,7 @@ export class Zephyr<E extends ZephyrEventMap = ZephyrEventMap> implements IZephy
 
     this.auth = options.auth;
     this.autoConnect = options.autoConnect ?? false;
+    this.autoRefreshOnExpiry = options.autoRefreshOnExpiry ?? true;
     this.logger = options.logger?.child(["Zephyr"]);
     this.middleware = options.middleware ?? [];
     this.namespace = options.namespace ?? "";
@@ -52,6 +64,9 @@ export class Zephyr<E extends ZephyrEventMap = ZephyrEventMap> implements IZephy
     this.disconnectHandlers = [];
     this.errorHandlers = [];
     this.reconnectHandlers = [];
+    this.authExpiredHandlers = new Set();
+
+    this.refreshDeduped = dedupePromise(() => this.performRefresh());
 
     if (this.autoConnect) {
       this.connect().catch((err) => this.handleError(err));
@@ -77,7 +92,7 @@ export class Zephyr<E extends ZephyrEventMap = ZephyrEventMap> implements IZephy
     });
 
     if (this.auth) {
-      this.socket.auth = { bearer: await resolveBearer(this.auth) };
+      await this.auth.prepareHandshake(this.socket);
     }
 
     this.wireLifecycleEvents(this.socket);
@@ -115,6 +130,18 @@ export class Zephyr<E extends ZephyrEventMap = ZephyrEventMap> implements IZephy
 
       this.socket!.disconnect();
     });
+  }
+
+  public refresh(): Promise<void> {
+    if (!this.auth) {
+      return Promise.reject(
+        new ZephyrError("No auth strategy configured", {
+          code: "ZEPHYR_NO_AUTH_STRATEGY",
+        }),
+      );
+    }
+
+    return this.refreshDeduped();
   }
 
   public async emit<K extends string & keyof E>(
@@ -231,7 +258,24 @@ export class Zephyr<E extends ZephyrEventMap = ZephyrEventMap> implements IZephy
     this.reconnectHandlers.push(handler);
   }
 
+  public onAuthExpired(handler: AuthExpiredHandler): () => void {
+    this.authExpiredHandlers.add(handler);
+    return () => {
+      this.authExpiredHandlers.delete(handler);
+    };
+  }
+
   // Private
+
+  private async performRefresh(): Promise<void> {
+    if (!this.socket) {
+      throw new ZephyrError("Cannot refresh before connect", {
+        code: "ZEPHYR_REFRESH_BEFORE_CONNECT",
+      });
+    }
+
+    await this.auth!.refresh(this.socket);
+  }
 
   private addListener(event: string, handler: (data: any) => void, once: boolean): void {
     const wrapped = this.wrapHandler(event, handler, once);
@@ -325,17 +369,31 @@ export class Zephyr<E extends ZephyrEventMap = ZephyrEventMap> implements IZephy
       this.handleError(new ZephyrError(err.message, { error: err }));
     });
 
-    socket.io.on("reconnect", (attempt: number) => {
-      if (this.auth) {
-        resolveBearer(this.auth)
-          .then((token) => {
-            this.socket!.auth = { bearer: token };
-          })
-          .catch((err) => this.handleError(err));
-      }
+    socket.io.on("reconnect_attempt", () => {
+      if (!this.auth) return;
 
+      this.auth.prepareHandshake(socket).catch((err) => this.handleError(err));
+    });
+
+    socket.io.on("reconnect", (attempt: number) => {
       for (const handler of this.reconnectHandlers) {
         handler(attempt);
+      }
+    });
+
+    socket.on(AUTH_EXPIRED_EVENT, (payload: AuthExpiredEvent | undefined) => {
+      const event: AuthExpiredEvent = payload ?? {};
+
+      for (const handler of this.authExpiredHandlers) {
+        try {
+          handler(event);
+        } catch (err) {
+          this.handleError(err);
+        }
+      }
+
+      if (this.autoRefreshOnExpiry && this.auth) {
+        this.refresh().catch((err) => this.handleError(err));
       }
     });
   }
