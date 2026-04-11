@@ -3,9 +3,14 @@ import { createCommonContextInitialisationMiddleware } from "#internal/middlewar
 import { createQueueMiddleware } from "#internal/middleware/common-queue-middleware";
 import { createSourcesMiddleware } from "#internal/middleware/common-sources-middleware";
 import { createWebhookMiddleware } from "#internal/middleware/common-webhook-middleware";
+import { createConnectionContextInitialisationMiddleware } from "#internal/middleware/connection-context-initialisation-middleware";
+import { createConnectionCorsMiddleware } from "#internal/middleware/connection-cors-middleware";
+import { connectionErrorHandlerMiddleware } from "#internal/middleware/connection-error-handler-middleware";
+import { connectionLoggerMiddleware } from "#internal/middleware/connection-logger-middleware";
 import { createSocketContextInitialisationMiddleware } from "#internal/middleware/socket-context-initialisation-middleware";
 import { socketErrorHandlerMiddleware } from "#internal/middleware/socket-error-handler-middleware";
 import { socketLoggerMiddleware } from "#internal/middleware/socket-logger-middleware";
+import { composePylonHandshakeContext } from "#internal/utils/handshake/compose-pylon-handshake-context";
 import { initialisePylonSocketData } from "#internal/utils/initialise-pylon-socket-data";
 import { composePylonSocketContextBase } from "#internal/utils/compose-pylon-socket-context";
 import { createBuiltInRoomListeners } from "#internal/utils/create-built-in-room-listeners";
@@ -21,6 +26,7 @@ import { Server as SocketIoServer } from "socket.io";
 import {
   IoServer,
   IoSocket,
+  PylonConnectionMiddleware,
   PylonOptions,
   PylonSocket,
   PylonSocketContext,
@@ -167,7 +173,27 @@ export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
       ...(this.middleware ?? []),
     ];
 
+    const connectionMiddleware: Array<PylonConnectionMiddleware> = [
+      connectionErrorHandlerMiddleware,
+      createConnectionContextInitialisationMiddleware(this.logger),
+      createCommonContextInitialisationMiddleware(this.options.amphora),
+      ...(this.options.cors ? [createConnectionCorsMiddleware(this.options.cors)] : []),
+      connectionLoggerMiddleware,
+      ...((this.options.socket?.connectionMiddleware ??
+        []) as Array<PylonConnectionMiddleware>),
+    ];
+
     const stdListeners = listeners.filter((listener) => !listener.namespace);
+    const uniqueNamespaces = uniq(namespaces);
+    const allNamespaces = ["/", ...uniqueNamespaces];
+
+    for (const ns of allNamespaces) {
+      this.server.of(ns).use((socket, next) => {
+        this.runConnectionChain(socket, connectionMiddleware)
+          .then(() => next())
+          .catch((err: Error) => next(err));
+      });
+    }
 
     this.logger.debug("Creating connection handler", { listeners: stdListeners });
 
@@ -175,7 +201,7 @@ export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
       this.createSocketConnectionHandler(this.server, socket, middleware, stdListeners);
     });
 
-    for (const namespace of uniq(namespaces)) {
+    for (const namespace of uniqueNamespaces) {
       const nsListeners = listeners.filter(
         (listener) => listener.namespace === namespace,
       );
@@ -204,16 +230,32 @@ export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
     }
   }
 
+  private async runConnectionChain(
+    socket: IoSocket,
+    middleware: Array<PylonConnectionMiddleware>,
+  ): Promise<void> {
+    socket.data = {
+      ...socket.data,
+      ...initialisePylonSocketData(this.options),
+    };
+
+    const ctx = composePylonHandshakeContext(this.server, socket as PylonSocket);
+
+    await composeMiddleware<any>(ctx, middleware, { useClone: false });
+  }
+
   private createSocketConnectionHandler(
     io: IoServer,
     socket: IoSocket,
     middleware: Array<PylonSocketMiddleware<T>>,
     listeners: Array<PylonListener<T>>,
   ): void {
-    socket.data = {
-      ...socket.data,
-      ...initialisePylonSocketData(this.options),
-    };
+    if (!socket.data?.app) {
+      socket.data = {
+        ...socket.data,
+        ...initialisePylonSocketData(this.options),
+      };
+    }
 
     const disconnectListeners = listeners.filter((l) =>
       l.listeners.some((item) => item.event === "disconnect"),
