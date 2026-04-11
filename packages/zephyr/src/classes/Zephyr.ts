@@ -14,7 +14,7 @@ import type {
 import type { ListenerEntry } from "../internal/types/listener-entry";
 import { buildEnvelope } from "../internal/utils/build-envelope";
 import { createZephyrContext } from "../internal/utils/create-zephyr-context";
-import { dedupePromise } from "../internal/utils/dedupe-promise";
+import { dedupPromise } from "../internal/utils/dedup-promise";
 import { unwrapAckResponse } from "../internal/utils/unwrap-ack-response";
 import type { AppContext, ZephyrContext, ZephyrMiddleware } from "../types/context";
 import type { EventIncoming, EventOutgoing, ZephyrEventMap } from "../types/event-map";
@@ -41,7 +41,7 @@ export class Zephyr<E extends ZephyrEventMap = ZephyrEventMap> implements IZephy
   private readonly errorHandlers: Array<(error: ZephyrError) => void>;
   private readonly reconnectHandlers: Array<(attempt: number) => void>;
   private readonly authExpiredHandlers: Set<AuthExpiredHandler>;
-  private readonly refreshDeduped: () => Promise<void>;
+  private readonly refreshDedup: () => Promise<void>;
 
   public constructor(options: ZephyrOptions) {
     this.app = {
@@ -66,7 +66,7 @@ export class Zephyr<E extends ZephyrEventMap = ZephyrEventMap> implements IZephy
     this.reconnectHandlers = [];
     this.authExpiredHandlers = new Set();
 
-    this.refreshDeduped = dedupePromise(() => this.performRefresh());
+    this.refreshDedup = dedupPromise(() => this.performRefresh());
 
     if (this.autoConnect) {
       this.connect().catch((err) => this.handleError(err));
@@ -139,7 +139,7 @@ export class Zephyr<E extends ZephyrEventMap = ZephyrEventMap> implements IZephy
       });
     }
 
-    await this.refreshDeduped();
+    await this.refreshDedup();
   }
 
   public async emit<K extends string & keyof E>(
