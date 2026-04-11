@@ -2,14 +2,14 @@ import { createMockAegis } from "@lindorm/aegis";
 import { createMockAmphora } from "@lindorm/amphora";
 import { B64 } from "@lindorm/b64";
 import { PylonCookieConfig } from "../../../types";
-import { createCookieReader } from "./create-cookie-reader";
+import { createGetCookie } from "./create-get-cookie";
 import { verifyCookie as _verifyCookie } from "./verify-cookie";
 
 jest.mock("./verify-cookie");
 
 const verifyCookie = _verifyCookie as jest.Mock;
 
-describe("createCookieReader", () => {
+describe("createGetCookie", () => {
   let ctx: any;
   let config: PylonCookieConfig;
 
@@ -22,35 +22,35 @@ describe("createCookieReader", () => {
   afterEach(jest.clearAllMocks);
 
   test("should return null for missing cookie", async () => {
-    const reader = createCookieReader({ ctx, config, parsed: [] });
+    const getCookie = createGetCookie({ ctx, config, parsed: [] });
 
-    await expect(reader.get("missing")).resolves.toBeNull();
+    await expect(getCookie("missing")).resolves.toBeNull();
   });
 
   test("should decode plain value with config encoding", async () => {
-    const reader = createCookieReader({
+    const getCookie = createGetCookie({
       ctx,
       config,
       parsed: [{ name: "cookie_name", signature: null, value: "Y29va2llX3ZhbHVl" }],
     });
 
-    await expect(reader.get("cookie_name")).resolves.toEqual("cookie_value");
+    await expect(getCookie("cookie_name")).resolves.toEqual("cookie_value");
   });
 
   test("should decode value with override encoding", async () => {
-    const reader = createCookieReader({
+    const getCookie = createGetCookie({
       ctx,
       config,
       parsed: [{ name: "cookie_name", signature: null, value: "bmV3X3ZhbHVl" }],
     });
 
-    await expect(reader.get("cookie_name", { encoding: "base64" })).resolves.toEqual(
+    await expect(getCookie("cookie_name", { encoding: "base64" })).resolves.toEqual(
       "new_value",
     );
   });
 
   test("should parse json data", async () => {
-    const reader = createCookieReader({
+    const getCookie = createGetCookie({
       ctx,
       config,
       parsed: [
@@ -62,24 +62,24 @@ describe("createCookieReader", () => {
       ],
     });
 
-    await expect(reader.get("cookie_name")).resolves.toEqual({ key: "value" });
+    await expect(getCookie("cookie_name")).resolves.toEqual({ key: "value" });
   });
 
   test("should decrypt aes-tokenised value", async () => {
     const tokenised = `aes:${Buffer.from(JSON.stringify("secret_value")).toString("base64url")}`;
 
-    const reader = createCookieReader({
+    const getCookie = createGetCookie({
       ctx,
       config,
       parsed: [{ name: "cookie_name", signature: null, value: tokenised }],
     });
 
-    await expect(reader.get("cookie_name")).resolves.toEqual("secret_value");
+    await expect(getCookie("cookie_name")).resolves.toEqual("secret_value");
     expect(ctx.aegis.aes.decrypt).toHaveBeenCalledWith(tokenised);
   });
 
   test("should verify signed cookie", async () => {
-    const reader = createCookieReader({
+    const getCookie = createGetCookie({
       ctx,
       config,
       parsed: [
@@ -91,7 +91,7 @@ describe("createCookieReader", () => {
       ],
     });
 
-    await expect(reader.get("cookie_name", { signed: true })).resolves.toEqual(
+    await expect(getCookie("cookie_name", { signed: true })).resolves.toEqual(
       "cookie_value",
     );
     expect(verifyCookie).toHaveBeenCalledWith(
@@ -103,14 +103,14 @@ describe("createCookieReader", () => {
   });
 
   test("should cache resolved values", async () => {
-    const reader = createCookieReader({
+    const getCookie = createGetCookie({
       ctx,
       config,
       parsed: [{ name: "cookie_name", signature: null, value: "Y29va2llX3ZhbHVl" }],
     });
 
-    await reader.get("cookie_name");
-    await reader.get("cookie_name");
+    await getCookie("cookie_name");
+    await getCookie("cookie_name");
 
     expect(verifyCookie).not.toHaveBeenCalled();
   });

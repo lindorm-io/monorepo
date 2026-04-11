@@ -3,7 +3,7 @@ import { ServerError } from "@lindorm/errors";
 import { isObject, isString } from "@lindorm/is";
 import { PylonCookie } from "../classes/PylonCookie";
 import { PylonCookieConfig, PylonHttpMiddleware, PylonSetCookie } from "../../types";
-import { createCookieReader } from "../utils/cookies/create-cookie-reader";
+import { createGetCookie } from "../utils/cookies/create-get-cookie";
 import { parseCookieHeader } from "../utils/cookies/parse-cookie-header";
 import { signCookie } from "../utils/cookies/sign-cookie";
 
@@ -15,7 +15,7 @@ export const createHttpCookiesMiddleware = (
   return async function httpCookiesMiddleware(ctx, next) {
     const parsed = parseCookieHeader(ctx.get("cookie"));
 
-    const reader = createCookieReader({ ctx, config, parsed });
+    const getCookie = createGetCookie({ ctx, config, parsed });
 
     let cookies: Array<PylonCookie> = [];
 
@@ -70,7 +70,7 @@ export const createHttpCookiesMiddleware = (
         }
       },
 
-      get: reader.get,
+      get: getCookie,
 
       del: (name: string): void => {
         removeExisting(name);
