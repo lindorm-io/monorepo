@@ -1,56 +1,38 @@
 import { KryptosSigAlgorithm } from "@lindorm/kryptos";
 import { Dict } from "@lindorm/types";
-import { ParsedTokenHeader } from "../header";
-import { AdjustedAccessLevel, LevelOfAssurance } from "../level-of-assurance";
+import {
+  AegisProfile,
+  ConfirmationClaim,
+  ExtendedClaims,
+  LindormClaims,
+  OidcClaims,
+  StdClaims,
+} from "../claims";
+import { RefinedTokenHeader } from "../header";
 import { DecodedJwt } from "./jwt-decode";
-import { AegisProfile } from "./aegis-profile";
-import { ActClaim } from "./jwt-act";
-import { AuthFactor, SessionHint, SubjectHint } from "./jwt-claims";
-import { ConfirmationClaim } from "./jwt-confirmation";
 import { TokenDelegation } from "./jwt-delegation";
 import { ParsedDpopProof } from "./jwt-dpop";
 
-export type ParsedJwtHeader = Omit<ParsedTokenHeader, "algorithm" | "headerType"> & {
-  algorithm: KryptosSigAlgorithm;
-  headerType: string;
-};
+export type ParsedJwtHeader = RefinedTokenHeader<KryptosSigAlgorithm>;
 
-export type ParsedJwtPayload<C extends Dict = Dict> = {
-  accessTokenHash: string | undefined;
-  act: ActClaim | undefined;
-  adjustedAccessLevel: AdjustedAccessLevel | undefined;
-  audience: Array<string>;
-  authContextClass: string | undefined;
-  authFactor: Array<AuthFactor> | undefined;
-  authMethods: Array<string>;
-  authorizedParty: string | undefined;
-  authTime: Date | undefined;
-  claims: C;
-  clientId: string | undefined;
-  codeHash: string | undefined;
-  confirmation: ConfirmationClaim | undefined;
-  entitlements: Array<string>;
-  expiresAt: Date | undefined;
-  grantType: string | undefined;
-  groups: Array<string>;
-  issuedAt: Date | undefined;
-  issuer: string;
-  levelOfAssurance: LevelOfAssurance | undefined;
-  mayAct: ActClaim | undefined;
-  nonce: string | undefined;
-  notBefore: Date | undefined;
-  permissions: Array<string>;
-  profile: AegisProfile | undefined;
-  roles: Array<string>;
-  scope: Array<string>;
-  sessionHint: SessionHint | undefined;
-  sessionId: string | undefined;
-  stateHash: string | undefined;
-  subject: string;
-  subjectHint: SubjectHint | undefined;
-  tenantId: string | undefined;
-  tokenId: string;
-};
+export type ParsedJwtPayload<C extends Dict = Dict> = StdClaims &
+  OidcClaims &
+  LindormClaims &
+  ExtendedClaims & {
+    audience: Array<string>;
+    authMethods: Array<string>;
+    claims: C;
+    confirmation: ConfirmationClaim | undefined;
+    entitlements: Array<string>;
+    groups: Array<string>;
+    issuer: string;
+    permissions: Array<string>;
+    profile: AegisProfile | undefined;
+    roles: Array<string>;
+    scope: Array<string>;
+    subject: string;
+    tokenId: string;
+  };
 
 export type ParsedJwt<C extends Dict = Dict> = {
   decoded: DecodedJwt<C>;

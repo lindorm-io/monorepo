@@ -1,6 +1,6 @@
 import { Dict } from "@lindorm/types";
+import { JwtClaims } from "../claims/jwt/jwt-claims";
 import { TokenHeaderClaims } from "../header";
-import { JwtClaims } from "../jwt";
 
 export type DecodedCwt<C extends Dict = Dict> = {
   protected: Pick<TokenHeaderClaims, "alg" | "crit" | "cty" | "typ">;

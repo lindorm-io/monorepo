@@ -1,4 +1,4 @@
-import { ActClaimWire } from "./jwt-act";
+import { ActClaimWire } from "./act-claim-wire";
 
 // https://datatracker.ietf.org/doc/html/rfc8693 (act, may_act)
 // https://datatracker.ietf.org/doc/html/rfc9068#section-2.2.3.1 (groups, entitlements)
