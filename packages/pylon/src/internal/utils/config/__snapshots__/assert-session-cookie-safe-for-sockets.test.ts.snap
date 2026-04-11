@@ -1,0 +1,17 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`assertSessionCookieSafeForSockets should throw with actionable error message 1`] = `
+{
+  "code": "wildcard_cors_allowlist_for_session",
+  "data": {},
+  "debug": {},
+  "details": "options.cors.allowOrigins cannot be '*' when options.session is set. Cookie-mode socket auth is Cross-Site WebSocket Hijacking (CSWSH) vulnerable without an explicit origin allowlist.",
+  "errors": [],
+  "id": Any<String>,
+  "name": "PylonError",
+  "status": -1,
+  "support": null,
+  "timestamp": Any<Date>,
+  "title": null,
+}
+`;
