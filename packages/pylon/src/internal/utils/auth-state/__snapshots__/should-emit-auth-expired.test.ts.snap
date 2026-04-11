@@ -1,0 +1,5 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`shouldEmitAuthExpired returns false when authExpiredEmittedAt is set 1`] = `false`;
+
+exports[`shouldEmitAuthExpired returns true when authExpiredEmittedAt is null 1`] = `true`;
