@@ -2,6 +2,7 @@ import { isArray } from "@lindorm/is";
 import { HttpMethod } from "@lindorm/types";
 import { CorsError } from "../../errors";
 import { CorsOptions, PylonHttpMiddleware } from "../../types";
+import { validateCorsOptions } from "../utils/cors/validate-cors-options";
 import {
   handleAccessControlCredentials,
   handleAccessControlExposeHeaders,
@@ -17,9 +18,7 @@ import {
 export const createHttpCorsMiddleware = (
   options: CorsOptions = {},
 ): PylonHttpMiddleware => {
-  if (options.allowOrigins === "*" && options.allowCredentials) {
-    throw new Error("Cannot set allowCredentials to true when allowOrigins is set to *");
-  }
+  validateCorsOptions(options);
 
   options.allowMethods = isArray(options.allowMethods)
     ? options.allowMethods.map((m) => m.toUpperCase() as HttpMethod)
