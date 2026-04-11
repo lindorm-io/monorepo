@@ -1,4 +1,4 @@
-import { assertDpopRequestMatch } from "#internal/utils/assert-dpop-request-match";
+import { assertDpopHttpRequestMatch } from "#internal/utils/dpop/assert-dpop-http-request-match";
 import { DEFAULT_AUTH_WARNING_MS } from "#internal/constants/auth";
 import { isInExpiryWarningWindow } from "#internal/utils/auth-state/is-in-expiry-warning-window";
 import { isTokenExpired } from "#internal/utils/auth-state/is-token-expired";
@@ -42,7 +42,7 @@ const runHttp = async (ctx: PylonHttpContext, options: Options): Promise<void> =
     });
 
     if (verified.dpop) {
-      assertDpopRequestMatch(ctx, verified.dpop);
+      assertDpopHttpRequestMatch(ctx, verified.dpop);
     }
 
     ctx.state.tokens.accessToken = verified;
