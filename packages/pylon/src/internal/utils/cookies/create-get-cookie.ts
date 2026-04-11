@@ -23,10 +23,10 @@ export const createGetCookie = ({
 }: CreateGetCookieOptions): GetCookie => {
   const cache: Dict = {};
 
-  return async <T = any>(
+  return async function getCookie<T = any>(
     name: string,
     options: PylonGetCookie = {},
-  ): Promise<T | null> => {
+  ): Promise<T | null> {
     if (cache[name]) return cache[name];
 
     const cookie = parsed.find((c) => c.name === name);
