@@ -1,10 +1,11 @@
 import { KryptosEncryption } from "@lindorm/kryptos";
+import { CoseProtectedHeaderKey } from "#internal/constants/cose";
 import { RawTokenHeaderClaims, TokenHeaderClaims } from "../header";
 
 // RFC 9052: protected alg = content encryption (KryptosEncryption),
 // recipient alg = key management (TokenHeaderAlgorithm via RawTokenHeaderClaims)
 export type DecodedCwe = {
-  protected: Omit<Pick<TokenHeaderClaims, "alg" | "cty" | "typ">, "alg"> & {
+  protected: Pick<TokenHeaderClaims, Exclude<CoseProtectedHeaderKey, "alg">> & {
     alg: KryptosEncryption;
   };
   protectedCbor: Buffer;
