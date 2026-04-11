@@ -1,5 +1,3 @@
-import { DecodedTokenHeader } from "../../types/header";
-
 /**
  * IANA-registered JOSE header parameter names.
  * Source: https://www.iana.org/assignments/jose/jose.xhtml#web-signature-encryption-header-parameters
@@ -49,7 +47,12 @@ const IANA_REGISTERED_JOSE_HEADER_PARAMS = new Set([
  * when it violates one of the RFC requirements. The caller is expected to
  * translate a non-null return into its own Kit-specific error class.
  */
-export const validateCrit = (decoded: DecodedTokenHeader): string | null => {
+// Generic over any header-shaped object with an optional `crit`. This function
+// only reads `crit` and performs a membership check on `decoded`, so it works
+// for any header dict regardless of whether `alg` is narrowed, omitted, etc.
+export const validateCrit = (
+  decoded: { crit?: unknown } & Record<string, unknown>,
+): string | null => {
   const crit = decoded.crit;
 
   if (crit === undefined) return null;
@@ -79,7 +82,7 @@ export const validateCrit = (decoded: DecodedTokenHeader): string | null => {
     // the JWS Protected Header [...] The 'crit' Header Parameter MUST NOT be
     // included unless one or more extensions are actually being used [...]"
     // — enforced via the existence check below.
-    if (!(name in (decoded as Record<string, unknown>))) {
+    if (!(name in decoded)) {
       return `crit listed parameter "${name}" is not present in the header`;
     }
   }

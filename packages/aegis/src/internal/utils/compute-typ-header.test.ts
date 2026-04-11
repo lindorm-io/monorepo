@@ -35,10 +35,6 @@ describe("computeTypHeader", () => {
     test("passes unknown token types through with suffix", () => {
       expect(computeTypHeader("my_custom_thing", "jwt")).toBe("my_custom_thing+jwt");
     });
-
-    test("pairs custom types with cwt suffix", () => {
-      expect(computeTypHeader("custom", "cwt")).toBe("custom+cwt");
-    });
   });
 
   describe("undefined tokenType", () => {
@@ -52,10 +48,6 @@ describe("computeTypHeader", () => {
 
     test("returns format fallback for jwe", () => {
       expect(computeTypHeader(undefined, "jwe")).toBe("JWE");
-    });
-
-    test("returns application/cwt for cwt", () => {
-      expect(computeTypHeader(undefined, "cwt")).toBe("application/cwt");
     });
   });
 
@@ -104,7 +96,6 @@ describe("decodeTokenTypeFromTyp", () => {
   test("returns undefined for format fallback (bare JWT treated as ambiguous)", () => {
     expect(decodeTokenTypeFromTyp("JWT", "jwt")).toBeUndefined();
     expect(decodeTokenTypeFromTyp("JWS", "jws")).toBeUndefined();
-    expect(decodeTokenTypeFromTyp("application/cwt", "cwt")).toBeUndefined();
   });
 
   test("returns undefined when typ is absent", () => {
@@ -134,18 +125,6 @@ describe("getBaseFormat", () => {
     test("recognizes JWE", () => {
       expect(getBaseFormat("JWE")).toBe("JWE");
     });
-
-    test("recognizes application/cwt", () => {
-      expect(getBaseFormat("application/cwt")).toBe("CWT");
-    });
-
-    test("recognizes COSE-sign media type", () => {
-      expect(getBaseFormat("application/cose; cose-type=cose-sign")).toBe("CWS");
-    });
-
-    test("recognizes COSE-encrypt media type", () => {
-      expect(getBaseFormat("application/cose; cose-type=cose-encrypt")).toBe("CWE");
-    });
   });
 
   describe("suffix forms", () => {
@@ -161,18 +140,6 @@ describe("getBaseFormat", () => {
 
     test("recognizes +jwe suffix", () => {
       expect(getBaseFormat("logout+jwe")).toBe("JWE");
-    });
-
-    test("recognizes +cwt suffix", () => {
-      expect(getBaseFormat("custom+cwt")).toBe("CWT");
-    });
-
-    test("recognizes +cws suffix", () => {
-      expect(getBaseFormat("custom+cws")).toBe("CWS");
-    });
-
-    test("recognizes +cwe suffix", () => {
-      expect(getBaseFormat("custom+cwe")).toBe("CWE");
     });
   });
 

@@ -51,7 +51,7 @@ export type RawTokenHeaderClaims = {
 
 export type DecodedTokenHeader = TokenHeaderClaims;
 
-export type BaseTokenFormat = "JWT" | "JWS" | "JWE" | "CWT" | "CWS" | "CWE";
+export type BaseTokenFormat = "JWT" | "JWS" | "JWE";
 
 export type ParsedTokenHeader = {
   algorithm: TokenHeaderAlgorithm;

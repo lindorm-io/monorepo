@@ -6,5 +6,4 @@ export * from "./lindorm-claims";
 export * from "./oidc-claims";
 export * from "./std-claims";
 
-export * from "./cwt";
 export * from "./jwt";

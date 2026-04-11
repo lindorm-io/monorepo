@@ -55,41 +55,6 @@ export const createMockAegis = (): MockAegis => {
       }),
     },
 
-    cwe: {
-      encrypt: jest
-        .fn()
-        .mockResolvedValue({ buffer: Buffer.alloc(0), token: "mocked_token" }),
-      decrypt: jest.fn().mockResolvedValue({
-        decoded: {},
-        header: {},
-        payload: "mocked_payload",
-      }),
-    },
-    cwt: {
-      sign: jest.fn().mockResolvedValue({
-        buffer: Buffer.alloc(0),
-        objectId: "mocked_object_id",
-        token: "mocked_token",
-      }),
-      verify: jest.fn().mockResolvedValue({
-        decoded: {},
-        header: {},
-        payload: "verified_payload",
-      }),
-    },
-    cws: {
-      sign: jest.fn().mockResolvedValue({
-        buffer: Buffer.alloc(0),
-        objectId: "mocked_object_id",
-        token: "mocked_token",
-      }),
-      verify: jest.fn().mockResolvedValue({
-        decoded: {},
-        header: {},
-        payload: "verified_payload",
-      }),
-    },
-
     verify: jest.fn().mockResolvedValue({
       decoded: {},
       header: {},
