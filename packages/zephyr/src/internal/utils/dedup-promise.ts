@@ -1,4 +1,4 @@
-export const dedupePromise = <T>(fn: () => Promise<T>): (() => Promise<T>) => {
+export const dedupPromise = <T>(fn: () => Promise<T>): (() => Promise<T>) => {
   let inFlight: Promise<T> | undefined;
 
   return () => {
