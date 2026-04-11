@@ -91,6 +91,77 @@ describe("createBearerRefreshHandler", () => {
     );
   });
 
+  describe("capturedJkt (DPoP binding)", () => {
+    test("accepts refresh when new token has same cnf.jkt", async () => {
+      (aegis.verify as jest.Mock).mockResolvedValue({
+        payload: {
+          subject: "alice",
+          expiresAt: new Date("2026-04-11T13:00:00.000Z"),
+          confirmation: { thumbprint: "jkt-abc" },
+        },
+        header: {},
+        token: "new-jwt",
+      });
+
+      const handler = createBearerRefreshHandler({
+        aegis,
+        capturedJkt: "jkt-abc",
+        socket,
+        subject: "alice",
+        verifyOptions: { issuer: "https://test.lindorm.io/" } as any,
+      });
+
+      await expect(
+        handler({ bearer: "new-jwt", expiresIn: 3600 }),
+      ).resolves.toBeUndefined();
+      expect(socket.data.tokens.bearer).toMatchSnapshot();
+    });
+
+    test("rejects refresh when new token has a different cnf.jkt", async () => {
+      (aegis.verify as jest.Mock).mockResolvedValue({
+        payload: {
+          subject: "alice",
+          expiresAt: new Date(),
+          confirmation: { thumbprint: "jkt-xyz" },
+        },
+        header: {},
+        token: "new-jwt",
+      });
+
+      const handler = createBearerRefreshHandler({
+        aegis,
+        capturedJkt: "jkt-abc",
+        socket,
+        subject: "alice",
+        verifyOptions: { issuer: "https://test.lindorm.io/" } as any,
+      });
+
+      await expect(handler({ bearer: "new-jwt", expiresIn: 3600 })).rejects.toThrow(
+        ClientError,
+      );
+    });
+
+    test("rejects refresh when new token is bearer-only (no cnf.jkt)", async () => {
+      (aegis.verify as jest.Mock).mockResolvedValue({
+        payload: { subject: "alice", expiresAt: new Date() },
+        header: {},
+        token: "new-jwt",
+      });
+
+      const handler = createBearerRefreshHandler({
+        aegis,
+        capturedJkt: "jkt-abc",
+        socket,
+        subject: "alice",
+        verifyOptions: { issuer: "https://test.lindorm.io/" } as any,
+      });
+
+      await expect(handler({ bearer: "new-jwt", expiresIn: 3600 })).rejects.toThrow(
+        ClientError,
+      );
+    });
+  });
+
   test("throws when payload is malformed", async () => {
     const handler = createBearerRefreshHandler({
       aegis,
