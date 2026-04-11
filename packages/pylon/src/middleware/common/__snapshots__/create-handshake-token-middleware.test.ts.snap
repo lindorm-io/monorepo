@@ -4,7 +4,7 @@ exports[`createHandshakeTokenMiddleware bearer path bearer refresh handler swaps
 {
   "header": {},
   "payload": {
-    "expiresAt": 2026-04-11T13:00:00.000Z,
+    "expiresAt": 2026-04-11T23:59:59.000Z,
     "subject": "alice",
   },
   "token": "new-jwt",
