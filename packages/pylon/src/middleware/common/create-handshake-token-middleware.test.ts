@@ -80,33 +80,46 @@ describe("createHandshakeTokenMiddleware", () => {
     });
 
     test("bearer refresh handler swaps token and clears authExpiredEmittedAt", async () => {
-      const ctx = makeCtx();
-      ctx.io.socket.handshake.auth.bearer = "jwt-token";
+      jest.useFakeTimers().setSystemTime(new Date("2026-04-11T12:00:00.000Z"));
 
-      const initExp = new Date("2026-04-11T12:05:00.000Z");
-      (ctx.aegis.verify as jest.Mock).mockResolvedValueOnce({
-        payload: { subject: "alice", expiresAt: initExp },
-        header: {},
-        token: "jwt-token",
-      });
+      try {
+        const ctx = makeCtx();
+        ctx.io.socket.handshake.auth.bearer = "jwt-token";
 
-      const mw = createHandshakeTokenMiddleware(options);
-      await mw(ctx, next);
+        const initExp = new Date("2026-04-11T12:05:00.000Z");
+        (ctx.aegis.verify as jest.Mock).mockResolvedValueOnce({
+          payload: { subject: "alice", expiresAt: initExp },
+          header: {},
+          token: "jwt-token",
+        });
 
-      const newExp = new Date("2026-04-11T13:00:00.000Z");
-      (ctx.aegis.verify as jest.Mock).mockResolvedValueOnce({
-        payload: { subject: "alice", expiresAt: newExp },
-        header: {},
-        token: "new-jwt",
-      });
+        const mw = createHandshakeTokenMiddleware(options);
+        await mw(ctx, next);
 
-      ctx.io.socket.data.pylon.auth.authExpiredEmittedAt = new Date();
+        (ctx.aegis.verify as jest.Mock).mockResolvedValueOnce({
+          payload: {
+            subject: "alice",
+            expiresAt: new Date("2026-04-11T23:59:59.000Z"),
+          },
+          header: {},
+          token: "new-jwt",
+        });
 
-      await ctx.io.socket.data.pylon.auth.refresh({ bearer: "new-jwt" });
+        ctx.io.socket.data.pylon.auth.authExpiredEmittedAt = new Date();
 
-      expect(ctx.io.socket.data.tokens.bearer).toMatchSnapshot();
-      expect(ctx.io.socket.data.pylon.auth.getExpiresAt()).toEqual(newExp);
-      expect(ctx.io.socket.data.pylon.auth.authExpiredEmittedAt).toBeNull();
+        await ctx.io.socket.data.pylon.auth.refresh({
+          bearer: "new-jwt",
+          expiresIn: 3600,
+        });
+
+        expect(ctx.io.socket.data.tokens.bearer).toMatchSnapshot();
+        expect(ctx.io.socket.data.pylon.auth.getExpiresAt()).toEqual(
+          new Date("2026-04-11T13:00:00.000Z"),
+        );
+        expect(ctx.io.socket.data.pylon.auth.authExpiredEmittedAt).toBeNull();
+      } finally {
+        jest.useRealTimers();
+      }
     });
 
     test("bearer refresh handler throws on subject mismatch", async () => {
@@ -129,7 +142,7 @@ describe("createHandshakeTokenMiddleware", () => {
       });
 
       await expect(
-        ctx.io.socket.data.pylon.auth.refresh({ bearer: "swap" }),
+        ctx.io.socket.data.pylon.auth.refresh({ bearer: "swap", expiresIn: 3600 }),
       ).rejects.toThrow(ClientError);
     });
   });

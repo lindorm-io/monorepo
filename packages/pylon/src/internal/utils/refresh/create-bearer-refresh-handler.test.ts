@@ -9,6 +9,8 @@ describe("createBearerRefreshHandler", () => {
   let socket: any;
 
   beforeEach(() => {
+    jest.useFakeTimers().setSystemTime(new Date("2026-04-11T12:00:00.000Z"));
+
     aegis = createMockAegis();
 
     auth = {
@@ -26,10 +28,13 @@ describe("createBearerRefreshHandler", () => {
     };
   });
 
-  test("swaps bearer, updates getExpiresAt, clears authExpiredEmittedAt on valid refresh", async () => {
-    const newExp = new Date("2026-04-11T13:00:00.000Z");
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  test("swaps bearer, updates getExpiresAt from expiresIn, clears authExpiredEmittedAt on valid refresh", async () => {
     (aegis.verify as jest.Mock).mockResolvedValue({
-      payload: { subject: "alice", expiresAt: newExp },
+      payload: { subject: "alice", expiresAt: new Date("2026-04-11T13:30:00.000Z") },
       header: { tokenType: "access_token" },
       token: "new-jwt",
     });
@@ -41,11 +46,30 @@ describe("createBearerRefreshHandler", () => {
       verifyOptions: { issuer: "https://test.lindorm.io/" } as any,
     });
 
-    await handler({ bearer: "new-jwt" });
+    await handler({ bearer: "new-jwt", expiresIn: 3600 });
 
     expect(socket.data.tokens.bearer).toMatchSnapshot();
-    expect(auth.getExpiresAt()).toMatchSnapshot();
+    expect(auth.getExpiresAt()).toEqual(new Date("2026-04-11T13:00:00.000Z"));
     expect(auth.authExpiredEmittedAt).toBeNull();
+  });
+
+  test("envelope expiresIn wins over parsed token exp", async () => {
+    (aegis.verify as jest.Mock).mockResolvedValue({
+      payload: { subject: "alice", expiresAt: new Date("2026-04-11T23:59:59.000Z") },
+      header: { tokenType: "access_token" },
+      token: "new-jwt",
+    });
+
+    const handler = createBearerRefreshHandler({
+      aegis,
+      socket,
+      subject: "alice",
+      verifyOptions: { issuer: "https://test.lindorm.io/" } as any,
+    });
+
+    await handler({ bearer: "new-jwt", expiresIn: 300 });
+
+    expect(auth.getExpiresAt()).toEqual(new Date("2026-04-11T12:05:00.000Z"));
   });
 
   test("throws when subject changes", async () => {
@@ -62,7 +86,9 @@ describe("createBearerRefreshHandler", () => {
       verifyOptions: { issuer: "https://test.lindorm.io/" } as any,
     });
 
-    await expect(handler({ bearer: "new-jwt" })).rejects.toThrow(ClientError);
+    await expect(handler({ bearer: "new-jwt", expiresIn: 3600 })).rejects.toThrow(
+      ClientError,
+    );
   });
 
   test("throws when payload is malformed", async () => {
@@ -75,6 +101,16 @@ describe("createBearerRefreshHandler", () => {
 
     await expect(handler({})).rejects.toThrow(ClientError);
     await expect(handler(null)).rejects.toThrow(ClientError);
-    await expect(handler({ bearer: 123 })).rejects.toThrow(ClientError);
+    await expect(handler({ bearer: 123, expiresIn: 3600 })).rejects.toThrow(ClientError);
+    await expect(handler({ bearer: "new-jwt" })).rejects.toThrow(ClientError);
+    await expect(handler({ bearer: "new-jwt", expiresIn: "3600" })).rejects.toThrow(
+      ClientError,
+    );
+    await expect(handler({ bearer: "new-jwt", expiresIn: 0 })).rejects.toThrow(
+      ClientError,
+    );
+    await expect(handler({ bearer: "new-jwt", expiresIn: -1 })).rejects.toThrow(
+      ClientError,
+    );
   });
 });
