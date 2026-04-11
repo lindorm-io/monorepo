@@ -1,3 +1,4 @@
+export * from "./claims";
 export * from "./cwe";
 export * from "./cws";
 export * from "./cwt";

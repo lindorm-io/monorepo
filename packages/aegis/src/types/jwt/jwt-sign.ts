@@ -1,46 +1,32 @@
 import { Expiry } from "@lindorm/date";
 import { Dict } from "@lindorm/types";
+import {
+  AegisProfile,
+  ConfirmationClaim,
+  ExtendedClaims,
+  LindormClaims,
+  OidcClaims,
+  StdClaims,
+} from "../claims";
 import { TokenEncryptOrSignOptions } from "../header";
-import { AdjustedAccessLevel, LevelOfAssurance } from "../level-of-assurance";
-import { AegisProfile } from "./aegis-profile";
-import { ActClaim } from "./jwt-act";
-import { AuthFactor, SessionHint, SubjectHint } from "./jwt-claims";
-import { ConfirmationClaim } from "./jwt-confirmation";
 
-export type SignJwtContent<C extends Dict = Dict> = {
-  accessToken?: string;
-  act?: ActClaim;
-  adjustedAccessLevel?: AdjustedAccessLevel;
-  audience?: Array<string>;
-  authCode?: string;
-  authContextClass?: string;
-  authFactor?: Array<AuthFactor>;
-  authMethods?: Array<string>;
-  authorizedParty?: string;
-  authState?: string;
-  authTime?: Date;
-  claims?: C;
-  clientId?: string;
-  confirmation?: ConfirmationClaim;
-  entitlements?: Array<string>;
-  expires: Expiry;
-  grantType?: string;
-  groups?: Array<string>;
-  levelOfAssurance?: LevelOfAssurance;
-  mayAct?: ActClaim;
-  nonce?: string;
-  notBefore?: Date;
-  permissions?: Array<string>;
-  profile?: AegisProfile;
-  roles?: Array<string>;
-  scope?: Array<string>;
-  sessionHint?: SessionHint;
-  sessionId?: string;
-  subject: string;
-  subjectHint?: SubjectHint;
-  tenantId?: string;
-  tokenType: string;
-};
+export type SignJwtContent<C extends Dict = Dict> = Omit<
+  StdClaims,
+  "expiresAt" | "issuedAt" | "issuer" | "tokenId"
+> &
+  Omit<OidcClaims, "accessTokenHash" | "codeHash" | "stateHash"> &
+  LindormClaims &
+  ExtendedClaims & {
+    accessToken?: string;
+    authCode?: string;
+    authState?: string;
+    claims?: C;
+    confirmation?: ConfirmationClaim;
+    expires: Expiry;
+    profile?: AegisProfile;
+    subject: string;
+    tokenType: string;
+  };
 
 export type SignJwtOptions = {
   accessTokenHash?: string;

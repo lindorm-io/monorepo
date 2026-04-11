@@ -1,5 +1,5 @@
-import { AdjustedAccessLevel, LevelOfAssurance } from "../level-of-assurance";
-import { AuthFactor, SessionHint, SubjectHint } from "./jwt-claims";
+import { AdjustedAccessLevel, LevelOfAssurance } from "../../level-of-assurance";
+import { AuthFactor, SessionHint, SubjectHint } from "../lindorm-claims";
 
 export type LindormClaimsWire = {
   aal?: AdjustedAccessLevel; // adjusted access level
