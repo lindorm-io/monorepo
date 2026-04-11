@@ -1,7 +1,7 @@
-import { PylonHttpContext } from "../types";
+import { PylonCommonContext } from "../types";
 import { IPylonSession } from "./PylonSession";
 
-export interface IPylonSessionStore<C extends PylonHttpContext = PylonHttpContext> {
+export interface IPylonSessionStore<C extends PylonCommonContext = PylonCommonContext> {
   set: (ctx: C, session: IPylonSession) => Promise<string>;
   get: (ctx: C, id: string) => Promise<IPylonSession | null>;
   del: (ctx: C, id: string) => Promise<void>;

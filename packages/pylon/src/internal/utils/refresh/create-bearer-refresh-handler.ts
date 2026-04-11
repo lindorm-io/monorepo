@@ -2,10 +2,12 @@ import { IAegis, VerifyJwtOptions } from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
 import { isNumber, isObject, isString } from "@lindorm/is";
 import { PylonSocket } from "../../../types";
+import { assertJktUnchanged } from "./assert-jkt-unchanged";
 import { assertSubjectUnchanged } from "./assert-subject-unchanged";
 
 type CreateBearerRefreshHandlerOptions = {
   aegis: IAegis;
+  capturedJkt?: string;
   socket: PylonSocket;
   subject: string;
   verifyOptions: VerifyJwtOptions;
@@ -13,6 +15,7 @@ type CreateBearerRefreshHandlerOptions = {
 
 export const createBearerRefreshHandler = ({
   aegis,
+  capturedJkt,
   socket,
   subject,
   verifyOptions,
@@ -40,8 +43,7 @@ export const createBearerRefreshHandler = ({
 
     assertSubjectUnchanged(subject, verified.payload.subject);
 
-    // Phase 4 hook: when DPoP lands, assert cnf.jkt unchanged here via
-    // assertJktUnchanged(capturedJkt, verified.payload.confirmation?.thumbprint).
+    assertJktUnchanged(capturedJkt, (verified.payload as any).confirmation?.thumbprint);
 
     socket.data.tokens.bearer = verified;
 

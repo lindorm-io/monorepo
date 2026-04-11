@@ -1,5 +1,19 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
+exports[`createBearerRefreshHandler capturedJkt (DPoP binding) accepts refresh when new token has same cnf.jkt 1`] = `
+{
+  "header": {},
+  "payload": {
+    "confirmation": {
+      "thumbprint": "jkt-abc",
+    },
+    "expiresAt": 2026-04-11T13:00:00.000Z,
+    "subject": "alice",
+  },
+  "token": "new-jwt",
+}
+`;
+
 exports[`createBearerRefreshHandler swaps bearer, updates getExpiresAt from expiresIn, clears authExpiredEmittedAt on valid refresh 1`] = `
 {
   "header": {
