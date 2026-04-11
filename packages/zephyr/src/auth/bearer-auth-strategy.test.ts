@@ -15,24 +15,23 @@ const createMockSocket = (
 
 describe("createBearerAuthStrategy", () => {
   describe("prepareHandshake", () => {
-    it("should resolve getAccessToken and set socket.auth.bearer", async () => {
-      const getAccessToken = jest.fn().mockResolvedValue("token-123");
-      const getExpiresIn = jest.fn();
+    it("should resolve getBearerCredentials and set socket.auth.bearer", async () => {
+      const getBearerCredentials = jest
+        .fn()
+        .mockResolvedValue({ bearer: "token-123", expiresIn: 300 });
 
-      const strategy = createBearerAuthStrategy({ getAccessToken, getExpiresIn });
+      const strategy = createBearerAuthStrategy({ getBearerCredentials });
       const { socket } = createMockSocket(jest.fn());
 
       await strategy.prepareHandshake(socket);
 
-      expect(getAccessToken).toHaveBeenCalledTimes(1);
-      expect(getExpiresIn).not.toHaveBeenCalled();
+      expect(getBearerCredentials).toHaveBeenCalledTimes(1);
       expect(socket.auth).toEqual({ bearer: "token-123" });
     });
 
-    it("should accept a synchronous getAccessToken", async () => {
+    it("should accept a synchronous getBearerCredentials", async () => {
       const strategy = createBearerAuthStrategy({
-        getAccessToken: () => "sync-token",
-        getExpiresIn: () => 60,
+        getBearerCredentials: () => ({ bearer: "sync-token", expiresIn: 60 }),
       });
       const { socket } = createMockSocket(jest.fn());
 
@@ -47,8 +46,7 @@ describe("createBearerAuthStrategy", () => {
       const emitWithAck = jest.fn().mockResolvedValue({ __pylon: true, ok: true });
 
       const strategy = createBearerAuthStrategy({
-        getAccessToken: async () => "fresh-token",
-        getExpiresIn: async () => 300,
+        getBearerCredentials: async () => ({ bearer: "fresh-token", expiresIn: 300 }),
       });
 
       const { socket, timeout } = createMockSocket(emitWithAck);
@@ -66,8 +64,7 @@ describe("createBearerAuthStrategy", () => {
       const emitWithAck = jest.fn().mockResolvedValue({ __pylon: true, ok: true });
 
       const strategy = createBearerAuthStrategy({
-        getAccessToken: async () => "t",
-        getExpiresIn: async () => 60,
+        getBearerCredentials: async () => ({ bearer: "t", expiresIn: 60 }),
         refreshAckTimeoutMs: 2500,
       });
 
@@ -78,23 +75,12 @@ describe("createBearerAuthStrategy", () => {
       expect(timeout).toHaveBeenCalledWith(2500);
     });
 
-    it("should await getAccessToken and getExpiresIn in parallel", async () => {
-      const order: Array<string> = [];
+    it("should read bearer and expiresIn from a single getter call", async () => {
+      const getBearerCredentials = jest
+        .fn()
+        .mockResolvedValue({ bearer: "t", expiresIn: 60 });
 
-      const strategy = createBearerAuthStrategy({
-        getAccessToken: async () => {
-          order.push("token-start");
-          await new Promise((r) => setTimeout(r, 10));
-          order.push("token-end");
-          return "t";
-        },
-        getExpiresIn: async () => {
-          order.push("expires-start");
-          await new Promise((r) => setTimeout(r, 10));
-          order.push("expires-end");
-          return 60;
-        },
-      });
+      const strategy = createBearerAuthStrategy({ getBearerCredentials });
 
       const { socket } = createMockSocket(
         jest.fn().mockResolvedValue({ __pylon: true, ok: true }),
@@ -102,7 +88,7 @@ describe("createBearerAuthStrategy", () => {
 
       await strategy.refresh(socket);
 
-      expect(order).toMatchSnapshot();
+      expect(getBearerCredentials).toHaveBeenCalledTimes(1);
     });
 
     it("should throw when ack is { ok: false } and preserve error envelope fields", async () => {
@@ -117,8 +103,7 @@ describe("createBearerAuthStrategy", () => {
       });
 
       const strategy = createBearerAuthStrategy({
-        getAccessToken: async () => "t",
-        getExpiresIn: async () => 60,
+        getBearerCredentials: async () => ({ bearer: "t", expiresIn: 60 }),
       });
 
       const { socket } = createMockSocket(emitWithAck);
@@ -142,8 +127,7 @@ describe("createBearerAuthStrategy", () => {
         .mockRejectedValue(new Error("operation has timed out"));
 
       const strategy = createBearerAuthStrategy({
-        getAccessToken: async () => "t",
-        getExpiresIn: async () => 60,
+        getBearerCredentials: async () => ({ bearer: "t", expiresIn: 60 }),
       });
 
       const { socket } = createMockSocket(emitWithAck);
@@ -156,8 +140,7 @@ describe("createBearerAuthStrategy", () => {
 
     it("should throw when expiresIn is zero", async () => {
       const strategy = createBearerAuthStrategy({
-        getAccessToken: async () => "t",
-        getExpiresIn: async () => 0,
+        getBearerCredentials: async () => ({ bearer: "t", expiresIn: 0 }),
       });
 
       const { socket } = createMockSocket(jest.fn());
@@ -169,8 +152,7 @@ describe("createBearerAuthStrategy", () => {
 
     it("should throw when expiresIn is negative", async () => {
       const strategy = createBearerAuthStrategy({
-        getAccessToken: async () => "t",
-        getExpiresIn: async () => -10,
+        getBearerCredentials: async () => ({ bearer: "t", expiresIn: -10 }),
       });
 
       const { socket } = createMockSocket(jest.fn());
@@ -184,8 +166,7 @@ describe("createBearerAuthStrategy", () => {
       const emitWithAck = jest.fn().mockResolvedValue({ raw: "data" });
 
       const strategy = createBearerAuthStrategy({
-        getAccessToken: async () => "t",
-        getExpiresIn: async () => 60,
+        getBearerCredentials: async () => ({ bearer: "t", expiresIn: 60 }),
       });
 
       const { socket } = createMockSocket(emitWithAck);
