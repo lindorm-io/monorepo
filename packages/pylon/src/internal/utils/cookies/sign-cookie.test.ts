@@ -13,14 +13,14 @@ jest.mock("@lindorm/aegis", () => ({
 }));
 
 describe("signCookie", () => {
-  let amphora: any;
+  let ctx: any;
 
   beforeEach(() => {
-    amphora = createMockAmphora();
+    ctx = { amphora: createMockAmphora() };
   });
 
   test("should return signed value", async () => {
-    await expect(signCookie(amphora, "value")).resolves.toStrictEqual(
+    await expect(signCookie(ctx, "value")).resolves.toStrictEqual(
       "formatted_signed_value",
     );
   });

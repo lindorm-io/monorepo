@@ -1,15 +1,12 @@
-import { IAegis } from "@lindorm/aegis";
 import { AesKit } from "@lindorm/aes";
-import { IAmphora } from "@lindorm/amphora";
 import { Dict } from "@lindorm/types";
 import { safelyParse } from "@lindorm/utils";
-import { PylonCookieConfig, PylonGetCookie } from "../../../types";
+import { PylonCommonContext, PylonCookieConfig, PylonGetCookie } from "../../../types";
 import { ParsedCookie } from "./parse-cookie-header";
 import { verifyCookie } from "./verify-cookie";
 
 export type CookieReaderOptions = {
-  aegis: IAegis;
-  amphora: IAmphora;
+  ctx: Pick<PylonCommonContext, "aegis" | "amphora">;
   config: PylonCookieConfig;
   parsed: Array<ParsedCookie>;
 };
@@ -19,8 +16,7 @@ export type CookieReader = {
 };
 
 export const createCookieReader = ({
-  aegis,
-  amphora,
+  ctx,
   config,
   parsed,
 }: CookieReaderOptions): CookieReader => {
@@ -40,13 +36,13 @@ export const createCookieReader = ({
       const opts = { ...config, ...options };
 
       if (opts.signed) {
-        await verifyCookie(amphora, name, cookie.value, cookie.signature);
+        await verifyCookie(ctx, name, cookie.value, cookie.signature);
       }
 
       let value: any = cookie.value;
 
       if (AesKit.isAesTokenised(value)) {
-        value = await aegis.aes.decrypt(value);
+        value = await ctx.aegis.aes.decrypt(value);
       } else {
         if (opts.encoding) {
           value = Buffer.from(value, opts.encoding).toString();
