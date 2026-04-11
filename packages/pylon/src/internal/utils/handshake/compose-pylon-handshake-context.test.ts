@@ -7,8 +7,8 @@ describe("composePylonHandshakeContext", () => {
 
     const ctx = composePylonHandshakeContext(io, socket);
 
-    expect(ctx.eventId).toEqual(expect.any(String));
-    expect(ctx.eventId).toHaveLength(36);
+    expect(ctx.handshakeId).toEqual(expect.any(String));
+    expect(ctx.handshakeId).toHaveLength(36);
     expect(ctx.io.app).toBe(io);
     expect(ctx.io.socket).toBe(socket);
   });
