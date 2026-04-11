@@ -19,6 +19,7 @@ export const initialisePylonSocketData = <D extends PylonSocketData>(
   const data: PylonSocketData = {
     app: { domain, environment, name, version },
     tokens: {},
+    pylon: {},
   };
 
   return data as D;

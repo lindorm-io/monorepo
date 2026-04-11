@@ -11,6 +11,10 @@ import Redis from "ioredis";
 import { ServerOptions as SocketOptions } from "socket.io";
 import { PylonListener, PylonRouter } from "../classes";
 import { PylonAuthOptions } from "./auth";
+import {
+  PylonConnectionMiddleware,
+  PylonSocketHandshakeContext,
+} from "./context-socket-handshake";
 import { PylonHttpContext, PylonHttpMiddleware } from "./context-http";
 import { PylonSocketContext, PylonSocketMiddleware } from "./context-socket";
 import { PylonEventMap } from "./pylon-event-map";
@@ -76,8 +80,12 @@ export type PylonHttpOptions<C extends PylonHttpContext = PylonHttpContext> =
     session?: PylonSessionOptions;
   };
 
-export type PylonSocketOptions<T extends PylonSocketContext = PylonSocketContext> = {
+export type PylonSocketOptions<
+  T extends PylonSocketContext = PylonSocketContext,
+  H extends PylonSocketHandshakeContext = PylonSocketHandshakeContext,
+> = {
   enabled: boolean;
+  connectionMiddleware?: Array<PylonConnectionMiddleware<H>>;
   listeners?: string | Array<PylonListener<T>>;
   middleware?: Array<PylonSocketMiddleware<T>>;
   options?: Partial<SocketOptions>;
