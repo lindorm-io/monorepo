@@ -1,15 +1,10 @@
-import { TokenType } from "../../constants/token-type";
 import { CoseTarget } from "../cose-target";
-import { TokenEncryptOrSignOptions } from "../header";
+import { EncryptedJwe, JweEncryptOptions } from "../jwe";
 
-export type CweEncryptOptions = {
-  header?: TokenEncryptOrSignOptions;
-  objectId?: string;
+export type CweEncryptOptions = JweEncryptOptions & {
   target?: CoseTarget;
-  tokenType?: TokenType;
 };
 
-export type EncryptedCwe = {
+export type EncryptedCwe = EncryptedJwe & {
   buffer: Buffer;
-  token: string;
 };

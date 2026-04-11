@@ -1,17 +1,10 @@
-import { TokenType } from "../../constants/token-type";
 import { CoseTarget } from "../cose-target";
-import { TokenEncryptOrSignOptions } from "../header";
+import { SignJwsOptions, SignedJws } from "../jws";
 
-export type SignCwsOptions = {
-  contentType?: string;
-  header?: TokenEncryptOrSignOptions;
-  objectId?: string;
+export type SignCwsOptions = SignJwsOptions & {
   target?: CoseTarget;
-  tokenType?: TokenType;
 };
 
-export type SignedCws = {
+export type SignedCws = SignedJws & {
   buffer: Buffer;
-  objectId: string | undefined;
-  token: string;
 };
