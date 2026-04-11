@@ -1,10 +1,7 @@
-import { IKryptos } from "@lindorm/kryptos";
-import { ILogger } from "@lindorm/logger";
+import { SignKitOptions } from "../kit";
 
-export type JwtKitOptions = {
+export type JwtKitOptions = SignKitOptions & {
   clockTolerance?: number;
   dpopMaxSkew?: number;
   issuer?: string;
-  logger: ILogger;
-  kryptos: IKryptos;
 };
