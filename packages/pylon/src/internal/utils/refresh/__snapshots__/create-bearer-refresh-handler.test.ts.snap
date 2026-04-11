@@ -1,0 +1,16 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`createBearerRefreshHandler swaps bearer, updates getExpiresAt, clears authExpiredEmittedAt on valid refresh 1`] = `
+{
+  "header": {
+    "tokenType": "access_token",
+  },
+  "payload": {
+    "expiresAt": 2026-04-11T13:00:00.000Z,
+    "subject": "alice",
+  },
+  "token": "new-jwt",
+}
+`;
+
+exports[`createBearerRefreshHandler swaps bearer, updates getExpiresAt, clears authExpiredEmittedAt on valid refresh 2`] = `2026-04-11T13:00:00.000Z`;
