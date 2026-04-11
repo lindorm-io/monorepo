@@ -1,9 +1,5 @@
-import { IKryptos } from "@lindorm/kryptos";
-import { ILogger } from "@lindorm/logger";
+import { SignKitOptions } from "../kit";
 
 export type JwsContent = Buffer | string;
 
-export type JwsKitOptions = {
-  logger: ILogger;
-  kryptos: IKryptos;
-};
+export type JwsKitOptions = SignKitOptions;

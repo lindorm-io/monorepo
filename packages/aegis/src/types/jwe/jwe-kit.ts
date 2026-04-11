@@ -1,8 +1,3 @@
-import { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
-import { ILogger } from "@lindorm/logger";
+import { EncryptKitOptions } from "../kit";
 
-export type JweKitOptions = {
-  encryption?: KryptosEncryption;
-  kryptos: IKryptos;
-  logger: ILogger;
-};
+export type JweKitOptions = EncryptKitOptions;

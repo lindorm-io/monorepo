@@ -8,6 +8,7 @@ export * from "./jwt";
 export * from "./aegis";
 export * from "./cose-target";
 export * from "./header";
+export * from "./kit";
 export * from "./level-of-assurance";
 
 export * from "./signature-kit";
