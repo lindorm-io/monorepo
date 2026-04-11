@@ -6,9 +6,13 @@ const DEFAULT_REFRESH_ACK_TIMEOUT_MS = 5000;
 
 const REFRESH_EVENT = "$pylon/auth/refresh";
 
+export type BearerCredentials = {
+  bearer: string;
+  expiresIn: number;
+};
+
 export type BearerAuthStrategyOptions = {
-  getAccessToken: () => string | Promise<string>;
-  getExpiresIn: () => number | Promise<number>;
+  getBearerCredentials: () => BearerCredentials | Promise<BearerCredentials>;
   refreshAckTimeoutMs?: number;
 };
 
@@ -39,15 +43,12 @@ export const createBearerAuthStrategy = (
   const timeoutMs = options.refreshAckTimeoutMs ?? DEFAULT_REFRESH_ACK_TIMEOUT_MS;
 
   const prepareHandshake = async (socket: Socket): Promise<void> => {
-    const bearer = await options.getAccessToken();
+    const { bearer } = await options.getBearerCredentials();
     socket.auth = { bearer };
   };
 
   const refresh = async (socket: Socket): Promise<void> => {
-    const [bearer, expiresIn] = await Promise.all([
-      options.getAccessToken(),
-      options.getExpiresIn(),
-    ]);
+    const { bearer, expiresIn } = await options.getBearerCredentials();
 
     if (typeof expiresIn !== "number" || !Number.isFinite(expiresIn) || expiresIn <= 0) {
       throw new ZephyrError("Invalid expiresIn for auth refresh", {
