@@ -5,8 +5,11 @@ import { createSourcesMiddleware } from "#internal/middleware/common-sources-mid
 import { createWebhookMiddleware } from "#internal/middleware/common-webhook-middleware";
 import { createConnectionContextInitialisationMiddleware } from "#internal/middleware/connection-context-initialisation-middleware";
 import { createConnectionCorsMiddleware } from "#internal/middleware/connection-cors-middleware";
+import { createConnectionSessionMiddleware } from "#internal/middleware/connection-session-middleware";
 import { connectionErrorHandlerMiddleware } from "#internal/middleware/connection-error-handler-middleware";
 import { connectionLoggerMiddleware } from "#internal/middleware/connection-logger-middleware";
+import { assertSameSiteForSockets } from "#internal/utils/config/assert-same-site-for-sockets";
+import { assertSessionCookieSafeForSockets } from "#internal/utils/config/assert-session-cookie-safe-for-sockets";
 import { createSocketContextInitialisationMiddleware } from "#internal/middleware/socket-context-initialisation-middleware";
 import { socketErrorHandlerMiddleware } from "#internal/middleware/socket-error-handler-middleware";
 import { socketLoggerMiddleware } from "#internal/middleware/socket-logger-middleware";
@@ -43,6 +46,9 @@ export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
   public readonly server: IoServer;
 
   public constructor(http: Server, options: PylonOptions<any, any, T>) {
+    assertSessionCookieSafeForSockets(options);
+    assertSameSiteForSockets(options.session);
+
     this.logger = options.logger.child(["PylonSocket"]);
 
     const socket = options.socket!;
@@ -179,6 +185,9 @@ export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
       createConnectionContextInitialisationMiddleware(this.logger),
       createCommonContextInitialisationMiddleware(this.options.amphora),
       ...(this.options.cors ? [createConnectionCorsMiddleware(this.options.cors)] : []),
+      ...(this.options.session
+        ? [createConnectionSessionMiddleware(this.options.session)]
+        : []),
       connectionLoggerMiddleware,
       ...((this.options.socket?.connectionMiddleware ??
         []) as Array<PylonConnectionMiddleware>),
