@@ -1,0 +1,1 @@
+export const DEFAULT_AUTH_WARNING_MS = 60_000;
