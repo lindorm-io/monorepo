@@ -10,13 +10,11 @@ jest.mock("./verify-cookie");
 const verifyCookie = _verifyCookie as jest.Mock;
 
 describe("createCookieReader", () => {
-  let aegis: any;
-  let amphora: any;
+  let ctx: any;
   let config: PylonCookieConfig;
 
   beforeEach(() => {
-    aegis = createMockAegis();
-    amphora = createMockAmphora();
+    ctx = { aegis: createMockAegis(), amphora: createMockAmphora() };
     config = { encoding: "base64url" };
     verifyCookie.mockResolvedValue(undefined);
   });
@@ -24,15 +22,14 @@ describe("createCookieReader", () => {
   afterEach(jest.clearAllMocks);
 
   test("should return null for missing cookie", async () => {
-    const reader = createCookieReader({ aegis, amphora, config, parsed: [] });
+    const reader = createCookieReader({ ctx, config, parsed: [] });
 
     await expect(reader.get("missing")).resolves.toBeNull();
   });
 
   test("should decode plain value with config encoding", async () => {
     const reader = createCookieReader({
-      aegis,
-      amphora,
+      ctx,
       config,
       parsed: [{ name: "cookie_name", signature: null, value: "Y29va2llX3ZhbHVl" }],
     });
@@ -42,8 +39,7 @@ describe("createCookieReader", () => {
 
   test("should decode value with override encoding", async () => {
     const reader = createCookieReader({
-      aegis,
-      amphora,
+      ctx,
       config,
       parsed: [{ name: "cookie_name", signature: null, value: "bmV3X3ZhbHVl" }],
     });
@@ -55,8 +51,7 @@ describe("createCookieReader", () => {
 
   test("should parse json data", async () => {
     const reader = createCookieReader({
-      aegis,
-      amphora,
+      ctx,
       config,
       parsed: [
         {
@@ -74,20 +69,18 @@ describe("createCookieReader", () => {
     const tokenised = `aes:${Buffer.from(JSON.stringify("secret_value")).toString("base64url")}`;
 
     const reader = createCookieReader({
-      aegis,
-      amphora,
+      ctx,
       config,
       parsed: [{ name: "cookie_name", signature: null, value: tokenised }],
     });
 
     await expect(reader.get("cookie_name")).resolves.toEqual("secret_value");
-    expect(aegis.aes.decrypt).toHaveBeenCalledWith(tokenised);
+    expect(ctx.aegis.aes.decrypt).toHaveBeenCalledWith(tokenised);
   });
 
   test("should verify signed cookie", async () => {
     const reader = createCookieReader({
-      aegis,
-      amphora,
+      ctx,
       config,
       parsed: [
         {
@@ -102,7 +95,7 @@ describe("createCookieReader", () => {
       "cookie_value",
     );
     expect(verifyCookie).toHaveBeenCalledWith(
-      amphora,
+      ctx,
       "cookie_name",
       "Y29va2llX3ZhbHVl",
       "cookie_signature",
@@ -111,8 +104,7 @@ describe("createCookieReader", () => {
 
   test("should cache resolved values", async () => {
     const reader = createCookieReader({
-      aegis,
-      amphora,
+      ctx,
       config,
       parsed: [{ name: "cookie_name", signature: null, value: "Y29va2llX3ZhbHVl" }],
     });

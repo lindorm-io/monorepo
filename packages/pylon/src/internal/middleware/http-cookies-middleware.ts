@@ -15,12 +15,7 @@ export const createHttpCookiesMiddleware = (
   return async function httpCookiesMiddleware(ctx, next) {
     const parsed = parseCookieHeader(ctx.get("cookie"));
 
-    const reader = createCookieReader({
-      aegis: ctx.aegis,
-      amphora: ctx.amphora,
-      config,
-      parsed,
-    });
+    const reader = createCookieReader({ ctx, config, parsed });
 
     let cookies: Array<PylonCookie> = [];
 
@@ -69,7 +64,7 @@ export const createHttpCookiesMiddleware = (
         cookies.push(new PylonCookie(name, final, opts));
 
         if (opts.signed) {
-          const signature = await signCookie(ctx.amphora, final);
+          const signature = await signCookie(ctx, final);
 
           cookies.push(new PylonCookie(`${name}.sig`, signature, opts));
         }

@@ -1,8 +1,11 @@
 import { SignatureKit } from "@lindorm/aegis";
-import { IAmphora } from "@lindorm/amphora";
+import { PylonCommonContext } from "../../../types";
 
-export const signCookie = async (amphora: IAmphora, value: string): Promise<string> => {
-  const kryptos = await amphora.find({
+export const signCookie = async (
+  ctx: Pick<PylonCommonContext, "amphora">,
+  value: string,
+): Promise<string> => {
+  const kryptos = await ctx.amphora.find({
     isExternal: false,
     operations: ["sign"],
     $or: [{ purpose: "cookie" }, { purpose: "session" }, { purpose: undefined }],

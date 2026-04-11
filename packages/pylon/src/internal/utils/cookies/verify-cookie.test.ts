@@ -13,12 +13,12 @@ jest.mock("@lindorm/aegis", () => ({
 }));
 
 describe("verifyCookie", () => {
-  let amphora: any;
+  let ctx: any;
 
   beforeEach(() => {
-    amphora = createMockAmphora();
+    ctx = { amphora: createMockAmphora() };
 
-    amphora.filter.mockResolvedValue(["kryptos1", "kryptos2", "kryptos3"]);
+    ctx.amphora.filter.mockResolvedValue(["kryptos1", "kryptos2", "kryptos3"]);
   });
 
   afterEach(jest.clearAllMocks);
@@ -27,7 +27,7 @@ describe("verifyCookie", () => {
     verify.mockReturnValueOnce(true);
 
     await expect(
-      verifyCookie(amphora, "name", "value", "signature"),
+      verifyCookie(ctx, "name", "value", "signature"),
     ).resolves.toBeUndefined();
 
     expect(verify).toHaveBeenCalledTimes(1);
@@ -40,7 +40,7 @@ describe("verifyCookie", () => {
       .mockReturnValueOnce(true);
 
     await expect(
-      verifyCookie(amphora, "name", "value", "signature"),
+      verifyCookie(ctx, "name", "value", "signature"),
     ).resolves.toBeUndefined();
 
     expect(verify).toHaveBeenCalledTimes(3);
@@ -49,7 +49,7 @@ describe("verifyCookie", () => {
   test("should throw when no verification succeeds", async () => {
     verify.mockReturnValue(false);
 
-    await expect(verifyCookie(amphora, "name", "value", "signature")).rejects.toThrow(
+    await expect(verifyCookie(ctx, "name", "value", "signature")).rejects.toThrow(
       ClientError,
     );
 
@@ -59,9 +59,7 @@ describe("verifyCookie", () => {
   test("should throw on missing signature", async () => {
     verify.mockReturnValue(false);
 
-    await expect(verifyCookie(amphora, "name", "value", null)).rejects.toThrow(
-      ClientError,
-    );
+    await expect(verifyCookie(ctx, "name", "value", null)).rejects.toThrow(ClientError);
 
     expect(verify).not.toHaveBeenCalled();
   });
