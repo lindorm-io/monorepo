@@ -1,11 +1,8 @@
 import { KryptosSigAlgorithm } from "@lindorm/kryptos";
-import { ParsedTokenHeader } from "../header";
+import { RefinedTokenHeader } from "../header";
 import { DecodedJws } from "./jws-decode";
 
-export type ParsedJwsHeader = Omit<ParsedTokenHeader, "algorithm" | "headerType"> & {
-  algorithm: KryptosSigAlgorithm;
-  headerType: string;
-};
+export type ParsedJwsHeader = RefinedTokenHeader<KryptosSigAlgorithm>;
 
 export type ParsedJws<T extends Buffer | string> = {
   decoded: DecodedJws;

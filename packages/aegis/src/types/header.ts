@@ -101,3 +101,11 @@ export type TokenEncryptOrSignOptions = Pick<
   TokenHeaderOptions,
   "jwk" | "x5c" | "x5t" | "x5tS256" | "x5u"
 >;
+
+export type RefinedTokenHeader<A> = Omit<
+  ParsedTokenHeader,
+  "algorithm" | "headerType"
+> & {
+  algorithm: A;
+  headerType: string;
+};

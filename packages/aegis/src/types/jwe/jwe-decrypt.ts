@@ -1,14 +1,9 @@
 import { KryptosEncAlgorithm, KryptosEncryption } from "@lindorm/kryptos";
-import { ParsedTokenHeader } from "../header";
+import { RefinedTokenHeader } from "../header";
 import { DecodedJwe } from "./jwe-decode";
 
-export type DecryptedJweHeader = Omit<
-  ParsedTokenHeader,
-  "algorithm" | "encryption" | "headerType"
-> & {
-  algorithm: KryptosEncAlgorithm;
+export type DecryptedJweHeader = RefinedTokenHeader<KryptosEncAlgorithm> & {
   encryption: KryptosEncryption;
-  headerType: string;
 };
 
 export type DecryptedJwe = {
