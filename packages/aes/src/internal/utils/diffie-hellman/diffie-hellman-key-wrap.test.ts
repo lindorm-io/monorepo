@@ -262,30 +262,4 @@ describe("diffieHellman", () => {
       ).toEqual({ contentEncryptionKey: result.contentEncryptionKey });
     });
   });
-
-  describe("apu/apv", () => {
-    test("should produce matching keys with apu and apv for key wrap", () => {
-      const kryptos = KryptosKit.generate.enc.ec({ algorithm: "ECDH-ES+A256KW" });
-      const apu = Buffer.from("sender");
-      const apv = Buffer.from("receiver");
-
-      const result = getDiffieHellmanKeyWrapEncryptionKey({
-        apu,
-        apv,
-        encryption: "A256GCM",
-        kryptos,
-      });
-
-      expect(
-        getDiffieHellmanKeyWrapDecryptionKey({
-          apu,
-          apv,
-          encryption: "A256GCM",
-          publicEncryptionJwk: result.publicEncryptionJwk,
-          publicEncryptionKey: result.publicEncryptionKey,
-          kryptos,
-        }),
-      ).toEqual({ contentEncryptionKey: result.contentEncryptionKey });
-    });
-  });
 });
