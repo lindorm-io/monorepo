@@ -2,12 +2,19 @@ import type { ZephyrError } from "../errors/ZephyrError";
 import type { EventIncoming, EventOutgoing, ZephyrEventMap } from "../types/event-map";
 import type { IZephyrRoom } from "./ZephyrRoom";
 
+export type AuthExpiredEvent = {
+  expiresAt?: number;
+};
+
+export type AuthExpiredHandler = (event: AuthExpiredEvent) => void;
+
 export interface IZephyr<E extends ZephyrEventMap = ZephyrEventMap> {
   readonly id: string | undefined;
   readonly connected: boolean;
 
   connect(): Promise<void>;
   disconnect(): Promise<void>;
+  refresh(): Promise<void>;
 
   emit<K extends string & keyof E>(event: K, data?: EventOutgoing<E, K>): Promise<void>;
   request<K extends string & keyof E>(
@@ -35,4 +42,5 @@ export interface IZephyr<E extends ZephyrEventMap = ZephyrEventMap> {
   onDisconnect(handler: (reason: string) => void): void;
   onError(handler: (error: ZephyrError) => void): void;
   onReconnect(handler: (attempt: number) => void): void;
+  onAuthExpired(handler: AuthExpiredHandler): () => void;
 }

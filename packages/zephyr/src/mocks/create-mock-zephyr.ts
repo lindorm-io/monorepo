@@ -8,6 +8,7 @@ export const createMockZephyr = (): MockZephyr => ({
   connected: true,
   connect: jest.fn().mockResolvedValue(undefined),
   disconnect: jest.fn().mockResolvedValue(undefined),
+  refresh: jest.fn().mockResolvedValue(undefined),
   emit: jest.fn().mockResolvedValue(undefined),
   request: jest.fn().mockResolvedValue({}),
   on: jest.fn(),
@@ -18,4 +19,5 @@ export const createMockZephyr = (): MockZephyr => ({
   onDisconnect: jest.fn(),
   onError: jest.fn(),
   onReconnect: jest.fn(),
+  onAuthExpired: jest.fn().mockReturnValue(() => undefined),
 });
