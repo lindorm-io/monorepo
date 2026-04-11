@@ -1,0 +1,14 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`createSessionRefreshHandler updates session, tokens, and auth state on successful lookup 1`] = `
+{
+  "header": {},
+  "payload": {
+    "expiresAt": 2026-04-12T12:00:00.000Z,
+    "subject": "alice",
+  },
+  "token": "new-session-jwt",
+}
+`;
+
+exports[`createSessionRefreshHandler updates session, tokens, and auth state on successful lookup 2`] = `2026-04-12T12:00:00.000Z`;
