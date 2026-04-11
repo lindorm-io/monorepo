@@ -8,7 +8,7 @@ describe("createConnectionContextInitialisationMiddleware", () => {
   beforeEach(() => {
     logger = createMockLogger();
     ctx = {
-      eventId: "aa9a627d-8296-598c-9589-4ec91d27d056",
+      handshakeId: "aa9a627d-8296-598c-9589-4ec91d27d056",
       io: {
         socket: {
           id: "009aecca-3bc0-500f-8e67-6dae90188c7d",

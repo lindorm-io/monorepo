@@ -15,7 +15,7 @@ export const createConnectionContextInitialisationMiddleware = (
       app: ctx.io.socket.data.app,
       authorization: getSocketAuthorization(ctx.io.socket),
       metadata: {
-        id: ctx.eventId,
+        id: ctx.handshakeId,
         correlationId,
         date: new Date(),
         environment:

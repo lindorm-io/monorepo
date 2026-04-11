@@ -6,7 +6,7 @@ import { PylonSocketData } from "./pylon-socket";
 
 export type PylonSocketHandshakeContextBase<D extends PylonSocketData = PylonSocketData> =
   {
-    eventId: string;
+    handshakeId: string;
     io: PylonIoContextSocket<D>;
     logger?: ILogger;
   };

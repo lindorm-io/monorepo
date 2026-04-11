@@ -11,7 +11,7 @@ export const composePylonHandshakeContext = <D extends PylonSocketData = PylonSo
   socket: PylonSocket<D>,
 ): PylonSocketHandshakeContextBase<D> => {
   return {
-    eventId: randomUUID(),
+    handshakeId: randomUUID(),
     io: { app: io, socket },
   };
 };
