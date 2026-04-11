@@ -1,0 +1,35 @@
+import { ILogger } from "@lindorm/logger";
+import { Environment } from "@lindorm/types";
+import { randomUUID } from "crypto";
+import { PylonConnectionMiddleware } from "../../types";
+import { getSocketAuthorization } from "../utils/get-socket-authorization";
+
+export const createConnectionContextInitialisationMiddleware = (
+  logger: ILogger,
+): PylonConnectionMiddleware => {
+  return async function connectionContextInitialisationMiddleware(ctx, next) {
+    const correlationId =
+      (ctx.io.socket.handshake?.headers?.["x-correlation-id"] as string) ?? randomUUID();
+
+    ctx.state = {
+      app: ctx.io.socket.data.app,
+      authorization: getSocketAuthorization(ctx.io.socket),
+      metadata: {
+        id: ctx.eventId,
+        correlationId,
+        date: new Date(),
+        environment:
+          (ctx.io.socket.handshake?.headers?.["x-environment"] as Environment) ||
+          "unknown",
+      },
+      tokens: ctx.io.socket.data.tokens ?? {},
+    };
+
+    ctx.logger = logger.child(["Handshake"], {
+      correlationId,
+      socketId: ctx.io.socket.id,
+    });
+
+    await next();
+  };
+};
