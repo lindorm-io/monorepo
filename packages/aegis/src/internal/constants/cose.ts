@@ -99,6 +99,13 @@ export const COSE_HEADER: Array<CoseItem> = [
   { key: "oid", label: 400, bstr },
 ] as const;
 
+// RFC 9052 §3.1: alg, crit, content type, and type disambiguator must be
+// integrity-protected. Shared source of truth for Decoded*.protected types
+// and the runtime bucket enforcement in mapCoseHeader/decodeCoseHeader.
+export const COSE_PROTECTED_HEADER_KEYS = ["alg", "crit", "cty", "typ"] as const;
+
+export type CoseProtectedHeaderKey = (typeof COSE_PROTECTED_HEADER_KEYS)[number];
+
 export const COSE_KEY: Array<CoseItem> = [
   // RFC
   { key: "alg", label: 3 },

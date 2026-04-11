@@ -1,10 +1,11 @@
 import { Dict } from "@lindorm/types";
-import { JwtClaims } from "../claims/jwt/jwt-claims";
+import { CoseProtectedHeaderKey } from "#internal/constants/cose";
 import { TokenHeaderClaims } from "../header";
+import { JwtClaims } from "../claims/jwt/jwt-claims";
 
 export type DecodedCwt<C extends Dict = Dict> = {
-  protected: Pick<TokenHeaderClaims, "alg" | "crit" | "cty" | "typ">;
-  unprotected: Omit<TokenHeaderClaims, "alg" | "crit" | "cty" | "typ">;
+  protected: Pick<TokenHeaderClaims, CoseProtectedHeaderKey>;
+  unprotected: Omit<TokenHeaderClaims, CoseProtectedHeaderKey>;
   payload: JwtClaims & C;
   signature: Buffer;
 };
