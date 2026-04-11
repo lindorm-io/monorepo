@@ -132,16 +132,14 @@ export class Zephyr<E extends ZephyrEventMap = ZephyrEventMap> implements IZephy
     });
   }
 
-  public refresh(): Promise<void> {
+  public async refresh(): Promise<void> {
     if (!this.auth) {
-      return Promise.reject(
-        new ZephyrError("No auth strategy configured", {
-          code: "ZEPHYR_NO_AUTH_STRATEGY",
-        }),
-      );
+      throw new ZephyrError("No auth strategy configured", {
+        code: "ZEPHYR_NO_AUTH_STRATEGY",
+      });
     }
 
-    return this.refreshDeduped();
+    await this.refreshDeduped();
   }
 
   public async emit<K extends string & keyof E>(
