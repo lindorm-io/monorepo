@@ -1,0 +1,27 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`zephyrChangeOutgoingDataMiddleware should convert outgoing array items 1`] = `
+[
+  {
+    "camel_case": "a",
+  },
+  {
+    "another_key": "b",
+  },
+]
+`;
+
+exports[`zephyrChangeOutgoingDataMiddleware should convert outgoing object keys to snake_case by default 1`] = `
+{
+  "camel_case": "value",
+  "nested_key": {
+    "inner_key": 1,
+  },
+}
+`;
+
+exports[`zephyrChangeOutgoingDataMiddleware should respect custom mode 1`] = `
+{
+  "snakeCase": "value",
+}
+`;
