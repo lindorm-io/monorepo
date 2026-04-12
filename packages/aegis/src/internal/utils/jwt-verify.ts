@@ -102,6 +102,8 @@ export const createJwtVerify = (
     if (key === "actor") continue;
     // dpopProof is validated against the cnf.jkt claim by each Kit directly
     if (key === "dpopProof") continue;
+    // trustBoundThumbprint is a binary flag consumed by each Kit directly
+    if (key === "trustBoundThumbprint") continue;
 
     const mapped = mapVerify(key as keyof VerifyJwtOptions);
 

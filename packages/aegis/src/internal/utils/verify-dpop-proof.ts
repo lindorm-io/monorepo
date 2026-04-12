@@ -50,7 +50,17 @@ export const verifyDpopProof = (options: Options): ParsedDpopProof => {
     throw new JwtError("Invalid DPoP proof: header jwk is required");
   }
 
-  const proofKryptos = KryptosKit.from.jwk(header.jwk);
+  // RFC 9449 DPoP proofs carry a minimal public JWK in the `jwk` header
+  // (kty/crv/x/y for EC; kty/e/n for RSA; kty/crv/x for OKP). KryptosKit
+  // requires `alg` and `use` to construct a Kryptos instance, so inject
+  // them from the JOSE header's `alg` (authoritative) and `use: "sig"`
+  // (DPoP proofs are always signatures). The thumbprint computation is
+  // RFC 7638 canonical and unaffected by these hints.
+  const proofKryptos = KryptosKit.from.jwk({
+    ...(header.jwk as object),
+    alg: header.alg,
+    use: "sig",
+  } as Parameters<typeof KryptosKit.from.jwk>[0]);
 
   if (!verifyJoseSignature(proofKryptos, proof)) {
     throw new JwtError("Invalid DPoP proof: signature verification failed");

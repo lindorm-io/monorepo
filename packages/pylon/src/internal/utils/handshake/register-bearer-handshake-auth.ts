@@ -1,4 +1,4 @@
-import { IAegis, VerifyJwtOptions } from "@lindorm/aegis";
+import { Aegis, IAegis, ParsedJwt, VerifyJwtOptions } from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
 import { assertDpopHandshakeMatch } from "../dpop/assert-dpop-handshake-match";
 import { createBearerRefreshHandler } from "../refresh/create-bearer-refresh-handler";
@@ -30,10 +30,24 @@ export const registerBearerHandshakeAuth = async ({
     });
   }
 
+  // Preflight parse the token so we can tell whether it carries a cnf.jkt
+  // binding BEFORE handing it to aegis.verify. aegis.verify refuses to
+  // process a bound token without a proof (and vice versa), so we only pass
+  // `dpopProof` to the full verify when the token is actually DPoP-bound.
+  // In "optional" mode a bearer-only token may still arrive alongside a
+  // DPoP header (the client signed preemptively) — we accept the token as
+  // a plain bearer and ignore the proof.
+  const preflight = Aegis.parse<ParsedJwt<any>>(token);
+  const preflightJkt = (preflight.payload as any).confirmation?.thumbprint as
+    | string
+    | undefined;
+
+  const passDpopProof = preflightJkt && dpopMode !== "disabled" ? dpopProof : undefined;
+
   const verified = await aegis.verify(token, {
     tokenType: "access_token",
     ...verifyOptions,
-    dpopProof,
+    dpopProof: passDpopProof,
   });
 
   const confirmedJkt = (verified.payload as any).confirmation?.thumbprint as
