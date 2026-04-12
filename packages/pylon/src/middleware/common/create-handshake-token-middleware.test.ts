@@ -60,7 +60,7 @@ describe("createHandshakeTokenMiddleware", () => {
 
   beforeEach(() => {
     next = jest.fn();
-    (Aegis.parse as jest.Mock).mockReset();
+    (Aegis.parse as jest.Mock).mockReset().mockReturnValue({ payload: {} });
   });
 
   describe("bearer path", () => {
@@ -257,6 +257,12 @@ describe("createHandshakeTokenMiddleware", () => {
   });
 
   describe("DPoP path", () => {
+    const mockPreflightJkt = (jkt = "jkt-abc") => {
+      (Aegis.parse as jest.Mock).mockReturnValue({
+        payload: { confirmation: { thumbprint: jkt } },
+      });
+    };
+
     describe('dpop: "required"', () => {
       test("rejects when DPoP header is missing", async () => {
         const ctx = makeCtx();
@@ -286,6 +292,7 @@ describe("createHandshakeTokenMiddleware", () => {
       });
 
       test("accepts jkt-bound token + valid proof, strategy = dpop-bearer", async () => {
+        mockPreflightJkt();
         const ctx = makeCtx();
         ctx.io.socket.handshake.auth.bearer = "jwt-token";
         ctx.io.socket.handshake.headers.dpop = "proof-jwt";
@@ -321,6 +328,7 @@ describe("createHandshakeTokenMiddleware", () => {
       });
 
       test("accepts jkt-bound token + valid proof, strategy = dpop-bearer", async () => {
+        mockPreflightJkt();
         const ctx = makeCtx();
         ctx.io.socket.handshake.auth.bearer = "jwt-token";
         ctx.io.socket.handshake.headers.dpop = "proof-jwt";
@@ -333,6 +341,7 @@ describe("createHandshakeTokenMiddleware", () => {
       });
 
       test("rejects jkt-bound token without proof (strict per token)", async () => {
+        mockPreflightJkt();
         const ctx = makeCtx();
         ctx.io.socket.handshake.auth.bearer = "jwt-token";
         (ctx.aegis.verify as jest.Mock).mockResolvedValue({
@@ -350,6 +359,7 @@ describe("createHandshakeTokenMiddleware", () => {
       });
 
       test("rejects invalid DPoP proof (htu mismatch)", async () => {
+        mockPreflightJkt();
         const ctx = makeCtx();
         ctx.io.socket.handshake.auth.bearer = "jwt-token";
         ctx.io.socket.handshake.headers.dpop = "proof-jwt";
@@ -369,6 +379,7 @@ describe("createHandshakeTokenMiddleware", () => {
 
     describe('dpop: "disabled"', () => {
       test("accepts jkt-bound token without proof as plain bearer", async () => {
+        mockPreflightJkt();
         const ctx = makeCtx();
         ctx.io.socket.handshake.auth.bearer = "jwt-token";
         (ctx.aegis.verify as jest.Mock).mockResolvedValue({
@@ -390,6 +401,7 @@ describe("createHandshakeTokenMiddleware", () => {
 
     describe("refresh handler with captured jkt", () => {
       const installDpopHandshake = async (ctx: any) => {
+        mockPreflightJkt();
         ctx.io.socket.handshake.auth.bearer = "jwt-token";
         ctx.io.socket.handshake.headers.dpop = "proof-jwt";
         (ctx.aegis.verify as jest.Mock).mockResolvedValueOnce(makeDpopVerifyResult());

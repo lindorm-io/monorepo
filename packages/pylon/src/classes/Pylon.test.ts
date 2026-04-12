@@ -3,7 +3,7 @@ import { Amphora, IAmphora } from "@lindorm/amphora";
 import { ServerError } from "@lindorm/errors";
 import { isArray, isObject } from "@lindorm/is";
 import { KryptosKit } from "@lindorm/kryptos";
-import { ILogger, Logger } from "@lindorm/logger";
+import { createMockLogger, ILogger } from "@lindorm/logger";
 import axios from "axios";
 import { randomBytes } from "crypto";
 import { readFileSync } from "fs";
@@ -60,7 +60,7 @@ describe("Pylon", () => {
   });
 
   beforeAll(() => {
-    logger = new Logger({ level: "error", readable: true });
+    logger = createMockLogger();
 
     amphora = new Amphora({
       domain: "http://test.lindorm.io",
