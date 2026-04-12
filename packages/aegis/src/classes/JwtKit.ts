@@ -180,7 +180,7 @@ export class JwtKit implements IJwtKit {
         expectedThumbprint: boundThumbprint,
         dpopMaxSkew: this.dpopMaxSkew,
       });
-    } else if (boundThumbprint) {
+    } else if (boundThumbprint && !verify.trustBoundThumbprint) {
       throw new JwtError(
         "Invalid token: token is DPoP-bound but no DPoP proof was provided",
       );

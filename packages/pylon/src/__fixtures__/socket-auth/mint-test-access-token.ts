@@ -4,6 +4,7 @@ import { SOCKET_AUTH_TEST_ISSUER } from "./shared";
 export type MintTestAccessTokenInput = {
   subject: string;
   expiresIn?: number;
+  jkt?: string;
 };
 
 export type MintTestAccessTokenResult = {
@@ -24,6 +25,7 @@ export const mintTestAccessToken = async (
     expires: `${expiresIn} seconds`,
     subject: input.subject,
     tokenType: "access_token",
+    ...(input.jkt ? { confirmation: { thumbprint: input.jkt } } : {}),
   });
 
   return {

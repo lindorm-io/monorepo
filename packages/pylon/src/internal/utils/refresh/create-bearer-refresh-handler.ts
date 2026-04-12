@@ -36,9 +36,14 @@ export const createBearerRefreshHandler = ({
     const token = (payload as any).bearer as string;
     const expiresIn = (payload as any).expiresIn as number;
 
+    // The DPoP binding is established once at handshake time; refresh events
+    // do not re-present a DPoP proof per the socket-auth plan. Tell aegis to
+    // trust the existing jkt binding for this verify call, then compare the
+    // new token's cnf.jkt against the captured one below.
     const verified = await aegis.verify(token, {
       tokenType: "access_token",
       ...verifyOptions,
+      trustBoundThumbprint: capturedJkt !== undefined,
     });
 
     assertSubjectUnchanged(subject, verified.payload.subject);
