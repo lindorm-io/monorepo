@@ -2,6 +2,7 @@ import { KryptosKit } from "@lindorm/kryptos";
 import { ShaKit } from "@lindorm/sha";
 import { JwtError } from "../../errors";
 import { ParsedDpopProof } from "../../types/jwt/jwt-dpop";
+import { computeJwkThumbprint } from "./compute-jwk-thumbprint";
 import { decodeJoseHeader } from "./jose-header";
 import { verifyJoseSignature } from "./jose-signature";
 import { decodeJwtPayload } from "./jwt-payload";
@@ -50,26 +51,31 @@ export const verifyDpopProof = (options: Options): ParsedDpopProof => {
     throw new JwtError("Invalid DPoP proof: header jwk is required");
   }
 
-  // RFC 9449 DPoP proofs carry a minimal public JWK in the `jwk` header
-  // (kty/crv/x/y for EC; kty/e/n for RSA; kty/crv/x for OKP). KryptosKit
-  // requires `alg` and `use` to construct a Kryptos instance, so inject
-  // them from the JOSE header's `alg` (authoritative) and `use: "sig"`
-  // (DPoP proofs are always signatures). The thumbprint computation is
-  // RFC 7638 canonical and unaffected by these hints.
+  const rawJwk = header.jwk as Record<string, unknown>;
+
+  // RFC 7638 thumbprint from the raw JWK — uses only canonical key-material
+  // fields (kty/crv/x/y for EC, kty/e/n for RSA, kty/crv/x for OKP).
+  const thumbprint = computeJwkThumbprint(rawJwk);
+
+  if (thumbprint !== expectedThumbprint) {
+    throw new JwtError("Invalid DPoP proof: thumbprint does not match cnf.jkt", {
+      data: { expected: expectedThumbprint, actual: thumbprint },
+    });
+  }
+
+  // Signature verification requires a Kryptos instance because the
+  // SignatureKit dispatch chain (EcKit/RsaKit/OkpKit) is coupled to
+  // IKryptos. The DPoP proof JWK carries only key material; we supply
+  // `alg` from the JOSE header (authoritative per RFC 9449) and
+  // `use: "sig"` (DPoP proofs are always signatures).
   const proofKryptos = KryptosKit.from.jwk({
-    ...(header.jwk as object),
+    ...rawJwk,
     alg: header.alg,
     use: "sig",
   } as Parameters<typeof KryptosKit.from.jwk>[0]);
 
   if (!verifyJoseSignature(proofKryptos, proof)) {
     throw new JwtError("Invalid DPoP proof: signature verification failed");
-  }
-
-  if (proofKryptos.thumbprint !== expectedThumbprint) {
-    throw new JwtError("Invalid DPoP proof: thumbprint does not match cnf.jkt", {
-      data: { expected: expectedThumbprint, actual: proofKryptos.thumbprint },
-    });
   }
 
   const payload = decodeJwtPayload<DpopProofPayload>(payloadB64);
@@ -94,7 +100,7 @@ export const verifyDpopProof = (options: Options): ParsedDpopProof => {
   }
 
   return {
-    thumbprint: proofKryptos.thumbprint,
+    thumbprint,
     tokenId,
     httpMethod,
     httpUri,
