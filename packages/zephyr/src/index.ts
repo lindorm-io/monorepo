@@ -2,4 +2,5 @@ export * from "./auth";
 export * from "./classes";
 export * from "./errors";
 export * from "./interfaces";
+export * from "./middleware";
 export * from "./types";
