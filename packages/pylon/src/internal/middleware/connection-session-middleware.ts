@@ -21,7 +21,7 @@ export const createConnectionSessionMiddleware = <
 
   const config: PylonSessionConfig = removeUndefined({
     domain: options.domain,
-    encoding: options.encoding,
+    encoding: options.encoding ?? "base64url",
     encrypted: options.encrypted,
     expiry: options.expiry,
     httpOnly: options.httpOnly,
