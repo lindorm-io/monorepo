@@ -3,9 +3,9 @@ import { createMockIrisSource } from "@lindorm/iris/mocks";
 import { createMockLogger } from "@lindorm/logger";
 import { createMockProteusSource } from "@lindorm/proteus/mocks";
 import { RATE_LIMIT_SOURCE } from "../constants/symbols";
-import { createSourcesMiddleware } from "./common-sources-middleware";
+import { createDependenciesMiddleware } from "./common-dependencies-middleware";
 
-describe("createSourcesMiddleware", () => {
+describe("createDependenciesMiddleware", () => {
   let ctx: any;
 
   beforeEach(() => {
@@ -17,7 +17,7 @@ describe("createSourcesMiddleware", () => {
   test("should lazily create proteus session on first access", async () => {
     const proteus = createMockProteusSource();
 
-    const middleware = createSourcesMiddleware({ proteus: proteus as any });
+    const middleware = createDependenciesMiddleware({ proteus: proteus as any });
 
     await middleware(ctx, jest.fn());
 
@@ -33,7 +33,7 @@ describe("createSourcesMiddleware", () => {
   test("should lazily create iris session on first access", async () => {
     const iris = createMockIrisSource();
 
-    const middleware = createSourcesMiddleware({ iris: iris as any });
+    const middleware = createDependenciesMiddleware({ iris: iris as any });
 
     await middleware(ctx, jest.fn());
 
@@ -49,7 +49,7 @@ describe("createSourcesMiddleware", () => {
   test("should lazily create hermes session on first access", async () => {
     const hermes = createMockHermes();
 
-    const middleware = createSourcesMiddleware({ hermes: hermes as any });
+    const middleware = createDependenciesMiddleware({ hermes: hermes as any });
 
     await middleware(ctx, jest.fn());
 
@@ -63,7 +63,7 @@ describe("createSourcesMiddleware", () => {
   });
 
   test("should handle no sources configured", async () => {
-    const middleware = createSourcesMiddleware({});
+    const middleware = createDependenciesMiddleware({});
 
     await expect(middleware(ctx, jest.fn())).resolves.toBeUndefined();
 
@@ -75,7 +75,7 @@ describe("createSourcesMiddleware", () => {
   test("should store raw rateLimitProteus on context via symbol (lazy session)", async () => {
     const rateLimitProteus = createMockProteusSource();
 
-    const middleware = createSourcesMiddleware({
+    const middleware = createDependenciesMiddleware({
       rateLimitProteus: rateLimitProteus as any,
     });
 
@@ -86,7 +86,7 @@ describe("createSourcesMiddleware", () => {
   });
 
   test("should not set rate limit symbol when rateLimitProteus not provided", async () => {
-    const middleware = createSourcesMiddleware({});
+    const middleware = createDependenciesMiddleware({});
 
     await middleware(ctx, jest.fn());
 
@@ -113,7 +113,7 @@ describe("createSourcesMiddleware", () => {
         },
       };
 
-      const middleware = createSourcesMiddleware({ roomsEnabled: true });
+      const middleware = createDependenciesMiddleware({ roomsEnabled: true });
 
       await middleware(socketCtx, jest.fn());
 
@@ -135,7 +135,7 @@ describe("createSourcesMiddleware", () => {
         },
       };
 
-      const middleware = createSourcesMiddleware({ roomsEnabled: true });
+      const middleware = createDependenciesMiddleware({ roomsEnabled: true });
 
       await middleware(httpCtx, jest.fn());
 
@@ -143,7 +143,7 @@ describe("createSourcesMiddleware", () => {
     });
 
     test("should not set rooms when no io present even when roomsEnabled", async () => {
-      const middleware = createSourcesMiddleware({ roomsEnabled: true });
+      const middleware = createDependenciesMiddleware({ roomsEnabled: true });
 
       await middleware(ctx, jest.fn());
 
@@ -160,7 +160,7 @@ describe("createSourcesMiddleware", () => {
         },
       };
 
-      const middleware = createSourcesMiddleware({ roomsEnabled: false });
+      const middleware = createDependenciesMiddleware({ roomsEnabled: false });
 
       await middleware(socketCtx, jest.fn());
 
@@ -188,7 +188,7 @@ describe("createSourcesMiddleware", () => {
         },
       };
 
-      const middleware = createSourcesMiddleware({
+      const middleware = createDependenciesMiddleware({
         roomsEnabled: true,
         roomsPresence: true,
         roomsProteus: roomsProteus as any,
