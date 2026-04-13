@@ -236,3 +236,36 @@ exports[`Amphora external config should add external config and find jwks 1`] = 
   },
 ]
 `;
+
+exports[`Amphora x509 certificate chain should emit x5c/x5t#S256/x5t in JWKS for kryptos with chain 1`] = `
+{
+  "keys": [
+    {
+      "alg": "ES256",
+      "crv": "P-256",
+      "exp": 4859740800,
+      "iat": 1704067800,
+      "iss": "https://test.lindorm.io/",
+      "jku": "https://test.lindorm.io/.well-known/jwks.json",
+      "key_ops": [
+        "sign",
+        "verify",
+      ],
+      "kid": "c4f03a0e-6c15-5a8e-9d85-5a9d4b8f1a7c",
+      "kty": "EC",
+      "nbf": 1672534800,
+      "uat": 1704095940,
+      "use": "sig",
+      "x": "g7-PZHaGSsppBpQK2uY8RXAkqq6k2HzCx2-lLAi3sN0",
+      "x5c": [
+        "MIIBozCCAUqgAwIBAgIUH8a+d6uH7hZYplK+HoMbcv8ly8QwCgYIKoZIzj0EAwIwJDEiMCAGA1UEAwwZbGluZG9ybS10ZXN0LWludGVybWVkaWF0ZTAgFw0yNjA0MTMxMTM1MDBaGA8yMTI2MDMyMDExMzUwMFowHDEaMBgGA1UEAwwRbGluZG9ybS10ZXN0LWxlYWYwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAASDv49kdoZKymkGlAra5jxFcCSqrqTYfMLHb6UsCLew3WQtsj4mizNYd3WpRAaKPQFzs7VP1G1cwzPE9RQLW1S3o2AwXjAMBgNVHRMBAf8EAjAAMA4GA1UdDwEB/wQEAwIHgDAdBgNVHQ4EFgQU7PPxSt9sZhGL5y3DpWarh0/ouM8wHwYDVR0jBBgwFoAUuvcF1azFaNW8Sy7CB6nJsVd4XpIwCgYIKoZIzj0EAwIDRwAwRAIgc6WORqsJtaAWHffTnBm9jGlAYrkx4gn4HB8yP+AxEdUCIEMVwc2zE5/q4VbQGFRAbEFONnzpi+akdVcuHYYy87To",
+        "MIIBqzCCAVCgAwIBAgIUPrBSpCTfUhNj/QIZuQsEtQrTpJcwCgYIKoZIzj0EAwIwHDEaMBgGA1UEAwwRbGluZG9ybS10ZXN0LXJvb3QwIBcNMjYwNDEzMTEzNTAwWhgPMjEyNjAzMjAxMTM1MDBaMCQxIjAgBgNVBAMMGWxpbmRvcm0tdGVzdC1pbnRlcm1lZGlhdGUwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAASXjSn4iP5qFox80WCOzWQM3c3IU6W8EA/ljpPkS27Hx248sxCTJrAITpSJ9roDXXxRg+WvlzI8aMHdddErTZoZo2YwZDASBgNVHRMBAf8ECDAGAQH/AgEAMA4GA1UdDwEB/wQEAwIBBjAdBgNVHQ4EFgQUuvcF1azFaNW8Sy7CB6nJsVd4XpIwHwYDVR0jBBgwFoAU4sctur7Io2JSmyWLWzSTVXDwrBAwCgYIKoZIzj0EAwIDSQAwRgIhAIhM1rg+E+8/8RzmgvYTiHw3UCZxZjnXuYMHcvb5calWAiEAiYXgbUDdXyHDzgDJB7lBbaNaePxu+Kvsx7bYunS2yhY=",
+        "MIIBnjCCAUWgAwIBAgIUCQm0C13BQsFkIgc7SShh80ejgQAwCgYIKoZIzj0EAwIwHDEaMBgGA1UEAwwRbGluZG9ybS10ZXN0LXJvb3QwIBcNMjYwNDEzMTEzNTAwWhgPMjEyNjAzMjAxMTM1MDBaMBwxGjAYBgNVBAMMEWxpbmRvcm0tdGVzdC1yb290MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEO5N985BltmGIV3XZu4YMBcrpO1EbmQBt9cEnVyNNkiNCNKsAOP2zbFs9kLu9Tb+2R/BiFwVoGpzQMhqcy+39cKNjMGEwHQYDVR0OBBYEFOLHLbq+yKNiUpsli1s0k1Vw8KwQMB8GA1UdIwQYMBaAFOLHLbq+yKNiUpsli1s0k1Vw8KwQMA8GA1UdEwEB/wQFMAMBAf8wDgYDVR0PAQH/BAQDAgEGMAoGCCqGSM49BAMCA0cAMEQCIGvDtRrg/MHARlqYkNfZU2phl2f+QkZwHgk00T1r4tXoAiBndB9hNEOkRdSPFBcy6w/LPWH+Y7HQdl8xukjZcY7Yeg==",
+      ],
+      "x5t": "83RTODK4dhmAaqY7_fQX8atsXG4",
+      "x5t#S256": "PQeZGdGGGG1A9Qr4z0qBh_TJrmoi5B-6jbMUOGn34QA",
+      "y": "ZC2yPiaLM1h3dalEBoo9AXOztU_UbVzDM8T1FAtbVLc",
+    },
+  ],
+}
+`;

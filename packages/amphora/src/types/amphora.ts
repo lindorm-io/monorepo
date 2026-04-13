@@ -1,4 +1,9 @@
-import { KryptosAttributes, KryptosMetadata, LindormJwk } from "@lindorm/kryptos";
+import {
+  IKryptos,
+  KryptosAttributes,
+  KryptosMetadata,
+  LindormJwk,
+} from "@lindorm/kryptos";
 import { ILogger } from "@lindorm/logger";
 import { OpenIdConfiguration, Predicate } from "@lindorm/types";
 
@@ -40,7 +45,8 @@ export type AmphoraQuery = Pick<
   | "purpose"
   | "type"
   | "use"
->;
+> &
+  Pick<IKryptos, "x5tS256">;
 
 export type AmphoraJwks = {
   keys: Array<LindormJwk>;
