@@ -4,14 +4,14 @@ export type KryptosCertificateSelfSignedOption = {
   mode: "self-signed";
   subject?: string;
   organization?: string;
-  subjectAlternativeNames?: ReadonlyArray<string>;
+  subjectAlternativeNames?: Array<string>;
 };
 
 export type KryptosCertificateRootCaOption = {
   mode: "root-ca";
   subject?: string;
   organization?: string;
-  subjectAlternativeNames?: ReadonlyArray<string>;
+  subjectAlternativeNames?: Array<string>;
   pathLengthConstraint?: number;
 };
 
@@ -20,7 +20,7 @@ export type KryptosCertificateCaSignedOption = {
   ca: IKryptos;
   subject?: string;
   organization?: string;
-  subjectAlternativeNames?: ReadonlyArray<string>;
+  subjectAlternativeNames?: Array<string>;
 };
 
 export type KryptosCertificateOption =
