@@ -298,15 +298,24 @@ describe("socket auth (session / cookie) e2e", () => {
       // Directly delete the session from the backing store — bypassing HTTP.
       store.delete(creds.sessionId);
 
+      const socket = (client as any).socket;
+
+      // Set up disconnect listener BEFORE triggering the refresh failure.
+      const disconnectPromise = new Promise<void>((resolve) => {
+        socket.on("disconnect", () => resolve());
+      });
+
       // The socket-level refresh handler re-reads the store and must reject.
       // Note: the cookie strategy would first POST /refresh-session, which
       // would also reject (since ctx.state.session is null). To exercise the
       // _socket_ closure, we emit the refresh event directly.
-      const socket = (client as any).socket;
       const ack = await socket.timeout(5000).emitWithAck("$pylon/auth/refresh", {});
 
       expect(ack.__pylon).toBe(true);
       expect(ack.ok).toBe(false);
+
+      // Session strategy must disconnect the socket after failed refresh.
+      await disconnectPromise;
     } finally {
       await client.disconnect();
     }
@@ -327,10 +336,19 @@ describe("socket auth (session / cookie) e2e", () => {
       });
 
       const socket = (client as any).socket;
+
+      // Set up disconnect listener BEFORE triggering the refresh failure.
+      const disconnectPromise = new Promise<void>((resolve) => {
+        socket.on("disconnect", () => resolve());
+      });
+
       const ack = await socket.timeout(5000).emitWithAck("$pylon/auth/refresh", {});
 
       expect(ack.__pylon).toBe(true);
       expect(ack.ok).toBe(false);
+
+      // Session strategy must disconnect the socket after failed refresh.
+      await disconnectPromise;
     } finally {
       await client.disconnect();
     }
