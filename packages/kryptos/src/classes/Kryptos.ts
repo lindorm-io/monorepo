@@ -118,7 +118,7 @@ export class Kryptos implements IKryptos {
 
       const parsed = parseX509(options.certificateChain);
 
-      if (!x509PublicKeyMatches(parsed[0].cert, this._publicKey)) {
+      if (!x509PublicKeyMatches(parsed[0].cert, this._publicKey, this._type)) {
         throw new KryptosError(
           "certificateChain leaf certificate public key does not match kryptos public key",
         );

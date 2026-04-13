@@ -7,6 +7,9 @@ import {
   TEST_X509_OTHER_PRIVATE_KEY_B64,
   TEST_X509_OTHER_PUBLIC_KEY_B64,
   TEST_X509_ROOT_PEM,
+  TEST_X509_RSA_LEAF_PEM,
+  TEST_X509_RSA_LEAF_PRIVATE_KEY_B64,
+  TEST_X509_RSA_LEAF_PUBLIC_KEY_B64,
 } from "../__fixtures__/x509";
 import { KryptosError } from "../errors";
 import { Kryptos } from "./Kryptos";
@@ -121,6 +124,40 @@ describe("Kryptos (X.509)", () => {
       expect(() =>
         kryptos.verifyCertificateChain({ trustAnchors: TEST_X509_ROOT_PEM }),
       ).toThrow("Kryptos has no certificateChain to verify");
+    });
+  });
+
+  describe("RSA public key matching", () => {
+    const baseRsaOptions = {
+      ...fixedDates,
+      algorithm: "RS256" as const,
+      curve: null,
+      type: "RSA" as const,
+      use: "sig" as const,
+      isExternal: false,
+      operations: ["sign", "verify"] as Array<"sign" | "verify">,
+      privateKey: Buffer.from(TEST_X509_RSA_LEAF_PRIVATE_KEY_B64, "base64url"),
+      publicKey: Buffer.from(TEST_X509_RSA_LEAF_PUBLIC_KEY_B64, "base64url"),
+    };
+
+    test("accepts an RSA cert chain whose leaf matches the RSA kryptos key", () => {
+      const kryptos = new Kryptos({
+        ...baseRsaOptions,
+        certificateChain: [TEST_X509_RSA_LEAF_PEM],
+      });
+
+      expect(kryptos.x5c).toHaveLength(1);
+      expect(kryptos.x5tS256).toBeDefined();
+    });
+
+    test("rejects an RSA cert chain whose leaf does not match the RSA kryptos key", () => {
+      expect(
+        () =>
+          new Kryptos({
+            ...baseRsaOptions,
+            certificateChain: [TEST_X509_LEAF_PEM],
+          }),
+      ).toThrow("leaf certificate public key does not match kryptos public key");
     });
   });
 });
