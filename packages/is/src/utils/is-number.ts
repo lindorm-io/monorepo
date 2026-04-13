@@ -1,1 +1,2 @@
-export const isNumber = (input?: any): input is number => typeof input === "number";
+export const isNumber = <T extends number>(input?: any): input is T =>
+  typeof input === "number";
