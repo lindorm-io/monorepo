@@ -1,7 +1,9 @@
 import { ClientError } from "@lindorm/errors";
-import { PylonAuthConfig, PylonHttpMiddleware } from "../../../types";
+import { PylonAuthRouterConfig, PylonHttpMiddleware } from "../../../types";
 
-export const createAuthHandler = (config: PylonAuthConfig): PylonHttpMiddleware =>
+export const createAuthHandler = (
+  routerConfig: PylonAuthRouterConfig,
+): PylonHttpMiddleware =>
   async function authHandler(ctx) {
     if (!ctx.state.session) {
       throw new ClientError("Session not found", {
@@ -10,10 +12,12 @@ export const createAuthHandler = (config: PylonAuthConfig): PylonHttpMiddleware 
     }
 
     ctx.body = {
-      ...(config.expose.accessToken && { accessToken: ctx.state.session.accessToken }),
-      ...(config.expose.idToken && { idToken: ctx.state.session.idToken }),
-      ...(config.expose.scope && { scope: ctx.state.session.scope }),
-      ...(config.expose.subject && { subject: ctx.state.session.subject }),
+      ...(routerConfig.expose.accessToken && {
+        accessToken: ctx.state.session.accessToken,
+      }),
+      ...(routerConfig.expose.idToken && { idToken: ctx.state.session.idToken }),
+      ...(routerConfig.expose.scope && { scope: ctx.state.session.scope }),
+      ...(routerConfig.expose.subject && { subject: ctx.state.session.subject }),
     };
     ctx.status = 200;
   };

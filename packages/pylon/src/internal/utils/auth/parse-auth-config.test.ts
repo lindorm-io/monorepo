@@ -1,7 +1,7 @@
 import { parseAuthConfig } from "./parse-auth-config";
 
 describe("parseAuthConfig", () => {
-  test("should merge defaults with minimal options", () => {
+  test("should return config with null router when no router options", () => {
     expect(
       parseAuthConfig({
         clientId: "test-client-id",
@@ -11,25 +11,50 @@ describe("parseAuthConfig", () => {
     ).toMatchSnapshot();
   });
 
-  test("should merge defaults with options", () => {
+  test("should merge defaults with router options", () => {
     expect(
       parseAuthConfig({
         clientId: "test-client-id",
         clientSecret: "test-client-secret",
         issuer: "https://issuer.com",
+        router: {},
+      }),
+    ).toMatchSnapshot();
+  });
 
-        codeChallengeMethod: "plain",
-        tokenExpiry: "1d",
-
-        dynamicRedirectDomains: ["https://client.com"],
-
+  test("should merge defaults with custom router options", () => {
+    expect(
+      parseAuthConfig({
+        clientId: "test-client-id",
+        clientSecret: "test-client-secret",
+        issuer: "https://issuer.com",
+        defaultTokenExpiry: "1d",
         refresh: {
           maxAge: "6m",
           mode: "none",
         },
-        staticRedirect: {
-          login: "https://client.com/login/static",
+        router: {
+          authorize: {
+            codeChallengeMethod: "plain",
+            resource: "https://api.example.com",
+          },
+          dynamicRedirectDomains: ["https://client.com"],
+          resourceKey: "audience",
+          staticRedirect: {
+            login: "https://client.com/login/static",
+          },
         },
+      }),
+    ).toMatchSnapshot();
+  });
+
+  test("should merge refresh defaults when refresh is partially specified", () => {
+    expect(
+      parseAuthConfig({
+        clientId: "test-client-id",
+        clientSecret: "test-client-secret",
+        issuer: "https://issuer.com",
+        refresh: { mode: "max_age" },
       }),
     ).toMatchSnapshot();
   });

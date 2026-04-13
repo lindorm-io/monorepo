@@ -4,6 +4,7 @@ import { BaseRequest } from "koa";
 import { RouterContext } from "koa-router";
 import { IPylonCookies, IPylonFileUpload, IPylonSession } from "../interfaces";
 import { PylonCommonContext, PylonHttpMetadata, PylonState } from "./context-common";
+import { PylonAuthClient } from "./pylon-auth-client";
 import { PylonRoomContextHttp } from "./context-socket";
 import { PylonIoContextHttp } from "./pylon-io-context";
 import { PylonSessionOnContext } from "./session";
@@ -24,6 +25,7 @@ export type PylonHttpState = PylonState & {
 };
 
 type Context<Data, State> = {
+  auth: PylonAuthClient;
   cookies: IPylonCookies;
   data: Data;
   io: PylonIoContextHttp;

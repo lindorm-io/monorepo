@@ -1,17 +1,12 @@
 import { ClientError } from "@lindorm/errors";
-import { getAuthClient as _getAuthClient } from "./get-auth-client";
 import { createLogoutHandler } from "./logout-handler";
 
-jest.mock("./get-auth-client");
-
-const getAuthClient = _getAuthClient as jest.Mock;
-
-describe("createLoginHandler", () => {
-  let config: any;
+describe("createLogoutHandler", () => {
+  let routerConfig: any;
   let ctx: any;
 
   beforeEach(() => {
-    config = {
+    routerConfig = {
       cookies: {
         login: "login_cookie",
         logout: "logout_cookie",
@@ -25,6 +20,12 @@ describe("createLoginHandler", () => {
     };
 
     ctx = {
+      auth: {
+        logout: jest.fn().mockReturnValue({
+          redirect: new URL("/auth/logout/callback", "https://example.com"),
+          state: "state",
+        }),
+      },
       cookies: {
         get: jest.fn().mockResolvedValue({
           redirectUri: "https://example.com",
@@ -53,19 +54,14 @@ describe("createLoginHandler", () => {
         },
       },
     };
-
-    getAuthClient.mockReturnValue({
-      logout: jest.fn().mockReturnValue({
-        redirect: new URL("/auth/logout/callback", "https://example.com"),
-        state: "state",
-      }),
-    });
   });
 
   afterEach(jest.clearAllMocks);
 
   test("should resolve dynamic redirect uri", async () => {
-    await expect(createLogoutHandler(config)(ctx, jest.fn())).resolves.toBeUndefined();
+    await expect(
+      createLogoutHandler(routerConfig)(ctx, jest.fn()),
+    ).resolves.toBeUndefined();
 
     expect(ctx.cookies.set).toHaveBeenCalledWith(
       "logout_cookie",
@@ -81,7 +77,9 @@ describe("createLoginHandler", () => {
   test("should resolve static redirect uri", async () => {
     ctx.data.redirectUri = undefined;
 
-    await expect(createLogoutHandler(config)(ctx, jest.fn())).resolves.toBeUndefined();
+    await expect(
+      createLogoutHandler(routerConfig)(ctx, jest.fn()),
+    ).resolves.toBeUndefined();
 
     expect(ctx.cookies.set).toHaveBeenCalledWith(
       "logout_cookie",
@@ -97,7 +95,7 @@ describe("createLoginHandler", () => {
   test("should throw on missing session", async () => {
     ctx.state.session = undefined;
 
-    await expect(createLogoutHandler(config)(ctx, jest.fn())).rejects.toThrow(
+    await expect(createLogoutHandler(routerConfig)(ctx, jest.fn())).rejects.toThrow(
       ClientError,
     );
   });
@@ -105,16 +103,16 @@ describe("createLoginHandler", () => {
   test("should throw on invalid redirect uri domain", async () => {
     ctx.data.redirectUri = "https://invalid.com/redirect";
 
-    await expect(createLogoutHandler(config)(ctx, jest.fn())).rejects.toThrow(
+    await expect(createLogoutHandler(routerConfig)(ctx, jest.fn())).rejects.toThrow(
       ClientError,
     );
   });
 
   test("should throw on missing redirect uri", async () => {
-    config.staticRedirect.logout = undefined;
+    routerConfig.staticRedirect.logout = undefined;
     ctx.data.redirectUri = undefined;
 
-    await expect(createLogoutHandler(config)(ctx, jest.fn())).rejects.toThrow(
+    await expect(createLogoutHandler(routerConfig)(ctx, jest.fn())).rejects.toThrow(
       ClientError,
     );
   });

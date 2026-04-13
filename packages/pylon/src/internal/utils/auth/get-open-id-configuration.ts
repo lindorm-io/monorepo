@@ -1,9 +1,10 @@
+import { IAmphora } from "@lindorm/amphora";
 import { ServerError } from "@lindorm/errors";
 import { OpenIdConfiguration } from "@lindorm/types";
-import { PylonAuthConfig, PylonHttpContext } from "../../../types";
+import { PylonAuthConfig } from "../../../types";
 
 export const getOpenIdConfiguration = (
-  ctx: PylonHttpContext,
+  ctx: { amphora: IAmphora },
   config: PylonAuthConfig,
 ): OpenIdConfiguration => {
   const configuration = ctx.amphora.config.find((c) => c.issuer === config.issuer);

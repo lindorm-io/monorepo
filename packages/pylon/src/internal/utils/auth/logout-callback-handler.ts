@@ -1,16 +1,16 @@
 import { ClientError } from "@lindorm/errors";
 import {
-  PylonAuthConfig,
+  PylonAuthRouterConfig,
   PylonHttpContext,
   PylonHttpMiddleware,
   PylonLogoutCookie,
 } from "../../../types";
 
 export const createLogoutCallbackHandler = <C extends PylonHttpContext>(
-  config: PylonAuthConfig,
+  routerConfig: PylonAuthRouterConfig,
 ): PylonHttpMiddleware<C> =>
   async function logoutCallbackHandler(ctx) {
-    const cookie = await ctx.cookies.get<PylonLogoutCookie>(config.cookies.logout);
+    const cookie = await ctx.cookies.get<PylonLogoutCookie>(routerConfig.cookies.logout);
 
     if (!cookie) {
       throw new ClientError("No logout cookie found");
@@ -22,7 +22,7 @@ export const createLogoutCallbackHandler = <C extends PylonHttpContext>(
       });
     }
 
-    ctx.cookies.del(config.cookies.logout);
+    ctx.cookies.del(routerConfig.cookies.logout);
 
     await ctx.session.del();
 

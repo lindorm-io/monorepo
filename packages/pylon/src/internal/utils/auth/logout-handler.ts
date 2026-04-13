@@ -1,12 +1,11 @@
 import { ClientError } from "@lindorm/errors";
 import { z } from "zod/v4";
 import {
-  PylonAuthConfig,
+  PylonAuthRouterConfig,
   PylonHttpContext,
   PylonHttpMiddleware,
   PylonLogoutCookie,
 } from "../../../types";
-import { getAuthClient } from "./get-auth-client";
 
 export const logoutSchema = z.object({
   idTokenHint: z.string().optional(),
@@ -16,11 +15,11 @@ export const logoutSchema = z.object({
 });
 
 export const createLogoutHandler = <C extends PylonHttpContext>(
-  config: PylonAuthConfig,
+  routerConfig: PylonAuthRouterConfig,
 ): PylonHttpMiddleware<C> =>
   async function logoutHandler(ctx) {
-    if (await ctx.cookies.get(config.cookies.login)) {
-      ctx.cookies.del(config.cookies.login);
+    if (await ctx.cookies.get(routerConfig.cookies.login)) {
+      ctx.cookies.del(routerConfig.cookies.login);
     }
 
     if (!ctx.state.session) {
@@ -31,7 +30,7 @@ export const createLogoutHandler = <C extends PylonHttpContext>(
 
     if (
       ctx.data.redirectUri &&
-      !config.dynamicRedirectDomains.some((u) => {
+      !routerConfig.dynamicRedirectDomains.some((u) => {
         try {
           return new URL(ctx.data.redirectUri).origin === new URL(u).origin;
         } catch {
@@ -42,21 +41,19 @@ export const createLogoutHandler = <C extends PylonHttpContext>(
       throw new ClientError("Invalid redirect URI");
     }
 
-    const client = getAuthClient(ctx, config);
-
-    const { redirect, state } = client.logout({
+    const { redirect, state } = ctx.auth.logout({
       idTokenHint: ctx.data.idTokenHint ?? ctx.state.session.idToken,
       logoutHint: ctx.data.logoutHint,
       uiLocales: ctx.data.uiLocales,
     });
 
-    const redirectUri = ctx.data.redirectUri || config.staticRedirect.logout;
+    const redirectUri = ctx.data.redirectUri || routerConfig.staticRedirect.logout;
 
     if (!redirectUri) {
       throw new ClientError("Redirect URI is required", {
         debug: {
           query: ctx.data.redirectUri,
-          config: config.staticRedirect.logout,
+          config: routerConfig.staticRedirect.logout,
         },
       });
     }
@@ -66,7 +63,7 @@ export const createLogoutHandler = <C extends PylonHttpContext>(
       state,
     };
 
-    await ctx.cookies.set(config.cookies.logout, cookie, { expiry: "15m" });
+    await ctx.cookies.set(routerConfig.cookies.logout, cookie, { expiry: "15m" });
 
     ctx.redirect(redirect.toString());
   };

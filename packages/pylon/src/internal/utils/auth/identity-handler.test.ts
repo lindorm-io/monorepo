@@ -1,29 +1,25 @@
 import { ClientError } from "@lindorm/errors";
 import { identityHandler } from "./identity-handler";
 
-jest.mock("@lindorm/aegis", () => ({
-  Aegis: class Aegis {
-    static parse() {
-      return {
-        payload: {
-          claims: {
-            username: "username",
-          },
-          sub: "sub",
-          iss: "iss",
-          aud: "aud",
-          exp: 1234567890,
-        },
-      };
-    }
-  },
-}));
-
 describe("identityHandler", () => {
   let ctx: any;
 
   beforeEach(() => {
     ctx = {
+      aegis: {
+        verify: jest.fn().mockResolvedValue({
+          header: { baseFormat: "JWT" },
+          payload: {
+            claims: {
+              username: "username",
+            },
+            sub: "sub",
+            iss: "iss",
+            aud: "aud",
+            exp: 1234567890,
+          },
+        }),
+      },
       state: {
         session: {
           idToken: "idToken",
@@ -53,6 +49,12 @@ describe("identityHandler", () => {
 
   test("should throw on missing id token", async () => {
     ctx.state.session = {};
+
+    await expect(identityHandler(ctx, jest.fn())).rejects.toThrow(ClientError);
+  });
+
+  test("should throw when verified token is not jwt kind", async () => {
+    ctx.aegis.verify.mockResolvedValue({ decoded: {}, header: { baseFormat: "JWS" } });
 
     await expect(identityHandler(ctx, jest.fn())).rejects.toThrow(ClientError);
   });

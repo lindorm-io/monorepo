@@ -1,22 +1,36 @@
+import { ReadableTime } from "@lindorm/date";
 import { merge } from "@lindorm/utils";
-import { PylonAuthConfig, PylonAuthOptions } from "../../../types";
+import {
+  PylonAuthConfig,
+  PylonAuthOptions,
+  PylonAuthRefreshConfig,
+  PylonAuthRouterConfig,
+} from "../../../types";
 
-const DEFAULT: Omit<PylonAuthConfig, "clientId" | "clientSecret" | "issuer"> = {
-  codeChallengeMethod: "S256",
+const REFRESH_DEFAULTS: PylonAuthRefreshConfig = {
+  maxAge: "1h",
+  mode: "half_life",
+};
+
+const DEFAULT_TOKEN_EXPIRY: ReadableTime = "1d";
+
+const ROUTER_DEFAULTS: PylonAuthRouterConfig = {
   errorRedirect: "/error",
   pathPrefix: "/auth",
-  tokenExpiry: "1d",
 
-  defaults: {
+  authorize: {
     acrValues: null,
-    audience: null,
+    codeChallengeMethod: "S256",
     maxAge: null,
     prompt: null,
+    resource: null,
     responseType: "code",
     scope: ["openid", "offline_access", "email", "profile"],
   },
 
   dynamicRedirectDomains: [],
+
+  resourceKey: "resource",
 
   expose: {
     accessToken: false,
@@ -30,11 +44,6 @@ const DEFAULT: Omit<PylonAuthConfig, "clientId" | "clientSecret" | "issuer"> = {
     logout: "pylon_logout_session",
   },
 
-  refresh: {
-    maxAge: "1h",
-    mode: "half_life",
-  },
-
   staticRedirect: {
     login: null,
     logout: null,
@@ -42,10 +51,23 @@ const DEFAULT: Omit<PylonAuthConfig, "clientId" | "clientSecret" | "issuer"> = {
 };
 
 export const parseAuthConfig = (options: PylonAuthOptions): PylonAuthConfig => {
-  const merged = merge<PylonAuthConfig>(DEFAULT, options);
+  const router = options.router
+    ? merge<PylonAuthRouterConfig>(ROUTER_DEFAULTS, options.router)
+    : null;
 
-  merged.errorRedirect =
-    options.errorRedirect ?? merged.pathPrefix + merged.errorRedirect;
+  if (router) {
+    router.errorRedirect =
+      options.router?.errorRedirect ?? router.pathPrefix + router.errorRedirect;
+  }
 
-  return merged;
+  const refresh = merge<PylonAuthRefreshConfig>(REFRESH_DEFAULTS, options.refresh ?? {});
+
+  return {
+    clientId: options.clientId,
+    clientSecret: options.clientSecret,
+    issuer: options.issuer,
+    defaultTokenExpiry: options.defaultTokenExpiry ?? DEFAULT_TOKEN_EXPIRY,
+    refresh,
+    router,
+  };
 };
