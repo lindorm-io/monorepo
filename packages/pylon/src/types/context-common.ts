@@ -8,6 +8,7 @@ import { Middleware } from "@lindorm/middleware";
 import { IEntity, IProteusSession } from "@lindorm/proteus";
 import { Dict, Environment, Priority } from "@lindorm/types";
 import { AuthorizationState } from "./authorization";
+import { PylonAuthClaimsClient } from "./pylon-auth-client";
 import { PylonIoContextHttp } from "./pylon-io-context";
 import { PylonSocketEmitter } from "./pylon-socket-emitter";
 
@@ -47,6 +48,7 @@ type Conduits = {
 export type PylonCommonContext = {
   aegis: IAegis;
   amphora: IAmphora;
+  auth: PylonAuthClaimsClient;
   conduits: Conduits;
   entities: Dict<IEntity>;
   logger: ILogger;

@@ -1,91 +1,125 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
-exports[`parseAuthConfig should merge defaults with minimal options 1`] = `
+exports[`parseAuthConfig should merge defaults with custom router options 1`] = `
 {
   "clientId": "test-client-id",
   "clientSecret": "test-client-secret",
-  "codeChallengeMethod": "S256",
-  "cookies": {
-    "login": "pylon_login_session",
-    "logout": "pylon_logout_session",
-  },
-  "defaults": {
-    "acrValues": null,
-    "audience": null,
-    "maxAge": null,
-    "prompt": null,
-    "responseType": "code",
-    "scope": [
-      "openid",
-      "offline_access",
-      "email",
-      "profile",
-    ],
-  },
-  "dynamicRedirectDomains": [],
-  "errorRedirect": "/auth/error",
-  "expose": {
-    "accessToken": false,
-    "idToken": false,
-    "scope": false,
-    "subject": false,
-  },
+  "defaultTokenExpiry": "1d",
   "issuer": "https://issuer.com",
-  "pathPrefix": "/auth",
-  "refresh": {
-    "maxAge": "1h",
-    "mode": "half_life",
-  },
-  "staticRedirect": {
-    "login": null,
-    "logout": null,
-  },
-  "tokenExpiry": "1d",
-}
-`;
-
-exports[`parseAuthConfig should merge defaults with options 1`] = `
-{
-  "clientId": "test-client-id",
-  "clientSecret": "test-client-secret",
-  "codeChallengeMethod": "plain",
-  "cookies": {
-    "login": "pylon_login_session",
-    "logout": "pylon_logout_session",
-  },
-  "defaults": {
-    "acrValues": null,
-    "audience": null,
-    "maxAge": null,
-    "prompt": null,
-    "responseType": "code",
-    "scope": [
-      "openid",
-      "offline_access",
-      "email",
-      "profile",
-    ],
-  },
-  "dynamicRedirectDomains": [
-    "https://client.com",
-  ],
-  "errorRedirect": "/auth/error",
-  "expose": {
-    "accessToken": false,
-    "idToken": false,
-    "scope": false,
-    "subject": false,
-  },
-  "issuer": "https://issuer.com",
-  "pathPrefix": "/auth",
   "refresh": {
     "maxAge": "6m",
     "mode": "none",
   },
-  "staticRedirect": {
-    "login": "https://client.com/login/static",
-    "logout": null,
+  "router": {
+    "authorize": {
+      "acrValues": null,
+      "codeChallengeMethod": "plain",
+      "maxAge": null,
+      "prompt": null,
+      "resource": "https://api.example.com",
+      "responseType": "code",
+      "scope": [
+        "openid",
+        "offline_access",
+        "email",
+        "profile",
+      ],
+    },
+    "cookies": {
+      "login": "pylon_login_session",
+      "logout": "pylon_logout_session",
+    },
+    "dynamicRedirectDomains": [
+      "https://client.com",
+    ],
+    "errorRedirect": "/auth/error",
+    "expose": {
+      "accessToken": false,
+      "idToken": false,
+      "scope": false,
+      "subject": false,
+    },
+    "pathPrefix": "/auth",
+    "resourceKey": "audience",
+    "staticRedirect": {
+      "login": "https://client.com/login/static",
+      "logout": null,
+    },
   },
-  "tokenExpiry": "1d",
+}
+`;
+
+exports[`parseAuthConfig should merge defaults with router options 1`] = `
+{
+  "clientId": "test-client-id",
+  "clientSecret": "test-client-secret",
+  "defaultTokenExpiry": "1d",
+  "issuer": "https://issuer.com",
+  "refresh": {
+    "maxAge": "1h",
+    "mode": "half_life",
+  },
+  "router": {
+    "authorize": {
+      "acrValues": null,
+      "codeChallengeMethod": "S256",
+      "maxAge": null,
+      "prompt": null,
+      "resource": null,
+      "responseType": "code",
+      "scope": [
+        "openid",
+        "offline_access",
+        "email",
+        "profile",
+      ],
+    },
+    "cookies": {
+      "login": "pylon_login_session",
+      "logout": "pylon_logout_session",
+    },
+    "dynamicRedirectDomains": [],
+    "errorRedirect": "/auth/error",
+    "expose": {
+      "accessToken": false,
+      "idToken": false,
+      "scope": false,
+      "subject": false,
+    },
+    "pathPrefix": "/auth",
+    "resourceKey": "resource",
+    "staticRedirect": {
+      "login": null,
+      "logout": null,
+    },
+  },
+}
+`;
+
+exports[`parseAuthConfig should merge refresh defaults when refresh is partially specified 1`] = `
+{
+  "clientId": "test-client-id",
+  "clientSecret": "test-client-secret",
+  "defaultTokenExpiry": "1d",
+  "issuer": "https://issuer.com",
+  "refresh": {
+    "maxAge": "1h",
+    "mode": "max_age",
+  },
+  "router": null,
+}
+`;
+
+exports[`parseAuthConfig should return config with null router when no router options 1`] = `
+{
+  "clientId": "test-client-id",
+  "clientSecret": "test-client-secret",
+  "defaultTokenExpiry": "1d",
+  "issuer": "https://issuer.com",
+  "refresh": {
+    "maxAge": "1h",
+    "mode": "half_life",
+  },
+  "router": null,
 }
 `;

@@ -1,5 +1,6 @@
-import { ClientError } from "@lindorm/errors";
+import { AegisError } from "@lindorm/aegis";
 import MockDate from "mockdate";
+import { CannotEstablishSessionIdentity } from "../../../errors";
 import { parseTokenData } from "./parse-token-data";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
@@ -10,46 +11,40 @@ jest.mock("crypto", () => ({
   randomUUID: jest.fn().mockImplementation(() => "c8ff3952-8ba4-51a3-a4d5-2f0726c49524"),
 }));
 
-const isJwt = jest.fn().mockReturnValue(true);
-jest.mock("@lindorm/aegis", () => ({
-  Aegis: class Aegis {
-    static parse() {
-      return {
-        payload: {
-          expiresAt: new Date(Date.now() + 86400 * 1000),
-          issuedAt: new Date(),
-          sessionId: "85924874-c05c-5574-ad85-0cf2cf39be95",
-          subject: "4e294800-be7e-5954-b143-0ebdcf393906",
-        },
-      };
-    }
-    static isJwt() {
-      return isJwt();
-    }
+const createJwtVerifyResult = (overrides: Record<string, any> = {}) => ({
+  payload: {
+    expiresAt: new Date("2024-01-02T08:00:00.000Z"),
+    issuedAt: new Date("2024-01-01T08:00:00.000Z"),
+    sessionId: "85924874-c05c-5574-ad85-0cf2cf39be95",
+    subject: "4e294800-be7e-5954-b143-0ebdcf393906",
+    ...overrides,
   },
-}));
+  header: { baseFormat: "JWT" as const },
+  decoded: {},
+  token: "jwt-token",
+});
+
+const createJwsVerifyResult = () => ({
+  payload: "some-payload",
+  header: { baseFormat: "JWS" as const },
+  decoded: {},
+  token: "jws-token",
+});
 
 describe("parseTokenData", () => {
-  let ctx: any;
-  let config: any;
+  let aegis: any;
   let data: any;
 
   beforeEach(() => {
-    ctx = {
-      state: {
-        session: undefined,
-      },
-    };
-
-    config = {
-      tokenExpiry: "1h",
+    aegis = {
+      verify: jest.fn().mockResolvedValue(createJwtVerifyResult()),
     };
 
     data = {
       accessToken: "accessToken",
       code: "code",
       expiresIn: 3600,
-      expiresOn: Math.floor(Date.now() / 1000) + 3600,
+      expiresOn: Math.floor(new Date("2024-01-01T09:00:00.000Z").getTime() / 1000),
       idToken: "idToken",
       refreshToken: "refreshToken",
       scope: "scope1 scope2",
@@ -60,56 +55,159 @@ describe("parseTokenData", () => {
 
   afterEach(jest.clearAllMocks);
 
-  test("should parse access token correctly", () => {
+  test("should resolve subject and expiresAt from JWT access token", async () => {
     data.idToken = undefined;
     data.refreshToken = undefined;
 
-    expect(parseTokenData(ctx, config, data)).toMatchSnapshot();
+    const result = await parseTokenData(aegis, data);
+    expect(result).toMatchSnapshot();
   });
 
-  test("should not parse access token if not jwt", () => {
+  test("should fall through when access token verifies as JWS (non-JWT)", async () => {
+    aegis.verify.mockResolvedValueOnce(createJwsVerifyResult());
+    // second call for id_token should return JWT
+    aegis.verify.mockResolvedValueOnce(createJwtVerifyResult());
+
+    const result = await parseTokenData(aegis, data);
+    expect(result).toMatchSnapshot();
+  });
+
+  test("should fall through when access token verify throws AegisError (opaque token)", async () => {
+    aegis.verify.mockRejectedValueOnce(new AegisError("Invalid token type"));
+    // id_token verify returns JWT
+    aegis.verify.mockResolvedValueOnce(createJwtVerifyResult());
+
+    const result = await parseTokenData(aegis, data);
+    expect(result).toMatchSnapshot();
+  });
+
+  test("should resolve subject from id_token when access token has no subject", async () => {
+    aegis.verify
+      .mockResolvedValueOnce(createJwtVerifyResult({ subject: "" }))
+      .mockResolvedValueOnce(createJwtVerifyResult());
+
+    data.refreshToken = undefined;
+
+    const result = await parseTokenData(aegis, data);
+    expect(result).toMatchSnapshot();
+  });
+
+  test("should resolve subject via resolveSubject callback when no id_token", async () => {
+    aegis.verify.mockRejectedValueOnce(new AegisError("opaque"));
+
     data.idToken = undefined;
-    data.refreshToken = undefined;
 
-    isJwt.mockReturnValue(false);
+    const resolveSubject = jest.fn().mockResolvedValue("userinfo-subject");
 
-    expect(parseTokenData(ctx, config, data)).toMatchSnapshot();
+    const result = await parseTokenData(aegis, data, { resolveSubject });
+    expect(result).toMatchSnapshot();
+    expect(resolveSubject).toHaveBeenCalledWith("accessToken");
   });
 
-  test("should parse id token correctly", () => {
-    data.refreshToken = undefined;
+  test("should throw CannotEstablishSessionIdentity when no subject found", async () => {
+    aegis.verify.mockRejectedValueOnce(new AegisError("opaque"));
 
-    expect(parseTokenData(ctx, config, data)).toMatchSnapshot();
+    data.idToken = undefined;
+
+    await expect(parseTokenData(aegis, data)).rejects.toThrow(
+      CannotEstablishSessionIdentity,
+    );
   });
 
-  test("should parse all tokens correctly", () => {
-    expect(parseTokenData(ctx, config, data)).toMatchSnapshot();
+  test("should re-throw non-AegisError from verify", async () => {
+    const error = new TypeError("network failure");
+    aegis.verify.mockRejectedValueOnce(error);
+
+    await expect(parseTokenData(aegis, data)).rejects.toThrow(TypeError);
   });
 
-  test("should parse when session exists", () => {
-    ctx.state.session = {
+  test("should parse all tokens correctly", async () => {
+    const result = await parseTokenData(aegis, data, { defaultTokenExpiry: "1h" });
+    expect(result).toMatchSnapshot();
+  });
+
+  test("should preserve existing session fields on refresh", async () => {
+    const existingSession = {
       id: "35e8805b-2352-5c71-871a-19e8545540ce",
       accessToken: "existingAccessToken",
-      expiresAt: new Date(Date.now() + 4800 * 1000),
+      expiresAt: new Date("2024-01-01T09:20:00.000Z"),
       idToken: "existingIdToken",
-      issuedAt: new Date(Date.now() - 360 * 1000),
+      issuedAt: new Date("2024-01-01T07:54:00.000Z"),
       refreshToken: "existingRefreshToken",
       scope: ["scope1", "scope2"],
       subject: "efd9178b-778b-53ce-b929-da87c320140e",
     };
 
-    data = {
-      accessToken: "accessToken",
-    };
+    data = { accessToken: "accessToken" };
 
-    isJwt.mockReturnValue(false);
+    aegis.verify.mockRejectedValueOnce(new AegisError("opaque"));
 
-    expect(parseTokenData(ctx, config, data)).toMatchSnapshot();
+    const result = await parseTokenData(aegis, data, {
+      defaultTokenExpiry: "1h",
+      session: existingSession,
+    });
+
+    expect(result).toMatchSnapshot();
   });
 
-  test("should throw on missing access token", () => {
-    data.accessToken = undefined;
+  test("should compute expiresAt from expiresIn when no token claims", async () => {
+    aegis.verify.mockRejectedValueOnce(new AegisError("opaque"));
+    aegis.verify.mockResolvedValueOnce(createJwtVerifyResult());
 
-    expect(() => parseTokenData(ctx, config, data)).toThrow(ClientError);
+    delete data.expiresOn;
+
+    const result = await parseTokenData(aegis, data);
+    expect(result).toMatchSnapshot();
+  });
+
+  test("should resolve scope from id_token when access token is opaque and envelope has no scope", async () => {
+    aegis.verify
+      .mockRejectedValueOnce(new AegisError("opaque"))
+      .mockResolvedValueOnce(
+        createJwtVerifyResult({ scope: ["openid", "profile", "email"] }),
+      );
+
+    delete data.scope;
+    data.refreshToken = undefined;
+
+    const result = await parseTokenData(aegis, data);
+    expect(result.scope).toEqual(["openid", "profile", "email"]);
+    expect(result).toMatchSnapshot();
+  });
+
+  test("envelope scope takes precedence over id_token scope", async () => {
+    aegis.verify
+      .mockRejectedValueOnce(new AegisError("opaque"))
+      .mockResolvedValueOnce(createJwtVerifyResult({ scope: ["ignored-from-idtoken"] }));
+
+    data.scope = "envelope1 envelope2";
+    data.refreshToken = undefined;
+
+    const result = await parseTokenData(aegis, data);
+    expect(result.scope).toEqual(["envelope1", "envelope2"]);
+  });
+
+  test("access token JWT scope takes precedence over envelope", async () => {
+    aegis.verify.mockResolvedValueOnce(
+      createJwtVerifyResult({ scope: ["from-jwt-claim"] }),
+    );
+
+    data.scope = "envelope1 envelope2";
+    data.idToken = undefined;
+    data.refreshToken = undefined;
+
+    const result = await parseTokenData(aegis, data);
+    expect(result.scope).toEqual(["from-jwt-claim"]);
+  });
+
+  test("should compute expiresAt from tokenExpiry fallback", async () => {
+    aegis.verify.mockRejectedValueOnce(new AegisError("opaque"));
+    aegis.verify.mockResolvedValueOnce(createJwtVerifyResult());
+
+    delete data.expiresIn;
+    delete data.expiresOn;
+
+    const result = await parseTokenData(aegis, data, { defaultTokenExpiry: "2h" });
+    expect(result).toMatchSnapshot();
   });
 });

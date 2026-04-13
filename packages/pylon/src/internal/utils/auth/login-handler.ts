@@ -2,15 +2,13 @@ import { ClientError } from "@lindorm/errors";
 import { OpenIdAuthorizeRequestQuery } from "@lindorm/types";
 import { z } from "zod/v4";
 import {
-  PylonAuthConfig,
+  PylonAuthRouterConfig,
   PylonHttpContext,
   PylonHttpMiddleware,
   PylonLoginCookie,
 } from "../../../types";
-import { getAuthClient } from "./get-auth-client";
 
 export const loginSchema = z.object({
-  audience: z.string().optional(),
   acrValues: z.string().optional(),
   display: z.string().optional(),
   idTokenHint: z.string().optional(),
@@ -18,19 +16,18 @@ export const loginSchema = z.object({
   maxAge: z.coerce.number().optional(),
   prompt: z.string().optional(),
   redirectUri: z.url().optional(),
+  resource: z.string().optional(),
   scope: z.string().optional(),
   uiLocales: z.string().optional(),
 });
 
 export const createLoginHandler = (
-  config: PylonAuthConfig,
+  routerConfig: PylonAuthRouterConfig,
 ): PylonHttpMiddleware<PylonHttpContext<OpenIdAuthorizeRequestQuery>> =>
   async function loginHandler(ctx) {
-    if (await ctx.cookies.get(config.cookies.logout)) {
-      ctx.cookies.del(config.cookies.logout);
+    if (await ctx.cookies.get(routerConfig.cookies.logout)) {
+      ctx.cookies.del(routerConfig.cookies.logout);
     }
-
-    const client = getAuthClient(ctx, config);
 
     const {
       codeChallengeMethod,
@@ -40,21 +37,21 @@ export const createLoginHandler = (
       responseType,
       scope,
       state,
-    } = client.login({
-      audience: ctx.data.audience,
+    } = ctx.auth.login({
       acrValues: ctx.data.acrValues,
       display: ctx.data.display,
       idTokenHint: ctx.data.idTokenHint,
       loginHint: ctx.data.loginHint,
       maxAge: ctx.data.maxAge,
       prompt: ctx.data.prompt,
+      resource: ctx.data.resource,
       scope: ctx.data.scope,
       uiLocales: ctx.data.uiLocales,
     });
 
     if (
       ctx.data.redirectUri &&
-      !config.dynamicRedirectDomains.some((u) => {
+      !routerConfig.dynamicRedirectDomains.some((u) => {
         try {
           return new URL(ctx.data.redirectUri).origin === new URL(u).origin;
         } catch {
@@ -65,13 +62,13 @@ export const createLoginHandler = (
       throw new ClientError("Invalid redirect URI");
     }
 
-    const redirectUri = ctx.data.redirectUri || config.staticRedirect.login;
+    const redirectUri = ctx.data.redirectUri || routerConfig.staticRedirect.login;
 
     if (!redirectUri) {
       throw new ClientError("Redirect URI is required", {
         debug: {
           query: ctx.data.redirectUri,
-          config: config.staticRedirect.login,
+          config: routerConfig.staticRedirect.login,
         },
       });
     }
@@ -86,7 +83,7 @@ export const createLoginHandler = (
       state,
     };
 
-    await ctx.cookies.set(config.cookies.login, cookie, {
+    await ctx.cookies.set(routerConfig.cookies.login, cookie, {
       encrypted: true,
       httpOnly: true,
       expiry: "15m",

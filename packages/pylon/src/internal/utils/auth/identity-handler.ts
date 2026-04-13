@@ -1,6 +1,5 @@
-import { Aegis, ParsedJwt } from "@lindorm/aegis";
+import { isParsedJwt } from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
-import { OpenIdClaims } from "@lindorm/types";
 import { PylonHttpMiddleware } from "../../../types";
 
 export const identityHandler: PylonHttpMiddleware = async (ctx) => {
@@ -14,9 +13,13 @@ export const identityHandler: PylonHttpMiddleware = async (ctx) => {
     throw new ClientError("ID token not found");
   }
 
-  const {
-    payload: { claims, ...rest },
-  } = Aegis.parse<ParsedJwt<OpenIdClaims>>(ctx.state.session.idToken);
+  const verified = await ctx.aegis.verify(ctx.state.session.idToken);
+
+  if (!isParsedJwt(verified)) {
+    throw new ClientError("Invalid ID token format");
+  }
+
+  const { claims, ...rest } = verified.payload;
 
   ctx.body = {
     ...claims,

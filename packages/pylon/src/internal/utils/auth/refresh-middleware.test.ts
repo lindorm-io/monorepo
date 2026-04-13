@@ -1,31 +1,38 @@
 import { ClientError } from "@lindorm/errors";
 import MockDate from "mockdate";
-import { getAuthClient as _getAuthClient } from "./get-auth-client";
 import { parseTokenData as _parseTokenData } from "./parse-token-data";
 import { createRefreshMiddleware } from "./refresh-middleware";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate);
 
-jest.mock("./get-auth-client");
 jest.mock("./parse-token-data");
 
-const getAuthClient = _getAuthClient as jest.Mock;
 const parseTokenData = _parseTokenData as jest.Mock;
 
 describe("createRefreshMiddleware", () => {
-  let config: any;
+  let authConfig: any;
   let ctx: any;
 
   beforeEach(() => {
-    config = {
+    authConfig = {
       refresh: {
         maxAge: "12h",
         mode: "force",
       },
+      defaultTokenExpiry: "1d",
     };
 
     ctx = {
+      aegis: {
+        verify: jest.fn(),
+      },
+      auth: {
+        token: jest.fn().mockResolvedValue({ data: true }),
+      },
+      logger: {
+        warn: jest.fn(),
+      },
       session: {
         get: jest.fn(),
         set: jest.fn(),
@@ -45,59 +52,55 @@ describe("createRefreshMiddleware", () => {
       },
     };
 
-    getAuthClient.mockReturnValue({
-      token: jest.fn().mockResolvedValue({ data: true }),
-    });
-
-    parseTokenData.mockReturnValue("parsedTokenData");
+    parseTokenData.mockResolvedValue("parsedTokenData");
   });
 
   afterEach(jest.clearAllMocks);
 
   test("should resolve force", async () => {
     await expect(
-      createRefreshMiddleware(config)(ctx, jest.fn()),
+      createRefreshMiddleware(authConfig)(ctx, jest.fn()),
     ).resolves.toBeUndefined();
 
     expect(ctx.session.set).toHaveBeenCalled();
   });
 
   test("should resolve half_life", async () => {
-    config.refresh.mode = "half_life";
+    authConfig.refresh.mode = "half_life";
 
     await expect(
-      createRefreshMiddleware(config)(ctx, jest.fn()),
+      createRefreshMiddleware(authConfig)(ctx, jest.fn()),
     ).resolves.toBeUndefined();
 
     expect(ctx.session.set).toHaveBeenCalled();
   });
 
   test("should resolve max_age", async () => {
-    config.refresh.mode = "max_age";
+    authConfig.refresh.mode = "max_age";
 
     await expect(
-      createRefreshMiddleware(config)(ctx, jest.fn()),
+      createRefreshMiddleware(authConfig)(ctx, jest.fn()),
     ).resolves.toBeUndefined();
 
     expect(ctx.session.set).toHaveBeenCalled();
   });
 
   test("should not resolve max_age", async () => {
-    config.refresh.maxAge = "43201s";
-    config.refresh.mode = "max_age";
+    authConfig.refresh.maxAge = "43201s";
+    authConfig.refresh.mode = "max_age";
 
     await expect(
-      createRefreshMiddleware(config)(ctx, jest.fn()),
+      createRefreshMiddleware(authConfig)(ctx, jest.fn()),
     ).resolves.toBeUndefined();
 
     expect(ctx.session.set).not.toHaveBeenCalled();
   });
 
   test("should not resolve none", async () => {
-    config.refresh.mode = "none";
+    authConfig.refresh.mode = "none";
 
     await expect(
-      createRefreshMiddleware(config)(ctx, jest.fn()),
+      createRefreshMiddleware(authConfig)(ctx, jest.fn()),
     ).resolves.toBeUndefined();
 
     expect(ctx.session.set).not.toHaveBeenCalled();
@@ -106,7 +109,7 @@ describe("createRefreshMiddleware", () => {
   test("should throw on missing session", async () => {
     ctx.state.session = null;
 
-    await expect(createRefreshMiddleware(config)(ctx, jest.fn())).rejects.toThrow(
+    await expect(createRefreshMiddleware(authConfig)(ctx, jest.fn())).rejects.toThrow(
       ClientError,
     );
   });

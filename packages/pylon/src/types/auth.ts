@@ -26,26 +26,39 @@ export const PYLON_REFRESH_MODE = ["force", "half_life", "max_age", "none"] as c
 
 export type PylonRefreshMode = (typeof PYLON_REFRESH_MODE)[number];
 
-export type PylonAuthConfig = {
-  clientId: string;
-  clientSecret: string;
-  issuer: string;
+export type PylonAuthRefreshConfig = {
+  maxAge: ReadableTime;
+  mode: PylonRefreshMode;
+};
 
+export type PylonAuthAuthorizeConfig = {
+  acrValues: string | null;
   codeChallengeMethod: PkceMethod;
+  maxAge: ReadableTime | null;
+  prompt: OpenIdPromptMode | null;
+  resource: string | null;
+  responseType: OpenIdResponseType;
+  scope: Array<OpenIdScope>;
+};
+
+export type PylonAuthResourceKey = "resource" | "audience";
+
+export type PylonAuthRouterConfig = {
   errorRedirect: string;
   pathPrefix: string;
-  tokenExpiry: ReadableTime;
 
-  defaults: {
-    acrValues: string | null;
-    audience: string | null;
-    maxAge: ReadableTime | null;
-    prompt: OpenIdPromptMode | null;
-    responseType: OpenIdResponseType;
-    scope: Array<OpenIdScope>;
-  };
+  authorize: PylonAuthAuthorizeConfig;
 
   dynamicRedirectDomains: Array<string>;
+
+  /**
+   * Wire-format name for the Resource Indicator on the authorize
+   * request. Defaults to `"resource"` (RFC 8707). Set to `"audience"`
+   * for Auth0 tenants without the Resource Parameter Compatibility
+   * Profile enabled, or any OP that only recognises the proprietary
+   * `audience` parameter.
+   */
+  resourceKey: PylonAuthResourceKey;
 
   expose: {
     accessToken: boolean;
@@ -59,19 +72,26 @@ export type PylonAuthConfig = {
     logout: string;
   };
 
-  refresh: {
-    maxAge: ReadableTime;
-    mode: PylonRefreshMode;
-  };
-
   staticRedirect: {
     login: string | null;
     logout: string | null;
   };
 };
 
-export type PylonAuthOptions = Pick<
-  PylonAuthConfig,
-  "clientId" | "clientSecret" | "issuer"
-> &
-  DeepPartial<Omit<PylonAuthConfig, "clientId" | "clientSecret" | "issuer">>;
+export type PylonAuthConfig = {
+  clientId: string;
+  clientSecret: string;
+  issuer: string;
+  defaultTokenExpiry: ReadableTime;
+  refresh: PylonAuthRefreshConfig;
+  router: PylonAuthRouterConfig | null;
+};
+
+export type PylonAuthOptions = {
+  clientId: string;
+  clientSecret: string;
+  issuer: string;
+  defaultTokenExpiry?: ReadableTime;
+  refresh?: Partial<PylonAuthRefreshConfig>;
+  router?: DeepPartial<PylonAuthRouterConfig>;
+};

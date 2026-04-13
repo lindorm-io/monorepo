@@ -1,7 +1,6 @@
 import { ms } from "@lindorm/date";
 import { ClientError, ServerError } from "@lindorm/errors";
 import { PylonAuthConfig, PylonHttpContext, PylonHttpMiddleware } from "../../../types";
-import { getAuthClient } from "./get-auth-client";
 import { parseTokenData } from "./parse-token-data";
 
 const getAutoRefresh = (ctx: PylonHttpContext, config: PylonAuthConfig): number => {
@@ -39,14 +38,15 @@ export const createRefreshMiddleware = <C extends PylonHttpContext>(
 
       if (now >= autoRefresh) {
         try {
-          const client = getAuthClient(ctx, config);
-
-          const data = await client.token({
+          const data = await ctx.auth.token({
             grantType: "refresh_token",
             refreshToken: ctx.state.session.refreshToken,
           });
 
-          ctx.state.session = parseTokenData(ctx, config, data);
+          ctx.state.session = await parseTokenData(ctx.aegis, data, {
+            defaultTokenExpiry: config.defaultTokenExpiry,
+            session: ctx.state.session,
+          });
 
           await ctx.session.set(ctx.state.session);
         } catch (error) {

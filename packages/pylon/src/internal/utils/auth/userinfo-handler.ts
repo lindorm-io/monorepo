@@ -1,10 +1,9 @@
 import { ClientError } from "@lindorm/errors";
-import { PylonAuthConfig, PylonHttpContext, PylonHttpMiddleware } from "../../../types";
-import { getAuthClient } from "./get-auth-client";
+import { PylonHttpContext, PylonHttpMiddleware } from "../../../types";
 
-export const createUserinfoHandler = <C extends PylonHttpContext>(
-  config: PylonAuthConfig,
-): PylonHttpMiddleware<C> =>
+export const createUserinfoHandler = <
+  C extends PylonHttpContext,
+>(): PylonHttpMiddleware<C> =>
   async function userinfoHandler(ctx) {
     if (!ctx.state.session) {
       throw new ClientError("Session not found", {
@@ -12,8 +11,6 @@ export const createUserinfoHandler = <C extends PylonHttpContext>(
       });
     }
 
-    const client = getAuthClient(ctx, config);
-
-    ctx.body = await client.userinfo(ctx.state.session.accessToken);
+    ctx.body = await ctx.auth.userinfo();
     ctx.status = 200;
   };

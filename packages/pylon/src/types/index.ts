@@ -15,6 +15,7 @@ export * from "./pylon-callback-options";
 export * from "./pylon-http-handler";
 export * from "./pylon-event-map";
 export * from "./pylon-io-context";
+export * from "./pylon-auth-client";
 export * from "./pylon-options";
 export * from "./pylon-socket";
 export * from "./pylon-socket-emitter";
