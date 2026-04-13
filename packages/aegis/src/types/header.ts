@@ -98,7 +98,7 @@ export type CertificateHeaderFields = {
 
 export type TokenEncryptOrSignOptions = Pick<TokenHeaderOptions, "jwk">;
 
-export type BindCertificateMode = "thumbprint" | "chain";
+export type BindCertificateMode = "thumbprint" | "chain" | "none";
 
 export type RefinedTokenHeader<A> = Omit<
   ParsedTokenHeader,
