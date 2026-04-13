@@ -1,4 +1,4 @@
-import { Aegis, ParsedJwt } from "@lindorm/aegis";
+import { AegisError, IAegis, isParsedJwt } from "@lindorm/aegis";
 import { IPylonSession } from "../../../interfaces";
 import { PylonSocket } from "../../../types";
 import { assertSessionStillValid } from "./assert-session-still-valid";
@@ -6,12 +6,14 @@ import { assertSessionStillValid } from "./assert-session-still-valid";
 export type SessionLookup = (sessionId: string) => Promise<IPylonSession | null>;
 
 type CreateSessionRefreshHandlerOptions = {
+  aegis: IAegis;
   lookup: SessionLookup;
   sessionId: string;
   socket: PylonSocket;
 };
 
 export const createSessionRefreshHandler = ({
+  aegis,
   lookup,
   sessionId,
   socket,
@@ -22,15 +24,29 @@ export const createSessionRefreshHandler = ({
 
     assertSessionStillValid(session, now);
 
-    const parsed = Aegis.parse<ParsedJwt>(session.accessToken);
     socket.data.session = session;
-    socket.data.tokens.bearer = parsed;
 
-    const auth = socket.data.pylon.auth;
-    if (auth) {
-      const expiresAt = parsed.payload.expiresAt ?? new Date(0);
-      auth.getExpiresAt = () => expiresAt;
-      auth.authExpiredEmittedAt = null;
+    try {
+      const verified = await aegis.verify(session.accessToken);
+      if (isParsedJwt(verified)) {
+        socket.data.tokens.bearer = verified;
+
+        const auth = socket.data.pylon.auth;
+        if (auth) {
+          const expiresAt = verified.payload.expiresAt ?? new Date(0);
+          auth.getExpiresAt = () => expiresAt;
+          auth.authExpiredEmittedAt = null;
+        }
+      }
+    } catch (err) {
+      if (!(err instanceof AegisError)) throw err;
+      // Token unreadable — session is still updated, fall back to session.expiresAt
+      const auth = socket.data.pylon.auth;
+      if (auth) {
+        const expiresAt = session.expiresAt ?? new Date(0);
+        auth.getExpiresAt = () => expiresAt;
+        auth.authExpiredEmittedAt = null;
+      }
     }
   };
 };

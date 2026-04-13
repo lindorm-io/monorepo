@@ -39,6 +39,10 @@ export const registerAuthRefreshListener = (
           status: err.status ?? 401,
         },
       });
+
+      if (socket.data?.pylon?.auth?.strategy === "session") {
+        socket.disconnect(true);
+      }
     }
   });
 };

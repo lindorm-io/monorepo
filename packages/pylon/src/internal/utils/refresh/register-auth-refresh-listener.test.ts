@@ -11,6 +11,7 @@ const makeSocket = (auth?: PylonSocketAuth): any => {
     on: jest.fn((event: string, handler: Function) => {
       handlers[event] = handler;
     }),
+    disconnect: jest.fn(),
     handlers,
     data: {
       pylon: auth ? { auth } : {},
@@ -89,6 +90,55 @@ describe("registerAuthRefreshListener", () => {
     );
     const payload = ack.mock.calls[0][0];
     expect(payload.error).toMatchSnapshot();
+    expect(socket.disconnect).not.toHaveBeenCalled();
+  });
+
+  test("disconnects socket after failed session refresh", async () => {
+    const refresh = jest.fn(async () => {
+      throw new Error("session revoked");
+    });
+    const auth: PylonSocketAuth = {
+      strategy: "session",
+      getExpiresAt: () => new Date(),
+      refresh,
+      authExpiredEmittedAt: null,
+    };
+    const socket = makeSocket(auth);
+    registerAuthRefreshListener(socket, createMockLogger());
+
+    const ack = jest.fn();
+    const handler = socket.handlers[PYLON_AUTH_REFRESH_EVENT];
+
+    await handler({}, ack);
+
+    expect(ack).toHaveBeenCalledWith(
+      expect.objectContaining({ __pylon: true, ok: false }),
+    );
+    expect(socket.disconnect).toHaveBeenCalledWith(true);
+  });
+
+  test("does NOT disconnect socket after failed bearer refresh", async () => {
+    const refresh = jest.fn(async () => {
+      throw new Error("token expired");
+    });
+    const auth: PylonSocketAuth = {
+      strategy: "bearer",
+      getExpiresAt: () => new Date(),
+      refresh,
+      authExpiredEmittedAt: null,
+    };
+    const socket = makeSocket(auth);
+    registerAuthRefreshListener(socket, createMockLogger());
+
+    const ack = jest.fn();
+    const handler = socket.handlers[PYLON_AUTH_REFRESH_EVENT];
+
+    await handler({}, ack);
+
+    expect(ack).toHaveBeenCalledWith(
+      expect.objectContaining({ __pylon: true, ok: false }),
+    );
+    expect(socket.disconnect).not.toHaveBeenCalled();
   });
 
   test("tolerates missing ack (fire-and-forget)", async () => {

@@ -1,25 +1,22 @@
-import { Aegis } from "@lindorm/aegis";
+import { AegisError } from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
 import { PylonSocketAuth } from "../../../types";
 import { createSessionRefreshHandler } from "./create-session-refresh-handler";
 
-jest.mock("@lindorm/aegis", () => ({
-  ...jest.requireActual("@lindorm/aegis"),
-  Aegis: { parse: jest.fn() },
-}));
-
 describe("createSessionRefreshHandler", () => {
+  let aegis: any;
   let auth: PylonSocketAuth;
   let socket: any;
   const parsedExp = new Date("2026-04-12T12:00:00.000Z");
 
   beforeEach(() => {
-    (Aegis.parse as jest.Mock).mockReset();
-    (Aegis.parse as jest.Mock).mockReturnValue({
-      payload: { subject: "alice", expiresAt: parsedExp },
-      header: {},
-      token: "new-session-jwt",
-    });
+    aegis = {
+      verify: jest.fn().mockResolvedValue({
+        payload: { subject: "alice", expiresAt: parsedExp },
+        header: { baseFormat: "JWT" },
+        token: "new-session-jwt",
+      }),
+    };
 
     auth = {
       strategy: "session",
@@ -48,6 +45,7 @@ describe("createSessionRefreshHandler", () => {
     } as any;
 
     const handler = createSessionRefreshHandler({
+      aegis,
       lookup: async () => futureSession,
       sessionId: "sess-1",
       socket,
@@ -61,8 +59,36 @@ describe("createSessionRefreshHandler", () => {
     expect(auth.authExpiredEmittedAt).toBeNull();
   });
 
+  test("falls back to session.expiresAt when token is unreadable", async () => {
+    aegis.verify.mockRejectedValue(new AegisError("bad token"));
+
+    const futureSession = {
+      id: "sess-1",
+      accessToken: "bad-token",
+      expiresAt: new Date("2099-06-01T00:00:00.000Z"),
+      issuedAt: new Date(),
+      scope: ["openid"],
+      subject: "alice",
+    } as any;
+
+    const handler = createSessionRefreshHandler({
+      aegis,
+      lookup: async () => futureSession,
+      sessionId: "sess-1",
+      socket,
+    });
+
+    await handler({});
+
+    expect(socket.data.session).toBe(futureSession);
+    expect(socket.data.tokens.bearer).toBeUndefined();
+    expect(auth.getExpiresAt()).toEqual(new Date("2099-06-01T00:00:00.000Z"));
+    expect(auth.authExpiredEmittedAt).toBeNull();
+  });
+
   test("throws when lookup returns null", async () => {
     const handler = createSessionRefreshHandler({
+      aegis,
       lookup: async () => null,
       sessionId: "sess-1",
       socket,
@@ -82,6 +108,7 @@ describe("createSessionRefreshHandler", () => {
     } as any;
 
     const handler = createSessionRefreshHandler({
+      aegis,
       lookup: async () => pastSession,
       sessionId: "sess-1",
       socket,

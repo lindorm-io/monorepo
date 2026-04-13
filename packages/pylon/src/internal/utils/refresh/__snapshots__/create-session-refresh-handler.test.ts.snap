@@ -2,7 +2,9 @@
 
 exports[`createSessionRefreshHandler updates session, tokens, and auth state on successful lookup 1`] = `
 {
-  "header": {},
+  "header": {
+    "baseFormat": "JWT",
+  },
   "payload": {
     "expiresAt": 2026-04-12T12:00:00.000Z,
     "subject": "alice",
