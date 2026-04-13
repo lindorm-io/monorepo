@@ -1,0 +1,5 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`x509-thumbprints x5t returns base64url SHA-1 of leaf DER 1`] = `"83RTODK4dhmAaqY7_fQX8atsXG4"`;
+
+exports[`x509-thumbprints x5tS256 returns base64url SHA-256 of leaf DER 1`] = `"PQeZGdGGGG1A9Qr4z0qBh_TJrmoi5B-6jbMUOGn34QA"`;

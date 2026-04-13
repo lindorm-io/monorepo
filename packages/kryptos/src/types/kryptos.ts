@@ -43,6 +43,9 @@ export type KryptosJwk = {
   use: KryptosUse;
   x?: string;
   y?: string;
+  x5c?: Array<string>;
+  x5t?: string;
+  "x5t#S256"?: string;
 };
 
 export type KryptosKey = KryptosString | KryptosBuffer | KryptosJwk;
