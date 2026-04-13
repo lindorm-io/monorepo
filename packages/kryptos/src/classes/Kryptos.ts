@@ -399,9 +399,6 @@ export class Kryptos implements IKryptos {
           ...(this.encryption ? { enc: this.encryption } : {}),
           use: this.use,
           kty: this.type,
-          x5c: this.x5c,
-          x5t: this.x5t,
-          "x5t#S256": this.x5tS256,
         }) as KryptosJwk;
       }
 

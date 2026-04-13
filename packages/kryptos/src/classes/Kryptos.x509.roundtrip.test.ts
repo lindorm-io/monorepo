@@ -20,9 +20,9 @@ jest.mock("crypto", () => ({
 describe("Kryptos (X.509 round-trip)", () => {
   const fixedDates = {
     id: "3b9a051f-e1ec-562b-bf92-7cf92ec465ba",
-    createdAt: new Date("2026-04-13T12:00:00.000Z"),
-    notBefore: new Date("2026-04-13T12:00:00.000Z"),
-    updatedAt: new Date("2026-04-13T12:00:00.000Z"),
+    createdAt: new Date("2020-01-01T00:00:00.000Z"),
+    notBefore: new Date("2020-01-01T00:00:00.000Z"),
+    updatedAt: new Date("2020-01-01T00:00:00.000Z"),
   };
 
   const baseEcOptions = {
