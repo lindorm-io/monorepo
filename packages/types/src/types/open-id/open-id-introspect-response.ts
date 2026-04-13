@@ -102,7 +102,7 @@ export type OpenIdIntrospectResponse = {
    * Type of the token as defined in Section 5.1 of
    * OAuth 2.0 [RFC6749].
    */
-  tokenType: "access_token" | "refresh_token" | null;
+  tokenType: string | null;
 
   /**
    * OPTIONAL
