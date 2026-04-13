@@ -7,7 +7,6 @@ import { KryptosError } from "../errors";
 import { IKryptos } from "../interfaces";
 import {
   KryptosAlgorithm,
-  KryptosAttributes,
   KryptosBuffer,
   KryptosCurve,
   KryptosDB,
@@ -18,7 +17,6 @@ import {
   KryptosJwk,
   KryptosKey,
   KryptosKeys,
-  KryptosMetadata,
   KryptosOperation,
   KryptosOptions,
   KryptosString,
@@ -111,7 +109,7 @@ export class Kryptos implements IKryptos {
         ? modulusSize({ privateKey: this._privateKey, publicKey: this._publicKey! })
         : null);
 
-    if (options.certificateChain !== undefined) {
+    if (options.certificateChain != null) {
       if (!this._publicKey || this._publicKey.length === 0) {
         throw new KryptosError(
           "certificateChain requires a kryptos with a public key (oct keys are not supported)",
@@ -292,6 +290,17 @@ export class Kryptos implements IKryptos {
     return this._certificateChain?.map((entry) => entry.der.toString("base64"));
   }
 
+  public get certificateChainPem(): string | null {
+    if (!this._certificateChain) return null;
+    return this._certificateChain
+      .map((entry) => {
+        const b64 = entry.der.toString("base64");
+        const lines = b64.match(/.{1,64}/g)?.join("\n") ?? b64;
+        return `-----BEGIN CERTIFICATE-----\n${lines}\n-----END CERTIFICATE-----`;
+      })
+      .join("\n");
+  }
+
   public get x5t(): string | undefined {
     if (!this._certificateChain) return undefined;
     return x5tThumbprint(this._certificateChain[0].der);
@@ -420,7 +429,7 @@ export class Kryptos implements IKryptos {
     this.assertNotDisposed();
 
     const { privateKey, publicKey } = this.export("b64");
-    return {
+    return removeUndefined<KryptosDB>({
       id: this.id,
       algorithm: this.algorithm,
       createdAt: this.createdAt,
@@ -440,7 +449,8 @@ export class Kryptos implements IKryptos {
       use: this.use,
       privateKey,
       publicKey,
-    };
+      certificateChain: this.x5c,
+    });
   }
 
   public toEnvString(): string {
@@ -450,7 +460,7 @@ export class Kryptos implements IKryptos {
   }
 
   public toJSON(): KryptosJSON {
-    return removeUndefined<KryptosAttributes & KryptosMetadata>({
+    return removeUndefined<KryptosJSON>({
       id: this.id,
       algorithm: this.algorithm,
       createdAt: this.createdAt,
@@ -474,6 +484,7 @@ export class Kryptos implements IKryptos {
       type: this.type,
       updatedAt: this.updatedAt,
       use: this.use,
+      certificateChain: this.x5c,
     });
   }
 

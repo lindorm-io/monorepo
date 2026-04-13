@@ -1,10 +1,12 @@
 import { changeKeys } from "@lindorm/case";
 import { KryptosError } from "../../errors";
-import { KryptosOptions, KryptosType, UnknownJwk } from "../../types";
+import { KryptosJwk, KryptosOptions, KryptosType, UnknownJwk } from "../../types";
 
 const TYPES: Array<KryptosType> = ["EC", "oct", "OKP", "RSA"] as const;
 
-export const parseJwkOptions = (options: UnknownJwk): KryptosOptions => {
+export const parseJwkOptions = (
+  options: UnknownJwk & Partial<KryptosJwk>,
+): KryptosOptions => {
   const jwk = changeKeys(options, "snake");
 
   if (!TYPES.includes(jwk.kty)) {
@@ -27,6 +29,7 @@ export const parseJwkOptions = (options: UnknownJwk): KryptosOptions => {
     type: jwk.kty,
     updatedAt: jwk.uat ? new Date(jwk.uat * 1000) : undefined,
     use: jwk.use,
+    certificateChain: jwk.x5c,
   };
 };
 
@@ -48,4 +51,5 @@ export const parseStdOptions = (options: Options): KryptosOptions => ({
   type: options.type,
   updatedAt: options.updatedAt,
   use: options.use,
+  certificateChain: options.certificateChain,
 });

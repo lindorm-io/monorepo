@@ -14,6 +14,7 @@ import {
 export interface IKryptos extends Disposable, KryptosAttributes, KryptosMetadata {
   readonly thumbprint: string;
   readonly certificateChain: Array<X509Certificate> | undefined;
+  readonly certificateChainPem: string | null;
   readonly x5c: Array<string> | undefined;
   readonly x5t: string | undefined;
   readonly x5tS256: string | undefined;
