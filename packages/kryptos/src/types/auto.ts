@@ -2,6 +2,7 @@
 
 import { Optional } from "@lindorm/types";
 import { KryptosAttributes } from "./attributes";
+import { KryptosCertificateOption } from "./certificate";
 
 type Attributes = Omit<KryptosAttributes, "curve" | "operations" | "type" | "use">;
 
@@ -19,4 +20,4 @@ export type KryptosAuto = Optional<
   | "ownerId"
   | "purpose"
   | "updatedAt"
->;
+> & { certificate?: KryptosCertificateOption };
