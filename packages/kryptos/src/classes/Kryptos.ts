@@ -2,7 +2,7 @@ import { B64 } from "@lindorm/b64";
 import { getUnixTime, isAfter, isEqual } from "@lindorm/date";
 import { isBuffer } from "@lindorm/is";
 import { removeEmpty, removeUndefined } from "@lindorm/utils";
-import { randomUUID, X509Certificate } from "crypto";
+import { randomUUID } from "crypto";
 import { KryptosError } from "../errors";
 import { IKryptos } from "../interfaces";
 import {
@@ -23,6 +23,7 @@ import {
   KryptosType,
   KryptosUse,
   LindormJwk,
+  ParsedX509Certificate,
   RsaModulus,
 } from "../types";
 import { ExportCache } from "#internal/types/export-cache";
@@ -237,7 +238,7 @@ export class Kryptos implements IKryptos {
 
   // x509
 
-  public get certificateChain(): Array<X509Certificate> | undefined {
+  public get certificateChain(): Array<ParsedX509Certificate> | undefined {
     return this._certificateChain?.map((entry) => entry.cert);
   }
 

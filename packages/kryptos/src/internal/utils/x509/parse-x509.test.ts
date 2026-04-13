@@ -11,7 +11,7 @@ describe("parseX509", () => {
     const result = parseX509(TEST_X509_LEAF_PEM);
 
     expect(result).toHaveLength(1);
-    expect(result[0].cert.subject).toMatchSnapshot();
+    expect(result[0].cert.subject.commonName).toMatchSnapshot();
     expect(result[0].der).toBeInstanceOf(Buffer);
   });
 
@@ -19,7 +19,7 @@ describe("parseX509", () => {
     const result = parseX509(TEST_X509_LEAF_B64_DER);
 
     expect(result).toHaveLength(1);
-    expect(result[0].cert.subject).toMatchSnapshot();
+    expect(result[0].cert.subject.commonName).toMatchSnapshot();
   });
 
   test("parses an array of PEM certs (one cert per element)", () => {
@@ -30,7 +30,7 @@ describe("parseX509", () => {
     ]);
 
     expect(result).toHaveLength(3);
-    expect(result.map((r) => r.cert.subject)).toMatchSnapshot();
+    expect(result.map((r) => r.cert.subject.commonName)).toMatchSnapshot();
   });
 
   test("parses concatenated PEM blocks in a single string", () => {
