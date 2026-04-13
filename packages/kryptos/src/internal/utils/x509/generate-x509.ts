@@ -17,6 +17,8 @@ import {
   keyUsageExt,
   subjectAlternativeNameExt,
   subjectKeyIdentifierExt,
+  X509BasicConstraints,
+  X509KeyUsageFlag,
 } from "./encode-extensions";
 import { encodeX509Name, X509NameInput } from "./encode-name";
 import { encodeX509Validity } from "./encode-validity";
@@ -30,7 +32,8 @@ export type GenerateX509Options = {
   issuer: X509NameInput;
   notBefore: Date;
   notAfter: Date;
-  keyUsage: "sig" | "enc";
+  basicConstraints: X509BasicConstraints;
+  keyUsage: ReadonlyArray<X509KeyUsageFlag>;
   subjectAlternativeNames: ReadonlyArray<string>;
   authorityKeyIdentifier?: Buffer;
   serialNumber?: Buffer;
@@ -44,33 +47,32 @@ const buildSerialNumber = (provided?: Buffer): Buffer => {
     return provided;
   }
   const bytes = randomBytes(16);
-  // Clear the top bit to stay a positive integer after DER's two-complement
-  // normalization. Ensures we don't need encodeInteger's sign-extension byte.
   bytes[0] &= 0x7f;
   if (bytes[0] === 0x00) bytes[0] = 0x01;
   return bytes;
 };
 
-const buildExtensions = (
-  options: GenerateX509Options,
-  subjectSpki: Buffer,
-  isSelfSigned: boolean,
-): Buffer => {
-  const extensions: Array<Buffer> = [];
-
-  extensions.push(basicConstraintsExt(isSelfSigned));
-
-  if (options.keyUsage === "sig") {
-    extensions.push(
-      keyUsageExt({
-        digitalSignature: true,
-        ...(isSelfSigned ? { keyCertSign: true, crlSign: true } : {}),
-      }),
-    );
-  } else {
-    extensions.push(keyUsageExt({ keyEncipherment: true, dataEncipherment: true }));
+const assertKeyUsageAgainstBasicConstraints = (
+  keyUsage: ReadonlyArray<X509KeyUsageFlag>,
+  basicConstraints: X509BasicConstraints,
+): void => {
+  if (keyUsage.length === 0) {
+    throw new KryptosError("keyUsage must contain at least one flag (RFC 5280 §4.2.1.3)");
   }
 
+  const needsCa = keyUsage.includes("keyCertSign") || keyUsage.includes("cRLSign");
+  if (needsCa && !basicConstraints.ca) {
+    throw new KryptosError(
+      "keyUsage with keyCertSign or cRLSign requires basicConstraints.ca=true (RFC 5280 §4.2.1.3)",
+    );
+  }
+};
+
+const buildExtensions = (options: GenerateX509Options, subjectSpki: Buffer): Buffer => {
+  const extensions: Array<Buffer> = [];
+
+  extensions.push(basicConstraintsExt(options.basicConstraints));
+  extensions.push(keyUsageExt(options.keyUsage));
   extensions.push(subjectKeyIdentifierExt(subjectSpki));
 
   if (options.authorityKeyIdentifier !== undefined) {
@@ -92,6 +94,8 @@ export const generateX509Certificate = (options: GenerateX509Options): Buffer =>
     throw new KryptosError("notBefore must be <= notAfter");
   }
 
+  assertKeyUsageAgainstBasicConstraints(options.keyUsage, options.basicConstraints);
+
   const subjectSpki = spkiFromPublicKey(
     options.subjectKryptos.publicKey,
     options.subjectKryptos.type,
@@ -110,9 +114,7 @@ export const generateX509Certificate = (options: GenerateX509Options): Buffer =>
 
   const serial = buildSerialNumber(options.serialNumber);
 
-  const isSelfSigned = options.authorityKeyIdentifier === undefined;
-
-  const extensions = buildExtensions(options, subjectSpki, isSelfSigned);
+  const extensions = buildExtensions(options, subjectSpki);
 
   const tbs = encodeSequence([
     encodeExplicitTag(0, encodeInteger(Buffer.from([0x02]))),

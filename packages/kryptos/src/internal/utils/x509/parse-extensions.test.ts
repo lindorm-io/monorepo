@@ -21,8 +21,8 @@ describe("parseX509Extensions", () => {
   test("parses a typical extensions block", () => {
     const spki = buildSpki();
     const der = encodeSequence([
-      basicConstraintsExt(true),
-      keyUsageExt({ digitalSignature: true, keyCertSign: true, crlSign: true }),
+      basicConstraintsExt({ ca: true }),
+      keyUsageExt(["digitalSignature", "keyCertSign", "cRLSign"]),
       subjectKeyIdentifierExt(spki),
       authorityKeyIdentifierExt(Buffer.alloc(20, 0xab)),
       subjectAlternativeNameExt(["https://example.com/"]),
@@ -61,7 +61,7 @@ describe("parseX509Extensions", () => {
     const unknownOid = "1.2.3.4.5.6.7.8";
     const der = encodeSequence([
       encodeSequence([encodeOid(unknownOid), encodeOctetString(Buffer.from([0x00]))]),
-      basicConstraintsExt(false),
+      basicConstraintsExt({ ca: false }),
     ]);
     const parsed = parseX509Extensions(der);
     expect(parsed.basicConstraintsCa).toBe(false);

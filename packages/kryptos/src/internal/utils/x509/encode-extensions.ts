@@ -5,6 +5,7 @@ import {
   encodeBitString,
   encodeBoolean,
   encodeImplicitTag,
+  encodeInteger,
   encodeOctetString,
   encodeOid,
   encodeSequence,
@@ -18,6 +19,22 @@ import {
   X509_OID_EXT_SUBJECT_KEY_IDENTIFIER,
 } from "./oids";
 
+export type X509KeyUsageFlag =
+  | "digitalSignature"
+  | "nonRepudiation"
+  | "keyEncipherment"
+  | "dataEncipherment"
+  | "keyAgreement"
+  | "keyCertSign"
+  | "cRLSign"
+  | "encipherOnly"
+  | "decipherOnly";
+
+export type X509BasicConstraints = {
+  ca: boolean;
+  pathLenConstraint?: number;
+};
+
 export const wrapExtension = (oid: string, inner: Buffer, critical = false): Buffer => {
   const children: Array<Buffer> = [encodeOid(oid)];
   if (critical) {
@@ -27,59 +44,76 @@ export const wrapExtension = (oid: string, inner: Buffer, critical = false): Buf
   return encodeSequence(children);
 };
 
-export const basicConstraintsExt = (isCa: boolean): Buffer => {
+export const basicConstraintsExt = (
+  { ca, pathLenConstraint }: X509BasicConstraints,
+  critical = true,
+): Buffer => {
+  if (!ca && pathLenConstraint !== undefined) {
+    throw new KryptosError(
+      "basicConstraints.pathLenConstraint is only valid when ca=true (RFC 5280 §4.2.1.9)",
+    );
+  }
+
   const seqChildren: Array<Buffer> = [];
-  if (isCa) {
+  if (ca) {
     seqChildren.push(encodeBoolean(true));
+    if (pathLenConstraint !== undefined) {
+      if (!Number.isInteger(pathLenConstraint) || pathLenConstraint < 0) {
+        throw new KryptosError(
+          "basicConstraints.pathLenConstraint must be a non-negative integer",
+        );
+      }
+      seqChildren.push(encodeInteger(Buffer.from([pathLenConstraint & 0xff])));
+    }
   }
   const inner = encodeSequence(seqChildren);
-  return wrapExtension(X509_OID_EXT_BASIC_CONSTRAINTS, inner, true);
+  return wrapExtension(X509_OID_EXT_BASIC_CONSTRAINTS, inner, critical);
 };
 
-export type KeyUsageFlags = {
-  digitalSignature?: boolean;
-  nonRepudiation?: boolean;
-  keyEncipherment?: boolean;
-  dataEncipherment?: boolean;
-  keyAgreement?: boolean;
-  keyCertSign?: boolean;
-  crlSign?: boolean;
-};
-
-const KEY_USAGE_BIT_ORDER: ReadonlyArray<keyof KeyUsageFlags> = [
+const KEY_USAGE_BIT_ORDER: ReadonlyArray<X509KeyUsageFlag> = [
   "digitalSignature",
   "nonRepudiation",
   "keyEncipherment",
   "dataEncipherment",
   "keyAgreement",
   "keyCertSign",
-  "crlSign",
+  "cRLSign",
+  "encipherOnly",
+  "decipherOnly",
 ];
 
-export const keyUsageExt = (flags: KeyUsageFlags): Buffer => {
-  let highestBit = -1;
-  for (let i = 0; i < KEY_USAGE_BIT_ORDER.length; i++) {
-    if (flags[KEY_USAGE_BIT_ORDER[i]]) highestBit = i;
+export const keyUsageExt = (
+  flags: ReadonlyArray<X509KeyUsageFlag>,
+  critical = true,
+): Buffer => {
+  if (flags.length === 0) {
+    throw new KryptosError(
+      "keyUsage extension requires at least one bit (RFC 5280 §4.2.1.3)",
+    );
   }
 
-  if (highestBit === -1) {
-    throw new KryptosError("keyUsage extension requires at least one bit");
+  const bits: Array<number> = [];
+  for (const flag of flags) {
+    const index = KEY_USAGE_BIT_ORDER.indexOf(flag);
+    if (index === -1) {
+      throw new KryptosError(`Unknown keyUsage flag: ${flag}`);
+    }
+    bits.push(index);
   }
 
+  const highestBit = Math.max(...bits);
   const byteLength = Math.floor(highestBit / 8) + 1;
   const unusedBits = byteLength * 8 - (highestBit + 1);
   const bytes = Buffer.alloc(byteLength, 0x00);
 
-  for (let i = 0; i <= highestBit; i++) {
-    if (flags[KEY_USAGE_BIT_ORDER[i]]) {
-      const byteIndex = Math.floor(i / 8);
-      const bitWithinByte = 7 - (i % 8);
-      bytes[byteIndex] |= 1 << bitWithinByte;
-    }
+  for (const bit of bits) {
+    const byteIndex = Math.floor(bit / 8);
+    const bitWithinByte = 7 - (bit % 8);
+    bytes[byteIndex] |= 1 << bitWithinByte;
   }
 
   const inner = encodeBitString(bytes, unusedBits);
-  return wrapExtension(X509_OID_EXT_KEY_USAGE, inner, true);
+  return wrapExtension(X509_OID_EXT_KEY_USAGE, inner, critical);
 };
 
 const extractBitStringBody = (spkiBytes: Buffer): Buffer => {
@@ -94,8 +128,6 @@ const extractBitStringBody = (spkiBytes: Buffer): Buffer => {
   while (offset < end) {
     const tlv = readTlv(spkiBytes, offset);
     if (tlv.tag === ASN1_TAG_BIT_STRING) {
-      // The BIT STRING content byte 0 is the unusedBits count; the rest is the
-      // subjectPublicKey payload we hash. RFC 5280 4.2.1.2 method (1).
       return spkiBytes.subarray(
         tlv.contentStart + 1,
         tlv.contentStart + tlv.contentLength,
@@ -117,7 +149,6 @@ export const subjectKeyIdentifierExt = (spkiBytes: Buffer): Buffer => {
 };
 
 export const authorityKeyIdentifierExt = (issuerSkiBytes: Buffer): Buffer => {
-  // AuthorityKeyIdentifier ::= SEQUENCE { keyIdentifier [0] IMPLICIT OCTET STRING }
   const keyIdentifier = encodeImplicitTag(0, issuerSkiBytes, false);
   const inner = encodeSequence([keyIdentifier]);
   return wrapExtension(X509_OID_EXT_AUTHORITY_KEY_IDENTIFIER, inner, false);
@@ -127,7 +158,6 @@ export const subjectAlternativeNameExt = (sans: ReadonlyArray<string>): Buffer =
   if (sans.length === 0) {
     throw new KryptosError("subjectAlternativeNameExt requires at least one SAN");
   }
-  // Each SAN is encoded as GeneralName. URI is [6] IMPLICIT IA5String.
   const children = sans.map((uri) =>
     encodeImplicitTag(6, Buffer.from(uri, "ascii"), false),
   );

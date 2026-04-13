@@ -1,27 +1,19 @@
 import { KryptosError } from "../../errors";
-import { IKryptos } from "../../interfaces";
-import { KryptosAlgorithm, KryptosCurve, KryptosType, KryptosUse } from "../../types";
-import { generateX509Certificate } from "./x509/generate-x509";
+import {
+  KryptosAlgorithm,
+  KryptosCertificateOption,
+  KryptosCurve,
+  KryptosType,
+  KryptosUse,
+} from "../../types";
+import { computeSpkiKeyIdentifier } from "./x509/compute-spki-key-identifier";
+import { X509KeyUsageFlag } from "./x509/encode-extensions";
 import { X509NameInput } from "./x509/encode-name";
+import { generateX509Certificate } from "./x509/generate-x509";
 import { resolveSignAlgorithmForCert } from "./resolve-sign-algorithm";
 
-export type CertificateOption =
-  | {
-      mode: "self-signed";
-      subject?: string;
-      organization?: string;
-      subjectAlternativeNames?: ReadonlyArray<string>;
-    }
-  | {
-      mode: "ca-signed";
-      ca: IKryptos;
-      subject?: string;
-      organization?: string;
-      subjectAlternativeNames?: ReadonlyArray<string>;
-    };
-
 type StampInput = {
-  certificate: CertificateOption;
+  certificate: KryptosCertificateOption;
   subjectKryptos: {
     id: string;
     issuer: string | null;
@@ -52,16 +44,16 @@ const deriveSan = (issuer: string | null, id: string): string => {
 };
 
 const resolveSubject = (
-  option: CertificateOption,
+  option: KryptosCertificateOption,
   issuer: string | null,
   id: string,
-): X509NameInput => ({
+): { commonName: string; organization?: string } => ({
   commonName: option.subject ?? issuer ?? id,
   ...(option.organization !== undefined ? { organization: option.organization } : {}),
 });
 
 const resolveSans = (
-  option: CertificateOption,
+  option: KryptosCertificateOption,
   issuer: string | null,
   id: string,
 ): ReadonlyArray<string> => {
@@ -71,18 +63,8 @@ const resolveSans = (
   return [deriveSan(issuer, id)];
 };
 
-const parsedNameToInput = (name: {
-  commonName?: string;
-  organization?: string;
-}): X509NameInput => {
-  if (!name.commonName) {
-    throw new KryptosError("CA certificate subject has no commonName");
-  }
-  return {
-    commonName: name.commonName,
-    ...(name.organization !== undefined ? { organization: name.organization } : {}),
-  };
-};
+const keyUsageForUse = (use: KryptosUse): ReadonlyArray<X509KeyUsageFlag> =>
+  use === "sig" ? ["digitalSignature"] : ["keyEncipherment", "dataEncipherment"];
 
 export const stampCertificate = (input: StampInput): Array<string> => {
   const { certificate, subjectKryptos } = input;
@@ -91,32 +73,39 @@ export const stampCertificate = (input: StampInput): Array<string> => {
     throw new KryptosError("symmetric keys cannot have certificates");
   }
 
-  const subjectName = resolveSubject(
+  if (!subjectKryptos.privateKey) {
+    throw new KryptosError(
+      "certificate generation requires the generated kryptos to have a private key",
+    );
+  }
+
+  const subjectName: X509NameInput = resolveSubject(
     certificate,
     subjectKryptos.issuer,
     subjectKryptos.id,
   );
   const sans = resolveSans(certificate, subjectKryptos.issuer, subjectKryptos.id);
 
-  if (certificate.mode === "self-signed") {
-    if (!subjectKryptos.privateKey) {
-      throw new KryptosError(
-        "self-signed mode requires the generated kryptos to have a private key",
-      );
-    }
+  const subjectKryptosSig = {
+    publicKey: subjectKryptos.publicKey,
+    type: subjectKryptos.type,
+    algorithm: subjectKryptos.algorithm,
+  };
 
+  if (certificate.mode === "self-signed") {
     const signAlgorithm = resolveSignAlgorithmForCert({
       type: subjectKryptos.type,
       algorithm: subjectKryptos.algorithm,
       curve: subjectKryptos.curve,
     });
 
+    const ownSki = computeSpkiKeyIdentifier(
+      subjectKryptos.publicKey,
+      subjectKryptos.type,
+    );
+
     const der = generateX509Certificate({
-      subjectKryptos: {
-        publicKey: subjectKryptos.publicKey,
-        type: subjectKryptos.type,
-        algorithm: subjectKryptos.algorithm,
-      },
+      subjectKryptos: subjectKryptosSig,
       issuerKryptos: {
         privateKey: subjectKryptos.privateKey,
         type: subjectKryptos.type,
@@ -126,7 +115,41 @@ export const stampCertificate = (input: StampInput): Array<string> => {
       issuer: subjectName,
       notBefore: subjectKryptos.notBefore,
       notAfter: subjectKryptos.expiresAt,
-      keyUsage: subjectKryptos.use,
+      basicConstraints: { ca: false },
+      keyUsage: keyUsageForUse(subjectKryptos.use),
+      subjectAlternativeNames: sans,
+      authorityKeyIdentifier: ownSki,
+      ...(input.serialNumber ? { serialNumber: input.serialNumber } : {}),
+    });
+
+    return [der.toString("base64")];
+  }
+
+  if (certificate.mode === "root-ca") {
+    const signAlgorithm = resolveSignAlgorithmForCert({
+      type: subjectKryptos.type,
+      algorithm: subjectKryptos.algorithm,
+      curve: subjectKryptos.curve,
+    });
+
+    const der = generateX509Certificate({
+      subjectKryptos: subjectKryptosSig,
+      issuerKryptos: {
+        privateKey: subjectKryptos.privateKey,
+        type: subjectKryptos.type,
+        algorithm: signAlgorithm,
+      },
+      subject: subjectName,
+      issuer: subjectName,
+      notBefore: subjectKryptos.notBefore,
+      notAfter: subjectKryptos.expiresAt,
+      basicConstraints: {
+        ca: true,
+        ...(certificate.pathLenConstraint !== undefined
+          ? { pathLenConstraint: certificate.pathLenConstraint }
+          : {}),
+      },
+      keyUsage: ["keyCertSign", "cRLSign"],
       subjectAlternativeNames: sans,
       ...(input.serialNumber ? { serialNumber: input.serialNumber } : {}),
     });
@@ -134,7 +157,6 @@ export const stampCertificate = (input: StampInput): Array<string> => {
     return [der.toString("base64")];
   }
 
-  // ca-signed
   const ca = certificate.ca;
 
   if (!ca.hasPrivateKey) {
@@ -145,21 +167,43 @@ export const stampCertificate = (input: StampInput): Array<string> => {
     throw new KryptosError("ca-signed mode requires CA kryptos with a certificateChain");
   }
 
-  const caLeaf = ca.certificateChain[0];
-  const caAki = caLeaf.extensions.subjectKeyIdentifier;
+  if (ca.type === "oct") {
+    throw new KryptosError("ca-signed mode cannot use a symmetric CA kryptos");
+  }
 
-  if (!caAki) {
+  const caLeaf = ca.certificateChain[0];
+
+  if (!caLeaf.extensions.basicConstraintsCa) {
     throw new KryptosError(
-      "ca-signed mode requires CA leaf certificate with a subjectKeyIdentifier extension",
+      "ca-signed requires CA kryptos whose leaf cert has basicConstraints cA=true",
+    );
+  }
+
+  const caSki = caLeaf.extensions.subjectKeyIdentifier;
+  if (!caSki) {
+    throw new KryptosError(
+      "ca-signed requires CA leaf certificate with a subjectKeyIdentifier extension",
+    );
+  }
+
+  if (!caLeaf.extensions.keyUsage.includes("keyCertSign")) {
+    throw new KryptosError(
+      "ca-signed requires CA leaf certificate with keyCertSign in keyUsage",
+    );
+  }
+
+  if (
+    subjectKryptos.notBefore.getTime() < caLeaf.notBefore.getTime() ||
+    subjectKryptos.expiresAt.getTime() > caLeaf.notAfter.getTime()
+  ) {
+    throw new KryptosError(
+      "ca-signed child validity window must fit within the CA's validity window",
     );
   }
 
   const caDer = ca.export("der");
   if (!caDer.privateKey) {
     throw new KryptosError("ca-signed mode requires CA kryptos with a private key");
-  }
-  if (ca.type === "oct") {
-    throw new KryptosError("ca-signed mode cannot use a symmetric CA kryptos");
   }
 
   const caSignAlgorithm = resolveSignAlgorithmForCert({
@@ -168,26 +212,21 @@ export const stampCertificate = (input: StampInput): Array<string> => {
     curve: ca.curve,
   });
 
-  const issuerName = parsedNameToInput(caLeaf.subject);
-
   const der = generateX509Certificate({
-    subjectKryptos: {
-      publicKey: subjectKryptos.publicKey,
-      type: subjectKryptos.type,
-      algorithm: subjectKryptos.algorithm,
-    },
+    subjectKryptos: subjectKryptosSig,
     issuerKryptos: {
       privateKey: caDer.privateKey,
       type: ca.type,
       algorithm: caSignAlgorithm,
     },
     subject: subjectName,
-    issuer: issuerName,
+    issuer: { raw: caLeaf.subject.raw },
     notBefore: subjectKryptos.notBefore,
     notAfter: subjectKryptos.expiresAt,
-    keyUsage: subjectKryptos.use,
+    basicConstraints: { ca: false },
+    keyUsage: keyUsageForUse(subjectKryptos.use),
     subjectAlternativeNames: sans,
-    authorityKeyIdentifier: caAki,
+    authorityKeyIdentifier: caSki,
     ...(input.serialNumber ? { serialNumber: input.serialNumber } : {}),
   });
 
