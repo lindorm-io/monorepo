@@ -34,6 +34,8 @@ import {
 } from "#internal/utils/jwt-payload";
 import { createJwtVerify } from "#internal/utils/jwt-verify";
 import { parseTokenHeader } from "#internal/utils/token-header";
+import { resolveCertBinding } from "#internal/utils/resolve-cert-binding";
+import { verifyCertBinding } from "#internal/utils/verify-cert-binding";
 import { validate } from "#internal/utils/validate";
 
 const DEFAULT_DPOP_MAX_SKEW = 60;
@@ -76,7 +78,9 @@ export class JwtKit implements IJwtKit {
       objectId,
     };
 
-    const header = encodeJoseHeader(headerOptions);
+    const cert = resolveCertBinding(this.kryptos, options.bindCertificate);
+
+    const header = encodeJoseHeader(headerOptions, cert);
 
     const { expiresAt, expiresIn, expiresOn, payload, tokenId } = encodeJwtPayload<C>(
       { algorithm: this.kryptos.algorithm, issuer: this.issuer },
@@ -136,6 +140,15 @@ export class JwtKit implements IJwtKit {
         data: { verified, token: token },
       });
     }
+
+    // Content tamper check: this runs AFTER signature verification has
+    // already succeeded with the amphora-sourced kryptos. It is NOT a key
+    // selection step. Header cert fields remain forbidden as key sources
+    // — see the SECURITY INVARIANT in Aegis.kryptosSig.
+    verifyCertBinding(this.kryptos, {
+      x5t: parsed.header.x5t,
+      x5tS256: parsed.header.x5tS256,
+    });
 
     const predicate = createJwtVerify(
       this.kryptos.algorithm,

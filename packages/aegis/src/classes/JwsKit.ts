@@ -21,6 +21,8 @@ import {
 import { decodeJoseHeader, encodeJoseHeader } from "#internal/utils/jose-header";
 import { createJoseSignature, verifyJoseSignature } from "#internal/utils/jose-signature";
 import { parseTokenHeader } from "#internal/utils/token-header";
+import { resolveCertBinding } from "#internal/utils/resolve-cert-binding";
+import { verifyCertBinding } from "#internal/utils/verify-cert-binding";
 import { validateCrit } from "#internal/utils/validate-crit";
 
 export class JwsKit implements IJwsKit {
@@ -54,7 +56,9 @@ export class JwsKit implements IJwsKit {
       objectId,
     };
 
-    const header = encodeJoseHeader(headerOptions);
+    const cert = resolveCertBinding(this.kryptos, options.bindCertificate);
+
+    const header = encodeJoseHeader(headerOptions, cert);
 
     const payload = isBuffer(data) ? data.toString(B64U) : B64.encode(data, B64U);
 
@@ -97,6 +101,15 @@ export class JwsKit implements IJwsKit {
         data: { verified, token: token },
       });
     }
+
+    // Content tamper check: runs AFTER signature verification has succeeded
+    // with the amphora-sourced kryptos. NOT a key selection step. Header
+    // cert fields remain forbidden as key sources — see the SECURITY
+    // INVARIANT in Aegis.kryptosSig.
+    verifyCertBinding(this.kryptos, {
+      x5t: parsed.header.x5t,
+      x5tS256: parsed.header.x5tS256,
+    });
 
     this.logger.debug("Token verified");
 
