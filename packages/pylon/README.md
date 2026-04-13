@@ -62,6 +62,7 @@ await app.start();
   - [File-Based Listeners](#file-based-listeners)
   - [Manual Listeners](#manual-listeners)
   - [Namespaces](#namespaces)
+  - [Socket Authentication](#socket-authentication)
   - [Room Management](#room-management)
   - [Redis Adapter](#redis-adapter)
 - [Middleware](#middleware)
@@ -521,6 +522,97 @@ adminListener.on("command", adminAuthMiddleware, async (ctx) => {
   // Only reachable via io.connect("/admin")
 });
 ```
+
+### Socket Authentication
+
+Pylon supports two authentication strategies for socket connections: **bearer tokens** and **sessions (cookies)**. Authentication is established once at handshake time, then enforced reactively on each event.
+
+#### Connection Middleware
+
+Use `connectionMiddleware` to run middleware once during the Socket.io handshake, before the connection is established. This is a separate chain from per-event middleware and uses the `PylonConnectionMiddleware` type.
+
+```typescript
+import { Pylon, createHandshakeTokenMiddleware } from "@lindorm/pylon";
+
+const app = new Pylon({
+  // ...
+  socket: {
+    enabled: true,
+    listeners: "./src/listeners",
+    connectionMiddleware: [
+      createHandshakeTokenMiddleware({ issuer: "https://auth.example.com" }),
+    ],
+  },
+});
+```
+
+Connection middleware receives a `PylonSocketHandshakeContext` and runs in order before any event listeners are registered. If any middleware throws, the handshake is rejected and the socket never connects.
+
+#### Handshake Token Middleware
+
+`createHandshakeTokenMiddleware(options)` verifies a bearer token at handshake and populates `socket.data.pylon.auth` for downstream use.
+
+**Options** (extends `VerifyJwtOptions` from `@lindorm/aegis`):
+
+| Option     | Type                                     | Required | Description                              |
+| ---------- | ---------------------------------------- | -------- | ---------------------------------------- |
+| `issuer`   | `string`                                 | Yes      | Expected token issuer                    |
+| `audience` | `string`                                 | No       | Expected token audience                  |
+| `dpop`     | `"required" \| "optional" \| "disabled"` | No       | DPoP enforcement (default: `"optional"`) |
+
+**Token source resolution** is automatic: the middleware tries `handshake.auth.bearer` first, then falls back to the session cookie if present. When both are available, the explicit bearer token wins.
+
+If neither source provides a token, the middleware throws a `ClientError` with status 401.
+
+#### Session Mode (Cookie Auth)
+
+When `session` is configured on the Pylon constructor, session middleware is auto-wired for both HTTP and socket transports. No `connectionMiddleware` entry is needed.
+
+```typescript
+const app = new Pylon({
+  cors: { allowOrigins: ["https://app.example.com"] },
+  session: { enabled: true, expiry: "90 minutes" },
+  socket: { enabled: true, listeners: "./src/listeners" },
+  // ...
+});
+```
+
+The auto-wired session connection middleware is **non-rejecting**: if no session cookie is present, the handshake proceeds and public events still work. Only events guarded by `createAccessTokenMiddleware` will require a valid session.
+
+**Safety:** Session + socket requires an explicit CORS allowlist (not `"*"`). Pylon throws a `PylonError` at construction if `session` is set without a proper `cors.allowOrigins` list, to prevent Cross-Site WebSocket Hijacking.
+
+#### Auth Refresh Protocol
+
+Pylon automatically registers a refresh listener when handshake auth state is established. Two reserved events handle the refresh lifecycle:
+
+| Event                 | Direction        | Description                                                 |
+| --------------------- | ---------------- | ----------------------------------------------------------- |
+| `$pylon/auth/refresh` | client to server | Refreshes the auth state on the server                      |
+| `$pylon/auth/expired` | server to client | Advisory warning emitted in the 60-second pre-expiry window |
+
+No user wiring is needed — the `$pylon/auth/refresh` listener is auto-registered when `socket.data.pylon.auth` is set during the handshake phase.
+
+**Refresh payload** depends on the auth strategy:
+
+- **Bearer mode:** `{ bearer: string, expiresIn: number }` — client sends a new token.
+- **Session mode:** `{}` — the server re-reads the session from the store.
+
+**Failure behaviour:**
+
+- Bearer: an error ack is returned, the socket stays connected (the old token may still be valid).
+- Session: an error ack is returned and the socket is **disconnected** (the session is gone).
+
+The ack response follows the shape `{ __pylon: true, ok: boolean, data?: unknown, error?: { code, message, name, status } }`.
+
+#### Per-Event Freshness
+
+After the handshake, `createAccessTokenMiddleware` uses a fast path for socket events — it checks the auth state established at handshake time rather than re-verifying the token on every event:
+
+- **Token well before expiry** — event accepted silently.
+- **Token in 60-second warning window** — `$pylon/auth/expired` is emitted once, event is still accepted.
+- **Token past expiry** — event rejected with a 401 `ClientError` and the socket is disconnected.
+
+There are no server-side timers. Pylon is reactive — the client owns timing and sends `$pylon/auth/refresh` before expiry.
 
 ### Room Management
 
