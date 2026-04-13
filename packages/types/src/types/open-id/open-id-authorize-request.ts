@@ -1,5 +1,6 @@
 // https://openid.net/specs/openid-connect-core-1_0.html#AuthRequest
 // https://www.rfc-editor.org/rfc/rfc7636#section-4.1
+// https://www.rfc-editor.org/rfc/rfc8707
 
 import { OpenIdCodeChallengeMethod } from "./open-id-code-challenge-method";
 import { OpenIdDisplayMode } from "./open-id-display-mode";
@@ -7,33 +8,40 @@ import { OpenIdPromptMode } from "./open-id-prompt-mode";
 import { OpenIdResponseMode } from "./open-id-response-mode";
 import { OpenIdResponseType } from "./open-id-response-type";
 
-type LindormRequestQuery = {
+type ExtensionRequestQuery = {
   /**
    * OPTIONAL
    *
-   * The logical name of the target service where the client
-   * intends to use the requested security token. This serves
-   * a purpose similar to the resource parameter but with the
-   * client providing a logical name for the target service.
-   * Interpretation of the name requires that the value be
-   * something that both the client and the authorization
-   * server understand. An OAuth client identifier, a SAML
-   * entity identifier [OASIS.saml-core-2.0-os], and an OpenID
-   * Connect Issuer Identifier [OpenID.Core] are examples of
-   * things that might be used as audience parameter values.
-   * However, audience values used with a given authorization
-   * server must be unique within that server to ensure that
-   * they are properly interpreted as the intended type of
-   * value. Multiple audience parameters may be used to indicate
-   * that the issued token is intended to be used at the multiple
-   * audiences listed. The audience and resource parameters
-   * may be used together to indicate multiple target services
-   * with a mix of logical names and resource URIs.
+   * Proprietary extension used by Auth0 (and historically by
+   * other vendors prior to RFC 8707) to indicate the target
+   * API / Resource Server for the issued access token. Values
+   * are opaque to the client and interpreted by the AS; Auth0
+   * typically expects the registered API Identifier (a URI by
+   * convention, but not strictly required).
+   *
+   * Prefer `resource` (RFC 8707) for standards-compliant OPs.
    */
   audience?: string;
+
+  /**
+   * OPTIONAL
+   *
+   * RFC 8707 Resource Indicator. Indicates the target service
+   * (resource server) where the client intends to use the
+   * access token. The value MUST be an absolute URI as defined
+   * by RFC 3986 §4.3 and SHOULD NOT include a fragment. When
+   * honored by the AS, the resulting JWT access token's `aud`
+   * claim SHOULD match this value (RFC 9068 §3).
+   *
+   * Multiple resource indicators may be expressed by repeating
+   * the parameter; this type carries a single value — callers
+   * serializing to the wire should expand arrays into repeated
+   * `resource` query parameters where needed.
+   */
+  resource?: string;
 };
 
-export type OpenIdAuthorizeRequestQuery = LindormRequestQuery & {
+export type OpenIdAuthorizeRequestQuery = ExtensionRequestQuery & {
   /**
    * OPTIONAL
    *
