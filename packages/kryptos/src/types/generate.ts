@@ -1,5 +1,6 @@
 import { Optional } from "@lindorm/types";
 import { KryptosAttributes } from "./attributes";
+import { KryptosCertificateOption } from "./certificate";
 import { KryptosEncryption } from "./encryption";
 import {
   OctEncDirAlgorithm,
@@ -35,7 +36,9 @@ type Std = Optional<
   | "ownerId"
   | "purpose"
   | "updatedAt"
->;
+> & {
+  certificate?: KryptosCertificateOption;
+};
 
 type Enc = {
   encryption?: KryptosEncryption;

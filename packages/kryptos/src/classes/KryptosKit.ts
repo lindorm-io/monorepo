@@ -1,4 +1,5 @@
 import { B64 } from "@lindorm/b64";
+import { randomUUID } from "crypto";
 import { KryptosError } from "../errors";
 import {
   IKryptos,
@@ -9,6 +10,7 @@ import {
 } from "../interfaces";
 import {
   KryptosAuto,
+  KryptosCurve,
   KryptosDB,
   KryptosFormat,
   KryptosFrom,
@@ -35,6 +37,7 @@ import {
 import { calculateKeyOps } from "#internal/utils/key-ops";
 import { fromOptions } from "#internal/utils/from-options";
 import { isB64, isDer, isJwk, isPem } from "#internal/utils/is";
+import { stampCertificate } from "#internal/utils/stamp-certificate";
 import { Kryptos } from "./Kryptos";
 
 type Env = {
@@ -292,7 +295,7 @@ export class KryptosKit {
       operations,
     };
 
-    return new Kryptos({ ...generate, ...generateKey(generate) });
+    return KryptosKit.finalizeGenerate(generate, generateKey(generate));
   }
 
   private static generateEcEnc(options: KryptosGenerateEcEnc): IKryptos {
@@ -368,14 +371,59 @@ export class KryptosKit {
   }
 
   private static generateKryptos(generate: KryptosGenerate): IKryptos {
-    return new Kryptos({
+    return KryptosKit.finalizeGenerate(generate, generateKey(generate));
+  }
+
+  private static finalizeGenerate(
+    generate: KryptosGenerate,
+    key: ReturnType<typeof generateKey>,
+  ): IKryptos {
+    const id = generate.id ?? randomUUID();
+    const notBefore = generate.notBefore ?? new Date();
+    const expiresAt =
+      generate.expiresAt ??
+      new Date(notBefore.getTime() + 25 * 365.25 * 24 * 60 * 60 * 1000);
+
+    const encryption = generate.use === "enc" ? (generate.encryption ?? "A256GCM") : null;
+    const operations = generate.operations?.length
+      ? generate.operations
+      : calculateKeyOps(generate);
+
+    const base = {
       ...generate,
-      encryption: generate.use === "enc" ? (generate.encryption ?? "A256GCM") : null,
-      operations: generate.operations?.length
-        ? generate.operations
-        : calculateKeyOps(generate),
-      ...generateKey(generate),
+      id,
+      notBefore,
+      expiresAt,
+      encryption,
+      operations,
+      ...key,
+    };
+
+    if (!generate.certificate) {
+      return new Kryptos(base);
+    }
+
+    if (generate.type === "oct") {
+      throw new KryptosError("symmetric keys cannot have certificates");
+    }
+
+    const certificateChain = stampCertificate({
+      certificate: generate.certificate,
+      subjectKryptos: {
+        id,
+        issuer: generate.issuer ?? null,
+        notBefore,
+        expiresAt,
+        use: generate.use,
+        type: generate.type,
+        algorithm: generate.algorithm,
+        curve: (base as { curve?: KryptosCurve | null }).curve ?? null,
+        publicKey: (key as { publicKey?: Buffer }).publicKey as Buffer,
+        privateKey: (key as { privateKey?: Buffer }).privateKey,
+      },
     });
+
+    return new Kryptos({ ...base, certificateChain });
   }
 
   // private generateAsync
@@ -412,7 +460,7 @@ export class KryptosKit {
       operations,
     };
 
-    return new Kryptos({ ...generate, ...(await generateKeyAsync(generate)) });
+    return KryptosKit.finalizeGenerate(generate, await generateKeyAsync(generate));
   }
 
   private static async generateEcEncAsync(
@@ -466,13 +514,6 @@ export class KryptosKit {
   private static async generateKryptosAsync(
     generate: KryptosGenerate,
   ): Promise<IKryptos> {
-    return new Kryptos({
-      ...generate,
-      encryption: generate.use === "enc" ? (generate.encryption ?? "A256GCM") : null,
-      operations: generate.operations?.length
-        ? generate.operations
-        : calculateKeyOps(generate),
-      ...(await generateKeyAsync(generate)),
-    });
+    return KryptosKit.finalizeGenerate(generate, await generateKeyAsync(generate));
   }
 }

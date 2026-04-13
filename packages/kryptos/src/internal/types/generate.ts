@@ -1,5 +1,6 @@
 import { Optional } from "@lindorm/types";
 import { KryptosAttributes } from "../../types/attributes";
+import { KryptosCertificateOption } from "../../types/certificate";
 
 type Attributes = Omit<KryptosAttributes, "algorithm" | "type" | "use">;
 
@@ -23,4 +24,4 @@ type Std = Optional<
 
 type Req = Pick<KryptosAttributes, "algorithm" | "type" | "use">;
 
-export type KryptosGenerate = Std & Req;
+export type KryptosGenerate = Std & Req & { certificate?: KryptosCertificateOption };
