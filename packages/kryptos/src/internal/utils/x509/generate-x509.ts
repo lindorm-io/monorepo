@@ -1,6 +1,6 @@
 import { randomBytes } from "crypto";
 import { KryptosError } from "../../../errors";
-import { KryptosAlgorithm, KryptosType } from "../../../types";
+import { KryptosAlgorithm, KryptosType, X509SubjectAltNameInput } from "../../../types";
 import {
   encodeBitString,
   encodeExplicitTag,
@@ -34,7 +34,7 @@ export type GenerateX509Options = {
   notAfter: Date;
   basicConstraints: X509BasicConstraints;
   keyUsage: ReadonlyArray<X509KeyUsageFlag>;
-  subjectAlternativeNames: ReadonlyArray<string>;
+  subjectAlternativeNames: ReadonlyArray<X509SubjectAltNameInput>;
   authorityKeyIdentifier?: Buffer;
   serialNumber?: Buffer;
 };

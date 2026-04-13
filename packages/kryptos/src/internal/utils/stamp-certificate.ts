@@ -5,6 +5,7 @@ import {
   KryptosCurve,
   KryptosType,
   KryptosUse,
+  X509SubjectAltNameInput,
 } from "../../types";
 import { computeSpkiKeyIdentifier } from "./x509/compute-spki-key-identifier";
 import { X509KeyUsageFlag } from "./x509/encode-extensions";
@@ -52,15 +53,20 @@ const resolveSubject = (
   ...(option.organization !== undefined ? { organization: option.organization } : {}),
 });
 
+const normalizeSan = (
+  entry: string | X509SubjectAltNameInput,
+): X509SubjectAltNameInput =>
+  typeof entry === "string" ? { type: "uri", value: entry } : entry;
+
 const resolveSans = (
   option: KryptosCertificateOption,
   issuer: string | null,
   id: string,
-): ReadonlyArray<string> => {
+): ReadonlyArray<X509SubjectAltNameInput> => {
   if (option.subjectAlternativeNames && option.subjectAlternativeNames.length > 0) {
-    return option.subjectAlternativeNames;
+    return option.subjectAlternativeNames.map(normalizeSan);
   }
-  return [deriveSan(issuer, id)];
+  return [{ type: "uri", value: deriveSan(issuer, id) }];
 };
 
 const keyUsageForUse = (use: KryptosUse): ReadonlyArray<X509KeyUsageFlag> =>

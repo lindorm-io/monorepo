@@ -2,6 +2,7 @@ import * as x509 from "@peculiar/x509";
 import { createPublicKey, generateKeyPairSync, X509Certificate } from "crypto";
 import { KryptosType } from "../../../types";
 import { generateX509Certificate } from "./generate-x509";
+import { parseX509Certificate } from "./parse-certificate";
 
 const toU8 = (buf: Buffer): Uint8Array<ArrayBuffer> => {
   const out = new Uint8Array(new ArrayBuffer(buf.byteLength));
@@ -125,7 +126,7 @@ describe("generateX509Certificate", () => {
         notAfter: NOT_AFTER,
         basicConstraints: { ca: true },
         keyUsage: ["keyCertSign", "cRLSign"],
-        subjectAlternativeNames: ["https://example.test/a"],
+        subjectAlternativeNames: [{ type: "uri", value: "https://example.test/a" }],
         serialNumber: SERIAL,
       });
       assertRootCaSelfSigned(der, pair);
@@ -142,7 +143,7 @@ describe("generateX509Certificate", () => {
         notAfter: NOT_AFTER,
         basicConstraints: { ca: true },
         keyUsage: ["keyCertSign", "cRLSign"],
-        subjectAlternativeNames: ["https://example.test/a"],
+        subjectAlternativeNames: [{ type: "uri", value: "https://example.test/a" }],
         serialNumber: SERIAL,
       });
       assertRootCaSelfSigned(der, pair);
@@ -159,7 +160,7 @@ describe("generateX509Certificate", () => {
         notAfter: NOT_AFTER,
         basicConstraints: { ca: true },
         keyUsage: ["keyCertSign", "cRLSign"],
-        subjectAlternativeNames: ["https://example.test/a"],
+        subjectAlternativeNames: [{ type: "uri", value: "https://example.test/a" }],
         serialNumber: SERIAL,
       });
       assertRootCaSelfSigned(der, pair);
@@ -176,7 +177,7 @@ describe("generateX509Certificate", () => {
         notAfter: NOT_AFTER,
         basicConstraints: { ca: true },
         keyUsage: ["keyCertSign", "cRLSign"],
-        subjectAlternativeNames: ["https://example.test/a"],
+        subjectAlternativeNames: [{ type: "uri", value: "https://example.test/a" }],
         serialNumber: SERIAL,
       });
       assertRootCaSelfSigned(der, pair);
@@ -193,7 +194,7 @@ describe("generateX509Certificate", () => {
         notAfter: NOT_AFTER,
         basicConstraints: { ca: true },
         keyUsage: ["keyCertSign", "cRLSign"],
-        subjectAlternativeNames: ["https://example.test/a"],
+        subjectAlternativeNames: [{ type: "uri", value: "https://example.test/a" }],
         serialNumber: SERIAL,
       });
       assertRootCaSelfSigned(der, pair);
@@ -210,7 +211,7 @@ describe("generateX509Certificate", () => {
         notAfter: NOT_AFTER,
         basicConstraints: { ca: false },
         keyUsage: ["digitalSignature"],
-        subjectAlternativeNames: ["https://leaf.test"],
+        subjectAlternativeNames: [{ type: "uri", value: "https://leaf.test" }],
         serialNumber: SERIAL,
       });
 
@@ -237,7 +238,7 @@ describe("generateX509Certificate", () => {
         notAfter: NOT_AFTER,
         basicConstraints: { ca: false },
         keyUsage: ["keyEncipherment", "dataEncipherment"],
-        subjectAlternativeNames: ["https://enc.test"],
+        subjectAlternativeNames: [{ type: "uri", value: "https://enc.test" }],
         serialNumber: SERIAL,
       });
 
@@ -265,7 +266,7 @@ describe("generateX509Certificate", () => {
         notAfter: NOT_AFTER,
         basicConstraints: { ca: true },
         keyUsage: ["keyCertSign", "cRLSign"],
-        subjectAlternativeNames: ["https://root.test"],
+        subjectAlternativeNames: [{ type: "uri", value: "https://root.test" }],
         serialNumber: SERIAL,
       });
 
@@ -289,7 +290,7 @@ describe("generateX509Certificate", () => {
         notAfter: NOT_AFTER,
         basicConstraints: { ca: false },
         keyUsage: ["digitalSignature"],
-        subjectAlternativeNames: ["https://leaf.test"],
+        subjectAlternativeNames: [{ type: "uri", value: "https://leaf.test" }],
         authorityKeyIdentifier: caSki,
         serialNumber: leafSerial,
       });
@@ -399,7 +400,9 @@ describe("generateX509Certificate", () => {
         notAfter: NOT_AFTER,
         basicConstraints: { ca: true },
         keyUsage: ["keyCertSign", "cRLSign"] as const,
-        subjectAlternativeNames: ["https://example.test/a"],
+        subjectAlternativeNames: [
+          { type: "uri" as const, value: "https://example.test/a" },
+        ],
         serialNumber: SERIAL,
       };
 
@@ -431,7 +434,7 @@ describe("generateX509Certificate", () => {
           notAfter: NOT_AFTER,
           basicConstraints: { ca: true },
           keyUsage: ["keyCertSign", "cRLSign"],
-          subjectAlternativeNames: ["https://example.test/a"],
+          subjectAlternativeNames: [{ type: "uri", value: "https://example.test/a" }],
           serialNumber: SERIAL,
         }),
       ).toThrow("RSA-PSS signatures (PS256) for X.509 are not yet supported");
@@ -456,7 +459,7 @@ describe("generateX509Certificate", () => {
           notAfter: NOT_AFTER,
           basicConstraints: { ca: false },
           keyUsage: ["digitalSignature"],
-          subjectAlternativeNames: ["https://example.test/a"],
+          subjectAlternativeNames: [{ type: "uri", value: "https://example.test/a" }],
           serialNumber: SERIAL,
         }),
       ).toThrow("X.509 certificates require asymmetric keys");
@@ -474,7 +477,7 @@ describe("generateX509Certificate", () => {
           notAfter: NOT_BEFORE,
           basicConstraints: { ca: false },
           keyUsage: ["digitalSignature"],
-          subjectAlternativeNames: ["https://example.test/a"],
+          subjectAlternativeNames: [{ type: "uri", value: "https://example.test/a" }],
           serialNumber: SERIAL,
         }),
       ).toThrow("notBefore must be <= notAfter");
@@ -492,7 +495,7 @@ describe("generateX509Certificate", () => {
           notAfter: NOT_AFTER,
           basicConstraints: { ca: false },
           keyUsage: ["digitalSignature"],
-          subjectAlternativeNames: ["https://example.test/a"],
+          subjectAlternativeNames: [{ type: "uri", value: "https://example.test/a" }],
           serialNumber: Buffer.alloc(0),
         }),
       ).toThrow("serialNumber must be non-empty");
@@ -509,10 +512,48 @@ describe("generateX509Certificate", () => {
         notAfter: NOT_AFTER,
         basicConstraints: { ca: false },
         keyUsage: ["digitalSignature"],
-        subjectAlternativeNames: ["https://example.test/a"],
+        subjectAlternativeNames: [{ type: "uri", value: "https://example.test/a" }],
       });
       const nodeCert = new X509Certificate(der);
       expect(nodeCert.serialNumber.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe("subject alternative name round-trip", () => {
+    test("mixed uri+dns+email list round-trips through parseX509Certificate", () => {
+      const pair = ecKeyPair("P-256");
+      const der = generateX509Certificate({
+        subjectKryptos: { ...pair, algorithm: "ES256" },
+        issuerKryptos: { ...pair, algorithm: "ES256" },
+        subject: { commonName: "mixed.test" },
+        issuer: { commonName: "mixed.test" },
+        notBefore: NOT_BEFORE,
+        notAfter: NOT_AFTER,
+        basicConstraints: { ca: false },
+        keyUsage: ["digitalSignature"],
+        subjectAlternativeNames: [
+          { type: "uri", value: "https://mixed.test" },
+          { type: "dns", value: "mixed.test" },
+          { type: "email", value: "ops@mixed.test" },
+        ],
+        serialNumber: SERIAL,
+      });
+
+      const parsed = parseX509Certificate(der);
+      expect(parsed.extensions.subjectAltNames).toEqual([
+        { type: "uri", value: "https://mixed.test" },
+        { type: "dns", value: "mixed.test" },
+        { type: "email", value: "ops@mixed.test" },
+      ]);
+
+      const peculiar = new x509.X509Certificate(toU8(der));
+      const sanExt = peculiar.extensions.find((e) => e.type === "2.5.29.17") as
+        | x509.SubjectAlternativeNameExtension
+        | undefined;
+      expect(sanExt).toBeDefined();
+      const names = sanExt!.names.toJSON();
+      const types = names.map((n) => n.type);
+      expect(types).toEqual(expect.arrayContaining(["url", "dns", "email"]));
     });
   });
 });

@@ -84,10 +84,105 @@ describe("encode-extensions", () => {
   test("subjectAlternativeNameExt encodes URI entries as [6] IMPLICIT", () => {
     expect(
       subjectAlternativeNameExt([
-        "https://example.test/a",
-        "https://example.test/b",
+        { type: "uri", value: "https://example.test/a" },
+        { type: "uri", value: "https://example.test/b" },
       ]).toString("hex"),
     ).toMatchSnapshot();
+  });
+
+  test("subjectAlternativeNameExt encodes DNS entries as [2] IMPLICIT", () => {
+    expect(
+      subjectAlternativeNameExt([{ type: "dns", value: "example.test" }]).toString("hex"),
+    ).toMatchSnapshot();
+  });
+
+  test("subjectAlternativeNameExt encodes Email entries as [1] IMPLICIT", () => {
+    expect(
+      subjectAlternativeNameExt([{ type: "email", value: "ops@example.test" }]).toString(
+        "hex",
+      ),
+    ).toMatchSnapshot();
+  });
+
+  test("subjectAlternativeNameExt encodes IPv4 as [7] IMPLICIT with 4 raw bytes", () => {
+    expect(
+      subjectAlternativeNameExt([{ type: "ip", value: "192.168.1.1" }]).toString("hex"),
+    ).toMatchSnapshot();
+  });
+
+  test("subjectAlternativeNameExt encodes IPv6 ::1 as 16 raw bytes", () => {
+    expect(
+      subjectAlternativeNameExt([{ type: "ip", value: "::1" }]).toString("hex"),
+    ).toMatchSnapshot();
+  });
+
+  test("subjectAlternativeNameExt encodes IPv6 2001:db8::1", () => {
+    expect(
+      subjectAlternativeNameExt([{ type: "ip", value: "2001:db8::1" }]).toString("hex"),
+    ).toMatchSnapshot();
+  });
+
+  test("subjectAlternativeNameExt encodes IPv6 fe80::1", () => {
+    expect(
+      subjectAlternativeNameExt([{ type: "ip", value: "fe80::1" }]).toString("hex"),
+    ).toMatchSnapshot();
+  });
+
+  test("subjectAlternativeNameExt encodes IPv4-mapped IPv6 ::ffff:192.168.1.1", () => {
+    expect(
+      subjectAlternativeNameExt([{ type: "ip", value: "::ffff:192.168.1.1" }]).toString(
+        "hex",
+      ),
+    ).toMatchSnapshot();
+  });
+
+  test("subjectAlternativeNameExt encodes full IPv6 2001:db8:85a3::8a2e:370:7334", () => {
+    expect(
+      subjectAlternativeNameExt([
+        { type: "ip", value: "2001:db8:85a3::8a2e:370:7334" },
+      ]).toString("hex"),
+    ).toMatchSnapshot();
+  });
+
+  test("subjectAlternativeNameExt encodes mixed list", () => {
+    expect(
+      subjectAlternativeNameExt([
+        { type: "uri", value: "https://example.test" },
+        { type: "dns", value: "example.test" },
+        { type: "email", value: "ops@example.test" },
+        { type: "ip", value: "10.0.0.1" },
+      ]).toString("hex"),
+    ).toMatchSnapshot();
+  });
+
+  test("subjectAlternativeNameExt throws on non-ASCII URI", () => {
+    expect(() =>
+      subjectAlternativeNameExt([{ type: "uri", value: "https://exämple.test" }]),
+    ).toThrow("must be ASCII (IA5String)");
+  });
+
+  test("subjectAlternativeNameExt throws on non-ASCII DNS", () => {
+    expect(() =>
+      subjectAlternativeNameExt([{ type: "dns", value: "exämple.test" }]),
+    ).toThrow("must be ASCII (IA5String)");
+  });
+
+  test("subjectAlternativeNameExt throws on non-ASCII email", () => {
+    expect(() =>
+      subjectAlternativeNameExt([{ type: "email", value: "øps@example.test" }]),
+    ).toThrow("must be ASCII (IA5String)");
+  });
+
+  test("subjectAlternativeNameExt throws on invalid IP", () => {
+    expect(() => subjectAlternativeNameExt([{ type: "ip", value: "not-an-ip" }])).toThrow(
+      "is not a valid IPv4 or IPv6 address",
+    );
+  });
+
+  test("subjectAlternativeNameExt throws when empty", () => {
+    expect(() => subjectAlternativeNameExt([])).toThrow(
+      "subjectAlternativeNameExt requires at least one SAN",
+    );
   });
 
   test("wrapExtension omits BOOLEAN when critical=false", () => {

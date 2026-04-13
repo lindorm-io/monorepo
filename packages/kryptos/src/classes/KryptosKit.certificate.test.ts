@@ -181,6 +181,48 @@ describe("KryptosKit certificate generation", () => {
       expect(parsed.subject.commonName).toBe("abc-123");
     });
 
+    test("SAN rich input: mixed uri + dns + email", () => {
+      const kryptos = KryptosKit.generate.sig.ec({
+        algorithm: "ES256",
+        issuer: "https://issuer.example.com",
+        notBefore: NOT_BEFORE,
+        expiresAt: EXPIRES_AT,
+        certificate: {
+          mode: "self-signed",
+          subjectAlternativeNames: [
+            "https://example.com",
+            { type: "dns", value: "example.com" },
+            { type: "email", value: "ops@example.com" },
+          ],
+        },
+      });
+
+      const parsed = parseX509Certificate(Buffer.from(kryptos.x5c![0], "base64"));
+      expect(parsed.extensions.subjectAltNames).toEqual([
+        { type: "uri", value: "https://example.com" },
+        { type: "dns", value: "example.com" },
+        { type: "email", value: "ops@example.com" },
+      ]);
+    });
+
+    test("SAN rich input: IPv4", () => {
+      const kryptos = KryptosKit.generate.sig.ec({
+        algorithm: "ES256",
+        issuer: "https://issuer.example.com",
+        notBefore: NOT_BEFORE,
+        expiresAt: EXPIRES_AT,
+        certificate: {
+          mode: "self-signed",
+          subjectAlternativeNames: [{ type: "ip", value: "192.168.1.1" }],
+        },
+      });
+
+      const parsed = parseX509Certificate(Buffer.from(kryptos.x5c![0], "base64"));
+      expect(parsed.extensions.subjectAltNames).toEqual([
+        { type: "ip", value: "c0a80101" },
+      ]);
+    });
+
     test("SAN explicit override wins", () => {
       const kryptos = KryptosKit.generate.sig.ec({
         algorithm: "ES256",

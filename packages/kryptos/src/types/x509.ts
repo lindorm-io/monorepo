@@ -14,6 +14,12 @@ export type ParsedX509SubjectAltName = {
   readonly value: string;
 };
 
+export type X509SubjectAltNameInput =
+  | { type: "uri"; value: string }
+  | { type: "dns"; value: string }
+  | { type: "email"; value: string }
+  | { type: "ip"; value: string };
+
 export type ParsedX509Name = {
   readonly commonName?: string;
   readonly organization?: string;
