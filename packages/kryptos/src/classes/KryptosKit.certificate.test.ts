@@ -237,13 +237,13 @@ describe("KryptosKit certificate generation", () => {
       expect(bcExt?.ca).toBe(true);
     });
 
-    test("root-CA with pathLenConstraint=0", () => {
+    test("root-CA with pathLengthConstraint=0", () => {
       const ca = KryptosKit.generate.sig.ec({
         algorithm: "ES256",
         issuer: "https://ca.example.com",
         notBefore: CA_NOT_BEFORE,
         expiresAt: CA_EXPIRES_AT,
-        certificate: { mode: "root-ca", pathLenConstraint: 0 },
+        certificate: { mode: "root-ca", pathLengthConstraint: 0 },
       });
 
       const peculiar = new x509.X509Certificate(Buffer.from(ca.x5c![0], "base64"));

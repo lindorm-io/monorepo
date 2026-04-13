@@ -12,7 +12,7 @@ export type KryptosCertificateRootCaOption = {
   subject?: string;
   organization?: string;
   subjectAlternativeNames?: ReadonlyArray<string>;
-  pathLenConstraint?: number;
+  pathLengthConstraint?: number;
 };
 
 export type KryptosCertificateCaSignedOption = {

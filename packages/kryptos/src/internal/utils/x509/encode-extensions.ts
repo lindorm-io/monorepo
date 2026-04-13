@@ -32,7 +32,7 @@ export type X509KeyUsageFlag =
 
 export type X509BasicConstraints = {
   ca: boolean;
-  pathLenConstraint?: number;
+  pathLengthConstraint?: number;
 };
 
 export const wrapExtension = (oid: string, inner: Buffer, critical = false): Buffer => {
@@ -45,25 +45,25 @@ export const wrapExtension = (oid: string, inner: Buffer, critical = false): Buf
 };
 
 export const basicConstraintsExt = (
-  { ca, pathLenConstraint }: X509BasicConstraints,
+  { ca, pathLengthConstraint }: X509BasicConstraints,
   critical = true,
 ): Buffer => {
-  if (!ca && pathLenConstraint !== undefined) {
+  if (!ca && pathLengthConstraint !== undefined) {
     throw new KryptosError(
-      "basicConstraints.pathLenConstraint is only valid when ca=true (RFC 5280 §4.2.1.9)",
+      "basicConstraints.pathLengthConstraint is only valid when ca=true (RFC 5280 §4.2.1.9)",
     );
   }
 
   const seqChildren: Array<Buffer> = [];
   if (ca) {
     seqChildren.push(encodeBoolean(true));
-    if (pathLenConstraint !== undefined) {
-      if (!Number.isInteger(pathLenConstraint) || pathLenConstraint < 0) {
+    if (pathLengthConstraint !== undefined) {
+      if (!Number.isInteger(pathLengthConstraint) || pathLengthConstraint < 0) {
         throw new KryptosError(
-          "basicConstraints.pathLenConstraint must be a non-negative integer",
+          "basicConstraints.pathLengthConstraint must be a non-negative integer",
         );
       }
-      seqChildren.push(encodeInteger(Buffer.from([pathLenConstraint & 0xff])));
+      seqChildren.push(encodeInteger(Buffer.from([pathLengthConstraint & 0xff])));
     }
   }
   const inner = encodeSequence(seqChildren);
