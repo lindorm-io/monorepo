@@ -239,12 +239,14 @@ describe("Pylon", () => {
         clientId: "clientId",
         clientSecret: "clientSecret",
         issuer: "https://lindorm.eu.auth0.com/",
-        dynamicRedirectDomains: ["http://client.lindorm.io"],
-        expose: {
-          accessToken: true,
-          idToken: true,
-          scope: true,
-          subject: true,
+        router: {
+          dynamicRedirectDomains: ["http://client.lindorm.io"],
+          expose: {
+            accessToken: true,
+            idToken: true,
+            scope: true,
+            subject: true,
+          },
         },
       },
 
