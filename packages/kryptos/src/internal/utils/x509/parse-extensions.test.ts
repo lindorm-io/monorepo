@@ -25,7 +25,7 @@ describe("parseX509Extensions", () => {
       keyUsageExt(["digitalSignature", "keyCertSign", "cRLSign"]),
       subjectKeyIdentifierExt(spki),
       authorityKeyIdentifierExt(Buffer.alloc(20, 0xab)),
-      subjectAlternativeNameExt(["https://example.com/"]),
+      subjectAlternativeNameExt([{ type: "uri", value: "https://example.com/" }]),
     ]);
 
     const parsed = parseX509Extensions(der);

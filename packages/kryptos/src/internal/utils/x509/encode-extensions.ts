@@ -1,5 +1,7 @@
 import { ShaKit } from "@lindorm/sha";
+import { isIPv4, isIPv6 } from "node:net";
 import { KryptosError } from "../../../errors";
+import { X509SubjectAltNameInput } from "../../../types/x509";
 import {
   ASN1_TAG_BIT_STRING,
   encodeBitString,
@@ -154,13 +156,98 @@ export const authorityKeyIdentifierExt = (issuerSkiBytes: Buffer): Buffer => {
   return wrapExtension(X509_OID_EXT_AUTHORITY_KEY_IDENTIFIER, inner, false);
 };
 
-export const subjectAlternativeNameExt = (sans: ReadonlyArray<string>): Buffer => {
+const SAN_IA5_TAG: Record<"email" | "dns" | "uri", number> = {
+  email: 1,
+  dns: 2,
+  uri: 6,
+};
+
+const assertIa5String = (type: "uri" | "dns" | "email", value: string): void => {
+  for (let i = 0; i < value.length; i++) {
+    if (value.charCodeAt(i) > 0x7f) {
+      throw new KryptosError(
+        `subjectAlternativeName value for type '${type}' must be ASCII (IA5String)`,
+      );
+    }
+  }
+};
+
+const parseIpv4 = (value: string): Buffer => {
+  const parts = value.split(".");
+  const bytes = Buffer.alloc(4);
+  for (let i = 0; i < 4; i++) {
+    bytes[i] = Number.parseInt(parts[i], 10);
+  }
+  return bytes;
+};
+
+const parseIpv6 = (value: string): Buffer => {
+  const [head, tail] = value.includes("::") ? value.split("::") : [value, undefined];
+  const splitGroups = (section: string): Array<string> =>
+    section.length === 0 ? [] : section.split(":");
+
+  const headGroups = splitGroups(head);
+  const tailGroups = tail !== undefined ? splitGroups(tail) : [];
+
+  const lastTail = tailGroups[tailGroups.length - 1];
+  const hasEmbeddedIpv4 = lastTail !== undefined && lastTail.includes(".");
+  let embeddedBytes: Buffer | undefined;
+  if (hasEmbeddedIpv4) {
+    embeddedBytes = parseIpv4(tailGroups.pop() as string);
+  } else if (headGroups.length > 0 && headGroups[headGroups.length - 1].includes(".")) {
+    embeddedBytes = parseIpv4(headGroups.pop() as string);
+  }
+
+  const existing = headGroups.length + tailGroups.length + (embeddedBytes ? 2 : 0);
+  const missing = 8 - existing;
+  const zeroFill: Array<string> = tail !== undefined ? new Array(missing).fill("0") : [];
+
+  const groups: Array<string> = [...headGroups, ...zeroFill, ...tailGroups];
+
+  const bytes = Buffer.alloc(16);
+  for (let i = 0; i < groups.length; i++) {
+    const word = Number.parseInt(groups[i], 16);
+    bytes[i * 2] = (word >> 8) & 0xff;
+    bytes[i * 2 + 1] = word & 0xff;
+  }
+  if (embeddedBytes) {
+    bytes[12] = embeddedBytes[0];
+    bytes[13] = embeddedBytes[1];
+    bytes[14] = embeddedBytes[2];
+    bytes[15] = embeddedBytes[3];
+  }
+  return bytes;
+};
+
+const encodeIpSan = (value: string): Buffer => {
+  if (isIPv4(value)) {
+    return encodeImplicitTag(7, parseIpv4(value), false);
+  }
+  if (isIPv6(value)) {
+    return encodeImplicitTag(7, parseIpv6(value), false);
+  }
+  throw new KryptosError(
+    `subjectAlternativeName ip value '${value}' is not a valid IPv4 or IPv6 address`,
+  );
+};
+
+export const subjectAlternativeNameExt = (
+  sans: ReadonlyArray<X509SubjectAltNameInput>,
+): Buffer => {
   if (sans.length === 0) {
     throw new KryptosError("subjectAlternativeNameExt requires at least one SAN");
   }
-  const children = sans.map((uri) =>
-    encodeImplicitTag(6, Buffer.from(uri, "ascii"), false),
-  );
+  const children = sans.map((san) => {
+    if (san.type === "ip") {
+      return encodeIpSan(san.value);
+    }
+    assertIa5String(san.type, san.value);
+    return encodeImplicitTag(
+      SAN_IA5_TAG[san.type],
+      Buffer.from(san.value, "ascii"),
+      false,
+    );
+  });
   const inner = encodeSequence(children);
   return wrapExtension(X509_OID_EXT_SUBJECT_ALT_NAME, inner, false);
 };
