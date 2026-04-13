@@ -26,7 +26,9 @@ exports[`createHandshakeTokenMiddleware bearer path verifies bearer and register
 
 exports[`createHandshakeTokenMiddleware session fallback path registers session strategy when socket.data.session present 1`] = `
 {
-  "header": {},
+  "header": {
+    "baseFormat": "JWT",
+  },
   "payload": {
     "expiresAt": 2099-01-01T00:00:00.000Z,
     "subject": "alice",

@@ -23,7 +23,9 @@ exports[`createAccessTokenMiddleware DPoP (HTTP) passes DPoP header to aegis and
 
 exports[`createAccessTokenMiddleware HTTP context falls back to session.accessToken when no header present 1`] = `
 {
-  "header": {},
+  "header": {
+    "baseFormat": "JWT",
+  },
   "payload": {
     "subject": "alice",
   },
