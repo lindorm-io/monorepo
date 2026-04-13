@@ -5,6 +5,7 @@ import { verifyCookie } from "./verify-cookie";
 const verify = jest.fn();
 
 jest.mock("@lindorm/aegis", () => ({
+  ...jest.requireActual("@lindorm/aegis"),
   SignatureKit: class SignatureKit {
     verify(): boolean {
       return verify();

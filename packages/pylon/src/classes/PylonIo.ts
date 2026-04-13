@@ -1,7 +1,7 @@
 import { PylonListenerScanner } from "#internal/classes/PylonListenerScanner";
 import { createCommonContextInitialisationMiddleware } from "#internal/middleware/common-context-initialisation-middleware";
 import { createQueueMiddleware } from "#internal/middleware/common-queue-middleware";
-import { createSourcesMiddleware } from "#internal/middleware/common-sources-middleware";
+import { createDependenciesMiddleware } from "#internal/middleware/common-dependencies-middleware";
 import { createWebhookMiddleware } from "#internal/middleware/common-webhook-middleware";
 import { createConnectionContextInitialisationMiddleware } from "#internal/middleware/connection-context-initialisation-middleware";
 import { createConnectionCorsMiddleware } from "#internal/middleware/connection-cors-middleware";
@@ -54,7 +54,7 @@ export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
     const socket = options.socket!;
 
     this.middleware = [
-      createSourcesMiddleware({
+      createDependenciesMiddleware({
         auditConfig:
           options.audit?.enabled && (options.audit.iris ?? options.iris)
             ? {

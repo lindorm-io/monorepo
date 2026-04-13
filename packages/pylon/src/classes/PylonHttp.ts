@@ -1,7 +1,7 @@
 import { PylonRouterScanner } from "#internal/classes/PylonRouterScanner";
 import { createCommonContextInitialisationMiddleware } from "#internal/middleware/common-context-initialisation-middleware";
 import { createQueueMiddleware } from "#internal/middleware/common-queue-middleware";
-import { createSourcesMiddleware } from "#internal/middleware/common-sources-middleware";
+import { createDependenciesMiddleware } from "#internal/middleware/common-dependencies-middleware";
 import { createWebhookMiddleware } from "#internal/middleware/common-webhook-middleware";
 import { createHttpBodyParserMiddleware } from "#internal/middleware/http-body-parser-middleware";
 import { createHttpContextInitialisationMiddleware } from "#internal/middleware/http-context-initialisation-middleware";
@@ -26,6 +26,7 @@ import Koa from "koa";
 import { useRateLimit } from "../middleware/common/use-rate-limit";
 import {
   HttpCallback,
+  PylonAuthConfig,
   PylonHttpContext,
   PylonHttpMiddleware,
   PylonHttpOptions,
@@ -33,6 +34,7 @@ import {
 import { PylonRouter } from "./PylonRouter";
 
 export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
+  private readonly authConfig: PylonAuthConfig | undefined;
   private readonly logger: ILogger;
   private readonly middleware: Array<PylonHttpMiddleware<T>>;
   private readonly options: PylonHttpOptions<T>;
@@ -45,6 +47,7 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
   public constructor(options: PylonHttpOptions<T>) {
     this.logger = options.logger.child(["PylonHttp"]);
 
+    this.authConfig = options.auth ? parseAuthConfig(options.auth) : undefined;
     this.middleware = [];
     this.options = options;
     this.router = new PylonRouter<T>();
@@ -95,7 +98,8 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
       httpQueryParserMiddleware,
       httpRequestLoggerMiddleware,
       httpResponseBodyMiddleware,
-      createSourcesMiddleware({
+      createDependenciesMiddleware({
+        authConfig: this.authConfig,
         auditConfig:
           this.options.audit?.enabled && (this.options.audit.iris ?? this.options.iris)
             ? {
@@ -140,9 +144,11 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
     this.addRouter("/health", createHealthRouter(this.options.callbacks?.health));
     this.addRouter("/.well-known", createWellKnownRouter(this.options));
 
-    if (this.options.auth) {
-      const config = parseAuthConfig(this.options.auth);
-      this.addRouter(config.pathPrefix, createAuthRouter(config));
+    if (this.authConfig?.router) {
+      this.addRouter(
+        this.authConfig.router.pathPrefix,
+        createAuthRouter(this.authConfig),
+      );
     }
 
     if (isString(this.options.routes)) {

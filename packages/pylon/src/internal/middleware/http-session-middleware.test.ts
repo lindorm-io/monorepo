@@ -8,14 +8,6 @@ import { createHttpSessionMiddleware } from "./http-session-middleware";
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate);
 
-jest.mock("@lindorm/aegis", () => ({
-  Aegis: class Aegis {
-    public static parse() {
-      return "parsed";
-    }
-  },
-}));
-
 describe("httpSessionMiddleware", () => {
   let ctx: any;
   let next: Next;
@@ -47,7 +39,12 @@ describe("httpSessionMiddleware", () => {
         canEncrypt: jest.fn().mockReturnValue(false),
         canDecrypt: jest.fn().mockReturnValue(false),
       },
-      aegis: { aes: { encrypt: jest.fn(), decrypt: jest.fn() } },
+      aegis: {
+        aes: { encrypt: jest.fn(), decrypt: jest.fn() },
+        verify: jest
+          .fn()
+          .mockResolvedValue({ payload: {}, header: { baseFormat: "JWT" } }),
+      },
       state: {
         metadata: {},
         session: null,

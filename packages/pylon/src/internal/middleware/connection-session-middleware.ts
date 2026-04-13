@@ -73,7 +73,7 @@ export const createConnectionSessionMiddleware = <
       return next();
     }
 
-    const parsedToken = extractTokenFromSession(session);
+    const parsedToken = await extractTokenFromSession(ctx.aegis, session);
     if (parsedToken) {
       socket.data.tokens.bearer = parsedToken;
     }
@@ -82,6 +82,7 @@ export const createConnectionSessionMiddleware = <
       session.expiresAt ?? parsedToken?.payload.expiresAt ?? new Date(0);
 
     const refresh = createSessionRefreshHandler({
+      aegis: ctx.aegis,
       lookup: (id) => store.get(ctx, id),
       sessionId: session.id,
       socket,
