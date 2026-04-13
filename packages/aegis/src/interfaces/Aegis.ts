@@ -61,6 +61,7 @@ export interface IAegis {
   jws: IAegisJws;
   jwt: IAegisJwt;
 
+  verify(token: string): Promise<ParsedJwt | ParsedJws<any>>;
   verify<T extends ParsedJws<any>>(token: string): Promise<T>;
   verify<T extends ParsedJwt>(token: string, options?: VerifyJwtOptions): Promise<T>;
 }

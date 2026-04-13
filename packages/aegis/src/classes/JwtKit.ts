@@ -244,6 +244,7 @@ export class JwtKit implements IJwtKit {
 
     const header = parseTokenHeader<ParsedJwtHeader>(decoded.header);
     header.tokenType = decodeTokenTypeFromTyp(typ, "jwt");
+    header.baseFormat = "JWT";
 
     const payload = parseTokenPayload<C>(decoded.payload);
 

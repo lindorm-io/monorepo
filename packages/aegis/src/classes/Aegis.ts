@@ -18,8 +18,10 @@ import { Dict } from "@lindorm/types";
 import { AegisError } from "../errors";
 import { IAegis, IAegisAes, IAegisJwe, IAegisJws, IAegisJwt } from "../interfaces";
 import {
+  AegisIntrospection,
   AegisOptions,
   AegisPredicate,
+  AegisUserinfo,
   DecodedJwe,
   DecodedJws,
   DecodedJwt,
@@ -35,9 +37,17 @@ import {
   SignedJws,
   SignedJwt,
   TokenHeaderClaims,
+  ValidateJwtOptions,
   VerifyJwtOptions,
 } from "../types";
+import { createJwtValidate } from "#internal/utils/jwt-validate";
+import { validate as validateClaims } from "#internal/utils/validate";
 import { decodeJoseHeader } from "#internal/utils/jose-header";
+import {
+  IntrospectClaimsInput,
+  parseIntrospection,
+} from "#internal/utils/parse-introspection";
+import { parseUserinfo, UserinfoClaimsInput } from "#internal/utils/parse-userinfo";
 import { JweKit } from "./JweKit";
 import { JwsKit } from "./JwsKit";
 import { JwtKit } from "./JwtKit";
@@ -166,6 +176,27 @@ export class Aegis implements IAegis {
       return JwsKit.parse(token) as T;
     }
     throw new AegisError("Invalid token type", { debug: { token } });
+  }
+
+  public static parseUserinfo(data: UserinfoClaimsInput): AegisUserinfo {
+    return parseUserinfo(data);
+  }
+
+  public static parseIntrospection(data: IntrospectClaimsInput): AegisIntrospection {
+    return parseIntrospection(data);
+  }
+
+  /**
+   * Validate a flat claim dict against a JwtClaimMatchers-style declarative
+   * matcher. Throws LindormError("Invalid token") with details about every
+   * failing key when the claims don't match.
+   *
+   * Works on any flat claim source — ParsedJwtPayload, AegisIntrospection,
+   * AegisUserinfo, or any structurally-compatible dict.
+   */
+  public static validateClaims(claims: Dict, matchers: ValidateJwtOptions): void {
+    const predicate = createJwtValidate(matchers);
+    validateClaims(claims, predicate);
   }
 
   // private aes
