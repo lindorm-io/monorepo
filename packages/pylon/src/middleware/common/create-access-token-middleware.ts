@@ -50,7 +50,7 @@ const runHttp = async (ctx: PylonHttpContext, options: Options): Promise<void> =
   }
 
   if (source.kind === "session") {
-    const parsed = extractTokenFromSession(source.session);
+    const parsed = await extractTokenFromSession(ctx.aegis, source.session);
     if (!parsed) {
       throw new ClientError("Invalid session access token", {
         status: ClientError.Status.Unauthorized,

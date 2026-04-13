@@ -3,25 +3,32 @@ import { isString } from "@lindorm/is";
 import { get } from "object-path";
 import { PylonContext, PylonMiddleware } from "../../types";
 
-const DEFAULT_PATH = "state.tokens.accessToken.payload.tenantId";
-
 type UseTenantOptions = {
   required?: boolean;
 };
 
 export const useTenant = (
-  path: string = DEFAULT_PATH,
+  path?: string,
   options: UseTenantOptions = {},
 ): PylonMiddleware => {
   const required = options.required ?? true;
 
   return async function useTenantMiddleware(ctx: PylonContext, next) {
-    const value = get(ctx, path);
-    const tenantId = isString(value) && value.length ? value : undefined;
+    let tenantId: string | undefined;
+
+    if (path) {
+      const value = get(ctx, path);
+      tenantId = isString(value) && value.length ? value : undefined;
+    } else {
+      const introspection = await ctx.auth.introspect();
+      tenantId = introspection.active ? (introspection.tenantId ?? undefined) : undefined;
+    }
 
     if (!tenantId && required) {
       throw new ClientError("Tenant ID is required", {
-        details: `Expected tenant at path [${path}]`,
+        details: path
+          ? `Expected tenant at path [${path}]`
+          : "No tenant found in token introspection",
         status: ClientError.Status.Forbidden,
         code: "tenant_required",
       });

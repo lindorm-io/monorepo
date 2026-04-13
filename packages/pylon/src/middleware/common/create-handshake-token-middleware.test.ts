@@ -177,13 +177,12 @@ describe("createHandshakeTokenMiddleware", () => {
     } as any;
 
     test("registers session strategy when socket.data.session present", async () => {
-      (Aegis.parse as jest.Mock).mockReturnValue({
+      const ctx = makeCtx({ data: { session } });
+      (ctx.aegis.verify as jest.Mock).mockResolvedValue({
         payload: { subject: "alice", expiresAt: session.expiresAt },
-        header: {},
+        header: { baseFormat: "JWT" },
         token: "session-jwt",
       });
-
-      const ctx = makeCtx({ data: { session } });
 
       const mw = createHandshakeTokenMiddleware(options);
       await mw(ctx, next);
@@ -214,13 +213,12 @@ describe("createHandshakeTokenMiddleware", () => {
     });
 
     test("session refresh handler updates state from re-read session", async () => {
-      (Aegis.parse as jest.Mock).mockReturnValue({
+      const ctx = makeCtx({ data: { session } });
+      (ctx.aegis.verify as jest.Mock).mockResolvedValue({
         payload: { subject: "alice", expiresAt: session.expiresAt },
-        header: {},
+        header: { baseFormat: "JWT" },
         token: "session-jwt",
       });
-
-      const ctx = makeCtx({ data: { session } });
 
       const mw = createHandshakeTokenMiddleware(options);
       await mw(ctx, next);
@@ -239,13 +237,12 @@ describe("createHandshakeTokenMiddleware", () => {
         ...session,
         expiresAt: new Date("2000-01-01T00:00:00.000Z"),
       };
-      (Aegis.parse as jest.Mock).mockReturnValue({
+      const ctx = makeCtx({ data: { session: pastSession } });
+      (ctx.aegis.verify as jest.Mock).mockResolvedValue({
         payload: { subject: "alice", expiresAt: pastSession.expiresAt },
-        header: {},
+        header: { baseFormat: "JWT" },
         token: "session-jwt",
       });
-
-      const ctx = makeCtx({ data: { session: pastSession } });
 
       const mw = createHandshakeTokenMiddleware(options);
       await mw(ctx, next);

@@ -1,27 +1,25 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
-exports[`useAccess should collect all violations into a single error message 1`] = `"Requires at least one role: admin; Missing required permissions: admin:write; Requires at least one scope: admin:all; Requires level of assurance >= 4, got 2; Requires adjusted access level >= 3, got 1"`;
+exports[`useAccess with ctx.auth (introspection) should collect all violations into a single error message 1`] = `"roles (got: ["user"]); permissions (got: ["users:read"]); scope (got: ["openid"]); levelOfAssurance (got: 2); adjustedAccessLevel (got: 1)"`;
 
-exports[`useAccess should throw 401 when token is missing 1`] = `"Token not found"`;
+exports[`useAccess with ctx.auth (introspection) should throw 401 when token is not active 1`] = `"Token is not active"`;
 
-exports[`useAccess should throw 401 when token is missing 2`] = `"Expected token [accessToken] on context"`;
+exports[`useAccess with ctx.auth (introspection) should throw 403 when adjustedAccessLevel is too low 1`] = `"adjustedAccessLevel (got: 1)"`;
 
-exports[`useAccess should throw 403 when adjustedAccessLevel is too low 1`] = `"Requires adjusted access level >= 5, got 1"`;
+exports[`useAccess with ctx.auth (introspection) should throw 403 when adjustedAccessLevel is undefined on introspection 1`] = `"adjustedAccessLevel (got: undefined)"`;
 
-exports[`useAccess should throw 403 when adjustedAccessLevel is undefined on payload 1`] = `"Requires adjusted access level >= 1, got none"`;
+exports[`useAccess with ctx.auth (introspection) should throw 403 when levelOfAssurance is too low 1`] = `"levelOfAssurance (got: 2)"`;
 
-exports[`useAccess should throw 403 when levelOfAssurance is too low 1`] = `"Requires level of assurance >= 3, got 2"`;
+exports[`useAccess with ctx.auth (introspection) should throw 403 when levelOfAssurance is undefined on introspection 1`] = `"levelOfAssurance (got: undefined)"`;
 
-exports[`useAccess should throw 403 when levelOfAssurance is undefined on payload 1`] = `"Requires level of assurance >= 1, got none"`;
+exports[`useAccess with ctx.auth (introspection) should throw 403 when permissions check fails 1`] = `"Access denied"`;
 
-exports[`useAccess should throw 403 when permissions check fails 1`] = `"Access denied"`;
+exports[`useAccess with ctx.auth (introspection) should throw 403 when permissions check fails 2`] = `"permissions (got: ["users:read"])"`;
 
-exports[`useAccess should throw 403 when permissions check fails 2`] = `"Missing required permissions: users:delete"`;
+exports[`useAccess with ctx.auth (introspection) should throw 403 when roles check fails 1`] = `"Access denied"`;
 
-exports[`useAccess should throw 403 when roles check fails 1`] = `"Access denied"`;
+exports[`useAccess with ctx.auth (introspection) should throw 403 when roles check fails 2`] = `"roles (got: ["user"])"`;
 
-exports[`useAccess should throw 403 when roles check fails 2`] = `"Requires at least one role: admin, superadmin"`;
+exports[`useAccess with ctx.auth (introspection) should throw 403 when scopes check fails 1`] = `"Access denied"`;
 
-exports[`useAccess should throw 403 when scopes check fails 1`] = `"Access denied"`;
-
-exports[`useAccess should throw 403 when scopes check fails 2`] = `"Requires at least one scope: admin:all, system:write"`;
+exports[`useAccess with ctx.auth (introspection) should throw 403 when scopes check fails 2`] = `"scope (got: ["openid"])"`;

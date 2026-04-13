@@ -1,15 +1,7 @@
-import { Aegis, createMockAegis } from "@lindorm/aegis";
+import { createMockAegis } from "@lindorm/aegis";
 import { ClientError, ServerError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger";
 import { createAccessTokenMiddleware } from "./create-access-token-middleware";
-
-jest.mock("@lindorm/aegis", () => ({
-  ...jest.requireActual("@lindorm/aegis"),
-  Aegis: {
-    ...jest.requireActual("@lindorm/aegis").Aegis,
-    parse: jest.fn(),
-  },
-}));
 
 describe("createAccessTokenMiddleware", () => {
   let next: jest.Mock;
@@ -18,7 +10,6 @@ describe("createAccessTokenMiddleware", () => {
 
   beforeEach(() => {
     next = jest.fn();
-    (Aegis.parse as jest.Mock).mockReset();
   });
 
   describe("HTTP context", () => {
@@ -61,16 +52,16 @@ describe("createAccessTokenMiddleware", () => {
         scope: ["openid"],
         subject: "alice",
       };
-      (Aegis.parse as jest.Mock).mockReturnValue({
+      (ctx.aegis.verify as jest.Mock).mockResolvedValue({
         payload: { subject: "alice" },
-        header: {},
+        header: { baseFormat: "JWT" },
         token: "session-jwt",
       });
 
       const middleware = createAccessTokenMiddleware(options);
       await middleware(ctx, next);
 
-      expect(ctx.aegis.verify).not.toHaveBeenCalled();
+      expect(ctx.aegis.verify).toHaveBeenCalledWith("session-jwt");
       expect(ctx.state.tokens.accessToken).toMatchSnapshot();
       expect(next).toHaveBeenCalledTimes(1);
     });
@@ -92,7 +83,6 @@ describe("createAccessTokenMiddleware", () => {
         "jwt-token",
         expect.objectContaining({ tokenType: "access_token" }),
       );
-      expect(Aegis.parse).not.toHaveBeenCalled();
     });
 
     test("throws Unauthorized when neither header nor session present", async () => {
@@ -112,9 +102,8 @@ describe("createAccessTokenMiddleware", () => {
         scope: ["openid"],
         subject: "alice",
       };
-      (Aegis.parse as jest.Mock).mockImplementation(() => {
-        throw new Error("bad");
-      });
+      const { AegisError } = jest.requireActual("@lindorm/aegis");
+      (ctx.aegis.verify as jest.Mock).mockRejectedValue(new AegisError("bad token"));
 
       const middleware = createAccessTokenMiddleware(options);
       await expect(middleware(ctx, next)).rejects.toThrow(ClientError);

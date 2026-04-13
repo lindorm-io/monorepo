@@ -45,7 +45,7 @@ export const createHandshakeTokenMiddleware = <
     if (source.kind === "session") {
       if (socket.data.pylon.auth) return next();
 
-      const parsed = extractTokenFromSession(source.session);
+      const parsed = await extractTokenFromSession(ctx.aegis, source.session);
       if (parsed) socket.data.tokens.bearer = parsed;
 
       const auth: PylonSocketAuth = {
@@ -56,6 +56,7 @@ export const createHandshakeTokenMiddleware = <
         authExpiredEmittedAt: null,
       };
       auth.refresh = createSessionRefreshHandler({
+        aegis: ctx.aegis,
         lookup: async () => source.session,
         sessionId: source.session.id,
         socket,
