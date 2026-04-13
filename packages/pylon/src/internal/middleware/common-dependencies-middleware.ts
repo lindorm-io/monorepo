@@ -4,13 +4,24 @@ import { IIrisSource } from "@lindorm/iris";
 import { Middleware } from "@lindorm/middleware";
 import { IProteusSource } from "@lindorm/proteus";
 import { lazyFactory } from "@lindorm/utils";
+import {
+  PylonAuthConfig,
+  PylonCommonContext,
+  PylonContext,
+  PylonHttpContext,
+} from "../../types";
 import { AUDIT_SOURCE, RATE_LIMIT_SOURCE } from "../constants/symbols";
+import {
+  createAuthClient,
+  createSocketClaimsClient,
+} from "../utils/auth/create-auth-client";
+import { createUnconfiguredAuthClient } from "../utils/auth/create-unconfigured-auth-client";
+import { isHttpContext } from "../utils/is-context";
 import { createHttpRoomContext, createRoomContext } from "../utils/create-room-context";
 import {
   createHttpSocketEmitter,
   createSocketEmitter,
 } from "../utils/create-socket-emitter";
-import { PylonCommonContext } from "../../types";
 
 type AuditConfig = {
   iris: IIrisSource;
@@ -20,6 +31,7 @@ type AuditConfig = {
 };
 
 type Options = {
+  authConfig?: PylonAuthConfig;
   auditConfig?: AuditConfig;
   hermes?: IHermes;
   iris?: IIrisSource;
@@ -30,10 +42,10 @@ type Options = {
   roomsProteus?: IProteusSource;
 };
 
-export const createSourcesMiddleware = <C extends PylonCommonContext>(
+export const createDependenciesMiddleware = <C extends PylonCommonContext>(
   options: Options,
 ): Middleware<C> => {
-  return async function sourcesMiddleware(ctx, next) {
+  return async function dependenciesMiddleware(ctx, next) {
     const timer = ctx.logger.time();
 
     try {
@@ -51,6 +63,20 @@ export const createSourcesMiddleware = <C extends PylonCommonContext>(
         lazyFactory(ctx, "iris", () =>
           options.iris!.session({ logger: ctx.logger, context: ctx }),
         );
+      }
+
+      if (options.authConfig) {
+        if (isHttpContext(ctx)) {
+          lazyFactory(ctx, "auth", () =>
+            createAuthClient(ctx as unknown as PylonHttpContext, options.authConfig!),
+          );
+        } else {
+          lazyFactory(ctx, "auth", () =>
+            createSocketClaimsClient(ctx as unknown as PylonContext, options.authConfig!),
+          );
+        }
+      } else {
+        lazyFactory(ctx, "auth", () => createUnconfiguredAuthClient());
       }
 
       if (options.auditConfig) {
@@ -103,11 +129,11 @@ export const createSourcesMiddleware = <C extends PylonCommonContext>(
         );
       }
 
-      timer.debug("Sources added to context");
+      timer.debug("Dependencies added to context");
     } catch (error: any) {
-      timer.debug("Failed to add sources to context");
+      timer.debug("Failed to add dependencies to context");
 
-      throw new ServerError("Failed to add sources to context", { error });
+      throw new ServerError("Failed to add dependencies to context", { error });
     }
 
     await next();
