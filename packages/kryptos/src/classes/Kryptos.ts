@@ -55,7 +55,7 @@ export class Kryptos implements IKryptos {
   private readonly _use: KryptosUse;
   private readonly _certificateChain: ReadonlyArray<ParsedX509> | undefined;
   private readonly _encryption: KryptosEncryption | null;
-  private readonly _expiresAt: Date | null;
+  private readonly _expiresAt: Date;
   private readonly _hidden: boolean;
   private readonly _issuer: string | null;
   private readonly _jwksUri: string | null;
@@ -74,12 +74,14 @@ export class Kryptos implements IKryptos {
     this._createdAt = options.createdAt ?? new Date();
     this._curve = options.curve || null;
     this._encryption = options.encryption || null;
-    this._expiresAt = options.expiresAt || null;
+    this._notBefore = options.notBefore ?? new Date();
+    this._expiresAt =
+      options.expiresAt ??
+      new Date(this._notBefore.getTime() + 25 * 365.25 * 24 * 60 * 60 * 1000);
     this._hidden = options.hidden ?? false;
     this._isExternal = options.isExternal ?? false;
     this._issuer = options.issuer || null;
     this._jwksUri = options.jwksUri || null;
-    this._notBefore = options.notBefore ?? new Date();
     this._operations = options.operations ?? [];
     this._ownerId = options.ownerId || null;
     this._purpose = options.purpose || null;
@@ -150,7 +152,7 @@ export class Kryptos implements IKryptos {
     return this._encryption;
   }
 
-  public get expiresAt(): Date | null {
+  public get expiresAt(): Date {
     return this._expiresAt;
   }
 
@@ -201,7 +203,6 @@ export class Kryptos implements IKryptos {
   // metadata
 
   public get expiresIn(): number {
-    if (!this._expiresAt) return -1;
     if (this.isExpired) return 0;
     return getUnixTime(this._expiresAt) - getUnixTime(new Date());
   }
@@ -222,7 +223,6 @@ export class Kryptos implements IKryptos {
   }
 
   public get isExpired(): boolean {
-    if (!this._expiresAt) return false;
     return isEqual(new Date(), this._expiresAt) || isAfter(new Date(), this._expiresAt);
   }
 
@@ -472,7 +472,7 @@ export class Kryptos implements IKryptos {
       use: this.use,
       kty: this.type,
       enc: this.encryption ?? undefined,
-      exp: this.expiresAt ? getUnixTime(this.expiresAt) : undefined,
+      exp: getUnixTime(this.expiresAt),
       iat: getUnixTime(this.createdAt),
       iss: this.issuer ?? undefined,
       jku: this.jwksUri ?? undefined,

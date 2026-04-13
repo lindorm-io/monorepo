@@ -1,3 +1,4 @@
+import MockDate from "mockdate";
 import {
   TEST_X509_INTERMEDIATE_PEM,
   TEST_X509_LEAF_B64_DER,
@@ -11,6 +12,8 @@ import {
 import { KryptosError } from "../errors";
 import { Kryptos } from "./Kryptos";
 import { KryptosKit } from "./KryptosKit";
+
+MockDate.set(new Date("2025-06-15T12:00:00.000Z").toISOString());
 
 jest.mock("crypto", () => ({
   ...jest.requireActual("crypto"),

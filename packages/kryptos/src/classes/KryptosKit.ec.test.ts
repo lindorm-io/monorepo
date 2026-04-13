@@ -66,9 +66,7 @@ describe("KryptosKit (EC)", () => {
         use: "enc",
       });
 
-      expect(KryptosKit.env.export(kryptos)).toEqual(
-        "kryptos:eyJjcnYiOiJQLTUyMSIsIngiOiJBSTNZOGhXbEZOMTljdVkzR1NEd0dUYWJtZDYycGl3MWJZdDUtR1NXdmFOOG1KVlFsUU0taG1nWjlwc2JNY1NDd3FNX1lkRnMtd1FqLTAwUGZIZzMxVmJSIiwieSI6IkFBZ1BaUmhkcnNZM1NMTWRZZ1ZGMk5WaTVIbjdTUExBVzEzNmo4M1k4NTJ1LVZYekc2WjFVcjVPSkk4UWgxOHFndjhpN1I3c2dwT3dteVA1U1lUeXNNbWYiLCJkIjoiQUV3R0tOdzBHSzZBMWVSSUNVbExQNURpTDV4RW5HWHAtOTRGMnVhRUpMbTlIcEVKb0RpWFQwSXlEVkxIV0VaLXUwQ3Y2QVhUVklWVzdSdjZuY2FpSUdxMyIsImtpZCI6IjEzNjE3MWM1LTdiNzYtNWUxNC05YmI4LWM2MDU1MTk3N2M1OSIsImFsZyI6IkVDREgtRVMrQTI1NkdDTUtXIiwidXNlIjoiZW5jIiwia3R5IjoiRUMiLCJlbmMiOiJBMjU2R0NNIiwiaWF0IjoxNzA0MDk2MDAwLCJrZXlfb3BzIjpbInNpZ24iLCJ2ZXJpZnkiXSwibmJmIjoxNzA0MDk2MDAwLCJ1YXQiOjE3MDQwOTYwMDB9",
-      );
+      expect(KryptosKit.env.export(kryptos)).toMatchSnapshot();
     });
   });
 

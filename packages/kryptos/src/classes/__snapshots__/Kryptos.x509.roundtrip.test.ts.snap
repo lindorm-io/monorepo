@@ -11,7 +11,7 @@ exports[`Kryptos (X.509 round-trip) toDB → fromDb round-trip preserves certifi
   "createdAt": 2020-01-01T00:00:00.000Z,
   "curve": "P-256",
   "encryption": null,
-  "expiresAt": null,
+  "expiresAt": 2044-12-31T06:00:00.000Z,
   "hidden": false,
   "id": "3b9a051f-e1ec-562b-bf92-7cf92ec465ba",
   "isExternal": false,
@@ -43,8 +43,8 @@ exports[`Kryptos (X.509 round-trip) toJSON → fromJwk round-trip preserves cert
   "createdAt": 2020-01-01T00:00:00.000Z,
   "curve": "P-256",
   "encryption": null,
-  "expiresAt": null,
-  "expiresIn": -1,
+  "expiresAt": 2044-12-31T06:00:00.000Z,
+  "expiresIn": 616788000,
   "hasPrivateKey": true,
   "hasPublicKey": true,
   "hidden": false,
@@ -72,6 +72,7 @@ exports[`Kryptos (X.509 round-trip) toJWK → fromJwk round-trip preserves chain
 {
   "alg": "ES256",
   "crv": "P-256",
+  "exp": 2366776800,
   "iat": 1577836800,
   "key_ops": [
     "sign",

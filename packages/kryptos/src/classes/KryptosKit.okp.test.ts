@@ -38,9 +38,7 @@ describe("KryptosKit (OKP)", () => {
     test("export", () => {
       const kryptos = KryptosKit.from.auto(TEST_OKP_KEY_B64);
 
-      expect(KryptosKit.env.export(kryptos)).toEqual(
-        "kryptos:eyJjcnYiOiJFZDI1NTE5IiwieCI6IkdSQ3dDQTZsQ2hvc0ZHTVF3eEdpSENkemJsZnZDejBGTmlSdFRubTFxcWMiLCJkIjoiSEFvbVctaUhXZUIzMHRGM3QyMjhZNUtwYmk1bHFaMjhpN1FBRVBZQ1RFcyIsImtpZCI6ImZmMmE0NDhlLThlYjAtNTlhOC04ZmM2LTBjZTIzYWQwN2U4ZiIsImFsZyI6IkVkRFNBIiwidXNlIjoic2lnIiwia3R5IjoiT0tQIiwiaWF0IjoxNzA0MDk2MDAwLCJrZXlfb3BzIjpbInNpZ24iLCJ2ZXJpZnkiXSwibmJmIjoxNzA0MDk2MDAwLCJ1YXQiOjE3MDQwOTYwMDB9",
-      );
+      expect(KryptosKit.env.export(kryptos)).toMatchSnapshot();
     });
   });
 
