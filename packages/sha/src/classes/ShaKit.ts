@@ -14,7 +14,18 @@ export class ShaKit {
 
   // public static
 
-  public static S256(data: string): string {
+  // SHA-1 is cryptographically broken. The ONLY legitimate use of this method is
+  // computing the legacy X.509 `x5t` thumbprint per RFC 7515 §4.1.7.
+  // Do NOT use S1 for authentication, integrity, or any security-sensitive purpose.
+  public static S1(data: string | Buffer): string {
+    return createShaHash({
+      algorithm: "SHA1",
+      data,
+      encoding: "base64url",
+    });
+  }
+
+  public static S256(data: string | Buffer): string {
     return createShaHash({
       algorithm: "SHA256",
       data,
@@ -22,7 +33,7 @@ export class ShaKit {
     });
   }
 
-  public static S384(data: string): string {
+  public static S384(data: string | Buffer): string {
     return createShaHash({
       algorithm: "SHA384",
       data,
@@ -30,7 +41,7 @@ export class ShaKit {
     });
   }
 
-  public static S512(data: string): string {
+  public static S512(data: string | Buffer): string {
     return createShaHash({
       algorithm: "SHA512",
       data,
