@@ -2,7 +2,7 @@ import { PredicateOperator } from "@lindorm/types";
 
 export type JwtClaimMatchers = {
   accessToken?: string;
-  adjustedAccessLevel?: PredicateOperator<number>;
+  adjustedAccessLevel?: number | PredicateOperator<number>;
   audience?: Array<string> | string | PredicateOperator<any>;
   authCode?: string;
   authContextClass?: string | PredicateOperator<string>;

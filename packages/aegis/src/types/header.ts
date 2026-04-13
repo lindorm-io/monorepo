@@ -104,8 +104,9 @@ export type TokenEncryptOrSignOptions = Pick<
 
 export type RefinedTokenHeader<A> = Omit<
   ParsedTokenHeader,
-  "algorithm" | "headerType"
+  "algorithm" | "baseFormat" | "headerType"
 > & {
   algorithm: A;
+  baseFormat: BaseTokenFormat;
   headerType: string;
 };

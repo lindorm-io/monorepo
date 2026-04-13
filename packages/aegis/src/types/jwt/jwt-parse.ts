@@ -2,10 +2,11 @@ import { KryptosSigAlgorithm } from "@lindorm/kryptos";
 import { Dict } from "@lindorm/types";
 import {
   AegisProfile,
-  ConfirmationClaim,
-  ExtendedClaims,
   LindormClaims,
+  OAuthClaims,
   OidcClaims,
+  PopClaims,
+  DelegationClaims,
   StdClaims,
 } from "../claims";
 import { RefinedTokenHeader } from "../header";
@@ -17,12 +18,13 @@ export type ParsedJwtHeader = RefinedTokenHeader<KryptosSigAlgorithm>;
 
 export type ParsedJwtPayload<C extends Dict = Dict> = StdClaims &
   OidcClaims &
-  LindormClaims &
-  ExtendedClaims & {
+  PopClaims &
+  DelegationClaims &
+  OAuthClaims &
+  LindormClaims & {
     audience: Array<string>;
     authMethods: Array<string>;
     claims: C;
-    confirmation: ConfirmationClaim | undefined;
     entitlements: Array<string>;
     groups: Array<string>;
     issuer: string;

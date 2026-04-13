@@ -2,10 +2,11 @@ import { Expiry } from "@lindorm/date";
 import { Dict } from "@lindorm/types";
 import {
   AegisProfile,
-  ConfirmationClaim,
-  ExtendedClaims,
   LindormClaims,
+  OAuthClaims,
   OidcClaims,
+  PopClaims,
+  DelegationClaims,
   StdClaims,
 } from "../claims";
 import { TokenEncryptOrSignOptions } from "../header";
@@ -15,13 +16,14 @@ export type SignJwtContent<C extends Dict = Dict> = Omit<
   "expiresAt" | "issuedAt" | "issuer" | "tokenId"
 > &
   Omit<OidcClaims, "accessTokenHash" | "codeHash" | "stateHash"> &
-  LindormClaims &
-  ExtendedClaims & {
+  PopClaims &
+  DelegationClaims &
+  OAuthClaims &
+  LindormClaims & {
     accessToken?: string;
     authCode?: string;
     authState?: string;
     claims?: C;
-    confirmation?: ConfirmationClaim;
     expires: Expiry;
     profile?: AegisProfile;
     subject: string;

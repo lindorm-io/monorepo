@@ -1,5 +1,5 @@
 import { B64 } from "@lindorm/b64";
-import { camelKeys, snakeKeys } from "@lindorm/case";
+import { snakeKeys } from "@lindorm/case";
 import { expires, getUnixTime } from "@lindorm/date";
 import { isArray, isDate, isFinite, isObject, isString, isUrlLike } from "@lindorm/is";
 import { KryptosAlgorithm } from "@lindorm/kryptos";
@@ -10,15 +10,14 @@ import { JwtError } from "../../errors";
 import {
   ActClaim,
   ActClaimWire,
-  AegisProfile,
-  ConfirmationClaim,
   JwtClaims,
   ParsedJwtPayload,
   SignJwtContent,
   SignJwtOptions,
 } from "../../types";
-import { AEGIS_PROFILE_WIRE_KEYS } from "../constants/aegis-profile-keys";
 import { createAccessTokenHash, createCodeHash, createStateHash } from "./create-hash";
+import { extractAegisProfile } from "./extract-aegis-profile";
+import { extractDomainClaims } from "./extract-claims";
 import { generateTokenId } from "./generate-token-id";
 
 type Config = {
@@ -43,15 +42,6 @@ const actClaimToWire = (claim: ActClaim): ActClaimWire =>
     aud: claim.audience,
     client_id: claim.clientId,
     act: isObject(claim.act) ? actClaimToWire(claim.act) : undefined,
-  });
-
-const actClaimFromWire = (wire: ActClaimWire): ActClaim =>
-  removeUndefined({
-    subject: wire.sub,
-    issuer: wire.iss,
-    audience: wire.aud,
-    clientId: wire.client_id,
-    act: isObject(wire.act) ? actClaimFromWire(wire.act) : undefined,
   });
 
 export const mapJwtContentToClaims = <C extends Dict = Dict>(
@@ -183,112 +173,29 @@ export const parseTokenPayload = <C extends Dict = Dict<never>>(
     throw new JwtError("Missing claim: iss");
   }
 
-  const {
-    aal,
-    acr,
-    act,
-    afr,
-    amr,
-    at_hash,
-    aud,
-    auth_time,
-    azp,
-    c_hash,
-    client_id,
-    cnf,
-    entitlements,
-    exp,
-    groups,
-    gty,
-    iat,
-    iss,
-    jti,
-    loa,
-    may_act,
-    nbf,
-    nonce,
-    permissions,
-    roles,
-    s_hash,
-    scope,
-    sid,
-    sih,
-    sub,
-    suh,
-    tenant_id,
-    ...rest
-  } = decoded;
+  const { claims: domain, rest } = extractDomainClaims(decoded);
+  const { profile, rest: customClaims } = extractAegisProfile(rest);
 
-  // Partition remaining claims into AegisProfile fields (which we'll
-  // camelCase and surface as payload.profile) and truly custom claims
-  // (passed through unchanged to payload.claims).
-  const profileWire: Dict = {};
-  const customClaims: Dict = {};
-
-  for (const [key, value] of Object.entries(rest)) {
-    if (AEGIS_PROFILE_WIRE_KEYS.has(key)) {
-      profileWire[key] = value;
-    } else {
-      customClaims[key] = value;
-    }
-  }
-
-  const profile =
-    Object.keys(profileWire).length > 0
-      ? (camelKeys(profileWire) as AegisProfile)
-      : undefined;
-
-  const claims = customClaims as C;
-
-  const confirmation: ConfirmationClaim | undefined = isObject(cnf)
-    ? removeUndefined({
-        thumbprint: cnf.jkt,
-        mtlsCertThumbprint: cnf["x5t#S256"],
-        key: cnf.jwk,
-        keyId: cnf.kid,
-        jwkSetUri: cnf.jku,
-      })
-    : undefined;
-
+  // ParsedJwtPayload uses non-optional arrays with [] defaults and
+  // "unknown" fallbacks for required fields — stricter than DomainClaims.
   return removeUndefined({
-    accessTokenHash: at_hash,
-    act: isObject(act) ? actClaimFromWire(act) : undefined,
-    adjustedAccessLevel: aal,
-    audience: aud ?? [],
-    authContextClass: acr,
-    authFactor: afr,
-    authMethods: amr ?? [],
-    authorizedParty: azp,
-    authTime: auth_time ? new Date(auth_time * 1000) : undefined,
-    clientId: client_id,
-    codeHash: c_hash,
-    confirmation:
-      confirmation && Object.keys(confirmation).length > 0 ? confirmation : undefined,
-    entitlements: isArray(entitlements) ? entitlements : [],
-    expiresAt: exp ? new Date(exp * 1000) : undefined,
-    grantType: gty,
-    groups: isArray(groups) ? groups : [],
-    issuedAt: iat ? new Date(iat * 1000) : undefined,
-    issuer: iss,
-    levelOfAssurance: loa,
-    mayAct: isObject(may_act) ? actClaimFromWire(may_act) : undefined,
-    nonce,
-    notBefore: nbf ? new Date(nbf * 1000) : undefined,
-    permissions: isArray(permissions)
-      ? permissions
-      : isString(permissions)
-        ? [permissions]
-        : [],
+    ...domain,
+    // Required fields (validated above — iss/exp/iat all checked)
+    issuer: domain.issuer!,
+    expiresAt: domain.expiresAt!,
+    issuedAt: domain.issuedAt!,
+    // Non-optional arrays default to []
+    audience: domain.audience ?? [],
+    authMethods: domain.authMethods ?? [],
+    entitlements: domain.entitlements ?? [],
+    groups: domain.groups ?? [],
+    permissions: domain.permissions ?? [],
+    roles: domain.roles ?? [],
+    scope: domain.scope ?? [],
+    // Non-optional strings default to "unknown"
+    subject: domain.subject ?? "unknown",
+    tokenId: domain.tokenId ?? "unknown",
     profile,
-    roles: isArray(roles) ? roles : isString(roles) ? [roles] : [],
-    scope: isArray(scope) ? scope : isString(scope) ? [scope] : [],
-    sessionHint: sih,
-    sessionId: sid,
-    stateHash: s_hash,
-    subject: sub ? sub : "unknown",
-    subjectHint: suh,
-    tenantId: tenant_id,
-    tokenId: jti ? jti : "unknown",
-    claims,
+    claims: customClaims as C,
   });
 };

@@ -20,7 +20,6 @@ export type LindormClaims = {
   grantType?: string;
   levelOfAssurance?: LevelOfAssurance;
   permissions?: Array<string>;
-  roles?: Array<string>;
   scope?: Array<string>;
   sessionHint?: SessionHint;
   sessionId?: string;
