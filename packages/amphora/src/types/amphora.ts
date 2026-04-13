@@ -11,6 +11,7 @@ export type AmphoraConfig = Partial<OpenIdConfiguration> & {
   issuer: string;
   jwksUri: string;
   openIdConfigurationUri?: string;
+  trustAnchors?: string | Array<string>;
 };
 
 export type AmphoraExternalOption = {
@@ -18,6 +19,7 @@ export type AmphoraExternalOption = {
   jwksUri?: string;
   openIdConfiguration?: Partial<OpenIdConfiguration>;
   openIdConfigurationUri?: string;
+  trustAnchors?: string | Array<string>;
 };
 
 export type AmphoraOptions = {

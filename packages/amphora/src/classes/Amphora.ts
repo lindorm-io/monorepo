@@ -306,7 +306,11 @@ export class Amphora implements IAmphora {
         options.openIdConfigurationUri,
       );
 
-      this._config.push({ ...data, ...(options.openIdConfiguration ?? {}) });
+      this._config.push({
+        ...data,
+        ...(options.openIdConfiguration ?? {}),
+        ...(options.trustAnchors ? { trustAnchors: options.trustAnchors } : {}),
+      });
 
       return;
     }
@@ -316,6 +320,7 @@ export class Amphora implements IAmphora {
         issuer: options.issuer,
         jwksUri: options.jwksUri,
         ...(options.openIdConfiguration ?? {}),
+        ...(options.trustAnchors ? { trustAnchors: options.trustAnchors } : {}),
       });
 
       return;
@@ -358,6 +363,12 @@ export class Amphora implements IAmphora {
     const result: Array<IKryptos> = [];
     let rejectedCount = 0;
     let expiredCount = 0;
+    let rejectedByTrust = 0;
+
+    const trustAnchors = config.trustAnchors;
+    const trustRequired =
+      (isString(trustAnchors) && trustAnchors.length > 0) ||
+      (isArray(trustAnchors) && trustAnchors.length > 0);
 
     for (const jwk of keys) {
       if (jwk.iss && jwk.iss !== config.issuer) {
@@ -381,34 +392,74 @@ export class Amphora implements IAmphora {
         continue;
       }
 
+      if (trustRequired) {
+        if (!kryptos.hasCertificate) {
+          this.logger.warn(
+            "External JWK rejected: trust validation required but key has no certificate chain",
+            { issuer: config.issuer, kid: jwk.kid },
+          );
+          rejectedByTrust++;
+          continue;
+        }
+
+        try {
+          kryptos.verifyCertificate({ trustAnchors: trustAnchors });
+        } catch (error) {
+          this.logger.warn(
+            "External JWK rejected: certificate chain failed trust validation",
+            {
+              issuer: config.issuer,
+              kid: jwk.kid,
+              error: error instanceof Error ? error.message : String(error),
+            },
+          );
+          rejectedByTrust++;
+          continue;
+        }
+      }
+
       this.logger.silly("Adding Kryptos from external source", { kryptos });
       result.push(kryptos);
     }
 
-    if (rejectedCount > 0 || expiredCount > 0) {
+    if (rejectedCount > 0 || expiredCount > 0 || rejectedByTrust > 0) {
       this.logger.silly("External JWKS key summary", {
         issuer: config.issuer,
         total: keys.length,
         valid: result.length,
         rejected: rejectedCount,
         expired: expiredCount,
+        rejectedByTrust,
       });
     }
 
     if (result.length === 0 && keys.length > 0) {
+      const debug = {
+        issuer: config.issuer,
+        total: keys.length,
+        rejected: rejectedCount,
+        expired: expiredCount,
+        rejectedByTrust,
+      };
+
+      if (rejectedByTrust === keys.length) {
+        throw new AmphoraError(
+          "All external JWK keys rejected due to trust anchor validation",
+          { debug },
+        );
+      }
+
       if (rejectedCount === keys.length) {
         throw new AmphoraError("All external JWK keys rejected due to issuer mismatch", {
-          debug: { issuer: config.issuer, keyCount: keys.length },
+          debug,
         });
-      } else if (expiredCount + rejectedCount === keys.length) {
-        throw new AmphoraError("No valid external JWK keys (expired or rejected)", {
-          debug: {
-            issuer: config.issuer,
-            total: keys.length,
-            rejected: rejectedCount,
-            expired: expiredCount,
-          },
-        });
+      }
+
+      if (expiredCount + rejectedCount + rejectedByTrust === keys.length) {
+        throw new AmphoraError(
+          "No valid external JWK keys (expired, rejected, or untrusted)",
+          { debug },
+        );
       }
     }
 
@@ -423,17 +474,20 @@ export class Amphora implements IAmphora {
         result.push({
           openIdConfiguration: item.openIdConfiguration,
           openIdConfigurationUri: item.openIdConfigurationUri,
+          trustAnchors: item.trustAnchors,
         });
       } else if (isString(item.issuer) && isUrlLike(item.jwksUri)) {
         result.push({
           issuer: item.issuer,
           jwksUri: item.jwksUri,
           openIdConfiguration: item.openIdConfiguration,
+          trustAnchors: item.trustAnchors,
         });
       } else if (isUrlLike(item.issuer)) {
         result.push({
           openIdConfiguration: item.openIdConfiguration,
           openIdConfigurationUri: new URL(OIDCONF, item.issuer).toString(),
+          trustAnchors: item.trustAnchors,
         });
       } else {
         throw new AmphoraError("Invalid external options", { debug: { item } });
