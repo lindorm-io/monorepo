@@ -162,6 +162,7 @@ export class JwsKit implements IJwsKit {
 
     const header = parseTokenHeader<ParsedJwsHeader>(decoded.header);
     header.tokenType = decodeTokenTypeFromTyp(typ, "jws");
+    header.baseFormat = "JWS";
 
     const payload =
       header.contentType === "text/plain; charset=utf-8"
