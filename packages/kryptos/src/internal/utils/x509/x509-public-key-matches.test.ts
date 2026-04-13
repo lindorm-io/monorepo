@@ -7,17 +7,17 @@ import { parseX509 } from "./parse-x509";
 import { x509PublicKeyMatches } from "./x509-public-key-matches";
 
 describe("x509PublicKeyMatches", () => {
-  test("returns true when leaf cert matches the kryptos public key", () => {
+  test("returns true when leaf cert matches the kryptos EC public key", () => {
     const [leaf] = parseX509(TEST_X509_LEAF_PEM);
     const matchingSpki = leaf.cert.publicKey.export({
       format: "der",
       type: "spki",
     }) as Buffer;
 
-    expect(x509PublicKeyMatches(leaf.cert, matchingSpki)).toBe(true);
+    expect(x509PublicKeyMatches(leaf.cert, matchingSpki, "EC")).toBe(true);
   });
 
-  test("returns false for a mismatched key", () => {
+  test("returns false for a mismatched EC key", () => {
     const [leaf] = parseX509(TEST_X509_LEAF_PEM);
     const otherSpki = createPublicKey({
       key: Buffer.from(TEST_X509_OTHER_PUBLIC_KEY_B64, "base64url"),
@@ -25,6 +25,6 @@ describe("x509PublicKeyMatches", () => {
       type: "spki",
     }).export({ format: "der", type: "spki" }) as Buffer;
 
-    expect(x509PublicKeyMatches(leaf.cert, otherSpki)).toBe(false);
+    expect(x509PublicKeyMatches(leaf.cert, otherSpki, "EC")).toBe(false);
   });
 });
