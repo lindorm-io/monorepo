@@ -34,11 +34,15 @@ export type KryptosMetadata = {
   modulus: RsaModulus | null;
 };
 
-export type KryptosJSON = KryptosAttributes & KryptosMetadata;
+export type KryptosJSON = KryptosAttributes &
+  KryptosMetadata & {
+    certificateChain?: Array<string>;
+  };
 
 export type KryptosDB = KryptosAttributes & {
   privateKey: string | null | undefined;
   publicKey: string | null | undefined;
+  certificateChain?: Array<string>;
 };
 
 export type KryptosLike = Partial<KryptosAttributes>;

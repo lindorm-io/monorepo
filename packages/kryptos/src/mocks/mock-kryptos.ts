@@ -29,6 +29,7 @@ export const createMockKryptos = (): MockKryptos => ({
   modulus: null,
   thumbprint: "mock-thumbprint",
   certificateChain: undefined,
+  certificateChainPem: null,
   x5c: undefined,
   x5t: undefined,
   x5tS256: undefined,

@@ -208,7 +208,25 @@ export class KryptosKit {
   }
 
   private static fromJwk(options: KryptosFromJwk): IKryptos {
-    return KryptosKit.fromKryptos("jwk", options);
+    const kryptos = KryptosKit.fromKryptos("jwk", options);
+
+    if (options.x5c && options.x5c.length > 0) {
+      const incomingS256 = options["x5t#S256"];
+      if (incomingS256 && incomingS256 !== kryptos.x5tS256) {
+        throw new KryptosError(
+          "fromJWK: x5t#S256 thumbprint does not match recomputed leaf cert hash",
+        );
+      }
+
+      const incomingS1 = options.x5t;
+      if (incomingS1 && incomingS1 !== kryptos.x5t) {
+        throw new KryptosError(
+          "fromJWK: x5t thumbprint does not match recomputed leaf cert hash",
+        );
+      }
+    }
+
+    return kryptos;
   }
 
   private static fromPem(options: KryptosFromString): IKryptos {
