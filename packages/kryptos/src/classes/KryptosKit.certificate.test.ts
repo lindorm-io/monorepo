@@ -347,9 +347,7 @@ describe("KryptosKit certificate generation", () => {
         ),
       ).toBe(true);
 
-      expect(() =>
-        child.verifyCertificateChain({ trustAnchors: [ca.x5c![0]] }),
-      ).not.toThrow();
+      expect(() => child.verifyCertificate({ trustAnchors: [ca.x5c![0]] })).not.toThrow();
 
       const chainBuilder = new x509.X509ChainBuilder({
         certificates: [new x509.X509Certificate(caDer)],
@@ -378,9 +376,7 @@ describe("KryptosKit certificate generation", () => {
       expect(parsedChild.signatureAlgorithm).toBe("1.2.840.10045.4.3.2");
       expect(parsedChild.extensions.basicConstraintsCa).toBe(false);
 
-      expect(() =>
-        child.verifyCertificateChain({ trustAnchors: [ca.x5c![0]] }),
-      ).not.toThrow();
+      expect(() => child.verifyCertificate({ trustAnchors: [ca.x5c![0]] })).not.toThrow();
     });
 
     test("byte-equal issuer DN regression", () => {

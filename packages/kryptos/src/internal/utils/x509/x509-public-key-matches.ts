@@ -1,11 +1,11 @@
-import { ParsedX509Certificate, KryptosType } from "../../../types";
+import { KryptosType } from "../../../types";
 import { spkiFromPublicKey } from "./spki-from-public-key";
 
 export const x509PublicKeyMatches = (
-  cert: ParsedX509Certificate,
+  subjectPublicKeyInfo: Buffer,
   kryptosPublicKey: Buffer,
   kryptosType: KryptosType,
 ): boolean => {
   const keySpki = spkiFromPublicKey(kryptosPublicKey, kryptosType);
-  return cert.subjectPublicKeyInfo.equals(keySpki);
+  return subjectPublicKeyInfo.equals(keySpki);
 };

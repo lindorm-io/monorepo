@@ -6,10 +6,10 @@ describe("x509-thumbprints", () => {
   const [leaf] = parseX509(TEST_X509_LEAF_PEM);
 
   test("x5t returns base64url SHA-1 of leaf DER", () => {
-    expect(x5t(leaf.der)).toMatchSnapshot();
+    expect(x5t(leaf)).toMatchSnapshot();
   });
 
   test("x5tS256 returns base64url SHA-256 of leaf DER", () => {
-    expect(x5tS256(leaf.der)).toMatchSnapshot();
+    expect(x5tS256(leaf)).toMatchSnapshot();
   });
 });

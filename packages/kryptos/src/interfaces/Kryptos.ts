@@ -14,15 +14,15 @@ import {
 export interface IKryptos
   extends Disposable, Readonly<KryptosAttributes>, Readonly<KryptosMetadata> {
   readonly thumbprint: string;
-  readonly certificateChain: Array<ParsedX509Certificate> | undefined;
-  readonly certificateChainPem: string | null;
+  readonly hasCertificate: boolean;
+  readonly certificate: ParsedX509Certificate | null;
   readonly x5c: Array<string> | undefined;
   readonly x5t: string | undefined;
   readonly x5tS256: string | undefined;
 
   dispose(): void;
 
-  verifyCertificateChain(options: { trustAnchors: string | Array<string> }): void;
+  verifyCertificate(options: { trustAnchors: string | Array<string> }): void;
 
   toDB(): KryptosDB;
   toEnvString(): string;
