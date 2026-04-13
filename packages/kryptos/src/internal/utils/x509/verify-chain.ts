@@ -11,7 +11,7 @@ const matchesAnchor = (parsed: ParsedX509, anchors: Array<ParsedX509>): boolean 
   anchors.some((anchor) => anchor.der.equals(parsed.der));
 
 export const verifyX509Chain = (
-  chain: Array<ParsedX509>,
+  chain: ReadonlyArray<ParsedX509>,
   trustAnchors: string | Array<ParsedX509> | Array<string>,
 ): void => {
   // Pragmatic chain validation only: signature walk, validity window, basic

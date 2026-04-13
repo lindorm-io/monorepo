@@ -56,19 +56,6 @@ describe("Kryptos (EC)", () => {
       expect(kryptos.hasPrivateKey).toEqual(true);
       expect(kryptos.hasPublicKey).toEqual(true);
     });
-
-    test("should allow setting expiry", () => {
-      const kryptos = KryptosKit.from.b64({ ...TEST_EC_KEY_B64, ...options });
-
-      kryptos.expiresAt = new Date("2023-12-31T08:00:00.000Z");
-
-      expect(kryptos.expiresAt).toEqual(new Date("2023-12-31T08:00:00.000Z"));
-      expect(kryptos.updatedAt).toEqual(new Date("2024-01-01T08:00:00.000Z"));
-
-      expect(kryptos.isActive).toEqual(false);
-      expect(kryptos.isExpired).toEqual(true);
-      expect(kryptos.expiresIn).toEqual(0);
-    });
   });
 
   describe("export", () => {

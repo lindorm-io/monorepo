@@ -53,20 +53,20 @@ export class Kryptos implements IKryptos {
   private readonly _publicKey: Buffer | undefined;
   private readonly _type: KryptosType;
   private readonly _use: KryptosUse;
-  private readonly _certificateChain: Array<ParsedX509> | undefined;
+  private readonly _certificateChain: ReadonlyArray<ParsedX509> | undefined;
+  private readonly _encryption: KryptosEncryption | null;
+  private readonly _expiresAt: Date | null;
+  private readonly _hidden: boolean;
+  private readonly _issuer: string | null;
+  private readonly _jwksUri: string | null;
+  private readonly _notBefore: Date;
+  private readonly _operations: ReadonlyArray<KryptosOperation>;
+  private readonly _ownerId: string | null;
+  private readonly _purpose: string | null;
+  private readonly _updatedAt: Date;
 
   private _cache: ExportCache = {};
   private _disposed: boolean = false;
-  private _encryption: KryptosEncryption | null;
-  private _expiresAt: Date | null;
-  private _hidden: boolean;
-  private _issuer: string | null;
-  private _jwksUri: string | null;
-  private _notBefore: Date;
-  private _operations: Array<KryptosOperation>;
-  private _ownerId: string | null;
-  private _purpose: string | null;
-  private _updatedAt: Date;
 
   public constructor(options: KryptosOptions) {
     this._id = options.id || randomUUID();
@@ -150,27 +150,12 @@ export class Kryptos implements IKryptos {
     return this._encryption;
   }
 
-  public set encryption(encryption: KryptosEncryption | null) {
-    this._encryption = encryption;
-    this._updatedAt = new Date();
-  }
-
   public get expiresAt(): Date | null {
     return this._expiresAt;
   }
 
-  public set expiresAt(date: Date) {
-    this._expiresAt = date;
-    this._updatedAt = new Date();
-  }
-
   public get hidden(): boolean {
     return this._hidden;
-  }
-
-  public set hidden(hidden: boolean) {
-    this._hidden = hidden;
-    this._updatedAt = new Date();
   }
 
   public get isExternal(): boolean {
@@ -181,54 +166,24 @@ export class Kryptos implements IKryptos {
     return this._issuer;
   }
 
-  public set issuer(issuer: string | null) {
-    this._issuer = issuer;
-    this._updatedAt = new Date();
-  }
-
   public get jwksUri(): string | null {
     return this._jwksUri;
-  }
-
-  public set jwksUri(jwksUri: string | null) {
-    this._jwksUri = jwksUri;
-    this._updatedAt = new Date();
   }
 
   public get notBefore(): Date {
     return this._notBefore;
   }
 
-  public set notBefore(notBefore: Date) {
-    this._notBefore = notBefore;
-    this._updatedAt = new Date();
-  }
-
   public get operations(): Array<KryptosOperation> {
-    return this._operations;
-  }
-
-  public set operations(operations: Array<KryptosOperation>) {
-    this._operations = operations;
-    this._updatedAt = new Date();
+    return [...this._operations];
   }
 
   public get ownerId(): string | null {
     return this._ownerId;
   }
 
-  public set ownerId(ownerId: string | null) {
-    this._ownerId = ownerId;
-    this._updatedAt = new Date();
-  }
-
   public get purpose(): string | null {
     return this._purpose;
-  }
-
-  public set purpose(purpose: string | null) {
-    this._purpose = purpose;
-    this._updatedAt = new Date();
   }
 
   public get type(): KryptosType {
@@ -381,7 +336,14 @@ export class Kryptos implements IKryptos {
 
       case "der": {
         const result = exportToDer(exportOptions);
-        return { ...metadata, ...result } as KryptosBuffer;
+        return {
+          ...metadata,
+          ...result,
+          privateKey: result.privateKey
+            ? Buffer.from(result.privateKey)
+            : result.privateKey,
+          publicKey: result.publicKey ? Buffer.from(result.publicKey) : result.publicKey,
+        } as KryptosBuffer;
       }
 
       case "jwk": {

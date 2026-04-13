@@ -11,7 +11,8 @@ import {
   LindormJwk,
 } from "../types";
 
-export interface IKryptos extends Disposable, KryptosAttributes, KryptosMetadata {
+export interface IKryptos
+  extends Disposable, Readonly<KryptosAttributes>, Readonly<KryptosMetadata> {
   readonly thumbprint: string;
   readonly certificateChain: Array<X509Certificate> | undefined;
   readonly certificateChainPem: string | null;
