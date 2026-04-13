@@ -1,9 +1,10 @@
-import { X509Certificate } from "crypto";
 import { KryptosError } from "../../../errors";
+import { ParsedX509Certificate } from "../../../types";
+import { parseX509Certificate } from "./parse-certificate";
 
 export type ParsedX509 = {
   der: Buffer;
-  cert: X509Certificate;
+  cert: ParsedX509Certificate;
 };
 
 const PEM_BLOCK_REGEX =
@@ -37,7 +38,7 @@ const toDerBuffers = (input: string): Array<Buffer> =>
 
 const toParsed = (der: Buffer): ParsedX509 => {
   try {
-    return { der, cert: new X509Certificate(der) };
+    return { der, cert: parseX509Certificate(der) };
   } catch (err: any) {
     throw new KryptosError("Failed to parse X.509 certificate", { error: err });
   }

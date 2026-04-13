@@ -12,3 +12,4 @@ export * from "./generate";
 export * from "./operation";
 export * from "./options";
 export * from "./types";
+export * from "./x509";

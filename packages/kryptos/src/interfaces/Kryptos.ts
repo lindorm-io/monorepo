@@ -1,4 +1,3 @@
-import { X509Certificate } from "crypto";
 import {
   KryptosAttributes,
   KryptosBuffer,
@@ -9,12 +8,13 @@ import {
   KryptosMetadata,
   KryptosString,
   LindormJwk,
+  ParsedX509Certificate,
 } from "../types";
 
 export interface IKryptos
   extends Disposable, Readonly<KryptosAttributes>, Readonly<KryptosMetadata> {
   readonly thumbprint: string;
-  readonly certificateChain: Array<X509Certificate> | undefined;
+  readonly certificateChain: Array<ParsedX509Certificate> | undefined;
   readonly certificateChainPem: string | null;
   readonly x5c: Array<string> | undefined;
   readonly x5t: string | undefined;

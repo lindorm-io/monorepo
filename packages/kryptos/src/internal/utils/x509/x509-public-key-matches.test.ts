@@ -9,12 +9,10 @@ import { x509PublicKeyMatches } from "./x509-public-key-matches";
 describe("x509PublicKeyMatches", () => {
   test("returns true when leaf cert matches the kryptos EC public key", () => {
     const [leaf] = parseX509(TEST_X509_LEAF_PEM);
-    const matchingSpki = leaf.cert.publicKey.export({
-      format: "der",
-      type: "spki",
-    }) as Buffer;
 
-    expect(x509PublicKeyMatches(leaf.cert, matchingSpki, "EC")).toBe(true);
+    expect(x509PublicKeyMatches(leaf.cert, leaf.cert.subjectPublicKeyInfo, "EC")).toBe(
+      true,
+    );
   });
 
   test("returns false for a mismatched EC key", () => {
