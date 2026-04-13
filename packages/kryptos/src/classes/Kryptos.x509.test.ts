@@ -53,7 +53,9 @@ describe("Kryptos (X.509)", () => {
       expect(kryptos.x5c).toMatchSnapshot();
       expect(kryptos.x5t).toMatchSnapshot();
       expect(kryptos.x5tS256).toMatchSnapshot();
-      expect(kryptos.certificateChain).toHaveLength(3);
+      expect(kryptos.x5c).toHaveLength(3);
+      expect(kryptos.hasCertificate).toBe(true);
+      expect(kryptos.certificate).not.toBeNull();
     });
 
     test("accepts a chain in base64-DER form (no PEM wrapper)", () => {
@@ -106,7 +108,7 @@ describe("Kryptos (X.509)", () => {
     });
   });
 
-  describe("verifyCertificateChain", () => {
+  describe("verifyCertificate", () => {
     test("succeeds against a correct trust anchor", () => {
       const kryptos = new Kryptos({
         ...baseEcOptions,
@@ -114,7 +116,7 @@ describe("Kryptos (X.509)", () => {
       });
 
       expect(() =>
-        kryptos.verifyCertificateChain({ trustAnchors: TEST_X509_ROOT_PEM }),
+        kryptos.verifyCertificate({ trustAnchors: TEST_X509_ROOT_PEM }),
       ).not.toThrow();
     });
 
@@ -122,8 +124,47 @@ describe("Kryptos (X.509)", () => {
       const kryptos = new Kryptos(baseEcOptions);
 
       expect(() =>
-        kryptos.verifyCertificateChain({ trustAnchors: TEST_X509_ROOT_PEM }),
-      ).toThrow("Kryptos has no certificateChain to verify");
+        kryptos.verifyCertificate({ trustAnchors: TEST_X509_ROOT_PEM }),
+      ).toThrow("Kryptos has no certificate to verify");
+    });
+  });
+
+  describe("hasCertificate / certificate", () => {
+    test("hasCertificate false and certificate null when no chain", () => {
+      const kryptos = new Kryptos(baseEcOptions);
+
+      expect(kryptos.hasCertificate).toBe(false);
+      expect(kryptos.certificate).toBeNull();
+    });
+
+    test("certificate is lazily parsed and memoized across accesses", () => {
+      const kryptos = new Kryptos({
+        ...baseEcOptions,
+        certificateChain: [
+          TEST_X509_LEAF_PEM,
+          TEST_X509_INTERMEDIATE_PEM,
+          TEST_X509_ROOT_PEM,
+        ],
+      });
+
+      const first = kryptos.certificate;
+      const second = kryptos.certificate;
+
+      expect(first).not.toBeNull();
+      expect(first).toBe(second);
+    });
+
+    test("certificate returns the leaf (first DER) only", () => {
+      const kryptos = new Kryptos({
+        ...baseEcOptions,
+        certificateChain: [
+          TEST_X509_LEAF_PEM,
+          TEST_X509_INTERMEDIATE_PEM,
+          TEST_X509_ROOT_PEM,
+        ],
+      });
+
+      expect(kryptos.certificate?.subject.commonName).toBe("lindorm-test-leaf");
     });
   });
 

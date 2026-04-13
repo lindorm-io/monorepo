@@ -1,11 +1,4 @@
 import { KryptosError } from "../../../errors";
-import { ParsedX509Certificate } from "../../../types";
-import { parseX509Certificate } from "./parse-certificate";
-
-export type ParsedX509 = {
-  der: Buffer;
-  cert: ParsedX509Certificate;
-};
 
 const PEM_BLOCK_REGEX =
   /-----BEGIN CERTIFICATE-----([A-Za-z0-9+/=\s]+?)-----END CERTIFICATE-----/g;
@@ -36,15 +29,7 @@ const decodeBase64Der = (input: string): Buffer => {
 const toDerBuffers = (input: string): Array<Buffer> =>
   looksLikePem(input) ? decodePemBlocks(input) : [decodeBase64Der(input)];
 
-const toParsed = (der: Buffer): ParsedX509 => {
-  try {
-    return { der, cert: parseX509Certificate(der) };
-  } catch (err: any) {
-    throw new KryptosError("Failed to parse X.509 certificate", { error: err });
-  }
-};
-
-export const parseX509 = (input: string | Array<string>): Array<ParsedX509> => {
+export const parseX509 = (input: string | Array<string>): Array<Buffer> => {
   const inputs = Array.isArray(input) ? input : [input];
 
   if (inputs.length === 0) {
@@ -63,5 +48,5 @@ export const parseX509 = (input: string | Array<string>): Array<ParsedX509> => {
     throw new KryptosError("certificateChain produced no certificates");
   }
 
-  return ders.map(toParsed);
+  return ders;
 };

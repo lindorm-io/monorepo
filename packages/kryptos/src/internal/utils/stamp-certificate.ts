@@ -169,15 +169,15 @@ export const stampCertificate = (input: StampInput): Array<string> => {
     throw new KryptosError("ca-signed mode requires CA kryptos with a private key");
   }
 
-  if (!ca.certificateChain || ca.certificateChain.length === 0 || !ca.x5c) {
-    throw new KryptosError("ca-signed mode requires CA kryptos with a certificateChain");
+  if (!ca.hasCertificate || !ca.x5c || !ca.certificate) {
+    throw new KryptosError("ca-signed mode requires CA kryptos with a certificate");
   }
 
   if (ca.type === "oct") {
     throw new KryptosError("ca-signed mode cannot use a symmetric CA kryptos");
   }
 
-  const caLeaf = ca.certificateChain[0];
+  const caLeaf = ca.certificate;
 
   if (!caLeaf.extensions.basicConstraintsCa) {
     throw new KryptosError(

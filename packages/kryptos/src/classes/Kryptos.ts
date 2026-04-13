@@ -35,7 +35,9 @@ import { exportToJwk } from "#internal/utils/export/export-jwk";
 import { exportToPem } from "#internal/utils/export/export-pem";
 import { isOctDer } from "#internal/utils/oct/is";
 import { modulusSize } from "#internal/utils/rsa/modulus-size";
-import { ParsedX509, parseX509 } from "#internal/utils/x509/parse-x509";
+import { extractLeafSpki } from "#internal/utils/x509/extract-leaf-spki";
+import { parseX509Certificate } from "#internal/utils/x509/parse-certificate";
+import { parseX509 } from "#internal/utils/x509/parse-x509";
 import { verifyX509Chain } from "#internal/utils/x509/verify-chain";
 import { x509PublicKeyMatches } from "#internal/utils/x509/x509-public-key-matches";
 import {
@@ -54,7 +56,7 @@ export class Kryptos implements IKryptos {
   private readonly _publicKey: Buffer | undefined;
   private readonly _type: KryptosType;
   private readonly _use: KryptosUse;
-  private readonly _certificateChain: ReadonlyArray<ParsedX509> | undefined;
+  private readonly _certificateChain: ReadonlyArray<Buffer> | undefined;
   private readonly _encryption: KryptosEncryption | null;
   private readonly _expiresAt: Date;
   private readonly _hidden: boolean;
@@ -119,15 +121,16 @@ export class Kryptos implements IKryptos {
         );
       }
 
-      const parsed = parseX509(options.certificateChain);
+      const ders = parseX509(options.certificateChain);
+      const leafSpki = extractLeafSpki(ders[0]);
 
-      if (!x509PublicKeyMatches(parsed[0].cert, this._publicKey, this._type)) {
+      if (!x509PublicKeyMatches(leafSpki, this._publicKey, this._type)) {
         throw new KryptosError(
           "certificateChain leaf certificate public key does not match kryptos public key",
         );
       }
 
-      this._certificateChain = parsed;
+      this._certificateChain = ders;
     }
   }
 
@@ -238,40 +241,37 @@ export class Kryptos implements IKryptos {
 
   // x509
 
-  public get certificateChain(): Array<ParsedX509Certificate> | undefined {
-    return this._certificateChain?.map((entry) => entry.cert);
+  public get hasCertificate(): boolean {
+    return this._certificateChain !== undefined && this._certificateChain.length > 0;
+  }
+
+  public get certificate(): ParsedX509Certificate | null {
+    if (!this._certificateChain || this._certificateChain.length === 0) return null;
+    if (!this._cache.parsedLeaf) {
+      this._cache.parsedLeaf = parseX509Certificate(this._certificateChain[0]);
+    }
+    return this._cache.parsedLeaf;
   }
 
   public get x5c(): Array<string> | undefined {
-    return this._certificateChain?.map((entry) => entry.der.toString("base64"));
-  }
-
-  public get certificateChainPem(): string | null {
-    if (!this._certificateChain) return null;
-    return this._certificateChain
-      .map((entry) => {
-        const b64 = entry.der.toString("base64");
-        const lines = b64.match(/.{1,64}/g)?.join("\n") ?? b64;
-        return `-----BEGIN CERTIFICATE-----\n${lines}\n-----END CERTIFICATE-----`;
-      })
-      .join("\n");
+    return this._certificateChain?.map((der) => der.toString("base64"));
   }
 
   public get x5t(): string | undefined {
     if (!this._certificateChain) return undefined;
-    return x5tThumbprint(this._certificateChain[0].der);
+    return x5tThumbprint(this._certificateChain[0]);
   }
 
   public get x5tS256(): string | undefined {
     if (!this._certificateChain) return undefined;
-    return x5tS256Thumbprint(this._certificateChain[0].der);
+    return x5tS256Thumbprint(this._certificateChain[0]);
   }
 
-  public verifyCertificateChain(options: { trustAnchors: string | Array<string> }): void {
+  public verifyCertificate(options: { trustAnchors: string | Array<string> }): void {
     this.assertNotDisposed();
 
     if (!this._certificateChain) {
-      throw new KryptosError("Kryptos has no certificateChain to verify");
+      throw new KryptosError("Kryptos has no certificate to verify");
     }
 
     verifyX509Chain(this._certificateChain, options.trustAnchors);

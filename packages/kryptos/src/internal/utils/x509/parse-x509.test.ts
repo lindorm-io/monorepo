@@ -7,19 +7,18 @@ import {
 import { parseX509 } from "./parse-x509";
 
 describe("parseX509", () => {
-  test("parses a single PEM cert", () => {
+  test("parses a single PEM cert into a DER buffer", () => {
     const result = parseX509(TEST_X509_LEAF_PEM);
 
     expect(result).toHaveLength(1);
-    expect(result[0].cert.subject.commonName).toMatchSnapshot();
-    expect(result[0].der).toBeInstanceOf(Buffer);
+    expect(result[0]).toBeInstanceOf(Buffer);
   });
 
   test("parses a base64-DER cert (no PEM wrapper)", () => {
     const result = parseX509(TEST_X509_LEAF_B64_DER);
 
     expect(result).toHaveLength(1);
-    expect(result[0].cert.subject.commonName).toMatchSnapshot();
+    expect(result[0]).toBeInstanceOf(Buffer);
   });
 
   test("parses an array of PEM certs (one cert per element)", () => {
@@ -30,7 +29,7 @@ describe("parseX509", () => {
     ]);
 
     expect(result).toHaveLength(3);
-    expect(result.map((r) => r.cert.subject.commonName)).toMatchSnapshot();
+    result.forEach((der) => expect(der).toBeInstanceOf(Buffer));
   });
 
   test("parses concatenated PEM blocks in a single string", () => {
@@ -53,10 +52,5 @@ describe("parseX509", () => {
 
   test("throws for non-base64, non-PEM input", () => {
     expect(() => parseX509("not a cert!!")).toThrow();
-  });
-
-  test("throws when PEM body is unparseable", () => {
-    const broken = "-----BEGIN CERTIFICATE-----\nAAAA\n-----END CERTIFICATE-----";
-    expect(() => parseX509(broken)).toThrow("Failed to parse X.509 certificate");
   });
 });
