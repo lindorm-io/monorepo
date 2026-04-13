@@ -6,9 +6,9 @@ exports[`encode-extensions basicConstraintsExt ca=false 1`] = `"300c0603551d1301
 
 exports[`encode-extensions basicConstraintsExt ca=true 1`] = `"300f0603551d130101ff040530030101ff"`;
 
-exports[`encode-extensions basicConstraintsExt ca=true with pathLenConstraint=0 1`] = `"30120603551d130101ff040830060101ff020100"`;
+exports[`encode-extensions basicConstraintsExt ca=true with pathLengthConstraint=0 1`] = `"30120603551d130101ff040830060101ff020100"`;
 
-exports[`encode-extensions basicConstraintsExt ca=true with pathLenConstraint=3 1`] = `"30120603551d130101ff040830060101ff020103"`;
+exports[`encode-extensions basicConstraintsExt ca=true with pathLengthConstraint=3 1`] = `"30120603551d130101ff040830060101ff020103"`;
 
 exports[`encode-extensions keyUsageExt digitalSignature only 1`] = `"300e0603551d0f0101ff040403020780"`;
 

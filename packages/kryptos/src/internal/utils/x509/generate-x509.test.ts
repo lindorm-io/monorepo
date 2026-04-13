@@ -366,7 +366,7 @@ describe("generateX509Certificate", () => {
       ).toThrow("keyUsage must contain at least one flag");
     });
 
-    test("pathLenConstraint with ca=false throws", () => {
+    test("pathLengthConstraint with ca=false throws", () => {
       const pair = ecKeyPair("P-256");
       expect(() =>
         generateX509Certificate({
@@ -376,12 +376,12 @@ describe("generateX509Certificate", () => {
           issuer: { commonName: "bad.test" },
           notBefore: NOT_BEFORE,
           notAfter: NOT_AFTER,
-          basicConstraints: { ca: false, pathLenConstraint: 1 },
+          basicConstraints: { ca: false, pathLengthConstraint: 1 },
           keyUsage: ["digitalSignature"],
           subjectAlternativeNames: [],
           serialNumber: SERIAL,
         }),
-      ).toThrow("pathLenConstraint is only valid when ca=true");
+      ).toThrow("pathLengthConstraint is only valid when ca=true");
     });
   });
 

@@ -145,8 +145,8 @@ export const stampCertificate = (input: StampInput): Array<string> => {
       notAfter: subjectKryptos.expiresAt,
       basicConstraints: {
         ca: true,
-        ...(certificate.pathLenConstraint !== undefined
-          ? { pathLenConstraint: certificate.pathLenConstraint }
+        ...(certificate.pathLengthConstraint !== undefined
+          ? { pathLengthConstraint: certificate.pathLengthConstraint }
           : {}),
       },
       keyUsage: ["keyCertSign", "cRLSign"],

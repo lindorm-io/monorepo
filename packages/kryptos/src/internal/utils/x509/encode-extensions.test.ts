@@ -19,26 +19,26 @@ describe("encode-extensions", () => {
     expect(basicConstraintsExt({ ca: true }).toString("hex")).toMatchSnapshot();
   });
 
-  test("basicConstraintsExt ca=true with pathLenConstraint=0", () => {
+  test("basicConstraintsExt ca=true with pathLengthConstraint=0", () => {
     expect(
-      basicConstraintsExt({ ca: true, pathLenConstraint: 0 }).toString("hex"),
+      basicConstraintsExt({ ca: true, pathLengthConstraint: 0 }).toString("hex"),
     ).toMatchSnapshot();
   });
 
-  test("basicConstraintsExt ca=true with pathLenConstraint=3", () => {
+  test("basicConstraintsExt ca=true with pathLengthConstraint=3", () => {
     expect(
-      basicConstraintsExt({ ca: true, pathLenConstraint: 3 }).toString("hex"),
+      basicConstraintsExt({ ca: true, pathLengthConstraint: 3 }).toString("hex"),
     ).toMatchSnapshot();
   });
 
-  test("basicConstraintsExt throws when ca=false and pathLenConstraint provided", () => {
-    expect(() => basicConstraintsExt({ ca: false, pathLenConstraint: 1 })).toThrow(
+  test("basicConstraintsExt throws when ca=false and pathLengthConstraint provided", () => {
+    expect(() => basicConstraintsExt({ ca: false, pathLengthConstraint: 1 })).toThrow(
       KryptosError,
     );
   });
 
-  test("basicConstraintsExt throws when pathLenConstraint is negative", () => {
-    expect(() => basicConstraintsExt({ ca: true, pathLenConstraint: -1 })).toThrow(
+  test("basicConstraintsExt throws when pathLengthConstraint is negative", () => {
+    expect(() => basicConstraintsExt({ ca: true, pathLengthConstraint: -1 })).toThrow(
       KryptosError,
     );
   });
