@@ -1,0 +1,93 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`parseIntrospection should handle active false with minimal fields 1`] = `
+{
+  "active": false,
+}
+`;
+
+exports[`parseIntrospection should map Lindorm extension fields 1`] = `
+{
+  "active": true,
+  "adjustedAccessLevel": 2,
+  "audience": [
+    "https://api.example.com",
+  ],
+  "authFactor": [
+    "pwd",
+    "otp",
+  ],
+  "clientId": "client-ext",
+  "entitlements": [
+    "premium",
+  ],
+  "expiresAt": 2023-11-14T23:13:20.000Z,
+  "grantType": "authorization_code",
+  "groups": [
+    "engineering",
+    "leads",
+  ],
+  "issuedAt": 2023-11-14T22:13:20.000Z,
+  "issuer": "https://auth.example.com",
+  "levelOfAssurance": 3,
+  "notBefore": 2023-11-14T22:13:20.000Z,
+  "permissions": [
+    "read",
+    "write",
+  ],
+  "roles": [
+    "admin",
+    "user",
+  ],
+  "scope": [
+    "openid",
+  ],
+  "sessionHint": "browser",
+  "sessionId": "session-xyz",
+  "subject": "user-ext-789",
+  "subjectHint": "identity",
+  "tenantId": "tenant-abc",
+  "tokenId": "tok-ext-123",
+  "tokenType": "bearer",
+  "username": "janedoe",
+}
+`;
+
+exports[`parseIntrospection should map full RFC 7662 response to AegisIntrospection 1`] = `
+{
+  "active": true,
+  "audience": [
+    "https://api.example.com",
+    "https://other.example.com",
+  ],
+  "clientId": "client-abc",
+  "expiresAt": 2023-11-14T23:13:20.000Z,
+  "issuedAt": 2023-11-14T22:13:20.000Z,
+  "issuer": "https://auth.example.com",
+  "notBefore": 2023-11-14T22:13:20.000Z,
+  "scope": [
+    "openid",
+    "profile",
+    "email",
+  ],
+  "subject": "user-intro-123",
+  "tokenId": "tok-intro-456",
+  "tokenType": "bearer",
+  "username": "johndoe",
+}
+`;
+
+exports[`parseIntrospection should split scope string into array 1`] = `
+[
+  "openid",
+  "profile",
+  "email",
+  "offline_access",
+]
+`;
+
+exports[`parseIntrospection should wrap single audience string in array 1`] = `
+[
+  "https://single.example.com",
+]
+`;
