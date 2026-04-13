@@ -2,7 +2,7 @@ import { B64 } from "@lindorm/b64";
 import { getUnixTime, isAfter, isEqual } from "@lindorm/date";
 import { isBuffer } from "@lindorm/is";
 import { removeEmpty, removeUndefined } from "@lindorm/utils";
-import { randomUUID } from "crypto";
+import { randomUUID, X509Certificate } from "crypto";
 import { KryptosError } from "../errors";
 import { IKryptos } from "../interfaces";
 import {
@@ -36,6 +36,13 @@ import { exportToJwk } from "#internal/utils/export/export-jwk";
 import { exportToPem } from "#internal/utils/export/export-pem";
 import { isOctDer } from "#internal/utils/oct/is";
 import { modulusSize } from "#internal/utils/rsa/modulus-size";
+import { ParsedX509, parseX509 } from "#internal/utils/x509/parse-x509";
+import { verifyX509Chain } from "#internal/utils/x509/verify-chain";
+import { x509PublicKeyMatches } from "#internal/utils/x509/x509-public-key-matches";
+import {
+  x5t as x5tThumbprint,
+  x5tS256 as x5tS256Thumbprint,
+} from "#internal/utils/x509/x509-thumbprints";
 
 export class Kryptos implements IKryptos {
   private readonly _id: string;
@@ -48,6 +55,7 @@ export class Kryptos implements IKryptos {
   private readonly _publicKey: Buffer | undefined;
   private readonly _type: KryptosType;
   private readonly _use: KryptosUse;
+  private readonly _certificateChain: Array<ParsedX509> | undefined;
 
   private _cache: ExportCache = {};
   private _disposed: boolean = false;
@@ -102,6 +110,24 @@ export class Kryptos implements IKryptos {
       (this._type === "RSA" && (this._privateKey || this._publicKey)
         ? modulusSize({ privateKey: this._privateKey, publicKey: this._publicKey! })
         : null);
+
+    if (options.certificateChain !== undefined) {
+      if (!this._publicKey || this._publicKey.length === 0) {
+        throw new KryptosError(
+          "certificateChain requires a kryptos with a public key (oct keys are not supported)",
+        );
+      }
+
+      const parsed = parseX509(options.certificateChain);
+
+      if (!x509PublicKeyMatches(parsed[0].cert, this._publicKey)) {
+        throw new KryptosError(
+          "certificateChain leaf certificate public key does not match kryptos public key",
+        );
+      }
+
+      this._certificateChain = parsed;
+    }
   }
 
   // getters and setters
@@ -256,6 +282,36 @@ export class Kryptos implements IKryptos {
     return computeThumbprint(this.export("jwk"));
   }
 
+  // x509
+
+  public get certificateChain(): Array<X509Certificate> | undefined {
+    return this._certificateChain?.map((entry) => entry.cert);
+  }
+
+  public get x5c(): Array<string> | undefined {
+    return this._certificateChain?.map((entry) => entry.der.toString("base64"));
+  }
+
+  public get x5t(): string | undefined {
+    if (!this._certificateChain) return undefined;
+    return x5tThumbprint(this._certificateChain[0].der);
+  }
+
+  public get x5tS256(): string | undefined {
+    if (!this._certificateChain) return undefined;
+    return x5tS256Thumbprint(this._certificateChain[0].der);
+  }
+
+  public verifyCertificateChain(options: { trustAnchors: string | Array<string> }): void {
+    this.assertNotDisposed();
+
+    if (!this._certificateChain) {
+      throw new KryptosError("Kryptos has no certificateChain to verify");
+    }
+
+    verifyX509Chain(this._certificateChain, options.trustAnchors);
+  }
+
   // dispose
 
   public dispose(): void {
@@ -327,14 +383,17 @@ export class Kryptos implements IKryptos {
           });
           this._cache.jwkPrivate = Object.freeze(keys);
         }
-        return {
+        return removeUndefined({
           ...this._cache.jwkPrivate,
           kid: this.id,
           alg: this.algorithm,
           ...(this.encryption ? { enc: this.encryption } : {}),
           use: this.use,
           kty: this.type,
-        } as KryptosJwk;
+          x5c: this.x5c,
+          x5t: this.x5t,
+          "x5t#S256": this.x5tS256,
+        }) as KryptosJwk;
       }
 
       case "pem": {
@@ -452,6 +511,9 @@ export class Kryptos implements IKryptos {
       owner_id: this.ownerId ?? undefined,
       purpose: this.purpose ?? undefined,
       uat: getUnixTime(this.updatedAt),
+      x5c: this.x5c,
+      x5t: this.x5t,
+      "x5t#S256": this.x5tS256,
     });
   }
 

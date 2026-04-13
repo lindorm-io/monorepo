@@ -1,3 +1,4 @@
+import { X509Certificate } from "crypto";
 import {
   KryptosAttributes,
   KryptosBuffer,
@@ -12,8 +13,14 @@ import {
 
 export interface IKryptos extends Disposable, KryptosAttributes, KryptosMetadata {
   readonly thumbprint: string;
+  readonly certificateChain: Array<X509Certificate> | undefined;
+  readonly x5c: Array<string> | undefined;
+  readonly x5t: string | undefined;
+  readonly x5tS256: string | undefined;
 
   dispose(): void;
+
+  verifyCertificateChain(options: { trustAnchors: string | Array<string> }): void;
 
   toDB(): KryptosDB;
   toEnvString(): string;

@@ -27,5 +27,6 @@ export type KryptosKeys = {
 
 export type KryptosOptions = StdOptions &
   KryptosKeys & {
+    certificateChain?: string | Array<string>;
     modulus?: RsaModulus | null;
   };
