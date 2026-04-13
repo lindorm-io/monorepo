@@ -14,6 +14,7 @@ import {
   TEST_OKP_KEY_SIG,
   TEST_RSA_KEY_SIG,
 } from "../__fixtures__/keys";
+import { TEST_X509_KRYPTOS_SIG } from "../__fixtures__/x509";
 import { AmphoraError } from "../errors";
 import { Amphora } from "./Amphora";
 
@@ -809,6 +810,36 @@ describe("Amphora", () => {
       const jwks = amphora.jwks;
       jwks.keys.length = 0;
       expect(amphora.jwks.keys).toHaveLength(1);
+    });
+  });
+
+  describe("x509 certificate chain", () => {
+    test("should emit x5c/x5t#S256/x5t in JWKS for kryptos with chain", () => {
+      amphora.add(TEST_X509_KRYPTOS_SIG);
+
+      expect(amphora.jwks).toMatchSnapshot();
+    });
+
+    test("should filter kryptos by x5tS256 thumbprint", async () => {
+      amphora.add([TEST_EC_KEY_SIG, TEST_X509_KRYPTOS_SIG]);
+
+      await expect(
+        amphora.filter({ x5tS256: TEST_X509_KRYPTOS_SIG.x5tS256 }),
+      ).resolves.toEqual([TEST_X509_KRYPTOS_SIG]);
+    });
+
+    test("should return empty array when filtering by unknown thumbprint", async () => {
+      amphora.add([TEST_EC_KEY_SIG, TEST_X509_KRYPTOS_SIG]);
+
+      await expect(
+        amphora.filter({ x5tS256: "unknown-thumbprint-value" }),
+      ).resolves.toEqual([]);
+    });
+
+    test("should return empty array when filtering by thumbprint on chain-less vault", async () => {
+      amphora.add([TEST_EC_KEY_SIG, TEST_OCT_KEY_SIG]);
+
+      await expect(amphora.filter({ x5tS256: "some-thumbprint" })).resolves.toEqual([]);
     });
   });
 
