@@ -1,0 +1,3 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`time encoding encodeUtcTime matches known format 1`] = `"170d3234303131353130323033305a"`;
