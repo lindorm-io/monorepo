@@ -1,5 +1,16 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
+exports[`Aegis cert binding with cert-bound kryptos sign omitted on cert-bearing kryptos stamps thumbprint by default 1`] = `
+{
+  "alg": "ES256",
+  "kid": "e1a4f9c0-0000-0000-0000-aegis-cert-key0",
+  "typ": "at+jwt",
+  "x5c": undefined,
+  "x5t": "83RTODK4dhmAaqY7_fQX8atsXG4",
+  "x5t#S256": "PQeZGdGGGG1A9Qr4z0qBh_TJrmoi5B-6jbMUOGn34QA",
+}
+`;
+
 exports[`Aegis cert binding with cert-bound kryptos sign with bindCertificate: 'chain' stamps x5c + x5t#S256 + x5t 1`] = `
 {
   "alg": "ES256",

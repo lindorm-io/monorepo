@@ -142,8 +142,29 @@ describe("Aegis cert binding", () => {
       expect(stripped.x5t).toEqual(expect.any(String));
     });
 
-    test("sign without bindCertificate emits no cert fields in header", async () => {
+    test("sign omitted on cert-bearing kryptos stamps thumbprint by default", async () => {
       const { token } = await aegis.jwt.sign(signContent);
+
+      const decoded = JwtKit.decode(token);
+      const stripped = {
+        alg: decoded.header.alg,
+        kid: decoded.header.kid,
+        typ: decoded.header.typ,
+        x5c: (decoded.header as any).x5c,
+        x5t: (decoded.header as any).x5t,
+        "x5t#S256": (decoded.header as any)["x5t#S256"],
+      };
+
+      expect(stripped).toMatchSnapshot();
+      expect(stripped["x5t#S256"]).toEqual(expect.any(String));
+      expect(stripped.x5t).toEqual(expect.any(String));
+      expect(stripped.x5c).toBeUndefined();
+    });
+
+    test("sign with bindCertificate: 'none' on cert-bearing kryptos stamps nothing", async () => {
+      const { token } = await aegis.jwt.sign(signContent, {
+        bindCertificate: "none",
+      });
 
       const decoded = JwtKit.decode(token);
       expect(decoded.header).not.toHaveProperty("x5c");
@@ -264,6 +285,18 @@ describe("Aegis cert binding", () => {
       await expect(
         aegis.jwt.sign(signContent, { bindCertificate: "thumbprint" }),
       ).rejects.toThrow(/bindCertificate requires a signing kryptos/);
+    });
+
+    test("sign with bindCertificate: 'none' on chain-less kryptos stamps nothing and does not throw", async () => {
+      const { token } = await aegis.jwt.sign(signContent, {
+        bindCertificate: "none",
+      });
+      const decoded = JwtKit.decode(token);
+      expect(decoded.header).not.toHaveProperty("x5c");
+      expect(decoded.header).not.toHaveProperty("x5t");
+      expect(decoded.header).not.toHaveProperty("x5t#S256");
+
+      await expect(aegis.jwt.verify(token)).resolves.toBeDefined();
     });
 
     test("sign without bindCertificate succeeds (regression: base path unchanged)", async () => {

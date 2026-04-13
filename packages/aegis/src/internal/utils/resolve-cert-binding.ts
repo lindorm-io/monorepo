@@ -6,9 +6,18 @@ export const resolveCertBinding = (
   kryptos: IKryptos,
   mode: BindCertificateMode | undefined,
 ): CertificateHeaderFields | undefined => {
-  if (!mode) return undefined;
+  const resolved: BindCertificateMode =
+    mode === "none"
+      ? "none"
+      : mode === undefined
+        ? kryptos.hasCertificate
+          ? "thumbprint"
+          : "none"
+        : mode;
 
-  if (!kryptos.x5c) {
+  if (resolved === "none") return undefined;
+
+  if (!kryptos.hasCertificate) {
     throw new AegisError(
       "bindCertificate requires a signing kryptos with a certificateChain",
       { debug: { kryptosId: kryptos.id, mode } },
@@ -20,7 +29,7 @@ export const resolveCertBinding = (
     x5t: kryptos.x5t,
   };
 
-  if (mode === "chain") {
+  if (resolved === "chain") {
     fields.x5c = kryptos.x5c;
   }
 
