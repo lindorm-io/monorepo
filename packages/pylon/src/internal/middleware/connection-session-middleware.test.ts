@@ -4,18 +4,6 @@ import { Next } from "@lindorm/middleware";
 import { PylonSessionOptions } from "../../types";
 import { createConnectionSessionMiddleware } from "./connection-session-middleware";
 
-jest.mock("@lindorm/aegis", () => ({
-  Aegis: {
-    parse: jest.fn((token: string) => ({
-      token,
-      payload: {
-        subject: "sub-1",
-        expiresAt: new Date("2099-01-01T00:00:00.000Z"),
-      },
-    })),
-  },
-}));
-
 const SESSION_ID = "cad4002a-bd04-52f1-9733-58866f421686";
 
 const buildSession = (overrides: Partial<any> = {}) => ({
@@ -49,7 +37,19 @@ const buildCtx = (cookieHeader: string | undefined, proteus?: any): any => {
       canEncrypt: jest.fn().mockReturnValue(false),
       canDecrypt: jest.fn().mockReturnValue(false),
     },
-    aegis: { aes: { encrypt: jest.fn(), decrypt: jest.fn() } },
+    aegis: {
+      aes: { encrypt: jest.fn(), decrypt: jest.fn() },
+      verify: jest.fn((token: string) =>
+        Promise.resolve({
+          token,
+          header: { baseFormat: "JWT" as const },
+          payload: {
+            subject: "sub-1",
+            expiresAt: new Date("2099-01-01T00:00:00.000Z"),
+          },
+        }),
+      ),
+    },
   };
 };
 

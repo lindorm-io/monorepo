@@ -25,21 +25,19 @@ describe("isSocketEventContext", () => {
 
 describe("isSocketHandshakeContext", () => {
   test("should return true for handshake context", () => {
-    expect(isSocketHandshakeContext({ io: { socket: {} } } as any)).toBe(true);
+    expect(isSocketHandshakeContext({ io: { socket: {} } })).toBe(true);
   });
 
   test("should return false for socket event context (has event)", () => {
-    expect(isSocketHandshakeContext({ event: "test", io: { socket: {} } } as any)).toBe(
-      false,
-    );
+    expect(isSocketHandshakeContext({ event: "test", io: { socket: {} } })).toBe(false);
   });
 
   test("should return false for HTTP context", () => {
-    expect(isSocketHandshakeContext({ request: {} } as any)).toBe(false);
+    expect(isSocketHandshakeContext({ request: {} })).toBe(false);
   });
 
   test("should return false when io.socket is missing", () => {
-    expect(isSocketHandshakeContext({ io: {} } as any)).toBe(false);
+    expect(isSocketHandshakeContext({ io: {} })).toBe(false);
   });
 });
 

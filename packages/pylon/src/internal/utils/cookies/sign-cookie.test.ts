@@ -2,6 +2,7 @@ import { createMockAmphora } from "@lindorm/amphora";
 import { signCookie } from "./sign-cookie";
 
 jest.mock("@lindorm/aegis", () => ({
+  ...jest.requireActual("@lindorm/aegis"),
   SignatureKit: class SignatureKit {
     format(value: any): string {
       return "formatted_" + value;
