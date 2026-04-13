@@ -1,9 +1,5 @@
-import { Aegis } from "@lindorm/aegis";
+import { AegisError } from "@lindorm/aegis";
 import { extractTokenFromSession } from "./extract-token-from-session";
-
-jest.mock("@lindorm/aegis", () => ({
-  Aegis: { parse: jest.fn() },
-}));
 
 const session = {
   id: "sess-1",
@@ -15,31 +11,47 @@ const session = {
 } as any;
 
 describe("extractTokenFromSession", () => {
+  let aegis: any;
+
   beforeEach(() => {
-    (Aegis.parse as jest.Mock).mockReset();
+    aegis = {
+      verify: jest.fn().mockResolvedValue({
+        token: "session-jwt",
+        header: { baseFormat: "JWT" },
+      }),
+    };
   });
 
-  test("returns parsed token when session has accessToken", () => {
-    (Aegis.parse as jest.Mock).mockReturnValue({ token: "session-jwt" });
-    expect(extractTokenFromSession(session)).toMatchSnapshot();
+  test("returns parsed token when session has accessToken", async () => {
+    expect(await extractTokenFromSession(aegis, session)).toMatchSnapshot();
   });
 
-  test("returns null when session is null", () => {
-    expect(extractTokenFromSession(null)).toMatchSnapshot();
+  test("returns null when session is null", async () => {
+    expect(await extractTokenFromSession(aegis, null)).toMatchSnapshot();
   });
 
-  test("returns null when session is undefined", () => {
-    expect(extractTokenFromSession(undefined)).toMatchSnapshot();
+  test("returns null when session is undefined", async () => {
+    expect(await extractTokenFromSession(aegis, undefined)).toMatchSnapshot();
   });
 
-  test("returns null when accessToken is missing", () => {
-    expect(extractTokenFromSession({ ...session, accessToken: "" })).toMatchSnapshot();
+  test("returns null when accessToken is missing", async () => {
+    expect(
+      await extractTokenFromSession(aegis, { ...session, accessToken: "" }),
+    ).toMatchSnapshot();
   });
 
-  test("returns null when Aegis.parse throws", () => {
-    (Aegis.parse as jest.Mock).mockImplementation(() => {
-      throw new Error("bad token");
-    });
-    expect(extractTokenFromSession(session)).toMatchSnapshot();
+  test("returns null when aegis.verify throws AegisError", async () => {
+    aegis.verify.mockRejectedValue(new AegisError("bad token"));
+    expect(await extractTokenFromSession(aegis, session)).toMatchSnapshot();
+  });
+
+  test("returns null when verified token is not jwt kind", async () => {
+    aegis.verify.mockResolvedValue({ decoded: {}, header: { baseFormat: "JWS" } });
+    expect(await extractTokenFromSession(aegis, session)).toMatchSnapshot();
+  });
+
+  test("rethrows non-AegisError", async () => {
+    aegis.verify.mockRejectedValue(new TypeError("unexpected"));
+    await expect(extractTokenFromSession(aegis, session)).rejects.toThrow(TypeError);
   });
 });
