@@ -2,13 +2,17 @@
 
 exports[`encode-extensions authorityKeyIdentifierExt wraps OCTET STRING in [0] IMPLICIT 1`] = `"301f0603551d23041830168014abababababababababababababababababababab"`;
 
-exports[`encode-extensions basicConstraintsExt with CA=false omits BOOLEAN 1`] = `"300c0603551d130101ff04023000"`;
+exports[`encode-extensions basicConstraintsExt ca=false 1`] = `"300c0603551d130101ff04023000"`;
 
-exports[`encode-extensions basicConstraintsExt with CA=true includes BOOLEAN TRUE 1`] = `"300f0603551d130101ff040530030101ff"`;
+exports[`encode-extensions basicConstraintsExt ca=true 1`] = `"300f0603551d130101ff040530030101ff"`;
+
+exports[`encode-extensions basicConstraintsExt ca=true with pathLenConstraint=0 1`] = `"30120603551d130101ff040830060101ff020100"`;
+
+exports[`encode-extensions basicConstraintsExt ca=true with pathLenConstraint=3 1`] = `"30120603551d130101ff040830060101ff020103"`;
 
 exports[`encode-extensions keyUsageExt digitalSignature only 1`] = `"300e0603551d0f0101ff040403020780"`;
 
-exports[`encode-extensions keyUsageExt keyCertSign + crlSign 1`] = `"300e0603551d0f0101ff040403020106"`;
+exports[`encode-extensions keyUsageExt keyCertSign + cRLSign 1`] = `"300e0603551d0f0101ff040403020106"`;
 
 exports[`encode-extensions keyUsageExt keyEncipherment + dataEncipherment 1`] = `"300e0603551d0f0101ff040403020430"`;
 

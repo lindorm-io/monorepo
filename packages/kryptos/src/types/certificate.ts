@@ -1,16 +1,29 @@
 import type { IKryptos } from "../interfaces/Kryptos";
 
+export type KryptosCertificateSelfSignedOption = {
+  mode: "self-signed";
+  subject?: string;
+  organization?: string;
+  subjectAlternativeNames?: ReadonlyArray<string>;
+};
+
+export type KryptosCertificateRootCaOption = {
+  mode: "root-ca";
+  subject?: string;
+  organization?: string;
+  subjectAlternativeNames?: ReadonlyArray<string>;
+  pathLenConstraint?: number;
+};
+
+export type KryptosCertificateCaSignedOption = {
+  mode: "ca-signed";
+  ca: IKryptos;
+  subject?: string;
+  organization?: string;
+  subjectAlternativeNames?: ReadonlyArray<string>;
+};
+
 export type KryptosCertificateOption =
-  | {
-      mode: "self-signed";
-      subject?: string;
-      organization?: string;
-      subjectAlternativeNames?: ReadonlyArray<string>;
-    }
-  | {
-      mode: "ca-signed";
-      ca: IKryptos;
-      subject?: string;
-      organization?: string;
-      subjectAlternativeNames?: ReadonlyArray<string>;
-    };
+  | KryptosCertificateSelfSignedOption
+  | KryptosCertificateRootCaOption
+  | KryptosCertificateCaSignedOption;

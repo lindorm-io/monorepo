@@ -88,7 +88,7 @@ const getSubjectSpki = (pair: KeyPair): Buffer => {
   }).export({ format: "der", type: "spki" }) as Buffer;
 };
 
-const assertSelfSigned = (der: Buffer, subjectPair: KeyPair): void => {
+const assertRootCaSelfSigned = (der: Buffer, subjectPair: KeyPair): void => {
   const nodeCert = new X509Certificate(der);
   expect(nodeCert.subject).toContain("CN=example.test");
   expect(nodeCert.issuer).toContain("CN=example.test");
@@ -113,8 +113,8 @@ const assertSelfSigned = (der: Buffer, subjectPair: KeyPair): void => {
 };
 
 describe("generateX509Certificate", () => {
-  describe("self-signed happy paths", () => {
-    test("ES256 self-signed", () => {
+  describe("root-ca happy paths", () => {
+    test("ES256 root-ca", () => {
       const pair = ecKeyPair("P-256");
       const der = generateX509Certificate({
         subjectKryptos: { ...pair, algorithm: "ES256" },
@@ -123,14 +123,15 @@ describe("generateX509Certificate", () => {
         issuer: { commonName: "example.test", organization: "Lindorm" },
         notBefore: NOT_BEFORE,
         notAfter: NOT_AFTER,
-        keyUsage: "sig",
+        basicConstraints: { ca: true },
+        keyUsage: ["keyCertSign", "cRLSign"],
         subjectAlternativeNames: ["https://example.test/a"],
         serialNumber: SERIAL,
       });
-      assertSelfSigned(der, pair);
+      assertRootCaSelfSigned(der, pair);
     });
 
-    test("ES384 self-signed", () => {
+    test("ES384 root-ca", () => {
       const pair = ecKeyPair("P-384");
       const der = generateX509Certificate({
         subjectKryptos: { ...pair, algorithm: "ES384" },
@@ -139,14 +140,15 @@ describe("generateX509Certificate", () => {
         issuer: { commonName: "example.test" },
         notBefore: NOT_BEFORE,
         notAfter: NOT_AFTER,
-        keyUsage: "sig",
+        basicConstraints: { ca: true },
+        keyUsage: ["keyCertSign", "cRLSign"],
         subjectAlternativeNames: ["https://example.test/a"],
         serialNumber: SERIAL,
       });
-      assertSelfSigned(der, pair);
+      assertRootCaSelfSigned(der, pair);
     });
 
-    test("RS256 self-signed", () => {
+    test("RS256 root-ca", () => {
       const pair = rsaKeyPair();
       const der = generateX509Certificate({
         subjectKryptos: { ...pair, algorithm: "RS256" },
@@ -155,14 +157,15 @@ describe("generateX509Certificate", () => {
         issuer: { commonName: "example.test", organization: "Lindorm" },
         notBefore: NOT_BEFORE,
         notAfter: NOT_AFTER,
-        keyUsage: "sig",
+        basicConstraints: { ca: true },
+        keyUsage: ["keyCertSign", "cRLSign"],
         subjectAlternativeNames: ["https://example.test/a"],
         serialNumber: SERIAL,
       });
-      assertSelfSigned(der, pair);
+      assertRootCaSelfSigned(der, pair);
     });
 
-    test("Ed25519 self-signed", () => {
+    test("Ed25519 root-ca", () => {
       const pair = ed25519KeyPair();
       const der = generateX509Certificate({
         subjectKryptos: { ...pair, algorithm: "EdDSA" },
@@ -171,14 +174,15 @@ describe("generateX509Certificate", () => {
         issuer: { commonName: "example.test" },
         notBefore: NOT_BEFORE,
         notAfter: NOT_AFTER,
-        keyUsage: "sig",
+        basicConstraints: { ca: true },
+        keyUsage: ["keyCertSign", "cRLSign"],
         subjectAlternativeNames: ["https://example.test/a"],
         serialNumber: SERIAL,
       });
-      assertSelfSigned(der, pair);
+      assertRootCaSelfSigned(der, pair);
     });
 
-    test("Ed448 self-signed", () => {
+    test("Ed448 root-ca", () => {
       const pair = ed448KeyPair();
       const der = generateX509Certificate({
         subjectKryptos: { ...pair, algorithm: "EdDSA" },
@@ -187,24 +191,53 @@ describe("generateX509Certificate", () => {
         issuer: { commonName: "example.test" },
         notBefore: NOT_BEFORE,
         notAfter: NOT_AFTER,
-        keyUsage: "sig",
+        basicConstraints: { ca: true },
+        keyUsage: ["keyCertSign", "cRLSign"],
         subjectAlternativeNames: ["https://example.test/a"],
         serialNumber: SERIAL,
       });
-      assertSelfSigned(der, pair);
+      assertRootCaSelfSigned(der, pair);
     });
 
-    test("enc key usage sets keyEncipherment + dataEncipherment", () => {
+    test("self-signed leaf (non-CA) with digitalSignature only", () => {
+      const pair = ecKeyPair("P-256");
+      const der = generateX509Certificate({
+        subjectKryptos: { ...pair, algorithm: "ES256" },
+        issuerKryptos: { ...pair, algorithm: "ES256" },
+        subject: { commonName: "leaf.test" },
+        issuer: { commonName: "leaf.test" },
+        notBefore: NOT_BEFORE,
+        notAfter: NOT_AFTER,
+        basicConstraints: { ca: false },
+        keyUsage: ["digitalSignature"],
+        subjectAlternativeNames: ["https://leaf.test"],
+        serialNumber: SERIAL,
+      });
+
+      const nodeCert = new X509Certificate(der);
+      expect(nodeCert.ca).toBe(false);
+
+      const peculiar = new x509.X509Certificate(toU8(der));
+      const kuExt = peculiar.extensions.find((e) => e.type === "2.5.29.15") as
+        | x509.KeyUsagesExtension
+        | undefined;
+      expect(kuExt).toBeDefined();
+      expect((kuExt!.usages & x509.KeyUsageFlags.digitalSignature) !== 0).toBe(true);
+      expect((kuExt!.usages & x509.KeyUsageFlags.keyCertSign) !== 0).toBe(false);
+    });
+
+    test("keyEncipherment + dataEncipherment leaf", () => {
       const pair = rsaKeyPair();
       const der = generateX509Certificate({
         subjectKryptos: { ...pair, algorithm: "RS256" },
         issuerKryptos: { ...pair, algorithm: "RS256" },
-        subject: { commonName: "example.test" },
-        issuer: { commonName: "example.test" },
+        subject: { commonName: "enc.test" },
+        issuer: { commonName: "enc.test" },
         notBefore: NOT_BEFORE,
         notAfter: NOT_AFTER,
-        keyUsage: "enc",
-        subjectAlternativeNames: ["https://example.test/a"],
+        basicConstraints: { ca: false },
+        keyUsage: ["keyEncipherment", "dataEncipherment"],
+        subjectAlternativeNames: ["https://enc.test"],
         serialNumber: SERIAL,
       });
 
@@ -219,7 +252,7 @@ describe("generateX509Certificate", () => {
   });
 
   describe("CA-signed chain", () => {
-    test("EC CA signs EC leaf; verifiable via Node and @peculiar/x509", () => {
+    test("EC root-CA signs EC leaf with byte-equal issuer DN", () => {
       const caPair = ecKeyPair("P-256");
       const leafPair = ecKeyPair("P-256");
 
@@ -230,7 +263,8 @@ describe("generateX509Certificate", () => {
         issuer: { commonName: "root.test", organization: "Lindorm" },
         notBefore: NOT_BEFORE,
         notAfter: NOT_AFTER,
-        keyUsage: "sig",
+        basicConstraints: { ca: true },
+        keyUsage: ["keyCertSign", "cRLSign"],
         subjectAlternativeNames: ["https://root.test"],
         serialNumber: SERIAL,
       });
@@ -238,7 +272,6 @@ describe("generateX509Certificate", () => {
       const nodeCa = new X509Certificate(caDer);
       expect(nodeCa.ca).toBe(true);
 
-      // Extract the CA's SKI from its SubjectKeyIdentifier extension for AKI wiring.
       const peculiarCa = new x509.X509Certificate(toU8(caDer));
       const caSkiExt = peculiarCa.extensions.find((e) => e.type === "2.5.29.14") as
         | x509.SubjectKeyIdentifierExtension
@@ -251,10 +284,11 @@ describe("generateX509Certificate", () => {
         subjectKryptos: { ...leafPair, algorithm: "ES256" },
         issuerKryptos: { ...caPair, algorithm: "ES256" },
         subject: { commonName: "leaf.test", organization: "Lindorm" },
-        issuer: { commonName: "root.test", organization: "Lindorm" },
+        issuer: { raw: Buffer.from(peculiarCa.subjectName.toArrayBuffer()) },
         notBefore: NOT_BEFORE,
         notAfter: NOT_AFTER,
-        keyUsage: "sig",
+        basicConstraints: { ca: false },
+        keyUsage: ["digitalSignature"],
         subjectAlternativeNames: ["https://leaf.test"],
         authorityKeyIdentifier: caSki,
         serialNumber: leafSerial,
@@ -277,11 +311,83 @@ describe("generateX509Certificate", () => {
     });
   });
 
+  describe("RFC 5280 enforcement", () => {
+    test("keyCertSign with ca=false throws", () => {
+      const pair = ecKeyPair("P-256");
+      expect(() =>
+        generateX509Certificate({
+          subjectKryptos: { ...pair, algorithm: "ES256" },
+          issuerKryptos: { ...pair, algorithm: "ES256" },
+          subject: { commonName: "bad.test" },
+          issuer: { commonName: "bad.test" },
+          notBefore: NOT_BEFORE,
+          notAfter: NOT_AFTER,
+          basicConstraints: { ca: false },
+          keyUsage: ["keyCertSign"],
+          subjectAlternativeNames: [],
+          serialNumber: SERIAL,
+        }),
+      ).toThrow("keyCertSign or cRLSign requires basicConstraints.ca=true");
+    });
+
+    test("cRLSign with ca=false throws", () => {
+      const pair = ecKeyPair("P-256");
+      expect(() =>
+        generateX509Certificate({
+          subjectKryptos: { ...pair, algorithm: "ES256" },
+          issuerKryptos: { ...pair, algorithm: "ES256" },
+          subject: { commonName: "bad.test" },
+          issuer: { commonName: "bad.test" },
+          notBefore: NOT_BEFORE,
+          notAfter: NOT_AFTER,
+          basicConstraints: { ca: false },
+          keyUsage: ["cRLSign"],
+          subjectAlternativeNames: [],
+          serialNumber: SERIAL,
+        }),
+      ).toThrow("keyCertSign or cRLSign requires basicConstraints.ca=true");
+    });
+
+    test("empty keyUsage throws", () => {
+      const pair = ecKeyPair("P-256");
+      expect(() =>
+        generateX509Certificate({
+          subjectKryptos: { ...pair, algorithm: "ES256" },
+          issuerKryptos: { ...pair, algorithm: "ES256" },
+          subject: { commonName: "bad.test" },
+          issuer: { commonName: "bad.test" },
+          notBefore: NOT_BEFORE,
+          notAfter: NOT_AFTER,
+          basicConstraints: { ca: false },
+          keyUsage: [],
+          subjectAlternativeNames: [],
+          serialNumber: SERIAL,
+        }),
+      ).toThrow("keyUsage must contain at least one flag");
+    });
+
+    test("pathLenConstraint with ca=false throws", () => {
+      const pair = ecKeyPair("P-256");
+      expect(() =>
+        generateX509Certificate({
+          subjectKryptos: { ...pair, algorithm: "ES256" },
+          issuerKryptos: { ...pair, algorithm: "ES256" },
+          subject: { commonName: "bad.test" },
+          issuer: { commonName: "bad.test" },
+          notBefore: NOT_BEFORE,
+          notAfter: NOT_AFTER,
+          basicConstraints: { ca: false, pathLenConstraint: 1 },
+          keyUsage: ["digitalSignature"],
+          subjectAlternativeNames: [],
+          serialNumber: SERIAL,
+        }),
+      ).toThrow("pathLenConstraint is only valid when ca=true");
+    });
+  });
+
   describe("byte-identical determinism", () => {
     test("same inputs produce byte-equal DER", () => {
       const pair = ecKeyPair("P-256");
-      // ECDSA has random k, so determinism only holds if Node uses deterministic-k
-      // for the same key. Use Ed25519 which is fully deterministic by spec.
       const edPair = ed25519KeyPair();
 
       const options = {
@@ -291,7 +397,8 @@ describe("generateX509Certificate", () => {
         issuer: { commonName: "example.test" },
         notBefore: NOT_BEFORE,
         notAfter: NOT_AFTER,
-        keyUsage: "sig" as const,
+        basicConstraints: { ca: true },
+        keyUsage: ["keyCertSign", "cRLSign"] as const,
         subjectAlternativeNames: ["https://example.test/a"],
         serialNumber: SERIAL,
       };
@@ -301,14 +408,12 @@ describe("generateX509Certificate", () => {
 
       expect(a.equals(b)).toBe(true);
 
-      // Also: different serial -> different bytes (sanity).
       const c = generateX509Certificate({
         ...options,
         serialNumber: Buffer.from("ffeeddccbbaa99887766554433221100", "hex"),
       });
       expect(a.equals(c)).toBe(false);
 
-      // Silence unused var warning.
       expect(pair.type).toBe("EC");
     });
   });
@@ -324,7 +429,8 @@ describe("generateX509Certificate", () => {
           issuer: { commonName: "example.test" },
           notBefore: NOT_BEFORE,
           notAfter: NOT_AFTER,
-          keyUsage: "sig",
+          basicConstraints: { ca: true },
+          keyUsage: ["keyCertSign", "cRLSign"],
           subjectAlternativeNames: ["https://example.test/a"],
           serialNumber: SERIAL,
         }),
@@ -348,7 +454,8 @@ describe("generateX509Certificate", () => {
           issuer: { commonName: "example.test" },
           notBefore: NOT_BEFORE,
           notAfter: NOT_AFTER,
-          keyUsage: "sig",
+          basicConstraints: { ca: false },
+          keyUsage: ["digitalSignature"],
           subjectAlternativeNames: ["https://example.test/a"],
           serialNumber: SERIAL,
         }),
@@ -365,7 +472,8 @@ describe("generateX509Certificate", () => {
           issuer: { commonName: "example.test" },
           notBefore: NOT_AFTER,
           notAfter: NOT_BEFORE,
-          keyUsage: "sig",
+          basicConstraints: { ca: false },
+          keyUsage: ["digitalSignature"],
           subjectAlternativeNames: ["https://example.test/a"],
           serialNumber: SERIAL,
         }),
@@ -382,14 +490,15 @@ describe("generateX509Certificate", () => {
           issuer: { commonName: "example.test" },
           notBefore: NOT_BEFORE,
           notAfter: NOT_AFTER,
-          keyUsage: "sig",
+          basicConstraints: { ca: false },
+          keyUsage: ["digitalSignature"],
           subjectAlternativeNames: ["https://example.test/a"],
           serialNumber: Buffer.alloc(0),
         }),
       ).toThrow("serialNumber must be non-empty");
     });
 
-    test("randomly generated serial when omitted yields 16 bytes with top bit clear", () => {
+    test("randomly generated serial when omitted", () => {
       const pair = ed25519KeyPair();
       const der = generateX509Certificate({
         subjectKryptos: { ...pair, algorithm: "EdDSA" },
@@ -398,7 +507,8 @@ describe("generateX509Certificate", () => {
         issuer: { commonName: "example.test" },
         notBefore: NOT_BEFORE,
         notAfter: NOT_AFTER,
-        keyUsage: "sig",
+        basicConstraints: { ca: false },
+        keyUsage: ["digitalSignature"],
         subjectAlternativeNames: ["https://example.test/a"],
       });
       const nodeCert = new X509Certificate(der);

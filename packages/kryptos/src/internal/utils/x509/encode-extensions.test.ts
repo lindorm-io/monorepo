@@ -1,4 +1,5 @@
 import { generateKeyPairSync } from "crypto";
+import { KryptosError } from "../../../errors";
 import {
   authorityKeyIdentifierExt,
   basicConstraintsExt,
@@ -10,32 +11,60 @@ import {
 } from "./encode-extensions";
 
 describe("encode-extensions", () => {
-  test("basicConstraintsExt with CA=false omits BOOLEAN", () => {
-    expect(basicConstraintsExt(false).toString("hex")).toMatchSnapshot();
+  test("basicConstraintsExt ca=false", () => {
+    expect(basicConstraintsExt({ ca: false }).toString("hex")).toMatchSnapshot();
   });
 
-  test("basicConstraintsExt with CA=true includes BOOLEAN TRUE", () => {
-    expect(basicConstraintsExt(true).toString("hex")).toMatchSnapshot();
+  test("basicConstraintsExt ca=true", () => {
+    expect(basicConstraintsExt({ ca: true }).toString("hex")).toMatchSnapshot();
+  });
+
+  test("basicConstraintsExt ca=true with pathLenConstraint=0", () => {
+    expect(
+      basicConstraintsExt({ ca: true, pathLenConstraint: 0 }).toString("hex"),
+    ).toMatchSnapshot();
+  });
+
+  test("basicConstraintsExt ca=true with pathLenConstraint=3", () => {
+    expect(
+      basicConstraintsExt({ ca: true, pathLenConstraint: 3 }).toString("hex"),
+    ).toMatchSnapshot();
+  });
+
+  test("basicConstraintsExt throws when ca=false and pathLenConstraint provided", () => {
+    expect(() => basicConstraintsExt({ ca: false, pathLenConstraint: 1 })).toThrow(
+      KryptosError,
+    );
+  });
+
+  test("basicConstraintsExt throws when pathLenConstraint is negative", () => {
+    expect(() => basicConstraintsExt({ ca: true, pathLenConstraint: -1 })).toThrow(
+      KryptosError,
+    );
   });
 
   test("keyUsageExt digitalSignature only", () => {
-    expect(keyUsageExt({ digitalSignature: true }).toString("hex")).toMatchSnapshot();
+    expect(keyUsageExt(["digitalSignature"]).toString("hex")).toMatchSnapshot();
   });
 
   test("keyUsageExt keyEncipherment + dataEncipherment", () => {
     expect(
-      keyUsageExt({ keyEncipherment: true, dataEncipherment: true }).toString("hex"),
+      keyUsageExt(["keyEncipherment", "dataEncipherment"]).toString("hex"),
     ).toMatchSnapshot();
   });
 
-  test("keyUsageExt keyCertSign + crlSign", () => {
-    expect(
-      keyUsageExt({ keyCertSign: true, crlSign: true }).toString("hex"),
-    ).toMatchSnapshot();
+  test("keyUsageExt keyCertSign + cRLSign", () => {
+    expect(keyUsageExt(["keyCertSign", "cRLSign"]).toString("hex")).toMatchSnapshot();
   });
 
   test("keyUsageExt throws when empty", () => {
-    expect(() => keyUsageExt({})).toThrow("keyUsage extension requires at least one bit");
+    expect(() => keyUsageExt([])).toThrow("keyUsage extension requires at least one bit");
+  });
+
+  test("keyUsageExt throws on unknown flag", () => {
+    expect(() => keyUsageExt(["bogus" as unknown as "digitalSignature"])).toThrow(
+      KryptosError,
+    );
   });
 
   test("subjectKeyIdentifierExt computes SHA-1 of the SPKI BIT STRING body", () => {
