@@ -1,0 +1,53 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`parseUserinfo ParsedJwtPayload input should extract profile from ParsedJwtPayload 1`] = `
+{
+  "email": "jane@example.com",
+  "emailVerified": true,
+  "familyName": "Smith",
+  "givenName": "Jane",
+  "locale": "en-GB",
+  "subject": "user-jwt-456",
+}
+`;
+
+exports[`parseUserinfo plain claims input should handle minimal claims with only sub 1`] = `
+{
+  "subject": "user-minimal",
+}
+`;
+
+exports[`parseUserinfo plain claims input should include lindorm extension fields 1`] = `
+{
+  "department": "Engineering",
+  "displayName": "Johnny D",
+  "honorific": "Dr.",
+  "jobTitle": "Staff Engineer",
+  "organization": "Acme Corp",
+  "pronouns": "he/him",
+  "subject": "user-ext-123",
+}
+`;
+
+exports[`parseUserinfo plain claims input should map standard OIDC claims to AegisUserinfo 1`] = `
+{
+  "birthdate": "1990-01-01",
+  "email": "john@example.com",
+  "emailVerified": true,
+  "familyName": "Doe",
+  "gender": "male",
+  "givenName": "John",
+  "locale": "en-US",
+  "name": "John Doe",
+  "nickname": "Johnny",
+  "phoneNumber": "+1234567890",
+  "phoneNumberVerified": false,
+  "picture": "https://example.com/photo.jpg",
+  "preferredUsername": "johnd",
+  "profile": "https://example.com/johnd",
+  "subject": "user-abc-123",
+  "updatedAt": 1700000000,
+  "website": "https://johndoe.example.com",
+  "zoneinfo": "America/New_York",
+}
+`;
