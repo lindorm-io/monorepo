@@ -1,6 +1,7 @@
 import { isFinite, isObject, isString, isUrlLike } from "@lindorm/is";
 import { removeUndefined } from "@lindorm/utils";
 import {
+  CertificateHeaderFields,
   DecodedTokenHeader,
   ParsedTokenHeader,
   RawTokenHeaderClaims,
@@ -8,7 +9,10 @@ import {
 } from "../../types";
 import { getBaseFormat } from "./compute-typ-header";
 
-export const mapTokenHeader = (options: TokenHeaderOptions): RawTokenHeaderClaims => {
+export const mapTokenHeader = (
+  options: TokenHeaderOptions,
+  cert: CertificateHeaderFields = {},
+): RawTokenHeaderClaims => {
   const crit = options.critical
     ?.map((key): string => {
       switch (key) {
@@ -38,14 +42,6 @@ export const mapTokenHeader = (options: TokenHeaderOptions): RawTokenHeaderClaim
           return "epk";
         case "publicEncryptionTag":
           return "tag";
-        case "x5c":
-          return "x5c";
-        case "x5t":
-          return "x5t";
-        case "x5u":
-          return "x5u";
-        case "x5tS256":
-          return "x5t#S256";
         default:
           return key; // Pass through unknown params for rejection by the Kit class
       }
@@ -67,10 +63,9 @@ export const mapTokenHeader = (options: TokenHeaderOptions): RawTokenHeaderClaim
     p2s: options.pbkdfSalt,
     tag: options.publicEncryptionTag,
     typ: options.headerType,
-    x5c: isString(options.x5c) ? options.x5c : undefined,
-    x5t: isString(options.x5t) ? options.x5t : undefined,
-    x5u: isString(options.x5u) ? options.x5u : undefined,
-    "x5t#S256": isString(options.x5tS256) ? options.x5tS256 : undefined,
+    x5c: Array.isArray(cert.x5c) ? cert.x5c : undefined,
+    x5t: isString(cert.x5t) ? cert.x5t : undefined,
+    "x5t#S256": isString(cert.x5tS256) ? cert.x5tS256 : undefined,
   });
 };
 
@@ -111,8 +106,6 @@ export const parseTokenHeader = <T extends ParsedTokenHeader = ParsedTokenHeader
             return "x5c";
           case "x5t":
             return "x5t";
-          case "x5u":
-            return "x5u";
           case "x5t#S256":
             return "x5tS256";
           default:
@@ -139,7 +132,6 @@ export const parseTokenHeader = <T extends ParsedTokenHeader = ParsedTokenHeader
     publicEncryptionTag: decoded.tag,
     x5c: decoded.x5c,
     x5t: decoded.x5t,
-    x5u: decoded.x5u,
     x5tS256: decoded["x5t#S256"],
   }) as T;
 };

@@ -24,7 +24,6 @@ export type TokenHeaderClaims = {
   typ?: string; // header type (optional per RFC 7515 Section 4.1.9)
   x5c?: Array<string>;
   x5t?: string;
-  x5u?: string;
   "x5t#S256"?: string;
 };
 
@@ -45,7 +44,6 @@ export type RawTokenHeaderClaims = {
   typ?: TokenHeaderType;
   x5c?: Array<string>;
   x5t?: string;
-  x5u?: string;
   "x5t#S256"?: string;
 };
 
@@ -72,7 +70,6 @@ export type ParsedTokenHeader = {
   tokenType: string | undefined;
   x5c: Array<string> | undefined;
   x5t: string | undefined;
-  x5u: string | undefined;
   x5tS256: string | undefined;
 };
 
@@ -91,16 +88,17 @@ export type TokenHeaderOptions = {
   pbkdfSalt?: Buffer;
   publicEncryptionJwk?: PublicEncryptionJwk;
   publicEncryptionTag?: Buffer;
+};
+
+export type CertificateHeaderFields = {
   x5c?: Array<string>;
   x5t?: string;
   x5tS256?: string;
-  x5u?: string;
 };
 
-export type TokenEncryptOrSignOptions = Pick<
-  TokenHeaderOptions,
-  "jwk" | "x5c" | "x5t" | "x5tS256" | "x5u"
->;
+export type TokenEncryptOrSignOptions = Pick<TokenHeaderOptions, "jwk">;
+
+export type BindCertificateMode = "thumbprint" | "chain";
 
 export type RefinedTokenHeader<A> = Omit<
   ParsedTokenHeader,

@@ -21,6 +21,8 @@ import {
 } from "#internal/utils/compute-typ-header";
 import { decodeJoseHeader, encodeJoseHeader } from "#internal/utils/jose-header";
 import { parseTokenHeader } from "#internal/utils/token-header";
+import { resolveCertBinding } from "#internal/utils/resolve-cert-binding";
+import { verifyCertBinding } from "#internal/utils/verify-cert-binding";
 import { validateCrit } from "#internal/utils/validate-crit";
 import { JwsKit } from "./JwsKit";
 import { JwtKit } from "./JwtKit";
@@ -70,8 +72,10 @@ export class JweKit implements IJweKit {
       publicEncryptionTag: prepared.headerParams.publicEncryptionTag,
     };
 
+    const cert = resolveCertBinding(this.kryptos, options.bindCertificate);
+
     // Step 3: Encode header as base64url
-    const header = encodeJoseHeader(headerOptions);
+    const header = encodeJoseHeader(headerOptions, cert);
 
     // Step 4: Compute AAD from the encoded protected header per RFC 7516 Section 5.1 step 14
     const aad = Buffer.from(header, "ascii");
@@ -185,6 +189,15 @@ export class JweKit implements IJweKit {
       },
       { aad },
     );
+
+    // Content tamper check: runs AFTER decryption has succeeded (AES-GCM
+    // authenticated decryption validates AAD over the header). NOT a key
+    // selection step — header cert fields remain forbidden as key sources.
+    // See the SECURITY INVARIANT in Aegis.kryptosSig.
+    verifyCertBinding(this.kryptos, {
+      x5t: header.x5t,
+      x5tS256: header.x5tS256,
+    });
 
     this.logger.debug("Token decrypted");
 

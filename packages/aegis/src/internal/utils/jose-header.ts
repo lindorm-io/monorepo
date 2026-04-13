@@ -1,10 +1,18 @@
 import { B64 } from "@lindorm/b64";
 import { B64U } from "../constants/format";
 import { TOKEN_HEADER_ALGORITHMS } from "../constants/header";
-import { DecodedTokenHeader, TokenHeaderClaims, TokenHeaderOptions } from "../../types";
+import {
+  CertificateHeaderFields,
+  DecodedTokenHeader,
+  TokenHeaderClaims,
+  TokenHeaderOptions,
+} from "../../types";
 import { mapTokenHeader } from "./token-header";
 
-export const encodeJoseHeader = (options: TokenHeaderOptions): string => {
+export const encodeJoseHeader = (
+  options: TokenHeaderOptions,
+  cert?: CertificateHeaderFields,
+): string => {
   if (!options.algorithm) {
     throw new Error("Algorithm is required");
   }
@@ -18,7 +26,7 @@ export const encodeJoseHeader = (options: TokenHeaderOptions): string => {
     throw new Error("Key ID is required");
   }
 
-  const raw = mapTokenHeader(options);
+  const raw = mapTokenHeader(options, cert);
 
   // Convert Buffer fields (iv, p2s, tag) to base64url strings for JSON serialization.
   // RawTokenHeaderClaims uses Buffer for these fields; TokenHeaderClaims uses string.

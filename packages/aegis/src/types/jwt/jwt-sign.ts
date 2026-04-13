@@ -9,7 +9,7 @@ import {
   DelegationClaims,
   StdClaims,
 } from "../claims";
-import { TokenEncryptOrSignOptions } from "../header";
+import { BindCertificateMode, TokenEncryptOrSignOptions } from "../header";
 
 export type SignJwtContent<C extends Dict = Dict> = Omit<
   StdClaims,
@@ -32,6 +32,7 @@ export type SignJwtContent<C extends Dict = Dict> = Omit<
 
 export type SignJwtOptions = {
   accessTokenHash?: string;
+  bindCertificate?: BindCertificateMode;
   codeHash?: string;
   header?: TokenEncryptOrSignOptions;
   issuedAt?: Date;
