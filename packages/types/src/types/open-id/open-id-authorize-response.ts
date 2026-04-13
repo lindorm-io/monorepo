@@ -1,6 +1,7 @@
 // https://openid.net/specs/openid-connect-core-1_0.html#AuthRequest
 // https://www.rfc-editor.org/rfc/rfc7636#section-4.1
 // https://openid.net/specs/openid-connect-core-1_0.html#ImplicitAuthResponse
+// https://www.rfc-editor.org/rfc/rfc6749#section-4.1.2.1
 
 type LindormResponse = {
   /**
@@ -19,6 +20,26 @@ export type OpenIdAuthorizeResponseQuery = LindormResponse & {
    * Authorization Code. This is always returned when using the Hybrid Flow.
    */
   code?: string;
+
+  /**
+   * RFC 6749 §4.1.2.1 — error code returned when the authorization request fails.
+   * REQUIRED if the request fails. Common values: invalid_request, unauthorized_client,
+   * access_denied, unsupported_response_type, invalid_scope, server_error,
+   * temporarily_unavailable.
+   */
+  error?: string;
+
+  /**
+   * RFC 6749 §4.1.2.1 — human-readable error description for developers.
+   * OPTIONAL.
+   */
+  errorDescription?: string;
+
+  /**
+   * RFC 6749 §4.1.2.1 — URI to a human-readable web page with error info.
+   * OPTIONAL.
+   */
+  errorUri?: string;
 
   /**
    * Expiration time of the Access Token in seconds since the response was generated.
