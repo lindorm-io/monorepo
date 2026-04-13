@@ -113,27 +113,33 @@ export class Amphora implements IAmphora {
   public add(kryptos: Array<IKryptos> | IKryptos): void {
     const array = isArray(kryptos) ? kryptos : [kryptos];
 
-    for (const item of array) {
-      if (!item.id) {
+    for (const input of array) {
+      if (!input.id) {
         throw new AmphoraError("Id is required when adding Kryptos");
       }
 
-      if (!item.issuer && this.domain) {
+      const overwrite: Record<string, unknown> = {};
+
+      if (!input.issuer && this.domain) {
         this.logger.silly("Setting issuer on Kryptos from domain", {
-          id: item.id,
+          id: input.id,
           issuer: this.domain,
         });
-        item.issuer = this.domain;
+        overwrite.issuer = this.domain;
       }
 
-      if (!item.jwksUri && this.domain) {
+      if (!input.jwksUri && this.domain) {
         const jwksUri = new URL("/.well-known/jwks.json", this.domain).toString();
         this.logger.silly("Setting jwksUri on Kryptos from domain", {
-          id: item.id,
+          id: input.id,
           jwksUri,
         });
-        item.jwksUri = jwksUri;
+        overwrite.jwksUri = jwksUri;
       }
+
+      const item = Object.keys(overwrite).length
+        ? KryptosKit.clone(input, overwrite)
+        : input;
 
       if (!item.issuer) {
         throw new AmphoraError("Issuer is required when adding Kryptos");
