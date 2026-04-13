@@ -11,7 +11,7 @@ export type KryptosAttributes = {
   createdAt: Date;
   curve: KryptosCurve | null;
   encryption: KryptosEncryption | null;
-  expiresAt: Date | null;
+  expiresAt: Date;
   hidden: boolean;
   isExternal: boolean;
   issuer: string | null;

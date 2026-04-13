@@ -39,9 +39,7 @@ describe("KryptosKit (oct)", () => {
     test("export", () => {
       const kryptos = KryptosKit.from.auto(TEST_OCT_KEY_B64);
 
-      expect(KryptosKit.env.export(kryptos)).toEqual(
-        "kryptos:eyJrIjoiZGlZbnljZVp4bW4xOHhHalZvYkJFd09TajJRT2F2SGZ2X3RXR051QnBqTkQ1NzJQYTNxRDhQRHFEU3J2b0x0TE9XeUhkUTVsc21zdUVJRGNQZ2JQS3A5MkhmTmthd2JLcENzVk5CcG9UbGJaLTVqZXdMTVJFb0dqZTlfcFF6R1NQTGdoLWNBa3d0Y3JMVUpOYndieU1HTWxYbUlKWGVHdWtXc0Q2QmZPQWltTnpQSXlMZjhRWU1KWUw5dHpmMTZYNG1RMVN2VTc2WThNcW9wNnd6OHlsQUVUN3hXVGl2SS1pT0s4WmsxTWlpb21Kd3c1dzQ3VXo3WDZIYV91ejdjdENFU3N5WU1lZjlabllsc3F3c0hQcm5QNzhpaHlpdjhjSDdvYnViS0o2SGttc0NuU1RCT2NoRFl4bm1RaVZaZmZ1TVNiOHBTY2FJSzZWZmVmXzFjN1ZnIiwia2lkIjoiZDhlODMwNzAtYjkwNi01NTQwLTk5MzMtMDFmZTg5MDM3MTY4IiwiYWxnIjoiSFM1MTIiLCJ1c2UiOiJzaWciLCJrdHkiOiJvY3QiLCJpYXQiOjE3MDQwOTYwMDAsImtleV9vcHMiOlsic2lnbiIsInZlcmlmeSJdLCJuYmYiOjE3MDQwOTYwMDAsInVhdCI6MTcwNDA5NjAwMH0",
-      );
+      expect(KryptosKit.env.export(kryptos)).toMatchSnapshot();
     });
   });
 

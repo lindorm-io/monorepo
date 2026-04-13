@@ -1,13 +1,15 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
+exports[`KryptosKit (oct) env export 1`] = `"kryptos:eyJrIjoiZGlZbnljZVp4bW4xOHhHalZvYkJFd09TajJRT2F2SGZ2X3RXR051QnBqTkQ1NzJQYTNxRDhQRHFEU3J2b0x0TE9XeUhkUTVsc21zdUVJRGNQZ2JQS3A5MkhmTmthd2JLcENzVk5CcG9UbGJaLTVqZXdMTVJFb0dqZTlfcFF6R1NQTGdoLWNBa3d0Y3JMVUpOYndieU1HTWxYbUlKWGVHdWtXc0Q2QmZPQWltTnpQSXlMZjhRWU1KWUw5dHpmMTZYNG1RMVN2VTc2WThNcW9wNnd6OHlsQUVUN3hXVGl2SS1pT0s4WmsxTWlpb21Kd3c1dzQ3VXo3WDZIYV91ejdjdENFU3N5WU1lZjlabllsc3F3c0hQcm5QNzhpaHlpdjhjSDdvYnViS0o2SGttc0NuU1RCT2NoRFl4bm1RaVZaZmZ1TVNiOHBTY2FJSzZWZmVmXzFjN1ZnIiwia2lkIjoiZDhlODMwNzAtYjkwNi01NTQwLTk5MzMtMDFmZTg5MDM3MTY4IiwiYWxnIjoiSFM1MTIiLCJ1c2UiOiJzaWciLCJrdHkiOiJvY3QiLCJleHAiOjI0OTMwMzYwMDAsImlhdCI6MTcwNDA5NjAwMCwia2V5X29wcyI6WyJzaWduIiwidmVyaWZ5Il0sIm5iZiI6MTcwNDA5NjAwMCwidWF0IjoxNzA0MDk2MDAwfQ"`;
+
 exports[`KryptosKit (oct) from auto b64 1`] = `
 {
   "algorithm": "HS512",
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": null,
   "encryption": null,
-  "expiresAt": null,
-  "expiresIn": -1,
+  "expiresAt": 2048-12-31T14:00:00.000Z,
+  "expiresIn": 788940000,
   "hasPrivateKey": true,
   "hasPublicKey": false,
   "hidden": false,
@@ -34,6 +36,7 @@ exports[`KryptosKit (oct) from auto b64 1`] = `
 exports[`KryptosKit (oct) from auto b64 2`] = `
 {
   "alg": "HS512",
+  "exp": 2493036000,
   "iat": 1704096000,
   "key_ops": [
     "sign",
@@ -64,8 +67,8 @@ exports[`KryptosKit (oct) from auto jwk 1`] = `
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": null,
   "encryption": null,
-  "expiresAt": null,
-  "expiresIn": -1,
+  "expiresAt": 2048-12-31T14:00:00.000Z,
+  "expiresIn": 788940000,
   "hasPrivateKey": true,
   "hasPublicKey": false,
   "hidden": false,
@@ -92,6 +95,7 @@ exports[`KryptosKit (oct) from auto jwk 1`] = `
 exports[`KryptosKit (oct) from auto jwk 2`] = `
 {
   "alg": "HS512",
+  "exp": 2493036000,
   "iat": 1704096000,
   "key_ops": [
     "sign",
@@ -121,8 +125,8 @@ exports[`KryptosKit (oct) from auto pem 1`] = `
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": null,
   "encryption": null,
-  "expiresAt": null,
-  "expiresIn": -1,
+  "expiresAt": 2048-12-31T14:00:00.000Z,
+  "expiresIn": 788940000,
   "hasPrivateKey": true,
   "hasPublicKey": false,
   "hidden": false,
@@ -149,6 +153,7 @@ exports[`KryptosKit (oct) from auto pem 1`] = `
 exports[`KryptosKit (oct) from auto pem 2`] = `
 {
   "alg": "HS512",
+  "exp": 2493036000,
   "iat": 1704096000,
   "key_ops": [
     "sign",
@@ -185,8 +190,8 @@ exports[`KryptosKit (oct) from b64 1`] = `
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": null,
   "encryption": null,
-  "expiresAt": null,
-  "expiresIn": -1,
+  "expiresAt": 2048-12-31T14:00:00.000Z,
+  "expiresIn": 788940000,
   "hasPrivateKey": true,
   "hasPublicKey": false,
   "hidden": false,
@@ -213,6 +218,7 @@ exports[`KryptosKit (oct) from b64 1`] = `
 exports[`KryptosKit (oct) from b64 2`] = `
 {
   "alg": "HS512",
+  "exp": 2493036000,
   "iat": 1704096000,
   "key_ops": [
     "sign",
@@ -243,8 +249,8 @@ exports[`KryptosKit (oct) from jwk 1`] = `
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": null,
   "encryption": null,
-  "expiresAt": null,
-  "expiresIn": -1,
+  "expiresAt": 2048-12-31T14:00:00.000Z,
+  "expiresIn": 788940000,
   "hasPrivateKey": true,
   "hasPublicKey": false,
   "hidden": false,
@@ -271,6 +277,7 @@ exports[`KryptosKit (oct) from jwk 1`] = `
 exports[`KryptosKit (oct) from jwk 2`] = `
 {
   "alg": "HS512",
+  "exp": 2493036000,
   "iat": 1704096000,
   "key_ops": [
     "sign",
@@ -300,8 +307,8 @@ exports[`KryptosKit (oct) from pem 1`] = `
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": null,
   "encryption": null,
-  "expiresAt": null,
-  "expiresIn": -1,
+  "expiresAt": 2048-12-31T14:00:00.000Z,
+  "expiresIn": 788940000,
   "hasPrivateKey": true,
   "hasPublicKey": false,
   "hidden": false,
@@ -328,6 +335,7 @@ exports[`KryptosKit (oct) from pem 1`] = `
 exports[`KryptosKit (oct) from pem 2`] = `
 {
   "alg": "HS512",
+  "exp": 2493036000,
   "iat": 1704096000,
   "key_ops": [
     "sign",
@@ -364,8 +372,8 @@ exports[`KryptosKit (oct) from utf 1`] = `
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": null,
   "encryption": null,
-  "expiresAt": null,
-  "expiresIn": -1,
+  "expiresAt": 2048-12-31T14:00:00.000Z,
+  "expiresIn": 788940000,
   "hasPrivateKey": true,
   "hasPublicKey": false,
   "hidden": false,
@@ -392,6 +400,7 @@ exports[`KryptosKit (oct) from utf 1`] = `
 exports[`KryptosKit (oct) from utf 2`] = `
 {
   "alg": "HS512",
+  "exp": 2493036000,
   "iat": 1704096000,
   "key_ops": [
     "sign",
@@ -422,8 +431,8 @@ exports[`KryptosKit (oct) generate auto 1`] = `
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": null,
   "encryption": null,
-  "expiresAt": null,
-  "expiresIn": -1,
+  "expiresAt": 2048-12-31T14:00:00.000Z,
+  "expiresIn": 788940000,
   "hasPrivateKey": true,
   "hasPublicKey": false,
   "hidden": false,
@@ -453,8 +462,8 @@ exports[`KryptosKit (oct) generate enc 1`] = `
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": null,
   "encryption": "A256GCM",
-  "expiresAt": null,
-  "expiresIn": -1,
+  "expiresAt": 2048-12-31T14:00:00.000Z,
+  "expiresIn": 788940000,
   "hasPrivateKey": true,
   "hasPublicKey": false,
   "hidden": false,
@@ -484,8 +493,8 @@ exports[`KryptosKit (oct) generate sig 1`] = `
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": null,
   "encryption": null,
-  "expiresAt": null,
-  "expiresIn": -1,
+  "expiresAt": 2048-12-31T14:00:00.000Z,
+  "expiresIn": 788940000,
   "hasPrivateKey": true,
   "hasPublicKey": false,
   "hidden": false,
