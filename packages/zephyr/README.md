@@ -18,11 +18,16 @@ Peer dependencies vary by feature:
 ## Quick Start
 
 ```typescript
-import { Zephyr } from "@lindorm/zephyr";
+import { createBearerAuthStrategy, Zephyr } from "@lindorm/zephyr";
 
 const client = new Zephyr({
   url: "https://api.example.com",
-  auth: { bearer: () => getAccessToken() },
+  auth: createBearerAuthStrategy({
+    getBearerCredentials: async () => ({
+      bearer: await getAccessToken(),
+      expiresIn: 3600,
+    }),
+  }),
 });
 
 await client.connect();
@@ -48,6 +53,7 @@ client.on("notifications:new", (data) => {
   - [Rooms](#rooms)
 - [Connection Management](#connection-management)
   - [Authentication](#authentication)
+  - [Auth Refresh](#auth-refresh)
   - [Lifecycle Handlers](#lifecycle-handlers)
   - [Auto-Connect](#auto-connect)
 - [Events](#events)
@@ -57,6 +63,7 @@ client.on("notifications:new", (data) => {
 - [Room Management](#room-management)
 - [Middleware](#middleware-1)
 - [Wire Protocol](#wire-protocol)
+- [React Auth Bridge](#react-auth-bridge)
 - [React Integration](#react-integration)
   - [ZephyrProvider](#zephyrprovider)
   - [useZephyr](#usezephyr)
@@ -185,28 +192,138 @@ await lobby.leave();
 
 ### Authentication
 
-Zephyr supports bearer token authentication with both static strings and async resolvers:
+Zephyr uses pluggable **auth strategies** to handle different authentication flows. Each strategy implements `ZephyrAuthStrategy`, which prepares the socket handshake and handles credential refresh.
 
 ```typescript
-// Static token
-const client = new Zephyr({
-  url: "https://api.example.com",
-  auth: { bearer: "my-access-token" },
-});
+import {
+  createBearerAuthStrategy,
+  createDpopBearerAuthStrategy,
+  createCookieAuthStrategy,
+  Zephyr,
+} from "@lindorm/zephyr";
+```
 
-// Async token resolver (called on each connect/reconnect)
+#### Bearer Auth
+
+For applications that authenticate with bearer tokens (e.g. OAuth2 access tokens):
+
+```typescript
 const client = new Zephyr({
   url: "https://api.example.com",
-  auth: {
-    bearer: async () => {
-      const token = await refreshToken();
-      return token.accessToken;
-    },
-  },
+  auth: createBearerAuthStrategy({
+    getBearerCredentials: async () => ({
+      bearer: authContext.accessToken,
+      expiresIn: authContext.expiresIn,
+    }),
+  }),
 });
 ```
 
-The bearer token is resolved at connection time and passed to Socket.IO's `auth` option.
+`getBearerCredentials` is called at connect time, on every reconnect attempt, and on each `refresh()` call. It must return the current bearer token and its remaining lifetime in seconds.
+
+**Options (`BearerAuthStrategyOptions`):**
+
+| Option                 | Type                                                    | Required | Description                                      |
+| ---------------------- | ------------------------------------------------------- | -------- | ------------------------------------------------ |
+| `getBearerCredentials` | `() => BearerCredentials \| Promise<BearerCredentials>` | Yes      | Returns `{ bearer, expiresIn }`                  |
+| `refreshAckTimeoutMs`  | `number`                                                | No       | Server ack timeout for refresh (default: 5000ms) |
+
+#### DPoP Bearer Auth
+
+For DPoP-bound tokens (RFC 9449). Sends a DPoP proof JWT in a header alongside the bearer token:
+
+```typescript
+const client = new Zephyr({
+  url: "https://api.example.com",
+  auth: createDpopBearerAuthStrategy({
+    getBearerCredentials: async () => ({
+      bearer: authContext.accessToken,
+      expiresIn: authContext.expiresIn,
+    }),
+    privateKey: dpopKeyPair.privateKey,
+    publicJwk: dpopKeyPair.publicJwk,
+  }),
+});
+```
+
+The DPoP proof is generated automatically using the Web Crypto API and injected as a `DPoP` header on the handshake request.
+
+**Options (`DpopBearerAuthStrategyOptions`):**
+
+| Option                 | Type                                                    | Required | Description                                      |
+| ---------------------- | ------------------------------------------------------- | -------- | ------------------------------------------------ |
+| `getBearerCredentials` | `() => BearerCredentials \| Promise<BearerCredentials>` | Yes      | Returns `{ bearer, expiresIn }`                  |
+| `privateKey`           | `CryptoKey`                                             | Yes      | DPoP signing key (Web Crypto)                    |
+| `publicJwk`            | `JsonWebKey`                                            | Yes      | Public JWK for proof header                      |
+| `refreshAckTimeoutMs`  | `number`                                                | No       | Server ack timeout for refresh (default: 5000ms) |
+
+#### Cookie Auth
+
+For browser applications that rely on HTTP-only session cookies. The browser sends cookies automatically; the strategy calls an HTTP endpoint to extend the session before notifying the socket:
+
+```typescript
+const client = new Zephyr({
+  url: "https://api.example.com",
+  auth: createCookieAuthStrategy({
+    refreshUrl: "https://api.example.com/auth/refresh",
+  }),
+  socketOptions: { withCredentials: true },
+});
+```
+
+On `refresh()`, the strategy issues a `POST` request to `refreshUrl` with `credentials: "include"`, then emits a refresh event to the socket.
+
+**Options (`CookieAuthStrategyOptions`):**
+
+| Option                | Type          | Required | Description                                       |
+| --------------------- | ------------- | -------- | ------------------------------------------------- |
+| `refreshUrl`          | `string`      | Yes      | HTTP endpoint that extends/refreshes the session  |
+| `refreshFetchInit`    | `RequestInit` | No       | Custom fetch options merged into the refresh call |
+| `refreshAckTimeoutMs` | `number`      | No       | Server ack timeout for refresh (default: 5000ms)  |
+
+#### Known Limitations
+
+- Cookie mode requires the pylon server to have an explicit CORS allowlist (not `"*"`).
+- DPoP proof is verified once at handshake; key rotation requires reconnect.
+- Session invalidation is detected at refresh time, not instantly.
+
+### Auth Refresh
+
+Zephyr provides built-in support for refreshing credentials on a live connection.
+
+**`client.refresh()`** -- manually triggers a credential refresh. The call is internally debounced so concurrent callers share a single in-flight refresh. Returns a promise that resolves when the server acknowledges the new credentials.
+
+```typescript
+await client.refresh();
+```
+
+**`client.onAuthExpired(handler)`** -- registers a handler for server-sent `$pylon/auth/expired` events. Returns an unsubscribe function.
+
+```typescript
+const unsubscribe = client.onAuthExpired((event) => {
+  console.log("Auth expired", event.reason);
+});
+
+// Later
+unsubscribe();
+```
+
+**`autoRefreshOnExpiry`** -- when `true` (the default), the client automatically calls `refresh()` whenever a `$pylon/auth/expired` event is received from the server. Set to `false` if you want full manual control.
+
+```typescript
+const client = new Zephyr({
+  url: "https://api.example.com",
+  auth: createBearerAuthStrategy({
+    /* ... */
+  }),
+  autoRefreshOnExpiry: false,
+});
+
+client.onAuthExpired(async () => {
+  await renewTokens();
+  await client.refresh();
+});
+```
 
 ### Lifecycle Handlers
 
@@ -356,6 +473,48 @@ Zephyr wraps all payloads in a **Pylon envelope** for interoperability with `@li
 ```
 
 Error acknowledgements are automatically unwrapped and thrown as `ZephyrError` instances.
+
+## React Auth Bridge
+
+When using Zephyr with React, the auth strategy's `getBearerCredentials` callback is captured once at client creation time. If it closes over a React state value (e.g. `auth.accessToken`), it will read a stale snapshot after re-renders. Use a **ref** to ensure the callback always reads the latest token:
+
+```tsx
+import { FC, ReactNode, useEffect, useMemo, useRef } from "react";
+import { Zephyr } from "@lindorm/zephyr";
+import { createBearerAuthStrategy } from "@lindorm/zephyr";
+import { ZephyrProvider } from "@lindorm/zephyr/react";
+
+const ZephyrBridge: FC<{ children: ReactNode }> = ({ children }) => {
+  const auth = useAuth();
+  const tokenRef = useRef(auth.accessToken);
+  tokenRef.current = auth.accessToken;
+
+  const client = useMemo(
+    () =>
+      new Zephyr({
+        url: "https://api.example.com",
+        auth: createBearerAuthStrategy({
+          getBearerCredentials: () => ({
+            bearer: tokenRef.current,
+            expiresIn: auth.expiresIn,
+          }),
+        }),
+      }),
+    [],
+  );
+
+  useEffect(() => {
+    return client.onAuthExpired(async () => {
+      await auth.refresh();
+      await client.refresh();
+    });
+  }, [auth, client]);
+
+  return <ZephyrProvider client={client}>{children}</ZephyrProvider>;
+};
+```
+
+The `tokenRef` is mutated on every render so `getBearerCredentials` always returns the current access token, even though the `Zephyr` instance is created only once via `useMemo`. Without the ref, reconnect and refresh flows would send an expired token captured in the initial closure.
 
 ## React Integration
 
@@ -530,28 +689,23 @@ Full type signature of `ZephyrOptions`:
 ```typescript
 type ZephyrOptions = {
   // Required
-  url: string; // Server URL
+  url: string;
 
   // Optional
-  alias?: string; // App alias for metadata
-  auth?: ZephyrAuth; // Authentication config
-  autoConnect?: boolean; // Connect on instantiation (default: false)
-  environment?: Environment; // Environment context
-  logger?: ILogger; // Logger instance
-  middleware?: Array<ZephyrMiddleware>; // Middleware chain
-  namespace?: string; // Socket.IO namespace
-  socketOptions?: AdvancedOptions; // Socket.IO client options
-  timeout?: number; // Default request timeout (default: 5000ms)
+  alias?: string;
+  auth?: ZephyrAuthStrategy;
+  autoConnect?: boolean; // default: false
+  autoRefreshOnExpiry?: boolean; // default: true
+  environment?: Environment;
+  logger?: ILogger;
+  middleware?: Array<ZephyrMiddleware>;
+  namespace?: string;
+  socketOptions?: AdvancedOptions;
+  timeout?: number; // default: 5000ms
 };
 ```
 
-**`ZephyrAuth`:**
-
-```typescript
-type ZephyrAuth = {
-  bearer: string | (() => string | Promise<string>);
-};
-```
+The `auth` option accepts any `ZephyrAuthStrategy`, created via `createBearerAuthStrategy`, `createDpopBearerAuthStrategy`, or `createCookieAuthStrategy`. See [Authentication](#authentication) for details on each strategy.
 
 ## Error Handling
 
@@ -574,6 +728,7 @@ Error sources:
 - **Timeout** — request exceeds the configured timeout
 - **Nack response** — server responds with `{ ok: false, error: { ... } }`
 - **Connection failure** — socket fails to connect or disconnects unexpectedly
+- **Auth refresh failure** — server rejects the refresh, ack times out, or (in cookie mode) the HTTP refresh call fails
 
 ## License
 
