@@ -1005,7 +1005,7 @@ describe("Amphora", () => {
           {
             issuer: externalIssuer,
             jwksUri: externalJwksUri,
-            trustAnchors: ca.certificateChain![0],
+            trustAnchors: ca.certificateChain[0],
           },
         ],
       });
@@ -1036,7 +1036,7 @@ describe("Amphora", () => {
           {
             issuer: externalIssuer,
             jwksUri: externalJwksUri,
-            trustAnchors: [caA.certificateChain![0], caB.certificateChain![0]],
+            trustAnchors: [caA.certificateChain[0], caB.certificateChain[0]],
           },
         ],
       });
@@ -1067,7 +1067,7 @@ describe("Amphora", () => {
           {
             issuer: externalIssuer,
             jwksUri: externalJwksUri,
-            trustAnchors: trustedCa.certificateChain![0],
+            trustAnchors: trustedCa.certificateChain[0],
           },
         ],
       });
@@ -1101,7 +1101,7 @@ describe("Amphora", () => {
           {
             issuer: externalIssuer,
             jwksUri: externalJwksUri,
-            trustAnchors: ca.certificateChain![0],
+            trustAnchors: ca.certificateChain[0],
           },
         ],
       });
@@ -1130,7 +1130,7 @@ describe("Amphora", () => {
           {
             issuer: externalIssuer,
             jwksUri: externalJwksUri,
-            trustAnchors: trustedCa.certificateChain![0],
+            trustAnchors: trustedCa.certificateChain[0],
           },
         ],
       });
@@ -1172,7 +1172,7 @@ describe("Amphora", () => {
           {
             issuer: "https://trusted.lindorm.io/",
             jwksUri: "https://trusted.lindorm.io/.well-known/jwks.json",
-            trustAnchors: ca.certificateChain![0],
+            trustAnchors: ca.certificateChain[0],
           },
           {
             issuer: "https://loose.lindorm.io/",
@@ -1241,7 +1241,7 @@ describe("Amphora", () => {
           {
             issuer: externalIssuer,
             jwksUri: externalJwksUri,
-            trustAnchors: ca.certificateChain![0],
+            trustAnchors: ca.certificateChain[0],
             trustMode: "lax",
           },
         ],
@@ -1272,7 +1272,7 @@ describe("Amphora", () => {
           {
             issuer: externalIssuer,
             jwksUri: externalJwksUri,
-            trustAnchors: ca.certificateChain![0],
+            trustAnchors: ca.certificateChain[0],
             trustMode: "lax",
           },
         ],
@@ -1304,7 +1304,7 @@ describe("Amphora", () => {
           {
             issuer: externalIssuer,
             jwksUri: externalJwksUri,
-            trustAnchors: trustedCa.certificateChain![0],
+            trustAnchors: trustedCa.certificateChain[0],
             trustMode: "lax",
           },
         ],
@@ -1339,7 +1339,7 @@ describe("Amphora", () => {
           {
             issuer: externalIssuer,
             jwksUri: externalJwksUri,
-            trustAnchors: ca.certificateChain![0],
+            trustAnchors: ca.certificateChain[0],
             trustMode: "strict",
           },
         ],
@@ -1384,13 +1384,13 @@ describe("Amphora", () => {
           {
             issuer: "https://lax.lindorm.io/",
             jwksUri: "https://lax.lindorm.io/.well-known/jwks.json",
-            trustAnchors: ca.certificateChain![0],
+            trustAnchors: ca.certificateChain[0],
             trustMode: "lax",
           },
           {
             issuer: "https://strict.lindorm.io/",
             jwksUri: "https://strict.lindorm.io/.well-known/jwks.json",
-            trustAnchors: ca.certificateChain![0],
+            trustAnchors: ca.certificateChain[0],
             trustMode: "strict",
           },
         ],
