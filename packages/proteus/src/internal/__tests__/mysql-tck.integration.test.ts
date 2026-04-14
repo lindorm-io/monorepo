@@ -33,6 +33,7 @@ const factory: TckDriverFactory = {
     versioning: true,
     cursor: true,
     lazyLoading: true,
+    embeddedLists: true,
     atomicIncrements: true,
     queryBuilder: true,
     uniqueEnforcement: true,

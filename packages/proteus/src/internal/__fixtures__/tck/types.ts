@@ -18,6 +18,8 @@ export type TckCapabilities = {
   cursor: boolean;
   /** Lazy relation loading (loading: "lazy") */
   lazyLoading: boolean;
+  /** @EmbeddedList collection tables */
+  embeddedLists: boolean;
   /** Atomic increment() / decrement() without full entity load */
   atomicIncrements: boolean;
   /** source.queryBuilder() — where, orderBy, skip, take, select, aggregates, clone */

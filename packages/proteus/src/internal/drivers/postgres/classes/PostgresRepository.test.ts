@@ -134,6 +134,7 @@ const mockMetadata = {
   indexes: [],
   primaryKeys: ["id"],
   relations: [],
+  embeddedLists: [],
   schemas: [],
   uniques: [],
   versionKeys: [],
