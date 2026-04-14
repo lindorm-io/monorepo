@@ -23,6 +23,7 @@ import {
   X509_OID_EXT_SUBJECT_ALT_NAME,
   X509_OID_EXT_SUBJECT_KEY_IDENTIFIER,
 } from "./oids";
+import { SAN_TYPE_BY_TAG } from "./san-tags";
 
 const KEY_USAGE_BITS: ReadonlyArray<ParsedX509KeyUsageFlag> = [
   "digitalSignature",
@@ -98,13 +99,6 @@ const parseAuthorityKeyIdentifier = (extnValue: Buffer): Buffer | undefined => {
     offset = child.nextOffset;
   }
   return undefined;
-};
-
-const SAN_IMPLICIT_TAGS: Record<number, ParsedX509SubjectAltName["type"]> = {
-  0x81: "email",
-  0x82: "dns",
-  0x86: "uri",
-  0x87: "ip",
 };
 
 const decodeIpv4 = (bytes: Buffer): string =>
@@ -188,7 +182,7 @@ const parseSubjectAltNames = (
   const end = tlv.contentStart + tlv.contentLength;
   while (offset < end) {
     const child = readTlv(extnValue, offset);
-    const type = SAN_IMPLICIT_TAGS[child.tag];
+    const type = SAN_TYPE_BY_TAG[child.tag];
     if (type !== undefined) {
       const content = extnValue.subarray(
         child.contentStart,

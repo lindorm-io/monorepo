@@ -2,7 +2,7 @@ import { IKryptos } from "../interfaces";
 
 export type MockKryptos = jest.Mocked<IKryptos>;
 
-export const createMockKryptos = (): MockKryptos => ({
+export const createMockKryptos = (overrides: Partial<IKryptos> = {}): MockKryptos => ({
   id: "9353f654-7cd3-5c91-8a39-96ea7eab1d78",
   algorithm: "ECDH-ES",
   createdAt: new Date("2000-01-01T00:00:00.000Z"),
@@ -43,4 +43,6 @@ export const createMockKryptos = (): MockKryptos => ({
   toJWK: jest.fn().mockReturnValue({}),
   toString: jest.fn().mockReturnValue("Kryptos<EC:ECDH-ES:mock>"),
   export: jest.fn().mockReturnValue({}),
+
+  ...overrides,
 });

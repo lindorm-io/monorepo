@@ -417,13 +417,26 @@ export class KryptosKit {
         use: generate.use,
         type: generate.type,
         algorithm: generate.algorithm,
-        curve: (base as { curve?: KryptosCurve | null }).curve ?? null,
+        curve: KryptosKit.resolveCurveForCert(generate, key),
         publicKey: (key as { publicKey?: Buffer }).publicKey as Buffer,
         privateKey: (key as { privateKey?: Buffer }).privateKey,
       },
     });
 
     return new Kryptos({ ...base, certificateChain });
+  }
+
+  private static resolveCurveForCert(
+    generate: KryptosGenerate,
+    key: ReturnType<typeof generateKey>,
+  ): KryptosCurve | null {
+    // EC/OKP keygen always returns a concrete curve; RSA/oct don't have one.
+    // Post-keygen `key.curve` is the source of truth — `generate.curve` may
+    // have been omitted by the caller and defaulted by the keygen layer.
+    if (generate.type === "EC" || generate.type === "OKP") {
+      return (key as { curve: KryptosCurve }).curve;
+    }
+    return null;
   }
 
   // private generateAsync
