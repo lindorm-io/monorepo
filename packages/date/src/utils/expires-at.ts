@@ -6,6 +6,10 @@ import {
   readableToDuration,
 } from "#internal/utils";
 
+/**
+ * Resolve an `Expiry` to an absolute `Date`. Calendar-correct via date-fns
+ * for year/month units (uses `add()`, not millisecond estimation).
+ */
 export const expiresAt = (expiry: Expiry, from: Date = new Date()): Date => {
   if (isString(expiry)) {
     return addWithMilliseconds(from, readableToDuration(expiry));
