@@ -9,11 +9,13 @@
  */
 
 import { getEntityMetadata } from "./get-entity-metadata";
+import { Eager } from "../../../decorators/Eager";
 import { Embeddable } from "../../../decorators/Embeddable";
 import { Embedded } from "../../../decorators/Embedded";
 import { EmbeddedList } from "../../../decorators/EmbeddedList";
 import { Entity } from "../../../decorators/Entity";
 import { Field } from "../../../decorators/Field";
+import { Lazy } from "../../../decorators/Lazy";
 import { PrimaryKey } from "../../../decorators/PrimaryKey";
 import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField";
 
@@ -490,6 +492,107 @@ describe("build-primary — @EmbeddedList / @Field key collision guard (C9)", ()
       }
 
       getEntityMetadata(C9NoCollisionEntity);
+    }).not.toThrow();
+  });
+});
+
+// ─── Lazy @EmbeddedList field-initializer guard ──────────────────────────────
+
+describe("build-primary — lazy @EmbeddedList field-initializer guard", () => {
+  test("should throw when a lazy @EmbeddedList field carries a default-value initializer", () => {
+    expect(() => {
+      @Entity({ name: "LazyElInitDefault" })
+      class LazyElInitDefault {
+        @PrimaryKeyField()
+        id!: string;
+
+        @Field("string")
+        name!: string;
+
+        // Default scope: multiple=lazy — initializer below must be rejected.
+        @EmbeddedList("string")
+        tags: string[] = [];
+      }
+
+      getEntityMetadata(LazyElInitDefault);
+    }).toThrow(
+      /@EmbeddedList property "tags" on "LazyElInitDefault" carries a runtime field initializer but resolves to a lazy loading scope/,
+    );
+  });
+
+  test("should throw when an explicit @Lazy() @EmbeddedList field carries an initializer", () => {
+    expect(() => {
+      @Entity({ name: "LazyElInitExplicit" })
+      class LazyElInitExplicit {
+        @PrimaryKeyField()
+        id!: string;
+
+        @Field("string")
+        name!: string;
+
+        @Lazy()
+        @EmbeddedList("string")
+        tags: string[] = [];
+      }
+
+      getEntityMetadata(LazyElInitExplicit);
+    }).toThrow(/carries a runtime field initializer/);
+  });
+
+  test('should throw when @Lazy("single") @EmbeddedList field carries an initializer', () => {
+    expect(() => {
+      @Entity({ name: "LazyElInitSingleScope" })
+      class LazyElInitSingleScope {
+        @PrimaryKeyField()
+        id!: string;
+
+        @Field("string")
+        name!: string;
+
+        @Lazy("single")
+        @EmbeddedList("string")
+        tags: string[] = [];
+      }
+
+      getEntityMetadata(LazyElInitSingleScope);
+    }).toThrow(/lazy loading scope/);
+  });
+
+  test("should NOT throw when an eager-only @EmbeddedList field carries an initializer", () => {
+    expect(() => {
+      @Entity({ name: "EagerElInitAllowed" })
+      class EagerElInitAllowed {
+        @PrimaryKeyField()
+        id!: string;
+
+        @Field("string")
+        name!: string;
+
+        // @Eager() on both scopes — no lazy loading, so initializer is fine.
+        @Eager()
+        @EmbeddedList("string")
+        tags: string[] = [];
+      }
+
+      getEntityMetadata(EagerElInitAllowed);
+    }).not.toThrow();
+  });
+
+  test("should NOT throw when a lazy @EmbeddedList field uses definite-assignment assertion", () => {
+    expect(() => {
+      @Entity({ name: "LazyElDefiniteAssignment" })
+      class LazyElDefiniteAssignment {
+        @PrimaryKeyField()
+        id!: string;
+
+        @Field("string")
+        name!: string;
+
+        @EmbeddedList("string")
+        tags!: string[];
+      }
+
+      getEntityMetadata(LazyElDefiniteAssignment);
     }).not.toThrow();
   });
 });

@@ -15,10 +15,16 @@ export type LazyEmbeddedListContext = {
  * Install lazy `LazyCollection` thenables on entity properties for
  * `@EmbeddedList` fields whose `loading[scope]` is `"lazy"`.
  *
- * Must be called after hydration / eager EL loading. The `defaultCreateEntity`
- * path initialises every EL property to `[]` — that empty array is the
- * "unresolved" marker this helper overwrites. A populated array is assumed
- * to be an eager-loaded result (or a user-provided write) and is preserved.
+ * Must be called after hydration / eager EL loading. A field is treated as
+ * "unresolved" only when its value is `undefined` — i.e. driver hydrate skipped
+ * it because the scope is lazy. Any defined value (empty array, populated
+ * array, user write) is preserved as-is.
+ *
+ * Because a TS class field initializer (`public tags: string[] = []`) would
+ * leave the property defined before hydrate and silently suppress the lazy
+ * install, `buildPrimaryMetadata` rejects such initializers at build time via
+ * `validateEmbeddedListInitializers`. Declare lazy `@EmbeddedList` fields with
+ * the definite-assignment assertion (`public tags!: Array<T>`).
  */
 export const installLazyEmbeddedLists = <E extends IEntity>(
   entity: E,
