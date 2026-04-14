@@ -480,7 +480,25 @@ describe("generateX509Certificate", () => {
           subjectAlternativeNames: [{ type: "uri", value: "https://example.test/a" }],
           serialNumber: SERIAL,
         }),
-      ).toThrow("notBefore must be <= notAfter");
+      ).toThrow("notBefore must be strictly before notAfter");
+    });
+
+    test("notBefore equal to notAfter throws", () => {
+      const pair = ecKeyPair("P-256");
+      expect(() =>
+        generateX509Certificate({
+          subjectKryptos: { ...pair, algorithm: "ES256" },
+          issuerKryptos: { ...pair, algorithm: "ES256" },
+          subject: { commonName: "example.test" },
+          issuer: { commonName: "example.test" },
+          notBefore: NOT_BEFORE,
+          notAfter: NOT_BEFORE,
+          basicConstraints: { ca: false },
+          keyUsage: ["digitalSignature"],
+          subjectAlternativeNames: [{ type: "uri", value: "https://example.test/a" }],
+          serialNumber: SERIAL,
+        }),
+      ).toThrow("notBefore must be strictly before notAfter");
     });
 
     test("empty serial number throws", () => {

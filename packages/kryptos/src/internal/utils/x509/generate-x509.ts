@@ -90,8 +90,8 @@ export const generateX509Certificate = (options: GenerateX509Options): Buffer =>
   if (options.subjectKryptos.type === "oct" || options.issuerKryptos.type === "oct") {
     throw new KryptosError("X.509 certificates require asymmetric keys");
   }
-  if (options.notBefore.getTime() > options.notAfter.getTime()) {
-    throw new KryptosError("notBefore must be <= notAfter");
+  if (options.notBefore.getTime() >= options.notAfter.getTime()) {
+    throw new KryptosError("notBefore must be strictly before notAfter");
   }
 
   assertKeyUsageAgainstBasicConstraints(options.keyUsage, options.basicConstraints);
