@@ -4,7 +4,7 @@ import { AegisError } from "../../errors";
 import { CertBindingMode } from "../../types";
 
 type VerifyCertBindingOptions = {
-  header: { x5t: string | undefined; x5tS256: string | undefined };
+  header: { x5tS256: string | undefined };
   kryptos: IKryptos;
   logger: ILogger;
   mode: CertBindingMode;
@@ -15,6 +15,10 @@ type VerifyCertBindingOptions = {
 // amphora-sourced kryptos. It is NOT a key selection step. Header cert
 // fields remain forbidden as key sources — see the SECURITY INVARIANT
 // in Aegis.kryptosSig.
+//
+// Aegis binds exclusively on x5t#S256 (SHA-256). The legacy SHA-1 `x5t`
+// header is not verified — if an incoming token carries `x5t` but no
+// `x5t#S256`, cert binding is simply not checked.
 //
 // Mode semantics:
 // - "strict" (default): if the header carries a thumbprint but the
@@ -31,44 +35,28 @@ export const verifyCertBinding = ({
   logger,
   mode,
 }: VerifyCertBindingOptions): void => {
-  if (header.x5tS256 !== undefined) {
-    if (kryptos.x5tS256 === undefined) {
-      if (mode === "strict") {
-        throw new AegisError(
-          "token header x5t#S256 present but signing kryptos has no certificateChain",
-          { debug: { kryptosId: kryptos.id } },
-        );
-      }
-      logger.warn(
-        "Cert binding: token header x5t#S256 present but signing kryptos has no certificateChain (lax mode — passing through)",
-        { kryptosId: kryptos.id },
+  if (header.x5tS256 === undefined) return;
+
+  if (kryptos.certificateThumbprint === null) {
+    if (mode === "strict") {
+      throw new AegisError(
+        "token header x5t#S256 present but signing kryptos has no certificateChain",
+        { debug: { kryptosId: kryptos.id } },
       );
-    } else if (header.x5tS256 !== kryptos.x5tS256) {
-      throw new AegisError("signing certificate thumbprint mismatch", {
-        debug: {
-          expected: kryptos.x5tS256,
-          received: header.x5tS256,
-        },
-      });
     }
+    logger.warn(
+      "Cert binding: token header x5t#S256 present but signing kryptos has no certificateChain (lax mode — passing through)",
+      { kryptosId: kryptos.id },
+    );
+    return;
   }
 
-  if (header.x5t !== undefined) {
-    if (kryptos.x5t === undefined) {
-      if (mode === "strict") {
-        throw new AegisError(
-          "token header x5t present but signing kryptos has no certificateChain",
-          { debug: { kryptosId: kryptos.id } },
-        );
-      }
-      logger.warn(
-        "Cert binding: token header x5t present but signing kryptos has no certificateChain (lax mode — passing through)",
-        { kryptosId: kryptos.id },
-      );
-    } else if (header.x5t !== kryptos.x5t) {
-      throw new AegisError("signing certificate thumbprint mismatch", {
-        debug: { expected: kryptos.x5t, received: header.x5t },
-      });
-    }
+  if (header.x5tS256 !== kryptos.certificateThumbprint) {
+    throw new AegisError("signing certificate thumbprint mismatch", {
+      debug: {
+        expected: kryptos.certificateThumbprint,
+        received: header.x5tS256,
+      },
+    });
   }
 };

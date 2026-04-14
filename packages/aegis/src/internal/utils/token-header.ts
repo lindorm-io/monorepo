@@ -64,7 +64,6 @@ export const mapTokenHeader = (
     tag: options.publicEncryptionTag,
     typ: options.headerType,
     x5c: Array.isArray(cert.x5c) ? cert.x5c : undefined,
-    x5t: isString(cert.x5t) ? cert.x5t : undefined,
     "x5t#S256": isString(cert.x5tS256) ? cert.x5tS256 : undefined,
   });
 };
