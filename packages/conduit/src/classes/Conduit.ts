@@ -6,7 +6,6 @@ import {
 } from "#internal/constants/defaults";
 import { axiosRequestHandler } from "#internal/middleware/axios-request-handler";
 import { defaultHeaders } from "#internal/middleware/default-headers";
-import { fetchRequestHandler } from "#internal/middleware/fetch-request-handler";
 import { requestLogger } from "#internal/middleware/request-logger";
 import { responseLogger } from "#internal/middleware/response-logger";
 import { defaultRetryCallback } from "#internal/utils/default-retry-callback";
@@ -25,7 +24,6 @@ import {
   ConduitMiddleware,
   ConduitOptions,
   ConduitResponse,
-  ConduitUsing,
   ConfigContext,
   MethodOptions,
   RequestContext,
@@ -42,7 +40,6 @@ export class Conduit implements IConduit {
   private readonly middleware: Array<ConduitMiddleware>;
   private readonly retryCallback: RetryCallback;
   private readonly retryConfig: RetryConfig;
-  private readonly using: ConduitUsing;
 
   public constructor(options: ConduitOptions = {}) {
     this.baseURL = options.baseURL ? getPlainUrl(options.baseURL) : undefined;
@@ -70,8 +67,6 @@ export class Conduit implements IConduit {
       ...RETRY_CONFIG,
       ...(options.retryOptions ?? {}),
     };
-
-    this.using = options.using ?? "axios";
   }
 
   public async delete<
@@ -237,7 +232,6 @@ export class Conduit implements IConduit {
       signal,
       stream,
       timeout,
-      using = this.using,
       withCredentials,
     } = options;
 
@@ -296,7 +290,7 @@ export class Conduit implements IConduit {
       ...this.middleware,
       ...middleware,
       ...(this.logger ? [requestLogger] : []),
-      ...(using === "axios" ? [axiosRequestHandler] : [fetchRequestHandler]),
+      axiosRequestHandler,
     ]);
 
     return result.res;
