@@ -181,6 +181,35 @@ describe("KryptosKit certificate generation", () => {
       expect(parsed.subject.commonName).toBe("abc-123");
     });
 
+    test("SAN defaulting: non-URL issuer throws unless explicit SANs supplied", () => {
+      expect(() =>
+        KryptosKit.generate.sig.ec({
+          algorithm: "ES256",
+          issuer: "my-local-svc",
+          notBefore: NOT_BEFORE,
+          expiresAt: EXPIRES_AT,
+          certificate: { mode: "self-signed" },
+        }),
+      ).toThrow("non-URL issuer");
+    });
+
+    test("SAN defaulting: non-URL issuer + explicit SANs is allowed", () => {
+      const kryptos = KryptosKit.generate.sig.ec({
+        algorithm: "ES256",
+        issuer: "my-local-svc",
+        notBefore: NOT_BEFORE,
+        expiresAt: EXPIRES_AT,
+        certificate: {
+          mode: "self-signed",
+          subjectAlternativeNames: [{ type: "dns", value: "my-local-svc.local" }],
+        },
+      });
+      const parsed = parseX509Certificate(Buffer.from(kryptos.x5c![0], "base64"));
+      expect(parsed.extensions.subjectAltNames).toEqual([
+        { type: "dns", value: "my-local-svc.local" },
+      ]);
+    });
+
     test("SAN rich input: mixed uri + dns + email", () => {
       const kryptos = KryptosKit.generate.sig.ec({
         algorithm: "ES256",
