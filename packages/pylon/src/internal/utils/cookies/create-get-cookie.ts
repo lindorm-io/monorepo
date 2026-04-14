@@ -36,7 +36,7 @@ export const createGetCookie = ({
     const opts = { ...config, ...options };
 
     if (opts.signed) {
-      await verifyCookie(ctx, name, cookie.value, cookie.signature);
+      await verifyCookie(ctx, name, cookie.value, cookie.signature, cookie.kid);
     }
 
     let value: any = cookie.value;

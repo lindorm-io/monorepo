@@ -7,26 +7,43 @@ export const verifyCookie = async (
   name: string,
   value: string,
   signature: string | null,
+  kid: string | null,
 ): Promise<void> => {
   if (!signature) {
     throw new ClientError("Missing cookie signature", {
       code: "missing_signature",
-      debug: { name, value, signature },
+      debug: { name, value, signature, kid },
     });
   }
 
-  const array = await ctx.amphora.filter({
-    isExternal: false,
-    operations: ["verify"],
-    use: "sig",
-  });
-
-  for (const kryptos of array) {
-    if (new SignatureKit({ kryptos }).verify(value, signature)) return;
+  if (!kid) {
+    throw new ClientError("Missing cookie kid", {
+      code: "missing_kid",
+      debug: { name, value, signature, kid },
+    });
   }
 
-  throw new ClientError("Invalid cookie signature", {
-    code: "invalid_signature",
-    debug: { name, value, signature },
-  });
+  try {
+    const kryptos = ctx.amphora.findByIdSync(kid);
+
+    if (!new SignatureKit({ kryptos }).verify(value, signature)) {
+      throw new ClientError("Invalid cookie signature", {
+        code: "invalid_signature",
+        debug: { name, value, signature, kid },
+      });
+    }
+  } catch (error) {
+    if (error instanceof ClientError) throw error;
+
+    throw new ClientError("Invalid cookie signature", {
+      code: "invalid_signature",
+      debug: {
+        name,
+        value,
+        signature,
+        kid,
+        error: error instanceof Error ? error.message : String(error),
+      },
+    });
+  }
 };

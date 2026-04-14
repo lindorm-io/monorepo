@@ -18,50 +18,55 @@ describe("verifyCookie", () => {
 
   beforeEach(() => {
     ctx = { amphora: createMockAmphora() };
-
-    ctx.amphora.filter.mockResolvedValue(["kryptos1", "kryptos2", "kryptos3"]);
+    ctx.amphora.findByIdSync.mockReturnValue({ id: "kid-1" });
   });
 
   afterEach(jest.clearAllMocks);
 
-  test("should resolve immediately", async () => {
+  test("should resolve when kid lookup succeeds and signature verifies", async () => {
     verify.mockReturnValueOnce(true);
 
     await expect(
-      verifyCookie(ctx, "name", "value", "signature"),
+      verifyCookie(ctx, "name", "value", "signature", "kid-1"),
     ).resolves.toBeUndefined();
 
+    expect(ctx.amphora.findByIdSync).toHaveBeenCalledWith("kid-1");
     expect(verify).toHaveBeenCalledTimes(1);
   });
 
-  test("should resolve when verification succeeds", async () => {
-    verify
-      .mockReturnValueOnce(false)
-      .mockReturnValueOnce(false)
-      .mockReturnValueOnce(true);
-
-    await expect(
-      verifyCookie(ctx, "name", "value", "signature"),
-    ).resolves.toBeUndefined();
-
-    expect(verify).toHaveBeenCalledTimes(3);
-  });
-
-  test("should throw when no verification succeeds", async () => {
+  test("should throw when signature does not verify", async () => {
     verify.mockReturnValue(false);
 
-    await expect(verifyCookie(ctx, "name", "value", "signature")).rejects.toThrow(
-      ClientError,
-    );
-
-    expect(verify).toHaveBeenCalledTimes(3);
+    await expect(
+      verifyCookie(ctx, "name", "value", "signature", "kid-1"),
+    ).rejects.toThrow(ClientError);
   });
 
   test("should throw on missing signature", async () => {
-    verify.mockReturnValue(false);
+    await expect(verifyCookie(ctx, "name", "value", null, "kid-1")).rejects.toThrow(
+      ClientError,
+    );
 
-    await expect(verifyCookie(ctx, "name", "value", null)).rejects.toThrow(ClientError);
-
+    expect(ctx.amphora.findByIdSync).not.toHaveBeenCalled();
     expect(verify).not.toHaveBeenCalled();
+  });
+
+  test("should throw on missing kid", async () => {
+    await expect(verifyCookie(ctx, "name", "value", "signature", null)).rejects.toThrow(
+      ClientError,
+    );
+
+    expect(ctx.amphora.findByIdSync).not.toHaveBeenCalled();
+    expect(verify).not.toHaveBeenCalled();
+  });
+
+  test("should throw when findByIdSync throws", async () => {
+    ctx.amphora.findByIdSync.mockImplementation(() => {
+      throw new Error("not found");
+    });
+
+    await expect(
+      verifyCookie(ctx, "name", "value", "signature", "unknown-kid"),
+    ).rejects.toThrow(ClientError);
   });
 });

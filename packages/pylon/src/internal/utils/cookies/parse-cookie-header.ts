@@ -4,6 +4,7 @@ import { RESTRICTED_NAMES_REGEXP } from "../../constants/regexp";
 export type ParsedCookie = {
   name: string;
   signature: string | null;
+  kid: string | null;
   value: string;
 };
 
@@ -26,18 +27,26 @@ export const parseCookieHeader = (header?: string): Array<ParsedCookie> => {
     }
 
     if (name.endsWith(".sig")) {
-      const baseName = name.slice(0, -4); // Remove ".sig"
+      const baseName = name.slice(0, -4);
 
       if (result[baseName]) {
         result[baseName].signature = value;
       } else {
-        result[baseName] = { name: baseName, signature: value, value: "" };
+        result[baseName] = { name: baseName, signature: value, kid: null, value: "" };
+      }
+    } else if (name.endsWith(".kid")) {
+      const baseName = name.slice(0, -4);
+
+      if (result[baseName]) {
+        result[baseName].kid = value;
+      } else {
+        result[baseName] = { name: baseName, signature: null, kid: value, value: "" };
       }
     } else {
       if (result[name]) {
         result[name].value = value;
       } else {
-        result[name] = { name, signature: null, value };
+        result[name] = { name, signature: null, kid: null, value };
       }
     }
   }

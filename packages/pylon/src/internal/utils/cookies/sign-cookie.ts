@@ -4,7 +4,7 @@ import { PylonCommonContext } from "../../../types";
 export const signCookie = async (
   ctx: Pick<PylonCommonContext, "amphora">,
   value: string,
-): Promise<string> => {
+): Promise<{ signature: string; kid: string }> => {
   const kryptos = await ctx.amphora.find({
     isExternal: false,
     operations: ["sign"],
@@ -14,5 +14,8 @@ export const signCookie = async (
 
   const kit = new SignatureKit({ kryptos });
 
-  return kit.format(kit.sign(value));
+  return {
+    signature: kit.format(kit.sign(value)),
+    kid: kryptos.id,
+  };
 };

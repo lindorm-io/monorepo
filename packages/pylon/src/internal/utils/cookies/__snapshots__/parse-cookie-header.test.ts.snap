@@ -1,0 +1,57 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`parseCookieHeader should initialize both as null for plain cookies 1`] = `
+[
+  {
+    "kid": null,
+    "name": "foo",
+    "signature": null,
+    "value": "bar",
+  },
+]
+`;
+
+exports[`parseCookieHeader should initialize kid as null when only sig is present 1`] = `
+[
+  {
+    "kid": null,
+    "name": "foo",
+    "signature": "sigval",
+    "value": "bar",
+  },
+]
+`;
+
+exports[`parseCookieHeader should initialize signature as null when only kid is present 1`] = `
+[
+  {
+    "kid": "kidval",
+    "name": "foo",
+    "signature": null,
+    "value": "bar",
+  },
+]
+`;
+
+exports[`parseCookieHeader should parse cookies with sig and kid siblings 1`] = `
+[
+  {
+    "kid": "5382ca15-b849-55ae-904a-9196797ccc1b",
+    "name": "pylon_session",
+    "signature": "YX2HG7xfLoqklyL4yXJQhJy8CJM",
+    "value": "eyJhbGciOiJFQ0RILUVTIiwiY3JpdCI6WyJhbGciLCJlbmMiLCJlcGsiLCJoa2RmX3NhbHQiXSwiY3R5IjoidGV4dC9wbGFpbiIsImVuYyI6IkEyNTZHQ00iLCJlcGsiOnsiY3J2IjoiWDQ0OCIsImt0eSI6Ik9LUCIsIngiOiJBMk5iQmlqc0dVSF83b1c2OTJJbllPdUlEWjFONUdQSkNRZ1ZzbnVGZGtjLVQ1MFoweWRFb190YTR6UHlEeGxkLW96NzBEbVJrSmcifSwiaGtkZl9zYWx0IjoiRTBlS0N0cnk5Zk1XbFN5QUNKNGFIQT09Iiwia2lkIjoiNTM4MmNhMTUtYjg0OS01NWFlLTkwNGEtOTE5Njc5N2NjYzFiIiwib2lkIjoiMmM0NTRiZWItOWI2Yi00Y2U3LTkwMDEtYzE4ZDhhMzhlYTA2IiwidHlwIjoiSldFIn0..7pg6pypi47K_StCi.fMbk-FpafEM1Z5O4HXawtFz1DVLvLEWdNw2P1cZOmIlM09VteqaJVr-VDbHPaLtgZM9znWxnzNPIOXTpSApLfT2xUckNKglV0ibYB8qEC7_q_tawP7T4kvo4ekQEdArvIEFb74s8iYLM3hp4.-wpdFHmREZZ0r80J7PCVvA",
+  },
+  {
+    "kid": "kid-one",
+    "name": "testOne",
+    "signature": "EGWG5m0eCn2p32rJ7erkL4NX4LM",
+    "value": "dmFsdWVPbmU",
+  },
+  {
+    "kid": null,
+    "name": "testTwo",
+    "signature": null,
+    "value": "dmFsdWVUd28",
+  },
+]
+`;

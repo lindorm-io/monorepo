@@ -39,9 +39,14 @@ describe("httpCookiesMiddleware", () => {
     };
 
     parseCookieHeader.mockReturnValue([
-      { name: "cookie_name", signature: "cookie_signature", value: "Y29va2llX3ZhbHVl" },
+      {
+        name: "cookie_name",
+        signature: "cookie_signature",
+        kid: "cookie_kid",
+        value: "Y29va2llX3ZhbHVl",
+      },
     ]);
-    signCookie.mockResolvedValue("signature");
+    signCookie.mockResolvedValue({ signature: "signature", kid: "kid-1" });
     verifyCookie.mockResolvedValue(undefined);
   });
 
@@ -94,6 +99,7 @@ describe("httpCookiesMiddleware", () => {
     expect(ctx.set).toHaveBeenCalledWith("set-cookie", [
       "new_cookie=bmV3X3ZhbHVl; domain=http://lindorm.io; path=/; samesite=strict; secure; httponly",
       "new_cookie.sig=signature; domain=http://lindorm.io; path=/; samesite=strict; secure; httponly",
+      "new_cookie.kid=kid-1; domain=http://lindorm.io; path=/; samesite=strict; secure; httponly",
     ]);
   });
 
@@ -121,7 +127,12 @@ describe("httpCookiesMiddleware", () => {
 
   test("should get encoded cookie", async () => {
     parseCookieHeader.mockReturnValue([
-      { name: "cookie_name", signature: "cookie_signature", value: "bmV3X3ZhbHVl" },
+      {
+        name: "cookie_name",
+        signature: "cookie_signature",
+        kid: "cookie_kid",
+        value: "bmV3X3ZhbHVl",
+      },
     ]);
 
     next.mockImplementation(async () => {
@@ -137,7 +148,12 @@ describe("httpCookiesMiddleware", () => {
     const tokenised = `aes:${Buffer.from(JSON.stringify("secret_value")).toString("base64url")}`;
 
     parseCookieHeader.mockReturnValue([
-      { name: "cookie_name", signature: "cookie_signature", value: tokenised },
+      {
+        name: "cookie_name",
+        signature: "cookie_signature",
+        kid: "cookie_kid",
+        value: tokenised,
+      },
     ]);
 
     next.mockImplementation(async () => {
@@ -151,7 +167,12 @@ describe("httpCookiesMiddleware", () => {
 
   test("should get signed cookie", async () => {
     parseCookieHeader.mockReturnValue([
-      { name: "cookie_name", signature: "cookie_signature", value: "Y29va2llX3ZhbHVl" },
+      {
+        name: "cookie_name",
+        signature: "cookie_signature",
+        kid: "cookie_kid",
+        value: "Y29va2llX3ZhbHVl",
+      },
     ]);
 
     next.mockImplementation(async () => {
@@ -170,6 +191,7 @@ describe("httpCookiesMiddleware", () => {
       {
         name: "cookie_name",
         signature: "cookie_signature",
+        kid: "cookie_kid",
         value: B64.encode('{"key":"value"}', "b64u"),
       },
     ]);
