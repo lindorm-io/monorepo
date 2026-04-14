@@ -1,10 +1,22 @@
 import { resolve, join } from "path";
 
 const mockConfirm = jest.fn();
+const mockAccess = jest.fn().mockRejectedValue(new Error("ENOENT"));
+const mockToEnvString = jest.fn().mockReturnValue("kryptos:mock-kek-env-string");
+const mockGenerateAuto = jest.fn().mockReturnValue({ toEnvString: mockToEnvString });
 
 jest.mock("fs/promises", () => ({
+  access: (...args: Array<unknown>) => mockAccess(...args),
   mkdir: jest.fn().mockResolvedValue(undefined),
   writeFile: jest.fn().mockResolvedValue(undefined),
+}));
+
+jest.mock("@lindorm/kryptos", () => ({
+  KryptosKit: {
+    generate: {
+      auto: mockGenerateAuto,
+    },
+  },
 }));
 
 jest.mock("@lindorm/logger", () => ({
@@ -61,6 +73,80 @@ const withAnswers = (answers: Record<string, boolean>): void => {
 describe("init", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockAccess.mockRejectedValue(new Error("ENOENT"));
+    mockToEnvString.mockReturnValue("kryptos:mock-kek-env-string");
+    mockGenerateAuto.mockReturnValue({ toEnvString: mockToEnvString });
+  });
+
+  it("should create .env file with generated KEK", async () => {
+    allTrue();
+    await init({});
+
+    const envCall = writeFile.mock.calls.find((c: Array<unknown>) =>
+      (c[0] as string).endsWith(".env"),
+    );
+
+    expect(envCall).toBeDefined();
+
+    const envContent = envCall?.[1] as string;
+
+    expect(envContent).toContain("PYLON_KRYPTOS_KEK='[");
+
+    const match = envContent.match(/PYLON_KRYPTOS_KEK='(.+)'/);
+    expect(match).not.toBeNull();
+
+    const parsed = JSON.parse(match![1]);
+    expect(Array.isArray(parsed)).toBe(true);
+    expect(parsed).toHaveLength(1);
+    expect(parsed[0]).toBe("kryptos:mock-kek-env-string");
+  });
+
+  it("should not overwrite existing .env without force", async () => {
+    mockAccess.mockResolvedValue(undefined);
+    allTrue();
+    await init({});
+
+    const envCall = writeFile.mock.calls.find((c: Array<unknown>) =>
+      (c[0] as string).endsWith(".env"),
+    );
+
+    expect(envCall).toBeUndefined();
+  });
+
+  it("should overwrite existing .env when force is true", async () => {
+    mockAccess.mockResolvedValue(undefined);
+    allTrue();
+    await init({ force: true });
+
+    const envCall = writeFile.mock.calls.find((c: Array<unknown>) =>
+      (c[0] as string).endsWith(".env"),
+    );
+
+    expect(envCall).toBeDefined();
+  });
+
+  it("should include kryptosKek in config schema", async () => {
+    allTrue();
+    await init({});
+
+    const configContent = writeFile.mock.calls.find((c: Array<unknown>) =>
+      (c[0] as string).endsWith("config.ts"),
+    )?.[1] as string;
+
+    expect(configContent).toContain("kryptosKek: z.array(z.string()).min(1)");
+  });
+
+  it("should scaffold amphora template with KEK loader", async () => {
+    allTrue();
+    await init({});
+
+    const amphoraContent = writeFile.mock.calls.find((c: Array<unknown>) =>
+      (c[0] as string).endsWith("amphora.ts"),
+    )?.[1] as string;
+
+    expect(amphoraContent).toContain("KryptosKit");
+    expect(amphoraContent).toContain("config.kryptosKek");
+    expect(amphoraContent).toContain("amphora.add");
   });
 
   it("should create logger file", async () => {
