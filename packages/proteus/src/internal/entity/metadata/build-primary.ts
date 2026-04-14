@@ -4,6 +4,7 @@ import { uniq } from "@lindorm/utils";
 import { EntityMetadataError } from "../errors/EntityMetadataError";
 import { IEntity } from "../../../interfaces";
 import type {
+  EmbeddedListLoadingScope,
   EntityMetadata,
   MetaCache,
   MetaEmbeddedList,
@@ -16,6 +17,7 @@ import type {
   StagedEmbedded,
   StagedEmbeddedList,
   StagedFieldModifier,
+  StagedRelationModifier,
 } from "../types/staged";
 import {
   generateAutoFilters,
@@ -211,12 +213,92 @@ const flattenEmbeddedFields = <TDecorator extends MetaFieldDecorator>(
  * 3. For embeddable element types: resolve fields from the embeddable class
  * 4. For primitive element types: single "value" column
  */
+const DEFAULT_EMBEDDED_LIST_LOADING: EmbeddedListLoadingScope = {
+  single: "eager",
+  multiple: "lazy",
+};
+
+const resolveEmbeddedListLoading = (
+  targetName: string,
+  key: string,
+  modifiers: Array<StagedRelationModifier>,
+): EmbeddedListLoadingScope => {
+  const loading: EmbeddedListLoadingScope = { ...DEFAULT_EMBEDDED_LIST_LOADING };
+
+  // Track applied scopes for conflict detection
+  const applied = new Map<string, string>(); // scopeKey → decoratorName
+
+  for (const modifier of modifiers) {
+    if (modifier.key !== key) continue;
+
+    // Embedded lists only support @Eager / @Lazy — other modifier kinds
+    // (cascade, onOrphan, deferrable, orderBy) are relation-only and will
+    // be caught by mergeRelationModifiers throwing below.
+    const hasNonLoading =
+      modifier.cascade != null ||
+      modifier.deferrable != null ||
+      modifier.initiallyDeferred != null ||
+      modifier.onOrphan != null ||
+      modifier.orderBy != null;
+    if (hasNonLoading) {
+      throw new EntityMetadataError(
+        `@${modifier.decorator} on property "${key}" is not valid on @EmbeddedList — only @Eager and @Lazy are supported`,
+        { debug: { target: targetName, property: key } },
+      );
+    }
+
+    if (!modifier.loading || modifier.loading === "ignore") continue;
+
+    const loadingValue: "eager" | "lazy" = modifier.loading;
+    const scopeKey = modifier.loadingScope ?? "both";
+    const baseName = loadingValue === "eager" ? "Eager" : "Lazy";
+    const opposite = baseName === "Eager" ? "Lazy" : "Eager";
+
+    // Duplicate detection (same decorator with same scope)
+    for (const [scope, dec] of applied) {
+      if (scope === scopeKey && dec === modifier.decorator) {
+        throw new EntityMetadataError(
+          `Duplicate @${modifier.decorator} on property "${key}" of ${targetName}`,
+          {
+            debug: { target: targetName, property: key, decorator: modifier.decorator },
+          },
+        );
+      }
+    }
+
+    // Conflict detection: Eager vs Lazy on overlapping scopes
+    const scopesToCheck =
+      scopeKey === "both" ? ["both", "single", "multiple"] : ["both", scopeKey];
+    for (const checkScope of scopesToCheck) {
+      const existing = applied.get(checkScope);
+      if (existing && existing.startsWith(opposite)) {
+        throw new EntityMetadataError(
+          `@Eager and @Lazy conflict on property "${key}" of ${targetName} (overlapping scope)`,
+          { debug: { target: targetName, property: key } },
+        );
+      }
+    }
+
+    applied.set(scopeKey, modifier.decorator);
+
+    if (modifier.loadingScope) {
+      loading[modifier.loadingScope] = loadingValue;
+    } else {
+      loading.single = loadingValue;
+      loading.multiple = loadingValue;
+    }
+  }
+
+  return loading;
+};
+
 const resolveEmbeddedLists = (
   targetName: string,
   entityName: string,
   staged: Array<StagedEmbeddedList>,
   primaryKeys: Array<string>,
   fields: Array<MetaField>,
+  relationModifiers: Array<StagedRelationModifier>,
 ): Array<MetaEmbeddedList> => {
   if (primaryKeys.length !== 1) {
     throw new EntityMetadataError(
@@ -235,6 +317,8 @@ const resolveEmbeddedLists = (
   for (const entry of staged) {
     const tableName =
       entry.tableName ?? `${snakeCase(entityName)}_${snakeCase(entry.key)}`;
+
+    const loading = resolveEmbeddedListLoading(targetName, entry.key, relationModifiers);
 
     if (entry.elementConstructor) {
       // Embeddable element type
@@ -268,6 +352,7 @@ const resolveEmbeddedLists = (
         elementType: null,
         elementFields: embeddableFields,
         elementConstructor: entry.elementConstructor as () => Constructor,
+        loading,
       });
     } else {
       // Reject structured types — they cannot be serialized into a single column
@@ -294,6 +379,7 @@ const resolveEmbeddedLists = (
         elementType: entry.elementType,
         elementFields: null,
         elementConstructor: null,
+        loading,
       });
     }
   }
@@ -510,6 +596,7 @@ export const buildPrimaryMetadata = <
 
   // Resolve @EmbeddedList declarations
   const stagedEmbeddedLists = collectAll(target, "embeddedLists");
+  const stagedRelationModifiers = collectAll(target, "relationModifiers");
   const embeddedLists =
     stagedEmbeddedLists.length > 0
       ? resolveEmbeddedLists(
@@ -518,6 +605,7 @@ export const buildPrimaryMetadata = <
           stagedEmbeddedLists,
           primaryKeys,
           fields,
+          stagedRelationModifiers,
         )
       : [];
 

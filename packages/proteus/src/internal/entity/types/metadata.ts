@@ -274,6 +274,13 @@ export type MetaRelationCount = {
   relationKey: string;
 };
 
+export type EmbeddedListLoading = "eager" | "lazy";
+
+export type EmbeddedListLoadingScope = {
+  single: EmbeddedListLoading;
+  multiple: EmbeddedListLoading;
+};
+
 export type MetaEmbeddedList = {
   key: string; // property name on parent entity
   tableName: string; // resolved table name
@@ -282,6 +289,7 @@ export type MetaEmbeddedList = {
   elementType: MetaFieldType | null; // for primitives
   elementFields: Array<MetaField> | null; // for embeddables (flattened fields)
   elementConstructor: (() => Constructor) | null; // for embeddable instantiation
+  loading: EmbeddedListLoadingScope; // JPA-aligned default: { single: "eager", multiple: "lazy" }
 };
 
 export type MetaFilter = {

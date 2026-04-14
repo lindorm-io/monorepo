@@ -66,6 +66,7 @@ const embeddedListSpec: MetaEmbeddedList = {
   elementType: "string",
   elementFields: null,
   elementConstructor: null,
+  loading: { single: "eager", multiple: "lazy" },
 };
 
 const metadataWithEmbeddedLists = {

@@ -3,6 +3,7 @@ import type { z } from "zod/v4";
 import type { IEntity } from "../../../interfaces";
 import type { DiscriminatorValue, InheritanceStrategy } from "./inheritance";
 import type {
+  EmbeddedListLoadingScope,
   MetaCheck,
   MetaEntity,
   MetaExtra,
@@ -116,6 +117,7 @@ export type StagedEmbeddedList = {
   elementConstructor: (() => any) | null; // for embeddable arrays
   elementType: MetaFieldType | null; // for primitive arrays
   tableName: string | null; // custom table name, null = auto
+  loading?: EmbeddedListLoadingScope; // resolved from @Eager/@Lazy modifiers at build time
 };
 
 export type StagedMetadata = {
