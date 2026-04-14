@@ -532,6 +532,59 @@ describe("KryptosKit certificate generation", () => {
         }),
       ).toThrow("validity window must fit within");
     });
+
+    test("default child validity window inherits the CA's window", () => {
+      const ca = buildCa({
+        notBefore: new Date("2023-06-01T00:00:00.000Z"),
+        expiresAt: new Date("2028-06-01T00:00:00.000Z"),
+      });
+
+      const child = KryptosKit.generate.sig.ec({
+        algorithm: "ES256",
+        issuer: "https://child.example.com",
+        certificate: { mode: "ca-signed", ca },
+      });
+
+      expect(child.notBefore).toEqual(ca.notBefore);
+      expect(child.expiresAt).toEqual(ca.expiresAt);
+      expect(() =>
+        child.verifyCertificate({ trustAnchors: [ca.certificateChain[0]] }),
+      ).not.toThrow();
+    });
+
+    test("natural idiom: chained generate with no window pinning works", () => {
+      const ca = KryptosKit.generate.sig.ec({
+        algorithm: "ES256",
+        issuer: "https://ca.example.com",
+        certificate: { mode: "root-ca" },
+      });
+      const child = KryptosKit.generate.sig.ec({
+        algorithm: "ES256",
+        issuer: "https://child.example.com",
+        certificate: { mode: "ca-signed", ca },
+      });
+
+      expect(() =>
+        child.verifyCertificate({ trustAnchors: [ca.certificateChain[0]] }),
+      ).not.toThrow();
+    });
+
+    test("explicit child notBefore/expiresAt still wins over CA defaults", () => {
+      const ca = buildCa({
+        notBefore: new Date("2024-01-01T00:00:00.000Z"),
+        expiresAt: new Date("2030-01-01T00:00:00.000Z"),
+      });
+
+      const child = KryptosKit.generate.sig.ec({
+        algorithm: "ES256",
+        notBefore: new Date("2025-06-01T00:00:00.000Z"),
+        expiresAt: new Date("2028-06-01T00:00:00.000Z"),
+        certificate: { mode: "ca-signed", ca },
+      });
+
+      expect(child.notBefore).toEqual(new Date("2025-06-01T00:00:00.000Z"));
+      expect(child.expiresAt).toEqual(new Date("2028-06-01T00:00:00.000Z"));
+    });
   });
 
   describe("oct keys", () => {

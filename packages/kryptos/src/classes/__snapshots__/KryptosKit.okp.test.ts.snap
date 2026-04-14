@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
-exports[`KryptosKit (OKP) env export 1`] = `"kryptos:eyJjcnYiOiJFZDI1NTE5IiwieCI6IkdSQ3dDQTZsQ2hvc0ZHTVF3eEdpSENkemJsZnZDejBGTmlSdFRubTFxcWMiLCJkIjoiSEFvbVctaUhXZUIzMHRGM3QyMjhZNUtwYmk1bHFaMjhpN1FBRVBZQ1RFcyIsImtpZCI6ImZmMmE0NDhlLThlYjAtNTlhOC04ZmM2LTBjZTIzYWQwN2U4ZiIsImFsZyI6IkVkRFNBIiwidXNlIjoic2lnIiwia3R5IjoiT0tQIiwiZXhwIjoyNDkzMDM2MDAwLCJpYXQiOjE3MDQwOTYwMDAsImtleV9vcHMiOlsic2lnbiIsInZlcmlmeSJdLCJuYmYiOjE3MDQwOTYwMDB9"`;
+exports[`KryptosKit (OKP) env export 1`] = `"kryptos:eyJjcnYiOiJFZDI1NTE5IiwieCI6IkdSQ3dDQTZsQ2hvc0ZHTVF3eEdpSENkemJsZnZDejBGTmlSdFRubTFxcWMiLCJkIjoiSEFvbVctaUhXZUIzMHRGM3QyMjhZNUtwYmk1bHFaMjhpN1FBRVBZQ1RFcyIsImtpZCI6ImZmMmE0NDhlLThlYjAtNTlhOC04ZmM2LTBjZTIzYWQwN2U4ZiIsImFsZyI6IkVkRFNBIiwidXNlIjoic2lnIiwia3R5IjoiT0tQIiwiZXhwIjoyNDkzMTAwODAwLCJpYXQiOjE3MDQwOTYwMDAsImtleV9vcHMiOlsic2lnbiIsInZlcmlmeSJdLCJuYmYiOjE3MDQwOTYwMDB9"`;
 
 exports[`KryptosKit (OKP) from auto b64 1`] = `
 {
@@ -10,8 +10,8 @@ exports[`KryptosKit (OKP) from auto b64 1`] = `
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": "Ed25519",
   "encryption": null,
-  "expiresAt": 2048-12-31T14:00:00.000Z,
-  "expiresIn": 788940000,
+  "expiresAt": 2049-01-01T08:00:00.000Z,
+  "expiresIn": 789004800,
   "hasPrivateKey": true,
   "hasPublicKey": true,
   "hidden": false,
@@ -38,7 +38,7 @@ exports[`KryptosKit (OKP) from auto b64 2`] = `
 {
   "alg": "EdDSA",
   "crv": "Ed25519",
-  "exp": 2493036000,
+  "exp": 2493100800,
   "iat": 1704096000,
   "key_ops": [
     "sign",
@@ -72,8 +72,8 @@ exports[`KryptosKit (OKP) from auto jwk 1`] = `
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": "Ed25519",
   "encryption": null,
-  "expiresAt": 2048-12-31T14:00:00.000Z,
-  "expiresIn": 788940000,
+  "expiresAt": 2049-01-01T08:00:00.000Z,
+  "expiresIn": 789004800,
   "hasPrivateKey": true,
   "hasPublicKey": true,
   "hidden": false,
@@ -100,7 +100,7 @@ exports[`KryptosKit (OKP) from auto jwk 2`] = `
 {
   "alg": "EdDSA",
   "crv": "Ed25519",
-  "exp": 2493036000,
+  "exp": 2493100800,
   "iat": 1704096000,
   "key_ops": [
     "sign",
@@ -134,8 +134,8 @@ exports[`KryptosKit (OKP) from auto pem 1`] = `
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": "Ed25519",
   "encryption": null,
-  "expiresAt": 2048-12-31T14:00:00.000Z,
-  "expiresIn": 788940000,
+  "expiresAt": 2049-01-01T08:00:00.000Z,
+  "expiresIn": 789004800,
   "hasPrivateKey": true,
   "hasPublicKey": true,
   "hidden": false,
@@ -162,7 +162,7 @@ exports[`KryptosKit (OKP) from auto pem 2`] = `
 {
   "alg": "EdDSA",
   "crv": "Ed25519",
-  "exp": 2493036000,
+  "exp": 2493100800,
   "iat": 1704096000,
   "key_ops": [
     "sign",
@@ -202,8 +202,8 @@ exports[`KryptosKit (OKP) from b64 1`] = `
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": "Ed25519",
   "encryption": null,
-  "expiresAt": 2048-12-31T14:00:00.000Z,
-  "expiresIn": 788940000,
+  "expiresAt": 2049-01-01T08:00:00.000Z,
+  "expiresIn": 789004800,
   "hasPrivateKey": true,
   "hasPublicKey": true,
   "hidden": false,
@@ -230,7 +230,7 @@ exports[`KryptosKit (OKP) from b64 2`] = `
 {
   "alg": "EdDSA",
   "crv": "Ed25519",
-  "exp": 2493036000,
+  "exp": 2493100800,
   "iat": 1704096000,
   "key_ops": [
     "sign",
@@ -264,8 +264,8 @@ exports[`KryptosKit (OKP) from jwk 1`] = `
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": "Ed25519",
   "encryption": null,
-  "expiresAt": 2048-12-31T14:00:00.000Z,
-  "expiresIn": 788940000,
+  "expiresAt": 2049-01-01T08:00:00.000Z,
+  "expiresIn": 789004800,
   "hasPrivateKey": true,
   "hasPublicKey": true,
   "hidden": false,
@@ -292,7 +292,7 @@ exports[`KryptosKit (OKP) from jwk 2`] = `
 {
   "alg": "EdDSA",
   "crv": "Ed25519",
-  "exp": 2493036000,
+  "exp": 2493100800,
   "iat": 1704096000,
   "key_ops": [
     "sign",
@@ -326,8 +326,8 @@ exports[`KryptosKit (OKP) from pem 1`] = `
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": "Ed25519",
   "encryption": null,
-  "expiresAt": 2048-12-31T14:00:00.000Z,
-  "expiresIn": 788940000,
+  "expiresAt": 2049-01-01T08:00:00.000Z,
+  "expiresIn": 789004800,
   "hasPrivateKey": true,
   "hasPublicKey": true,
   "hidden": false,
@@ -354,7 +354,7 @@ exports[`KryptosKit (OKP) from pem 2`] = `
 {
   "alg": "EdDSA",
   "crv": "Ed25519",
-  "exp": 2493036000,
+  "exp": 2493100800,
   "iat": 1704096000,
   "key_ops": [
     "sign",
@@ -394,8 +394,8 @@ exports[`KryptosKit (OKP) generate auto 1`] = `
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": "P-256",
   "encryption": "A256GCM",
-  "expiresAt": 2048-12-31T14:00:00.000Z,
-  "expiresIn": 788940000,
+  "expiresAt": 2049-01-01T08:00:00.000Z,
+  "expiresIn": 789004800,
   "hasPrivateKey": true,
   "hasPublicKey": true,
   "hidden": false,
@@ -425,8 +425,8 @@ exports[`KryptosKit (OKP) generate enc 1`] = `
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": "X25519",
   "encryption": "A256GCM",
-  "expiresAt": 2048-12-31T14:00:00.000Z,
-  "expiresIn": 788940000,
+  "expiresAt": 2049-01-01T08:00:00.000Z,
+  "expiresIn": 789004800,
   "hasPrivateKey": true,
   "hasPublicKey": true,
   "hidden": false,
@@ -456,8 +456,8 @@ exports[`KryptosKit (OKP) generate sig 1`] = `
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": "Ed25519",
   "encryption": null,
-  "expiresAt": 2048-12-31T14:00:00.000Z,
-  "expiresIn": 788940000,
+  "expiresAt": 2049-01-01T08:00:00.000Z,
+  "expiresIn": 789004800,
   "hasPrivateKey": true,
   "hasPublicKey": true,
   "hidden": false,

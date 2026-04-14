@@ -16,7 +16,7 @@ exports[`Kryptos (X.509) toJWK emits x5c / x5t#S256 when chain is set 1`] = `
 {
   "alg": "ES256",
   "crv": "P-256",
-  "exp": 2565021600,
+  "exp": 2565000000,
   "iat": 1776081600,
   "key_ops": [
     "sign",

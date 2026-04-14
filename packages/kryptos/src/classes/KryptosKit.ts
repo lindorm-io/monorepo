@@ -1,4 +1,5 @@
 import { B64 } from "@lindorm/b64";
+import { expiresAt } from "@lindorm/date";
 import { randomUUID } from "crypto";
 import { KryptosError } from "../errors";
 import {
@@ -372,10 +373,22 @@ export class KryptosKit {
     key: ReturnType<typeof generateKey>,
   ): IKryptos {
     const id = generate.id ?? randomUUID();
-    const notBefore = generate.notBefore ?? new Date();
-    const expiresAt =
-      generate.expiresAt ??
-      new Date(notBefore.getTime() + 25 * 365.25 * 24 * 60 * 60 * 1000);
+
+    // In ca-signed mode, the child's validity window MUST fit within the CA's.
+    // Default the child's window to the CA's own window so that the natural
+    // idiomatic usage (generate CA, generate child, chain them) works without
+    // the caller having to pin dates defensively. Callers may still override
+    // notBefore/expiresAt explicitly.
+    const caWindow =
+      generate.certificate?.mode === "ca-signed"
+        ? {
+            notBefore: generate.certificate.ca.notBefore,
+            expiresAt: generate.certificate.ca.expiresAt,
+          }
+        : null;
+    const notBefore = generate.notBefore ?? caWindow?.notBefore ?? new Date();
+    const childExpiresAt =
+      generate.expiresAt ?? caWindow?.expiresAt ?? expiresAt("25 years", notBefore);
 
     const encryption = generate.use === "enc" ? (generate.encryption ?? "A256GCM") : null;
     const operations = generate.operations?.length
@@ -386,7 +399,7 @@ export class KryptosKit {
       ...generate,
       id,
       notBefore,
-      expiresAt,
+      expiresAt: childExpiresAt,
       encryption,
       operations,
       ...key,
@@ -406,7 +419,7 @@ export class KryptosKit {
         id,
         issuer: generate.issuer ?? null,
         notBefore,
-        expiresAt,
+        expiresAt: childExpiresAt,
         use: generate.use,
         type: generate.type,
         algorithm: generate.algorithm,
