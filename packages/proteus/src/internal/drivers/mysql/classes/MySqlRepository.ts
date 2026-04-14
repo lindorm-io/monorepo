@@ -60,7 +60,7 @@ import {
   loadEmbeddedListRows,
   loadEmbeddedListRowsBatch,
 } from "../utils/repository/embedded-list-ops";
-import type { LazyEmbeddedListLoader } from "#internal/entity/utils/install-lazy-embedded-lists";
+import type { MetaEmbeddedList } from "#internal/entity/types/metadata";
 
 export type { RepositoryFactory } from "#internal/types/repository-factory";
 
@@ -1267,12 +1267,10 @@ export class MySqlRepository<
     }
   }
 
-  protected override buildLazyEmbeddedListLoader(): LazyEmbeddedListLoader {
-    const client = this.client;
-    const namespace = this.namespace;
-    return async (entity, embeddedList) => {
-      await loadEmbeddedListRows(entity, embeddedList, client, namespace);
-      return (entity as any)[embeddedList.key] ?? [];
-    };
+  protected override async loadEmbeddedListForEntity(
+    entity: E,
+    embeddedList: MetaEmbeddedList,
+  ): Promise<void> {
+    await loadEmbeddedListRows(entity, embeddedList, this.client, this.namespace);
   }
 }

@@ -43,7 +43,7 @@ import {
   loadMongoEmbeddedListRowsBatch,
   deleteMongoEmbeddedListRows,
 } from "../utils/embedded-list-ops";
-import type { LazyEmbeddedListLoader } from "#internal/entity/utils/install-lazy-embedded-lists";
+import type { MetaEmbeddedList } from "#internal/entity/types/metadata";
 import { resolveCollectionName } from "../utils/resolve-collection-name";
 import { MongoCursor } from "./MongoCursor";
 import { compileFilterWithSystem } from "../utils/compile-filter";
@@ -973,13 +973,11 @@ export class MongoRepository<
     }
   }
 
-  protected override buildLazyEmbeddedListLoader(): LazyEmbeddedListLoader {
-    const db = this.db;
-    const session = this.session;
-    return async (entity, embeddedList) => {
-      await loadMongoEmbeddedListRows(entity, embeddedList, db, session);
-      return (entity as any)[embeddedList.key] ?? [];
-    };
+  protected override async loadEmbeddedListForEntity(
+    entity: E,
+    embeddedList: MetaEmbeddedList,
+  ): Promise<void> {
+    await loadMongoEmbeddedListRows(entity, embeddedList, this.db, this.session);
   }
 
   private async deleteAllEmbeddedLists(entity: E): Promise<void> {

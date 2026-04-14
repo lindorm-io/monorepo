@@ -43,10 +43,8 @@ import {
   loadMemoryEmbeddedListRows,
   deleteMemoryEmbeddedListRows,
 } from "../utils/memory-embedded-list-ops";
-import {
-  installLazyEmbeddedLists,
-  type LazyEmbeddedListLoader,
-} from "#internal/entity/utils/install-lazy-embedded-lists";
+import { installLazyEmbeddedLists } from "#internal/entity/utils/install-lazy-embedded-lists";
+import type { MetaEmbeddedList } from "#internal/entity/types/metadata";
 import type { ILogger } from "@lindorm/logger";
 import type { EntityEmitFn } from "../../../../types/event-map";
 import type { PaginateOptions } from "../../../../types/paginate-options";
@@ -960,13 +958,16 @@ export class MemoryRepository<
     }
   }
 
-  protected override buildLazyEmbeddedListLoader(): LazyEmbeddedListLoader {
-    const store = this.store;
-    const namespace = this.embeddedListNamespace;
-    return async (entity, embeddedList) => {
-      loadMemoryEmbeddedListRows(entity, embeddedList, store, namespace);
-      return (entity as any)[embeddedList.key] ?? [];
-    };
+  protected override loadEmbeddedListForEntity(
+    entity: E,
+    embeddedList: MetaEmbeddedList,
+  ): void {
+    loadMemoryEmbeddedListRows(
+      entity,
+      embeddedList,
+      this.store,
+      this.embeddedListNamespace,
+    );
   }
 
   private deleteAllEmbeddedLists(entity: E, store: MemoryStore): void {

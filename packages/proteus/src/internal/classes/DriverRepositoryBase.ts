@@ -21,7 +21,11 @@ import type {
 import { EntityManager } from "#internal/entity/classes/EntityManager";
 import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
 import type { IRepositoryExecutor } from "../interfaces/RepositoryExecutor";
-import type { EntityMetadata, QueryScope } from "#internal/entity/types/metadata";
+import type {
+  EntityMetadata,
+  MetaEmbeddedList,
+  QueryScope,
+} from "#internal/entity/types/metadata";
 import type { RepositoryFactory } from "#internal/types/repository-factory";
 import type { AggregateFunction } from "#internal/types/aggregate";
 import type { LazyRelationLoader } from "#internal/entity/utils/install-lazy-relations";
@@ -129,12 +133,36 @@ export abstract class DriverRepositoryBase<
   public abstract clear(options?: ClearOptions): Promise<void>;
   protected abstract buildLazyLoader(): LazyRelationLoader;
   /**
-   * Driver hook that returns a loader for lazy `@EmbeddedList` fields.
-   * Drivers that do not support embedded lists (e.g. redis) return `null`
-   * and the base helper short-circuits.
+   * Driver hook that loads the rows for a single entity's `@EmbeddedList`
+   * field from the backing store, mutating `entity[el.key]` in place.
+   *
+   * Drivers that support embedded lists override this method. Drivers that
+   * do not (e.g. redis) leave the default implementation — it's unreachable
+   * because `validateRedisEntity` rejects `@EmbeddedList` at setup time, so
+   * `this.metadata.embeddedLists.length` is always zero on redis.
+   */
+  protected loadEmbeddedListForEntity(
+    _entity: E,
+    _embeddedList: MetaEmbeddedList,
+  ): Promise<void> | void {
+    throw new ProteusRepositoryError("Driver does not support @EmbeddedList fields");
+  }
+
+  /**
+   * Builds the loader closure passed to `installLazyEmbeddedLists`. Shared
+   * across all drivers — each driver only needs to implement
+   * `loadEmbeddedListForEntity`.
    */
   protected buildLazyEmbeddedListLoader(): LazyEmbeddedListLoader | null {
-    return null;
+    if (this.metadata.embeddedLists.length === 0) return null;
+    return async (entity, embeddedList) => {
+      await this.loadEmbeddedListForEntity(entity as E, embeddedList);
+      return (
+        ((entity as Record<string, unknown>)[embeddedList.key] as
+          | Array<unknown>
+          | undefined) ?? []
+      );
+    };
   }
   protected abstract executeAggregate(
     type: AggregateFunction,

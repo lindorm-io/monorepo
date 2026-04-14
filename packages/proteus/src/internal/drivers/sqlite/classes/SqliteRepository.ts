@@ -60,7 +60,7 @@ import {
   loadEmbeddedListRows,
   loadEmbeddedListRowsBatch,
 } from "../utils/repository/embedded-list-ops";
-import type { LazyEmbeddedListLoader } from "#internal/entity/utils/install-lazy-embedded-lists";
+import type { MetaEmbeddedList } from "#internal/entity/types/metadata";
 
 export type { RepositoryFactory } from "#internal/types/repository-factory";
 
@@ -1292,11 +1292,10 @@ export class SqliteRepository<
     }
   }
 
-  protected override buildLazyEmbeddedListLoader(): LazyEmbeddedListLoader {
-    const client = this.client;
-    return async (entity, embeddedList) => {
-      loadEmbeddedListRows(entity, embeddedList, client);
-      return (entity as any)[embeddedList.key] ?? [];
-    };
+  protected override loadEmbeddedListForEntity(
+    entity: E,
+    embeddedList: MetaEmbeddedList,
+  ): void {
+    loadEmbeddedListRows(entity, embeddedList, this.client);
   }
 }
