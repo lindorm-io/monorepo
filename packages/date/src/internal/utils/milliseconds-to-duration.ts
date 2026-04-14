@@ -1,18 +1,27 @@
 import { DurationDict, DurationString } from "../../types";
 import {
-  calculateCurrentDuration,
-  calculateRemainingDuration,
-} from "./calculate-duration";
+  DAYS,
+  HOURS,
+  MINUTES,
+  MONTHS,
+  SECONDS,
+  WEEKS,
+  YEARS,
+} from "#internal/constants/time";
 
-const array: Array<DurationString> = [
-  "years",
-  "months",
-  "weeks",
-  "days",
-  "hours",
-  "minutes",
-  "seconds",
-  "milliseconds",
+type Bucket = { key: DurationString; size: number; tolerance: number };
+
+// Same coarse-match philosophy as millisecondsToReadable: when the quotient
+// for a bucket is within one unit of the next-smaller bucket of an integer,
+// treat it as that integer (absorbs residuals from estimation rounding).
+const BUCKETS: Array<Bucket> = [
+  { key: "years", size: YEARS, tolerance: DAYS },
+  { key: "months", size: MONTHS, tolerance: DAYS },
+  { key: "weeks", size: WEEKS, tolerance: HOURS },
+  { key: "days", size: DAYS, tolerance: HOURS },
+  { key: "hours", size: HOURS, tolerance: 0 },
+  { key: "minutes", size: MINUTES, tolerance: 0 },
+  { key: "seconds", size: SECONDS, tolerance: 0 },
 ];
 
 export const millisecondsToDuration = (milliseconds: number): DurationDict => {
@@ -27,20 +36,28 @@ export const millisecondsToDuration = (milliseconds: number): DurationDict => {
     milliseconds: 0,
   };
 
-  let remaining: number = milliseconds;
+  let remaining = milliseconds;
 
-  for (const key of array) {
-    const duration = key as unknown as DurationString;
-    const value = calculateCurrentDuration(remaining, duration);
+  for (const { key, size, tolerance } of BUCKETS) {
+    if (remaining < size) continue;
 
-    if (value < 1) continue;
+    const ceilCandidate = Math.ceil(remaining / size);
+    const ceilResidual = Math.abs(ceilCandidate * size - remaining);
 
-    const floor = Math.floor(value);
+    let count: number;
+    if (ceilResidual <= tolerance) {
+      count = ceilCandidate;
+    } else {
+      count = Math.floor(remaining / size);
+    }
 
-    object[duration] = floor;
+    if (count < 1) continue;
 
-    remaining = remaining - calculateRemainingDuration(value, duration);
+    object[key] = count;
+    remaining = remaining - count * size;
   }
+
+  object.milliseconds = Math.max(0, Math.round(remaining));
 
   return object;
 };

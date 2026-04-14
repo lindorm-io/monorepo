@@ -2,11 +2,11 @@ import { readableToMilliseconds } from "./readable-to-milliseconds";
 
 describe("readableToMilliseconds", () => {
   test("should return years", () => {
-    expect(readableToMilliseconds("1 year")).toEqual(31557600000);
+    expect(readableToMilliseconds("1 year")).toEqual(31556952000);
   });
 
   test("should return months", () => {
-    expect(readableToMilliseconds("1 month")).toEqual(2629800000);
+    expect(readableToMilliseconds("1 month")).toEqual(2629746000);
   });
 
   test("should return weeks", () => {
@@ -45,6 +45,6 @@ describe("readableToMilliseconds", () => {
         "7 seconds",
         "8 milliseconds",
       ),
-    ).toEqual(38995567008);
+    ).toEqual(38994811008);
   });
 });

@@ -48,8 +48,8 @@ describe("millisecondsToDuration", () => {
       weeks: 2,
       days: 2,
       hours: 15,
-      minutes: 39,
-      seconds: 40,
+      minutes: 40,
+      seconds: 34,
       milliseconds: 24,
     });
   });
