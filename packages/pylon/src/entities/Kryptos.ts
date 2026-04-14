@@ -9,14 +9,15 @@ import {
 } from "@lindorm/kryptos";
 import {
   CreateDateField,
+  Eager,
+  EmbeddedList,
   Entity,
   ExpiryDateField,
   Field,
+  Index,
   Namespace,
   Nullable,
   PrimaryKeyField,
-  UpdateDateField,
-  VersionField,
 } from "@lindorm/proteus";
 
 @Namespace("pylon")
@@ -25,20 +26,23 @@ export class Kryptos implements KryptosDB {
   @PrimaryKeyField()
   public id!: string;
 
-  @VersionField()
-  public version!: number;
-
   @CreateDateField()
   public createdAt!: Date;
 
-  @UpdateDateField()
-  public updatedAt!: Date;
+  @Field("timestamp")
+  public notBefore!: Date;
 
   @ExpiryDateField()
-  public expiresAt!: Date | null;
+  public expiresAt!: Date;
 
   @Field("string")
   public algorithm!: KryptosAlgorithm;
+
+  @Field("string")
+  public type!: KryptosType;
+
+  @Field("string")
+  public use!: KryptosUse;
 
   @Nullable()
   @Field("string")
@@ -48,45 +52,51 @@ export class Kryptos implements KryptosDB {
   @Field("string")
   public encryption!: KryptosEncryption | null;
 
-  @Field("boolean")
-  public hidden!: boolean;
+  @Eager()
+  @EmbeddedList("string")
+  public operations!: Array<KryptosOperation>;
 
-  @Field("boolean")
-  public isExternal!: boolean;
+  @Nullable()
+  @Field("text")
+  public privateKey!: string | null;
 
+  @Nullable()
+  @Field("text")
+  public publicKey!: string | null;
+
+  @Nullable()
+  @Eager()
+  @EmbeddedList("string")
+  public certificateChain!: Array<string> | null;
+
+  @Nullable()
+  @Field("string")
+  public certificateThumbprint!: string | null;
+
+  @Index()
   @Nullable()
   @Field("string")
   public issuer!: string | null;
 
+  @Index()
   @Nullable()
   @Field("url")
   public jwksUri!: string | null;
 
-  @Field("timestamp")
-  public notBefore!: Date;
+  @Index()
+  @Field("boolean")
+  public isExternal!: boolean;
 
-  @Field("array", { arrayType: "string" })
-  public operations!: Array<KryptosOperation>;
-
+  @Index()
   @Nullable()
   @Field("string")
   public ownerId!: string | null;
 
-  @Nullable()
-  @Field("string")
-  public privateKey!: string | null;
-
-  @Nullable()
-  @Field("string")
-  public publicKey!: string | null;
-
+  @Index()
   @Nullable()
   @Field("string")
   public purpose!: string | null;
 
-  @Field("string")
-  public type!: KryptosType;
-
-  @Field("string")
-  public use!: KryptosUse;
+  @Field("boolean")
+  public hidden!: boolean;
 }

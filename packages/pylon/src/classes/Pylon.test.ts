@@ -336,6 +336,7 @@ describe("Pylon", () => {
         {
           alg: "ES256",
           crv: "P-256",
+          exp: 2493036000,
           iat: 1704096000,
           iss: "http://test.lindorm.io",
           jku: "http://test.lindorm.io/.well-known/jwks.json",
@@ -344,7 +345,6 @@ describe("Pylon", () => {
           kty: "EC",
           nbf: 1704096000,
           purpose: "token",
-          uat: 1704096000,
           use: "sig",
           x: "HxWiZBmTMQ5-uemIg60iebC0cIqfst2tFcwuHFD8cQA",
           y: "nO5EFG1WozcaK19NASJSvMXalyYxlu14A6EiouVT9_o",
@@ -352,6 +352,7 @@ describe("Pylon", () => {
         {
           alg: "ECDH-ES",
           crv: "X448",
+          exp: 2493036000,
           iat: 1704096000,
           iss: "http://test.lindorm.io",
           jku: "http://test.lindorm.io/.well-known/jwks.json",
@@ -360,7 +361,6 @@ describe("Pylon", () => {
           kty: "OKP",
           nbf: 1704096000,
           purpose: "session",
-          uat: 1704096000,
           use: "enc",
           x: "CmHn63oaLtiwYY2FyuoObj5A6nLWxyqKgiMa-ueJuYr6WhirvxFYYYY-tB_7HolUBGCca3UxG04",
         },
