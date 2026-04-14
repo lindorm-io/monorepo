@@ -566,8 +566,8 @@ describe("KryptosKit certificate generation", () => {
     });
   });
 
-  describe("determinism", () => {
-    test("self-signed deterministic with fixed EdDSA key and MockDate", () => {
+  describe("round-trip preservation", () => {
+    test("x5c survives fromJwk round-trip", () => {
       const shared = KryptosKit.generate.sig.okp({
         algorithm: "EdDSA",
         curve: "Ed25519",
@@ -576,8 +576,9 @@ describe("KryptosKit certificate generation", () => {
         expiresAt: EXPIRES_AT,
         certificate: { mode: "self-signed" },
       });
-      // Reuse existing key via fromJwk → generate flow isn't stable for serial.
-      // Instead, compare x5c between two fromJwk ingests which must match.
+      // Round-trip preservation: the chain travels through JWK export and
+      // re-import unchanged. NOT a determinism test — see
+      // stamp-certificate.test.ts for true byte-equal determinism per mode.
       const jwk = shared.toJWK("private");
       const a = KryptosKit.from.jwk(jwk);
       const b = KryptosKit.from.jwk(jwk);
@@ -621,6 +622,8 @@ describe("KryptosKit certificate generation", () => {
       const parsedChild = parseX509Certificate(Buffer.from(child.x5c![0], "base64"));
       const parsedCa = parseX509Certificate(Buffer.from(ca.x5c![0], "base64"));
       expect(parsedChild.issuer.raw.equals(parsedCa.subject.raw)).toBe(true);
+
+      expect(() => child.verifyCertificate({ trustAnchors: [ca.x5c![0]] })).not.toThrow();
     });
   });
 
