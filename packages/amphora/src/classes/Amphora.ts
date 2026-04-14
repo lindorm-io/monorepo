@@ -206,6 +206,39 @@ export class Amphora implements IAmphora {
     });
   }
 
+  public async findById(id: string): Promise<IKryptos> {
+    const existing = this._vault.find((i) => i.id === id);
+    if (existing) return existing;
+
+    if (this._external.length) {
+      await this.refresh();
+
+      const refreshed = this._vault.find((i) => i.id === id);
+      if (refreshed) return refreshed;
+    }
+
+    throw new AmphoraError("Kryptos not found by id", {
+      debug: { id, totalKeys: this._vault.length },
+    });
+  }
+
+  public findByIdSync(id: string): IKryptos {
+    if (!this._setup && this._external.length) {
+      throw new AmphoraError(
+        this._setupPromise
+          ? "setup() is in progress; await setup() before using sync methods"
+          : "setup() must be called before using sync methods with external providers",
+      );
+    }
+
+    const existing = this._vault.find((i) => i.id === id);
+    if (existing) return existing;
+
+    throw new AmphoraError("Kryptos not found by id", {
+      debug: { id, totalKeys: this._vault.length },
+    });
+  }
+
   public findSync(predicate: AmphoraPredicate): IKryptos {
     if (!this._setup && this._external.length) {
       throw new AmphoraError(
@@ -244,22 +277,8 @@ export class Amphora implements IAmphora {
 
     await this.refreshExternalConfig();
     await this.refreshExternalKeys();
-    this.pruneExpiredKeys();
 
     this._lastRefresh = new Date();
-  }
-
-  private pruneExpiredKeys(): void {
-    const before = this._vault.length;
-
-    this._vault = this._vault.filter((k) => !k.isExpired || k.isExternal);
-
-    const removed = before - this._vault.length;
-
-    if (removed > 0) {
-      this.logger.silly("Pruned expired internal keys from vault", { removed });
-      this.refreshJwks();
-    }
   }
 
   public canEncrypt(): boolean {
@@ -572,7 +591,7 @@ export class Amphora implements IAmphora {
     this._jwks = Predicated.filter(this._vault, {
       hasPublicKey: true,
       hidden: false,
-      isActive: true,
+      isExpired: false,
       isExternal: false,
       issuer: this.domain,
     })

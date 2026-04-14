@@ -12,6 +12,8 @@ export interface IAmphora {
   filter(query: AmphoraPredicate): Promise<Array<IKryptos>>;
   filterSync(query: AmphoraPredicate): Array<IKryptos>;
   find(query: AmphoraPredicate): Promise<IKryptos>;
+  findById(id: string): Promise<IKryptos>;
+  findByIdSync(id: string): IKryptos;
   findSync(query: AmphoraPredicate): IKryptos;
   refresh(): Promise<void>;
   setup(): Promise<void>;

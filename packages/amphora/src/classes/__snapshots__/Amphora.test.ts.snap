@@ -1,5 +1,30 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
+exports[`Amphora JWKS publication window should include not-yet-active (notBefore in future) keys in JWKS 1`] = `
+{
+  "keys": [
+    {
+      "alg": "ES512",
+      "crv": "P-521",
+      "exp": 1717200000,
+      "iat": 1704067260,
+      "iss": "https://test.lindorm.io/",
+      "jku": "https://test.lindorm.io/.well-known/jwks.json",
+      "key_ops": [
+        "sign",
+        "verify",
+      ],
+      "kid": "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+      "kty": "EC",
+      "nbf": 4070908800,
+      "use": "sig",
+      "x": "AI3Y8hWlFN19cuY3GSDwGTabmd62piw1bYt5-GSWvaN8mJVQlQM-hmgZ9psbMcSCwqM_YdFs-wQj-00PfHg31VbR",
+      "y": "AAgPZRhdrsY3SLMdYgVF2NVi5Hn7SPLAW136j83Y852u-VXzG6Z1Ur5OJI8Qh18qgv8i7R7sgpOwmyP5SYTysMmf",
+    },
+  ],
+}
+`;
+
 exports[`Amphora add should update jwks when adding key 1`] = `
 {
   "keys": [
