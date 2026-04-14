@@ -150,7 +150,6 @@ export class JwtKit implements IJwtKit {
     // — see the SECURITY INVARIANT in Aegis.kryptosSig.
     verifyCertBinding({
       header: {
-        x5t: parsed.header.x5t,
         x5tS256: parsed.header.x5tS256,
       },
       kryptos: this.kryptos,

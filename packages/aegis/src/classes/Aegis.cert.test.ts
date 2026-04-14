@@ -99,7 +99,7 @@ describe("Aegis cert binding", () => {
       amphora.add(buildCertBoundKryptos());
     });
 
-    test("sign with bindCertificate: 'thumbprint' stamps x5t#S256 + x5t, no x5c", async () => {
+    test("sign with bindCertificate: 'thumbprint' stamps x5t#S256, no x5c, no x5t", async () => {
       const { token } = await aegis.jwt.sign(signContent, {
         bindCertificate: "thumbprint",
       });
@@ -116,11 +116,11 @@ describe("Aegis cert binding", () => {
 
       expect(stripped).toMatchSnapshot();
       expect(stripped["x5t#S256"]).toEqual(expect.any(String));
-      expect(stripped.x5t).toEqual(expect.any(String));
+      expect(stripped.x5t).toBeUndefined();
       expect(stripped.x5c).toBeUndefined();
     });
 
-    test("sign with bindCertificate: 'chain' stamps x5c + x5t#S256 + x5t", async () => {
+    test("sign with bindCertificate: 'chain' stamps x5c + x5t#S256, no x5t", async () => {
       const { token } = await aegis.jwt.sign(signContent, {
         bindCertificate: "chain",
       });
@@ -139,7 +139,7 @@ describe("Aegis cert binding", () => {
       expect(Array.isArray(stripped.x5c)).toBe(true);
       expect(stripped.x5c).toHaveLength(3);
       expect(stripped["x5t#S256"]).toEqual(expect.any(String));
-      expect(stripped.x5t).toEqual(expect.any(String));
+      expect(stripped.x5t).toBeUndefined();
     });
 
     test("sign omitted on cert-bearing kryptos stamps thumbprint by default", async () => {
@@ -157,7 +157,7 @@ describe("Aegis cert binding", () => {
 
       expect(stripped).toMatchSnapshot();
       expect(stripped["x5t#S256"]).toEqual(expect.any(String));
-      expect(stripped.x5t).toEqual(expect.any(String));
+      expect(stripped.x5t).toBeUndefined();
       expect(stripped.x5c).toBeUndefined();
     });
 
@@ -226,7 +226,7 @@ describe("Aegis cert binding", () => {
       });
       const decoded = JwtKit.decode(good.token);
       const kryptos = buildCertBoundKryptos();
-      expect(decoded.header["x5t#S256"]).toBe(kryptos.x5tS256);
+      expect(decoded.header["x5t#S256"]).toBe(kryptos.certificateThumbprint);
 
       // Directly exercise verifyCertBinding for the "mismatch" branch by
       // constructing a header with a fake thumbprint.
@@ -235,7 +235,6 @@ describe("Aegis cert binding", () => {
       expect(() =>
         verifyCertBinding({
           header: {
-            x5t: undefined,
             x5tS256: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
           },
           kryptos,
@@ -325,7 +324,6 @@ describe("Aegis cert binding", () => {
       expect(() =>
         verifyCertBinding({
           header: {
-            x5t: undefined,
             x5tS256: "abc",
           },
           kryptos,
@@ -462,7 +460,6 @@ describe("Aegis cert binding", () => {
       expect(() =>
         verifyCertBinding({
           header: {
-            x5t: undefined,
             x5tS256: "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ",
           },
           kryptos: certKryptos,

@@ -199,7 +199,6 @@ export class JweKit implements IJweKit {
     // See the SECURITY INVARIANT in Aegis.kryptosSig.
     verifyCertBinding({
       header: {
-        x5t: header.x5t,
         x5tS256: header.x5tS256,
       },
       kryptos: this.kryptos,

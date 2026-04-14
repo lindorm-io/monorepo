@@ -92,7 +92,6 @@ export type TokenHeaderOptions = {
 
 export type CertificateHeaderFields = {
   x5c?: Array<string>;
-  x5t?: string;
   x5tS256?: string;
 };
 
