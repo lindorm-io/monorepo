@@ -71,10 +71,18 @@ export const defaultCloneEntity = <E extends IEntity>(
     }
   }
 
-  // Deep-clone @EmbeddedList arrays
+  // Deep-clone @EmbeddedList arrays. A LazyCollection thenable is preserved
+  // by identity — cloning an unresolved lazy EL keeps the same deferred-load
+  // semantics on the clone.
   for (const el of metadata.embeddedLists ?? []) {
     const source = (entity as any)[el.key];
-    clone[el.key] = Array.isArray(source) ? structuredClone(source) : [];
+    if (Array.isArray(source)) {
+      clone[el.key] = structuredClone(source);
+    } else if (isLazyCollection(source)) {
+      clone[el.key] = source;
+    } else {
+      clone[el.key] = [];
+    }
   }
 
   // Reset generated fields to null so generate() can populate them

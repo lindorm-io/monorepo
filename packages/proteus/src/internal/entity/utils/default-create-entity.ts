@@ -60,10 +60,20 @@ export const createEntity = <
     }
   }
 
-  // Initialize @EmbeddedList fields from options (or default to empty array)
+  // Initialize @EmbeddedList fields from options.
+  // - Populated Array<T>: copy by value
+  // - LazyCollection thenable: preserve identity (cloning a lazy collection
+  //   keeps the same deferred-load semantics on the new entity)
+  // - Otherwise: default to empty array for eager-by-default consistency
   for (const el of metadata.embeddedLists ?? []) {
     const optValue = (options as any)[el.key];
-    entity[el.key] = Array.isArray(optValue) ? [...optValue] : [];
+    if (Array.isArray(optValue)) {
+      entity[el.key] = [...optValue];
+    } else if (isLazyCollection(optValue)) {
+      entity[el.key] = optValue;
+    } else {
+      entity[el.key] = [];
+    }
   }
 
   // Reset generated fields that weren't user-provided to null.
