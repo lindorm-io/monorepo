@@ -336,7 +336,7 @@ describe("Pylon", () => {
         {
           alg: "ES256",
           crv: "P-256",
-          exp: 2493036000,
+          exp: 2493100800,
           iat: 1704096000,
           iss: "http://test.lindorm.io",
           jku: "http://test.lindorm.io/.well-known/jwks.json",
@@ -352,7 +352,7 @@ describe("Pylon", () => {
         {
           alg: "ECDH-ES",
           crv: "X448",
-          exp: 2493036000,
+          exp: 2493100800,
           iat: 1704096000,
           iss: "http://test.lindorm.io",
           jku: "http://test.lindorm.io/.well-known/jwks.json",
