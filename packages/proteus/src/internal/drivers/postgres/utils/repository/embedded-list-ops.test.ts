@@ -41,6 +41,7 @@ const primitiveEmbeddedList: MetaEmbeddedList = {
   elementType: "string",
   elementFields: null,
   elementConstructor: null,
+  loading: { single: "eager", multiple: "lazy" },
 };
 
 const embeddableEmbeddedList: MetaEmbeddedList = {
@@ -54,6 +55,7 @@ const embeddableEmbeddedList: MetaEmbeddedList = {
     makeField("score", { type: "integer", name: "score" }),
   ],
   elementConstructor: () => TagEmbeddable as any,
+  loading: { single: "eager", multiple: "lazy" },
 };
 
 // ─── Mock Client ──────────────────────────────────────────────────────────────

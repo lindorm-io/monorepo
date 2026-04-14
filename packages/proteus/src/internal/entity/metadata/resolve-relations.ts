@@ -70,6 +70,7 @@ const mergeRelationModifiers = (
   staged: Array<StagedRelation>,
   modifiers: Array<StagedRelationModifier>,
   orderByMap: Map<string, Record<string, "ASC" | "DESC">>,
+  embeddedListKeys: Set<string>,
 ): void => {
   // Track applied decorators per key per scope
   // Outer key = property name, inner key = scope ("single" | "multiple" | "both"), value = set of decorator names
@@ -78,6 +79,19 @@ const mergeRelationModifiers = (
   for (const modifier of modifiers) {
     const relation = staged.find((r) => r.key === modifier.key);
     if (!relation) {
+      // Fall-through: @Eager / @Lazy are allowed on @EmbeddedList targets.
+      // The other four relation modifier decorators (Cascade, OnOrphan,
+      // Deferrable, OrderBy) remain relation-only and still throw.
+      if (embeddedListKeys.has(modifier.key)) {
+        const isLoadingOnly =
+          modifier.loading != null &&
+          modifier.cascade == null &&
+          modifier.deferrable == null &&
+          modifier.initiallyDeferred == null &&
+          modifier.onOrphan == null &&
+          modifier.orderBy == null;
+        if (isLoadingOnly) continue; // handled by resolveEmbeddedListLoading
+      }
       throw new EntityMetadataError(
         `@${modifier.decorator} on property "${modifier.key}" requires a relation decorator`,
         { debug: { target: targetName, property: modifier.key } },
@@ -381,7 +395,14 @@ export const resolveRelations = (
   mergeJoinTables(targetName, staged, joinTables);
 
   const orderByMap = new Map<string, Record<string, "ASC" | "DESC">>();
-  mergeRelationModifiers(targetName, staged, relationModifiers, orderByMap);
+  const embeddedListKeys = new Set(primaryMeta.embeddedLists.map((el) => el.key));
+  mergeRelationModifiers(
+    targetName,
+    staged,
+    relationModifiers,
+    orderByMap,
+    embeddedListKeys,
+  );
 
   const relations: Array<MetaRelation> = [];
 

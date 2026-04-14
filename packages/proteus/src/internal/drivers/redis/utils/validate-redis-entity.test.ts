@@ -125,6 +125,7 @@ describe("validateRedisEntity", () => {
             elementType: "string",
             elementFields: null,
             elementConstructor: null,
+            loading: { single: "eager", multiple: "lazy" },
           },
         ],
       });
@@ -533,6 +534,7 @@ describe("isRedisCompatibleEntity", () => {
           elementType: "string",
           elementFields: null,
           elementConstructor: null,
+          loading: { single: "eager", multiple: "lazy" },
         },
       ],
     });
