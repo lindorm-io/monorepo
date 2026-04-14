@@ -22,7 +22,6 @@ type Attributes = Omit<
   KryptosAttributes,
   | "algorithm"
   | "certificateChain"
-  | "certificateThumbprint"
   | "curve"
   | "encryption"
   | "operations"

@@ -13,8 +13,6 @@ import {
 
 export interface IKryptos
   extends Disposable, Readonly<KryptosAttributes>, Readonly<KryptosMetadata> {
-  readonly thumbprint: string;
-  readonly hasCertificate: boolean;
   readonly certificate: ParsedX509Certificate | null;
 
   dispose(): void;

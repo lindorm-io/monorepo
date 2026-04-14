@@ -316,7 +316,6 @@ exports[`Kryptos (oct) to should return db 1`] = `
 {
   "algorithm": "HS512",
   "certificateChain": [],
-  "certificateThumbprint": null,
   "createdAt": 2023-01-01T08:00:00.000Z,
   "curve": null,
   "encryption": null,
@@ -350,6 +349,7 @@ exports[`Kryptos (oct) to should return json 1`] = `
   "encryption": null,
   "expiresAt": 2099-01-01T08:00:00.000Z,
   "expiresIn": 2366841600,
+  "hasCertificate": false,
   "hasPrivateKey": true,
   "hasPublicKey": false,
   "hidden": false,
@@ -367,6 +367,7 @@ exports[`Kryptos (oct) to should return json 1`] = `
   ],
   "ownerId": "f02c2d0c-44ee-5e4e-8b3b-39d46924d227",
   "purpose": "test",
+  "thumbprint": "5bEfL2jN6rgsVLDTqCpPFPIA3iY_6WgILt8IBEJ-WXM",
   "type": "oct",
   "use": "sig",
 }

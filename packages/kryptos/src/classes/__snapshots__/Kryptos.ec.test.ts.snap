@@ -474,7 +474,6 @@ exports[`Kryptos (EC) to should return db 1`] = `
 {
   "algorithm": "ES512",
   "certificateChain": [],
-  "certificateThumbprint": null,
   "createdAt": 2023-01-01T08:00:00.000Z,
   "curve": "P-521",
   "encryption": null,
@@ -508,6 +507,7 @@ exports[`Kryptos (EC) to should return json 1`] = `
   "encryption": null,
   "expiresAt": 2099-01-01T08:00:00.000Z,
   "expiresIn": 2366841600,
+  "hasCertificate": false,
   "hasPrivateKey": true,
   "hasPublicKey": true,
   "hidden": false,
@@ -525,6 +525,7 @@ exports[`Kryptos (EC) to should return json 1`] = `
   ],
   "ownerId": "f02c2d0c-44ee-5e4e-8b3b-39d46924d227",
   "purpose": "test",
+  "thumbprint": "kvOZ7ng44IIdfprU0_U-4G9nyay_Hj-iN19pU9hnT_M",
   "type": "EC",
   "use": "sig",
 }
