@@ -82,13 +82,11 @@ export const parseX509Certificate = (der: Buffer): ParsedX509Certificate => {
   if (child.tag !== ASN1_TAG_SEQUENCE) {
     throw new KryptosError("TBSCertificate signature is not a SEQUENCE");
   }
-  // Cross-check inner sigAlg matches outer (RFC 5280). Best-effort.
-  const innerSigAlg = parseX509AlgorithmIdentifier(
-    Buffer.from(der.subarray(offset, child.nextOffset)),
-  );
-  if (innerSigAlg !== signatureAlgorithm) {
+  // RFC 5280 §4.1.1.2: inner TBS signature MUST byte-equal outer signatureAlgorithm.
+  const innerSigAlgBytes = der.subarray(offset, child.nextOffset);
+  if (!Buffer.from(innerSigAlgBytes).equals(Buffer.from(sigAlgBytes))) {
     throw new KryptosError(
-      "TBS signature algorithm does not match outer signatureAlgorithm",
+      "Certificate signature algorithm mismatch between outer and inner TBS (RFC 5280 §4.1.1.2)",
     );
   }
   offset = child.nextOffset;
