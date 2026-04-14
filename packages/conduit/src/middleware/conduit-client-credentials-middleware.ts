@@ -9,7 +9,7 @@ import {
 } from "@lindorm/types";
 import { Conduit } from "../classes";
 import { ConduitError } from "../errors";
-import { ConduitMiddleware, ConduitUsing, RequestOptions } from "../types";
+import { ConduitMiddleware, RequestOptions } from "../types";
 import { conduitBasicAuthMiddleware } from "./conduit-basic-auth-middleware";
 import { conduitBearerAuthMiddleware } from "./conduit-bearer-auth-middleware";
 import { conduitChangeRequestBodyMiddleware } from "./conduit-change-request-body-middleware";
@@ -33,7 +33,6 @@ type Config = {
   grantType?: "client_credentials";
   issuer: string;
   tokenUri?: string;
-  using?: ConduitUsing;
 };
 
 type Options = {
@@ -93,7 +92,6 @@ export const conduitClientCredentialsMiddlewareFactory = (
     dpopSigner,
     grantType = "client_credentials",
     issuer,
-    using,
   } = config;
 
   const bindAccessToken = (accessToken: string, tokenType?: string): ConduitMiddleware =>
@@ -134,7 +132,6 @@ export const conduitClientCredentialsMiddlewareFactory = (
           conduitChangeRequestBodyMiddleware("snake"),
           conduitChangeResponseDataMiddleware("camel"),
         ],
-        using,
       });
 
       const cachedIssuer = cache.find((item) => item.issuer === issuer);
