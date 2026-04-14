@@ -1,7 +1,7 @@
 import { B64 } from "@lindorm/b64";
 import { AES_FORMAT_VERSION } from "#internal/constants/version";
 import {
-  AesDecryptionRecord,
+  ParsedAesDecryptionRecord,
   SerialisedAesDecryption,
 } from "../../types/aes-decryption-data";
 import {
@@ -60,7 +60,7 @@ export const createSerialisedAesRecord = (
 
 export const parseSerialisedAesRecord = (
   options: SerialisedAesDecryption,
-): AesDecryptionRecord => {
+): ParsedAesDecryptionRecord => {
   const header = decodeAesHeader(options.header);
   const params = headerToDecryptionParams(header);
   const aad = computeAad(options.header);

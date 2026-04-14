@@ -5,7 +5,7 @@ import {
   KryptosKit,
 } from "@lindorm/kryptos";
 import { IAesKit } from "../interfaces";
-import { AesEncryptionMode } from "../types";
+import { AesDecryptionRecord, AesEncryptionMode } from "../types";
 import { AesKit } from "./AesKit";
 
 describe("AesKit", () => {
@@ -175,11 +175,21 @@ describe("AesKit", () => {
 
     describe("parse", () => {
       test("should return same object for already-parsed AesDecryptionRecord", () => {
-        const record = {
-          content: Buffer.from("encrypted"),
-          encryption: "A128GCM" as const,
-          initialisationVector: Buffer.from("initialization-vector"),
+        const record: AesDecryptionRecord = {
+          algorithm: "dir",
           authTag: Buffer.from("auth-tag"),
+          content: Buffer.from("encrypted"),
+          contentType: "text/plain",
+          encryption: "A128GCM",
+          initialisationVector: Buffer.from("initialization-vector"),
+          keyId: "test-key-id",
+          pbkdfIterations: undefined,
+          pbkdfSalt: undefined,
+          publicEncryptionIv: undefined,
+          publicEncryptionJwk: undefined,
+          publicEncryptionKey: undefined,
+          publicEncryptionTag: undefined,
+          version: "1.0",
         };
 
         expect(AesKit.parse(record)).toEqual(record);
@@ -372,11 +382,18 @@ describe("AesKit", () => {
       const prepared = aesKit.prepareEncryption();
       const encryptResult = prepared.encrypt("test data");
 
-      const decryptionRecord = {
+      const decryptionRecord: AesDecryptionRecord = {
         ...encryptResult,
-        ...prepared.headerParams,
+        pbkdfIterations: prepared.headerParams.pbkdfIterations,
+        pbkdfSalt: prepared.headerParams.pbkdfSalt,
+        publicEncryptionIv: prepared.headerParams.publicEncryptionIv,
+        publicEncryptionJwk: prepared.headerParams.publicEncryptionJwk,
+        publicEncryptionTag: prepared.headerParams.publicEncryptionTag,
         publicEncryptionKey: prepared.publicEncryptionKey,
-        encryption: "A128GCM" as const,
+        encryption: "A128GCM",
+        algorithm: kryptos.algorithm,
+        keyId: kryptos.id,
+        version: "1.0",
       };
 
       const decrypted = aesKit.decrypt(decryptionRecord);
@@ -390,11 +407,18 @@ describe("AesKit", () => {
 
       const encryptResult = prepared.encrypt("test data", { aad });
 
-      const decryptionRecord = {
+      const decryptionRecord: AesDecryptionRecord = {
         ...encryptResult,
-        ...prepared.headerParams,
+        pbkdfIterations: prepared.headerParams.pbkdfIterations,
+        pbkdfSalt: prepared.headerParams.pbkdfSalt,
+        publicEncryptionIv: prepared.headerParams.publicEncryptionIv,
+        publicEncryptionJwk: prepared.headerParams.publicEncryptionJwk,
+        publicEncryptionTag: prepared.headerParams.publicEncryptionTag,
         publicEncryptionKey: prepared.publicEncryptionKey,
-        encryption: "A128GCM" as const,
+        encryption: "A128GCM",
+        algorithm: kryptos.algorithm,
+        keyId: kryptos.id,
+        version: "1.0",
       };
 
       const decrypted = aesKit.decrypt(decryptionRecord, { aad });
@@ -408,11 +432,18 @@ describe("AesKit", () => {
 
       const encryptResult = prepared.encrypt("test data", { aad });
 
-      const decryptionRecord = {
+      const decryptionRecord: AesDecryptionRecord = {
         ...encryptResult,
-        ...prepared.headerParams,
+        pbkdfIterations: prepared.headerParams.pbkdfIterations,
+        pbkdfSalt: prepared.headerParams.pbkdfSalt,
+        publicEncryptionIv: prepared.headerParams.publicEncryptionIv,
+        publicEncryptionJwk: prepared.headerParams.publicEncryptionJwk,
+        publicEncryptionTag: prepared.headerParams.publicEncryptionTag,
         publicEncryptionKey: prepared.publicEncryptionKey,
-        encryption: "A128GCM" as const,
+        encryption: "A128GCM",
+        algorithm: kryptos.algorithm,
+        keyId: kryptos.id,
+        version: "1.0",
       };
 
       expect(() => aesKit.decrypt(decryptionRecord)).toThrow();
@@ -433,11 +464,18 @@ describe("AesKit", () => {
 
         const encryptResult = prepared.encrypt("test");
 
-        const decryptionRecord = {
+        const decryptionRecord: AesDecryptionRecord = {
           ...encryptResult,
-          ...prepared.headerParams,
+          pbkdfIterations: prepared.headerParams.pbkdfIterations,
+          pbkdfSalt: prepared.headerParams.pbkdfSalt,
+          publicEncryptionIv: prepared.headerParams.publicEncryptionIv,
+          publicEncryptionJwk: prepared.headerParams.publicEncryptionJwk,
+          publicEncryptionTag: prepared.headerParams.publicEncryptionTag,
           publicEncryptionKey: prepared.publicEncryptionKey,
-          encryption: "A256GCM" as const,
+          encryption: "A256GCM",
+          algorithm: k.algorithm,
+          keyId: k.id,
+          version: "1.0",
         };
 
         const decrypted = kit.decrypt(decryptionRecord);

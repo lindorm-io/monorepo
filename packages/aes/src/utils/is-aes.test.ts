@@ -1,25 +1,19 @@
 import { isAesBufferData, isAesSerialisedData, isAesTokenised } from "./is-aes";
 import { AesDecryptionRecord, SerialisedAesDecryption } from "../types";
+import { createTestAesDecryptionRecord } from "./__fixtures__/aes-decryption-record";
 
 describe("is-aes", () => {
   describe("isAesBufferData", () => {
     test("should return true when any value is a Buffer", () => {
-      const data: AesDecryptionRecord = {
-        content: Buffer.from("test"),
-        encryption: "A256GCM",
-        initialisationVector: Buffer.from("iv"),
-      };
+      const data: AesDecryptionRecord = createTestAesDecryptionRecord();
 
       expect(isAesBufferData(data)).toBe(true);
     });
 
     test("should return true when multiple values are Buffers", () => {
-      const data: AesDecryptionRecord = {
-        content: Buffer.from("test"),
-        encryption: "A256GCM",
-        initialisationVector: Buffer.from("iv"),
+      const data: AesDecryptionRecord = createTestAesDecryptionRecord({
         authTag: Buffer.from("tag"),
-      };
+      });
 
       expect(isAesBufferData(data)).toBe(true);
     });
@@ -90,11 +84,7 @@ describe("is-aes", () => {
     });
 
     test("should return false when any value is a Buffer", () => {
-      const data: AesDecryptionRecord = {
-        content: Buffer.from("test"),
-        encryption: "A256GCM",
-        initialisationVector: Buffer.from("iv"),
-      };
+      const data: AesDecryptionRecord = createTestAesDecryptionRecord();
 
       expect(isAesSerialisedData(data)).toBe(false);
     });
