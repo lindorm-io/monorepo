@@ -1,10 +1,12 @@
-import { mkdir, writeFile } from "fs/promises";
+import { access, mkdir, writeFile } from "fs/promises";
 import { dirname, join, resolve } from "path";
+import { KryptosKit } from "@lindorm/kryptos";
 import { Logger } from "@lindorm/logger";
 
 type InitOptions = {
   directory?: string;
   dryRun?: boolean;
+  force?: boolean;
 };
 
 type InitAnswers = {
@@ -34,6 +36,7 @@ const configTemplate = (answers: InitAnswers): string => {
     `export const config = configuration({`,
     `  port: z.number().default(3000),`,
     `  environment: z.enum(["production", "staging", "development", "test"]).default("development"),`,
+    `  kryptosKek: z.array(z.string()).min(1),`,
   ];
 
   if (answers.auth) {
@@ -51,9 +54,41 @@ const configTemplate = (answers: InitAnswers): string => {
 const amphoraTemplate = (): string =>
   [
     `import { Amphora } from "@lindorm/amphora";`,
+    `import { KryptosKit } from "@lindorm/kryptos";`,
+    `import { config } from "./config";`,
     `import { logger } from "../logger";`,
     ``,
     `export const amphora = new Amphora({ logger });`,
+    ``,
+    `for (const envString of config.kryptosKek) {`,
+    `  amphora.add(KryptosKit.env.import(envString));`,
+    `}`,
+    ``,
+  ].join("\n");
+
+const envTemplate = (kekEnvString: string): string =>
+  [
+    `# ---------------------------------------------------------------`,
+    `# PYLON_KRYPTOS_KEK`,
+    `#`,
+    `# Key Encryption Keys (KEKs) that envelope-encrypt all private`,
+    `# keys stored in the database. Pylon will refuse to boot without`,
+    `# at least one KEK, because the Kryptos entity has an @Encrypted`,
+    `# field.`,
+    `#`,
+    `# Format: JSON array of kryptos env strings. Parsed by`,
+    `# @lindorm/config via its zod array support.`,
+    `#`,
+    `# Rotation: to rotate, PREPEND a new kryptos to the array. Pylon`,
+    `# picks the newest active key for new writes (by createdAt), and`,
+    `# old rows still decrypt via the kid embedded in the AES`,
+    `# ciphertext header. Remove an old KEK only once no rows remain`,
+    `# encrypted under it.`,
+    `#`,
+    `# NEVER commit this value. Rotate from a secret manager in`,
+    `# production.`,
+    `# ---------------------------------------------------------------`,
+    `PYLON_KRYPTOS_KEK='${JSON.stringify([kekEnvString])}'`,
     ``,
   ].join("\n");
 
@@ -206,6 +241,27 @@ export const init = async (options: InitOptions): Promise<void> => {
 
   const directory = resolve(process.cwd(), options.directory ?? ".");
 
+  const kek = KryptosKit.generate.auto({
+    algorithm: "dir",
+    encryption: "A256GCM",
+    purpose: "kryptos-kek",
+  });
+
+  const envPath = join(directory, ".env");
+  let writeEnv = true;
+
+  try {
+    await access(envPath);
+    if (!options.force) {
+      writeEnv = false;
+      Logger.std.warn(
+        `.env already exists at ${envPath}; skipping (pass --force to overwrite).`,
+      );
+    }
+  } catch {
+    // .env does not exist yet — will be written fresh
+  }
+
   const files: Array<{ path: string; content: string }> = [
     {
       path: join(directory, "config", ".node_config.json"),
@@ -230,6 +286,13 @@ export const init = async (options: InitOptions): Promise<void> => {
     { path: join(directory, "src", "middleware", ".gitkeep"), content: "" },
     { path: join(directory, "src", "workers", ".gitkeep"), content: "" },
   ];
+
+  if (writeEnv) {
+    files.unshift({
+      path: envPath,
+      content: envTemplate(kek.toEnvString()),
+    });
+  }
 
   if (answers.routes) {
     files.push({
