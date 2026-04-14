@@ -10,6 +10,10 @@ type Result = {
   fromUnix: number;
 };
 
+/**
+ * Full expiry bundle: `expiresAt`, `expiresIn`, `expiresOn`, `from`,
+ * `fromUnix`. Calendar-correct for year/month units via `expiresAt()`.
+ */
 export const expires = (expiry: Expiry, from: Date = new Date()): Result => {
   const fromUnix = getUnixTime(from);
   const date = expiresAt(expiry);

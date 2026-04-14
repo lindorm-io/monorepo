@@ -1,6 +1,8 @@
 # @lindorm/date
 
-Comprehensive date/time utilities with human-readable duration parsing, expiration handling, and full date-fns integration.
+A lindorm-flavoured wrapper around [date-fns](https://date-fns.org/) that
+accepts human-readable time strings (`"10 minutes"`, `"2h"`, `"25 years"`)
+everywhere and re-exports all of date-fns.
 
 ## Installation
 
@@ -8,414 +10,204 @@ Comprehensive date/time utilities with human-readable duration parsing, expirati
 npm install @lindorm/date
 ```
 
-## Features
-
-- **Human-Readable Time**: Parse and format durations like "10 minutes", "2h", "30s"
-- **Bidirectional Converters**: Functions work both ways (ms to readable, readable to ms)
-- **Expiration Management**: Handle expiry dates with multiple representations
-- **Duration Objects**: Break down time into years, months, days, hours, etc.
-- **Type-Safe**: Full TypeScript support with strict typing
-- **date-fns Integration**: Re-exports all date-fns functions
-- **Flexible Input**: Multiple unit formats, case-insensitive, with/without spaces
-
 ## Quick Start
 
-```typescript
-import { ms, sec, duration, expires } from "@lindorm/date";
+```ts
+import { expiresAt, ms, duration } from "@lindorm/date";
 
-// Convert between milliseconds and readable time
-ms("2 hours");          // 7200000
-ms(5000);              // "5s"
+// Absolute expiry 25 years from now — calendar-correct via date-fns
+const deadline = expiresAt("25 years");
 
-// Convert between seconds and readable time  
-sec("10 minutes");      // 600
-sec(30);               // "30s"
+// Millisecond count (estimated using a Gregorian-year average)
+ms("2 hours"); // 7200000
+ms(5000); // "5s"
 
-// Parse durations
-duration(3661000);     // { hours: 1, minutes: 1, seconds: 1 }
-duration("2h 30m");    // { hours: 2, minutes: 30 }
-
-// Handle expiration
-const exp = expires("1 hour");
-// {
-//   expiresAt: Date,     // 1 hour from now
-//   expiresIn: 3600,     // seconds
-//   expiresOn: 1234567890, // Unix timestamp
-//   from: Date,          // Current time
-//   fromUnix: 1234564290 // Current Unix timestamp
-// }
+// Duration dict from a readable string (exact) or a ms count (bucketised)
+duration("1y 6mo");
+// { years: 1, months: 6, weeks: 0, days: 0,
+//   hours: 0, minutes: 0, seconds: 0, milliseconds: 0 }
 ```
 
-## API Reference
+## Calendar vs estimation
 
-### Time Conversion
+`ReadableTime` is the single input type — it accepts every unit from
+milliseconds up to years in long, short, and abbreviated forms. The package
+honours that input in two different ways depending on what it knows:
+
+- **Calendar-correct** (via date-fns `add()`): `expiresAt`, `expiresIn`,
+  `expires`, `readableToDuration` + `addWithMilliseconds`. These have a
+  reference date to anchor to, so `"1 year"` means "the same calendar day
+  next year" regardless of leap years, and `"1 month"` means "the same day
+  of next month" regardless of month length.
+
+- **Estimation** (constant-based): `ms`, `sec`, `millisecondsToReadable`,
+  `millisecondsToDuration`. These have no reference date, so year and month
+  values are computed using a Gregorian-calendar average of **365.2425 days
+  per year** (year / 12 per month). This tracks real calendar years more
+  closely than the Julian 365.25 over long spans.
+
+Both forms accept the full `ReadableTime` surface including year and month
+units. When you have a reference date available, prefer the calendar-correct
+functions; when you only need a millisecond count for a timeout or TTL, the
+estimation functions are fine.
+
+The estimation inverse (`ms(number)`, `duration(number)`) uses coarse
+matching: values that are within a small tolerance of a clean integer in a
+larger unit are normalised to that unit, so `ms(readableToMilliseconds("25
+years"))` round-trips to `"25y"` cleanly.
+
+## API reference
+
+### Time conversion
 
 #### `ms(value)`
-Converts between milliseconds and readable time strings.
 
-```typescript
-// String to milliseconds
-ms("100");              // 100
-ms("2s");               // 2000
-ms("5 minutes");        // 300000
-ms("1.5h");            // 5400000
-ms("1 day");           // 86400000
+Convert between `ReadableTime` and a millisecond count.
 
-// Milliseconds to string
-ms(60000);             // "1m"
-ms(3600000);           // "1h"
-ms(90000);             // "1m"
-ms(5400000);           // "1h"
+```ts
+ms("2s"); // 2000
+ms("5 minutes"); // 300000
+ms("1 day"); // 86400000
+ms(60000); // "1m"
+ms(3600000); // "1h"
 ```
 
 #### `sec(value)`
-Converts between seconds and readable time strings.
 
-```typescript
-// String to seconds
-sec("30s");             // 30
-sec("5 minutes");       // 300
-sec("2 hours");         // 7200
-sec("1 day");          // 86400
+Convert between `ReadableTime` and a second count.
 
-// Seconds to string
-sec(60);               // "1m"
-sec(3600);             // "1h"
-sec(86400);            // "1d"
+```ts
+sec("30s"); // 30
+sec("5 minutes"); // 300
+sec(60); // "1m"
+sec(86400); // "1d"
 ```
-
-### Duration Handling
 
 #### `duration(value)`
-Converts milliseconds or readable time to a duration object.
 
-```typescript
-// Milliseconds to duration object
+Convert between `ReadableTime` and a `DurationDict`.
+
+```ts
+duration("1d 2h");
+// { years: 0, months: 0, weeks: 0, days: 1,
+//   hours: 2, minutes: 0, seconds: 0, milliseconds: 0 }
+
 duration(93784000);
-// {
-//   days: 1,
-//   hours: 2,
-//   minutes: 3,
-//   seconds: 4
-// }
-
-// Readable time to duration object
-duration("1 year 2 months");
-// {
-//   years: 1,
-//   months: 2
-// }
-
-// Single unit
-duration("48h");
-// {
-//   hours: 48
-// }
+// { years: 0, months: 0, weeks: 0, days: 1,
+//   hours: 2, minutes: 3, seconds: 4, milliseconds: 0 }
 ```
 
-### Readable Time Formats
+### Expiration
 
-#### Supported Units
+#### `expiresAt(expiry, from?)`
 
-| Unit | Long Form | Abbreviated | Short |
-|------|-----------|-------------|-------|
-| Years | years, year | yrs, yr | y |
-| Months | months, month | - | mo |
-| Weeks | weeks, week | - | w |
-| Days | days, day | - | d |
-| Hours | hours, hour | hrs, hr | h |
-| Minutes | minutes, minute | mins, min | m |
-| Seconds | seconds, second | secs, sec | s |
-| Milliseconds | milliseconds, millisecond | msecs, msec | ms |
+Returns the absolute expiration `Date`. Calendar-correct for year/month.
 
-#### Format Examples
-
-```typescript
-// All these are valid:
-"5s"                    // 5 seconds
-"5 s"                   // with space
-"5 seconds"             // long form
-"5 Seconds"             // case-insensitive
-"5 SECONDS"             // all caps
-"2.5h"                  // decimals
-"2 hours 30 minutes"   // multiple units
+```ts
+expiresAt("30 minutes"); // Date 30 minutes from now
+expiresAt("25 years"); // Same calendar day, 25 years from now
+expiresAt(new Date("2026-01-01"));
 ```
 
-#### `isReadableTime(value)`
-Type guard to check if a string is valid readable time.
+Throws if a passed `Date` is in the past.
 
-```typescript
-isReadableTime("10 minutes");  // true
-isReadableTime("invalid");     // false
-isReadableTime("2.5 hours");   // true
-isReadableTime("");            // false
+#### `expiresIn(expiry, from?)`
+
+Returns seconds until expiration. Calendar-correct.
+
+```ts
+expiresIn("10 minutes"); // 600
+expiresIn("1 hour"); // 3600
 ```
 
-### Expiration Handling
+#### `expires(expiry, from?)`
 
-#### `expiresAt(expiry)`
-Returns the absolute expiration date.
+Returns the full expiry bundle.
 
-```typescript
-// From readable time (relative to now)
-expiresAt("30 minutes");       // Date 30 minutes from now
-expiresAt("1h");               // Date 1 hour from now
-
-// From Date object
-const futureDate = new Date("2025-01-01");
-expiresAt(futureDate);         // Returns the same Date
-
-// Throws error if date is in the past
-const pastDate = new Date("2020-01-01");
-expiresAt(pastDate);           // Throws Error
-```
-
-#### `expiresIn(expiry)`
-Returns seconds until expiration.
-
-```typescript
-expiresIn("10 minutes");       // 600
-expiresIn("1 hour");           // 3600
-expiresIn("1d");               // 86400
-
-const futureDate = new Date(Date.now() + 60000);
-expiresIn(futureDate);         // ~60
-```
-
-#### `expires(expiry)`
-Returns comprehensive expiration information.
-
-```typescript
+```ts
 const exp = expires("30 minutes");
 // {
-//   expiresAt: Date,          // Absolute expiration date
-//   expiresIn: 1800,          // Seconds until expiration
-//   expiresOn: 1234567890,    // Unix timestamp of expiration
-//   from: Date,               // Reference date (now)
-//   fromUnix: 1234566090      // Unix timestamp of reference
+//   expiresAt: Date,       // absolute expiration
+//   expiresIn: 1800,       // seconds until expiration
+//   expiresOn: 1234567890, // unix timestamp of expiration
+//   from: Date,            // reference date (now)
+//   fromUnix: 1234566090,  // unix timestamp of reference
 // }
-
-// With a specific date
-const futureDate = new Date("2025-01-01T00:00:00Z");
-const exp2 = expires(futureDate);
 ```
 
-### Types
+### Type guards
 
-#### `DurationString`
-Enum of available duration units.
+#### `isReadableTime(value)`
 
-```typescript
-enum DurationString {
-  Years = "years",
-  Months = "months",
-  Weeks = "weeks",
-  Days = "days",
-  Hours = "hours",
-  Minutes = "minutes",
-  Seconds = "seconds",
-  Milliseconds = "milliseconds"
-}
+```ts
+isReadableTime("10 minutes"); // true
+isReadableTime("2.5 hours"); // true
+isReadableTime("invalid"); // false
 ```
 
-#### `DurationDict`
-Object representing a duration broken down by units.
+## ReadableTime format
 
-```typescript
-type DurationDict = {
-  years?: number;
-  months?: number;
-  weeks?: number;
-  days?: number;
-  hours?: number;
-  minutes?: number;
-  seconds?: number;
-  milliseconds?: number;
-}
+| Unit         | Long form                 | Abbreviated | Short |
+| ------------ | ------------------------- | ----------- | ----- |
+| Years        | years, year               | yrs, yr     | y     |
+| Months       | months, month             | —           | mo    |
+| Weeks        | weeks, week               | —           | w     |
+| Days         | days, day                 | —           | d     |
+| Hours        | hours, hour               | hrs, hr     | h     |
+| Minutes      | minutes, minute           | mins, min   | m     |
+| Seconds      | seconds, second           | secs, sec   | s     |
+| Milliseconds | milliseconds, millisecond | msecs, msec | ms    |
+
+All unit forms are case-insensitive and the space between number and unit is
+optional:
+
+```ts
+"5s"; // short, no space
+"5 s"; // short, space
+"5 seconds"; // long
+"5 Seconds"; // mixed case
+"5 SECONDS"; // upper case
+"2 hours 30 minutes"; // multiple units
 ```
 
-#### `ReadableTime`
-Type-safe string format for readable time.
+## Classes
 
-```typescript
-type ReadableTime = string; // e.g., "5s", "10 minutes", "2h"
+### `TtlMap<K, V>`
+
+A `Map` with per-entry TTL. Entries expire after their TTL elapses and are
+cleaned up lazily on read.
+
+```ts
+import { TtlMap } from "@lindorm/date";
+
+const cache = new TtlMap<string, number>("5m"); // default TTL
+cache.set("a", 42); // uses default TTL
+cache.set("b", 99, "30s"); // per-entry override
+cache.get("a"); // 42
+// ...5 minutes later
+cache.get("a"); // undefined
 ```
 
-#### `Expiry`
-Union type for expiration values.
+### `TtlSet<V>`
 
-```typescript
-type Expiry = ReadableTime | Date;
+Set equivalent — members expire after their TTL.
+
+```ts
+import { TtlSet } from "@lindorm/date";
+
+const seen = new TtlSet<string>("1h");
+seen.add("nonce");
+seen.has("nonce"); // true
 ```
 
-## Advanced Examples
+## date-fns re-export
 
-### Working with Durations
+This package re-exports everything from `date-fns`, so you can import both
+lindorm helpers and raw date-fns from the same module:
 
-```typescript
-import { duration, ms } from "@lindorm/date";
-
-// Convert complex duration to milliseconds
-const complexDuration = duration("1d 2h 30m");
-const totalMs = 
-  (complexDuration.days || 0) * 24 * 60 * 60 * 1000 +
-  (complexDuration.hours || 0) * 60 * 60 * 1000 +
-  (complexDuration.minutes || 0) * 60 * 1000;
-
-// Parse user input
-function parseUserTimeout(input: string): number {
-  if (isReadableTime(input)) {
-    return ms(input);
-  }
-  throw new Error("Invalid timeout format");
-}
+```ts
+import { expiresAt, addDays, format, parseISO } from "@lindorm/date";
 ```
-
-### Token Expiration
-
-```typescript
-import { expires, expiresIn } from "@lindorm/date";
-
-interface Token {
-  value: string;
-  expiresAt: Date;
-}
-
-function createToken(ttl: ReadableTime): Token {
-  const exp = expires(ttl);
-  
-  return {
-    value: generateTokenValue(),
-    expiresAt: exp.expiresAt
-  };
-}
-
-function isTokenValid(token: Token): boolean {
-  try {
-    const secondsRemaining = expiresIn(token.expiresAt);
-    return secondsRemaining > 0;
-  } catch {
-    // Token is expired
-    return false;
-  }
-}
-```
-
-### Cache TTL Management
-
-```typescript
-import { ms, expires } from "@lindorm/date";
-
-class Cache<T> {
-  private store = new Map<string, { value: T; expiresAt: Date }>();
-
-  set(key: string, value: T, ttl: ReadableTime = "5m"): void {
-    const exp = expires(ttl);
-    this.store.set(key, {
-      value,
-      expiresAt: exp.expiresAt
-    });
-  }
-
-  get(key: string): T | undefined {
-    const item = this.store.get(key);
-    if (!item) return undefined;
-
-    try {
-      expiresIn(item.expiresAt); // Throws if expired
-      return item.value;
-    } catch {
-      this.store.delete(key);
-      return undefined;
-    }
-  }
-
-  // Clean up expired entries
-  cleanup(): void {
-    const now = Date.now();
-    for (const [key, item] of this.store.entries()) {
-      if (item.expiresAt.getTime() < now) {
-        this.store.delete(key);
-      }
-    }
-  }
-}
-```
-
-### Configuration with Durations
-
-```typescript
-import { duration, ms } from "@lindorm/date";
-import { z } from "zod";
-
-// Configuration schema with readable time
-const configSchema = z.object({
-  server: z.object({
-    timeout: z.string().refine(isReadableTime),
-    keepAlive: z.string().refine(isReadableTime),
-  }),
-  cache: z.object({
-    defaultTTL: z.string().refine(isReadableTime),
-    maxAge: z.string().refine(isReadableTime),
-  }),
-});
-
-// Use in application
-const config = configSchema.parse({
-  server: {
-    timeout: "30s",
-    keepAlive: "5m",
-  },
-  cache: {
-    defaultTTL: "1h",
-    maxAge: "24h",
-  },
-});
-
-// Convert to milliseconds when needed
-const serverTimeout = ms(config.server.timeout);
-const cacheMaxAge = ms(config.cache.maxAge);
-```
-
-## date-fns Integration
-
-This package re-exports all functions from date-fns:
-
-```typescript
-import { 
-  format, 
-  addDays, 
-  differenceInDays, 
-  parseISO 
-} from "@lindorm/date";
-
-// Use date-fns functions
-const tomorrow = addDays(new Date(), 1);
-const formatted = format(tomorrow, "yyyy-MM-dd");
-const diff = differenceInDays(tomorrow, new Date());
-```
-
-## Error Handling
-
-Functions throw errors for invalid inputs:
-
-```typescript
-try {
-  ms("invalid");           // Throws Error
-  expiresAt(new Date(0)); // Throws Error (date in past)
-  duration("not a time"); // Throws Error
-} catch (error) {
-  console.error("Invalid time format:", error.message);
-}
-```
-
-## Time Calculation Notes
-
-- **Year**: Calculated as 365.25 days for accuracy
-- **Month**: Calculated as year/12 (approximately 30.44 days)
-- **Week**: Exactly 7 days
-- **Day**: Exactly 24 hours
-- **All calculations maintain millisecond precision**
 
 ## License
 
