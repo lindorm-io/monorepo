@@ -109,14 +109,19 @@ export class Kryptos implements IKryptos {
         ? modulusSize({ privateKey: this._privateKey, publicKey: this._publicKey! })
         : null);
 
-    if (options.certificateChain != null) {
+    const hasCertChainInput =
+      options.certificateChain != null &&
+      (typeof options.certificateChain === "string" ||
+        options.certificateChain.length > 0);
+
+    if (hasCertChainInput) {
       if (!this._publicKey || this._publicKey.length === 0) {
         throw new KryptosError(
           "certificateChain requires a kryptos with a public key (oct keys are not supported)",
         );
       }
 
-      const ders = parseX509(options.certificateChain);
+      const ders = parseX509(options.certificateChain!);
       const leafSpki = extractLeafSpki(ders[0]);
 
       if (!x509PublicKeyMatches(leafSpki, this._publicKey, this._type)) {
@@ -244,13 +249,13 @@ export class Kryptos implements IKryptos {
     return this._cache.parsedLeaf;
   }
 
-  public get certificateChain(): Array<string> | null {
-    if (!this._certificateChain) return null;
+  public get certificateChain(): Array<string> {
+    if (!this._certificateChain) return [];
     return this._certificateChain.map((der) => der.toString("base64"));
   }
 
   public get certificateThumbprint(): string | null {
-    if (!this._certificateChain) return null;
+    if (!this._certificateChain || this._certificateChain.length === 0) return null;
     return x5tS256Thumbprint(this._certificateChain[0]);
   }
 
@@ -468,7 +473,7 @@ export class Kryptos implements IKryptos {
       nbf: getUnixTime(this.notBefore),
       owner_id: this.ownerId ?? undefined,
       purpose: this.purpose ?? undefined,
-      x5c: this.certificateChain ?? undefined,
+      x5c: this.certificateChain.length > 0 ? this.certificateChain : undefined,
       "x5t#S256": this.certificateThumbprint ?? undefined,
     });
   }

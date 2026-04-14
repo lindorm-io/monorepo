@@ -28,7 +28,7 @@ export const parseJwkOptions = (
     purpose: jwk.purpose,
     type: jwk.kty,
     use: jwk.use,
-    certificateChain: jwk.x5c,
+    certificateChain: jwk.x5c ?? [],
   };
 };
 

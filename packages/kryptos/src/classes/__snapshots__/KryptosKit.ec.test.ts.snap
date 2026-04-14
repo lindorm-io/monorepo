@@ -5,7 +5,7 @@ exports[`KryptosKit (EC) env export 1`] = `"kryptos:eyJjcnYiOiJQLTUyMSIsIngiOiJB
 exports[`KryptosKit (EC) from auto b64 1`] = `
 {
   "algorithm": "ES512",
-  "certificateChain": null,
+  "certificateChain": [],
   "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": "P-521",
@@ -68,7 +68,7 @@ exports[`KryptosKit (EC) from auto b64 3`] = `
 exports[`KryptosKit (EC) from auto jwk 1`] = `
 {
   "algorithm": "ES512",
-  "certificateChain": null,
+  "certificateChain": [],
   "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": "P-521",
@@ -132,7 +132,7 @@ exports[`KryptosKit (EC) from auto jwk 3`] = `
 exports[`KryptosKit (EC) from auto pem 1`] = `
 {
   "algorithm": "ES512",
-  "certificateChain": null,
+  "certificateChain": [],
   "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": "P-521",
@@ -209,7 +209,7 @@ QGygbB2Th7u8NIPlFVE=
 exports[`KryptosKit (EC) from b64 1`] = `
 {
   "algorithm": "ES512",
-  "certificateChain": null,
+  "certificateChain": [],
   "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": "P-521",
@@ -272,7 +272,7 @@ exports[`KryptosKit (EC) from b64 3`] = `
 exports[`KryptosKit (EC) from jwk 1`] = `
 {
   "algorithm": "ES512",
-  "certificateChain": null,
+  "certificateChain": [],
   "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": "P-521",
@@ -336,7 +336,7 @@ exports[`KryptosKit (EC) from jwk 3`] = `
 exports[`KryptosKit (EC) from pem 1`] = `
 {
   "algorithm": "ES512",
-  "certificateChain": null,
+  "certificateChain": [],
   "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": "P-521",
@@ -413,7 +413,7 @@ QGygbB2Th7u8NIPlFVE=
 exports[`KryptosKit (EC) generate auto 1`] = `
 {
   "algorithm": "ES256",
-  "certificateChain": null,
+  "certificateChain": [],
   "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": "P-256",
@@ -445,7 +445,7 @@ exports[`KryptosKit (EC) generate auto 1`] = `
 exports[`KryptosKit (EC) generate enc 1`] = `
 {
   "algorithm": "ECDH-ES+A192GCMKW",
-  "certificateChain": null,
+  "certificateChain": [],
   "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": "P-384",
@@ -476,7 +476,7 @@ exports[`KryptosKit (EC) generate enc 1`] = `
 exports[`KryptosKit (EC) generate sig 1`] = `
 {
   "algorithm": "ES256",
-  "certificateChain": null,
+  "certificateChain": [],
   "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": "P-256",

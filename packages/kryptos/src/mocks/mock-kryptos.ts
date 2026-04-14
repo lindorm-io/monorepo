@@ -5,7 +5,7 @@ export type MockKryptos = jest.Mocked<IKryptos>;
 export const createMockKryptos = (overrides: Partial<MockKryptos> = {}): MockKryptos => ({
   id: "9353f654-7cd3-5c91-8a39-96ea7eab1d78",
   algorithm: "ECDH-ES",
-  certificateChain: null,
+  certificateChain: [],
   certificateThumbprint: null,
   createdAt: new Date("2000-01-01T00:00:00.000Z"),
   curve: "P-521",

@@ -315,7 +315,7 @@ uMSb8pScaIK6Vfef/1c7Vg==
 exports[`Kryptos (oct) to should return db 1`] = `
 {
   "algorithm": "HS512",
-  "certificateChain": null,
+  "certificateChain": [],
   "certificateThumbprint": null,
   "createdAt": 2023-01-01T08:00:00.000Z,
   "curve": null,
@@ -343,7 +343,7 @@ exports[`Kryptos (oct) to should return db 1`] = `
 exports[`Kryptos (oct) to should return json 1`] = `
 {
   "algorithm": "HS512",
-  "certificateChain": null,
+  "certificateChain": [],
   "certificateThumbprint": null,
   "createdAt": 2023-01-01T08:00:00.000Z,
   "curve": null,

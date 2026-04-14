@@ -5,7 +5,7 @@ exports[`KryptosKit (oct) env export 1`] = `"kryptos:eyJrIjoiZGlZbnljZVp4bW4xOHh
 exports[`KryptosKit (oct) from auto b64 1`] = `
 {
   "algorithm": "HS512",
-  "certificateChain": null,
+  "certificateChain": [],
   "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": null,
@@ -64,7 +64,7 @@ exports[`KryptosKit (oct) from auto b64 3`] = `
 exports[`KryptosKit (oct) from auto jwk 1`] = `
 {
   "algorithm": "HS512",
-  "certificateChain": null,
+  "certificateChain": [],
   "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": null,
@@ -122,7 +122,7 @@ exports[`KryptosKit (oct) from auto jwk 3`] = `
 exports[`KryptosKit (oct) from auto pem 1`] = `
 {
   "algorithm": "HS512",
-  "certificateChain": null,
+  "certificateChain": [],
   "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": null,
@@ -187,7 +187,7 @@ cvQHzpn+t5VXn6eD+7A74Q==
 exports[`KryptosKit (oct) from b64 1`] = `
 {
   "algorithm": "HS512",
-  "certificateChain": null,
+  "certificateChain": [],
   "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": null,
@@ -246,7 +246,7 @@ exports[`KryptosKit (oct) from b64 3`] = `
 exports[`KryptosKit (oct) from jwk 1`] = `
 {
   "algorithm": "HS512",
-  "certificateChain": null,
+  "certificateChain": [],
   "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": null,
@@ -304,7 +304,7 @@ exports[`KryptosKit (oct) from jwk 3`] = `
 exports[`KryptosKit (oct) from pem 1`] = `
 {
   "algorithm": "HS512",
-  "certificateChain": null,
+  "certificateChain": [],
   "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": null,
@@ -369,7 +369,7 @@ cvQHzpn+t5VXn6eD+7A74Q==
 exports[`KryptosKit (oct) from utf 1`] = `
 {
   "algorithm": "HS512",
-  "certificateChain": null,
+  "certificateChain": [],
   "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": null,
@@ -428,7 +428,7 @@ exports[`KryptosKit (oct) from utf 3`] = `
 exports[`KryptosKit (oct) generate auto 1`] = `
 {
   "algorithm": "HS384",
-  "certificateChain": null,
+  "certificateChain": [],
   "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": null,
@@ -460,7 +460,7 @@ exports[`KryptosKit (oct) generate auto 1`] = `
 exports[`KryptosKit (oct) generate enc 1`] = `
 {
   "algorithm": "dir",
-  "certificateChain": null,
+  "certificateChain": [],
   "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": null,
@@ -492,7 +492,7 @@ exports[`KryptosKit (oct) generate enc 1`] = `
 exports[`KryptosKit (oct) generate sig 1`] = `
 {
   "algorithm": "HS512",
-  "certificateChain": null,
+  "certificateChain": [],
   "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": null,
