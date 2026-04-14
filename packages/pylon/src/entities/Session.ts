@@ -10,7 +10,7 @@ import { OpenIdScope } from "@lindorm/types";
 import { IPylonSession } from "../interfaces";
 
 @Namespace("pylon")
-@Entity({ name: "session" })
+@Entity()
 export class Session implements IPylonSession {
   @PrimaryKeyField()
   public id!: string;

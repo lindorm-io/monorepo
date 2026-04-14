@@ -8,7 +8,7 @@ import {
 } from "@lindorm/proteus";
 
 @Namespace("pylon")
-@Entity({ name: "rate_limit_sliding" })
+@Entity()
 export class RateLimitSliding {
   @PrimaryKeyField()
   public id!: string;

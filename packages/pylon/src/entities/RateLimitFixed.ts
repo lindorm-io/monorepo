@@ -8,7 +8,7 @@ import {
 } from "@lindorm/proteus";
 
 @Namespace("pylon")
-@Entity({ name: "rate_limit_fixed" })
+@Entity()
 export class RateLimitFixed {
   @PrimaryKeyField()
   public id!: string;
