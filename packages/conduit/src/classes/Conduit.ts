@@ -45,6 +45,7 @@ export class Conduit implements IConduit {
     this.baseURL = options.baseURL ? getPlainUrl(options.baseURL) : undefined;
 
     this.config = {
+      adapter: options.adapter ?? "http",
       timeout: options.timeout ?? TIMEOUT,
       validateStatus: defaultValidateStatus,
       withCredentials: options.withCredentials,
@@ -215,6 +216,7 @@ export class Conduit implements IConduit {
     options: RequestOptions<ResponseData, RequestBody, RequestParams, RequestQuery> = {},
   ): Promise<ConduitResponse<ResponseData>> {
     const {
+      adapter,
       body,
       config = {},
       expectedResponse,
@@ -244,6 +246,7 @@ export class Conduit implements IConduit {
       config: {
         ...this.config,
         ...config,
+        ...(adapter !== undefined ? { adapter } : {}),
         method: method.toUpperCase() as Uppercase<HttpMethod>,
         responseType: expectedResponse,
         timeout,

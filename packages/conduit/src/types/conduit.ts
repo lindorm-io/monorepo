@@ -2,6 +2,7 @@ import { ILogger } from "@lindorm/logger";
 import { Middleware } from "@lindorm/middleware";
 import { RetryOptions } from "@lindorm/retry";
 import { Dict, Environment } from "@lindorm/types";
+import { ConduitAdapter } from "./adapter";
 import { AppContext, RequestContext } from "./context";
 import { ConfigOptions } from "./overrides";
 import { ConduitResponse } from "./response";
@@ -27,6 +28,11 @@ export type ConduitMiddleware<
 > = Middleware<ConduitContext<ResponseData, RequestBody, RequestParams, RequestQuery>>;
 
 export type ConduitOptions = {
+  /**
+   * Axios adapter to use for requests. Defaults to `"http"`. Set to
+   * `"fetch"` to use axios's native-fetch adapter.
+   */
+  adapter?: ConduitAdapter;
   alias?: string;
   baseURL?: URL | string;
   config?: ConfigOptions;
