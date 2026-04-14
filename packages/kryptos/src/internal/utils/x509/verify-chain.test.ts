@@ -1,3 +1,4 @@
+import MockDate from "mockdate";
 import {
   TEST_X509_ALT_INTERMEDIATE_PEM,
   TEST_X509_ALT_ROOT_PEM,
@@ -11,6 +12,16 @@ import { parseX509 } from "./parse-x509";
 import { verifyX509Chain } from "./verify-chain";
 
 describe("verifyX509Chain", () => {
+  beforeAll(() => {
+    // Pin clock to a date inside the fixture chain validity window
+    // (fixture certs: 2026-04-13 to 2126-03-20).
+    MockDate.set(new Date("2030-06-15T12:00:00.000Z").toISOString());
+  });
+
+  afterAll(() => {
+    MockDate.reset();
+  });
+
   test("accepts a valid leaf -> intermediate -> root chain anchored at root", () => {
     const chain = parseX509([
       TEST_X509_LEAF_PEM,
