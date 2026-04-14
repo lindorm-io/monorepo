@@ -93,7 +93,7 @@ exports[`Pylon should setup correctly 2`] = `
 [
   {
     "algorithm": "ES256",
-    "certificateChain": null,
+    "certificateChain": [],
     "certificateThumbprint": null,
     "createdAt": 2024-01-01T08:00:00.000Z,
     "curve": "P-256",
@@ -122,7 +122,7 @@ exports[`Pylon should setup correctly 2`] = `
   },
   {
     "algorithm": "HS256",
-    "certificateChain": null,
+    "certificateChain": [],
     "certificateThumbprint": null,
     "createdAt": 2024-01-01T08:00:00.000Z,
     "curve": null,
@@ -151,7 +151,7 @@ exports[`Pylon should setup correctly 2`] = `
   },
   {
     "algorithm": "ECDH-ES",
-    "certificateChain": null,
+    "certificateChain": [],
     "certificateThumbprint": null,
     "createdAt": 2024-01-01T08:00:00.000Z,
     "curve": "X448",
@@ -179,7 +179,7 @@ exports[`Pylon should setup correctly 2`] = `
   },
   {
     "algorithm": "EdDSA",
-    "certificateChain": null,
+    "certificateChain": [],
     "certificateThumbprint": null,
     "createdAt": 2024-01-01T08:00:00.000Z,
     "curve": "Ed25519",
