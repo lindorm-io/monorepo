@@ -415,8 +415,6 @@ export class Zephyr<E extends ZephyrEventMap = ZephyrEventMap> implements IZephy
       this.logger.error("Unhandled Zephyr error", { error });
       return;
     }
-
-    console.error("Unhandled Zephyr error:", error);
   }
 
   private assertConnected(): void {

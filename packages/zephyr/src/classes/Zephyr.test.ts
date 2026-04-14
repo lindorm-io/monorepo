@@ -614,37 +614,6 @@ describe("Zephyr", () => {
         expect.objectContaining({ error: expect.any(ZephyrError) }),
       );
     });
-
-    it("should fall back to console.error when no onError handler and no logger", async () => {
-      const consoleSpy = jest.spyOn(console, "error").mockImplementation();
-
-      const zephyr = new Zephyr(
-        createOptions({
-          middleware: [
-            async () => {
-              throw new Error("Middleware failure");
-            },
-          ],
-        }),
-      );
-
-      await connectZephyr(zephyr);
-
-      const handler = jest.fn();
-      zephyr.on("test:event", handler);
-
-      const call = findLastCall(mockSocket.on, "test:event");
-      call![1]({ data: "test" });
-
-      await new Promise((resolve) => setTimeout(resolve, 10));
-
-      expect(consoleSpy).toHaveBeenCalledWith(
-        "Unhandled Zephyr error:",
-        expect.any(ZephyrError),
-      );
-
-      consoleSpy.mockRestore();
-    });
   });
 
   describe("lifecycle hooks", () => {
