@@ -1,5 +1,5 @@
 import { B64 } from "@lindorm/b64";
-import { getUnixTime, isAfter, isEqual } from "@lindorm/date";
+import { expiresAt, getUnixTime, isAfter, isEqual } from "@lindorm/date";
 import { isBuffer } from "@lindorm/is";
 import { removeEmpty, removeUndefined } from "@lindorm/utils";
 import { randomUUID } from "crypto";
@@ -74,9 +74,7 @@ export class Kryptos implements IKryptos {
     this._curve = options.curve || null;
     this._encryption = options.encryption || null;
     this._notBefore = options.notBefore ?? new Date();
-    this._expiresAt =
-      options.expiresAt ??
-      new Date(this._notBefore.getTime() + 25 * 365.25 * 24 * 60 * 60 * 1000);
+    this._expiresAt = options.expiresAt ?? expiresAt("25 years", this._notBefore);
     this._hidden = options.hidden ?? false;
     this._isExternal = options.isExternal ?? false;
     this._issuer = options.issuer || null;

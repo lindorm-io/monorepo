@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
-exports[`KryptosKit (EC) env export 1`] = `"kryptos:eyJjcnYiOiJQLTUyMSIsIngiOiJBSTNZOGhXbEZOMTljdVkzR1NEd0dUYWJtZDYycGl3MWJZdDUtR1NXdmFOOG1KVlFsUU0taG1nWjlwc2JNY1NDd3FNX1lkRnMtd1FqLTAwUGZIZzMxVmJSIiwieSI6IkFBZ1BaUmhkcnNZM1NMTWRZZ1ZGMk5WaTVIbjdTUExBVzEzNmo4M1k4NTJ1LVZYekc2WjFVcjVPSkk4UWgxOHFndjhpN1I3c2dwT3dteVA1U1lUeXNNbWYiLCJkIjoiQUV3R0tOdzBHSzZBMWVSSUNVbExQNURpTDV4RW5HWHAtOTRGMnVhRUpMbTlIcEVKb0RpWFQwSXlEVkxIV0VaLXUwQ3Y2QVhUVklWVzdSdjZuY2FpSUdxMyIsImtpZCI6IjEzNjE3MWM1LTdiNzYtNWUxNC05YmI4LWM2MDU1MTk3N2M1OSIsImFsZyI6IkVDREgtRVMrQTI1NkdDTUtXIiwidXNlIjoiZW5jIiwia3R5IjoiRUMiLCJlbmMiOiJBMjU2R0NNIiwiZXhwIjoyNDkzMDM2MDAwLCJpYXQiOjE3MDQwOTYwMDAsImtleV9vcHMiOlsic2lnbiIsInZlcmlmeSJdLCJuYmYiOjE3MDQwOTYwMDB9"`;
+exports[`KryptosKit (EC) env export 1`] = `"kryptos:eyJjcnYiOiJQLTUyMSIsIngiOiJBSTNZOGhXbEZOMTljdVkzR1NEd0dUYWJtZDYycGl3MWJZdDUtR1NXdmFOOG1KVlFsUU0taG1nWjlwc2JNY1NDd3FNX1lkRnMtd1FqLTAwUGZIZzMxVmJSIiwieSI6IkFBZ1BaUmhkcnNZM1NMTWRZZ1ZGMk5WaTVIbjdTUExBVzEzNmo4M1k4NTJ1LVZYekc2WjFVcjVPSkk4UWgxOHFndjhpN1I3c2dwT3dteVA1U1lUeXNNbWYiLCJkIjoiQUV3R0tOdzBHSzZBMWVSSUNVbExQNURpTDV4RW5HWHAtOTRGMnVhRUpMbTlIcEVKb0RpWFQwSXlEVkxIV0VaLXUwQ3Y2QVhUVklWVzdSdjZuY2FpSUdxMyIsImtpZCI6IjEzNjE3MWM1LTdiNzYtNWUxNC05YmI4LWM2MDU1MTk3N2M1OSIsImFsZyI6IkVDREgtRVMrQTI1NkdDTUtXIiwidXNlIjoiZW5jIiwia3R5IjoiRUMiLCJlbmMiOiJBMjU2R0NNIiwiZXhwIjoyNDkzMTAwODAwLCJpYXQiOjE3MDQwOTYwMDAsImtleV9vcHMiOlsic2lnbiIsInZlcmlmeSJdLCJuYmYiOjE3MDQwOTYwMDB9"`;
 
 exports[`KryptosKit (EC) from auto b64 1`] = `
 {
@@ -10,8 +10,8 @@ exports[`KryptosKit (EC) from auto b64 1`] = `
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": "P-521",
   "encryption": null,
-  "expiresAt": 2048-12-31T14:00:00.000Z,
-  "expiresIn": 788940000,
+  "expiresAt": 2049-01-01T08:00:00.000Z,
+  "expiresIn": 789004800,
   "hasPrivateKey": true,
   "hasPublicKey": true,
   "hidden": false,
@@ -38,7 +38,7 @@ exports[`KryptosKit (EC) from auto b64 2`] = `
 {
   "alg": "ES512",
   "crv": "P-521",
-  "exp": 2493036000,
+  "exp": 2493100800,
   "iat": 1704096000,
   "key_ops": [
     "sign",
@@ -73,8 +73,8 @@ exports[`KryptosKit (EC) from auto jwk 1`] = `
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": "P-521",
   "encryption": null,
-  "expiresAt": 2048-12-31T14:00:00.000Z,
-  "expiresIn": 788940000,
+  "expiresAt": 2049-01-01T08:00:00.000Z,
+  "expiresIn": 789004800,
   "hasPrivateKey": true,
   "hasPublicKey": true,
   "hidden": false,
@@ -101,7 +101,7 @@ exports[`KryptosKit (EC) from auto jwk 2`] = `
 {
   "alg": "ES512",
   "crv": "P-521",
-  "exp": 2493036000,
+  "exp": 2493100800,
   "iat": 1704096000,
   "key_ops": [
     "sign",
@@ -137,8 +137,8 @@ exports[`KryptosKit (EC) from auto pem 1`] = `
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": "P-521",
   "encryption": null,
-  "expiresAt": 2048-12-31T14:00:00.000Z,
-  "expiresIn": 788940000,
+  "expiresAt": 2049-01-01T08:00:00.000Z,
+  "expiresIn": 789004800,
   "hasPrivateKey": true,
   "hasPublicKey": true,
   "hidden": false,
@@ -165,7 +165,7 @@ exports[`KryptosKit (EC) from auto pem 2`] = `
 {
   "alg": "ES512",
   "crv": "P-521",
-  "exp": 2493036000,
+  "exp": 2493100800,
   "iat": 1704096000,
   "key_ops": [
     "sign",
@@ -214,8 +214,8 @@ exports[`KryptosKit (EC) from b64 1`] = `
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": "P-521",
   "encryption": null,
-  "expiresAt": 2048-12-31T14:00:00.000Z,
-  "expiresIn": 788940000,
+  "expiresAt": 2049-01-01T08:00:00.000Z,
+  "expiresIn": 789004800,
   "hasPrivateKey": true,
   "hasPublicKey": true,
   "hidden": false,
@@ -242,7 +242,7 @@ exports[`KryptosKit (EC) from b64 2`] = `
 {
   "alg": "ES512",
   "crv": "P-521",
-  "exp": 2493036000,
+  "exp": 2493100800,
   "iat": 1704096000,
   "key_ops": [
     "sign",
@@ -277,8 +277,8 @@ exports[`KryptosKit (EC) from jwk 1`] = `
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": "P-521",
   "encryption": null,
-  "expiresAt": 2048-12-31T14:00:00.000Z,
-  "expiresIn": 788940000,
+  "expiresAt": 2049-01-01T08:00:00.000Z,
+  "expiresIn": 789004800,
   "hasPrivateKey": true,
   "hasPublicKey": true,
   "hidden": false,
@@ -305,7 +305,7 @@ exports[`KryptosKit (EC) from jwk 2`] = `
 {
   "alg": "ES512",
   "crv": "P-521",
-  "exp": 2493036000,
+  "exp": 2493100800,
   "iat": 1704096000,
   "key_ops": [
     "sign",
@@ -341,8 +341,8 @@ exports[`KryptosKit (EC) from pem 1`] = `
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": "P-521",
   "encryption": null,
-  "expiresAt": 2048-12-31T14:00:00.000Z,
-  "expiresIn": 788940000,
+  "expiresAt": 2049-01-01T08:00:00.000Z,
+  "expiresIn": 789004800,
   "hasPrivateKey": true,
   "hasPublicKey": true,
   "hidden": false,
@@ -369,7 +369,7 @@ exports[`KryptosKit (EC) from pem 2`] = `
 {
   "alg": "ES512",
   "crv": "P-521",
-  "exp": 2493036000,
+  "exp": 2493100800,
   "iat": 1704096000,
   "key_ops": [
     "sign",
@@ -418,8 +418,8 @@ exports[`KryptosKit (EC) generate auto 1`] = `
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": "P-256",
   "encryption": null,
-  "expiresAt": 2048-12-31T14:00:00.000Z,
-  "expiresIn": 788940000,
+  "expiresAt": 2049-01-01T08:00:00.000Z,
+  "expiresIn": 789004800,
   "hasPrivateKey": true,
   "hasPublicKey": true,
   "hidden": false,
@@ -450,8 +450,8 @@ exports[`KryptosKit (EC) generate enc 1`] = `
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": "P-384",
   "encryption": "A256GCM",
-  "expiresAt": 2048-12-31T14:00:00.000Z,
-  "expiresIn": 788940000,
+  "expiresAt": 2049-01-01T08:00:00.000Z,
+  "expiresIn": 789004800,
   "hasPrivateKey": true,
   "hasPublicKey": true,
   "hidden": false,
@@ -481,8 +481,8 @@ exports[`KryptosKit (EC) generate sig 1`] = `
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": "P-256",
   "encryption": null,
-  "expiresAt": 2048-12-31T14:00:00.000Z,
-  "expiresIn": 788940000,
+  "expiresAt": 2049-01-01T08:00:00.000Z,
+  "expiresIn": 789004800,
   "hasPrivateKey": true,
   "hasPublicKey": true,
   "hidden": false,

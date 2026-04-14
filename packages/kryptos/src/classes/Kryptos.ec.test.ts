@@ -59,7 +59,7 @@ describe("Kryptos (EC)", () => {
       const { expiresAt: _omit, ...rest } = options;
       const kryptos = KryptosKit.from.b64({ ...TEST_EC_KEY_B64, ...rest });
 
-      expect(kryptos.expiresAt).toEqual(new Date("2048-01-01T14:00:00.000Z"));
+      expect(kryptos.expiresAt).toEqual(new Date("2048-01-01T08:00:00.000Z"));
       expect(kryptos.isExpired).toEqual(false);
     });
   });
