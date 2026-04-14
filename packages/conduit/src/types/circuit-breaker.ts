@@ -1,4 +1,9 @@
-export type {
-  ConduitCircuitBreakerCache,
-  ConduitCircuitBreakerConfig,
-} from "../middleware/conduit-circuit-breaker-middleware";
+import { CircuitBreakerOptions, ICircuitBreaker } from "@lindorm/breaker";
+
+export type ConduitCircuitBreakerCache = Map<string, ICircuitBreaker>;
+
+export type ConduitCircuitBreakerConfig = Partial<
+  Omit<CircuitBreakerOptions, "name" | "classifier">
+> & {
+  classifier?: CircuitBreakerOptions["classifier"];
+};

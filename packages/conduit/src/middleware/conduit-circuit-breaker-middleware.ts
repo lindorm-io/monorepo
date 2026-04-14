@@ -1,21 +1,12 @@
 import { defaultConduitClassifier } from "#internal/utils/default-conduit-classifier";
-import {
-  CircuitBreaker,
-  CircuitOpenError,
-  type CircuitBreakerOptions,
-  type ICircuitBreaker,
-} from "@lindorm/breaker";
+import { CircuitBreaker, CircuitOpenError } from "@lindorm/breaker";
 import { ILogger } from "@lindorm/logger";
 import { ConduitError } from "../errors";
-import type { ConduitMiddleware } from "../types";
-
-export type ConduitCircuitBreakerCache = Map<string, ICircuitBreaker>;
-
-export type ConduitCircuitBreakerConfig = Partial<
-  Omit<CircuitBreakerOptions, "name" | "classifier">
-> & {
-  classifier?: CircuitBreakerOptions["classifier"];
-};
+import type {
+  ConduitCircuitBreakerCache,
+  ConduitCircuitBreakerConfig,
+  ConduitMiddleware,
+} from "../types";
 
 export const createConduitCircuitBreakerMiddleware = (
   config: ConduitCircuitBreakerConfig = {},
