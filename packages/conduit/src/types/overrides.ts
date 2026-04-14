@@ -1,25 +1,6 @@
 import { RawAxiosRequestConfig } from "axios";
 import { HttpMethod } from "@lindorm/types";
 
-type FetchConfigOverride = {
-  cache?:
-    | "default"
-    | "force-cache"
-    | "no-cache"
-    | "no-store"
-    | "only-if-cached"
-    | "reload";
-  credentials?: RequestCredentials;
-  integrity?: string;
-  keepalive?: boolean;
-  mode?: RequestMode;
-  priority?: RequestPriority;
-  redirect?: RequestRedirect;
-  referrer?: string;
-  referrerPolicy?: ReferrerPolicy;
-  window?: null;
-};
-
 type RawAxiosRequestConfigOptions = Omit<
   RawAxiosRequestConfig,
   | "auth"
@@ -51,9 +32,8 @@ type RawAxiosRequestConfigContext = Omit<
   | "url"
 >;
 
-export type ConfigOptions = RawAxiosRequestConfigOptions & FetchConfigOverride;
+export type ConfigOptions = RawAxiosRequestConfigOptions;
 
-export type ConfigContext = RawAxiosRequestConfigContext &
-  FetchConfigOverride & {
-    method: Uppercase<HttpMethod>;
-  };
+export type ConfigContext = RawAxiosRequestConfigContext & {
+  method: Uppercase<HttpMethod>;
+};
