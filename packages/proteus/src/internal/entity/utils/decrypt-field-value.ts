@@ -15,8 +15,8 @@ export const decryptFieldValue = (
   }
 
   try {
-    const parsed = parseAes(cipher);
-    const key = amphora.findSync({ id: parsed.keyId });
+    const { keyId } = parseAes(cipher);
+    const key = amphora.findByIdSync(keyId);
     const kit = new AesKit({ kryptos: key });
     return kit.decrypt(cipher);
   } catch (error) {
