@@ -20,6 +20,7 @@ import {
   X509_OID_EXT_SUBJECT_ALT_NAME,
   X509_OID_EXT_SUBJECT_KEY_IDENTIFIER,
 } from "./oids";
+import { SAN_IP_TAG_NUMBER, SAN_TAG_NUMBER_BY_TYPE } from "./san-tags";
 
 export type X509KeyUsageFlag =
   | "digitalSignature"
@@ -161,12 +162,6 @@ export const authorityKeyIdentifierExt = (issuerSkiBytes: Buffer): Buffer => {
   return wrapExtension(X509_OID_EXT_AUTHORITY_KEY_IDENTIFIER, inner, false);
 };
 
-const SAN_IA5_TAG: Record<"email" | "dns" | "uri", number> = {
-  email: 1,
-  dns: 2,
-  uri: 6,
-};
-
 const assertIa5String = (type: "uri" | "dns" | "email", value: string): void => {
   for (let i = 0; i < value.length; i++) {
     if (value.charCodeAt(i) > 0x7f) {
@@ -226,10 +221,10 @@ const parseIpv6 = (value: string): Buffer => {
 
 const encodeIpSan = (value: string): Buffer => {
   if (isIPv4(value)) {
-    return encodeImplicitTag(7, parseIpv4(value), false);
+    return encodeImplicitTag(SAN_IP_TAG_NUMBER, parseIpv4(value), false);
   }
   if (isIPv6(value)) {
-    return encodeImplicitTag(7, parseIpv6(value), false);
+    return encodeImplicitTag(SAN_IP_TAG_NUMBER, parseIpv6(value), false);
   }
   throw new KryptosError(
     `subjectAlternativeName ip value '${value}' is not a valid IPv4 or IPv6 address`,
@@ -248,7 +243,7 @@ export const subjectAlternativeNameExt = (
     }
     assertIa5String(san.type, san.value);
     return encodeImplicitTag(
-      SAN_IA5_TAG[san.type],
+      SAN_TAG_NUMBER_BY_TYPE[san.type],
       Buffer.from(san.value, "ascii"),
       false,
     );

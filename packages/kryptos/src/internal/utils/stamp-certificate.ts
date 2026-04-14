@@ -177,10 +177,6 @@ export const stampCertificate = (input: StampInput): Array<string> => {
     throw new KryptosError("ca-signed mode requires CA kryptos with a certificate");
   }
 
-  if (ca.type === "oct") {
-    throw new KryptosError("ca-signed mode cannot use a symmetric CA kryptos");
-  }
-
   const caLeaf = ca.certificate;
 
   if (!caLeaf.extensions.basicConstraintsCa) {

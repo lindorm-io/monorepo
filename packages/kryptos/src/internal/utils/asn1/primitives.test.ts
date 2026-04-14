@@ -97,6 +97,11 @@ describe("encodeOid / decodeOid", () => {
     expect(() => encodeOid("bad")).toThrow();
     expect(() => encodeOid("1")).toThrow();
   });
+
+  test("rejects subidentifier above 32-bit unsigned range", () => {
+    // 2^31 = 2147483648 is one above the encoder cap (2^31 - 1).
+    expect(() => encodeOid("1.2.2147483648")).toThrow("exceeds encoder range");
+  });
 });
 
 describe("octet/utf8/printable strings", () => {

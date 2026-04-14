@@ -48,11 +48,18 @@ export const decodeInteger = (bytes: Buffer): Buffer => {
   return Buffer.from(bytes);
 };
 
+// `>>>` is a 32-bit unsigned shift, so subidentifiers above 2^31 - 1 would
+// silently mis-encode. Real-world OIDs never approach this — cap and throw.
+const OID_SUBIDENTIFIER_MAX = 0x7fffffff;
+
 export const encodeOid = (dotted: string): Buffer => {
   const parts = dotted.split(".").map((p) => {
     const n = Number(p);
     if (!Number.isInteger(n) || n < 0) {
       throw new KryptosError(`Invalid OID component: ${p}`);
+    }
+    if (n > OID_SUBIDENTIFIER_MAX) {
+      throw new KryptosError(`OID subidentifier exceeds encoder range: ${p}`);
     }
     return n;
   });
