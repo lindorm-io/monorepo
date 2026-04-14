@@ -65,6 +65,11 @@ export const basicConstraintsExt = (
           "basicConstraints.pathLengthConstraint must be a non-negative integer",
         );
       }
+      if (pathLengthConstraint > 255) {
+        throw new KryptosError(
+          "basicConstraints.pathLengthConstraint must be between 0 and 255",
+        );
+      }
       seqChildren.push(encodeInteger(Buffer.from([pathLengthConstraint & 0xff])));
     }
   }

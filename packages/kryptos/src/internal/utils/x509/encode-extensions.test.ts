@@ -43,6 +43,18 @@ describe("encode-extensions", () => {
     );
   });
 
+  test("basicConstraintsExt throws when pathLengthConstraint is 256", () => {
+    expect(() => basicConstraintsExt({ ca: true, pathLengthConstraint: 256 })).toThrow(
+      KryptosError,
+    );
+  });
+
+  test("basicConstraintsExt throws when pathLengthConstraint is 300", () => {
+    expect(() => basicConstraintsExt({ ca: true, pathLengthConstraint: 300 })).toThrow(
+      KryptosError,
+    );
+  });
+
   test("keyUsageExt digitalSignature only", () => {
     expect(keyUsageExt(["digitalSignature"]).toString("hex")).toMatchSnapshot();
   });
