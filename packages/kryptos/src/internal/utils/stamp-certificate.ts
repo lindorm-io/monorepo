@@ -40,8 +40,12 @@ const isUrl = (value: string): boolean => {
 };
 
 const deriveSan = (issuer: string | null, id: string): string => {
-  if (issuer && isUrl(issuer)) return issuer;
-  return `urn:lindorm:kryptos:${id}`;
+  if (!issuer) return `urn:lindorm:kryptos:${id}`;
+  if (isUrl(issuer)) return issuer;
+  throw new KryptosError(
+    "Cannot derive SAN from non-URL issuer; supply explicit subjectAlternativeNames or use a URL-shaped issuer",
+    { data: { issuer } },
+  );
 };
 
 const resolveSubject = (
