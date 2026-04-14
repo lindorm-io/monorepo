@@ -64,10 +64,9 @@ export class Kryptos implements KryptosDB {
   @Field("text")
   public publicKey!: string | null;
 
-  @Nullable()
   @Eager()
   @EmbeddedList("string")
-  public certificateChain!: Array<string> | null;
+  public certificateChain!: Array<string>;
 
   @Nullable()
   @Field("string")
