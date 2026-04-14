@@ -5,7 +5,7 @@ exports[`KryptosKit (RSA) env export 1`] = `"kryptos:eyJlIjoiQVFBQiIsIm4iOiI3Y3h
 exports[`KryptosKit (RSA) from auto b64 1`] = `
 {
   "algorithm": "RS512",
-  "certificateChain": null,
+  "certificateChain": [],
   "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": null,
@@ -66,7 +66,7 @@ exports[`KryptosKit (RSA) from auto b64 3`] = `
 exports[`KryptosKit (RSA) from auto jwk 1`] = `
 {
   "algorithm": "RS256",
-  "certificateChain": null,
+  "certificateChain": [],
   "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": null,
@@ -133,7 +133,7 @@ exports[`KryptosKit (RSA) from auto jwk 3`] = `
 exports[`KryptosKit (RSA) from auto pem 1`] = `
 {
   "algorithm": "RS256",
-  "certificateChain": null,
+  "certificateChain": [],
   "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": null,
@@ -214,7 +214,7 @@ E/WiZilDH1btbVDr5GQ1PtJuymXlg1Mk4AvzVxn8rVFNZMQbJH1TAgMBAAE=
 exports[`KryptosKit (RSA) from b64 1`] = `
 {
   "algorithm": "RS512",
-  "certificateChain": null,
+  "certificateChain": [],
   "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": null,
@@ -275,7 +275,7 @@ exports[`KryptosKit (RSA) from b64 3`] = `
 exports[`KryptosKit (RSA) from jwk 1`] = `
 {
   "algorithm": "RS256",
-  "certificateChain": null,
+  "certificateChain": [],
   "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": null,
@@ -342,7 +342,7 @@ exports[`KryptosKit (RSA) from jwk 3`] = `
 exports[`KryptosKit (RSA) from pem 1`] = `
 {
   "algorithm": "RS256",
-  "certificateChain": null,
+  "certificateChain": [],
   "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": null,
@@ -423,7 +423,7 @@ E/WiZilDH1btbVDr5GQ1PtJuymXlg1Mk4AvzVxn8rVFNZMQbJH1TAgMBAAE=
 exports[`KryptosKit (RSA) generate auto 1`] = `
 {
   "algorithm": "PS384",
-  "certificateChain": null,
+  "certificateChain": [],
   "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": null,
@@ -455,7 +455,7 @@ exports[`KryptosKit (RSA) generate auto 1`] = `
 exports[`KryptosKit (RSA) generate enc 1`] = `
 {
   "algorithm": "RSA-OAEP-384",
-  "certificateChain": null,
+  "certificateChain": [],
   "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": null,
@@ -487,7 +487,7 @@ exports[`KryptosKit (RSA) generate enc 1`] = `
 exports[`KryptosKit (RSA) generate sig 1`] = `
 {
   "algorithm": "RS256",
-  "certificateChain": null,
+  "certificateChain": [],
   "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": null,

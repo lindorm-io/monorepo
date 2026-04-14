@@ -5,7 +5,7 @@ exports[`KryptosKit (OKP) env export 1`] = `"kryptos:eyJjcnYiOiJFZDI1NTE5IiwieCI
 exports[`KryptosKit (OKP) from auto b64 1`] = `
 {
   "algorithm": "EdDSA",
-  "certificateChain": null,
+  "certificateChain": [],
   "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": "Ed25519",
@@ -67,7 +67,7 @@ exports[`KryptosKit (OKP) from auto b64 3`] = `
 exports[`KryptosKit (OKP) from auto jwk 1`] = `
 {
   "algorithm": "EdDSA",
-  "certificateChain": null,
+  "certificateChain": [],
   "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": "Ed25519",
@@ -129,7 +129,7 @@ exports[`KryptosKit (OKP) from auto jwk 3`] = `
 exports[`KryptosKit (OKP) from auto pem 1`] = `
 {
   "algorithm": "EdDSA",
-  "certificateChain": null,
+  "certificateChain": [],
   "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": "Ed25519",
@@ -197,7 +197,7 @@ MCowBQYDK2VwAyEAFqCTfRe3gmMUYSmAmAl8id+ZYSsmFpKHXmh+ZOaPOfM=
 exports[`KryptosKit (OKP) from b64 1`] = `
 {
   "algorithm": "EdDSA",
-  "certificateChain": null,
+  "certificateChain": [],
   "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": "Ed25519",
@@ -259,7 +259,7 @@ exports[`KryptosKit (OKP) from b64 3`] = `
 exports[`KryptosKit (OKP) from jwk 1`] = `
 {
   "algorithm": "EdDSA",
-  "certificateChain": null,
+  "certificateChain": [],
   "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": "Ed25519",
@@ -321,7 +321,7 @@ exports[`KryptosKit (OKP) from jwk 3`] = `
 exports[`KryptosKit (OKP) from pem 1`] = `
 {
   "algorithm": "EdDSA",
-  "certificateChain": null,
+  "certificateChain": [],
   "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": "Ed25519",
@@ -389,7 +389,7 @@ MCowBQYDK2VwAyEAFqCTfRe3gmMUYSmAmAl8id+ZYSsmFpKHXmh+ZOaPOfM=
 exports[`KryptosKit (OKP) generate auto 1`] = `
 {
   "algorithm": "ECDH-ES+A128GCMKW",
-  "certificateChain": null,
+  "certificateChain": [],
   "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": "P-256",
@@ -420,7 +420,7 @@ exports[`KryptosKit (OKP) generate auto 1`] = `
 exports[`KryptosKit (OKP) generate enc 1`] = `
 {
   "algorithm": "ECDH-ES",
-  "certificateChain": null,
+  "certificateChain": [],
   "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": "X25519",
@@ -451,7 +451,7 @@ exports[`KryptosKit (OKP) generate enc 1`] = `
 exports[`KryptosKit (OKP) generate sig 1`] = `
 {
   "algorithm": "EdDSA",
-  "certificateChain": null,
+  "certificateChain": [],
   "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": "Ed25519",

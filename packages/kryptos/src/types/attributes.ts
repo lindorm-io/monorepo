@@ -8,7 +8,7 @@ import { KryptosType, KryptosUse } from "./types";
 export type KryptosAttributes = {
   id: string;
   algorithm: KryptosAlgorithm;
-  certificateChain: Array<string> | null;
+  certificateChain: Array<string>;
   certificateThumbprint: string | null;
   createdAt: Date;
   curve: KryptosCurve | null;

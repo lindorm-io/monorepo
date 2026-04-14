@@ -62,14 +62,14 @@ describe("Kryptos (X.509 round-trip)", () => {
       expect(restored.certificateThumbprint).toBe(kryptos.certificateThumbprint);
     });
 
-    test("chain-less kryptos round-trips certificateChain as null", () => {
+    test("chain-less kryptos round-trips certificateChain as empty array", () => {
       const kryptos = new Kryptos(baseEcOptions);
       const db = kryptos.toDB();
 
-      expect(db.certificateChain).toBeNull();
+      expect(db.certificateChain).toEqual([]);
 
       const restored = KryptosKit.from.db(db as any);
-      expect(restored.certificateChain).toBeNull();
+      expect(restored.certificateChain).toEqual([]);
     });
   });
 
@@ -82,11 +82,11 @@ describe("Kryptos (X.509 round-trip)", () => {
       expect(json.certificateChain).toHaveLength(3);
     });
 
-    test("chain-less kryptos produces null certificateChain in toJSON", () => {
+    test("chain-less kryptos produces empty certificateChain in toJSON", () => {
       const kryptos = new Kryptos(baseEcOptions);
       const json = kryptos.toJSON();
 
-      expect(json.certificateChain).toBeNull();
+      expect(json.certificateChain).toEqual([]);
       expect(json.certificateThumbprint).toBeNull();
     });
   });
