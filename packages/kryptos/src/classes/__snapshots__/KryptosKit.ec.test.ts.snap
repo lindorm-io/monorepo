@@ -1,10 +1,12 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
-exports[`KryptosKit (EC) env export 1`] = `"kryptos:eyJjcnYiOiJQLTUyMSIsIngiOiJBSTNZOGhXbEZOMTljdVkzR1NEd0dUYWJtZDYycGl3MWJZdDUtR1NXdmFOOG1KVlFsUU0taG1nWjlwc2JNY1NDd3FNX1lkRnMtd1FqLTAwUGZIZzMxVmJSIiwieSI6IkFBZ1BaUmhkcnNZM1NMTWRZZ1ZGMk5WaTVIbjdTUExBVzEzNmo4M1k4NTJ1LVZYekc2WjFVcjVPSkk4UWgxOHFndjhpN1I3c2dwT3dteVA1U1lUeXNNbWYiLCJkIjoiQUV3R0tOdzBHSzZBMWVSSUNVbExQNURpTDV4RW5HWHAtOTRGMnVhRUpMbTlIcEVKb0RpWFQwSXlEVkxIV0VaLXUwQ3Y2QVhUVklWVzdSdjZuY2FpSUdxMyIsImtpZCI6IjEzNjE3MWM1LTdiNzYtNWUxNC05YmI4LWM2MDU1MTk3N2M1OSIsImFsZyI6IkVDREgtRVMrQTI1NkdDTUtXIiwidXNlIjoiZW5jIiwia3R5IjoiRUMiLCJlbmMiOiJBMjU2R0NNIiwiZXhwIjoyNDkzMDM2MDAwLCJpYXQiOjE3MDQwOTYwMDAsImtleV9vcHMiOlsic2lnbiIsInZlcmlmeSJdLCJuYmYiOjE3MDQwOTYwMDAsInVhdCI6MTcwNDA5NjAwMH0"`;
+exports[`KryptosKit (EC) env export 1`] = `"kryptos:eyJjcnYiOiJQLTUyMSIsIngiOiJBSTNZOGhXbEZOMTljdVkzR1NEd0dUYWJtZDYycGl3MWJZdDUtR1NXdmFOOG1KVlFsUU0taG1nWjlwc2JNY1NDd3FNX1lkRnMtd1FqLTAwUGZIZzMxVmJSIiwieSI6IkFBZ1BaUmhkcnNZM1NMTWRZZ1ZGMk5WaTVIbjdTUExBVzEzNmo4M1k4NTJ1LVZYekc2WjFVcjVPSkk4UWgxOHFndjhpN1I3c2dwT3dteVA1U1lUeXNNbWYiLCJkIjoiQUV3R0tOdzBHSzZBMWVSSUNVbExQNURpTDV4RW5HWHAtOTRGMnVhRUpMbTlIcEVKb0RpWFQwSXlEVkxIV0VaLXUwQ3Y2QVhUVklWVzdSdjZuY2FpSUdxMyIsImtpZCI6IjEzNjE3MWM1LTdiNzYtNWUxNC05YmI4LWM2MDU1MTk3N2M1OSIsImFsZyI6IkVDREgtRVMrQTI1NkdDTUtXIiwidXNlIjoiZW5jIiwia3R5IjoiRUMiLCJlbmMiOiJBMjU2R0NNIiwiZXhwIjoyNDkzMDM2MDAwLCJpYXQiOjE3MDQwOTYwMDAsImtleV9vcHMiOlsic2lnbiIsInZlcmlmeSJdLCJuYmYiOjE3MDQwOTYwMDB9"`;
 
 exports[`KryptosKit (EC) from auto b64 1`] = `
 {
   "algorithm": "ES512",
+  "certificateChain": null,
+  "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": "P-521",
   "encryption": null,
@@ -28,7 +30,6 @@ exports[`KryptosKit (EC) from auto b64 1`] = `
   "ownerId": null,
   "purpose": null,
   "type": "EC",
-  "updatedAt": 2024-01-01T08:00:00.000Z,
   "use": "sig",
 }
 `;
@@ -46,7 +47,6 @@ exports[`KryptosKit (EC) from auto b64 2`] = `
   "kid": "217d138b-6ce6-5e5c-953a-35fb11865b9a",
   "kty": "EC",
   "nbf": 1704096000,
-  "uat": 1704096000,
   "use": "sig",
   "x": "AI3Y8hWlFN19cuY3GSDwGTabmd62piw1bYt5-GSWvaN8mJVQlQM-hmgZ9psbMcSCwqM_YdFs-wQj-00PfHg31VbR",
   "y": "AAgPZRhdrsY3SLMdYgVF2NVi5Hn7SPLAW136j83Y852u-VXzG6Z1Ur5OJI8Qh18qgv8i7R7sgpOwmyP5SYTysMmf",
@@ -68,6 +68,8 @@ exports[`KryptosKit (EC) from auto b64 3`] = `
 exports[`KryptosKit (EC) from auto jwk 1`] = `
 {
   "algorithm": "ES512",
+  "certificateChain": null,
+  "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": "P-521",
   "encryption": null,
@@ -91,7 +93,6 @@ exports[`KryptosKit (EC) from auto jwk 1`] = `
   "ownerId": null,
   "purpose": null,
   "type": "EC",
-  "updatedAt": 2024-01-01T08:00:00.000Z,
   "use": "sig",
 }
 `;
@@ -109,7 +110,6 @@ exports[`KryptosKit (EC) from auto jwk 2`] = `
   "kid": "df280784-0bf1-5362-9ab5-23715e4ece69",
   "kty": "EC",
   "nbf": 1704096000,
-  "uat": 1704096000,
   "use": "sig",
   "x": "APR_foe7ldh7LLa8ZFvQA6t2niQqzdFbV38w7jt5KrCcMGoIizvVqHEf4DeFe-KGI8u3QiP7UNVrU1yuldAoEwhw",
   "y": "ABzy87I16-HAaIfLYfT1vayxG0HuHX8h771d9EnX_vweC1fcMHetmzYDKT5heXvVE4JmREBsoGwdk4e7vDSD5RVR",
@@ -132,6 +132,8 @@ exports[`KryptosKit (EC) from auto jwk 3`] = `
 exports[`KryptosKit (EC) from auto pem 1`] = `
 {
   "algorithm": "ES512",
+  "certificateChain": null,
+  "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": "P-521",
   "encryption": null,
@@ -155,7 +157,6 @@ exports[`KryptosKit (EC) from auto pem 1`] = `
   "ownerId": null,
   "purpose": null,
   "type": "EC",
-  "updatedAt": 2024-01-01T08:00:00.000Z,
   "use": "sig",
 }
 `;
@@ -173,7 +174,6 @@ exports[`KryptosKit (EC) from auto pem 2`] = `
   "kid": "583238e6-9496-5f7a-adfe-aca1ad5de594",
   "kty": "EC",
   "nbf": 1704096000,
-  "uat": 1704096000,
   "use": "sig",
   "x": "APR_foe7ldh7LLa8ZFvQA6t2niQqzdFbV38w7jt5KrCcMGoIizvVqHEf4DeFe-KGI8u3QiP7UNVrU1yuldAoEwhw",
   "y": "ABzy87I16-HAaIfLYfT1vayxG0HuHX8h771d9EnX_vweC1fcMHetmzYDKT5heXvVE4JmREBsoGwdk4e7vDSD5RVR",
@@ -209,6 +209,8 @@ QGygbB2Th7u8NIPlFVE=
 exports[`KryptosKit (EC) from b64 1`] = `
 {
   "algorithm": "ES512",
+  "certificateChain": null,
+  "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": "P-521",
   "encryption": null,
@@ -232,7 +234,6 @@ exports[`KryptosKit (EC) from b64 1`] = `
   "ownerId": null,
   "purpose": null,
   "type": "EC",
-  "updatedAt": 2024-01-01T08:00:00.000Z,
   "use": "sig",
 }
 `;
@@ -250,7 +251,6 @@ exports[`KryptosKit (EC) from b64 2`] = `
   "kid": "217d138b-6ce6-5e5c-953a-35fb11865b9a",
   "kty": "EC",
   "nbf": 1704096000,
-  "uat": 1704096000,
   "use": "sig",
   "x": "AI3Y8hWlFN19cuY3GSDwGTabmd62piw1bYt5-GSWvaN8mJVQlQM-hmgZ9psbMcSCwqM_YdFs-wQj-00PfHg31VbR",
   "y": "AAgPZRhdrsY3SLMdYgVF2NVi5Hn7SPLAW136j83Y852u-VXzG6Z1Ur5OJI8Qh18qgv8i7R7sgpOwmyP5SYTysMmf",
@@ -272,6 +272,8 @@ exports[`KryptosKit (EC) from b64 3`] = `
 exports[`KryptosKit (EC) from jwk 1`] = `
 {
   "algorithm": "ES512",
+  "certificateChain": null,
+  "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": "P-521",
   "encryption": null,
@@ -295,7 +297,6 @@ exports[`KryptosKit (EC) from jwk 1`] = `
   "ownerId": null,
   "purpose": null,
   "type": "EC",
-  "updatedAt": 2024-01-01T08:00:00.000Z,
   "use": "sig",
 }
 `;
@@ -313,7 +314,6 @@ exports[`KryptosKit (EC) from jwk 2`] = `
   "kid": "df280784-0bf1-5362-9ab5-23715e4ece69",
   "kty": "EC",
   "nbf": 1704096000,
-  "uat": 1704096000,
   "use": "sig",
   "x": "APR_foe7ldh7LLa8ZFvQA6t2niQqzdFbV38w7jt5KrCcMGoIizvVqHEf4DeFe-KGI8u3QiP7UNVrU1yuldAoEwhw",
   "y": "ABzy87I16-HAaIfLYfT1vayxG0HuHX8h771d9EnX_vweC1fcMHetmzYDKT5heXvVE4JmREBsoGwdk4e7vDSD5RVR",
@@ -336,6 +336,8 @@ exports[`KryptosKit (EC) from jwk 3`] = `
 exports[`KryptosKit (EC) from pem 1`] = `
 {
   "algorithm": "ES512",
+  "certificateChain": null,
+  "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": "P-521",
   "encryption": null,
@@ -359,7 +361,6 @@ exports[`KryptosKit (EC) from pem 1`] = `
   "ownerId": null,
   "purpose": null,
   "type": "EC",
-  "updatedAt": 2024-01-01T08:00:00.000Z,
   "use": "sig",
 }
 `;
@@ -377,7 +378,6 @@ exports[`KryptosKit (EC) from pem 2`] = `
   "kid": "583238e6-9496-5f7a-adfe-aca1ad5de594",
   "kty": "EC",
   "nbf": 1704096000,
-  "uat": 1704096000,
   "use": "sig",
   "x": "APR_foe7ldh7LLa8ZFvQA6t2niQqzdFbV38w7jt5KrCcMGoIizvVqHEf4DeFe-KGI8u3QiP7UNVrU1yuldAoEwhw",
   "y": "ABzy87I16-HAaIfLYfT1vayxG0HuHX8h771d9EnX_vweC1fcMHetmzYDKT5heXvVE4JmREBsoGwdk4e7vDSD5RVR",
@@ -413,6 +413,8 @@ QGygbB2Th7u8NIPlFVE=
 exports[`KryptosKit (EC) generate auto 1`] = `
 {
   "algorithm": "ES256",
+  "certificateChain": null,
+  "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": "P-256",
   "encryption": null,
@@ -436,7 +438,6 @@ exports[`KryptosKit (EC) generate auto 1`] = `
   "ownerId": null,
   "purpose": null,
   "type": "EC",
-  "updatedAt": 2024-01-01T08:00:00.000Z,
   "use": "sig",
 }
 `;
@@ -444,6 +445,8 @@ exports[`KryptosKit (EC) generate auto 1`] = `
 exports[`KryptosKit (EC) generate enc 1`] = `
 {
   "algorithm": "ECDH-ES+A192GCMKW",
+  "certificateChain": null,
+  "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": "P-384",
   "encryption": "A256GCM",
@@ -466,7 +469,6 @@ exports[`KryptosKit (EC) generate enc 1`] = `
   "ownerId": null,
   "purpose": null,
   "type": "EC",
-  "updatedAt": 2024-01-01T08:00:00.000Z,
   "use": "enc",
 }
 `;
@@ -474,6 +476,8 @@ exports[`KryptosKit (EC) generate enc 1`] = `
 exports[`KryptosKit (EC) generate sig 1`] = `
 {
   "algorithm": "ES256",
+  "certificateChain": null,
+  "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": "P-256",
   "encryption": null,
@@ -497,7 +501,6 @@ exports[`KryptosKit (EC) generate sig 1`] = `
   "ownerId": null,
   "purpose": null,
   "type": "EC",
-  "updatedAt": 2024-01-01T08:00:00.000Z,
   "use": "sig",
 }
 `;

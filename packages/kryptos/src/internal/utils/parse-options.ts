@@ -27,7 +27,6 @@ export const parseJwkOptions = (
     ownerId: jwk.owner_id,
     purpose: jwk.purpose,
     type: jwk.kty,
-    updatedAt: jwk.uat ? new Date(jwk.uat * 1000) : undefined,
     use: jwk.use,
     certificateChain: jwk.x5c,
   };
@@ -49,7 +48,6 @@ export const parseStdOptions = (options: Options): KryptosOptions => ({
   ownerId: options.ownerId,
   purpose: options.purpose,
   type: options.type,
-  updatedAt: options.updatedAt,
   use: options.use,
   certificateChain: options.certificateChain,
 });

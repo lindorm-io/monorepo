@@ -11,7 +11,6 @@ type Std = Omit<
 export type KryptosFromDb = KryptosAttributes & {
   privateKey: string | null;
   publicKey: string | null;
-  certificateChain?: Array<string>;
 };
 
 export type KryptosFromString = Std & KryptosString;

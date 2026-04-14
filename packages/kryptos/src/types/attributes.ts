@@ -8,6 +8,8 @@ import { KryptosType, KryptosUse } from "./types";
 export type KryptosAttributes = {
   id: string;
   algorithm: KryptosAlgorithm;
+  certificateChain: Array<string> | null;
+  certificateThumbprint: string | null;
   createdAt: Date;
   curve: KryptosCurve | null;
   encryption: KryptosEncryption | null;
@@ -21,7 +23,6 @@ export type KryptosAttributes = {
   ownerId: string | null;
   purpose: string | null;
   type: KryptosType;
-  updatedAt: Date;
   use: KryptosUse;
 };
 
@@ -34,15 +35,11 @@ export type KryptosMetadata = {
   modulus: RsaModulus | null;
 };
 
-export type KryptosJSON = KryptosAttributes &
-  KryptosMetadata & {
-    certificateChain?: Array<string>;
-  };
+export type KryptosJSON = KryptosAttributes & KryptosMetadata;
 
 export type KryptosDB = KryptosAttributes & {
   privateKey: string | null | undefined;
   publicKey: string | null | undefined;
-  certificateChain?: Array<string>;
 };
 
 export type KryptosLike = Partial<KryptosAttributes>;

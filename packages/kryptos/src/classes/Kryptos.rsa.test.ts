@@ -25,7 +25,6 @@ describe("Kryptos (RSA)", () => {
       operations: ["sign", "verify"],
       ownerId: "f02c2d0c-44ee-5e4e-8b3b-39d46924d227",
       purpose: "test",
-      updatedAt: new Date("2023-12-01T08:00:00.000Z"),
     };
   });
 
@@ -50,7 +49,6 @@ describe("Kryptos (RSA)", () => {
       expect(kryptos.ownerId).toEqual("f02c2d0c-44ee-5e4e-8b3b-39d46924d227");
       expect(kryptos.purpose).toEqual("test");
       expect(kryptos.type).toEqual("RSA");
-      expect(kryptos.updatedAt).toEqual(new Date("2023-12-01T08:00:00.000Z"));
       expect(kryptos.use).toEqual("sig");
 
       expect(kryptos.hasPrivateKey).toEqual(true);

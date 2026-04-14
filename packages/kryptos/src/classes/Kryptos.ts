@@ -40,10 +40,7 @@ import { parseX509Certificate } from "#internal/utils/x509/parse-certificate";
 import { parseX509 } from "#internal/utils/x509/parse-x509";
 import { verifyX509Chain } from "#internal/utils/x509/verify-chain";
 import { x509PublicKeyMatches } from "#internal/utils/x509/x509-public-key-matches";
-import {
-  x5t as x5tThumbprint,
-  x5tS256 as x5tS256Thumbprint,
-} from "#internal/utils/x509/x509-thumbprints";
+import { x5tS256 as x5tS256Thumbprint } from "#internal/utils/x509/x509-thumbprints";
 
 export class Kryptos implements IKryptos {
   private readonly _id: string;
@@ -66,7 +63,6 @@ export class Kryptos implements IKryptos {
   private readonly _operations: ReadonlyArray<KryptosOperation>;
   private readonly _ownerId: string | null;
   private readonly _purpose: string | null;
-  private readonly _updatedAt: Date;
 
   private _cache: ExportCache = {};
   private _disposed: boolean = false;
@@ -89,7 +85,6 @@ export class Kryptos implements IKryptos {
     this._ownerId = options.ownerId || null;
     this._purpose = options.purpose || null;
     this._type = options.type;
-    this._updatedAt = options.updatedAt ?? new Date();
     this._use = options.use;
 
     if (options.privateKey && !options.publicKey) {
@@ -196,10 +191,6 @@ export class Kryptos implements IKryptos {
     return this._type;
   }
 
-  public get updatedAt(): Date {
-    return this._updatedAt;
-  }
-
   public get use(): KryptosUse {
     return this._use;
   }
@@ -253,17 +244,13 @@ export class Kryptos implements IKryptos {
     return this._cache.parsedLeaf;
   }
 
-  public get x5c(): Array<string> | undefined {
-    return this._certificateChain?.map((der) => der.toString("base64"));
+  public get certificateChain(): Array<string> | null {
+    if (!this._certificateChain) return null;
+    return this._certificateChain.map((der) => der.toString("base64"));
   }
 
-  public get x5t(): string | undefined {
-    if (!this._certificateChain) return undefined;
-    return x5tThumbprint(this._certificateChain[0]);
-  }
-
-  public get x5tS256(): string | undefined {
-    if (!this._certificateChain) return undefined;
+  public get certificateThumbprint(): string | null {
+    if (!this._certificateChain) return null;
     return x5tS256Thumbprint(this._certificateChain[0]);
   }
 
@@ -392,6 +379,8 @@ export class Kryptos implements IKryptos {
     return removeUndefined<KryptosDB>({
       id: this.id,
       algorithm: this.algorithm,
+      certificateChain: this.certificateChain,
+      certificateThumbprint: this.certificateThumbprint,
       createdAt: this.createdAt,
       curve: this.curve,
       encryption: this.encryption,
@@ -405,11 +394,9 @@ export class Kryptos implements IKryptos {
       ownerId: this.ownerId,
       purpose: this.purpose,
       type: this.type,
-      updatedAt: this.updatedAt,
       use: this.use,
       privateKey,
       publicKey,
-      certificateChain: this.x5c,
     });
   }
 
@@ -423,6 +410,8 @@ export class Kryptos implements IKryptos {
     return removeUndefined<KryptosJSON>({
       id: this.id,
       algorithm: this.algorithm,
+      certificateChain: this.certificateChain,
+      certificateThumbprint: this.certificateThumbprint,
       createdAt: this.createdAt,
       curve: this.curve,
       encryption: this.encryption,
@@ -442,9 +431,7 @@ export class Kryptos implements IKryptos {
       ownerId: this.ownerId,
       purpose: this.purpose,
       type: this.type,
-      updatedAt: this.updatedAt,
       use: this.use,
-      certificateChain: this.x5c,
     });
   }
 
@@ -481,10 +468,8 @@ export class Kryptos implements IKryptos {
       nbf: getUnixTime(this.notBefore),
       owner_id: this.ownerId ?? undefined,
       purpose: this.purpose ?? undefined,
-      uat: getUnixTime(this.updatedAt),
-      x5c: this.x5c,
-      x5t: this.x5t,
-      "x5t#S256": this.x5tS256,
+      x5c: this.certificateChain ?? undefined,
+      "x5t#S256": this.certificateThumbprint ?? undefined,
     });
   }
 

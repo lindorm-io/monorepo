@@ -16,9 +16,6 @@ export interface IKryptos
   readonly thumbprint: string;
   readonly hasCertificate: boolean;
   readonly certificate: ParsedX509Certificate | null;
-  readonly x5c: Array<string> | undefined;
-  readonly x5t: string | undefined;
-  readonly x5tS256: string | undefined;
 
   dispose(): void;
 

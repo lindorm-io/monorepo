@@ -2,7 +2,10 @@ import { Optional } from "@lindorm/types";
 import { KryptosAttributes } from "../../types/attributes";
 import { KryptosCertificateOption } from "../../types/certificate";
 
-type Attributes = Omit<KryptosAttributes, "algorithm" | "type" | "use">;
+type Attributes = Omit<
+  KryptosAttributes,
+  "algorithm" | "certificateChain" | "certificateThumbprint" | "type" | "use"
+>;
 
 type Std = Optional<
   Attributes,
@@ -19,7 +22,6 @@ type Std = Optional<
   | "operations"
   | "ownerId"
   | "purpose"
-  | "updatedAt"
 >;
 
 type Req = Pick<KryptosAttributes, "algorithm" | "type" | "use">;

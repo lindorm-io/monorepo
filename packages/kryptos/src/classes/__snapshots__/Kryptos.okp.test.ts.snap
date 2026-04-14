@@ -157,6 +157,8 @@ MCowBQYDK2VwAyEAGRCwCA6lChosFGMQwxGiHCdzblfvCz0FNiRtTnm1qqc=
 exports[`Kryptos (OKP) to should return db 1`] = `
 {
   "algorithm": "EdDSA",
+  "certificateChain": null,
+  "certificateThumbprint": null,
   "createdAt": 2023-01-01T08:00:00.000Z,
   "curve": "Ed25519",
   "encryption": null,
@@ -176,7 +178,6 @@ exports[`Kryptos (OKP) to should return db 1`] = `
   "publicKey": "MCowBQYDK2VwAyEAGRCwCA6lChosFGMQwxGiHCdzblfvCz0FNiRtTnm1qqc",
   "purpose": "test",
   "type": "OKP",
-  "updatedAt": 2023-12-01T08:00:00.000Z,
   "use": "sig",
 }
 `;
@@ -184,6 +185,8 @@ exports[`Kryptos (OKP) to should return db 1`] = `
 exports[`Kryptos (OKP) to should return json 1`] = `
 {
   "algorithm": "EdDSA",
+  "certificateChain": null,
+  "certificateThumbprint": null,
   "createdAt": 2023-01-01T08:00:00.000Z,
   "curve": "Ed25519",
   "encryption": null,
@@ -207,7 +210,6 @@ exports[`Kryptos (OKP) to should return json 1`] = `
   "ownerId": "f02c2d0c-44ee-5e4e-8b3b-39d46924d227",
   "purpose": "test",
   "type": "OKP",
-  "updatedAt": 2023-12-01T08:00:00.000Z,
   "use": "sig",
 }
 `;
@@ -230,7 +232,6 @@ exports[`Kryptos (OKP) to should return jwk with private key 1`] = `
   "nbf": 1672560000,
   "owner_id": "f02c2d0c-44ee-5e4e-8b3b-39d46924d227",
   "purpose": "test",
-  "uat": 1701417600,
   "use": "sig",
   "x": "GRCwCA6lChosFGMQwxGiHCdzblfvCz0FNiRtTnm1qqc",
 }
@@ -253,7 +254,6 @@ exports[`Kryptos (OKP) to should return jwk with public key 1`] = `
   "nbf": 1672560000,
   "owner_id": "f02c2d0c-44ee-5e4e-8b3b-39d46924d227",
   "purpose": "test",
-  "uat": 1701417600,
   "use": "sig",
   "x": "GRCwCA6lChosFGMQwxGiHCdzblfvCz0FNiRtTnm1qqc",
 }

@@ -473,6 +473,8 @@ HuyCk7CbI/lJhPKwyZ8=
 exports[`Kryptos (EC) to should return db 1`] = `
 {
   "algorithm": "ES512",
+  "certificateChain": null,
+  "certificateThumbprint": null,
   "createdAt": 2023-01-01T08:00:00.000Z,
   "curve": "P-521",
   "encryption": null,
@@ -492,7 +494,6 @@ exports[`Kryptos (EC) to should return db 1`] = `
   "publicKey": "MIGbMBAGByqGSM49AgEGBSuBBAAjA4GGAAQAjdjyFaUU3X1y5jcZIPAZNpuZ3ramLDVti3n4ZJa9o3yYlVCVAz6GaBn2mxsxxILCoz9h0Wz7BCP7TQ98eDfVVtEACA9lGF2uxjdIsx1iBUXY1WLkeftI8sBbXfqPzdjzna75VfMbpnVSvk4kjxCHXyqC_yLtHuyCk7CbI_lJhPKwyZ8",
   "purpose": "test",
   "type": "EC",
-  "updatedAt": 2023-12-01T08:00:00.000Z,
   "use": "sig",
 }
 `;
@@ -500,6 +501,8 @@ exports[`Kryptos (EC) to should return db 1`] = `
 exports[`Kryptos (EC) to should return json 1`] = `
 {
   "algorithm": "ES512",
+  "certificateChain": null,
+  "certificateThumbprint": null,
   "createdAt": 2023-01-01T08:00:00.000Z,
   "curve": "P-521",
   "encryption": null,
@@ -523,7 +526,6 @@ exports[`Kryptos (EC) to should return json 1`] = `
   "ownerId": "f02c2d0c-44ee-5e4e-8b3b-39d46924d227",
   "purpose": "test",
   "type": "EC",
-  "updatedAt": 2023-12-01T08:00:00.000Z,
   "use": "sig",
 }
 `;
@@ -546,7 +548,6 @@ exports[`Kryptos (EC) to should return jwk with private key 1`] = `
   "nbf": 1672560000,
   "owner_id": "f02c2d0c-44ee-5e4e-8b3b-39d46924d227",
   "purpose": "test",
-  "uat": 1701417600,
   "use": "sig",
   "x": "AI3Y8hWlFN19cuY3GSDwGTabmd62piw1bYt5-GSWvaN8mJVQlQM-hmgZ9psbMcSCwqM_YdFs-wQj-00PfHg31VbR",
   "y": "AAgPZRhdrsY3SLMdYgVF2NVi5Hn7SPLAW136j83Y852u-VXzG6Z1Ur5OJI8Qh18qgv8i7R7sgpOwmyP5SYTysMmf",
@@ -570,7 +571,6 @@ exports[`Kryptos (EC) to should return jwk with public key 1`] = `
   "nbf": 1672560000,
   "owner_id": "f02c2d0c-44ee-5e4e-8b3b-39d46924d227",
   "purpose": "test",
-  "uat": 1701417600,
   "use": "sig",
   "x": "AI3Y8hWlFN19cuY3GSDwGTabmd62piw1bYt5-GSWvaN8mJVQlQM-hmgZ9psbMcSCwqM_YdFs-wQj-00PfHg31VbR",
   "y": "AAgPZRhdrsY3SLMdYgVF2NVi5Hn7SPLAW136j83Y852u-VXzG6Z1Ur5OJI8Qh18qgv8i7R7sgpOwmyP5SYTysMmf",

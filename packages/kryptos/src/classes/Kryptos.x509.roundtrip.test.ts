@@ -25,7 +25,6 @@ describe("Kryptos (X.509 round-trip)", () => {
     id: "3b9a051f-e1ec-562b-bf92-7cf92ec465ba",
     createdAt: new Date("2020-01-01T00:00:00.000Z"),
     notBefore: new Date("2020-01-01T00:00:00.000Z"),
-    updatedAt: new Date("2020-01-01T00:00:00.000Z"),
   };
 
   const baseEcOptions = {
@@ -59,19 +58,18 @@ describe("Kryptos (X.509 round-trip)", () => {
 
       const restored = KryptosKit.from.db(db as any);
 
-      expect(restored.x5c).toEqual(kryptos.x5c);
-      expect(restored.x5t).toBe(kryptos.x5t);
-      expect(restored.x5tS256).toBe(kryptos.x5tS256);
+      expect(restored.certificateChain).toEqual(kryptos.certificateChain);
+      expect(restored.certificateThumbprint).toBe(kryptos.certificateThumbprint);
     });
 
-    test("chain-less kryptos produces no certificateChain field", () => {
+    test("chain-less kryptos round-trips certificateChain as null", () => {
       const kryptos = new Kryptos(baseEcOptions);
       const db = kryptos.toDB();
 
-      expect(db).not.toHaveProperty("certificateChain");
+      expect(db.certificateChain).toBeNull();
 
       const restored = KryptosKit.from.db(db as any);
-      expect(restored.x5c).toBeUndefined();
+      expect(restored.certificateChain).toBeNull();
     });
   });
 
@@ -84,39 +82,49 @@ describe("Kryptos (X.509 round-trip)", () => {
       expect(json.certificateChain).toHaveLength(3);
     });
 
-    test("chain-less kryptos produces no certificateChain field in toJSON", () => {
+    test("chain-less kryptos produces null certificateChain in toJSON", () => {
       const kryptos = new Kryptos(baseEcOptions);
       const json = kryptos.toJSON();
 
-      expect(json).not.toHaveProperty("certificateChain");
+      expect(json.certificateChain).toBeNull();
+      expect(json.certificateThumbprint).toBeNull();
     });
   });
 
   describe("toJWK → fromJwk round-trip", () => {
-    test("preserves chain via JWK x5c/x5t/x5t#S256", () => {
+    test("preserves chain via JWK x5c/x5t#S256", () => {
       const kryptos = buildKryptosWithChain();
       const jwk = kryptos.toJWK("public");
 
       expect(jwk).toMatchSnapshot();
 
       const restored = KryptosKit.from.jwk(jwk);
-      expect(restored.x5c).toEqual(kryptos.x5c);
-      expect(restored.x5t).toBe(kryptos.x5t);
-      expect(restored.x5tS256).toBe(kryptos.x5tS256);
+      expect(restored.certificateChain).toEqual(kryptos.certificateChain);
+      expect(restored.certificateThumbprint).toBe(kryptos.certificateThumbprint);
     });
 
-    test("benign: fromJwk with only x5c (no thumbprints) succeeds", () => {
+    test("benign: fromJwk with only x5c (no thumbprint) succeeds", () => {
       const kryptos = buildKryptosWithChain();
       const jwk = kryptos.toJWK("public");
-      const { x5t, "x5t#S256": x5tS256, ...stripped } = jwk;
-      void x5t;
+      const { "x5t#S256": x5tS256, ...stripped } = jwk;
       void x5tS256;
 
       const restored = KryptosKit.from.jwk(stripped);
 
-      expect(restored.x5c).toEqual(kryptos.x5c);
-      expect(restored.x5t).toBe(kryptos.x5t);
-      expect(restored.x5tS256).toBe(kryptos.x5tS256);
+      expect(restored.certificateChain).toEqual(kryptos.certificateChain);
+      expect(restored.certificateThumbprint).toBe(kryptos.certificateThumbprint);
+    });
+
+    test("silently ignores legacy x5t (SHA-1) on input", () => {
+      const kryptos = buildKryptosWithChain();
+      const jwk = kryptos.toJWK("public");
+      const withLegacyX5t = {
+        ...(jwk as Record<string, unknown>),
+        x5t: "AAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      };
+
+      const restored = KryptosKit.from.jwk(withLegacyX5t as any);
+      expect(restored.certificateThumbprint).toBe(kryptos.certificateThumbprint);
     });
   });
 
@@ -125,9 +133,8 @@ describe("Kryptos (X.509 round-trip)", () => {
       const kryptos = buildKryptosWithChain();
       const cloned = KryptosKit.clone(kryptos);
 
-      expect(cloned.x5c).toEqual(kryptos.x5c);
-      expect(cloned.x5t).toBe(kryptos.x5t);
-      expect(cloned.x5tS256).toBe(kryptos.x5tS256);
+      expect(cloned.certificateChain).toEqual(kryptos.certificateChain);
+      expect(cloned.certificateThumbprint).toBe(kryptos.certificateThumbprint);
     });
   });
 
@@ -174,19 +181,6 @@ describe("Kryptos (X.509 round-trip)", () => {
 
       expect(() => KryptosKit.from.jwk(tampered)).toThrow(
         /x5t#S256 thumbprint does not match/,
-      );
-    });
-
-    test("fromJwk with tampered x5t (SHA-1) throws", () => {
-      const kryptos = buildKryptosWithChain();
-      const jwk = kryptos.toJWK("public");
-      const tampered = {
-        ...jwk,
-        x5t: "AAAAAAAAAAAAAAAAAAAAAAAAAAA",
-      };
-
-      expect(() => KryptosKit.from.jwk(tampered)).toThrow(
-        /x5t thumbprint does not match/,
       );
     });
   });
