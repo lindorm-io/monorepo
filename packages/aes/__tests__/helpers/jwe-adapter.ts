@@ -102,15 +102,21 @@ export const fromFlattenedJWE = (
 
   const record: AesDecryptionRecord = {
     algorithm: header.alg as AesDecryptionRecord["algorithm"],
-    encryption: header.enc as AesDecryptionRecord["encryption"],
-    content: Buffer.from(jwe.ciphertext, "base64url"),
-    initialisationVector: Buffer.from(jwe.iv, "base64url"),
     authTag: Buffer.from(jwe.tag, "base64url"),
+    content: Buffer.from(jwe.ciphertext, "base64url"),
+    contentType: (header.cty as AesDecryptionRecord["contentType"]) ?? "text/plain",
+    encryption: header.enc as AesDecryptionRecord["encryption"],
+    initialisationVector: Buffer.from(jwe.iv, "base64url"),
+    keyId: header.kid ?? "jwe-interop",
+    pbkdfIterations: undefined,
+    pbkdfSalt: undefined,
+    publicEncryptionIv: header.iv ? Buffer.from(header.iv, "base64url") : undefined,
+    publicEncryptionJwk: undefined,
     publicEncryptionKey: jwe.encrypted_key
       ? Buffer.from(jwe.encrypted_key, "base64url")
       : undefined,
-    publicEncryptionIv: header.iv ? Buffer.from(header.iv, "base64url") : undefined,
     publicEncryptionTag: header.tag ? Buffer.from(header.tag, "base64url") : undefined,
+    version: "1.0",
   };
 
   return { record, aad };

@@ -1,6 +1,11 @@
 import { parseAes } from "./parse-aes";
 import { AesError } from "../errors";
-import { AesDecryptionRecord, SerialisedAesDecryption } from "../types";
+import {
+  AesDecryptionRecord,
+  ParsedAesDecryptionRecord,
+  SerialisedAesDecryption,
+} from "../types";
+import { createTestAesDecryptionRecord } from "./__fixtures__/aes-decryption-record";
 import { isAesBufferData, isAesSerialisedData, isAesTokenised } from "./is-aes";
 import { parseEncodedAesString } from "#internal/utils/encoded-aes";
 import { parseSerialisedAesRecord } from "#internal/utils/serialised-aes";
@@ -36,11 +41,7 @@ describe("parseAes", () => {
   describe("tokenised string", () => {
     test("should parse tokenised string when input starts with 'aes:'", () => {
       const tokenisedString = "aes:header$iv$tag$ciphertext";
-      const expectedRecord: AesDecryptionRecord = {
-        content: Buffer.from("test"),
-        encryption: "A256GCM",
-        initialisationVector: Buffer.from("iv"),
-      };
+      const expectedRecord: AesDecryptionRecord = createTestAesDecryptionRecord();
 
       mockIsAesTokenised.mockReturnValue(true);
       mockParseTokenisedAesString.mockReturnValue(expectedRecord as any);
@@ -56,11 +57,7 @@ describe("parseAes", () => {
   describe("encoded string (non-tokenised)", () => {
     test("should parse encoded string when input is string and not tokenised", () => {
       const encodedString = "ATgkYzAzYjU4OWItMTI0ZC00NWViLTgzNzY";
-      const expectedRecord: AesDecryptionRecord = {
-        content: Buffer.from("test"),
-        encryption: "A256GCM",
-        initialisationVector: Buffer.from("iv"),
-      };
+      const expectedRecord: AesDecryptionRecord = createTestAesDecryptionRecord();
 
       mockIsAesTokenised.mockReturnValue(false);
       mockParseEncodedAesString.mockReturnValue(expectedRecord as any);
@@ -75,11 +72,7 @@ describe("parseAes", () => {
 
   describe("buffer data object", () => {
     test("should return buffer data object when input is object with buffers", () => {
-      const bufferData: AesDecryptionRecord = {
-        content: Buffer.from("test"),
-        encryption: "A256GCM",
-        initialisationVector: Buffer.from("iv"),
-      };
+      const bufferData: AesDecryptionRecord = createTestAesDecryptionRecord();
 
       mockIsAesBufferData.mockReturnValue(true);
 
@@ -99,11 +92,9 @@ describe("parseAes", () => {
         tag: "dGFn",
         v: "1.0",
       };
-      const expectedRecord: AesDecryptionRecord = {
-        content: Buffer.from("test"),
-        encryption: "A256GCM",
-        initialisationVector: Buffer.from("iv"),
-      };
+      const expectedRecord = createTestAesDecryptionRecord({
+        aad: Buffer.from("aad"),
+      }) as ParsedAesDecryptionRecord;
 
       mockIsAesBufferData.mockReturnValue(false);
       mockIsAesSerialisedData.mockReturnValue(true);

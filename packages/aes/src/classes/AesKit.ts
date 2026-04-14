@@ -9,6 +9,7 @@ import {
   AesEncryptionMode,
   AesEncryptionRecord,
   AesKitOptions,
+  ParsedAesDecryptionRecord,
   SerialisedAesDecryption,
   SerialisedAesEncryption,
 } from "../types";
@@ -158,6 +159,12 @@ export class AesKit implements IAesKit {
     return isAesTokenised(input);
   }
 
+  public static parse(data: string): ParsedAesDecryptionRecord;
+  public static parse(data: SerialisedAesDecryption): ParsedAesDecryptionRecord;
+  public static parse(data: AesDecryptionRecord): AesDecryptionRecord;
+  public static parse(
+    data: AesDecryptionRecord | SerialisedAesDecryption | string,
+  ): AesDecryptionRecord;
   public static parse(
     data: AesDecryptionRecord | SerialisedAesDecryption | string,
   ): AesDecryptionRecord {
