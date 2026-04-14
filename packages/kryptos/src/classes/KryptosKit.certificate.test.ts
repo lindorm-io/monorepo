@@ -37,11 +37,10 @@ describe("KryptosKit certificate generation", () => {
         certificate: { mode: "self-signed" },
       });
 
-      expect(kryptos.x5c).toHaveLength(1);
-      expect(kryptos.x5t).toEqual(expect.any(String));
-      expect(kryptos.x5tS256).toEqual(expect.any(String));
+      expect(kryptos.certificateChain).toHaveLength(1);
+      expect(kryptos.certificateThumbprint).toEqual(expect.any(String));
 
-      const der = Buffer.from(kryptos.x5c![0], "base64");
+      const der = Buffer.from(kryptos.certificateChain![0], "base64");
       const parsed = parseX509Certificate(der);
       expect(parsed.subject.commonName).toBe("https://issuer.example.com");
       expect(parsed.issuer.commonName).toBe("https://issuer.example.com");
@@ -79,7 +78,7 @@ describe("KryptosKit certificate generation", () => {
         certificate: { mode: "self-signed" },
       });
 
-      const der = Buffer.from(kryptos.x5c![0], "base64");
+      const der = Buffer.from(kryptos.certificateChain![0], "base64");
       const parsed = parseX509Certificate(der);
       expect(parsed.subject.commonName).toBe("https://rsa.example.com");
       expect(parsed.signatureAlgorithm).toBe("1.2.840.113549.1.1.11");
@@ -101,7 +100,7 @@ describe("KryptosKit certificate generation", () => {
         certificate: { mode: "self-signed" },
       });
 
-      const der = Buffer.from(kryptos.x5c![0], "base64");
+      const der = Buffer.from(kryptos.certificateChain![0], "base64");
       const parsed = parseX509Certificate(der);
       expect(parsed.signatureAlgorithm).toBe("1.3.101.112");
       expect(parsed.extensions.basicConstraintsCa).toBe(false);
@@ -117,7 +116,7 @@ describe("KryptosKit certificate generation", () => {
         certificate: { mode: "self-signed" },
       });
 
-      const der = Buffer.from(kryptos.x5c![0], "base64");
+      const der = Buffer.from(kryptos.certificateChain![0], "base64");
       const parsed = parseX509Certificate(der);
       expect(parsed.extensions.keyUsage).toEqual(["keyEncipherment", "dataEncipherment"]);
       expect(parsed.extensions.keyUsage).not.toContain("digitalSignature");
@@ -133,7 +132,9 @@ describe("KryptosKit certificate generation", () => {
         certificate: { mode: "self-signed", subject: "my-custom-cn" },
       });
 
-      const parsed = parseX509Certificate(Buffer.from(kryptos.x5c![0], "base64"));
+      const parsed = parseX509Certificate(
+        Buffer.from(kryptos.certificateChain![0], "base64"),
+      );
       expect(parsed.subject.commonName).toBe("my-custom-cn");
     });
 
@@ -146,7 +147,9 @@ describe("KryptosKit certificate generation", () => {
         certificate: { mode: "self-signed", organization: "Lindorm" },
       });
 
-      const parsed = parseX509Certificate(Buffer.from(kryptos.x5c![0], "base64"));
+      const parsed = parseX509Certificate(
+        Buffer.from(kryptos.certificateChain![0], "base64"),
+      );
       expect(parsed.subject.organization).toBe("Lindorm");
     });
 
@@ -159,7 +162,9 @@ describe("KryptosKit certificate generation", () => {
         certificate: { mode: "self-signed" },
       });
 
-      const parsed = parseX509Certificate(Buffer.from(kryptos.x5c![0], "base64"));
+      const parsed = parseX509Certificate(
+        Buffer.from(kryptos.certificateChain![0], "base64"),
+      );
       expect(parsed.extensions.subjectAltNames).toEqual([
         { type: "uri", value: "https://url.example.com/keys" },
       ]);
@@ -174,7 +179,9 @@ describe("KryptosKit certificate generation", () => {
         certificate: { mode: "self-signed" },
       });
 
-      const parsed = parseX509Certificate(Buffer.from(kryptos.x5c![0], "base64"));
+      const parsed = parseX509Certificate(
+        Buffer.from(kryptos.certificateChain![0], "base64"),
+      );
       expect(parsed.extensions.subjectAltNames).toEqual([
         { type: "uri", value: "urn:lindorm:kryptos:abc-123" },
       ]);
@@ -204,7 +211,9 @@ describe("KryptosKit certificate generation", () => {
           subjectAlternativeNames: [{ type: "dns", value: "my-local-svc.local" }],
         },
       });
-      const parsed = parseX509Certificate(Buffer.from(kryptos.x5c![0], "base64"));
+      const parsed = parseX509Certificate(
+        Buffer.from(kryptos.certificateChain![0], "base64"),
+      );
       expect(parsed.extensions.subjectAltNames).toEqual([
         { type: "dns", value: "my-local-svc.local" },
       ]);
@@ -226,7 +235,9 @@ describe("KryptosKit certificate generation", () => {
         },
       });
 
-      const parsed = parseX509Certificate(Buffer.from(kryptos.x5c![0], "base64"));
+      const parsed = parseX509Certificate(
+        Buffer.from(kryptos.certificateChain![0], "base64"),
+      );
       expect(parsed.extensions.subjectAltNames).toEqual([
         { type: "uri", value: "https://example.com" },
         { type: "dns", value: "example.com" },
@@ -246,7 +257,9 @@ describe("KryptosKit certificate generation", () => {
         },
       });
 
-      const parsed = parseX509Certificate(Buffer.from(kryptos.x5c![0], "base64"));
+      const parsed = parseX509Certificate(
+        Buffer.from(kryptos.certificateChain![0], "base64"),
+      );
       expect(parsed.extensions.subjectAltNames).toEqual([
         { type: "ip", value: "192.168.1.1" },
       ]);
@@ -264,7 +277,9 @@ describe("KryptosKit certificate generation", () => {
         },
       });
 
-      const parsed = parseX509Certificate(Buffer.from(kryptos.x5c![0], "base64"));
+      const parsed = parseX509Certificate(
+        Buffer.from(kryptos.certificateChain![0], "base64"),
+      );
       expect(parsed.extensions.subjectAltNames).toEqual([
         { type: "uri", value: "https://a.example.com" },
         { type: "uri", value: "https://b.example.com" },
@@ -279,7 +294,9 @@ describe("KryptosKit certificate generation", () => {
         expiresAt: new Date("2026-11-20T23:59:59.000Z"),
         certificate: { mode: "self-signed" },
       });
-      const parsed = parseX509Certificate(Buffer.from(kryptos.x5c![0], "base64"));
+      const parsed = parseX509Certificate(
+        Buffer.from(kryptos.certificateChain![0], "base64"),
+      );
       expect(parsed.notBefore.toISOString()).toBe("2024-05-10T12:00:00.000Z");
       expect(parsed.notAfter.toISOString()).toBe("2026-11-20T23:59:59.000Z");
     });
@@ -295,13 +312,15 @@ describe("KryptosKit certificate generation", () => {
         certificate: { mode: "root-ca" },
       });
 
-      const parsed = parseX509Certificate(Buffer.from(ca.x5c![0], "base64"));
+      const parsed = parseX509Certificate(Buffer.from(ca.certificateChain![0], "base64"));
       expect(parsed.extensions.basicConstraintsCa).toBe(true);
       expect(parsed.extensions.keyUsage).toEqual(["keyCertSign", "crlSign"]);
       expect(parsed.extensions.subjectKeyIdentifier).toBeDefined();
       expect(parsed.extensions.authorityKeyIdentifier).toBeUndefined();
 
-      const peculiar = new x509.X509Certificate(Buffer.from(ca.x5c![0], "base64"));
+      const peculiar = new x509.X509Certificate(
+        Buffer.from(ca.certificateChain![0], "base64"),
+      );
       const bcExt = peculiar.extensions.find((e) => e.type === "2.5.29.19") as
         | x509.BasicConstraintsExtension
         | undefined;
@@ -317,7 +336,9 @@ describe("KryptosKit certificate generation", () => {
         certificate: { mode: "root-ca", pathLengthConstraint: 0 },
       });
 
-      const peculiar = new x509.X509Certificate(Buffer.from(ca.x5c![0], "base64"));
+      const peculiar = new x509.X509Certificate(
+        Buffer.from(ca.certificateChain![0], "base64"),
+      );
       const bcExt = peculiar.extensions.find((e) => e.type === "2.5.29.19") as
         | x509.BasicConstraintsExtension
         | undefined;
@@ -333,7 +354,7 @@ describe("KryptosKit certificate generation", () => {
         expiresAt: CA_EXPIRES_AT,
         certificate: { mode: "root-ca" },
       });
-      const parsed = parseX509Certificate(Buffer.from(ca.x5c![0], "base64"));
+      const parsed = parseX509Certificate(Buffer.from(ca.certificateChain![0], "base64"));
       expect(parsed.notBefore.toISOString()).toBe(CA_NOT_BEFORE.toISOString());
       expect(parsed.notAfter.toISOString()).toBe(CA_EXPIRES_AT.toISOString());
     });
@@ -359,11 +380,11 @@ describe("KryptosKit certificate generation", () => {
         certificate: { mode: "ca-signed", ca },
       });
 
-      expect(child.x5c).toHaveLength(2);
+      expect(child.certificateChain).toHaveLength(2);
 
-      const childDer = Buffer.from(child.x5c![0], "base64");
+      const childDer = Buffer.from(child.certificateChain![0], "base64");
       const parsedChild = parseX509Certificate(childDer);
-      const caDer = Buffer.from(ca.x5c![0], "base64");
+      const caDer = Buffer.from(ca.certificateChain![0], "base64");
       const parsedCa = parseX509Certificate(caDer);
 
       expect(parsedChild.issuer.raw.equals(parsedCa.subject.raw)).toBe(true);
@@ -376,7 +397,9 @@ describe("KryptosKit certificate generation", () => {
         ),
       ).toBe(true);
 
-      expect(() => child.verifyCertificate({ trustAnchors: [ca.x5c![0]] })).not.toThrow();
+      expect(() =>
+        child.verifyCertificate({ trustAnchors: [ca.certificateChain![0]] }),
+      ).not.toThrow();
 
       const chainBuilder = new x509.X509ChainBuilder({
         certificates: [new x509.X509Certificate(caDer)],
@@ -398,14 +421,16 @@ describe("KryptosKit certificate generation", () => {
         certificate: { mode: "ca-signed", ca },
       });
 
-      expect(child.x5c).toHaveLength(2);
+      expect(child.certificateChain).toHaveLength(2);
 
-      const childDer = Buffer.from(child.x5c![0], "base64");
+      const childDer = Buffer.from(child.certificateChain![0], "base64");
       const parsedChild = parseX509Certificate(childDer);
       expect(parsedChild.signatureAlgorithm).toBe("1.2.840.10045.4.3.2");
       expect(parsedChild.extensions.basicConstraintsCa).toBe(false);
 
-      expect(() => child.verifyCertificate({ trustAnchors: [ca.x5c![0]] })).not.toThrow();
+      expect(() =>
+        child.verifyCertificate({ trustAnchors: [ca.certificateChain![0]] }),
+      ).not.toThrow();
     });
 
     test("byte-equal issuer DN regression", () => {
@@ -417,8 +442,12 @@ describe("KryptosKit certificate generation", () => {
         expiresAt: EXPIRES_AT,
         certificate: { mode: "ca-signed", ca },
       });
-      const parsedChild = parseX509Certificate(Buffer.from(child.x5c![0], "base64"));
-      const parsedCa = parseX509Certificate(Buffer.from(ca.x5c![0], "base64"));
+      const parsedChild = parseX509Certificate(
+        Buffer.from(child.certificateChain![0], "base64"),
+      );
+      const parsedCa = parseX509Certificate(
+        Buffer.from(ca.certificateChain![0], "base64"),
+      );
       expect(parsedChild.issuer.raw.equals(parsedCa.subject.raw)).toBe(true);
     });
 
@@ -431,7 +460,9 @@ describe("KryptosKit certificate generation", () => {
         expiresAt: new Date("2025-07-01T00:00:00.000Z"),
         certificate: { mode: "ca-signed", ca },
       });
-      const parsed = parseX509Certificate(Buffer.from(child.x5c![0], "base64"));
+      const parsed = parseX509Certificate(
+        Buffer.from(child.certificateChain![0], "base64"),
+      );
       expect(parsed.notBefore.toISOString()).toBe("2024-07-01T00:00:00.000Z");
       expect(parsed.notAfter.toISOString()).toBe("2025-07-01T00:00:00.000Z");
     });
@@ -546,9 +577,8 @@ describe("KryptosKit certificate generation", () => {
       expect(db.certificateChain).toHaveLength(2);
 
       const restored = KryptosKit.from.db(db);
-      expect(restored.x5c).toEqual(child.x5c);
-      expect(restored.x5t).toBe(child.x5t);
-      expect(restored.x5tS256).toBe(child.x5tS256);
+      expect(restored.certificateChain).toEqual(child.certificateChain);
+      expect(restored.certificateThumbprint).toBe(child.certificateThumbprint);
     });
 
     test("PEM chain can be parsed back", () => {
@@ -560,7 +590,7 @@ describe("KryptosKit certificate generation", () => {
         certificate: { mode: "self-signed" },
       });
 
-      const pem = b64ToPem(kryptos.x5c![0]);
+      const pem = b64ToPem(kryptos.certificateChain![0]);
       const nodeCert = new X509Certificate(pem);
       expect(nodeCert.subject).toContain("https://pem.example.com");
     });
@@ -582,7 +612,7 @@ describe("KryptosKit certificate generation", () => {
       const jwk = shared.toJWK("private");
       const a = KryptosKit.from.jwk(jwk);
       const b = KryptosKit.from.jwk(jwk);
-      expect(a.x5c?.[0]).toBe(b.x5c?.[0]);
+      expect(a.certificateChain?.[0]).toBe(b.certificateChain?.[0]);
     });
   });
 
@@ -596,8 +626,10 @@ describe("KryptosKit certificate generation", () => {
         certificate: { mode: "self-signed" },
       });
 
-      expect(kryptos.x5c).toHaveLength(1);
-      const parsed = parseX509Certificate(Buffer.from(kryptos.x5c![0], "base64"));
+      expect(kryptos.certificateChain).toHaveLength(1);
+      const parsed = parseX509Certificate(
+        Buffer.from(kryptos.certificateChain![0], "base64"),
+      );
       expect(parsed.extensions.basicConstraintsCa).toBe(false);
       expect(parsed.extensions.keyUsage).toEqual(["digitalSignature"]);
     });
@@ -618,12 +650,18 @@ describe("KryptosKit certificate generation", () => {
         certificate: { mode: "ca-signed", ca },
       });
 
-      expect(child.x5c).toHaveLength(2);
-      const parsedChild = parseX509Certificate(Buffer.from(child.x5c![0], "base64"));
-      const parsedCa = parseX509Certificate(Buffer.from(ca.x5c![0], "base64"));
+      expect(child.certificateChain).toHaveLength(2);
+      const parsedChild = parseX509Certificate(
+        Buffer.from(child.certificateChain![0], "base64"),
+      );
+      const parsedCa = parseX509Certificate(
+        Buffer.from(ca.certificateChain![0], "base64"),
+      );
       expect(parsedChild.issuer.raw.equals(parsedCa.subject.raw)).toBe(true);
 
-      expect(() => child.verifyCertificate({ trustAnchors: [ca.x5c![0]] })).not.toThrow();
+      expect(() =>
+        child.verifyCertificate({ trustAnchors: [ca.certificateChain![0]] }),
+      ).not.toThrow();
     });
   });
 

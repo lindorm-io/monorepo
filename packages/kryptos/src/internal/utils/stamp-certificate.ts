@@ -173,7 +173,7 @@ export const stampCertificate = (input: StampInput): Array<string> => {
     throw new KryptosError("ca-signed mode requires CA kryptos with a private key");
   }
 
-  if (!ca.hasCertificate || !ca.x5c || !ca.certificate) {
+  if (!ca.hasCertificate || !ca.certificateChain || !ca.certificate) {
     throw new KryptosError("ca-signed mode requires CA kryptos with a certificate");
   }
 
@@ -236,5 +236,5 @@ export const stampCertificate = (input: StampInput): Array<string> => {
     ...(input.serialNumber ? { serialNumber: input.serialNumber } : {}),
   });
 
-  return [der.toString("base64"), ...ca.x5c];
+  return [der.toString("base64"), ...ca.certificateChain];
 };

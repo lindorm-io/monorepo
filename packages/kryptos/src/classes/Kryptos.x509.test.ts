@@ -24,7 +24,6 @@ describe("Kryptos (X.509)", () => {
     id: "3b9a051f-e1ec-562b-bf92-7cf92ec465ba",
     createdAt: new Date("2026-04-13T12:00:00.000Z"),
     notBefore: new Date("2026-04-13T12:00:00.000Z"),
-    updatedAt: new Date("2026-04-13T12:00:00.000Z"),
   };
 
   const baseEcOptions = {
@@ -50,10 +49,9 @@ describe("Kryptos (X.509)", () => {
         ],
       });
 
-      expect(kryptos.x5c).toMatchSnapshot();
-      expect(kryptos.x5t).toMatchSnapshot();
-      expect(kryptos.x5tS256).toMatchSnapshot();
-      expect(kryptos.x5c).toHaveLength(3);
+      expect(kryptos.certificateChain).toMatchSnapshot();
+      expect(kryptos.certificateThumbprint).toMatchSnapshot();
+      expect(kryptos.certificateChain).toHaveLength(3);
       expect(kryptos.hasCertificate).toBe(true);
       expect(kryptos.certificate).not.toBeNull();
     });
@@ -64,8 +62,8 @@ describe("Kryptos (X.509)", () => {
         certificateChain: TEST_X509_LEAF_B64_DER,
       });
 
-      expect(kryptos.x5c).toHaveLength(1);
-      expect(kryptos.x5tS256).toMatchSnapshot();
+      expect(kryptos.certificateChain).toHaveLength(1);
+      expect(kryptos.certificateThumbprint).toMatchSnapshot();
     });
 
     test("throws when leaf cert public key does not match kryptos public key", () => {
@@ -82,7 +80,7 @@ describe("Kryptos (X.509)", () => {
   });
 
   describe("toJWK", () => {
-    test("emits x5c / x5t / x5t#S256 when chain is set", () => {
+    test("emits x5c / x5t#S256 when chain is set", () => {
       const kryptos = new Kryptos({
         ...baseEcOptions,
         certificateChain: [
@@ -98,13 +96,23 @@ describe("Kryptos (X.509)", () => {
       expect(jwk).toMatchSnapshot();
     });
 
-    test("does not emit x5c / x5t / x5t#S256 when no chain is set", () => {
+    test("does not emit x5c / x5t#S256 when no chain is set", () => {
       const kryptos = new Kryptos(baseEcOptions);
       const jwk = kryptos.toJWK("public");
 
       expect(jwk.x5c).toBeUndefined();
-      expect(jwk.x5t).toBeUndefined();
       expect(jwk["x5t#S256"]).toBeUndefined();
+    });
+
+    test("does not emit legacy x5t (SHA-1) when chain is set", () => {
+      const kryptos = new Kryptos({
+        ...baseEcOptions,
+        certificateChain: [TEST_X509_LEAF_PEM],
+      });
+
+      const jwk = kryptos.toJWK("public") as Record<string, unknown>;
+
+      expect(jwk.x5t).toBeUndefined();
     });
   });
 
@@ -187,8 +195,8 @@ describe("Kryptos (X.509)", () => {
         certificateChain: [TEST_X509_RSA_LEAF_PEM],
       });
 
-      expect(kryptos.x5c).toHaveLength(1);
-      expect(kryptos.x5tS256).toBeDefined();
+      expect(kryptos.certificateChain).toHaveLength(1);
+      expect(kryptos.certificateThumbprint).toBeDefined();
     });
 
     test("rejects an RSA cert chain whose leaf does not match the RSA kryptos key", () => {

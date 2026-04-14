@@ -22,7 +22,6 @@ export type LindormJwkMetadata = {
   nbf: number;
   owner_id?: string;
   purpose?: string;
-  uat: number;
 };
 
 export type LindormJwk = JwkMetadata & LindormJwkMetadata & KryptosJwk;

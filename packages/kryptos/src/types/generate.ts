@@ -20,7 +20,14 @@ import { KryptosEncOperation, KryptosSigOperation } from "./operation";
 
 type Attributes = Omit<
   KryptosAttributes,
-  "algorithm" | "curve" | "encryption" | "operations" | "type" | "use"
+  | "algorithm"
+  | "certificateChain"
+  | "certificateThumbprint"
+  | "curve"
+  | "encryption"
+  | "operations"
+  | "type"
+  | "use"
 >;
 
 type StdBase = Optional<
@@ -35,7 +42,6 @@ type StdBase = Optional<
   | "notBefore"
   | "ownerId"
   | "purpose"
-  | "updatedAt"
 >;
 
 type CertifiableStd = StdBase & {

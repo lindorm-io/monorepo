@@ -5,6 +5,8 @@ export type MockKryptos = jest.Mocked<IKryptos>;
 export const createMockKryptos = (overrides: Partial<MockKryptos> = {}): MockKryptos => ({
   id: "9353f654-7cd3-5c91-8a39-96ea7eab1d78",
   algorithm: "ECDH-ES",
+  certificateChain: null,
+  certificateThumbprint: null,
   createdAt: new Date("2000-01-01T00:00:00.000Z"),
   curve: "P-521",
   encryption: "A256GCM",
@@ -18,7 +20,6 @@ export const createMockKryptos = (overrides: Partial<MockKryptos> = {}): MockKry
   ownerId: null,
   purpose: null,
   type: "EC",
-  updatedAt: new Date("2020-01-01T00:00:00.000Z"),
   use: "enc",
 
   expiresIn: 999999999,
@@ -30,9 +31,6 @@ export const createMockKryptos = (overrides: Partial<MockKryptos> = {}): MockKry
   thumbprint: "mock-thumbprint",
   hasCertificate: false,
   certificate: null,
-  x5c: undefined,
-  x5t: undefined,
-  x5tS256: undefined,
 
   dispose: jest.fn(),
   [Symbol.dispose]: jest.fn(),

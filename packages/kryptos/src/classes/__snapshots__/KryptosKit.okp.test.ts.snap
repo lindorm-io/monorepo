@@ -1,10 +1,12 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
-exports[`KryptosKit (OKP) env export 1`] = `"kryptos:eyJjcnYiOiJFZDI1NTE5IiwieCI6IkdSQ3dDQTZsQ2hvc0ZHTVF3eEdpSENkemJsZnZDejBGTmlSdFRubTFxcWMiLCJkIjoiSEFvbVctaUhXZUIzMHRGM3QyMjhZNUtwYmk1bHFaMjhpN1FBRVBZQ1RFcyIsImtpZCI6ImZmMmE0NDhlLThlYjAtNTlhOC04ZmM2LTBjZTIzYWQwN2U4ZiIsImFsZyI6IkVkRFNBIiwidXNlIjoic2lnIiwia3R5IjoiT0tQIiwiZXhwIjoyNDkzMDM2MDAwLCJpYXQiOjE3MDQwOTYwMDAsImtleV9vcHMiOlsic2lnbiIsInZlcmlmeSJdLCJuYmYiOjE3MDQwOTYwMDAsInVhdCI6MTcwNDA5NjAwMH0"`;
+exports[`KryptosKit (OKP) env export 1`] = `"kryptos:eyJjcnYiOiJFZDI1NTE5IiwieCI6IkdSQ3dDQTZsQ2hvc0ZHTVF3eEdpSENkemJsZnZDejBGTmlSdFRubTFxcWMiLCJkIjoiSEFvbVctaUhXZUIzMHRGM3QyMjhZNUtwYmk1bHFaMjhpN1FBRVBZQ1RFcyIsImtpZCI6ImZmMmE0NDhlLThlYjAtNTlhOC04ZmM2LTBjZTIzYWQwN2U4ZiIsImFsZyI6IkVkRFNBIiwidXNlIjoic2lnIiwia3R5IjoiT0tQIiwiZXhwIjoyNDkzMDM2MDAwLCJpYXQiOjE3MDQwOTYwMDAsImtleV9vcHMiOlsic2lnbiIsInZlcmlmeSJdLCJuYmYiOjE3MDQwOTYwMDB9"`;
 
 exports[`KryptosKit (OKP) from auto b64 1`] = `
 {
   "algorithm": "EdDSA",
+  "certificateChain": null,
+  "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": "Ed25519",
   "encryption": null,
@@ -28,7 +30,6 @@ exports[`KryptosKit (OKP) from auto b64 1`] = `
   "ownerId": null,
   "purpose": null,
   "type": "OKP",
-  "updatedAt": 2024-01-01T08:00:00.000Z,
   "use": "sig",
 }
 `;
@@ -46,7 +47,6 @@ exports[`KryptosKit (OKP) from auto b64 2`] = `
   "kid": "ff2a448e-8eb0-59a8-8fc6-0ce23ad07e8f",
   "kty": "OKP",
   "nbf": 1704096000,
-  "uat": 1704096000,
   "use": "sig",
   "x": "GRCwCA6lChosFGMQwxGiHCdzblfvCz0FNiRtTnm1qqc",
 }
@@ -67,6 +67,8 @@ exports[`KryptosKit (OKP) from auto b64 3`] = `
 exports[`KryptosKit (OKP) from auto jwk 1`] = `
 {
   "algorithm": "EdDSA",
+  "certificateChain": null,
+  "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": "Ed25519",
   "encryption": null,
@@ -90,7 +92,6 @@ exports[`KryptosKit (OKP) from auto jwk 1`] = `
   "ownerId": null,
   "purpose": null,
   "type": "OKP",
-  "updatedAt": 2024-01-01T08:00:00.000Z,
   "use": "sig",
 }
 `;
@@ -108,7 +109,6 @@ exports[`KryptosKit (OKP) from auto jwk 2`] = `
   "kid": "6fc93fb6-d40e-52dc-9606-adaa80fef0c7",
   "kty": "OKP",
   "nbf": 1704096000,
-  "uat": 1704096000,
   "use": "sig",
   "x": "eTgk2sA8y7_9q8MjEPskpM4mAUZqtXmwEiHwy249kj4",
 }
@@ -129,6 +129,8 @@ exports[`KryptosKit (OKP) from auto jwk 3`] = `
 exports[`KryptosKit (OKP) from auto pem 1`] = `
 {
   "algorithm": "EdDSA",
+  "certificateChain": null,
+  "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": "Ed25519",
   "encryption": null,
@@ -152,7 +154,6 @@ exports[`KryptosKit (OKP) from auto pem 1`] = `
   "ownerId": null,
   "purpose": null,
   "type": "OKP",
-  "updatedAt": 2024-01-01T08:00:00.000Z,
   "use": "sig",
 }
 `;
@@ -170,7 +171,6 @@ exports[`KryptosKit (OKP) from auto pem 2`] = `
   "kid": "3ee7c51b-e879-554e-ae49-e6330610f09e",
   "kty": "OKP",
   "nbf": 1704096000,
-  "uat": 1704096000,
   "use": "sig",
   "x": "FqCTfRe3gmMUYSmAmAl8id-ZYSsmFpKHXmh-ZOaPOfM",
 }
@@ -197,6 +197,8 @@ MCowBQYDK2VwAyEAFqCTfRe3gmMUYSmAmAl8id+ZYSsmFpKHXmh+ZOaPOfM=
 exports[`KryptosKit (OKP) from b64 1`] = `
 {
   "algorithm": "EdDSA",
+  "certificateChain": null,
+  "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": "Ed25519",
   "encryption": null,
@@ -220,7 +222,6 @@ exports[`KryptosKit (OKP) from b64 1`] = `
   "ownerId": null,
   "purpose": null,
   "type": "OKP",
-  "updatedAt": 2024-01-01T08:00:00.000Z,
   "use": "sig",
 }
 `;
@@ -238,7 +239,6 @@ exports[`KryptosKit (OKP) from b64 2`] = `
   "kid": "ff2a448e-8eb0-59a8-8fc6-0ce23ad07e8f",
   "kty": "OKP",
   "nbf": 1704096000,
-  "uat": 1704096000,
   "use": "sig",
   "x": "GRCwCA6lChosFGMQwxGiHCdzblfvCz0FNiRtTnm1qqc",
 }
@@ -259,6 +259,8 @@ exports[`KryptosKit (OKP) from b64 3`] = `
 exports[`KryptosKit (OKP) from jwk 1`] = `
 {
   "algorithm": "EdDSA",
+  "certificateChain": null,
+  "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": "Ed25519",
   "encryption": null,
@@ -282,7 +284,6 @@ exports[`KryptosKit (OKP) from jwk 1`] = `
   "ownerId": null,
   "purpose": null,
   "type": "OKP",
-  "updatedAt": 2024-01-01T08:00:00.000Z,
   "use": "sig",
 }
 `;
@@ -300,7 +301,6 @@ exports[`KryptosKit (OKP) from jwk 2`] = `
   "kid": "6fc93fb6-d40e-52dc-9606-adaa80fef0c7",
   "kty": "OKP",
   "nbf": 1704096000,
-  "uat": 1704096000,
   "use": "sig",
   "x": "eTgk2sA8y7_9q8MjEPskpM4mAUZqtXmwEiHwy249kj4",
 }
@@ -321,6 +321,8 @@ exports[`KryptosKit (OKP) from jwk 3`] = `
 exports[`KryptosKit (OKP) from pem 1`] = `
 {
   "algorithm": "EdDSA",
+  "certificateChain": null,
+  "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": "Ed25519",
   "encryption": null,
@@ -344,7 +346,6 @@ exports[`KryptosKit (OKP) from pem 1`] = `
   "ownerId": null,
   "purpose": null,
   "type": "OKP",
-  "updatedAt": 2024-01-01T08:00:00.000Z,
   "use": "sig",
 }
 `;
@@ -362,7 +363,6 @@ exports[`KryptosKit (OKP) from pem 2`] = `
   "kid": "3ee7c51b-e879-554e-ae49-e6330610f09e",
   "kty": "OKP",
   "nbf": 1704096000,
-  "uat": 1704096000,
   "use": "sig",
   "x": "FqCTfRe3gmMUYSmAmAl8id-ZYSsmFpKHXmh-ZOaPOfM",
 }
@@ -389,6 +389,8 @@ MCowBQYDK2VwAyEAFqCTfRe3gmMUYSmAmAl8id+ZYSsmFpKHXmh+ZOaPOfM=
 exports[`KryptosKit (OKP) generate auto 1`] = `
 {
   "algorithm": "ECDH-ES+A128GCMKW",
+  "certificateChain": null,
+  "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": "P-256",
   "encryption": "A256GCM",
@@ -411,7 +413,6 @@ exports[`KryptosKit (OKP) generate auto 1`] = `
   "ownerId": null,
   "purpose": null,
   "type": "EC",
-  "updatedAt": 2024-01-01T08:00:00.000Z,
   "use": "enc",
 }
 `;
@@ -419,6 +420,8 @@ exports[`KryptosKit (OKP) generate auto 1`] = `
 exports[`KryptosKit (OKP) generate enc 1`] = `
 {
   "algorithm": "ECDH-ES",
+  "certificateChain": null,
+  "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": "X25519",
   "encryption": "A256GCM",
@@ -441,7 +444,6 @@ exports[`KryptosKit (OKP) generate enc 1`] = `
   "ownerId": null,
   "purpose": null,
   "type": "OKP",
-  "updatedAt": 2024-01-01T08:00:00.000Z,
   "use": "enc",
 }
 `;
@@ -449,6 +451,8 @@ exports[`KryptosKit (OKP) generate enc 1`] = `
 exports[`KryptosKit (OKP) generate sig 1`] = `
 {
   "algorithm": "EdDSA",
+  "certificateChain": null,
+  "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
   "curve": "Ed25519",
   "encryption": null,
@@ -472,7 +476,6 @@ exports[`KryptosKit (OKP) generate sig 1`] = `
   "ownerId": null,
   "purpose": null,
   "type": "OKP",
-  "updatedAt": 2024-01-01T08:00:00.000Z,
   "use": "sig",
 }
 `;
