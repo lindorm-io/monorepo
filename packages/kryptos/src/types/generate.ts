@@ -23,7 +23,7 @@ type Attributes = Omit<
   "algorithm" | "curve" | "encryption" | "operations" | "type" | "use"
 >;
 
-type Std = Optional<
+type StdBase = Optional<
   Attributes,
   | "id"
   | "createdAt"
@@ -36,7 +36,9 @@ type Std = Optional<
   | "ownerId"
   | "purpose"
   | "updatedAt"
-> & {
+>;
+
+type CertifiableStd = StdBase & {
   certificate?: KryptosCertificateOption;
 };
 
@@ -73,33 +75,33 @@ type RsaSig = { algorithm: RsaSigAlgorithm };
 
 // combined options
 
-export type KryptosGenerateEcEnc = Std & Enc & EcEnc;
+export type KryptosGenerateEcEnc = CertifiableStd & Enc & EcEnc;
 
-export type KryptosGenerateEcSig = Std & Sig & EcSig;
+export type KryptosGenerateEcSig = CertifiableStd & Sig & EcSig;
 
 export type KryptosGenerateEc = (KryptosGenerateEcEnc | KryptosGenerateEcSig) & {
   type: "EC";
 };
 
-export type KryptosGenerateOctEnc = Std & Enc & OctEnc;
+export type KryptosGenerateOctEnc = StdBase & Enc & OctEnc;
 
-export type KryptosGenerateOctSig = Std & Sig & OctSig;
+export type KryptosGenerateOctSig = StdBase & Sig & OctSig;
 
 export type KryptosGenerateOct = (KryptosGenerateOctEnc | KryptosGenerateOctSig) & {
   type: "oct";
 };
 
-export type KryptosGenerateOkpEnc = Std & Enc & OkpEnc;
+export type KryptosGenerateOkpEnc = CertifiableStd & Enc & OkpEnc;
 
-export type KryptosGenerateOkpSig = Std & Sig & OkpSig;
+export type KryptosGenerateOkpSig = CertifiableStd & Sig & OkpSig;
 
 export type KryptosGenerateOkp = (KryptosGenerateOkpEnc | KryptosGenerateOkpSig) & {
   type: "OKP";
 };
 
-export type KryptosGenerateRsaEnc = Std & Enc & RsaEnc;
+export type KryptosGenerateRsaEnc = CertifiableStd & Enc & RsaEnc;
 
-export type KryptosGenerateRsaSig = Std & Sig & RsaSig;
+export type KryptosGenerateRsaSig = CertifiableStd & Sig & RsaSig;
 
 export type KryptosGenerateRsa = (KryptosGenerateRsaEnc | KryptosGenerateRsaSig) & {
   type: "RSA";

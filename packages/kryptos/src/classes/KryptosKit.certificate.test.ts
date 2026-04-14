@@ -479,6 +479,7 @@ describe("KryptosKit certificate generation", () => {
       expect(() =>
         KryptosKit.generate.sig.oct({
           algorithm: "HS256",
+          // @ts-expect-error — certificate option is type-excluded from oct variants; this proves the runtime guard still catches forced calls
           certificate: { mode: "self-signed" },
         }),
       ).toThrow("symmetric keys cannot have certificates");
@@ -488,6 +489,7 @@ describe("KryptosKit certificate generation", () => {
       expect(() =>
         KryptosKit.generate.sig.oct({
           algorithm: "HS256",
+          // @ts-expect-error — certificate option is type-excluded from oct variants; this proves the runtime guard still catches forced calls
           certificate: { mode: "root-ca" },
         }),
       ).toThrow("symmetric keys cannot have certificates");
