@@ -32,7 +32,7 @@
     "typecheck:watch": "tsc -w",
     "update": "ncu -i",
     "update:auto": "ncu -u",
-    "verify": "npm run typecheck; npm run build; npm test"
+    "verify": "npm run typecheck && npm run build && npm test"
   },
   "dependencies": {
     "commander": "^14.0.3"

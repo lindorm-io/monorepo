@@ -46,7 +46,7 @@
     "typecheck:watch": "tsc --watch",
     "update": "ncu -i",
     "update:auto": "ncu -u",
-    "verify": "npm run typecheck; npm run build; npm test"
+    "verify": "npm run typecheck && npm run build && npm test"
   },
   "dependencies": {
     "@lindorm/aes": "^0.6.3",
