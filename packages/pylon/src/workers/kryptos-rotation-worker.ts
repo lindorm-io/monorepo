@@ -1,6 +1,5 @@
-import { AesKit } from "@lindorm/aes";
 import { add, duration, ms, ReadableTime, sub } from "@lindorm/date";
-import { IKryptos, KryptosAlgorithm, KryptosDB, KryptosKit } from "@lindorm/kryptos";
+import { KryptosAlgorithm, KryptosDB, KryptosKit } from "@lindorm/kryptos";
 import { IProteusSource } from "@lindorm/proteus";
 import { Constructor } from "@lindorm/types";
 import { CreateLindormWorkerOptions, LindormWorkerConfig } from "@lindorm/worker";
@@ -11,7 +10,6 @@ type KeyOption = {
 };
 
 type Options = CreateLindormWorkerOptions & {
-  encryptionKey?: IKryptos;
   expiry?: ReadableTime;
   keys?: Array<KeyOption>;
   proteus: IProteusSource;
@@ -33,10 +31,6 @@ export const createKryptosRotationWorker = (options: Options): LindormWorkerConf
       { algorithm: "ES512", purpose: "token" },
       { algorithm: "ECDH-ES+A128GCMKW", purpose: "token" },
     ];
-
-    const aes = options.encryptionKey
-      ? new AesKit({ kryptos: options.encryptionKey })
-      : undefined;
 
     const repository = options.proteus.repository(options.target);
     const existing = await repository.find();
@@ -67,13 +61,7 @@ export const createKryptosRotationWorker = (options: Options): LindormWorkerConf
           purpose: opts.purpose,
         });
 
-        const data = kryptos.toDB();
-
-        if (aes && data.privateKey) {
-          data.privateKey = aes.encrypt(data.privateKey, "tokenised");
-        }
-
-        const entity = repository.create(data);
+        const entity = repository.create(kryptos.toDB());
         const inserted = await repository.insert(entity);
 
         existingKeys.push(inserted);
@@ -95,13 +83,7 @@ export const createKryptosRotationWorker = (options: Options): LindormWorkerConf
           purpose: opts.purpose,
         });
 
-        const data = kryptos.toDB();
-
-        if (aes && data.privateKey) {
-          data.privateKey = aes.encrypt(data.privateKey, "tokenised");
-        }
-
-        const entity = repository.create(data);
+        const entity = repository.create(kryptos.toDB());
         await repository.insert(entity);
         generated++;
       }

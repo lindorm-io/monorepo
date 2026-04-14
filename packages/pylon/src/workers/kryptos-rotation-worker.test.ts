@@ -1,4 +1,3 @@
-const mockEncrypt = jest.fn().mockImplementation((v: any) => "encrypted_" + v);
 const mockGenerate = jest.fn().mockReturnValue({
   toDB: () => ({
     id: "new-key-id",
@@ -19,12 +18,6 @@ const mockRepository = jest.fn().mockReturnValue({
 });
 import { createMockLogger } from "@lindorm/logger";
 const mockLogger = createMockLogger();
-
-jest.mock("@lindorm/aes", () => ({
-  AesKit: class AesKit {
-    encrypt = mockEncrypt;
-  },
-}));
 
 jest.mock("@lindorm/kryptos", () => ({
   KryptosKit: { generate: { auto: mockGenerate } },
@@ -186,57 +179,6 @@ describe("createKryptosRotationWorker", () => {
 
       expect(mockGenerate).not.toHaveBeenCalled();
       expect(mockInsert).not.toHaveBeenCalled();
-    });
-
-    test("should encrypt private key when encryption key is provided", async () => {
-      mockFind.mockResolvedValueOnce([]);
-
-      const config = createKryptosRotationWorker({
-        proteus,
-        target: FakeKryptosDB as any,
-        encryptionKey: {} as any,
-        keys: [{ algorithm: "ES512", purpose: "token" }],
-      });
-
-      await config.callback({ logger: mockLogger } as any);
-
-      expect(mockEncrypt).toHaveBeenCalledWith("generated-private-key", "tokenised");
-    });
-
-    test("should not encrypt when no encryption key is provided", async () => {
-      mockFind.mockResolvedValueOnce([]);
-
-      const config = createKryptosRotationWorker({
-        proteus,
-        target: FakeKryptosDB as any,
-        keys: [{ algorithm: "ES512", purpose: "token" }],
-      });
-
-      await config.callback({ logger: mockLogger } as any);
-
-      expect(mockEncrypt).not.toHaveBeenCalled();
-    });
-
-    test("should not encrypt when generated key has no private key", async () => {
-      mockFind.mockResolvedValueOnce([]);
-      mockGenerate.mockReturnValue({
-        toDB: () => ({
-          id: "new-key-id",
-          algorithm: "ES512",
-          privateKey: null,
-        }),
-      });
-
-      const config = createKryptosRotationWorker({
-        proteus,
-        target: FakeKryptosDB as any,
-        encryptionKey: {} as any,
-        keys: [{ algorithm: "ES512", purpose: "token" }],
-      });
-
-      await config.callback({ logger: mockLogger } as any);
-
-      expect(mockEncrypt).not.toHaveBeenCalled();
     });
 
     test("should filter existing keys by algorithm and purpose", async () => {
