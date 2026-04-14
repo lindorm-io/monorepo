@@ -12,6 +12,7 @@ import { validateCrit } from "#internal/utils/validate-crit";
 import { verifyDpopProof } from "#internal/utils/verify-dpop-proof";
 import { IJwtKit } from "../interfaces";
 import {
+  CertBindingMode,
   DecodedJwt,
   JwtKitOptions,
   ParsedJwt,
@@ -41,6 +42,7 @@ import { validate } from "#internal/utils/validate";
 const DEFAULT_DPOP_MAX_SKEW = 60;
 
 export class JwtKit implements IJwtKit {
+  private readonly certBindingMode: CertBindingMode;
   private readonly clockTolerance: number;
   private readonly dpopMaxSkew: number;
   private readonly issuer: string | null;
@@ -52,6 +54,7 @@ export class JwtKit implements IJwtKit {
     this.kryptos = options.kryptos;
     this.issuer = options.issuer ?? null;
 
+    this.certBindingMode = options.certBindingMode ?? "strict";
     this.clockTolerance = options.clockTolerance ?? 0;
     this.dpopMaxSkew = options.dpopMaxSkew ?? DEFAULT_DPOP_MAX_SKEW;
   }
@@ -145,9 +148,14 @@ export class JwtKit implements IJwtKit {
     // already succeeded with the amphora-sourced kryptos. It is NOT a key
     // selection step. Header cert fields remain forbidden as key sources
     // — see the SECURITY INVARIANT in Aegis.kryptosSig.
-    verifyCertBinding(this.kryptos, {
-      x5t: parsed.header.x5t,
-      x5tS256: parsed.header.x5tS256,
+    verifyCertBinding({
+      header: {
+        x5t: parsed.header.x5t,
+        x5tS256: parsed.header.x5tS256,
+      },
+      kryptos: this.kryptos,
+      logger: this.logger,
+      mode: this.certBindingMode,
     });
 
     const predicate = createJwtVerify(

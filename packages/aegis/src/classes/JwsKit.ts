@@ -6,6 +6,7 @@ import { B64U } from "#internal/constants/format";
 import { JwsError } from "../errors";
 import { IJwsKit } from "../interfaces";
 import {
+  CertBindingMode,
   DecodedJws,
   JwsKitOptions,
   ParsedJws,
@@ -26,12 +27,14 @@ import { verifyCertBinding } from "#internal/utils/verify-cert-binding";
 import { validateCrit } from "#internal/utils/validate-crit";
 
 export class JwsKit implements IJwsKit {
+  private readonly certBindingMode: CertBindingMode;
   private readonly logger: ILogger;
   private readonly kryptos: IKryptos;
 
   public constructor(options: JwsKitOptions) {
     this.logger = options.logger.child(["JwsKit"]);
     this.kryptos = options.kryptos;
+    this.certBindingMode = options.certBindingMode ?? "strict";
   }
 
   public sign<T extends Buffer | string>(
@@ -106,9 +109,14 @@ export class JwsKit implements IJwsKit {
     // with the amphora-sourced kryptos. NOT a key selection step. Header
     // cert fields remain forbidden as key sources — see the SECURITY
     // INVARIANT in Aegis.kryptosSig.
-    verifyCertBinding(this.kryptos, {
-      x5t: parsed.header.x5t,
-      x5tS256: parsed.header.x5tS256,
+    verifyCertBinding({
+      header: {
+        x5t: parsed.header.x5t,
+        x5tS256: parsed.header.x5tS256,
+      },
+      kryptos: this.kryptos,
+      logger: this.logger,
+      mode: this.certBindingMode,
     });
 
     this.logger.debug("Token verified");

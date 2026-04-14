@@ -100,6 +100,8 @@ export type TokenEncryptOrSignOptions = Pick<TokenHeaderOptions, "jwk">;
 
 export type BindCertificateMode = "thumbprint" | "chain" | "none";
 
+export type CertBindingMode = "strict" | "lax";
+
 export type RefinedTokenHeader<A> = Omit<
   ParsedTokenHeader,
   "algorithm" | "baseFormat" | "headerType"

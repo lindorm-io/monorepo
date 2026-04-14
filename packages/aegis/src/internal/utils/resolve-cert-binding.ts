@@ -18,10 +18,9 @@ export const resolveCertBinding = (
   if (resolved === "none") return undefined;
 
   if (!kryptos.hasCertificate) {
-    throw new AegisError(
-      "bindCertificate requires a signing kryptos with a certificateChain",
-      { debug: { kryptosId: kryptos.id, mode } },
-    );
+    throw new AegisError("bindCertificate requires kryptos with certificateChain", {
+      debug: { kryptosId: kryptos.id, mode },
+    });
   }
 
   const fields: CertificateHeaderFields = {

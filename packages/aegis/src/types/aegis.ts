@@ -6,6 +6,7 @@ import {
 } from "@lindorm/kryptos";
 import { ILogger } from "@lindorm/logger";
 import { Predicate } from "@lindorm/types";
+import { CertBindingMode } from "./header";
 
 export type AegisPredicate = Predicate<
   Pick<AmphoraQuery, "id" | "curve" | "purpose" | "type" | "use" | "ownerId">
@@ -13,6 +14,7 @@ export type AegisPredicate = Predicate<
 
 export type AegisOptions = {
   amphora: IAmphora;
+  certBindingMode?: CertBindingMode;
   clockTolerance?: number;
   dpopMaxSkew?: number;
   encAlgorithm?: KryptosEncAlgorithm;
