@@ -1,11 +1,8 @@
 import { CircuitBreaker, CircuitOpenError, type ICircuitBreaker } from "@lindorm/breaker";
 import { createMockLogger } from "@lindorm/logger/mocks";
 import { ConduitError } from "../errors";
-import {
-  ConduitCircuitBreakerCache,
-  createConduitCircuitBreakerMiddleware,
-} from "./conduit-circuit-breaker-middleware";
-import type { ConduitMiddleware } from "../types";
+import { createConduitCircuitBreakerMiddleware } from "./conduit-circuit-breaker-middleware";
+import type { ConduitCircuitBreakerCache, ConduitMiddleware } from "../types";
 
 describe("conduitCircuitBreakerMiddleware", () => {
   let ctx: any;
