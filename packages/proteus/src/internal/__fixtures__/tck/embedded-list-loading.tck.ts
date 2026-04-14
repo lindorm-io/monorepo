@@ -8,6 +8,10 @@
 import type { TckDriverHandle } from "./types";
 import type { TckEntities } from "./create-tck-entities";
 import { isLazyCollection } from "../../entity/utils/lazy-collection";
+import {
+  getLazyEmbeddedListLoaderInvocations,
+  resetLazyEmbeddedListLoaderInvocations,
+} from "../../entity/utils/install-lazy-embedded-lists";
 
 export const embeddedListLoadingSuite = (
   getHandle: () => TckDriverHandle,
@@ -17,6 +21,7 @@ export const embeddedListLoadingSuite = (
 
   beforeEach(async () => {
     await getHandle().clear();
+    resetLazyEmbeddedListLoaderInvocations();
   });
 
   // ─── E1: Default — findOne is eager ─────────────────────────────────
@@ -113,5 +118,94 @@ export const embeddedListLoadingSuite = (
 
     const tags = await rows[0].tags;
     expect(tags).toEqual([]);
+  });
+
+  // ─── E7: Proof of laziness — loader counter ─────────────────────────
+  //
+  // Verifies that `find()` does NOT eagerly load lazy embedded lists.
+  // The counter increments once per deferred loader invocation, proving
+  // the load was actually deferred (not eagerly pre-loaded and wrapped in
+  // a thenable shell, which would pass E2's isLazyCollection assertions).
+
+  test("lazy find: loader counter is zero until first await", async () => {
+    const repo = getHandle().repository(TckElDefault);
+    await repo.insert({ name: "a", tags: ["a1", "a2"] });
+    await repo.insert({ name: "b", tags: ["b1", "b2", "b3"] });
+    await repo.insert({ name: "c", tags: ["c1"] });
+
+    const rows = await repo.find();
+    expect(rows).toHaveLength(3);
+
+    // No row has been awaited yet — zero loader calls.
+    expect(getLazyEmbeddedListLoaderInvocations()).toBe(0);
+    for (const row of rows) {
+      expect(isLazyCollection(row.tags)).toBe(true);
+    }
+
+    // Awaiting the first row triggers exactly one loader call.
+    await rows[0].tags;
+    expect(getLazyEmbeddedListLoaderInvocations()).toBe(1);
+
+    // Awaiting the second row triggers one more.
+    await rows[1].tags;
+    expect(getLazyEmbeddedListLoaderInvocations()).toBe(2);
+
+    // The first row's resolved value must not have triggered any
+    // follow-up load — re-reading it is a plain array access.
+    expect(isLazyCollection(rows[0].tags)).toBe(false);
+    expect(Array.isArray(rows[0].tags)).toBe(true);
+  });
+
+  // ─── E8: Double-await caching — loader fires exactly once ───────────
+
+  test("lazy find: double-await the same row increments the counter once", async () => {
+    const repo = getHandle().repository(TckElDefault);
+    await repo.insert({ name: "once", tags: ["x", "y", "z"] });
+
+    const rows = await repo.find();
+    expect(rows).toHaveLength(1);
+    expect(getLazyEmbeddedListLoaderInvocations()).toBe(0);
+
+    // Capture the thenable identity before the first await — the first
+    // await replaces the property with the resolved array.
+    const thenable = rows[0].tags;
+    expect(isLazyCollection(thenable)).toBe(true);
+
+    const firstAwait = await thenable;
+    expect([...firstAwait].sort()).toEqual(["x", "y", "z"]);
+    expect(getLazyEmbeddedListLoaderInvocations()).toBe(1);
+
+    // Awaiting the same LazyCollection instance again must resolve from
+    // cache — the loader is NOT invoked a second time.
+    const secondAwait = await thenable;
+    expect([...secondAwait].sort()).toEqual(["x", "y", "z"]);
+    expect(getLazyEmbeddedListLoaderInvocations()).toBe(1);
+  });
+
+  // ─── E9: Save-time preservation — lazy insert round-trips ──────────
+
+  test('@Lazy("single") insert with populated array preserves the values on reload', async () => {
+    const repo = getHandle().repository(TckElLazySingle);
+    const inserted = await repo.insert({
+      name: "preserved",
+      tags: ["one", "two", "three"],
+    });
+
+    // The insert path does not need to invoke the lazy loader — the
+    // user-provided array is persisted directly, not wrapped-and-discarded.
+    expect(Array.isArray(inserted.tags)).toBe(true);
+    expect([...inserted.tags].sort()).toEqual(["one", "three", "two"]);
+
+    // Reset the counter so the reload assertions are isolated.
+    resetLazyEmbeddedListLoaderInvocations();
+
+    const found = await repo.findOne({ id: inserted.id });
+    expect(found).not.toBeNull();
+    expect(isLazyCollection(found!.tags)).toBe(true);
+    expect(getLazyEmbeddedListLoaderInvocations()).toBe(0);
+
+    const tags = await found!.tags;
+    expect([...tags].sort()).toEqual(["one", "three", "two"]);
+    expect(getLazyEmbeddedListLoaderInvocations()).toBe(1);
   });
 };
