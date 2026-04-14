@@ -1188,4 +1188,212 @@ describe("Amphora", () => {
       expect(loose[0]!.id).toBe(TEST_EC_KEY_SIG.id);
     });
   });
+
+  describe("external trust mode", () => {
+    const externalIssuer = "https://external.lindorm.io/";
+    const externalJwksUri = "https://external.lindorm.io/.well-known/jwks.json";
+
+    const generateCa = () =>
+      KryptosKit.generate.sig.ec({
+        algorithm: "ES256",
+        issuer: externalIssuer,
+        certificate: { mode: "root-ca" },
+      });
+
+    const generateChild = (ca: ReturnType<typeof generateCa>) =>
+      KryptosKit.generate.sig.ec({
+        algorithm: "ES256",
+        issuer: externalIssuer,
+        certificate: { mode: "ca-signed", ca },
+      });
+
+    test("should accept cert-less key when trustMode is lax", async () => {
+      const ca = generateCa();
+      const chainless = KryptosKit.generate.sig.ec({
+        algorithm: "ES256",
+        issuer: externalIssuer,
+      });
+      const jwk = chainless.toJWK("public");
+      delete jwk.iss;
+      expect(jwk.x5c).toBeUndefined();
+
+      nock("https://external.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, { keys: [jwk] });
+
+      amphora = new Amphora({
+        domain: issuer,
+        logger: createMockLogger(),
+        external: [
+          {
+            issuer: externalIssuer,
+            jwksUri: externalJwksUri,
+            trustAnchors: ca.x5c![0],
+            trustMode: "lax",
+          },
+        ],
+      });
+
+      await amphora.setup();
+
+      const accepted = await amphora.filter({ issuer: externalIssuer });
+      expect(accepted).toHaveLength(1);
+      expect(accepted[0]!.id).toBe(chainless.id);
+    });
+
+    test("should accept ca-signed key with valid anchor when trustMode is lax", async () => {
+      const ca = generateCa();
+      const child = generateChild(ca);
+      const jwk = child.toJWK("public");
+      delete jwk.iss;
+
+      nock("https://external.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, { keys: [jwk] });
+
+      amphora = new Amphora({
+        domain: issuer,
+        logger: createMockLogger(),
+        external: [
+          {
+            issuer: externalIssuer,
+            jwksUri: externalJwksUri,
+            trustAnchors: ca.x5c![0],
+            trustMode: "lax",
+          },
+        ],
+      });
+
+      await amphora.setup();
+
+      const accepted = await amphora.filter({ issuer: externalIssuer });
+      expect(accepted).toHaveLength(1);
+      expect(accepted[0]!.id).toBe(child.id);
+    });
+
+    test("should reject ca-signed key with wrong anchor even when trustMode is lax", async () => {
+      const trustedCa = generateCa();
+      const untrustedCa = generateCa();
+      const child = generateChild(untrustedCa);
+      const jwk = child.toJWK("public");
+      delete jwk.iss;
+
+      nock("https://external.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, { keys: [jwk] });
+
+      amphora = new Amphora({
+        domain: issuer,
+        logger: createMockLogger(),
+        external: [
+          {
+            issuer: externalIssuer,
+            jwksUri: externalJwksUri,
+            trustAnchors: trustedCa.x5c![0],
+            trustMode: "lax",
+          },
+        ],
+      });
+
+      await expect(amphora.setup()).rejects.toThrow(
+        "All external JWKS providers failed during refresh",
+      );
+
+      expect(amphora.vault.filter((k) => k.issuer === externalIssuer)).toHaveLength(0);
+    });
+
+    test("should reject cert-less key when trustMode is explicitly strict", async () => {
+      const ca = generateCa();
+      const chainless = KryptosKit.generate.sig.ec({
+        algorithm: "ES256",
+        issuer: externalIssuer,
+      });
+      const jwk = chainless.toJWK("public");
+      delete jwk.iss;
+      expect(jwk.x5c).toBeUndefined();
+
+      nock("https://external.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, { keys: [jwk] });
+
+      amphora = new Amphora({
+        domain: issuer,
+        logger: createMockLogger(),
+        external: [
+          {
+            issuer: externalIssuer,
+            jwksUri: externalJwksUri,
+            trustAnchors: ca.x5c![0],
+            trustMode: "strict",
+          },
+        ],
+      });
+
+      await expect(amphora.setup()).rejects.toThrow(AmphoraError);
+
+      expect(amphora.vault.filter((k) => k.issuer === externalIssuer)).toHaveLength(0);
+    });
+
+    test("should evaluate per-issuer trust mode independently", async () => {
+      const ca = generateCa();
+
+      const laxChainless = KryptosKit.generate.sig.ec({
+        algorithm: "ES256",
+        issuer: "https://lax.lindorm.io/",
+      });
+      const laxJwk = laxChainless.toJWK("public");
+      delete laxJwk.iss;
+
+      const strictChainless = KryptosKit.generate.sig.ec({
+        algorithm: "ES256",
+        issuer: "https://strict.lindorm.io/",
+      });
+      const strictJwk = strictChainless.toJWK("public");
+      delete strictJwk.iss;
+
+      nock("https://lax.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, { keys: [laxJwk] });
+
+      nock("https://strict.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, { keys: [strictJwk] });
+
+      amphora = new Amphora({
+        domain: issuer,
+        logger: createMockLogger(),
+        external: [
+          {
+            issuer: "https://lax.lindorm.io/",
+            jwksUri: "https://lax.lindorm.io/.well-known/jwks.json",
+            trustAnchors: ca.x5c![0],
+            trustMode: "lax",
+          },
+          {
+            issuer: "https://strict.lindorm.io/",
+            jwksUri: "https://strict.lindorm.io/.well-known/jwks.json",
+            trustAnchors: ca.x5c![0],
+            trustMode: "strict",
+          },
+        ],
+      });
+
+      await amphora.setup();
+
+      const laxKeys = amphora.vault.filter((k) => k.issuer === "https://lax.lindorm.io/");
+      const strictKeys = amphora.vault.filter(
+        (k) => k.issuer === "https://strict.lindorm.io/",
+      );
+
+      expect(laxKeys).toHaveLength(1);
+      expect(laxKeys[0]!.id).toBe(laxChainless.id);
+      expect(strictKeys).toHaveLength(0);
+    });
+  });
 });
