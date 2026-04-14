@@ -12,6 +12,26 @@ export type LazyEmbeddedListContext = {
 };
 
 /**
+ * Module-scoped invocation counter for lazy-EL loaders. Incremented once per
+ * actual driver loader call (inside the deferred closure `LazyCollection`
+ * invokes on first await). Used by the TCK suite to prove deferred loading
+ * is genuine — i.e. that no load happened before the user awaited — and to
+ * assert that double-await is cached.
+ *
+ * This is test-only instrumentation; the cost is a single integer increment
+ * per lazy-EL resolution and is intentionally always-on to avoid test harness
+ * plumbing. Do not build production logic on it.
+ */
+let lazyEmbeddedListLoaderInvocations = 0;
+
+export const getLazyEmbeddedListLoaderInvocations = (): number =>
+  lazyEmbeddedListLoaderInvocations;
+
+export const resetLazyEmbeddedListLoaderInvocations = (): void => {
+  lazyEmbeddedListLoaderInvocations = 0;
+};
+
+/**
  * Install lazy `LazyCollection` thenables on entity properties for
  * `@EmbeddedList` fields whose `loading[scope]` is `"lazy"`.
  *
@@ -44,8 +64,9 @@ export const installLazyEmbeddedLists = <E extends IEntity>(
     // was produced by eager loading, user write, or default-create — preserve it.
     if (existing !== undefined) continue;
 
-    (entity as any)[el.key] = new LazyCollection<unknown>(entity, el.key, () =>
-      ctx.loadEmbeddedList(entity, el),
-    );
+    (entity as any)[el.key] = new LazyCollection<unknown>(entity, el.key, () => {
+      lazyEmbeddedListLoaderInvocations += 1;
+      return ctx.loadEmbeddedList(entity, el);
+    });
   }
 };
