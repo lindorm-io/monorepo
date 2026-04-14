@@ -2,7 +2,6 @@ import { ILogger } from "@lindorm/logger";
 import { Middleware } from "@lindorm/middleware";
 import { RetryOptions } from "@lindorm/retry";
 import { Dict, Environment } from "@lindorm/types";
-import { ConduitUsing } from "../types";
 import { AppContext, RequestContext } from "./context";
 import { ConfigOptions } from "./overrides";
 import { ConduitResponse } from "./response";
@@ -38,6 +37,5 @@ export type ConduitOptions = {
   retryCallback?: RetryCallback;
   retryOptions?: RetryOptions;
   timeout?: number;
-  using?: ConduitUsing;
   withCredentials?: boolean;
 };

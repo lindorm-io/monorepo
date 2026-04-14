@@ -1,7 +1,7 @@
 import { RetryOptions } from "@lindorm/retry";
 import { Dict, HttpMethod, Param, Query } from "@lindorm/types";
 import { Readable } from "stream";
-import { ConduitUsing, ExpectedResponse } from "../types";
+import { ExpectedResponse } from "../types";
 import { ConduitMiddleware } from "./conduit";
 import { ConfigOptions } from "./overrides";
 import { OnRetryCallback, RetryCallback } from "./retry";
@@ -37,6 +37,5 @@ export type RequestOptions<
   signal?: AbortSignal;
   stream?: Readable;
   timeout?: number;
-  using?: ConduitUsing;
   withCredentials?: boolean;
 };
