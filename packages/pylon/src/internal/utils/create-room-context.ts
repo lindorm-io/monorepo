@@ -1,9 +1,10 @@
+import { expiresAt } from "@lindorm/date";
 import { ILogger } from "@lindorm/logger";
 import { IProteusSource } from "@lindorm/proteus";
 import { Presence } from "../../entities";
 import { PylonRoomContextHttp, PylonRoomContextSocket } from "../../types";
-import { IoServer } from "../../types/socket";
 import { PylonSocket } from "../../types/pylon-socket";
+import { IoServer } from "../../types/socket";
 
 type CreateRoomContextOptions = {
   socket: PylonSocket;
@@ -19,8 +20,6 @@ type CreateHttpRoomContextOptions = {
   proteusSource?: IProteusSource;
   presence?: boolean;
 };
-
-const PRESENCE_TTL_MS = 24 * 60 * 60 * 1000;
 
 export const createHttpRoomContext = (
   options: CreateHttpRoomContextOptions,
@@ -82,7 +81,7 @@ export const createRoomContext = (
             socketId: socket.id,
             userId,
             joinedAt: new Date(),
-            expiresAt: new Date(Date.now() + PRESENCE_TTL_MS),
+            expiresAt: expiresAt("24 hours"),
           },
         );
       }
