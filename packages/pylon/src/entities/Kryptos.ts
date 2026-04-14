@@ -8,9 +8,11 @@ import {
   KryptosUse,
 } from "@lindorm/kryptos";
 import {
+  AppendOnly,
   CreateDateField,
   Eager,
   EmbeddedList,
+  Encrypted,
   Entity,
   ExpiryDateField,
   Field,
@@ -21,7 +23,8 @@ import {
 } from "@lindorm/proteus";
 
 @Namespace("pylon")
-@Entity({ name: "kryptos" })
+@AppendOnly()
+@Entity()
 export class Kryptos implements KryptosDB {
   @PrimaryKeyField()
   public id!: string;
@@ -56,6 +59,7 @@ export class Kryptos implements KryptosDB {
   @EmbeddedList("string")
   public operations!: Array<KryptosOperation>;
 
+  @Encrypted({ purpose: "kryptos-kek" })
   @Nullable()
   @Field("text")
   public privateKey!: string | null;
@@ -67,10 +71,6 @@ export class Kryptos implements KryptosDB {
   @Eager()
   @EmbeddedList("string")
   public certificateChain!: Array<string>;
-
-  @Nullable()
-  @Field("string")
-  public certificateThumbprint!: string | null;
 
   @Index()
   @Nullable()
