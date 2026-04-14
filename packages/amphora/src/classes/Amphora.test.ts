@@ -199,6 +199,147 @@ describe("Amphora", () => {
     });
   });
 
+  describe("findById", () => {
+    afterEach(() => {
+      MockDate.set(MockedDate);
+    });
+
+    test("should find a not-yet-active key (notBefore in future) by id", () => {
+      const future = KryptosKit.clone(TEST_EC_KEY_SIG, {
+        notBefore: new Date("2099-01-01T00:00:00.000Z"),
+      });
+      amphora.add(future);
+
+      expect(amphora.findByIdSync(future.id)).toEqual(future);
+    });
+
+    test("should find an expired key by id after time advances past expiresAt", () => {
+      const key = KryptosKit.clone(TEST_EC_KEY_SIG, {
+        expiresAt: new Date("2024-01-01T09:00:00.000Z"),
+      });
+      amphora.add(key);
+
+      MockDate.set(new Date("2024-01-01T10:00:00.000Z"));
+
+      expect(key.isExpired).toBe(true);
+      expect(amphora.findByIdSync(key.id)).toEqual(key);
+    });
+
+    test("should find a not-yet-active key via async findById", async () => {
+      const future = KryptosKit.clone(TEST_EC_KEY_SIG, {
+        notBefore: new Date("2099-01-01T00:00:00.000Z"),
+      });
+      amphora.add(future);
+
+      await expect(amphora.findById(future.id)).resolves.toEqual(future);
+    });
+
+    test("should throw AmphoraError when findByIdSync misses", () => {
+      amphora.add(TEST_EC_KEY_SIG);
+
+      expect(() => amphora.findByIdSync("does-not-exist")).toThrow(AmphoraError);
+      expect(() => amphora.findByIdSync("does-not-exist")).toThrow(
+        "Kryptos not found by id",
+      );
+    });
+
+    test("should throw AmphoraError when async findById misses without external providers", async () => {
+      amphora.add(TEST_EC_KEY_SIG);
+
+      await expect(amphora.findById("does-not-exist")).rejects.toThrow(
+        "Kryptos not found by id",
+      );
+    });
+
+    test("should refresh and retry when findById misses and external providers exist", async () => {
+      const jwk = TEST_EC_KEY_SIG.toJWK("private");
+      delete jwk.iss;
+
+      nock("https://external.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, { keys: [jwk] });
+
+      amphora = new Amphora({
+        domain: issuer,
+        logger: createMockLogger(),
+        external: [
+          {
+            issuer: "https://external.lindorm.io/",
+            jwksUri: "https://external.lindorm.io/.well-known/jwks.json",
+          },
+        ],
+      });
+
+      await expect(amphora.findById(TEST_EC_KEY_SIG.id)).resolves.toEqual(
+        expect.objectContaining({ id: TEST_EC_KEY_SIG.id }),
+      );
+      expect(nock.isDone()).toBe(true);
+    });
+
+    test("should throw from findByIdSync when setup not called with external providers", () => {
+      amphora = new Amphora({
+        domain: issuer,
+        logger: createMockLogger(),
+        external: [
+          {
+            issuer: "https://external.lindorm.io/",
+            jwksUri: "https://external.lindorm.io/.well-known/jwks.json",
+          },
+        ],
+      });
+
+      expect(() => amphora.findByIdSync("anything")).toThrow(
+        "setup() must be called before using sync methods with external providers",
+      );
+    });
+  });
+
+  describe("vault retention", () => {
+    afterEach(() => {
+      MockDate.set(MockedDate);
+    });
+
+    test("should retain expired non-external keys across refresh", async () => {
+      const key = KryptosKit.clone(TEST_EC_KEY_SIG, {
+        expiresAt: new Date("2024-01-01T09:00:00.000Z"),
+      });
+      amphora.add(key);
+
+      MockDate.set(new Date("2024-01-01T10:00:00.000Z"));
+
+      await amphora.refresh();
+
+      expect(amphora.vault.find((k) => k.id === key.id)).toBeDefined();
+      expect(amphora.findByIdSync(key.id)).toEqual(key);
+    });
+  });
+
+  describe("JWKS publication window", () => {
+    test("should include not-yet-active (notBefore in future) keys in JWKS", () => {
+      const future = KryptosKit.clone(TEST_EC_KEY_SIG, {
+        notBefore: new Date("2099-01-01T00:00:00.000Z"),
+      });
+      amphora.add(future);
+
+      expect(amphora.jwks).toMatchSnapshot();
+    });
+
+    test("should exclude expired keys from JWKS", () => {
+      const key = KryptosKit.clone(TEST_EC_KEY_SIG, {
+        expiresAt: new Date("2024-01-01T09:00:00.000Z"),
+      });
+      amphora.add(key);
+
+      MockDate.set(new Date("2024-01-01T10:00:00.000Z"));
+      // refresh JWKS by adding another unrelated key
+      amphora.add(TEST_OCT_KEY_SIG);
+      MockDate.set(MockedDate);
+
+      expect(amphora.jwks.keys.some((k) => k.kid === key.id)).toBe(false);
+    });
+  });
+
   describe("can", () => {
     test("should return true for canEncrypt", () => {
       amphora.add(TEST_OCT_KEY_ENC);

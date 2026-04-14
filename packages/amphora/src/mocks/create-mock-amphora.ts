@@ -15,6 +15,8 @@ export const createMockAmphora = (): MockAmphora => ({
   filter: jest.fn().mockResolvedValue([]),
   filterSync: jest.fn().mockReturnValue([]),
   find: jest.fn().mockResolvedValue("mock_kryptos"),
+  findById: jest.fn().mockResolvedValue("mock_kryptos"),
+  findByIdSync: jest.fn().mockReturnValue("mock_kryptos"),
   findSync: jest.fn().mockReturnValue("mock_kryptos"),
   refresh: jest.fn().mockResolvedValue(undefined),
   setup: jest.fn().mockResolvedValue(undefined),
