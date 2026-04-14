@@ -973,8 +973,6 @@ describe("Amphora", () => {
       KryptosKit.generate.sig.ec({
         algorithm: "ES256",
         issuer: externalIssuer,
-        notBefore: new Date("2023-01-01T00:00:00.000Z"),
-        expiresAt: new Date("2030-01-01T00:00:00.000Z"),
         certificate: { mode: "root-ca" },
       });
 
@@ -982,8 +980,6 @@ describe("Amphora", () => {
       KryptosKit.generate.sig.ec({
         algorithm: "ES256",
         issuer: externalIssuer,
-        notBefore: new Date("2023-01-02T00:00:00.000Z"),
-        expiresAt: new Date("2029-12-31T00:00:00.000Z"),
         certificate: { mode: "ca-signed", ca },
       });
 
@@ -1205,8 +1201,6 @@ describe("Amphora", () => {
       KryptosKit.generate.sig.ec({
         algorithm: "ES256",
         issuer: externalIssuer,
-        notBefore: new Date("2023-01-01T00:00:00.000Z"),
-        expiresAt: new Date("2030-01-01T00:00:00.000Z"),
         certificate: { mode: "root-ca" },
       });
 
@@ -1214,8 +1208,6 @@ describe("Amphora", () => {
       KryptosKit.generate.sig.ec({
         algorithm: "ES256",
         issuer: externalIssuer,
-        notBefore: new Date("2023-01-02T00:00:00.000Z"),
-        expiresAt: new Date("2029-12-31T00:00:00.000Z"),
         certificate: { mode: "ca-signed", ca },
       });
 
