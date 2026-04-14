@@ -3,7 +3,7 @@ import { KryptosAttributes } from "./attributes";
 import { RsaModulus } from "./key-types";
 
 type StdOptions = Optional<
-  Omit<KryptosAttributes, "certificateChain" | "certificateThumbprint">,
+  Omit<KryptosAttributes, "certificateChain">,
   | "id"
   | "createdAt"
   | "curve"

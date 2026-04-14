@@ -8,7 +8,6 @@ exports[`Kryptos (X.509 round-trip) toDB → fromDb round-trip preserves certifi
     "MIIBqzCCAVCgAwIBAgIUPrBSpCTfUhNj/QIZuQsEtQrTpJcwCgYIKoZIzj0EAwIwHDEaMBgGA1UEAwwRbGluZG9ybS10ZXN0LXJvb3QwIBcNMjYwNDEzMTEzNTAwWhgPMjEyNjAzMjAxMTM1MDBaMCQxIjAgBgNVBAMMGWxpbmRvcm0tdGVzdC1pbnRlcm1lZGlhdGUwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAASXjSn4iP5qFox80WCOzWQM3c3IU6W8EA/ljpPkS27Hx248sxCTJrAITpSJ9roDXXxRg+WvlzI8aMHdddErTZoZo2YwZDASBgNVHRMBAf8ECDAGAQH/AgEAMA4GA1UdDwEB/wQEAwIBBjAdBgNVHQ4EFgQUuvcF1azFaNW8Sy7CB6nJsVd4XpIwHwYDVR0jBBgwFoAU4sctur7Io2JSmyWLWzSTVXDwrBAwCgYIKoZIzj0EAwIDSQAwRgIhAIhM1rg+E+8/8RzmgvYTiHw3UCZxZjnXuYMHcvb5calWAiEAiYXgbUDdXyHDzgDJB7lBbaNaePxu+Kvsx7bYunS2yhY=",
     "MIIBnjCCAUWgAwIBAgIUCQm0C13BQsFkIgc7SShh80ejgQAwCgYIKoZIzj0EAwIwHDEaMBgGA1UEAwwRbGluZG9ybS10ZXN0LXJvb3QwIBcNMjYwNDEzMTEzNTAwWhgPMjEyNjAzMjAxMTM1MDBaMBwxGjAYBgNVBAMMEWxpbmRvcm0tdGVzdC1yb290MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEO5N985BltmGIV3XZu4YMBcrpO1EbmQBt9cEnVyNNkiNCNKsAOP2zbFs9kLu9Tb+2R/BiFwVoGpzQMhqcy+39cKNjMGEwHQYDVR0OBBYEFOLHLbq+yKNiUpsli1s0k1Vw8KwQMB8GA1UdIwQYMBaAFOLHLbq+yKNiUpsli1s0k1Vw8KwQMA8GA1UdEwEB/wQFMAMBAf8wDgYDVR0PAQH/BAQDAgEGMAoGCCqGSM49BAMCA0cAMEQCIGvDtRrg/MHARlqYkNfZU2phl2f+QkZwHgk00T1r4tXoAiBndB9hNEOkRdSPFBcy6w/LPWH+Y7HQdl8xukjZcY7Yeg==",
   ],
-  "certificateThumbprint": "PQeZGdGGGG1A9Qr4z0qBh_TJrmoi5B-6jbMUOGn34QA",
   "createdAt": 2020-01-01T00:00:00.000Z,
   "curve": "P-256",
   "encryption": null,
@@ -46,6 +45,7 @@ exports[`Kryptos (X.509 round-trip) toJSON → fromJwk round-trip preserves cert
   "encryption": null,
   "expiresAt": 2045-01-01T00:00:00.000Z,
   "expiresIn": 616852800,
+  "hasCertificate": true,
   "hasPrivateKey": true,
   "hasPublicKey": true,
   "hidden": false,
@@ -63,6 +63,7 @@ exports[`Kryptos (X.509 round-trip) toJSON → fromJwk round-trip preserves cert
   ],
   "ownerId": null,
   "purpose": null,
+  "thumbprint": "UyCf8BRUJoOEu6u-C8DYyXXf3j51X6G-aPO_D8OE2QM",
   "type": "EC",
   "use": "sig",
 }

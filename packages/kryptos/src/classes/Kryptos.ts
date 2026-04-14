@@ -383,7 +383,6 @@ export class Kryptos implements IKryptos {
       id: this.id,
       algorithm: this.algorithm,
       certificateChain: this.certificateChain,
-      certificateThumbprint: this.certificateThumbprint,
       createdAt: this.createdAt,
       curve: this.curve,
       encryption: this.encryption,
@@ -420,6 +419,7 @@ export class Kryptos implements IKryptos {
       encryption: this.encryption,
       expiresAt: this.expiresAt,
       expiresIn: this.expiresIn,
+      hasCertificate: this.hasCertificate,
       hasPrivateKey: this.hasPrivateKey,
       hasPublicKey: this.hasPublicKey,
       hidden: this.hidden,
@@ -433,6 +433,7 @@ export class Kryptos implements IKryptos {
       operations: this.operations,
       ownerId: this.ownerId,
       purpose: this.purpose,
+      thumbprint: this.thumbprint,
       type: this.type,
       use: this.use,
     });

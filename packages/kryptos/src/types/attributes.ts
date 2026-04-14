@@ -9,7 +9,6 @@ export type KryptosAttributes = {
   id: string;
   algorithm: KryptosAlgorithm;
   certificateChain: Array<string>;
-  certificateThumbprint: string | null;
   createdAt: Date;
   curve: KryptosCurve | null;
   encryption: KryptosEncryption | null;
@@ -27,12 +26,15 @@ export type KryptosAttributes = {
 };
 
 export type KryptosMetadata = {
+  certificateThumbprint: string | null;
   expiresIn: number;
+  hasCertificate: boolean;
   hasPrivateKey: boolean;
   hasPublicKey: boolean;
   isActive: boolean;
   isExpired: boolean;
   modulus: RsaModulus | null;
+  thumbprint: string;
 };
 
 export type KryptosJSON = KryptosAttributes & KryptosMetadata;

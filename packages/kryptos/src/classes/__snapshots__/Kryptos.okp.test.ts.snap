@@ -158,7 +158,6 @@ exports[`Kryptos (OKP) to should return db 1`] = `
 {
   "algorithm": "EdDSA",
   "certificateChain": [],
-  "certificateThumbprint": null,
   "createdAt": 2023-01-01T08:00:00.000Z,
   "curve": "Ed25519",
   "encryption": null,
@@ -192,6 +191,7 @@ exports[`Kryptos (OKP) to should return json 1`] = `
   "encryption": null,
   "expiresAt": 2099-01-01T08:00:00.000Z,
   "expiresIn": 2366841600,
+  "hasCertificate": false,
   "hasPrivateKey": true,
   "hasPublicKey": true,
   "hidden": false,
@@ -209,6 +209,7 @@ exports[`Kryptos (OKP) to should return json 1`] = `
   ],
   "ownerId": "f02c2d0c-44ee-5e4e-8b3b-39d46924d227",
   "purpose": "test",
+  "thumbprint": "XcTD1o2JXbVRJkHHqVflMHIZF-62rlFVMCkDEKF8vik",
   "type": "OKP",
   "use": "sig",
 }

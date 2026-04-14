@@ -6,7 +6,7 @@ import { KryptosCertificateOption } from "./certificate";
 
 type Attributes = Omit<
   KryptosAttributes,
-  "certificateChain" | "certificateThumbprint" | "curve" | "operations" | "type" | "use"
+  "certificateChain" | "curve" | "operations" | "type" | "use"
 >;
 
 export type KryptosAuto = Optional<

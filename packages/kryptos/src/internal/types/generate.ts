@@ -4,7 +4,7 @@ import { KryptosCertificateOption } from "../../types/certificate";
 
 type Attributes = Omit<
   KryptosAttributes,
-  "algorithm" | "certificateChain" | "certificateThumbprint" | "type" | "use"
+  "algorithm" | "certificateChain" | "type" | "use"
 >;
 
 type Std = Optional<
