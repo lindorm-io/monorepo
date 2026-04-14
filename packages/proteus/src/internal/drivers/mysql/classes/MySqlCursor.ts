@@ -9,6 +9,7 @@ import {
   loadEmbeddedListRows,
   loadEmbeddedListRowsBatch,
 } from "../utils/repository/embedded-list-ops";
+import { installLazyEmbeddedLists } from "#internal/entity/utils/install-lazy-embedded-lists";
 
 export type MySqlCursorOptions = {
   sql: string;
@@ -174,12 +175,28 @@ export class MySqlCursor<E extends IEntity> implements IProteusCursor<E> {
     if (this.metadata.embeddedLists.length === 0 || entities.length === 0) return;
     if (entities.length === 1) {
       for (const el of this.metadata.embeddedLists) {
+        if (el.loading.multiple === "lazy") continue;
         await loadEmbeddedListRows(entities[0], el, this.client, this.namespace);
       }
     } else {
       for (const el of this.metadata.embeddedLists) {
+        if (el.loading.multiple === "lazy") continue;
         await loadEmbeddedListRowsBatch(entities, el, this.client, this.namespace);
       }
+    }
+
+    for (const entity of entities) {
+      installLazyEmbeddedLists(
+        entity,
+        this.metadata,
+        {
+          loadEmbeddedList: async (e, el) => {
+            await loadEmbeddedListRows(e, el, this.client, this.namespace);
+            return (e as any)[el.key] ?? [];
+          },
+        },
+        "multiple",
+      );
     }
   }
 }

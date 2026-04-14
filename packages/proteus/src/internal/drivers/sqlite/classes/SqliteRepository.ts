@@ -57,8 +57,10 @@ import { loadRelationIds } from "../utils/repository/load-relation-ids";
 import { loadRelationCounts } from "../utils/repository/load-relation-counts";
 import {
   saveEmbeddedListRows,
+  loadEmbeddedListRows,
   loadEmbeddedListRowsBatch,
 } from "../utils/repository/embedded-list-ops";
+import type { LazyEmbeddedListLoader } from "#internal/entity/utils/install-lazy-embedded-lists";
 
 export type { RepositoryFactory } from "#internal/types/repository-factory";
 
@@ -159,7 +161,7 @@ export class SqliteRepository<
     }
 
     if (this.hasEmbeddedLists) {
-      this.loadAllEmbeddedLists(entities, this.client);
+      this.loadAllEmbeddedLists(entities, this.client, _scope);
     }
 
     for (const entity of entities) {
@@ -201,7 +203,7 @@ export class SqliteRepository<
     }
 
     if (this.hasEmbeddedLists) {
-      this.loadAllEmbeddedLists(entities, this.client);
+      this.loadAllEmbeddedLists(entities, this.client, "multiple");
     }
 
     for (const entity of entities) {
@@ -1278,10 +1280,23 @@ export class SqliteRepository<
     }
   }
 
-  private loadAllEmbeddedLists(entities: Array<E>, client: SqliteQueryClient): void {
+  private loadAllEmbeddedLists(
+    entities: Array<E>,
+    client: SqliteQueryClient,
+    scope: QueryScope,
+  ): void {
     if (!this.hasEmbeddedLists) return;
     for (const el of this.metadata.embeddedLists) {
+      if (el.loading[scope] === "lazy") continue;
       loadEmbeddedListRowsBatch(entities, el, client);
     }
+  }
+
+  protected override buildLazyEmbeddedListLoader(): LazyEmbeddedListLoader {
+    const client = this.client;
+    return async (entity, embeddedList) => {
+      loadEmbeddedListRows(entity, embeddedList, client);
+      return (entity as any)[embeddedList.key] ?? [];
+    };
   }
 }

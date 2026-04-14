@@ -9,6 +9,7 @@ import {
   loadEmbeddedListRows,
   loadEmbeddedListRowsBatch,
 } from "../utils/repository/embedded-list-ops";
+import { installLazyEmbeddedLists } from "#internal/entity/utils/install-lazy-embedded-lists";
 
 export type SqliteCursorOptions = {
   sql: string;
@@ -144,12 +145,29 @@ export class SqliteCursor<E extends IEntity> implements IProteusCursor<E> {
     if (this.metadata.embeddedLists.length === 0 || entities.length === 0) return;
     if (entities.length === 1) {
       for (const el of this.metadata.embeddedLists) {
+        if (el.loading.multiple === "lazy") continue;
         loadEmbeddedListRows(entities[0], el, this.client);
       }
     } else {
       for (const el of this.metadata.embeddedLists) {
+        if (el.loading.multiple === "lazy") continue;
         loadEmbeddedListRowsBatch(entities, el, this.client);
       }
+    }
+
+    const client = this.client;
+    for (const entity of entities) {
+      installLazyEmbeddedLists(
+        entity,
+        this.metadata,
+        {
+          loadEmbeddedList: async (e, el) => {
+            loadEmbeddedListRows(e, el, client);
+            return (e as any)[el.key] ?? [];
+          },
+        },
+        "multiple",
+      );
     }
   }
 }

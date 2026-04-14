@@ -10,6 +10,7 @@ import {
   loadEmbeddedListRows,
   loadEmbeddedListRowsBatch,
 } from "../utils/repository/embedded-list-ops";
+import { installLazyEmbeddedLists } from "#internal/entity/utils/install-lazy-embedded-lists";
 
 export type PostgresCursorOptions = {
   sql: string;
@@ -151,14 +152,32 @@ export class PostgresCursor<E extends IEntity> implements IProteusCursor<E> {
   private async loadEmbeddedLists(entities: Array<E>): Promise<void> {
     if (this.metadata.embeddedLists.length === 0 || entities.length === 0) return;
     const ns = this.metadata.entity.namespace ?? this.namespace;
+    // Cursors are always a "multiple" scope — skip fields that are lazy on list queries.
     if (entities.length === 1) {
       for (const el of this.metadata.embeddedLists) {
+        if (el.loading.multiple === "lazy") continue;
         await loadEmbeddedListRows(entities[0], el, this.poolClient, ns);
       }
     } else {
       for (const el of this.metadata.embeddedLists) {
+        if (el.loading.multiple === "lazy") continue;
         await loadEmbeddedListRowsBatch(entities, el, this.poolClient, ns);
       }
+    }
+
+    // Install lazy thenables for fields that were skipped above.
+    for (const entity of entities) {
+      installLazyEmbeddedLists(
+        entity,
+        this.metadata,
+        {
+          loadEmbeddedList: async (e, el) => {
+            await loadEmbeddedListRows(e, el, this.poolClient, ns);
+            return (e as any)[el.key] ?? [];
+          },
+        },
+        "multiple",
+      );
     }
   }
 }
