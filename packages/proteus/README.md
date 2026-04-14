@@ -1412,6 +1412,33 @@ tags!: string[];
 
 **Arguments:** `(typeOrFn: MetaFieldType | (() => Constructor), options?: { tableName?: string })`.
 
+##### Loading: lazy by default on `find()`, eager by default on `findOne()`
+
+`@EmbeddedList` fields obey the same `@Eager` / `@Lazy` decorators as relations, with the JPA `@ElementCollection` default: **`{ single: "eager", multiple: "lazy" }`**. JPA settled on lazy-on-list because element collections are a separate batched query against a separate table — eager-by-default on every `find()` is a footgun that surfaces only under load.
+
+What this means in practice:
+
+- `repo.findOne(...)` returns plain arrays for every embedded list field.
+- `repo.find(...)` returns a `LazyCollection<T>` thenable on each embedded list field. `await row.tags` resolves to the actual array and replaces the property by identity, so subsequent reads are plain arrays.
+
+Override per scope when the default does not fit:
+
+```typescript
+@Eager()                  // both findOne and find load eagerly
+@EmbeddedList("string")
+operations!: string[];
+
+@Eager("multiple")        // force eager on list queries
+@EmbeddedList("string")
+certificateChain!: string[];
+
+@Lazy("single")           // force lazy thenable on findOne
+@EmbeddedList("string")
+auditLog!: string[];
+```
+
+The cursor APIs (`cursor()`, `stream()`) follow the `"multiple"` scope, so a `@Lazy("multiple")` (or default) embedded list yields thenables on every cursor batch.
+
 #### `@JoinKey`
 
 Marks a relation field as the owning side (has FK column) and optionally provides explicit join key mapping.
@@ -1528,7 +1555,7 @@ profile!: Profile | null;
 tags!: Tag[];
 ```
 
-**Argument:** `"single" | "multiple"` or omit for both.
+**Argument:** `"single" | "multiple"` or omit for both. Also applies to `@EmbeddedList` fields — see [`@EmbeddedList` loading](#loading-lazy-by-default-on-find-eager-by-default-on-findone).
 
 #### `@Lazy`
 
@@ -1545,7 +1572,7 @@ profile!: LazyType<Profile | null>;
 
 Use `LazyType<T>` as the property type for lazy-loaded relations.
 
-**Argument:** `"single" | "multiple"` or omit for both.
+**Argument:** `"single" | "multiple"` or omit for both. Also applies to `@EmbeddedList` fields — see [`@EmbeddedList` loading](#loading-lazy-by-default-on-find-eager-by-default-on-findone).
 
 #### `@OnOrphan`
 

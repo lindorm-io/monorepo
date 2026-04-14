@@ -21,6 +21,7 @@ import {
   Eager,
   Embeddable,
   Embedded,
+  EmbeddedList,
   Encrypted,
   Entity,
   ExpiryDateField,
@@ -893,6 +894,96 @@ export const createTckEntities = (hookCallback: jest.Mock) => {
     transformedSecret!: string;
   }
 
+  // ─── Embedded List Loading Entities ────────────────────────────────
+  // Default JPA-aligned loading: { single: "eager", multiple: "lazy" }
+
+  @Entity({ name: "TckElDefault" })
+  class TckElDefault {
+    @PrimaryKeyField()
+    id!: string;
+
+    @VersionField()
+    version!: number;
+
+    @CreateDateField()
+    createdAt!: Date;
+
+    @UpdateDateField()
+    updatedAt!: Date;
+
+    @Field("string")
+    name!: string;
+
+    @EmbeddedList("string")
+    tags!: string[];
+  }
+
+  @Entity({ name: "TckElEagerMultiple" })
+  class TckElEagerMultiple {
+    @PrimaryKeyField()
+    id!: string;
+
+    @VersionField()
+    version!: number;
+
+    @CreateDateField()
+    createdAt!: Date;
+
+    @UpdateDateField()
+    updatedAt!: Date;
+
+    @Field("string")
+    name!: string;
+
+    @Eager("multiple")
+    @EmbeddedList("string")
+    tags!: string[];
+  }
+
+  @Entity({ name: "TckElLazySingle" })
+  class TckElLazySingle {
+    @PrimaryKeyField()
+    id!: string;
+
+    @VersionField()
+    version!: number;
+
+    @CreateDateField()
+    createdAt!: Date;
+
+    @UpdateDateField()
+    updatedAt!: Date;
+
+    @Field("string")
+    name!: string;
+
+    @Lazy("single")
+    @EmbeddedList("string")
+    tags!: string[];
+  }
+
+  @Entity({ name: "TckElEager" })
+  class TckElEager {
+    @PrimaryKeyField()
+    id!: string;
+
+    @VersionField()
+    version!: number;
+
+    @CreateDateField()
+    createdAt!: Date;
+
+    @UpdateDateField()
+    updatedAt!: Date;
+
+    @Field("string")
+    name!: string;
+
+    @Eager()
+    @EmbeddedList("string")
+    tags!: string[];
+  }
+
   return {
     TckSimpleUser,
     TckSimplePost,
@@ -933,5 +1024,9 @@ export const createTckEntities = (hookCallback: jest.Mock) => {
     TckAddress,
     TckWithAddress,
     TckEncrypted,
+    TckElDefault,
+    TckElEagerMultiple,
+    TckElLazySingle,
+    TckElEager,
   };
 };

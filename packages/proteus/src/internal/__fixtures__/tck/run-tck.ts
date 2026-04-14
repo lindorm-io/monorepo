@@ -31,6 +31,7 @@ import {
 import { queryBuilderSuite } from "./query-builder.tck";
 import { scopeSuite } from "./scope.tck";
 import { lazyLoadingSuite } from "./lazy-loading.tck";
+import { embeddedListLoadingSuite } from "./embedded-list-loading.tck";
 import { unversionedSuite } from "./unversioned.tck";
 import { streamSuite } from "./stream.tck";
 import { clearSuite } from "./clear.tck";
@@ -105,6 +106,16 @@ export const runTck = (factory: TckDriverFactory, getSource: () => ProteusSource
     baseTargets.push(entities.TckAnimal, entities.TckDog, entities.TckCat);
   }
 
+  // Embedded list loading entities (all drivers except redis)
+  if (caps.embeddedLists) {
+    baseTargets.push(
+      entities.TckElDefault,
+      entities.TckElEagerMultiple,
+      entities.TckElLazySingle,
+      entities.TckElEager,
+    );
+  }
+
   const allTargets = baseTargets;
 
   beforeAll(async () => {
@@ -148,6 +159,9 @@ export const runTck = (factory: TckDriverFactory, getSource: () => ProteusSource
   );
   maybeDescribe(caps.lazyLoading, "lazyLoading", () =>
     lazyLoadingSuite(getHandle, entities),
+  );
+  maybeDescribe(caps.embeddedLists, "embeddedListLoading", () =>
+    embeddedListLoadingSuite(getHandle, entities),
   );
   maybeDescribe(caps.uniqueEnforcement, "uniqueEnforcement", () =>
     uniqueConstraintsSuite(getHandle, entities),
