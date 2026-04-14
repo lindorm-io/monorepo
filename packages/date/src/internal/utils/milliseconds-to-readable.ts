@@ -1,3 +1,4 @@
+import { ReadableTime } from "../../types";
 import {
   DAYS,
   HOURS,
@@ -6,8 +7,7 @@ import {
   SECONDS,
   WEEKS,
   YEARS,
-} from "../../constants/private";
-import { ReadableTime } from "../../types";
+} from "#internal/constants/time";
 
 export const millisecondsToReadable = (milliseconds: number): ReadableTime => {
   const y = milliseconds / YEARS;

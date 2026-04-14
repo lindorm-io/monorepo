@@ -1,3 +1,4 @@
+import { ReadableTime } from "../../types";
 import {
   DAYS,
   HOURS,
@@ -6,9 +7,8 @@ import {
   SECONDS,
   WEEKS,
   YEARS,
-} from "../../constants/private";
-import { ReadableTime } from "../../types";
-import { readableToDuration } from "./readable-to-duration";
+} from "#internal/constants/time";
+import { readableToDuration } from "#internal/utils/readable-to-duration";
 
 export const readableToMilliseconds = (...values: Array<ReadableTime>): number => {
   const object = readableToDuration(...values);

@@ -1,3 +1,4 @@
+import { DurationString } from "../../types";
 import {
   DAYS,
   HOURS,
@@ -6,8 +7,7 @@ import {
   SECONDS,
   WEEKS,
   YEARS,
-} from "../../constants/private";
-import { DurationString } from "../../types";
+} from "#internal/constants/time";
 
 export const calculateCurrentDuration = (
   milliseconds: number,
