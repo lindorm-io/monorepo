@@ -814,17 +814,19 @@ describe("Amphora", () => {
   });
 
   describe("x509 certificate chain", () => {
-    test("should emit x5c/x5t#S256/x5t in JWKS for kryptos with chain", () => {
+    test("should emit x5c and x5t#S256 in JWKS for kryptos with chain", () => {
       amphora.add(TEST_X509_KRYPTOS_SIG);
 
       expect(amphora.jwks).toMatchSnapshot();
     });
 
-    test("should filter kryptos by x5tS256 thumbprint", async () => {
+    test("should filter kryptos by certificateThumbprint", async () => {
       amphora.add([TEST_EC_KEY_SIG, TEST_X509_KRYPTOS_SIG]);
 
       await expect(
-        amphora.filter({ x5tS256: TEST_X509_KRYPTOS_SIG.x5tS256 }),
+        amphora.filter({
+          certificateThumbprint: TEST_X509_KRYPTOS_SIG.certificateThumbprint,
+        }),
       ).resolves.toEqual([TEST_X509_KRYPTOS_SIG]);
     });
 
@@ -832,14 +834,16 @@ describe("Amphora", () => {
       amphora.add([TEST_EC_KEY_SIG, TEST_X509_KRYPTOS_SIG]);
 
       await expect(
-        amphora.filter({ x5tS256: "unknown-thumbprint-value" }),
+        amphora.filter({ certificateThumbprint: "unknown-thumbprint-value" }),
       ).resolves.toEqual([]);
     });
 
     test("should return empty array when filtering by thumbprint on chain-less vault", async () => {
       amphora.add([TEST_EC_KEY_SIG, TEST_OCT_KEY_SIG]);
 
-      await expect(amphora.filter({ x5tS256: "some-thumbprint" })).resolves.toEqual([]);
+      await expect(
+        amphora.filter({ certificateThumbprint: "some-thumbprint" }),
+      ).resolves.toEqual([]);
     });
   });
 
@@ -969,6 +973,8 @@ describe("Amphora", () => {
       KryptosKit.generate.sig.ec({
         algorithm: "ES256",
         issuer: externalIssuer,
+        notBefore: new Date("2026-01-01T00:00:00.000Z"),
+        expiresAt: new Date("2030-01-01T00:00:00.000Z"),
         certificate: { mode: "root-ca" },
       });
 
@@ -976,6 +982,8 @@ describe("Amphora", () => {
       KryptosKit.generate.sig.ec({
         algorithm: "ES256",
         issuer: externalIssuer,
+        notBefore: new Date("2026-01-02T00:00:00.000Z"),
+        expiresAt: new Date("2029-12-31T00:00:00.000Z"),
         certificate: { mode: "ca-signed", ca },
       });
 
@@ -997,7 +1005,7 @@ describe("Amphora", () => {
           {
             issuer: externalIssuer,
             jwksUri: externalJwksUri,
-            trustAnchors: ca.x5c![0],
+            trustAnchors: ca.certificateChain![0],
           },
         ],
       });
@@ -1028,7 +1036,7 @@ describe("Amphora", () => {
           {
             issuer: externalIssuer,
             jwksUri: externalJwksUri,
-            trustAnchors: [caA.x5c![0], caB.x5c![0]],
+            trustAnchors: [caA.certificateChain![0], caB.certificateChain![0]],
           },
         ],
       });
@@ -1059,7 +1067,7 @@ describe("Amphora", () => {
           {
             issuer: externalIssuer,
             jwksUri: externalJwksUri,
-            trustAnchors: trustedCa.x5c![0],
+            trustAnchors: trustedCa.certificateChain![0],
           },
         ],
       });
@@ -1093,7 +1101,7 @@ describe("Amphora", () => {
           {
             issuer: externalIssuer,
             jwksUri: externalJwksUri,
-            trustAnchors: ca.x5c![0],
+            trustAnchors: ca.certificateChain![0],
           },
         ],
       });
@@ -1122,7 +1130,7 @@ describe("Amphora", () => {
           {
             issuer: externalIssuer,
             jwksUri: externalJwksUri,
-            trustAnchors: trustedCa.x5c![0],
+            trustAnchors: trustedCa.certificateChain![0],
           },
         ],
       });
@@ -1164,7 +1172,7 @@ describe("Amphora", () => {
           {
             issuer: "https://trusted.lindorm.io/",
             jwksUri: "https://trusted.lindorm.io/.well-known/jwks.json",
-            trustAnchors: ca.x5c![0],
+            trustAnchors: ca.certificateChain![0],
           },
           {
             issuer: "https://loose.lindorm.io/",
@@ -1197,6 +1205,8 @@ describe("Amphora", () => {
       KryptosKit.generate.sig.ec({
         algorithm: "ES256",
         issuer: externalIssuer,
+        notBefore: new Date("2026-01-01T00:00:00.000Z"),
+        expiresAt: new Date("2030-01-01T00:00:00.000Z"),
         certificate: { mode: "root-ca" },
       });
 
@@ -1204,6 +1214,8 @@ describe("Amphora", () => {
       KryptosKit.generate.sig.ec({
         algorithm: "ES256",
         issuer: externalIssuer,
+        notBefore: new Date("2026-01-02T00:00:00.000Z"),
+        expiresAt: new Date("2029-12-31T00:00:00.000Z"),
         certificate: { mode: "ca-signed", ca },
       });
 
@@ -1229,7 +1241,7 @@ describe("Amphora", () => {
           {
             issuer: externalIssuer,
             jwksUri: externalJwksUri,
-            trustAnchors: ca.x5c![0],
+            trustAnchors: ca.certificateChain![0],
             trustMode: "lax",
           },
         ],
@@ -1260,7 +1272,7 @@ describe("Amphora", () => {
           {
             issuer: externalIssuer,
             jwksUri: externalJwksUri,
-            trustAnchors: ca.x5c![0],
+            trustAnchors: ca.certificateChain![0],
             trustMode: "lax",
           },
         ],
@@ -1292,7 +1304,7 @@ describe("Amphora", () => {
           {
             issuer: externalIssuer,
             jwksUri: externalJwksUri,
-            trustAnchors: trustedCa.x5c![0],
+            trustAnchors: trustedCa.certificateChain![0],
             trustMode: "lax",
           },
         ],
@@ -1327,7 +1339,7 @@ describe("Amphora", () => {
           {
             issuer: externalIssuer,
             jwksUri: externalJwksUri,
-            trustAnchors: ca.x5c![0],
+            trustAnchors: ca.certificateChain![0],
             trustMode: "strict",
           },
         ],
@@ -1372,13 +1384,13 @@ describe("Amphora", () => {
           {
             issuer: "https://lax.lindorm.io/",
             jwksUri: "https://lax.lindorm.io/.well-known/jwks.json",
-            trustAnchors: ca.x5c![0],
+            trustAnchors: ca.certificateChain![0],
             trustMode: "lax",
           },
           {
             issuer: "https://strict.lindorm.io/",
             jwksUri: "https://strict.lindorm.io/.well-known/jwks.json",
-            trustAnchors: ca.x5c![0],
+            trustAnchors: ca.certificateChain![0],
             trustMode: "strict",
           },
         ],
