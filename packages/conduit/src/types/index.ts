@@ -1,3 +1,4 @@
+export * from "./adapter";
 export * from "./circuit-breaker";
 export * from "./conduit";
 export * from "./context";

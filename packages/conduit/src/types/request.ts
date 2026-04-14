@@ -1,7 +1,7 @@
 import { RetryOptions } from "@lindorm/retry";
 import { Dict, HttpMethod, Param, Query } from "@lindorm/types";
 import { Readable } from "stream";
-import { ExpectedResponse } from "../types";
+import { ConduitAdapter, ExpectedResponse } from "../types";
 import { ConduitMiddleware } from "./conduit";
 import { ConfigOptions } from "./overrides";
 import { OnRetryCallback, RetryCallback } from "./retry";
@@ -18,6 +18,7 @@ export type RequestOptions<
   RequestParams = Dict<Param>,
   RequestQuery = Dict<Query>,
 > = {
+  adapter?: ConduitAdapter;
   body?: RequestBody;
   config?: ConfigOptions;
   expectedResponse?: ExpectedResponse;
