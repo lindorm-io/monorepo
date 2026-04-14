@@ -219,7 +219,7 @@ describe("KryptosKit certificate generation", () => {
 
       const parsed = parseX509Certificate(Buffer.from(kryptos.x5c![0], "base64"));
       expect(parsed.extensions.subjectAltNames).toEqual([
-        { type: "ip", value: "c0a80101" },
+        { type: "ip", value: "192.168.1.1" },
       ]);
     });
 

@@ -57,6 +57,43 @@ describe("parseX509Extensions", () => {
     expect(() => parseX509Extensions(der)).toThrow(/Unknown critical/);
   });
 
+  test.each([
+    ["192.168.1.1"],
+    ["10.0.0.1"],
+    ["255.255.255.255"],
+    ["0.0.0.0"],
+    ["::1"],
+    ["2001:db8::1"],
+    ["fe80::1"],
+    ["::ffff:192.168.1.1"],
+    ["2001:db8:85a3::8a2e:370:7334"],
+    ["2001:db8:0:1:1:1:1:1"],
+  ])("round-trips SAN ip %s", (ip) => {
+    const der = encodeSequence([subjectAlternativeNameExt([{ type: "ip", value: ip }])]);
+    const parsed = parseX509Extensions(der);
+    expect(parsed.subjectAltNames).toEqual([{ type: "ip", value: ip }]);
+  });
+
+  test("compresses first of multiple equal-length zero runs (RFC 5952)", () => {
+    // 1:0:0:1:1:0:0:1 — two runs of length 2; canonical is 1::1:1:0:0:1
+    const der = encodeSequence([
+      subjectAlternativeNameExt([{ type: "ip", value: "1::1:1:0:0:1" }]),
+    ]);
+    const parsed = parseX509Extensions(der);
+    expect(parsed.subjectAltNames).toEqual([{ type: "ip", value: "1::1:1:0:0:1" }]);
+  });
+
+  test("does not compress a single zero group (RFC 5952 §4.2.2)", () => {
+    // 2001:db8:0:1:1:1:1:1 has a single zero group; must NOT be compressed.
+    const der = encodeSequence([
+      subjectAlternativeNameExt([{ type: "ip", value: "2001:db8:0:1:1:1:1:1" }]),
+    ]);
+    const parsed = parseX509Extensions(der);
+    expect(parsed.subjectAltNames).toEqual([
+      { type: "ip", value: "2001:db8:0:1:1:1:1:1" },
+    ]);
+  });
+
   test("silently ignores unknown non-critical extension", () => {
     const unknownOid = "1.2.3.4.5.6.7.8";
     const der = encodeSequence([

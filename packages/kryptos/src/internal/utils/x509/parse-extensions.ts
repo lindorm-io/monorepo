@@ -107,6 +107,75 @@ const SAN_IMPLICIT_TAGS: Record<number, ParsedX509SubjectAltName["type"]> = {
   0x87: "ip",
 };
 
+const decodeIpv4 = (bytes: Buffer): string =>
+  `${bytes[0]}.${bytes[1]}.${bytes[2]}.${bytes[3]}`;
+
+const decodeIpv6 = (bytes: Buffer): string => {
+  // RFC 4291 §2.5.5.2 IPv4-mapped IPv6 address: ::ffff:a.b.c.d
+  const isIpv4Mapped =
+    bytes[0] === 0 &&
+    bytes[1] === 0 &&
+    bytes[2] === 0 &&
+    bytes[3] === 0 &&
+    bytes[4] === 0 &&
+    bytes[5] === 0 &&
+    bytes[6] === 0 &&
+    bytes[7] === 0 &&
+    bytes[8] === 0 &&
+    bytes[9] === 0 &&
+    bytes[10] === 0xff &&
+    bytes[11] === 0xff;
+  if (isIpv4Mapped) {
+    return `::ffff:${bytes[12]}.${bytes[13]}.${bytes[14]}.${bytes[15]}`;
+  }
+
+  const groups: Array<number> = [];
+  for (let i = 0; i < 8; i++) {
+    groups.push((bytes[i * 2] << 8) | bytes[i * 2 + 1]);
+  }
+
+  // Find the longest run of zero groups (length >= 2), first-wins on ties (RFC 5952 §4.2.3).
+  let bestStart = -1;
+  let bestLen = 0;
+  let curStart = -1;
+  let curLen = 0;
+  for (let i = 0; i < groups.length; i++) {
+    if (groups[i] === 0) {
+      if (curStart === -1) curStart = i;
+      curLen++;
+      if (curLen > bestLen) {
+        bestLen = curLen;
+        bestStart = curStart;
+      }
+    } else {
+      curStart = -1;
+      curLen = 0;
+    }
+  }
+  // RFC 5952 §4.2.2: a single 16-bit zero group MUST NOT be shortened.
+  if (bestLen < 2) {
+    return groups.map((g) => g.toString(16)).join(":");
+  }
+
+  const head = groups
+    .slice(0, bestStart)
+    .map((g) => g.toString(16))
+    .join(":");
+  const tail = groups
+    .slice(bestStart + bestLen)
+    .map((g) => g.toString(16))
+    .join(":");
+  return `${head}::${tail}`;
+};
+
+const decodeSanIpBytes = (bytes: Buffer): string => {
+  if (bytes.length === 4) return decodeIpv4(bytes);
+  if (bytes.length === 16) return decodeIpv6(bytes);
+  throw new KryptosError(
+    `subjectAlternativeName ip value has unexpected length ${bytes.length} (expected 4 or 16)`,
+  );
+};
+
 const parseSubjectAltNames = (
   extnValue: Buffer,
 ): ReadonlyArray<ParsedX509SubjectAltName> => {
@@ -125,7 +194,10 @@ const parseSubjectAltNames = (
         child.contentStart,
         child.contentStart + child.contentLength,
       );
-      const value = type === "ip" ? content.toString("hex") : content.toString("ascii");
+      const value =
+        type === "ip"
+          ? decodeSanIpBytes(Buffer.from(content))
+          : content.toString("ascii");
       names.push({ type, value });
     }
     offset = child.nextOffset;
