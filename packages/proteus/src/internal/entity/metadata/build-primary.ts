@@ -27,6 +27,7 @@ import {
 import { generateAutoIndexes } from "./auto-indexes";
 import { collectAll, collectOwn, collectSingular } from "./collect";
 import { inferGeneratedTypes } from "./infer-generated-type";
+import { validateEmbeddedListInitializers } from "./validate-embedded-list-initializers";
 import { validateFields } from "./validate-fields";
 import { validateIndexes } from "./validate-indexes";
 import { validatePrimaryKeys, validateVersionKeys } from "./validate-primary-keys";
@@ -618,6 +619,12 @@ export const buildPrimaryMetadata = <
       );
     }
   }
+
+  // Guard: lazy-scope @EmbeddedList fields must not carry class field initializers.
+  // Field initializers run in `new target()` before hydrate and pre-populate the
+  // property with `[]`, which causes `installLazyEmbeddedLists` to skip the field
+  // (it only overwrites `undefined`) and the lazy loader never fires.
+  validateEmbeddedListInitializers(target.name, target, embeddedLists);
 
   const final: Omit<EntityMetadata<TExtra, TDecorator>, "relations"> = {
     target: target as Constructor<IEntity>,
