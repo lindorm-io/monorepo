@@ -31,7 +31,9 @@ describe("createGetCookie", () => {
     const getCookie = createGetCookie({
       ctx,
       config,
-      parsed: [{ name: "cookie_name", signature: null, value: "Y29va2llX3ZhbHVl" }],
+      parsed: [
+        { name: "cookie_name", signature: null, kid: null, value: "Y29va2llX3ZhbHVl" },
+      ],
     });
 
     await expect(getCookie("cookie_name")).resolves.toEqual("cookie_value");
@@ -41,7 +43,9 @@ describe("createGetCookie", () => {
     const getCookie = createGetCookie({
       ctx,
       config,
-      parsed: [{ name: "cookie_name", signature: null, value: "bmV3X3ZhbHVl" }],
+      parsed: [
+        { name: "cookie_name", signature: null, kid: null, value: "bmV3X3ZhbHVl" },
+      ],
     });
 
     await expect(getCookie("cookie_name", { encoding: "base64" })).resolves.toEqual(
@@ -57,6 +61,7 @@ describe("createGetCookie", () => {
         {
           name: "cookie_name",
           signature: null,
+          kid: null,
           value: B64.encode('{"key":"value"}', "b64u"),
         },
       ],
@@ -71,7 +76,7 @@ describe("createGetCookie", () => {
     const getCookie = createGetCookie({
       ctx,
       config,
-      parsed: [{ name: "cookie_name", signature: null, value: tokenised }],
+      parsed: [{ name: "cookie_name", signature: null, kid: null, value: tokenised }],
     });
 
     await expect(getCookie("cookie_name")).resolves.toEqual("secret_value");
@@ -86,6 +91,7 @@ describe("createGetCookie", () => {
         {
           name: "cookie_name",
           signature: "cookie_signature",
+          kid: "cookie_kid",
           value: "Y29va2llX3ZhbHVl",
         },
       ],
@@ -99,6 +105,7 @@ describe("createGetCookie", () => {
       "cookie_name",
       "Y29va2llX3ZhbHVl",
       "cookie_signature",
+      "cookie_kid",
     );
   });
 
@@ -106,7 +113,9 @@ describe("createGetCookie", () => {
     const getCookie = createGetCookie({
       ctx,
       config,
-      parsed: [{ name: "cookie_name", signature: null, value: "Y29va2llX3ZhbHVl" }],
+      parsed: [
+        { name: "cookie_name", signature: null, kid: null, value: "Y29va2llX3ZhbHVl" },
+      ],
     });
 
     await getCookie("cookie_name");

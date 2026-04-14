@@ -21,7 +21,10 @@ export const createHttpCookiesMiddleware = (
 
     const removeExisting = (name: string): void => {
       cookies = cookies.filter(
-        (cookie) => cookie.name !== name && cookie.name !== `${name}.sig`,
+        (cookie) =>
+          cookie.name !== name &&
+          cookie.name !== `${name}.sig` &&
+          cookie.name !== `${name}.kid`,
       );
     };
 
@@ -64,9 +67,10 @@ export const createHttpCookiesMiddleware = (
         cookies.push(new PylonCookie(name, final, opts));
 
         if (opts.signed) {
-          const signature = await signCookie(ctx, final);
+          const { signature, kid } = await signCookie(ctx, final);
 
           cookies.push(new PylonCookie(`${name}.sig`, signature, opts));
+          cookies.push(new PylonCookie(`${name}.kid`, kid, opts));
         }
       },
 

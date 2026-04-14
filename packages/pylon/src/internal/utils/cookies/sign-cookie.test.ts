@@ -18,11 +18,13 @@ describe("signCookie", () => {
 
   beforeEach(() => {
     ctx = { amphora: createMockAmphora() };
+    ctx.amphora.find.mockResolvedValue({ id: "kid-1" });
   });
 
-  test("should return signed value", async () => {
-    await expect(signCookie(ctx, "value")).resolves.toStrictEqual(
-      "formatted_signed_value",
-    );
+  test("should return signed value and kid", async () => {
+    await expect(signCookie(ctx, "value")).resolves.toStrictEqual({
+      signature: "formatted_signed_value",
+      kid: "kid-1",
+    });
   });
 });
