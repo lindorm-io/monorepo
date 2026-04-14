@@ -19,7 +19,7 @@ import { WebhookAuth, WebhookMethod } from "../enums";
 import { IWebhookSubscription } from "../interfaces";
 
 @Namespace("pylon")
-@Entity({ name: "webhook_subscription" })
+@Entity()
 export class WebhookSubscription implements IWebhookSubscription {
   @PrimaryKeyField()
   public id!: string;

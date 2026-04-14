@@ -7,7 +7,7 @@ import {
 } from "@lindorm/proteus";
 
 @Namespace("pylon")
-@Entity({ name: "presence" })
+@Entity()
 export class Presence {
   @PrimaryKeyField()
   public id!: string;

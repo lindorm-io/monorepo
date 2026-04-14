@@ -9,11 +9,7 @@ import {
 } from "@lindorm/proteus";
 
 @Namespace("pylon")
-@Index<typeof RequestAuditLog>(["actor"])
-@Index<typeof RequestAuditLog>(["endpoint"])
-@Index<typeof RequestAuditLog>(["correlationId"])
-@Index<typeof RequestAuditLog>(["requestId"])
-@Entity({ name: "request_audit_log" })
+@Entity()
 export class RequestAuditLog {
   @PrimaryKeyField()
   public id!: string;
@@ -21,18 +17,22 @@ export class RequestAuditLog {
   @CreateDateField()
   public createdAt!: Date;
 
+  @Index()
   @Field("string")
   public requestId!: string;
 
+  @Index()
   @Field("string")
   public correlationId!: string;
 
+  @Index()
   @Field("string")
   public actor!: string;
 
   @Field("string")
   public appName!: string;
 
+  @Index()
   @Field("string")
   public endpoint!: string;
 
