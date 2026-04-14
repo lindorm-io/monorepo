@@ -85,6 +85,24 @@ describe("parseX509Certificate (cross-check)", () => {
     expect(ours.extensions.authorityKeyIdentifier).toBeInstanceOf(Buffer);
   });
 
+  test("throws when inner TBS sigAlg bytes differ from outer signatureAlgorithm", () => {
+    const der = pemToDer(TEST_X509_LEAF_PEM);
+    // Locate outer sigAlg bytes (immediately after TBSCertificate inside the outer SEQUENCE).
+    // Then locate the inner TBS signature SEQUENCE and mutate one of its OID bytes so
+    // the byte-equal check fails (RFC 5280 §4.1.1.2).
+    const mutated = Buffer.from(der);
+    // Walk to find outer sigAlg SEQUENCE: outer SEQUENCE -> tbs SEQUENCE -> sigAlg SEQUENCE.
+    // The outer sigAlg occurs right after the tbs SEQUENCE ends. We look for the first
+    // ecdsa-with-SHA256 OID (2a 86 48 ce 3d 04 03 02) inside the TBS — that is the inner
+    // signature AlgorithmIdentifier. Flip its trailing byte.
+    const needle = Buffer.from([0x2a, 0x86, 0x48, 0xce, 0x3d, 0x04, 0x03, 0x02]);
+    const firstIdx = mutated.indexOf(needle);
+    expect(firstIdx).toBeGreaterThan(0);
+    // Flip the final byte (algorithm sub-id) to break OID equality.
+    mutated[firstIdx + needle.length - 1] = 0x03;
+    expect(() => parseX509Certificate(mutated)).toThrow(/RFC 5280/);
+  });
+
   test("tbsBytes are the exact bytes Node would verify against", () => {
     const der = pemToDer(TEST_X509_LEAF_PEM);
     const ours = parseX509Certificate(der);
