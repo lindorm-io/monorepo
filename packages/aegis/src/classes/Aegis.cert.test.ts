@@ -233,9 +233,14 @@ describe("Aegis cert binding", () => {
       const { verifyCertBinding } = await import("../internal/utils/verify-cert-binding");
 
       expect(() =>
-        verifyCertBinding(kryptos, {
-          x5t: undefined,
-          x5tS256: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+        verifyCertBinding({
+          header: {
+            x5t: undefined,
+            x5tS256: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+          },
+          kryptos,
+          logger,
+          mode: "strict",
         }),
       ).toThrow(/signing certificate thumbprint mismatch/);
     });
@@ -284,7 +289,7 @@ describe("Aegis cert binding", () => {
     test("sign with bindCertificate on chain-less kryptos throws", async () => {
       await expect(
         aegis.jwt.sign(signContent, { bindCertificate: "thumbprint" }),
-      ).rejects.toThrow(/bindCertificate requires a signing kryptos/);
+      ).rejects.toThrow(/bindCertificate requires kryptos with certificateChain/);
     });
 
     test("sign with bindCertificate: 'none' on chain-less kryptos stamps nothing and does not throw", async () => {
@@ -318,11 +323,172 @@ describe("Aegis cert binding", () => {
       const kryptos = buildChainlessKryptos();
 
       expect(() =>
-        verifyCertBinding(kryptos, {
-          x5t: undefined,
-          x5tS256: "abc",
+        verifyCertBinding({
+          header: {
+            x5t: undefined,
+            x5tS256: "abc",
+          },
+          kryptos,
+          logger,
+          mode: "strict",
         }),
       ).toThrow(/signing kryptos has no certificateChain/);
+    });
+  });
+
+  describe("certBindingMode", () => {
+    const SHARED_KID = "c0a1b2c3-0000-0000-0000-aegis-cert-shrd";
+
+    const buildSharedCertBoundKryptos = (): Kryptos =>
+      new Kryptos({
+        ...defaults,
+        id: SHARED_KID,
+        algorithm: "ES256",
+        curve: "P-256",
+        type: "EC",
+        use: "sig",
+        isExternal: false,
+        operations: ["sign", "verify"],
+        privateKey: Buffer.from(TEST_X509_LEAF_PRIVATE_KEY_B64, "base64url"),
+        publicKey: Buffer.from(TEST_X509_LEAF_PUBLIC_KEY_B64, "base64url"),
+        certificateChain: [
+          TEST_X509_LEAF_PEM,
+          TEST_X509_INTERMEDIATE_PEM,
+          TEST_X509_ROOT_PEM,
+        ],
+      });
+
+    const buildSharedChainlessKryptos = (): Kryptos =>
+      new Kryptos({
+        ...defaults,
+        id: SHARED_KID,
+        algorithm: "ES256",
+        curve: "P-256",
+        type: "EC",
+        use: "sig",
+        isExternal: false,
+        operations: ["sign", "verify"],
+        privateKey: Buffer.from(TEST_X509_LEAF_PRIVATE_KEY_B64, "base64url"),
+        publicKey: Buffer.from(TEST_X509_LEAF_PUBLIC_KEY_B64, "base64url"),
+      });
+
+    const setupAegis = async (
+      mode?: "strict" | "lax",
+    ): Promise<{
+      aegis: Aegis;
+      amphora: IAmphora;
+      logger: ILogger;
+    }> => {
+      const localLogger = createMockLogger();
+      const localAmphora = new Amphora({
+        domain: "https://test.lindorm.io/",
+        logger: localLogger,
+      });
+      const localAegis = new Aegis({
+        amphora: localAmphora,
+        logger: localLogger,
+        ...(mode ? { certBindingMode: mode } : {}),
+      });
+      await localAmphora.setup();
+      return { aegis: localAegis, amphora: localAmphora, logger: localLogger };
+    };
+
+    test("default mode is strict — stranded token after kryptos chain loss throws", async () => {
+      const { aegis: localAegis, amphora: localAmphora } = await setupAegis();
+      localAmphora.add(buildSharedCertBoundKryptos());
+
+      const { token } = await localAegis.jwt.sign(signContent);
+
+      // Simulate chain loss after signing: overwrite the same kid with a
+      // chain-less kryptos that shares the key material so the signature
+      // still verifies, but the post-verify cert-binding check fires.
+      localAmphora.add(buildSharedChainlessKryptos());
+
+      await expect(localAegis.jwt.verify(token)).rejects.toThrow(
+        /signing kryptos has no certificateChain/,
+      );
+    });
+
+    test("explicit strict matches default behaviour", async () => {
+      const { aegis: localAegis, amphora: localAmphora } = await setupAegis("strict");
+      localAmphora.add(buildSharedCertBoundKryptos());
+
+      const { token } = await localAegis.jwt.sign(signContent);
+
+      localAmphora.add(buildSharedChainlessKryptos());
+
+      await expect(localAegis.jwt.verify(token)).rejects.toThrow(
+        /signing kryptos has no certificateChain/,
+      );
+    });
+
+    test("lax mode allows stranded tokens through with a warn log", async () => {
+      const warnSpy: Array<{ message: string; meta: unknown }> = [];
+      const localLogger = createMockLogger((msg: string, meta: unknown) => {
+        warnSpy.push({ message: msg, meta });
+      });
+      const localAmphora = new Amphora({
+        domain: "https://test.lindorm.io/",
+        logger: localLogger,
+      });
+      const localAegis = new Aegis({
+        amphora: localAmphora,
+        logger: localLogger,
+        certBindingMode: "lax",
+      });
+      await localAmphora.setup();
+      localAmphora.add(buildSharedCertBoundKryptos());
+
+      const { token } = await localAegis.jwt.sign(signContent);
+
+      localAmphora.add(buildSharedChainlessKryptos());
+
+      await expect(localAegis.jwt.verify(token)).resolves.toBeDefined();
+
+      const laxWarn = warnSpy.find((entry) => /lax mode/.test(entry.message));
+      expect(laxWarn).toBeDefined();
+      expect(laxWarn?.message).toMatch(/x5t#S256/);
+    });
+
+    test("lax still rejects thumbprint mismatch (critical invariant)", async () => {
+      // The plan accepts a direct unit test of verifyCertBinding for the
+      // mismatch path under lax mode, since manufacturing two valid
+      // signatures with different cert chains in-test is impractical with
+      // a single fixture set. The invariant we're proving: lax skips ONLY
+      // the "stranded" branch, never the "mismatch" branch.
+      const { verifyCertBinding } = await import("../internal/utils/verify-cert-binding");
+      const certKryptos = buildCertBoundKryptos();
+
+      expect(() =>
+        verifyCertBinding({
+          header: {
+            x5t: undefined,
+            x5tS256: "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ",
+          },
+          kryptos: certKryptos,
+          logger,
+          mode: "lax",
+        }),
+      ).toThrow(/signing certificate thumbprint mismatch/);
+    });
+
+    test("lax with no header thumbprint is a no-op", async () => {
+      const { aegis: localAegis, amphora: localAmphora } = await setupAegis("lax");
+      localAmphora.add(buildChainlessKryptos());
+
+      const { token } = await localAegis.jwt.sign(signContent);
+      const decoded = JwtKit.decode(token);
+      expect(decoded.header).not.toHaveProperty("x5t#S256");
+
+      await expect(localAegis.jwt.verify(token)).resolves.toBeDefined();
+    });
+
+    test("strict mode is unaffected by header-less tokens", async () => {
+      const { aegis: localAegis, amphora: localAmphora } = await setupAegis("strict");
+      localAmphora.add(buildChainlessKryptos());
+
+      const { token } = await localAegis.jwt.sign(signContent);
+      await expect(localAegis.jwt.verify(token)).resolves.toBeDefined();
     });
   });
 

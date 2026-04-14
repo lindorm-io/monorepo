@@ -7,6 +7,7 @@ import { B64U } from "#internal/constants/format";
 import { JweError } from "../errors";
 import { IJweKit } from "../interfaces";
 import {
+  CertBindingMode,
   DecodedJwe,
   DecryptedJwe,
   DecryptedJweHeader,
@@ -28,6 +29,7 @@ import { JwsKit } from "./JwsKit";
 import { JwtKit } from "./JwtKit";
 
 export class JweKit implements IJweKit {
+  private readonly certBindingMode: CertBindingMode;
   private readonly encryption: KryptosEncryption;
   private readonly kryptos: IKryptos;
   private readonly logger: ILogger;
@@ -36,6 +38,7 @@ export class JweKit implements IJweKit {
     this.logger = options.logger.child(["JweKit"]);
     this.kryptos = options.kryptos;
     this.encryption = options.encryption ?? options.kryptos.encryption ?? "A256GCM";
+    this.certBindingMode = options.certBindingMode ?? "strict";
   }
 
   public encrypt(data: string, options: JweEncryptOptions = {}): EncryptedJwe {
@@ -194,9 +197,14 @@ export class JweKit implements IJweKit {
     // authenticated decryption validates AAD over the header). NOT a key
     // selection step — header cert fields remain forbidden as key sources.
     // See the SECURITY INVARIANT in Aegis.kryptosSig.
-    verifyCertBinding(this.kryptos, {
-      x5t: header.x5t,
-      x5tS256: header.x5tS256,
+    verifyCertBinding({
+      header: {
+        x5t: header.x5t,
+        x5tS256: header.x5tS256,
+      },
+      kryptos: this.kryptos,
+      logger: this.logger,
+      mode: this.certBindingMode,
     });
 
     this.logger.debug("Token decrypted");

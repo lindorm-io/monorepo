@@ -22,6 +22,7 @@ import {
   AegisOptions,
   AegisPredicate,
   AegisUserinfo,
+  CertBindingMode,
   DecodedJwe,
   DecodedJws,
   DecodedJwt,
@@ -72,6 +73,7 @@ export class Aegis implements IAegis {
   public readonly issuer: string | null;
 
   private readonly amphora: IAmphora;
+  private readonly certBindingMode: CertBindingMode;
   private readonly clockTolerance: number;
   private readonly dpopMaxSkew: number | undefined;
   private readonly encAlgorithm: KryptosEncAlgorithm | undefined;
@@ -84,6 +86,7 @@ export class Aegis implements IAegis {
     this.amphora = options.amphora;
     this.issuer = options.issuer ?? this.amphora.domain;
 
+    this.certBindingMode = options.certBindingMode ?? "strict";
     this.clockTolerance = options.clockTolerance ?? 0;
     this.dpopMaxSkew = options.dpopMaxSkew;
     this.encAlgorithm = options.encAlgorithm;
@@ -235,6 +238,7 @@ export class Aegis implements IAegis {
     const kryptos = await this.kryptosEnc(options);
 
     return new JweKit({
+      certBindingMode: this.certBindingMode,
       encryption: this.encryption,
       kryptos,
       logger: this.logger,
@@ -266,7 +270,11 @@ export class Aegis implements IAegis {
   private async jwsKit(options: SigOptions = {}): Promise<JwsKit> {
     const kryptos = await this.kryptosSig(options);
 
-    return new JwsKit({ kryptos, logger: this.logger });
+    return new JwsKit({
+      certBindingMode: this.certBindingMode,
+      kryptos,
+      logger: this.logger,
+    });
   }
 
   private async jwsSign<T extends JwsContent>(
@@ -295,6 +303,7 @@ export class Aegis implements IAegis {
     const kryptos = await this.kryptosSig(options);
 
     return new JwtKit({
+      certBindingMode: this.certBindingMode,
       clockTolerance: this.clockTolerance,
       dpopMaxSkew: this.dpopMaxSkew,
       issuer: this.issuer ?? undefined,
