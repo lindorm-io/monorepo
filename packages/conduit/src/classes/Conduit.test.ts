@@ -1,7 +1,4 @@
-import { ChangeCase } from "@lindorm/case";
-import { HttpMethod } from "@lindorm/types";
 import { createMockLogger } from "@lindorm/logger";
-import { RetryStrategy } from "@lindorm/retry";
 import nock from "nock";
 import { join } from "path";
 import {
