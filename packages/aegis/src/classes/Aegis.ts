@@ -359,9 +359,9 @@ export class Aegis implements IAegis {
           ...(options.predicate ?? {}),
         };
 
-    const kryptos = await this.amphora.find(
-      options.id ? { id: options.id } : { ...query, use: "enc" },
-    );
+    const kryptos = options.id
+      ? await this.amphora.findById(options.id)
+      : await this.amphora.find({ ...query, use: "enc" });
 
     this.logger.debug("Kryptos found", { kryptos: kryptos.toJSON() });
 
@@ -392,9 +392,9 @@ export class Aegis implements IAegis {
           ...(options.predicate ?? {}),
         };
 
-    const kryptos = await this.amphora.find(
-      options.id ? { id: options.id } : { ...query, use: "sig" },
-    );
+    const kryptos = options.id
+      ? await this.amphora.findById(options.id)
+      : await this.amphora.find({ ...query, use: "sig" });
 
     this.logger.debug("Kryptos found", { kryptos: kryptos.toJSON() });
 

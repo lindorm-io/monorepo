@@ -179,16 +179,20 @@ export class JweKit implements IJweKit {
 
     const payload = kit.decrypt(
       {
+        algorithm: header.algorithm,
         authTag,
         content,
+        contentType: "text/plain",
         encryption: this.encryption,
         initialisationVector,
+        keyId: header.keyId ?? this.kryptos.id,
         pbkdfIterations,
         pbkdfSalt,
         publicEncryptionIv,
         publicEncryptionJwk,
         publicEncryptionKey,
         publicEncryptionTag,
+        version: "1.0",
       },
       { aad },
     );
