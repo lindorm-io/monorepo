@@ -310,6 +310,7 @@ export class Amphora implements IAmphora {
         ...data,
         ...(options.openIdConfiguration ?? {}),
         ...(options.trustAnchors ? { trustAnchors: options.trustAnchors } : {}),
+        ...(options.trustMode ? { trustMode: options.trustMode } : {}),
       });
 
       return;
@@ -321,6 +322,7 @@ export class Amphora implements IAmphora {
         jwksUri: options.jwksUri,
         ...(options.openIdConfiguration ?? {}),
         ...(options.trustAnchors ? { trustAnchors: options.trustAnchors } : {}),
+        ...(options.trustMode ? { trustMode: options.trustMode } : {}),
       });
 
       return;
@@ -369,6 +371,7 @@ export class Amphora implements IAmphora {
     const trustRequired =
       (isString(trustAnchors) && trustAnchors.length > 0) ||
       (isArray(trustAnchors) && trustAnchors.length > 0);
+    const trustMode = config.trustMode ?? "strict";
 
     for (const jwk of keys) {
       if (jwk.iss && jwk.iss !== config.issuer) {
@@ -394,27 +397,34 @@ export class Amphora implements IAmphora {
 
       if (trustRequired) {
         if (!kryptos.hasCertificate) {
-          this.logger.warn(
-            "External JWK rejected: trust validation required but key has no certificate chain",
+          if (trustMode === "strict") {
+            this.logger.warn(
+              "External JWK rejected: trust validation required but key has no certificate chain",
+              { issuer: config.issuer, kid: jwk.kid },
+            );
+            rejectedByTrust++;
+            continue;
+          }
+
+          this.logger.silly(
+            "External JWK accepted without cert validation (lax trust mode)",
             { issuer: config.issuer, kid: jwk.kid },
           );
-          rejectedByTrust++;
-          continue;
-        }
-
-        try {
-          kryptos.verifyCertificate({ trustAnchors: trustAnchors });
-        } catch (error) {
-          this.logger.warn(
-            "External JWK rejected: certificate chain failed trust validation",
-            {
-              issuer: config.issuer,
-              kid: jwk.kid,
-              error: error instanceof Error ? error.message : String(error),
-            },
-          );
-          rejectedByTrust++;
-          continue;
+        } else {
+          try {
+            kryptos.verifyCertificate({ trustAnchors: trustAnchors });
+          } catch (error) {
+            this.logger.warn(
+              "External JWK rejected: certificate chain failed trust validation",
+              {
+                issuer: config.issuer,
+                kid: jwk.kid,
+                error: error instanceof Error ? error.message : String(error),
+              },
+            );
+            rejectedByTrust++;
+            continue;
+          }
         }
       }
 
@@ -475,6 +485,7 @@ export class Amphora implements IAmphora {
           openIdConfiguration: item.openIdConfiguration,
           openIdConfigurationUri: item.openIdConfigurationUri,
           trustAnchors: item.trustAnchors,
+          trustMode: item.trustMode,
         });
       } else if (isString(item.issuer) && isUrlLike(item.jwksUri)) {
         result.push({
@@ -482,12 +493,14 @@ export class Amphora implements IAmphora {
           jwksUri: item.jwksUri,
           openIdConfiguration: item.openIdConfiguration,
           trustAnchors: item.trustAnchors,
+          trustMode: item.trustMode,
         });
       } else if (isUrlLike(item.issuer)) {
         result.push({
           openIdConfiguration: item.openIdConfiguration,
           openIdConfigurationUri: new URL(OIDCONF, item.issuer).toString(),
           trustAnchors: item.trustAnchors,
+          trustMode: item.trustMode,
         });
       } else {
         throw new AmphoraError("Invalid external options", { debug: { item } });
