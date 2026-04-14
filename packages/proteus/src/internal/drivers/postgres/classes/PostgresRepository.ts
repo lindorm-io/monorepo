@@ -57,8 +57,10 @@ import { loadRelationIds } from "../utils/repository/load-relation-ids";
 import { loadRelationCounts } from "../utils/repository/load-relation-counts";
 import {
   saveEmbeddedListRows,
+  loadEmbeddedListRows,
   loadEmbeddedListRowsBatch,
 } from "../utils/repository/embedded-list-ops";
+import type { LazyEmbeddedListLoader } from "#internal/entity/utils/install-lazy-embedded-lists";
 
 export type { RepositoryFactory } from "#internal/types/repository-factory";
 
@@ -169,7 +171,7 @@ export class PostgresRepository<
     }
 
     if (this.hasEmbeddedLists) {
-      await this.loadAllEmbeddedLists(entities, this.client);
+      await this.loadAllEmbeddedLists(entities, this.client, _scope);
     }
 
     for (const entity of entities) {
@@ -213,7 +215,7 @@ export class PostgresRepository<
     }
 
     if (this.hasEmbeddedLists) {
-      await this.loadAllEmbeddedLists(entities, this.client);
+      await this.loadAllEmbeddedLists(entities, this.client, "multiple");
     }
 
     for (const entity of entities) {
@@ -1379,10 +1381,21 @@ export class PostgresRepository<
   private async loadAllEmbeddedLists(
     entities: Array<E>,
     client: PostgresQueryClient,
+    scope: QueryScope,
   ): Promise<void> {
     if (!this.hasEmbeddedLists) return;
     for (const el of this.metadata.embeddedLists) {
+      if (el.loading[scope] === "lazy") continue;
       await loadEmbeddedListRowsBatch(entities, el, client, this.embeddedListNamespace);
     }
+  }
+
+  protected override buildLazyEmbeddedListLoader(): LazyEmbeddedListLoader {
+    const client = this.client;
+    const namespace = this.embeddedListNamespace;
+    return async (entity, embeddedList) => {
+      await loadEmbeddedListRows(entity, embeddedList, client, namespace);
+      return (entity as any)[embeddedList.key] ?? [];
+    };
   }
 }

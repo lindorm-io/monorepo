@@ -25,6 +25,8 @@ import type { EntityMetadata, QueryScope } from "#internal/entity/types/metadata
 import type { RepositoryFactory } from "#internal/types/repository-factory";
 import type { AggregateFunction } from "#internal/types/aggregate";
 import type { LazyRelationLoader } from "#internal/entity/utils/install-lazy-relations";
+import type { LazyEmbeddedListLoader } from "#internal/entity/utils/install-lazy-embedded-lists";
+import { installLazyEmbeddedLists } from "#internal/entity/utils/install-lazy-embedded-lists";
 import type { EntityEmitFn } from "../../types/event-map";
 import { buildPrimaryKeyPredicate } from "#internal/utils/repository/build-pk-predicate";
 import {
@@ -126,6 +128,14 @@ export abstract class DriverRepositoryBase<
   public abstract cursor(options?: CursorOptions<E>): Promise<IProteusCursor<E>>;
   public abstract clear(options?: ClearOptions): Promise<void>;
   protected abstract buildLazyLoader(): LazyRelationLoader;
+  /**
+   * Driver hook that returns a loader for lazy `@EmbeddedList` fields.
+   * Drivers that do not support embedded lists (e.g. redis) return `null`
+   * and the base helper short-circuits.
+   */
+  protected buildLazyEmbeddedListLoader(): LazyEmbeddedListLoader | null {
+    return null;
+  }
   protected abstract executeAggregate(
     type: AggregateFunction,
     field: keyof E,
@@ -742,15 +752,28 @@ export abstract class DriverRepositoryBase<
   }
 
   protected applyLazyRelations(entity: E, operationScope: QueryScope): void {
-    if (!this.hasRelations) return;
-    installLazyRelations(
-      entity,
-      this.metadata,
-      {
-        loadRelation: this.buildLazyLoader(),
-      },
-      operationScope,
-    );
+    if (this.hasRelations) {
+      installLazyRelations(
+        entity,
+        this.metadata,
+        {
+          loadRelation: this.buildLazyLoader(),
+        },
+        operationScope,
+      );
+    }
+
+    if (this.metadata.embeddedLists.length > 0) {
+      const elLoader = this.buildLazyEmbeddedListLoader();
+      if (elLoader) {
+        installLazyEmbeddedLists(
+          entity,
+          this.metadata,
+          { loadEmbeddedList: elLoader },
+          operationScope,
+        );
+      }
+    }
   }
 
   protected async saveOne(input: O | E): Promise<E> {

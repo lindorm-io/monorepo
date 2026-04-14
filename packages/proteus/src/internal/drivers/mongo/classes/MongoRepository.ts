@@ -39,9 +39,11 @@ import { NotSupportedError } from "../../../../errors/NotSupportedError";
 import { MongoDuplicateKeyError } from "../errors/MongoDuplicateKeyError";
 import {
   saveMongoEmbeddedListRows,
+  loadMongoEmbeddedListRows,
   loadMongoEmbeddedListRowsBatch,
   deleteMongoEmbeddedListRows,
 } from "../utils/embedded-list-ops";
+import type { LazyEmbeddedListLoader } from "#internal/entity/utils/install-lazy-embedded-lists";
 import { resolveCollectionName } from "../utils/resolve-collection-name";
 import { MongoCursor } from "./MongoCursor";
 import { compileFilterWithSystem } from "../utils/compile-filter";
@@ -129,7 +131,7 @@ export class MongoRepository<
     }
 
     if (this.hasEmbeddedLists) {
-      await this.loadAllEmbeddedLists(entities);
+      await this.loadAllEmbeddedLists(entities, _scope);
     }
 
     for (const entity of entities) {
@@ -170,7 +172,7 @@ export class MongoRepository<
     }
 
     if (this.hasEmbeddedLists) {
-      await this.loadAllEmbeddedLists(entities);
+      await this.loadAllEmbeddedLists(entities, "multiple");
     }
 
     for (const entity of entities) {
@@ -960,11 +962,24 @@ export class MongoRepository<
     }
   }
 
-  private async loadAllEmbeddedLists(entities: Array<E>): Promise<void> {
+  private async loadAllEmbeddedLists(
+    entities: Array<E>,
+    scope: QueryScope,
+  ): Promise<void> {
     if (!this.hasEmbeddedLists) return;
     for (const el of this.metadata.embeddedLists) {
+      if (el.loading[scope] === "lazy") continue;
       await loadMongoEmbeddedListRowsBatch(entities, el, this.db, this.session);
     }
+  }
+
+  protected override buildLazyEmbeddedListLoader(): LazyEmbeddedListLoader {
+    const db = this.db;
+    const session = this.session;
+    return async (entity, embeddedList) => {
+      await loadMongoEmbeddedListRows(entity, embeddedList, db, session);
+      return (entity as any)[embeddedList.key] ?? [];
+    };
   }
 
   private async deleteAllEmbeddedLists(entity: E): Promise<void> {

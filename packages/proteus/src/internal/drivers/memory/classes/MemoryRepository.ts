@@ -43,6 +43,10 @@ import {
   loadMemoryEmbeddedListRows,
   deleteMemoryEmbeddedListRows,
 } from "../utils/memory-embedded-list-ops";
+import {
+  installLazyEmbeddedLists,
+  type LazyEmbeddedListLoader,
+} from "#internal/entity/utils/install-lazy-embedded-lists";
 import type { ILogger } from "@lindorm/logger";
 import type { EntityEmitFn } from "../../../../types/event-map";
 import type { PaginateOptions } from "../../../../types/paginate-options";
@@ -134,7 +138,7 @@ export class MemoryRepository<
     }
 
     if (this.hasEmbeddedLists) {
-      this.loadAllEmbeddedLists(entities, this.store);
+      this.loadAllEmbeddedLists(entities, this.store, _scope);
     }
 
     for (const entity of entities) {
@@ -170,7 +174,7 @@ export class MemoryRepository<
     }
 
     if (this.hasEmbeddedLists) {
-      this.loadAllEmbeddedLists(entities, this.store);
+      this.loadAllEmbeddedLists(entities, this.store, "multiple");
     }
 
     for (const entity of entities) {
@@ -242,15 +246,17 @@ export class MemoryRepository<
         findOptions,
       );
       if (this.hasEmbeddedLists) {
-        this.loadAllEmbeddedLists(entities, this.store);
+        this.loadAllEmbeddedLists(entities, this.store, "multiple");
       }
+      this.installLazyEmbeddedListsForCursor(entities);
       return new MemoryCursor<E>(entities);
     }
 
     const entities = await this.executor.executeFind({} as Predicate<E>, findOptions);
     if (this.hasEmbeddedLists) {
-      this.loadAllEmbeddedLists(entities, this.store);
+      this.loadAllEmbeddedLists(entities, this.store, "multiple");
     }
+    this.installLazyEmbeddedListsForCursor(entities);
     return new MemoryCursor<E>(entities);
   }
 
@@ -926,13 +932,41 @@ export class MemoryRepository<
     }
   }
 
-  private loadAllEmbeddedLists(entities: Array<E>, store: MemoryStore): void {
+  private loadAllEmbeddedLists(
+    entities: Array<E>,
+    store: MemoryStore,
+    scope: QueryScope,
+  ): void {
     if (!this.hasEmbeddedLists) return;
     for (const entity of entities) {
       for (const el of this.metadata.embeddedLists) {
+        if (el.loading[scope] === "lazy") continue;
         loadMemoryEmbeddedListRows(entity, el, store, this.embeddedListNamespace);
       }
     }
+  }
+
+  private installLazyEmbeddedListsForCursor(entities: Array<E>): void {
+    if (!this.hasEmbeddedLists) return;
+    const loader = this.buildLazyEmbeddedListLoader();
+    if (!loader) return;
+    for (const entity of entities) {
+      installLazyEmbeddedLists(
+        entity,
+        this.metadata,
+        { loadEmbeddedList: loader },
+        "multiple",
+      );
+    }
+  }
+
+  protected override buildLazyEmbeddedListLoader(): LazyEmbeddedListLoader {
+    const store = this.store;
+    const namespace = this.embeddedListNamespace;
+    return async (entity, embeddedList) => {
+      loadMemoryEmbeddedListRows(entity, embeddedList, store, namespace);
+      return (entity as any)[embeddedList.key] ?? [];
+    };
   }
 
   private deleteAllEmbeddedLists(entity: E, store: MemoryStore): void {
