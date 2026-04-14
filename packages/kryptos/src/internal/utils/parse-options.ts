@@ -1,13 +1,24 @@
-import { changeKeys } from "@lindorm/case";
 import { KryptosError } from "../../errors";
-import { KryptosJwk, KryptosOptions, KryptosType, UnknownJwk } from "../../types";
+import {
+  KryptosJwk,
+  KryptosOperation,
+  KryptosOptions,
+  KryptosType,
+  UnknownJwk,
+} from "../../types";
 
 const TYPES: Array<KryptosType> = ["EC", "oct", "OKP", "RSA"] as const;
+
+type LooseJwk = UnknownJwk &
+  Partial<KryptosJwk> & {
+    keyOps?: Array<KryptosOperation>;
+    ownerId?: string;
+  };
 
 export const parseJwkOptions = (
   options: UnknownJwk & Partial<KryptosJwk>,
 ): KryptosOptions => {
-  const jwk = changeKeys(options, "snake");
+  const jwk = options as LooseJwk;
 
   if (!TYPES.includes(jwk.kty)) {
     throw new KryptosError("Invalid key type", { data: { valid: TYPES } });
@@ -23,8 +34,8 @@ export const parseJwkOptions = (
     issuer: jwk.iss,
     jwksUri: jwk.jku,
     notBefore: jwk.nbf ? new Date(jwk.nbf * 1000) : undefined,
-    operations: jwk.key_ops,
-    ownerId: jwk.owner_id,
+    operations: jwk.key_ops ?? jwk.keyOps,
+    ownerId: jwk.owner_id ?? jwk.ownerId,
     purpose: jwk.purpose,
     type: jwk.kty,
     use: jwk.use,
