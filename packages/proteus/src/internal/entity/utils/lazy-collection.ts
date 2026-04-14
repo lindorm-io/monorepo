@@ -7,12 +7,17 @@ import type { IEntity } from "../../../interfaces";
 export const LAZY_COLLECTION = Symbol.for("proteus.lazy-collection");
 
 /**
- * A thenable that lazily loads a collection relation (OneToMany, ManyToMany).
+ * A thenable that lazily loads a collection of values.
  *
- * Same thenable protocol as LazyRelation, but resolves to Array<T>.
+ * Originally built for relation collections (OneToMany, ManyToMany), but now
+ * also used for primitive / embeddable element collections (@EmbeddedList).
+ * The `T` parameter is unconstrained — the class body does not use entity
+ * semantics, it only resolves to Array<T> via the provided loader.
+ *
  * After resolution, replaces itself on the owning entity with the array.
+ * Pre-resolution, `toJSON()` returns `undefined`.
  */
-export class LazyCollection<T extends IEntity> {
+export class LazyCollection<T = unknown> {
   public readonly [LAZY_COLLECTION] = true;
 
   private readonly _owner: IEntity;
@@ -65,5 +70,5 @@ export class LazyCollection<T extends IEntity> {
   }
 }
 
-export const isLazyCollection = (value: unknown): value is LazyCollection<IEntity> =>
+export const isLazyCollection = (value: unknown): value is LazyCollection<unknown> =>
   isObjectLike(value) && (value as any)[LAZY_COLLECTION] === true;
