@@ -8,7 +8,6 @@ if (typeof Symbol.metadata === "undefined") {
 import { readFileSync } from "fs";
 import { resolve } from "path";
 import { Command } from "commander";
-import { registerInitCommand } from "#internal/cli/commands/register-init";
 import { registerGenerateCommands } from "#internal/cli/commands/register-generate";
 
 const pkg = JSON.parse(readFileSync(resolve(__dirname, "..", "package.json"), "utf-8"));
@@ -20,7 +19,6 @@ program
   .description("Pylon application framework command-line tools")
   .version(pkg.version);
 
-registerInitCommand(program);
 registerGenerateCommands(program);
 
 // Graceful shutdown: clean exit on first signal, force exit on second
