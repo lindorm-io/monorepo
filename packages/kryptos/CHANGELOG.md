@@ -3,6 +3,32 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.6.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/kryptos@0.5.3...@lindorm/kryptos@0.6.0) (2026-04-15)
+
+### Bug Fixes
+
+- **kryptos:** add thumbprint to mock kryptos ([5ecdd5c](https://github.com/lindorm-io/monorepo/commit/5ecdd5c9970f486e51dae5304cc18425f4f74099))
+- **kryptos:** decode SAN IP bytes to human-readable strings per RFC 5952 ([e03b843](https://github.com/lindorm-io/monorepo/commit/e03b8436272f23a89bbeff1298e356f8a482c132))
+- **kryptos:** enforce byte-equal sigAlg between outer and inner TBS per RFC 5280 §4.1.1.2 ([3622e6d](https://github.com/lindorm-io/monorepo/commit/3622e6d66359b83fde9811627d2cc0e0f4e9e71c))
+- **kryptos:** reject non-URL issuer in SAN derivation fallback ([595f3de](https://github.com/lindorm-io/monorepo/commit/595f3de061317524216352ea3d108a4e48185397))
+- **kryptos:** reject pathLengthConstraint > 255 in basicConstraintsExt ([0eb05f6](https://github.com/lindorm-io/monorepo/commit/0eb05f6a45e6a9579d88640adfa84600be7d80ea))
+- **kryptos:** reject zero-duration certificates in generateX509Certificate ([a638c25](https://github.com/lindorm-io/monorepo/commit/a638c254a39319d010ece7531d341b1a7e0077ed))
+- **kryptos:** support RSA public keys in x509PublicKeyMatches ([9ab6e8f](https://github.com/lindorm-io/monorepo/commit/9ab6e8ffd3e84621e2041a6f6ffa0faf78e97e4e)), closes [PKCS#1](https://github.com/PKCS/issues/1)
+- **kryptos:** use @lindorm/date for validity defaults and inherit CA window for ca-signed children ([ceeec3d](https://github.com/lindorm-io/monorepo/commit/ceeec3d2851705b06a2d6020f9e981753183a684))
+- **kryptos:** widen createMockKryptos overrides to Partial<MockKryptos> ([c1ef0c0](https://github.com/lindorm-io/monorepo/commit/c1ef0c09f39707089d2dd016393674d37dc176ba))
+
+### Features
+
+- **kryptos:** add certificateChain/certificateThumbprint and drop x5t/updatedAt ([a9f2836](https://github.com/lindorm-io/monorepo/commit/a9f283672d3cb612a8bee568594b5bca03ac0713)), closes [x5t#S256](https://github.com/x5t/issues/S256) [x5t#S256](https://github.com/x5t/issues/S256)
+- **kryptos:** add minimal ASN.1 DER encoder + decoder primitives ([c089fcd](https://github.com/lindorm-io/monorepo/commit/c089fcd5f5ac61e5f5800f1eb327d5bae87fcc12))
+- **kryptos:** add RFC 7638 JWK thumbprint getter ([ad3d347](https://github.com/lindorm-io/monorepo/commit/ad3d347df6b9380144520034c6ae9e31e49f9dba))
+- **kryptos:** add self-signed and ca-signed cert generation to KryptosKit.generate ([ed6eaf1](https://github.com/lindorm-io/monorepo/commit/ed6eaf1d45305d40f012e53c0286ed4956388943))
+- **kryptos:** add X.509 certificate builder using DIY ASN.1 encoder ([4ced43a](https://github.com/lindorm-io/monorepo/commit/4ced43a823869fe5db282c99db089424340abf21))
+- **kryptos:** add X.509 certificate chain support with pragmatic chain validation ([2f56021](https://github.com/lindorm-io/monorepo/commit/2f560212bc0a9d23e7aae3ed0666e1bb6def5316))
+- **kryptos:** add X.509 parser and replace Node X509Certificate usage internally ([c28da3e](https://github.com/lindorm-io/monorepo/commit/c28da3e66e3a65079884d77c224fccb550bd4ede))
+- **kryptos:** round-trip certificateChain through toJSON/toDB/fromJWK ([966d8d7](https://github.com/lindorm-io/monorepo/commit/966d8d73355fe4122dfaa85db9892980306ff062))
+- **kryptos:** support dns/email/ip subject alternative names in cert generation ([1956d21](https://github.com/lindorm-io/monorepo/commit/1956d215d714e5cbfc40be01682c8f2032f99c07))
+
 ## [0.5.3](https://github.com/lindorm-io/monorepo/compare/@lindorm/kryptos@0.5.2...@lindorm/kryptos@0.5.3) (2026-04-01)
 
 **Note:** Version bump only for package @lindorm/kryptos

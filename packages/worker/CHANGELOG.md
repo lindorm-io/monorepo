@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.3.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/worker@0.2.11...@lindorm/worker@0.3.0) (2026-04-15)
+
+### Features
+
+- **worker:** add graceful shutdown, destroy, callback timeout, health, validation ([ea2eba5](https://github.com/lindorm-io/monorepo/commit/ea2eba586a0e10b1b98a0209ef3493e62c6479e6))
+
 ## [0.2.11](https://github.com/lindorm-io/monorepo/compare/@lindorm/worker@0.2.10...@lindorm/worker@0.2.11) (2026-04-01)
 
 **Note:** Version bump only for package @lindorm/worker

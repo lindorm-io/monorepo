@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/config",
-  "version": "0.2.8",
+  "version": "0.2.9",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -31,9 +31,9 @@
   },
   "dependencies": {
     "@dotenvx/dotenvx": "^1.54.1",
-    "@lindorm/case": "^0.1.14",
-    "@lindorm/is": "^0.1.14",
-    "@lindorm/utils": "^0.6.2",
+    "@lindorm/case": "^0.1.15",
+    "@lindorm/is": "^0.1.15",
+    "@lindorm/utils": "^0.7.0",
     "commander": "^14.0.3",
     "config": "^4.4.1",
     "dotenv": "^17.3.1",
@@ -41,7 +41,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@lindorm/types": "^0.4.1",
+    "@lindorm/types": "^0.5.0",
     "@types/config": "^3.3.5",
     "@types/js-yaml": "^4.0.9"
   }

@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/breaker",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -48,6 +48,6 @@
     "verify": "npm run typecheck && npm run build && npm test"
   },
   "dependencies": {
-    "@lindorm/errors": "^0.1.16"
+    "@lindorm/errors": "^0.1.17"
   }
 }

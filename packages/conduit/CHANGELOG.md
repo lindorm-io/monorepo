@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.5.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/conduit@0.4.4...@lindorm/conduit@0.5.0) (2026-04-15)
+
+### Bug Fixes
+
+- **conduit:** force axios http adapter so nock can intercept in tests ([784bdd2](https://github.com/lindorm-io/monorepo/commit/784bdd28408d5b42325b58abb3bf78de9ee23f39))
+- **conduit:** normalize request method to uppercase and tighten ConfigContext ([699614e](https://github.com/lindorm-io/monorepo/commit/699614e85693fa730025e8b9ee0887949a93f3c1))
+
+### Features
+
+- **conduit:** add DPoP auth middleware and Web Crypto signer ([d2e162e](https://github.com/lindorm-io/monorepo/commit/d2e162e1e2ca614e10ab1671ad0de8688d466625))
+- **conduit:** expose axios adapter as conduit option ([933aa6f](https://github.com/lindorm-io/monorepo/commit/933aa6f2fb2258fa05afc0dad717913f51f86f53))
+- **conduit:** support DPoP-bound tokens in client credentials flow ([d08ed89](https://github.com/lindorm-io/monorepo/commit/d08ed89ee955180cd33dd1c9fc358808bd0c0cf8))
+
 ## [0.4.4](https://github.com/lindorm-io/monorepo/compare/@lindorm/conduit@0.4.3...@lindorm/conduit@0.4.4) (2026-04-01)
 
 ### Bug Fixes

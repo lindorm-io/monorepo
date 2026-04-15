@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/retry",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -27,6 +27,6 @@
     "verify": "npm run typecheck && npm run build && npm test"
   },
   "devDependencies": {
-    "@lindorm/types": "^0.4.1"
+    "@lindorm/types": "^0.5.0"
   }
 }
