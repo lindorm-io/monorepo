@@ -425,7 +425,7 @@ exports[`KryptosKit (OKP) generate auto 1`] = `
   ],
   "ownerId": null,
   "purpose": null,
-  "thumbprint": "ntZgIVFqgr1HkWXbk3QCdVmVi39pEpbI6_ChCaAmzQU",
+  "thumbprint": Any<String>,
   "type": "EC",
   "use": "enc",
 }
@@ -458,7 +458,7 @@ exports[`KryptosKit (OKP) generate enc 1`] = `
   ],
   "ownerId": null,
   "purpose": null,
-  "thumbprint": "Ys6ju_LVW7xHImwth7oer_pfL3qgEiD5JiKczznImy8",
+  "thumbprint": Any<String>,
   "type": "OKP",
   "use": "enc",
 }
@@ -492,7 +492,7 @@ exports[`KryptosKit (OKP) generate sig 1`] = `
   ],
   "ownerId": null,
   "purpose": null,
-  "thumbprint": "QpTgps_63_MtEcSO7BqN7DQaU1GUyq1cHQTAfMV3lXs",
+  "thumbprint": Any<String>,
   "type": "OKP",
   "use": "sig",
 }

@@ -460,7 +460,7 @@ exports[`KryptosKit (RSA) generate auto 1`] = `
   ],
   "ownerId": null,
   "purpose": null,
-  "thumbprint": "iY10IQj08Z9khXV3UtKllzJz7E-pbHGKx2YlXcaEdzo",
+  "thumbprint": Any<String>,
   "type": "RSA",
   "use": "sig",
 }
@@ -494,7 +494,7 @@ exports[`KryptosKit (RSA) generate enc 1`] = `
   ],
   "ownerId": null,
   "purpose": null,
-  "thumbprint": "tI0z1Oys-pf5BAjQipmritPtbd_0KD2oQQVLyQ5Qfnk",
+  "thumbprint": Any<String>,
   "type": "RSA",
   "use": "enc",
 }
@@ -528,7 +528,7 @@ exports[`KryptosKit (RSA) generate sig 1`] = `
   ],
   "ownerId": null,
   "purpose": null,
-  "thumbprint": "D6jaxYwX1uyVqhvnhjgUSySPDR7tOoJFs3k_aE7Xn5I",
+  "thumbprint": Any<String>,
   "type": "RSA",
   "use": "sig",
 }

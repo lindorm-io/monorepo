@@ -126,7 +126,7 @@ describe("KryptosKit (OKP)", () => {
         algorithm: "ECDH-ES+A128GCMKW",
       });
 
-      expect(kryptos.toJSON()).toMatchSnapshot();
+      expect(kryptos.toJSON()).toMatchSnapshot({ thumbprint: expect.any(String) });
       expect(kryptos.export("b64")).toEqual({
         id: "6e6f84b0-e125-5e3f-90ae-c65269668d98",
         algorithm: "ECDH-ES+A128GCMKW",
@@ -145,7 +145,7 @@ describe("KryptosKit (OKP)", () => {
         encryption: "A256GCM",
       });
 
-      expect(kryptos.toJSON()).toMatchSnapshot();
+      expect(kryptos.toJSON()).toMatchSnapshot({ thumbprint: expect.any(String) });
       expect(kryptos.export("b64")).toEqual({
         id: "6e6f84b0-e125-5e3f-90ae-c65269668d98",
         algorithm: "ECDH-ES",
@@ -163,7 +163,7 @@ describe("KryptosKit (OKP)", () => {
         algorithm: "EdDSA",
       });
 
-      expect(kryptos.toJSON()).toMatchSnapshot();
+      expect(kryptos.toJSON()).toMatchSnapshot({ thumbprint: expect.any(String) });
       expect(kryptos.export("b64")).toEqual({
         id: "6e6f84b0-e125-5e3f-90ae-c65269668d98",
         algorithm: "EdDSA",

@@ -467,7 +467,7 @@ exports[`KryptosKit (oct) generate auto 1`] = `
   ],
   "ownerId": null,
   "purpose": null,
-  "thumbprint": "nGSDGRR7wYiVni2hDDJGXVNAB-hRW3r5lNEX6pbCTlA",
+  "thumbprint": Any<String>,
   "type": "oct",
   "use": "sig",
 }
@@ -501,7 +501,7 @@ exports[`KryptosKit (oct) generate enc 1`] = `
   ],
   "ownerId": null,
   "purpose": null,
-  "thumbprint": "tDJv-apMIrFGDovent-tLKnqaXv2it6Fiq_wenL98L4",
+  "thumbprint": Any<String>,
   "type": "oct",
   "use": "enc",
 }
@@ -535,7 +535,7 @@ exports[`KryptosKit (oct) generate sig 1`] = `
   ],
   "ownerId": null,
   "purpose": null,
-  "thumbprint": "iMPWhjBZM8RI8pnO1MdUlRVT3apzd13OIcVkGazbS_s",
+  "thumbprint": Any<String>,
   "type": "oct",
   "use": "sig",
 }

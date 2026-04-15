@@ -450,7 +450,7 @@ exports[`KryptosKit (EC) generate auto 1`] = `
   ],
   "ownerId": null,
   "purpose": null,
-  "thumbprint": "7OJoPZbcL7GjzoWfkj9xpWmktC4pOwOrKCCbe-cpklk",
+  "thumbprint": Any<String>,
   "type": "EC",
   "use": "sig",
 }
@@ -483,7 +483,7 @@ exports[`KryptosKit (EC) generate enc 1`] = `
   ],
   "ownerId": null,
   "purpose": null,
-  "thumbprint": "AORMkcyvJ34P13V9o89nRTqnP5vzwN8J8vZb_wN7yow",
+  "thumbprint": Any<String>,
   "type": "EC",
   "use": "enc",
 }
@@ -517,7 +517,7 @@ exports[`KryptosKit (EC) generate sig 1`] = `
   ],
   "ownerId": null,
   "purpose": null,
-  "thumbprint": "OpmmzDWwZJPa36eGODHihMTF1-rg2NLbnft_m5gNjEk",
+  "thumbprint": Any<String>,
   "type": "EC",
   "use": "sig",
 }

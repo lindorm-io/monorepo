@@ -135,7 +135,7 @@ describe("KryptosKit (oct)", () => {
         algorithm: "HS384",
       });
 
-      expect(kryptos.toJSON()).toMatchSnapshot();
+      expect(kryptos.toJSON()).toMatchSnapshot({ thumbprint: expect.any(String) });
       expect(kryptos.export("b64")).toEqual({
         id: "6e6f84b0-e125-5e3f-90ae-c65269668d98",
         algorithm: "HS384",
@@ -152,7 +152,7 @@ describe("KryptosKit (oct)", () => {
         encryption: "A256GCM",
       });
 
-      expect(kryptos.toJSON()).toMatchSnapshot();
+      expect(kryptos.toJSON()).toMatchSnapshot({ thumbprint: expect.any(String) });
       expect(kryptos.export("b64")).toEqual({
         id: "6e6f84b0-e125-5e3f-90ae-c65269668d98",
         algorithm: "dir",
@@ -169,7 +169,7 @@ describe("KryptosKit (oct)", () => {
         algorithm: "HS512",
       });
 
-      expect(kryptos.toJSON()).toMatchSnapshot();
+      expect(kryptos.toJSON()).toMatchSnapshot({ thumbprint: expect.any(String) });
       expect(kryptos.export("b64")).toEqual({
         id: "6e6f84b0-e125-5e3f-90ae-c65269668d98",
         algorithm: "HS512",
