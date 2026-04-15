@@ -4,12 +4,14 @@ import { decryptPayload, encryptPayload } from "./encrypt";
 
 const mockEncrypt = jest.fn();
 const mockDecrypt = jest.fn();
+const mockParseAes = jest.fn();
 
 jest.mock("@lindorm/aes", () => ({
   AesKit: jest.fn().mockImplementation(() => ({
     encrypt: mockEncrypt,
     decrypt: mockDecrypt,
   })),
+  parseAes: (data: unknown) => mockParseAes(data),
 }));
 
 const predicate = { algorithm: "aes-256-gcm", purpose: "encryption" } as any;
@@ -62,32 +64,35 @@ describe("encryptPayload", () => {
 describe("decryptPayload", () => {
   const mockAmphora = {
     find: jest.fn(),
+    findById: jest.fn(),
   } as any;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockAmphora.find.mockResolvedValue({ id: "key-1" });
+    mockAmphora.findById.mockResolvedValue({ id: "key-1" });
+    mockParseAes.mockReturnValue({ keyId: "key-1" });
     mockDecrypt.mockReturnValue(Buffer.from("decrypted-data").toString("base64"));
   });
 
   it("should decrypt tokenised string and return Buffer", async () => {
-    const result = await decryptPayload("encrypted-token", mockAmphora, predicate);
+    const result = await decryptPayload("encrypted-token", mockAmphora);
 
     expect(result).toEqual(Buffer.from("decrypted-data"));
-    expect(mockAmphora.find).toHaveBeenCalledWith(predicate);
+    expect(mockParseAes).toHaveBeenCalledWith("encrypted-token");
+    expect(mockAmphora.findById).toHaveBeenCalledWith("key-1");
     expect(mockDecrypt).toHaveBeenCalledWith("encrypted-token");
   });
 
   it("should throw IrisNotSupportedError when amphora is not provided", async () => {
-    await expect(decryptPayload("token", undefined, predicate)).rejects.toThrow(
+    await expect(decryptPayload("token", undefined)).rejects.toThrow(
       IrisNotSupportedError,
     );
   });
 
   it("should wrap unexpected errors in IrisSerializationError", async () => {
-    mockAmphora.find.mockRejectedValue(new Error("key not found"));
+    mockAmphora.findById.mockRejectedValue(new Error("key not found"));
 
-    await expect(decryptPayload("token", mockAmphora, predicate)).rejects.toThrow(
+    await expect(decryptPayload("token", mockAmphora)).rejects.toThrow(
       IrisSerializationError,
     );
   });
@@ -103,7 +108,7 @@ describe("decryptPayload", () => {
 
     const original = Buffer.from(originalText);
     const encrypted = await encryptPayload(original, mockAmphora, predicate);
-    const decrypted = await decryptPayload(encrypted, mockAmphora, predicate);
+    const decrypted = await decryptPayload(encrypted, mockAmphora);
 
     expect(decrypted).toEqual(original);
   });

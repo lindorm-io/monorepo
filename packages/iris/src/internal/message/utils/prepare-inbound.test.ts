@@ -5,12 +5,14 @@ import { prepareOutbound } from "./prepare-outbound";
 
 const mockEncrypt = jest.fn();
 const mockDecrypt = jest.fn();
+const mockParseAes = jest.fn((_data: unknown) => ({ keyId: "key-1" }));
 
 jest.mock("@lindorm/aes", () => ({
   AesKit: jest.fn().mockImplementation(() => ({
     encrypt: mockEncrypt,
     decrypt: mockDecrypt,
   })),
+  parseAes: (data: unknown) => mockParseAes(data),
 }));
 
 const baseMetadata: MessageMetadata = {
@@ -107,7 +109,10 @@ describe("prepareInbound", () => {
       Buffer.from("encrypted-token"),
       { "x-iris-encrypted": "true" },
       metadata,
-      { find: jest.fn().mockResolvedValue({ id: "key-1" }) } as any,
+      {
+        find: jest.fn().mockResolvedValue({ id: "key-1" }),
+        findById: jest.fn().mockResolvedValue({ id: "key-1" }),
+      } as any,
     );
 
     expect(result.name).toBe("secret");
@@ -128,7 +133,10 @@ describe("prepareInbound", () => {
       return "encrypted-token";
     });
 
-    const mockAmphora = { find: jest.fn().mockResolvedValue({ id: "key-1" }) } as any;
+    const mockAmphora = {
+      find: jest.fn().mockResolvedValue({ id: "key-1" }),
+      findById: jest.fn().mockResolvedValue({ id: "key-1" }),
+    } as any;
     const outbound = await prepareOutbound(
       { name: "both", count: 3 },
       metadata,
