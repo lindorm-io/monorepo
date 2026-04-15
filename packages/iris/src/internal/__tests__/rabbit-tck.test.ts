@@ -36,6 +36,7 @@ const createMockLogger = () => ({
 
 const mockAmphora = {
   find: jest.fn().mockResolvedValue({ id: "mock-kryptos-key" }),
+  findById: jest.fn().mockResolvedValue({ id: "mock-kryptos-key" }),
 };
 
 const factory: TckDriverFactory = {
