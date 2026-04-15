@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/logger",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -47,16 +47,16 @@
     "verify": "npm run typecheck && npm run build && npm test"
   },
   "dependencies": {
-    "@lindorm/case": "^0.1.14",
-    "@lindorm/is": "^0.1.14",
+    "@lindorm/case": "^0.1.15",
+    "@lindorm/is": "^0.1.15",
     "fast-safe-stringify": "^2.1.1",
     "object-path": "^0.11.8",
     "picocolors": "^1.1.1",
     "winston": "^3.19.0"
   },
   "devDependencies": {
-    "@lindorm/errors": "^0.1.16",
-    "@lindorm/types": "^0.4.1",
+    "@lindorm/errors": "^0.1.17",
+    "@lindorm/types": "^0.5.0",
     "@types/object-path": "^0.11.4"
   }
 }

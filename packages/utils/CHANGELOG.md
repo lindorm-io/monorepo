@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.7.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/utils@0.6.2...@lindorm/utils@0.7.0) (2026-04-15)
+
+### Features
+
+- **utils:** add lazyFactory utility for deferred property initialization ([bc7ffe8](https://github.com/lindorm-io/monorepo/commit/bc7ffe8c94936c4c68e09375d1493dbc9ccd9477))
+
 ## [0.6.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/utils@0.6.1...@lindorm/utils@0.6.2) (2026-04-01)
 
 **Note:** Version bump only for package @lindorm/utils

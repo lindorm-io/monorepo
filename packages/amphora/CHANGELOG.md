@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/amphora@0.3.4...@lindorm/amphora@0.4.0) (2026-04-15)
+
+### Bug Fixes
+
+- **amphora:** shift trust anchor cert windows to include MockDate clock ([2b6ffe9](https://github.com/lindorm-io/monorepo/commit/2b6ffe9450cfb72824232024c8e8bef6de960aa1))
+
+### Features
+
+- **amphora:** add findById and findByIdSync for historical key lookup ([45e948a](https://github.com/lindorm-io/monorepo/commit/45e948a5b0549bcc5fe3e37643b6febe58c5faf3))
+- **amphora:** add issuer-scoped trustAnchors for external JWKS chain validation ([e2a08a9](https://github.com/lindorm-io/monorepo/commit/e2a08a9e766240be4b72d19d9a1bb474678f0d16))
+- **amphora:** add trustMode for external JWKS trust anchors ([2c3d59f](https://github.com/lindorm-io/monorepo/commit/2c3d59f86f2e3ed6a35e2a980e0902ff0c4daaf0))
+- **amphora:** adopt kryptos descriptive cert fields and drop SHA-1 x5t from JWKS ([d04c2bb](https://github.com/lindorm-io/monorepo/commit/d04c2bb1eb5073584a336e35cafa16f9a919d820))
+- **amphora:** emit x5c/x5t#S256 in JWKS and support cert thumbprint filter ([7020100](https://github.com/lindorm-io/monorepo/commit/70201004dbfa03760031b4de21386f27062b5343)), closes [x5c/x5t#S256](https://github.com/x5c/x5t/issues/S256)
+
 ## [0.3.4](https://github.com/lindorm-io/monorepo/compare/@lindorm/amphora@0.3.3...@lindorm/amphora@0.3.4) (2026-04-01)
 
 ### Bug Fixes

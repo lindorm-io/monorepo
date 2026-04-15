@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.6.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/hermes@0.5.0...@lindorm/hermes@0.6.0) (2026-04-15)
+
+### Bug Fixes
+
+- **hermes:** add explicit return types to inline arrow functions ([f93f530](https://github.com/lindorm-io/monorepo/commit/f93f530c5d7b18e876d0e5794bdabc9471cff965))
+- **proteus,iris,hermes:** simplify logger in init templates ([76230f8](https://github.com/lindorm-io/monorepo/commit/76230f8c4e4c96ff8b0858e518ac44be455d25cf))
+
+### Features
+
+- **hermes:** add CLI with init and generate commands ([8b49b2e](https://github.com/lindorm-io/monorepo/commit/8b49b2ee3d2ab1233623ab522413dc01371a63c4))
+- **hermes:** mark EventRecord and ChecksumRecord as @AppendOnly ([92de440](https://github.com/lindorm-io/monorepo/commit/92de4407d05f8740c5aff6a230e8a27f539eaa5c))
+
 # [0.5.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/hermes@0.3.7...@lindorm/hermes@0.5.0) (2026-04-01)
 
 ### Features

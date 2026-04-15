@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/zephyr",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -55,9 +55,9 @@
     "verify": "npm run typecheck && npm run build && npm test"
   },
   "dependencies": {
-    "@lindorm/errors": "^0.1.16",
-    "@lindorm/middleware": "^0.1.7",
-    "@lindorm/random": "^0.2.2",
+    "@lindorm/errors": "^0.1.17",
+    "@lindorm/middleware": "^0.1.8",
+    "@lindorm/random": "^0.2.3",
     "socket.io-client": "^4.8.3"
   },
   "devDependencies": {

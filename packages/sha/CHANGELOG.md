@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/sha@0.3.2...@lindorm/sha@0.4.0) (2026-04-15)
+
+### Features
+
+- **sha:** accept Buffer input on hash methods and add S1 for legacy x509 x5t ([de70dd6](https://github.com/lindorm-io/monorepo/commit/de70dd670467039d31c3a5c4168d9285e3f9c561))
+
 ## [0.3.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/sha@0.3.1...@lindorm/sha@0.3.2) (2026-04-01)
 
 **Note:** Version bump only for package @lindorm/sha

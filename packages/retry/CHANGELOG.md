@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/retry@0.2.1...@lindorm/retry@0.2.2) (2026-04-15)
+
+### Bug Fixes
+
+- **retry:** add explicit return type to isRetryable default ([5c433b7](https://github.com/lindorm-io/monorepo/commit/5c433b7cbb7c1011c48bd9f1ad470136f9f5f9b2))
+
 ## [0.2.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/retry@0.2.0...@lindorm/retry@0.2.1) (2026-04-01)
 
 **Note:** Version bump only for package @lindorm/retry

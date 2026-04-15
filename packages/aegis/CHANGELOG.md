@@ -3,6 +3,34 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.5.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/aegis@0.4.4...@lindorm/aegis@0.5.0) (2026-04-15)
+
+### Bug Fixes
+
+- **aegis:** accept AesContent in IAegisAes types, delegate mock to AesKit ([11b78df](https://github.com/lindorm-io/monorepo/commit/11b78df01112106280466a1824a8c47151ceee65))
+- **aegis:** adopt kryptos descriptive cert fields and drop SHA-1 x5t binding ([06e4d4d](https://github.com/lindorm-io/monorepo/commit/06e4d4dd4bc2f3311370335316d1ffb27df0a317))
+- **aegis:** resolve historical kryptos by id when verifying JWE/JWS ([24c81d4](https://github.com/lindorm-io/monorepo/commit/24c81d4dfa2da67eafcc6e1af432af1a75567b16))
+- **aegis:** string verifier for array-valued claims uses containment ([7cc2c7e](https://github.com/lindorm-io/monorepo/commit/7cc2c7e32140a29ffddd079f956dee9e611ae03c))
+
+### Features
+
+- **aegis:** add act, may_act, groups, entitlements claim types ([ed80767](https://github.com/lindorm-io/monorepo/commit/ed80767a029fded720bb9af44fb3cdeb2b5c30d6))
+- **aegis:** add AegisProfile claim type for ID token profile personalization ([929a9b6](https://github.com/lindorm-io/monorepo/commit/929a9b6ee7b051d50dda8aa8c6a1c3e88e23e4d5))
+- **aegis:** add baseFormat to parsed token headers ([43d37a0](https://github.com/lindorm-io/monorepo/commit/43d37a02a3ae1773fb166aabd7f7957dcf30e4ac))
+- **aegis:** add bindCertificate sign option and post-verify thumbprint check ([0d4e2a5](https://github.com/lindorm-io/monorepo/commit/0d4e2a5bdfbfa745b7b3e137ecf4b4a617c6d8f5)), closes [x5t#S256](https://github.com/x5t/issues/S256)
+- **aegis:** add certBindingMode strict/lax for cert-binding verify ([bfd2165](https://github.com/lindorm-io/monorepo/commit/bfd2165d65a1bdb0895e503466dfc287259f7a66))
+- **aegis:** add cnf claim support on sign and parse ([e7d7a28](https://github.com/lindorm-io/monorepo/commit/e7d7a28d1b82cf711c54d64aa51f2615b96c1e4d))
+- **aegis:** add isParsedJwt and isParsedJws guards ([1640977](https://github.com/lindorm-io/monorepo/commit/1640977405de7bc183e98b24857ce33cc21ad0d4))
+- **aegis:** add TokenType, AuthFactor, SessionHint, SubjectHint types ([fb7a15a](https://github.com/lindorm-io/monorepo/commit/fb7a15a2687ed0e1126ac94c23ed01472d0fa044))
+- **aegis:** add userinfo and introspection parse utilities ([ab2e14f](https://github.com/lindorm-io/monorepo/commit/ab2e14f4ef0b40c7a70ad0fe08079a88c99c5f33))
+- **aegis:** attach TokenIdentity to parsed results and add actor verify option ([7bcfdae](https://github.com/lindorm-io/monorepo/commit/7bcfdae0d4d1c83811ea8e03437fb284113f69e4))
+- **aegis:** auto-stamp thumbprint on sign when kryptos has cert, add none mode ([441630f](https://github.com/lindorm-io/monorepo/commit/441630f177b4264a791da9ce9e5409b4de15958a))
+- **aegis:** enforce algorithm allowlist in decodeJoseHeader ([5be80a1](https://github.com/lindorm-io/monorepo/commit/5be80a10aa7461323e1b620bed8a699f960e7089)), closes [PKCS#1](https://github.com/PKCS/issues/1)
+- **aegis:** expose parseUserinfo, parseIntrospection, and validateClaims on Aegis ([a29ec9c](https://github.com/lindorm-io/monorepo/commit/a29ec9c3568631c067d0984de07769a969ca1719))
+- **aegis:** reject JWE tokens with zip compression header ([644d37d](https://github.com/lindorm-io/monorepo/commit/644d37debea9a5bf0edab469ced8e2bc6467bf60))
+- **aegis:** validate tokenType input in computeTypHeader ([5d95fb6](https://github.com/lindorm-io/monorepo/commit/5d95fb69ab5625cd6812b5b29be91c436f8001a0))
+- **aegis:** verify DPoP proofs as part of JWT verification ([9795b7c](https://github.com/lindorm-io/monorepo/commit/9795b7c1d0b8925050fe82176515a47aeefd5957))
+
 ## [0.4.4](https://github.com/lindorm-io/monorepo/compare/@lindorm/aegis@0.4.3...@lindorm/aegis@0.4.4) (2026-04-01)
 
 **Note:** Version bump only for package @lindorm/aegis

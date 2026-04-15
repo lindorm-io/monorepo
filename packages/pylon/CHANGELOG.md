@@ -3,6 +3,63 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.8.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/pylon@0.7.0...@lindorm/pylon@0.8.0) (2026-04-15)
+
+### Bug Fixes
+
+- **pylon:** add explicit return types and await worker.stop() ([4cdaae8](https://github.com/lindorm-io/monorepo/commit/4cdaae899942e5879be9dc790b244a673660a2b5))
+- **pylon:** auto-detect encrypted cookies with tokenised AES ([a98e876](https://github.com/lindorm-io/monorepo/commit/a98e87653c845af94d60e94a655f1ffa6e5d6902))
+- **pylon:** critical auth fixes — expiry, session upsert, CSRF, nonce, redirects ([5300945](https://github.com/lindorm-io/monorepo/commit/5300945bc7c0f2a5661507b5422bf8b0047e26b1))
+- **pylon:** fix session cookie decoding in socket connection middleware ([1534eb5](https://github.com/lindorm-io/monorepo/commit/1534eb56cf9f5e604c6fb248e4a10f915625ff07))
+- **pylon:** improve workers with logging and error isolation ([4adaa6d](https://github.com/lindorm-io/monorepo/commit/4adaa6d99cd3d1ecd6c88f75940026b3d9a93ea1))
+- **pylon:** make socket emitter data argument optional ([2bda475](https://github.com/lindorm-io/monorepo/commit/2bda475fd1ece2d4e9035c4d88ad0a3e533a4294))
+- **pylon:** move queue/webhook to CommonOptions, remove as any casts ([0188ced](https://github.com/lindorm-io/monorepo/commit/0188ced6df0d3cac50ec9171241cc4c5c23b3c81))
+- **pylon:** read tokenType from verified header ([a83e893](https://github.com/lindorm-io/monorepo/commit/a83e8932253eb365f8be9779369dbd7e824ad4ad))
+- **pylon:** register entities and messages on Proteus/Iris sources ([6ee90a4](https://github.com/lindorm-io/monorepo/commit/6ee90a404076fe102b34119e517f3c963c495eb8))
+- **pylon:** revert error handler to pass through full query params ([9babfca](https://github.com/lindorm-io/monorepo/commit/9babfca8e327dee677137e50dc0f5ad508fc66f5))
+
+### Features
+
+- **pylon:** add .kid sibling cookie for signed cookies ([b1a4962](https://github.com/lindorm-io/monorepo/commit/b1a4962db93366fe5774ad88b460fadac16cfbc1))
+- **pylon:** add audit log Iris consumer and export entity ([26221fb](https://github.com/lindorm-io/monorepo/commit/26221fbd3a44ed41423dfc887e3d548368ddca9c))
+- **pylon:** add auth-state pure utilities ([1ae4558](https://github.com/lindorm-io/monorepo/commit/1ae4558ffb2479e5510a23230f803d74fb5c970f))
+- **pylon:** add CLI with init and generate commands ([9a56fbf](https://github.com/lindorm-io/monorepo/commit/9a56fbf349f4ce75d12d5c9395b95de75675ead1))
+- **pylon:** add connection chain middleware factories ([d28a3d1](https://github.com/lindorm-io/monorepo/commit/d28a3d1fb3f0eeefc9fbd1ecf038d29f0f0eabff))
+- **pylon:** add createConnectionSessionMiddleware ([f7c6893](https://github.com/lindorm-io/monorepo/commit/f7c6893126722b6c4d7db672719f32b56c5d2377))
+- **pylon:** add createHandshakeTokenMiddleware ([dd965b3](https://github.com/lindorm-io/monorepo/commit/dd965b39ce9f4fb50f38171fbb07bf2a8134f4cb))
+- **pylon:** add data-level audit via Proteus entity events ([bf56233](https://github.com/lindorm-io/monorepo/commit/bf56233014f27b99b93bcdcb5670fb26fa2bcceb))
+- **pylon:** add handshake DPoP match adapter ([a21949e](https://github.com/lindorm-io/monorepo/commit/a21949e0642d6e08e52eac50fbe3768dc207c468))
+- **pylon:** add public convenience middleware and unify transport-specific middleware ([8ca1037](https://github.com/lindorm-io/monorepo/commit/8ca103759cbd2c5bbe7e0f3977d90c35ddb28b1e))
+- **pylon:** add PylonConnectionMiddleware type and handshake context ([5bb85fe](https://github.com/lindorm-io/monorepo/commit/5bb85feb121436191726c04822eeba87926c8c03))
+- **pylon:** add refresh handler builders ([5fee470](https://github.com/lindorm-io/monorepo/commit/5fee47043522a2e6dbce4cf252f06bb4a698e8f5))
+- **pylon:** add session cookie safety assertions ([303135c](https://github.com/lindorm-io/monorepo/commit/303135cc0f77d4b91049c5419b1842ddcf0b965c))
+- **pylon:** add session identity and userinfo/introspection error types ([18adbd7](https://github.com/lindorm-io/monorepo/commit/18adbd72ba667b7fcc5e5807979436c731f987ee))
+- **pylon:** add token source resolvers ([5ec3959](https://github.com/lindorm-io/monorepo/commit/5ec3959620e5b27cc0ac0e6a0b6f506de7e79632))
+- **pylon:** add webhook Iris consumers, method field, and export entity ([e0ec22c](https://github.com/lindorm-io/monorepo/commit/e0ec22c633599473fda91a1c310fb68e3c664f58))
+- **pylon:** auto-inject ctx.rooms via lazyFactory, auto-register built-in room handlers ([c233c56](https://github.com/lindorm-io/monorepo/commit/c233c56149ad7dd085ddc942e7d65db80ec8cc18))
+- **pylon:** auto-register $pylon/auth/refresh listener ([ed9b4bc](https://github.com/lindorm-io/monorepo/commit/ed9b4bc6e4f896e0bcc7091006e9944067c2ed6a))
+- **pylon:** auto-wire connection session middleware in PylonIo ([b4d83af](https://github.com/lindorm-io/monorepo/commit/b4d83afcb37fed8826011874222f3eb18537ebec))
+- **pylon:** encrypt kryptos private keys at rest with @Encrypted + @AppendOnly ([93534fd](https://github.com/lindorm-io/monorepo/commit/93534fd21d8316ec1f25116748285a17bae807e0))
+- **pylon:** enforce DPoP at handshake token middleware ([75f7329](https://github.com/lindorm-io/monorepo/commit/75f73299b329f766f507a5b9a5e547b60fbeea5b))
+- **pylon:** fix socket error handling and add ack/nack support ([b757e02](https://github.com/lindorm-io/monorepo/commit/b757e02f48f4cef9638fe73aac431ae856469291))
+- **pylon:** handle DPoP-bound access tokens in access token middleware ([76d65db](https://github.com/lindorm-io/monorepo/commit/76d65db6fd12ac72a69e6f105da312cb75c84a40))
+- **pylon:** integrate Iris for messaging, remove entity-based queue ([b719a86](https://github.com/lindorm-io/monorepo/commit/b719a86a4b08c5ce25861425eeeb6f4edbee5b69))
+- **pylon:** integrate Proteus for entity persistence ([ea4a707](https://github.com/lindorm-io/monorepo/commit/ea4a707d6f4ddb998a96d2044c6946992a2783e5))
+- **pylon:** multi-tenant and scope middleware ([67ba4fa](https://github.com/lindorm-io/monorepo/commit/67ba4fa3fb5b0fe13e6c9904d9b81c92aa7e85c8))
+- **pylon:** parameterised socket event matching via EventMatcher trie ([523fd26](https://github.com/lindorm-io/monorepo/commit/523fd26f4656cdfef875f9b256e5f22109f9431c))
+- **pylon:** pin cnf.jkt across bearer refresh ([ddf83ba](https://github.com/lindorm-io/monorepo/commit/ddf83bac62ea2d1c9fbd754d3df5ae506bc48280))
+- **pylon:** pylon envelope protocol, typed socket payloads, correlation & lifecycle ([27f9b78](https://github.com/lindorm-io/monorepo/commit/27f9b78e19b31e01f6db9f7bb8d4ff7445366380))
+- **pylon:** rate limiting middleware with three strategies, rename entities/messages ([c4fbfb6](https://github.com/lindorm-io/monorepo/commit/c4fbfb66f2c154e56f30e04e619876d376a27b2e))
+- **pylon:** redesign Kryptos entity with descriptive cert fields and eager embedded lists ([dc16de7](https://github.com/lindorm-io/monorepo/commit/dc16de764b9237d2729d58e9b55d8ddc93817d16))
+- **pylon:** remove init command from cli ([7e8a914](https://github.com/lindorm-io/monorepo/commit/7e8a914e66f6ebaf2f8ca1cb2402e3ccdae6c272))
+- **pylon:** request-level audit logging via Iris worker queue ([18d4d45](https://github.com/lindorm-io/monorepo/commit/18d4d4537ab54eb5540adc50a24412201626170b))
+- **pylon:** require expiresIn in $pylon/auth/refresh bearer payload ([ecac2f1](https://github.com/lindorm-io/monorepo/commit/ecac2f1c00d0661681369c622460d025f84763c1))
+- **pylon:** restructure socket context with envelope emitter ([423e614](https://github.com/lindorm-io/monorepo/commit/423e6148268496a299bc2a10e310002588627134))
+- **pylon:** room management middleware with optional presence tracking ([44d6503](https://github.com/lindorm-io/monorepo/commit/44d6503e4b73ea377a54703be52969d1cba78839))
+- **pylon:** scaffold KEK + amphora bootstrap during pylon init ([777353d](https://github.com/lindorm-io/monorepo/commit/777353d78e23c836cd75082d37191ea03d9b2118))
+- **pylon:** scanner overhaul with shared base and new conventions ([475a100](https://github.com/lindorm-io/monorepo/commit/475a100fa451ed4c2d234c7dc4607be2f0e6e82d))
+- **pylon:** wire handshake chain into PylonIo ([61e802e](https://github.com/lindorm-io/monorepo/commit/61e802ee8452ead63d6728dc7e521095631c8b03))
+
 # [0.7.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/pylon@0.6.3...@lindorm/pylon@0.7.0) (2026-04-01)
 
 ### Bug Fixes

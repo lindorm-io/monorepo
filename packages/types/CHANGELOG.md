@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.5.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/types@0.4.1...@lindorm/types@0.5.0) (2026-04-15)
+
+### Bug Fixes
+
+- **types:** rename OpenIdClaims.birthDate to birthdate ([e019f59](https://github.com/lindorm-io/monorepo/commit/e019f5916bdafda18620998ee5f76803b44a0050))
+
+### Features
+
+- **types:** add DpopSigner contract ([47e6012](https://github.com/lindorm-io/monorepo/commit/47e60128000139905258c6919d2f33e86f6158d1))
+- **types:** add RFC 6749 error fields to OpenIdAuthorizeResponseQuery ([e1566fc](https://github.com/lindorm-io/monorepo/commit/e1566fcc60e67a137942eb43702cda95cd17411e))
+- **types:** add RFC 8707 resource parameter to OpenIdAuthorizeRequestQuery ([0517f1b](https://github.com/lindorm-io/monorepo/commit/0517f1b58e9ce374b95913eadfc9331819081ae0))
+
 ## [0.4.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/types@0.4.0...@lindorm/types@0.4.1) (2026-04-01)
 
 **Note:** Version bump only for package @lindorm/types

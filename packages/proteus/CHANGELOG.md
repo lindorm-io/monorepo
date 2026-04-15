@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.5.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/proteus@0.4.0...@lindorm/proteus@0.5.0) (2026-04-15)
+
+### Bug Fixes
+
+- **proteus,iris,hermes:** simplify logger in init templates ([76230f8](https://github.com/lindorm-io/monorepo/commit/76230f8c4e4c96ff8b0858e518ac44be455d25cf))
+- **proteus:** add explicit return type to emitEntity default ([d8988cb](https://github.com/lindorm-io/monorepo/commit/d8988cb496cf1a49d8b280f1fa0f05f74a3c54e5))
+- **proteus:** decrypt @Encrypted fields by exact kid, not predicate ([ba6f2ed](https://github.com/lindorm-io/monorepo/commit/ba6f2edd8bb344e8a7aafe37f26f0eb3ba84766a))
+- **proteus:** improve init source template ([65553d8](https://github.com/lindorm-io/monorepo/commit/65553d8f6b217a156c77dd3076f721f31e7d1615))
+- **proteus:** reject field initializers on lazy @EmbeddedList fields at metadata build ([ae3ad97](https://github.com/lindorm-io/monorepo/commit/ae3ad971e0b4ce737b3bd71fa21264ebeed22cc8))
+
+### Features
+
+- **proteus:** add @AppendOnly decorator with SQL trigger enforcement ([9f1a21a](https://github.com/lindorm-io/monorepo/commit/9f1a21aaed785ca5ecfc27b0e8a63a24013436e3))
+- **proteus:** add init and generate entity CLI commands ([f5979fe](https://github.com/lindorm-io/monorepo/commit/f5979fe2b504287cc2d744e9d436d0eb1cf1aba7))
+- **proteus:** add IProteusSource interface ([5ec548b](https://github.com/lindorm-io/monorepo/commit/5ec548b14e65f606e6bf480b6af96bb88353a58c))
+- **proteus:** add loading field to MetaEmbeddedList with eager/lazy dispatch ([88c2ee7](https://github.com/lindorm-io/monorepo/commit/88c2ee7957246c6bb1368edbc4bb18fa35c5ae92))
+- **proteus:** generalise LazyCollection and add installLazyEmbeddedLists ([f005d16](https://github.com/lindorm-io/monorepo/commit/f005d1644904a52f3a460f17426a306b4bc481ea))
+- **proteus:** wire lazy embedded-list skip in drivers and cursors ([8daab7f](https://github.com/lindorm-io/monorepo/commit/8daab7ffd4844d52a989374c0629ec691e3ee949))
+
 # [0.4.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/proteus@0.3.0...@lindorm/proteus@0.4.0) (2026-04-01)
 
 ### Bug Fixes
