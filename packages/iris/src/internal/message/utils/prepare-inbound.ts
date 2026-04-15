@@ -16,7 +16,7 @@ export const prepareInbound = async (
 
   if (headers["x-iris-encrypted"] === "true" && metadata.encrypted) {
     const str = Buffer.isBuffer(data) ? data.toString("utf-8") : data;
-    data = await decryptPayload(str, amphora, metadata.encrypted.predicate);
+    data = await decryptPayload(str, amphora);
   }
 
   if (headers["x-iris-encrypted"] === "true" && !metadata.encrypted) {

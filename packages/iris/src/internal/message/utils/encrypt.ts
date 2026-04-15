@@ -30,7 +30,6 @@ export const encryptPayload = async (
 export const decryptPayload = async (
   data: string,
   amphora: IAmphora | null | undefined,
-  predicate: AmphoraPredicate,
 ): Promise<Buffer> => {
   if (!amphora) {
     throw new IrisNotSupportedError(
@@ -39,8 +38,9 @@ export const decryptPayload = async (
   }
 
   try {
-    const { AesKit } = await import("@lindorm/aes");
-    const kryptos = await amphora.find(predicate);
+    const { AesKit, parseAes } = await import("@lindorm/aes");
+    const { keyId } = parseAes(data);
+    const kryptos = await amphora.findById(keyId);
     const aesKit = new AesKit({ kryptos: kryptos as any });
     const decrypted = aesKit.decrypt<string>(data);
     return Buffer.from(decrypted, "base64");
