@@ -16,7 +16,7 @@
   "scripts": {
     "build": "rimraf dist && tsc -b ./tsconfig.build.json",
     "prettier": "prettier --write ./src/*",
-    "test": "jest --",
+    "test": "jest",
     "test:ci": "jest",
     "test:watch": "jest --watch --",
     "typecheck": "tsc",

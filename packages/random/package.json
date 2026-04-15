@@ -20,7 +20,7 @@
     "example:number": "ts-node example/random-number.ts",
     "example:string": "ts-node example/random-string.ts",
     "prettier": "prettier --write ./src/*",
-    "test": "jest --",
+    "test": "jest",
     "test:ci": "jest",
     "test:watch": "jest --watch --",
     "typecheck": "tsc",

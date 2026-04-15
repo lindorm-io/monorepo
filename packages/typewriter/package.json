@@ -17,7 +17,7 @@
     "build": "rimraf dist && tsc -b ./tsconfig.build.json && chmod +x dist/cli.js",
     "example": "ts-node example",
     "prettier": "prettier --write ./src/*",
-    "test": "jest --",
+    "test": "jest",
     "test:ci": "jest",
     "test:watch": "jest --watch --",
     "typecheck": "tsc",
