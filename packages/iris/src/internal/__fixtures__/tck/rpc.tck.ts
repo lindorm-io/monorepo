@@ -53,7 +53,7 @@ export const rpcSuite = (
       const req = new TckRpcRequest();
       req.question = "unhandled";
 
-      await expect(client.request(req)).rejects.toThrow(IrisError);
+      await expect(client.request(req, { timeout: 500 })).rejects.toThrow(IrisError);
 
       await client.close();
     });
@@ -114,7 +114,7 @@ export const rpcSuite = (
       const req2 = new TckRpcRequest();
       req2.question = "second";
 
-      await expect(client.request(req2)).rejects.toThrow(IrisError);
+      await expect(client.request(req2, { timeout: 500 })).rejects.toThrow(IrisError);
 
       await client.close();
     });
