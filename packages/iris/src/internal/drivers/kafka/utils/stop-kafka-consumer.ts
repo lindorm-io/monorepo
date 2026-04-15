@@ -61,6 +61,32 @@ export const stopAllKafkaConsumers = async (state: KafkaSharedState): Promise<vo
   state.consumerPool.clear();
 };
 
+// Fire-and-forget: detach consumers from state immediately and stop them in
+// the background. Used by reset() to keep beforeEach() cheap. Old consumers
+// keep running until their stop promises resolve, but because reset()
+// increments resetGeneration, any subsequent subscribe uses a fresh groupId
+// and does not collide with them.
+export const detachAllKafkaConsumers = (state: KafkaSharedState): void => {
+  const consumers = [...state.consumers];
+  state.consumers.length = 0;
+
+  const pooled = [...state.consumerPool.values()];
+  state.consumerPool.clear();
+
+  for (const p of pooled) {
+    try {
+      p.localAbort.abort();
+    } catch {
+      /* already aborted */
+    }
+  }
+
+  void Promise.allSettled([
+    ...consumers.map((handle) => stopConsumerWithTimeout(handle.consumer)),
+    ...pooled.map((p) => stopConsumerWithTimeout(p.consumer)),
+  ]);
+};
+
 export type { ReleasePooledConsumerOptions };
 
 export const releasePooledConsumer = async (

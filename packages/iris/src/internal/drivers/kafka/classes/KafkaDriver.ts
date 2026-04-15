@@ -23,7 +23,10 @@ import { getMessageMetadata } from "../../../message/metadata/get-message-metada
 import { resolveDefaultTopic } from "../../../message/utils/resolve-default-topic";
 import { resolveTopicName } from "../utils/resolve-topic-name";
 import { serializeKafkaMessage } from "../utils/serialize-kafka-message";
-import { stopAllKafkaConsumers } from "../utils/stop-kafka-consumer";
+import {
+  detachAllKafkaConsumers,
+  stopAllKafkaConsumers,
+} from "../utils/stop-kafka-consumer";
 import { KafkaMessageBus } from "./KafkaMessageBus";
 import { KafkaPublisher } from "./KafkaPublisher";
 import { KafkaRpcClient } from "./KafkaRpcClient";
@@ -325,7 +328,11 @@ export class KafkaDriver implements IIrisDriver {
     this.state.abortController.abort();
     this.state.abortController = new AbortController();
 
-    await stopAllKafkaConsumers(this.state);
+    // Detach consumers without waiting for their stop/disconnect to complete.
+    // stopConsumerWithTimeout() has a 2s-per-consumer cap; awaiting it in
+    // beforeEach was the dominant cost of every kafka TCK test. Resources
+    // are reclaimed in disconnect() during afterAll.
+    detachAllKafkaConsumers(this.state);
 
     // Don't delete Kafka topics — topic deletion is slow and causes
     // "topic-partition not hosted" errors on immediate re-subscribe.
