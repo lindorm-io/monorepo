@@ -10,4 +10,5 @@ export const createMockAesModule = () => ({
       return token.slice(ENCRYPTED_PREFIX.length);
     }),
   })),
+  parseAes: jest.fn((_data: string) => ({ keyId: "mock-kryptos-key" })),
 });
