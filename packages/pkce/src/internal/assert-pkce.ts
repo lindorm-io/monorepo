@@ -1,5 +1,5 @@
 import { PkceMethod } from "@lindorm/types";
-import { PkceError } from "../../errors";
+import { PkceError } from "../errors";
 import { verifyPkce } from "./verify-pkce";
 
 export const assertPkce = (

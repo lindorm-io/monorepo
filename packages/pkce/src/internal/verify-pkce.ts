@@ -1,5 +1,5 @@
 import { PkceMethod } from "@lindorm/types";
-import { PkceError } from "../../errors";
+import { PkceError } from "../errors";
 import { createBaseHash } from "./create-base-hash";
 import { stringComparison } from "./string-comparison";
 
