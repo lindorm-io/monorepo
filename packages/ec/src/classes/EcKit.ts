@@ -7,11 +7,7 @@ import {
 import { DsaEncoding, IKeyKit, KeyData } from "@lindorm/types";
 import { EcError } from "../errors";
 import { EcKitOptions } from "../types";
-import {
-  assertEcSignature,
-  createEcSignature,
-  verifyEcSignature,
-} from "../utils/private";
+import { assertEcSignature, createEcSignature, verifyEcSignature } from "#internal/index";
 
 export class EcKit implements IKeyKit {
   private readonly dsa: DsaEncoding;

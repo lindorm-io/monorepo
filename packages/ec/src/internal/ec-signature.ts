@@ -1,7 +1,7 @@
 import { isBuffer, isString } from "@lindorm/is";
 import { createSign, createVerify } from "crypto";
-import { EcError } from "../../errors";
-import { CreateEcSignatureOptions, VerifyEcSignatureOptions } from "../../types/ec-kit";
+import { EcError } from "../errors";
+import { CreateEcSignatureOptions, VerifyEcSignatureOptions } from "../types/ec-kit";
 import { getSignKey, getVerifyKey } from "./get-key";
 import { mapEcAlgorithm } from "./map-algorithm";
 import { derToRaw, rawToDer } from "./raw";
