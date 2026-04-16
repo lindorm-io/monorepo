@@ -1,5 +1,5 @@
 import { KeysInput } from "../../types";
-import { convertArray, convertObject, kebabCase } from "../private";
+import { convertArray, convertObject, kebabCase } from "#internal/index";
 
 export { kebabCase };
 

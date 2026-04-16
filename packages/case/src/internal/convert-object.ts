@@ -1,5 +1,5 @@
 import { isArray, isObject } from "@lindorm/is";
-import { CaseCallback, KeysInput } from "../../types";
+import { CaseCallback, KeysInput } from "../types";
 import { convertObjectArrayKeys } from "./convert-object-array-keys";
 import { convertObjectKeys } from "./convert-object-keys";
 

@@ -1,5 +1,5 @@
 import { KeysInput } from "../../types";
-import { convertArray, convertObject, pathCase } from "../private";
+import { convertArray, convertObject, pathCase } from "#internal/index";
 
 export { pathCase };
 
