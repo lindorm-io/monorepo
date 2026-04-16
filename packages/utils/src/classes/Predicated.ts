@@ -1,5 +1,5 @@
 import { Dict, Predicate } from "@lindorm/types";
-import { advancedMatch } from "../utils/private";
+import { advancedMatch } from "#internal/index";
 
 export class Predicated {
   public static filter<T extends Dict>(
