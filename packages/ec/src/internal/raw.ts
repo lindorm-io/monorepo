@@ -1,5 +1,5 @@
 import { IKryptosEc } from "@lindorm/kryptos";
-import { EcError } from "../../errors";
+import { EcError } from "../errors";
 
 const KEY_SIZES = {
   "P-256": 32,

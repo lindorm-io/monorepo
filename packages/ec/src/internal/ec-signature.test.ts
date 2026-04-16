@@ -3,8 +3,8 @@ import {
   TEST_EC_KEY_ES256,
   TEST_EC_KEY_ES384,
   TEST_EC_KEY_ES512,
-} from "../../__fixtures__/keys";
-import { EcError } from "../../errors";
+} from "../__fixtures__/keys";
+import { EcError } from "../errors";
 import { assertEcSignature, createEcSignature, verifyEcSignature } from "./ec-signature";
 
 describe("ec-signature", () => {
