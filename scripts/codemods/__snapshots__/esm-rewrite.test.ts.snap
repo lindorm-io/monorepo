@@ -1,0 +1,391 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`.json imports leaves import data from './foo.json' untouched 1`] = `
+"import data from "./foo.json";
+"
+`;
+
+exports[`additional edge cases default import import X from './foo' 1`] = `
+"import X from "./foo.js";
+"
+`;
+
+exports[`additional edge cases multiple rewrites in one file apply in correct order 1`] = `
+"import { A } from "./a.js";
+import { B } from "./b.js";
+export { C } from "./c.js";
+"
+`;
+
+exports[`additional edge cases namespace import import * as X from './foo' 1`] = `
+"import * as Foo from "./foo.js";
+"
+`;
+
+exports[`additional edge cases side-effect import 'import ./foo' 1`] = `
+"import "./foo.js";
+"
+`;
+
+exports[`dynamic import() with static string leaves dynamic import of .json untouched 1`] = `
+"const m = import("./foo.json");
+"
+`;
+
+exports[`dynamic import() with static string leaves dynamic import of package untouched 1`] = `
+"const m = import("@lindorm/b64");
+"
+`;
+
+exports[`dynamic import() with static string rewrites await import('./foo') in async context 1`] = `
+"export const load = async () => {
+  const mod = await import("./foo.js");
+  return mod;
+};
+"
+`;
+
+exports[`dynamic import() with static string rewrites import('./foo') 1`] = `
+"const m = import("./foo.js");
+"
+`;
+
+exports[`jest.mock and jest.unstable_mockModule leaves jest.mock of package untouched 1`] = `
+"jest.mock("@lindorm/b64", () => ({}));
+"
+`;
+
+exports[`jest.mock and jest.unstable_mockModule rewrites jest.mock('./foo', factory) 1`] = `
+"jest.mock("./foo.js", () => ({}));
+"
+`;
+
+exports[`jest.mock and jest.unstable_mockModule rewrites jest.unstable_mockModule('./foo', factory) 1`] = `
+"jest.unstable_mockModule("./foo.js", () => ({}));
+"
+`;
+
+exports[`mixed value and type imports preserves inline type modifier on mixed import 1`] = `
+"import { A, type B } from "./foo.js";
+"
+`;
+
+exports[`mixed value and type imports rewrites both value and type imports from same module 1`] = `
+"import { A } from "./foo.js";
+import type { T } from "./foo.js";
+"
+`;
+
+exports[`mixed value and type imports rewrites import type 1`] = `
+"import type { T } from "./foo.js";
+"
+`;
+
+exports[`non-import string literals leaves Error message string untouched 1`] = `
+"throw new Error("./foo");
+"
+`;
+
+exports[`non-import string literals leaves fs.readFile('./config') untouched 1`] = `
+"fs.readFile("./config");
+"
+`;
+
+exports[`non-import string literals leaves plain string constant untouched 1`] = `
+"const p = "./relative/path";
+"
+`;
+
+exports[`preservation invariants double-quoted imports stay double-quoted 1`] = `
+"import { X } from "./foo.js";
+"
+`;
+
+exports[`preservation invariants leading comments preserved 1`] = `
+"// header comment
+/* block comment */
+import { X } from "./foo.js";
+"
+`;
+
+exports[`preservation invariants multi-line import formatting preserved 1`] = `
+"import {
+  A,
+  B,
+  C,
+} from "./foo.js";
+"
+`;
+
+exports[`preservation invariants single-quoted imports stay single-quoted 1`] = `
+"import { X } from './foo.js';
+"
+`;
+
+exports[`preservation invariants trailing comma in import specifier list preserved 1`] = `
+"import { A, B, } from "./foo.js";
+"
+`;
+
+exports[`re-exports leaves local declaration export untouched 1`] = `
+"export const foo = 1;
+"
+`;
+
+exports[`re-exports leaves package re-export untouched 1`] = `
+"export * from "@lindorm/other";
+"
+`;
+
+exports[`re-exports rewrites export * from 1`] = `
+"export * from "./foo.js";
+"
+`;
+
+exports[`re-exports rewrites export { X } from 1`] = `
+"export { X } from "./foo.js";
+"
+`;
+
+exports[`re-exports rewrites export { X as Y } from 1`] = `
+"export { X as Y } from "./foo.js";
+"
+`;
+
+exports[`re-exports rewrites export { type X } from and preserves inline type 1`] = `
+"export { type X } from "./foo.js";
+"
+`;
+
+exports[`re-exports rewrites export type { X } from 1`] = `
+"export type { X } from "./foo.js";
+"
+`;
+
+exports[`relative directory imports file wins when both ./foo.ts and ./foo/index.ts exist 1`] = `
+"import { X } from "./foo.js";
+"
+`;
+
+exports[`relative directory imports rewrites ./foo to ./foo/index.js when ./foo/index.ts exists 1`] = `
+"import { X } from "./foo/index.js";
+"
+`;
+
+exports[`relative directory imports rewrites ./foo to ./foo/index.js when ./foo/index.tsx exists 1`] = `
+"import { X } from "./foo/index.js";
+"
+`;
+
+exports[`relative directory imports trailing slash on directory specifier is normalised 1`] = `
+"import { X } from "./foo/index.js";
+"
+`;
+
+exports[`relative directory imports unresolved relative emits warning and leaves source untouched 1`] = `
+"import { X } from "./missing";
+"
+`;
+
+exports[`relative file imports leaves #internal subpath imports untouched 1`] = `
+"import { Foo } from "#internal/classes/Foo";
+"
+`;
+
+exports[`relative file imports leaves .json imports untouched 1`] = `
+"import data from "./foo.json";
+"
+`;
+
+exports[`relative file imports leaves already-extensioned .js untouched 1`] = `
+"import { X } from "./foo.js";
+"
+`;
+
+exports[`relative file imports leaves already-extensioned .ts untouched (no normalisation) 1`] = `
+"import { X } from "./foo.ts";
+"
+`;
+
+exports[`relative file imports leaves node builtin imports untouched 1`] = `
+"import * as fs from "node:fs";
+"
+`;
+
+exports[`relative file imports leaves package imports untouched 1`] = `
+"import { B64 } from "@lindorm/b64";
+"
+`;
+
+exports[`relative file imports rewrites ../bar when ../bar.ts exists 1`] = `
+"import { X } from "../bar.js";
+"
+`;
+
+exports[`relative file imports rewrites ./Button when ./Button.tsx exists 1`] = `
+"import Button from "./Button.js";
+"
+`;
+
+exports[`relative file imports rewrites ./foo to ./foo.js when ./foo.ts exists 1`] = `
+"import { X } from "./foo.js";
+"
+`;
+
+exports[`require.resolve does not duplicate createRequire import when already present 1`] = `
+"import { createRequire } from "node:module";
+const require = createRequire(import.meta.url);
+const p = require.resolve("./foo.js");
+"
+`;
+
+exports[`require.resolve injects createRequire boilerplate when file has no imports 1`] = `
+"
+import { createRequire } from "node:module";
+const require = createRequire(import.meta.url);
+const p = require.resolve("./foo.js");
+"
+`;
+
+exports[`require.resolve inserts createRequire boilerplate after last existing import 1`] = `
+"import { X } from "./foo.js";
+import { createRequire } from "node:module";
+const require = createRequire(import.meta.url);
+
+
+const p = require.resolve("./bar.js");
+"
+`;
+
+exports[`require.resolve leaves require.resolve of .json untouched 1`] = `
+"const p = require.resolve("./foo.json");
+"
+`;
+
+exports[`require.resolve leaves require.resolve of package untouched and no boilerplate injection 1`] = `
+"const p = require.resolve("@lindorm/b64");
+"
+`;
+
+exports[`subpath imports (#internal/*) emits unresolved-subpath-import warning when target missing 1`] = `
+"import { X } from "#internal/missing";
+"
+`;
+
+exports[`subpath imports (#internal/*) file wins over directory when both exist 1`] = `
+"import { Foo } from "#internal/foo.js";
+"
+`;
+
+exports[`subpath imports (#internal/*) leaves already-extensioned #internal/foo.js untouched 1`] = `
+"import { X } from "#internal/foo.js";
+"
+`;
+
+exports[`subpath imports (#internal/*) leaves non-matching #other/foo subpath untouched 1`] = `
+"import { X } from "#other/foo";
+"
+`;
+
+exports[`subpath imports (#internal/*) regression: package import @lindorm/x unchanged with subpath map present 1`] = `
+"import { B64 } from "@lindorm/b64";
+"
+`;
+
+exports[`subpath imports (#internal/*) regression: relative import still rewrites with subpath map present 1`] = `
+"import { X } from "./local.js";
+"
+`;
+
+exports[`subpath imports (#internal/*) rewrites #internal/foo to #internal/foo.js when file exists 1`] = `
+"import { Foo } from "#internal/foo.js";
+"
+`;
+
+exports[`subpath imports (#internal/*) rewrites #internal/foo to #internal/foo/index.js when directory exists 1`] = `
+"import { Foo } from "#internal/foo/index.js";
+"
+`;
+
+exports[`subpath imports (#internal/*) rewrites #internal/foo when index.tsx exists 1`] = `
+"import { Foo } from "#internal/foo/index.js";
+"
+`;
+
+exports[`subpath imports (#internal/*) rewrites dynamic import('#internal/foo') 1`] = `
+"const m = import("#internal/foo.js");
+"
+`;
+
+exports[`subpath imports (#internal/*) rewrites export * from #internal/foo 1`] = `
+"export * from "#internal/foo.js";
+"
+`;
+
+exports[`subpath imports (#internal/*) rewrites export { X } from #internal/foo 1`] = `
+"export { X } from "#internal/foo.js";
+"
+`;
+
+exports[`subpath imports (#internal/*) rewrites export type { X } from #internal/foo 1`] = `
+"export type { X } from "#internal/foo.js";
+"
+`;
+
+exports[`subpath imports (#internal/*) rewrites jest.mock('#internal/foo', factory) 1`] = `
+"jest.mock("#internal/foo.js", () => ({}));
+"
+`;
+
+exports[`subpath imports (#internal/*) rewrites nested #internal/classes/Foo file 1`] = `
+"import { Foo } from "#internal/classes/Foo.js";
+"
+`;
+
+exports[`subpath imports (#internal/*) rewrites require.resolve('#internal/foo') and injects createRequire 1`] = `
+"
+import { createRequire } from "node:module";
+const require = createRequire(import.meta.url);
+const p = require.resolve("#internal/foo.js");
+"
+`;
+
+exports[`subpath imports with providesExtension leaves #internal/foo untouched when imports map provides extension 1`] = `
+"import { Foo } from "#internal/foo";
+"
+`;
+
+exports[`subpath imports with providesExtension leaves already-extensioned #internal/foo.js untouched (still passthrough) 1`] = `
+"import { X } from "#internal/foo.js";
+"
+`;
+
+exports[`subpath imports with providesExtension leaves dynamic import('#internal/foo') untouched when imports map provides extension 1`] = `
+"const m = import("#internal/foo");
+"
+`;
+
+exports[`subpath imports with providesExtension leaves export * from #internal/foo untouched when imports map provides extension 1`] = `
+"export * from "#internal/foo";
+"
+`;
+
+exports[`subpath imports with providesExtension leaves jest.mock('#internal/foo') untouched when imports map provides extension 1`] = `
+"jest.mock("#internal/foo", () => ({}));
+"
+`;
+
+exports[`subpath imports with providesExtension leaves nested #internal/classes/Foo untouched when imports map provides extension 1`] = `
+"import { Foo } from "#internal/classes/Foo";
+"
+`;
+
+exports[`subpath imports with providesExtension leaves require.resolve('#internal/foo') untouched — no createRequire injection 1`] = `
+"const p = require.resolve("#internal/foo");
+"
+`;
+
+exports[`subpath imports with providesExtension relative imports still rewrite even when subpath has providesExtension 1`] = `
+"import { X } from "./local.js";
+"
+`;

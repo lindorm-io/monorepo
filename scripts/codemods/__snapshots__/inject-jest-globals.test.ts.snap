@@ -1,0 +1,45 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`injection pipeline handles jest.spyOn deep in nested blocks 1`] = `
+"import { Foo } from "./foo";
+import { jest } from "@jest/globals";
+
+describe("x", () => {
+  beforeEach(() => {
+    jest.spyOn(Foo, "bar");
+  });
+});
+"
+`;
+
+exports[`injection pipeline handles multiple jest.* calls — only one import injected 1`] = `
+"import { X } from "./x";
+import { jest } from "@jest/globals";
+jest.mock("./x");
+const fn = jest.fn();
+jest.resetAllMocks();
+"
+`;
+
+exports[`injection pipeline injects after last import when jest.fn() is used 1`] = `
+"import { Foo } from "./foo";
+import { jest } from "@jest/globals";
+
+const fn = jest.fn();
+"
+`;
+
+exports[`injection pipeline injects after multiple imports 1`] = `
+"import { A } from "./a";
+import { B } from "./b";
+import { jest } from "@jest/globals";
+
+jest.mock("./a");
+"
+`;
+
+exports[`injection pipeline injects at position 0 when no imports exist 1`] = `
+"import { jest } from "@jest/globals";jest.mock("./foo");
+describe("x", () => {});
+"
+`;
