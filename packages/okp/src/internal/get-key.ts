@@ -1,5 +1,5 @@
 import { IKryptosOkp } from "@lindorm/kryptos";
-import { OkpError } from "../../errors";
+import { OkpError } from "../errors";
 
 export const getSignKey = (kryptos: IKryptosOkp): string => {
   const { privateKey } = kryptos.export("pem");

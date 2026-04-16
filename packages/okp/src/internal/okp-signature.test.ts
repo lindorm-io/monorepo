@@ -1,6 +1,6 @@
 import { randomBytes } from "crypto";
-import { TEST_OKP_KEY_ED25519, TEST_OKP_KEY_ED448 } from "../../__fixtures__/keys";
-import { OkpError } from "../../errors";
+import { TEST_OKP_KEY_ED25519, TEST_OKP_KEY_ED448 } from "../__fixtures__/keys";
+import { OkpError } from "../errors";
 import {
   assertOkpSignature,
   createOkpSignature,
