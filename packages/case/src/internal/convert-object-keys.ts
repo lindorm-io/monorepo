@@ -1,6 +1,6 @@
 import { isArray, isObject } from "@lindorm/is";
 import { Dict } from "@lindorm/types";
-import { CaseCallback } from "../../types";
+import { CaseCallback } from "../types";
 import { convertObjectArrayKeys } from "./convert-object-array-keys";
 
 export const convertObjectKeys = <T = any>(input: T, callback: CaseCallback): T => {
