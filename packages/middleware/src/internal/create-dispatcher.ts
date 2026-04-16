@@ -1,4 +1,4 @@
-import { ComposedMiddleware, Dispatch, Middleware, Next } from "../../types";
+import { ComposedMiddleware, Dispatch, Middleware, Next } from "../types";
 
 export const createDispatcher =
   <Context>(middleware: Array<Middleware<Context>>): ComposedMiddleware<Context> =>

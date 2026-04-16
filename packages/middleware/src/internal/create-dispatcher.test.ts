@@ -1,4 +1,4 @@
-import { Middleware, Next } from "../../types";
+import { Middleware, Next } from "../types";
 import { createDispatcher } from "./create-dispatcher";
 
 describe("createDispatcher", () => {
