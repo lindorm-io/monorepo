@@ -1,5 +1,5 @@
 import { ILogger, LoggerOptions } from "@lindorm/logger";
-import { getLogger, getTypes, loadSamples, writeLinesToFile } from "./private";
+import { getLogger, getTypes, loadSamples, writeLinesToFile } from "#internal/index";
 
 type Options = {
   fileName?: string;
