@@ -1,6 +1,6 @@
 import { IKryptosOct, OCT_SIG_ALGORITHMS, OctSigAlgorithm } from "@lindorm/kryptos";
 import { ShaAlgorithm } from "@lindorm/types";
-import { OctError } from "../../errors";
+import { OctError } from "../errors";
 
 const OCT_SIG_ALGORITHM_MAP: Record<OctSigAlgorithm, ShaAlgorithm> = {
   HS256: "SHA256",

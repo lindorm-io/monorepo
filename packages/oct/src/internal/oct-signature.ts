@@ -1,7 +1,7 @@
 import { isString } from "@lindorm/is";
 import { createHmac, timingSafeEqual } from "crypto";
-import { OctError } from "../../errors";
-import { CreateOctSignatureOptions, VerifyOctSignatureOptions } from "../../types";
+import { OctError } from "../errors";
+import { CreateOctSignatureOptions, VerifyOctSignatureOptions } from "../types";
 import { assertKeySize } from "./assert-key-size";
 import { getPrivateKey } from "./get-key";
 import { mapOctAlgorithm } from "./map-algorithm";

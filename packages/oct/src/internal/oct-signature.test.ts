@@ -3,8 +3,8 @@ import {
   TEST_OCT_KEY_HS256,
   TEST_OCT_KEY_HS384,
   TEST_OCT_KEY_HS512,
-} from "../../__fixtures__/keys";
-import { OctError } from "../../errors";
+} from "../__fixtures__/keys";
+import { OctError } from "../errors";
 import {
   assertOctSignature,
   createOctSignature,
