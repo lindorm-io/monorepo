@@ -1,4 +1,4 @@
-import { parseTokenHeader } from "./private";
+import { parseTokenHeader } from "#internal/index";
 
 const LENGTH = 5;
 const REGEX =

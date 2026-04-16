@@ -1,4 +1,4 @@
-import { parseTokenHeader } from "./private";
+import { parseTokenHeader } from "#internal/index";
 
 const LENGTH = 3;
 const REGEX = /^[a-zA-Z0-9-_]+\.[a-zA-Z0-9-_]+\.[a-zA-Z0-9-_]+$/;
