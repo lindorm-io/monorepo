@@ -1,5 +1,5 @@
 import { Dict, Param, Query } from "@lindorm/types";
-import { CreateUrlOptions } from "../../types/types";
+import { CreateUrlOptions } from "../types/types";
 import { addQueryToURL } from "./add-query-to-url";
 import { replaceParams } from "./replace-params";
 
