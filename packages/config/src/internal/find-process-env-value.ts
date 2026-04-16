@@ -1,6 +1,6 @@
 import { changeCase } from "@lindorm/case";
 import { safelyParse } from "@lindorm/utils";
-import { ProcessEnv } from "../../types";
+import { ProcessEnv } from "../types";
 
 export const findProcessEnvValue = (
   processEnv: ProcessEnv,
