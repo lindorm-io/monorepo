@@ -6,8 +6,8 @@ import {
   TEST_RSA_KEY_RS256,
   TEST_RSA_KEY_RS384,
   TEST_RSA_KEY_RS512,
-} from "../../__fixtures__/keys";
-import { RsaError } from "../../errors";
+} from "../__fixtures__/keys";
+import { RsaError } from "../errors";
 import {
   assertRsaSignature,
   createRsaSignature,

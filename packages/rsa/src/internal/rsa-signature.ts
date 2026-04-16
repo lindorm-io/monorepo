@@ -1,7 +1,7 @@
 import { isString } from "@lindorm/is";
 import { createSign, createVerify } from "crypto";
-import { RsaError } from "../../errors";
-import { CreateRsaSignatureOptions, VerifyRsaSignatureOptions } from "../../types";
+import { RsaError } from "../errors";
+import { CreateRsaSignatureOptions, VerifyRsaSignatureOptions } from "../types";
 import { getSignKey, getVerifyKey } from "./get-key";
 import { mapRsaAlgorithm } from "./map-algorithm";
 

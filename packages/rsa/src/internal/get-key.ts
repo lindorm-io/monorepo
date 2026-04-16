@@ -2,7 +2,7 @@ import { IKryptosRsa } from "@lindorm/kryptos";
 import { DsaEncoding } from "@lindorm/types";
 import { RSA_PKCS1_PSS_PADDING } from "constants";
 import { SignPrivateKeyInput, VerifyPublicKeyInput } from "crypto";
-import { RsaError } from "../../errors";
+import { RsaError } from "../errors";
 
 const RSA_PKCS1_SALT_LENGTH = 32 as const;
 
