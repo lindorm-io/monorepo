@@ -1,5 +1,5 @@
-import { TEST_OCT_KEY_SIG } from "../../__fixtures__/keys";
-import { ArgonError } from "../../errors";
+import { TEST_OCT_KEY_SIG } from "../__fixtures__/keys";
+import { ArgonError } from "../errors";
 import { assertArgonHash, createArgonHash, verifyArgonHash } from "./argon-hash";
 
 describe("argon-hash", () => {
