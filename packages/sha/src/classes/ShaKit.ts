@@ -1,7 +1,7 @@
 import { ShaAlgorithm } from "@lindorm/types";
 import { BinaryToTextEncoding } from "crypto";
 import { ShaKitOptions } from "../types";
-import { assertShaHash, createShaHash, verifyShaHash } from "../utils/private";
+import { assertShaHash, createShaHash, verifyShaHash } from "#internal/index";
 
 export class ShaKit {
   private readonly algorithm: ShaAlgorithm | undefined;
