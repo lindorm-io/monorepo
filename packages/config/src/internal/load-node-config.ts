@@ -1,7 +1,7 @@
 import { isString } from "@lindorm/is";
 import { Dict } from "@lindorm/types";
 import { safelyParse } from "@lindorm/utils";
-import { ProcessEnv } from "../../types";
+import { ProcessEnv } from "../types";
 
 export const loadNodeConfig = (processEnv: ProcessEnv): Dict => {
   if (!processEnv.NODE_CONFIG) return {};

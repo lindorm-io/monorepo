@@ -1,6 +1,6 @@
 import { isObject, isUndefined } from "@lindorm/is";
 import { Dict } from "@lindorm/types";
-import { ProcessEnv } from "../../types";
+import { ProcessEnv } from "../types";
 import { findProcessEnvValue } from "./find-process-env-value";
 
 export const mergeObjectWithProcessEnv = (
