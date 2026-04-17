@@ -39,6 +39,7 @@ exports[`parseAuthConfig should merge defaults with custom router options 1`] = 
       "scope": false,
       "subject": false,
     },
+    "introspect": false,
     "pathPrefix": "/auth",
     "resourceKey": "audience",
     "staticRedirect": {
@@ -86,6 +87,7 @@ exports[`parseAuthConfig should merge defaults with router options 1`] = `
       "scope": false,
       "subject": false,
     },
+    "introspect": false,
     "pathPrefix": "/auth",
     "resourceKey": "resource",
     "staticRedirect": {
