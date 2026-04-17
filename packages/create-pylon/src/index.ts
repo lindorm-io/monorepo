@@ -16,9 +16,9 @@ export {
 export { installDependencies, installDevDependencies } from "./install";
 export { initGit } from "./git";
 export {
-  runIrisGenerateMessage,
+  runIrisGenerateSampleMessage,
   runIrisInit,
-  runProteusGenerateEntity,
+  runProteusGenerateSampleEntity,
   runProteusInit,
 } from "./drivers";
 export type {
