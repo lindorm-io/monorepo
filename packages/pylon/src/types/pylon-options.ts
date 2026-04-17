@@ -59,7 +59,7 @@ type CommonOptions = {
 };
 
 export type PylonHttpCallbacksOptions<C extends PylonHttpContext = PylonHttpContext> = {
-  health?: PylonHttpCallback<C>;
+  health?: PylonHttpCallback<C> | null;
   rightToBeForgotten?: PylonHttpCallback<C>;
 };
 

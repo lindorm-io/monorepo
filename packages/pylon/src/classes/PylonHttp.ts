@@ -17,6 +17,7 @@ import { httpResponseTimeMiddleware } from "../internal/middleware/http-response
 import { createHttpSessionMiddleware } from "../internal/middleware/http-session-middleware";
 import { createHttpStateMiddleware } from "../internal/middleware/http-state-middleware";
 import { parseAuthConfig } from "../internal/utils/auth/parse-auth-config";
+import { buildDefaultHealthCallback } from "../internal/utils/build-default-health-callback";
 import { createAuthRouter } from "../internal/utils/create-auth-router";
 import { createHealthRouter } from "../internal/utils/create-health-router";
 import { createWellKnownRouter } from "../internal/utils/create-well-known-router";
@@ -27,6 +28,7 @@ import { useRateLimit } from "../middleware/common/use-rate-limit";
 import {
   HttpCallback,
   PylonAuthConfig,
+  PylonHttpCallback,
   PylonHttpContext,
   PylonHttpMiddleware,
   PylonHttpOptions,
@@ -141,7 +143,7 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
 
     this.router.use(...this.middleware);
 
-    this.addRouter("/health", createHealthRouter(this.options.callbacks?.health));
+    this.addRouter("/health", createHealthRouter(this.resolveHealthCallback()));
     this.addRouter("/.well-known", createWellKnownRouter(this.options));
 
     if (this.authConfig?.router) {
@@ -183,5 +185,17 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
   private addRouter(path: string, router: PylonRouter<T>): void {
     this.logger.debug("Adding router", { path });
     this.router.use(path, router.routes(), router.allowedMethods());
+  }
+
+  private resolveHealthCallback(): PylonHttpCallback<T> | undefined {
+    const configured = this.options.callbacks?.health;
+
+    if (configured === null) return undefined;
+    if (configured) return configured;
+
+    return buildDefaultHealthCallback<T>({
+      iris: this.options.iris,
+      proteus: this.options.proteus,
+    });
   }
 }
