@@ -1,0 +1,83 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`generateSource emits TODO comment for rabbit when loggerImport is null 1`] = `
+"import { join } from "path";
+import { IrisSource } from "@lindorm/iris";
+
+export const source = new IrisSource({
+  driver: "rabbit",
+  logger: logger, // TODO: import or create a Logger instance
+  messages: [join(__dirname, "messages")],
+  url: "amqp://localhost:5672",
+});
+"
+`;
+
+exports[`generateSource emits TODO comment for rabbit when loggerImport is omitted 1`] = `
+"import { join } from "path";
+import { IrisSource } from "@lindorm/iris";
+
+export const source = new IrisSource({
+  driver: "rabbit",
+  logger: logger, // TODO: import or create a Logger instance
+  messages: [join(__dirname, "messages")],
+  url: "amqp://localhost:5672",
+});
+"
+`;
+
+exports[`generateSource emits logger import for kafka driver 1`] = `
+"import { logger } from "../logger";
+import { join } from "path";
+import { IrisSource } from "@lindorm/iris";
+
+export const source = new IrisSource({
+  driver: "kafka",
+  logger: logger,
+  messages: [join(__dirname, "messages")],
+  brokers: ["localhost:9092"],
+});
+"
+`;
+
+exports[`generateSource emits logger import for nats driver 1`] = `
+"import { logger } from "../logger";
+import { join } from "path";
+import { IrisSource } from "@lindorm/iris";
+
+export const source = new IrisSource({
+  driver: "nats",
+  logger: logger,
+  messages: [join(__dirname, "messages")],
+  servers: "localhost:4222",
+});
+"
+`;
+
+exports[`generateSource emits logger import for redis driver 1`] = `
+"import { logger } from "../logger";
+import { join } from "path";
+import { IrisSource } from "@lindorm/iris";
+
+export const source = new IrisSource({
+  driver: "redis",
+  logger: logger,
+  messages: [join(__dirname, "messages")],
+  url: "redis://localhost:6379",
+});
+"
+`;
+
+exports[`generateSource emits logger import when loggerImport is provided 1`] = `
+"import { logger } from "../logger";
+import { join } from "path";
+import { IrisSource } from "@lindorm/iris";
+
+export const source = new IrisSource({
+  driver: "rabbit",
+  logger: logger,
+  messages: [join(__dirname, "messages")],
+  url: "amqp://localhost:5672",
+});
+"
+`;
