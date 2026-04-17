@@ -1,11 +1,7 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "rootDir": "./src",
-    "baseUrl": ".",
-    "paths": {
-      "#internal/*": ["./src/internal/*"]
-    }
+    "rootDir": "./src"
   },
   "include": ["src/**/*", "cli.ts"]
 }

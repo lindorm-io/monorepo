@@ -1,2 +1,2 @@
-export * from "#internal/utils/composed";
+export * from "./internal/utils/composed";
 export * from "./types";
