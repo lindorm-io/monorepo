@@ -1,4 +1,4 @@
-import type { z } from "zod/v4";
+import type { z } from "zod";
 import { stageFieldModifier } from "../internal/message/metadata/stage-metadata";
 
 export const Schema =
