@@ -964,25 +964,29 @@ const app = new Pylon({
     clientId: "my-client-id",
     clientSecret: "my-client-secret",
     issuer: "https://auth.example.com",
-    pathPrefix: "/auth",
-    codeChallengeMethod: "S256",
-    errorRedirect: "/error",
-    defaults: {
-      scope: ["openid", "profile", "email"],
-      responseType: "code",
-    },
-    expose: {
-      accessToken: true,
-      idToken: true,
-    },
     refresh: {
       mode: "half_life",
+    },
+    router: {
+      pathPrefix: "/auth",
+      errorRedirect: "/error",
+      authorize: {
+        scope: ["openid", "profile", "email"],
+        responseType: "code",
+        codeChallengeMethod: "S256",
+      },
+      expose: {
+        accessToken: true,
+        idToken: true,
+      },
     },
   },
   session: { enabled: true },
   // ...
 });
 ```
+
+Top-level `PylonAuthOptions` carries the IdP credentials (`clientId`, `clientSecret`, `issuer`), token-expiry default, and refresh mode. Everything related to the auto-mounted router (path prefix, authorize parameters, what to expose on the context, redirect behaviour, cookie names) lives under `router`. Both `refresh` and `router` accept partials — omit any field to take the default.
 
 **Auto-created routes:**
 
