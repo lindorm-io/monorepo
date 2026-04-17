@@ -1,5 +1,5 @@
 import type { Constructor } from "@lindorm/types";
-import type { z } from "zod/v4";
+import type { z } from "zod";
 import type { IMessage } from "../../../interfaces";
 import type { AmphoraPredicate } from "@lindorm/amphora";
 import type {

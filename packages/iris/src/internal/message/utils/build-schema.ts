@@ -1,4 +1,4 @@
-import { z } from "zod/v4";
+import { z } from "zod";
 import { IrisSerializationError } from "../../../errors/IrisSerializationError";
 import type { MetaField } from "../types/metadata";
 import type { MessageMetadata } from "../types/metadata";

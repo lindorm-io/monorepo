@@ -1,6 +1,6 @@
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
-import type { z } from "zod/v4";
+import type { z } from "zod";
 import { IrisError } from "../../../errors/IrisError";
 import { IrisSerializationError } from "../../../errors/IrisSerializationError";
 import type { IMessage } from "../../../interfaces";

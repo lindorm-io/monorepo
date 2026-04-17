@@ -1,4 +1,4 @@
-import { z } from "zod/v4";
+import { z } from "zod";
 import { buildSchema } from "./build-schema";
 import type { MetaField } from "../types/metadata";
 import type { MessageMetadata } from "../types/metadata";

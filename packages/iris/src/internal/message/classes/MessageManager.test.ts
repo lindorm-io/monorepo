@@ -17,7 +17,7 @@ import { TimestampField } from "../../../decorators/TimestampField";
 import { Transform } from "../../../decorators/Transform";
 import { IrisError } from "../../../errors/IrisError";
 import { MessageManager } from "./MessageManager";
-import { z } from "zod/v4";
+import { z } from "zod";
 
 // --- Test message classes ---
 

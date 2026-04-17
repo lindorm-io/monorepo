@@ -2,7 +2,7 @@
 //
 // Each call produces fresh class declarations with fresh Symbol.metadata.
 
-import { z } from "zod/v4";
+import { z } from "zod";
 import type { IMessage } from "../../../interfaces";
 import { Compressed } from "../../../decorators/Compressed";
 import { CorrelationField } from "../../../decorators/CorrelationField";
