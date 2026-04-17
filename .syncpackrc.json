@@ -2,34 +2,21 @@
   "$schema": "./node_modules/syncpack/schema.json",
   "versionGroups": [
     {
-      "label": "Ignore non-@lindorm dependencies",
-      "dependencies": ["!@lindorm/**"],
+      "label": "Ignore workspace own version — lerna manages this",
+      "dependencyTypes": ["local"],
       "isIgnored": true
     },
     {
-      "label": "Ignore @lindorm/* prod and dev dependencies (lerna owns these)",
-      "dependencies": ["@lindorm/**"],
-      "dependencyTypes": ["prod", "dev"],
-      "isIgnored": true
+      "label": "Runtime dependencies — consistent across packages",
+      "dependencyTypes": ["prod"]
     },
     {
-      "label": "Match @lindorm/* peerDependencies to workspace versions",
-      "dependencies": ["@lindorm/**"],
-      "dependencyTypes": ["peer", "local"],
-      "preferVersion": "highestSemver"
-    }
-  ],
-  "semverGroups": [
-    {
-      "label": "Use >= prefix for @lindorm/* peerDependencies",
-      "dependencies": ["@lindorm/**"],
-      "dependencyTypes": ["peer"],
-      "range": ">="
+      "label": "Dev dependencies — consistent across packages",
+      "dependencyTypes": ["dev"]
     },
     {
-      "label": "Ignore everything else",
-      "dependencies": ["**"],
-      "isIgnored": true
+      "label": "Peer dependencies — consistent across packages",
+      "dependencyTypes": ["peer"]
     }
   ]
 }
