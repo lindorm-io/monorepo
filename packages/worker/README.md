@@ -166,16 +166,21 @@ export const JITTER = "1m";
 export const RETRY = { maxAttempts: 3, strategy: "linear" };
 ```
 
-Scan a directory to get an array of `LindormWorkerConfig`:
+Scan a directory to get an array of `ILindormWorker` instances:
 
 ```ts
 import { LindormWorkerScanner } from "@lindorm/worker";
 
-const configs = LindormWorkerScanner.scan([
-  "./src/workers", // directories are scanned recursively
-  existingConfig, // LindormWorkerConfig objects pass through
-]);
+const workers = LindormWorkerScanner.scan(
+  [
+    "./src/workers", // directories are scanned recursively
+    existingWorker, // LindormWorker instances pass through
+  ],
+  logger,
+);
 ```
+
+The scanner constructs a `LindormWorker` for every CALLBACK-style file it finds, using the provided logger.
 
 ### Recognised Exports
 

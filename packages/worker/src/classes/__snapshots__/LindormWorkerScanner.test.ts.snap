@@ -1,43 +1,9 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
-exports[`LindormWorkerScanner should return with array of worker config from directory 1`] = `
+exports[`LindormWorkerScanner should construct workers from a directory of CALLBACK files 1`] = `
 [
-  {
-    "alias": "WorkerOne",
-    "callback": [Function],
-    "interval": "1w",
-    "jitter": "1h",
-    "retry": {
-      "maxAttempts": 10,
-      "strategy": "linear",
-      "timeout": 1000,
-      "timeoutMax": 10000,
-    },
-  },
-  {
-    "alias": "WorkerThree",
-    "callback": [Function],
-    "retry": {
-      "maxAttempts": 10,
-      "strategy": "linear",
-      "timeout": 1000,
-      "timeoutMax": 10000,
-    },
-  },
-  {
-    "alias": "WorkerTwo",
-    "callback": [Function],
-    "interval": "2y",
-    "listeners": [
-      {
-        "event": "start",
-        "listener": [Function],
-      },
-      {
-        "event": "stop",
-        "listener": [Function],
-      },
-    ],
-  },
+  "WorkerOne",
+  "WorkerThree",
+  "WorkerTwo",
 ]
 `;
