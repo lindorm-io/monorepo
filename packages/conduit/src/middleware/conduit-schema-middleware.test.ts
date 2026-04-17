@@ -1,4 +1,4 @@
-import { z } from "zod/v4";
+import { z } from "zod";
 import { ConduitError } from "../errors";
 import { conduitSchemaMiddleware } from "./conduit-schema-middleware";
 
