@@ -34,4 +34,9 @@ export interface IWebhookSubscription {
   issuer: string | null;
   scope: Array<string>;
   tokenUri: string | null;
+
+  // error tracking
+  errorCount: number;
+  lastErrorAt: Date | null;
+  suspendedAt: Date | null;
 }

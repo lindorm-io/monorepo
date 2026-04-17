@@ -52,6 +52,9 @@ describe("createConduitWebhookAuthMiddleware", () => {
     tokenUri: null,
     url: "https://test.webhook.com/endpoint",
     username: null,
+    errorCount: 0,
+    lastErrorAt: null,
+    suspendedAt: null,
     ...overrides,
   });
 

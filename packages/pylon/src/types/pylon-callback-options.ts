@@ -48,6 +48,7 @@ export type PylonWebhookOptions = {
   proteus?: IProteusSource;
   iris?: IIrisSource;
   encryptionKey?: IKryptos;
+  maxErrors?: number;
 };
 
 export type PylonRateLimitOptions = {

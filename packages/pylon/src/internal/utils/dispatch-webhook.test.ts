@@ -57,6 +57,10 @@ describe("createDispatchWebhook", () => {
         issuer: null,
         scope: [],
         tokenUri: null,
+
+        errorCount: 0,
+        lastErrorAt: null,
+        suspendedAt: null,
       },
     };
 

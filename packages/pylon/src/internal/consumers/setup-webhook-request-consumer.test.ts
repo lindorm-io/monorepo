@@ -35,8 +35,18 @@ describe("setupWebhookRequestConsumer", () => {
 
   test("should publish WebhookDispatch for each matching subscription", async () => {
     const subscriptions = [
-      { id: "sub-1", event: "order.created", url: "https://example.com/hook1" },
-      { id: "sub-2", event: "order.created", url: "https://example.com/hook2" },
+      {
+        id: "sub-1",
+        event: "order.created",
+        url: "https://example.com/hook1",
+        suspendedAt: null,
+      },
+      {
+        id: "sub-2",
+        event: "order.created",
+        url: "https://example.com/hook2",
+        suspendedAt: null,
+      },
     ];
     mockFind.mockResolvedValueOnce(subscriptions);
 
@@ -81,6 +91,74 @@ describe("setupWebhookRequestConsumer", () => {
     });
 
     expect(mockFind).toHaveBeenCalledWith({ event: "user.deleted" });
+    expect(mockCreate).not.toHaveBeenCalled();
+    expect(mockPublish).not.toHaveBeenCalled();
+  });
+
+  test("should filter out suspended subscriptions before publishing", async () => {
+    const subscriptions = [
+      {
+        id: "sub-active",
+        event: "order.created",
+        url: "https://example.com/hook-active",
+        suspendedAt: null,
+      },
+      {
+        id: "sub-suspended",
+        event: "order.created",
+        url: "https://example.com/hook-suspended",
+        suspendedAt: new Date("2026-01-01T00:00:00.000Z"),
+      },
+    ];
+    mockFind.mockResolvedValueOnce(subscriptions);
+
+    await setupWebhookRequestConsumer(iris, proteus, logger);
+
+    const handler = mockConsume.mock.calls[0][1];
+
+    await handler({
+      correlationId: "corr-id-3",
+      event: "order.created",
+      payload: { orderId: "999" },
+    });
+
+    expect(mockCreate).toHaveBeenCalledTimes(1);
+    expect(mockCreate).toHaveBeenCalledWith({
+      correlationId: "corr-id-3",
+      event: "order.created",
+      payload: { orderId: "999" },
+      subscription: subscriptions[0],
+    });
+    expect(mockPublish).toHaveBeenCalledTimes(1);
+  });
+
+  test("should not publish any dispatches when all subscriptions are suspended", async () => {
+    const subscriptions = [
+      {
+        id: "sub-suspended-1",
+        event: "order.created",
+        url: "https://example.com/hook1",
+        suspendedAt: new Date("2026-01-01T00:00:00.000Z"),
+      },
+      {
+        id: "sub-suspended-2",
+        event: "order.created",
+        url: "https://example.com/hook2",
+        suspendedAt: new Date("2026-01-02T00:00:00.000Z"),
+      },
+    ];
+    mockFind.mockResolvedValueOnce(subscriptions);
+
+    await setupWebhookRequestConsumer(iris, proteus, logger);
+
+    const handler = mockConsume.mock.calls[0][1];
+
+    await handler({
+      correlationId: "corr-id-4",
+      event: "order.created",
+      payload: {},
+    });
+
     expect(mockCreate).not.toHaveBeenCalled();
     expect(mockPublish).not.toHaveBeenCalled();
   });
