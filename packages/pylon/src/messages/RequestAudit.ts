@@ -5,6 +5,7 @@ import {
   IdentifierField,
   Message,
   Namespace,
+  Nullable,
   Retry,
   TimestampField,
   Topic,
@@ -52,12 +53,15 @@ export class RequestAudit {
   @Field("string")
   public readonly sourceIp!: string;
 
-  @Field("object", { nullable: true })
+  @Nullable()
+  @Field("object")
   public readonly requestBody!: Record<string, unknown> | null;
 
-  @Field("string", { nullable: true })
+  @Nullable()
+  @Field("string")
   public readonly sessionId!: string | null;
 
-  @Field("string", { nullable: true })
+  @Nullable()
+  @Field("string")
   public readonly userAgent!: string | null;
 }
