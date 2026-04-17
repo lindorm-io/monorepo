@@ -1,6 +1,6 @@
 import dotenvx from "@dotenvx/dotenvx";
 import { merge } from "@lindorm/utils";
-import { z } from "zod/v4";
+import { z } from "zod";
 import { NpmInformation } from "../types";
 import { coerceAll, loadConfig, loadNodeConfig } from "../internal/index";
 
