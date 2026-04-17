@@ -6,7 +6,7 @@ import {
   assertOkpSignature,
   createOkpSignature,
   verifyOkpSignature,
-} from "#internal/index";
+} from "../internal/index";
 
 export class OkpKit implements IKeyKit {
   private readonly dsa: DsaEncoding;
