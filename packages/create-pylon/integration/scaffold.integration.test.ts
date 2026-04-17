@@ -9,6 +9,10 @@ import {
   PROTEUS_DRIVER_DEV_PACKAGES,
   buildDependencyList,
   buildDevDependencyList,
+  runIrisGenerateMessage,
+  runIrisInit,
+  runProteusGenerateEntity,
+  runProteusInit,
   scaffold,
 } from "../src";
 import type { Answers } from "../src";
@@ -123,7 +127,7 @@ describe("create-pylon scaffold integration", () => {
     const runtimeDeps = resolveRuntimeDependencies(answers);
     const runtimeResult = await run(
       "npm",
-      ["install", "--save", ...runtimeDeps],
+      ["install", "--save", "--legacy-peer-deps", ...runtimeDeps],
       answers.projectDir,
     );
     assertStepOk("npm install (runtime deps)", runtimeResult);
@@ -132,13 +136,13 @@ describe("create-pylon scaffold integration", () => {
     const devDeps = resolveDevDependencies(answers);
     const devResult = await run(
       "npm",
-      ["install", "--save-dev", ...devDeps],
+      ["install", "--save-dev", "--legacy-peer-deps", ...devDeps],
       answers.projectDir,
     );
     assertStepOk("npm install (dev deps)", devResult);
 
     const binDir = join(answers.projectDir, "node_modules/.bin");
-    for (const bin of ["proteus", "iris", "tsc"]) {
+    for (const bin of ["tsc"]) {
       if (!existsSync(join(binDir, bin))) {
         throw new Error(
           `post-install: expected binary missing: node_modules/.bin/${bin}`,
@@ -146,45 +150,29 @@ describe("create-pylon scaffold integration", () => {
       }
     }
 
-    // Step 4 — proteus init + generate entity
-    const proteusBin = join(binDir, "proteus");
-    const proteusInit = await run(
-      proteusBin,
-      ["init", "--driver", answers.proteusDriver, "-d", "./src/proteus"],
-      answers.projectDir,
-    );
-    assertStepOk("proteus init", proteusInit, (r) =>
-      existsSync(join(answers.projectDir, "src/proteus/source.ts"))
-        ? null
-        : "src/proteus/source.ts not created",
-    );
+    // Step 4 — proteus init + generate entity via programmatic API
+    await runProteusInit(answers.projectDir, answers.proteusDriver);
+    if (!existsSync(join(answers.projectDir, "src/proteus/source.ts"))) {
+      throw new Error("proteus init: src/proteus/source.ts not created");
+    }
+    await runProteusGenerateEntity(answers.projectDir, "SampleEntity");
+    if (!existsSync(join(answers.projectDir, "src/proteus/entities/SampleEntity.ts"))) {
+      throw new Error(
+        "proteus generate entity: src/proteus/entities/SampleEntity.ts not created",
+      );
+    }
 
-    const proteusGen = await run(
-      proteusBin,
-      ["generate", "entity", "SampleEntity", "-d", "./src/proteus/entities"],
-      answers.projectDir,
-    );
-    assertStepOk("proteus generate entity", proteusGen);
-
-    // Step 5 — iris init + generate message
-    const irisBin = join(binDir, "iris");
-    const irisInit = await run(
-      irisBin,
-      ["init", "--driver", answers.irisDriver, "-d", "./src/iris"],
-      answers.projectDir,
-    );
-    assertStepOk("iris init", irisInit, (r) =>
-      existsSync(join(answers.projectDir, "src/iris/source.ts"))
-        ? null
-        : "src/iris/source.ts not created",
-    );
-
-    const irisGen = await run(
-      irisBin,
-      ["generate", "message", "SampleMessage", "-d", "./src/iris/messages"],
-      answers.projectDir,
-    );
-    assertStepOk("iris generate message", irisGen);
+    // Step 5 — iris init + generate message via programmatic API
+    await runIrisInit(answers.projectDir, answers.irisDriver);
+    if (!existsSync(join(answers.projectDir, "src/iris/source.ts"))) {
+      throw new Error("iris init: src/iris/source.ts not created");
+    }
+    await runIrisGenerateMessage(answers.projectDir, "SampleMessage");
+    if (!existsSync(join(answers.projectDir, "src/iris/messages/SampleMessage.ts"))) {
+      throw new Error(
+        "iris generate message: src/iris/messages/SampleMessage.ts not created",
+      );
+    }
 
     // Step 6 — tsc --noEmit
     const tscResult = await run(join(binDir, "tsc"), ["--noEmit"], answers.projectDir);

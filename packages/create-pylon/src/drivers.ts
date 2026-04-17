@@ -1,44 +1,35 @@
-import spawn from "cross-spawn";
+import {
+  writeEntity as writeProteusEntity,
+  writeSource as writeProteusSource,
+} from "@lindorm/proteus";
+import {
+  writeMessage as writeIrisMessage,
+  writeSource as writeIrisSource,
+} from "@lindorm/iris";
 import { join } from "path";
 import type { IrisDriver, ProteusDriver } from "./types";
-
-const runBin = (bin: string, args: Array<string>, projectDir: string): Promise<void> =>
-  new Promise((resolvePromise, rejectPromise) => {
-    const child = spawn(bin, args, { cwd: projectDir, stdio: "inherit" });
-    child.on("error", rejectPromise);
-    child.on("close", (code) => {
-      if (code === 0) return resolvePromise();
-      rejectPromise(new Error(`${bin} ${args.join(" ")} exited with code ${code}`));
-    });
-  });
-
-const proteusBin = (projectDir: string): string =>
-  join(projectDir, "node_modules", ".bin", "proteus");
-
-const irisBin = (projectDir: string): string =>
-  join(projectDir, "node_modules", ".bin", "iris");
 
 export const runProteusInit = async (
   projectDir: string,
   driver: ProteusDriver,
 ): Promise<void> => {
   if (driver === "none") return;
-  await runBin(
-    proteusBin(projectDir),
-    ["init", "--driver", driver, "-d", "./src/proteus"],
-    projectDir,
-  );
+
+  await writeProteusSource({
+    driver,
+    directory: join(projectDir, "src/proteus"),
+    loggerImport: "../logger",
+  });
 };
 
 export const runProteusGenerateEntity = async (
   projectDir: string,
   entityName: string,
 ): Promise<void> => {
-  await runBin(
-    proteusBin(projectDir),
-    ["generate", "entity", entityName, "-d", "./src/proteus/entities"],
-    projectDir,
-  );
+  await writeProteusEntity({
+    name: entityName,
+    directory: join(projectDir, "src/proteus/entities"),
+  });
 };
 
 export const runIrisInit = async (
@@ -46,20 +37,20 @@ export const runIrisInit = async (
   driver: IrisDriver,
 ): Promise<void> => {
   if (driver === "none") return;
-  await runBin(
-    irisBin(projectDir),
-    ["init", "--driver", driver, "-d", "./src/iris"],
-    projectDir,
-  );
+
+  await writeIrisSource({
+    driver,
+    directory: join(projectDir, "src/iris"),
+    loggerImport: "../logger",
+  });
 };
 
 export const runIrisGenerateMessage = async (
   projectDir: string,
   messageName: string,
 ): Promise<void> => {
-  await runBin(
-    irisBin(projectDir),
-    ["generate", "message", messageName, "-d", "./src/iris/messages"],
-    projectDir,
-  );
+  await writeIrisMessage({
+    name: messageName,
+    directory: join(projectDir, "src/iris/messages"),
+  });
 };
