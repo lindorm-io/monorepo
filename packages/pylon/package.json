@@ -96,11 +96,11 @@
     "zod": "^3.25.76"
   },
   "peerDependencies": {
-    "@lindorm/amphora": ">=0.3.4",
+    "@lindorm/amphora": ">=0.4.0",
     "@lindorm/hermes": ">=0.6.0",
-    "@lindorm/iris": ">=0.1.1",
+    "@lindorm/iris": ">=0.2.0",
     "@lindorm/logger": ">=0.5.3",
-    "@lindorm/proteus": ">=0.4.0"
+    "@lindorm/proteus": ">=0.5.0"
   },
   "peerDependenciesMeta": {
     "@lindorm/hermes": {
