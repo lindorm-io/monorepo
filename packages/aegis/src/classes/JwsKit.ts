@@ -2,7 +2,7 @@ import { B64 } from "@lindorm/b64";
 import { isBuffer, isString } from "@lindorm/is";
 import { IKryptos } from "@lindorm/kryptos";
 import { ILogger } from "@lindorm/logger";
-import { B64U } from "#internal/constants/format";
+import { B64U } from "../internal/constants/format";
 import { JwsError } from "../errors";
 import { IJwsKit } from "../interfaces";
 import {
@@ -18,13 +18,16 @@ import {
 import {
   computeTypHeader,
   decodeTokenTypeFromTyp,
-} from "#internal/utils/compute-typ-header";
-import { decodeJoseHeader, encodeJoseHeader } from "#internal/utils/jose-header";
-import { createJoseSignature, verifyJoseSignature } from "#internal/utils/jose-signature";
-import { parseTokenHeader } from "#internal/utils/token-header";
-import { resolveCertBinding } from "#internal/utils/resolve-cert-binding";
-import { verifyCertBinding } from "#internal/utils/verify-cert-binding";
-import { validateCrit } from "#internal/utils/validate-crit";
+} from "../internal/utils/compute-typ-header";
+import { decodeJoseHeader, encodeJoseHeader } from "../internal/utils/jose-header";
+import {
+  createJoseSignature,
+  verifyJoseSignature,
+} from "../internal/utils/jose-signature";
+import { parseTokenHeader } from "../internal/utils/token-header";
+import { resolveCertBinding } from "../internal/utils/resolve-cert-binding";
+import { verifyCertBinding } from "../internal/utils/verify-cert-binding";
+import { validateCrit } from "../internal/utils/validate-crit";
 
 export class JwsKit implements IJwsKit {
   private readonly certBindingMode: CertBindingMode;

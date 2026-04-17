@@ -5,7 +5,7 @@ import { B64U } from "../constants/format";
 /**
  * @internal — aegis-private helper. MUST NOT be exported from src/index.ts
  * or re-exported through any public barrel. Lives in src/internal/ and is
- * reachable only via the #internal/* subpath imports inside this package.
+ * reachable only via relative imports inside this package.
  *
  * Generate an opaque token identifier suitable for use as the JWT `jti`
  * claim (RFC 7519 §4.1.7) or any other unique token identifier slot in
