@@ -1,5 +1,5 @@
 import { IrisMetadataError } from "../errors";
-import { findMessageByName } from "#internal/message/metadata/registry";
+import { findMessageByName } from "../internal/message/metadata/registry";
 import { AbstractMessage } from "./AbstractMessage";
 import { Broadcast } from "./Broadcast";
 import { Compressed } from "./Compressed";

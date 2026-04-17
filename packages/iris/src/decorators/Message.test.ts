@@ -1,4 +1,4 @@
-import { findMessageByName } from "#internal/message/metadata/registry";
+import { findMessageByName } from "../internal/message/metadata/registry";
 import { Message } from "./Message";
 
 describe("Message", () => {

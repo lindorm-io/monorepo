@@ -1,4 +1,4 @@
-import { stageAbstractMessage } from "#internal/message/metadata/stage-metadata";
+import { stageAbstractMessage } from "../internal/message/metadata/stage-metadata";
 
 const R_VERSION_SUFFIX = /_[vV]\d+$/;
 

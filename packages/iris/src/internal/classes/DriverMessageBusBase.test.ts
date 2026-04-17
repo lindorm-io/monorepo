@@ -9,7 +9,7 @@ import { AfterConsume } from "../../decorators/AfterConsume";
 import { OnConsumeError } from "../../decorators/OnConsumeError";
 import type { IMessage, IMessageSubscriber } from "../../interfaces";
 import type { PublishOptions, SubscribeOptions } from "../../types";
-import { clearRegistry } from "#internal/message/metadata/registry";
+import { clearRegistry } from "../message/metadata/registry";
 import {
   DriverMessageBusBase,
   type DriverMessageBusBaseOptions,

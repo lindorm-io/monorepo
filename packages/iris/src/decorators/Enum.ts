@@ -1,4 +1,4 @@
-import { stageFieldModifier } from "#internal/message/metadata/stage-metadata";
+import { stageFieldModifier } from "../internal/message/metadata/stage-metadata";
 
 export const Enum =
   (values: Record<string, string | number>) =>

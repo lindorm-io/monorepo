@@ -1,5 +1,5 @@
 import type { z } from "zod/v4";
-import { stageFieldModifier } from "#internal/message/metadata/stage-metadata";
+import { stageFieldModifier } from "../internal/message/metadata/stage-metadata";
 
 export const Schema =
   (schema: z.ZodType) =>

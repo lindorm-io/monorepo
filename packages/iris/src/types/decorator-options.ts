@@ -1,4 +1,4 @@
-import type { MetaFieldDefault, MetaTransform } from "#internal/message/types/types";
+import type { MetaFieldDefault, MetaTransform } from "../internal/message/types/types";
 
 export type FieldDecoratorOptions = {
   default?: MetaFieldDefault | null;

@@ -22,13 +22,13 @@ import type {
   MessageScannerInput,
   SessionOptions,
 } from "../types";
-import type { DeadLetterManager } from "#internal/dead-letter/DeadLetterManager";
-import type { DelayManager } from "#internal/delay/DelayManager";
-import { MessageScanner } from "#internal/message/classes/MessageScanner";
-import { isAbstractMessage } from "#internal/message/metadata/abstract-message";
-import { clearMetadataCache } from "#internal/message/metadata/registry";
+import type { DeadLetterManager } from "../internal/dead-letter/DeadLetterManager";
+import type { DelayManager } from "../internal/delay/DelayManager";
+import { MessageScanner } from "../internal/message/classes/MessageScanner";
+import { isAbstractMessage } from "../internal/message/metadata/abstract-message";
+import { clearMetadataCache } from "../internal/message/metadata/registry";
 import type { IAmphora } from "@lindorm/amphora";
-import { validateEncryptedMessages } from "#internal/utils/validate-encrypted-messages";
+import { validateEncryptedMessages } from "../internal/utils/validate-encrypted-messages";
 import { IrisSession } from "./IrisSession";
 
 export class IrisSource implements IIrisSource {
@@ -251,13 +251,14 @@ export class IrisSource implements IIrisSource {
   }
 
   private async _createManagers(): Promise<void> {
-    const { createDelayStore } = await import("#internal/delay/utils/create-delay-store");
+    const { createDelayStore } =
+      await import("../internal/delay/utils/create-delay-store");
     const { createDeadLetterStore } =
-      await import("#internal/dead-letter/utils/create-dead-letter-store");
+      await import("../internal/dead-letter/utils/create-dead-letter-store");
     const { DelayManager: DelayManagerClass } =
-      await import("#internal/delay/DelayManager");
+      await import("../internal/delay/DelayManager");
     const { DeadLetterManager: DeadLetterManagerClass } =
-      await import("#internal/dead-letter/DeadLetterManager");
+      await import("../internal/dead-letter/DeadLetterManager");
 
     const persistence = this._options.persistence;
 
@@ -293,7 +294,7 @@ export class IrisSource implements IIrisSource {
     switch (this._options.driver) {
       case "memory": {
         const { MemoryDriver } =
-          await import("#internal/drivers/memory/classes/MemoryDriver");
+          await import("../internal/drivers/memory/classes/MemoryDriver");
         const driver = new MemoryDriver({
           logger: this.logger,
           context: this.context,
@@ -309,7 +310,7 @@ export class IrisSource implements IIrisSource {
 
       case "rabbit": {
         const { RabbitDriver } =
-          await import("#internal/drivers/rabbit/classes/RabbitDriver");
+          await import("../internal/drivers/rabbit/classes/RabbitDriver");
         const rabbitOpts = this._options;
         const driver = new RabbitDriver({
           logger: this.logger,
@@ -328,7 +329,7 @@ export class IrisSource implements IIrisSource {
 
       case "kafka": {
         const { KafkaDriver } =
-          await import("#internal/drivers/kafka/classes/KafkaDriver");
+          await import("../internal/drivers/kafka/classes/KafkaDriver");
         const kafkaOpts = this._options;
         const driver = new KafkaDriver({
           logger: this.logger,
@@ -350,7 +351,8 @@ export class IrisSource implements IIrisSource {
       }
 
       case "nats": {
-        const { NatsDriver } = await import("#internal/drivers/nats/classes/NatsDriver");
+        const { NatsDriver } =
+          await import("../internal/drivers/nats/classes/NatsDriver");
         const natsOpts = this._options;
         const driver = new NatsDriver({
           logger: this.logger,
@@ -371,7 +373,7 @@ export class IrisSource implements IIrisSource {
 
       case "redis": {
         const { RedisDriver } =
-          await import("#internal/drivers/redis/classes/RedisDriver");
+          await import("../internal/drivers/redis/classes/RedisDriver");
         const redisOpts = this._options;
         const driver = new RedisDriver({
           logger: this.logger,

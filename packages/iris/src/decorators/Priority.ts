@@ -1,5 +1,5 @@
 import { IrisMetadataError } from "../errors/IrisMetadataError";
-import { stagePriority } from "#internal/message/metadata/stage-metadata";
+import { stagePriority } from "../internal/message/metadata/stage-metadata";
 
 export const Priority =
   (priority: number) =>
