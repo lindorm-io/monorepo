@@ -11,7 +11,7 @@ import {
   assertOctSignature,
   createOctSignature,
   verifyOctSignature,
-} from "#internal/index";
+} from "../internal/index";
 
 export class OctKit implements IKeyKit {
   private readonly encoding: BufferEncoding;
