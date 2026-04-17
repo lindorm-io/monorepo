@@ -1,4 +1,4 @@
-import { z } from "zod/v4";
+import { z } from "zod";
 import { configuration } from "./configuration";
 
 describe("configuration", () => {

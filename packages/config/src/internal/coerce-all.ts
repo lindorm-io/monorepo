@@ -1,5 +1,5 @@
 import { Dict } from "@lindorm/types";
-import { z } from "zod/v4";
+import { z } from "zod";
 
 export const coerceAll = <T extends z.ZodType>(schema: T): T => {
   const def = (schema as any)._zod?.def ?? (schema as any)._def;
