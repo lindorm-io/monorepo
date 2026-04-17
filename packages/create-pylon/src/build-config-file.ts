@@ -23,7 +23,7 @@ const irisField = (driver: IrisDriver): string | null => {
 export const buildConfigFile = (answers: Answers): string => {
   const lines: Array<string> = [
     `import { configuration } from "@lindorm/config";`,
-    `import { z } from "zod/v4";`,
+    `import { z } from "zod";`,
     ``,
     `export const config = configuration({`,
     `  server: z.object({ port: z.number() }),`,

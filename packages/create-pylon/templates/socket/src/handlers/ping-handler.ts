@@ -1,4 +1,4 @@
-import { z } from "zod/v4";
+import { z } from "zod";
 import type { ServerSocketHandler } from "../types/context";
 
 export const pingSchema = z.object({
