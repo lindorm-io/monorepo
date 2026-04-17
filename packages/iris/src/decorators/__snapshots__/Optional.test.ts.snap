@@ -1,0 +1,9 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`Optional should stage field modifier with optional true 1`] = `
+{
+  "decorator": "Optional",
+  "key": "nickname",
+  "optional": true,
+}
+`;

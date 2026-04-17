@@ -4,6 +4,7 @@ import { Field } from "../../../decorators/Field";
 import { Generated } from "../../../decorators/Generated";
 import { Header } from "../../../decorators/Header";
 import { Message } from "../../../decorators/Message";
+import { Nullable } from "../../../decorators/Nullable";
 import { Transform } from "../../../decorators/Transform";
 import { MessageManager } from "../classes/MessageManager";
 import { getMessageMetadata } from "../metadata/get-message-metadata";
@@ -336,16 +337,20 @@ describe("pipeline round-trip", () => {
         @Field("string")
         required!: string;
 
-        @Field("string", { nullable: true })
+        @Nullable()
+        @Field("string")
         optionalName!: string | null;
 
-        @Field("integer", { nullable: true })
+        @Nullable()
+        @Field("integer")
         optionalCount!: number | null;
 
-        @Field("date", { nullable: true })
+        @Nullable()
+        @Field("date")
         optionalDate!: Date | null;
 
-        @Field("boolean", { nullable: true })
+        @Nullable()
+        @Field("boolean")
         optionalFlag!: boolean | null;
       }
 
@@ -376,10 +381,12 @@ describe("pipeline round-trip", () => {
     it("should round-trip mix of null and non-null values", async () => {
       @Message({ name: "MixedNullableMsg" })
       class MixedNullableMsg implements IMessage {
-        @Field("string", { nullable: true })
+        @Nullable()
+        @Field("string")
         name!: string | null;
 
-        @Field("integer", { nullable: true })
+        @Nullable()
+        @Field("integer")
         age!: number | null;
       }
 
@@ -702,7 +709,8 @@ describe("pipeline round-trip", () => {
         })
         secret!: string;
 
-        @Field("string", { nullable: true })
+        @Nullable()
+        @Field("string")
         optionalNote!: string | null;
 
         @Field("integer")
@@ -776,7 +784,8 @@ describe("pipeline round-trip", () => {
         @Header("x-correlation-id")
         correlationId!: string;
 
-        @Field("string", { nullable: true })
+        @Nullable()
+        @Field("string")
         description!: string | null;
 
         @Field("integer")

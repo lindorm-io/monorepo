@@ -1,4 +1,5 @@
 import type { Constructor } from "@lindorm/types";
+import { Default } from "../../decorators/Default";
 import { Field } from "../../decorators/Field";
 import { IdentifierField } from "../../decorators/IdentifierField";
 import { Message } from "../../decorators/Message";
@@ -46,7 +47,8 @@ class WqTestMessage {
   @Field("string")
   label!: string;
 
-  @Field("integer", { default: 0 })
+  @Default(0)
+  @Field("integer")
   seq!: number;
 }
 
@@ -55,7 +57,8 @@ class SimpleWqMessage {
   @IdentifierField()
   id!: string;
 
-  @Field("string", { default: "wq-default" })
+  @Default("wq-default")
+  @Field("string")
   value!: string;
 }
 

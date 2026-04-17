@@ -10,6 +10,7 @@ import { IdentifierField } from "../../../decorators/IdentifierField";
 import { Message } from "../../../decorators/Message";
 import { Namespace } from "../../../decorators/Namespace";
 import { OnCreate } from "../../../decorators/OnCreate";
+import { Optional } from "../../../decorators/Optional";
 import { OnValidate } from "../../../decorators/OnValidate";
 import { TimestampField } from "../../../decorators/TimestampField";
 import { Transform } from "../../../decorators/Transform";
@@ -141,7 +142,8 @@ describe("buildMessageMetadata", () => {
       @Field("string")
       name!: string;
 
-      @Field("email", { optional: true })
+      @Optional()
+      @Field("email")
       email!: string;
 
       @Header("x-trace-id")

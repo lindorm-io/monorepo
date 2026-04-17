@@ -1,4 +1,5 @@
 import type { Constructor } from "@lindorm/types";
+import { Default } from "../../decorators/Default";
 import { Field } from "../../decorators/Field";
 import { IdentifierField } from "../../decorators/IdentifierField";
 import { Message } from "../../decorators/Message";
@@ -32,7 +33,8 @@ class RpcClientTestResponse {
   @Field("string")
   answer!: string;
 
-  @Field("integer", { default: 0 })
+  @Default(0)
+  @Field("integer")
   code!: number;
 }
 

@@ -1,4 +1,5 @@
 import { AbstractMessage } from "../decorators/AbstractMessage";
+import { Default } from "../decorators/Default";
 import { Encrypted } from "../decorators/Encrypted";
 import { Field } from "../decorators/Field";
 import { IdentifierField } from "../decorators/IdentifierField";
@@ -27,7 +28,8 @@ class AnotherTestMessage {
   @IdentifierField()
   id!: string;
 
-  @Field("integer", { default: 0 })
+  @Default(0)
+  @Field("integer")
   count!: number;
 }
 
@@ -52,7 +54,8 @@ class BaseMsg {
 
 @Message({ name: "ConcreteMsg" })
 class ConcreteMsg extends BaseMsg {
-  @Field("integer", { default: 0 })
+  @Default(0)
+  @Field("integer")
   priority!: number;
 }
 

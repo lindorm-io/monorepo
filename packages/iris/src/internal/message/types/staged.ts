@@ -11,14 +11,19 @@ import type {
   MetaStagedTransform,
   MetaTopic,
 } from "./metadata";
+import type { MetaFieldDefault, MetaTransform } from "./types";
 
 export type StagedFieldModifier = {
   key: string;
   decorator: string;
+  default?: MetaFieldDefault | null;
   enum?: Record<string, string | number> | null;
   min?: number | null;
   max?: number | null;
+  nullable?: boolean;
+  optional?: boolean;
   schema?: z.ZodType | null;
+  transform?: MetaTransform | null;
 };
 
 export type StagedMetadata = {

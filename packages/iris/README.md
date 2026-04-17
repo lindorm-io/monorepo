@@ -341,10 +341,10 @@ class FullExample {
   @Field("array") tags!: Array<string>;
   @Field("object") metadata!: Record<string, unknown>;
 
-  @Field("string", { nullable: true }) description!: string | null;
-  @Field("string", { optional: true }) nickname?: string;
-  @Field("integer", { default: 0 }) retryCount!: number;
-  @Field("string", { default: () => "generated" }) code!: string;
+  @Nullable() @Field("string") description!: string | null;
+  @Optional() @Field("string") nickname?: string;
+  @Default(0) @Field("integer") retryCount!: number;
+  @Default(() => "generated") @Field("string") code!: string;
 }
 ```
 
@@ -649,36 +649,32 @@ tags!: Array<string>;
 metadata!: Record<string, unknown>;
 ```
 
-**Arguments:** `(type: MetaFieldType, options?: FieldDecoratorOptions)`.
+**Arguments:** `(type: MetaFieldType)`.
 
-**Options:**
-
-| Field       | Type                             | Default | Description                               |
-| ----------- | -------------------------------- | ------- | ----------------------------------------- |
-| `nullable`  | `boolean`                        | `false` | Allow `null` values                       |
-| `optional`  | `boolean`                        | `false` | Field may be omitted                      |
-| `default`   | `value \| (() => value) \| null` | `null`  | Default value applied on create           |
-| `transform` | `MetaTransform \| null`          | `null`  | Inline serialisation/deserialisation pair |
+Modifiers (nullable, optional, default value, transform) are expressed as stackable decorators applied above `@Field`. See the modifier sections below.
 
 ```typescript
-@Field("string", { nullable: true })
+@Nullable()
+@Field("string")
 description!: string | null;
 
-@Field("string", { optional: true })
+@Optional()
+@Field("string")
 nickname?: string;
 
-@Field("integer", { default: 0 })
+@Default(0)
+@Field("integer")
 retryCount!: number;
 
-@Field("string", { default: () => "generated" })
+@Default(() => "generated")
+@Field("string")
 code!: string;
 
-@Field("float", {
-  transform: {
-    to: (value: number) => Math.round(value * 100),
-    from: (raw: number) => raw / 100,
-  },
+@Transform({
+  to: (value: unknown) => Math.round((value as number) * 100),
+  from: (raw: unknown) => (raw as number) / 100,
 })
+@Field("float")
 price!: number;
 ```
 
@@ -691,7 +687,7 @@ Shorthand for a UUID primary identifier field. Auto-generates a UUID v4 on messa
 id!: string;
 ```
 
-Equivalent to `@Field("uuid", { default: () => randomUUID() })`. Non-nullable, non-optional.
+Equivalent to `@Default(() => randomUUID()) @Field("uuid")`. Non-nullable, non-optional.
 
 No arguments.
 
@@ -704,7 +700,7 @@ Shorthand for a UUID correlation tracking field. Auto-generates a UUID v4 on mes
 correlationId!: string;
 ```
 
-Equivalent to `@Field("uuid", { default: () => randomUUID() })`. Non-nullable, non-optional.
+Equivalent to `@Default(() => randomUUID()) @Field("uuid")`. Non-nullable, non-optional.
 
 No arguments.
 
@@ -717,7 +713,7 @@ Shorthand for a timestamp field. Auto-generates the current `Date` on message cr
 createdAt!: Date;
 ```
 
-Equivalent to `@Field("date", { default: () => new Date() })`. Non-nullable, non-optional.
+Equivalent to `@Default(() => new Date()) @Field("date")`. Non-nullable, non-optional.
 
 No arguments.
 
@@ -730,7 +726,7 @@ Shorthand for a boolean flag that defaults to `false`. Commonly used for acknowl
 requiresApproval!: boolean;
 ```
 
-Equivalent to `@Field("boolean", { default: false })`. Non-nullable, non-optional.
+Equivalent to `@Default(false) @Field("boolean")`. Non-nullable, non-optional.
 
 No arguments.
 
@@ -743,7 +739,7 @@ Shorthand for a boolean persistence flag that defaults to `false`. Commonly used
 shouldPersist!: boolean;
 ```
 
-Equivalent to `@Field("boolean", { default: false })`. Non-nullable, non-optional.
+Equivalent to `@Default(false) @Field("boolean")`. Non-nullable, non-optional.
 
 No arguments.
 

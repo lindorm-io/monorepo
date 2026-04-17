@@ -55,7 +55,7 @@ describe("inheritance with real decorators", () => {
   @OnValidate(childOnValidate)
   @AfterConsume(childAfterConsume)
   class UserCreatedEvent extends BaseEvent {
-    @Field("string", { optional: false })
+    @Field("string")
     name!: string;
 
     @Field("email")

@@ -6,6 +6,7 @@ import { z } from "zod/v4";
 import type { IMessage } from "../../../interfaces";
 import { Compressed } from "../../../decorators/Compressed";
 import { CorrelationField } from "../../../decorators/CorrelationField";
+import { Default } from "../../../decorators/Default";
 import { Encrypted } from "../../../decorators/Encrypted";
 import { Field } from "../../../decorators/Field";
 import { Header } from "../../../decorators/Header";
@@ -200,8 +201,8 @@ export const createTckMessages = (hookLog: Array<string>) => {
     @Schema(z.string().min(1))
     @Field("string")
     body!: string;
-    @Field("boolean", { default: false }) touched!: boolean;
-    @Field("boolean", { default: false }) hydrated!: boolean;
+    @Default(false) @Field("boolean") touched!: boolean;
+    @Default(false) @Field("boolean") hydrated!: boolean;
   }
 
   @Message({ name: "TckMandatoryPersistentMessage" })

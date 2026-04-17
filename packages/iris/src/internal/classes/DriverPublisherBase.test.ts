@@ -1,4 +1,5 @@
 import type { Constructor } from "@lindorm/types";
+import { Default } from "../../decorators/Default";
 import { Field } from "../../decorators/Field";
 import { IdentifierField } from "../../decorators/IdentifierField";
 import { Message } from "../../decorators/Message";
@@ -31,7 +32,8 @@ class PubTestMessage {
   @Field("string")
   label!: string;
 
-  @Field("integer", { default: 0 })
+  @Default(0)
+  @Field("integer")
   seq!: number;
 }
 
@@ -40,7 +42,8 @@ class SimplePubMessage {
   @IdentifierField()
   id!: string;
 
-  @Field("string", { default: "default-val" })
+  @Default("default-val")
+  @Field("string")
   value!: string;
 }
 

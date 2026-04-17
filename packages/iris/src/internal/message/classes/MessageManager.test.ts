@@ -1,4 +1,5 @@
 import { AbstractMessage } from "../../../decorators/AbstractMessage";
+import { Default } from "../../../decorators/Default";
 import { Enum } from "../../../decorators/Enum";
 import { Field } from "../../../decorators/Field";
 import { Generated } from "../../../decorators/Generated";
@@ -7,6 +8,7 @@ import { Max } from "../../../decorators/Max";
 import { Message } from "../../../decorators/Message";
 import { Min } from "../../../decorators/Min";
 import { Namespace } from "../../../decorators/Namespace";
+import { Nullable } from "../../../decorators/Nullable";
 import { OnCreate } from "../../../decorators/OnCreate";
 import { OnHydrate } from "../../../decorators/OnHydrate";
 import { OnValidate } from "../../../decorators/OnValidate";
@@ -31,7 +33,8 @@ class TestEvent {
   @Field("string")
   name!: string;
 
-  @Field("integer", { default: 0 })
+  @Default(0)
+  @Field("integer")
   count!: number;
 }
 
@@ -41,10 +44,12 @@ class NullableEvent {
   @IdentifierField()
   id!: string;
 
-  @Field("string", { nullable: true })
+  @Nullable()
+  @Field("string")
   label!: string | null;
 
-  @Field("integer", { nullable: true })
+  @Nullable()
+  @Field("integer")
   score!: number | null;
 }
 
@@ -149,7 +154,8 @@ class ChildEvent extends BaseEvent {
   @Field("string")
   childName!: string;
 
-  @Field("integer", { default: 0 })
+  @Default(0)
+  @Field("integer")
   childCount!: number;
 }
 
@@ -176,7 +182,8 @@ class ComplexEvent {
   @Field("object")
   metadata!: Record<string, any>;
 
-  @Field("boolean", { default: false })
+  @Default(false)
+  @Field("boolean")
   active!: boolean;
 }
 
@@ -186,10 +193,13 @@ class NullableDefaultEvent {
   @IdentifierField()
   id!: string;
 
-  @Field("string", { nullable: true, default: "fallback" })
+  @Nullable()
+  @Default("fallback")
+  @Field("string")
   label!: string | null;
 
-  @Field("boolean", { nullable: true })
+  @Nullable()
+  @Field("boolean")
   flag!: boolean | null;
 }
 
@@ -713,7 +723,8 @@ describe("MessageManager", () => {
       @Namespace("test")
       @Message({ name: "ChildMsg" })
       class ChildMsg extends ParentMsg {
-        @Field("string", { default: "x" })
+        @Default("x")
+        @Field("string")
         value!: string;
       }
 

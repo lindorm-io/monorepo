@@ -3,6 +3,7 @@ import { findMessageByName } from "../internal/message/metadata/registry";
 import { AbstractMessage } from "./AbstractMessage";
 import { Broadcast } from "./Broadcast";
 import { Compressed } from "./Compressed";
+import { Default } from "./Default";
 import { Enum } from "./Enum";
 import { Field } from "./Field";
 import { Generated } from "./Generated";
@@ -115,44 +116,48 @@ describe("negative and edge-case decorator usage", () => {
 
     it("should accept default value of false", () => {
       class FalseDefault {
-        @Field("boolean", { default: false })
+        @Default(false)
+        @Field("boolean")
         active!: boolean;
       }
 
       const meta = (FalseDefault as any)[Symbol.metadata];
-      expect(meta.fields[0].default).toBe(false);
+      expect(meta.fieldModifiers[0].default).toBe(false);
     });
 
     it("should accept default value of zero", () => {
       class ZeroDefault {
-        @Field("integer", { default: 0 })
+        @Default(0)
+        @Field("integer")
         count!: number;
       }
 
       const meta = (ZeroDefault as any)[Symbol.metadata];
-      expect(meta.fields[0].default).toBe(0);
+      expect(meta.fieldModifiers[0].default).toBe(0);
     });
 
     it("should accept default value of empty string", () => {
       class EmptyDefault {
-        @Field("string", { default: "" })
+        @Default("")
+        @Field("string")
         label!: string;
       }
 
       const meta = (EmptyDefault as any)[Symbol.metadata];
-      expect(meta.fields[0].default).toBe("");
+      expect(meta.fieldModifiers[0].default).toBe("");
     });
 
     it("should accept a function default", () => {
       const factory = () => [];
 
       class FnDefault {
-        @Field("array", { default: factory })
+        @Default(factory)
+        @Field("array")
         items!: Array<unknown>;
       }
 
       const meta = (FnDefault as any)[Symbol.metadata];
-      expect(meta.fields[0].default).toBe(factory);
+      expect(meta.fieldModifiers[0].default).toBe(factory);
     });
 
     it("should accept @Enum as a standalone modifier", () => {
