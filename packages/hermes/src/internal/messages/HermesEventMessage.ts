@@ -21,7 +21,7 @@ export class HermesEventMessage implements IMessage {
   @MandatoryField()
   public mandatory: boolean = false;
 
-  @Field("jsonb")
+  @Field("object")
   public aggregate: AggregateIdentifier = { id: "", name: "", namespace: "" };
 
   @Field("string")
@@ -36,10 +36,10 @@ export class HermesEventMessage implements IMessage {
   @Field("string", { nullable: true })
   public correlationId: string | null = null;
 
-  @Field("jsonb")
+  @Field("object")
   public data: Dict = {};
 
-  @Field("jsonb")
+  @Field("object")
   public meta: Dict = {};
 
   @TimestampField()
