@@ -864,67 +864,75 @@ export const pylon = new Pylon({
 exports[`scaffold writeWorkerFiles snapshot: all four: amphora-entity-sync content 1`] = `
 "import { createAmphoraEntityWorker } from "@lindorm/pylon";
 import { amphora } from "../pylon/amphora";
+import { logger } from "../logger";
 import { source as proteusSource } from "../proteus/source";
 
-export default createAmphoraEntityWorker({ amphora, proteus: proteusSource });
+export default createAmphoraEntityWorker({ amphora, logger, proteus: proteusSource });
 "
 `;
 
 exports[`scaffold writeWorkerFiles snapshot: all four: amphora-refresh content 1`] = `
 "import { createAmphoraRefreshWorker } from "@lindorm/pylon";
 import { amphora } from "../pylon/amphora";
+import { logger } from "../logger";
 
-export default createAmphoraRefreshWorker({ amphora });
+export default createAmphoraRefreshWorker({ amphora, logger });
 "
 `;
 
 exports[`scaffold writeWorkerFiles snapshot: all four: expiry-cleanup content 1`] = `
 "import { createExpiryCleanupWorker } from "@lindorm/pylon";
+import { logger } from "../logger";
 import { source as proteusSource } from "../proteus/source";
 
 // TODO: add your entities with expiry fields to this array
-export default createExpiryCleanupWorker({ proteus: proteusSource, targets: [] });
+export default createExpiryCleanupWorker({ logger, proteus: proteusSource, targets: [] });
 "
 `;
 
 exports[`scaffold writeWorkerFiles snapshot: all four: kryptos-rotation content 1`] = `
 "import { createKryptosRotationWorker } from "@lindorm/pylon";
+import { logger } from "../logger";
 import { source as proteusSource } from "../proteus/source";
 
-export default createKryptosRotationWorker({ proteus: proteusSource });
+export default createKryptosRotationWorker({ logger, proteus: proteusSource });
 "
 `;
 
 exports[`scaffold writeWorkerFiles snapshot: amphora-entity-sync only: amphora-entity-sync content 1`] = `
 "import { createAmphoraEntityWorker } from "@lindorm/pylon";
 import { amphora } from "../pylon/amphora";
+import { logger } from "../logger";
 import { source as proteusSource } from "../proteus/source";
 
-export default createAmphoraEntityWorker({ amphora, proteus: proteusSource });
+export default createAmphoraEntityWorker({ amphora, logger, proteus: proteusSource });
 "
 `;
 
 exports[`scaffold writeWorkerFiles snapshot: amphora-refresh only: amphora-refresh content 1`] = `
 "import { createAmphoraRefreshWorker } from "@lindorm/pylon";
 import { amphora } from "../pylon/amphora";
+import { logger } from "../logger";
 
-export default createAmphoraRefreshWorker({ amphora });
+export default createAmphoraRefreshWorker({ amphora, logger });
 "
 `;
 
 exports[`scaffold writeWorkerFiles snapshot: expiry-cleanup only: expiry-cleanup content 1`] = `
 "import { createExpiryCleanupWorker } from "@lindorm/pylon";
+import { logger } from "../logger";
 import { source as proteusSource } from "../proteus/source";
 
 // TODO: add your entities with expiry fields to this array
-export default createExpiryCleanupWorker({ proteus: proteusSource, targets: [] });
+export default createExpiryCleanupWorker({ logger, proteus: proteusSource, targets: [] });
 "
 `;
 
 exports[`scaffold writeWorkerFiles snapshot: kryptos-rotation only: kryptos-rotation content 1`] = `
 "import { createKryptosRotationWorker } from "@lindorm/pylon";
+import { logger } from "../logger";
 import { source as proteusSource } from "../proteus/source";
 
-export default createKryptosRotationWorker({ proteus: proteusSource });
+export default createKryptosRotationWorker({ logger, proteus: proteusSource });
 "
 `;

@@ -4,8 +4,9 @@ const amphoraRefresh = (): string =>
   [
     `import { createAmphoraRefreshWorker } from "@lindorm/pylon";`,
     `import { amphora } from "../pylon/amphora";`,
+    `import { logger } from "../logger";`,
     ``,
-    `export default createAmphoraRefreshWorker({ amphora });`,
+    `export default createAmphoraRefreshWorker({ amphora, logger });`,
     ``,
   ].join("\n");
 
@@ -13,28 +14,31 @@ const amphoraEntitySync = (): string =>
   [
     `import { createAmphoraEntityWorker } from "@lindorm/pylon";`,
     `import { amphora } from "../pylon/amphora";`,
+    `import { logger } from "../logger";`,
     `import { source as proteusSource } from "../proteus/source";`,
     ``,
-    `export default createAmphoraEntityWorker({ amphora, proteus: proteusSource });`,
+    `export default createAmphoraEntityWorker({ amphora, logger, proteus: proteusSource });`,
     ``,
   ].join("\n");
 
 const expiryCleanup = (): string =>
   [
     `import { createExpiryCleanupWorker } from "@lindorm/pylon";`,
+    `import { logger } from "../logger";`,
     `import { source as proteusSource } from "../proteus/source";`,
     ``,
     `// TODO: add your entities with expiry fields to this array`,
-    `export default createExpiryCleanupWorker({ proteus: proteusSource, targets: [] });`,
+    `export default createExpiryCleanupWorker({ logger, proteus: proteusSource, targets: [] });`,
     ``,
   ].join("\n");
 
 const kryptosRotation = (): string =>
   [
     `import { createKryptosRotationWorker } from "@lindorm/pylon";`,
+    `import { logger } from "../logger";`,
     `import { source as proteusSource } from "../proteus/source";`,
     ``,
-    `export default createKryptosRotationWorker({ proteus: proteusSource });`,
+    `export default createKryptosRotationWorker({ logger, proteus: proteusSource });`,
     ``,
   ].join("\n");
 
