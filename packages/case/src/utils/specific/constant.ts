@@ -1,5 +1,5 @@
 import { KeysInput } from "../../types";
-import { constantCase, convertArray, convertObject } from "#internal/index";
+import { constantCase, convertArray, convertObject } from "../../internal/index";
 
 export { constantCase };
 

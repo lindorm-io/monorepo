@@ -1,5 +1,5 @@
 import { KeysInput } from "../../types";
-import { capitalCase, convertArray, convertObject } from "#internal/index";
+import { capitalCase, convertArray, convertObject } from "../../internal/index";
 
 export { capitalCase };
 

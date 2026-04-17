@@ -1,5 +1,5 @@
 import { KeysInput } from "../../types";
-import { camelCase, convertArray, convertObject } from "#internal/index";
+import { camelCase, convertArray, convertObject } from "../../internal/index";
 
 export { camelCase };
 
