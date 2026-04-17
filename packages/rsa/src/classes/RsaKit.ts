@@ -11,7 +11,7 @@ import {
   assertRsaSignature,
   createRsaSignature,
   verifyRsaSignature,
-} from "#internal/index";
+} from "../internal/index";
 
 export class RsaKit implements IKeyKit {
   private readonly dsa: DsaEncoding;
