@@ -1,4 +1,4 @@
-import { createRandomString } from "#internal/index";
+import { createRandomString } from "../internal/index";
 
 type Options = {
   numbers?: number;
