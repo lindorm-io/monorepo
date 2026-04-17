@@ -23,6 +23,7 @@ jest.mock("@lindorm/kryptos", () => ({
   KryptosKit: { generate: { auto: mockGenerate } },
 }));
 
+import { Kryptos } from "../entities/Kryptos";
 import { createKryptosRotationWorker } from "./kryptos-rotation-worker";
 
 describe("createKryptosRotationWorker", () => {
@@ -47,48 +48,55 @@ describe("createKryptosRotationWorker", () => {
   });
 
   test("should return a worker config with correct alias", () => {
-    const config = createKryptosRotationWorker({
-      proteus,
-      target: FakeKryptosDB as any,
-    });
+    const config = createKryptosRotationWorker({ proteus });
 
     expect(config.alias).toBe("KryptosRotationWorker");
   });
 
   test("should default interval to 1d", () => {
-    const config = createKryptosRotationWorker({
-      proteus,
-      target: FakeKryptosDB as any,
-    });
+    const config = createKryptosRotationWorker({ proteus });
 
     expect(config.interval).toBe("1d");
   });
 
   test("should default listeners to empty array", () => {
-    const config = createKryptosRotationWorker({
-      proteus,
-      target: FakeKryptosDB as any,
-    });
+    const config = createKryptosRotationWorker({ proteus });
 
     expect(config.listeners).toEqual([]);
   });
 
   test("should use provided interval", () => {
-    const config = createKryptosRotationWorker({
-      proteus,
-      target: FakeKryptosDB as any,
-      interval: "12h",
-    });
+    const config = createKryptosRotationWorker({ proteus, interval: "12h" });
 
     expect(config.interval).toBe("12h");
   });
 
   describe("callback", () => {
-    test("should use default keys when none provided", async () => {
+    test("should default repository target to Kryptos entity when target not provided", async () => {
+      const config = createKryptosRotationWorker({
+        proteus,
+        keys: [{ algorithm: "ES512", purpose: "token" }],
+      });
+
+      await config.callback({ logger: mockLogger } as any);
+
+      expect(mockRepository).toHaveBeenCalledWith(Kryptos);
+    });
+
+    test("should use provided target override when supplied", async () => {
       const config = createKryptosRotationWorker({
         proteus,
         target: FakeKryptosDB as any,
+        keys: [{ algorithm: "ES512", purpose: "token" }],
       });
+
+      await config.callback({ logger: mockLogger } as any);
+
+      expect(mockRepository).toHaveBeenCalledWith(FakeKryptosDB);
+    });
+
+    test("should use default keys when none provided", async () => {
+      const config = createKryptosRotationWorker({ proteus });
 
       await config.callback({ logger: mockLogger } as any);
 
@@ -102,7 +110,6 @@ describe("createKryptosRotationWorker", () => {
 
       const config = createKryptosRotationWorker({
         proteus,
-        target: FakeKryptosDB as any,
         keys: keys as any,
       });
 
@@ -120,7 +127,6 @@ describe("createKryptosRotationWorker", () => {
 
       const config = createKryptosRotationWorker({
         proteus,
-        target: FakeKryptosDB as any,
         keys: [{ algorithm: "ES512", purpose: "token" }],
       });
 
@@ -147,7 +153,6 @@ describe("createKryptosRotationWorker", () => {
 
       const config = createKryptosRotationWorker({
         proteus,
-        target: FakeKryptosDB as any,
         keys: [{ algorithm: "ES512", purpose: "token" }],
       });
 
@@ -171,7 +176,6 @@ describe("createKryptosRotationWorker", () => {
 
       const config = createKryptosRotationWorker({
         proteus,
-        target: FakeKryptosDB as any,
         keys: [{ algorithm: "ES512", purpose: "token" }],
       });
 
@@ -191,7 +195,6 @@ describe("createKryptosRotationWorker", () => {
 
       const config = createKryptosRotationWorker({
         proteus,
-        target: FakeKryptosDB as any,
         keys: [
           { algorithm: "ES512", purpose: "token" },
           { algorithm: "HS256", purpose: "cookie" },
@@ -213,7 +216,6 @@ describe("createKryptosRotationWorker", () => {
 
       const config = createKryptosRotationWorker({
         proteus,
-        target: FakeKryptosDB as any,
         keys: [{ algorithm: "ES512", purpose: "token" }],
       });
 

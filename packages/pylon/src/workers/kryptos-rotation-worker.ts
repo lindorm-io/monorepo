@@ -3,6 +3,7 @@ import { KryptosAlgorithm, KryptosDB, KryptosKit } from "@lindorm/kryptos";
 import { IProteusSource } from "@lindorm/proteus";
 import { Constructor } from "@lindorm/types";
 import { CreateLindormWorkerOptions, LindormWorkerConfig } from "@lindorm/worker";
+import { Kryptos } from "../entities/Kryptos";
 
 type KeyOption = {
   algorithm: KryptosAlgorithm;
@@ -13,7 +14,7 @@ type Options = CreateLindormWorkerOptions & {
   expiry?: ReadableTime;
   keys?: Array<KeyOption>;
   proteus: IProteusSource;
-  target: Constructor<KryptosDB>;
+  target?: Constructor<KryptosDB>;
 };
 
 export const createKryptosRotationWorker = (options: Options): LindormWorkerConfig => ({
@@ -32,7 +33,7 @@ export const createKryptosRotationWorker = (options: Options): LindormWorkerConf
       { algorithm: "ECDH-ES+A128GCMKW", purpose: "token" },
     ];
 
-    const repository = options.proteus.repository(options.target);
+    const repository = options.proteus.repository(options.target ?? Kryptos);
     const existing = await repository.find();
 
     const expiry = options.expiry ?? "6m";
