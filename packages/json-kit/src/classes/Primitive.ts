@@ -7,7 +7,7 @@ import {
   parseObjectValues,
   stringifyArrayValues,
   stringifyObjectValues,
-} from "#internal/index";
+} from "../internal/index";
 
 export class Primitive<T extends Array<any> | Dict = Dict> {
   private readonly _data: T;
