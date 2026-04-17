@@ -4,6 +4,7 @@ import { generateRoute } from "./generate-route";
 import { generateListener } from "./generate-listener";
 import { generateMiddleware } from "./generate-middleware";
 import { generateHandler } from "./generate-handler";
+import { generateWorker } from "./generate-worker";
 
 jest.mock("./generate-route", () => ({
   generateRoute: jest.fn(),
@@ -21,6 +22,10 @@ jest.mock("./generate-handler", () => ({
   generateHandler: jest.fn(),
 }));
 
+jest.mock("./generate-worker", () => ({
+  generateWorker: jest.fn(),
+}));
+
 const mockGenerateRoute = generateRoute as jest.MockedFunction<typeof generateRoute>;
 const mockGenerateListener = generateListener as jest.MockedFunction<
   typeof generateListener
@@ -31,6 +36,7 @@ const mockGenerateMiddleware = generateMiddleware as jest.MockedFunction<
 const mockGenerateHandler = generateHandler as jest.MockedFunction<
   typeof generateHandler
 >;
+const mockGenerateWorker = generateWorker as jest.MockedFunction<typeof generateWorker>;
 
 describe("registerGenerateCommands", () => {
   let program: Command;
@@ -277,6 +283,69 @@ describe("registerGenerateCommands", () => {
 
       expect(mockGenerateHandler).toHaveBeenCalledTimes(1);
       expect(mockGenerateHandler.mock.calls[0][0]).toBe("createOrder");
+    });
+  });
+
+  describe("worker subcommand", () => {
+    it("should register a 'worker' subcommand", () => {
+      const cmd = generateCmd.commands.find((c) => c.name() === "worker");
+      expect(cmd).toBeDefined();
+    });
+
+    it("should register 'w' as alias for worker", () => {
+      const cmd = generateCmd.commands.find((c) => c.name() === "worker")!;
+      expect(cmd.alias()).toBe("w");
+    });
+
+    it("should register --directory option on worker", () => {
+      const cmd = generateCmd.commands.find((c) => c.name() === "worker")!;
+      const opt = cmd.options.find((o) => o.long === "--directory");
+      expect(opt).toBeDefined();
+      expect(opt!.short).toBe("-d");
+    });
+
+    it("should register --dry-run option on worker", () => {
+      const cmd = generateCmd.commands.find((c) => c.name() === "worker")!;
+      const opt = cmd.options.find((o) => o.long === "--dry-run");
+      expect(opt).toBeDefined();
+    });
+
+    it("should wire generateWorker as the action", async () => {
+      mockGenerateWorker.mockResolvedValue(undefined);
+
+      await program.parseAsync([
+        "node",
+        "pylon",
+        "generate",
+        "worker",
+        "HeartbeatWorker",
+      ]);
+
+      expect(mockGenerateWorker).toHaveBeenCalledTimes(1);
+    });
+
+    it("should pass name argument through", async () => {
+      mockGenerateWorker.mockResolvedValue(undefined);
+
+      await program.parseAsync([
+        "node",
+        "pylon",
+        "generate",
+        "worker",
+        "HeartbeatWorker",
+      ]);
+
+      const [name] = mockGenerateWorker.mock.calls[0];
+      expect(name).toBe("HeartbeatWorker");
+    });
+
+    it("should work with aliases", async () => {
+      mockGenerateWorker.mockResolvedValue(undefined);
+
+      await program.parseAsync(["node", "pylon", "g", "w", "CleanupWorker"]);
+
+      expect(mockGenerateWorker).toHaveBeenCalledTimes(1);
+      expect(mockGenerateWorker.mock.calls[0][0]).toBe("CleanupWorker");
     });
   });
 });
