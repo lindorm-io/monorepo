@@ -1,5 +1,5 @@
 import { ReadableTime } from "../types";
-import { millisecondsToReadable, readableToMilliseconds } from "#internal/utils";
+import { millisecondsToReadable, readableToMilliseconds } from "../internal/utils";
 
 /**
  * Convert between a `ReadableTime` string and a millisecond count. Year and
