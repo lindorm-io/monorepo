@@ -5,7 +5,7 @@ import { isArray, isString } from "@lindorm/is";
 import { program } from "commander";
 import { TypewriterOutput } from "./types";
 import { typewriter } from "./utils";
-import { absolutePath } from "#internal/index";
+import { absolutePath } from "./internal/index";
 
 program
   .name("typewriter")
