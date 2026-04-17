@@ -1,12 +1,25 @@
-import { EventEmitter } from "events";
 import { join } from "path";
 
-jest.mock("cross-spawn", () => ({
+jest.mock("@lindorm/proteus", () => ({
   __esModule: true,
-  default: jest.fn(),
+  writeSource: jest.fn().mockResolvedValue(undefined),
+  writeEntity: jest.fn().mockResolvedValue(undefined),
 }));
 
-import spawn from "cross-spawn";
+jest.mock("@lindorm/iris", () => ({
+  __esModule: true,
+  writeSource: jest.fn().mockResolvedValue(undefined),
+  writeMessage: jest.fn().mockResolvedValue(undefined),
+}));
+
+import {
+  writeEntity as proteusWriteEntity,
+  writeSource as proteusWriteSource,
+} from "@lindorm/proteus";
+import {
+  writeMessage as irisWriteMessage,
+  writeSource as irisWriteSource,
+} from "@lindorm/iris";
 import {
   runIrisGenerateMessage,
   runIrisInit,
@@ -14,79 +27,69 @@ import {
   runProteusInit,
 } from "./drivers";
 
-const mockedSpawn = spawn as unknown as jest.Mock;
-
-const createChild = (code: number): EventEmitter => {
-  const child = new EventEmitter();
-  setImmediate(() => child.emit("close", code));
-  return child;
-};
+const mockedProteusWriteSource = proteusWriteSource as jest.Mock;
+const mockedProteusWriteEntity = proteusWriteEntity as jest.Mock;
+const mockedIrisWriteSource = irisWriteSource as jest.Mock;
+const mockedIrisWriteMessage = irisWriteMessage as jest.Mock;
 
 describe("drivers", () => {
-  beforeEach(() => mockedSpawn.mockReset());
+  beforeEach(() => {
+    mockedProteusWriteSource.mockClear();
+    mockedProteusWriteEntity.mockClear();
+    mockedIrisWriteSource.mockClear();
+    mockedIrisWriteMessage.mockClear();
+  });
 
-  test("runProteusInit uses ./node_modules/.bin/proteus", async () => {
-    mockedSpawn.mockReturnValue(createChild(0));
-
+  test("runProteusInit delegates to proteus writeSource with loggerImport", async () => {
     await runProteusInit("/tmp/project", "postgres");
 
-    expect(mockedSpawn).toHaveBeenCalledWith(
-      join("/tmp/project", "node_modules", ".bin", "proteus"),
-      ["init", "--driver", "postgres", "-d", "./src/proteus"],
-      { cwd: "/tmp/project", stdio: "inherit" },
-    );
+    expect(mockedProteusWriteSource).toHaveBeenCalledWith({
+      driver: "postgres",
+      directory: join("/tmp/project", "src/proteus"),
+      loggerImport: "../logger",
+    });
   });
 
   test("runProteusInit is a no-op for none", async () => {
     await runProteusInit("/tmp/project", "none");
-    expect(mockedSpawn).not.toHaveBeenCalled();
+    expect(mockedProteusWriteSource).not.toHaveBeenCalled();
   });
 
-  test("runIrisInit uses ./node_modules/.bin/iris", async () => {
-    mockedSpawn.mockReturnValue(createChild(0));
-
+  test("runIrisInit delegates to iris writeSource with loggerImport", async () => {
     await runIrisInit("/tmp/project", "rabbit");
 
-    expect(mockedSpawn).toHaveBeenCalledWith(
-      join("/tmp/project", "node_modules", ".bin", "iris"),
-      ["init", "--driver", "rabbit", "-d", "./src/iris"],
-      { cwd: "/tmp/project", stdio: "inherit" },
-    );
+    expect(mockedIrisWriteSource).toHaveBeenCalledWith({
+      driver: "rabbit",
+      directory: join("/tmp/project", "src/iris"),
+      loggerImport: "../logger",
+    });
   });
 
   test("runIrisInit is a no-op for none", async () => {
     await runIrisInit("/tmp/project", "none");
-    expect(mockedSpawn).not.toHaveBeenCalled();
+    expect(mockedIrisWriteSource).not.toHaveBeenCalled();
   });
 
   test("runProteusGenerateEntity forwards entity name", async () => {
-    mockedSpawn.mockReturnValue(createChild(0));
-
     await runProteusGenerateEntity("/tmp/project", "SampleEntity");
 
-    expect(mockedSpawn).toHaveBeenCalledWith(
-      join("/tmp/project", "node_modules", ".bin", "proteus"),
-      ["generate", "entity", "SampleEntity", "-d", "./src/proteus/entities"],
-      { cwd: "/tmp/project", stdio: "inherit" },
-    );
+    expect(mockedProteusWriteEntity).toHaveBeenCalledWith({
+      name: "SampleEntity",
+      directory: join("/tmp/project", "src/proteus/entities"),
+    });
   });
 
   test("runIrisGenerateMessage forwards message name", async () => {
-    mockedSpawn.mockReturnValue(createChild(0));
-
     await runIrisGenerateMessage("/tmp/project", "SampleMessage");
 
-    expect(mockedSpawn).toHaveBeenCalledWith(
-      join("/tmp/project", "node_modules", ".bin", "iris"),
-      ["generate", "message", "SampleMessage", "-d", "./src/iris/messages"],
-      { cwd: "/tmp/project", stdio: "inherit" },
-    );
+    expect(mockedIrisWriteMessage).toHaveBeenCalledWith({
+      name: "SampleMessage",
+      directory: join("/tmp/project", "src/iris/messages"),
+    });
   });
 
-  test("rejects on non-zero exit", async () => {
-    mockedSpawn.mockReturnValue(createChild(1));
-    await expect(runProteusInit("/tmp/project", "postgres")).rejects.toThrow(
-      /exited with code 1/,
-    );
+  test("propagates errors from proteus writeSource", async () => {
+    mockedProteusWriteSource.mockRejectedValueOnce(new Error("boom"));
+    await expect(runProteusInit("/tmp/project", "postgres")).rejects.toThrow("boom");
   });
 });
