@@ -78,7 +78,7 @@ export const writePackageJson = (answers: Answers): void => {
     name: answers.projectName,
     version: "0.0.0",
     private: true,
-    engines: { node: ">=20" },
+    engines: { node: ">=24.13.0" },
     scripts: {
       dev: "tsx watch src/index.ts",
       build: "tsc -p tsconfig.build.json",
