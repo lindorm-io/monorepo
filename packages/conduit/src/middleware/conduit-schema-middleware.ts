@@ -1,5 +1,5 @@
 import { ServerError } from "@lindorm/errors";
-import { z, ZodArray, ZodObject, ZodRawShape } from "zod/v4";
+import { z, ZodArray, ZodObject, ZodRawShape } from "zod";
 import { ConduitError } from "../errors";
 import { ConduitMiddleware } from "../types";
 
