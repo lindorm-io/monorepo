@@ -4,7 +4,7 @@ import { PylonAuthConfig, PylonHttpContext } from "../../types";
 import { createAuthHandler } from "./auth/auth-handler";
 import { backchannelLogoutHandler } from "./auth/backchannel-logout-handler";
 import { errorHandler } from "./auth/error-handler";
-import { identityHandler } from "./auth/identity-handler";
+import { createIntrospectHandler } from "./auth/introspect-handler";
 import { createLoginCallbackHandler } from "./auth/login-callback-handler";
 import { createLoginHandler, loginSchema } from "./auth/login-handler";
 import { createLogoutCallbackHandler } from "./auth/logout-callback-handler";
@@ -31,7 +31,9 @@ export const createAuthRouter = <C extends PylonHttpContext>(
 
   router.get("/error", errorHandler);
 
-  router.get("/identity", refreshMiddleware, identityHandler);
+  if (routerConfig.introspect) {
+    router.get("/introspect", refreshMiddleware, createIntrospectHandler());
+  }
 
   router.get("/login", useSchema(loginSchema), createLoginHandler(routerConfig));
 

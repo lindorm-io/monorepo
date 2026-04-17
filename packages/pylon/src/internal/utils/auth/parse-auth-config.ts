@@ -18,6 +18,8 @@ const ROUTER_DEFAULTS: PylonAuthRouterConfig = {
   errorRedirect: "/error",
   pathPrefix: "/auth",
 
+  introspect: false,
+
   authorize: {
     acrValues: null,
     codeChallengeMethod: "S256",
