@@ -79,11 +79,13 @@ await app.start();
 - [Workers](#workers)
   - [Custom Workers](#custom-workers)
   - [Built-in Workers](#built-in-workers)
+- [Health Check](#health-check)
 - [Error Handling](#error-handling)
 - [CORS](#cors)
 - [Body Parsing](#body-parsing)
 - [Configuration Reference](#configuration-reference)
 - [Entities](#entities)
+- [Command-Line Tools](#command-line-tools)
 
 ## Core Concepts
 
@@ -1056,6 +1058,25 @@ await ctx.webhook("user.created", { userId: "abc-123", email: "alice@example.com
 
 Pylon matches the event against all active subscriptions and dispatches with the configured auth.
 
+**Automatic suspension on repeated failures:**
+
+Each subscription tracks `errorCount`, `lastErrorAt`, and `suspendedAt`. When a dispatch fails, the dispatch consumer increments `errorCount` and records `lastErrorAt`. After `maxErrors` consecutive failures (default: 10), `suspendedAt` is set and the subscription is skipped by the request consumer until it is reset.
+
+```typescript
+const app = new Pylon({
+  webhook: {
+    enabled: true,
+    proteus: mySource,
+    iris: myIrisSource,
+    encryptionKey: myKryptos,
+    maxErrors: 20,
+  },
+  // ...
+});
+```
+
+To reactivate a suspended subscription, update it (PATCH-style) and clear `errorCount` and `suspendedAt` via your own CRUD route.
+
 ## Workers
 
 Background jobs with configurable intervals, retry logic, and jitter.
@@ -1110,13 +1131,49 @@ import {
 
 **`createExpiryCleanupWorker`** — Deletes expired entities from specified targets (default: every 15 minutes).
 
+**`createAmphoraEntityWorker`** — Syncs `KryptosDB` entities from the configured Proteus source into the Amphora key cache on an interval (default: 3 minutes). Uses Pylon's built-in `Kryptos` entity by default; pass `target` to override.
+
 ```typescript
 const app = new Pylon({
   workers: [
     createAmphoraRefreshWorker({ amphora: myAmphora }),
-    createKryptosRotationWorker({ proteus: mySource, target: KryptosDB }),
+    createKryptosRotationWorker({ proteus: mySource }),
+    createAmphoraEntityWorker({ amphora: myAmphora, proteus: mySource }),
     createExpiryCleanupWorker({ proteus: mySource, targets: [Session, OtpCode] }),
   ],
+  // ...
+});
+```
+
+`createKryptosRotationWorker` and `createAmphoraEntityWorker` default to Pylon's built-in `Kryptos` entity. Pass `target: MyKryptosEntity` to override with a custom `KryptosDB` implementation.
+
+## Health Check
+
+Pylon exposes a `GET /health` endpoint automatically. When no custom callback is configured, Pylon builds a default health callback based on the integrations in use:
+
+- If `proteus` is provided, the callback pings the configured source.
+- If `iris` is provided, the callback pings the broker.
+- If both fail, the response is `503 Service Unavailable` with a `health_check_failed` error code and `failures: ["proteus" | "iris", ...]`.
+- When everything is healthy (or when neither integration is configured), `/health` returns `204 No Content`.
+
+**Override with a custom callback:**
+
+```typescript
+const app = new Pylon({
+  callbacks: {
+    health: async (ctx) => {
+      await checkDownstream();
+    },
+  },
+  // ...
+});
+```
+
+**Disable the probe entirely:**
+
+```typescript
+const app = new Pylon({
+  callbacks: { health: null }, // /health returns 204 unconditionally
   // ...
 });
 ```
@@ -1248,7 +1305,7 @@ type PylonOptions<E extends PylonEventMap = PylonEventMap> = {
 
   // HTTP
   auth?: PylonAuthOptions;
-  callbacks?: { health?; rightToBeForgotten? };
+  callbacks?: { health?: PylonHttpCallback | null; rightToBeForgotten? };
   changePasswordUri?: string;
   cookies?: PylonCookieConfig;
   cors?: CorsOptions;
@@ -1307,6 +1364,99 @@ Import them from the main entry point:
 ```typescript
 import { DataAuditLog, RequestAuditLog, WebhookSubscription } from "@lindorm/pylon";
 ```
+
+## Command-Line Tools
+
+Pylon ships a `pylon` CLI for scaffolding route, listener, middleware, handler, and worker files. With `@lindorm/pylon` installed, invoke it via `npx pylon` or `./node_modules/.bin/pylon`.
+
+```bash
+pylon --help
+pylon generate --help
+```
+
+All `generate` commands prompt interactively when required arguments are omitted and support `--dry-run` to print the generated file without writing to disk.
+
+### `pylon generate route`
+
+```bash
+pylon generate route [methods] [path] [options]
+```
+
+| Argument  | Example         | Description                                                                 |
+| --------- | --------------- | --------------------------------------------------------------------------- |
+| `methods` | `GET,POST`      | Comma-separated HTTP methods                                                |
+| `path`    | `/v1/users/:id` | URL path — `:params` become `[param]` segments; `*rest` becomes `[...rest]` |
+
+| Option                   | Default        | Description                                    |
+| ------------------------ | -------------- | ---------------------------------------------- |
+| `-d, --directory <path>` | `./src/routes` | Output directory                               |
+| `--dry-run`              | —              | Print the generated file instead of writing it |
+
+**Example:** `pylon generate route GET,POST /v1/users/:id` → `./src/routes/v1/users/[id].ts`
+
+### `pylon generate listener`
+
+```bash
+pylon generate listener [bindings] [event] [options]
+```
+
+| Argument   | Example           | Description                                                     |
+| ---------- | ----------------- | --------------------------------------------------------------- |
+| `bindings` | `ON` or `ON,ONCE` | Comma-separated bindings — valid values: `ON`, `ONCE`           |
+| `event`    | `chat:message`    | Colon-separated event name — colons become directory separators |
+
+| Option                   | Default           | Description                                    |
+| ------------------------ | ----------------- | ---------------------------------------------- |
+| `-d, --directory <path>` | `./src/listeners` | Output directory                               |
+| `--dry-run`              | —                 | Print the generated file instead of writing it |
+
+**Example:** `pylon generate listener ON chat:message` → `./src/listeners/chat/message.ts`
+
+### `pylon generate middleware`
+
+```bash
+pylon generate middleware [path] [options]
+```
+
+Generates a `_middleware.ts` file exporting a `MIDDLEWARE` array for inheritance.
+
+| Option                   | Default                                                 | Description                                    |
+| ------------------------ | ------------------------------------------------------- | ---------------------------------------------- |
+| `-d, --directory <path>` | `./src/routes` (HTTP) or `./src/listeners` (`--socket`) | Output directory                               |
+| `-S, --socket`           | off                                                     | Generate socket middleware (default is HTTP)   |
+| `--dry-run`              | —                                                       | Print the generated file instead of writing it |
+
+**Example:** `pylon generate middleware /v1/admin` → `./src/routes/v1/admin/_middleware.ts`
+
+### `pylon generate handler`
+
+```bash
+pylon generate handler [name] [options]
+```
+
+Generates a handler file with a Zod schema stub and a typed `ServerHandler` export. Filenames are camelCase.
+
+| Option                   | Default          | Description                                    |
+| ------------------------ | ---------------- | ---------------------------------------------- |
+| `-d, --directory <path>` | `./src/handlers` | Output directory                               |
+| `--dry-run`              | —                | Print the generated file instead of writing it |
+
+**Example:** `pylon generate handler getUser` → `./src/handlers/getUser.ts`
+
+### `pylon generate worker`
+
+```bash
+pylon generate worker [name] [options]
+```
+
+Generates a worker file with `CALLBACK` and `INTERVAL` named exports, matching Pylon's file-based worker scanner convention. Filenames are kebab-cased.
+
+| Option                   | Default         | Description                                    |
+| ------------------------ | --------------- | ---------------------------------------------- |
+| `-d, --directory <path>` | `./src/workers` | Output directory                               |
+| `--dry-run`              | —               | Print the generated file instead of writing it |
+
+**Example:** `pylon generate worker HeartbeatWorker` → `./src/workers/heartbeat-worker.ts`
 
 ## License
 
