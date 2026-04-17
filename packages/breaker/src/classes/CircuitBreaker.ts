@@ -1,7 +1,7 @@
 import { EventEmitter } from "events";
 import { CircuitOpenError } from "../errors/CircuitOpenError";
 import type { ICircuitBreaker } from "../interfaces/CircuitBreaker";
-import { calculateBackoff, SlidingWindow } from "#internal/index";
+import { calculateBackoff, SlidingWindow } from "../internal/index";
 import type {
   CircuitBreakerOptions,
   CircuitBreakerState,
