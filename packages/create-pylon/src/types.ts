@@ -98,15 +98,20 @@ export const BASE_RUNTIME_DEPENDENCIES: ReadonlyArray<string> = [
   "@lindorm/amphora",
   "@lindorm/logger",
   "@lindorm/types",
+  "@lindorm/worker",
   "@lindorm/config",
   "zod",
 ];
 
 export const BASE_DEV_DEPENDENCIES: ReadonlyArray<string> = [
-  "@lindorm/worker",
-  "@types/node",
   "@types/jest",
+  "@types/node",
+  "@types/supertest",
+  "globals",
   "jest",
+  "mockdate",
+  "nock",
+  "supertest",
   "ts-jest",
   "tsx",
   "typescript",
