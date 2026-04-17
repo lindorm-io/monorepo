@@ -4,6 +4,7 @@ import {
   IdentifierField,
   MandatoryField,
   Message,
+  Nullable,
   TimestampField,
 } from "@lindorm/iris";
 import type { IMessage } from "@lindorm/iris";
@@ -31,7 +32,8 @@ export class HermesErrorMessage implements IMessage {
   @Field("string")
   public causationId: string = "";
 
-  @Field("string", { nullable: true })
+  @Nullable()
+  @Field("string")
   public correlationId: string | null = null;
 
   @Field("object")
