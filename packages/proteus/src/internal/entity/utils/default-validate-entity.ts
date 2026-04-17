@@ -1,5 +1,5 @@
 import type { Constructor } from "@lindorm/types";
-import { z } from "zod/v4";
+import { z } from "zod";
 import { IEntity } from "../../../interfaces";
 import type { MetaField } from "../types/metadata";
 import { getEntityMetadata } from "../metadata/get-entity-metadata";

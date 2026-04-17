@@ -1,5 +1,5 @@
 import { Constructor, Dict, Predicate } from "@lindorm/types";
-import { z } from "zod/v4";
+import { z } from "zod";
 import { IEntity } from "../../../interfaces";
 import { IndexDirection } from "../../types/types";
 import { MetaInheritance } from "./inheritance";
