@@ -47,14 +47,6 @@ export type PylonAuthRouterConfig = {
   errorRedirect: string;
   pathPrefix: string;
 
-  /**
-   * Gates the `GET /:prefix/introspect` endpoint, which exposes the
-   * result of `ctx.auth.introspect()` (RFC 7662 token metadata).
-   * Opt-in because token introspection leaks scope, expiry, and
-   * client_id — not something every app wants on the wire.
-   */
-  introspect: boolean;
-
   authorize: PylonAuthAuthorizeConfig;
 
   dynamicRedirectDomains: Array<string>;
@@ -67,13 +59,6 @@ export type PylonAuthRouterConfig = {
    * `audience` parameter.
    */
   resourceKey: PylonAuthResourceKey;
-
-  expose: {
-    accessToken: boolean;
-    idToken: boolean;
-    scope: boolean;
-    subject: boolean;
-  };
 
   cookies: {
     login: string;

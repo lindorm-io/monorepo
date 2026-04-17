@@ -975,10 +975,6 @@ const app = new Pylon({
         responseType: "code",
         codeChallengeMethod: "S256",
       },
-      expose: {
-        accessToken: true,
-        idToken: true,
-      },
     },
   },
   session: { enabled: true },
@@ -986,28 +982,26 @@ const app = new Pylon({
 });
 ```
 
-Top-level `PylonAuthOptions` carries the IdP credentials (`clientId`, `clientSecret`, `issuer`), token-expiry default, and refresh mode. Everything related to the auto-mounted router (path prefix, authorize parameters, what to expose on the context, redirect behaviour, cookie names) lives under `router`. Both `refresh` and `router` accept partials — omit any field to take the default.
+Top-level `PylonAuthOptions` carries the IdP credentials (`clientId`, `clientSecret`, `issuer`), token-expiry default, and refresh mode. Everything related to the auto-mounted router (path prefix, authorize parameters, redirect behaviour, cookie names) lives under `router`. Both `refresh` and `router` accept partials — omit any field to take the default.
 
 **Auto-created routes:**
 
-| Route                              | Purpose                                                         | Default                                    |
-| ---------------------------------- | --------------------------------------------------------------- | ------------------------------------------ |
-| `GET /:prefix/`                    | Returns session fields filtered by `expose` config              | always                                     |
-| `GET /:prefix/error`               | Error landing page for OIDC failures                            | always                                     |
-| `GET /:prefix/introspect`          | Token introspection (RFC 7662) — `ctx.auth.introspect()` result | off — opt in via `router.introspect: true` |
-| `GET /:prefix/login`               | Start authorization flow                                        | always                                     |
-| `GET /:prefix/login/callback`      | Handle OIDC callback                                            | always                                     |
-| `GET /:prefix/logout`              | Start logout flow                                               | always                                     |
-| `GET /:prefix/logout/callback`     | Handle logout callback                                          | always                                     |
-| `GET /:prefix/refresh`             | Force-refresh the session's tokens                              | always                                     |
-| `GET /:prefix/userinfo`            | IdP userinfo endpoint (or local id_token fast path)             | always                                     |
-| `POST /:prefix/backchannel-logout` | RP-initiated logout from the IdP                                | always                                     |
+| Route                              | Purpose                                                         |
+| ---------------------------------- | --------------------------------------------------------------- |
+| `GET /:prefix/error`               | Error landing page for OIDC failures                            |
+| `GET /:prefix/introspect`          | Token introspection (RFC 7662) — `ctx.auth.introspect()` result |
+| `GET /:prefix/login`               | Start authorization flow                                        |
+| `GET /:prefix/login/callback`      | Handle OIDC callback                                            |
+| `GET /:prefix/logout`              | Start logout flow                                               |
+| `GET /:prefix/logout/callback`     | Handle logout callback                                          |
+| `GET /:prefix/refresh`             | Force-refresh the session's tokens                              |
+| `GET /:prefix/userinfo`            | IdP userinfo endpoint (or local id_token fast path)             |
+| `POST /:prefix/backchannel-logout` | RP-initiated logout from the IdP                                |
 
-Three of these routes surface identity-adjacent data and it's worth knowing which one to reach for:
+Two of these routes surface identity-adjacent data and it's worth knowing which one to reach for:
 
-- **`GET /:prefix/`** — returns fields from the local session according to the `router.expose` config. This is _your_ session state, not the IdP's view.
 - **`GET /:prefix/userinfo`** — returns user claims. Fast path: parses the id*token locally. Fallback: calls the IdP's userinfo endpoint. Answers *"who is this user?"\_.
-- **`GET /:prefix/introspect`** — returns RFC 7662 token metadata (`active`, `scope`, `client_id`, `exp`, `iat`, `sub`, `token_type`, etc.). Answers _"is this token valid, what can it do, when does it expire?"_. Off by default — opt in when you actually need token metadata on the wire.
+- **`GET /:prefix/introspect`** — returns RFC 7662 token metadata (`active`, `scope`, `client_id`, `exp`, `iat`, `sub`, `token_type`, etc.). Answers _"is this token valid, what can it do, when does it expire?"_.
 
 ## Session Management
 

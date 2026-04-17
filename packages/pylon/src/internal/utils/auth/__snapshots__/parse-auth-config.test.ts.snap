@@ -33,13 +33,6 @@ exports[`parseAuthConfig should merge defaults with custom router options 1`] = 
       "https://client.com",
     ],
     "errorRedirect": "/auth/error",
-    "expose": {
-      "accessToken": false,
-      "idToken": false,
-      "scope": false,
-      "subject": false,
-    },
-    "introspect": false,
     "pathPrefix": "/auth",
     "resourceKey": "audience",
     "staticRedirect": {
@@ -81,13 +74,6 @@ exports[`parseAuthConfig should merge defaults with router options 1`] = `
     },
     "dynamicRedirectDomains": [],
     "errorRedirect": "/auth/error",
-    "expose": {
-      "accessToken": false,
-      "idToken": false,
-      "scope": false,
-      "subject": false,
-    },
-    "introspect": false,
     "pathPrefix": "/auth",
     "resourceKey": "resource",
     "staticRedirect": {

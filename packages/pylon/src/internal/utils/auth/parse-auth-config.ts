@@ -18,8 +18,6 @@ const ROUTER_DEFAULTS: PylonAuthRouterConfig = {
   errorRedirect: "/error",
   pathPrefix: "/auth",
 
-  introspect: false,
-
   authorize: {
     acrValues: null,
     codeChallengeMethod: "S256",
@@ -33,13 +31,6 @@ const ROUTER_DEFAULTS: PylonAuthRouterConfig = {
   dynamicRedirectDomains: [],
 
   resourceKey: "resource",
-
-  expose: {
-    accessToken: false,
-    idToken: false,
-    scope: false,
-    subject: false,
-  },
 
   cookies: {
     login: "pylon_login_session",
