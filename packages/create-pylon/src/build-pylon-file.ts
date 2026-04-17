@@ -90,6 +90,49 @@ const buildOptions = (answers: Answers): string => {
     lines.push(`  },`);
   }
 
+  if (answers.features.session) {
+    lines.push(`  session: {`);
+    lines.push(`    enabled: true,`);
+    if (answers.proteusDriver !== "none") {
+      lines.push(`    proteus: proteusSource,`);
+    }
+    lines.push(`    name: "sid",`);
+    lines.push(`    encrypted: true,`);
+    lines.push(`    httpOnly: true,`);
+    lines.push(`    sameSite: "lax",`);
+    lines.push(`    secure: false, // TODO: flip to true in production (behind HTTPS)`);
+    lines.push(`    expiry: "7d",`);
+    lines.push(`  },`);
+  }
+
+  if (answers.features.auth) {
+    lines.push(`  auth: {`);
+    lines.push(`    clientId: config.authClientId,`);
+    lines.push(`    clientSecret: config.authClientSecret,`);
+    lines.push(`    issuer: config.authIssuer,`);
+    lines.push(`    router: {`);
+    lines.push(`      pathPrefix: "/auth",`);
+    lines.push(`      authorize: {`);
+    lines.push(`        scope: ["openid", "profile", "email"],`);
+    lines.push(`        responseType: "code",`);
+    lines.push(`      },`);
+    lines.push(`    },`);
+    lines.push(`  },`);
+  }
+
+  if (answers.features.rateLimit) {
+    lines.push(`  rateLimit: {`);
+    lines.push(`    enabled: true,`);
+    if (answers.proteusDriver !== "none") {
+      lines.push(`    proteus: proteusSource,`);
+    }
+    lines.push(`    strategy: "fixed",`);
+    lines.push(`    window: "1m",`);
+    lines.push(`    max: 60,`);
+    lines.push(`    // TODO: tune strategy/window/max for your traffic`);
+    lines.push(`  },`);
+  }
+
   const workers = buildWorkersArray(answers);
   if (workers) {
     lines.push(workers);

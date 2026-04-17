@@ -20,6 +20,9 @@ export type Features = {
   socket: boolean;
   webhooks: boolean;
   audit: boolean;
+  session: boolean;
+  auth: boolean;
+  rateLimit: boolean;
 };
 
 export type Answers = {
@@ -86,6 +89,12 @@ export const IRIS_ENV_VARS: Record<IrisDriver, Array<EnvEntry>> = {
   rabbit: [{ key: "IRIS_URL", value: "amqp://localhost:5672" }],
   redis: [{ key: "IRIS_URL", value: "redis://localhost:6379" }],
 };
+
+export const AUTH_ENV_VARS: ReadonlyArray<EnvEntry> = [
+  { key: "AUTH_CLIENT_ID", value: "" },
+  { key: "AUTH_CLIENT_SECRET", value: "" },
+  { key: "AUTH_ISSUER", value: "https://auth.example.com" },
+];
 
 export const PROTEUS_DEPENDENT_WORKERS: ReadonlyArray<WorkerKey> = [
   "amphora-entity-sync",

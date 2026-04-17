@@ -3,7 +3,10 @@
 exports[`runPrompts prompts for name when positional missing 1`] = `
 {
   "audit": false,
+  "auth": false,
   "http": true,
+  "rateLimit": false,
+  "session": false,
   "socket": true,
   "webhooks": false,
 }
@@ -20,7 +23,10 @@ exports[`runPrompts returns answers with positional name and defaults 1`] = `
 {
   "features": {
     "audit": false,
+    "auth": false,
     "http": true,
+    "rateLimit": false,
+    "session": false,
     "socket": false,
     "webhooks": false,
   },

@@ -42,7 +42,15 @@ const mockedIrisSampleMessage = runIrisGenerateSampleMessage as jest.Mock;
 const baseAnswers = (overrides: Partial<Answers> = {}): Answers => ({
   projectName: "demo",
   projectDir: "/tmp/demo",
-  features: { http: true, socket: false, webhooks: false, audit: false },
+  features: {
+    http: true,
+    socket: false,
+    webhooks: false,
+    audit: false,
+    session: false,
+    auth: false,
+    rateLimit: false,
+  },
   proteusDriver: "none",
   irisDriver: "none",
   workers: [],

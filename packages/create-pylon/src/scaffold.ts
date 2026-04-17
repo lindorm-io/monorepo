@@ -15,6 +15,7 @@ import { buildPylonFile } from "./build-pylon-file";
 import { buildWorkerFile } from "./build-worker-file";
 import type { Answers } from "./types";
 import {
+  AUTH_ENV_VARS,
   IRIS_DRIVER_PACKAGES,
   IRIS_ENV_VARS,
   PROTEUS_DRIVER_PACKAGES,
@@ -113,6 +114,12 @@ export const buildEnvLines = (answers: Answers): Array<string> => {
 
   for (const entry of IRIS_ENV_VARS[answers.irisDriver]) {
     lines.push(`${entry.key}=${entry.value}`);
+  }
+
+  if (answers.features.auth) {
+    for (const entry of AUTH_ENV_VARS) {
+      lines.push(`${entry.key}=${entry.value}`);
+    }
   }
 
   return lines;

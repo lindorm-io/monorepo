@@ -67,6 +67,15 @@ const promptWebhooks = async (): Promise<boolean> =>
 const promptAudit = async (): Promise<boolean> =>
   confirm({ message: "Audit logging?", default: false });
 
+const promptSession = async (): Promise<boolean> =>
+  confirm({ message: "Sessions?", default: false });
+
+const promptAuth = async (): Promise<boolean> =>
+  confirm({ message: "OIDC authentication?", default: false });
+
+const promptRateLimit = async (): Promise<boolean> =>
+  confirm({ message: "Rate limiting?", default: false });
+
 const promptWorkers = async (hasProteus: boolean): Promise<Array<WorkerKey>> => {
   const choices: Array<{ name: string; value: WorkerKey; checked?: boolean }> = [
     { name: "Amphora key refresh", value: "amphora-refresh", checked: true },
@@ -128,6 +137,15 @@ export const runPrompts = async ({
   const webhooks = bothSelected ? await promptWebhooks() : false;
   const audit = bothSelected ? await promptAudit() : false;
 
+  let session = await promptSession();
+  const auth = await promptAuth();
+  const rateLimit = proteusDriver !== "none" ? await promptRateLimit() : false;
+
+  if (auth && !session) {
+    session = true;
+    process.stdout.write("Sessions auto-enabled (required by OIDC auth).\n");
+  }
+
   const workers = await promptWorkers(proteusDriver !== "none");
 
   return {
@@ -138,6 +156,9 @@ export const runPrompts = async ({
       socket: featureFlags.socket,
       webhooks,
       audit,
+      session,
+      auth,
+      rateLimit,
     },
     proteusDriver,
     irisDriver,
