@@ -3,14 +3,14 @@ import {
   REPLACE_URL,
   RETRY_CONFIG,
   TIMEOUT,
-} from "#internal/constants/defaults";
-import { axiosRequestHandler } from "#internal/middleware/axios-request-handler";
-import { defaultHeaders } from "#internal/middleware/default-headers";
-import { requestLogger } from "#internal/middleware/request-logger";
-import { responseLogger } from "#internal/middleware/response-logger";
-import { defaultRetryCallback } from "#internal/utils/default-retry-callback";
-import { defaultValidateStatus } from "#internal/utils/default-validate-status";
-import { getOrigin } from "#internal/utils/get-origin";
+} from "../internal/constants/defaults";
+import { axiosRequestHandler } from "../internal/middleware/axios-request-handler";
+import { defaultHeaders } from "../internal/middleware/default-headers";
+import { requestLogger } from "../internal/middleware/request-logger";
+import { responseLogger } from "../internal/middleware/response-logger";
+import { defaultRetryCallback } from "../internal/utils/default-retry-callback";
+import { defaultValidateStatus } from "../internal/utils/default-validate-status";
+import { getOrigin } from "../internal/utils/get-origin";
 import { ILogger } from "@lindorm/logger";
 import { composeMiddleware } from "@lindorm/middleware";
 import { randomUUID } from "@lindorm/random";

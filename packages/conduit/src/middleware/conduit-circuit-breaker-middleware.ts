@@ -1,4 +1,4 @@
-import { defaultConduitClassifier } from "#internal/utils/default-conduit-classifier";
+import { defaultConduitClassifier } from "../internal/utils/default-conduit-classifier";
 import { CircuitBreaker, CircuitOpenError } from "@lindorm/breaker";
 import { ILogger } from "@lindorm/logger";
 import { ConduitError } from "../errors";

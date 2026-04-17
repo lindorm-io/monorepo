@@ -11,9 +11,6 @@
   "publishConfig": {
     "access": "public"
   },
-  "imports": {
-    "#internal/*": "./dist/internal/*.js"
-  },
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "scripts": {

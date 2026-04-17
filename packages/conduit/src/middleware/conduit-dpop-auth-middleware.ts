@@ -1,4 +1,4 @@
-import { buildDpopProof } from "#internal/build-dpop-proof";
+import { buildDpopProof } from "../internal/build-dpop-proof";
 import { DpopSigner } from "@lindorm/types";
 import { ConduitMiddleware } from "../types";
 
