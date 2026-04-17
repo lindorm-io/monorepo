@@ -62,7 +62,7 @@ describe("generateHandler", () => {
 
     const content = writeFile.mock.calls[0][1] as string;
 
-    expect(content).toContain('import { z } from "zod"');
+    expect(content).toContain('import { z } from "zod/v4"');
     expect(content).toContain('import type { ServerHandler } from "../types/context"');
   });
 
