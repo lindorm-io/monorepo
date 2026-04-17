@@ -1,5 +1,5 @@
 import { Middleware } from "../types";
-import { createDispatcher } from "#internal/index";
+import { createDispatcher } from "../internal/index";
 
 type Options = {
   useClone?: boolean;
