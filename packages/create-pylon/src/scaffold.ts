@@ -8,6 +8,11 @@ import {
   writeFileSync,
 } from "fs";
 import { dirname, join, resolve } from "path";
+import { buildConfigFile } from "./build-config-file";
+import { buildDockerCompose } from "./build-docker-compose";
+import { buildIrisSamples } from "./build-iris-samples";
+import { buildPylonFile } from "./build-pylon-file";
+import { buildWorkerFile } from "./build-worker-file";
 import type { Answers } from "./types";
 import {
   IRIS_DRIVER_PACKAGES,
@@ -126,40 +131,13 @@ const ensureDir = (filePath: string): void => {
 export const writeConfigFile = (answers: Answers): void => {
   const target = join(answers.projectDir, "src/pylon/config.ts");
   ensureDir(target);
-
-  const body = [
-    `// TODO (phase 2): assemble schema based on feature flags for ${answers.projectName}`,
-    `import { configuration } from "@lindorm/config";`,
-    `import { z } from "zod/v4";`,
-    ``,
-    `export const config = configuration({`,
-    `  schema: z.object({}),`,
-    `});`,
-    ``,
-  ].join("\n");
-
-  writeFileSync(target, body, "utf-8");
+  writeFileSync(target, buildConfigFile(answers), "utf-8");
 };
 
 export const writePylonFile = (answers: Answers): void => {
   const target = join(answers.projectDir, "src/pylon/pylon.ts");
   ensureDir(target);
-
-  const body = [
-    `// TODO (phase 2): wire setup/teardown, feature options, worker registration`,
-    `import { Pylon } from "@lindorm/pylon";`,
-    `import { amphora } from "./amphora";`,
-    `import { logger } from "../logger";`,
-    ``,
-    `export const pylon = new Pylon({`,
-    `  logger,`,
-    `  amphora,`,
-    `  // project: ${answers.projectName}`,
-    `});`,
-    ``,
-  ].join("\n");
-
-  writeFileSync(target, body, "utf-8");
+  writeFileSync(target, buildPylonFile(answers), "utf-8");
 };
 
 const needsDockerCompose = (answers: Answers): boolean =>
@@ -169,16 +147,10 @@ const needsDockerCompose = (answers: Answers): boolean =>
 export const writeDockerCompose = (answers: Answers): void => {
   if (!needsDockerCompose(answers)) return;
 
+  const body = buildDockerCompose(answers);
+  if (!body) return;
+
   const target = join(answers.projectDir, "docker-compose.yml");
-
-  const body = [
-    `# TODO (phase 2): assemble containers for selected drivers`,
-    `# proteusDriver: ${answers.proteusDriver}`,
-    `# irisDriver: ${answers.irisDriver}`,
-    `services: {}`,
-    ``,
-  ].join("\n");
-
   writeFileSync(target, body, "utf-8");
 };
 
@@ -188,55 +160,25 @@ export const writeWorkerFiles = (answers: Answers): void => {
   for (const key of answers.workers) {
     const target = join(answers.projectDir, "src/workers", `${key}.ts`);
     ensureDir(target);
-
-    const body = [
-      `import type { LindormWorkerCallback } from "@lindorm/worker";`,
-      ``,
-      `export const CALLBACK: LindormWorkerCallback = async (ctx) => {`,
-      `  ctx.logger.info("TODO (phase 2): ${key} worker");`,
-      `};`,
-      ``,
-      `export const INTERVAL = "1m";`,
-      ``,
-    ].join("\n");
-
-    writeFileSync(target, body, "utf-8");
+    writeFileSync(target, buildWorkerFile(key), "utf-8");
   }
 };
 
 export const writeIrisSamples = (answers: Answers): void => {
   if (answers.irisDriver === "none") return;
 
+  const files = buildIrisSamples();
+
   const publisher = join(answers.projectDir, "src/iris/publishers/sample-publisher.ts");
   ensureDir(publisher);
-  writeFileSync(
-    publisher,
-    [
-      `// TODO (phase 2): sample publisher wiring for driver ${answers.irisDriver}`,
-      `export const publishSample = async (): Promise<void> => {`,
-      `  // no-op placeholder`,
-      `};`,
-      ``,
-    ].join("\n"),
-    "utf-8",
-  );
+  writeFileSync(publisher, files.publisher, "utf-8");
 
   const subscriber = join(
     answers.projectDir,
     "src/iris/subscribers/sample-subscriber.ts",
   );
   ensureDir(subscriber);
-  writeFileSync(
-    subscriber,
-    [
-      `// TODO (phase 2): sample subscriber wiring for driver ${answers.irisDriver}`,
-      `export const sampleSubscriber = {`,
-      `  topic: "sample",`,
-      `};`,
-      ``,
-    ].join("\n"),
-    "utf-8",
-  );
+  writeFileSync(subscriber, files.subscriber, "utf-8");
 };
 
 export const scaffold = async (answers: Answers): Promise<void> => {
