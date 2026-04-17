@@ -25,7 +25,6 @@
     "prettier": "prettier --write ./src/*",
     "test": "jest",
     "test:ci": "jest",
-    "test:integration": "jest --config=jest.integration.config.mjs --runInBand",
     "test:update": "jest -u --",
     "test:watch": "jest --watch --",
     "typecheck": "tsc",
