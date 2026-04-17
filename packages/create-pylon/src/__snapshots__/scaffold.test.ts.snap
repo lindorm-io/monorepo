@@ -170,7 +170,7 @@ exports[`scaffold scaffold orchestration runs all write functions in sequence 1`
 
 exports[`scaffold writeConfigFile snapshot: kafka only 1`] = `
 "import { configuration } from "@lindorm/config";
-import { z } from "zod/v4";
+import { z } from "zod";
 
 export const config = configuration({
   server: z.object({ port: z.number() }),
@@ -181,7 +181,7 @@ export const config = configuration({
 
 exports[`scaffold writeConfigFile snapshot: memory proteus only 1`] = `
 "import { configuration } from "@lindorm/config";
-import { z } from "zod/v4";
+import { z } from "zod";
 
 export const config = configuration({
   server: z.object({ port: z.number() }),
@@ -191,7 +191,7 @@ export const config = configuration({
 
 exports[`scaffold writeConfigFile snapshot: mongo + nats 1`] = `
 "import { configuration } from "@lindorm/config";
-import { z } from "zod/v4";
+import { z } from "zod";
 
 export const config = configuration({
   server: z.object({ port: z.number() }),
@@ -203,7 +203,7 @@ export const config = configuration({
 
 exports[`scaffold writeConfigFile snapshot: nats only 1`] = `
 "import { configuration } from "@lindorm/config";
-import { z } from "zod/v4";
+import { z } from "zod";
 
 export const config = configuration({
   server: z.object({ port: z.number() }),
@@ -214,7 +214,7 @@ export const config = configuration({
 
 exports[`scaffold writeConfigFile snapshot: no drivers 1`] = `
 "import { configuration } from "@lindorm/config";
-import { z } from "zod/v4";
+import { z } from "zod";
 
 export const config = configuration({
   server: z.object({ port: z.number() }),
@@ -224,7 +224,7 @@ export const config = configuration({
 
 exports[`scaffold writeConfigFile snapshot: postgres + kafka 1`] = `
 "import { configuration } from "@lindorm/config";
-import { z } from "zod/v4";
+import { z } from "zod";
 
 export const config = configuration({
   server: z.object({ port: z.number() }),
@@ -236,7 +236,7 @@ export const config = configuration({
 
 exports[`scaffold writeConfigFile snapshot: postgres only 1`] = `
 "import { configuration } from "@lindorm/config";
-import { z } from "zod/v4";
+import { z } from "zod";
 
 export const config = configuration({
   server: z.object({ port: z.number() }),
@@ -247,7 +247,7 @@ export const config = configuration({
 
 exports[`scaffold writeConfigFile snapshot: rabbit only 1`] = `
 "import { configuration } from "@lindorm/config";
-import { z } from "zod/v4";
+import { z } from "zod";
 
 export const config = configuration({
   server: z.object({ port: z.number() }),
@@ -258,7 +258,7 @@ export const config = configuration({
 
 exports[`scaffold writeConfigFile snapshot: redis only 1`] = `
 "import { configuration } from "@lindorm/config";
-import { z } from "zod/v4";
+import { z } from "zod";
 
 export const config = configuration({
   server: z.object({ port: z.number() }),
@@ -269,7 +269,7 @@ export const config = configuration({
 
 exports[`scaffold writeConfigFile snapshot: sqlite only 1`] = `
 "import { configuration } from "@lindorm/config";
-import { z } from "zod/v4";
+import { z } from "zod";
 
 export const config = configuration({
   server: z.object({ port: z.number() }),

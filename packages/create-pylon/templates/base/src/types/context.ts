@@ -5,7 +5,7 @@ import type {
   PylonSocketContext,
   PylonSocketMiddleware,
 } from "@lindorm/pylon";
-import type { z, ZodType } from "zod/v4";
+import type { z, ZodType } from "zod";
 
 export type ServerHttpContext<Data = any> = PylonHttpContext<Data>;
 
