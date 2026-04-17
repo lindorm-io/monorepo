@@ -1,4 +1,4 @@
-import { buildDpopProof } from "#internal/build-dpop-proof";
+import { buildDpopProof } from "../internal/build-dpop-proof";
 import { isArray, isString } from "@lindorm/is";
 import { ILogger } from "@lindorm/logger";
 import {

@@ -1,6 +1,6 @@
 import { createUrl } from "@lindorm/url";
 import type { RawAxiosRequestConfig } from "axios";
-import { REPLACE_URL } from "#internal/constants/defaults";
+import { REPLACE_URL } from "../constants/defaults";
 import type { ConduitContext } from "../../types";
 import { composeAxiosData } from "./compose-axios-data";
 
