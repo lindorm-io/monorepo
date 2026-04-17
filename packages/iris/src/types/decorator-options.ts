@@ -1,12 +1,3 @@
-import type { MetaFieldDefault, MetaTransform } from "../internal/message/types/types";
-
-export type FieldDecoratorOptions = {
-  default?: MetaFieldDefault | null;
-  nullable?: boolean;
-  optional?: boolean;
-  transform?: MetaTransform | null;
-};
-
 export type GeneratedDecoratorOptions = {
   length?: number | null;
   max?: number | null;

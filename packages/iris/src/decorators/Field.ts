@@ -1,23 +1,20 @@
 import { stageField } from "../internal/message/metadata/stage-metadata";
 import type { MetaFieldType } from "../internal/message/types/types";
-import type { FieldDecoratorOptions } from "../types/decorator-options";
 
 export const Field =
-  (type: MetaFieldType, options?: FieldDecoratorOptions) =>
+  (type: MetaFieldType) =>
   (_target: undefined, context: ClassFieldDecoratorContext): void => {
-    const opts = options ?? {};
-
     stageField(context.metadata, {
       key: String(context.name),
       decorator: "Field",
-      default: opts.default ?? null,
+      default: null,
       enum: null,
       max: null,
       min: null,
-      nullable: opts.nullable ?? false,
-      optional: opts.optional ?? false,
+      nullable: false,
+      optional: false,
       schema: null,
-      transform: opts.transform ?? null,
+      transform: null,
       type,
     });
   };

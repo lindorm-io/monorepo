@@ -106,7 +106,7 @@ export const buildMessageMetadata = (target: Function): MessageMetadata => {
     field.transform = transform.transform;
   }
 
-  // Merge field modifiers (Min, Max, Enum, Schema) into fields
+  // Merge field modifiers into fields
   const fieldModifiers = collectAll(target, "fieldModifiers");
   for (const mod of fieldModifiers) {
     const field = fields.find((f) => f.key === mod.key);
@@ -120,6 +120,10 @@ export const buildMessageMetadata = (target: Function): MessageMetadata => {
     if (mod.max != null) field.max = mod.max;
     if (mod.enum != null) field.enum = mod.enum;
     if (mod.schema != null) field.schema = mod.schema;
+    if (mod.default !== undefined) field.default = mod.default;
+    if (mod.nullable === true) field.nullable = true;
+    if (mod.optional === true) field.optional = true;
+    if (mod.transform != null) field.transform = mod.transform;
   }
 
   // Validate

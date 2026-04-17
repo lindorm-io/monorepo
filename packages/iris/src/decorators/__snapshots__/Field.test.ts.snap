@@ -48,21 +48,3 @@ exports[`Field should stage field with explicit type 1`] = `
   },
 ]
 `;
-
-exports[`Field should stage field with type and options 1`] = `
-[
-  {
-    "decorator": "Field",
-    "default": null,
-    "enum": null,
-    "key": "count",
-    "max": null,
-    "min": null,
-    "nullable": true,
-    "optional": false,
-    "schema": null,
-    "transform": null,
-    "type": "integer",
-  },
-]
-`;

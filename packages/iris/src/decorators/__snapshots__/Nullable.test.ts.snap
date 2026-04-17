@@ -1,0 +1,9 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`Nullable should stage field modifier with nullable true 1`] = `
+{
+  "decorator": "Nullable",
+  "key": "label",
+  "nullable": true,
+}
+`;
