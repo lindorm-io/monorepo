@@ -49,6 +49,7 @@ describe("createConduitWebhookAuthMiddleware", () => {
     ownerId: "owner-id",
     password: null,
     scope: [],
+    tenantId: null,
     tokenUri: null,
     url: "https://test.webhook.com/endpoint",
     username: null,

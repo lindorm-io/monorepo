@@ -1,4 +1,11 @@
-import { CorrelationField, Field, Message, Namespace, Topic } from "@lindorm/iris";
+import {
+  CorrelationField,
+  Field,
+  Message,
+  Namespace,
+  Nullable,
+  Topic,
+} from "@lindorm/iris";
 import { Dict } from "@lindorm/types";
 
 @Namespace("pylon")
@@ -13,4 +20,8 @@ export class WebhookRequest {
 
   @Field("object")
   public readonly payload!: Dict;
+
+  @Nullable()
+  @Field("string")
+  public readonly tenantId!: string | null;
 }
