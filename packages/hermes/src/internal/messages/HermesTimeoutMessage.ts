@@ -4,6 +4,7 @@ import {
   IdentifierField,
   MandatoryField,
   Message,
+  Nullable,
   TimestampField,
   Topic,
 } from "@lindorm/iris";
@@ -36,7 +37,8 @@ export class HermesTimeoutMessage implements IMessage {
   @Field("string")
   public causationId: string = "";
 
-  @Field("string", { nullable: true })
+  @Nullable()
+  @Field("string")
   public correlationId: string | null = null;
 
   @Field("object")
