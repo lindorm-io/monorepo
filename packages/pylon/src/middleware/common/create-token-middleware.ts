@@ -1,4 +1,4 @@
-import { isSocketContext } from "#internal/utils/is-context";
+import { isSocketContext } from "../../internal/utils/is-context";
 import { VerifyJwtOptions } from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
 import { isString } from "@lindorm/is";

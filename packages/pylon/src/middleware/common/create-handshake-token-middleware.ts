@@ -3,10 +3,10 @@ import { ClientError } from "@lindorm/errors";
 import {
   HandshakeDpopMode,
   registerBearerHandshakeAuth,
-} from "#internal/utils/handshake/register-bearer-handshake-auth";
-import { resolveHandshakeTokenSource } from "#internal/utils/tokens/resolve-handshake-token-source";
-import { createSessionRefreshHandler } from "#internal/utils/refresh/create-session-refresh-handler";
-import { extractTokenFromSession } from "#internal/utils/tokens/extract-token-from-session";
+} from "../../internal/utils/handshake/register-bearer-handshake-auth";
+import { resolveHandshakeTokenSource } from "../../internal/utils/tokens/resolve-handshake-token-source";
+import { createSessionRefreshHandler } from "../../internal/utils/refresh/create-session-refresh-handler";
+import { extractTokenFromSession } from "../../internal/utils/tokens/extract-token-from-session";
 import {
   PylonConnectionMiddleware,
   PylonSocketAuth,

@@ -2,7 +2,7 @@ import { IAmphora } from "@lindorm/amphora";
 import { ILogger } from "@lindorm/logger";
 import { ILindormWorker } from "@lindorm/worker";
 import { Server as HttpServer, createServer } from "http";
-import { httpSocketIoMiddleware } from "#internal/middleware/http-socket-io-middleware";
+import { httpSocketIoMiddleware } from "../internal/middleware/http-socket-io-middleware";
 import {
   HttpCallback,
   PylonEventMap,
@@ -30,14 +30,14 @@ import {
   WebhookDispatch,
   WebhookRequest,
 } from "../messages";
-import { setupAuditConsumer } from "#internal/consumers/setup-audit-consumer";
-import { setupDataAuditConsumer } from "#internal/consumers/setup-data-audit-consumer";
-import { setupDataAuditListeners } from "#internal/listeners/setup-data-audit-listeners";
-import { setupWebhookDispatchConsumer } from "#internal/consumers/setup-webhook-dispatch-consumer";
-import { setupWebhookRequestConsumer } from "#internal/consumers/setup-webhook-request-consumer";
-import { calculateSubscriptions } from "#internal/utils/calculate-subscriptions";
-import { calculateWorkers } from "#internal/utils/calculate-workers";
-import { scanWorkers } from "#internal/utils/scan-workers";
+import { setupAuditConsumer } from "../internal/consumers/setup-audit-consumer";
+import { setupDataAuditConsumer } from "../internal/consumers/setup-data-audit-consumer";
+import { setupDataAuditListeners } from "../internal/listeners/setup-data-audit-listeners";
+import { setupWebhookDispatchConsumer } from "../internal/consumers/setup-webhook-dispatch-consumer";
+import { setupWebhookRequestConsumer } from "../internal/consumers/setup-webhook-request-consumer";
+import { calculateSubscriptions } from "../internal/utils/calculate-subscriptions";
+import { calculateWorkers } from "../internal/utils/calculate-workers";
+import { scanWorkers } from "../internal/utils/scan-workers";
 import { PylonHttp } from "./PylonHttp";
 import { PylonIo } from "./PylonIo";
 

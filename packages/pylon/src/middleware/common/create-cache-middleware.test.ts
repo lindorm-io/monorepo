@@ -2,8 +2,8 @@ import { ServerError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger";
 import { createCacheMiddleware } from "./create-cache-middleware";
 
-jest.mock("#internal/utils/resolve-proteus");
-import { resolveProteus } from "#internal/utils/resolve-proteus";
+jest.mock("../../internal/utils/resolve-proteus");
+import { resolveProteus } from "../../internal/utils/resolve-proteus";
 
 class Session {}
 class TokenEntity {}

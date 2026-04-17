@@ -1,17 +1,17 @@
 import { ClientError, ServerError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger";
-import { RATE_LIMIT_SOURCE } from "#internal/constants/symbols";
+import { RATE_LIMIT_SOURCE } from "../../internal/constants/symbols";
 import { useRateLimit } from "./use-rate-limit";
 
-jest.mock("#internal/utils/rate-limit/fixed-window-strategy");
-jest.mock("#internal/utils/rate-limit/sliding-window-strategy");
-jest.mock("#internal/utils/rate-limit/token-bucket-strategy");
-jest.mock("#internal/utils/is-context");
+jest.mock("../../internal/utils/rate-limit/fixed-window-strategy");
+jest.mock("../../internal/utils/rate-limit/sliding-window-strategy");
+jest.mock("../../internal/utils/rate-limit/token-bucket-strategy");
+jest.mock("../../internal/utils/is-context");
 
-import { fixedWindowStrategy } from "#internal/utils/rate-limit/fixed-window-strategy";
-import { slidingWindowStrategy } from "#internal/utils/rate-limit/sliding-window-strategy";
-import { tokenBucketStrategy } from "#internal/utils/rate-limit/token-bucket-strategy";
-import { isHttpContext, isSocketContext } from "#internal/utils/is-context";
+import { fixedWindowStrategy } from "../../internal/utils/rate-limit/fixed-window-strategy";
+import { slidingWindowStrategy } from "../../internal/utils/rate-limit/sliding-window-strategy";
+import { tokenBucketStrategy } from "../../internal/utils/rate-limit/token-bucket-strategy";
+import { isHttpContext, isSocketContext } from "../../internal/utils/is-context";
 
 describe("useRateLimit", () => {
   let ctx: any;

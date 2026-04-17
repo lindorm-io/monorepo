@@ -1,4 +1,4 @@
-import { isHttpContext } from "#internal/utils/is-context";
+import { isHttpContext } from "../../internal/utils/is-context";
 import { ClientError, ServerError } from "@lindorm/errors";
 import { Dict } from "@lindorm/types";
 import { get, set } from "object-path";

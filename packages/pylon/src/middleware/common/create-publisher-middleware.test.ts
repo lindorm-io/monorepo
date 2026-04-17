@@ -2,8 +2,8 @@ import { ServerError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger";
 import { createPublisherMiddleware } from "./create-publisher-middleware";
 
-jest.mock("#internal/utils/resolve-iris");
-import { resolveIris } from "#internal/utils/resolve-iris";
+jest.mock("../../internal/utils/resolve-iris");
+import { resolveIris } from "../../internal/utils/resolve-iris";
 
 class OrderCreatedEvent {}
 class UserUpdatedEvent {}

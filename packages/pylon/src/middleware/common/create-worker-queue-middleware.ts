@@ -1,4 +1,4 @@
-import { resolveIris } from "#internal/utils/resolve-iris";
+import { resolveIris } from "../../internal/utils/resolve-iris";
 import { camelCase } from "@lindorm/case";
 import { IIrisSource, IMessage } from "@lindorm/iris";
 import { Constructor, Dict } from "@lindorm/types";

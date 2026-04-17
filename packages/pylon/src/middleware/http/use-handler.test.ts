@@ -1,12 +1,12 @@
 import { createMockLogger } from "@lindorm/logger";
-import { getBody as _getBody } from "#internal/utils/get-body";
-import { getFile as _getFile } from "#internal/utils/get-file";
-import { getStatus as _getStatus } from "#internal/utils/get-status";
+import { getBody as _getBody } from "../../internal/utils/get-body";
+import { getFile as _getFile } from "../../internal/utils/get-file";
+import { getStatus as _getStatus } from "../../internal/utils/get-status";
 import { useHandler } from "./use-handler";
 
-jest.mock("#internal/utils/get-body");
-jest.mock("#internal/utils/get-file");
-jest.mock("#internal/utils/get-status");
+jest.mock("../../internal/utils/get-body");
+jest.mock("../../internal/utils/get-file");
+jest.mock("../../internal/utils/get-status");
 
 const getBody = _getBody as jest.Mock;
 const getFile = _getFile as jest.Mock;
