@@ -12,7 +12,7 @@ const handlerTemplate = (name: string): string => {
   const camel = camelCase(name);
 
   return [
-    `import { z } from "zod/v4";`,
+    `import { z } from "zod";`,
     `import type { ServerHandler } from "../types/context";`,
     ``,
     `export const ${camel}Schema = z.object({`,

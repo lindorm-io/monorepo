@@ -2,7 +2,7 @@ import { isHttpContext } from "../../internal/utils/is-context";
 import { ClientError, ServerError } from "@lindorm/errors";
 import { Dict } from "@lindorm/types";
 import { get, set } from "object-path";
-import { ZodObject, ZodRawShape } from "zod/v4";
+import { ZodObject, ZodRawShape } from "zod";
 import { PylonHttpContext, PylonMiddleware } from "../../types";
 
 type Path = "data" | "body" | "headers" | "params" | "query" | string;

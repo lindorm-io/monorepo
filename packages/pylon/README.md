@@ -800,7 +800,7 @@ Validate and coerce request data with [Zod](https://zod.dev/):
 
 ```typescript
 import { useSchema } from "@lindorm/pylon";
-import { z } from "zod/v4";
+import { z } from "zod";
 
 const CreateUserSchema = z.object({
   name: z.string().min(1),
