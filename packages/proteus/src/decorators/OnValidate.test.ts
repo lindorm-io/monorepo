@@ -1,4 +1,4 @@
-import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
+import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata";
 import { Entity } from "./Entity";
 import { OnValidate } from "./OnValidate";
 import { PrimaryKeyField } from "./PrimaryKeyField";

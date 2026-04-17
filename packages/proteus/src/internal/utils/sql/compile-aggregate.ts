@@ -1,7 +1,7 @@
 import { ProteusError } from "../../../errors";
 import type { IEntity } from "../../../interfaces";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
-import type { PredicateEntry, QueryState, RawWhereEntry } from "#internal/types/query";
+import type { EntityMetadata } from "../../entity/types/metadata";
+import type { PredicateEntry, QueryState, RawWhereEntry } from "../../types/query";
 import { resolveColumnName } from "./resolve-column-name";
 import type { SqlDialect } from "./sql-dialect";
 import type { AliasMap, InheritanceAliasMap } from "./types";
@@ -40,7 +40,7 @@ export type CompileAggregateDeps = {
     params: Array<unknown>,
   ) => string;
   compileCtes: (
-    ctes: Array<import("#internal/types/query").CteSpec>,
+    ctes: Array<import("../../types/query").CteSpec>,
     globalParams: Array<unknown>,
   ) => string;
 };

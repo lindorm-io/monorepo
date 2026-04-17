@@ -12,7 +12,7 @@ import {
   TestVersionKeyed,
 } from "../../../../__fixtures__/test-entities";
 import { generateEntityDDL } from "./generate-entity-ddl";
-import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
+import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata";
 
 const OPTS = {};
 

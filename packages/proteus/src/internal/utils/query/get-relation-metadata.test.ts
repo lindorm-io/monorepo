@@ -1,13 +1,13 @@
 import { makeField } from "../../__fixtures__/make-field";
-import type { EntityMetadata, MetaRelation } from "#internal/entity/types/metadata";
+import type { EntityMetadata, MetaRelation } from "../../entity/types/metadata";
 import { ProteusError } from "../../../errors";
 
 // Mock getEntityMetadata so we don't need a real decorator-decorated class
-jest.mock("#internal/entity/metadata/get-entity-metadata", () => ({
+jest.mock("../../entity/metadata/get-entity-metadata", () => ({
   getEntityMetadata: jest.fn(),
 }));
 
-import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
+import { getEntityMetadata } from "../../entity/metadata/get-entity-metadata";
 import { findRelationByKey, getRelationMetadata } from "./get-relation-metadata";
 
 const mockGetEntityMetadata = getEntityMetadata as jest.MockedFunction<

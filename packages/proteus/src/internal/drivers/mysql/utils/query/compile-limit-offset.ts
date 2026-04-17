@@ -1,4 +1,4 @@
-import { compileLimitOffset as shared } from "#internal/utils/sql/compile-limit-offset";
+import { compileLimitOffset as shared } from "../../../../utils/sql/compile-limit-offset";
 import { mysqlDialect } from "../mysql-dialect";
 
 export const compileLimitOffset = (

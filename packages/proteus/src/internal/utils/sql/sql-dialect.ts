@@ -1,5 +1,5 @@
 import type { LockMode } from "../../../types/find-options";
-import type { MetaField } from "#internal/entity/types/metadata";
+import type { MetaField } from "../../entity/types/metadata";
 
 export type SqlDialect = {
   // Quoting

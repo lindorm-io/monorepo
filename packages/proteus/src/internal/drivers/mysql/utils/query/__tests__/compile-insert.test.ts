@@ -1,5 +1,5 @@
 import { makeField } from "../../../../../__fixtures__/make-field";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
+import type { EntityMetadata } from "../../../../../entity/types/metadata";
 import { compileInsert, compileInsertBulk } from "../compile-insert";
 
 const metadata = {

@@ -1,4 +1,4 @@
-import type { EntityMetadata } from "#internal/entity/types/metadata";
+import type { EntityMetadata } from "../../../../entity/types/metadata";
 import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier";
 
 const escapeComment = (text: string): string => text.replace(/'/g, "''");

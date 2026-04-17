@@ -1,5 +1,5 @@
 import type { Collection, Db, MongoClient, ClientSession } from "mongodb";
-import type { MigrationRunnerBase } from "#internal/types/migration";
+import type { MigrationRunnerBase } from "../../../../types/migration";
 
 export type MongoMigrationContext = {
   db: () => Db;

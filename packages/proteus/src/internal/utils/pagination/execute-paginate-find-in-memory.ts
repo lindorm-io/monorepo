@@ -3,7 +3,7 @@ import type { IEntity } from "../../../interfaces";
 import type { FindOptions } from "../../../types";
 import type { PaginateOptions } from "../../../types/paginate-options";
 import type { KeysetOrderEntry } from "./build-keyset-order";
-import type { QueryScope } from "#internal/entity/types/metadata";
+import type { QueryScope } from "../../entity/types/metadata";
 import { buildKeysetFilterMemory } from "./build-keyset-filter-memory";
 
 /**

@@ -3,22 +3,22 @@ import type {
   EntityMetadata,
   MetaRelation,
   MetaRelationOptions,
-} from "#internal/entity/types/metadata";
-import type { JoinTableOps } from "#internal/types/join-table-ops";
+} from "../../entity/types/metadata";
+import type { JoinTableOps } from "../../types/join-table-ops";
 import { RelationPersister } from "./RelationPersister";
 
 // ─── Mocks ───────────────────────────────────────────────────────────────────
 
-jest.mock("#internal/entity/metadata/get-entity-metadata", () => ({
+jest.mock("../../entity/metadata/get-entity-metadata", () => ({
   getEntityMetadata: jest.fn(),
 }));
 
-jest.mock("#internal/utils/repository/build-relation-filter", () => ({
+jest.mock("./build-relation-filter", () => ({
   buildRelationFilter: jest.fn(),
 }));
 
-import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
-import { buildRelationFilter } from "#internal/utils/repository/build-relation-filter";
+import { getEntityMetadata } from "../../entity/metadata/get-entity-metadata";
+import { buildRelationFilter } from "./build-relation-filter";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 

@@ -1,7 +1,7 @@
 import { resolve } from "path";
 import { randomUUID } from "crypto";
 import { Logger } from "@lindorm/logger";
-import { writeMigrationFile } from "#internal/utils/migration/write-migration-file";
+import { writeMigrationFile } from "../../utils/migration/write-migration-file";
 import { formatTimestamp, sanitizeName, kebabToPascal } from "../utils/migration-naming";
 import type { GlobalOptions } from "../with-source";
 import { withSourceConfig } from "../with-source";

@@ -1,7 +1,7 @@
 import type { Db } from "mongodb";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
-import type { GenerateMigrationResult } from "#internal/interfaces/MigrationManager";
-import { writeMigrationFile } from "#internal/utils/migration/write-migration-file";
+import type { EntityMetadata } from "../../../../entity/types/metadata";
+import type { GenerateMigrationResult } from "../../../../interfaces/MigrationManager";
+import { writeMigrationFile } from "../../../../utils/migration/write-migration-file";
 import { diffIndexes } from "../sync/diff-indexes";
 import { introspectIndexes } from "../sync/introspect-indexes";
 import { projectDesiredIndexes } from "../sync/project-desired-indexes";

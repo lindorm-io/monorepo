@@ -1,5 +1,5 @@
 import { ProteusError } from "../../../../errors";
-import type { MetaField } from "#internal/entity/types/metadata";
+import type { MetaField } from "../../../entity/types/metadata";
 
 /**
  * Maps a metadata field to its MySQL column type string.

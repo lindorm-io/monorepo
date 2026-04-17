@@ -1,14 +1,14 @@
 import { ProteusError } from "../../errors/ProteusError";
 import { ProteusSource } from "../../classes/ProteusSource";
-import { MigrationManager } from "#internal/drivers/postgres/classes/MigrationManager";
-import { MySqlMigrationManager } from "#internal/drivers/mysql/classes/MySqlMigrationManager";
-import { SqliteMigrationManager } from "#internal/drivers/sqlite/classes/SqliteMigrationManager";
+import { MigrationManager } from "../drivers/postgres/classes/MigrationManager";
+import { MySqlMigrationManager } from "../drivers/mysql/classes/MySqlMigrationManager";
+import { SqliteMigrationManager } from "../drivers/sqlite/classes/SqliteMigrationManager";
 import { withMigrationManager, wrapPoolClient } from "./with-migration-manager";
 
 jest.mock("../../classes/ProteusSource");
-jest.mock("#internal/drivers/postgres/classes/MigrationManager");
-jest.mock("#internal/drivers/mysql/classes/MySqlMigrationManager");
-jest.mock("#internal/drivers/sqlite/classes/SqliteMigrationManager");
+jest.mock("../drivers/postgres/classes/MigrationManager");
+jest.mock("../drivers/mysql/classes/MySqlMigrationManager");
+jest.mock("../drivers/sqlite/classes/SqliteMigrationManager");
 
 const createMockSource = (driverType: string, migrationsTable?: string) => {
   const source = {

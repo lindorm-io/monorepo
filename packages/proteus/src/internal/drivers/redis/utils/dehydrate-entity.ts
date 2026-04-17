@@ -1,9 +1,9 @@
 import type { IAmphora } from "@lindorm/amphora";
 import type { Dict } from "@lindorm/types";
 import type { IEntity } from "../../../../interfaces";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
-import { encryptFieldValue } from "#internal/entity/utils/encrypt-field-value";
-import { resolveJoinKeyValue } from "#internal/entity/utils/resolve-join-key-value";
+import type { EntityMetadata } from "../../../entity/types/metadata";
+import { encryptFieldValue } from "../../../entity/utils/encrypt-field-value";
+import { resolveJoinKeyValue } from "../../../entity/utils/resolve-join-key-value";
 
 /**
  * Convert an entity instance into a flat Dict keyed by field key for Redis persistence.

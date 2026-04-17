@@ -8,7 +8,7 @@ import {
   TestCourse,
   TestStudent,
 } from "../../../../__fixtures__/test-entities";
-import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
+import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata";
 import { projectDesiredSchemaMysql } from "./project-desired-schema-mysql";
 
 describe("projectDesiredSchemaMysql", () => {

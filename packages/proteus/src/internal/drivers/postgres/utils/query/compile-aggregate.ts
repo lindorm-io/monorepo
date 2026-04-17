@@ -1,10 +1,10 @@
 import type { IEntity } from "../../../../../interfaces";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
-import type { QueryState } from "#internal/types/query";
+import type { EntityMetadata } from "../../../../entity/types/metadata";
+import type { QueryState } from "../../../../types/query";
 import {
   type AggregateType,
   compileAggregate as shared,
-} from "#internal/utils/sql/compile-aggregate";
+} from "../../../../utils/sql/compile-aggregate";
 import { postgresDialect } from "../postgres-dialect";
 import { compileCtes } from "./compile-cte";
 import { compileGroupBy } from "./compile-group-by";

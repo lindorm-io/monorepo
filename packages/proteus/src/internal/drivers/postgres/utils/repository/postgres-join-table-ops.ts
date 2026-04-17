@@ -1,4 +1,4 @@
-import type { JoinTableOps } from "#internal/types/join-table-ops";
+import type { JoinTableOps } from "../../../../types/join-table-ops";
 import type { PostgresQueryClient } from "../../types/postgres-query-client";
 import { syncJoinTableRows, deleteJoinTableRows } from "./manage-join-table";
 

@@ -11,16 +11,16 @@ import type {
 } from "../../../../interfaces";
 import type { WriteResult } from "../../../../interfaces/InsertQueryBuilder";
 import type { LockMode } from "../../../../types/find-options";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
-import type { FilterRegistry } from "#internal/utils/query/filter-registry";
+import type { EntityMetadata } from "../../../entity/types/metadata";
+import type { FilterRegistry } from "../../../utils/query/filter-registry";
 import { QueryBuilder } from "../../../../classes/QueryBuilder";
 import { NotSupportedError } from "../../../../errors/NotSupportedError";
 import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError";
 import { Predicated } from "@lindorm/utils";
-import { defaultHydrateEntity } from "#internal/entity/utils/default-hydrate-entity";
-import { generateAutoFilters } from "#internal/entity/metadata/auto-filters";
-import { resolveFilters } from "#internal/utils/query/resolve-filters";
-import { mergeSystemFilterOverrides } from "#internal/utils/query/merge-system-filter-overrides";
+import { defaultHydrateEntity } from "../../../entity/utils/default-hydrate-entity";
+import { generateAutoFilters } from "../../../entity/metadata/auto-filters";
+import { resolveFilters } from "../../../utils/query/resolve-filters";
+import { mergeSystemFilterOverrides } from "../../../utils/query/merge-system-filter-overrides";
 import { buildEntityKey, buildEntityKeyFromRow } from "../utils/build-entity-key";
 import { buildScanPattern } from "../utils/build-scan-pattern";
 // deserializeHash parses array/json/object fields from JSON strings to native JS
@@ -31,17 +31,17 @@ import { serializeHash } from "../utils/serialize-hash";
 import { extractExactPk } from "../utils/is-pk-exact";
 import { scanEntityKeys } from "../utils/scan-entity-keys";
 import { applyRedisAutoIncrement } from "../utils/redis-auto-increment";
-import { resolveInheritanceRoot } from "#internal/entity/utils/resolve-inheritance-root";
-import { resolvePolymorphicMetadata } from "#internal/entity/utils/resolve-polymorphic-metadata";
+import { resolveInheritanceRoot } from "../../../entity/utils/resolve-inheritance-root";
+import { resolvePolymorphicMetadata } from "../../../entity/utils/resolve-polymorphic-metadata";
 import { RedisDriverError } from "../errors/RedisDriverError";
 import { RedisDuplicateKeyError } from "../errors/RedisDuplicateKeyError";
-import { encryptFieldValue } from "#internal/entity/utils/encrypt-field-value";
-import { flattenEmbeddedCriteria } from "#internal/utils/query/flatten-embedded-criteria";
-import { applyOrdering } from "#internal/utils/query/apply-ordering";
+import { encryptFieldValue } from "../../../entity/utils/encrypt-field-value";
+import { flattenEmbeddedCriteria } from "../../../utils/query/flatten-embedded-criteria";
+import { applyOrdering } from "../../../utils/query/apply-ordering";
 import {
   computeAggregateFromValues,
   extractNumericValues,
-} from "#internal/utils/query/compute-in-memory-aggregate";
+} from "../../../utils/query/compute-in-memory-aggregate";
 import { scanAllRows as scanAllRowsShared } from "../utils/scan-all-rows";
 
 // ─── Lock mode guard ──────────────────────────────────────────────────────────

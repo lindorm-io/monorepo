@@ -1,4 +1,4 @@
 export {
   extractFieldDictFromReturning,
   extractFieldDictFromAliased,
-} from "#internal/utils/sql/extract-field-dict";
+} from "../../../../utils/sql/extract-field-dict";

@@ -1,4 +1,4 @@
-import { stageJoinTable } from "#internal/entity/metadata/stage-metadata";
+import { stageJoinTable } from "../internal/entity/metadata/stage-metadata";
 
 /**
  * Options for explicit join table configuration.

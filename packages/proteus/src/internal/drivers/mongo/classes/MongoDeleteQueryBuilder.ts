@@ -3,11 +3,11 @@ import type { Predicate } from "@lindorm/types";
 import type { IEntity } from "../../../../interfaces";
 import type { IDeleteQueryBuilder } from "../../../../interfaces/DeleteQueryBuilder";
 import type { WriteResult } from "../../../../interfaces/InsertQueryBuilder";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
+import type { EntityMetadata } from "../../../entity/types/metadata";
 import { NotSupportedError } from "../../../../errors/NotSupportedError";
 import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError";
 import { compilePredicatesToFilter } from "../utils/compile-aggregation-pipeline";
-import { flattenEmbeddedCriteria } from "#internal/utils/query/flatten-embedded-criteria";
+import { flattenEmbeddedCriteria } from "../../../utils/query/flatten-embedded-criteria";
 import { resolveCollectionName } from "../utils/resolve-collection-name";
 
 /**

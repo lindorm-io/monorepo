@@ -1,7 +1,7 @@
 import { filterHiddenSelections } from "./filter-hidden-selections";
 import { makeField } from "../../__fixtures__/make-field";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
-import type { QueryScope } from "#internal/entity/types/metadata";
+import type { EntityMetadata } from "../../entity/types/metadata";
+import type { QueryScope } from "../../entity/types/metadata";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 

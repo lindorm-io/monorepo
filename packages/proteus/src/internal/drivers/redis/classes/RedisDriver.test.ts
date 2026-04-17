@@ -1,6 +1,6 @@
 import { createMockLogger } from "@lindorm/logger";
 import type { ILogger } from "@lindorm/logger";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
+import type { EntityMetadata } from "../../../entity/types/metadata";
 import type { ProteusRedisOptions } from "../../../../types";
 import type { MetadataResolver } from "../../../interfaces/ProteusDriver";
 import { NotSupportedError } from "../../../../errors/NotSupportedError";

@@ -9,12 +9,12 @@ import type {
   IUpdateQueryBuilder,
 } from "../../../../interfaces";
 import type { LockMode } from "../../../../types";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
+import type { EntityMetadata } from "../../../entity/types/metadata";
 import type {
   SetOperationType,
   SqlFragment,
   SubqueryPredicateSpec,
-} from "#internal/types/query";
+} from "../../../types/query";
 import type { MysqlQueryClient } from "../types/mysql-query-client";
 import { compileAggregate, type AggregateType } from "../utils/query/compile-aggregate";
 import {
@@ -26,7 +26,7 @@ import { executeQueryIncludes } from "../utils/query/execute-query-includes";
 import { hydrateRows } from "../utils/query/hydrate-result";
 import { partitionIncludes } from "../utils/query/partition-includes";
 import { warnCartesianIncludes } from "../utils/query/warn-cartesian-includes";
-import { filterHiddenSelections } from "#internal/utils/query/filter-hidden-selections";
+import { filterHiddenSelections } from "../../../utils/query/filter-hidden-selections";
 import { MySqlInsertQueryBuilder } from "./MySqlInsertQueryBuilder";
 import { MySqlUpdateQueryBuilder } from "./MySqlUpdateQueryBuilder";
 import { MySqlDeleteQueryBuilder } from "./MySqlDeleteQueryBuilder";

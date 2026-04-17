@@ -2,7 +2,7 @@ import Cursor from "pg-cursor";
 import type { Dict } from "@lindorm/types";
 import type { PoolClient } from "pg";
 import type { IEntity, IProteusCursor } from "../../../../interfaces";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
+import type { EntityMetadata } from "../../../entity/types/metadata";
 import type { AliasMap } from "../utils/query/compile-select";
 import { PostgresDriverError } from "../errors/PostgresDriverError";
 import { hydrateRows } from "../utils/query/hydrate-result";
@@ -10,7 +10,7 @@ import {
   loadEmbeddedListRows,
   loadEmbeddedListRowsBatch,
 } from "../utils/repository/embedded-list-ops";
-import { installLazyEmbeddedLists } from "#internal/entity/utils/install-lazy-embedded-lists";
+import { installLazyEmbeddedLists } from "../../../entity/utils/install-lazy-embedded-lists";
 
 export type PostgresCursorOptions = {
   sql: string;

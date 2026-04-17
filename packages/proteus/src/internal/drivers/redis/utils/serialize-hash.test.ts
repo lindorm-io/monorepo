@@ -1,4 +1,4 @@
-import type { MetaField, MetaRelation } from "#internal/entity/types/metadata";
+import type { MetaField, MetaRelation } from "../../../entity/types/metadata";
 import { serializeHash } from "./serialize-hash";
 import { deserializeHash } from "./deserialize-hash";
 

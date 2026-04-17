@@ -17,7 +17,7 @@ import { Max } from "../../../../../decorators/Max";
 import { Namespace } from "../../../../../decorators/Namespace";
 import { PrimaryKeyField } from "../../../../../decorators/PrimaryKeyField";
 import { generateEntityDDL } from "./generate-entity-ddl";
-import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
+import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata";
 
 // ---------------------------------------------------------------------------
 // Additional test entities at module scope

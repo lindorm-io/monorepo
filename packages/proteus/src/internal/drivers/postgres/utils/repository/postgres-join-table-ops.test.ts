@@ -1,4 +1,4 @@
-import type { MetaRelation } from "#internal/entity/types/metadata";
+import type { MetaRelation } from "../../../../entity/types/metadata";
 import type { PostgresQueryClient } from "../../types/postgres-query-client";
 import { createPostgresJoinTableOps } from "./postgres-join-table-ops";
 

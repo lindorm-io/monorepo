@@ -1,10 +1,10 @@
 import type { IEntity } from "../../../../../interfaces";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
+import type { EntityMetadata } from "../../../../entity/types/metadata";
 import {
   buildDiscriminatorPredicateUnqualified as sharedBuildDiscUnqualified,
   buildPrimaryKeyConditions as sharedBuildPk,
   getDiscriminatorColumnName,
-} from "#internal/utils/sql/compile-helpers";
+} from "../../../../utils/sql/compile-helpers";
 import { sqliteDialect } from "../sqlite-dialect";
 
 export { getDiscriminatorColumnName };

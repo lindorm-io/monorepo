@@ -1,10 +1,10 @@
 import type { Db } from "mongodb";
 import type { ILogger } from "@lindorm/logger";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
-import type { GenerateBaselineResult } from "#internal/interfaces/MigrationManager";
-import { computeHash } from "#internal/utils/migration/compute-hash";
-import { loadMigrations } from "#internal/utils/migration/load-migrations";
-import { writeMigrationFile } from "#internal/utils/migration/write-migration-file";
+import type { EntityMetadata } from "../../../../entity/types/metadata";
+import type { GenerateBaselineResult } from "../../../../interfaces/MigrationManager";
+import { computeHash } from "../../../../utils/migration/compute-hash";
+import { loadMigrations } from "../../../../utils/migration/load-migrations";
+import { writeMigrationFile } from "../../../../utils/migration/write-migration-file";
 import { diffIndexes } from "../sync/diff-indexes";
 import { introspectIndexes } from "../sync/introspect-indexes";
 import { projectDesiredIndexes } from "../sync/project-desired-indexes";

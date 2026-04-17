@@ -4,8 +4,8 @@ import {
   TestIndexed,
 } from "../../../../__fixtures__/test-entities";
 import { makeField } from "../../../../__fixtures__/make-field";
-import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
-import type { EntityMetadata, MetaRelation } from "#internal/entity/types/metadata";
+import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata";
+import type { EntityMetadata, MetaRelation } from "../../../../entity/types/metadata";
 import { projectDesiredSchema } from "./project-desired-schema";
 
 describe("projectDesiredSchema", () => {

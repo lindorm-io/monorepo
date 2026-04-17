@@ -1,5 +1,5 @@
-import type { EntityMetadata } from "#internal/entity/types/metadata";
-import type { NamespaceOptions } from "#internal/types/types";
+import type { EntityMetadata } from "../../../../entity/types/metadata";
+import type { NamespaceOptions } from "../../../../types/types";
 import type { DbSnapshot } from "../../types/db-snapshot";
 import type { PostgresQueryClient } from "../../types/postgres-query-client";
 import type {
@@ -7,7 +7,7 @@ import type {
   SerializeMigrationOptions,
 } from "./serialize-migration";
 import type { MigrationTableOptions } from "../../types/migration";
-import { computeHash } from "#internal/utils/migration/compute-hash";
+import { computeHash } from "../../../../utils/migration/compute-hash";
 import { loadMigrations } from "./load-migrations";
 import { introspectSchema } from "../sync/introspect-schema";
 import { projectDesiredSchema } from "../sync/project-desired-schema";

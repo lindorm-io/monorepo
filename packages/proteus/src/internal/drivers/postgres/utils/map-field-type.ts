@@ -1,6 +1,6 @@
 import { getEnumTypeName } from "../../../drivers/postgres/utils/get-enum-type-name";
 import { ProteusError } from "../../../../errors";
-import type { MetaField } from "#internal/entity/types/metadata";
+import type { MetaField } from "../../../entity/types/metadata";
 import { quoteQualifiedName } from "./quote-identifier";
 
 /**

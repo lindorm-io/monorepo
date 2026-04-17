@@ -8,10 +8,10 @@ if (typeof Symbol.metadata === "undefined") {
 import { readFileSync } from "fs";
 import { resolve } from "path";
 import { Command } from "commander";
-import { registerMigrateCommands } from "#internal/cli/commands/migrate";
-import { registerDbCommands } from "#internal/cli/commands/db";
-import { registerInitCommand } from "#internal/cli/commands/register-init";
-import { registerGenerateCommands } from "#internal/cli/commands/register-generate";
+import { registerMigrateCommands } from "./internal/cli/commands/migrate";
+import { registerDbCommands } from "./internal/cli/commands/db";
+import { registerInitCommand } from "./internal/cli/commands/register-init";
+import { registerGenerateCommands } from "./internal/cli/commands/register-generate";
 
 const pkg = JSON.parse(readFileSync(resolve(__dirname, "..", "package.json"), "utf-8"));
 

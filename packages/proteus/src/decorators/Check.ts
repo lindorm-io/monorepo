@@ -1,5 +1,5 @@
-import type { CheckDecoratorOptions } from "#internal/entity/types/decorators";
-import { stageCheck } from "#internal/entity/metadata/stage-metadata";
+import type { CheckDecoratorOptions } from "../internal/entity/types/decorators";
+import { stageCheck } from "../internal/entity/metadata/stage-metadata";
 
 /**
  * Declare a CHECK constraint on the entity table.

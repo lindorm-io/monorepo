@@ -1,1 +1,1 @@
-export type { InheritanceStrategy } from "#internal/entity/types/inheritance";
+export type { InheritanceStrategy } from "../internal/entity/types/inheritance";

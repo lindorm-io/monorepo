@@ -1,5 +1,5 @@
-import type { NamedDecoratorOptions } from "#internal/entity/types/decorators";
-import { stageField } from "#internal/entity/metadata/stage-metadata";
+import type { NamedDecoratorOptions } from "../internal/entity/types/decorators";
+import { stageField } from "../internal/entity/metadata/stage-metadata";
 
 /**
  * Declare a timestamp field for soft-delete tracking.

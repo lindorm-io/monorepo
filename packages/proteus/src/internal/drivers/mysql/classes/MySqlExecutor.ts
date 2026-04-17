@@ -3,15 +3,15 @@ import type { DeepPartial, Predicate } from "@lindorm/types";
 import type { IEntity } from "../../../../interfaces";
 import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor";
 import type { DeleteOptions, FindOptions } from "../../../../types";
-import type { EntityMetadata, QueryScope } from "#internal/entity/types/metadata";
-import type { FilterRegistry } from "#internal/utils/query/filter-registry";
+import type { EntityMetadata, QueryScope } from "../../../entity/types/metadata";
+import type { FilterRegistry } from "../../../utils/query/filter-registry";
 import type { MysqlQueryClient } from "../types/mysql-query-client";
-import { OptimisticLockError } from "#internal/errors/OptimisticLockError";
+import { OptimisticLockError } from "../../../errors/OptimisticLockError";
 import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError";
 import { MySqlExecutorError } from "../errors/MySqlExecutorError";
-import { buildPrimaryKeyDebug } from "#internal/utils/repository/build-pk-debug";
+import { buildPrimaryKeyDebug } from "../../../utils/repository/build-pk-debug";
 import { wrapMysqlError } from "../utils/repository/wrap-mysql-error";
-import { guardEmptyCriteria } from "#internal/utils/repository/guard-empty-criteria";
+import { guardEmptyCriteria } from "../../../utils/repository/guard-empty-criteria";
 import { compileDelete, compileJoinedChildDelete } from "../utils/query/compile-delete";
 import {
   compileDeleteExpired,
@@ -35,7 +35,7 @@ import {
   compileSelectByPkValues,
 } from "../utils/query/compile-select-by-pk";
 import { executeQueryIncludes } from "../utils/query/execute-query-includes";
-import { findOptionsToQueryState } from "#internal/utils/query/find-options-to-query-state";
+import { findOptionsToQueryState } from "../../../utils/query/find-options-to-query-state";
 import { hydrateRows } from "../utils/query/hydrate-result";
 import { hydrateReturning } from "../utils/query/hydrate-returning";
 import { partitionIncludes } from "../utils/query/partition-includes";

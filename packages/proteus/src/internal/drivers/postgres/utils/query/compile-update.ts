@@ -1,9 +1,9 @@
 import type { IAmphora } from "@lindorm/amphora";
 import type { DeepPartial, Predicate } from "@lindorm/types";
 import type { IEntity } from "../../../../../interfaces";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
-import { encryptFieldValue } from "#internal/entity/utils/encrypt-field-value";
-import { getEntityName } from "#internal/entity/utils/get-entity-name";
+import type { EntityMetadata } from "../../../../entity/types/metadata";
+import { encryptFieldValue } from "../../../../entity/utils/encrypt-field-value";
+import { getEntityName } from "../../../../entity/utils/get-entity-name";
 import { ProteusRepositoryError } from "../../../../../errors/ProteusRepositoryError";
 import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier";
 import { coerceWriteValue } from "./coerce-value";

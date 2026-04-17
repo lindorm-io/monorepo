@@ -1,6 +1,6 @@
 import { ProteusError } from "../../../errors";
 import type { IEntity } from "../../../interfaces";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
+import type { EntityMetadata } from "../../entity/types/metadata";
 import type {
   CteSpec,
   IncludeSpec,
@@ -9,8 +9,8 @@ import type {
   RawWhereEntry,
   SetOperationEntry,
   WindowSpec,
-} from "#internal/types/query";
-import type { QueryState } from "#internal/types/query";
+} from "../../types/query";
+import type { QueryState } from "../../types/query";
 import type { SqlDialect } from "./sql-dialect";
 import type { AliasMap, InheritanceAliasMap } from "./types";
 

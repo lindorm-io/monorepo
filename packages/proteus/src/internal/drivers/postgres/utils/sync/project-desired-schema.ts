@@ -8,16 +8,16 @@ import type {
   DesiredTable,
   DesiredTrigger,
 } from "../../types/desired-schema";
-import type { RelationChange, RelationDestroy } from "#internal/entity/types/metadata";
+import type { RelationChange, RelationDestroy } from "../../../../entity/types/metadata";
 import type {
   EntityMetadata,
   MetaField,
   MetaGenerated,
-} from "#internal/entity/types/metadata";
-import type { NamespaceOptions } from "#internal/types/types";
-import { getEntityName } from "#internal/entity/utils/get-entity-name";
-import { getJoinName } from "#internal/entity/utils/get-join-name";
-import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
+} from "../../../../entity/types/metadata";
+import type { NamespaceOptions } from "../../../../types/types";
+import { getEntityName } from "../../../../entity/utils/get-entity-name";
+import { getJoinName } from "../../../../entity/utils/get-join-name";
+import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata";
 import { generateAppendOnlyDDL } from "../ddl/generate-append-only-ddl";
 import { extractEnumValues } from "../extract-enum-values";
 import { getEnumTypeName } from "../get-enum-type-name";

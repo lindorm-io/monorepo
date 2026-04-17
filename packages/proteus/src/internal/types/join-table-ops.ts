@@ -1,5 +1,5 @@
 import type { IEntity } from "../../interfaces";
-import type { MetaRelation } from "#internal/entity/types/metadata";
+import type { MetaRelation } from "../entity/types/metadata";
 
 export type JoinTableOps = {
   sync: (

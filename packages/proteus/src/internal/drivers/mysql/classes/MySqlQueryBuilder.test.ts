@@ -1,7 +1,7 @@
 import { ProteusError } from "../../../../errors";
 import { makeField } from "../../../__fixtures__/make-field";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
-import type { SqlFragment } from "#internal/types/query";
+import type { EntityMetadata } from "../../../entity/types/metadata";
+import type { SqlFragment } from "../../../types/query";
 import type { MysqlQueryClient } from "../types/mysql-query-client";
 import { MySqlQueryBuilder } from "./MySqlQueryBuilder";
 

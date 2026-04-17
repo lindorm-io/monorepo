@@ -1,4 +1,4 @@
-import type { SetOperationEntry } from "#internal/types/query";
+import type { SetOperationEntry } from "../../types/query";
 import type { SqlDialect } from "./sql-dialect";
 
 export const compileSetOperations = (

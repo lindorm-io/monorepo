@@ -1,10 +1,10 @@
 import { makeField } from "../../../../__fixtures__/make-field";
-import type { EntityMetadata, MetaFilter } from "#internal/entity/types/metadata";
-import type { SubqueryPredicateSpec } from "#internal/types/query";
+import type { EntityMetadata, MetaFilter } from "../../../../entity/types/metadata";
+import type { SubqueryPredicateSpec } from "../../../../types/query";
 import {
   SCOPE_FILTER_NAME,
   SOFT_DELETE_FILTER_NAME,
-} from "#internal/entity/metadata/auto-filters";
+} from "../../../../entity/metadata/auto-filters";
 import { createEmptyState } from "../../../../../classes/QueryBuilder";
 import { compileWhereWithFilters, getVersionCondition } from "./compile-system-filters";
 

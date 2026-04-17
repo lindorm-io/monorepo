@@ -5,7 +5,7 @@ import { join } from "path";
 import { Client } from "pg";
 import { createTestPgClient } from "../../../../__fixtures__/create-test-pg-client";
 import { TestChecked, TestIndexed } from "../../../../__fixtures__/test-entities";
-import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
+import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata";
 import type { PostgresQueryClient } from "../../types/postgres-query-client";
 import { diffSchema } from "../sync/diff-schema";
 import { SyncPlanExecutor } from "../sync/execute-sync-plan";

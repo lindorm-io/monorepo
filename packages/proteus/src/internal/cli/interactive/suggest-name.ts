@@ -1,5 +1,5 @@
 import { kebabCase } from "@lindorm/case";
-import type { SyncOperation } from "#internal/drivers/postgres/types/sync-plan";
+import type { SyncOperation } from "../../drivers/postgres/types/sync-plan";
 
 const inferPrefix = (operations: Array<SyncOperation>): string => {
   let creates = 0;

@@ -5,7 +5,7 @@ import type {
   IProteusRepository,
   ITransactionContext,
 } from "../../../../interfaces";
-import type { RepositoryFactory } from "#internal/types/repository-factory";
+import type { RepositoryFactory } from "../../../types/repository-factory";
 import type { MongoTransactionHandle } from "../types/mongo-types";
 import type { MongoDriver } from "./MongoDriver";
 import { MongoDriverError } from "../errors/MongoDriverError";

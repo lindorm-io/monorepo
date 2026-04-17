@@ -1,6 +1,6 @@
 import { ProteusError } from "../../../errors";
-import type { EntityMetadata, MetaRelation } from "#internal/entity/types/metadata";
-import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
+import type { EntityMetadata, MetaRelation } from "../../entity/types/metadata";
+import { getEntityMetadata } from "../../entity/metadata/get-entity-metadata";
 
 export const getRelationMetadata = (relation: MetaRelation): EntityMetadata => {
   const foreignConstructor = relation.foreignConstructor();

@@ -1,5 +1,5 @@
-import type { EntityMetadata } from "#internal/entity/types/metadata";
-import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
+import type { EntityMetadata } from "../../entity/types/metadata";
+import { getEntityMetadata } from "../../entity/metadata/get-entity-metadata";
 import type { SqlDialect } from "./sql-dialect";
 import type { InheritanceAliasMap } from "./types";
 

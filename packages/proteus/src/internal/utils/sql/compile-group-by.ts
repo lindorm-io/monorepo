@@ -1,5 +1,5 @@
 import type { IEntity } from "../../../interfaces";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
+import type { EntityMetadata } from "../../entity/types/metadata";
 import { resolveColumnName } from "./resolve-column-name";
 import type { SqlDialect } from "./sql-dialect";
 

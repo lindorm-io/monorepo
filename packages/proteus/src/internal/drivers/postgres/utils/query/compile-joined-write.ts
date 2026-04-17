@@ -1,6 +1,6 @@
 import type { IAmphora } from "@lindorm/amphora";
 import type { IEntity } from "../../../../../interfaces";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
+import type { EntityMetadata } from "../../../../entity/types/metadata";
 import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier";
 import type { CompiledSql } from "./compiled-sql";
 import { dehydrateEntity } from "./dehydrate-entity";
@@ -9,7 +9,7 @@ import {
   partitionJoinedFields,
   type JoinedFieldPartition,
 } from "./partition-joined-fields";
-import { getEntityName } from "#internal/entity/utils/get-entity-name";
+import { getEntityName } from "../../../../entity/utils/get-entity-name";
 
 export type JoinedInsertSql = {
   rootSql: CompiledSql;

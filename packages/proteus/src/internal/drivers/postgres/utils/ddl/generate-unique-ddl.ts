@@ -1,5 +1,5 @@
 import { ProteusError } from "../../../../../errors";
-import type { MetaField, MetaUnique } from "#internal/entity/types/metadata";
+import type { MetaField, MetaUnique } from "../../../../entity/types/metadata";
 import { PG_IDENTIFIER_LIMIT } from "../../constants/postgres-constants";
 import { hashIdentifier } from "../hash-identifier";
 import { quoteIdentifier } from "../quote-identifier";

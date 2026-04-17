@@ -1,6 +1,6 @@
 import { camelCase, snakeCase } from "@lindorm/case";
 import type { Dict } from "@lindorm/types";
-import type { EntityMetadata, MetaField } from "#internal/entity/types/metadata";
+import type { EntityMetadata, MetaField } from "../../entity/types/metadata";
 import type { NamingStrategy } from "../../../types/source-options";
 
 const transformName = (name: string, strategy: NamingStrategy): string => {

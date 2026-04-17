@@ -3,8 +3,8 @@ import type {
   EntityMetadata,
   MetaField,
   MetaGenerated,
-} from "#internal/entity/types/metadata";
-import type { NamespaceOptions } from "#internal/types/types";
+} from "../../../../entity/types/metadata";
+import type { NamespaceOptions } from "../../../../types/types";
 import { mapFieldType } from "../map-field-type";
 import { quoteIdentifier } from "../quote-identifier";
 import { resolveFkColumnType } from "../resolve-fk-column-type";

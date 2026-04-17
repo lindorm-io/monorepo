@@ -1,7 +1,7 @@
 import type { ClientSession, Db, Document } from "mongodb";
 import type { IEntity } from "../../../../interfaces";
-import type { MetaEmbeddedList } from "#internal/entity/types/metadata";
-import { deserialise } from "#internal/entity/utils/deserialise";
+import type { MetaEmbeddedList } from "../../../entity/types/metadata";
+import { deserialise } from "../../../entity/utils/deserialise";
 
 const sessionOpts = (session?: ClientSession): { session: ClientSession } | undefined =>
   session ? { session } : undefined;

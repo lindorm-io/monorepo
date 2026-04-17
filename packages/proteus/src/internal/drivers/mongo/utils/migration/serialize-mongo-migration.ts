@@ -2,7 +2,7 @@ import {
   formatTimestamp,
   kebabToPascal,
   sanitizeName,
-} from "#internal/cli/utils/migration-naming";
+} from "../../../../cli/utils/migration-naming";
 import { ShaKit } from "@lindorm/sha";
 import { randomUUID } from "crypto";
 import type { MongoSyncPlan, DesiredMongoIndex } from "../sync/types";

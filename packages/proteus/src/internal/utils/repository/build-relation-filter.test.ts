@@ -1,4 +1,4 @@
-import type { MetaRelation } from "#internal/entity/types/metadata";
+import type { MetaRelation } from "../../entity/types/metadata";
 import { ProteusRepositoryError } from "../../../errors/ProteusRepositoryError";
 import { buildRelationFilter } from "./build-relation-filter";
 

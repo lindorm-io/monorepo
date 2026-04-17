@@ -1,8 +1,8 @@
-import type { EntityMetadata, MetaRelation } from "#internal/entity/types/metadata";
-import type { IncludeSpec } from "#internal/types/query";
-import { generateAutoFilters } from "#internal/entity/metadata/auto-filters";
-import { mergeSystemFilterOverrides } from "#internal/utils/query/merge-system-filter-overrides";
-import { resolveFilters } from "#internal/utils/query/resolve-filters";
+import type { EntityMetadata, MetaRelation } from "../../../../entity/types/metadata";
+import type { IncludeSpec } from "../../../../types/query";
+import { generateAutoFilters } from "../../../../entity/metadata/auto-filters";
+import { mergeSystemFilterOverrides } from "../../../../utils/query/merge-system-filter-overrides";
+import { resolveFilters } from "../../../../utils/query/resolve-filters";
 import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier";
 import { resolveColumnNameSafe } from "../resolve-column-name";
 import { findRelationByKey, getRelationMetadata } from "./get-relation-metadata";

@@ -1,12 +1,12 @@
 import type { IEntity } from "../../../../../interfaces";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
+import type { EntityMetadata } from "../../../../entity/types/metadata";
 import {
   buildDiscriminatorPredicateQualified as sharedBuildDiscQualified,
   buildDiscriminatorPredicateUnqualified as sharedBuildDiscUnqualified,
   buildPrimaryKeyConditions as sharedBuildPk,
   buildPrimaryKeyConditionsQualified as sharedBuildPkQualified,
   getDiscriminatorColumnName,
-} from "#internal/utils/sql/compile-helpers";
+} from "../../../../utils/sql/compile-helpers";
 import { mysqlDialect } from "../mysql-dialect";
 
 export { getDiscriminatorColumnName };

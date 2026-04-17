@@ -1,4 +1,4 @@
-import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
+import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata";
 import { Eager } from "./Eager";
 import { Entity } from "./Entity";
 import { Field } from "./Field";

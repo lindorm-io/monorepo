@@ -9,7 +9,7 @@ import {
   TestVersionKeyed,
 } from "../../../../__fixtures__/test-entities";
 import { generateTableDDL } from "./generate-table-ddl";
-import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
+import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata";
 
 const NS = null;
 const NS_SCOPED = "public";

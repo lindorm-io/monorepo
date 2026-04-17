@@ -6,8 +6,8 @@ import type {
   IProteusRepository,
   ITransactionContext,
 } from "../../../../interfaces";
-import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
-import type { RepositoryFactory } from "#internal/types/repository-factory";
+import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata";
+import type { RepositoryFactory } from "../../../types/repository-factory";
 import { PostgresTransactionError } from "../errors/PostgresTransactionError";
 import type { PostgresTransactionHandle } from "../types/postgres-transaction-handle";
 import { commitTransaction } from "../utils/transaction/commit-transaction";

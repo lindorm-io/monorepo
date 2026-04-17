@@ -1,6 +1,6 @@
 import type { Predicate } from "@lindorm/types";
 import type { IEntity } from "../../../../../interfaces";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
+import type { EntityMetadata } from "../../../../entity/types/metadata";
 import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier";
 import type { CompiledSql } from "./compiled-sql";
 import { compileWhere } from "./compile-where";
@@ -8,7 +8,7 @@ import { buildDiscriminatorPredicate, resolveTableName } from "./resolve-table-n
 import { buildJoinedChildContext } from "./joined-child-context";
 import { buildDiscriminatorPredicateUnqualified } from "./compile-helpers";
 import { mysqlDialect } from "../mysql-dialect";
-import { compileJoinedChildDelete as sharedCompileJoinedChildDelete } from "#internal/utils/sql/compile-joined-child-delete";
+import { compileJoinedChildDelete as sharedCompileJoinedChildDelete } from "../../../../utils/sql/compile-joined-child-delete";
 
 /**
  * Compiles a hard `DELETE FROM` statement. Does not apply system filters -- the caller

@@ -8,12 +8,12 @@ import type {
   IProteusQueryBuilder,
   IUpdateQueryBuilder,
 } from "../../../../interfaces";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
+import type { EntityMetadata } from "../../../entity/types/metadata";
 import type {
   SetOperationType,
   SqlFragment,
   SubqueryPredicateSpec,
-} from "#internal/types/query";
+} from "../../../types/query";
 import type { SqliteQueryClient } from "../types/sqlite-query-client";
 import { compileAggregate, type AggregateType } from "../utils/query/compile-aggregate";
 import {
@@ -25,7 +25,7 @@ import { executeQueryIncludes } from "../utils/query/execute-query-includes";
 import { hydrateRows } from "../utils/query/hydrate-result";
 import { partitionIncludes } from "../utils/query/partition-includes";
 import { warnCartesianIncludes } from "../utils/query/warn-cartesian-includes";
-import { filterHiddenSelections } from "#internal/utils/query/filter-hidden-selections";
+import { filterHiddenSelections } from "../../../utils/query/filter-hidden-selections";
 import { SqliteInsertQueryBuilder } from "./SqliteInsertQueryBuilder";
 import { SqliteUpdateQueryBuilder } from "./SqliteUpdateQueryBuilder";
 import { SqliteDeleteQueryBuilder } from "./SqliteDeleteQueryBuilder";

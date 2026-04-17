@@ -1,5 +1,5 @@
-import type { QueryScope } from "#internal/entity/types/metadata";
-import { stageFieldModifier } from "#internal/entity/metadata/stage-metadata";
+import type { QueryScope } from "../internal/entity/types/metadata";
+import { stageFieldModifier } from "../internal/entity/metadata/stage-metadata";
 
 /**
  * Hides a field from query results for the given scope.

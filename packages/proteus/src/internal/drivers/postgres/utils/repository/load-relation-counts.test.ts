@@ -1,12 +1,12 @@
-import type { EntityMetadata, MetaRelation } from "#internal/entity/types/metadata";
+import type { EntityMetadata, MetaRelation } from "../../../../entity/types/metadata";
 import type { PostgresQueryClient } from "../../types/postgres-query-client";
 import { loadRelationCounts, LoadRelationCountsContext } from "./load-relation-counts";
 
-jest.mock("#internal/entity/metadata/get-entity-metadata", () => ({
+jest.mock("../../../../entity/metadata/get-entity-metadata", () => ({
   getEntityMetadata: jest.fn(),
 }));
 
-import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
+import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata";
 
 const mockGetEntityMetadata = getEntityMetadata as jest.MockedFunction<
   typeof getEntityMetadata

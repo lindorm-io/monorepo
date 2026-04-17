@@ -1,6 +1,6 @@
 import type { IEntity } from "../../../../../interfaces";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
-import { compileGroupBy as shared } from "#internal/utils/sql/compile-group-by";
+import type { EntityMetadata } from "../../../../entity/types/metadata";
+import { compileGroupBy as shared } from "../../../../utils/sql/compile-group-by";
 import { mysqlDialect } from "../mysql-dialect";
 
 export const compileGroupBy = <E extends IEntity>(

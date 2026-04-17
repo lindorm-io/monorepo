@@ -1,5 +1,5 @@
 import { ProteusError } from "../../../../../errors";
-import type { MetaField } from "#internal/entity/types/metadata";
+import type { MetaField } from "../../../../entity/types/metadata";
 import { extractEnumValues } from "../extract-enum-values";
 import { getEnumTypeName } from "../get-enum-type-name";
 import { quoteQualifiedName } from "../quote-identifier";

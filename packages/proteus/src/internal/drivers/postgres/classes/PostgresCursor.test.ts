@@ -1,6 +1,6 @@
 import type { PoolClient } from "pg";
 import { makeField } from "../../../__fixtures__/make-field";
-import type { EntityMetadata, MetaEmbeddedList } from "#internal/entity/types/metadata";
+import type { EntityMetadata, MetaEmbeddedList } from "../../../entity/types/metadata";
 import type { AliasMap } from "../utils/query/compile-select";
 import { PostgresCursor, type PostgresCursorOptions } from "./PostgresCursor";
 import { PostgresDriverError } from "../errors/PostgresDriverError";

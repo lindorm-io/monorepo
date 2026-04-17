@@ -1,9 +1,9 @@
 import type { Redis } from "ioredis";
 import type { IEntity } from "../../../../interfaces";
-import type { MetaRelation } from "#internal/entity/types/metadata";
-import type { JoinTableOps } from "#internal/types/join-table-ops";
-import { getJoinName } from "#internal/entity/utils/get-join-name";
-import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
+import type { MetaRelation } from "../../../entity/types/metadata";
+import type { JoinTableOps } from "../../../types/join-table-ops";
+import { getJoinName } from "../../../entity/utils/get-join-name";
+import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata";
 import { buildJoinSetKey, buildReverseJoinSetKey } from "./build-join-set-key";
 import { encodePkSegment } from "./encode-pk-segment";
 import { scanEntityKeys } from "./scan-entity-keys";

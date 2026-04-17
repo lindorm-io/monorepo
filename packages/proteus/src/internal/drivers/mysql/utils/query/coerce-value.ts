@@ -1,4 +1,4 @@
-import type { MetaFieldType } from "#internal/entity/types/metadata";
+import type { MetaFieldType } from "../../../../entity/types/metadata";
 
 /**
  * Coerce a JavaScript value into a form MySQL can store.

@@ -1,8 +1,8 @@
-import type { SyncOperation } from "#internal/drivers/postgres/types/sync-plan";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
+import type { SyncOperation } from "../../drivers/postgres/types/sync-plan";
+import type { EntityMetadata } from "../../entity/types/metadata";
 import { groupOperationsByEntity } from "./group-operations";
 
-jest.mock("#internal/entity/utils/get-entity-name", () => ({
+jest.mock("../../entity/utils/get-entity-name", () => ({
   getEntityName: jest.fn((target: Function, options: { namespace?: string }) => ({
     namespace: options.namespace ?? null,
     name: target.name.toLowerCase(),

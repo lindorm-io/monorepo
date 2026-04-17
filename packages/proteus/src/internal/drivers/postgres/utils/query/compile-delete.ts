@@ -1,6 +1,6 @@
 import type { Predicate } from "@lindorm/types";
 import type { IEntity } from "../../../../../interfaces";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
+import type { EntityMetadata } from "../../../../entity/types/metadata";
 import { quoteQualifiedName } from "../quote-identifier";
 import type { CompiledSql } from "./compiled-sql";
 import { compileWhere } from "./compile-where";
@@ -10,9 +10,9 @@ import { postgresDialect } from "../postgres-dialect";
 import {
   compileSoftDelete as sharedCompileSoftDelete,
   compileRestore as sharedCompileRestore,
-} from "#internal/utils/sql/compile-soft-delete";
-import { compileDeleteExpired as sharedCompileDeleteExpired } from "#internal/utils/sql/compile-delete-expired";
-import { compileJoinedChildDelete as sharedCompileJoinedChildDelete } from "#internal/utils/sql/compile-joined-child-delete";
+} from "../../../../utils/sql/compile-soft-delete";
+import { compileDeleteExpired as sharedCompileDeleteExpired } from "../../../../utils/sql/compile-delete-expired";
+import { compileJoinedChildDelete as sharedCompileJoinedChildDelete } from "../../../../utils/sql/compile-joined-child-delete";
 
 /**
  * Compiles a hard `DELETE FROM` statement. Does not apply system filters — the caller

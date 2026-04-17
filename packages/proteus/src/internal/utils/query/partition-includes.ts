@@ -1,4 +1,4 @@
-import type { IncludeSpec } from "#internal/types/query";
+import type { IncludeSpec } from "../../types/query";
 
 export type PartitionedIncludes = {
   joinIncludes: Array<IncludeSpec>;

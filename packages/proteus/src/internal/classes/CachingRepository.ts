@@ -18,13 +18,13 @@ import type {
   PaginateResult,
   UpsertOptions,
 } from "../../types";
-import type { EntityMetadata, QueryScope } from "#internal/entity/types/metadata";
+import type { EntityMetadata, QueryScope } from "../entity/types/metadata";
 import { ProteusRepositoryError } from "../../errors/ProteusRepositoryError";
-import { buildCacheKey, buildCachePrefix } from "#internal/utils/cache/build-cache-key";
-import { resolveCacheTtl } from "#internal/utils/cache/resolve-cache-ttl";
-import { defaultHydrateEntity } from "#internal/entity/utils/default-hydrate-entity";
-import { resolvePolymorphicMetadata } from "#internal/entity/utils/resolve-polymorphic-metadata";
-import { runHooksAsync } from "#internal/entity/utils/run-hooks-async";
+import { buildCacheKey, buildCachePrefix } from "../utils/cache/build-cache-key";
+import { resolveCacheTtl } from "../utils/cache/resolve-cache-ttl";
+import { defaultHydrateEntity } from "../entity/utils/default-hydrate-entity";
+import { resolvePolymorphicMetadata } from "../entity/utils/resolve-polymorphic-metadata";
+import { runHooksAsync } from "../entity/utils/run-hooks-async";
 
 // ─── JSON replacer / reviver ─────────────────────────────────────────────
 

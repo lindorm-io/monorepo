@@ -1,6 +1,6 @@
-import type { EntityMetadata } from "#internal/entity/types/metadata";
-import type { NamespaceOptions } from "#internal/types/types";
-import { getEntityName } from "#internal/entity/utils/get-entity-name";
+import type { EntityMetadata } from "../../../../entity/types/metadata";
+import type { NamespaceOptions } from "../../../../types/types";
+import { getEntityName } from "../../../../entity/utils/get-entity-name";
 import { generateAppendOnlyDDL } from "./generate-append-only-ddl";
 import { generateEnumTypeDDL } from "./generate-enum-type-ddl";
 import { generateFkDDL } from "./generate-fk-ddl";

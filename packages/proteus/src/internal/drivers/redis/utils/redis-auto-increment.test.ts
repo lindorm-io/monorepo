@@ -1,4 +1,4 @@
-import type { EntityMetadata } from "#internal/entity/types/metadata";
+import type { EntityMetadata } from "../../../entity/types/metadata";
 import { applyRedisAutoIncrement } from "./redis-auto-increment";
 
 // ─── Module Mocks ────────────────────────────────────────────────────────────

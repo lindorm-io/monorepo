@@ -145,7 +145,7 @@ import { PostgresMigrationError } from "../errors/PostgresMigrationError";
 import { SyncPlanExecutor } from "../utils/sync/execute-sync-plan";
 import type { IEntity } from "../../../../interfaces";
 import type { Constructor } from "@lindorm/types";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
+import type { EntityMetadata } from "../../../entity/types/metadata";
 import { makeField } from "../../../__fixtures__/make-field";
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────

@@ -1,9 +1,9 @@
 import { makeField } from "../../__fixtures__/make-field";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
-import type { PredicateEntry } from "#internal/types/query";
-import { postgresDialect } from "#internal/drivers/postgres/utils/postgres-dialect";
-import { mysqlDialect } from "#internal/drivers/mysql/utils/mysql-dialect";
-import { sqliteDialect } from "#internal/drivers/sqlite/utils/sqlite-dialect";
+import type { EntityMetadata } from "../../entity/types/metadata";
+import type { PredicateEntry } from "../../types/query";
+import { postgresDialect } from "../../drivers/postgres/utils/postgres-dialect";
+import { mysqlDialect } from "../../drivers/mysql/utils/mysql-dialect";
+import { sqliteDialect } from "../../drivers/sqlite/utils/sqlite-dialect";
 import type { SqlDialect } from "./sql-dialect";
 import { compileWhere, compilePredicate } from "./compile-where";
 

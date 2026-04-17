@@ -1,16 +1,16 @@
-import type { EntityMetadata, MetaField } from "#internal/entity/types/metadata";
+import type { EntityMetadata, MetaField } from "../../../entity/types/metadata";
 
 // Mock dependencies before importing the module under test
-jest.mock("#internal/entity/utils/default-hydrate-entity", () => ({
+jest.mock("../../../entity/utils/default-hydrate-entity", () => ({
   defaultHydrateEntity: jest.fn((row: any, _meta: any, _opts: any) => row),
 }));
 
-jest.mock("#internal/entity/utils/resolve-polymorphic-metadata", () => ({
+jest.mock("../../../entity/utils/resolve-polymorphic-metadata", () => ({
   resolvePolymorphicMetadata: jest.fn((_row: any, meta: any) => meta),
 }));
 
 import { hydrateEntity, hydrateEntities } from "./hydrate";
-import { defaultHydrateEntity } from "#internal/entity/utils/default-hydrate-entity";
+import { defaultHydrateEntity } from "../../../entity/utils/default-hydrate-entity";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

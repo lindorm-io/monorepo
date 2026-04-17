@@ -4,7 +4,7 @@ import type {
   MetaIndex,
   MetaRelation,
   MetaUnique,
-} from "#internal/entity/types/metadata";
+} from "../../../../entity/types/metadata";
 import { projectDesiredIndexes } from "./project-desired-indexes";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

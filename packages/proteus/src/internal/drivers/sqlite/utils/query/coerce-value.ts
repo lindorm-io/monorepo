@@ -1,5 +1,5 @@
 import { isString } from "@lindorm/is";
-import type { MetaFieldType } from "#internal/entity/types/metadata";
+import type { MetaFieldType } from "../../../../entity/types/metadata";
 
 /**
  * Coerce a value read from SQLite into the JavaScript type expected by the entity field.

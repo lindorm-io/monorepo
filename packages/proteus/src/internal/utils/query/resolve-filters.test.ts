@@ -1,4 +1,4 @@
-import type { MetaFilter } from "#internal/entity/types/metadata";
+import type { MetaFilter } from "../../entity/types/metadata";
 import type { FilterRegistry } from "./filter-registry";
 import { resolveFilters } from "./resolve-filters";
 

@@ -1,5 +1,5 @@
 import { makeField } from "../../../__fixtures__/make-field";
-import type { MetaRelation } from "#internal/entity/types/metadata";
+import type { MetaRelation } from "../../../entity/types/metadata";
 import { ProteusError } from "../../../../errors";
 import { resolveColumnName, resolveColumnNameSafe } from "./resolve-column-name";
 

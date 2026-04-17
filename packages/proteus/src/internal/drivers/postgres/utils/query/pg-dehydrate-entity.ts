@@ -1,8 +1,8 @@
 import type { IAmphora } from "@lindorm/amphora";
 import type { IEntity } from "../../../../../interfaces";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
-import { defaultDehydrateEntity } from "#internal/entity/utils/default-dehydrate-entity";
-import type { DehydrateMode } from "#internal/entity/utils/default-dehydrate-entity";
+import type { EntityMetadata } from "../../../../entity/types/metadata";
+import { defaultDehydrateEntity } from "../../../../entity/utils/default-dehydrate-entity";
+import type { DehydrateMode } from "../../../../entity/utils/default-dehydrate-entity";
 import { coerceWriteValue } from "./coerce-value";
 import type { DehydratedColumn } from "./dehydrate-entity";
 

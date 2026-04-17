@@ -1,6 +1,6 @@
-import type { EntityMetadata } from "#internal/entity/types/metadata";
+import type { EntityMetadata } from "../../../../entity/types/metadata";
 import type { DesiredMongoIndex } from "./types";
-import { hashIdentifier } from "#internal/utils/sql/hash-identifier";
+import { hashIdentifier } from "../../../../utils/sql/hash-identifier";
 
 /**
  * Resolve the MongoDB collection name for an entity.

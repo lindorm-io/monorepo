@@ -1,8 +1,8 @@
 import { ProteusError } from "../../../../../errors";
-import type { EntityMetadata, MetaRelation } from "#internal/entity/types/metadata";
-import type { NamespaceOptions } from "#internal/types/types";
-import { getEntityName } from "#internal/entity/utils/get-entity-name";
-import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
+import type { EntityMetadata, MetaRelation } from "../../../../entity/types/metadata";
+import type { NamespaceOptions } from "../../../../types/types";
+import { getEntityName } from "../../../../entity/utils/get-entity-name";
+import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata";
 import { quoteIdentifier } from "../quote-identifier";
 import { resolveColumnNameSafe } from "../resolve-column-name";
 

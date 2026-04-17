@@ -1,11 +1,11 @@
 import type { IAmphora } from "@lindorm/amphora";
 import type { Dict } from "@lindorm/types";
 import type { IEntity } from "../../../../../interfaces";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
-import type { IncludeSpec } from "#internal/types/query";
+import type { EntityMetadata } from "../../../../entity/types/metadata";
+import type { IncludeSpec } from "../../../../types/query";
 import type { MysqlQueryClient } from "../../types/mysql-query-client";
-import { defaultHydrateEntity } from "#internal/entity/utils/default-hydrate-entity";
-import { resolvePolymorphicMetadata } from "#internal/entity/utils/resolve-polymorphic-metadata";
+import { defaultHydrateEntity } from "../../../../entity/utils/default-hydrate-entity";
+import { resolvePolymorphicMetadata } from "../../../../entity/utils/resolve-polymorphic-metadata";
 import { resolveColumnNameSafe } from "../resolve-column-name";
 import {
   compileRelationQuery,
@@ -76,7 +76,7 @@ export const executeQueryIncludes = async <E extends IEntity>(
 const executeOwningInclude = async <E extends IEntity>(
   entities: Array<E>,
   include: IncludeSpec,
-  relation: import("#internal/entity/types/metadata").MetaRelation,
+  relation: import("../../../../entity/types/metadata").MetaRelation,
   foreignMeta: EntityMetadata,
   isCollection: boolean,
   ctx: RelationQueryContext,
@@ -141,7 +141,7 @@ const executeOwningInclude = async <E extends IEntity>(
 const executeInverseInclude = async <E extends IEntity>(
   entities: Array<E>,
   include: IncludeSpec,
-  relation: import("#internal/entity/types/metadata").MetaRelation,
+  relation: import("../../../../entity/types/metadata").MetaRelation,
   foreignMeta: EntityMetadata,
   isCollection: boolean,
   ctx: RelationQueryContext,
@@ -193,7 +193,7 @@ const executeInverseInclude = async <E extends IEntity>(
 const executeManyToManyInclude = async <E extends IEntity>(
   entities: Array<E>,
   include: IncludeSpec,
-  relation: import("#internal/entity/types/metadata").MetaRelation,
+  relation: import("../../../../entity/types/metadata").MetaRelation,
   foreignMeta: EntityMetadata,
   ctx: RelationQueryContext,
   opts: ExecuteQueryIncludesOptions,

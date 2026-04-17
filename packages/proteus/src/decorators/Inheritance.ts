@@ -1,5 +1,5 @@
-import type { InheritanceStrategy } from "#internal/entity/types/inheritance";
-import { stageInheritance } from "#internal/entity/metadata/stage-metadata";
+import type { InheritanceStrategy } from "../internal/entity/types/inheritance";
+import { stageInheritance } from "../internal/entity/metadata/stage-metadata";
 
 /**
  * Declare this entity as the root of an inheritance hierarchy.

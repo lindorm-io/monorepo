@@ -1,4 +1,4 @@
-import { stageFieldModifier } from "#internal/entity/metadata/stage-metadata";
+import { stageFieldModifier } from "../internal/entity/metadata/stage-metadata";
 
 /**
  * Sets the precision and scale for a numeric field (decimal, float, real).

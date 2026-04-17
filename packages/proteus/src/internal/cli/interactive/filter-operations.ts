@@ -1,4 +1,4 @@
-import type { SyncOperation } from "#internal/drivers/postgres/types/sync-plan";
+import type { SyncOperation } from "../../drivers/postgres/types/sync-plan";
 import type { EntityGroup } from "./group-operations";
 
 export const filterOperationsByEntities = (

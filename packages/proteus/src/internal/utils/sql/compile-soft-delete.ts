@@ -1,7 +1,7 @@
 import type { Predicate } from "@lindorm/types";
 import type { IEntity } from "../../../interfaces";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
-import type { PredicateEntry } from "#internal/types/query";
+import type { EntityMetadata } from "../../entity/types/metadata";
+import type { PredicateEntry } from "../../types/query";
 import { ProteusError } from "../../../errors/ProteusError";
 import type { CompiledSql } from "./compiled-sql";
 import {

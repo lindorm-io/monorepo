@@ -1,4 +1,4 @@
-import { stageFieldModifier } from "#internal/entity/metadata/stage-metadata";
+import { stageFieldModifier } from "../internal/entity/metadata/stage-metadata";
 
 /**
  * Restrict a field to a fixed set of allowed values.

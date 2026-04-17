@@ -1,5 +1,5 @@
 import { ProteusError } from "../../../errors";
-import type { MetaField, MetaRelation } from "#internal/entity/types/metadata";
+import type { MetaField, MetaRelation } from "../../entity/types/metadata";
 
 /**
  * Resolves a field key to its column name.

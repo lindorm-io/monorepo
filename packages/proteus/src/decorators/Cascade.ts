@@ -1,5 +1,5 @@
-import type { RelationChange, RelationDestroy } from "#internal/entity/types/metadata";
-import { stageRelationModifier } from "#internal/entity/metadata/stage-metadata";
+import type { RelationChange, RelationDestroy } from "../internal/entity/types/metadata";
+import { stageRelationModifier } from "../internal/entity/metadata/stage-metadata";
 
 /**
  * Options for cascade behavior on a relation.

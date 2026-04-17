@@ -1,5 +1,5 @@
 import type { Dict } from "@lindorm/types";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
+import type { EntityMetadata } from "../../../entity/types/metadata";
 import type { MemoryTable } from "../types/memory-store";
 import { MemoryDuplicateKeyError } from "../errors/MemoryDuplicateKeyError";
 

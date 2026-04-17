@@ -3,7 +3,7 @@ import type {
   MetaField,
   MetaFieldType,
   MetaRelation,
-} from "#internal/entity/types/metadata";
+} from "../../../entity/types/metadata";
 import { RedisDriverError } from "../errors/RedisDriverError";
 
 /**

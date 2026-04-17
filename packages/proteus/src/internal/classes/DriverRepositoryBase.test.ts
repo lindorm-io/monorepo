@@ -10,19 +10,19 @@
 
 // ─── Module Mocks ────────────────────────────────────────────────────────────
 
-jest.mock("#internal/entity/classes/EntityManager", () => ({
+jest.mock("../entity/classes/EntityManager", () => ({
   EntityManager: jest.fn(),
 }));
 
-jest.mock("#internal/entity/metadata/get-entity-metadata", () => ({
+jest.mock("../entity/metadata/get-entity-metadata", () => ({
   getEntityMetadata: jest.fn(),
 }));
 
-jest.mock("#internal/utils/repository/build-pk-predicate", () => ({
+jest.mock("../utils/repository/build-pk-predicate", () => ({
   buildPrimaryKeyPredicate: jest.fn(),
 }));
 
-jest.mock("#internal/utils/repository/repository-guards", () => ({
+jest.mock("../utils/repository/repository-guards", () => ({
   guardAppendOnly: jest.fn(),
   guardDeleteDateField: jest.fn(),
   guardExpiryDateField: jest.fn(),
@@ -31,44 +31,44 @@ jest.mock("#internal/utils/repository/repository-guards", () => ({
   validateRelationNames: jest.fn(),
 }));
 
-jest.mock("#internal/entity/utils/install-lazy-relations", () => ({
+jest.mock("../entity/utils/install-lazy-relations", () => ({
   installLazyRelations: jest.fn(),
 }));
 
-jest.mock("#internal/entity/utils/lazy-relation", () => ({
+jest.mock("../entity/utils/lazy-relation", () => ({
   isLazyRelation: jest.fn().mockReturnValue(false),
 }));
 
-jest.mock("#internal/entity/utils/lazy-collection", () => ({
+jest.mock("../entity/utils/lazy-collection", () => ({
   isLazyCollection: jest.fn().mockReturnValue(false),
 }));
 
-jest.mock("#internal/utils/query/filter-hidden-selections", () => ({
+jest.mock("../utils/query/filter-hidden-selections", () => ({
   filterHiddenSelections: jest.fn().mockReturnValue(null),
 }));
 
-jest.mock("#internal/utils/pagination/validate-paginate-options", () => ({
+jest.mock("../utils/pagination/validate-paginate-options", () => ({
   validatePaginateOptions: jest.fn(),
 }));
 
-jest.mock("#internal/utils/pagination/build-keyset-order", () => ({
+jest.mock("../utils/pagination/build-keyset-order", () => ({
   buildKeysetOrder: jest.fn().mockReturnValue([]),
   keysetOrderToRecord: jest.fn().mockReturnValue({}),
 }));
 
-jest.mock("#internal/utils/pagination/build-keyset-predicate", () => ({
+jest.mock("../utils/pagination/build-keyset-predicate", () => ({
   buildKeysetPredicate: jest.fn().mockReturnValue({}),
 }));
 
-jest.mock("#internal/utils/pagination/encode-cursor", () => ({
+jest.mock("../utils/pagination/encode-cursor", () => ({
   encodeCursor: jest.fn().mockReturnValue("cursor-token"),
 }));
 
-jest.mock("#internal/utils/pagination/decode-cursor", () => ({
+jest.mock("../utils/pagination/decode-cursor", () => ({
   decodeCursor: jest.fn().mockReturnValue({ values: ["val1"] }),
 }));
 
-jest.mock("#internal/utils/pagination/extract-cursor-values", () => ({
+jest.mock("../utils/pagination/extract-cursor-values", () => ({
   extractCursorValues: jest.fn().mockReturnValue(["val1"]),
 }));
 
@@ -77,18 +77,18 @@ jest.mock("#internal/utils/pagination/extract-cursor-values", () => ({
 import type { ILogger } from "@lindorm/logger";
 import type { DeepPartial, Predicate } from "@lindorm/types";
 import type { Constructor } from "@lindorm/types";
-import { EntityManager } from "#internal/entity/classes/EntityManager";
-import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
-import { buildPrimaryKeyPredicate } from "#internal/utils/repository/build-pk-predicate";
+import { EntityManager } from "../entity/classes/EntityManager";
+import { getEntityMetadata } from "../entity/metadata/get-entity-metadata";
+import { buildPrimaryKeyPredicate } from "../utils/repository/build-pk-predicate";
 import {
   guardAppendOnly,
   guardDeleteDateField,
   guardExpiryDateField,
   guardUpsertBlocked,
-} from "#internal/utils/repository/repository-guards";
-import { filterHiddenSelections } from "#internal/utils/query/filter-hidden-selections";
+} from "../utils/repository/repository-guards";
+import { filterHiddenSelections } from "../utils/query/filter-hidden-selections";
 import { makeField } from "../__fixtures__/make-field";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
+import type { EntityMetadata } from "../entity/types/metadata";
 import type { IRepositoryExecutor } from "../interfaces/RepositoryExecutor";
 import type { IEntity, IProteusCursor, IProteusQueryBuilder } from "../../interfaces";
 import type {
@@ -97,9 +97,9 @@ import type {
   FindOptions,
   UpsertOptions,
 } from "../../types";
-import type { QueryScope } from "#internal/entity/types/metadata";
-import type { AggregateFunction } from "#internal/types/aggregate";
-import type { LazyRelationLoader } from "#internal/entity/utils/install-lazy-relations";
+import type { QueryScope } from "../entity/types/metadata";
+import type { AggregateFunction } from "../types/aggregate";
+import type { LazyRelationLoader } from "../entity/utils/install-lazy-relations";
 import {
   DriverRepositoryBase,
   type DriverRepositoryBaseOptions,
@@ -1538,7 +1538,7 @@ describe("DriverRepositoryBase", () => {
     });
 
     test("skips lazy relations (isLazyRelation returns true)", () => {
-      const { isLazyRelation } = require("#internal/entity/utils/lazy-relation");
+      const { isLazyRelation } = require("../entity/utils/lazy-relation");
       (isLazyRelation as jest.Mock).mockReturnValue(true);
 
       const { repo } = createRepo({ metadata: mockMetadataWithRelations });
@@ -1552,7 +1552,7 @@ describe("DriverRepositoryBase", () => {
     });
 
     test("skips lazy collections (isLazyCollection returns true)", () => {
-      const { isLazyCollection } = require("#internal/entity/utils/lazy-collection");
+      const { isLazyCollection } = require("../entity/utils/lazy-collection");
       (isLazyCollection as jest.Mock).mockReturnValue(true);
 
       const { repo } = createRepo({ metadata: mockMetadataWithRelations });

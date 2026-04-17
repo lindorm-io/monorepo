@@ -7,23 +7,23 @@
 import type { ILogger } from "@lindorm/logger";
 import type { ICacheAdapter } from "../../interfaces/CacheAdapter";
 import type { IProteusRepository } from "../../interfaces";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
+import type { EntityMetadata } from "../entity/types/metadata";
 import type { IEntity } from "../../interfaces";
 import { ProteusRepositoryError } from "../../errors/ProteusRepositoryError";
 import { CachingRepository } from "./CachingRepository";
 
 // ─── Module Mocks ─────────────────────────────────────────────────────────────
 
-jest.mock("#internal/entity/utils/default-hydrate-entity", () => ({
+jest.mock("../entity/utils/default-hydrate-entity", () => ({
   defaultHydrateEntity: jest.fn(),
 }));
 
-jest.mock("#internal/entity/utils/run-hooks-async", () => ({
+jest.mock("../entity/utils/run-hooks-async", () => ({
   runHooksAsync: jest.fn().mockResolvedValue(undefined),
 }));
 
-import { defaultHydrateEntity } from "#internal/entity/utils/default-hydrate-entity";
-import { runHooksAsync } from "#internal/entity/utils/run-hooks-async";
+import { defaultHydrateEntity } from "../entity/utils/default-hydrate-entity";
+import { runHooksAsync } from "../entity/utils/run-hooks-async";
 
 // ─── Entity Fixture ───────────────────────────────────────────────────────────
 

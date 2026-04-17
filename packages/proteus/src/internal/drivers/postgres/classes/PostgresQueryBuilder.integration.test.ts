@@ -2,7 +2,7 @@ import { randomBytes, randomUUID } from "crypto";
 import { Client } from "pg";
 import { createTestPgClient } from "../../../__fixtures__/create-test-pg-client";
 import type { PostgresQueryClient } from "../types/postgres-query-client";
-import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
+import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata";
 import { projectDesiredSchema } from "../utils/sync/project-desired-schema";
 import { introspectSchema } from "../utils/sync/introspect-schema";
 import { diffSchema } from "../utils/sync/diff-schema";

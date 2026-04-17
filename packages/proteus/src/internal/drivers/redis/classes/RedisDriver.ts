@@ -21,12 +21,12 @@ import type {
   TransactionOptions,
 } from "../../../../types";
 import type { EntityEmitFn } from "../../../../types/event-map";
-import type { RepositoryFactory } from "#internal/types/repository-factory";
-import type { FilterRegistry } from "#internal/utils/query/filter-registry";
+import type { RepositoryFactory } from "../../../types/repository-factory";
+import type { FilterRegistry } from "../../../utils/query/filter-registry";
 import type { RedisTransactionHandle } from "../types/redis-types";
-import { BreakerExecutor } from "#internal/classes/BreakerExecutor";
+import { BreakerExecutor } from "../../../classes/BreakerExecutor";
 import { RedisDriverError } from "../errors/RedisDriverError";
-import { validateConnectionMutualExclusivity } from "#internal/utils/validate-connection-options";
+import { validateConnectionMutualExclusivity } from "../../../utils/validate-connection-options";
 import { RedisExecutor } from "./RedisExecutor";
 import { RedisQueryBuilder } from "./RedisQueryBuilder";
 import { RedisRepository } from "./RedisRepository";

@@ -1,4 +1,4 @@
-import type { MetaCache } from "#internal/entity/types/metadata";
+import type { MetaCache } from "../../entity/types/metadata";
 import { resolveCacheTtl } from "./resolve-cache-ttl";
 
 describe("resolveCacheTtl", () => {

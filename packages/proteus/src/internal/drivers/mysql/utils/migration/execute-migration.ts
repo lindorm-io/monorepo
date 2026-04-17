@@ -1,4 +1,4 @@
-import { buildMysqlLockName } from "#internal/utils/advisory-lock-name";
+import { buildMysqlLockName } from "../../../../utils/advisory-lock-name";
 import { MySqlMigrationError } from "../../errors/MySqlMigrationError";
 import type { MysqlQueryClient } from "../../types/mysql-query-client";
 import type {

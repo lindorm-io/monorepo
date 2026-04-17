@@ -1,5 +1,5 @@
 import type { Dict } from "@lindorm/types";
-import type { MetaField, MetaRelation } from "#internal/entity/types/metadata";
+import type { MetaField, MetaRelation } from "../../../entity/types/metadata";
 
 /**
  * Serialize an entity row Dict into Redis HASH fields (Record<string, string>).

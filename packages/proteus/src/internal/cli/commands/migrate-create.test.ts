@@ -1,12 +1,12 @@
 import { resolve } from "path";
 import { migrateCreate } from "./migrate-create";
 import { withSourceConfig } from "../with-source";
-import { writeMigrationFile } from "#internal/utils/migration/write-migration-file";
+import { writeMigrationFile } from "../../utils/migration/write-migration-file";
 import { formatTimestamp, sanitizeName, kebabToPascal } from "../utils/migration-naming";
 import { Logger } from "@lindorm/logger";
 
 jest.mock("../with-source");
-jest.mock("#internal/utils/migration/write-migration-file");
+jest.mock("../../utils/migration/write-migration-file");
 jest.mock("../utils/migration-naming", () => ({
   formatTimestamp: jest.fn(),
   sanitizeName: jest.fn(),

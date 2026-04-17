@@ -1,12 +1,12 @@
 import type { Dict, Predicate } from "@lindorm/types";
 import type { IEntity } from "../../../../../interfaces";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
-import type { PredicateEntry } from "#internal/types/query";
+import type { EntityMetadata } from "../../../../entity/types/metadata";
+import type { PredicateEntry } from "../../../../types/query";
 import {
   compileWhere as sharedCompileWhere,
   compilePredicate as sharedCompilePredicate,
   type FieldAliasOverrides,
-} from "#internal/utils/sql/compile-where";
+} from "../../../../utils/sql/compile-where";
 import { postgresDialect } from "../postgres-dialect";
 
 export type { FieldAliasOverrides };

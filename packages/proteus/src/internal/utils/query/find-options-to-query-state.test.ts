@@ -1,4 +1,4 @@
-import type { EntityMetadata, MetaRelation } from "#internal/entity/types/metadata";
+import type { EntityMetadata, MetaRelation } from "../../entity/types/metadata";
 import { findOptionsToQueryState } from "./find-options-to-query-state";
 
 const metadataWithDefaultOrder = {

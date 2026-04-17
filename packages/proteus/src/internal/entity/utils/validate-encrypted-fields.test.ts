@@ -1,6 +1,6 @@
 import { createMockAmphora } from "@lindorm/amphora";
 import { ProteusError } from "../../../errors";
-import { makeField } from "#internal/__fixtures__/make-field";
+import { makeField } from "../../__fixtures__/make-field";
 import type { EntityMetadata } from "../types/metadata";
 import { validateEncryptedFields } from "./validate-encrypted-fields";
 

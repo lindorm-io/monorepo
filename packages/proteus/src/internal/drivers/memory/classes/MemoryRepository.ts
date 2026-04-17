@@ -10,46 +10,46 @@ import type {
   FindOptions,
   UpsertOptions,
 } from "../../../../types";
-import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
+import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata";
 import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor";
-import type { MetaRelation, QueryScope } from "#internal/entity/types/metadata";
-import type { RepositoryFactory } from "#internal/types/repository-factory";
-import type { AggregateFunction } from "#internal/types/aggregate";
+import type { MetaRelation, QueryScope } from "../../../entity/types/metadata";
+import type { RepositoryFactory } from "../../../types/repository-factory";
+import type { AggregateFunction } from "../../../types/aggregate";
 import type { MemoryStore } from "../types/memory-store";
-import { DriverRepositoryBase } from "#internal/classes/DriverRepositoryBase";
-import { buildPrimaryKeyPredicate } from "#internal/utils/repository/build-pk-predicate";
+import { DriverRepositoryBase } from "../../../classes/DriverRepositoryBase";
+import { buildPrimaryKeyPredicate } from "../../../utils/repository/build-pk-predicate";
 import {
   guardAppendOnly,
   guardVersionFields,
   validateRelationNames,
-} from "#internal/utils/repository/repository-guards";
-import { RelationPersister } from "#internal/utils/repository/RelationPersister";
+} from "../../../utils/repository/repository-guards";
+import { RelationPersister } from "../../../utils/repository/RelationPersister";
 import { createMemoryJoinTableOps } from "../utils/memory-join-table-ops";
-import type { LazyRelationLoader } from "#internal/entity/utils/install-lazy-relations";
-import { buildRelationFilter } from "#internal/utils/repository/build-relation-filter";
+import type { LazyRelationLoader } from "../../../entity/utils/install-lazy-relations";
+import { buildRelationFilter } from "../../../utils/repository/build-relation-filter";
 import { MemoryDuplicateKeyError } from "../errors/MemoryDuplicateKeyError";
 import { MemoryCursor } from "./MemoryCursor";
-import { getSnapshot, clearSnapshot } from "#internal/entity/utils/snapshot-store";
-import { diffColumns } from "#internal/entity/utils/diff-columns";
-import { filterHiddenSelections } from "#internal/utils/query/filter-hidden-selections";
+import { getSnapshot, clearSnapshot } from "../../../entity/utils/snapshot-store";
+import { diffColumns } from "../../../entity/utils/diff-columns";
+import { filterHiddenSelections } from "../../../utils/query/filter-hidden-selections";
 import {
   computeAggregateFromValues,
   extractNumericValues,
-} from "#internal/utils/query/compute-in-memory-aggregate";
-import { getEntityName } from "#internal/entity/utils/get-entity-name";
-import { getJoinName } from "#internal/entity/utils/get-join-name";
+} from "../../../utils/query/compute-in-memory-aggregate";
+import { getEntityName } from "../../../entity/utils/get-entity-name";
+import { getJoinName } from "../../../entity/utils/get-join-name";
 import {
   saveMemoryEmbeddedListRows,
   loadMemoryEmbeddedListRows,
   deleteMemoryEmbeddedListRows,
 } from "../utils/memory-embedded-list-ops";
-import { installLazyEmbeddedLists } from "#internal/entity/utils/install-lazy-embedded-lists";
-import type { MetaEmbeddedList } from "#internal/entity/types/metadata";
+import { installLazyEmbeddedLists } from "../../../entity/utils/install-lazy-embedded-lists";
+import type { MetaEmbeddedList } from "../../../entity/types/metadata";
 import type { ILogger } from "@lindorm/logger";
 import type { EntityEmitFn } from "../../../../types/event-map";
 import type { PaginateOptions } from "../../../../types/paginate-options";
-import type { KeysetOrderEntry } from "#internal/utils/pagination/build-keyset-order";
-import { executePaginateFindInMemory } from "#internal/utils/pagination/execute-paginate-find-in-memory";
+import type { KeysetOrderEntry } from "../../../utils/pagination/build-keyset-order";
+import { executePaginateFindInMemory } from "../../../utils/pagination/execute-paginate-find-in-memory";
 
 export type WithImplicitTransaction<E extends IEntity> = <T>(
   fn: (ctx: {

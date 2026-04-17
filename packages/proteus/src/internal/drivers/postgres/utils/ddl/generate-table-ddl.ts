@@ -1,5 +1,5 @@
-import type { EntityMetadata } from "#internal/entity/types/metadata";
-import type { NamespaceOptions } from "#internal/types/types";
+import type { EntityMetadata } from "../../../../entity/types/metadata";
+import type { NamespaceOptions } from "../../../../types/types";
 import { generateUniqueDDL } from "./generate-unique-ddl";
 import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier";
 import { resolveColumnNameSafe } from "../resolve-column-name";

@@ -1,7 +1,7 @@
 import type { DeepPartial, Predicate } from "@lindorm/types";
 import type { DeleteOptions, FindOptions } from "../../types";
 import { IEntity } from "../../interfaces/Entity";
-import type { QueryScope } from "#internal/entity/types/metadata";
+import type { QueryScope } from "../entity/types/metadata";
 
 export interface IRepositoryExecutor<E extends IEntity> {
   executeInsert(entity: E): Promise<E>;

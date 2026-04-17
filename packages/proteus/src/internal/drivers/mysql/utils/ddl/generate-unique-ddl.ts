@@ -1,5 +1,5 @@
 import { ProteusError } from "../../../../../errors";
-import type { MetaField, MetaUnique } from "#internal/entity/types/metadata";
+import type { MetaField, MetaUnique } from "../../../../entity/types/metadata";
 import {
   INDEX_PREFIX_LENGTH,
   MYSQL_IDENTIFIER_LIMIT,

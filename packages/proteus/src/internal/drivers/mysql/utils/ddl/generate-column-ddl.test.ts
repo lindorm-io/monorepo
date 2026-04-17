@@ -1,5 +1,5 @@
 import { makeField } from "../../../../__fixtures__/make-field";
-import type { EntityMetadata, MetaField } from "#internal/entity/types/metadata";
+import type { EntityMetadata, MetaField } from "../../../../entity/types/metadata";
 import { Default } from "../../../../../decorators/Default";
 import { Entity } from "../../../../../decorators/Entity";
 import { Field } from "../../../../../decorators/Field";
@@ -9,7 +9,7 @@ import { Nullable } from "../../../../../decorators/Nullable";
 import { OneToMany } from "../../../../../decorators/OneToMany";
 import { PrimaryKey } from "../../../../../decorators/PrimaryKey";
 import { PrimaryKeyField } from "../../../../../decorators/PrimaryKeyField";
-import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
+import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata";
 import { generateColumnDDL } from "./generate-column-ddl";
 
 // ---------------------------------------------------------------------------

@@ -1,4 +1,4 @@
-import type { EntityMetadata } from "#internal/entity/types/metadata";
+import type { EntityMetadata } from "../../../../entity/types/metadata";
 import type { PostgresQueryClient } from "../../types/postgres-query-client";
 import type { DbSnapshot } from "../../types/db-snapshot";
 import type { DesiredSchema } from "../../types/desired-schema";

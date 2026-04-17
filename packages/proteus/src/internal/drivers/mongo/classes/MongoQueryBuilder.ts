@@ -9,16 +9,16 @@ import type {
   IUpdateQueryBuilder,
 } from "../../../../interfaces";
 import type { LockMode } from "../../../../types/find-options";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
-import type { FilterRegistry } from "#internal/utils/query/filter-registry";
+import type { EntityMetadata } from "../../../entity/types/metadata";
+import type { FilterRegistry } from "../../../utils/query/filter-registry";
 import type { AggregateSelection } from "../utils/compile-aggregation-pipeline";
 import { QueryBuilder } from "../../../../classes/QueryBuilder";
 import { NotSupportedError } from "../../../../errors/NotSupportedError";
 import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError";
-import { generateAutoFilters } from "#internal/entity/metadata/auto-filters";
-import { resolveFilters } from "#internal/utils/query/resolve-filters";
-import { mergeSystemFilterOverrides } from "#internal/utils/query/merge-system-filter-overrides";
-import { flattenEmbeddedCriteria } from "#internal/utils/query/flatten-embedded-criteria";
+import { generateAutoFilters } from "../../../entity/metadata/auto-filters";
+import { resolveFilters } from "../../../utils/query/resolve-filters";
+import { mergeSystemFilterOverrides } from "../../../utils/query/merge-system-filter-overrides";
+import { flattenEmbeddedCriteria } from "../../../utils/query/flatten-embedded-criteria";
 import { compileFilter } from "../utils/compile-filter";
 import { compileSort } from "../utils/compile-sort";
 import { compileProjection } from "../utils/compile-projection";

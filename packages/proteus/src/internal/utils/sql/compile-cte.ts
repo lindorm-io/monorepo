@@ -1,4 +1,4 @@
-import type { CteSpec } from "#internal/types/query";
+import type { CteSpec } from "../../types/query";
 import type { SqlDialect } from "./sql-dialect";
 
 export const compileCtes = (

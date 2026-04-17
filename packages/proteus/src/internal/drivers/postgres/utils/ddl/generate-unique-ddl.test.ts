@@ -1,5 +1,5 @@
 import { ProteusError } from "../../../../../errors";
-import type { MetaUnique } from "#internal/entity/types/metadata";
+import type { MetaUnique } from "../../../../entity/types/metadata";
 import { generateUniqueDDL } from "./generate-unique-ddl";
 
 const TABLE = "products";

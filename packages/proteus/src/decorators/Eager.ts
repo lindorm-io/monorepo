@@ -1,5 +1,5 @@
-import type { QueryScope } from "#internal/entity/types/metadata";
-import { stageRelationModifier } from "#internal/entity/metadata/stage-metadata";
+import type { QueryScope } from "../internal/entity/types/metadata";
+import { stageRelationModifier } from "../internal/entity/metadata/stage-metadata";
 
 /**
  * Automatically load a relation alongside every query result (eager loading).

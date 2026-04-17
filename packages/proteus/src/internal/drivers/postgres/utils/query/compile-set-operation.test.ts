@@ -1,4 +1,4 @@
-import type { SetOperationEntry } from "#internal/types/query";
+import type { SetOperationEntry } from "../../../../types/query";
 import { compileSetOperations } from "./compile-set-operation";
 
 describe("compileSetOperations", () => {

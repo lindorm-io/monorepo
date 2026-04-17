@@ -2,7 +2,7 @@ import type {
   EntityMetadata,
   MetaField,
   MetaRelation,
-} from "#internal/entity/types/metadata";
+} from "../../../entity/types/metadata";
 import type { IEntity } from "../../../../interfaces";
 import { dehydrateEntity, dehydrateToRow } from "./dehydrate";
 

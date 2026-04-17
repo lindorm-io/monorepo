@@ -1,8 +1,11 @@
 import type { IEntity } from "../../../../../interfaces";
-import type { EntityMetadata, MetaRelationCount } from "#internal/entity/types/metadata";
+import type {
+  EntityMetadata,
+  MetaRelationCount,
+} from "../../../../entity/types/metadata";
 import type { PostgresQueryClient } from "../../types/postgres-query-client";
-import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
-import { getJoinName } from "#internal/entity/utils/get-join-name";
+import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata";
+import { getJoinName } from "../../../../entity/utils/get-join-name";
 import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier";
 import { resolveColumnNameSafe } from "../resolve-column-name";
 import { buildSimpleIn } from "./build-simple-in";
@@ -52,7 +55,7 @@ export const loadRelationCounts = async <E extends IEntity>(
 const loadOneToManyCount = async <E extends IEntity>(
   entities: Array<E>,
   rc: MetaRelationCount,
-  relation: import("#internal/entity/types/metadata").MetaRelation,
+  relation: import("../../../../entity/types/metadata").MetaRelation,
   foreignMeta: EntityMetadata,
   schema: string | null,
   ctx: LoadRelationCountsContext,
@@ -113,7 +116,7 @@ const loadOneToManyCount = async <E extends IEntity>(
 const loadManyToManyCount = async <E extends IEntity>(
   entities: Array<E>,
   rc: MetaRelationCount,
-  relation: import("#internal/entity/types/metadata").MetaRelation,
+  relation: import("../../../../entity/types/metadata").MetaRelation,
   ctx: LoadRelationCountsContext,
 ): Promise<void> => {
   if (!relation.joinKeys) return;

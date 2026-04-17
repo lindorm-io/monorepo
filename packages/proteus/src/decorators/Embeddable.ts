@@ -1,4 +1,4 @@
-import { stageEmbeddable } from "#internal/entity/metadata/stage-metadata";
+import { stageEmbeddable } from "../internal/entity/metadata/stage-metadata";
 
 /**
  * Mark a class as an embeddable value type.
