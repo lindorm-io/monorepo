@@ -168,74 +168,276 @@ exports[`scaffold scaffold orchestration runs all write functions in sequence 1`
 ]
 `;
 
-exports[`scaffold stubs writeConfigFile stub writes placeholder 1`] = `
-"// TODO (phase 2): assemble schema based on feature flags for test-app
-import { configuration } from "@lindorm/config";
+exports[`scaffold writeConfigFile snapshot: kafka only 1`] = `
+"import { configuration } from "@lindorm/config";
 import { z } from "zod/v4";
 
 export const config = configuration({
-  schema: z.object({}),
+  server: z.object({ port: z.number() }),
+  irisBrokers: z.string().transform((s) => s.split(",")),
 });
 "
 `;
 
-exports[`scaffold stubs writeDockerCompose writes stub when driver needs it 1`] = `
-"# TODO (phase 2): assemble containers for selected drivers
-# proteusDriver: postgres
-# irisDriver: none
-services: {}
-"
-`;
+exports[`scaffold writeConfigFile snapshot: memory proteus only 1`] = `
+"import { configuration } from "@lindorm/config";
+import { z } from "zod/v4";
 
-exports[`scaffold stubs writeIrisSamples writes pub/sub when iris selected 1`] = `
-"// TODO (phase 2): sample publisher wiring for driver rabbit
-export const publishSample = async (): Promise<void> => {
-  // no-op placeholder
-};
-"
-`;
-
-exports[`scaffold stubs writeIrisSamples writes pub/sub when iris selected 2`] = `
-"// TODO (phase 2): sample subscriber wiring for driver rabbit
-export const sampleSubscriber = {
-  topic: "sample",
-};
-"
-`;
-
-exports[`scaffold stubs writePylonFile stub writes placeholder 1`] = `
-"// TODO (phase 2): wire setup/teardown, feature options, worker registration
-import { Pylon } from "@lindorm/pylon";
-import { amphora } from "./amphora";
-import { logger } from "../logger";
-
-export const pylon = new Pylon({
-  logger,
-  amphora,
-  // project: test-app
+export const config = configuration({
+  server: z.object({ port: z.number() }),
 });
 "
 `;
 
-exports[`scaffold stubs writeWorkerFiles writes one file per selected worker 1`] = `
-"import type { LindormWorkerCallback } from "@lindorm/worker";
+exports[`scaffold writeConfigFile snapshot: mongo + nats 1`] = `
+"import { configuration } from "@lindorm/config";
+import { z } from "zod/v4";
 
-export const CALLBACK: LindormWorkerCallback = async (ctx) => {
-  ctx.logger.info("TODO (phase 2): amphora-refresh worker");
-};
-
-export const INTERVAL = "1m";
+export const config = configuration({
+  server: z.object({ port: z.number() }),
+  proteusUrl: z.string(),
+  irisServers: z.string(),
+});
 "
 `;
 
-exports[`scaffold stubs writeWorkerFiles writes one file per selected worker 2`] = `
-"import type { LindormWorkerCallback } from "@lindorm/worker";
+exports[`scaffold writeConfigFile snapshot: nats only 1`] = `
+"import { configuration } from "@lindorm/config";
+import { z } from "zod/v4";
 
-export const CALLBACK: LindormWorkerCallback = async (ctx) => {
-  ctx.logger.info("TODO (phase 2): expiry-cleanup worker");
-};
+export const config = configuration({
+  server: z.object({ port: z.number() }),
+  irisServers: z.string(),
+});
+"
+`;
 
-export const INTERVAL = "1m";
+exports[`scaffold writeConfigFile snapshot: no drivers 1`] = `
+"import { configuration } from "@lindorm/config";
+import { z } from "zod/v4";
+
+export const config = configuration({
+  server: z.object({ port: z.number() }),
+});
+"
+`;
+
+exports[`scaffold writeConfigFile snapshot: postgres + kafka 1`] = `
+"import { configuration } from "@lindorm/config";
+import { z } from "zod/v4";
+
+export const config = configuration({
+  server: z.object({ port: z.number() }),
+  proteusUrl: z.string(),
+  irisBrokers: z.string().transform((s) => s.split(",")),
+});
+"
+`;
+
+exports[`scaffold writeConfigFile snapshot: postgres only 1`] = `
+"import { configuration } from "@lindorm/config";
+import { z } from "zod/v4";
+
+export const config = configuration({
+  server: z.object({ port: z.number() }),
+  proteusUrl: z.string(),
+});
+"
+`;
+
+exports[`scaffold writeConfigFile snapshot: rabbit only 1`] = `
+"import { configuration } from "@lindorm/config";
+import { z } from "zod/v4";
+
+export const config = configuration({
+  server: z.object({ port: z.number() }),
+  irisUrl: z.string(),
+});
+"
+`;
+
+exports[`scaffold writeConfigFile snapshot: redis only 1`] = `
+"import { configuration } from "@lindorm/config";
+import { z } from "zod/v4";
+
+export const config = configuration({
+  server: z.object({ port: z.number() }),
+  irisUrl: z.string(),
+});
+"
+`;
+
+exports[`scaffold writeConfigFile snapshot: sqlite only 1`] = `
+"import { configuration } from "@lindorm/config";
+import { z } from "zod/v4";
+
+export const config = configuration({
+  server: z.object({ port: z.number() }),
+  proteusUrl: z.string(),
+});
+"
+`;
+
+exports[`scaffold writeDockerCompose snapshot: iris redis 1`] = `
+"services:
+  redis:
+    image: redis:7
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+"
+`;
+
+exports[`scaffold writeDockerCompose snapshot: kafka + zookeeper 1`] = `
+"services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    restart: unless-stopped
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    restart: unless-stopped
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    ports:
+      - "9092:9092"
+"
+`;
+
+exports[`scaffold writeDockerCompose snapshot: mongo + kafka 1`] = `
+"services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    restart: unless-stopped
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    restart: unless-stopped
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    ports:
+      - "9092:9092"
+"
+`;
+
+exports[`scaffold writeDockerCompose snapshot: mongo 1`] = `
+"services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+"
+`;
+
+exports[`scaffold writeDockerCompose snapshot: mysql 1`] = `
+"services:
+  mysql:
+    image: mysql:8
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: app
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3306:3306"
+"
+`;
+
+exports[`scaffold writeDockerCompose snapshot: nats 1`] = `
+"services:
+  nats:
+    image: nats:2
+    restart: unless-stopped
+    ports:
+      - "4222:4222"
+"
+`;
+
+exports[`scaffold writeDockerCompose snapshot: postgres + rabbit 1`] = `
+"services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: app
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+  rabbitmq:
+    image: rabbitmq:3-management
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+"
+`;
+
+exports[`scaffold writeDockerCompose snapshot: postgres 1`] = `
+"services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: app
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+"
+`;
+
+exports[`scaffold writeDockerCompose snapshot: proteus redis 1`] = `
+"services:
+  redis:
+    image: redis:7
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+"
+`;
+
+exports[`scaffold writeDockerCompose snapshot: rabbit 1`] = `
+"services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+"
+`;
+
+exports[`scaffold writeDockerCompose snapshot: redis dedup 1`] = `
+"services:
+  redis:
+    image: redis:7
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
 "
 `;
 
@@ -248,6 +450,138 @@ exports[`scaffold writeEnvFile postgres + kafka 1`] = `
 "NODE_ENV=development
 PROTEUS_URL=postgresql://localhost:5432/app
 IRIS_BROKERS=localhost:9092
+"
+`;
+
+exports[`scaffold writeIrisSamples snapshot: kafka publisher + subscriber: publisher 1`] = `
+"import { source as irisSource } from "../source";
+import { SampleMessage } from "../messages/SampleMessage";
+
+const publisher = irisSource.publisher(SampleMessage);
+
+export const publishSample = async (
+  payload: Partial<SampleMessage> = {},
+): Promise<void> => {
+  await publisher.publish(publisher.create(payload));
+};
+"
+`;
+
+exports[`scaffold writeIrisSamples snapshot: kafka publisher + subscriber: subscriber 1`] = `
+"import { logger } from "../../logger";
+import { source as irisSource } from "../source";
+import { SampleMessage } from "../messages/SampleMessage";
+
+const bus = irisSource.messageBus(SampleMessage);
+
+export const subscribeSample = async (): Promise<void> => {
+  await bus.subscribe({
+    topic: "SampleMessage",
+    queue: "sample-queue",
+    callback: async (msg) => {
+      logger.info("Received sample message", { message: msg });
+    },
+  });
+};
+"
+`;
+
+exports[`scaffold writeIrisSamples snapshot: nats publisher + subscriber: publisher 1`] = `
+"import { source as irisSource } from "../source";
+import { SampleMessage } from "../messages/SampleMessage";
+
+const publisher = irisSource.publisher(SampleMessage);
+
+export const publishSample = async (
+  payload: Partial<SampleMessage> = {},
+): Promise<void> => {
+  await publisher.publish(publisher.create(payload));
+};
+"
+`;
+
+exports[`scaffold writeIrisSamples snapshot: nats publisher + subscriber: subscriber 1`] = `
+"import { logger } from "../../logger";
+import { source as irisSource } from "../source";
+import { SampleMessage } from "../messages/SampleMessage";
+
+const bus = irisSource.messageBus(SampleMessage);
+
+export const subscribeSample = async (): Promise<void> => {
+  await bus.subscribe({
+    topic: "SampleMessage",
+    queue: "sample-queue",
+    callback: async (msg) => {
+      logger.info("Received sample message", { message: msg });
+    },
+  });
+};
+"
+`;
+
+exports[`scaffold writeIrisSamples snapshot: rabbit publisher + subscriber: publisher 1`] = `
+"import { source as irisSource } from "../source";
+import { SampleMessage } from "../messages/SampleMessage";
+
+const publisher = irisSource.publisher(SampleMessage);
+
+export const publishSample = async (
+  payload: Partial<SampleMessage> = {},
+): Promise<void> => {
+  await publisher.publish(publisher.create(payload));
+};
+"
+`;
+
+exports[`scaffold writeIrisSamples snapshot: rabbit publisher + subscriber: subscriber 1`] = `
+"import { logger } from "../../logger";
+import { source as irisSource } from "../source";
+import { SampleMessage } from "../messages/SampleMessage";
+
+const bus = irisSource.messageBus(SampleMessage);
+
+export const subscribeSample = async (): Promise<void> => {
+  await bus.subscribe({
+    topic: "SampleMessage",
+    queue: "sample-queue",
+    callback: async (msg) => {
+      logger.info("Received sample message", { message: msg });
+    },
+  });
+};
+"
+`;
+
+exports[`scaffold writeIrisSamples snapshot: redis publisher + subscriber: publisher 1`] = `
+"import { source as irisSource } from "../source";
+import { SampleMessage } from "../messages/SampleMessage";
+
+const publisher = irisSource.publisher(SampleMessage);
+
+export const publishSample = async (
+  payload: Partial<SampleMessage> = {},
+): Promise<void> => {
+  await publisher.publish(publisher.create(payload));
+};
+"
+`;
+
+exports[`scaffold writeIrisSamples snapshot: redis publisher + subscriber: subscriber 1`] = `
+"import { logger } from "../../logger";
+import { source as irisSource } from "../source";
+import { SampleMessage } from "../messages/SampleMessage";
+
+const bus = irisSource.messageBus(SampleMessage);
+
+export const subscribeSample = async (): Promise<void> => {
+  await bus.subscribe({
+    topic: "SampleMessage",
+    queue: "sample-queue",
+    callback: async (msg) => {
+      logger.info("Received sample message", { message: msg });
+    },
+  });
+};
 "
 `;
 
@@ -292,5 +626,305 @@ exports[`scaffold writePackageJson default answers produce minimal package.json 
   "dependencies": {},
   "devDependencies": {}
 }
+"
+`;
+
+exports[`scaffold writePylonFile snapshot: all features + all proteus workers 1`] = `
+"import { Pylon } from "@lindorm/pylon";
+import { logger } from "../logger";
+import { amphora } from "./amphora";
+import { config } from "./config";
+import { source as proteusSource } from "../proteus/source";
+import { source as irisSource } from "../iris/source";
+import amphoraRefreshWorker from "../workers/amphora-refresh";
+import amphoraEntitySyncWorker from "../workers/amphora-entity-sync";
+import expiryCleanupWorker from "../workers/expiry-cleanup";
+import kryptosRotationWorker from "../workers/kryptos-rotation";
+
+export const pylon = new Pylon({
+  logger,
+  amphora,
+  port: config.server.port,
+  routes: "./src/routes",
+  socket: {
+    enabled: true,
+    listeners: "./src/listeners",
+  },
+  rooms: { presence: true },
+  proteus: proteusSource,
+  kryptos: { enabled: true },
+  iris: irisSource,
+  queue: { enabled: true },
+  webhook: { enabled: true },
+  audit: {
+    enabled: true,
+    actor: (ctx) => (ctx.state as any).subject ?? "anonymous",
+    // sanitise: (body) => body,
+    // skip: (ctx) => false,
+    // entities: [],
+  },
+  workers: [
+    amphoraRefreshWorker,
+    amphoraEntitySyncWorker,
+    expiryCleanupWorker,
+    kryptosRotationWorker,
+  ],
+  setup: async () => {
+    await proteusSource.connect();
+    await irisSource.connect();
+  },
+  teardown: async () => {
+    // pylon handles proteus/iris disconnect automatically
+  },
+});
+"
+`;
+
+exports[`scaffold writePylonFile snapshot: http + postgres + rabbit + webhooks + audit 1`] = `
+"import { Pylon } from "@lindorm/pylon";
+import { logger } from "../logger";
+import { amphora } from "./amphora";
+import { config } from "./config";
+import { source as proteusSource } from "../proteus/source";
+import { source as irisSource } from "../iris/source";
+
+export const pylon = new Pylon({
+  logger,
+  amphora,
+  port: config.server.port,
+  routes: "./src/routes",
+  proteus: proteusSource,
+  kryptos: { enabled: true },
+  iris: irisSource,
+  queue: { enabled: true },
+  webhook: { enabled: true },
+  audit: {
+    enabled: true,
+    actor: (ctx) => (ctx.state as any).subject ?? "anonymous",
+    // sanitise: (body) => body,
+    // skip: (ctx) => false,
+    // entities: [],
+  },
+  setup: async () => {
+    await proteusSource.connect();
+    await irisSource.connect();
+  },
+  teardown: async () => {
+    // pylon handles proteus/iris disconnect automatically
+  },
+});
+"
+`;
+
+exports[`scaffold writePylonFile snapshot: http + postgres + rabbit 1`] = `
+"import { Pylon } from "@lindorm/pylon";
+import { logger } from "../logger";
+import { amphora } from "./amphora";
+import { config } from "./config";
+import { source as proteusSource } from "../proteus/source";
+import { source as irisSource } from "../iris/source";
+
+export const pylon = new Pylon({
+  logger,
+  amphora,
+  port: config.server.port,
+  routes: "./src/routes",
+  proteus: proteusSource,
+  kryptos: { enabled: true },
+  iris: irisSource,
+  queue: { enabled: true },
+  setup: async () => {
+    await proteusSource.connect();
+    await irisSource.connect();
+  },
+  teardown: async () => {
+    // pylon handles proteus/iris disconnect automatically
+  },
+});
+"
+`;
+
+exports[`scaffold writePylonFile snapshot: http + postgres 1`] = `
+"import { Pylon } from "@lindorm/pylon";
+import { logger } from "../logger";
+import { amphora } from "./amphora";
+import { config } from "./config";
+import { source as proteusSource } from "../proteus/source";
+
+export const pylon = new Pylon({
+  logger,
+  amphora,
+  port: config.server.port,
+  routes: "./src/routes",
+  proteus: proteusSource,
+  kryptos: { enabled: true },
+  setup: async () => {
+    await proteusSource.connect();
+  },
+  teardown: async () => {
+    // pylon handles proteus/iris disconnect automatically
+  },
+});
+"
+`;
+
+exports[`scaffold writePylonFile snapshot: http + rabbit 1`] = `
+"import { Pylon } from "@lindorm/pylon";
+import { logger } from "../logger";
+import { amphora } from "./amphora";
+import { config } from "./config";
+import { source as irisSource } from "../iris/source";
+
+export const pylon = new Pylon({
+  logger,
+  amphora,
+  port: config.server.port,
+  routes: "./src/routes",
+  iris: irisSource,
+  queue: { enabled: true },
+  setup: async () => {
+    await irisSource.connect();
+  },
+  teardown: async () => {
+    // pylon handles proteus/iris disconnect automatically
+  },
+});
+"
+`;
+
+exports[`scaffold writePylonFile snapshot: http + socket, no drivers 1`] = `
+"import { Pylon } from "@lindorm/pylon";
+import { logger } from "../logger";
+import { amphora } from "./amphora";
+import { config } from "./config";
+
+export const pylon = new Pylon({
+  logger,
+  amphora,
+  port: config.server.port,
+  routes: "./src/routes",
+  socket: {
+    enabled: true,
+    listeners: "./src/listeners",
+  },
+  rooms: { presence: true },
+  setup: async () => {
+  },
+  teardown: async () => {
+    // pylon handles proteus/iris disconnect automatically
+  },
+});
+"
+`;
+
+exports[`scaffold writePylonFile snapshot: http only, no drivers, no workers 1`] = `
+"import { Pylon } from "@lindorm/pylon";
+import { logger } from "../logger";
+import { amphora } from "./amphora";
+import { config } from "./config";
+
+export const pylon = new Pylon({
+  logger,
+  amphora,
+  port: config.server.port,
+  routes: "./src/routes",
+  setup: async () => {
+  },
+  teardown: async () => {
+    // pylon handles proteus/iris disconnect automatically
+  },
+});
+"
+`;
+
+exports[`scaffold writePylonFile snapshot: socket only, no drivers 1`] = `
+"import { Pylon } from "@lindorm/pylon";
+import { logger } from "../logger";
+import { amphora } from "./amphora";
+import { config } from "./config";
+
+export const pylon = new Pylon({
+  logger,
+  amphora,
+  port: config.server.port,
+  socket: {
+    enabled: true,
+    listeners: "./src/listeners",
+  },
+  rooms: { presence: true },
+  setup: async () => {
+  },
+  teardown: async () => {
+    // pylon handles proteus/iris disconnect automatically
+  },
+});
+"
+`;
+
+exports[`scaffold writeWorkerFiles snapshot: all four: amphora-entity-sync content 1`] = `
+"import { createAmphoraEntityWorker } from "@lindorm/pylon";
+import { amphora } from "../pylon/amphora";
+import { source as proteusSource } from "../proteus/source";
+
+export default createAmphoraEntityWorker({ amphora, proteus: proteusSource });
+"
+`;
+
+exports[`scaffold writeWorkerFiles snapshot: all four: amphora-refresh content 1`] = `
+"import { createAmphoraRefreshWorker } from "@lindorm/pylon";
+import { amphora } from "../pylon/amphora";
+
+export default createAmphoraRefreshWorker({ amphora });
+"
+`;
+
+exports[`scaffold writeWorkerFiles snapshot: all four: expiry-cleanup content 1`] = `
+"import { createExpiryCleanupWorker } from "@lindorm/pylon";
+import { source as proteusSource } from "../proteus/source";
+
+// TODO: add your entities with expiry fields to this array
+export default createExpiryCleanupWorker({ proteus: proteusSource, targets: [] });
+"
+`;
+
+exports[`scaffold writeWorkerFiles snapshot: all four: kryptos-rotation content 1`] = `
+"import { createKryptosRotationWorker } from "@lindorm/pylon";
+import { source as proteusSource } from "../proteus/source";
+
+export default createKryptosRotationWorker({ proteus: proteusSource });
+"
+`;
+
+exports[`scaffold writeWorkerFiles snapshot: amphora-entity-sync only: amphora-entity-sync content 1`] = `
+"import { createAmphoraEntityWorker } from "@lindorm/pylon";
+import { amphora } from "../pylon/amphora";
+import { source as proteusSource } from "../proteus/source";
+
+export default createAmphoraEntityWorker({ amphora, proteus: proteusSource });
+"
+`;
+
+exports[`scaffold writeWorkerFiles snapshot: amphora-refresh only: amphora-refresh content 1`] = `
+"import { createAmphoraRefreshWorker } from "@lindorm/pylon";
+import { amphora } from "../pylon/amphora";
+
+export default createAmphoraRefreshWorker({ amphora });
+"
+`;
+
+exports[`scaffold writeWorkerFiles snapshot: expiry-cleanup only: expiry-cleanup content 1`] = `
+"import { createExpiryCleanupWorker } from "@lindorm/pylon";
+import { source as proteusSource } from "../proteus/source";
+
+// TODO: add your entities with expiry fields to this array
+export default createExpiryCleanupWorker({ proteus: proteusSource, targets: [] });
+"
+`;
+
+exports[`scaffold writeWorkerFiles snapshot: kryptos-rotation only: kryptos-rotation content 1`] = `
+"import { createKryptosRotationWorker } from "@lindorm/pylon";
+import { source as proteusSource } from "../proteus/source";
+
+export default createKryptosRotationWorker({ proteus: proteusSource });
 "
 `;

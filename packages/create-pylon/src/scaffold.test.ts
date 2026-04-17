@@ -151,76 +151,179 @@ describe("scaffold", () => {
     });
   });
 
-  describe("stubs", () => {
-    test("writeConfigFile stub writes placeholder", () => {
+  describe("writeConfigFile", () => {
+    test.each<[string, Partial<Answers>]>([
+      ["no drivers", {}],
+      ["memory proteus only", { proteusDriver: "memory" }],
+      ["postgres only", { proteusDriver: "postgres" }],
+      ["sqlite only", { proteusDriver: "sqlite" }],
+      ["kafka only", { irisDriver: "kafka" }],
+      ["nats only", { irisDriver: "nats" }],
+      ["rabbit only", { irisDriver: "rabbit" }],
+      ["redis only", { irisDriver: "redis" }],
+      ["postgres + kafka", { proteusDriver: "postgres", irisDriver: "kafka" }],
+      ["mongo + nats", { proteusDriver: "mongo", irisDriver: "nats" }],
+    ])("snapshot: %s", (_name, overrides) => {
       mkdirSync(projectDir, { recursive: true });
-      const answers = baseAnswers({ projectDir });
+      const answers = baseAnswers({ projectDir, ...overrides });
       writeConfigFile(answers);
       expect(
         readFileSync(join(projectDir, "src/pylon/config.ts"), "utf-8"),
       ).toMatchSnapshot();
     });
+  });
 
-    test("writePylonFile stub writes placeholder", () => {
+  describe("writePylonFile", () => {
+    test.each<[string, Partial<Answers>]>([
+      ["http only, no drivers, no workers", {}],
+      [
+        "socket only, no drivers",
+        { features: { http: false, socket: true, webhooks: false, audit: false } },
+      ],
+      [
+        "http + socket, no drivers",
+        { features: { http: true, socket: true, webhooks: false, audit: false } },
+      ],
+      [
+        "http + postgres",
+        {
+          proteusDriver: "postgres",
+        },
+      ],
+      [
+        "http + rabbit",
+        {
+          irisDriver: "rabbit",
+        },
+      ],
+      ["http + postgres + rabbit", { proteusDriver: "postgres", irisDriver: "rabbit" }],
+      [
+        "http + postgres + rabbit + webhooks + audit",
+        {
+          proteusDriver: "postgres",
+          irisDriver: "rabbit",
+          features: { http: true, socket: false, webhooks: true, audit: true },
+        },
+      ],
+      [
+        "all features + all proteus workers",
+        {
+          proteusDriver: "postgres",
+          irisDriver: "kafka",
+          features: { http: true, socket: true, webhooks: true, audit: true },
+          workers: [
+            "amphora-refresh",
+            "amphora-entity-sync",
+            "expiry-cleanup",
+            "kryptos-rotation",
+          ],
+        },
+      ],
+    ])("snapshot: %s", (_name, overrides) => {
       mkdirSync(projectDir, { recursive: true });
-      const answers = baseAnswers({ projectDir });
+      const answers = baseAnswers({ projectDir, ...overrides });
       writePylonFile(answers);
       expect(
         readFileSync(join(projectDir, "src/pylon/pylon.ts"), "utf-8"),
       ).toMatchSnapshot();
     });
+  });
 
-    test("writeDockerCompose writes stub when driver needs it", () => {
+  describe("writeDockerCompose", () => {
+    test.each<[string, Partial<Answers>]>([
+      ["postgres", { proteusDriver: "postgres" }],
+      ["mysql", { proteusDriver: "mysql" }],
+      ["mongo", { proteusDriver: "mongo" }],
+      ["proteus redis", { proteusDriver: "redis" }],
+      ["rabbit", { irisDriver: "rabbit" }],
+      ["kafka + zookeeper", { irisDriver: "kafka" }],
+      ["nats", { irisDriver: "nats" }],
+      ["iris redis", { irisDriver: "redis" }],
+      ["postgres + rabbit", { proteusDriver: "postgres", irisDriver: "rabbit" }],
+      ["redis dedup", { proteusDriver: "redis", irisDriver: "redis" }],
+      ["mongo + kafka", { proteusDriver: "mongo", irisDriver: "kafka" }],
+    ])("snapshot: %s", (_name, overrides) => {
       mkdirSync(projectDir, { recursive: true });
-      const answers = baseAnswers({ projectDir, proteusDriver: "postgres" });
+      const answers = baseAnswers({ projectDir, ...overrides });
       writeDockerCompose(answers);
       expect(
         readFileSync(join(projectDir, "docker-compose.yml"), "utf-8"),
       ).toMatchSnapshot();
     });
 
-    test("writeDockerCompose is skipped when no driver needs it", () => {
+    test("skipped when no driver needs it", () => {
       mkdirSync(projectDir, { recursive: true });
       const answers = baseAnswers({ projectDir, proteusDriver: "sqlite" });
       writeDockerCompose(answers);
       expect(existsSync(join(projectDir, "docker-compose.yml"))).toBe(false);
     });
 
-    test("writeWorkerFiles writes one file per selected worker", () => {
+    test("skipped when only memory selected", () => {
+      mkdirSync(projectDir, { recursive: true });
+      const answers = baseAnswers({ projectDir, proteusDriver: "memory" });
+      writeDockerCompose(answers);
+      expect(existsSync(join(projectDir, "docker-compose.yml"))).toBe(false);
+    });
+  });
+
+  describe("writeWorkerFiles", () => {
+    test.each<[string, Answers["workers"]]>([
+      ["amphora-refresh only", ["amphora-refresh"]],
+      ["amphora-entity-sync only", ["amphora-entity-sync"]],
+      ["expiry-cleanup only", ["expiry-cleanup"]],
+      ["kryptos-rotation only", ["kryptos-rotation"]],
+      [
+        "all four",
+        ["amphora-refresh", "amphora-entity-sync", "expiry-cleanup", "kryptos-rotation"],
+      ],
+    ])("snapshot: %s", (_name, workers) => {
       mkdirSync(projectDir, { recursive: true });
       const answers = baseAnswers({
         projectDir,
         proteusDriver: "postgres",
-        workers: ["amphora-refresh", "expiry-cleanup"],
+        workers,
       });
       writeWorkerFiles(answers);
-      expect(
-        readFileSync(join(projectDir, "src/workers/amphora-refresh.ts"), "utf-8"),
-      ).toMatchSnapshot();
-      expect(
-        readFileSync(join(projectDir, "src/workers/expiry-cleanup.ts"), "utf-8"),
-      ).toMatchSnapshot();
+      for (const key of workers) {
+        expect(
+          readFileSync(join(projectDir, "src/workers", `${key}.ts`), "utf-8"),
+        ).toMatchSnapshot(`${key} content`);
+      }
     });
 
-    test("writeIrisSamples writes pub/sub when iris selected", () => {
+    test("skipped when no workers selected", () => {
       mkdirSync(projectDir, { recursive: true });
-      const answers = baseAnswers({ projectDir, irisDriver: "rabbit" });
+      const answers = baseAnswers({ projectDir });
+      writeWorkerFiles(answers);
+      expect(existsSync(join(projectDir, "src/workers"))).toBe(false);
+    });
+  });
+
+  describe("writeIrisSamples", () => {
+    test.each<[string, Answers["irisDriver"]]>([
+      ["rabbit", "rabbit"],
+      ["kafka", "kafka"],
+      ["nats", "nats"],
+      ["redis", "redis"],
+    ])("snapshot: %s publisher + subscriber", (_name, irisDriver) => {
+      mkdirSync(projectDir, { recursive: true });
+      const answers = baseAnswers({ projectDir, irisDriver });
       writeIrisSamples(answers);
       expect(
         readFileSync(
           join(projectDir, "src/iris/publishers/sample-publisher.ts"),
           "utf-8",
         ),
-      ).toMatchSnapshot();
+      ).toMatchSnapshot("publisher");
       expect(
         readFileSync(
           join(projectDir, "src/iris/subscribers/sample-subscriber.ts"),
           "utf-8",
         ),
-      ).toMatchSnapshot();
+      ).toMatchSnapshot("subscriber");
     });
 
-    test("writeIrisSamples is skipped when iris is none", () => {
+    test("skipped when iris is none", () => {
       mkdirSync(projectDir, { recursive: true });
       const answers = baseAnswers({ projectDir });
       writeIrisSamples(answers);
