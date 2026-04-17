@@ -1,11 +1,11 @@
 import { ServerError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger";
-import { AUDIT_SOURCE } from "#internal/constants/symbols";
+import { AUDIT_SOURCE } from "../../internal/constants/symbols";
 import { useAuditLog } from "./use-audit-log";
 
-jest.mock("#internal/utils/is-context");
+jest.mock("../../internal/utils/is-context");
 
-import { isHttpContext, isSocketContext } from "#internal/utils/is-context";
+import { isHttpContext, isSocketContext } from "../../internal/utils/is-context";
 
 describe("useAuditLog", () => {
   let ctx: any;

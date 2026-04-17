@@ -8,7 +8,7 @@ if (typeof Symbol.metadata === "undefined") {
 import { readFileSync } from "fs";
 import { resolve } from "path";
 import { Command } from "commander";
-import { registerGenerateCommands } from "#internal/cli/commands/register-generate";
+import { registerGenerateCommands } from "./internal/cli/commands/register-generate";
 
 const pkg = JSON.parse(readFileSync(resolve(__dirname, "..", "package.json"), "utf-8"));
 

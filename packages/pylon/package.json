@@ -33,9 +33,6 @@
       ]
     }
   },
-  "imports": {
-    "#internal/*": "./dist/internal/*.js"
-  },
   "scripts": {
     "build": "rimraf dist && tsc -b ./tsconfig.build.json && chmod +x dist/cli.js",
     "example": "ts-node example/index.ts",

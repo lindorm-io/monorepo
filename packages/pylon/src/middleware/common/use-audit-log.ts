@@ -1,7 +1,7 @@
 import { ServerError } from "@lindorm/errors";
 import { IIrisSource } from "@lindorm/iris";
-import { AUDIT_SOURCE } from "#internal/constants/symbols";
-import { isHttpContext, isSocketContext } from "#internal/utils/is-context";
+import { AUDIT_SOURCE } from "../../internal/constants/symbols";
+import { isHttpContext, isSocketContext } from "../../internal/utils/is-context";
 import { RequestAudit } from "../../messages";
 import { PylonContext, PylonMiddleware } from "../../types";
 

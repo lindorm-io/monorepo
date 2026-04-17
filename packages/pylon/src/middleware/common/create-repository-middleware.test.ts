@@ -2,8 +2,8 @@ import { ServerError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger";
 import { createRepositoryMiddleware } from "./create-repository-middleware";
 
-jest.mock("#internal/utils/resolve-proteus");
-import { resolveProteus } from "#internal/utils/resolve-proteus";
+jest.mock("../../internal/utils/resolve-proteus");
+import { resolveProteus } from "../../internal/utils/resolve-proteus";
 
 class UserEntity {}
 class OrderEntity {}

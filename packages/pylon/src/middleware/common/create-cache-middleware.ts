@@ -1,4 +1,4 @@
-import { resolveProteus } from "#internal/utils/resolve-proteus";
+import { resolveProteus } from "../../internal/utils/resolve-proteus";
 import { camelCase } from "@lindorm/case";
 import { IEntity, IProteusSource } from "@lindorm/proteus";
 import { Constructor, Dict } from "@lindorm/types";
