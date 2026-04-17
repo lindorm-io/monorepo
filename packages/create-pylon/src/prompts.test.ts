@@ -40,6 +40,7 @@ describe("runPrompts", () => {
   test("returns answers with positional name and defaults", async () => {
     queueSequence(mockedCheckbox, [["http"], []]);
     queueSequence(mockedSelect, ["none", "none"]);
+    queueSequence(mockedConfirm, [false, false]);
 
     const answers = await runPrompts({ positionalName: "my-app", cwd: sandboxDir });
 
@@ -55,6 +56,7 @@ describe("runPrompts", () => {
     mockedInput.mockResolvedValueOnce("prompted-name");
     queueSequence(mockedCheckbox, [["http", "socket"], ["amphora-refresh"]]);
     queueSequence(mockedSelect, ["none", "none"]);
+    queueSequence(mockedConfirm, [false, false]);
 
     const answers = await runPrompts({ cwd: sandboxDir });
 
@@ -66,11 +68,12 @@ describe("runPrompts", () => {
   test("prompts webhooks and audit only when both drivers selected", async () => {
     queueSequence(mockedCheckbox, [["http"], ["amphora-refresh", "expiry-cleanup"]]);
     queueSequence(mockedSelect, ["postgres", "rabbit"]);
-    queueSequence(mockedConfirm, [true, true]);
+    // webhooks, audit, session, auth, rateLimit
+    queueSequence(mockedConfirm, [true, true, false, false, false]);
 
     const answers = await runPrompts({ positionalName: "full-app", cwd: sandboxDir });
 
-    expect(mockedConfirm).toHaveBeenCalledTimes(2);
+    expect(mockedConfirm).toHaveBeenCalledTimes(5);
     expect(answers.features.webhooks).toBe(true);
     expect(answers.features.audit).toBe(true);
     expect(answers.proteusDriver).toBe("postgres");
@@ -81,12 +84,72 @@ describe("runPrompts", () => {
   test("skips webhooks and audit prompts when iris is none", async () => {
     queueSequence(mockedCheckbox, [["http"], ["amphora-refresh"]]);
     queueSequence(mockedSelect, ["postgres", "none"]);
+    // session, auth, rateLimit (no webhooks/audit)
+    queueSequence(mockedConfirm, [false, false, false]);
 
     const answers = await runPrompts({ positionalName: "partial-app", cwd: sandboxDir });
 
-    expect(mockedConfirm).not.toHaveBeenCalled();
+    expect(mockedConfirm).toHaveBeenCalledTimes(3);
     expect(answers.features.webhooks).toBe(false);
     expect(answers.features.audit).toBe(false);
+  });
+
+  test("session and auth prompts always shown regardless of drivers", async () => {
+    queueSequence(mockedCheckbox, [["http"], []]);
+    queueSequence(mockedSelect, ["none", "none"]);
+    // session, auth (rateLimit skipped — no proteus)
+    queueSequence(mockedConfirm, [true, false]);
+
+    const answers = await runPrompts({ positionalName: "s-app", cwd: sandboxDir });
+
+    expect(mockedConfirm).toHaveBeenCalledTimes(2);
+    expect(answers.features.session).toBe(true);
+    expect(answers.features.auth).toBe(false);
+    expect(answers.features.rateLimit).toBe(false);
+  });
+
+  test("rate limit prompt only shown when proteus selected", async () => {
+    queueSequence(mockedCheckbox, [["http"], []]);
+    queueSequence(mockedSelect, ["postgres", "none"]);
+    // session, auth, rateLimit
+    queueSequence(mockedConfirm, [false, false, true]);
+
+    const answers = await runPrompts({ positionalName: "rl-app", cwd: sandboxDir });
+
+    expect(mockedConfirm).toHaveBeenCalledTimes(3);
+    expect(answers.features.rateLimit).toBe(true);
+  });
+
+  test("rate limit prompt skipped when proteus is none", async () => {
+    queueSequence(mockedCheckbox, [["http"], []]);
+    queueSequence(mockedSelect, ["none", "none"]);
+    // session, auth only
+    queueSequence(mockedConfirm, [false, false]);
+
+    const answers = await runPrompts({ positionalName: "no-rl-app", cwd: sandboxDir });
+
+    expect(mockedConfirm).toHaveBeenCalledTimes(2);
+    expect(answers.features.rateLimit).toBe(false);
+  });
+
+  test("auto-forces session when auth selected without session", async () => {
+    const writeSpy = jest.spyOn(process.stdout, "write").mockImplementation(() => true);
+    try {
+      queueSequence(mockedCheckbox, [["http"], []]);
+      queueSequence(mockedSelect, ["none", "none"]);
+      // session=false, auth=true
+      queueSequence(mockedConfirm, [false, true]);
+
+      const answers = await runPrompts({ positionalName: "a-app", cwd: sandboxDir });
+
+      expect(answers.features.auth).toBe(true);
+      expect(answers.features.session).toBe(true);
+      expect(writeSpy).toHaveBeenCalledWith(
+        "Sessions auto-enabled (required by OIDC auth).\n",
+      );
+    } finally {
+      writeSpy.mockRestore();
+    }
   });
 
   test("cancels when user declines to remove existing directory", async () => {

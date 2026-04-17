@@ -16,10 +16,23 @@ import {
 } from "./scaffold";
 import type { Answers } from "./types";
 
+const baseFeatures = (
+  overrides: Partial<Answers["features"]> = {},
+): Answers["features"] => ({
+  http: true,
+  socket: false,
+  webhooks: false,
+  audit: false,
+  session: false,
+  auth: false,
+  rateLimit: false,
+  ...overrides,
+});
+
 const baseAnswers = (overrides: Partial<Answers> = {}): Answers => ({
   projectName: "test-app",
   projectDir: "",
-  features: { http: true, socket: false, webhooks: false, audit: false },
+  features: baseFeatures(),
   proteusDriver: "none",
   irisDriver: "none",
   workers: [],
@@ -75,7 +88,7 @@ describe("scaffold", () => {
     test("base only — http false, socket false", () => {
       const answers = baseAnswers({
         projectDir,
-        features: { http: false, socket: false, webhooks: false, audit: false },
+        features: baseFeatures({ http: false }),
       });
       copyTemplates(answers);
       expect(dumpTree(projectDir)).toMatchSnapshot();
@@ -90,7 +103,7 @@ describe("scaffold", () => {
     test("base + http + socket + workers + webhooks", () => {
       const answers = baseAnswers({
         projectDir,
-        features: { http: true, socket: true, webhooks: true, audit: true },
+        features: baseFeatures({ socket: true, webhooks: true, audit: true }),
         workers: ["amphora-refresh"],
       });
       copyTemplates(answers);
@@ -148,6 +161,15 @@ describe("scaffold", () => {
       ["mongo-nats", baseAnswers({ proteusDriver: "mongo", irisDriver: "nats" })],
       ["sqlite-redis", baseAnswers({ proteusDriver: "sqlite", irisDriver: "redis" })],
       ["mysql-rabbit", baseAnswers({ proteusDriver: "mysql", irisDriver: "rabbit" })],
+      ["none-none + auth", baseAnswers({ features: baseFeatures({ auth: true }) })],
+      [
+        "postgres-rabbit + auth",
+        baseAnswers({
+          proteusDriver: "postgres",
+          irisDriver: "rabbit",
+          features: baseFeatures({ auth: true }),
+        }),
+      ],
     ])("snapshot: %s", (_name, answers) => {
       expect(buildEnvLines(answers)).toMatchSnapshot();
     });
@@ -180,6 +202,11 @@ describe("scaffold", () => {
       ["redis only", { irisDriver: "redis" }],
       ["postgres + kafka", { proteusDriver: "postgres", irisDriver: "kafka" }],
       ["mongo + nats", { proteusDriver: "mongo", irisDriver: "nats" }],
+      ["auth only", { features: baseFeatures({ auth: true }) }],
+      [
+        "postgres + auth",
+        { proteusDriver: "postgres", features: baseFeatures({ auth: true }) },
+      ],
     ])("snapshot: %s", (_name, overrides) => {
       mkdirSync(projectDir, { recursive: true });
       const answers = baseAnswers({ projectDir, ...overrides });
@@ -195,12 +222,9 @@ describe("scaffold", () => {
       ["http only, no drivers, no workers", {}],
       [
         "socket only, no drivers",
-        { features: { http: false, socket: true, webhooks: false, audit: false } },
+        { features: baseFeatures({ http: false, socket: true }) },
       ],
-      [
-        "http + socket, no drivers",
-        { features: { http: true, socket: true, webhooks: false, audit: false } },
-      ],
+      ["http + socket, no drivers", { features: baseFeatures({ socket: true }) }],
       [
         "http + postgres",
         {
@@ -217,23 +241,49 @@ describe("scaffold", () => {
       [
         "http + postgres + rabbit + webhooks + audit",
         {
-          proteusDriver: "postgres",
-          irisDriver: "rabbit",
-          features: { http: true, socket: false, webhooks: true, audit: true },
+          proteusDriver: "postgres" as const,
+          irisDriver: "rabbit" as const,
+          features: baseFeatures({ webhooks: true, audit: true }),
         },
       ],
       [
         "all features + all proteus workers",
         {
-          proteusDriver: "postgres",
-          irisDriver: "kafka",
-          features: { http: true, socket: true, webhooks: true, audit: true },
+          proteusDriver: "postgres" as const,
+          irisDriver: "kafka" as const,
+          features: baseFeatures({ socket: true, webhooks: true, audit: true }),
           workers: [
             "amphora-refresh",
             "amphora-entity-sync",
             "expiry-cleanup",
             "kryptos-rotation",
-          ],
+          ] as Array<Answers["workers"][number]>,
+        },
+      ],
+      ["session only, no proteus", { features: baseFeatures({ session: true }) }],
+      [
+        "session with proteus (persistent)",
+        {
+          proteusDriver: "postgres" as const,
+          features: baseFeatures({ session: true }),
+        },
+      ],
+      [
+        "auth only (session auto-forced)",
+        { features: baseFeatures({ session: true, auth: true }) },
+      ],
+      [
+        "rate limit with proteus",
+        {
+          proteusDriver: "postgres" as const,
+          features: baseFeatures({ rateLimit: true }),
+        },
+      ],
+      [
+        "session + auth + rate limit + postgres",
+        {
+          proteusDriver: "postgres" as const,
+          features: baseFeatures({ session: true, auth: true, rateLimit: true }),
         },
       ],
     ])("snapshot: %s", (_name, overrides) => {
@@ -354,11 +404,78 @@ describe("scaffold", () => {
         projectDir,
         proteusDriver: "postgres",
         irisDriver: "rabbit",
-        features: { http: true, socket: true, webhooks: true, audit: true },
+        features: baseFeatures({ socket: true, webhooks: true, audit: true }),
         workers: ["amphora-refresh", "expiry-cleanup"],
       });
       await scaffold(answers);
       expect(listTree(projectDir)).toMatchSnapshot();
+    });
+
+    test("session-only combo", async () => {
+      const answers = baseAnswers({
+        projectDir,
+        features: baseFeatures({ session: true }),
+      });
+      await scaffold(answers);
+      expect(listTree(projectDir)).toMatchSnapshot();
+    });
+
+    test("auth-only combo (auto-forces session)", async () => {
+      const answers = baseAnswers({
+        projectDir,
+        features: baseFeatures({ session: true, auth: true }),
+      });
+      await scaffold(answers);
+      expect(
+        readFileSync(join(projectDir, "src/pylon/pylon.ts"), "utf-8"),
+      ).toMatchSnapshot("pylon.ts");
+      expect(
+        readFileSync(join(projectDir, "src/pylon/config.ts"), "utf-8"),
+      ).toMatchSnapshot("config.ts");
+      expect(readFileSync(join(projectDir, ".env"), "utf-8")).toMatchSnapshot(".env");
+    });
+
+    test("rateLimit-only combo (with postgres)", async () => {
+      const answers = baseAnswers({
+        projectDir,
+        proteusDriver: "postgres",
+        features: baseFeatures({ rateLimit: true }),
+      });
+      await scaffold(answers);
+      expect(
+        readFileSync(join(projectDir, "src/pylon/pylon.ts"), "utf-8"),
+      ).toMatchSnapshot("pylon.ts");
+    });
+
+    test("all-on: postgres + rabbit + sessions + auth + rateLimit + workers", async () => {
+      const answers = baseAnswers({
+        projectDir,
+        proteusDriver: "postgres",
+        irisDriver: "rabbit",
+        features: baseFeatures({
+          socket: true,
+          webhooks: true,
+          audit: true,
+          session: true,
+          auth: true,
+          rateLimit: true,
+        }),
+        workers: [
+          "amphora-refresh",
+          "amphora-entity-sync",
+          "expiry-cleanup",
+          "kryptos-rotation",
+        ],
+      });
+      await scaffold(answers);
+      expect(listTree(projectDir)).toMatchSnapshot("tree");
+      expect(
+        readFileSync(join(projectDir, "src/pylon/pylon.ts"), "utf-8"),
+      ).toMatchSnapshot("pylon.ts");
+      expect(
+        readFileSync(join(projectDir, "src/pylon/config.ts"), "utf-8"),
+      ).toMatchSnapshot("config.ts");
+      expect(readFileSync(join(projectDir, ".env"), "utf-8")).toMatchSnapshot(".env");
     });
   });
 });

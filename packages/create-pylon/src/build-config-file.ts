@@ -26,6 +26,7 @@ export const buildConfigFile = (answers: Answers): string => {
     `import { z } from "zod";`,
     ``,
     `export const config = configuration({`,
+    `  nodeEnv: z.string().default("development"),`,
     `  server: z.object({ port: z.number() }),`,
   ];
 
@@ -34,6 +35,12 @@ export const buildConfigFile = (answers: Answers): string => {
 
   const iris = irisField(answers.irisDriver);
   if (iris) lines.push(iris);
+
+  if (answers.features.auth) {
+    lines.push(`  authClientId: z.string(),`);
+    lines.push(`  authClientSecret: z.string(),`);
+    lines.push(`  authIssuer: z.string(),`);
+  }
 
   lines.push(`});`, ``);
 
