@@ -4,15 +4,15 @@ import {
   CreateCekResult,
   DecryptCekOptions,
   DecryptCekResult,
-} from "#internal/types/content-encryption-key";
+} from "../../types/content-encryption-key";
 import {
   getDiffieHellmanDecryptionKey,
   getDiffieHellmanEncryptionKey,
-} from "#internal/utils/diffie-hellman/diffie-hellman";
+} from "../diffie-hellman/diffie-hellman";
 import {
   getDiffieHellmanKeyWrapDecryptionKey,
   getDiffieHellmanKeyWrapEncryptionKey,
-} from "#internal/utils/diffie-hellman/diffie-hellman-key-wrap";
+} from "../diffie-hellman/diffie-hellman-key-wrap";
 
 export const getEcEncryptionKey = (options: CreateCekOptions): CreateCekResult => {
   switch (options.kryptos.algorithm) {

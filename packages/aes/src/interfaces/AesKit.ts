@@ -6,7 +6,7 @@ import {
   SerialisedAesDecryption,
   SerialisedAesEncryption,
 } from "../types";
-import { PreparedEncryption } from "#internal/types/prepared-encryption";
+import { PreparedEncryption } from "../internal/types/prepared-encryption";
 
 export type AesOperationOptions = {
   aad?: Buffer;

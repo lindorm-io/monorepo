@@ -1,7 +1,7 @@
-import { getEcDecryptionKey as _getEcDecryptionKey } from "#internal/utils/key-types/get-ec-keys";
-import { getOctDecryptionKey as _getOctDecryptionKey } from "#internal/utils/key-types/get-oct-keys";
-import { getOkpDecryptionKey as _getOkpDecryptionKey } from "#internal/utils/key-types/get-okp-keys";
-import { getRsaDecryptionKey as _getRsaDecryptionKey } from "#internal/utils/key-types/get-rsa-keys";
+import { getEcDecryptionKey as _getEcDecryptionKey } from "../key-types/get-ec-keys";
+import { getOctDecryptionKey as _getOctDecryptionKey } from "../key-types/get-oct-keys";
+import { getOkpDecryptionKey as _getOkpDecryptionKey } from "../key-types/get-okp-keys";
+import { getRsaDecryptionKey as _getRsaDecryptionKey } from "../key-types/get-rsa-keys";
 import {
   TEST_EC_KEY,
   TEST_OCT_KEY,
@@ -10,10 +10,10 @@ import {
 } from "../../../__fixtures__/keys";
 import { getDecryptionKey } from "./get-decryption-key";
 
-jest.mock("#internal/utils/key-types/get-ec-keys");
-jest.mock("#internal/utils/key-types/get-oct-keys");
-jest.mock("#internal/utils/key-types/get-okp-keys");
-jest.mock("#internal/utils/key-types/get-rsa-keys");
+jest.mock("../key-types/get-ec-keys");
+jest.mock("../key-types/get-oct-keys");
+jest.mock("../key-types/get-okp-keys");
+jest.mock("../key-types/get-rsa-keys");
 
 const getEcDecryptionKey = _getEcDecryptionKey as jest.Mock;
 const getOctDecryptionKey = _getOctDecryptionKey as jest.Mock;

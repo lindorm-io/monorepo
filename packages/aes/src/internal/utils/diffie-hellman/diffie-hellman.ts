@@ -5,9 +5,9 @@ import {
   CreateCekResult,
   DecryptCekOptions,
   DecryptCekResult,
-} from "#internal/types/content-encryption-key";
-import { calculateContentEncryptionKeySize } from "#internal/utils/calculate/calculate-content-encryption-key-size";
-import { concatKdf } from "#internal/utils/key-derivation/concat-kdf";
+} from "../../types/content-encryption-key";
+import { calculateContentEncryptionKeySize } from "../calculate/calculate-content-encryption-key-size";
+import { concatKdf } from "../key-derivation/concat-kdf";
 import { calculateSharedSecret, generateSharedSecret } from "./shared-secret";
 
 export const getDiffieHellmanEncryptionKey = ({

@@ -1,12 +1,9 @@
 import { AesError } from "../../../errors";
-import {
-  DecryptCekOptions,
-  DecryptCekResult,
-} from "#internal/types/content-encryption-key";
-import { getEcDecryptionKey } from "#internal/utils/key-types/get-ec-keys";
-import { getOctDecryptionKey } from "#internal/utils/key-types/get-oct-keys";
-import { getOkpDecryptionKey } from "#internal/utils/key-types/get-okp-keys";
-import { getRsaDecryptionKey } from "#internal/utils/key-types/get-rsa-keys";
+import { DecryptCekOptions, DecryptCekResult } from "../../types/content-encryption-key";
+import { getEcDecryptionKey } from "../key-types/get-ec-keys";
+import { getOctDecryptionKey } from "../key-types/get-oct-keys";
+import { getOkpDecryptionKey } from "../key-types/get-okp-keys";
+import { getRsaDecryptionKey } from "../key-types/get-rsa-keys";
 
 export const getDecryptionKey = (options: DecryptCekOptions): DecryptCekResult => {
   switch (options.kryptos.type) {

@@ -6,12 +6,12 @@ import {
   CreateCekResult,
   DecryptCekOptions,
   DecryptCekResult,
-} from "#internal/types/content-encryption-key";
-import { calculateContentEncryptionKeySize } from "#internal/utils/calculate/calculate-content-encryption-key-size";
-import { calculateKeyWrapSize } from "#internal/utils/calculate/calculate-key-wrap-size";
-import { calculatePbkdfAlgorithm } from "#internal/utils/calculate/calculate-pbkdf-hash";
-import { pbkdf } from "#internal/utils/key-derivation/pbkdf";
-import { ecbKeyUnwrap, ecbKeyWrap } from "#internal/utils/key-wrap/ecb-key-wrap";
+} from "../../types/content-encryption-key";
+import { calculateContentEncryptionKeySize } from "../calculate/calculate-content-encryption-key-size";
+import { calculateKeyWrapSize } from "../calculate/calculate-key-wrap-size";
+import { calculatePbkdfAlgorithm } from "../calculate/calculate-pbkdf-hash";
+import { pbkdf } from "../key-derivation/pbkdf";
+import { ecbKeyUnwrap, ecbKeyWrap } from "../key-wrap/ecb-key-wrap";
 
 export const getOctPbkdfKeyWrapEncryptionKey = ({
   encryption,

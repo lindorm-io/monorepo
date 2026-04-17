@@ -2,7 +2,7 @@ import { KryptosEncryption } from "@lindorm/kryptos";
 import { ShaAlgorithm } from "@lindorm/types";
 import { createHmac, timingSafeEqual } from "crypto";
 import { AesError } from "../../../errors";
-import { CreateHmacAuthTag, VerifyHmacAuthTag } from "#internal/types/auth-tag";
+import { CreateHmacAuthTag, VerifyHmacAuthTag } from "../../types/auth-tag";
 
 const shaHash = (encryption: KryptosEncryption): ShaAlgorithm => {
   switch (encryption) {

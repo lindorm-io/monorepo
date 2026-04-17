@@ -1,5 +1,5 @@
 import { B64 } from "@lindorm/b64";
-import { AES_FORMAT_VERSION } from "#internal/constants/version";
+import { AES_FORMAT_VERSION } from "../constants/version";
 import {
   ParsedAesDecryptionRecord,
   SerialisedAesDecryption,
@@ -14,7 +14,7 @@ import {
   decodeAesHeader,
   encodeAesHeader,
   headerToDecryptionParams,
-} from "#internal/utils/aes-header";
+} from "./aes-header";
 
 /**
  * New serialised format (v1.0):

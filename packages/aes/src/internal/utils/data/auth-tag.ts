@@ -1,6 +1,6 @@
 import { CipherGCM, DecipherGCM } from "crypto";
 import { AesError } from "../../../errors";
-import { GetAuthTagOptions, SetAuthTagOptions } from "#internal/types/auth-tag";
+import { GetAuthTagOptions, SetAuthTagOptions } from "../../types/auth-tag";
 import { assertHmacAuthTag, createHmacAuthTag } from "./auth-tag-hmac";
 
 export const createAuthTag = ({

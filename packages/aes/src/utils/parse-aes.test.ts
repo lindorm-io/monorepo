@@ -7,14 +7,14 @@ import {
 } from "../types";
 import { createTestAesDecryptionRecord } from "./__fixtures__/aes-decryption-record";
 import { isAesBufferData, isAesSerialisedData, isAesTokenised } from "./is-aes";
-import { parseEncodedAesString } from "#internal/utils/encoded-aes";
-import { parseSerialisedAesRecord } from "#internal/utils/serialised-aes";
-import { parseTokenisedAesString } from "#internal/utils/tokenised-aes";
+import { parseEncodedAesString } from "../internal/utils/encoded-aes";
+import { parseSerialisedAesRecord } from "../internal/utils/serialised-aes";
+import { parseTokenisedAesString } from "../internal/utils/tokenised-aes";
 
 jest.mock("./is-aes");
-jest.mock("#internal/utils/encoded-aes");
-jest.mock("#internal/utils/serialised-aes");
-jest.mock("#internal/utils/tokenised-aes");
+jest.mock("../internal/utils/encoded-aes");
+jest.mock("../internal/utils/serialised-aes");
+jest.mock("../internal/utils/tokenised-aes");
 
 const mockIsAesBufferData = isAesBufferData as jest.MockedFunction<
   typeof isAesBufferData

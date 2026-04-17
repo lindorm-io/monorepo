@@ -5,8 +5,8 @@ import {
   CreateCekResult,
   DecryptCekOptions,
   DecryptCekResult,
-} from "#internal/types/content-encryption-key";
-import { calculateContentEncryptionKeySize } from "#internal/utils/calculate/calculate-content-encryption-key-size";
+} from "../../types/content-encryption-key";
+import { calculateContentEncryptionKeySize } from "../calculate/calculate-content-encryption-key-size";
 
 export const getOctDirEncryptionKey = ({
   encryption,

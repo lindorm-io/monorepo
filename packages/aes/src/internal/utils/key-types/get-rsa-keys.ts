@@ -7,9 +7,9 @@ import {
   CreateCekResult,
   DecryptCekOptions,
   DecryptCekResult,
-} from "#internal/types/content-encryption-key";
-import { calculateContentEncryptionKeySize } from "#internal/utils/calculate/calculate-content-encryption-key-size";
-import { calculateRsaOaepHash } from "#internal/utils/calculate/calculate-rsa-oaep-hash";
+} from "../../types/content-encryption-key";
+import { calculateContentEncryptionKeySize } from "../calculate/calculate-content-encryption-key-size";
+import { calculateRsaOaepHash } from "../calculate/calculate-rsa-oaep-hash";
 
 export const getRsaEncryptionKey = ({
   encryption,

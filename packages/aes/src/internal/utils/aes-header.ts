@@ -1,6 +1,6 @@
 import { B64 } from "@lindorm/b64";
 import { KryptosAlgorithm, KryptosEncryption } from "@lindorm/kryptos";
-import { AES_FORMAT_VERSION } from "#internal/constants/version";
+import { AES_FORMAT_VERSION } from "../constants/version";
 import { AesError } from "../../errors/AesError";
 import { AesContentType } from "../../types/content";
 import { PublicEncryptionJwk } from "../../types/types";

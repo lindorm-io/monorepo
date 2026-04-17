@@ -4,7 +4,7 @@ import {
   KeyUnwrapResult,
   KeyWrapOptions,
   KeyWrapResult,
-} from "#internal/types/key-wrap";
+} from "../../types/key-wrap";
 import { ecbKeyUnwrap as _ecbKeyUnwrap, ecbKeyWrap as _ecbKeyWrap } from "./ecb-key-wrap";
 import { gcmKeyUnwrap as _gcmKeyUnwrap, gcmKeyWrap as _gcmKeyWrap } from "./gcm-key-wrap";
 import { keyUnwrap, keyWrap } from "./key-wrap";
