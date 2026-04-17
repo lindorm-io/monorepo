@@ -13,14 +13,14 @@ import {
   SerialisedAesDecryption,
   SerialisedAesEncryption,
 } from "../types";
-import { PreparedEncryption } from "#internal/types/prepared-encryption";
+import { PreparedEncryption } from "../internal/types/prepared-encryption";
 import { isAesTokenised, parseAes } from "../utils";
-import { decryptAes, encryptAes } from "#internal/utils/encryption";
-import { prepareAesEncryption } from "#internal/utils/prepare-encryption";
-import { calculateContentType } from "#internal/utils/content";
-import { encryptEncoded } from "#internal/utils/encrypt-encoded";
-import { encryptSerialised } from "#internal/utils/encrypt-serialised";
-import { encryptTokenised } from "#internal/utils/encrypt-tokenised";
+import { decryptAes, encryptAes } from "../internal/utils/encryption";
+import { prepareAesEncryption } from "../internal/utils/prepare-encryption";
+import { calculateContentType } from "../internal/utils/content";
+import { encryptEncoded } from "../internal/utils/encrypt-encoded";
+import { encryptSerialised } from "../internal/utils/encrypt-serialised";
+import { encryptTokenised } from "../internal/utils/encrypt-tokenised";
 
 export class AesKit implements IAesKit {
   private readonly encryption: KryptosEncryption;

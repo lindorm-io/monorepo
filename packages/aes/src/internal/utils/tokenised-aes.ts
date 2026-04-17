@@ -8,7 +8,7 @@ import {
   decodeAesHeader,
   encodeAesHeader,
   headerToDecryptionParams,
-} from "#internal/utils/aes-header";
+} from "./aes-header";
 
 /**
  * New tokenised format (v1.0):

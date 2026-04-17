@@ -4,24 +4,24 @@ import {
   CreateCekResult,
   DecryptCekOptions,
   DecryptCekResult,
-} from "#internal/types/content-encryption-key";
+} from "../../types/content-encryption-key";
 import {
   getOctDirDecryptionKey as _getOctDirDecryptionKey,
   getOctDirEncryptionKey as _getOctDirEncryptionKey,
-} from "#internal/utils/oct/get-oct-dir-keys";
+} from "../oct/get-oct-dir-keys";
 import {
   getOctKeyWrapDecryptionKey as _getOctKeyWrapDecryptionKey,
   getOctKeyWrapEncryptionKey as _getOctKeyWrapEncryptionKey,
-} from "#internal/utils/oct/get-oct-key-key-wrap";
+} from "../oct/get-oct-key-key-wrap";
 import {
   getOctPbkdfKeyWrapDecryptionKey as _getOctPbkdfKeyWrapDecryptionKey,
   getOctPbkdfKeyWrapEncryptionKey as _getOctPbkdfKeyWrapEncryptionKey,
-} from "#internal/utils/oct/get-oct-pbkdf-key-wrap-keys";
+} from "../oct/get-oct-pbkdf-key-wrap-keys";
 import { getOctDecryptionKey, getOctEncryptionKey } from "./get-oct-keys";
 
-jest.mock("#internal/utils/oct/get-oct-dir-keys");
-jest.mock("#internal/utils/oct/get-oct-key-key-wrap");
-jest.mock("#internal/utils/oct/get-oct-pbkdf-key-wrap-keys");
+jest.mock("../oct/get-oct-dir-keys");
+jest.mock("../oct/get-oct-key-key-wrap");
+jest.mock("../oct/get-oct-pbkdf-key-wrap-keys");
 
 const getOctDirDecryptionKey = _getOctDirDecryptionKey as jest.Mock;
 const getOctDirEncryptionKey = _getOctDirEncryptionKey as jest.Mock;

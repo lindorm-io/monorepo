@@ -8,7 +8,7 @@ import {
 import { createPrivateKey, createPublicKey, diffieHellman } from "crypto";
 import { AesError } from "../../../errors/AesError";
 import { PublicEncryptionJwk } from "../../../types/types";
-import { DecryptCekOptions } from "#internal/types/content-encryption-key";
+import { DecryptCekOptions } from "../../types/content-encryption-key";
 
 type GenerateResult = {
   publicEncryptionJwk: PublicEncryptionJwk;

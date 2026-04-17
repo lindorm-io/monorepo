@@ -1,4 +1,4 @@
-import { AES_FORMAT_MAJOR } from "#internal/constants/version";
+import { AES_FORMAT_MAJOR } from "../constants/version";
 import { AesError } from "../../errors/AesError";
 
 /**

@@ -11,8 +11,8 @@ import {
   KeyUnwrapResult,
   KeyWrapOptions,
   KeyWrapResult,
-} from "#internal/types/key-wrap";
-import { calculateKeyWrapEncryption } from "#internal/utils/calculate/calculate-key-wrap-encryption";
+} from "../../types/key-wrap";
+import { calculateKeyWrapEncryption } from "../calculate/calculate-key-wrap-encryption";
 
 export const gcmKeyWrap = ({
   contentEncryptionKey,

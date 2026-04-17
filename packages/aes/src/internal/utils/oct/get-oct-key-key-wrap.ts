@@ -6,10 +6,10 @@ import {
   CreateCekResult,
   DecryptCekOptions,
   DecryptCekResult,
-} from "#internal/types/content-encryption-key";
-import { calculateContentEncryptionKeySize } from "#internal/utils/calculate/calculate-content-encryption-key-size";
-import { calculateKeyWrapSize } from "#internal/utils/calculate/calculate-key-wrap-size";
-import { keyUnwrap, keyWrap } from "#internal/utils/key-wrap/key-wrap";
+} from "../../types/content-encryption-key";
+import { calculateContentEncryptionKeySize } from "../calculate/calculate-content-encryption-key-size";
+import { calculateKeyWrapSize } from "../calculate/calculate-key-wrap-size";
+import { keyUnwrap, keyWrap } from "../key-wrap/key-wrap";
 
 export const getOctKeyWrapEncryptionKey = ({
   encryption,

@@ -2,12 +2,12 @@ import { CipherGCM, CipherGCMOptions, createCipheriv } from "crypto";
 import {
   EncryptContentOptions,
   EncryptContentResult,
-} from "#internal/types/prepared-encryption";
-import { calculateAesEncryption } from "#internal/utils/calculate/calculate-aes-encryption";
-import { calculateContentType, contentToBuffer } from "#internal/utils/content";
-import { createAuthTag } from "#internal/utils/data/auth-tag";
-import { getInitialisationVector } from "#internal/utils/data/get-initialisation-vector";
-import { splitContentEncryptionKey } from "#internal/utils/data/split-content-encryption-key";
+} from "../types/prepared-encryption";
+import { calculateAesEncryption } from "./calculate/calculate-aes-encryption";
+import { calculateContentType, contentToBuffer } from "./content";
+import { createAuthTag } from "./data/auth-tag";
+import { getInitialisationVector } from "./data/get-initialisation-vector";
+import { splitContentEncryptionKey } from "./data/split-content-encryption-key";
 
 export const encryptAesContent = (
   options: EncryptContentOptions,

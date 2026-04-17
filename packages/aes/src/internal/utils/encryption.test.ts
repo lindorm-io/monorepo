@@ -1,5 +1,5 @@
 import { KryptosEncryption, KryptosKit } from "@lindorm/kryptos";
-import { LATEST_AES_VERSION } from "#internal/constants/version";
+import { LATEST_AES_VERSION } from "../constants/version";
 import { decryptAes, encryptAes } from "./encryption";
 
 describe("aes-data", () => {

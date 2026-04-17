@@ -6,9 +6,9 @@ import {
   SerialisedAesDecryption,
 } from "../types";
 import { isAesBufferData, isAesSerialisedData, isAesTokenised } from "./is-aes";
-import { parseEncodedAesString } from "#internal/utils/encoded-aes";
-import { parseSerialisedAesRecord } from "#internal/utils/serialised-aes";
-import { parseTokenisedAesString } from "#internal/utils/tokenised-aes";
+import { parseEncodedAesString } from "../internal/utils/encoded-aes";
+import { parseSerialisedAesRecord } from "../internal/utils/serialised-aes";
+import { parseTokenisedAesString } from "../internal/utils/tokenised-aes";
 
 type ParseAes = {
   (data: string): ParsedAesDecryptionRecord;

@@ -4,9 +4,9 @@ import {
   KeyUnwrapResult,
   KeyWrapOptions,
   KeyWrapResult,
-} from "#internal/types/key-wrap";
+} from "../../types/key-wrap";
 import { AesError } from "../../../errors/AesError";
-import { calculateKeyWrapEncryption } from "#internal/utils/calculate/calculate-key-wrap-encryption";
+import { calculateKeyWrapEncryption } from "../calculate/calculate-key-wrap-encryption";
 
 const AIV = "A6A6A6A6A6A6A6A6" as const;
 const AIV_BUFFER = Buffer.from(AIV, "hex");

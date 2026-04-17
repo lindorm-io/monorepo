@@ -1,9 +1,9 @@
 import {
   PrepareEncryptionOptions,
   PreparedEncryption,
-} from "#internal/types/prepared-encryption";
-import { encryptAesContent } from "#internal/utils/encrypt-content";
-import { getEncryptionKey } from "#internal/utils/get-key/get-encryption-key";
+} from "../types/prepared-encryption";
+import { encryptAesContent } from "./encrypt-content";
+import { getEncryptionKey } from "./get-key/get-encryption-key";
 
 export const prepareAesEncryption = (
   options: PrepareEncryptionOptions,

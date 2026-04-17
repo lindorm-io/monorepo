@@ -3,11 +3,7 @@
   "compilerOptions": {
     "module": "esnext",
     "moduleResolution": "node",
-    "rootDir": ".",
-    "baseUrl": ".",
-    "paths": {
-      "#internal/*": ["./src/internal/*"]
-    }
+    "rootDir": "."
   },
   "include": ["__tests__/**/*", "src/**/*"]
 }

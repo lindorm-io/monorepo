@@ -4,19 +4,19 @@ import {
   CreateCekResult,
   DecryptCekOptions,
   DecryptCekResult,
-} from "#internal/types/content-encryption-key";
+} from "../../types/content-encryption-key";
 import {
   getDiffieHellmanDecryptionKey as _getDiffieHellmanDecryptionKey,
   getDiffieHellmanEncryptionKey as _getDiffieHellmanEncryptionKey,
-} from "#internal/utils/diffie-hellman/diffie-hellman";
+} from "../diffie-hellman/diffie-hellman";
 import {
   getDiffieHellmanKeyWrapDecryptionKey as _getDiffieHellmanKeyWrapDecryptionKey,
   getDiffieHellmanKeyWrapEncryptionKey as _getDiffieHellmanKeyWrapEncryptionKey,
-} from "#internal/utils/diffie-hellman/diffie-hellman-key-wrap";
+} from "../diffie-hellman/diffie-hellman-key-wrap";
 import { getEcDecryptionKey, getEcEncryptionKey } from "./get-ec-keys";
 
-jest.mock("#internal/utils/diffie-hellman/diffie-hellman");
-jest.mock("#internal/utils/diffie-hellman/diffie-hellman-key-wrap");
+jest.mock("../diffie-hellman/diffie-hellman");
+jest.mock("../diffie-hellman/diffie-hellman-key-wrap");
 
 const getDiffieHellmanDecryptionKey = _getDiffieHellmanDecryptionKey as jest.Mock;
 const getDiffieHellmanEncryptionKey = _getDiffieHellmanEncryptionKey as jest.Mock;
