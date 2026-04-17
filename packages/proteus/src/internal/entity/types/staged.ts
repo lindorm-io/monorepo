@@ -1,5 +1,5 @@
 import type { Dict } from "@lindorm/types";
-import type { z } from "zod/v4";
+import type { z } from "zod";
 import type { IEntity } from "../../../interfaces";
 import type { DiscriminatorValue, InheritanceStrategy } from "./inheritance";
 import type {

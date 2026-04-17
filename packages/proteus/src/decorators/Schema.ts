@@ -1,4 +1,4 @@
-import { z } from "zod/v4";
+import { z } from "zod";
 import { IEntity } from "../interfaces";
 import { stageSchema } from "../internal/entity/metadata/stage-metadata";
 

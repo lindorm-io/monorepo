@@ -1,4 +1,4 @@
-import { z } from "zod/v4";
+import { z } from "zod";
 import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata";
 import { Entity } from "./Entity";
 import { Field } from "./Field";
