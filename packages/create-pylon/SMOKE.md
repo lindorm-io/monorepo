@@ -12,8 +12,13 @@ cd /Users/jonn/Projects/lindorm-monorepo/packages/create-pylon
 npm run build
 
 # 2. Scaffold INTO the workspace glob (picks a representative combo)
-cd /Users/jonn/Projects/lindorm-monorepo
-node ./packages/create-pylon/dist/cli.js pylon-smoke
+#    cd into packages/ so the project is created at packages/pylon-smoke,
+#    matching the workspaces "packages/*" glob. If you cd into the repo
+#    root instead, the project lands at <root>/pylon-smoke (outside the
+#    workspace) and npm install pulls from the registry — defeating the
+#    smoke test's purpose.
+cd /Users/jonn/Projects/lindorm-monorepo/packages
+node ./create-pylon/dist/cli.js pylon-smoke
 
 # → answer prompts. A typical "flex everything" combo:
 #   features:     HTTP routes ✓ Socket.IO listeners ✓
@@ -24,7 +29,7 @@ node ./packages/create-pylon/dist/cli.js pylon-smoke
 #   workers:      all four
 
 # 3. Verify the generated project compiles
-cd packages/pylon-smoke
+cd pylon-smoke
 npx tsc --noEmit
 echo "exit=$?"   # must be 0
 
