@@ -1,5 +1,5 @@
 import { KeysInput } from "../../types";
-import { convertArray, convertObject, pascalCase } from "#internal/index";
+import { convertArray, convertObject, pascalCase } from "../../internal/index";
 
 export { pascalCase };
 
