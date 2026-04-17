@@ -43,7 +43,7 @@ export class EventRecord {
   @Field("string")
   public checksum: string = "";
 
-  @Field("jsonb")
+  @Field("json")
   public data: Record<string, unknown> = {};
 
   @Field("boolean")
@@ -59,7 +59,7 @@ export class EventRecord {
   @Field("integer")
   public expectedEvents: number = 0;
 
-  @Field("jsonb")
+  @Field("json")
   public meta: Record<string, unknown> = {};
 
   @Field("string")

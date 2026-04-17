@@ -28,11 +28,11 @@ export class SagaRecord {
   @Default(false)
   public destroyed: boolean = false;
 
-  @Field("jsonb")
+  @Field("array")
   @Default(() => [])
   public messagesToDispatch: Array<unknown> = [];
 
-  @Field("jsonb")
+  @Field("json")
   @Default(() => ({}))
   public state: Record<string, unknown> = {};
 
