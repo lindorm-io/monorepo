@@ -34,7 +34,7 @@
     "verify": "npm run typecheck; npm run build; npm test"
   },
   "dependencies": {
-    "@inquirer/prompts": "^7.10.1",
+    "@inquirer/prompts": "^8.3.0",
     "@lindorm/case": "^0.1.15",
     "@lindorm/iris": "^0.2.0",
     "@lindorm/logger": "^0.5.3",
