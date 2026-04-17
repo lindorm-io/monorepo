@@ -43,6 +43,23 @@ const listTree = (root: string): Array<string> => {
   return results;
 };
 
+const dumpTree = (root: string): Record<string, string> => {
+  const result: Record<string, string> = {};
+  const walk = (dir: string, prefix: string): void => {
+    for (const entry of readdirSync(dir).sort()) {
+      const full = join(dir, entry);
+      const rel = prefix ? `${prefix}/${entry}` : entry;
+      if (statSync(full).isDirectory()) {
+        walk(full, rel);
+      } else {
+        result[rel] = readFileSync(full, "utf-8");
+      }
+    }
+  };
+  walk(root, "");
+  return result;
+};
+
 describe("scaffold", () => {
   let projectDir: string;
 
@@ -61,13 +78,13 @@ describe("scaffold", () => {
         features: { http: false, socket: false, webhooks: false, audit: false },
       });
       copyTemplates(answers);
-      expect(listTree(projectDir)).toMatchSnapshot();
+      expect(dumpTree(projectDir)).toMatchSnapshot();
     });
 
     test("base + http overlay", () => {
       const answers = baseAnswers({ projectDir });
       copyTemplates(answers);
-      expect(listTree(projectDir)).toMatchSnapshot();
+      expect(dumpTree(projectDir)).toMatchSnapshot();
     });
 
     test("base + http + socket + workers + webhooks", () => {
@@ -77,7 +94,7 @@ describe("scaffold", () => {
         workers: ["amphora-refresh"],
       });
       copyTemplates(answers);
-      expect(listTree(projectDir)).toMatchSnapshot();
+      expect(dumpTree(projectDir)).toMatchSnapshot();
     });
 
     test("renames _gitignore to .gitignore but leaves _middleware.ts alone", () => {
