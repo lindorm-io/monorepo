@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { composed } from "#internal/utils/composed";
+import { composed } from "./internal/utils/composed";
 import { program } from "commander";
 
 program
