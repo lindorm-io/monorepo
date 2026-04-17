@@ -990,14 +990,24 @@ Top-level `PylonAuthOptions` carries the IdP credentials (`clientId`, `clientSec
 
 **Auto-created routes:**
 
-| Route                              | Purpose                  |
-| ---------------------------------- | ------------------------ |
-| `GET /:prefix/login`               | Start authorization flow |
-| `GET /:prefix/login/callback`      | Handle OIDC callback     |
-| `GET /:prefix/logout`              | Start logout flow        |
-| `GET /:prefix/logout/callback`     | Handle logout callback   |
-| `GET /:prefix/userinfo`            | Fetch user info          |
-| `POST /:prefix/backchannel-logout` | RP-initiated logout      |
+| Route                              | Purpose                                                         | Default                                    |
+| ---------------------------------- | --------------------------------------------------------------- | ------------------------------------------ |
+| `GET /:prefix/`                    | Returns session fields filtered by `expose` config              | always                                     |
+| `GET /:prefix/error`               | Error landing page for OIDC failures                            | always                                     |
+| `GET /:prefix/introspect`          | Token introspection (RFC 7662) — `ctx.auth.introspect()` result | off — opt in via `router.introspect: true` |
+| `GET /:prefix/login`               | Start authorization flow                                        | always                                     |
+| `GET /:prefix/login/callback`      | Handle OIDC callback                                            | always                                     |
+| `GET /:prefix/logout`              | Start logout flow                                               | always                                     |
+| `GET /:prefix/logout/callback`     | Handle logout callback                                          | always                                     |
+| `GET /:prefix/refresh`             | Force-refresh the session's tokens                              | always                                     |
+| `GET /:prefix/userinfo`            | IdP userinfo endpoint (or local id_token fast path)             | always                                     |
+| `POST /:prefix/backchannel-logout` | RP-initiated logout from the IdP                                | always                                     |
+
+Three of these routes surface identity-adjacent data and it's worth knowing which one to reach for:
+
+- **`GET /:prefix/`** — returns fields from the local session according to the `router.expose` config. This is _your_ session state, not the IdP's view.
+- **`GET /:prefix/userinfo`** — returns user claims. Fast path: parses the id*token locally. Fallback: calls the IdP's userinfo endpoint. Answers *"who is this user?"\_.
+- **`GET /:prefix/introspect`** — returns RFC 7662 token metadata (`active`, `scope`, `client_id`, `exp`, `iat`, `sub`, `token_type`, etc.). Answers _"is this token valid, what can it do, when does it expire?"_. Off by default — opt in when you actually need token metadata on the wire.
 
 ## Session Management
 
