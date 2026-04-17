@@ -8,9 +8,9 @@ import { readFileSync } from "fs";
 import { resolve } from "path";
 import { Command } from "commander";
 import {
-  runIrisGenerateMessage,
+  runIrisGenerateSampleMessage,
   runIrisInit,
-  runProteusGenerateEntity,
+  runProteusGenerateSampleEntity,
   runProteusInit,
 } from "./drivers";
 import { initGit } from "./git";
@@ -84,13 +84,13 @@ export const run = async (positionalName?: string): Promise<void> => {
   if (answers.proteusDriver !== "none") {
     process.stdout.write(`\nGenerating proteus scaffolding …\n`);
     await runProteusInit(answers.projectDir, answers.proteusDriver);
-    await runProteusGenerateEntity(answers.projectDir, "SampleEntity");
+    await runProteusGenerateSampleEntity(answers.projectDir);
   }
 
   if (answers.irisDriver !== "none") {
     process.stdout.write(`\nGenerating iris scaffolding …\n`);
     await runIrisInit(answers.projectDir, answers.irisDriver);
-    await runIrisGenerateMessage(answers.projectDir, "SampleMessage");
+    await runIrisGenerateSampleMessage(answers.projectDir);
   }
 
   process.stdout.write(`\nInitialising git …\n`);
