@@ -5,7 +5,7 @@ import { IKryptos } from "@lindorm/kryptos";
 import { ShaKit } from "@lindorm/sha";
 import { Dict, DsaEncoding, ShaAlgorithm } from "@lindorm/types";
 import { BinaryToTextEncoding } from "crypto";
-import { z } from "zod/v4";
+import { z } from "zod";
 import { PylonHttpContext, PylonHttpMiddleware } from "../../types";
 
 export type GetSignedRequestKryptosCallback<

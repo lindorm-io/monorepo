@@ -1,5 +1,5 @@
 import { ClientError } from "@lindorm/errors";
-import { z } from "zod/v4";
+import { z } from "zod";
 import {
   PylonAuthRouterConfig,
   PylonHttpContext,
