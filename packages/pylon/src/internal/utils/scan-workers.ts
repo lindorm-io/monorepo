@@ -1,7 +1,6 @@
 import { IAmphora } from "@lindorm/amphora";
 import { pascalCase } from "@lindorm/case";
 import { ReadableTime } from "@lindorm/date";
-import { isObject, isString } from "@lindorm/is";
 import { ILogger } from "@lindorm/logger";
 import { RetryOptions } from "@lindorm/retry";
 import {
@@ -23,6 +22,14 @@ type Options = {
 export const scanWorkers = (options: Options): Array<ILindormWorker> => {
   const { workers = [], workersInterval = "5m", workersRetry } = options;
 
+  const instances = workers.filter(
+    (a): a is ILindormWorker => a instanceof LindormWorker,
+  );
+
+  const remaining = workers.filter(
+    (a): a is LindormWorkerConfig | string => !(a instanceof LindormWorker),
+  ) as LindormWorkerScannerInput;
+
   const result: Array<ILindormWorker> = [
     new LindormWorker({
       alias: "AmphoraWorker",
@@ -31,14 +38,19 @@ export const scanWorkers = (options: Options): Array<ILindormWorker> => {
       logger: options.logger,
       retry: workersRetry,
     }),
-    ...(workers.filter((a) => !isObject(a) && !isString(a)) as Array<ILindormWorker>),
+    ...instances,
   ];
 
-  const scan = LindormWorkerScanner.scan(
-    workers.filter((a) => isObject(a) || isString(a)) as LindormWorkerScannerInput,
-  );
+  const scan = LindormWorkerScanner.scan(remaining);
 
-  for (const config of scan) {
+  for (const item of scan) {
+    if (item instanceof LindormWorker) {
+      result.push(item);
+      continue;
+    }
+
+    const config = item as LindormWorkerConfig;
+
     result.push(
       new LindormWorker({
         alias: pascalCase(config.alias),
