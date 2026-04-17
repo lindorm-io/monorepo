@@ -3,7 +3,7 @@ import fastSafeStringify from "fast-safe-stringify";
 import { blue, cyan, gray, green, red, white, yellow } from "picocolors";
 import { Formatter } from "picocolors/types";
 import { LogContent, LogLevel } from "../../types";
-import { InternalLog } from "#internal/types/internal-log";
+import { InternalLog } from "../types/internal-log";
 import { inspectDictionary } from "../../utils/inspect-dictionary";
 
 const colourise = (

@@ -1,4 +1,4 @@
-import { InternalLog } from "#internal/types/internal-log";
+import { InternalLog } from "../types/internal-log";
 import { readableFormat } from "./readable-format";
 
 const makeLog = (overrides: Partial<InternalLog> = {}): InternalLog => ({
