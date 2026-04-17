@@ -51,6 +51,10 @@ export class WebhookSubscription implements IWebhookSubscription {
   @Field("string")
   public ownerId!: string;
 
+  @Nullable()
+  @Field("string")
+  public tenantId!: string | null;
+
   @Field("url")
   public url!: string;
 

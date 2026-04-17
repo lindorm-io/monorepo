@@ -24,9 +24,13 @@ export const setupWebhookRequestConsumer = async (
       return;
     }
 
-    const active = subscriptions.filter((s) => s.suspendedAt === null);
+    const matched = subscriptions.filter(
+      (s) =>
+        s.suspendedAt === null &&
+        (s.tenantId === null || s.tenantId === message.tenantId),
+    );
 
-    if (!active.length) {
+    if (!matched.length) {
       logger.debug("No active webhook subscriptions for event", {
         event: message.event,
         total: subscriptions.length,
@@ -36,7 +40,7 @@ export const setupWebhookRequestConsumer = async (
 
     const dispatchQueue = iris.workerQueue(WebhookDispatch);
 
-    for (const subscription of active) {
+    for (const subscription of matched) {
       const dispatch = dispatchQueue.create({
         correlationId: message.correlationId,
         event: message.event,
@@ -48,7 +52,7 @@ export const setupWebhookRequestConsumer = async (
 
     logger.debug("Webhook dispatches published", {
       event: message.event,
-      count: active.length,
+      count: matched.length,
     });
   });
 

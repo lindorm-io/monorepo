@@ -30,6 +30,7 @@ export const createWebhookMiddleware = <C extends PylonContext>(
           correlationId: ctx.state.metadata.correlationId,
           event,
           payload,
+          tenantId: ctx.state.tenant ?? null,
         });
         await wq.publish(msg);
       } catch (err: any) {

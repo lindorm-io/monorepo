@@ -16,6 +16,7 @@ export interface IWebhookSubscription {
   method: WebhookMethod;
   headers: Dict<string>;
   ownerId: string;
+  tenantId: string | null;
   url: string;
 
   // auth headers

@@ -53,8 +53,42 @@ describe("createWebhookMiddleware", () => {
       correlationId: "test-correlation-id",
       event: "test-event",
       payload: { data: "test" },
+      tenantId: null,
     });
     expect(mockPublish).toHaveBeenCalled();
+  });
+
+  test("should propagate tenantId from ctx.state.tenant", async () => {
+    ctx.state.tenant = "tenant-xyz";
+
+    const middleware = createWebhookMiddleware({ enabled: true });
+
+    await middleware(ctx, jest.fn());
+
+    await ctx.webhook("tenant-event", { foo: "bar" });
+
+    expect(mockCreate).toHaveBeenCalledWith({
+      correlationId: "test-correlation-id",
+      event: "tenant-event",
+      payload: { foo: "bar" },
+      tenantId: "tenant-xyz",
+    });
+  });
+
+  test("should coerce undefined tenant to null", async () => {
+    // ctx.state.tenant intentionally not set (useTenant() never ran)
+    const middleware = createWebhookMiddleware({ enabled: true });
+
+    await middleware(ctx, jest.fn());
+
+    await ctx.webhook("missing-tenant-event", { foo: "bar" });
+
+    expect(mockCreate).toHaveBeenCalledWith({
+      correlationId: "test-correlation-id",
+      event: "missing-tenant-event",
+      payload: { foo: "bar" },
+      tenantId: null,
+    });
   });
 
   test("should swallow error when optional", async () => {

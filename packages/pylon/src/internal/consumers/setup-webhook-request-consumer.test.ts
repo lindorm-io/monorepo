@@ -40,12 +40,14 @@ describe("setupWebhookRequestConsumer", () => {
         event: "order.created",
         url: "https://example.com/hook1",
         suspendedAt: null,
+        tenantId: null,
       },
       {
         id: "sub-2",
         event: "order.created",
         url: "https://example.com/hook2",
         suspendedAt: null,
+        tenantId: null,
       },
     ];
     mockFind.mockResolvedValueOnce(subscriptions);
@@ -58,6 +60,7 @@ describe("setupWebhookRequestConsumer", () => {
       correlationId: "corr-id-1",
       event: "order.created",
       payload: { orderId: "123" },
+      tenantId: null,
     });
 
     expect(mockFind).toHaveBeenCalledWith({ event: "order.created" });
@@ -88,6 +91,7 @@ describe("setupWebhookRequestConsumer", () => {
       correlationId: "corr-id-2",
       event: "user.deleted",
       payload: {},
+      tenantId: null,
     });
 
     expect(mockFind).toHaveBeenCalledWith({ event: "user.deleted" });
@@ -102,12 +106,14 @@ describe("setupWebhookRequestConsumer", () => {
         event: "order.created",
         url: "https://example.com/hook-active",
         suspendedAt: null,
+        tenantId: null,
       },
       {
         id: "sub-suspended",
         event: "order.created",
         url: "https://example.com/hook-suspended",
         suspendedAt: new Date("2026-01-01T00:00:00.000Z"),
+        tenantId: null,
       },
     ];
     mockFind.mockResolvedValueOnce(subscriptions);
@@ -120,6 +126,7 @@ describe("setupWebhookRequestConsumer", () => {
       correlationId: "corr-id-3",
       event: "order.created",
       payload: { orderId: "999" },
+      tenantId: null,
     });
 
     expect(mockCreate).toHaveBeenCalledTimes(1);
@@ -139,12 +146,14 @@ describe("setupWebhookRequestConsumer", () => {
         event: "order.created",
         url: "https://example.com/hook1",
         suspendedAt: new Date("2026-01-01T00:00:00.000Z"),
+        tenantId: null,
       },
       {
         id: "sub-suspended-2",
         event: "order.created",
         url: "https://example.com/hook2",
         suspendedAt: new Date("2026-01-02T00:00:00.000Z"),
+        tenantId: null,
       },
     ];
     mockFind.mockResolvedValueOnce(subscriptions);
@@ -157,9 +166,220 @@ describe("setupWebhookRequestConsumer", () => {
       correlationId: "corr-id-4",
       event: "order.created",
       payload: {},
+      tenantId: null,
     });
 
     expect(mockCreate).not.toHaveBeenCalled();
     expect(mockPublish).not.toHaveBeenCalled();
+  });
+
+  test("should only match null-tenant subscriptions when dispatch has null tenantId", async () => {
+    const subscriptions = [
+      {
+        id: "sub-global",
+        event: "order.created",
+        url: "https://example.com/global",
+        suspendedAt: null,
+        tenantId: null,
+      },
+      {
+        id: "sub-tenant-a",
+        event: "order.created",
+        url: "https://example.com/tenant-a",
+        suspendedAt: null,
+        tenantId: "tenant-a",
+      },
+    ];
+    mockFind.mockResolvedValueOnce(subscriptions);
+
+    await setupWebhookRequestConsumer(iris, proteus, logger);
+
+    const handler = mockConsume.mock.calls[0][1];
+
+    await handler({
+      correlationId: "corr-id-null",
+      event: "order.created",
+      payload: {},
+      tenantId: null,
+    });
+
+    expect(mockCreate).toHaveBeenCalledTimes(1);
+    expect(mockCreate).toHaveBeenCalledWith({
+      correlationId: "corr-id-null",
+      event: "order.created",
+      payload: {},
+      subscription: subscriptions[0],
+    });
+  });
+
+  test("should match only tenanted subscriptions when all subs are tenanted", async () => {
+    const subscriptions = [
+      {
+        id: "sub-tenant-a",
+        event: "order.created",
+        url: "https://example.com/tenant-a",
+        suspendedAt: null,
+        tenantId: "tenant-a",
+      },
+      {
+        id: "sub-tenant-b",
+        event: "order.created",
+        url: "https://example.com/tenant-b",
+        suspendedAt: null,
+        tenantId: "tenant-b",
+      },
+    ];
+    mockFind.mockResolvedValueOnce(subscriptions);
+
+    await setupWebhookRequestConsumer(iris, proteus, logger);
+
+    const handler = mockConsume.mock.calls[0][1];
+
+    await handler({
+      correlationId: "corr-id-a",
+      event: "order.created",
+      payload: {},
+      tenantId: "tenant-a",
+    });
+
+    expect(mockCreate).toHaveBeenCalledTimes(1);
+    expect(mockCreate).toHaveBeenCalledWith({
+      correlationId: "corr-id-a",
+      event: "order.created",
+      payload: {},
+      subscription: subscriptions[0],
+    });
+  });
+
+  test("should match both global and tenanted subs for a tenanted dispatch", async () => {
+    const subscriptions = [
+      {
+        id: "sub-global",
+        event: "order.created",
+        url: "https://example.com/global",
+        suspendedAt: null,
+        tenantId: null,
+      },
+      {
+        id: "sub-tenant-a",
+        event: "order.created",
+        url: "https://example.com/tenant-a",
+        suspendedAt: null,
+        tenantId: "tenant-a",
+      },
+      {
+        id: "sub-tenant-b",
+        event: "order.created",
+        url: "https://example.com/tenant-b",
+        suspendedAt: null,
+        tenantId: "tenant-b",
+      },
+    ];
+    mockFind.mockResolvedValueOnce(subscriptions);
+
+    await setupWebhookRequestConsumer(iris, proteus, logger);
+
+    const handler = mockConsume.mock.calls[0][1];
+
+    await handler({
+      correlationId: "corr-id-mixed",
+      event: "order.created",
+      payload: {},
+      tenantId: "tenant-a",
+    });
+
+    expect(mockCreate).toHaveBeenCalledTimes(2);
+    expect(mockCreate).toHaveBeenCalledWith({
+      correlationId: "corr-id-mixed",
+      event: "order.created",
+      payload: {},
+      subscription: subscriptions[0],
+    });
+    expect(mockCreate).toHaveBeenCalledWith({
+      correlationId: "corr-id-mixed",
+      event: "order.created",
+      payload: {},
+      subscription: subscriptions[1],
+    });
+  });
+
+  test("should isolate tenants - cross-tenant subscriptions not matched", async () => {
+    const subscriptions = [
+      {
+        id: "sub-tenant-a",
+        event: "order.created",
+        url: "https://example.com/tenant-a",
+        suspendedAt: null,
+        tenantId: "tenant-a",
+      },
+      {
+        id: "sub-tenant-b",
+        event: "order.created",
+        url: "https://example.com/tenant-b",
+        suspendedAt: null,
+        tenantId: "tenant-b",
+      },
+    ];
+    mockFind.mockResolvedValueOnce(subscriptions);
+
+    await setupWebhookRequestConsumer(iris, proteus, logger);
+
+    const handler = mockConsume.mock.calls[0][1];
+
+    await handler({
+      correlationId: "corr-id-c",
+      event: "order.created",
+      payload: {},
+      tenantId: "tenant-c",
+    });
+
+    expect(mockCreate).not.toHaveBeenCalled();
+    expect(mockPublish).not.toHaveBeenCalled();
+  });
+
+  test("should respect suspended filter together with tenant match", async () => {
+    const subscriptions = [
+      {
+        id: "sub-tenant-a-active",
+        event: "order.created",
+        url: "https://example.com/tenant-a-active",
+        suspendedAt: null,
+        tenantId: "tenant-a",
+      },
+      {
+        id: "sub-tenant-a-suspended",
+        event: "order.created",
+        url: "https://example.com/tenant-a-suspended",
+        suspendedAt: new Date("2026-01-01T00:00:00.000Z"),
+        tenantId: "tenant-a",
+      },
+      {
+        id: "sub-global-suspended",
+        event: "order.created",
+        url: "https://example.com/global-suspended",
+        suspendedAt: new Date("2026-01-01T00:00:00.000Z"),
+        tenantId: null,
+      },
+    ];
+    mockFind.mockResolvedValueOnce(subscriptions);
+
+    await setupWebhookRequestConsumer(iris, proteus, logger);
+
+    const handler = mockConsume.mock.calls[0][1];
+
+    await handler({
+      correlationId: "corr-id-and",
+      event: "order.created",
+      payload: {},
+      tenantId: "tenant-a",
+    });
+
+    expect(mockCreate).toHaveBeenCalledTimes(1);
+    expect(mockCreate).toHaveBeenCalledWith({
+      correlationId: "corr-id-and",
+      event: "order.created",
+      payload: {},
+      subscription: subscriptions[0],
+    });
   });
 });

@@ -42,6 +42,7 @@ describe("createDispatchWebhook", () => {
         method: WebhookMethod.Post,
         headers: {},
         ownerId: "d5555606-ff30-5647-aa10-54be8d2a1086",
+        tenantId: null,
         url: "http://test.webhook.com/endpoint",
 
         authHeaders: {},
