@@ -2,16 +2,16 @@ import type {
   EntityMetadata,
   MetaField,
   MetaRelation,
-} from "#internal/entity/types/metadata";
+} from "../../../entity/types/metadata";
 import { dehydrateToRow } from "./dehydrate-entity";
 
 // ─── Module Mocks ────────────────────────────────────────────────────────────
 
-jest.mock("#internal/entity/utils/resolve-join-key-value", () => ({
+jest.mock("../../../entity/utils/resolve-join-key-value", () => ({
   resolveJoinKeyValue: jest.fn(),
 }));
 
-import { resolveJoinKeyValue } from "#internal/entity/utils/resolve-join-key-value";
+import { resolveJoinKeyValue } from "../../../entity/utils/resolve-join-key-value";
 
 const mockResolveJoinKeyValue = resolveJoinKeyValue as jest.MockedFunction<
   typeof resolveJoinKeyValue

@@ -1,8 +1,8 @@
 import type { IAmphora } from "@lindorm/amphora";
 import type { DeepPartial, Predicate } from "@lindorm/types";
 import type { IEntity } from "../../../../../interfaces";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
-import { encryptFieldValue } from "#internal/entity/utils/encrypt-field-value";
+import type { EntityMetadata } from "../../../../entity/types/metadata";
+import { encryptFieldValue } from "../../../../entity/utils/encrypt-field-value";
 import { ProteusRepositoryError } from "../../../../../errors/ProteusRepositoryError";
 import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier";
 import { coerceWriteValue } from "./coerce-value";
@@ -20,8 +20,8 @@ import { mysqlDialect } from "../mysql-dialect";
 import {
   compileSoftDelete as sharedCompileSoftDelete,
   compileRestore as sharedCompileRestore,
-} from "#internal/utils/sql/compile-soft-delete";
-import { compileDeleteExpired as sharedCompileDeleteExpired } from "#internal/utils/sql/compile-delete-expired";
+} from "../../../../utils/sql/compile-soft-delete";
+import { compileDeleteExpired as sharedCompileDeleteExpired } from "../../../../utils/sql/compile-delete-expired";
 
 /**
  * Compile an UPDATE statement for a single entity.

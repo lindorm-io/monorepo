@@ -1,8 +1,8 @@
 import { isObject } from "@lindorm/is";
 import type { Dict, Predicate, PredicateOperator } from "@lindorm/types";
 import type { IEntity } from "../../../interfaces";
-import type { EntityMetadata, MetaField } from "#internal/entity/types/metadata";
-import type { PredicateEntry } from "#internal/types/query";
+import type { EntityMetadata, MetaField } from "../../entity/types/metadata";
+import type { PredicateEntry } from "../../types/query";
 import { NotSupportedError, ProteusError } from "../../../errors";
 import { resolveColumnName } from "./resolve-column-name";
 import type { SqlDialect } from "./sql-dialect";

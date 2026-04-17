@@ -1,8 +1,8 @@
 import type { IAmphora } from "@lindorm/amphora";
 import type { IEntity } from "../../../../../interfaces";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
+import type { EntityMetadata } from "../../../../entity/types/metadata";
 import { ProteusRepositoryError } from "../../../../../errors/ProteusRepositoryError";
-import { getUpsertSetSkipColumns } from "#internal/utils/sql/get-upsert-set-skip-columns";
+import { getUpsertSetSkipColumns } from "../../../../utils/sql/get-upsert-set-skip-columns";
 import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier";
 import type { CompiledSql } from "./compiled-sql";
 import { applyDiscriminatorColumn } from "./compile-insert";

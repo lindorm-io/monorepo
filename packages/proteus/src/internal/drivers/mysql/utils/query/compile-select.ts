@@ -1,16 +1,16 @@
 import type { IEntity } from "../../../../../interfaces";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
-import type { IncludeSpec, RawSelectEntry, WindowSpec } from "#internal/types/query";
+import type { EntityMetadata } from "../../../../entity/types/metadata";
+import type { IncludeSpec, RawSelectEntry, WindowSpec } from "../../../../types/query";
 import type {
   AliasMap,
   BuiltAliasResult,
   InheritanceAliasMap,
-} from "#internal/utils/sql/types";
+} from "../../../../utils/sql/types";
 import {
   buildAliasMap as sharedBuildAliasMap,
   compileFrom as sharedCompileFrom,
   compileSelect as sharedCompileSelect,
-} from "#internal/utils/sql/compile-select";
+} from "../../../../utils/sql/compile-select";
 import { mysqlDialect } from "../mysql-dialect";
 import { buildInheritanceAliases } from "./compile-inheritance-join";
 import { findRelationByKey, getRelationMetadata } from "./get-relation-metadata";

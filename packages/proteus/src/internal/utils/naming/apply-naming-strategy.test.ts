@@ -3,7 +3,7 @@ import type {
   EntityMetadata,
   MetaRelation,
   MetaRelationOptions,
-} from "#internal/entity/types/metadata";
+} from "../../entity/types/metadata";
 import { applyNamingStrategy } from "./apply-naming-strategy";
 
 const defaultOptions: MetaRelationOptions = {

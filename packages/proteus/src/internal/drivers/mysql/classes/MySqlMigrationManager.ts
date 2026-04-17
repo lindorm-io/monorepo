@@ -1,16 +1,16 @@
-import type { EntityMetadata } from "#internal/entity/types/metadata";
+import type { EntityMetadata } from "../../../entity/types/metadata";
 import type {
   GenerateBaselineResult,
   GenerateMigrationResult,
   IMigrationManager,
   MigrationStatusResult,
-} from "#internal/interfaces/MigrationManager";
-import type { NamespaceOptions } from "#internal/types/types";
-import { buildMysqlLockName } from "#internal/utils/advisory-lock-name";
-import { computeHash } from "#internal/utils/migration/compute-hash";
-import { loadMigrations } from "#internal/utils/migration/load-migrations";
-import { resolvePending } from "#internal/utils/migration/resolve-pending";
-import { validateMigrationDriver } from "#internal/utils/migration/validate-migration-driver";
+} from "../../../interfaces/MigrationManager";
+import type { NamespaceOptions } from "../../../types/types";
+import { buildMysqlLockName } from "../../../utils/advisory-lock-name";
+import { computeHash } from "../../../utils/migration/compute-hash";
+import { loadMigrations } from "../../../utils/migration/load-migrations";
+import { resolvePending } from "../../../utils/migration/resolve-pending";
+import { validateMigrationDriver } from "../../../utils/migration/validate-migration-driver";
 import type { ILogger } from "@lindorm/logger";
 import { MySqlMigrationError } from "../errors/MySqlMigrationError";
 import type {

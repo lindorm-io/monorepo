@@ -5,7 +5,7 @@ import type {
   IProteusRepository,
   ITransactionContext,
 } from "../../../../interfaces";
-import type { RepositoryFactory } from "#internal/types/repository-factory";
+import type { RepositoryFactory } from "../../../types/repository-factory";
 import type { RedisTransactionHandle } from "../types/redis-types";
 import type { RedisDriver } from "./RedisDriver";
 import { RedisDriverError } from "../errors/RedisDriverError";

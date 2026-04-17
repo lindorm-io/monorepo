@@ -1,9 +1,9 @@
 import type { Predicate } from "@lindorm/types";
 import type { IEntity } from "../../../interfaces";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
-import type { PredicateEntry } from "#internal/types/query";
-import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
-import { getEntityName } from "#internal/entity/utils/get-entity-name";
+import type { EntityMetadata } from "../../entity/types/metadata";
+import type { PredicateEntry } from "../../types/query";
+import { getEntityMetadata } from "../../entity/metadata/get-entity-metadata";
+import { getEntityName } from "../../entity/utils/get-entity-name";
 import type { CompiledSql } from "./compiled-sql";
 import { compileWhere } from "./compile-where";
 import type { SqlDialect } from "./sql-dialect";

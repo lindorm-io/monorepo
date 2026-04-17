@@ -13,30 +13,30 @@ import type {
   UpsertOptions,
 } from "../../../../types";
 import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor";
-import type { MetaRelation, QueryScope } from "#internal/entity/types/metadata";
-import type { RepositoryFactory } from "#internal/types/repository-factory";
-import type { AggregateFunction } from "#internal/types/aggregate";
-import type { LazyRelationLoader } from "#internal/entity/utils/install-lazy-relations";
+import type { MetaRelation, QueryScope } from "../../../entity/types/metadata";
+import type { RepositoryFactory } from "../../../types/repository-factory";
+import type { AggregateFunction } from "../../../types/aggregate";
+import type { LazyRelationLoader } from "../../../entity/utils/install-lazy-relations";
 import type { EntityEmitFn } from "../../../../types/event-map";
 import type { PaginateOptions } from "../../../../types/paginate-options";
-import type { KeysetOrderEntry } from "#internal/utils/pagination/build-keyset-order";
-import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
-import { DriverRepositoryBase } from "#internal/classes/DriverRepositoryBase";
-import { buildPrimaryKeyPredicate } from "#internal/utils/repository/build-pk-predicate";
+import type { KeysetOrderEntry } from "../../../utils/pagination/build-keyset-order";
+import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata";
+import { DriverRepositoryBase } from "../../../classes/DriverRepositoryBase";
+import { buildPrimaryKeyPredicate } from "../../../utils/repository/build-pk-predicate";
 import {
   guardAppendOnly,
   validateRelationNames,
-} from "#internal/utils/repository/repository-guards";
-import { RelationPersister } from "#internal/utils/repository/RelationPersister";
-import { buildRelationFilter } from "#internal/utils/repository/build-relation-filter";
-import { filterHiddenSelections } from "#internal/utils/query/filter-hidden-selections";
+} from "../../../utils/repository/repository-guards";
+import { RelationPersister } from "../../../utils/repository/RelationPersister";
+import { buildRelationFilter } from "../../../utils/repository/build-relation-filter";
+import { filterHiddenSelections } from "../../../utils/query/filter-hidden-selections";
 import {
   computeAggregateFromValues,
   extractNumericValues,
-} from "#internal/utils/query/compute-in-memory-aggregate";
-import { executePaginateFindInMemory } from "#internal/utils/pagination/execute-paginate-find-in-memory";
-import { getSnapshot, clearSnapshot } from "#internal/entity/utils/snapshot-store";
-import { diffColumns } from "#internal/entity/utils/diff-columns";
+} from "../../../utils/query/compute-in-memory-aggregate";
+import { executePaginateFindInMemory } from "../../../utils/pagination/execute-paginate-find-in-memory";
+import { getSnapshot, clearSnapshot } from "../../../entity/utils/snapshot-store";
+import { diffColumns } from "../../../entity/utils/diff-columns";
 import { NotSupportedError } from "../../../../errors/NotSupportedError";
 import { RedisDriverError } from "../errors/RedisDriverError";
 import { RedisDuplicateKeyError } from "../errors/RedisDuplicateKeyError";
@@ -50,7 +50,7 @@ import { buildJoinSetKey, buildReverseJoinSetKey } from "../utils/build-join-set
 import { buildScanPattern } from "../utils/build-scan-pattern";
 import { scanEntityKeys } from "../utils/scan-entity-keys";
 import { deserializeHash } from "../utils/deserialize-hash";
-import { resolveInheritanceRoot } from "#internal/entity/utils/resolve-inheritance-root";
+import { resolveInheritanceRoot } from "../../../entity/utils/resolve-inheritance-root";
 
 export type RedisRepositoryOptions<E extends IEntity> = {
   target: Constructor<E>;

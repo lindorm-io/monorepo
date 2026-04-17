@@ -7,14 +7,14 @@ import type {
   IProteusQueryBuilder,
   IUpdateQueryBuilder,
 } from "../interfaces";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
+import type { EntityMetadata } from "../internal/entity/types/metadata";
 import type {
   IncludeOptions,
   QueryState,
   SqlFragment,
   WindowSpec,
-} from "#internal/types/query";
-import { resolveIncludeStrategy } from "#internal/utils/query/resolve-include-strategy";
+} from "../internal/types/query";
+import { resolveIncludeStrategy } from "../internal/utils/query/resolve-include-strategy";
 
 /**
  * Abstract base class for fluent query builders.

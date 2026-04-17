@@ -5,7 +5,7 @@
  * - `sql` — tagged template literal for building safe, parameterized SQL: `` sql`SELECT * FROM ${table}` ``
  * - `isSqlFragment` — type guard to check if a value is a SqlFragment
  */
-export type { SqlFragment } from "#internal/types/query";
+export type { SqlFragment } from "../internal/types/query";
 export {
   sql,
   isSqlFragment,

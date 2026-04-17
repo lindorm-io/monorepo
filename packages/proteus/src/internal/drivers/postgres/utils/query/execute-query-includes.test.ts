@@ -1,6 +1,6 @@
 import { makeField } from "../../../../__fixtures__/make-field";
-import type { EntityMetadata, MetaRelation } from "#internal/entity/types/metadata";
-import type { IncludeSpec } from "#internal/types/query";
+import type { EntityMetadata, MetaRelation } from "../../../../entity/types/metadata";
+import type { IncludeSpec } from "../../../../types/query";
 import type { ExecuteQueryIncludesOptions } from "./execute-query-includes";
 
 // Mock the helpers that access the metadata registry and compile SQL

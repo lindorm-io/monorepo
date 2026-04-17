@@ -1,7 +1,7 @@
 import type { Predicate } from "@lindorm/types";
 import type { IEntity, IDeleteQueryBuilder, WriteResult } from "../../../../interfaces";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
-import type { PredicateEntry } from "#internal/types/query";
+import type { EntityMetadata } from "../../../entity/types/metadata";
+import type { PredicateEntry } from "../../../types/query";
 import { ProteusError } from "../../../../errors/ProteusError";
 import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError";
 import type { MysqlQueryClient } from "../types/mysql-query-client";

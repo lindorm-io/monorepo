@@ -1,7 +1,7 @@
 import type { Dict, Predicate } from "@lindorm/types";
 import type { IEntity } from "../../../interfaces";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
-import type { PredicateEntry, RawWhereEntry } from "#internal/types/query";
+import type { EntityMetadata } from "../../entity/types/metadata";
+import type { PredicateEntry, RawWhereEntry } from "../../types/query";
 import type { SqlDialect } from "./sql-dialect";
 
 export type CompilePredicateFn = (

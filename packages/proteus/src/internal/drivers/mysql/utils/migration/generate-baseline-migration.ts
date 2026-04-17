@@ -1,9 +1,9 @@
-import type { EntityMetadata } from "#internal/entity/types/metadata";
-import type { GenerateBaselineResult } from "#internal/interfaces/MigrationManager";
-import type { NamespaceOptions } from "#internal/types/types";
-import { computeHash } from "#internal/utils/migration/compute-hash";
-import { loadMigrations } from "#internal/utils/migration/load-migrations";
-import { writeMigrationFile } from "#internal/utils/migration/write-migration-file";
+import type { EntityMetadata } from "../../../../entity/types/metadata";
+import type { GenerateBaselineResult } from "../../../../interfaces/MigrationManager";
+import type { NamespaceOptions } from "../../../../types/types";
+import { computeHash } from "../../../../utils/migration/compute-hash";
+import { loadMigrations } from "../../../../utils/migration/load-migrations";
+import { writeMigrationFile } from "../../../../utils/migration/write-migration-file";
 import type { MysqlDbSnapshot } from "../../types/db-snapshot";
 import type { MysqlMigrationTableOptions } from "../../types/migration";
 import type { MysqlQueryClient } from "../../types/mysql-query-client";

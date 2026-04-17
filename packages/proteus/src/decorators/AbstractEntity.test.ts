@@ -1,5 +1,5 @@
-import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
-import { buildPrimaryMetadata } from "#internal/entity/metadata/build-primary";
+import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata";
+import { buildPrimaryMetadata } from "../internal/entity/metadata/build-primary";
 import { AbstractEntity } from "./AbstractEntity";
 import { Entity } from "./Entity";
 import { Field } from "./Field";

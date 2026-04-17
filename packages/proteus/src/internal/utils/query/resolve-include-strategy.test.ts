@@ -2,7 +2,7 @@ import type {
   EntityMetadata,
   MetaRelation,
   RelationStrategy,
-} from "#internal/entity/types/metadata";
+} from "../../entity/types/metadata";
 import { resolveIncludeStrategy } from "./resolve-include-strategy";
 
 const makeRelation = (

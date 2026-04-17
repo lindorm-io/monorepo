@@ -8,12 +8,12 @@ import type {
   IProteusQueryBuilder,
   IUpdateQueryBuilder,
 } from "../../../../interfaces";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
+import type { EntityMetadata } from "../../../entity/types/metadata";
 import type {
   SetOperationType,
   SqlFragment,
   SubqueryPredicateSpec,
-} from "#internal/types/query";
+} from "../../../types/query";
 import { PostgresInsertQueryBuilder } from "./PostgresInsertQueryBuilder";
 import { PostgresUpdateQueryBuilder } from "./PostgresUpdateQueryBuilder";
 import { PostgresDeleteQueryBuilder } from "./PostgresDeleteQueryBuilder";
@@ -29,7 +29,7 @@ import { executeQueryIncludes } from "../utils/query/execute-query-includes";
 import { hydrateRows } from "../utils/query/hydrate-result";
 import { partitionIncludes } from "../utils/query/partition-includes";
 import { warnCartesianIncludes } from "../utils/query/warn-cartesian-includes";
-import { filterHiddenSelections } from "#internal/utils/query/filter-hidden-selections";
+import { filterHiddenSelections } from "../../../utils/query/filter-hidden-selections";
 
 export class PostgresQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   private readonly client: PostgresQueryClient;

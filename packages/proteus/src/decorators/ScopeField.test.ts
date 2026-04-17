@@ -1,5 +1,5 @@
-import { SCOPE_FILTER_NAME } from "#internal/entity/metadata/auto-filters";
-import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
+import { SCOPE_FILTER_NAME } from "../internal/entity/metadata/auto-filters";
+import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata";
 import { Entity } from "./Entity";
 import { PrimaryKeyField } from "./PrimaryKeyField";
 import { ScopeField } from "./ScopeField";

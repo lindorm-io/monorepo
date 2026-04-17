@@ -16,7 +16,7 @@ import type { IAmphora } from "@lindorm/amphora";
 import type {
   FilterRegistryGetter,
   MetadataResolver,
-} from "#internal/interfaces/ProteusDriver";
+} from "../../../interfaces/ProteusDriver";
 import { SqliteDriverError } from "../errors/SqliteDriverError";
 import { SqliteMigrationError } from "../errors/SqliteMigrationError";
 import type { SqliteQueryClient } from "../types/sqlite-query-client";
@@ -33,8 +33,8 @@ import { rollbackTransaction } from "../utils/transaction/rollback-transaction";
 import { SqliteMigrationManager } from "./SqliteMigrationManager";
 import { SqliteExecutor } from "./SqliteExecutor";
 import { SqliteQueryBuilder } from "./SqliteQueryBuilder";
-import type { RepositoryFactory } from "#internal/types/repository-factory";
-import type { FilterRegistry } from "#internal/utils/query/filter-registry";
+import type { RepositoryFactory } from "../../../types/repository-factory";
+import type { FilterRegistry } from "../../../utils/query/filter-registry";
 import type { EntityEmitFn } from "../../../../types/event-map";
 import { SqliteRepository, type WithImplicitTransaction } from "./SqliteRepository";
 import { SqliteTransactionContext } from "./SqliteTransactionContext";
@@ -492,7 +492,7 @@ export class SqliteDriver implements IProteusDriver {
 
   private syncAppendOnlyTriggers(
     client: SqliteQueryClient,
-    metadatas: Array<import("#internal/entity/types/metadata").EntityMetadata>,
+    metadatas: Array<import("../../../entity/types/metadata").EntityMetadata>,
   ): void {
     for (const metadata of metadatas) {
       const tableName = metadata.entity.name;

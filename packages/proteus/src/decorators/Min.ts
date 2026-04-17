@@ -1,4 +1,4 @@
-import { stageFieldModifier } from "#internal/entity/metadata/stage-metadata";
+import { stageFieldModifier } from "../internal/entity/metadata/stage-metadata";
 
 /**
  * Set the minimum allowed value for a numeric field, or minimum length for a string field.

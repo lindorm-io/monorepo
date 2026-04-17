@@ -1,8 +1,8 @@
 import type { IEntity } from "../../../../../interfaces";
-import type { MetaEmbeddedList } from "#internal/entity/types/metadata";
+import type { MetaEmbeddedList } from "../../../../entity/types/metadata";
 import type { MysqlQueryClient } from "../../types/mysql-query-client";
 import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier";
-import { deserialise } from "#internal/entity/utils/deserialise";
+import { deserialise } from "../../../../entity/utils/deserialise";
 
 /**
  * Insert collection table rows for an entity's @EmbeddedList fields.

@@ -1,5 +1,5 @@
-import type { EntityMetadata } from "#internal/entity/types/metadata";
-import type { NamespaceOptions } from "#internal/types/types";
+import type { EntityMetadata } from "../../../../entity/types/metadata";
+import type { NamespaceOptions } from "../../../../types/types";
 import type { PostgresQueryClient } from "../../types/postgres-query-client";
 import type {
   SerializedMigration,

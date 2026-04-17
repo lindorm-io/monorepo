@@ -1,9 +1,9 @@
-import type { EntityMetadata } from "#internal/entity/types/metadata";
+import type { EntityMetadata } from "../../../../entity/types/metadata";
 import {
   type ResolvedTable,
   buildDiscriminatorPredicate as sharedBuildDiscPredicate,
   resolveTableName as sharedResolveTableName,
-} from "#internal/utils/sql/resolve-table-name";
+} from "../../../../utils/sql/resolve-table-name";
 import { sqliteDialect } from "../sqlite-dialect";
 
 export type { ResolvedTable };

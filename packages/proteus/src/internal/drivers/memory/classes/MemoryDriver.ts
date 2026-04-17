@@ -19,16 +19,16 @@ import type {
   TransactionOptions,
 } from "../../../../types";
 import type { EntityEmitFn } from "../../../../types/event-map";
-import type { RepositoryFactory } from "#internal/types/repository-factory";
-import type { FilterRegistry } from "#internal/utils/query/filter-registry";
+import type { RepositoryFactory } from "../../../types/repository-factory";
+import type { FilterRegistry } from "../../../utils/query/filter-registry";
 import type {
   MemoryStore,
   MemoryTable,
   MemoryTransactionHandle,
 } from "../types/memory-store";
-import { getEntityName } from "#internal/entity/utils/get-entity-name";
-import { getJoinName } from "#internal/entity/utils/get-join-name";
-import { resolveInheritanceRoot } from "#internal/entity/utils/resolve-inheritance-root";
+import { getEntityName } from "../../../entity/utils/get-entity-name";
+import { getJoinName } from "../../../entity/utils/get-join-name";
+import { resolveInheritanceRoot } from "../../../entity/utils/resolve-inheritance-root";
 import { MemoryDriverError } from "../errors/MemoryDriverError";
 import { MemoryExecutor } from "./MemoryExecutor";
 import { MemoryRepository, type WithImplicitTransaction } from "./MemoryRepository";

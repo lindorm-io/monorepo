@@ -1,5 +1,5 @@
 import type { Dict } from "@lindorm/types";
-import type { EntityMetadata, MetaField } from "#internal/entity/types/metadata";
+import type { EntityMetadata, MetaField } from "../../../entity/types/metadata";
 import { NotSupportedError } from "../../../../errors/NotSupportedError";
 import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError";
 import { RedisDuplicateKeyError } from "../errors/RedisDuplicateKeyError";
@@ -91,7 +91,7 @@ jest.mock("../utils/redis-auto-increment", () => ({
   applyRedisAutoIncrement: jest.fn(),
 }));
 
-jest.mock("#internal/entity/utils/default-hydrate-entity", () => ({
+jest.mock("../../../entity/utils/default-hydrate-entity", () => ({
   defaultHydrateEntity: jest.fn((data: Dict, metadata: EntityMetadata) => {
     const entity = new metadata.target();
     for (const field of metadata.fields) {
@@ -103,24 +103,24 @@ jest.mock("#internal/entity/utils/default-hydrate-entity", () => ({
   }),
 }));
 
-jest.mock("#internal/utils/query/resolve-filters", () => ({
+jest.mock("../../../utils/query/resolve-filters", () => ({
   resolveFilters: jest.fn(() => []),
 }));
 
-jest.mock("#internal/utils/query/merge-system-filter-overrides", () => ({
+jest.mock("../../../utils/query/merge-system-filter-overrides", () => ({
   mergeSystemFilterOverrides: jest.fn(
     (overrides: unknown, _withDeleted: boolean, _withoutScope: boolean) => overrides,
   ),
 }));
 
-jest.mock("#internal/entity/metadata/auto-filters", () => ({
+jest.mock("../../../entity/metadata/auto-filters", () => ({
   generateAutoFilters: jest.fn(() => []),
 }));
 
 // ─── Import mocked modules ───────────────────────────────────────────────────
 
 import { scanEntityKeys } from "../utils/scan-entity-keys";
-import { resolveFilters } from "#internal/utils/query/resolve-filters";
+import { resolveFilters } from "../../../utils/query/resolve-filters";
 import { RedisQueryBuilder } from "./RedisQueryBuilder";
 
 const mockedScanEntityKeys = scanEntityKeys as jest.MockedFunction<typeof scanEntityKeys>;

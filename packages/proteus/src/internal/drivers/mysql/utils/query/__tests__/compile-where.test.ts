@@ -1,6 +1,6 @@
 import { makeField } from "../../../../../__fixtures__/make-field";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
-import type { PredicateEntry } from "#internal/types/query";
+import type { EntityMetadata } from "../../../../../entity/types/metadata";
+import type { PredicateEntry } from "../../../../../types/query";
 import { compileWhere } from "../compile-where";
 
 const metadata = {

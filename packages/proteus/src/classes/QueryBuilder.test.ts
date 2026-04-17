@@ -1,8 +1,8 @@
 import { ProteusError } from "../errors";
 import type { IEntity } from "../interfaces";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
-import type { QueryState } from "#internal/types/query";
-import { makeField } from "#internal/__fixtures__/make-field";
+import type { EntityMetadata } from "../internal/entity/types/metadata";
+import type { QueryState } from "../internal/types/query";
+import { makeField } from "../internal/__fixtures__/make-field";
 import { QueryBuilder } from "./QueryBuilder";
 
 // Concrete test implementation

@@ -1,6 +1,6 @@
 import { makeField } from "../../../../__fixtures__/make-field";
-import type { EntityMetadata, MetaRelation } from "#internal/entity/types/metadata";
-import type { IncludeSpec } from "#internal/types/query";
+import type { EntityMetadata, MetaRelation } from "../../../../entity/types/metadata";
+import type { IncludeSpec } from "../../../../types/query";
 import type { RelationQueryContext } from "./compile-relation-query";
 
 // Mock the two helpers that call getEntityMetadata under the hood

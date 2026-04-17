@@ -1,4 +1,4 @@
-import { stageFieldModifier } from "#internal/entity/metadata/stage-metadata";
+import { stageFieldModifier } from "../internal/entity/metadata/stage-metadata";
 
 /**
  * Mark a field as a computed/generated column with the given SQL expression.

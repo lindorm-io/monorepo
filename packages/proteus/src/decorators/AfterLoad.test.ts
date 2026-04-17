@@ -1,4 +1,4 @@
-import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
+import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata";
 import { AfterLoad } from "./AfterLoad";
 import { Entity } from "./Entity";
 import { PrimaryKeyField } from "./PrimaryKeyField";

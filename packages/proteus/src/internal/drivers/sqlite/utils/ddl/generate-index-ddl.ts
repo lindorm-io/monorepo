@@ -1,5 +1,5 @@
 import { ProteusError } from "../../../../../errors";
-import type { MetaField, MetaIndex } from "#internal/entity/types/metadata";
+import type { MetaField, MetaIndex } from "../../../../entity/types/metadata";
 import { SQLITE_IDENTIFIER_LIMIT } from "../../constants/sqlite-constants";
 import { hashIdentifier } from "../hash-identifier";
 import { quoteIdentifier } from "../quote-identifier";

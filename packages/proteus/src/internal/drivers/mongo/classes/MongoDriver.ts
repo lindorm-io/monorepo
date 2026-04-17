@@ -26,27 +26,27 @@ import type {
   TransactionCallback,
   TransactionOptions,
 } from "../../../../types";
-import type { RepositoryFactory } from "#internal/types/repository-factory";
-import type { FilterRegistry } from "#internal/utils/query/filter-registry";
+import type { RepositoryFactory } from "../../../types/repository-factory";
+import type { FilterRegistry } from "../../../utils/query/filter-registry";
 import type { EntityEmitFn } from "../../../../types/event-map";
 import type { MongoTransactionHandle } from "../types/mongo-types";
 import { detectReplicaSet } from "../utils/detect-replica-set";
 import { createMongoJoinTableOps } from "../utils/mongo-join-table-ops";
 import { mapIsolationLevel } from "../utils/map-isolation-level";
 import { isRetryableMongoError } from "../utils/is-retryable-mongo-error";
-import { withRetry } from "#internal/utils/transaction/with-retry";
-import { validateConnectionMutualExclusivity } from "#internal/utils/validate-connection-options";
+import { withRetry } from "../../../utils/transaction/with-retry";
+import { validateConnectionMutualExclusivity } from "../../../utils/validate-connection-options";
 import { MongoDriverError } from "../errors/MongoDriverError";
 import { MongoMigrationError } from "../errors/MongoMigrationError";
 import { MongoExecutor } from "./MongoExecutor";
-import { BreakerExecutor } from "#internal/classes/BreakerExecutor";
+import { BreakerExecutor } from "../../../classes/BreakerExecutor";
 import { MongoMigrationManager } from "./MongoMigrationManager";
 import { MongoQueryBuilder } from "./MongoQueryBuilder";
 import { MongoRepository } from "./MongoRepository";
 import { MongoTransactionContext } from "./MongoTransactionContext";
 import { NotSupportedError } from "../../../../errors/NotSupportedError";
 import { resolveCollectionName } from "../utils/resolve-collection-name";
-import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
+import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata";
 import { diffIndexes } from "../utils/sync/diff-indexes";
 import { executeSync } from "../utils/sync/execute-sync";
 import { introspectIndexes } from "../utils/sync/introspect-indexes";

@@ -1,4 +1,4 @@
-import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
+import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata";
 import { Embeddable } from "./Embeddable";
 import { Embedded } from "./Embedded";
 import { Entity } from "./Entity";

@@ -1,5 +1,5 @@
 import type { Db } from "mongodb";
-import type { MigrationInterfaceShape } from "#internal/utils/migration/resolve-pending";
+import type { MigrationInterfaceShape } from "../../../../utils/migration/resolve-pending";
 import { MongoMigrationError } from "../../errors/MongoMigrationError";
 import {
   ensureMigrationCollection,

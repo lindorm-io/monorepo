@@ -1,6 +1,6 @@
-import type { EntityMetadata } from "#internal/entity/types/metadata";
-import type { SyncOperation } from "#internal/drivers/postgres/types/sync-plan";
-import { getEntityName } from "#internal/entity/utils/get-entity-name";
+import type { EntityMetadata } from "../../entity/types/metadata";
+import type { SyncOperation } from "../../drivers/postgres/types/sync-plan";
+import { getEntityName } from "../../entity/utils/get-entity-name";
 
 export type EntityGroup = {
   entityName: string;

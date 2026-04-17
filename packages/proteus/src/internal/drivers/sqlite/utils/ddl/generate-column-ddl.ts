@@ -3,8 +3,8 @@ import type {
   EntityMetadata,
   MetaField,
   MetaGenerated,
-} from "#internal/entity/types/metadata";
-import { extractEnumValues } from "#internal/utils/extract-enum-values";
+} from "../../../../entity/types/metadata";
+import { extractEnumValues } from "../../../../utils/extract-enum-values";
 import { mapFieldTypeSqlite } from "../map-field-type-sqlite";
 import { quoteIdentifier } from "../quote-identifier";
 import { resolveFkColumnType } from "../resolve-fk-column-type";

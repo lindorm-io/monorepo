@@ -1,14 +1,14 @@
 import type { IEntity } from "../../../../../interfaces";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
+import type { EntityMetadata } from "../../../../entity/types/metadata";
 import type {
   QueryState,
   RawWhereEntry,
   SubqueryPredicateSpec,
-} from "#internal/types/query";
-import { generateAutoFilters } from "#internal/entity/metadata/auto-filters";
-import { mergeSystemFilterOverrides } from "#internal/utils/query/merge-system-filter-overrides";
-import type { ResolvedFilter } from "#internal/utils/query/resolve-filters";
-import { resolveFilters } from "#internal/utils/query/resolve-filters";
+} from "../../../../types/query";
+import { generateAutoFilters } from "../../../../entity/metadata/auto-filters";
+import { mergeSystemFilterOverrides } from "../../../../utils/query/merge-system-filter-overrides";
+import type { ResolvedFilter } from "../../../../utils/query/resolve-filters";
+import { resolveFilters } from "../../../../utils/query/resolve-filters";
 import { quoteIdentifier } from "../quote-identifier";
 import { resolveColumnName } from "../resolve-column-name";
 import {

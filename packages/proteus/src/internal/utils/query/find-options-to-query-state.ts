@@ -1,12 +1,12 @@
 import type { Predicate } from "@lindorm/types";
 import type { IEntity } from "../../../interfaces";
 import type { FindOptions } from "../../../types";
-import type { EntityMetadata, QueryScope } from "#internal/entity/types/metadata";
-import type { IncludeSpec, PredicateEntry, QueryState } from "#internal/types/query";
-import type { FilterRegistry } from "#internal/utils/query/filter-registry";
-import { mergeSystemFilterOverrides } from "#internal/utils/query/merge-system-filter-overrides";
-import { resolveFilters } from "#internal/utils/query/resolve-filters";
-import { resolveIncludeStrategy } from "#internal/utils/query/resolve-include-strategy";
+import type { EntityMetadata, QueryScope } from "../../entity/types/metadata";
+import type { IncludeSpec, PredicateEntry, QueryState } from "../../types/query";
+import type { FilterRegistry } from "./filter-registry";
+import { mergeSystemFilterOverrides } from "./merge-system-filter-overrides";
+import { resolveFilters } from "./resolve-filters";
+import { resolveIncludeStrategy } from "./resolve-include-strategy";
 
 export const findOptionsToQueryState = <E extends IEntity>(
   criteria: Predicate<E>,

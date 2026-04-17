@@ -1,7 +1,7 @@
 import type { IEntity } from "../../../../../interfaces";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
-import { defaultHydrateEntity } from "#internal/entity/utils/default-hydrate-entity";
-import type { HydrateOptions } from "#internal/entity/utils/default-hydrate-entity";
+import type { EntityMetadata } from "../../../../entity/types/metadata";
+import { defaultHydrateEntity } from "../../../../entity/utils/default-hydrate-entity";
+import type { HydrateOptions } from "../../../../entity/utils/default-hydrate-entity";
 import { extractFieldDictFromReturning } from "./extract-field-dict";
 
 /**

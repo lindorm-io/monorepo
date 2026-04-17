@@ -1,5 +1,5 @@
-import type { EntityMetadata, MetaRelation } from "#internal/entity/types/metadata";
-import type { IncludeSpec } from "#internal/types/query";
+import type { EntityMetadata, MetaRelation } from "../../entity/types/metadata";
+import type { IncludeSpec } from "../../types/query";
 import { ProteusError } from "../../../errors";
 import { warnCartesianIncludes } from "./warn-cartesian-includes";
 

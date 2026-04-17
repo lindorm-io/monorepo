@@ -29,11 +29,11 @@ jest.mock("../utils/build-join-set-key", () => ({
   ),
 }));
 
-jest.mock("#internal/utils/repository/build-pk-predicate", () => ({
+jest.mock("../../../utils/repository/build-pk-predicate", () => ({
   buildPrimaryKeyPredicate: jest.fn((entity: any) => ({ id: entity.id })),
 }));
 
-jest.mock("#internal/utils/repository/repository-guards", () => ({
+jest.mock("../../../utils/repository/repository-guards", () => ({
   guardAppendOnly: jest.fn(),
   validateRelationNames: jest.fn(),
   guardDeleteDateField: jest.fn(),
@@ -41,7 +41,7 @@ jest.mock("#internal/utils/repository/repository-guards", () => ({
   guardUpsertBlocked: jest.fn(),
 }));
 
-jest.mock("#internal/utils/repository/RelationPersister", () => ({
+jest.mock("../../../utils/repository/RelationPersister", () => ({
   RelationPersister: jest.fn().mockImplementation(() => ({
     saveOwning: jest.fn().mockResolvedValue(undefined),
     saveInverse: jest.fn().mockResolvedValue(undefined),
@@ -49,57 +49,57 @@ jest.mock("#internal/utils/repository/RelationPersister", () => ({
   })),
 }));
 
-jest.mock("#internal/utils/repository/build-relation-filter", () => ({
+jest.mock("../../../utils/repository/build-relation-filter", () => ({
   buildRelationFilter: jest.fn(() => ({})),
 }));
 
-jest.mock("#internal/utils/query/filter-hidden-selections", () => ({
+jest.mock("../../../utils/query/filter-hidden-selections", () => ({
   filterHiddenSelections: jest.fn(() => null),
 }));
 
-jest.mock("#internal/utils/pagination/build-keyset-filter-memory", () => ({
+jest.mock("../../../utils/pagination/build-keyset-filter-memory", () => ({
   buildKeysetFilterMemory: jest.fn(() => () => true),
 }));
 
-jest.mock("#internal/entity/utils/snapshot-store", () => ({
+jest.mock("../../../entity/utils/snapshot-store", () => ({
   getSnapshot: jest.fn(() => null),
   clearSnapshot: jest.fn(),
 }));
 
-jest.mock("#internal/entity/utils/install-lazy-relations", () => ({
+jest.mock("../../../entity/utils/install-lazy-relations", () => ({
   installLazyRelations: jest.fn(),
 }));
 
-jest.mock("#internal/entity/utils/lazy-relation", () => ({
+jest.mock("../../../entity/utils/lazy-relation", () => ({
   isLazyRelation: jest.fn(() => false),
 }));
 
-jest.mock("#internal/entity/utils/lazy-collection", () => ({
+jest.mock("../../../entity/utils/lazy-collection", () => ({
   isLazyCollection: jest.fn(() => false),
 }));
 
-jest.mock("#internal/utils/pagination/validate-paginate-options", () => ({
+jest.mock("../../../utils/pagination/validate-paginate-options", () => ({
   validatePaginateOptions: jest.fn(),
 }));
 
-jest.mock("#internal/utils/pagination/build-keyset-order", () => ({
+jest.mock("../../../utils/pagination/build-keyset-order", () => ({
   buildKeysetOrder: jest.fn(() => []),
   keysetOrderToRecord: jest.fn(() => ({})),
 }));
 
-jest.mock("#internal/utils/pagination/build-keyset-predicate", () => ({
+jest.mock("../../../utils/pagination/build-keyset-predicate", () => ({
   buildKeysetPredicate: jest.fn(() => ({})),
 }));
 
-jest.mock("#internal/utils/pagination/encode-cursor", () => ({
+jest.mock("../../../utils/pagination/encode-cursor", () => ({
   encodeCursor: jest.fn(() => "cursor-token"),
 }));
 
-jest.mock("#internal/utils/pagination/decode-cursor", () => ({
+jest.mock("../../../utils/pagination/decode-cursor", () => ({
   decodeCursor: jest.fn(() => ({ values: [] })),
 }));
 
-jest.mock("#internal/utils/pagination/extract-cursor-values", () => ({
+jest.mock("../../../utils/pagination/extract-cursor-values", () => ({
   extractCursorValues: jest.fn(() => []),
 }));
 
@@ -128,7 +128,7 @@ import { RedisDriverError } from "../errors/RedisDriverError";
 import { RedisCursor } from "./RedisCursor";
 import { RedisRepository } from "./RedisRepository";
 import { scanEntityKeys } from "../utils/scan-entity-keys";
-import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
+import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata";
 
 const mockedScanEntityKeys = scanEntityKeys as jest.MockedFunction<typeof scanEntityKeys>;
 

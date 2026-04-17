@@ -1,6 +1,6 @@
-import type { EntityMetadata } from "#internal/entity/types/metadata";
-import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
-import { getEntityName } from "#internal/entity/utils/get-entity-name";
+import type { EntityMetadata } from "../../../../entity/types/metadata";
+import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata";
+import { getEntityName } from "../../../../entity/utils/get-entity-name";
 import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier";
 import type { FieldAliasOverrides } from "./compile-where";
 

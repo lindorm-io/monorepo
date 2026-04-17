@@ -1,13 +1,13 @@
-import type { ScopedName } from "#internal/types/types";
+import type { ScopedName } from "../../../types/types";
 import { buildJoinSetKey, buildReverseJoinSetKey } from "./build-join-set-key";
 
 // ─── Module Mocks ────────────────────────────────────────────────────────────
 
-jest.mock("#internal/entity/utils/get-join-name", () => ({
+jest.mock("../../../entity/utils/get-join-name", () => ({
   getJoinName: jest.fn(),
 }));
 
-import { getJoinName } from "#internal/entity/utils/get-join-name";
+import { getJoinName } from "../../../entity/utils/get-join-name";
 
 const mockGetJoinName = getJoinName as jest.MockedFunction<typeof getJoinName>;
 

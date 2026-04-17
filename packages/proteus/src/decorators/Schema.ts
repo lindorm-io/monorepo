@@ -1,6 +1,6 @@
 import { z } from "zod/v4";
 import { IEntity } from "../interfaces";
-import { stageSchema } from "#internal/entity/metadata/stage-metadata";
+import { stageSchema } from "../internal/entity/metadata/stage-metadata";
 
 /**
  * Attach a Zod schema to an entity for runtime validation.

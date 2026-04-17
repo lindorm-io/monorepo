@@ -1,6 +1,6 @@
 import type { ILogger } from "@lindorm/logger";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
-import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
+import type { EntityMetadata } from "../../../entity/types/metadata";
+import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata";
 import { NotSupportedError } from "../../../../errors/NotSupportedError";
 import { RedisDriverError } from "../errors/RedisDriverError";
 

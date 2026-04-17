@@ -1,10 +1,10 @@
-import type { EntityMetadata } from "#internal/entity/types/metadata";
+import type { EntityMetadata } from "../../../../entity/types/metadata";
 import {
   type InheritanceAliasMap,
   buildInheritanceAliases as sharedBuildAliases,
   compileInheritanceFrom as sharedCompileFrom,
   compileInheritanceJoin as sharedCompileJoin,
-} from "#internal/utils/sql/compile-inheritance-join";
+} from "../../../../utils/sql/compile-inheritance-join";
 import { postgresDialect } from "../postgres-dialect";
 
 export type { InheritanceAliasMap };

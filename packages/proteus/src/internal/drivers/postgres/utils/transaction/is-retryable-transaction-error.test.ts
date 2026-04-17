@@ -1,5 +1,5 @@
-import { DeadlockError } from "#internal/errors/DeadlockError";
-import { SerializationError } from "#internal/errors/SerializationError";
+import { DeadlockError } from "../../../../errors/DeadlockError";
+import { SerializationError } from "../../../../errors/SerializationError";
 import { PostgresTransactionError } from "../../errors/PostgresTransactionError";
 import { isRetryableTransactionError } from "./is-retryable-transaction-error";
 

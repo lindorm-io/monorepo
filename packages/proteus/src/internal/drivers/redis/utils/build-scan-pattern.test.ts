@@ -1,13 +1,13 @@
-import type { ScopedName } from "#internal/types/types";
+import type { ScopedName } from "../../../types/types";
 import { buildScanPattern } from "./build-scan-pattern";
 
 // ─── Module Mocks ────────────────────────────────────────────────────────────
 
-jest.mock("#internal/entity/utils/get-entity-name", () => ({
+jest.mock("../../../entity/utils/get-entity-name", () => ({
   getEntityName: jest.fn(),
 }));
 
-import { getEntityName } from "#internal/entity/utils/get-entity-name";
+import { getEntityName } from "../../../entity/utils/get-entity-name";
 
 const mockGetEntityName = getEntityName as jest.MockedFunction<typeof getEntityName>;
 

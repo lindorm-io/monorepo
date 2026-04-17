@@ -1,6 +1,6 @@
 import type { Dict } from "@lindorm/types";
 import type { IEntity, IProteusCursor } from "../../../../interfaces";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
+import type { EntityMetadata } from "../../../entity/types/metadata";
 import type { AliasMap } from "../utils/query/compile-select";
 import type { MysqlQueryClient } from "../types/mysql-query-client";
 import { MySqlDriverError } from "../errors/MySqlDriverError";
@@ -9,7 +9,7 @@ import {
   loadEmbeddedListRows,
   loadEmbeddedListRowsBatch,
 } from "../utils/repository/embedded-list-ops";
-import { installLazyEmbeddedLists } from "#internal/entity/utils/install-lazy-embedded-lists";
+import { installLazyEmbeddedLists } from "../../../entity/utils/install-lazy-embedded-lists";
 
 export type MySqlCursorOptions = {
   sql: string;

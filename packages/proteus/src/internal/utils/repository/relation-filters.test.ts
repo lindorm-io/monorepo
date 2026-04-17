@@ -1,4 +1,4 @@
-import type { EntityMetadata, MetaRelation } from "#internal/entity/types/metadata";
+import type { EntityMetadata, MetaRelation } from "../../entity/types/metadata";
 import type { Constructor } from "@lindorm/types";
 import type { IEntity } from "../../../interfaces";
 import {

@@ -1,4 +1,4 @@
-import { stageAppendOnly } from "#internal/entity/metadata/stage-metadata";
+import { stageAppendOnly } from "../internal/entity/metadata/stage-metadata";
 
 /**
  * Mark an entity as append-only.

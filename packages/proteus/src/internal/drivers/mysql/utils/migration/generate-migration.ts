@@ -1,7 +1,7 @@
-import type { EntityMetadata } from "#internal/entity/types/metadata";
-import type { GenerateMigrationResult } from "#internal/interfaces/MigrationManager";
-import type { NamespaceOptions } from "#internal/types/types";
-import { writeMigrationFile } from "#internal/utils/migration/write-migration-file";
+import type { EntityMetadata } from "../../../../entity/types/metadata";
+import type { GenerateMigrationResult } from "../../../../interfaces/MigrationManager";
+import type { NamespaceOptions } from "../../../../types/types";
+import { writeMigrationFile } from "../../../../utils/migration/write-migration-file";
 import type { MysqlQueryClient } from "../../types/mysql-query-client";
 import { diffSchema } from "../sync/diff-schema";
 import { introspectSchema } from "../sync/introspect-schema";

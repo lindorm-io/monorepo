@@ -1,5 +1,5 @@
 import type { ILogger } from "@lindorm/logger";
-import { buildMysqlLockName } from "#internal/utils/advisory-lock-name";
+import { buildMysqlLockName } from "../../../../utils/advisory-lock-name";
 import { MySqlSyncError } from "../../errors/MySqlSyncError";
 import type { MysqlQueryClient } from "../../types/mysql-query-client";
 import type {

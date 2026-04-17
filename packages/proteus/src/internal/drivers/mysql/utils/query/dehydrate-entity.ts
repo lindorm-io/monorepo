@@ -1,10 +1,10 @@
 import type { IAmphora } from "@lindorm/amphora";
 import type { IEntity } from "../../../../../interfaces";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
-import type { DehydrateMode } from "#internal/entity/utils/default-dehydrate-entity";
-import { encryptFieldValue } from "#internal/entity/utils/encrypt-field-value";
-import { resolveJoinKeyValue } from "#internal/entity/utils/resolve-join-key-value";
-import { getSkipKeys } from "#internal/utils/sql/get-skip-keys";
+import type { EntityMetadata } from "../../../../entity/types/metadata";
+import type { DehydrateMode } from "../../../../entity/utils/default-dehydrate-entity";
+import { encryptFieldValue } from "../../../../entity/utils/encrypt-field-value";
+import { resolveJoinKeyValue } from "../../../../entity/utils/resolve-join-key-value";
+import { getSkipKeys } from "../../../../utils/sql/get-skip-keys";
 import { coerceWriteValue } from "./coerce-value";
 
 export type DehydratedColumn = {

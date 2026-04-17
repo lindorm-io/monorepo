@@ -5,11 +5,11 @@ import type {
   IInsertQueryBuilder,
   WriteResult,
 } from "../../../../interfaces/InsertQueryBuilder";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
+import type { EntityMetadata } from "../../../entity/types/metadata";
 import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError";
 import { MongoDuplicateKeyError } from "../errors/MongoDuplicateKeyError";
-import { defaultHydrateEntity } from "#internal/entity/utils/default-hydrate-entity";
-import { resolvePolymorphicMetadata } from "#internal/entity/utils/resolve-polymorphic-metadata";
+import { defaultHydrateEntity } from "../../../entity/utils/default-hydrate-entity";
+import { resolvePolymorphicMetadata } from "../../../entity/utils/resolve-polymorphic-metadata";
 import { resolveCollectionName } from "../utils/resolve-collection-name";
 
 const DUPLICATE_KEY_CODE = 11000;

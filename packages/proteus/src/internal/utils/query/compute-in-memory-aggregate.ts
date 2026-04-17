@@ -1,4 +1,4 @@
-import type { AggregateFunction } from "#internal/types/aggregate";
+import type { AggregateFunction } from "../../types/aggregate";
 
 /**
  * Extract numeric values from a field across an array of row-like objects.

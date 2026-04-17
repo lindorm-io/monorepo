@@ -1,13 +1,13 @@
-import type { EntityMetadata } from "#internal/entity/types/metadata";
+import type { EntityMetadata } from "../../../entity/types/metadata";
 import type {
   IMigrationManager,
   MigrationStatusResult,
-} from "#internal/interfaces/MigrationManager";
-import type { MigrationRecord } from "#internal/types/migration";
-import type { NamespaceOptions } from "#internal/types/types";
-import { hashNamespaceToInt32 } from "#internal/utils/advisory-lock-name";
-import { computeHash } from "#internal/utils/migration/compute-hash";
-import { validateMigrationDriver } from "#internal/utils/migration/validate-migration-driver";
+} from "../../../interfaces/MigrationManager";
+import type { MigrationRecord } from "../../../types/migration";
+import type { NamespaceOptions } from "../../../types/types";
+import { hashNamespaceToInt32 } from "../../../utils/advisory-lock-name";
+import { computeHash } from "../../../utils/migration/compute-hash";
+import { validateMigrationDriver } from "../../../utils/migration/validate-migration-driver";
 import type { ILogger } from "@lindorm/logger";
 import { PostgresMigrationError } from "../errors/PostgresMigrationError";
 import type { MigrationApplyResult, MigrationTableOptions } from "../types/migration";

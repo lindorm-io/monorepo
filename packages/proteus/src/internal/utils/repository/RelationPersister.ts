@@ -1,18 +1,14 @@
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
 import type { IEntity } from "../../../interfaces";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
-import type { JoinTableOps } from "#internal/types/join-table-ops";
-import type { RepositoryFactory } from "#internal/types/repository-factory";
-import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
-import { isLazyRelation } from "#internal/entity/utils/lazy-relation";
-import { isLazyCollection } from "#internal/entity/utils/lazy-collection";
-import { buildRelationFilter } from "#internal/utils/repository/build-relation-filter";
-import {
-  isOwningRelation,
-  findMirror,
-  shouldSkipParent,
-} from "#internal/utils/repository/relation-filters";
+import type { EntityMetadata } from "../../entity/types/metadata";
+import type { JoinTableOps } from "../../types/join-table-ops";
+import type { RepositoryFactory } from "../../types/repository-factory";
+import { getEntityMetadata } from "../../entity/metadata/get-entity-metadata";
+import { isLazyRelation } from "../../entity/utils/lazy-relation";
+import { isLazyCollection } from "../../entity/utils/lazy-collection";
+import { buildRelationFilter } from "./build-relation-filter";
+import { isOwningRelation, findMirror, shouldSkipParent } from "./relation-filters";
 
 export class RelationPersister {
   private readonly metadata: EntityMetadata;

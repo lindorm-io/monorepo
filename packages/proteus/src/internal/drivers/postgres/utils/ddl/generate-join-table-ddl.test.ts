@@ -1,7 +1,7 @@
 import { ProteusError } from "../../../../../errors";
 import { TestCourse, TestStudent } from "../../../../__fixtures__/test-entities";
-import type { EntityMetadata, MetaRelation } from "#internal/entity/types/metadata";
-import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
+import type { EntityMetadata, MetaRelation } from "../../../../entity/types/metadata";
+import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata";
 import { generateJoinTableDDL } from "./generate-join-table-ddl";
 import { Entity } from "../../../../../decorators/Entity";
 import { Field } from "../../../../../decorators/Field";

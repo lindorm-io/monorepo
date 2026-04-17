@@ -1,7 +1,7 @@
 import type { IAmphora } from "@lindorm/amphora";
 import type { IEntity } from "../../../../../interfaces";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
-import { applyDiscriminatorColumn } from "#internal/utils/sql/apply-discriminator-column";
+import type { EntityMetadata } from "../../../../entity/types/metadata";
+import { applyDiscriminatorColumn } from "../../../../utils/sql/apply-discriminator-column";
 import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier";
 import type { CompiledSql } from "./compiled-sql";
 import { dehydrateEntity } from "./dehydrate-entity";

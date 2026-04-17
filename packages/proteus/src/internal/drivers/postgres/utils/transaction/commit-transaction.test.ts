@@ -1,6 +1,6 @@
 import { ProteusRepositoryError } from "../../../../../errors/ProteusRepositoryError";
 import { PostgresTransactionError } from "../../errors/PostgresTransactionError";
-import { SerializationError } from "#internal/errors/SerializationError";
+import { SerializationError } from "../../../../errors/SerializationError";
 import type { PostgresTransactionHandle } from "../../types/postgres-transaction-handle";
 import { commitTransaction } from "./commit-transaction";
 

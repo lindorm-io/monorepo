@@ -1,10 +1,10 @@
 import { isString } from "@lindorm/is";
 import { ProteusError } from "../../../../../errors";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
-import type { NamespaceOptions } from "#internal/types/types";
-import { getEntityName } from "#internal/entity/utils/get-entity-name";
-import { getJoinName } from "#internal/entity/utils/get-join-name";
-import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
+import type { EntityMetadata } from "../../../../entity/types/metadata";
+import type { NamespaceOptions } from "../../../../types/types";
+import { getEntityName } from "../../../../entity/utils/get-entity-name";
+import { getJoinName } from "../../../../entity/utils/get-join-name";
+import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata";
 import { hashIdentifier } from "../hash-identifier";
 import { quoteIdentifier } from "../quote-identifier";
 import { resolveColumnNameSafe } from "../resolve-column-name";

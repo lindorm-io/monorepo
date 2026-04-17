@@ -1,5 +1,5 @@
 import type { ILogger } from "@lindorm/logger";
-import { hashNamespaceToInt32 } from "#internal/utils/advisory-lock-name";
+import { hashNamespaceToInt32 } from "../../../../utils/advisory-lock-name";
 import { PostgresSyncError } from "../../errors/PostgresSyncError";
 import type { PostgresQueryClient } from "../../types/postgres-query-client";
 import type {

@@ -1,7 +1,7 @@
 import { makeField } from "../../../../__fixtures__/make-field";
-import type { EntityMetadata, MetaRelation } from "#internal/entity/types/metadata";
+import type { EntityMetadata, MetaRelation } from "../../../../entity/types/metadata";
 import type { AliasMap } from "./compile-select";
-import type { IncludeSpec } from "#internal/types/query";
+import type { IncludeSpec } from "../../../../types/query";
 
 // Mock get-relation-metadata so includes tests do not require a real decorator-registered entity.
 jest.mock("./get-relation-metadata");

@@ -27,23 +27,23 @@ import type {
   TransactionCallback,
   TransactionOptions,
 } from "../types";
-import { classifyMongoError } from "#internal/drivers/mongo/utils/classify-breaker-error";
-import { classifyMysqlError } from "#internal/drivers/mysql/utils/classify-breaker-error";
-import { classifyPostgresError } from "#internal/drivers/postgres/utils/classify-breaker-error";
-import { classifyRedisError } from "#internal/drivers/redis/utils/classify-breaker-error";
-import { CachingRepository } from "#internal/classes/CachingRepository";
-import { EntityScanner } from "#internal/entity/classes/EntityScanner";
-import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
-import { resolveInheritanceHierarchies } from "#internal/entity/metadata/resolve-inheritance";
-import { clearPrimaryCache } from "#internal/entity/metadata/build-primary";
-import { clearMetadataCache } from "#internal/entity/metadata/registry";
-import { validateEncryptedFields } from "#internal/entity/utils/validate-encrypted-fields";
-import { applyNamingStrategy } from "#internal/utils/naming/apply-naming-strategy";
-import type { MetaInheritance } from "#internal/entity/types/inheritance";
+import { classifyMongoError } from "../internal/drivers/mongo/utils/classify-breaker-error";
+import { classifyMysqlError } from "../internal/drivers/mysql/utils/classify-breaker-error";
+import { classifyPostgresError } from "../internal/drivers/postgres/utils/classify-breaker-error";
+import { classifyRedisError } from "../internal/drivers/redis/utils/classify-breaker-error";
+import { CachingRepository } from "../internal/classes/CachingRepository";
+import { EntityScanner } from "../internal/entity/classes/EntityScanner";
+import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata";
+import { resolveInheritanceHierarchies } from "../internal/entity/metadata/resolve-inheritance";
+import { clearPrimaryCache } from "../internal/entity/metadata/build-primary";
+import { clearMetadataCache } from "../internal/entity/metadata/registry";
+import { validateEncryptedFields } from "../internal/entity/utils/validate-encrypted-fields";
+import { applyNamingStrategy } from "../internal/utils/naming/apply-naming-strategy";
+import type { MetaInheritance } from "../internal/entity/types/inheritance";
 import type {
   IProteusDriver,
   MetadataResolver,
-} from "#internal/interfaces/ProteusDriver";
+} from "../internal/interfaces/ProteusDriver";
 import {
   type FilterRegistry,
   createFilterRegistry,
@@ -51,8 +51,8 @@ import {
   setFilterParams as setFilterParamsUtil,
   enableFilter as enableFilterUtil,
   disableFilter as disableFilterUtil,
-} from "#internal/utils/query/filter-registry";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
+} from "../internal/utils/query/filter-registry";
+import type { EntityMetadata } from "../internal/entity/types/metadata";
 
 /**
  * Options for creating a session from a ProteusSource.
@@ -281,7 +281,7 @@ export class ProteusSource<C = unknown> implements IProteusSource<C> {
     switch (opts.driver) {
       case "postgres": {
         const { PostgresDriver } =
-          await import("#internal/drivers/postgres/classes/PostgresDriver");
+          await import("../internal/drivers/postgres/classes/PostgresDriver");
         this._driver = new PostgresDriver(
           opts,
           this.logger,
@@ -296,7 +296,7 @@ export class ProteusSource<C = unknown> implements IProteusSource<C> {
       }
       case "memory": {
         const { MemoryDriver } =
-          await import("#internal/drivers/memory/classes/MemoryDriver");
+          await import("../internal/drivers/memory/classes/MemoryDriver");
         this._driver = new MemoryDriver(
           opts,
           this.logger,
@@ -310,7 +310,7 @@ export class ProteusSource<C = unknown> implements IProteusSource<C> {
       }
       case "redis": {
         const { RedisDriver } =
-          await import("#internal/drivers/redis/classes/RedisDriver");
+          await import("../internal/drivers/redis/classes/RedisDriver");
         this._driver = new RedisDriver(
           opts,
           this.logger,
@@ -325,7 +325,7 @@ export class ProteusSource<C = unknown> implements IProteusSource<C> {
       }
       case "sqlite": {
         const { SqliteDriver } =
-          await import("#internal/drivers/sqlite/classes/SqliteDriver");
+          await import("../internal/drivers/sqlite/classes/SqliteDriver");
         this._driver = new SqliteDriver(
           opts,
           this.logger,
@@ -339,7 +339,7 @@ export class ProteusSource<C = unknown> implements IProteusSource<C> {
       }
       case "mysql": {
         const { MySqlDriver } =
-          await import("#internal/drivers/mysql/classes/MySqlDriver");
+          await import("../internal/drivers/mysql/classes/MySqlDriver");
         this._driver = new MySqlDriver(
           opts,
           this.logger,
@@ -354,7 +354,7 @@ export class ProteusSource<C = unknown> implements IProteusSource<C> {
       }
       case "mongo": {
         const { MongoDriver } =
-          await import("#internal/drivers/mongo/classes/MongoDriver");
+          await import("../internal/drivers/mongo/classes/MongoDriver");
         this._driver = new MongoDriver(
           opts,
           this.logger,

@@ -18,41 +18,41 @@ import type {
   PaginateResult,
   UpsertOptions,
 } from "../../types";
-import { EntityManager } from "#internal/entity/classes/EntityManager";
-import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
+import { EntityManager } from "../entity/classes/EntityManager";
+import { getEntityMetadata } from "../entity/metadata/get-entity-metadata";
 import type { IRepositoryExecutor } from "../interfaces/RepositoryExecutor";
 import type {
   EntityMetadata,
   MetaEmbeddedList,
   QueryScope,
-} from "#internal/entity/types/metadata";
-import type { RepositoryFactory } from "#internal/types/repository-factory";
-import type { AggregateFunction } from "#internal/types/aggregate";
-import type { LazyRelationLoader } from "#internal/entity/utils/install-lazy-relations";
-import type { LazyEmbeddedListLoader } from "#internal/entity/utils/install-lazy-embedded-lists";
-import { installLazyEmbeddedLists } from "#internal/entity/utils/install-lazy-embedded-lists";
+} from "../entity/types/metadata";
+import type { RepositoryFactory } from "../types/repository-factory";
+import type { AggregateFunction } from "../types/aggregate";
+import type { LazyRelationLoader } from "../entity/utils/install-lazy-relations";
+import type { LazyEmbeddedListLoader } from "../entity/utils/install-lazy-embedded-lists";
+import { installLazyEmbeddedLists } from "../entity/utils/install-lazy-embedded-lists";
 import type { EntityEmitFn } from "../../types/event-map";
-import { buildPrimaryKeyPredicate } from "#internal/utils/repository/build-pk-predicate";
+import { buildPrimaryKeyPredicate } from "../utils/repository/build-pk-predicate";
 import {
   guardAppendOnly,
   guardDeleteDateField,
   guardExpiryDateField,
   guardUpsertBlocked,
-} from "#internal/utils/repository/repository-guards";
-import { installLazyRelations } from "#internal/entity/utils/install-lazy-relations";
-import { isLazyRelation } from "#internal/entity/utils/lazy-relation";
-import { isLazyCollection } from "#internal/entity/utils/lazy-collection";
-import { filterHiddenSelections } from "#internal/utils/query/filter-hidden-selections";
-import { validatePaginateOptions } from "#internal/utils/pagination/validate-paginate-options";
+} from "../utils/repository/repository-guards";
+import { installLazyRelations } from "../entity/utils/install-lazy-relations";
+import { isLazyRelation } from "../entity/utils/lazy-relation";
+import { isLazyCollection } from "../entity/utils/lazy-collection";
+import { filterHiddenSelections } from "../utils/query/filter-hidden-selections";
+import { validatePaginateOptions } from "../utils/pagination/validate-paginate-options";
 import {
   buildKeysetOrder,
   keysetOrderToRecord,
   type KeysetOrderEntry,
-} from "#internal/utils/pagination/build-keyset-order";
-import { buildKeysetPredicate } from "#internal/utils/pagination/build-keyset-predicate";
-import { encodeCursor } from "#internal/utils/pagination/encode-cursor";
-import { decodeCursor } from "#internal/utils/pagination/decode-cursor";
-import { extractCursorValues } from "#internal/utils/pagination/extract-cursor-values";
+} from "../utils/pagination/build-keyset-order";
+import { buildKeysetPredicate } from "../utils/pagination/build-keyset-predicate";
+import { encodeCursor } from "../utils/pagination/encode-cursor";
+import { decodeCursor } from "../utils/pagination/decode-cursor";
+import { extractCursorValues } from "../utils/pagination/extract-cursor-values";
 
 export type DriverRepositoryBaseOptions<E extends IEntity> = {
   target: Constructor<E>;

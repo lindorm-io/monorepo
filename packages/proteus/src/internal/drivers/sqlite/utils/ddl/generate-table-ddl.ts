@@ -1,4 +1,4 @@
-import type { EntityMetadata } from "#internal/entity/types/metadata";
+import type { EntityMetadata } from "../../../../entity/types/metadata";
 import { quoteIdentifier } from "../quote-identifier";
 import { resolveColumnNameSafe } from "../resolve-column-name";
 import { generateCheckDDL } from "./generate-check-ddl";

@@ -18,9 +18,9 @@ import type { IAmphora } from "@lindorm/amphora";
 import type {
   FilterRegistryGetter,
   MetadataResolver,
-} from "#internal/interfaces/ProteusDriver";
-import type { RepositoryFactory } from "#internal/types/repository-factory";
-import type { FilterRegistry } from "#internal/utils/query/filter-registry";
+} from "../../../interfaces/ProteusDriver";
+import type { RepositoryFactory } from "../../../types/repository-factory";
+import type { FilterRegistry } from "../../../utils/query/filter-registry";
 import type { EntityEmitFn } from "../../../../types/event-map";
 import type { IProteusRepository } from "../../../../interfaces/ProteusRepository";
 import { MySqlDriverError } from "../errors/MySqlDriverError";
@@ -40,11 +40,11 @@ import { projectDesiredSchemaMysql } from "../utils/sync/project-desired-schema-
 import { diffSchema } from "../utils/sync/diff-schema";
 import { SyncPlanExecutor } from "../utils/sync/execute-sync-plan";
 import { quoteIdentifier } from "../utils/quote-identifier";
-import { buildMysqlLockName } from "#internal/utils/advisory-lock-name";
+import { buildMysqlLockName } from "../../../utils/advisory-lock-name";
 import { MySqlMigrationManager } from "./MySqlMigrationManager";
 import { MySqlQueryBuilder } from "./MySqlQueryBuilder";
-import { BreakerExecutor } from "#internal/classes/BreakerExecutor";
-import { validateConnectionMutualExclusivity } from "#internal/utils/validate-connection-options";
+import { BreakerExecutor } from "../../../classes/BreakerExecutor";
+import { validateConnectionMutualExclusivity } from "../../../utils/validate-connection-options";
 
 export class MySqlDriver implements IProteusDriver {
   private readonly options: ProteusMysqlOptions;
@@ -506,7 +506,7 @@ export class MySqlDriver implements IProteusDriver {
     };
 
     if (options?.retry) {
-      const { withRetry } = await import("#internal/utils/transaction/with-retry");
+      const { withRetry } = await import("../../../utils/transaction/with-retry");
 
       const retryOptions = {
         ...options.retry,
@@ -674,7 +674,7 @@ export class MySqlDriver implements IProteusDriver {
 
   private async syncAppendOnlyTriggers(
     client: MysqlQueryClient,
-    metadatas: Array<import("#internal/entity/types/metadata").EntityMetadata>,
+    metadatas: Array<import("../../../entity/types/metadata").EntityMetadata>,
   ): Promise<void> {
     for (const metadata of metadatas) {
       const tableName = metadata.entity.name;

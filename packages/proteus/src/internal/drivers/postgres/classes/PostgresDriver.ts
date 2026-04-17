@@ -18,9 +18,9 @@ import type { ProteusResult } from "../../../types/proteus-result";
 import type {
   FilterRegistryGetter,
   MetadataResolver,
-} from "#internal/interfaces/ProteusDriver";
+} from "../../../interfaces/ProteusDriver";
 import type { EntityEmitFn } from "../../../../types/event-map";
-import { BreakerExecutor } from "#internal/classes/BreakerExecutor";
+import { BreakerExecutor } from "../../../classes/BreakerExecutor";
 import { PostgresDriverError } from "../errors/PostgresDriverError";
 import { PostgresMigrationError } from "../errors/PostgresMigrationError";
 import type { PostgresQueryClient } from "../types/postgres-query-client";
@@ -39,9 +39,9 @@ import { withRetry } from "../utils/transaction/with-retry";
 import { MigrationManager } from "./MigrationManager";
 import { PostgresExecutor } from "./PostgresExecutor";
 import { PostgresQueryBuilder } from "./PostgresQueryBuilder";
-import type { RepositoryFactory } from "#internal/types/repository-factory";
-import type { FilterRegistry } from "#internal/utils/query/filter-registry";
-import { validateConnectionMutualExclusivity } from "#internal/utils/validate-connection-options";
+import type { RepositoryFactory } from "../../../types/repository-factory";
+import type { FilterRegistry } from "../../../utils/query/filter-registry";
+import { validateConnectionMutualExclusivity } from "../../../utils/validate-connection-options";
 import {
   PostgresRepository,
   type CreateCursorClient,
@@ -604,7 +604,7 @@ export class PostgresDriver implements IProteusDriver {
 
   private async syncAppendOnlyTriggers(
     client: PostgresQueryClient,
-    metadatas: Array<import("#internal/entity/types/metadata").EntityMetadata>,
+    metadatas: Array<import("../../../entity/types/metadata").EntityMetadata>,
     nsOptions: { namespace: string | null },
   ): Promise<void> {
     for (const metadata of metadatas) {

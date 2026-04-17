@@ -3,7 +3,7 @@ import type {
   EntityMetadata,
   MetaField,
   MetaFilter,
-} from "#internal/entity/types/metadata";
+} from "../../../entity/types/metadata";
 import { RedisExecutor } from "./RedisExecutor";
 import { RedisDuplicateKeyError } from "../errors/RedisDuplicateKeyError";
 import { RedisOptimisticLockError } from "../errors/RedisOptimisticLockError";
@@ -102,7 +102,7 @@ jest.mock("../utils/redis-auto-increment", () => ({
   applyRedisAutoIncrement: jest.fn(),
 }));
 
-jest.mock("#internal/entity/utils/default-hydrate-entity", () => ({
+jest.mock("../../../entity/utils/default-hydrate-entity", () => ({
   defaultHydrateEntity: jest.fn((data: Dict, metadata: EntityMetadata) => {
     const entity = new metadata.target();
     for (const field of metadata.fields) {
@@ -114,7 +114,7 @@ jest.mock("#internal/entity/utils/default-hydrate-entity", () => ({
   }),
 }));
 
-jest.mock("#internal/utils/repository/guard-empty-criteria", () => ({
+jest.mock("../../../utils/repository/guard-empty-criteria", () => ({
   guardEmptyCriteria: jest.fn(
     (criteria: Record<string, unknown>, operation: string, ErrorClass: any) => {
       if (Object.keys(criteria).length === 0) {
@@ -124,17 +124,17 @@ jest.mock("#internal/utils/repository/guard-empty-criteria", () => ({
   ),
 }));
 
-jest.mock("#internal/utils/query/resolve-filters", () => ({
+jest.mock("../../../utils/query/resolve-filters", () => ({
   resolveFilters: jest.fn(() => []),
 }));
 
-jest.mock("#internal/utils/query/merge-system-filter-overrides", () => ({
+jest.mock("../../../utils/query/merge-system-filter-overrides", () => ({
   mergeSystemFilterOverrides: jest.fn(
     (overrides: unknown, _withDeleted: boolean, _withoutScope: boolean) => overrides,
   ),
 }));
 
-jest.mock("#internal/entity/metadata/auto-filters", () => ({
+jest.mock("../../../entity/metadata/auto-filters", () => ({
   generateAutoFilters: jest.fn(() => []),
 }));
 
@@ -142,7 +142,7 @@ jest.mock("#internal/entity/metadata/auto-filters", () => ({
 
 import { scanEntityKeys } from "../utils/scan-entity-keys";
 import { applyRedisAutoIncrement } from "../utils/redis-auto-increment";
-import { resolveFilters } from "#internal/utils/query/resolve-filters";
+import { resolveFilters } from "../../../utils/query/resolve-filters";
 
 const mockedScanEntityKeys = scanEntityKeys as jest.MockedFunction<typeof scanEntityKeys>;
 const mockedApplyRedisAutoIncrement = applyRedisAutoIncrement as jest.MockedFunction<

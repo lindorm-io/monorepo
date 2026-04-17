@@ -1,6 +1,6 @@
 import type { ILogger } from "@lindorm/logger";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
-import type { IncludeSpec } from "#internal/types/query";
+import type { EntityMetadata } from "../../entity/types/metadata";
+import type { IncludeSpec } from "../../types/query";
 import { findRelationByKey } from "./get-relation-metadata";
 
 const MANY_RELATION_JOIN_THRESHOLD = 2;

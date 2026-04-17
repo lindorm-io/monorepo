@@ -1,5 +1,5 @@
 import type { Dict, Predicate } from "@lindorm/types";
-import type { IncludeOptions, SqlFragment, WindowSpec } from "#internal/types/query";
+import type { IncludeOptions, SqlFragment, WindowSpec } from "../internal/types/query";
 import type { IDeleteQueryBuilder } from "./DeleteQueryBuilder";
 import type { IEntity } from "./Entity";
 import type { IInsertQueryBuilder } from "./InsertQueryBuilder";

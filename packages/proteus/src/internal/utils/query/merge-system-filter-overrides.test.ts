@@ -1,7 +1,7 @@
 import {
   SCOPE_FILTER_NAME,
   SOFT_DELETE_FILTER_NAME,
-} from "#internal/entity/metadata/auto-filters";
+} from "../../entity/metadata/auto-filters";
 import { mergeSystemFilterOverrides } from "./merge-system-filter-overrides";
 
 describe("mergeSystemFilterOverrides", () => {

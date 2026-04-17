@@ -1,7 +1,7 @@
 import type { IEntity } from "../../../../../interfaces";
-import type { MetaRelation } from "#internal/entity/types/metadata";
+import type { MetaRelation } from "../../../../entity/types/metadata";
 import type { PostgresQueryClient } from "../../types/postgres-query-client";
-import { getJoinName } from "#internal/entity/utils/get-join-name";
+import { getJoinName } from "../../../../entity/utils/get-join-name";
 import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier";
 
 /**

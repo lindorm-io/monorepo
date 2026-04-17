@@ -1,12 +1,12 @@
 import type { IEntity } from "../../../../../interfaces";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
-import type { QueryState } from "#internal/types/query";
+import type { EntityMetadata } from "../../../../entity/types/metadata";
+import type { QueryState } from "../../../../types/query";
 import {
   type CompileQueryResult,
   compileCount as sharedCompileCount,
   compileQuery as sharedCompileQuery,
-} from "#internal/utils/sql/compile-query";
-import type { AliasMap } from "#internal/utils/sql/types";
+} from "../../../../utils/sql/compile-query";
+import type { AliasMap } from "../../../../utils/sql/types";
 import { sqliteDialect } from "../sqlite-dialect";
 import { compileCtes } from "./compile-cte";
 import { compileGroupBy } from "./compile-group-by";

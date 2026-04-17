@@ -1,4 +1,4 @@
-import type { EntityMetadata } from "#internal/entity/types/metadata";
+import type { EntityMetadata } from "../../entity/types/metadata";
 import { buildKeysetOrder, keysetOrderToRecord } from "./build-keyset-order";
 
 const makeMetadata = (primaryKeys: Array<string>): EntityMetadata =>

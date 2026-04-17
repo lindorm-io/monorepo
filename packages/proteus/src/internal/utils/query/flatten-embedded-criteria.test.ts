@@ -1,4 +1,4 @@
-import type { EntityMetadata } from "#internal/entity/types/metadata";
+import type { EntityMetadata } from "../../entity/types/metadata";
 import { makeField } from "../../__fixtures__/make-field";
 import { flattenEmbeddedCriteria } from "./flatten-embedded-criteria";
 

@@ -1,6 +1,6 @@
 import { makeField } from "../../../../__fixtures__/make-field";
-import type { EntityMetadata, MetaRelation } from "#internal/entity/types/metadata";
-import type { IncludeSpec, WindowSpec } from "#internal/types/query";
+import type { EntityMetadata, MetaRelation } from "../../../../entity/types/metadata";
+import type { IncludeSpec, WindowSpec } from "../../../../types/query";
 
 // Mock get-relation-metadata so tests for buildAliasMap / compileSelect with includes
 // do not need a real decorator-decorated entity class registered in getEntityMetadata.

@@ -1,9 +1,9 @@
-import type { MetaRelation } from "#internal/entity/types/metadata";
-import type { ScopedName } from "#internal/types/types";
+import type { MetaRelation } from "../../../entity/types/metadata";
+import type { ScopedName } from "../../../types/types";
 
 // ─── Module Mocks ────────────────────────────────────────────────────────────
 
-jest.mock("#internal/entity/utils/get-join-name", () => ({
+jest.mock("../../../entity/utils/get-join-name", () => ({
   getJoinName: jest.fn(),
 }));
 
@@ -11,13 +11,13 @@ jest.mock("./scan-entity-keys", () => ({
   scanEntityKeys: jest.fn(),
 }));
 
-jest.mock("#internal/entity/metadata/get-entity-metadata", () => ({
+jest.mock("../../../entity/metadata/get-entity-metadata", () => ({
   getEntityMetadata: jest.fn(),
 }));
 
-import { getJoinName } from "#internal/entity/utils/get-join-name";
+import { getJoinName } from "../../../entity/utils/get-join-name";
 import { scanEntityKeys } from "./scan-entity-keys";
-import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
+import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata";
 import { createRedisJoinTableOps } from "./redis-join-table-ops";
 
 const mockGetJoinName = getJoinName as jest.MockedFunction<typeof getJoinName>;

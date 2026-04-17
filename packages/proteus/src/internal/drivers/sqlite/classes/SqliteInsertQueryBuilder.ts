@@ -1,6 +1,6 @@
 import type { DeepPartial, Dict } from "@lindorm/types";
 import type { IEntity, IInsertQueryBuilder, WriteResult } from "../../../../interfaces";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
+import type { EntityMetadata } from "../../../entity/types/metadata";
 import { ProteusError } from "../../../../errors/ProteusError";
 import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError";
 import type { SqliteQueryClient } from "../types/sqlite-query-client";

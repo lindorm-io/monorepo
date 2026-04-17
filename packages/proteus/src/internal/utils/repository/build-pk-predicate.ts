@@ -1,7 +1,7 @@
 import type { Predicate } from "@lindorm/types";
 import type { IEntity } from "../../../interfaces";
 import { ProteusRepositoryError } from "../../../errors/ProteusRepositoryError";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
+import type { EntityMetadata } from "../../entity/types/metadata";
 
 export const buildPrimaryKeyPredicate = <E extends IEntity>(
   entity: E,

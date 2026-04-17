@@ -1,28 +1,28 @@
 import type { ILogger } from "@lindorm/logger";
 import { makeField } from "../../../__fixtures__/make-field";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
+import type { EntityMetadata } from "../../../entity/types/metadata";
 import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor";
 import type { PostgresQueryClient } from "../types/postgres-query-client";
 import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError";
-import { DuplicateKeyError } from "#internal/errors/DuplicateKeyError";
+import { DuplicateKeyError } from "../../../errors/DuplicateKeyError";
 import { PostgresRepository } from "./PostgresRepository";
 import type { IEntity } from "../../../../interfaces";
 import type { Constructor } from "@lindorm/types";
 
 // ─── Module Mocks ────────────────────────────────────────────────────────────
 
-jest.mock("#internal/entity/classes/EntityManager", () => ({
+jest.mock("../../../entity/classes/EntityManager", () => ({
   EntityManager: jest.fn(),
 }));
 
-jest.mock("#internal/entity/metadata/get-entity-metadata", () => ({
+jest.mock("../../../entity/metadata/get-entity-metadata", () => ({
   getEntityMetadata: jest.fn(),
 }));
 
 const mockSaveOwning = jest.fn();
 const mockSaveInverse = jest.fn();
 const mockDestroy = jest.fn();
-jest.mock("#internal/utils/repository/RelationPersister", () => ({
+jest.mock("../../../utils/repository/RelationPersister", () => ({
   RelationPersister: jest.fn().mockImplementation(() => ({
     saveOwning: mockSaveOwning,
     saveInverse: mockSaveInverse,
@@ -30,11 +30,11 @@ jest.mock("#internal/utils/repository/RelationPersister", () => ({
   })),
 }));
 
-jest.mock("#internal/utils/repository/build-pk-predicate", () => ({
+jest.mock("../../../utils/repository/build-pk-predicate", () => ({
   buildPrimaryKeyPredicate: jest.fn(),
 }));
 
-jest.mock("#internal/utils/repository/repository-guards", () => ({
+jest.mock("../../../utils/repository/repository-guards", () => ({
   guardAppendOnly: jest.fn(),
   guardDeleteDateField: jest.fn(),
   guardExpiryDateField: jest.fn(),
@@ -47,7 +47,7 @@ jest.mock("../utils/repository/wrap-pg-error", () => ({
   wrapPgError: jest.fn(),
 }));
 
-jest.mock("#internal/errors/DuplicateKeyError", () => {
+jest.mock("../../../errors/DuplicateKeyError", () => {
   const { ProteusRepositoryError } = jest.requireActual(
     "../../../../errors/ProteusRepositoryError",
   );
@@ -81,16 +81,16 @@ jest.mock("./PostgresCursor", () => ({
 
 // ─── Import mocks after jest.mock ────────────────────────────────────────────
 
-import { EntityManager } from "#internal/entity/classes/EntityManager";
-import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
-import { RelationPersister } from "#internal/utils/repository/RelationPersister";
-import { buildPrimaryKeyPredicate } from "#internal/utils/repository/build-pk-predicate";
+import { EntityManager } from "../../../entity/classes/EntityManager";
+import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata";
+import { RelationPersister } from "../../../utils/repository/RelationPersister";
+import { buildPrimaryKeyPredicate } from "../../../utils/repository/build-pk-predicate";
 import {
   guardDeleteDateField,
   guardExpiryDateField,
   guardVersionFields,
   guardUpsertBlocked,
-} from "#internal/utils/repository/repository-guards";
+} from "../../../utils/repository/repository-guards";
 import { wrapPgError } from "../utils/repository/wrap-pg-error";
 import { compileUpsert } from "../utils/query/compile-upsert";
 import { compileInsertBulk } from "../utils/query/compile-insert";
@@ -510,7 +510,7 @@ describe("PostgresRepository", () => {
 
     test("calls validateRelationNames when relations option is provided", async () => {
       const { validateRelationNames: mockValidate } = jest.requireMock(
-        "#internal/utils/repository/repository-guards",
+        "../../../utils/repository/repository-guards",
       );
       const { repo, executor } = createRepository();
       executor.executeFind.mockResolvedValue([]);
@@ -522,7 +522,7 @@ describe("PostgresRepository", () => {
 
     test("propagates validateRelationNames error", async () => {
       const { validateRelationNames: mockValidate } = jest.requireMock(
-        "#internal/utils/repository/repository-guards",
+        "../../../utils/repository/repository-guards",
       );
       mockValidate.mockImplementation(() => {
         throw new ProteusRepositoryError('Unknown relation "unknown"');

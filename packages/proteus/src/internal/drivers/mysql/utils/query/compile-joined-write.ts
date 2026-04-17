@@ -1,9 +1,9 @@
 import type { IAmphora } from "@lindorm/amphora";
 import type { IEntity } from "../../../../../interfaces";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
-import { getEntityName } from "#internal/entity/utils/get-entity-name";
-import { applyDiscriminatorColumn } from "#internal/utils/sql/apply-discriminator-column";
-import { getDiscriminatorColumnName } from "#internal/utils/sql/get-discriminator-column-name";
+import type { EntityMetadata } from "../../../../entity/types/metadata";
+import { getEntityName } from "../../../../entity/utils/get-entity-name";
+import { applyDiscriminatorColumn } from "../../../../utils/sql/apply-discriminator-column";
+import { getDiscriminatorColumnName } from "../../../../utils/sql/get-discriminator-column-name";
 import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier";
 import type { CompiledSql } from "./compiled-sql";
 import {

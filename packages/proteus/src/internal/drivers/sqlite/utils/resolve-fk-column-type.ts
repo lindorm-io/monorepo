@@ -1,7 +1,7 @@
 import type { Constructor } from "@lindorm/types";
 import { ProteusError } from "../../../../errors";
 import type { IEntity } from "../../../../interfaces";
-import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
+import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata";
 
 /**
  * Resolves the SQLite type affinity for a foreign key column by looking up the

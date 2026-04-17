@@ -1,1 +1,1 @@
-export type { CompiledSql } from "#internal/utils/sql/compiled-sql";
+export type { CompiledSql } from "../../../../utils/sql/compiled-sql";

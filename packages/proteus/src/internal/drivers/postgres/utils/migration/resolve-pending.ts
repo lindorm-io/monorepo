@@ -6,4 +6,4 @@ export {
   type MigrationRecordShape,
   type LoadedMigrationShape,
   type MigrationInterfaceShape,
-} from "#internal/utils/migration/resolve-pending";
+} from "../../../../utils/migration/resolve-pending";

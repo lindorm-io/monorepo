@@ -9,15 +9,15 @@ import type {
 } from "../interfaces";
 import type { ICacheAdapter } from "../interfaces/CacheAdapter";
 import type { EntityEmitFn, TransactionCallback, TransactionOptions } from "../types";
-import { CachingRepository } from "#internal/classes/CachingRepository";
-import type { MetadataResolver } from "#internal/interfaces/ProteusDriver";
-import type { IProteusDriver } from "#internal/interfaces/ProteusDriver";
-import type { FilterRegistry } from "#internal/utils/query/filter-registry";
+import { CachingRepository } from "../internal/classes/CachingRepository";
+import type { MetadataResolver } from "../internal/interfaces/ProteusDriver";
+import type { IProteusDriver } from "../internal/interfaces/ProteusDriver";
+import type { FilterRegistry } from "../internal/utils/query/filter-registry";
 import {
   setFilterParams as setFilterParamsUtil,
   enableFilter as enableFilterUtil,
   disableFilter as disableFilterUtil,
-} from "#internal/utils/query/filter-registry";
+} from "../internal/utils/query/filter-registry";
 
 export type ProteusSessionOptions<C = unknown> = {
   source: IProteusSource<C>;

@@ -5,7 +5,7 @@ import type {
   IProteusRepository,
   ITransactionContext,
 } from "../../../../interfaces";
-import type { RepositoryFactory } from "#internal/types/repository-factory";
+import type { RepositoryFactory } from "../../../types/repository-factory";
 import type { MemoryTransactionHandle } from "../types/memory-store";
 import type { MemoryDriver } from "./MemoryDriver";
 import { MemoryDriverError } from "../errors/MemoryDriverError";

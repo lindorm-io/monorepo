@@ -5,7 +5,7 @@ import { tmpdir } from "os";
 import { join } from "path";
 import { Client } from "pg";
 import { mockScannerImport } from "../../../../__fixtures__/mock-scanner-import";
-import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
+import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata";
 import { PostgresDriver } from "./PostgresDriver";
 
 mockScannerImport();

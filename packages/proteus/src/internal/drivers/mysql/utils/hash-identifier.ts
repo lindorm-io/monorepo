@@ -1,1 +1,1 @@
-export { hashIdentifier } from "#internal/utils/sql/hash-identifier";
+export { hashIdentifier } from "../../../utils/sql/hash-identifier";

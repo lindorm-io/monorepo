@@ -1,10 +1,10 @@
 import type { Dict } from "@lindorm/types";
 import type { IEntity } from "../../../../../interfaces";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
-import type { IncludeSpec } from "#internal/types/query";
-import { defaultHydrateEntity } from "#internal/entity/utils/default-hydrate-entity";
-import type { HydrateOptions } from "#internal/entity/utils/default-hydrate-entity";
-import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
+import type { EntityMetadata } from "../../../../entity/types/metadata";
+import type { IncludeSpec } from "../../../../types/query";
+import { defaultHydrateEntity } from "../../../../entity/utils/default-hydrate-entity";
+import type { HydrateOptions } from "../../../../entity/utils/default-hydrate-entity";
+import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata";
 import type { AliasMap } from "./compile-select";
 import { extractFieldDictFromAliased } from "./extract-field-dict";
 import { getRelationMetadata } from "./get-relation-metadata";

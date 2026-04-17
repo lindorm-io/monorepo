@@ -7,7 +7,7 @@ import { ManyToOne } from "../../../../../decorators/ManyToOne";
 import { OneToMany } from "../../../../../decorators/OneToMany";
 import { OneToOne } from "../../../../../decorators/OneToOne";
 import { PrimaryKeyField } from "../../../../../decorators/PrimaryKeyField";
-import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
+import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata";
 import { generateFkDDL } from "./generate-fk-ddl";
 
 // ---------------------------------------------------------------------------

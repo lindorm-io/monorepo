@@ -1,6 +1,6 @@
 import type { Predicate } from "@lindorm/types";
 import type { IEntity } from "../../../../../interfaces";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
+import type { EntityMetadata } from "../../../../entity/types/metadata";
 import { createEmptyState } from "../../../../../classes/QueryBuilder";
 import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier";
 import { resolveColumnName } from "../resolve-column-name";

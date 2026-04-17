@@ -1,9 +1,9 @@
-import type { MetaRelation } from "#internal/entity/types/metadata";
+import type { MetaRelation } from "../../../../entity/types/metadata";
 import type { PostgresQueryClient } from "../../types/postgres-query-client";
 import { deleteJoinTableRows, syncJoinTableRows } from "./manage-join-table";
 
 // Mock the external utilities before importing the module under test
-jest.mock("#internal/entity/utils/get-join-name", () => ({
+jest.mock("../../../../entity/utils/get-join-name", () => ({
   getJoinName: jest.fn(() => ({
     namespace: "public",
     name: "test_join_table",

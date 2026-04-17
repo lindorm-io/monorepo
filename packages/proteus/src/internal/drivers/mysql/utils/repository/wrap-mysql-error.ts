@@ -1,11 +1,11 @@
 import { ProteusError } from "../../../../../errors/ProteusError";
 import { ProteusRepositoryError } from "../../../../../errors/ProteusRepositoryError";
-import { CheckConstraintError } from "#internal/errors/CheckConstraintError";
-import { DeadlockError } from "#internal/errors/DeadlockError";
-import { DuplicateKeyError } from "#internal/errors/DuplicateKeyError";
-import { ForeignKeyViolationError } from "#internal/errors/ForeignKeyViolationError";
-import { NotNullViolationError } from "#internal/errors/NotNullViolationError";
-import { SerializationError } from "#internal/errors/SerializationError";
+import { CheckConstraintError } from "../../../../errors/CheckConstraintError";
+import { DeadlockError } from "../../../../errors/DeadlockError";
+import { DuplicateKeyError } from "../../../../errors/DuplicateKeyError";
+import { ForeignKeyViolationError } from "../../../../errors/ForeignKeyViolationError";
+import { NotNullViolationError } from "../../../../errors/NotNullViolationError";
+import { SerializationError } from "../../../../errors/SerializationError";
 
 /**
  * Maps mysql2 error codes to Proteus error classes and throws.

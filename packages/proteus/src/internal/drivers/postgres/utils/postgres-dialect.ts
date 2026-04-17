@@ -1,5 +1,5 @@
-import type { MetaField } from "#internal/entity/types/metadata";
-import type { SqlDialect } from "#internal/utils/sql/sql-dialect";
+import type { MetaField } from "../../../entity/types/metadata";
+import type { SqlDialect } from "../../../utils/sql/sql-dialect";
 import { ProteusError } from "../../../../errors";
 import type { LockMode } from "../../../../types/find-options";
 

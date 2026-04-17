@@ -1,6 +1,6 @@
-import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
-import { defaultCreateEntity } from "#internal/entity/utils/default-create-entity";
-import { defaultCloneEntity } from "#internal/entity/utils/default-clone-entity";
+import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata";
+import { defaultCreateEntity } from "../internal/entity/utils/default-create-entity";
+import { defaultCloneEntity } from "../internal/entity/utils/default-clone-entity";
 import { Embeddable } from "./Embeddable";
 import { EmbeddedList } from "./EmbeddedList";
 import { Entity } from "./Entity";

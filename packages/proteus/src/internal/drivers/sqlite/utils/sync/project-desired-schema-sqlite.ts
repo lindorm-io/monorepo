@@ -8,17 +8,17 @@ import type {
   SqliteDesiredTrigger,
   SqliteDesiredUnique,
 } from "../../types/desired-schema";
-import type { RelationChange, RelationDestroy } from "#internal/entity/types/metadata";
+import type { RelationChange, RelationDestroy } from "../../../../entity/types/metadata";
 import type {
   EntityMetadata,
   MetaField,
   MetaGenerated,
-} from "#internal/entity/types/metadata";
-import type { NamespaceOptions } from "#internal/types/types";
-import { getEntityName } from "#internal/entity/utils/get-entity-name";
-import { getJoinName } from "#internal/entity/utils/get-join-name";
-import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
-import { extractEnumValues } from "#internal/utils/extract-enum-values";
+} from "../../../../entity/types/metadata";
+import type { NamespaceOptions } from "../../../../types/types";
+import { getEntityName } from "../../../../entity/utils/get-entity-name";
+import { getJoinName } from "../../../../entity/utils/get-join-name";
+import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata";
+import { extractEnumValues } from "../../../../utils/extract-enum-values";
 import { generateAppendOnlyDDL } from "../ddl/generate-append-only-ddl";
 import { hashIdentifier } from "../hash-identifier";
 import { mapFieldTypeSqlite } from "../map-field-type-sqlite";

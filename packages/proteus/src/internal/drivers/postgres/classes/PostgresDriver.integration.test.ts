@@ -15,7 +15,7 @@ import {
   TestCourse,
   TestVersionKeyed,
 } from "../../../__fixtures__/test-entities";
-import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
+import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata";
 import { projectDesiredSchema } from "../utils/sync/project-desired-schema";
 import { introspectSchema } from "../utils/sync/introspect-schema";
 import { diffSchema } from "../utils/sync/diff-schema";

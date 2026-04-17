@@ -1,5 +1,5 @@
 import { makeField } from "../../../../__fixtures__/make-field";
-import type { EntityMetadata, MetaRelation } from "#internal/entity/types/metadata";
+import type { EntityMetadata, MetaRelation } from "../../../../entity/types/metadata";
 import { ProteusError } from "../../../../../errors/ProteusError";
 import { compileJoin } from "./compile-join";
 import type { AliasMap } from "./compile-select";

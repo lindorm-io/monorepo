@@ -1,8 +1,8 @@
 import { isNumber } from "@lindorm/is";
 import { ProteusError } from "../../../errors";
 import type { IEntity } from "../../../interfaces";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
-import type { IncludeSpec, RawSelectEntry, WindowSpec } from "#internal/types/query";
+import type { EntityMetadata } from "../../entity/types/metadata";
+import type { IncludeSpec, RawSelectEntry, WindowSpec } from "../../types/query";
 import { resolveColumnName } from "./resolve-column-name";
 import type { SqlDialect } from "./sql-dialect";
 import type { AliasMap, BuiltAliasResult, InheritanceAliasMap } from "./types";
@@ -20,9 +20,9 @@ export type CompileSelectDeps = {
   findRelationByKey: (
     metadata: EntityMetadata,
     relationKey: string,
-  ) => import("#internal/entity/types/metadata").MetaRelation;
+  ) => import("../../entity/types/metadata").MetaRelation;
   getRelationMetadata: (
-    relation: import("#internal/entity/types/metadata").MetaRelation,
+    relation: import("../../entity/types/metadata").MetaRelation,
   ) => EntityMetadata;
 };
 

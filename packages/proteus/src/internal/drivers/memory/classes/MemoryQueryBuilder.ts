@@ -10,24 +10,24 @@ import type {
 } from "../../../../interfaces";
 import type { WriteResult } from "../../../../interfaces/InsertQueryBuilder";
 import type { LockMode } from "../../../../types/find-options";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
+import type { EntityMetadata } from "../../../entity/types/metadata";
 import type { MemoryStore, MemoryTable } from "../types/memory-store";
 import { QueryBuilder } from "../../../../classes/QueryBuilder";
 import { NotSupportedError } from "../../../../errors/NotSupportedError";
 import { guardMemoryLockMode } from "../utils/guard-memory-lock-mode";
 import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError";
 import { Predicated } from "@lindorm/utils";
-import { defaultHydrateEntity } from "#internal/entity/utils/default-hydrate-entity";
-import { resolvePolymorphicMetadata } from "#internal/entity/utils/resolve-polymorphic-metadata";
-import { generateAutoFilters } from "#internal/entity/metadata/auto-filters";
-import { flattenEmbeddedCriteria } from "#internal/utils/query/flatten-embedded-criteria";
-import { applyOrdering } from "#internal/utils/query/apply-ordering";
+import { defaultHydrateEntity } from "../../../entity/utils/default-hydrate-entity";
+import { resolvePolymorphicMetadata } from "../../../entity/utils/resolve-polymorphic-metadata";
+import { generateAutoFilters } from "../../../entity/metadata/auto-filters";
+import { flattenEmbeddedCriteria } from "../../../utils/query/flatten-embedded-criteria";
+import { applyOrdering } from "../../../utils/query/apply-ordering";
 import {
   computeAggregateFromValues,
   extractNumericValues,
-} from "#internal/utils/query/compute-in-memory-aggregate";
-import { resolveFilters } from "#internal/utils/query/resolve-filters";
-import { mergeSystemFilterOverrides } from "#internal/utils/query/merge-system-filter-overrides";
+} from "../../../utils/query/compute-in-memory-aggregate";
+import { resolveFilters } from "../../../utils/query/resolve-filters";
+import { mergeSystemFilterOverrides } from "../../../utils/query/merge-system-filter-overrides";
 import { MemoryDuplicateKeyError } from "../errors/MemoryDuplicateKeyError";
 import { applyAutoIncrement } from "../utils/memory-auto-increment";
 import { checkUniqueConstraints } from "../utils/memory-unique-check";

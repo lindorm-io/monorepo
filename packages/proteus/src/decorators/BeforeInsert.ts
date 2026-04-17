@@ -1,5 +1,5 @@
 import type { Constructor } from "@lindorm/types";
-import { stageHook } from "#internal/entity/metadata/stage-metadata";
+import { stageHook } from "../internal/entity/metadata/stage-metadata";
 import type { HookCallback } from "../types";
 
 /**

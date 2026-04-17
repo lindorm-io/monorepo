@@ -1,6 +1,6 @@
 import { ProteusError } from "../../../../errors";
 import { makeField } from "../../../__fixtures__/make-field";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
+import type { EntityMetadata } from "../../../entity/types/metadata";
 import { PostgresUpdateQueryBuilder } from "./PostgresUpdateQueryBuilder";
 
 const metadata = {

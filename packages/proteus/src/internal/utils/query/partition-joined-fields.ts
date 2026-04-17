@@ -1,5 +1,5 @@
-import type { EntityMetadata, MetaField } from "#internal/entity/types/metadata";
-import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
+import type { EntityMetadata, MetaField } from "../../entity/types/metadata";
+import { getEntityMetadata } from "../../entity/metadata/get-entity-metadata";
 
 export type JoinedFieldPartition = {
   /** Fields that belong to the root table (including PK and discriminator) */

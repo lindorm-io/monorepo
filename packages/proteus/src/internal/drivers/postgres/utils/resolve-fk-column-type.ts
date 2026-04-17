@@ -1,9 +1,9 @@
 import type { Constructor } from "@lindorm/types";
 import { ProteusError } from "../../../../errors";
 import type { IEntity } from "../../../../interfaces";
-import type { NamespaceOptions } from "#internal/types/types";
-import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
-import { getEntityName } from "#internal/entity/utils/get-entity-name";
+import type { NamespaceOptions } from "../../../types/types";
+import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata";
+import { getEntityName } from "../../../entity/utils/get-entity-name";
 import { mapFieldType } from "./map-field-type";
 
 /**

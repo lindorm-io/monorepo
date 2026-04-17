@@ -1,4 +1,4 @@
-import type { MetaField, MetaRelation } from "#internal/entity/types/metadata";
+import type { MetaField, MetaRelation } from "../../../entity/types/metadata";
 import { RedisDriverError } from "../errors/RedisDriverError";
 import { deserializeHash } from "./deserialize-hash";
 

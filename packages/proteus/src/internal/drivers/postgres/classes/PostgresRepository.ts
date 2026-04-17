@@ -14,14 +14,14 @@ import type {
   FindOptions,
   UpsertOptions,
 } from "../../../../types";
-import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
+import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata";
 import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor";
-import type { MetaRelation, QueryScope } from "#internal/entity/types/metadata";
-import type { QueryState } from "#internal/types/query";
-import type { RepositoryFactory } from "#internal/types/repository-factory";
-import type { AggregateFunction } from "#internal/types/aggregate";
+import type { MetaRelation, QueryScope } from "../../../entity/types/metadata";
+import type { QueryState } from "../../../types/query";
+import type { RepositoryFactory } from "../../../types/repository-factory";
+import type { AggregateFunction } from "../../../types/aggregate";
 import type { PostgresQueryClient } from "../types/postgres-query-client";
-import { DriverRepositoryBase } from "#internal/classes/DriverRepositoryBase";
+import { DriverRepositoryBase } from "../../../classes/DriverRepositoryBase";
 import { createEmptyState } from "../../../../classes/QueryBuilder";
 import { compileAggregate } from "../utils/query/compile-aggregate";
 import type { AggregateType } from "../utils/query/compile-aggregate";
@@ -33,26 +33,26 @@ import {
   compilePartialUpdate,
 } from "../utils/query/compile-partial-update";
 import { hydrateReturning } from "../utils/query/hydrate-returning";
-import { buildPrimaryKeyPredicate } from "#internal/utils/repository/build-pk-predicate";
+import { buildPrimaryKeyPredicate } from "../../../utils/repository/build-pk-predicate";
 import {
   guardAppendOnly,
   guardDeleteDateField,
   guardVersionFields,
   validateRelationNames,
-} from "#internal/utils/repository/repository-guards";
+} from "../../../utils/repository/repository-guards";
 import { wrapPgError } from "../utils/repository/wrap-pg-error";
-import { RelationPersister } from "#internal/utils/repository/RelationPersister";
+import { RelationPersister } from "../../../utils/repository/RelationPersister";
 import { createPostgresJoinTableOps } from "../utils/repository/postgres-join-table-ops";
-import type { LazyRelationLoader } from "#internal/entity/utils/install-lazy-relations";
+import type { LazyRelationLoader } from "../../../entity/utils/install-lazy-relations";
 import type { EntityEmitFn } from "../../../../types/event-map";
-import { buildRelationFilter } from "#internal/utils/repository/build-relation-filter";
+import { buildRelationFilter } from "../../../utils/repository/build-relation-filter";
 import { quoteIdentifier, quoteQualifiedName } from "../utils/quote-identifier";
 import { resolveTableName } from "../utils/query/resolve-table-name";
-import { DuplicateKeyError } from "#internal/errors/DuplicateKeyError";
+import { DuplicateKeyError } from "../../../errors/DuplicateKeyError";
 import { PostgresCursor } from "./PostgresCursor";
-import { getSnapshot, clearSnapshot } from "#internal/entity/utils/snapshot-store";
-import { diffColumns } from "#internal/entity/utils/diff-columns";
-import { filterHiddenSelections } from "#internal/utils/query/filter-hidden-selections";
+import { getSnapshot, clearSnapshot } from "../../../entity/utils/snapshot-store";
+import { diffColumns } from "../../../entity/utils/diff-columns";
+import { filterHiddenSelections } from "../../../utils/query/filter-hidden-selections";
 import { loadRelationIds } from "../utils/repository/load-relation-ids";
 import { loadRelationCounts } from "../utils/repository/load-relation-counts";
 import {
@@ -60,9 +60,9 @@ import {
   loadEmbeddedListRows,
   loadEmbeddedListRowsBatch,
 } from "../utils/repository/embedded-list-ops";
-import type { MetaEmbeddedList } from "#internal/entity/types/metadata";
+import type { MetaEmbeddedList } from "../../../entity/types/metadata";
 
-export type { RepositoryFactory } from "#internal/types/repository-factory";
+export type { RepositoryFactory } from "../../../types/repository-factory";
 
 export type WithImplicitTransaction<E extends IEntity> = <T>(
   fn: (ctx: {

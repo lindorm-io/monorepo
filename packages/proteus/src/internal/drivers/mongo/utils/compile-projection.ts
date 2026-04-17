@@ -1,5 +1,5 @@
 import type { Document } from "mongodb";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
+import type { EntityMetadata } from "../../../entity/types/metadata";
 
 /**
  * Convert Proteus select fields into MongoDB projection.

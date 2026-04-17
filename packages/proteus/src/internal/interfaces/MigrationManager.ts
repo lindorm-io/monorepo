@@ -1,10 +1,10 @@
-import type { EntityMetadata } from "#internal/entity/types/metadata";
-import type { NamespaceOptions } from "#internal/types/types";
-import type { MigrationApplyResult, MigrationRecord } from "#internal/types/migration";
+import type { EntityMetadata } from "../entity/types/metadata";
+import type { NamespaceOptions } from "../types/types";
+import type { MigrationApplyResult, MigrationRecord } from "../types/migration";
 import type {
   ResolvedMigration,
   GhostMigration,
-} from "#internal/utils/migration/resolve-pending";
+} from "../utils/migration/resolve-pending";
 
 export type MigrationStatusResult = {
   resolved: Array<ResolvedMigration>;

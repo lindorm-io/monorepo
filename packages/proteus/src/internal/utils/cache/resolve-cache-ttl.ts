@@ -1,5 +1,5 @@
 import { ms } from "@lindorm/date";
-import type { MetaCache } from "#internal/entity/types/metadata";
+import type { MetaCache } from "../../entity/types/metadata";
 import type { FindCacheOption } from "../../../types/find-options";
 
 export type ResolveCacheTtlInput = {

@@ -1,4 +1,4 @@
-import type { EntityMetadata } from "#internal/entity/types/metadata";
+import type { EntityMetadata } from "../../../entity/types/metadata";
 import type { MemoryStore } from "../types/memory-store";
 import { applyAutoIncrement } from "./memory-auto-increment";
 

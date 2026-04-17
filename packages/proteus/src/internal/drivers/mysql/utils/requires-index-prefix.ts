@@ -1,4 +1,4 @@
-import type { MetaField } from "#internal/entity/types/metadata";
+import type { MetaField } from "../../../entity/types/metadata";
 
 /**
  * Returns true if the given field maps to a MySQL type that requires a prefix

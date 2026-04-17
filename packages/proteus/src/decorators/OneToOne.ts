@@ -1,7 +1,7 @@
 import type { Constructor } from "@lindorm/types";
 import type { IEntity } from "../interfaces";
-import type { RelationOptions } from "#internal/entity/types/decorators";
-import { stageRelation } from "#internal/entity/metadata/stage-metadata";
+import type { RelationOptions } from "../internal/entity/types/decorators";
+import { stageRelation } from "../internal/entity/metadata/stage-metadata";
 
 /**
  * Declare a one-to-one relation between two entities.

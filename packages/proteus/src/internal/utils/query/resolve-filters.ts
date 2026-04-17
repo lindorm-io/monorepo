@@ -1,5 +1,5 @@
 import type { Dict, Predicate } from "@lindorm/types";
-import type { MetaFilter } from "#internal/entity/types/metadata";
+import type { MetaFilter } from "../../entity/types/metadata";
 import type { FilterRegistry } from "./filter-registry";
 import { ProteusError } from "../../../errors";
 

@@ -1,5 +1,5 @@
 import { isString } from "@lindorm/is";
-import type { MetaFieldType } from "#internal/entity/types/metadata";
+import type { MetaFieldType } from "../../../../entity/types/metadata";
 
 export const coerceReadValue = (
   value: unknown,

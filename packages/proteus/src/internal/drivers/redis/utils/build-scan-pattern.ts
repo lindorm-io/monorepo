@@ -1,6 +1,6 @@
 import type { Constructor } from "@lindorm/types";
 import type { IEntity } from "../../../../interfaces";
-import { getEntityName } from "#internal/entity/utils/get-entity-name";
+import { getEntityName } from "../../../entity/utils/get-entity-name";
 import { encodePkSegment } from "./encode-pk-segment";
 
 /**

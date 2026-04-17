@@ -3,10 +3,10 @@ import type { DeepPartial, Predicate } from "@lindorm/types";
 import type { IEntity } from "../../../../interfaces";
 import type { IUpdateQueryBuilder } from "../../../../interfaces/UpdateQueryBuilder";
 import type { WriteResult } from "../../../../interfaces/InsertQueryBuilder";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
+import type { EntityMetadata } from "../../../entity/types/metadata";
 import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError";
 import { compilePredicatesToFilter } from "../utils/compile-aggregation-pipeline";
-import { flattenEmbeddedCriteria } from "#internal/utils/query/flatten-embedded-criteria";
+import { flattenEmbeddedCriteria } from "../../../utils/query/flatten-embedded-criteria";
 import { resolveCollectionName } from "../utils/resolve-collection-name";
 
 /**

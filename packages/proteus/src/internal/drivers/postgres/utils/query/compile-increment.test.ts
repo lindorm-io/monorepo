@@ -1,6 +1,6 @@
 import { makeField } from "../../../../__fixtures__/make-field";
-import type { EntityMetadata, MetaFilter } from "#internal/entity/types/metadata";
-import { SOFT_DELETE_FILTER_NAME } from "#internal/entity/metadata/auto-filters";
+import type { EntityMetadata, MetaFilter } from "../../../../entity/types/metadata";
+import { SOFT_DELETE_FILTER_NAME } from "../../../../entity/metadata/auto-filters";
 import { compileIncrement } from "./compile-increment";
 
 const metadata = {

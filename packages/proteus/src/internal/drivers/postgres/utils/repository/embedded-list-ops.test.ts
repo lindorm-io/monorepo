@@ -4,7 +4,7 @@
  *         loadEmbeddedListRowsBatch, saveEmbeddedListRows
  */
 
-import type { MetaEmbeddedList } from "#internal/entity/types/metadata";
+import type { MetaEmbeddedList } from "../../../../entity/types/metadata";
 import type { PostgresQueryClient } from "../../types/postgres-query-client";
 import { makeField } from "../../../../__fixtures__/make-field";
 import {
@@ -22,7 +22,7 @@ jest.mock("../quote-identifier", () => ({
   ),
 }));
 
-jest.mock("#internal/entity/utils/deserialise", () => ({
+jest.mock("../../../../entity/utils/deserialise", () => ({
   deserialise: jest.fn((value: unknown) => value),
 }));
 

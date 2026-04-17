@@ -1,5 +1,5 @@
 import { isObjectLike } from "@lindorm/is";
-import type { SqlFragment } from "#internal/types/query";
+import type { SqlFragment } from "../../../../types/query";
 
 /**
  * Tagged template literal for creating parameterized SQL fragments.

@@ -1,4 +1,4 @@
-import type { SqlDialect } from "#internal/utils/sql/sql-dialect";
+import type { SqlDialect } from "../../../utils/sql/sql-dialect";
 import { ProteusError } from "../../../../errors";
 import type { LockMode } from "../../../../types/find-options";
 

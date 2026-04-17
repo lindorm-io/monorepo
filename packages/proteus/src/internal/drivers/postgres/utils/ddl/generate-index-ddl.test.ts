@@ -1,5 +1,5 @@
 import { ProteusError } from "../../../../../errors";
-import type { MetaIndex } from "#internal/entity/types/metadata";
+import type { MetaIndex } from "../../../../entity/types/metadata";
 import { generateIndexDDL } from "./generate-index-ddl";
 
 const TABLE = "products";

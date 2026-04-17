@@ -1,9 +1,9 @@
-import { getEntityMetadata } from "#internal/entity/metadata/get-entity-metadata";
-import { defaultCreateEntity } from "#internal/entity/utils/default-create-entity";
-import { defaultCloneEntity } from "#internal/entity/utils/default-clone-entity";
-import { defaultDehydrateEntity } from "#internal/entity/utils/default-dehydrate-entity";
-import { defaultHydrateEntity } from "#internal/entity/utils/default-hydrate-entity";
-import { defaultValidateEntity } from "#internal/entity/utils/default-validate-entity";
+import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata";
+import { defaultCreateEntity } from "../internal/entity/utils/default-create-entity";
+import { defaultCloneEntity } from "../internal/entity/utils/default-clone-entity";
+import { defaultDehydrateEntity } from "../internal/entity/utils/default-dehydrate-entity";
+import { defaultHydrateEntity } from "../internal/entity/utils/default-hydrate-entity";
+import { defaultValidateEntity } from "../internal/entity/utils/default-validate-entity";
 import { Embeddable } from "./Embeddable";
 import { Embedded } from "./Embedded";
 import { Entity } from "./Entity";

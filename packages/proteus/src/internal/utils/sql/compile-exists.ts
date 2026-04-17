@@ -1,8 +1,8 @@
 import type { Predicate } from "@lindorm/types";
 import type { IEntity } from "../../../interfaces";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
+import type { EntityMetadata } from "../../entity/types/metadata";
 import { createEmptyState } from "../../../classes/QueryBuilder";
-import type { QueryState } from "#internal/types/query";
+import type { QueryState } from "../../types/query";
 import type { SqlDialect } from "./sql-dialect";
 import type { InheritanceAliasMap } from "./types";
 

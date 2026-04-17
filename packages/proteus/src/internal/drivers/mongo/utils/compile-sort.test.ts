@@ -1,4 +1,4 @@
-import type { EntityMetadata, MetaField } from "#internal/entity/types/metadata";
+import type { EntityMetadata, MetaField } from "../../../entity/types/metadata";
 import { compileSort } from "./compile-sort";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

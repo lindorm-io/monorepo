@@ -1,7 +1,7 @@
 import type { FindCursor, Document } from "mongodb";
 import type { IEntity } from "../../../../interfaces";
 import type { IProteusCursor } from "../../../../interfaces/ProteusCursor";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
+import type { EntityMetadata } from "../../../entity/types/metadata";
 import { ProteusError } from "../../../../errors";
 import { hydrateEntity } from "../utils/hydrate";
 

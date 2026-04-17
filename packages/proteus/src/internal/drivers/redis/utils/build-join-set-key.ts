@@ -1,4 +1,4 @@
-import { getJoinName } from "#internal/entity/utils/get-join-name";
+import { getJoinName } from "../../../entity/utils/get-join-name";
 import { encodePkSegment } from "./encode-pk-segment";
 
 /**

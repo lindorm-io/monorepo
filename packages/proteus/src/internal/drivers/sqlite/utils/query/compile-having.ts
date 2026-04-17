@@ -1,7 +1,7 @@
 import type { IEntity } from "../../../../../interfaces";
-import type { EntityMetadata } from "#internal/entity/types/metadata";
-import type { PredicateEntry, RawWhereEntry } from "#internal/types/query";
-import { compileHaving as shared } from "#internal/utils/sql/compile-having";
+import type { EntityMetadata } from "../../../../entity/types/metadata";
+import type { PredicateEntry, RawWhereEntry } from "../../../../types/query";
+import { compileHaving as shared } from "../../../../utils/sql/compile-having";
 import { sqliteDialect } from "../sqlite-dialect";
 import { compilePredicate } from "./compile-where";
 

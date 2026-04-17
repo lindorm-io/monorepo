@@ -1,5 +1,5 @@
 import { makeField } from "../../../../__fixtures__/make-field";
-import type { EntityMetadata, MetaField } from "#internal/entity/types/metadata";
+import type { EntityMetadata, MetaField } from "../../../../entity/types/metadata";
 import { generateCommentDDL } from "./generate-comment-ddl";
 
 // ---------------------------------------------------------------------------
