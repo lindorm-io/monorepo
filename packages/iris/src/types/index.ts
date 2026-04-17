@@ -14,4 +14,4 @@ export type {
   MetaGeneratedStrategy as IrisGeneratedStrategy,
   MetaTransform as IrisTransformFn,
   MetaFieldDefault as IrisFieldDefault,
-} from "#internal/message/types/types";
+} from "../internal/message/types/types";

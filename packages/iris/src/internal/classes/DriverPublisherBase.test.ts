@@ -6,7 +6,7 @@ import { BeforePublish } from "../../decorators/BeforePublish";
 import { AfterPublish } from "../../decorators/AfterPublish";
 import type { IMessage, IMessageSubscriber } from "../../interfaces";
 import type { PublishOptions } from "../../types";
-import { clearRegistry } from "#internal/message/metadata/registry";
+import { clearRegistry } from "../message/metadata/registry";
 import {
   DriverPublisherBase,
   type DriverPublisherBaseOptions,

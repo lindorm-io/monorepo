@@ -4,7 +4,7 @@ import { IdentifierField } from "../../decorators/IdentifierField";
 import { Message } from "../../decorators/Message";
 import { IrisDriverError } from "../../errors/IrisDriverError";
 import type { IMessage } from "../../interfaces";
-import { clearRegistry } from "#internal/message/metadata/registry";
+import { clearRegistry } from "../message/metadata/registry";
 import { prepareOutbound } from "../message/utils/prepare-outbound";
 import { getMessageMetadata } from "../message/metadata/get-message-metadata";
 import {

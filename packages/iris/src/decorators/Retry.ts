@@ -1,4 +1,4 @@
-import { stageRetry } from "#internal/message/metadata/stage-metadata";
+import { stageRetry } from "../internal/message/metadata/stage-metadata";
 import type { RetryDecoratorOptions } from "../types/decorator-options";
 
 export const Retry =

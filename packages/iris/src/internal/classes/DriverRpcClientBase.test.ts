@@ -5,7 +5,7 @@ import { Message } from "../../decorators/Message";
 import { IrisTimeoutError } from "../../errors/IrisTimeoutError";
 import { IrisTransportError } from "../../errors/IrisTransportError";
 import type { IMessage } from "../../interfaces";
-import { clearRegistry } from "#internal/message/metadata/registry";
+import { clearRegistry } from "../message/metadata/registry";
 import { prepareOutbound } from "../message/utils/prepare-outbound";
 import { getMessageMetadata } from "../message/metadata/get-message-metadata";
 import {

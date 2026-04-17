@@ -8,7 +8,7 @@ import { IrisSourceError } from "../errors/IrisSourceError";
 import type { IMessageSubscriber } from "../interfaces";
 import type { IIrisDriver } from "../interfaces/IrisDriver";
 import type { IrisSourceOptions, IrisSourceOptionsBase } from "../types";
-import { clearRegistry } from "#internal/message/metadata/registry";
+import { clearRegistry } from "../internal/message/metadata/registry";
 import { IrisSource } from "./IrisSource";
 
 // --- Test message classes ---

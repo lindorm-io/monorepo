@@ -1,6 +1,6 @@
 import type { Constructor } from "@lindorm/types";
 import type { HookCallback } from "../types";
-import { stageHook } from "#internal/message/metadata/stage-metadata";
+import { stageHook } from "../internal/message/metadata/stage-metadata";
 
 export const OnValidate =
   <T extends Constructor>(callback: HookCallback) =>

@@ -1,5 +1,5 @@
-import { registerMessage } from "#internal/message/metadata/registry";
-import { stageMessage } from "#internal/message/metadata/stage-metadata";
+import { registerMessage } from "../internal/message/metadata/registry";
+import { stageMessage } from "../internal/message/metadata/stage-metadata";
 import type { MessageDecoratorOptions } from "../types/decorator-options";
 
 const R_VERSION_SUFFIX = /_[vV]\d+$/;

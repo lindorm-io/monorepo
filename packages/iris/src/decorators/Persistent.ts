@@ -1,4 +1,4 @@
-import { stagePersistent } from "#internal/message/metadata/stage-metadata";
+import { stagePersistent } from "../internal/message/metadata/stage-metadata";
 
 export const Persistent =
   () =>

@@ -1,4 +1,4 @@
-import { stageHeader } from "#internal/message/metadata/stage-metadata";
+import { stageHeader } from "../internal/message/metadata/stage-metadata";
 
 export const Header =
   (headerName?: string) =>

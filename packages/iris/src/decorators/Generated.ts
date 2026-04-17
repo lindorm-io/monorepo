@@ -1,5 +1,5 @@
-import type { MetaGeneratedStrategy } from "#internal/message/types/types";
-import { stageGenerated } from "#internal/message/metadata/stage-metadata";
+import type { MetaGeneratedStrategy } from "../internal/message/types/types";
+import { stageGenerated } from "../internal/message/metadata/stage-metadata";
 import type { GeneratedDecoratorOptions } from "../types/decorator-options";
 
 export const Generated =

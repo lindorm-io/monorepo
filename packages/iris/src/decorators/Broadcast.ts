@@ -1,4 +1,4 @@
-import { stageBroadcast } from "#internal/message/metadata/stage-metadata";
+import { stageBroadcast } from "../internal/message/metadata/stage-metadata";
 
 export const Broadcast =
   () =>

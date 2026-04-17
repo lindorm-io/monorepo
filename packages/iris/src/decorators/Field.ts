@@ -1,5 +1,5 @@
-import { stageField } from "#internal/message/metadata/stage-metadata";
-import type { MetaFieldType } from "#internal/message/types/types";
+import { stageField } from "../internal/message/metadata/stage-metadata";
+import type { MetaFieldType } from "../internal/message/types/types";
 import type { FieldDecoratorOptions } from "../types/decorator-options";
 
 export const Field =
