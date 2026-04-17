@@ -9,13 +9,14 @@ jest.mock("@lindorm/kryptos", () => ({
 }));
 
 import { createMockLogger } from "@lindorm/logger";
+import { LindormWorker } from "@lindorm/worker";
 import { Kryptos } from "../entities/Kryptos";
 import { createAmphoraEntityWorker } from "./amphora-entity-worker";
 
 describe("createAmphoraEntityWorker", () => {
   const amphora: any = { refresh: mockRefresh, add: mockAdd };
   const proteus: any = { repository: mockRepository };
-  const ctx: any = { logger: createMockLogger() };
+  const logger = createMockLogger();
 
   class FakeKryptosDB {}
 
@@ -24,82 +25,53 @@ describe("createAmphoraEntityWorker", () => {
     mockFind.mockResolvedValue([]);
   });
 
-  test("should return a worker config with correct alias", () => {
-    const config = createAmphoraEntityWorker({ amphora, proteus });
+  test("should return a LindormWorker instance with correct alias", () => {
+    const worker = createAmphoraEntityWorker({ amphora, logger, proteus });
 
-    expect(config.alias).toBe("AmphoraEntityWorker");
+    expect(worker).toBeInstanceOf(LindormWorker);
+    expect(worker.alias).toBe("AmphoraEntityWorker");
   });
 
-  test("should default interval to 3m", () => {
-    const config = createAmphoraEntityWorker({ amphora, proteus });
-
-    expect(config.interval).toBe("3m");
-  });
-
-  test("should default listeners to empty array", () => {
-    const config = createAmphoraEntityWorker({ amphora, proteus });
-
-    expect(config.listeners).toEqual([]);
-  });
-
-  test("should use provided interval", () => {
-    const config = createAmphoraEntityWorker({
-      amphora,
-      proteus,
-      interval: "10m",
-    });
-
-    expect(config.interval).toBe("10m");
-  });
-
-  test("should use provided listeners", () => {
-    const listeners: any = [{ event: "test" }];
-    const config = createAmphoraEntityWorker({
-      amphora,
-      proteus,
-      listeners,
-    });
-
-    expect(config.listeners).toBe(listeners);
-  });
-
-  test("should pass through jitter and retry", () => {
-    const config = createAmphoraEntityWorker({
-      amphora,
-      proteus,
-      jitter: "1s",
-      retry: 3,
-    } as any);
-
-    expect(config.jitter).toBe("1s");
-    expect(config.retry).toBe(3);
+  test("should accept interval, listeners, jitter and retry overrides", () => {
+    expect(() =>
+      createAmphoraEntityWorker({
+        amphora,
+        logger,
+        proteus,
+        interval: "10m",
+        listeners: [{ event: "start", listener: () => {} }],
+        jitter: "1s",
+        retry: { maxAttempts: 3 },
+      }),
+    ).not.toThrow();
   });
 
   describe("callback", () => {
     test("should default repository target to Kryptos entity when target not provided", async () => {
-      const config = createAmphoraEntityWorker({ amphora, proteus });
+      const worker = createAmphoraEntityWorker({ amphora, logger, proteus });
 
-      await config.callback(ctx);
+      await worker.trigger();
 
       expect(mockRepository).toHaveBeenCalledWith(Kryptos);
     });
 
     test("should use provided target override when supplied", async () => {
-      const config = createAmphoraEntityWorker({
+      const worker = createAmphoraEntityWorker({
         amphora,
+        logger,
         proteus,
         target: FakeKryptosDB as any,
       });
 
-      await config.callback(ctx);
+      await worker.trigger();
 
       expect(mockRepository).toHaveBeenCalledWith(FakeKryptosDB);
     });
 
     test("should refresh amphora and add keys", async () => {
-      const config = createAmphoraEntityWorker({ amphora, proteus });
+      const worker = createAmphoraEntityWorker({ amphora, logger, proteus });
 
-      await config.callback(ctx);
+      await worker.trigger();
 
       expect(mockRefresh).toHaveBeenCalledTimes(1);
       expect(mockFind).toHaveBeenCalledTimes(1);
@@ -110,9 +82,9 @@ describe("createAmphoraEntityWorker", () => {
       const entity = { id: "key-1", algorithm: "ES512", privateKey: null };
       mockFind.mockResolvedValueOnce([entity]);
 
-      const config = createAmphoraEntityWorker({ amphora, proteus });
+      const worker = createAmphoraEntityWorker({ amphora, logger, proteus });
 
-      await config.callback(ctx);
+      await worker.trigger();
 
       expect(mockFromDb).toHaveBeenCalledWith(entity);
       expect(mockAdd).toHaveBeenCalledWith([{ id: "key-1" }]);
@@ -126,9 +98,9 @@ describe("createAmphoraEntityWorker", () => {
       ];
       mockFind.mockResolvedValueOnce(entities);
 
-      const config = createAmphoraEntityWorker({ amphora, proteus });
+      const worker = createAmphoraEntityWorker({ amphora, logger, proteus });
 
-      await config.callback(ctx);
+      await worker.trigger();
 
       expect(mockFromDb).toHaveBeenCalledTimes(3);
       expect(mockAdd).toHaveBeenCalledWith([
