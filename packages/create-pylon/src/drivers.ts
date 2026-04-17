@@ -22,12 +22,11 @@ export const runProteusInit = async (
   });
 };
 
-export const runProteusGenerateEntity = async (
+export const runProteusGenerateSampleEntity = async (
   projectDir: string,
-  entityName: string,
 ): Promise<void> => {
   await writeProteusEntity({
-    name: entityName,
+    name: "SampleEntity",
     directory: join(projectDir, "src/proteus/entities"),
   });
 };
@@ -45,12 +44,9 @@ export const runIrisInit = async (
   });
 };
 
-export const runIrisGenerateMessage = async (
-  projectDir: string,
-  messageName: string,
-): Promise<void> => {
+export const runIrisGenerateSampleMessage = async (projectDir: string): Promise<void> => {
   await writeIrisMessage({
-    name: messageName,
+    name: "SampleMessage",
     directory: join(projectDir, "src/iris/messages"),
   });
 };

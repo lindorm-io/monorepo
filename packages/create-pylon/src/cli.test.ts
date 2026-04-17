@@ -11,9 +11,9 @@ jest.mock("./install", () => ({
 jest.mock("./git", () => ({ initGit: jest.fn() }));
 jest.mock("./drivers", () => ({
   runProteusInit: jest.fn(),
-  runProteusGenerateEntity: jest.fn(),
+  runProteusGenerateSampleEntity: jest.fn(),
   runIrisInit: jest.fn(),
-  runIrisGenerateMessage: jest.fn(),
+  runIrisGenerateSampleMessage: jest.fn(),
 }));
 
 import { runPrompts } from "./prompts";
@@ -21,9 +21,9 @@ import { scaffold } from "./scaffold";
 import { installDependencies, installDevDependencies } from "./install";
 import { initGit } from "./git";
 import {
-  runIrisGenerateMessage,
+  runIrisGenerateSampleMessage,
   runIrisInit,
-  runProteusGenerateEntity,
+  runProteusGenerateSampleEntity,
   runProteusInit,
 } from "./drivers";
 import { run } from "./cli";
@@ -35,9 +35,9 @@ const mockedInstall = installDependencies as jest.Mock;
 const mockedInstallDev = installDevDependencies as jest.Mock;
 const mockedInitGit = initGit as jest.Mock;
 const mockedProteusInit = runProteusInit as jest.Mock;
-const mockedProteusEntity = runProteusGenerateEntity as jest.Mock;
+const mockedProteusSampleEntity = runProteusGenerateSampleEntity as jest.Mock;
 const mockedIrisInit = runIrisInit as jest.Mock;
-const mockedIrisMessage = runIrisGenerateMessage as jest.Mock;
+const mockedIrisSampleMessage = runIrisGenerateSampleMessage as jest.Mock;
 
 const baseAnswers = (overrides: Partial<Answers> = {}): Answers => ({
   projectName: "demo",
@@ -60,9 +60,9 @@ describe("cli run orchestration", () => {
       mockedInstallDev,
       mockedInitGit,
       mockedProteusInit,
-      mockedProteusEntity,
+      mockedProteusSampleEntity,
       mockedIrisInit,
-      mockedIrisMessage,
+      mockedIrisSampleMessage,
     ].forEach((m) => m.mockReset());
 
     [
@@ -71,9 +71,9 @@ describe("cli run orchestration", () => {
       mockedInstallDev,
       mockedInitGit,
       mockedProteusInit,
-      mockedProteusEntity,
+      mockedProteusSampleEntity,
       mockedIrisInit,
-      mockedIrisMessage,
+      mockedIrisSampleMessage,
     ].forEach((m) => m.mockResolvedValue(undefined));
 
     stdout = jest.spyOn(process.stdout, "write").mockImplementation(() => true);
@@ -98,7 +98,7 @@ describe("cli run orchestration", () => {
     await run();
 
     expect(mockedProteusInit).toHaveBeenCalledWith("/tmp/demo", "postgres");
-    expect(mockedProteusEntity).toHaveBeenCalledWith("/tmp/demo", "SampleEntity");
+    expect(mockedProteusSampleEntity).toHaveBeenCalledWith("/tmp/demo");
     expect(mockedIrisInit).not.toHaveBeenCalled();
   });
 
@@ -107,7 +107,7 @@ describe("cli run orchestration", () => {
     await run();
 
     expect(mockedIrisInit).toHaveBeenCalledWith("/tmp/demo", "rabbit");
-    expect(mockedIrisMessage).toHaveBeenCalledWith("/tmp/demo", "SampleMessage");
+    expect(mockedIrisSampleMessage).toHaveBeenCalledWith("/tmp/demo");
     expect(mockedProteusInit).not.toHaveBeenCalled();
   });
 
@@ -129,13 +129,13 @@ describe("cli run orchestration", () => {
     mockedProteusInit.mockImplementation(async () => {
       calls.push("proteus-init");
     });
-    mockedProteusEntity.mockImplementation(async () => {
+    mockedProteusSampleEntity.mockImplementation(async () => {
       calls.push("proteus-entity");
     });
     mockedIrisInit.mockImplementation(async () => {
       calls.push("iris-init");
     });
-    mockedIrisMessage.mockImplementation(async () => {
+    mockedIrisSampleMessage.mockImplementation(async () => {
       calls.push("iris-msg");
     });
     mockedInitGit.mockImplementation(async () => {

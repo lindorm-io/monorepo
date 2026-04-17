@@ -21,9 +21,9 @@ import {
   writeSource as irisWriteSource,
 } from "@lindorm/iris";
 import {
-  runIrisGenerateMessage,
+  runIrisGenerateSampleMessage,
   runIrisInit,
-  runProteusGenerateEntity,
+  runProteusGenerateSampleEntity,
   runProteusInit,
 } from "./drivers";
 
@@ -70,8 +70,8 @@ describe("drivers", () => {
     expect(mockedIrisWriteSource).not.toHaveBeenCalled();
   });
 
-  test("runProteusGenerateEntity forwards entity name", async () => {
-    await runProteusGenerateEntity("/tmp/project", "SampleEntity");
+  test("runProteusGenerateSampleEntity writes SampleEntity", async () => {
+    await runProteusGenerateSampleEntity("/tmp/project");
 
     expect(mockedProteusWriteEntity).toHaveBeenCalledWith({
       name: "SampleEntity",
@@ -79,8 +79,8 @@ describe("drivers", () => {
     });
   });
 
-  test("runIrisGenerateMessage forwards message name", async () => {
-    await runIrisGenerateMessage("/tmp/project", "SampleMessage");
+  test("runIrisGenerateSampleMessage writes SampleMessage", async () => {
+    await runIrisGenerateSampleMessage("/tmp/project");
 
     expect(mockedIrisWriteMessage).toHaveBeenCalledWith({
       name: "SampleMessage",
