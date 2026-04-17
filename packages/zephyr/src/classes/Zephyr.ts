@@ -1,4 +1,4 @@
-import { DEFAULT_TIMEOUT } from "#internal/constants/defaults";
+import { DEFAULT_TIMEOUT } from "../internal/constants/defaults";
 import { ILogger } from "@lindorm/logger";
 import { composeMiddleware } from "@lindorm/middleware";
 import type { Socket } from "socket.io-client";
