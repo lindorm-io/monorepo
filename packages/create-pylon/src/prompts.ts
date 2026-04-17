@@ -67,9 +67,6 @@ const promptWebhooks = async (): Promise<boolean> =>
 const promptAudit = async (): Promise<boolean> =>
   confirm({ message: "Audit logging?", default: false });
 
-const promptSession = async (): Promise<boolean> =>
-  confirm({ message: "Sessions?", default: false });
-
 const promptAuth = async (): Promise<boolean> =>
   confirm({ message: "OIDC authentication?", default: false });
 
@@ -137,14 +134,9 @@ export const runPrompts = async ({
   const webhooks = bothSelected ? await promptWebhooks() : false;
   const audit = bothSelected ? await promptAudit() : false;
 
-  let session = await promptSession();
   const auth = await promptAuth();
+  const session = auth;
   const rateLimit = proteusDriver !== "none" ? await promptRateLimit() : false;
-
-  if (auth && !session) {
-    session = true;
-    process.stdout.write("Sessions auto-enabled (required by OIDC auth).\n");
-  }
 
   const workers = await promptWorkers(proteusDriver !== "none");
 
