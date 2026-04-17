@@ -2,18 +2,25 @@ import { isReadableTime } from "@lindorm/date";
 import { isArray, isFunction, isNumber, isObject, isString } from "@lindorm/is";
 import { IScanData, Scanner } from "@lindorm/scanner";
 import { LindormWorkerScannerError } from "../errors";
+import { ILindormWorker } from "../interfaces";
 import {
   LindormWorkerConfig,
   LindormWorkerScannerInput,
   LindormWorkerScannerOutput,
 } from "../types";
+import { LindormWorker } from "./LindormWorker";
 
 export class LindormWorkerScanner {
   public static scan(input: LindormWorkerScannerInput): LindormWorkerScannerOutput {
-    const objects = input.filter((a) => isObject(a));
-    const strings = input.filter((a) => isString(a));
+    const instances = input.filter(
+      (a): a is ILindormWorker => a instanceof LindormWorker,
+    );
+    const configs = input.filter(
+      (a): a is LindormWorkerConfig => isObject(a) && !(a instanceof LindormWorker),
+    );
+    const strings = input.filter((a): a is string => isString(a));
 
-    const result: Array<LindormWorkerConfig> = [...objects];
+    const result: LindormWorkerScannerOutput = [...instances, ...configs];
 
     if (!strings.length) return result;
 
@@ -33,8 +40,10 @@ export class LindormWorkerScanner {
 
   // private
 
-  private static scanDirectory(data: IScanData): Array<LindormWorkerConfig> {
-    const result: Array<LindormWorkerConfig> = [];
+  private static scanDirectory(
+    data: IScanData,
+  ): Array<LindormWorkerConfig | ILindormWorker> {
+    const result: Array<LindormWorkerConfig | ILindormWorker> = [];
 
     for (const child of data.children) {
       if (child.isDirectory) {
@@ -48,11 +57,19 @@ export class LindormWorkerScanner {
     return result;
   }
 
-  private static scanFile(data: IScanData): LindormWorkerConfig {
+  private static scanFile(data: IScanData): LindormWorkerConfig | ILindormWorker {
     const module: any = LindormWorkerScanner.scanner.require(data.fullPath);
 
+    for (const value of Object.values(module)) {
+      if (value instanceof LindormWorker) {
+        return value;
+      }
+    }
+
     if (!module.CALLBACK) {
-      throw new LindormWorkerScannerError(`No CALLBACK found in file: ${data.fullPath}`);
+      throw new LindormWorkerScannerError(
+        `No LindormWorker export or CALLBACK export found in file: ${data.fullPath}`,
+      );
     }
 
     const result: Partial<LindormWorkerConfig> = {};
