@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "ESNext",
     "module": "commonjs",
-    "moduleResolution": "node10",
+    "moduleResolution": "node16",
     "esModuleInterop": true,
     "skipLibCheck": true,
     "strict": true,
