@@ -41,14 +41,14 @@ import {
   ValidateJwtOptions,
   VerifyJwtOptions,
 } from "../types";
-import { createJwtValidate } from "#internal/utils/jwt-validate";
-import { validate as validateClaims } from "#internal/utils/validate";
-import { decodeJoseHeader } from "#internal/utils/jose-header";
+import { createJwtValidate } from "../internal/utils/jwt-validate";
+import { validate as validateClaims } from "../internal/utils/validate";
+import { decodeJoseHeader } from "../internal/utils/jose-header";
 import {
   IntrospectClaimsInput,
   parseIntrospection,
-} from "#internal/utils/parse-introspection";
-import { parseUserinfo, UserinfoClaimsInput } from "#internal/utils/parse-userinfo";
+} from "../internal/utils/parse-introspection";
+import { parseUserinfo, UserinfoClaimsInput } from "../internal/utils/parse-userinfo";
 import { JweKit } from "./JweKit";
 import { JwsKit } from "./JwsKit";
 import { JwtKit } from "./JwtKit";

@@ -5,11 +5,11 @@ import { JwtError } from "../errors";
 import {
   computeTypHeader,
   decodeTokenTypeFromTyp,
-} from "#internal/utils/compute-typ-header";
-import { extractTokenDelegation } from "#internal/utils/extract-token-delegation";
-import { validateActor } from "#internal/utils/validate-actor";
-import { validateCrit } from "#internal/utils/validate-crit";
-import { verifyDpopProof } from "#internal/utils/verify-dpop-proof";
+} from "../internal/utils/compute-typ-header";
+import { extractTokenDelegation } from "../internal/utils/extract-token-delegation";
+import { validateActor } from "../internal/utils/validate-actor";
+import { validateCrit } from "../internal/utils/validate-crit";
+import { verifyDpopProof } from "../internal/utils/verify-dpop-proof";
 import { IJwtKit } from "../interfaces";
 import {
   CertBindingMode,
@@ -25,19 +25,22 @@ import {
   ValidateJwtOptions,
   VerifyJwtOptions,
 } from "../types";
-import { decodeJoseHeader, encodeJoseHeader } from "#internal/utils/jose-header";
-import { createJoseSignature, verifyJoseSignature } from "#internal/utils/jose-signature";
-import { createJwtValidate } from "#internal/utils/jwt-validate";
+import { decodeJoseHeader, encodeJoseHeader } from "../internal/utils/jose-header";
+import {
+  createJoseSignature,
+  verifyJoseSignature,
+} from "../internal/utils/jose-signature";
+import { createJwtValidate } from "../internal/utils/jwt-validate";
 import {
   decodeJwtPayload,
   encodeJwtPayload,
   parseTokenPayload,
-} from "#internal/utils/jwt-payload";
-import { createJwtVerify } from "#internal/utils/jwt-verify";
-import { parseTokenHeader } from "#internal/utils/token-header";
-import { resolveCertBinding } from "#internal/utils/resolve-cert-binding";
-import { verifyCertBinding } from "#internal/utils/verify-cert-binding";
-import { validate } from "#internal/utils/validate";
+} from "../internal/utils/jwt-payload";
+import { createJwtVerify } from "../internal/utils/jwt-verify";
+import { parseTokenHeader } from "../internal/utils/token-header";
+import { resolveCertBinding } from "../internal/utils/resolve-cert-binding";
+import { verifyCertBinding } from "../internal/utils/verify-cert-binding";
+import { validate } from "../internal/utils/validate";
 
 const DEFAULT_DPOP_MAX_SKEW = 60;
 

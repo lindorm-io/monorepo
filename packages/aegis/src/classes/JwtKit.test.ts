@@ -1230,7 +1230,7 @@ describe("JwtKit", () => {
       const { B64 } = require("@lindorm/b64") as typeof import("@lindorm/b64");
       const { ShaKit } = require("@lindorm/sha") as typeof import("@lindorm/sha");
       const { createJoseSignature } =
-        require("#internal/utils/jose-signature") as typeof import("#internal/utils/jose-signature");
+        require("../internal/utils/jose-signature") as typeof import("../internal/utils/jose-signature");
       const header = B64.encode(
         JSON.stringify({
           alg: "RS512",

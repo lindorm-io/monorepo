@@ -3,7 +3,7 @@ import { B64 } from "@lindorm/b64";
 import { isString } from "@lindorm/is";
 import { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
 import { ILogger } from "@lindorm/logger";
-import { B64U } from "#internal/constants/format";
+import { B64U } from "../internal/constants/format";
 import { JweError } from "../errors";
 import { IJweKit } from "../interfaces";
 import {
@@ -19,12 +19,12 @@ import {
 import {
   computeTypHeader,
   decodeTokenTypeFromTyp,
-} from "#internal/utils/compute-typ-header";
-import { decodeJoseHeader, encodeJoseHeader } from "#internal/utils/jose-header";
-import { parseTokenHeader } from "#internal/utils/token-header";
-import { resolveCertBinding } from "#internal/utils/resolve-cert-binding";
-import { verifyCertBinding } from "#internal/utils/verify-cert-binding";
-import { validateCrit } from "#internal/utils/validate-crit";
+} from "../internal/utils/compute-typ-header";
+import { decodeJoseHeader, encodeJoseHeader } from "../internal/utils/jose-header";
+import { parseTokenHeader } from "../internal/utils/token-header";
+import { resolveCertBinding } from "../internal/utils/resolve-cert-binding";
+import { verifyCertBinding } from "../internal/utils/verify-cert-binding";
+import { validateCrit } from "../internal/utils/validate-crit";
 import { JwsKit } from "./JwsKit";
 import { JwtKit } from "./JwtKit";
 
