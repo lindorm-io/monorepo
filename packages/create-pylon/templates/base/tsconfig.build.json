@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "removeComments": true
+  },
+  "exclude": [
+    "**/*.test.ts",
+    "**/*.integration.ts",
+    "**/__fixtures__/**",
+    "**/__mocks__/**",
+    "**/__snapshots__/**"
+  ]
+}

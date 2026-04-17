@@ -1,0 +1,33 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`runPrompts prompts for name when positional missing 1`] = `
+{
+  "audit": false,
+  "http": true,
+  "socket": true,
+  "webhooks": false,
+}
+`;
+
+exports[`runPrompts prompts webhooks and audit only when both drivers selected 1`] = `
+[
+  "amphora-refresh",
+  "expiry-cleanup",
+]
+`;
+
+exports[`runPrompts returns answers with positional name and defaults 1`] = `
+{
+  "features": {
+    "audit": false,
+    "http": true,
+    "socket": false,
+    "webhooks": false,
+  },
+  "irisDriver": "none",
+  "projectDir": "<cwd>/my-app",
+  "projectName": "my-app",
+  "proteusDriver": "none",
+  "workers": [],
+}
+`;
