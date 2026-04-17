@@ -43,21 +43,21 @@ import {
   CausationRecord,
   ChecksumRecord,
   SagaRecord,
-} from "#internal/entities";
+} from "../entities";
 import {
   HermesCommandMessage,
   HermesEventMessage,
   HermesErrorMessage,
   HermesTimeoutMessage,
-} from "#internal/messages";
-import { HermesScanner } from "#internal/registry/HermesScanner";
-import { HermesRegistry } from "#internal/registry/hermes-registry";
+} from "../messages";
+import { HermesScanner } from "../registry/HermesScanner";
+import { HermesRegistry } from "../registry/hermes-registry";
 import type {
   RegisteredAggregate,
   RegisteredSaga,
   RegisteredView,
   HandlerRegistration,
-} from "#internal/registry/types";
+} from "../registry/types";
 import { AggregateDomain } from "./aggregate-domain";
 import { SagaDomain } from "./saga-domain";
 import { ViewDomain } from "./view-domain";

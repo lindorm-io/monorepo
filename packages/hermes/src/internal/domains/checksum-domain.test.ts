@@ -42,15 +42,15 @@ import {
   CausationRecord,
   ChecksumRecord,
   SagaRecord,
-} from "#internal/entities";
+} from "../entities";
 import {
   HermesCommandMessage,
   HermesEventMessage,
   HermesErrorMessage,
   HermesTimeoutMessage,
-} from "#internal/messages";
-import { HermesScanner } from "#internal/registry/HermesScanner";
-import { HermesRegistry } from "#internal/registry/hermes-registry";
+} from "../messages";
+import { HermesScanner } from "../registry/HermesScanner";
+import { HermesRegistry } from "../registry/hermes-registry";
 import { ChecksumDomain } from "./checksum-domain";
 
 describe("ChecksumDomain", () => {

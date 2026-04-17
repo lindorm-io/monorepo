@@ -1,4 +1,4 @@
-import { extractNameData, stageDto } from "#internal/metadata";
+import { extractNameData, stageDto } from "../internal/metadata";
 
 export const Query =
   (name?: string) =>

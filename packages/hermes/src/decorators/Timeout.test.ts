@@ -1,4 +1,4 @@
-import type { StagedMetadata } from "#internal/metadata";
+import type { StagedMetadata } from "../internal/metadata";
 import { Timeout } from "./Timeout";
 
 const createMockContext = (metadata: DecoratorMetadataObject): ClassDecoratorContext =>

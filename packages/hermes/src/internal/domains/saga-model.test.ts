@@ -30,7 +30,7 @@ import { TestSaga } from "../../__fixtures__/modules/sagas";
 import { TestTimeoutReminder } from "../../__fixtures__/modules/timeouts";
 import { TestView } from "../../__fixtures__/modules/views/TestView";
 import { SagaDestroyedError } from "../../errors";
-import { HermesRegistry, HermesScanner } from "#internal/registry";
+import { HermesRegistry, HermesScanner } from "../registry";
 import { SagaModel } from "./saga-model";
 import type { SagaPendingMessage } from "./saga-model";
 

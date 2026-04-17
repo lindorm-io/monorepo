@@ -1,5 +1,5 @@
 import type { IProteusRepository } from "@lindorm/proteus";
-import type { ChecksumRecord } from "#internal/entities";
+import type { ChecksumRecord } from "../entities";
 
 export const findChecksum = async (
   repo: IProteusRepository<ChecksumRecord>,

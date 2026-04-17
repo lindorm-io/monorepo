@@ -14,16 +14,16 @@ import {
   SagaNotCreatedError,
 } from "../../errors";
 import type { ErrorDispatchOptions, SagaErrorCtx } from "../../types";
-import type { HermesRegistry } from "#internal/registry";
-import type { HandlerRegistration, RegisteredSaga } from "#internal/registry/types";
-import { CausationRecord, SagaRecord } from "#internal/entities";
+import type { HermesRegistry } from "../registry";
+import type { HandlerRegistration, RegisteredSaga } from "../registry/types";
+import { CausationRecord, SagaRecord } from "../entities";
 import type {
   HermesCommandMessage,
   HermesErrorMessage,
   HermesEventMessage,
   HermesTimeoutMessage,
-} from "#internal/messages";
-import { causationExists, loadSaga, clearMessages } from "#internal/stores";
+} from "../messages";
+import { causationExists, loadSaga, clearMessages } from "../stores";
 import { SagaModel } from "./saga-model";
 import type { SagaPendingMessage } from "./saga-model";
 

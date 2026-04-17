@@ -1,5 +1,5 @@
 import type { Constructor } from "@lindorm/types";
-import { stageHandler } from "#internal/metadata";
+import { stageHandler } from "../internal/metadata";
 
 /**
  * Registers a method as an error handler for the given error class within a

@@ -1,4 +1,4 @@
-import { stageNamespace } from "#internal/metadata";
+import { stageNamespace } from "../internal/metadata";
 
 export const Namespace =
   (namespace: string) =>

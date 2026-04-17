@@ -2,7 +2,7 @@ import { IrisSource } from "@lindorm/iris";
 import { createMockLogger } from "@lindorm/logger";
 import { ProteusSource } from "@lindorm/proteus";
 import { randomUUID } from "crypto";
-import { createChecksum } from "#internal/utils";
+import { createChecksum } from "../internal/utils";
 import {
   createTestIrisSource,
   createTestProteusSource,
@@ -387,7 +387,7 @@ describe("Hermes", () => {
       aggregateId: string,
       events: Array<{ name: string; data: Record<string, unknown>; checksum?: string }>,
     ): Promise<void> => {
-      const { EventRecord } = await import("#internal/entities");
+      const { EventRecord } = await import("../internal/entities");
       const repo = proteus.repository(EventRecord);
 
       for (let i = 0; i < events.length; i++) {
@@ -647,7 +647,7 @@ describe("Hermes", () => {
 
       // Seed events interleaved by timestamp across two aggregate instances.
       // aggId1 create at T=0, aggId2 create at T=1, aggId1 merge at T=2
-      const { EventRecord: ER } = await import("#internal/entities");
+      const { EventRecord: ER } = await import("../internal/entities");
       const repo = proteus.repository(ER);
 
       const baseTime = new Date("2025-01-01T00:00:00Z");
@@ -908,7 +908,7 @@ describe("Hermes", () => {
       aggregateId: string,
       events: Array<{ name: string; data: Record<string, unknown>; checksum?: string }>,
     ): Promise<void> => {
-      const { EventRecord } = await import("#internal/entities");
+      const { EventRecord } = await import("../internal/entities");
       const repo = proteus.repository(EventRecord);
 
       for (let i = 0; i < events.length; i++) {

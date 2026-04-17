@@ -32,22 +32,17 @@ import type {
   ErrorDispatchOptions,
 } from "../../types";
 import { ChecksumError } from "../../errors";
-import { EventRecord, EncryptionRecord } from "#internal/entities";
+import { EventRecord, EncryptionRecord } from "../entities";
 import {
   HermesCommandMessage,
   HermesErrorMessage,
   HermesEventMessage,
-} from "#internal/messages";
-import type { HermesRegistry } from "#internal/registry";
-import type { RegisteredAggregate, HandlerRegistration } from "#internal/registry";
-import { findEvents } from "#internal/stores";
-import { findEncryptionKey, insertEncryptionKey } from "#internal/stores";
-import {
-  assertChecksum,
-  createChecksum,
-  extractDto,
-  recoverCommand,
-} from "#internal/utils";
+} from "../messages";
+import type { HermesRegistry } from "../registry";
+import type { RegisteredAggregate, HandlerRegistration } from "../registry";
+import { findEvents } from "../stores";
+import { findEncryptionKey, insertEncryptionKey } from "../stores";
+import { assertChecksum, createChecksum, extractDto, recoverCommand } from "../utils";
 import { AggregateModel } from "./aggregate-model";
 
 export type AggregateDomainOptions = {

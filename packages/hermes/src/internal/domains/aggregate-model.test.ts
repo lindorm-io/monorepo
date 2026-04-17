@@ -39,8 +39,8 @@ import {
   HandlerNotRegisteredError,
   UpcasterChainError,
 } from "../../errors";
-import { HermesEventMessage } from "#internal/messages";
-import { HermesRegistry, HermesScanner } from "#internal/registry";
+import { HermesEventMessage } from "../messages";
+import { HermesRegistry, HermesScanner } from "../registry";
 import { AggregateModel } from "./aggregate-model";
 
 const ALL_CONSTRUCTORS = [

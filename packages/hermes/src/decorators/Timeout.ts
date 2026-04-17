@@ -1,4 +1,4 @@
-import { extractNameData, stageDto } from "#internal/metadata";
+import { extractNameData, stageDto } from "../internal/metadata";
 
 type TimeoutOptions = {
   name?: string;

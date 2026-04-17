@@ -1,7 +1,7 @@
 import type { ILogger } from "@lindorm/logger";
 import type { ClassLike, Constructor, Dict } from "@lindorm/types";
 import type { AggregateIdentifier, SagaDispatchOptions } from "../../types";
-import type { HermesRegistry } from "#internal/registry";
+import type { HermesRegistry } from "../registry";
 import merge from "deepmerge";
 import { z } from "zod/v4";
 import { SagaDestroyedError } from "../../errors";

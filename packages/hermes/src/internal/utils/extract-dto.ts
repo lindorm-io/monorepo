@@ -1,5 +1,5 @@
 import type { ClassLike, Dict } from "@lindorm/types";
-import { extractNameData, getHermesMetadata } from "#internal/metadata";
+import { extractNameData, getHermesMetadata } from "../metadata";
 
 export type DtoData = {
   name: string;
