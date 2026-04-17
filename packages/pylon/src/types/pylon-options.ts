@@ -6,7 +6,7 @@ import { ILogger } from "@lindorm/logger";
 import { IProteusSource } from "@lindorm/proteus";
 import { RetryOptions } from "@lindorm/retry";
 import { Environment } from "@lindorm/types";
-import { ILindormWorker, LindormWorkerConfig } from "@lindorm/worker";
+import { ILindormWorker } from "@lindorm/worker";
 import Redis from "ioredis";
 import { ServerOptions as SocketOptions } from "socket.io";
 import { PylonListener, PylonRouter } from "../classes";
@@ -103,7 +103,7 @@ export type PylonOptions<
   setup?: PylonSetup;
   teardown?: PylonTeardown;
   subscriptions?: Array<PylonSubscribeOptions>;
-  workers?: Array<ILindormWorker | LindormWorkerConfig | string>;
+  workers?: Array<ILindormWorker | string>;
   workersInterval?: ReadableTime;
   workersRetry?: RetryOptions;
 };

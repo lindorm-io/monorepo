@@ -1,23 +1,14 @@
 import { createMockAmphora } from "@lindorm/amphora";
 import { createMockLogger } from "@lindorm/logger";
-import { ILindormWorker, LindormWorker, LindormWorkerConfig } from "@lindorm/worker";
+import { ILindormWorker, LindormWorker } from "@lindorm/worker";
 import { join } from "path";
 import { scanWorkers } from "./scan-workers";
 
 describe("scanWorkers", () => {
   const logger = createMockLogger();
 
-  test("should return an array of workers", () => {
+  test("should return amphora worker plus instance plus scanned directory workers", () => {
     const amphora = createMockAmphora();
-
-    const config: LindormWorkerConfig = {
-      alias: "config-alias",
-      callback: async () => {},
-      interval: "1m",
-      listeners: [],
-      jitter: "10s",
-      retry: {},
-    };
 
     const worker: ILindormWorker = new LindormWorker({
       alias: "WorkerAlias",
@@ -30,12 +21,11 @@ describe("scanWorkers", () => {
       scanWorkers({
         amphora,
         logger,
-        workers: [config, worker, join(__dirname, "..", "..", "__fixtures__", "workers")],
+        workers: [worker, join(__dirname, "..", "..", "__fixtures__", "workers")],
       }),
     ).toEqual([
       expect.objectContaining({ alias: "AmphoraWorker" }),
       expect.objectContaining({ alias: "WorkerAlias" }),
-      expect.objectContaining({ alias: "ConfigAlias" }),
       expect.objectContaining({ alias: "WorkerOne" }),
       expect.objectContaining({ alias: "WorkerThree" }),
       expect.objectContaining({ alias: "WorkerTwo" }),
@@ -58,23 +48,6 @@ describe("scanWorkers", () => {
     expect(result[1]).toBe(worker);
   });
 
-  test("should wrap LindormWorkerConfig objects in new LindormWorker", () => {
-    const amphora = createMockAmphora();
-
-    const config: LindormWorkerConfig = {
-      alias: "config-alias",
-      callback: async () => {},
-      interval: "1m",
-    };
-
-    const result = scanWorkers({ amphora, logger, workers: [config] });
-
-    expect(result).toHaveLength(2);
-    expect(result[1]).toBeInstanceOf(LindormWorker);
-    expect(result[1]).not.toBe(config);
-    expect(result[1].alias).toBe("ConfigAlias");
-  });
-
   test("should pass through instance exports from scanned directories", () => {
     const amphora = createMockAmphora();
 
@@ -89,14 +62,8 @@ describe("scanWorkers", () => {
     expect(result[1].alias).toBe("DefaultInstance");
   });
 
-  test("should handle mixed inputs of instance, config and directory path", () => {
+  test("should handle mixed inputs of instance and directory path", () => {
     const amphora = createMockAmphora();
-
-    const config: LindormWorkerConfig = {
-      alias: "config-alias",
-      callback: async () => {},
-      interval: "1m",
-    };
 
     const worker: ILindormWorker = new LindormWorker({
       alias: "MixedWorker",
@@ -108,13 +75,12 @@ describe("scanWorkers", () => {
     const result = scanWorkers({
       amphora,
       logger,
-      workers: [worker, config, join(__dirname, "..", "..", "__fixtures__", "workers")],
+      workers: [worker, join(__dirname, "..", "..", "__fixtures__", "workers")],
     });
 
     expect(result).toEqual([
       expect.objectContaining({ alias: "AmphoraWorker" }),
       expect.objectContaining({ alias: "MixedWorker" }),
-      expect.objectContaining({ alias: "ConfigAlias" }),
       expect.objectContaining({ alias: "WorkerOne" }),
       expect.objectContaining({ alias: "WorkerThree" }),
       expect.objectContaining({ alias: "WorkerTwo" }),

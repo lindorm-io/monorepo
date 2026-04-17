@@ -1136,14 +1136,24 @@ import {
 ```typescript
 const app = new Pylon({
   workers: [
-    createAmphoraRefreshWorker({ amphora: myAmphora }),
-    createKryptosRotationWorker({ proteus: mySource }),
-    createAmphoraEntityWorker({ amphora: myAmphora, proteus: mySource }),
-    createExpiryCleanupWorker({ proteus: mySource, targets: [Session, OtpCode] }),
+    createAmphoraRefreshWorker({ amphora: myAmphora, logger: myLogger }),
+    createKryptosRotationWorker({ proteus: mySource, logger: myLogger }),
+    createAmphoraEntityWorker({
+      amphora: myAmphora,
+      proteus: mySource,
+      logger: myLogger,
+    }),
+    createExpiryCleanupWorker({
+      proteus: mySource,
+      targets: [Session, OtpCode],
+      logger: myLogger,
+    }),
   ],
   // ...
 });
 ```
+
+Each factory returns a `LindormWorker` instance. You can also default-export a built worker from a file and pass `"./src/workers"` as a string — the scanner picks up instance exports automatically.
 
 `createKryptosRotationWorker` and `createAmphoraEntityWorker` default to Pylon's built-in `Kryptos` entity. Pass `target: MyKryptosEntity` to override with a custom `KryptosDB` implementation.
 
@@ -1342,7 +1352,7 @@ type PylonOptions<E extends PylonEventMap = PylonEventMap> = {
   subscriptions?: PylonSubscribeOptions[];
 
   // Workers
-  workers?: Array<ILindormWorker | LindormWorkerConfig | string>;
+  workers?: Array<ILindormWorker | string>;
   workersInterval?: ReadableTime;
   workersRetry?: RetryOptions;
 };
