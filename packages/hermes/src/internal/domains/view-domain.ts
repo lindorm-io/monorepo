@@ -15,16 +15,16 @@ import {
 } from "../../errors";
 import type { ErrorDispatchOptions } from "../../types";
 import type { HermesViewEntity } from "../../entities/HermesViewEntity";
-import type { HermesRegistry } from "#internal/registry";
-import type { HandlerRegistration, RegisteredView } from "#internal/registry/types";
-import { CausationRecord } from "#internal/entities";
+import type { HermesRegistry } from "../registry";
+import type { HandlerRegistration, RegisteredView } from "../registry/types";
+import { CausationRecord } from "../entities";
 import type {
   HermesCommandMessage,
   HermesErrorMessage,
   HermesEventMessage,
-} from "#internal/messages";
-import { causationExists } from "#internal/stores";
-import { applyUpcasters } from "#internal/utils";
+} from "../messages";
+import { causationExists } from "../stores";
+import { applyUpcasters } from "../utils";
 
 export type ViewDomainOptions = {
   registry: HermesRegistry;

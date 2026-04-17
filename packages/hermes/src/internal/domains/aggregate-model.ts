@@ -7,10 +7,10 @@ import {
   HandlerNotRegisteredError,
 } from "../../errors";
 import type { AggregateEventCtx } from "../../types";
-import type { HermesRegistry } from "#internal/registry";
-import type { RegisteredAggregate, HandlerRegistration } from "#internal/registry";
-import { HermesEventMessage } from "#internal/messages";
-import { applyUpcasters, extractDto } from "#internal/utils";
+import type { HermesRegistry } from "../registry";
+import type { RegisteredAggregate, HandlerRegistration } from "../registry";
+import { HermesEventMessage } from "../messages";
+import { applyUpcasters, extractDto } from "../utils";
 
 export type AggregateModelOptions = {
   id: string;

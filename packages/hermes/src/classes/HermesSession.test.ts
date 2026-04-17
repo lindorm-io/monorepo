@@ -27,7 +27,7 @@ const createOptions = (
 });
 
 // extractDto is used internally — mock it to return predictable data
-jest.mock("#internal/utils", () => ({
+jest.mock("../internal/utils", () => ({
   extractDto: jest.fn().mockReturnValue({ data: { foo: "bar" } }),
 }));
 

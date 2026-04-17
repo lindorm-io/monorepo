@@ -7,10 +7,10 @@ import { sortKeys } from "@lindorm/utils";
 import { randomUUID } from "@lindorm/random";
 import EventEmitter from "events";
 import { ChecksumError } from "../../errors";
-import { ChecksumRecord } from "#internal/entities";
-import { HermesErrorMessage, HermesEventMessage } from "#internal/messages";
-import type { HermesRegistry } from "#internal/registry";
-import { findChecksum, insertChecksum } from "#internal/stores";
+import { ChecksumRecord } from "../entities";
+import { HermesErrorMessage, HermesEventMessage } from "../messages";
+import type { HermesRegistry } from "../registry";
+import { findChecksum, insertChecksum } from "../stores";
 
 export type ChecksumDomainOptions = {
   registry: HermesRegistry;

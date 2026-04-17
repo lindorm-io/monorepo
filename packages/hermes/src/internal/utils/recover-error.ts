@@ -9,7 +9,7 @@ import {
   CommandSchemaValidationError,
   DomainError,
 } from "../../errors";
-import type { HermesErrorMessage } from "#internal/messages";
+import type { HermesErrorMessage } from "../messages";
 
 type ErrorData = {
   error: { message: string; [key: string]: unknown };

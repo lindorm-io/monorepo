@@ -1,5 +1,5 @@
-import type { HermesRegistry } from "#internal/registry";
-import type { HermesCommandMessage, HermesEventMessage } from "#internal/messages";
+import type { HermesRegistry } from "../registry";
+import type { HermesCommandMessage, HermesEventMessage } from "../messages";
 import { recoverCommand, recoverEvent } from "./recover-dto";
 
 class FakeCommand {

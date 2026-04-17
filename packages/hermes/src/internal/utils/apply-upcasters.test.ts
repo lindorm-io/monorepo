@@ -1,5 +1,5 @@
 import { UpcasterChainError } from "../../errors";
-import type { RegisteredAggregate, RegisteredUpcaster } from "#internal/registry";
+import type { RegisteredAggregate, RegisteredUpcaster } from "../registry";
 import { applyUpcasters } from "./apply-upcasters";
 
 describe("applyUpcasters", () => {

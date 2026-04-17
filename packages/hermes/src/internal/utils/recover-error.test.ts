@@ -1,5 +1,5 @@
 import { snakeCase } from "@lindorm/case";
-import type { HermesErrorMessage } from "#internal/messages";
+import type { HermesErrorMessage } from "../messages";
 import {
   AggregateAlreadyCreatedError,
   AggregateDestroyedError,

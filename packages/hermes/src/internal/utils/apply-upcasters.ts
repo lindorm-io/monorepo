@@ -1,6 +1,6 @@
 import type { Dict } from "@lindorm/types";
 import { UpcasterChainError } from "../../errors";
-import type { RegisteredAggregate, RegisteredUpcaster } from "#internal/registry";
+import type { RegisteredAggregate, RegisteredUpcaster } from "../registry";
 
 export type UpcastResult = {
   data: Dict;

@@ -1,4 +1,4 @@
-import type { StagedMetadata } from "#internal/metadata";
+import type { StagedMetadata } from "../internal/metadata";
 import { Event } from "./Event";
 
 const createMockContext = (metadata: DecoratorMetadataObject): ClassDecoratorContext =>

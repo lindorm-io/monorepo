@@ -1,4 +1,4 @@
-import type { StagedMetadata } from "#internal/metadata";
+import type { StagedMetadata } from "../internal/metadata";
 import { Namespace } from "./Namespace";
 
 const createMockContext = (metadata: DecoratorMetadataObject): ClassDecoratorContext =>

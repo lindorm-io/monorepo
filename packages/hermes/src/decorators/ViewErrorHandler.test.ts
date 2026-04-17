@@ -1,4 +1,4 @@
-import type { StagedMetadata } from "#internal/metadata";
+import type { StagedMetadata } from "../internal/metadata";
 import { ViewErrorHandler } from "./ViewErrorHandler";
 
 const createMockMethodContext = (

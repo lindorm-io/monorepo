@@ -1,4 +1,4 @@
-import type { StagedMetadata } from "#internal/metadata";
+import type { StagedMetadata } from "../internal/metadata";
 import { RequireCreated } from "./RequireCreated";
 
 const createMockMethodContext = (

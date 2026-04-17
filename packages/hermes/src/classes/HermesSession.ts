@@ -7,10 +7,10 @@ import { HandlerNotRegisteredError } from "../errors";
 import type { IHermesSession } from "../interfaces/IHermesSession";
 import type { AggregateIdentifier } from "../types/aggregate-identifier";
 import type { HermesStatus } from "../types/hermes-status";
-import { ViewDomain } from "#internal/domains";
-import { HermesCommandMessage } from "#internal/messages";
-import type { HermesRegistry } from "#internal/registry";
-import { extractDto } from "#internal/utils";
+import { ViewDomain } from "../internal/domains";
+import { HermesCommandMessage } from "../internal/messages";
+import type { HermesRegistry } from "../internal/registry";
+import { extractDto } from "../internal/utils";
 
 type StatusRef = { current: HermesStatus };
 

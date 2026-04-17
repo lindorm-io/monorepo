@@ -5,8 +5,8 @@ import type {
   MetaUpcaster,
   MetaValidation,
   StagedMetadata,
-} from "#internal/metadata";
-import { extractNameData, getHermesMetadata } from "#internal/metadata";
+} from "../metadata";
+import { extractNameData, getHermesMetadata } from "../metadata";
 import { isString } from "@lindorm/is";
 import { IScanData, Scanner } from "@lindorm/scanner";
 import type { Constructor } from "@lindorm/types";

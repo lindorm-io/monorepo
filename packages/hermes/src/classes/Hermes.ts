@@ -21,22 +21,22 @@ import {
   ChecksumDomain,
   SagaDomain,
   ViewDomain,
-} from "#internal/domains";
+} from "../internal/domains";
 import {
   CausationRecord,
   ChecksumRecord,
   EncryptionRecord,
   EventRecord,
   SagaRecord,
-} from "#internal/entities";
+} from "../internal/entities";
 import {
   HermesCommandMessage,
   HermesErrorMessage,
   HermesEventMessage,
   HermesTimeoutMessage,
-} from "#internal/messages";
-import { HermesRegistry, HermesScanner } from "#internal/registry";
-import { assertChecksum, extractDto } from "#internal/utils";
+} from "../internal/messages";
+import { HermesRegistry, HermesScanner } from "../internal/registry";
+import { assertChecksum, extractDto } from "../internal/utils";
 import { HermesSession } from "./HermesSession";
 
 const DEFAULT_NAMESPACE = "hermes";

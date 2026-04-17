@@ -1,5 +1,5 @@
 import type { IProteusRepository } from "@lindorm/proteus";
-import type { CausationRecord } from "#internal/entities";
+import type { CausationRecord } from "../entities";
 
 export const causationExists = async (
   repo: IProteusRepository<CausationRecord>,

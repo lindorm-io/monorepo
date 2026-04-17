@@ -40,7 +40,7 @@ import {
   createTestIrisSource,
   createTestProteusSource,
 } from "./__fixtures__/create-test-sources";
-import { EventRecord } from "#internal/entities";
+import { EventRecord } from "./internal/entities";
 
 // -- Example module imports (same as what a user would write) --
 import { OpenAccount } from "./__fixtures__/example/commands/OpenAccount";

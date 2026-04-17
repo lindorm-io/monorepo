@@ -1,4 +1,4 @@
-import type { StagedMetadata } from "#internal/metadata";
+import type { StagedMetadata } from "../internal/metadata";
 import { EventUpcaster } from "./EventUpcaster";
 
 const createMockMethodContext = (

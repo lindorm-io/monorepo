@@ -1,7 +1,7 @@
 import type { Constructor } from "@lindorm/types";
 import type { z } from "zod";
 import type { HermesViewEntity } from "../../entities/HermesViewEntity";
-import type { HandlerKind, MetaDtoKind } from "#internal/metadata";
+import type { HandlerKind, MetaDtoKind } from "../metadata";
 
 // -- Scanner input --
 

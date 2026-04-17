@@ -50,16 +50,16 @@ import {
   CausationRecord,
   ChecksumRecord,
   SagaRecord,
-} from "#internal/entities";
+} from "../entities";
 import {
   HermesCommandMessage,
   HermesEventMessage,
   HermesErrorMessage,
   HermesTimeoutMessage,
-} from "#internal/messages";
-import { HermesScanner } from "#internal/registry/HermesScanner";
-import { HermesRegistry } from "#internal/registry/hermes-registry";
-import type { RegisteredView, HandlerRegistration } from "#internal/registry/types";
+} from "../messages";
+import { HermesScanner } from "../registry/HermesScanner";
+import { HermesRegistry } from "../registry/hermes-registry";
+import type { RegisteredView, HandlerRegistration } from "../registry/types";
 import { ViewDomain } from "./view-domain";
 
 describe("ViewDomain", () => {

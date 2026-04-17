@@ -1,4 +1,4 @@
-import { stageMethodModifier } from "#internal/metadata";
+import { stageMethodModifier } from "../internal/metadata";
 
 export const RequireNotCreated =
   () =>

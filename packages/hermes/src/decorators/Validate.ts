@@ -1,5 +1,5 @@
 import type { z } from "zod";
-import { stageValidation } from "#internal/metadata";
+import { stageValidation } from "../internal/metadata";
 
 export const Validate =
   (schema: z.ZodType) =>
