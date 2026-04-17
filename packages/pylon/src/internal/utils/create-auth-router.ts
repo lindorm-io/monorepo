@@ -1,7 +1,6 @@
 import { merge } from "@lindorm/utils";
 import { PylonRouter } from "../../classes";
 import { PylonAuthConfig, PylonHttpContext } from "../../types";
-import { createAuthHandler } from "./auth/auth-handler";
 import { backchannelLogoutHandler } from "./auth/backchannel-logout-handler";
 import { errorHandler } from "./auth/error-handler";
 import { createIntrospectHandler } from "./auth/introspect-handler";
@@ -25,15 +24,11 @@ export const createAuthRouter = <C extends PylonHttpContext>(
     merge(config, { refresh: { mode: "force" } }),
   );
 
-  router.get("/", refreshMiddleware, createAuthHandler(routerConfig));
-
   router.post("/backchannel-logout", backchannelLogoutHandler);
 
   router.get("/error", errorHandler);
 
-  if (routerConfig.introspect) {
-    router.get("/introspect", refreshMiddleware, createIntrospectHandler());
-  }
+  router.get("/introspect", refreshMiddleware, createIntrospectHandler());
 
   router.get("/login", useSchema(loginSchema), createLoginHandler(routerConfig));
 
