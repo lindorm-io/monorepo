@@ -3,7 +3,7 @@ import { X509Certificate } from "crypto";
 import MockDate from "mockdate";
 import { KryptosError } from "../errors";
 import type { KryptosCertificateOption } from "../types/certificate";
-import { parseX509Certificate } from "#internal/utils/x509/parse-certificate";
+import { parseX509Certificate } from "../internal/utils/x509/parse-certificate";
 import { KryptosKit } from "./KryptosKit";
 
 const MOCKED_NOW = new Date("2024-01-01T08:00:00.000Z");

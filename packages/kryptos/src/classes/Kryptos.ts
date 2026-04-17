@@ -26,21 +26,21 @@ import {
   ParsedX509Certificate,
   RsaModulus,
 } from "../types";
-import { ExportCache } from "#internal/types/export-cache";
-import { computeThumbprint } from "#internal/utils/compute-thumbprint";
-import { createDerFromDer } from "#internal/utils/from/der-from-der";
-import { exportToB64 } from "#internal/utils/export/export-b64";
-import { exportToDer } from "#internal/utils/export/export-der";
-import { exportToJwk } from "#internal/utils/export/export-jwk";
-import { exportToPem } from "#internal/utils/export/export-pem";
-import { isOctDer } from "#internal/utils/oct/is";
-import { modulusSize } from "#internal/utils/rsa/modulus-size";
-import { extractLeafSpki } from "#internal/utils/x509/extract-leaf-spki";
-import { parseX509Certificate } from "#internal/utils/x509/parse-certificate";
-import { parseX509 } from "#internal/utils/x509/parse-x509";
-import { verifyX509Chain } from "#internal/utils/x509/verify-chain";
-import { x509PublicKeyMatches } from "#internal/utils/x509/x509-public-key-matches";
-import { x5tS256 as x5tS256Thumbprint } from "#internal/utils/x509/x509-thumbprints";
+import { ExportCache } from "../internal/types/export-cache";
+import { computeThumbprint } from "../internal/utils/compute-thumbprint";
+import { createDerFromDer } from "../internal/utils/from/der-from-der";
+import { exportToB64 } from "../internal/utils/export/export-b64";
+import { exportToDer } from "../internal/utils/export/export-der";
+import { exportToJwk } from "../internal/utils/export/export-jwk";
+import { exportToPem } from "../internal/utils/export/export-pem";
+import { isOctDer } from "../internal/utils/oct/is";
+import { modulusSize } from "../internal/utils/rsa/modulus-size";
+import { extractLeafSpki } from "../internal/utils/x509/extract-leaf-spki";
+import { parseX509Certificate } from "../internal/utils/x509/parse-certificate";
+import { parseX509 } from "../internal/utils/x509/parse-x509";
+import { verifyX509Chain } from "../internal/utils/x509/verify-chain";
+import { x509PublicKeyMatches } from "../internal/utils/x509/x509-public-key-matches";
+import { x5tS256 as x5tS256Thumbprint } from "../internal/utils/x509/x509-thumbprints";
 
 export class Kryptos implements IKryptos {
   private readonly _id: string;
