@@ -3,11 +3,12 @@ import { IKryptos, KryptosDB, KryptosKit } from "@lindorm/kryptos";
 import { IProteusSource } from "@lindorm/proteus";
 import { Constructor } from "@lindorm/types";
 import { CreateLindormWorkerOptions, LindormWorkerConfig } from "@lindorm/worker";
+import { Kryptos } from "../entities/Kryptos";
 
 type Options = CreateLindormWorkerOptions & {
   amphora: IAmphora;
   proteus: IProteusSource;
-  target: Constructor<KryptosDB>;
+  target?: Constructor<KryptosDB>;
 };
 
 export const createAmphoraEntityWorker = (options: Options): LindormWorkerConfig => ({
@@ -21,7 +22,7 @@ export const createAmphoraEntityWorker = (options: Options): LindormWorkerConfig
 
     await options.amphora.refresh();
 
-    const repository = options.proteus.repository(options.target);
+    const repository = options.proteus.repository(options.target ?? Kryptos);
     const existing = await repository.find();
 
     ctx.logger.debug("Loaded kryptos entities from database", { count: existing.length });
