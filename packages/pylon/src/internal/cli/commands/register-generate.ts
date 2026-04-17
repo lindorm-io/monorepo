@@ -3,6 +3,7 @@ import { generateRoute } from "./generate-route";
 import { generateListener } from "./generate-listener";
 import { generateMiddleware } from "./generate-middleware";
 import { generateHandler } from "./generate-handler";
+import { generateWorker } from "./generate-worker";
 
 export const registerGenerateCommands = (program: Command): void => {
   const generate = program
@@ -48,4 +49,13 @@ export const registerGenerateCommands = (program: Command): void => {
     .option("-d, --directory <path>", "Output directory", "./src/handlers")
     .option("--dry-run", "Show what would be created without writing files")
     .action(generateHandler);
+
+  generate
+    .command("worker")
+    .alias("w")
+    .description("Generate a worker file")
+    .argument("[name]", "Worker name (e.g. HeartbeatWorker)")
+    .option("-d, --directory <path>", "Output directory", "./src/workers")
+    .option("--dry-run", "Show what would be created without writing files")
+    .action(generateWorker);
 };
