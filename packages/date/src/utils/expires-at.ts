@@ -4,7 +4,7 @@ import {
   addWithMilliseconds,
   assertExpiryDate,
   readableToDuration,
-} from "#internal/utils";
+} from "../internal/utils";
 
 /**
  * Resolve an `Expiry` to an absolute `Date`. Calendar-correct via date-fns

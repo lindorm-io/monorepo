@@ -1,5 +1,5 @@
 import { DurationDict, ReadableTime } from "../types";
-import { millisecondsToDuration, readableToDuration } from "#internal/utils";
+import { millisecondsToDuration, readableToDuration } from "../internal/utils";
 
 /**
  * Convert between a `ReadableTime` string and a `DurationDict`. String input
