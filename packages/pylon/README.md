@@ -997,6 +997,12 @@ const app = new Pylon({
 
 ## Session Management
 
+`ctx.session` is an **auth-focused** session store. It's shaped around a token-holding identity — `id`, `accessToken`, `idToken?`, `refreshToken?`, `subject`, `scope` — and is designed to be populated by pylon's OIDC auth flow. Third-party OAuth2 providers that aren't strictly OIDC (GitHub, Facebook) also fit the shape: populate `accessToken`, `subject`, leave `scope` empty or carry the provider's scopes, and the session API works.
+
+**It is not a general-purpose state bag.** For anonymous state that doesn't belong to an authenticated identity (guest shopping carts, theme preferences, CSRF state, etc.) reach for [`ctx.cookies`](#context-object) directly or model the state as a domain entity keyed by a client-generated identifier. Attempting to stuff arbitrary data into `ctx.session` by faking OIDC fields is a smell.
+
+The `Session` entity backing persisted sessions lives under the `pylon` namespace — register it with your proteus source when you opt into DB-backed sessions.
+
 Cookie-based sessions with configurable encryption:
 
 ```typescript
