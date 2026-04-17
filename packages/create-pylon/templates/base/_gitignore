@@ -1,0 +1,12 @@
+node_modules/
+dist/
+coverage/
+.nx/cache/
+.config-cache/
+
+.env
+.env.*
+!.env.example
+
+.DS_Store
+*.log

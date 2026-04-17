@@ -1,0 +1,296 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`scaffold buildDependencyList snapshot: memory-nats 1`] = `
+[
+  "@lindorm/proteus",
+  "@lindorm/iris",
+  "nats",
+]
+`;
+
+exports[`scaffold buildDependencyList snapshot: none-none 1`] = `[]`;
+
+exports[`scaffold buildDependencyList snapshot: postgres-rabbit 1`] = `
+[
+  "@lindorm/proteus",
+  "pg",
+  "@lindorm/iris",
+  "amqplib",
+]
+`;
+
+exports[`scaffold buildDependencyList snapshot: redis-redis 1`] = `
+[
+  "@lindorm/proteus",
+  "ioredis",
+  "@lindorm/iris",
+  "ioredis",
+]
+`;
+
+exports[`scaffold buildDependencyList snapshot: sqlite-kafka 1`] = `
+[
+  "@lindorm/proteus",
+  "better-sqlite3",
+  "@lindorm/iris",
+  "kafkajs",
+]
+`;
+
+exports[`scaffold buildEnvLines snapshot: mongo-nats 1`] = `
+[
+  "NODE_ENV=development",
+  "PROTEUS_URL=mongodb://localhost:27017/app",
+  "IRIS_SERVERS=localhost:4222",
+]
+`;
+
+exports[`scaffold buildEnvLines snapshot: mysql-rabbit 1`] = `
+[
+  "NODE_ENV=development",
+  "PROTEUS_URL=mysql://localhost:3306/app",
+  "IRIS_URL=amqp://localhost:5672",
+]
+`;
+
+exports[`scaffold buildEnvLines snapshot: none-none 1`] = `
+[
+  "NODE_ENV=development",
+]
+`;
+
+exports[`scaffold buildEnvLines snapshot: sqlite-redis 1`] = `
+[
+  "NODE_ENV=development",
+  "PROTEUS_URL=file:./data/app.db",
+  "IRIS_URL=redis://localhost:6379",
+]
+`;
+
+exports[`scaffold copyTemplates base + http + socket + workers + webhooks 1`] = `
+[
+  ".gitignore",
+  "config/default.yml",
+  "jest.config.ts",
+  "src/handlers/create-webhook-handler.ts",
+  "src/handlers/delete-webhook-handler.ts",
+  "src/handlers/example-handler.ts",
+  "src/handlers/get-webhook-handler.ts",
+  "src/handlers/list-webhooks-handler.ts",
+  "src/handlers/ping-handler.ts",
+  "src/handlers/update-webhook-handler.ts",
+  "src/index.ts",
+  "src/listeners/_middleware.ts",
+  "src/listeners/ping.ts",
+  "src/logger/index.ts",
+  "src/middleware/example.ts",
+  "src/pylon/amphora.ts",
+  "src/routes/_middleware.ts",
+  "src/routes/v1/example.ts",
+  "src/routes/webhooks/[id].ts",
+  "src/routes/webhooks/_middleware.ts",
+  "src/routes/webhooks/index.ts",
+  "src/types/context.ts",
+  "src/workers/alive.ts",
+  "tsconfig.build.json",
+  "tsconfig.json",
+]
+`;
+
+exports[`scaffold copyTemplates base + http overlay 1`] = `
+[
+  ".gitignore",
+  "config/default.yml",
+  "jest.config.ts",
+  "src/handlers/example-handler.ts",
+  "src/index.ts",
+  "src/logger/index.ts",
+  "src/middleware/example.ts",
+  "src/pylon/amphora.ts",
+  "src/routes/_middleware.ts",
+  "src/routes/v1/example.ts",
+  "src/types/context.ts",
+  "tsconfig.build.json",
+  "tsconfig.json",
+]
+`;
+
+exports[`scaffold copyTemplates base only — http false, socket false 1`] = `
+[
+  ".gitignore",
+  "config/default.yml",
+  "jest.config.ts",
+  "src/index.ts",
+  "src/logger/index.ts",
+  "src/pylon/amphora.ts",
+  "src/types/context.ts",
+  "tsconfig.build.json",
+  "tsconfig.json",
+]
+`;
+
+exports[`scaffold scaffold orchestration runs all write functions in sequence 1`] = `
+[
+  ".env",
+  ".gitignore",
+  "config/default.yml",
+  "docker-compose.yml",
+  "jest.config.ts",
+  "package.json",
+  "src/handlers/create-webhook-handler.ts",
+  "src/handlers/delete-webhook-handler.ts",
+  "src/handlers/example-handler.ts",
+  "src/handlers/get-webhook-handler.ts",
+  "src/handlers/list-webhooks-handler.ts",
+  "src/handlers/ping-handler.ts",
+  "src/handlers/update-webhook-handler.ts",
+  "src/index.ts",
+  "src/iris/publishers/sample-publisher.ts",
+  "src/iris/subscribers/sample-subscriber.ts",
+  "src/listeners/_middleware.ts",
+  "src/listeners/ping.ts",
+  "src/logger/index.ts",
+  "src/middleware/example.ts",
+  "src/pylon/amphora.ts",
+  "src/pylon/config.ts",
+  "src/pylon/pylon.ts",
+  "src/routes/_middleware.ts",
+  "src/routes/v1/example.ts",
+  "src/routes/webhooks/[id].ts",
+  "src/routes/webhooks/_middleware.ts",
+  "src/routes/webhooks/index.ts",
+  "src/types/context.ts",
+  "src/workers/alive.ts",
+  "src/workers/amphora-refresh.ts",
+  "src/workers/expiry-cleanup.ts",
+  "tsconfig.build.json",
+  "tsconfig.json",
+]
+`;
+
+exports[`scaffold stubs writeConfigFile stub writes placeholder 1`] = `
+"// TODO (phase 2): assemble schema based on feature flags for test-app
+import { configuration } from "@lindorm/config";
+import { z } from "zod/v4";
+
+export const config = configuration({
+  schema: z.object({}),
+});
+"
+`;
+
+exports[`scaffold stubs writeDockerCompose writes stub when driver needs it 1`] = `
+"# TODO (phase 2): assemble containers for selected drivers
+# proteusDriver: postgres
+# irisDriver: none
+services: {}
+"
+`;
+
+exports[`scaffold stubs writeIrisSamples writes pub/sub when iris selected 1`] = `
+"// TODO (phase 2): sample publisher wiring for driver rabbit
+export const publishSample = async (): Promise<void> => {
+  // no-op placeholder
+};
+"
+`;
+
+exports[`scaffold stubs writeIrisSamples writes pub/sub when iris selected 2`] = `
+"// TODO (phase 2): sample subscriber wiring for driver rabbit
+export const sampleSubscriber = {
+  topic: "sample",
+};
+"
+`;
+
+exports[`scaffold stubs writePylonFile stub writes placeholder 1`] = `
+"// TODO (phase 2): wire setup/teardown, feature options, worker registration
+import { Pylon } from "@lindorm/pylon";
+import { amphora } from "./amphora";
+import { logger } from "../logger";
+
+export const pylon = new Pylon({
+  logger,
+  amphora,
+  // project: test-app
+});
+"
+`;
+
+exports[`scaffold stubs writeWorkerFiles writes one file per selected worker 1`] = `
+"import type { LindormWorkerCallback } from "@lindorm/worker";
+
+export const CALLBACK: LindormWorkerCallback = async (ctx) => {
+  ctx.logger.info("TODO (phase 2): amphora-refresh worker");
+};
+
+export const INTERVAL = "1m";
+"
+`;
+
+exports[`scaffold stubs writeWorkerFiles writes one file per selected worker 2`] = `
+"import type { LindormWorkerCallback } from "@lindorm/worker";
+
+export const CALLBACK: LindormWorkerCallback = async (ctx) => {
+  ctx.logger.info("TODO (phase 2): expiry-cleanup worker");
+};
+
+export const INTERVAL = "1m";
+"
+`;
+
+exports[`scaffold writeEnvFile none drivers 1`] = `
+"NODE_ENV=development
+"
+`;
+
+exports[`scaffold writeEnvFile postgres + kafka 1`] = `
+"NODE_ENV=development
+PROTEUS_URL=postgresql://localhost:5432/app
+IRIS_BROKERS=localhost:9092
+"
+`;
+
+exports[`scaffold writePackageJson adds docker scripts when driver needs compose 1`] = `
+"{
+  "name": "test-app",
+  "version": "0.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "test": "jest",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
+"
+`;
+
+exports[`scaffold writePackageJson default answers produce minimal package.json 1`] = `
+"{
+  "name": "test-app",
+  "version": "0.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "test": "jest"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
+"
+`;
