@@ -349,8 +349,9 @@ export class Pylon<
 
       if (iris && proteus) {
         await setupWebhookRequestConsumer(iris, proteus, this.logger);
-        await setupWebhookDispatchConsumer(iris, this.logger, {
+        await setupWebhookDispatchConsumer(iris, proteus, this.logger, {
           encryptionKey: this.options.webhook.encryptionKey,
+          maxErrors: this.options.webhook.maxErrors,
         });
       }
     }

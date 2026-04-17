@@ -102,4 +102,18 @@ export class WebhookSubscription implements IWebhookSubscription {
   @Nullable()
   @Field("url")
   public tokenUri!: string | null;
+
+  // error tracking
+
+  @Default(0)
+  @Field("integer")
+  public errorCount!: number;
+
+  @Nullable()
+  @Field("timestamp")
+  public lastErrorAt!: Date | null;
+
+  @Nullable()
+  @Field("timestamp")
+  public suspendedAt!: Date | null;
 }
