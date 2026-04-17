@@ -5,6 +5,7 @@ import {
   IdentifierField,
   Message,
   Namespace,
+  Nullable,
   Retry,
   TimestampField,
   Topic,
@@ -31,7 +32,8 @@ export class DataAuditChange {
   @Field("string")
   public readonly entityName!: string;
 
-  @Field("string", { nullable: true })
+  @Nullable()
+  @Field("string")
   public readonly entityNamespace!: string | null;
 
   @Field("string")
@@ -40,6 +42,7 @@ export class DataAuditChange {
   @Field("string")
   public readonly action!: string;
 
-  @Field("object", { nullable: true })
+  @Nullable()
+  @Field("object")
   public readonly changes!: Record<string, { from: unknown; to: unknown }> | null;
 }
