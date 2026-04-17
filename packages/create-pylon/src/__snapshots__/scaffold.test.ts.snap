@@ -68,65 +68,666 @@ exports[`scaffold buildEnvLines snapshot: sqlite-redis 1`] = `
 `;
 
 exports[`scaffold copyTemplates base + http + socket + workers + webhooks 1`] = `
-[
-  ".gitignore",
-  "config/default.yml",
-  "jest.config.ts",
-  "src/handlers/create-webhook-handler.ts",
-  "src/handlers/delete-webhook-handler.ts",
-  "src/handlers/example-handler.ts",
-  "src/handlers/get-webhook-handler.ts",
-  "src/handlers/list-webhooks-handler.ts",
-  "src/handlers/ping-handler.ts",
-  "src/handlers/update-webhook-handler.ts",
-  "src/index.ts",
-  "src/listeners/_middleware.ts",
-  "src/listeners/ping.ts",
-  "src/logger/index.ts",
-  "src/middleware/example.ts",
-  "src/pylon/amphora.ts",
-  "src/routes/_middleware.ts",
-  "src/routes/v1/example.ts",
-  "src/routes/webhooks/[id].ts",
-  "src/routes/webhooks/_middleware.ts",
-  "src/routes/webhooks/index.ts",
-  "src/types/context.ts",
-  "src/workers/alive.ts",
-  "tsconfig.build.json",
-  "tsconfig.json",
-]
+{
+  ".gitignore": "node_modules/
+dist/
+coverage/
+.nx/cache/
+.config-cache/
+
+.env
+.env.*
+!.env.example
+
+.DS_Store
+*.log
+",
+  "config/default.yml": "server:
+  port: 3000
+",
+  "jest.config.ts": "import type { Config } from "jest";
+
+const config: Config = {
+  preset: "ts-jest",
+  testEnvironment: "node",
+  roots: ["<rootDir>/src"],
+  testMatch: ["**/*.test.ts"],
+  moduleFileExtensions: ["ts", "tsx", "js", "json"],
+};
+
+export default config;
+",
+  "src/handlers/create-webhook-handler.ts": "import { z } from "zod";
+import type { ServerHandler } from "../types/context";
+
+export const createWebhookSchema = z.object({
+  auth: z.string(),
+  event: z.string(),
+  method: z.string().optional(),
+  headers: z.record(z.string(), z.string()).optional(),
+  ownerId: z.string(),
+  tenantId: z.string().nullable().optional(),
+  url: z.string(),
+
+  authHeaders: z.record(z.string(), z.string()).optional(),
+
+  username: z.string().nullable().optional(),
+  password: z.string().nullable().optional(),
+
+  audience: z.string().nullable().optional(),
+  authLocation: z.string().nullable().optional(),
+  clientId: z.string().nullable().optional(),
+  clientSecret: z.string().nullable().optional(),
+  contentType: z.string().nullable().optional(),
+  issuer: z.string().nullable().optional(),
+  scope: z.array(z.string()).optional(),
+  tokenUri: z.string().nullable().optional(),
+});
+
+export const createWebhookHandler: ServerHandler<typeof createWebhookSchema> = async (
+  ctx,
+) => {
+  const repository = ctx.repositories!.webhookSubscription;
+  const subscription = await repository.save(ctx.data);
+
+  return { body: subscription, status: 201 };
+};
+",
+  "src/handlers/delete-webhook-handler.ts": "import { ClientError } from "@lindorm/errors";
+import { z } from "zod";
+import type { ServerHandler } from "../types/context";
+
+export const deleteWebhookSchema = z.object({
+  id: z.string(),
+});
+
+export const deleteWebhookHandler: ServerHandler<typeof deleteWebhookSchema> = async (
+  ctx,
+) => {
+  const repository = ctx.repositories!.webhookSubscription;
+  const existing = await repository.findOne({ id: ctx.data.id });
+
+  if (!existing) {
+    throw new ClientError("Webhook subscription not found", {
+      status: ClientError.Status.NotFound,
+    });
+  }
+
+  await repository.destroy(existing);
+
+  return { status: 204 };
+};
+",
+  "src/handlers/example-handler.ts": "import { z } from "zod";
+import type { ServerHandler } from "../types/context";
+
+export const exampleSchema = z.object({
+  name: z.string().optional(),
+});
+
+export const exampleHandler: ServerHandler<typeof exampleSchema> = async (ctx) => {
+  const name = ctx.data.name ?? "world";
+  return { body: { message: \`Hello, \${name}!\` } };
+};
+",
+  "src/handlers/get-webhook-handler.ts": "import { ClientError } from "@lindorm/errors";
+import { z } from "zod";
+import type { ServerHandler } from "../types/context";
+
+export const getWebhookSchema = z.object({
+  id: z.string(),
+});
+
+export const getWebhookHandler: ServerHandler<typeof getWebhookSchema> = async (ctx) => {
+  const repository = ctx.repositories!.webhookSubscription;
+  const subscription = await repository.findOne({ id: ctx.data.id });
+
+  if (!subscription) {
+    throw new ClientError("Webhook subscription not found", {
+      status: ClientError.Status.NotFound,
+    });
+  }
+
+  return { body: subscription };
+};
+",
+  "src/handlers/list-webhooks-handler.ts": "import { z } from "zod";
+import type { ServerHandler } from "../types/context";
+
+export const listWebhooksSchema = z.object({
+  ownerId: z.string(),
+  tenantId: z.string().nullable().optional(),
+});
+
+export const listWebhooksHandler: ServerHandler<typeof listWebhooksSchema> = async (
+  ctx,
+) => {
+  const repository = ctx.repositories!.webhookSubscription;
+  const query: { ownerId: string; tenantId?: string | null } = {
+    ownerId: ctx.data.ownerId,
+  };
+
+  if (ctx.data.tenantId !== undefined) {
+    query.tenantId = ctx.data.tenantId;
+  }
+
+  const subscriptions = await repository.find(query);
+
+  return { body: subscriptions };
+};
+",
+  "src/handlers/ping-handler.ts": "import { z } from "zod";
+import type { ServerSocketHandler } from "../types/context";
+
+export const pingSchema = z.object({
+  message: z.string().optional(),
+});
+
+export const pingHandler: ServerSocketHandler<typeof pingSchema> = async (ctx) => {
+  ctx.logger.info("Received ping", { data: ctx.data });
+
+  ctx.ack?.({
+    pong: true,
+    message: ctx.data.message,
+    receivedAt: new Date().toISOString(),
+  });
+};
+",
+  "src/handlers/update-webhook-handler.ts": "import { ClientError } from "@lindorm/errors";
+import { z } from "zod";
+import type { ServerHandler } from "../types/context";
+
+export const updateWebhookSchema = z.object({
+  id: z.string(),
+
+  event: z.string().optional(),
+  method: z.string().optional(),
+  headers: z.record(z.string(), z.string()).optional(),
+  tenantId: z.string().nullable().optional(),
+  url: z.string().optional(),
+
+  authHeaders: z.record(z.string(), z.string()).optional(),
+
+  username: z.string().nullable().optional(),
+  password: z.string().nullable().optional(),
+
+  audience: z.string().nullable().optional(),
+  authLocation: z.string().nullable().optional(),
+  clientId: z.string().nullable().optional(),
+  clientSecret: z.string().nullable().optional(),
+  contentType: z.string().nullable().optional(),
+  issuer: z.string().nullable().optional(),
+  scope: z.array(z.string()).optional(),
+  tokenUri: z.string().nullable().optional(),
+});
+
+export const updateWebhookHandler: ServerHandler<typeof updateWebhookSchema> = async (
+  ctx,
+) => {
+  const repository = ctx.repositories!.webhookSubscription;
+  const existing = await repository.findOne({ id: ctx.data.id });
+
+  if (!existing) {
+    throw new ClientError("Webhook subscription not found", {
+      status: ClientError.Status.NotFound,
+    });
+  }
+
+  const { id: _ignored, ...changes } = ctx.data;
+
+  const updated = await repository.save({
+    ...existing,
+    ...changes,
+    errorCount: 0,
+    suspendedAt: null,
+  });
+
+  return { body: updated };
+};
+",
+  "src/index.ts": "import { pylon } from "./pylon/pylon";
+
+void pylon.start();
+",
+  "src/listeners/_middleware.ts": "import { exampleMiddleware } from "../middleware/example";
+
+export const MIDDLEWARE = [exampleMiddleware];
+",
+  "src/listeners/ping.ts": "import { useSchema } from "@lindorm/pylon";
+import type { ServerSocketMiddleware } from "../types/context";
+import { pingHandler, pingSchema } from "../handlers/ping-handler";
+
+export const ON: Array<ServerSocketMiddleware> = [useSchema(pingSchema), pingHandler];
+",
+  "src/logger/index.ts": "import { Logger } from "@lindorm/logger";
+
+export const logger = new Logger({
+  readable: process.env.NODE_ENV !== "production",
+});
+",
+  "src/middleware/example.ts": "import type { ServerSocketMiddleware } from "../types/context";
+
+export const exampleMiddleware: ServerSocketMiddleware = async (ctx, next) => {
+  ctx.logger.warn(
+    "This is already logged but as an example we'll do it again as a warn",
+    {
+      event: ctx.event,
+      eventId: ctx.eventId,
+      socketId: ctx.io.socket.id,
+    },
+  );
+
+  await next();
+};
+",
+  "src/pylon/amphora.ts": "import { Amphora } from "@lindorm/amphora";
+import { logger } from "../logger";
+
+export const amphora = new Amphora({ logger });
+",
+  "src/routes/_middleware.ts": "import { exampleMiddleware } from "../middleware/example";
+
+export const MIDDLEWARE = [exampleMiddleware];
+",
+  "src/routes/v1/example.ts": "import { useHandler, useSchema } from "@lindorm/pylon";
+import type { ServerHttpMiddleware } from "../../types/context";
+import { exampleHandler, exampleSchema } from "../../handlers/example-handler";
+
+export const GET: Array<ServerHttpMiddleware> = [
+  useSchema(exampleSchema),
+  useHandler(exampleHandler),
+];
+",
+  "src/routes/webhooks/[id].ts": "// TODO: add auth middleware — these routes expose webhook subscription management.
+import { useHandler, useSchema } from "@lindorm/pylon";
+import type { ServerHttpMiddleware } from "../../types/context";
+import {
+  deleteWebhookHandler,
+  deleteWebhookSchema,
+} from "../../handlers/delete-webhook-handler";
+import { getWebhookHandler, getWebhookSchema } from "../../handlers/get-webhook-handler";
+import {
+  updateWebhookHandler,
+  updateWebhookSchema,
+} from "../../handlers/update-webhook-handler";
+
+export const GET: Array<ServerHttpMiddleware> = [
+  useSchema(getWebhookSchema),
+  useHandler(getWebhookHandler),
+];
+
+export const PATCH: Array<ServerHttpMiddleware> = [
+  useSchema(updateWebhookSchema),
+  useHandler(updateWebhookHandler),
+];
+
+export const DELETE: Array<ServerHttpMiddleware> = [
+  useSchema(deleteWebhookSchema),
+  useHandler(deleteWebhookHandler),
+];
+",
+  "src/routes/webhooks/_middleware.ts": "import { createRepositoryMiddleware, WebhookSubscription } from "@lindorm/pylon";
+
+export const MIDDLEWARE = [createRepositoryMiddleware([WebhookSubscription])];
+",
+  "src/routes/webhooks/index.ts": "// TODO: add auth middleware — these routes expose webhook subscription management.
+import { useHandler, useSchema } from "@lindorm/pylon";
+import type { ServerHttpMiddleware } from "../../types/context";
+import {
+  createWebhookHandler,
+  createWebhookSchema,
+} from "../../handlers/create-webhook-handler";
+import {
+  listWebhooksHandler,
+  listWebhooksSchema,
+} from "../../handlers/list-webhooks-handler";
+
+export const POST: Array<ServerHttpMiddleware> = [
+  useSchema(createWebhookSchema),
+  useHandler(createWebhookHandler),
+];
+
+export const GET: Array<ServerHttpMiddleware> = [
+  useSchema(listWebhooksSchema),
+  useHandler(listWebhooksHandler),
+];
+",
+  "src/types/context.ts": "import type {
+  PylonHandler,
+  PylonHttpContext,
+  PylonHttpMiddleware,
+  PylonSocketContext,
+  PylonSocketMiddleware,
+} from "@lindorm/pylon";
+import type { z, ZodType } from "zod";
+
+export type ServerHttpContext<Data = any> = PylonHttpContext<Data>;
+
+export type ServerSocketContext<Payload = any> = PylonSocketContext<Payload>;
+
+export type ServerHttpMiddleware<C extends ServerHttpContext = ServerHttpContext> =
+  PylonHttpMiddleware<C>;
+
+export type ServerSocketMiddleware<C extends ServerSocketContext = ServerSocketContext> =
+  PylonSocketMiddleware<C>;
+
+// TODO: extend Data / State / Payload here to match your application's shape.
+export type ServerHandler<
+  Schema extends ZodType = ZodType<any>,
+  Body = any,
+> = PylonHandler<ServerHttpContext<z.infer<Schema>>, Body>;
+
+export type ServerSocketHandler<Schema extends ZodType = ZodType<any>> =
+  PylonSocketMiddleware<ServerSocketContext<z.infer<Schema>>>;
+",
+  "src/workers/alive.ts": "import type { LindormWorkerCallback } from "@lindorm/worker";
+
+export const CALLBACK: LindormWorkerCallback = async (ctx) => {
+  ctx.logger.info("I'm alive");
+};
+
+export const INTERVAL = "1m";
+",
+  "tsconfig.build.json": "{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "removeComments": true
+  },
+  "exclude": [
+    "**/*.test.ts",
+    "**/*.integration.ts",
+    "**/__fixtures__/**",
+    "**/__mocks__/**",
+    "**/__snapshots__/**"
+  ]
+}
+",
+  "tsconfig.json": "{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "node16",
+    "moduleResolution": "node16",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "experimentalDecorators": false,
+    "emitDecoratorMetadata": false,
+    "resolveJsonModule": true,
+    "forceConsistentCasingInFileNames": true,
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "noEmit": true,
+    "types": ["node", "jest"]
+  },
+  "include": ["src/**/*"]
+}
+",
+}
 `;
 
 exports[`scaffold copyTemplates base + http overlay 1`] = `
-[
-  ".gitignore",
-  "config/default.yml",
-  "jest.config.ts",
-  "src/handlers/example-handler.ts",
-  "src/index.ts",
-  "src/logger/index.ts",
-  "src/middleware/example.ts",
-  "src/pylon/amphora.ts",
-  "src/routes/_middleware.ts",
-  "src/routes/v1/example.ts",
-  "src/types/context.ts",
-  "tsconfig.build.json",
-  "tsconfig.json",
-]
+{
+  ".gitignore": "node_modules/
+dist/
+coverage/
+.nx/cache/
+.config-cache/
+
+.env
+.env.*
+!.env.example
+
+.DS_Store
+*.log
+",
+  "config/default.yml": "server:
+  port: 3000
+",
+  "jest.config.ts": "import type { Config } from "jest";
+
+const config: Config = {
+  preset: "ts-jest",
+  testEnvironment: "node",
+  roots: ["<rootDir>/src"],
+  testMatch: ["**/*.test.ts"],
+  moduleFileExtensions: ["ts", "tsx", "js", "json"],
+};
+
+export default config;
+",
+  "src/handlers/example-handler.ts": "import { z } from "zod";
+import type { ServerHandler } from "../types/context";
+
+export const exampleSchema = z.object({
+  name: z.string().optional(),
+});
+
+export const exampleHandler: ServerHandler<typeof exampleSchema> = async (ctx) => {
+  const name = ctx.data.name ?? "world";
+  return { body: { message: \`Hello, \${name}!\` } };
+};
+",
+  "src/index.ts": "import { pylon } from "./pylon/pylon";
+
+void pylon.start();
+",
+  "src/logger/index.ts": "import { Logger } from "@lindorm/logger";
+
+export const logger = new Logger({
+  readable: process.env.NODE_ENV !== "production",
+});
+",
+  "src/middleware/example.ts": "import type { ServerHttpMiddleware } from "../types/context";
+
+export const exampleMiddleware: ServerHttpMiddleware = async (ctx, next) => {
+  ctx.set("x-example-header", "true");
+
+  await next();
+};
+",
+  "src/pylon/amphora.ts": "import { Amphora } from "@lindorm/amphora";
+import { logger } from "../logger";
+
+export const amphora = new Amphora({ logger });
+",
+  "src/routes/_middleware.ts": "import { exampleMiddleware } from "../middleware/example";
+
+export const MIDDLEWARE = [exampleMiddleware];
+",
+  "src/routes/v1/example.ts": "import { useHandler, useSchema } from "@lindorm/pylon";
+import type { ServerHttpMiddleware } from "../../types/context";
+import { exampleHandler, exampleSchema } from "../../handlers/example-handler";
+
+export const GET: Array<ServerHttpMiddleware> = [
+  useSchema(exampleSchema),
+  useHandler(exampleHandler),
+];
+",
+  "src/types/context.ts": "import type {
+  PylonHandler,
+  PylonHttpContext,
+  PylonHttpMiddleware,
+  PylonSocketContext,
+  PylonSocketMiddleware,
+} from "@lindorm/pylon";
+import type { z, ZodType } from "zod";
+
+export type ServerHttpContext<Data = any> = PylonHttpContext<Data>;
+
+export type ServerSocketContext<Payload = any> = PylonSocketContext<Payload>;
+
+export type ServerHttpMiddleware<C extends ServerHttpContext = ServerHttpContext> =
+  PylonHttpMiddleware<C>;
+
+export type ServerSocketMiddleware<C extends ServerSocketContext = ServerSocketContext> =
+  PylonSocketMiddleware<C>;
+
+// TODO: extend Data / State / Payload here to match your application's shape.
+export type ServerHandler<
+  Schema extends ZodType = ZodType<any>,
+  Body = any,
+> = PylonHandler<ServerHttpContext<z.infer<Schema>>, Body>;
+
+export type ServerSocketHandler<Schema extends ZodType = ZodType<any>> =
+  PylonSocketMiddleware<ServerSocketContext<z.infer<Schema>>>;
+",
+  "tsconfig.build.json": "{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "removeComments": true
+  },
+  "exclude": [
+    "**/*.test.ts",
+    "**/*.integration.ts",
+    "**/__fixtures__/**",
+    "**/__mocks__/**",
+    "**/__snapshots__/**"
+  ]
+}
+",
+  "tsconfig.json": "{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "node16",
+    "moduleResolution": "node16",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "experimentalDecorators": false,
+    "emitDecoratorMetadata": false,
+    "resolveJsonModule": true,
+    "forceConsistentCasingInFileNames": true,
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "noEmit": true,
+    "types": ["node", "jest"]
+  },
+  "include": ["src/**/*"]
+}
+",
+}
 `;
 
 exports[`scaffold copyTemplates base only — http false, socket false 1`] = `
-[
-  ".gitignore",
-  "config/default.yml",
-  "jest.config.ts",
-  "src/index.ts",
-  "src/logger/index.ts",
-  "src/pylon/amphora.ts",
-  "src/types/context.ts",
-  "tsconfig.build.json",
-  "tsconfig.json",
-]
+{
+  ".gitignore": "node_modules/
+dist/
+coverage/
+.nx/cache/
+.config-cache/
+
+.env
+.env.*
+!.env.example
+
+.DS_Store
+*.log
+",
+  "config/default.yml": "server:
+  port: 3000
+",
+  "jest.config.ts": "import type { Config } from "jest";
+
+const config: Config = {
+  preset: "ts-jest",
+  testEnvironment: "node",
+  roots: ["<rootDir>/src"],
+  testMatch: ["**/*.test.ts"],
+  moduleFileExtensions: ["ts", "tsx", "js", "json"],
+};
+
+export default config;
+",
+  "src/index.ts": "import { pylon } from "./pylon/pylon";
+
+void pylon.start();
+",
+  "src/logger/index.ts": "import { Logger } from "@lindorm/logger";
+
+export const logger = new Logger({
+  readable: process.env.NODE_ENV !== "production",
+});
+",
+  "src/pylon/amphora.ts": "import { Amphora } from "@lindorm/amphora";
+import { logger } from "../logger";
+
+export const amphora = new Amphora({ logger });
+",
+  "src/types/context.ts": "import type {
+  PylonHandler,
+  PylonHttpContext,
+  PylonHttpMiddleware,
+  PylonSocketContext,
+  PylonSocketMiddleware,
+} from "@lindorm/pylon";
+import type { z, ZodType } from "zod";
+
+export type ServerHttpContext<Data = any> = PylonHttpContext<Data>;
+
+export type ServerSocketContext<Payload = any> = PylonSocketContext<Payload>;
+
+export type ServerHttpMiddleware<C extends ServerHttpContext = ServerHttpContext> =
+  PylonHttpMiddleware<C>;
+
+export type ServerSocketMiddleware<C extends ServerSocketContext = ServerSocketContext> =
+  PylonSocketMiddleware<C>;
+
+// TODO: extend Data / State / Payload here to match your application's shape.
+export type ServerHandler<
+  Schema extends ZodType = ZodType<any>,
+  Body = any,
+> = PylonHandler<ServerHttpContext<z.infer<Schema>>, Body>;
+
+export type ServerSocketHandler<Schema extends ZodType = ZodType<any>> =
+  PylonSocketMiddleware<ServerSocketContext<z.infer<Schema>>>;
+",
+  "tsconfig.build.json": "{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "removeComments": true
+  },
+  "exclude": [
+    "**/*.test.ts",
+    "**/*.integration.ts",
+    "**/__fixtures__/**",
+    "**/__mocks__/**",
+    "**/__snapshots__/**"
+  ]
+}
+",
+  "tsconfig.json": "{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "node16",
+    "moduleResolution": "node16",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "experimentalDecorators": false,
+    "emitDecoratorMetadata": false,
+    "resolveJsonModule": true,
+    "forceConsistentCasingInFileNames": true,
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "noEmit": true,
+    "types": ["node", "jest"]
+  },
+  "include": ["src/**/*"]
+}
+",
+}
 `;
 
 exports[`scaffold scaffold orchestration runs all write functions in sequence 1`] = `
