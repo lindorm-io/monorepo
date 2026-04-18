@@ -1341,7 +1341,10 @@ type PylonOptions<E extends PylonEventMap = PylonEventMap> = {
 
   // HTTP
   auth?: PylonAuthOptions;
-  callbacks?: { health?: PylonHttpCallback | null; rightToBeForgotten? };
+  callbacks?: {
+    health?: PylonHttpCallback | null;
+    rightToBeForgotten?: PylonHttpCallback;
+  };
   changePasswordUri?: string;
   cookies?: PylonCookieConfig;
   cors?: CorsOptions;
