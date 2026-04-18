@@ -37,7 +37,7 @@ const app = new Pylon({
   port: 3000,
   amphora: new Amphora(),
   logger: new Logger({ readable: true }),
-  httpRouters: [{ path: "/", router }],
+  routes: [{ path: "/", router }],
 });
 
 await app.start();
@@ -108,14 +108,17 @@ const app = new Pylon({
   proxy: true,
 
   // HTTP
-  httpRouters: [{ path: "/api", router: apiRouter }],
+  routes: [{ path: "/api", router: apiRouter }],
   httpMiddleware: [myMiddleware],
   cors: { allowOrigins: ["https://example.com"] },
 
   // Socket.io
-  socketListeners: [chatListener],
-  socketMiddleware: [mySocketMiddleware],
-  socketRedis: redisClient,
+  socket: {
+    enabled: true,
+    listeners: [chatListener],
+    middleware: [mySocketMiddleware],
+    redis: redisClient,
+  },
 
   // Integrations
   proteus: myProteusSource,
@@ -261,11 +264,11 @@ ctx.args; // Raw event arguments
 
 ### File-Based Routing
 
-Pass a directory path to `httpRouters` and Pylon scans it recursively, mapping files to routes:
+Pass a directory path to `routes` and Pylon scans it recursively, mapping files to routes:
 
 ```typescript
 const app = new Pylon({
-  httpRouters: "./src/routes",
+  routes: "./src/routes",
   // ...
 });
 ```
@@ -359,7 +362,7 @@ For programmatic routing, pass an array of `{ path, router }` objects:
 
 ```typescript
 const app = new Pylon({
-  httpRouters: [
+  routes: [
     { path: "/api", router: apiRouter },
     { path: "/admin", router: adminRouter },
   ],
@@ -459,11 +462,14 @@ router.post(
 
 ### File-Based Listeners
 
-Pass a directory path to `socketListeners` for automatic event scanning:
+Pass a directory path to `socket.listeners` for automatic event scanning:
 
 ```typescript
 const app = new Pylon({
-  socketListeners: "./src/listeners",
+  socket: {
+    enabled: true,
+    listeners: "./src/listeners",
+  },
   // ...
 });
 ```
@@ -510,7 +516,10 @@ For programmatic listener setup, pass an array of `PylonListener` instances:
 
 ```typescript
 const app = new Pylon({
-  socketListeners: [chatListener, adminListener],
+  socket: {
+    enabled: true,
+    listeners: [chatListener, adminListener],
+  },
   // ...
 });
 ```
@@ -711,7 +720,10 @@ For horizontal scaling across multiple server instances:
 import Redis from "ioredis";
 
 const app = new Pylon({
-  socketRedis: new Redis("redis://localhost:6379"),
+  socket: {
+    enabled: true,
+    redis: new Redis("redis://localhost:6379"),
+  },
   // ...
 });
 ```
@@ -1334,7 +1346,7 @@ type PylonOptions<E extends PylonEventMap = PylonEventMap> = {
   cookies?: PylonCookieConfig;
   cors?: CorsOptions;
   httpMiddleware?: PylonHttpMiddleware[];
-  httpRouters?: string | PylonHttpRouters[];
+  routes?: string | PylonHttpRouters | Array<string | PylonHttpRouters>;
   maxRequestAge?: ReadableTime;
   minRequestAge?: ReadableTime;
   openIdConfiguration?: Partial<OpenIdConfigurationOptions>;
@@ -1342,10 +1354,14 @@ type PylonOptions<E extends PylonEventMap = PylonEventMap> = {
   session?: PylonSessionOptions;
 
   // Socket.io
-  socketListeners?: string | PylonListener[];
-  socketMiddleware?: PylonSocketMiddleware[];
-  socketOptions?: Partial<SocketOptions>;
-  socketRedis?: Redis;
+  socket?: {
+    enabled: boolean;
+    listeners?: string | PylonListener | Array<string | PylonListener>;
+    middleware?: PylonSocketMiddleware[];
+    connectionMiddleware?: PylonConnectionMiddleware[];
+    options?: Partial<SocketOptions>;
+    redis?: Redis;
+  };
 
   // Integrations
   hermes?: IHermes;
@@ -1366,7 +1382,7 @@ type PylonOptions<E extends PylonEventMap = PylonEventMap> = {
   subscriptions?: PylonSubscribeOptions[];
 
   // Workers
-  workers?: Array<ILindormWorker | string>;
+  workers?: string | ILindormWorker | Array<string | ILindormWorker>;
   workersInterval?: ReadableTime;
   workersRetry?: RetryOptions;
 };
