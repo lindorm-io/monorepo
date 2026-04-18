@@ -293,20 +293,31 @@ describe("buildSchema", () => {
   });
 
   describe("unknown field type", () => {
-    it("should skip fields with an unrecognized type", () => {
+    it("should skip fields with an unrecognized type and reject them as unknown keys", () => {
       const schema = buildSchema(
         makeMetadata([makeField({ key: "x", type: "unknown" as any })]),
       );
       expect(parse(schema, {}).success).toBe(true);
-      expect(parse(schema, { x: "anything" }).success).toBe(true);
+      expect(parse(schema, { x: "anything" }).success).toBe(false);
     });
   });
 
   describe("empty fields", () => {
-    it("should produce a schema that accepts any object when fields array is empty", () => {
+    it("should accept an empty object but reject any extra keys when fields array is empty", () => {
       const schema = buildSchema(makeMetadata([]));
       expect(parse(schema, {}).success).toBe(true);
-      expect(parse(schema, { extra: "data" }).success).toBe(true);
+      expect(parse(schema, { extra: "data" }).success).toBe(false);
+    });
+  });
+
+  describe("strict validation", () => {
+    it("should reject unknown top-level keys on the message", () => {
+      const schema = buildSchema(makeMetadata([makeField({ key: "id", type: "uuid" })]));
+      const result = parse(schema, {
+        id: "550e8400-e29b-41d4-a716-446655440000",
+        stray: "should not be here",
+      });
+      expect(result.success).toBe(false);
     });
   });
 
