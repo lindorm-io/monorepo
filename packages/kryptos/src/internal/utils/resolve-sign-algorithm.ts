@@ -13,7 +13,16 @@ export const resolveSignAlgorithmForCert = (input: Input): KryptosAlgorithm => {
   }
 
   if (input.type === "AKP") {
-    throw new KryptosError("AKP keys do not yet support certificates");
+    if (
+      input.algorithm === "ML-DSA-44" ||
+      input.algorithm === "ML-DSA-65" ||
+      input.algorithm === "ML-DSA-87"
+    ) {
+      return input.algorithm;
+    }
+    throw new KryptosError(
+      `Unsupported AKP algorithm for X.509 certificate signing: ${String(input.algorithm)}`,
+    );
   }
 
   if (input.type === "RSA") {

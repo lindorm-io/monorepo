@@ -9,6 +9,10 @@ export const X509_OID_ECDSA_WITH_SHA512 = "1.2.840.10045.4.3.4";
 export const X509_OID_ED25519 = "1.3.101.112";
 export const X509_OID_ED448 = "1.3.101.113";
 
+export const X509_OID_ML_DSA_44 = "2.16.840.1.101.3.4.3.17";
+export const X509_OID_ML_DSA_65 = "2.16.840.1.101.3.4.3.18";
+export const X509_OID_ML_DSA_87 = "2.16.840.1.101.3.4.3.19";
+
 export const X509_OID_COMMON_NAME = "2.5.4.3";
 export const X509_OID_ORGANIZATION_NAME = "2.5.4.10";
 export const X509_OID_COUNTRY_NAME = "2.5.4.6";

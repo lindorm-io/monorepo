@@ -7,6 +7,9 @@ import {
   X509_OID_ECDSA_WITH_SHA512,
   X509_OID_ED25519,
   X509_OID_ED448,
+  X509_OID_ML_DSA_44,
+  X509_OID_ML_DSA_65,
+  X509_OID_ML_DSA_87,
   X509_OID_SHA256_WITH_RSA,
   X509_OID_SHA384_WITH_RSA,
   X509_OID_SHA512_WITH_RSA,
@@ -23,6 +26,9 @@ const SIG_ALG_HASH: Record<string, string | null> = {
   [X509_OID_ECDSA_WITH_SHA512]: "sha512",
   [X509_OID_ED25519]: null,
   [X509_OID_ED448]: null,
+  [X509_OID_ML_DSA_44]: null,
+  [X509_OID_ML_DSA_65]: null,
+  [X509_OID_ML_DSA_87]: null,
 };
 
 type ParsedEntry = {
