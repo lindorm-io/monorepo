@@ -1,6 +1,6 @@
 # @lindorm/okp
 
-EdDSA signature kit built on Node's `crypto` module and [`@lindorm/kryptos`](../kryptos). Provides an `OkpKit` class that implements the `IKeyKit` contract used across the Lindorm cryptography packages.
+EdDSA signature kit built on Node's `crypto` module and [`@lindorm/kryptos`](https://github.com/lindorm-io/monorepo/tree/main/packages/kryptos). Provides an `OkpKit` class that implements the `IKeyKit` contract used across the Lindorm cryptography packages.
 
 ## Installation
 
@@ -62,7 +62,7 @@ class OkpKit implements IKeyKit {
 | Ed25519 | EdDSA     | Signing |
 | Ed448   | EdDSA     | Signing |
 
-X25519 and X448 are encryption curves and are not supported by `OkpKit`. Use the [`@lindorm/aes`](../aes) package for encryption with OKP keys.
+X25519 and X448 are encryption curves and are not supported by `OkpKit`. Use the [`@lindorm/aes`](https://github.com/lindorm-io/monorepo/tree/main/packages/aes) package for encryption with OKP keys.
 
 ## Error Handling
 

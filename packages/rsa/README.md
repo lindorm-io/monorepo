@@ -1,6 +1,6 @@
 # @lindorm/rsa
 
-RSA signature kit built on Node's `crypto` module and [`@lindorm/kryptos`](../kryptos). Provides an `RsaKit` class that implements the `IKeyKit` contract used across the Lindorm cryptography packages.
+RSA signature kit built on Node's `crypto` module and [`@lindorm/kryptos`](https://github.com/lindorm-io/monorepo/tree/main/packages/kryptos). Provides an `RsaKit` class that implements the `IKeyKit` contract used across the Lindorm cryptography packages.
 
 ## Installation
 

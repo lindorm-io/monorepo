@@ -1,7 +1,7 @@
 # @lindorm/url
 
 Small set of **URL manipulation helpers** that simplify building, validating and parsing URLs in
-Node.js & browser environments.  All utilities are zero-dependency wrappers around the native `URL`
+Node.js & browser environments. All utilities are zero-dependency wrappers around the native `URL`
 class.
 
 ---
@@ -27,7 +27,7 @@ yarn add @lindorm/url
 All helpers are available as named exports:
 
 ```ts
-import { createUrl, getPlainUrl } from '@lindorm/url';
+import { createUrl, getPlainUrl } from "@lindorm/url";
 ```
 
 ---
@@ -37,10 +37,10 @@ import { createUrl, getPlainUrl } from '@lindorm/url';
 ### Build url with path params & query
 
 ```ts
-const url = createUrl('/users/:id', {
-  host: 'https://api.example.com',
-  params: { id: 'u1' },
-  query: { include: 'posts', page: 2 },
+const url = createUrl("/users/:id", {
+  host: "https://api.example.com",
+  params: { id: "u1" },
+  query: { include: "posts", page: 2 },
 });
 
 console.log(url.toString());
@@ -50,7 +50,7 @@ console.log(url.toString());
 ### Derive from existing URL
 
 ```ts
-const next = createUrl(new URL('https://example.com/foo?bar=1'), {
+const next = createUrl(new URL("https://example.com/foo?bar=1"), {
   params: {},
   query: { baz: 2 }, // merged with existing search params
 });
@@ -75,5 +75,4 @@ const url = createUrl<Params, Query>('/users/:id', { … });
 
 ## License
 
-AGPL-3.0-or-later – see the root [`LICENSE`](../../LICENSE).
-
+AGPL-3.0-or-later – see the root [`LICENSE`](https://github.com/lindorm-io/monorepo/blob/main/LICENSE).

@@ -1,6 +1,6 @@
 # @lindorm/oct
 
-HMAC signature kit built on Node's `crypto` module and [`@lindorm/kryptos`](../kryptos). Provides an `OctKit` class that implements the `IKeyKit` contract used across the Lindorm cryptography packages.
+HMAC signature kit built on Node's `crypto` module and [`@lindorm/kryptos`](https://github.com/lindorm-io/monorepo/tree/main/packages/kryptos). Provides an `OctKit` class that implements the `IKeyKit` contract used across the Lindorm cryptography packages.
 
 ## Installation
 

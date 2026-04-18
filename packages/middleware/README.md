@@ -23,7 +23,7 @@ yarn add @lindorm/middleware
 ## Usage
 
 ```ts
-import { composeMiddleware, Middleware } from '@lindorm/middleware';
+import { composeMiddleware, Middleware } from "@lindorm/middleware";
 
 type Ctx = { counter: number };
 
@@ -61,9 +61,9 @@ console.log(context.counter); // 20
 
 ### `composeMiddleware(context, middleware[], options?) → Promise<Context>`
 
-* **context** – any object that will be shared between middleware functions
-* **middleware** – array of `Middleware<Context>`
-* **options.useClone** – boolean (default `true`)
+- **context** – any object that will be shared between middleware functions
+- **middleware** – array of `Middleware<Context>`
+- **options.useClone** – boolean (default `true`)
 
 Each middleware receives two arguments:
 
@@ -83,13 +83,12 @@ propagated back up the promise chain.
 
 The helper exports the following types so you can build fully typed middleware stacks:
 
-* `Middleware<Ctx>`
-* `Next` – the `() => Promise<void>` callback type
-* `ComposedMiddleware<Ctx>` – low-level dispatcher type used internally
+- `Middleware<Ctx>`
+- `Next` – the `() => Promise<void>` callback type
+- `ComposedMiddleware<Ctx>` – low-level dispatcher type used internally
 
 ---
 
 ## License
 
-AGPL-3.0-or-later – see the root [`LICENSE`](../../LICENSE) file.
-
+AGPL-3.0-or-later – see the root [`LICENSE`](https://github.com/lindorm-io/monorepo/blob/main/LICENSE) file.

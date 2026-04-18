@@ -1,7 +1,7 @@
 # @lindorm/types
 
-Shared **type utilities and common interfaces** used across the Lindorm monorepo.  The package does
-not contain any executable code and therefore adds _zero_ runtime overhead to your project.  It is
+Shared **type utilities and common interfaces** used across the Lindorm monorepo. The package does
+not contain any executable code and therefore adds _zero_ runtime overhead to your project. It is
 published separately so downstream packages can depend on a single source of truth for complex
 generics and enums.
 
@@ -34,12 +34,11 @@ Refer to the source files in `packages/types/src` for the complete list.
 ## Semantic versioning
 
 While the package follows SemVer, **breaking type changes** may occur more frequently than in
-runtime libraries.  Always consult the changelog before upgrading in libraries that rely heavily on
+runtime libraries. Always consult the changelog before upgrading in libraries that rely heavily on
 these generics.
 
 ---
 
 ## License
 
-AGPL-3.0-or-later – see the root [`LICENSE`](../../LICENSE).
-
+AGPL-3.0-or-later – see the root [`LICENSE`](https://github.com/lindorm-io/monorepo/blob/main/LICENSE).

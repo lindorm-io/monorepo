@@ -1,6 +1,6 @@
 # @lindorm/retry
 
-Microscopic helper to calculate **back-off delays** for retry logic.  Supports `exponential` (default)
+Microscopic helper to calculate **back-off delays** for retry logic. Supports `exponential` (default)
 and `linear` strategies with configurable base timeout and maximum cap.
 
 ---
@@ -20,16 +20,16 @@ No runtime dependencies – the package is literally a single function + enum.
 ## Usage
 
 ```ts
-import { calculateRetry, RetryStrategy } from '@lindorm/retry';
+import { calculateRetry, RetryStrategy } from "@lindorm/retry";
 
 for (let attempt = 1; attempt <= 5; attempt++) {
   const delay = calculateRetry(attempt, {
     strategy: RetryStrategy.Exponential, // default
-    timeout: 200,   // initial delay in ms (default 100)
+    timeout: 200, // initial delay in ms (default 100)
     timeoutMax: 5000, // absolute upper cap (default 10000)
   });
 
-  console.log('waiting', delay, 'ms');
+  console.log("waiting", delay, "ms");
   await new Promise((r) => setTimeout(r, delay));
 }
 ```
@@ -50,8 +50,8 @@ function calculateRetry(
   attempt: number,
   options?: {
     strategy?: RetryStrategy; // 'exponential' | 'linear'
-    timeout?: number;         // base delay in ms (default 100)
-    timeoutMax?: number;      // hard cap (default 10000)
+    timeout?: number; // base delay in ms (default 100)
+    timeoutMax?: number; // hard cap (default 10000)
   },
 ): number;
 ```
@@ -60,5 +60,4 @@ function calculateRetry(
 
 ## License
 
-AGPL-3.0-or-later – see the root [`LICENSE`](../../LICENSE).
-
+AGPL-3.0-or-later – see the root [`LICENSE`](https://github.com/lindorm-io/monorepo/blob/main/LICENSE).
