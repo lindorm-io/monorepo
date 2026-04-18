@@ -97,7 +97,7 @@ describe("Pylon", () => {
         algorithm: "HS256",
         privateKey:
           "ZtL9AyQMb60GXUhTYziSizr6SFb_i6bHu8RnN283-gU4I1fPRZbGE9X0QT0YLWW3m1AM1rl2yRf9zS9PhDuylA",
-        purpose: "pylon:cookie",
+        purpose: "cookie",
         type: "oct",
         use: "sig",
       }),
@@ -112,7 +112,7 @@ describe("Pylon", () => {
           "MEYCAQAwBQYDK2VvBDoEOGRWElZ3_EFza2XMyTVr4LroWzaQtjDpyA0h3JX6HcHbf1_91UOlU4_mdMkQUDfRFtL4VR9PmwHT",
         publicKey:
           "MEIwBQYDK2VvAzkACmHn63oaLtiwYY2FyuoObj5A6nLWxyqKgiMa-ueJuYr6WhirvxFYYYY-tB_7HolUBGCca3UxG04",
-        purpose: "pylon:session",
+        purpose: "session",
         type: "OKP",
         use: "enc",
       }),
@@ -354,7 +354,7 @@ describe("Pylon", () => {
           kid: "5382ca15-b849-55ae-904a-9196797ccc1b",
           kty: "OKP",
           nbf: 1704096000,
-          purpose: "pylon:session",
+          purpose: "session",
           use: "enc",
           x: "CmHn63oaLtiwYY2FyuoObj5A6nLWxyqKgiMa-ueJuYr6WhirvxFYYYY-tB_7HolUBGCca3UxG04",
         },
