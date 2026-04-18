@@ -117,31 +117,35 @@ const config: Config = {
 
 export default config;
 ",
-  "src/handlers/create-webhook-handler.ts": "import { z } from "zod";
+  "src/handlers/create-webhook-handler.ts": "import { WebhookAuth, WebhookMethod } from "@lindorm/pylon";
+import { z } from "zod";
 import type { ServerHandler } from "../types/context";
 
 export const createWebhookSchema = z.object({
-  auth: z.string(),
+  auth: z.nativeEnum(WebhookAuth),
   event: z.string(),
-  method: z.string().optional(),
-  headers: z.record(z.string(), z.string()).optional(),
+  method: z.nativeEnum(WebhookMethod).optional(),
+  headers: z.record(z.string(), z.string()),
   ownerId: z.string(),
   tenantId: z.string().nullable().optional(),
-  url: z.string(),
+  url: z.string().url(),
 
-  authHeaders: z.record(z.string(), z.string()).optional(),
+  authHeaders: z.record(z.string(), z.string()),
 
   username: z.string().nullable().optional(),
   password: z.string().nullable().optional(),
 
   audience: z.string().nullable().optional(),
-  authLocation: z.string().nullable().optional(),
+  authLocation: z.enum(["body", "header"]).nullable().optional(),
   clientId: z.string().nullable().optional(),
   clientSecret: z.string().nullable().optional(),
-  contentType: z.string().nullable().optional(),
+  contentType: z
+    .enum(["application/json", "application/x-www-form-urlencoded"])
+    .nullable()
+    .optional(),
   issuer: z.string().nullable().optional(),
   scope: z.array(z.string()).optional(),
-  tokenUri: z.string().nullable().optional(),
+  tokenUri: z.string().url().nullable().optional(),
 });
 
 export const createWebhookHandler: ServerHandler<typeof createWebhookSchema> = async (
@@ -254,6 +258,7 @@ export const pingHandler: ServerSocketHandler<typeof pingSchema> = async (ctx) =
 };
 ",
   "src/handlers/update-webhook-handler.ts": "import { ClientError } from "@lindorm/errors";
+import { WebhookMethod } from "@lindorm/pylon";
 import { z } from "zod";
 import type { ServerHandler } from "../types/context";
 
@@ -261,24 +266,27 @@ export const updateWebhookSchema = z.object({
   id: z.string(),
 
   event: z.string().optional(),
-  method: z.string().optional(),
-  headers: z.record(z.string(), z.string()).optional(),
+  method: z.nativeEnum(WebhookMethod).optional(),
+  headers: z.record(z.string(), z.string()),
   tenantId: z.string().nullable().optional(),
-  url: z.string().optional(),
+  url: z.string().url().optional(),
 
-  authHeaders: z.record(z.string(), z.string()).optional(),
+  authHeaders: z.record(z.string(), z.string()),
 
   username: z.string().nullable().optional(),
   password: z.string().nullable().optional(),
 
   audience: z.string().nullable().optional(),
-  authLocation: z.string().nullable().optional(),
+  authLocation: z.enum(["body", "header"]).nullable().optional(),
   clientId: z.string().nullable().optional(),
   clientSecret: z.string().nullable().optional(),
-  contentType: z.string().nullable().optional(),
+  contentType: z
+    .enum(["application/json", "application/x-www-form-urlencoded"])
+    .nullable()
+    .optional(),
   issuer: z.string().nullable().optional(),
   scope: z.array(z.string()).optional(),
-  tokenUri: z.string().nullable().optional(),
+  tokenUri: z.string().url().nullable().optional(),
 });
 
 export const updateWebhookHandler: ServerHandler<typeof updateWebhookSchema> = async (
@@ -309,9 +317,9 @@ export const updateWebhookHandler: ServerHandler<typeof updateWebhookSchema> = a
 
 void pylon.start();
 ",
-  "src/listeners/_middleware.ts": "import { exampleMiddleware } from "../middleware/example";
+  "src/listeners/_middleware.ts": "import { socketExampleMiddleware } from "../middleware/socket-example";
 
-export const MIDDLEWARE = [exampleMiddleware];
+export const MIDDLEWARE = [socketExampleMiddleware];
 ",
   "src/listeners/ping.ts": "import { useSchema } from "@lindorm/pylon";
 import type { ServerSocketMiddleware } from "../types/context";
@@ -326,9 +334,17 @@ export const logger = new Logger({
   readable: config.nodeEnv !== "production",
 });
 ",
-  "src/middleware/example.ts": "import type { ServerSocketMiddleware } from "../types/context";
+  "src/middleware/http-example.ts": "import type { ServerHttpMiddleware } from "../types/context";
 
-export const exampleMiddleware: ServerSocketMiddleware = async (ctx, next) => {
+export const httpExampleMiddleware: ServerHttpMiddleware = async (ctx, next) => {
+  ctx.set("x-example-header", "true");
+
+  await next();
+};
+",
+  "src/middleware/socket-example.ts": "import type { ServerSocketMiddleware } from "../types/context";
+
+export const socketExampleMiddleware: ServerSocketMiddleware = async (ctx, next) => {
   ctx.logger.warn(
     "This is already logged but as an example we'll do it again as a warn",
     {
@@ -346,9 +362,9 @@ import { logger } from "../logger";
 
 export const amphora = new Amphora({ logger });
 ",
-  "src/routes/_middleware.ts": "import { exampleMiddleware } from "../middleware/example";
+  "src/routes/_middleware.ts": "import { httpExampleMiddleware } from "../middleware/http-example";
 
-export const MIDDLEWARE = [exampleMiddleware];
+export const MIDDLEWARE = [httpExampleMiddleware];
 ",
   "src/routes/v1/example.ts": "import { useHandler, useSchema } from "@lindorm/pylon";
 import type { ServerHttpMiddleware } from "../../types/context";
@@ -543,9 +559,9 @@ export const logger = new Logger({
   readable: config.nodeEnv !== "production",
 });
 ",
-  "src/middleware/example.ts": "import type { ServerHttpMiddleware } from "../types/context";
+  "src/middleware/http-example.ts": "import type { ServerHttpMiddleware } from "../types/context";
 
-export const exampleMiddleware: ServerHttpMiddleware = async (ctx, next) => {
+export const httpExampleMiddleware: ServerHttpMiddleware = async (ctx, next) => {
   ctx.set("x-example-header", "true");
 
   await next();
@@ -556,9 +572,9 @@ import { logger } from "../logger";
 
 export const amphora = new Amphora({ logger });
 ",
-  "src/routes/_middleware.ts": "import { exampleMiddleware } from "../middleware/example";
+  "src/routes/_middleware.ts": "import { httpExampleMiddleware } from "../middleware/http-example";
 
-export const MIDDLEWARE = [exampleMiddleware];
+export const MIDDLEWARE = [httpExampleMiddleware];
 ",
   "src/routes/v1/example.ts": "import { useHandler, useSchema } from "@lindorm/pylon";
 import type { ServerHttpMiddleware } from "../../types/context";
@@ -781,15 +797,12 @@ export const config = configuration({
 
 exports[`scaffold scaffold orchestration all-on: postgres + rabbit + sessions + auth + rateLimit + workers: pylon.ts 1`] = `
 "import { Pylon } from "@lindorm/pylon";
+import { join } from "path";
 import { logger } from "../logger";
 import { amphora } from "./amphora";
 import { config } from "./config";
 import { source as proteusSource } from "../proteus/source";
 import { source as irisSource } from "../iris/source";
-import amphoraRefreshWorker from "../workers/amphora-refresh";
-import amphoraEntitySyncWorker from "../workers/amphora-entity-sync";
-import expiryCleanupWorker from "../workers/expiry-cleanup";
-import kryptosRotationWorker from "../workers/kryptos-rotation";
 
 export const pylon = new Pylon({
   logger,
@@ -808,7 +821,7 @@ export const pylon = new Pylon({
   webhook: { enabled: true },
   audit: {
     enabled: true,
-    actor: (ctx) => (ctx.state as any).subject ?? "anonymous",
+    actor: (ctx) => ctx.state.session?.subject ?? "anonymous",
     // sanitise: (body) => body,
     // skip: (ctx) => false,
     // entities: [],
@@ -843,12 +856,7 @@ export const pylon = new Pylon({
     max: 60,
     // TODO: tune strategy/window/max for your traffic
   },
-  workers: [
-    amphoraRefreshWorker,
-    amphoraEntitySyncWorker,
-    expiryCleanupWorker,
-    kryptosRotationWorker,
-  ],
+  workers: [join(__dirname, "..", "workers")],
   setup: async () => {
     await proteusSource.connect();
     await irisSource.connect();
@@ -881,7 +889,8 @@ exports[`scaffold scaffold orchestration all-on: postgres + rabbit + sessions + 
   "src/listeners/_middleware.ts",
   "src/listeners/ping.ts",
   "src/logger/index.ts",
-  "src/middleware/example.ts",
+  "src/middleware/http-example.ts",
+  "src/middleware/socket-example.ts",
   "src/pylon/amphora.ts",
   "src/pylon/config.ts",
   "src/pylon/pylon.ts",
@@ -1017,7 +1026,8 @@ exports[`scaffold scaffold orchestration runs all write functions in sequence 1`
   "src/listeners/_middleware.ts",
   "src/listeners/ping.ts",
   "src/logger/index.ts",
-  "src/middleware/example.ts",
+  "src/middleware/http-example.ts",
+  "src/middleware/socket-example.ts",
   "src/pylon/amphora.ts",
   "src/pylon/config.ts",
   "src/pylon/pylon.ts",
@@ -1045,7 +1055,7 @@ exports[`scaffold scaffold orchestration session-only combo 1`] = `
   "src/handlers/example-handler.ts",
   "src/index.ts",
   "src/logger/index.ts",
-  "src/middleware/example.ts",
+  "src/middleware/http-example.ts",
   "src/pylon/amphora.ts",
   "src/pylon/config.ts",
   "src/pylon/pylon.ts",
@@ -1559,15 +1569,12 @@ exports[`scaffold writePackageJson default answers produce minimal package.json 
 
 exports[`scaffold writePylonFile snapshot: all features + all proteus workers 1`] = `
 "import { Pylon } from "@lindorm/pylon";
+import { join } from "path";
 import { logger } from "../logger";
 import { amphora } from "./amphora";
 import { config } from "./config";
 import { source as proteusSource } from "../proteus/source";
 import { source as irisSource } from "../iris/source";
-import amphoraRefreshWorker from "../workers/amphora-refresh";
-import amphoraEntitySyncWorker from "../workers/amphora-entity-sync";
-import expiryCleanupWorker from "../workers/expiry-cleanup";
-import kryptosRotationWorker from "../workers/kryptos-rotation";
 
 export const pylon = new Pylon({
   logger,
@@ -1586,17 +1593,12 @@ export const pylon = new Pylon({
   webhook: { enabled: true },
   audit: {
     enabled: true,
-    actor: (ctx) => (ctx.state as any).subject ?? "anonymous",
+    actor: (ctx) => ctx.state.session?.subject ?? "anonymous",
     // sanitise: (body) => body,
     // skip: (ctx) => false,
     // entities: [],
   },
-  workers: [
-    amphoraRefreshWorker,
-    amphoraEntitySyncWorker,
-    expiryCleanupWorker,
-    kryptosRotationWorker,
-  ],
+  workers: [join(__dirname, "..", "workers")],
   setup: async () => {
     await proteusSource.connect();
     await irisSource.connect();
@@ -1669,7 +1671,7 @@ export const pylon = new Pylon({
   webhook: { enabled: true },
   audit: {
     enabled: true,
-    actor: (ctx) => (ctx.state as any).subject ?? "anonymous",
+    actor: (ctx) => ctx.state.session?.subject ?? "anonymous",
     // sanitise: (body) => body,
     // skip: (ctx) => false,
     // entities: [],
