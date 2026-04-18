@@ -27,6 +27,7 @@ export const buildConfigFile = (answers: Answers): string => {
     ``,
     `export const config = configuration({`,
     `  nodeEnv: z.string().default("development"),`,
+    `  pylon: z.object({ kek: z.string() }),`,
     `  server: z.object({ port: z.number() }),`,
   ];
 
