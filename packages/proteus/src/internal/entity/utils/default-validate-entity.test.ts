@@ -370,4 +370,36 @@ describe("defaultValidateEntity — @Embedded nullable (H1)", () => {
       defaultValidateEntity(H1EmbeddedNullableEntity, entity as any),
     ).toThrow();
   });
+
+  describe("strict validation", () => {
+    test("should reject unknown top-level fields", () => {
+      const entity = {
+        id: validUuid,
+        version: 1,
+        name: "bob",
+        age: 30,
+        active: true,
+        email: null,
+        stray: "shouldn't be here",
+      };
+      expect(() => defaultValidateEntity(ValidateEntityBasic, entity as any)).toThrow(
+        /Unrecognized key/,
+      );
+    });
+
+    test("should reject unknown keys inside embedded objects", () => {
+      const entity = {
+        id: validUuid,
+        address: {
+          street: "Main",
+          city: "Springfield",
+          zip: 12345,
+          suite: "extra",
+        },
+      };
+      expect(() =>
+        defaultValidateEntity(H1EmbeddedNullableEntity, entity as any),
+      ).toThrow(/Unrecognized key/);
+    });
+  });
 });

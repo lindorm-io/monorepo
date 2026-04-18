@@ -168,7 +168,25 @@ const buildSchema = (target: Constructor<any>): z.ZodObject<any> => {
       nestedShape[nestedKey] = validator;
     }
     // The embedded object itself can be null
-    validators[parentKey] = z.looseObject(nestedShape).nullish();
+    validators[parentKey] = z.strictObject(nestedShape).nullish();
+  }
+
+  // Declare slots for relations, relationIds, relationCounts, and implicit
+  // join-key FK columns so strict validation doesn't reject them. Contents
+  // vary (arrays, proxies, scalars) and are validated elsewhere.
+  for (const relation of metadata.relations) {
+    validators[relation.key] = z.any().optional();
+    if (relation.joinKeys) {
+      for (const joinKey of Object.keys(relation.joinKeys)) {
+        validators[joinKey] = z.any().optional();
+      }
+    }
+  }
+  for (const relationId of metadata.relationIds) {
+    validators[relationId.key] = z.any().optional();
+  }
+  for (const relationCount of metadata.relationCounts) {
+    validators[relationCount.key] = z.any().optional();
   }
 
   // Add validators for @EmbeddedList fields
@@ -184,7 +202,7 @@ const buildSchema = (target: Constructor<any>): z.ZodObject<any> => {
         }
         elementShape[field.key] = validator;
       }
-      validators[el.key] = z.array(z.looseObject(elementShape));
+      validators[el.key] = z.array(z.strictObject(elementShape));
     } else if (el.elementType) {
       // Primitive element type — create a minimal field-like object for getValidator
       const elementValidator = getValidator({
@@ -201,7 +219,7 @@ const buildSchema = (target: Constructor<any>): z.ZodObject<any> => {
     }
   }
 
-  return z.looseObject(validators) as z.ZodObject<any>;
+  return z.strictObject(validators) as z.ZodObject<any>;
 };
 
 export const defaultValidateEntity = <E extends IEntity>(
