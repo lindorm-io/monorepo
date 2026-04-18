@@ -1,15 +1,5 @@
 import type { WorkerKey } from "./types";
 
-const amphoraRefresh = (): string =>
-  [
-    `import { createAmphoraRefreshWorker } from "@lindorm/pylon";`,
-    `import { amphora } from "../pylon/amphora";`,
-    `import { logger } from "../logger";`,
-    ``,
-    `export default createAmphoraRefreshWorker({ amphora, logger });`,
-    ``,
-  ].join("\n");
-
 const amphoraEntitySync = (): string =>
   [
     `import { createAmphoraEntityWorker } from "@lindorm/pylon";`,
@@ -44,8 +34,6 @@ const kryptosRotation = (): string =>
 
 export const buildWorkerFile = (key: WorkerKey): string => {
   switch (key) {
-    case "amphora-refresh":
-      return amphoraRefresh();
     case "amphora-entity-sync":
       return amphoraEntitySync();
     case "expiry-cleanup":

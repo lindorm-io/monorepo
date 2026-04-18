@@ -73,18 +73,12 @@ const promptAuth = async (): Promise<boolean> =>
 const promptRateLimit = async (): Promise<boolean> =>
   confirm({ message: "Rate limiting?", default: false });
 
-const promptWorkers = async (hasProteus: boolean): Promise<Array<WorkerKey>> => {
+const promptWorkers = async (): Promise<Array<WorkerKey>> => {
   const choices: Array<{ name: string; value: WorkerKey; checked?: boolean }> = [
-    { name: "Amphora key refresh", value: "amphora-refresh", checked: true },
+    { name: "Amphora entity sync", value: "amphora-entity-sync" },
+    { name: "Expiry cleanup", value: "expiry-cleanup" },
+    { name: "Kryptos key rotation", value: "kryptos-rotation" },
   ];
-
-  if (hasProteus) {
-    choices.push(
-      { name: "Amphora entity sync", value: "amphora-entity-sync" },
-      { name: "Expiry cleanup", value: "expiry-cleanup" },
-      { name: "Kryptos key rotation", value: "kryptos-rotation" },
-    );
-  }
 
   return checkbox<WorkerKey>({ message: "Workers:", choices });
 };
@@ -138,7 +132,7 @@ export const runPrompts = async ({
   const session = auth;
   const rateLimit = proteusDriver !== "none" ? await promptRateLimit() : false;
 
-  const workers = await promptWorkers(proteusDriver !== "none");
+  const workers = proteusDriver !== "none" ? await promptWorkers() : [];
 
   return {
     projectName,

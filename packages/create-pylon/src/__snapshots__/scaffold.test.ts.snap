@@ -902,7 +902,6 @@ exports[`scaffold scaffold orchestration all-on: postgres + rabbit + sessions + 
   "src/types/context.ts",
   "src/workers/alive.ts",
   "src/workers/amphora-entity-sync.ts",
-  "src/workers/amphora-refresh.ts",
   "src/workers/expiry-cleanup.ts",
   "src/workers/kryptos-rotation.ts",
   "tsconfig.build.json",
@@ -1040,7 +1039,6 @@ exports[`scaffold scaffold orchestration runs all write functions in sequence 1`
   "src/routes/webhooks/index.ts",
   "src/types/context.ts",
   "src/workers/alive.ts",
-  "src/workers/amphora-refresh.ts",
   "src/workers/expiry-cleanup.ts",
   "tsconfig.build.json",
   "tsconfig.json",
@@ -1995,7 +1993,7 @@ export const pylon = new Pylon({
 "
 `;
 
-exports[`scaffold writeWorkerFiles snapshot: all four: amphora-entity-sync content 1`] = `
+exports[`scaffold writeWorkerFiles snapshot: all three: amphora-entity-sync content 1`] = `
 "import { createAmphoraEntityWorker } from "@lindorm/pylon";
 import { amphora } from "../pylon/amphora";
 import { logger } from "../logger";
@@ -2005,16 +2003,7 @@ export default createAmphoraEntityWorker({ amphora, logger, proteus: proteusSour
 "
 `;
 
-exports[`scaffold writeWorkerFiles snapshot: all four: amphora-refresh content 1`] = `
-"import { createAmphoraRefreshWorker } from "@lindorm/pylon";
-import { amphora } from "../pylon/amphora";
-import { logger } from "../logger";
-
-export default createAmphoraRefreshWorker({ amphora, logger });
-"
-`;
-
-exports[`scaffold writeWorkerFiles snapshot: all four: expiry-cleanup content 1`] = `
+exports[`scaffold writeWorkerFiles snapshot: all three: expiry-cleanup content 1`] = `
 "import { createExpiryCleanupWorker } from "@lindorm/pylon";
 import { logger } from "../logger";
 import { source as proteusSource } from "../proteus/source";
@@ -2024,7 +2013,7 @@ export default createExpiryCleanupWorker({ logger, proteus: proteusSource, targe
 "
 `;
 
-exports[`scaffold writeWorkerFiles snapshot: all four: kryptos-rotation content 1`] = `
+exports[`scaffold writeWorkerFiles snapshot: all three: kryptos-rotation content 1`] = `
 "import { createKryptosRotationWorker } from "@lindorm/pylon";
 import { logger } from "../logger";
 import { source as proteusSource } from "../proteus/source";
@@ -2040,15 +2029,6 @@ import { logger } from "../logger";
 import { source as proteusSource } from "../proteus/source";
 
 export default createAmphoraEntityWorker({ amphora, logger, proteus: proteusSource });
-"
-`;
-
-exports[`scaffold writeWorkerFiles snapshot: amphora-refresh only: amphora-refresh content 1`] = `
-"import { createAmphoraRefreshWorker } from "@lindorm/pylon";
-import { amphora } from "../pylon/amphora";
-import { logger } from "../logger";
-
-export default createAmphoraRefreshWorker({ amphora, logger });
 "
 `;
 

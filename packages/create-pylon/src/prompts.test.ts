@@ -38,7 +38,7 @@ describe("runPrompts", () => {
   });
 
   test("returns answers with positional name and defaults", async () => {
-    queueSequence(mockedCheckbox, [["http"], []]);
+    queueSequence(mockedCheckbox, [["http"]]);
     queueSequence(mockedSelect, ["none", "none"]);
     queueSequence(mockedConfirm, [false, false]);
 
@@ -54,7 +54,7 @@ describe("runPrompts", () => {
 
   test("prompts for name when positional missing", async () => {
     mockedInput.mockResolvedValueOnce("prompted-name");
-    queueSequence(mockedCheckbox, [["http", "socket"], ["amphora-refresh"]]);
+    queueSequence(mockedCheckbox, [["http", "socket"]]);
     queueSequence(mockedSelect, ["none", "none"]);
     queueSequence(mockedConfirm, [false, false]);
 
@@ -66,7 +66,7 @@ describe("runPrompts", () => {
   });
 
   test("prompts webhooks and audit only when both drivers selected", async () => {
-    queueSequence(mockedCheckbox, [["http"], ["amphora-refresh", "expiry-cleanup"]]);
+    queueSequence(mockedCheckbox, [["http"], ["expiry-cleanup"]]);
     queueSequence(mockedSelect, ["postgres", "rabbit"]);
     // webhooks, audit, auth, rateLimit
     queueSequence(mockedConfirm, [true, true, false, false]);
@@ -82,7 +82,7 @@ describe("runPrompts", () => {
   });
 
   test("skips webhooks and audit prompts when iris is none", async () => {
-    queueSequence(mockedCheckbox, [["http"], ["amphora-refresh"]]);
+    queueSequence(mockedCheckbox, [["http"], ["expiry-cleanup"]]);
     queueSequence(mockedSelect, ["postgres", "none"]);
     // auth, rateLimit (no webhooks/audit)
     queueSequence(mockedConfirm, [false, false]);
@@ -92,6 +92,20 @@ describe("runPrompts", () => {
     expect(mockedConfirm).toHaveBeenCalledTimes(2);
     expect(answers.features.webhooks).toBe(false);
     expect(answers.features.audit).toBe(false);
+  });
+
+  test("skips workers prompt entirely when proteusDriver is none", async () => {
+    queueSequence(mockedCheckbox, [["http"]]);
+    queueSequence(mockedSelect, ["none", "none"]);
+    queueSequence(mockedConfirm, [false]);
+
+    const answers = await runPrompts({
+      positionalName: "no-workers-app",
+      cwd: sandboxDir,
+    });
+
+    expect(mockedCheckbox).toHaveBeenCalledTimes(1);
+    expect(answers.workers).toEqual([]);
   });
 
   test("auth prompt implies session — picking auth sets both", async () => {

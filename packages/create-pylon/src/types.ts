@@ -9,11 +9,7 @@ export type ProteusDriver =
 
 export type IrisDriver = "none" | "kafka" | "nats" | "rabbit" | "redis";
 
-export type WorkerKey =
-  | "amphora-refresh"
-  | "amphora-entity-sync"
-  | "expiry-cleanup"
-  | "kryptos-rotation";
+export type WorkerKey = "amphora-entity-sync" | "expiry-cleanup" | "kryptos-rotation";
 
 export type Features = {
   http: boolean;

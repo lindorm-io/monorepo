@@ -68,12 +68,7 @@ const answers = {
   features: { http: true, socket: true, webhooks: true, audit: true },
   proteusDriver: "postgres",
   irisDriver: "redis",
-  workers: [
-    "amphora-refresh",
-    "amphora-entity-sync",
-    "expiry-cleanup",
-    "kryptos-rotation",
-  ],
+  workers: ["amphora-entity-sync", "expiry-cleanup", "kryptos-rotation"],
 };
 
 await scaffold(answers);
