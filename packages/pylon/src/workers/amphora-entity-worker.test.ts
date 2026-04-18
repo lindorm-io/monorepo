@@ -68,14 +68,21 @@ describe("createAmphoraEntityWorker", () => {
       expect(mockRepository).toHaveBeenCalledWith(FakeKryptosDB);
     });
 
-    test("should refresh amphora and add keys", async () => {
+    test("should load keys from repository and add to amphora", async () => {
       const worker = createAmphoraEntityWorker({ amphora, logger, proteus });
 
       await worker.trigger();
 
-      expect(mockRefresh).toHaveBeenCalledTimes(1);
       expect(mockFind).toHaveBeenCalledTimes(1);
       expect(mockAdd).toHaveBeenCalledWith([]);
+    });
+
+    test("should not refresh amphora (handled by internal AmphoraWorker)", async () => {
+      const worker = createAmphoraEntityWorker({ amphora, logger, proteus });
+
+      await worker.trigger();
+
+      expect(mockRefresh).not.toHaveBeenCalled();
     });
 
     test("should convert found entities to kryptos and add them", async () => {

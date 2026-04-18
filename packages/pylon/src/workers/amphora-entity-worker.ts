@@ -22,10 +22,6 @@ export const createAmphoraEntityWorker = (options: Options): LindormWorker =>
     retry: options.retry,
     logger: options.logger,
     callback: async (ctx): Promise<void> => {
-      ctx.logger.debug("Refreshing amphora from external sources");
-
-      await options.amphora.refresh();
-
       const repository = options.proteus.repository(options.target ?? Kryptos);
       const existing = await repository.find();
 
