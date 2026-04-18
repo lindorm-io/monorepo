@@ -4,6 +4,9 @@ import { KryptosJwk } from "../../types";
 
 const computeCanonical = (jwk: KryptosJwk): Partial<KryptosJwk> => {
   switch (jwk.kty) {
+    case "AKP":
+      return { alg: jwk.alg, kty: jwk.kty, pub: jwk.pub };
+
     case "EC":
       return { crv: jwk.crv, kty: jwk.kty, x: jwk.x, y: jwk.y };
 

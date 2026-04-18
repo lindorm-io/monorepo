@@ -1,6 +1,8 @@
 import { KryptosError } from "../../../errors";
 import { KryptosExportMode, KryptosJwk } from "../../../types";
 import { ExportOptions } from "../../types/export-options";
+import { exportAkpToJwk } from "../akp/export-jwk";
+import { isAkpDer } from "../akp/is";
 import { exportEcToJwk } from "../ec/export-jwk";
 import { isEcDer } from "../ec/is";
 import { exportOctToJwk } from "../oct/export-jwk";
@@ -16,6 +18,18 @@ type Options = ExportOptions & {
 
 export const exportToJwk = (options: Options): KryptosJwk => {
   switch (options.type) {
+    case "AKP":
+      if (!isAkpDer(options)) {
+        throw new KryptosError("Invalid options");
+      }
+      return {
+        ...exportAkpToJwk(options),
+        kid: options.id,
+        alg: options.algorithm,
+        use: options.use,
+        kty: "AKP",
+      };
+
     case "EC":
       if (!isEcDer(options)) {
         throw new KryptosError("Invalid options");

@@ -1,11 +1,21 @@
 import { KryptosError } from "../../../errors";
 import { KryptosBuffer } from "../../../types";
+import { createAkpDerFromDer } from "../akp/der-from-der";
 import { createEcDerFromDer } from "../ec/der-from-der";
 import { createOkpDerFromDer } from "../okp/der-from-der";
 import { createRsaDerFromDer } from "../rsa/der-from-der";
 
 export const createDerFromDer = (options: KryptosBuffer): KryptosBuffer => {
   switch (options.type) {
+    case "AKP":
+      return {
+        ...createAkpDerFromDer(options),
+        id: options.id,
+        algorithm: options.algorithm,
+        type: options.type,
+        use: options.use,
+      };
+
     case "EC":
       return {
         ...createEcDerFromDer(options),

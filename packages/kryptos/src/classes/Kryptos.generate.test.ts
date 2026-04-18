@@ -94,6 +94,11 @@ const autoTestCases: Array<AutoTestCase> = [
   // OKP signature
   { algorithm: "EdDSA", type: "OKP", use: "sig", curve: "Ed25519" },
 
+  // AKP (post-quantum) signature
+  { algorithm: "ML-DSA-44", type: "AKP", use: "sig" },
+  { algorithm: "ML-DSA-65", type: "AKP", use: "sig" },
+  { algorithm: "ML-DSA-87", type: "AKP", use: "sig" },
+
   // RSA encryption
   { algorithm: "RSA-OAEP", type: "RSA", use: "enc", encryption: "A256GCM" },
   { algorithm: "RSA-OAEP-256", type: "RSA", use: "enc", encryption: "A256GCM" },

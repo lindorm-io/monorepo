@@ -4,6 +4,7 @@ import {
   KryptosFromJwk,
   KryptosFromString,
 } from "../../types";
+import { isAkpB64, isAkpDer, isAkpJwk, isAkpPem } from "./akp/is";
 import { isEcB64, isEcDer, isEcJwk, isEcPem } from "./ec/is";
 import { isOctB64, isOctDer, isOctJwk, isOctPem, isOctUtf } from "./oct/is";
 import { isOkpB64, isOkpDer, isOkpJwk, isOkpPem } from "./okp/is";
@@ -13,6 +14,9 @@ export const isB64 = (options: KryptosFrom): options is KryptosFromString => {
   const typed = options as KryptosFromString;
 
   switch (typed.type) {
+    case "AKP":
+      return isAkpB64(typed);
+
     case "EC":
       return isEcB64(typed);
 
@@ -34,6 +38,9 @@ export const isDer = (options: KryptosFrom): options is KryptosFromBuffer => {
   const typed = options as KryptosFromBuffer;
 
   switch (typed.type) {
+    case "AKP":
+      return isAkpDer(typed);
+
     case "EC":
       return isEcDer(typed);
 
@@ -55,6 +62,9 @@ export const isJwk = (options: KryptosFrom): options is KryptosFromJwk => {
   const typed = options as KryptosFromJwk;
 
   switch (typed.kty) {
+    case "AKP":
+      return isAkpJwk(typed);
+
     case "EC":
       return isEcJwk(typed);
 
@@ -76,6 +86,9 @@ export const isPem = (options: KryptosFrom): options is KryptosFromString => {
   const typed = options as KryptosFromString;
 
   switch (typed.type) {
+    case "AKP":
+      return isAkpPem(typed);
+
     case "EC":
       return isEcPem(typed);
 

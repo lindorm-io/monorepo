@@ -1,6 +1,8 @@
 import { KryptosError } from "../../../errors";
 import { KryptosString } from "../../../types";
 import { ExportOptions } from "../../types/export-options";
+import { exportAkpToPem } from "../akp/export-pem";
+import { isAkpDer } from "../akp/is";
 import { exportEcToPem } from "../ec/export-pem";
 import { isEcDer } from "../ec/is";
 import { exportOctToPem } from "../oct/export-pem";
@@ -12,6 +14,18 @@ import { isRsaDer } from "../rsa/is";
 
 export const exportToPem = (options: ExportOptions): KryptosString => {
   switch (options.type) {
+    case "AKP":
+      if (!isAkpDer(options)) {
+        throw new KryptosError("Invalid options");
+      }
+      return {
+        ...exportAkpToPem(options),
+        id: options.id,
+        algorithm: options.algorithm,
+        use: options.use,
+        type: "AKP",
+      };
+
     case "EC":
       if (!isEcDer(options)) {
         throw new KryptosError("Invalid options");

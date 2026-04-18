@@ -1,5 +1,6 @@
 import { KryptosError } from "../../errors";
 import {
+  AkpBuffer,
   EcBuffer,
   KryptosAlgorithm,
   OctBuffer,
@@ -8,12 +9,14 @@ import {
   RsaModulus,
 } from "../../types";
 import { KryptosGenerate } from "../types/generate";
+import { generateAkpKey, generateAkpKeyAsync } from "./akp/generate-key";
 import { generateEcKey, generateEcKeyAsync } from "./ec/generate-key";
 import { generateOctKey, generateOctKeyAsync } from "./oct/generate-key";
 import { generateOkpKey, generateOkpKeyAsync } from "./okp/generate-key";
 import { generateRsaKey, generateRsaKeyAsync } from "./rsa/generate-key";
 
 type GenerateResult =
+  | Omit<AkpBuffer, "id" | "algorithm" | "type" | "use">
   | Omit<EcBuffer, "id" | "algorithm" | "type" | "use">
   | Omit<OctBuffer, "id" | "algorithm" | "type" | "use">
   | Omit<OkpBuffer, "id" | "algorithm" | "type" | "use">
@@ -21,6 +24,9 @@ type GenerateResult =
 
 export const generateKey = (options: KryptosGenerate): GenerateResult => {
   switch (options.type) {
+    case "AKP":
+      return generateAkpKey(options);
+
     case "EC":
       return generateEcKey(options);
 
@@ -42,6 +48,9 @@ export const generateKeyAsync = async (
   options: KryptosGenerate,
 ): Promise<GenerateResult> => {
   switch (options.type) {
+    case "AKP":
+      return generateAkpKeyAsync(options);
+
     case "EC":
       return generateEcKeyAsync(options);
 
@@ -63,6 +72,15 @@ type AutoResult = KryptosGenerate;
 
 export const autoGenerateConfig = (algorithm: KryptosAlgorithm): AutoResult => {
   switch (algorithm) {
+    case "ML-DSA-44":
+    case "ML-DSA-65":
+    case "ML-DSA-87":
+      return {
+        algorithm,
+        type: "AKP",
+        use: "sig",
+      };
+
     case "A128KW":
     case "A192KW":
     case "A256KW":

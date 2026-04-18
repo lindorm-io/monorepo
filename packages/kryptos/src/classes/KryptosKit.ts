@@ -4,6 +4,7 @@ import { randomUUID } from "crypto";
 import { KryptosError } from "../errors";
 import {
   IKryptos,
+  IKryptosAkp,
   IKryptosEc,
   IKryptosOct,
   IKryptosOkp,
@@ -19,6 +20,7 @@ import {
   KryptosFromDb,
   KryptosFromJwk,
   KryptosFromString,
+  KryptosGenerateAkpSig,
   KryptosGenerateEcEnc,
   KryptosGenerateEcSig,
   KryptosGenerateOctEnc,
@@ -64,6 +66,7 @@ type Encryption = {
 };
 
 type Signature = {
+  akp(options: KryptosGenerateAkpSig): IKryptos;
   ec(options: KryptosGenerateEcSig): IKryptos;
   oct(options: KryptosGenerateOctSig): IKryptos;
   okp(options: KryptosGenerateOkpSig): IKryptos;
@@ -84,6 +87,7 @@ type AsyncEncryption = {
 };
 
 type AsyncSignature = {
+  akp(options: KryptosGenerateAkpSig): Promise<IKryptos>;
   ec(options: KryptosGenerateEcSig): Promise<IKryptos>;
   oct(options: KryptosGenerateOctSig): Promise<IKryptos>;
   okp(options: KryptosGenerateOkpSig): Promise<IKryptos>;
@@ -127,6 +131,10 @@ export class KryptosKit {
   }
 
   // is
+
+  public static isAkp(kryptos: KryptosLike): kryptos is IKryptosAkp {
+    return kryptos instanceof Kryptos && kryptos.type === "AKP";
+  }
 
   public static isEc(kryptos: KryptosLike): kryptos is IKryptosEc {
     return kryptos instanceof Kryptos && kryptos.type === "EC" && Boolean(kryptos.curve);
@@ -268,6 +276,7 @@ export class KryptosKit {
 
   private static get signature(): Signature {
     return {
+      akp: this.generateAkpSig,
       ec: this.generateEcSig,
       oct: this.generateOctSig,
       okp: this.generateOkpSig,
@@ -290,6 +299,15 @@ export class KryptosKit {
     };
 
     return KryptosKit.finalizeGenerate(generate, generateKey(generate));
+  }
+
+  private static generateAkpSig(options: KryptosGenerateAkpSig): IKryptos {
+    const generate: KryptosGenerate = {
+      ...options,
+      type: "AKP",
+      use: "sig",
+    };
+    return KryptosKit.generateKryptos(generate);
   }
 
   private static generateEcEnc(options: KryptosGenerateEcEnc): IKryptos {
@@ -458,6 +476,7 @@ export class KryptosKit {
 
   private static get signatureAsync(): AsyncSignature {
     return {
+      akp: this.generateAkpSigAsync,
       ec: this.generateEcSigAsync,
       oct: this.generateOctSigAsync,
       okp: this.generateOkpSigAsync,
@@ -480,6 +499,12 @@ export class KryptosKit {
     };
 
     return KryptosKit.finalizeGenerate(generate, await generateKeyAsync(generate));
+  }
+
+  private static async generateAkpSigAsync(
+    options: KryptosGenerateAkpSig,
+  ): Promise<IKryptos> {
+    return KryptosKit.generateKryptosAsync({ ...options, type: "AKP", use: "sig" });
   }
 
   private static async generateEcEncAsync(
