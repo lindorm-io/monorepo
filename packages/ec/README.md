@@ -1,6 +1,6 @@
 # @lindorm/ec
 
-ECDSA digital signature kit built on Node's `crypto` module and [`@lindorm/kryptos`](../kryptos). Provides an `EcKit` class that implements the `IKeyKit` contract used across the Lindorm cryptography packages.
+ECDSA digital signature kit built on Node's `crypto` module and [`@lindorm/kryptos`](https://github.com/lindorm-io/monorepo/tree/main/packages/kryptos). Provides an `EcKit` class that implements the `IKeyKit` contract used across the Lindorm cryptography packages.
 
 ## Installation
 

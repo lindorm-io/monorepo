@@ -1,7 +1,7 @@
 # @lindorm/pkce
 
 Tiny, dependency-free helper for **Proof Key for Code Exchange (PKCE)** as defined in
-[RFC 7636](https://datatracker.ietf.org/doc/html/rfc7636).  It supports both the `plain` and `S256`
+[RFC 7636](https://datatracker.ietf.org/doc/html/rfc7636). It supports both the `plain` and `S256`
 methods and gives you predictable errors via `PkceError`.
 
 ---
@@ -21,8 +21,8 @@ yarn add @lindorm/pkce
 ### Generate challenge + verifier
 
 ```ts
-import { PKCE } from '@lindorm/pkce';
-import { PkceMethod } from '@lindorm/enums';
+import { PKCE } from "@lindorm/pkce";
+import { PkceMethod } from "@lindorm/enums";
 
 const { challenge, verifier } = PKCE.create(PkceMethod.S256); // default length: 43 chars
 ```
@@ -31,7 +31,7 @@ const { challenge, verifier } = PKCE.create(PkceMethod.S256); // default length:
 
 ```ts
 if (!PKCE.verify(challenge, verifier)) {
-  throw new Error('PKCE mismatch');
+  throw new Error("PKCE mismatch");
 }
 
 // or
@@ -45,7 +45,10 @@ PKCE.assert(challenge, verifier); // throws PkceError on mismatch
 
 ```ts
 class PKCE {
-  static create(method?: PkceMethod, length?: number): {
+  static create(
+    method?: PkceMethod,
+    length?: number,
+  ): {
     challenge: string;
     verifier: string;
     method: PkceMethod;
@@ -56,19 +59,18 @@ class PKCE {
 }
 ```
 
-* **PkceMethod** is re-exported from `@lindorm/enums` and can be `Plain` or `S256`.
+- **PkceMethod** is re-exported from `@lindorm/enums` and can be `Plain` or `S256`.
 
 ---
 
 ## Security notes
 
-* Always prefer `S256` over `plain` unless interoperability forces otherwise.
-* The random verifier default length (43) equals 256 bits of entropy as recommended by the spec.
-* Constant-time comparison protects against timing attacks.
+- Always prefer `S256` over `plain` unless interoperability forces otherwise.
+- The random verifier default length (43) equals 256 bits of entropy as recommended by the spec.
+- Constant-time comparison protects against timing attacks.
 
 ---
 
 ## License
 
-AGPL-3.0-or-later – see the root [`LICENSE`](../../LICENSE).
-
+AGPL-3.0-or-later – see the root [`LICENSE`](https://github.com/lindorm-io/monorepo/blob/main/LICENSE).

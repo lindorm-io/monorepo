@@ -1,7 +1,7 @@
 # @lindorm/sha
 
 Minimal **SHA-1/256/384/512 hashing kit** that wraps Node’s `crypto.createHash` in a convenient,
-type-safe API.  The `ShaKit` class exposes _hash_, _verify_ and _assert_ helpers and defaults to
+type-safe API. The `ShaKit` class exposes _hash_, _verify_ and _assert_ helpers and defaults to
 `SHA256` with Base64 output.
 
 ---
@@ -19,15 +19,15 @@ yarn add @lindorm/sha
 ## Usage
 
 ```ts
-import { ShaKit } from '@lindorm/sha';
+import { ShaKit } from "@lindorm/sha";
 
-const sha = new ShaKit({ algorithm: 'SHA512', encoding: 'hex' });
+const sha = new ShaKit({ algorithm: "SHA512", encoding: "hex" });
 
-const digest = sha.hash('hello world');
+const digest = sha.hash("hello world");
 
 console.log(digest); // → '2ae...'
 
-sha.assert('hello world', digest); // throws ShaError on mismatch
+sha.assert("hello world", digest); // throws ShaError on mismatch
 ```
 
 ---
@@ -50,12 +50,11 @@ Supported algorithms (`ShaAlgorithm` from `@lindorm/types`): `SHA1`, `SHA256`, `
 
 ## TypeScript
 
-Written in TS and ships with full declarations.  Zero runtime dependencies besides the Node `crypto`
+Written in TS and ships with full declarations. Zero runtime dependencies besides the Node `crypto`
 module.
 
 ---
 
 ## License
 
-AGPL-3.0-or-later – see the root [`LICENSE`](../../LICENSE).
-
+AGPL-3.0-or-later – see the root [`LICENSE`](https://github.com/lindorm-io/monorepo/blob/main/LICENSE).
