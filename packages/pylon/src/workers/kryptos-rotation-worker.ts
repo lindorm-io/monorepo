@@ -1,5 +1,5 @@
-import { add, duration, ms, ReadableTime, sub } from "@lindorm/date";
-import { KryptosAuto, KryptosDB, KryptosKit } from "@lindorm/kryptos";
+import { add, duration, isAfter, ms, ReadableTime, sub } from "@lindorm/date";
+import { IKryptos, KryptosAuto, KryptosDB, KryptosKit } from "@lindorm/kryptos";
 import { ILogger } from "@lindorm/logger";
 import { IProteusSource } from "@lindorm/proteus";
 import { Constructor } from "@lindorm/types";
@@ -14,13 +14,27 @@ type KeyOption = Pick<
 type Options = CreateLindormWorkerOptions & {
   expiry?: ReadableTime;
   keys?: Array<KeyOption>;
+  rootCaKey?: IKryptos;
   logger: ILogger;
   proteus: IProteusSource;
   target?: Constructor<KryptosDB>;
 };
 
-export const createKryptosRotationWorker = (options: Options): LindormWorker =>
-  new LindormWorker({
+export const createKryptosRotationWorker = (options: Options): LindormWorker => {
+  const keys: Array<KeyOption> = [
+    { algorithm: "dir", hidden: true, purpose: "cookie" },
+    { algorithm: "HS256", hidden: true, purpose: "cookie" },
+    { algorithm: "EdDSA", curve: "Ed448", hidden: true, purpose: "session" },
+    { algorithm: "ECDH-ES", curve: "X448", hidden: true, purpose: "session" },
+    ...(options.keys ?? [
+      { algorithm: "EdDSA", curve: "Ed25519", purpose: "token" },
+      { algorithm: "ECDH-ES+A256GCMKW", curve: "X448", purpose: "token" },
+    ]),
+  ];
+
+  const expiry = options.expiry ?? "6m";
+
+  return new LindormWorker({
     alias: "KryptosRotationWorker",
     interval: options.interval ?? "1d",
     listeners: options.listeners ?? [],
@@ -28,19 +42,9 @@ export const createKryptosRotationWorker = (options: Options): LindormWorker =>
     retry: options.retry,
     logger: options.logger,
     callback: async (ctx): Promise<void> => {
-      const keys: Array<KeyOption> = options.keys ?? [
-        { algorithm: "dir", hidden: true, purpose: "pylon:cookie" },
-        { algorithm: "HS256", hidden: true, purpose: "pylon:cookie" },
-        { algorithm: "EdDSA", curve: "Ed448", hidden: true, purpose: "pylon:session" },
-        { algorithm: "ECDH-ES", curve: "X448", hidden: true, purpose: "pylon:session" },
-        { algorithm: "EdDSA", curve: "Ed25519", purpose: "token" },
-        { algorithm: "ECDH-ES+A256GCMKW", curve: "X448", purpose: "token" },
-      ];
-
       const repository = options.proteus.repository(options.target ?? Kryptos);
       const existing = await repository.find();
 
-      const expiry = options.expiry ?? "6m";
       const rotation: ReadableTime = ms(ms(expiry) / 2);
 
       const notBefore = new Date();
@@ -53,8 +57,16 @@ export const createKryptosRotationWorker = (options: Options): LindormWorker =>
           (k) =>
             k.algorithm === opts.algorithm &&
             k.purpose === opts.purpose &&
-            (opts.curve == null || k.curve === opts.curve),
+            (opts.curve == null || k.curve === opts.curve) &&
+            isAfter(k.expiresAt, notBefore),
         );
+
+        const certificate =
+          options.rootCaKey &&
+          !opts.hidden &&
+          KryptosKit.getTypeForAlgorithm(opts.algorithm) !== "oct"
+            ? ({ mode: "ca-signed", ca: options.rootCaKey } as const)
+            : undefined;
 
         if (existingKeys.length === 0) {
           ctx.logger.debug("No existing keys found, generating initial key", {
@@ -65,6 +77,7 @@ export const createKryptosRotationWorker = (options: Options): LindormWorker =>
 
           const kryptos = KryptosKit.generate.auto({
             algorithm: opts.algorithm,
+            certificate,
             curve: opts.curve,
             expiresAt,
             notBefore,
@@ -89,9 +102,10 @@ export const createKryptosRotationWorker = (options: Options): LindormWorker =>
 
           const kryptos = KryptosKit.generate.auto({
             algorithm: opts.algorithm,
+            certificate,
             curve: opts.curve,
-            expiresAt: add(existingKey.expiresAt ?? expiresAt, duration(rotation)),
-            notBefore: sub(existingKey.expiresAt ?? expiresAt, duration(rotation)),
+            expiresAt: add(existingKey.expiresAt, duration(rotation)),
+            notBefore: sub(existingKey.expiresAt, duration(rotation)),
             purpose: opts.purpose,
           });
 
@@ -108,3 +122,4 @@ export const createKryptosRotationWorker = (options: Options): LindormWorker =>
       });
     },
   });
+};

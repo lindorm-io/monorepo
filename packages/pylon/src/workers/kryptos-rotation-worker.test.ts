@@ -16,16 +16,47 @@ const mockRepository = jest.fn().mockReturnValue({
   create: mockCreate,
   insert: mockInsert,
 });
+const octAlgorithms = new Set([
+  "dir",
+  "HS256",
+  "HS384",
+  "HS512",
+  "A128KW",
+  "A192KW",
+  "A256KW",
+  "A128GCMKW",
+  "A192GCMKW",
+  "A256GCMKW",
+]);
+const mockGetTypeForAlgorithm = jest.fn((algorithm: string) =>
+  octAlgorithms.has(algorithm) ? "oct" : "EC",
+);
 import { createMockLogger } from "@lindorm/logger";
 const mockLogger = createMockLogger();
 
 jest.mock("@lindorm/kryptos", () => ({
-  KryptosKit: { generate: { auto: mockGenerate } },
+  KryptosKit: {
+    generate: { auto: mockGenerate },
+    getTypeForAlgorithm: mockGetTypeForAlgorithm,
+  },
 }));
 
 import { LindormWorker } from "@lindorm/worker";
 import { Kryptos } from "../entities/Kryptos";
 import { createKryptosRotationWorker } from "./kryptos-rotation-worker";
+
+const future = new Date("2030-01-01T00:00:00.000Z");
+
+const seedInternalKeys = () => [
+  { algorithm: "dir", purpose: "cookie", expiresAt: future },
+  { algorithm: "dir", purpose: "cookie", expiresAt: future },
+  { algorithm: "HS256", purpose: "cookie", expiresAt: future },
+  { algorithm: "HS256", purpose: "cookie", expiresAt: future },
+  { algorithm: "EdDSA", curve: "Ed448", purpose: "session", expiresAt: future },
+  { algorithm: "EdDSA", curve: "Ed448", purpose: "session", expiresAt: future },
+  { algorithm: "ECDH-ES", curve: "X448", purpose: "session", expiresAt: future },
+  { algorithm: "ECDH-ES", curve: "X448", purpose: "session", expiresAt: future },
+];
 
 describe("createKryptosRotationWorker", () => {
   const proteus: any = { repository: mockRepository };
@@ -97,6 +128,7 @@ describe("createKryptosRotationWorker", () => {
     });
 
     test("should use provided keys", async () => {
+      mockFind.mockResolvedValueOnce(seedInternalKeys());
       const keys = [{ algorithm: "ES256", purpose: "test" }];
 
       const worker = createKryptosRotationWorker({
@@ -161,11 +193,11 @@ describe("createKryptosRotationWorker", () => {
     });
 
     test("should not create keys when two or more existing keys found", async () => {
-      const existingKeys = [
-        { algorithm: "ES512", purpose: "token", expiresAt: new Date() },
-        { algorithm: "ES512", purpose: "token", expiresAt: new Date() },
-      ];
-      mockFind.mockResolvedValueOnce(existingKeys);
+      mockFind.mockResolvedValueOnce([
+        ...seedInternalKeys(),
+        { algorithm: "ES512", purpose: "token", expiresAt: future },
+        { algorithm: "ES512", purpose: "token", expiresAt: future },
+      ]);
 
       const worker = createKryptosRotationWorker({
         logger: mockLogger,
@@ -180,32 +212,78 @@ describe("createKryptosRotationWorker", () => {
     });
 
     test("should filter existing keys by algorithm and purpose", async () => {
-      const existingKeys = [
-        { algorithm: "ES512", purpose: "token", expiresAt: new Date() },
-        { algorithm: "ES512", purpose: "token", expiresAt: new Date() },
-        { algorithm: "HS256", purpose: "pylon:cookie", expiresAt: new Date() },
-      ];
-      mockFind.mockResolvedValueOnce(existingKeys);
+      mockFind.mockResolvedValueOnce([
+        ...seedInternalKeys(),
+        { algorithm: "ES512", purpose: "token", expiresAt: future },
+        { algorithm: "ES512", purpose: "token", expiresAt: future },
+      ]);
 
       const worker = createKryptosRotationWorker({
         logger: mockLogger,
         proteus,
         keys: [
           { algorithm: "ES512", purpose: "token" },
-          { algorithm: "HS256", purpose: "pylon:cookie" },
+          { algorithm: "HS256", purpose: "mytoken" },
         ],
       });
 
       await worker.trigger();
 
-      expect(mockGenerate).toHaveBeenCalledTimes(1);
+      expect(mockGenerate).toHaveBeenCalledTimes(2);
       expect(mockGenerate).toHaveBeenCalledWith(
-        expect.objectContaining({ algorithm: "HS256", purpose: "pylon:cookie" }),
+        expect.objectContaining({ algorithm: "HS256", purpose: "mytoken" }),
+      );
+      expect(mockGenerate).not.toHaveBeenCalledWith(
+        expect.objectContaining({ algorithm: "ES512", purpose: "token" }),
       );
     });
 
+    test("should treat expired keys as non-existent and generate initial key", async () => {
+      const past = new Date("2020-01-01T00:00:00.000Z");
+      mockFind.mockResolvedValueOnce([
+        ...seedInternalKeys(),
+        { algorithm: "ES512", purpose: "token", expiresAt: past },
+      ]);
+
+      const worker = createKryptosRotationWorker({
+        logger: mockLogger,
+        proteus,
+        keys: [{ algorithm: "ES512", purpose: "token" }],
+      });
+
+      await worker.trigger();
+
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        "No existing keys found, generating initial key",
+        expect.objectContaining({ algorithm: "ES512", purpose: "token" }),
+      );
+    });
+
+    test("should count only non-expired keys toward rotation decision", async () => {
+      const past = new Date("2020-01-01T00:00:00.000Z");
+      mockFind.mockResolvedValueOnce([
+        ...seedInternalKeys(),
+        { algorithm: "ES512", purpose: "token", expiresAt: past },
+        { algorithm: "ES512", purpose: "token", expiresAt: future },
+      ]);
+
+      const worker = createKryptosRotationWorker({
+        logger: mockLogger,
+        proteus,
+        keys: [{ algorithm: "ES512", purpose: "token" }],
+      });
+
+      await worker.trigger();
+
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        "Only one key found, generating rotation key",
+        expect.objectContaining({ algorithm: "ES512", purpose: "token" }),
+      );
+      expect(mockGenerate).toHaveBeenCalledTimes(1);
+    });
+
     test("should use default expiry of 6m", async () => {
-      mockFind.mockResolvedValueOnce([]);
+      mockFind.mockResolvedValueOnce(seedInternalKeys());
 
       const worker = createKryptosRotationWorker({
         logger: mockLogger,
@@ -220,6 +298,112 @@ describe("createKryptosRotationWorker", () => {
       expect(call.purpose).toBe("token");
       expect(call.notBefore).toBeInstanceOf(Date);
       expect(call.expiresAt).toBeInstanceOf(Date);
+    });
+
+    describe("rootCaKey", () => {
+      const rootCaKey = { id: "root-ca-id" } as any;
+
+      test("should not pass certificate when rootCaKey is unset", async () => {
+        mockFind.mockResolvedValueOnce(seedInternalKeys());
+
+        const worker = createKryptosRotationWorker({
+          logger: mockLogger,
+          proteus,
+          keys: [{ algorithm: "ES512", purpose: "token" }],
+        });
+
+        await worker.trigger();
+
+        expect(mockGenerate).toHaveBeenCalledWith(
+          expect.objectContaining({ algorithm: "ES512", certificate: undefined }),
+        );
+      });
+
+      test("should pass ca-signed certificate for non-hidden asymmetric key", async () => {
+        mockFind.mockResolvedValueOnce(seedInternalKeys());
+
+        const worker = createKryptosRotationWorker({
+          logger: mockLogger,
+          proteus,
+          rootCaKey,
+          keys: [{ algorithm: "ES512", purpose: "token" }],
+        });
+
+        await worker.trigger();
+
+        expect(mockGenerate).toHaveBeenCalledWith(
+          expect.objectContaining({
+            algorithm: "ES512",
+            certificate: { mode: "ca-signed", ca: rootCaKey },
+          }),
+        );
+      });
+
+      test("should skip certificate when key is hidden", async () => {
+        mockFind.mockResolvedValueOnce(seedInternalKeys());
+
+        const worker = createKryptosRotationWorker({
+          logger: mockLogger,
+          proteus,
+          rootCaKey,
+          keys: [{ algorithm: "ES512", hidden: true, purpose: "my:hidden" }],
+        });
+
+        await worker.trigger();
+
+        expect(mockGenerate).toHaveBeenCalledWith(
+          expect.objectContaining({
+            algorithm: "ES512",
+            purpose: "my:hidden",
+            certificate: undefined,
+          }),
+        );
+      });
+
+      test("should skip certificate when algorithm is symmetric (oct)", async () => {
+        mockFind.mockResolvedValueOnce(seedInternalKeys());
+
+        const worker = createKryptosRotationWorker({
+          logger: mockLogger,
+          proteus,
+          rootCaKey,
+          keys: [{ algorithm: "HS256", purpose: "mytoken" }],
+        });
+
+        await worker.trigger();
+
+        expect(mockGenerate).toHaveBeenCalledWith(
+          expect.objectContaining({
+            algorithm: "HS256",
+            purpose: "mytoken",
+            certificate: undefined,
+          }),
+        );
+      });
+
+      test("should pass ca-signed certificate on rotation branch too", async () => {
+        mockFind.mockResolvedValueOnce([
+          ...seedInternalKeys(),
+          { algorithm: "ES512", purpose: "token", expiresAt: future },
+        ]);
+
+        const worker = createKryptosRotationWorker({
+          logger: mockLogger,
+          proteus,
+          rootCaKey,
+          keys: [{ algorithm: "ES512", purpose: "token" }],
+        });
+
+        await worker.trigger();
+
+        expect(mockGenerate).toHaveBeenCalledTimes(1);
+        expect(mockGenerate).toHaveBeenCalledWith(
+          expect.objectContaining({
+            algorithm: "ES512",
+            certificate: { mode: "ca-signed", ca: rootCaKey },
+          }),
+        );
+      });
     });
   });
 });
