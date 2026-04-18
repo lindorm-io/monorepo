@@ -1,4 +1,5 @@
 import { KryptosFromString, KryptosKit } from "@lindorm/kryptos";
+import { MOCK_KRYPTOS_AKP_SIG_ML_DSA_65 } from "@lindorm/kryptos/mocks";
 
 const defaults = {
   notBefore: new Date("2023-01-01T01:00:00.000Z"),
@@ -117,4 +118,11 @@ export const TEST_RSA_KEY_ENC = KryptosKit.from.b64({
   createdAt: new Date("2024-01-01T00:07:00.000Z"),
   operations: ["encrypt", "decrypt"],
   use: "enc",
+});
+
+export const TEST_AKP_KEY_SIG = KryptosKit.clone(MOCK_KRYPTOS_AKP_SIG_ML_DSA_65, {
+  ...defaults,
+  id: "a1d54c22-9f37-5b9e-b6c8-9c15d92a6410",
+  createdAt: new Date("2024-01-01T00:08:00.000Z"),
+  operations: ["sign", "verify"],
 });

@@ -2,6 +2,7 @@ import { ILogger, createMockLogger } from "@lindorm/logger";
 import * as jsonwebtoken from "jsonwebtoken";
 import MockDate from "mockdate";
 import {
+  TEST_AKP_KEY_SIG,
   TEST_EC_KEY_SIG,
   TEST_OCT_KEY_SIG,
   TEST_OKP_KEY_SIG,
@@ -109,6 +110,31 @@ describe("JwtKit", () => {
         token: expect.any(String),
         tokenId: expect.any(String),
       });
+    });
+
+    test("should sign token using AKP (ML-DSA)", () => {
+      kit = new JwtKit({ issuer, logger, kryptos: TEST_AKP_KEY_SIG });
+
+      const signed = kit.sign(
+        {
+          expires: "1h",
+          subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
+          tokenType: "test_token",
+        },
+        { objectId: "test-object-id" },
+      );
+
+      expect(signed).toEqual({
+        expiresAt: new Date("2024-01-01T09:00:00.000Z"),
+        expiresIn: 3600,
+        expiresOn: 1704099600,
+        objectId: "test-object-id",
+        token: expect.any(String),
+        tokenId: expect.any(String),
+      });
+
+      // Round-trip: verify the ML-DSA-signed JWT validates without throwing.
+      expect(() => kit.verify(signed.token)).not.toThrow();
     });
 
     test("should sign token without objectId and omit oid from header", () => {

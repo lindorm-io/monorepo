@@ -46,6 +46,7 @@
   },
   "dependencies": {
     "@lindorm/aes": "^0.6.4",
+    "@lindorm/akp": "^0.0.0",
     "@lindorm/b64": "^0.1.9",
     "@lindorm/date": "^0.4.3",
     "@lindorm/ec": "^0.2.10",
