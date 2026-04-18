@@ -1,4 +1,5 @@
 import {
+  AKP_SIG_ALGORITHMS,
   EC_ENC_ALGORITHMS,
   EC_SIG_ALGORITHMS,
   OCT_ENC_DIR_ALGORITHMS,
@@ -11,6 +12,7 @@ import {
 } from "@lindorm/kryptos";
 
 export const TOKEN_HEADER_ALGORITHMS = [
+  ...AKP_SIG_ALGORITHMS,
   ...EC_ENC_ALGORITHMS,
   ...EC_SIG_ALGORITHMS,
   ...OKP_ENC_ALGORITHMS,
