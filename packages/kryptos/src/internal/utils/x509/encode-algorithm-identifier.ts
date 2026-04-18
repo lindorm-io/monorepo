@@ -7,6 +7,9 @@ import {
   X509_OID_ECDSA_WITH_SHA512,
   X509_OID_ED25519,
   X509_OID_ED448,
+  X509_OID_ML_DSA_44,
+  X509_OID_ML_DSA_65,
+  X509_OID_ML_DSA_87,
   X509_OID_SHA256_WITH_RSA,
   X509_OID_SHA384_WITH_RSA,
   X509_OID_SHA512_WITH_RSA,
@@ -21,7 +24,7 @@ export type X509SignatureContext = {
 export type X509SignatureDescriptor = {
   oid: string;
   hashName: string | null;
-  nodeSignAlgorithm: "rsa" | "ecdsa" | "ed25519" | "ed448";
+  nodeSignAlgorithm: "rsa" | "ecdsa" | "ed25519" | "ed448" | "ml-dsa";
   includeNullParams: boolean;
 };
 
@@ -85,6 +88,33 @@ export const resolveSignatureDescriptor = (
         oid: X509_OID_ECDSA_WITH_SHA512,
         hashName: "sha512",
         nodeSignAlgorithm: "ecdsa",
+        includeNullParams: false,
+      };
+    }
+  }
+
+  if (keyType === "AKP") {
+    if (algorithm === "ML-DSA-44") {
+      return {
+        oid: X509_OID_ML_DSA_44,
+        hashName: null,
+        nodeSignAlgorithm: "ml-dsa",
+        includeNullParams: false,
+      };
+    }
+    if (algorithm === "ML-DSA-65") {
+      return {
+        oid: X509_OID_ML_DSA_65,
+        hashName: null,
+        nodeSignAlgorithm: "ml-dsa",
+        includeNullParams: false,
+      };
+    }
+    if (algorithm === "ML-DSA-87") {
+      return {
+        oid: X509_OID_ML_DSA_87,
+        hashName: null,
+        nodeSignAlgorithm: "ml-dsa",
         includeNullParams: false,
       };
     }

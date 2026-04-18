@@ -83,10 +83,6 @@ export const stampCertificate = (input: StampInput): Array<string> => {
     throw new KryptosError("symmetric keys cannot have certificates");
   }
 
-  if (subjectKryptos.type === "AKP") {
-    throw new KryptosError("AKP keys do not yet support certificates");
-  }
-
   if (!subjectKryptos.privateKey) {
     throw new KryptosError(
       "certificate generation requires the generated kryptos to have a private key",

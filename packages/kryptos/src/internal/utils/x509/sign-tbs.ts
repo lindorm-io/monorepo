@@ -39,11 +39,12 @@ export const signX509Tbs = (options: SignTbsOptions): Buffer => {
 
   if (
     descriptor.nodeSignAlgorithm === "ed25519" ||
-    descriptor.nodeSignAlgorithm === "ed448"
+    descriptor.nodeSignAlgorithm === "ed448" ||
+    descriptor.nodeSignAlgorithm === "ml-dsa"
   ) {
     const signature = cryptoSign(null, tbsBytes, keyObject);
     if (!Buffer.isBuffer(signature)) {
-      throw new KryptosError("EdDSA signing did not return a Buffer");
+      throw new KryptosError("One-shot signing did not return a Buffer");
     }
     return signature;
   }

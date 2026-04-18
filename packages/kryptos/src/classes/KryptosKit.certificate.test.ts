@@ -107,6 +107,30 @@ describe("KryptosKit certificate generation", () => {
       expect(parsed.extensions.keyUsage).toEqual(["digitalSignature"]);
     });
 
+    test.each([
+      { algorithm: "ML-DSA-44" as const, oid: "2.16.840.1.101.3.4.3.17" },
+      { algorithm: "ML-DSA-65" as const, oid: "2.16.840.1.101.3.4.3.18" },
+      { algorithm: "ML-DSA-87" as const, oid: "2.16.840.1.101.3.4.3.19" },
+    ])("AKP sig ($algorithm) self-signed leaf", ({ algorithm, oid }) => {
+      const kryptos = KryptosKit.generate.sig.akp({
+        algorithm,
+        issuer: "https://akp.example.com",
+        notBefore: NOT_BEFORE,
+        expiresAt: EXPIRES_AT,
+        certificate: { mode: "self-signed" },
+      });
+
+      const der = Buffer.from(kryptos.certificateChain![0], "base64");
+      const parsed = parseX509Certificate(der);
+      expect(parsed.signatureAlgorithm).toBe(oid);
+      expect(parsed.extensions.basicConstraintsCa).toBe(false);
+      expect(parsed.extensions.keyUsage).toEqual(["digitalSignature"]);
+
+      const nodeCert = new X509Certificate(der);
+      expect(nodeCert.publicKey.asymmetricKeyType).toBe(algorithm.toLowerCase());
+      expect(nodeCert.verify(nodeCert.publicKey)).toBe(true);
+    });
+
     test("enc kryptos → keyEncipherment + dataEncipherment", () => {
       const kryptos = KryptosKit.generate.enc.rsa({
         algorithm: "RSA-OAEP-256",
@@ -409,6 +433,50 @@ describe("KryptosKit certificate generation", () => {
       const peculiarChild = new x509.X509Certificate(childDer);
       const peculiarCa = new x509.X509Certificate(caDer);
       expect(peculiarChild.issuer).toBe(peculiarCa.subject);
+    });
+
+    test("post-quantum: ML-DSA-65 child under ML-DSA-87 root", () => {
+      const ca = KryptosKit.generate.sig.akp({
+        algorithm: "ML-DSA-87",
+        issuer: "https://pq-ca.example.com",
+        notBefore: CA_NOT_BEFORE,
+        expiresAt: CA_EXPIRES_AT,
+        certificate: { mode: "root-ca" },
+      });
+      const child = KryptosKit.generate.sig.akp({
+        algorithm: "ML-DSA-65",
+        issuer: "https://pq-child.example.com",
+        notBefore: NOT_BEFORE,
+        expiresAt: EXPIRES_AT,
+        certificate: { mode: "ca-signed", ca },
+      });
+
+      expect(child.certificateChain).toHaveLength(2);
+      expect(() =>
+        child.verifyCertificate({ trustAnchors: [ca.certificateChain![0]] }),
+      ).not.toThrow();
+    });
+
+    test("mixed-algorithm: ML-DSA-44 child under EC P-384 root", () => {
+      const ca = KryptosKit.generate.sig.ec({
+        algorithm: "ES384",
+        issuer: "https://ec-ca.example.com",
+        notBefore: CA_NOT_BEFORE,
+        expiresAt: CA_EXPIRES_AT,
+        certificate: { mode: "root-ca" },
+      });
+      const child = KryptosKit.generate.sig.akp({
+        algorithm: "ML-DSA-44",
+        issuer: "https://pq-leaf.example.com",
+        notBefore: NOT_BEFORE,
+        expiresAt: EXPIRES_AT,
+        certificate: { mode: "ca-signed", ca },
+      });
+
+      expect(child.certificateChain).toHaveLength(2);
+      expect(() =>
+        child.verifyCertificate({ trustAnchors: [ca.certificateChain![0]] }),
+      ).not.toThrow();
     });
 
     test("mixed-algorithm: RSA child under EC root", () => {
