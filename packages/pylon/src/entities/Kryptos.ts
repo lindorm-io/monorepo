@@ -59,7 +59,7 @@ export class Kryptos implements KryptosDB {
   @EmbeddedList("string")
   public operations!: Array<KryptosOperation>;
 
-  @Encrypted({ purpose: "kryptos:kek" })
+  @Encrypted({ purpose: "pylon:kek" })
   @Nullable()
   @Field("text")
   public privateKey!: string | null;

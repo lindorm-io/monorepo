@@ -39,6 +39,8 @@ const baseAnswers = (overrides: Partial<Answers> = {}): Answers => ({
   ...overrides,
 });
 
+const FIXED_KEK = "kryptos:test-fixed-kek-placeholder";
+
 const listTree = (root: string): Array<string> => {
   const results: Array<string> = [];
   const walk = (dir: string, prefix: string): void => {
@@ -139,7 +141,7 @@ describe("scaffold", () => {
     test("none drivers", () => {
       mkdirSync(projectDir, { recursive: true });
       const answers = baseAnswers({ projectDir });
-      writeEnvFile(answers);
+      writeEnvFile(answers, FIXED_KEK);
       expect(readFileSync(join(projectDir, ".env"), "utf-8")).toMatchSnapshot();
     });
 
@@ -150,8 +152,16 @@ describe("scaffold", () => {
         proteusDriver: "postgres",
         irisDriver: "kafka",
       });
-      writeEnvFile(answers);
+      writeEnvFile(answers, FIXED_KEK);
       expect(readFileSync(join(projectDir, ".env"), "utf-8")).toMatchSnapshot();
+    });
+
+    test("generates a real kryptos env string when no kek is supplied", () => {
+      mkdirSync(projectDir, { recursive: true });
+      const answers = baseAnswers({ projectDir });
+      writeEnvFile(answers);
+      const env = readFileSync(join(projectDir, ".env"), "utf-8");
+      expect(env).toMatch(/^PYLON_KEK=kryptos:[A-Za-z0-9_-]+$/m);
     });
   });
 
@@ -171,7 +181,7 @@ describe("scaffold", () => {
         }),
       ],
     ])("snapshot: %s", (_name, answers) => {
-      expect(buildEnvLines(answers)).toMatchSnapshot();
+      expect(buildEnvLines(answers, FIXED_KEK)).toMatchSnapshot();
     });
   });
 
@@ -400,7 +410,7 @@ describe("scaffold", () => {
         features: baseFeatures({ socket: true, webhooks: true, audit: true }),
         workers: ["expiry-cleanup"],
       });
-      await scaffold(answers);
+      await scaffold(answers, FIXED_KEK);
       expect(listTree(projectDir)).toMatchSnapshot();
     });
 
@@ -409,7 +419,7 @@ describe("scaffold", () => {
         projectDir,
         features: baseFeatures({ session: true }),
       });
-      await scaffold(answers);
+      await scaffold(answers, FIXED_KEK);
       expect(listTree(projectDir)).toMatchSnapshot();
     });
 
@@ -418,7 +428,7 @@ describe("scaffold", () => {
         projectDir,
         features: baseFeatures({ session: true, auth: true }),
       });
-      await scaffold(answers);
+      await scaffold(answers, FIXED_KEK);
       expect(
         readFileSync(join(projectDir, "src/pylon/pylon.ts"), "utf-8"),
       ).toMatchSnapshot("pylon.ts");
@@ -434,7 +444,7 @@ describe("scaffold", () => {
         proteusDriver: "postgres",
         features: baseFeatures({ rateLimit: true }),
       });
-      await scaffold(answers);
+      await scaffold(answers, FIXED_KEK);
       expect(
         readFileSync(join(projectDir, "src/pylon/pylon.ts"), "utf-8"),
       ).toMatchSnapshot("pylon.ts");
@@ -455,7 +465,7 @@ describe("scaffold", () => {
         }),
         workers: ["amphora-entity-sync", "expiry-cleanup", "kryptos-rotation"],
       });
-      await scaffold(answers);
+      await scaffold(answers, FIXED_KEK);
       expect(listTree(projectDir)).toMatchSnapshot("tree");
       expect(
         readFileSync(join(projectDir, "src/pylon/pylon.ts"), "utf-8"),

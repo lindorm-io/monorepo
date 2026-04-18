@@ -40,6 +40,7 @@ exports[`scaffold buildDependencyList snapshot: sqlite-kafka 1`] = `
 exports[`scaffold buildEnvLines snapshot: mongo-nats 1`] = `
 [
   "NODE_ENV=development",
+  "PYLON_KEK=kryptos:test-fixed-kek-placeholder",
   "PROTEUS_URL=mongodb://localhost:27017/app",
   "IRIS_SERVERS=localhost:4222",
 ]
@@ -48,6 +49,7 @@ exports[`scaffold buildEnvLines snapshot: mongo-nats 1`] = `
 exports[`scaffold buildEnvLines snapshot: mysql-rabbit 1`] = `
 [
   "NODE_ENV=development",
+  "PYLON_KEK=kryptos:test-fixed-kek-placeholder",
   "PROTEUS_URL=mysql://localhost:3306/app",
   "IRIS_URL=amqp://localhost:5672",
 ]
@@ -56,6 +58,7 @@ exports[`scaffold buildEnvLines snapshot: mysql-rabbit 1`] = `
 exports[`scaffold buildEnvLines snapshot: none-none + auth 1`] = `
 [
   "NODE_ENV=development",
+  "PYLON_KEK=kryptos:test-fixed-kek-placeholder",
   "AUTH_CLIENT_ID=",
   "AUTH_CLIENT_SECRET=",
   "AUTH_ISSUER=https://auth.example.com",
@@ -65,12 +68,14 @@ exports[`scaffold buildEnvLines snapshot: none-none + auth 1`] = `
 exports[`scaffold buildEnvLines snapshot: none-none 1`] = `
 [
   "NODE_ENV=development",
+  "PYLON_KEK=kryptos:test-fixed-kek-placeholder",
 ]
 `;
 
 exports[`scaffold buildEnvLines snapshot: postgres-rabbit + auth 1`] = `
 [
   "NODE_ENV=development",
+  "PYLON_KEK=kryptos:test-fixed-kek-placeholder",
   "PROTEUS_URL=postgresql://localhost:5432/app",
   "IRIS_URL=amqp://localhost:5672",
   "AUTH_CLIENT_ID=",
@@ -82,6 +87,7 @@ exports[`scaffold buildEnvLines snapshot: postgres-rabbit + auth 1`] = `
 exports[`scaffold buildEnvLines snapshot: sqlite-redis 1`] = `
 [
   "NODE_ENV=development",
+  "PYLON_KEK=kryptos:test-fixed-kek-placeholder",
   "PROTEUS_URL=file:./data/app.db",
   "IRIS_URL=redis://localhost:6379",
 ]
@@ -359,8 +365,11 @@ export const socketExampleMiddleware: ServerSocketMiddleware = async (ctx, next)
 ",
   "src/pylon/amphora.ts": "import { Amphora } from "@lindorm/amphora";
 import { logger } from "../logger";
+import { config } from "./config";
 
 export const amphora = new Amphora({ logger });
+
+amphora.env(config.pylon.kek);
 ",
   "src/routes/_middleware.ts": "import { httpExampleMiddleware } from "../middleware/http-example";
 
@@ -569,8 +578,11 @@ export const httpExampleMiddleware: ServerHttpMiddleware = async (ctx, next) => 
 ",
   "src/pylon/amphora.ts": "import { Amphora } from "@lindorm/amphora";
 import { logger } from "../logger";
+import { config } from "./config";
 
 export const amphora = new Amphora({ logger });
+
+amphora.env(config.pylon.kek);
 ",
   "src/routes/_middleware.ts": "import { httpExampleMiddleware } from "../middleware/http-example";
 
@@ -697,8 +709,11 @@ export const logger = new Logger({
 ",
   "src/pylon/amphora.ts": "import { Amphora } from "@lindorm/amphora";
 import { logger } from "../logger";
+import { config } from "./config";
 
 export const amphora = new Amphora({ logger });
+
+amphora.env(config.pylon.kek);
 ",
   "src/types/context.ts": "import type {
   PylonHandler,
@@ -771,6 +786,7 @@ export type ServerSocketHandler<Schema extends ZodType = ZodType<any>> =
 
 exports[`scaffold scaffold orchestration all-on: postgres + rabbit + sessions + auth + rateLimit + workers: .env 1`] = `
 "NODE_ENV=development
+PYLON_KEK=kryptos:test-fixed-kek-placeholder
 PROTEUS_URL=postgresql://localhost:5432/app
 IRIS_URL=amqp://localhost:5672
 AUTH_CLIENT_ID=
@@ -785,6 +801,7 @@ import { z } from "zod";
 
 export const config = configuration({
   nodeEnv: z.string().default("development"),
+  pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
   proteusUrl: z.string(),
   irisUrl: z.string(),
@@ -911,6 +928,7 @@ exports[`scaffold scaffold orchestration all-on: postgres + rabbit + sessions + 
 
 exports[`scaffold scaffold orchestration auth-only combo (auto-forces session): .env 1`] = `
 "NODE_ENV=development
+PYLON_KEK=kryptos:test-fixed-kek-placeholder
 AUTH_CLIENT_ID=
 AUTH_CLIENT_SECRET=
 AUTH_ISSUER=https://auth.example.com
@@ -923,6 +941,7 @@ import { z } from "zod";
 
 export const config = configuration({
   nodeEnv: z.string().default("development"),
+  pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
   authClientId: z.string(),
   authClientSecret: z.string(),
@@ -1073,6 +1092,7 @@ import { z } from "zod";
 
 export const config = configuration({
   nodeEnv: z.string().default("development"),
+  pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
   authClientId: z.string(),
   authClientSecret: z.string(),
@@ -1087,6 +1107,7 @@ import { z } from "zod";
 
 export const config = configuration({
   nodeEnv: z.string().default("development"),
+  pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
   irisBrokers: z.string().transform((s) => s.split(",")),
 });
@@ -1099,6 +1120,7 @@ import { z } from "zod";
 
 export const config = configuration({
   nodeEnv: z.string().default("development"),
+  pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
 });
 "
@@ -1110,6 +1132,7 @@ import { z } from "zod";
 
 export const config = configuration({
   nodeEnv: z.string().default("development"),
+  pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
   proteusUrl: z.string(),
   irisServers: z.string(),
@@ -1123,6 +1146,7 @@ import { z } from "zod";
 
 export const config = configuration({
   nodeEnv: z.string().default("development"),
+  pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
   irisServers: z.string(),
 });
@@ -1135,6 +1159,7 @@ import { z } from "zod";
 
 export const config = configuration({
   nodeEnv: z.string().default("development"),
+  pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
 });
 "
@@ -1146,6 +1171,7 @@ import { z } from "zod";
 
 export const config = configuration({
   nodeEnv: z.string().default("development"),
+  pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
   proteusUrl: z.string(),
   authClientId: z.string(),
@@ -1161,6 +1187,7 @@ import { z } from "zod";
 
 export const config = configuration({
   nodeEnv: z.string().default("development"),
+  pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
   proteusUrl: z.string(),
   irisBrokers: z.string().transform((s) => s.split(",")),
@@ -1174,6 +1201,7 @@ import { z } from "zod";
 
 export const config = configuration({
   nodeEnv: z.string().default("development"),
+  pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
   proteusUrl: z.string(),
 });
@@ -1186,6 +1214,7 @@ import { z } from "zod";
 
 export const config = configuration({
   nodeEnv: z.string().default("development"),
+  pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
   irisUrl: z.string(),
 });
@@ -1198,6 +1227,7 @@ import { z } from "zod";
 
 export const config = configuration({
   nodeEnv: z.string().default("development"),
+  pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
   irisUrl: z.string(),
 });
@@ -1210,6 +1240,7 @@ import { z } from "zod";
 
 export const config = configuration({
   nodeEnv: z.string().default("development"),
+  pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
   proteusUrl: z.string(),
 });
@@ -1381,11 +1412,13 @@ exports[`scaffold writeDockerCompose snapshot: redis dedup 1`] = `
 
 exports[`scaffold writeEnvFile none drivers 1`] = `
 "NODE_ENV=development
+PYLON_KEK=kryptos:test-fixed-kek-placeholder
 "
 `;
 
 exports[`scaffold writeEnvFile postgres + kafka 1`] = `
 "NODE_ENV=development
+PYLON_KEK=kryptos:test-fixed-kek-placeholder
 PROTEUS_URL=postgresql://localhost:5432/app
 IRIS_BROKERS=localhost:9092
 "

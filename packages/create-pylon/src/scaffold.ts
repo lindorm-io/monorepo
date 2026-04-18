@@ -1,3 +1,4 @@
+import { KryptosKit } from "@lindorm/kryptos";
 import {
   cpSync,
   existsSync,
@@ -21,6 +22,21 @@ import {
   PROTEUS_DRIVER_PACKAGES,
   PROTEUS_ENV_VARS,
 } from "./types";
+
+// Far-future expiry — the KEK protects every @Encrypted field in the DB;
+// rotating it is a re-encryption migration, not a routine rotation, so a
+// practical "no expiry" value avoids silently bricking encrypted data.
+const KEK_EXPIRES_AT = new Date("2299-12-31T23:59:59.000Z");
+
+export const generateKekEnvString = (): string =>
+  KryptosKit.generate
+    .auto({
+      algorithm: "dir",
+      expiresAt: KEK_EXPIRES_AT,
+      hidden: true,
+      purpose: "pylon:kek",
+    })
+    .toEnvString();
 
 const TEMPLATE_ROOT = resolve(__dirname, "..", "templates");
 
@@ -105,8 +121,11 @@ export const writePackageJson = (answers: Answers): void => {
   writeFileSync(target, JSON.stringify(pkg, null, 2) + "\n", "utf-8");
 };
 
-export const buildEnvLines = (answers: Answers): Array<string> => {
-  const lines: Array<string> = ["NODE_ENV=development"];
+export const buildEnvLines = (
+  answers: Answers,
+  kek: string = generateKekEnvString(),
+): Array<string> => {
+  const lines: Array<string> = ["NODE_ENV=development", `PYLON_KEK=${kek}`];
 
   for (const entry of PROTEUS_ENV_VARS[answers.proteusDriver]) {
     lines.push(`${entry.key}=${entry.value}`);
@@ -125,8 +144,11 @@ export const buildEnvLines = (answers: Answers): Array<string> => {
   return lines;
 };
 
-export const writeEnvFile = (answers: Answers): void => {
-  const lines = buildEnvLines(answers);
+export const writeEnvFile = (
+  answers: Answers,
+  kek: string = generateKekEnvString(),
+): void => {
+  const lines = buildEnvLines(answers, kek);
   const target = join(answers.projectDir, ".env");
   writeFileSync(target, lines.join("\n") + "\n", "utf-8");
 };
@@ -188,10 +210,13 @@ export const writeIrisSamples = (answers: Answers): void => {
   writeFileSync(subscriber, files.subscriber, "utf-8");
 };
 
-export const scaffold = async (answers: Answers): Promise<void> => {
+export const scaffold = async (
+  answers: Answers,
+  kek: string = generateKekEnvString(),
+): Promise<void> => {
   copyTemplates(answers);
   writePackageJson(answers);
-  writeEnvFile(answers);
+  writeEnvFile(answers, kek);
   writeConfigFile(answers);
   writePylonFile(answers);
   writeDockerCompose(answers);
