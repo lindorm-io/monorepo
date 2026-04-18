@@ -35,7 +35,7 @@ const autoTestCases: Array<AutoTestCase> = [
   { algorithm: "HS384", type: "oct", use: "sig" },
   { algorithm: "HS512", type: "oct", use: "sig" },
 
-  // OKP encryption (ECDH-ES direct — encryption required)
+  // OKP encryption (ECDH-ES direct + key-wrap variants default to OKP/X curves)
   {
     algorithm: "ECDH-ES",
     type: "OKP",
@@ -43,14 +43,48 @@ const autoTestCases: Array<AutoTestCase> = [
     curve: "X25519",
     encryption: "A256GCM",
   },
-
-  // EC encryption (ECDH-ES key wrapping — encryption set by autoGenerateConfig)
-  { algorithm: "ECDH-ES+A128KW", type: "EC", use: "enc", encryption: "A256GCM" },
-  { algorithm: "ECDH-ES+A192KW", type: "EC", use: "enc", encryption: "A256GCM" },
-  { algorithm: "ECDH-ES+A256KW", type: "EC", use: "enc", encryption: "A256GCM" },
-  { algorithm: "ECDH-ES+A128GCMKW", type: "EC", use: "enc", encryption: "A256GCM" },
-  { algorithm: "ECDH-ES+A192GCMKW", type: "EC", use: "enc", encryption: "A256GCM" },
-  { algorithm: "ECDH-ES+A256GCMKW", type: "EC", use: "enc", encryption: "A256GCM" },
+  {
+    algorithm: "ECDH-ES+A128KW",
+    type: "OKP",
+    use: "enc",
+    curve: "X25519",
+    encryption: "A256GCM",
+  },
+  {
+    algorithm: "ECDH-ES+A128GCMKW",
+    type: "OKP",
+    use: "enc",
+    curve: "X25519",
+    encryption: "A256GCM",
+  },
+  {
+    algorithm: "ECDH-ES+A192KW",
+    type: "OKP",
+    use: "enc",
+    curve: "X448",
+    encryption: "A256GCM",
+  },
+  {
+    algorithm: "ECDH-ES+A192GCMKW",
+    type: "OKP",
+    use: "enc",
+    curve: "X448",
+    encryption: "A256GCM",
+  },
+  {
+    algorithm: "ECDH-ES+A256KW",
+    type: "OKP",
+    use: "enc",
+    curve: "X448",
+    encryption: "A256GCM",
+  },
+  {
+    algorithm: "ECDH-ES+A256GCMKW",
+    type: "OKP",
+    use: "enc",
+    curve: "X448",
+    encryption: "A256GCM",
+  },
 
   // EC signature
   { algorithm: "ES256", type: "EC", use: "sig", curve: "P-256" },

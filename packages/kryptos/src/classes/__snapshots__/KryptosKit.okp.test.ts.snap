@@ -404,7 +404,7 @@ exports[`KryptosKit (OKP) generate auto 1`] = `
   "certificateChain": [],
   "certificateThumbprint": null,
   "createdAt": 2024-01-01T08:00:00.000Z,
-  "curve": "P-256",
+  "curve": "X25519",
   "encryption": "A256GCM",
   "expiresAt": 2049-01-01T08:00:00.000Z,
   "expiresIn": 789004800,
@@ -426,7 +426,7 @@ exports[`KryptosKit (OKP) generate auto 1`] = `
   "ownerId": null,
   "purpose": null,
   "thumbprint": Any<String>,
-  "type": "EC",
+  "type": "OKP",
   "use": "enc",
 }
 `;

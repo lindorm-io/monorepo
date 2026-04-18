@@ -88,6 +88,8 @@ export const autoGenerateConfig = (algorithm: KryptosAlgorithm): AutoResult => {
       };
 
     case "ECDH-ES":
+    case "ECDH-ES+A128KW":
+    case "ECDH-ES+A128GCMKW":
       return {
         algorithm,
         curve: "X25519",
@@ -96,16 +98,15 @@ export const autoGenerateConfig = (algorithm: KryptosAlgorithm): AutoResult => {
         use: "enc",
       };
 
-    case "ECDH-ES+A128KW":
     case "ECDH-ES+A192KW":
-    case "ECDH-ES+A256KW":
-    case "ECDH-ES+A128GCMKW":
     case "ECDH-ES+A192GCMKW":
+    case "ECDH-ES+A256KW":
     case "ECDH-ES+A256GCMKW":
       return {
         algorithm,
+        curve: "X448",
         encryption: "A256GCM",
-        type: "EC",
+        type: "OKP",
         use: "enc",
       };
 
