@@ -103,7 +103,7 @@ export type PylonOptions<
   setup?: PylonSetup;
   teardown?: PylonTeardown;
   subscriptions?: Array<PylonSubscribeOptions>;
-  workers?: Array<ILindormWorker | string>;
+  workers?: string | ILindormWorker | Array<ILindormWorker | string>;
   workersInterval?: ReadableTime;
   workersRetry?: RetryOptions;
 };

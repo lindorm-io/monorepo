@@ -7,13 +7,21 @@ import { ILindormWorker, LindormWorker, LindormWorkerScanner } from "@lindorm/wo
 type Options = {
   amphora: IAmphora;
   logger: ILogger;
-  workers?: Array<ILindormWorker | string>;
+  workers?: string | ILindormWorker | Array<ILindormWorker | string>;
   workersInterval?: ReadableTime;
   workersRetry?: RetryOptions;
 };
 
+const normalise = (input: Options["workers"]): Array<ILindormWorker | string> => {
+  if (input === undefined) return [];
+  if (Array.isArray(input)) return input;
+  if (typeof input === "string" || input instanceof LindormWorker) return [input];
+  return [];
+};
+
 export const scanWorkers = (options: Options): Array<ILindormWorker> => {
-  const { workers = [], workersInterval = "5m", workersRetry } = options;
+  const { workersInterval = "5m", workersRetry } = options;
+  const workers = normalise(options.workers);
 
   return [
     new LindormWorker({

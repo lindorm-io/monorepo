@@ -62,6 +62,39 @@ describe("scanWorkers", () => {
     expect(result[1].alias).toBe("DefaultInstance");
   });
 
+  test("should accept a bare directory path string and scan it", () => {
+    const amphora = createMockAmphora();
+
+    const result = scanWorkers({
+      amphora,
+      logger,
+      workers: join(__dirname, "..", "..", "__fixtures__", "workers"),
+    });
+
+    expect(result).toEqual([
+      expect.objectContaining({ alias: "AmphoraWorker" }),
+      expect.objectContaining({ alias: "WorkerOne" }),
+      expect.objectContaining({ alias: "WorkerThree" }),
+      expect.objectContaining({ alias: "WorkerTwo" }),
+    ]);
+  });
+
+  test("should accept a bare ILindormWorker instance and pass it through by reference", () => {
+    const amphora = createMockAmphora();
+
+    const worker: ILindormWorker = new LindormWorker({
+      alias: "BareInstanceWorker",
+      callback: async () => {},
+      interval: "2m",
+      logger,
+    });
+
+    const result = scanWorkers({ amphora, logger, workers: worker });
+
+    expect(result).toHaveLength(2);
+    expect(result[1]).toBe(worker);
+  });
+
   test("should handle mixed inputs of instance and directory path", () => {
     const amphora = createMockAmphora();
 
