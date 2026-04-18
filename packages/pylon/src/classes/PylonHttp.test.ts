@@ -2,8 +2,10 @@ import { createMockAmphora } from "@lindorm/amphora/mocks";
 import { createMockIrisSource } from "@lindorm/iris/mocks";
 import { createMockLogger } from "@lindorm/logger";
 import { createMockProteusSource } from "@lindorm/proteus/mocks";
+import { join } from "path";
 import request from "supertest";
 import { PylonHttp } from "./PylonHttp";
+import { PylonRouter } from "./PylonRouter";
 
 const createPylonHttp = (overrides: Record<string, unknown> = {}): PylonHttp => {
   const pylonHttp = new PylonHttp({
@@ -133,5 +135,68 @@ describe("PylonHttp health endpoint", () => {
       code: "health_check_failed",
       data: { failures: ["proteus", "iris"] },
     });
+  });
+});
+
+describe("PylonHttp routes option", () => {
+  const routesDir = join(__dirname, "..", "__fixtures__", "routes");
+
+  const buildRouter = (marker: string): PylonRouter => {
+    const router = new PylonRouter();
+    router.get("/probe", async (ctx) => {
+      ctx.status = 200;
+      ctx.body = { marker };
+    });
+    return router;
+  };
+
+  test("should accept a bare directory path string and scan it", async () => {
+    const pylonHttp = createPylonHttp({ routes: routesDir });
+
+    const response = await request(pylonHttp.callback).get("/custom").expect(200);
+    expect(response.body.route).toBe("custom");
+  });
+
+  test("should accept a bare PylonHttpRouters entry and mount it", async () => {
+    const pylonHttp = createPylonHttp({
+      routes: { path: "/solo", router: buildRouter("solo") },
+    });
+
+    const response = await request(pylonHttp.callback).get("/solo/probe").expect(200);
+    expect(response.body).toEqual({ marker: "solo" });
+  });
+
+  test("should accept an array of pre-built PylonHttpRouters", async () => {
+    const pylonHttp = createPylonHttp({
+      routes: [
+        { path: "/alpha", router: buildRouter("alpha") },
+        { path: "/beta", router: buildRouter("beta") },
+      ],
+    });
+
+    const alpha = await request(pylonHttp.callback).get("/alpha/probe").expect(200);
+    const beta = await request(pylonHttp.callback).get("/beta/probe").expect(200);
+
+    expect(alpha.body).toEqual({ marker: "alpha" });
+    expect(beta.body).toEqual({ marker: "beta" });
+  });
+
+  test("should accept an array of directory path strings and scan each", async () => {
+    const pylonHttp = createPylonHttp({ routes: [routesDir] });
+
+    const response = await request(pylonHttp.callback).get("/custom").expect(200);
+    expect(response.body.route).toBe("custom");
+  });
+
+  test("should accept a mixed array of scanner paths and pre-built routers", async () => {
+    const pylonHttp = createPylonHttp({
+      routes: [routesDir, { path: "/mixed", router: buildRouter("mixed") }],
+    });
+
+    const scanned = await request(pylonHttp.callback).get("/custom").expect(200);
+    const direct = await request(pylonHttp.callback).get("/mixed/probe").expect(200);
+
+    expect(scanned.body.route).toBe("custom");
+    expect(direct.body).toEqual({ marker: "mixed" });
   });
 });

@@ -3,7 +3,10 @@ import { ClientError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger";
 import { createMockProteusSource, createMockRepository } from "@lindorm/proteus/mocks";
 import { Server as HttpServer } from "http";
+import { join } from "path";
+import { PylonListenerScanner } from "../internal/classes/PylonListenerScanner";
 import { PylonError } from "../errors/PylonError";
+import { PylonListener } from "./PylonListener";
 import { PylonIo } from "./PylonIo";
 
 describe("PylonIo (handshake chain)", () => {
@@ -307,5 +310,107 @@ describe("PylonIo (handshake chain)", () => {
       expect(socket.data.session.id).toBe("sid-1");
       expect(socket.data.pylon.auth?.strategy).toBe("session");
     });
+  });
+});
+
+describe("PylonIo socket.listeners option", () => {
+  let http: HttpServer;
+  let amphora: IAmphora;
+
+  const listenersDir = join(__dirname, "..", "__fixtures__", "listeners");
+
+  beforeEach(() => {
+    http = new HttpServer();
+    amphora = new Amphora({ logger: createMockLogger() });
+  });
+
+  afterEach(() => {
+    http.close();
+  });
+
+  const buildIo = (listeners: any): PylonIo => {
+    return new PylonIo(http, {
+      amphora,
+      logger: createMockLogger(),
+      environment: "test",
+      socket: { enabled: true, listeners },
+    } as any);
+  };
+
+  test("should scan when given a bare directory path string", () => {
+    const scanSpy = jest.spyOn(PylonListenerScanner.prototype, "scan");
+    const io = buildIo(listenersDir);
+
+    io.load();
+
+    expect(scanSpy).toHaveBeenCalledTimes(1);
+    expect(scanSpy).toHaveBeenCalledWith(listenersDir);
+
+    scanSpy.mockRestore();
+  });
+
+  test("should accept a bare PylonListener instance and register its namespace", () => {
+    const scanSpy = jest.spyOn(PylonListenerScanner.prototype, "scan");
+    const listener = new PylonListener({ namespace: "/solo" });
+    const io = buildIo(listener);
+
+    const ofSpy = jest.spyOn(io.server, "of");
+    io.load();
+
+    expect(scanSpy).not.toHaveBeenCalled();
+    expect(ofSpy.mock.calls.map((c) => c[0])).toEqual(
+      expect.arrayContaining(["/", "/solo"]),
+    );
+
+    scanSpy.mockRestore();
+    ofSpy.mockRestore();
+  });
+
+  test("should accept an array of pre-built PylonListener instances", () => {
+    const scanSpy = jest.spyOn(PylonListenerScanner.prototype, "scan");
+    const io = buildIo([
+      new PylonListener({ namespace: "/alpha" }),
+      new PylonListener({ namespace: "/beta" }),
+    ]);
+
+    const ofSpy = jest.spyOn(io.server, "of");
+    io.load();
+
+    expect(scanSpy).not.toHaveBeenCalled();
+    expect(ofSpy.mock.calls.map((c) => c[0])).toEqual(
+      expect.arrayContaining(["/", "/alpha", "/beta"]),
+    );
+
+    scanSpy.mockRestore();
+    ofSpy.mockRestore();
+  });
+
+  test("should accept an array of directory path strings and scan each", () => {
+    const scanSpy = jest.spyOn(PylonListenerScanner.prototype, "scan");
+    const io = buildIo([listenersDir]);
+
+    io.load();
+
+    expect(scanSpy).toHaveBeenCalledTimes(1);
+    expect(scanSpy).toHaveBeenCalledWith(listenersDir);
+
+    scanSpy.mockRestore();
+  });
+
+  test("should accept a mixed array of scanner paths and pre-built listeners", () => {
+    const scanSpy = jest.spyOn(PylonListenerScanner.prototype, "scan");
+    const io = buildIo([listenersDir, new PylonListener({ namespace: "/mixed" })]);
+
+    const ofSpy = jest.spyOn(io.server, "of");
+    io.load();
+
+    expect(scanSpy).toHaveBeenCalledTimes(1);
+    expect(scanSpy).toHaveBeenCalledWith(listenersDir);
+    expect(ofSpy.mock.calls.map((c) => c[0])).toEqual(
+      expect.arrayContaining(["/", "/mixed"]),
+    );
+
+    scanSpy.mockRestore();
+    ofSpy.mockRestore();
   });
 });
