@@ -25,7 +25,7 @@ The fastest way to start a new Pylon service is the scaffolder:
 npm create @lindorm/pylon@latest my-app
 ```
 
-`@lindorm/create-pylon` prompts for features and drivers, writes the project, installs dependencies, and initialises git. See [`@lindorm/create-pylon`](../create-pylon/README.md) for the full prompt flow and programmatic API.
+`@lindorm/create-pylon` prompts for features and drivers, writes the project, installs dependencies, and initialises git. See [`@lindorm/create-pylon`](https://github.com/lindorm-io/monorepo/tree/main/packages/create-pylon) for the full prompt flow and programmatic API.
 
 To wire Pylon manually:
 
@@ -1507,4 +1507,4 @@ Generates a worker file with `CALLBACK` and `INTERVAL` named exports, matching P
 
 ## License
 
-AGPL-3.0-or-later — see the root [`LICENSE`](../../LICENSE).
+AGPL-3.0-or-later — see the root [`LICENSE`](https://github.com/lindorm-io/monorepo/blob/main/LICENSE).
