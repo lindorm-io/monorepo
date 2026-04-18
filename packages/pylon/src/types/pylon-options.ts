@@ -71,7 +71,7 @@ export type PylonHttpOptions<C extends PylonHttpContext = PylonHttpContext> =
     cookies?: PylonCookieConfig;
     cors?: CorsOptions;
     httpMiddleware?: Array<PylonHttpMiddleware<C>>;
-    routes?: string | Array<PylonHttpRouters<C>>;
+    routes?: string | PylonHttpRouters<C> | Array<string | PylonHttpRouters<C>>;
     maxRequestAge?: ReadableTime;
     minRequestAge?: ReadableTime;
     openIdConfiguration?: Partial<OpenIdConfigurationOptions>;
@@ -86,7 +86,7 @@ export type PylonSocketOptions<
 > = {
   enabled: boolean;
   connectionMiddleware?: Array<PylonConnectionMiddleware<H>>;
-  listeners?: string | Array<PylonListener<T>>;
+  listeners?: string | PylonListener<T> | Array<string | PylonListener<T>>;
   middleware?: Array<PylonSocketMiddleware<T>>;
   options?: Partial<SocketOptions>;
   redis?: Redis;

@@ -21,7 +21,8 @@ import { buildDefaultHealthCallback } from "../internal/utils/build-default-heal
 import { createAuthRouter } from "../internal/utils/create-auth-router";
 import { createHealthRouter } from "../internal/utils/create-health-router";
 import { createWellKnownRouter } from "../internal/utils/create-well-known-router";
-import { isArray, isString } from "@lindorm/is";
+import { normaliseRoutes } from "../internal/utils/normalise-routes";
+import { isString } from "@lindorm/is";
 import { ILogger } from "@lindorm/logger";
 import Koa from "koa";
 import { useRateLimit } from "../middleware/common/use-rate-limit";
@@ -153,14 +154,18 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
       );
     }
 
-    if (isString(this.options.routes)) {
-      const scanner = new PylonRouterScanner<T>(this.logger);
-      const router = scanner.scan(this.options.routes);
+    const routes = normaliseRoutes(this.options.routes);
 
-      this.router.use(router.routes(), router.allowedMethods());
-    } else if (isArray(this.options.routes)) {
-      for (const router of this.options.routes ?? []) {
-        this.addRouter(router.path, router.router);
+    if (routes.length) {
+      const scanner = new PylonRouterScanner<T>(this.logger);
+
+      for (const entry of routes) {
+        if (isString(entry)) {
+          const router = scanner.scan(entry);
+          this.router.use(router.routes(), router.allowedMethods());
+        } else {
+          this.addRouter(entry.path, entry.router);
+        }
       }
     }
 

@@ -19,8 +19,9 @@ import { initialisePylonSocketData } from "../internal/utils/initialise-pylon-so
 import { composePylonSocketContextBase } from "../internal/utils/compose-pylon-socket-context";
 import { createBuiltInRoomListeners } from "../internal/utils/create-built-in-room-listeners";
 import { loadPylonListeners } from "../internal/utils/load-pylon-listener";
+import { normaliseListeners } from "../internal/utils/normalise-listeners";
 import { composeMiddleware } from "@lindorm/middleware";
-import { isArray, isString } from "@lindorm/is";
+import { isString } from "@lindorm/is";
 import { ILogger } from "@lindorm/logger";
 import { uniq } from "@lindorm/utils";
 import { useRateLimit } from "../middleware/common/use-rate-limit";
@@ -114,20 +115,23 @@ export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
     const listeners: Array<PylonListener<T>> = [];
     const namespaces: Array<string> = [];
 
-    const socketListeners = this.options.socket?.listeners;
+    const socketListeners = normaliseListeners(this.options.socket?.listeners);
 
-    if (isString(socketListeners)) {
+    if (socketListeners.length) {
       const scanner = new PylonListenerScanner<T>(this.logger);
-      const result = scanner.scan(socketListeners);
 
-      listeners.push(...result.listeners);
-      namespaces.push(...result.namespaces);
-    } else if (isArray(socketListeners)) {
-      for (const listener of socketListeners) {
-        listeners.push(listener);
+      for (const entry of socketListeners) {
+        if (isString(entry)) {
+          const result = scanner.scan(entry);
 
-        if (listener.namespace) {
-          namespaces.push(listener.namespace);
+          listeners.push(...result.listeners);
+          namespaces.push(...result.namespaces);
+        } else {
+          listeners.push(entry);
+
+          if (entry.namespace) {
+            namespaces.push(entry.namespace);
+          }
         }
       }
     }
