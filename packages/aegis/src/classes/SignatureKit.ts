@@ -1,3 +1,4 @@
+import { AkpKit } from "@lindorm/akp";
 import { EcKit } from "@lindorm/ec";
 import { OctKit } from "@lindorm/oct";
 import { OkpKit } from "@lindorm/okp";
@@ -35,6 +36,9 @@ export class SignatureKit implements IKeyKit {
 
   private getKit(options: SignatureOptions): IKeyKit {
     switch (options.kryptos.type) {
+      case "AKP":
+        return new AkpKit(options);
+
       case "EC":
         return new EcKit(options);
 
