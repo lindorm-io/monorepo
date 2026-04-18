@@ -105,6 +105,7 @@ export const PROTEUS_DEPENDENT_WORKERS: ReadonlyArray<WorkerKey> = [
 export const BASE_RUNTIME_DEPENDENCIES: ReadonlyArray<string> = [
   "@lindorm/pylon",
   "@lindorm/amphora",
+  "@lindorm/errors",
   "@lindorm/logger",
   "@lindorm/types",
   "@lindorm/worker",
