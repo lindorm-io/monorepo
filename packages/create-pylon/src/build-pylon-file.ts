@@ -1,31 +1,17 @@
-import type { Answers, WorkerKey } from "./types";
-
-const WORKER_IMPORTS: Record<WorkerKey, { local: string; path: string }> = {
-  "amphora-refresh": {
-    local: "amphoraRefreshWorker",
-    path: "../workers/amphora-refresh",
-  },
-  "amphora-entity-sync": {
-    local: "amphoraEntitySyncWorker",
-    path: "../workers/amphora-entity-sync",
-  },
-  "expiry-cleanup": {
-    local: "expiryCleanupWorker",
-    path: "../workers/expiry-cleanup",
-  },
-  "kryptos-rotation": {
-    local: "kryptosRotationWorker",
-    path: "../workers/kryptos-rotation",
-  },
-};
+import type { Answers } from "./types";
 
 const buildImports = (answers: Answers): Array<string> => {
-  const lines: Array<string> = [
-    `import { Pylon } from "@lindorm/pylon";`,
+  const lines: Array<string> = [`import { Pylon } from "@lindorm/pylon";`];
+
+  if (answers.workers.length > 0) {
+    lines.push(`import { join } from "path";`);
+  }
+
+  lines.push(
     `import { logger } from "../logger";`,
     `import { amphora } from "./amphora";`,
     `import { config } from "./config";`,
-  ];
+  );
 
   if (answers.proteusDriver !== "none") {
     lines.push(`import { source as proteusSource } from "../proteus/source";`);
@@ -35,20 +21,13 @@ const buildImports = (answers: Answers): Array<string> => {
     lines.push(`import { source as irisSource } from "../iris/source";`);
   }
 
-  for (const key of answers.workers) {
-    const { local, path } = WORKER_IMPORTS[key];
-    lines.push(`import ${local} from "${path}";`);
-  }
-
   return lines;
 };
 
 const buildWorkersArray = (answers: Answers): string | null => {
   if (answers.workers.length === 0) return null;
 
-  const entries = answers.workers.map((k) => `    ${WORKER_IMPORTS[k].local},`);
-
-  return [`  workers: [`, ...entries, `  ],`].join("\n");
+  return `  workers: [join(__dirname, "..", "workers")],`;
 };
 
 const buildOptions = (answers: Answers): string => {
@@ -83,7 +62,7 @@ const buildOptions = (answers: Answers): string => {
   if (answers.features.audit) {
     lines.push(`  audit: {`);
     lines.push(`    enabled: true,`);
-    lines.push(`    actor: (ctx) => (ctx.state as any).subject ?? "anonymous",`);
+    lines.push(`    actor: (ctx) => ctx.state.session?.subject ?? "anonymous",`);
     lines.push(`    // sanitise: (body) => body,`);
     lines.push(`    // skip: (ctx) => false,`);
     lines.push(`    // entities: [],`);
