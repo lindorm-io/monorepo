@@ -1,3 +1,3 @@
-import { exampleMiddleware } from "../middleware/example";
+import { httpExampleMiddleware } from "../middleware/http-example";
 
-export const MIDDLEWARE = [exampleMiddleware];
+export const MIDDLEWARE = [httpExampleMiddleware];

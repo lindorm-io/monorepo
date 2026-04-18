@@ -1,3 +1,3 @@
-import { exampleMiddleware } from "../middleware/example";
+import { socketExampleMiddleware } from "../middleware/socket-example";
 
-export const MIDDLEWARE = [exampleMiddleware];
+export const MIDDLEWARE = [socketExampleMiddleware];
