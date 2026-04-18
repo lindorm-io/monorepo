@@ -67,4 +67,4 @@ See `src/types.ts` for the `Answers` shape.
 
 ## License
 
-AGPL-3.0-or-later — see the root [`LICENSE`](../../LICENSE).
+AGPL-3.0-or-later — see the root [`LICENSE`](https://github.com/lindorm-io/monorepo/blob/main/LICENSE).
