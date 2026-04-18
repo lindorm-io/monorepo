@@ -1133,14 +1133,11 @@ Pylon provides factory functions for common operational tasks:
 
 ```typescript
 import {
-  createAmphoraRefreshWorker,
   createAmphoraEntityWorker,
   createKryptosRotationWorker,
   createExpiryCleanupWorker,
 } from "@lindorm/pylon";
 ```
-
-**`createAmphoraRefreshWorker`** — Refreshes Amphora keys on an interval (default: 15 minutes). Keeps JWKS discovery in sync.
 
 **`createAmphoraEntityWorker`** — Loads cryptographic keys from a Proteus entity into Amphora. Optionally decrypts private keys with an AES encryption key.
 
@@ -1162,7 +1159,6 @@ import {
 ```typescript
 const app = new Pylon({
   workers: [
-    createAmphoraRefreshWorker({ amphora: myAmphora, logger: myLogger }),
     createKryptosRotationWorker({ proteus: mySource, logger: myLogger }),
     createAmphoraEntityWorker({
       amphora: myAmphora,
