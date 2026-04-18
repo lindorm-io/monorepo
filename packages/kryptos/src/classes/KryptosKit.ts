@@ -11,6 +11,7 @@ import {
   IKryptosRsa,
 } from "../interfaces";
 import {
+  KryptosAlgorithm,
   KryptosAuto,
   KryptosCurve,
   KryptosDB,
@@ -30,6 +31,7 @@ import {
   KryptosGenerateRsaEnc,
   KryptosGenerateRsaSig,
   KryptosLike,
+  KryptosType,
 } from "../types";
 import { KryptosGenerate } from "../internal/types/generate";
 import {
@@ -150,6 +152,12 @@ export class KryptosKit {
 
   public static isRsa(kryptos: KryptosLike): kryptos is IKryptosRsa {
     return kryptos instanceof Kryptos && kryptos.type === "RSA" && !kryptos.curve;
+  }
+
+  // resolve
+
+  public static getTypeForAlgorithm(algorithm: KryptosAlgorithm): KryptosType {
+    return autoGenerateConfig(algorithm).type;
   }
 
   // generate
