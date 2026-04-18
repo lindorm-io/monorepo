@@ -104,7 +104,7 @@ describe("scaffold", () => {
       const answers = baseAnswers({
         projectDir,
         features: baseFeatures({ socket: true, webhooks: true, audit: true }),
-        workers: ["amphora-refresh"],
+        workers: ["expiry-cleanup"],
       });
       copyTemplates(answers);
       expect(dumpTree(projectDir)).toMatchSnapshot();
@@ -252,12 +252,9 @@ describe("scaffold", () => {
           proteusDriver: "postgres" as const,
           irisDriver: "kafka" as const,
           features: baseFeatures({ socket: true, webhooks: true, audit: true }),
-          workers: [
-            "amphora-refresh",
-            "amphora-entity-sync",
-            "expiry-cleanup",
-            "kryptos-rotation",
-          ] as Array<Answers["workers"][number]>,
+          workers: ["amphora-entity-sync", "expiry-cleanup", "kryptos-rotation"] as Array<
+            Answers["workers"][number]
+          >,
         },
       ],
       ["session only, no proteus", { features: baseFeatures({ session: true }) }],
@@ -335,14 +332,10 @@ describe("scaffold", () => {
 
   describe("writeWorkerFiles", () => {
     test.each<[string, Answers["workers"]]>([
-      ["amphora-refresh only", ["amphora-refresh"]],
       ["amphora-entity-sync only", ["amphora-entity-sync"]],
       ["expiry-cleanup only", ["expiry-cleanup"]],
       ["kryptos-rotation only", ["kryptos-rotation"]],
-      [
-        "all four",
-        ["amphora-refresh", "amphora-entity-sync", "expiry-cleanup", "kryptos-rotation"],
-      ],
+      ["all three", ["amphora-entity-sync", "expiry-cleanup", "kryptos-rotation"]],
     ])("snapshot: %s", (_name, workers) => {
       mkdirSync(projectDir, { recursive: true });
       const answers = baseAnswers({
@@ -405,7 +398,7 @@ describe("scaffold", () => {
         proteusDriver: "postgres",
         irisDriver: "rabbit",
         features: baseFeatures({ socket: true, webhooks: true, audit: true }),
-        workers: ["amphora-refresh", "expiry-cleanup"],
+        workers: ["expiry-cleanup"],
       });
       await scaffold(answers);
       expect(listTree(projectDir)).toMatchSnapshot();
@@ -460,12 +453,7 @@ describe("scaffold", () => {
           auth: true,
           rateLimit: true,
         }),
-        workers: [
-          "amphora-refresh",
-          "amphora-entity-sync",
-          "expiry-cleanup",
-          "kryptos-rotation",
-        ],
+        workers: ["amphora-entity-sync", "expiry-cleanup", "kryptos-rotation"],
       });
       await scaffold(answers);
       expect(listTree(projectDir)).toMatchSnapshot("tree");

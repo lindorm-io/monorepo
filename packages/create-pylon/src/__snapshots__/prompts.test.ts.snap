@@ -14,7 +14,6 @@ exports[`runPrompts prompts for name when positional missing 1`] = `
 
 exports[`runPrompts prompts webhooks and audit only when both drivers selected 1`] = `
 [
-  "amphora-refresh",
   "expiry-cleanup",
 ]
 `;
