@@ -46,10 +46,13 @@ After answering prompts you get a project with:
 ? Message bus driver (Iris): (none / kafka / nats / rabbit / redis)
 ? Webhooks? (y/N)              (only when both proteus and iris are selected)
 ? Audit logging? (y/N)         (only when both proteus and iris are selected)
-? Workers: (Amphora key refresh / Amphora entity sync / Expiry cleanup / Kryptos key rotation)
+? OIDC authentication? (y/N)   (implies session management)
+? Rate limiting? (y/N)         (only when a proteus driver is selected)
+? Workers: (Amphora entity sync / Expiry cleanup / Kryptos key rotation)
+                                (only when a proteus driver is selected — all built-in workers need proteus)
 ```
 
-The proteus-dependent workers only appear when a proteus driver is selected. Queue and rooms are auto-enabled when iris or socket is selected respectively.
+Queue and rooms are auto-enabled when iris or socket is selected respectively. Amphora key refresh runs internally on a 5-minute interval and does not need a worker file.
 
 ## Programmatic use
 
