@@ -130,11 +130,11 @@ describe("KryptosKit (OKP)", () => {
       expect(kryptos.export("b64")).toEqual({
         id: "6e6f84b0-e125-5e3f-90ae-c65269668d98",
         algorithm: "ECDH-ES+A128GCMKW",
-        curve: "P-256",
+        curve: "X25519",
         encryption: "A256GCM",
         privateKey: expect.any(String),
         publicKey: expect.any(String),
-        type: "EC",
+        type: "OKP",
         use: "enc",
       });
     });
