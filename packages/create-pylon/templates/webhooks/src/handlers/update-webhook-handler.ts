@@ -1,4 +1,5 @@
 import { ClientError } from "@lindorm/errors";
+import { WebhookMethod } from "@lindorm/pylon";
 import { z } from "zod";
 import type { ServerHandler } from "../types/context";
 
@@ -6,24 +7,27 @@ export const updateWebhookSchema = z.object({
   id: z.string(),
 
   event: z.string().optional(),
-  method: z.string().optional(),
-  headers: z.record(z.string(), z.string()).optional(),
+  method: z.nativeEnum(WebhookMethod).optional(),
+  headers: z.record(z.string(), z.string()),
   tenantId: z.string().nullable().optional(),
-  url: z.string().optional(),
+  url: z.string().url().optional(),
 
-  authHeaders: z.record(z.string(), z.string()).optional(),
+  authHeaders: z.record(z.string(), z.string()),
 
   username: z.string().nullable().optional(),
   password: z.string().nullable().optional(),
 
   audience: z.string().nullable().optional(),
-  authLocation: z.string().nullable().optional(),
+  authLocation: z.enum(["body", "header"]).nullable().optional(),
   clientId: z.string().nullable().optional(),
   clientSecret: z.string().nullable().optional(),
-  contentType: z.string().nullable().optional(),
+  contentType: z
+    .enum(["application/json", "application/x-www-form-urlencoded"])
+    .nullable()
+    .optional(),
   issuer: z.string().nullable().optional(),
   scope: z.array(z.string()).optional(),
-  tokenUri: z.string().nullable().optional(),
+  tokenUri: z.string().url().nullable().optional(),
 });
 
 export const updateWebhookHandler: ServerHandler<typeof updateWebhookSchema> = async (
