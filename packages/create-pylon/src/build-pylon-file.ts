@@ -3,7 +3,7 @@ import type { Answers } from "./types";
 const buildImports = (answers: Answers): Array<string> => {
   const lines: Array<string> = [`import { Pylon } from "@lindorm/pylon";`];
 
-  if (answers.workers.length > 0) {
+  if (answers.features.http || answers.features.socket || answers.workers.length > 0) {
     lines.push(`import { join } from "path";`);
   }
 
@@ -34,13 +34,13 @@ const buildOptions = (answers: Answers): string => {
   const lines: Array<string> = [`  logger,`, `  amphora,`, `  port: config.server.port,`];
 
   if (answers.features.http) {
-    lines.push(`  routes: "./src/routes",`);
+    lines.push(`  routes: join(__dirname, "..", "routes"),`);
   }
 
   if (answers.features.socket) {
     lines.push(`  socket: {`);
     lines.push(`    enabled: true,`);
-    lines.push(`    listeners: "./src/listeners",`);
+    lines.push(`    listeners: join(__dirname, "..", "listeners"),`);
     lines.push(`  },`);
     lines.push(`  rooms: { presence: true },`);
   }
