@@ -74,7 +74,8 @@ export class Pylon<
     options.subscriptions = options.subscriptions ?? [];
     options.subscriptions.push(...calculateSubscriptions());
 
-    options.workers = options.workers ?? [];
+    const workers = options.workers;
+    options.workers = Array.isArray(workers) ? workers : workers ? [workers] : [];
     options.workers.push(...calculateWorkers());
 
     this.options = options;
