@@ -12,6 +12,10 @@ export const resolveSignAlgorithmForCert = (input: Input): KryptosAlgorithm => {
     throw new KryptosError("symmetric keys cannot have certificates");
   }
 
+  if (input.type === "AKP") {
+    throw new KryptosError("AKP keys do not yet support certificates");
+  }
+
   if (input.type === "RSA") {
     if (
       input.algorithm === "RS256" ||

@@ -1,3 +1,4 @@
+import { TEST_AKP_KEY_B64 } from "../__fixtures__/akp-keys";
 import { TEST_EC_KEY_B64 } from "../__fixtures__/ec-keys";
 import { TEST_OCT_KEY_B64 } from "../__fixtures__/oct-keys";
 import { TEST_OKP_KEY_B64 } from "../__fixtures__/okp-keys";
@@ -8,6 +9,11 @@ import { KryptosKit } from "./KryptosKit";
 describe("Kryptos.thumbprint", () => {
   test("should compute an RFC 7638 thumbprint for an EC key", () => {
     const kryptos = KryptosKit.from.b64(TEST_EC_KEY_B64);
+    expect(kryptos.thumbprint).toMatchSnapshot();
+  });
+
+  test("should compute a thumbprint for an AKP key", () => {
+    const kryptos = KryptosKit.from.b64(TEST_AKP_KEY_B64);
     expect(kryptos.thumbprint).toMatchSnapshot();
   });
 

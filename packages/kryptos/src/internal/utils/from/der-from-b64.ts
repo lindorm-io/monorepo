@@ -1,11 +1,21 @@
 import { KryptosError } from "../../../errors";
 import { KryptosBuffer, KryptosString } from "../../../types";
+import { createAkpDerFromB64 } from "../akp/der-from-b64";
 import { createEcDerFromB64 } from "../ec/der-from-b64";
 import { createOkpDerFromB64 } from "../okp/der-from-b64";
 import { createRsaDerFromB64 } from "../rsa/der-from-b64";
 
 export const createDerFromB64 = (options: KryptosString): KryptosBuffer => {
   switch (options.type) {
+    case "AKP":
+      return {
+        ...createAkpDerFromB64(options),
+        id: options.id,
+        algorithm: options.algorithm,
+        type: options.type,
+        use: options.use,
+      };
+
     case "EC":
       return {
         ...createEcDerFromB64(options),

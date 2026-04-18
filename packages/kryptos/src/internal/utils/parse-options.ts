@@ -7,7 +7,7 @@ import {
   UnknownJwk,
 } from "../../types";
 
-const TYPES: Array<KryptosType> = ["EC", "oct", "OKP", "RSA"] as const;
+const TYPES: Array<KryptosType> = ["AKP", "EC", "oct", "OKP", "RSA"] as const;
 
 type LooseJwk = UnknownJwk &
   Partial<KryptosJwk> & {

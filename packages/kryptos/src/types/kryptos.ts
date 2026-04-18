@@ -38,6 +38,8 @@ export type KryptosJwk = {
   kty: KryptosType;
   n?: string;
   p?: string;
+  priv?: string;
+  pub?: string;
   q?: string;
   qi?: string;
   use: KryptosUse;

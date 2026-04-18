@@ -3,6 +3,7 @@ import { KryptosAttributes } from "./attributes";
 import { KryptosCertificateOption } from "./certificate";
 import { KryptosEncryption } from "./encryption";
 import {
+  AkpSigAlgorithm,
   OctEncDirAlgorithm,
   OctEncStdAlgorithm,
   OctSigAlgorithm,
@@ -58,6 +59,8 @@ type Sig = {
 
 // specific key options
 
+type AkpSig = { algorithm: AkpSigAlgorithm };
+
 type EcEnc = { algorithm: EcEncAlgorithm; curve?: EcCurve };
 
 type EcSig = { algorithm: EcSigAlgorithm; curve?: EcCurve };
@@ -79,6 +82,12 @@ type RsaEnc = { algorithm: RsaEncAlgorithm };
 type RsaSig = { algorithm: RsaSigAlgorithm };
 
 // combined options
+
+export type KryptosGenerateAkpSig = CertifiableStd & Sig & AkpSig;
+
+export type KryptosGenerateAkp = KryptosGenerateAkpSig & {
+  type: "AKP";
+};
 
 export type KryptosGenerateEcEnc = CertifiableStd & Enc & EcEnc;
 

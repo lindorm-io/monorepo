@@ -1,5 +1,7 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
+exports[`Kryptos.thumbprint should compute a thumbprint for an AKP key 1`] = `"BOXXj_OgD7SZEukI-ekGb9h9OV-TyBwiG_Ft_g9E1Bo"`;
+
 exports[`Kryptos.thumbprint should compute an RFC 7638 thumbprint for an EC key 1`] = `"kvOZ7ng44IIdfprU0_U-4G9nyay_Hj-iN19pU9hnT_M"`;
 
 exports[`Kryptos.thumbprint should compute an RFC 7638 thumbprint for an OKP key 1`] = `"XcTD1o2JXbVRJkHHqVflMHIZF-62rlFVMCkDEKF8vik"`;

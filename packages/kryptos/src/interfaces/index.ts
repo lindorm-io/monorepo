@@ -1,4 +1,5 @@
 export * from "./Kryptos";
+export * from "./KryptosAkp";
 export * from "./KryptosEc";
 export * from "./KryptosOct";
 export * from "./KryptosOkp";
