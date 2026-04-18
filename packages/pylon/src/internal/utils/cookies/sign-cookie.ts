@@ -8,7 +8,11 @@ export const signCookie = async (
   const kryptos = await ctx.amphora.find({
     isExternal: false,
     operations: ["sign"],
-    $or: [{ purpose: "cookie" }, { purpose: "session" }, { purpose: undefined }],
+    $or: [
+      { purpose: "pylon:cookie" },
+      { purpose: "pylon:session" },
+      { purpose: undefined },
+    ],
     use: "sig",
   });
 

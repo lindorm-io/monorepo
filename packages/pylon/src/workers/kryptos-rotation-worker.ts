@@ -1,15 +1,15 @@
 import { add, duration, ms, ReadableTime, sub } from "@lindorm/date";
-import { KryptosAlgorithm, KryptosDB, KryptosKit } from "@lindorm/kryptos";
+import { KryptosAuto, KryptosDB, KryptosKit } from "@lindorm/kryptos";
 import { ILogger } from "@lindorm/logger";
 import { IProteusSource } from "@lindorm/proteus";
 import { Constructor } from "@lindorm/types";
 import { CreateLindormWorkerOptions, LindormWorker } from "@lindorm/worker";
 import { Kryptos } from "../entities/Kryptos";
 
-type KeyOption = {
-  algorithm: KryptosAlgorithm;
-  purpose: string | null;
-};
+type KeyOption = Pick<
+  KryptosAuto,
+  "algorithm" | "curve" | "encryption" | "hidden" | "purpose"
+>;
 
 type Options = CreateLindormWorkerOptions & {
   expiry?: ReadableTime;
@@ -28,13 +28,13 @@ export const createKryptosRotationWorker = (options: Options): LindormWorker =>
     retry: options.retry,
     logger: options.logger,
     callback: async (ctx): Promise<void> => {
-      const keys = options.keys ?? [
-        { algorithm: "dir", purpose: "cookie" },
-        { algorithm: "HS256", purpose: "cookie" },
-        { algorithm: "EdDSA", purpose: "session" },
-        { algorithm: "ECDH-ES", purpose: "session" },
-        { algorithm: "ES512", purpose: "token" },
-        { algorithm: "ECDH-ES+A128GCMKW", purpose: "token" },
+      const keys: Array<KeyOption> = options.keys ?? [
+        { algorithm: "dir", hidden: true, purpose: "pylon:cookie" },
+        { algorithm: "HS256", hidden: true, purpose: "pylon:cookie" },
+        { algorithm: "EdDSA", curve: "Ed448", hidden: true, purpose: "pylon:session" },
+        { algorithm: "ECDH-ES", curve: "X448", hidden: true, purpose: "pylon:session" },
+        { algorithm: "EdDSA", curve: "Ed25519", purpose: "token" },
+        { algorithm: "ECDH-ES+A256GCMKW", curve: "X448", purpose: "token" },
       ];
 
       const repository = options.proteus.repository(options.target ?? Kryptos);
@@ -50,17 +50,22 @@ export const createKryptosRotationWorker = (options: Options): LindormWorker =>
 
       for (const opts of keys) {
         const existingKeys = existing.filter(
-          (k) => k.algorithm === opts.algorithm && k.purpose === opts.purpose,
+          (k) =>
+            k.algorithm === opts.algorithm &&
+            k.purpose === opts.purpose &&
+            (opts.curve == null || k.curve === opts.curve),
         );
 
         if (existingKeys.length === 0) {
           ctx.logger.debug("No existing keys found, generating initial key", {
             algorithm: opts.algorithm,
+            curve: opts.curve,
             purpose: opts.purpose,
           });
 
           const kryptos = KryptosKit.generate.auto({
             algorithm: opts.algorithm,
+            curve: opts.curve,
             expiresAt,
             notBefore,
             purpose: opts.purpose,
@@ -76,6 +81,7 @@ export const createKryptosRotationWorker = (options: Options): LindormWorker =>
         if (existingKeys.length === 1) {
           ctx.logger.debug("Only one key found, generating rotation key", {
             algorithm: opts.algorithm,
+            curve: opts.curve,
             purpose: opts.purpose,
           });
 
@@ -83,6 +89,7 @@ export const createKryptosRotationWorker = (options: Options): LindormWorker =>
 
           const kryptos = KryptosKit.generate.auto({
             algorithm: opts.algorithm,
+            curve: opts.curve,
             expiresAt: add(existingKey.expiresAt ?? expiresAt, duration(rotation)),
             notBefore: sub(existingKey.expiresAt ?? expiresAt, duration(rotation)),
             purpose: opts.purpose,

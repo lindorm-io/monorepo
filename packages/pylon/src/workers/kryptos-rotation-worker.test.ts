@@ -183,7 +183,7 @@ describe("createKryptosRotationWorker", () => {
       const existingKeys = [
         { algorithm: "ES512", purpose: "token", expiresAt: new Date() },
         { algorithm: "ES512", purpose: "token", expiresAt: new Date() },
-        { algorithm: "HS256", purpose: "cookie", expiresAt: new Date() },
+        { algorithm: "HS256", purpose: "pylon:cookie", expiresAt: new Date() },
       ];
       mockFind.mockResolvedValueOnce(existingKeys);
 
@@ -192,7 +192,7 @@ describe("createKryptosRotationWorker", () => {
         proteus,
         keys: [
           { algorithm: "ES512", purpose: "token" },
-          { algorithm: "HS256", purpose: "cookie" },
+          { algorithm: "HS256", purpose: "pylon:cookie" },
         ],
       });
 
@@ -200,7 +200,7 @@ describe("createKryptosRotationWorker", () => {
 
       expect(mockGenerate).toHaveBeenCalledTimes(1);
       expect(mockGenerate).toHaveBeenCalledWith(
-        expect.objectContaining({ algorithm: "HS256", purpose: "cookie" }),
+        expect.objectContaining({ algorithm: "HS256", purpose: "pylon:cookie" }),
       );
     });
 
