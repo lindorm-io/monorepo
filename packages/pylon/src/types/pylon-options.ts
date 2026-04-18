@@ -4,7 +4,6 @@ import { IHermes } from "@lindorm/hermes";
 import { IIrisSource } from "@lindorm/iris";
 import { ILogger } from "@lindorm/logger";
 import { IProteusSource } from "@lindorm/proteus";
-import { RetryOptions } from "@lindorm/retry";
 import { Environment } from "@lindorm/types";
 import { ILindormWorker } from "@lindorm/worker";
 import Redis from "ioredis";
@@ -104,6 +103,4 @@ export type PylonOptions<
   teardown?: PylonTeardown;
   subscriptions?: Array<PylonSubscribeOptions>;
   workers?: string | ILindormWorker | Array<ILindormWorker | string>;
-  workersInterval?: ReadableTime;
-  workersRetry?: RetryOptions;
 };
