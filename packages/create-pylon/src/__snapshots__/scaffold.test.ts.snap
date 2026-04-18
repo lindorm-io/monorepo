@@ -856,7 +856,7 @@ export const pylon = new Pylon({
     max: 60,
     // TODO: tune strategy/window/max for your traffic
   },
-  workers: [join(__dirname, "..", "workers")],
+  workers: join(__dirname, "..", "workers"),
   setup: async () => {
     await proteusSource.connect();
     await irisSource.connect();
@@ -1600,7 +1600,7 @@ export const pylon = new Pylon({
     // skip: (ctx) => false,
     // entities: [],
   },
-  workers: [join(__dirname, "..", "workers")],
+  workers: join(__dirname, "..", "workers"),
   setup: async () => {
     await proteusSource.connect();
     await irisSource.connect();

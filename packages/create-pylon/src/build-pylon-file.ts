@@ -24,10 +24,10 @@ const buildImports = (answers: Answers): Array<string> => {
   return lines;
 };
 
-const buildWorkersArray = (answers: Answers): string | null => {
+const buildWorkersPath = (answers: Answers): string | null => {
   if (answers.workers.length === 0) return null;
 
-  return `  workers: [join(__dirname, "..", "workers")],`;
+  return `  workers: join(__dirname, "..", "workers"),`;
 };
 
 const buildOptions = (answers: Answers): string => {
@@ -112,7 +112,7 @@ const buildOptions = (answers: Answers): string => {
     lines.push(`  },`);
   }
 
-  const workers = buildWorkersArray(answers);
+  const workers = buildWorkersPath(answers);
   if (workers) {
     lines.push(workers);
   }
