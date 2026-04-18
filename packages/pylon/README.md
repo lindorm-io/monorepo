@@ -134,7 +134,6 @@ const app = new Pylon({
 
   // Workers
   workers: [myWorker],
-  workersInterval: "30s",
 });
 ```
 
@@ -1107,6 +1106,8 @@ To reactivate a suspended subscription, update it (PATCH-style) and clear `error
 
 Background jobs with configurable intervals, retry logic, and jitter.
 
+Pylon automatically runs `amphora.refresh()` every 5 minutes to keep key material in sync with the configured amphora. This runs regardless of whether you configure any custom workers — you do not need to add a refresh worker of your own.
+
 ### Custom Workers
 
 ```typescript
@@ -1122,7 +1123,6 @@ const app = new Pylon({
       },
     },
   ],
-  workersInterval: "30s", // Default interval for workers without one
   // ...
 });
 ```
@@ -1386,8 +1386,6 @@ type PylonOptions<E extends PylonEventMap = PylonEventMap> = {
 
   // Workers
   workers?: string | ILindormWorker | Array<string | ILindormWorker>;
-  workersInterval?: ReadableTime;
-  workersRetry?: RetryOptions;
 };
 ```
 
