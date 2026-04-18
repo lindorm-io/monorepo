@@ -19,6 +19,16 @@ You will also need `@lindorm/logger` and `@lindorm/amphora` (key management) —
 
 ## Quick Start
 
+The fastest way to start a new Pylon service is the scaffolder:
+
+```bash
+npm create @lindorm/pylon@latest my-app
+```
+
+`@lindorm/create-pylon` prompts for features and drivers, writes the project, installs dependencies, and initialises git. See [`@lindorm/create-pylon`](../create-pylon/README.md) for the full prompt flow and programmatic API.
+
+To wire Pylon manually:
+
 ```typescript
 import { Pylon, PylonRouter, useHandler } from "@lindorm/pylon";
 import { Logger } from "@lindorm/logger";
