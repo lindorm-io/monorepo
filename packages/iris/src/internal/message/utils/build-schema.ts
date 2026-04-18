@@ -105,5 +105,5 @@ export const buildSchema = (metadata: MessageMetadata): z.ZodType => {
     validators[field.key] = validator;
   }
 
-  return z.looseObject(validators);
+  return z.strictObject(validators);
 };
