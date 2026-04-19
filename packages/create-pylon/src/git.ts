@@ -9,7 +9,34 @@ const run = (command: string, args: Array<string>, cwd: string): Promise<RunResu
     child.on("close", (code) => resolvePromise({ code }));
   });
 
+const runSilent = (
+  command: string,
+  args: Array<string>,
+  cwd: string,
+): Promise<RunResult> =>
+  new Promise((resolvePromise) => {
+    const child = spawn(command, args, { cwd, stdio: "ignore" });
+    child.on("error", (error) => resolvePromise({ code: null, error }));
+    child.on("close", (code) => resolvePromise({ code }));
+  });
+
+export const isInsideGitRepo = async (projectDir: string): Promise<boolean> => {
+  const result = await runSilent(
+    "git",
+    ["rev-parse", "--is-inside-work-tree"],
+    projectDir,
+  );
+  return result.code === 0;
+};
+
 export const initGit = async (projectDir: string): Promise<void> => {
+  if (await isInsideGitRepo(projectDir)) {
+    process.stdout.write(
+      "Detected existing git repository; skipping git init and initial commit.\n",
+    );
+    return;
+  }
+
   const initResult = await run("git", ["init"], projectDir);
   if (initResult.code !== 0) {
     process.stderr.write(
