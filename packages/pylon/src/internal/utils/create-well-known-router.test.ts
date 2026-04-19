@@ -1,4 +1,5 @@
-import { ClientError } from "@lindorm/errors";
+import { ClientError, ServerError } from "@lindorm/errors";
+import { PylonSecurityTxt } from "../../types";
 import { createWellKnownRouter } from "./create-well-known-router";
 
 describe("createWellKnownRouter", () => {
@@ -162,6 +163,87 @@ describe("createWellKnownRouter", () => {
 
       expect(ctx.status).toBe(204);
       expect(ctx.body).toBeUndefined();
+    });
+  });
+
+  describe("security.txt", () => {
+    const futureDate = (): Date => {
+      const date = new Date();
+      date.setDate(date.getDate() + 30);
+      return date;
+    };
+
+    const fixedExpires = futureDate();
+
+    const securityTxt: PylonSecurityTxt = {
+      contact: "mailto:security@example.com",
+      expires: fixedExpires,
+      canonical: "https://example.com/.well-known/security.txt",
+      encryption: "https://example.com/pgp-key.txt",
+      preferredLanguages: ["en", "sv"],
+    };
+
+    test("should not register the route when securityTxt is unset", () => {
+      const router = createWellKnownRouter(defaultOptions);
+      const layer = router.stack.find((l) => l.path === "/security.txt");
+
+      expect(layer).toBeUndefined();
+    });
+
+    test("should register the route when securityTxt is set", () => {
+      const router = createWellKnownRouter({ ...defaultOptions, securityTxt });
+      const layer = router.stack.find((l) => l.path === "/security.txt");
+
+      expect(layer).toBeDefined();
+    });
+
+    test("should serve the rendered body with expected content-type and status", async () => {
+      const router = createWellKnownRouter({ ...defaultOptions, securityTxt });
+      const layer = router.stack.find((l) => l.path === "/security.txt");
+
+      const ctx: any = { body: null, status: 0, type: "" };
+      const next = jest.fn();
+
+      for (const mw of layer!.stack) {
+        await mw(ctx, next);
+      }
+
+      expect(ctx.status).toBe(200);
+      expect(ctx.type).toBe("text/plain; charset=utf-8");
+      expect(ctx.body).toContain("Contact: mailto:security@example.com");
+      expect(ctx.body).toContain(`Expires: ${fixedExpires.toISOString()}`);
+      expect(ctx.body).toContain(
+        "Canonical: https://example.com/.well-known/security.txt",
+      );
+      expect(ctx.body).toContain("Encryption: https://example.com/pgp-key.txt");
+      expect(ctx.body).toContain("Preferred-Languages: en, sv");
+    });
+
+    test("should throw when expires is in the past", () => {
+      const past = new Date();
+      past.setDate(past.getDate() - 1);
+
+      expect(() =>
+        createWellKnownRouter({
+          ...defaultOptions,
+          securityTxt: {
+            contact: "mailto:security@example.com",
+            expires: past,
+          },
+        }),
+      ).toThrow(ServerError);
+    });
+
+    test("should accept valid securityTxt with Date expires within window", () => {
+      expect(() =>
+        createWellKnownRouter({
+          ...defaultOptions,
+          securityTxt: {
+            contact: "mailto:security@example.com",
+            expires: futureDate(),
+          },
+        }),
+      ).not.toThrow();
     });
   });
 });
