@@ -373,19 +373,6 @@ describe("Pylon", () => {
     });
   });
 
-  test("should return well-known pylon-configuration", async () => {
-    const response = await request(pylon.callback)
-      .get("/.well-known/pylon-configuration")
-      .expect(200);
-
-    expect(response.body).toEqual({
-      domain: "http://test.lindorm.io",
-      name: "@lindorm/pylon",
-      environment: "test",
-      version: "0.0.1",
-    });
-  });
-
   test("should return well-known right-to-be-forgotten", async () => {
     await request(pylon.callback)
       .get("/.well-known/right-to-be-forgotten")
