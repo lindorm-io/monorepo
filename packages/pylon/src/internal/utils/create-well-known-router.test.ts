@@ -1,4 +1,4 @@
-import { ClientError, ServerError } from "@lindorm/errors";
+import { ClientError } from "@lindorm/errors";
 import { createWellKnownRouter } from "./create-well-known-router";
 
 describe("createWellKnownRouter", () => {
@@ -40,7 +40,7 @@ describe("createWellKnownRouter", () => {
       );
     });
 
-    test("should throw ServerError when changePasswordUri is not configured", async () => {
+    test("should throw ClientError when changePasswordUri is not configured", async () => {
       const router = createWellKnownRouter({
         ...defaultOptions,
         changePasswordUri: undefined,
@@ -54,7 +54,7 @@ describe("createWellKnownRouter", () => {
         for (const mw of layer!.stack) {
           await mw(ctx, next);
         }
-      }).rejects.toThrow(ServerError);
+      }).rejects.toThrow(ClientError);
     });
   });
 
@@ -84,25 +84,11 @@ describe("createWellKnownRouter", () => {
       const ctx: any = {
         body: null,
         status: 0,
-        state: { origin: "https://origin.lindorm.io" },
+        state: {
+          app: { domain: "https://test.lindorm.io" },
+          origin: "https://origin.lindorm.io",
+        },
       };
-      const next = jest.fn();
-
-      for (const mw of layer!.stack) {
-        await mw(ctx, next);
-      }
-
-      expect(ctx.status).toBe(200);
-      expect(ctx.body).toMatchSnapshot();
-    });
-  });
-
-  describe("pylon-configuration", () => {
-    test("should return pylon configuration", async () => {
-      const router = createWellKnownRouter(defaultOptions);
-      const layer = router.stack.find((l) => l.path === "/pylon-configuration");
-
-      const ctx: any = { body: null, status: 0 };
       const next = jest.fn();
 
       for (const mw of layer!.stack) {

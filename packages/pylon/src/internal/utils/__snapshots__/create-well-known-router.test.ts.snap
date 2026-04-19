@@ -4,20 +4,7 @@ exports[`createWellKnownRouter openid-configuration should return openid configu
 {
   "authorization_endpoint": "https://test.lindorm.io/auth",
   "issuer": "https://test.lindorm.io",
-  "token_endpoint": "<ORIGIN>/token",
-}
-`;
-
-exports[`createWellKnownRouter pylon-configuration should return pylon configuration 1`] = `
-{
-  "cors": {
-    "origin": "*",
-  },
-  "domain": "https://test.lindorm.io",
-  "environment": "test",
-  "maxRequestAge": 30000,
-  "name": "test-service",
-  "version": "1.0.0",
+  "token_endpoint": "https://origin.lindorm.io/token",
 }
 `;
 
@@ -25,8 +12,9 @@ exports[`createWellKnownRouter should create a router with expected routes 1`] =
 [
   "/change-password",
   "/jwks.json",
-  "/openid-configuration",
-  "/pylon-configuration",
+  "/oauth-protected-resource",
   "/right-to-be-forgotten",
+  "/oauth-authorization-server",
+  "/openid-configuration",
 ]
 `;

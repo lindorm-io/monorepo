@@ -1,5 +1,6 @@
-import { ClientError, ServerError } from "@lindorm/errors";
+import { ClientError } from "@lindorm/errors";
 import { isString, isUrlLike } from "@lindorm/is";
+import { OpenIdConfiguration } from "@lindorm/types";
 import { removeUndefined, sortKeys } from "@lindorm/utils";
 import { PylonRouter } from "../../classes";
 import { PylonHttpContext, PylonHttpOptions } from "../../types";
@@ -9,25 +10,11 @@ export const createWellKnownRouter = <C extends PylonHttpContext>(
 ): PylonRouter<C> => {
   const router = new PylonRouter<C>();
 
-  const openIdConfiguration = sortKeys(
-    removeUndefined({
-      ...(options.openIdConfiguration ?? {}),
-      ...(options.domain && { issuer: options.domain }),
-    }),
-  );
-
-  if (options.domain) {
-    for (const [key, value] of Object.entries(openIdConfiguration)) {
-      if (isString(value) && value.includes("<DOMAIN>")) {
-        (openIdConfiguration as any)[key] = value.replace("<DOMAIN>", options.domain);
-        continue;
-      }
-    }
-  }
-
   router.get("/change-password", async (ctx) => {
     if (!isUrlLike(options.changePasswordUri)) {
-      throw new ServerError("Change password URI not configured");
+      throw new ClientError("Change password URI not configured", {
+        status: ClientError.Status.NotFound,
+      });
     }
     ctx.redirect(options.changePasswordUri);
   });
@@ -37,29 +24,13 @@ export const createWellKnownRouter = <C extends PylonHttpContext>(
     ctx.status = 200;
   });
 
-  router.get("/openid-configuration", async (ctx) => {
-    const result = { ...openIdConfiguration };
-
-    for (const [key, value] of Object.entries(result)) {
-      if (isString(value) && value.includes("<ORIGIN>")) {
-        (result as any)[key] = value.replace("<ORIGIN>", ctx.state.origin);
-        continue;
-      }
+  router.get("/oauth-protected-resource", async (ctx) => {
+    if (!isUrlLike(options.auth?.issuer)) {
+      throw new ClientError("Change password URI not configured", {
+        status: ClientError.Status.NotFound,
+      });
     }
-
-    ctx.body = openIdConfiguration;
-    ctx.status = 200;
-  });
-
-  router.get("/pylon-configuration", async (ctx) => {
-    ctx.body = {
-      cors: options.cors,
-      domain: options.domain,
-      environment: options.environment,
-      maxRequestAge: options.maxRequestAge,
-      name: options.name,
-      version: options.version,
-    };
+    ctx.body = [options.auth.issuer];
     ctx.status = 200;
   });
 
@@ -79,6 +50,45 @@ export const createWellKnownRouter = <C extends PylonHttpContext>(
     ctx.body = undefined;
     ctx.status = 204;
   });
+
+  if (options.openIdConfiguration) {
+    const openIdConfiguration = sortKeys(
+      removeUndefined({
+        ...(options.domain && { issuer: options.domain }),
+        ...options.openIdConfiguration,
+      }),
+    );
+
+    const getOpenIdConfig = (ctx: C): Partial<OpenIdConfiguration> => {
+      const result = { ...openIdConfiguration };
+
+      for (const [key, value] of Object.entries(result)) {
+        if (isString(value) && value.includes("<DOMAIN>")) {
+          (result as any)[key] = value.replace("<DOMAIN>", ctx.state.app.domain);
+          continue;
+        }
+      }
+
+      for (const [key, value] of Object.entries(result)) {
+        if (isString(value) && value.includes("<ORIGIN>")) {
+          (result as any)[key] = value.replace("<ORIGIN>", ctx.state.origin);
+          continue;
+        }
+      }
+
+      return result;
+    };
+
+    router.get("/oauth-authorization-server", async (ctx) => {
+      ctx.body = getOpenIdConfig(ctx);
+      ctx.status = 200;
+    });
+
+    router.get("/openid-configuration", async (ctx) => {
+      ctx.body = getOpenIdConfig(ctx);
+      ctx.status = 200;
+    });
+  }
 
   return router;
 };
