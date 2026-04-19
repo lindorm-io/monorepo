@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.11](https://github.com/lindorm-io/monorepo/compare/@lindorm/oct@0.2.10...@lindorm/oct@0.2.11) (2026-04-19)
+
+**Note:** Version bump only for package @lindorm/oct
+
 ## [0.2.10](https://github.com/lindorm-io/monorepo/compare/@lindorm/oct@0.2.9...@lindorm/oct@0.2.10) (2026-04-15)
 
 **Note:** Version bump only for package @lindorm/oct

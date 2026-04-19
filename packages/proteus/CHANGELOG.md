@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.5.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/proteus@0.5.0...@lindorm/proteus@0.5.1) (2026-04-19)
+
+### Bug Fixes
+
+- **proteus:** reject unknown fields during entity validation ([4ec3eae](https://github.com/lindorm-io/monorepo/commit/4ec3eae3a1959884493404ee3cf3c0a0d9c42263))
+- **proteus:** widen @lindorm/\* peer ranges to current workspace versions ([ff3ac90](https://github.com/lindorm-io/monorepo/commit/ff3ac9052534f663cf1e1ef75947f11f1f6bc8b0))
+
 # [0.5.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/proteus@0.4.0...@lindorm/proteus@0.5.0) (2026-04-15)
 
 ### Bug Fixes

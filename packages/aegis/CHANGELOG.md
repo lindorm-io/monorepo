@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.6.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/aegis@0.5.0...@lindorm/aegis@0.6.0) (2026-04-19)
+
+### Features
+
+- **aegis:** accept AKP algorithms in token header ([3dc40b7](https://github.com/lindorm-io/monorepo/commit/3dc40b781f436181a6453235d8f4dc7c61885e7d))
+- **aegis:** route AKP kryptos keys through AkpKit for ML-DSA JWS ([a9351fc](https://github.com/lindorm-io/monorepo/commit/a9351fc94e47de240d51f2024a418111e762f046))
+
 # [0.5.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/aegis@0.4.4...@lindorm/aegis@0.5.0) (2026-04-15)
 
 ### Bug Fixes

@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.6.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/hermes@0.6.0...@lindorm/hermes@0.6.1) (2026-04-19)
+
+### Bug Fixes
+
+- **hermes:** correct invalid "jsonb" entity field types ([a855d1a](https://github.com/lindorm-io/monorepo/commit/a855d1a10d2bc31a9eede1d7bbd95b12d5a9856d))
+- **hermes:** correct invalid "jsonb" message field types ([6db5882](https://github.com/lindorm-io/monorepo/commit/6db5882ae305439e154bfcde9c003fe6ddba4a33))
+- **hermes:** widen @lindorm/\* peer ranges to current workspace versions ([2a0c8cf](https://github.com/lindorm-io/monorepo/commit/2a0c8cfb75c454a66b771cc9db0eafa41c111cd6))
+
 # [0.6.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/hermes@0.5.0...@lindorm/hermes@0.6.0) (2026-04-15)
 
 ### Bug Fixes

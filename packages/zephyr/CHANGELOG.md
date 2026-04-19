@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/zephyr@0.1.0...@lindorm/zephyr@0.1.1) (2026-04-19)
+
+### Bug Fixes
+
+- **zephyr:** widen @lindorm/\* peer ranges to current workspace versions ([70b98ea](https://github.com/lindorm-io/monorepo/commit/70b98ea91895e0f3fc99e8a277cd585b95f8df5d))
+
 # 0.1.0 (2026-04-15)
 
 ### Features
