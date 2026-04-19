@@ -4,6 +4,8 @@ import { OpenIdConfiguration } from "@lindorm/types";
 import { removeUndefined, sortKeys } from "@lindorm/utils";
 import { PylonRouter } from "../../classes";
 import { PylonHttpContext, PylonHttpOptions } from "../../types";
+import { assertSecurityTxtOptions } from "./assert-security-txt-options";
+import { renderSecurityTxt } from "./render-security-txt";
 
 export const createWellKnownRouter = <C extends PylonHttpContext>(
   options: PylonHttpOptions<C>,
@@ -50,6 +52,18 @@ export const createWellKnownRouter = <C extends PylonHttpContext>(
     ctx.body = undefined;
     ctx.status = 204;
   });
+
+  if (options.securityTxt) {
+    assertSecurityTxtOptions(options.securityTxt);
+
+    const body = renderSecurityTxt(options.securityTxt);
+
+    router.get("/security.txt", async (ctx) => {
+      ctx.type = "text/plain; charset=utf-8";
+      ctx.body = body;
+      ctx.status = 200;
+    });
+  }
 
   if (options.openIdConfiguration) {
     const openIdConfiguration = sortKeys(

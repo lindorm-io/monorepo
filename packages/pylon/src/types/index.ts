@@ -23,4 +23,5 @@ export * from "./session";
 export * from "./setup";
 export * from "./socket";
 export * from "./route";
+export * from "./security-txt";
 export * from "./types";

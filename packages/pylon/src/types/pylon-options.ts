@@ -32,6 +32,7 @@ import {
   PylonWebhookOptions,
 } from "./pylon-callback-options";
 
+import { PylonSecurityTxt } from "./security-txt";
 import { PylonSetup, PylonTeardown } from "./setup";
 import { PylonSubscribeOptions } from "./types";
 
@@ -76,6 +77,7 @@ export type PylonHttpOptions<C extends PylonHttpContext = PylonHttpContext> =
     openIdConfiguration?: Partial<OpenIdConfigurationOptions>;
     parseBody?: ParseBodyOptions;
     proxy?: boolean;
+    securityTxt?: PylonSecurityTxt;
     session?: PylonSessionOptions;
   };
 
