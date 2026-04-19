@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.7.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/kryptos@0.6.0...@lindorm/kryptos@0.7.0) (2026-04-19)
+
+### Features
+
+- **kryptos:** add AKP key type with ML-DSA-44/65/87 signatures ([e18cab7](https://github.com/lindorm-io/monorepo/commit/e18cab7c1cb5d8e147cfe1eaeafd82a083fb1559))
+- **kryptos:** default ECDH-ES key-wrap variants to OKP X-curves ([ad8833a](https://github.com/lindorm-io/monorepo/commit/ad8833a276ad9a25bc5df53a8175065919a2b2cb))
+- **kryptos:** enable X.509 certificates for AKP (ML-DSA) keys ([7ae5fd8](https://github.com/lindorm-io/monorepo/commit/7ae5fd8bb5c58b4b29fc8fcc0fe988f93bf7f4f6))
+- **kryptos:** expose KryptosKit.getTypeForAlgorithm ([68de7a4](https://github.com/lindorm-io/monorepo/commit/68de7a40e5cb0258971e449a9bc867c21fdd8e6c))
+
 # [0.6.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/kryptos@0.5.3...@lindorm/kryptos@0.6.0) (2026-04-15)
 
 ### Bug Fixes

@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/kryptos",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -48,14 +48,14 @@
   },
   "dependencies": {
     "@inquirer/prompts": "^8.3.0",
-    "@lindorm/b64": "^0.1.9",
-    "@lindorm/case": "^0.1.15",
-    "@lindorm/date": "^0.4.3",
-    "@lindorm/errors": "^0.1.17",
-    "@lindorm/is": "^0.1.15",
-    "@lindorm/random": "^0.2.3",
-    "@lindorm/sha": "^0.4.0",
-    "@lindorm/utils": "^0.7.0",
+    "@lindorm/b64": "^0.1.10",
+    "@lindorm/case": "^0.1.16",
+    "@lindorm/date": "^0.4.4",
+    "@lindorm/errors": "^0.1.18",
+    "@lindorm/is": "^0.1.16",
+    "@lindorm/random": "^0.2.4",
+    "@lindorm/sha": "^0.4.1",
+    "@lindorm/utils": "^0.7.1",
     "commander": "^14.0.3"
   },
   "devDependencies": {

@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.3.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/iris@0.2.0...@lindorm/iris@0.3.0) (2026-04-19)
+
+### Bug Fixes
+
+- **iris:** reject unknown fields during message validation ([d7e0ccb](https://github.com/lindorm-io/monorepo/commit/d7e0ccb929ba0a35487807e5b02e7dca5ed61b9f))
+
+### Features
+
+- **iris:** add Nullable, Default, and Optional field decorators ([a128f34](https://github.com/lindorm-io/monorepo/commit/a128f3437927970ee65b36210aba0c8136350ca5))
+
 # [0.2.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/iris@0.1.1...@lindorm/iris@0.2.0) (2026-04-15)
 
 ### Bug Fixes

@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/worker@0.3.0...@lindorm/worker@0.4.0) (2026-04-19)
+
+### Features
+
+- **worker:** scanner supports LindormWorker instance exports ([8406076](https://github.com/lindorm-io/monorepo/commit/84060767401c93473af8f56d2859e71231c60d4d))
+
 # [0.3.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/worker@0.2.11...@lindorm/worker@0.3.0) (2026-04-15)
 
 ### Features

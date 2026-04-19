@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.9.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/pylon@0.8.0...@lindorm/pylon@0.9.0) (2026-04-19)
+
+### Bug Fixes
+
+- **pylon:** emit zod/v4 import in generate handler template ([41e50a3](https://github.com/lindorm-io/monorepo/commit/41e50a33379dcc6cef4ee8da692dfc2af52b2cea))
+- **pylon:** route LindormWorker instances through scan-workers without re-wrapping ([f9c4ca7](https://github.com/lindorm-io/monorepo/commit/f9c4ca73aa81bf0f638be2a895a1ca4ca0089bf1))
+- **pylon:** widen @lindorm/\* peer ranges to current workspace versions ([789e1db](https://github.com/lindorm-io/monorepo/commit/789e1dbef6523381210d7ffce5e82c6927bd4b27))
+
+### Features
+
+- **create-pylon:** generate and load a pylon:kek at scaffold time ([eab4f28](https://github.com/lindorm-io/monorepo/commit/eab4f2848ea3d1c4494740d637d3ba65df463bd7))
+- **pylon:** add default health check for proteus and iris ([6d2f9f2](https://github.com/lindorm-io/monorepo/commit/6d2f9f2f883d3c760853f616f7d4d3edbbecba47))
+- **pylon:** add generate worker command ([48f2dc4](https://github.com/lindorm-io/monorepo/commit/48f2dc4f699878bf30002d10a3b34bc4e2a15a48))
+- **pylon:** add tenant-aware webhook dispatch ([b3cda8b](https://github.com/lindorm-io/monorepo/commit/b3cda8babc7eaebc5ec30b12d11655c2f99d0153))
+- **pylon:** add webhook error tracking to WebhookSubscription ([5644176](https://github.com/lindorm-io/monorepo/commit/56441769afa65327924376904e6f3abceba82d57))
+- **pylon:** expose /.well-known/security.txt per RFC 9116 ([319a466](https://github.com/lindorm-io/monorepo/commit/319a4668ccb6e640659773be44d848c4e388bdc2))
+- **pylon:** rotate kryptos under optional root CA and skip expired rows ([d9cb104](https://github.com/lindorm-io/monorepo/commit/d9cb10454d1f7abc9edcf74abd7342d398479557))
+- **pylon:** use Edwards curves for internal keys and namespace system purposes ([229472c](https://github.com/lindorm-io/monorepo/commit/229472cf0477e3bcca0ae9c9298fdf99a3df859b))
+
 # [0.8.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/pylon@0.7.0...@lindorm/pylon@0.8.0) (2026-04-15)
 
 ### Bug Fixes

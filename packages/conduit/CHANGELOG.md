@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.5.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/conduit@0.5.0...@lindorm/conduit@0.5.1) (2026-04-19)
+
+**Note:** Version bump only for package @lindorm/conduit
+
 # [0.5.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/conduit@0.4.4...@lindorm/conduit@0.5.0) (2026-04-15)
 
 ### Bug Fixes
