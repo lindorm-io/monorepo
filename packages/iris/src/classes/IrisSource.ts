@@ -1,3 +1,4 @@
+import { isString } from "@lindorm/is";
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
 import { IrisNotSupportedError } from "../errors/IrisNotSupportedError";
@@ -40,6 +41,7 @@ export class IrisSource implements IIrisSource {
   private readonly logger: ILogger;
   private readonly context: unknown;
   private readonly _messages: Array<Constructor<IMessage>>;
+  private readonly _pendingMessagePaths: Array<MessageScannerInput[number]>;
   private readonly _driverType: IrisDriverType;
   private _subscribersRef: { current: Array<IMessageSubscriber> };
   private _connectingPromise: Promise<void> | null = null;
@@ -52,7 +54,12 @@ export class IrisSource implements IIrisSource {
     this._amphora = options.amphora;
     this.logger = options.logger.child(["IrisSource"]);
     this.context = options.context;
-    this._messages = options.messages ? MessageScanner.scan(options.messages) : [];
+    // Pre-loaded classes go straight into _messages; string paths are deferred
+    // to setup() since scanner.import() is async.
+    this._messages = (options.messages ?? []).filter(
+      (a): a is Constructor<IMessage> => !isString(a) && (a as any)?.prototype != null,
+    );
+    this._pendingMessagePaths = (options.messages ?? []).filter((a) => isString(a));
     this._driverType = options.driver;
     this._subscribersRef = { current: [] };
 
@@ -99,11 +106,11 @@ export class IrisSource implements IIrisSource {
     return this._messages;
   }
 
-  public addMessages(input: MessageScannerInput): void {
+  public async addMessages(input: MessageScannerInput): Promise<void> {
     if (this.isSetUp) {
       throw new IrisSourceError("Cannot add messages after setup() has been called");
     }
-    const scanned = MessageScanner.scan(input);
+    const scanned = await MessageScanner.scan(input);
     for (const msg of scanned) {
       if (!this._messages.includes(msg)) {
         this._messages.push(msg);
@@ -463,6 +470,16 @@ export class IrisSource implements IIrisSource {
 
   private async _doSetup(): Promise<void> {
     clearMetadataCache();
+
+    if (this._pendingMessagePaths.length) {
+      const scanned = await MessageScanner.scan(this._pendingMessagePaths);
+      for (const msg of scanned) {
+        if (!this._messages.includes(msg)) {
+          this._messages.push(msg);
+        }
+      }
+      this._pendingMessagePaths.length = 0;
+    }
 
     const concreteMessages = this._messages.filter(
       (target) => !isAbstractMessage(target),
