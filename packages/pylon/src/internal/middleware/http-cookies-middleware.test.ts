@@ -1,6 +1,6 @@
 import { AesKit } from "@lindorm/aes";
-import { createMockAegis } from "@lindorm/aegis";
-import { createMockAmphora } from "@lindorm/amphora";
+import { createMockAegis } from "@lindorm/aegis/mocks/jest";
+import { createMockAmphora } from "@lindorm/amphora/mocks/jest";
 import { B64 } from "@lindorm/b64";
 import { PylonCookieConfig } from "../../types";
 import { parseCookieHeader as _parseCookieHeader } from "../utils/cookies/parse-cookie-header";
