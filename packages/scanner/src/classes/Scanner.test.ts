@@ -235,7 +235,7 @@ describe("Scanner", () => {
   });
 
   describe("import", () => {
-    const fixturePath = join(__dirname, "..", "__fixtures__", "require-fixture.ts");
+    const fixturePath = join(__dirname, "..", "__fixtures__", "import-fixture.ts");
 
     test("should import a file", async () => {
       const scanner = new Scanner();
@@ -256,31 +256,6 @@ describe("Scanner", () => {
       const scanner = new Scanner();
 
       await expect(scanner.import("/missing/module.ts")).rejects.toThrow();
-    });
-  });
-
-  describe("require", () => {
-    const fixturePath = join(__dirname, "..", "__fixtures__", "require-fixture.ts");
-
-    test("should require a file", () => {
-      const scanner = new Scanner();
-      const result = scanner.require<{ fixture: { foo: string } }>(fixturePath);
-
-      expect(result).toEqual({ fixture: { foo: "bar" } });
-    });
-
-    test("should accept IScanData", () => {
-      const scanner = new Scanner();
-      const scanData = { fullPath: fixturePath };
-      const result = scanner.require<{ fixture: { foo: string } }>(scanData as any);
-
-      expect(result).toEqual({ fixture: { foo: "bar" } });
-    });
-
-    test("should propagate MODULE_NOT_FOUND error", () => {
-      const scanner = new Scanner();
-
-      expect(() => scanner.require("/missing/module.ts")).toThrow();
     });
   });
 

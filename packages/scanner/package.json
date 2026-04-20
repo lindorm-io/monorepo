@@ -28,10 +28,10 @@
   },
   "dependencies": {
     "@lindorm/errors": "^0.1.18",
-    "@lindorm/is": "^0.1.16",
-    "tsx": "^4.21.0"
+    "@lindorm/is": "^0.1.16"
   },
   "devDependencies": {
-    "@lindorm/logger": "^0.5.4"
+    "@lindorm/logger": "^0.5.4",
+    "tsx": "^4.21.0"
   }
 }
