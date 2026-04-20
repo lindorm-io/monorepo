@@ -1,6 +1,7 @@
 import type { SyncOperation } from "../../drivers/postgres/types/sync-plan";
 import type { EntityGroup } from "./group-operations";
 import { filterOperationsByEntities } from "./filter-operations";
+import { describe, expect, it } from "vitest";
 
 const makeOp = (overrides: Partial<SyncOperation>): SyncOperation => ({
   type: "add_column",

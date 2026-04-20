@@ -1,6 +1,7 @@
 import { diffConstraints } from "../../../../drivers/postgres/utils/sync/diff-constraints";
 import type { DbConstraint } from "../../types/db-snapshot";
 import type { DesiredConstraint } from "../../types/desired-schema";
+import { describe, expect, it } from "vitest";
 
 const makeDbConstraint = (overrides: Partial<DbConstraint> = {}): DbConstraint => ({
   name: "test_constraint",

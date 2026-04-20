@@ -2,6 +2,7 @@ import { makeField } from "../../../../__fixtures__/make-field";
 import type { EntityMetadata } from "../../../../entity/types/metadata";
 import { ProteusError } from "../../../../../errors";
 import { compileOrderBy } from "./compile-order-by";
+import { describe, expect, test } from "vitest";
 
 const metadata = {
   fields: [

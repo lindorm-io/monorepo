@@ -1,4 +1,29 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`loadMemoryEmbeddedListRows > embeddable elements > hydrates embeddable elements using elementConstructor 1`] = `
+[
+  Address {
+    "city": "Berlin",
+    "zip": "10115",
+  },
+]
+`;
+
+exports[`loadMemoryEmbeddedListRows > primitive elements > loads from namespaced table when namespace provided 1`] = `
+[
+  "alpha",
+  "beta",
+  "gamma",
+]
+`;
+
+exports[`loadMemoryEmbeddedListRows > primitive elements > loads primitive rows back onto entity 1`] = `
+[
+  "alpha",
+  "beta",
+  "gamma",
+]
+`;
 
 exports[`loadMemoryEmbeddedListRows embeddable elements hydrates embeddable elements using elementConstructor 1`] = `
 [
@@ -22,6 +47,56 @@ exports[`loadMemoryEmbeddedListRows primitive elements loads primitive rows back
   "alpha",
   "beta",
   "gamma",
+]
+`;
+
+exports[`saveMemoryEmbeddedListRows > embeddable elements > handles null item values gracefully 1`] = `
+[
+  {
+    "entity_id": "e1",
+    "name": null,
+  },
+]
+`;
+
+exports[`saveMemoryEmbeddedListRows > embeddable elements > persists embeddable fields with optional transform 1`] = `
+[
+  {
+    "city": "Berlin",
+    "entity_id": "e1",
+    "zip": "10115",
+  },
+  {
+    "city": "Hamburg",
+    "entity_id": "e1",
+    "zip": "20095",
+  },
+]
+`;
+
+exports[`saveMemoryEmbeddedListRows > primitive elements > persists rows for each element with parentFkColumn 1`] = `
+[
+  {
+    "entity_id": "entity-1",
+    "value": "alpha",
+  },
+  {
+    "entity_id": "entity-1",
+    "value": "beta",
+  },
+  {
+    "entity_id": "entity-1",
+    "value": "gamma",
+  },
+]
+`;
+
+exports[`saveMemoryEmbeddedListRows > primitive elements > replaces existing rows on re-save 1`] = `
+[
+  {
+    "entity_id": "entity-1",
+    "value": "replaced",
+  },
 ]
 `;
 

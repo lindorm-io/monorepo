@@ -1,5 +1,6 @@
 import type { EntityMetadata } from "../../entity/types/metadata";
 import { buildKeysetOrder, keysetOrderToRecord } from "./build-keyset-order";
+import { describe, expect, it } from "vitest";
 
 const makeMetadata = (primaryKeys: Array<string>): EntityMetadata =>
   ({ primaryKeys }) as unknown as EntityMetadata;

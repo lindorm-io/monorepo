@@ -3,13 +3,14 @@
 // Runs the full TCK suite against the in-memory driver.
 // No external services required.
 
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import type { Constructor } from "@lindorm/types";
 import type { IEntity } from "../../interfaces";
 import { ProteusSource } from "../../classes/ProteusSource";
 import type { TckDriverFactory, TckDriverHandle } from "../__fixtures__/tck/types";
 import { createTckAmphora } from "../__fixtures__/tck/create-tck-amphora";
 import { runTck } from "../__fixtures__/tck/run-tck";
+import { describe } from "vitest";
 
 jest.setTimeout(30_000);
 

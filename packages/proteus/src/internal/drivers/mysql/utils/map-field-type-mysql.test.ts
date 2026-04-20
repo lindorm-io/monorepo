@@ -1,6 +1,7 @@
 import { makeField } from "../../../__fixtures__/make-field";
 import { ProteusError } from "../../../../errors";
 import { mapFieldTypeMysql } from "./map-field-type-mysql";
+import { describe, expect, test } from "vitest";
 
 describe("mapFieldTypeMysql", () => {
   describe("boolean", () => {

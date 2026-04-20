@@ -1,3 +1,4 @@
+import { describe, expect, test, vi } from "vitest";
 import { makeField } from "../../__fixtures__/make-field";
 import type { MetaHook } from "../types/metadata";
 import {
@@ -12,7 +13,7 @@ import {
 
 const makeHook = (decorator: MetaHook["decorator"]): MetaHook => ({
   decorator,
-  callback: jest.fn(),
+  callback: vi.fn(),
 });
 
 describe("stage-metadata", () => {

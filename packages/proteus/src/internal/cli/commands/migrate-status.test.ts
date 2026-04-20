@@ -4,29 +4,30 @@ import { withSource } from "../with-source";
 import { withMigrationManager } from "../with-migration-manager";
 import { formatStatusTable } from "../output/format-status-table";
 import { Logger } from "@lindorm/logger";
+import { beforeEach, describe, expect, it, vi, type MockedFunction } from "vitest";
 
-jest.mock("../with-source");
-jest.mock("../with-migration-manager");
-jest.mock("../output/format-status-table");
+vi.mock("../with-source");
+vi.mock("../with-migration-manager");
+vi.mock("../output/format-status-table");
 
-jest.mock("@lindorm/logger", () => ({
+vi.mock("@lindorm/logger", () => ({
   Logger: {
     std: {
-      log: jest.fn(),
-      info: jest.fn(),
-      success: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-      debug: jest.fn(),
+      log: vi.fn(),
+      info: vi.fn(),
+      success: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+      debug: vi.fn(),
     },
   },
 }));
 
-const mockWithSource = withSource as jest.MockedFunction<typeof withSource>;
-const mockWithMigrationManager = withMigrationManager as jest.MockedFunction<
+const mockWithSource = withSource as MockedFunction<typeof withSource>;
+const mockWithMigrationManager = withMigrationManager as MockedFunction<
   typeof withMigrationManager
 >;
-const mockFormatStatusTable = formatStatusTable as jest.MockedFunction<
+const mockFormatStatusTable = formatStatusTable as MockedFunction<
   typeof formatStatusTable
 >;
 
@@ -36,31 +37,31 @@ const makeSource = (overrides: Record<string, unknown> = {}) => ({
   namespace: "myapp",
   driverType: "postgres",
   migrationsTable: undefined as string | undefined,
-  getEntityMetadata: jest.fn().mockReturnValue([]),
-  log: { child: jest.fn().mockReturnValue({ debug: jest.fn() }) },
+  getEntityMetadata: vi.fn().mockReturnValue([]),
+  log: { child: vi.fn().mockReturnValue({ debug: vi.fn() }) },
   ...overrides,
 });
 
 const makeManager = () => ({
-  apply: jest.fn(),
-  rollback: jest.fn(),
-  status: jest.fn().mockResolvedValue({
+  apply: vi.fn(),
+  rollback: vi.fn(),
+  status: vi.fn().mockResolvedValue({
     resolved: [
       { name: "20240101-add-users", status: "applied" },
       { name: "20240201-add-posts", status: "pending" },
     ],
     ghosts: [],
   }),
-  getRecords: jest.fn(),
-  resolveApplied: jest.fn(),
-  resolveRolledBack: jest.fn(),
+  getRecords: vi.fn(),
+  resolveApplied: vi.fn(),
+  resolveRolledBack: vi.fn(),
 });
 
 describe("migrateStatus", () => {
   let manager: ReturnType<typeof makeManager>;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     manager = makeManager();
 
     mockWithSource.mockImplementation(async (_opts, fn) => {

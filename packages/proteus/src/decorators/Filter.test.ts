@@ -4,6 +4,7 @@ import { Field } from "./Field";
 import { Filter } from "./Filter";
 import { Nullable } from "./Nullable";
 import { PrimaryKeyField } from "./PrimaryKeyField";
+import { describe, expect, test } from "vitest";
 
 @Entity({ name: "FilterActive" })
 @Filter({ name: "active", condition: { status: "active" }, default: true })

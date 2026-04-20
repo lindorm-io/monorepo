@@ -1,4 +1,30 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`classifyTypeCast > should classify NUMERIC(8, 1) → NUMERIC(8, 4) as safe alter (scale widening) 1`] = `
+{
+  "action": "alter",
+}
+`;
+
+exports[`classifyTypeCast > should classify NUMERIC(8, 4) → NUMERIC(8, 1) as alter_using (scale narrowing) 1`] = `
+{
+  "action": "alter_using",
+  "using": "col::numeric(8, 1)",
+}
+`;
+
+exports[`classifyTypeCast > should classify NUMERIC(10) → NUMERIC(8) as alter_using (precision narrowing, no scale) 1`] = `
+{
+  "action": "alter_using",
+  "using": "col::numeric(8)",
+}
+`;
+
+exports[`classifyTypeCast > should classify VARCHAR(50) → VARCHAR (unlimited, no parens) as safe alter 1`] = `
+{
+  "action": "alter",
+}
+`;
 
 exports[`classifyTypeCast should classify NUMERIC(8, 1) → NUMERIC(8, 4) as safe alter (scale widening) 1`] = `
 {

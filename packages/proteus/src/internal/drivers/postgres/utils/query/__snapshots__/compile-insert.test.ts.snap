@@ -1,4 +1,15 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`compileInsert > should compile a basic insert 1`] = `
+{
+  "params": [
+    "abc-123",
+    "Alice",
+    "alice@example.com",
+  ],
+  "text": "INSERT INTO "app"."users" ("id", "name", "email_address") VALUES ($1, $2, $3) RETURNING *",
+}
+`;
 
 exports[`compileInsert should compile a basic insert 1`] = `
 {
@@ -8,6 +19,20 @@ exports[`compileInsert should compile a basic insert 1`] = `
     "alice@example.com",
   ],
   "text": "INSERT INTO "app"."users" ("id", "name", "email_address") VALUES ($1, $2, $3) RETURNING *",
+}
+`;
+
+exports[`compileInsertBulk > should compile multi-row insert 1`] = `
+{
+  "params": [
+    "1",
+    "Alice",
+    "a@b.com",
+    "2",
+    "Bob",
+    "b@b.com",
+  ],
+  "text": "INSERT INTO "app"."users" ("id", "name", "email_address") VALUES ($1, $2, $3), ($4, $5, $6) RETURNING *",
 }
 `;
 

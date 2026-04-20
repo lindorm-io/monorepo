@@ -4,6 +4,7 @@ import { Field } from "../../../decorators/Field";
 import { Generated } from "../../../decorators/Generated";
 import { PrimaryKey } from "../../../decorators/PrimaryKey";
 import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField";
+import { describe, expect, test } from "vitest";
 
 @Entity({ name: "GenerateUuidEntity" })
 class GenerateUuidEntity {

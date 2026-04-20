@@ -1,10 +1,11 @@
 import { introspectComments } from "../../../../drivers/postgres/utils/sync/introspect-comments";
 import type { PostgresQueryClient } from "../../types/postgres-query-client";
+import { describe, expect, it, vi } from "vitest";
 
 const createMockClient = (
   rows: Array<Record<string, unknown>> = [],
 ): PostgresQueryClient => ({
-  query: jest.fn().mockResolvedValue({ rows, rowCount: rows.length }),
+  query: vi.fn().mockResolvedValue({ rows, rowCount: rows.length }),
 });
 
 describe("introspectComments", () => {

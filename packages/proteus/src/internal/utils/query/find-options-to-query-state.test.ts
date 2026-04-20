@@ -1,5 +1,6 @@
 import type { EntityMetadata, MetaRelation } from "../../entity/types/metadata";
 import { findOptionsToQueryState } from "./find-options-to-query-state";
+import { describe, expect, test } from "vitest";
 
 const metadataWithDefaultOrder = {
   defaultOrder: { createdAt: "DESC" },

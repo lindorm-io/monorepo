@@ -2,6 +2,7 @@ import { PostgresSyncError } from "../../errors/PostgresSyncError";
 import type { DbColumn } from "../../types/db-snapshot";
 import type { DesiredColumn } from "../../types/desired-schema";
 import { diffColumns } from "./diff-columns";
+import { describe, expect, it } from "vitest";
 
 const makeDbCol = (overrides: Partial<DbColumn> = {}): DbColumn => ({
   name: "col",

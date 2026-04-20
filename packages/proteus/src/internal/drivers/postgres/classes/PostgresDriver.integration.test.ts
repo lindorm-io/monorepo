@@ -1,5 +1,6 @@
+import { afterAll, beforeAll, beforeEach, describe, expect, test } from "vitest";
 import { randomBytes } from "node:crypto";
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { Client } from "pg";
 import {
   TestUser,

@@ -5,6 +5,7 @@ import { Field } from "../../../decorators/Field";
 import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField";
 import { UpdateDateField } from "../../../decorators/UpdateDateField";
 import { VersionField } from "../../../decorators/VersionField";
+import { describe, expect, test } from "vitest";
 
 @Entity({ name: "UpdateEntityVersioned" })
 class UpdateEntityVersioned {

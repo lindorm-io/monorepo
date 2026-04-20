@@ -1,4 +1,24 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`RedisDuplicateKeyError snapshot > serialises to JSON with expected shape 1`] = `
+{
+  "code": null,
+  "data": {},
+  "debug": {
+    "entityName": "User",
+    "key": "id:abc-123",
+  },
+  "details": null,
+  "errors": [],
+  "id": "00000000-0000-0000-0000-000000000002",
+  "message": "Duplicate key for entity User",
+  "name": "DuplicateKeyError",
+  "status": -1,
+  "support": null,
+  "timestamp": 2024-01-01T00:00:00.000Z,
+  "title": null,
+}
+`;
 
 exports[`RedisDuplicateKeyError snapshot serialises to JSON with expected shape 1`] = `
 {

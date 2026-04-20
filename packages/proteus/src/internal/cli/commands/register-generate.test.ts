@@ -1,12 +1,13 @@
 import { Command } from "commander";
 import { registerGenerateCommands } from "./register-generate";
 import { generateEntity } from "./generate-entity";
+import { beforeEach, describe, expect, it, vi, type MockedFunction } from "vitest";
 
-jest.mock("./generate-entity", () => ({
-  generateEntity: jest.fn(),
+vi.mock("./generate-entity", () => ({
+  generateEntity: vi.fn(),
 }));
 
-const mockGenerateEntity = generateEntity as jest.MockedFunction<typeof generateEntity>;
+const mockGenerateEntity = generateEntity as MockedFunction<typeof generateEntity>;
 
 describe("registerGenerateCommands", () => {
   let program: Command;
@@ -14,7 +15,7 @@ describe("registerGenerateCommands", () => {
   let entityCmd: Command;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     program = new Command();
     program.exitOverride();
     registerGenerateCommands(program);

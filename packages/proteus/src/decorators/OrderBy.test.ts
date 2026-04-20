@@ -5,6 +5,7 @@ import { ManyToOne } from "./ManyToOne";
 import { OneToMany } from "./OneToMany";
 import { OrderBy } from "./OrderBy";
 import { PrimaryKeyField } from "./PrimaryKeyField";
+import { describe, expect, test } from "vitest";
 
 @Entity({ name: "OrderByTeam" })
 class OrderByTeam {

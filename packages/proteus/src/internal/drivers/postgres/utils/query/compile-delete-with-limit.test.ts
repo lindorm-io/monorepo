@@ -1,6 +1,7 @@
 import { makeField } from "../../../../__fixtures__/make-field";
 import type { EntityMetadata } from "../../../../entity/types/metadata";
 import { compileDeleteWithLimit } from "./compile-delete-with-limit";
+import { describe, expect, test } from "vitest";
 
 // ---------------------------------------------------------------------------
 // Base metadata — single PK, schema-qualified

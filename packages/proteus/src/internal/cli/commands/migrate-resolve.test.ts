@@ -3,25 +3,26 @@ import { migrateResolve } from "./migrate-resolve";
 import { withSource } from "../with-source";
 import { withMigrationManager } from "../with-migration-manager";
 import { Logger } from "@lindorm/logger";
+import { beforeEach, describe, expect, it, vi, type MockedFunction } from "vitest";
 
-jest.mock("../with-source");
-jest.mock("../with-migration-manager");
+vi.mock("../with-source");
+vi.mock("../with-migration-manager");
 
-jest.mock("@lindorm/logger", () => ({
+vi.mock("@lindorm/logger", () => ({
   Logger: {
     std: {
-      log: jest.fn(),
-      info: jest.fn(),
-      success: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-      debug: jest.fn(),
+      log: vi.fn(),
+      info: vi.fn(),
+      success: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+      debug: vi.fn(),
     },
   },
 }));
 
-const mockWithSource = withSource as jest.MockedFunction<typeof withSource>;
-const mockWithMigrationManager = withMigrationManager as jest.MockedFunction<
+const mockWithSource = withSource as MockedFunction<typeof withSource>;
+const mockWithMigrationManager = withMigrationManager as MockedFunction<
   typeof withMigrationManager
 >;
 
@@ -31,25 +32,25 @@ const makeSource = (overrides: Record<string, unknown> = {}) => ({
   namespace: "myapp",
   driverType: "postgres",
   migrationsTable: undefined as string | undefined,
-  getEntityMetadata: jest.fn().mockReturnValue([]),
-  log: { child: jest.fn().mockReturnValue({ debug: jest.fn() }) },
+  getEntityMetadata: vi.fn().mockReturnValue([]),
+  log: { child: vi.fn().mockReturnValue({ debug: vi.fn() }) },
   ...overrides,
 });
 
 const makeManager = () => ({
-  apply: jest.fn(),
-  rollback: jest.fn(),
-  status: jest.fn(),
-  getRecords: jest.fn(),
-  resolveApplied: jest.fn().mockResolvedValue(undefined),
-  resolveRolledBack: jest.fn().mockResolvedValue(undefined),
+  apply: vi.fn(),
+  rollback: vi.fn(),
+  status: vi.fn(),
+  getRecords: vi.fn(),
+  resolveApplied: vi.fn().mockResolvedValue(undefined),
+  resolveRolledBack: vi.fn().mockResolvedValue(undefined),
 });
 
 describe("migrateResolve", () => {
   let manager: ReturnType<typeof makeManager>;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     manager = makeManager();
 
     mockWithSource.mockImplementation(async (_opts, fn) => {

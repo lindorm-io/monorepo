@@ -1,4 +1,40 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`RedisDriverError snapshot > accepts debug metadata 1`] = `
+{
+  "code": null,
+  "data": {},
+  "debug": {
+    "state": "committed",
+  },
+  "details": null,
+  "errors": [],
+  "id": "00000000-0000-0000-0000-000000000001",
+  "message": "Cannot commit: transaction is committed",
+  "name": "RedisDriverError",
+  "status": -1,
+  "support": null,
+  "timestamp": 2024-01-01T00:00:00.000Z,
+  "title": null,
+}
+`;
+
+exports[`RedisDriverError snapshot > serialises to JSON with expected shape 1`] = `
+{
+  "code": null,
+  "data": {},
+  "debug": {},
+  "details": null,
+  "errors": [],
+  "id": "00000000-0000-0000-0000-000000000001",
+  "message": "Redis client is not connected. Call connect() first.",
+  "name": "RedisDriverError",
+  "status": -1,
+  "support": null,
+  "timestamp": 2024-01-01T00:00:00.000Z,
+  "title": null,
+}
+`;
 
 exports[`RedisDriverError snapshot accepts debug metadata 1`] = `
 {

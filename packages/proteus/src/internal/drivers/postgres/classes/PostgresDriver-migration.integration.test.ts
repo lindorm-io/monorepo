@@ -1,4 +1,4 @@
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { randomBytes, randomUUID } from "crypto";
 import { mkdtemp, rm, writeFile } from "fs/promises";
 import { tmpdir } from "os";
@@ -7,6 +7,7 @@ import { Client } from "pg";
 import { mockScannerImport } from "../../../../__fixtures__/mock-scanner-import";
 import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata";
 import { PostgresDriver } from "./PostgresDriver";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 mockScannerImport();
 

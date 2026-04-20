@@ -1,3 +1,4 @@
+import { describe, expect, test } from "vitest";
 import { makeField } from "../../__fixtures__/make-field";
 import type { EntityMetadata } from "../../entity/types/metadata";
 import { postgresDialect } from "../../drivers/postgres/utils/postgres-dialect";

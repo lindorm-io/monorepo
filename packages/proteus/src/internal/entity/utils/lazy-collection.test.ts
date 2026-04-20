@@ -1,4 +1,5 @@
 import { LazyCollection, isLazyCollection, LAZY_COLLECTION } from "./lazy-collection";
+import { describe, expect, it, vi } from "vitest";
 
 describe("LazyCollection", () => {
   const createEntity = () => ({ id: "1", comments: undefined as any });
@@ -6,7 +7,7 @@ describe("LazyCollection", () => {
   describe("then", () => {
     it("should load on first await and self-replace", async () => {
       const items = [{ id: "a" }, { id: "b" }] as any[];
-      const loader = jest.fn().mockResolvedValue(items);
+      const loader = vi.fn().mockResolvedValue(items);
       const entity = createEntity();
 
       entity.comments = new LazyCollection(entity, "comments", loader);
@@ -22,7 +23,7 @@ describe("LazyCollection", () => {
 
     it("should return cached value on second await", async () => {
       const items = [{ id: "a" }] as any[];
-      const loader = jest.fn().mockResolvedValue(items);
+      const loader = vi.fn().mockResolvedValue(items);
       const entity = createEntity();
 
       entity.comments = new LazyCollection(entity, "comments", loader);
@@ -36,7 +37,7 @@ describe("LazyCollection", () => {
     });
 
     it("should handle empty array result", async () => {
-      const loader = jest.fn().mockResolvedValue([]);
+      const loader = vi.fn().mockResolvedValue([]);
       const entity = createEntity();
 
       entity.comments = new LazyCollection(entity, "comments", loader);
@@ -50,7 +51,7 @@ describe("LazyCollection", () => {
 
     it("should deduplicate concurrent loads", async () => {
       let resolveLoader: (v: any) => void;
-      const loader = jest.fn().mockReturnValue(
+      const loader = vi.fn().mockReturnValue(
         new Promise((resolve) => {
           resolveLoader = resolve;
         }),
@@ -71,7 +72,7 @@ describe("LazyCollection", () => {
     });
 
     it("should propagate loader errors", async () => {
-      const loader = jest.fn().mockRejectedValue(new Error("DB error"));
+      const loader = vi.fn().mockRejectedValue(new Error("DB error"));
       const entity = createEntity();
 
       entity.comments = new LazyCollection(entity, "comments", loader);
@@ -83,7 +84,7 @@ describe("LazyCollection", () => {
   describe("toJSON", () => {
     it("should return undefined when unresolved", () => {
       const entity = createEntity();
-      const ref = new LazyCollection(entity, "comments", jest.fn());
+      const ref = new LazyCollection(entity, "comments", vi.fn());
       expect(ref.toJSON()).toBeUndefined();
     });
 
@@ -93,7 +94,7 @@ describe("LazyCollection", () => {
       const ref = new LazyCollection(
         entity,
         "comments",
-        jest.fn().mockResolvedValue(items),
+        vi.fn().mockResolvedValue(items),
       );
       entity.comments = ref;
 
@@ -106,7 +107,7 @@ describe("LazyCollection", () => {
   describe("isLazyCollection", () => {
     it("should return true for LazyCollection instances", () => {
       const entity = createEntity();
-      const ref = new LazyCollection(entity, "comments", jest.fn());
+      const ref = new LazyCollection(entity, "comments", vi.fn());
       expect(isLazyCollection(ref)).toBe(true);
     });
 
@@ -130,7 +131,7 @@ describe("LazyCollection", () => {
   describe("brand symbol", () => {
     it("should have the brand symbol set to true", () => {
       const entity = createEntity();
-      const ref = new LazyCollection(entity, "comments", jest.fn());
+      const ref = new LazyCollection(entity, "comments", vi.fn());
       expect((ref as any)[LAZY_COLLECTION]).toBe(true);
     });
   });

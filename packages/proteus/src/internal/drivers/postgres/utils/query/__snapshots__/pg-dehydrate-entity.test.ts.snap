@@ -1,4 +1,21 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`pgDehydrateEntity > should return Array<DehydratedColumn> 1`] = `
+[
+  {
+    "column": "id",
+    "value": "abc",
+  },
+  {
+    "column": "name",
+    "value": "Alice",
+  },
+  {
+    "column": "counter",
+    "value": "42",
+  },
+]
+`;
 
 exports[`pgDehydrateEntity should return Array<DehydratedColumn> 1`] = `
 [
@@ -13,6 +30,32 @@ exports[`pgDehydrateEntity should return Array<DehydratedColumn> 1`] = `
   {
     "column": "counter",
     "value": "42",
+  },
+]
+`;
+
+exports[`pgDehydrateEntity — CreateDate fields > should include CreateDate fields in insert mode 1`] = `
+[
+  {
+    "column": "id",
+    "value": "abc",
+  },
+  {
+    "column": "createdAt",
+    "value": 2024-01-01T00:00:00.000Z,
+  },
+  {
+    "column": "name",
+    "value": "Alice",
+  },
+]
+`;
+
+exports[`pgDehydrateEntity — CreateDate fields > should skip CreateDate fields in update mode 1`] = `
+[
+  {
+    "column": "name",
+    "value": "Alice",
   },
 ]
 `;
@@ -39,6 +82,57 @@ exports[`pgDehydrateEntity — CreateDate fields should skip CreateDate fields i
   {
     "column": "name",
     "value": "Alice",
+  },
+]
+`;
+
+exports[`pgDehydrateEntity — embedded fields > should produce null for embedded fields when parent object is null 1`] = `
+[
+  {
+    "column": "id",
+    "value": "abc",
+  },
+  {
+    "column": "street",
+    "value": null,
+  },
+  {
+    "column": "city",
+    "value": null,
+  },
+]
+`;
+
+exports[`pgDehydrateEntity — embedded fields > should produce null for embedded fields when parent object is undefined 1`] = `
+[
+  {
+    "column": "id",
+    "value": "abc",
+  },
+  {
+    "column": "street",
+    "value": null,
+  },
+  {
+    "column": "city",
+    "value": null,
+  },
+]
+`;
+
+exports[`pgDehydrateEntity — embedded fields > should read embedded fields from nested object in insert mode 1`] = `
+[
+  {
+    "column": "id",
+    "value": "abc",
+  },
+  {
+    "column": "street",
+    "value": "123 Main St",
+  },
+  {
+    "column": "city",
+    "value": "Springfield",
   },
 ]
 `;
@@ -94,6 +188,32 @@ exports[`pgDehydrateEntity — embedded fields should read embedded fields from 
 ]
 `;
 
+exports[`pgDehydrateEntity — readonly fields > should exclude readonly fields in update mode 1`] = `
+[
+  {
+    "column": "name",
+    "value": "Alice",
+  },
+]
+`;
+
+exports[`pgDehydrateEntity — readonly fields > should include readonly fields in insert mode 1`] = `
+[
+  {
+    "column": "id",
+    "value": "abc",
+  },
+  {
+    "column": "slug",
+    "value": "alice-smith",
+  },
+  {
+    "column": "name",
+    "value": "Alice",
+  },
+]
+`;
+
 exports[`pgDehydrateEntity — readonly fields should exclude readonly fields in update mode 1`] = `
 [
   {
@@ -116,6 +236,53 @@ exports[`pgDehydrateEntity — readonly fields should include readonly fields in
   {
     "column": "name",
     "value": "Alice",
+  },
+]
+`;
+
+exports[`pgDehydrateEntity — transform functions > should apply transform.to before writing the value 1`] = `
+[
+  {
+    "column": "id",
+    "value": "abc",
+  },
+  {
+    "column": "code",
+    "value": "HELLO-WORLD",
+  },
+  {
+    "column": "payload",
+    "value": "{"key":"value","count":3}",
+  },
+]
+`;
+
+exports[`pgDehydrateEntity — transform functions > should apply transform.to in update mode as well 1`] = `
+[
+  {
+    "column": "code",
+    "value": "HELLO-WORLD",
+  },
+  {
+    "column": "payload",
+    "value": "{"key":"value","count":3}",
+  },
+]
+`;
+
+exports[`pgDehydrateEntity — transform functions > should not apply transform when value is null 1`] = `
+[
+  {
+    "column": "id",
+    "value": "abc",
+  },
+  {
+    "column": "code",
+    "value": null,
+  },
+  {
+    "column": "payload",
+    "value": null,
   },
 ]
 `;

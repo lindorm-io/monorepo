@@ -6,6 +6,7 @@ import type { MigrationInterface, MigrationTableOptions } from "../../types/migr
 import type { PostgresQueryClient } from "../../types/postgres-query-client";
 import { executeMigrationDown, executeMigrationUp } from "./execute-migration";
 import { getAllMigrationRecords } from "./migration-table";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 let client: PostgresQueryClient;
 let raw: Client;

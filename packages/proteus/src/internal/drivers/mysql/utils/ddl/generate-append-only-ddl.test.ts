@@ -1,4 +1,5 @@
 import { generateAppendOnlyDDL } from "./generate-append-only-ddl";
+import { describe, expect, test } from "vitest";
 
 describe("generateAppendOnlyDDL (MySQL)", () => {
   test("generates triggers for a simple table", () => {

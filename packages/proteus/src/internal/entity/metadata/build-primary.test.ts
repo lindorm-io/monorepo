@@ -38,6 +38,7 @@ import { PrimaryKey } from "../../../decorators/PrimaryKey";
 import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField";
 import { VersionKeyField } from "../../../decorators/VersionKeyField";
 import { EntityMetadataError } from "../errors/EntityMetadataError";
+import { describe, expect, test } from "vitest";
 
 // ─── @AbstractEntity guard ────────────────────────────────────────────────────
 

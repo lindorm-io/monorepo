@@ -1,3 +1,4 @@
+import { describe, expect, test } from "vitest";
 import type { EntityMetadata, MetaField } from "../../../entity/types/metadata";
 import {
   compileAggregationPipeline,

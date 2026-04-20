@@ -6,33 +6,41 @@ import type { DesiredSchema } from "../../types/desired-schema";
 import type { PostgresQueryClient } from "../../types/postgres-query-client";
 import type { SyncPlan } from "../../types/sync-plan";
 import { generateMigration } from "./generate-migration";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+  type Mock,
+  type MockedFunction,
+} from "vitest";
 
 // Mock the sync pipeline modules
-jest.mock("../sync/introspect-schema", () => ({
-  introspectSchema: jest.fn(),
+vi.mock("../sync/introspect-schema", () => ({
+  introspectSchema: vi.fn(),
 }));
-jest.mock("../sync/project-desired-schema", () => ({
-  projectDesiredSchema: jest.fn(),
+vi.mock("../sync/project-desired-schema", () => ({
+  projectDesiredSchema: vi.fn(),
 }));
-jest.mock("../sync/diff-schema", () => ({
-  diffSchema: jest.fn(),
+vi.mock("../sync/diff-schema", () => ({
+  diffSchema: vi.fn(),
 }));
 
 // Stable UUID for snapshots
-jest.mock("crypto", () => ({
-  ...jest.requireActual("crypto"),
-  randomUUID: jest.fn(() => "00000000-0000-0000-0000-000000000001"),
+vi.mock("crypto", async () => ({
+  ...(await vi.importActual<typeof import("crypto")>("crypto")),
+  randomUUID: vi.fn(() => "00000000-0000-0000-0000-000000000001"),
 }));
 
 import { introspectSchema } from "../sync/introspect-schema";
 import { projectDesiredSchema } from "../sync/project-desired-schema";
 import { diffSchema } from "../sync/diff-schema";
 
-const mockIntrospect = introspectSchema as jest.MockedFunction<typeof introspectSchema>;
-const mockProject = projectDesiredSchema as jest.MockedFunction<
-  typeof projectDesiredSchema
->;
-const mockDiff = diffSchema as jest.MockedFunction<typeof diffSchema>;
+const mockIntrospect = introspectSchema as MockedFunction<typeof introspectSchema>;
+const mockProject = projectDesiredSchema as MockedFunction<typeof projectDesiredSchema>;
+const mockDiff = diffSchema as MockedFunction<typeof diffSchema>;
 
 const emptySnapshot: DbSnapshot = { tables: [], enums: [], schemas: [] };
 const emptyDesired: DesiredSchema = {
@@ -47,7 +55,7 @@ const emptyPlan: SyncPlan = {
 };
 
 const mockClient: PostgresQueryClient = {
-  query: jest.fn().mockResolvedValue({ rows: [], rowCount: 0 }),
+  query: vi.fn().mockResolvedValue({ rows: [], rowCount: 0 }),
 };
 
 const fixedDate = new Date("2026-02-20T09:00:00.000Z");
@@ -56,7 +64,7 @@ let dir: string;
 
 beforeEach(async () => {
   dir = await mkdtemp(join(tmpdir(), "proteus-gen-test-"));
-  jest.clearAllMocks();
+  vi.clearAllMocks();
   mockProject.mockReturnValue(emptyDesired);
   mockIntrospect.mockResolvedValue(emptySnapshot);
   mockDiff.mockReturnValue(emptyPlan);

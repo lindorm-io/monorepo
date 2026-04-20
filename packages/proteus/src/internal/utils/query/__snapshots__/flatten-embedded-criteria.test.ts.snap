@@ -1,4 +1,94 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`flattenEmbeddedCriteria > should flatten multiple embedded fields 1`] = `
+{
+  "address.city": "London",
+  "address.country": "UK",
+}
+`;
+
+exports[`flattenEmbeddedCriteria > should flatten simple embedded equality 1`] = `
+{
+  "address.city": "London",
+}
+`;
+
+exports[`flattenEmbeddedCriteria > should handle $and with embedded criteria 1`] = `
+{
+  "$and": [
+    {
+      "address.city": "London",
+    },
+    {
+      "address.country": "UK",
+    },
+  ],
+}
+`;
+
+exports[`flattenEmbeddedCriteria > should handle $not with embedded criteria 1`] = `
+{
+  "$not": {
+    "address.city": "London",
+  },
+}
+`;
+
+exports[`flattenEmbeddedCriteria > should handle $or with embedded criteria 1`] = `
+{
+  "$or": [
+    {
+      "address.city": "London",
+    },
+    {
+      "address.city": "Paris",
+    },
+  ],
+}
+`;
+
+exports[`flattenEmbeddedCriteria > should handle mixed embedded and non-embedded keys 1`] = `
+{
+  "address.city": "London",
+  "name": "Alice",
+}
+`;
+
+exports[`flattenEmbeddedCriteria > should not flatten array value for embedded parent key 1`] = `
+{
+  "address": [
+    "London",
+  ],
+}
+`;
+
+exports[`flattenEmbeddedCriteria > should not flatten null embedded value 1`] = `
+{
+  "address": null,
+}
+`;
+
+exports[`flattenEmbeddedCriteria > should not flatten predicate operator on embedded parent key 1`] = `
+{
+  "address": {
+    "$eq": "something",
+  },
+}
+`;
+
+exports[`flattenEmbeddedCriteria > should pass through non-embedded keys unchanged 1`] = `
+{
+  "name": "Alice",
+}
+`;
+
+exports[`flattenEmbeddedCriteria > should preserve operator inside embedded child value 1`] = `
+{
+  "address.city": {
+    "$like": "Lon%",
+  },
+}
+`;
 
 exports[`flattenEmbeddedCriteria should flatten multiple embedded fields 1`] = `
 {

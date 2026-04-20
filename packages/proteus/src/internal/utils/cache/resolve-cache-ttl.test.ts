@@ -1,5 +1,6 @@
 import type { MetaCache } from "../../entity/types/metadata";
 import { resolveCacheTtl } from "./resolve-cache-ttl";
+import { describe, expect, test } from "vitest";
 
 describe("resolveCacheTtl", () => {
   const decoratorCache: MetaCache = { ttlMs: 60000 };

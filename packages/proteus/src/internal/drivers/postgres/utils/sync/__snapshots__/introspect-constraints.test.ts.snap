@@ -1,4 +1,102 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`introspectConstraints > should map check constraint 1`] = `
+[
+  {
+    "constraint": {
+      "checkExpr": "CHECK ((price > 0))",
+      "columns": [
+        "price",
+      ],
+      "deferrable": false,
+      "foreignColumns": null,
+      "foreignSchema": null,
+      "foreignTable": null,
+      "initiallyDeferred": false,
+      "name": "chk_abc123",
+      "onDelete": null,
+      "onUpdate": null,
+      "type": "CHECK",
+    },
+    "schema": "public",
+    "table": "products",
+  },
+]
+`;
+
+exports[`introspectConstraints > should map foreign key constraint with actions 1`] = `
+[
+  {
+    "constraint": {
+      "checkExpr": null,
+      "columns": [
+        "author_id",
+      ],
+      "deferrable": false,
+      "foreignColumns": [
+        "id",
+      ],
+      "foreignSchema": "public",
+      "foreignTable": "users",
+      "initiallyDeferred": false,
+      "name": "fk_abc123",
+      "onDelete": "CASCADE",
+      "onUpdate": "NO ACTION",
+      "type": "FOREIGN KEY",
+    },
+    "schema": "public",
+    "table": "posts",
+  },
+]
+`;
+
+exports[`introspectConstraints > should map primary key constraint 1`] = `
+[
+  {
+    "constraint": {
+      "checkExpr": null,
+      "columns": [
+        "id",
+      ],
+      "deferrable": false,
+      "foreignColumns": null,
+      "foreignSchema": null,
+      "foreignTable": null,
+      "initiallyDeferred": false,
+      "name": "users_pkey",
+      "onDelete": null,
+      "onUpdate": null,
+      "type": "PRIMARY KEY",
+    },
+    "schema": "public",
+    "table": "users",
+  },
+]
+`;
+
+exports[`introspectConstraints > should map unique constraint 1`] = `
+[
+  {
+    "constraint": {
+      "checkExpr": null,
+      "columns": [
+        "email",
+      ],
+      "deferrable": false,
+      "foreignColumns": null,
+      "foreignSchema": null,
+      "foreignTable": null,
+      "initiallyDeferred": false,
+      "name": "uq_abc123",
+      "onDelete": null,
+      "onUpdate": null,
+      "type": "UNIQUE",
+    },
+    "schema": "public",
+    "table": "users",
+  },
+]
+`;
 
 exports[`introspectConstraints should map check constraint 1`] = `
 [

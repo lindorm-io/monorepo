@@ -1,10 +1,11 @@
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 /**
  * Integration tests for paginate() using the Memory driver.
  * Tests the complete paginate flow: validation, keyset WHERE,
  * cursor encode/decode, forward/backward, PK tiebreaker, filter composition.
  */
 
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import {
   CreateDateField,
   Default,

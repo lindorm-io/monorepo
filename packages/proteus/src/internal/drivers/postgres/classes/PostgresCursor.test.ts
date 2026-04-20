@@ -4,11 +4,12 @@ import type { EntityMetadata, MetaEmbeddedList } from "../../../entity/types/met
 import type { AliasMap } from "../utils/query/compile-select";
 import { PostgresCursor, type PostgresCursorOptions } from "./PostgresCursor";
 import { PostgresDriverError } from "../errors/PostgresDriverError";
+import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 // Mock loadEmbeddedListRows so C2 tests can verify it is called without real DB queries
-jest.mock("../utils/repository/embedded-list-ops", () => ({
-  loadEmbeddedListRows: jest.fn().mockResolvedValue(undefined),
-  loadEmbeddedListRowsBatch: jest.fn().mockResolvedValue(undefined),
+vi.mock("../utils/repository/embedded-list-ops", () => ({
+  loadEmbeddedListRows: vi.fn().mockResolvedValue(undefined),
+  loadEmbeddedListRowsBatch: vi.fn().mockResolvedValue(undefined),
 }));
 
 import {
@@ -107,18 +108,18 @@ const makeRow = (id: string, name: string, count: number) => ({
 });
 
 type MockCursorInstance = {
-  read: jest.Mock;
-  close: jest.Mock;
+  read: Mock;
+  close: Mock;
 };
 
 const createMockCursorInstance = (): MockCursorInstance => ({
-  read: jest.fn().mockResolvedValue([]),
-  close: jest.fn().mockResolvedValue(undefined),
+  read: vi.fn().mockResolvedValue([]),
+  close: vi.fn().mockResolvedValue(undefined),
 });
 
 const createMockPoolClient = (cursorInstance: MockCursorInstance) => {
   const poolClient = {
-    query: jest.fn().mockReturnValue(cursorInstance),
+    query: vi.fn().mockReturnValue(cursorInstance),
   } as unknown as PoolClient;
   return poolClient;
 };
@@ -129,12 +130,12 @@ const createCursor = (
 ): {
   cursor: PostgresCursor<any>;
   mockCursor: MockCursorInstance;
-  releaseClient: jest.Mock;
+  releaseClient: Mock;
   poolClient: PoolClient;
 } => {
   const mockCursor = cursorInstance ?? createMockCursorInstance();
   const poolClient = createMockPoolClient(mockCursor);
-  const releaseClient = jest.fn();
+  const releaseClient = vi.fn();
 
   const cursor = new PostgresCursor({
     sql: "SELECT * FROM items WHERE active = $1",
@@ -158,9 +159,9 @@ describe("PostgresCursor", () => {
     test("submits a pg-cursor query to the pool client", () => {
       const { poolClient } = createCursor();
 
-      expect(poolClient.query as jest.Mock).toHaveBeenCalledTimes(1);
+      expect(poolClient.query as Mock).toHaveBeenCalledTimes(1);
       // The argument should be a Cursor instance from pg-cursor
-      const arg = (poolClient.query as jest.Mock).mock.calls[0][0];
+      const arg = (poolClient.query as Mock).mock.calls[0][0];
       expect(arg).toBeDefined();
       expect(arg.constructor.name).toBe("Cursor");
     });
@@ -504,12 +505,12 @@ const createEmbeddedListCursor = (
 ): {
   cursor: PostgresCursor<any>;
   mockCursor: MockCursorInstance;
-  releaseClient: jest.Mock;
+  releaseClient: Mock;
   poolClient: PoolClient;
 } => {
   const mockCursor = cursorInstance ?? createMockCursorInstance();
   const poolClient = createMockPoolClient(mockCursor);
-  const releaseClient = jest.fn();
+  const releaseClient = vi.fn();
 
   const cursor = new PostgresCursor({
     sql: "SELECT * FROM items",
@@ -528,9 +529,9 @@ const createEmbeddedListCursor = (
 
 describe("PostgresCursor — embedded list loading (C2)", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    (loadEmbeddedListRows as jest.Mock).mockResolvedValue(undefined);
-    (loadEmbeddedListRowsBatch as jest.Mock).mockResolvedValue(undefined);
+    vi.clearAllMocks();
+    (loadEmbeddedListRows as Mock).mockResolvedValue(undefined);
+    (loadEmbeddedListRowsBatch as Mock).mockResolvedValue(undefined);
   });
 
   describe("next() calls loadEmbeddedListRows", () => {
@@ -687,9 +688,7 @@ describe("PostgresCursor — embedded list loading (C2)", () => {
 
   describe("error handling — client released on loadEmbeddedListRows failure", () => {
     test("releases client if loadEmbeddedListRows throws during next()", async () => {
-      (loadEmbeddedListRows as jest.Mock).mockRejectedValueOnce(
-        new Error("table missing"),
-      );
+      (loadEmbeddedListRows as Mock).mockRejectedValueOnce(new Error("table missing"));
       const { cursor, mockCursor, releaseClient } = createEmbeddedListCursor();
       mockCursor.read.mockResolvedValueOnce([makeTagRow("id-1", "alpha")]);
 

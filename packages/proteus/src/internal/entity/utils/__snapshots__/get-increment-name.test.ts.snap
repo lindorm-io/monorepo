@@ -1,4 +1,29 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`getIncrementName > should return scoped name with namespace from decorator 1`] = `
+{
+  "name": "GetIncrementWithNs",
+  "namespace": "myApp",
+  "parts": [
+    "myApp",
+    "increment",
+    "GetIncrementWithNs",
+  ],
+  "type": "increment",
+}
+`;
+
+exports[`getIncrementName > should return scoped name without namespace 1`] = `
+{
+  "name": "GetIncrementSimple",
+  "namespace": null,
+  "parts": [
+    "increment",
+    "GetIncrementSimple",
+  ],
+  "type": "increment",
+}
+`;
 
 exports[`getIncrementName should return scoped name with namespace from decorator 1`] = `
 {

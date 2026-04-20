@@ -2,6 +2,7 @@ import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metada
 import { Entity } from "./Entity";
 import { PrimaryKeyField } from "./PrimaryKeyField";
 import { VersionStartDateField } from "./VersionStartDateField";
+import { describe, expect, test } from "vitest";
 
 @Entity({ name: "VersionStartDateFieldDecorated" })
 class VersionStartDateFieldDecorated {

@@ -1,5 +1,6 @@
 import { calculateJoinKeys } from "./calculate-join-keys";
 import type { EntityMetadata } from "../types/metadata";
+import { describe, expect, test } from "vitest";
 
 const makePrimaryMeta = (
   primaryKeys: Array<string>,

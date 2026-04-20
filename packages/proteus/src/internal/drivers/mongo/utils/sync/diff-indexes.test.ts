@@ -1,5 +1,6 @@
 import type { DesiredMongoIndex, ExistingMongoIndex } from "./types";
 import { diffIndexes } from "./diff-indexes";
+import { describe, expect, test } from "vitest";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

@@ -7,8 +7,9 @@ import { PrimaryKeyField } from "./PrimaryKeyField";
 import { CreateDateField } from "./CreateDateField";
 import { UpdateDateField } from "./UpdateDateField";
 import { BeforeInsert } from "./BeforeInsert";
+import { describe, expect, test, vi } from "vitest";
 
-const setTimestamps = jest.fn();
+const setTimestamps = vi.fn();
 
 // Abstract base class — no @Entity(), just fields and hooks
 @AbstractEntity()

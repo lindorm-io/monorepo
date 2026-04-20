@@ -1,5 +1,6 @@
 import { makeField } from "../../__fixtures__/make-field";
 import { generateAutoIndexes } from "./auto-indexes";
+import { describe, expect, test } from "vitest";
 
 describe("generateAutoIndexes", () => {
   test("should return empty array with no special fields", () => {

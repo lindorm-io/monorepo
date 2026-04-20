@@ -1,6 +1,7 @@
 import type { EntityMetadata } from "../types/metadata";
 import type { MetaInheritance } from "../types/inheritance";
 import { resolvePolymorphicMetadata } from "./resolve-polymorphic-metadata";
+import { describe, expect, test, vi, type Mock } from "vitest";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Minimal entity constructors and metadata stubs
@@ -102,7 +103,7 @@ const noInheritanceMetadata = makeMinimalMetadata({
 // Mock: getEntityMetadata (used internally by resolvePolymorphicMetadata)
 // ─────────────────────────────────────────────────────────────────────────────
 
-jest.mock("../metadata/get-entity-metadata", () => ({
+vi.mock("../metadata/get-entity-metadata", () => ({
   getEntityMetadata: (ctor: Function) => {
     if (ctor === RPMChildA) return childAMetadata;
     if (ctor === RPMChildB) return childBMetadata;

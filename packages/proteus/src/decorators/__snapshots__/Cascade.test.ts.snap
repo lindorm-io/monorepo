@@ -1,4 +1,101 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Cascade > should match snapshot 1`] = `
+{
+  "appendOnly": false,
+  "cache": null,
+  "checks": [],
+  "defaultOrder": null,
+  "embeddedLists": [],
+  "entity": {
+    "comment": null,
+    "decorator": "Entity",
+    "name": "CascadeChild",
+    "namespace": null,
+  },
+  "extras": [],
+  "fields": [
+    {
+      "arrayType": null,
+      "collation": null,
+      "comment": null,
+      "computed": null,
+      "decorator": "Field",
+      "default": null,
+      "embedded": null,
+      "encrypted": null,
+      "enum": null,
+      "hideOn": [],
+      "key": "id",
+      "max": null,
+      "min": null,
+      "name": "id",
+      "nullable": false,
+      "order": null,
+      "precision": null,
+      "readonly": true,
+      "scale": null,
+      "schema": null,
+      "transform": null,
+      "type": "uuid",
+    },
+  ],
+  "filters": [],
+  "generated": [
+    {
+      "key": "id",
+      "length": null,
+      "max": null,
+      "min": null,
+      "strategy": "uuid",
+    },
+  ],
+  "hooks": [],
+  "indexes": [],
+  "inheritance": null,
+  "primaryKeys": [
+    "id",
+  ],
+  "relationCounts": [],
+  "relationIds": [],
+  "relations": [
+    {
+      "findKeys": {
+        "id": "parentId",
+      },
+      "foreignConstructor": [Function],
+      "foreignKey": "children",
+      "joinKeys": {
+        "parentId": "id",
+      },
+      "joinTable": null,
+      "key": "parent",
+      "options": {
+        "deferrable": false,
+        "initiallyDeferred": false,
+        "loading": {
+          "multiple": "ignore",
+          "single": "ignore",
+        },
+        "nullable": false,
+        "onDestroy": "cascade",
+        "onInsert": "cascade",
+        "onOrphan": "ignore",
+        "onSoftDestroy": "ignore",
+        "onUpdate": "cascade",
+        "strategy": null,
+      },
+      "orderBy": null,
+      "type": "ManyToOne",
+    },
+  ],
+  "schemas": [],
+  "scopeKeys": [],
+  "target": [Function],
+  "uniques": [],
+  "versionKeys": [],
+}
+`;
 
 exports[`Cascade should match snapshot 1`] = `
 {

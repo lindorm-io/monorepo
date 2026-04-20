@@ -1,4 +1,14 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`MemoryDriver.createRepository > returns a functioning repository 1`] = `
+{
+  "createdAt": Any<Date>,
+  "id": Any<String>,
+  "name": "Repo Test",
+  "updatedAt": Any<Date>,
+  "version": 1,
+}
+`;
 
 exports[`MemoryDriver.createRepository returns a functioning repository 1`] = `
 {

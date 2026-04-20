@@ -1,4 +1,5 @@
 import { hashIdentifier } from "../../../drivers/postgres/utils/hash-identifier";
+import { describe, expect, test } from "vitest";
 
 describe("hashIdentifier", () => {
   test("returns an 11-character base64url string", () => {

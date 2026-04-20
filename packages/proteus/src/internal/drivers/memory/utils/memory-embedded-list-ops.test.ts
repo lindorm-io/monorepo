@@ -1,3 +1,4 @@
+import { describe, expect, test } from "vitest";
 import type { MetaEmbeddedList } from "../../../entity/types/metadata";
 import type { MemoryStore } from "../types/memory-store";
 import {

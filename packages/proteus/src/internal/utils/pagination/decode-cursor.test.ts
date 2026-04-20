@@ -1,5 +1,6 @@
 import { decodeCursor } from "./decode-cursor";
 import { encodeCursor } from "./encode-cursor";
+import { describe, expect, it } from "vitest";
 
 describe("decodeCursor", () => {
   it("should decode a valid cursor token", () => {

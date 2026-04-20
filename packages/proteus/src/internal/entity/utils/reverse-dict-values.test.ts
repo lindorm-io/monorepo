@@ -1,4 +1,5 @@
 import { reverseDictValues } from "./reverse-dict-values";
+import { describe, expect, test } from "vitest";
 
 describe("reverseDictValues", () => {
   test("should swap keys and values", () => {

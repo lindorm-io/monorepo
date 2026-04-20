@@ -1,8 +1,18 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`generateDownSql — add_column > should produce DROP COLUMN 1`] = `"ALTER TABLE "app"."users" DROP COLUMN "email";"`;
 
 exports[`generateDownSql — add_column should produce DROP COLUMN 1`] = `"ALTER TABLE "app"."users" DROP COLUMN "email";"`;
 
+exports[`generateDownSql — add_constraint > should produce DROP CONSTRAINT 1`] = `"ALTER TABLE "app"."users" DROP CONSTRAINT "uq_email";"`;
+
 exports[`generateDownSql — add_constraint should produce DROP CONSTRAINT 1`] = `"ALTER TABLE "app"."users" DROP CONSTRAINT "uq_email";"`;
+
+exports[`generateDownSql — alter_column_default > should drop default when prior had none 1`] = `"ALTER TABLE "app"."users" ALTER COLUMN "age" DROP DEFAULT;"`;
+
+exports[`generateDownSql — alter_column_default > should restore prior default when dropping 1`] = `"ALTER TABLE "app"."users" ALTER COLUMN "email" SET DEFAULT '';"`;
+
+exports[`generateDownSql — alter_column_default > should restore prior default when setting a new one 1`] = `"ALTER TABLE "app"."users" ALTER COLUMN "email" SET DEFAULT '';"`;
 
 exports[`generateDownSql — alter_column_default should drop default when prior had none 1`] = `"ALTER TABLE "app"."users" ALTER COLUMN "age" DROP DEFAULT;"`;
 
@@ -10,17 +20,41 @@ exports[`generateDownSql — alter_column_default should restore prior default w
 
 exports[`generateDownSql — alter_column_default should restore prior default when setting a new one 1`] = `"ALTER TABLE "app"."users" ALTER COLUMN "email" SET DEFAULT '';"`;
 
+exports[`generateDownSql — alter_column_nullable > should reverse DROP NOT NULL to SET NOT NULL 1`] = `"ALTER TABLE "app"."users" ALTER COLUMN "age" SET NOT NULL;"`;
+
+exports[`generateDownSql — alter_column_nullable > should reverse SET NOT NULL to DROP NOT NULL 1`] = `"ALTER TABLE "app"."users" ALTER COLUMN "age" DROP NOT NULL;"`;
+
 exports[`generateDownSql — alter_column_nullable should reverse DROP NOT NULL to SET NOT NULL 1`] = `"ALTER TABLE "app"."users" ALTER COLUMN "age" SET NOT NULL;"`;
 
 exports[`generateDownSql — alter_column_nullable should reverse SET NOT NULL to DROP NOT NULL 1`] = `"ALTER TABLE "app"."users" ALTER COLUMN "age" DROP NOT NULL;"`;
 
+exports[`generateDownSql — create_index > should produce DROP INDEX 1`] = `"DROP INDEX IF EXISTS "app"."idx_email";"`;
+
 exports[`generateDownSql — create_index should produce DROP INDEX 1`] = `"DROP INDEX IF EXISTS "app"."idx_email";"`;
 
+exports[`generateDownSql — create_trigger > should produce DROP TRIGGER for CREATE TRIGGER sql 1`] = `"DROP TRIGGER IF EXISTS "trg_append_only_users" ON "app"."users";"`;
+
 exports[`generateDownSql — create_trigger should produce DROP TRIGGER for CREATE TRIGGER sql 1`] = `"DROP TRIGGER IF EXISTS "trg_append_only_users" ON "app"."users";"`;
+
+exports[`generateDownSql — drop_and_readd_column > should produce DROP COLUMN for incompatible-type re-add phase 1`] = `"ALTER TABLE "app"."users" DROP COLUMN "geo";"`;
+
+exports[`generateDownSql — drop_and_readd_column > should produce DROP COLUMN for re-add phase 1`] = `"ALTER TABLE "app"."users" DROP COLUMN "calc";"`;
 
 exports[`generateDownSql — drop_and_readd_column should produce DROP COLUMN for incompatible-type re-add phase 1`] = `"ALTER TABLE "app"."users" DROP COLUMN "geo";"`;
 
 exports[`generateDownSql — drop_and_readd_column should produce DROP COLUMN for re-add phase 1`] = `"ALTER TABLE "app"."users" DROP COLUMN "calc";"`;
+
+exports[`generateDownSql — drop_constraint > should reconstruct CHECK from snapshot 1`] = `"ALTER TABLE "app"."users" ADD CONSTRAINT "chk_age" CHECK ((age >= 0));"`;
+
+exports[`generateDownSql — drop_constraint > should reconstruct FOREIGN KEY from snapshot 1`] = `"ALTER TABLE "app"."users" ADD CONSTRAINT "fk_org" FOREIGN KEY ("org_id") REFERENCES "app"."orgs" ("id") ON DELETE CASCADE ON UPDATE NO ACTION;"`;
+
+exports[`generateDownSql — drop_constraint > should reconstruct FOREIGN KEY with DEFERRABLE INITIALLY DEFERRED from snapshot 1`] = `"ALTER TABLE "app"."users" ADD CONSTRAINT "fk_org_deferred" FOREIGN KEY ("org_id") REFERENCES "app"."orgs" ("id") ON DELETE CASCADE ON UPDATE NO ACTION DEFERRABLE INITIALLY DEFERRED;"`;
+
+exports[`generateDownSql — drop_constraint > should reconstruct FOREIGN KEY with DEFERRABLE INITIALLY IMMEDIATE from snapshot 1`] = `"ALTER TABLE "app"."users" ADD CONSTRAINT "fk_org_immediate" FOREIGN KEY ("org_id") REFERENCES "app"."orgs" ("id") ON DELETE CASCADE ON UPDATE NO ACTION DEFERRABLE INITIALLY IMMEDIATE;"`;
+
+exports[`generateDownSql — drop_constraint > should reconstruct PRIMARY KEY from snapshot 1`] = `"ALTER TABLE "app"."users" ADD CONSTRAINT "users_pkey" PRIMARY KEY ("id");"`;
+
+exports[`generateDownSql — drop_constraint > should reconstruct UNIQUE from snapshot 1`] = `"ALTER TABLE "app"."users" ADD CONSTRAINT "uq_email" UNIQUE ("email");"`;
 
 exports[`generateDownSql — drop_constraint should reconstruct CHECK from snapshot 1`] = `"ALTER TABLE "app"."users" ADD CONSTRAINT "chk_age" CHECK ((age >= 0));"`;
 
@@ -34,9 +68,31 @@ exports[`generateDownSql — drop_constraint should reconstruct PRIMARY KEY from
 
 exports[`generateDownSql — drop_constraint should reconstruct UNIQUE from snapshot 1`] = `"ALTER TABLE "app"."users" ADD CONSTRAINT "uq_email" UNIQUE ("email");"`;
 
+exports[`generateDownSql — drop_index > should reconstruct index with WHERE and INCLUDE from snapshot 1`] = `"CREATE INDEX "idx_active" ON "app"."users" ("status" ASC) INCLUDE ("email") WHERE status = 'active';"`;
+
+exports[`generateDownSql — drop_index > should reconstruct simple index from snapshot 1`] = `"CREATE INDEX "idx_email" ON "app"."users" ("email" ASC);"`;
+
 exports[`generateDownSql — drop_index should reconstruct index with WHERE and INCLUDE from snapshot 1`] = `"CREATE INDEX "idx_active" ON "app"."users" ("status" ASC) INCLUDE ("email") WHERE status = 'active';"`;
 
 exports[`generateDownSql — drop_index should reconstruct simple index from snapshot 1`] = `"CREATE INDEX "idx_email" ON "app"."users" ("email" ASC);"`;
+
+exports[`generateDownSql — set_comment > should escape single quotes in prior column comment 1`] = `"COMMENT ON COLUMN "app"."users"."email" IS 'User''s email address';"`;
+
+exports[`generateDownSql — set_comment > should escape single quotes in prior table comment 1`] = `"COMMENT ON TABLE "app"."users" IS 'It''s the user''s table';"`;
+
+exports[`generateDownSql — set_comment > should restore prior column comment 1`] = `"COMMENT ON COLUMN "app"."users"."email" IS 'User email address';"`;
+
+exports[`generateDownSql — set_comment > should restore prior column comment when removing 1`] = `"COMMENT ON COLUMN "app"."users"."email" IS 'User email address';"`;
+
+exports[`generateDownSql — set_comment > should restore prior comment when removing 1`] = `"COMMENT ON TABLE "app"."users" IS 'The users table';"`;
+
+exports[`generateDownSql — set_comment > should restore prior table comment 1`] = `"COMMENT ON TABLE "app"."users" IS 'The users table';"`;
+
+exports[`generateDownSql — set_comment > should set NULL when no prior column comment 1`] = `"COMMENT ON COLUMN "app"."users"."age" IS NULL;"`;
+
+exports[`generateDownSql — set_comment > should set NULL when no prior table comment 1`] = `"COMMENT ON TABLE "app"."users" IS NULL;"`;
+
+exports[`generateDownSql — set_comment > should set NULL when removing column comment with no prior 1`] = `"COMMENT ON COLUMN "app"."users"."age" IS NULL;"`;
 
 exports[`generateDownSql — set_comment should escape single quotes in prior column comment 1`] = `"COMMENT ON COLUMN "app"."users"."email" IS 'User''s email address';"`;
 

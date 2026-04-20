@@ -4,6 +4,7 @@ import { Field } from "../../../decorators/Field";
 import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField";
 import { VersionField } from "../../../decorators/VersionField";
 import { getEntityMetadata } from "../metadata/get-entity-metadata";
+import { describe, expect, test } from "vitest";
 
 @Entity({ name: "VersionManagerVersioned" })
 class VersionManagerVersioned {

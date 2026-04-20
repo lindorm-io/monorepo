@@ -1,4 +1,5 @@
 import { compileLimitOffset } from "./compile-limit-offset";
+import { describe, expect, test } from "vitest";
 
 describe("compileLimitOffset", () => {
   test("should return empty string when both null", () => {

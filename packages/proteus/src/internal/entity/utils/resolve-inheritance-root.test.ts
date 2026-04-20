@@ -1,6 +1,7 @@
 import type { EntityMetadata } from "../types/metadata";
 import type { MetaInheritance } from "../types/inheritance";
 import { resolveInheritanceRoot } from "./resolve-inheritance-root";
+import { describe, expect, test } from "vitest";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Minimal entity constructors and metadata stubs

@@ -1,20 +1,21 @@
 import type { PostgresQueryClient } from "../../types/postgres-query-client";
 import { introspectSchema } from "./introspect-schema";
+import { beforeEach, describe, expect, it, vi, type MockedFunction } from "vitest";
 
-jest.mock("./introspect-tables", () => ({
-  introspectTables: jest.fn(),
+vi.mock("./introspect-tables", () => ({
+  introspectTables: vi.fn(),
 }));
-jest.mock("./introspect-constraints", () => ({
-  introspectConstraints: jest.fn(),
+vi.mock("./introspect-constraints", () => ({
+  introspectConstraints: vi.fn(),
 }));
-jest.mock("./introspect-indexes", () => ({
-  introspectIndexes: jest.fn(),
+vi.mock("./introspect-indexes", () => ({
+  introspectIndexes: vi.fn(),
 }));
-jest.mock("./introspect-enums", () => ({
-  introspectEnums: jest.fn(),
+vi.mock("./introspect-enums", () => ({
+  introspectEnums: vi.fn(),
 }));
-jest.mock("./introspect-comments", () => ({
-  introspectComments: jest.fn(),
+vi.mock("./introspect-comments", () => ({
+  introspectComments: vi.fn(),
 }));
 
 import { introspectComments } from "../../../../drivers/postgres/utils/sync/introspect-comments";
@@ -23,29 +24,25 @@ import { introspectEnums } from "../../../../drivers/postgres/utils/sync/introsp
 import { introspectIndexes } from "../../../../drivers/postgres/utils/sync/introspect-indexes";
 import { introspectTables } from "./introspect-tables";
 
-const mockIntrospectTables = introspectTables as jest.MockedFunction<
-  typeof introspectTables
->;
-const mockIntrospectConstraints = introspectConstraints as jest.MockedFunction<
+const mockIntrospectTables = introspectTables as MockedFunction<typeof introspectTables>;
+const mockIntrospectConstraints = introspectConstraints as MockedFunction<
   typeof introspectConstraints
 >;
-const mockIntrospectIndexes = introspectIndexes as jest.MockedFunction<
+const mockIntrospectIndexes = introspectIndexes as MockedFunction<
   typeof introspectIndexes
 >;
-const mockIntrospectEnums = introspectEnums as jest.MockedFunction<
-  typeof introspectEnums
->;
-const mockIntrospectComments = introspectComments as jest.MockedFunction<
+const mockIntrospectEnums = introspectEnums as MockedFunction<typeof introspectEnums>;
+const mockIntrospectComments = introspectComments as MockedFunction<
   typeof introspectComments
 >;
 
 const createMockClient = (): PostgresQueryClient => ({
-  query: jest.fn().mockResolvedValue({ rows: [{ nspname: "public" }], rowCount: 1 }),
+  query: vi.fn().mockResolvedValue({ rows: [{ nspname: "public" }], rowCount: 1 }),
 });
 
 describe("introspectSchema", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it("should return empty snapshot for no managed tables", async () => {
@@ -265,7 +262,7 @@ describe("introspectSchema", () => {
 
   it("should include existing schemas from pg_namespace", async () => {
     const client: PostgresQueryClient = {
-      query: jest.fn().mockResolvedValue({
+      query: vi.fn().mockResolvedValue({
         rows: [{ nspname: "public" }, { nspname: "custom" }],
         rowCount: 2,
       }),

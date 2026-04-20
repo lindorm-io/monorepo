@@ -1,4 +1,5 @@
 import { mapIsolationLevel } from "./map-isolation-level";
+import { describe, expect, test } from "vitest";
 
 describe("mapIsolationLevel", () => {
   test("should return majority concern for READ COMMITTED", () => {

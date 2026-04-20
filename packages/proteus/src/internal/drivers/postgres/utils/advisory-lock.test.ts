@@ -1,5 +1,6 @@
 import type { PostgresQueryClient } from "../types/postgres-query-client";
 import { withAdvisoryLock } from "./advisory-lock";
+import { describe, expect, it, vi } from "vitest";
 
 const KEY_1 = 0x50524f54; // "PROT"
 const KEY_2 = 0x53594e43; // "SYNC"
@@ -13,7 +14,7 @@ const makeClient = (
   const queries: Array<{ sql: string; params?: Array<unknown> }> = [];
   let firstCall = true;
   const client = {
-    query: jest.fn(async (sql: string, params?: Array<unknown>) => {
+    query: vi.fn(async (sql: string, params?: Array<unknown>) => {
       queries.push({ sql, params });
       if (firstCall) {
         firstCall = false;
@@ -98,7 +99,7 @@ describe("withAdvisoryLock — lock acquired", () => {
     const unlockError = new Error("unlock-error");
 
     const client: PostgresQueryClient = {
-      query: jest.fn(async (sql: string) => {
+      query: vi.fn(async (sql: string) => {
         if (sql.includes("pg_try_advisory_lock")) {
           return { rows: [{ locked: true }], rowCount: 1 };
         }
@@ -122,7 +123,7 @@ describe("withAdvisoryLock — lock acquired", () => {
     const unlockError = new Error("unlock-error");
 
     const client: PostgresQueryClient = {
-      query: jest.fn(async (sql: string) => {
+      query: vi.fn(async (sql: string) => {
         if (sql.includes("pg_try_advisory_lock")) {
           return { rows: [{ locked: true }], rowCount: 1 };
         }
@@ -160,7 +161,7 @@ describe("withAdvisoryLock — lock not acquired", () => {
 
   it("should not call the callback when lock is not available", async () => {
     const { client } = makeClient(false);
-    const cb = jest.fn(async () => "value");
+    const cb = vi.fn(async () => "value");
     await withAdvisoryLock(client, KEY_1, KEY_2, cb);
     expect(cb).not.toHaveBeenCalled();
   });
@@ -180,7 +181,7 @@ describe("withAdvisoryLock — lock not acquired", () => {
 
   it("should handle missing rows in result (treats as not locked)", async () => {
     const client = {
-      query: jest.fn().mockResolvedValue({ rows: [], rowCount: 0 }),
+      query: vi.fn().mockResolvedValue({ rows: [], rowCount: 0 }),
     } as unknown as PostgresQueryClient;
     const result = await withAdvisoryLock(client, KEY_1, KEY_2, async () => "x");
     expect(result).toBeNull();
@@ -188,7 +189,7 @@ describe("withAdvisoryLock — lock not acquired", () => {
 
   it("should handle locked=false explicitly", async () => {
     const client = {
-      query: jest.fn().mockResolvedValue({ rows: [{ locked: false }], rowCount: 1 }),
+      query: vi.fn().mockResolvedValue({ rows: [{ locked: false }], rowCount: 1 }),
     } as unknown as PostgresQueryClient;
     const result = await withAdvisoryLock(client, KEY_1, KEY_2, async () => "x");
     expect(result).toBeNull();

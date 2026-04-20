@@ -1,16 +1,17 @@
 import type { MetaHook } from "../types/metadata";
 import { runHooksAsync } from "./run-hooks-async";
+import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 describe("runHooksAsync", () => {
   const hooks: Array<MetaHook> = [
-    { decorator: "BeforeInsert", callback: jest.fn().mockResolvedValue(undefined) },
-    { decorator: "AfterInsert", callback: jest.fn().mockResolvedValue(undefined) },
-    { decorator: "BeforeInsert", callback: jest.fn().mockResolvedValue(undefined) },
+    { decorator: "BeforeInsert", callback: vi.fn().mockResolvedValue(undefined) },
+    { decorator: "AfterInsert", callback: vi.fn().mockResolvedValue(undefined) },
+    { decorator: "BeforeInsert", callback: vi.fn().mockResolvedValue(undefined) },
   ];
 
   beforeEach(() => {
     for (const h of hooks) {
-      (h.callback as jest.Mock).mockClear();
+      (h.callback as Mock).mockClear();
     }
   });
 
@@ -36,14 +37,14 @@ describe("runHooksAsync", () => {
     const seqHooks: Array<MetaHook> = [
       {
         decorator: "BeforeInsert",
-        callback: jest.fn(async () => {
+        callback: vi.fn(async () => {
           await new Promise((r) => setTimeout(r, 10));
           order.push(1);
         }),
       },
       {
         decorator: "BeforeInsert",
-        callback: jest.fn(async () => {
+        callback: vi.fn(async () => {
           order.push(2);
         }),
       },
@@ -66,7 +67,7 @@ describe("runHooksAsync", () => {
     const errorHooks: Array<MetaHook> = [
       {
         decorator: "BeforeInsert",
-        callback: jest.fn().mockRejectedValue(new Error("hook failed")),
+        callback: vi.fn().mockRejectedValue(new Error("hook failed")),
       },
     ];
 

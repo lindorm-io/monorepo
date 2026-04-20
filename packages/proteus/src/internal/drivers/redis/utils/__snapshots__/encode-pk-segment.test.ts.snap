@@ -1,4 +1,18 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`encodePkSegment > should convert boolean to string 1`] = `"true"`;
+
+exports[`encodePkSegment > should convert number to string 1`] = `"42"`;
+
+exports[`encodePkSegment > should encode string containing colon 1`] = `"foo%3Abar"`;
+
+exports[`encodePkSegment > should encode string with multiple colons 1`] = `"a%3Ab%3Ac"`;
+
+exports[`encodePkSegment > should handle UUID without encoding (no colons) 1`] = `"550e8400-e29b-41d4-a716-446655440000"`;
+
+exports[`encodePkSegment > should handle empty string 1`] = `""`;
+
+exports[`encodePkSegment > should pass through simple string 1`] = `"hello"`;
 
 exports[`encodePkSegment should convert boolean to string 1`] = `"true"`;
 

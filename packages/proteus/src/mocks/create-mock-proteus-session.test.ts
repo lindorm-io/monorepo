@@ -1,7 +1,8 @@
-import { createMockProteusSession } from "./create-mock-proteus-session";
+import { createMockProteusSession } from "./vitest";
+import { describe, expect, it, vi } from "vitest";
 
 describe("createMockProteusSession", () => {
-  it("should create a mock session with all methods as jest.fn()", () => {
+  it("should create a mock session with all methods as vi.fn()", () => {
     const session = createMockProteusSession();
 
     expect(session).toMatchSnapshot();
@@ -19,7 +20,7 @@ describe("createMockProteusSession", () => {
     const repo = session.repository();
 
     expect(repo).toBeDefined();
-    expect(jest.isMockFunction(repo.find)).toBe(true);
+    expect(vi.isMockFunction(repo.find)).toBe(true);
   });
 
   it("should resolve true for ping()", async () => {

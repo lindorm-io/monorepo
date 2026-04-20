@@ -7,6 +7,7 @@ import type { DesiredSchema } from "../../types/desired-schema";
 import type { PostgresQueryClient } from "../../types/postgres-query-client";
 import type { SyncOptions, SyncPlan } from "../../types/sync-plan";
 import { introspectSchema } from "./introspect-schema";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 const executeSyncPlan = (
   client: PostgresQueryClient,

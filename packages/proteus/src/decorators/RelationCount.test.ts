@@ -5,6 +5,7 @@ import { ManyToOne } from "./ManyToOne";
 import { OneToMany } from "./OneToMany";
 import { PrimaryKeyField } from "./PrimaryKeyField";
 import { RelationCount } from "./RelationCount";
+import { describe, expect, test } from "vitest";
 
 @Entity({ name: "RelationCountBlog" })
 class RelationCountBlog {

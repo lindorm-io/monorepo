@@ -4,6 +4,7 @@ import { Field } from "../../../decorators/Field";
 import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField";
 import { ReadOnly } from "../../../decorators/ReadOnly";
 import { VersionField } from "../../../decorators/VersionField";
+import { describe, expect, test } from "vitest";
 
 @Entity({ name: "VerifyReadonlyEntity" })
 class VerifyReadonlyEntity {

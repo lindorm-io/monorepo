@@ -1,6 +1,7 @@
 import type { MetaField, MetaRelation } from "../../../entity/types/metadata";
 import { RedisDriverError } from "../errors/RedisDriverError";
 import { deserializeHash } from "./deserialize-hash";
+import { describe, expect, test } from "vitest";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 

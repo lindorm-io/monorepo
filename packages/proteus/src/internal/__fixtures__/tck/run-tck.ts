@@ -48,7 +48,7 @@ const maybeDescribe = (flag: boolean, name: string, fn: () => void) => {
 };
 
 export const runTck = (factory: TckDriverFactory, getSource: () => ProteusSource) => {
-  const hookCallback = jest.fn();
+  const hookCallback = vi.fn();
   const entities = createTckEntities(hookCallback);
   const caps = factory.capabilities;
 

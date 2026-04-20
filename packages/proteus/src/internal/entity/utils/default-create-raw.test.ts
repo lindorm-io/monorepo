@@ -7,6 +7,7 @@ import { OneToMany } from "../../../decorators/OneToMany";
 import { OneToOne } from "../../../decorators/OneToOne";
 import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField";
 import { VersionField } from "../../../decorators/VersionField";
+import { describe, expect, test } from "vitest";
 
 @Entity({ name: "CreateRawOwner" })
 class CreateRawOwner {

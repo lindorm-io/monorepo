@@ -2,6 +2,7 @@ import { makeField } from "../../../__fixtures__/make-field";
 import type { MetaRelation } from "../../../entity/types/metadata";
 import { ProteusError } from "../../../../errors";
 import { resolveColumnName, resolveColumnNameSafe } from "./resolve-column-name";
+import { describe, expect, test } from "vitest";
 
 const fields = [
   makeField("id", { type: "uuid", name: "id" }),

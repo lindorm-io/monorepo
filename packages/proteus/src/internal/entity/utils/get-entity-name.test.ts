@@ -2,6 +2,7 @@ import { getEntityName } from "./get-entity-name";
 import { Entity } from "../../../decorators/Entity";
 import { Namespace } from "../../../decorators/Namespace";
 import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField";
+import { describe, expect, test } from "vitest";
 
 @Entity({ name: "GetEntityNameSimple" })
 class GetEntityNameSimple {

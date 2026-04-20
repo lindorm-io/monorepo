@@ -1,3 +1,4 @@
+import { describe, expect, test } from "vitest";
 import { makeField } from "../../__fixtures__/make-field";
 import {
   generateAutoFilters,

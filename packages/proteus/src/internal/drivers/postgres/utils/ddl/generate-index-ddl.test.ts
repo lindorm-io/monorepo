@@ -1,6 +1,7 @@
 import { ProteusError } from "../../../../../errors";
 import type { MetaIndex } from "../../../../entity/types/metadata";
 import { generateIndexDDL } from "./generate-index-ddl";
+import { describe, expect, test } from "vitest";
 
 const TABLE = "products";
 const NS = null;

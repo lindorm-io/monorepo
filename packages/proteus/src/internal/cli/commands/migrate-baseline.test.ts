@@ -3,25 +3,34 @@ import { migrateBaseline } from "./migrate-baseline";
 import { withSource } from "../with-source";
 import { withMigrationManager } from "../with-migration-manager";
 import { Logger } from "@lindorm/logger";
+import {
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+  type Mock,
+  type MockedFunction,
+} from "vitest";
 
-jest.mock("../with-source");
-jest.mock("../with-migration-manager");
+vi.mock("../with-source");
+vi.mock("../with-migration-manager");
 
-jest.mock("@lindorm/logger", () => ({
+vi.mock("@lindorm/logger", () => ({
   Logger: {
     std: {
-      log: jest.fn(),
-      info: jest.fn(),
-      success: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-      debug: jest.fn(),
+      log: vi.fn(),
+      info: vi.fn(),
+      success: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+      debug: vi.fn(),
     },
   },
 }));
 
-const mockWithSource = withSource as jest.MockedFunction<typeof withSource>;
-const mockWithMigrationManager = withMigrationManager as jest.MockedFunction<
+const mockWithSource = withSource as MockedFunction<typeof withSource>;
+const mockWithMigrationManager = withMigrationManager as MockedFunction<
   typeof withMigrationManager
 >;
 
@@ -31,24 +40,24 @@ const makeSource = (overrides: Record<string, unknown> = {}) => ({
   namespace: "myapp",
   driverType: "postgres",
   migrationsTable: undefined as string | undefined,
-  getEntityMetadata: jest.fn().mockReturnValue([]),
-  log: { child: jest.fn().mockReturnValue({ debug: jest.fn() }) },
+  getEntityMetadata: vi.fn().mockReturnValue([]),
+  log: { child: vi.fn().mockReturnValue({ debug: vi.fn() }) },
   ...overrides,
 });
 
 const makeManager = () => ({
-  apply: jest.fn(),
-  rollback: jest.fn(),
-  status: jest.fn(),
-  getRecords: jest.fn(),
-  resolveApplied: jest.fn(),
-  resolveRolledBack: jest.fn(),
-  generateBaseline: jest.fn().mockResolvedValue({
+  apply: vi.fn(),
+  rollback: vi.fn(),
+  status: vi.fn(),
+  getRecords: vi.fn(),
+  resolveApplied: vi.fn(),
+  resolveRolledBack: vi.fn(),
+  generateBaseline: vi.fn().mockResolvedValue({
     filepath: `${defaultDir}/20240101_baseline.ts`,
     operationCount: 5,
     markedAsApplied: false,
   }),
-  generateMigration: jest.fn(),
+  generateMigration: vi.fn(),
 });
 
 describe("migrateBaseline", () => {
@@ -56,7 +65,7 @@ describe("migrateBaseline", () => {
   let manager: ReturnType<typeof makeManager>;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     source = makeSource();
     manager = makeManager();
 
@@ -155,7 +164,7 @@ describe("migrateBaseline", () => {
   it("should not log marked as applied message when markedAsApplied is false", async () => {
     await migrateBaseline({ name: "baseline", source: "/config.ts" });
 
-    const infoCalls = (Logger.std.info as jest.Mock).mock.calls.map(
+    const infoCalls = (Logger.std.info as Mock).mock.calls.map(
       (c: unknown[]) => c[0] as string,
     );
     expect(infoCalls.join("")).not.toContain("Baseline marked as applied");

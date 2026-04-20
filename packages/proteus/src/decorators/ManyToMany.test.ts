@@ -4,6 +4,7 @@ import { Field } from "./Field";
 import { JoinTable } from "./JoinTable";
 import { ManyToMany } from "./ManyToMany";
 import { PrimaryKeyField } from "./PrimaryKeyField";
+import { describe, expect, test } from "vitest";
 
 // ManyToMany: Category <-> Product
 

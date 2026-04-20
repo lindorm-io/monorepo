@@ -1,6 +1,7 @@
 import { makeField } from "../../__fixtures__/make-field";
 import type { MetaFilter } from "../types/metadata";
 import { validateFilters } from "./validate-filters";
+import { describe, expect, test } from "vitest";
 
 const fields = [
   makeField("id", { type: "uuid" }),

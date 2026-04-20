@@ -2,8 +2,9 @@ import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metada
 import { AfterSave } from "./AfterSave";
 import { Entity } from "./Entity";
 import { PrimaryKeyField } from "./PrimaryKeyField";
+import { describe, expect, test, vi } from "vitest";
 
-const afterSaveCallback = jest.fn();
+const afterSaveCallback = vi.fn();
 
 @Entity({ name: "AfterSaveDecorated" })
 @AfterSave(afterSaveCallback)

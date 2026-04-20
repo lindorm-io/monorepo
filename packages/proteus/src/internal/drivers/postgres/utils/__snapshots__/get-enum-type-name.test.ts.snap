@@ -1,4 +1,10 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`getEnumTypeName > returns readable name for a short table and field 1`] = `"enum_users_status"`;
+
+exports[`getEnumTypeName > snapshot for a long name that triggers hashing 1`] = `"enum_w0J4aruJ0Gl"`;
+
+exports[`getEnumTypeName > snapshot for a typical enum field name 1`] = `"enum_product_category"`;
 
 exports[`getEnumTypeName returns readable name for a short table and field 1`] = `"enum_users_status"`;
 

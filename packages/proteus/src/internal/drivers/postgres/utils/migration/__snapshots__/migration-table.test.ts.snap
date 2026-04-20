@@ -1,4 +1,20 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`ensureMigrationTable > should create schema and table with default names 1`] = `"CREATE SCHEMA IF NOT EXISTS "public""`;
+
+exports[`ensureMigrationTable > should create schema and table with default names 2`] = `
+"
+    CREATE TABLE IF NOT EXISTS "public"."proteus_migrations" (
+      "id"             UUID        NOT NULL PRIMARY KEY,
+      "name"           TEXT        NOT NULL UNIQUE,
+      "checksum"       TEXT        NOT NULL,
+      "created_at"     TIMESTAMPTZ NOT NULL,
+      "started_at"     TIMESTAMPTZ NOT NULL DEFAULT now(),
+      "finished_at"    TIMESTAMPTZ,
+      "rolled_back_at" TIMESTAMPTZ
+    )
+  "
+`;
 
 exports[`ensureMigrationTable should create schema and table with default names 1`] = `"CREATE SCHEMA IF NOT EXISTS "public""`;
 
@@ -16,10 +32,35 @@ exports[`ensureMigrationTable should create schema and table with default names 
   "
 `;
 
+exports[`getAllMigrationRecords > should query all records without WHERE filter 1`] = `
+"SELECT "id", "name", "checksum", "created_at", "started_at", "finished_at", "rolled_back_at"
+     FROM "public"."proteus_migrations"
+     ORDER BY "created_at" ASC, "name" ASC"
+`;
+
 exports[`getAllMigrationRecords should query all records without WHERE filter 1`] = `
 "SELECT "id", "name", "checksum", "created_at", "started_at", "finished_at", "rolled_back_at"
      FROM "public"."proteus_migrations"
      ORDER BY "created_at" ASC, "name" ASC"
+`;
+
+exports[`getAppliedMigrations > should filter for finished and not rolled back 1`] = `
+"SELECT "id", "name", "checksum", "created_at", "started_at", "finished_at", "rolled_back_at"
+     FROM "public"."proteus_migrations"
+     WHERE "finished_at" IS NOT NULL AND "rolled_back_at" IS NULL
+     ORDER BY "created_at" ASC, "name" ASC"
+`;
+
+exports[`getAppliedMigrations > should query applied migrations and map rows to records 1`] = `
+{
+  "checksum": "abc123",
+  "createdAt": 2026-02-20T10:00:00.000Z,
+  "finishedAt": 2026-02-20T10:00:00.000Z,
+  "id": "aaa",
+  "name": "20260220-init",
+  "rolledBackAt": null,
+  "startedAt": 2026-02-20T10:00:00.000Z,
+}
 `;
 
 exports[`getAppliedMigrations should filter for finished and not rolled back 1`] = `
@@ -41,6 +82,17 @@ exports[`getAppliedMigrations should query applied migrations and map rows to re
 }
 `;
 
+exports[`insertMigrationRecord > should upsert with parameterized values 1`] = `
+"INSERT INTO "public"."proteus_migrations" ("id", "name", "checksum", "created_at", "started_at")
+     VALUES ($1, $2, $3, $4, $5)
+     ON CONFLICT ("name") DO UPDATE SET
+       "id" = EXCLUDED."id",
+       "checksum" = EXCLUDED."checksum",
+       "started_at" = EXCLUDED."started_at",
+       "finished_at" = NULL,
+       "rolled_back_at" = NULL"
+`;
+
 exports[`insertMigrationRecord should upsert with parameterized values 1`] = `
 "INSERT INTO "public"."proteus_migrations" ("id", "name", "checksum", "created_at", "started_at")
      VALUES ($1, $2, $3, $4, $5)
@@ -52,6 +104,10 @@ exports[`insertMigrationRecord should upsert with parameterized values 1`] = `
        "rolled_back_at" = NULL"
 `;
 
+exports[`markMigrationFinished > should update finished_at by id 1`] = `"UPDATE "public"."proteus_migrations" SET "finished_at" = now() WHERE "id" = $1"`;
+
 exports[`markMigrationFinished should update finished_at by id 1`] = `"UPDATE "public"."proteus_migrations" SET "finished_at" = now() WHERE "id" = $1"`;
+
+exports[`markMigrationRolledBack > should update rolled_back_at and coalesce finished_at 1`] = `"UPDATE "public"."proteus_migrations" SET "rolled_back_at" = now(), "finished_at" = COALESCE("finished_at", now()) WHERE "id" = $1"`;
 
 exports[`markMigrationRolledBack should update rolled_back_at and coalesce finished_at 1`] = `"UPDATE "public"."proteus_migrations" SET "rolled_back_at" = now(), "finished_at" = COALESCE("finished_at", now()) WHERE "id" = $1"`;

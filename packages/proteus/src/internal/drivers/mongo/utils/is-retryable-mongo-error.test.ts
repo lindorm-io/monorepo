@@ -1,4 +1,5 @@
 import { isRetryableMongoError } from "./is-retryable-mongo-error";
+import { describe, expect, test } from "vitest";
 
 describe("isRetryableMongoError", () => {
   test("should return true for TransientTransactionError label", () => {

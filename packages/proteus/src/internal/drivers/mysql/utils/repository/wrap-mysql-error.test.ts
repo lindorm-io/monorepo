@@ -6,6 +6,7 @@ import { ForeignKeyViolationError } from "../../../../errors/ForeignKeyViolation
 import { NotNullViolationError } from "../../../../errors/NotNullViolationError";
 import { SerializationError } from "../../../../errors/SerializationError";
 import { wrapMysqlError } from "./wrap-mysql-error";
+import { describe, expect, it } from "vitest";
 
 const createMysqlError = (errno: number, code: string, message?: string): Error => {
   const error = new Error(message ?? `MySQL error ${code}`);

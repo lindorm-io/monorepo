@@ -6,6 +6,7 @@ import { Lazy } from "./Lazy";
 import { ManyToOne } from "./ManyToOne";
 import { OneToMany } from "./OneToMany";
 import { PrimaryKeyField } from "./PrimaryKeyField";
+import { describe, expect, test } from "vitest";
 
 @Entity({ name: "LazyOrganization" })
 class LazyOrganization {

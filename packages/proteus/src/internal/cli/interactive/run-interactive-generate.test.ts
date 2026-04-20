@@ -11,64 +11,71 @@ import { filterOperationsByEntities } from "./filter-operations";
 import { suggestMigrationName } from "./suggest-name";
 import { previewOperations } from "./preview-operations";
 import { Logger } from "@lindorm/logger";
+import {
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+  type Mock,
+  type MockedFunction,
+} from "vitest";
 
-jest.mock("../../drivers/postgres/utils/sync/project-desired-schema");
-jest.mock("../../drivers/postgres/utils/sync/introspect-schema");
-jest.mock("../../drivers/postgres/utils/sync/diff-schema");
-jest.mock("../../drivers/postgres/utils/migration/serialize-migration");
-jest.mock("../../drivers/postgres/utils/migration/write-migration-file");
-jest.mock("./group-operations");
-jest.mock("./filter-operations");
-jest.mock("./suggest-name");
-jest.mock("./preview-operations");
+vi.mock("../../drivers/postgres/utils/sync/project-desired-schema");
+vi.mock("../../drivers/postgres/utils/sync/introspect-schema");
+vi.mock("../../drivers/postgres/utils/sync/diff-schema");
+vi.mock("../../drivers/postgres/utils/migration/serialize-migration");
+vi.mock("../../drivers/postgres/utils/migration/write-migration-file");
+vi.mock("./group-operations");
+vi.mock("./filter-operations");
+vi.mock("./suggest-name");
+vi.mock("./preview-operations");
 
-jest.mock("@lindorm/logger", () => ({
+vi.mock("@lindorm/logger", () => ({
   Logger: {
     std: {
-      log: jest.fn(),
-      info: jest.fn(),
-      success: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-      debug: jest.fn(),
+      log: vi.fn(),
+      info: vi.fn(),
+      success: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+      debug: vi.fn(),
     },
   },
 }));
 
 // Mock @inquirer/prompts with a factory that returns controllable functions
-const mockCheckbox = jest.fn();
-const mockInput = jest.fn();
-const mockConfirm = jest.fn();
+const mockCheckbox = vi.fn();
+const mockInput = vi.fn();
+const mockConfirm = vi.fn();
 
-jest.mock("@inquirer/prompts", () => ({
+vi.mock("@inquirer/prompts", () => ({
   checkbox: (...args: unknown[]) => mockCheckbox(...args),
   input: (...args: unknown[]) => mockInput(...args),
   confirm: (...args: unknown[]) => mockConfirm(...args),
 }));
 
-const mockProjectDesiredSchema = projectDesiredSchema as jest.MockedFunction<
+const mockProjectDesiredSchema = projectDesiredSchema as MockedFunction<
   typeof projectDesiredSchema
 >;
-const mockIntrospectSchema = introspectSchema as jest.MockedFunction<
-  typeof introspectSchema
->;
-const mockDiffSchema = diffSchema as jest.MockedFunction<typeof diffSchema>;
-const mockSerializeMigration = serializeMigration as jest.MockedFunction<
+const mockIntrospectSchema = introspectSchema as MockedFunction<typeof introspectSchema>;
+const mockDiffSchema = diffSchema as MockedFunction<typeof diffSchema>;
+const mockSerializeMigration = serializeMigration as MockedFunction<
   typeof serializeMigration
 >;
-const mockWriteMigrationFile = writeMigrationFile as jest.MockedFunction<
+const mockWriteMigrationFile = writeMigrationFile as MockedFunction<
   typeof writeMigrationFile
 >;
-const mockGroupOperationsByEntity = groupOperationsByEntity as jest.MockedFunction<
+const mockGroupOperationsByEntity = groupOperationsByEntity as MockedFunction<
   typeof groupOperationsByEntity
 >;
-const mockFilterOperationsByEntities = filterOperationsByEntities as jest.MockedFunction<
+const mockFilterOperationsByEntities = filterOperationsByEntities as MockedFunction<
   typeof filterOperationsByEntities
 >;
-const mockSuggestMigrationName = suggestMigrationName as jest.MockedFunction<
+const mockSuggestMigrationName = suggestMigrationName as MockedFunction<
   typeof suggestMigrationName
 >;
-const mockPreviewOperations = previewOperations as jest.MockedFunction<
+const mockPreviewOperations = previewOperations as MockedFunction<
   typeof previewOperations
 >;
 
@@ -95,7 +102,7 @@ const makeGroup = (overrides: Record<string, unknown> = {}): EntityGroup =>
   }) as EntityGroup;
 
 const makeOptions = (overrides: Record<string, unknown> = {}) => ({
-  client: { query: jest.fn() },
+  client: { query: vi.fn() },
   metadataList: [],
   source: { namespace: "app" },
   directory: "/project/migrations",
@@ -104,7 +111,7 @@ const makeOptions = (overrides: Record<string, unknown> = {}) => ({
 
 describe("runInteractiveGenerate", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     const ops = [makeSyncOp()];
     mockProjectDesiredSchema.mockReturnValue({ tables: [] } as any);

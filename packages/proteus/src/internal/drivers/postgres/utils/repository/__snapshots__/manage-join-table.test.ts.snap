@@ -1,4 +1,25 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`deleteJoinTableRows > deletes all join rows for the entity 1`] = `
+{
+  "params": [
+    "article-1",
+  ],
+  "sql": "DELETE FROM "public"."test_join_table" WHERE "article_id" = $1",
+}
+`;
+
+exports[`deleteJoinTableRows > handles composite owner key in WHERE clause 1`] = `
+{
+  "params": [
+    "ns-1",
+    "article-1",
+  ],
+  "sql": "DELETE FROM "public"."test_join_table" WHERE "article_ns" = $1 AND "article_id" = $2",
+}
+`;
+
+exports[`deleteJoinTableRows > uses quoted identifiers in DELETE query 1`] = `"DELETE FROM "public"."test_join_table" WHERE "article_id" = $1"`;
 
 exports[`deleteJoinTableRows deletes all join rows for the entity 1`] = `
 {
@@ -20,6 +41,70 @@ exports[`deleteJoinTableRows handles composite owner key in WHERE clause 1`] = `
 `;
 
 exports[`deleteJoinTableRows uses quoted identifiers in DELETE query 1`] = `"DELETE FROM "public"."test_join_table" WHERE "article_id" = $1"`;
+
+exports[`syncJoinTableRows > deletes all existing rows when relatedEntities is empty 1`] = `
+[
+  {
+    "params": [
+      "article-1",
+      "tag-a",
+    ],
+    "sql": "DELETE FROM "public"."test_join_table" WHERE "article_id" = $1 AND "tag_id" = $2",
+  },
+  {
+    "params": [
+      "article-1",
+      "tag-b",
+    ],
+    "sql": "DELETE FROM "public"."test_join_table" WHERE "article_id" = $1 AND "tag_id" = $2",
+  },
+]
+`;
+
+exports[`syncJoinTableRows > deletes removed join rows when related entities shrink 1`] = `
+{
+  "params": [
+    "article-1",
+    "tag-b",
+  ],
+  "sql": "DELETE FROM "public"."test_join_table" WHERE "article_id" = $1 AND "tag_id" = $2",
+}
+`;
+
+exports[`syncJoinTableRows > handles composite primary keys on both sides 1`] = `"INSERT INTO "public"."test_join_table" ("article_ns", "article_id", "tag_ns", "tag_id") VALUES ($1, $2, $3, $4) ON CONFLICT ("article_ns", "article_id", "tag_ns", "tag_id") DO NOTHING"`;
+
+exports[`syncJoinTableRows > handles composite primary keys on both sides 2`] = `
+[
+  "ns-1",
+  "article-1",
+  "ns-2",
+  "tag-a",
+]
+`;
+
+exports[`syncJoinTableRows > inserts new join rows when none exist 1`] = `
+{
+  "params": [
+    "article-1",
+    "tag-a",
+  ],
+  "sql": "INSERT INTO "public"."test_join_table" ("article_id", "tag_id") VALUES ($1, $2) ON CONFLICT ("article_id", "tag_id") DO NOTHING",
+}
+`;
+
+exports[`syncJoinTableRows > inserts new join rows when none exist 2`] = `
+{
+  "params": [
+    "article-1",
+    "tag-b",
+  ],
+  "sql": "INSERT INTO "public"."test_join_table" ("article_id", "tag_id") VALUES ($1, $2) ON CONFLICT ("article_id", "tag_id") DO NOTHING",
+}
+`;
+
+exports[`syncJoinTableRows > uses ON CONFLICT DO NOTHING for inserts 1`] = `"INSERT INTO "public"."test_join_table" ("article_id", "tag_id") VALUES ($1, $2) ON CONFLICT ("article_id", "tag_id") DO NOTHING"`;
+
+exports[`syncJoinTableRows > uses quoted identifiers in SELECT query 1`] = `"SELECT * FROM "public"."test_join_table" WHERE "article_id" = $1"`;
 
 exports[`syncJoinTableRows deletes all existing rows when relatedEntities is empty 1`] = `
 [

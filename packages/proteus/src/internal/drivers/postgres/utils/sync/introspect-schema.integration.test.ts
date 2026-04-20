@@ -3,6 +3,7 @@ import { Client } from "pg";
 import { createTestPgClient } from "../../../../__fixtures__/create-test-pg-client";
 import type { PostgresQueryClient } from "../../types/postgres-query-client";
 import { introspectSchema } from "./introspect-schema";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 let client: PostgresQueryClient;
 let raw: Client;

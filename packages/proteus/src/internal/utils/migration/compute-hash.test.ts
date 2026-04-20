@@ -1,4 +1,5 @@
 import { computeHash } from "./compute-hash";
+import { describe, expect, it } from "vitest";
 
 describe("computeHash", () => {
   it("should produce deterministic hash", () => {

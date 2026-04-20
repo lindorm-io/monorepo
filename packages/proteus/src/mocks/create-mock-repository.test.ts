@@ -1,7 +1,8 @@
-import { createMockRepository } from "./create-mock-repository";
+import { createMockRepository } from "./vitest";
+import { describe, expect, test, vi } from "vitest";
 
 describe("createMockRepository", () => {
-  test("should create a mock with all methods as jest.fn()", () => {
+  test("should create a mock with all methods as vi.fn()", () => {
     const repo = createMockRepository();
 
     expect(repo).toMatchSnapshot();

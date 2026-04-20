@@ -1,4 +1,5 @@
 import { extractExactPk } from "./is-pk-exact";
+import { describe, expect, test } from "vitest";
 
 describe("extractExactPk", () => {
   describe("single PK", () => {

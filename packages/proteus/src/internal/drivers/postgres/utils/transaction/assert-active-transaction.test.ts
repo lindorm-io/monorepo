@@ -1,12 +1,13 @@
 import { PostgresTransactionError } from "../../errors/PostgresTransactionError";
 import type { PostgresTransactionHandle } from "../../types/postgres-transaction-handle";
 import { assertActiveTransaction } from "./assert-active-transaction";
+import { describe, expect, it, vi } from "vitest";
 
 const makeHandle = (
   state: PostgresTransactionHandle["state"] = "active",
 ): PostgresTransactionHandle => ({
-  client: { query: jest.fn() },
-  release: jest.fn(),
+  client: { query: vi.fn() },
+  release: vi.fn(),
   state,
   savepointCounter: 0,
 });

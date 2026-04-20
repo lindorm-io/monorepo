@@ -4,24 +4,25 @@ import { tmpdir } from "os";
 import { join } from "path";
 import { mockScannerImport } from "../../../../../__fixtures__/mock-scanner-import";
 import { loadMigrations } from "./load-migrations";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 mockScannerImport();
 
 let dir: string;
 
 const mockLogger: ILogger = {
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
-  child: jest.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
+  child: vi.fn().mockReturnThis(),
 } as unknown as ILogger;
 
 beforeEach(async () => {
   dir = await mkdtemp(join(tmpdir(), "proteus-load-test-"));
-  jest.clearAllMocks();
+  vi.clearAllMocks();
 });
 
 afterEach(async () => {

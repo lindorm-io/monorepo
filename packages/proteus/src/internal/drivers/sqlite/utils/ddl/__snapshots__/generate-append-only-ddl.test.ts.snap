@@ -1,4 +1,38 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`generateAppendOnlyDDL (SQLite) > escapes double quotes in table name 1`] = `
+[
+  "CREATE TRIGGER IF NOT EXISTS "proteus_ao_my""table_no_update"
+  BEFORE UPDATE ON "my""table"
+  FOR EACH ROW
+  BEGIN
+    SELECT RAISE(ABORT, 'append-only entity: UPDATE operations are forbidden');
+  END;",
+  "CREATE TRIGGER IF NOT EXISTS "proteus_ao_my""table_no_delete"
+  BEFORE DELETE ON "my""table"
+  FOR EACH ROW
+  BEGIN
+    SELECT RAISE(ABORT, 'append-only entity: DELETE operations are forbidden');
+  END;",
+]
+`;
+
+exports[`generateAppendOnlyDDL (SQLite) > generates triggers for a simple table 1`] = `
+[
+  "CREATE TRIGGER IF NOT EXISTS "proteus_ao_audit_log_no_update"
+  BEFORE UPDATE ON "audit_log"
+  FOR EACH ROW
+  BEGIN
+    SELECT RAISE(ABORT, 'append-only entity: UPDATE operations are forbidden');
+  END;",
+  "CREATE TRIGGER IF NOT EXISTS "proteus_ao_audit_log_no_delete"
+  BEFORE DELETE ON "audit_log"
+  FOR EACH ROW
+  BEGIN
+    SELECT RAISE(ABORT, 'append-only entity: DELETE operations are forbidden');
+  END;",
+]
+`;
 
 exports[`generateAppendOnlyDDL (SQLite) escapes double quotes in table name 1`] = `
 [

@@ -1,4 +1,10 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Inheritance > should stage __inheritance as 'joined' when joined strategy is provided 1`] = `"joined"`;
+
+exports[`Inheritance > should stage __inheritance as 'single-table' when called with no arguments 1`] = `"single-table"`;
+
+exports[`Inheritance > should stage __inheritance as 'single-table' when explicitly provided 1`] = `"single-table"`;
 
 exports[`Inheritance should stage __inheritance as 'joined' when joined strategy is provided 1`] = `"joined"`;
 

@@ -2,8 +2,9 @@ import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metada
 import { BeforeDestroy } from "./BeforeDestroy";
 import { Entity } from "./Entity";
 import { PrimaryKeyField } from "./PrimaryKeyField";
+import { describe, expect, test, vi } from "vitest";
 
-const beforeDestroyCallback = jest.fn();
+const beforeDestroyCallback = vi.fn();
 
 @Entity({ name: "BeforeDestroyDecorated" })
 @BeforeDestroy(beforeDestroyCallback)

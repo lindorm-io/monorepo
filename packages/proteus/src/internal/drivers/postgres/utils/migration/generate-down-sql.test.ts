@@ -1,6 +1,7 @@
 import type { DbSnapshot } from "../../types/db-snapshot";
 import type { SyncOperation } from "../../types/sync-plan";
 import { generateDownSql } from "./generate-down-sql";
+import { describe, expect, it } from "vitest";
 
 const emptySnapshot: DbSnapshot = { tables: [], enums: [], schemas: [] };
 

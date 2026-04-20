@@ -1,3 +1,4 @@
+import { describe, expect, test } from "vitest";
 import { AbstractEntity } from "../../../decorators/AbstractEntity";
 import { Discriminator } from "../../../decorators/Discriminator";
 import { DiscriminatorValue } from "../../../decorators/DiscriminatorValue";

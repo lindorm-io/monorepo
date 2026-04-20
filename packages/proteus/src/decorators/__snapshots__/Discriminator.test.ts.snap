@@ -1,4 +1,22 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Discriminator > should stage __discriminator with fieldName 'kind' 1`] = `
+{
+  "fieldName": "kind",
+}
+`;
+
+exports[`Discriminator > should stage __discriminator with fieldName 'type' 1`] = `
+{
+  "fieldName": "type",
+}
+`;
+
+exports[`Discriminator > should stage __discriminator with fieldName 'vehicleType' 1`] = `
+{
+  "fieldName": "vehicleType",
+}
+`;
 
 exports[`Discriminator should stage __discriminator with fieldName 'kind' 1`] = `
 {

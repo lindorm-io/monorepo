@@ -13,8 +13,9 @@ import { PrimaryKey } from "../../../decorators/PrimaryKey";
 import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField";
 import { UpdateDateField } from "../../../decorators/UpdateDateField";
 import { VersionField } from "../../../decorators/VersionField";
+import { describe, expect, test, vi } from "vitest";
 
-const cloneOnCreateCb = jest.fn();
+const cloneOnCreateCb = vi.fn();
 
 @Entity({ name: "CloneEntityChild" })
 class CloneEntityChild {

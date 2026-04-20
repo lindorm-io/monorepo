@@ -3,6 +3,7 @@ import { Entity } from "./Entity";
 import { Field } from "./Field";
 import { Index } from "./Index_";
 import { PrimaryKeyField } from "./PrimaryKeyField";
+import { describe, expect, test } from "vitest";
 
 @Entity({ name: "IndexFieldLevel" })
 class IndexFieldLevel {

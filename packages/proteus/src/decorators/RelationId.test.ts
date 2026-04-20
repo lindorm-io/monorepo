@@ -7,6 +7,7 @@ import { Nullable } from "./Nullable";
 import { OneToMany } from "./OneToMany";
 import { PrimaryKeyField } from "./PrimaryKeyField";
 import { RelationId } from "./RelationId";
+import { describe, expect, test } from "vitest";
 
 @Entity({ name: "RelationIdCompany" })
 class RelationIdCompany {

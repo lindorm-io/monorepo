@@ -1,5 +1,6 @@
 import type { EntityMetadata, MetaField } from "../../../entity/types/metadata";
 import { compileFilter } from "./compile-filter";
+import { describe, expect, test } from "vitest";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

@@ -1,3 +1,4 @@
+import { describe, expect, it, vi } from "vitest";
 import type {
   LoadedMigration,
   MigrationInterface,
@@ -10,8 +11,8 @@ const makeMigration = (
 ): MigrationInterface => ({
   id: "aaa-111",
   ts: "2026-02-20T09:00:00.000Z",
-  up: jest.fn(),
-  down: jest.fn(),
+  up: vi.fn(),
+  down: vi.fn(),
   ...overrides,
 });
 

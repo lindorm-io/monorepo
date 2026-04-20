@@ -1,4 +1,5 @@
 import { validateConnectionMutualExclusivity } from "./validate-connection-options";
+import { describe, expect, it } from "vitest";
 
 describe("validateConnectionMutualExclusivity", () => {
   it("should not throw when only url is provided", () => {

@@ -1,14 +1,23 @@
 import type { EntityMetadata, MetaRelation } from "../../../../entity/types/metadata";
 import type { PostgresQueryClient } from "../../types/postgres-query-client";
 import { loadRelationIds, LoadRelationIdsContext } from "./load-relation-ids";
+import {
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+  type Mock,
+  type MockedFunction,
+} from "vitest";
 
-jest.mock("../../../../entity/metadata/get-entity-metadata", () => ({
-  getEntityMetadata: jest.fn(),
+vi.mock("../../../../entity/metadata/get-entity-metadata", () => ({
+  getEntityMetadata: vi.fn(),
 }));
 
 import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata";
 
-const mockGetEntityMetadata = getEntityMetadata as jest.MockedFunction<
+const mockGetEntityMetadata = getEntityMetadata as MockedFunction<
   typeof getEntityMetadata
 >;
 
@@ -119,7 +128,7 @@ const makeRelation = (overrides: Partial<MetaRelation> = {}): MetaRelation => ({
 });
 
 const makeClient = (rows: Array<Record<string, unknown>> = []): PostgresQueryClient => ({
-  query: jest.fn().mockResolvedValue({ rows, rowCount: rows.length }),
+  query: vi.fn().mockResolvedValue({ rows, rowCount: rows.length }),
 });
 
 // --- early exit ---
@@ -242,7 +251,7 @@ describe("loadRelationIds — OneToMany", () => {
       client,
     });
 
-    const [sql, params] = (client.query as jest.Mock).mock.calls[0];
+    const [sql, params] = (client.query as Mock).mock.calls[0];
     expect(sql).toContain("SELECT");
     expect(sql).toContain("WHERE");
     expect(sql).toMatchSnapshot();
@@ -366,7 +375,7 @@ describe("loadRelationIds — inverse OneToOne", () => {
       client,
     });
 
-    const [sql] = (client.query as jest.Mock).mock.calls[0];
+    const [sql] = (client.query as Mock).mock.calls[0];
     expect(sql).toContain("SELECT");
     expect(sql).toContain("profiles");
     expect(sql).toMatchSnapshot();

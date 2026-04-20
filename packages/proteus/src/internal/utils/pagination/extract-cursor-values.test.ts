@@ -1,4 +1,5 @@
 import { extractCursorValues } from "./extract-cursor-values";
+import { describe, expect, it } from "vitest";
 
 describe("extractCursorValues", () => {
   it("should extract values aligned with keyset entries", () => {

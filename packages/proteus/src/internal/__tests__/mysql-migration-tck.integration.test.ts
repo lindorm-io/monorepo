@@ -1,9 +1,10 @@
+import { afterAll, beforeAll, describe } from "vitest";
 // MySQL Migration TCK Harness
 //
 // Runs the migration TCK suite against a real MySQL 8.4 instance.
 // Creates a randomized database per run for parallel-safe execution.
 
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import type { ILogger } from "@lindorm/logger";
 import { randomBytes } from "node:crypto";
 import { writeFile } from "node:fs/promises";

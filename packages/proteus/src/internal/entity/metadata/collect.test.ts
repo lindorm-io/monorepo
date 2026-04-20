@@ -4,6 +4,7 @@ import { Field } from "../../../decorators/Field";
 import { Namespace } from "../../../decorators/Namespace";
 import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField";
 import { VersionField } from "../../../decorators/VersionField";
+import { describe, expect, test } from "vitest";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Fixture classes must be defined at module scope (stage 3 decorators)

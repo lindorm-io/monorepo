@@ -7,6 +7,7 @@ import { diffSchema } from "./diff-schema";
 import { SyncPlanExecutor } from "./execute-sync-plan";
 import { introspectSchema } from "./introspect-schema";
 import type { SyncPlan, SyncOptions } from "../../types/sync-plan";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 const executeSyncPlan = (
   client: PostgresQueryClient,

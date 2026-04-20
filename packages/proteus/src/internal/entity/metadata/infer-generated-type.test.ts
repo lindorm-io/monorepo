@@ -1,6 +1,7 @@
 import { makeField } from "../../__fixtures__/make-field";
 import { inferGeneratedTypes } from "./infer-generated-type";
 import type { MetaGenerated } from "../types/metadata";
+import { describe, expect, test } from "vitest";
 
 const makeGenerated = (
   key: string,

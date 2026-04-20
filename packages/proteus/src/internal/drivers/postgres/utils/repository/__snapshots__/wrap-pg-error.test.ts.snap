@@ -1,4 +1,114 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`wrapPgError > PG error code 40P01 — Deadlock detected > DeadlockError debug includes detail and context fields 1`] = `
+{
+  "detail": "Process 12345 waits for ShareLock on transaction 67890.",
+  "entity": "Account",
+  "operation": "update",
+}
+`;
+
+exports[`wrapPgError > PG error code 23502 — NOT NULL violation > NotNullViolationError debug includes detail, column, table, and context fields 1`] = `
+{
+  "column": "email",
+  "detail": "Failing row contains (null, foo@bar.com).",
+  "entity": "User",
+  "operation": "insert",
+  "table": "users",
+}
+`;
+
+exports[`wrapPgError > PG error code 23503 — FK violation > ForeignKeyViolationError debug includes detail, constraint, table, and context fields 1`] = `
+{
+  "constraint": "orders_user_id_fkey",
+  "detail": "Key (user_id)=(999) is not present in table "users".",
+  "entity": "Order",
+  "operation": "insert",
+  "table": "orders",
+}
+`;
+
+exports[`wrapPgError > PG error code 23505 — unique constraint violation > DuplicateKeyError debug forwards constraint field when present 1`] = `
+{
+  "constraint": "users_email_key",
+  "detail": "Key (email)=(foo@bar.com) already exists.",
+  "table": "users",
+}
+`;
+
+exports[`wrapPgError > PG error code 23505 — unique constraint violation > DuplicateKeyError debug includes context fields 1`] = `
+{
+  "constraint": undefined,
+  "detail": "Key (id)=(1) already exists.",
+  "entity": "Order",
+  "operation": "insert",
+}
+`;
+
+exports[`wrapPgError > PG error code 23505 — unique constraint violation > DuplicateKeyError debug includes pg detail when present 1`] = `
+{
+  "constraint": undefined,
+  "detail": "Key (email)=(foo@bar.com) already exists.",
+  "table": "users",
+}
+`;
+
+exports[`wrapPgError > PG error code 23514 — CHECK constraint violation > CheckConstraintError debug includes detail, constraint, table, and context fields 1`] = `
+{
+  "constraint": "users_age_check",
+  "detail": "Failing row contains (age=-1).",
+  "entity": "User",
+  "operation": "update",
+  "table": "users",
+}
+`;
+
+exports[`wrapPgError > PG error code 40001 — Serialization failure > SerializationError debug includes detail and context fields 1`] = `
+{
+  "detail": "Process 12345 waits for ShareLock on transaction 67890.",
+  "entity": "Account",
+  "operation": "update",
+}
+`;
+
+exports[`wrapPgError > unknown errors — wrapping in ProteusRepositoryError > ProteusRepositoryError debug code is undefined for non-PG errors 1`] = `
+{
+  "code": undefined,
+  "message": "plain js error",
+}
+`;
+
+exports[`wrapPgError > unknown errors — wrapping in ProteusRepositoryError > ProteusRepositoryError debug includes context fields 1`] = `
+{
+  "code": undefined,
+  "entity": "User",
+  "message": "unexpected",
+  "operation": "find",
+}
+`;
+
+exports[`wrapPgError > unknown errors — wrapping in ProteusRepositoryError > ProteusRepositoryError debug includes original error message 1`] = `
+{
+  "code": undefined,
+  "message": "connection refused",
+  "table": "orders",
+}
+`;
+
+exports[`wrapPgError > unknown errors — wrapping in ProteusRepositoryError > ProteusRepositoryError debug includes pg error code when available 1`] = `
+{
+  "code": "42703",
+  "message": "PG error",
+  "table": "orders",
+}
+`;
+
+exports[`wrapPgError > unknown errors — wrapping in ProteusRepositoryError > ProteusRepositoryError debug uses String() for non-Error values 1`] = `
+{
+  "code": undefined,
+  "message": "42",
+}
+`;
 
 exports[`wrapPgError PG error code 40P01 — Deadlock detected DeadlockError debug includes detail and context fields 1`] = `
 {

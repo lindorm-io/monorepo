@@ -1,5 +1,6 @@
 import { ProteusError } from "../../../../errors";
 import { extractEnumValues } from "./extract-enum-values";
+import { describe, expect, it } from "vitest";
 
 // --- String enums ---
 

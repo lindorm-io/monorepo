@@ -5,6 +5,7 @@ import { Field } from "./Field";
 import { Namespace } from "./Namespace";
 import { PrimaryKey } from "./PrimaryKey";
 import { PrimaryKeyField } from "./PrimaryKeyField";
+import { describe, expect, test } from "vitest";
 
 @Entity()
 class EntityDefaultName {

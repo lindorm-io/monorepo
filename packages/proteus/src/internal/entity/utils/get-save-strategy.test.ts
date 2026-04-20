@@ -5,6 +5,7 @@ import { Generated } from "../../../decorators/Generated";
 import { PrimaryKey } from "../../../decorators/PrimaryKey";
 import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField";
 import { VersionField } from "../../../decorators/VersionField";
+import { describe, expect, test } from "vitest";
 
 @Entity({ name: "GetSaveStrategyVersioned" })
 class GetSaveStrategyVersioned {

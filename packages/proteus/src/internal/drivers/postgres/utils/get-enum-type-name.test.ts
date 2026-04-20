@@ -1,5 +1,6 @@
 import { getEnumTypeName } from "./get-enum-type-name";
 import { hashIdentifier } from "./hash-identifier";
+import { describe, expect, test } from "vitest";
 
 describe("getEnumTypeName", () => {
   test("returns readable name when result is exactly 63 characters", () => {

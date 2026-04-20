@@ -4,6 +4,7 @@ import type { EntityMetadata } from "../../../entity/types/metadata";
 import type { SqlFragment } from "../../../types/query";
 import type { MysqlQueryClient } from "../types/mysql-query-client";
 import { MySqlQueryBuilder } from "./MySqlQueryBuilder";
+import { describe, expect, test, vi } from "vitest";
 
 const fragment = (sql: string, params: Array<unknown> = []): SqlFragment =>
   ({ __brand: "SqlFragment", sql, params }) as SqlFragment;
@@ -46,7 +47,7 @@ const metadata = {
 } as EntityMetadata;
 
 const createMockClient = (rows: Array<any> = []): MysqlQueryClient => ({
-  query: jest.fn(async () => ({ rows, rowCount: rows.length, insertId: 0 })),
+  query: vi.fn(async () => ({ rows, rowCount: rows.length, insertId: 0 })),
 });
 
 describe("MySqlQueryBuilder", () => {
@@ -194,7 +195,7 @@ describe("MySqlQueryBuilder", () => {
 
   describe("getManyAndCount", () => {
     test("should return entities and count", async () => {
-      const queryFn = jest
+      const queryFn = vi
         .fn()
         .mockResolvedValueOnce({
           rows: [

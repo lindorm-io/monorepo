@@ -1,4 +1,38 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`compileInsert > should apply transform.to() on field values 1`] = `
+{
+  "params": [
+    "abc-123",
+    "ALICE",
+    "alice@example.com",
+  ],
+  "text": "INSERT INTO \`app\`.\`users\` (\`id\`, \`name\`, \`email_address\`) VALUES (?, ?, ?)",
+}
+`;
+
+exports[`compileInsert > should compile a basic insert without RETURNING 1`] = `
+{
+  "params": [
+    "abc-123",
+    "Alice",
+    "alice@example.com",
+  ],
+  "text": "INSERT INTO \`app\`.\`users\` (\`id\`, \`name\`, \`email_address\`) VALUES (?, ?, ?)",
+}
+`;
+
+exports[`compileInsert > should include discriminator column when entity has inheritance root metadata 1`] = `
+{
+  "params": [
+    "abc-123",
+    "Alice",
+    "alice@example.com",
+    "base",
+  ],
+  "text": "INSERT INTO \`app\`.\`users\` (\`id\`, \`name\`, \`email_address\`, \`__discriminator\`) VALUES (?, ?, ?, ?)",
+}
+`;
 
 exports[`compileInsert should apply transform.to() on field values 1`] = `
 {
@@ -31,6 +65,20 @@ exports[`compileInsert should include discriminator column when entity has inher
     "base",
   ],
   "text": "INSERT INTO \`app\`.\`users\` (\`id\`, \`name\`, \`email_address\`, \`__discriminator\`) VALUES (?, ?, ?, ?)",
+}
+`;
+
+exports[`compileInsertBulk > should compile multi-row insert without RETURNING 1`] = `
+{
+  "params": [
+    "1",
+    "Alice",
+    "a@b.com",
+    "2",
+    "Bob",
+    "b@b.com",
+  ],
+  "text": "INSERT INTO \`app\`.\`users\` (\`id\`, \`name\`, \`email_address\`) VALUES (?, ?, ?), (?, ?, ?)",
 }
 `;
 

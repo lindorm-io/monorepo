@@ -1,4 +1,5 @@
 import { validateMigrationDriver } from "./validate-migration-driver";
+import { describe, expect, it } from "vitest";
 
 const makeMigration = (driver?: string) => ({
   id: "test-id",

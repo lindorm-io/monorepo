@@ -2,6 +2,7 @@ import { ProteusError } from "../../../../../errors";
 import { makeField } from "../../../../__fixtures__/make-field";
 import type { MetaIndex } from "../../../../entity/types/metadata";
 import { generateIndexDDL } from "./generate-index-ddl";
+import { describe, expect, test } from "vitest";
 
 const TABLE = "products";
 const FIELDS = [

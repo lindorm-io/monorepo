@@ -18,6 +18,7 @@ import { Field } from "../../../decorators/Field";
 import { Lazy } from "../../../decorators/Lazy";
 import { PrimaryKey } from "../../../decorators/PrimaryKey";
 import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField";
+import { describe, expect, test } from "vitest";
 
 // ─── B7: Nested @Embeddable guard ────────────────────────────────────────────
 

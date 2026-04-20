@@ -1,4 +1,12 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`compileOrderBy > should compile multiple fields 1`] = `"ORDER BY "t0"."name" ASC, "t0"."age" DESC"`;
+
+exports[`compileOrderBy > should compile single field ASC 1`] = `"ORDER BY "t0"."name" ASC"`;
+
+exports[`compileOrderBy > should compile single field DESC 1`] = `"ORDER BY "t0"."age" DESC"`;
+
+exports[`compileOrderBy > should use column name mapping 1`] = `"ORDER BY "t0"."email_address" ASC"`;
 
 exports[`compileOrderBy should compile multiple fields 1`] = `"ORDER BY "t0"."name" ASC, "t0"."age" DESC"`;
 

@@ -11,6 +11,7 @@ import { Field } from "./Field";
 import { Nullable } from "./Nullable";
 import { PrimaryKeyField } from "./PrimaryKeyField";
 import { Generated } from "./Generated";
+import { describe, expect, test } from "vitest";
 
 @Embeddable()
 class Coord {

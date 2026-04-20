@@ -2,8 +2,9 @@ import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metada
 import { Entity } from "./Entity";
 import { OnCreate } from "./OnCreate";
 import { PrimaryKeyField } from "./PrimaryKeyField";
+import { describe, expect, test, vi } from "vitest";
 
-const onCreateCallback = jest.fn();
+const onCreateCallback = vi.fn();
 
 @Entity({ name: "OnCreateDecorated" })
 @OnCreate(onCreateCallback)

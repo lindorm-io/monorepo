@@ -1,3 +1,4 @@
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 // Table Inheritance PostgreSQL Integration Tests
 //
 // Exercises both inheritance strategies against a real PostgreSQL instance:
@@ -7,7 +8,7 @@
 // Uses a randomised schema for isolation; teardown drops the schema.
 
 import { randomBytes } from "crypto";
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { Client } from "pg";
 import { ProteusSource } from "../../classes/ProteusSource";
 import {

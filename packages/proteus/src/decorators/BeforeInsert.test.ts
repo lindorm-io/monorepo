@@ -2,8 +2,9 @@ import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metada
 import { BeforeInsert } from "./BeforeInsert";
 import { Entity } from "./Entity";
 import { PrimaryKeyField } from "./PrimaryKeyField";
+import { describe, expect, test, vi } from "vitest";
 
-const beforeInsertCallback = jest.fn();
+const beforeInsertCallback = vi.fn();
 
 @Entity({ name: "BeforeInsertDecorated" })
 @BeforeInsert(beforeInsertCallback)

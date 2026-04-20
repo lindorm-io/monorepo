@@ -1,4 +1,5 @@
 import { normalizePgType } from "../../../../drivers/postgres/utils/sync/normalize-pg-type";
+import { describe, expect, it } from "vitest";
 
 describe("normalizePgType", () => {
   // Direct aliases

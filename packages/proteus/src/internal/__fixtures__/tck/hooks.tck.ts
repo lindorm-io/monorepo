@@ -1,5 +1,5 @@
 // TCK: Hooks Suite
-// Tests hook invocation (not ordering). Uses jest.fn() for verification.
+// Tests hook invocation (not ordering). Uses vi.fn() for verification.
 // Intent-based hooks: insert→BeforeInsert/AfterInsert, update→BeforeUpdate/AfterUpdate,
 // save→BeforeSave/AfterSave (not Insert/Update hooks).
 
@@ -9,7 +9,7 @@ import type { TckEntities } from "./create-tck-entities";
 export const hooksSuite = (
   getHandle: () => TckDriverHandle,
   entities: TckEntities,
-  hookCallback: jest.Mock,
+  hookCallback: Mock,
 ) => {
   describe("Hooks", () => {
     const { TckHooked } = entities;

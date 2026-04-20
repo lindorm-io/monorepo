@@ -1,4 +1,5 @@
 import { Inheritance } from "./Inheritance";
+import { describe, expect, test } from "vitest";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Test entities

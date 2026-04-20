@@ -2,6 +2,7 @@ import { makeField } from "../../../__fixtures__/make-field";
 import type { EntityMetadata } from "../../../entity/types/metadata";
 import { ProteusError } from "../../../../errors/ProteusError";
 import { PostgresInsertQueryBuilder } from "./PostgresInsertQueryBuilder";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 const metadata = {
   entity: { name: "users", namespace: null },
@@ -14,12 +15,12 @@ const metadata = {
 } as unknown as EntityMetadata;
 
 const mockClient = {
-  query: jest.fn().mockResolvedValue({ rows: [], rowCount: 0 }),
+  query: vi.fn().mockResolvedValue({ rows: [], rowCount: 0 }),
 };
 
 describe("PostgresInsertQueryBuilder", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test("should return empty result for empty values array", async () => {

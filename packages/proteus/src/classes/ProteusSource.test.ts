@@ -1,10 +1,11 @@
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { ProteusSession } from "./ProteusSession";
 import { ProteusSource } from "./ProteusSource";
 import { Entity } from "../decorators/Entity";
 import { Field } from "../decorators/Field";
 import { PrimaryKeyField } from "../decorators/PrimaryKeyField";
 import { Filter } from "../decorators/Filter";
+import { describe, expect, test } from "vitest";
 
 @Entity({ name: "SessionTestEntity" })
 @Filter({ name: "tenant", condition: { tenantId: "$tenantId" } })

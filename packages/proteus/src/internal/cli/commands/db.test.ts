@@ -1,18 +1,19 @@
 import { Command } from "commander";
 import { registerDbCommands } from "./db";
 import { dbPing } from "./db-ping";
+import { beforeEach, describe, expect, it, vi, type MockedFunction } from "vitest";
 
-jest.mock("./db-ping", () => ({
-  dbPing: jest.fn(),
+vi.mock("./db-ping", () => ({
+  dbPing: vi.fn(),
 }));
 
-const mockDbPing = dbPing as jest.MockedFunction<typeof dbPing>;
+const mockDbPing = dbPing as MockedFunction<typeof dbPing>;
 
 describe("registerDbCommands", () => {
   let program: Command;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     program = new Command();
     program.exitOverride(); // Prevent commander from calling process.exit
     registerDbCommands(program);

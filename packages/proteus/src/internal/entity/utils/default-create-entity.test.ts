@@ -14,8 +14,9 @@ import { OneToOne } from "../../../decorators/OneToOne";
 import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField";
 import { UpdateDateField } from "../../../decorators/UpdateDateField";
 import { VersionField } from "../../../decorators/VersionField";
+import { describe, expect, test, vi } from "vitest";
 
-const onCreateCb = jest.fn();
+const onCreateCb = vi.fn();
 
 @Entity({ name: "CreateEntityComment" })
 class CreateEntityComment {

@@ -1,4 +1,5 @@
 import { PG_IDENTIFIER_LIMIT } from "./postgres-constants";
+import { describe, expect, it } from "vitest";
 
 describe("postgres-constants", () => {
   describe("PG_IDENTIFIER_LIMIT", () => {

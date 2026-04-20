@@ -2,8 +2,9 @@ import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metada
 import { Entity } from "./Entity";
 import { OnHydrate } from "./OnHydrate";
 import { PrimaryKeyField } from "./PrimaryKeyField";
+import { describe, expect, test, vi } from "vitest";
 
-const onHydrateCallback = jest.fn();
+const onHydrateCallback = vi.fn();
 
 @Entity({ name: "OnHydrateDecorated" })
 @OnHydrate(onHydrateCallback)

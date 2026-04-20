@@ -11,6 +11,7 @@ import { Nullable } from "../../../decorators/Nullable";
 import { OneToMany } from "../../../decorators/OneToMany";
 import { OneToOne } from "../../../decorators/OneToOne";
 import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField";
+import { describe, expect, test } from "vitest";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Happy path entities

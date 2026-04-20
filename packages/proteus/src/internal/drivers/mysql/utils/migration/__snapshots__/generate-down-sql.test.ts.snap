@@ -1,26 +1,58 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`generateMysqlDownSql — add_check > should produce DROP CHECK 1`] = `"ALTER TABLE \`users\` DROP CHECK \`chk_age\`;"`;
 
 exports[`generateMysqlDownSql — add_check should produce DROP CHECK 1`] = `"ALTER TABLE \`users\` DROP CHECK \`chk_age\`;"`;
 
+exports[`generateMysqlDownSql — add_column > should produce DROP COLUMN from ADD COLUMN sql 1`] = `"ALTER TABLE \`users\` DROP COLUMN \`email\`;"`;
+
 exports[`generateMysqlDownSql — add_column should produce DROP COLUMN from ADD COLUMN sql 1`] = `"ALTER TABLE \`users\` DROP COLUMN \`email\`;"`;
+
+exports[`generateMysqlDownSql — add_fk > should produce DROP FOREIGN KEY 1`] = `"ALTER TABLE \`users\` DROP FOREIGN KEY \`fk_org\`;"`;
 
 exports[`generateMysqlDownSql — add_fk should produce DROP FOREIGN KEY 1`] = `"ALTER TABLE \`users\` DROP FOREIGN KEY \`fk_org\`;"`;
 
+exports[`generateMysqlDownSql — add_index > should produce DROP INDEX 1`] = `"DROP INDEX \`idx_email\` ON \`users\`;"`;
+
 exports[`generateMysqlDownSql — add_index should produce DROP INDEX 1`] = `"DROP INDEX \`idx_email\` ON \`users\`;"`;
+
+exports[`generateMysqlDownSql — add_unique > should produce DROP INDEX (MySQL unique constraints are indexes) 1`] = `"ALTER TABLE \`users\` DROP INDEX \`uq_email\`;"`;
 
 exports[`generateMysqlDownSql — add_unique should produce DROP INDEX (MySQL unique constraints are indexes) 1`] = `"ALTER TABLE \`users\` DROP INDEX \`uq_email\`;"`;
 
+exports[`generateMysqlDownSql — create_table > should produce DROP TABLE IF EXISTS 1`] = `"DROP TABLE IF EXISTS \`users\`;"`;
+
 exports[`generateMysqlDownSql — create_table should produce DROP TABLE IF EXISTS 1`] = `"DROP TABLE IF EXISTS \`users\`;"`;
 
+exports[`generateMysqlDownSql — create_trigger > should produce DROP TRIGGER IF EXISTS for a CREATE TRIGGER sql 1`] = `"DROP TRIGGER IF EXISTS \`trg_events_no_update\`;"`;
+
 exports[`generateMysqlDownSql — create_trigger should produce DROP TRIGGER IF EXISTS for a CREATE TRIGGER sql 1`] = `"DROP TRIGGER IF EXISTS \`trg_events_no_update\`;"`;
+
+exports[`generateMysqlDownSql — drop_fk > should reconstruct FK with CASCADE delete rule from snapshot 1`] = `"ALTER TABLE \`users\` ADD CONSTRAINT \`fk_org\` FOREIGN KEY (\`org_id\`) REFERENCES \`orgs\` (\`id\`) ON DELETE CASCADE;"`;
+
+exports[`generateMysqlDownSql — drop_fk > should reconstruct FK with CASCADE update rule from snapshot 1`] = `"ALTER TABLE \`users\` ADD CONSTRAINT \`fk_team\` FOREIGN KEY (\`team_id\`) REFERENCES \`teams\` (\`id\`) ON UPDATE CASCADE;"`;
 
 exports[`generateMysqlDownSql — drop_fk should reconstruct FK with CASCADE delete rule from snapshot 1`] = `"ALTER TABLE \`users\` ADD CONSTRAINT \`fk_org\` FOREIGN KEY (\`org_id\`) REFERENCES \`orgs\` (\`id\`) ON DELETE CASCADE;"`;
 
 exports[`generateMysqlDownSql — drop_fk should reconstruct FK with CASCADE update rule from snapshot 1`] = `"ALTER TABLE \`users\` ADD CONSTRAINT \`fk_team\` FOREIGN KEY (\`team_id\`) REFERENCES \`teams\` (\`id\`) ON UPDATE CASCADE;"`;
 
+exports[`generateMysqlDownSql — drop_index > should reconstruct compound unique index from snapshot 1`] = `"CREATE UNIQUE INDEX \`idx_compound\` ON \`users\` (\`email\` ASC, \`age\` DESC);"`;
+
+exports[`generateMysqlDownSql — drop_index > should reconstruct simple index from snapshot 1`] = `"CREATE INDEX \`idx_email\` ON \`users\` (\`email\` ASC);"`;
+
 exports[`generateMysqlDownSql — drop_index should reconstruct compound unique index from snapshot 1`] = `"CREATE UNIQUE INDEX \`idx_compound\` ON \`users\` (\`email\` ASC, \`age\` DESC);"`;
 
 exports[`generateMysqlDownSql — drop_index should reconstruct simple index from snapshot 1`] = `"CREATE INDEX \`idx_email\` ON \`users\` (\`email\` ASC);"`;
+
+exports[`generateMysqlDownSql — modify_column > should handle stored generated column (minimal reconstruction) 1`] = `"ALTER TABLE \`users\` MODIFY COLUMN \`computed\` INT;"`;
+
+exports[`generateMysqlDownSql — modify_column > should match column name case-insensitively 1`] = `"ALTER TABLE \`users\` MODIFY COLUMN \`email\` VARCHAR(255) NOT NULL DEFAULT '';"`;
+
+exports[`generateMysqlDownSql — modify_column > should reconstruct auto_increment column 1`] = `"ALTER TABLE \`users\` MODIFY COLUMN \`counter\` INT AUTO_INCREMENT;"`;
+
+exports[`generateMysqlDownSql — modify_column > should reconstruct nullable column with no default 1`] = `"ALTER TABLE \`users\` MODIFY COLUMN \`age\` INT;"`;
+
+exports[`generateMysqlDownSql — modify_column > should reconstruct previous column definition from snapshot 1`] = `"ALTER TABLE \`users\` MODIFY COLUMN \`email\` VARCHAR(255) NOT NULL DEFAULT '';"`;
 
 exports[`generateMysqlDownSql — modify_column should handle stored generated column (minimal reconstruction) 1`] = `"ALTER TABLE \`users\` MODIFY COLUMN \`computed\` INT;"`;
 

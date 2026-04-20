@@ -1,9 +1,19 @@
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  describe,
+  expect,
+  it,
+  vi,
+  type Mock,
+} from "vitest";
 // Caching Integration Tests
 //
 // Exercises the full caching layer (MemoryCacheAdapter + CachingRepository)
 // against the Memory driver. No Docker needed.
 
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { ProteusSource } from "../../classes/ProteusSource";
 import { MemoryCacheAdapter } from "../../classes/MemoryCacheAdapter";
 import {
@@ -61,7 +71,7 @@ class UncachedItem {
   updatedAt!: Date;
 }
 
-const afterLoadSpy = jest.fn();
+const afterLoadSpy = vi.fn();
 
 @Entity({ name: "HookedItem" })
 @Cache("1 Minute")
@@ -107,7 +117,7 @@ afterAll(async () => {
 });
 
 afterEach(() => {
-  jest.restoreAllMocks();
+  vi.restoreAllMocks();
   afterLoadSpy.mockClear();
 });
 
@@ -117,8 +127,8 @@ describe("caching integration", () => {
   describe("cache hit", () => {
     it("should return cached result on second find", async () => {
       const repo = source.repository(CachedItem);
-      const getSpy = jest.spyOn(adapter, "get");
-      const setSpy = jest.spyOn(adapter, "set");
+      const getSpy = vi.spyOn(adapter, "get");
+      const setSpy = vi.spyOn(adapter, "set");
 
       const saved = await repo.save({ name: "alpha", value: 10 });
 
@@ -209,9 +219,9 @@ describe("caching integration", () => {
 
       // Advance Date.now past the 1 minute TTL
       const realNow = Date.now();
-      const dateNowSpy = jest.spyOn(Date, "now").mockReturnValue(realNow + 61_000);
+      const dateNowSpy = vi.spyOn(Date, "now").mockReturnValue(realNow + 61_000);
 
-      const setSpy = jest.spyOn(adapter, "set");
+      const setSpy = vi.spyOn(adapter, "set");
 
       // This find should miss (TTL expired) and re-fetch from DB
       const result = await repo.find({ name: "ttl-test" });
@@ -227,8 +237,8 @@ describe("caching integration", () => {
   describe("per-query cache:false override", () => {
     it("should bypass cache when cache:false is set", async () => {
       const repo = source.repository(CachedItem);
-      const getSpy = jest.spyOn(adapter, "get");
-      const setSpy = jest.spyOn(adapter, "set");
+      const getSpy = vi.spyOn(adapter, "get");
+      const setSpy = vi.spyOn(adapter, "set");
 
       await repo.save({ name: "no-cache", value: 0 });
 
@@ -246,7 +256,7 @@ describe("caching integration", () => {
   describe("per-query TTL override", () => {
     it("should use per-query TTL instead of decorator TTL", async () => {
       const repo = source.repository(CachedItem);
-      const setSpy = jest.spyOn(adapter, "set");
+      const setSpy = vi.spyOn(adapter, "set");
 
       await repo.save({ name: "custom-ttl", value: 0 });
 
@@ -265,8 +275,8 @@ describe("caching integration", () => {
   describe("uncached entity with source default", () => {
     it("should cache UncachedItem via source ttl", async () => {
       const repo = source.repository(UncachedItem);
-      const getSpy = jest.spyOn(adapter, "get");
-      const setSpy = jest.spyOn(adapter, "set");
+      const getSpy = vi.spyOn(adapter, "get");
+      const setSpy = vi.spyOn(adapter, "set");
 
       await repo.save({ name: "uses-default" });
 
@@ -292,8 +302,8 @@ describe("caching integration", () => {
   describe("relation exclusion", () => {
     it("should skip cache when relations option is non-empty", async () => {
       const repo = source.repository(CachedItem);
-      const getSpy = jest.spyOn(adapter, "get");
-      const setSpy = jest.spyOn(adapter, "set");
+      const getSpy = vi.spyOn(adapter, "get");
+      const setSpy = vi.spyOn(adapter, "set");
 
       await repo.save({ name: "rel-test", value: 0 });
 
@@ -315,8 +325,8 @@ describe("caching integration", () => {
   describe("findAndCount caching", () => {
     it("should cache findAndCount results and invalidate on write", async () => {
       const repo = source.repository(CachedItem);
-      const getSpy = jest.spyOn(adapter, "get");
-      const setSpy = jest.spyOn(adapter, "set");
+      const getSpy = vi.spyOn(adapter, "get");
+      const setSpy = vi.spyOn(adapter, "set");
 
       await repo.save({ name: "fac-item", value: 1 });
       await repo.save({ name: "fac-item", value: 2 });
@@ -380,8 +390,8 @@ describe("caching integration", () => {
   describe("negative caching", () => {
     it("should cache null findOne result", async () => {
       const repo = source.repository(CachedItem);
-      const getSpy = jest.spyOn(adapter, "get");
-      const setSpy = jest.spyOn(adapter, "set");
+      const getSpy = vi.spyOn(adapter, "get");
+      const setSpy = vi.spyOn(adapter, "set");
 
       getSpy.mockClear();
       setSpy.mockClear();
@@ -434,9 +444,7 @@ describe("caching integration", () => {
       await repo.find({ name: "degrade-test" });
 
       // Mock adapter.get to throw
-      const getSpy = jest
-        .spyOn(adapter, "get")
-        .mockRejectedValue(new Error("Redis down"));
+      const getSpy = vi.spyOn(adapter, "get").mockRejectedValue(new Error("Redis down"));
 
       // find should still work — falls back to inner
       const result = await repo.find({ name: "degrade-test" });
@@ -452,9 +460,7 @@ describe("caching integration", () => {
       const saved = await repo.save({ name: "set-fail-test", value: 0 });
 
       // Mock adapter.set to throw
-      const setSpy = jest
-        .spyOn(adapter, "set")
-        .mockRejectedValue(new Error("Redis down"));
+      const setSpy = vi.spyOn(adapter, "set").mockRejectedValue(new Error("Redis down"));
 
       // find should still work — just can't cache
       const result = await repo.find({ name: "set-fail-test" });
@@ -468,8 +474,8 @@ describe("caching integration", () => {
   describe("count() caching", () => {
     it("should cache count results and invalidate on write", async () => {
       const repo = source.repository(CachedItem);
-      const getSpy = jest.spyOn(adapter, "get");
-      const setSpy = jest.spyOn(adapter, "set");
+      const getSpy = vi.spyOn(adapter, "get");
+      const setSpy = vi.spyOn(adapter, "set");
 
       await repo.save({ name: "count-test", value: 1 });
       await repo.save({ name: "count-test", value: 2 });
@@ -506,8 +512,8 @@ describe("caching integration", () => {
   describe("exists() caching", () => {
     it("should cache exists results", async () => {
       const repo = source.repository(CachedItem);
-      const getSpy = jest.spyOn(adapter, "get");
-      const setSpy = jest.spyOn(adapter, "set");
+      const getSpy = vi.spyOn(adapter, "get");
+      const setSpy = vi.spyOn(adapter, "set");
 
       const saved = await repo.save({ name: "exists-test", value: 0 });
 
@@ -531,7 +537,7 @@ describe("caching integration", () => {
 
     it("should cache false exists result", async () => {
       const repo = source.repository(CachedItem);
-      const setSpy = jest.spyOn(adapter, "set");
+      const setSpy = vi.spyOn(adapter, "set");
 
       setSpy.mockClear();
 
@@ -550,8 +556,8 @@ describe("caching integration", () => {
   describe("lock option skips cache", () => {
     it("should bypass cache when lock option is set", async () => {
       const repo = source.repository(CachedItem);
-      const getSpy = jest.spyOn(adapter, "get");
-      const setSpy = jest.spyOn(adapter, "set");
+      const getSpy = vi.spyOn(adapter, "get");
+      const setSpy = vi.spyOn(adapter, "set");
 
       await repo.save({ name: "lock-test", value: 0 });
 
@@ -574,7 +580,7 @@ describe("caching integration", () => {
       const before = await repo.count({ name: "clear-test" });
       expect(before).toBe(1);
 
-      const setSpy = jest.spyOn(adapter, "set");
+      const setSpy = vi.spyOn(adapter, "set");
 
       // Clear all records
       await repo.clear();
@@ -624,7 +630,7 @@ describe("caching integration", () => {
       expect(resultB[0].name).toBe("iso-b");
 
       // Verify they are independently cached
-      const getSpy = jest.spyOn(adapter, "get");
+      const getSpy = vi.spyOn(adapter, "get");
 
       const cachedA = await repo.find({ name: "iso-a" });
       const cachedB = await repo.find({ name: "iso-b" });
@@ -641,8 +647,8 @@ describe("caching integration", () => {
 
       await repo.save({ name: "op-test", value: 1 });
 
-      const getSpy = jest.spyOn(adapter, "get");
-      const setSpy = jest.spyOn(adapter, "set");
+      const getSpy = vi.spyOn(adapter, "get");
+      const setSpy = vi.spyOn(adapter, "set");
 
       getSpy.mockClear();
       setSpy.mockClear();
@@ -666,8 +672,8 @@ describe("caching integration", () => {
       // Find it (populates cache)
       await repo.find({ name: "tx-test" });
 
-      const getSpy = jest.spyOn(adapter, "get");
-      const setSpy = jest.spyOn(adapter, "set");
+      const getSpy = vi.spyOn(adapter, "get");
+      const setSpy = vi.spyOn(adapter, "set");
 
       getSpy.mockClear();
       setSpy.mockClear();
@@ -688,7 +694,7 @@ describe("caching integration", () => {
   describe("findOneOrFail with cache", () => {
     it("should cache findOneOrFail results", async () => {
       const repo = source.repository(CachedItem);
-      const setSpy = jest.spyOn(adapter, "set");
+      const setSpy = vi.spyOn(adapter, "set");
 
       const saved = await repo.save({ name: "fail-test", value: 0 });
 

@@ -1,9 +1,17 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`buildMysqlLockName > should hash namespace when result exceeds 64 chars 1`] = `"proteus_sync_2816597888e4a0d3a36b82b83316ab32"`;
+
+exports[`buildMysqlLockName > should include namespace in the lock name 1`] = `"proteus_sync_my_app"`;
+
+exports[`buildMysqlLockName > should use 'default' when namespace is null 1`] = `"proteus_sync_default"`;
 
 exports[`buildMysqlLockName should hash namespace when result exceeds 64 chars 1`] = `"proteus_sync_2816597888e4a0d3a36b82b83316ab32"`;
 
 exports[`buildMysqlLockName should include namespace in the lock name 1`] = `"proteus_sync_my_app"`;
 
 exports[`buildMysqlLockName should use 'default' when namespace is null 1`] = `"proteus_sync_default"`;
+
+exports[`hashNamespaceToInt32 > should produce deterministic results 1`] = `-1416750865`;
 
 exports[`hashNamespaceToInt32 should produce deterministic results 1`] = `-1416750865`;

@@ -1,4 +1,18 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`wrapMysqlError > should map errno 1048 (NOT NULL) to NotNullViolationError 1`] = `"insert failed (NOT NULL constraint violation)"`;
+
+exports[`wrapMysqlError > should map errno 1205 (lock wait timeout) to SerializationError 1`] = `"update failed (lock wait timeout — retry the operation)"`;
+
+exports[`wrapMysqlError > should map errno 1213 (deadlock) to DeadlockError 1`] = `"update failed (deadlock detected — retry the operation)"`;
+
+exports[`wrapMysqlError > should map errno 1216 (ER_NO_REFERENCED_ROW) to ForeignKeyViolationError 1`] = `"insert failed (foreign key violation: referenced row not found)"`;
+
+exports[`wrapMysqlError > should map errno 1217 (ER_ROW_IS_REFERENCED) to ForeignKeyViolationError 1`] = `"delete failed (foreign key violation: parent row referenced)"`;
+
+exports[`wrapMysqlError > should map errno 1451 (FK parent referenced) to ForeignKeyViolationError 1`] = `"delete failed (foreign key violation: parent row referenced)"`;
+
+exports[`wrapMysqlError > should map errno 3819 (CHECK constraint) to CheckConstraintError 1`] = `"insert failed (CHECK constraint violation)"`;
 
 exports[`wrapMysqlError should map errno 1048 (NOT NULL) to NotNullViolationError 1`] = `"insert failed (NOT NULL constraint violation)"`;
 

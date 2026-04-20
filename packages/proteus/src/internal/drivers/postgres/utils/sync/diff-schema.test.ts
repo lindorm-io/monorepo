@@ -1,6 +1,7 @@
 import { diffSchema } from "../../../../drivers/postgres/utils/sync/diff-schema";
 import type { DbSnapshot } from "../../types/db-snapshot";
 import type { DesiredSchema } from "../../types/desired-schema";
+import { describe, expect, it } from "vitest";
 
 const emptySnapshot: DbSnapshot = { tables: [], enums: [], schemas: [] };
 

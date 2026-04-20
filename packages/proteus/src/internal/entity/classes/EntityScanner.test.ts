@@ -1,23 +1,26 @@
 import { EntityScanner } from "./EntityScanner";
 import { EntityScannerError } from "../errors/EntityScannerError";
 import type { IScanData } from "@lindorm/scanner";
+import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 // ─── Mock @lindorm/scanner ────────────────────────────────────────────────────
 
 // We keep the mock scanner instance stable across tests so we can control
-// its return values per-test. jest.resetAllMocks() only resets mock *functions*,
+// its return values per-test. vi.resetAllMocks() only resets mock *functions*,
 // not the factory implementation, so we re-install the mock in beforeEach.
 
-const mockScan = jest.fn();
-const mockImport = jest.fn();
+const mockScan = vi.fn();
+const mockImport = vi.fn();
 const mockScannerInstance = { scan: mockScan, import: mockImport };
 
-jest.mock("@lindorm/scanner", () => ({
-  Scanner: jest.fn(() => mockScannerInstance),
+vi.mock("@lindorm/scanner", () => ({
+  Scanner: vi.fn(function () {
+    return mockScannerInstance;
+  }),
 }));
 
 import { Scanner } from "@lindorm/scanner";
-const MockScanner = Scanner as unknown as jest.Mock;
+const MockScanner = Scanner as unknown as Mock;
 
 // ─── Fixture constructors ─────────────────────────────────────────────────────
 

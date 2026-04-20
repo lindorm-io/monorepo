@@ -2,6 +2,7 @@ import { findEntityMetadata } from "./find-entity-metadata";
 import { Entity } from "../../../decorators/Entity";
 import { Field } from "../../../decorators/Field";
 import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField";
+import { describe, expect, test } from "vitest";
 
 @Entity({ name: "FindMetadataTarget" })
 class FindMetadataTarget {

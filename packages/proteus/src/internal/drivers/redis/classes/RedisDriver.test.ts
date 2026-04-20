@@ -1,4 +1,4 @@
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import type { ILogger } from "@lindorm/logger";
 import type { EntityMetadata } from "../../../entity/types/metadata";
 import type { ProteusRedisOptions } from "../../../../types";
@@ -6,21 +6,24 @@ import type { MetadataResolver } from "../../../interfaces/ProteusDriver";
 import { NotSupportedError } from "../../../../errors/NotSupportedError";
 import { RedisDriverError } from "../errors/RedisDriverError";
 import { RedisDriver } from "./RedisDriver";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
-const mockConnect = jest.fn().mockResolvedValue(undefined);
-const mockQuit = jest.fn().mockResolvedValue("OK");
-const mockPing = jest.fn().mockResolvedValue("PONG");
+const mockConnect = vi.fn().mockResolvedValue(undefined);
+const mockQuit = vi.fn().mockResolvedValue("OK");
+const mockPing = vi.fn().mockResolvedValue("PONG");
 
-jest.mock("ioredis", () => {
+vi.mock("ioredis", () => {
   return {
     __esModule: true,
-    default: jest.fn().mockImplementation(() => ({
-      connect: mockConnect,
-      quit: mockQuit,
-      ping: mockPing,
-    })),
+    default: vi.fn(function () {
+      return {
+        connect: mockConnect,
+        quit: mockQuit,
+        ping: mockPing,
+      };
+    }),
   };
 });
 
@@ -101,7 +104,7 @@ const createDriver = (
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 beforeEach(() => {
-  jest.clearAllMocks();
+  vi.clearAllMocks();
 });
 
 describe("RedisDriver", () => {
@@ -405,7 +408,7 @@ describe("RedisDriver", () => {
       const { driver } = createDriver();
 
       // T-007: Spy on rollbackTransaction to verify it's actually called on failure
-      const rollbackSpy = jest.spyOn(driver, "rollbackTransaction");
+      const rollbackSpy = vi.spyOn(driver, "rollbackTransaction");
 
       await expect(
         driver.withTransaction(async () => {

@@ -9,6 +9,7 @@ import { OptimisticLockError } from "../../../../errors/OptimisticLockError";
 import { SerializationError } from "../../../../errors/SerializationError";
 import { PostgresExecutorError } from "../../errors/PostgresExecutorError";
 import { wrapPgError } from "./wrap-pg-error";
+import { describe, expect, test } from "vitest";
 
 type PgErrorFields = {
   detail?: string;

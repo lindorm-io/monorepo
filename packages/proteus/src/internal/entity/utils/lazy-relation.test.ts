@@ -1,4 +1,5 @@
 import { LazyRelation, isLazyRelation, LAZY_RELATION } from "./lazy-relation";
+import { describe, expect, it, vi } from "vitest";
 
 describe("LazyRelation", () => {
   const createEntity = () => ({ id: "1", name: "Test", author: undefined as any });
@@ -6,7 +7,7 @@ describe("LazyRelation", () => {
   describe("then", () => {
     it("should load on first await and self-replace", async () => {
       const loaded = { id: "2", name: "Author" } as any;
-      const loader = jest.fn().mockResolvedValue(loaded);
+      const loader = vi.fn().mockResolvedValue(loaded);
       const entity = createEntity();
 
       entity.author = new LazyRelation(entity, "author", loader);
@@ -21,7 +22,7 @@ describe("LazyRelation", () => {
 
     it("should return cached value on second await without re-querying", async () => {
       const loaded = { id: "2", name: "Author" } as any;
-      const loader = jest.fn().mockResolvedValue(loaded);
+      const loader = vi.fn().mockResolvedValue(loaded);
       const entity = createEntity();
 
       entity.author = new LazyRelation(entity, "author", loader);
@@ -37,7 +38,7 @@ describe("LazyRelation", () => {
     });
 
     it("should handle null result", async () => {
-      const loader = jest.fn().mockResolvedValue(null);
+      const loader = vi.fn().mockResolvedValue(null);
       const entity = createEntity();
 
       entity.author = new LazyRelation(entity, "author", loader);
@@ -50,7 +51,7 @@ describe("LazyRelation", () => {
 
     it("should deduplicate concurrent loads", async () => {
       let resolveLoader: (v: any) => void;
-      const loader = jest.fn().mockReturnValue(
+      const loader = vi.fn().mockReturnValue(
         new Promise((resolve) => {
           resolveLoader = resolve;
         }),
@@ -71,7 +72,7 @@ describe("LazyRelation", () => {
     });
 
     it("should propagate loader errors", async () => {
-      const loader = jest.fn().mockRejectedValue(new Error("DB error"));
+      const loader = vi.fn().mockRejectedValue(new Error("DB error"));
       const entity = createEntity();
 
       entity.author = new LazyRelation(entity, "author", loader);
@@ -83,14 +84,14 @@ describe("LazyRelation", () => {
   describe("toJSON", () => {
     it("should return undefined when unresolved", () => {
       const entity = createEntity();
-      const ref = new LazyRelation(entity, "author", jest.fn());
+      const ref = new LazyRelation(entity, "author", vi.fn());
       expect(ref.toJSON()).toBeUndefined();
     });
 
     it("should return the value when resolved", async () => {
       const loaded = { id: "2", name: "Author" } as any;
       const entity = createEntity();
-      const ref = new LazyRelation(entity, "author", jest.fn().mockResolvedValue(loaded));
+      const ref = new LazyRelation(entity, "author", vi.fn().mockResolvedValue(loaded));
       entity.author = ref;
 
       await ref.then(() => {});
@@ -102,7 +103,7 @@ describe("LazyRelation", () => {
   describe("isLazyRelation", () => {
     it("should return true for LazyRelation instances", () => {
       const entity = createEntity();
-      const ref = new LazyRelation(entity, "author", jest.fn());
+      const ref = new LazyRelation(entity, "author", vi.fn());
       expect(isLazyRelation(ref)).toBe(true);
     });
 
@@ -130,7 +131,7 @@ describe("LazyRelation", () => {
   describe("brand symbol", () => {
     it("should have the brand symbol set to true", () => {
       const entity = createEntity();
-      const ref = new LazyRelation(entity, "author", jest.fn());
+      const ref = new LazyRelation(entity, "author", vi.fn());
       expect((ref as any)[LAZY_RELATION]).toBe(true);
     });
   });
@@ -138,7 +139,7 @@ describe("LazyRelation", () => {
   describe("truthiness", () => {
     it("should be truthy (thenable is an object)", () => {
       const entity = createEntity();
-      const ref = new LazyRelation(entity, "author", jest.fn());
+      const ref = new LazyRelation(entity, "author", vi.fn());
       expect(!!ref).toBe(true);
     });
   });
