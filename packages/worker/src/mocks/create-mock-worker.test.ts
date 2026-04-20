@@ -1,4 +1,4 @@
-import { createMockWorker } from "./create-mock-worker";
+import { createMockWorker } from "./jest";
 
 describe("createMockWorker", () => {
   test("should create mock with expected shape", () => {
