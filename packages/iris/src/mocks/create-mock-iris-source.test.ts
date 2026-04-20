@@ -1,4 +1,4 @@
-import { createMockIrisSource } from "./create-mock-iris-source";
+import { createMockIrisSource } from "./jest";
 
 describe("createMockIrisSource", () => {
   it("should create a mock with default values", () => {

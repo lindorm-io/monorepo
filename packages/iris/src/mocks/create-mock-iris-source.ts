@@ -1,38 +1,54 @@
 import type { Constructor } from "@lindorm/types";
 import type { IIrisSource, IMessage } from "../interfaces";
 import type { IrisConnectionState } from "../types";
-import { createMockIrisSession } from "./create-mock-iris-session";
-import { createMockMessageBus } from "./create-mock-message-bus";
-import { createMockPublisher } from "./create-mock-publisher";
-import { createMockRpcClient } from "./create-mock-rpc-client";
-import { createMockWorkerQueue } from "./create-mock-worker-queue";
+import { _createMockIrisSession } from "./create-mock-iris-session";
+import { _createMockMessageBus } from "./create-mock-message-bus";
+import { _createMockPublisher } from "./create-mock-publisher";
+import { _createMockRpcClient } from "./create-mock-rpc-client";
+import { _createMockWorkerQueue } from "./create-mock-worker-queue";
 
-export type MockIrisSource = jest.Mocked<IIrisSource>;
+export const _createMockIrisSource = (mockFn: () => any): IIrisSource => {
+  const impl = (fn: any) => {
+    const m = mockFn();
+    m.mockImplementation(fn);
+    return m;
+  };
+  const returns = (value: any) => {
+    const m = mockFn();
+    m.mockReturnValue(value);
+    return m;
+  };
+  const resolves = (value: any) => {
+    const m = mockFn();
+    m.mockResolvedValue(value);
+    return m;
+  };
 
-export const createMockIrisSource = (): MockIrisSource => ({
-  driver: "memory" as const,
-  messages: [] as ReadonlyArray<Constructor<IMessage>>,
+  return {
+    driver: "memory" as const,
+    messages: [] as ReadonlyArray<Constructor<IMessage>>,
 
-  addMessages: jest.fn(),
-  hasMessage: jest.fn().mockReturnValue(true),
-  addSubscriber: jest.fn(),
-  removeSubscriber: jest.fn(),
-  session: jest.fn().mockImplementation(() => createMockIrisSession()),
+    addMessages: mockFn(),
+    hasMessage: returns(true),
+    addSubscriber: mockFn(),
+    removeSubscriber: mockFn(),
+    session: impl(() => _createMockIrisSession(mockFn)),
 
-  connect: jest.fn(),
-  disconnect: jest.fn(),
-  drain: jest.fn(),
-  ping: jest.fn().mockResolvedValue(true),
-  setup: jest.fn(),
-  getConnectionState: jest.fn().mockReturnValue("connected" as IrisConnectionState),
-  on: jest.fn(),
-  off: jest.fn(),
-  once: jest.fn(),
+    connect: mockFn(),
+    disconnect: mockFn(),
+    drain: mockFn(),
+    ping: resolves(true),
+    setup: mockFn(),
+    getConnectionState: returns("connected" as IrisConnectionState),
+    on: mockFn(),
+    off: mockFn(),
+    once: mockFn(),
 
-  messageBus: jest.fn().mockImplementation(() => createMockMessageBus()),
-  publisher: jest.fn().mockImplementation(() => createMockPublisher()),
-  workerQueue: jest.fn().mockImplementation(() => createMockWorkerQueue()),
-  stream: jest.fn(),
-  rpcClient: jest.fn().mockImplementation(() => createMockRpcClient()),
-  rpcServer: jest.fn(),
-});
+    messageBus: impl(() => _createMockMessageBus(mockFn)),
+    publisher: impl(() => _createMockPublisher(mockFn)),
+    workerQueue: impl(() => _createMockWorkerQueue(mockFn)),
+    stream: mockFn(),
+    rpcClient: impl(() => _createMockRpcClient(mockFn)),
+    rpcServer: mockFn(),
+  } as unknown as IIrisSource;
+};
