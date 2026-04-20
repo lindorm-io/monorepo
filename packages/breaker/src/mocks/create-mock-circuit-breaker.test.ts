@@ -1,4 +1,4 @@
-import { createMockCircuitBreaker } from "./create-mock-circuit-breaker";
+import { createMockCircuitBreaker } from "./jest";
 
 describe("createMockCircuitBreaker", () => {
   test("should create mock with default values", () => {
