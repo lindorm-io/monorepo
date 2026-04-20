@@ -1,72 +1,60 @@
-import { createMockProteusSession } from "./create-mock-proteus-session";
-import { createMockRepository } from "./create-mock-repository";
+import type { IProteusSource } from "../interfaces/ProteusSource";
+import { _createMockProteusSession } from "./create-mock-proteus-session";
+import { _createMockRepository } from "./create-mock-repository";
 
-export type MockProteusSource = {
-  namespace: string | null;
-  driverType: string;
-  migrationsTable: string | undefined;
-  log: Record<string, jest.Mock>;
-  breaker: null;
+export const _createMockProteusSource = (mockFn: () => any): IProteusSource => {
+  const impl = (fn: any) => {
+    const m = mockFn();
+    m.mockImplementation(fn);
+    return m;
+  };
+  const returns = (value: any) => {
+    const m = mockFn();
+    m.mockReturnValue(value);
+    return m;
+  };
+  const resolves = (value: any) => {
+    const m = mockFn();
+    m.mockResolvedValue(value);
+    return m;
+  };
 
-  on: jest.Mock;
-  off: jest.Mock;
-  once: jest.Mock;
+  return {
+    namespace: null,
+    driverType: "memory",
+    migrationsTable: undefined,
+    log: {
+      info: mockFn(),
+      warn: mockFn(),
+      error: mockFn(),
+      debug: mockFn(),
+      verbose: mockFn(),
+      child: mockFn(),
+      time: mockFn(),
+    },
+    breaker: null,
 
-  session: jest.Mock;
-  connect: jest.Mock;
-  disconnect: jest.Mock;
-  ping: jest.Mock;
-  setup: jest.Mock;
+    on: mockFn(),
+    off: mockFn(),
+    once: mockFn(),
 
-  addEntities: jest.Mock;
-  getEntityMetadata: jest.Mock;
+    session: impl(() => _createMockProteusSession(mockFn)),
+    connect: mockFn(),
+    disconnect: mockFn(),
+    ping: resolves(true),
+    setup: mockFn(),
 
-  setFilterParams: jest.Mock;
-  enableFilter: jest.Mock;
-  disableFilter: jest.Mock;
-  getFilterRegistry: jest.Mock;
+    addEntities: mockFn(),
+    getEntityMetadata: returns([]),
 
-  repository: jest.Mock;
-  queryBuilder: jest.Mock;
-  client: jest.Mock;
-  transaction: jest.Mock;
+    setFilterParams: mockFn(),
+    enableFilter: mockFn(),
+    disableFilter: mockFn(),
+    getFilterRegistry: returns(new Map()),
+
+    repository: impl(() => _createMockRepository(mockFn)),
+    queryBuilder: mockFn(),
+    client: mockFn(),
+    transaction: impl(async (cb: Function) => cb({})),
+  } as unknown as IProteusSource;
 };
-
-export const createMockProteusSource = (): MockProteusSource => ({
-  namespace: null,
-  driverType: "memory",
-  migrationsTable: undefined,
-  log: {
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-    debug: jest.fn(),
-    verbose: jest.fn(),
-    child: jest.fn(),
-    time: jest.fn(),
-  },
-  breaker: null,
-
-  on: jest.fn(),
-  off: jest.fn(),
-  once: jest.fn(),
-
-  session: jest.fn().mockImplementation(() => createMockProteusSession()),
-  connect: jest.fn(),
-  disconnect: jest.fn(),
-  ping: jest.fn().mockResolvedValue(true),
-  setup: jest.fn(),
-
-  addEntities: jest.fn(),
-  getEntityMetadata: jest.fn().mockReturnValue([]),
-
-  setFilterParams: jest.fn(),
-  enableFilter: jest.fn(),
-  disableFilter: jest.fn(),
-  getFilterRegistry: jest.fn().mockReturnValue(new Map()),
-
-  repository: jest.fn().mockImplementation(() => createMockRepository()),
-  queryBuilder: jest.fn(),
-  client: jest.fn(),
-  transaction: jest.fn().mockImplementation(async (cb: Function) => cb({})),
-});
