@@ -1,4 +1,4 @@
-import { createMockAegis } from "@lindorm/aegis";
+import { createMockAegis } from "@lindorm/aegis/mocks/jest";
 import { ClientError } from "@lindorm/errors";
 import { PylonSocketAuth } from "../../../types";
 import { createBearerRefreshHandler } from "./create-bearer-refresh-handler";

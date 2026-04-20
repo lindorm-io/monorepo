@@ -1,46 +1,49 @@
-import { createMockAesKit } from "@lindorm/aes";
+import type { IAesKit } from "@lindorm/aes";
 import { IAegis } from "../interfaces";
 
-export type MockAegis = jest.Mocked<IAegis>;
-
-export const createMockAegis = (): MockAegis => {
-  const mockAesKit = createMockAesKit();
+export const _createMockAegis = (mockFn: () => any, aesKit: IAesKit): IAegis => {
+  const impl = (fn: any) => {
+    const m = mockFn();
+    m.mockImplementation(fn);
+    return m;
+  };
+  const resolves = (value: any) => {
+    const m = mockFn();
+    m.mockResolvedValue(value);
+    return m;
+  };
 
   return {
     issuer: "https://test.lindorm.io/",
 
     aes: {
-      encrypt: jest
-        .fn()
-        .mockImplementation((data: any, mode?: string) =>
-          Promise.resolve(mockAesKit.encrypt(data, mode as any)),
-        ),
-      decrypt: jest
-        .fn()
-        .mockImplementation((data: any) => Promise.resolve(mockAesKit.decrypt(data))),
+      encrypt: impl((data: any, mode?: string) =>
+        Promise.resolve(aesKit.encrypt(data, mode as any)),
+      ),
+      decrypt: impl((data: any) => Promise.resolve(aesKit.decrypt(data))),
     },
 
     jwe: {
-      encrypt: jest.fn().mockResolvedValue({ token: "mocked_token" }),
-      decrypt: jest.fn().mockResolvedValue({
+      encrypt: resolves({ token: "mocked_token" }),
+      decrypt: resolves({
         decoded: {},
         header: {},
         payload: "mocked_payload",
       }),
     },
     jws: {
-      sign: jest.fn().mockResolvedValue({
+      sign: resolves({
         objectId: "mocked_object_id",
         token: "mocked_token",
       }),
-      verify: jest.fn().mockResolvedValue({
+      verify: resolves({
         decoded: {},
         header: {},
         payload: "verified_payload",
       }),
     },
     jwt: {
-      sign: jest.fn().mockResolvedValue({
+      sign: resolves({
         expiresAt: new Date("2999-01-01T00:00:00.000Z"),
         expiresIn: 999,
         expiresOn: 9999,
@@ -48,17 +51,17 @@ export const createMockAegis = (): MockAegis => {
         token: "mocked_token",
         tokenId: "mocked_token_id",
       }),
-      verify: jest.fn().mockResolvedValue({
+      verify: resolves({
         decoded: {},
         header: {},
         payload: { subject: "verified_subject" },
       }),
     },
 
-    verify: jest.fn().mockResolvedValue({
+    verify: resolves({
       decoded: {},
       header: {},
       payload: { subject: "verified_subject" },
     }),
-  };
+  } as unknown as IAegis;
 };
