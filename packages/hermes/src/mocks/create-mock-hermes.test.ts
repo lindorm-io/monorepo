@@ -1,4 +1,4 @@
-import { createMockHermes } from "./create-mock-hermes";
+import { createMockHermes } from "./jest";
 
 describe("createMockHermes", () => {
   it("should create a mock hermes with all methods as jest.fn()", () => {
