@@ -119,14 +119,14 @@ export class Pylon<
     await this.amphora.setup();
 
     this.http.loadMiddleware();
-    this.http.loadRouters();
+    await this.http.loadRouters();
 
     if (this.io) {
-      this.io.load();
+      await this.io.load();
       this.http.server.use(httpSocketIoMiddleware(this.io.server));
     }
 
-    const workers = scanWorkers(this.options);
+    const workers = await scanWorkers(this.options);
     this.workers.push(...workers);
 
     if (this._setup) {

@@ -9,14 +9,14 @@ describe("PylonRouterScanner", () => {
   const directory = join(__dirname, "..", "..", "__fixtures__", "routes");
   const scanner = new PylonRouterScanner(logger);
 
-  test("should return a PylonRouter", () => {
-    const router = scanner.scan(directory);
+  test("should return a PylonRouter", async () => {
+    const router = await scanner.scan(directory);
 
     expect(router).toBeInstanceOf(PylonRouter);
   });
 
-  test("should register file-as-handler routes", () => {
-    const router = scanner.scan(directory);
+  test("should register file-as-handler routes", async () => {
+    const router = await scanner.scan(directory);
     const routes = router.stack.map((r: any) => ({
       methods: r.methods,
       path: r.path,
@@ -52,8 +52,8 @@ describe("PylonRouterScanner", () => {
     );
   });
 
-  test("should strip route groups from path", () => {
-    const router = scanner.scan(directory);
+  test("should strip route groups from path", async () => {
+    const router = await scanner.scan(directory);
     const paths = router.stack.map((r: any) => r.path);
 
     // (admin) group stripped — dashboard is at /v1/dashboard not /v1/admin/dashboard
@@ -62,22 +62,22 @@ describe("PylonRouterScanner", () => {
     expect(paths).not.toContain("/v1/(admin)/dashboard");
   });
 
-  test("should handle catch-all routes", () => {
-    const router = scanner.scan(directory);
+  test("should handle catch-all routes", async () => {
+    const router = await scanner.scan(directory);
     const paths = router.stack.map((r: any) => r.path);
 
     expect(paths).toEqual(expect.arrayContaining([expect.stringContaining("/proxy/")]));
   });
 
-  test("should handle PylonRouter instance exports", () => {
-    const router = scanner.scan(directory);
+  test("should handle PylonRouter instance exports", async () => {
+    const router = await scanner.scan(directory);
     const paths = router.stack.map((r: any) => r.path);
 
     expect(paths).toContain("/custom");
   });
 
-  test("should inherit middleware from _middleware.ts files", () => {
-    const router = scanner.scan(directory);
+  test("should inherit middleware from _middleware.ts files", async () => {
+    const router = await scanner.scan(directory);
 
     // Find the health route — should have rootMiddleware in its stack
     const healthRoute = router.stack.find(
