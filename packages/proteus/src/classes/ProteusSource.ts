@@ -79,6 +79,7 @@ export class ProteusSource<C = unknown> implements IProteusSource<C> {
   private readonly logger: ILogger;
   private readonly context: C;
   private readonly _entities: Array<Constructor<IEntity>>;
+  private readonly _pendingEntityPaths: Array<EntityScannerInput[number]>;
   private readonly resolveMetadata: MetadataResolver;
   private readonly cacheAdapter: ICacheAdapter | undefined;
   private readonly sourceTtlMs: number | undefined;
@@ -97,7 +98,15 @@ export class ProteusSource<C = unknown> implements IProteusSource<C> {
     this._amphora = options.amphora;
     this.logger = options.logger.child(["ProteusSource"]);
     this.context = options.context as C;
-    this._entities = options.entities ? EntityScanner.scan(options.entities) : [];
+    // Pre-loaded classes go straight into _entities; string paths are deferred
+    // to setup() since scanner.import() is async.
+    this._entities = ((options.entities ?? []) as Array<unknown>).filter(
+      (a): a is Constructor<IEntity> =>
+        typeof a !== "string" && (a as any)?.prototype != null,
+    );
+    this._pendingEntityPaths = ((options.entities ?? []) as Array<unknown>).filter(
+      (a): a is string => typeof a === "string",
+    );
 
     const namespace = options.namespace ?? null;
     this._namespace = namespace;
@@ -252,17 +261,14 @@ export class ProteusSource<C = unknown> implements IProteusSource<C> {
   }
 
   /** Register additional entity classes or glob patterns after construction. */
-  public addEntities(entities: EntityScannerInput): void {
+  public async addEntities(entities: EntityScannerInput): Promise<void> {
     if (this.isSetUp) {
       throw new ProteusError(
         "Cannot add entities after setup() has been called. Create a new ProteusSource instance instead.",
       );
     }
-    this._entities.push(
-      ...EntityScanner.scan(entities).filter(
-        (Entity) => !this._entities.includes(Entity),
-      ),
-    );
+    const scanned = await EntityScanner.scan(entities);
+    this._entities.push(...scanned.filter((Entity) => !this._entities.includes(Entity)));
   }
 
   /** Return resolved metadata for all registered entities. */
@@ -423,6 +429,16 @@ export class ProteusSource<C = unknown> implements IProteusSource<C> {
   }
 
   private async _doSetup(): Promise<void> {
+    if (this._pendingEntityPaths.length) {
+      const scanned = await EntityScanner.scan(this._pendingEntityPaths);
+      for (const entity of scanned) {
+        if (!this._entities.includes(entity)) {
+          this._entities.push(entity);
+        }
+      }
+      this._pendingEntityPaths.length = 0;
+    }
+
     // Invalidate any metadata that may have been cached before setup() was called.
     clearPrimaryCache();
     clearMetadataCache();
