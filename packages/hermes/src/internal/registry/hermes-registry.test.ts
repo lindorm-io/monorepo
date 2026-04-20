@@ -70,8 +70,8 @@ const ALL_CONSTRUCTORS = [
 describe("HermesRegistry", () => {
   let registry: HermesRegistry;
 
-  beforeAll(() => {
-    const scanned = HermesScanner.scan(ALL_CONSTRUCTORS);
+  beforeAll(async () => {
+    const scanned = await HermesScanner.scan(ALL_CONSTRUCTORS);
     registry = new HermesRegistry(scanned);
   });
 
@@ -585,7 +585,7 @@ describe("HermesRegistry", () => {
   // -- Duplicate upcaster detection --
 
   describe("duplicate upcaster detection", () => {
-    test("should throw when registering duplicate upcaster for same fromVersion", () => {
+    test("should throw when registering duplicate upcaster for same fromVersion", async () => {
       class DuplicateEvent_V1 {}
       (DuplicateEvent_V1 as any)[Symbol.metadata] = {
         dto: { kind: "event", name: "duplicate_event", version: 1 },
@@ -606,7 +606,7 @@ describe("HermesRegistry", () => {
         ],
       };
 
-      const scanned = HermesScanner.scan([
+      const scanned = await HermesScanner.scan([
         DuplicateEvent_V1,
         DuplicateEvent_V2,
         DuplicateAgg,
@@ -682,7 +682,7 @@ describe("HermesRegistry", () => {
       expect(gapWarnings).toHaveLength(0);
     });
 
-    test("should warn about upcaster chain gap when versions are not contiguous", () => {
+    test("should warn about upcaster chain gap when versions are not contiguous", async () => {
       const { createMockLogger } = require("@lindorm/logger");
       const mockLogger = createMockLogger();
 
@@ -713,7 +713,7 @@ describe("HermesRegistry", () => {
         ],
       };
 
-      const scanned = HermesScanner.scan([
+      const scanned = await HermesScanner.scan([
         GapEvent_V1,
         GapEvent_V2,
         GapEvent_V4,
