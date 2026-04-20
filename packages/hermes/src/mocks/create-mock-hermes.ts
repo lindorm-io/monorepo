@@ -1,64 +1,52 @@
-import type { HermesStatus } from "../types/hermes-status";
-import { createMockHermesSession } from "./create-mock-hermes-session";
+import type { IHermes } from "../interfaces/IHermes";
+import { _createMockHermesSession } from "./create-mock-hermes-session";
 
-export type MockHermes = {
-  status: HermesStatus;
-
-  setup: jest.Mock;
-  teardown: jest.Mock;
-  session: jest.Mock;
-
-  command: jest.Mock;
-  query: jest.Mock;
-  on: jest.Mock;
-  off: jest.Mock;
-
-  admin: {
-    inspect: {
-      aggregate: jest.Mock;
-      saga: jest.Mock;
-      view: jest.Mock;
-    };
-    purgeCausations: jest.Mock;
-    replay: {
-      view: jest.Mock;
-      aggregate: jest.Mock;
-    };
+export const _createMockHermes = (mockFn: () => any): IHermes => {
+  const impl = (fn: any) => {
+    const m = mockFn();
+    m.mockImplementation(fn);
+    return m;
   };
+  const returns = (value: any) => {
+    const m = mockFn();
+    m.mockReturnValue(value);
+    return m;
+  };
+  const resolves = (value: any) => {
+    const m = mockFn();
+    m.mockResolvedValue(value);
+    return m;
+  };
+  const replayHandle = () =>
+    returns({
+      on: mockFn(),
+      cancel: mockFn(),
+      promise: Promise.resolve(),
+    });
+
+  return {
+    status: "ready",
+
+    setup: mockFn(),
+    teardown: mockFn(),
+    session: impl(() => _createMockHermesSession(mockFn)),
+
+    command: resolves({ id: "mock-id", name: "mock", namespace: "mock" }),
+    query: resolves(undefined),
+    on: mockFn(),
+    off: mockFn(),
+
+    admin: {
+      inspect: {
+        aggregate: resolves(undefined),
+        saga: resolves(null),
+        view: resolves(null),
+      },
+      purgeCausations: resolves(0),
+      replay: {
+        view: replayHandle(),
+        aggregate: replayHandle(),
+      },
+    },
+  } as unknown as IHermes;
 };
-
-export const createMockHermes = (): MockHermes => ({
-  status: "ready",
-
-  setup: jest.fn(),
-  teardown: jest.fn(),
-  session: jest.fn().mockImplementation(() => createMockHermesSession()),
-
-  command: jest
-    .fn()
-    .mockResolvedValue({ id: "mock-id", name: "mock", namespace: "mock" }),
-  query: jest.fn().mockResolvedValue(undefined),
-  on: jest.fn(),
-  off: jest.fn(),
-
-  admin: {
-    inspect: {
-      aggregate: jest.fn().mockResolvedValue(undefined),
-      saga: jest.fn().mockResolvedValue(null),
-      view: jest.fn().mockResolvedValue(null),
-    },
-    purgeCausations: jest.fn().mockResolvedValue(0),
-    replay: {
-      view: jest.fn().mockReturnValue({
-        on: jest.fn(),
-        cancel: jest.fn(),
-        promise: Promise.resolve(),
-      }),
-      aggregate: jest.fn().mockReturnValue({
-        on: jest.fn(),
-        cancel: jest.fn(),
-        promise: Promise.resolve(),
-      }),
-    },
-  },
-});
