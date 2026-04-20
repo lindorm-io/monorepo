@@ -1,4 +1,4 @@
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/jest";
 import type { IrisSource } from "@lindorm/iris";
 import { DuplicateKeyError, OptimisticLockError } from "@lindorm/proteus";
 import type { ProteusSource } from "@lindorm/proteus";

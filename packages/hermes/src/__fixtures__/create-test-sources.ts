@@ -1,5 +1,5 @@
 import { IrisSource } from "@lindorm/iris";
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/jest";
 import { ProteusSource } from "@lindorm/proteus";
 
 export const createTestProteusSource = (): ProteusSource =>

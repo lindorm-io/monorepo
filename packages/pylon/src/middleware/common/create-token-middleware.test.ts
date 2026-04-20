@@ -1,6 +1,6 @@
-import { createMockAegis } from "@lindorm/aegis";
+import { createMockAegis } from "@lindorm/aegis/mocks/jest";
 import { ClientError } from "@lindorm/errors";
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/jest";
 import { createTokenMiddleware } from "./create-token-middleware";
 
 describe("createTokenMiddleware", () => {

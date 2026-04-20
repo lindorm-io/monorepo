@@ -1,5 +1,5 @@
 import { ClientError, ServerError } from "@lindorm/errors";
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/jest";
 import { socketErrorHandlerMiddleware } from "./socket-error-handler-middleware";
 
 describe("socketErrorHandlerMiddleware", () => {

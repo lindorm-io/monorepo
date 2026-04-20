@@ -1,6 +1,6 @@
 import { AesKit } from "@lindorm/aes";
 import { KryptosKit } from "@lindorm/kryptos";
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/jest";
 import axios from "axios";
 import nock from "nock";
 

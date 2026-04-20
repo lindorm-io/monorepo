@@ -1,5 +1,5 @@
 import { ServerError } from "@lindorm/errors";
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/jest";
 import { AUDIT_SOURCE } from "../../internal/constants/symbols";
 import { useAuditLog } from "./use-audit-log";
 

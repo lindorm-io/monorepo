@@ -1,5 +1,5 @@
-import { createMockLogger } from "@lindorm/logger";
-import { createMockProteusSource } from "@lindorm/proteus/mocks";
+import { createMockLogger } from "@lindorm/logger/mocks/jest";
+import { createMockProteusSource } from "@lindorm/proteus/mocks/jest";
 import { createHttpRoomContext, createRoomContext } from "./create-room-context";
 
 describe("createRoomContext", () => {

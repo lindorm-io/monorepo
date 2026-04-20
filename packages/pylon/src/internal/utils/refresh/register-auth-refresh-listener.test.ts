@@ -1,4 +1,4 @@
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/jest";
 import { PylonSocketAuth } from "../../../types";
 import {
   PYLON_AUTH_REFRESH_EVENT,

@@ -1,4 +1,4 @@
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/jest";
 import { ServerError } from "@lindorm/errors";
 import { createConduitMiddleware } from "./create-conduit-middleware";
 

@@ -1,6 +1,7 @@
 import { Amphora, IAmphora } from "@lindorm/amphora";
 import { Kryptos } from "@lindorm/kryptos";
-import { ILogger, createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/jest";
+import { ILogger } from "@lindorm/logger";
 import MockDate from "mockdate";
 import * as fs from "node:fs";
 import * as path from "node:path";

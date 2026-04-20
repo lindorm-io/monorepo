@@ -1,4 +1,4 @@
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/jest";
 import { join } from "path";
 import { PylonRouter } from "../../classes/PylonRouter";
 import { PylonRouterScanner } from "./PylonRouterScanner";

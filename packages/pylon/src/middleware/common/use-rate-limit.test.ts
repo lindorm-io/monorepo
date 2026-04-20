@@ -1,5 +1,5 @@
 import { ClientError, ServerError } from "@lindorm/errors";
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/jest";
 import { RATE_LIMIT_SOURCE } from "../../internal/constants/symbols";
 import { useRateLimit } from "./use-rate-limit";
 

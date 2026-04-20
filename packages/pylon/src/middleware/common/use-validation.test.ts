@@ -1,6 +1,6 @@
 import { JwtKit } from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/jest";
 import { useValidation } from "./use-validation";
 
 describe("useValidation", () => {

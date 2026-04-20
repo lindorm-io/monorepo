@@ -1,4 +1,4 @@
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/jest";
 import { sleep } from "@lindorm/utils";
 import { LindormWorkerError } from "../errors";
 import { LindormWorkerCallback, LindormWorkerErrorCallback } from "../types";

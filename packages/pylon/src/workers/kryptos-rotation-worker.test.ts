@@ -31,7 +31,7 @@ const octAlgorithms = new Set([
 const mockGetTypeForAlgorithm = jest.fn((algorithm: string) =>
   octAlgorithms.has(algorithm) ? "oct" : "EC",
 );
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/jest";
 const mockLogger = createMockLogger();
 
 jest.mock("@lindorm/kryptos", () => ({

@@ -1,6 +1,7 @@
-import { Aegis, createMockAegis } from "@lindorm/aegis";
+import { Aegis } from "@lindorm/aegis";
+import { createMockAegis } from "@lindorm/aegis/mocks/jest";
 import { ClientError } from "@lindorm/errors";
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/jest";
 import { createHandshakeTokenMiddleware } from "./create-handshake-token-middleware";
 
 jest.mock("@lindorm/aegis", () => ({

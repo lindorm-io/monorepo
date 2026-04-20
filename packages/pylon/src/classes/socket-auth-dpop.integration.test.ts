@@ -1,7 +1,8 @@
 import { Aegis, IAegis } from "@lindorm/aegis";
 import { Amphora, IAmphora } from "@lindorm/amphora";
 import { KryptosKit } from "@lindorm/kryptos";
-import { createMockLogger, ILogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/jest";
+import { ILogger } from "@lindorm/logger";
 import {
   createBearerAuthStrategy,
   createDpopBearerAuthStrategy,

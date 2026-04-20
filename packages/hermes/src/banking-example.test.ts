@@ -30,7 +30,7 @@
  *   - queries/    -- @Query DTO
  */
 
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/jest";
 import type { ProteusSource } from "@lindorm/proteus";
 import type { IrisSource } from "@lindorm/iris";
 import { randomUUID } from "crypto";

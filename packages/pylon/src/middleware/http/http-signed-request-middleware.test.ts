@@ -1,7 +1,7 @@
 import { SignatureKit } from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
 import { KryptosKit } from "@lindorm/kryptos";
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/jest";
 import { ShaError, ShaKit } from "@lindorm/sha";
 import MockDate from "mockdate";
 import { EcError } from "../../../../ec/dist";

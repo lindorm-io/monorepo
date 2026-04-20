@@ -1,5 +1,5 @@
 import { CircuitBreaker, CircuitOpenError, type ICircuitBreaker } from "@lindorm/breaker";
-import { createMockLogger } from "@lindorm/logger/mocks";
+import { createMockLogger } from "@lindorm/logger/mocks/jest";
 import { ConduitError } from "../errors";
 import { createConduitCircuitBreakerMiddleware } from "./conduit-circuit-breaker-middleware";
 import type { ConduitCircuitBreakerCache, ConduitMiddleware } from "../types";

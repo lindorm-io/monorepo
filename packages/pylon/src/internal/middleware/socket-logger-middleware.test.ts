@@ -1,4 +1,4 @@
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/jest";
 import { socketLoggerMiddleware } from "./socket-logger-middleware";
 
 describe("socketLoggerMiddleware", () => {

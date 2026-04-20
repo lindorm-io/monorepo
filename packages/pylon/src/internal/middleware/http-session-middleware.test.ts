@@ -1,5 +1,8 @@
-import { createMockLogger } from "@lindorm/logger";
-import { createMockProteusSource, createMockRepository } from "@lindorm/proteus/mocks";
+import { createMockLogger } from "@lindorm/logger/mocks/jest";
+import {
+  createMockProteusSource,
+  createMockRepository,
+} from "@lindorm/proteus/mocks/jest";
 import { Next } from "@lindorm/middleware";
 import MockDate from "mockdate";
 import { PylonSessionOptions } from "../../types";

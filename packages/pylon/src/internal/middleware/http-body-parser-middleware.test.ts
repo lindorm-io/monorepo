@@ -1,4 +1,4 @@
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/jest";
 import MockDate from "mockdate";
 import { PylonError } from "../../errors";
 import { getBodyType as _getBodyType } from "../utils/body/get-body-type";

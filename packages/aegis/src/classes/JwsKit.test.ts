@@ -1,4 +1,4 @@
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/jest";
 import MockDate from "mockdate";
 import { TEST_EC_KEY_SIG } from "../__fixtures__/keys";
 import { JwsKit } from "./JwsKit";

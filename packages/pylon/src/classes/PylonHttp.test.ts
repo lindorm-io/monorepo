@@ -1,7 +1,7 @@
-import { createMockAmphora } from "@lindorm/amphora/mocks";
-import { createMockIrisSource } from "@lindorm/iris/mocks";
-import { createMockLogger } from "@lindorm/logger";
-import { createMockProteusSource } from "@lindorm/proteus/mocks";
+import { createMockAmphora } from "@lindorm/amphora/mocks/jest";
+import { createMockIrisSource } from "@lindorm/iris/mocks/jest";
+import { createMockLogger } from "@lindorm/logger/mocks/jest";
+import { createMockProteusSource } from "@lindorm/proteus/mocks/jest";
 import { join } from "path";
 import request from "supertest";
 import { PylonHttp } from "./PylonHttp";

@@ -1,4 +1,4 @@
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/jest";
 import { PylonScannerBase, ParsedSegment, ScannedFile } from "./PylonScannerBase";
 
 class TestScanner extends PylonScannerBase {

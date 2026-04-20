@@ -1,3 +1,4 @@
+import { createMockLogger } from "@lindorm/logger/mocks/jest";
 import {
   TestAggregate,
   TestForgettableAggregate,
@@ -654,7 +655,6 @@ describe("HermesRegistry", () => {
 
   describe("validate", () => {
     test("should not warn when all events have at least one handler", () => {
-      const { createMockLogger } = require("@lindorm/logger");
       const mockLogger = createMockLogger();
       registry.validate(mockLogger);
       // All test events have handlers (aggregate, saga, or view)
@@ -673,7 +673,6 @@ describe("HermesRegistry", () => {
     });
 
     test("should not warn about upcaster gaps when chain is contiguous", () => {
-      const { createMockLogger } = require("@lindorm/logger");
       const mockLogger = createMockLogger();
       registry.validate(mockLogger);
       const gapWarnings = mockLogger.warn.mock.calls.filter(
@@ -683,7 +682,6 @@ describe("HermesRegistry", () => {
     });
 
     test("should warn about upcaster chain gap when versions are not contiguous", async () => {
-      const { createMockLogger } = require("@lindorm/logger");
       const mockLogger = createMockLogger();
 
       class GapEvent_V1 {}
