@@ -1,4 +1,4 @@
-import { isArray, isString } from "@lindorm/is";
+import { isArray, isObjectLike, isString } from "@lindorm/is";
 import { readdirSync, statSync } from "fs";
 import { basename, extname, join, relative, sep } from "path";
 import { ScannerError } from "../errors";
@@ -43,8 +43,53 @@ export class Scanner implements IScanner {
   }
 
   public async import<T>(fileOrPath: IScanData | string): Promise<T> {
-    // TODO: Use tsImport from "tsx/esm/api" when packages are upgraded to ESM
-    return this.require(fileOrPath);
+    const filePath = isString(fileOrPath) ? fileOrPath : fileOrPath.fullPath;
+    const { pathToFileURL } = await import("url");
+    // Built per-call so it binds to the CURRENT vm realm. Under Jest
+    // parallel workers, a module-scoped `new Function` would capture the
+    // first test file's realm and later fail with "Provided module is not
+    // an instance of Module" once that realm is torn down. Per-call
+    // construction is cheap and sidesteps the issue.
+    // eslint-disable-next-line @typescript-eslint/no-implied-eval
+    const nativeImport = new Function("specifier", "return import(specifier)") as (
+      specifier: string,
+    ) => Promise<unknown>;
+    const ns: any = await nativeImport(pathToFileURL(filePath).href);
+    return Scanner.normalizeModule(ns) as T;
+  }
+
+  // Normalise the ESM namespace returned by dynamic import across runtimes so
+  // consumers always see the user's real exports without interop wrappers.
+  //
+  //   - Jest + ts-jest vm-modules:   { __esModule, default: { <named>, __esModule }, <named> }
+  //   - Native Node + tsx CJS hook:  { default: { <named> }, "module.exports": { <named> } }
+  //   - Native pure ESM source:      { <named> }  (or { default: X, <named> })
+  //
+  // In every case we expose { <named>, default: X | undefined } — the same
+  // shape the user authored, with no `__esModule` or `module.exports` noise.
+  private static normalizeModule(ns: any): Record<string, unknown> {
+    if (!isObjectLike(ns)) return ns;
+
+    let source: Record<string, unknown> = ns;
+
+    // Native Node CJS interop stashes the real exports object under
+    // "module.exports"; `default` mirrors the same object.
+    if (isObjectLike(ns["module.exports"])) {
+      source = ns["module.exports"];
+    } else if (
+      ns.__esModule === true &&
+      isObjectLike(ns.default) &&
+      (ns.default as Record<string, unknown>).__esModule === true
+    ) {
+      // Jest + ts-jest vm-modules wraps the CJS exports object as `default`
+      // AND copies it to the top level; the nested default carries
+      // `__esModule: true` we can use as a fingerprint.
+      source = ns.default;
+    }
+
+    const { __esModule: _esm, ...userExports } = source;
+    void _esm;
+    return userExports;
   }
 
   public require<T>(fileOrPath: IScanData | string): T {
