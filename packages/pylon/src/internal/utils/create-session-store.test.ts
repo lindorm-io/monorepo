@@ -1,6 +1,9 @@
-import { createMockAegis } from "@lindorm/aegis";
-import { createMockAmphora } from "@lindorm/amphora";
-import { createMockProteusSource, createMockRepository } from "@lindorm/proteus/mocks";
+import { createMockAegis } from "@lindorm/aegis/mocks/jest";
+import { createMockAmphora } from "@lindorm/amphora/mocks/jest";
+import {
+  createMockProteusSource,
+  createMockRepository,
+} from "@lindorm/proteus/mocks/jest";
 import { IPylonSession } from "../../interfaces";
 import { createSessionStore } from "./create-session-store";
 

@@ -1,4 +1,4 @@
-import { createMockAmphora } from "@lindorm/amphora";
+import { createMockAmphora } from "@lindorm/amphora/mocks/jest";
 import { ClientError } from "@lindorm/errors";
 import { verifyCookie } from "./verify-cookie";
 

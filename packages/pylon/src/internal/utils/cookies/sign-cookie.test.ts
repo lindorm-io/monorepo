@@ -1,4 +1,4 @@
-import { createMockAmphora } from "@lindorm/amphora";
+import { createMockAmphora } from "@lindorm/amphora/mocks/jest";
 import { signCookie } from "./sign-cookie";
 
 jest.mock("@lindorm/aegis", () => ({
