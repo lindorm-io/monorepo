@@ -1,7 +1,7 @@
 import { IKryptosEc } from "../interfaces";
 import { KryptosKit } from "../classes";
 
-export const MOCK_KRYPTOS_EC_SIG_ES256 = KryptosKit.from.b64({
+export const KRYPTOS_EC_SIG_ES256 = KryptosKit.from.b64({
   id: "b3b62d67-9c48-4e3c-9efd-81f82f6b6551",
   algorithm: "ES256",
   curve: "P-256",
@@ -13,7 +13,7 @@ export const MOCK_KRYPTOS_EC_SIG_ES256 = KryptosKit.from.b64({
     "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEdah8lTaVHcRLjoFNEYC498nk_ZuT34338Yaz-mL1QcdQ5_-qmJZan5gdyRpoynjNrGRZvw2afKlSDJjxMs_12Q",
 }) as IKryptosEc;
 
-export const MOCK_KRYPTOS_EC_SIG_ES384 = KryptosKit.from.b64({
+export const KRYPTOS_EC_SIG_ES384 = KryptosKit.from.b64({
   id: "a08382e3-20ba-4549-8378-f3a40920d86b",
   algorithm: "ES384",
   curve: "P-384",
@@ -25,7 +25,7 @@ export const MOCK_KRYPTOS_EC_SIG_ES384 = KryptosKit.from.b64({
     "MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEcB98i4qwGLGJULlue6vis__UVNe4bx89qQAA2ReFxvIMmnyps09IwIyAuRPvK2Tu5NA4mg0F-57rZzd__NJl58qzUqrJCVx7fKzUYpxmY6Dvy8hR9WDRdTBvAjB6RkLX",
 }) as IKryptosEc;
 
-export const MOCK_KRYPTOS_EC_SIG_ES512 = KryptosKit.from.b64({
+export const KRYPTOS_EC_SIG_ES512 = KryptosKit.from.b64({
   id: "fefd9170-918e-462f-af41-2fa2cc38e367",
   algorithm: "ES512",
   curve: "P-521",
@@ -37,7 +37,7 @@ export const MOCK_KRYPTOS_EC_SIG_ES512 = KryptosKit.from.b64({
     "MIGbMBAGByqGSM49AgEGBSuBBAAjA4GGAAQB5lGWp_msERH22iFy0o5_77eWSjg6CIFQfz4rzqD1b__qv9Qy9dVa3WgzWrqLddENPpaEf8O_n27Y2fmpIVt-7AcACpSCE6bc2SgmGxjxBsFVIoE85LTiLb_kwyCAyIGjTdjH-jUJUxrRAO_KXoVfQ3Egv59pd1QqCrQI750vuNdlN34",
 }) as IKryptosEc;
 
-export const MOCK_KRYPTOS_EC_ENC = KryptosKit.from.b64({
+export const KRYPTOS_EC_ENC = KryptosKit.from.b64({
   id: "ae496192-5ba9-43c0-95b7-f3d709884b9c",
   algorithm: "ECDH-ES",
   curve: "P-256",

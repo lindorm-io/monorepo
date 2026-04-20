@@ -1,4 +1,4 @@
-import { MOCK_KRYPTOS_EC_ENC, MOCK_KRYPTOS_EC_SIG_ES512 } from "@lindorm/kryptos";
+import { KRYPTOS_EC_ENC, KRYPTOS_EC_SIG_ES512 } from "@lindorm/kryptos/fixtures";
 import { randomBytes } from "crypto";
 import { EcError } from "../errors";
 import { EcKit } from "./EcKit";
@@ -9,7 +9,7 @@ describe("EcKit", () => {
   let signature: Buffer;
 
   beforeEach(() => {
-    kit = new EcKit({ kryptos: MOCK_KRYPTOS_EC_SIG_ES512 });
+    kit = new EcKit({ kryptos: KRYPTOS_EC_SIG_ES512 });
     data = randomBytes(32);
     signature = kit.sign(data);
   });
@@ -31,8 +31,8 @@ describe("EcKit", () => {
   });
 
   test("should throw on encryption algorithm", () => {
-    expect(() => new EcKit({ kryptos: MOCK_KRYPTOS_EC_ENC as any })).toThrow(EcError);
-    expect(() => new EcKit({ kryptos: MOCK_KRYPTOS_EC_ENC as any })).toThrow(
+    expect(() => new EcKit({ kryptos: KRYPTOS_EC_ENC as any })).toThrow(EcError);
+    expect(() => new EcKit({ kryptos: KRYPTOS_EC_ENC as any })).toThrow(
       "EcKit only supports signing algorithms",
     );
   });
