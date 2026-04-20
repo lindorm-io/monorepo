@@ -1,47 +1,47 @@
-import { createMockRepository } from "./create-mock-repository";
+import type { IProteusSession } from "../interfaces/ProteusSession";
+import { _createMockRepository } from "./create-mock-repository";
 
-export type MockProteusSession = {
-  namespace: string | null;
-  driverType: string;
-  log: Record<string, jest.Mock>;
+export const _createMockProteusSession = (mockFn: () => any): IProteusSession => {
+  const impl = (fn: any) => {
+    const m = mockFn();
+    m.mockImplementation(fn);
+    return m;
+  };
+  const returns = (value: any) => {
+    const m = mockFn();
+    m.mockReturnValue(value);
+    return m;
+  };
+  const resolves = (value: any) => {
+    const m = mockFn();
+    m.mockResolvedValue(value);
+    return m;
+  };
 
-  setFilterParams: jest.Mock;
-  enableFilter: jest.Mock;
-  disableFilter: jest.Mock;
-  getFilterRegistry: jest.Mock;
+  return {
+    namespace: null,
+    driverType: "memory",
+    log: {
+      info: mockFn(),
+      warn: mockFn(),
+      error: mockFn(),
+      debug: mockFn(),
+      verbose: mockFn(),
+      child: mockFn(),
+      time: mockFn(),
+    },
 
-  repository: jest.Mock;
-  queryBuilder: jest.Mock;
-  client: jest.Mock;
-  transaction: jest.Mock;
-  ping: jest.Mock;
+    setFilterParams: mockFn(),
+    enableFilter: mockFn(),
+    disableFilter: mockFn(),
+    getFilterRegistry: returns(new Map()),
 
-  getEmitEntity: jest.Mock;
+    repository: impl(() => _createMockRepository(mockFn)),
+    queryBuilder: mockFn(),
+    client: mockFn(),
+    transaction: impl(async (cb: Function) => cb({})),
+    ping: resolves(true),
+
+    getEmitEntity: returns(mockFn()),
+  } as unknown as IProteusSession;
 };
-
-export const createMockProteusSession = (): MockProteusSession => ({
-  namespace: null,
-  driverType: "memory",
-  log: {
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-    debug: jest.fn(),
-    verbose: jest.fn(),
-    child: jest.fn(),
-    time: jest.fn(),
-  },
-
-  setFilterParams: jest.fn(),
-  enableFilter: jest.fn(),
-  disableFilter: jest.fn(),
-  getFilterRegistry: jest.fn().mockReturnValue(new Map()),
-
-  repository: jest.fn().mockImplementation(() => createMockRepository()),
-  queryBuilder: jest.fn(),
-  client: jest.fn(),
-  transaction: jest.fn().mockImplementation(async (cb: Function) => cb({})),
-  ping: jest.fn().mockResolvedValue(true),
-
-  getEmitEntity: jest.fn().mockReturnValue(jest.fn()),
-});

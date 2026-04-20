@@ -1,6 +1,6 @@
 import { ServerError } from "@lindorm/errors";
-import { createMockIrisSource } from "@lindorm/iris/mocks";
-import { createMockProteusSource } from "@lindorm/proteus/mocks";
+import { createMockIrisSource } from "@lindorm/iris/mocks/jest";
+import { createMockProteusSource } from "@lindorm/proteus/mocks/jest";
 import { buildDefaultHealthCallback } from "./build-default-health-callback";
 
 describe("buildDefaultHealthCallback", () => {
