@@ -22,9 +22,13 @@
       "types": "./dist/react/index.d.ts",
       "default": "./dist/react/index.js"
     },
-    "./mocks": {
-      "types": "./dist/mocks/index.d.ts",
-      "default": "./dist/mocks/index.js"
+    "./mocks/jest": {
+      "types": "./dist/mocks/jest.d.ts",
+      "default": "./dist/mocks/jest.js"
+    },
+    "./mocks/vitest": {
+      "types": "./dist/mocks/vitest.d.mts",
+      "default": "./dist/mocks/vitest.mjs"
     }
   },
   "typesVersions": {
@@ -32,8 +36,11 @@
       "react": [
         "dist/react/index.d.ts"
       ],
-      "mocks": [
-        "dist/mocks/index.d.ts"
+      "mocks/jest": [
+        "dist/mocks/jest.d.ts"
+      ],
+      "mocks/vitest": [
+        "dist/mocks/vitest.d.mts"
       ]
     }
   },

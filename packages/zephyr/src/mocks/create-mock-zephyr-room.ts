@@ -1,12 +1,21 @@
 import type { IZephyrRoom } from "../interfaces/ZephyrRoom";
 
-export type MockZephyrRoom = jest.Mocked<IZephyrRoom>;
+export const _createMockZephyrRoom = (
+  mockFn: () => any,
+  name = "mock-room",
+): IZephyrRoom => {
+  const resolves = (value: any) => {
+    const m = mockFn();
+    m.mockResolvedValue(value);
+    return m;
+  };
 
-export const createMockZephyrRoom = (name = "mock-room"): MockZephyrRoom => ({
-  name,
-  join: jest.fn().mockResolvedValue(undefined),
-  leave: jest.fn().mockResolvedValue(undefined),
-  emit: jest.fn().mockResolvedValue(undefined),
-  on: jest.fn(),
-  off: jest.fn(),
-});
+  return {
+    name,
+    join: resolves(undefined),
+    leave: resolves(undefined),
+    emit: resolves(undefined),
+    on: mockFn(),
+    off: mockFn(),
+  } as unknown as IZephyrRoom;
+};
