@@ -6,29 +6,17 @@ import { IScanData, IScanner } from "../interfaces";
 import { StructureScannerOptions } from "../types";
 import { ScanData } from "./ScanData";
 
-type RequireFn = (id: string, parentPath: string) => unknown;
-
 export class Scanner implements IScanner {
   private readonly deniedDirectories: Array<RegExp>;
   private readonly deniedExtensions: Array<RegExp>;
   private readonly deniedFilenames: Array<RegExp>;
   private readonly deniedTypes: Array<RegExp>;
-  private readonly requireFn: RequireFn;
 
   public constructor(options: StructureScannerOptions = {}) {
     this.deniedDirectories = options.deniedDirectories || [];
     this.deniedExtensions = options.deniedExtensions || [];
     this.deniedFilenames = options.deniedFilenames || [];
     this.deniedTypes = options.deniedTypes || [];
-
-    if (process.env.JEST_WORKER_ID) {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      this.requireFn = (id: string): unknown => require(id);
-    } else {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { require: tsxRequire } = require("tsx/cjs/api");
-      this.requireFn = tsxRequire;
-    }
   }
 
   // public
@@ -90,11 +78,6 @@ export class Scanner implements IScanner {
     const { __esModule: _esm, ...userExports } = source;
     void _esm;
     return userExports;
-  }
-
-  public require<T>(fileOrPath: IScanData | string): T {
-    const filePath = isString(fileOrPath) ? fileOrPath : fileOrPath.fullPath;
-    return this.requireFn(filePath, filePath) as T;
   }
 
   // public static

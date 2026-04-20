@@ -6,10 +6,10 @@
  *
  * Demonstrates:
  *   1. Directory walking via scan()
- *   2. Sync file loading via require() (the current CJS path, via tsx/cjs/api)
- *   3. Async file loading via import() (native dynamic import)
- *   4. That the same file loaded via either path yields equivalent values
- *   5. That class identity survives the async import boundary
+ *   2. Async file loading via import() (native dynamic import)
+ *   3. That class identity is preserved across the async import boundary —
+ *      an instance exported from a scanned file is instanceof the class
+ *      imported by the caller.
  */
 
 import { Scanner } from "../src";
@@ -38,43 +38,23 @@ if (!workerA || !workerB) {
   throw new Error("example fixtures missing");
 }
 
-// sync require
-const syncModule = scanner.require<any>(workerA);
-
-console.log("\nsync require — worker-a:", {
-  keys: Object.keys(syncModule),
-  INTERVAL: syncModule.INTERVAL,
-  brandCtor: syncModule.brand?.constructor?.name,
-  brandIsInstance: syncModule.brand instanceof WorkerBrand,
-});
-
-// async native import
 (async () => {
-  const asyncA = await scanner.import<any>(workerA);
+  const moduleA = await scanner.import<any>(workerA);
 
-  console.log("\nasync import — worker-a:", {
-    keys: Object.keys(asyncA),
-    INTERVAL: asyncA.INTERVAL,
-    brandCtor: asyncA.brand?.constructor?.name,
-    brandIsInstance: asyncA.brand instanceof WorkerBrand,
+  console.log("\nworker-a (named exports):", {
+    keys: Object.keys(moduleA),
+    INTERVAL: moduleA.INTERVAL,
+    brandCtor: moduleA.brand?.constructor?.name,
+    brandIsInstance: moduleA.brand instanceof WorkerBrand,
   });
 
-  const asyncB = await scanner.import<any>(workerB);
+  const moduleB = await scanner.import<any>(workerB);
 
-  console.log("\nasync import — worker-b (default export):", {
-    keys: Object.keys(asyncB),
-    defaultCtor: asyncB.default?.constructor?.name,
-    defaultIsInstance: asyncB.default instanceof WorkerBrand,
-    defaultAlias: asyncB.default?.alias,
-  });
-
-  // Equivalence between the two load paths for the same file.
-
-  console.log("\nidentity across sync and async:", {
-    sameBrandInstance: syncModule.brand === asyncA.brand,
-    sameClass: syncModule.brand?.constructor === asyncA.brand?.constructor,
-    bothMatchImportedClass:
-      syncModule.brand instanceof WorkerBrand && asyncA.brand instanceof WorkerBrand,
+  console.log("\nworker-b (default export):", {
+    keys: Object.keys(moduleB),
+    defaultCtor: moduleB.default?.constructor?.name,
+    defaultIsInstance: moduleB.default instanceof WorkerBrand,
+    defaultAlias: moduleB.default?.alias,
   });
 })().catch((err) => {
   console.error("example failed:", err);
