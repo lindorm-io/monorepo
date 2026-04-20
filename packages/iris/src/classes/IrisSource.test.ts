@@ -185,9 +185,9 @@ describe("IrisSource", () => {
   });
 
   describe("addMessages / hasMessage", () => {
-    it("should add messages to the message list", () => {
+    it("should add messages to the message list", async () => {
       const source = new IrisSource(createMemoryOptions());
-      source.addMessages([SourceTestMessage]);
+      await source.addMessages([SourceTestMessage]);
       expect(source.hasMessage(SourceTestMessage)).toBe(true);
     });
 
@@ -196,16 +196,16 @@ describe("IrisSource", () => {
       expect(source.hasMessage(SourceTestMessage)).toBe(false);
     });
 
-    it("should not duplicate messages added twice", () => {
+    it("should not duplicate messages added twice", async () => {
       const source = new IrisSource(createMemoryOptions());
-      source.addMessages([SourceTestMessage]);
-      source.addMessages([SourceTestMessage]);
+      await source.addMessages([SourceTestMessage]);
+      await source.addMessages([SourceTestMessage]);
       expect(source.messages).toHaveLength(1);
     });
 
-    it("should add multiple messages at once", () => {
+    it("should add multiple messages at once", async () => {
       const source = new IrisSource(createMemoryOptions());
-      source.addMessages([SourceTestMessage, AnotherTestMessage]);
+      await source.addMessages([SourceTestMessage, AnotherTestMessage]);
       expect(source.messages).toHaveLength(2);
       expect(source.hasMessage(SourceTestMessage)).toBe(true);
       expect(source.hasMessage(AnotherTestMessage)).toBe(true);
@@ -285,10 +285,10 @@ describe("IrisSource", () => {
       expect(session.hasMessage(SourceTestMessage)).toBe(true);
     });
 
-    it("should have independent messages list (adding to source does not affect session)", () => {
+    it("should have independent messages list (adding to source does not affect session)", async () => {
       const source = new IrisSource(createMemoryOptions());
       const session = source.session();
-      source.addMessages([SourceTestMessage]);
+      await source.addMessages([SourceTestMessage]);
       expect(session.hasMessage(SourceTestMessage)).toBe(false);
       expect(source.hasMessage(SourceTestMessage)).toBe(true);
     });
@@ -975,8 +975,10 @@ describe("IrisSource", () => {
       await source.connect();
       await source.setup();
 
-      expect(() => source.addMessages([AnotherTestMessage])).toThrow(IrisSourceError);
-      expect(() => source.addMessages([AnotherTestMessage])).toThrow(
+      await expect(source.addMessages([AnotherTestMessage])).rejects.toThrow(
+        IrisSourceError,
+      );
+      await expect(source.addMessages([AnotherTestMessage])).rejects.toThrow(
         "Cannot add messages after setup",
       );
 
