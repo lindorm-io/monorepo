@@ -1,4 +1,139 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`buildKeysetPredicate > should build backward predicate with flipped operators 1`] = `
+{
+  "$or": [
+    {
+      "createdAt": {
+        "$lt": "2024-06-15",
+      },
+    },
+    {
+      "$and": [
+        {
+          "createdAt": "2024-06-15",
+        },
+        {
+          "id": {
+            "$lt": "xyz",
+          },
+        },
+      ],
+    },
+  ],
+}
+`;
+
+exports[`buildKeysetPredicate > should build single column ASC backward predicate 1`] = `
+{
+  "id": {
+    "$lt": 42,
+  },
+}
+`;
+
+exports[`buildKeysetPredicate > should build single column ASC forward predicate 1`] = `
+{
+  "id": {
+    "$gt": 42,
+  },
+}
+`;
+
+exports[`buildKeysetPredicate > should build single column DESC forward predicate 1`] = `
+{
+  "score": {
+    "$lt": 100,
+  },
+}
+`;
+
+exports[`buildKeysetPredicate > should build three column boolean expansion 1`] = `
+{
+  "$or": [
+    {
+      "category": {
+        "$gt": "tech",
+      },
+    },
+    {
+      "$and": [
+        {
+          "category": "tech",
+        },
+        {
+          "score": {
+            "$lt": 95,
+          },
+        },
+      ],
+    },
+    {
+      "$and": [
+        {
+          "category": "tech",
+        },
+        {
+          "score": 95,
+        },
+        {
+          "id": {
+            "$gt": "abc-123",
+          },
+        },
+      ],
+    },
+  ],
+}
+`;
+
+exports[`buildKeysetPredicate > should build two column mixed-direction forward predicate 1`] = `
+{
+  "$or": [
+    {
+      "createdAt": {
+        "$gt": "2024-01-01",
+      },
+    },
+    {
+      "$and": [
+        {
+          "createdAt": "2024-01-01",
+        },
+        {
+          "id": {
+            "$lt": "abc",
+          },
+        },
+      ],
+    },
+  ],
+}
+`;
+
+exports[`buildKeysetPredicate > should handle null cursor values 1`] = `
+{
+  "$or": [
+    {
+      "name": {
+        "$gt": null,
+      },
+    },
+    {
+      "$and": [
+        {
+          "name": null,
+        },
+        {
+          "id": {
+            "$gt": "abc",
+          },
+        },
+      ],
+    },
+  ],
+}
+`;
 
 exports[`buildKeysetPredicate should build backward predicate with flipped operators 1`] = `
 {

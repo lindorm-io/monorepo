@@ -2,6 +2,7 @@ import { makeField } from "../../../../__fixtures__/make-field";
 import type { EntityMetadata } from "../../../../entity/types/metadata";
 import { ProteusRepositoryError } from "../../../../../errors/ProteusRepositoryError";
 import { compileUpdate, compileUpdateMany } from "./compile-update";
+import { describe, expect, test } from "vitest";
 
 const metadata = {
   entity: {

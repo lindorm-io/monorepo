@@ -1,16 +1,17 @@
 import type { EntityMetadata } from "../../../entity/types/metadata";
 import type { ScopedName } from "../../../types/types";
 import { buildEntityKey, buildEntityKeyFromRow } from "./build-entity-key";
+import { beforeEach, describe, expect, test, vi, type MockedFunction } from "vitest";
 
 // ─── Module Mocks ────────────────────────────────────────────────────────────
 
-jest.mock("../../../entity/utils/get-entity-name", () => ({
-  getEntityName: jest.fn(),
+vi.mock("../../../entity/utils/get-entity-name", () => ({
+  getEntityName: vi.fn(),
 }));
 
 import { getEntityName } from "../../../entity/utils/get-entity-name";
 
-const mockGetEntityName = getEntityName as jest.MockedFunction<typeof getEntityName>;
+const mockGetEntityName = getEntityName as MockedFunction<typeof getEntityName>;
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -30,7 +31,7 @@ const makeScopedName = (overrides: Partial<ScopedName> = {}): ScopedName => ({
 
 describe("buildEntityKey", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test("should build key without namespace", () => {
@@ -66,7 +67,7 @@ describe("buildEntityKey", () => {
 
 describe("buildEntityKeyFromRow", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test("should extract PK from row in metadata order", () => {

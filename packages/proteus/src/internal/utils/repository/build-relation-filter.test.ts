@@ -1,6 +1,7 @@
 import type { MetaRelation } from "../../entity/types/metadata";
 import { ProteusRepositoryError } from "../../../errors/ProteusRepositoryError";
 import { buildRelationFilter } from "./build-relation-filter";
+import { describe, expect, test } from "vitest";
 
 const makeRelation = (overrides: Partial<MetaRelation> = {}): MetaRelation =>
   ({

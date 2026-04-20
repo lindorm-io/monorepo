@@ -4,6 +4,7 @@ import type { EntityMetadata } from "../internal/entity/types/metadata";
 import type { QueryState } from "../internal/types/query";
 import { makeField } from "../internal/__fixtures__/make-field";
 import { QueryBuilder } from "./QueryBuilder";
+import { beforeEach, describe, expect, test } from "vitest";
 
 // Concrete test implementation
 class TestQueryBuilder<E extends IEntity> extends QueryBuilder<E> {

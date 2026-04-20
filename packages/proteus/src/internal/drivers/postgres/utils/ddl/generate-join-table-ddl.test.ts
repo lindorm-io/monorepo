@@ -10,6 +10,7 @@ import { ManyToMany } from "../../../../../decorators/ManyToMany";
 import { ManyToOne } from "../../../../../decorators/ManyToOne";
 import { OneToMany } from "../../../../../decorators/OneToMany";
 import { PrimaryKeyField } from "../../../../../decorators/PrimaryKeyField";
+import { describe, expect, test } from "vitest";
 
 // ---------------------------------------------------------------------------
 // Additional test entities at module scope

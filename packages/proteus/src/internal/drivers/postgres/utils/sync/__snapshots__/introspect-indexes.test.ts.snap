@@ -1,4 +1,26 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`introspectIndexes > should map a simple btree index 1`] = `
+[
+  {
+    "index": {
+      "columns": [
+        {
+          "direction": "asc",
+          "name": "email",
+        },
+      ],
+      "include": [],
+      "method": "btree",
+      "name": "idx_abc123",
+      "unique": false,
+      "where": null,
+    },
+    "schema": "public",
+    "table": "users",
+  },
+]
+`;
 
 exports[`introspectIndexes should map a simple btree index 1`] = `
 [

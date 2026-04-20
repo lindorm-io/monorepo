@@ -1,6 +1,7 @@
 import { diffIndexes } from "../../../../drivers/postgres/utils/sync/diff-indexes";
 import type { DbIndex } from "../../types/db-snapshot";
 import type { DesiredIndex } from "../../types/desired-schema";
+import { describe, expect, it } from "vitest";
 
 const makeDbIndex = (overrides: Partial<DbIndex> = {}): DbIndex => ({
   name: "idx_test",

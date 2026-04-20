@@ -6,6 +6,7 @@ import { Field } from "../../../decorators/Field";
 import { Inheritance } from "../../../decorators/Inheritance";
 import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField";
 import { resolveInheritanceHierarchies } from "./resolve-inheritance";
+import { beforeAll, describe, expect, test } from "vitest";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Single-table: two concrete subtypes

@@ -1,17 +1,18 @@
 import { PostgresTransactionError } from "../errors/PostgresTransactionError";
 import type { PostgresTransactionHandle } from "../types/postgres-transaction-handle";
 import { TransactionContext } from "./TransactionContext";
+import { describe, expect, it, vi } from "vitest";
 
 const makeHandle = (): PostgresTransactionHandle => {
   const queries: Array<string> = [];
   return {
     client: {
-      query: jest.fn(async (sql: string, params?: Array<unknown>) => {
+      query: vi.fn(async (sql: string, params?: Array<unknown>) => {
         queries.push(sql);
         return { rows: [{ id: 1 }], rowCount: 1 };
       }),
     },
-    release: jest.fn(),
+    release: vi.fn(),
     state: "active" as const,
     savepointCounter: 0,
     __queries: queries,
@@ -30,7 +31,7 @@ describe("TransactionContext", () => {
     it("should return repository from factory when configured", () => {
       const handle = makeHandle();
       const mockRepo = {} as any;
-      const factory = jest.fn().mockReturnValue(mockRepo);
+      const factory = vi.fn().mockReturnValue(mockRepo);
       const ctx = new TransactionContext(handle, undefined, undefined, factory);
 
       class TestEntity {}

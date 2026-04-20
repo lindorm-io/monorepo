@@ -1,4 +1,10 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`warnCartesianIncludes > should match full warning message snapshot for 2-ToMany joins 1`] = `
+[
+  "Query on "User" joins 2 *ToMany relations (posts, tags), which may cause cartesian explosion. Consider using strategy: "query" on some relations.",
+]
+`;
 
 exports[`warnCartesianIncludes should match full warning message snapshot for 2-ToMany joins 1`] = `
 [

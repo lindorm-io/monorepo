@@ -5,6 +5,7 @@ import { Field } from "./Field";
 import { ManyToOne } from "./ManyToOne";
 import { OneToMany } from "./OneToMany";
 import { PrimaryKeyField } from "./PrimaryKeyField";
+import { describe, expect, test } from "vitest";
 
 @Entity({ name: "CascadeParent" })
 class CascadeParent {

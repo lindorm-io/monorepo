@@ -1,4 +1,28 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`generateFkDDL (MySQL) > generates FK constraint for OneToOne owning side 1`] = `
+[
+  "CONSTRAINT \`fk_9wUOW0wBcZb\` FOREIGN KEY (\`profileId\`) REFERENCES \`MysFkOneToOneProfile\` (\`id\`) ON DELETE NO ACTION ON UPDATE NO ACTION",
+]
+`;
+
+exports[`generateFkDDL (MySQL) > generates FK constraint with ON DELETE CASCADE ON UPDATE CASCADE 1`] = `
+[
+  "CONSTRAINT \`fk_mTb4n9s4It7\` FOREIGN KEY (\`parentId\`) REFERENCES \`MysFkCascadeParent\` (\`id\`) ON DELETE CASCADE ON UPDATE CASCADE",
+]
+`;
+
+exports[`generateFkDDL (MySQL) > generates FK constraint with ON DELETE SET NULL ON UPDATE SET NULL 1`] = `
+[
+  "CONSTRAINT \`fk_qW_99Whv_zi\` FOREIGN KEY (\`parentId\`) REFERENCES \`MysFkSetNullParent\` (\`id\`) ON DELETE SET NULL ON UPDATE SET NULL",
+]
+`;
+
+exports[`generateFkDDL (MySQL) > generates FK constraint with default ON DELETE NO ACTION ON UPDATE NO ACTION 1`] = `
+[
+  "CONSTRAINT \`fk_LXxtGNm459q\` FOREIGN KEY (\`parentId\`) REFERENCES \`MysFkDefaultParent\` (\`id\`) ON DELETE NO ACTION ON UPDATE NO ACTION",
+]
+`;
 
 exports[`generateFkDDL (MySQL) generates FK constraint for OneToOne owning side 1`] = `
 [

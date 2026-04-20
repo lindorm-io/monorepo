@@ -1,6 +1,7 @@
 import { DriverError } from "../../../../errors/DriverError";
 import { MongoDriverError } from "./MongoDriverError";
 import { MongoMigrationError } from "./MongoMigrationError";
+import { describe, expect, test } from "vitest";
 
 describe("MongoDriverError", () => {
   test("should be an instance of DriverError", () => {

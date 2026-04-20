@@ -1,4 +1,17 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`DefaultOrder > should stage multi-field default order 1`] = `
+{
+  "firstName": "ASC",
+  "lastName": "ASC",
+}
+`;
+
+exports[`DefaultOrder > should stage single-field default order 1`] = `
+{
+  "createdAt": "DESC",
+}
+`;
 
 exports[`DefaultOrder should stage multi-field default order 1`] = `
 {

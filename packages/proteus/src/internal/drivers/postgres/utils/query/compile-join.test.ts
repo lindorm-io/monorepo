@@ -3,6 +3,7 @@ import type { EntityMetadata, MetaRelation } from "../../../../entity/types/meta
 import { ProteusError } from "../../../../../errors/ProteusError";
 import { compileJoin } from "./compile-join";
 import type { AliasMap } from "./compile-select";
+import { describe, expect, test, vi, type Mock } from "vitest";
 
 // Mock getEntityMetadata so we control what metadata the join compiler sees
 const postMetadata = {
@@ -147,8 +148,8 @@ const versionedProfileMetadata = {
   primaryKeys: ["id"],
 } as unknown as EntityMetadata;
 
-jest.mock("../../../../entity/metadata/get-entity-metadata", () => ({
-  getEntityMetadata: jest.fn((ctor: any) => {
+vi.mock("../../../../entity/metadata/get-entity-metadata", () => ({
+  getEntityMetadata: vi.fn((ctor: any) => {
     if (ctor._name === "Post") return postMetadata;
     if (ctor._name === "Tag") return tagMetadata;
     if (ctor._name === "Profile") return profileMetadata;

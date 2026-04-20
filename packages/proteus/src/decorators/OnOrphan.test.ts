@@ -6,6 +6,7 @@ import { ManyToOne } from "./ManyToOne";
 import { OnOrphan } from "./OnOrphan";
 import { OneToMany } from "./OneToMany";
 import { PrimaryKeyField } from "./PrimaryKeyField";
+import { describe, expect, test } from "vitest";
 
 @Entity({ name: "OnOrphanParent" })
 class OnOrphanParent {

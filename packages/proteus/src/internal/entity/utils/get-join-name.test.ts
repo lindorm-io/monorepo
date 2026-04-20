@@ -1,4 +1,5 @@
 import { getJoinName } from "./get-join-name";
+import { describe, expect, test } from "vitest";
 
 describe("getJoinName", () => {
   test("should return scoped name without namespace", () => {

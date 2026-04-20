@@ -13,6 +13,7 @@ import { PrimaryKey } from "../../../decorators/PrimaryKey";
 import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField";
 import { UpdateDateField } from "../../../decorators/UpdateDateField";
 import { VersionField } from "../../../decorators/VersionField";
+import { describe, expect, test, vi } from "vitest";
 
 @Entity({ name: "GetMetadataSimple" })
 class GetMetadataSimple {
@@ -53,7 +54,7 @@ class GetMetadataCacheOnly {
 }
 
 // E2E pipeline test entities
-const e2eOnCreateCb = jest.fn();
+const e2eOnCreateCb = vi.fn();
 
 @Entity({ name: "E2EComment" })
 class E2EComment {

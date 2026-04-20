@@ -1,4 +1,17 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`createMemoryJoinTableOps > sync > inserts join rows for new relationships 1`] = `
+[
+  {
+    "post_id": "post-1",
+    "tag_id": "tag-1",
+  },
+  {
+    "post_id": "post-1",
+    "tag_id": "tag-2",
+  },
+]
+`;
 
 exports[`createMemoryJoinTableOps sync inserts join rows for new relationships 1`] = `
 [

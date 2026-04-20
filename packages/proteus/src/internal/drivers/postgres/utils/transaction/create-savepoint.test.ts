@@ -1,12 +1,13 @@
 import { PostgresTransactionError } from "../../errors/PostgresTransactionError";
 import type { PostgresTransactionHandle } from "../../types/postgres-transaction-handle";
 import { createSavepoint } from "./create-savepoint";
+import { describe, expect, it, vi, type Mock } from "vitest";
 
 const makeHandle = (
   state: PostgresTransactionHandle["state"] = "active",
 ): PostgresTransactionHandle => ({
-  client: { query: jest.fn().mockResolvedValue({ rows: [], rowCount: 0 }) },
-  release: jest.fn(),
+  client: { query: vi.fn().mockResolvedValue({ rows: [], rowCount: 0 }) },
+  release: vi.fn(),
   state,
   savepointCounter: 0,
 });
@@ -43,9 +44,7 @@ describe("createSavepoint", () => {
 
   it("should propagate query failure", async () => {
     const handle = makeHandle();
-    (handle.client.query as jest.Mock).mockRejectedValueOnce(
-      new Error("connection lost"),
-    );
+    (handle.client.query as Mock).mockRejectedValueOnce(new Error("connection lost"));
 
     await expect(createSavepoint(handle)).rejects.toThrow("connection lost");
   });

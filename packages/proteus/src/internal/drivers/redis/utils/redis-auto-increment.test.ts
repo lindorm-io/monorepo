@@ -1,10 +1,11 @@
 import type { EntityMetadata } from "../../../entity/types/metadata";
 import { applyRedisAutoIncrement } from "./redis-auto-increment";
+import { describe, expect, test, vi, type Mock } from "vitest";
 
 // ─── Module Mocks ────────────────────────────────────────────────────────────
 
-jest.mock("./build-increment-key", () => ({
-  buildIncrementKey: jest.fn((_target, fieldName, namespace) =>
+vi.mock("./build-increment-key", () => ({
+  buildIncrementKey: vi.fn((_target, fieldName, namespace) =>
     namespace ? `${namespace}:seq:test:${fieldName}` : `seq:test:${fieldName}`,
   ),
 }));
@@ -14,7 +15,7 @@ jest.mock("./build-increment-key", () => ({
 const createMockRedisClient = () => {
   const counters = new Map<string, number>();
   return {
-    incr: jest.fn().mockImplementation((key: string) => {
+    incr: vi.fn().mockImplementation((key: string) => {
       const next = (counters.get(key) ?? 0) + 1;
       counters.set(key, next);
       return Promise.resolve(next);

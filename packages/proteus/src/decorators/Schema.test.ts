@@ -4,6 +4,7 @@ import { Entity } from "./Entity";
 import { Field } from "./Field";
 import { PrimaryKeyField } from "./PrimaryKeyField";
 import { Schema } from "./Schema";
+import { describe, expect, test } from "vitest";
 
 const nameSchema = z.object({
   name: z.string().min(1).max(100),

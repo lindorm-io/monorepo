@@ -2,10 +2,19 @@ import type { ILogger } from "@lindorm/logger";
 import type { PostgresQueryClient } from "../../types/postgres-query-client";
 import type { SyncOperation, SyncOptions, SyncPlan } from "../../types/sync-plan";
 import { SyncPlanExecutor } from "./execute-sync-plan";
+import {
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+  type Mock,
+  type MockedFunction,
+} from "vitest";
 
 // Mock advisory-lock so we can control whether it "acquires" the lock
-jest.mock("../advisory-lock", () => ({
-  withAdvisoryLock: jest.fn(
+vi.mock("../advisory-lock", () => ({
+  withAdvisoryLock: vi.fn(
     async (_client: unknown, _k1: unknown, _k2: unknown, fn: () => Promise<unknown>) =>
       fn(),
   ),
@@ -13,9 +22,7 @@ jest.mock("../advisory-lock", () => ({
 
 import { withAdvisoryLock } from "../advisory-lock";
 
-const mockWithAdvisoryLock = withAdvisoryLock as jest.MockedFunction<
-  typeof withAdvisoryLock
->;
+const mockWithAdvisoryLock = withAdvisoryLock as MockedFunction<typeof withAdvisoryLock>;
 
 // --- helpers ---
 
@@ -32,7 +39,7 @@ const executeSyncPlan = (
 const makeClient = (): { client: PostgresQueryClient; queries: Array<string> } => {
   const queries: Array<string> = [];
   const client: PostgresQueryClient = {
-    query: jest.fn(async (sql: string) => {
+    query: vi.fn(async (sql: string) => {
       queries.push(sql);
       return { rows: [], rowCount: 0 };
     }),
@@ -89,17 +96,17 @@ const makeLogger = (): {
     error: [],
   };
   const logger: ILogger = {
-    debug: jest.fn((...args: Array<unknown>) => calls.debug.push(args)),
-    info: jest.fn((...args: Array<unknown>) => calls.info.push(args)),
-    warn: jest.fn((...args: Array<unknown>) => calls.warn.push(args)),
-    error: jest.fn((...args: Array<unknown>) => calls.error.push(args)),
-    child: jest.fn(() => logger),
+    debug: vi.fn((...args: Array<unknown>) => calls.debug.push(args)),
+    info: vi.fn((...args: Array<unknown>) => calls.info.push(args)),
+    warn: vi.fn((...args: Array<unknown>) => calls.warn.push(args)),
+    error: vi.fn((...args: Array<unknown>) => calls.error.push(args)),
+    child: vi.fn(() => logger),
   } as unknown as ILogger;
   return { logger, calls };
 };
 
 beforeEach(() => {
-  jest.clearAllMocks();
+  vi.clearAllMocks();
   // Default: advisory lock succeeds
   mockWithAdvisoryLock.mockImplementation(async (_c, _k1, _k2, fn) => fn());
 });
@@ -189,7 +196,7 @@ describe("SyncPlanExecutor — transactional operations", () => {
     const { queries } = makeClient();
     let callCount = 0;
     const failClient: PostgresQueryClient = {
-      query: jest.fn(async (sql: string) => {
+      query: vi.fn(async (sql: string) => {
         queries.push(sql);
         callCount++;
         if (callCount === 2) throw new Error("syntax error"); // fail on first real op
@@ -243,7 +250,7 @@ describe("SyncPlanExecutor — autocommit operations", () => {
     const goodSql = "GOOD_OP;";
     let callCount = 0;
     const failClient: PostgresQueryClient = {
-      query: jest.fn(async (sql: string) => {
+      query: vi.fn(async (sql: string) => {
         callCount++;
         if (sql === failedSql) throw new Error("autocommit-failure");
         return { rows: [], rowCount: 0 };

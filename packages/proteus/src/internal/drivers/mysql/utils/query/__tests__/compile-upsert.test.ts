@@ -1,6 +1,7 @@
 import { makeField } from "../../../../../__fixtures__/make-field";
 import type { EntityMetadata } from "../../../../../entity/types/metadata";
 import { compileUpsert } from "../compile-upsert";
+import { describe, expect, test } from "vitest";
 
 const metadata = {
   entity: {

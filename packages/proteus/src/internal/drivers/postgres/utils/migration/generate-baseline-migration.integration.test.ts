@@ -13,6 +13,7 @@ import { introspectSchema } from "../sync/introspect-schema";
 import { projectDesiredSchema } from "../sync/project-desired-schema";
 import { getAllMigrationRecords } from "./migration-table";
 import { generateBaselineMigration } from "./generate-baseline-migration";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 let client: PostgresQueryClient;
 let raw: Client;

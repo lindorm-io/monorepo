@@ -1,4 +1,40 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`createMockProteusSource > should create a mock source with all methods as vi.fn() 1`] = `
+{
+  "addEntities": [MockFunction],
+  "breaker": null,
+  "client": [MockFunction],
+  "connect": [MockFunction],
+  "disableFilter": [MockFunction],
+  "disconnect": [MockFunction],
+  "driverType": "memory",
+  "enableFilter": [MockFunction],
+  "getEntityMetadata": [MockFunction],
+  "getFilterRegistry": [MockFunction],
+  "log": {
+    "child": [MockFunction],
+    "debug": [MockFunction],
+    "error": [MockFunction],
+    "info": [MockFunction],
+    "time": [MockFunction],
+    "verbose": [MockFunction],
+    "warn": [MockFunction],
+  },
+  "migrationsTable": undefined,
+  "namespace": null,
+  "off": [MockFunction],
+  "on": [MockFunction],
+  "once": [MockFunction],
+  "ping": [MockFunction],
+  "queryBuilder": [MockFunction],
+  "repository": [MockFunction],
+  "session": [MockFunction],
+  "setFilterParams": [MockFunction],
+  "setup": [MockFunction],
+  "transaction": [MockFunction],
+}
+`;
 
 exports[`createMockProteusSource should create a mock source with all methods as jest.fn() 1`] = `
 {

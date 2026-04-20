@@ -2,10 +2,11 @@ import { randomUUID } from "crypto";
 import type { DbSnapshot } from "../../types/db-snapshot";
 import type { SyncOperation, SyncPlan } from "../../types/sync-plan";
 import { serializeMigration } from "./serialize-migration";
+import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
-jest.mock("crypto", () => ({
-  ...jest.requireActual("crypto"),
-  randomUUID: jest.fn(() => "00000000-0000-0000-0000-000000000001"),
+vi.mock("crypto", async () => ({
+  ...(await vi.importActual<typeof import("crypto")>("crypto")),
+  randomUUID: vi.fn(() => "00000000-0000-0000-0000-000000000001"),
 }));
 
 const fixedDate = new Date("2026-02-20T09:00:00.000Z");
@@ -74,7 +75,7 @@ const makePlan = (operations: Array<SyncOperation>): SyncPlan => {
 };
 
 beforeEach(() => {
-  (randomUUID as jest.Mock).mockReturnValue("00000000-0000-0000-0000-000000000001");
+  (randomUUID as Mock).mockReturnValue("00000000-0000-0000-0000-000000000001");
 });
 
 // --- Filename and class name ---

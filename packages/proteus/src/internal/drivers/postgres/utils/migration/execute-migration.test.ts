@@ -2,14 +2,23 @@ import { PostgresMigrationError } from "../../errors/PostgresMigrationError";
 import type { PostgresQueryClient } from "../../types/postgres-query-client";
 import type { MigrationInterface, MigrationQueryRunner } from "../../types/migration";
 import { executeMigrationUp, executeMigrationDown } from "./execute-migration";
+import {
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+  type Mock,
+  type MockedFunction,
+} from "vitest";
 
 // Mock migration-table
-jest.mock("./migration-table", () => ({
-  ensureMigrationTable: jest.fn(),
-  insertMigrationRecord: jest.fn(),
-  deleteMigrationRecord: jest.fn(),
-  markMigrationFinished: jest.fn(),
-  markMigrationRolledBack: jest.fn(),
+vi.mock("./migration-table", () => ({
+  ensureMigrationTable: vi.fn(),
+  insertMigrationRecord: vi.fn(),
+  deleteMigrationRecord: vi.fn(),
+  markMigrationFinished: vi.fn(),
+  markMigrationRolledBack: vi.fn(),
 }));
 
 import {
@@ -20,24 +29,24 @@ import {
   markMigrationRolledBack,
 } from "./migration-table";
 
-const mockEnsureTable = ensureMigrationTable as jest.MockedFunction<
+const mockEnsureTable = ensureMigrationTable as MockedFunction<
   typeof ensureMigrationTable
 >;
-const mockInsertRecord = insertMigrationRecord as jest.MockedFunction<
+const mockInsertRecord = insertMigrationRecord as MockedFunction<
   typeof insertMigrationRecord
 >;
-const mockDeleteRecord = deleteMigrationRecord as jest.MockedFunction<
+const mockDeleteRecord = deleteMigrationRecord as MockedFunction<
   typeof deleteMigrationRecord
 >;
-const mockMarkFinished = markMigrationFinished as jest.MockedFunction<
+const mockMarkFinished = markMigrationFinished as MockedFunction<
   typeof markMigrationFinished
 >;
-const mockMarkRolledBack = markMigrationRolledBack as jest.MockedFunction<
+const mockMarkRolledBack = markMigrationRolledBack as MockedFunction<
   typeof markMigrationRolledBack
 >;
 
 const mockClient: PostgresQueryClient = {
-  query: jest.fn().mockResolvedValue({ rows: [], rowCount: 0 }),
+  query: vi.fn().mockResolvedValue({ rows: [], rowCount: 0 }),
 };
 
 const makeMigration = (
@@ -45,13 +54,13 @@ const makeMigration = (
 ): MigrationInterface => ({
   id: "uuid-001",
   ts: "2026-02-20T09:00:00.000Z",
-  up: jest.fn(),
-  down: jest.fn(),
+  up: vi.fn(),
+  down: vi.fn(),
   ...overrides,
 });
 
 beforeEach(() => {
-  jest.clearAllMocks();
+  vi.clearAllMocks();
 });
 
 describe("executeMigrationUp", () => {
@@ -86,7 +95,7 @@ describe("executeMigrationUp", () => {
 
   it("should throw PostgresMigrationError when up() fails", async () => {
     const migration = makeMigration({
-      up: jest.fn().mockRejectedValue(new Error("SQL syntax error")),
+      up: vi.fn().mockRejectedValue(new Error("SQL syntax error")),
     });
 
     await expect(
@@ -96,7 +105,7 @@ describe("executeMigrationUp", () => {
 
   it("should delete orphaned record when up() fails", async () => {
     const migration = makeMigration({
-      up: jest.fn().mockRejectedValue(new Error("SQL syntax error")),
+      up: vi.fn().mockRejectedValue(new Error("SQL syntax error")),
     });
 
     await expect(
@@ -124,7 +133,7 @@ describe("executeMigrationUp", () => {
   it("should create a runner that supports transaction and query", async () => {
     let capturedRunner: MigrationQueryRunner | null = null;
     const migration = makeMigration({
-      up: jest.fn(async (runner) => {
+      up: vi.fn(async (runner) => {
         capturedRunner = runner;
       }),
     });
@@ -139,14 +148,14 @@ describe("executeMigrationUp", () => {
   it("should wrap runner.transaction in BEGIN/COMMIT", async () => {
     const queries: Array<string> = [];
     const txClient: PostgresQueryClient = {
-      query: jest.fn(async (sql: string) => {
+      query: vi.fn(async (sql: string) => {
         queries.push(sql);
         return { rows: [], rowCount: 0 };
       }),
     };
 
     const migration = makeMigration({
-      up: jest.fn(async (runner) => {
+      up: vi.fn(async (runner) => {
         await runner.transaction(async (ctx) => {
           await ctx.query("INSERT INTO foo VALUES (1)");
         });
@@ -163,14 +172,14 @@ describe("executeMigrationUp", () => {
   it("should ROLLBACK on transaction error", async () => {
     const queries: Array<string> = [];
     const txClient: PostgresQueryClient = {
-      query: jest.fn(async (sql: string) => {
+      query: vi.fn(async (sql: string) => {
         queries.push(sql);
         return { rows: [], rowCount: 0 };
       }),
     };
 
     const migration = makeMigration({
-      up: jest.fn(async (runner) => {
+      up: vi.fn(async (runner) => {
         await runner.transaction(async () => {
           throw new Error("boom");
         });
@@ -190,7 +199,7 @@ describe("executeMigrationUp", () => {
   it("should preserve the original PostgresMigrationError when deleteMigrationRecord also throws during cleanup", async () => {
     const upError = new Error("SQL syntax error");
     const migration = makeMigration({
-      up: jest.fn().mockRejectedValue(upError),
+      up: vi.fn().mockRejectedValue(upError),
     });
     mockDeleteRecord.mockRejectedValue(new Error("cleanup DB connection lost"));
 
@@ -235,7 +244,7 @@ describe("executeMigrationDown", () => {
 
   it("should throw PostgresMigrationError when down() fails", async () => {
     const migration = makeMigration({
-      down: jest.fn().mockRejectedValue(new Error("rollback error")),
+      down: vi.fn().mockRejectedValue(new Error("rollback error")),
     });
 
     await expect(

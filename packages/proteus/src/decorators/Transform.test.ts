@@ -3,6 +3,7 @@ import { Entity } from "./Entity";
 import { Field } from "./Field";
 import { PrimaryKeyField } from "./PrimaryKeyField";
 import { Transform } from "./Transform";
+import { describe, expect, test } from "vitest";
 
 const toUpperCase = (value: unknown) => (value as string).toUpperCase();
 const toLowerCase = (raw: unknown) => (raw as string).toLowerCase();

@@ -1,4 +1,18 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`diffIndexes > should create new index 1`] = `
+[
+  {
+    "autocommit": false,
+    "description": "Create index "idx_email" on "public"."users"",
+    "schema": "public",
+    "severity": "safe",
+    "sql": "CREATE INDEX "idx_email" ON "public"."users" ("email" ASC);",
+    "table": "users",
+    "type": "create_index",
+  },
+]
+`;
 
 exports[`diffIndexes should create new index 1`] = `
 [

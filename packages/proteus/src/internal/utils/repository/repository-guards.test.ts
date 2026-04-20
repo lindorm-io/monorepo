@@ -1,3 +1,4 @@
+import { describe, expect, test } from "vitest";
 import type { EntityMetadata } from "../../entity/types/metadata";
 import { ProteusRepositoryError } from "../../../errors/ProteusRepositoryError";
 import {

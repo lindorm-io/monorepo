@@ -8,78 +8,90 @@ import { DuplicateKeyError } from "../../../errors/DuplicateKeyError";
 import { PostgresRepository } from "./PostgresRepository";
 import type { IEntity } from "../../../../interfaces";
 import type { Constructor } from "@lindorm/types";
+import {
+  beforeEach,
+  describe,
+  expect,
+  test,
+  vi,
+  type Mock,
+  type Mocked,
+  type MockedClass,
+} from "vitest";
 
 // ─── Module Mocks ────────────────────────────────────────────────────────────
 
-jest.mock("../../../entity/classes/EntityManager", () => ({
-  EntityManager: jest.fn(),
+vi.mock("../../../entity/classes/EntityManager", () => ({
+  EntityManager: vi.fn(),
 }));
 
-jest.mock("../../../entity/metadata/get-entity-metadata", () => ({
-  getEntityMetadata: jest.fn(),
+vi.mock("../../../entity/metadata/get-entity-metadata", () => ({
+  getEntityMetadata: vi.fn(),
 }));
 
-const mockSaveOwning = jest.fn();
-const mockSaveInverse = jest.fn();
-const mockDestroy = jest.fn();
-jest.mock("../../../utils/repository/RelationPersister", () => ({
-  RelationPersister: jest.fn().mockImplementation(() => ({
-    saveOwning: mockSaveOwning,
-    saveInverse: mockSaveInverse,
-    destroy: mockDestroy,
-  })),
+const mockSaveOwning = vi.fn();
+const mockSaveInverse = vi.fn();
+const mockDestroy = vi.fn();
+vi.mock("../../../utils/repository/RelationPersister", () => ({
+  RelationPersister: vi.fn(function () {
+    return {
+      saveOwning: mockSaveOwning,
+      saveInverse: mockSaveInverse,
+      destroy: mockDestroy,
+    };
+  }),
 }));
 
-jest.mock("../../../utils/repository/build-pk-predicate", () => ({
-  buildPrimaryKeyPredicate: jest.fn(),
+vi.mock("../../../utils/repository/build-pk-predicate", () => ({
+  buildPrimaryKeyPredicate: vi.fn(),
 }));
 
-jest.mock("../../../utils/repository/repository-guards", () => ({
-  guardAppendOnly: jest.fn(),
-  guardDeleteDateField: jest.fn(),
-  guardExpiryDateField: jest.fn(),
-  guardVersionFields: jest.fn(),
-  guardUpsertBlocked: jest.fn(),
-  validateRelationNames: jest.fn(),
+vi.mock("../../../utils/repository/repository-guards", () => ({
+  guardAppendOnly: vi.fn(),
+  guardDeleteDateField: vi.fn(),
+  guardExpiryDateField: vi.fn(),
+  guardVersionFields: vi.fn(),
+  guardUpsertBlocked: vi.fn(),
+  validateRelationNames: vi.fn(),
 }));
 
-jest.mock("../utils/repository/wrap-pg-error", () => ({
-  wrapPgError: jest.fn(),
+vi.mock("../utils/repository/wrap-pg-error", () => ({
+  wrapPgError: vi.fn(),
 }));
 
-jest.mock("../../../errors/DuplicateKeyError", () => {
-  const { ProteusRepositoryError } = jest.requireActual(
-    "../../../../errors/ProteusRepositoryError",
-  );
+vi.mock("../../../errors/DuplicateKeyError", async () => {
+  const { ProteusRepositoryError } = await vi.importActual<
+    typeof import("../../../errors/ProteusRepositoryError")
+  >("../../../../errors/ProteusRepositoryError");
   class DuplicateKeyError extends ProteusRepositoryError {}
   return { DuplicateKeyError };
 });
 
-jest.mock("../utils/query/compile-upsert", () => ({
-  compileUpsert: jest.fn(),
+vi.mock("../utils/query/compile-upsert", () => ({
+  compileUpsert: vi.fn(),
 }));
 
-jest.mock("../utils/query/compile-insert", () => ({
-  compileInsertBulk: jest.fn(),
+vi.mock("../utils/query/compile-insert", () => ({
+  compileInsertBulk: vi.fn(),
 }));
 
-jest.mock("../utils/query/compile-aggregate", () => ({
-  compileAggregate: jest.fn(),
+vi.mock("../utils/query/compile-aggregate", () => ({
+  compileAggregate: vi.fn(),
 }));
 
-jest.mock("../utils/query/compile-query", () => ({
-  compileQuery: jest.fn(),
+vi.mock("../utils/query/compile-query", () => ({
+  compileQuery: vi.fn(),
 }));
 
-jest.mock("../utils/query/hydrate-returning", () => ({
-  hydrateReturning: jest.fn(),
+vi.mock("../utils/query/hydrate-returning", () => ({
+  hydrateReturning: vi.fn(),
 }));
 
-jest.mock("./PostgresCursor", () => ({
-  PostgresCursor: jest.fn(),
+vi.mock("./PostgresCursor", () => ({
+  PostgresCursor: vi.fn(),
 }));
 
-// ─── Import mocks after jest.mock ────────────────────────────────────────────
+// ─── Import mocks after vi.mock ────────────────────────────────────────────
 
 import { EntityManager } from "../../../entity/classes/EntityManager";
 import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata";
@@ -207,60 +219,60 @@ const mockMetadataWithRelations = {
 
 const createMockLogger = (): ILogger =>
   ({
-    child: jest.fn().mockReturnThis(),
-    silly: jest.fn(),
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
+    child: vi.fn().mockReturnThis(),
+    silly: vi.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
   }) as unknown as ILogger;
 
-const createMockExecutor = (): jest.Mocked<IRepositoryExecutor<TestEntity>> => ({
-  executeInsert: jest.fn(),
-  executeUpdate: jest.fn(),
-  executeDelete: jest.fn(),
-  executeSoftDelete: jest.fn(),
-  executeRestore: jest.fn(),
-  executeDeleteExpired: jest.fn(),
-  executeTtl: jest.fn(),
-  executeFind: jest.fn(),
-  executeCount: jest.fn(),
-  executeExists: jest.fn(),
-  executeIncrement: jest.fn(),
-  executeDecrement: jest.fn(),
-  executeInsertBulk: jest.fn(),
-  executeUpdateMany: jest.fn(),
+const createMockExecutor = (): Mocked<IRepositoryExecutor<TestEntity>> => ({
+  executeInsert: vi.fn(),
+  executeUpdate: vi.fn(),
+  executeDelete: vi.fn(),
+  executeSoftDelete: vi.fn(),
+  executeRestore: vi.fn(),
+  executeDeleteExpired: vi.fn(),
+  executeTtl: vi.fn(),
+  executeFind: vi.fn(),
+  executeCount: vi.fn(),
+  executeExists: vi.fn(),
+  executeIncrement: vi.fn(),
+  executeDecrement: vi.fn(),
+  executeInsertBulk: vi.fn(),
+  executeUpdateMany: vi.fn(),
 });
 
 const createMockClient = (): PostgresQueryClient =>
   ({
-    query: jest.fn(),
+    query: vi.fn(),
   }) as unknown as PostgresQueryClient;
 
 const createMockEntityManager = (overrides: Record<string, any> = {}): any => ({
   target: TestEntity,
   updateStrategy: "update",
-  create: jest.fn(),
-  copy: jest.fn(),
-  insert: jest.fn(),
-  update: jest.fn(),
-  clone: jest.fn(),
-  validate: jest.fn(),
-  beforeInsert: jest.fn(),
-  afterInsert: jest.fn(),
-  beforeSave: jest.fn(),
-  afterSave: jest.fn(),
-  beforeUpdate: jest.fn(),
-  afterUpdate: jest.fn(),
-  beforeDestroy: jest.fn(),
-  afterDestroy: jest.fn(),
-  beforeSoftDestroy: jest.fn(),
-  afterSoftDestroy: jest.fn(),
-  afterLoad: jest.fn(),
-  getSaveStrategy: jest.fn(),
-  versionUpdate: jest.fn(),
-  versionCopy: jest.fn(),
-  verifyReadonly: jest.fn(),
+  create: vi.fn(),
+  copy: vi.fn(),
+  insert: vi.fn(),
+  update: vi.fn(),
+  clone: vi.fn(),
+  validate: vi.fn(),
+  beforeInsert: vi.fn(),
+  afterInsert: vi.fn(),
+  beforeSave: vi.fn(),
+  afterSave: vi.fn(),
+  beforeUpdate: vi.fn(),
+  afterUpdate: vi.fn(),
+  beforeDestroy: vi.fn(),
+  afterDestroy: vi.fn(),
+  beforeSoftDestroy: vi.fn(),
+  afterSoftDestroy: vi.fn(),
+  afterLoad: vi.fn(),
+  getSaveStrategy: vi.fn(),
+  versionUpdate: vi.fn(),
+  versionCopy: vi.fn(),
+  verifyReadonly: vi.fn(),
   ...overrides,
 });
 
@@ -288,7 +300,7 @@ const createRepository = (
     metadata?: EntityMetadata;
     executorOverrides?: Record<string, any>;
     entityManagerOverrides?: Record<string, any>;
-    withImplicitTransaction?: jest.Mock;
+    withImplicitTransaction?: Mock;
   } = {},
 ) => {
   const meta = overrides.metadata ?? mockMetadata;
@@ -303,20 +315,22 @@ const createRepository = (
   }
 
   // Wire up mocks
-  (getEntityMetadata as jest.Mock).mockReturnValue(meta);
-  const MockEntityManager = EntityManager as jest.MockedClass<
+  (getEntityMetadata as Mock).mockReturnValue(meta);
+  const MockEntityManager = EntityManager as MockedClass<
     typeof EntityManager<TestEntity>
   >;
-  MockEntityManager.mockImplementation(() => mockEM);
+  MockEntityManager.mockImplementation(function () {
+    return mockEM;
+  });
 
-  const withImplicitTransaction: jest.Mock =
+  const withImplicitTransaction: Mock =
     overrides.withImplicitTransaction ??
-    jest
+    vi
       .fn()
       .mockImplementation(async (fn: any) => fn({ client, executor, repositoryFactory }));
 
-  const repositoryFactory = jest.fn();
-  const queryBuilderFactory = jest.fn().mockReturnValue({ build: jest.fn() });
+  const repositoryFactory = vi.fn();
+  const queryBuilderFactory = vi.fn().mockReturnValue({ build: vi.fn() });
 
   const repo = new PostgresRepository<TestEntity>({
     target: TestEntity,
@@ -344,21 +358,23 @@ const createRepository = (
 
 describe("PostgresRepository", () => {
   beforeEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
     // Re-wire RelationPersister constructor after resetAllMocks
-    (RelationPersister as unknown as jest.Mock).mockImplementation(() => ({
-      saveOwning: mockSaveOwning,
-      saveInverse: mockSaveInverse,
-      destroy: mockDestroy,
-    }));
+    (RelationPersister as unknown as Mock).mockImplementation(function () {
+      return {
+        saveOwning: mockSaveOwning,
+        saveInverse: mockSaveInverse,
+        destroy: mockDestroy,
+      };
+    });
     // Default: wrapPgError re-throws as ProteusRepositoryError
-    (wrapPgError as unknown as jest.Mock).mockImplementation(
+    (wrapPgError as unknown as Mock).mockImplementation(
       (error: unknown, message: string) => {
         throw new ProteusRepositoryError(message);
       },
     );
     // Default: buildPrimaryKeyPredicate returns { id: entity.id }
-    (buildPrimaryKeyPredicate as jest.Mock).mockImplementation((entity: any) => ({
+    (buildPrimaryKeyPredicate as Mock).mockImplementation((entity: any) => ({
       id: entity.id,
     }));
     // Default: relation helpers resolve immediately
@@ -509,9 +525,9 @@ describe("PostgresRepository", () => {
     });
 
     test("calls validateRelationNames when relations option is provided", async () => {
-      const { validateRelationNames: mockValidate } = jest.requireMock(
-        "../../../utils/repository/repository-guards",
-      );
+      const { validateRelationNames: mockValidate } = await vi.importMock<
+        typeof import("../../../utils/repository/repository-guards")
+      >("../../../utils/repository/repository-guards");
       const { repo, executor } = createRepository();
       executor.executeFind.mockResolvedValue([]);
 
@@ -521,9 +537,9 @@ describe("PostgresRepository", () => {
     });
 
     test("propagates validateRelationNames error", async () => {
-      const { validateRelationNames: mockValidate } = jest.requireMock(
-        "../../../utils/repository/repository-guards",
-      );
+      const { validateRelationNames: mockValidate } = await vi.importMock<
+        typeof import("../../../utils/repository/repository-guards")
+      >("../../../utils/repository/repository-guards");
       mockValidate.mockImplementation(() => {
         throw new ProteusRepositoryError('Unknown relation "unknown"');
       });
@@ -796,7 +812,7 @@ describe("PostgresRepository", () => {
         /* expected */
       }
 
-      const [err, msg] = (wrapPgError as unknown as jest.Mock).mock.calls[0];
+      const [err, msg] = (wrapPgError as unknown as Mock).mock.calls[0];
       expect(err).toBe(dbError);
       expect(msg).toContain("TestEntity");
     });
@@ -811,15 +827,15 @@ describe("PostgresRepository", () => {
         text: "INSERT INTO ... VALUES ...",
         params: ["val1", "val2"],
       };
-      (compileInsertBulk as jest.Mock).mockReturnValue(compiledSql);
-      (client.query as jest.Mock).mockResolvedValue({
+      (compileInsertBulk as Mock).mockReturnValue(compiledSql);
+      (client.query as Mock).mockResolvedValue({
         rows: [
           { id: "entity-id-1", name: "Entity A" },
           { id: "entity-id-2", name: "Entity B" },
         ],
         rowCount: 2,
       });
-      (hydrateReturning as jest.Mock)
+      (hydrateReturning as Mock)
         .mockReturnValueOnce(entityA)
         .mockReturnValueOnce(entityB);
 
@@ -1003,8 +1019,10 @@ describe("PostgresRepository", () => {
       });
 
       // Configure wrapPgError to pass through ProteusError instances (mirrors real implementation)
-      const { ProteusError } = jest.requireActual("../../../../errors/ProteusError");
-      (wrapPgError as unknown as jest.Mock).mockImplementation(
+      const { ProteusError } = await vi.importActual<
+        typeof import("../../../../errors/ProteusError")
+      >("../../../../errors/ProteusError");
+      (wrapPgError as unknown as Mock).mockImplementation(
         (error: unknown, message: string) => {
           if (error instanceof ProteusError) throw error;
           throw new ProteusRepositoryError(message);
@@ -1131,7 +1149,7 @@ describe("PostgresRepository", () => {
       executor.executeUpdate.mockResolvedValue(hydrated);
 
       // wrapPgError should re-throw as DuplicateKeyError for unique violations
-      (wrapPgError as unknown as jest.Mock).mockImplementation((error: unknown) => {
+      (wrapPgError as unknown as Mock).mockImplementation((error: unknown) => {
         if (error instanceof DuplicateKeyError) throw error;
         throw new ProteusRepositoryError("wrapped");
       });
@@ -1287,7 +1305,7 @@ describe("PostgresRepository", () => {
 
   describe("softDestroy", () => {
     test("throws guardDeleteDateField error when guard rejects", async () => {
-      (guardDeleteDateField as jest.Mock).mockImplementation(() => {
+      (guardDeleteDateField as Mock).mockImplementation(() => {
         throw new ProteusRepositoryError(
           'softDestroy() requires @DeleteDateField on "MockEntity"',
         );
@@ -1385,7 +1403,7 @@ describe("PostgresRepository", () => {
     });
 
     test("propagates guard error", async () => {
-      (guardDeleteDateField as jest.Mock).mockImplementation(() => {
+      (guardDeleteDateField as Mock).mockImplementation(() => {
         throw new ProteusRepositoryError(
           'softDelete() requires @DeleteDateField on "MockEntity"',
         );
@@ -1428,7 +1446,7 @@ describe("PostgresRepository", () => {
     });
 
     test("propagates guard error", async () => {
-      (guardExpiryDateField as jest.Mock).mockImplementation(() => {
+      (guardExpiryDateField as Mock).mockImplementation(() => {
         throw new ProteusRepositoryError(
           'ttl() requires @ExpiryDateField on "MockEntity"',
         );
@@ -1455,7 +1473,7 @@ describe("PostgresRepository", () => {
     });
 
     test("propagates guard error", async () => {
-      (guardVersionFields as jest.Mock).mockImplementation(() => {
+      (guardVersionFields as Mock).mockImplementation(() => {
         throw new ProteusRepositoryError(
           "versions() requires @VersionStartDateField and @VersionEndDateField",
         );
@@ -1719,12 +1737,12 @@ describe("PostgresRepository", () => {
 
       mockEM.insert.mockResolvedValue(entityA);
       const compiledSql = { text: "INSERT INTO ... ON CONFLICT ...", params: ["val1"] };
-      (compileUpsert as jest.Mock).mockReturnValue(compiledSql);
-      (client.query as jest.Mock).mockResolvedValue({
+      (compileUpsert as Mock).mockReturnValue(compiledSql);
+      (client.query as Mock).mockResolvedValue({
         rows: [{ id: "entity-id-1", name: "Entity A" }],
         rowCount: 1,
       });
-      (hydrateReturning as jest.Mock).mockReturnValue(entityA);
+      (hydrateReturning as Mock).mockReturnValue(entityA);
 
       const result = await repo.upsert(entityA);
 
@@ -1752,12 +1770,12 @@ describe("PostgresRepository", () => {
       mockEM.validate.mockImplementation(() => {
         callOrder.push("validate");
       });
-      (compileUpsert as jest.Mock).mockImplementation(() => {
+      (compileUpsert as Mock).mockImplementation(() => {
         callOrder.push("compileUpsert");
         return { text: "SQL", params: [] };
       });
-      (client.query as jest.Mock).mockResolvedValue({ rows: [{}], rowCount: 1 });
-      (hydrateReturning as jest.Mock).mockReturnValue(entityA);
+      (client.query as Mock).mockResolvedValue({ rows: [{}], rowCount: 1 });
+      (hydrateReturning as Mock).mockReturnValue(entityA);
 
       await repo.upsert(entityA);
 
@@ -1767,9 +1785,9 @@ describe("PostgresRepository", () => {
     test("calls guardUpsertBlocked with metadata", async () => {
       const { repo, client, mockEM } = createRepository();
       mockEM.insert.mockResolvedValue(entityA);
-      (compileUpsert as jest.Mock).mockReturnValue({ text: "SQL", params: [] });
-      (client.query as jest.Mock).mockResolvedValue({ rows: [{}], rowCount: 1 });
-      (hydrateReturning as jest.Mock).mockReturnValue(entityA);
+      (compileUpsert as Mock).mockReturnValue({ text: "SQL", params: [] });
+      (client.query as Mock).mockResolvedValue({ rows: [{}], rowCount: 1 });
+      (hydrateReturning as Mock).mockReturnValue(entityA);
 
       await repo.upsert(entityA);
 
@@ -1777,7 +1795,7 @@ describe("PostgresRepository", () => {
     });
 
     test("propagates guardUpsertBlocked error", async () => {
-      (guardUpsertBlocked as jest.Mock).mockImplementation(() => {
+      (guardUpsertBlocked as Mock).mockImplementation(() => {
         throw new ProteusRepositoryError(
           'upsert() is not supported on versioned entity "MockEntity"',
         );
@@ -1793,9 +1811,9 @@ describe("PostgresRepository", () => {
       const { repo, client, mockEM } = createRepository();
 
       mockEM.insert.mockResolvedValue(prepared);
-      (compileUpsert as jest.Mock).mockReturnValue({ text: "UPSERT SQL", params: [] });
-      (client.query as jest.Mock).mockResolvedValue({ rows: [{}], rowCount: 1 });
-      (hydrateReturning as jest.Mock).mockReturnValue(hydrated);
+      (compileUpsert as Mock).mockReturnValue({ text: "UPSERT SQL", params: [] });
+      (client.query as Mock).mockResolvedValue({ rows: [{}], rowCount: 1 });
+      (hydrateReturning as Mock).mockReturnValue(hydrated);
 
       await repo.upsert(entityA);
 
@@ -1816,12 +1834,12 @@ describe("PostgresRepository", () => {
       mockEM.afterInsert.mockImplementation(async () => {
         callOrder.push("afterInsert");
       });
-      (compileUpsert as jest.Mock).mockReturnValue({ text: "UPSERT SQL", params: [] });
-      (client.query as jest.Mock).mockImplementation(async () => {
+      (compileUpsert as Mock).mockReturnValue({ text: "UPSERT SQL", params: [] });
+      (client.query as Mock).mockImplementation(async () => {
         callOrder.push("query");
         return { rows: [{}], rowCount: 1 };
       });
-      (hydrateReturning as jest.Mock).mockReturnValue(hydrated);
+      (hydrateReturning as Mock).mockReturnValue(hydrated);
 
       await repo.upsert(entityA);
 
@@ -1832,7 +1850,7 @@ describe("PostgresRepository", () => {
     test("upsertOne fires beforeInsert and afterInsert entity events", async () => {
       const prepared = { ...entityA, id: "prepared-id" } as TestEntity;
       const hydrated = { ...entityA, id: "hydrated-id" } as TestEntity;
-      const emitEntity = jest.fn().mockResolvedValue(undefined);
+      const emitEntity = vi.fn().mockResolvedValue(undefined);
 
       const meta = mockMetadata;
       const executor = createMockExecutor();
@@ -1840,14 +1858,16 @@ describe("PostgresRepository", () => {
       const logger = createMockLogger();
       const mockEM = createMockEntityManager();
 
-      (getEntityMetadata as jest.Mock).mockReturnValue(meta);
-      const MockEntityManager = EntityManager as jest.MockedClass<
+      (getEntityMetadata as Mock).mockReturnValue(meta);
+      const MockEntityManager = EntityManager as MockedClass<
         typeof EntityManager<TestEntity>
       >;
-      MockEntityManager.mockImplementation(() => mockEM);
+      MockEntityManager.mockImplementation(function () {
+        return mockEM;
+      });
 
-      const repositoryFactory = jest.fn();
-      const withImplicitTransaction = jest
+      const repositoryFactory = vi.fn();
+      const withImplicitTransaction = vi
         .fn()
         .mockImplementation(async (fn: any) =>
           fn({ client, executor, repositoryFactory }),
@@ -1856,7 +1876,7 @@ describe("PostgresRepository", () => {
       const repo = new PostgresRepository<TestEntity>({
         target: TestEntity,
         executor,
-        queryBuilderFactory: jest.fn().mockReturnValue({ build: jest.fn() }),
+        queryBuilderFactory: vi.fn().mockReturnValue({ build: vi.fn() }),
         client,
         namespace: null,
         logger,
@@ -1866,9 +1886,9 @@ describe("PostgresRepository", () => {
       });
 
       mockEM.insert.mockResolvedValue(prepared);
-      (compileUpsert as jest.Mock).mockReturnValue({ text: "UPSERT SQL", params: [] });
-      (client.query as jest.Mock).mockResolvedValue({ rows: [{}], rowCount: 1 });
-      (hydrateReturning as jest.Mock).mockReturnValue(hydrated);
+      (compileUpsert as Mock).mockReturnValue({ text: "UPSERT SQL", params: [] });
+      (client.query as Mock).mockResolvedValue({ rows: [{}], rowCount: 1 });
+      (hydrateReturning as Mock).mockReturnValue(hydrated);
 
       await repo.upsert(entityA);
 
@@ -1887,7 +1907,7 @@ describe("PostgresRepository", () => {
 
   describe("aggregates", () => {
     beforeEach(() => {
-      (compileAggregate as jest.Mock).mockReturnValue({
+      (compileAggregate as Mock).mockReturnValue({
         text: "SELECT SUM(...)",
         params: [],
       });
@@ -1895,7 +1915,7 @@ describe("PostgresRepository", () => {
 
     test("sum compiles and returns numeric result", async () => {
       const { repo, client } = createRepository();
-      (client.query as jest.Mock).mockResolvedValue({
+      (client.query as Mock).mockResolvedValue({
         rows: [{ result: "42" }],
         rowCount: 1,
       });
@@ -1914,7 +1934,7 @@ describe("PostgresRepository", () => {
 
     test("average compiles with AVG", async () => {
       const { repo, client } = createRepository();
-      (client.query as jest.Mock).mockResolvedValue({
+      (client.query as Mock).mockResolvedValue({
         rows: [{ result: "3.14" }],
         rowCount: 1,
       });
@@ -1933,7 +1953,7 @@ describe("PostgresRepository", () => {
 
     test("minimum compiles with MIN", async () => {
       const { repo, client } = createRepository();
-      (client.query as jest.Mock).mockResolvedValue({
+      (client.query as Mock).mockResolvedValue({
         rows: [{ result: "1" }],
         rowCount: 1,
       });
@@ -1952,7 +1972,7 @@ describe("PostgresRepository", () => {
 
     test("maximum compiles with MAX", async () => {
       const { repo, client } = createRepository();
-      (client.query as jest.Mock).mockResolvedValue({
+      (client.query as Mock).mockResolvedValue({
         rows: [{ result: "100" }],
         rowCount: 1,
       });
@@ -1971,7 +1991,7 @@ describe("PostgresRepository", () => {
 
     test("returns null when no rows match", async () => {
       const { repo, client } = createRepository();
-      (client.query as jest.Mock).mockResolvedValue({
+      (client.query as Mock).mockResolvedValue({
         rows: [{ result: null }],
         rowCount: 1,
       });
@@ -1983,7 +2003,7 @@ describe("PostgresRepository", () => {
 
     test("passes criteria as predicate", async () => {
       const { repo, client } = createRepository();
-      (client.query as jest.Mock).mockResolvedValue({
+      (client.query as Mock).mockResolvedValue({
         rows: [{ result: "5" }],
         rowCount: 1,
       });

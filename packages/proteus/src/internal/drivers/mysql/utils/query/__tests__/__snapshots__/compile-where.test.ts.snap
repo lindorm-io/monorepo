@@ -1,4 +1,36 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`compileWhere > should compile $all using JSON_CONTAINS 1`] = `"WHERE JSON_CONTAINS(\`t0\`.\`tags\`, ?)"`;
+
+exports[`compileWhere > should compile $between 1`] = `"WHERE \`t0\`.\`age\` BETWEEN ? AND ?"`;
+
+exports[`compileWhere > should compile $contained using reversed JSON_CONTAINS 1`] = `"WHERE JSON_CONTAINS(?, \`t0\`.\`tags\`)"`;
+
+exports[`compileWhere > should compile $eq: null to IS NULL 1`] = `"WHERE \`t0\`.\`name\` IS NULL"`;
+
+exports[`compileWhere > should compile $has using JSON_CONTAINS 1`] = `"WHERE JSON_CONTAINS(\`t0\`.\`data\`, CAST(? AS JSON))"`;
+
+exports[`compileWhere > should compile $ilike using LOWER() wrapping 1`] = `"WHERE LOWER(\`t0\`.\`name\`) LIKE LOWER(?)"`;
+
+exports[`compileWhere > should compile $in with values 1`] = `"WHERE \`t0\`.\`name\` IN (?, ?)"`;
+
+exports[`compileWhere > should compile $length using JSON_LENGTH 1`] = `"WHERE (\`t0\`.\`tags\` IS NOT NULL AND COALESCE(JSON_LENGTH(\`t0\`.\`tags\`), 0) = ?)"`;
+
+exports[`compileWhere > should compile $or groups 1`] = `"WHERE (\`t0\`.\`name\` = ? OR \`t0\`.\`name\` = ?)"`;
+
+exports[`compileWhere > should compile $overlap using JSON_OVERLAPS 1`] = `"WHERE JSON_OVERLAPS(\`t0\`.\`tags\`, ?)"`;
+
+exports[`compileWhere > should compile $regex as REGEXP (string pattern) 1`] = `"WHERE \`t0\`.\`name\` REGEXP ?"`;
+
+exports[`compileWhere > should compile $regex with RegExp object by extracting .source 1`] = `"WHERE \`t0\`.\`name\` REGEXP ?"`;
+
+exports[`compileWhere > should compile comparison operators 1`] = `"WHERE (\`t0\`.\`age\` > ? AND \`t0\`.\`age\` <= ?)"`;
+
+exports[`compileWhere > should compile empty $in to FALSE 1`] = `"WHERE FALSE"`;
+
+exports[`compileWhere > should compile simple equality 1`] = `"WHERE \`t0\`.\`name\` = ?"`;
+
+exports[`compileWhere > should use column name mapping 1`] = `"WHERE \`t0\`.\`email_address\` = ?"`;
 
 exports[`compileWhere should compile $all using JSON_CONTAINS 1`] = `"WHERE JSON_CONTAINS(\`t0\`.\`tags\`, ?)"`;
 

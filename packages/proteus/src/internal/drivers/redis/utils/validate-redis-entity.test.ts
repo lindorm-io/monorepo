@@ -4,19 +4,20 @@
 // can be satisfied without requiring actual @Entity-decorated classes.
 // By default returns metadata with a single PK ("id") — a compatible foreign entity.
 
-jest.mock("../../../entity/metadata/get-entity-metadata", () => ({
-  getEntityMetadata: jest.fn(() => ({
+vi.mock("../../../entity/metadata/get-entity-metadata", () => ({
+  getEntityMetadata: vi.fn(() => ({
     primaryKeys: ["id"],
     relations: [],
     entity: { name: "MockForeignEntity" },
   })),
 }));
 
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import type { EntityMetadata } from "../../../entity/types/metadata";
 import { NotSupportedError } from "../../../../errors/NotSupportedError";
 import { RedisDriverError } from "../errors/RedisDriverError";
 import { validateRedisEntity, isRedisCompatibleEntity } from "./validate-redis-entity";
+import { describe, expect, test, vi, type Mock } from "vitest";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

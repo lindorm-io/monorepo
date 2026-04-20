@@ -5,6 +5,7 @@ import { mysqlDialect } from "../../drivers/mysql/utils/mysql-dialect";
 import { sqliteDialect } from "../../drivers/sqlite/utils/sqlite-dialect";
 import type { SqlDialect } from "./sql-dialect";
 import { compileDeleteExpired } from "./compile-delete-expired";
+import { describe, expect, test } from "vitest";
 
 const dialects: Array<[string, SqlDialect]> = [
   ["postgres", postgresDialect],

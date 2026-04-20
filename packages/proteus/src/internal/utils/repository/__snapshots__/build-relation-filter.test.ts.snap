@@ -1,4 +1,35 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`buildRelationFilter > happy path > builds filter for multi-key mapping 1`] = `
+{
+  "tenantId": "tenant-1",
+  "userId": "user-1",
+}
+`;
+
+exports[`buildRelationFilter > happy path > builds filter from findKeys mapping 1`] = `
+{
+  "tagId": "entity-1",
+}
+`;
+
+exports[`buildRelationFilter > null value handling > coerces undefined entity field to null in filter 1`] = `
+{
+  "tagId": null,
+}
+`;
+
+exports[`buildRelationFilter > null value handling > preserves non-null values 1`] = `
+{
+  "authorId": "abc-999",
+}
+`;
+
+exports[`buildRelationFilter > null value handling > preserves null entity field as null in filter 1`] = `
+{
+  "tagId": null,
+}
+`;
 
 exports[`buildRelationFilter happy path builds filter for multi-key mapping 1`] = `
 {

@@ -1,17 +1,18 @@
 import type { MetaHook } from "../types/metadata";
 import { runHooksSync } from "./run-hooks-sync";
+import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 describe("runHooksSync", () => {
   const hooks: Array<MetaHook> = [
-    { decorator: "OnCreate", callback: jest.fn() },
-    { decorator: "OnValidate", callback: jest.fn() },
-    { decorator: "OnCreate", callback: jest.fn() },
-    { decorator: "OnHydrate", callback: jest.fn() },
+    { decorator: "OnCreate", callback: vi.fn() },
+    { decorator: "OnValidate", callback: vi.fn() },
+    { decorator: "OnCreate", callback: vi.fn() },
+    { decorator: "OnHydrate", callback: vi.fn() },
   ];
 
   beforeEach(() => {
     for (const h of hooks) {
-      (h.callback as jest.Mock).mockClear();
+      (h.callback as Mock).mockClear();
     }
   });
 

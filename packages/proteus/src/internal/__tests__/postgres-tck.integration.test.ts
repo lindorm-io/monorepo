@@ -4,7 +4,7 @@
 // Uses a random schema for isolation; teardown drops the schema.
 
 import { randomBytes } from "node:crypto";
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { Client } from "pg";
 import type { Constructor } from "@lindorm/types";
 import type { IEntity } from "../../interfaces";
@@ -13,6 +13,7 @@ import { PostgresDriver } from "../drivers/postgres/classes/PostgresDriver";
 import type { TckDriverFactory, TckDriverHandle } from "../__fixtures__/tck/types";
 import { createTckAmphora } from "../__fixtures__/tck/create-tck-amphora";
 import { runTck } from "../__fixtures__/tck/run-tck";
+import { describe } from "vitest";
 
 jest.setTimeout(120_000);
 

@@ -1,7 +1,8 @@
-import { createMockProteusSource } from "./create-mock-proteus-source";
+import { createMockProteusSource } from "./vitest";
+import { describe, expect, it, vi } from "vitest";
 
 describe("createMockProteusSource", () => {
-  it("should create a mock source with all methods as jest.fn()", () => {
+  it("should create a mock source with all methods as vi.fn()", () => {
     const source = createMockProteusSource();
 
     expect(source).toMatchSnapshot();
@@ -21,7 +22,7 @@ describe("createMockProteusSource", () => {
 
     expect(repo).toBeDefined();
     expect(repo.find).toBeDefined();
-    expect(jest.isMockFunction(repo.find)).toBe(true);
+    expect(vi.isMockFunction(repo.find)).toBe(true);
   });
 
   it("should return a new mock session from session()", () => {
@@ -32,7 +33,7 @@ describe("createMockProteusSource", () => {
     expect(session).not.toBe(source);
     expect(session.namespace).toBeNull();
     expect(session.driverType).toBe("memory");
-    expect(jest.isMockFunction(session.repository)).toBe(true);
+    expect(vi.isMockFunction(session.repository)).toBe(true);
   });
 
   it("should resolve true for ping()", async () => {

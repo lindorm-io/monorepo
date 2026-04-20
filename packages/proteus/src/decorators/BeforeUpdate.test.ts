@@ -2,8 +2,9 @@ import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metada
 import { BeforeUpdate } from "./BeforeUpdate";
 import { Entity } from "./Entity";
 import { PrimaryKeyField } from "./PrimaryKeyField";
+import { describe, expect, test, vi } from "vitest";
 
-const beforeUpdateCallback = jest.fn();
+const beforeUpdateCallback = vi.fn();
 
 @Entity({ name: "BeforeUpdateDecorated" })
 @BeforeUpdate(beforeUpdateCallback)

@@ -1,15 +1,16 @@
 import type { ScopedName } from "../../../types/types";
 import { buildScanPattern } from "./build-scan-pattern";
+import { beforeEach, describe, expect, test, vi, type MockedFunction } from "vitest";
 
 // ─── Module Mocks ────────────────────────────────────────────────────────────
 
-jest.mock("../../../entity/utils/get-entity-name", () => ({
-  getEntityName: jest.fn(),
+vi.mock("../../../entity/utils/get-entity-name", () => ({
+  getEntityName: vi.fn(),
 }));
 
 import { getEntityName } from "../../../entity/utils/get-entity-name";
 
-const mockGetEntityName = getEntityName as jest.MockedFunction<typeof getEntityName>;
+const mockGetEntityName = getEntityName as MockedFunction<typeof getEntityName>;
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -29,7 +30,7 @@ const makeScopedName = (overrides: Partial<ScopedName> = {}): ScopedName => ({
 
 describe("buildScanPattern", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test("should build pattern without namespace", () => {

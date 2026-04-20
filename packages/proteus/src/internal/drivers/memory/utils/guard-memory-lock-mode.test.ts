@@ -1,5 +1,6 @@
 import { NotSupportedError } from "../../../../errors/NotSupportedError";
 import { guardMemoryLockMode } from "./guard-memory-lock-mode";
+import { describe, expect, test } from "vitest";
 
 describe("guardMemoryLockMode", () => {
   test("should allow pessimistic_read", () => {

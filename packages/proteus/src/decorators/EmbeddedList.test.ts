@@ -7,6 +7,7 @@ import { Entity } from "./Entity";
 import { Field } from "./Field";
 import { Nullable } from "./Nullable";
 import { PrimaryKeyField } from "./PrimaryKeyField";
+import { describe, expect, test } from "vitest";
 
 // ─── Test Fixtures ──────────────────────────────────────────────────────────
 

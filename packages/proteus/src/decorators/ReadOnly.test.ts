@@ -3,6 +3,7 @@ import { Entity } from "./Entity";
 import { Field } from "./Field";
 import { PrimaryKeyField } from "./PrimaryKeyField";
 import { ReadOnly } from "./ReadOnly";
+import { describe, expect, test } from "vitest";
 
 @Entity({ name: "ReadOnlyDecorated" })
 class ReadOnlyDecorated {

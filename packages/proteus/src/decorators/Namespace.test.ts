@@ -2,6 +2,7 @@ import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metada
 import { Entity } from "./Entity";
 import { Namespace } from "./Namespace";
 import { PrimaryKeyField } from "./PrimaryKeyField";
+import { describe, expect, test } from "vitest";
 
 @Namespace("tenant")
 @Entity({ name: "NamespacedEntity" })

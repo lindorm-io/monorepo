@@ -1,10 +1,11 @@
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { ProteusSession } from "./ProteusSession";
 import { ProteusSource } from "./ProteusSource";
 import { Entity } from "../decorators/Entity";
 import { Field } from "../decorators/Field";
 import { PrimaryKeyField } from "../decorators/PrimaryKeyField";
 import { Filter } from "../decorators/Filter";
+import { describe, expect, test, vi } from "vitest";
 
 @Entity({ name: "SessionEntity" })
 @Filter({ name: "tenant", condition: { tenantId: "$tenantId" } })
@@ -154,7 +155,7 @@ describe("ProteusSession", () => {
       await source.connect();
       await source.setup();
 
-      const listener = jest.fn();
+      const listener = vi.fn();
       source.on("entity:after-insert", listener);
 
       const session = source.session();
@@ -179,7 +180,7 @@ describe("ProteusSession", () => {
       await source.connect();
       await source.setup();
 
-      const listener = jest.fn();
+      const listener = vi.fn();
       source.on("entity:before-insert", listener);
 
       const session = source.session();
@@ -200,7 +201,7 @@ describe("ProteusSession", () => {
       await source.setup();
 
       const requestContext = { requestId: "req-456", actor: "user-1" };
-      const listener = jest.fn();
+      const listener = vi.fn();
       source.on("entity:after-insert", listener);
 
       const session = source.session({ context: requestContext });
@@ -237,7 +238,7 @@ describe("ProteusSession", () => {
       } as any);
 
       const destroyContext = { requestId: "req-789", actor: "user-2" };
-      const listener = jest.fn();
+      const listener = vi.fn();
       source.on("entity:after-destroy", listener);
 
       const destroySession = source.session({ context: destroyContext });
@@ -259,7 +260,7 @@ describe("ProteusSession", () => {
       await source.connect();
       await source.setup();
 
-      const listener = jest.fn();
+      const listener = vi.fn();
       source.on("entity:after-insert", listener);
 
       const session = source.session();

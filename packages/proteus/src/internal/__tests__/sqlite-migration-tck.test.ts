@@ -1,9 +1,10 @@
+import { afterAll, beforeAll, describe } from "vitest";
 // SQLite Migration TCK Harness
 //
 // Runs the migration TCK suite against the SQLite driver.
 // No external services required — uses a temp file database.
 
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import type { ILogger } from "@lindorm/logger";
 import { randomUUID } from "node:crypto";
 import { writeFile, rm } from "node:fs/promises";

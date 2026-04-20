@@ -7,6 +7,7 @@ import { ReadOnly } from "../../../decorators/ReadOnly";
 import { UpdateDateField } from "../../../decorators/UpdateDateField";
 import { VersionField } from "../../../decorators/VersionField";
 import { removeReadonlyDataFields } from "./remove-readonly-data-fields";
+import { describe, expect, test } from "vitest";
 
 @Entity({ name: "RemoveReadonlyEntity" })
 class RemoveReadonlyEntity {

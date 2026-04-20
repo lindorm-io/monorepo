@@ -1,8 +1,9 @@
 import { Amphora } from "@lindorm/amphora";
 import { KryptosKit } from "@lindorm/kryptos";
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { ProteusError } from "../../../errors";
 import { encryptFieldValue } from "./encrypt-field-value";
+import { describe, expect, test } from "vitest";
 
 const createTestAmphora = () => {
   const key = KryptosKit.generate.enc.oct({

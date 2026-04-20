@@ -1,3 +1,4 @@
+import { describe, expect, test } from "vitest";
 import type { EntityMetadata, MetaRelation } from "../../entity/types/metadata";
 import type { Constructor } from "@lindorm/types";
 import type { IEntity } from "../../../interfaces";

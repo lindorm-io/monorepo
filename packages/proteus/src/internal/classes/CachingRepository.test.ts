@@ -11,15 +11,17 @@ import type { EntityMetadata } from "../entity/types/metadata";
 import type { IEntity } from "../../interfaces";
 import { ProteusRepositoryError } from "../../errors/ProteusRepositoryError";
 import { CachingRepository } from "./CachingRepository";
+import { beforeEach, describe, expect, it, vi, type Mock, type Mocked } from "vitest";
+import { beforeEach, describe, expect, it, vi, type Mock, type Mocked } from "vitest";
 
 // ─── Module Mocks ─────────────────────────────────────────────────────────────
 
-jest.mock("../entity/utils/default-hydrate-entity", () => ({
-  defaultHydrateEntity: jest.fn(),
+vi.mock("../entity/utils/default-hydrate-entity", () => ({
+  defaultHydrateEntity: vi.fn(),
 }));
 
-jest.mock("../entity/utils/run-hooks-async", () => ({
-  runHooksAsync: jest.fn().mockResolvedValue(undefined),
+vi.mock("../entity/utils/run-hooks-async", () => ({
+  runHooksAsync: vi.fn().mockResolvedValue(undefined),
 }));
 
 import { defaultHydrateEntity } from "../entity/utils/default-hydrate-entity";
@@ -39,59 +41,59 @@ class TestEntity implements IEntity {
 
 const createMockLogger = (): ILogger =>
   ({
-    child: jest.fn().mockReturnThis(),
-    silly: jest.fn(),
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
+    child: vi.fn().mockReturnThis(),
+    silly: vi.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
   }) as unknown as ILogger;
 
-const createMockAdapter = (): jest.Mocked<ICacheAdapter> => ({
-  get: jest.fn().mockResolvedValue(null),
-  set: jest.fn().mockResolvedValue(undefined),
-  del: jest.fn().mockResolvedValue(undefined),
-  delByPrefix: jest.fn().mockResolvedValue(undefined),
+const createMockAdapter = (): Mocked<ICacheAdapter> => ({
+  get: vi.fn().mockResolvedValue(null),
+  set: vi.fn().mockResolvedValue(undefined),
+  del: vi.fn().mockResolvedValue(undefined),
+  delByPrefix: vi.fn().mockResolvedValue(undefined),
 });
 
-const createMockInner = (): jest.Mocked<IProteusRepository<TestEntity>> =>
+const createMockInner = (): Mocked<IProteusRepository<TestEntity>> =>
   ({
-    create: jest.fn().mockReturnValue(new TestEntity()),
-    copy: jest.fn().mockReturnValue(new TestEntity()),
-    validate: jest.fn(),
-    count: jest.fn().mockResolvedValue(0),
-    exists: jest.fn().mockResolvedValue(false),
-    find: jest.fn().mockResolvedValue([]),
-    findAndCount: jest.fn().mockResolvedValue([[], 0]),
-    findOne: jest.fn().mockResolvedValue(null),
-    findOneOrFail: jest.fn().mockResolvedValue(new TestEntity()),
-    findOneOrSave: jest.fn().mockResolvedValue(new TestEntity()),
-    upsert: jest.fn().mockResolvedValue(new TestEntity()),
-    insert: jest.fn().mockResolvedValue(new TestEntity()),
-    save: jest.fn().mockResolvedValue(new TestEntity()),
-    update: jest.fn().mockResolvedValue(new TestEntity()),
-    clone: jest.fn().mockResolvedValue(new TestEntity()),
-    destroy: jest.fn().mockResolvedValue(undefined),
-    softDestroy: jest.fn().mockResolvedValue(undefined),
-    increment: jest.fn().mockResolvedValue(undefined),
-    decrement: jest.fn().mockResolvedValue(undefined),
-    delete: jest.fn().mockResolvedValue(undefined),
-    updateMany: jest.fn().mockResolvedValue(undefined),
-    softDelete: jest.fn().mockResolvedValue(undefined),
-    restore: jest.fn().mockResolvedValue(undefined),
-    versions: jest.fn().mockResolvedValue([]),
-    sum: jest.fn().mockResolvedValue(null),
-    average: jest.fn().mockResolvedValue(null),
-    minimum: jest.fn().mockResolvedValue(null),
-    maximum: jest.fn().mockResolvedValue(null),
-    ttl: jest.fn().mockResolvedValue(0),
-    deleteExpired: jest.fn().mockResolvedValue(undefined),
-    cursor: jest.fn().mockResolvedValue({}),
-    stream: jest.fn().mockReturnValue({ [Symbol.asyncIterator]: jest.fn() }),
-    clear: jest.fn().mockResolvedValue(undefined),
-    queryBuilder: jest.fn().mockReturnValue({}),
-    setup: jest.fn().mockResolvedValue(undefined),
-  }) as unknown as jest.Mocked<IProteusRepository<TestEntity>>;
+    create: vi.fn().mockReturnValue(new TestEntity()),
+    copy: vi.fn().mockReturnValue(new TestEntity()),
+    validate: vi.fn(),
+    count: vi.fn().mockResolvedValue(0),
+    exists: vi.fn().mockResolvedValue(false),
+    find: vi.fn().mockResolvedValue([]),
+    findAndCount: vi.fn().mockResolvedValue([[], 0]),
+    findOne: vi.fn().mockResolvedValue(null),
+    findOneOrFail: vi.fn().mockResolvedValue(new TestEntity()),
+    findOneOrSave: vi.fn().mockResolvedValue(new TestEntity()),
+    upsert: vi.fn().mockResolvedValue(new TestEntity()),
+    insert: vi.fn().mockResolvedValue(new TestEntity()),
+    save: vi.fn().mockResolvedValue(new TestEntity()),
+    update: vi.fn().mockResolvedValue(new TestEntity()),
+    clone: vi.fn().mockResolvedValue(new TestEntity()),
+    destroy: vi.fn().mockResolvedValue(undefined),
+    softDestroy: vi.fn().mockResolvedValue(undefined),
+    increment: vi.fn().mockResolvedValue(undefined),
+    decrement: vi.fn().mockResolvedValue(undefined),
+    delete: vi.fn().mockResolvedValue(undefined),
+    updateMany: vi.fn().mockResolvedValue(undefined),
+    softDelete: vi.fn().mockResolvedValue(undefined),
+    restore: vi.fn().mockResolvedValue(undefined),
+    versions: vi.fn().mockResolvedValue([]),
+    sum: vi.fn().mockResolvedValue(null),
+    average: vi.fn().mockResolvedValue(null),
+    minimum: vi.fn().mockResolvedValue(null),
+    maximum: vi.fn().mockResolvedValue(null),
+    ttl: vi.fn().mockResolvedValue(0),
+    deleteExpired: vi.fn().mockResolvedValue(undefined),
+    cursor: vi.fn().mockResolvedValue({}),
+    stream: vi.fn().mockReturnValue({ [Symbol.asyncIterator]: vi.fn() }),
+    clear: vi.fn().mockResolvedValue(undefined),
+    queryBuilder: vi.fn().mockReturnValue({}),
+    setup: vi.fn().mockResolvedValue(undefined),
+  }) as unknown as Mocked<IProteusRepository<TestEntity>>;
 
 const makeBaseMetadata = (overrides: Partial<EntityMetadata> = {}): EntityMetadata =>
   ({
@@ -199,10 +201,10 @@ const entityA = Object.assign(new TestEntity(), {
 
 describe("CachingRepository", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     // By default, defaultHydrateEntity returns a plain TestEntity.
     // Individual tests override this when they need entity data back.
-    (defaultHydrateEntity as jest.Mock).mockReturnValue(new TestEntity());
+    (defaultHydrateEntity as Mock).mockReturnValue(new TestEntity());
   });
 
   // ─── Category C: Passthrough methods ────────────────────────────────────────
@@ -263,7 +265,7 @@ describe("CachingRepository", () => {
 
     it("should delegate stream() to inner without touching adapter", () => {
       const { repo, inner, adapter } = createRepo();
-      const fakeStream = { [Symbol.asyncIterator]: jest.fn() } as any;
+      const fakeStream = { [Symbol.asyncIterator]: vi.fn() } as any;
       inner.stream.mockReturnValue(fakeStream);
 
       const result = repo.stream();
@@ -350,7 +352,7 @@ describe("CachingRepository", () => {
       const { repo, inner, adapter } = createRepo();
       inner.find.mockResolvedValue([entityA]);
       adapter.get.mockResolvedValue(null);
-      (defaultHydrateEntity as jest.Mock).mockReturnValue(entityA);
+      (defaultHydrateEntity as Mock).mockReturnValue(entityA);
 
       await repo.find({ name: "Entity A" });
 
@@ -375,7 +377,7 @@ describe("CachingRepository", () => {
       const { repo, inner, adapter } = createRepo();
       const serialized = JSON.stringify([{ id: "id-1", name: "Entity A" }]);
       adapter.get.mockResolvedValue(serialized);
-      (defaultHydrateEntity as jest.Mock).mockReturnValue(entityA);
+      (defaultHydrateEntity as Mock).mockReturnValue(entityA);
 
       const result = await repo.find({ name: "Entity A" });
 
@@ -555,7 +557,7 @@ describe("CachingRepository", () => {
       await repo.find({ name: "Entity A" });
 
       expect(adapter.set).toHaveBeenCalledTimes(1);
-      const ttlArg = (adapter.set as jest.Mock).mock.calls[0][2];
+      const ttlArg = (adapter.set as Mock).mock.calls[0][2];
       expect(ttlArg).toBe(30_000);
     });
 
@@ -567,7 +569,7 @@ describe("CachingRepository", () => {
       await repo.find({ name: "Entity A" });
 
       expect(adapter.set).toHaveBeenCalledTimes(1);
-      const ttlArg = (adapter.set as jest.Mock).mock.calls[0][2];
+      const ttlArg = (adapter.set as Mock).mock.calls[0][2];
       expect(ttlArg).toBe(60_000);
     });
   });
@@ -590,7 +592,7 @@ describe("CachingRepository", () => {
       const { repo, inner, adapter } = createRepo();
       inner.findOne.mockResolvedValue(entityA);
       adapter.get.mockResolvedValue(null);
-      (defaultHydrateEntity as jest.Mock).mockReturnValue(entityA);
+      (defaultHydrateEntity as Mock).mockReturnValue(entityA);
 
       const result = await repo.findOne({ id: "id-1" });
 
@@ -602,7 +604,7 @@ describe("CachingRepository", () => {
       const { repo, inner, adapter } = createRepo();
       const serialized = JSON.stringify([{ id: "id-1", name: "Entity A" }]);
       adapter.get.mockResolvedValue(serialized);
-      (defaultHydrateEntity as jest.Mock).mockReturnValue(entityA);
+      (defaultHydrateEntity as Mock).mockReturnValue(entityA);
 
       const result = await repo.findOne({ id: "id-1" });
 
@@ -663,7 +665,7 @@ describe("CachingRepository", () => {
       const { repo, inner, adapter } = createRepo();
       inner.findAndCount.mockResolvedValue([[entityA], 1]);
       adapter.get.mockResolvedValue(null);
-      (defaultHydrateEntity as jest.Mock).mockReturnValue(entityA);
+      (defaultHydrateEntity as Mock).mockReturnValue(entityA);
 
       const [entities, count] = await repo.findAndCount({ name: "Entity A" });
 
@@ -676,7 +678,7 @@ describe("CachingRepository", () => {
       const { repo, inner, adapter } = createRepo();
       const payload = { entities: [{ id: "id-1", name: "Entity A" }], count: 1 };
       adapter.get.mockResolvedValue(JSON.stringify(payload));
-      (defaultHydrateEntity as jest.Mock).mockReturnValue(entityA);
+      (defaultHydrateEntity as Mock).mockReturnValue(entityA);
 
       const [entities, count] = await repo.findAndCount({ name: "Entity A" });
 
@@ -708,7 +710,7 @@ describe("CachingRepository", () => {
 
       expect(result).toBe(5);
       expect(adapter.set).toHaveBeenCalledTimes(1);
-      const stored = (adapter.set as jest.Mock).mock.calls[0][1];
+      const stored = (adapter.set as Mock).mock.calls[0][1];
       expect(JSON.parse(stored)).toBe(5);
     });
 
@@ -756,7 +758,7 @@ describe("CachingRepository", () => {
 
       expect(result).toBe(false);
       expect(adapter.set).toHaveBeenCalledTimes(1);
-      const stored = (adapter.set as jest.Mock).mock.calls[0][1];
+      const stored = (adapter.set as Mock).mock.calls[0][1];
       expect(JSON.parse(stored)).toBe(false);
     });
 
@@ -778,7 +780,7 @@ describe("CachingRepository", () => {
       const { repo, inner, adapter } = createRepo();
       inner.findOne.mockResolvedValue(entityA);
       adapter.get.mockResolvedValue(null);
-      (defaultHydrateEntity as jest.Mock).mockReturnValue(entityA);
+      (defaultHydrateEntity as Mock).mockReturnValue(entityA);
 
       const result = await repo.findOneOrSave({ id: "id-1" }, {
         name: "Entity A",
@@ -792,7 +794,7 @@ describe("CachingRepository", () => {
       const { repo, inner, adapter } = createRepo();
       inner.findOne.mockResolvedValue(null);
       adapter.get.mockResolvedValue(null);
-      (inner.save as jest.Mock).mockResolvedValue(entityA);
+      (inner.save as Mock).mockResolvedValue(entityA);
 
       const result = await repo.findOneOrSave({ id: "id-1" }, {
         name: "Entity A",
@@ -810,7 +812,7 @@ describe("CachingRepository", () => {
   describe("write methods — invalidate on success", () => {
     it("insert() should call inner.insert then invalidate", async () => {
       const { repo, inner, adapter } = createRepo();
-      (inner.insert as jest.Mock).mockResolvedValue(entityA);
+      (inner.insert as Mock).mockResolvedValue(entityA);
 
       const result = await repo.insert(entityA);
 
@@ -821,7 +823,7 @@ describe("CachingRepository", () => {
 
     it("save() should call inner.save then invalidate", async () => {
       const { repo, inner, adapter } = createRepo();
-      (inner.save as jest.Mock).mockResolvedValue(entityA);
+      (inner.save as Mock).mockResolvedValue(entityA);
 
       const result = await repo.save(entityA);
 
@@ -832,7 +834,7 @@ describe("CachingRepository", () => {
 
     it("update() should call inner.update then invalidate", async () => {
       const { repo, inner, adapter } = createRepo();
-      (inner.update as jest.Mock).mockResolvedValue(entityA);
+      (inner.update as Mock).mockResolvedValue(entityA);
 
       const result = await repo.update(entityA);
 
@@ -843,7 +845,7 @@ describe("CachingRepository", () => {
 
     it("clone() should call inner.clone then invalidate", async () => {
       const { repo, inner, adapter } = createRepo();
-      (inner.clone as jest.Mock).mockResolvedValue(entityA);
+      (inner.clone as Mock).mockResolvedValue(entityA);
 
       const result = await repo.clone(entityA);
 
@@ -872,7 +874,7 @@ describe("CachingRepository", () => {
 
     it("upsert() should call inner.upsert then invalidate", async () => {
       const { repo, inner, adapter } = createRepo();
-      (inner.upsert as jest.Mock).mockResolvedValue(entityA);
+      (inner.upsert as Mock).mockResolvedValue(entityA);
 
       const result = await repo.upsert(entityA);
 
@@ -988,7 +990,7 @@ describe("CachingRepository", () => {
   describe("cache invalidation failure resilience", () => {
     it("should not throw when adapter.delByPrefix throws during invalidation", async () => {
       const { repo, inner, adapter } = createRepo();
-      (inner.save as jest.Mock).mockResolvedValue(entityA);
+      (inner.save as Mock).mockResolvedValue(entityA);
       adapter.delByPrefix.mockRejectedValue(new Error("adapter offline"));
 
       // Should succeed — invalidation errors are swallowed
@@ -1000,7 +1002,7 @@ describe("CachingRepository", () => {
 
   describe("serialization", () => {
     it("should NOT apply field.transform.to() when serializing — stores entity-side values directly", async () => {
-      const transformTo = jest.fn().mockReturnValue("transformed");
+      const transformTo = vi.fn().mockReturnValue("transformed");
       const metadata = makeBaseMetadata({
         fields: [
           {
@@ -1022,7 +1024,7 @@ describe("CachingRepository", () => {
             readonly: false,
             scale: null,
             schema: null,
-            transform: { to: transformTo, from: jest.fn() },
+            transform: { to: transformTo, from: vi.fn() },
             type: "string",
           },
         ] as any,
@@ -1035,7 +1037,7 @@ describe("CachingRepository", () => {
 
       expect(transformTo).not.toHaveBeenCalled();
       // Verify the raw entity value is stored, not a transformed one
-      const setCall = (adapter.set as jest.Mock).mock.calls[0];
+      const setCall = (adapter.set as Mock).mock.calls[0];
       const serialized = JSON.parse(setCall[1]);
       expect(serialized[0].name).toBe("Entity A");
     });
@@ -1044,7 +1046,7 @@ describe("CachingRepository", () => {
       const { repo, inner, adapter } = createRepo();
       const serialized = JSON.stringify([{ id: "id-1", name: "Entity A" }]);
       adapter.get.mockResolvedValue(serialized);
-      (defaultHydrateEntity as jest.Mock).mockReturnValue(entityA);
+      (defaultHydrateEntity as Mock).mockReturnValue(entityA);
 
       await repo.find({ name: "Entity A" });
 
@@ -1122,7 +1124,7 @@ describe("CachingRepository", () => {
         id: "id-1",
         secret: "should-be-hidden",
       });
-      (defaultHydrateEntity as jest.Mock).mockReturnValue(hydratedEntity);
+      (defaultHydrateEntity as Mock).mockReturnValue(hydratedEntity);
 
       const result = await repo.find({ id: "id-1" } as any);
 
@@ -1188,7 +1190,7 @@ describe("CachingRepository", () => {
         id: "id-1",
         password: "secret-hash",
       });
-      (defaultHydrateEntity as jest.Mock).mockReturnValue(hydratedEntity);
+      (defaultHydrateEntity as Mock).mockReturnValue(hydratedEntity);
 
       const result = await repo.findOne({ id: "id-1" } as any);
 
@@ -1234,7 +1236,7 @@ describe("CachingRepository", () => {
 
       await repo.find({});
 
-      const setCall = (adapter.set as jest.Mock).mock.calls[0];
+      const setCall = (adapter.set as Mock).mock.calls[0];
       const serialized = JSON.parse(setCall[1]);
       expect(serialized[0].parentId).toBe("parent-id-1");
     });
@@ -1272,7 +1274,7 @@ describe("CachingRepository", () => {
 
       await repo.find({});
 
-      const setCall = (adapter.set as jest.Mock).mock.calls[0];
+      const setCall = (adapter.set as Mock).mock.calls[0];
       const serialized = JSON.parse(setCall[1]);
       expect("tagId" in serialized[0]).toBe(false);
     });
@@ -1288,7 +1290,7 @@ describe("CachingRepository", () => {
 
       await repo.find({});
 
-      const getKey = (adapter.get as jest.Mock).mock.calls[0][0] as string;
+      const getKey = (adapter.get as Mock).mock.calls[0][0] as string;
       expect(getKey).toContain("myapp:");
     });
 
@@ -1299,18 +1301,18 @@ describe("CachingRepository", () => {
 
       await repo.find({});
 
-      const getKey = (adapter.get as jest.Mock).mock.calls[0][0] as string;
+      const getKey = (adapter.get as Mock).mock.calls[0][0] as string;
       expect(getKey).not.toContain("null:");
       expect(getKey).toMatch(/^cache:TestEntity:/);
     });
 
     it("should use entity-scoped prefix for invalidation", async () => {
       const { repo, inner, adapter } = createRepo({ namespace: "myapp" });
-      (inner.save as jest.Mock).mockResolvedValue(entityA);
+      (inner.save as Mock).mockResolvedValue(entityA);
 
       await repo.save(entityA);
 
-      const prefix = (adapter.delByPrefix as jest.Mock).mock.calls[0][0] as string;
+      const prefix = (adapter.delByPrefix as Mock).mock.calls[0][0] as string;
       expect(prefix).toBe("myapp:cache:TestEntity:");
     });
   });

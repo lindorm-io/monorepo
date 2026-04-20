@@ -1,4 +1,59 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`cloneDocument > should clone a plain object 1`] = `
+{
+  "age": 42,
+  "name": "foo",
+}
+`;
+
+exports[`cloneDocument > should clone arrays 1`] = `
+{
+  "nested": [
+    {
+      "x": 1,
+    },
+  ],
+  "tags": [
+    "a",
+    "b",
+    "c",
+  ],
+}
+`;
+
+exports[`cloneDocument > should deep-clone nested objects 1`] = `
+{
+  "address": {
+    "city": "Stockholm",
+    "zip": "11122",
+  },
+}
+`;
+
+exports[`cloneDocument > should handle empty object 1`] = `{}`;
+
+exports[`cloneDocument > should handle null values 1`] = `
+{
+  "name": null,
+  "nested": {
+    "val": null,
+  },
+}
+`;
+
+exports[`cloneDocument > should preserve Date objects 1`] = `
+{
+  "createdAt": 2024-01-01T00:00:00.000Z,
+}
+`;
+
+exports[`cloneDocument > should strip getters by deep-cloning 1`] = `
+{
+  "hidden": "secret",
+  "visible": "yes",
+}
+`;
 
 exports[`cloneDocument should clone a plain object 1`] = `
 {

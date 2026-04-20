@@ -1,4 +1,5 @@
 import { buildMysqlLockName, hashNamespaceToInt32 } from "./advisory-lock-name";
+import { describe, expect, it } from "vitest";
 
 describe("buildMysqlLockName", () => {
   it("should use 'default' when namespace is null", () => {

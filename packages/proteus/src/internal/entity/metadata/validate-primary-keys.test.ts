@@ -1,5 +1,6 @@
 import { makeField } from "../../__fixtures__/make-field";
 import { validatePrimaryKeys, validateVersionKeys } from "./validate-primary-keys";
+import { describe, expect, test } from "vitest";
 
 describe("validatePrimaryKeys", () => {
   test("should pass with valid primary key matching field", () => {

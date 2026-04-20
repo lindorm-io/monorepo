@@ -2,6 +2,7 @@ import { makeField } from "../../__fixtures__/make-field";
 import type { EntityMetadata } from "../types/metadata";
 import { defaultHydrateEntity } from "./default-hydrate-entity";
 import { getSnapshot } from "./snapshot-store";
+import { describe, expect, test, vi } from "vitest";
 
 // ─── Embedded Fixtures ──────────────────────────────────────────────────────
 
@@ -93,7 +94,7 @@ describe("defaultHydrateEntity", () => {
   });
 
   test("should fire OnHydrate hooks by default", () => {
-    const hookCb = jest.fn();
+    const hookCb = vi.fn();
     const metaWithHooks = {
       ...metadata,
       hooks: [{ decorator: "OnHydrate", callback: hookCb }],
@@ -107,7 +108,7 @@ describe("defaultHydrateEntity", () => {
   });
 
   test("should skip hooks when option is false", () => {
-    const hookCb = jest.fn();
+    const hookCb = vi.fn();
     const metaWithHooks = {
       ...metadata,
       hooks: [{ decorator: "OnHydrate", callback: hookCb }],
@@ -119,7 +120,7 @@ describe("defaultHydrateEntity", () => {
   });
 
   test("should pass context to hooks", () => {
-    const hookCb = jest.fn();
+    const hookCb = vi.fn();
     const metaWithHooks = {
       ...metadata,
       hooks: [{ decorator: "OnHydrate", callback: hookCb }],

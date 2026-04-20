@@ -1,4 +1,5 @@
 import { classifyPostgresError } from "./classify-breaker-error";
+import { describe, expect, it } from "vitest";
 
 describe("classifyPostgresError", () => {
   describe("transient postgres codes", () => {

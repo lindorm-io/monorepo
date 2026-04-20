@@ -1,5 +1,6 @@
 import type { EntityMetadata, MetaField } from "../../../entity/types/metadata";
 import { compileSort } from "./compile-sort";
+import { describe, expect, test } from "vitest";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

@@ -1,3 +1,4 @@
+import { describe, expect, test, vi, type Mock } from "vitest";
 /**
  * Tests for embedded-list-ops.ts
  * Covers: insertEmbeddedListRows, deleteEmbeddedListRows, loadEmbeddedListRows,
@@ -15,15 +16,15 @@ import {
   saveEmbeddedListRows,
 } from "./embedded-list-ops";
 
-jest.mock("../quote-identifier", () => ({
-  quoteIdentifier: jest.fn((name: string) => `"${name}"`),
-  quoteQualifiedName: jest.fn((namespace: string | null, name: string) =>
+vi.mock("../quote-identifier", () => ({
+  quoteIdentifier: vi.fn((name: string) => `"${name}"`),
+  quoteQualifiedName: vi.fn((namespace: string | null, name: string) =>
     namespace ? `"${namespace}"."${name}"` : `"${name}"`,
   ),
 }));
 
-jest.mock("../../../../entity/utils/deserialise", () => ({
-  deserialise: jest.fn((value: unknown) => value),
+vi.mock("../../../../entity/utils/deserialise", () => ({
+  deserialise: vi.fn((value: unknown) => value),
 }));
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
@@ -68,7 +69,7 @@ const createMockClient = (
 } => {
   const queries: Array<{ sql: string; params?: Array<unknown> }> = [];
   const client = {
-    query: jest.fn(async (sql: string, params?: Array<unknown>) => {
+    query: vi.fn(async (sql: string, params?: Array<unknown>) => {
       queries.push({ sql, params });
       return { rows, rowCount: rows.length };
     }),
@@ -325,7 +326,7 @@ describe("loadEmbeddedListRowsBatch", () => {
     });
 
     test("applies transform.from() on embeddable field values when transform is defined", async () => {
-      const transformFrom = jest.fn((v: unknown) => `transformed:${v}`);
+      const transformFrom = vi.fn((v: unknown) => `transformed:${v}`);
       const embeddableListWithTransform: MetaEmbeddedList = {
         ...embeddableEmbeddedList,
         tableName: "transformed_tags",
@@ -522,7 +523,7 @@ describe("insertEmbeddedListRows", () => {
     });
 
     test("applies transform.to() on embeddable field values when transform is defined", async () => {
-      const transformTo = jest.fn((v: unknown) => `encoded:${v}`);
+      const transformTo = vi.fn((v: unknown) => `encoded:${v}`);
       const embeddableListWithTransform: MetaEmbeddedList = {
         ...embeddableEmbeddedList,
         tableName: "transformed_tags",
@@ -762,7 +763,7 @@ describe("loadEmbeddedListRows", () => {
     });
 
     test("applies transform.from() on embeddable field values when transform is defined", async () => {
-      const transformFrom = jest.fn((v: unknown) => `decoded:${v}`);
+      const transformFrom = vi.fn((v: unknown) => `decoded:${v}`);
       const embeddableListWithTransform: MetaEmbeddedList = {
         ...embeddableEmbeddedList,
         tableName: "transformed_tags",

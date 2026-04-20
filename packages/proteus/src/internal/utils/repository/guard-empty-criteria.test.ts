@@ -1,4 +1,5 @@
 import { guardEmptyCriteria } from "./guard-empty-criteria";
+import { describe, expect, test } from "vitest";
 
 // ─── Custom error fixtures ────────────────────────────────────────────────────
 

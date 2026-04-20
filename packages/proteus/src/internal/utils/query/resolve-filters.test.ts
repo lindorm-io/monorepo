@@ -1,6 +1,7 @@
 import type { MetaFilter } from "../../entity/types/metadata";
 import type { FilterRegistry } from "./filter-registry";
 import { resolveFilters } from "./resolve-filters";
+import { describe, expect, test } from "vitest";
 
 const activeFilter: MetaFilter = {
   name: "active",

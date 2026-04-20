@@ -5,6 +5,7 @@ import { Generated } from "./Generated";
 import { PrimaryKey } from "./PrimaryKey";
 import { PrimaryKeyField } from "./PrimaryKeyField";
 import { VersionKey } from "./VersionKey";
+import { describe, expect, test } from "vitest";
 
 @Entity({ name: "VersionKeyFieldLevel" })
 class VersionKeyFieldLevel {

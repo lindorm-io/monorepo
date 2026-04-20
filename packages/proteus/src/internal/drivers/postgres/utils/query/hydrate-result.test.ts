@@ -2,14 +2,23 @@ import { makeField } from "../../../../__fixtures__/make-field";
 import type { EntityMetadata, MetaRelation } from "../../../../entity/types/metadata";
 import type { AliasMap } from "./compile-select";
 import type { IncludeSpec } from "../../../../types/query";
+import {
+  beforeEach,
+  describe,
+  expect,
+  test,
+  vi,
+  type Mock,
+  type MockedFunction,
+} from "vitest";
 
 // Mock get-relation-metadata so includes tests do not require a real decorator-registered entity.
-jest.mock("./get-relation-metadata");
+vi.mock("./get-relation-metadata");
 
 import { getRelationMetadata } from "./get-relation-metadata";
 import { hydrateRows } from "./hydrate-result";
 
-const mockGetRelationMetadata = getRelationMetadata as jest.MockedFunction<
+const mockGetRelationMetadata = getRelationMetadata as MockedFunction<
   typeof getRelationMetadata
 >;
 
@@ -47,7 +56,7 @@ const aliasMap: Array<AliasMap> = [
 
 describe("hydrateRows", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test("should return empty array for no rows", () => {
@@ -216,7 +225,7 @@ const o2mInclude: IncludeSpec = {
 
 describe("hydrateRows — with includes", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   // -------------------------------------------------------------------------
@@ -429,7 +438,7 @@ describe("hydrateRows — with includes", () => {
 
 describe("hydrateRows — sortByOrderBy via OneToMany includes", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   const o2mWithOrderBy: MetaRelation = {
@@ -558,7 +567,7 @@ describe("hydrateRows — sortByOrderBy via OneToMany includes", () => {
 
 describe("hydrateRows — composite PK deduplication", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   class TenantPostEntity {

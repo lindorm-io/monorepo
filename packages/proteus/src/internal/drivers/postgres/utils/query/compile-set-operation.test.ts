@@ -1,5 +1,6 @@
 import type { SetOperationEntry } from "../../../../types/query";
 import { compileSetOperations } from "./compile-set-operation";
+import { describe, expect, test } from "vitest";
 
 describe("compileSetOperations", () => {
   describe("empty entries", () => {

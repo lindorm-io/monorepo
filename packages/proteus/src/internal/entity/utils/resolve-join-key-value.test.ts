@@ -1,5 +1,6 @@
 import type { MetaRelation } from "../types/metadata";
 import { resolveJoinKeyValue } from "./resolve-join-key-value";
+import { describe, expect, test } from "vitest";
 
 const relation = {
   key: "author",

@@ -13,6 +13,7 @@ import { OnValidate } from "../../../decorators/OnValidate";
 import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField";
 import { Schema } from "../../../decorators/Schema";
 import { VersionField } from "../../../decorators/VersionField";
+import { describe, expect, test, vi } from "vitest";
 
 enum Status {
   Active = "active",
@@ -68,7 +69,7 @@ class ValidateEntityEnum {
 }
 
 const nameSchema = z.object({ name: z.string().min(1) }) as any;
-const validateSchemaCb = jest.fn();
+const validateSchemaCb = vi.fn();
 
 @Entity({ name: "ValidateEntityWithSchema" })
 @Schema(nameSchema)

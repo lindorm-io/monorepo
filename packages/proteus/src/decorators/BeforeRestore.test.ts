@@ -2,8 +2,9 @@ import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metada
 import { BeforeRestore } from "./BeforeRestore";
 import { Entity } from "./Entity";
 import { PrimaryKeyField } from "./PrimaryKeyField";
+import { describe, expect, test, vi } from "vitest";
 
-const beforeRestoreCallback = jest.fn();
+const beforeRestoreCallback = vi.fn();
 
 @Entity({ name: "BeforeRestoreDecorated" })
 @BeforeRestore(beforeRestoreCallback)
@@ -12,8 +13,8 @@ class BeforeRestoreDecorated {
   id!: string;
 }
 
-const multiHookCb1 = jest.fn();
-const multiHookCb2 = jest.fn();
+const multiHookCb1 = vi.fn();
+const multiHookCb2 = vi.fn();
 
 @Entity({ name: "BeforeRestoreMultiHook" })
 @BeforeRestore(multiHookCb1)

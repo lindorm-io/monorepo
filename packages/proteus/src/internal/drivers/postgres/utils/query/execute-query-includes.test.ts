@@ -2,22 +2,31 @@ import { makeField } from "../../../../__fixtures__/make-field";
 import type { EntityMetadata, MetaRelation } from "../../../../entity/types/metadata";
 import type { IncludeSpec } from "../../../../types/query";
 import type { ExecuteQueryIncludesOptions } from "./execute-query-includes";
+import {
+  beforeEach,
+  describe,
+  expect,
+  test,
+  vi,
+  type Mock,
+  type MockedFunction,
+} from "vitest";
 
 // Mock the helpers that access the metadata registry and compile SQL
-jest.mock("./get-relation-metadata");
-jest.mock("./compile-relation-query");
+vi.mock("./get-relation-metadata");
+vi.mock("./compile-relation-query");
 
 import { findRelationByKey, getRelationMetadata } from "./get-relation-metadata";
 import { compileRelationQuery } from "./compile-relation-query";
 import { executeQueryIncludes } from "./execute-query-includes";
 
-const mockFindRelationByKey = findRelationByKey as jest.MockedFunction<
+const mockFindRelationByKey = findRelationByKey as MockedFunction<
   typeof findRelationByKey
 >;
-const mockGetRelationMetadata = getRelationMetadata as jest.MockedFunction<
+const mockGetRelationMetadata = getRelationMetadata as MockedFunction<
   typeof getRelationMetadata
 >;
-const mockCompileRelationQuery = compileRelationQuery as jest.MockedFunction<
+const mockCompileRelationQuery = compileRelationQuery as MockedFunction<
   typeof compileRelationQuery
 >;
 
@@ -84,7 +93,7 @@ const makeOpts = (
   overrides: Partial<ExecuteQueryIncludesOptions> = {},
 ): ExecuteQueryIncludesOptions => ({
   rootMetadata: makeRootMetadata(),
-  client: { query: jest.fn() } as any,
+  client: { query: vi.fn() } as any,
   namespace: "app",
   withDeleted: false,
   versionTimestamp: null,
@@ -97,7 +106,7 @@ const makeOpts = (
 
 describe("executeQueryIncludes — early exit", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test("does nothing when entities array is empty", async () => {
@@ -126,7 +135,7 @@ describe("executeQueryIncludes — early exit", () => {
 
 describe("executeQueryIncludes — inverse relation (OneToMany)", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test("assigns hydrated collection to matching entities", async () => {
@@ -147,7 +156,7 @@ describe("executeQueryIncludes — inverse relation (OneToMany)", () => {
     });
 
     const client = {
-      query: jest.fn().mockResolvedValue({
+      query: vi.fn().mockResolvedValue({
         rows: [
           { id: "post-1", title: "First Post", author_id: "user-1" },
           { id: "post-2", title: "Second Post", author_id: "user-1" },
@@ -185,7 +194,7 @@ describe("executeQueryIncludes — inverse relation (OneToMany)", () => {
     });
 
     const client = {
-      query: jest.fn().mockResolvedValue({ rows: [] }),
+      query: vi.fn().mockResolvedValue({ rows: [] }),
     };
 
     const entities: any[] = [{ id: "user-1" }];
@@ -216,7 +225,7 @@ describe("executeQueryIncludes — inverse relation (OneToMany)", () => {
     });
 
     const client = {
-      query: jest.fn().mockResolvedValue({
+      query: vi.fn().mockResolvedValue({
         rows: [
           { id: "post-1", title: "User1 Post", author_id: "user-1" },
           { id: "post-2", title: "User2 Post", author_id: "user-2" },
@@ -255,7 +264,7 @@ describe("executeQueryIncludes — inverse relation (OneToMany)", () => {
     });
 
     const client = {
-      query: jest.fn().mockResolvedValue({
+      query: vi.fn().mockResolvedValue({
         rows: [{ id: "post-1", title: "Shared Post", author_id: "user-1" }],
       }),
     };
@@ -293,7 +302,7 @@ describe("executeQueryIncludes — inverse relation (OneToMany)", () => {
     });
 
     const client = {
-      query: jest.fn().mockResolvedValue({
+      query: vi.fn().mockResolvedValue({
         rows: [{ id: "post-1", title: "My Title", author_id: "user-1" }],
       }),
     };
@@ -334,7 +343,7 @@ describe("executeQueryIncludes — inverse relation (OneToMany)", () => {
     });
 
     const client = {
-      query: jest.fn().mockResolvedValue({
+      query: vi.fn().mockResolvedValue({
         rows: [{ id: "post-1", title: "My Title", author_id: "user-1" }],
       }),
     };
@@ -356,7 +365,7 @@ describe("executeQueryIncludes — inverse relation (OneToMany)", () => {
 
 describe("executeQueryIncludes — owning relation (ManyToOne)", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test("assigns null when the FK value on root entity is null", async () => {
@@ -369,7 +378,7 @@ describe("executeQueryIncludes — owning relation (ManyToOne)", () => {
     mockFindRelationByKey.mockReturnValue(relation);
     mockGetRelationMetadata.mockReturnValue(foreignMeta);
 
-    const client = { query: jest.fn() };
+    const client = { query: vi.fn() };
 
     // Entity where authorId is null — FK is missing
     const entities: any[] = [{ id: "post-1", authorId: null }];
@@ -402,7 +411,7 @@ describe("executeQueryIncludes — owning relation (ManyToOne)", () => {
     });
 
     const client = {
-      query: jest.fn().mockResolvedValue({
+      query: vi.fn().mockResolvedValue({
         rows: [{ id: "author-1", title: "Alice", author_id: null }],
       }),
     };
@@ -437,7 +446,7 @@ describe("executeQueryIncludes — owning relation (ManyToOne)", () => {
     });
 
     const client = {
-      query: jest.fn().mockResolvedValue({ rows: [] }),
+      query: vi.fn().mockResolvedValue({ rows: [] }),
     };
 
     const entities: any[] = [{ id: "post-1", authorId: "author-missing" }];
@@ -460,7 +469,7 @@ describe("executeQueryIncludes — owning relation (ManyToOne)", () => {
     mockFindRelationByKey.mockReturnValue(relation);
     mockGetRelationMetadata.mockReturnValue(foreignMeta);
 
-    const client = { query: jest.fn() };
+    const client = { query: vi.fn() };
 
     const entities: any[] = [
       { id: "post-1", authorId: null },
@@ -485,7 +494,7 @@ describe("executeQueryIncludes — owning relation (ManyToOne)", () => {
 
 describe("executeQueryIncludes — ManyToMany", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test("groups rows by __jt_ aliased join-table columns", async () => {
@@ -512,7 +521,7 @@ describe("executeQueryIncludes — ManyToMany", () => {
     });
 
     const client = {
-      query: jest.fn().mockResolvedValue({
+      query: vi.fn().mockResolvedValue({
         rows: [
           { id: "tag-1", label: "JS", __jt_studentId: "student-1" },
           { id: "tag-2", label: "TS", __jt_studentId: "student-1" },
@@ -556,7 +565,7 @@ describe("executeQueryIncludes — ManyToMany", () => {
     });
 
     const client = {
-      query: jest.fn().mockResolvedValue({ rows: [] }),
+      query: vi.fn().mockResolvedValue({ rows: [] }),
     };
 
     const entities: any[] = [{ id: "student-1" }];
@@ -576,7 +585,7 @@ describe("executeQueryIncludes — ManyToMany", () => {
 
 describe("executeQueryIncludes — multiple includes", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test("processes multiple includes sequentially", async () => {
@@ -618,7 +627,7 @@ describe("executeQueryIncludes — multiple includes", () => {
       });
 
     const client = {
-      query: jest
+      query: vi
         .fn()
         .mockResolvedValueOnce({
           rows: [{ id: "post-1", title: "Post 1", author_id: "user-1" }],
@@ -671,7 +680,7 @@ describe("executeQueryIncludes — multiple includes", () => {
     });
 
     const client = {
-      query: jest.fn().mockResolvedValueOnce({
+      query: vi.fn().mockResolvedValueOnce({
         rows: [{ id: "post-1", title: "Post 1", author_id: "user-1" }],
       }),
     };

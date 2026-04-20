@@ -1,3 +1,4 @@
+import { describe, expect, test } from "vitest";
 import {
   SCOPE_FILTER_NAME,
   SOFT_DELETE_FILTER_NAME,

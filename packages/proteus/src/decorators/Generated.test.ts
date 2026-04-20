@@ -4,6 +4,7 @@ import { Field } from "./Field";
 import { Generated } from "./Generated";
 import { PrimaryKey } from "./PrimaryKey";
 import { PrimaryKeyField } from "./PrimaryKeyField";
+import { describe, expect, test } from "vitest";
 
 @Entity({ name: "GeneratedUuid" })
 class GeneratedUuid {

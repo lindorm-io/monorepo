@@ -1,4 +1,212 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`compileAggregationPipeline > should add $match for having conditions 1`] = `
+[
+  {
+    "$group": {
+      "_id": {
+        "category": "$category",
+      },
+      "total": {
+        "$sum": "$amount",
+      },
+    },
+  },
+  {
+    "$match": {
+      "total": {
+        "$gt": 100,
+      },
+    },
+  },
+  {
+    "$project": {
+      "_id": 0,
+      "category": "$_id.category",
+      "total": 1,
+    },
+  },
+]
+`;
+
+exports[`compileAggregationPipeline > should handle COUNT(*) as $sum: 1 1`] = `
+[
+  {
+    "$group": {
+      "_id": {
+        "category": "$category",
+      },
+      "count": {
+        "$sum": 1,
+      },
+    },
+  },
+  {
+    "$project": {
+      "_id": 0,
+      "category": "$_id.category",
+      "count": 1,
+    },
+  },
+]
+`;
+
+exports[`compileAggregationPipeline > should map PK fields to _id in group-by 1`] = `
+[
+  {
+    "$group": {
+      "_id": {
+        "id": "$_id",
+      },
+      "total": {
+        "$sum": "$amount",
+      },
+    },
+  },
+  {
+    "$project": {
+      "_id": 0,
+      "id": "$_id.id",
+      "total": 1,
+    },
+  },
+]
+`;
+
+exports[`compileAggregationPipeline > should omit $match stage for empty filter 1`] = `
+[
+  {
+    "$group": {
+      "_id": {
+        "category": "$category",
+      },
+      "total": {
+        "$sum": "$amount",
+      },
+    },
+  },
+  {
+    "$project": {
+      "_id": 0,
+      "category": "$_id.category",
+      "total": 1,
+    },
+  },
+]
+`;
+
+exports[`compileAggregationPipeline > should produce $group stage with group-by fields 1`] = `
+[
+  {
+    "$group": {
+      "_id": {
+        "category": "$category",
+        "status": "$status",
+      },
+      "total": {
+        "$sum": "$amount",
+      },
+    },
+  },
+  {
+    "$project": {
+      "_id": 0,
+      "category": "$_id.category",
+      "status": "$_id.status",
+      "total": 1,
+    },
+  },
+]
+`;
+
+exports[`compileAggregationPipeline > should produce $match stage from filter 1`] = `
+[
+  {
+    "$match": {
+      "status": "active",
+    },
+  },
+  {
+    "$group": {
+      "_id": {
+        "category": "$category",
+      },
+      "total": {
+        "$sum": "$amount",
+      },
+    },
+  },
+  {
+    "$project": {
+      "_id": 0,
+      "category": "$_id.category",
+      "total": 1,
+    },
+  },
+]
+`;
+
+exports[`compileAggregationPipeline > should produce $project stage exposing group-by fields from _id 1`] = `
+{
+  "$project": {
+    "_id": 0,
+    "category": "$_id.category",
+    "total": 1,
+  },
+}
+`;
+
+exports[`compileAggregationPipeline > should produce $sort, $skip, and $limit stages 1`] = `
+[
+  {
+    "$group": {
+      "_id": {
+        "category": "$category",
+      },
+      "total": {
+        "$sum": "$amount",
+      },
+    },
+  },
+  {
+    "$sort": {
+      "category": 1,
+    },
+  },
+  {
+    "$skip": 10,
+  },
+  {
+    "$limit": 5,
+  },
+  {
+    "$project": {
+      "_id": 0,
+      "category": "$_id.category",
+      "total": 1,
+    },
+  },
+]
+`;
+
+exports[`compileAggregationPipeline > should use null _id for no group-by fields 1`] = `
+[
+  {
+    "$group": {
+      "_id": null,
+      "total": {
+        "$sum": "$amount",
+      },
+    },
+  },
+  {
+    "$project": {
+      "_id": 0,
+      "total": 1,
+    },
+  },
+]
+`;
 
 exports[`compileAggregationPipeline should add $match for having conditions 1`] = `
 [
@@ -207,6 +415,53 @@ exports[`compileAggregationPipeline should use null _id for no group-by fields 1
   },
 ]
 `;
+
+exports[`compilePredicatesToFilter > should compile OR predicates 1`] = `
+{
+  "$or": [
+    {
+      "name": "foo",
+    },
+    {
+      "name": "bar",
+    },
+  ],
+}
+`;
+
+exports[`compilePredicatesToFilter > should compile mixed AND and OR predicates 1`] = `
+{
+  "$or": [
+    {
+      "status": "active",
+    },
+    {
+      "name": "foo",
+    },
+  ],
+}
+`;
+
+exports[`compilePredicatesToFilter > should compile multiple AND predicates 1`] = `
+{
+  "$and": [
+    {
+      "name": "foo",
+    },
+    {
+      "status": "active",
+    },
+  ],
+}
+`;
+
+exports[`compilePredicatesToFilter > should compile single AND predicate 1`] = `
+{
+  "name": "foo",
+}
+`;
+
+exports[`compilePredicatesToFilter > should return empty filter for no predicates 1`] = `{}`;
 
 exports[`compilePredicatesToFilter should compile OR predicates 1`] = `
 {

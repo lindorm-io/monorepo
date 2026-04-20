@@ -1,4 +1,5 @@
 import { buildCompoundId, buildIdFilter } from "./build-compound-id";
+import { describe, expect, test } from "vitest";
 
 describe("buildCompoundId", () => {
   test("should return value directly for single PK", () => {

@@ -6,6 +6,7 @@ import { JoinKey } from "./JoinKey";
 import { Nullable } from "./Nullable";
 import { PrimaryKeyField } from "./PrimaryKeyField";
 import { OneToOne } from "./OneToOne";
+import { describe, expect, test } from "vitest";
 
 // OneToOne: User owns Profile (has FK), Profile references back to User
 

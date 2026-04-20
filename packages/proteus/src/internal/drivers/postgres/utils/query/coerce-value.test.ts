@@ -1,4 +1,5 @@
 import { coerceReadValue, coerceWriteValue } from "./coerce-value";
+import { describe, expect, test } from "vitest";
 
 describe("coerceReadValue", () => {
   test("should return null for null", () => {

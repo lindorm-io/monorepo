@@ -3,6 +3,7 @@ import { Entity } from "./Entity";
 import { Enum } from "./Enum";
 import { Field } from "./Field";
 import { PrimaryKeyField } from "./PrimaryKeyField";
+import { describe, expect, test } from "vitest";
 
 enum StatusEnum {
   Active = "active",

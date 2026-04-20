@@ -9,6 +9,7 @@ import { OneToOne } from "../../../../../decorators/OneToOne";
 import { PrimaryKeyField } from "../../../../../decorators/PrimaryKeyField";
 import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata";
 import { generateFkDDL } from "./generate-fk-ddl";
+import { describe, expect, test } from "vitest";
 
 // ---------------------------------------------------------------------------
 // Test entities — must be at module scope for stage-3 decorator execution.

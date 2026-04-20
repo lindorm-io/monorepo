@@ -3,7 +3,7 @@
 // Runs the full TCK suite against a real MySQL 8.4 instance.
 // Creates a randomized database per run for parallel-safe execution.
 
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { randomBytes } from "node:crypto";
 import mysql from "mysql2/promise";
 import type { Constructor } from "@lindorm/types";
@@ -12,6 +12,7 @@ import { ProteusSource } from "../../classes/ProteusSource";
 import type { TckDriverFactory, TckDriverHandle } from "../__fixtures__/tck/types";
 import { createTckAmphora } from "../__fixtures__/tck/create-tck-amphora";
 import { runTck } from "../__fixtures__/tck/run-tck";
+import { describe } from "vitest";
 
 jest.setTimeout(120_000);
 

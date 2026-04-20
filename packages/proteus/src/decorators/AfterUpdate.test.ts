@@ -2,8 +2,9 @@ import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metada
 import { AfterUpdate } from "./AfterUpdate";
 import { Entity } from "./Entity";
 import { PrimaryKeyField } from "./PrimaryKeyField";
+import { describe, expect, test, vi } from "vitest";
 
-const afterUpdateCallback = jest.fn();
+const afterUpdateCallback = vi.fn();
 
 @Entity({ name: "AfterUpdateDecorated" })
 @AfterUpdate(afterUpdateCallback)

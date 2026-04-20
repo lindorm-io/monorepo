@@ -12,6 +12,7 @@ import { SyncPlanExecutor } from "../sync/execute-sync-plan";
 import { introspectSchema } from "../sync/introspect-schema";
 import { projectDesiredSchema } from "../sync/project-desired-schema";
 import { generateMigration } from "./generate-migration";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 let client: PostgresQueryClient;
 let raw: Client;

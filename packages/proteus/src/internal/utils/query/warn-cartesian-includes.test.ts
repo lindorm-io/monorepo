@@ -2,6 +2,7 @@ import type { EntityMetadata, MetaRelation } from "../../entity/types/metadata";
 import type { IncludeSpec } from "../../types/query";
 import { ProteusError } from "../../../errors";
 import { warnCartesianIncludes } from "./warn-cartesian-includes";
+import { describe, expect, test, vi } from "vitest";
 
 const makeRelation = (key: string, type: MetaRelation["type"]): MetaRelation =>
   ({ key, type, options: {} }) as unknown as MetaRelation;
@@ -27,7 +28,7 @@ const metadata = {
 
 describe("warnCartesianIncludes", () => {
   test("should not warn when no *ToMany joins", () => {
-    const logger = { warn: jest.fn() } as any;
+    const logger = { warn: vi.fn() } as any;
     warnCartesianIncludes(
       [makeInclude("author"), makeInclude("profile")],
       metadata,
@@ -37,7 +38,7 @@ describe("warnCartesianIncludes", () => {
   });
 
   test("should not warn when only one *ToMany join", () => {
-    const logger = { warn: jest.fn() } as any;
+    const logger = { warn: vi.fn() } as any;
     warnCartesianIncludes(
       [makeInclude("posts"), makeInclude("author")],
       metadata,
@@ -47,7 +48,7 @@ describe("warnCartesianIncludes", () => {
   });
 
   test("should warn when 2+ *ToMany relations are joined", () => {
-    const logger = { warn: jest.fn() } as any;
+    const logger = { warn: vi.fn() } as any;
     warnCartesianIncludes([makeInclude("posts"), makeInclude("tags")], metadata, logger);
     expect(logger.warn).toHaveBeenCalledTimes(1);
     expect(logger.warn).toHaveBeenCalledWith(
@@ -56,7 +57,7 @@ describe("warnCartesianIncludes", () => {
   });
 
   test("should warn when 3+ *ToMany relations are joined", () => {
-    const logger = { warn: jest.fn() } as any;
+    const logger = { warn: vi.fn() } as any;
     warnCartesianIncludes(
       [makeInclude("posts"), makeInclude("tags"), makeInclude("comments")],
       metadata,
@@ -69,19 +70,19 @@ describe("warnCartesianIncludes", () => {
   });
 
   test("should include relation names in warning", () => {
-    const logger = { warn: jest.fn() } as any;
+    const logger = { warn: vi.fn() } as any;
     warnCartesianIncludes([makeInclude("posts"), makeInclude("tags")], metadata, logger);
     expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining("posts, tags"));
   });
 
   test("should match full warning message snapshot for 2-ToMany joins", () => {
-    const logger = { warn: jest.fn() } as any;
+    const logger = { warn: vi.fn() } as any;
     warnCartesianIncludes([makeInclude("posts"), makeInclude("tags")], metadata, logger);
     expect(logger.warn.mock.calls[0]).toMatchSnapshot();
   });
 
   test("should throw ProteusError when include references an unknown relation key", () => {
-    const logger = { warn: jest.fn() } as any;
+    const logger = { warn: vi.fn() } as any;
     expect(() =>
       warnCartesianIncludes([makeInclude("nonExistentRelation")], metadata, logger),
     ).toThrow(ProteusError);

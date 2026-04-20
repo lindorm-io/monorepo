@@ -2,6 +2,7 @@ import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metada
 import { AppendOnly } from "./AppendOnly";
 import { Entity } from "./Entity";
 import { PrimaryKeyField } from "./PrimaryKeyField";
+import { describe, expect, test } from "vitest";
 
 @AppendOnly()
 @Entity({ name: "AppendOnlyDecorated" })

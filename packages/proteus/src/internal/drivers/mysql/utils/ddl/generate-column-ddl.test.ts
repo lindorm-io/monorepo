@@ -11,6 +11,7 @@ import { PrimaryKey } from "../../../../../decorators/PrimaryKey";
 import { PrimaryKeyField } from "../../../../../decorators/PrimaryKeyField";
 import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata";
 import { generateColumnDDL } from "./generate-column-ddl";
+import { describe, expect, test } from "vitest";
 
 // ---------------------------------------------------------------------------
 // Test entities — must be at module scope for stage-3 decorator execution.

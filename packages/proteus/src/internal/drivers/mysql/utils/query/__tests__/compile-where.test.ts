@@ -2,6 +2,7 @@ import { makeField } from "../../../../../__fixtures__/make-field";
 import type { EntityMetadata } from "../../../../../entity/types/metadata";
 import type { PredicateEntry } from "../../../../../types/query";
 import { compileWhere } from "../compile-where";
+import { describe, expect, test } from "vitest";
 
 const metadata = {
   fields: [

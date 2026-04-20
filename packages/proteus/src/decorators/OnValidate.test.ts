@@ -2,8 +2,9 @@ import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metada
 import { Entity } from "./Entity";
 import { OnValidate } from "./OnValidate";
 import { PrimaryKeyField } from "./PrimaryKeyField";
+import { describe, expect, test, vi } from "vitest";
 
-const onValidateCallback = jest.fn();
+const onValidateCallback = vi.fn();
 
 @Entity({ name: "OnValidateDecorated" })
 @OnValidate(onValidateCallback)

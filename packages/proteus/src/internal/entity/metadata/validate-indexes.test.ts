@@ -1,6 +1,7 @@
 import { makeField } from "../../__fixtures__/make-field";
 import { validateIndexes } from "./validate-indexes";
 import type { MetaIndex } from "../types/metadata";
+import { describe, expect, test } from "vitest";
 
 const makeIndex = (
   keys: Array<{ key: string; direction?: "asc" | "desc" }>,

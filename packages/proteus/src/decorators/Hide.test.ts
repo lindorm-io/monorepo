@@ -3,6 +3,7 @@ import { Entity } from "./Entity";
 import { Field } from "./Field";
 import { Hide } from "./Hide";
 import { PrimaryKeyField } from "./PrimaryKeyField";
+import { describe, expect, test } from "vitest";
 
 @Entity({ name: "HideBothTest" })
 class HideBothTest {

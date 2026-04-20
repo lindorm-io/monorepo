@@ -2,6 +2,7 @@ import type { IProteusQueryBuilder, IProteusRepository } from "../../../../inter
 import type { RedisTransactionHandle } from "../types/redis-types";
 import { RedisDriverError } from "../errors/RedisDriverError";
 import { RedisTransactionContext } from "./RedisTransactionContext";
+import { describe, expect, test, vi } from "vitest";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -12,9 +13,9 @@ const makeHandle = (
 });
 
 const makeDriver = () => ({
-  commitTransaction: jest.fn().mockResolvedValue(undefined),
-  rollbackTransaction: jest.fn().mockResolvedValue(undefined),
-  createTransactionalQueryBuilder: jest
+  commitTransaction: vi.fn().mockResolvedValue(undefined),
+  rollbackTransaction: vi.fn().mockResolvedValue(undefined),
+  createTransactionalQueryBuilder: vi
     .fn()
     .mockReturnValue({} as IProteusQueryBuilder<any>),
 });
@@ -34,7 +35,7 @@ describe("RedisTransactionContext constructor", () => {
   test("constructs with a repository factory", () => {
     const handle = makeHandle();
     const driver = makeDriver();
-    const factory = jest.fn();
+    const factory = vi.fn();
 
     expect(
       () => new RedisTransactionContext(handle, driver as any, factory),
@@ -56,7 +57,7 @@ describe("RedisTransactionContext.repository", () => {
 
   test("delegates to the repository factory when configured", () => {
     const mockRepo = {} as IProteusRepository<any>;
-    const factory = jest.fn().mockReturnValue(mockRepo);
+    const factory = vi.fn().mockReturnValue(mockRepo);
     const ctx = new RedisTransactionContext(makeHandle(), makeDriver() as any, factory);
 
     const result = ctx.repository(StubEntity as any);
@@ -68,7 +69,7 @@ describe("RedisTransactionContext.repository", () => {
   test("passes the target constructor to the factory", () => {
     class AnotherEntity {}
 
-    const factory = jest.fn().mockReturnValue({});
+    const factory = vi.fn().mockReturnValue({});
     const ctx = new RedisTransactionContext(makeHandle(), makeDriver() as any, factory);
 
     ctx.repository(AnotherEntity as any);
@@ -94,7 +95,7 @@ describe("RedisTransactionContext.queryBuilder", () => {
   });
 
   test("returns the query builder from the driver", () => {
-    const mockQb = { getMany: jest.fn() } as unknown as IProteusQueryBuilder<any>;
+    const mockQb = { getMany: vi.fn() } as unknown as IProteusQueryBuilder<any>;
     const driver = makeDriver();
     driver.createTransactionalQueryBuilder.mockReturnValue(mockQb);
     const ctx = new RedisTransactionContext(makeHandle(), driver as any);

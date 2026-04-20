@@ -1,4 +1,5 @@
 import { classifyRedisError } from "./classify-breaker-error";
+import { describe, expect, it } from "vitest";
 
 describe("classifyRedisError", () => {
   describe("transient system codes", () => {

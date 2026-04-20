@@ -1,5 +1,6 @@
 import { defaultRelationFilter } from "./default-relation-filter";
 import type { MetaRelation } from "../types/metadata";
+import { describe, expect, test } from "vitest";
 
 const makeRelation = (overrides: Partial<MetaRelation> = {}): MetaRelation =>
   ({

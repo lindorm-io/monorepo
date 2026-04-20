@@ -1,9 +1,10 @@
+import { afterAll, beforeAll, describe } from "vitest";
 // Postgres Migration TCK Harness
 //
 // Runs the migration TCK suite against a real PostgreSQL instance.
 // Uses a random schema for isolation; teardown drops the schema.
 
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import type { ILogger } from "@lindorm/logger";
 import { randomBytes } from "node:crypto";
 import { writeFile } from "node:fs/promises";

@@ -1,4 +1,32 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`diffComments > should add column comment 1`] = `
+[
+  {
+    "autocommit": false,
+    "description": "Set comment on column "public"."users"."email"",
+    "schema": "public",
+    "severity": "safe",
+    "sql": "COMMENT ON COLUMN "public"."users"."email" IS 'Primary email';",
+    "table": "users",
+    "type": "set_comment",
+  },
+]
+`;
+
+exports[`diffComments > should add table comment 1`] = `
+[
+  {
+    "autocommit": false,
+    "description": "Set comment on table "public"."users"",
+    "schema": "public",
+    "severity": "safe",
+    "sql": "COMMENT ON TABLE "public"."users" IS 'User accounts';",
+    "table": "users",
+    "type": "set_comment",
+  },
+]
+`;
 
 exports[`diffComments should add column comment 1`] = `
 [

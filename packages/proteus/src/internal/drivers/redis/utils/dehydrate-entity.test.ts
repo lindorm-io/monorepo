@@ -1,3 +1,4 @@
+import { beforeEach, describe, expect, test, vi, type MockedFunction } from "vitest";
 import type {
   EntityMetadata,
   MetaField,
@@ -7,13 +8,13 @@ import { dehydrateToRow } from "./dehydrate-entity";
 
 // ─── Module Mocks ────────────────────────────────────────────────────────────
 
-jest.mock("../../../entity/utils/resolve-join-key-value", () => ({
-  resolveJoinKeyValue: jest.fn(),
+vi.mock("../../../entity/utils/resolve-join-key-value", () => ({
+  resolveJoinKeyValue: vi.fn(),
 }));
 
 import { resolveJoinKeyValue } from "../../../entity/utils/resolve-join-key-value";
 
-const mockResolveJoinKeyValue = resolveJoinKeyValue as jest.MockedFunction<
+const mockResolveJoinKeyValue = resolveJoinKeyValue as MockedFunction<
   typeof resolveJoinKeyValue
 >;
 
@@ -60,7 +61,7 @@ const makeMetadata = (
 
 describe("dehydrateToRow", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test("should extract simple field values from entity", () => {
@@ -127,7 +128,7 @@ describe("dehydrateToRow", () => {
   });
 
   test("should not apply transform when value is null", () => {
-    const toMock = jest.fn();
+    const toMock = vi.fn();
     const fields = [
       makeField({
         key: "data",

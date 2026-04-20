@@ -1,6 +1,7 @@
 import { makeField } from "../../../../__fixtures__/make-field";
 import type { EntityMetadata } from "../../../../entity/types/metadata";
 import { hydrateReturning, hydrateReturningRows } from "./hydrate-returning";
+import { describe, expect, test } from "vitest";
 
 class UserEntity {
   id: string = "";

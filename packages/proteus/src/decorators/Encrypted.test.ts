@@ -3,6 +3,7 @@ import { Entity } from "./Entity";
 import { Encrypted } from "./Encrypted";
 import { Field } from "./Field";
 import { PrimaryKeyField } from "./PrimaryKeyField";
+import { describe, expect, test } from "vitest";
 
 @Entity({ name: "EncryptedNoOptions" })
 class EncryptedNoOptions {

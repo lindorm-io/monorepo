@@ -1,4 +1,30 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`compileUpdate > should add optimistic locking WHERE when Version field exists 1`] = `
+{
+  "params": [
+    "Alice Updated",
+    "alice-new@example.com",
+    2024-06-01T00:00:00.000Z,
+    3,
+    "abc-123",
+    2,
+  ],
+  "text": "UPDATE "app"."users" AS "t0" SET "name" = $1, "email_address" = $2, "updated_at" = $3, "version" = $4 WHERE "t0"."id" = $5 AND "t0"."version" = $6 RETURNING *",
+}
+`;
+
+exports[`compileUpdate > should compile a basic update 1`] = `
+{
+  "params": [
+    "Alice Updated",
+    "alice-new@example.com",
+    2024-06-01T00:00:00.000Z,
+    "abc-123",
+  ],
+  "text": "UPDATE "app"."users" AS "t0" SET "name" = $1, "email_address" = $2, "updated_at" = $3 WHERE "t0"."id" = $4 RETURNING *",
+}
+`;
 
 exports[`compileUpdate should add optimistic locking WHERE when Version field exists 1`] = `
 {
@@ -23,6 +49,16 @@ exports[`compileUpdate should compile a basic update 1`] = `
     "abc-123",
   ],
   "text": "UPDATE "app"."users" AS "t0" SET "name" = $1, "email_address" = $2, "updated_at" = $3 WHERE "t0"."id" = $4 RETURNING *",
+}
+`;
+
+exports[`compileUpdateMany > should compile criteria-based update 1`] = `
+{
+  "params": [
+    "new@example.com",
+    "Alice",
+  ],
+  "text": "UPDATE "app"."users" AS "t0" SET "email_address" = $1 WHERE "t0"."name" = $2",
 }
 `;
 

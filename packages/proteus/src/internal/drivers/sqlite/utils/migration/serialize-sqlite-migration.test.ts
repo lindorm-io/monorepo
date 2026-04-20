@@ -1,15 +1,16 @@
 import type { SqliteDbSnapshot } from "../../types/db-snapshot";
 import type { SqliteSyncOperation, SqliteSyncPlan } from "../../types/sync-plan";
+import { describe, expect, test, vi, type Mock } from "vitest";
 
 // Mock crypto.randomUUID for deterministic IDs
-jest.mock("crypto", () => ({
-  ...jest.requireActual("crypto"),
-  randomUUID: jest.fn(() => "00000000-0000-0000-0000-000000000000"),
+vi.mock("crypto", async () => ({
+  ...(await vi.importActual<typeof import("crypto")>("crypto")),
+  randomUUID: vi.fn(() => "00000000-0000-0000-0000-000000000000"),
 }));
 
 // Mock ShaKit for deterministic checksums
-jest.mock("@lindorm/sha", () => ({
-  ShaKit: { S256: jest.fn(() => "mocked-checksum-sha256") },
+vi.mock("@lindorm/sha", () => ({
+  ShaKit: { S256: vi.fn(() => "mocked-checksum-sha256") },
 }));
 
 import { serializeSqliteMigration } from "./serialize-sqlite-migration";

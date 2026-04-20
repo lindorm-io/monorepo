@@ -1,10 +1,35 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`RedisRepository M2M metadata invariants (used by loadManyToManyLazy) > ManyToMany both sides resolve to the same joinTable name 1`] = `"repo_m2m_owner_x_repo_m2m_target"`;
 
 exports[`RedisRepository M2M metadata invariants (used by loadManyToManyLazy) ManyToMany both sides resolve to the same joinTable name 1`] = `"repo_m2m_owner_x_repo_m2m_target"`;
+
+exports[`RedisRepository.clear (with ManyToMany relations) > T-013: scans with correct forward and reverse join patterns for ManyToMany 1`] = `"join:repo_m2m_owner_x_repo_m2m_target:*"`;
+
+exports[`RedisRepository.clear (with ManyToMany relations) > T-013: scans with correct forward and reverse join patterns for ManyToMany 2`] = `"join:repo_m2m_owner_x_repo_m2m_target:rev:*"`;
 
 exports[`RedisRepository.clear (with ManyToMany relations) T-013: scans with correct forward and reverse join patterns for ManyToMany 1`] = `"join:repo_m2m_owner_x_repo_m2m_target:*"`;
 
 exports[`RedisRepository.clear (with ManyToMany relations) T-013: scans with correct forward and reverse join patterns for ManyToMany 2`] = `"join:repo_m2m_owner_x_repo_m2m_target:rev:*"`;
+
+exports[`RedisRepository.cursor > cursor contains entities from executor when no where clause 1`] = `
+[
+  RepoItem {
+    "createdAt": undefined,
+    "id": "c1",
+    "name": "first",
+    "updatedAt": undefined,
+    "version": undefined,
+  },
+  RepoItem {
+    "createdAt": undefined,
+    "id": "c2",
+    "name": "second",
+    "updatedAt": undefined,
+    "version": undefined,
+  },
+]
+`;
 
 exports[`RedisRepository.cursor cursor contains entities from executor when no where clause 1`] = `
 [
@@ -19,6 +44,25 @@ exports[`RedisRepository.cursor cursor contains entities from executor when no w
     "createdAt": undefined,
     "id": "c2",
     "name": "second",
+    "updatedAt": undefined,
+    "version": undefined,
+  },
+]
+`;
+
+exports[`RedisRepository.find > returns entities array from executor 1`] = `
+[
+  RepoItem {
+    "createdAt": undefined,
+    "id": "1",
+    "name": "alpha",
+    "updatedAt": undefined,
+    "version": undefined,
+  },
+  RepoItem {
+    "createdAt": undefined,
+    "id": "2",
+    "name": "beta",
     "updatedAt": undefined,
     "version": undefined,
   },

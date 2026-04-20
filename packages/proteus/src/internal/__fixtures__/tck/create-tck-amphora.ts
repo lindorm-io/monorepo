@@ -1,6 +1,6 @@
 import { Amphora } from "@lindorm/amphora";
 import { KryptosKit } from "@lindorm/kryptos";
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import type { IAmphora } from "@lindorm/amphora";
 
 export const createTckAmphora = (): IAmphora => {

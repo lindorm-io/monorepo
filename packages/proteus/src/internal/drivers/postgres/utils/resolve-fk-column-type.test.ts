@@ -6,6 +6,7 @@ import { PrimaryKey } from "../../../../decorators/PrimaryKey";
 import { PrimaryKeyField } from "../../../../decorators/PrimaryKeyField";
 import { resolveFkColumnType } from "../../../drivers/postgres/utils/resolve-fk-column-type";
 import { ProteusError } from "../../../../errors";
+import { describe, expect, test } from "vitest";
 
 // ---------------------------------------------------------------------------
 // Test entities — must be at module scope for stage-3 decorator execution

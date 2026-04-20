@@ -22,8 +22,9 @@ import { VersionEndDateField } from "../../../decorators/VersionEndDateField";
 import { VersionField } from "../../../decorators/VersionField";
 import { VersionKeyField } from "../../../decorators/VersionKeyField";
 import { VersionStartDateField } from "../../../decorators/VersionStartDateField";
+import { describe, expect, test, vi } from "vitest";
 
-const emHookCb = jest.fn();
+const emHookCb = vi.fn();
 
 @Entity({ name: "EMOrderItem" })
 class EMOrderItem {
@@ -166,7 +167,7 @@ describe("EntityManager", () => {
     });
 
     test("should not throw when increment entity has getNextIncrement", () => {
-      const getNextIncrement = jest.fn().mockResolvedValue(1);
+      const getNextIncrement = vi.fn().mockResolvedValue(1);
       expect(
         () =>
           new EntityManager({
@@ -242,7 +243,7 @@ describe("EntityManager", () => {
     });
 
     test("should call getNextIncrement for increment-strategy fields", async () => {
-      const getNextIncrement = jest.fn().mockResolvedValue(42);
+      const getNextIncrement = vi.fn().mockResolvedValue(42);
       const manager = new EntityManager({
         target: EMWithIncrement,
         driver: "postgres",
@@ -257,7 +258,7 @@ describe("EntityManager", () => {
     });
 
     test("should not call getNextIncrement when field already has a positive value", async () => {
-      const getNextIncrement = jest.fn().mockResolvedValue(99);
+      const getNextIncrement = vi.fn().mockResolvedValue(99);
       const manager = new EntityManager({
         target: EMWithIncrement,
         driver: "postgres",

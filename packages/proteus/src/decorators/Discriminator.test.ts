@@ -1,4 +1,5 @@
 import { Discriminator } from "./Discriminator";
+import { describe, expect, test } from "vitest";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Test entities

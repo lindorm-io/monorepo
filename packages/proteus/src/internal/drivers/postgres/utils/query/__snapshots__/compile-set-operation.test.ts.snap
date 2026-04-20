@@ -1,4 +1,28 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`compileSetOperations > multiple operations chained > should join multiple no-param entries with spaces 1`] = `"UNION SELECT id FROM archived_orders EXCEPT SELECT id FROM cancelled_orders UNION ALL SELECT id FROM pending_orders"`;
+
+exports[`compileSetOperations > multiple operations with params — correct reindexing across entries > should reindex $N placeholders sequentially across multiple entries 1`] = `"UNION SELECT id FROM orders WHERE status = $1 UNION ALL SELECT id FROM orders WHERE region = $2 AND tier = $3"`;
+
+exports[`compileSetOperations > parameterless entry with non-empty globalParams > result SQL is correct when entry has no params but globalParams is non-empty 1`] = `"UNION SELECT id FROM archived_orders"`;
+
+exports[`compileSetOperations > pre-existing globalParams — offset applied correctly > should correctly offset multiple entries when globalParams already has entries 1`] = `"UNION SELECT id FROM t WHERE x = $2 AND y = $3 EXCEPT SELECT id FROM t WHERE z = $4"`;
+
+exports[`compileSetOperations > pre-existing globalParams — offset applied correctly > should offset $N placeholders by the number of pre-existing globalParams 1`] = `"UNION SELECT id FROM orders WHERE status = $3"`;
+
+exports[`compileSetOperations > single EXCEPT ALL operation > should produce EXCEPT ALL prefix with the entry SQL 1`] = `"EXCEPT ALL SELECT id FROM suspended_users"`;
+
+exports[`compileSetOperations > single EXCEPT operation > should produce EXCEPT prefix with the entry SQL 1`] = `"EXCEPT SELECT id FROM banned_users"`;
+
+exports[`compileSetOperations > single INTERSECT ALL operation > should produce INTERSECT ALL prefix with the entry SQL 1`] = `"INTERSECT ALL SELECT id FROM active_users"`;
+
+exports[`compileSetOperations > single INTERSECT operation > should produce INTERSECT prefix with the entry SQL 1`] = `"INTERSECT SELECT id FROM premium_users"`;
+
+exports[`compileSetOperations > single UNION ALL operation > should produce UNION ALL prefix with the entry SQL 1`] = `"UNION ALL SELECT id FROM deleted_orders"`;
+
+exports[`compileSetOperations > single UNION operation > should produce UNION prefix with the entry SQL 1`] = `"UNION SELECT id FROM archived_orders"`;
+
+exports[`compileSetOperations > single operation with params > should reindex $1 to $1 when globalParams is initially empty 1`] = `"UNION SELECT id FROM orders WHERE status = $1"`;
 
 exports[`compileSetOperations multiple operations chained should join multiple no-param entries with spaces 1`] = `"UNION SELECT id FROM archived_orders EXCEPT SELECT id FROM cancelled_orders UNION ALL SELECT id FROM pending_orders"`;
 

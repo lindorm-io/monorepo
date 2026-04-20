@@ -2,6 +2,7 @@ import { installLazyRelations } from "./install-lazy-relations";
 import { isLazyRelation } from "./lazy-relation";
 import { isLazyCollection } from "./lazy-collection";
 import type { EntityMetadata, MetaRelation } from "../types/metadata";
+import { describe, expect, it, vi } from "vitest";
 
 const makeRelation = (overrides: Partial<MetaRelation>): MetaRelation => ({
   key: "author",
@@ -30,7 +31,7 @@ const makeRelation = (overrides: Partial<MetaRelation>): MetaRelation => ({
 const makeMetadata = (relations: MetaRelation[]): EntityMetadata =>
   ({ relations }) as EntityMetadata;
 
-const mockLoadRelation = () => jest.fn().mockResolvedValue(null);
+const mockLoadRelation = () => vi.fn().mockResolvedValue(null);
 
 describe("installLazyRelations", () => {
   it("should install LazyRelation for ManyToOne with non-null FK", () => {
@@ -165,7 +166,7 @@ describe("installLazyRelations", () => {
 
   it("should call loadRelation with correct entity and relation on load", async () => {
     const foundAuthor = { id: "2", name: "Author" };
-    const loader = jest.fn().mockResolvedValue(foundAuthor);
+    const loader = vi.fn().mockResolvedValue(foundAuthor);
 
     const relation = makeRelation({ foreignConstructor: () => class Author {} as any });
     const entity: any = { id: "1", authorId: "2" };

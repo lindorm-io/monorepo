@@ -1,23 +1,24 @@
 import { PostgresTransactionError } from "../../errors/PostgresTransactionError";
 import { beginTransaction } from "./begin-transaction";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockPoolClient = {
-  query: jest.fn().mockResolvedValue({ rows: [], rowCount: 0 }),
-  release: jest.fn(),
+  query: vi.fn().mockResolvedValue({ rows: [], rowCount: 0 }),
+  release: vi.fn(),
 };
 
 const mockPool = {
-  connect: jest.fn().mockResolvedValue(mockPoolClient),
+  connect: vi.fn().mockResolvedValue(mockPoolClient),
 } as any;
 
-const mockCreatePgClient = jest.fn((poolClient: any) => ({
-  query: jest.fn(async (sql: string, params?: Array<unknown>) => {
+const mockCreatePgClient = vi.fn((poolClient: any) => ({
+  query: vi.fn(async (sql: string, params?: Array<unknown>) => {
     return poolClient.query(sql, params);
   }),
 }));
 
 beforeEach(() => {
-  jest.clearAllMocks();
+  vi.clearAllMocks();
 });
 
 describe("beginTransaction", () => {

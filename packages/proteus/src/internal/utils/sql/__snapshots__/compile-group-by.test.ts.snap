@@ -1,4 +1,10 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`compileGroupBy [mysql] > should compile multiple field groupBy 1`] = `"GROUP BY \`t0\`.\`name\`, \`t0\`.\`age\`"`;
+
+exports[`compileGroupBy [mysql] > should compile single field groupBy 1`] = `"GROUP BY \`t0\`.\`name\`"`;
+
+exports[`compileGroupBy [mysql] > should use column name mapping 1`] = `"GROUP BY \`t0\`.\`dept_code\`"`;
 
 exports[`compileGroupBy [mysql] should compile multiple field groupBy 1`] = `"GROUP BY \`t0\`.\`name\`, \`t0\`.\`age\`"`;
 
@@ -6,11 +12,23 @@ exports[`compileGroupBy [mysql] should compile single field groupBy 1`] = `"GROU
 
 exports[`compileGroupBy [mysql] should use column name mapping 1`] = `"GROUP BY \`t0\`.\`dept_code\`"`;
 
+exports[`compileGroupBy [postgres] > should compile multiple field groupBy 1`] = `"GROUP BY "t0"."name", "t0"."age""`;
+
+exports[`compileGroupBy [postgres] > should compile single field groupBy 1`] = `"GROUP BY "t0"."name""`;
+
+exports[`compileGroupBy [postgres] > should use column name mapping 1`] = `"GROUP BY "t0"."dept_code""`;
+
 exports[`compileGroupBy [postgres] should compile multiple field groupBy 1`] = `"GROUP BY "t0"."name", "t0"."age""`;
 
 exports[`compileGroupBy [postgres] should compile single field groupBy 1`] = `"GROUP BY "t0"."name""`;
 
 exports[`compileGroupBy [postgres] should use column name mapping 1`] = `"GROUP BY "t0"."dept_code""`;
+
+exports[`compileGroupBy [sqlite] > should compile multiple field groupBy 1`] = `"GROUP BY "t0"."name", "t0"."age""`;
+
+exports[`compileGroupBy [sqlite] > should compile single field groupBy 1`] = `"GROUP BY "t0"."name""`;
+
+exports[`compileGroupBy [sqlite] > should use column name mapping 1`] = `"GROUP BY "t0"."dept_code""`;
 
 exports[`compileGroupBy [sqlite] should compile multiple field groupBy 1`] = `"GROUP BY "t0"."name", "t0"."age""`;
 

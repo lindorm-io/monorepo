@@ -3,6 +3,7 @@ import { Check } from "./Check";
 import { Entity } from "./Entity";
 import { Field } from "./Field";
 import { PrimaryKeyField } from "./PrimaryKeyField";
+import { describe, expect, test } from "vitest";
 
 @Entity({ name: "CheckUnnamed" })
 @Check("age >= 0")

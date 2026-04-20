@@ -1,4 +1,4 @@
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import type { ILogger } from "@lindorm/logger";
 import { randomBytes, randomUUID } from "crypto";
 import { mkdtemp, rm, writeFile } from "fs/promises";
@@ -13,6 +13,7 @@ import type { MigrationTableOptions } from "../types/migration";
 import { withAdvisoryLock } from "../utils/advisory-lock";
 import { getAllMigrationRecords } from "../utils/migration/migration-table";
 import { MigrationManager } from "./MigrationManager";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 mockScannerImport();
 

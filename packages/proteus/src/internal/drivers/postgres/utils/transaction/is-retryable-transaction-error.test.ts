@@ -2,6 +2,7 @@ import { DeadlockError } from "../../../../errors/DeadlockError";
 import { SerializationError } from "../../../../errors/SerializationError";
 import { PostgresTransactionError } from "../../errors/PostgresTransactionError";
 import { isRetryableTransactionError } from "./is-retryable-transaction-error";
+import { describe, expect, it } from "vitest";
 
 describe("isRetryableTransactionError", () => {
   it("should return true for SerializationError", () => {

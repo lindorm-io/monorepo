@@ -2,6 +2,7 @@ import { makeField } from "../../../../../__fixtures__/make-field";
 import type { EntityMetadata } from "../../../../../entity/types/metadata";
 import { createEmptyState } from "../../../../../../classes/QueryBuilder";
 import { compileQuery, compileCount } from "../compile-query";
+import { describe, expect, test } from "vitest";
 
 const metadata = {
   entity: {

@@ -1,4 +1,5 @@
 import { buildKeysetPredicate } from "./build-keyset-predicate";
+import { describe, expect, it } from "vitest";
 
 describe("buildKeysetPredicate", () => {
   it("should build single column ASC forward predicate", () => {

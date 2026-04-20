@@ -4,6 +4,7 @@ import { Entity } from "./Entity";
 import { PrimaryKeyField } from "./PrimaryKeyField";
 import { Field } from "./Field";
 import { CreateDateField } from "./CreateDateField";
+import { describe, expect, test } from "vitest";
 
 @Entity({ name: "DefaultOrderSingle" })
 @DefaultOrder({ createdAt: "DESC" })

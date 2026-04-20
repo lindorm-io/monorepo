@@ -1,6 +1,7 @@
 import { diffComments } from "../../../../drivers/postgres/utils/sync/diff-comments";
 import type { DbTable } from "../../types/db-snapshot";
 import type { DesiredTable } from "../../types/desired-schema";
+import { describe, expect, it } from "vitest";
 
 const makeDbTable = (overrides: Partial<DbTable> = {}): DbTable => ({
   schema: "public",

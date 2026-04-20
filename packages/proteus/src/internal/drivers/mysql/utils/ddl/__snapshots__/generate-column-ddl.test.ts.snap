@@ -1,4 +1,98 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`generateColumnDDL (MySQL) > FK relation adds an implicit FK column 1`] = `
+[
+  "\`id\` CHAR(36) NOT NULL",
+  "\`title\` TEXT NOT NULL",
+  "\`parentId\` CHAR(36) NOT NULL",
+]
+`;
+
+exports[`generateColumnDDL (MySQL) > boolean field with boolean DEFAULT (integer 0/1) 1`] = `
+[
+  "\`id\` CHAR(36) NOT NULL",
+  "\`active\` TINYINT(1) DEFAULT 0 NOT NULL",
+]
+`;
+
+exports[`generateColumnDDL (MySQL) > computed field emits GENERATED ALWAYS AS (expr) STORED 1`] = `
+[
+  "\`id\` CHAR(36) NOT NULL",
+  "\`firstName\` TEXT NOT NULL",
+  "\`lastName\` TEXT NOT NULL",
+  "\`fullName\` TEXT GENERATED ALWAYS AS (CONCAT(firstName, ' ', lastName)) STORED",
+]
+`;
+
+exports[`generateColumnDDL (MySQL) > does not duplicate FK column when field is explicitly declared 1`] = `
+[
+  "\`id\` CHAR(36) NOT NULL",
+  "\`parentId\` CHAR(36)",
+]
+`;
+
+exports[`generateColumnDDL (MySQL) > enum field emits inline ENUM type 1`] = `
+[
+  "\`id\` CHAR(36) NOT NULL",
+  "\`status\` ENUM('active', 'inactive', 'pending') NOT NULL",
+]
+`;
+
+exports[`generateColumnDDL (MySQL) > function-based default is skipped (no DEFAULT clause emitted) 1`] = `
+[
+  "\`id\` CHAR(36) NOT NULL",
+  "\`generated\` TEXT NOT NULL",
+]
+`;
+
+exports[`generateColumnDDL (MySQL) > generates basic NOT NULL field columns 1`] = `
+[
+  "\`id\` CHAR(36) NOT NULL",
+  "\`name\` TEXT NOT NULL",
+]
+`;
+
+exports[`generateColumnDDL (MySQL) > integer field with AUTO_INCREMENT 1`] = `
+[
+  "\`id\` INT AUTO_INCREMENT",
+  "\`label\` TEXT NOT NULL",
+]
+`;
+
+exports[`generateColumnDDL (MySQL) > integer field with numeric DEFAULT 1`] = `
+[
+  "\`id\` CHAR(36) NOT NULL",
+  "\`count\` INT DEFAULT 0 NOT NULL",
+]
+`;
+
+exports[`generateColumnDDL (MySQL) > nullable field omits NOT NULL 1`] = `
+[
+  "\`id\` CHAR(36) NOT NULL",
+  "\`description\` TEXT",
+]
+`;
+
+exports[`generateColumnDDL (MySQL) > string field with single-quoted default escapes embedded quotes 1`] = `
+[
+  "\`id\` CHAR(36) NOT NULL",
+  "\`label\` TEXT DEFAULT 'it''s default' NOT NULL",
+]
+`;
+
+exports[`generateColumnDDL (MySQL) > string field with string DEFAULT 1`] = `
+[
+  "\`id\` CHAR(36) NOT NULL",
+  "\`status\` TEXT DEFAULT 'unknown' NOT NULL",
+]
+`;
+
+exports[`generateColumnDDL (MySQL) > uuid field — no DEFAULT (app-generated) 1`] = `
+[
+  "\`id\` CHAR(36) NOT NULL",
+  "\`title\` TEXT NOT NULL",
+]
+`;
 
 exports[`generateColumnDDL (MySQL) FK relation adds an implicit FK column 1`] = `
 [

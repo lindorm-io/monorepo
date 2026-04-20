@@ -1,6 +1,7 @@
 import { makeField } from "../../../../__fixtures__/make-field";
 import { ProteusError } from "../../../../../errors";
 import { generateEnumTypeDDL } from "./generate-enum-type-ddl";
+import { describe, expect, test } from "vitest";
 
 // ---------------------------------------------------------------------------
 // Sample enums

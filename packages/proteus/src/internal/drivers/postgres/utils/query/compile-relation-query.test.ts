@@ -2,17 +2,26 @@ import { makeField } from "../../../../__fixtures__/make-field";
 import type { EntityMetadata, MetaRelation } from "../../../../entity/types/metadata";
 import type { IncludeSpec } from "../../../../types/query";
 import type { RelationQueryContext } from "./compile-relation-query";
+import {
+  beforeEach,
+  describe,
+  expect,
+  test,
+  vi,
+  type Mock,
+  type MockedFunction,
+} from "vitest";
 
 // Mock the two helpers that call getEntityMetadata under the hood
-jest.mock("./get-relation-metadata");
+vi.mock("./get-relation-metadata");
 
 import { findRelationByKey, getRelationMetadata } from "./get-relation-metadata";
 import { compileRelationQuery } from "./compile-relation-query";
 
-const mockFindRelationByKey = findRelationByKey as jest.MockedFunction<
+const mockFindRelationByKey = findRelationByKey as MockedFunction<
   typeof findRelationByKey
 >;
-const mockGetRelationMetadata = getRelationMetadata as jest.MockedFunction<
+const mockGetRelationMetadata = getRelationMetadata as MockedFunction<
   typeof getRelationMetadata
 >;
 
@@ -84,7 +93,7 @@ const makeRelation = (overrides: Partial<MetaRelation> = {}): MetaRelation =>
 
 describe("compileRelationQuery — inverse (OneToMany)", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test("compiles a basic inverse query with single root PK value", () => {
@@ -255,7 +264,7 @@ describe("compileRelationQuery — inverse (OneToMany)", () => {
 
 describe("compileRelationQuery — owning side (has joinKeys)", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test("compiles owning-side query using foreign PK IN clause", () => {
@@ -354,7 +363,7 @@ describe("compileRelationQuery — owning side (has joinKeys)", () => {
 
 describe("compileRelationQuery — ManyToMany", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test("compiles a basic ManyToMany query with INNER JOIN on join table", () => {
@@ -511,7 +520,7 @@ describe("compileRelationQuery — ManyToMany", () => {
 
 describe("compileRelationQuery — version filtering", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test("adds versionEndDate IS NULL when foreignMeta has version fields and no timestamp", () => {
@@ -592,7 +601,7 @@ describe("compileRelationQuery — version filtering", () => {
 
 describe("compileRelationQuery — user-provided WHERE", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test("appends compiled user WHERE condition to the query", () => {

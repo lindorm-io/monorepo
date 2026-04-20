@@ -1,6 +1,7 @@
 import type { EntityMetadata } from "../../../entity/types/metadata";
 import type { MemoryStore } from "../types/memory-store";
 import { applyAutoIncrement } from "./memory-auto-increment";
+import { describe, expect, test } from "vitest";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

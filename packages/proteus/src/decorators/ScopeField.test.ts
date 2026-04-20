@@ -3,6 +3,7 @@ import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metada
 import { Entity } from "./Entity";
 import { PrimaryKeyField } from "./PrimaryKeyField";
 import { ScopeField } from "./ScopeField";
+import { describe, expect, test } from "vitest";
 
 @Entity({ name: "ScopeFieldDecorated" })
 class ScopeFieldDecorated {

@@ -1,6 +1,7 @@
 import { makeField } from "../../__fixtures__/make-field";
 import { validateUniques } from "./validate-uniques";
 import type { MetaUnique } from "../types/metadata";
+import { describe, expect, test } from "vitest";
 
 const makeUnique = (keys: Array<string>, name: string | null = null): MetaUnique => ({
   keys,

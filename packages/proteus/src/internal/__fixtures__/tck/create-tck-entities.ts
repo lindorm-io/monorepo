@@ -53,7 +53,7 @@ import {
 
 export type TckEntities = ReturnType<typeof createTckEntities>;
 
-export const createTckEntities = (hookCallback: jest.Mock) => {
+export const createTckEntities = (hookCallback: Mock) => {
   // Forward-declare relation classes so thunks can reference them
 
   @Entity({ name: "TckSimplePost" })
