@@ -1,7 +1,7 @@
 import { IKryptosRsa } from "../interfaces";
 import { KryptosKit } from "../classes";
 
-export const MOCK_KRYPTOS_RSA_SIG_RS256 = KryptosKit.from.b64({
+export const KRYPTOS_RSA_SIG_RS256 = KryptosKit.from.b64({
   id: "587fd323-46d5-46d7-a22a-56200991c20b",
   algorithm: "RS256",
   type: "RSA",
@@ -12,7 +12,7 @@ export const MOCK_KRYPTOS_RSA_SIG_RS256 = KryptosKit.from.b64({
     "MIIBCgKCAQEAsx0-GUFHyH1otCROaE2Jt1KMbkTJaB-2slLEh6YLcBySR3ZSGYOhed3fYKjH5AqpYFosBVR3cAmEY0VgvHEWgLKFBtGVriykTejaulnUv7vNnMoDoRnN0Na94nqT5jq_Rm3q04MOrEtEaJdg11d05Oye6dBhxgXYfpG4xYtpqiB95x6iwGJEZF8FeaKCsnhQz93ghhRQbZ6psbb3hgXl7JCxA9AK8h6cuDzxLaXTkPJsn5uigZeiL0lP5OfSKMooHwjQOzq-S0g5u52Lw_tQJsmhWL7rGsHsWG9Ml4IiS3OrIOYZy5qSsGzWHPnwzDnmuY30Qqmc9WT1_p80JteWHwIDAQAB",
 }) as IKryptosRsa;
 
-export const MOCK_KRYPTOS_RSA_SIG_RS384 = KryptosKit.from.b64({
+export const KRYPTOS_RSA_SIG_RS384 = KryptosKit.from.b64({
   id: "c974e89f-8680-458d-a0ed-c850aa530f65",
   algorithm: "RS384",
   type: "RSA",
@@ -23,7 +23,7 @@ export const MOCK_KRYPTOS_RSA_SIG_RS384 = KryptosKit.from.b64({
     "MIIBigKCAYEAzttXz20Czo-REBNpTSVohMDFvxmmG9XrIOCrmwQZtEaYYY2-sffRSw40Z4hHNcKoaAWoWO70W6nrC1T4aZXBxMYxp9LgMrROD6ZA-tAAeglykWDINrsfeIGkC3Yq0sOxV1-81zFihDCp-s-bCYO7dIEvEWQwifLv2AyoT3Of1l8eXhn6tU1mRxHTvx3C6v5FSHfLdjDH7-tNQpExCMCxnSTIEgC--EgP6mpvJ-yYa63CGxhOJjHjQhfrD6jxqOvTJaVtmWBs-auBchc4e4urQE5WC9oWeisZdbAWJys6RE4vQfHWZZOuq00lRxNKEvdhwG2c3JcgsP_kd7NJmYVQ_PRYveVx6ikh4gmkj-1Nx_kxMdglhhtJPAdAFLiyrX6qkDgK_awZLyqLXbxzI0mz7tUTikHznoyNkSlcfOXSIZO32JqjN2nlcG3K7GbMM7MUXcQp7AJcUU5pBvnBip9QINhuk2rOqiTA1l7dPVuc0F-i1ZAqKi8XIiEOjCY5VCejAgMBAAE",
 }) as IKryptosRsa;
 
-export const MOCK_KRYPTOS_RSA_SIG_RS512 = KryptosKit.from.b64({
+export const KRYPTOS_RSA_SIG_RS512 = KryptosKit.from.b64({
   id: "66bed866-2b7c-4b25-8b5a-fa9a8e4775ae",
   algorithm: "RS512",
   type: "RSA",
@@ -34,7 +34,7 @@ export const MOCK_KRYPTOS_RSA_SIG_RS512 = KryptosKit.from.b64({
     "MIICCgKCAgEAzSxBF06yu8PAao8HAIXCjGTH4raUHAOdO_zg_ltsVlmE-Xnw3y-cakvrRVgwARHNQazvf0YG51yOUwybxowei9J8BENBCs3vXCeUtL--bnrPIgZLyy81gcSSHoowjlh_kzvNlH2e_0_Gk3nRx87ODU93UCcFoDZxA1Dfsk0vWB-omkVGsDDGjVCcMDUz4rLs05UqKsZ_6voVgCCnZLOh_5RlRxiyhCGK2usK-pv-Zw7UvKxlbISUy620oQc55OY9kukps5DRoEDajJ1Zeo5xz7aXNiW6hCaLWQ29DC1RqaN5jbHjMCpBu7lx79NZuLRX8NXYSxIvqAmJ5e8ksqy4zf_gZBvR4UenB2wUXcdBQApjM9TEbkn-3__JnZMjJOrnvA5yYFhqF3QUHTAxZLtro2t7iolBZWN5xA1fYCiWi4dHDMZtXaZ5zMiDDbt6mVwJFMnzrQDjjx36EWO6We8ntOETyY29zG6_6R7WDV417WnEbVAqQRHXRUzHkAZc4EydjPXfgGC61TyyyUdtdzHPFCY2XimY3mpgjHBJo-gpwpx4XUlAw_8-iiwOJGmY4MtM_1yEAKHKEWpFcKupIbxmJcg16WR03Kxj8TZHX2DNlGvXzi3nEG41hymOVBoZ_7kesar30oXpO6UkyRbEVt0OySRm-GxYxpk6t_lmRiSrqgsCAwEAAQ",
 }) as IKryptosRsa;
 
-export const MOCK_KRYPTOS_RSA_SIG_PS256 = KryptosKit.from.b64({
+export const KRYPTOS_RSA_SIG_PS256 = KryptosKit.from.b64({
   id: "e99ce934-aad0-499e-889a-ef2157ce6738",
   algorithm: "PS256",
   type: "RSA",
@@ -45,7 +45,7 @@ export const MOCK_KRYPTOS_RSA_SIG_PS256 = KryptosKit.from.b64({
     "MIIBCgKCAQEAj5CjQCKtep0YTZvU5J2FE0wtHMettCqoQXsvzze3jzD4sEQFG34IIvuECR9ZFV9dGPsNRuNLPkT5BL4FrAFvvluYJ2-7935oD5IFGjgVdMCD_Ela8M7-UHTBBUdP8tkf6gTAbKaxW19dqDhNkCmxrZGNP2TKzywQPhPNM767G_x57Yy4GobF5tD6XFAM9g1I8q89rkGusT-7Jy5WsFGDwEMOTCk_CfsamKHTZ54DlE2LFz4TQuRDjmO4T4Bl-4JaSoQutOAqP5UEBU8P13EAf_gJ7qiAiWs0Kwo-C-5RvT4ya8rRsGQD2kg-FbzsDocHvmproBEMoTF6ROsVxdxu9QIDAQAB",
 }) as IKryptosRsa;
 
-export const MOCK_KRYPTOS_RSA_SIG_PS384 = KryptosKit.from.b64({
+export const KRYPTOS_RSA_SIG_PS384 = KryptosKit.from.b64({
   id: "fe05adab-7211-4c94-81d1-92f1e1c6a910",
   algorithm: "PS384",
   type: "RSA",
@@ -56,7 +56,7 @@ export const MOCK_KRYPTOS_RSA_SIG_PS384 = KryptosKit.from.b64({
     "MIIBigKCAYEA1jOYyxcK0EU_0DwSE7QYikv9SIzxmdgv28hPhhXS7VOwIoELEdh9XGKWLvrxilRLNasWZvB-29vNh5p5uesSAJaf-YB9a6L02SN02yGfoGKTtbfEkQMmMW4V9NhYLg8spHeyX5jkxqPLODayHB6gyFh4fTaaj-J2iieFkwn1qmAr8fN4c0oVSKVsE80qWPMwsCGGtihirsmnOJsN274iW5Wqyeocp67I_k1Qq4saE0Y_H0D28-k4NBq05DzS7Lj_A_hbh335M2W3U6cfLJFqzcobZebw61GfsaKdgLd5rMc6yMp0zrSY0wTmfANLqL7nb2XB2YP8kDmJV9BK0IPnGkp7boFGvD_spjtuFWgBy0qPeoBoP2MIQRt2TQItYiSgeUC-jPjW4Y6u3IYVz6jEygiK-txqylkVebhCO7ZlWgtqGF98oCJD9Wtuks9Y3U_u9PqY6sjcdfEbjU7ZBG6nonfAyGVAZMFoT7fmsGdzRl-LJ2uy7Av6QPbkxgSorCI_AgMBAAE",
 }) as IKryptosRsa;
 
-export const MOCK_KRYPTOS_RSA_SIG_PS512 = KryptosKit.from.b64({
+export const KRYPTOS_RSA_SIG_PS512 = KryptosKit.from.b64({
   id: "2ad02afd-f988-4c83-b2c6-ab1e84fdef58",
   algorithm: "PS512",
   type: "RSA",
@@ -67,7 +67,7 @@ export const MOCK_KRYPTOS_RSA_SIG_PS512 = KryptosKit.from.b64({
     "MIICCgKCAgEAwMm3FWy_zs4JFmXF890bwdhXZYo1EYEKgrGpq_wVSy0AY9SOSWRJnv8AfKOcU_ySSJgwJNPUG3xlZIvupPshLEwRm1-JbZjfzjL-5bhYQGdan8dtNiHAWebcJg71ChyZYxLmKnuq8KRmS6FaHP5wuC_eKKVdXmcLbPX60DfzEtIl13NENT0Fs8_o5ryOqnAYuhewpAgzjDXjMukIKnAyQkBwePKbjhasduf-y4gWkduRzRxFyGSjrIh3tuwP9iu5v4NUxBLT0ZGbnDiBVcTnqSYDucVQE0RofDr0bV9ivzj930t1SLVYHX04kZd-exDIvD8HsHNOlKFAD3UH9WFzNtIEbnXeZDRUFItDLPSpJNSZNB-Kdz70ItMhHg8K2wNyl7iw6aZ7uPVOleblsku1aMkQ8ZXT7boILkwfQy8ObXHZ311Yd_oqaIeQUl6Sstr-RJn78U2GeFL6fYWRdQcwMPQ9NlkCF4aL9lY0IA8exFujzmSr0OCOUfjpVKtBhOVoDos8oQjriwh9kiU6l4fXJcSD-IqiguxeibFoBNFjCjhiMEydXWrNdX5T74EYhynN0RGgbMcSqcxgDvMwBR2uPiRP_W6Yt_KGduRJgdnl08P0gv7tJ2YlSiYUpSOKx9j8eJXnZO5jiji7NXML_yotT0ng8Lauvp11HLDq724jVmkCAwEAAQ",
 }) as IKryptosRsa;
 
-export const MOCK_KRYPTOS_RSA_ENC = KryptosKit.from.b64({
+export const KRYPTOS_RSA_ENC = KryptosKit.from.b64({
   id: "8ff744d9-46ff-4627-8a3a-dd65666a22b7",
   algorithm: "RSA-OAEP",
   type: "RSA",

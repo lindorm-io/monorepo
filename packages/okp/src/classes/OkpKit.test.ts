@@ -1,8 +1,8 @@
 import {
-  MOCK_KRYPTOS_OKP_ENC_X25519,
-  MOCK_KRYPTOS_OKP_ENC_X448,
-  MOCK_KRYPTOS_OKP_SIG_ED25519,
-} from "@lindorm/kryptos";
+  KRYPTOS_OKP_ENC_X25519,
+  KRYPTOS_OKP_ENC_X448,
+  KRYPTOS_OKP_SIG_ED25519,
+} from "@lindorm/kryptos/fixtures";
 import { OkpError } from "../errors";
 import { OkpKit } from "./OkpKit";
 
@@ -11,7 +11,7 @@ describe("OkpKit", () => {
   let signature: Buffer;
 
   beforeEach(() => {
-    kit = new OkpKit({ kryptos: MOCK_KRYPTOS_OKP_SIG_ED25519 });
+    kit = new OkpKit({ kryptos: KRYPTOS_OKP_SIG_ED25519 });
     signature = kit.sign("string");
   });
 
@@ -32,19 +32,17 @@ describe("OkpKit", () => {
   });
 
   test("should throw on X25519 encryption curve", () => {
-    expect(() => new OkpKit({ kryptos: MOCK_KRYPTOS_OKP_ENC_X25519 as any })).toThrow(
+    expect(() => new OkpKit({ kryptos: KRYPTOS_OKP_ENC_X25519 as any })).toThrow(
       OkpError,
     );
-    expect(() => new OkpKit({ kryptos: MOCK_KRYPTOS_OKP_ENC_X25519 as any })).toThrow(
+    expect(() => new OkpKit({ kryptos: KRYPTOS_OKP_ENC_X25519 as any })).toThrow(
       "OkpKit only supports signing curves",
     );
   });
 
   test("should throw on X448 encryption curve", () => {
-    expect(() => new OkpKit({ kryptos: MOCK_KRYPTOS_OKP_ENC_X448 as any })).toThrow(
-      OkpError,
-    );
-    expect(() => new OkpKit({ kryptos: MOCK_KRYPTOS_OKP_ENC_X448 as any })).toThrow(
+    expect(() => new OkpKit({ kryptos: KRYPTOS_OKP_ENC_X448 as any })).toThrow(OkpError);
+    expect(() => new OkpKit({ kryptos: KRYPTOS_OKP_ENC_X448 as any })).toThrow(
       "OkpKit only supports signing curves",
     );
   });
