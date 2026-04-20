@@ -24,10 +24,12 @@
     "@commitlint/cli": "20.5.0",
     "@commitlint/config-conventional": "20.5.0",
     "@eslint/js": "^10.0.1",
+    "@swc/core": "^1.15.30",
     "@types/fs-extra": "^11.0.4",
     "@types/jest": "^30.0.0",
     "@types/node": "^25.5.0",
     "@types/supertest": "^7.2.0",
+    "@vitest/coverage-v8": "^4.1.4",
     "concurrently": "^9.2.1",
     "cross-env": "^10.1.0",
     "eslint": "^10.2.0",
@@ -51,7 +53,9 @@
     "ts-jest": "^29.4.9",
     "ts-node": "^10.9.2",
     "typescript": "^6.0.2",
-    "typescript-eslint": "^8.58.0"
+    "typescript-eslint": "^8.58.0",
+    "unplugin-swc": "^1.5.9",
+    "vitest": "^4.1.4"
   },
   "optionalDependencies": {
     "@nx/nx-darwin-arm64": "22.5.4",
