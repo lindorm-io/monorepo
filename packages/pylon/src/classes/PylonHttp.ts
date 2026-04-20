@@ -139,7 +139,7 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
     this.logger.debug("Middleware loaded");
   }
 
-  public loadRouters(): void {
+  public async loadRouters(): Promise<void> {
     this.logger.debug("Loading routers");
 
     this.router.use(...this.middleware);
@@ -161,7 +161,7 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
 
       for (const entry of routes) {
         if (isString(entry)) {
-          const router = scanner.scan(entry);
+          const router = await scanner.scan(entry);
           this.router.use(router.routes(), router.allowedMethods());
         } else {
           this.addRouter(entry.path, entry.router);

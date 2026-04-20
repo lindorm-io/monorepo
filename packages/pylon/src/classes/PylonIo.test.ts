@@ -61,16 +61,19 @@ describe("PylonIo (handshake chain)", () => {
       return namespace;
     });
 
-    io.load();
+    // NOTE: load() is async; tests call `await io.load()` themselves. Keeping
+    // createPylonIo sync so tests that assert constructor-time throws can use
+    // plain `expect(() => createPylonIo(...)).toThrow(...)`.
 
     return io;
   };
 
-  const invokeRunner = (
+  const invokeRunner = async (
     io: PylonIo,
     ns: string,
     socketOverrides: any = {},
   ): Promise<Error | undefined> => {
+    await io.load();
     const runner = (io.server.of(ns) as any).__runner as (
       s: any,
       next: (err?: Error) => void,
@@ -277,6 +280,8 @@ describe("PylonIo (handshake chain)", () => {
         session: { ...validSession, proteus: mockProteus },
       });
 
+      await io.load();
+
       const seen: any = {};
       const runner = (io.server.of("/") as any).__runner as (
         s: any,
@@ -337,11 +342,11 @@ describe("PylonIo socket.listeners option", () => {
     } as any);
   };
 
-  test("should scan when given a bare directory path string", () => {
+  test("should scan when given a bare directory path string", async () => {
     const scanSpy = jest.spyOn(PylonListenerScanner.prototype, "scan");
     const io = buildIo(listenersDir);
 
-    io.load();
+    await io.load();
 
     expect(scanSpy).toHaveBeenCalledTimes(1);
     expect(scanSpy).toHaveBeenCalledWith(listenersDir);
@@ -349,13 +354,13 @@ describe("PylonIo socket.listeners option", () => {
     scanSpy.mockRestore();
   });
 
-  test("should accept a bare PylonListener instance and register its namespace", () => {
+  test("should accept a bare PylonListener instance and register its namespace", async () => {
     const scanSpy = jest.spyOn(PylonListenerScanner.prototype, "scan");
     const listener = new PylonListener({ namespace: "/solo" });
     const io = buildIo(listener);
 
     const ofSpy = jest.spyOn(io.server, "of");
-    io.load();
+    await io.load();
 
     expect(scanSpy).not.toHaveBeenCalled();
     expect(ofSpy.mock.calls.map((c) => c[0])).toEqual(
@@ -366,7 +371,7 @@ describe("PylonIo socket.listeners option", () => {
     ofSpy.mockRestore();
   });
 
-  test("should accept an array of pre-built PylonListener instances", () => {
+  test("should accept an array of pre-built PylonListener instances", async () => {
     const scanSpy = jest.spyOn(PylonListenerScanner.prototype, "scan");
     const io = buildIo([
       new PylonListener({ namespace: "/alpha" }),
@@ -374,7 +379,7 @@ describe("PylonIo socket.listeners option", () => {
     ]);
 
     const ofSpy = jest.spyOn(io.server, "of");
-    io.load();
+    await io.load();
 
     expect(scanSpy).not.toHaveBeenCalled();
     expect(ofSpy.mock.calls.map((c) => c[0])).toEqual(
@@ -385,11 +390,11 @@ describe("PylonIo socket.listeners option", () => {
     ofSpy.mockRestore();
   });
 
-  test("should accept an array of directory path strings and scan each", () => {
+  test("should accept an array of directory path strings and scan each", async () => {
     const scanSpy = jest.spyOn(PylonListenerScanner.prototype, "scan");
     const io = buildIo([listenersDir]);
 
-    io.load();
+    await io.load();
 
     expect(scanSpy).toHaveBeenCalledTimes(1);
     expect(scanSpy).toHaveBeenCalledWith(listenersDir);
@@ -397,12 +402,12 @@ describe("PylonIo socket.listeners option", () => {
     scanSpy.mockRestore();
   });
 
-  test("should accept a mixed array of scanner paths and pre-built listeners", () => {
+  test("should accept a mixed array of scanner paths and pre-built listeners", async () => {
     const scanSpy = jest.spyOn(PylonListenerScanner.prototype, "scan");
     const io = buildIo([listenersDir, new PylonListener({ namespace: "/mixed" })]);
 
     const ofSpy = jest.spyOn(io.server, "of");
-    io.load();
+    await io.load();
 
     expect(scanSpy).toHaveBeenCalledTimes(1);
     expect(scanSpy).toHaveBeenCalledWith(listenersDir);

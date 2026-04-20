@@ -22,12 +22,12 @@ export class PylonRouterScanner<
     super(logger.child(["PylonRouterScanner"]));
   }
 
-  public scan(directory: string): PylonRouter<C> {
+  public async scan(directory: string): Promise<PylonRouter<C>> {
     const start = Date.now();
 
     this.logger.debug("Scanning routes", { directory });
 
-    const files = this.scanDirectory(directory);
+    const files = await this.scanDirectory(directory);
     const root = new PylonRouter<C>();
 
     for (const file of files) {

@@ -21,12 +21,12 @@ export class PylonListenerScanner<
     super(logger.child(["PylonListenerScanner"]));
   }
 
-  public scan(directory: string): ListenerScanResult<S> {
+  public async scan(directory: string): Promise<ListenerScanResult<S>> {
     const start = Date.now();
 
     this.logger.debug("Scanning listeners", { directory });
 
-    const files = this.scanDirectory(directory);
+    const files = await this.scanDirectory(directory);
     const listeners: Array<PylonListener<S>> = [];
 
     for (const file of files) {

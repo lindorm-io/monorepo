@@ -109,7 +109,15 @@ export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
     this.addMiddleware(middleware);
   }
 
-  public load(): void {
+  public async load(): Promise<void> {
+    if (this._loaded) return this._loaded;
+    this._loaded = this.loadOnce();
+    return this._loaded;
+  }
+
+  private _loaded: Promise<void> | null = null;
+
+  private async loadOnce(): Promise<void> {
     this.logger.verbose("Loading listeners");
 
     const listeners: Array<PylonListener<T>> = [];
@@ -122,7 +130,7 @@ export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
 
       for (const entry of socketListeners) {
         if (isString(entry)) {
-          const result = scanner.scan(entry);
+          const result = await scanner.scan(entry);
 
           listeners.push(...result.listeners);
           namespaces.push(...result.namespaces);

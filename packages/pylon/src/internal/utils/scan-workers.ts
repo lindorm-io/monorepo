@@ -15,7 +15,7 @@ const normalise = (input: Options["workers"]): Array<ILindormWorker | string> =>
   return [];
 };
 
-export const scanWorkers = (options: Options): Array<ILindormWorker> => {
+export const scanWorkers = async (options: Options): Promise<Array<ILindormWorker>> => {
   const workers = normalise(options.workers);
 
   return [
@@ -25,6 +25,6 @@ export const scanWorkers = (options: Options): Array<ILindormWorker> => {
       interval: "5m",
       logger: options.logger,
     }),
-    ...LindormWorkerScanner.scan(workers, options.logger),
+    ...(await LindormWorkerScanner.scan(workers, options.logger)),
   ];
 };
