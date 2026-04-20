@@ -1,23 +1,39 @@
 import type { IZephyr } from "../interfaces/Zephyr";
-import { createMockZephyrRoom } from "./create-mock-zephyr-room";
+import { _createMockZephyrRoom } from "./create-mock-zephyr-room";
 
-export type MockZephyr = jest.Mocked<IZephyr>;
+export const _createMockZephyr = (mockFn: () => any): IZephyr => {
+  const impl = (fn: any) => {
+    const m = mockFn();
+    m.mockImplementation(fn);
+    return m;
+  };
+  const returns = (value: any) => {
+    const m = mockFn();
+    m.mockReturnValue(value);
+    return m;
+  };
+  const resolves = (value: any) => {
+    const m = mockFn();
+    m.mockResolvedValue(value);
+    return m;
+  };
 
-export const createMockZephyr = (): MockZephyr => ({
-  id: "mock-id",
-  connected: true,
-  connect: jest.fn().mockResolvedValue(undefined),
-  disconnect: jest.fn().mockResolvedValue(undefined),
-  refresh: jest.fn().mockResolvedValue(undefined),
-  emit: jest.fn().mockResolvedValue(undefined),
-  request: jest.fn().mockResolvedValue({}),
-  on: jest.fn(),
-  once: jest.fn(),
-  off: jest.fn(),
-  room: jest.fn().mockImplementation((name: string) => createMockZephyrRoom(name)),
-  onConnect: jest.fn(),
-  onDisconnect: jest.fn(),
-  onError: jest.fn(),
-  onReconnect: jest.fn(),
-  onAuthExpired: jest.fn().mockReturnValue(() => undefined),
-});
+  return {
+    id: "mock-id",
+    connected: true,
+    connect: resolves(undefined),
+    disconnect: resolves(undefined),
+    refresh: resolves(undefined),
+    emit: resolves(undefined),
+    request: resolves({}),
+    on: mockFn(),
+    once: mockFn(),
+    off: mockFn(),
+    room: impl((name: string) => _createMockZephyrRoom(mockFn, name)),
+    onConnect: mockFn(),
+    onDisconnect: mockFn(),
+    onError: mockFn(),
+    onReconnect: mockFn(),
+    onAuthExpired: returns(() => undefined),
+  } as unknown as IZephyr;
+};
