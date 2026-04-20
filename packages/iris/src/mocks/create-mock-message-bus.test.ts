@@ -1,4 +1,4 @@
-import { createMockMessageBus } from "./create-mock-message-bus";
+import { createMockMessageBus } from "./jest";
 
 type TestMessage = { id: string; body: string };
 

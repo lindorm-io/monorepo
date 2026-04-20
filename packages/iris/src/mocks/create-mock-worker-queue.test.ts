@@ -1,4 +1,4 @@
-import { createMockWorkerQueue } from "./create-mock-worker-queue";
+import { createMockWorkerQueue } from "./jest";
 
 type TestMessage = { id: string; body: string };
 

@@ -1,4 +1,4 @@
-import { createMockPublisher } from "./create-mock-publisher";
+import { createMockPublisher } from "./jest";
 
 type TestMessage = { id: string; body: string };
 

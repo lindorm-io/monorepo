@@ -1,4 +1,4 @@
-import { createMockRpcClient } from "./create-mock-rpc-client";
+import { createMockRpcClient } from "./jest";
 
 type TestReq = { id: string; query: string };
 type TestRes = { id: string; result: string };
