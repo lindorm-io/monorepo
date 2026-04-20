@@ -1,4 +1,4 @@
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/jest";
 import { createConnectionContextInitialisationMiddleware } from "./connection-context-initialisation-middleware";
 
 describe("createConnectionContextInitialisationMiddleware", () => {

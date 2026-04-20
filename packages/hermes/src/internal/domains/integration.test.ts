@@ -1,5 +1,5 @@
 import type { IIrisMessageBus, IIrisWorkerQueue, IrisSource } from "@lindorm/iris";
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/jest";
 import type { ProteusSource } from "@lindorm/proteus";
 import { randomUUID } from "crypto";
 import {

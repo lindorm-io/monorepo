@@ -1,4 +1,4 @@
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/jest";
 import { getBody as _getBody } from "../../internal/utils/get-body";
 import { getFile as _getFile } from "../../internal/utils/get-file";
 import { getStatus as _getStatus } from "../../internal/utils/get-status";

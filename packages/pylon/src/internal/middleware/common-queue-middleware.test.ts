@@ -1,4 +1,4 @@
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/jest";
 import { createQueueMiddleware } from "./common-queue-middleware";
 
 describe("createQueueMiddleware", () => {

@@ -1,6 +1,7 @@
 import { Amphora, IAmphora } from "@lindorm/amphora";
 import { KryptosKit } from "@lindorm/kryptos";
-import { createMockLogger, ILogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/jest";
+import { ILogger } from "@lindorm/logger";
 import { createBearerAuthStrategy, Zephyr } from "@lindorm/zephyr";
 import { join } from "path";
 import request from "supertest";

@@ -1,5 +1,5 @@
 import { ClientError } from "@lindorm/errors";
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/jest";
 import { PylonError } from "../../errors";
 import { createBasicAuthMiddleware } from "./create-basic-auth-middleware";
 

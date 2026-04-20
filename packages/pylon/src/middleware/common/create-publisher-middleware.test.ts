@@ -1,5 +1,5 @@
 import { ServerError } from "@lindorm/errors";
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/jest";
 import { createPublisherMiddleware } from "./create-publisher-middleware";
 
 jest.mock("../../internal/utils/resolve-iris");

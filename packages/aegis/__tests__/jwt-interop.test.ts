@@ -1,5 +1,5 @@
 import { KryptosKit } from "@lindorm/kryptos";
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { importJWK, jwtVerify, SignJWT } from "jose";
 import type { JwtPayload } from "jsonwebtoken";
 import { createRequire } from "module";

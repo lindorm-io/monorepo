@@ -1,5 +1,5 @@
-import { createMockAmphora } from "@lindorm/amphora";
-import { createMockLogger } from "@lindorm/logger";
+import { createMockAmphora } from "@lindorm/amphora/mocks/jest";
+import { createMockLogger } from "@lindorm/logger/mocks/jest";
 import { ILindormWorker, LindormWorker } from "@lindorm/worker";
 import { join } from "path";
 import { scanWorkers } from "./scan-workers";

@@ -1,4 +1,5 @@
-import { ILogger, createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/jest";
+import { ILogger } from "@lindorm/logger";
 import * as jsonwebtoken from "jsonwebtoken";
 import MockDate from "mockdate";
 import {

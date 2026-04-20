@@ -1,5 +1,5 @@
 import { KryptosKit } from "@lindorm/kryptos";
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/jest";
 import MockDate from "mockdate";
 import nock from "nock";
 import {

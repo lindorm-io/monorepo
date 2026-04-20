@@ -8,7 +8,7 @@ jest.mock("@lindorm/kryptos", () => ({
   KryptosKit: { from: { db: mockFromDb } },
 }));
 
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/jest";
 import { LindormWorker } from "@lindorm/worker";
 import { Kryptos } from "../entities/Kryptos";
 import { createAmphoraEntityWorker } from "./amphora-entity-worker";

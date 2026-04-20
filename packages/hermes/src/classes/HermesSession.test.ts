@@ -1,5 +1,5 @@
 import { LindormError } from "@lindorm/errors";
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/jest";
 import type { HermesStatus } from "../types/hermes-status";
 import { HermesSession } from "./HermesSession";
 import type { HermesSessionOptions } from "./HermesSession";

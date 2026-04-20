@@ -1,7 +1,10 @@
 import { Amphora, IAmphora } from "@lindorm/amphora";
 import { ClientError } from "@lindorm/errors";
-import { createMockLogger } from "@lindorm/logger";
-import { createMockProteusSource, createMockRepository } from "@lindorm/proteus/mocks";
+import { createMockLogger } from "@lindorm/logger/mocks/jest";
+import {
+  createMockProteusSource,
+  createMockRepository,
+} from "@lindorm/proteus/mocks/jest";
 import { Server as HttpServer } from "http";
 import { join } from "path";
 import { PylonListenerScanner } from "../internal/classes/PylonListenerScanner";

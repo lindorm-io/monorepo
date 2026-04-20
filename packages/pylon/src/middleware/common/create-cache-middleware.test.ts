@@ -1,5 +1,5 @@
 import { ServerError } from "@lindorm/errors";
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/jest";
 import { createCacheMiddleware } from "./create-cache-middleware";
 
 jest.mock("../../internal/utils/resolve-proteus");

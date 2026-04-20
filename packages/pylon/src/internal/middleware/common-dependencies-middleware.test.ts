@@ -1,7 +1,7 @@
-import { createMockHermes } from "@lindorm/hermes/mocks";
-import { createMockIrisSource } from "@lindorm/iris/mocks";
-import { createMockLogger } from "@lindorm/logger";
-import { createMockProteusSource } from "@lindorm/proteus/mocks";
+import { createMockHermes } from "@lindorm/hermes/mocks/jest";
+import { createMockIrisSource } from "@lindorm/iris/mocks/jest";
+import { createMockLogger } from "@lindorm/logger/mocks/jest";
+import { createMockProteusSource } from "@lindorm/proteus/mocks/jest";
 import { RATE_LIMIT_SOURCE } from "../constants/symbols";
 import { createDependenciesMiddleware } from "./common-dependencies-middleware";
 

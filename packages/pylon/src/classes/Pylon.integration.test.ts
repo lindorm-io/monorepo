@@ -1,6 +1,7 @@
 import { Amphora, IAmphora } from "@lindorm/amphora";
 import { KryptosKit } from "@lindorm/kryptos";
-import { createMockLogger, ILogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/jest";
+import { ILogger } from "@lindorm/logger";
 import { join } from "path";
 import { Socket as ClientSocket, io as ioClient } from "socket.io-client";
 import request from "supertest";

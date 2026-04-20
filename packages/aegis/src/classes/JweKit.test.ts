@@ -1,5 +1,6 @@
 import { KryptosAlgorithm, KryptosKit } from "@lindorm/kryptos";
-import { ILogger, createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/jest";
+import { ILogger } from "@lindorm/logger";
 import MockDate from "mockdate";
 import {
   TEST_EC_KEY_ENC,
