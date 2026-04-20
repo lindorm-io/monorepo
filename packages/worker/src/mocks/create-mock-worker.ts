@@ -1,42 +1,44 @@
 import type { ILindormWorker } from "../interfaces/LindormWorker";
 
-export type MockWorker = ILindormWorker & {
-  destroy: jest.Mock;
-  health: jest.Mock;
-  start: jest.Mock;
-  stop: jest.Mock;
-  trigger: jest.Mock;
-  on: jest.Mock;
-  off: jest.Mock;
-  once: jest.Mock;
-};
+export const _createMockWorker = (mockFn: () => any): ILindormWorker => {
+  const returns = (value: any) => {
+    const m = mockFn();
+    m.mockReturnValue(value);
+    return m;
+  };
+  const resolves = (value: any) => {
+    const m = mockFn();
+    m.mockResolvedValue(value);
+    return m;
+  };
 
-export const createMockWorker = (): MockWorker => ({
-  alias: "mock",
-  latestError: null,
-  latestStart: null,
-  latestStop: null,
-  latestSuccess: null,
-  latestTry: null,
-  running: false,
-  seq: 0,
-  started: false,
-
-  destroy: jest.fn().mockResolvedValue(undefined),
-  health: jest.fn().mockReturnValue({
+  return {
     alias: "mock",
-    started: false,
-    running: false,
-    destroyed: false,
-    seq: 0,
-    latestSuccess: null,
     latestError: null,
+    latestStart: null,
+    latestStop: null,
+    latestSuccess: null,
     latestTry: null,
-  }),
-  start: jest.fn(),
-  stop: jest.fn().mockResolvedValue(undefined),
-  trigger: jest.fn().mockResolvedValue(undefined),
-  on: jest.fn(),
-  off: jest.fn(),
-  once: jest.fn(),
-});
+    running: false,
+    seq: 0,
+    started: false,
+
+    destroy: resolves(undefined),
+    health: returns({
+      alias: "mock",
+      started: false,
+      running: false,
+      destroyed: false,
+      seq: 0,
+      latestSuccess: null,
+      latestError: null,
+      latestTry: null,
+    }),
+    start: mockFn(),
+    stop: resolves(undefined),
+    trigger: resolves(undefined),
+    on: mockFn(),
+    off: mockFn(),
+    once: mockFn(),
+  } as unknown as ILindormWorker;
+};
