@@ -130,7 +130,7 @@ export class Hermes implements IHermes {
     try {
       this.logger.debug("Scanning modules");
 
-      const scanned = HermesScanner.scan(this.options.modules);
+      const scanned = await HermesScanner.scan(this.options.modules);
       this.registry = new HermesRegistry(scanned);
 
       this.logger.debug("Registry built", {

@@ -72,8 +72,8 @@ describe("HermesScanner", () => {
   describe("scan", () => {
     let result: ScannedModules;
 
-    beforeAll(() => {
-      result = HermesScanner.scan(ALL_CONSTRUCTORS);
+    beforeAll(async () => {
+      result = await HermesScanner.scan(ALL_CONSTRUCTORS);
     });
 
     test("should return complete scanned modules structure", () => {
@@ -416,7 +416,7 @@ describe("HermesScanner", () => {
 
     // -- Error cases --
 
-    test("should throw when view entity does not extend HermesViewEntity", () => {
+    test("should throw when view entity does not extend HermesViewEntity", async () => {
       class BadEntity {
         id = "";
       }
@@ -432,22 +432,22 @@ describe("HermesScanner", () => {
         handlers: [],
       };
 
-      expect(() => HermesScanner.scan([BadView])).toThrow(
+      await expect(HermesScanner.scan([BadView])).rejects.toThrow(
         'View "bad_view" entity class "BadEntity" must extend HermesViewEntity',
       );
     });
 
     // -- Empty input --
 
-    test("should handle empty input", () => {
-      const empty = HermesScanner.scan([]);
+    test("should handle empty input", async () => {
+      const empty = await HermesScanner.scan([]);
       expect(empty).toMatchSnapshot();
     });
 
     // -- Constructor input (no file scanning) --
 
-    test("should accept Constructor[] input without file paths", () => {
-      const partial = HermesScanner.scan([TestCommandCreate, TestEventCreate]);
+    test("should accept Constructor[] input without file paths", async () => {
+      const partial = await HermesScanner.scan([TestCommandCreate, TestEventCreate]);
       expect(partial.commands).toHaveLength(1);
       expect(partial.events).toHaveLength(1);
       expect(partial.queries).toHaveLength(0);
@@ -459,22 +459,22 @@ describe("HermesScanner", () => {
 
     // -- Classes without hermes metadata are silently skipped --
 
-    test("should skip classes without hermes metadata", () => {
+    test("should skip classes without hermes metadata", async () => {
       class PlainClass {}
 
-      const partial = HermesScanner.scan([PlainClass, TestCommandCreate]);
+      const partial = await HermesScanner.scan([PlainClass, TestCommandCreate]);
       expect(partial.commands).toHaveLength(1);
       expect(partial.commands[0].target).toBe(TestCommandCreate);
     });
 
     // -- MEDIUM: Multiple plain classes silently skipped --
 
-    test("should silently skip multiple classes without hermes metadata", () => {
+    test("should silently skip multiple classes without hermes metadata", async () => {
       class PlainA {}
       class PlainB {}
       class PlainC {}
 
-      const partial = HermesScanner.scan([PlainA, PlainB, PlainC, TestEventCreate]);
+      const partial = await HermesScanner.scan([PlainA, PlainB, PlainC, TestEventCreate]);
       expect(partial.commands).toHaveLength(0);
       expect(partial.events).toHaveLength(1);
       expect(partial.events[0].target).toBe(TestEventCreate);
@@ -485,7 +485,7 @@ describe("HermesScanner", () => {
 
     // -- MEDIUM: resolveAggregateName: missing @Aggregate metadata --
 
-    test("should throw when saga references a class without @Aggregate metadata", () => {
+    test("should throw when saga references a class without @Aggregate metadata", async () => {
       class NotAnAggregate {}
 
       class BadSaga {}
@@ -497,7 +497,7 @@ describe("HermesScanner", () => {
         handlers: [],
       };
 
-      expect(() => HermesScanner.scan([BadSaga])).toThrow(
+      await expect(HermesScanner.scan([BadSaga])).rejects.toThrow(
         /has no @Aggregate\(\) metadata/,
       );
     });

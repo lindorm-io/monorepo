@@ -64,8 +64,8 @@ const ALL_CONSTRUCTORS = [
 describe("SagaModel", () => {
   let registry: HermesRegistry;
 
-  beforeAll(() => {
-    const scanned = HermesScanner.scan(ALL_CONSTRUCTORS);
+  beforeAll(async () => {
+    const scanned = await HermesScanner.scan(ALL_CONSTRUCTORS);
     registry = new HermesRegistry(scanned);
   });
 

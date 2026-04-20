@@ -27,8 +27,8 @@ import type {
 const DEFAULT_NAMESPACE = "hermes";
 
 export class HermesScanner {
-  public static scan(input: HermesScannerInput): ScannedModules {
-    const classes = HermesScanner.discoverClasses(input);
+  public static async scan(input: HermesScannerInput): Promise<ScannedModules> {
+    const classes = await HermesScanner.discoverClasses(input);
 
     const commands: Array<RegisteredDto> = [];
     const events: Array<RegisteredDto> = [];
@@ -152,10 +152,13 @@ export class HermesScanner {
     });
   }
 
-  private static scanFile(scanner: Scanner, data: IScanData): Constructor | null {
+  private static async scanFile(
+    scanner: Scanner,
+    data: IScanData,
+  ): Promise<Constructor | null> {
     if (!data.isFile) return null;
 
-    const module = scanner.require<Record<string, unknown>>(data.fullPath);
+    const module = await scanner.import<Record<string, unknown>>(data.fullPath);
     if (!module) return null;
 
     for (const value of Object.values(module)) {
@@ -167,34 +170,36 @@ export class HermesScanner {
     return null;
   }
 
-  private static collectClassesFromScan(
+  private static async collectClassesFromScan(
     scanner: Scanner,
     data: IScanData,
-  ): Array<Constructor> {
+  ): Promise<Array<Constructor>> {
     const result: Array<Constructor> = [];
 
     if (data.isFile) {
-      const ctor = HermesScanner.scanFile(scanner, data);
+      const ctor = await HermesScanner.scanFile(scanner, data);
       if (ctor) result.push(ctor);
     }
 
     if (data.isDirectory) {
       for (const child of data.children) {
-        result.push(...HermesScanner.collectClassesFromScan(scanner, child));
+        result.push(...(await HermesScanner.collectClassesFromScan(scanner, child)));
       }
     }
 
     return result;
   }
 
-  private static discoverClasses(input: HermesScannerInput): Array<Constructor> {
+  private static async discoverClasses(
+    input: HermesScannerInput,
+  ): Promise<Array<Constructor>> {
     const result: Array<Constructor> = [];
     const scanner = HermesScanner.createScanner();
 
     for (const item of input) {
       if (isString(item)) {
         const data = scanner.scan(item);
-        result.push(...HermesScanner.collectClassesFromScan(scanner, data));
+        result.push(...(await HermesScanner.collectClassesFromScan(scanner, data)));
       } else if (typeof item === "function" && item.prototype) {
         result.push(item);
       }

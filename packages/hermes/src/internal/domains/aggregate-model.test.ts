@@ -98,8 +98,8 @@ const createEventMessage = (
 describe("AggregateModel", () => {
   let registry: HermesRegistry;
 
-  beforeAll(() => {
-    const scanned = HermesScanner.scan(ALL_CONSTRUCTORS);
+  beforeAll(async () => {
+    const scanned = await HermesScanner.scan(ALL_CONSTRUCTORS);
     registry = new HermesRegistry(scanned);
   });
 
@@ -373,8 +373,8 @@ describe("AggregateModel", () => {
 describe("AggregateModel upcasting", () => {
   let registry: HermesRegistry;
 
-  beforeAll(() => {
-    const scanned = HermesScanner.scan(ALL_CONSTRUCTORS);
+  beforeAll(async () => {
+    const scanned = await HermesScanner.scan(ALL_CONSTRUCTORS);
     registry = new HermesRegistry(scanned);
   });
 
@@ -475,7 +475,7 @@ describe("AggregateModel upcasting", () => {
     // We'll manually construct a registry with incomplete upcasters
 
     // Build a custom scanned modules with a broken upcaster chain
-    const scanned = HermesScanner.scan(ALL_CONSTRUCTORS);
+    const scanned = await HermesScanner.scan(ALL_CONSTRUCTORS);
 
     // Find the upcaster aggregate and remove the V1->V2 step
     const upcasterAgg = scanned.aggregates.find(

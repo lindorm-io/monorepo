@@ -129,7 +129,7 @@ describe("Full Pipeline Integration", () => {
     proteus = createTestProteusSource();
     iris = createTestIrisSource();
 
-    const scanned = HermesScanner.scan(ALL_MODULES);
+    const scanned = await HermesScanner.scan(ALL_MODULES);
     registry = new HermesRegistry(scanned);
 
     proteus.addEntities([

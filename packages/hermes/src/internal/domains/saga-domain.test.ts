@@ -78,7 +78,7 @@ describe("SagaDomain", () => {
     proteus = createTestProteusSource();
     iris = createTestIrisSource();
 
-    const scanned = HermesScanner.scan([
+    const scanned = await HermesScanner.scan([
       TestCommandCreate,
       TestCommandDestroy,
       TestCommandDestroyNext,
