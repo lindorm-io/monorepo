@@ -5,9 +5,9 @@ import type { EntityScannerInput } from "../../../types";
 import { EntityScannerError } from "../errors/EntityScannerError";
 
 export class EntityScanner {
-  public static scan<T extends Dict = Dict>(
+  public static async scan<T extends Dict = Dict>(
     input: EntityScannerInput<T>,
-  ): Array<Constructor<T>> {
+  ): Promise<Array<Constructor<T>>> {
     const entities = input.filter(
       (a) => !isObject(a) && !isString(a) && (a as T).prototype,
     ) as Array<Constructor<T>>;
@@ -17,10 +17,10 @@ export class EntityScanner {
     for (const path of strings) {
       const item = EntityScanner.scanner.scan(path);
       if (item.isDirectory) {
-        result.push(...EntityScanner.scanDirectory<T>(item));
+        result.push(...(await EntityScanner.scanDirectory<T>(item)));
       }
       if (item.isFile) {
-        result.push(...EntityScanner.scanFile<T>(item));
+        result.push(...(await EntityScanner.scanFile<T>(item)));
       }
     }
     return result;
@@ -28,25 +28,27 @@ export class EntityScanner {
 
   // private
 
-  private static scanDirectory<T extends Dict = Dict>(
+  private static async scanDirectory<T extends Dict = Dict>(
     data: IScanData,
-  ): Array<Constructor<T>> {
+  ): Promise<Array<Constructor<T>>> {
     const result: Array<Constructor<T>> = [];
     for (const child of data.children) {
       if (child.isDirectory) {
-        result.push(...EntityScanner.scanDirectory<T>(child));
+        result.push(...(await EntityScanner.scanDirectory<T>(child)));
       }
       if (child.isFile) {
-        result.push(...EntityScanner.scanFile<T>(child));
+        result.push(...(await EntityScanner.scanFile<T>(child)));
       }
     }
     return result;
   }
 
-  private static scanFile<T extends Dict = Dict>(data: IScanData): Array<Constructor<T>> {
+  private static async scanFile<T extends Dict = Dict>(
+    data: IScanData,
+  ): Promise<Array<Constructor<T>>> {
     let module: Constructor<T>;
     try {
-      module = EntityScanner.scanner.require<Constructor<T>>(data.fullPath);
+      module = await EntityScanner.scanner.import<Constructor<T>>(data.fullPath);
     } catch (err) {
       throw new EntityScannerError(
         `Failed to load entity from "${data.fullPath}": ${err instanceof Error ? err.message : String(err)}`,
