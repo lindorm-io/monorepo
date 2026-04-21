@@ -1,7 +1,7 @@
 import { createCipheriv, randomBytes } from "crypto";
-import { gcm, cbc, aeskw } from "@noble/ciphers/aes";
-import { encryptAes, decryptAes } from "../src/utils/private/encryption";
-import { ecbKeyWrap, ecbKeyUnwrap } from "../src/utils/private/key-wrap/ecb-key-wrap";
+import { gcm, cbc, aeskw } from "@noble/ciphers/aes.js";
+import { encryptAes, decryptAes } from "../src/internal/utils/encryption";
+import { ecbKeyWrap, ecbKeyUnwrap } from "../src/internal/utils/key-wrap/ecb-key-wrap";
 import { toUint8Array, toBuffer } from "./helpers/buffer-utils";
 import {
   RAW_KEY_128,
@@ -15,6 +15,7 @@ import {
   KEK_256,
   createOctKryptos,
 } from "./fixtures/keys";
+import { describe, expect, test } from "vitest";
 
 const GCM_TAG_LENGTH = 16;
 const GCM_IV_LENGTH = 12;

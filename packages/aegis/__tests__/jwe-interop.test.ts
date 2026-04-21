@@ -2,6 +2,7 @@ import { KryptosKit } from "@lindorm/kryptos";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { CompactEncrypt, compactDecrypt, importJWK } from "jose";
 import { JweKit } from "../src/classes/JweKit";
+import { describe, expect, test } from "vitest";
 
 // ---------------------------------------------------------------------------
 // Shared constants

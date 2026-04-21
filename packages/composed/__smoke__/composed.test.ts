@@ -1,4 +1,5 @@
 import { Client } from "pg";
+import { afterAll, beforeAll, describe, expect, test } from "vitest";
 
 describe("postgres integration", () => {
   let client: Client;

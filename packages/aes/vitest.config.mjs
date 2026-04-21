@@ -1,3 +1,6 @@
 import { createVitestConfig } from "../../vitest.config.base.mjs";
 
-export default createVitestConfig();
+const config = createVitestConfig();
+config.test.include = ["src/**/*.test.ts", "__tests__/**/*.test.ts"];
+
+export default config;
