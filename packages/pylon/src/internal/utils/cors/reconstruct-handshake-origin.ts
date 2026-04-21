@@ -1,5 +1,7 @@
 import { isString } from "@lindorm/is";
-import { Handshake } from "socket.io/dist/socket-types";
+import type { Socket } from "socket.io";
+
+type Handshake = Socket["handshake"];
 
 const firstHeader = (value: string | Array<string> | undefined): string | undefined => {
   if (!value) return undefined;

@@ -1,6 +1,8 @@
+import { mkdir as _mkdir, writeFile as _writeFile } from "fs/promises";
+import { Logger as _Logger } from "@lindorm/logger";
 import { resolve, join } from "path";
 import { generateWorker } from "./generate-worker";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 vi.mock("fs/promises", async () => ({
   mkdir: vi.fn().mockResolvedValue(undefined),
@@ -20,10 +22,18 @@ vi.mock("@lindorm/logger", () => ({
   },
 }));
 
-const { mkdir, writeFile } =
-  await vi.importMock<typeof import("fs/promises")>("fs/promises");
-const { Logger } =
-  await vi.importMock<typeof import("@lindorm/logger")>("@lindorm/logger");
+const mkdir = _mkdir as unknown as Mock;
+const writeFile = _writeFile as unknown as Mock;
+const Logger = _Logger as unknown as {
+  std: {
+    log: Mock;
+    info: Mock;
+    success: Mock;
+    warn: Mock;
+    error: Mock;
+    debug: Mock;
+  };
+};
 
 const defaultDir = resolve(process.cwd(), "./src/workers");
 

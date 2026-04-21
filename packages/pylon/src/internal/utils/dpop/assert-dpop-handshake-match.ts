@@ -1,7 +1,9 @@
 import { ClientError } from "@lindorm/errors";
-import { Handshake } from "socket.io/dist/socket-types";
+import type { Socket } from "socket.io";
 import { reconstructHandshakeHtu } from "../handshake/reconstruct-handshake-htu";
 import { assertDpopMatch, DpopProofClaims } from "./assert-dpop-match";
+
+type Handshake = Socket["handshake"];
 
 export const assertDpopHandshakeMatch = (
   handshake: Pick<Handshake, "secure" | "headers" | "url">,
