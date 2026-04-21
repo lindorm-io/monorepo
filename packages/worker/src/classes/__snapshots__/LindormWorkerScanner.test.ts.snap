@@ -1,4 +1,12 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`LindormWorkerScanner > should construct workers from a directory of CALLBACK files 1`] = `
+[
+  "WorkerOne",
+  "WorkerThree",
+  "WorkerTwo",
+]
+`;
 
 exports[`LindormWorkerScanner should construct workers from a directory of CALLBACK files 1`] = `
 [

@@ -4,18 +4,19 @@ import { composeUp } from "./compose-up";
 import { composed } from "./composed";
 import { resolveComposeFile } from "./resolve-compose-file";
 import { spawnCommand } from "./spawn-command";
+import { beforeEach, describe, expect, test, vi, type MockedFunction } from "vitest";
 
-jest.mock("./resolve-compose-file");
-jest.mock("./compose-up");
-jest.mock("./compose-down");
-jest.mock("./spawn-command");
+vi.mock("./resolve-compose-file");
+vi.mock("./compose-up");
+vi.mock("./compose-down");
+vi.mock("./spawn-command");
 
-const mockResolveComposeFile = resolveComposeFile as jest.MockedFunction<
+const mockResolveComposeFile = resolveComposeFile as MockedFunction<
   typeof resolveComposeFile
 >;
-const mockComposeUp = composeUp as jest.MockedFunction<typeof composeUp>;
-const mockComposeDown = composeDown as jest.MockedFunction<typeof composeDown>;
-const mockSpawnCommand = spawnCommand as jest.MockedFunction<typeof spawnCommand>;
+const mockComposeUp = composeUp as MockedFunction<typeof composeUp>;
+const mockComposeDown = composeDown as MockedFunction<typeof composeDown>;
+const mockSpawnCommand = spawnCommand as MockedFunction<typeof spawnCommand>;
 
 const defaultOptions: ComposedOptions = {
   file: "docker-compose.yml",
@@ -29,7 +30,7 @@ const defaultOptions: ComposedOptions = {
 
 describe("composed", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockResolveComposeFile.mockReturnValue("/resolved/docker-compose.yml");
     mockComposeUp.mockResolvedValue(undefined);
     mockComposeDown.mockResolvedValue(undefined);
@@ -87,7 +88,7 @@ describe("composed", () => {
 
   test("should return 1 and teardown on composeUp failure", async () => {
     mockComposeUp.mockRejectedValue(new Error("up failed"));
-    const errorSpy = jest.spyOn(console, "error").mockImplementation();
+    const errorSpy = vi.spyOn(console, "error").mockImplementation();
 
     const result = await composed(defaultOptions);
 
@@ -100,7 +101,7 @@ describe("composed", () => {
 
   test("should log error message on composeUp failure", async () => {
     mockComposeUp.mockRejectedValue(new Error("up failed"));
-    const errorSpy = jest.spyOn(console, "error").mockImplementation();
+    const errorSpy = vi.spyOn(console, "error").mockImplementation();
 
     await composed(defaultOptions);
 
@@ -111,7 +112,7 @@ describe("composed", () => {
 
   test("should not teardown on composeUp failure when teardown is false", async () => {
     mockComposeUp.mockRejectedValue(new Error("up failed"));
-    const errorSpy = jest.spyOn(console, "error").mockImplementation();
+    const errorSpy = vi.spyOn(console, "error").mockImplementation();
 
     await composed({ ...defaultOptions, teardown: false });
 

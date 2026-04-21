@@ -1,5 +1,6 @@
 import { encodeX509Name } from "./encode-name";
 import { parseX509Name } from "./parse-name";
+import { describe, expect, test } from "vitest";
 
 describe("parseX509Name", () => {
   test("round-trips a CN-only name", () => {

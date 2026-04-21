@@ -1,5 +1,6 @@
 import { KryptosKit } from "@lindorm/kryptos";
 import { getRsaDecryptionKey, getRsaEncryptionKey } from "./get-rsa-keys";
+import { describe, expect, test } from "vitest";
 
 describe("get-rsa-keys", () => {
   test("should return encryption keys with RSA-OAEP", () => {

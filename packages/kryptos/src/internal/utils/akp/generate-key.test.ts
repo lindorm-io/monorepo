@@ -1,4 +1,5 @@
 import { generateAkpKey } from "./generate-key";
+import { describe, expect, test } from "vitest";
 
 describe("generateAkpKey", () => {
   describe("sig", () => {

@@ -3,6 +3,7 @@ import {
   getOctKeyWrapDecryptionKey,
   getOctKeyWrapEncryptionKey,
 } from "./get-oct-key-key-wrap";
+import { describe, expect, test } from "vitest";
 
 describe("getOctKeyWrap", () => {
   describe("ECB", () => {

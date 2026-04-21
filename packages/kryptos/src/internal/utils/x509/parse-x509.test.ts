@@ -5,6 +5,7 @@ import {
   TEST_X509_ROOT_PEM,
 } from "../../../__fixtures__/x509";
 import { parseX509 } from "./parse-x509";
+import { describe, expect, test } from "vitest";
 
 describe("parseX509", () => {
   test("parses a single PEM cert into a DER buffer", () => {

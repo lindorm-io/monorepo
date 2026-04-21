@@ -1,3 +1,5 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`time encoding > encodeUtcTime matches known format 1`] = `"170d3234303131353130323033305a"`;
 
 exports[`time encoding encodeUtcTime matches known format 1`] = `"170d3234303131353130323033305a"`;

@@ -1,5 +1,5 @@
 import { KryptosKit } from "@lindorm/kryptos";
-import { createMockLogger } from "@lindorm/logger/mocks/jest";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import MockDate from "mockdate";
 import nock from "nock";
 import {
@@ -17,6 +17,7 @@ import {
 import { TEST_X509_KRYPTOS_SIG } from "../__fixtures__/x509";
 import { AmphoraError } from "../errors";
 import { Amphora } from "./Amphora";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate);

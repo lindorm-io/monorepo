@@ -2,13 +2,14 @@ import MockDate from "mockdate";
 import { ConduitError } from "../errors";
 import { ConduitMiddleware } from "../types";
 import { createConduitRateLimitMiddleware } from "./conduit-rate-limit-middleware";
+import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate);
 
 describe("conduitRateLimitMiddleware", () => {
   let ctx: any;
-  let next: jest.Mock;
+  let next: Mock;
   let middleware: ConduitMiddleware;
 
   beforeEach(() => {
@@ -21,11 +22,11 @@ describe("conduitRateLimitMiddleware", () => {
       },
     };
 
-    next = jest.fn().mockResolvedValue(undefined);
+    next = vi.fn().mockResolvedValue(undefined);
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     MockDate.set(MockedDate);
   });
 

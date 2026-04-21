@@ -2,22 +2,23 @@ import { mkdirSync, rmSync, writeFileSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
 import { runPrompts } from "./prompts";
+import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
-jest.mock("@inquirer/prompts", () => ({
-  input: jest.fn(),
-  checkbox: jest.fn(),
-  select: jest.fn(),
-  confirm: jest.fn(),
+vi.mock("@inquirer/prompts", () => ({
+  input: vi.fn(),
+  checkbox: vi.fn(),
+  select: vi.fn(),
+  confirm: vi.fn(),
 }));
 
 import { checkbox, confirm, input, select } from "@inquirer/prompts";
 
-const mockedInput = input as unknown as jest.Mock;
-const mockedCheckbox = checkbox as unknown as jest.Mock;
-const mockedSelect = select as unknown as jest.Mock;
-const mockedConfirm = confirm as unknown as jest.Mock;
+const mockedInput = input as unknown as Mock;
+const mockedCheckbox = checkbox as unknown as Mock;
+const mockedSelect = select as unknown as Mock;
+const mockedConfirm = confirm as unknown as Mock;
 
-const queueSequence = (mock: jest.Mock, values: Array<unknown>): void => {
+const queueSequence = (mock: Mock, values: Array<unknown>): void => {
   for (const value of values) mock.mockResolvedValueOnce(value);
 };
 

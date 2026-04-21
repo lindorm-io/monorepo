@@ -1,11 +1,12 @@
 import { z } from "zod";
 import { configuration } from "./configuration";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("configuration", () => {
   const env = process.env;
 
   beforeEach(() => {
-    jest.resetModules();
+    vi.resetModules();
 
     process.env = {
       NODE_ENV: "test",

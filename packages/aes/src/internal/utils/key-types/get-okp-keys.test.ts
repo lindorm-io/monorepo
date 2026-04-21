@@ -14,16 +14,17 @@ import {
   getDiffieHellmanKeyWrapEncryptionKey as _getDiffieHellmanKeyWrapEncryptionKey,
 } from "../diffie-hellman/diffie-hellman-key-wrap";
 import { getOkpDecryptionKey, getOkpEncryptionKey } from "./get-okp-keys";
+import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
-jest.mock("../diffie-hellman/diffie-hellman");
-jest.mock("../diffie-hellman/diffie-hellman-key-wrap");
+vi.mock("../diffie-hellman/diffie-hellman");
+vi.mock("../diffie-hellman/diffie-hellman-key-wrap");
 
-const getDiffieHellmanDecryptionKey = _getDiffieHellmanDecryptionKey as jest.Mock;
-const getDiffieHellmanEncryptionKey = _getDiffieHellmanEncryptionKey as jest.Mock;
+const getDiffieHellmanDecryptionKey = _getDiffieHellmanDecryptionKey as Mock;
+const getDiffieHellmanEncryptionKey = _getDiffieHellmanEncryptionKey as Mock;
 const getDiffieHellmanKeyWrapDecryptionKey =
-  _getDiffieHellmanKeyWrapDecryptionKey as jest.Mock;
+  _getDiffieHellmanKeyWrapDecryptionKey as Mock;
 const getDiffieHellmanKeyWrapEncryptionKey =
-  _getDiffieHellmanKeyWrapEncryptionKey as jest.Mock;
+  _getDiffieHellmanKeyWrapEncryptionKey as Mock;
 
 describe("get-okp-keys", () => {
   const mockEncryptionResult: CreateCekResult = {
@@ -36,7 +37,7 @@ describe("get-okp-keys", () => {
   };
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe("getOkpEncryptionKey", () => {

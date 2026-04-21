@@ -9,16 +9,17 @@ import {
   TEST_RSA_KEY,
 } from "../../../__fixtures__/keys";
 import { getEncryptionKey } from "./get-encryption-key";
+import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
-jest.mock("../key-types/get-ec-keys");
-jest.mock("../key-types/get-oct-keys");
-jest.mock("../key-types/get-okp-keys");
-jest.mock("../key-types/get-rsa-keys");
+vi.mock("../key-types/get-ec-keys");
+vi.mock("../key-types/get-oct-keys");
+vi.mock("../key-types/get-okp-keys");
+vi.mock("../key-types/get-rsa-keys");
 
-const getEcEncryptionKey = _getEcEncryptionKey as jest.Mock;
-const getOctEncryptionKey = _getOctEncryptionKey as jest.Mock;
-const getOkpEncryptionKey = _getOkpEncryptionKey as jest.Mock;
-const getRsaEncryptionKey = _getRsaEncryptionKey as jest.Mock;
+const getEcEncryptionKey = _getEcEncryptionKey as Mock;
+const getOctEncryptionKey = _getOctEncryptionKey as Mock;
+const getOkpEncryptionKey = _getOkpEncryptionKey as Mock;
+const getRsaEncryptionKey = _getRsaEncryptionKey as Mock;
 
 describe("getEncryptionKeys", () => {
   beforeEach(() => {
@@ -28,7 +29,7 @@ describe("getEncryptionKeys", () => {
     getRsaEncryptionKey.mockReturnValue("getRsaEncryptionKey");
   });
 
-  afterEach(jest.clearAllMocks);
+  afterEach(vi.clearAllMocks);
 
   test("should resolve encryption keys with EC key", () => {
     expect(

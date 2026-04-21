@@ -1,6 +1,6 @@
 import { Amphora, IAmphora } from "@lindorm/amphora";
 import { Kryptos } from "@lindorm/kryptos";
-import { createMockLogger } from "@lindorm/logger/mocks/jest";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { ILogger } from "@lindorm/logger";
 import MockDate from "mockdate";
 import * as fs from "node:fs";
@@ -14,6 +14,7 @@ import {
 } from "../__fixtures__/x509";
 import { Aegis } from "./Aegis";
 import { JwtKit } from "./JwtKit";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 // The X.509 fixtures have a validity window of 2026-04-13 .. 2126-03-20. We
 // pin MockDate inside the window so that any implicit time-based checks
@@ -21,9 +22,9 @@ import { JwtKit } from "./JwtKit";
 const MockedDate = new Date("2026-06-01T12:00:00.000Z");
 MockDate.set(MockedDate);
 
-jest.mock("crypto", () => ({
-  ...jest.requireActual("crypto"),
-  randomUUID: jest
+vi.mock("crypto", async () => ({
+  ...(await vi.importActual<typeof import("crypto")>("crypto")),
+  randomUUID: vi
     .fn()
     .mockReturnValueOnce("7a14c2ca-1111-4999-b111-aegis-cert-0001")
     .mockReturnValueOnce("7a14c2ca-1111-4999-b111-aegis-cert-0002")

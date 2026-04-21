@@ -1,4 +1,30 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`zephyrChangeIncomingDataMiddleware > should convert incoming array items 1`] = `
+[
+  {
+    "snakeCase": "a",
+  },
+  {
+    "anotherKey": "b",
+  },
+]
+`;
+
+exports[`zephyrChangeIncomingDataMiddleware > should convert incoming object keys to camelCase by default 1`] = `
+{
+  "nestedKey": {
+    "innerKey": 1,
+  },
+  "snakeCase": "value",
+}
+`;
+
+exports[`zephyrChangeIncomingDataMiddleware > should respect custom mode 1`] = `
+{
+  "camel_case": "value",
+}
+`;
 
 exports[`zephyrChangeIncomingDataMiddleware should convert incoming array items 1`] = `
 [

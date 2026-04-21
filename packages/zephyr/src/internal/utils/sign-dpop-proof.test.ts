@@ -1,4 +1,5 @@
 import { signDpopProof, toPublicJwk } from "./sign-dpop-proof";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 const decodePart = (part: string): Record<string, unknown> =>
   JSON.parse(Buffer.from(part, "base64url").toString("utf-8"));
@@ -20,13 +21,13 @@ describe("signDpopProof", () => {
   });
 
   beforeEach(() => {
-    jest.useFakeTimers().setSystemTime(FIXED_DATE);
-    jest.spyOn(crypto, "randomUUID").mockReturnValue(FIXED_JTI);
+    vi.useFakeTimers().setSystemTime(FIXED_DATE);
+    vi.spyOn(crypto, "randomUUID").mockReturnValue(FIXED_JTI);
   });
 
   afterEach(() => {
-    jest.useRealTimers();
-    jest.restoreAllMocks();
+    vi.useRealTimers();
+    vi.restoreAllMocks();
   });
 
   it("should produce a compact JWS of three base64url parts", async () => {

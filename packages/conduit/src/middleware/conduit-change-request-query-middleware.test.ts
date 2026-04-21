@@ -1,5 +1,6 @@
 import { ChangeCase } from "@lindorm/case";
 import { conduitChangeRequestQueryMiddleware } from "./conduit-change-request-query-middleware";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("conduitChangeRequestQueryMiddleware", () => {
   let ctx: any;
@@ -18,7 +19,7 @@ describe("conduitChangeRequestQueryMiddleware", () => {
 
   test("should resolve with default case", async () => {
     await expect(
-      conduitChangeRequestQueryMiddleware()(ctx, jest.fn()),
+      conduitChangeRequestQueryMiddleware()(ctx, vi.fn()),
     ).resolves.toBeUndefined();
 
     expect(ctx.req.query).toEqual({
@@ -30,7 +31,7 @@ describe("conduitChangeRequestQueryMiddleware", () => {
 
   test("should resolve with camelCase for request object", async () => {
     await expect(
-      conduitChangeRequestQueryMiddleware("camel")(ctx, jest.fn()),
+      conduitChangeRequestQueryMiddleware("camel")(ctx, vi.fn()),
     ).resolves.toBeUndefined();
 
     expect(ctx.req.query).toEqual({

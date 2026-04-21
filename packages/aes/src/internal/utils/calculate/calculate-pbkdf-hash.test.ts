@@ -1,6 +1,7 @@
 import { IKryptos, KryptosAlgorithm } from "@lindorm/kryptos";
 import { AesError } from "../../../errors";
 import { calculatePbkdfAlgorithm } from "./calculate-pbkdf-hash";
+import { describe, expect, test } from "vitest";
 
 describe("calculatePbkdfAlgorithm", () => {
   test.each<[KryptosAlgorithm, string]>([

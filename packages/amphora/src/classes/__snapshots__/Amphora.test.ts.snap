@@ -1,4 +1,294 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Amphora > JWKS publication window > should include not-yet-active (notBefore in future) keys in JWKS 1`] = `
+{
+  "keys": [
+    {
+      "alg": "ES512",
+      "crv": "P-521",
+      "exp": 1717200000,
+      "iat": 1704067260,
+      "iss": "https://test.lindorm.io/",
+      "jku": "https://test.lindorm.io/.well-known/jwks.json",
+      "key_ops": [
+        "sign",
+        "verify",
+      ],
+      "kid": "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+      "kty": "EC",
+      "nbf": 4070908800,
+      "use": "sig",
+      "x": "AI3Y8hWlFN19cuY3GSDwGTabmd62piw1bYt5-GSWvaN8mJVQlQM-hmgZ9psbMcSCwqM_YdFs-wQj-00PfHg31VbR",
+      "y": "AAgPZRhdrsY3SLMdYgVF2NVi5Hn7SPLAW136j83Y852u-VXzG6Z1Ur5OJI8Qh18qgv8i7R7sgpOwmyP5SYTysMmf",
+    },
+  ],
+}
+`;
+
+exports[`Amphora > add > should update jwks when adding key 1`] = `
+{
+  "keys": [
+    {
+      "alg": "RS512",
+      "e": "AQAB",
+      "exp": 1717200000,
+      "iat": 1704067560,
+      "iss": "https://test.lindorm.io/",
+      "jku": "https://test.lindorm.io/.well-known/jwks.json",
+      "key_ops": [
+        "sign",
+        "verify",
+      ],
+      "kid": "aaac22b3-2253-5598-8e0c-1733fc748122",
+      "kty": "RSA",
+      "n": "7cxLHoxaHdYU8EX2ij5m42XIQYWBUxKMOfVbV2OX0nNHEdojXfRfONvrAHwsvRqcdN44yv1E1be18qs5HRB67D3qLeRjXcjegdjWvQj66IFVZIxQHNJ-LXDbAYs7gez8RYbBObnDzfrqy9vIPZet1tbqvlxv9aTR38x3ORJ4Y6Ym9StbKOUIo7BLIvoc1M5uNUIEnFKKZhbmVR423-F50w_E0618KExZgeur_8cMsSWZxyl0oeSI-rIodjfVJbshT1yy98zKRj-mMnyPKgHQARr9SwDA5Xlt9L2fVZ72xgwaPOBUgFoDTPQsqQ3Rkj7nYUSqwQVEL0-oH2K7U3OeGeKyIQMNzRdSfYMw3gSc5dtwqX64oK33lN2jzTKa0clSZjqJ4jzUL1YrXMddF07dMQqjN2mGjeZVy5LaO4B58Y5l-kO01KdwA-_LcDhkNgbKiZMZVtNPlVkR3nCvInt5cqPOqMOcLW3oA1wmh7zauWqorklpSSs75zw8ETtzATSJv8h7kUG9Bl1QQgdBkGqKb4ZG-r5Bj6pwJrHVmgPSMowP8P9G13iQLFdKX714A3DMKDc03TJvs2yVK81YUCtO5aRdwb0q0YcFqn9BHI3cmO-kOhXquMakPQ3zW_FBSnIeBhJMObCQOmYEuZxrifMcCQTY7j5jsP962e7ZPn53STc",
+      "nbf": 1672534800,
+      "use": "sig",
+    },
+    {
+      "alg": "EdDSA",
+      "crv": "Ed25519",
+      "exp": 1717200000,
+      "iat": 1704067500,
+      "iss": "https://test.lindorm.io/",
+      "jku": "https://test.lindorm.io/.well-known/jwks.json",
+      "key_ops": [
+        "sign",
+        "verify",
+      ],
+      "kid": "2fa52a91-7f63-5731-a55d-30d36350c642",
+      "kty": "OKP",
+      "nbf": 1672534800,
+      "use": "sig",
+      "x": "GRCwCA6lChosFGMQwxGiHCdzblfvCz0FNiRtTnm1qqc",
+    },
+    {
+      "alg": "ES512",
+      "crv": "P-521",
+      "exp": 1717200000,
+      "iat": 1704067260,
+      "iss": "https://test.lindorm.io/",
+      "jku": "https://test.lindorm.io/.well-known/jwks.json",
+      "key_ops": [
+        "sign",
+        "verify",
+      ],
+      "kid": "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
+      "kty": "EC",
+      "nbf": 1672534800,
+      "use": "sig",
+      "x": "AI3Y8hWlFN19cuY3GSDwGTabmd62piw1bYt5-GSWvaN8mJVQlQM-hmgZ9psbMcSCwqM_YdFs-wQj-00PfHg31VbR",
+      "y": "AAgPZRhdrsY3SLMdYgVF2NVi5Hn7SPLAW136j83Y852u-VXzG6Z1Ur5OJI8Qh18qgv8i7R7sgpOwmyP5SYTysMmf",
+    },
+  ],
+}
+`;
+
+exports[`Amphora > external config > should add external config and find jwks 1`] = `
+[
+  {
+    "issuer": "https://external.lindorm.io/",
+    "jwksUri": "https://external.lindorm.io/.well-known/jwks.json",
+  },
+  {
+    "authorizationEndpoint": "https://lindorm.eu.auth0.com/authorize",
+    "claimsSupported": [
+      "aud",
+      "auth_time",
+      "created_at",
+      "email",
+      "email_verified",
+      "exp",
+      "family_name",
+      "given_name",
+      "iat",
+      "identities",
+      "iss",
+      "name",
+      "nickname",
+      "phone_number",
+      "picture",
+      "sub",
+    ],
+    "codeChallengeMethodsSupported": [
+      "S256",
+      "plain",
+    ],
+    "deviceAuthorizationEndpoint": "https://lindorm.eu.auth0.com/oauth/device/code",
+    "idTokenSigningAlgValuesSupported": [
+      "HS256",
+      "RS256",
+      "PS256",
+    ],
+    "issuer": "https://lindorm.eu.auth0.com/",
+    "jwksUri": "https://lindorm.eu.auth0.com/.well-known/jwks.json",
+    "mfaChallengeEndpoint": "https://lindorm.eu.auth0.com/mfa/challenge",
+    "registrationEndpoint": "https://lindorm.eu.auth0.com/oidc/register",
+    "requestParameterSupported": false,
+    "requestUriParameterSupported": false,
+    "responseModesSupported": [
+      "query",
+      "fragment",
+      "form_post",
+    ],
+    "responseTypesSupported": [
+      "code",
+      "token",
+      "id_token",
+      "code token",
+      "code id_token",
+      "token id_token",
+      "code token id_token",
+    ],
+    "revocationEndpoint": "https://lindorm.eu.auth0.com/oauth/revoke",
+    "scopesSupported": [
+      "openid",
+      "profile",
+      "offline_access",
+      "name",
+      "given_name",
+      "family_name",
+      "nickname",
+      "email",
+      "email_verified",
+      "picture",
+      "created_at",
+      "identities",
+      "phone",
+      "address",
+    ],
+    "subjectTypesSupported": [
+      "public",
+    ],
+    "tokenEndpoint": "https://lindorm.eu.auth0.com/oauth/token",
+    "tokenEndpointAuthMethodsSupported": [
+      "client_secret_basic",
+      "client_secret_post",
+      "private_key_jwt",
+    ],
+    "tokenEndpointAuthSigningAlgValuesSupported": [
+      "RS256",
+      "RS384",
+      "PS256",
+    ],
+    "userinfoEndpoint": "https://lindorm.eu.auth0.com/userinfo",
+  },
+  {
+    "authorizationEndpoint": "https://lindorm.eu.auth0.com/authorize",
+    "claimsSupported": [
+      "aud",
+      "auth_time",
+      "created_at",
+      "email",
+      "email_verified",
+      "exp",
+      "family_name",
+      "given_name",
+      "iat",
+      "identities",
+      "iss",
+      "name",
+      "nickname",
+      "phone_number",
+      "picture",
+      "sub",
+    ],
+    "codeChallengeMethodsSupported": [
+      "S256",
+      "plain",
+    ],
+    "deviceAuthorizationEndpoint": "https://lindorm.eu.auth0.com/oauth/device/code",
+    "idTokenSigningAlgValuesSupported": [
+      "HS256",
+      "RS256",
+      "PS256",
+    ],
+    "issuer": "https://lindorm.jp.auth0.io/",
+    "jwksUri": "https://lindorm.jp.auth0.com/.well-known/jwks.json",
+    "mfaChallengeEndpoint": "https://lindorm.eu.auth0.com/mfa/challenge",
+    "registrationEndpoint": "https://lindorm.eu.auth0.com/oidc/register",
+    "requestParameterSupported": false,
+    "requestUriParameterSupported": false,
+    "responseModesSupported": [
+      "query",
+      "fragment",
+      "form_post",
+    ],
+    "responseTypesSupported": [
+      "code",
+      "token",
+      "id_token",
+      "code token",
+      "code id_token",
+      "token id_token",
+      "code token id_token",
+    ],
+    "revocationEndpoint": "https://lindorm.eu.auth0.com/oauth/revoke",
+    "scopesSupported": [
+      "openid",
+      "profile",
+      "offline_access",
+      "name",
+      "given_name",
+      "family_name",
+      "nickname",
+      "email",
+      "email_verified",
+      "picture",
+      "created_at",
+      "identities",
+      "phone",
+      "address",
+    ],
+    "subjectTypesSupported": [
+      "public",
+    ],
+    "tokenEndpoint": "https://lindorm.eu.auth0.com/oauth/token",
+    "tokenEndpointAuthMethodsSupported": [
+      "client_secret_basic",
+      "client_secret_post",
+      "private_key_jwt",
+    ],
+    "tokenEndpointAuthSigningAlgValuesSupported": [
+      "RS256",
+      "RS384",
+      "PS256",
+    ],
+    "userinfoEndpoint": "https://lindorm.eu.auth0.com/userinfo",
+  },
+]
+`;
+
+exports[`Amphora > x509 certificate chain > should emit x5c and x5t#S256 in JWKS for kryptos with chain 1`] = `
+{
+  "keys": [
+    {
+      "alg": "ES256",
+      "crv": "P-256",
+      "exp": 4859740800,
+      "iat": 1704067800,
+      "iss": "https://test.lindorm.io/",
+      "jku": "https://test.lindorm.io/.well-known/jwks.json",
+      "key_ops": [
+        "sign",
+        "verify",
+      ],
+      "kid": "c4f03a0e-6c15-5a8e-9d85-5a9d4b8f1a7c",
+      "kty": "EC",
+      "nbf": 1672534800,
+      "use": "sig",
+      "x": "g7-PZHaGSsppBpQK2uY8RXAkqq6k2HzCx2-lLAi3sN0",
+      "x5c": [
+        "MIIBozCCAUqgAwIBAgIUH8a+d6uH7hZYplK+HoMbcv8ly8QwCgYIKoZIzj0EAwIwJDEiMCAGA1UEAwwZbGluZG9ybS10ZXN0LWludGVybWVkaWF0ZTAgFw0yNjA0MTMxMTM1MDBaGA8yMTI2MDMyMDExMzUwMFowHDEaMBgGA1UEAwwRbGluZG9ybS10ZXN0LWxlYWYwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAASDv49kdoZKymkGlAra5jxFcCSqrqTYfMLHb6UsCLew3WQtsj4mizNYd3WpRAaKPQFzs7VP1G1cwzPE9RQLW1S3o2AwXjAMBgNVHRMBAf8EAjAAMA4GA1UdDwEB/wQEAwIHgDAdBgNVHQ4EFgQU7PPxSt9sZhGL5y3DpWarh0/ouM8wHwYDVR0jBBgwFoAUuvcF1azFaNW8Sy7CB6nJsVd4XpIwCgYIKoZIzj0EAwIDRwAwRAIgc6WORqsJtaAWHffTnBm9jGlAYrkx4gn4HB8yP+AxEdUCIEMVwc2zE5/q4VbQGFRAbEFONnzpi+akdVcuHYYy87To",
+        "MIIBqzCCAVCgAwIBAgIUPrBSpCTfUhNj/QIZuQsEtQrTpJcwCgYIKoZIzj0EAwIwHDEaMBgGA1UEAwwRbGluZG9ybS10ZXN0LXJvb3QwIBcNMjYwNDEzMTEzNTAwWhgPMjEyNjAzMjAxMTM1MDBaMCQxIjAgBgNVBAMMGWxpbmRvcm0tdGVzdC1pbnRlcm1lZGlhdGUwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAASXjSn4iP5qFox80WCOzWQM3c3IU6W8EA/ljpPkS27Hx248sxCTJrAITpSJ9roDXXxRg+WvlzI8aMHdddErTZoZo2YwZDASBgNVHRMBAf8ECDAGAQH/AgEAMA4GA1UdDwEB/wQEAwIBBjAdBgNVHQ4EFgQUuvcF1azFaNW8Sy7CB6nJsVd4XpIwHwYDVR0jBBgwFoAU4sctur7Io2JSmyWLWzSTVXDwrBAwCgYIKoZIzj0EAwIDSQAwRgIhAIhM1rg+E+8/8RzmgvYTiHw3UCZxZjnXuYMHcvb5calWAiEAiYXgbUDdXyHDzgDJB7lBbaNaePxu+Kvsx7bYunS2yhY=",
+        "MIIBnjCCAUWgAwIBAgIUCQm0C13BQsFkIgc7SShh80ejgQAwCgYIKoZIzj0EAwIwHDEaMBgGA1UEAwwRbGluZG9ybS10ZXN0LXJvb3QwIBcNMjYwNDEzMTEzNTAwWhgPMjEyNjAzMjAxMTM1MDBaMBwxGjAYBgNVBAMMEWxpbmRvcm0tdGVzdC1yb290MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEO5N985BltmGIV3XZu4YMBcrpO1EbmQBt9cEnVyNNkiNCNKsAOP2zbFs9kLu9Tb+2R/BiFwVoGpzQMhqcy+39cKNjMGEwHQYDVR0OBBYEFOLHLbq+yKNiUpsli1s0k1Vw8KwQMB8GA1UdIwQYMBaAFOLHLbq+yKNiUpsli1s0k1Vw8KwQMA8GA1UdEwEB/wQFMAMBAf8wDgYDVR0PAQH/BAQDAgEGMAoGCCqGSM49BAMCA0cAMEQCIGvDtRrg/MHARlqYkNfZU2phl2f+QkZwHgk00T1r4tXoAiBndB9hNEOkRdSPFBcy6w/LPWH+Y7HQdl8xukjZcY7Yeg==",
+      ],
+      "x5t#S256": "PQeZGdGGGG1A9Qr4z0qBh_TJrmoi5B-6jbMUOGn34QA",
+      "y": "ZC2yPiaLM1h3dalEBoo9AXOztU_UbVzDM8T1FAtbVLc",
+    },
+  ],
+}
+`;
 
 exports[`Amphora JWKS publication window should include not-yet-active (notBefore in future) keys in JWKS 1`] = `
 {

@@ -1,6 +1,7 @@
 import { KryptosAlgorithm } from "@lindorm/kryptos";
 import { AesError } from "../../../errors";
 import { calculateKeyWrapSize } from "./calculate-key-wrap-size";
+import { describe, expect, test } from "vitest";
 
 describe("calculateKeyWrapSize", () => {
   test.each<KryptosAlgorithm>([

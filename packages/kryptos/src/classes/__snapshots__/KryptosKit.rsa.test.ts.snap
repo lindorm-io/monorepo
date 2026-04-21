@@ -1,4 +1,538 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`KryptosKit (RSA) > env > export 1`] = `"kryptos:eyJlIjoiQVFBQiIsIm4iOiI3Y3hMSG94YUhkWVU4RVgyaWo1bTQyWElRWVdCVXhLTU9mVmJWMk9YMG5OSEVkb2pYZlJmT052ckFId3N2UnFjZE40NHl2MUUxYmUxOHFzNUhSQjY3RDNxTGVSalhjamVnZGpXdlFqNjZJRlZaSXhRSE5KLUxYRGJBWXM3Z2V6OFJZYkJPYm5EemZycXk5dklQWmV0MXRicXZseHY5YVRSMzh4M09SSjRZNlltOVN0YktPVUlvN0JMSXZvYzFNNXVOVUlFbkZLS1poYm1WUjQyMy1GNTB3X0UwNjE4S0V4WmdldXJfOGNNc1NXWnh5bDBvZVNJLXJJb2RqZlZKYnNoVDF5eTk4ektSai1tTW55UEtnSFFBUnI5U3dEQTVYbHQ5TDJmVlo3Mnhnd2FQT0JVZ0ZvRFRQUXNxUTNSa2o3bllVU3F3UVZFTDAtb0gySzdVM09lR2VLeUlRTU56UmRTZllNdzNnU2M1ZHR3cVg2NG9LMzNsTjJqelRLYTBjbFNaanFKNGp6VUwxWXJYTWRkRjA3ZE1RcWpOMm1HamVaVnk1TGFPNEI1OFk1bC1rTzAxS2R3QS1fTGNEaGtOZ2JLaVpNWlZ0TlBsVmtSM25DdkludDVjcVBPcU1PY0xXM29BMXdtaDd6YXVXcW9ya2xwU1NzNzV6dzhFVHR6QVRTSnY4aDdrVUc5QmwxUVFnZEJrR3FLYjRaRy1yNUJqNnB3SnJIVm1nUFNNb3dQOFA5RzEzaVFMRmRLWDcxNEEzRE1LRGMwM1RKdnMyeVZLODFZVUN0TzVhUmR3YjBxMFljRnFuOUJISTNjbU8ta09oWHF1TWFrUFEzeldfRkJTbkllQmhKTU9iQ1FPbVlFdVp4cmlmTWNDUVRZN2o1anNQOTYyZTdaUG41M1NUYyIsImQiOiJLNkxEWGhXdks2NXZKVEFSYjRqSDVJNTIwdDhtdmhHM1BhTnlZWFRiRlRrbUgzYUI2dW0tMTNZemgyRkI3R21Ic0VKZTlaRElJdGVWUWJSOXhJR1RyT29ub01nNkc2bVNldzFKU21MdGQtRFR4S0dpeWNjdWREUXpXX01xdGtyQWVCbWtOMjJKS3JFU2lOb0p3cE9reUxtalZjOHNsRXpzWGo3czJjSXo2VVZCX05jNTRTVTJFcU4xQmpRVE9sR3ZFNExMeWN1enJjd2g5QmlaUlRmZzNRUVZ3Q29qa0ZtQ1N6N3R6di05cW53VjNlQVRrT21ZNFRmMENNMXlCWHh6UGxicVdHSng4N1lXVDBsZ0VfdEZLZzdEMEJHUlZBcVdUTVRIQ2pValgzQTFHRnFwNXV1ZGsyOXpDb3FJbkdlQ21leTUwTFdncjNYVWlmM2FGaFF2UElJMzlnaFZYUWUxNVM5cXBDdW8yTzdVRndDZURRR2NHYU96N1NCMzk1VTd3X0l5T210UURYX3pCRzlsc1BtVFNSMWNQSWJkRWdmcm5DeWJaWmNqWHJFM1BUTU1pM2NLZlBPdUNpdGt3VTkxZG9kSWZaTE1ra3dlcUtsbUdPTFlJYy1KbVpoX2VScjdiVGthbFhpVnhNVFRJYTZMaU9fcDIweVd1a0NKeFctMlJua1lOMmxkQm5EVTBIMkpoS1Fyc0Q4LVlSY196Qm5MSlEyVE1ydzYyaE53dFYyRERWb05EM3NKdTBTQ09NVWRIMEttZklrcEJQRVo0M3NtQ1VMOWUwZkdfcTAwNEJiZG10OHE0dlY4dHJkWUZfbnotLS1veXVhc2UwOWNKN0NmLXFtcU5XcXNBYmk2Wk5SMDR0V0NRYXIzT2V3MTBaemZadG5EM2pOLWRZRSIsInAiOiItY2h6aWZCcTcxcThtRVRMZkJRaldoNWtLa1ZVZGFhU3VaMDJseU1oemlSOGlaQXNGMFIwOFNGUDJYV2xPSnJSR3ZMQkl0dWw3ODdNdXJPSTRWTGhPU0YteTVDWnVmU3hITy14RHNaVERHRC1HeFlXQXVMY2RzaGNTbDRIeUo0U1pzMTN1M0ZVTlZKZUlOQzZJWTRrbjhpV0huUFViVUh0dTRrS3ZkLTB0NmhZeFVCMzZ3Yl80ZlVqblFuZ2hqdFNKSzIzb2VvQXJRN1pEQTBoQXBDM2ZQRTJnNW9RRGtHcVdEZDFTbXJtejNYbEFaVE1LOXZxVWxHSFpSaGFxQy1kQmhwdExHU1V1bHdybmNFcXNZS2xXN05ZcHBBV2dIQVk0MHdSeTVZZ2xwdjlHT2h0SmZVcWttN21Rc21MaFZ3LTFHdEdjN01pOHNQM05uLTAzbWNxb1EiLCJxIjoiODdkNkgwREd2Sk5OTENaZGxleHA5UTg0UHBaWU1NeS00SmpiT3BaaDZxeWh2Y2xnWG5rd1hrMHVvN0cxZEk1YS0tRWdnZnQ2X25RczhxUS0yYmJ0SjNWNkJBRUNuRXNXUEplV21laU1GRWYwTDUxUDBNTWZfQVk1WTRYT0xDRTZBM1RpZXVINE5KMGlXTUlacVlrQ0VZSXFHVGpSM1RXTmtTelFHSmFld0twRHUxbTk1ZFpDSWJYR01YYzBUZzZRSkYwRElSZHBxU1F3NVFBeUxGbVNRWUx1ZGpkczY4OHRlLXM2M2cwMldfeExlVWdLT0tkLXpzTVlfeG51YkVsWGFFWFZJdEJ0Z3BiUG9NcXo2REdyOTJ1TlRwS1VPM1diMnN3SUhob01LcDVHN1hOUXpTbHNITG5FandiejhtNHhNWGxDWkRmeF8tdWtKMGlORmx6ODF3IiwiZHAiOiJxeFl5bFVPNGF4UFNZOVdUTHZ5NExpenMzTXM2QzQtNXBpdFp6ZkhCWU9vNjV4cDZLTUc1LThPZVpzdWZESU4yUUtnUHctbUE0aDNhdXZMb0NiWDBFR2F4NjRxeTBOMGFSMENpSFFXWXNyem9yX0xUeHN4T3g0bDdOWERza2V3N25IQ1YxeXpMeWU0T0RSb0tzNXNoMk5QU2h5ODlURXpCSWhlLTVNa0tobFZuNEV2RkY1Vm14UVZjakY3TWpBU3J3ZlctOXNkS0NUOUhTV3JndGxvYlpCZndCX29KajBwSV9EMllPQTI2NUZUVE05OFFiZVltdkpXZFVKQjY0QUlrNHA1Tk12XzlveHdvdjlna2Z3dUdhYVlSVFowWjNJVnJkcHlPXzh4bnEtRlNYYkl0dUxjUm50VVpJSnZkMWMyV04zYjJfWjZ3akduUHRXT0pwbUF4b1EiLCJkcSI6IkhRX3BBU2NSUzlWbzQzWGp2UWdIRHBEMURRbVNsS2NscjlTcWQ4OE0tQllENTRURy1CME5kb0ZQcVhkOGd0eWkzdHhXcXdsWV9sVE9NMVVBcGFlWm1oWDVLZGNRXzZBNGs1c2otMUJ1dTlCa3Z2VE1Xc0daNDh5LU5TNzBpZkNnWVY4anpyRjVqcFNhVHVrLWRDZ0JWaU1tY0FHRmpSSmd3a29NdXBIamRtZ1hVWlQtX3hSUXFJSnJrdVI3R1RfRlVvREE2Y1pIOUVKN2ppTTYyRzBKOHNQeE9hbWNWSFpOSHpUS3ZVWG9FSW9DV2dFTUx2dFNOTWV4Q0dLSU91TjRCOWdqOVZYVGFUb2dvalRweFN0X0xTN25GOUtFMko1S3FvbWdBaTdxLW40TFNTOXlHRFR6VG0yY2tjMnJjMkpPZlc3UFN2SWM2bjZvQVlNMlI4OW8ydyIsInFpIjoicGtwZnZwWVZVRzhGMW95VEtGMEdNR1FlNGkxVndJR1E0TTQwcldaVVA1eEptSC1yX2tFejdEOC1sQ25PUlZzcFFuMWdQdVFldjYzVVJhRl8yNUJ6bUJrdVJ0S1hybXc0YkZ2S3lzTHFnbTJQV0g4dkJET09BLWVmVFVWdHZTZEhsUTFhVVlSTFdONF8yS2hXUV9aLVgwdmxZVEd5anRZV1FqRUN2NUNPQXJpZGF2RTJpTWZpLXZXSmUxTFdCNTVyY21yYmgyamMzOGVuTU5kRDJTSjlHTVFlVGhaZVc1aW1DbGFoOE5DUV93cU0xcUNnSVZIMjJFdWVTdHd4bjRkb3liUnFYY2pxdkZVdm52QjllQXZ4bWNYY0RkVkpvdTNjN3puQjNmdjhZdjl3M0J4TURTN1pBNFpBbmxwUk56MExOQXJ1Y2xwZHpaV2hWYTBaamZYTENRIiwia2lkIjoiZmE2NTk3ODAtMGQ1Yy01NjViLWE3NmUtZDg1NDc3YzJiMDBiIiwiYWxnIjoiUlM1MTIiLCJ1c2UiOiJzaWciLCJrdHkiOiJSU0EiLCJleHAiOjI0OTMxMDA4MDAsImlhdCI6MTcwNDA5NjAwMCwia2V5X29wcyI6WyJzaWduIiwidmVyaWZ5Il0sIm5iZiI6MTcwNDA5NjAwMH0"`;
+
+exports[`KryptosKit (RSA) > from > auto > b64 1`] = `
+{
+  "algorithm": "RS512",
+  "certificateChain": [],
+  "certificateThumbprint": null,
+  "createdAt": 2024-01-01T08:00:00.000Z,
+  "curve": null,
+  "encryption": null,
+  "expiresAt": 2049-01-01T08:00:00.000Z,
+  "expiresIn": 789004800,
+  "hasCertificate": false,
+  "hasPrivateKey": true,
+  "hasPublicKey": true,
+  "hidden": false,
+  "id": "fa659780-0d5c-565b-a76e-d85477c2b00b",
+  "isActive": true,
+  "isExpired": false,
+  "isExternal": false,
+  "issuer": null,
+  "jwksUri": null,
+  "modulus": 4096,
+  "notBefore": 2024-01-01T08:00:00.000Z,
+  "operations": [
+    "sign",
+    "verify",
+  ],
+  "ownerId": null,
+  "purpose": null,
+  "thumbprint": "LxMMTLzLftdEwQqk_iSStmYgEsJoz9_wwm3aogsV7MQ",
+  "type": "RSA",
+  "use": "sig",
+}
+`;
+
+exports[`KryptosKit (RSA) > from > auto > b64 2`] = `
+{
+  "alg": "RS512",
+  "e": "AQAB",
+  "exp": 2493100800,
+  "iat": 1704096000,
+  "key_ops": [
+    "sign",
+    "verify",
+  ],
+  "kid": "fa659780-0d5c-565b-a76e-d85477c2b00b",
+  "kty": "RSA",
+  "n": "7cxLHoxaHdYU8EX2ij5m42XIQYWBUxKMOfVbV2OX0nNHEdojXfRfONvrAHwsvRqcdN44yv1E1be18qs5HRB67D3qLeRjXcjegdjWvQj66IFVZIxQHNJ-LXDbAYs7gez8RYbBObnDzfrqy9vIPZet1tbqvlxv9aTR38x3ORJ4Y6Ym9StbKOUIo7BLIvoc1M5uNUIEnFKKZhbmVR423-F50w_E0618KExZgeur_8cMsSWZxyl0oeSI-rIodjfVJbshT1yy98zKRj-mMnyPKgHQARr9SwDA5Xlt9L2fVZ72xgwaPOBUgFoDTPQsqQ3Rkj7nYUSqwQVEL0-oH2K7U3OeGeKyIQMNzRdSfYMw3gSc5dtwqX64oK33lN2jzTKa0clSZjqJ4jzUL1YrXMddF07dMQqjN2mGjeZVy5LaO4B58Y5l-kO01KdwA-_LcDhkNgbKiZMZVtNPlVkR3nCvInt5cqPOqMOcLW3oA1wmh7zauWqorklpSSs75zw8ETtzATSJv8h7kUG9Bl1QQgdBkGqKb4ZG-r5Bj6pwJrHVmgPSMowP8P9G13iQLFdKX714A3DMKDc03TJvs2yVK81YUCtO5aRdwb0q0YcFqn9BHI3cmO-kOhXquMakPQ3zW_FBSnIeBhJMObCQOmYEuZxrifMcCQTY7j5jsP962e7ZPn53STc",
+  "nbf": 1704096000,
+  "use": "sig",
+}
+`;
+
+exports[`KryptosKit (RSA) > from > auto > b64 3`] = `
+{
+  "algorithm": "RS512",
+  "id": "fa659780-0d5c-565b-a76e-d85477c2b00b",
+  "privateKey": "MIIJKQIBAAKCAgEA7cxLHoxaHdYU8EX2ij5m42XIQYWBUxKMOfVbV2OX0nNHEdojXfRfONvrAHwsvRqcdN44yv1E1be18qs5HRB67D3qLeRjXcjegdjWvQj66IFVZIxQHNJ-LXDbAYs7gez8RYbBObnDzfrqy9vIPZet1tbqvlxv9aTR38x3ORJ4Y6Ym9StbKOUIo7BLIvoc1M5uNUIEnFKKZhbmVR423-F50w_E0618KExZgeur_8cMsSWZxyl0oeSI-rIodjfVJbshT1yy98zKRj-mMnyPKgHQARr9SwDA5Xlt9L2fVZ72xgwaPOBUgFoDTPQsqQ3Rkj7nYUSqwQVEL0-oH2K7U3OeGeKyIQMNzRdSfYMw3gSc5dtwqX64oK33lN2jzTKa0clSZjqJ4jzUL1YrXMddF07dMQqjN2mGjeZVy5LaO4B58Y5l-kO01KdwA-_LcDhkNgbKiZMZVtNPlVkR3nCvInt5cqPOqMOcLW3oA1wmh7zauWqorklpSSs75zw8ETtzATSJv8h7kUG9Bl1QQgdBkGqKb4ZG-r5Bj6pwJrHVmgPSMowP8P9G13iQLFdKX714A3DMKDc03TJvs2yVK81YUCtO5aRdwb0q0YcFqn9BHI3cmO-kOhXquMakPQ3zW_FBSnIeBhJMObCQOmYEuZxrifMcCQTY7j5jsP962e7ZPn53STcCAwEAAQKCAgArosNeFa8rrm8lMBFviMfkjnbS3ya-Ebc9o3JhdNsVOSYfdoHq6b7XdjOHYUHsaYewQl71kMgi15VBtH3EgZOs6iegyDobqZJ7DUlKYu134NPEoaLJxy50NDNb8yq2SsB4GaQ3bYkqsRKI2gnCk6TIuaNVzyyUTOxePuzZwjPpRUH81znhJTYSo3UGNBM6Ua8TgsvJy7OtzCH0GJlFN-DdBBXAKiOQWYJLPu3O_72qfBXd4BOQ6ZjhN_QIzXIFfHM-VupYYnHzthZPSWAT-0UqDsPQEZFUCpZMxMcKNSNfcDUYWqnm652Tb3MKioicZ4KZ7LnQtaCvddSJ_doWFC88gjf2CFVdB7XlL2qkK6jY7tQXAJ4NAZwZo7PtIHf3lTvD8jI6a1ANf_MEb2Ww-ZNJHVw8ht0SB-ucLJtllyNesTc9MwyLdwp8864KK2TBT3V2h0h9ksySTB6oqWYY4tghz4mZmH95GvttORqVeJXExNMhrouI7-nbTJa6QInFb7ZGeRg3aV0GcNTQfYmEpCuwPz5hFz_MGcslDZMyvDraE3C1XYMNWg0Pewm7RII4xR0fQqZ8iSkE8RnjeyYJQv17R8b-rTTgFt2a3yri9Xy2t1gX-fP776jK5qx7T1wnsJ_6qao1aqwBuLpk1HTi1YJBqvc57DXRnN9m2cPeM351gQKCAQEA-chzifBq71q8mETLfBQjWh5kKkVUdaaSuZ02lyMhziR8iZAsF0R08SFP2XWlOJrRGvLBItul787MurOI4VLhOSF-y5CZufSxHO-xDsZTDGD-GxYWAuLcdshcSl4HyJ4SZs13u3FUNVJeINC6IY4kn8iWHnPUbUHtu4kKvd-0t6hYxUB36wb_4fUjnQnghjtSJK23oeoArQ7ZDA0hApC3fPE2g5oQDkGqWDd1Smrmz3XlAZTMK9vqUlGHZRhaqC-dBhptLGSUulwrncEqsYKlW7NYppAWgHAY40wRy5Yglpv9GOhtJfUqkm7mQsmLhVw-1GtGc7Mi8sP3Nn-03mcqoQKCAQEA87d6H0DGvJNNLCZdlexp9Q84PpZYMMy-4JjbOpZh6qyhvclgXnkwXk0uo7G1dI5a--Eggft6_nQs8qQ-2bbtJ3V6BAECnEsWPJeWmeiMFEf0L51P0MMf_AY5Y4XOLCE6A3TieuH4NJ0iWMIZqYkCEYIqGTjR3TWNkSzQGJaewKpDu1m95dZCIbXGMXc0Tg6QJF0DIRdpqSQw5QAyLFmSQYLudjds688te-s63g02W_xLeUgKOKd-zsMY_xnubElXaEXVItBtgpbPoMqz6DGr92uNTpKUO3Wb2swIHhoMKp5G7XNQzSlsHLnEjwbz8m4xMXlCZDfx_-ukJ0iNFlz81wKCAQEAqxYylUO4axPSY9WTLvy4Lizs3Ms6C4-5pitZzfHBYOo65xp6KMG5-8OeZsufDIN2QKgPw-mA4h3auvLoCbX0EGax64qy0N0aR0CiHQWYsrzor_LTxsxOx4l7NXDskew7nHCV1yzLye4ODRoKs5sh2NPShy89TEzBIhe-5MkKhlVn4EvFF5VmxQVcjF7MjASrwfW-9sdKCT9HSWrgtlobZBfwB_oJj0pI_D2YOA265FTTM98QbeYmvJWdUJB64AIk4p5NMv_9oxwov9gkfwuGaaYRTZ0Z3IVrdpyO_8xnq-FSXbItuLcRntUZIJvd1c2WN3b2_Z6wjGnPtWOJpmAxoQKCAQAdD-kBJxFL1WjjdeO9CAcOkPUNCZKUpyWv1Kp3zwz4FgPnhMb4HQ12gU-pd3yC3KLe3FarCVj-VM4zVQClp5maFfkp1xD_oDiTmyP7UG670GS-9MxawZnjzL41LvSJ8KBhXyPOsXmOlJpO6T50KAFWIyZwAYWNEmDCSgy6keN2aBdRlP7_FFCogmuS5HsZP8VSgMDpxkf0QnuOIzrYbQnyw_E5qZxUdk0fNMq9RegQigJaAQwu-1I0x7EIYog643gH2CP1VdNpOiCiNOnFK38tLucX0oTYnkqqiaACLur6fgtJL3IYNPNObZyRzatzYk59bs9K8hzqfqgBgzZHz2jbAoIBAQCmSl--lhVQbwXWjJMoXQYwZB7iLVXAgZDgzjStZlQ_nEmYf6v-QTPsPz6UKc5FWylCfWA-5B6_rdRFoX_bkHOYGS5G0peubDhsW8rKwuqCbY9Yfy8EM44D559NRW29J0eVDVpRhEtY3j_YqFZD9n5fS-VhMbKO1hZCMQK_kI4CuJ1q8TaIx-L69Yl7UtYHnmtyatuHaNzfx6cw10PZIn0YxB5OFl5bmKYKVqHw0JD_CozWoKAhUfbYS55K3DGfh2jJtGpdyOq8VS-e8H14C_GZxdwN1Umi7dzvOcHd-_xi_3DcHEwNLtkDhkCeWlE3PQs0Cu5yWl3NlaFVrRmN9csJ",
+  "publicKey": "MIICCgKCAgEA7cxLHoxaHdYU8EX2ij5m42XIQYWBUxKMOfVbV2OX0nNHEdojXfRfONvrAHwsvRqcdN44yv1E1be18qs5HRB67D3qLeRjXcjegdjWvQj66IFVZIxQHNJ-LXDbAYs7gez8RYbBObnDzfrqy9vIPZet1tbqvlxv9aTR38x3ORJ4Y6Ym9StbKOUIo7BLIvoc1M5uNUIEnFKKZhbmVR423-F50w_E0618KExZgeur_8cMsSWZxyl0oeSI-rIodjfVJbshT1yy98zKRj-mMnyPKgHQARr9SwDA5Xlt9L2fVZ72xgwaPOBUgFoDTPQsqQ3Rkj7nYUSqwQVEL0-oH2K7U3OeGeKyIQMNzRdSfYMw3gSc5dtwqX64oK33lN2jzTKa0clSZjqJ4jzUL1YrXMddF07dMQqjN2mGjeZVy5LaO4B58Y5l-kO01KdwA-_LcDhkNgbKiZMZVtNPlVkR3nCvInt5cqPOqMOcLW3oA1wmh7zauWqorklpSSs75zw8ETtzATSJv8h7kUG9Bl1QQgdBkGqKb4ZG-r5Bj6pwJrHVmgPSMowP8P9G13iQLFdKX714A3DMKDc03TJvs2yVK81YUCtO5aRdwb0q0YcFqn9BHI3cmO-kOhXquMakPQ3zW_FBSnIeBhJMObCQOmYEuZxrifMcCQTY7j5jsP962e7ZPn53STcCAwEAAQ",
+  "type": "RSA",
+  "use": "sig",
+}
+`;
+
+exports[`KryptosKit (RSA) > from > auto > jwk 1`] = `
+{
+  "algorithm": "RS256",
+  "certificateChain": [],
+  "certificateThumbprint": null,
+  "createdAt": 2024-01-01T08:00:00.000Z,
+  "curve": null,
+  "encryption": null,
+  "expiresAt": 2049-01-01T08:00:00.000Z,
+  "expiresIn": 789004800,
+  "hasCertificate": false,
+  "hasPrivateKey": true,
+  "hasPublicKey": true,
+  "hidden": false,
+  "id": "16816f0a-3f23-568f-b052-123e63cfa37a",
+  "isActive": true,
+  "isExpired": false,
+  "isExternal": true,
+  "issuer": null,
+  "jwksUri": null,
+  "modulus": 1024,
+  "notBefore": 2024-01-01T08:00:00.000Z,
+  "operations": [
+    "sign",
+    "verify",
+  ],
+  "ownerId": null,
+  "purpose": null,
+  "thumbprint": "MT0bkLFOG_6h8Daer6eIvzREIIK0IZYjDhs0ZKunvHo",
+  "type": "RSA",
+  "use": "sig",
+}
+`;
+
+exports[`KryptosKit (RSA) > from > auto > jwk 2`] = `
+{
+  "alg": "RS256",
+  "e": "AQAB",
+  "exp": 2493100800,
+  "iat": 1704096000,
+  "key_ops": [
+    "sign",
+    "verify",
+  ],
+  "kid": "16816f0a-3f23-568f-b052-123e63cfa37a",
+  "kty": "RSA",
+  "n": "tsSkRYzjC1YlpxyrPw2oC-BligZg5-CrdIZ0bcvXCjvQNynYLHMS1IbCT53WMNFpeIlo1RLj84MsRM4BS6Ov3rPys042Ie-y23yMPH5ikXFHvmLjECvcsngHAHwroJ9JXyl3u8Qir3vnx_n_l1ggf3BgpG3utU0lMsw-eRq1aF8",
+  "nbf": 1704096000,
+  "use": "sig",
+}
+`;
+
+exports[`KryptosKit (RSA) > from > auto > jwk 3`] = `
+{
+  "alg": "RS256",
+  "d": "IrZAONFkQb_v0MhaIdSXKQJKZqeFeiSqi6wJqty_D7uCdSemXfLRDbo2Z2ajyovLS1BVr7oxvwsXuk2h41rISOJmtdJ2mCOwjbMhMXQ2-eknf1byOvxDrO9fBi-laL7IjZVWwe0hYjx8Plm33D9kdP29nhBvSMCkMQM4wtCBYek",
+  "dp": "gTSoEONk-DKpAlYaJHPHbt0el8QTdpkQcCVb44L5xK8ox3_YMT8-kAnG8MWAsTO5jkOvYi7pL_rcaSEpWOip8Q",
+  "dq": "M7CpLl0LHXS5DmFfW6W0Rc_Qogo39R5lKbKkbpzhFAKNqEpgGuaVfn3bbMYa2R8RJ2tv3XnfSqBYe5zGTZvxHw",
+  "e": "AQAB",
+  "kid": "16816f0a-3f23-568f-b052-123e63cfa37a",
+  "kty": "RSA",
+  "n": "tsSkRYzjC1YlpxyrPw2oC-BligZg5-CrdIZ0bcvXCjvQNynYLHMS1IbCT53WMNFpeIlo1RLj84MsRM4BS6Ov3rPys042Ie-y23yMPH5ikXFHvmLjECvcsngHAHwroJ9JXyl3u8Qir3vnx_n_l1ggf3BgpG3utU0lMsw-eRq1aF8",
+  "p": "6Ex5gfLWiKK3P9illzQGbGju0Gc7UggVahZG6N9dy8GBk-hJ1S8qKSDxxn_T4wpUO6XAuPGrNhri8_zfAbpL3Q",
+  "q": "yWpz8BUWlIXcN5-l2NZuOOWhBP19D1UyEBnJQR6iisdER0uMGOGj7hcibIxUrV1SyzUvo9lKLc8wNDJCEIDPaw",
+  "qi": "dLC6kbyxCC4Mn3qb6CnHjJwJYVmFw2OsMmXCx8U3jXNNz0iQ_t_ByQ-IYEvY1SQgr7POS5AA3qcejoa1gvq1hw",
+  "use": "sig",
+}
+`;
+
+exports[`KryptosKit (RSA) > from > auto > pem 1`] = `
+{
+  "algorithm": "RS256",
+  "certificateChain": [],
+  "certificateThumbprint": null,
+  "createdAt": 2024-01-01T08:00:00.000Z,
+  "curve": null,
+  "encryption": null,
+  "expiresAt": 2049-01-01T08:00:00.000Z,
+  "expiresIn": 789004800,
+  "hasCertificate": false,
+  "hasPrivateKey": true,
+  "hasPublicKey": true,
+  "hidden": false,
+  "id": "246299a0-bbbf-5999-a4dc-9b50e115b23c",
+  "isActive": true,
+  "isExpired": false,
+  "isExternal": false,
+  "issuer": null,
+  "jwksUri": null,
+  "modulus": 1024,
+  "notBefore": 2024-01-01T08:00:00.000Z,
+  "operations": [
+    "sign",
+    "verify",
+  ],
+  "ownerId": null,
+  "purpose": null,
+  "thumbprint": "rMWyJD0dsiEDhmtmW2guspfeZ1DaFbRnqcVbScbtFGE",
+  "type": "RSA",
+  "use": "sig",
+}
+`;
+
+exports[`KryptosKit (RSA) > from > auto > pem 2`] = `
+{
+  "alg": "RS256",
+  "e": "AQAB",
+  "exp": 2493100800,
+  "iat": 1704096000,
+  "key_ops": [
+    "sign",
+    "verify",
+  ],
+  "kid": "246299a0-bbbf-5999-a4dc-9b50e115b23c",
+  "kty": "RSA",
+  "n": "vY8fqQa8JhjJXUZjRxqTRU67lp79x3RmXZBS9ov5ySNOLxBUvgbJYax6qnj0AW5C3hzirvZeNVPvQs_YEytU-TKIoPmUb53xdAJCozB0HAqn9gYEEC_8oAoT9aJmKUMfVu1tUOvkZDU-0m7KZeWDUyTgC_NXGfytUU1kxBskfVM",
+  "nbf": 1704096000,
+  "use": "sig",
+}
+`;
+
+exports[`KryptosKit (RSA) > from > auto > pem 3`] = `
+{
+  "algorithm": "RS256",
+  "id": "246299a0-bbbf-5999-a4dc-9b50e115b23c",
+  "privateKey": "-----BEGIN RSA PRIVATE KEY-----
+MIICWwIBAAKBgQC9jx+pBrwmGMldRmNHGpNFTruWnv3HdGZdkFL2i/nJI04vEFS+
+BslhrHqqePQBbkLeHOKu9l41U+9Cz9gTK1T5Moig+ZRvnfF0AkKjMHQcCqf2BgQQ
+L/ygChP1omYpQx9W7W1Q6+RkNT7Sbspl5YNTJOAL81cZ/K1RTWTEGyR9UwIDAQAB
+AoGASsV47JhugOyICVXpdTOjYdRTpG8klZdxhXiXcQ73wYI+pcvgUXCl4PRDEplR
+TnsqvyhPtkoSESEBoK4RgkY2ZsMl8Bu6ZH//f62a4Y1PxxQpm7s13P9+fX3WvxZT
+3SHnAN1izKBG+8FLISJ3FYbz9yVXMf3BSdwr1tHDlgYadwECQQDxdn+JFx3ej9EK
+JnDki7FaAWuhBbDStWOe8zswgJ8khzZtTmNwdyZeaRdfv80rVUj8BkPKz2Mw6p6D
+inxKC9HTAkEAyPiq70V+kHOYAXFrWGHcs+llazoBeKy9rYZDdfUSmACk/1tOOQ0p
+ywCG3VOe5Xr5cMCYclVuT+DQLypO2dX2gQI/dAN7Q2LX9xciWL4ff6+ehqAoFjWl
+v5dnRfeXeLZTwDk27U28eUzGIpZbpKWC7k8LwgtAhzEdd2NCxfDDxs/nAkAreJ6A
+4yddV6OprD7r/z8eK34kk4d98t+UiVZOTZSYDIukMLva214O6y5A8bWNLeyG1yIi
+mRgjbx2ZFi24MPABAkEA0wtgayXucRq/fp4yZ5ZGDsQVGTqUyrzacuww/wTO7YZs
+3Ctg0SHS7VjZon/bLyLtW0mfpYwE6sq+tG3k5FyueQ==
+-----END RSA PRIVATE KEY-----
+",
+  "publicKey": "-----BEGIN RSA PUBLIC KEY-----
+MIGJAoGBAL2PH6kGvCYYyV1GY0cak0VOu5ae/cd0Zl2QUvaL+ckjTi8QVL4GyWGs
+eqp49AFuQt4c4q72XjVT70LP2BMrVPkyiKD5lG+d8XQCQqMwdBwKp/YGBBAv/KAK
+E/WiZilDH1btbVDr5GQ1PtJuymXlg1Mk4AvzVxn8rVFNZMQbJH1TAgMBAAE=
+-----END RSA PUBLIC KEY-----
+",
+  "type": "RSA",
+  "use": "sig",
+}
+`;
+
+exports[`KryptosKit (RSA) > from > b64 1`] = `
+{
+  "algorithm": "RS512",
+  "certificateChain": [],
+  "certificateThumbprint": null,
+  "createdAt": 2024-01-01T08:00:00.000Z,
+  "curve": null,
+  "encryption": null,
+  "expiresAt": 2049-01-01T08:00:00.000Z,
+  "expiresIn": 789004800,
+  "hasCertificate": false,
+  "hasPrivateKey": true,
+  "hasPublicKey": true,
+  "hidden": false,
+  "id": "fa659780-0d5c-565b-a76e-d85477c2b00b",
+  "isActive": true,
+  "isExpired": false,
+  "isExternal": false,
+  "issuer": null,
+  "jwksUri": null,
+  "modulus": 4096,
+  "notBefore": 2024-01-01T08:00:00.000Z,
+  "operations": [
+    "sign",
+    "verify",
+  ],
+  "ownerId": null,
+  "purpose": null,
+  "thumbprint": "LxMMTLzLftdEwQqk_iSStmYgEsJoz9_wwm3aogsV7MQ",
+  "type": "RSA",
+  "use": "sig",
+}
+`;
+
+exports[`KryptosKit (RSA) > from > b64 2`] = `
+{
+  "alg": "RS512",
+  "e": "AQAB",
+  "exp": 2493100800,
+  "iat": 1704096000,
+  "key_ops": [
+    "sign",
+    "verify",
+  ],
+  "kid": "fa659780-0d5c-565b-a76e-d85477c2b00b",
+  "kty": "RSA",
+  "n": "7cxLHoxaHdYU8EX2ij5m42XIQYWBUxKMOfVbV2OX0nNHEdojXfRfONvrAHwsvRqcdN44yv1E1be18qs5HRB67D3qLeRjXcjegdjWvQj66IFVZIxQHNJ-LXDbAYs7gez8RYbBObnDzfrqy9vIPZet1tbqvlxv9aTR38x3ORJ4Y6Ym9StbKOUIo7BLIvoc1M5uNUIEnFKKZhbmVR423-F50w_E0618KExZgeur_8cMsSWZxyl0oeSI-rIodjfVJbshT1yy98zKRj-mMnyPKgHQARr9SwDA5Xlt9L2fVZ72xgwaPOBUgFoDTPQsqQ3Rkj7nYUSqwQVEL0-oH2K7U3OeGeKyIQMNzRdSfYMw3gSc5dtwqX64oK33lN2jzTKa0clSZjqJ4jzUL1YrXMddF07dMQqjN2mGjeZVy5LaO4B58Y5l-kO01KdwA-_LcDhkNgbKiZMZVtNPlVkR3nCvInt5cqPOqMOcLW3oA1wmh7zauWqorklpSSs75zw8ETtzATSJv8h7kUG9Bl1QQgdBkGqKb4ZG-r5Bj6pwJrHVmgPSMowP8P9G13iQLFdKX714A3DMKDc03TJvs2yVK81YUCtO5aRdwb0q0YcFqn9BHI3cmO-kOhXquMakPQ3zW_FBSnIeBhJMObCQOmYEuZxrifMcCQTY7j5jsP962e7ZPn53STc",
+  "nbf": 1704096000,
+  "use": "sig",
+}
+`;
+
+exports[`KryptosKit (RSA) > from > b64 3`] = `
+{
+  "algorithm": "RS512",
+  "id": "fa659780-0d5c-565b-a76e-d85477c2b00b",
+  "privateKey": "MIIJKQIBAAKCAgEA7cxLHoxaHdYU8EX2ij5m42XIQYWBUxKMOfVbV2OX0nNHEdojXfRfONvrAHwsvRqcdN44yv1E1be18qs5HRB67D3qLeRjXcjegdjWvQj66IFVZIxQHNJ-LXDbAYs7gez8RYbBObnDzfrqy9vIPZet1tbqvlxv9aTR38x3ORJ4Y6Ym9StbKOUIo7BLIvoc1M5uNUIEnFKKZhbmVR423-F50w_E0618KExZgeur_8cMsSWZxyl0oeSI-rIodjfVJbshT1yy98zKRj-mMnyPKgHQARr9SwDA5Xlt9L2fVZ72xgwaPOBUgFoDTPQsqQ3Rkj7nYUSqwQVEL0-oH2K7U3OeGeKyIQMNzRdSfYMw3gSc5dtwqX64oK33lN2jzTKa0clSZjqJ4jzUL1YrXMddF07dMQqjN2mGjeZVy5LaO4B58Y5l-kO01KdwA-_LcDhkNgbKiZMZVtNPlVkR3nCvInt5cqPOqMOcLW3oA1wmh7zauWqorklpSSs75zw8ETtzATSJv8h7kUG9Bl1QQgdBkGqKb4ZG-r5Bj6pwJrHVmgPSMowP8P9G13iQLFdKX714A3DMKDc03TJvs2yVK81YUCtO5aRdwb0q0YcFqn9BHI3cmO-kOhXquMakPQ3zW_FBSnIeBhJMObCQOmYEuZxrifMcCQTY7j5jsP962e7ZPn53STcCAwEAAQKCAgArosNeFa8rrm8lMBFviMfkjnbS3ya-Ebc9o3JhdNsVOSYfdoHq6b7XdjOHYUHsaYewQl71kMgi15VBtH3EgZOs6iegyDobqZJ7DUlKYu134NPEoaLJxy50NDNb8yq2SsB4GaQ3bYkqsRKI2gnCk6TIuaNVzyyUTOxePuzZwjPpRUH81znhJTYSo3UGNBM6Ua8TgsvJy7OtzCH0GJlFN-DdBBXAKiOQWYJLPu3O_72qfBXd4BOQ6ZjhN_QIzXIFfHM-VupYYnHzthZPSWAT-0UqDsPQEZFUCpZMxMcKNSNfcDUYWqnm652Tb3MKioicZ4KZ7LnQtaCvddSJ_doWFC88gjf2CFVdB7XlL2qkK6jY7tQXAJ4NAZwZo7PtIHf3lTvD8jI6a1ANf_MEb2Ww-ZNJHVw8ht0SB-ucLJtllyNesTc9MwyLdwp8864KK2TBT3V2h0h9ksySTB6oqWYY4tghz4mZmH95GvttORqVeJXExNMhrouI7-nbTJa6QInFb7ZGeRg3aV0GcNTQfYmEpCuwPz5hFz_MGcslDZMyvDraE3C1XYMNWg0Pewm7RII4xR0fQqZ8iSkE8RnjeyYJQv17R8b-rTTgFt2a3yri9Xy2t1gX-fP776jK5qx7T1wnsJ_6qao1aqwBuLpk1HTi1YJBqvc57DXRnN9m2cPeM351gQKCAQEA-chzifBq71q8mETLfBQjWh5kKkVUdaaSuZ02lyMhziR8iZAsF0R08SFP2XWlOJrRGvLBItul787MurOI4VLhOSF-y5CZufSxHO-xDsZTDGD-GxYWAuLcdshcSl4HyJ4SZs13u3FUNVJeINC6IY4kn8iWHnPUbUHtu4kKvd-0t6hYxUB36wb_4fUjnQnghjtSJK23oeoArQ7ZDA0hApC3fPE2g5oQDkGqWDd1Smrmz3XlAZTMK9vqUlGHZRhaqC-dBhptLGSUulwrncEqsYKlW7NYppAWgHAY40wRy5Yglpv9GOhtJfUqkm7mQsmLhVw-1GtGc7Mi8sP3Nn-03mcqoQKCAQEA87d6H0DGvJNNLCZdlexp9Q84PpZYMMy-4JjbOpZh6qyhvclgXnkwXk0uo7G1dI5a--Eggft6_nQs8qQ-2bbtJ3V6BAECnEsWPJeWmeiMFEf0L51P0MMf_AY5Y4XOLCE6A3TieuH4NJ0iWMIZqYkCEYIqGTjR3TWNkSzQGJaewKpDu1m95dZCIbXGMXc0Tg6QJF0DIRdpqSQw5QAyLFmSQYLudjds688te-s63g02W_xLeUgKOKd-zsMY_xnubElXaEXVItBtgpbPoMqz6DGr92uNTpKUO3Wb2swIHhoMKp5G7XNQzSlsHLnEjwbz8m4xMXlCZDfx_-ukJ0iNFlz81wKCAQEAqxYylUO4axPSY9WTLvy4Lizs3Ms6C4-5pitZzfHBYOo65xp6KMG5-8OeZsufDIN2QKgPw-mA4h3auvLoCbX0EGax64qy0N0aR0CiHQWYsrzor_LTxsxOx4l7NXDskew7nHCV1yzLye4ODRoKs5sh2NPShy89TEzBIhe-5MkKhlVn4EvFF5VmxQVcjF7MjASrwfW-9sdKCT9HSWrgtlobZBfwB_oJj0pI_D2YOA265FTTM98QbeYmvJWdUJB64AIk4p5NMv_9oxwov9gkfwuGaaYRTZ0Z3IVrdpyO_8xnq-FSXbItuLcRntUZIJvd1c2WN3b2_Z6wjGnPtWOJpmAxoQKCAQAdD-kBJxFL1WjjdeO9CAcOkPUNCZKUpyWv1Kp3zwz4FgPnhMb4HQ12gU-pd3yC3KLe3FarCVj-VM4zVQClp5maFfkp1xD_oDiTmyP7UG670GS-9MxawZnjzL41LvSJ8KBhXyPOsXmOlJpO6T50KAFWIyZwAYWNEmDCSgy6keN2aBdRlP7_FFCogmuS5HsZP8VSgMDpxkf0QnuOIzrYbQnyw_E5qZxUdk0fNMq9RegQigJaAQwu-1I0x7EIYog643gH2CP1VdNpOiCiNOnFK38tLucX0oTYnkqqiaACLur6fgtJL3IYNPNObZyRzatzYk59bs9K8hzqfqgBgzZHz2jbAoIBAQCmSl--lhVQbwXWjJMoXQYwZB7iLVXAgZDgzjStZlQ_nEmYf6v-QTPsPz6UKc5FWylCfWA-5B6_rdRFoX_bkHOYGS5G0peubDhsW8rKwuqCbY9Yfy8EM44D559NRW29J0eVDVpRhEtY3j_YqFZD9n5fS-VhMbKO1hZCMQK_kI4CuJ1q8TaIx-L69Yl7UtYHnmtyatuHaNzfx6cw10PZIn0YxB5OFl5bmKYKVqHw0JD_CozWoKAhUfbYS55K3DGfh2jJtGpdyOq8VS-e8H14C_GZxdwN1Umi7dzvOcHd-_xi_3DcHEwNLtkDhkCeWlE3PQs0Cu5yWl3NlaFVrRmN9csJ",
+  "publicKey": "MIICCgKCAgEA7cxLHoxaHdYU8EX2ij5m42XIQYWBUxKMOfVbV2OX0nNHEdojXfRfONvrAHwsvRqcdN44yv1E1be18qs5HRB67D3qLeRjXcjegdjWvQj66IFVZIxQHNJ-LXDbAYs7gez8RYbBObnDzfrqy9vIPZet1tbqvlxv9aTR38x3ORJ4Y6Ym9StbKOUIo7BLIvoc1M5uNUIEnFKKZhbmVR423-F50w_E0618KExZgeur_8cMsSWZxyl0oeSI-rIodjfVJbshT1yy98zKRj-mMnyPKgHQARr9SwDA5Xlt9L2fVZ72xgwaPOBUgFoDTPQsqQ3Rkj7nYUSqwQVEL0-oH2K7U3OeGeKyIQMNzRdSfYMw3gSc5dtwqX64oK33lN2jzTKa0clSZjqJ4jzUL1YrXMddF07dMQqjN2mGjeZVy5LaO4B58Y5l-kO01KdwA-_LcDhkNgbKiZMZVtNPlVkR3nCvInt5cqPOqMOcLW3oA1wmh7zauWqorklpSSs75zw8ETtzATSJv8h7kUG9Bl1QQgdBkGqKb4ZG-r5Bj6pwJrHVmgPSMowP8P9G13iQLFdKX714A3DMKDc03TJvs2yVK81YUCtO5aRdwb0q0YcFqn9BHI3cmO-kOhXquMakPQ3zW_FBSnIeBhJMObCQOmYEuZxrifMcCQTY7j5jsP962e7ZPn53STcCAwEAAQ",
+  "type": "RSA",
+  "use": "sig",
+}
+`;
+
+exports[`KryptosKit (RSA) > from > jwk 1`] = `
+{
+  "algorithm": "RS256",
+  "certificateChain": [],
+  "certificateThumbprint": null,
+  "createdAt": 2024-01-01T08:00:00.000Z,
+  "curve": null,
+  "encryption": null,
+  "expiresAt": 2049-01-01T08:00:00.000Z,
+  "expiresIn": 789004800,
+  "hasCertificate": false,
+  "hasPrivateKey": true,
+  "hasPublicKey": true,
+  "hidden": false,
+  "id": "16816f0a-3f23-568f-b052-123e63cfa37a",
+  "isActive": true,
+  "isExpired": false,
+  "isExternal": true,
+  "issuer": null,
+  "jwksUri": null,
+  "modulus": 1024,
+  "notBefore": 2024-01-01T08:00:00.000Z,
+  "operations": [
+    "sign",
+    "verify",
+  ],
+  "ownerId": null,
+  "purpose": null,
+  "thumbprint": "MT0bkLFOG_6h8Daer6eIvzREIIK0IZYjDhs0ZKunvHo",
+  "type": "RSA",
+  "use": "sig",
+}
+`;
+
+exports[`KryptosKit (RSA) > from > jwk 2`] = `
+{
+  "alg": "RS256",
+  "e": "AQAB",
+  "exp": 2493100800,
+  "iat": 1704096000,
+  "key_ops": [
+    "sign",
+    "verify",
+  ],
+  "kid": "16816f0a-3f23-568f-b052-123e63cfa37a",
+  "kty": "RSA",
+  "n": "tsSkRYzjC1YlpxyrPw2oC-BligZg5-CrdIZ0bcvXCjvQNynYLHMS1IbCT53WMNFpeIlo1RLj84MsRM4BS6Ov3rPys042Ie-y23yMPH5ikXFHvmLjECvcsngHAHwroJ9JXyl3u8Qir3vnx_n_l1ggf3BgpG3utU0lMsw-eRq1aF8",
+  "nbf": 1704096000,
+  "use": "sig",
+}
+`;
+
+exports[`KryptosKit (RSA) > from > jwk 3`] = `
+{
+  "alg": "RS256",
+  "d": "IrZAONFkQb_v0MhaIdSXKQJKZqeFeiSqi6wJqty_D7uCdSemXfLRDbo2Z2ajyovLS1BVr7oxvwsXuk2h41rISOJmtdJ2mCOwjbMhMXQ2-eknf1byOvxDrO9fBi-laL7IjZVWwe0hYjx8Plm33D9kdP29nhBvSMCkMQM4wtCBYek",
+  "dp": "gTSoEONk-DKpAlYaJHPHbt0el8QTdpkQcCVb44L5xK8ox3_YMT8-kAnG8MWAsTO5jkOvYi7pL_rcaSEpWOip8Q",
+  "dq": "M7CpLl0LHXS5DmFfW6W0Rc_Qogo39R5lKbKkbpzhFAKNqEpgGuaVfn3bbMYa2R8RJ2tv3XnfSqBYe5zGTZvxHw",
+  "e": "AQAB",
+  "kid": "16816f0a-3f23-568f-b052-123e63cfa37a",
+  "kty": "RSA",
+  "n": "tsSkRYzjC1YlpxyrPw2oC-BligZg5-CrdIZ0bcvXCjvQNynYLHMS1IbCT53WMNFpeIlo1RLj84MsRM4BS6Ov3rPys042Ie-y23yMPH5ikXFHvmLjECvcsngHAHwroJ9JXyl3u8Qir3vnx_n_l1ggf3BgpG3utU0lMsw-eRq1aF8",
+  "p": "6Ex5gfLWiKK3P9illzQGbGju0Gc7UggVahZG6N9dy8GBk-hJ1S8qKSDxxn_T4wpUO6XAuPGrNhri8_zfAbpL3Q",
+  "q": "yWpz8BUWlIXcN5-l2NZuOOWhBP19D1UyEBnJQR6iisdER0uMGOGj7hcibIxUrV1SyzUvo9lKLc8wNDJCEIDPaw",
+  "qi": "dLC6kbyxCC4Mn3qb6CnHjJwJYVmFw2OsMmXCx8U3jXNNz0iQ_t_ByQ-IYEvY1SQgr7POS5AA3qcejoa1gvq1hw",
+  "use": "sig",
+}
+`;
+
+exports[`KryptosKit (RSA) > from > pem 1`] = `
+{
+  "algorithm": "RS256",
+  "certificateChain": [],
+  "certificateThumbprint": null,
+  "createdAt": 2024-01-01T08:00:00.000Z,
+  "curve": null,
+  "encryption": null,
+  "expiresAt": 2049-01-01T08:00:00.000Z,
+  "expiresIn": 789004800,
+  "hasCertificate": false,
+  "hasPrivateKey": true,
+  "hasPublicKey": true,
+  "hidden": false,
+  "id": "246299a0-bbbf-5999-a4dc-9b50e115b23c",
+  "isActive": true,
+  "isExpired": false,
+  "isExternal": false,
+  "issuer": null,
+  "jwksUri": null,
+  "modulus": 1024,
+  "notBefore": 2024-01-01T08:00:00.000Z,
+  "operations": [
+    "sign",
+    "verify",
+  ],
+  "ownerId": null,
+  "purpose": null,
+  "thumbprint": "rMWyJD0dsiEDhmtmW2guspfeZ1DaFbRnqcVbScbtFGE",
+  "type": "RSA",
+  "use": "sig",
+}
+`;
+
+exports[`KryptosKit (RSA) > from > pem 2`] = `
+{
+  "alg": "RS256",
+  "e": "AQAB",
+  "exp": 2493100800,
+  "iat": 1704096000,
+  "key_ops": [
+    "sign",
+    "verify",
+  ],
+  "kid": "246299a0-bbbf-5999-a4dc-9b50e115b23c",
+  "kty": "RSA",
+  "n": "vY8fqQa8JhjJXUZjRxqTRU67lp79x3RmXZBS9ov5ySNOLxBUvgbJYax6qnj0AW5C3hzirvZeNVPvQs_YEytU-TKIoPmUb53xdAJCozB0HAqn9gYEEC_8oAoT9aJmKUMfVu1tUOvkZDU-0m7KZeWDUyTgC_NXGfytUU1kxBskfVM",
+  "nbf": 1704096000,
+  "use": "sig",
+}
+`;
+
+exports[`KryptosKit (RSA) > from > pem 3`] = `
+{
+  "algorithm": "RS256",
+  "id": "246299a0-bbbf-5999-a4dc-9b50e115b23c",
+  "privateKey": "-----BEGIN RSA PRIVATE KEY-----
+MIICWwIBAAKBgQC9jx+pBrwmGMldRmNHGpNFTruWnv3HdGZdkFL2i/nJI04vEFS+
+BslhrHqqePQBbkLeHOKu9l41U+9Cz9gTK1T5Moig+ZRvnfF0AkKjMHQcCqf2BgQQ
+L/ygChP1omYpQx9W7W1Q6+RkNT7Sbspl5YNTJOAL81cZ/K1RTWTEGyR9UwIDAQAB
+AoGASsV47JhugOyICVXpdTOjYdRTpG8klZdxhXiXcQ73wYI+pcvgUXCl4PRDEplR
+TnsqvyhPtkoSESEBoK4RgkY2ZsMl8Bu6ZH//f62a4Y1PxxQpm7s13P9+fX3WvxZT
+3SHnAN1izKBG+8FLISJ3FYbz9yVXMf3BSdwr1tHDlgYadwECQQDxdn+JFx3ej9EK
+JnDki7FaAWuhBbDStWOe8zswgJ8khzZtTmNwdyZeaRdfv80rVUj8BkPKz2Mw6p6D
+inxKC9HTAkEAyPiq70V+kHOYAXFrWGHcs+llazoBeKy9rYZDdfUSmACk/1tOOQ0p
+ywCG3VOe5Xr5cMCYclVuT+DQLypO2dX2gQI/dAN7Q2LX9xciWL4ff6+ehqAoFjWl
+v5dnRfeXeLZTwDk27U28eUzGIpZbpKWC7k8LwgtAhzEdd2NCxfDDxs/nAkAreJ6A
+4yddV6OprD7r/z8eK34kk4d98t+UiVZOTZSYDIukMLva214O6y5A8bWNLeyG1yIi
+mRgjbx2ZFi24MPABAkEA0wtgayXucRq/fp4yZ5ZGDsQVGTqUyrzacuww/wTO7YZs
+3Ctg0SHS7VjZon/bLyLtW0mfpYwE6sq+tG3k5FyueQ==
+-----END RSA PRIVATE KEY-----
+",
+  "publicKey": "-----BEGIN RSA PUBLIC KEY-----
+MIGJAoGBAL2PH6kGvCYYyV1GY0cak0VOu5ae/cd0Zl2QUvaL+ckjTi8QVL4GyWGs
+eqp49AFuQt4c4q72XjVT70LP2BMrVPkyiKD5lG+d8XQCQqMwdBwKp/YGBBAv/KAK
+E/WiZilDH1btbVDr5GQ1PtJuymXlg1Mk4AvzVxn8rVFNZMQbJH1TAgMBAAE=
+-----END RSA PUBLIC KEY-----
+",
+  "type": "RSA",
+  "use": "sig",
+}
+`;
+
+exports[`KryptosKit (RSA) > generate > auto 1`] = `
+{
+  "algorithm": "PS384",
+  "certificateChain": [],
+  "certificateThumbprint": null,
+  "createdAt": 2024-01-01T08:00:00.000Z,
+  "curve": null,
+  "encryption": null,
+  "expiresAt": 2049-01-01T08:00:00.000Z,
+  "expiresIn": 789004800,
+  "hasCertificate": false,
+  "hasPrivateKey": true,
+  "hasPublicKey": true,
+  "hidden": false,
+  "id": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "isActive": true,
+  "isExpired": false,
+  "isExternal": false,
+  "issuer": null,
+  "jwksUri": null,
+  "modulus": 3072,
+  "notBefore": 2024-01-01T08:00:00.000Z,
+  "operations": [
+    "sign",
+    "verify",
+  ],
+  "ownerId": null,
+  "purpose": null,
+  "thumbprint": Any<String>,
+  "type": "RSA",
+  "use": "sig",
+}
+`;
+
+exports[`KryptosKit (RSA) > generate > enc 1`] = `
+{
+  "algorithm": "RSA-OAEP-384",
+  "certificateChain": [],
+  "certificateThumbprint": null,
+  "createdAt": 2024-01-01T08:00:00.000Z,
+  "curve": null,
+  "encryption": "A256GCM",
+  "expiresAt": 2049-01-01T08:00:00.000Z,
+  "expiresIn": 789004800,
+  "hasCertificate": false,
+  "hasPrivateKey": true,
+  "hasPublicKey": true,
+  "hidden": false,
+  "id": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "isActive": true,
+  "isExpired": false,
+  "isExternal": false,
+  "issuer": null,
+  "jwksUri": null,
+  "modulus": 3072,
+  "notBefore": 2024-01-01T08:00:00.000Z,
+  "operations": [
+    "wrapKey",
+    "unwrapKey",
+  ],
+  "ownerId": null,
+  "purpose": null,
+  "thumbprint": Any<String>,
+  "type": "RSA",
+  "use": "enc",
+}
+`;
+
+exports[`KryptosKit (RSA) > generate > sig 1`] = `
+{
+  "algorithm": "RS256",
+  "certificateChain": [],
+  "certificateThumbprint": null,
+  "createdAt": 2024-01-01T08:00:00.000Z,
+  "curve": null,
+  "encryption": null,
+  "expiresAt": 2049-01-01T08:00:00.000Z,
+  "expiresIn": 789004800,
+  "hasCertificate": false,
+  "hasPrivateKey": true,
+  "hasPublicKey": true,
+  "hidden": false,
+  "id": "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+  "isActive": true,
+  "isExpired": false,
+  "isExternal": false,
+  "issuer": null,
+  "jwksUri": null,
+  "modulus": 2048,
+  "notBefore": 2024-01-01T08:00:00.000Z,
+  "operations": [
+    "sign",
+    "verify",
+  ],
+  "ownerId": null,
+  "purpose": null,
+  "thumbprint": Any<String>,
+  "type": "RSA",
+  "use": "sig",
+}
+`;
 
 exports[`KryptosKit (RSA) env export 1`] = `"kryptos:eyJlIjoiQVFBQiIsIm4iOiI3Y3hMSG94YUhkWVU4RVgyaWo1bTQyWElRWVdCVXhLTU9mVmJWMk9YMG5OSEVkb2pYZlJmT052ckFId3N2UnFjZE40NHl2MUUxYmUxOHFzNUhSQjY3RDNxTGVSalhjamVnZGpXdlFqNjZJRlZaSXhRSE5KLUxYRGJBWXM3Z2V6OFJZYkJPYm5EemZycXk5dklQWmV0MXRicXZseHY5YVRSMzh4M09SSjRZNlltOVN0YktPVUlvN0JMSXZvYzFNNXVOVUlFbkZLS1poYm1WUjQyMy1GNTB3X0UwNjE4S0V4WmdldXJfOGNNc1NXWnh5bDBvZVNJLXJJb2RqZlZKYnNoVDF5eTk4ektSai1tTW55UEtnSFFBUnI5U3dEQTVYbHQ5TDJmVlo3Mnhnd2FQT0JVZ0ZvRFRQUXNxUTNSa2o3bllVU3F3UVZFTDAtb0gySzdVM09lR2VLeUlRTU56UmRTZllNdzNnU2M1ZHR3cVg2NG9LMzNsTjJqelRLYTBjbFNaanFKNGp6VUwxWXJYTWRkRjA3ZE1RcWpOMm1HamVaVnk1TGFPNEI1OFk1bC1rTzAxS2R3QS1fTGNEaGtOZ2JLaVpNWlZ0TlBsVmtSM25DdkludDVjcVBPcU1PY0xXM29BMXdtaDd6YXVXcW9ya2xwU1NzNzV6dzhFVHR6QVRTSnY4aDdrVUc5QmwxUVFnZEJrR3FLYjRaRy1yNUJqNnB3SnJIVm1nUFNNb3dQOFA5RzEzaVFMRmRLWDcxNEEzRE1LRGMwM1RKdnMyeVZLODFZVUN0TzVhUmR3YjBxMFljRnFuOUJISTNjbU8ta09oWHF1TWFrUFEzeldfRkJTbkllQmhKTU9iQ1FPbVlFdVp4cmlmTWNDUVRZN2o1anNQOTYyZTdaUG41M1NUYyIsImQiOiJLNkxEWGhXdks2NXZKVEFSYjRqSDVJNTIwdDhtdmhHM1BhTnlZWFRiRlRrbUgzYUI2dW0tMTNZemgyRkI3R21Ic0VKZTlaRElJdGVWUWJSOXhJR1RyT29ub01nNkc2bVNldzFKU21MdGQtRFR4S0dpeWNjdWREUXpXX01xdGtyQWVCbWtOMjJKS3JFU2lOb0p3cE9reUxtalZjOHNsRXpzWGo3czJjSXo2VVZCX05jNTRTVTJFcU4xQmpRVE9sR3ZFNExMeWN1enJjd2g5QmlaUlRmZzNRUVZ3Q29qa0ZtQ1N6N3R6di05cW53VjNlQVRrT21ZNFRmMENNMXlCWHh6UGxicVdHSng4N1lXVDBsZ0VfdEZLZzdEMEJHUlZBcVdUTVRIQ2pValgzQTFHRnFwNXV1ZGsyOXpDb3FJbkdlQ21leTUwTFdncjNYVWlmM2FGaFF2UElJMzlnaFZYUWUxNVM5cXBDdW8yTzdVRndDZURRR2NHYU96N1NCMzk1VTd3X0l5T210UURYX3pCRzlsc1BtVFNSMWNQSWJkRWdmcm5DeWJaWmNqWHJFM1BUTU1pM2NLZlBPdUNpdGt3VTkxZG9kSWZaTE1ra3dlcUtsbUdPTFlJYy1KbVpoX2VScjdiVGthbFhpVnhNVFRJYTZMaU9fcDIweVd1a0NKeFctMlJua1lOMmxkQm5EVTBIMkpoS1Fyc0Q4LVlSY196Qm5MSlEyVE1ydzYyaE53dFYyRERWb05EM3NKdTBTQ09NVWRIMEttZklrcEJQRVo0M3NtQ1VMOWUwZkdfcTAwNEJiZG10OHE0dlY4dHJkWUZfbnotLS1veXVhc2UwOWNKN0NmLXFtcU5XcXNBYmk2Wk5SMDR0V0NRYXIzT2V3MTBaemZadG5EM2pOLWRZRSIsInAiOiItY2h6aWZCcTcxcThtRVRMZkJRaldoNWtLa1ZVZGFhU3VaMDJseU1oemlSOGlaQXNGMFIwOFNGUDJYV2xPSnJSR3ZMQkl0dWw3ODdNdXJPSTRWTGhPU0YteTVDWnVmU3hITy14RHNaVERHRC1HeFlXQXVMY2RzaGNTbDRIeUo0U1pzMTN1M0ZVTlZKZUlOQzZJWTRrbjhpV0huUFViVUh0dTRrS3ZkLTB0NmhZeFVCMzZ3Yl80ZlVqblFuZ2hqdFNKSzIzb2VvQXJRN1pEQTBoQXBDM2ZQRTJnNW9RRGtHcVdEZDFTbXJtejNYbEFaVE1LOXZxVWxHSFpSaGFxQy1kQmhwdExHU1V1bHdybmNFcXNZS2xXN05ZcHBBV2dIQVk0MHdSeTVZZ2xwdjlHT2h0SmZVcWttN21Rc21MaFZ3LTFHdEdjN01pOHNQM05uLTAzbWNxb1EiLCJxIjoiODdkNkgwREd2Sk5OTENaZGxleHA5UTg0UHBaWU1NeS00SmpiT3BaaDZxeWh2Y2xnWG5rd1hrMHVvN0cxZEk1YS0tRWdnZnQ2X25RczhxUS0yYmJ0SjNWNkJBRUNuRXNXUEplV21laU1GRWYwTDUxUDBNTWZfQVk1WTRYT0xDRTZBM1RpZXVINE5KMGlXTUlacVlrQ0VZSXFHVGpSM1RXTmtTelFHSmFld0twRHUxbTk1ZFpDSWJYR01YYzBUZzZRSkYwRElSZHBxU1F3NVFBeUxGbVNRWUx1ZGpkczY4OHRlLXM2M2cwMldfeExlVWdLT0tkLXpzTVlfeG51YkVsWGFFWFZJdEJ0Z3BiUG9NcXo2REdyOTJ1TlRwS1VPM1diMnN3SUhob01LcDVHN1hOUXpTbHNITG5FandiejhtNHhNWGxDWkRmeF8tdWtKMGlORmx6ODF3IiwiZHAiOiJxeFl5bFVPNGF4UFNZOVdUTHZ5NExpenMzTXM2QzQtNXBpdFp6ZkhCWU9vNjV4cDZLTUc1LThPZVpzdWZESU4yUUtnUHctbUE0aDNhdXZMb0NiWDBFR2F4NjRxeTBOMGFSMENpSFFXWXNyem9yX0xUeHN4T3g0bDdOWERza2V3N25IQ1YxeXpMeWU0T0RSb0tzNXNoMk5QU2h5ODlURXpCSWhlLTVNa0tobFZuNEV2RkY1Vm14UVZjakY3TWpBU3J3ZlctOXNkS0NUOUhTV3JndGxvYlpCZndCX29KajBwSV9EMllPQTI2NUZUVE05OFFiZVltdkpXZFVKQjY0QUlrNHA1Tk12XzlveHdvdjlna2Z3dUdhYVlSVFowWjNJVnJkcHlPXzh4bnEtRlNYYkl0dUxjUm50VVpJSnZkMWMyV04zYjJfWjZ3akduUHRXT0pwbUF4b1EiLCJkcSI6IkhRX3BBU2NSUzlWbzQzWGp2UWdIRHBEMURRbVNsS2NscjlTcWQ4OE0tQllENTRURy1CME5kb0ZQcVhkOGd0eWkzdHhXcXdsWV9sVE9NMVVBcGFlWm1oWDVLZGNRXzZBNGs1c2otMUJ1dTlCa3Z2VE1Xc0daNDh5LU5TNzBpZkNnWVY4anpyRjVqcFNhVHVrLWRDZ0JWaU1tY0FHRmpSSmd3a29NdXBIamRtZ1hVWlQtX3hSUXFJSnJrdVI3R1RfRlVvREE2Y1pIOUVKN2ppTTYyRzBKOHNQeE9hbWNWSFpOSHpUS3ZVWG9FSW9DV2dFTUx2dFNOTWV4Q0dLSU91TjRCOWdqOVZYVGFUb2dvalRweFN0X0xTN25GOUtFMko1S3FvbWdBaTdxLW40TFNTOXlHRFR6VG0yY2tjMnJjMkpPZlc3UFN2SWM2bjZvQVlNMlI4OW8ydyIsInFpIjoicGtwZnZwWVZVRzhGMW95VEtGMEdNR1FlNGkxVndJR1E0TTQwcldaVVA1eEptSC1yX2tFejdEOC1sQ25PUlZzcFFuMWdQdVFldjYzVVJhRl8yNUJ6bUJrdVJ0S1hybXc0YkZ2S3lzTHFnbTJQV0g4dkJET09BLWVmVFVWdHZTZEhsUTFhVVlSTFdONF8yS2hXUV9aLVgwdmxZVEd5anRZV1FqRUN2NUNPQXJpZGF2RTJpTWZpLXZXSmUxTFdCNTVyY21yYmgyamMzOGVuTU5kRDJTSjlHTVFlVGhaZVc1aW1DbGFoOE5DUV93cU0xcUNnSVZIMjJFdWVTdHd4bjRkb3liUnFYY2pxdkZVdm52QjllQXZ4bWNYY0RkVkpvdTNjN3puQjNmdjhZdjl3M0J4TURTN1pBNFpBbmxwUk56MExOQXJ1Y2xwZHpaV2hWYTBaamZYTENRIiwia2lkIjoiZmE2NTk3ODAtMGQ1Yy01NjViLWE3NmUtZDg1NDc3YzJiMDBiIiwiYWxnIjoiUlM1MTIiLCJ1c2UiOiJzaWciLCJrdHkiOiJSU0EiLCJleHAiOjI0OTMxMDA4MDAsImlhdCI6MTcwNDA5NjAwMCwia2V5X29wcyI6WyJzaWduIiwidmVyaWZ5Il0sIm5iZiI6MTcwNDA5NjAwMH0"`;
 

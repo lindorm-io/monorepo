@@ -5,6 +5,7 @@ import {
 } from "@lindorm/kryptos/fixtures";
 import { OkpError } from "../errors";
 import { OkpKit } from "./OkpKit";
+import { beforeEach, describe, expect, test } from "vitest";
 
 describe("OkpKit", () => {
   let kit: OkpKit;

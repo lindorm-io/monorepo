@@ -2,32 +2,33 @@ import { ZephyrError } from "../errors/ZephyrError";
 import type { ZephyrMiddleware } from "../types/context";
 import type { ZephyrOptions } from "../types/options";
 import { Zephyr } from "./Zephyr";
+import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
-jest.mock("@lindorm/random", () => ({
-  randomUUID: jest.fn().mockReturnValue("mock-uuid"),
+vi.mock("@lindorm/random", () => ({
+  randomUUID: vi.fn().mockReturnValue("mock-uuid"),
 }));
 
 const mockSocket = {
   auth: undefined as any,
   connected: false,
   id: "mock-socket-id",
-  connect: jest.fn(),
-  disconnect: jest.fn(),
-  emit: jest.fn(),
-  on: jest.fn(),
-  once: jest.fn(),
-  off: jest.fn(),
-  timeout: jest.fn(),
+  connect: vi.fn(),
+  disconnect: vi.fn(),
+  emit: vi.fn(),
+  on: vi.fn(),
+  once: vi.fn(),
+  off: vi.fn(),
+  timeout: vi.fn(),
   io: {
-    on: jest.fn(),
+    on: vi.fn(),
   },
 };
 
-jest.mock("socket.io-client", () => ({
-  io: jest.fn(() => mockSocket),
+vi.mock("socket.io-client", () => ({
+  io: vi.fn(() => mockSocket),
 }));
 
-const { io } = jest.requireMock("socket.io-client");
+const { io } = await vi.importMock<typeof import("socket.io-client")>("socket.io-client");
 
 const createOptions = (overrides?: Partial<ZephyrOptions>): ZephyrOptions => ({
   url: "http://test.example.com",
@@ -35,7 +36,7 @@ const createOptions = (overrides?: Partial<ZephyrOptions>): ZephyrOptions => ({
   ...overrides,
 });
 
-const findLastCall = (mock: jest.Mock, event: string): Array<any> | undefined => {
+const findLastCall = (mock: Mock, event: string): Array<any> | undefined => {
   const calls = mock.mock.calls.filter(([e]: [string]) => e === event);
   return calls[calls.length - 1];
 };
@@ -72,17 +73,17 @@ const connectZephyr = async (zephyr: Zephyr): Promise<void> => {
 
 describe("Zephyr", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockSocket.connected = false;
     mockSocket.auth = undefined;
     mockSocket.timeout.mockReturnValue({
-      emitWithAck: jest.fn(),
+      emitWithAck: vi.fn(),
     });
   });
 
   describe("constructor", () => {
     it("should store options correctly", () => {
-      const logger = { child: jest.fn().mockReturnThis() } as any;
+      const logger = { child: vi.fn().mockReturnThis() } as any;
       const middleware: Array<ZephyrMiddleware> = [
         async (ctx, next) => {
           await next();
@@ -169,11 +170,11 @@ describe("Zephyr", () => {
     it("should call auth.prepareHandshake before socket.connect", async () => {
       const order: Array<string> = [];
       const auth = {
-        prepareHandshake: jest.fn(async (socket: any) => {
+        prepareHandshake: vi.fn(async (socket: any) => {
           order.push("prepareHandshake");
           socket.auth = { bearer: "static-token" };
         }),
-        refresh: jest.fn(),
+        refresh: vi.fn(),
       };
       mockSocket.connect.mockImplementation(() => {
         order.push("socket.connect");
@@ -319,10 +320,10 @@ describe("Zephyr", () => {
 
   describe("request", () => {
     let zephyr: Zephyr;
-    let emitWithAck: jest.Mock;
+    let emitWithAck: Mock;
 
     beforeEach(async () => {
-      emitWithAck = jest.fn();
+      emitWithAck = vi.fn();
       mockSocket.timeout.mockReturnValue({ emitWithAck });
 
       zephyr = new Zephyr(createOptions());
@@ -431,7 +432,7 @@ describe("Zephyr", () => {
       const zephyr = new Zephyr(createOptions());
       await connectZephyr(zephyr);
 
-      const handler = jest.fn();
+      const handler = vi.fn();
       zephyr.on("test:event", handler);
 
       expect(mockSocket.on).toHaveBeenCalledWith("test:event", expect.any(Function));
@@ -439,7 +440,7 @@ describe("Zephyr", () => {
 
     it("should queue handler before connect", async () => {
       const zephyr = new Zephyr(createOptions());
-      const handler = jest.fn();
+      const handler = vi.fn();
 
       zephyr.on("test:event", handler);
 
@@ -473,7 +474,7 @@ describe("Zephyr", () => {
 
       await connectZephyr(zephyr);
 
-      const handler = jest.fn(() => {
+      const handler = vi.fn(() => {
         order.push("handler");
       });
       zephyr.on("test:event", handler);
@@ -494,7 +495,7 @@ describe("Zephyr", () => {
       const zephyr = new Zephyr(createOptions());
       await connectZephyr(zephyr);
 
-      const handler = jest.fn();
+      const handler = vi.fn();
       zephyr.once("test:event", handler);
 
       expect(mockSocket.once).toHaveBeenCalledWith("test:event", expect.any(Function));
@@ -502,7 +503,7 @@ describe("Zephyr", () => {
 
     it("should queue once handler before connect", async () => {
       const zephyr = new Zephyr(createOptions());
-      const handler = jest.fn();
+      const handler = vi.fn();
 
       zephyr.once("test:event", handler);
 
@@ -520,7 +521,7 @@ describe("Zephyr", () => {
       const zephyr = new Zephyr(createOptions());
       await connectZephyr(zephyr);
 
-      const handler = jest.fn();
+      const handler = vi.fn();
       zephyr.on("test:event", handler);
 
       zephyr.off("test:event", handler);
@@ -532,8 +533,8 @@ describe("Zephyr", () => {
       const zephyr = new Zephyr(createOptions());
       await connectZephyr(zephyr);
 
-      const handler1 = jest.fn();
-      const handler2 = jest.fn();
+      const handler1 = vi.fn();
+      const handler2 = vi.fn();
       zephyr.on("test:event", handler1);
       zephyr.on("test:event", handler2);
 
@@ -554,7 +555,7 @@ describe("Zephyr", () => {
 
   describe("error handling for on() handlers", () => {
     it("should call onError handlers when middleware throws", async () => {
-      const errorHandler = jest.fn();
+      const errorHandler = vi.fn();
 
       const zephyr = new Zephyr(
         createOptions({
@@ -570,7 +571,7 @@ describe("Zephyr", () => {
 
       await connectZephyr(zephyr);
 
-      const handler = jest.fn();
+      const handler = vi.fn();
       zephyr.on("test:event", handler);
 
       const call = findLastCall(mockSocket.on, "test:event");
@@ -584,8 +585,8 @@ describe("Zephyr", () => {
 
     it("should fall back to logger.error when no onError handler", async () => {
       const logger = {
-        child: jest.fn().mockReturnThis(),
-        error: jest.fn(),
+        child: vi.fn().mockReturnThis(),
+        error: vi.fn(),
       } as any;
 
       const zephyr = new Zephyr(
@@ -601,7 +602,7 @@ describe("Zephyr", () => {
 
       await connectZephyr(zephyr);
 
-      const handler = jest.fn();
+      const handler = vi.fn();
       zephyr.on("test:event", handler);
 
       const call = findLastCall(mockSocket.on, "test:event");
@@ -618,7 +619,7 @@ describe("Zephyr", () => {
 
   describe("lifecycle hooks", () => {
     it("should call onConnect handlers on connect", async () => {
-      const handler = jest.fn();
+      const handler = vi.fn();
       const zephyr = new Zephyr(createOptions());
       zephyr.onConnect(handler);
 
@@ -631,7 +632,7 @@ describe("Zephyr", () => {
     });
 
     it("should call onDisconnect handlers on disconnect", async () => {
-      const handler = jest.fn();
+      const handler = vi.fn();
       const zephyr = new Zephyr(createOptions());
       zephyr.onDisconnect(handler);
 
@@ -644,7 +645,7 @@ describe("Zephyr", () => {
     });
 
     it("should call onReconnect handlers on reconnect", async () => {
-      const handler = jest.fn();
+      const handler = vi.fn();
       const zephyr = new Zephyr(createOptions());
       zephyr.onReconnect(handler);
 
@@ -657,7 +658,7 @@ describe("Zephyr", () => {
     });
 
     it("should call auth.prepareHandshake again on reconnect_attempt", async () => {
-      const prepareHandshake = jest
+      const prepareHandshake = vi
         .fn()
         .mockImplementationOnce(async (socket: any) => {
           socket.auth = { bearer: "token-1" };
@@ -666,7 +667,7 @@ describe("Zephyr", () => {
           socket.auth = { bearer: "token-2" };
         });
 
-      const auth = { prepareHandshake, refresh: jest.fn() };
+      const auth = { prepareHandshake, refresh: vi.fn() };
 
       const zephyr = new Zephyr(createOptions({ auth }));
 
@@ -687,8 +688,8 @@ describe("Zephyr", () => {
   describe("refresh", () => {
     it("should delegate to auth.refresh with the socket", async () => {
       const auth = {
-        prepareHandshake: jest.fn().mockResolvedValue(undefined),
-        refresh: jest.fn().mockResolvedValue(undefined),
+        prepareHandshake: vi.fn().mockResolvedValue(undefined),
+        refresh: vi.fn().mockResolvedValue(undefined),
       };
 
       const zephyr = new Zephyr(createOptions({ auth }));
@@ -703,8 +704,8 @@ describe("Zephyr", () => {
     it("should debounce concurrent refresh calls", async () => {
       let resolveInner: (() => void) | undefined;
       const auth = {
-        prepareHandshake: jest.fn().mockResolvedValue(undefined),
-        refresh: jest
+        prepareHandshake: vi.fn().mockResolvedValue(undefined),
+        refresh: vi
           .fn()
           .mockImplementationOnce(
             () =>
@@ -746,15 +747,15 @@ describe("Zephyr", () => {
 
     it("should fire registered handlers on $pylon/auth/expired", async () => {
       const auth = {
-        prepareHandshake: jest.fn().mockResolvedValue(undefined),
-        refresh: jest.fn().mockResolvedValue(undefined),
+        prepareHandshake: vi.fn().mockResolvedValue(undefined),
+        refresh: vi.fn().mockResolvedValue(undefined),
       };
 
       const zephyr = new Zephyr(createOptions({ auth }));
       await connectZephyr(zephyr);
 
-      const handler1 = jest.fn();
-      const handler2 = jest.fn();
+      const handler1 = vi.fn();
+      const handler2 = vi.fn();
       zephyr.onAuthExpired(handler1);
       zephyr.onAuthExpired(handler2);
 
@@ -766,14 +767,14 @@ describe("Zephyr", () => {
 
     it("should unsubscribe via returned function", async () => {
       const auth = {
-        prepareHandshake: jest.fn().mockResolvedValue(undefined),
-        refresh: jest.fn().mockResolvedValue(undefined),
+        prepareHandshake: vi.fn().mockResolvedValue(undefined),
+        refresh: vi.fn().mockResolvedValue(undefined),
       };
 
       const zephyr = new Zephyr(createOptions({ auth }));
       await connectZephyr(zephyr);
 
-      const handler = jest.fn();
+      const handler = vi.fn();
       const unsub = zephyr.onAuthExpired(handler);
       unsub();
 
@@ -784,8 +785,8 @@ describe("Zephyr", () => {
 
     it("should auto-trigger refresh on $pylon/auth/expired by default", async () => {
       const auth = {
-        prepareHandshake: jest.fn().mockResolvedValue(undefined),
-        refresh: jest.fn().mockResolvedValue(undefined),
+        prepareHandshake: vi.fn().mockResolvedValue(undefined),
+        refresh: vi.fn().mockResolvedValue(undefined),
       };
 
       const zephyr = new Zephyr(createOptions({ auth }));
@@ -800,8 +801,8 @@ describe("Zephyr", () => {
 
     it("should not auto-refresh when autoRefreshOnExpiry is false", async () => {
       const auth = {
-        prepareHandshake: jest.fn().mockResolvedValue(undefined),
-        refresh: jest.fn().mockResolvedValue(undefined),
+        prepareHandshake: vi.fn().mockResolvedValue(undefined),
+        refresh: vi.fn().mockResolvedValue(undefined),
       };
 
       const zephyr = new Zephyr(createOptions({ auth, autoRefreshOnExpiry: false }));

@@ -1,4 +1,5 @@
 import { generateTokenId } from "./generate-token-id";
+import { describe, expect, test } from "vitest";
 
 describe("generateTokenId", () => {
   test("returns a base64url string with 120 bits of entropy in 20 chars", () => {

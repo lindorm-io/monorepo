@@ -4,6 +4,7 @@ import {
 } from "@lindorm/kryptos/fixtures";
 import { AkpError } from "../errors";
 import { AkpKit } from "./AkpKit";
+import { beforeEach, describe, expect, test } from "vitest";
 
 describe("AkpKit", () => {
   let kit: AkpKit;

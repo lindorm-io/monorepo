@@ -1,4 +1,4 @@
-import { createMockLogger } from "@lindorm/logger/mocks/jest";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { LindormWorker } from "../../classes/LindormWorker";
 
 export const worker = new LindormWorker({

@@ -6,6 +6,7 @@ import {
 } from "../__fixtures__/keys";
 import { EcError } from "../errors";
 import { assertEcSignature, createEcSignature, verifyEcSignature } from "./ec-signature";
+import { beforeEach, describe, expect, test } from "vitest";
 
 describe("ec-signature", () => {
   const dsaEncoding = "der";

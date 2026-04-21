@@ -1,4 +1,5 @@
 import { ConduitError } from "./ConduitError";
+import { describe, expect, test } from "vitest";
 
 describe("ConduitError", () => {
   describe("isNetworkError", () => {

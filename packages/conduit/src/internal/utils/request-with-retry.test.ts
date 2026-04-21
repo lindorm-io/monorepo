@@ -1,12 +1,13 @@
 import { calculateRetry as _calculateRetry } from "@lindorm/retry";
 import { requestWithRetry } from "./request-with-retry";
 import { sleep as __sleep } from "./sleep";
+import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
-jest.mock("@lindorm/retry");
-jest.mock("./sleep");
+vi.mock("@lindorm/retry");
+vi.mock("./sleep");
 
-const calculateRetry = _calculateRetry as jest.Mock;
-const sleep = __sleep as jest.Mock;
+const calculateRetry = _calculateRetry as Mock;
+const sleep = __sleep as Mock;
 
 describe("requestWithRetry", () => {
   let ctx: any;
@@ -21,17 +22,17 @@ describe("requestWithRetry", () => {
         signal: undefined,
       },
       logger: {
-        debug: jest.fn(),
+        debug: vi.fn(),
       },
     };
 
-    fn = jest.fn().mockResolvedValue("response");
+    fn = vi.fn().mockResolvedValue("response");
 
     calculateRetry.mockReturnValue(1000);
     sleep.mockResolvedValue(undefined);
   });
 
-  afterEach(jest.resetAllMocks);
+  afterEach(vi.resetAllMocks);
 
   test("should resolve", async () => {
     await expect(requestWithRetry(fn, ctx)).resolves.toEqual("response");
@@ -50,7 +51,7 @@ describe("requestWithRetry", () => {
 
   test("should enforce hard ceiling of 100 attempts", async () => {
     // Mock callback to always return true (retry forever)
-    ctx.req.retryCallback = jest.fn().mockReturnValue(true);
+    ctx.req.retryCallback = vi.fn().mockReturnValue(true);
 
     // Mock fn to always fail
     fn.mockRejectedValue(new Error("persistent failure"));
@@ -65,7 +66,7 @@ describe("requestWithRetry", () => {
   test("should stop retrying when signal is aborted", async () => {
     const controller = new AbortController();
     ctx.req.signal = controller.signal;
-    ctx.req.retryCallback = jest.fn().mockReturnValue(true);
+    ctx.req.retryCallback = vi.fn().mockReturnValue(true);
 
     // First call fails, then abort the signal before retry
     fn.mockRejectedValueOnce(new Error("first failure")).mockResolvedValue("success");
@@ -92,7 +93,7 @@ describe("requestWithRetry", () => {
   });
 
   test("should call onRetry callback with correct arguments before each retry", async () => {
-    const onRetry = jest.fn();
+    const onRetry = vi.fn();
     ctx.req.onRetry = onRetry;
     ctx.req.retryConfig = {
       maxAttempts: 3,

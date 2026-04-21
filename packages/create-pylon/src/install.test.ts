@@ -1,14 +1,15 @@
 import { EventEmitter } from "events";
+import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
-jest.mock("cross-spawn", () => ({
+vi.mock("cross-spawn", () => ({
   __esModule: true,
-  default: jest.fn(),
+  default: vi.fn(),
 }));
 
 import spawn from "cross-spawn";
 import { installDependencies, installDevDependencies } from "./install";
 
-const mockedSpawn = spawn as unknown as jest.Mock;
+const mockedSpawn = spawn as unknown as Mock;
 
 const createChild = (): EventEmitter => new EventEmitter();
 

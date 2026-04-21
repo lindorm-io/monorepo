@@ -6,6 +6,7 @@ import {
   createOkpSignature,
   verifyOkpSignature,
 } from "./okp-signature";
+import { beforeEach, describe, expect, test } from "vitest";
 
 describe("okp-signature", () => {
   const dsaEncoding = "der";

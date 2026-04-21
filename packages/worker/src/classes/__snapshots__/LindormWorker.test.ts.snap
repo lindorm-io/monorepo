@@ -1,4 +1,17 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`LindormWorker > health > should return health snapshot for idle worker 1`] = `
+{
+  "alias": "Alias",
+  "destroyed": false,
+  "latestError": null,
+  "latestSuccess": null,
+  "latestTry": null,
+  "running": false,
+  "seq": 0,
+  "started": false,
+}
+`;
 
 exports[`LindormWorker health should return health snapshot for idle worker 1`] = `
 {

@@ -1,4 +1,5 @@
 import { calculateBackoff, type BackoffConfig } from "./exponential-backoff";
+import { describe, expect, it } from "vitest";
 
 describe("calculateBackoff", () => {
   const config: BackoffConfig = {

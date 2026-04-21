@@ -1,8 +1,9 @@
 import { dedupPromise } from "./dedup-promise";
+import { describe, expect, it, vi } from "vitest";
 
 describe("dedupPromise", () => {
   it("should return the same in-flight promise for concurrent calls", async () => {
-    const fn = jest.fn(
+    const fn = vi.fn(
       () => new Promise<string>((resolve) => setTimeout(() => resolve("value"), 20)),
     );
     const dedup = dedupPromise(fn);
@@ -17,7 +18,7 @@ describe("dedupPromise", () => {
   });
 
   it("should re-run fn after in-flight promise settles successfully", async () => {
-    const fn = jest.fn().mockResolvedValueOnce("first").mockResolvedValueOnce("second");
+    const fn = vi.fn().mockResolvedValueOnce("first").mockResolvedValueOnce("second");
     const dedup = dedupPromise(fn);
 
     await expect(dedup()).resolves.toBe("first");
@@ -27,7 +28,7 @@ describe("dedupPromise", () => {
   });
 
   it("should re-run fn after in-flight promise rejects", async () => {
-    const fn = jest
+    const fn = vi
       .fn()
       .mockRejectedValueOnce(new Error("fail"))
       .mockResolvedValueOnce("ok");
@@ -40,7 +41,7 @@ describe("dedupPromise", () => {
   });
 
   it("should not cache successful results", async () => {
-    const fn = jest.fn().mockResolvedValue("value");
+    const fn = vi.fn().mockResolvedValue("value");
     const dedup = dedupPromise(fn);
 
     await dedup();

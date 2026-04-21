@@ -3,6 +3,7 @@ import { createPublicKey, generateKeyPairSync, X509Certificate } from "crypto";
 import { KryptosType } from "../../../types";
 import { generateX509Certificate } from "./generate-x509";
 import { parseX509Certificate } from "./parse-certificate";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 const toU8 = (buf: Buffer): Uint8Array<ArrayBuffer> => {
   const out = new Uint8Array(new ArrayBuffer(buf.byteLength));
@@ -72,12 +73,12 @@ const NOT_AFTER = new Date("2025-01-01T00:00:00.000Z");
 const SERIAL = Buffer.from("1122334455667788991122334455667700".padEnd(32, "0"), "hex");
 
 beforeEach(() => {
-  jest.useFakeTimers();
-  jest.setSystemTime(BASE_DATE);
+  vi.useFakeTimers();
+  vi.setSystemTime(BASE_DATE);
 });
 
 afterEach(() => {
-  jest.useRealTimers();
+  vi.useRealTimers();
 });
 
 const getSubjectSpki = (pair: KeyPair): Buffer => {

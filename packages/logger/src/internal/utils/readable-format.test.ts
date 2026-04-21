@@ -1,5 +1,6 @@
 import { InternalLog } from "../types/internal-log";
 import { readableFormat } from "./readable-format";
+import { describe, expect, test, vi } from "vitest";
 
 const makeLog = (overrides: Partial<InternalLog> = {}): InternalLog => ({
   context: {},
@@ -121,7 +122,7 @@ describe("readableFormat", () => {
   });
 
   test("should return JSON fallback on format error", () => {
-    const spy = jest.spyOn(console, "error").mockImplementation(() => {});
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     const badLog = makeLog();
     // force an error by making time.toISOString throw

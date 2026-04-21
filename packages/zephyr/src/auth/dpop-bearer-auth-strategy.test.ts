@@ -1,6 +1,7 @@
 import type { Socket } from "socket.io-client";
 import { ZephyrError } from "../errors/ZephyrError";
 import { createDpopBearerAuthStrategy } from "./dpop-bearer-auth-strategy";
+import { beforeAll, describe, expect, it, vi, type Mock } from "vitest";
 
 type MockManager = {
   uri: string;
@@ -10,18 +11,18 @@ type MockManager = {
 type MockSocket = {
   socket: Socket;
   manager: MockManager;
-  timeout: jest.Mock;
+  timeout: Mock;
 };
 
 const createMockSocket = (
-  emitWithAck: jest.Mock,
+  emitWithAck: Mock,
   {
     uri = "https://api.example.com",
     path,
     extraHeaders,
   }: { uri?: string; path?: string; extraHeaders?: Record<string, string> } = {},
 ): MockSocket => {
-  const timeout = jest.fn().mockReturnValue({ emitWithAck });
+  const timeout = vi.fn().mockReturnValue({ emitWithAck });
   const manager: MockManager = { uri, opts: { path, extraHeaders } };
   const socket = {
     auth: undefined as unknown,
@@ -49,7 +50,7 @@ describe("createDpopBearerAuthStrategy", () => {
 
   describe("prepareHandshake", () => {
     it("should set socket.auth.bearer from the credentials getter", async () => {
-      const getBearerCredentials = jest
+      const getBearerCredentials = vi
         .fn()
         .mockResolvedValue({ bearer: "token-123", expiresIn: 300 });
 
@@ -59,7 +60,7 @@ describe("createDpopBearerAuthStrategy", () => {
         publicJwk,
       });
 
-      const { socket } = createMockSocket(jest.fn());
+      const { socket } = createMockSocket(vi.fn());
 
       await strategy.prepareHandshake(socket);
 
@@ -74,7 +75,7 @@ describe("createDpopBearerAuthStrategy", () => {
         publicJwk,
       });
 
-      const { socket, manager } = createMockSocket(jest.fn());
+      const { socket, manager } = createMockSocket(vi.fn());
 
       await strategy.prepareHandshake(socket);
 
@@ -105,7 +106,7 @@ describe("createDpopBearerAuthStrategy", () => {
         publicJwk,
       });
 
-      const { socket, manager } = createMockSocket(jest.fn(), {
+      const { socket, manager } = createMockSocket(vi.fn(), {
         extraHeaders: { "x-trace-id": "abc-123" },
       });
 
@@ -124,7 +125,7 @@ describe("createDpopBearerAuthStrategy", () => {
         publicJwk,
       });
 
-      const { socket, manager } = createMockSocket(jest.fn());
+      const { socket, manager } = createMockSocket(vi.fn());
 
       await strategy.prepareHandshake(socket);
 
@@ -153,7 +154,7 @@ describe("createDpopBearerAuthStrategy", () => {
         publicJwk,
       });
 
-      const { socket, manager } = createMockSocket(jest.fn(), { path: "/ws" });
+      const { socket, manager } = createMockSocket(vi.fn(), { path: "/ws" });
 
       await strategy.prepareHandshake(socket);
 
@@ -166,7 +167,7 @@ describe("createDpopBearerAuthStrategy", () => {
 
   describe("refresh", () => {
     it("should emit refresh with bearer and expiresIn and no DPoP payload", async () => {
-      const emitWithAck = jest.fn().mockResolvedValue({ __pylon: true, ok: true });
+      const emitWithAck = vi.fn().mockResolvedValue({ __pylon: true, ok: true });
 
       const strategy = createDpopBearerAuthStrategy({
         getBearerCredentials: async () => ({ bearer: "fresh", expiresIn: 300 }),
@@ -186,7 +187,7 @@ describe("createDpopBearerAuthStrategy", () => {
     });
 
     it("should honour a custom refreshAckTimeoutMs", async () => {
-      const emitWithAck = jest.fn().mockResolvedValue({ __pylon: true, ok: true });
+      const emitWithAck = vi.fn().mockResolvedValue({ __pylon: true, ok: true });
 
       const strategy = createDpopBearerAuthStrategy({
         getBearerCredentials: async () => ({ bearer: "t", expiresIn: 60 }),
@@ -203,7 +204,7 @@ describe("createDpopBearerAuthStrategy", () => {
     });
 
     it("should throw when ack is { ok: false } with error envelope", async () => {
-      const emitWithAck = jest.fn().mockResolvedValue({
+      const emitWithAck = vi.fn().mockResolvedValue({
         __pylon: true,
         ok: false,
         error: {
@@ -235,9 +236,7 @@ describe("createDpopBearerAuthStrategy", () => {
     });
 
     it("should throw a timeout error when emitWithAck rejects", async () => {
-      const emitWithAck = jest
-        .fn()
-        .mockRejectedValue(new Error("operation has timed out"));
+      const emitWithAck = vi.fn().mockRejectedValue(new Error("operation has timed out"));
 
       const strategy = createDpopBearerAuthStrategy({
         getBearerCredentials: async () => ({ bearer: "t", expiresIn: 60 }),
@@ -260,7 +259,7 @@ describe("createDpopBearerAuthStrategy", () => {
         publicJwk,
       });
 
-      const { socket } = createMockSocket(jest.fn());
+      const { socket } = createMockSocket(vi.fn());
 
       await expect(strategy.refresh(socket)).rejects.toMatchObject({
         code: "ZEPHYR_AUTH_REFRESH_INVALID_EXPIRES_IN",
@@ -268,7 +267,7 @@ describe("createDpopBearerAuthStrategy", () => {
     });
 
     it("should throw when ack shape is not a pylon envelope", async () => {
-      const emitWithAck = jest.fn().mockResolvedValue({ raw: "data" });
+      const emitWithAck = vi.fn().mockResolvedValue({ raw: "data" });
 
       const strategy = createDpopBearerAuthStrategy({
         getBearerCredentials: async () => ({ bearer: "t", expiresIn: 60 }),

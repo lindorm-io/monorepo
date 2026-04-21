@@ -1,4 +1,50 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`JwtKit > confirmation claim > should round-trip a DPoP thumbprint through sign and verify > parsed — jkt only 1`] = `
+{
+  "thumbprint": "0ZcOCORZNYy-DWpqq30jZyJGHTN0d2HglBV3uiguA4I",
+}
+`;
+
+exports[`JwtKit > confirmation claim > should round-trip a DPoP thumbprint through sign and verify > wire payload — jkt only 1`] = `
+{
+  "cnf": {
+    "jkt": "0ZcOCORZNYy-DWpqq30jZyJGHTN0d2HglBV3uiguA4I",
+  },
+  "exp": 1704099600,
+  "iat": 1704096000,
+  "iss": "https://test.lindorm.io/",
+  "jti": "stable-token-id",
+  "nbf": 1704096000,
+  "sub": "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
+}
+`;
+
+exports[`JwtKit > confirmation claim > should round-trip all confirmation members > parsed — full cnf 1`] = `
+{
+  "jwkSetUri": "https://example.com/.well-known/jwks.json",
+  "keyId": "test-key-id",
+  "mtlsCertThumbprint": "A4DtL2JmUMhAsvJj5tKyn64SqzmuXbMrJa0n761y5v0",
+  "thumbprint": "0ZcOCORZNYy-DWpqq30jZyJGHTN0d2HglBV3uiguA4I",
+}
+`;
+
+exports[`JwtKit > confirmation claim > should round-trip all confirmation members > wire payload — full cnf 1`] = `
+{
+  "cnf": {
+    "jkt": "0ZcOCORZNYy-DWpqq30jZyJGHTN0d2HglBV3uiguA4I",
+    "jku": "https://example.com/.well-known/jwks.json",
+    "kid": "test-key-id",
+    "x5t#S256": "A4DtL2JmUMhAsvJj5tKyn64SqzmuXbMrJa0n761y5v0",
+  },
+  "exp": 1704099600,
+  "iat": 1704096000,
+  "iss": "https://test.lindorm.io/",
+  "jti": "stable-token-id-full",
+  "nbf": 1704096000,
+  "sub": "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
+}
+`;
 
 exports[`JwtKit confirmation claim should round-trip a DPoP thumbprint through sign and verify: parsed — jkt only 1`] = `
 {

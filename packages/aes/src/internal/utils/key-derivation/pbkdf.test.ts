@@ -1,5 +1,6 @@
 import { TEST_OCT_KEY } from "../../../__fixtures__/keys";
 import { pbkdf } from "./pbkdf";
+import { describe, expect, test } from "vitest";
 
 describe("pbkdf", () => {
   test("should create a key derivation", () => {

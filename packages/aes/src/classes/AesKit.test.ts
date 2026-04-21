@@ -7,6 +7,7 @@ import {
 import { IAesKit } from "../interfaces";
 import { AesDecryptionRecord, AesEncryptionMode } from "../types";
 import { AesKit } from "./AesKit";
+import { beforeEach, describe, expect, test } from "vitest";
 
 describe("AesKit", () => {
   const modes: Record<AesEncryptionMode, any> = {

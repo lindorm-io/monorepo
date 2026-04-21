@@ -1,6 +1,7 @@
 import { KryptosKit } from "@lindorm/kryptos";
 import { randomBytes } from "crypto";
 import { ecbKeyUnwrap, ecbKeyWrap } from "./ecb-key-wrap";
+import { describe, expect, test } from "vitest";
 
 describe("ecbKeyWrap", () => {
   test("should wrap and unwrap key with A128KW", () => {

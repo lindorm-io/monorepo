@@ -1,6 +1,7 @@
 import { KryptosEncryption } from "@lindorm/kryptos";
 import { AesError } from "../../../errors";
 import { calculateContentEncryptionKeySize } from "./calculate-content-encryption-key-size";
+import { describe, expect, test } from "vitest";
 
 describe("calculateContentEncryptionKeySize", () => {
   test.each<[KryptosEncryption, number]>([

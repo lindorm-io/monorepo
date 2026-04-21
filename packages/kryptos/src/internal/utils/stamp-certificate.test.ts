@@ -1,6 +1,7 @@
 import MockDate from "mockdate";
 import { generateOkpKey } from "./okp/generate-key";
 import { stampCertificate } from "./stamp-certificate";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
 
 const MOCKED_NOW = new Date("2024-01-01T08:00:00.000Z");
 const NOT_BEFORE = new Date("2024-01-01T00:00:00.000Z");

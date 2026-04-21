@@ -5,6 +5,7 @@ import { TEST_OKP_KEY_B64 } from "../__fixtures__/okp-keys";
 import { TEST_RSA_KEY_B64 } from "../__fixtures__/rsa-keys";
 import { KryptosError } from "../errors";
 import { KryptosKit } from "./KryptosKit";
+import { describe, expect, test } from "vitest";
 
 describe("Kryptos.thumbprint", () => {
   test("should compute an RFC 7638 thumbprint for an EC key", () => {

@@ -1,27 +1,28 @@
 import type { IZephyr } from "../../interfaces/Zephyr";
+import { vi, type Mocked } from "vitest";
 
-export const createMockClient = (): jest.Mocked<IZephyr> => ({
+export const createMockClient = (): Mocked<IZephyr> => ({
   id: "mock-id",
   connected: true,
-  connect: jest.fn().mockResolvedValue(undefined),
-  disconnect: jest.fn().mockResolvedValue(undefined),
-  refresh: jest.fn().mockResolvedValue(undefined),
-  emit: jest.fn().mockResolvedValue(undefined),
-  request: jest.fn().mockResolvedValue({}),
-  on: jest.fn(),
-  once: jest.fn(),
-  off: jest.fn(),
-  room: jest.fn().mockReturnValue({
+  connect: vi.fn().mockResolvedValue(undefined),
+  disconnect: vi.fn().mockResolvedValue(undefined),
+  refresh: vi.fn().mockResolvedValue(undefined),
+  emit: vi.fn().mockResolvedValue(undefined),
+  request: vi.fn().mockResolvedValue({}),
+  on: vi.fn(),
+  once: vi.fn(),
+  off: vi.fn(),
+  room: vi.fn().mockReturnValue({
     name: "mock-room",
-    join: jest.fn().mockResolvedValue(undefined),
-    leave: jest.fn().mockResolvedValue(undefined),
-    emit: jest.fn().mockResolvedValue(undefined),
-    on: jest.fn(),
-    off: jest.fn(),
+    join: vi.fn().mockResolvedValue(undefined),
+    leave: vi.fn().mockResolvedValue(undefined),
+    emit: vi.fn().mockResolvedValue(undefined),
+    on: vi.fn(),
+    off: vi.fn(),
   }),
-  onConnect: jest.fn(),
-  onDisconnect: jest.fn(),
-  onError: jest.fn(),
-  onReconnect: jest.fn(),
-  onAuthExpired: jest.fn().mockReturnValue(() => undefined),
+  onConnect: vi.fn(),
+  onDisconnect: vi.fn(),
+  onError: vi.fn(),
+  onReconnect: vi.fn(),
+  onAuthExpired: vi.fn().mockReturnValue(() => undefined),
 });

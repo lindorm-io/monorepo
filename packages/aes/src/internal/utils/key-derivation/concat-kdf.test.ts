@@ -1,4 +1,5 @@
 import { concatKdf } from "./concat-kdf";
+import { describe, expect, test } from "vitest";
 
 describe("concatKdf", () => {
   const sharedSecret = Buffer.from("shared-secret-value-for-testing!");

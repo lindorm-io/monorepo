@@ -1,5 +1,6 @@
 import { createPublicKey, generateKeyPairSync } from "crypto";
 import { spkiFromPublicKey } from "./spki-from-public-key";
+import { describe, expect, test } from "vitest";
 
 describe("spkiFromPublicKey", () => {
   test("EC public key in SPKI form passes through unchanged", () => {

@@ -1,5 +1,6 @@
 import { AesError } from "../../errors";
 import { validateAesVersion } from "./validate-version";
+import { describe, expect, test } from "vitest";
 
 describe("validateAesVersion", () => {
   test("should accept current version 1.0", () => {

@@ -1,4 +1,5 @@
 import { generateEcKey } from "./generate-key";
+import { describe, expect, test } from "vitest";
 
 describe("generateEcKey", () => {
   describe("enc", () => {

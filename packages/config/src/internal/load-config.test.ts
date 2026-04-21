@@ -1,4 +1,5 @@
 import { loadConfig } from "./load-config";
+import { describe, expect, test } from "vitest";
 
 describe("loadConfig", () => {
   test("should work", () => {

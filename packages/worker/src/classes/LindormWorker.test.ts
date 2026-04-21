@@ -1,19 +1,28 @@
-import { createMockLogger } from "@lindorm/logger/mocks/jest";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { sleep } from "@lindorm/utils";
 import { LindormWorkerError } from "../errors";
 import { LindormWorkerCallback, LindormWorkerErrorCallback } from "../types";
 import { LindormWorker } from "./LindormWorker";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  test,
+  vi,
+  type MockedFunction,
+} from "vitest";
 
 describe("LindormWorker", () => {
-  let callback: jest.MockedFunction<LindormWorkerCallback>;
-  let errorCallback: jest.MockedFunction<LindormWorkerErrorCallback>;
-  let listener: jest.MockedFunction<() => void>;
+  let callback: MockedFunction<LindormWorkerCallback>;
+  let errorCallback: MockedFunction<LindormWorkerErrorCallback>;
+  let listener: MockedFunction<() => void>;
   let worker: LindormWorker;
 
   beforeEach(() => {
-    callback = jest.fn().mockResolvedValue(undefined);
-    errorCallback = jest.fn().mockResolvedValue(undefined);
-    listener = jest.fn();
+    callback = vi.fn().mockResolvedValue(undefined);
+    errorCallback = vi.fn().mockResolvedValue(undefined);
+    listener = vi.fn();
 
     worker = new LindormWorker({
       alias: "Alias",
@@ -221,7 +230,7 @@ describe("LindormWorker", () => {
     test("should throw on on after destroy", async () => {
       await worker.destroy();
 
-      expect(() => worker.on("start", jest.fn())).toThrow(
+      expect(() => worker.on("start", vi.fn())).toThrow(
         expect.objectContaining({ message: "Worker has been destroyed" }),
       );
     });
@@ -229,7 +238,7 @@ describe("LindormWorker", () => {
     test("should throw on off after destroy", async () => {
       await worker.destroy();
 
-      expect(() => worker.off("start", jest.fn())).toThrow(
+      expect(() => worker.off("start", vi.fn())).toThrow(
         expect.objectContaining({ message: "Worker has been destroyed" }),
       );
     });
@@ -237,7 +246,7 @@ describe("LindormWorker", () => {
     test("should throw on once after destroy", async () => {
       await worker.destroy();
 
-      expect(() => worker.once("start", jest.fn())).toThrow(
+      expect(() => worker.once("start", vi.fn())).toThrow(
         expect.objectContaining({ message: "Worker has been destroyed" }),
       );
     });
@@ -246,7 +255,7 @@ describe("LindormWorker", () => {
   describe("callback timeout", () => {
     test("should abort slow callback when timeout is exceeded", async () => {
       let callbackResolve: () => void;
-      const slowCallback = jest.fn().mockImplementation(
+      const slowCallback = vi.fn().mockImplementation(
         () =>
           new Promise<void>((resolve) => {
             callbackResolve = resolve;
@@ -259,7 +268,7 @@ describe("LindormWorker", () => {
         errorCallback,
         callbackTimeout: 50,
         interval: 1000,
-        listeners: [{ event: "error", listener: jest.fn() }],
+        listeners: [{ event: "error", listener: vi.fn() }],
         logger: createMockLogger(),
         retry: { maxAttempts: 0 },
       });
@@ -276,11 +285,11 @@ describe("LindormWorker", () => {
     });
 
     test("should succeed normally when callback completes before timeout", async () => {
-      const successListener = jest.fn();
+      const successListener = vi.fn();
 
       const fastWorker = new LindormWorker({
         alias: "FastWorker",
-        callback: jest.fn().mockResolvedValue(undefined),
+        callback: vi.fn().mockResolvedValue(undefined),
         callbackTimeout: 500,
         interval: 1000,
         listeners: [{ event: "success", listener: successListener }],
@@ -359,7 +368,7 @@ describe("LindormWorker", () => {
 
   describe("off", () => {
     test("should remove listener so it is not called", async () => {
-      const startListener = jest.fn();
+      const startListener = vi.fn();
 
       worker.on("start", startListener);
       worker.off("start", startListener);
@@ -372,7 +381,7 @@ describe("LindormWorker", () => {
 
   describe("once", () => {
     test("should fire listener only on the first event", async () => {
-      const successListener = jest.fn();
+      const successListener = vi.fn();
 
       worker.once("success", successListener);
 
@@ -409,16 +418,16 @@ describe("LindormWorker", () => {
 
   describe("warning events on retry", () => {
     test("should emit warning events during retries before max attempts", async () => {
-      const warningListener = jest.fn();
+      const warningListener = vi.fn();
 
       const retryWorker = new LindormWorker({
         alias: "RetryWorker",
-        callback: jest.fn().mockRejectedValue(new Error("retry me")),
+        callback: vi.fn().mockRejectedValue(new Error("retry me")),
         errorCallback,
         interval: 1000,
         listeners: [
           { event: "warning", listener: warningListener },
-          { event: "error", listener: jest.fn() },
+          { event: "error", listener: vi.fn() },
         ],
         logger: createMockLogger(),
         retry: {

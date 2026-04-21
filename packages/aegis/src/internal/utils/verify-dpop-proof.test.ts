@@ -5,6 +5,7 @@ import { TEST_RSA_KEY_SIG } from "../../__fixtures__/keys";
 import { JwtError } from "../../errors";
 import { createJoseSignature } from "./jose-signature";
 import { verifyDpopProof } from "./verify-dpop-proof";
+import { describe, expect, test } from "vitest";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate);

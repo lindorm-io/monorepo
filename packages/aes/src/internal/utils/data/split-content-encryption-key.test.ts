@@ -1,6 +1,7 @@
 import { KryptosEncryption } from "@lindorm/kryptos";
 import { AesError } from "../../../errors";
 import { splitContentEncryptionKey } from "./split-content-encryption-key";
+import { describe, expect, test } from "vitest";
 
 describe("splitContentEncryptionKey", () => {
   describe("CBC modes (RFC 7518 order: hashKey first, encryptionKey last)", () => {

@@ -10,6 +10,7 @@ import {
 } from "../../../__fixtures__/x509";
 import { parseX509 } from "./parse-x509";
 import { verifyX509Chain } from "./verify-chain";
+import { afterAll, beforeAll, describe, expect, test } from "vitest";
 
 describe("verifyX509Chain", () => {
   beforeAll(() => {

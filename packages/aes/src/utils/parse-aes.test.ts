@@ -10,32 +10,31 @@ import { isAesBufferData, isAesSerialisedData, isAesTokenised } from "./is-aes";
 import { parseEncodedAesString } from "../internal/utils/encoded-aes";
 import { parseSerialisedAesRecord } from "../internal/utils/serialised-aes";
 import { parseTokenisedAesString } from "../internal/utils/tokenised-aes";
+import { beforeEach, describe, expect, test, vi, type MockedFunction } from "vitest";
 
-jest.mock("./is-aes");
-jest.mock("../internal/utils/encoded-aes");
-jest.mock("../internal/utils/serialised-aes");
-jest.mock("../internal/utils/tokenised-aes");
+vi.mock("./is-aes");
+vi.mock("../internal/utils/encoded-aes");
+vi.mock("../internal/utils/serialised-aes");
+vi.mock("../internal/utils/tokenised-aes");
 
-const mockIsAesBufferData = isAesBufferData as jest.MockedFunction<
-  typeof isAesBufferData
->;
-const mockIsAesSerialisedData = isAesSerialisedData as jest.MockedFunction<
+const mockIsAesBufferData = isAesBufferData as MockedFunction<typeof isAesBufferData>;
+const mockIsAesSerialisedData = isAesSerialisedData as MockedFunction<
   typeof isAesSerialisedData
 >;
-const mockIsAesTokenised = isAesTokenised as jest.MockedFunction<typeof isAesTokenised>;
-const mockParseEncodedAesString = parseEncodedAesString as jest.MockedFunction<
+const mockIsAesTokenised = isAesTokenised as MockedFunction<typeof isAesTokenised>;
+const mockParseEncodedAesString = parseEncodedAesString as MockedFunction<
   typeof parseEncodedAesString
 >;
-const mockParseSerialisedAesRecord = parseSerialisedAesRecord as jest.MockedFunction<
+const mockParseSerialisedAesRecord = parseSerialisedAesRecord as MockedFunction<
   typeof parseSerialisedAesRecord
 >;
-const mockParseTokenisedAesString = parseTokenisedAesString as jest.MockedFunction<
+const mockParseTokenisedAesString = parseTokenisedAesString as MockedFunction<
   typeof parseTokenisedAesString
 >;
 
 describe("parseAes", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe("tokenised string", () => {

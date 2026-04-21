@@ -1,4 +1,80 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`createZephyrContext > should create incoming context with data 1`] = `
+{
+  "app": {
+    "alias": "test-app",
+    "environment": null,
+    "url": "http://test.example.com",
+  },
+  "event": "test:event",
+  "incoming": {
+    "data": {
+      "result": "ok",
+    },
+    "ok": true,
+  },
+  "logger": undefined,
+  "metadata": {
+    "correlationId": "mock-uuid",
+    "requestId": "mock-uuid",
+  },
+  "outgoing": {
+    "data": {},
+    "header": {},
+  },
+}
+`;
+
+exports[`createZephyrContext > should create outgoing context with data 1`] = `
+{
+  "app": {
+    "alias": "test-app",
+    "environment": null,
+    "url": "http://test.example.com",
+  },
+  "event": "test:event",
+  "incoming": {
+    "data": {},
+    "ok": true,
+  },
+  "logger": undefined,
+  "metadata": {
+    "correlationId": "mock-uuid",
+    "requestId": "mock-uuid",
+  },
+  "outgoing": {
+    "data": {
+      "key": "value",
+    },
+    "header": {},
+  },
+}
+`;
+
+exports[`createZephyrContext > should create outgoing context with default empty data 1`] = `
+{
+  "app": {
+    "alias": "test-app",
+    "environment": null,
+    "url": "http://test.example.com",
+  },
+  "event": "test:event",
+  "incoming": {
+    "data": {},
+    "ok": true,
+  },
+  "logger": undefined,
+  "metadata": {
+    "correlationId": "mock-uuid",
+    "requestId": "mock-uuid",
+  },
+  "outgoing": {
+    "data": {},
+    "header": {},
+  },
+}
+`;
 
 exports[`createZephyrContext should create incoming context with data 1`] = `
 {

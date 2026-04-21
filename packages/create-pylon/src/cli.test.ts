@@ -1,19 +1,19 @@
-jest.mock("./prompts", () => ({ runPrompts: jest.fn() }));
-jest.mock("./scaffold", () => ({
-  scaffold: jest.fn(),
-  buildDependencyList: jest.fn(() => []),
-  buildDevDependencyList: jest.fn(() => []),
+vi.mock("./prompts", () => ({ runPrompts: vi.fn() }));
+vi.mock("./scaffold", () => ({
+  scaffold: vi.fn(),
+  buildDependencyList: vi.fn(() => []),
+  buildDevDependencyList: vi.fn(() => []),
 }));
-jest.mock("./install", () => ({
-  installDependencies: jest.fn(),
-  installDevDependencies: jest.fn(),
+vi.mock("./install", () => ({
+  installDependencies: vi.fn(),
+  installDevDependencies: vi.fn(),
 }));
-jest.mock("./git", () => ({ initGit: jest.fn() }));
-jest.mock("./drivers", () => ({
-  runProteusInit: jest.fn(),
-  runProteusGenerateSampleEntity: jest.fn(),
-  runIrisInit: jest.fn(),
-  runIrisGenerateSampleMessage: jest.fn(),
+vi.mock("./git", () => ({ initGit: vi.fn() }));
+vi.mock("./drivers", () => ({
+  runProteusInit: vi.fn(),
+  runProteusGenerateSampleEntity: vi.fn(),
+  runIrisInit: vi.fn(),
+  runIrisGenerateSampleMessage: vi.fn(),
 }));
 
 import { runPrompts } from "./prompts";
@@ -28,16 +28,26 @@ import {
 } from "./drivers";
 import { run } from "./cli";
 import type { Answers } from "./types";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  test,
+  vi,
+  type Mock,
+  type MockInstance,
+} from "vitest";
 
-const mockedRunPrompts = runPrompts as jest.Mock;
-const mockedScaffold = scaffold as jest.Mock;
-const mockedInstall = installDependencies as jest.Mock;
-const mockedInstallDev = installDevDependencies as jest.Mock;
-const mockedInitGit = initGit as jest.Mock;
-const mockedProteusInit = runProteusInit as jest.Mock;
-const mockedProteusSampleEntity = runProteusGenerateSampleEntity as jest.Mock;
-const mockedIrisInit = runIrisInit as jest.Mock;
-const mockedIrisSampleMessage = runIrisGenerateSampleMessage as jest.Mock;
+const mockedRunPrompts = runPrompts as Mock;
+const mockedScaffold = scaffold as Mock;
+const mockedInstall = installDependencies as Mock;
+const mockedInstallDev = installDevDependencies as Mock;
+const mockedInitGit = initGit as Mock;
+const mockedProteusInit = runProteusInit as Mock;
+const mockedProteusSampleEntity = runProteusGenerateSampleEntity as Mock;
+const mockedIrisInit = runIrisInit as Mock;
+const mockedIrisSampleMessage = runIrisGenerateSampleMessage as Mock;
 
 const baseAnswers = (overrides: Partial<Answers> = {}): Answers => ({
   projectName: "demo",
@@ -58,7 +68,7 @@ const baseAnswers = (overrides: Partial<Answers> = {}): Answers => ({
 });
 
 describe("cli run orchestration", () => {
-  let stdout: jest.SpyInstance;
+  let stdout: MockInstance;
 
   beforeEach(() => {
     [
@@ -84,7 +94,7 @@ describe("cli run orchestration", () => {
       mockedIrisSampleMessage,
     ].forEach((m) => m.mockResolvedValue(undefined));
 
-    stdout = jest.spyOn(process.stdout, "write").mockImplementation(() => true);
+    stdout = vi.spyOn(process.stdout, "write").mockImplementation(() => true);
   });
 
   afterEach(() => stdout.mockRestore());

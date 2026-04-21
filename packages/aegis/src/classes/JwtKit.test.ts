@@ -1,5 +1,7 @@
-import { createMockLogger } from "@lindorm/logger/mocks/jest";
+import { B64 } from "@lindorm/b64";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { ILogger } from "@lindorm/logger";
+import { ShaKit } from "@lindorm/sha";
 import * as jsonwebtoken from "jsonwebtoken";
 import MockDate from "mockdate";
 import {
@@ -9,8 +11,10 @@ import {
   TEST_OKP_KEY_SIG,
   TEST_RSA_KEY_SIG,
 } from "../__fixtures__/keys";
+import { createJoseSignature } from "../internal/utils/jose-signature";
 import { SignJwtContent } from "../types";
 import { JwtKit } from "./JwtKit";
+import { beforeEach, describe, expect, test } from "vitest";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate);
@@ -1254,10 +1258,6 @@ describe("JwtKit", () => {
       accessToken: string,
       payloadOverrides: Record<string, unknown> = {},
     ): string => {
-      const { B64 } = require("@lindorm/b64") as typeof import("@lindorm/b64");
-      const { ShaKit } = require("@lindorm/sha") as typeof import("@lindorm/sha");
-      const { createJoseSignature } =
-        require("../internal/utils/jose-signature") as typeof import("../internal/utils/jose-signature");
       const header = B64.encode(
         JSON.stringify({
           alg: "RS512",

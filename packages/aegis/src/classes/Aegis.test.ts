@@ -1,9 +1,10 @@
 import { Amphora, IAmphora } from "@lindorm/amphora";
-import { createMockLogger } from "@lindorm/logger/mocks/jest";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { ILogger } from "@lindorm/logger";
 import MockDate from "mockdate";
 import { TEST_EC_KEY_SIG, TEST_OKP_KEY_ENC } from "../__fixtures__/keys";
 import { Aegis } from "./Aegis";
+import { beforeEach, describe, expect, test } from "vitest";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate);

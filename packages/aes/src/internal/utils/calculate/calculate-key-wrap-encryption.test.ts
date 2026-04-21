@@ -1,6 +1,7 @@
 import { IKryptos, KryptosAlgorithm } from "@lindorm/kryptos";
 import { AesError } from "../../../errors";
 import { calculateKeyWrapEncryption } from "./calculate-key-wrap-encryption";
+import { describe, expect, test } from "vitest";
 
 describe("calculateKeyWrapEncryption", () => {
   describe("ECB algorithms", () => {

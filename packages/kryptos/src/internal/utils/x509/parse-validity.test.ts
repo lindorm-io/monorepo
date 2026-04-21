@@ -1,5 +1,6 @@
 import { encodeX509Validity } from "./encode-validity";
 import { parseX509Validity } from "./parse-validity";
+import { describe, expect, test } from "vitest";
 
 describe("parseX509Validity", () => {
   test("round-trips UTCTime window", () => {

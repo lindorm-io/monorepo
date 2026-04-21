@@ -1,4 +1,4 @@
-import { createMockLogger } from "@lindorm/logger/mocks/jest";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import nock from "nock";
 import { join } from "path";
 import {
@@ -7,6 +7,7 @@ import {
 } from "../middleware";
 import { ConduitMiddleware } from "../types";
 import { Conduit } from "./Conduit";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("Conduit", () => {
   describe("constructor", () => {
@@ -56,7 +57,7 @@ describe("Conduit", () => {
     });
 
     afterEach(() => {
-      jest.resetAllMocks();
+      vi.resetAllMocks();
       scope.done();
     });
 
@@ -192,7 +193,7 @@ describe("Conduit", () => {
     });
 
     afterEach(() => {
-      jest.resetAllMocks();
+      vi.resetAllMocks();
       scope.done();
     });
 
@@ -237,7 +238,7 @@ describe("Conduit", () => {
     });
 
     afterEach(() => {
-      jest.resetAllMocks();
+      vi.resetAllMocks();
       scope.done();
     });
 

@@ -1,15 +1,16 @@
 import { join } from "path";
+import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
-jest.mock("@lindorm/proteus", () => ({
+vi.mock("@lindorm/proteus", () => ({
   __esModule: true,
-  writeSource: jest.fn().mockResolvedValue(undefined),
-  writeEntity: jest.fn().mockResolvedValue(undefined),
+  writeSource: vi.fn().mockResolvedValue(undefined),
+  writeEntity: vi.fn().mockResolvedValue(undefined),
 }));
 
-jest.mock("@lindorm/iris", () => ({
+vi.mock("@lindorm/iris", () => ({
   __esModule: true,
-  writeSource: jest.fn().mockResolvedValue(undefined),
-  writeMessage: jest.fn().mockResolvedValue(undefined),
+  writeSource: vi.fn().mockResolvedValue(undefined),
+  writeMessage: vi.fn().mockResolvedValue(undefined),
 }));
 
 import {
@@ -27,10 +28,10 @@ import {
   runProteusInit,
 } from "./drivers";
 
-const mockedProteusWriteSource = proteusWriteSource as jest.Mock;
-const mockedProteusWriteEntity = proteusWriteEntity as jest.Mock;
-const mockedIrisWriteSource = irisWriteSource as jest.Mock;
-const mockedIrisWriteMessage = irisWriteMessage as jest.Mock;
+const mockedProteusWriteSource = proteusWriteSource as Mock;
+const mockedProteusWriteEntity = proteusWriteEntity as Mock;
+const mockedIrisWriteSource = irisWriteSource as Mock;
+const mockedIrisWriteMessage = irisWriteMessage as Mock;
 
 describe("drivers", () => {
   beforeEach(() => {

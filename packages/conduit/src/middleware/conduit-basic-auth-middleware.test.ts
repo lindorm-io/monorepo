@@ -1,4 +1,5 @@
 import { conduitBasicAuthMiddleware } from "./conduit-basic-auth-middleware";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("conduitBasicAuthMiddleware", () => {
   let ctx: any;
@@ -13,7 +14,7 @@ describe("conduitBasicAuthMiddleware", () => {
 
   test("should add Basic Authorization header with base64-encoded credentials", async () => {
     await expect(
-      conduitBasicAuthMiddleware("user123", "pass456")(ctx, jest.fn()),
+      conduitBasicAuthMiddleware("user123", "pass456")(ctx, vi.fn()),
     ).resolves.toBeUndefined();
 
     const expectedToken = Buffer.from("user123:pass456").toString("base64");
@@ -27,7 +28,7 @@ describe("conduitBasicAuthMiddleware", () => {
   test("should override existing Authorization header", async () => {
     ctx.req.headers.Authorization = "Bearer old-token";
 
-    await conduitBasicAuthMiddleware("admin", "secret")(ctx, jest.fn());
+    await conduitBasicAuthMiddleware("admin", "secret")(ctx, vi.fn());
 
     const expectedToken = Buffer.from("admin:secret").toString("base64");
 
@@ -35,7 +36,7 @@ describe("conduitBasicAuthMiddleware", () => {
   });
 
   test("should call next middleware", async () => {
-    const next = jest.fn();
+    const next = vi.fn();
 
     await conduitBasicAuthMiddleware("user", "pass")(ctx, next);
 

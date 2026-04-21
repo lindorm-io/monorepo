@@ -1,4 +1,2088 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`scaffold > buildDependencyList > snapshot: memory-nats 1`] = `
+[
+  "@lindorm/proteus",
+  "@lindorm/iris",
+  "nats",
+]
+`;
+
+exports[`scaffold > buildDependencyList > snapshot: none-none 1`] = `[]`;
+
+exports[`scaffold > buildDependencyList > snapshot: postgres-rabbit 1`] = `
+[
+  "@lindorm/proteus",
+  "pg",
+  "@lindorm/iris",
+  "amqplib",
+]
+`;
+
+exports[`scaffold > buildDependencyList > snapshot: redis-redis 1`] = `
+[
+  "@lindorm/proteus",
+  "ioredis",
+  "@lindorm/iris",
+  "ioredis",
+]
+`;
+
+exports[`scaffold > buildDependencyList > snapshot: sqlite-kafka 1`] = `
+[
+  "@lindorm/proteus",
+  "better-sqlite3",
+  "@lindorm/iris",
+  "kafkajs",
+]
+`;
+
+exports[`scaffold > buildEnvLines > snapshot: mongo-nats 1`] = `
+[
+  "NODE_ENV=development",
+  "PYLON_KEK=kryptos:test-fixed-kek-placeholder",
+  "PROTEUS_URL=mongodb://localhost:27017/app",
+  "IRIS_SERVERS=localhost:4222",
+]
+`;
+
+exports[`scaffold > buildEnvLines > snapshot: mysql-rabbit 1`] = `
+[
+  "NODE_ENV=development",
+  "PYLON_KEK=kryptos:test-fixed-kek-placeholder",
+  "PROTEUS_URL=mysql://localhost:3306/app",
+  "IRIS_URL=amqp://localhost:5672",
+]
+`;
+
+exports[`scaffold > buildEnvLines > snapshot: none-none + auth 1`] = `
+[
+  "NODE_ENV=development",
+  "PYLON_KEK=kryptos:test-fixed-kek-placeholder",
+  "AUTH_CLIENT_ID=",
+  "AUTH_CLIENT_SECRET=",
+  "AUTH_ISSUER=https://auth.example.com",
+]
+`;
+
+exports[`scaffold > buildEnvLines > snapshot: none-none 1`] = `
+[
+  "NODE_ENV=development",
+  "PYLON_KEK=kryptos:test-fixed-kek-placeholder",
+]
+`;
+
+exports[`scaffold > buildEnvLines > snapshot: postgres-rabbit + auth 1`] = `
+[
+  "NODE_ENV=development",
+  "PYLON_KEK=kryptos:test-fixed-kek-placeholder",
+  "PROTEUS_URL=postgresql://localhost:5432/app",
+  "IRIS_URL=amqp://localhost:5672",
+  "AUTH_CLIENT_ID=",
+  "AUTH_CLIENT_SECRET=",
+  "AUTH_ISSUER=https://auth.example.com",
+]
+`;
+
+exports[`scaffold > buildEnvLines > snapshot: sqlite-redis 1`] = `
+[
+  "NODE_ENV=development",
+  "PYLON_KEK=kryptos:test-fixed-kek-placeholder",
+  "PROTEUS_URL=file:./data/app.db",
+  "IRIS_URL=redis://localhost:6379",
+]
+`;
+
+exports[`scaffold > copyTemplates > base + http + socket + workers + webhooks 1`] = `
+{
+  ".gitignore": "node_modules/
+dist/
+coverage/
+.nx/cache/
+.config-cache/
+
+.env
+.env.*
+!.env.example
+
+.DS_Store
+*.log
+",
+  "config/default.yml": "server:
+  port: 3000
+",
+  "jest.config.ts": "import type { Config } from "jest";
+
+const config: Config = {
+  preset: "ts-jest",
+  testEnvironment: "node",
+  roots: ["<rootDir>/src"],
+  testMatch: ["**/*.test.ts"],
+  moduleFileExtensions: ["ts", "tsx", "js", "json"],
+};
+
+export default config;
+",
+  "src/handlers/create-webhook-handler.ts": "import { WebhookAuth, WebhookMethod } from "@lindorm/pylon";
+import { z } from "zod";
+import type { ServerHandler } from "../types/context";
+
+export const createWebhookSchema = z.object({
+  auth: z.nativeEnum(WebhookAuth),
+  event: z.string(),
+  method: z.nativeEnum(WebhookMethod).optional(),
+  headers: z.record(z.string(), z.string()),
+  ownerId: z.string(),
+  tenantId: z.string().nullable().optional(),
+  url: z.string().url(),
+
+  authHeaders: z.record(z.string(), z.string()),
+
+  username: z.string().nullable().optional(),
+  password: z.string().nullable().optional(),
+
+  audience: z.string().nullable().optional(),
+  authLocation: z.enum(["body", "header"]).nullable().optional(),
+  clientId: z.string().nullable().optional(),
+  clientSecret: z.string().nullable().optional(),
+  contentType: z
+    .enum(["application/json", "application/x-www-form-urlencoded"])
+    .nullable()
+    .optional(),
+  issuer: z.string().nullable().optional(),
+  scope: z.array(z.string()).optional(),
+  tokenUri: z.string().url().nullable().optional(),
+});
+
+export const createWebhookHandler: ServerHandler<typeof createWebhookSchema> = async (
+  ctx,
+) => {
+  const repository = ctx.repositories!.webhookSubscription;
+  const subscription = await repository.save(ctx.data);
+
+  return { body: subscription, status: 201 };
+};
+",
+  "src/handlers/delete-webhook-handler.ts": "import { ClientError } from "@lindorm/errors";
+import { z } from "zod";
+import type { ServerHandler } from "../types/context";
+
+export const deleteWebhookSchema = z.object({
+  id: z.string(),
+});
+
+export const deleteWebhookHandler: ServerHandler<typeof deleteWebhookSchema> = async (
+  ctx,
+) => {
+  const repository = ctx.repositories!.webhookSubscription;
+  const existing = await repository.findOne({ id: ctx.data.id });
+
+  if (!existing) {
+    throw new ClientError("Webhook subscription not found", {
+      status: ClientError.Status.NotFound,
+    });
+  }
+
+  await repository.destroy(existing);
+
+  return { status: 204 };
+};
+",
+  "src/handlers/example-handler.ts": "import { z } from "zod";
+import type { ServerHandler } from "../types/context";
+
+export const exampleSchema = z.object({
+  name: z.string().optional(),
+});
+
+export const exampleHandler: ServerHandler<typeof exampleSchema> = async (ctx) => {
+  const name = ctx.data.name ?? "world";
+  return { body: { message: \`Hello, \${name}!\` } };
+};
+",
+  "src/handlers/get-webhook-handler.ts": "import { ClientError } from "@lindorm/errors";
+import { z } from "zod";
+import type { ServerHandler } from "../types/context";
+
+export const getWebhookSchema = z.object({
+  id: z.string(),
+});
+
+export const getWebhookHandler: ServerHandler<typeof getWebhookSchema> = async (ctx) => {
+  const repository = ctx.repositories!.webhookSubscription;
+  const subscription = await repository.findOne({ id: ctx.data.id });
+
+  if (!subscription) {
+    throw new ClientError("Webhook subscription not found", {
+      status: ClientError.Status.NotFound,
+    });
+  }
+
+  return { body: subscription };
+};
+",
+  "src/handlers/list-webhooks-handler.ts": "import { z } from "zod";
+import type { ServerHandler } from "../types/context";
+
+export const listWebhooksSchema = z.object({
+  ownerId: z.string(),
+  tenantId: z.string().nullable().optional(),
+});
+
+export const listWebhooksHandler: ServerHandler<typeof listWebhooksSchema> = async (
+  ctx,
+) => {
+  const repository = ctx.repositories!.webhookSubscription;
+  const query: { ownerId: string; tenantId?: string | null } = {
+    ownerId: ctx.data.ownerId,
+  };
+
+  if (ctx.data.tenantId !== undefined) {
+    query.tenantId = ctx.data.tenantId;
+  }
+
+  const subscriptions = await repository.find(query);
+
+  return { body: subscriptions };
+};
+",
+  "src/handlers/ping-handler.ts": "import { z } from "zod";
+import type { ServerSocketHandler } from "../types/context";
+
+export const pingSchema = z.object({
+  message: z.string().optional(),
+});
+
+export const pingHandler: ServerSocketHandler<typeof pingSchema> = async (ctx) => {
+  ctx.logger.info("Received ping", { data: ctx.data });
+
+  ctx.ack?.({
+    pong: true,
+    message: ctx.data.message,
+    receivedAt: new Date().toISOString(),
+  });
+};
+",
+  "src/handlers/update-webhook-handler.ts": "import { ClientError } from "@lindorm/errors";
+import { WebhookMethod } from "@lindorm/pylon";
+import { z } from "zod";
+import type { ServerHandler } from "../types/context";
+
+export const updateWebhookSchema = z.object({
+  id: z.string(),
+
+  event: z.string().optional(),
+  method: z.nativeEnum(WebhookMethod).optional(),
+  headers: z.record(z.string(), z.string()),
+  tenantId: z.string().nullable().optional(),
+  url: z.string().url().optional(),
+
+  authHeaders: z.record(z.string(), z.string()),
+
+  username: z.string().nullable().optional(),
+  password: z.string().nullable().optional(),
+
+  audience: z.string().nullable().optional(),
+  authLocation: z.enum(["body", "header"]).nullable().optional(),
+  clientId: z.string().nullable().optional(),
+  clientSecret: z.string().nullable().optional(),
+  contentType: z
+    .enum(["application/json", "application/x-www-form-urlencoded"])
+    .nullable()
+    .optional(),
+  issuer: z.string().nullable().optional(),
+  scope: z.array(z.string()).optional(),
+  tokenUri: z.string().url().nullable().optional(),
+});
+
+export const updateWebhookHandler: ServerHandler<typeof updateWebhookSchema> = async (
+  ctx,
+) => {
+  const repository = ctx.repositories!.webhookSubscription;
+  const existing = await repository.findOne({ id: ctx.data.id });
+
+  if (!existing) {
+    throw new ClientError("Webhook subscription not found", {
+      status: ClientError.Status.NotFound,
+    });
+  }
+
+  const { id: _ignored, ...changes } = ctx.data;
+
+  const updated = await repository.save({
+    ...existing,
+    ...changes,
+    errorCount: 0,
+    suspendedAt: null,
+  });
+
+  return { body: updated };
+};
+",
+  "src/index.ts": "import { pylon } from "./pylon/pylon";
+
+void pylon.start();
+",
+  "src/listeners/_middleware.ts": "import { socketExampleMiddleware } from "../middleware/socket-example";
+
+export const MIDDLEWARE = [socketExampleMiddleware];
+",
+  "src/listeners/ping.ts": "import { useSchema } from "@lindorm/pylon";
+import type { ServerSocketMiddleware } from "../types/context";
+import { pingHandler, pingSchema } from "../handlers/ping-handler";
+
+export const ON: Array<ServerSocketMiddleware> = [useSchema(pingSchema), pingHandler];
+",
+  "src/logger/index.ts": "import { Logger } from "@lindorm/logger";
+import { config } from "../pylon/config";
+
+export const logger = new Logger({
+  readable: config.nodeEnv !== "production",
+});
+",
+  "src/middleware/http-example.ts": "import type { ServerHttpMiddleware } from "../types/context";
+
+export const httpExampleMiddleware: ServerHttpMiddleware = async (ctx, next) => {
+  ctx.set("x-example-header", "true");
+
+  await next();
+};
+",
+  "src/middleware/socket-example.ts": "import type { ServerSocketMiddleware } from "../types/context";
+
+export const socketExampleMiddleware: ServerSocketMiddleware = async (ctx, next) => {
+  ctx.logger.warn(
+    "This is already logged but as an example we'll do it again as a warn",
+    {
+      event: ctx.event,
+      eventId: ctx.eventId,
+      socketId: ctx.io.socket.id,
+    },
+  );
+
+  await next();
+};
+",
+  "src/pylon/amphora.ts": "import { Amphora } from "@lindorm/amphora";
+import { logger } from "../logger";
+import { config } from "./config";
+
+export const amphora = new Amphora({ logger });
+
+amphora.env(config.pylon.kek);
+",
+  "src/routes/_middleware.ts": "import { httpExampleMiddleware } from "../middleware/http-example";
+
+export const MIDDLEWARE = [httpExampleMiddleware];
+",
+  "src/routes/v1/example.ts": "import { useHandler, useSchema } from "@lindorm/pylon";
+import type { ServerHttpMiddleware } from "../../types/context";
+import { exampleHandler, exampleSchema } from "../../handlers/example-handler";
+
+export const GET: Array<ServerHttpMiddleware> = [
+  useSchema(exampleSchema),
+  useHandler(exampleHandler),
+];
+",
+  "src/routes/webhooks/[id].ts": "// TODO: add auth middleware — these routes expose webhook subscription management.
+import { useHandler, useSchema } from "@lindorm/pylon";
+import type { ServerHttpMiddleware } from "../../types/context";
+import {
+  deleteWebhookHandler,
+  deleteWebhookSchema,
+} from "../../handlers/delete-webhook-handler";
+import { getWebhookHandler, getWebhookSchema } from "../../handlers/get-webhook-handler";
+import {
+  updateWebhookHandler,
+  updateWebhookSchema,
+} from "../../handlers/update-webhook-handler";
+
+export const GET: Array<ServerHttpMiddleware> = [
+  useSchema(getWebhookSchema),
+  useHandler(getWebhookHandler),
+];
+
+export const PATCH: Array<ServerHttpMiddleware> = [
+  useSchema(updateWebhookSchema),
+  useHandler(updateWebhookHandler),
+];
+
+export const DELETE: Array<ServerHttpMiddleware> = [
+  useSchema(deleteWebhookSchema),
+  useHandler(deleteWebhookHandler),
+];
+",
+  "src/routes/webhooks/_middleware.ts": "import { createRepositoryMiddleware, WebhookSubscription } from "@lindorm/pylon";
+
+export const MIDDLEWARE = [createRepositoryMiddleware([WebhookSubscription])];
+",
+  "src/routes/webhooks/index.ts": "// TODO: add auth middleware — these routes expose webhook subscription management.
+import { useHandler, useSchema } from "@lindorm/pylon";
+import type { ServerHttpMiddleware } from "../../types/context";
+import {
+  createWebhookHandler,
+  createWebhookSchema,
+} from "../../handlers/create-webhook-handler";
+import {
+  listWebhooksHandler,
+  listWebhooksSchema,
+} from "../../handlers/list-webhooks-handler";
+
+export const POST: Array<ServerHttpMiddleware> = [
+  useSchema(createWebhookSchema),
+  useHandler(createWebhookHandler),
+];
+
+export const GET: Array<ServerHttpMiddleware> = [
+  useSchema(listWebhooksSchema),
+  useHandler(listWebhooksHandler),
+];
+",
+  "src/types/context.ts": "import type {
+  PylonHandler,
+  PylonHttpContext,
+  PylonHttpMiddleware,
+  PylonSocketContext,
+  PylonSocketMiddleware,
+} from "@lindorm/pylon";
+import type { z, ZodType } from "zod";
+
+export type ServerHttpContext<Data = any> = PylonHttpContext<Data>;
+
+export type ServerSocketContext<Payload = any> = PylonSocketContext<Payload>;
+
+export type ServerHttpMiddleware<C extends ServerHttpContext = ServerHttpContext> =
+  PylonHttpMiddleware<C>;
+
+export type ServerSocketMiddleware<C extends ServerSocketContext = ServerSocketContext> =
+  PylonSocketMiddleware<C>;
+
+// TODO: extend Data / State / Payload here to match your application's shape.
+export type ServerHandler<
+  Schema extends ZodType = ZodType<any>,
+  Body = any,
+> = PylonHandler<ServerHttpContext<z.infer<Schema>>, Body>;
+
+export type ServerSocketHandler<Schema extends ZodType = ZodType<any>> =
+  PylonSocketMiddleware<ServerSocketContext<z.infer<Schema>>>;
+",
+  "src/workers/alive.ts": "import type { LindormWorkerCallback } from "@lindorm/worker";
+
+export const CALLBACK: LindormWorkerCallback = async (ctx) => {
+  ctx.logger.info("I'm alive");
+};
+
+export const INTERVAL = "1m";
+",
+  "tsconfig.build.json": "{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "removeComments": true
+  },
+  "exclude": [
+    "**/*.test.ts",
+    "**/*.integration.ts",
+    "**/__fixtures__/**",
+    "**/__mocks__/**",
+    "**/__snapshots__/**"
+  ]
+}
+",
+  "tsconfig.json": "{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "node16",
+    "moduleResolution": "node16",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "experimentalDecorators": false,
+    "emitDecoratorMetadata": false,
+    "resolveJsonModule": true,
+    "forceConsistentCasingInFileNames": true,
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "noEmit": true,
+    "types": ["node", "jest"]
+  },
+  "include": ["src/**/*"]
+}
+",
+}
+`;
+
+exports[`scaffold > copyTemplates > base + http overlay 1`] = `
+{
+  ".gitignore": "node_modules/
+dist/
+coverage/
+.nx/cache/
+.config-cache/
+
+.env
+.env.*
+!.env.example
+
+.DS_Store
+*.log
+",
+  "config/default.yml": "server:
+  port: 3000
+",
+  "jest.config.ts": "import type { Config } from "jest";
+
+const config: Config = {
+  preset: "ts-jest",
+  testEnvironment: "node",
+  roots: ["<rootDir>/src"],
+  testMatch: ["**/*.test.ts"],
+  moduleFileExtensions: ["ts", "tsx", "js", "json"],
+};
+
+export default config;
+",
+  "src/handlers/example-handler.ts": "import { z } from "zod";
+import type { ServerHandler } from "../types/context";
+
+export const exampleSchema = z.object({
+  name: z.string().optional(),
+});
+
+export const exampleHandler: ServerHandler<typeof exampleSchema> = async (ctx) => {
+  const name = ctx.data.name ?? "world";
+  return { body: { message: \`Hello, \${name}!\` } };
+};
+",
+  "src/index.ts": "import { pylon } from "./pylon/pylon";
+
+void pylon.start();
+",
+  "src/logger/index.ts": "import { Logger } from "@lindorm/logger";
+import { config } from "../pylon/config";
+
+export const logger = new Logger({
+  readable: config.nodeEnv !== "production",
+});
+",
+  "src/middleware/http-example.ts": "import type { ServerHttpMiddleware } from "../types/context";
+
+export const httpExampleMiddleware: ServerHttpMiddleware = async (ctx, next) => {
+  ctx.set("x-example-header", "true");
+
+  await next();
+};
+",
+  "src/pylon/amphora.ts": "import { Amphora } from "@lindorm/amphora";
+import { logger } from "../logger";
+import { config } from "./config";
+
+export const amphora = new Amphora({ logger });
+
+amphora.env(config.pylon.kek);
+",
+  "src/routes/_middleware.ts": "import { httpExampleMiddleware } from "../middleware/http-example";
+
+export const MIDDLEWARE = [httpExampleMiddleware];
+",
+  "src/routes/v1/example.ts": "import { useHandler, useSchema } from "@lindorm/pylon";
+import type { ServerHttpMiddleware } from "../../types/context";
+import { exampleHandler, exampleSchema } from "../../handlers/example-handler";
+
+export const GET: Array<ServerHttpMiddleware> = [
+  useSchema(exampleSchema),
+  useHandler(exampleHandler),
+];
+",
+  "src/types/context.ts": "import type {
+  PylonHandler,
+  PylonHttpContext,
+  PylonHttpMiddleware,
+  PylonSocketContext,
+  PylonSocketMiddleware,
+} from "@lindorm/pylon";
+import type { z, ZodType } from "zod";
+
+export type ServerHttpContext<Data = any> = PylonHttpContext<Data>;
+
+export type ServerSocketContext<Payload = any> = PylonSocketContext<Payload>;
+
+export type ServerHttpMiddleware<C extends ServerHttpContext = ServerHttpContext> =
+  PylonHttpMiddleware<C>;
+
+export type ServerSocketMiddleware<C extends ServerSocketContext = ServerSocketContext> =
+  PylonSocketMiddleware<C>;
+
+// TODO: extend Data / State / Payload here to match your application's shape.
+export type ServerHandler<
+  Schema extends ZodType = ZodType<any>,
+  Body = any,
+> = PylonHandler<ServerHttpContext<z.infer<Schema>>, Body>;
+
+export type ServerSocketHandler<Schema extends ZodType = ZodType<any>> =
+  PylonSocketMiddleware<ServerSocketContext<z.infer<Schema>>>;
+",
+  "tsconfig.build.json": "{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "removeComments": true
+  },
+  "exclude": [
+    "**/*.test.ts",
+    "**/*.integration.ts",
+    "**/__fixtures__/**",
+    "**/__mocks__/**",
+    "**/__snapshots__/**"
+  ]
+}
+",
+  "tsconfig.json": "{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "node16",
+    "moduleResolution": "node16",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "experimentalDecorators": false,
+    "emitDecoratorMetadata": false,
+    "resolveJsonModule": true,
+    "forceConsistentCasingInFileNames": true,
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "noEmit": true,
+    "types": ["node", "jest"]
+  },
+  "include": ["src/**/*"]
+}
+",
+}
+`;
+
+exports[`scaffold > copyTemplates > base only — http false, socket false 1`] = `
+{
+  ".gitignore": "node_modules/
+dist/
+coverage/
+.nx/cache/
+.config-cache/
+
+.env
+.env.*
+!.env.example
+
+.DS_Store
+*.log
+",
+  "config/default.yml": "server:
+  port: 3000
+",
+  "jest.config.ts": "import type { Config } from "jest";
+
+const config: Config = {
+  preset: "ts-jest",
+  testEnvironment: "node",
+  roots: ["<rootDir>/src"],
+  testMatch: ["**/*.test.ts"],
+  moduleFileExtensions: ["ts", "tsx", "js", "json"],
+};
+
+export default config;
+",
+  "src/index.ts": "import { pylon } from "./pylon/pylon";
+
+void pylon.start();
+",
+  "src/logger/index.ts": "import { Logger } from "@lindorm/logger";
+import { config } from "../pylon/config";
+
+export const logger = new Logger({
+  readable: config.nodeEnv !== "production",
+});
+",
+  "src/pylon/amphora.ts": "import { Amphora } from "@lindorm/amphora";
+import { logger } from "../logger";
+import { config } from "./config";
+
+export const amphora = new Amphora({ logger });
+
+amphora.env(config.pylon.kek);
+",
+  "src/types/context.ts": "import type {
+  PylonHandler,
+  PylonHttpContext,
+  PylonHttpMiddleware,
+  PylonSocketContext,
+  PylonSocketMiddleware,
+} from "@lindorm/pylon";
+import type { z, ZodType } from "zod";
+
+export type ServerHttpContext<Data = any> = PylonHttpContext<Data>;
+
+export type ServerSocketContext<Payload = any> = PylonSocketContext<Payload>;
+
+export type ServerHttpMiddleware<C extends ServerHttpContext = ServerHttpContext> =
+  PylonHttpMiddleware<C>;
+
+export type ServerSocketMiddleware<C extends ServerSocketContext = ServerSocketContext> =
+  PylonSocketMiddleware<C>;
+
+// TODO: extend Data / State / Payload here to match your application's shape.
+export type ServerHandler<
+  Schema extends ZodType = ZodType<any>,
+  Body = any,
+> = PylonHandler<ServerHttpContext<z.infer<Schema>>, Body>;
+
+export type ServerSocketHandler<Schema extends ZodType = ZodType<any>> =
+  PylonSocketMiddleware<ServerSocketContext<z.infer<Schema>>>;
+",
+  "tsconfig.build.json": "{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "removeComments": true
+  },
+  "exclude": [
+    "**/*.test.ts",
+    "**/*.integration.ts",
+    "**/__fixtures__/**",
+    "**/__mocks__/**",
+    "**/__snapshots__/**"
+  ]
+}
+",
+  "tsconfig.json": "{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "node16",
+    "moduleResolution": "node16",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "experimentalDecorators": false,
+    "emitDecoratorMetadata": false,
+    "resolveJsonModule": true,
+    "forceConsistentCasingInFileNames": true,
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "noEmit": true,
+    "types": ["node", "jest"]
+  },
+  "include": ["src/**/*"]
+}
+",
+}
+`;
+
+exports[`scaffold > scaffold orchestration > all-on: postgres + rabbit + sessions + auth + rateLimit + workers > .env 1`] = `
+"NODE_ENV=development
+PYLON_KEK=kryptos:test-fixed-kek-placeholder
+PROTEUS_URL=postgresql://localhost:5432/app
+IRIS_URL=amqp://localhost:5672
+AUTH_CLIENT_ID=
+AUTH_CLIENT_SECRET=
+AUTH_ISSUER=https://auth.example.com
+"
+`;
+
+exports[`scaffold > scaffold orchestration > all-on: postgres + rabbit + sessions + auth + rateLimit + workers > config.ts 1`] = `
+"import { configuration } from "@lindorm/config";
+import { z } from "zod";
+
+export const config = configuration({
+  nodeEnv: z.string().default("development"),
+  pylon: z.object({ kek: z.string() }),
+  server: z.object({ port: z.number() }),
+  proteusUrl: z.string(),
+  irisUrl: z.string(),
+  authClientId: z.string(),
+  authClientSecret: z.string(),
+  authIssuer: z.string(),
+});
+"
+`;
+
+exports[`scaffold > scaffold orchestration > all-on: postgres + rabbit + sessions + auth + rateLimit + workers > pylon.ts 1`] = `
+"import { Pylon } from "@lindorm/pylon";
+import { join } from "path";
+import { logger } from "../logger";
+import { amphora } from "./amphora";
+import { config } from "./config";
+import { source as proteusSource } from "../proteus/source";
+import { source as irisSource } from "../iris/source";
+
+export const pylon = new Pylon({
+  logger,
+  amphora,
+  port: config.server.port,
+  routes: join(__dirname, "..", "routes"),
+  socket: {
+    enabled: true,
+    listeners: join(__dirname, "..", "listeners"),
+  },
+  rooms: { presence: true },
+  proteus: proteusSource,
+  kryptos: { enabled: true },
+  iris: irisSource,
+  queue: { enabled: true },
+  webhook: { enabled: true },
+  audit: {
+    enabled: true,
+    actor: (ctx) => ctx.state.session?.subject ?? "anonymous",
+    // sanitise: (body) => body,
+    // skip: (ctx) => false,
+    // entities: [],
+  },
+  session: {
+    enabled: true,
+    proteus: proteusSource,
+    name: "sid",
+    encrypted: true,
+    httpOnly: true,
+    sameSite: "lax",
+    secure: false, // TODO: flip to true in production (behind HTTPS)
+    expiry: "7d",
+  },
+  auth: {
+    clientId: config.authClientId,
+    clientSecret: config.authClientSecret,
+    issuer: config.authIssuer,
+    router: {
+      pathPrefix: "/auth",
+      authorize: {
+        scope: ["openid", "profile", "email"],
+        responseType: "code",
+      },
+    },
+  },
+  rateLimit: {
+    enabled: true,
+    proteus: proteusSource,
+    strategy: "fixed",
+    window: "1m",
+    max: 60,
+    // TODO: tune strategy/window/max for your traffic
+  },
+  workers: join(__dirname, "..", "workers"),
+  setup: async () => {
+    await proteusSource.connect();
+    await irisSource.connect();
+  },
+  teardown: async () => {
+    // pylon handles proteus/iris disconnect automatically
+  },
+});
+"
+`;
+
+exports[`scaffold > scaffold orchestration > all-on: postgres + rabbit + sessions + auth + rateLimit + workers > tree 1`] = `
+[
+  ".env",
+  ".gitignore",
+  "config/default.yml",
+  "docker-compose.yml",
+  "jest.config.ts",
+  "package.json",
+  "src/handlers/create-webhook-handler.ts",
+  "src/handlers/delete-webhook-handler.ts",
+  "src/handlers/example-handler.ts",
+  "src/handlers/get-webhook-handler.ts",
+  "src/handlers/list-webhooks-handler.ts",
+  "src/handlers/ping-handler.ts",
+  "src/handlers/update-webhook-handler.ts",
+  "src/index.ts",
+  "src/iris/publishers/sample-publisher.ts",
+  "src/iris/subscribers/sample-subscriber.ts",
+  "src/listeners/_middleware.ts",
+  "src/listeners/ping.ts",
+  "src/logger/index.ts",
+  "src/middleware/http-example.ts",
+  "src/middleware/socket-example.ts",
+  "src/pylon/amphora.ts",
+  "src/pylon/config.ts",
+  "src/pylon/pylon.ts",
+  "src/routes/_middleware.ts",
+  "src/routes/v1/example.ts",
+  "src/routes/webhooks/[id].ts",
+  "src/routes/webhooks/_middleware.ts",
+  "src/routes/webhooks/index.ts",
+  "src/types/context.ts",
+  "src/workers/alive.ts",
+  "src/workers/amphora-entity-sync.ts",
+  "src/workers/expiry-cleanup.ts",
+  "src/workers/kryptos-rotation.ts",
+  "tsconfig.build.json",
+  "tsconfig.json",
+]
+`;
+
+exports[`scaffold > scaffold orchestration > auth-only combo (auto-forces session) > .env 1`] = `
+"NODE_ENV=development
+PYLON_KEK=kryptos:test-fixed-kek-placeholder
+AUTH_CLIENT_ID=
+AUTH_CLIENT_SECRET=
+AUTH_ISSUER=https://auth.example.com
+"
+`;
+
+exports[`scaffold > scaffold orchestration > auth-only combo (auto-forces session) > config.ts 1`] = `
+"import { configuration } from "@lindorm/config";
+import { z } from "zod";
+
+export const config = configuration({
+  nodeEnv: z.string().default("development"),
+  pylon: z.object({ kek: z.string() }),
+  server: z.object({ port: z.number() }),
+  authClientId: z.string(),
+  authClientSecret: z.string(),
+  authIssuer: z.string(),
+});
+"
+`;
+
+exports[`scaffold > scaffold orchestration > auth-only combo (auto-forces session) > pylon.ts 1`] = `
+"import { Pylon } from "@lindorm/pylon";
+import { join } from "path";
+import { logger } from "../logger";
+import { amphora } from "./amphora";
+import { config } from "./config";
+
+export const pylon = new Pylon({
+  logger,
+  amphora,
+  port: config.server.port,
+  routes: join(__dirname, "..", "routes"),
+  session: {
+    enabled: true,
+    name: "sid",
+    encrypted: true,
+    httpOnly: true,
+    sameSite: "lax",
+    secure: false, // TODO: flip to true in production (behind HTTPS)
+    expiry: "7d",
+  },
+  auth: {
+    clientId: config.authClientId,
+    clientSecret: config.authClientSecret,
+    issuer: config.authIssuer,
+    router: {
+      pathPrefix: "/auth",
+      authorize: {
+        scope: ["openid", "profile", "email"],
+        responseType: "code",
+      },
+    },
+  },
+  setup: async () => {
+  },
+  teardown: async () => {
+    // pylon handles proteus/iris disconnect automatically
+  },
+});
+"
+`;
+
+exports[`scaffold > scaffold orchestration > rateLimit-only combo (with postgres) > pylon.ts 1`] = `
+"import { Pylon } from "@lindorm/pylon";
+import { join } from "path";
+import { logger } from "../logger";
+import { amphora } from "./amphora";
+import { config } from "./config";
+import { source as proteusSource } from "../proteus/source";
+
+export const pylon = new Pylon({
+  logger,
+  amphora,
+  port: config.server.port,
+  routes: join(__dirname, "..", "routes"),
+  proteus: proteusSource,
+  kryptos: { enabled: true },
+  rateLimit: {
+    enabled: true,
+    proteus: proteusSource,
+    strategy: "fixed",
+    window: "1m",
+    max: 60,
+    // TODO: tune strategy/window/max for your traffic
+  },
+  setup: async () => {
+    await proteusSource.connect();
+  },
+  teardown: async () => {
+    // pylon handles proteus/iris disconnect automatically
+  },
+});
+"
+`;
+
+exports[`scaffold > scaffold orchestration > runs all write functions in sequence 1`] = `
+[
+  ".env",
+  ".gitignore",
+  "config/default.yml",
+  "docker-compose.yml",
+  "jest.config.ts",
+  "package.json",
+  "src/handlers/create-webhook-handler.ts",
+  "src/handlers/delete-webhook-handler.ts",
+  "src/handlers/example-handler.ts",
+  "src/handlers/get-webhook-handler.ts",
+  "src/handlers/list-webhooks-handler.ts",
+  "src/handlers/ping-handler.ts",
+  "src/handlers/update-webhook-handler.ts",
+  "src/index.ts",
+  "src/iris/publishers/sample-publisher.ts",
+  "src/iris/subscribers/sample-subscriber.ts",
+  "src/listeners/_middleware.ts",
+  "src/listeners/ping.ts",
+  "src/logger/index.ts",
+  "src/middleware/http-example.ts",
+  "src/middleware/socket-example.ts",
+  "src/pylon/amphora.ts",
+  "src/pylon/config.ts",
+  "src/pylon/pylon.ts",
+  "src/routes/_middleware.ts",
+  "src/routes/v1/example.ts",
+  "src/routes/webhooks/[id].ts",
+  "src/routes/webhooks/_middleware.ts",
+  "src/routes/webhooks/index.ts",
+  "src/types/context.ts",
+  "src/workers/alive.ts",
+  "src/workers/expiry-cleanup.ts",
+  "tsconfig.build.json",
+  "tsconfig.json",
+]
+`;
+
+exports[`scaffold > scaffold orchestration > session-only combo 1`] = `
+[
+  ".env",
+  ".gitignore",
+  "config/default.yml",
+  "jest.config.ts",
+  "package.json",
+  "src/handlers/example-handler.ts",
+  "src/index.ts",
+  "src/logger/index.ts",
+  "src/middleware/http-example.ts",
+  "src/pylon/amphora.ts",
+  "src/pylon/config.ts",
+  "src/pylon/pylon.ts",
+  "src/routes/_middleware.ts",
+  "src/routes/v1/example.ts",
+  "src/types/context.ts",
+  "tsconfig.build.json",
+  "tsconfig.json",
+]
+`;
+
+exports[`scaffold > writeConfigFile > snapshot: auth only 1`] = `
+"import { configuration } from "@lindorm/config";
+import { z } from "zod";
+
+export const config = configuration({
+  nodeEnv: z.string().default("development"),
+  pylon: z.object({ kek: z.string() }),
+  server: z.object({ port: z.number() }),
+  authClientId: z.string(),
+  authClientSecret: z.string(),
+  authIssuer: z.string(),
+});
+"
+`;
+
+exports[`scaffold > writeConfigFile > snapshot: kafka only 1`] = `
+"import { configuration } from "@lindorm/config";
+import { z } from "zod";
+
+export const config = configuration({
+  nodeEnv: z.string().default("development"),
+  pylon: z.object({ kek: z.string() }),
+  server: z.object({ port: z.number() }),
+  irisBrokers: z.string().transform((s) => s.split(",")),
+});
+"
+`;
+
+exports[`scaffold > writeConfigFile > snapshot: memory proteus only 1`] = `
+"import { configuration } from "@lindorm/config";
+import { z } from "zod";
+
+export const config = configuration({
+  nodeEnv: z.string().default("development"),
+  pylon: z.object({ kek: z.string() }),
+  server: z.object({ port: z.number() }),
+});
+"
+`;
+
+exports[`scaffold > writeConfigFile > snapshot: mongo + nats 1`] = `
+"import { configuration } from "@lindorm/config";
+import { z } from "zod";
+
+export const config = configuration({
+  nodeEnv: z.string().default("development"),
+  pylon: z.object({ kek: z.string() }),
+  server: z.object({ port: z.number() }),
+  proteusUrl: z.string(),
+  irisServers: z.string(),
+});
+"
+`;
+
+exports[`scaffold > writeConfigFile > snapshot: nats only 1`] = `
+"import { configuration } from "@lindorm/config";
+import { z } from "zod";
+
+export const config = configuration({
+  nodeEnv: z.string().default("development"),
+  pylon: z.object({ kek: z.string() }),
+  server: z.object({ port: z.number() }),
+  irisServers: z.string(),
+});
+"
+`;
+
+exports[`scaffold > writeConfigFile > snapshot: no drivers 1`] = `
+"import { configuration } from "@lindorm/config";
+import { z } from "zod";
+
+export const config = configuration({
+  nodeEnv: z.string().default("development"),
+  pylon: z.object({ kek: z.string() }),
+  server: z.object({ port: z.number() }),
+});
+"
+`;
+
+exports[`scaffold > writeConfigFile > snapshot: postgres + auth 1`] = `
+"import { configuration } from "@lindorm/config";
+import { z } from "zod";
+
+export const config = configuration({
+  nodeEnv: z.string().default("development"),
+  pylon: z.object({ kek: z.string() }),
+  server: z.object({ port: z.number() }),
+  proteusUrl: z.string(),
+  authClientId: z.string(),
+  authClientSecret: z.string(),
+  authIssuer: z.string(),
+});
+"
+`;
+
+exports[`scaffold > writeConfigFile > snapshot: postgres + kafka 1`] = `
+"import { configuration } from "@lindorm/config";
+import { z } from "zod";
+
+export const config = configuration({
+  nodeEnv: z.string().default("development"),
+  pylon: z.object({ kek: z.string() }),
+  server: z.object({ port: z.number() }),
+  proteusUrl: z.string(),
+  irisBrokers: z.string().transform((s) => s.split(",")),
+});
+"
+`;
+
+exports[`scaffold > writeConfigFile > snapshot: postgres only 1`] = `
+"import { configuration } from "@lindorm/config";
+import { z } from "zod";
+
+export const config = configuration({
+  nodeEnv: z.string().default("development"),
+  pylon: z.object({ kek: z.string() }),
+  server: z.object({ port: z.number() }),
+  proteusUrl: z.string(),
+});
+"
+`;
+
+exports[`scaffold > writeConfigFile > snapshot: rabbit only 1`] = `
+"import { configuration } from "@lindorm/config";
+import { z } from "zod";
+
+export const config = configuration({
+  nodeEnv: z.string().default("development"),
+  pylon: z.object({ kek: z.string() }),
+  server: z.object({ port: z.number() }),
+  irisUrl: z.string(),
+});
+"
+`;
+
+exports[`scaffold > writeConfigFile > snapshot: redis only 1`] = `
+"import { configuration } from "@lindorm/config";
+import { z } from "zod";
+
+export const config = configuration({
+  nodeEnv: z.string().default("development"),
+  pylon: z.object({ kek: z.string() }),
+  server: z.object({ port: z.number() }),
+  irisUrl: z.string(),
+});
+"
+`;
+
+exports[`scaffold > writeConfigFile > snapshot: sqlite only 1`] = `
+"import { configuration } from "@lindorm/config";
+import { z } from "zod";
+
+export const config = configuration({
+  nodeEnv: z.string().default("development"),
+  pylon: z.object({ kek: z.string() }),
+  server: z.object({ port: z.number() }),
+  proteusUrl: z.string(),
+});
+"
+`;
+
+exports[`scaffold > writeDockerCompose > snapshot: iris redis 1`] = `
+"services:
+  redis:
+    image: redis:7
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+"
+`;
+
+exports[`scaffold > writeDockerCompose > snapshot: kafka + zookeeper 1`] = `
+"services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    restart: unless-stopped
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    restart: unless-stopped
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    ports:
+      - "9092:9092"
+"
+`;
+
+exports[`scaffold > writeDockerCompose > snapshot: mongo + kafka 1`] = `
+"services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    restart: unless-stopped
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    restart: unless-stopped
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    ports:
+      - "9092:9092"
+"
+`;
+
+exports[`scaffold > writeDockerCompose > snapshot: mongo 1`] = `
+"services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+"
+`;
+
+exports[`scaffold > writeDockerCompose > snapshot: mysql 1`] = `
+"services:
+  mysql:
+    image: mysql:8
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: app
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3306:3306"
+"
+`;
+
+exports[`scaffold > writeDockerCompose > snapshot: nats 1`] = `
+"services:
+  nats:
+    image: nats:2
+    restart: unless-stopped
+    ports:
+      - "4222:4222"
+"
+`;
+
+exports[`scaffold > writeDockerCompose > snapshot: postgres + rabbit 1`] = `
+"services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: app
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+  rabbitmq:
+    image: rabbitmq:3-management
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+"
+`;
+
+exports[`scaffold > writeDockerCompose > snapshot: postgres 1`] = `
+"services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: app
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+"
+`;
+
+exports[`scaffold > writeDockerCompose > snapshot: proteus redis 1`] = `
+"services:
+  redis:
+    image: redis:7
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+"
+`;
+
+exports[`scaffold > writeDockerCompose > snapshot: rabbit 1`] = `
+"services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+"
+`;
+
+exports[`scaffold > writeDockerCompose > snapshot: redis dedup 1`] = `
+"services:
+  redis:
+    image: redis:7
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+"
+`;
+
+exports[`scaffold > writeEnvFile > none drivers 1`] = `
+"NODE_ENV=development
+PYLON_KEK=kryptos:test-fixed-kek-placeholder
+"
+`;
+
+exports[`scaffold > writeEnvFile > postgres + kafka 1`] = `
+"NODE_ENV=development
+PYLON_KEK=kryptos:test-fixed-kek-placeholder
+PROTEUS_URL=postgresql://localhost:5432/app
+IRIS_BROKERS=localhost:9092
+"
+`;
+
+exports[`scaffold > writeIrisSamples > snapshot: kafka publisher + subscriber > publisher 1`] = `
+"import { source as irisSource } from "../source";
+import { SampleMessage } from "../messages/SampleMessage";
+
+const publisher = irisSource.publisher(SampleMessage);
+
+export const publishSample = async (
+  payload: Partial<SampleMessage> = {},
+): Promise<void> => {
+  await publisher.publish(publisher.create(payload));
+};
+"
+`;
+
+exports[`scaffold > writeIrisSamples > snapshot: kafka publisher + subscriber > subscriber 1`] = `
+"import { logger } from "../../logger";
+import { source as irisSource } from "../source";
+import { SampleMessage } from "../messages/SampleMessage";
+
+const bus = irisSource.messageBus(SampleMessage);
+
+export const subscribeSample = async (): Promise<void> => {
+  await bus.subscribe({
+    topic: "SampleMessage",
+    queue: "sample-queue",
+    callback: async (msg) => {
+      logger.info("Received sample message", { message: msg });
+    },
+  });
+};
+"
+`;
+
+exports[`scaffold > writeIrisSamples > snapshot: nats publisher + subscriber > publisher 1`] = `
+"import { source as irisSource } from "../source";
+import { SampleMessage } from "../messages/SampleMessage";
+
+const publisher = irisSource.publisher(SampleMessage);
+
+export const publishSample = async (
+  payload: Partial<SampleMessage> = {},
+): Promise<void> => {
+  await publisher.publish(publisher.create(payload));
+};
+"
+`;
+
+exports[`scaffold > writeIrisSamples > snapshot: nats publisher + subscriber > subscriber 1`] = `
+"import { logger } from "../../logger";
+import { source as irisSource } from "../source";
+import { SampleMessage } from "../messages/SampleMessage";
+
+const bus = irisSource.messageBus(SampleMessage);
+
+export const subscribeSample = async (): Promise<void> => {
+  await bus.subscribe({
+    topic: "SampleMessage",
+    queue: "sample-queue",
+    callback: async (msg) => {
+      logger.info("Received sample message", { message: msg });
+    },
+  });
+};
+"
+`;
+
+exports[`scaffold > writeIrisSamples > snapshot: rabbit publisher + subscriber > publisher 1`] = `
+"import { source as irisSource } from "../source";
+import { SampleMessage } from "../messages/SampleMessage";
+
+const publisher = irisSource.publisher(SampleMessage);
+
+export const publishSample = async (
+  payload: Partial<SampleMessage> = {},
+): Promise<void> => {
+  await publisher.publish(publisher.create(payload));
+};
+"
+`;
+
+exports[`scaffold > writeIrisSamples > snapshot: rabbit publisher + subscriber > subscriber 1`] = `
+"import { logger } from "../../logger";
+import { source as irisSource } from "../source";
+import { SampleMessage } from "../messages/SampleMessage";
+
+const bus = irisSource.messageBus(SampleMessage);
+
+export const subscribeSample = async (): Promise<void> => {
+  await bus.subscribe({
+    topic: "SampleMessage",
+    queue: "sample-queue",
+    callback: async (msg) => {
+      logger.info("Received sample message", { message: msg });
+    },
+  });
+};
+"
+`;
+
+exports[`scaffold > writeIrisSamples > snapshot: redis publisher + subscriber > publisher 1`] = `
+"import { source as irisSource } from "../source";
+import { SampleMessage } from "../messages/SampleMessage";
+
+const publisher = irisSource.publisher(SampleMessage);
+
+export const publishSample = async (
+  payload: Partial<SampleMessage> = {},
+): Promise<void> => {
+  await publisher.publish(publisher.create(payload));
+};
+"
+`;
+
+exports[`scaffold > writeIrisSamples > snapshot: redis publisher + subscriber > subscriber 1`] = `
+"import { logger } from "../../logger";
+import { source as irisSource } from "../source";
+import { SampleMessage } from "../messages/SampleMessage";
+
+const bus = irisSource.messageBus(SampleMessage);
+
+export const subscribeSample = async (): Promise<void> => {
+  await bus.subscribe({
+    topic: "SampleMessage",
+    queue: "sample-queue",
+    callback: async (msg) => {
+      logger.info("Received sample message", { message: msg });
+    },
+  });
+};
+"
+`;
+
+exports[`scaffold > writePackageJson > adds docker scripts when driver needs compose 1`] = `
+"{
+  "name": "test-app",
+  "version": "0.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=24.13.0"
+  },
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "test": "jest",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
+"
+`;
+
+exports[`scaffold > writePackageJson > default answers produce minimal package.json 1`] = `
+"{
+  "name": "test-app",
+  "version": "0.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=24.13.0"
+  },
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "test": "jest"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
+"
+`;
+
+exports[`scaffold > writePylonFile > snapshot: all features + all proteus workers 1`] = `
+"import { Pylon } from "@lindorm/pylon";
+import { join } from "path";
+import { logger } from "../logger";
+import { amphora } from "./amphora";
+import { config } from "./config";
+import { source as proteusSource } from "../proteus/source";
+import { source as irisSource } from "../iris/source";
+
+export const pylon = new Pylon({
+  logger,
+  amphora,
+  port: config.server.port,
+  routes: join(__dirname, "..", "routes"),
+  socket: {
+    enabled: true,
+    listeners: join(__dirname, "..", "listeners"),
+  },
+  rooms: { presence: true },
+  proteus: proteusSource,
+  kryptos: { enabled: true },
+  iris: irisSource,
+  queue: { enabled: true },
+  webhook: { enabled: true },
+  audit: {
+    enabled: true,
+    actor: (ctx) => ctx.state.session?.subject ?? "anonymous",
+    // sanitise: (body) => body,
+    // skip: (ctx) => false,
+    // entities: [],
+  },
+  workers: join(__dirname, "..", "workers"),
+  setup: async () => {
+    await proteusSource.connect();
+    await irisSource.connect();
+  },
+  teardown: async () => {
+    // pylon handles proteus/iris disconnect automatically
+  },
+});
+"
+`;
+
+exports[`scaffold > writePylonFile > snapshot: auth only (session auto-forced) 1`] = `
+"import { Pylon } from "@lindorm/pylon";
+import { join } from "path";
+import { logger } from "../logger";
+import { amphora } from "./amphora";
+import { config } from "./config";
+
+export const pylon = new Pylon({
+  logger,
+  amphora,
+  port: config.server.port,
+  routes: join(__dirname, "..", "routes"),
+  session: {
+    enabled: true,
+    name: "sid",
+    encrypted: true,
+    httpOnly: true,
+    sameSite: "lax",
+    secure: false, // TODO: flip to true in production (behind HTTPS)
+    expiry: "7d",
+  },
+  auth: {
+    clientId: config.authClientId,
+    clientSecret: config.authClientSecret,
+    issuer: config.authIssuer,
+    router: {
+      pathPrefix: "/auth",
+      authorize: {
+        scope: ["openid", "profile", "email"],
+        responseType: "code",
+      },
+    },
+  },
+  setup: async () => {
+  },
+  teardown: async () => {
+    // pylon handles proteus/iris disconnect automatically
+  },
+});
+"
+`;
+
+exports[`scaffold > writePylonFile > snapshot: http + postgres + rabbit + webhooks + audit 1`] = `
+"import { Pylon } from "@lindorm/pylon";
+import { join } from "path";
+import { logger } from "../logger";
+import { amphora } from "./amphora";
+import { config } from "./config";
+import { source as proteusSource } from "../proteus/source";
+import { source as irisSource } from "../iris/source";
+
+export const pylon = new Pylon({
+  logger,
+  amphora,
+  port: config.server.port,
+  routes: join(__dirname, "..", "routes"),
+  proteus: proteusSource,
+  kryptos: { enabled: true },
+  iris: irisSource,
+  queue: { enabled: true },
+  webhook: { enabled: true },
+  audit: {
+    enabled: true,
+    actor: (ctx) => ctx.state.session?.subject ?? "anonymous",
+    // sanitise: (body) => body,
+    // skip: (ctx) => false,
+    // entities: [],
+  },
+  setup: async () => {
+    await proteusSource.connect();
+    await irisSource.connect();
+  },
+  teardown: async () => {
+    // pylon handles proteus/iris disconnect automatically
+  },
+});
+"
+`;
+
+exports[`scaffold > writePylonFile > snapshot: http + postgres + rabbit 1`] = `
+"import { Pylon } from "@lindorm/pylon";
+import { join } from "path";
+import { logger } from "../logger";
+import { amphora } from "./amphora";
+import { config } from "./config";
+import { source as proteusSource } from "../proteus/source";
+import { source as irisSource } from "../iris/source";
+
+export const pylon = new Pylon({
+  logger,
+  amphora,
+  port: config.server.port,
+  routes: join(__dirname, "..", "routes"),
+  proteus: proteusSource,
+  kryptos: { enabled: true },
+  iris: irisSource,
+  queue: { enabled: true },
+  setup: async () => {
+    await proteusSource.connect();
+    await irisSource.connect();
+  },
+  teardown: async () => {
+    // pylon handles proteus/iris disconnect automatically
+  },
+});
+"
+`;
+
+exports[`scaffold > writePylonFile > snapshot: http + postgres 1`] = `
+"import { Pylon } from "@lindorm/pylon";
+import { join } from "path";
+import { logger } from "../logger";
+import { amphora } from "./amphora";
+import { config } from "./config";
+import { source as proteusSource } from "../proteus/source";
+
+export const pylon = new Pylon({
+  logger,
+  amphora,
+  port: config.server.port,
+  routes: join(__dirname, "..", "routes"),
+  proteus: proteusSource,
+  kryptos: { enabled: true },
+  setup: async () => {
+    await proteusSource.connect();
+  },
+  teardown: async () => {
+    // pylon handles proteus/iris disconnect automatically
+  },
+});
+"
+`;
+
+exports[`scaffold > writePylonFile > snapshot: http + rabbit 1`] = `
+"import { Pylon } from "@lindorm/pylon";
+import { join } from "path";
+import { logger } from "../logger";
+import { amphora } from "./amphora";
+import { config } from "./config";
+import { source as irisSource } from "../iris/source";
+
+export const pylon = new Pylon({
+  logger,
+  amphora,
+  port: config.server.port,
+  routes: join(__dirname, "..", "routes"),
+  iris: irisSource,
+  queue: { enabled: true },
+  setup: async () => {
+    await irisSource.connect();
+  },
+  teardown: async () => {
+    // pylon handles proteus/iris disconnect automatically
+  },
+});
+"
+`;
+
+exports[`scaffold > writePylonFile > snapshot: http + socket, no drivers 1`] = `
+"import { Pylon } from "@lindorm/pylon";
+import { join } from "path";
+import { logger } from "../logger";
+import { amphora } from "./amphora";
+import { config } from "./config";
+
+export const pylon = new Pylon({
+  logger,
+  amphora,
+  port: config.server.port,
+  routes: join(__dirname, "..", "routes"),
+  socket: {
+    enabled: true,
+    listeners: join(__dirname, "..", "listeners"),
+  },
+  rooms: { presence: true },
+  setup: async () => {
+  },
+  teardown: async () => {
+    // pylon handles proteus/iris disconnect automatically
+  },
+});
+"
+`;
+
+exports[`scaffold > writePylonFile > snapshot: http only, no drivers, no workers 1`] = `
+"import { Pylon } from "@lindorm/pylon";
+import { join } from "path";
+import { logger } from "../logger";
+import { amphora } from "./amphora";
+import { config } from "./config";
+
+export const pylon = new Pylon({
+  logger,
+  amphora,
+  port: config.server.port,
+  routes: join(__dirname, "..", "routes"),
+  setup: async () => {
+  },
+  teardown: async () => {
+    // pylon handles proteus/iris disconnect automatically
+  },
+});
+"
+`;
+
+exports[`scaffold > writePylonFile > snapshot: rate limit with proteus 1`] = `
+"import { Pylon } from "@lindorm/pylon";
+import { join } from "path";
+import { logger } from "../logger";
+import { amphora } from "./amphora";
+import { config } from "./config";
+import { source as proteusSource } from "../proteus/source";
+
+export const pylon = new Pylon({
+  logger,
+  amphora,
+  port: config.server.port,
+  routes: join(__dirname, "..", "routes"),
+  proteus: proteusSource,
+  kryptos: { enabled: true },
+  rateLimit: {
+    enabled: true,
+    proteus: proteusSource,
+    strategy: "fixed",
+    window: "1m",
+    max: 60,
+    // TODO: tune strategy/window/max for your traffic
+  },
+  setup: async () => {
+    await proteusSource.connect();
+  },
+  teardown: async () => {
+    // pylon handles proteus/iris disconnect automatically
+  },
+});
+"
+`;
+
+exports[`scaffold > writePylonFile > snapshot: session + auth + rate limit + postgres 1`] = `
+"import { Pylon } from "@lindorm/pylon";
+import { join } from "path";
+import { logger } from "../logger";
+import { amphora } from "./amphora";
+import { config } from "./config";
+import { source as proteusSource } from "../proteus/source";
+
+export const pylon = new Pylon({
+  logger,
+  amphora,
+  port: config.server.port,
+  routes: join(__dirname, "..", "routes"),
+  proteus: proteusSource,
+  kryptos: { enabled: true },
+  session: {
+    enabled: true,
+    proteus: proteusSource,
+    name: "sid",
+    encrypted: true,
+    httpOnly: true,
+    sameSite: "lax",
+    secure: false, // TODO: flip to true in production (behind HTTPS)
+    expiry: "7d",
+  },
+  auth: {
+    clientId: config.authClientId,
+    clientSecret: config.authClientSecret,
+    issuer: config.authIssuer,
+    router: {
+      pathPrefix: "/auth",
+      authorize: {
+        scope: ["openid", "profile", "email"],
+        responseType: "code",
+      },
+    },
+  },
+  rateLimit: {
+    enabled: true,
+    proteus: proteusSource,
+    strategy: "fixed",
+    window: "1m",
+    max: 60,
+    // TODO: tune strategy/window/max for your traffic
+  },
+  setup: async () => {
+    await proteusSource.connect();
+  },
+  teardown: async () => {
+    // pylon handles proteus/iris disconnect automatically
+  },
+});
+"
+`;
+
+exports[`scaffold > writePylonFile > snapshot: session only, no proteus 1`] = `
+"import { Pylon } from "@lindorm/pylon";
+import { join } from "path";
+import { logger } from "../logger";
+import { amphora } from "./amphora";
+import { config } from "./config";
+
+export const pylon = new Pylon({
+  logger,
+  amphora,
+  port: config.server.port,
+  routes: join(__dirname, "..", "routes"),
+  session: {
+    enabled: true,
+    name: "sid",
+    encrypted: true,
+    httpOnly: true,
+    sameSite: "lax",
+    secure: false, // TODO: flip to true in production (behind HTTPS)
+    expiry: "7d",
+  },
+  setup: async () => {
+  },
+  teardown: async () => {
+    // pylon handles proteus/iris disconnect automatically
+  },
+});
+"
+`;
+
+exports[`scaffold > writePylonFile > snapshot: session with proteus (persistent) 1`] = `
+"import { Pylon } from "@lindorm/pylon";
+import { join } from "path";
+import { logger } from "../logger";
+import { amphora } from "./amphora";
+import { config } from "./config";
+import { source as proteusSource } from "../proteus/source";
+
+export const pylon = new Pylon({
+  logger,
+  amphora,
+  port: config.server.port,
+  routes: join(__dirname, "..", "routes"),
+  proteus: proteusSource,
+  kryptos: { enabled: true },
+  session: {
+    enabled: true,
+    proteus: proteusSource,
+    name: "sid",
+    encrypted: true,
+    httpOnly: true,
+    sameSite: "lax",
+    secure: false, // TODO: flip to true in production (behind HTTPS)
+    expiry: "7d",
+  },
+  setup: async () => {
+    await proteusSource.connect();
+  },
+  teardown: async () => {
+    // pylon handles proteus/iris disconnect automatically
+  },
+});
+"
+`;
+
+exports[`scaffold > writePylonFile > snapshot: socket only, no drivers 1`] = `
+"import { Pylon } from "@lindorm/pylon";
+import { join } from "path";
+import { logger } from "../logger";
+import { amphora } from "./amphora";
+import { config } from "./config";
+
+export const pylon = new Pylon({
+  logger,
+  amphora,
+  port: config.server.port,
+  socket: {
+    enabled: true,
+    listeners: join(__dirname, "..", "listeners"),
+  },
+  rooms: { presence: true },
+  setup: async () => {
+  },
+  teardown: async () => {
+    // pylon handles proteus/iris disconnect automatically
+  },
+});
+"
+`;
+
+exports[`scaffold > writeWorkerFiles > snapshot: all three > amphora-entity-sync content 1`] = `
+"import { createAmphoraEntityWorker } from "@lindorm/pylon";
+import { amphora } from "../pylon/amphora";
+import { logger } from "../logger";
+import { source as proteusSource } from "../proteus/source";
+
+export default createAmphoraEntityWorker({ amphora, logger, proteus: proteusSource });
+"
+`;
+
+exports[`scaffold > writeWorkerFiles > snapshot: all three > expiry-cleanup content 1`] = `
+"import { createExpiryCleanupWorker } from "@lindorm/pylon";
+import { logger } from "../logger";
+import { source as proteusSource } from "../proteus/source";
+
+// TODO: add your entities with expiry fields to this array
+export default createExpiryCleanupWorker({ logger, proteus: proteusSource, targets: [] });
+"
+`;
+
+exports[`scaffold > writeWorkerFiles > snapshot: all three > kryptos-rotation content 1`] = `
+"import { createKryptosRotationWorker } from "@lindorm/pylon";
+import { logger } from "../logger";
+import { source as proteusSource } from "../proteus/source";
+
+export default createKryptosRotationWorker({ logger, proteus: proteusSource });
+"
+`;
+
+exports[`scaffold > writeWorkerFiles > snapshot: amphora-entity-sync only > amphora-entity-sync content 1`] = `
+"import { createAmphoraEntityWorker } from "@lindorm/pylon";
+import { amphora } from "../pylon/amphora";
+import { logger } from "../logger";
+import { source as proteusSource } from "../proteus/source";
+
+export default createAmphoraEntityWorker({ amphora, logger, proteus: proteusSource });
+"
+`;
+
+exports[`scaffold > writeWorkerFiles > snapshot: expiry-cleanup only > expiry-cleanup content 1`] = `
+"import { createExpiryCleanupWorker } from "@lindorm/pylon";
+import { logger } from "../logger";
+import { source as proteusSource } from "../proteus/source";
+
+// TODO: add your entities with expiry fields to this array
+export default createExpiryCleanupWorker({ logger, proteus: proteusSource, targets: [] });
+"
+`;
+
+exports[`scaffold > writeWorkerFiles > snapshot: kryptos-rotation only > kryptos-rotation content 1`] = `
+"import { createKryptosRotationWorker } from "@lindorm/pylon";
+import { logger } from "../logger";
+import { source as proteusSource } from "../proteus/source";
+
+export default createKryptosRotationWorker({ logger, proteus: proteusSource });
+"
+`;
 
 exports[`scaffold buildDependencyList snapshot: memory-nats 1`] = `
 [

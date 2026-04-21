@@ -5,6 +5,7 @@ import { ZephyrProvider } from "./ZephyrProvider";
 import { useRequest } from "./useRequest";
 import { ZephyrError } from "../errors/ZephyrError";
 import { createMockClient } from "./__fixtures__/mock-client";
+import { describe, expect, test } from "vitest";
 
 const createWrapper = (client: any) => {
   const Wrapper = ({ children }: { children: React.ReactNode }) => (

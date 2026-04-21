@@ -7,6 +7,7 @@ import {
 } from "./containers";
 import { encodeInteger, encodeUtf8String } from "./primitives";
 import { readTlv } from "./walker";
+import { describe, expect, test } from "vitest";
 
 describe("encodeSequence", () => {
   test("wraps children with SEQUENCE tag", () => {

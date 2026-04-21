@@ -1,6 +1,7 @@
 import { DpopSigner } from "@lindorm/types";
 import MockDate from "mockdate";
 import { buildDpopProof } from "./build-dpop-proof";
+import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate);
@@ -13,11 +14,11 @@ describe("buildDpopProof", () => {
   const signer: DpopSigner = {
     algorithm: "ES256",
     publicJwk,
-    sign: jest.fn(async () => new Uint8Array([1, 2, 3, 4])),
+    sign: vi.fn(async () => new Uint8Array([1, 2, 3, 4])),
   };
 
   beforeEach(() => {
-    (signer.sign as jest.Mock).mockClear();
+    (signer.sign as Mock).mockClear();
   });
 
   test("should build a compact JWS with header, payload and signature", async () => {
@@ -110,7 +111,7 @@ describe("buildDpopProof", () => {
     });
 
     expect(signer.sign).toHaveBeenCalledTimes(1);
-    const [data] = (signer.sign as jest.Mock).mock.calls[0];
+    const [data] = (signer.sign as Mock).mock.calls[0];
     const signingInput = new TextDecoder().decode(data);
     const [headerB64, payloadB64] = signingInput.split(".");
     expect(headerB64).toBeTruthy();

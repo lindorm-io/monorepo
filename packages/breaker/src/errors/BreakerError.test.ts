@@ -1,5 +1,6 @@
 import { LindormError } from "@lindorm/errors";
 import { BreakerError } from "./BreakerError";
+import { describe, expect, it } from "vitest";
 
 describe("BreakerError", () => {
   const error = new BreakerError("test message");

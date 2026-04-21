@@ -7,6 +7,7 @@ import {
 import { extractLeafSpki } from "./extract-leaf-spki";
 import { parseX509Certificate } from "./parse-certificate";
 import { parseX509 } from "./parse-x509";
+import { describe, expect, test } from "vitest";
 
 describe("extractLeafSpki", () => {
   test("matches parseX509Certificate subjectPublicKeyInfo for a leaf cert", () => {
