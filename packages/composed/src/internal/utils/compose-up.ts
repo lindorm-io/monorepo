@@ -17,15 +17,30 @@ export const composeUp = (options: ComposeUpOptions): Promise<void> =>
     if (options.build) args.push("--build");
 
     const child = spawn("docker", args, {
-      stdio: options.verbose ? "inherit" : ["ignore", "ignore", "inherit"],
+      stdio: options.verbose ? "inherit" : ["ignore", "pipe", "pipe"],
     });
+
+    const chunks: Array<Buffer> = [];
+
+    if (!options.verbose) {
+      child.stdout?.on("data", (chunk: Buffer) => chunks.push(chunk));
+      child.stderr?.on("data", (chunk: Buffer) => chunks.push(chunk));
+    }
 
     child.on("error", (err) =>
       reject(new Error(`Failed to spawn docker: ${err.message}`)),
     );
 
     child.on("close", (code) => {
-      if (code === 0) resolve();
-      else reject(new Error(`docker compose up exited with code ${code}`));
+      if (code === 0) {
+        resolve();
+        return;
+      }
+
+      if (!options.verbose && chunks.length > 0) {
+        process.stderr.write(Buffer.concat(chunks));
+      }
+
+      reject(new Error(`docker compose up exited with code ${code}`));
     });
   });

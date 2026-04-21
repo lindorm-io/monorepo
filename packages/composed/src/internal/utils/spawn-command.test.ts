@@ -17,7 +17,7 @@ const createMockChild = () => {
   return child;
 };
 
-describe("spawnCommand", () => {
+describe("spawnCommand", async () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockForwardSignals.mockReturnValue(mockUnforward);

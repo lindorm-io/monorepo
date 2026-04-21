@@ -12,16 +12,3 @@ exports[`spawnCommand > should spawn command with stdio inherit 1`] = `
   },
 ]
 `;
-
-exports[`spawnCommand should spawn command with stdio inherit 1`] = `
-[
-  "jest",
-  [
-    "--runInBand",
-    "--no-coverage",
-  ],
-  {
-    "stdio": "inherit",
-  },
-]
-`;

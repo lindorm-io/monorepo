@@ -1,5 +1,20 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`composeDown > should inherit stdio when verbose 1`] = `
+[
+  "docker",
+  [
+    "compose",
+    "down",
+    "--remove-orphans",
+    "--volumes",
+  ],
+  {
+    "stdio": "inherit",
+  },
+]
+`;
+
 exports[`composeDown > should omit -f when file is empty 1`] = `
 [
   "docker",
@@ -12,8 +27,8 @@ exports[`composeDown > should omit -f when file is empty 1`] = `
   {
     "stdio": [
       "ignore",
-      "ignore",
-      "inherit",
+      "pipe",
+      "pipe",
     ],
   },
 ]
@@ -33,48 +48,8 @@ exports[`composeDown > should spawn with correct args 1`] = `
   {
     "stdio": [
       "ignore",
-      "ignore",
-      "inherit",
-    ],
-  },
-]
-`;
-
-exports[`composeDown should omit -f when file is empty 1`] = `
-[
-  "docker",
-  [
-    "compose",
-    "down",
-    "--remove-orphans",
-    "--volumes",
-  ],
-  {
-    "stdio": [
-      "ignore",
-      "ignore",
-      "inherit",
-    ],
-  },
-]
-`;
-
-exports[`composeDown should spawn with correct args 1`] = `
-[
-  "docker",
-  [
-    "compose",
-    "-f",
-    "/path/compose.yml",
-    "down",
-    "--remove-orphans",
-    "--volumes",
-  ],
-  {
-    "stdio": [
-      "ignore",
-      "ignore",
-      "inherit",
+      "pipe",
+      "pipe",
     ],
   },
 ]
