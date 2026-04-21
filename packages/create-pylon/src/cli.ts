@@ -118,7 +118,7 @@ program
   });
 
 if (require.main === module) {
-  program.parseAsync(process.argv);
+  void program.parseAsync(process.argv);
 }
 
 export { program };
