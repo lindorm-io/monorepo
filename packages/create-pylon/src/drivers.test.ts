@@ -1,7 +1,7 @@
 import { join } from "path";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
-vi.mock("@lindorm/proteus", () => ({
+vi.mock("@lindorm/proteus", async () => ({
   __esModule: true,
   writeSource: vi.fn().mockResolvedValue(undefined),
   writeEntity: vi.fn().mockResolvedValue(undefined),

@@ -9,7 +9,7 @@ vi.mock("./sleep");
 const calculateRetry = _calculateRetry as Mock;
 const sleep = __sleep as Mock;
 
-describe("requestWithRetry", () => {
+describe("requestWithRetry", async () => {
   let ctx: any;
   let fn: any;
 

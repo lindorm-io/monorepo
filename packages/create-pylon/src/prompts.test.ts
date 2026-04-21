@@ -4,7 +4,7 @@ import { join } from "path";
 import { runPrompts } from "./prompts";
 import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
-vi.mock("@inquirer/prompts", () => ({
+vi.mock("@inquirer/prompts", async () => ({
   input: vi.fn(),
   checkbox: vi.fn(),
   select: vi.fn(),

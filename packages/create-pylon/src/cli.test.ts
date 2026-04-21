@@ -1,4 +1,4 @@
-vi.mock("./prompts", () => ({ runPrompts: vi.fn() }));
+vi.mock("./prompts", async () => ({ runPrompts: vi.fn() }));
 vi.mock("./scaffold", () => ({
   scaffold: vi.fn(),
   buildDependencyList: vi.fn(() => []),
