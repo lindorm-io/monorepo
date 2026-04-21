@@ -1,3 +1,4 @@
+import { connect as _connect } from "nats";
 import type { IMessage, IMessageSubscriber } from "../../../../interfaces";
 import type { IrisConnectionState } from "../../../../types";
 import { Field } from "../../../../decorators/Field";
@@ -18,64 +19,70 @@ import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 let statusIteratorDone = false;
 let statusIteratorValues: Array<{ type: string; data?: unknown }> = [];
 
-const mockNc = {
-  jetstream: vi.fn(),
-  jetstreamManager: vi.fn(),
-  publish: vi.fn().mockResolvedValue(undefined),
-  subscribe: vi.fn(),
-  request: vi.fn(),
-  flush: vi.fn().mockResolvedValue(undefined),
-  close: vi.fn().mockResolvedValue(undefined),
-  drain: vi.fn().mockResolvedValue(undefined),
-  status: vi.fn().mockReturnValue(
-    (async function* () {
-      while (!statusIteratorDone) {
-        if (statusIteratorValues.length > 0) {
-          yield statusIteratorValues.shift()!;
-        } else {
-          // Wait briefly then exit to avoid infinite loop in tests
-          await new Promise<void>((r) => setTimeout(r, 10));
-          return;
+// Hoisted so vi.mock() factory can reference these at module-eval time.
+const { mockNc, mockJs, mockJsm, mockHeaders } = vi.hoisted(() => {
+  const mockNc = {
+    jetstream: vi.fn(),
+    jetstreamManager: vi.fn(),
+    publish: vi.fn().mockResolvedValue(undefined),
+    subscribe: vi.fn(),
+    request: vi.fn(),
+    flush: vi.fn().mockResolvedValue(undefined),
+    close: vi.fn().mockResolvedValue(undefined),
+    drain: vi.fn().mockResolvedValue(undefined),
+    status: vi.fn().mockReturnValue(
+      (async function* () {
+        while (!statusIteratorDone) {
+          if (statusIteratorValues.length > 0) {
+            yield statusIteratorValues.shift()!;
+          } else {
+            await new Promise<void>((r) => setTimeout(r, 10));
+            return;
+          }
         }
-      }
-    })(),
-  ),
-  isClosed: vi.fn().mockReturnValue(false),
-};
+      })(),
+    ),
+    isClosed: vi.fn().mockReturnValue(false),
+  };
 
-const mockJs = {
-  publish: vi.fn().mockResolvedValue({ seq: 1, stream: "IRIS_IRIS", duplicate: false }),
-  consumers: { get: vi.fn() },
-};
+  const mockJs = {
+    publish: vi.fn().mockResolvedValue({ seq: 1, stream: "IRIS_IRIS", duplicate: false }),
+    consumers: { get: vi.fn() },
+  };
 
-const mockJsm = {
-  streams: {
-    info: vi.fn().mockResolvedValue({}),
-    add: vi.fn().mockResolvedValue({}),
-    purge: vi.fn().mockResolvedValue({}),
-    delete: vi.fn().mockResolvedValue({}),
-  },
-  consumers: {
-    add: vi.fn().mockResolvedValue({}),
-    delete: vi.fn().mockResolvedValue(true),
-  },
-};
+  const mockJsm = {
+    streams: {
+      info: vi.fn().mockResolvedValue({}),
+      add: vi.fn().mockResolvedValue({}),
+      purge: vi.fn().mockResolvedValue({}),
+      delete: vi.fn().mockResolvedValue({}),
+    },
+    consumers: {
+      add: vi.fn().mockResolvedValue({}),
+      delete: vi.fn().mockResolvedValue(true),
+    },
+  };
 
-const mockHeaders = vi.fn().mockReturnValue({
-  get: vi.fn(),
-  set: vi.fn(),
-  has: vi.fn(),
-  values: vi.fn(),
+  const mockHeaders = vi.fn().mockReturnValue({
+    get: vi.fn(),
+    set: vi.fn(),
+    has: vi.fn(),
+    values: vi.fn(),
+  });
+
+  mockNc.jetstream.mockReturnValue(mockJs);
+  mockNc.jetstreamManager.mockResolvedValue(mockJsm);
+
+  return { mockNc, mockJs, mockJsm, mockHeaders };
 });
-
-mockNc.jetstream.mockReturnValue(mockJs);
-mockNc.jetstreamManager.mockResolvedValue(mockJsm);
 
 vi.mock("nats", async () => ({
   __esModule: true,
   connect: vi.fn().mockResolvedValue(mockNc),
   headers: mockHeaders,
 }));
+
+const connect = _connect as unknown as Mock;
 
 // --- Test message classes ---
 
@@ -208,7 +215,6 @@ describe("NatsDriver", () => {
     });
 
     it("should set connection state to disconnected when connect fails", async () => {
-      const { connect } = (await vi.importMock<typeof import("nats")>("nats")) as any;
       connect.mockRejectedValueOnce(new Error("connection refused"));
 
       const driver = createDriver();
