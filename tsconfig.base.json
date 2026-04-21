@@ -2,14 +2,15 @@
   "compilerOptions": {
     "esModuleInterop": true,
     "ignoreDeprecations": "6.0",
-    "module": "commonjs",
-    "moduleResolution": "node",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "noEmit": true,
     "noUnusedLocals": false,
     "preserveConstEnums": true,
     "skipLibCheck": true,
     "strict": true,
     "target": "ESNext",
-    "types": ["node", "jest"]
+    "types": ["node", "jest"],
+    "verbatimModuleSyntax": true
   }
 }
