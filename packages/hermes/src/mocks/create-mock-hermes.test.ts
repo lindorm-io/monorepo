@@ -1,5 +1,8 @@
+import { HermesViewEntity } from "../entities/HermesViewEntity";
 import { createMockHermes } from "./vitest";
 import { describe, expect, it, vi } from "vitest";
+
+class TestView extends HermesViewEntity {}
 
 describe("createMockHermes", () => {
   it("should create a mock hermes with all methods as vi.fn()", () => {
@@ -47,7 +50,7 @@ describe("createMockHermes", () => {
 
   it("should return a replay handle from admin.replay.view()", () => {
     const mock = createMockHermes();
-    const handle = mock.admin.replay.view(class {});
+    const handle = mock.admin.replay.view(TestView);
 
     expect(handle).toBeDefined();
     expect(handle.on).toBeDefined();
@@ -57,7 +60,7 @@ describe("createMockHermes", () => {
 
   it("should return a replay handle from admin.replay.aggregate()", () => {
     const mock = createMockHermes();
-    const handle = mock.admin.replay.aggregate(class {});
+    const handle = mock.admin.replay.aggregate(TestView);
 
     expect(handle).toBeDefined();
     expect(handle.on).toBeDefined();
