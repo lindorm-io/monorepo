@@ -1,4 +1,4 @@
-import type Redis from "ioredis";
+import type { Redis } from "ioredis";
 import type { ICacheAdapter } from "../interfaces/CacheAdapter.js";
 
 /**
@@ -126,7 +126,7 @@ export class RedisCacheAdapter implements ICacheAdapter {
 
     if (!this._ownedClientPromise) {
       this._ownedClientPromise = (async (): Promise<Redis> => {
-        const { default: Redis } = await import("ioredis");
+        const { Redis } = await import("ioredis");
         const opts = this._connectionOptions!;
         return opts.url
           ? new Redis(opts.url)

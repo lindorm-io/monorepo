@@ -5,7 +5,7 @@
 // interfering with other Redis test files running in parallel.
 
 import { randomBytes } from "node:crypto";
-import type Redis from "ioredis";
+import type { Redis } from "ioredis";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import type { Constructor } from "@lindorm/types";
 import type { IEntity } from "../../interfaces/index.js";

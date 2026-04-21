@@ -6,7 +6,7 @@ import type { ILogger } from "@lindorm/logger";
 import type { IProteusSource } from "@lindorm/proteus";
 import type { Environment } from "@lindorm/types";
 import type { ILindormWorker } from "@lindorm/worker";
-import Redis from "ioredis";
+import type { Redis } from "ioredis";
 import type { ServerOptions as SocketOptions } from "socket.io";
 import { PylonListener, PylonRouter } from "../classes/index.js";
 import type { PylonAuthOptions } from "./auth.js";
