@@ -1,10 +1,11 @@
 import { ZephyrError } from "../errors/ZephyrError";
 import type { ZephyrMiddleware } from "../types/context";
 import type { ZephyrOptions } from "../types/options";
+import { io as _io } from "socket.io-client";
 import { Zephyr } from "./Zephyr";
 import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
-vi.mock("@lindorm/random", () => ({
+vi.mock("@lindorm/random", async () => ({
   randomUUID: vi.fn().mockReturnValue("mock-uuid"),
 }));
 
@@ -28,7 +29,7 @@ vi.mock("socket.io-client", () => ({
   io: vi.fn(() => mockSocket),
 }));
 
-const { io } = await vi.importMock<typeof import("socket.io-client")>("socket.io-client");
+const io = _io as unknown as Mock;
 
 const createOptions = (overrides?: Partial<ZephyrOptions>): ZephyrOptions => ({
   url: "http://test.example.com",
@@ -37,7 +38,7 @@ const createOptions = (overrides?: Partial<ZephyrOptions>): ZephyrOptions => ({
 });
 
 const findLastCall = (mock: Mock, event: string): Array<any> | undefined => {
-  const calls = mock.mock.calls.filter(([e]: [string]) => e === event);
+  const calls = mock.mock.calls.filter((args: Array<any>) => args[0] === event);
   return calls[calls.length - 1];
 };
 
@@ -446,14 +447,14 @@ describe("Zephyr", () => {
 
       // Not yet registered on the socket since we haven't connected
       const callsBefore = mockSocket.on.mock.calls.filter(
-        ([e]: [string]) => e === "test:event",
+        (args: Array<any>) => args[0] === "test:event",
       );
       expect(callsBefore).toHaveLength(0);
 
       await connectZephyr(zephyr);
 
       const callsAfter = mockSocket.on.mock.calls.filter(
-        ([e]: [string]) => e === "test:event",
+        (args: Array<any>) => args[0] === "test:event",
       );
       expect(callsAfter).toHaveLength(1);
     });
@@ -510,7 +511,7 @@ describe("Zephyr", () => {
       await connectZephyr(zephyr);
 
       const calls = mockSocket.once.mock.calls.filter(
-        ([e]: [string]) => e === "test:event",
+        (args: Array<any>) => args[0] === "test:event",
       );
       expect(calls).toHaveLength(1);
     });
@@ -541,7 +542,7 @@ describe("Zephyr", () => {
       zephyr.off("test:event");
 
       const offCalls = mockSocket.off.mock.calls.filter(
-        ([e]: [string]) => e === "test:event",
+        (args: Array<any>) => args[0] === "test:event",
       );
       expect(offCalls).toHaveLength(2);
     });
