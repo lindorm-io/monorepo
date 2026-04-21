@@ -1,4 +1,4 @@
-import Redis from "ioredis";
+import { Redis } from "ioredis";
 import { randomUUID } from "crypto";
 import type { IrisEnvelope } from "../types/iris-envelope.js";
 import type { DelayedEntry } from "../../types/delay.js";

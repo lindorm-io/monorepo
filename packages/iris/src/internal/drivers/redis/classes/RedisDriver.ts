@@ -95,7 +95,8 @@ export class RedisDriver implements IIrisDriver {
     this.setConnectionState("connecting");
 
     try {
-      const { default: Redis } = await import("ioredis");
+      const ioredis = await import("ioredis");
+      const Redis = ioredis.Redis;
 
       const {
         url,
@@ -142,7 +143,7 @@ export class RedisDriver implements IIrisDriver {
       if ((redis as any).status !== "ready") {
         await new Promise<void>((resolve, reject) => {
           redis.once("ready", () => resolve());
-          redis.once("error", (err) => reject(err as Error));
+          redis.once("error", (err) => reject(err));
         });
       }
 

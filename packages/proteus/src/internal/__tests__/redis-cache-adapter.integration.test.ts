@@ -4,7 +4,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 // Exercises RedisCacheAdapter against a real Redis instance (via docker-compose).
 // Uses Redis DB 1 (isolated from other tests on DB 0) and FLUSHDB for clean state.
 
-import Redis from "ioredis";
+import { Redis } from "ioredis";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { RedisCacheAdapter } from "../../classes/RedisCacheAdapter.js";
 import { ProteusSource } from "../../classes/ProteusSource.js";
