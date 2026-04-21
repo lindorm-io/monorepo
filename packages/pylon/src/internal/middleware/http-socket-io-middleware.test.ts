@@ -1,4 +1,5 @@
 import { httpSocketIoMiddleware } from "./http-socket-io-middleware";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("createHttpSocketIoMiddleware", () => {
   let ctx: any;
@@ -10,9 +11,7 @@ describe("createHttpSocketIoMiddleware", () => {
   });
 
   test("should resolve", async () => {
-    await expect(
-      httpSocketIoMiddleware(socketIo)(ctx, jest.fn()),
-    ).resolves.toBeUndefined();
+    await expect(httpSocketIoMiddleware(socketIo)(ctx, vi.fn())).resolves.toBeUndefined();
 
     expect(ctx.io).toEqual({ app: "socketIo" });
   });

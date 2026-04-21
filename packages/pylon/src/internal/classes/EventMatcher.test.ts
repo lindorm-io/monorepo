@@ -1,4 +1,5 @@
 import { EventMatcher, EventSegment } from "./EventMatcher";
+import { describe, expect, it } from "vitest";
 
 const literal = (value: string): EventSegment => ({ type: "literal", value });
 const param = (value: string): EventSegment => ({ type: "param", value });

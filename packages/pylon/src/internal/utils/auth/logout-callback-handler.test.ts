@@ -1,5 +1,6 @@
 import { ClientError } from "@lindorm/errors";
 import { createLogoutCallbackHandler } from "./logout-callback-handler";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("createLoginHandler", () => {
   let config: any;
@@ -15,28 +16,28 @@ describe("createLoginHandler", () => {
 
     ctx = {
       cookies: {
-        get: jest.fn().mockResolvedValue({
+        get: vi.fn().mockResolvedValue({
           redirectUri: "https://example.com",
           state: "state",
         }),
-        set: jest.fn(),
-        del: jest.fn(),
+        set: vi.fn(),
+        del: vi.fn(),
       },
       data: {
         state: "state",
       },
-      redirect: jest.fn(),
+      redirect: vi.fn(),
       session: {
-        get: jest.fn(),
-        set: jest.fn(),
-        del: jest.fn(),
+        get: vi.fn(),
+        set: vi.fn(),
+        del: vi.fn(),
       },
     };
   });
 
   test("should resolve", async () => {
     await expect(
-      createLogoutCallbackHandler(config)(ctx, jest.fn()),
+      createLogoutCallbackHandler(config)(ctx, vi.fn()),
     ).resolves.toBeUndefined();
 
     expect(ctx.cookies.del).toHaveBeenCalled();
@@ -47,7 +48,7 @@ describe("createLoginHandler", () => {
   test("should throw on missing cookie", async () => {
     ctx.cookies.get.mockResolvedValueOnce(null);
 
-    await expect(createLogoutCallbackHandler(config)(ctx, jest.fn())).rejects.toThrow(
+    await expect(createLogoutCallbackHandler(config)(ctx, vi.fn())).rejects.toThrow(
       ClientError,
     );
   });
@@ -55,7 +56,7 @@ describe("createLoginHandler", () => {
   test("should throw on invalid state", async () => {
     ctx.data.state = "invalid_state";
 
-    await expect(createLogoutCallbackHandler(config)(ctx, jest.fn())).rejects.toThrow(
+    await expect(createLogoutCallbackHandler(config)(ctx, vi.fn())).rejects.toThrow(
       ClientError,
     );
   });

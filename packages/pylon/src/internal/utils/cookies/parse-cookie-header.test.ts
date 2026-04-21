@@ -1,4 +1,5 @@
 import { parseCookieHeader } from "./parse-cookie-header";
+import { describe, expect, test } from "vitest";
 
 describe("parseCookieHeader", () => {
   test("should parse cookies with sig and kid siblings", () => {

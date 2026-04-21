@@ -1,11 +1,12 @@
-import { createMockAmphora } from "@lindorm/amphora/mocks/jest";
+import { createMockAmphora } from "@lindorm/amphora/mocks/vitest";
 import { ClientError } from "@lindorm/errors";
 import { verifyCookie } from "./verify-cookie";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
-const verify = jest.fn();
+const verify = vi.fn();
 
-jest.mock("@lindorm/aegis", () => ({
-  ...jest.requireActual("@lindorm/aegis"),
+vi.mock("@lindorm/aegis", async () => ({
+  ...(await vi.importActual<typeof import("@lindorm/aegis")>("@lindorm/aegis")),
   SignatureKit: class SignatureKit {
     verify(): boolean {
       return verify();
@@ -21,7 +22,7 @@ describe("verifyCookie", () => {
     ctx.amphora.findByIdSync.mockReturnValue({ id: "kid-1" });
   });
 
-  afterEach(jest.clearAllMocks);
+  afterEach(vi.clearAllMocks);
 
   test("should resolve when kid lookup succeeds and signature verifies", async () => {
     verify.mockReturnValueOnce(true);

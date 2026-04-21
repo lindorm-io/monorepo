@@ -1,14 +1,15 @@
 import { connectionLoggerMiddleware } from "./connection-logger-middleware";
+import { describe, expect, test, vi } from "vitest";
 
 describe("connectionLoggerMiddleware", () => {
   test("should log handshake received and resolved", async () => {
-    const info = jest.fn();
+    const info = vi.fn();
     const ctx: any = {
       io: { socket: { id: "socket-123" } },
       logger: { info },
     };
 
-    await connectionLoggerMiddleware(ctx, jest.fn().mockResolvedValue(undefined));
+    await connectionLoggerMiddleware(ctx, vi.fn().mockResolvedValue(undefined));
 
     expect(info).toHaveBeenCalledWith("Socket handshake received", {
       socketId: "socket-123",
@@ -22,7 +23,7 @@ describe("connectionLoggerMiddleware", () => {
   test("should tolerate missing logger", async () => {
     const ctx: any = { io: { socket: { id: "socket-456" } } };
     await expect(
-      connectionLoggerMiddleware(ctx, jest.fn().mockResolvedValue(undefined)),
+      connectionLoggerMiddleware(ctx, vi.fn().mockResolvedValue(undefined)),
     ).resolves.toBeUndefined();
   });
 });

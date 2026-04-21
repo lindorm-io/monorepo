@@ -1,6 +1,7 @@
 import { KryptosKit } from "@lindorm/kryptos";
 import MockDate from "mockdate";
 import { conduitSignedRequestMiddleware } from "./conduit-signed-request-middleware";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate.toISOString());
@@ -42,7 +43,7 @@ describe("conduitSignedRequestMiddleware", () => {
 
   test("should add digest and signature headers to the request", async () => {
     await expect(
-      conduitSignedRequestMiddleware({ kryptos })(ctx, jest.fn()),
+      conduitSignedRequestMiddleware({ kryptos })(ctx, vi.fn()),
     ).resolves.toBeUndefined();
 
     expect(ctx.req.headers.digest).toMatch(

@@ -1,5 +1,6 @@
 import { ClientError } from "@lindorm/errors";
 import { useRoles } from "./use-roles";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("useRoles", () => {
   let ctx: any;
@@ -21,7 +22,7 @@ describe("useRoles", () => {
   });
 
   test("should call next when at least one role matches (OR logic)", async () => {
-    const next = jest.fn();
+    const next = vi.fn();
 
     await expect(useRoles("user", "superadmin")(ctx, next)).resolves.toBeUndefined();
 
@@ -29,12 +30,12 @@ describe("useRoles", () => {
   });
 
   test("should throw ClientError 403 when no role matches", async () => {
-    await expect(useRoles("superadmin", "moderator")(ctx, jest.fn())).rejects.toThrow(
+    await expect(useRoles("superadmin", "moderator")(ctx, vi.fn())).rejects.toThrow(
       ClientError,
     );
 
     try {
-      await useRoles("superadmin", "moderator")(ctx, jest.fn());
+      await useRoles("superadmin", "moderator")(ctx, vi.fn());
     } catch (err: any) {
       expect(err.status).toBe(403);
       expect(err.message).toMatchSnapshot();
@@ -45,10 +46,10 @@ describe("useRoles", () => {
   test("should throw ClientError 401 when token is missing", async () => {
     ctx.state.tokens = {};
 
-    await expect(useRoles("admin")(ctx, jest.fn())).rejects.toThrow(ClientError);
+    await expect(useRoles("admin")(ctx, vi.fn())).rejects.toThrow(ClientError);
 
     try {
-      await useRoles("admin")(ctx, jest.fn());
+      await useRoles("admin")(ctx, vi.fn());
     } catch (err: any) {
       expect(err.status).toBe(401);
       expect(err.message).toMatchSnapshot();
@@ -65,7 +66,7 @@ describe("useRoles", () => {
       },
     };
 
-    const next = jest.fn();
+    const next = vi.fn();
 
     await expect(
       useRoles("viewer", { token: "idToken" })(ctx, next),

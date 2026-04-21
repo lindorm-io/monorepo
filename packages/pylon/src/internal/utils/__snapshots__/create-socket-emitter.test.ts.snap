@@ -1,7 +1,20 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`createHttpSocketEmitter > should return an object with emit method 1`] = `
+[
+  "emit",
+]
+`;
 
 exports[`createHttpSocketEmitter should return an object with emit method 1`] = `
 [
+  "emit",
+]
+`;
+
+exports[`createSocketEmitter > should return an object with emit and broadcast methods 1`] = `
+[
+  "broadcast",
   "emit",
 ]
 `;

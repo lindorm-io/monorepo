@@ -1,11 +1,12 @@
-import { createMockAmphora } from "@lindorm/amphora/mocks/jest";
-import { createMockIrisSource } from "@lindorm/iris/mocks/jest";
-import { createMockLogger } from "@lindorm/logger/mocks/jest";
-import { createMockProteusSource } from "@lindorm/proteus/mocks/jest";
+import { createMockAmphora } from "@lindorm/amphora/mocks/vitest";
+import { createMockIrisSource } from "@lindorm/iris/mocks/vitest";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
+import { createMockProteusSource } from "@lindorm/proteus/mocks/vitest";
 import { join } from "path";
 import request from "supertest";
 import { PylonHttp } from "./PylonHttp";
 import { PylonRouter } from "./PylonRouter";
+import { describe, expect, test, vi } from "vitest";
 
 const createPylonHttp = async (
   overrides: Record<string, unknown> = {},
@@ -32,7 +33,7 @@ describe("PylonHttp health endpoint", () => {
   test("should prefer the user-provided callback over auto-built one", async () => {
     const proteus = createMockProteusSource();
     const iris = createMockIrisSource();
-    const health = jest.fn();
+    const health = vi.fn();
 
     const pylonHttp = await createPylonHttp({
       proteus,

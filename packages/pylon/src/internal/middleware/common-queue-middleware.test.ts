@@ -1,19 +1,20 @@
-import { createMockLogger } from "@lindorm/logger/mocks/jest";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { createQueueMiddleware } from "./common-queue-middleware";
+import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 describe("createQueueMiddleware", () => {
   let ctx: any;
-  let mockPublish: jest.Mock;
-  let mockCreate: jest.Mock;
+  let mockPublish: Mock;
+  let mockCreate: Mock;
 
   beforeEach(() => {
-    mockPublish = jest.fn();
-    mockCreate = jest.fn().mockImplementation((data: any) => data);
+    mockPublish = vi.fn();
+    mockCreate = vi.fn().mockImplementation((data: any) => data);
 
     ctx = {
       logger: createMockLogger(),
       iris: {
-        workerQueue: jest.fn().mockReturnValue({
+        workerQueue: vi.fn().mockReturnValue({
           create: mockCreate,
           publish: mockPublish,
         }),
@@ -29,7 +30,7 @@ describe("createQueueMiddleware", () => {
   test("should throw when not enabled", async () => {
     const middleware = createQueueMiddleware();
 
-    await middleware(ctx, jest.fn());
+    await middleware(ctx, vi.fn());
 
     await expect(ctx.queue("event", {})).rejects.toThrow("Queue is not enabled");
   });
@@ -37,7 +38,7 @@ describe("createQueueMiddleware", () => {
   test("should throw when enabled:false", async () => {
     const middleware = createQueueMiddleware({ enabled: false });
 
-    await middleware(ctx, jest.fn());
+    await middleware(ctx, vi.fn());
 
     await expect(ctx.queue("event", {})).rejects.toThrow("Queue is not enabled");
   });
@@ -45,7 +46,7 @@ describe("createQueueMiddleware", () => {
   test("should publish job via iris when enabled", async () => {
     const middleware = createQueueMiddleware({ enabled: true });
 
-    await middleware(ctx, jest.fn());
+    await middleware(ctx, vi.fn());
 
     await ctx.queue("test-event", { key: "value" });
 
@@ -63,7 +64,7 @@ describe("createQueueMiddleware", () => {
   test("should map priority to numeric value", async () => {
     const middleware = createQueueMiddleware({ enabled: true });
 
-    await middleware(ctx, jest.fn());
+    await middleware(ctx, vi.fn());
 
     await ctx.queue("event", {}, "critical");
 
@@ -75,7 +76,7 @@ describe("createQueueMiddleware", () => {
 
     const middleware = createQueueMiddleware({ enabled: true });
 
-    await middleware(ctx, jest.fn());
+    await middleware(ctx, vi.fn());
 
     await expect(ctx.queue("event", {}, "default", true)).resolves.toBeUndefined();
   });
@@ -85,7 +86,7 @@ describe("createQueueMiddleware", () => {
 
     const middleware = createQueueMiddleware({ enabled: true });
 
-    await middleware(ctx, jest.fn());
+    await middleware(ctx, vi.fn());
 
     await expect(ctx.queue("event", {})).rejects.toThrow("publish failed");
   });
@@ -93,9 +94,9 @@ describe("createQueueMiddleware", () => {
   test("should use iris override source", async () => {
     const overrideWq = { create: mockCreate, publish: mockPublish };
     const overrideIris = {
-      session: jest
+      session: vi
         .fn()
-        .mockReturnValue({ workerQueue: jest.fn().mockReturnValue(overrideWq) }),
+        .mockReturnValue({ workerQueue: vi.fn().mockReturnValue(overrideWq) }),
     };
 
     const middleware = createQueueMiddleware({
@@ -103,7 +104,7 @@ describe("createQueueMiddleware", () => {
       iris: overrideIris as any,
     });
 
-    await middleware(ctx, jest.fn());
+    await middleware(ctx, vi.fn());
 
     await ctx.queue("event", {});
 
@@ -114,7 +115,7 @@ describe("createQueueMiddleware", () => {
   });
 
   test("should call next", async () => {
-    const next = jest.fn();
+    const next = vi.fn();
     const middleware = createQueueMiddleware({ enabled: true });
 
     await middleware(ctx, next);

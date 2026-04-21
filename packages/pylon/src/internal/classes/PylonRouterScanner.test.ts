@@ -1,8 +1,9 @@
-import { createMockLogger } from "@lindorm/logger/mocks/jest";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { join } from "path";
 import { PylonRouter } from "../../classes/PylonRouter";
 import { PylonRouterScanner } from "./PylonRouterScanner";
 import { rootMiddleware } from "../../__fixtures__/routes/_middleware";
+import { beforeAll, describe, expect, test } from "vitest";
 
 describe("PylonRouterScanner", () => {
   const logger = createMockLogger();

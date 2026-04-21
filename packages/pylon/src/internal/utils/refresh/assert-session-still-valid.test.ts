@@ -1,5 +1,6 @@
 import { ClientError } from "@lindorm/errors";
 import { assertSessionStillValid } from "./assert-session-still-valid";
+import { describe, expect, test } from "vitest";
 
 const baseSession = {
   id: "sess-1",

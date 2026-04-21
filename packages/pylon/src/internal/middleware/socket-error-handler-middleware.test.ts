@@ -1,6 +1,7 @@
 import { ClientError, ServerError } from "@lindorm/errors";
-import { createMockLogger } from "@lindorm/logger/mocks/jest";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { socketErrorHandlerMiddleware } from "./socket-error-handler-middleware";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("socketErrorHandlerMiddleware", () => {
   let ctx: any;
@@ -10,14 +11,14 @@ describe("socketErrorHandlerMiddleware", () => {
       logger: createMockLogger(),
       io: {
         socket: {
-          emit: jest.fn(),
+          emit: vi.fn(),
         },
       },
     };
   });
 
   test("should do nothing when no errors are thrown", async () => {
-    await expect(socketErrorHandlerMiddleware(ctx, jest.fn())).resolves.toBeUndefined();
+    await expect(socketErrorHandlerMiddleware(ctx, vi.fn())).resolves.toBeUndefined();
 
     expect(ctx.io.socket.emit).not.toHaveBeenCalled();
   });

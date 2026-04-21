@@ -1,21 +1,22 @@
-import { createMockLogger } from "@lindorm/logger/mocks/jest";
-import { createMockProteusSource } from "@lindorm/proteus/mocks/jest";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
+import { createMockProteusSource } from "@lindorm/proteus/mocks/vitest";
 import { createHttpRoomContext, createRoomContext } from "./create-room-context";
+import { describe, expect, test, vi, type Mock } from "vitest";
 
 describe("createRoomContext", () => {
   const createMockSocket = (overrides: Record<string, any> = {}) => ({
     id: "socket-123",
     data: {},
-    join: jest.fn().mockResolvedValue(undefined),
-    leave: jest.fn().mockResolvedValue(undefined),
-    to: jest.fn().mockReturnValue({ emit: jest.fn() }),
+    join: vi.fn().mockResolvedValue(undefined),
+    leave: vi.fn().mockResolvedValue(undefined),
+    to: vi.fn().mockReturnValue({ emit: vi.fn() }),
     ...overrides,
   });
 
   const createMockIo = () => ({
-    to: jest.fn().mockReturnValue({ emit: jest.fn() }),
-    in: jest.fn().mockReturnValue({
-      fetchSockets: jest.fn().mockResolvedValue([{ id: "socket-a" }, { id: "socket-b" }]),
+    to: vi.fn().mockReturnValue({ emit: vi.fn() }),
+    in: vi.fn().mockReturnValue({
+      fetchSockets: vi.fn().mockResolvedValue([{ id: "socket-a" }, { id: "socket-b" }]),
     }),
   });
 
@@ -118,10 +119,10 @@ describe("createRoomContext", () => {
   test("should use socket.data.tokens.accessToken.payload.subject as userId", async () => {
     const proteusSource = createMockProteusSource();
     const mockRepo = {
-      findOneOrSave: jest.fn().mockResolvedValue(undefined),
+      findOneOrSave: vi.fn().mockResolvedValue(undefined),
     };
-    (proteusSource.session as jest.Mock).mockReturnValue({
-      repository: jest.fn().mockReturnValue(mockRepo),
+    (proteusSource.session as Mock).mockReturnValue({
+      repository: vi.fn().mockReturnValue(mockRepo),
     });
 
     const socket = createMockSocket({
@@ -151,10 +152,10 @@ describe("createRoomContext", () => {
   test("should fall back to socket.id when no accessToken subject", async () => {
     const proteusSource = createMockProteusSource();
     const mockRepo = {
-      findOneOrSave: jest.fn().mockResolvedValue(undefined),
+      findOneOrSave: vi.fn().mockResolvedValue(undefined),
     };
-    (proteusSource.session as jest.Mock).mockReturnValue({
-      repository: jest.fn().mockReturnValue(mockRepo),
+    (proteusSource.session as Mock).mockReturnValue({
+      repository: vi.fn().mockReturnValue(mockRepo),
     });
 
     const socket = createMockSocket();
@@ -178,9 +179,9 @@ describe("createRoomContext", () => {
 
 describe("createHttpRoomContext", () => {
   const createMockIo = () => ({
-    to: jest.fn().mockReturnValue({ emit: jest.fn() }),
-    in: jest.fn().mockReturnValue({
-      fetchSockets: jest.fn().mockResolvedValue([{ id: "socket-a" }, { id: "socket-b" }]),
+    to: vi.fn().mockReturnValue({ emit: vi.fn() }),
+    in: vi.fn().mockReturnValue({
+      fetchSockets: vi.fn().mockResolvedValue([{ id: "socket-a" }, { id: "socket-b" }]),
     }),
   });
 

@@ -1,5 +1,6 @@
 import { PylonListener } from "../../classes/PylonListener";
 import { normaliseListeners } from "./normalise-listeners";
+import { describe, expect, test } from "vitest";
 
 describe("normaliseListeners", () => {
   test("should return empty array when input is undefined", () => {

@@ -1,14 +1,15 @@
 import { Aegis } from "@lindorm/aegis";
-import { createMockAegis } from "@lindorm/aegis/mocks/jest";
+import { createMockAegis } from "@lindorm/aegis/mocks/vitest";
 import { ClientError } from "@lindorm/errors";
-import { createMockLogger } from "@lindorm/logger/mocks/jest";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { createHandshakeTokenMiddleware } from "./create-handshake-token-middleware";
+import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
-jest.mock("@lindorm/aegis", () => ({
-  ...jest.requireActual("@lindorm/aegis"),
+vi.mock("@lindorm/aegis", async () => ({
+  ...(await vi.importActual<typeof import("@lindorm/aegis")>("@lindorm/aegis")),
   Aegis: {
-    ...jest.requireActual("@lindorm/aegis").Aegis,
-    parse: jest.fn(),
+    ...(await vi.importActual<typeof import("@lindorm/aegis")>("@lindorm/aegis")).Aegis,
+    parse: vi.fn(),
   },
 }));
 
@@ -57,11 +58,11 @@ const makeDpopVerifyResult = (overrides: any = {}) => ({
 });
 
 describe("createHandshakeTokenMiddleware", () => {
-  let next: jest.Mock;
+  let next: Mock;
 
   beforeEach(() => {
-    next = jest.fn();
-    (Aegis.parse as jest.Mock).mockReset().mockReturnValue({ payload: {} });
+    next = vi.fn();
+    (Aegis.parse as Mock).mockReset().mockReturnValue({ payload: {} });
   });
 
   describe("bearer path", () => {
@@ -70,7 +71,7 @@ describe("createHandshakeTokenMiddleware", () => {
       ctx.io.socket.handshake.auth.bearer = "jwt-token";
 
       const exp = new Date("2026-04-11T12:05:00.000Z");
-      (ctx.aegis.verify as jest.Mock).mockResolvedValue({
+      (ctx.aegis.verify as Mock).mockResolvedValue({
         payload: { subject: "alice", expiresAt: exp },
         header: { tokenType: "access_token" },
         token: "jwt-token",
@@ -93,21 +94,21 @@ describe("createHandshakeTokenMiddleware", () => {
     test("throws when bearer verification fails", async () => {
       const ctx = makeCtx();
       ctx.io.socket.handshake.auth.bearer = "bad-jwt";
-      (ctx.aegis.verify as jest.Mock).mockRejectedValue(new Error("bad signature"));
+      (ctx.aegis.verify as Mock).mockRejectedValue(new Error("bad signature"));
 
       const mw = createHandshakeTokenMiddleware(options);
       await expect(mw(ctx, next)).rejects.toThrow();
     });
 
     test("bearer refresh handler swaps token and clears authExpiredEmittedAt", async () => {
-      jest.useFakeTimers().setSystemTime(new Date("2026-04-11T12:00:00.000Z"));
+      vi.useFakeTimers().setSystemTime(new Date("2026-04-11T12:00:00.000Z"));
 
       try {
         const ctx = makeCtx();
         ctx.io.socket.handshake.auth.bearer = "jwt-token";
 
         const initExp = new Date("2026-04-11T12:05:00.000Z");
-        (ctx.aegis.verify as jest.Mock).mockResolvedValueOnce({
+        (ctx.aegis.verify as Mock).mockResolvedValueOnce({
           payload: { subject: "alice", expiresAt: initExp },
           header: {},
           token: "jwt-token",
@@ -116,7 +117,7 @@ describe("createHandshakeTokenMiddleware", () => {
         const mw = createHandshakeTokenMiddleware(options);
         await mw(ctx, next);
 
-        (ctx.aegis.verify as jest.Mock).mockResolvedValueOnce({
+        (ctx.aegis.verify as Mock).mockResolvedValueOnce({
           payload: {
             subject: "alice",
             expiresAt: new Date("2026-04-11T23:59:59.000Z"),
@@ -138,7 +139,7 @@ describe("createHandshakeTokenMiddleware", () => {
         );
         expect(ctx.io.socket.data.pylon.auth.authExpiredEmittedAt).toBeNull();
       } finally {
-        jest.useRealTimers();
+        vi.useRealTimers();
       }
     });
 
@@ -146,7 +147,7 @@ describe("createHandshakeTokenMiddleware", () => {
       const ctx = makeCtx();
       ctx.io.socket.handshake.auth.bearer = "jwt-token";
 
-      (ctx.aegis.verify as jest.Mock).mockResolvedValueOnce({
+      (ctx.aegis.verify as Mock).mockResolvedValueOnce({
         payload: { subject: "alice", expiresAt: new Date() },
         header: {},
         token: "jwt-token",
@@ -155,7 +156,7 @@ describe("createHandshakeTokenMiddleware", () => {
       const mw = createHandshakeTokenMiddleware(options);
       await mw(ctx, next);
 
-      (ctx.aegis.verify as jest.Mock).mockResolvedValueOnce({
+      (ctx.aegis.verify as Mock).mockResolvedValueOnce({
         payload: { subject: "bob", expiresAt: new Date() },
         header: {},
         token: "swap",
@@ -179,7 +180,7 @@ describe("createHandshakeTokenMiddleware", () => {
 
     test("registers session strategy when socket.data.session present", async () => {
       const ctx = makeCtx({ data: { session } });
-      (ctx.aegis.verify as jest.Mock).mockResolvedValue({
+      (ctx.aegis.verify as Mock).mockResolvedValue({
         payload: { subject: "alice", expiresAt: session.expiresAt },
         header: { baseFormat: "JWT" },
         token: "session-jwt",
@@ -198,7 +199,7 @@ describe("createHandshakeTokenMiddleware", () => {
       const preAuth = {
         strategy: "session" as const,
         getExpiresAt: () => session.expiresAt,
-        refresh: jest.fn(async () => {}),
+        refresh: vi.fn(async () => {}),
         authExpiredEmittedAt: null,
       };
 
@@ -215,7 +216,7 @@ describe("createHandshakeTokenMiddleware", () => {
 
     test("session refresh handler updates state from re-read session", async () => {
       const ctx = makeCtx({ data: { session } });
-      (ctx.aegis.verify as jest.Mock).mockResolvedValue({
+      (ctx.aegis.verify as Mock).mockResolvedValue({
         payload: { subject: "alice", expiresAt: session.expiresAt },
         header: { baseFormat: "JWT" },
         token: "session-jwt",
@@ -239,7 +240,7 @@ describe("createHandshakeTokenMiddleware", () => {
         expiresAt: new Date("2000-01-01T00:00:00.000Z"),
       };
       const ctx = makeCtx({ data: { session: pastSession } });
-      (ctx.aegis.verify as jest.Mock).mockResolvedValue({
+      (ctx.aegis.verify as Mock).mockResolvedValue({
         payload: { subject: "alice", expiresAt: pastSession.expiresAt },
         header: { baseFormat: "JWT" },
         token: "session-jwt",
@@ -256,7 +257,7 @@ describe("createHandshakeTokenMiddleware", () => {
 
   describe("DPoP path", () => {
     const mockPreflightJkt = (jkt = "jkt-abc") => {
-      (Aegis.parse as jest.Mock).mockReturnValue({
+      (Aegis.parse as Mock).mockReturnValue({
         payload: { confirmation: { thumbprint: jkt } },
       });
     };
@@ -275,7 +276,7 @@ describe("createHandshakeTokenMiddleware", () => {
         const ctx = makeCtx();
         ctx.io.socket.handshake.auth.bearer = "jwt-token";
         ctx.io.socket.handshake.headers.dpop = "proof-jwt";
-        (ctx.aegis.verify as jest.Mock).mockResolvedValue({
+        (ctx.aegis.verify as Mock).mockResolvedValue({
           payload: { subject: "alice", expiresAt: new Date() },
           header: {},
           token: "jwt-token",
@@ -294,7 +295,7 @@ describe("createHandshakeTokenMiddleware", () => {
         const ctx = makeCtx();
         ctx.io.socket.handshake.auth.bearer = "jwt-token";
         ctx.io.socket.handshake.headers.dpop = "proof-jwt";
-        (ctx.aegis.verify as jest.Mock).mockResolvedValue(makeDpopVerifyResult());
+        (ctx.aegis.verify as Mock).mockResolvedValue(makeDpopVerifyResult());
 
         const mw = createHandshakeTokenMiddleware({ ...options, dpop: "required" });
         await mw(ctx, next);
@@ -313,7 +314,7 @@ describe("createHandshakeTokenMiddleware", () => {
       test("accepts bearer-only token, strategy = bearer", async () => {
         const ctx = makeCtx();
         ctx.io.socket.handshake.auth.bearer = "jwt-token";
-        (ctx.aegis.verify as jest.Mock).mockResolvedValue({
+        (ctx.aegis.verify as Mock).mockResolvedValue({
           payload: { subject: "alice", expiresAt: new Date() },
           header: {},
           token: "jwt-token",
@@ -330,7 +331,7 @@ describe("createHandshakeTokenMiddleware", () => {
         const ctx = makeCtx();
         ctx.io.socket.handshake.auth.bearer = "jwt-token";
         ctx.io.socket.handshake.headers.dpop = "proof-jwt";
-        (ctx.aegis.verify as jest.Mock).mockResolvedValue(makeDpopVerifyResult());
+        (ctx.aegis.verify as Mock).mockResolvedValue(makeDpopVerifyResult());
 
         const mw = createHandshakeTokenMiddleware(options);
         await mw(ctx, next);
@@ -342,7 +343,7 @@ describe("createHandshakeTokenMiddleware", () => {
         mockPreflightJkt();
         const ctx = makeCtx();
         ctx.io.socket.handshake.auth.bearer = "jwt-token";
-        (ctx.aegis.verify as jest.Mock).mockResolvedValue({
+        (ctx.aegis.verify as Mock).mockResolvedValue({
           payload: {
             subject: "alice",
             expiresAt: new Date(),
@@ -361,7 +362,7 @@ describe("createHandshakeTokenMiddleware", () => {
         const ctx = makeCtx();
         ctx.io.socket.handshake.auth.bearer = "jwt-token";
         ctx.io.socket.handshake.headers.dpop = "proof-jwt";
-        (ctx.aegis.verify as jest.Mock).mockResolvedValue(
+        (ctx.aegis.verify as Mock).mockResolvedValue(
           makeDpopVerifyResult({
             dpop: {
               httpMethod: "GET",
@@ -380,7 +381,7 @@ describe("createHandshakeTokenMiddleware", () => {
         mockPreflightJkt();
         const ctx = makeCtx();
         ctx.io.socket.handshake.auth.bearer = "jwt-token";
-        (ctx.aegis.verify as jest.Mock).mockResolvedValue({
+        (ctx.aegis.verify as Mock).mockResolvedValue({
           payload: {
             subject: "alice",
             expiresAt: new Date(),
@@ -402,7 +403,7 @@ describe("createHandshakeTokenMiddleware", () => {
         mockPreflightJkt();
         ctx.io.socket.handshake.auth.bearer = "jwt-token";
         ctx.io.socket.handshake.headers.dpop = "proof-jwt";
-        (ctx.aegis.verify as jest.Mock).mockResolvedValueOnce(makeDpopVerifyResult());
+        (ctx.aegis.verify as Mock).mockResolvedValueOnce(makeDpopVerifyResult());
 
         const mw = createHandshakeTokenMiddleware(options);
         await mw(ctx, next);
@@ -412,7 +413,7 @@ describe("createHandshakeTokenMiddleware", () => {
         const ctx = makeCtx();
         await installDpopHandshake(ctx);
 
-        (ctx.aegis.verify as jest.Mock).mockResolvedValueOnce({
+        (ctx.aegis.verify as Mock).mockResolvedValueOnce({
           payload: {
             subject: "alice",
             expiresAt: new Date("2026-04-11T13:00:00.000Z"),
@@ -434,7 +435,7 @@ describe("createHandshakeTokenMiddleware", () => {
         const ctx = makeCtx();
         await installDpopHandshake(ctx);
 
-        (ctx.aegis.verify as jest.Mock).mockResolvedValueOnce({
+        (ctx.aegis.verify as Mock).mockResolvedValueOnce({
           payload: {
             subject: "alice",
             expiresAt: new Date(),
@@ -456,7 +457,7 @@ describe("createHandshakeTokenMiddleware", () => {
         const ctx = makeCtx();
         await installDpopHandshake(ctx);
 
-        (ctx.aegis.verify as jest.Mock).mockResolvedValueOnce({
+        (ctx.aegis.verify as Mock).mockResolvedValueOnce({
           payload: { subject: "alice", expiresAt: new Date() },
           header: {},
           token: "new-jwt",

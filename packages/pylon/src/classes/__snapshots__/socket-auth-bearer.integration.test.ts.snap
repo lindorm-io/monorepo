@@ -1,4 +1,14 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`socket auth (bearer) e2e > refresh ack envelope shape 1`] = `
+{
+  "__pylon": true,
+  "data": {
+    "refreshed": true,
+  },
+  "ok": true,
+}
+`;
 
 exports[`socket auth (bearer) e2e refresh ack envelope shape 1`] = `
 {

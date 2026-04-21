@@ -1,17 +1,18 @@
-import { createMockLogger } from "@lindorm/logger/mocks/jest";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { PylonSocketAuth } from "../../../types";
 import {
   PYLON_AUTH_REFRESH_EVENT,
   registerAuthRefreshListener,
 } from "./register-auth-refresh-listener";
+import { describe, expect, test, vi } from "vitest";
 
 const makeSocket = (auth?: PylonSocketAuth): any => {
   const handlers: Record<string, Function> = {};
   return {
-    on: jest.fn((event: string, handler: Function) => {
+    on: vi.fn((event: string, handler: Function) => {
       handlers[event] = handler;
     }),
-    disconnect: jest.fn(),
+    disconnect: vi.fn(),
     handlers,
     data: {
       pylon: auth ? { auth } : {},
@@ -30,7 +31,7 @@ describe("registerAuthRefreshListener", () => {
     const auth: PylonSocketAuth = {
       strategy: "bearer",
       getExpiresAt: () => new Date(),
-      refresh: jest.fn(async () => {}),
+      refresh: vi.fn(async () => {}),
       authExpiredEmittedAt: null,
     };
     const socket = makeSocket(auth);
@@ -44,7 +45,7 @@ describe("registerAuthRefreshListener", () => {
   });
 
   test("delegates to auth.refresh and acks success", async () => {
-    const refresh = jest.fn(async () => {});
+    const refresh = vi.fn(async () => {});
     const auth: PylonSocketAuth = {
       strategy: "bearer",
       getExpiresAt: () => new Date(),
@@ -54,7 +55,7 @@ describe("registerAuthRefreshListener", () => {
     const socket = makeSocket(auth);
     registerAuthRefreshListener(socket, createMockLogger());
 
-    const ack = jest.fn();
+    const ack = vi.fn();
     const handler = socket.handlers[PYLON_AUTH_REFRESH_EVENT];
 
     await handler({ bearer: "new-jwt" }, ack);
@@ -66,7 +67,7 @@ describe("registerAuthRefreshListener", () => {
   });
 
   test("acks failure when auth.refresh throws", async () => {
-    const refresh = jest.fn(async () => {
+    const refresh = vi.fn(async () => {
       const err: any = new Error("bad signature");
       err.status = 401;
       throw err;
@@ -80,7 +81,7 @@ describe("registerAuthRefreshListener", () => {
     const socket = makeSocket(auth);
     registerAuthRefreshListener(socket, createMockLogger());
 
-    const ack = jest.fn();
+    const ack = vi.fn();
     const handler = socket.handlers[PYLON_AUTH_REFRESH_EVENT];
 
     await handler({ bearer: "bad" }, ack);
@@ -94,7 +95,7 @@ describe("registerAuthRefreshListener", () => {
   });
 
   test("disconnects socket after failed session refresh", async () => {
-    const refresh = jest.fn(async () => {
+    const refresh = vi.fn(async () => {
       throw new Error("session revoked");
     });
     const auth: PylonSocketAuth = {
@@ -106,7 +107,7 @@ describe("registerAuthRefreshListener", () => {
     const socket = makeSocket(auth);
     registerAuthRefreshListener(socket, createMockLogger());
 
-    const ack = jest.fn();
+    const ack = vi.fn();
     const handler = socket.handlers[PYLON_AUTH_REFRESH_EVENT];
 
     await handler({}, ack);
@@ -118,7 +119,7 @@ describe("registerAuthRefreshListener", () => {
   });
 
   test("does NOT disconnect socket after failed bearer refresh", async () => {
-    const refresh = jest.fn(async () => {
+    const refresh = vi.fn(async () => {
       throw new Error("token expired");
     });
     const auth: PylonSocketAuth = {
@@ -130,7 +131,7 @@ describe("registerAuthRefreshListener", () => {
     const socket = makeSocket(auth);
     registerAuthRefreshListener(socket, createMockLogger());
 
-    const ack = jest.fn();
+    const ack = vi.fn();
     const handler = socket.handlers[PYLON_AUTH_REFRESH_EVENT];
 
     await handler({}, ack);
@@ -142,7 +143,7 @@ describe("registerAuthRefreshListener", () => {
   });
 
   test("tolerates missing ack (fire-and-forget)", async () => {
-    const refresh = jest.fn(async () => {});
+    const refresh = vi.fn(async () => {});
     const auth: PylonSocketAuth = {
       strategy: "bearer",
       getExpiresAt: () => new Date(),

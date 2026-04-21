@@ -1,5 +1,6 @@
-import { createMockLogger } from "@lindorm/logger/mocks/jest";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { createConnectionContextInitialisationMiddleware } from "./connection-context-initialisation-middleware";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("createConnectionContextInitialisationMiddleware", () => {
   let ctx: any;
@@ -33,7 +34,7 @@ describe("createConnectionContextInitialisationMiddleware", () => {
 
   test("should initialise state and child logger", async () => {
     await expect(
-      createConnectionContextInitialisationMiddleware(logger)(ctx, jest.fn()),
+      createConnectionContextInitialisationMiddleware(logger)(ctx, vi.fn()),
     ).resolves.toBeUndefined();
 
     expect(ctx.state).toEqual({
@@ -56,7 +57,7 @@ describe("createConnectionContextInitialisationMiddleware", () => {
   test("should pick up x-correlation-id header", async () => {
     ctx.io.socket.handshake.headers["x-correlation-id"] = "given-correlation-id";
 
-    await createConnectionContextInitialisationMiddleware(logger)(ctx, jest.fn());
+    await createConnectionContextInitialisationMiddleware(logger)(ctx, vi.fn());
 
     expect(ctx.state.metadata.correlationId).toBe("given-correlation-id");
   });
@@ -64,7 +65,7 @@ describe("createConnectionContextInitialisationMiddleware", () => {
   test("should pick up bearer token as authorization", async () => {
     ctx.io.socket.handshake.headers.authorization = "Bearer abc123";
 
-    await createConnectionContextInitialisationMiddleware(logger)(ctx, jest.fn());
+    await createConnectionContextInitialisationMiddleware(logger)(ctx, vi.fn());
 
     expect(ctx.state.authorization).toEqual({ type: "bearer", value: "abc123" });
   });

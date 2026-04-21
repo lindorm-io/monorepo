@@ -2,15 +2,16 @@ import { ClientError } from "@lindorm/errors";
 import MockDate from "mockdate";
 import { parseTokenData as _parseTokenData } from "./parse-token-data";
 import { createRefreshMiddleware } from "./refresh-middleware";
+import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate);
 
-jest.mock("./parse-token-data");
+vi.mock("./parse-token-data");
 
-const parseTokenData = _parseTokenData as jest.Mock;
+const parseTokenData = _parseTokenData as Mock;
 
-describe("createRefreshMiddleware", () => {
+describe("createRefreshMiddleware", async () => {
   let authConfig: any;
   let ctx: any;
 
@@ -25,18 +26,18 @@ describe("createRefreshMiddleware", () => {
 
     ctx = {
       aegis: {
-        verify: jest.fn(),
+        verify: vi.fn(),
       },
       auth: {
-        token: jest.fn().mockResolvedValue({ data: true }),
+        token: vi.fn().mockResolvedValue({ data: true }),
       },
       logger: {
-        warn: jest.fn(),
+        warn: vi.fn(),
       },
       session: {
-        get: jest.fn(),
-        set: jest.fn(),
-        del: jest.fn(),
+        get: vi.fn(),
+        set: vi.fn(),
+        del: vi.fn(),
       },
       state: {
         session: {
@@ -55,11 +56,11 @@ describe("createRefreshMiddleware", () => {
     parseTokenData.mockResolvedValue("parsedTokenData");
   });
 
-  afterEach(jest.clearAllMocks);
+  afterEach(vi.clearAllMocks);
 
   test("should resolve force", async () => {
     await expect(
-      createRefreshMiddleware(authConfig)(ctx, jest.fn()),
+      createRefreshMiddleware(authConfig)(ctx, vi.fn()),
     ).resolves.toBeUndefined();
 
     expect(ctx.session.set).toHaveBeenCalled();
@@ -69,7 +70,7 @@ describe("createRefreshMiddleware", () => {
     authConfig.refresh.mode = "half_life";
 
     await expect(
-      createRefreshMiddleware(authConfig)(ctx, jest.fn()),
+      createRefreshMiddleware(authConfig)(ctx, vi.fn()),
     ).resolves.toBeUndefined();
 
     expect(ctx.session.set).toHaveBeenCalled();
@@ -79,7 +80,7 @@ describe("createRefreshMiddleware", () => {
     authConfig.refresh.mode = "max_age";
 
     await expect(
-      createRefreshMiddleware(authConfig)(ctx, jest.fn()),
+      createRefreshMiddleware(authConfig)(ctx, vi.fn()),
     ).resolves.toBeUndefined();
 
     expect(ctx.session.set).toHaveBeenCalled();
@@ -90,7 +91,7 @@ describe("createRefreshMiddleware", () => {
     authConfig.refresh.mode = "max_age";
 
     await expect(
-      createRefreshMiddleware(authConfig)(ctx, jest.fn()),
+      createRefreshMiddleware(authConfig)(ctx, vi.fn()),
     ).resolves.toBeUndefined();
 
     expect(ctx.session.set).not.toHaveBeenCalled();
@@ -100,7 +101,7 @@ describe("createRefreshMiddleware", () => {
     authConfig.refresh.mode = "none";
 
     await expect(
-      createRefreshMiddleware(authConfig)(ctx, jest.fn()),
+      createRefreshMiddleware(authConfig)(ctx, vi.fn()),
     ).resolves.toBeUndefined();
 
     expect(ctx.session.set).not.toHaveBeenCalled();
@@ -109,7 +110,7 @@ describe("createRefreshMiddleware", () => {
   test("should throw on missing session", async () => {
     ctx.state.session = null;
 
-    await expect(createRefreshMiddleware(authConfig)(ctx, jest.fn())).rejects.toThrow(
+    await expect(createRefreshMiddleware(authConfig)(ctx, vi.fn())).rejects.toThrow(
       ClientError,
     );
   });

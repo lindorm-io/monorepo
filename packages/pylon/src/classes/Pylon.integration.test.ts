@@ -1,11 +1,20 @@
 import { Amphora, IAmphora } from "@lindorm/amphora";
 import { KryptosKit } from "@lindorm/kryptos";
-import { createMockLogger } from "@lindorm/logger/mocks/jest";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { ILogger } from "@lindorm/logger";
 import { join } from "path";
 import { Socket as ClientSocket, io as ioClient } from "socket.io-client";
 import request from "supertest";
 import { Pylon } from "./Pylon";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  test,
+} from "vitest";
 
 describe("PylonScanner", () => {
   let pylon: Pylon;

@@ -1,4 +1,5 @@
 import { initialisePylonSocketData } from "./initialise-pylon-socket-data";
+import { describe, expect, test } from "vitest";
 
 describe("initialisePylonSocketData", () => {
   test("should initialize with all options provided", () => {

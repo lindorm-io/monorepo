@@ -1,5 +1,6 @@
 import { ClientError } from "@lindorm/errors";
 import { createLoginHandler } from "./login-handler";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("createLoginHandler", () => {
   let routerConfig: any;
@@ -21,7 +22,7 @@ describe("createLoginHandler", () => {
 
     ctx = {
       auth: {
-        login: jest.fn().mockReturnValue({
+        login: vi.fn().mockReturnValue({
           codeChallengeMethod: "codeChallengeMethod",
           codeVerifier: "codeVerifier",
           nonce: "nonce",
@@ -32,9 +33,9 @@ describe("createLoginHandler", () => {
         }),
       },
       cookies: {
-        get: jest.fn(),
-        set: jest.fn(),
-        del: jest.fn(),
+        get: vi.fn(),
+        set: vi.fn(),
+        del: vi.fn(),
       },
       data: {
         acrValues: "acrValues",
@@ -48,16 +49,14 @@ describe("createLoginHandler", () => {
         uiLocales: "uiLocales",
         redirectUri: "https://client.com/redirect",
       },
-      redirect: jest.fn(),
+      redirect: vi.fn(),
     };
   });
 
-  afterEach(jest.clearAllMocks);
+  afterEach(vi.clearAllMocks);
 
   test("should resolve dynamic redirect uri", async () => {
-    await expect(
-      createLoginHandler(routerConfig)(ctx, jest.fn()),
-    ).resolves.toBeUndefined();
+    await expect(createLoginHandler(routerConfig)(ctx, vi.fn())).resolves.toBeUndefined();
 
     expect(ctx.cookies.set).toHaveBeenCalledWith(
       "login_cookie",
@@ -78,9 +77,7 @@ describe("createLoginHandler", () => {
   test("should resolve static redirect uri", async () => {
     ctx.data.redirectUri = undefined;
 
-    await expect(
-      createLoginHandler(routerConfig)(ctx, jest.fn()),
-    ).resolves.toBeUndefined();
+    await expect(createLoginHandler(routerConfig)(ctx, vi.fn())).resolves.toBeUndefined();
 
     expect(ctx.cookies.set).toHaveBeenCalledWith(
       "login_cookie",
@@ -102,7 +99,7 @@ describe("createLoginHandler", () => {
     routerConfig.staticRedirect.login = undefined;
     ctx.data.redirectUri = undefined;
 
-    await expect(createLoginHandler(routerConfig)(ctx, jest.fn())).rejects.toThrow(
+    await expect(createLoginHandler(routerConfig)(ctx, vi.fn())).rejects.toThrow(
       ClientError,
     );
   });
@@ -110,7 +107,7 @@ describe("createLoginHandler", () => {
   test("should throw on invalid redirect uri domain", async () => {
     ctx.data.redirectUri = "https://invalid.com/redirect";
 
-    await expect(createLoginHandler(routerConfig)(ctx, jest.fn())).rejects.toThrow(
+    await expect(createLoginHandler(routerConfig)(ctx, vi.fn())).rejects.toThrow(
       ClientError,
     );
   });

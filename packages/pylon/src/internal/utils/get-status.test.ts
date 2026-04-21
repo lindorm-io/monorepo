@@ -1,4 +1,5 @@
 import { getStatus } from "./get-status";
+import { describe, expect, test } from "vitest";
 
 describe("getStatus", () => {
   test("should return status", () => {

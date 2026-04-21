@@ -1,5 +1,6 @@
-import { createMockLogger } from "@lindorm/logger/mocks/jest";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { httpResponseLoggerMiddleware } from "./http-response-logger-middleware";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("httpResponseLoggerMiddleware", () => {
   let ctx: any;
@@ -26,7 +27,7 @@ describe("httpResponseLoggerMiddleware", () => {
   });
 
   test("should log response information", async () => {
-    await expect(httpResponseLoggerMiddleware(ctx, jest.fn())).resolves.toBeUndefined();
+    await expect(httpResponseLoggerMiddleware(ctx, vi.fn())).resolves.toBeUndefined();
 
     expect(ctx.logger.info).toHaveBeenCalledWith("Service response", {
       metadata: "metadata",

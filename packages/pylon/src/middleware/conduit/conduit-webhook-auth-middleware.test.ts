@@ -7,16 +7,18 @@ import {
 import { WebhookAuth, WebhookMethod } from "../../enums";
 import { IWebhookSubscription } from "../../interfaces";
 import { createConduitWebhookAuthMiddleware } from "./conduit-webhook-auth-middleware";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
-jest.mock("@lindorm/conduit", () => {
-  const actual = jest.requireActual("@lindorm/conduit");
+vi.mock("@lindorm/conduit", async () => {
+  const actual =
+    await vi.importActual<typeof import("@lindorm/conduit")>("@lindorm/conduit");
   return {
     ...actual,
-    conduitBasicAuthMiddleware: jest.fn().mockReturnValue(jest.fn()),
-    conduitClientCredentialsMiddlewareFactory: jest
+    conduitBasicAuthMiddleware: vi.fn().mockReturnValue(vi.fn()),
+    conduitClientCredentialsMiddlewareFactory: vi
       .fn()
-      .mockReturnValue(jest.fn().mockResolvedValue(jest.fn())),
-    conduitHeadersMiddleware: jest.fn().mockReturnValue(jest.fn()),
+      .mockReturnValue(vi.fn().mockResolvedValue(vi.fn())),
+    conduitHeadersMiddleware: vi.fn().mockReturnValue(vi.fn()),
   };
 });
 
@@ -24,7 +26,7 @@ describe("createConduitWebhookAuthMiddleware", () => {
   let cache: any;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     cache = {};
   });
 
@@ -63,7 +65,7 @@ describe("createConduitWebhookAuthMiddleware", () => {
     const subscription = createSubscription({ auth: WebhookAuth.None });
     const middleware = await createConduitWebhookAuthMiddleware(subscription, cache);
 
-    const next = jest.fn();
+    const next = vi.fn();
     await middleware({} as any, next);
 
     expect(next).toHaveBeenCalled();

@@ -1,7 +1,8 @@
 import { ServerError } from "@lindorm/errors";
-import { createMockIrisSource } from "@lindorm/iris/mocks/jest";
-import { createMockProteusSource } from "@lindorm/proteus/mocks/jest";
+import { createMockIrisSource } from "@lindorm/iris/mocks/vitest";
+import { createMockProteusSource } from "@lindorm/proteus/mocks/vitest";
 import { buildDefaultHealthCallback } from "./build-default-health-callback";
+import { describe, expect, test } from "vitest";
 
 describe("buildDefaultHealthCallback", () => {
   test("should return undefined when neither proteus nor iris is provided", () => {

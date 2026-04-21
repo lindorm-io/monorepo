@@ -1,5 +1,6 @@
-import { createMockLogger } from "@lindorm/logger/mocks/jest";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { PylonScannerBase, ParsedSegment, ScannedFile } from "./PylonScannerBase";
+import { beforeAll, describe, expect, test, vi } from "vitest";
 
 class TestScanner extends PylonScannerBase {
   public constructor() {
@@ -204,7 +205,7 @@ describe("PylonScannerBase", () => {
     test("should return empty array when module has no MIDDLEWARE export", async () => {
       const mockScanner = new TestScanner();
       (mockScanner as any).scanner = {
-        import: jest.fn().mockResolvedValue({ default: "something" }),
+        import: vi.fn().mockResolvedValue({ default: "something" }),
       };
 
       const result = await mockScanner.testLoadMiddleware({
@@ -215,10 +216,10 @@ describe("PylonScannerBase", () => {
     });
 
     test("should return array when MIDDLEWARE is an array", async () => {
-      const middlewareFns = [jest.fn(), jest.fn()];
+      const middlewareFns = [vi.fn(), vi.fn()];
       const mockScanner = new TestScanner();
       (mockScanner as any).scanner = {
-        import: jest.fn().mockResolvedValue({ MIDDLEWARE: middlewareFns }),
+        import: vi.fn().mockResolvedValue({ MIDDLEWARE: middlewareFns }),
       };
 
       const result = await mockScanner.testLoadMiddleware({
@@ -229,10 +230,10 @@ describe("PylonScannerBase", () => {
     });
 
     test("should wrap non-array MIDDLEWARE in array", async () => {
-      const middlewareFn = jest.fn();
+      const middlewareFn = vi.fn();
       const mockScanner = new TestScanner();
       (mockScanner as any).scanner = {
-        import: jest.fn().mockResolvedValue({ MIDDLEWARE: middlewareFn }),
+        import: vi.fn().mockResolvedValue({ MIDDLEWARE: middlewareFn }),
       };
 
       const result = await mockScanner.testLoadMiddleware({
@@ -249,9 +250,9 @@ describe("PylonScannerBase", () => {
 
       // Scanner.hasFiles is a static method — mock it
       const originalHasFiles = (mockScanner as any).scanner.constructor.hasFiles;
-      jest
-        .spyOn((mockScanner as any).scanner.constructor, "hasFiles")
-        .mockReturnValue(false);
+      vi.spyOn((mockScanner as any).scanner.constructor, "hasFiles").mockReturnValue(
+        false,
+      );
 
       await expect(mockScanner.testScanDirectory("/empty/dir")).rejects.toThrow(
         "Directory [ /empty/dir ] is empty",

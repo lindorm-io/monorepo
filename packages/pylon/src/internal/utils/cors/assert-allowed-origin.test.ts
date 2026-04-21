@@ -1,5 +1,6 @@
 import { ClientError } from "@lindorm/errors";
 import { assertAllowedOrigin } from "./assert-allowed-origin";
+import { describe, expect, test } from "vitest";
 
 describe("assertAllowedOrigin", () => {
   test("should throw Forbidden when origin is missing", () => {

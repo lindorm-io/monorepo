@@ -1,4 +1,5 @@
 import { composePylonHandshakeContext } from "./compose-pylon-handshake-context";
+import { describe, expect, test } from "vitest";
 
 describe("composePylonHandshakeContext", () => {
   test("should build a handshake context", () => {

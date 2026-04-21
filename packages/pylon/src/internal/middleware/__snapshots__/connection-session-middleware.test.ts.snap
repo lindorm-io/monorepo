@@ -1,4 +1,15 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`createConnectionSessionMiddleware > should load session, register auth, and parse bearer when cookie valid 1`] = `
+{
+  "accessToken": "access_token",
+  "expiresAt": Any<Date>,
+  "id": "cad4002a-bd04-52f1-9733-58866f421686",
+  "issuedAt": Any<Date>,
+  "scope": [],
+  "subject": "sub-1",
+}
+`;
 
 exports[`createConnectionSessionMiddleware should load session, register auth, and parse bearer when cookie valid 1`] = `
 {

@@ -1,5 +1,6 @@
 import { PylonError } from "../../../errors/PylonError";
 import { assertSessionCookieSafeForSockets } from "./assert-session-cookie-safe-for-sockets";
+import { describe, expect, test } from "vitest";
 
 describe("assertSessionCookieSafeForSockets", () => {
   test("should pass when session is not configured", () => {

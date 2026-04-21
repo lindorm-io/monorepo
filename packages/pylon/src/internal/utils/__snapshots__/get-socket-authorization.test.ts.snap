@@ -1,4 +1,74 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`getSocketAuthorization > should fall back to headers.authorization when auth.token is absent 1`] = `
+{
+  "type": "bearer",
+  "value": "xyz789",
+}
+`;
+
+exports[`getSocketAuthorization > should return basic authorization from auth.token 1`] = `
+{
+  "type": "basic",
+  "value": "dXNlcjpwYXNz",
+}
+`;
+
+exports[`getSocketAuthorization > should return bearer authorization from auth.token 1`] = `
+{
+  "type": "bearer",
+  "value": "abc123",
+}
+`;
+
+exports[`getSocketAuthorization > should return default when auth is not a string 1`] = `
+{
+  "type": "none",
+  "value": null,
+}
+`;
+
+exports[`getSocketAuthorization > should return default when auth is null 1`] = `
+{
+  "type": "none",
+  "value": null,
+}
+`;
+
+exports[`getSocketAuthorization > should return default when auth string has no value after type 1`] = `
+{
+  "type": "none",
+  "value": null,
+}
+`;
+
+exports[`getSocketAuthorization > should return default when auth string has unknown type 1`] = `
+{
+  "type": "none",
+  "value": null,
+}
+`;
+
+exports[`getSocketAuthorization > should return default when auth string is only the type 1`] = `
+{
+  "type": "none",
+  "value": null,
+}
+`;
+
+exports[`getSocketAuthorization > should return default when handshake has no auth or headers 1`] = `
+{
+  "type": "none",
+  "value": null,
+}
+`;
+
+exports[`getSocketAuthorization > should return dpop authorization from auth.token 1`] = `
+{
+  "type": "dpop",
+  "value": "proof-token",
+}
+`;
 
 exports[`getSocketAuthorization should fall back to headers.authorization when auth.token is absent 1`] = `
 {

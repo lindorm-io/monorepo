@@ -1,4 +1,5 @@
 import { noopHandler } from "./noop-handler";
+import { describe, expect, test } from "vitest";
 
 describe("noopHandler", () => {
   test("should set body to undefined and status to 204", async () => {

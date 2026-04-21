@@ -1,17 +1,21 @@
-const mockRefresh = jest.fn().mockResolvedValue(undefined);
-const mockAdd = jest.fn();
-const mockFind = jest.fn().mockResolvedValue([]);
-const mockRepository = jest.fn().mockReturnValue({ find: mockFind });
-const mockFromDb = jest.fn().mockImplementation((data: any) => ({ id: data.id }));
-
-jest.mock("@lindorm/kryptos", () => ({
-  KryptosKit: { from: { db: mockFromDb } },
-}));
-
-import { createMockLogger } from "@lindorm/logger/mocks/jest";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { LindormWorker } from "@lindorm/worker";
 import { Kryptos } from "../entities/Kryptos";
 import { createAmphoraEntityWorker } from "./amphora-entity-worker";
+import { beforeEach, describe, expect, test, vi } from "vitest";
+
+const { mockRefresh, mockAdd, mockFind, mockRepository, mockFromDb } = vi.hoisted(() => ({
+  mockRefresh: vi.fn().mockResolvedValue(undefined),
+  mockAdd: vi.fn(),
+  mockFind: vi.fn().mockResolvedValue([]),
+  mockRepository: vi.fn().mockReturnValue({ find: undefined }),
+  mockFromDb: vi.fn().mockImplementation((data: any) => ({ id: data.id })),
+}));
+mockRepository.mockReturnValue({ find: mockFind });
+
+vi.mock("@lindorm/kryptos", async () => ({
+  KryptosKit: { from: { db: mockFromDb } },
+}));
 
 describe("createAmphoraEntityWorker", () => {
   const amphora: any = { refresh: mockRefresh, add: mockAdd };
@@ -21,7 +25,7 @@ describe("createAmphoraEntityWorker", () => {
   class FakeKryptosDB {}
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockFind.mockResolvedValue([]);
   });
 

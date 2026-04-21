@@ -1,6 +1,6 @@
 import { Amphora, IAmphora } from "@lindorm/amphora";
 import { KryptosKit } from "@lindorm/kryptos";
-import { createMockLogger } from "@lindorm/logger/mocks/jest";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { ILogger } from "@lindorm/logger";
 import { createBearerAuthStrategy, Zephyr } from "@lindorm/zephyr";
 import { join } from "path";
@@ -11,6 +11,7 @@ import {
 } from "../__fixtures__/socket-auth/shared";
 import { createHandshakeTokenMiddleware } from "../middleware/common/create-handshake-token-middleware";
 import { Pylon } from "./Pylon";
+import { afterAll, beforeAll, describe, expect, test, vi } from "vitest";
 
 // TODO(Phase 9d): cover deferred socket auth scenarios that depend on
 // reconciling fake timers with socket.io's internal timers:
@@ -153,7 +154,7 @@ describe("socket auth (bearer) e2e", () => {
     const initial = await login("alice", 3600);
     let current = initial;
 
-    const getCredentials = jest.fn(async () => ({
+    const getCredentials = vi.fn(async () => ({
       bearer: current.bearer,
       expiresIn: current.expiresIn,
     }));
@@ -189,7 +190,7 @@ describe("socket auth (bearer) e2e", () => {
     const initial = await login("alice", 3600);
     let current = initial;
 
-    const getCredentials = jest.fn(async () => ({
+    const getCredentials = vi.fn(async () => ({
       bearer: current.bearer,
       expiresIn: current.expiresIn,
     }));
@@ -229,7 +230,7 @@ describe("socket auth (bearer) e2e", () => {
     const initial = await login("alice", 3600);
     let current = initial;
 
-    const getCredentials = jest.fn(async () => ({
+    const getCredentials = vi.fn(async () => ({
       bearer: current.bearer,
       expiresIn: current.expiresIn,
     }));

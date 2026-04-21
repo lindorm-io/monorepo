@@ -2,28 +2,29 @@ import {
   setupWebhookRequestConsumer,
   WEBHOOK_REQUEST_QUEUE,
 } from "./setup-webhook-request-consumer";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("setupWebhookRequestConsumer", () => {
-  const mockPublish = jest.fn().mockResolvedValue(undefined);
-  const mockCreate = jest.fn().mockImplementation((data) => data);
-  const mockFind = jest.fn().mockResolvedValue([]);
-  const mockConsume = jest.fn().mockResolvedValue(undefined);
-  const mockWorkerQueue = jest.fn().mockReturnValue({
+  const mockPublish = vi.fn().mockResolvedValue(undefined);
+  const mockCreate = vi.fn().mockImplementation((data) => data);
+  const mockFind = vi.fn().mockResolvedValue([]);
+  const mockConsume = vi.fn().mockResolvedValue(undefined);
+  const mockWorkerQueue = vi.fn().mockReturnValue({
     consume: mockConsume,
     create: mockCreate,
     publish: mockPublish,
   });
-  const mockRepository = jest.fn().mockReturnValue({ find: mockFind });
+  const mockRepository = vi.fn().mockReturnValue({ find: mockFind });
 
   const iris = { workerQueue: mockWorkerQueue } as any;
   const proteus = { repository: mockRepository } as any;
   const logger = {
-    debug: jest.fn(),
-    verbose: jest.fn(),
+    debug: vi.fn(),
+    verbose: vi.fn(),
   } as any;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test("should set up worker queue consumer for WebhookRequest", async () => {

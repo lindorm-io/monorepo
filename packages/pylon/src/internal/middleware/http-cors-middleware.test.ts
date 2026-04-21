@@ -1,8 +1,9 @@
 import { CorsOptions } from "../../types";
 import { createHttpCorsMiddleware } from "./http-cors-middleware";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("httpCorsMiddleware", () => {
-  const next = jest.fn();
+  const next = vi.fn();
 
   let ctx: any;
   let options: CorsOptions;
@@ -10,9 +11,9 @@ describe("httpCorsMiddleware", () => {
   beforeEach(() => {
     ctx = {
       method: "OPTIONS",
-      get: jest.fn(),
-      set: jest.fn(),
-      vary: jest.fn(),
+      get: vi.fn(),
+      set: vi.fn(),
+      vary: vi.fn(),
     };
 
     options = {
@@ -50,7 +51,7 @@ describe("httpCorsMiddleware", () => {
     });
   });
 
-  afterEach(jest.clearAllMocks);
+  afterEach(vi.clearAllMocks);
 
   test("should resolve next on a normal request", async () => {
     ctx.method = "POST";

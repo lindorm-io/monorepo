@@ -1,6 +1,7 @@
 import { PylonError } from "../../../errors/PylonError";
 import { PylonSessionOptions } from "../../../types";
 import { assertSameSiteForSockets } from "./assert-same-site-for-sockets";
+import { describe, expect, test } from "vitest";
 
 const base: PylonSessionOptions = { enabled: true };
 

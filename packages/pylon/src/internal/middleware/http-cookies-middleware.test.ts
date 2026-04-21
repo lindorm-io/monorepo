@@ -1,35 +1,36 @@
 import { AesKit } from "@lindorm/aes";
-import { createMockAegis } from "@lindorm/aegis/mocks/jest";
-import { createMockAmphora } from "@lindorm/amphora/mocks/jest";
+import { createMockAegis } from "@lindorm/aegis/mocks/vitest";
+import { createMockAmphora } from "@lindorm/amphora/mocks/vitest";
 import { B64 } from "@lindorm/b64";
 import { PylonCookieConfig } from "../../types";
 import { parseCookieHeader as _parseCookieHeader } from "../utils/cookies/parse-cookie-header";
 import { signCookie as _signCookie } from "../utils/cookies/sign-cookie";
 import { verifyCookie as _verifyCookie } from "../utils/cookies/verify-cookie";
 import { createHttpCookiesMiddleware } from "./http-cookies-middleware";
+import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
-jest.mock("../utils/cookies/parse-cookie-header");
-jest.mock("../utils/cookies/sign-cookie");
-jest.mock("../utils/cookies/verify-cookie");
+vi.mock("../utils/cookies/parse-cookie-header");
+vi.mock("../utils/cookies/sign-cookie");
+vi.mock("../utils/cookies/verify-cookie");
 
-const parseCookieHeader = _parseCookieHeader as jest.Mock;
-const signCookie = _signCookie as jest.Mock;
-const verifyCookie = _verifyCookie as jest.Mock;
+const parseCookieHeader = _parseCookieHeader as Mock;
+const signCookie = _signCookie as Mock;
+const verifyCookie = _verifyCookie as Mock;
 
-describe("httpCookiesMiddleware", () => {
+describe("httpCookiesMiddleware", async () => {
   let config: PylonCookieConfig;
   let ctx: any;
-  let next: jest.Mock;
+  let next: Mock;
 
   beforeEach(() => {
     ctx = {
       aegis: createMockAegis(),
       amphora: createMockAmphora(),
-      get: jest.fn().mockReturnValue(""),
-      set: jest.fn(),
+      get: vi.fn().mockReturnValue(""),
+      set: vi.fn(),
     };
 
-    next = jest.fn();
+    next = vi.fn();
 
     config = {
       domain: "http://lindorm.io",

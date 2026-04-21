@@ -1,28 +1,29 @@
 import { ServerError } from "@lindorm/errors";
-import { createMockLogger } from "@lindorm/logger/mocks/jest";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { createWorkerQueueMiddleware } from "./create-worker-queue-middleware";
+import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
-jest.mock("../../internal/utils/resolve-iris");
+vi.mock("../../internal/utils/resolve-iris");
 import { resolveIris } from "../../internal/utils/resolve-iris";
 
 class OrderCreatedEvent {}
 class UserUpdatedEvent {}
 
-describe("createWorkerQueueMiddleware", () => {
+describe("createWorkerQueueMiddleware", async () => {
   let ctx: any;
-  let next: jest.Mock;
+  let next: Mock;
   let mockWorkerQueue: any;
   let mockSource: any;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
-    mockWorkerQueue = { enqueue: jest.fn() };
-    mockSource = { workerQueue: jest.fn().mockReturnValue(mockWorkerQueue) };
-    (resolveIris as jest.Mock).mockReturnValue(mockSource);
+    mockWorkerQueue = { enqueue: vi.fn() };
+    mockSource = { workerQueue: vi.fn().mockReturnValue(mockWorkerQueue) };
+    (resolveIris as Mock).mockReturnValue(mockSource);
 
     ctx = { logger: createMockLogger() };
-    next = jest.fn();
+    next = vi.fn();
   });
 
   test("should call next", async () => {
@@ -61,7 +62,7 @@ describe("createWorkerQueueMiddleware", () => {
   });
 
   test("should pass the override source to resolveIris when provided", async () => {
-    const overrideSource: any = { workerQueue: jest.fn() };
+    const overrideSource: any = { workerQueue: vi.fn() };
 
     await createWorkerQueueMiddleware([OrderCreatedEvent], overrideSource)(ctx, next);
 
@@ -69,7 +70,7 @@ describe("createWorkerQueueMiddleware", () => {
   });
 
   test("should throw ServerError when resolveIris throws", async () => {
-    (resolveIris as jest.Mock).mockImplementation(() => {
+    (resolveIris as Mock).mockImplementation(() => {
       throw new ServerError("IrisSource is not configured");
     });
 

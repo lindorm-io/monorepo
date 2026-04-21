@@ -1,8 +1,9 @@
-import { createMockAmphora } from "@lindorm/amphora/mocks/jest";
+import { createMockAmphora } from "@lindorm/amphora/mocks/vitest";
 import { signCookie } from "./sign-cookie";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
-jest.mock("@lindorm/aegis", () => ({
-  ...jest.requireActual("@lindorm/aegis"),
+vi.mock("@lindorm/aegis", async () => ({
+  ...(await vi.importActual<typeof import("@lindorm/aegis")>("@lindorm/aegis")),
   SignatureKit: class SignatureKit {
     format(value: any): string {
       return "formatted_" + value;

@@ -3,16 +3,17 @@ import { PylonListener } from "../../classes";
 import { EventSegment } from "../classes/EventMatcher";
 import { composePylonSocketContextBase } from "./compose-pylon-socket-context";
 import { loadPylonListeners } from "./load-pylon-listener";
+import { beforeEach, describe, expect, test, vi, type MockedFunction } from "vitest";
 
-jest.mock("@lindorm/middleware");
-jest.mock("./compose-pylon-socket-context", () => ({
-  composePylonSocketContextBase: jest.fn().mockReturnValue({ mocked: true, params: {} }),
+vi.mock("@lindorm/middleware");
+vi.mock("./compose-pylon-socket-context", async () => ({
+  composePylonSocketContextBase: vi.fn().mockReturnValue({ mocked: true, params: {} }),
 }));
 
-const mockComposeMiddleware = composeMiddleware as jest.MockedFunction<
+const mockComposeMiddleware = composeMiddleware as MockedFunction<
   typeof composeMiddleware
 >;
-const mockComposeContext = composePylonSocketContextBase as jest.MockedFunction<
+const mockComposeContext = composePylonSocketContextBase as MockedFunction<
   typeof composePylonSocketContextBase
 >;
 
@@ -24,23 +25,23 @@ describe("loadPylonListeners", () => {
   let socket: any;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockComposeMiddleware.mockResolvedValue(undefined as any);
 
     io = {};
     socket = {
-      on: jest.fn(),
-      once: jest.fn(),
-      onAny: jest.fn(),
-      onAnyOutgoing: jest.fn(),
-      prependAny: jest.fn(),
-      prependAnyOutgoing: jest.fn(),
+      on: vi.fn(),
+      once: vi.fn(),
+      onAny: vi.fn(),
+      onAnyOutgoing: vi.fn(),
+      prependAny: vi.fn(),
+      prependAnyOutgoing: vi.fn(),
     };
   });
 
   test("should register 'on' listeners on the socket", () => {
     const listener = new PylonListener();
-    listener.on("test-event", jest.fn());
+    listener.on("test-event", vi.fn());
 
     loadPylonListeners(io, socket, [], [listener]);
 
@@ -49,7 +50,7 @@ describe("loadPylonListeners", () => {
 
   test("should register 'once' listeners on the socket", () => {
     const listener = new PylonListener();
-    listener.once("disconnect", jest.fn());
+    listener.once("disconnect", vi.fn());
 
     loadPylonListeners(io, socket, [], [listener]);
 
@@ -58,7 +59,7 @@ describe("loadPylonListeners", () => {
 
   test("should register 'onAny' listeners on the socket", () => {
     const listener = new PylonListener();
-    listener.onAny("any-event", jest.fn());
+    listener.onAny("any-event", vi.fn());
 
     loadPylonListeners(io, socket, [], [listener]);
 
@@ -67,7 +68,7 @@ describe("loadPylonListeners", () => {
 
   test("should prepend prefix to event name", () => {
     const listener = new PylonListener({ prefix: "chat" });
-    listener.on("message", jest.fn());
+    listener.on("message", vi.fn());
 
     loadPylonListeners(io, socket, [], [listener]);
 
@@ -76,7 +77,7 @@ describe("loadPylonListeners", () => {
 
   test("should not prepend prefix when listener has no prefix", () => {
     const listener = new PylonListener();
-    listener.on("message", jest.fn());
+    listener.on("message", vi.fn());
 
     loadPylonListeners(io, socket, [], [listener]);
 
@@ -85,10 +86,10 @@ describe("loadPylonListeners", () => {
 
   test("should compose middleware when on-handler is invoked", async () => {
     const listener = new PylonListener();
-    const handler = jest.fn();
+    const handler = vi.fn();
     listener.on("test-event", handler);
 
-    const globalMiddleware = [jest.fn()];
+    const globalMiddleware = [vi.fn()];
 
     loadPylonListeners(io, socket, globalMiddleware, [listener]);
 
@@ -104,7 +105,7 @@ describe("loadPylonListeners", () => {
 
   test("should compose middleware when onAny-handler is invoked", async () => {
     const listener = new PylonListener();
-    const handler = jest.fn();
+    const handler = vi.fn();
     listener.onAny("any-event", handler);
 
     loadPylonListeners(io, socket, [], [listener]);
@@ -121,11 +122,11 @@ describe("loadPylonListeners", () => {
 
   test("should handle multiple listeners", () => {
     const listener1 = new PylonListener();
-    listener1.on("event1", jest.fn());
+    listener1.on("event1", vi.fn());
 
     const listener2 = new PylonListener();
-    listener2.on("event2", jest.fn());
-    listener2.once("event3", jest.fn());
+    listener2.on("event2", vi.fn());
+    listener2.once("event3", vi.fn());
 
     loadPylonListeners(io, socket, [], [listener1, listener2]);
 
@@ -136,7 +137,7 @@ describe("loadPylonListeners", () => {
   describe("dynamic routing via EventMatcher", () => {
     test("should register onAny handler when dynamic segments exist", () => {
       const listener = new PylonListener();
-      const handler = jest.fn();
+      const handler = vi.fn();
       listener._addScannedListener(
         "rooms::roomId:join",
         "on",
@@ -153,7 +154,7 @@ describe("loadPylonListeners", () => {
     });
 
     test("should dispatch dynamic event and set params on context", async () => {
-      const handler = jest.fn();
+      const handler = vi.fn();
       const listener = new PylonListener();
       listener._addScannedListener(
         "rooms::roomId:join",
@@ -179,7 +180,7 @@ describe("loadPylonListeners", () => {
     });
 
     test("should not dispatch when dynamic event does not match trie", async () => {
-      const handler = jest.fn();
+      const handler = vi.fn();
       const listener = new PylonListener();
       listener._addScannedListener(
         "rooms::roomId:join",
@@ -197,7 +198,7 @@ describe("loadPylonListeners", () => {
     });
 
     test("should fire once handler only on first match", async () => {
-      const handler = jest.fn();
+      const handler = vi.fn();
       const listener = new PylonListener();
       listener._addScannedListener(
         "rooms::roomId:leave",
@@ -221,7 +222,7 @@ describe("loadPylonListeners", () => {
     });
 
     test("should prepend prefix segments for dynamic routes", async () => {
-      const handler = jest.fn();
+      const handler = vi.fn();
       const listener = new PylonListener({ prefix: "game" });
       listener._addScannedListener(
         "rooms::roomId:join",
@@ -243,9 +244,9 @@ describe("loadPylonListeners", () => {
     });
 
     test("should include global and listener middleware for dynamic routes", async () => {
-      const globalMw = jest.fn();
-      const listenerMw = jest.fn();
-      const handler = jest.fn();
+      const globalMw = vi.fn();
+      const listenerMw = vi.fn();
+      const handler = vi.fn();
 
       const listener = new PylonListener();
       listener.use(listenerMw);
@@ -272,8 +273,8 @@ describe("loadPylonListeners", () => {
     });
 
     test("should register static listeners directly even when dynamic ones exist", () => {
-      const staticHandler = jest.fn();
-      const dynamicHandler = jest.fn();
+      const staticHandler = vi.fn();
+      const dynamicHandler = vi.fn();
 
       const staticListener = new PylonListener();
       staticListener.on("chat:message", staticHandler);
@@ -300,7 +301,7 @@ describe("loadPylonListeners", () => {
         "chat:message",
         "on",
         [literal("chat"), literal("message")],
-        [jest.fn()],
+        [vi.fn()],
       );
 
       loadPylonListeners(io, socket, [], [listener]);

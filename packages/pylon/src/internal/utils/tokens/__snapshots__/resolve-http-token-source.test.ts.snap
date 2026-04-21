@@ -1,4 +1,47 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`resolveHttpTokenSource > prefers bearer over session when both present 1`] = `
+{
+  "kind": "bearer",
+  "token": "bearer-jwt",
+}
+`;
+
+exports[`resolveHttpTokenSource > returns bearer kind when authorization is bearer 1`] = `
+{
+  "kind": "bearer",
+  "token": "bearer-jwt",
+}
+`;
+
+exports[`resolveHttpTokenSource > returns dpop kind when authorization is dpop 1`] = `
+{
+  "kind": "dpop",
+  "token": "dpop-jwt",
+}
+`;
+
+exports[`resolveHttpTokenSource > returns none when nothing available 1`] = `
+{
+  "kind": "none",
+}
+`;
+
+exports[`resolveHttpTokenSource > returns session kind when session has accessToken and no header 1`] = `
+{
+  "kind": "session",
+  "session": {
+    "accessToken": "session-jwt",
+    "expiresAt": 2026-04-11T13:00:00.000Z,
+    "id": "sess-1",
+    "issuedAt": 2026-04-11T12:00:00.000Z,
+    "scope": [
+      "openid",
+    ],
+    "subject": "sub",
+  },
+}
+`;
 
 exports[`resolveHttpTokenSource prefers bearer over session when both present 1`] = `
 {

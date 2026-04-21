@@ -1,8 +1,8 @@
 import { Amphora, IAmphora } from "@lindorm/amphora";
 import { KryptosKit } from "@lindorm/kryptos";
-import { createMockLogger } from "@lindorm/logger/mocks/jest";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { ILogger } from "@lindorm/logger";
-import { createMockProteusSource } from "@lindorm/proteus/mocks/jest";
+import { createMockProteusSource } from "@lindorm/proteus/mocks/vitest";
 import { createCookieAuthStrategy, Zephyr } from "@lindorm/zephyr";
 import { join } from "path";
 import request from "supertest";
@@ -12,6 +12,7 @@ import {
 } from "../__fixtures__/socket-auth/shared";
 import { IPylonSession } from "../interfaces";
 import { Pylon } from "./Pylon";
+import { afterAll, beforeAll, describe, expect, test, vi, type Mock } from "vitest";
 
 /**
  * Cookie-jar strategy: faithful use of `createCookieAuthStrategy` with manual
@@ -48,15 +49,15 @@ const buildInMemoryProteus = () => {
   const store = new Map<string, IPylonSession>();
 
   const repo = {
-    upsert: jest.fn(async (session: IPylonSession) => {
+    upsert: vi.fn(async (session: IPylonSession) => {
       store.set(session.id, { ...session });
       return { ...session };
     }),
-    findOne: jest.fn(async (criteria: { id: string }) => {
+    findOne: vi.fn(async (criteria: { id: string }) => {
       const hit = store.get(criteria.id);
       return hit ? { ...hit } : null;
     }),
-    delete: jest.fn(async (criteria: { id?: string; subject?: string }) => {
+    delete: vi.fn(async (criteria: { id?: string; subject?: string }) => {
       if (criteria.id) {
         store.delete(criteria.id);
         return;
@@ -70,12 +71,12 @@ const buildInMemoryProteus = () => {
   } as any;
 
   const session = {
-    repository: jest.fn(() => repo),
-    ping: jest.fn().mockResolvedValue(true),
+    repository: vi.fn(() => repo),
+    ping: vi.fn().mockResolvedValue(true),
   } as any;
 
   const source = createMockProteusSource();
-  (source.session as jest.Mock).mockImplementation(() => session);
+  (source.session as Mock).mockImplementation(() => session);
 
   return { source, store };
 };

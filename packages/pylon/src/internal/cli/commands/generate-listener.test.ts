@@ -1,32 +1,35 @@
 import { resolve, join } from "path";
 import { generateListener } from "./generate-listener";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-jest.mock("fs/promises", () => ({
-  mkdir: jest.fn().mockResolvedValue(undefined),
-  writeFile: jest.fn().mockResolvedValue(undefined),
+vi.mock("fs/promises", async () => ({
+  mkdir: vi.fn().mockResolvedValue(undefined),
+  writeFile: vi.fn().mockResolvedValue(undefined),
 }));
 
-jest.mock("@lindorm/logger", () => ({
+vi.mock("@lindorm/logger", () => ({
   Logger: {
     std: {
-      log: jest.fn(),
-      info: jest.fn(),
-      success: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-      debug: jest.fn(),
+      log: vi.fn(),
+      info: vi.fn(),
+      success: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+      debug: vi.fn(),
     },
   },
 }));
 
-const { mkdir, writeFile } = jest.requireMock("fs/promises");
-const { Logger } = jest.requireMock("@lindorm/logger");
+const { mkdir, writeFile } =
+  await vi.importMock<typeof import("fs/promises")>("fs/promises");
+const { Logger } =
+  await vi.importMock<typeof import("@lindorm/logger")>("@lindorm/logger");
 
 const defaultDir = resolve(process.cwd(), "./src/listeners");
 
 describe("generateListener", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it("should create listener file at correct path", async () => {
@@ -161,18 +164,18 @@ describe("generateListener", () => {
   });
 
   it("should prompt for bindings and event when not provided", async () => {
-    const mockInput = jest
+    const mockInput = vi
       .fn()
       .mockResolvedValueOnce("ON")
       .mockResolvedValueOnce("chat:message");
-    jest.doMock("@inquirer/prompts", () => ({ input: mockInput }));
+    vi.doMock("@inquirer/prompts", () => ({ input: mockInput }));
 
-    jest.resetModules();
+    vi.resetModules();
     const { generateListener: freshGenerate } = await import("./generate-listener");
 
-    jest.doMock("fs/promises", () => ({
-      mkdir: jest.fn().mockResolvedValue(undefined),
-      writeFile: jest.fn().mockResolvedValue(undefined),
+    vi.doMock("fs/promises", () => ({
+      mkdir: vi.fn().mockResolvedValue(undefined),
+      writeFile: vi.fn().mockResolvedValue(undefined),
     }));
 
     await freshGenerate(undefined, undefined, {});

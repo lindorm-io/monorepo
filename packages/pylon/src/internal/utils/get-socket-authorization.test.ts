@@ -1,4 +1,5 @@
 import { getSocketAuthorization } from "./get-socket-authorization";
+import { describe, expect, test } from "vitest";
 
 describe("getSocketAuthorization", () => {
   test("should return bearer authorization from auth.token", () => {

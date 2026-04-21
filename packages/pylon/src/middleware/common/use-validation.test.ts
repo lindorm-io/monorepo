@@ -1,11 +1,12 @@
 import { JwtKit } from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
-import { createMockLogger } from "@lindorm/logger/mocks/jest";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { useValidation } from "./use-validation";
+import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 describe("useValidation", () => {
   let ctx: any;
-  let next: jest.Mock;
+  let next: Mock;
 
   beforeEach(() => {
     ctx = {
@@ -16,11 +17,11 @@ describe("useValidation", () => {
         },
       },
     };
-    next = jest.fn();
+    next = vi.fn();
   });
 
   test("should resolve when validation passes", async () => {
-    jest.spyOn(JwtKit, "validate").mockImplementation(() => undefined);
+    vi.spyOn(JwtKit, "validate").mockImplementation(() => undefined);
 
     const middleware = useValidation("jwt", { audience: "test-audience" });
 
@@ -28,7 +29,7 @@ describe("useValidation", () => {
 
     expect(next).toHaveBeenCalledTimes(1);
 
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   test("should throw ClientError when token not found at path", async () => {
@@ -45,7 +46,7 @@ describe("useValidation", () => {
   });
 
   test("should throw ClientError 403 when validation fails", async () => {
-    jest.spyOn(JwtKit, "validate").mockImplementation(() => {
+    vi.spyOn(JwtKit, "validate").mockImplementation(() => {
       throw new Error("audience mismatch");
     });
 
@@ -60,6 +61,6 @@ describe("useValidation", () => {
       expect(err.message).toMatchSnapshot();
     }
 
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 });

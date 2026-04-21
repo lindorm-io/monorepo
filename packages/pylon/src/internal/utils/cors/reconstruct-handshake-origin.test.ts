@@ -1,4 +1,5 @@
 import { reconstructHandshakeOrigin } from "./reconstruct-handshake-origin";
+import { describe, expect, test } from "vitest";
 
 describe("reconstructHandshakeOrigin", () => {
   test("should use http when handshake is not secure", () => {

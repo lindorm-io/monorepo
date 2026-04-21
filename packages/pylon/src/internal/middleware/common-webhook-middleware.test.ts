@@ -1,19 +1,20 @@
-import { createMockLogger } from "@lindorm/logger/mocks/jest";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { createWebhookMiddleware } from "./common-webhook-middleware";
+import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 describe("createWebhookMiddleware", () => {
   let ctx: any;
-  let mockPublish: jest.Mock;
-  let mockCreate: jest.Mock;
+  let mockPublish: Mock;
+  let mockCreate: Mock;
 
   beforeEach(() => {
-    mockPublish = jest.fn();
-    mockCreate = jest.fn().mockImplementation((data: any) => data);
+    mockPublish = vi.fn();
+    mockCreate = vi.fn().mockImplementation((data: any) => data);
 
     ctx = {
       logger: createMockLogger(),
       iris: {
-        workerQueue: jest.fn().mockReturnValue({
+        workerQueue: vi.fn().mockReturnValue({
           create: mockCreate,
           publish: mockPublish,
         }),
@@ -29,7 +30,7 @@ describe("createWebhookMiddleware", () => {
   test("should throw when not enabled", async () => {
     const middleware = createWebhookMiddleware();
 
-    await middleware(ctx, jest.fn());
+    await middleware(ctx, vi.fn());
 
     await expect(ctx.webhook("event")).rejects.toThrow("Webhook is not enabled");
   });
@@ -37,7 +38,7 @@ describe("createWebhookMiddleware", () => {
   test("should throw when enabled:false", async () => {
     const middleware = createWebhookMiddleware({ enabled: false });
 
-    await middleware(ctx, jest.fn());
+    await middleware(ctx, vi.fn());
 
     await expect(ctx.webhook("event")).rejects.toThrow("Webhook is not enabled");
   });
@@ -45,7 +46,7 @@ describe("createWebhookMiddleware", () => {
   test("should publish webhook request via iris when enabled", async () => {
     const middleware = createWebhookMiddleware({ enabled: true });
 
-    await middleware(ctx, jest.fn());
+    await middleware(ctx, vi.fn());
 
     await ctx.webhook("test-event", { data: "test" });
 
@@ -63,7 +64,7 @@ describe("createWebhookMiddleware", () => {
 
     const middleware = createWebhookMiddleware({ enabled: true });
 
-    await middleware(ctx, jest.fn());
+    await middleware(ctx, vi.fn());
 
     await ctx.webhook("tenant-event", { foo: "bar" });
 
@@ -79,7 +80,7 @@ describe("createWebhookMiddleware", () => {
     // ctx.state.tenant intentionally not set (useTenant() never ran)
     const middleware = createWebhookMiddleware({ enabled: true });
 
-    await middleware(ctx, jest.fn());
+    await middleware(ctx, vi.fn());
 
     await ctx.webhook("missing-tenant-event", { foo: "bar" });
 
@@ -96,7 +97,7 @@ describe("createWebhookMiddleware", () => {
 
     const middleware = createWebhookMiddleware({ enabled: true });
 
-    await middleware(ctx, jest.fn());
+    await middleware(ctx, vi.fn());
 
     await expect(ctx.webhook("event", {}, true)).resolves.toBeUndefined();
   });
@@ -106,7 +107,7 @@ describe("createWebhookMiddleware", () => {
 
     const middleware = createWebhookMiddleware({ enabled: true });
 
-    await middleware(ctx, jest.fn());
+    await middleware(ctx, vi.fn());
 
     await expect(ctx.webhook("event", {})).rejects.toThrow("publish failed");
   });
@@ -114,9 +115,9 @@ describe("createWebhookMiddleware", () => {
   test("should use iris override source", async () => {
     const overrideWq = { create: mockCreate, publish: mockPublish };
     const overrideIris = {
-      session: jest
+      session: vi
         .fn()
-        .mockReturnValue({ workerQueue: jest.fn().mockReturnValue(overrideWq) }),
+        .mockReturnValue({ workerQueue: vi.fn().mockReturnValue(overrideWq) }),
     };
 
     const middleware = createWebhookMiddleware({
@@ -124,7 +125,7 @@ describe("createWebhookMiddleware", () => {
       iris: overrideIris as any,
     });
 
-    await middleware(ctx, jest.fn());
+    await middleware(ctx, vi.fn());
 
     await ctx.webhook("event", {});
 
@@ -135,7 +136,7 @@ describe("createWebhookMiddleware", () => {
   });
 
   test("should call next", async () => {
-    const next = jest.fn();
+    const next = vi.fn();
     const middleware = createWebhookMiddleware({ enabled: true });
 
     await middleware(ctx, next);

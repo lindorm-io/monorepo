@@ -1,10 +1,11 @@
 import { ClientError } from "@lindorm/errors";
-import { createMockLogger } from "@lindorm/logger/mocks/jest";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { PylonError } from "../../errors";
 import { createBasicAuthMiddleware } from "./create-basic-auth-middleware";
+import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 describe("createBasicAuthMiddleware", () => {
-  let next: jest.Mock;
+  let next: Mock;
 
   const credentials = [
     { username: "admin", password: "secret" },
@@ -12,7 +13,7 @@ describe("createBasicAuthMiddleware", () => {
   ];
 
   beforeEach(() => {
-    next = jest.fn();
+    next = vi.fn();
   });
 
   const createCtx = (username: string, password: string): any => ({
@@ -66,7 +67,7 @@ describe("createBasicAuthMiddleware", () => {
   describe("custom verify function", () => {
     test("should resolve with custom verify function", async () => {
       const ctx = createCtx("custom", "pass");
-      const verifyFn = jest.fn().mockResolvedValue(undefined);
+      const verifyFn = vi.fn().mockResolvedValue(undefined);
       const middleware = createBasicAuthMiddleware(verifyFn);
 
       await expect(middleware(ctx, next)).resolves.toBeUndefined();

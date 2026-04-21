@@ -1,23 +1,24 @@
 import { tokenBucketStrategy } from "./token-bucket-strategy";
+import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 describe("tokenBucketStrategy", () => {
-  let mockFindOneOrSave: jest.Mock;
-  let mockUpdate: jest.Mock;
+  let mockFindOneOrSave: Mock;
+  let mockUpdate: Mock;
   let repository: any;
 
   beforeEach(() => {
-    mockFindOneOrSave = jest.fn();
-    mockUpdate = jest.fn();
+    mockFindOneOrSave = vi.fn();
+    mockUpdate = vi.fn();
     repository = {
       findOneOrSave: mockFindOneOrSave,
       update: mockUpdate,
     };
-    jest.useFakeTimers();
-    jest.setSystemTime(new Date("2026-01-01T00:00:00.000Z"));
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-01-01T00:00:00.000Z"));
   });
 
   afterEach(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   test("should create new bucket with max tokens and allow", async () => {

@@ -1,16 +1,17 @@
 import { ClientError } from "@lindorm/errors";
 import { useTenant } from "./use-tenant";
+import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 describe("useTenant", () => {
   let ctx: any;
-  let next: jest.Mock;
+  let next: Mock;
 
   beforeEach(() => {
-    next = jest.fn();
+    next = vi.fn();
 
     ctx = {
       auth: {
-        introspect: jest.fn().mockResolvedValue({
+        introspect: vi.fn().mockResolvedValue({
           active: true,
           tenantId: "tenant-abc",
         }),
@@ -25,7 +26,7 @@ describe("useTenant", () => {
         },
       },
       proteus: {
-        setFilterParams: jest.fn(),
+        setFilterParams: vi.fn(),
       },
     };
   });

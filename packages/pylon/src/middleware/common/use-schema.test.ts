@@ -1,6 +1,7 @@
 import { ClientError, ServerError } from "@lindorm/errors";
 import { z } from "zod";
 import { useSchema } from "./use-schema";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("useSchema", () => {
   describe("HTTP context", () => {
@@ -28,7 +29,7 @@ describe("useSchema", () => {
             key: z.string(),
             number: z.coerce.number(),
           }),
-        )(ctx, jest.fn()),
+        )(ctx, vi.fn()),
       ).resolves.toBeUndefined();
 
       expect(ctx.data).toEqual({
@@ -45,7 +46,7 @@ describe("useSchema", () => {
             "header-key": z.string(),
           }),
           "headers",
-        )(ctx, jest.fn()),
+        )(ctx, vi.fn()),
       ).resolves.toBeUndefined();
 
       expect(ctx.headers).toEqual({
@@ -64,12 +65,12 @@ describe("useSchema", () => {
             key: z.string(),
             number: z.coerce.number(),
           }),
-        )(ctx, jest.fn()),
+        )(ctx, vi.fn()),
       ).rejects.toThrow(ClientError);
     });
 
     test("should call next", async () => {
-      const next = jest.fn();
+      const next = vi.fn();
 
       await useSchema(z.object({ key: z.string() }))(ctx, next);
 
@@ -97,7 +98,7 @@ describe("useSchema", () => {
             key: z.string(),
             number: z.coerce.number(),
           }),
-        )(ctx, jest.fn()),
+        )(ctx, vi.fn()),
       ).resolves.toBeUndefined();
 
       expect(ctx.data).toEqual({
@@ -108,19 +109,19 @@ describe("useSchema", () => {
 
     test("should throw ServerError when using headers path on socket context", async () => {
       await expect(
-        useSchema(z.object({ key: z.string() }), "headers")(ctx, jest.fn()),
+        useSchema(z.object({ key: z.string() }), "headers")(ctx, vi.fn()),
       ).rejects.toThrow(ServerError);
     });
 
     test("should throw ServerError when using body path on socket context", async () => {
       await expect(
-        useSchema(z.object({ key: z.string() }), "body")(ctx, jest.fn()),
+        useSchema(z.object({ key: z.string() }), "body")(ctx, vi.fn()),
       ).rejects.toThrow(ServerError);
     });
 
     test("should throw ServerError when using query path on socket context", async () => {
       await expect(
-        useSchema(z.object({ key: z.string() }), "query")(ctx, jest.fn()),
+        useSchema(z.object({ key: z.string() }), "query")(ctx, vi.fn()),
       ).rejects.toThrow(ServerError);
     });
   });
