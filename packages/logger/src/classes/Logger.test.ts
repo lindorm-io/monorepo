@@ -33,7 +33,7 @@ vi.mock("winston", async () => {
   return {
     ...actual,
     createLogger,
-    default: { ...actual.default, createLogger },
+    default: { ...actual, createLogger },
   };
 });
 
@@ -904,12 +904,13 @@ describe("Logger", () => {
     };
 
     beforeEach(() => {
+      const noop = () => {};
       consoleSpy = {
-        log: vi.spyOn(console, "log").mockImplementation(),
-        info: vi.spyOn(console, "info").mockImplementation(),
-        warn: vi.spyOn(console, "warn").mockImplementation(),
-        error: vi.spyOn(console, "error").mockImplementation(),
-        debug: vi.spyOn(console, "debug").mockImplementation(),
+        log: vi.spyOn(console, "log").mockImplementation(noop),
+        info: vi.spyOn(console, "info").mockImplementation(noop),
+        warn: vi.spyOn(console, "warn").mockImplementation(noop),
+        error: vi.spyOn(console, "error").mockImplementation(noop),
+        debug: vi.spyOn(console, "debug").mockImplementation(noop),
       };
     });
 
