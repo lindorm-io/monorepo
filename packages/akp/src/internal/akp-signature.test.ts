@@ -10,6 +10,7 @@ import {
   createAkpSignature,
   verifyAkpSignature,
 } from "./akp-signature";
+import { beforeEach, describe, expect, test } from "vitest";
 
 describe("akp-signature", () => {
   const encoding = "base64";

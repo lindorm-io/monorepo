@@ -1,4 +1,17 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`spawnCommand > should spawn command with stdio inherit 1`] = `
+[
+  "jest",
+  [
+    "--runInBand",
+    "--no-coverage",
+  ],
+  {
+    "stdio": "inherit",
+  },
+]
+`;
 
 exports[`spawnCommand should spawn command with stdio inherit 1`] = `
 [

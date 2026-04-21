@@ -10,6 +10,7 @@ import {
 import { parseX509Extensions } from "./parse-extensions";
 import { spkiFromPublicKey } from "./spki-from-public-key";
 import { generateKeyPairSync } from "crypto";
+import { describe, expect, test } from "vitest";
 
 const buildSpki = (): Buffer => {
   const { publicKey } = generateKeyPairSync("ec", { namedCurve: "P-256" });

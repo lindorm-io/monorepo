@@ -1,6 +1,7 @@
 import { KryptosKit } from "@lindorm/kryptos";
 import { EnigmaError } from "../errors";
 import { Enigma } from "./Enigma";
+import { beforeEach, describe, expect, test } from "vitest";
 
 describe("Enigma", () => {
   let kit: Enigma;

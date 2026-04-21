@@ -1,6 +1,7 @@
 import { AegisError } from "../../errors";
 import { AegisProfile, ParsedJwtPayload } from "../../types";
 import { parseUserinfo, UserinfoClaimsInput } from "./parse-userinfo";
+import { describe, expect, test } from "vitest";
 
 describe("parseUserinfo", () => {
   describe("plain claims input", () => {

@@ -1,4 +1,5 @@
 import { encodeX509Validity } from "./encode-validity";
+import { describe, expect, test } from "vitest";
 
 describe("encodeX509Validity", () => {
   test("encodes a UTCTime range", () => {

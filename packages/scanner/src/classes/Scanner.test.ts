@@ -1,5 +1,6 @@
 import { join } from "path";
 import { Scanner } from "./Scanner";
+import { describe, expect, test } from "vitest";
 
 describe("Scanner", () => {
   const path = join(__dirname, "..", "..", "example");

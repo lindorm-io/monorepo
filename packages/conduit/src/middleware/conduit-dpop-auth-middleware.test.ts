@@ -1,20 +1,21 @@
 import { DpopSigner } from "@lindorm/types";
 import { createConduitDpopAuthMiddleware } from "./conduit-dpop-auth-middleware";
+import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 describe("createConduitDpopAuthMiddleware", () => {
   const publicJwk = { kty: "EC", crv: "P-256", x: "x-val", y: "y-val" } as any;
   const signer: DpopSigner = {
     algorithm: "ES256",
     publicJwk,
-    sign: jest.fn(async () => new Uint8Array([1, 2, 3, 4])),
+    sign: vi.fn(async () => new Uint8Array([1, 2, 3, 4])),
   };
 
-  let next: jest.Mock;
+  let next: Mock;
   let dpopAuth: ReturnType<typeof createConduitDpopAuthMiddleware>;
 
   beforeEach(() => {
-    next = jest.fn();
-    (signer.sign as jest.Mock).mockClear();
+    next = vi.fn();
+    (signer.sign as Mock).mockClear();
     dpopAuth = createConduitDpopAuthMiddleware(signer);
   });
 

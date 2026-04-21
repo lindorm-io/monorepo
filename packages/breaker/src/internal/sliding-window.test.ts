@@ -1,4 +1,5 @@
 import { SlidingWindow } from "./sliding-window";
+import { beforeEach, describe, expect, it } from "vitest";
 
 describe("SlidingWindow", () => {
   let window: SlidingWindow;

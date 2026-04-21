@@ -5,6 +5,7 @@ import {
 } from "../../__fixtures__/keys";
 import { JwtError } from "../../errors";
 import { computeJwkThumbprint } from "./compute-jwk-thumbprint";
+import { describe, expect, test } from "vitest";
 
 describe("computeJwkThumbprint", () => {
   test("should compute thumbprint for an EC JWK", () => {

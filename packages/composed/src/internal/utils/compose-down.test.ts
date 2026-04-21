@@ -1,15 +1,16 @@
 import { EventEmitter } from "events";
 import { spawn } from "child_process";
 import { composeDown } from "./compose-down";
+import { beforeEach, describe, expect, test, vi, type MockedFunction } from "vitest";
 
-jest.mock("child_process");
+vi.mock("child_process");
 
-const mockSpawn = spawn as jest.MockedFunction<typeof spawn>;
+const mockSpawn = spawn as MockedFunction<typeof spawn>;
 const createMockChild = () => new EventEmitter();
 
 describe("composeDown", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test("should spawn with correct args", async () => {
@@ -61,7 +62,7 @@ describe("composeDown", () => {
   test("should log warning on spawn error in verbose mode", async () => {
     const child = createMockChild();
     mockSpawn.mockReturnValue(child as any);
-    const warnSpy = jest.spyOn(console, "warn").mockImplementation();
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation();
 
     const promise = composeDown("", true);
 
@@ -77,7 +78,7 @@ describe("composeDown", () => {
   test("should log warning on non-zero exit in verbose mode", async () => {
     const child = createMockChild();
     mockSpawn.mockReturnValue(child as any);
-    const warnSpy = jest.spyOn(console, "warn").mockImplementation();
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation();
 
     const promise = composeDown("", true);
 
@@ -93,7 +94,7 @@ describe("composeDown", () => {
   test("should not log warning on success in verbose mode", async () => {
     const child = createMockChild();
     mockSpawn.mockReturnValue(child as any);
-    const warnSpy = jest.spyOn(console, "warn").mockImplementation();
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation();
 
     const promise = composeDown("", true);
 

@@ -3,6 +3,7 @@ import {
   getDiffieHellmanKeyWrapDecryptionKey,
   getDiffieHellmanKeyWrapEncryptionKey,
 } from "./diffie-hellman-key-wrap";
+import { describe, expect, test } from "vitest";
 
 describe("diffieHellman", () => {
   describe("ECB", () => {

@@ -1,5 +1,6 @@
 import { ChangeCase } from "@lindorm/case";
 import { conduitChangeResponseDataMiddleware } from "./conduit-change-response-data-middleware";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("conduitChangeResponseDataMiddleware", () => {
   let ctx: any;
@@ -18,7 +19,7 @@ describe("conduitChangeResponseDataMiddleware", () => {
 
   test("should resolve with default case", async () => {
     await expect(
-      conduitChangeResponseDataMiddleware()(ctx, jest.fn()),
+      conduitChangeResponseDataMiddleware()(ctx, vi.fn()),
     ).resolves.toBeUndefined();
 
     expect(ctx.res.data).toEqual({
@@ -30,7 +31,7 @@ describe("conduitChangeResponseDataMiddleware", () => {
 
   test("should resolve with snake_case for response object", async () => {
     await expect(
-      conduitChangeResponseDataMiddleware("snake")(ctx, jest.fn()),
+      conduitChangeResponseDataMiddleware("snake")(ctx, vi.fn()),
     ).resolves.toBeUndefined();
 
     expect(ctx.res.data).toEqual({
@@ -44,7 +45,7 @@ describe("conduitChangeResponseDataMiddleware", () => {
     ctx.res.data = [ctx.res.data, ctx.res.data];
 
     await expect(
-      conduitChangeResponseDataMiddleware("snake")(ctx, jest.fn()),
+      conduitChangeResponseDataMiddleware("snake")(ctx, vi.fn()),
     ).resolves.toBeUndefined();
 
     expect(ctx.res.data).toEqual([

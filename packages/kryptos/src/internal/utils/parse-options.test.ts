@@ -1,4 +1,5 @@
 import { parseJwkOptions } from "./parse-options";
+import { describe, expect, test } from "vitest";
 
 describe("parseJwkOptions", () => {
   const baseJwk = {

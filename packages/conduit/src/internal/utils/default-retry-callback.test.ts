@@ -2,6 +2,7 @@ import { ServerError } from "@lindorm/errors";
 import { RetryConfig } from "@lindorm/retry";
 import { ConduitError } from "../../errors";
 import { defaultRetryCallback } from "./default-retry-callback";
+import { describe, expect, test } from "vitest";
 
 describe("defaultRetryCallback", () => {
   const options: RetryConfig = {

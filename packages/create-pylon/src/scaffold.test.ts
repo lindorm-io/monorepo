@@ -15,6 +15,7 @@ import {
   writeWorkerFiles,
 } from "./scaffold";
 import type { Answers } from "./types";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
 
 const baseFeatures = (
   overrides: Partial<Answers["features"]> = {},

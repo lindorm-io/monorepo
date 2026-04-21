@@ -1,4 +1,114 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`extractAegisProfile > camelCase input > should extract profile fields from camelCase data 1`] = `
+{
+  "profile": {
+    "email": "john@example.com",
+    "emailVerified": true,
+    "familyName": "Doe",
+    "givenName": "John",
+  },
+  "rest": {
+    "permissions": [
+      "read",
+    ],
+    "sub": "user-123",
+  },
+}
+`;
+
+exports[`extractAegisProfile > camelCase input > should handle all standard OIDC profile fields 1`] = `
+{
+  "profile": {
+    "birthdate": "1990-01-01",
+    "familyName": "Doe",
+    "gender": "male",
+    "givenName": "John",
+    "locale": "en-US",
+    "middleName": "Michael",
+    "name": "John Michael Doe",
+    "nickname": "Johnny",
+    "picture": "https://example.com/photo.jpg",
+    "preferredUsername": "johnd",
+    "profile": "https://example.com/johnd",
+    "updatedAt": 1700000000,
+    "website": "https://johndoe.example.com",
+    "zoneinfo": "America/New_York",
+  },
+  "rest": {},
+}
+`;
+
+exports[`extractAegisProfile > camelCase input > should return undefined profile when no profile fields present 1`] = `
+{
+  "profile": undefined,
+  "rest": {
+    "permissions": [
+      "read",
+    ],
+    "sub": "user-123",
+  },
+}
+`;
+
+exports[`extractAegisProfile > snake_case input > should extract profile fields from snake_case wire format 1`] = `
+{
+  "profile": {
+    "email": "john@example.com",
+    "emailVerified": true,
+    "familyName": "Doe",
+    "givenName": "John",
+  },
+  "rest": {
+    "custom_claim": "value",
+  },
+}
+`;
+
+exports[`extractAegisProfile > snake_case input > should handle address field 1`] = `
+{
+  "profile": {
+    "address": {
+      "locality": "Springfield",
+      "streetAddress": "123 Main St",
+    },
+    "givenName": "Jane",
+  },
+  "rest": {},
+}
+`;
+
+exports[`extractAegisProfile > snake_case input > should handle all lindorm extension fields 1`] = `
+{
+  "profile": {
+    "department": "Engineering",
+    "displayName": "Johnny",
+    "honorific": "Dr.",
+    "jobTitle": "Staff Engineer",
+    "legalName": "Jonathan Doe",
+    "legalNameVerified": true,
+    "namingSystem": "given_family",
+    "occupation": "Software Engineer",
+    "organization": "Acme Corp",
+    "preferredAccessibility": [
+      "high_contrast",
+    ],
+    "preferredName": "John",
+    "pronouns": "he/him",
+  },
+  "rest": {},
+}
+`;
+
+exports[`extractAegisProfile > snake_case input > should return undefined profile when no profile fields present 1`] = `
+{
+  "profile": undefined,
+  "rest": {
+    "another": 42,
+    "custom_claim": "value",
+  },
+}
+`;
 
 exports[`extractAegisProfile camelCase input should extract profile fields from camelCase data 1`] = `
 {

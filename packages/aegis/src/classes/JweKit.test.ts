@@ -1,5 +1,5 @@
 import { KryptosAlgorithm, KryptosKit } from "@lindorm/kryptos";
-import { createMockLogger } from "@lindorm/logger/mocks/jest";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { ILogger } from "@lindorm/logger";
 import MockDate from "mockdate";
 import {
@@ -9,6 +9,7 @@ import {
   TEST_RSA_KEY_ENC,
 } from "../__fixtures__/keys";
 import { JweKit } from "./JweKit";
+import { beforeEach, describe, expect, test } from "vitest";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate);

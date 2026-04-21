@@ -3,6 +3,7 @@ import {
   getOctPbkdfKeyWrapDecryptionKey,
   getOctPbkdfKeyWrapEncryptionKey,
 } from "./get-oct-pbkdf-key-wrap-keys";
+import { describe, expect, test } from "vitest";
 
 describe("getOctKeyWrap", () => {
   test("should return PBES2-HS256+A128KW", () => {

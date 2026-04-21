@@ -2,6 +2,7 @@ import { KryptosEncryption, KryptosKit } from "@lindorm/kryptos";
 import { decryptAes } from "./encryption";
 import { encryptAesContent } from "./encrypt-content";
 import { getEncryptionKey } from "./get-key/get-encryption-key";
+import { describe, expect, test } from "vitest";
 
 describe("encryptAesContent", () => {
   describe("encryptions", () => {

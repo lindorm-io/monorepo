@@ -4,6 +4,7 @@ import { renderHook } from "@testing-library/react";
 import { ZephyrProvider } from "./ZephyrProvider";
 import { useRoom } from "./useRoom";
 import { createMockClient } from "./__fixtures__/mock-client";
+import { describe, expect, test } from "vitest";
 
 const createWrapper = (client: any) => {
   const Wrapper = ({ children }: { children: React.ReactNode }) => (

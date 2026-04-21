@@ -1,4 +1,5 @@
 import { encodeX509Name } from "./encode-name";
+import { describe, expect, test } from "vitest";
 
 describe("encodeX509Name", () => {
   test("encodes CN only", () => {

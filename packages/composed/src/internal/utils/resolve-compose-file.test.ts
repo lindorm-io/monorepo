@@ -1,16 +1,17 @@
 import { existsSync } from "fs";
 import { resolve } from "path";
 import { resolveComposeFile } from "./resolve-compose-file";
+import { beforeEach, describe, expect, test, vi, type MockedFunction } from "vitest";
 
-jest.mock("fs", () => ({
-  existsSync: jest.fn(),
+vi.mock("fs", () => ({
+  existsSync: vi.fn(),
 }));
 
-const mockExistsSync = existsSync as jest.MockedFunction<typeof existsSync>;
+const mockExistsSync = existsSync as MockedFunction<typeof existsSync>;
 
 describe("resolveComposeFile", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test("should return resolved path when explicit file exists", () => {

@@ -1,5 +1,6 @@
 import { Middleware } from "../types";
 import { composeMiddleware } from "./compose-middleware";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("composeMiddleware", () => {
   let ctx: any;
@@ -22,7 +23,7 @@ describe("composeMiddleware", () => {
     ctx = { context: "context" };
   });
 
-  afterEach(jest.resetAllMocks);
+  afterEach(vi.resetAllMocks);
 
   test("should resolve", async () => {
     await expect(composeMiddleware(ctx, [mw])).resolves.toEqual({

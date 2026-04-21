@@ -3,6 +3,7 @@ import {
   getDiffieHellmanDecryptionKey,
   getDiffieHellmanEncryptionKey,
 } from "./diffie-hellman";
+import { describe, expect, test } from "vitest";
 
 describe("diffieHellman", () => {
   test("should return encryption keys with EC", () => {

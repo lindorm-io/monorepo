@@ -1,4 +1,5 @@
 import { decodeLength, encodeLength } from "./length";
+import { describe, expect, test } from "vitest";
 
 describe("encodeLength / decodeLength", () => {
   test.each([

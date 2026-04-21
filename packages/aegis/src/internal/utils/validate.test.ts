@@ -1,4 +1,5 @@
 import { validate } from "./validate";
+import { describe, expect, test } from "vitest";
 
 describe("validate", () => {
   test("should validate", () => {

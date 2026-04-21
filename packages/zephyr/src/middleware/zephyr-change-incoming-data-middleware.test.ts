@@ -1,14 +1,15 @@
 import { zephyrChangeIncomingDataMiddleware } from "./zephyr-change-incoming-data-middleware";
+import { afterEach, describe, expect, test, vi } from "vitest";
 
 describe("zephyrChangeIncomingDataMiddleware", () => {
-  afterEach(jest.clearAllMocks);
+  afterEach(vi.clearAllMocks);
 
   test("should convert incoming object keys to camelCase by default", async () => {
     const ctx: any = {
       outgoing: {},
       incoming: { data: { snake_case: "value", nested_key: { inner_key: 1 } } },
     };
-    const next = jest.fn();
+    const next = vi.fn();
 
     await zephyrChangeIncomingDataMiddleware()(ctx, next);
 
@@ -22,7 +23,7 @@ describe("zephyrChangeIncomingDataMiddleware", () => {
       incoming: { data: [{ snake_case: "a" }, { another_key: "b" }] },
     };
 
-    await zephyrChangeIncomingDataMiddleware()(ctx, jest.fn());
+    await zephyrChangeIncomingDataMiddleware()(ctx, vi.fn());
 
     expect(ctx.incoming.data).toMatchSnapshot();
   });
@@ -30,7 +31,7 @@ describe("zephyrChangeIncomingDataMiddleware", () => {
   test("should respect custom mode", async () => {
     const ctx: any = { outgoing: {}, incoming: { data: { camelCase: "value" } } };
 
-    await zephyrChangeIncomingDataMiddleware("snake")(ctx, jest.fn());
+    await zephyrChangeIncomingDataMiddleware("snake")(ctx, vi.fn());
 
     expect(ctx.incoming.data).toMatchSnapshot();
   });
@@ -38,7 +39,7 @@ describe("zephyrChangeIncomingDataMiddleware", () => {
   test("should pass through non-object data", async () => {
     const ctx: any = { outgoing: {}, incoming: { data: "string" } };
 
-    await zephyrChangeIncomingDataMiddleware()(ctx, jest.fn());
+    await zephyrChangeIncomingDataMiddleware()(ctx, vi.fn());
 
     expect(ctx.incoming.data).toBe("string");
   });
@@ -46,14 +47,14 @@ describe("zephyrChangeIncomingDataMiddleware", () => {
   test("should pass through null data", async () => {
     const ctx: any = { outgoing: {}, incoming: { data: null } };
 
-    await zephyrChangeIncomingDataMiddleware()(ctx, jest.fn());
+    await zephyrChangeIncomingDataMiddleware()(ctx, vi.fn());
 
     expect(ctx.incoming.data).toBeNull();
   });
 
   test("should run after next (transforms response, not request)", async () => {
     const order: Array<string> = [];
-    const next = jest.fn(async () => {
+    const next = vi.fn(async () => {
       order.push("next");
     });
     const ctx: any = { outgoing: {}, incoming: { data: { snake_case: "v" } } };

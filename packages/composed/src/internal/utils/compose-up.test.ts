@@ -1,15 +1,16 @@
 import { EventEmitter } from "events";
 import { spawn } from "child_process";
 import { composeUp } from "./compose-up";
+import { beforeEach, describe, expect, test, vi, type MockedFunction } from "vitest";
 
-jest.mock("child_process");
+vi.mock("child_process");
 
-const mockSpawn = spawn as jest.MockedFunction<typeof spawn>;
+const mockSpawn = spawn as MockedFunction<typeof spawn>;
 const createMockChild = () => new EventEmitter();
 
 describe("composeUp", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test("should spawn with correct args", async () => {

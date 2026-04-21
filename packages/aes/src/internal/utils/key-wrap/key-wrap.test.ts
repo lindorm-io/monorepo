@@ -8,14 +8,15 @@ import {
 import { ecbKeyUnwrap as _ecbKeyUnwrap, ecbKeyWrap as _ecbKeyWrap } from "./ecb-key-wrap";
 import { gcmKeyUnwrap as _gcmKeyUnwrap, gcmKeyWrap as _gcmKeyWrap } from "./gcm-key-wrap";
 import { keyUnwrap, keyWrap } from "./key-wrap";
+import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
-jest.mock("./ecb-key-wrap");
-jest.mock("./gcm-key-wrap");
+vi.mock("./ecb-key-wrap");
+vi.mock("./gcm-key-wrap");
 
-const ecbKeyUnwrap = _ecbKeyUnwrap as jest.Mock;
-const ecbKeyWrap = _ecbKeyWrap as jest.Mock;
-const gcmKeyUnwrap = _gcmKeyUnwrap as jest.Mock;
-const gcmKeyWrap = _gcmKeyWrap as jest.Mock;
+const ecbKeyUnwrap = _ecbKeyUnwrap as Mock;
+const ecbKeyWrap = _ecbKeyWrap as Mock;
+const gcmKeyUnwrap = _gcmKeyUnwrap as Mock;
+const gcmKeyWrap = _gcmKeyWrap as Mock;
 
 describe("key-wrap", () => {
   const mockKeyWrapResult: KeyWrapResult = {
@@ -29,7 +30,7 @@ describe("key-wrap", () => {
   };
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe("keyWrap", () => {

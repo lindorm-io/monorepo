@@ -1,6 +1,7 @@
 import { LindormError } from "@lindorm/errors";
 import { BreakerError } from "./BreakerError";
 import { CircuitOpenError } from "./CircuitOpenError";
+import { describe, expect, it } from "vitest";
 
 describe("CircuitOpenError", () => {
   const error = new CircuitOpenError("circuit is open");

@@ -10,6 +10,7 @@ import {
   createOctSignature,
   verifyOctSignature,
 } from "./oct-signature";
+import { beforeEach, describe, expect, test } from "vitest";
 
 describe("oct-signature", () => {
   const encoding = "base64";

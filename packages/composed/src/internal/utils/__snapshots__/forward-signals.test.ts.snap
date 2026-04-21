@@ -1,4 +1,13 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`forwardSignals > should register handlers for exactly these signals 1`] = `
+[
+  "SIGINT",
+  "SIGTERM",
+  "SIGHUP",
+  "SIGQUIT",
+]
+`;
 
 exports[`forwardSignals should register handlers for exactly these signals 1`] = `
 [

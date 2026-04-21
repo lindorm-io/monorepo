@@ -1,4 +1,5 @@
 import { extractAegisProfile } from "./extract-aegis-profile";
+import { describe, expect, test } from "vitest";
 
 describe("extractAegisProfile", () => {
   describe("snake_case input", () => {

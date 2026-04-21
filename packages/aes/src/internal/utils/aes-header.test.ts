@@ -7,6 +7,7 @@ import {
   encodeAesHeader,
   headerToDecryptionParams,
 } from "./aes-header";
+import { describe, expect, test } from "vitest";
 
 describe("aes-header", () => {
   describe("buildAesHeader", () => {

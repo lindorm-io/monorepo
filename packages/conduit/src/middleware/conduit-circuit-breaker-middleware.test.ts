@@ -1,12 +1,13 @@
 import { CircuitBreaker, CircuitOpenError, type ICircuitBreaker } from "@lindorm/breaker";
-import { createMockLogger } from "@lindorm/logger/mocks/jest";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { ConduitError } from "../errors";
 import { createConduitCircuitBreakerMiddleware } from "./conduit-circuit-breaker-middleware";
 import type { ConduitCircuitBreakerCache, ConduitMiddleware } from "../types";
+import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 describe("conduitCircuitBreakerMiddleware", () => {
   let ctx: any;
-  let next: jest.Mock;
+  let next: Mock;
   let cache: ConduitCircuitBreakerCache;
   let middleware: ConduitMiddleware;
   const origin = "https://api.test";
@@ -20,10 +21,10 @@ describe("conduitCircuitBreakerMiddleware", () => {
 
     cache = new Map();
     middleware = createConduitCircuitBreakerMiddleware({}, createMockLogger(), cache);
-    next = jest.fn().mockResolvedValue(undefined);
+    next = vi.fn().mockResolvedValue(undefined);
   });
 
-  afterEach(jest.clearAllMocks);
+  afterEach(vi.clearAllMocks);
 
   test("allows through when breaker is closed and next succeeds", async () => {
     await expect(middleware(ctx, next)).resolves.toBeUndefined();
@@ -55,11 +56,11 @@ describe("conduitCircuitBreakerMiddleware", () => {
       isOpen: true,
       isClosed: false,
       isHalfOpen: false,
-      execute: jest.fn().mockRejectedValue(new CircuitOpenError("open")),
-      open: jest.fn(),
-      close: jest.fn(),
-      reset: jest.fn(),
-      on: jest.fn(),
+      execute: vi.fn().mockRejectedValue(new CircuitOpenError("open")),
+      open: vi.fn(),
+      close: vi.fn(),
+      reset: vi.fn(),
+      on: vi.fn(),
     };
     cache.set(origin, mockBreaker);
 

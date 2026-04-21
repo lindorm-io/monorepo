@@ -1,9 +1,10 @@
 import { zephyrChangeOutgoingDataMiddleware } from "./zephyr-change-outgoing-data-middleware";
+import { afterEach, describe, expect, test, vi } from "vitest";
 
 describe("zephyrChangeOutgoingDataMiddleware", () => {
-  const next = jest.fn();
+  const next = vi.fn();
 
-  afterEach(jest.clearAllMocks);
+  afterEach(vi.clearAllMocks);
 
   test("should convert outgoing object keys to snake_case by default", async () => {
     const ctx: any = {

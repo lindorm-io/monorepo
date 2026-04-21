@@ -33,16 +33,7 @@ export class Scanner implements IScanner {
   public async import<T>(fileOrPath: IScanData | string): Promise<T> {
     const filePath = isString(fileOrPath) ? fileOrPath : fileOrPath.fullPath;
     const { pathToFileURL } = await import("url");
-    // Built per-call so it binds to the CURRENT vm realm. Under Jest
-    // parallel workers, a module-scoped `new Function` would capture the
-    // first test file's realm and later fail with "Provided module is not
-    // an instance of Module" once that realm is torn down. Per-call
-    // construction is cheap and sidesteps the issue.
-    // eslint-disable-next-line @typescript-eslint/no-implied-eval
-    const nativeImport = new Function("specifier", "return import(specifier)") as (
-      specifier: string,
-    ) => Promise<unknown>;
-    const ns: any = await nativeImport(pathToFileURL(filePath).href);
+    const ns: any = await import(pathToFileURL(filePath).href);
     return Scanner.normalizeModule(ns) as T;
   }
 

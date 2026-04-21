@@ -6,6 +6,7 @@ import {
 import { extractLeafSpki } from "./extract-leaf-spki";
 import { parseX509 } from "./parse-x509";
 import { x509PublicKeyMatches } from "./x509-public-key-matches";
+import { describe, expect, test } from "vitest";
 
 describe("x509PublicKeyMatches", () => {
   test("returns true when leaf SPKI matches the kryptos EC public key", () => {

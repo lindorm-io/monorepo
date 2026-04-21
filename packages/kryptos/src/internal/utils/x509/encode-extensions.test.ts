@@ -9,6 +9,7 @@ import {
   subjectKeyIdentifierExt,
   wrapExtension,
 } from "./encode-extensions";
+import { describe, expect, test } from "vitest";
 
 describe("encode-extensions", () => {
   test("basicConstraintsExt ca=false", () => {

@@ -13,6 +13,7 @@ import {
   createRsaSignature,
   verifyRsaSignature,
 } from "./rsa-signature";
+import { beforeEach, describe, expect, test } from "vitest";
 
 describe("rsa-signature", () => {
   const dsaEncoding = "der";

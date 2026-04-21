@@ -1,5 +1,6 @@
 import { Middleware, Next } from "../types";
 import { createDispatcher } from "./create-dispatcher";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("createDispatcher", () => {
   let ctx: any;
@@ -34,7 +35,7 @@ describe("createDispatcher", () => {
     next = () => Promise.resolve();
   });
 
-  afterEach(jest.resetAllMocks);
+  afterEach(vi.resetAllMocks);
 
   test("should compose", async () => {
     expect(createDispatcher([mw1, mw2])).toBeInstanceOf(Function);

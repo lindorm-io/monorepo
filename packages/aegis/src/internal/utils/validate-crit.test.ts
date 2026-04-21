@@ -1,5 +1,6 @@
 import { DecodedTokenHeader } from "../../types/header";
 import { validateCrit } from "./validate-crit";
+import { describe, expect, test } from "vitest";
 
 const base: DecodedTokenHeader = {
   alg: "ES256",

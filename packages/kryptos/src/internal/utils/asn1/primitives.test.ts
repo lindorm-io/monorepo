@@ -23,6 +23,7 @@ import {
 } from "./primitives";
 import { ASN1_TAG_GENERALIZED_TIME, ASN1_TAG_UTC_TIME } from "./tags";
 import { readTlv } from "./walker";
+import { describe, expect, test } from "vitest";
 
 const content = (buffer: Buffer): Buffer => {
   const tlv = readTlv(buffer, 0);

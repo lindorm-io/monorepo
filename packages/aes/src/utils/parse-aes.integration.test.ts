@@ -2,6 +2,7 @@ import { KryptosKit } from "@lindorm/kryptos";
 import { AesKit } from "../classes/AesKit";
 import { parseAes } from "./parse-aes";
 import { ParsedAesDecryptionRecord } from "../types";
+import { describe, expect, test } from "vitest";
 
 describe("parseAes (integration — strict return type)", () => {
   const kryptos = KryptosKit.generate.auto({ algorithm: "A128KW" });

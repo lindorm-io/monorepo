@@ -2,6 +2,7 @@ import { KryptosEncAlgorithm, KryptosKit } from "@lindorm/kryptos";
 import { AesEncryptionRecord, SerialisedAesEncryption } from "../../types";
 import { encryptAes } from "./encryption";
 import { createSerialisedAesRecord, parseSerialisedAesRecord } from "./serialised-aes";
+import { describe, expect, test } from "vitest";
 
 describe("serialised-aes", () => {
   describe("createSerialisedAesRecord", () => {

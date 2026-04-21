@@ -1,3 +1,5 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`signDpopProof > should include the ath claim when accessToken is provided 1`] = `"WXSA1LYsphIZPxnnP-TMOtF_C_nPwWp8v0tQZBMcSAU"`;
 
 exports[`signDpopProof should include the ath claim when accessToken is provided 1`] = `"WXSA1LYsphIZPxnnP-TMOtF_C_nPwWp8v0tQZBMcSAU"`;

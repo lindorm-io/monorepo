@@ -6,6 +6,7 @@ import {
   KryptosUse,
 } from "../types";
 import { KryptosKit } from "./KryptosKit";
+import { describe, expect, test } from "vitest";
 
 type AutoTestCase = {
   algorithm: KryptosAlgorithm;

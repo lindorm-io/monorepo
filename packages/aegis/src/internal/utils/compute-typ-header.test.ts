@@ -3,6 +3,7 @@ import {
   decodeTokenTypeFromTyp,
   getBaseFormat,
 } from "./compute-typ-header";
+import { describe, expect, test } from "vitest";
 
 describe("computeTypHeader", () => {
   describe("known token types", () => {

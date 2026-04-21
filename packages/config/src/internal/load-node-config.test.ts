@@ -1,4 +1,5 @@
 import { loadNodeConfig } from "./load-node-config";
+import { describe, expect, test } from "vitest";
 
 describe("loadNodeConfig", () => {
   test("should return empty object when NODE_CONFIG is not set", () => {

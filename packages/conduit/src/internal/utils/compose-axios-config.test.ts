@@ -1,6 +1,7 @@
 import { RetryStrategy } from "@lindorm/retry";
 import { RequestContext } from "../../types";
 import { composeAxiosConfig } from "./compose-axios-config";
+import { beforeEach, describe, expect, test } from "vitest";
 
 describe("composeAxiosConfig", () => {
   let ctx: any;

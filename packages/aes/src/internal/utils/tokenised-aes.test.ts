@@ -3,6 +3,7 @@ import { KryptosEncAlgorithm, KryptosKit } from "@lindorm/kryptos";
 import { isAesTokenised } from "../../utils/is-aes";
 import { encryptAes } from "./encryption";
 import { createTokenisedAesString, parseTokenisedAesString } from "./tokenised-aes";
+import { describe, expect, test } from "vitest";
 
 describe("tokenised-aes", () => {
   test("should create a tokenised string with CEK (key-wrap mode)", () => {

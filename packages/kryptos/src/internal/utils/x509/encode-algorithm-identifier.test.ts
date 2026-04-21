@@ -2,6 +2,7 @@ import {
   encodeX509AlgorithmIdentifier,
   resolveSignatureDescriptor,
 } from "./encode-algorithm-identifier";
+import { describe, expect, test } from "vitest";
 
 describe("resolveSignatureDescriptor", () => {
   test("RS256 -> sha256WithRSAEncryption with NULL params", () => {

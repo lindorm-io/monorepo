@@ -1,4 +1,112 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`composeUp > should include --build flag 1`] = `
+[
+  "docker",
+  [
+    "compose",
+    "-f",
+    "/path/compose.yml",
+    "up",
+    "-d",
+    "--wait",
+    "--wait-timeout",
+    "60",
+    "--build",
+  ],
+  {
+    "stdio": [
+      "ignore",
+      "ignore",
+      "inherit",
+    ],
+  },
+]
+`;
+
+exports[`composeUp > should inherit stdio when verbose 1`] = `
+[
+  "docker",
+  [
+    "compose",
+    "up",
+    "-d",
+    "--wait",
+    "--wait-timeout",
+    "60",
+  ],
+  {
+    "stdio": "inherit",
+  },
+]
+`;
+
+exports[`composeUp > should omit -f when file is empty 1`] = `
+[
+  "docker",
+  [
+    "compose",
+    "up",
+    "-d",
+    "--wait",
+    "--wait-timeout",
+    "60",
+  ],
+  {
+    "stdio": [
+      "ignore",
+      "ignore",
+      "inherit",
+    ],
+  },
+]
+`;
+
+exports[`composeUp > should spawn with correct args 1`] = `
+[
+  "docker",
+  [
+    "compose",
+    "-f",
+    "/path/compose.yml",
+    "up",
+    "-d",
+    "--wait",
+    "--wait-timeout",
+    "60",
+  ],
+  {
+    "stdio": [
+      "ignore",
+      "ignore",
+      "inherit",
+    ],
+  },
+]
+`;
+
+exports[`composeUp > should use custom wait timeout 1`] = `
+[
+  "docker",
+  [
+    "compose",
+    "-f",
+    "/path/compose.yml",
+    "up",
+    "-d",
+    "--wait",
+    "--wait-timeout",
+    "120",
+  ],
+  {
+    "stdio": [
+      "ignore",
+      "ignore",
+      "inherit",
+    ],
+  },
+]
+`;
 
 exports[`composeUp should include --build flag 1`] = `
 [

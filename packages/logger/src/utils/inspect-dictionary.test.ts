@@ -1,4 +1,5 @@
 import { inspectDictionary } from "./inspect-dictionary";
+import { describe, expect, test } from "vitest";
 
 describe("inspectDictionary", () => {
   test("should inspect a simple dictionary", () => {

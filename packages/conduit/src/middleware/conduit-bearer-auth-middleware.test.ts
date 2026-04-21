@@ -1,4 +1,5 @@
 import { conduitBearerAuthMiddleware } from "./conduit-bearer-auth-middleware";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("conduitBearerAuthMiddleware", () => {
   let ctx: any;
@@ -13,7 +14,7 @@ describe("conduitBearerAuthMiddleware", () => {
 
   test("should add Bearer Authorization header with default token type", async () => {
     await expect(
-      conduitBearerAuthMiddleware("access-token-123")(ctx, jest.fn()),
+      conduitBearerAuthMiddleware("access-token-123")(ctx, vi.fn()),
     ).resolves.toBeUndefined();
 
     expect(ctx.req.headers).toEqual({
@@ -24,7 +25,7 @@ describe("conduitBearerAuthMiddleware", () => {
 
   test("should add Authorization header with custom token type", async () => {
     await expect(
-      conduitBearerAuthMiddleware("jwt-token-456", "JWT")(ctx, jest.fn()),
+      conduitBearerAuthMiddleware("jwt-token-456", "JWT")(ctx, vi.fn()),
     ).resolves.toBeUndefined();
 
     expect(ctx.req.headers).toEqual({
@@ -36,13 +37,13 @@ describe("conduitBearerAuthMiddleware", () => {
   test("should override existing Authorization header", async () => {
     ctx.req.headers.Authorization = "Basic old-credentials";
 
-    await conduitBearerAuthMiddleware("new-token")(ctx, jest.fn());
+    await conduitBearerAuthMiddleware("new-token")(ctx, vi.fn());
 
     expect(ctx.req.headers.Authorization).toBe("Bearer new-token");
   });
 
   test("should call next middleware", async () => {
-    const next = jest.fn();
+    const next = vi.fn();
 
     await conduitBearerAuthMiddleware("token")(ctx, next);
 
