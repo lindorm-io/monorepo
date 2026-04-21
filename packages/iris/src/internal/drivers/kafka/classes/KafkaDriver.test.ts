@@ -1,3 +1,4 @@
+import { Kafka as _Kafka } from "kafkajs";
 import type { IMessage, IMessageSubscriber } from "../../../../interfaces";
 import type { IrisConnectionState } from "../../../../types";
 import { Field } from "../../../../decorators/Field";
@@ -69,6 +70,8 @@ vi.mock("kafkajs", async () => ({
   }),
   logLevel: { NOTHING: 0, ERROR: 1, WARN: 2, INFO: 4, DEBUG: 5 },
 }));
+
+const Kafka = _Kafka as unknown as Mock;
 
 // --- Test message classes ---
 
@@ -281,8 +284,6 @@ describe("KafkaDriver", () => {
 
   describe("connection config passthrough", () => {
     it("should pass full connection config to Kafka constructor", async () => {
-      const { Kafka } = await vi.importMock<typeof import("kafkajs")>("kafkajs");
-
       const driver = new KafkaDriver({
         logger: createMockLogger() as any,
         getSubscribers: () => [],
@@ -312,8 +313,6 @@ describe("KafkaDriver", () => {
     });
 
     it("should use prefix as default clientId when not provided", async () => {
-      const { Kafka } = await vi.importMock<typeof import("kafkajs")>("kafkajs");
-
       const driver = new KafkaDriver({
         logger: createMockLogger() as any,
         getSubscribers: () => [],
