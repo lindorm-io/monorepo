@@ -1,4 +1,11 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`AbstractMessage > should stage a MetaMessage with decorator AbstractMessage 1`] = `
+{
+  "decorator": "AbstractMessage",
+  "name": "BaseMsg",
+}
+`;
 
 exports[`AbstractMessage should stage a MetaMessage with decorator AbstractMessage 1`] = `
 {

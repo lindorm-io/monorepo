@@ -1,5 +1,6 @@
 import { IrisError } from "./IrisError";
 import { IrisScannerError } from "./IrisScannerError";
+import { describe, expect, it } from "vitest";
 
 describe("IrisScannerError", () => {
   it("should be an instance of IrisError", () => {

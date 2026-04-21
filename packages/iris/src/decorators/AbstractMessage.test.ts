@@ -1,4 +1,5 @@
 import { AbstractMessage } from "./AbstractMessage";
+import { describe, expect, it } from "vitest";
 
 describe("AbstractMessage", () => {
   it("should set __abstract flag on metadata", () => {

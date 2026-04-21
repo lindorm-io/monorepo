@@ -11,19 +11,20 @@ import { RedisWorkerQueue } from "./RedisWorkerQueue";
 import { RedisStreamProcessor } from "./RedisStreamProcessor";
 import { RedisRpcClient } from "./RedisRpcClient";
 import { RedisRpcServer } from "./RedisRpcServer";
+import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 // --- Mock ioredis ---
 const mockRedisInstance = {
-  once: jest.fn(),
-  on: jest.fn(),
-  ping: jest.fn().mockResolvedValue("PONG"),
-  disconnect: jest.fn().mockResolvedValue(undefined),
-  duplicate: jest.fn(),
-  xadd: jest.fn().mockResolvedValue("1-1"),
-  xreadgroup: jest.fn().mockResolvedValue(null),
-  xack: jest.fn().mockResolvedValue(1),
-  xgroup: jest.fn().mockResolvedValue("OK"),
-  del: jest.fn().mockResolvedValue(1),
+  once: vi.fn(),
+  on: vi.fn(),
+  ping: vi.fn().mockResolvedValue("PONG"),
+  disconnect: vi.fn().mockResolvedValue(undefined),
+  duplicate: vi.fn(),
+  xadd: vi.fn().mockResolvedValue("1-1"),
+  xreadgroup: vi.fn().mockResolvedValue(null),
+  xack: vi.fn().mockResolvedValue(1),
+  xgroup: vi.fn().mockResolvedValue("OK"),
+  del: vi.fn().mockResolvedValue(1),
 };
 
 // Simulate 'ready' event immediately
@@ -34,9 +35,11 @@ mockRedisInstance.once.mockImplementation((event: string, cb: Function) => {
   return mockRedisInstance;
 });
 
-jest.mock("ioredis", () => ({
+vi.mock("ioredis", async () => ({
   __esModule: true,
-  default: jest.fn().mockImplementation(() => mockRedisInstance),
+  default: vi.fn(function () {
+    return mockRedisInstance;
+  }),
 }));
 
 // --- Test message classes ---
@@ -59,13 +62,13 @@ class TckRedisDriverRes implements IMessage {
 // --- Helpers ---
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 const createDriver = (subscribers?: Array<IMessageSubscriber>) => {
@@ -82,7 +85,7 @@ const createDriver = (subscribers?: Array<IMessageSubscriber>) => {
 describe("RedisDriver", () => {
   beforeEach(() => {
     clearRegistry();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     // Re-setup the mock for ready event
     mockRedisInstance.once.mockImplementation((event: string, cb: Function) => {
       if (event === "ready") {
@@ -170,7 +173,7 @@ describe("RedisDriver", () => {
       const driver = createDriver();
       await driver.connect();
 
-      const sub: IMessageSubscriber = { beforePublish: jest.fn() };
+      const sub: IMessageSubscriber = { beforePublish: vi.fn() };
       const cloned = driver.cloneWithGetters(() => [sub]) as RedisDriver;
       expect((cloned as any).getSubscribers()).toEqual([sub]);
     });

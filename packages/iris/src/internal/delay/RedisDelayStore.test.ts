@@ -1,6 +1,7 @@
 import type { IrisEnvelope } from "../types/iris-envelope";
 import type { DelayedEntry } from "../../types/delay";
 import { RedisDelayStore } from "./RedisDelayStore";
+import { describe, expect, it, vi } from "vitest";
 
 const createEnvelope = (overrides: Partial<IrisEnvelope> = {}): IrisEnvelope => ({
   topic: "test-topic",
@@ -33,12 +34,12 @@ const createEntry = (overrides: Partial<DelayedEntry> = {}): DelayedEntry => ({
 
 const createMockPipeline = (execResult: Array<[Error | null, unknown]> | null = null) => {
   const pipeline = {
-    zadd: jest.fn().mockReturnThis(),
-    hset: jest.fn().mockReturnThis(),
-    zrem: jest.fn().mockReturnThis(),
-    hdel: jest.fn().mockReturnThis(),
-    del: jest.fn().mockReturnThis(),
-    exec: jest.fn().mockResolvedValue(
+    zadd: vi.fn().mockReturnThis(),
+    hset: vi.fn().mockReturnThis(),
+    zrem: vi.fn().mockReturnThis(),
+    hdel: vi.fn().mockReturnThis(),
+    del: vi.fn().mockReturnThis(),
+    exec: vi.fn().mockResolvedValue(
       execResult ?? [
         [null, 1],
         [null, 1],
@@ -49,11 +50,11 @@ const createMockPipeline = (execResult: Array<[Error | null, unknown]> | null = 
 };
 
 const createMockClient = (pipeline = createMockPipeline()) => ({
-  pipeline: jest.fn().mockReturnValue(pipeline),
-  defineCommand: jest.fn(),
-  irisDelayPoll: jest.fn().mockResolvedValue([]),
-  zcard: jest.fn().mockResolvedValue(0),
-  quit: jest.fn().mockResolvedValue("OK"),
+  pipeline: vi.fn().mockReturnValue(pipeline),
+  defineCommand: vi.fn(),
+  irisDelayPoll: vi.fn().mockResolvedValue([]),
+  zcard: vi.fn().mockResolvedValue(0),
+  quit: vi.fn().mockResolvedValue("OK"),
 });
 
 describe("RedisDelayStore", () => {

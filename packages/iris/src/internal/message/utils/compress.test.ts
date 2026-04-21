@@ -1,5 +1,6 @@
 import { IrisSerializationError } from "../../../errors/IrisSerializationError";
 import { compress, decompress } from "./compress";
+import { describe, expect, it } from "vitest";
 
 describe("compress / decompress", () => {
   const input = Buffer.from("hello world, this is a compression test payload");

@@ -1,5 +1,6 @@
 import type { MessageMetadata, MetaField } from "../message/types/metadata";
 import { resolveIdentifierValue } from "./resolve-identifier-value";
+import { describe, expect, it } from "vitest";
 
 const makeField = (overrides: Partial<MetaField>): MetaField => ({
   key: "id",

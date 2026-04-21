@@ -4,6 +4,7 @@ import { Message } from "../../../../decorators/Message";
 import { IrisDriverError } from "../../../../errors/IrisDriverError";
 import { clearRegistry } from "../../../message/metadata/registry";
 import { MemoryDriver } from "./MemoryDriver";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // --- Test message classes ---
 
@@ -20,13 +21,13 @@ class TckRpcSrvRes implements IMessage {
 // --- Helpers ---
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 const createServerSetup = () => {

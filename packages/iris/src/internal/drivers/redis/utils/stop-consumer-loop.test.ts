@@ -1,5 +1,6 @@
 import type { RedisSharedState, RedisConsumerLoop } from "../types/redis-types";
 import { stopConsumerLoop, stopAllConsumerLoops } from "./stop-consumer-loop";
+import { describe, expect, it, vi, type Mock } from "vitest";
 
 const createMockLoop = (
   consumerTag: string,
@@ -8,19 +9,19 @@ const createMockLoop = (
   consumerTag,
   groupName: `group-${consumerTag}`,
   streamKey: `stream-${consumerTag}`,
-  callback: jest.fn(),
+  callback: vi.fn(),
   abortController: new AbortController(),
   loopPromise: Promise.resolve(),
   ready: Promise.resolve(),
   connection: {
-    xadd: jest.fn(),
-    xreadgroup: jest.fn(),
-    xack: jest.fn(),
-    xgroup: jest.fn(),
-    del: jest.fn(),
-    duplicate: jest.fn(),
-    disconnect: jest.fn().mockResolvedValue(undefined),
-    on: jest.fn(),
+    xadd: vi.fn(),
+    xreadgroup: vi.fn(),
+    xack: vi.fn(),
+    xgroup: vi.fn(),
+    del: vi.fn(),
+    duplicate: vi.fn(),
+    disconnect: vi.fn().mockResolvedValue(undefined),
+    on: vi.fn(),
   } as any,
   ...overrides,
 });
@@ -74,7 +75,7 @@ describe("stopConsumerLoop", () => {
 
   it("should not throw if disconnect throws", async () => {
     const loop = createMockLoop("ctag-1");
-    (loop.connection.disconnect as jest.Mock).mockImplementation(() => {
+    (loop.connection.disconnect as Mock).mockImplementation(() => {
       throw new Error("disconnect failed");
     });
     const state = createMockState([loop]);

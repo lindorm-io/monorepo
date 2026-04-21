@@ -1,4 +1,197 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`buildAmqpHeaders > should apply options overrides 1`] = `
+{
+  "properties": {
+    "correlationId": undefined,
+    "headers": {
+      "x-iris-attempt": 0,
+    },
+    "mandatory": true,
+    "messageId": "msg-789",
+    "persistent": false,
+    "priority": undefined,
+    "timestamp": 1700000000000,
+    "type": "OrderCreated",
+  },
+  "routingKey": "orders.created",
+}
+`;
+
+exports[`buildAmqpHeaders > should build config with minimal envelope 1`] = `
+{
+  "properties": {
+    "correlationId": undefined,
+    "headers": {
+      "x-iris-attempt": 0,
+    },
+    "mandatory": undefined,
+    "messageId": undefined,
+    "persistent": true,
+    "priority": undefined,
+    "timestamp": 1700000000000,
+    "type": undefined,
+  },
+  "routingKey": "orders.created",
+}
+`;
+
+exports[`buildAmqpHeaders > should include all iris headers with fully populated envelope 1`] = `
+{
+  "properties": {
+    "correlationId": "corr-1",
+    "headers": {
+      "x-iris-attempt": 2,
+      "x-iris-broadcast": "true",
+      "x-iris-correlation-id": "corr-1",
+      "x-iris-expiry": 60000,
+      "x-iris-reply-to": "reply-q",
+      "x-user": "custom",
+    },
+    "mandatory": undefined,
+    "messageId": undefined,
+    "persistent": true,
+    "priority": 5,
+    "timestamp": 1700000000000,
+    "type": "TestMsg",
+  },
+  "routingKey": "orders.created",
+}
+`;
+
+exports[`buildAmqpHeaders > should include broadcast header when true 1`] = `
+{
+  "properties": {
+    "correlationId": undefined,
+    "headers": {
+      "x-iris-attempt": 0,
+      "x-iris-broadcast": "true",
+    },
+    "mandatory": undefined,
+    "messageId": undefined,
+    "persistent": true,
+    "priority": undefined,
+    "timestamp": 1700000000000,
+    "type": undefined,
+  },
+  "routingKey": "orders.created",
+}
+`;
+
+exports[`buildAmqpHeaders > should include correlation id when present 1`] = `
+{
+  "properties": {
+    "correlationId": "corr-456",
+    "headers": {
+      "x-iris-attempt": 0,
+      "x-iris-correlation-id": "corr-456",
+    },
+    "mandatory": undefined,
+    "messageId": undefined,
+    "persistent": true,
+    "priority": undefined,
+    "timestamp": 1700000000000,
+    "type": undefined,
+  },
+  "routingKey": "orders.created",
+}
+`;
+
+exports[`buildAmqpHeaders > should include expiry when not null 1`] = `
+{
+  "properties": {
+    "correlationId": undefined,
+    "headers": {
+      "x-iris-attempt": 0,
+      "x-iris-expiry": 30000,
+    },
+    "mandatory": undefined,
+    "messageId": undefined,
+    "persistent": true,
+    "priority": undefined,
+    "timestamp": 1700000000000,
+    "type": undefined,
+  },
+  "routingKey": "orders.created",
+}
+`;
+
+exports[`buildAmqpHeaders > should include reply-to when present 1`] = `
+{
+  "properties": {
+    "correlationId": undefined,
+    "headers": {
+      "x-iris-attempt": 0,
+      "x-iris-reply-to": "reply-queue",
+    },
+    "mandatory": undefined,
+    "messageId": undefined,
+    "persistent": true,
+    "priority": undefined,
+    "timestamp": 1700000000000,
+    "type": undefined,
+  },
+  "routingKey": "orders.created",
+}
+`;
+
+exports[`buildAmqpHeaders > should include user headers 1`] = `
+{
+  "properties": {
+    "correlationId": undefined,
+    "headers": {
+      "x-custom": "value",
+      "x-iris-attempt": 0,
+      "x-trace-id": "abc-123",
+    },
+    "mandatory": undefined,
+    "messageId": undefined,
+    "persistent": true,
+    "priority": undefined,
+    "timestamp": 1700000000000,
+    "type": undefined,
+  },
+  "routingKey": "orders.created",
+}
+`;
+
+exports[`buildAmqpHeaders > should not include max retries in headers (consumer-side policy only) 1`] = `
+{
+  "properties": {
+    "correlationId": undefined,
+    "headers": {
+      "x-iris-attempt": 0,
+    },
+    "mandatory": undefined,
+    "messageId": undefined,
+    "persistent": true,
+    "priority": undefined,
+    "timestamp": 1700000000000,
+    "type": undefined,
+  },
+  "routingKey": "orders.created",
+}
+`;
+
+exports[`buildAmqpHeaders > should sanitize routing key from topic 1`] = `"orders_created_v2"`;
+
+exports[`buildAmqpHeaders > should set priority on properties when non-zero 1`] = `
+{
+  "properties": {
+    "correlationId": undefined,
+    "headers": {
+      "x-iris-attempt": 0,
+    },
+    "mandatory": undefined,
+    "messageId": undefined,
+    "persistent": true,
+    "priority": 7,
+    "timestamp": 1700000000000,
+    "type": undefined,
+  },
+  "routingKey": "orders.created",
+}
+`;
 
 exports[`buildAmqpHeaders should apply options overrides 1`] = `
 {

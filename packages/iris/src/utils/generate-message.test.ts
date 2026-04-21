@@ -1,4 +1,5 @@
 import { generateMessageSource } from "./generate-message";
+import { describe, expect, it } from "vitest";
 
 describe("generateMessageSource", () => {
   it("produces a pascal-case message file", () => {

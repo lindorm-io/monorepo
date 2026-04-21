@@ -1,4 +1,5 @@
 import { CorrelationField } from "./CorrelationField";
+import { describe, expect, it } from "vitest";
 
 describe("CorrelationField", () => {
   it("should stage correlation field metadata", () => {

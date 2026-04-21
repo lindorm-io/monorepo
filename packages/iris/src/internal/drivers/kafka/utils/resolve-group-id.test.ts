@@ -1,4 +1,5 @@
 import { resolveGroupId } from "./resolve-group-id";
+import { describe, expect, it } from "vitest";
 
 describe("resolveGroupId", () => {
   describe("subscribe", () => {

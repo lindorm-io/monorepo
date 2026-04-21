@@ -4,10 +4,11 @@ import { Message } from "../../../../decorators/Message";
 import { clearRegistry } from "../../../message/metadata/registry";
 import type { RabbitSharedState } from "../types/rabbit-types";
 import { RabbitStreamPipeline } from "./RabbitStreamPipeline";
+import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 // --- Mocks ---
-jest.mock("../utils/build-amqp-headers", () => ({
-  buildAmqpHeaders: jest.fn().mockReturnValue({
+vi.mock("../utils/build-amqp-headers", async () => ({
+  buildAmqpHeaders: vi.fn().mockReturnValue({
     properties: {
       headers: {},
       contentType: "application/octet-stream",
@@ -16,8 +17,8 @@ jest.mock("../utils/build-amqp-headers", () => ({
   }),
 }));
 
-jest.mock("../utils/parse-amqp-headers", () => ({
-  parseAmqpHeaders: jest.fn().mockReturnValue({
+vi.mock("../utils/parse-amqp-headers", () => ({
+  parseAmqpHeaders: vi.fn().mockReturnValue({
     payload: Buffer.from("{}"),
     headers: {},
     envelope: { topic: "TckRabbitPlIn" },
@@ -39,31 +40,31 @@ class TckRabbitPlOut implements IMessage {
 // --- Helpers ---
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 const createMockChannel = () => ({
-  assertQueue: jest
+  assertQueue: vi
     .fn()
     .mockResolvedValue({ queue: "amq.gen-pipeline", messageCount: 0, consumerCount: 0 }),
-  bindQueue: jest.fn().mockResolvedValue(undefined),
-  consume: jest.fn().mockResolvedValue({ consumerTag: "pl-ctag" }),
-  cancel: jest.fn().mockResolvedValue(undefined),
-  unbindQueue: jest.fn().mockResolvedValue(undefined),
-  ack: jest.fn(),
-  nack: jest.fn(),
+  bindQueue: vi.fn().mockResolvedValue(undefined),
+  consume: vi.fn().mockResolvedValue({ consumerTag: "pl-ctag" }),
+  cancel: vi.fn().mockResolvedValue(undefined),
+  unbindQueue: vi.fn().mockResolvedValue(undefined),
+  ack: vi.fn(),
+  nack: vi.fn(),
 });
 
 const createMockState = (overrides?: Partial<RabbitSharedState>): RabbitSharedState => ({
   connection: {} as any,
   publishChannel: {
-    publish: jest.fn((_ex, _rk, _buf, _opts, cb) => {
+    publish: vi.fn((_ex, _rk, _buf, _opts, cb) => {
       process.nextTick(() => cb?.(null));
       return true;
     }),
@@ -221,7 +222,7 @@ describe("RabbitStreamPipeline", () => {
 
       await pipeline.start();
 
-      (channel.cancel as jest.Mock).mockRejectedValueOnce(new Error("channel closed"));
+      (channel.cancel as Mock).mockRejectedValueOnce(new Error("channel closed"));
 
       await expect(pipeline.stop()).resolves.toBeUndefined();
     });
@@ -249,14 +250,14 @@ describe("RabbitStreamPipeline", () => {
       const channel = state.consumeChannel!;
 
       let ctagCounter = 0;
-      (channel.consume as jest.Mock).mockImplementation(async () => ({
+      (channel.consume as Mock).mockImplementation(async () => ({
         consumerTag: `pl-ctag-${++ctagCounter}`,
       }));
 
       await pipeline.start();
       await pipeline.pause();
 
-      (channel.assertQueue as jest.Mock).mockResolvedValue({ queue: "amq.gen-resumed" });
+      (channel.assertQueue as Mock).mockResolvedValue({ queue: "amq.gen-resumed" });
 
       await pipeline.resume();
 
@@ -275,11 +276,11 @@ describe("RabbitStreamPipeline", () => {
       await pipeline.start();
       await pipeline.pause();
 
-      const cancelCount = (channel.cancel as jest.Mock).mock.calls.length;
+      const cancelCount = (channel.cancel as Mock).mock.calls.length;
 
       await pipeline.pause();
 
-      expect((channel.cancel as jest.Mock).mock.calls.length).toBe(cancelCount);
+      expect((channel.cancel as Mock).mock.calls.length).toBe(cancelCount);
     });
 
     it("should be a no-op to resume when not paused", async () => {
@@ -288,11 +289,11 @@ describe("RabbitStreamPipeline", () => {
 
       await pipeline.start();
 
-      const consumeCount = (channel.consume as jest.Mock).mock.calls.length;
+      const consumeCount = (channel.consume as Mock).mock.calls.length;
 
       await pipeline.resume();
 
-      expect((channel.consume as jest.Mock).mock.calls.length).toBe(consumeCount);
+      expect((channel.consume as Mock).mock.calls.length).toBe(consumeCount);
     });
 
     it("should warn and not create consumer when resume has no channel", async () => {
@@ -301,7 +302,7 @@ describe("RabbitStreamPipeline", () => {
 
       await pipeline.start();
 
-      const consumeCountAfterStart = (channel.consume as jest.Mock).mock.calls.length;
+      const consumeCountAfterStart = (channel.consume as Mock).mock.calls.length;
 
       await pipeline.pause();
 
@@ -310,9 +311,7 @@ describe("RabbitStreamPipeline", () => {
       await pipeline.resume();
 
       // No new consumer was created since channel is null
-      expect((channel.consume as jest.Mock).mock.calls.length).toBe(
-        consumeCountAfterStart,
-      );
+      expect((channel.consume as Mock).mock.calls.length).toBe(consumeCountAfterStart);
     });
   });
 });

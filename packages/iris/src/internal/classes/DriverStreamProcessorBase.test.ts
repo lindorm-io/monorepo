@@ -10,6 +10,7 @@ import {
   DriverStreamProcessorBase,
   type DriverStreamProcessorBaseOptions,
 } from "./DriverStreamProcessorBase";
+import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 // --- Test messages ---
 
@@ -71,13 +72,13 @@ class TestStreamProcessor<
 // --- Helpers ---
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 const createProcessor = () => {

@@ -11,6 +11,7 @@ import { getMessageMetadata } from "../metadata/get-message-metadata";
 import { clearRegistry } from "../metadata/registry";
 import { prepareInbound } from "./prepare-inbound";
 import { prepareOutbound } from "./prepare-outbound";
+import { beforeEach, describe, expect, it } from "vitest";
 
 beforeEach(() => {
   clearRegistry();

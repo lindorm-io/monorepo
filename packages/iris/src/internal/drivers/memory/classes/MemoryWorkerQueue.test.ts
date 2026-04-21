@@ -11,6 +11,7 @@ import { MemoryDeadLetterStore } from "../../../dead-letter/MemoryDeadLetterStor
 import type { MemorySharedState } from "../types/memory-store";
 import { createStore } from "../utils/create-store";
 import { MemoryWorkerQueue } from "./MemoryWorkerQueue";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // --- Test message classes ---
 
@@ -35,13 +36,13 @@ class TckWqBroadcast implements IMessage {
 // --- Helpers ---
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 const createWorkerQueue = <M extends IMessage>(
@@ -218,11 +219,11 @@ describe("MemoryWorkerQueue", () => {
 
   describe("retry", () => {
     beforeEach(() => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
     });
 
     afterEach(() => {
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
 
     it("should retry on callback error with fixed backoff", async () => {
@@ -239,10 +240,10 @@ describe("MemoryWorkerQueue", () => {
 
       expect(callCount).toBe(1);
 
-      await jest.advanceTimersByTimeAsync(50);
+      await vi.advanceTimersByTimeAsync(50);
       expect(callCount).toBe(2);
 
-      await jest.advanceTimersByTimeAsync(50);
+      await vi.advanceTimersByTimeAsync(50);
       expect(callCount).toBe(3);
     });
 
@@ -265,7 +266,7 @@ describe("MemoryWorkerQueue", () => {
       expect(callCount).toBe(1);
       expect(received).toHaveLength(0);
 
-      await jest.advanceTimersByTimeAsync(50);
+      await vi.advanceTimersByTimeAsync(50);
 
       expect(callCount).toBe(2);
       expect(received).toMatchSnapshot();
@@ -287,26 +288,26 @@ describe("MemoryWorkerQueue", () => {
       expect(callCount).toBe(1);
 
       // attempt 1
-      await jest.advanceTimersByTimeAsync(50);
+      await vi.advanceTimersByTimeAsync(50);
       expect(callCount).toBe(2);
 
       // attempt 2 (maxRetries=2, so this is the last retry)
-      await jest.advanceTimersByTimeAsync(50);
+      await vi.advanceTimersByTimeAsync(50);
       expect(callCount).toBe(3);
 
       // no more retries
-      await jest.advanceTimersByTimeAsync(500);
+      await vi.advanceTimersByTimeAsync(500);
       expect(callCount).toBe(3);
     });
   });
 
   describe("dead letter", () => {
     beforeEach(() => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
     });
 
     afterEach(() => {
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
 
     it("should dead-letter after maxRetries when @DeadLetter enabled", async () => {
@@ -320,8 +321,8 @@ describe("MemoryWorkerQueue", () => {
       await wq.publish(msg);
 
       // Exhaust all retries
-      await jest.advanceTimersByTimeAsync(50);
-      await jest.advanceTimersByTimeAsync(50);
+      await vi.advanceTimersByTimeAsync(50);
+      await vi.advanceTimersByTimeAsync(50);
 
       const deadLetters = await deadLetterManager.list();
       expect(deadLetters).toHaveLength(1);
@@ -338,8 +339,8 @@ describe("MemoryWorkerQueue", () => {
       const msg = wq.create({ data: "dlq-error" } as any);
       await wq.publish(msg);
 
-      await jest.advanceTimersByTimeAsync(50);
-      await jest.advanceTimersByTimeAsync(50);
+      await vi.advanceTimersByTimeAsync(50);
+      await vi.advanceTimersByTimeAsync(50);
 
       const deadLetters = await deadLetterManager.list();
       expect(deadLetters).toHaveLength(1);

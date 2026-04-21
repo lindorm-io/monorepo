@@ -1,6 +1,7 @@
 import type { IrisEnvelope } from "../types/iris-envelope";
 import type { DeadLetterEntry } from "../../types/dead-letter";
 import { MemoryDeadLetterStore } from "./MemoryDeadLetterStore";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 const createEnvelope = (overrides: Partial<IrisEnvelope> = {}): IrisEnvelope => ({
   topic: "test-topic",

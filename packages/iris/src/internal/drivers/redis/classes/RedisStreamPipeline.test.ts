@@ -4,18 +4,19 @@ import { Message } from "../../../../decorators/Message";
 import { clearRegistry } from "../../../message/metadata/registry";
 import type { RedisSharedState, RedisConsumerLoop } from "../types/redis-types";
 import { RedisStreamPipeline } from "./RedisStreamPipeline";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // --- Mocks ---
 let mockCreateConsumerLoopResult: Partial<RedisConsumerLoop>;
-const mockCreateConsumerLoop = jest
+const mockCreateConsumerLoop = vi
   .fn()
   .mockImplementation(async () => mockCreateConsumerLoopResult);
-jest.mock("../utils/create-consumer-loop", () => ({
+vi.mock("../utils/create-consumer-loop", async () => ({
   createConsumerLoop: (...args: Array<unknown>) => mockCreateConsumerLoop(...args),
 }));
 
-jest.mock("../utils/serialize-stream-fields", () => ({
-  serializeStreamFields: jest
+vi.mock("../utils/serialize-stream-fields", () => ({
+  serializeStreamFields: vi
     .fn()
     .mockReturnValue(["payload", "dGVzdA==", "topic", "test"]),
 }));
@@ -35,30 +36,30 @@ class TckRedisPlOut implements IMessage {
 // --- Helpers ---
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 const createMockState = (): RedisSharedState => ({
   publishConnection: {
-    xadd: jest.fn().mockResolvedValue("1-1"),
-    duplicate: jest.fn().mockReturnValue({
-      xreadgroup: jest.fn().mockResolvedValue(null),
-      xack: jest.fn().mockResolvedValue(1),
-      disconnect: jest.fn().mockResolvedValue(undefined),
-      on: jest.fn(),
+    xadd: vi.fn().mockResolvedValue("1-1"),
+    duplicate: vi.fn().mockReturnValue({
+      xreadgroup: vi.fn().mockResolvedValue(null),
+      xack: vi.fn().mockResolvedValue(1),
+      disconnect: vi.fn().mockResolvedValue(undefined),
+      on: vi.fn(),
     }),
-    disconnect: jest.fn(),
-    xgroup: jest.fn().mockResolvedValue("OK"),
-    xreadgroup: jest.fn(),
-    xack: jest.fn(),
-    del: jest.fn().mockResolvedValue(1),
-    on: jest.fn(),
+    disconnect: vi.fn(),
+    xgroup: vi.fn().mockResolvedValue("OK"),
+    xreadgroup: vi.fn(),
+    xack: vi.fn(),
+    del: vi.fn().mockResolvedValue(1),
+    on: vi.fn(),
   } as any,
   connectionConfig: { url: "redis://localhost:6379" },
   prefix: "iris",
@@ -82,10 +83,10 @@ beforeEach(() => {
     consumerTag: "pl-ctag",
     groupName: "iris.pipeline.test",
     streamKey: "iris:TckRedisPlIn",
-    callback: jest.fn(),
+    callback: vi.fn(),
     abortController: new AbortController(),
     loopPromise: Promise.resolve(),
-    connection: { disconnect: jest.fn() } as any,
+    connection: { disconnect: vi.fn() } as any,
   };
 });
 
@@ -122,12 +123,12 @@ describe("RedisStreamPipeline", () => {
 
   it("should stop and clean up loop", async () => {
     const ac = new AbortController();
-    const dc = jest.fn().mockResolvedValue(undefined);
+    const dc = vi.fn().mockResolvedValue(undefined);
     mockCreateConsumerLoopResult = {
       consumerTag: "pl-ctag-stop",
       groupName: "iris.pipeline.test",
       streamKey: "iris:TckRedisPlIn",
-      callback: jest.fn(),
+      callback: vi.fn(),
       abortController: ac,
       loopPromise: Promise.resolve(),
       connection: { disconnect: dc } as any,
@@ -152,12 +153,12 @@ describe("RedisStreamPipeline", () => {
 
   it("should pause and resume", async () => {
     const ac1 = new AbortController();
-    const dc1 = jest.fn().mockResolvedValue(undefined);
+    const dc1 = vi.fn().mockResolvedValue(undefined);
     mockCreateConsumerLoopResult = {
       consumerTag: "pl-ctag-pause",
       groupName: "iris.pipeline.test",
       streamKey: "iris:TckRedisPlIn",
-      callback: jest.fn(),
+      callback: vi.fn(),
       abortController: ac1,
       loopPromise: Promise.resolve(),
       connection: { disconnect: dc1 } as any,
@@ -183,10 +184,10 @@ describe("RedisStreamPipeline", () => {
       consumerTag: "pl-ctag-resume",
       groupName: "iris.pipeline.test2",
       streamKey: "iris:TckRedisPlIn",
-      callback: jest.fn(),
+      callback: vi.fn(),
       abortController: ac2,
       loopPromise: Promise.resolve(),
-      connection: { disconnect: jest.fn().mockResolvedValue(undefined) } as any,
+      connection: { disconnect: vi.fn().mockResolvedValue(undefined) } as any,
     };
 
     await pipeline.resume();

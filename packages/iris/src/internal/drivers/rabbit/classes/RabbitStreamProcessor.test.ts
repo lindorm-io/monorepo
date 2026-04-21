@@ -5,6 +5,7 @@ import { clearRegistry } from "../../../message/metadata/registry";
 import type { RabbitSharedState } from "../types/rabbit-types";
 import { RabbitStreamProcessor } from "./RabbitStreamProcessor";
 import { RabbitStreamPipeline } from "./RabbitStreamPipeline";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // --- Test messages ---
 
@@ -21,13 +22,13 @@ class TckRabbitSpOut implements IMessage {
 // --- Helpers ---
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 const createMockState = (): RabbitSharedState => ({

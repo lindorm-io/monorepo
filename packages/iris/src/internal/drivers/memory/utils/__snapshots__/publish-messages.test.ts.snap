@@ -1,4 +1,23 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`publishMessages > should dispatch immediately when delay > 0 but no delayManager 1`] = `
+[
+  "consumed",
+]
+`;
+
+exports[`publishMessages > should publish a single message 1`] = `
+[
+  "consumed",
+]
+`;
+
+exports[`publishMessages > should publish an array of messages 1`] = `
+[
+  "consumed",
+  "consumed",
+]
+`;
 
 exports[`publishMessages should dispatch immediately when delay > 0 but no delayManager 1`] = `
 [

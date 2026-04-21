@@ -1,4 +1,15 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Enum > should stage field modifier with enum values 1`] = `
+{
+  "decorator": "Enum",
+  "enum": {
+    "Active": "active",
+    "Inactive": "inactive",
+  },
+  "key": "status",
+}
+`;
 
 exports[`Enum should stage field modifier with enum values 1`] = `
 {

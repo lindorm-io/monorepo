@@ -4,24 +4,25 @@ import { Message } from "../../../../decorators/Message";
 import { clearRegistry } from "../../../message/metadata/registry";
 import type { KafkaSharedState } from "../types/kafka-types";
 import { KafkaRpcServer } from "./KafkaRpcServer";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // --- Mocks ---
 let mockGetOrCreateResult: { consumerTag: string };
-const mockGetOrCreatePooledConsumer = jest
+const mockGetOrCreatePooledConsumer = vi
   .fn()
   .mockImplementation(async () => mockGetOrCreateResult);
-jest.mock("../utils/create-kafka-consumer", () => ({
+vi.mock("../utils/create-kafka-consumer", async () => ({
   getOrCreatePooledConsumer: (...args: Array<unknown>) =>
     mockGetOrCreatePooledConsumer(...args),
 }));
 
-const mockReleasePooledConsumer = jest.fn().mockResolvedValue(undefined);
-jest.mock("../utils/stop-kafka-consumer", () => ({
+const mockReleasePooledConsumer = vi.fn().mockResolvedValue(undefined);
+vi.mock("../utils/stop-kafka-consumer", () => ({
   releasePooledConsumer: (...args: Array<unknown>) => mockReleasePooledConsumer(...args),
 }));
 
-jest.mock("../utils/serialize-kafka-message", () => ({
-  serializeKafkaMessage: jest
+vi.mock("../utils/serialize-kafka-message", () => ({
+  serializeKafkaMessage: vi
     .fn()
     .mockReturnValue({ key: null, value: Buffer.from("test"), headers: {} }),
 }));
@@ -41,26 +42,26 @@ class TckKafkaRpcSrvRes implements IMessage {
 // --- Helpers ---
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 const createMockState = (): KafkaSharedState => ({
   kafka: {
-    producer: jest.fn(),
-    consumer: jest.fn(),
-    admin: jest.fn(),
+    producer: vi.fn(),
+    consumer: vi.fn(),
+    admin: vi.fn(),
   } as any,
   admin: null,
   producer: {
-    send: jest.fn().mockResolvedValue(undefined),
-    connect: jest.fn(),
-    disconnect: jest.fn(),
+    send: vi.fn().mockResolvedValue(undefined),
+    connect: vi.fn(),
+    disconnect: vi.fn(),
   } as any,
   connectionConfig: { brokers: ["localhost:9092"] },
   prefix: "iris",

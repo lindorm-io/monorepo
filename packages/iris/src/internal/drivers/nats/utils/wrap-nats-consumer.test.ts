@@ -3,33 +3,37 @@ import type { ConsumeEnvelope } from "../../../../types";
 import type { MessageMetadata } from "../../../message/types/metadata";
 import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager";
 import type { NatsJsMsg, NatsSharedState } from "../types/nats-types";
+import { parseNatsMessage as _parseNatsMessage } from "./parse-nats-message";
 import { wrapNatsConsumer, type NatsConsumerCallbackHost } from "./wrap-nats-consumer";
+import { describe, expect, it, vi, type Mock } from "vitest";
+
+const parseNatsMessage = _parseNatsMessage as unknown as Mock;
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 const createMockHost = <M extends IMessage>(): NatsConsumerCallbackHost<M> => ({
-  prepareForConsume: jest.fn().mockResolvedValue({ data: "hydrated" }),
-  afterConsumeSuccess: jest.fn().mockResolvedValue(undefined),
-  onConsumeError: jest.fn().mockResolvedValue(undefined),
+  prepareForConsume: vi.fn().mockResolvedValue({ data: "hydrated" }),
+  afterConsumeSuccess: vi.fn().mockResolvedValue(undefined),
+  onConsumeError: vi.fn().mockResolvedValue(undefined),
 });
 
 const createMockDeadLetterManager = (): DeadLetterManager =>
   ({
-    send: jest.fn().mockResolvedValue("dl-id"),
-    list: jest.fn().mockResolvedValue([]),
-    get: jest.fn().mockResolvedValue(null),
-    remove: jest.fn().mockResolvedValue(false),
-    purge: jest.fn().mockResolvedValue(0),
-    count: jest.fn().mockResolvedValue(0),
-    close: jest.fn().mockResolvedValue(undefined),
+    send: vi.fn().mockResolvedValue("dl-id"),
+    list: vi.fn().mockResolvedValue([]),
+    get: vi.fn().mockResolvedValue(null),
+    remove: vi.fn().mockResolvedValue(false),
+    purge: vi.fn().mockResolvedValue(0),
+    count: vi.fn().mockResolvedValue(0),
+    close: vi.fn().mockResolvedValue(undefined),
   }) as any;
 
 const createMockMsg = (overrides?: Partial<NatsJsMsg>): NatsJsMsg => ({
@@ -42,10 +46,10 @@ const createMockMsg = (overrides?: Partial<NatsJsMsg>): NatsJsMsg => ({
     redelivered: false,
     deliveryCount: 1,
   },
-  ack: jest.fn(),
-  nak: jest.fn(),
-  working: jest.fn(),
-  term: jest.fn(),
+  ack: vi.fn(),
+  nak: vi.fn(),
+  working: vi.fn(),
+  term: vi.fn(),
   ...overrides,
 });
 
@@ -64,12 +68,10 @@ const createMetadata = (overrides: Partial<MessageMetadata> = {}): MessageMetada
 const createState = (overrides?: Partial<NatsSharedState>): NatsSharedState => ({
   nc: {} as any,
   js: {
-    publish: jest
-      .fn()
-      .mockResolvedValue({ seq: 1, stream: "IRIS_TEST", duplicate: false }),
+    publish: vi.fn().mockResolvedValue({ seq: 1, stream: "IRIS_TEST", duplicate: false }),
   } as any,
   jsm: null,
-  headersInit: jest.fn() as any,
+  headersInit: vi.fn() as any,
   prefix: "iris",
   streamName: "IRIS_IRIS",
   consumerLoops: [],
@@ -81,8 +83,8 @@ const createState = (overrides?: Partial<NatsSharedState>): NatsSharedState => (
 });
 
 // Mock parseNatsMessage to return an IrisEnvelope
-jest.mock("./parse-nats-message", () => ({
-  parseNatsMessage: jest.fn().mockReturnValue({
+vi.mock("./parse-nats-message", async () => ({
+  parseNatsMessage: vi.fn().mockReturnValue({
     topic: "test-topic",
     payload: Buffer.from('{"data":"test"}'),
     headers: {},
@@ -107,7 +109,7 @@ describe("wrapNatsConsumer", () => {
   describe("happy path", () => {
     it("should call prepareForConsume, callback, and afterConsumeSuccess", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockResolvedValue(undefined);
+      const callback = vi.fn().mockResolvedValue(undefined);
       const state = createState();
       const metadata = createMetadata();
       const logger = createMockLogger();
@@ -130,7 +132,7 @@ describe("wrapNatsConsumer", () => {
 
     it("should pass ConsumeEnvelope with metadata fields to callback", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockResolvedValue(undefined);
+      const callback = vi.fn().mockResolvedValue(undefined);
       const state = createState();
       const metadata = createMetadata({ namespace: "my-ns", version: 3 });
       const logger = createMockLogger();
@@ -155,7 +157,7 @@ describe("wrapNatsConsumer", () => {
 
     it("should decrement inFlightCount after processing", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockResolvedValue(undefined);
+      const callback = vi.fn().mockResolvedValue(undefined);
       const state = createState();
       const logger = createMockLogger();
 
@@ -174,7 +176,7 @@ describe("wrapNatsConsumer", () => {
     it("should increment inFlightCount during processing", async () => {
       const host = createMockHost();
       let captured = -1;
-      const callback = jest.fn().mockImplementation(async () => {
+      const callback = vi.fn().mockImplementation(async () => {
         captured = state.inFlightCount;
       });
       const state = createState();
@@ -196,7 +198,6 @@ describe("wrapNatsConsumer", () => {
 
   describe("expiry", () => {
     it("should skip expired messages and ack", async () => {
-      const { parseNatsMessage } = require("./parse-nats-message");
       parseNatsMessage.mockReturnValueOnce({
         topic: "test-topic",
         payload: Buffer.from('{"data":"test"}'),
@@ -218,7 +219,7 @@ describe("wrapNatsConsumer", () => {
       });
 
       const host = createMockHost();
-      const callback = jest.fn();
+      const callback = vi.fn();
       const state = createState();
       const logger = createMockLogger();
 
@@ -246,8 +247,8 @@ describe("wrapNatsConsumer", () => {
   describe("deserialization failure", () => {
     it("should send to dead letter and term on deserialization error when deadLetter enabled", async () => {
       const host = createMockHost();
-      (host.prepareForConsume as jest.Mock).mockRejectedValue(new Error("bad data"));
-      const callback = jest.fn();
+      (host.prepareForConsume as Mock).mockRejectedValue(new Error("bad data"));
+      const callback = vi.fn();
       const state = createState();
       const metadata = createMetadata({ deadLetter: true });
       const logger = createMockLogger();
@@ -268,8 +269,8 @@ describe("wrapNatsConsumer", () => {
 
     it("should ack and discard on deserialization error when deadLetter is false", async () => {
       const host = createMockHost();
-      (host.prepareForConsume as jest.Mock).mockRejectedValue(new Error("bad data"));
-      const callback = jest.fn();
+      (host.prepareForConsume as Mock).mockRejectedValue(new Error("bad data"));
+      const callback = vi.fn();
       const state = createState();
       const metadata = createMetadata({ deadLetter: false });
       const logger = createMockLogger();
@@ -290,8 +291,8 @@ describe("wrapNatsConsumer", () => {
 
     it("should wrap non-Error deserialization failures", async () => {
       const host = createMockHost();
-      (host.prepareForConsume as jest.Mock).mockRejectedValue("string error");
-      const callback = jest.fn();
+      (host.prepareForConsume as Mock).mockRejectedValue("string error");
+      const callback = vi.fn();
       const state = createState();
       const logger = createMockLogger();
 
@@ -316,8 +317,8 @@ describe("wrapNatsConsumer", () => {
 
     it("should not send to dead letter when no manager provided", async () => {
       const host = createMockHost();
-      (host.prepareForConsume as jest.Mock).mockRejectedValue(new Error("bad data"));
-      const callback = jest.fn();
+      (host.prepareForConsume as Mock).mockRejectedValue(new Error("bad data"));
+      const callback = vi.fn();
       const state = createState();
       const metadata = createMetadata({ deadLetter: true });
       const logger = createMockLogger();
@@ -335,7 +336,6 @@ describe("wrapNatsConsumer", () => {
 
   describe("callback error - retry", () => {
     it("should nak with delay when retries remain", async () => {
-      const { parseNatsMessage } = require("./parse-nats-message");
       parseNatsMessage.mockReturnValueOnce({
         topic: "test-topic",
         payload: Buffer.from('{"data":"test"}'),
@@ -357,7 +357,7 @@ describe("wrapNatsConsumer", () => {
       });
 
       const host = createMockHost();
-      const callback = jest.fn().mockRejectedValue(new Error("fail"));
+      const callback = vi.fn().mockRejectedValue(new Error("fail"));
       const state = createState();
       const metadata = createMetadata();
       const logger = createMockLogger();
@@ -374,7 +374,6 @@ describe("wrapNatsConsumer", () => {
     });
 
     it("should use native deliveryCount for attempt tracking", async () => {
-      const { parseNatsMessage } = require("./parse-nats-message");
       parseNatsMessage.mockReturnValueOnce({
         topic: "test-topic",
         payload: Buffer.from('{"data":"test"}'),
@@ -396,7 +395,7 @@ describe("wrapNatsConsumer", () => {
       });
 
       const host = createMockHost();
-      const callback = jest.fn().mockRejectedValue(new Error("fail"));
+      const callback = vi.fn().mockRejectedValue(new Error("fail"));
       const state = createState();
       const metadata = createMetadata();
       const logger = createMockLogger();
@@ -419,7 +418,6 @@ describe("wrapNatsConsumer", () => {
     });
 
     it("should not retry when attempt >= maxRetries", async () => {
-      const { parseNatsMessage } = require("./parse-nats-message");
       parseNatsMessage.mockReturnValueOnce({
         topic: "test-topic",
         payload: Buffer.from('{"data":"test"}'),
@@ -441,7 +439,7 @@ describe("wrapNatsConsumer", () => {
       });
 
       const host = createMockHost();
-      const callback = jest.fn().mockRejectedValue(new Error("fail"));
+      const callback = vi.fn().mockRejectedValue(new Error("fail"));
       const state = createState();
       const metadata = createMetadata();
       const logger = createMockLogger();
@@ -466,7 +464,6 @@ describe("wrapNatsConsumer", () => {
 
   describe("callback error - exhausted retries", () => {
     it("should send to dead letter and term when retries exhausted and dead letter enabled", async () => {
-      const { parseNatsMessage } = require("./parse-nats-message");
       parseNatsMessage.mockReturnValueOnce({
         topic: "test-topic",
         payload: Buffer.from('{"data":"test"}'),
@@ -488,7 +485,7 @@ describe("wrapNatsConsumer", () => {
       });
 
       const host = createMockHost();
-      const callback = jest.fn().mockRejectedValue(new Error("permanent"));
+      const callback = vi.fn().mockRejectedValue(new Error("permanent"));
       const state = createState();
       const metadata = createMetadata({ deadLetter: true });
       const logger = createMockLogger();
@@ -517,7 +514,6 @@ describe("wrapNatsConsumer", () => {
     });
 
     it("should term without dead letter when dead letter is disabled", async () => {
-      const { parseNatsMessage } = require("./parse-nats-message");
       parseNatsMessage.mockReturnValueOnce({
         topic: "test-topic",
         payload: Buffer.from('{"data":"test"}'),
@@ -539,7 +535,7 @@ describe("wrapNatsConsumer", () => {
       });
 
       const host = createMockHost();
-      const callback = jest.fn().mockRejectedValue(new Error("fail"));
+      const callback = vi.fn().mockRejectedValue(new Error("fail"));
       const state = createState();
       const metadata = createMetadata({ deadLetter: false });
       const logger = createMockLogger();
@@ -564,7 +560,6 @@ describe("wrapNatsConsumer", () => {
     });
 
     it("should not crash when dead letter enabled but no manager provided", async () => {
-      const { parseNatsMessage } = require("./parse-nats-message");
       parseNatsMessage.mockReturnValueOnce({
         topic: "test-topic",
         payload: Buffer.from('{"data":"test"}'),
@@ -586,7 +581,7 @@ describe("wrapNatsConsumer", () => {
       });
 
       const host = createMockHost();
-      const callback = jest.fn().mockRejectedValue(new Error("fail"));
+      const callback = vi.fn().mockRejectedValue(new Error("fail"));
       const state = createState();
       const metadata = createMetadata({ deadLetter: true });
       const logger = createMockLogger();
@@ -609,8 +604,8 @@ describe("wrapNatsConsumer", () => {
   describe("afterConsumeSuccess hook", () => {
     it("should log and swallow afterConsumeSuccess errors", async () => {
       const host = createMockHost();
-      (host.afterConsumeSuccess as jest.Mock).mockRejectedValue(new Error("hook failed"));
-      const callback = jest.fn().mockResolvedValue(undefined);
+      (host.afterConsumeSuccess as Mock).mockRejectedValue(new Error("hook failed"));
+      const callback = vi.fn().mockResolvedValue(undefined);
       const state = createState();
       const logger = createMockLogger();
 
@@ -638,7 +633,7 @@ describe("wrapNatsConsumer", () => {
   describe("error wrapping", () => {
     it("should wrap non-Error callback throws into Error instances", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockRejectedValue("string error");
+      const callback = vi.fn().mockRejectedValue("string error");
       const state = createState();
       const metadata = createMetadata({ deadLetter: true });
       const logger = createMockLogger();
@@ -660,7 +655,7 @@ describe("wrapNatsConsumer", () => {
   describe("inFlightCount management", () => {
     it("should decrement inFlightCount even on error", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockRejectedValue(new Error("fail"));
+      const callback = vi.fn().mockRejectedValue(new Error("fail"));
       const state = createState();
       const logger = createMockLogger();
 
@@ -678,8 +673,8 @@ describe("wrapNatsConsumer", () => {
 
     it("should decrement inFlightCount on deserialization failure", async () => {
       const host = createMockHost();
-      (host.prepareForConsume as jest.Mock).mockRejectedValue(new Error("bad data"));
-      const callback = jest.fn();
+      (host.prepareForConsume as Mock).mockRejectedValue(new Error("bad data"));
+      const callback = vi.fn();
       const state = createState();
       const logger = createMockLogger();
 

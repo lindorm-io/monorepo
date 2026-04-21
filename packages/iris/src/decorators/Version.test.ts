@@ -1,4 +1,5 @@
 import { Version } from "./Version";
+import { describe, expect, it } from "vitest";
 
 describe("Version", () => {
   it("should stage version metadata", () => {

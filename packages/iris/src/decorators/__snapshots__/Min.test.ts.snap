@@ -1,4 +1,12 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Min > should stage field modifier with min value 1`] = `
+{
+  "decorator": "Min",
+  "key": "count",
+  "min": 5,
+}
+`;
 
 exports[`Min should stage field modifier with min value 1`] = `
 {

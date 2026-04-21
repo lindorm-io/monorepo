@@ -3,6 +3,7 @@ import { randomUUID } from "crypto";
 import type { IrisEnvelope } from "../types/iris-envelope";
 import type { DelayedEntry } from "../../types/delay";
 import { RedisDelayStore } from "./RedisDelayStore";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 const createEnvelope = (overrides: Partial<IrisEnvelope> = {}): IrisEnvelope => ({
   topic: "test-topic",

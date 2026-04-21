@@ -1,4 +1,5 @@
 import { Enum } from "./Enum";
+import { describe, expect, it } from "vitest";
 
 describe("Enum", () => {
   it("should stage field modifier with enum values", () => {

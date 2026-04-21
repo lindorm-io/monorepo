@@ -1,5 +1,6 @@
 import type { MessageMetadata } from "../types/metadata";
 import { resolveDefaultTopic } from "./resolve-default-topic";
+import { describe, expect, it } from "vitest";
 
 describe("resolveDefaultTopic", () => {
   it("should prefix the message name with namespace when set", () => {

@@ -15,20 +15,21 @@ import { DeadLetter } from "../../../decorators/DeadLetter";
 import { Expiry } from "../../../decorators/Expiry";
 import { Topic } from "../../../decorators/Topic";
 import type { RabbitDriver } from "./classes/RabbitDriver";
+import { afterAll, beforeAll, beforeEach, describe, expect, test, vi } from "vitest";
 
-jest.setTimeout(30_000);
+vi.setConfig({ testTimeout: 30_000 });
 
 const wait = (ms: number): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 // Each describe block creates its own message classes (fresh Symbol.metadata)

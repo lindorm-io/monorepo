@@ -1,5 +1,6 @@
 import type { MessageMetadata } from "../types/metadata";
 import { resolvePriority } from "./resolve-priority";
+import { describe, expect, it } from "vitest";
 
 const makeMetadata = (overrides: Partial<MessageMetadata> = {}): MessageMetadata =>
   ({

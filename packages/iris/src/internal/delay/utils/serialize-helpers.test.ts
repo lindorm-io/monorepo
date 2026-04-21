@@ -1,6 +1,7 @@
 import type { IrisEnvelope } from "../../types/iris-envelope";
 import type { DelayedEntry } from "../../../types/delay";
 import { deserializeDelayedEntry, serializeDelayedEntry } from "./serialize-helpers";
+import { describe, expect, it } from "vitest";
 
 const createEnvelope = (overrides: Partial<IrisEnvelope> = {}): IrisEnvelope => ({
   topic: "test-topic",

@@ -15,14 +15,15 @@ import {
   DriverWorkerQueueBase,
   type DriverWorkerQueueBaseOptions,
 } from "./DriverWorkerQueueBase";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // --- Test message classes ---
 
-const beforePublishSpy = jest.fn();
-const afterPublishSpy = jest.fn();
-const beforeConsumeSpy = jest.fn();
-const afterConsumeSpy = jest.fn();
-const onConsumeErrorSpy = jest.fn();
+const beforePublishSpy = vi.fn();
+const afterPublishSpy = vi.fn();
+const beforeConsumeSpy = vi.fn();
+const afterConsumeSpy = vi.fn();
+const onConsumeErrorSpy = vi.fn();
 
 @AfterConsume((msg) => {
   afterConsumeSpy(msg);
@@ -110,13 +111,13 @@ class TestWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<M> {
 // --- Helpers ---
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 const createQueue = <M extends IMessage>(
@@ -193,7 +194,7 @@ describe("DriverWorkerQueueBase", () => {
 
   describe("prepareForPublish", () => {
     it("should run beforePublish hooks and produce payload and headers", async () => {
-      const subscriberBefore = jest.fn();
+      const subscriberBefore = vi.fn();
       const subscriber: IMessageSubscriber = {
         beforePublish: subscriberBefore,
       };
@@ -222,7 +223,7 @@ describe("DriverWorkerQueueBase", () => {
 
   describe("completePublish", () => {
     it("should fire afterPublish hooks and subscriber callbacks", async () => {
-      const subscriberAfter = jest.fn();
+      const subscriberAfter = vi.fn();
       const subscriber: IMessageSubscriber = {
         afterPublish: subscriberAfter,
       };
@@ -239,12 +240,12 @@ describe("DriverWorkerQueueBase", () => {
     it("should call subscribers in order", async () => {
       const callOrder: Array<string> = [];
       const sub1: IMessageSubscriber = {
-        afterPublish: jest.fn(() => {
+        afterPublish: vi.fn(() => {
           callOrder.push("sub1-after");
         }),
       };
       const sub2: IMessageSubscriber = {
-        afterPublish: jest.fn(() => {
+        afterPublish: vi.fn(() => {
           callOrder.push("sub2-after");
         }),
       };
@@ -260,7 +261,7 @@ describe("DriverWorkerQueueBase", () => {
 
   describe("prepareForConsume", () => {
     it("should hydrate from payload/headers and run hooks and subscriber callbacks", async () => {
-      const subscriberBefore = jest.fn();
+      const subscriberBefore = vi.fn();
       const subscriber: IMessageSubscriber = {
         beforeConsume: subscriberBefore,
       };
@@ -285,7 +286,7 @@ describe("DriverWorkerQueueBase", () => {
 
   describe("afterConsumeSuccess", () => {
     it("should fire afterConsume hooks and subscriber callbacks", async () => {
-      const subscriberAfter = jest.fn();
+      const subscriberAfter = vi.fn();
       const subscriber: IMessageSubscriber = {
         afterConsume: subscriberAfter,
       };
@@ -302,12 +303,12 @@ describe("DriverWorkerQueueBase", () => {
     it("should call subscribers in order", async () => {
       const callOrder: Array<string> = [];
       const sub1: IMessageSubscriber = {
-        afterConsume: jest.fn(() => {
+        afterConsume: vi.fn(() => {
           callOrder.push("sub1");
         }),
       };
       const sub2: IMessageSubscriber = {
-        afterConsume: jest.fn(() => {
+        afterConsume: vi.fn(() => {
           callOrder.push("sub2");
         }),
       };
@@ -323,7 +324,7 @@ describe("DriverWorkerQueueBase", () => {
 
   describe("onConsumeError", () => {
     it("should forward error to both hooks and subscribers", async () => {
-      const subscriberError = jest.fn();
+      const subscriberError = vi.fn();
       const subscriber: IMessageSubscriber = {
         onConsumeError: subscriberError,
       };
@@ -341,12 +342,12 @@ describe("DriverWorkerQueueBase", () => {
     it("should call subscribers in order", async () => {
       const callOrder: Array<string> = [];
       const sub1: IMessageSubscriber = {
-        onConsumeError: jest.fn(() => {
+        onConsumeError: vi.fn(() => {
           callOrder.push("sub1");
         }),
       };
       const sub2: IMessageSubscriber = {
-        onConsumeError: jest.fn(() => {
+        onConsumeError: vi.fn(() => {
           callOrder.push("sub2");
         }),
       };

@@ -1,4 +1,25 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`DriverWorkerQueueBase > afterConsumeSuccess > should call subscribers in order 1`] = `
+[
+  "sub1",
+  "sub2",
+]
+`;
+
+exports[`DriverWorkerQueueBase > completePublish > should call subscribers in order 1`] = `
+[
+  "sub1-after",
+  "sub2-after",
+]
+`;
+
+exports[`DriverWorkerQueueBase > onConsumeError > should call subscribers in order 1`] = `
+[
+  "sub1",
+  "sub2",
+]
+`;
 
 exports[`DriverWorkerQueueBase afterConsumeSuccess should call subscribers in order 1`] = `
 [

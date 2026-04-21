@@ -1,13 +1,16 @@
 import { JsonKit } from "@lindorm/json-kit";
 import type { MessageMetadata } from "../types/metadata";
 import { prepareOutbound } from "./prepare-outbound";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const mockEncrypt = jest.fn();
+const mockEncrypt = vi.fn();
 
-jest.mock("@lindorm/aes", () => ({
-  AesKit: jest.fn().mockImplementation(() => ({
-    encrypt: mockEncrypt,
-  })),
+vi.mock("@lindorm/aes", async () => ({
+  AesKit: vi.fn(function () {
+    return {
+      encrypt: mockEncrypt,
+    };
+  }),
 }));
 
 const baseMetadata: MessageMetadata = {
@@ -60,7 +63,7 @@ const baseMetadata: MessageMetadata = {
 
 describe("prepareOutbound", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it("should serialize plain message into Buffer payload with header fields", async () => {
@@ -92,7 +95,7 @@ describe("prepareOutbound", () => {
   });
 
   it("should encrypt payload and set encrypted header", async () => {
-    const mockAmphora = { find: jest.fn().mockResolvedValue({ id: "key-1" }) } as any;
+    const mockAmphora = { find: vi.fn().mockResolvedValue({ id: "key-1" }) } as any;
     mockEncrypt.mockReturnValue("encrypted-token");
 
     const metadata: MessageMetadata = {
@@ -112,7 +115,7 @@ describe("prepareOutbound", () => {
   });
 
   it("should compress then encrypt when both are configured", async () => {
-    const mockAmphora = { find: jest.fn().mockResolvedValue({ id: "key-1" }) } as any;
+    const mockAmphora = { find: vi.fn().mockResolvedValue({ id: "key-1" }) } as any;
     mockEncrypt.mockReturnValue("compressed-then-encrypted");
 
     const metadata: MessageMetadata = {

@@ -10,6 +10,7 @@
 import type { TckDriverHandle } from "./types";
 import type { TckMessages } from "./create-tck-messages";
 import { waitFor } from "./wait";
+import { beforeEach, describe, expect, test } from "vitest";
 
 export const hooksSuite = (
   getHandle: () => TckDriverHandle,

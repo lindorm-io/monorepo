@@ -1,4 +1,26 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`DriverStreamPipelineBase > publishOutput() > should hydrate, validate, and publish via doPublishEnvelope 1`] = `
+{
+  "attempt": 0,
+  "broadcast": false,
+  "correlationId": null,
+  "expiry": null,
+  "headers": {},
+  "identifierValue": null,
+  "maxRetries": 0,
+  "payload": Any<Buffer>,
+  "priority": 0,
+  "replyTo": null,
+  "retryDelay": 1000,
+  "retryDelayMax": 30000,
+  "retryJitter": false,
+  "retryMultiplier": 2,
+  "retryStrategy": "constant",
+  "timestamp": Any<Number>,
+  "topic": "TckPipeBaseOut",
+}
+`;
 
 exports[`DriverStreamPipelineBase publishOutput() should hydrate, validate, and publish via doPublishEnvelope 1`] = `
 {

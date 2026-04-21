@@ -1,5 +1,6 @@
 import type { MetaField, MetaHeader } from "../types/metadata";
 import { validateHeaders } from "./validate-headers";
+import { describe, expect, it } from "vitest";
 
 const makeField = (overrides: Partial<MetaField> & { key: string }): MetaField => ({
   decorator: "Field",

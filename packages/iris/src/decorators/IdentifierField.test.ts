@@ -1,4 +1,5 @@
 import { IdentifierField } from "./IdentifierField";
+import { describe, expect, it } from "vitest";
 
 describe("IdentifierField", () => {
   it("should stage identifier field metadata", () => {

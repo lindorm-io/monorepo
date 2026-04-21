@@ -1,6 +1,7 @@
 import type { IrisEnvelope } from "../types/iris-envelope";
 import type { DeadLetterEntry } from "../../types/dead-letter";
 import { RedisDeadLetterStore } from "./RedisDeadLetterStore";
+import { describe, expect, it, vi } from "vitest";
 
 const createEnvelope = (overrides: Partial<IrisEnvelope> = {}): IrisEnvelope => ({
   topic: "test-topic",
@@ -36,12 +37,12 @@ const createEntry = (overrides: Partial<DeadLetterEntry> = {}): DeadLetterEntry 
 
 const createMockPipeline = (execResult: Array<[Error | null, unknown]> | null = null) => {
   const pipeline = {
-    zadd: jest.fn().mockReturnThis(),
-    hset: jest.fn().mockReturnThis(),
-    zrem: jest.fn().mockReturnThis(),
-    hdel: jest.fn().mockReturnThis(),
-    del: jest.fn().mockReturnThis(),
-    exec: jest.fn().mockResolvedValue(
+    zadd: vi.fn().mockReturnThis(),
+    hset: vi.fn().mockReturnThis(),
+    zrem: vi.fn().mockReturnThis(),
+    hdel: vi.fn().mockReturnThis(),
+    del: vi.fn().mockReturnThis(),
+    exec: vi.fn().mockResolvedValue(
       execResult ?? [
         [null, 1],
         [null, 1],
@@ -52,13 +53,13 @@ const createMockPipeline = (execResult: Array<[Error | null, unknown]> | null = 
 };
 
 const createMockClient = (pipeline = createMockPipeline()) => ({
-  pipeline: jest.fn().mockReturnValue(pipeline),
-  zrevrange: jest.fn().mockResolvedValue([]),
-  zrange: jest.fn().mockResolvedValue([]),
-  zcard: jest.fn().mockResolvedValue(0),
-  hmget: jest.fn().mockResolvedValue([]),
-  hget: jest.fn().mockResolvedValue(null),
-  quit: jest.fn().mockResolvedValue("OK"),
+  pipeline: vi.fn().mockReturnValue(pipeline),
+  zrevrange: vi.fn().mockResolvedValue([]),
+  zrange: vi.fn().mockResolvedValue([]),
+  zcard: vi.fn().mockResolvedValue(0),
+  hmget: vi.fn().mockResolvedValue([]),
+  hget: vi.fn().mockResolvedValue(null),
+  quit: vi.fn().mockResolvedValue("OK"),
 });
 
 describe("RedisDeadLetterStore", () => {

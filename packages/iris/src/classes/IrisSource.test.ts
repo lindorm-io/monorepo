@@ -11,6 +11,7 @@ import type { IIrisDriver } from "../interfaces/IrisDriver";
 import type { IrisSourceOptions, IrisSourceOptionsBase } from "../types";
 import { clearRegistry } from "../internal/message/metadata/registry";
 import { IrisSource } from "./IrisSource";
+import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 // --- Test message classes ---
 
@@ -62,32 +63,32 @@ class ConcreteMsg extends BaseMsg {
 // --- Helpers ---
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 const createMockDriver = (): IIrisDriver => ({
-  connect: jest.fn(),
-  disconnect: jest.fn(),
-  drain: jest.fn().mockResolvedValue(undefined),
-  ping: jest.fn().mockResolvedValue(true),
-  setup: jest.fn().mockResolvedValue(undefined),
-  getConnectionState: jest.fn().mockReturnValue("connected"),
-  on: jest.fn(),
-  off: jest.fn(),
-  once: jest.fn(),
-  createMessageBus: jest.fn(),
-  createPublisher: jest.fn(),
-  createWorkerQueue: jest.fn(),
-  createStreamProcessor: jest.fn(),
-  createRpcClient: jest.fn(),
-  createRpcServer: jest.fn(),
-  cloneWithGetters: jest.fn(),
+  connect: vi.fn(),
+  disconnect: vi.fn(),
+  drain: vi.fn().mockResolvedValue(undefined),
+  ping: vi.fn().mockResolvedValue(true),
+  setup: vi.fn().mockResolvedValue(undefined),
+  getConnectionState: vi.fn().mockReturnValue("connected"),
+  on: vi.fn(),
+  off: vi.fn(),
+  once: vi.fn(),
+  createMessageBus: vi.fn(),
+  createPublisher: vi.fn(),
+  createWorkerQueue: vi.fn(),
+  createStreamProcessor: vi.fn(),
+  createRpcClient: vi.fn(),
+  createRpcServer: vi.fn(),
+  cloneWithGetters: vi.fn(),
 });
 
 const createMemoryOptions = (
@@ -216,7 +217,7 @@ describe("IrisSource", () => {
     it("should add a subscriber", () => {
       const source = new IrisSource(createMemoryOptions());
       const subscriber: IMessageSubscriber = {
-        beforePublish: jest.fn(),
+        beforePublish: vi.fn(),
       };
       source.addSubscriber(subscriber);
 
@@ -229,7 +230,7 @@ describe("IrisSource", () => {
     it("should remove a subscriber", () => {
       const source = new IrisSource(createMemoryOptions());
       const subscriber: IMessageSubscriber = {
-        afterConsume: jest.fn(),
+        afterConsume: vi.fn(),
       };
       source.addSubscriber(subscriber);
       source.removeSubscriber(subscriber);
@@ -240,9 +241,9 @@ describe("IrisSource", () => {
 
     it("should support multiple subscribers", () => {
       const source = new IrisSource(createMemoryOptions());
-      const sub1: IMessageSubscriber = { beforePublish: jest.fn() };
-      const sub2: IMessageSubscriber = { afterPublish: jest.fn() };
-      const sub3: IMessageSubscriber = { beforeConsume: jest.fn() };
+      const sub1: IMessageSubscriber = { beforePublish: vi.fn() };
+      const sub2: IMessageSubscriber = { afterPublish: vi.fn() };
+      const sub3: IMessageSubscriber = { beforeConsume: vi.fn() };
 
       source.addSubscriber(sub1);
       source.addSubscriber(sub2);
@@ -257,14 +258,14 @@ describe("IrisSource", () => {
   describe("session", () => {
     it("should create a session without affecting the source subscriber list", () => {
       const source = new IrisSource(createMemoryOptions());
-      const sub1: IMessageSubscriber = { beforePublish: jest.fn() };
+      const sub1: IMessageSubscriber = { beforePublish: vi.fn() };
       source.addSubscriber(sub1);
 
       const session = source.session();
       expect(session.driver).toBe("memory");
 
       // Adding to the original after session creation should not throw
-      const sub2: IMessageSubscriber = { afterPublish: jest.fn() };
+      const sub2: IMessageSubscriber = { afterPublish: vi.fn() };
       source.addSubscriber(sub2);
       expect((source as any)._subscribersRef.current).toHaveLength(2);
     });
@@ -313,7 +314,7 @@ describe("IrisSource", () => {
     it("should clone a connected driver via cloneWithGetters", () => {
       const mockDriver = createMockDriver();
       const clonedDriver = createMockDriver();
-      mockDriver.cloneWithGetters = jest.fn().mockReturnValue(clonedDriver);
+      mockDriver.cloneWithGetters = vi.fn().mockReturnValue(clonedDriver);
 
       const source = new IrisSource(createMemoryOptions());
       (source as any)._driver = mockDriver;
@@ -389,9 +390,7 @@ describe("IrisSource", () => {
 
     it("should clear driver even if disconnect throws", async () => {
       const mockDriver = createMockDriver();
-      (mockDriver.disconnect as jest.Mock).mockRejectedValue(
-        new Error("disconnect failed"),
-      );
+      (mockDriver.disconnect as Mock).mockRejectedValue(new Error("disconnect failed"));
 
       const source = new IrisSource(createMemoryOptions());
       (source as any)._driver = mockDriver;
@@ -465,7 +464,7 @@ describe("IrisSource", () => {
     it("should deduplicate concurrent setup calls", async () => {
       const mockDriver = createMockDriver();
       let resolveSetup: () => void;
-      (mockDriver.setup as jest.Mock).mockImplementation(
+      (mockDriver.setup as Mock).mockImplementation(
         () =>
           new Promise<void>((resolve) => {
             resolveSetup = resolve;
@@ -511,8 +510,8 @@ describe("IrisSource", () => {
 
     it("should delegate messageBus to driver", () => {
       const mockDriver = createMockDriver();
-      const mockBus = { publish: jest.fn() };
-      (mockDriver.createMessageBus as jest.Mock).mockReturnValue(mockBus);
+      const mockBus = { publish: vi.fn() };
+      (mockDriver.createMessageBus as Mock).mockReturnValue(mockBus);
 
       const source = new IrisSource(createMemoryOptions());
       (source as any)._driver = mockDriver;
@@ -525,8 +524,8 @@ describe("IrisSource", () => {
 
     it("should delegate publisher to driver", () => {
       const mockDriver = createMockDriver();
-      const mockPub = { publish: jest.fn() };
-      (mockDriver.createPublisher as jest.Mock).mockReturnValue(mockPub);
+      const mockPub = { publish: vi.fn() };
+      (mockDriver.createPublisher as Mock).mockReturnValue(mockPub);
 
       const source = new IrisSource(createMemoryOptions());
       (source as any)._driver = mockDriver;
@@ -539,8 +538,8 @@ describe("IrisSource", () => {
 
     it("should delegate workerQueue to driver", () => {
       const mockDriver = createMockDriver();
-      const mockQueue = { subscribe: jest.fn() };
-      (mockDriver.createWorkerQueue as jest.Mock).mockReturnValue(mockQueue);
+      const mockQueue = { subscribe: vi.fn() };
+      (mockDriver.createWorkerQueue as Mock).mockReturnValue(mockQueue);
 
       const source = new IrisSource(createMemoryOptions());
       (source as any)._driver = mockDriver;
@@ -553,8 +552,8 @@ describe("IrisSource", () => {
 
     it("should delegate stream to driver", () => {
       const mockDriver = createMockDriver();
-      const mockStream = { pipe: jest.fn() };
-      (mockDriver.createStreamProcessor as jest.Mock).mockReturnValue(mockStream);
+      const mockStream = { pipe: vi.fn() };
+      (mockDriver.createStreamProcessor as Mock).mockReturnValue(mockStream);
 
       const source = new IrisSource(createMemoryOptions());
       (source as any)._driver = mockDriver;
@@ -583,8 +582,8 @@ describe("IrisSource", () => {
 
     it("should delegate rpcClient to driver", () => {
       const mockDriver = createMockDriver();
-      const mockClient = { request: jest.fn(), close: jest.fn() };
-      (mockDriver.createRpcClient as jest.Mock).mockReturnValue(mockClient);
+      const mockClient = { request: vi.fn(), close: vi.fn() };
+      (mockDriver.createRpcClient as Mock).mockReturnValue(mockClient);
 
       const source = new IrisSource(createMemoryOptions());
       (source as any)._driver = mockDriver;
@@ -600,8 +599,8 @@ describe("IrisSource", () => {
 
     it("should delegate rpcServer to driver", () => {
       const mockDriver = createMockDriver();
-      const mockServer = { serve: jest.fn(), unserve: jest.fn(), unserveAll: jest.fn() };
-      (mockDriver.createRpcServer as jest.Mock).mockReturnValue(mockServer);
+      const mockServer = { serve: vi.fn(), unserve: vi.fn(), unserveAll: vi.fn() };
+      (mockDriver.createRpcServer as Mock).mockReturnValue(mockServer);
 
       const source = new IrisSource(createMemoryOptions());
       (source as any)._driver = mockDriver;
@@ -627,8 +626,8 @@ describe("IrisSource", () => {
   describe("subscribers — stronger assertions (#7)", () => {
     it("should reflect correct count after addSubscriber", () => {
       const source = new IrisSource(createMemoryOptions());
-      const sub1: IMessageSubscriber = { beforePublish: jest.fn() };
-      const sub2: IMessageSubscriber = { afterPublish: jest.fn() };
+      const sub1: IMessageSubscriber = { beforePublish: vi.fn() };
+      const sub2: IMessageSubscriber = { afterPublish: vi.fn() };
 
       source.addSubscriber(sub1);
       expect((source as any)._subscribersRef.current.length).toBe(1);
@@ -639,8 +638,8 @@ describe("IrisSource", () => {
 
     it("should decrease count after removeSubscriber", () => {
       const source = new IrisSource(createMemoryOptions());
-      const sub1: IMessageSubscriber = { beforePublish: jest.fn() };
-      const sub2: IMessageSubscriber = { afterPublish: jest.fn() };
+      const sub1: IMessageSubscriber = { beforePublish: vi.fn() };
+      const sub2: IMessageSubscriber = { afterPublish: vi.fn() };
 
       source.addSubscriber(sub1);
       source.addSubscriber(sub2);
@@ -653,10 +652,10 @@ describe("IrisSource", () => {
     it("should reflect correct count after adding multiple subscribers", () => {
       const source = new IrisSource(createMemoryOptions());
       const subs: Array<IMessageSubscriber> = [
-        { beforePublish: jest.fn() },
-        { afterPublish: jest.fn() },
-        { beforeConsume: jest.fn() },
-        { afterConsume: jest.fn() },
+        { beforePublish: vi.fn() },
+        { afterPublish: vi.fn() },
+        { beforeConsume: vi.fn() },
+        { afterConsume: vi.fn() },
       ];
 
       for (const sub of subs) {
@@ -671,7 +670,7 @@ describe("IrisSource", () => {
     it("should reject on first call when driver.setup fails, succeed on retry", async () => {
       const mockDriver = createMockDriver();
       let callCount = 0;
-      (mockDriver.setup as jest.Mock).mockImplementation(() => {
+      (mockDriver.setup as Mock).mockImplementation(() => {
         callCount += 1;
         if (callCount === 1) {
           return Promise.reject(new Error("setup failed"));
@@ -784,8 +783,8 @@ describe("IrisSource", () => {
     });
 
     it("should invoke beforePublish and afterPublish hooks on publish", async () => {
-      const beforePublish = jest.fn();
-      const afterPublish = jest.fn();
+      const beforePublish = vi.fn();
+      const afterPublish = vi.fn();
 
       source.addSubscriber({ beforePublish, afterPublish });
 
@@ -805,8 +804,8 @@ describe("IrisSource", () => {
     });
 
     it("should invoke beforeConsume and afterConsume hooks on subscribe + publish", async () => {
-      const beforeConsume = jest.fn();
-      const afterConsume = jest.fn();
+      const beforeConsume = vi.fn();
+      const afterConsume = vi.fn();
 
       source.addSubscriber({ beforeConsume, afterConsume });
 
@@ -832,7 +831,7 @@ describe("IrisSource", () => {
     });
 
     it("should invoke onConsumeError when consume callback throws", async () => {
-      const onConsumeError = jest.fn();
+      const onConsumeError = vi.fn();
 
       source.addSubscriber({ onConsumeError });
 
@@ -857,10 +856,10 @@ describe("IrisSource", () => {
 
     it("should isolate hook errors — publish succeeds even when beforePublish throws", async () => {
       const badSubscriber: IMessageSubscriber = {
-        beforePublish: jest.fn().mockRejectedValue(new Error("hook-boom")),
+        beforePublish: vi.fn().mockRejectedValue(new Error("hook-boom")),
       };
       const goodSubscriber: IMessageSubscriber = {
-        afterPublish: jest.fn(),
+        afterPublish: vi.fn(),
       };
 
       source.addSubscriber(badSubscriber);
@@ -881,8 +880,8 @@ describe("IrisSource", () => {
     });
 
     it("should invoke hooks on multiple subscribers", async () => {
-      const beforePublish1 = jest.fn();
-      const beforePublish2 = jest.fn();
+      const beforePublish1 = vi.fn();
+      const beforePublish2 = vi.fn();
 
       source.addSubscriber({ beforePublish: beforePublish1 });
       source.addSubscriber({ beforePublish: beforePublish2 });
@@ -997,7 +996,7 @@ describe("IrisSource", () => {
       await source.setup();
 
       expect(mockDriver.setup).toHaveBeenCalledTimes(1);
-      const passedMessages = (mockDriver.setup as jest.Mock).mock.calls[0][0];
+      const passedMessages = (mockDriver.setup as Mock).mock.calls[0][0];
       expect(passedMessages).toHaveLength(1);
       expect(passedMessages[0]).toBe(ConcreteMsg);
     });

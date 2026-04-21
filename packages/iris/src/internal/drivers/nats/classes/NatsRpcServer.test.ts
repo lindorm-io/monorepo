@@ -4,14 +4,15 @@ import { Message } from "../../../../decorators/Message";
 import { clearRegistry } from "../../../message/metadata/registry";
 import type { NatsSharedState, NatsSubscription } from "../types/nats-types";
 import { NatsRpcServer } from "./NatsRpcServer";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // --- Mocks ---
-jest.mock("../utils/serialize-nats-message", () => ({
-  serializeNatsMessage: jest.fn().mockReturnValue({ data: new Uint8Array([1, 2, 3]) }),
+vi.mock("../utils/serialize-nats-message", async () => ({
+  serializeNatsMessage: vi.fn().mockReturnValue({ data: new Uint8Array([1, 2, 3]) }),
 }));
 
-jest.mock("../utils/parse-nats-message", () => ({
-  parseNatsMessage: jest.fn().mockReturnValue({
+vi.mock("../utils/parse-nats-message", () => ({
+  parseNatsMessage: vi.fn().mockReturnValue({
     payload: Buffer.from("{}"),
     headers: {},
     topic: "TckNatsRpcSrvReq",
@@ -47,55 +48,55 @@ class TckNatsRpcSrvRes implements IMessage {
 // --- Helpers ---
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 let mockSubscription: NatsSubscription;
 
 const createMockState = (): NatsSharedState => {
   mockSubscription = {
-    unsubscribe: jest.fn(),
-    drain: jest.fn().mockResolvedValue(undefined),
+    unsubscribe: vi.fn(),
+    drain: vi.fn().mockResolvedValue(undefined),
     isClosed: false,
   };
 
   return {
     nc: {
-      subscribe: jest.fn().mockReturnValue(mockSubscription),
-      request: jest.fn(),
-      jetstream: jest.fn(),
-      jetstreamManager: jest.fn(),
-      publish: jest.fn(),
-      flush: jest.fn(),
-      close: jest.fn(),
-      drain: jest.fn(),
-      status: jest.fn(),
-      isClosed: jest.fn().mockReturnValue(false),
+      subscribe: vi.fn().mockReturnValue(mockSubscription),
+      request: vi.fn(),
+      jetstream: vi.fn(),
+      jetstreamManager: vi.fn(),
+      publish: vi.fn(),
+      flush: vi.fn(),
+      close: vi.fn(),
+      drain: vi.fn(),
+      status: vi.fn(),
+      isClosed: vi.fn().mockReturnValue(false),
     } as any,
     js: {
-      publish: jest
+      publish: vi
         .fn()
         .mockResolvedValue({ seq: 1, stream: "IRIS_IRIS", duplicate: false }),
-      consumers: { get: jest.fn() },
+      consumers: { get: vi.fn() },
     } as any,
     jsm: {
-      streams: { info: jest.fn(), add: jest.fn(), purge: jest.fn() },
+      streams: { info: vi.fn(), add: vi.fn(), purge: vi.fn() },
       consumers: {
-        add: jest.fn().mockResolvedValue({}),
-        delete: jest.fn().mockResolvedValue(true),
+        add: vi.fn().mockResolvedValue({}),
+        delete: vi.fn().mockResolvedValue(true),
       },
     } as any,
-    headersInit: jest.fn().mockReturnValue({
-      get: jest.fn(),
-      set: jest.fn(),
-      has: jest.fn(),
-      values: jest.fn(),
+    headersInit: vi.fn().mockReturnValue({
+      get: vi.fn(),
+      set: vi.fn(),
+      has: vi.fn(),
+      values: vi.fn(),
     }) as any,
     prefix: "iris",
     streamName: "IRIS_IRIS",

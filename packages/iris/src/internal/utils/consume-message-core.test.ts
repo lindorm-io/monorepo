@@ -7,21 +7,22 @@ import {
   type ConsumeStrategies,
   type ConsumeMessageCoreOptions,
 } from "./consume-message-core";
+import { describe, expect, it, vi, type Mock } from "vitest";
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 const createMockHost = <M extends IMessage>(): ConsumerCallbackHost<M> => ({
-  prepareForConsume: jest.fn().mockResolvedValue({ data: "hydrated" }),
-  afterConsumeSuccess: jest.fn().mockResolvedValue(undefined),
-  onConsumeError: jest.fn().mockResolvedValue(undefined),
+  prepareForConsume: vi.fn().mockResolvedValue({ data: "hydrated" }),
+  afterConsumeSuccess: vi.fn().mockResolvedValue(undefined),
+  onConsumeError: vi.fn().mockResolvedValue(undefined),
 });
 
 const createEnvelope = (overrides: Partial<IrisEnvelope> = {}): IrisEnvelope => ({
@@ -55,20 +56,20 @@ const createMetadata = (overrides: Partial<MessageMetadata> = {}): MessageMetada
   }) as unknown as MessageMetadata;
 
 const createStrategies = (): ConsumeStrategies => ({
-  onExpired: jest.fn().mockResolvedValue(undefined),
-  onDeserializationError: jest.fn().mockResolvedValue(undefined),
-  retry: jest.fn().mockResolvedValue(undefined),
-  onRetryFailed: jest.fn().mockResolvedValue(undefined),
-  deadLetter: jest.fn().mockResolvedValue(undefined),
-  onExhaustedNoDeadLetter: jest.fn().mockResolvedValue(undefined),
-  onSuccess: jest.fn().mockResolvedValue(undefined),
+  onExpired: vi.fn().mockResolvedValue(undefined),
+  onDeserializationError: vi.fn().mockResolvedValue(undefined),
+  retry: vi.fn().mockResolvedValue(undefined),
+  onRetryFailed: vi.fn().mockResolvedValue(undefined),
+  deadLetter: vi.fn().mockResolvedValue(undefined),
+  onExhaustedNoDeadLetter: vi.fn().mockResolvedValue(undefined),
+  onSuccess: vi.fn().mockResolvedValue(undefined),
 });
 
 describe("consumeMessageCore", () => {
   describe("happy path", () => {
     it("should call prepareForConsume, callback, onSuccess, and afterConsumeSuccess", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockResolvedValue(undefined);
+      const callback = vi.fn().mockResolvedValue(undefined);
       const strategies = createStrategies();
       const logger = createMockLogger();
 
@@ -91,7 +92,7 @@ describe("consumeMessageCore", () => {
 
     it("should build ConsumeEnvelope with metadata fields", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockResolvedValue(undefined);
+      const callback = vi.fn().mockResolvedValue(undefined);
       const strategies = createStrategies();
       const logger = createMockLogger();
       const metadata = createMetadata({ namespace: "my-ns", version: 3 });
@@ -119,7 +120,7 @@ describe("consumeMessageCore", () => {
   describe("expiry", () => {
     it("should skip expired envelopes and call onExpired", async () => {
       const host = createMockHost();
-      const callback = jest.fn();
+      const callback = vi.fn();
       const strategies = createStrategies();
       const logger = createMockLogger();
 
@@ -149,8 +150,8 @@ describe("consumeMessageCore", () => {
   describe("deserialization failure", () => {
     it("should call onDeserializationError strategy", async () => {
       const host = createMockHost();
-      (host.prepareForConsume as jest.Mock).mockRejectedValue(new Error("bad data"));
-      const callback = jest.fn();
+      (host.prepareForConsume as Mock).mockRejectedValue(new Error("bad data"));
+      const callback = vi.fn();
       const strategies = createStrategies();
       const logger = createMockLogger();
 
@@ -176,8 +177,8 @@ describe("consumeMessageCore", () => {
 
     it("should wrap non-Error throws in deserialization", async () => {
       const host = createMockHost();
-      (host.prepareForConsume as jest.Mock).mockRejectedValue("string error");
-      const callback = jest.fn();
+      (host.prepareForConsume as Mock).mockRejectedValue("string error");
+      const callback = vi.fn();
       const strategies = createStrategies();
       const logger = createMockLogger();
 
@@ -199,7 +200,7 @@ describe("consumeMessageCore", () => {
   describe("callback error - retry", () => {
     it("should call retry strategy when attempts remain", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockRejectedValue(new Error("fail"));
+      const callback = vi.fn().mockRejectedValue(new Error("fail"));
       const strategies = createStrategies();
       const logger = createMockLogger();
 
@@ -223,9 +224,9 @@ describe("consumeMessageCore", () => {
 
     it("should call onRetryFailed when retry strategy throws", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockRejectedValue(new Error("fail"));
+      const callback = vi.fn().mockRejectedValue(new Error("fail"));
       const strategies = createStrategies();
-      (strategies.retry as jest.Mock).mockRejectedValue(new Error("retry failed"));
+      (strategies.retry as Mock).mockRejectedValue(new Error("retry failed"));
       const logger = createMockLogger();
 
       const envelope = createEnvelope({ maxRetries: 3, retryDelay: 100 });
@@ -252,7 +253,7 @@ describe("consumeMessageCore", () => {
   describe("callback error - exhausted retries", () => {
     it("should call deadLetter strategy when retries exhausted and deadLetter enabled", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockRejectedValue(new Error("permanent"));
+      const callback = vi.fn().mockRejectedValue(new Error("permanent"));
       const strategies = createStrategies();
       const logger = createMockLogger();
 
@@ -275,7 +276,7 @@ describe("consumeMessageCore", () => {
 
     it("should call onExhaustedNoDeadLetter when no dead letter", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockRejectedValue(new Error("fail"));
+      const callback = vi.fn().mockRejectedValue(new Error("fail"));
       const strategies = createStrategies();
       const logger = createMockLogger();
 
@@ -297,8 +298,8 @@ describe("consumeMessageCore", () => {
   describe("afterConsumeSuccess hook", () => {
     it("should log and swallow afterConsumeSuccess errors", async () => {
       const host = createMockHost();
-      (host.afterConsumeSuccess as jest.Mock).mockRejectedValue(new Error("hook failed"));
-      const callback = jest.fn().mockResolvedValue(undefined);
+      (host.afterConsumeSuccess as Mock).mockRejectedValue(new Error("hook failed"));
+      const callback = vi.fn().mockResolvedValue(undefined);
       const strategies = createStrategies();
       const logger = createMockLogger();
 
@@ -323,7 +324,7 @@ describe("consumeMessageCore", () => {
     it("should increment before processing and decrement after", async () => {
       const host = createMockHost();
       let capturedCount = -1;
-      const callback = jest.fn().mockImplementation(async () => {
+      const callback = vi.fn().mockImplementation(async () => {
         capturedCount = counter.value;
       });
       const strategies = createStrategies();
@@ -352,7 +353,7 @@ describe("consumeMessageCore", () => {
 
     it("should decrement on error", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockRejectedValue(new Error("fail"));
+      const callback = vi.fn().mockRejectedValue(new Error("fail"));
       const strategies = createStrategies();
       const logger = createMockLogger();
       const counter = { value: 0 };
@@ -378,8 +379,8 @@ describe("consumeMessageCore", () => {
 
     it("should decrement on deserialization failure", async () => {
       const host = createMockHost();
-      (host.prepareForConsume as jest.Mock).mockRejectedValue(new Error("bad"));
-      const callback = jest.fn();
+      (host.prepareForConsume as Mock).mockRejectedValue(new Error("bad"));
+      const callback = vi.fn();
       const strategies = createStrategies();
       const logger = createMockLogger();
       const counter = { value: 0 };
@@ -405,7 +406,7 @@ describe("consumeMessageCore", () => {
 
     it("should not increment on expired messages", async () => {
       const host = createMockHost();
-      const callback = jest.fn();
+      const callback = vi.fn();
       const strategies = createStrategies();
       const logger = createMockLogger();
       const counter = { value: 0 };
@@ -436,7 +437,7 @@ describe("consumeMessageCore", () => {
   describe("error wrapping", () => {
     it("should wrap non-Error callback throws", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockRejectedValue("string error");
+      const callback = vi.fn().mockRejectedValue("string error");
       const strategies = createStrategies();
       const logger = createMockLogger();
 

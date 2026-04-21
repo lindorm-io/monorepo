@@ -2,14 +2,17 @@ import type { IDeadLetterStore } from "../../../interfaces/IrisDeadLetterStore";
 import { MemoryDeadLetterStore } from "../MemoryDeadLetterStore";
 import { RedisDeadLetterStore } from "../RedisDeadLetterStore";
 import { createDeadLetterStore } from "./create-dead-letter-store";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const mockPing = jest.fn().mockResolvedValue("PONG");
+const mockPing = vi.fn().mockResolvedValue("PONG");
 
-jest.mock("ioredis", () => ({
-  Redis: jest.fn().mockImplementation(() => ({
-    ping: mockPing,
-    quit: jest.fn(),
-  })),
+vi.mock("ioredis", async () => ({
+  Redis: vi.fn(function () {
+    return {
+      ping: mockPing,
+      quit: vi.fn(),
+    };
+  }),
 }));
 
 describe("createDeadLetterStore", () => {
@@ -30,13 +33,13 @@ describe("createDeadLetterStore", () => {
 
   it("should return the custom store as-is", async () => {
     const custom: IDeadLetterStore = {
-      add: jest.fn(),
-      list: jest.fn(),
-      get: jest.fn(),
-      remove: jest.fn(),
-      purge: jest.fn(),
-      count: jest.fn(),
-      close: jest.fn(),
+      add: vi.fn(),
+      list: vi.fn(),
+      get: vi.fn(),
+      remove: vi.fn(),
+      purge: vi.fn(),
+      count: vi.fn(),
+      close: vi.fn(),
     };
 
     const store = await createDeadLetterStore({ type: "custom", store: custom });

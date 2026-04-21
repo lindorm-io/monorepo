@@ -2,6 +2,7 @@ import { buildMessageMetadata } from "../internal/message/metadata/build-message
 import { Field } from "./Field";
 import { Message } from "./Message";
 import { Nullable } from "./Nullable";
+import { describe, expect, it } from "vitest";
 
 describe("Nullable", () => {
   it("should stage field modifier with nullable true", () => {

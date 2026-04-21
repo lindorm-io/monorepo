@@ -1,21 +1,24 @@
 import { MessageScanner } from "./MessageScanner";
 import { IrisScannerError } from "../errors/IrisScannerError";
 import type { IScanData } from "@lindorm/scanner";
+import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 // TODO: add integration test with real fixture directory to validate end-to-end file scanning and pattern exclusion
 
 // --- Mock @lindorm/scanner ----
 
-const mockScan = jest.fn();
-const mockImport = jest.fn();
+const mockScan = vi.fn();
+const mockImport = vi.fn();
 const mockScannerInstance = { scan: mockScan, import: mockImport };
 
-jest.mock("@lindorm/scanner", () => ({
-  Scanner: jest.fn(() => mockScannerInstance),
+vi.mock("@lindorm/scanner", async () => ({
+  Scanner: vi.fn(function () {
+    return mockScannerInstance;
+  }),
 }));
 
 import { Scanner } from "@lindorm/scanner";
-const MockScanner = Scanner as unknown as jest.Mock;
+const MockScanner = Scanner as unknown as Mock;
 
 // --- Fixture constructors ---
 

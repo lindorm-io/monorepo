@@ -6,6 +6,7 @@ import type { ConsumeEnvelope } from "../../../types/consume-envelope";
 import type { TckCapabilities, TckDriverHandle } from "./types";
 import type { TckMessages } from "./create-tck-messages";
 import { waitFor } from "./wait";
+import { beforeEach, describe, expect, test } from "vitest";
 
 export const retryDeadLetterSuite = (
   getHandle: () => TckDriverHandle,

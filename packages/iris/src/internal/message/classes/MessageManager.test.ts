@@ -18,6 +18,7 @@ import { Transform } from "../../../decorators/Transform";
 import { IrisError } from "../../../errors/IrisError";
 import { MessageManager } from "./MessageManager";
 import { z } from "zod";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // --- Test message classes ---
 
@@ -80,9 +81,9 @@ class GeneratedEvent {
   weight!: number;
 }
 
-const onCreateSpy = jest.fn();
-const onHydrateSpy = jest.fn();
-const onValidateSpy = jest.fn();
+const onCreateSpy = vi.fn();
+const onHydrateSpy = vi.fn();
+const onValidateSpy = vi.fn();
 
 @OnValidate(onValidateSpy)
 @OnHydrate(onHydrateSpy)
@@ -659,7 +660,7 @@ describe("MessageManager", () => {
     });
 
     it("should throw when sync hook returns a Promise", () => {
-      const asyncCallback = jest.fn().mockResolvedValue(undefined);
+      const asyncCallback = vi.fn().mockResolvedValue(undefined);
 
       @OnCreate(asyncCallback)
       @Namespace("test")
@@ -681,10 +682,10 @@ describe("MessageManager", () => {
     // collection order is child-first. Hooks fire in that same collection order.
     it("should fire hooks in metadata collection order (child-first)", () => {
       const order: Array<string> = [];
-      const first = jest.fn(() => {
+      const first = vi.fn(() => {
         order.push("first");
       });
-      const second = jest.fn(() => {
+      const second = vi.fn(() => {
         order.push("second");
       });
 
@@ -705,10 +706,10 @@ describe("MessageManager", () => {
 
     it("should fire child hooks before parent hooks in inheritance", () => {
       const order: Array<string> = [];
-      const parentSpy = jest.fn(() => {
+      const parentSpy = vi.fn(() => {
         order.push("parent");
       });
-      const childSpy = jest.fn(() => {
+      const childSpy = vi.fn(() => {
         order.push("child");
       });
 
@@ -738,7 +739,7 @@ describe("MessageManager", () => {
 
   describe("async hooks", () => {
     it("should fire beforePublish", async () => {
-      const spy = jest.fn();
+      const spy = vi.fn();
 
       const { BeforePublish } = await import("../../../decorators/BeforePublish");
 
@@ -759,7 +760,7 @@ describe("MessageManager", () => {
     });
 
     it("should fire afterConsume", async () => {
-      const spy = jest.fn();
+      const spy = vi.fn();
 
       const { AfterConsume } = await import("../../../decorators/AfterConsume");
 

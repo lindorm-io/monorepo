@@ -1,6 +1,7 @@
 import { IrisError } from "../../../errors/IrisError";
 import { runHooksSync, runHooksAsync } from "./run-hooks";
 import type { MetaHook } from "../types/metadata";
+import { describe, expect, it, vi } from "vitest";
 
 const makeHook = (
   decorator: MetaHook["decorator"],
@@ -9,7 +10,7 @@ const makeHook = (
 
 describe("runHooksSync", () => {
   it("should call hooks matching the specified decorator type", () => {
-    const cb = jest.fn();
+    const cb = vi.fn();
     const hooks = [makeHook("OnCreate", cb)];
     const message = { id: "abc" };
     const context = { user: "test" };
@@ -21,8 +22,8 @@ describe("runHooksSync", () => {
   });
 
   it("should skip hooks of different decorator types", () => {
-    const onCreateCb = jest.fn();
-    const onHydrateCb = jest.fn();
+    const onCreateCb = vi.fn();
+    const onHydrateCb = vi.fn();
     const hooks = [makeHook("OnCreate", onCreateCb), makeHook("OnHydrate", onHydrateCb)];
 
     runHooksSync("OnCreate", hooks, {});
@@ -51,7 +52,7 @@ describe("runHooksSync", () => {
   });
 
   it("should pass message and context to the callback", () => {
-    const cb = jest.fn();
+    const cb = vi.fn();
     const hooks = [makeHook("BeforePublish", cb)];
     const msg = { payload: "data" };
     const ctx = { traceId: "123" };
@@ -66,7 +67,7 @@ describe("runHooksSync", () => {
   });
 
   it("should not error when no hooks match the decorator", () => {
-    const cb = jest.fn();
+    const cb = vi.fn();
     const hooks = [makeHook("OnHydrate", cb)];
 
     expect(() => runHooksSync("OnCreate", hooks, {})).not.toThrow();
@@ -90,7 +91,7 @@ describe("runHooksSync", () => {
 
 describe("runHooksAsync", () => {
   it("should call hooks matching the specified decorator type", async () => {
-    const cb = jest.fn();
+    const cb = vi.fn();
     const hooks = [makeHook("AfterPublish", cb)];
     const message = { id: "xyz" };
     const context = { session: "s1" };
@@ -102,8 +103,8 @@ describe("runHooksAsync", () => {
   });
 
   it("should skip hooks of different decorator types", async () => {
-    const matchCb = jest.fn();
-    const otherCb = jest.fn();
+    const matchCb = vi.fn();
+    const otherCb = vi.fn();
     const hooks = [makeHook("AfterConsume", matchCb), makeHook("OnCreate", otherCb)];
 
     await runHooksAsync("AfterConsume", hooks, {});
@@ -130,7 +131,7 @@ describe("runHooksAsync", () => {
   });
 
   it("should pass message and context to the callback", async () => {
-    const cb = jest.fn();
+    const cb = vi.fn();
     const hooks = [makeHook("BeforeConsume", cb)];
     const msg = { type: "event" };
     const ctx = { correlationId: "c1" };
@@ -145,7 +146,7 @@ describe("runHooksAsync", () => {
   });
 
   it("should not error when no hooks match the decorator", async () => {
-    const cb = jest.fn();
+    const cb = vi.fn();
     const hooks = [makeHook("OnHydrate", cb)];
 
     await runHooksAsync("OnCreate", hooks, {});

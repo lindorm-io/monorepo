@@ -2,6 +2,7 @@ import { z } from "zod";
 import { buildSchema } from "./build-schema";
 import type { MetaField } from "../types/metadata";
 import type { MessageMetadata } from "../types/metadata";
+import { describe, expect, it } from "vitest";
 
 const makeField = (overrides: Partial<MetaField> = {}): MetaField => ({
   key: "testField",

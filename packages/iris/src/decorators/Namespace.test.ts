@@ -1,5 +1,6 @@
 import { IrisMetadataError } from "../errors";
 import { Namespace } from "./Namespace";
+import { describe, expect, it } from "vitest";
 
 describe("Namespace", () => {
   it("should stage namespace metadata", () => {

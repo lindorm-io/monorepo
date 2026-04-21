@@ -7,6 +7,7 @@ import {
   DriverStreamPipelineBase,
   type DriverStreamPipelineBaseOptions,
 } from "./DriverStreamPipelineBase";
+import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 // --- Test messages ---
 
@@ -25,13 +26,13 @@ class TckPipeBaseOut implements IMessage {
 // --- Mock logger ---
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 // --- Concrete test subclass ---
@@ -223,7 +224,7 @@ describe("DriverStreamPipelineBase", () => {
 
   describe("resetBatchTimer()", () => {
     it("should route timer flush through _processingQueue to prevent races", async () => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
 
       const pipeline = new TestStreamPipeline({
         logger: createMockLogger() as any,
@@ -245,7 +246,7 @@ describe("DriverStreamPipelineBase", () => {
       pipelineAny.resetBatchTimer({ size: 10, timeout: 50 });
 
       // Advance the timer to trigger the flush
-      jest.advanceTimersByTime(50);
+      vi.advanceTimersByTime(50);
 
       // The flush should be queued on _processingQueue, not called directly
       // Verify that _processingQueue is no longer the initial resolved promise
@@ -253,7 +254,7 @@ describe("DriverStreamPipelineBase", () => {
       expect(queue).toBeInstanceOf(Promise);
 
       // Wait for the queue to settle
-      jest.useRealTimers();
+      vi.useRealTimers();
       await queue;
 
       // Buffer should have been flushed

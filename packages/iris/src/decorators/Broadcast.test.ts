@@ -1,4 +1,5 @@
 import { Broadcast } from "./Broadcast";
+import { describe, expect, it } from "vitest";
 
 describe("Broadcast", () => {
   it("should stage broadcast flag on metadata", () => {

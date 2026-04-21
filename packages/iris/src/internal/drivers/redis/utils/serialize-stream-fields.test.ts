@@ -1,5 +1,6 @@
 import type { IrisEnvelope } from "../../../types/iris-envelope";
 import { serializeStreamFields } from "./serialize-stream-fields";
+import { describe, expect, it } from "vitest";
 
 const createEnvelope = (overrides: Partial<IrisEnvelope> = {}): IrisEnvelope => ({
   payload: Buffer.from('{"hello":"world"}'),

@@ -1,6 +1,7 @@
 import { IrisSerializationError } from "../../../errors/IrisSerializationError";
 import type { MetaField } from "../types/metadata";
 import { parseField } from "./parse-field";
+import { describe, expect, it } from "vitest";
 
 const createField = (overrides: Partial<MetaField> = {}): MetaField => ({
   key: "testKey",

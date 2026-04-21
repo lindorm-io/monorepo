@@ -2,6 +2,7 @@ import { buildMessageMetadata } from "../internal/message/metadata/build-message
 import { Field } from "./Field";
 import { Message } from "./Message";
 import { Optional } from "./Optional";
+import { describe, expect, it } from "vitest";
 
 describe("Optional", () => {
   it("should stage field modifier with optional true", () => {

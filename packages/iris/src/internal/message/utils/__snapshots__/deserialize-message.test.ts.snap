@@ -1,4 +1,18 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`deserializeMessage > should parse body JSON and return data 1`] = `
+{
+  "count": 42,
+  "name": "hello",
+}
+`;
+
+exports[`deserializeMessage > should reattach @Header fields from headers into data 1`] = `
+{
+  "data": "payload",
+  "traceId": "abc-123",
+}
+`;
 
 exports[`deserializeMessage should parse body JSON and return data 1`] = `
 {

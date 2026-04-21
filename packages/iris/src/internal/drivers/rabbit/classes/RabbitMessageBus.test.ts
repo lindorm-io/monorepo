@@ -4,15 +4,16 @@ import { Message } from "../../../../decorators/Message";
 import { clearRegistry } from "../../../message/metadata/registry";
 import type { RabbitSharedState } from "../types/rabbit-types";
 import { RabbitMessageBus } from "./RabbitMessageBus";
+import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 // --- Mocks ---
-const mockPublishRabbitMessages = jest.fn().mockResolvedValue(undefined);
-jest.mock("../utils/publish-messages", () => ({
+const mockPublishRabbitMessages = vi.fn().mockResolvedValue(undefined);
+vi.mock("../utils/publish-messages", async () => ({
   publishRabbitMessages: (...args: Array<unknown>) => mockPublishRabbitMessages(...args),
 }));
 
-const mockWrapRabbitConsumer = jest.fn().mockReturnValue(jest.fn());
-jest.mock("../utils/wrap-rabbit-consumer", () => ({
+const mockWrapRabbitConsumer = vi.fn().mockReturnValue(vi.fn());
+vi.mock("../utils/wrap-rabbit-consumer", () => ({
   wrapRabbitConsumer: (...args: Array<unknown>) => mockWrapRabbitConsumer(...args),
 }));
 
@@ -26,30 +27,30 @@ class TckRabbitBusBasic implements IMessage {
 // --- Helpers ---
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 const createMockChannel = () => ({
-  assertQueue: jest
+  assertQueue: vi
     .fn()
     .mockResolvedValue({ queue: "amq.gen-ephemeral", messageCount: 0, consumerCount: 0 }),
-  bindQueue: jest.fn().mockResolvedValue(undefined),
-  consume: jest.fn().mockResolvedValue({ consumerTag: "ctag-1" }),
-  cancel: jest.fn().mockResolvedValue(undefined),
-  unbindQueue: jest.fn().mockResolvedValue(undefined),
-  ack: jest.fn(),
-  nack: jest.fn(),
+  bindQueue: vi.fn().mockResolvedValue(undefined),
+  consume: vi.fn().mockResolvedValue({ consumerTag: "ctag-1" }),
+  cancel: vi.fn().mockResolvedValue(undefined),
+  unbindQueue: vi.fn().mockResolvedValue(undefined),
+  ack: vi.fn(),
+  nack: vi.fn(),
 });
 
 const createMockState = (overrides?: Partial<RabbitSharedState>): RabbitSharedState => ({
   connection: {} as any,
-  publishChannel: { publish: jest.fn() } as any,
+  publishChannel: { publish: vi.fn() } as any,
   consumeChannel: createMockChannel() as any,
   exchange: "test-exchange",
   dlxExchange: "test-exchange.dlx",
@@ -279,8 +280,8 @@ describe("RabbitMessageBus", () => {
         callback: async () => {},
       });
 
-      (channel.unbindQueue as jest.Mock).mockRejectedValueOnce(new Error("queue gone"));
-      (channel.cancel as jest.Mock).mockRejectedValueOnce(new Error("consumer gone"));
+      (channel.unbindQueue as Mock).mockRejectedValueOnce(new Error("queue gone"));
+      (channel.cancel as Mock).mockRejectedValueOnce(new Error("consumer gone"));
 
       await expect(
         bus.unsubscribe({ topic: "TckRabbitBusBasic", queue: "q1" }),
@@ -294,7 +295,7 @@ describe("RabbitMessageBus", () => {
       const channel = state.consumeChannel!;
 
       let ctagCounter = 0;
-      (channel.consume as jest.Mock).mockImplementation(async () => ({
+      (channel.consume as Mock).mockImplementation(async () => ({
         consumerTag: `ctag-${++ctagCounter}`,
       }));
 
@@ -326,8 +327,8 @@ describe("RabbitMessageBus", () => {
         callback: async () => {},
       });
 
-      (channel.unbindQueue as jest.Mock).mockRejectedValue(new Error("gone"));
-      (channel.cancel as jest.Mock).mockRejectedValue(new Error("gone"));
+      (channel.unbindQueue as Mock).mockRejectedValue(new Error("gone"));
+      (channel.cancel as Mock).mockRejectedValue(new Error("gone"));
 
       await expect(bus.unsubscribeAll()).resolves.toBeUndefined();
     });

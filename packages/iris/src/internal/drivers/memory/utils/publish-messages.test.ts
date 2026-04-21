@@ -5,6 +5,7 @@ import type { DelayManager } from "../../../delay/DelayManager";
 import type { MemorySharedState } from "../types/memory-store";
 import { createStore } from "./create-store";
 import { publishMessages, type PublishDriver } from "./publish-messages";
+import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 const makeMetadata = (name: string): MessageMetadata =>
   ({
@@ -28,11 +29,11 @@ const makeDriver = (
   return {
     metadata,
     calls,
-    prepareForPublish: jest.fn(async (message: IMessage): Promise<OutboundPayload> => {
+    prepareForPublish: vi.fn(async (message: IMessage): Promise<OutboundPayload> => {
       calls.prepared.push(message);
       return { payload: Buffer.from("test"), headers: {} };
     }),
-    completePublish: jest.fn(async (message: IMessage): Promise<void> => {
+    completePublish: vi.fn(async (message: IMessage): Promise<void> => {
       calls.completed.push(message);
     }),
   };
@@ -42,15 +43,15 @@ const createMockDelayManager = (): DelayManager & { scheduledCalls: Array<any> }
   const scheduledCalls: Array<any> = [];
   return {
     scheduledCalls,
-    schedule: jest.fn(async (envelope: any, topic: string, delayMs: number) => {
+    schedule: vi.fn(async (envelope: any, topic: string, delayMs: number) => {
       scheduledCalls.push({ envelope, topic, delayMs });
       return "delay-id";
     }),
-    cancel: jest.fn(),
-    start: jest.fn(),
-    stop: jest.fn(),
-    size: jest.fn(),
-    close: jest.fn(),
+    cancel: vi.fn(),
+    start: vi.fn(),
+    stop: vi.fn(),
+    size: vi.fn(),
+    close: vi.fn(),
   } as any;
 };
 
@@ -157,7 +158,7 @@ describe("publishMessages", () => {
 
     await publishMessages(msg, undefined, driver, store);
 
-    const prepared = (driver.prepareForPublish as jest.Mock).mock.results[0].value;
+    const prepared = (driver.prepareForPublish as Mock).mock.results[0].value;
     const outbound = await prepared;
 
     expect(outbound.headers["x-iris-priority"]).toBe("5");
@@ -178,7 +179,7 @@ describe("publishMessages", () => {
 
     await publishMessages(msg, { priority: 7 }, driver, store);
 
-    const prepared = (driver.prepareForPublish as jest.Mock).mock.results[0].value;
+    const prepared = (driver.prepareForPublish as Mock).mock.results[0].value;
     const outbound = await prepared;
 
     expect(outbound.headers["x-iris-priority"]).toBe("7");
@@ -196,7 +197,7 @@ describe("publishMessages", () => {
 
     await publishMessages(msg, undefined, driver, store);
 
-    const prepared = (driver.prepareForPublish as jest.Mock).mock.results[0].value;
+    const prepared = (driver.prepareForPublish as Mock).mock.results[0].value;
     const outbound = await prepared;
 
     expect(outbound.headers["x-iris-priority"]).toBeUndefined();

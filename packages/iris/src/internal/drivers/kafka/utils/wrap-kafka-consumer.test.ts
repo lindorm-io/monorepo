@@ -4,44 +4,45 @@ import type { MessageMetadata } from "../../../message/types/metadata";
 import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager";
 import type { KafkaEachMessagePayload, KafkaSharedState } from "../types/kafka-types";
 import { wrapKafkaConsumer, type KafkaConsumerCallbackHost } from "./wrap-kafka-consumer";
+import { describe, expect, it, vi, type Mock } from "vitest";
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 const createMockHost = <M extends IMessage>(): KafkaConsumerCallbackHost<M> => ({
-  prepareForConsume: jest.fn().mockResolvedValue({ data: "hydrated" }),
-  afterConsumeSuccess: jest.fn().mockResolvedValue(undefined),
-  onConsumeError: jest.fn().mockResolvedValue(undefined),
+  prepareForConsume: vi.fn().mockResolvedValue({ data: "hydrated" }),
+  afterConsumeSuccess: vi.fn().mockResolvedValue(undefined),
+  onConsumeError: vi.fn().mockResolvedValue(undefined),
 });
 
 const createMockDeadLetterManager = (): DeadLetterManager =>
   ({
-    send: jest.fn().mockResolvedValue("dl-id"),
-    list: jest.fn().mockResolvedValue([]),
-    get: jest.fn().mockResolvedValue(null),
-    remove: jest.fn().mockResolvedValue(false),
-    purge: jest.fn().mockResolvedValue(0),
-    count: jest.fn().mockResolvedValue(0),
-    close: jest.fn().mockResolvedValue(undefined),
+    send: vi.fn().mockResolvedValue("dl-id"),
+    list: vi.fn().mockResolvedValue([]),
+    get: vi.fn().mockResolvedValue(null),
+    remove: vi.fn().mockResolvedValue(false),
+    purge: vi.fn().mockResolvedValue(0),
+    count: vi.fn().mockResolvedValue(0),
+    close: vi.fn().mockResolvedValue(undefined),
   }) as any;
 
 const createMockConsumer = () => ({
-  connect: jest.fn().mockResolvedValue(undefined),
-  disconnect: jest.fn().mockResolvedValue(undefined),
-  subscribe: jest.fn().mockResolvedValue(undefined),
-  run: jest.fn().mockResolvedValue(undefined),
-  pause: jest.fn(),
-  resume: jest.fn(),
-  stop: jest.fn().mockResolvedValue(undefined),
-  commitOffsets: jest.fn().mockResolvedValue(undefined),
-  on: jest.fn().mockReturnValue(() => {}),
+  connect: vi.fn().mockResolvedValue(undefined),
+  disconnect: vi.fn().mockResolvedValue(undefined),
+  subscribe: vi.fn().mockResolvedValue(undefined),
+  run: vi.fn().mockResolvedValue(undefined),
+  pause: vi.fn(),
+  resume: vi.fn(),
+  stop: vi.fn().mockResolvedValue(undefined),
+  commitOffsets: vi.fn().mockResolvedValue(undefined),
+  on: vi.fn().mockReturnValue(() => {}),
   events: {
     GROUP_JOIN: "consumer.group_join",
     HEARTBEAT: "consumer.heartbeat",
@@ -60,9 +61,9 @@ const createMockConsumer = () => ({
 });
 
 const createMockProducer = () => ({
-  connect: jest.fn().mockResolvedValue(undefined),
-  disconnect: jest.fn().mockResolvedValue(undefined),
-  send: jest.fn().mockResolvedValue(undefined),
+  connect: vi.fn().mockResolvedValue(undefined),
+  disconnect: vi.fn().mockResolvedValue(undefined),
+  send: vi.fn().mockResolvedValue(undefined),
 });
 
 const createHeaders = (
@@ -113,7 +114,7 @@ const createPayload = (
     offset: overrides?.offset ?? "42",
     timestamp: overrides?.timestamp ?? "1700000000000",
   },
-  heartbeat: jest.fn().mockResolvedValue(undefined),
+  heartbeat: vi.fn().mockResolvedValue(undefined),
 });
 
 const createMetadata = (overrides: Partial<MessageMetadata> = {}): MessageMetadata =>
@@ -152,7 +153,7 @@ describe("wrapKafkaConsumer", () => {
   describe("happy path", () => {
     it("should call prepareForConsume, callback, and afterConsumeSuccess", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockResolvedValue(undefined);
+      const callback = vi.fn().mockResolvedValue(undefined);
       const state = createState();
       const metadata = createMetadata();
       const logger = createMockLogger();
@@ -178,7 +179,7 @@ describe("wrapKafkaConsumer", () => {
 
     it("should commit offsets after successful processing", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockResolvedValue(undefined);
+      const callback = vi.fn().mockResolvedValue(undefined);
       const state = createState();
       const metadata = createMetadata();
       const logger = createMockLogger();
@@ -197,7 +198,7 @@ describe("wrapKafkaConsumer", () => {
 
     it("should pass ConsumeEnvelope with metadata fields to callback", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockResolvedValue(undefined);
+      const callback = vi.fn().mockResolvedValue(undefined);
       const state = createState();
       const metadata = createMetadata({ namespace: "my-ns", version: 3 });
       const logger = createMockLogger();
@@ -224,7 +225,7 @@ describe("wrapKafkaConsumer", () => {
 
     it("should decrement inFlightCount after processing", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockResolvedValue(undefined);
+      const callback = vi.fn().mockResolvedValue(undefined);
       const state = createState();
       const logger = createMockLogger();
       const consumer = createMockConsumer();
@@ -245,7 +246,7 @@ describe("wrapKafkaConsumer", () => {
     it("should increment inFlightCount during processing", async () => {
       const host = createMockHost();
       let captured = -1;
-      const callback = jest.fn().mockImplementation(async () => {
+      const callback = vi.fn().mockImplementation(async () => {
         captured = state.inFlightCount;
       });
       const state = createState();
@@ -270,7 +271,7 @@ describe("wrapKafkaConsumer", () => {
   describe("expiry", () => {
     it("should skip expired messages", async () => {
       const host = createMockHost();
-      const callback = jest.fn();
+      const callback = vi.fn();
       const state = createState();
       const logger = createMockLogger();
       const consumer = createMockConsumer();
@@ -302,7 +303,7 @@ describe("wrapKafkaConsumer", () => {
 
     it("should not skip messages with null expiry", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockResolvedValue(undefined);
+      const callback = vi.fn().mockResolvedValue(undefined);
       const state = createState();
       const logger = createMockLogger();
       const consumer = createMockConsumer();
@@ -328,8 +329,8 @@ describe("wrapKafkaConsumer", () => {
   describe("deserialization failure", () => {
     it("should log and send to dead letter on deserialization error", async () => {
       const host = createMockHost();
-      (host.prepareForConsume as jest.Mock).mockRejectedValue(new Error("bad data"));
-      const callback = jest.fn();
+      (host.prepareForConsume as Mock).mockRejectedValue(new Error("bad data"));
+      const callback = vi.fn();
       const state = createState();
       const metadata = createMetadata({ deadLetter: true });
       const logger = createMockLogger();
@@ -354,8 +355,8 @@ describe("wrapKafkaConsumer", () => {
 
     it("should not send to dead letter when no manager provided", async () => {
       const host = createMockHost();
-      (host.prepareForConsume as jest.Mock).mockRejectedValue(new Error("bad data"));
-      const callback = jest.fn();
+      (host.prepareForConsume as Mock).mockRejectedValue(new Error("bad data"));
+      const callback = vi.fn();
       const state = createState();
       const metadata = createMetadata({ deadLetter: true });
       const logger = createMockLogger();
@@ -377,7 +378,7 @@ describe("wrapKafkaConsumer", () => {
   describe("callback error - retry", () => {
     it("should republish with incremented attempt when retries remain (no delayManager)", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockRejectedValue(new Error("fail"));
+      const callback = vi.fn().mockRejectedValue(new Error("fail"));
       const state = createState();
       const metadata = createMetadata();
       const logger = createMockLogger();
@@ -398,19 +399,19 @@ describe("wrapKafkaConsumer", () => {
       expect(host.onConsumeError).toHaveBeenCalled();
       expect(state.producer!.send).toHaveBeenCalledTimes(1);
 
-      const sendArgs = (state.producer!.send as jest.Mock).mock.calls[0][0];
+      const sendArgs = (state.producer!.send as Mock).mock.calls[0][0];
       const kafkaHeaders = sendArgs.messages[0].headers;
       expect(kafkaHeaders["x-iris-attempt"]).toBe("1");
     });
 
     it("should schedule retry via delayManager when available", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockRejectedValue(new Error("fail"));
+      const callback = vi.fn().mockRejectedValue(new Error("fail"));
       const state = createState();
       const metadata = createMetadata();
       const logger = createMockLogger();
       const consumer = createMockConsumer();
-      const delayManager = { schedule: jest.fn().mockResolvedValue("delay-id") } as any;
+      const delayManager = { schedule: vi.fn().mockResolvedValue("delay-id") } as any;
 
       const wrapped = wrapKafkaConsumer(host, callback, state, metadata, logger as any, {
         consumer: consumer as any,
@@ -437,7 +438,7 @@ describe("wrapKafkaConsumer", () => {
 
     it("should not retry when attempt >= maxRetries", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockRejectedValue(new Error("fail"));
+      const callback = vi.fn().mockRejectedValue(new Error("fail"));
       const state = createState();
       const metadata = createMetadata();
       const logger = createMockLogger();
@@ -462,7 +463,7 @@ describe("wrapKafkaConsumer", () => {
   describe("callback error - exhausted retries", () => {
     it("should send to dead letter when retries exhausted and dead letter enabled", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockRejectedValue(new Error("permanent"));
+      const callback = vi.fn().mockRejectedValue(new Error("permanent"));
       const state = createState();
       const metadata = createMetadata({ deadLetter: true });
       const logger = createMockLogger();
@@ -491,7 +492,7 @@ describe("wrapKafkaConsumer", () => {
 
     it("should not send to dead letter when dead letter is disabled", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockRejectedValue(new Error("fail"));
+      const callback = vi.fn().mockRejectedValue(new Error("fail"));
       const state = createState();
       const metadata = createMetadata({ deadLetter: false });
       const logger = createMockLogger();
@@ -518,8 +519,8 @@ describe("wrapKafkaConsumer", () => {
   describe("afterConsumeSuccess hook", () => {
     it("should log and swallow afterConsumeSuccess errors", async () => {
       const host = createMockHost();
-      (host.afterConsumeSuccess as jest.Mock).mockRejectedValue(new Error("hook failed"));
-      const callback = jest.fn().mockResolvedValue(undefined);
+      (host.afterConsumeSuccess as Mock).mockRejectedValue(new Error("hook failed"));
+      const callback = vi.fn().mockResolvedValue(undefined);
       const state = createState();
       const logger = createMockLogger();
       const consumer = createMockConsumer();
@@ -547,7 +548,7 @@ describe("wrapKafkaConsumer", () => {
   describe("inFlightCount management", () => {
     it("should decrement inFlightCount even on error", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockRejectedValue(new Error("fail"));
+      const callback = vi.fn().mockRejectedValue(new Error("fail"));
       const state = createState();
       const logger = createMockLogger();
       const consumer = createMockConsumer();
@@ -567,8 +568,8 @@ describe("wrapKafkaConsumer", () => {
 
     it("should decrement inFlightCount on deserialization failure", async () => {
       const host = createMockHost();
-      (host.prepareForConsume as jest.Mock).mockRejectedValue(new Error("bad data"));
-      const callback = jest.fn();
+      (host.prepareForConsume as Mock).mockRejectedValue(new Error("bad data"));
+      const callback = vi.fn();
       const state = createState();
       const logger = createMockLogger();
       const consumer = createMockConsumer();
