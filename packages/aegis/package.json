@@ -43,7 +43,6 @@
     "prettier": "prettier --write ./src/*",
     "test": "vitest run",
     "test:ci": "vitest run",
-    "test:interop": "NODE_OPTIONS='--experimental-vm-modules' jest --config jest.config.interop.mjs --no-coverage",
     "test:watch": "vitest",
     "typecheck": "tsc",
     "typecheck:watch": "tsc --watch",

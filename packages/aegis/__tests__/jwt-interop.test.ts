@@ -4,6 +4,7 @@ import { importJWK, jwtVerify, SignJWT } from "jose";
 import type { JwtPayload } from "jsonwebtoken";
 import { createRequire } from "module";
 import { JwtKit } from "../src/classes/JwtKit";
+import { describe, expect, test } from "vitest";
 
 const require = createRequire(import.meta.url);
 const jsonwebtoken = require("jsonwebtoken") as typeof import("jsonwebtoken");
