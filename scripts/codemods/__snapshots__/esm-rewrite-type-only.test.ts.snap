@@ -1,0 +1,50 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`applyTypeOnlyFixes handles aliased named import (foo as Bar) 1`] = `
+"import type { foo as Bar } from "./foo";
+"
+`;
+
+exports[`applyTypeOnlyFixes inline-annotates a single type-only specifier in a mixed import 1`] = `
+"import { A, type B } from "./foo";
+"
+`;
+
+exports[`applyTypeOnlyFixes inline-annotates type-only specifier in re-export 1`] = `
+"export { A, type B } from "./foo";
+"
+`;
+
+exports[`applyTypeOnlyFixes multi-line import formatting preserved 1`] = `
+"import {
+  A,
+  type B,
+} from "./foo";
+"
+`;
+
+exports[`applyTypeOnlyFixes promotes default-only import to import type 1`] = `
+"import type X from "./foo";
+"
+`;
+
+exports[`applyTypeOnlyFixes promotes multi-specifier statement when all are type-only 1`] = `
+"import type { A, B } from "./foo";
+"
+`;
+
+exports[`applyTypeOnlyFixes promotes re-export to export type when all specifiers are type-only 1`] = `
+"export type { A, B } from "./foo";
+"
+`;
+
+exports[`applyTypeOnlyFixes promotes whole statement to import type when every specifier is type-only 1`] = `
+"import type { B } from "./foo";
+"
+`;
+
+exports[`findTypeOnlyImports applying the fix clears TS1484 in the entry file 1`] = `
+"import { Foo, type Bar, type Baz } from "./lib";
+export const f = (b: Bar, z: Baz) => new Foo();
+"
+`;
