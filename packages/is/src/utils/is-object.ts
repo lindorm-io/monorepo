@@ -1,4 +1,4 @@
-import { Dict } from "@lindorm/types";
+import type { Dict } from "@lindorm/types";
 import { isBuffer } from "./is-buffer";
 import { isClass } from "./is-class";
 import { isDate } from "./is-date";
