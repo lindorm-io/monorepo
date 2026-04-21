@@ -144,7 +144,7 @@ export type KafkaSharedState = {
   admin: KafkaAdmin | null;
   connectionConfig: {
     brokers: Array<string>;
-  } & import("../../../../types").KafkaConnectionOptions;
+  } & import("../../../../types/index.js").KafkaConnectionOptions;
   acks: number;
   prefix: string;
   consumers: Array<KafkaConsumerHandle>;

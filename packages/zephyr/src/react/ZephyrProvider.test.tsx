@@ -1,8 +1,8 @@
 /** @jest-environment jsdom */
 import React from "react";
 import { renderHook } from "@testing-library/react";
-import { ZephyrProvider, useZephyrContext } from "./ZephyrProvider";
-import { createMockClient } from "./__fixtures__/mock-client";
+import { ZephyrProvider, useZephyrContext } from "./ZephyrProvider.js";
+import { createMockClient } from "./__fixtures__/mock-client.js";
 import { describe, expect, test, vi } from "vitest";
 
 const createWrapper = (client: any) => {

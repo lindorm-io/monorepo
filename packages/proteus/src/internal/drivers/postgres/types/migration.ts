@@ -16,7 +16,7 @@ export type {
 
 // Postgres-specific: LoadedMigration references the shared SqlMigrationInterface
 export type LoadedMigration = {
-  migration: import("../../../types/migration").SqlMigrationInterface;
+  migration: import("../../../types/migration.js").SqlMigrationInterface;
   name: string;
 };
 

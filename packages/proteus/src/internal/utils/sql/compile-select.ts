@@ -20,9 +20,9 @@ export type CompileSelectDeps = {
   findRelationByKey: (
     metadata: EntityMetadata,
     relationKey: string,
-  ) => import("../../entity/types/metadata").MetaRelation;
+  ) => import("../../entity/types/metadata.js").MetaRelation;
   getRelationMetadata: (
-    relation: import("../../entity/types/metadata").MetaRelation,
+    relation: import("../../entity/types/metadata.js").MetaRelation,
   ) => EntityMetadata;
 };
 

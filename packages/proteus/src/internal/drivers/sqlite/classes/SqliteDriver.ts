@@ -492,7 +492,7 @@ export class SqliteDriver implements IProteusDriver {
 
   private syncAppendOnlyTriggers(
     client: SqliteQueryClient,
-    metadatas: Array<import("../../../entity/types/metadata").EntityMetadata>,
+    metadatas: Array<import("../../../entity/types/metadata.js").EntityMetadata>,
   ): void {
     for (const metadata of metadatas) {
       const tableName = metadata.entity.name;

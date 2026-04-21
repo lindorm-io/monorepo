@@ -674,7 +674,7 @@ export class MySqlDriver implements IProteusDriver {
 
   private async syncAppendOnlyTriggers(
     client: MysqlQueryClient,
-    metadatas: Array<import("../../../entity/types/metadata").EntityMetadata>,
+    metadatas: Array<import("../../../entity/types/metadata.js").EntityMetadata>,
   ): Promise<void> {
     for (const metadata of metadatas) {
       const tableName = metadata.entity.name;

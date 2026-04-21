@@ -495,7 +495,7 @@ export class KafkaDriver implements IIrisDriver {
   }
 
   private registerProducerHandlers(
-    producer: import("../types/kafka-types").KafkaProducer,
+    producer: import("../types/kafka-types.js").KafkaProducer,
   ): void {
     const unsubDisconnect = producer.on(producer.events.DISCONNECT, () => {
       if (this._deliberateDisconnect) return;

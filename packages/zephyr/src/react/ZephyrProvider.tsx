@@ -1,6 +1,6 @@
 import { createContext, useContext, useMemo, type FC, type ReactNode } from "react";
-import type { IZephyr } from "../interfaces/Zephyr";
-import type { ZephyrEventMap } from "../types/event-map";
+import type { IZephyr } from "../interfaces/Zephyr.js";
+import type { ZephyrEventMap } from "../types/event-map.js";
 
 type ZephyrContextValue<E extends ZephyrEventMap = ZephyrEventMap> = {
   client: IZephyr<E>;

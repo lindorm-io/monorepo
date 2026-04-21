@@ -55,7 +55,7 @@ export const loadRelationCounts = async <E extends IEntity>(
 const loadOneToManyCount = async <E extends IEntity>(
   entities: Array<E>,
   rc: MetaRelationCount,
-  relation: import("../../../../entity/types/metadata").MetaRelation,
+  relation: import("../../../../entity/types/metadata.js").MetaRelation,
   foreignMeta: EntityMetadata,
   schema: string | null,
   ctx: LoadRelationCountsContext,
@@ -116,7 +116,7 @@ const loadOneToManyCount = async <E extends IEntity>(
 const loadManyToManyCount = async <E extends IEntity>(
   entities: Array<E>,
   rc: MetaRelationCount,
-  relation: import("../../../../entity/types/metadata").MetaRelation,
+  relation: import("../../../../entity/types/metadata.js").MetaRelation,
   ctx: LoadRelationCountsContext,
 ): Promise<void> => {
   if (!relation.joinKeys) return;
