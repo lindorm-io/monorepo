@@ -1,5 +1,6 @@
 import type { StagedMetadata } from "../internal/metadata";
 import { ViewErrorHandler } from "./ViewErrorHandler";
+import { describe, expect, test } from "vitest";
 
 const createMockMethodContext = (
   metadata: DecoratorMetadataObject,

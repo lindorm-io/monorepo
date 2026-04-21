@@ -1,4 +1,5 @@
 import { getHermesMetadata } from "./get-hermes-metadata";
+import { describe, expect, it } from "vitest";
 
 describe("getHermesMetadata", () => {
   it("should return metadata from a class with Symbol.metadata set", () => {

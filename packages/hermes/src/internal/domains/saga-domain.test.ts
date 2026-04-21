@@ -1,4 +1,4 @@
-import { createMockLogger } from "@lindorm/logger/mocks/jest";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import type { IrisSource } from "@lindorm/iris";
 import { DuplicateKeyError, OptimisticLockError } from "@lindorm/proteus";
 import type { ProteusSource } from "@lindorm/proteus";
@@ -61,6 +61,18 @@ import { HermesScanner } from "../registry/HermesScanner";
 import { HermesRegistry } from "../registry/hermes-registry";
 import type { RegisteredSaga, HandlerRegistration } from "../registry/types";
 import { SagaDomain } from "./saga-domain";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+  type Mock,
+  type MockInstance,
+} from "vitest";
 
 describe("SagaDomain", () => {
   const logger = createMockLogger();
@@ -70,9 +82,9 @@ describe("SagaDomain", () => {
   let registry: HermesRegistry;
   let domain: SagaDomain;
   let testSaga: RegisteredSaga;
-  let commandPublishSpy: jest.SpyInstance;
-  let timeoutPublishSpy: jest.SpyInstance;
-  let errorPublishSpy: jest.SpyInstance;
+  let commandPublishSpy: MockInstance;
+  let timeoutPublishSpy: MockInstance;
+  let errorPublishSpy: MockInstance;
 
   beforeAll(async () => {
     proteus = createTestProteusSource();
@@ -141,9 +153,9 @@ describe("SagaDomain", () => {
     const timeoutQueue = iris.workerQueue(HermesTimeoutMessage);
     const errorQueue = iris.workerQueue(HermesErrorMessage);
 
-    commandPublishSpy = jest.spyOn(commandQueue, "publish").mockResolvedValue(undefined);
-    timeoutPublishSpy = jest.spyOn(timeoutQueue, "publish").mockResolvedValue(undefined);
-    errorPublishSpy = jest.spyOn(errorQueue, "publish").mockResolvedValue(undefined);
+    commandPublishSpy = vi.spyOn(commandQueue, "publish").mockResolvedValue(undefined);
+    timeoutPublishSpy = vi.spyOn(timeoutQueue, "publish").mockResolvedValue(undefined);
+    errorPublishSpy = vi.spyOn(errorQueue, "publish").mockResolvedValue(undefined);
 
     domain = new SagaDomain({
       registry,
@@ -270,13 +282,13 @@ describe("SagaDomain", () => {
   });
 
   it("should subscribe to event topics using aggregate namespace and name, not saga namespace and name", async () => {
-    const subscribeSpy = jest
+    const subscribeSpy = vi
       .spyOn((domain as any).eventBus, "subscribe")
       .mockResolvedValue(undefined);
-    const timeoutConsumeSpy = jest
+    const timeoutConsumeSpy = vi
       .spyOn((domain as any).timeoutQueue, "consume")
       .mockResolvedValue(undefined);
-    const errorConsumeSpy = jest
+    const errorConsumeSpy = vi
       .spyOn((domain as any).errorQueue, "consume")
       .mockResolvedValue(undefined);
 
@@ -851,7 +863,7 @@ describe("SagaDomain", () => {
   // -- EventEmitter cleanup (H1) --
 
   it("should remove listener via off()", () => {
-    const listener = jest.fn();
+    const listener = vi.fn();
     domain.on("saga", listener);
     domain.off("saga", listener);
     // Verify the listener was removed by triggering an emit and checking it's not called
@@ -866,8 +878,8 @@ describe("SagaDomain", () => {
   });
 
   it("should remove all listeners via removeAllListeners()", () => {
-    const listener1 = jest.fn();
-    const listener2 = jest.fn();
+    const listener1 = vi.fn();
+    const listener2 = vi.fn();
     domain.on("saga", listener1);
     domain.on("saga.hermes", listener2);
 
@@ -1011,9 +1023,9 @@ describe("SagaDomain", () => {
     await handleEvent(createEvent, testSaga, createHandler);
 
     // Mock the proteus transaction to throw ConcurrencyError during save
-    jest
-      .spyOn(proteus, "transaction")
-      .mockRejectedValueOnce(new ConcurrencyError("saga concurrency conflict"));
+    vi.spyOn(proteus, "transaction").mockRejectedValueOnce(
+      new ConcurrencyError("saga concurrency conflict"),
+    );
 
     const timeoutHandler = findTimeoutHandler(testSaga, "test_timeout_reminder");
     const timeoutMsg = createTimeoutMsg(
@@ -1026,7 +1038,7 @@ describe("SagaDomain", () => {
       ConcurrencyError,
     );
 
-    (proteus.transaction as jest.Mock).mockRestore();
+    (proteus.transaction as Mock).mockRestore();
   });
 
   it("should publish error and acknowledge when timeout handler throws permanent DomainError", async () => {
@@ -1119,14 +1131,14 @@ describe("SagaDomain", () => {
     // Intercept the transaction so that txSagaRepo.findOne returns null
     // (simulating the record being deleted between load and save)
     const origTransaction = proteus.transaction.bind(proteus);
-    jest.spyOn(proteus, "transaction").mockImplementation(async (fn: any) => {
+    vi.spyOn(proteus, "transaction").mockImplementation(async (fn: any) => {
       return origTransaction(async (tx: any) => {
         const origRepo = tx.repository.bind(tx);
-        jest.spyOn(tx, "repository").mockImplementation((entity: any) => {
+        vi.spyOn(tx, "repository").mockImplementation((entity: any) => {
           const repo = origRepo(entity);
           if (entity === SagaRecord) {
             const origFindOne = repo.findOne.bind(repo);
-            jest.spyOn(repo, "findOne").mockResolvedValue(null);
+            vi.spyOn(repo, "findOne").mockResolvedValue(null);
           }
           return repo;
         });
@@ -1147,7 +1159,7 @@ describe("SagaDomain", () => {
       /Saga record not found for update/,
     );
 
-    (proteus.transaction as jest.Mock).mockRestore();
+    (proteus.transaction as Mock).mockRestore();
   });
 
   // -- MEDIUM: causation expiry null path (expiryMs = 0) --
@@ -1158,9 +1170,9 @@ describe("SagaDomain", () => {
     const localTimeoutQueue = iris.workerQueue(HermesTimeoutMessage);
     const localErrQueue = iris.workerQueue(HermesErrorMessage);
 
-    jest.spyOn(localCmdQueue, "publish").mockResolvedValue(undefined);
-    jest.spyOn(localTimeoutQueue, "publish").mockResolvedValue(undefined);
-    jest.spyOn(localErrQueue, "publish").mockResolvedValue(undefined);
+    vi.spyOn(localCmdQueue, "publish").mockResolvedValue(undefined);
+    vi.spyOn(localTimeoutQueue, "publish").mockResolvedValue(undefined);
+    vi.spyOn(localErrQueue, "publish").mockResolvedValue(undefined);
 
     const zeroDomain = new SagaDomain({
       registry,
@@ -1294,9 +1306,9 @@ describe("SagaDomain", () => {
     await handleEvent(createEvent, testSaga, createHandler);
 
     // Mock transaction to throw ConcurrencyError during save
-    jest
-      .spyOn(proteus, "transaction")
-      .mockRejectedValueOnce(new ConcurrencyError("saga concurrency"));
+    vi.spyOn(proteus, "transaction").mockRejectedValueOnce(
+      new ConcurrencyError("saga concurrency"),
+    );
 
     const dispatchHandler = findEventHandler(testSaga, "test_event_dispatch");
     const dispatchEvent = createEventMsg(
@@ -1309,7 +1321,7 @@ describe("SagaDomain", () => {
       ConcurrencyError,
     );
 
-    (proteus.transaction as jest.Mock).mockRestore();
+    (proteus.transaction as Mock).mockRestore();
   });
 
   // -- C1: Saga error handler registration and invocation --
@@ -1342,7 +1354,7 @@ describe("SagaDomain", () => {
   });
 
   it("should register error handlers in registerHandlers", async () => {
-    const errorConsumeSpy = jest
+    const errorConsumeSpy = vi
       .spyOn((domain as any).errorQueue, "consume")
       .mockResolvedValue(undefined);
 
@@ -1378,7 +1390,7 @@ describe("SagaDomain", () => {
     const origFindOne = sagaRepo.findOne.bind(sagaRepo);
     let findOneCallCount = 0;
 
-    jest.spyOn(sagaRepo, "findOne").mockImplementation(async (criteria?: any) => {
+    vi.spyOn(sagaRepo, "findOne").mockImplementation(async (criteria?: any) => {
       findOneCallCount++;
       const result = await origFindOne(criteria);
       // On the 3rd call (the post-publish re-load in publishMessages),
@@ -1400,7 +1412,7 @@ describe("SagaDomain", () => {
     // Command was still published
     expect(commandPublishSpy).toHaveBeenCalledTimes(1);
 
-    (sagaRepo.findOne as jest.Mock).mockRestore();
+    (sagaRepo.findOne as Mock).mockRestore();
   });
 
   // -- C5: DuplicateKeyError on concurrent saga creation --
@@ -1411,9 +1423,9 @@ describe("SagaDomain", () => {
     const createHandler = findEventHandler(testSaga, "test_event_create");
 
     // Mock the proteus transaction to throw DuplicateKeyError (simulating concurrent insert)
-    jest
-      .spyOn(proteus, "transaction")
-      .mockRejectedValueOnce(new DuplicateKeyError("unique constraint violation"));
+    vi.spyOn(proteus, "transaction").mockRejectedValueOnce(
+      new DuplicateKeyError("unique constraint violation"),
+    );
 
     const event = createEventMsg(
       "test_event_create",
@@ -1426,7 +1438,7 @@ describe("SagaDomain", () => {
       ConcurrencyError,
     );
 
-    (proteus.transaction as jest.Mock).mockRestore();
+    (proteus.transaction as Mock).mockRestore();
   });
 
   it("should not wrap DuplicateKeyError as ConcurrencyError for saga update path", async () => {
@@ -1443,11 +1455,9 @@ describe("SagaDomain", () => {
     await handleEvent(createEvent, testSaga, createHandler);
 
     // Now mock transaction to throw DuplicateKeyError on update (not insert)
-    jest
-      .spyOn(proteus, "transaction")
-      .mockRejectedValueOnce(
-        new DuplicateKeyError("unique constraint violation on update"),
-      );
+    vi.spyOn(proteus, "transaction").mockRejectedValueOnce(
+      new DuplicateKeyError("unique constraint violation on update"),
+    );
 
     const dispatchHandler = findEventHandler(testSaga, "test_event_dispatch");
     const dispatchEvent = createEventMsg(
@@ -1461,7 +1471,7 @@ describe("SagaDomain", () => {
       DuplicateKeyError,
     );
 
-    (proteus.transaction as jest.Mock).mockRestore();
+    (proteus.transaction as Mock).mockRestore();
   });
 
   // -- G3: publishAllMessages command/timeout discrimination with SagaPendingMessage --
@@ -1539,9 +1549,9 @@ describe("SagaDomain", () => {
     await handleEvent(createEvent, testSaga, createHandler);
 
     // Mock transaction to throw OptimisticLockError on update
-    jest
-      .spyOn(proteus, "transaction")
-      .mockRejectedValueOnce(new OptimisticLockError("saga", { id: aggregateId }));
+    vi.spyOn(proteus, "transaction").mockRejectedValueOnce(
+      new OptimisticLockError("saga", { id: aggregateId }),
+    );
 
     const dispatchHandler = findEventHandler(testSaga, "test_event_dispatch");
     const dispatchEvent = createEventMsg(
@@ -1555,7 +1565,7 @@ describe("SagaDomain", () => {
       ConcurrencyError,
     );
 
-    (proteus.transaction as jest.Mock).mockRestore();
+    (proteus.transaction as Mock).mockRestore();
   });
 
   it("should not wrap OptimisticLockError as ConcurrencyError for new saga creation", async () => {
@@ -1563,9 +1573,9 @@ describe("SagaDomain", () => {
     const aggregate = { id: aggregateId, name: "test_aggregate", namespace: "hermes" };
 
     // Mock transaction to throw OptimisticLockError on insert (unusual but should not wrap)
-    jest
-      .spyOn(proteus, "transaction")
-      .mockRejectedValueOnce(new OptimisticLockError("saga", { id: aggregateId }));
+    vi.spyOn(proteus, "transaction").mockRejectedValueOnce(
+      new OptimisticLockError("saga", { id: aggregateId }),
+    );
 
     const createHandler = findEventHandler(testSaga, "test_event_create");
     const createEvent = createEventMsg(
@@ -1579,7 +1589,7 @@ describe("SagaDomain", () => {
       OptimisticLockError,
     );
 
-    (proteus.transaction as jest.Mock).mockRestore();
+    (proteus.transaction as Mock).mockRestore();
   });
 
   // -- E8: Saga error handler failures propagate (not swallowed) --
@@ -1684,7 +1694,7 @@ describe("SagaDomain", () => {
     const sagaRepo = proteus.repository(SagaRecord);
     let findOneCallCount = 0;
     const origFindOne = sagaRepo.findOne.bind(sagaRepo);
-    jest.spyOn(sagaRepo, "findOne").mockImplementation(async (criteria?: any) => {
+    vi.spyOn(sagaRepo, "findOne").mockImplementation(async (criteria?: any) => {
       findOneCallCount++;
       if (findOneCallCount > 2) return null;
       return origFindOne(criteria);
@@ -1701,6 +1711,6 @@ describe("SagaDomain", () => {
     // Command was still published
     expect(commandPublishSpy).toHaveBeenCalledTimes(1);
 
-    (sagaRepo.findOne as jest.Mock).mockRestore();
+    (sagaRepo.findOne as Mock).mockRestore();
   });
 });

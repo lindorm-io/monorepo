@@ -15,6 +15,7 @@ import { ViewAlreadyCreatedError } from "./ViewAlreadyCreatedError";
 import { ViewNotCreatedError } from "./ViewNotCreatedError";
 import { ViewDestroyedError } from "./ViewDestroyedError";
 import { ViewNotUpdatedError } from "./ViewNotUpdatedError";
+import { describe, expect, it } from "vitest";
 
 describe("DomainError", () => {
   it("should default permanent to false", () => {

@@ -1,4 +1,12 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Hermes > command > should publish command and return AggregateIdentifier 1`] = `
+{
+  "id": Any<String>,
+  "name": Any<String>,
+  "namespace": Any<String>,
+}
+`;
 
 exports[`Hermes command should publish command and return AggregateIdentifier 1`] = `
 {

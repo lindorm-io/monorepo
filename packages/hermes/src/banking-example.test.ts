@@ -30,7 +30,7 @@
  *   - queries/    -- @Query DTO
  */
 
-import { createMockLogger } from "@lindorm/logger/mocks/jest";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import type { ProteusSource } from "@lindorm/proteus";
 import type { IrisSource } from "@lindorm/iris";
 import { randomUUID } from "crypto";
@@ -62,6 +62,7 @@ import { AccountAggregate } from "./__fixtures__/example/aggregates/AccountAggre
 import { OverdraftProtectionSaga } from "./__fixtures__/example/sagas/OverdraftProtectionSaga";
 import { AccountSummaryView } from "./__fixtures__/example/views/AccountSummaryView";
 import { AccountSummaryProjection } from "./__fixtures__/example/views/AccountSummaryProjection";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 // ============================================================================
 // All module constructors (what you'd pass to Hermes in production)

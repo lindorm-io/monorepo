@@ -20,6 +20,7 @@ import type {
   MetaView,
 } from "./types";
 import { z } from "zod";
+import { describe, expect, it } from "vitest";
 
 const createMetadata = (): DecoratorMetadataObject =>
   Object.create(null) as DecoratorMetadataObject;

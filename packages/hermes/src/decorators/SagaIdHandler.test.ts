@@ -1,5 +1,6 @@
 import type { StagedMetadata } from "../internal/metadata";
 import { SagaIdHandler } from "./SagaIdHandler";
+import { describe, expect, test } from "vitest";
 
 const createMockMethodContext = (
   metadata: DecoratorMetadataObject,

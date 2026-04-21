@@ -1,4 +1,4 @@
-import { createMockLogger } from "@lindorm/logger/mocks/jest";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import {
   TestAggregate,
   TestForgettableAggregate,
@@ -42,6 +42,7 @@ import {
 import { HermesEventMessage } from "../messages";
 import { HermesRegistry, HermesScanner } from "../registry";
 import { AggregateModel } from "./aggregate-model";
+import { beforeAll, describe, expect, test } from "vitest";
 
 const ALL_CONSTRUCTORS = [
   TestCommandCreate,

@@ -1,5 +1,6 @@
 import type { StagedMetadata } from "../internal/metadata";
 import { EventUpcaster } from "./EventUpcaster";
+import { describe, expect, test } from "vitest";
 
 const createMockMethodContext = (
   metadata: DecoratorMetadataObject,

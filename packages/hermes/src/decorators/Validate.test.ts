@@ -1,6 +1,7 @@
 import type { StagedMetadata } from "../internal/metadata";
 import { z } from "zod";
 import { Validate } from "./Validate";
+import { describe, expect, test } from "vitest";
 
 const createMockMethodContext = (
   metadata: DecoratorMetadataObject,

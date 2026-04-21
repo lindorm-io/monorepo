@@ -1,4 +1,4 @@
-import { createMockLogger } from "@lindorm/logger/mocks/jest";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import {
   TestAggregate,
   TestForgettableAggregate,
@@ -33,6 +33,7 @@ import { SagaDestroyedError } from "../../errors";
 import { HermesRegistry, HermesScanner } from "../registry";
 import { SagaModel } from "./saga-model";
 import type { SagaPendingMessage } from "./saga-model";
+import { beforeAll, describe, expect, test } from "vitest";
 
 const ALL_CONSTRUCTORS = [
   TestCommandCreate,

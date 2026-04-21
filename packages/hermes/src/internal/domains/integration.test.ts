@@ -1,5 +1,5 @@
 import type { IIrisMessageBus, IIrisWorkerQueue, IrisSource } from "@lindorm/iris";
-import { createMockLogger } from "@lindorm/logger/mocks/jest";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import type { ProteusSource } from "@lindorm/proteus";
 import { randomUUID } from "crypto";
 import {
@@ -62,6 +62,17 @@ import { AggregateDomain } from "./aggregate-domain";
 import { SagaDomain } from "./saga-domain";
 import { ViewDomain } from "./view-domain";
 import { ChecksumDomain } from "./checksum-domain";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+  type MockInstance,
+} from "vitest";
 
 // This integration test exercises the full pipeline across all four domains
 // (aggregate, saga, view, checksum) with real memory drivers.
@@ -120,10 +131,10 @@ describe("Full Pipeline Integration", () => {
   let timeoutQueue: IIrisWorkerQueue<HermesTimeoutMessage>;
 
   // Spies to intercept event publishing (prevents double-dispatch issues)
-  let eventBusPublishSpy: jest.SpyInstance;
-  let commandPublishSpy: jest.SpyInstance;
-  let timeoutPublishSpy: jest.SpyInstance;
-  let errorPublishSpy: jest.SpyInstance;
+  let eventBusPublishSpy: MockInstance;
+  let commandPublishSpy: MockInstance;
+  let timeoutPublishSpy: MockInstance;
+  let errorPublishSpy: MockInstance;
 
   beforeAll(async () => {
     proteus = createTestProteusSource();
@@ -173,10 +184,10 @@ describe("Full Pipeline Integration", () => {
     // domain creates HermesEventMessage objects via Object.assign (not
     // through iris create()), so we intercept publish to manually feed
     // events to saga/view domains.
-    eventBusPublishSpy = jest.spyOn(eventBus, "publish").mockResolvedValue(undefined);
-    commandPublishSpy = jest.spyOn(commandQueue, "publish").mockResolvedValue(undefined);
-    timeoutPublishSpy = jest.spyOn(timeoutQueue, "publish").mockResolvedValue(undefined);
-    errorPublishSpy = jest.spyOn(errorQueue, "publish").mockResolvedValue(undefined);
+    eventBusPublishSpy = vi.spyOn(eventBus, "publish").mockResolvedValue(undefined);
+    commandPublishSpy = vi.spyOn(commandQueue, "publish").mockResolvedValue(undefined);
+    timeoutPublishSpy = vi.spyOn(timeoutQueue, "publish").mockResolvedValue(undefined);
+    errorPublishSpy = vi.spyOn(errorQueue, "publish").mockResolvedValue(undefined);
 
     aggregateDomain = new AggregateDomain({
       registry,

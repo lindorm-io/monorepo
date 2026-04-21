@@ -1,4 +1,44 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Timeout > should extract version from class name _V2 suffix 1`] = `
+{
+  "dto": {
+    "kind": "timeout",
+    "name": "test_timeout_reminder",
+    "version": 2,
+  },
+}
+`;
+
+exports[`Timeout > should stage dto metadata with custom name and version when provided as options 1`] = `
+{
+  "dto": {
+    "kind": "timeout",
+    "name": "my_timeout",
+    "version": 3,
+  },
+}
+`;
+
+exports[`Timeout > should stage dto metadata with custom name when provided as string 1`] = `
+{
+  "dto": {
+    "kind": "timeout",
+    "name": "custom_timeout_name",
+    "version": 1,
+  },
+}
+`;
+
+exports[`Timeout > should stage dto metadata with snake_case name derived from class name 1`] = `
+{
+  "dto": {
+    "kind": "timeout",
+    "name": "test_timeout_reminder",
+    "version": 1,
+  },
+}
+`;
 
 exports[`Timeout should extract version from class name _V2 suffix 1`] = `
 {

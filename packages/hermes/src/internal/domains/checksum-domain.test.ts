@@ -1,4 +1,4 @@
-import { createMockLogger } from "@lindorm/logger/mocks/jest";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import type { IrisSource } from "@lindorm/iris";
 import type { ProteusSource } from "@lindorm/proteus";
 import { randomUUID } from "crypto";
@@ -52,6 +52,18 @@ import {
 import { HermesScanner } from "../registry/HermesScanner";
 import { HermesRegistry } from "../registry/hermes-registry";
 import { ChecksumDomain } from "./checksum-domain";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+  type Mock,
+  type MockInstance,
+} from "vitest";
 
 describe("ChecksumDomain", () => {
   const logger = createMockLogger();
@@ -120,14 +132,12 @@ describe("ChecksumDomain", () => {
     await proteus.disconnect();
   });
 
-  let errorPublishSpy: jest.SpyInstance;
+  let errorPublishSpy: MockInstance;
 
   beforeEach(async () => {
     const eventBus = iris.messageBus(HermesEventMessage);
     const errorQueue = iris.workerQueue(HermesErrorMessage);
-    errorPublishSpy = jest
-      .spyOn(errorQueue, "publish")
-      .mockResolvedValue(undefined as any);
+    errorPublishSpy = vi.spyOn(errorQueue, "publish").mockResolvedValue(undefined as any);
 
     domain = new ChecksumDomain({
       registry,
@@ -408,7 +418,7 @@ describe("ChecksumDomain", () => {
 
   it("should subscribe with aggregate-derived topic matching event publish format", async () => {
     const eventBus = iris.messageBus(HermesEventMessage);
-    const subscribeSpy = jest.spyOn(eventBus, "subscribe");
+    const subscribeSpy = vi.spyOn(eventBus, "subscribe");
 
     const errorQueue = iris.workerQueue(HermesErrorMessage);
     const localDomain = new ChecksumDomain({
@@ -496,19 +506,17 @@ describe("ChecksumDomain", () => {
 
     // Mock proteus.repository to return a repo whose insert fails
     const origRepository = proteus.repository.bind(proteus);
-    const repoSpy = jest
-      .spyOn(proteus, "repository")
-      .mockImplementation((entity: any) => {
-        const realRepo = origRepository(entity);
-        if (entity === ChecksumRecord) {
-          return {
-            ...realRepo,
-            findOne: realRepo.findOne.bind(realRepo),
-            insert: jest.fn().mockRejectedValue(new Error("insert failed")),
-          } as any;
-        }
-        return realRepo;
-      });
+    const repoSpy = vi.spyOn(proteus, "repository").mockImplementation((entity: any) => {
+      const realRepo = origRepository(entity);
+      if (entity === ChecksumRecord) {
+        return {
+          ...realRepo,
+          findOne: realRepo.findOne.bind(realRepo),
+          insert: vi.fn().mockRejectedValue(new Error("insert failed")),
+        } as any;
+      }
+      return realRepo;
+    });
 
     const errors: Array<unknown> = [];
     domain.on("checksum", (data) => errors.push(data));

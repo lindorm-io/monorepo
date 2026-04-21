@@ -1,7 +1,8 @@
-import { createMockHermes } from "./jest";
+import { createMockHermes } from "./vitest";
+import { describe, expect, it, vi } from "vitest";
 
 describe("createMockHermes", () => {
-  it("should create a mock hermes with all methods as jest.fn()", () => {
+  it("should create a mock hermes with all methods as vi.fn()", () => {
     const mock = createMockHermes();
 
     expect(mock).toMatchSnapshot();
@@ -20,7 +21,7 @@ describe("createMockHermes", () => {
     expect(session).toBeDefined();
     expect(session).not.toBe(mock);
     expect(session.status).toBe("ready");
-    expect(jest.isMockFunction(session.command)).toBe(true);
+    expect(vi.isMockFunction(session.command)).toBe(true);
   });
 
   it("should resolve an aggregate identifier from command()", async () => {

@@ -1,4 +1,20 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Aggregate > should stage aggregate metadata with custom name 1`] = `
+{
+  "aggregate": {
+    "name": "my_custom_aggregate",
+  },
+}
+`;
+
+exports[`Aggregate > should stage aggregate metadata with snake_case name from class name 1`] = `
+{
+  "aggregate": {
+    "name": "test_aggregate",
+  },
+}
+`;
 
 exports[`Aggregate should stage aggregate metadata with custom name 1`] = `
 {

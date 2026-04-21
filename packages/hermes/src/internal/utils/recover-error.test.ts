@@ -10,6 +10,7 @@ import {
   DomainError,
 } from "../../errors";
 import { recoverError } from "./recover-error";
+import { describe, expect, test } from "vitest";
 
 const createErrorMessage = (
   name: string,

@@ -1,4 +1,5 @@
 import { createChecksum } from "./create-checksum";
+import { describe, expect, test } from "vitest";
 
 describe("createChecksum", () => {
   test("should produce a deterministic base64 SHA256 checksum from event record attributes", () => {

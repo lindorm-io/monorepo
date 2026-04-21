@@ -1,4 +1,33 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`extractDto > should extract name, version, and data from a DTO instance 1`] = `
+{
+  "data": {
+    "input": "hello",
+  },
+  "name": "test_command_create_local",
+  "version": 1,
+}
+`;
+
+exports[`extractDto > should handle DTO with no properties (empty data object) 1`] = `
+{
+  "data": {},
+  "name": "test_command_empty",
+  "version": 1,
+}
+`;
+
+exports[`extractDto > should spread all enumerable properties as data 1`] = `
+{
+  "data": {
+    "extra": 42,
+    "input": "world",
+  },
+  "name": "test_event_update",
+  "version": 1,
+}
+`;
 
 exports[`extractDto should extract name, version, and data from a DTO instance 1`] = `
 {

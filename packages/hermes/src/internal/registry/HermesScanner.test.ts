@@ -36,6 +36,7 @@ import { TestViewEntity } from "../../__fixtures__/modules/views/TestViewEntity"
 import { HermesViewEntity } from "../../entities/HermesViewEntity";
 import { HermesScanner } from "./HermesScanner";
 import type { ScannedModules } from "./types";
+import { beforeAll, describe, expect, test } from "vitest";
 
 const ALL_CONSTRUCTORS = [
   TestCommandCreate,
