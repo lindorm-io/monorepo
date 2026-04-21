@@ -1,3 +1,4 @@
+import { describe, test, it, expect, beforeEach } from "vitest";
 // TCK: CRUD Suite
 // Structural assertions (not snapshots) for cross-driver portability.
 

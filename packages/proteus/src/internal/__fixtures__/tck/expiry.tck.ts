@@ -1,3 +1,4 @@
+import { test, expect, beforeEach } from "vitest";
 // TCK: Expiry Suite
 // Tests TTL / deleteExpired behavior.
 

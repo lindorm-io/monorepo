@@ -1,3 +1,4 @@
+import { describe, test, expect, beforeEach } from "vitest";
 // TCK: Queries Suite
 // Tests find options: ordering, pagination, limit, offset, select, distinct.
 

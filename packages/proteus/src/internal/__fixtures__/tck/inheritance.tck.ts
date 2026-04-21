@@ -1,3 +1,4 @@
+import { describe, test, it, expect, beforeEach } from "vitest";
 // TCK: Inheritance Suite
 // Tests table inheritance strategies (single-table and joined) for cross-driver portability.
 // Structural assertions only (no snapshots).

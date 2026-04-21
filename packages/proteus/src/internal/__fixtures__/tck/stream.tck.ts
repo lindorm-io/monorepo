@@ -1,3 +1,4 @@
+import { describe, test, expect, beforeEach } from "vitest";
 // TCK: Stream Suite
 // Verifies that stream() returns an AsyncIterable that yields entities.
 

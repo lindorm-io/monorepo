@@ -1,3 +1,4 @@
+import { describe, test, expect, beforeEach } from "vitest";
 // TCK: Clear/Truncate Suite
 // Verifies that clear() truncates the table.
 

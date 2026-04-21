@@ -12,7 +12,7 @@ import {
 } from "vitest";
 
 // Mock the underlying implementations
-vi.mock("./manage-join-table", () => ({
+vi.mock("./manage-join-table", async () => ({
   syncJoinTableRows: vi.fn().mockResolvedValue(undefined),
   deleteJoinTableRows: vi.fn().mockResolvedValue(undefined),
 }));

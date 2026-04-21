@@ -1,3 +1,4 @@
+import { test, expect, beforeEach } from "vitest";
 // TCK: Scope Suite
 // Tests multi-tenant scope field isolation.
 

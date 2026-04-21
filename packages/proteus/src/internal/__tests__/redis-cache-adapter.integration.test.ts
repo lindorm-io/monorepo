@@ -19,7 +19,7 @@ import {
   VersionField,
 } from "../../decorators";
 
-jest.setTimeout(30_000);
+vi.setConfig({ testTimeout: 30_000 });
 
 // ─── Test Entity for full integration test ───────────────────────────────────
 

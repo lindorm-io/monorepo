@@ -16,7 +16,7 @@ import {
 
 // --- Mock all external dependencies ---
 
-vi.mock("../sync/introspect-schema", () => ({
+vi.mock("../sync/introspect-schema", async () => ({
   introspectSchema: vi.fn(),
 }));
 

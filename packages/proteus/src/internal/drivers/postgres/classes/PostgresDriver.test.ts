@@ -15,7 +15,7 @@
 
 // ─── Module Mocks ────────────────────────────────────────────────────────────
 
-vi.mock("pg", () => {
+vi.mock("pg", async () => {
   const mockClient = {
     query: vi.fn().mockResolvedValue({ rows: [], rowCount: 0 }),
     release: vi.fn(),
@@ -36,7 +36,7 @@ vi.mock("pg", () => {
   };
 });
 
-vi.mock("./PostgresExecutor", () => ({
+vi.mock("./PostgresExecutor", async () => ({
   PostgresExecutor: vi.fn(function () {
     return {
       executeFind: vi.fn(),

@@ -8,7 +8,7 @@ import { beforeEach, describe, expect, it, vi, type MockedFunction } from "vites
 vi.mock("../with-source");
 vi.mock("../with-migration-manager");
 
-vi.mock("@lindorm/logger", () => ({
+vi.mock("@lindorm/logger", async () => ({
   Logger: {
     std: {
       log: vi.fn(),

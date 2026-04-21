@@ -13,7 +13,7 @@ const mockScan = vi.fn();
 const mockImport = vi.fn();
 const mockScannerInstance = { scan: mockScan, import: mockImport };
 
-vi.mock("@lindorm/scanner", () => ({
+vi.mock("@lindorm/scanner", async () => ({
   Scanner: vi.fn(function () {
     return mockScannerInstance;
   }),

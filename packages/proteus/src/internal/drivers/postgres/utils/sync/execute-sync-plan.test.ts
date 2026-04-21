@@ -13,7 +13,7 @@ import {
 } from "vitest";
 
 // Mock advisory-lock so we can control whether it "acquires" the lock
-vi.mock("../advisory-lock", () => ({
+vi.mock("../advisory-lock", async () => ({
   withAdvisoryLock: vi.fn(
     async (_client: unknown, _k1: unknown, _k2: unknown, fn: () => Promise<unknown>) =>
       fn(),

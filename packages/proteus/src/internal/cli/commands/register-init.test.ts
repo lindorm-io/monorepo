@@ -3,7 +3,7 @@ import { registerInitCommand } from "./register-init";
 import { init } from "./init";
 import { beforeEach, describe, expect, it, vi, type MockedFunction } from "vitest";
 
-vi.mock("./init", () => ({
+vi.mock("./init", async () => ({
   init: vi.fn(),
 }));
 

@@ -1,3 +1,4 @@
+import { test, expect, beforeEach } from "vitest";
 // TCK: Versioning Suite
 // Tests temporal versioning with composite PK (VersionKey).
 

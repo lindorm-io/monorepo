@@ -3,7 +3,7 @@ import { registerDbCommands } from "./db";
 import { dbPing } from "./db-ping";
 import { beforeEach, describe, expect, it, vi, type MockedFunction } from "vitest";
 
-vi.mock("./db-ping", () => ({
+vi.mock("./db-ping", async () => ({
   dbPing: vi.fn(),
 }));
 

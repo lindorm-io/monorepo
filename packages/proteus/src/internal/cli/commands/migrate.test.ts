@@ -9,7 +9,7 @@ import { migrateCreate } from "./migrate-create";
 import { migrateResolve } from "./migrate-resolve";
 import { beforeEach, describe, expect, it, vi, type MockedFunction } from "vitest";
 
-vi.mock("./migrate-generate", () => ({ migrateGenerate: vi.fn() }));
+vi.mock("./migrate-generate", async () => ({ migrateGenerate: vi.fn() }));
 vi.mock("./migrate-run", () => ({ migrateRun: vi.fn() }));
 vi.mock("./migrate-rollback", () => ({ migrateRollback: vi.fn() }));
 vi.mock("./migrate-status", () => ({ migrateStatus: vi.fn() }));

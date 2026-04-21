@@ -1,6 +1,10 @@
 import { createMockProteusSource } from "./vitest";
 import { describe, expect, it, vi } from "vitest";
 
+class TestEntity {
+  id!: string;
+}
+
 describe("createMockProteusSource", () => {
   it("should create a mock source with all methods as vi.fn()", () => {
     const source = createMockProteusSource();
@@ -18,7 +22,7 @@ describe("createMockProteusSource", () => {
 
   it("should return a mock repository from repository()", () => {
     const source = createMockProteusSource();
-    const repo = source.repository();
+    const repo = source.repository(TestEntity);
 
     expect(repo).toBeDefined();
     expect(repo.find).toBeDefined();
@@ -44,7 +48,7 @@ describe("createMockProteusSource", () => {
 
   it("should execute transaction callback", async () => {
     const source = createMockProteusSource();
-    const result = await source.transaction((ctx: unknown) => "done");
+    const result = await source.transaction(async () => "done");
 
     expect(result).toBe("done");
   });

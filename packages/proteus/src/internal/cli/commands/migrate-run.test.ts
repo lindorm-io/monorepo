@@ -10,7 +10,7 @@ vi.mock("../with-source");
 vi.mock("../with-migration-manager");
 vi.mock("../output/format-migration-result");
 
-vi.mock("@lindorm/logger", () => ({
+vi.mock("@lindorm/logger", async () => ({
   Logger: {
     std: {
       log: vi.fn(),

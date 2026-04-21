@@ -1,3 +1,4 @@
+import { describe, test, expect, beforeEach } from "vitest";
 // TCK: Encryption Suite
 // Tests field-level encryption via @Encrypted decorator across all drivers.
 

@@ -1,3 +1,4 @@
+import { test, it, expect, beforeEach } from "vitest";
 // TCK: Relations ManyToMany Suite
 // Tests ManyToMany: TckLeft (has join table) <-> TckRight.
 

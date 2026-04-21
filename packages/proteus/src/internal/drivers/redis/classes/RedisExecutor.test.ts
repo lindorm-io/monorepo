@@ -20,7 +20,7 @@ import { RedisDriverError } from "../errors/RedisDriverError";
 
 // ─── Module Mocks ────────────────────────────────────────────────────────────
 
-vi.mock("../utils/build-entity-key", () => ({
+vi.mock("../utils/build-entity-key", async () => ({
   buildEntityKey: vi.fn((_target, pkValues, namespace) => {
     const parts = namespace
       ? [namespace, "entity", "test_entity"]

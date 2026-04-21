@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe } from "vitest";
+import { afterAll, beforeAll, describe, vi } from "vitest";
 // MySQL Migration TCK Harness
 //
 // Runs the migration TCK suite against a real MySQL 8.4 instance.
@@ -28,7 +28,7 @@ import {
 
 mockScannerImport();
 
-jest.setTimeout(120_000);
+vi.setConfig({ testTimeout: 120_000 });
 
 const MYSQL_HOST = process.env["MYSQL_HOST"] ?? "127.0.0.1";
 const MYSQL_PORT = Number(process.env["MYSQL_PORT"] ?? 3306);

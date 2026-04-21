@@ -1,4 +1,219 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`TCK: SQLite > Complex Predicates > Array operators > $all — array contains all required elements > matches entities containing all specified elements 1`] = `
+[
+  [
+    "a",
+    "b",
+  ],
+  [
+    "a",
+    "b",
+    "c",
+  ],
+]
+`;
+
+exports[`TCK: SQLite > Complex Predicates > Array operators > $all — array contains all required elements > matches with single element 1`] = `
+[
+  "a",
+  "d",
+]
+`;
+
+exports[`TCK: SQLite > Complex Predicates > Array operators > $contained — all array elements are in the given set > matches only entities whose elements are a subset of the given set 1`] = `
+[
+  [
+    "a",
+  ],
+  [
+    "a",
+    "b",
+  ],
+]
+`;
+
+exports[`TCK: SQLite > Complex Predicates > Array operators > $length on numeric array (scores) > matches entities where scores has specified length 1`] = `
+[
+  [
+    10,
+    20,
+    30,
+  ],
+  [
+    50,
+    60,
+    70,
+  ],
+]
+`;
+
+exports[`TCK: SQLite > Complex Predicates > Array operators > $length — array length equals N > matches entities where array has specified length 1`] = `
+[
+  [
+    "a",
+    "b",
+  ],
+  [
+    "d",
+    "e",
+  ],
+]
+`;
+
+exports[`TCK: SQLite > Complex Predicates > Array operators > $overlap — array contains any of the given elements > matches entities with any overlapping element 1`] = `
+[
+  [
+    "a",
+    "b",
+  ],
+  [
+    "x",
+    "y",
+  ],
+]
+`;
+
+exports[`TCK: SQLite > Complex Predicates > Array operators > logical composition with array operators > $or with $all and $length 1`] = `
+[
+  [],
+  [
+    "a",
+    "b",
+  ],
+]
+`;
+
+exports[`TCK: SQLite > Complex Predicates > Embedded criteria > basic embedded criteria > filters by embedded field value 1`] = `
+TckAddress {
+  "city": "London",
+  "country": "UK",
+  "street": "1 Main St",
+}
+`;
+
+exports[`TCK: SQLite > Complex Predicates > Embedded criteria > embedded with country filter > filters by embedded country 1`] = `
+[
+  "Alice",
+  "Charlie",
+]
+`;
+
+exports[`TCK: SQLite > Complex Predicates > Embedded criteria > logical composition with embedded > $or with embedded criteria returns union 1`] = `
+[
+  "Alice",
+  "Bob",
+]
+`;
+
+exports[`TCK: SQLite > Complex Predicates > JSON containment ($has) > $has on metadata (Record<string, unknown>) > matches entities with matching key-value pair 1`] = `
+[
+  {
+    "theme": "dark",
+    "version": 2,
+  },
+  {
+    "extra": true,
+    "theme": "dark",
+    "version": 3,
+  },
+]
+`;
+
+exports[`TCK: SQLite > Complex Predicates > JSON containment ($has) > $has on payload (object with nested array) > matches entities by payload nested array exact match 1`] = `
+{
+  "count": 2,
+  "items": [
+    "x",
+    "y",
+  ],
+}
+`;
+
+exports[`TCK: SQLite > Complex Predicates > JSON containment ($has) > $has on payload (object with nested array) > matches entities by payload scalar key-value 1`] = `
+{
+  "count": 2,
+  "items": [
+    "x",
+    "y",
+  ],
+}
+`;
+
+exports[`TCK: SQLite > Complex Predicates > JSON containment ($has) > $has on settings (object field) > matches entities by settings key-value 1`] = `
+{
+  "count": 5,
+  "theme": "light",
+}
+`;
+
+exports[`TCK: SQLite > Complex Predicates > JSON containment ($has) > combined $has with another field predicate > intersection of $has on two fields 1`] = `
+{
+  "theme": "dark",
+}
+`;
+
+exports[`TCK: SQLite > Complex Predicates > JSON containment ($has) > combined $has with another field predicate > intersection of $has on two fields 2`] = `
+{
+  "count": 1,
+  "theme": "light",
+}
+`;
+
+exports[`TCK: SQLite > encryption > Encryption > basic round-trip > encrypted json/object field round-trips with deep equality 1`] = `
+{
+  "items": [
+    1,
+    2,
+    3,
+  ],
+  "label": "test",
+  "nested": {
+    "deep": true,
+  },
+}
+`;
+
+exports[`TCK: SQLite > encryption > Encryption > findMany decrypts all encrypted fields > find returns all entities with correctly decrypted fields 1`] = `
+[
+  {
+    "metadata": {
+      "a": 1,
+    },
+    "optionalSecret": null,
+    "pin": 10,
+    "secret": "alpha",
+    "transformedSecret": "aaa",
+    "verified": true,
+  },
+  {
+    "metadata": {
+      "b": 2,
+    },
+    "optionalSecret": "opt-b",
+    "pin": 20,
+    "secret": "beta",
+    "transformedSecret": "bbb",
+    "verified": false,
+  },
+  {
+    "metadata": {
+      "c": 3,
+    },
+    "optionalSecret": null,
+    "pin": 30,
+    "secret": "gamma",
+    "transformedSecret": "ccc",
+    "verified": true,
+  },
+]
+`;
+
+exports[`TCK: SQLite > encryption > Encryption > update operations > save (insert-or-update) with encrypted fields round-trips correctly 1`] = `
+{
+  "saved": true,
+}
+`;
 
 exports[`TCK: SQLite Complex Predicates Array operators $all — array contains all required elements matches entities containing all specified elements 1`] = `
 [

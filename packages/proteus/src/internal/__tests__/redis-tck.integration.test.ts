@@ -16,9 +16,9 @@ import { isRedisCompatibleEntity } from "../drivers/redis/utils/validate-redis-e
 import type { TckDriverFactory, TckDriverHandle } from "../__fixtures__/tck/types";
 import { createTckAmphora } from "../__fixtures__/tck/create-tck-amphora";
 import { runTck } from "../__fixtures__/tck/run-tck";
-import { describe } from "vitest";
+import { describe, vi } from "vitest";
 
-jest.setTimeout(60_000);
+vi.setConfig({ testTimeout: 60_000 });
 
 let source: ProteusSource;
 const namespace = `tck_${randomBytes(6).toString("hex")}`;

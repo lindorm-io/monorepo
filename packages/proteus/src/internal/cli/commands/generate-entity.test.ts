@@ -1,10 +1,12 @@
 import { resolve, join } from "path";
 import { Logger } from "@lindorm/logger";
-import { mkdir, writeFile } from "fs/promises";
+import { mkdir, writeFile as _writeFile } from "fs/promises";
 import { generateEntity } from "./generate-entity";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
-vi.mock("fs/promises", () => ({
+const writeFile = _writeFile as unknown as Mock;
+
+vi.mock("fs/promises", async () => ({
   mkdir: vi.fn().mockResolvedValue(undefined),
   writeFile: vi.fn().mockResolvedValue(undefined),
 }));

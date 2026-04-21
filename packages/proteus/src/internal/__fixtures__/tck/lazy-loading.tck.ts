@@ -1,3 +1,4 @@
+import { test, it, expect, beforeEach } from "vitest";
 // TCK: Lazy Loading Suite
 // Tests lazy relation loading via custom thenables (LazyRelation / LazyCollection).
 

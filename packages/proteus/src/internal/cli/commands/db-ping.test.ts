@@ -17,7 +17,7 @@ vi.mock("../load-source");
 
 const mockLoadSource = loadSource as MockedFunction<typeof loadSource>;
 
-vi.mock("@lindorm/logger", () => ({
+vi.mock("@lindorm/logger", async () => ({
   Logger: {
     std: {
       log: vi.fn(),

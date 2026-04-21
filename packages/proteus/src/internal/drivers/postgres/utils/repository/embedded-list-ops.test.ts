@@ -16,7 +16,7 @@ import {
   saveEmbeddedListRows,
 } from "./embedded-list-ops";
 
-vi.mock("../quote-identifier", () => ({
+vi.mock("../quote-identifier", async () => ({
   quoteIdentifier: vi.fn((name: string) => `"${name}"`),
   quoteQualifiedName: vi.fn((namespace: string | null, name: string) =>
     namespace ? `"${namespace}"."${name}"` : `"${name}"`,

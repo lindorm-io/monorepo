@@ -1,3 +1,4 @@
+import { test } from "vitest";
 import { Amphora } from "@lindorm/amphora";
 import { KryptosKit } from "@lindorm/kryptos";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
