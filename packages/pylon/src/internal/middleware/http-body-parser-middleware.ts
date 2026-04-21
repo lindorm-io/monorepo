@@ -1,7 +1,7 @@
 import { changeKeys } from "@lindorm/case";
 import { isObject } from "@lindorm/is";
 import type { HttpMethod } from "@lindorm/types";
-import { existsSync, mkdirSync } from "fs-extra";
+import { existsSync, mkdirSync } from "node:fs";
 import type { ParseBodyOptions, PylonHttpMiddleware } from "../../types/index.js";
 import { getBodyType } from "../utils/body/get-body-type.js";
 import { parseBody } from "../utils/body/parse-body.js";
