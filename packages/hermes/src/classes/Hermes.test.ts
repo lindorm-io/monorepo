@@ -1,5 +1,5 @@
 import { IrisSource } from "@lindorm/iris";
-import { createMockLogger } from "@lindorm/logger/mocks/jest";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { ProteusSource } from "@lindorm/proteus";
 import { randomUUID } from "crypto";
 import { createChecksum } from "../internal/utils";
@@ -38,6 +38,7 @@ import { TestViewQuery } from "../__fixtures__/modules/queries";
 import { TestSaga } from "../__fixtures__/modules/sagas";
 import { TestView, TestViewEntity } from "../__fixtures__/modules/views";
 import { Hermes } from "./Hermes";
+import { afterAll, beforeAll, describe, expect, it, vi, type Mock } from "vitest";
 
 const ALL_MODULES = [
   TestCommandCreate,
@@ -846,7 +847,7 @@ describe("Hermes", () => {
       ]);
 
       const eventBus = (hermes as any).eventBus;
-      const subscribeSpy = jest.spyOn(eventBus, "subscribe");
+      const subscribeSpy = vi.spyOn(eventBus, "subscribe");
 
       const handle = hermes.admin.replay.view(TestViewEntity);
       await handle.promise;
@@ -1049,7 +1050,7 @@ describe("Hermes", () => {
     });
 
     it("should remove listener via off()", () => {
-      const listener = jest.fn();
+      const listener = vi.fn();
       hermes.on("saga", listener);
       hermes.off("saga", listener);
       // If off works, the listener count should not grow unbounded.
@@ -1057,7 +1058,7 @@ describe("Hermes", () => {
     });
 
     it("should support off() for view listeners", () => {
-      const listener = jest.fn();
+      const listener = vi.fn();
       expect(() => {
         hermes.on("view.hermes", listener);
         hermes.off("view.hermes", listener);
@@ -1065,7 +1066,7 @@ describe("Hermes", () => {
     });
 
     it("should support off() for checksum listeners", () => {
-      const listener = jest.fn();
+      const listener = vi.fn();
       expect(() => {
         hermes.on("checksum", listener);
         hermes.off("checksum", listener);
@@ -1083,7 +1084,7 @@ describe("Hermes", () => {
       await iris.connect();
 
       // Mock proteus.setup to throw
-      jest.spyOn(proteus, "setup").mockRejectedValue(new Error("proteus setup failed"));
+      vi.spyOn(proteus, "setup").mockRejectedValue(new Error("proteus setup failed"));
 
       const hermes = new Hermes({
         proteus,
@@ -1095,7 +1096,7 @@ describe("Hermes", () => {
       await expect(hermes.setup()).rejects.toThrow("proteus setup failed");
       expect(hermes.status).toBe("created");
 
-      (proteus.setup as jest.Mock).mockRestore();
+      (proteus.setup as Mock).mockRestore();
       await iris.disconnect();
       await proteus.disconnect();
     });
@@ -1107,7 +1108,7 @@ describe("Hermes", () => {
       await iris.connect();
 
       // Mock iris.setup to throw (proteus.setup will succeed normally)
-      jest.spyOn(iris, "setup").mockRejectedValue(new Error("iris setup failed"));
+      vi.spyOn(iris, "setup").mockRejectedValue(new Error("iris setup failed"));
 
       const hermes = new Hermes({
         proteus,
@@ -1119,7 +1120,7 @@ describe("Hermes", () => {
       await expect(hermes.setup()).rejects.toThrow("iris setup failed");
       expect(hermes.status).toBe("created");
 
-      (iris.setup as jest.Mock).mockRestore();
+      (iris.setup as Mock).mockRestore();
       await iris.disconnect();
       await proteus.disconnect();
     });
@@ -1133,7 +1134,7 @@ describe("Hermes", () => {
       // Mock iris.messageBus to throw during createIrisPrimitives
       // This must be set up BEFORE hermes.setup() calls it, but AFTER
       // iris.addMessages (which happens during registerIrisMessages).
-      jest.spyOn(iris, "messageBus").mockImplementation((..._args: any[]) => {
+      vi.spyOn(iris, "messageBus").mockImplementation((..._args: any[]) => {
         // messageBus is called during createIrisPrimitives
         throw new Error("handler registration failed");
       });
@@ -1148,7 +1149,7 @@ describe("Hermes", () => {
       await expect(hermes.setup()).rejects.toThrow("handler registration failed");
       expect(hermes.status).toBe("created");
 
-      (iris.messageBus as jest.Mock).mockRestore();
+      (iris.messageBus as Mock).mockRestore();
       await iris.disconnect();
       await proteus.disconnect();
     });
@@ -1160,7 +1161,7 @@ describe("Hermes", () => {
       await iris.connect();
 
       // First attempt: mock proteus.setup to throw
-      jest.spyOn(proteus, "setup").mockRejectedValue(new Error("transient failure"));
+      vi.spyOn(proteus, "setup").mockRejectedValue(new Error("transient failure"));
 
       const hermes = new Hermes({
         proteus,
@@ -1173,7 +1174,7 @@ describe("Hermes", () => {
       expect(hermes.status).toBe("created");
 
       // Second attempt: restore real implementation so setup succeeds
-      (proteus.setup as jest.Mock).mockRestore();
+      (proteus.setup as Mock).mockRestore();
 
       await hermes.setup();
       expect(hermes.status).toBe("ready");

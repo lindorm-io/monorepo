@@ -1,35 +1,69 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`AggregateAlreadyCreatedError > should create a permanent domain error 1`] = `[AggregateAlreadyCreatedError: Aggregate has already been created]`;
 
 exports[`AggregateAlreadyCreatedError should create a permanent domain error 1`] = `[AggregateAlreadyCreatedError: Aggregate has already been created]`;
 
+exports[`AggregateDestroyedError > should create a permanent domain error 1`] = `[AggregateDestroyedError: Aggregate is destroyed]`;
+
 exports[`AggregateDestroyedError should create a permanent domain error 1`] = `[AggregateDestroyedError: Aggregate is destroyed]`;
+
+exports[`AggregateNotCreatedError > should create a permanent domain error 1`] = `[AggregateNotCreatedError: Aggregate has not been created]`;
 
 exports[`AggregateNotCreatedError should create a permanent domain error 1`] = `[AggregateNotCreatedError: Aggregate has not been created]`;
 
+exports[`AggregateNotDestroyedError > should create a permanent domain error 1`] = `[AggregateNotDestroyedError: Aggregate has not been destroyed]`;
+
 exports[`AggregateNotDestroyedError should create a permanent domain error 1`] = `[AggregateNotDestroyedError: Aggregate has not been destroyed]`;
 
+exports[`CausationMissingEventsError > should create a LindormError (not a DomainError) 1`] = `[CausationMissingEventsError: Causation produces no event array in aggregate]`;
+
 exports[`CausationMissingEventsError should create a LindormError (not a DomainError) 1`] = `[CausationMissingEventsError: Causation produces no event array in aggregate]`;
+
+exports[`ChecksumError > should accept an optional cause error 1`] = `[ChecksumError: checksum mismatch]`;
+
+exports[`ChecksumError > should create a permanent domain error with message 1`] = `[ChecksumError: checksum mismatch]`;
 
 exports[`ChecksumError should accept an optional cause error 1`] = `[ChecksumError: checksum mismatch]`;
 
 exports[`ChecksumError should create a permanent domain error with message 1`] = `[ChecksumError: checksum mismatch]`;
 
+exports[`CommandSchemaValidationError > should create a permanent domain error wrapping the original error 1`] = `[CommandSchemaValidationError: Schema validation error]`;
+
 exports[`CommandSchemaValidationError should create a permanent domain error wrapping the original error 1`] = `[CommandSchemaValidationError: Schema validation error]`;
+
+exports[`ConcurrencyError > should create a LindormError (not a DomainError) 1`] = `[ConcurrencyError: concurrency conflict]`;
 
 exports[`ConcurrencyError should create a LindormError (not a DomainError) 1`] = `[ConcurrencyError: concurrency conflict]`;
 
+exports[`HandlerNotRegisteredError > should create a LindormError (not a DomainError) 1`] = `[HandlerNotRegisteredError: Handler has not been registered]`;
+
 exports[`HandlerNotRegisteredError should create a LindormError (not a DomainError) 1`] = `[HandlerNotRegisteredError: Handler has not been registered]`;
+
+exports[`SagaAlreadyCreatedError > should default to non-permanent 1`] = `[SagaAlreadyCreatedError: Saga has already been created]`;
 
 exports[`SagaAlreadyCreatedError should default to non-permanent 1`] = `[SagaAlreadyCreatedError: Saga has already been created]`;
 
+exports[`SagaDestroyedError > should create a permanent domain error 1`] = `[SagaDestroyedError: Saga is destroyed]`;
+
 exports[`SagaDestroyedError should create a permanent domain error 1`] = `[SagaDestroyedError: Saga is destroyed]`;
+
+exports[`SagaNotCreatedError > should default to non-permanent 1`] = `[SagaNotCreatedError: Saga has not been created]`;
 
 exports[`SagaNotCreatedError should default to non-permanent 1`] = `[SagaNotCreatedError: Saga has not been created]`;
 
+exports[`ViewAlreadyCreatedError > should default to non-permanent 1`] = `[ViewAlreadyCreatedError: View has already been created]`;
+
 exports[`ViewAlreadyCreatedError should default to non-permanent 1`] = `[ViewAlreadyCreatedError: View has already been created]`;
+
+exports[`ViewDestroyedError > should create a permanent domain error 1`] = `[ViewDestroyedError: View is destroyed]`;
 
 exports[`ViewDestroyedError should create a permanent domain error 1`] = `[ViewDestroyedError: View is destroyed]`;
 
+exports[`ViewNotCreatedError > should default to non-permanent 1`] = `[ViewNotCreatedError: View has not been created]`;
+
 exports[`ViewNotCreatedError should default to non-permanent 1`] = `[ViewNotCreatedError: View has not been created]`;
+
+exports[`ViewNotUpdatedError > should create a permanent domain error with default message 1`] = `[ViewNotUpdatedError: View was not updated]`;
 
 exports[`ViewNotUpdatedError should create a permanent domain error with default message 1`] = `[ViewNotUpdatedError: View was not updated]`;

@@ -1,8 +1,9 @@
 import { LindormError } from "@lindorm/errors";
-import { createMockLogger } from "@lindorm/logger/mocks/jest";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import type { HermesStatus } from "../types/hermes-status";
 import { HermesSession } from "./HermesSession";
 import type { HermesSessionOptions } from "./HermesSession";
+import { describe, expect, it, vi } from "vitest";
 
 // Minimal stubs for the dependencies HermesSession actually uses
 const createOptions = (
@@ -11,24 +12,24 @@ const createOptions = (
   logger: createMockLogger(),
   statusRef: { current: "ready" },
   registry: {
-    getCommand: jest.fn().mockReturnValue({ name: "TestCommand", version: 1 }),
-    getCommandHandler: jest.fn().mockReturnValue({
+    getCommand: vi.fn().mockReturnValue({ name: "TestCommand", version: 1 }),
+    getCommandHandler: vi.fn().mockReturnValue({
       aggregate: { name: "TestAggregate", namespace: "test" },
     }),
   } as any,
   viewDomain: {
-    query: jest.fn().mockResolvedValue({ result: "ok" }),
+    query: vi.fn().mockResolvedValue({ result: "ok" }),
   } as any,
   commandQueue: {
-    create: jest.fn().mockReturnValue({ id: "msg-id" }),
-    publish: jest.fn().mockResolvedValue(undefined),
+    create: vi.fn().mockReturnValue({ id: "msg-id" }),
+    publish: vi.fn().mockResolvedValue(undefined),
   } as any,
   ...overrides,
 });
 
 // extractDto is used internally — mock it to return predictable data
-jest.mock("../internal/utils", () => ({
-  extractDto: jest.fn().mockReturnValue({ data: { foo: "bar" } }),
+vi.mock("../internal/utils", async () => ({
+  extractDto: vi.fn().mockReturnValue({ data: { foo: "bar" } }),
 }));
 
 describe("HermesSession", () => {
@@ -78,8 +79,8 @@ describe("HermesSession", () => {
       const session = new HermesSession(
         createOptions({
           registry: {
-            getCommand: jest.fn().mockReturnValue({ name: "X", version: 1 }),
-            getCommandHandler: jest.fn().mockReturnValue(null),
+            getCommand: vi.fn().mockReturnValue({ name: "X", version: 1 }),
+            getCommandHandler: vi.fn().mockReturnValue(null),
           } as any,
         }),
       );

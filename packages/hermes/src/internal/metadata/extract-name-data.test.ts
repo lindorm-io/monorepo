@@ -1,4 +1,5 @@
 import { extractNameData } from "./extract-name-data";
+import { describe, expect, it } from "vitest";
 
 describe("extractNameData", () => {
   it("should extract snake_case name from PascalCase class name", () => {

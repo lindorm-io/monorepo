@@ -1,4 +1,4 @@
-import { createMockLogger } from "@lindorm/logger/mocks/jest";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import {
   TestAggregate,
   TestForgettableAggregate,
@@ -36,6 +36,7 @@ import { TestView } from "../../__fixtures__/modules/views/TestView";
 import { TestViewEntity } from "../../__fixtures__/modules/views/TestViewEntity";
 import { HermesRegistry } from "./hermes-registry";
 import { HermesScanner } from "./HermesScanner";
+import { beforeAll, describe, expect, test } from "vitest";
 
 const ALL_CONSTRUCTORS = [
   TestCommandCreate,

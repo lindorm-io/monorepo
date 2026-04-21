@@ -1,4 +1,4 @@
-import { createMockLogger } from "@lindorm/logger/mocks/jest";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { DuplicateKeyError } from "@lindorm/proteus";
 import type { IIrisMessageBus, IIrisWorkerQueue } from "@lindorm/iris";
 import type { IrisSource } from "@lindorm/iris";
@@ -64,6 +64,18 @@ import { HermesScanner } from "../registry/HermesScanner";
 import { HermesRegistry } from "../registry/hermes-registry";
 import type { RegisteredAggregate, HandlerRegistration } from "../registry/types";
 import { AggregateDomain } from "./aggregate-domain";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+  type Mock,
+  type MockInstance,
+} from "vitest";
 
 describe("AggregateDomain", () => {
   const logger = createMockLogger();
@@ -74,7 +86,7 @@ describe("AggregateDomain", () => {
   let domain: AggregateDomain;
   let testAggregate: RegisteredAggregate;
   let forgettableAggregate: RegisteredAggregate;
-  let spiedEventBusPublish: jest.SpyInstance;
+  let spiedEventBusPublish: MockInstance;
   let eventBus: IIrisMessageBus<HermesEventMessage>;
 
   beforeAll(async () => {
@@ -158,7 +170,7 @@ describe("AggregateDomain", () => {
     // Spy on eventBus.publish to capture published events and prevent
     // Iris message validation (the domain creates HermesEventMessage
     // objects without going through Iris create() so they lack generated IDs)
-    spiedEventBusPublish = jest.spyOn(eventBus, "publish").mockResolvedValue(undefined);
+    spiedEventBusPublish = vi.spyOn(eventBus, "publish").mockResolvedValue(undefined);
   });
 
   afterEach(() => {
@@ -835,7 +847,7 @@ describe("AggregateDomain", () => {
 
     // Mock the proteus transaction to throw a DuplicateKeyError
     const originalTransaction = proteus.transaction.bind(proteus);
-    const transactionSpy = jest
+    const transactionSpy = vi
       .spyOn(proteus, "transaction")
       .mockRejectedValueOnce(new DuplicateKeyError("unique constraint violation"));
 
@@ -858,7 +870,7 @@ describe("AggregateDomain", () => {
     expect(errorHandler).toBeDefined();
 
     // Mock resolveHandlerFunction to return a handler that throws
-    jest.spyOn(domain as any, "resolveHandlerFunction").mockImplementation(() => {
+    vi.spyOn(domain as any, "resolveHandlerFunction").mockImplementation(() => {
       return async () => {
         throw new Error("error handler exploded");
       };
@@ -893,7 +905,7 @@ describe("AggregateDomain", () => {
     expect(errorHandler).toBeDefined();
 
     const commandQueue = (domain as any).commandQueue;
-    const publishSpy = jest
+    const publishSpy = vi
       .spyOn(commandQueue, "publish")
       .mockRejectedValueOnce(new Error("command queue publish failed"));
 
@@ -928,7 +940,7 @@ describe("AggregateDomain", () => {
     expect(errorHandler).toBeDefined();
 
     const commandQueue = (domain as any).commandQueue;
-    const commandPublishSpy = jest
+    const commandPublishSpy = vi
       .spyOn(commandQueue, "publish")
       .mockResolvedValue(undefined);
 
@@ -964,7 +976,7 @@ describe("AggregateDomain", () => {
     const createHandler = findCommandHandler(testAggregate, "test_command_create");
 
     // Mock resolveHandlerFunction to return a handler that doesn't call ctx.apply
-    jest.spyOn(domain as any, "resolveHandlerFunction").mockImplementation(() => {
+    vi.spyOn(domain as any, "resolveHandlerFunction").mockImplementation(() => {
       return async () => {
         // intentionally not calling ctx.apply
       };
@@ -991,14 +1003,12 @@ describe("AggregateDomain", () => {
     const createHandler = findCommandHandler(testAggregate, "test_command_create");
 
     // Mock transaction to throw DuplicateKeyError -> ConcurrencyError
-    jest
-      .spyOn(proteus, "transaction")
-      .mockRejectedValueOnce(new DuplicateKeyError("unique constraint violation"));
+    vi.spyOn(proteus, "transaction").mockRejectedValueOnce(
+      new DuplicateKeyError("unique constraint violation"),
+    );
 
     const errorQueue = (domain as any).errorQueue;
-    const errorPublishSpy = jest
-      .spyOn(errorQueue, "publish")
-      .mockResolvedValue(undefined);
+    const errorPublishSpy = vi.spyOn(errorQueue, "publish").mockResolvedValue(undefined);
 
     const cmd = createCommandMsg("test_command_create", { input: "race" }, { aggregate });
 
@@ -1010,7 +1020,7 @@ describe("AggregateDomain", () => {
     expect(errorPublishSpy).not.toHaveBeenCalled();
 
     errorPublishSpy.mockRestore();
-    (proteus.transaction as jest.Mock).mockRestore();
+    (proteus.transaction as Mock).mockRestore();
   });
 
   // -- H5: re-publish fails during alreadyProcessed --
@@ -1057,7 +1067,7 @@ describe("AggregateDomain", () => {
     await handleCommand(cmd, forgettableAggregate, createHandler);
 
     // Mock loadEncryptionKey to return null (simulating missing key)
-    const loadEncryptionKeySpy = jest
+    const loadEncryptionKeySpy = vi
       .spyOn(domain as any, "loadEncryptionKey")
       .mockResolvedValue(null);
 
@@ -1078,7 +1088,7 @@ describe("AggregateDomain", () => {
     const customEventBus = iris.messageBus(HermesEventMessage);
     const errQueue = iris.workerQueue(HermesErrorMessage);
 
-    jest.spyOn(customEventBus, "publish").mockResolvedValue(undefined);
+    vi.spyOn(customEventBus, "publish").mockResolvedValue(undefined);
 
     const customDomain = new AggregateDomain({
       registry,
@@ -1125,9 +1135,7 @@ describe("AggregateDomain", () => {
     const localEventBus = iris.messageBus(HermesEventMessage);
     const errQueue = iris.workerQueue(HermesErrorMessage);
 
-    const consumeSpy = jest
-      .spyOn(errQueue, "consume")
-      .mockResolvedValue(undefined as any);
+    const consumeSpy = vi.spyOn(errQueue, "consume").mockResolvedValue(undefined as any);
 
     const localDomain = new AggregateDomain({
       registry,
@@ -1160,14 +1168,14 @@ describe("AggregateDomain", () => {
     await handleCommand(createCmd, testAggregate, createHandler);
 
     const throwsHandler = findCommandHandler(testAggregate, "test_command_throws");
-    const resolverSpy = jest
+    const resolverSpy = vi
       .spyOn(domain as any, "resolveHandlerFunction")
       .mockReturnValue(async () => {
         throw new DomainError("transient failure", { permanent: false });
       });
 
     const errQueue = (domain as any).errorQueue;
-    const errPubSpy = jest.spyOn(errQueue, "publish").mockResolvedValue(undefined);
+    const errPubSpy = vi.spyOn(errQueue, "publish").mockResolvedValue(undefined);
 
     const throwsCmd = createCommandMsg(
       "test_command_throws",
@@ -1200,7 +1208,7 @@ describe("AggregateDomain", () => {
     await handleCommand(createCmd, testAggregate, createHandler);
 
     const errQueue = (domain as any).errorQueue;
-    const errPubSpy = jest
+    const errPubSpy = vi
       .spyOn(errQueue, "publish")
       .mockRejectedValue(new Error("publish failed"));
 
@@ -1226,7 +1234,7 @@ describe("AggregateDomain", () => {
     const aggregate = { id: aggregateId, name: "test_aggregate", namespace: "hermes" };
     const createHandler = findCommandHandler(testAggregate, "test_command_create");
 
-    const txSpy = jest
+    const txSpy = vi
       .spyOn(proteus, "transaction")
       .mockRejectedValueOnce(new Error("generic database error"));
 
@@ -1318,16 +1326,16 @@ describe("AggregateDomain", () => {
 
     // First call: no existing key -> proceed to create
     // After DuplicateKeyError: second call also returns null -> re-throw
-    const loadSpy = jest
+    const loadSpy = vi
       .spyOn(domain as any, "loadEncryptionKey")
       .mockResolvedValueOnce(null)
       .mockResolvedValueOnce(null);
 
     // Mock the proteus.repository to return a repo whose insert throws DuplicateKeyError
     const mockRepo = {
-      insert: jest.fn().mockRejectedValue(new DuplicateKeyError("duplicate key")),
+      insert: vi.fn().mockRejectedValue(new DuplicateKeyError("duplicate key")),
     };
-    const repoSpy = jest.spyOn(proteus, "repository").mockReturnValue(mockRepo as any);
+    const repoSpy = vi.spyOn(proteus, "repository").mockReturnValue(mockRepo as any);
 
     const loadOrCreate = (domain as any).loadOrCreateEncryptionKey.bind(domain);
     await expect(loadOrCreate(identifier)).rejects.toThrow(DuplicateKeyError);

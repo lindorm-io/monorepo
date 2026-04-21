@@ -1,6 +1,7 @@
 import type { HermesRegistry } from "../registry";
 import type { HermesCommandMessage, HermesEventMessage } from "../messages";
 import { recoverCommand, recoverEvent } from "./recover-dto";
+import { describe, expect, test } from "vitest";
 
 class FakeCommand {
   public input: string = "";

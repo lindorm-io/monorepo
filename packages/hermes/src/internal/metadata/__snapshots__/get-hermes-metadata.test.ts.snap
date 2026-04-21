@@ -1,4 +1,8 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`getHermesMetadata > should return empty object for a class with null metadata 1`] = `{}`;
+
+exports[`getHermesMetadata > should return empty object for a class without Symbol.metadata 1`] = `{}`;
 
 exports[`getHermesMetadata should return empty object for a class with null metadata 1`] = `{}`;
 

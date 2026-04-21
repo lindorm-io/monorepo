@@ -1,4 +1,15 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Saga > should stage saga metadata with single aggregate constructor 1`] = `
+{
+  "saga": {
+    "aggregates": [
+      [Function],
+    ],
+    "name": "test_saga",
+  },
+}
+`;
 
 exports[`Saga should stage saga metadata with single aggregate constructor 1`] = `
 {

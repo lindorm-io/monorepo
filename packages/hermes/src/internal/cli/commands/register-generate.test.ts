@@ -1,20 +1,21 @@
 import { Command } from "commander";
 import { registerGenerateCommands } from "./register-generate";
 import { generateDto } from "./generate-dto";
+import { beforeEach, describe, expect, it, vi, type MockedFunction } from "vitest";
 
-jest.mock("./generate-dto", () => ({
-  generateDto: jest.fn(() => jest.fn()),
+vi.mock("./generate-dto", async () => ({
+  generateDto: vi.fn(() => vi.fn()),
 }));
 
-const mockGenerateDto = generateDto as jest.MockedFunction<typeof generateDto>;
+const mockGenerateDto = generateDto as MockedFunction<typeof generateDto>;
 
 describe("registerGenerateCommands", () => {
   let program: Command;
   let generateCmd: Command;
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    mockGenerateDto.mockReturnValue(jest.fn().mockResolvedValue(undefined));
+    vi.clearAllMocks();
+    mockGenerateDto.mockReturnValue(vi.fn().mockResolvedValue(undefined));
     program = new Command();
     program.exitOverride();
     registerGenerateCommands(program);

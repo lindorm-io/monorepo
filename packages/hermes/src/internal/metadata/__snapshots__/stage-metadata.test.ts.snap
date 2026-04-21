@@ -1,9 +1,27 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`stageAggregate > should set aggregate on metadata 1`] = `
+{
+  "aggregate": {
+    "name": "test_aggregate",
+  },
+}
+`;
 
 exports[`stageAggregate should set aggregate on metadata 1`] = `
 {
   "aggregate": {
     "name": "test_aggregate",
+  },
+}
+`;
+
+exports[`stageDto > should set dto on metadata 1`] = `
+{
+  "dto": {
+    "kind": "command",
+    "name": "test_create",
+    "version": 1,
   },
 }
 `;
@@ -18,11 +36,25 @@ exports[`stageDto should set dto on metadata 1`] = `
 }
 `;
 
+exports[`stageForgettable > should set forgettable on metadata 1`] = `
+{
+  "forgettable": {
+    "forgettable": true,
+  },
+}
+`;
+
 exports[`stageForgettable should set forgettable on metadata 1`] = `
 {
   "forgettable": {
     "forgettable": true,
   },
+}
+`;
+
+exports[`stageNamespace > should set namespace on metadata 1`] = `
+{
+  "namespace": "billing",
 }
 `;
 
