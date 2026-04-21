@@ -1,4 +1,4 @@
-import { Dict } from "@lindorm/types";
+import type { Dict } from "@lindorm/types";
 
 export const parseTokenHeader = (input: string): Dict | null => {
   try {
