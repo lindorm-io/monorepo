@@ -604,7 +604,7 @@ export class PostgresDriver implements IProteusDriver {
 
   private async syncAppendOnlyTriggers(
     client: PostgresQueryClient,
-    metadatas: Array<import("../../../entity/types/metadata").EntityMetadata>,
+    metadatas: Array<import("../../../entity/types/metadata.js").EntityMetadata>,
     nsOptions: { namespace: string | null },
   ): Promise<void> {
     for (const metadata of metadatas) {

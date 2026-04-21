@@ -53,7 +53,7 @@ export const loadRelationCounts = <E extends IEntity>(
 const loadOneToManyCount = <E extends IEntity>(
   entities: Array<E>,
   rc: MetaRelationCount,
-  relation: import("../../../../entity/types/metadata").MetaRelation,
+  relation: import("../../../../entity/types/metadata.js").MetaRelation,
   foreignMeta: EntityMetadata,
   ctx: LoadRelationCountsContext,
 ): void => {
@@ -112,7 +112,7 @@ const loadOneToManyCount = <E extends IEntity>(
 const loadManyToManyCount = <E extends IEntity>(
   entities: Array<E>,
   rc: MetaRelationCount,
-  relation: import("../../../../entity/types/metadata").MetaRelation,
+  relation: import("../../../../entity/types/metadata.js").MetaRelation,
   ctx: LoadRelationCountsContext,
 ): void => {
   if (!relation.joinKeys) return;

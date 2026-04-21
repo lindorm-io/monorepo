@@ -40,7 +40,7 @@ export type CompileAggregateDeps = {
     params: Array<unknown>,
   ) => string;
   compileCtes: (
-    ctes: Array<import("../../types/query").CteSpec>,
+    ctes: Array<import("../../types/query.js").CteSpec>,
     globalParams: Array<unknown>,
   ) => string;
 };

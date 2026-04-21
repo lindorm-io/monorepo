@@ -61,7 +61,7 @@ vi.mock("../utils/repository/wrap-pg-error.js", () => ({
 
 vi.mock("../../../errors/DuplicateKeyError.js", async () => {
   const { ProteusRepositoryError } = await vi.importActual<
-    typeof import("../../../../errors/ProteusRepositoryError")
+    typeof import("../../../../errors/ProteusRepositoryError.js")
   >("../../../../errors/ProteusRepositoryError");
   class DuplicateKeyError extends ProteusRepositoryError {}
   return { DuplicateKeyError };
@@ -1017,7 +1017,7 @@ describe("PostgresRepository", () => {
 
       // Configure wrapPgError to pass through ProteusError instances (mirrors real implementation)
       const { ProteusError } = await vi.importActual<
-        typeof import("../../../../errors/ProteusError")
+        typeof import("../../../../errors/ProteusError.js")
       >("../../../../errors/ProteusError");
       (wrapPgError as unknown as Mock).mockImplementation(
         (error: unknown, message: string) => {

@@ -57,7 +57,7 @@ export const loadRelationIds = async <E extends IEntity>(
 const loadOneToManyIds = async <E extends IEntity>(
   entities: Array<E>,
   ri: MetaRelationId,
-  relation: import("../../../../entity/types/metadata").MetaRelation,
+  relation: import("../../../../entity/types/metadata.js").MetaRelation,
   foreignMeta: EntityMetadata,
   _schema: string | null,
   ctx: LoadRelationIdsContext,
@@ -122,7 +122,7 @@ const loadOneToManyIds = async <E extends IEntity>(
 const loadManyToManyIds = async <E extends IEntity>(
   entities: Array<E>,
   ri: MetaRelationId,
-  relation: import("../../../../entity/types/metadata").MetaRelation,
+  relation: import("../../../../entity/types/metadata.js").MetaRelation,
   foreignMeta: EntityMetadata,
   _schema: string | null,
   ctx: LoadRelationIdsContext,
@@ -200,7 +200,7 @@ const loadManyToManyIds = async <E extends IEntity>(
 const loadInverseOneToOneId = async <E extends IEntity>(
   entities: Array<E>,
   ri: MetaRelationId,
-  relation: import("../../../../entity/types/metadata").MetaRelation,
+  relation: import("../../../../entity/types/metadata.js").MetaRelation,
   foreignMeta: EntityMetadata,
   _schema: string | null,
   ctx: LoadRelationIdsContext,

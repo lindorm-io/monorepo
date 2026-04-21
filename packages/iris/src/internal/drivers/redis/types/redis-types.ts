@@ -76,7 +76,9 @@ export type RedisClient = {
 
 export type RedisSharedState = {
   publishConnection: RedisClient | null;
-  connectionConfig: { url?: string } & import("../../../../types").RedisConnectionOptions;
+  connectionConfig: {
+    url?: string;
+  } & import("../../../../types/index.js").RedisConnectionOptions;
   prefix: string;
   consumerName: string;
   consumerLoops: Array<RedisConsumerLoop>;
