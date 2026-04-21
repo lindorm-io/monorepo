@@ -1,4 +1,4 @@
-import { Encrypted } from "./Encrypted";
+import { Encrypted } from "./Encrypted.js";
 import { describe, expect, it } from "vitest";
 
 describe("Encrypted", () => {

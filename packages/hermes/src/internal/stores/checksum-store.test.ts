@@ -1,4 +1,4 @@
-import { findChecksum, insertChecksum } from "./checksum-store";
+import { findChecksum, insertChecksum } from "./checksum-store.js";
 import { describe, expect, it, vi } from "vitest";
 
 const createMockRepo = () => ({

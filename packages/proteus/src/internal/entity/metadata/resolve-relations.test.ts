@@ -1,16 +1,16 @@
-import { getEntityMetadata } from "./get-entity-metadata";
-import { buildPrimaryMetadata } from "./build-primary";
-import { resolveRelations } from "./resolve-relations";
-import { Entity } from "../../../decorators/Entity";
-import { Field } from "../../../decorators/Field";
-import { JoinKey } from "../../../decorators/JoinKey";
-import { JoinTable } from "../../../decorators/JoinTable";
-import { ManyToMany } from "../../../decorators/ManyToMany";
-import { ManyToOne } from "../../../decorators/ManyToOne";
-import { Nullable } from "../../../decorators/Nullable";
-import { OneToMany } from "../../../decorators/OneToMany";
-import { OneToOne } from "../../../decorators/OneToOne";
-import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField";
+import { getEntityMetadata } from "./get-entity-metadata.js";
+import { buildPrimaryMetadata } from "./build-primary.js";
+import { resolveRelations } from "./resolve-relations.js";
+import { Entity } from "../../../decorators/Entity.js";
+import { Field } from "../../../decorators/Field.js";
+import { JoinKey } from "../../../decorators/JoinKey.js";
+import { JoinTable } from "../../../decorators/JoinTable.js";
+import { ManyToMany } from "../../../decorators/ManyToMany.js";
+import { ManyToOne } from "../../../decorators/ManyToOne.js";
+import { Nullable } from "../../../decorators/Nullable.js";
+import { OneToMany } from "../../../decorators/OneToMany.js";
+import { OneToOne } from "../../../decorators/OneToOne.js";
+import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField.js";
 import { describe, expect, test } from "vitest";
 
 // ─────────────────────────────────────────────────────────────────────────────

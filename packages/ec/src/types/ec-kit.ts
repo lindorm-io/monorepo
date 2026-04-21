@@ -1,5 +1,5 @@
-import { IKryptos, IKryptosEc } from "@lindorm/kryptos";
-import { DsaEncoding, KeyData } from "@lindorm/types";
+import type { IKryptos, IKryptosEc } from "@lindorm/kryptos";
+import type { DsaEncoding, KeyData } from "@lindorm/types";
 
 export type CreateEcSignatureOptions = {
   data: KeyData;

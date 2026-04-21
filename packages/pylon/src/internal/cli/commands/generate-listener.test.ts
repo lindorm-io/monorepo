@@ -1,7 +1,7 @@
 import { resolve, join } from "path";
 import { mkdir as _mkdir, writeFile as _writeFile } from "fs/promises";
 import { Logger as _Logger } from "@lindorm/logger";
-import { generateListener } from "./generate-listener";
+import { generateListener } from "./generate-listener.js";
 import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 vi.mock("fs/promises", async () => ({
@@ -172,7 +172,7 @@ describe("generateListener", () => {
     vi.doMock("@inquirer/prompts", () => ({ input: mockInput }));
 
     vi.resetModules();
-    const { generateListener: freshGenerate } = await import("./generate-listener");
+    const { generateListener: freshGenerate } = await import("./generate-listener.js");
 
     vi.doMock("fs/promises", () => ({
       mkdir: vi.fn().mockResolvedValue(undefined),

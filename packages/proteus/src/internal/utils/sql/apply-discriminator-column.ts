@@ -1,4 +1,4 @@
-import type { EntityMetadata } from "../../entity/types/metadata";
+import type { EntityMetadata } from "../../entity/types/metadata.js";
 
 /**
  * Ensure the discriminator column is present with the correct metadata value

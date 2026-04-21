@@ -1,16 +1,16 @@
-import { makeField } from "../../../../__fixtures__/make-field";
-import type { EntityMetadata, MetaField } from "../../../../entity/types/metadata";
-import { Default } from "../../../../../decorators/Default";
-import { Entity } from "../../../../../decorators/Entity";
-import { Field } from "../../../../../decorators/Field";
-import { Generated } from "../../../../../decorators/Generated";
-import { ManyToOne } from "../../../../../decorators/ManyToOne";
-import { Nullable } from "../../../../../decorators/Nullable";
-import { OneToMany } from "../../../../../decorators/OneToMany";
-import { PrimaryKey } from "../../../../../decorators/PrimaryKey";
-import { PrimaryKeyField } from "../../../../../decorators/PrimaryKeyField";
-import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata";
-import { generateColumnDDL } from "./generate-column-ddl";
+import { makeField } from "../../../../__fixtures__/make-field.js";
+import type { EntityMetadata, MetaField } from "../../../../entity/types/metadata.js";
+import { Default } from "../../../../../decorators/Default.js";
+import { Entity } from "../../../../../decorators/Entity.js";
+import { Field } from "../../../../../decorators/Field.js";
+import { Generated } from "../../../../../decorators/Generated.js";
+import { ManyToOne } from "../../../../../decorators/ManyToOne.js";
+import { Nullable } from "../../../../../decorators/Nullable.js";
+import { OneToMany } from "../../../../../decorators/OneToMany.js";
+import { PrimaryKey } from "../../../../../decorators/PrimaryKey.js";
+import { PrimaryKeyField } from "../../../../../decorators/PrimaryKeyField.js";
+import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata.js";
+import { generateColumnDDL } from "./generate-column-ddl.js";
 import { describe, expect, test } from "vitest";
 
 // ---------------------------------------------------------------------------

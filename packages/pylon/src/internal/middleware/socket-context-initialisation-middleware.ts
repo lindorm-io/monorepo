@@ -1,9 +1,9 @@
 import { isObject } from "@lindorm/is";
-import { ILogger } from "@lindorm/logger";
-import { Environment } from "@lindorm/types";
+import type { ILogger } from "@lindorm/logger";
+import type { Environment } from "@lindorm/types";
 import { randomUUID } from "crypto";
-import { PylonSocketMiddleware } from "../../types";
-import { getSocketAuthorization } from "../utils/get-socket-authorization";
+import type { PylonSocketMiddleware } from "../../types/index.js";
+import { getSocketAuthorization } from "../utils/get-socket-authorization.js";
 
 const extractCorrelationId = (ctx: any): string => {
   if (typeof ctx.header?.correlationId === "string" && ctx.header.correlationId) {

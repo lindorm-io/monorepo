@@ -1,4 +1,4 @@
-import { expiresAt, Expiry } from "@lindorm/date";
+import { expiresAt, type Expiry } from "@lindorm/date";
 import { ServerError } from "@lindorm/errors";
 import { isDate, isString } from "@lindorm/is";
 import {
@@ -8,8 +8,12 @@ import {
   RESTRICTED_NAMES_REGEXP,
   RESTRICTED_VALUE_CHARS_REGEXP,
   SAME_SITE_REGEXP,
-} from "../constants/regexp";
-import { CookiePriority, CookieSameSite, PylonCookieOptions } from "../../types";
+} from "../constants/regexp.js";
+import type {
+  CookiePriority,
+  CookieSameSite,
+  PylonCookieOptions,
+} from "../../types/index.js";
 
 export class PylonCookie {
   private readonly domain: string | null;

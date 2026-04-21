@@ -1,7 +1,7 @@
 import {
   stagePrimaryKey,
   stageVersionKey,
-} from "../internal/entity/metadata/stage-metadata";
+} from "../internal/entity/metadata/stage-metadata.js";
 
 /**
  * Mark one or more fields as the version key for temporal/versioned tables.

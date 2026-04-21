@@ -1,4 +1,4 @@
-import { createNatsConsumer } from "./create-nats-consumer";
+import { createNatsConsumer } from "./create-nats-consumer.js";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@lindorm/random", async () => ({

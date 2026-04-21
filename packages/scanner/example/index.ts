@@ -12,8 +12,8 @@
  *      imported by the caller.
  */
 
-import { Scanner } from "../src";
-import { WorkerBrand } from "./worker-a";
+import { Scanner } from "../src/index.js";
+import { WorkerBrand } from "./worker-a.js";
 
 // Scan only the two worker demo files sitting alongside this entry point —
 // ignore index.ts itself and the unrelated `files/` scanner test fixtures.

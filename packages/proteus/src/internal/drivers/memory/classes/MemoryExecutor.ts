@@ -1,34 +1,34 @@
 import type { IAmphora } from "@lindorm/amphora";
 import type { DeepPartial, Dict, Predicate } from "@lindorm/types";
-import type { IEntity } from "../../../../interfaces";
-import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor";
-import type { DeleteOptions, FindOptions } from "../../../../types";
-import type { EntityMetadata, QueryScope } from "../../../entity/types/metadata";
-import type { FilterRegistry } from "../../../utils/query/filter-registry";
-import type { MemoryStore, MemoryTable } from "../types/memory-store";
+import type { IEntity } from "../../../../interfaces/index.js";
+import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor.js";
+import type { DeleteOptions, FindOptions } from "../../../../types/index.js";
+import type { EntityMetadata, QueryScope } from "../../../entity/types/metadata.js";
+import type { FilterRegistry } from "../../../utils/query/filter-registry.js";
+import type { MemoryStore, MemoryTable } from "../types/memory-store.js";
 import { Predicated } from "@lindorm/utils";
-import { defaultHydrateEntity } from "../../../entity/utils/default-hydrate-entity";
-import { encryptFieldValue } from "../../../entity/utils/encrypt-field-value";
-import { resolvePolymorphicMetadata } from "../../../entity/utils/resolve-polymorphic-metadata";
-import { generateAutoFilters } from "../../../entity/metadata/auto-filters";
+import { defaultHydrateEntity } from "../../../entity/utils/default-hydrate-entity.js";
+import { encryptFieldValue } from "../../../entity/utils/encrypt-field-value.js";
+import { resolvePolymorphicMetadata } from "../../../entity/utils/resolve-polymorphic-metadata.js";
+import { generateAutoFilters } from "../../../entity/metadata/auto-filters.js";
 import {
   matchesRow,
   applySelect,
   applyResolvedFilters,
   applyPagination,
-} from "../../../utils/query/in-memory-row-ops";
-import { mergeSystemFilterOverrides } from "../../../utils/query/merge-system-filter-overrides";
-import { resolveFilters } from "../../../utils/query/resolve-filters";
-import { MemoryDuplicateKeyError } from "../errors/MemoryDuplicateKeyError";
-import { MemoryOptimisticLockError } from "../errors/MemoryOptimisticLockError";
-import { MemoryDriverError } from "../errors/MemoryDriverError";
-import { applyOrdering } from "../../../utils/query/apply-ordering";
-import { buildPrimaryKeyDebug } from "../../../utils/repository/build-pk-debug";
-import { guardEmptyCriteria } from "../../../utils/repository/guard-empty-criteria";
-import { flattenEmbeddedCriteria } from "../../../utils/query/flatten-embedded-criteria";
-import { applyAutoIncrement } from "../utils/memory-auto-increment";
-import { checkUniqueConstraints } from "../utils/memory-unique-check";
-import { guardMemoryLockMode } from "../utils/guard-memory-lock-mode";
+} from "../../../utils/query/in-memory-row-ops.js";
+import { mergeSystemFilterOverrides } from "../../../utils/query/merge-system-filter-overrides.js";
+import { resolveFilters } from "../../../utils/query/resolve-filters.js";
+import { MemoryDuplicateKeyError } from "../errors/MemoryDuplicateKeyError.js";
+import { MemoryOptimisticLockError } from "../errors/MemoryOptimisticLockError.js";
+import { MemoryDriverError } from "../errors/MemoryDriverError.js";
+import { applyOrdering } from "../../../utils/query/apply-ordering.js";
+import { buildPrimaryKeyDebug } from "../../../utils/repository/build-pk-debug.js";
+import { guardEmptyCriteria } from "../../../utils/repository/guard-empty-criteria.js";
+import { flattenEmbeddedCriteria } from "../../../utils/query/flatten-embedded-criteria.js";
+import { applyAutoIncrement } from "../utils/memory-auto-increment.js";
+import { checkUniqueConstraints } from "../utils/memory-unique-check.js";
+import { guardMemoryLockMode } from "../utils/guard-memory-lock-mode.js";
 
 const serializePk = (
   entity: Record<string, unknown>,

@@ -1,7 +1,7 @@
-import type { IEntity } from "../../../interfaces";
-import type { PaginateOptions } from "../../../types/paginate-options";
-import { ProteusError } from "../../../errors";
-import type { EntityMetadata } from "../../entity/types/metadata";
+import type { IEntity } from "../../../interfaces/index.js";
+import type { PaginateOptions } from "../../../types/paginate-options.js";
+import { ProteusError } from "../../../errors/index.js";
+import type { EntityMetadata } from "../../entity/types/metadata.js";
 
 /**
  * Validate paginate options for mutual exclusivity and required fields.

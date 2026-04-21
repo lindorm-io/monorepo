@@ -1,20 +1,20 @@
-import type { IMessage } from "../../../../interfaces";
-import { AfterConsume } from "../../../../decorators/AfterConsume";
-import { AfterPublish } from "../../../../decorators/AfterPublish";
-import { BeforeConsume } from "../../../../decorators/BeforeConsume";
-import { BeforePublish } from "../../../../decorators/BeforePublish";
-import { DeadLetter } from "../../../../decorators/DeadLetter";
-import { Field } from "../../../../decorators/Field";
-import { Message } from "../../../../decorators/Message";
-import { OnConsumeError } from "../../../../decorators/OnConsumeError";
-import { Retry } from "../../../../decorators/Retry";
-import { Expiry } from "../../../../decorators/Expiry";
-import { Topic } from "../../../../decorators/Topic";
-import { clearRegistry } from "../../../message/metadata/registry";
-import { DeadLetterManager } from "../../../dead-letter/DeadLetterManager";
-import { MemoryDeadLetterStore } from "../../../dead-letter/MemoryDeadLetterStore";
-import { createStore } from "../utils/create-store";
-import { MemoryMessageBus } from "./MemoryMessageBus";
+import type { IMessage } from "../../../../interfaces/index.js";
+import { AfterConsume } from "../../../../decorators/AfterConsume.js";
+import { AfterPublish } from "../../../../decorators/AfterPublish.js";
+import { BeforeConsume } from "../../../../decorators/BeforeConsume.js";
+import { BeforePublish } from "../../../../decorators/BeforePublish.js";
+import { DeadLetter } from "../../../../decorators/DeadLetter.js";
+import { Field } from "../../../../decorators/Field.js";
+import { Message } from "../../../../decorators/Message.js";
+import { OnConsumeError } from "../../../../decorators/OnConsumeError.js";
+import { Retry } from "../../../../decorators/Retry.js";
+import { Expiry } from "../../../../decorators/Expiry.js";
+import { Topic } from "../../../../decorators/Topic.js";
+import { clearRegistry } from "../../../message/metadata/registry.js";
+import { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
+import { MemoryDeadLetterStore } from "../../../dead-letter/MemoryDeadLetterStore.js";
+import { createStore } from "../utils/create-store.js";
+import { MemoryMessageBus } from "./MemoryMessageBus.js";
 import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 // --- Mock logger ---

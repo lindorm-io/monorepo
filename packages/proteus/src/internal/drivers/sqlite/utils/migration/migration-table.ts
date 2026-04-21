@@ -1,7 +1,10 @@
-import { SqliteMigrationError } from "../../errors/SqliteMigrationError";
-import type { SqliteQueryClient } from "../../types/sqlite-query-client";
-import type { MigrationRecord, SqliteMigrationTableOptions } from "../../types/migration";
-import { quoteIdentifier } from "../quote-identifier";
+import { SqliteMigrationError } from "../../errors/SqliteMigrationError.js";
+import type { SqliteQueryClient } from "../../types/sqlite-query-client.js";
+import type {
+  MigrationRecord,
+  SqliteMigrationTableOptions,
+} from "../../types/migration.js";
+import { quoteIdentifier } from "../quote-identifier.js";
 
 const getQuotedTable = (options?: SqliteMigrationTableOptions): string =>
   quoteIdentifier(options?.table ?? "proteus_migrations");

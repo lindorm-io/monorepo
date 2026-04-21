@@ -1,16 +1,16 @@
 import type { Constructor } from "@lindorm/types";
-import type { IMessage } from "../../../../interfaces";
-import { Broadcast } from "../../../../decorators/Broadcast";
-import { DeadLetter } from "../../../../decorators/DeadLetter";
-import { Field } from "../../../../decorators/Field";
-import { Message } from "../../../../decorators/Message";
-import { Retry } from "../../../../decorators/Retry";
-import { clearRegistry } from "../../../message/metadata/registry";
-import { DeadLetterManager } from "../../../dead-letter/DeadLetterManager";
-import { MemoryDeadLetterStore } from "../../../dead-letter/MemoryDeadLetterStore";
-import type { MemorySharedState } from "../types/memory-store";
-import { createStore } from "../utils/create-store";
-import { MemoryWorkerQueue } from "./MemoryWorkerQueue";
+import type { IMessage } from "../../../../interfaces/index.js";
+import { Broadcast } from "../../../../decorators/Broadcast.js";
+import { DeadLetter } from "../../../../decorators/DeadLetter.js";
+import { Field } from "../../../../decorators/Field.js";
+import { Message } from "../../../../decorators/Message.js";
+import { Retry } from "../../../../decorators/Retry.js";
+import { clearRegistry } from "../../../message/metadata/registry.js";
+import { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
+import { MemoryDeadLetterStore } from "../../../dead-letter/MemoryDeadLetterStore.js";
+import type { MemorySharedState } from "../types/memory-store.js";
+import { createStore } from "../utils/create-store.js";
+import { MemoryWorkerQueue } from "./MemoryWorkerQueue.js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // --- Test message classes ---

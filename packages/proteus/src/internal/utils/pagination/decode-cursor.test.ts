@@ -1,5 +1,5 @@
-import { decodeCursor } from "./decode-cursor";
-import { encodeCursor } from "./encode-cursor";
+import { decodeCursor } from "./decode-cursor.js";
+import { encodeCursor } from "./encode-cursor.js";
 import { describe, expect, it } from "vitest";
 
 describe("decodeCursor", () => {

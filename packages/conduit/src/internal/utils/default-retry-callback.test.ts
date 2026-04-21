@@ -1,7 +1,7 @@
 import { ServerError } from "@lindorm/errors";
-import { RetryConfig } from "@lindorm/retry";
-import { ConduitError } from "../../errors";
-import { defaultRetryCallback } from "./default-retry-callback";
+import type { RetryConfig } from "@lindorm/retry";
+import { ConduitError } from "../../errors/index.js";
+import { defaultRetryCallback } from "./default-retry-callback.js";
 import { describe, expect, test } from "vitest";
 
 describe("defaultRetryCallback", () => {

@@ -1,8 +1,8 @@
-import type { IEntity } from "../../../../../interfaces";
-import type { MetaRelation } from "../../../../entity/types/metadata";
-import type { SqliteQueryClient } from "../../types/sqlite-query-client";
-import { getJoinName } from "../../../../entity/utils/get-join-name";
-import { quoteIdentifier } from "../quote-identifier";
+import type { IEntity } from "../../../../../interfaces/index.js";
+import type { MetaRelation } from "../../../../entity/types/metadata.js";
+import type { SqliteQueryClient } from "../../types/sqlite-query-client.js";
+import { getJoinName } from "../../../../entity/utils/get-join-name.js";
+import { quoteIdentifier } from "../quote-identifier.js";
 
 /**
  * Synchronises M2M join table rows for a single entity. Deletes existing rows for

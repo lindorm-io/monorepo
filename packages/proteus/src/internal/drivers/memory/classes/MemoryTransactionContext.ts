@@ -4,11 +4,11 @@ import type {
   IProteusQueryBuilder,
   IProteusRepository,
   ITransactionContext,
-} from "../../../../interfaces";
-import type { RepositoryFactory } from "../../../types/repository-factory";
-import type { MemoryTransactionHandle } from "../types/memory-store";
-import type { MemoryDriver } from "./MemoryDriver";
-import { MemoryDriverError } from "../errors/MemoryDriverError";
+} from "../../../../interfaces/index.js";
+import type { RepositoryFactory } from "../../../types/repository-factory.js";
+import type { MemoryTransactionHandle } from "../types/memory-store.js";
+import type { MemoryDriver } from "./MemoryDriver.js";
+import { MemoryDriverError } from "../errors/MemoryDriverError.js";
 
 export class MemoryTransactionContext implements ITransactionContext {
   private readonly handle: MemoryTransactionHandle;

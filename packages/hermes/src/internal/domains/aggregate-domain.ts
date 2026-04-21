@@ -1,12 +1,12 @@
-import { AesKit, parseAes, SerialisedAesDecryption } from "@lindorm/aes";
+import { AesKit, parseAes, type SerialisedAesDecryption } from "@lindorm/aes";
 import { snakeCase } from "@lindorm/case";
 import type { IIrisMessageBus, IIrisWorkerQueue } from "@lindorm/iris";
 import { JsonKit } from "@lindorm/json-kit";
 import {
   KryptosKit,
-  KryptosEncAlgorithm,
-  KryptosEncryption,
-  KryptosCurve,
+  type KryptosEncAlgorithm,
+  type KryptosEncryption,
+  type KryptosCurve,
 } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import { DuplicateKeyError } from "@lindorm/proteus";
@@ -23,27 +23,32 @@ import {
   ConcurrencyError,
   DomainError,
   HandlerNotRegisteredError,
-} from "../../errors";
-import type { ChecksumMode } from "../../types/hermes-options";
+} from "../../errors/index.js";
+import type { ChecksumMode } from "../../types/hermes-options.js";
 import type {
   AggregateCommandCtx,
   AggregateErrorCtx,
   AggregateIdentifier,
   ErrorDispatchOptions,
-} from "../../types";
-import { ChecksumError } from "../../errors";
-import { EventRecord, EncryptionRecord } from "../entities";
+} from "../../types/index.js";
+import { ChecksumError } from "../../errors/index.js";
+import { EventRecord, EncryptionRecord } from "../entities/index.js";
 import {
   HermesCommandMessage,
   HermesErrorMessage,
   HermesEventMessage,
-} from "../messages";
-import type { HermesRegistry } from "../registry";
-import type { RegisteredAggregate, HandlerRegistration } from "../registry";
-import { findEvents } from "../stores";
-import { findEncryptionKey, insertEncryptionKey } from "../stores";
-import { assertChecksum, createChecksum, extractDto, recoverCommand } from "../utils";
-import { AggregateModel } from "./aggregate-model";
+} from "../messages/index.js";
+import type { HermesRegistry } from "../registry/index.js";
+import type { RegisteredAggregate, HandlerRegistration } from "../registry/index.js";
+import { findEvents } from "../stores/index.js";
+import { findEncryptionKey, insertEncryptionKey } from "../stores/index.js";
+import {
+  assertChecksum,
+  createChecksum,
+  extractDto,
+  recoverCommand,
+} from "../utils/index.js";
+import { AggregateModel } from "./aggregate-model.js";
 
 export type AggregateDomainOptions = {
   registry: HermesRegistry;

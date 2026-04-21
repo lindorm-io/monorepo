@@ -1,6 +1,6 @@
-import { stageHook } from "../internal/entity/metadata/stage-metadata";
+import { stageHook } from "../internal/entity/metadata/stage-metadata.js";
 import type { Constructor } from "@lindorm/types";
-import type { HookCallback } from "../types";
+import type { HookCallback } from "../types/index.js";
 
 /**
  * Register a callback that fires after an entity is successfully saved (insert or update).

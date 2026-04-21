@@ -1,7 +1,7 @@
-import type { SqliteQueryClient } from "../../types/sqlite-query-client";
-import type { SqliteDbSnapshot } from "../../types/db-snapshot";
-import { introspectTable } from "./introspect-tables";
-import { introspectIndexes } from "./introspect-indexes";
+import type { SqliteQueryClient } from "../../types/sqlite-query-client.js";
+import type { SqliteDbSnapshot } from "../../types/db-snapshot.js";
+import { introspectTable } from "./introspect-tables.js";
+import { introspectIndexes } from "./introspect-indexes.js";
 
 /**
  * Introspects the SQLite database schema by listing all user tables from

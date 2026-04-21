@@ -1,5 +1,5 @@
-import { Middleware } from "../types";
-import { composeMiddleware } from "./compose-middleware";
+import type { Middleware } from "../types/index.js";
+import { composeMiddleware } from "./compose-middleware.js";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("composeMiddleware", () => {

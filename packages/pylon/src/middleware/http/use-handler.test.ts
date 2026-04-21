@@ -1,13 +1,13 @@
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
-import { getBody as _getBody } from "../../internal/utils/get-body";
-import { getFile as _getFile } from "../../internal/utils/get-file";
-import { getStatus as _getStatus } from "../../internal/utils/get-status";
-import { useHandler } from "./use-handler";
+import { getBody as _getBody } from "../../internal/utils/get-body.js";
+import { getFile as _getFile } from "../../internal/utils/get-file.js";
+import { getStatus as _getStatus } from "../../internal/utils/get-status.js";
+import { useHandler } from "./use-handler.js";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
-vi.mock("../../internal/utils/get-body");
-vi.mock("../../internal/utils/get-file");
-vi.mock("../../internal/utils/get-status");
+vi.mock("../../internal/utils/get-body.js");
+vi.mock("../../internal/utils/get-file.js");
+vi.mock("../../internal/utils/get-status.js");
 
 const getBody = _getBody as Mock;
 const getFile = _getFile as Mock;

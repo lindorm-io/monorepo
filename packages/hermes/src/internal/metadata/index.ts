@@ -1,6 +1,6 @@
-export { extractNameData } from "./extract-name-data";
-export type { NameData } from "./extract-name-data";
-export { getHermesMetadata } from "./get-hermes-metadata";
+export { extractNameData } from "./extract-name-data.js";
+export type { NameData } from "./extract-name-data.js";
+export { getHermesMetadata } from "./get-hermes-metadata.js";
 export {
   stageAggregate,
   stageDto,
@@ -12,7 +12,7 @@ export {
   stageUpcaster,
   stageValidation,
   stageView,
-} from "./stage-metadata";
+} from "./stage-metadata.js";
 export type {
   HandlerKind,
   MetaAggregate,
@@ -26,4 +26,4 @@ export type {
   MetaValidation,
   MetaView,
   StagedMetadata,
-} from "./types";
+} from "./types.js";

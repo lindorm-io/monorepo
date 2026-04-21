@@ -1,7 +1,7 @@
 import { snakeCase } from "@lindorm/case";
 import { isArray } from "@lindorm/is";
 import type { Constructor } from "@lindorm/types";
-import { stageView } from "../internal/metadata";
+import { stageView } from "../internal/metadata/index.js";
 
 const resolveEntityName = (entityClass: Constructor): string => {
   const meta = (entityClass as any)[Symbol.metadata];

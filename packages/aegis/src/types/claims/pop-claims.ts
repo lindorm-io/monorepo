@@ -1,4 +1,4 @@
-import { ConfirmationClaim } from "./confirmation-claim";
+import type { ConfirmationClaim } from "./confirmation-claim.js";
 
 // RFC 7800 — Proof-of-Possession Key Semantics for JWTs.
 // Used by RFC 9449 (DPoP), RFC 8705 (mTLS), and other PoP profiles.

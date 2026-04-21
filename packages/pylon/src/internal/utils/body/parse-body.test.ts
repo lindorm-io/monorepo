@@ -1,13 +1,13 @@
 import { ClientError } from "@lindorm/errors";
 import _CoBody from "co-body";
-import { BodyType } from "../../../types";
-import { composeParseBodyConfig } from "../compose-parse-body-config";
-import { parseBody } from "./parse-body";
-import { parseWithFormidable as _parseWithFormidable } from "./parse-with-formidable";
+import type { BodyType } from "../../../types/index.js";
+import { composeParseBodyConfig } from "../compose-parse-body-config.js";
+import { parseBody } from "./parse-body.js";
+import { parseWithFormidable as _parseWithFormidable } from "./parse-with-formidable.js";
 import { beforeEach, describe, expect, test, vi, type Mock, type Mocked } from "vitest";
 
 vi.mock("co-body");
-vi.mock("./parse-with-formidable");
+vi.mock("./parse-with-formidable.js");
 
 const parseWithFormidable = _parseWithFormidable as Mock;
 const CoBody = _CoBody as Mocked<typeof _CoBody>;

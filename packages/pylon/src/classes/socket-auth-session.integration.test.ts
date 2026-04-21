@@ -1,7 +1,7 @@
-import { Amphora, IAmphora } from "@lindorm/amphora";
+import { Amphora, type IAmphora } from "@lindorm/amphora";
 import { KryptosKit } from "@lindorm/kryptos";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
-import { ILogger } from "@lindorm/logger";
+import type { ILogger } from "@lindorm/logger";
 import { createMockProteusSource } from "@lindorm/proteus/mocks/vitest";
 import { createCookieAuthStrategy, Zephyr } from "@lindorm/zephyr";
 import { join } from "path";
@@ -9,9 +9,9 @@ import request from "supertest";
 import {
   SOCKET_AUTH_TEST_ISSUER,
   SOCKET_AUTH_TEST_KEY_ID,
-} from "../__fixtures__/socket-auth/shared";
-import { IPylonSession } from "../interfaces";
-import { Pylon } from "./Pylon";
+} from "../__fixtures__/socket-auth/shared.js";
+import type { IPylonSession } from "../interfaces/index.js";
+import { Pylon } from "./Pylon.js";
 import { afterAll, beforeAll, describe, expect, test, vi, type Mock } from "vitest";
 
 /**

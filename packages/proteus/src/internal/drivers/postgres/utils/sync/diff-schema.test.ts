@@ -1,6 +1,6 @@
-import { diffSchema } from "../../../../drivers/postgres/utils/sync/diff-schema";
-import type { DbSnapshot } from "../../types/db-snapshot";
-import type { DesiredSchema } from "../../types/desired-schema";
+import { diffSchema } from "../../../../drivers/postgres/utils/sync/diff-schema.js";
+import type { DbSnapshot } from "../../types/db-snapshot.js";
+import type { DesiredSchema } from "../../types/desired-schema.js";
 import { describe, expect, it } from "vitest";
 
 const emptySnapshot: DbSnapshot = { tables: [], enums: [], schemas: [] };

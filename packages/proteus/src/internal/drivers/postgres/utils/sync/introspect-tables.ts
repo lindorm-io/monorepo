@@ -1,5 +1,5 @@
-import type { DbColumn, DbTable } from "../../types/db-snapshot";
-import type { PostgresQueryClient } from "../../types/postgres-query-client";
+import type { DbColumn, DbTable } from "../../types/db-snapshot.js";
+import type { PostgresQueryClient } from "../../types/postgres-query-client.js";
 
 type ColumnRow = {
   table_schema: string;

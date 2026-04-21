@@ -1,5 +1,5 @@
-import { ProteusError } from "../../../errors";
-import type { MetaField, MetaRelation } from "../../entity/types/metadata";
+import { ProteusError } from "../../../errors/index.js";
+import type { MetaField, MetaRelation } from "../../entity/types/metadata.js";
 
 /**
  * Resolves a field key to its column name.

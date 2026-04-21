@@ -2,7 +2,7 @@ import type {
   DeadLetterEntry,
   DeadLetterFilterOptions,
   DeadLetterListOptions,
-} from "../types";
+} from "../types/index.js";
 
 export interface IDeadLetterStore {
   add(entry: DeadLetterEntry): Promise<void>;

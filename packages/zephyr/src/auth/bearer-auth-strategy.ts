@@ -1,6 +1,6 @@
 import type { Socket } from "socket.io-client";
-import { ZephyrError } from "../errors/ZephyrError";
-import type { ZephyrAuthStrategy } from "./zephyr-auth-strategy";
+import { ZephyrError } from "../errors/ZephyrError.js";
+import type { ZephyrAuthStrategy } from "./zephyr-auth-strategy.js";
 
 const DEFAULT_REFRESH_ACK_TIMEOUT_MS = 5000;
 

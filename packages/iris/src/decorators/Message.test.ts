@@ -1,5 +1,5 @@
-import { findMessageByName } from "../internal/message/metadata/registry";
-import { Message } from "./Message";
+import { findMessageByName } from "../internal/message/metadata/registry.js";
+import { Message } from "./Message.js";
 import { describe, expect, it } from "vitest";
 
 describe("Message", () => {

@@ -1,5 +1,5 @@
-import { KryptosError } from "../../../errors";
-import { decodeLength } from "./length";
+import { KryptosError } from "../../../errors/index.js";
+import { decodeLength } from "./length.js";
 
 export const readTlv = (
   buffer: Buffer,

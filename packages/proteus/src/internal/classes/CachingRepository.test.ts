@@ -5,26 +5,26 @@
 // unit test. No DB or adapter I/O occurs.
 
 import type { ILogger } from "@lindorm/logger";
-import type { ICacheAdapter } from "../../interfaces/CacheAdapter";
-import type { IProteusRepository } from "../../interfaces";
-import type { EntityMetadata } from "../entity/types/metadata";
-import type { IEntity } from "../../interfaces";
-import { ProteusRepositoryError } from "../../errors/ProteusRepositoryError";
-import { CachingRepository } from "./CachingRepository";
+import type { ICacheAdapter } from "../../interfaces/CacheAdapter.js";
+import type { IProteusRepository } from "../../interfaces/index.js";
+import type { EntityMetadata } from "../entity/types/metadata.js";
+import type { IEntity } from "../../interfaces/index.js";
+import { ProteusRepositoryError } from "../../errors/ProteusRepositoryError.js";
+import { CachingRepository } from "./CachingRepository.js";
 import { beforeEach, describe, expect, it, vi, type Mock, type Mocked } from "vitest";
 
 // ─── Module Mocks ─────────────────────────────────────────────────────────────
 
-vi.mock("../entity/utils/default-hydrate-entity", async () => ({
+vi.mock("../entity/utils/default-hydrate-entity.js", async () => ({
   defaultHydrateEntity: vi.fn(),
 }));
 
-vi.mock("../entity/utils/run-hooks-async", () => ({
+vi.mock("../entity/utils/run-hooks-async.js", () => ({
   runHooksAsync: vi.fn().mockResolvedValue(undefined),
 }));
 
-import { defaultHydrateEntity } from "../entity/utils/default-hydrate-entity";
-import { runHooksAsync } from "../entity/utils/run-hooks-async";
+import { defaultHydrateEntity } from "../entity/utils/default-hydrate-entity.js";
+import { runHooksAsync } from "../entity/utils/run-hooks-async.js";
 
 // ─── Entity Fixture ───────────────────────────────────────────────────────────
 

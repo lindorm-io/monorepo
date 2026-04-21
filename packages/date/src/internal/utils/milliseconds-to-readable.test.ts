@@ -1,5 +1,5 @@
-import { millisecondsToReadable } from "./milliseconds-to-readable";
-import { readableToMilliseconds } from "./readable-to-milliseconds";
+import { millisecondsToReadable } from "./milliseconds-to-readable.js";
+import { readableToMilliseconds } from "./readable-to-milliseconds.js";
 import { describe, expect, test } from "vitest";
 
 describe("millisecondsToReadable", () => {

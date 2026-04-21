@@ -1,14 +1,14 @@
-import type { ScopedName } from "../../../types/types";
-import { buildIncrementKey } from "./build-increment-key";
+import type { ScopedName } from "../../../types/types.js";
+import { buildIncrementKey } from "./build-increment-key.js";
 import { beforeEach, describe, expect, test, vi, type MockedFunction } from "vitest";
 
 // ─── Module Mocks ────────────────────────────────────────────────────────────
 
-vi.mock("../../../entity/utils/get-entity-name", () => ({
+vi.mock("../../../entity/utils/get-entity-name.js", () => ({
   getEntityName: vi.fn(),
 }));
 
-import { getEntityName } from "../../../entity/utils/get-entity-name";
+import { getEntityName } from "../../../entity/utils/get-entity-name.js";
 
 const mockGetEntityName = getEntityName as MockedFunction<typeof getEntityName>;
 

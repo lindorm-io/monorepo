@@ -1,4 +1,4 @@
-import type { GroupNameOptions } from "../types/redis-types";
+import type { GroupNameOptions } from "../types/redis-types.js";
 
 export type { GroupNameOptions };
 

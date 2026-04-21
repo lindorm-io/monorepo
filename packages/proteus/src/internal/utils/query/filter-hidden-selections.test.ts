@@ -1,7 +1,7 @@
-import { filterHiddenSelections } from "./filter-hidden-selections";
-import { makeField } from "../../__fixtures__/make-field";
-import type { EntityMetadata } from "../../entity/types/metadata";
-import type { QueryScope } from "../../entity/types/metadata";
+import { filterHiddenSelections } from "./filter-hidden-selections.js";
+import { makeField } from "../../__fixtures__/make-field.js";
+import type { EntityMetadata } from "../../entity/types/metadata.js";
+import type { QueryScope } from "../../entity/types/metadata.js";
 import { describe, expect, test } from "vitest";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────

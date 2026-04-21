@@ -1,6 +1,6 @@
-import { IProteusRepository } from "@lindorm/proteus";
-import { RateLimitSliding } from "../../../entities";
-import { RateLimitResult } from "./fixed-window-strategy";
+import type { IProteusRepository } from "@lindorm/proteus";
+import { RateLimitSliding } from "../../../entities/index.js";
+import type { RateLimitResult } from "./fixed-window-strategy.js";
 
 export const slidingWindowStrategy = async (
   repository: IProteusRepository<RateLimitSliding>,

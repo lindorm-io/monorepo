@@ -1,4 +1,4 @@
-import { isTokenExpired } from "./is-token-expired";
+import { isTokenExpired } from "./is-token-expired.js";
 import { describe, expect, test } from "vitest";
 
 describe("isTokenExpired", () => {

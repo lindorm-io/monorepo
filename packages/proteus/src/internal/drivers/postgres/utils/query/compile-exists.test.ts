@@ -1,6 +1,6 @@
-import { makeField } from "../../../../__fixtures__/make-field";
-import type { EntityMetadata } from "../../../../entity/types/metadata";
-import { compileExists } from "./compile-exists";
+import { makeField } from "../../../../__fixtures__/make-field.js";
+import type { EntityMetadata } from "../../../../entity/types/metadata.js";
+import { compileExists } from "./compile-exists.js";
 import { describe, expect, test } from "vitest";
 
 const metadata = {

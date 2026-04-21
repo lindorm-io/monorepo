@@ -1,7 +1,7 @@
-import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata";
-import { AfterRestore } from "./AfterRestore";
-import { Entity } from "./Entity";
-import { PrimaryKeyField } from "./PrimaryKeyField";
+import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata.js";
+import { AfterRestore } from "./AfterRestore.js";
+import { Entity } from "./Entity.js";
+import { PrimaryKeyField } from "./PrimaryKeyField.js";
 import { describe, expect, test, vi } from "vitest";
 
 const afterRestoreCallback = vi.fn();

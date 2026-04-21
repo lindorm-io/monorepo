@@ -1,5 +1,5 @@
-import type { PostgresTransactionHandle } from "../../types/postgres-transaction-handle";
-import { assertActiveTransaction } from "./assert-active-transaction";
+import type { PostgresTransactionHandle } from "../../types/postgres-transaction-handle.js";
+import { assertActiveTransaction } from "./assert-active-transaction.js";
 
 export const releaseSavepoint = async (
   handle: PostgresTransactionHandle,

@@ -1,5 +1,5 @@
-import { AesKeyLength } from "@lindorm/types";
-import { KryptosUse } from "../types";
+import type { AesKeyLength } from "@lindorm/types";
+import type { KryptosUse } from "../types.js";
 
 export const OCT_ENC_DIR_ALGORITHMS = ["dir"] as const;
 

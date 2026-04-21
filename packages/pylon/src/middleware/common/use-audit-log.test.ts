@@ -1,12 +1,12 @@
 import { ServerError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
-import { AUDIT_SOURCE } from "../../internal/constants/symbols";
-import { useAuditLog } from "./use-audit-log";
+import { AUDIT_SOURCE } from "../../internal/constants/symbols.js";
+import { useAuditLog } from "./use-audit-log.js";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
-vi.mock("../../internal/utils/is-context");
+vi.mock("../../internal/utils/is-context.js");
 
-import { isHttpContext, isSocketContext } from "../../internal/utils/is-context";
+import { isHttpContext, isSocketContext } from "../../internal/utils/is-context.js";
 
 describe("useAuditLog", () => {
   let ctx: any;

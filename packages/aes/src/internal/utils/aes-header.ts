@@ -1,10 +1,10 @@
 import { B64 } from "@lindorm/b64";
-import { KryptosAlgorithm, KryptosEncryption } from "@lindorm/kryptos";
-import { AES_FORMAT_VERSION } from "../constants/version";
-import { AesError } from "../../errors/AesError";
-import { AesContentType } from "../../types/content";
-import { PublicEncryptionJwk } from "../../types/types";
-import { validateAesVersion } from "./validate-version";
+import type { KryptosAlgorithm, KryptosEncryption } from "@lindorm/kryptos";
+import { AES_FORMAT_VERSION } from "../constants/version.js";
+import { AesError } from "../../errors/AesError.js";
+import type { AesContentType } from "../../types/content.js";
+import type { PublicEncryptionJwk } from "../../types/types.js";
+import { validateAesVersion } from "./validate-version.js";
 
 export type AesHeaderInput = {
   algorithm: KryptosAlgorithm;

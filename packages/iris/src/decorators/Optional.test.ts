@@ -1,7 +1,7 @@
-import { buildMessageMetadata } from "../internal/message/metadata/build-message-metadata";
-import { Field } from "./Field";
-import { Message } from "./Message";
-import { Optional } from "./Optional";
+import { buildMessageMetadata } from "../internal/message/metadata/build-message-metadata.js";
+import { Field } from "./Field.js";
+import { Message } from "./Message.js";
+import { Optional } from "./Optional.js";
 import { describe, expect, it } from "vitest";
 
 describe("Optional", () => {

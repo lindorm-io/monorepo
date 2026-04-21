@@ -1,6 +1,6 @@
-import type { DiscriminatorValue } from "../types/inheritance";
-import { EntityMetadataError } from "../errors/EntityMetadataError";
-import { collectOwn, collectSingular } from "./collect";
+import type { DiscriminatorValue } from "../types/inheritance.js";
+import { EntityMetadataError } from "../errors/EntityMetadataError.js";
+import { collectOwn, collectSingular } from "./collect.js";
 
 /**
  * Validate that @Discriminator is accompanied by @Inheritance on the same class.

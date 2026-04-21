@@ -1,5 +1,5 @@
-import { introspectTables } from "../../../../drivers/postgres/utils/sync/introspect-tables";
-import type { PostgresQueryClient } from "../../types/postgres-query-client";
+import { introspectTables } from "../../../../drivers/postgres/utils/sync/introspect-tables.js";
+import type { PostgresQueryClient } from "../../types/postgres-query-client.js";
 import { describe, expect, it, vi } from "vitest";
 
 const createMockClient = (

@@ -4,9 +4,9 @@ import { mkdtemp, rm, writeFile } from "fs/promises";
 import { tmpdir } from "os";
 import { join } from "path";
 import { Client } from "pg";
-import { mockScannerImport } from "../../../../__fixtures__/mock-scanner-import";
-import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata";
-import { PostgresDriver } from "./PostgresDriver";
+import { mockScannerImport } from "../../../../__fixtures__/mock-scanner-import.js";
+import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata.js";
+import { PostgresDriver } from "./PostgresDriver.js";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 mockScannerImport();

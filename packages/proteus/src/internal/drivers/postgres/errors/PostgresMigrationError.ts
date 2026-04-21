@@ -1,3 +1,3 @@
-import { MigrationError } from "../../../../errors/MigrationError";
+import { MigrationError } from "../../../../errors/MigrationError.js";
 
 export class PostgresMigrationError extends MigrationError {}

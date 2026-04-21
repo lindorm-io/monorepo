@@ -1,4 +1,4 @@
-import type { ICircuitBreaker } from "../interfaces/CircuitBreaker";
+import type { ICircuitBreaker } from "../interfaces/CircuitBreaker.js";
 
 export const _createMockCircuitBreaker = (mockFn: () => any): ICircuitBreaker => {
   const impl = (fn: any) => {

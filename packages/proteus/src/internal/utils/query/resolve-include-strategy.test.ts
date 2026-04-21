@@ -3,8 +3,8 @@ import type {
   EntityMetadata,
   MetaRelation,
   RelationStrategy,
-} from "../../entity/types/metadata";
-import { resolveIncludeStrategy } from "./resolve-include-strategy";
+} from "../../entity/types/metadata.js";
+import { resolveIncludeStrategy } from "./resolve-include-strategy.js";
 
 const makeRelation = (
   key: string,

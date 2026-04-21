@@ -1,4 +1,4 @@
-import { withRetry } from "./with-retry";
+import { withRetry } from "./with-retry.js";
 import { describe, expect, it, vi } from "vitest";
 
 class RetryableError extends Error {

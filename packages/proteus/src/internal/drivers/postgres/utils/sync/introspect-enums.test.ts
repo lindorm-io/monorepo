@@ -1,5 +1,5 @@
-import { introspectEnums } from "../../../../drivers/postgres/utils/sync/introspect-enums";
-import type { PostgresQueryClient } from "../../types/postgres-query-client";
+import { introspectEnums } from "../../../../drivers/postgres/utils/sync/introspect-enums.js";
+import type { PostgresQueryClient } from "../../types/postgres-query-client.js";
 import { describe, expect, it, vi } from "vitest";
 
 const createMockClient = (

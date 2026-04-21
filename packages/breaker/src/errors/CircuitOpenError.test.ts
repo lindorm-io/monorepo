@@ -1,6 +1,6 @@
 import { LindormError } from "@lindorm/errors";
-import { BreakerError } from "./BreakerError";
-import { CircuitOpenError } from "./CircuitOpenError";
+import { BreakerError } from "./BreakerError.js";
+import { CircuitOpenError } from "./CircuitOpenError.js";
 import { describe, expect, it } from "vitest";
 
 describe("CircuitOpenError", () => {

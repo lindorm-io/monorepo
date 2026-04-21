@@ -1,10 +1,10 @@
-import type { EntityMetadata } from "../../../../entity/types/metadata";
-import type { NamespaceOptions } from "../../../../types/types";
-import { generateUniqueDDL } from "./generate-unique-ddl";
-import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier";
-import { resolveColumnNameSafe } from "../resolve-column-name";
-import { generateCheckDDL } from "./generate-check-ddl";
-import { generateColumnDDL } from "./generate-column-ddl";
+import type { EntityMetadata } from "../../../../entity/types/metadata.js";
+import type { NamespaceOptions } from "../../../../types/types.js";
+import { generateUniqueDDL } from "./generate-unique-ddl.js";
+import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier.js";
+import { resolveColumnNameSafe } from "../resolve-column-name.js";
+import { generateCheckDDL } from "./generate-check-ddl.js";
+import { generateColumnDDL } from "./generate-column-ddl.js";
 
 /**
  * Generates a `CREATE TABLE IF NOT EXISTS` statement for the given entity.

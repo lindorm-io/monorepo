@@ -1,5 +1,5 @@
-import { KryptosError } from "../../../errors";
-import { ParsedX509Name } from "../../../types";
+import { KryptosError } from "../../../errors/index.js";
+import type { ParsedX509Name } from "../../../types/index.js";
 import {
   ASN1_TAG_OID,
   ASN1_TAG_PRINTABLE_STRING,
@@ -11,8 +11,8 @@ import {
   decodeUtf8String,
   readSequenceChildren,
   readTlv,
-} from "../asn1";
-import { X509_OID_COMMON_NAME, X509_OID_ORGANIZATION_NAME } from "./oids";
+} from "../asn1/index.js";
+import { X509_OID_COMMON_NAME, X509_OID_ORGANIZATION_NAME } from "./oids.js";
 
 const decodeDirectoryString = (tag: number, content: Buffer): string => {
   if (tag === ASN1_TAG_UTF8_STRING) return decodeUtf8String(content);

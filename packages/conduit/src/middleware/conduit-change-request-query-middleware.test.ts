@@ -1,5 +1,5 @@
-import { ChangeCase } from "@lindorm/case";
-import { conduitChangeRequestQueryMiddleware } from "./conduit-change-request-query-middleware";
+import type { ChangeCase } from "@lindorm/case";
+import { conduitChangeRequestQueryMiddleware } from "./conduit-change-request-query-middleware.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("conduitChangeRequestQueryMiddleware", () => {

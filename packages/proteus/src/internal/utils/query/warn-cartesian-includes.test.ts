@@ -1,7 +1,7 @@
-import type { EntityMetadata, MetaRelation } from "../../entity/types/metadata";
-import type { IncludeSpec } from "../../types/query";
-import { ProteusError } from "../../../errors";
-import { warnCartesianIncludes } from "./warn-cartesian-includes";
+import type { EntityMetadata, MetaRelation } from "../../entity/types/metadata.js";
+import type { IncludeSpec } from "../../types/query.js";
+import { ProteusError } from "../../../errors/index.js";
+import { warnCartesianIncludes } from "./warn-cartesian-includes.js";
 import { describe, expect, test, vi } from "vitest";
 
 const makeRelation = (key: string, type: MetaRelation["type"]): MetaRelation =>

@@ -1,5 +1,5 @@
-import type { StagedMetadata } from "../internal/metadata";
-import { SagaTimeoutHandler } from "./SagaTimeoutHandler";
+import type { StagedMetadata } from "../internal/metadata/index.js";
+import { SagaTimeoutHandler } from "./SagaTimeoutHandler.js";
 import { describe, expect, test } from "vitest";
 
 const createMockMethodContext = (

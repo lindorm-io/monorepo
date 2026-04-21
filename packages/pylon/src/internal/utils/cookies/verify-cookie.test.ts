@@ -1,6 +1,6 @@
 import { createMockAmphora } from "@lindorm/amphora/mocks/vitest";
 import { ClientError } from "@lindorm/errors";
-import { verifyCookie } from "./verify-cookie";
+import { verifyCookie } from "./verify-cookie.js";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 const verify = vi.fn();

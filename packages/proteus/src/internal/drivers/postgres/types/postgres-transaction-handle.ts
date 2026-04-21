@@ -1,4 +1,4 @@
-import type { PostgresQueryClient } from "./postgres-query-client";
+import type { PostgresQueryClient } from "./postgres-query-client.js";
 
 export type PostgresTransactionHandle = {
   readonly client: PostgresQueryClient;

@@ -1,5 +1,5 @@
-import { IrisPublishError } from "../../../../errors/IrisPublishError";
-import { publishToExchange } from "./publish-to-exchange";
+import { IrisPublishError } from "../../../../errors/IrisPublishError.js";
+import { publishToExchange } from "./publish-to-exchange.js";
 import { describe, expect, it, vi } from "vitest";
 
 type PublishCallback = (err: Error | null, ok?: any) => void;

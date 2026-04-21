@@ -1,8 +1,8 @@
 import {
-  IKryptosEc,
-  IKryptosOct,
-  IKryptosOkp,
-  IKryptosRsa,
+  type IKryptosEc,
+  type IKryptosOct,
+  type IKryptosOkp,
+  type IKryptosRsa,
   KryptosKit,
 } from "@lindorm/kryptos";
 

@@ -1,6 +1,6 @@
-import type { MemoryEnvelope, MemorySharedState } from "../types/memory-store";
-import { createStore } from "./create-store";
-import { dispatchToSubscribers } from "./dispatch-to-subscribers";
+import type { MemoryEnvelope, MemorySharedState } from "../types/memory-store.js";
+import { createStore } from "./create-store.js";
+import { dispatchToSubscribers } from "./dispatch-to-subscribers.js";
 import { beforeEach, describe, expect, it } from "vitest";
 
 const makeEnvelope = (topic: string): MemoryEnvelope => ({

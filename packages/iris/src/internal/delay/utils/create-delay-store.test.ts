@@ -1,7 +1,7 @@
-import type { IDelayStore } from "../../../interfaces/IrisDelayStore";
-import { MemoryDelayStore } from "../MemoryDelayStore";
-import { RedisDelayStore } from "../RedisDelayStore";
-import { createDelayStore } from "./create-delay-store";
+import type { IDelayStore } from "../../../interfaces/IrisDelayStore.js";
+import { MemoryDelayStore } from "../MemoryDelayStore.js";
+import { RedisDelayStore } from "../RedisDelayStore.js";
+import { createDelayStore } from "./create-delay-store.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockPing = vi.fn().mockResolvedValue("PONG");

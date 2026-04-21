@@ -1,5 +1,5 @@
 import { createHash } from "crypto";
-import { AesKeyLength } from "@lindorm/types";
+import type { AesKeyLength } from "@lindorm/types";
 
 type Options = {
   algorithm: string;

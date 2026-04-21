@@ -1,7 +1,7 @@
 import { ShaKit } from "@lindorm/sha";
 import { isIPv4, isIPv6 } from "node:net";
-import { KryptosError } from "../../../errors";
-import { X509SubjectAltNameInput } from "../../../types/x509";
+import { KryptosError } from "../../../errors/index.js";
+import type { X509SubjectAltNameInput } from "../../../types/x509.js";
 import {
   ASN1_TAG_BIT_STRING,
   encodeBitString,
@@ -12,15 +12,15 @@ import {
   encodeOid,
   encodeSequence,
   readTlv,
-} from "../asn1";
+} from "../asn1/index.js";
 import {
   X509_OID_EXT_AUTHORITY_KEY_IDENTIFIER,
   X509_OID_EXT_BASIC_CONSTRAINTS,
   X509_OID_EXT_KEY_USAGE,
   X509_OID_EXT_SUBJECT_ALT_NAME,
   X509_OID_EXT_SUBJECT_KEY_IDENTIFIER,
-} from "./oids";
-import { SAN_IP_TAG_NUMBER, SAN_TAG_NUMBER_BY_TYPE } from "./san-tags";
+} from "./oids.js";
+import { SAN_IP_TAG_NUMBER, SAN_TAG_NUMBER_BY_TYPE } from "./san-tags.js";
 
 export type X509KeyUsageFlag =
   | "digitalSignature"

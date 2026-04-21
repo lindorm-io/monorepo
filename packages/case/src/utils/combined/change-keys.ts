@@ -1,4 +1,4 @@
-import { ChangeCase, KeysInput } from "../../types";
+import type { ChangeCase, KeysInput } from "../../types/index.js";
 import {
   camelKeys,
   capitalKeys,
@@ -11,7 +11,7 @@ import {
   pathKeys,
   sentenceKeys,
   snakeKeys,
-} from "../specific";
+} from "../specific/index.js";
 
 export const changeKeys = <T extends KeysInput = KeysInput>(
   input: T,

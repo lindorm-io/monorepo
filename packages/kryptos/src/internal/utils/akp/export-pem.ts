@@ -1,7 +1,7 @@
 import { isString } from "@lindorm/is";
 import { createPrivateKey, createPublicKey } from "crypto";
-import { KryptosError } from "../../../errors";
-import { AkpString, KryptosBuffer } from "../../../types";
+import { KryptosError } from "../../../errors/index.js";
+import type { AkpString, KryptosBuffer } from "../../../types/index.js";
 
 type Options = Omit<KryptosBuffer, "id" | "algorithm" | "type" | "use">;
 

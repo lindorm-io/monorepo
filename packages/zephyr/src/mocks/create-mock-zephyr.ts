@@ -1,5 +1,5 @@
-import type { IZephyr } from "../interfaces/Zephyr";
-import { _createMockZephyrRoom } from "./create-mock-zephyr-room";
+import type { IZephyr } from "../interfaces/Zephyr.js";
+import { _createMockZephyrRoom } from "./create-mock-zephyr-room.js";
 
 export const _createMockZephyr = (mockFn: () => any): IZephyr => {
   const impl = (fn: any) => {

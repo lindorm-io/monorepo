@@ -1,6 +1,6 @@
-import { AegisError } from "../../errors";
-import { AegisProfile, ParsedJwtPayload } from "../../types";
-import { parseUserinfo, UserinfoClaimsInput } from "./parse-userinfo";
+import { AegisError } from "../../errors/index.js";
+import type { AegisProfile, ParsedJwtPayload } from "../../types/index.js";
+import { parseUserinfo, type UserinfoClaimsInput } from "./parse-userinfo.js";
 import { describe, expect, test } from "vitest";
 
 describe("parseUserinfo", () => {

@@ -1,5 +1,5 @@
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
-import { createSocketContextInitialisationMiddleware } from "./socket-context-initialisation-middleware";
+import { createSocketContextInitialisationMiddleware } from "./socket-context-initialisation-middleware.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("createSocketContextInitialisationMiddleware", () => {

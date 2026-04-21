@@ -1,29 +1,29 @@
 import { Command } from "commander";
-import { registerGenerateCommands } from "./register-generate";
-import { generateRoute } from "./generate-route";
-import { generateListener } from "./generate-listener";
-import { generateMiddleware } from "./generate-middleware";
-import { generateHandler } from "./generate-handler";
-import { generateWorker } from "./generate-worker";
+import { registerGenerateCommands } from "./register-generate.js";
+import { generateRoute } from "./generate-route.js";
+import { generateListener } from "./generate-listener.js";
+import { generateMiddleware } from "./generate-middleware.js";
+import { generateHandler } from "./generate-handler.js";
+import { generateWorker } from "./generate-worker.js";
 import { beforeEach, describe, expect, it, vi, type MockedFunction } from "vitest";
 
-vi.mock("./generate-route", async () => ({
+vi.mock("./generate-route.js", async () => ({
   generateRoute: vi.fn(),
 }));
 
-vi.mock("./generate-listener", () => ({
+vi.mock("./generate-listener.js", () => ({
   generateListener: vi.fn(),
 }));
 
-vi.mock("./generate-middleware", () => ({
+vi.mock("./generate-middleware.js", () => ({
   generateMiddleware: vi.fn(),
 }));
 
-vi.mock("./generate-handler", () => ({
+vi.mock("./generate-handler.js", () => ({
   generateHandler: vi.fn(),
 }));
 
-vi.mock("./generate-worker", () => ({
+vi.mock("./generate-worker.js", () => ({
   generateWorker: vi.fn(),
 }));
 

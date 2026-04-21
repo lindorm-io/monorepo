@@ -1,5 +1,5 @@
-import { Dict } from "@lindorm/types";
-import { ConduitMiddleware } from "../types";
+import type { Dict } from "@lindorm/types";
+import type { ConduitMiddleware } from "../types/index.js";
 
 export const conduitHeadersMiddleware = (headers: Dict<string>): ConduitMiddleware =>
   async function conduitHeadersMiddleware(ctx, next) {

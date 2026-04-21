@@ -1,4 +1,4 @@
-import { conduitBearerAuthMiddleware } from "./conduit-bearer-auth-middleware";
+import { conduitBearerAuthMiddleware } from "./conduit-bearer-auth-middleware.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("conduitBearerAuthMiddleware", () => {

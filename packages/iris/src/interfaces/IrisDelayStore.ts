@@ -1,4 +1,4 @@
-import type { DelayedEntry } from "../types";
+import type { DelayedEntry } from "../types/index.js";
 
 export interface IDelayStore {
   schedule(entry: DelayedEntry): Promise<void>;

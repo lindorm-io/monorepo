@@ -1,8 +1,8 @@
 import { basename, resolve } from "path";
 import { Logger } from "@lindorm/logger";
-import type { GlobalOptions } from "../with-source";
-import { withSource } from "../with-source";
-import { withMigrationManager } from "../with-migration-manager";
+import type { GlobalOptions } from "../with-source.js";
+import { withSource } from "../with-source.js";
+import { withMigrationManager } from "../with-migration-manager.js";
 
 type BaselineOptions = GlobalOptions & {
   name: string;

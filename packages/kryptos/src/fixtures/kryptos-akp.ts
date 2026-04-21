@@ -1,10 +1,10 @@
-import { IKryptosAkp } from "../interfaces";
-import { KryptosKit } from "../classes";
+import type { IKryptosAkp } from "../interfaces/index.js";
+import { KryptosKit } from "../classes/index.js";
 import {
   TEST_AKP_KEY_ML_DSA_44_B64,
   TEST_AKP_KEY_ML_DSA_65_B64,
   TEST_AKP_KEY_ML_DSA_87_B64,
-} from "../__fixtures__/akp-keys";
+} from "../__fixtures__/akp-keys.js";
 
 export const KRYPTOS_AKP_SIG_ML_DSA_44 = KryptosKit.from.b64({
   ...TEST_AKP_KEY_ML_DSA_44_B64,

@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { IEntity } from "../interfaces";
-import { stageSchema } from "../internal/entity/metadata/stage-metadata";
+import type { IEntity } from "../interfaces/index.js";
+import { stageSchema } from "../internal/entity/metadata/stage-metadata.js";
 
 /**
  * Attach a Zod schema to an entity for runtime validation.

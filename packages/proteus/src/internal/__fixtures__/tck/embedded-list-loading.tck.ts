@@ -6,13 +6,13 @@ import { test, it, expect, beforeEach } from "vitest";
 //   - @Eager() / @Eager("multiple") forces load on list queries
 //   - @Lazy("single") forces a thenable on findOne
 
-import type { TckDriverHandle } from "./types";
-import type { TckEntities } from "./create-tck-entities";
-import { isLazyCollection } from "../../entity/utils/lazy-collection";
+import type { TckDriverHandle } from "./types.js";
+import type { TckEntities } from "./create-tck-entities.js";
+import { isLazyCollection } from "../../entity/utils/lazy-collection.js";
 import {
   getLazyEmbeddedListLoaderInvocations,
   resetLazyEmbeddedListLoaderInvocations,
-} from "../../entity/utils/install-lazy-embedded-lists";
+} from "../../entity/utils/install-lazy-embedded-lists.js";
 
 export const embeddedListLoadingSuite = (
   getHandle: () => TckDriverHandle,

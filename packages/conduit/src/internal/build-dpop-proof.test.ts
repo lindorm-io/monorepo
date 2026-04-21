@@ -1,6 +1,6 @@
-import { DpopSigner } from "@lindorm/types";
+import type { DpopSigner } from "@lindorm/types";
 import MockDate from "mockdate";
-import { buildDpopProof } from "./build-dpop-proof";
+import { buildDpopProof } from "./build-dpop-proof.js";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");

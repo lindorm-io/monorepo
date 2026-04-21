@@ -1,4 +1,4 @@
-import type { ILindormWorker } from "../interfaces/LindormWorker";
+import type { ILindormWorker } from "../interfaces/LindormWorker.js";
 
 export const _createMockWorker = (mockFn: () => any): ILindormWorker => {
   const returns = (value: any) => {

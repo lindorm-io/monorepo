@@ -1,5 +1,5 @@
-import { EntityMetadataError } from "../errors/EntityMetadataError";
-import type { MetaField, MetaIndex } from "../types/metadata";
+import { EntityMetadataError } from "../errors/EntityMetadataError.js";
+import type { MetaField, MetaIndex } from "../types/metadata.js";
 
 export const validateIndexes = (
   targetName: string,

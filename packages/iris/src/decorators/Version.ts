@@ -1,5 +1,5 @@
-import { IrisMetadataError } from "../errors/IrisMetadataError";
-import { stageVersion } from "../internal/message/metadata/stage-metadata";
+import { IrisMetadataError } from "../errors/IrisMetadataError.js";
+import { stageVersion } from "../internal/message/metadata/stage-metadata.js";
 
 export const Version =
   (version: number) =>

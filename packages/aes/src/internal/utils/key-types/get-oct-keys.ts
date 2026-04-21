@@ -1,19 +1,22 @@
-import { AesError } from "../../../errors";
-import {
+import { AesError } from "../../../errors/index.js";
+import type {
   CreateCekOptions,
   CreateCekResult,
   DecryptCekOptions,
   DecryptCekResult,
-} from "../../types/content-encryption-key";
-import { getOctDirDecryptionKey, getOctDirEncryptionKey } from "../oct/get-oct-dir-keys";
+} from "../../types/content-encryption-key.js";
+import {
+  getOctDirDecryptionKey,
+  getOctDirEncryptionKey,
+} from "../oct/get-oct-dir-keys.js";
 import {
   getOctKeyWrapDecryptionKey,
   getOctKeyWrapEncryptionKey,
-} from "../oct/get-oct-key-key-wrap";
+} from "../oct/get-oct-key-key-wrap.js";
 import {
   getOctPbkdfKeyWrapDecryptionKey,
   getOctPbkdfKeyWrapEncryptionKey,
-} from "../oct/get-oct-pbkdf-key-wrap-keys";
+} from "../oct/get-oct-pbkdf-key-wrap-keys.js";
 
 export const getOctEncryptionKey = (options: CreateCekOptions): CreateCekResult => {
   switch (options.kryptos.algorithm) {

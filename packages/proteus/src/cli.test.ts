@@ -13,14 +13,14 @@
  */
 
 import { Command } from "commander";
-import { registerMigrateCommands } from "./internal/cli/commands/migrate";
-import { registerDbCommands } from "./internal/cli/commands/db";
+import { registerMigrateCommands } from "./internal/cli/commands/migrate.js";
+import { registerDbCommands } from "./internal/cli/commands/db.js";
 import { describe, expect, it, vi, type MockedFunction } from "vitest";
 
-vi.mock("./internal/cli/commands/migrate", () => ({
+vi.mock("./internal/cli/commands/migrate.js", () => ({
   registerMigrateCommands: vi.fn(),
 }));
-vi.mock("./internal/cli/commands/db", () => ({
+vi.mock("./internal/cli/commands/db.js", () => ({
   registerDbCommands: vi.fn(),
 }));
 

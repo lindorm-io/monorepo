@@ -1,7 +1,7 @@
 import { EventEmitter } from "node:events";
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
-import type { IIrisDriver } from "../../../../interfaces/IrisDriver";
+import type { IIrisDriver } from "../../../../interfaces/IrisDriver.js";
 import type {
   IIrisMessageBus,
   IIrisPublisher,
@@ -9,30 +9,30 @@ import type {
   IIrisWorkerQueue,
   IMessage,
   IMessageSubscriber,
-} from "../../../../interfaces";
+} from "../../../../interfaces/index.js";
 import type {
   IrisConnectionState,
   IrisEvents,
   KafkaConnectionOptions,
-} from "../../../../types";
+} from "../../../../types/index.js";
 import type { IAmphora } from "@lindorm/amphora";
-import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager";
-import type { DelayManager } from "../../../delay/DelayManager";
-import type { KafkaSharedState } from "../types/kafka-types";
-import { getMessageMetadata } from "../../../message/metadata/get-message-metadata";
-import { resolveDefaultTopic } from "../../../message/utils/resolve-default-topic";
-import { resolveTopicName } from "../utils/resolve-topic-name";
-import { serializeKafkaMessage } from "../utils/serialize-kafka-message";
+import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
+import type { DelayManager } from "../../../delay/DelayManager.js";
+import type { KafkaSharedState } from "../types/kafka-types.js";
+import { getMessageMetadata } from "../../../message/metadata/get-message-metadata.js";
+import { resolveDefaultTopic } from "../../../message/utils/resolve-default-topic.js";
+import { resolveTopicName } from "../utils/resolve-topic-name.js";
+import { serializeKafkaMessage } from "../utils/serialize-kafka-message.js";
 import {
   detachAllKafkaConsumers,
   stopAllKafkaConsumers,
-} from "../utils/stop-kafka-consumer";
-import { KafkaMessageBus } from "./KafkaMessageBus";
-import { KafkaPublisher } from "./KafkaPublisher";
-import { KafkaRpcClient } from "./KafkaRpcClient";
-import { KafkaRpcServer } from "./KafkaRpcServer";
-import { KafkaStreamProcessor } from "./KafkaStreamProcessor";
-import { KafkaWorkerQueue } from "./KafkaWorkerQueue";
+} from "../utils/stop-kafka-consumer.js";
+import { KafkaMessageBus } from "./KafkaMessageBus.js";
+import { KafkaPublisher } from "./KafkaPublisher.js";
+import { KafkaRpcClient } from "./KafkaRpcClient.js";
+import { KafkaRpcServer } from "./KafkaRpcServer.js";
+import { KafkaStreamProcessor } from "./KafkaStreamProcessor.js";
+import { KafkaWorkerQueue } from "./KafkaWorkerQueue.js";
 
 const DEFAULT_PREFIX = "iris";
 const DEFAULT_PREFETCH = 10;

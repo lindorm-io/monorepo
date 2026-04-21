@@ -1,18 +1,18 @@
-import { getEntityMetadata } from "./get-entity-metadata";
-import { Check } from "../../../decorators/Check";
-import { CreateDateField } from "../../../decorators/CreateDateField";
-import { Default } from "../../../decorators/Default";
-import { Entity } from "../../../decorators/Entity";
-import { Field } from "../../../decorators/Field";
-import { Generated } from "../../../decorators/Generated";
-import { Index } from "../../../decorators/Index_";
-import { ManyToOne } from "../../../decorators/ManyToOne";
-import { OnCreate } from "../../../decorators/OnCreate";
-import { OneToMany } from "../../../decorators/OneToMany";
-import { PrimaryKey } from "../../../decorators/PrimaryKey";
-import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField";
-import { UpdateDateField } from "../../../decorators/UpdateDateField";
-import { VersionField } from "../../../decorators/VersionField";
+import { getEntityMetadata } from "./get-entity-metadata.js";
+import { Check } from "../../../decorators/Check.js";
+import { CreateDateField } from "../../../decorators/CreateDateField.js";
+import { Default } from "../../../decorators/Default.js";
+import { Entity } from "../../../decorators/Entity.js";
+import { Field } from "../../../decorators/Field.js";
+import { Generated } from "../../../decorators/Generated.js";
+import { Index } from "../../../decorators/Index_.js";
+import { ManyToOne } from "../../../decorators/ManyToOne.js";
+import { OnCreate } from "../../../decorators/OnCreate.js";
+import { OneToMany } from "../../../decorators/OneToMany.js";
+import { PrimaryKey } from "../../../decorators/PrimaryKey.js";
+import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField.js";
+import { UpdateDateField } from "../../../decorators/UpdateDateField.js";
+import { VersionField } from "../../../decorators/VersionField.js";
 import { describe, expect, test, vi } from "vitest";
 
 @Entity({ name: "GetMetadataSimple" })

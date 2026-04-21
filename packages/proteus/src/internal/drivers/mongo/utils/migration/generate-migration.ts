@@ -1,11 +1,11 @@
 import type { Db } from "mongodb";
-import type { EntityMetadata } from "../../../../entity/types/metadata";
-import type { GenerateMigrationResult } from "../../../../interfaces/MigrationManager";
-import { writeMigrationFile } from "../../../../utils/migration/write-migration-file";
-import { diffIndexes } from "../sync/diff-indexes";
-import { introspectIndexes } from "../sync/introspect-indexes";
-import { projectDesiredIndexes } from "../sync/project-desired-indexes";
-import { serializeMongoMigration } from "./serialize-mongo-migration";
+import type { EntityMetadata } from "../../../../entity/types/metadata.js";
+import type { GenerateMigrationResult } from "../../../../interfaces/MigrationManager.js";
+import { writeMigrationFile } from "../../../../utils/migration/write-migration-file.js";
+import { diffIndexes } from "../sync/diff-indexes.js";
+import { introspectIndexes } from "../sync/introspect-indexes.js";
+import { projectDesiredIndexes } from "../sync/project-desired-indexes.js";
+import { serializeMongoMigration } from "./serialize-mongo-migration.js";
 
 export type GenerateMongoMigrationOptions = {
   name?: string;

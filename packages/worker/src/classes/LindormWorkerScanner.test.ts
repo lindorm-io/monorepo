@@ -1,9 +1,9 @@
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { join } from "path";
-import { LindormWorkerScannerError } from "../errors";
-import { ILindormWorker } from "../interfaces";
-import { LindormWorker } from "./LindormWorker";
-import { LindormWorkerScanner } from "./LindormWorkerScanner";
+import { LindormWorkerScannerError } from "../errors/index.js";
+import type { ILindormWorker } from "../interfaces/index.js";
+import { LindormWorker } from "./LindormWorker.js";
+import { LindormWorkerScanner } from "./LindormWorkerScanner.js";
 import { describe, expect, test } from "vitest";
 
 describe("LindormWorkerScanner", () => {

@@ -1,8 +1,8 @@
 import type { Pool, PoolClient } from "pg";
-import type { IsolationLevel } from "../../../../../types/transaction-options";
-import { PostgresTransactionError } from "../../errors/PostgresTransactionError";
-import type { PostgresQueryClient } from "../../types/postgres-query-client";
-import type { PostgresTransactionHandle } from "../../types/postgres-transaction-handle";
+import type { IsolationLevel } from "../../../../../types/transaction-options.js";
+import { PostgresTransactionError } from "../../errors/PostgresTransactionError.js";
+import type { PostgresQueryClient } from "../../types/postgres-query-client.js";
+import type { PostgresTransactionHandle } from "../../types/postgres-transaction-handle.js";
 
 const ISOLATION_SQL: Record<IsolationLevel, string> = {
   "READ COMMITTED": "BEGIN ISOLATION LEVEL READ COMMITTED",

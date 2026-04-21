@@ -2,7 +2,7 @@ import { KryptosKit } from "@lindorm/kryptos";
 import {
   getOctPbkdfKeyWrapDecryptionKey,
   getOctPbkdfKeyWrapEncryptionKey,
-} from "./get-oct-pbkdf-key-wrap-keys";
+} from "./get-oct-pbkdf-key-wrap-keys.js";
 import { describe, expect, test } from "vitest";
 
 describe("getOctKeyWrap", () => {

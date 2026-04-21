@@ -1,6 +1,6 @@
-import { makeField } from "../../../../__fixtures__/make-field";
-import type { EntityMetadata, MetaRelation } from "../../../../entity/types/metadata";
-import type { IncludeSpec, WindowSpec } from "../../../../types/query";
+import { makeField } from "../../../../__fixtures__/make-field.js";
+import type { EntityMetadata, MetaRelation } from "../../../../entity/types/metadata.js";
+import type { IncludeSpec, WindowSpec } from "../../../../types/query.js";
 import {
   beforeEach,
   describe,
@@ -13,10 +13,10 @@ import {
 
 // Mock get-relation-metadata so tests for buildAliasMap / compileSelect with includes
 // do not need a real decorator-decorated entity class registered in getEntityMetadata.
-vi.mock("./get-relation-metadata");
+vi.mock("./get-relation-metadata.js");
 
-import { findRelationByKey, getRelationMetadata } from "./get-relation-metadata";
-import { buildAliasMap, compileFrom, compileSelect } from "./compile-select";
+import { findRelationByKey, getRelationMetadata } from "./get-relation-metadata.js";
+import { buildAliasMap, compileFrom, compileSelect } from "./compile-select.js";
 
 const mockFindRelationByKey = findRelationByKey as MockedFunction<
   typeof findRelationByKey

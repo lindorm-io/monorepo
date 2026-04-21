@@ -1,6 +1,6 @@
 import { ShaKit } from "@lindorm/sha";
 import { sortKeys } from "@lindorm/utils";
-import type { EventRecord } from "../entities";
+import type { EventRecord } from "../entities/index.js";
 
 type ChecksumInput = Omit<EventRecord, "checksum" | "createdAt">;
 

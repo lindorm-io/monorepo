@@ -1,4 +1,4 @@
-import { Priority } from "./Priority";
+import { Priority } from "./Priority.js";
 import { describe, expect, it } from "vitest";
 
 describe("Priority", () => {

@@ -4,13 +4,13 @@ import {
   AggregateCommandHandler,
   AggregateEventHandler,
   EventUpcaster,
-} from "../../../decorators";
-import type { AggregateCommandCtx, AggregateEventCtx } from "../../../types";
-import { TestCommandCreate } from "../commands/TestCommandCreate";
-import { TestEventCreate } from "../events/TestEventCreate";
-import { TestEventUpcast_V1 } from "../events/TestEventUpcast_V1";
-import { TestEventUpcast_V2 } from "../events/TestEventUpcast_V2";
-import { TestEventUpcast_V3 } from "../events/TestEventUpcast_V3";
+} from "../../../decorators/index.js";
+import type { AggregateCommandCtx, AggregateEventCtx } from "../../../types/index.js";
+import { TestCommandCreate } from "../commands/TestCommandCreate.js";
+import { TestEventCreate } from "../events/TestEventCreate.js";
+import { TestEventUpcast_V1 } from "../events/TestEventUpcast_V1.js";
+import { TestEventUpcast_V2 } from "../events/TestEventUpcast_V2.js";
+import { TestEventUpcast_V3 } from "../events/TestEventUpcast_V3.js";
 
 export type TestUpcasterAggregateState = Dict;
 

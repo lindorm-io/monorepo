@@ -1,5 +1,5 @@
-import { PylonListener } from "../../classes";
-import { createBuiltInRoomListeners } from "./create-built-in-room-listeners";
+import { PylonListener } from "../../classes/index.js";
+import { createBuiltInRoomListeners } from "./create-built-in-room-listeners.js";
 import { describe, expect, it, vi } from "vitest";
 
 describe("createBuiltInRoomListeners", () => {

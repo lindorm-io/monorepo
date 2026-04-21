@@ -1,5 +1,5 @@
-import { IKryptos } from "@lindorm/kryptos";
-import { AesError } from "../../../errors";
+import type { IKryptos } from "@lindorm/kryptos";
+import { AesError } from "../../../errors/index.js";
 
 type KeywrapEncryption =
   | "aes-128-ecb"

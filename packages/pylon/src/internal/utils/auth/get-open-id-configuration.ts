@@ -1,7 +1,7 @@
-import { IAmphora } from "@lindorm/amphora";
+import type { IAmphora } from "@lindorm/amphora";
 import { ServerError } from "@lindorm/errors";
-import { OpenIdConfiguration } from "@lindorm/types";
-import { PylonAuthConfig } from "../../../types";
+import type { OpenIdConfiguration } from "@lindorm/types";
+import type { PylonAuthConfig } from "../../../types/index.js";
 
 export const getOpenIdConfiguration = (
   ctx: { amphora: IAmphora },

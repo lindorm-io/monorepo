@@ -2,9 +2,9 @@ import type { IAmphora } from "@lindorm/amphora";
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
 import type { ConnectionOptions } from "node:tls";
-import type { IDeadLetterStore } from "../interfaces/IrisDeadLetterStore";
-import type { IDelayStore } from "../interfaces/IrisDelayStore";
-import type { IMessage } from "../interfaces";
+import type { IDeadLetterStore } from "../interfaces/IrisDeadLetterStore.js";
+import type { IDelayStore } from "../interfaces/IrisDelayStore.js";
+import type { IMessage } from "../interfaces/index.js";
 
 export type IrisDriverType = "memory" | "rabbit" | "kafka" | "nats" | "redis";
 

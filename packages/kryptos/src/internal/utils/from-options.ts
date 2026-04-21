@@ -1,12 +1,12 @@
-import { KryptosError } from "../../errors";
-import { KryptosFormat, KryptosFrom, KryptosOptions } from "../../types";
-import { createDerFromB64 } from "./from/der-from-b64";
-import { createDerFromDer } from "./from/der-from-der";
-import { createDerFromJwk } from "./from/der-from-jwk";
-import { createDerFromPem } from "./from/der-from-pem";
-import { createDerFromUtf } from "./from/der-from-utf";
-import { isB64, isDer, isJwk, isPem, isUtf } from "./is";
-import { parseJwkOptions, parseStdOptions } from "./parse-options";
+import { KryptosError } from "../../errors/index.js";
+import type { KryptosFormat, KryptosFrom, KryptosOptions } from "../../types/index.js";
+import { createDerFromB64 } from "./from/der-from-b64.js";
+import { createDerFromDer } from "./from/der-from-der.js";
+import { createDerFromJwk } from "./from/der-from-jwk.js";
+import { createDerFromPem } from "./from/der-from-pem.js";
+import { createDerFromUtf } from "./from/der-from-utf.js";
+import { isB64, isDer, isJwk, isPem, isUtf } from "./is.js";
+import { parseJwkOptions, parseStdOptions } from "./parse-options.js";
 
 export const fromOptions = (format: KryptosFormat, arg: KryptosFrom): KryptosOptions => {
   switch (format) {

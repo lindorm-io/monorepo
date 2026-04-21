@@ -1,6 +1,6 @@
-import { extractDto } from "./extract-dto";
-import { TestCommandCreate } from "../../__fixtures__/modules/commands";
-import { TestEventCreate } from "../../__fixtures__/modules/events";
+import { extractDto } from "./extract-dto.js";
+import { TestCommandCreate } from "../../__fixtures__/modules/commands/index.js";
+import { TestEventCreate } from "../../__fixtures__/modules/events/index.js";
 import { describe, expect, test } from "vitest";
 
 describe("extractDto", () => {

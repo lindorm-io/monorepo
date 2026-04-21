@@ -1,5 +1,5 @@
 import { ClientError } from "@lindorm/errors";
-import { getContentEncoding } from "./get-content-encoding";
+import { getContentEncoding } from "./get-content-encoding.js";
 import { describe, expect, test } from "vitest";
 
 describe("getContentEncoding", () => {

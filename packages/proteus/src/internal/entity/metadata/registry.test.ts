@@ -5,8 +5,8 @@ import {
   getCachedMetadata,
   registerEntity,
   setCachedMetadata,
-} from "./registry";
-import type { EntityMetadata } from "../types/metadata";
+} from "./registry.js";
+import type { EntityMetadata } from "../types/metadata.js";
 
 const makeMinimalMetadata = (): EntityMetadata =>
   ({

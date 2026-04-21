@@ -1,6 +1,6 @@
 import type { Constructor } from "@lindorm/types";
-import type { ErrorHookCallback } from "../types";
-import { stageHook } from "../internal/message/metadata/stage-metadata";
+import type { ErrorHookCallback } from "../types/index.js";
+import { stageHook } from "../internal/message/metadata/stage-metadata.js";
 
 export const OnConsumeError =
   <T extends Constructor>(callback: ErrorHookCallback) =>

@@ -1,14 +1,14 @@
-import type { IMessage } from "../../../../interfaces";
-import { Field } from "../../../../decorators/Field";
-import { Message } from "../../../../decorators/Message";
-import { clearRegistry } from "../../../message/metadata/registry";
-import type { RabbitSharedState } from "../types/rabbit-types";
-import { RabbitPublisher } from "./RabbitPublisher";
+import type { IMessage } from "../../../../interfaces/index.js";
+import { Field } from "../../../../decorators/Field.js";
+import { Message } from "../../../../decorators/Message.js";
+import { clearRegistry } from "../../../message/metadata/registry.js";
+import type { RabbitSharedState } from "../types/rabbit-types.js";
+import { RabbitPublisher } from "./RabbitPublisher.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // --- Mocks ---
 const mockPublishRabbitMessages = vi.fn().mockResolvedValue(undefined);
-vi.mock("../utils/publish-messages", async () => ({
+vi.mock("../utils/publish-messages.js", async () => ({
   publishRabbitMessages: (...args: Array<unknown>) => mockPublishRabbitMessages(...args),
 }));
 

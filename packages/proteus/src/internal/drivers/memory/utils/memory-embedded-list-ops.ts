@@ -1,7 +1,7 @@
-import type { IEntity } from "../../../../interfaces";
-import type { MetaEmbeddedList } from "../../../entity/types/metadata";
-import type { MemoryCollectionTable, MemoryStore } from "../types/memory-store";
-import { deserialise } from "../../../entity/utils/deserialise";
+import type { IEntity } from "../../../../interfaces/index.js";
+import type { MetaEmbeddedList } from "../../../entity/types/metadata.js";
+import type { MemoryCollectionTable, MemoryStore } from "../types/memory-store.js";
+import { deserialise } from "../../../entity/utils/deserialise.js";
 
 const getCollectionTable = (
   store: MemoryStore,

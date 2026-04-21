@@ -1,6 +1,10 @@
-import { IKryptosRsa, RSA_SIG_ALGORITHMS, RsaSigAlgorithm } from "@lindorm/kryptos";
-import { ShaAlgorithm } from "@lindorm/types";
-import { RsaError } from "../errors";
+import {
+  type IKryptosRsa,
+  RSA_SIG_ALGORITHMS,
+  type RsaSigAlgorithm,
+} from "@lindorm/kryptos";
+import type { ShaAlgorithm } from "@lindorm/types";
+import { RsaError } from "../errors/index.js";
 
 const RSA_SIG_ALGORITHM_MAP: Record<RsaSigAlgorithm, ShaAlgorithm> = {
   RS256: "SHA256",

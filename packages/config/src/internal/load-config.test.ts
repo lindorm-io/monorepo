@@ -1,4 +1,4 @@
-import { loadConfig } from "./load-config";
+import { loadConfig } from "./load-config.js";
 import { describe, expect, test } from "vitest";
 
 describe("loadConfig", () => {

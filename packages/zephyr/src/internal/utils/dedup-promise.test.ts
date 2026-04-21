@@ -1,4 +1,4 @@
-import { dedupPromise } from "./dedup-promise";
+import { dedupPromise } from "./dedup-promise.js";
 import { describe, expect, it, vi } from "vitest";
 
 describe("dedupPromise", () => {

@@ -1,4 +1,4 @@
-import type { RedisSharedState } from "../types/redis-types";
+import type { RedisSharedState } from "../types/redis-types.js";
 
 export const stopConsumerLoop = async (
   state: RedisSharedState,

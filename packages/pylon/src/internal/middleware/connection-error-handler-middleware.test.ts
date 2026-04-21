@@ -1,5 +1,5 @@
 import { ClientError, ServerError } from "@lindorm/errors";
-import { connectionErrorHandlerMiddleware } from "./connection-error-handler-middleware";
+import { connectionErrorHandlerMiddleware } from "./connection-error-handler-middleware.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("connectionErrorHandlerMiddleware", () => {

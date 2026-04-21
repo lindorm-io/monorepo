@@ -1,6 +1,6 @@
-import type { EntityMetadata } from "../types/metadata";
-import type { MetaInheritance } from "../types/inheritance";
-import { resolveInheritanceRoot } from "./resolve-inheritance-root";
+import type { EntityMetadata } from "../types/metadata.js";
+import type { MetaInheritance } from "../types/inheritance.js";
+import { resolveInheritanceRoot } from "./resolve-inheritance-root.js";
 import { describe, expect, test } from "vitest";
 
 // ─────────────────────────────────────────────────────────────────────────────

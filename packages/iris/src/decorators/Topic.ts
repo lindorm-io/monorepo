@@ -1,5 +1,5 @@
 import type { Constructor } from "@lindorm/types";
-import { stageTopic } from "../internal/message/metadata/stage-metadata";
+import { stageTopic } from "../internal/message/metadata/stage-metadata.js";
 
 export const Topic =
   <T extends Constructor>(callback: (message: any) => string) =>

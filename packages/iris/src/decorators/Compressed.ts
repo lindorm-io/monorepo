@@ -1,5 +1,5 @@
-import type { IrisCompressionAlgorithm } from "../types";
-import { stageCompressed } from "../internal/message/metadata/stage-metadata";
+import type { IrisCompressionAlgorithm } from "../types/index.js";
+import { stageCompressed } from "../internal/message/metadata/stage-metadata.js";
 
 export const Compressed =
   (algorithm: IrisCompressionAlgorithm = "gzip") =>

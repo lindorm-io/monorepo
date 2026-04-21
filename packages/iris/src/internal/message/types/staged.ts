@@ -10,8 +10,8 @@ import type {
   MetaRetry,
   MetaStagedTransform,
   MetaTopic,
-} from "./metadata";
-import type { MetaFieldDefault, MetaTransform } from "./types";
+} from "./metadata.js";
+import type { MetaFieldDefault, MetaTransform } from "./types.js";
 
 export type StagedFieldModifier = {
   key: string;

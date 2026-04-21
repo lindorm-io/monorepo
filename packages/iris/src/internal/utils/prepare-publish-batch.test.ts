@@ -1,7 +1,7 @@
-import type { IMessage } from "../../interfaces";
-import type { MessageMetadata } from "../message/types/metadata";
-import type { OutboundPayload } from "../message/utils/prepare-outbound";
-import { preparePublishBatch, type PublishDriverLike } from "./prepare-publish-batch";
+import type { IMessage } from "../../interfaces/index.js";
+import type { MessageMetadata } from "../message/types/metadata.js";
+import type { OutboundPayload } from "../message/utils/prepare-outbound.js";
+import { preparePublishBatch, type PublishDriverLike } from "./prepare-publish-batch.js";
 import { describe, expect, it, vi } from "vitest";
 
 const makeMetadata = (

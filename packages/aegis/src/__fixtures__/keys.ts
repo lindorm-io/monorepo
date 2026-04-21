@@ -1,4 +1,4 @@
-import { KryptosFromString, KryptosKit } from "@lindorm/kryptos";
+import { type KryptosFromString, KryptosKit } from "@lindorm/kryptos";
 import { KRYPTOS_AKP_SIG_ML_DSA_65 } from "@lindorm/kryptos/fixtures";
 
 const defaults = {

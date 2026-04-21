@@ -1,9 +1,9 @@
-import { IAmphora } from "@lindorm/amphora";
-import { ILogger } from "@lindorm/logger";
-import { ILindormWorker } from "@lindorm/worker";
+import type { IAmphora } from "@lindorm/amphora";
+import type { ILogger } from "@lindorm/logger";
+import type { ILindormWorker } from "@lindorm/worker";
 import { Server as HttpServer, createServer } from "http";
-import { httpSocketIoMiddleware } from "../internal/middleware/http-socket-io-middleware";
-import {
+import { httpSocketIoMiddleware } from "../internal/middleware/http-socket-io-middleware.js";
+import type {
   HttpCallback,
   PylonEventMap,
   PylonHttpContext,
@@ -11,7 +11,7 @@ import {
   PylonSetup,
   PylonSocketContext,
   PylonTeardown,
-} from "../types";
+} from "../types/index.js";
 import {
   DataAuditLog,
   Kryptos,
@@ -22,24 +22,24 @@ import {
   RequestAuditLog,
   Session,
   WebhookSubscription,
-} from "../entities";
+} from "../entities/index.js";
 import {
   DataAuditChange,
   Job,
   RequestAudit,
   WebhookDispatch,
   WebhookRequest,
-} from "../messages";
-import { setupAuditConsumer } from "../internal/consumers/setup-audit-consumer";
-import { setupDataAuditConsumer } from "../internal/consumers/setup-data-audit-consumer";
-import { setupDataAuditListeners } from "../internal/listeners/setup-data-audit-listeners";
-import { setupWebhookDispatchConsumer } from "../internal/consumers/setup-webhook-dispatch-consumer";
-import { setupWebhookRequestConsumer } from "../internal/consumers/setup-webhook-request-consumer";
-import { calculateSubscriptions } from "../internal/utils/calculate-subscriptions";
-import { calculateWorkers } from "../internal/utils/calculate-workers";
-import { scanWorkers } from "../internal/utils/scan-workers";
-import { PylonHttp } from "./PylonHttp";
-import { PylonIo } from "./PylonIo";
+} from "../messages/index.js";
+import { setupAuditConsumer } from "../internal/consumers/setup-audit-consumer.js";
+import { setupDataAuditConsumer } from "../internal/consumers/setup-data-audit-consumer.js";
+import { setupDataAuditListeners } from "../internal/listeners/setup-data-audit-listeners.js";
+import { setupWebhookDispatchConsumer } from "../internal/consumers/setup-webhook-dispatch-consumer.js";
+import { setupWebhookRequestConsumer } from "../internal/consumers/setup-webhook-request-consumer.js";
+import { calculateSubscriptions } from "../internal/utils/calculate-subscriptions.js";
+import { calculateWorkers } from "../internal/utils/calculate-workers.js";
+import { scanWorkers } from "../internal/utils/scan-workers.js";
+import { PylonHttp } from "./PylonHttp.js";
+import { PylonIo } from "./PylonIo.js";
 
 export class Pylon<
   E extends PylonEventMap = PylonEventMap,

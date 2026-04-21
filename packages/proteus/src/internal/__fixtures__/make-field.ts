@@ -1,4 +1,4 @@
-import type { MetaField } from "../entity/types/metadata";
+import type { MetaField } from "../entity/types/metadata.js";
 
 export const makeField = (
   key: string,

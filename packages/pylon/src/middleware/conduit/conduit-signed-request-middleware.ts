@@ -1,10 +1,10 @@
 import { SignatureKit } from "@lindorm/aegis";
 import { snakeKeys } from "@lindorm/case";
-import { ConduitMiddleware } from "@lindorm/conduit";
-import { IKryptos } from "@lindorm/kryptos";
+import type { ConduitMiddleware } from "@lindorm/conduit";
+import type { IKryptos } from "@lindorm/kryptos";
 import { ShaKit } from "@lindorm/sha";
-import { DsaEncoding, ShaAlgorithm } from "@lindorm/types";
-import { BinaryToTextEncoding } from "crypto";
+import type { DsaEncoding, ShaAlgorithm } from "@lindorm/types";
+import type { BinaryToTextEncoding } from "crypto";
 
 type Options = {
   algorithm?: ShaAlgorithm;

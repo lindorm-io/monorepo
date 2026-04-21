@@ -1,6 +1,6 @@
-import { PkceMethod } from "@lindorm/types";
+import type { PkceMethod } from "@lindorm/types";
 import { createHash } from "crypto";
-import { assertPkce } from "./assert-pkce";
+import { assertPkce } from "./assert-pkce.js";
 import { beforeEach, describe, expect, test } from "vitest";
 
 describe("assertPkce", () => {

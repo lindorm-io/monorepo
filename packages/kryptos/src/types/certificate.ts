@@ -1,5 +1,5 @@
-import type { IKryptos } from "../interfaces/Kryptos";
-import type { X509SubjectAltNameInput } from "./x509";
+import type { IKryptos } from "../interfaces/Kryptos.js";
+import type { X509SubjectAltNameInput } from "./x509.js";
 
 export type KryptosCertificateSelfSignedOption = {
   mode: "self-signed";

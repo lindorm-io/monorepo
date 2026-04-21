@@ -1,4 +1,4 @@
-import type { EntityMetadata } from "../../entity/types/metadata";
+import type { EntityMetadata } from "../../entity/types/metadata.js";
 
 /**
  * Get the column name of the discriminator field, if this entity is a

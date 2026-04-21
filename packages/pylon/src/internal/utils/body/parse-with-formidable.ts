@@ -1,6 +1,6 @@
 import type { Fields, Files, Options } from "formidable";
 import formidable from "formidable";
-import { PylonHttpContext } from "../../../types";
+import type { PylonHttpContext } from "../../../types/index.js";
 
 type Result = {
   parsed: Fields;

@@ -1,6 +1,6 @@
 import { ClientError, ServerError } from "@lindorm/errors";
-import { PylonSecurityTxt } from "../../types";
-import { createWellKnownRouter } from "./create-well-known-router";
+import type { PylonSecurityTxt } from "../../types/index.js";
+import { createWellKnownRouter } from "./create-well-known-router.js";
 import { describe, expect, test, vi } from "vitest";
 
 describe("createWellKnownRouter", () => {

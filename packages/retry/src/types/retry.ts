@@ -1,4 +1,4 @@
-import { Optional } from "@lindorm/types";
+import type { Optional } from "@lindorm/types";
 
 export type RetryStrategy = "exponential" | "linear" | "constant";
 

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Command } from "../../../decorators";
+import { Command } from "../../../decorators/index.js";
 
 @Command()
 export class WithdrawFunds {

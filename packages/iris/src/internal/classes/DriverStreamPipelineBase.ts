@@ -1,16 +1,16 @@
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
-import type { IIrisStreamPipeline, IMessage } from "../../interfaces";
-import type { IrisEnvelope } from "../types/iris-envelope";
-import type { PipelineStage } from "../types/pipeline-stage";
+import type { IIrisStreamPipeline, IMessage } from "../../interfaces/index.js";
+import type { IrisEnvelope } from "../types/iris-envelope.js";
+import type { PipelineStage } from "../types/pipeline-stage.js";
 import type { IAmphora } from "@lindorm/amphora";
-import { applyStage } from "../message/utils/apply-stage";
-import { MessageManager } from "../message/classes/MessageManager";
-import { getMessageMetadata } from "../message/metadata/get-message-metadata";
-import { prepareOutbound } from "../message/utils/prepare-outbound";
-import { prepareInbound } from "../message/utils/prepare-inbound";
-import { resolveDefaultTopic } from "../message/utils/resolve-default-topic";
-import { buildEnvelope } from "../utils/build-envelope";
+import { applyStage } from "../message/utils/apply-stage.js";
+import { MessageManager } from "../message/classes/MessageManager.js";
+import { getMessageMetadata } from "../message/metadata/get-message-metadata.js";
+import { prepareOutbound } from "../message/utils/prepare-outbound.js";
+import { prepareInbound } from "../message/utils/prepare-inbound.js";
+import { resolveDefaultTopic } from "../message/utils/resolve-default-topic.js";
+import { buildEnvelope } from "../utils/build-envelope.js";
 
 export type DriverStreamPipelineBaseOptions = {
   logger: ILogger;

@@ -1,14 +1,14 @@
-import {
+import type {
   KryptosFrom,
   KryptosFromBuffer,
   KryptosFromJwk,
   KryptosFromString,
-} from "../../types";
-import { isAkpB64, isAkpDer, isAkpJwk, isAkpPem } from "./akp/is";
-import { isEcB64, isEcDer, isEcJwk, isEcPem } from "./ec/is";
-import { isOctB64, isOctDer, isOctJwk, isOctPem, isOctUtf } from "./oct/is";
-import { isOkpB64, isOkpDer, isOkpJwk, isOkpPem } from "./okp/is";
-import { isRsaB64, isRsaDer, isRsaJwk, isRsaPem } from "./rsa/is";
+} from "../../types/index.js";
+import { isAkpB64, isAkpDer, isAkpJwk, isAkpPem } from "./akp/is.js";
+import { isEcB64, isEcDer, isEcJwk, isEcPem } from "./ec/is.js";
+import { isOctB64, isOctDer, isOctJwk, isOctPem, isOctUtf } from "./oct/is.js";
+import { isOkpB64, isOkpDer, isOkpJwk, isOkpPem } from "./okp/is.js";
+import { isRsaB64, isRsaDer, isRsaJwk, isRsaPem } from "./rsa/is.js";
 
 export const isB64 = (options: KryptosFrom): options is KryptosFromString => {
   const typed = options as KryptosFromString;

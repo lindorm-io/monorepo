@@ -1,5 +1,5 @@
-import { MessageScanner } from "./MessageScanner";
-import { IrisScannerError } from "../errors/IrisScannerError";
+import { MessageScanner } from "./MessageScanner.js";
+import { IrisScannerError } from "../errors/IrisScannerError.js";
 import type { IScanData } from "@lindorm/scanner";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 

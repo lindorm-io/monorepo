@@ -1,5 +1,5 @@
 import { ClientError } from "@lindorm/errors";
-import { createIntrospectHandler } from "./introspect-handler";
+import { createIntrospectHandler } from "./introspect-handler.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("createIntrospectHandler", () => {

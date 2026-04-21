@@ -1,7 +1,7 @@
-import { IrisMetadataError } from "../../../errors/IrisMetadataError";
-import type { MetaField } from "../types/metadata";
-import type { MetaGenerated } from "../types/metadata";
-import type { MetaFieldType, MetaGeneratedStrategy } from "../types/types";
+import { IrisMetadataError } from "../../../errors/IrisMetadataError.js";
+import type { MetaField } from "../types/metadata.js";
+import type { MetaGenerated } from "../types/metadata.js";
+import type { MetaFieldType, MetaGeneratedStrategy } from "../types/types.js";
 
 const STRATEGY_TYPES: Record<MetaGeneratedStrategy, MetaFieldType> = {
   uuid: "uuid",

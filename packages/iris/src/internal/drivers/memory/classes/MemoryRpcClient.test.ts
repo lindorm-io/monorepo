@@ -1,10 +1,10 @@
-import type { IMessage } from "../../../../interfaces";
-import { Field } from "../../../../decorators/Field";
-import { Message } from "../../../../decorators/Message";
-import { IrisTimeoutError } from "../../../../errors/IrisTimeoutError";
-import { IrisTransportError } from "../../../../errors/IrisTransportError";
-import { clearRegistry } from "../../../message/metadata/registry";
-import { MemoryDriver } from "./MemoryDriver";
+import type { IMessage } from "../../../../interfaces/index.js";
+import { Field } from "../../../../decorators/Field.js";
+import { Message } from "../../../../decorators/Message.js";
+import { IrisTimeoutError } from "../../../../errors/IrisTimeoutError.js";
+import { IrisTransportError } from "../../../../errors/IrisTransportError.js";
+import { clearRegistry } from "../../../message/metadata/registry.js";
+import { MemoryDriver } from "./MemoryDriver.js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // --- Test message classes ---

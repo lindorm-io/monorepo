@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from "react";
-import type { IZephyrRoom } from "../interfaces/ZephyrRoom";
-import { useZephyrContext } from "./ZephyrProvider";
+import type { IZephyrRoom } from "../interfaces/ZephyrRoom.js";
+import { useZephyrContext } from "./ZephyrProvider.js";
 
 export const useRoom = (name: string): IZephyrRoom => {
   const { client } = useZephyrContext();

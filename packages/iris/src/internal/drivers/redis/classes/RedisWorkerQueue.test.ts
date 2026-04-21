@@ -1,19 +1,19 @@
-import type { IMessage } from "../../../../interfaces";
-import { Field } from "../../../../decorators/Field";
-import { Message } from "../../../../decorators/Message";
-import { clearRegistry } from "../../../message/metadata/registry";
-import type { RedisSharedState, RedisConsumerLoop } from "../types/redis-types";
-import { RedisWorkerQueue } from "./RedisWorkerQueue";
+import type { IMessage } from "../../../../interfaces/index.js";
+import { Field } from "../../../../decorators/Field.js";
+import { Message } from "../../../../decorators/Message.js";
+import { clearRegistry } from "../../../message/metadata/registry.js";
+import type { RedisSharedState, RedisConsumerLoop } from "../types/redis-types.js";
+import { RedisWorkerQueue } from "./RedisWorkerQueue.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // --- Mocks ---
 const mockPublishRedisMessages = vi.fn().mockResolvedValue(undefined);
-vi.mock("../utils/publish-redis-messages", async () => ({
+vi.mock("../utils/publish-redis-messages.js", async () => ({
   publishRedisMessages: (...args: Array<unknown>) => mockPublishRedisMessages(...args),
 }));
 
 const mockWrapRedisConsumer = vi.fn().mockReturnValue(vi.fn());
-vi.mock("../utils/wrap-redis-consumer", () => ({
+vi.mock("../utils/wrap-redis-consumer.js", () => ({
   wrapRedisConsumer: (...args: Array<unknown>) => mockWrapRedisConsumer(...args),
 }));
 
@@ -21,7 +21,7 @@ let mockCreateConsumerLoopResult: Partial<RedisConsumerLoop>;
 const mockCreateConsumerLoop = vi
   .fn()
   .mockImplementation(async () => mockCreateConsumerLoopResult);
-vi.mock("../utils/create-consumer-loop", () => ({
+vi.mock("../utils/create-consumer-loop.js", () => ({
   createConsumerLoop: (...args: Array<unknown>) => mockCreateConsumerLoop(...args),
 }));
 

@@ -1,4 +1,4 @@
-import { ConduitMiddleware, ConduitResponse } from "../types";
+import type { ConduitMiddleware, ConduitResponse } from "../types/index.js";
 
 type Config = {
   maxAge?: number;

@@ -7,11 +7,11 @@ import { randomBytes } from "node:crypto";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { MongoClient, type Db } from "mongodb";
 import type { Constructor } from "@lindorm/types";
-import type { IEntity } from "../../interfaces";
-import { ProteusSource } from "../../classes/ProteusSource";
-import type { TckDriverFactory, TckDriverHandle } from "../__fixtures__/tck/types";
-import { createTckAmphora } from "../__fixtures__/tck/create-tck-amphora";
-import { runTck } from "../__fixtures__/tck/run-tck";
+import type { IEntity } from "../../interfaces/index.js";
+import { ProteusSource } from "../../classes/ProteusSource.js";
+import type { TckDriverFactory, TckDriverHandle } from "../__fixtures__/tck/types.js";
+import { createTckAmphora } from "../__fixtures__/tck/create-tck-amphora.js";
+import { runTck } from "../__fixtures__/tck/run-tck.js";
 import { describe, vi } from "vitest";
 
 vi.setConfig({ testTimeout: 120_000 });

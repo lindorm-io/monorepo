@@ -1,4 +1,4 @@
-import { loadSaga, saveSaga, clearMessages } from "./saga-store";
+import { loadSaga, saveSaga, clearMessages } from "./saga-store.js";
 import { describe, expect, it, vi } from "vitest";
 
 const createMockRepo = () => ({

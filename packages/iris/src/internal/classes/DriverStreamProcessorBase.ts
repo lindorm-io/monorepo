@@ -1,12 +1,12 @@
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
-import { IrisNotSupportedError } from "../../errors/IrisNotSupportedError";
+import { IrisNotSupportedError } from "../../errors/IrisNotSupportedError.js";
 import type {
   IIrisStreamPipeline,
   IIrisStreamProcessor,
   IMessage,
-} from "../../interfaces";
-import type { PipelineStage } from "../types/pipeline-stage";
+} from "../../interfaces/index.js";
+import type { PipelineStage } from "../types/pipeline-stage.js";
 
 export type DriverStreamProcessorBaseOptions<State> = {
   state: State;

@@ -2,7 +2,7 @@ import { Aegis } from "@lindorm/aegis";
 import { createMockAegis } from "@lindorm/aegis/mocks/vitest";
 import { ClientError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
-import { createHandshakeTokenMiddleware } from "./create-handshake-token-middleware";
+import { createHandshakeTokenMiddleware } from "./create-handshake-token-middleware.js";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 vi.mock("@lindorm/aegis", async () => ({

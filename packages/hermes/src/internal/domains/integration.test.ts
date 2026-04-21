@@ -5,11 +5,11 @@ import { randomUUID } from "crypto";
 import {
   createTestIrisSource,
   createTestProteusSource,
-} from "../../__fixtures__/create-test-sources";
+} from "../../__fixtures__/create-test-sources.js";
 import {
   TestAggregate,
   TestForgettableAggregate,
-} from "../../__fixtures__/modules/aggregates";
+} from "../../__fixtures__/modules/aggregates/index.js";
 import {
   TestCommandCreate,
   TestCommandDestroy,
@@ -20,7 +20,7 @@ import {
   TestCommandSetState,
   TestCommandThrows,
   TestCommandTimeout,
-} from "../../__fixtures__/modules/commands";
+} from "../../__fixtures__/modules/commands/index.js";
 import {
   TestEventCreate,
   TestEventDestroy,
@@ -31,37 +31,40 @@ import {
   TestEventSetState,
   TestEventThrows,
   TestEventTimeout,
-} from "../../__fixtures__/modules/events";
-import { TestTimeoutReminder } from "../../__fixtures__/modules/timeouts";
-import { TestViewQuery } from "../../__fixtures__/modules/queries";
-import { TestSaga } from "../../__fixtures__/modules/sagas";
-import { TestView, TestViewEntity } from "../../__fixtures__/modules/views";
-import { AggregateAlreadyCreatedError, AggregateDestroyedError } from "../../errors";
+} from "../../__fixtures__/modules/events/index.js";
+import { TestTimeoutReminder } from "../../__fixtures__/modules/timeouts/index.js";
+import { TestViewQuery } from "../../__fixtures__/modules/queries/index.js";
+import { TestSaga } from "../../__fixtures__/modules/sagas/index.js";
+import { TestView, TestViewEntity } from "../../__fixtures__/modules/views/index.js";
+import {
+  AggregateAlreadyCreatedError,
+  AggregateDestroyedError,
+} from "../../errors/index.js";
 import {
   EventRecord,
   EncryptionRecord,
   CausationRecord,
   ChecksumRecord,
   SagaRecord,
-} from "../entities";
+} from "../entities/index.js";
 import {
   HermesCommandMessage,
   HermesEventMessage,
   HermesErrorMessage,
   HermesTimeoutMessage,
-} from "../messages";
-import { HermesScanner } from "../registry/HermesScanner";
-import { HermesRegistry } from "../registry/hermes-registry";
+} from "../messages/index.js";
+import { HermesScanner } from "../registry/HermesScanner.js";
+import { HermesRegistry } from "../registry/hermes-registry.js";
 import type {
   RegisteredAggregate,
   RegisteredSaga,
   RegisteredView,
   HandlerRegistration,
-} from "../registry/types";
-import { AggregateDomain } from "./aggregate-domain";
-import { SagaDomain } from "./saga-domain";
-import { ViewDomain } from "./view-domain";
-import { ChecksumDomain } from "./checksum-domain";
+} from "../registry/types.js";
+import { AggregateDomain } from "./aggregate-domain.js";
+import { SagaDomain } from "./saga-domain.js";
+import { ViewDomain } from "./view-domain.js";
+import { ChecksumDomain } from "./checksum-domain.js";
 import {
   afterAll,
   afterEach,

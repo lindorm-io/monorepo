@@ -4,9 +4,9 @@ import { describe, test, it, expect, beforeEach } from "vitest";
 // getMany, count, exists, withDeleted. Excludes advanced features (raw SQL,
 // GROUP BY, window functions, CTEs, subqueries, set operations).
 
-import type { TckDriverHandle } from "./types";
-import type { TckEntities } from "./create-tck-entities";
-import type { ProteusSource } from "../../../classes/ProteusSource";
+import type { TckDriverHandle } from "./types.js";
+import type { TckEntities } from "./create-tck-entities.js";
+import type { ProteusSource } from "../../../classes/ProteusSource.js";
 export const queryBuilderSuite = (
   getHandle: () => TckDriverHandle,
   entities: TckEntities,

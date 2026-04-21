@@ -1,3 +1,3 @@
-export * from "./amphora-entity-worker";
-export * from "./expiry-cleanup-worker";
-export * from "./kryptos-rotation-worker";
+export * from "./amphora-entity-worker.js";
+export * from "./expiry-cleanup-worker.js";
+export * from "./kryptos-rotation-worker.js";

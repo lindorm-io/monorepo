@@ -1,9 +1,9 @@
 import type { Dict } from "@lindorm/types";
-import type { MetaInheritance } from "../types/inheritance";
-import type { EntityMetadata, MetaFieldDecorator } from "../types/metadata";
-import { type BuildPrimaryOptions, buildPrimaryMetadata } from "./build-primary";
-import { getCachedMetadata, setCachedMetadata } from "./registry";
-import { resolveRelations } from "./resolve-relations";
+import type { MetaInheritance } from "../types/inheritance.js";
+import type { EntityMetadata, MetaFieldDecorator } from "../types/metadata.js";
+import { type BuildPrimaryOptions, buildPrimaryMetadata } from "./build-primary.js";
+import { getCachedMetadata, setCachedMetadata } from "./registry.js";
+import { resolveRelations } from "./resolve-relations.js";
 
 export const getEntityMetadata = <
   TExtra extends Dict = Dict,

@@ -1,6 +1,6 @@
 import MockDate from "mockdate";
-import { TEST_OKP_KEY_B64 } from "../__fixtures__/okp-keys";
-import { KryptosKit } from "./KryptosKit";
+import { TEST_OKP_KEY_B64 } from "../__fixtures__/okp-keys.js";
+import { KryptosKit } from "./KryptosKit.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");

@@ -1,7 +1,7 @@
 import { ClientError } from "@lindorm/errors";
 import { isString } from "@lindorm/is";
 import { get } from "object-path";
-import { PylonContext, PylonMiddleware } from "../../types";
+import type { PylonContext, PylonMiddleware } from "../../types/index.js";
 
 type UseTenantOptions = {
   required?: boolean;

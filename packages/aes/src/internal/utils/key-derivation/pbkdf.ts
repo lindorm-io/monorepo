@@ -1,6 +1,6 @@
-import { AesKeyLength, ShaAlgorithm } from "@lindorm/types";
+import type { AesKeyLength, ShaAlgorithm } from "@lindorm/types";
 import { pbkdf2Sync, randomBytes, randomInt } from "crypto";
-import { AesError } from "../../../errors";
+import { AesError } from "../../../errors/index.js";
 
 type Options = {
   algorithm: ShaAlgorithm;

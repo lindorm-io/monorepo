@@ -1,4 +1,4 @@
-import { ActClaim } from "./act-claim";
+import type { ActClaim } from "./act-claim.js";
 
 // Delegation claims — `act` and `may_act` from RFC 8693 §4.1
 // (OAuth 2.0 Token Exchange). Together they describe the actor chain:

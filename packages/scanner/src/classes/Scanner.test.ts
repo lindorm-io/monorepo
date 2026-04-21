@@ -1,5 +1,5 @@
 import { join } from "path";
-import { Scanner } from "./Scanner";
+import { Scanner } from "./Scanner.js";
 import { describe, expect, test } from "vitest";
 
 describe("Scanner", () => {

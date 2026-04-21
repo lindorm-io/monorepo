@@ -1,4 +1,4 @@
-import { scanEntityKeys } from "./scan-entity-keys";
+import { scanEntityKeys } from "./scan-entity-keys.js";
 import { describe, expect, test, vi, type Mock } from "vitest";
 
 // ─── Mock Redis Client ──────────────────────────────────────────────────────

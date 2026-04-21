@@ -1,5 +1,5 @@
-import { dbPing } from "./db-ping";
-import { loadSource } from "../load-source";
+import { dbPing } from "./db-ping.js";
+import { loadSource } from "../load-source.js";
 import { Logger } from "@lindorm/logger";
 import {
   afterEach,
@@ -13,7 +13,7 @@ import {
   type MockedFunction,
 } from "vitest";
 
-vi.mock("../load-source");
+vi.mock("../load-source.js");
 
 const mockLoadSource = loadSource as MockedFunction<typeof loadSource>;
 

@@ -1,9 +1,9 @@
 // TCK: Encryption Suite
 // Verifies @Encrypted roundtrip through the publish/subscribe pipeline.
 
-import type { TckDriverHandle } from "./types";
-import type { TckMessages } from "./create-tck-messages";
-import { waitFor } from "./wait";
+import type { TckDriverHandle } from "./types.js";
+import type { TckMessages } from "./create-tck-messages.js";
+import { waitFor } from "./wait.js";
 import { beforeEach, describe, expect, test } from "vitest";
 
 export const encryptionSuite = (

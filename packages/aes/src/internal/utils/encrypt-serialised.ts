@@ -1,13 +1,13 @@
 import { B64 } from "@lindorm/b64";
-import { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
-import { AES_FORMAT_VERSION } from "../constants/version";
-import { AesContent } from "../../types/content";
-import { SerialisedAesEncryption } from "../../types/aes-encryption-data";
-import { buildAesHeader, computeAad, encodeAesHeader } from "./aes-header";
-import { calculateContentType } from "./content";
-import { getInitialisationVector } from "./data/get-initialisation-vector";
-import { encryptAesContent } from "./encrypt-content";
-import { getEncryptionKey } from "./get-key/get-encryption-key";
+import type { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
+import { AES_FORMAT_VERSION } from "../constants/version.js";
+import type { AesContent } from "../../types/content.js";
+import type { SerialisedAesEncryption } from "../../types/aes-encryption-data.js";
+import { buildAesHeader, computeAad, encodeAesHeader } from "./aes-header.js";
+import { calculateContentType } from "./content.js";
+import { getInitialisationVector } from "./data/get-initialisation-vector.js";
+import { encryptAesContent } from "./encrypt-content.js";
+import { getEncryptionKey } from "./get-key/get-encryption-key.js";
 
 export type EncryptSerialisedOptions = {
   data: AesContent;

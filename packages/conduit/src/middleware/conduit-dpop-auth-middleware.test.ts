@@ -1,5 +1,5 @@
-import { DpopSigner } from "@lindorm/types";
-import { createConduitDpopAuthMiddleware } from "./conduit-dpop-auth-middleware";
+import type { DpopSigner } from "@lindorm/types";
+import { createConduitDpopAuthMiddleware } from "./conduit-dpop-auth-middleware.js";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 describe("createConduitDpopAuthMiddleware", () => {

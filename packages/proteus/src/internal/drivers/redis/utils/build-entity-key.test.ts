@@ -1,15 +1,15 @@
-import type { EntityMetadata } from "../../../entity/types/metadata";
-import type { ScopedName } from "../../../types/types";
-import { buildEntityKey, buildEntityKeyFromRow } from "./build-entity-key";
+import type { EntityMetadata } from "../../../entity/types/metadata.js";
+import type { ScopedName } from "../../../types/types.js";
+import { buildEntityKey, buildEntityKeyFromRow } from "./build-entity-key.js";
 import { beforeEach, describe, expect, test, vi, type MockedFunction } from "vitest";
 
 // ─── Module Mocks ────────────────────────────────────────────────────────────
 
-vi.mock("../../../entity/utils/get-entity-name", () => ({
+vi.mock("../../../entity/utils/get-entity-name.js", () => ({
   getEntityName: vi.fn(),
 }));
 
-import { getEntityName } from "../../../entity/utils/get-entity-name";
+import { getEntityName } from "../../../entity/utils/get-entity-name.js";
 
 const mockGetEntityName = getEntityName as MockedFunction<typeof getEntityName>;
 

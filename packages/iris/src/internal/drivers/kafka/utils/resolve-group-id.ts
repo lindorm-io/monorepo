@@ -1,4 +1,4 @@
-import type { GroupIdOptions } from "../types/kafka-types";
+import type { GroupIdOptions } from "../types/kafka-types.js";
 
 export type { GroupIdOptions };
 

@@ -1,13 +1,13 @@
 import type { PoolClient } from "pg";
-import { makeField } from "../../../__fixtures__/make-field";
-import type { EntityMetadata, MetaEmbeddedList } from "../../../entity/types/metadata";
-import type { AliasMap } from "../utils/query/compile-select";
-import { PostgresCursor, type PostgresCursorOptions } from "./PostgresCursor";
-import { PostgresDriverError } from "../errors/PostgresDriverError";
+import { makeField } from "../../../__fixtures__/make-field.js";
+import type { EntityMetadata, MetaEmbeddedList } from "../../../entity/types/metadata.js";
+import type { AliasMap } from "../utils/query/compile-select.js";
+import { PostgresCursor, type PostgresCursorOptions } from "./PostgresCursor.js";
+import { PostgresDriverError } from "../errors/PostgresDriverError.js";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 // Mock loadEmbeddedListRows so C2 tests can verify it is called without real DB queries
-vi.mock("../utils/repository/embedded-list-ops", async () => ({
+vi.mock("../utils/repository/embedded-list-ops.js", async () => ({
   loadEmbeddedListRows: vi.fn().mockResolvedValue(undefined),
   loadEmbeddedListRowsBatch: vi.fn().mockResolvedValue(undefined),
 }));
@@ -15,7 +15,7 @@ vi.mock("../utils/repository/embedded-list-ops", async () => ({
 import {
   loadEmbeddedListRows,
   loadEmbeddedListRowsBatch,
-} from "../utils/repository/embedded-list-ops";
+} from "../utils/repository/embedded-list-ops.js";
 
 // ─── Metadata Fixture ─────────────────────────────────────────────────────────
 

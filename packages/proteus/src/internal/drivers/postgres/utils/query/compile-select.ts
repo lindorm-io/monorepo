@@ -1,20 +1,20 @@
-import type { IEntity } from "../../../../../interfaces";
-import type { EntityMetadata } from "../../../../entity/types/metadata";
-import type { IncludeSpec, RawSelectEntry, WindowSpec } from "../../../../types/query";
+import type { IEntity } from "../../../../../interfaces/index.js";
+import type { EntityMetadata } from "../../../../entity/types/metadata.js";
+import type { IncludeSpec, RawSelectEntry, WindowSpec } from "../../../../types/query.js";
 import type {
   AliasMap,
   BuiltAliasResult,
   InheritanceAliasMap,
-} from "../../../../utils/sql/types";
+} from "../../../../utils/sql/types.js";
 import {
   buildAliasMap as sharedBuildAliasMap,
   compileFrom as sharedCompileFrom,
   compileSelect as sharedCompileSelect,
-} from "../../../../utils/sql/compile-select";
-import { postgresDialect } from "../postgres-dialect";
-import { buildInheritanceAliases } from "./compile-inheritance-join";
-import { findRelationByKey, getRelationMetadata } from "./get-relation-metadata";
-import { resolveTableName } from "./resolve-table-name";
+} from "../../../../utils/sql/compile-select.js";
+import { postgresDialect } from "../postgres-dialect.js";
+import { buildInheritanceAliases } from "./compile-inheritance-join.js";
+import { findRelationByKey, getRelationMetadata } from "./get-relation-metadata.js";
+import { resolveTableName } from "./resolve-table-name.js";
 
 export type { AliasMap, BuiltAliasResult, InheritanceAliasMap };
 

@@ -1,4 +1,4 @@
-import { getJoinName } from "./get-join-name";
+import { getJoinName } from "./get-join-name.js";
 import { describe, expect, test } from "vitest";
 
 describe("getJoinName", () => {

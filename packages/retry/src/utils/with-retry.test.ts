@@ -1,4 +1,4 @@
-import { withRetry } from "./with-retry";
+import { withRetry } from "./with-retry.js";
 import { describe, expect, test, vi } from "vitest";
 
 describe("withRetry", () => {

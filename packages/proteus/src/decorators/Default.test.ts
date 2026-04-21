@@ -1,8 +1,8 @@
-import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata";
-import { Default } from "./Default";
-import { Entity } from "./Entity";
-import { Field } from "./Field";
-import { PrimaryKeyField } from "./PrimaryKeyField";
+import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata.js";
+import { Default } from "./Default.js";
+import { Entity } from "./Entity.js";
+import { Field } from "./Field.js";
+import { PrimaryKeyField } from "./PrimaryKeyField.js";
 import { describe, expect, test } from "vitest";
 
 const defaultFactory = () => "guest";

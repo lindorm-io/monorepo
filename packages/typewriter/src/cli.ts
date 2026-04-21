@@ -3,9 +3,9 @@
 import { pascalCase } from "@lindorm/case";
 import { isArray, isString } from "@lindorm/is";
 import { program } from "commander";
-import { TypewriterOutput } from "./types";
-import { typewriter } from "./utils";
-import { absolutePath } from "./internal/index";
+import type { TypewriterOutput } from "./types/index.js";
+import { typewriter } from "./utils/index.js";
+import { absolutePath } from "./internal/index.js";
 
 program
   .name("typewriter")

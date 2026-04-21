@@ -1,4 +1,4 @@
-import { resolveHttpTokenSource } from "./resolve-http-token-source";
+import { resolveHttpTokenSource } from "./resolve-http-token-source.js";
 import { describe, expect, test } from "vitest";
 
 const session = {

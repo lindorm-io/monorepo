@@ -1,7 +1,7 @@
-import { PostgresMigrationError } from "../../errors/PostgresMigrationError";
-import type { PostgresQueryClient } from "../../types/postgres-query-client";
-import type { MigrationInterface, MigrationQueryRunner } from "../../types/migration";
-import { executeMigrationUp, executeMigrationDown } from "./execute-migration";
+import { PostgresMigrationError } from "../../errors/PostgresMigrationError.js";
+import type { PostgresQueryClient } from "../../types/postgres-query-client.js";
+import type { MigrationInterface, MigrationQueryRunner } from "../../types/migration.js";
+import { executeMigrationUp, executeMigrationDown } from "./execute-migration.js";
 import {
   beforeEach,
   describe,
@@ -13,7 +13,7 @@ import {
 } from "vitest";
 
 // Mock migration-table
-vi.mock("./migration-table", async () => ({
+vi.mock("./migration-table.js", async () => ({
   ensureMigrationTable: vi.fn(),
   insertMigrationRecord: vi.fn(),
   deleteMigrationRecord: vi.fn(),
@@ -27,7 +27,7 @@ import {
   deleteMigrationRecord,
   markMigrationFinished,
   markMigrationRolledBack,
-} from "./migration-table";
+} from "./migration-table.js";
 
 const mockEnsureTable = ensureMigrationTable as MockedFunction<
   typeof ensureMigrationTable

@@ -1,15 +1,15 @@
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { randomBytes, randomUUID } from "crypto";
 import { Client } from "pg";
-import { createTestPgClient } from "../../../__fixtures__/create-test-pg-client";
-import type { PostgresQueryClient } from "../types/postgres-query-client";
-import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata";
-import { projectDesiredSchema } from "../utils/sync/project-desired-schema";
-import { introspectSchema } from "../utils/sync/introspect-schema";
-import { diffSchema } from "../utils/sync/diff-schema";
-import { SyncPlanExecutor } from "../utils/sync/execute-sync-plan";
-import { PostgresQueryBuilder } from "./PostgresQueryBuilder";
-import "../../../__fixtures__/test-entities";
+import { createTestPgClient } from "../../../__fixtures__/create-test-pg-client.js";
+import type { PostgresQueryClient } from "../types/postgres-query-client.js";
+import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata.js";
+import { projectDesiredSchema } from "../utils/sync/project-desired-schema.js";
+import { introspectSchema } from "../utils/sync/introspect-schema.js";
+import { diffSchema } from "../utils/sync/diff-schema.js";
+import { SyncPlanExecutor } from "../utils/sync/execute-sync-plan.js";
+import { PostgresQueryBuilder } from "./PostgresQueryBuilder.js";
+import "../../../__fixtures__/test-entities.js";
 import {
   TestUser,
   TestPost,
@@ -19,7 +19,7 @@ import {
   TestProfile,
   TestCourse,
   TestStudent,
-} from "../../../__fixtures__/test-entities";
+} from "../../../__fixtures__/test-entities.js";
 
 let client: PostgresQueryClient;
 let raw: Client;

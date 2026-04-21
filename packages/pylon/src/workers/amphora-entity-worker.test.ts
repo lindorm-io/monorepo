@@ -1,7 +1,7 @@
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { LindormWorker } from "@lindorm/worker";
-import { Kryptos } from "../entities/Kryptos";
-import { createAmphoraEntityWorker } from "./amphora-entity-worker";
+import { Kryptos } from "../entities/Kryptos.js";
+import { createAmphoraEntityWorker } from "./amphora-entity-worker.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 const { mockRefresh, mockAdd, mockFind, mockRepository, mockFromDb } = vi.hoisted(() => ({

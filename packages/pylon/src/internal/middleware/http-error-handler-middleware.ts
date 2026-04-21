@@ -1,8 +1,8 @@
 import { ServerError } from "@lindorm/errors";
 import { isNumber, isString } from "@lindorm/is";
 import { randomBytes, randomUUID } from "crypto";
-import { RedirectError } from "../../errors";
-import { PylonHttpMiddleware } from "../../types";
+import { RedirectError } from "../../errors/index.js";
+import type { PylonHttpMiddleware } from "../../types/index.js";
 
 export const httpErrorHandlerMiddleware: PylonHttpMiddleware = async (ctx, next) => {
   try {

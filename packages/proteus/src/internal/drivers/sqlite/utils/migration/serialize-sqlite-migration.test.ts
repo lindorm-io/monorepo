@@ -1,5 +1,5 @@
-import type { SqliteDbSnapshot } from "../../types/db-snapshot";
-import type { SqliteSyncOperation, SqliteSyncPlan } from "../../types/sync-plan";
+import type { SqliteDbSnapshot } from "../../types/db-snapshot.js";
+import type { SqliteSyncOperation, SqliteSyncPlan } from "../../types/sync-plan.js";
 import { describe, expect, test, vi, type Mock } from "vitest";
 
 // Mock crypto.randomUUID for deterministic IDs
@@ -13,7 +13,7 @@ vi.mock("@lindorm/sha", () => ({
   ShaKit: { S256: vi.fn(() => "mocked-checksum-sha256") },
 }));
 
-import { serializeSqliteMigration } from "./serialize-sqlite-migration";
+import { serializeSqliteMigration } from "./serialize-sqlite-migration.js";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

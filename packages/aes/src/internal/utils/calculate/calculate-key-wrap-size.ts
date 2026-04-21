@@ -1,6 +1,6 @@
-import { KryptosAlgorithm } from "@lindorm/kryptos";
-import { AesKeyLength } from "@lindorm/types";
-import { AesError } from "../../../errors";
+import type { KryptosAlgorithm } from "@lindorm/kryptos";
+import type { AesKeyLength } from "@lindorm/types";
+import { AesError } from "../../../errors/index.js";
 
 export const calculateKeyWrapSize = (algorithm: KryptosAlgorithm): AesKeyLength => {
   switch (algorithm) {

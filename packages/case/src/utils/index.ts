@@ -1,2 +1,2 @@
-export * from "./combined";
-export * from "./specific";
+export * from "./combined/index.js";
+export * from "./specific/index.js";

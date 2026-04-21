@@ -1,9 +1,9 @@
-import { Middleware } from "@lindorm/middleware";
-import { Dict } from "@lindorm/types";
-import { PylonCommonContext, PylonState } from "./context-common";
-import { PylonIoContextSocket } from "./pylon-io-context";
-import { PylonSocketData } from "./pylon-socket";
-import { PylonSocketEmitterWithBroadcast } from "./pylon-socket-emitter";
+import type { Middleware } from "@lindorm/middleware";
+import type { Dict } from "@lindorm/types";
+import type { PylonCommonContext, PylonState } from "./context-common.js";
+import type { PylonIoContextSocket } from "./pylon-io-context.js";
+import type { PylonSocketData } from "./pylon-socket.js";
+import type { PylonSocketEmitterWithBroadcast } from "./pylon-socket-emitter.js";
 
 export type PylonEnvelopeHeader = {
   correlationId?: string;

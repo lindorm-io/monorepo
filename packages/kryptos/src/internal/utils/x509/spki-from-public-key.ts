@@ -1,6 +1,6 @@
 import { createPublicKey } from "crypto";
-import { KryptosError } from "../../../errors";
-import { KryptosType } from "../../../types";
+import { KryptosError } from "../../../errors/index.js";
+import type { KryptosType } from "../../../types/index.js";
 
 export const spkiFromPublicKey = (publicKey: Buffer, type: KryptosType): Buffer => {
   if (type === "oct") {

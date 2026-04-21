@@ -1,8 +1,12 @@
 import { ServerError } from "@lindorm/errors";
-import { PylonHandler, PylonHttpContext, PylonHttpMiddleware } from "../../types";
-import { getBody } from "../../internal/utils/get-body";
-import { getFile } from "../../internal/utils/get-file";
-import { getStatus } from "../../internal/utils/get-status";
+import type {
+  PylonHandler,
+  PylonHttpContext,
+  PylonHttpMiddleware,
+} from "../../types/index.js";
+import { getBody } from "../../internal/utils/get-body.js";
+import { getFile } from "../../internal/utils/get-file.js";
+import { getStatus } from "../../internal/utils/get-status.js";
 
 export const useHandler = <C extends PylonHttpContext = PylonHttpContext>(
   handler: PylonHandler<C>,

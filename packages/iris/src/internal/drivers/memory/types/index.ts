@@ -1,1 +1,1 @@
-export * from "./memory-store";
+export * from "./memory-store.js";

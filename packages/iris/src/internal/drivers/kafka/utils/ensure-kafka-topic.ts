@@ -1,5 +1,5 @@
 import type { ILogger } from "@lindorm/logger";
-import type { KafkaClient, KafkaSharedState } from "../types/kafka-types";
+import type { KafkaClient, KafkaSharedState } from "../types/kafka-types.js";
 
 export const ensureKafkaTopic = async (
   kafka: KafkaClient,

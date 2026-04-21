@@ -1,19 +1,19 @@
-import type { IMessage, IMessageSubscriber } from "../../../../interfaces";
-import { Field } from "../../../../decorators/Field";
-import { Message } from "../../../../decorators/Message";
-import { clearRegistry } from "../../../message/metadata/registry";
-import { DeadLetterManager } from "../../../dead-letter/DeadLetterManager";
-import { MemoryDeadLetterStore } from "../../../dead-letter/MemoryDeadLetterStore";
-import { DelayManager } from "../../../delay/DelayManager";
-import { MemoryDelayStore } from "../../../delay/MemoryDelayStore";
-import { createStore } from "../utils/create-store";
-import { MemoryDriver } from "./MemoryDriver";
-import { MemoryMessageBus } from "./MemoryMessageBus";
-import { MemoryPublisher } from "./MemoryPublisher";
-import { MemoryRpcClient } from "./MemoryRpcClient";
-import { MemoryRpcServer } from "./MemoryRpcServer";
-import { MemoryStreamProcessor } from "./MemoryStreamProcessor";
-import { MemoryWorkerQueue } from "./MemoryWorkerQueue";
+import type { IMessage, IMessageSubscriber } from "../../../../interfaces/index.js";
+import { Field } from "../../../../decorators/Field.js";
+import { Message } from "../../../../decorators/Message.js";
+import { clearRegistry } from "../../../message/metadata/registry.js";
+import { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
+import { MemoryDeadLetterStore } from "../../../dead-letter/MemoryDeadLetterStore.js";
+import { DelayManager } from "../../../delay/DelayManager.js";
+import { MemoryDelayStore } from "../../../delay/MemoryDelayStore.js";
+import { createStore } from "../utils/create-store.js";
+import { MemoryDriver } from "./MemoryDriver.js";
+import { MemoryMessageBus } from "./MemoryMessageBus.js";
+import { MemoryPublisher } from "./MemoryPublisher.js";
+import { MemoryRpcClient } from "./MemoryRpcClient.js";
+import { MemoryRpcServer } from "./MemoryRpcServer.js";
+import { MemoryStreamProcessor } from "./MemoryStreamProcessor.js";
+import { MemoryWorkerQueue } from "./MemoryWorkerQueue.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // --- Test message classes ---

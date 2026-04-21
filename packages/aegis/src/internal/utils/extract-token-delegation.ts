@@ -1,7 +1,7 @@
 import { removeUndefined } from "@lindorm/utils";
-import { ActClaim } from "../../types/claims/act-claim";
-import { ActClaimWire } from "../../types/claims/jwt/act-claim-wire";
-import { TokenDelegation } from "../../types/jwt/jwt-delegation";
+import type { ActClaim } from "../../types/claims/act-claim.js";
+import type { ActClaimWire } from "../../types/claims/jwt/act-claim-wire.js";
+import type { TokenDelegation } from "../../types/jwt/jwt-delegation.js";
 
 const walkActChain = (act: ActClaimWire | undefined): Array<ActClaim> => {
   const chain: Array<ActClaim> = [];

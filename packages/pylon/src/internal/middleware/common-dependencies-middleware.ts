@@ -1,27 +1,30 @@
 import { ServerError } from "@lindorm/errors";
-import { IHermes } from "@lindorm/hermes";
-import { IIrisSource } from "@lindorm/iris";
-import { Middleware } from "@lindorm/middleware";
-import { IProteusSource } from "@lindorm/proteus";
+import type { IHermes } from "@lindorm/hermes";
+import type { IIrisSource } from "@lindorm/iris";
+import type { Middleware } from "@lindorm/middleware";
+import type { IProteusSource } from "@lindorm/proteus";
 import { lazyFactory } from "@lindorm/utils";
-import {
+import type {
   PylonAuthConfig,
   PylonCommonContext,
   PylonContext,
   PylonHttpContext,
-} from "../../types";
-import { AUDIT_SOURCE, RATE_LIMIT_SOURCE } from "../constants/symbols";
+} from "../../types/index.js";
+import { AUDIT_SOURCE, RATE_LIMIT_SOURCE } from "../constants/symbols.js";
 import {
   createAuthClient,
   createSocketClaimsClient,
-} from "../utils/auth/create-auth-client";
-import { createUnconfiguredAuthClient } from "../utils/auth/create-unconfigured-auth-client";
-import { isHttpContext } from "../utils/is-context";
-import { createHttpRoomContext, createRoomContext } from "../utils/create-room-context";
+} from "../utils/auth/create-auth-client.js";
+import { createUnconfiguredAuthClient } from "../utils/auth/create-unconfigured-auth-client.js";
+import { isHttpContext } from "../utils/is-context.js";
+import {
+  createHttpRoomContext,
+  createRoomContext,
+} from "../utils/create-room-context.js";
 import {
   createHttpSocketEmitter,
   createSocketEmitter,
-} from "../utils/create-socket-emitter";
+} from "../utils/create-socket-emitter.js";
 
 type AuditConfig = {
   iris: IIrisSource;

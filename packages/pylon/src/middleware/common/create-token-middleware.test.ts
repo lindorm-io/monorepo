@@ -1,7 +1,7 @@
 import { createMockAegis } from "@lindorm/aegis/mocks/vitest";
 import { ClientError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
-import { createTokenMiddleware } from "./create-token-middleware";
+import { createTokenMiddleware } from "./create-token-middleware.js";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 describe("createTokenMiddleware", () => {

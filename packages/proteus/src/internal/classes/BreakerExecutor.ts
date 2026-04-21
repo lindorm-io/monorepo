@@ -1,11 +1,11 @@
 import type { ICircuitBreaker } from "@lindorm/breaker";
 import { CircuitOpenError as BreakerCircuitOpenError } from "@lindorm/breaker";
 import type { DeepPartial, Predicate } from "@lindorm/types";
-import { CircuitOpenError } from "../../errors/CircuitOpenError";
-import type { IEntity } from "../../interfaces/Entity";
-import type { DeleteOptions, FindOptions } from "../../types";
-import type { QueryScope } from "../entity/types/metadata";
-import type { IRepositoryExecutor } from "../interfaces/RepositoryExecutor";
+import { CircuitOpenError } from "../../errors/CircuitOpenError.js";
+import type { IEntity } from "../../interfaces/Entity.js";
+import type { DeleteOptions, FindOptions } from "../../types/index.js";
+import type { QueryScope } from "../entity/types/metadata.js";
+import type { IRepositoryExecutor } from "../interfaces/RepositoryExecutor.js";
 
 /**
  * Wraps an IRepositoryExecutor so every database operation goes through

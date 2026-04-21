@@ -1,4 +1,4 @@
-import { composePylonHandshakeContext } from "./compose-pylon-handshake-context";
+import { composePylonHandshakeContext } from "./compose-pylon-handshake-context.js";
 import { describe, expect, test } from "vitest";
 
 describe("composePylonHandshakeContext", () => {

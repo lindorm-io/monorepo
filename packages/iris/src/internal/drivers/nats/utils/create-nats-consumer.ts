@@ -3,7 +3,7 @@ import type {
   CreateNatsConsumerOptions,
   NatsConsumerLoop,
   NatsConsumerMessages,
-} from "../types/nats-types";
+} from "../types/nats-types.js";
 
 export type { CreateNatsConsumerOptions };
 

@@ -1,6 +1,6 @@
-import type { MetaRelation } from "../../../../entity/types/metadata";
-import type { PostgresQueryClient } from "../../types/postgres-query-client";
-import { createPostgresJoinTableOps } from "./postgres-join-table-ops";
+import type { MetaRelation } from "../../../../entity/types/metadata.js";
+import type { PostgresQueryClient } from "../../types/postgres-query-client.js";
+import { createPostgresJoinTableOps } from "./postgres-join-table-ops.js";
 import {
   beforeEach,
   describe,
@@ -12,12 +12,12 @@ import {
 } from "vitest";
 
 // Mock the underlying implementations
-vi.mock("./manage-join-table", async () => ({
+vi.mock("./manage-join-table.js", async () => ({
   syncJoinTableRows: vi.fn().mockResolvedValue(undefined),
   deleteJoinTableRows: vi.fn().mockResolvedValue(undefined),
 }));
 
-import { syncJoinTableRows, deleteJoinTableRows } from "./manage-join-table";
+import { syncJoinTableRows, deleteJoinTableRows } from "./manage-join-table.js";
 
 const mockSync = syncJoinTableRows as MockedFunction<typeof syncJoinTableRows>;
 const mockDelete = deleteJoinTableRows as MockedFunction<typeof deleteJoinTableRows>;

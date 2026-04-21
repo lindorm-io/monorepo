@@ -1,16 +1,16 @@
 import { removeUndefined } from "@lindorm/utils";
-import { createGetCookie } from "../utils/cookies/create-get-cookie";
-import { parseCookieHeader } from "../utils/cookies/parse-cookie-header";
-import { createSessionStore } from "../utils/create-session-store";
-import { createSessionRefreshHandler } from "../utils/refresh/create-session-refresh-handler";
-import { extractTokenFromSession } from "../utils/tokens/extract-token-from-session";
-import {
+import { createGetCookie } from "../utils/cookies/create-get-cookie.js";
+import { parseCookieHeader } from "../utils/cookies/parse-cookie-header.js";
+import { createSessionStore } from "../utils/create-session-store.js";
+import { createSessionRefreshHandler } from "../utils/refresh/create-session-refresh-handler.js";
+import { extractTokenFromSession } from "../utils/tokens/extract-token-from-session.js";
+import type {
   PylonConnectionMiddleware,
   PylonSessionConfig,
   PylonSessionOptions,
   PylonSocketAuth,
   PylonSocketHandshakeContext,
-} from "../../types";
+} from "../../types/index.js";
 
 export const createConnectionSessionMiddleware = <
   C extends PylonSocketHandshakeContext = PylonSocketHandshakeContext,

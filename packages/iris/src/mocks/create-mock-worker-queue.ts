@@ -1,5 +1,5 @@
-import type { IIrisWorkerQueue } from "../interfaces/IrisWorkerQueue";
-import type { IMessage } from "../interfaces/Message";
+import type { IIrisWorkerQueue } from "../interfaces/IrisWorkerQueue.js";
+import type { IMessage } from "../interfaces/Message.js";
 
 export type WorkerQueueExtras<M extends IMessage> = {
   published: Array<M>;

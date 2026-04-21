@@ -1,7 +1,7 @@
 import { JsonKit } from "@lindorm/json-kit";
-import { IrisSerializationError } from "../../../errors/IrisSerializationError";
-import type { MessageMetadata } from "../types/metadata";
-import type { SerializedMessage } from "../types/serialized-message";
+import { IrisSerializationError } from "../../../errors/IrisSerializationError.js";
+import type { MessageMetadata } from "../types/metadata.js";
+import type { SerializedMessage } from "../types/serialized-message.js";
 
 export type { SerializedMessage };
 

@@ -1,4 +1,4 @@
-import { extractAegisProfile } from "./extract-aegis-profile";
+import { extractAegisProfile } from "./extract-aegis-profile.js";
 import { describe, expect, test } from "vitest";
 
 describe("extractAegisProfile", () => {

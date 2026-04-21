@@ -1,4 +1,4 @@
-import { writeVersionSnapshot } from "./write-version-snapshot";
+import { writeVersionSnapshot } from "./write-version-snapshot.js";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

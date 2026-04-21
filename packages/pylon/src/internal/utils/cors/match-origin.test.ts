@@ -1,4 +1,4 @@
-import { matchOrigin } from "./match-origin";
+import { matchOrigin } from "./match-origin.js";
 import { describe, expect, test } from "vitest";
 
 describe("matchOrigin", () => {

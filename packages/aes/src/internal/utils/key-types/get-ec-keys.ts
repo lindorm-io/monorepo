@@ -1,18 +1,18 @@
-import { AesError } from "../../../errors";
-import {
+import { AesError } from "../../../errors/index.js";
+import type {
   CreateCekOptions,
   CreateCekResult,
   DecryptCekOptions,
   DecryptCekResult,
-} from "../../types/content-encryption-key";
+} from "../../types/content-encryption-key.js";
 import {
   getDiffieHellmanDecryptionKey,
   getDiffieHellmanEncryptionKey,
-} from "../diffie-hellman/diffie-hellman";
+} from "../diffie-hellman/diffie-hellman.js";
 import {
   getDiffieHellmanKeyWrapDecryptionKey,
   getDiffieHellmanKeyWrapEncryptionKey,
-} from "../diffie-hellman/diffie-hellman-key-wrap";
+} from "../diffie-hellman/diffie-hellman-key-wrap.js";
 
 export const getEcEncryptionKey = (options: CreateCekOptions): CreateCekResult => {
   switch (options.kryptos.algorithm) {

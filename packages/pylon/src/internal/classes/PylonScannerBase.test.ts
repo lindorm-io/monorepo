@@ -1,5 +1,9 @@
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
-import { PylonScannerBase, ParsedSegment, ScannedFile } from "./PylonScannerBase";
+import {
+  PylonScannerBase,
+  type ParsedSegment,
+  type ScannedFile,
+} from "./PylonScannerBase.js";
 import { beforeAll, describe, expect, test, vi } from "vitest";
 
 class TestScanner extends PylonScannerBase {

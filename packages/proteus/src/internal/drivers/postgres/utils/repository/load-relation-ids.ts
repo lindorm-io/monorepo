@@ -1,12 +1,15 @@
 import { uniq } from "@lindorm/utils";
-import type { IEntity } from "../../../../../interfaces";
-import type { EntityMetadata, MetaRelationId } from "../../../../entity/types/metadata";
-import type { PostgresQueryClient } from "../../types/postgres-query-client";
-import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata";
-import { getJoinName } from "../../../../entity/utils/get-join-name";
-import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier";
-import { resolveColumnNameSafe } from "../resolve-column-name";
-import { buildSimpleIn } from "./build-simple-in";
+import type { IEntity } from "../../../../../interfaces/index.js";
+import type {
+  EntityMetadata,
+  MetaRelationId,
+} from "../../../../entity/types/metadata.js";
+import type { PostgresQueryClient } from "../../types/postgres-query-client.js";
+import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata.js";
+import { getJoinName } from "../../../../entity/utils/get-join-name.js";
+import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier.js";
+import { resolveColumnNameSafe } from "../resolve-column-name.js";
+import { buildSimpleIn } from "./build-simple-in.js";
 
 export type LoadRelationIdsContext = {
   metadata: EntityMetadata;

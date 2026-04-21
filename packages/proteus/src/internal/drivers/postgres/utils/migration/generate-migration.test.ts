@@ -1,11 +1,11 @@
 import { mkdtemp, readFile, rm } from "fs/promises";
 import { tmpdir } from "os";
 import { join } from "path";
-import type { DbSnapshot } from "../../types/db-snapshot";
-import type { DesiredSchema } from "../../types/desired-schema";
-import type { PostgresQueryClient } from "../../types/postgres-query-client";
-import type { SyncPlan } from "../../types/sync-plan";
-import { generateMigration } from "./generate-migration";
+import type { DbSnapshot } from "../../types/db-snapshot.js";
+import type { DesiredSchema } from "../../types/desired-schema.js";
+import type { PostgresQueryClient } from "../../types/postgres-query-client.js";
+import type { SyncPlan } from "../../types/sync-plan.js";
+import { generateMigration } from "./generate-migration.js";
 import {
   afterEach,
   beforeEach,
@@ -18,13 +18,13 @@ import {
 } from "vitest";
 
 // Mock the sync pipeline modules
-vi.mock("../sync/introspect-schema", async () => ({
+vi.mock("../sync/introspect-schema.js", async () => ({
   introspectSchema: vi.fn(),
 }));
-vi.mock("../sync/project-desired-schema", () => ({
+vi.mock("../sync/project-desired-schema.js", () => ({
   projectDesiredSchema: vi.fn(),
 }));
-vi.mock("../sync/diff-schema", () => ({
+vi.mock("../sync/diff-schema.js", () => ({
   diffSchema: vi.fn(),
 }));
 
@@ -34,9 +34,9 @@ vi.mock("crypto", async () => ({
   randomUUID: vi.fn(() => "00000000-0000-0000-0000-000000000001"),
 }));
 
-import { introspectSchema } from "../sync/introspect-schema";
-import { projectDesiredSchema } from "../sync/project-desired-schema";
-import { diffSchema } from "../sync/diff-schema";
+import { introspectSchema } from "../sync/introspect-schema.js";
+import { projectDesiredSchema } from "../sync/project-desired-schema.js";
+import { diffSchema } from "../sync/diff-schema.js";
 
 const mockIntrospect = introspectSchema as MockedFunction<typeof introspectSchema>;
 const mockProject = projectDesiredSchema as MockedFunction<typeof projectDesiredSchema>;

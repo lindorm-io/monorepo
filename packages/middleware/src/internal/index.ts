@@ -1,1 +1,1 @@
-export * from "./create-dispatcher";
+export * from "./create-dispatcher.js";

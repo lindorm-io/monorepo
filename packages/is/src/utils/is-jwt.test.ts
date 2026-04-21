@@ -1,5 +1,5 @@
-import { TEST_FIXTURES } from "../__fixtures__/test-fixtures";
-import { isJwt } from "./is-jwt";
+import { TEST_FIXTURES } from "../__fixtures__/test-fixtures.js";
+import { isJwt } from "./is-jwt.js";
 import { describe, expect, test } from "vitest";
 
 describe("isJwt", () => {

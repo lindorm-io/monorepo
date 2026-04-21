@@ -1,7 +1,7 @@
 import type { ILogger } from "@lindorm/logger";
-import type { PostgresQueryClient } from "../../types/postgres-query-client";
-import type { SyncOperation, SyncOptions, SyncPlan } from "../../types/sync-plan";
-import { SyncPlanExecutor } from "./execute-sync-plan";
+import type { PostgresQueryClient } from "../../types/postgres-query-client.js";
+import type { SyncOperation, SyncOptions, SyncPlan } from "../../types/sync-plan.js";
+import { SyncPlanExecutor } from "./execute-sync-plan.js";
 import {
   beforeEach,
   describe,
@@ -13,14 +13,14 @@ import {
 } from "vitest";
 
 // Mock advisory-lock so we can control whether it "acquires" the lock
-vi.mock("../advisory-lock", async () => ({
+vi.mock("../advisory-lock.js", async () => ({
   withAdvisoryLock: vi.fn(
     async (_client: unknown, _k1: unknown, _k2: unknown, fn: () => Promise<unknown>) =>
       fn(),
   ),
 }));
 
-import { withAdvisoryLock } from "../advisory-lock";
+import { withAdvisoryLock } from "../advisory-lock.js";
 
 const mockWithAdvisoryLock = withAdvisoryLock as MockedFunction<typeof withAdvisoryLock>;
 

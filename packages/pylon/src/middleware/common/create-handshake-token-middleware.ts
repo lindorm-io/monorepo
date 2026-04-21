@@ -1,17 +1,17 @@
-import { VerifyJwtOptions } from "@lindorm/aegis";
+import type { VerifyJwtOptions } from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
 import {
-  HandshakeDpopMode,
+  type HandshakeDpopMode,
   registerBearerHandshakeAuth,
-} from "../../internal/utils/handshake/register-bearer-handshake-auth";
-import { resolveHandshakeTokenSource } from "../../internal/utils/tokens/resolve-handshake-token-source";
-import { createSessionRefreshHandler } from "../../internal/utils/refresh/create-session-refresh-handler";
-import { extractTokenFromSession } from "../../internal/utils/tokens/extract-token-from-session";
-import {
+} from "../../internal/utils/handshake/register-bearer-handshake-auth.js";
+import { resolveHandshakeTokenSource } from "../../internal/utils/tokens/resolve-handshake-token-source.js";
+import { createSessionRefreshHandler } from "../../internal/utils/refresh/create-session-refresh-handler.js";
+import { extractTokenFromSession } from "../../internal/utils/tokens/extract-token-from-session.js";
+import type {
   PylonConnectionMiddleware,
   PylonSocketAuth,
   PylonSocketHandshakeContext,
-} from "../../types";
+} from "../../types/index.js";
 
 type Options = Omit<VerifyJwtOptions, "issuer"> & {
   issuer: string;

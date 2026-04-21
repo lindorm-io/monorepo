@@ -1,5 +1,5 @@
 import type { Constructor } from "@lindorm/types";
-import type { IMessage } from "./Message";
+import type { IMessage } from "./Message.js";
 
 export interface IIrisStreamPipeline {
   start(): Promise<void>;

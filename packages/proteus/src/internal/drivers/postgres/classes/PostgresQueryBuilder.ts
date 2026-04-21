@@ -1,35 +1,38 @@
 import type { ILogger } from "@lindorm/logger";
-import { QueryBuilder } from "../../../../classes/QueryBuilder";
-import { ProteusError } from "../../../../errors";
+import { QueryBuilder } from "../../../../classes/QueryBuilder.js";
+import { ProteusError } from "../../../../errors/index.js";
 import type {
   IDeleteQueryBuilder,
   IEntity,
   IInsertQueryBuilder,
   IProteusQueryBuilder,
   IUpdateQueryBuilder,
-} from "../../../../interfaces";
-import type { EntityMetadata } from "../../../entity/types/metadata";
+} from "../../../../interfaces/index.js";
+import type { EntityMetadata } from "../../../entity/types/metadata.js";
 import type {
   SetOperationType,
   SqlFragment,
   SubqueryPredicateSpec,
-} from "../../../types/query";
-import { PostgresInsertQueryBuilder } from "./PostgresInsertQueryBuilder";
-import { PostgresUpdateQueryBuilder } from "./PostgresUpdateQueryBuilder";
-import { PostgresDeleteQueryBuilder } from "./PostgresDeleteQueryBuilder";
-import type { LockMode } from "../../../../types";
-import type { PostgresQueryClient } from "../types/postgres-query-client";
-import { compileAggregate, type AggregateType } from "../utils/query/compile-aggregate";
+} from "../../../types/query.js";
+import { PostgresInsertQueryBuilder } from "./PostgresInsertQueryBuilder.js";
+import { PostgresUpdateQueryBuilder } from "./PostgresUpdateQueryBuilder.js";
+import { PostgresDeleteQueryBuilder } from "./PostgresDeleteQueryBuilder.js";
+import type { LockMode } from "../../../../types/index.js";
+import type { PostgresQueryClient } from "../types/postgres-query-client.js";
+import {
+  compileAggregate,
+  type AggregateType,
+} from "../utils/query/compile-aggregate.js";
 import {
   compileQuery,
   compileCount,
   type CompiledQuery,
-} from "../utils/query/compile-query";
-import { executeQueryIncludes } from "../utils/query/execute-query-includes";
-import { hydrateRows } from "../utils/query/hydrate-result";
-import { partitionIncludes } from "../utils/query/partition-includes";
-import { warnCartesianIncludes } from "../utils/query/warn-cartesian-includes";
-import { filterHiddenSelections } from "../../../utils/query/filter-hidden-selections";
+} from "../utils/query/compile-query.js";
+import { executeQueryIncludes } from "../utils/query/execute-query-includes.js";
+import { hydrateRows } from "../utils/query/hydrate-result.js";
+import { partitionIncludes } from "../utils/query/partition-includes.js";
+import { warnCartesianIncludes } from "../utils/query/warn-cartesian-includes.js";
+import { filterHiddenSelections } from "../../../utils/query/filter-hidden-selections.js";
 
 export class PostgresQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   private readonly client: PostgresQueryClient;

@@ -1,4 +1,4 @@
-import { PylonSocketAuth } from "../../../types";
+import type { PylonSocketAuth } from "../../../types/index.js";
 
 export const shouldEmitAuthExpired = (
   auth: Pick<PylonSocketAuth, "authExpiredEmittedAt">,

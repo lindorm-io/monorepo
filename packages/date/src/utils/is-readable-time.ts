@@ -1,5 +1,5 @@
 import { isString } from "@lindorm/is";
-import { ReadableTime, UNIT_ANY_CASE } from "../types";
+import { type ReadableTime, UNIT_ANY_CASE } from "../types/index.js";
 
 // create regex based on UNIT_ANY_CASE
 const regex = new RegExp(`^\\d+\\s?(${UNIT_ANY_CASE.join("|")})$`, "i");

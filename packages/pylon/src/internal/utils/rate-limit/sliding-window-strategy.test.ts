@@ -1,4 +1,4 @@
-import { slidingWindowStrategy } from "./sliding-window-strategy";
+import { slidingWindowStrategy } from "./sliding-window-strategy.js";
 import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 describe("slidingWindowStrategy", () => {

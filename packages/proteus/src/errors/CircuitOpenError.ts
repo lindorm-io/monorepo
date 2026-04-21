@@ -1,4 +1,4 @@
-import { DriverError } from "./DriverError";
+import { DriverError } from "./DriverError.js";
 
 /**
  * Thrown when a database operation is rejected because the circuit breaker is open.

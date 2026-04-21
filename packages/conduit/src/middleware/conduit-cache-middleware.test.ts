@@ -1,6 +1,6 @@
 import MockDate from "mockdate";
-import { ConduitMiddleware } from "../types";
-import { createConduitCacheMiddleware } from "./conduit-cache-middleware";
+import type { ConduitMiddleware } from "../types/index.js";
+import { createConduitCacheMiddleware } from "./conduit-cache-middleware.js";
 import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");

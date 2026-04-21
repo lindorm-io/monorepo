@@ -1,7 +1,7 @@
 import { mkdtemp, readFile, rm } from "fs/promises";
 import { tmpdir } from "os";
 import { join } from "path";
-import { writeMigrationFile } from "./write-migration-file";
+import { writeMigrationFile } from "./write-migration-file.js";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 let dir: string;

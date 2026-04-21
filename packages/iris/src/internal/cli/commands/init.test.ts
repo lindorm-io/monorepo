@@ -1,7 +1,7 @@
 import { resolve, join } from "path";
 import { mkdir as _mkdir, writeFile as _writeFile } from "fs/promises";
 import { Logger as _Logger } from "@lindorm/logger";
-import { init } from "./init";
+import { init } from "./init.js";
 import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 vi.mock("fs/promises", async () => ({
@@ -156,7 +156,7 @@ describe("init", () => {
     vi.doMock("@inquirer/prompts", () => ({ select: mockSelect }));
 
     vi.resetModules();
-    const { init: freshInit } = await import("./init");
+    const { init: freshInit } = await import("./init.js");
 
     vi.doMock("fs/promises", () => ({
       mkdir: vi.fn().mockResolvedValue(undefined),

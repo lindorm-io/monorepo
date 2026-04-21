@@ -1,17 +1,21 @@
 import type { Predicate } from "@lindorm/types";
-import type { IEntity, IDeleteQueryBuilder, WriteResult } from "../../../../interfaces";
-import type { EntityMetadata } from "../../../entity/types/metadata";
-import type { PredicateEntry } from "../../../types/query";
-import { ProteusError } from "../../../../errors/ProteusError";
-import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError";
-import type { PostgresQueryClient } from "../types/postgres-query-client";
-import { quoteIdentifier, quoteQualifiedName } from "../utils/quote-identifier";
-import { compileWhere } from "../utils/query/compile-where";
-import { hydrateReturning } from "../utils/query/hydrate-returning";
+import type {
+  IEntity,
+  IDeleteQueryBuilder,
+  WriteResult,
+} from "../../../../interfaces/index.js";
+import type { EntityMetadata } from "../../../entity/types/metadata.js";
+import type { PredicateEntry } from "../../../types/query.js";
+import { ProteusError } from "../../../../errors/ProteusError.js";
+import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError.js";
+import type { PostgresQueryClient } from "../types/postgres-query-client.js";
+import { quoteIdentifier, quoteQualifiedName } from "../utils/quote-identifier.js";
+import { compileWhere } from "../utils/query/compile-where.js";
+import { hydrateReturning } from "../utils/query/hydrate-returning.js";
 import {
   buildDiscriminatorPredicate,
   resolveTableName,
-} from "../utils/query/resolve-table-name";
+} from "../utils/query/resolve-table-name.js";
 
 export class PostgresDeleteQueryBuilder<
   E extends IEntity,

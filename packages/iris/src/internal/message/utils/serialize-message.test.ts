@@ -1,5 +1,5 @@
-import type { MessageMetadata } from "../types/metadata";
-import { serializeMessage } from "./serialize-message";
+import type { MessageMetadata } from "../types/metadata.js";
+import { serializeMessage } from "./serialize-message.js";
 import { describe, expect, it } from "vitest";
 
 const baseMetadata: MessageMetadata = {

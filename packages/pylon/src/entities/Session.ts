@@ -6,8 +6,8 @@ import {
   Nullable,
   PrimaryKeyField,
 } from "@lindorm/proteus";
-import { OpenIdScope } from "@lindorm/types";
-import { IPylonSession } from "../interfaces";
+import type { OpenIdScope } from "@lindorm/types";
+import type { IPylonSession } from "../interfaces/index.js";
 
 @Namespace("pylon")
 @Entity()

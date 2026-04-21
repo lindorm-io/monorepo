@@ -1,5 +1,5 @@
-import { TEST_FIXTURES } from "../__fixtures__/test-fixtures";
-import { isBoolean } from "./is-boolean";
+import { TEST_FIXTURES } from "../__fixtures__/test-fixtures.js";
+import { isBoolean } from "./is-boolean.js";
 import { describe, expect, test } from "vitest";
 
 describe("isBoolean", () => {

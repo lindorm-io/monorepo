@@ -1,7 +1,7 @@
-import { ProteusError } from "../../../../errors";
-import { makeField } from "../../../__fixtures__/make-field";
-import type { EntityMetadata } from "../../../entity/types/metadata";
-import { PostgresUpdateQueryBuilder } from "./PostgresUpdateQueryBuilder";
+import { ProteusError } from "../../../../errors/index.js";
+import { makeField } from "../../../__fixtures__/make-field.js";
+import type { EntityMetadata } from "../../../entity/types/metadata.js";
+import { PostgresUpdateQueryBuilder } from "./PostgresUpdateQueryBuilder.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 const metadata = {

@@ -1,7 +1,7 @@
 import { JsonKit } from "@lindorm/json-kit";
-import type { MessageMetadata } from "../types/metadata";
-import { prepareInbound } from "./prepare-inbound";
-import { prepareOutbound } from "./prepare-outbound";
+import type { MessageMetadata } from "../types/metadata.js";
+import { prepareInbound } from "./prepare-inbound.js";
+import { prepareOutbound } from "./prepare-outbound.js";
 import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 const mockEncrypt = vi.fn();

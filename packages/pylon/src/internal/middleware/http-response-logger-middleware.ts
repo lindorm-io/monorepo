@@ -1,5 +1,5 @@
 import { Stream } from "stream";
-import { PylonHttpMiddleware } from "../../types";
+import type { PylonHttpMiddleware } from "../../types/index.js";
 
 export const httpResponseLoggerMiddleware: PylonHttpMiddleware = async (ctx, next) => {
   try {

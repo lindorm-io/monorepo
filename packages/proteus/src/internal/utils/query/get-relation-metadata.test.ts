@@ -1,6 +1,6 @@
-import { makeField } from "../../__fixtures__/make-field";
-import type { EntityMetadata, MetaRelation } from "../../entity/types/metadata";
-import { ProteusError } from "../../../errors";
+import { makeField } from "../../__fixtures__/make-field.js";
+import type { EntityMetadata, MetaRelation } from "../../entity/types/metadata.js";
+import { ProteusError } from "../../../errors/index.js";
 import {
   beforeEach,
   describe,
@@ -12,12 +12,12 @@ import {
 } from "vitest";
 
 // Mock getEntityMetadata so we don't need a real decorator-decorated class
-vi.mock("../../entity/metadata/get-entity-metadata", () => ({
+vi.mock("../../entity/metadata/get-entity-metadata.js", () => ({
   getEntityMetadata: vi.fn(),
 }));
 
-import { getEntityMetadata } from "../../entity/metadata/get-entity-metadata";
-import { findRelationByKey, getRelationMetadata } from "./get-relation-metadata";
+import { getEntityMetadata } from "../../entity/metadata/get-entity-metadata.js";
+import { findRelationByKey, getRelationMetadata } from "./get-relation-metadata.js";
 
 const mockGetEntityMetadata = getEntityMetadata as MockedFunction<
   typeof getEntityMetadata

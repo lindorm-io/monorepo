@@ -1,7 +1,7 @@
-import { buildMessageMetadata } from "../internal/message/metadata/build-message-metadata";
-import { Field } from "./Field";
-import { Message } from "./Message";
-import { Nullable } from "./Nullable";
+import { buildMessageMetadata } from "../internal/message/metadata/build-message-metadata.js";
+import { Field } from "./Field.js";
+import { Message } from "./Message.js";
+import { Nullable } from "./Nullable.js";
 import { describe, expect, it } from "vitest";
 
 describe("Nullable", () => {

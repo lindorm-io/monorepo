@@ -1,5 +1,5 @@
 import { ServerError } from "@lindorm/errors";
-import { resolveProteus } from "./resolve-proteus";
+import { resolveProteus } from "./resolve-proteus.js";
 import { describe, expect, test, vi } from "vitest";
 
 describe("resolveProteus", () => {

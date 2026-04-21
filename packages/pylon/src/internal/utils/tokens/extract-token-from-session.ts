@@ -1,5 +1,5 @@
-import { AegisError, IAegis, isParsedJwt, ParsedJwt } from "@lindorm/aegis";
-import { IPylonSession } from "../../../interfaces";
+import { AegisError, type IAegis, isParsedJwt, type ParsedJwt } from "@lindorm/aegis";
+import type { IPylonSession } from "../../../interfaces/index.js";
 
 export const extractTokenFromSession = async (
   aegis: IAegis,

@@ -1,8 +1,8 @@
-import { isArray } from "./is-array";
-import { isNull } from "./is-null";
-import { isObject } from "./is-object";
-import { isString } from "./is-string";
-import { isUndefined } from "./is-undefined";
+import { isArray } from "./is-array.js";
+import { isNull } from "./is-null.js";
+import { isObject } from "./is-object.js";
+import { isString } from "./is-string.js";
+import { isUndefined } from "./is-undefined.js";
 
 export const isEmpty = (input: any): boolean => {
   if (isNull(input) || isUndefined(input)) {

@@ -1,9 +1,9 @@
-import { collectAll, collectOwn, collectSingular } from "./collect";
-import { Entity } from "../../../decorators/Entity";
-import { Field } from "../../../decorators/Field";
-import { Namespace } from "../../../decorators/Namespace";
-import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField";
-import { VersionField } from "../../../decorators/VersionField";
+import { collectAll, collectOwn, collectSingular } from "./collect.js";
+import { Entity } from "../../../decorators/Entity.js";
+import { Field } from "../../../decorators/Field.js";
+import { Namespace } from "../../../decorators/Namespace.js";
+import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField.js";
+import { VersionField } from "../../../decorators/VersionField.js";
 import { describe, expect, test } from "vitest";
 
 // ─────────────────────────────────────────────────────────────────────────────

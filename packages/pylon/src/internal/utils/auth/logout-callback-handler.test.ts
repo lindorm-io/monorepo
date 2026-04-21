@@ -1,5 +1,5 @@
 import { ClientError } from "@lindorm/errors";
-import { createLogoutCallbackHandler } from "./logout-callback-handler";
+import { createLogoutCallbackHandler } from "./logout-callback-handler.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("createLoginHandler", () => {

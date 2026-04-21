@@ -1,5 +1,5 @@
-import type { EntityMetadata, MetaField } from "../../../entity/types/metadata";
-import { compileFilter } from "./compile-filter";
+import type { EntityMetadata, MetaField } from "../../../entity/types/metadata.js";
+import { compileFilter } from "./compile-filter.js";
 import { describe, expect, test } from "vitest";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

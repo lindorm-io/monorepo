@@ -1,6 +1,6 @@
 import { isString } from "@lindorm/is";
-import { IPylonSession } from "../../../interfaces";
-import { PylonSocket } from "../../../types";
+import type { IPylonSession } from "../../../interfaces/index.js";
+import type { PylonSocket } from "../../../types/index.js";
 
 export type HandshakeTokenSource =
   | { kind: "bearer"; token: string; dpopProof: undefined }

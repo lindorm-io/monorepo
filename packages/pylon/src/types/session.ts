@@ -1,5 +1,5 @@
-import { IPylonSession } from "../interfaces";
-import { PylonSetCookie } from "./cookies";
+import type { IPylonSession } from "../interfaces/index.js";
+import type { PylonSetCookie } from "./cookies.js";
 
 export type PylonSessionOnContext = {
   set(session: IPylonSession): Promise<void>;

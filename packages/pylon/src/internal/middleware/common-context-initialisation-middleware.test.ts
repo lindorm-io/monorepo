@@ -1,6 +1,6 @@
 import { Aegis } from "@lindorm/aegis";
 import { Conduit } from "@lindorm/conduit";
-import { createCommonContextInitialisationMiddleware } from "./common-context-initialisation-middleware";
+import { createCommonContextInitialisationMiddleware } from "./common-context-initialisation-middleware.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 vi.mock("@lindorm/aegis");

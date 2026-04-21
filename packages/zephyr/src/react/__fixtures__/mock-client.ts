@@ -1,4 +1,4 @@
-import type { IZephyr } from "../../interfaces/Zephyr";
+import type { IZephyr } from "../../interfaces/Zephyr.js";
 import { vi, type Mocked } from "vitest";
 
 export const createMockClient = (): Mocked<IZephyr> => ({

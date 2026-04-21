@@ -1,4 +1,4 @@
-import {
+import type {
   ClientCredentialsAuthLocation,
   ClientCredentialsContentType,
 } from "@lindorm/conduit";
@@ -14,9 +14,9 @@ import {
   UpdateDateField,
   VersionField,
 } from "@lindorm/proteus";
-import { Dict } from "@lindorm/types";
-import { WebhookAuth, WebhookMethod } from "../enums";
-import { IWebhookSubscription } from "../interfaces";
+import type { Dict } from "@lindorm/types";
+import { WebhookAuth, WebhookMethod } from "../enums/index.js";
+import type { IWebhookSubscription } from "../interfaces/index.js";
 
 @Namespace("pylon")
 @Entity()

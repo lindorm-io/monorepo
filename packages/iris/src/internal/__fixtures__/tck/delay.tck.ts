@@ -1,9 +1,9 @@
 // TCK: Delay Suite
 // Tests delayed publish with REAL timers.
 
-import type { TckDriverHandle } from "./types";
-import type { TckMessages } from "./create-tck-messages";
-import { wait, waitFor } from "./wait";
+import type { TckDriverHandle } from "./types.js";
+import type { TckMessages } from "./create-tck-messages.js";
+import { wait, waitFor } from "./wait.js";
 import { beforeEach, describe, expect, test } from "vitest";
 
 export const delaySuite = (

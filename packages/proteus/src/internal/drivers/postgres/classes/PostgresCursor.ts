@@ -1,16 +1,16 @@
 import Cursor from "pg-cursor";
 import type { Dict } from "@lindorm/types";
 import type { PoolClient } from "pg";
-import type { IEntity, IProteusCursor } from "../../../../interfaces";
-import type { EntityMetadata } from "../../../entity/types/metadata";
-import type { AliasMap } from "../utils/query/compile-select";
-import { PostgresDriverError } from "../errors/PostgresDriverError";
-import { hydrateRows } from "../utils/query/hydrate-result";
+import type { IEntity, IProteusCursor } from "../../../../interfaces/index.js";
+import type { EntityMetadata } from "../../../entity/types/metadata.js";
+import type { AliasMap } from "../utils/query/compile-select.js";
+import { PostgresDriverError } from "../errors/PostgresDriverError.js";
+import { hydrateRows } from "../utils/query/hydrate-result.js";
 import {
   loadEmbeddedListRows,
   loadEmbeddedListRowsBatch,
-} from "../utils/repository/embedded-list-ops";
-import { installLazyEmbeddedLists } from "../../../entity/utils/install-lazy-embedded-lists";
+} from "../utils/repository/embedded-list-ops.js";
+import { installLazyEmbeddedLists } from "../../../entity/utils/install-lazy-embedded-lists.js";
 
 export type PostgresCursorOptions = {
   sql: string;

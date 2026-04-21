@@ -1,9 +1,9 @@
-import type { IMessage } from "../../../../interfaces";
-import type { MessageMetadata } from "../../../message/types/metadata";
-import type { OutboundPayload } from "../../../message/utils/prepare-outbound";
-import type { RabbitSharedState } from "../types/rabbit-types";
-import { IrisPublishError } from "../../../../errors/IrisPublishError";
-import { publishRabbitMessages, type RabbitPublishDriver } from "./publish-messages";
+import type { IMessage } from "../../../../interfaces/index.js";
+import type { MessageMetadata } from "../../../message/types/metadata.js";
+import type { OutboundPayload } from "../../../message/utils/prepare-outbound.js";
+import type { RabbitSharedState } from "../types/rabbit-types.js";
+import { IrisPublishError } from "../../../../errors/IrisPublishError.js";
+import { publishRabbitMessages, type RabbitPublishDriver } from "./publish-messages.js";
 import { describe, expect, it, vi, type Mock } from "vitest";
 
 const createMockLogger = () => ({

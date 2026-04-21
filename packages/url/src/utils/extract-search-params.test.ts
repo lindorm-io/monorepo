@@ -1,4 +1,4 @@
-import { extractSearchParams } from "./extract-search-params";
+import { extractSearchParams } from "./extract-search-params.js";
 import { describe, expect, test } from "vitest";
 
 describe("extractSearchParams", () => {

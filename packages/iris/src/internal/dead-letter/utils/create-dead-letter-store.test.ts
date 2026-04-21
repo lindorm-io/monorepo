@@ -1,7 +1,7 @@
-import type { IDeadLetterStore } from "../../../interfaces/IrisDeadLetterStore";
-import { MemoryDeadLetterStore } from "../MemoryDeadLetterStore";
-import { RedisDeadLetterStore } from "../RedisDeadLetterStore";
-import { createDeadLetterStore } from "./create-dead-letter-store";
+import type { IDeadLetterStore } from "../../../interfaces/IrisDeadLetterStore.js";
+import { MemoryDeadLetterStore } from "../MemoryDeadLetterStore.js";
+import { RedisDeadLetterStore } from "../RedisDeadLetterStore.js";
+import { createDeadLetterStore } from "./create-dead-letter-store.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockPing = vi.fn().mockResolvedValue("PONG");

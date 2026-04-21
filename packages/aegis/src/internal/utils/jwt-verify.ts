@@ -1,9 +1,9 @@
 import { addSeconds, subSeconds } from "@lindorm/date";
 import { isArray, isNumber, isObject, isString } from "@lindorm/is";
-import { KryptosAlgorithm } from "@lindorm/kryptos";
-import { Dict, Predicate, PredicateOperator } from "@lindorm/types";
-import { JwtClaims, VerifyJwtOptions } from "../../types";
-import { createAccessTokenHash, createCodeHash, createStateHash } from "./create-hash";
+import type { KryptosAlgorithm } from "@lindorm/kryptos";
+import type { Dict, Predicate, PredicateOperator } from "@lindorm/types";
+import type { JwtClaims, VerifyJwtOptions } from "../../types/index.js";
+import { createAccessTokenHash, createCodeHash, createStateHash } from "./create-hash.js";
 
 const mapVerify = (key: keyof VerifyJwtOptions): keyof JwtClaims => {
   switch (key) {

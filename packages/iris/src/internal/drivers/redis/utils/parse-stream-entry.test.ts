@@ -1,4 +1,4 @@
-import { parseStreamEntry } from "./parse-stream-entry";
+import { parseStreamEntry } from "./parse-stream-entry.js";
 import { describe, expect, it } from "vitest";
 
 const createFields = (overrides: Record<string, string> = {}): Array<string> => {

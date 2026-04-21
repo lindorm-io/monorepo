@@ -6,7 +6,7 @@ import type {
   RestoreEvent,
   SoftDestroyEvent,
   UpdateEvent,
-} from "../interfaces/EntityEvent";
+} from "../interfaces/EntityEvent.js";
 
 // ─── Connection ──────────────────────────────────────────────────────────
 

@@ -1,4 +1,4 @@
-import { findEncryptionKey, insertEncryptionKey } from "./encryption-store";
+import { findEncryptionKey, insertEncryptionKey } from "./encryption-store.js";
 import { describe, expect, it, vi } from "vitest";
 
 const createMockRepo = () => ({

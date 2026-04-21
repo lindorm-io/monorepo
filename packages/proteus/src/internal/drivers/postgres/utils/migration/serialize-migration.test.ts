@@ -1,7 +1,7 @@
 import { randomUUID } from "crypto";
-import type { DbSnapshot } from "../../types/db-snapshot";
-import type { SyncOperation, SyncPlan } from "../../types/sync-plan";
-import { serializeMigration } from "./serialize-migration";
+import type { DbSnapshot } from "../../types/db-snapshot.js";
+import type { SyncOperation, SyncPlan } from "../../types/sync-plan.js";
+import { serializeMigration } from "./serialize-migration.js";
 import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 vi.mock("crypto", async () => ({

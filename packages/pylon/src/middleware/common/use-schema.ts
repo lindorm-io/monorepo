@@ -1,9 +1,9 @@
-import { isHttpContext } from "../../internal/utils/is-context";
+import { isHttpContext } from "../../internal/utils/is-context.js";
 import { ClientError, ServerError } from "@lindorm/errors";
-import { Dict } from "@lindorm/types";
+import type { Dict } from "@lindorm/types";
 import { get, set } from "object-path";
-import { ZodObject, ZodRawShape } from "zod";
-import { PylonHttpContext, PylonMiddleware } from "../../types";
+import { ZodObject, type ZodRawShape } from "zod";
+import type { PylonHttpContext, PylonMiddleware } from "../../types/index.js";
 
 type Path = "data" | "body" | "headers" | "params" | "query" | string;
 

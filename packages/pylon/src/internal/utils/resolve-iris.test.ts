@@ -1,5 +1,5 @@
 import { ServerError } from "@lindorm/errors";
-import { resolveIris } from "./resolve-iris";
+import { resolveIris } from "./resolve-iris.js";
 import { describe, expect, test, vi } from "vitest";
 
 describe("resolveIris", () => {

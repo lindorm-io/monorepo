@@ -1,6 +1,10 @@
-import { EC_SIG_ALGORITHMS, EcSigAlgorithm, IKryptosEc } from "@lindorm/kryptos";
-import { ShaAlgorithm } from "@lindorm/types";
-import { EcError } from "../errors";
+import {
+  EC_SIG_ALGORITHMS,
+  type EcSigAlgorithm,
+  type IKryptosEc,
+} from "@lindorm/kryptos";
+import type { ShaAlgorithm } from "@lindorm/types";
+import { EcError } from "../errors/index.js";
 
 const EC_SIG_ALGORITHM_MAP: Record<EcSigAlgorithm, ShaAlgorithm> = {
   ES256: "SHA256",

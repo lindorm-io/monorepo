@@ -1,12 +1,12 @@
 import { AesKit } from "@lindorm/aes";
 import { B64 } from "@lindorm/b64";
 import { isString } from "@lindorm/is";
-import { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
-import { ILogger } from "@lindorm/logger";
-import { B64U } from "../internal/constants/format";
-import { JweError } from "../errors";
-import { IJweKit } from "../interfaces";
-import {
+import type { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
+import type { ILogger } from "@lindorm/logger";
+import { B64U } from "../internal/constants/format.js";
+import { JweError } from "../errors/index.js";
+import type { IJweKit } from "../interfaces/index.js";
+import type {
   CertBindingMode,
   DecodedJwe,
   DecryptedJwe,
@@ -15,18 +15,18 @@ import {
   JweEncryptOptions,
   JweKitOptions,
   TokenHeaderOptions,
-} from "../types";
+} from "../types/index.js";
 import {
   computeTypHeader,
   decodeTokenTypeFromTyp,
-} from "../internal/utils/compute-typ-header";
-import { decodeJoseHeader, encodeJoseHeader } from "../internal/utils/jose-header";
-import { parseTokenHeader } from "../internal/utils/token-header";
-import { resolveCertBinding } from "../internal/utils/resolve-cert-binding";
-import { verifyCertBinding } from "../internal/utils/verify-cert-binding";
-import { validateCrit } from "../internal/utils/validate-crit";
-import { JwsKit } from "./JwsKit";
-import { JwtKit } from "./JwtKit";
+} from "../internal/utils/compute-typ-header.js";
+import { decodeJoseHeader, encodeJoseHeader } from "../internal/utils/jose-header.js";
+import { parseTokenHeader } from "../internal/utils/token-header.js";
+import { resolveCertBinding } from "../internal/utils/resolve-cert-binding.js";
+import { verifyCertBinding } from "../internal/utils/verify-cert-binding.js";
+import { validateCrit } from "../internal/utils/validate-crit.js";
+import { JwsKit } from "./JwsKit.js";
+import { JwtKit } from "./JwtKit.js";
 
 export class JweKit implements IJweKit {
   private readonly certBindingMode: CertBindingMode;

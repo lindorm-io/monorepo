@@ -1,5 +1,5 @@
 import type { Constructor } from "@lindorm/types";
-import { stageUpcaster } from "../internal/metadata";
+import { stageUpcaster } from "../internal/metadata/index.js";
 
 export const EventUpcaster = <From, To>(from: Constructor<From>, to: Constructor<To>) => {
   return <This>(

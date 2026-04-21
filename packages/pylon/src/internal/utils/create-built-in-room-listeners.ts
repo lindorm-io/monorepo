@@ -1,6 +1,6 @@
-import { PylonListener } from "../../classes";
-import { EventSegment } from "../classes/EventMatcher";
-import { PylonSocketContext, PylonSocketMiddleware } from "../../types";
+import { PylonListener } from "../../classes/index.js";
+import type { EventSegment } from "../classes/EventMatcher.js";
+import type { PylonSocketContext, PylonSocketMiddleware } from "../../types/index.js";
 
 const JOIN_SEGMENTS: Array<EventSegment> = [
   { type: "literal", value: "rooms" },

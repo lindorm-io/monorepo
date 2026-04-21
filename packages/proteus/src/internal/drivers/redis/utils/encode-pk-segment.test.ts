@@ -1,4 +1,4 @@
-import { encodePkSegment } from "./encode-pk-segment";
+import { encodePkSegment } from "./encode-pk-segment.js";
 import { describe, expect, test } from "vitest";
 
 describe("encodePkSegment", () => {

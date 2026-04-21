@@ -1,4 +1,4 @@
-import { Dict } from "@lindorm/types";
+import type { Dict } from "@lindorm/types";
 import { z } from "zod";
 
 export const coerceAll = <T extends z.ZodType>(schema: T): T => {

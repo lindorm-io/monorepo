@@ -1,5 +1,5 @@
 import { AegisError } from "@lindorm/aegis";
-import { extractTokenFromSession } from "./extract-token-from-session";
+import { extractTokenFromSession } from "./extract-token-from-session.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 const session = {

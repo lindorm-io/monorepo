@@ -1,7 +1,10 @@
-import type { IProteusQueryBuilder, IProteusRepository } from "../../../../interfaces";
-import type { RedisTransactionHandle } from "../types/redis-types";
-import { RedisDriverError } from "../errors/RedisDriverError";
-import { RedisTransactionContext } from "./RedisTransactionContext";
+import type {
+  IProteusQueryBuilder,
+  IProteusRepository,
+} from "../../../../interfaces/index.js";
+import type { RedisTransactionHandle } from "../types/redis-types.js";
+import { RedisDriverError } from "../errors/RedisDriverError.js";
+import { RedisTransactionContext } from "./RedisTransactionContext.js";
 import { describe, expect, test, vi } from "vitest";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

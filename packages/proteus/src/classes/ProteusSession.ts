@@ -6,18 +6,22 @@ import type {
   IProteusRepository,
   IProteusSession,
   IProteusSource,
-} from "../interfaces";
-import type { ICacheAdapter } from "../interfaces/CacheAdapter";
-import type { EntityEmitFn, TransactionCallback, TransactionOptions } from "../types";
-import { CachingRepository } from "../internal/classes/CachingRepository";
-import type { MetadataResolver } from "../internal/interfaces/ProteusDriver";
-import type { IProteusDriver } from "../internal/interfaces/ProteusDriver";
-import type { FilterRegistry } from "../internal/utils/query/filter-registry";
+} from "../interfaces/index.js";
+import type { ICacheAdapter } from "../interfaces/CacheAdapter.js";
+import type {
+  EntityEmitFn,
+  TransactionCallback,
+  TransactionOptions,
+} from "../types/index.js";
+import { CachingRepository } from "../internal/classes/CachingRepository.js";
+import type { MetadataResolver } from "../internal/interfaces/ProteusDriver.js";
+import type { IProteusDriver } from "../internal/interfaces/ProteusDriver.js";
+import type { FilterRegistry } from "../internal/utils/query/filter-registry.js";
 import {
   setFilterParams as setFilterParamsUtil,
   enableFilter as enableFilterUtil,
   disableFilter as disableFilterUtil,
-} from "../internal/utils/query/filter-registry";
+} from "../internal/utils/query/filter-registry.js";
 
 export type ProteusSessionOptions<C = unknown> = {
   source: IProteusSource<C>;

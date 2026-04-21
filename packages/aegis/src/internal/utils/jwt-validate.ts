@@ -1,7 +1,7 @@
 import { isArray, isNumber, isObject, isString } from "@lindorm/is";
-import { Dict, Predicate, PredicateOperator } from "@lindorm/types";
-import { ValidateJwtOptions } from "../../types";
-import { createAccessTokenHash, createCodeHash, createStateHash } from "./create-hash";
+import type { Dict, Predicate, PredicateOperator } from "@lindorm/types";
+import type { ValidateJwtOptions } from "../../types/index.js";
+import { createAccessTokenHash, createCodeHash, createStateHash } from "./create-hash.js";
 
 export const createJwtValidate = (validate: ValidateJwtOptions): Predicate<Dict> => {
   const algorithm = validate.algorithm;

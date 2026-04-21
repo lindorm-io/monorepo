@@ -3,22 +3,22 @@ import {
   REPLACE_URL,
   RETRY_CONFIG,
   TIMEOUT,
-} from "../internal/constants/defaults";
-import { axiosRequestHandler } from "../internal/middleware/axios-request-handler";
-import { defaultHeaders } from "../internal/middleware/default-headers";
-import { requestLogger } from "../internal/middleware/request-logger";
-import { responseLogger } from "../internal/middleware/response-logger";
-import { defaultRetryCallback } from "../internal/utils/default-retry-callback";
-import { defaultValidateStatus } from "../internal/utils/default-validate-status";
-import { getOrigin } from "../internal/utils/get-origin";
-import { ILogger } from "@lindorm/logger";
+} from "../internal/constants/defaults.js";
+import { axiosRequestHandler } from "../internal/middleware/axios-request-handler.js";
+import { defaultHeaders } from "../internal/middleware/default-headers.js";
+import { requestLogger } from "../internal/middleware/request-logger.js";
+import { responseLogger } from "../internal/middleware/response-logger.js";
+import { defaultRetryCallback } from "../internal/utils/default-retry-callback.js";
+import { defaultValidateStatus } from "../internal/utils/default-validate-status.js";
+import { getOrigin } from "../internal/utils/get-origin.js";
+import type { ILogger } from "@lindorm/logger";
 import { composeMiddleware } from "@lindorm/middleware";
 import { randomUUID } from "@lindorm/random";
-import { RetryConfig } from "@lindorm/retry";
-import { Dict, HttpMethod } from "@lindorm/types";
+import type { RetryConfig } from "@lindorm/retry";
+import type { Dict, HttpMethod } from "@lindorm/types";
 import { extractSearchParams, getPlainUrl, getValidUrl } from "@lindorm/url";
-import { IConduit } from "../interfaces";
-import {
+import type { IConduit } from "../interfaces/index.js";
+import type {
   AppContext,
   ConduitContext,
   ConduitMiddleware,
@@ -29,7 +29,7 @@ import {
   RequestContext,
   RequestOptions,
   RetryCallback,
-} from "../types";
+} from "../types/index.js";
 
 export class Conduit implements IConduit {
   private readonly baseURL: URL | undefined;

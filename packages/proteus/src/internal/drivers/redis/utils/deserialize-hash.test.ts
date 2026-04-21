@@ -1,6 +1,6 @@
-import type { MetaField, MetaRelation } from "../../../entity/types/metadata";
-import { RedisDriverError } from "../errors/RedisDriverError";
-import { deserializeHash } from "./deserialize-hash";
+import type { MetaField, MetaRelation } from "../../../entity/types/metadata.js";
+import { RedisDriverError } from "../errors/RedisDriverError.js";
+import { deserializeHash } from "./deserialize-hash.js";
 import { describe, expect, test } from "vitest";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────

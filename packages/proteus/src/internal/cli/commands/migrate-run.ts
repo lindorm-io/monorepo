@@ -1,9 +1,9 @@
 import { resolve } from "path";
 import { Logger } from "@lindorm/logger";
-import { formatApplyResult } from "../output/format-migration-result";
-import type { GlobalOptions } from "../with-source";
-import { withSource } from "../with-source";
-import { withMigrationManager } from "../with-migration-manager";
+import { formatApplyResult } from "../output/format-migration-result.js";
+import type { GlobalOptions } from "../with-source.js";
+import { withSource } from "../with-source.js";
+import { withMigrationManager } from "../with-migration-manager.js";
 
 type RunOptions = GlobalOptions & {
   directory?: string;

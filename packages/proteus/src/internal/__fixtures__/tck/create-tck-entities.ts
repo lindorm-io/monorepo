@@ -50,7 +50,7 @@ import {
   VersionKeyField,
   VersionStartDateField,
   VersionEndDateField,
-} from "../../../decorators";
+} from "../../../decorators/index.js";
 
 export type TckEntities = ReturnType<typeof createTckEntities>;
 

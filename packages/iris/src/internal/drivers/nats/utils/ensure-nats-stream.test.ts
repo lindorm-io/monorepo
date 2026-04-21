@@ -1,4 +1,4 @@
-import { ensureNatsStream } from "./ensure-nats-stream";
+import { ensureNatsStream } from "./ensure-nats-stream.js";
 import { describe, expect, it, vi } from "vitest";
 
 const createMockLogger = () => ({

@@ -1,5 +1,5 @@
-import { ProteusError } from "../../../../errors";
-import type { MetaField } from "../../../entity/types/metadata";
+import { ProteusError } from "../../../../errors/index.js";
+import type { MetaField } from "../../../entity/types/metadata.js";
 
 /**
  * Maps a metadata field to its SQLite type affinity string.

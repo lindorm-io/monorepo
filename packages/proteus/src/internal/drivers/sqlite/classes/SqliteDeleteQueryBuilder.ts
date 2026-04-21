@@ -1,15 +1,19 @@
 import type { Predicate } from "@lindorm/types";
-import type { IEntity, IDeleteQueryBuilder, WriteResult } from "../../../../interfaces";
-import type { EntityMetadata } from "../../../entity/types/metadata";
-import type { PredicateEntry } from "../../../types/query";
-import { ProteusError } from "../../../../errors/ProteusError";
-import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError";
-import type { SqliteQueryClient } from "../types/sqlite-query-client";
-import { quoteIdentifier } from "../utils/quote-identifier";
-import { buildDiscriminatorPredicateUnqualified } from "../utils/query/compile-helpers";
-import { compileWhere } from "../utils/query/compile-where";
-import { hydrateReturning } from "../utils/query/hydrate-returning";
-import { resolveTableName } from "../utils/query/resolve-table-name";
+import type {
+  IEntity,
+  IDeleteQueryBuilder,
+  WriteResult,
+} from "../../../../interfaces/index.js";
+import type { EntityMetadata } from "../../../entity/types/metadata.js";
+import type { PredicateEntry } from "../../../types/query.js";
+import { ProteusError } from "../../../../errors/ProteusError.js";
+import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError.js";
+import type { SqliteQueryClient } from "../types/sqlite-query-client.js";
+import { quoteIdentifier } from "../utils/quote-identifier.js";
+import { buildDiscriminatorPredicateUnqualified } from "../utils/query/compile-helpers.js";
+import { compileWhere } from "../utils/query/compile-where.js";
+import { hydrateReturning } from "../utils/query/hydrate-returning.js";
+import { resolveTableName } from "../utils/query/resolve-table-name.js";
 
 export class SqliteDeleteQueryBuilder<
   E extends IEntity,

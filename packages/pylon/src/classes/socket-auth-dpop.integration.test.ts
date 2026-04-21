@@ -1,8 +1,8 @@
-import { Aegis, IAegis } from "@lindorm/aegis";
-import { Amphora, IAmphora } from "@lindorm/amphora";
+import { Aegis, type IAegis } from "@lindorm/aegis";
+import { Amphora, type IAmphora } from "@lindorm/amphora";
 import { KryptosKit } from "@lindorm/kryptos";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
-import { ILogger } from "@lindorm/logger";
+import type { ILogger } from "@lindorm/logger";
 import {
   createBearerAuthStrategy,
   createDpopBearerAuthStrategy,
@@ -12,14 +12,14 @@ import { webcrypto } from "crypto";
 import { join } from "path";
 import type { Socket } from "socket.io-client";
 import request from "supertest";
-import { mintTestAccessToken } from "../__fixtures__/socket-auth/mint-test-access-token";
+import { mintTestAccessToken } from "../__fixtures__/socket-auth/mint-test-access-token.js";
 import {
   SOCKET_AUTH_TEST_ISSUER,
   SOCKET_AUTH_TEST_KEY_ID,
-} from "../__fixtures__/socket-auth/shared";
-import { reconstructHandshakeHtu } from "../internal/utils/handshake/reconstruct-handshake-htu";
-import { createHandshakeTokenMiddleware } from "../middleware/common/create-handshake-token-middleware";
-import { Pylon } from "./Pylon";
+} from "../__fixtures__/socket-auth/shared.js";
+import { reconstructHandshakeHtu } from "../internal/utils/handshake/reconstruct-handshake-htu.js";
+import { createHandshakeTokenMiddleware } from "../middleware/common/create-handshake-token-middleware.js";
+import { Pylon } from "./Pylon.js";
 import { afterAll, beforeAll, describe, expect, test, vi } from "vitest";
 
 // Phase 9b — DPoP end-to-end integration tests. Phase 9c (session/cookie) runs

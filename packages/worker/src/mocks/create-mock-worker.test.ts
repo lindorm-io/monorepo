@@ -1,4 +1,4 @@
-import { createMockWorker } from "./vitest";
+import { createMockWorker } from "./vitest.js";
 import { describe, expect, test, vi } from "vitest";
 
 describe("createMockWorker", () => {

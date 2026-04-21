@@ -1,7 +1,7 @@
 import { checkbox, confirm, input, select } from "@inquirer/prompts";
 import { existsSync, readdirSync, rmSync } from "fs";
 import { resolve } from "path";
-import type { Answers, Features, IrisDriver, ProteusDriver, WorkerKey } from "./types";
+import type { Answers, Features, IrisDriver, ProteusDriver, WorkerKey } from "./types.js";
 
 type RunPromptsInput = {
   positionalName?: string;

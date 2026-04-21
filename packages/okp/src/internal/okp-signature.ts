@@ -1,8 +1,11 @@
 import { isString } from "@lindorm/is";
 import { sign, verify } from "crypto";
-import { OkpError } from "../errors";
-import { CreateOkpSignatureOptions, VerifyOkpSignatureOptions } from "../types/okp-kit";
-import { getSignKey, getVerifyKey } from "./get-key";
+import { OkpError } from "../errors/index.js";
+import type {
+  CreateOkpSignatureOptions,
+  VerifyOkpSignatureOptions,
+} from "../types/okp-kit.js";
+import { getSignKey, getVerifyKey } from "./get-key.js";
 
 export const createOkpSignature = ({
   data,

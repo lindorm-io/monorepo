@@ -1,7 +1,7 @@
 import { isObject, isObjectLike } from "@lindorm/is";
 import type { Constructor, Dict } from "@lindorm/types";
-import { IEntity } from "../../../interfaces";
-import { getEntityMetadata } from "../metadata/get-entity-metadata";
+import type { IEntity } from "../../../interfaces/index.js";
+import { getEntityMetadata } from "../metadata/get-entity-metadata.js";
 
 export const defaultCreateRaw = <E extends IEntity>(
   target: Constructor<E>,

@@ -4,11 +4,11 @@ import type {
   IProteusQueryBuilder,
   IProteusRepository,
   ITransactionContext,
-} from "../../../../interfaces";
-import type { RepositoryFactory } from "../../../types/repository-factory";
-import type { RedisTransactionHandle } from "../types/redis-types";
-import type { RedisDriver } from "./RedisDriver";
-import { RedisDriverError } from "../errors/RedisDriverError";
+} from "../../../../interfaces/index.js";
+import type { RepositoryFactory } from "../../../types/repository-factory.js";
+import type { RedisTransactionHandle } from "../types/redis-types.js";
+import type { RedisDriver } from "./RedisDriver.js";
+import { RedisDriverError } from "../errors/RedisDriverError.js";
 
 /**
  * No-op transaction context for Redis.

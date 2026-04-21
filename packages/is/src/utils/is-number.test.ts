@@ -1,5 +1,5 @@
-import { TEST_FIXTURES } from "../__fixtures__/test-fixtures";
-import { isNumber } from "./is-number";
+import { TEST_FIXTURES } from "../__fixtures__/test-fixtures.js";
+import { isNumber } from "./is-number.js";
 import { describe, expect, test } from "vitest";
 
 describe("isNumber", () => {

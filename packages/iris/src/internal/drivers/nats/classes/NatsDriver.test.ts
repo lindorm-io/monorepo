@@ -1,17 +1,17 @@
 import { connect as _connect } from "nats";
-import type { IMessage, IMessageSubscriber } from "../../../../interfaces";
-import type { IrisConnectionState } from "../../../../types";
-import { Field } from "../../../../decorators/Field";
-import { Message } from "../../../../decorators/Message";
-import { clearRegistry } from "../../../message/metadata/registry";
-import type { NatsSharedState } from "../types/nats-types";
-import { NatsDriver } from "./NatsDriver";
-import { NatsPublisher } from "./NatsPublisher";
-import { NatsMessageBus } from "./NatsMessageBus";
-import { NatsWorkerQueue } from "./NatsWorkerQueue";
-import { NatsStreamProcessor } from "./NatsStreamProcessor";
-import { NatsRpcClient } from "./NatsRpcClient";
-import { NatsRpcServer } from "./NatsRpcServer";
+import type { IMessage, IMessageSubscriber } from "../../../../interfaces/index.js";
+import type { IrisConnectionState } from "../../../../types/index.js";
+import { Field } from "../../../../decorators/Field.js";
+import { Message } from "../../../../decorators/Message.js";
+import { clearRegistry } from "../../../message/metadata/registry.js";
+import type { NatsSharedState } from "../types/nats-types.js";
+import { NatsDriver } from "./NatsDriver.js";
+import { NatsPublisher } from "./NatsPublisher.js";
+import { NatsMessageBus } from "./NatsMessageBus.js";
+import { NatsWorkerQueue } from "./NatsWorkerQueue.js";
+import { NatsStreamProcessor } from "./NatsStreamProcessor.js";
+import { NatsRpcClient } from "./NatsRpcClient.js";
+import { NatsRpcServer } from "./NatsRpcServer.js";
 import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 // --- Mock nats module ---

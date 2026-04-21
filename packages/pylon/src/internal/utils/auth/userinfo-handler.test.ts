@@ -1,5 +1,5 @@
 import { ClientError } from "@lindorm/errors";
-import { createUserinfoHandler } from "./userinfo-handler";
+import { createUserinfoHandler } from "./userinfo-handler.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("createUserinfoHandler", () => {

@@ -1,9 +1,9 @@
 import { ServerError } from "@lindorm/errors";
-import { Middleware } from "@lindorm/middleware";
-import { Dict } from "@lindorm/types";
-import { WebhookRequest } from "../../messages";
-import { PylonContext, PylonWebhookOptions } from "../../types";
-import { resolveIris } from "../utils/resolve-iris";
+import type { Middleware } from "@lindorm/middleware";
+import type { Dict } from "@lindorm/types";
+import { WebhookRequest } from "../../messages/index.js";
+import type { PylonContext, PylonWebhookOptions } from "../../types/index.js";
+import { resolveIris } from "../utils/resolve-iris.js";
 
 export const createWebhookMiddleware = <C extends PylonContext>(
   options?: PylonWebhookOptions,

@@ -1,5 +1,5 @@
-import { PylonCommonContext } from "../types";
-import { IPylonSession } from "./PylonSession";
+import type { PylonCommonContext } from "../types/index.js";
+import type { IPylonSession } from "./PylonSession.js";
 
 export interface IPylonSessionStore<C extends PylonCommonContext = PylonCommonContext> {
   set: (ctx: C, session: IPylonSession) => Promise<string>;

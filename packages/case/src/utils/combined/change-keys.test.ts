@@ -1,6 +1,6 @@
-import { TEST_ARRAY_WITH_OBJECTS, TEST_OBJECT } from "../../__fixtures__/objects";
-import { ChangeCase } from "../../types";
-import { changeKeys } from "./change-keys";
+import { TEST_ARRAY_WITH_OBJECTS, TEST_OBJECT } from "../../__fixtures__/objects.js";
+import type { ChangeCase } from "../../types/index.js";
+import { changeKeys } from "./change-keys.js";
 import { describe, expect, test } from "vitest";
 
 describe.each([

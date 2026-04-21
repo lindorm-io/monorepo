@@ -8,10 +8,10 @@ import {
   TEST_X509_OTHER_PRIVATE_KEY_B64,
   TEST_X509_OTHER_PUBLIC_KEY_B64,
   TEST_X509_ROOT_PEM,
-} from "../__fixtures__/x509";
-import { KryptosError } from "../errors";
-import { Kryptos } from "./Kryptos";
-import { KryptosKit } from "./KryptosKit";
+} from "../__fixtures__/x509.js";
+import { KryptosError } from "../errors/index.js";
+import { Kryptos } from "./Kryptos.js";
+import { KryptosKit } from "./KryptosKit.js";
 import { describe, expect, test, vi } from "vitest";
 
 MockDate.set(new Date("2025-06-15T12:00:00.000Z").toISOString());

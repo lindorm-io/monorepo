@@ -5,25 +5,25 @@ import { describe, expect, test, vi, type Mock } from "vitest";
  *         loadEmbeddedListRowsBatch, saveEmbeddedListRows
  */
 
-import type { MetaEmbeddedList } from "../../../../entity/types/metadata";
-import type { PostgresQueryClient } from "../../types/postgres-query-client";
-import { makeField } from "../../../../__fixtures__/make-field";
+import type { MetaEmbeddedList } from "../../../../entity/types/metadata.js";
+import type { PostgresQueryClient } from "../../types/postgres-query-client.js";
+import { makeField } from "../../../../__fixtures__/make-field.js";
 import {
   deleteEmbeddedListRows,
   insertEmbeddedListRows,
   loadEmbeddedListRows,
   loadEmbeddedListRowsBatch,
   saveEmbeddedListRows,
-} from "./embedded-list-ops";
+} from "./embedded-list-ops.js";
 
-vi.mock("../quote-identifier", async () => ({
+vi.mock("../quote-identifier.js", async () => ({
   quoteIdentifier: vi.fn((name: string) => `"${name}"`),
   quoteQualifiedName: vi.fn((namespace: string | null, name: string) =>
     namespace ? `"${namespace}"."${name}"` : `"${name}"`,
   ),
 }));
 
-vi.mock("../../../../entity/utils/deserialise", () => ({
+vi.mock("../../../../entity/utils/deserialise.js", () => ({
   deserialise: vi.fn((value: unknown) => value),
 }));
 

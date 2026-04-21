@@ -1,12 +1,12 @@
 import type { Predicate } from "@lindorm/types";
-import type { IEntity } from "../../../interfaces";
-import type { EntityMetadata } from "../../entity/types/metadata";
-import type { PredicateEntry } from "../../types/query";
-import { getEntityMetadata } from "../../entity/metadata/get-entity-metadata";
-import { getEntityName } from "../../entity/utils/get-entity-name";
-import type { CompiledSql } from "./compiled-sql";
-import { compileWhere } from "./compile-where";
-import type { SqlDialect } from "./sql-dialect";
+import type { IEntity } from "../../../interfaces/index.js";
+import type { EntityMetadata } from "../../entity/types/metadata.js";
+import type { PredicateEntry } from "../../types/query.js";
+import { getEntityMetadata } from "../../entity/metadata/get-entity-metadata.js";
+import { getEntityName } from "../../entity/utils/get-entity-name.js";
+import type { CompiledSql } from "./compiled-sql.js";
+import { compileWhere } from "./compile-where.js";
+import type { SqlDialect } from "./sql-dialect.js";
 
 /**
  * Compiles a DELETE statement for the child table of a joined inheritance entity.

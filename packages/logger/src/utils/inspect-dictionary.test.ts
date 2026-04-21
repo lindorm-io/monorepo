@@ -1,4 +1,4 @@
-import { inspectDictionary } from "./inspect-dictionary";
+import { inspectDictionary } from "./inspect-dictionary.js";
 import { describe, expect, test } from "vitest";
 
 describe("inspectDictionary", () => {

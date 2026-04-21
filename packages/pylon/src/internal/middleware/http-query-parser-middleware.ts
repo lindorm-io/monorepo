@@ -1,7 +1,7 @@
 import { changeKeys } from "@lindorm/case";
 import { isObject } from "@lindorm/is";
 import { parseStringRecord } from "@lindorm/utils";
-import { PylonHttpMiddleware } from "../../types";
+import type { PylonHttpMiddleware } from "../../types/index.js";
 
 export const httpQueryParserMiddleware: PylonHttpMiddleware = async (ctx, next) => {
   if (!isObject(ctx.query)) {

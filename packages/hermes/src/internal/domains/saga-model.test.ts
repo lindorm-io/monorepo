@@ -2,7 +2,7 @@ import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import {
   TestAggregate,
   TestForgettableAggregate,
-} from "../../__fixtures__/modules/aggregates";
+} from "../../__fixtures__/modules/aggregates/index.js";
 import {
   TestCommandCreate,
   TestCommandDestroy,
@@ -13,7 +13,7 @@ import {
   TestCommandSetState,
   TestCommandThrows,
   TestCommandTimeout,
-} from "../../__fixtures__/modules/commands";
+} from "../../__fixtures__/modules/commands/index.js";
 import {
   TestEventCreate,
   TestEventDestroy,
@@ -24,15 +24,15 @@ import {
   TestEventSetState,
   TestEventThrows,
   TestEventTimeout,
-} from "../../__fixtures__/modules/events";
-import { TestViewQuery } from "../../__fixtures__/modules/queries";
-import { TestSaga } from "../../__fixtures__/modules/sagas";
-import { TestTimeoutReminder } from "../../__fixtures__/modules/timeouts";
-import { TestView } from "../../__fixtures__/modules/views/TestView";
-import { SagaDestroyedError } from "../../errors";
-import { HermesRegistry, HermesScanner } from "../registry";
-import { SagaModel } from "./saga-model";
-import type { SagaPendingMessage } from "./saga-model";
+} from "../../__fixtures__/modules/events/index.js";
+import { TestViewQuery } from "../../__fixtures__/modules/queries/index.js";
+import { TestSaga } from "../../__fixtures__/modules/sagas/index.js";
+import { TestTimeoutReminder } from "../../__fixtures__/modules/timeouts/index.js";
+import { TestView } from "../../__fixtures__/modules/views/TestView.js";
+import { SagaDestroyedError } from "../../errors/index.js";
+import { HermesRegistry, HermesScanner } from "../registry/index.js";
+import { SagaModel } from "./saga-model.js";
+import type { SagaPendingMessage } from "./saga-model.js";
 import { beforeAll, describe, expect, test } from "vitest";
 
 const ALL_CONSTRUCTORS = [

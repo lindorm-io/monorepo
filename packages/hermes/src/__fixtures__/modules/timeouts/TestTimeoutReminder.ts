@@ -1,4 +1,4 @@
-import { Timeout } from "../../../decorators";
+import { Timeout } from "../../../decorators/index.js";
 
 @Timeout()
 export class TestTimeoutReminder {

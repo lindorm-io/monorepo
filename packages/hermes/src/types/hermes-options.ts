@@ -3,7 +3,7 @@ import type { KryptosEncAlgorithm, KryptosEncryption } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import type { IProteusSource } from "@lindorm/proteus";
 import type { ReadableTime } from "@lindorm/date";
-import type { HermesScannerInput } from "../internal/registry/types";
+import type { HermesScannerInput } from "../internal/registry/types.js";
 
 export type ChecksumMode = "strict" | "warn";
 

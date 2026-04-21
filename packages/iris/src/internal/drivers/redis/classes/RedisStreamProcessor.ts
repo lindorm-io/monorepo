@@ -1,13 +1,13 @@
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
-import type { IMessage } from "../../../../interfaces";
-import type { RedisSharedState } from "../types/redis-types";
-import type { PipelineStage } from "../../../types/pipeline-stage";
+import type { IMessage } from "../../../../interfaces/index.js";
+import type { RedisSharedState } from "../types/redis-types.js";
+import type { PipelineStage } from "../../../types/pipeline-stage.js";
 import {
   DriverStreamProcessorBase,
   type DriverStreamProcessorBaseOptions,
-} from "../../../classes/DriverStreamProcessorBase";
-import { RedisStreamPipeline } from "./RedisStreamPipeline";
+} from "../../../classes/DriverStreamProcessorBase.js";
+import { RedisStreamPipeline } from "./RedisStreamPipeline.js";
 
 export type RedisStreamProcessorOptions =
   DriverStreamProcessorBaseOptions<RedisSharedState>;

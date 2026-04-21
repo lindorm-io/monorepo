@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from "vitest";
-import { makeField } from "../../__fixtures__/make-field";
-import type { MetaHook } from "../types/metadata";
+import { makeField } from "../../__fixtures__/make-field.js";
+import type { MetaHook } from "../types/metadata.js";
 import {
   stageDiscriminator,
   stageDiscriminatorValue,
@@ -9,7 +9,7 @@ import {
   stageGenerated,
   stageHook,
   stageInheritance,
-} from "./stage-metadata";
+} from "./stage-metadata.js";
 
 const makeHook = (decorator: MetaHook["decorator"]): MetaHook => ({
   decorator,

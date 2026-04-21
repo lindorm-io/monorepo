@@ -1,7 +1,7 @@
 import { resolve, join } from "path";
 import { Logger } from "@lindorm/logger";
 import { mkdir, writeFile as _writeFile } from "fs/promises";
-import { init } from "./init";
+import { init } from "./init.js";
 import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 const writeFile = _writeFile as unknown as Mock;
@@ -226,7 +226,7 @@ describe("init", () => {
 
     // Re-import to pick up the dynamic mock
     vi.resetModules();
-    const { init: freshInit } = await import("./init");
+    const { init: freshInit } = await import("./init.js");
 
     // Re-mock fs/promises and logger for the fresh module
     vi.doMock("fs/promises", () => ({

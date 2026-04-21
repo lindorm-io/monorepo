@@ -8,27 +8,27 @@ import {
   type Mocked,
   type MockedFunction,
 } from "vitest";
-import type { IEntity, IProteusRepository } from "../../../interfaces";
+import type { IEntity, IProteusRepository } from "../../../interfaces/index.js";
 import type {
   EntityMetadata,
   MetaRelation,
   MetaRelationOptions,
-} from "../../entity/types/metadata";
-import type { JoinTableOps } from "../../types/join-table-ops";
-import { RelationPersister } from "./RelationPersister";
+} from "../../entity/types/metadata.js";
+import type { JoinTableOps } from "../../types/join-table-ops.js";
+import { RelationPersister } from "./RelationPersister.js";
 
 // ─── Mocks ───────────────────────────────────────────────────────────────────
 
-vi.mock("../../entity/metadata/get-entity-metadata", async () => ({
+vi.mock("../../entity/metadata/get-entity-metadata.js", async () => ({
   getEntityMetadata: vi.fn(),
 }));
 
-vi.mock("./build-relation-filter", () => ({
+vi.mock("./build-relation-filter.js", () => ({
   buildRelationFilter: vi.fn(),
 }));
 
-import { getEntityMetadata } from "../../entity/metadata/get-entity-metadata";
-import { buildRelationFilter } from "./build-relation-filter";
+import { getEntityMetadata } from "../../entity/metadata/get-entity-metadata.js";
+import { buildRelationFilter } from "./build-relation-filter.js";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 

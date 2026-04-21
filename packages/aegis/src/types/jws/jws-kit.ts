@@ -1,4 +1,4 @@
-import { SignKitOptions } from "../kit";
+import type { SignKitOptions } from "../kit.js";
 
 export type JwsContent = Buffer | string;
 

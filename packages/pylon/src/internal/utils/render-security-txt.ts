@@ -1,4 +1,4 @@
-import { PylonSecurityTxt } from "../../types";
+import type { PylonSecurityTxt } from "../../types/index.js";
 
 const toIso = (value: Date | string): string =>
   value instanceof Date ? value.toISOString() : new Date(value).toISOString();

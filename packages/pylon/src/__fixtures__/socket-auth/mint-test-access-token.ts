@@ -1,5 +1,5 @@
-import { IAegis, SignedJwt } from "@lindorm/aegis";
-import { SOCKET_AUTH_TEST_ISSUER } from "./shared";
+import type { IAegis, SignedJwt } from "@lindorm/aegis";
+import { SOCKET_AUTH_TEST_ISSUER } from "./shared.js";
 
 export type MintTestAccessTokenInput = {
   subject: string;

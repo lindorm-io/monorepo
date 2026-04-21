@@ -1,7 +1,7 @@
 import type { ILogger } from "@lindorm/logger";
 import type { ClassLike, DeepPartial, Dict } from "@lindorm/types";
-import type { AggregateIdentifier } from "./aggregate-identifier";
-import type { SagaDispatchOptions } from "./dispatch-options";
+import type { AggregateIdentifier } from "./aggregate-identifier.js";
+import type { SagaDispatchOptions } from "./dispatch-options.js";
 
 export type SagaTimeoutCtx<E, S extends Dict = Dict> = {
   event: E;

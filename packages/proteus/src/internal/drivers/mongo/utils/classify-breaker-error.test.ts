@@ -1,4 +1,4 @@
-import { classifyMongoError } from "./classify-breaker-error";
+import { classifyMongoError } from "./classify-breaker-error.js";
 import { describe, expect, it, vi } from "vitest";
 
 describe("classifyMongoError", () => {

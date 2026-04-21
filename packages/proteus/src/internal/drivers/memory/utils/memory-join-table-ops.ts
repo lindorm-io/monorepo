@@ -1,8 +1,8 @@
-import type { IEntity } from "../../../../interfaces";
-import type { MetaRelation } from "../../../entity/types/metadata";
-import type { JoinTableOps } from "../../../types/join-table-ops";
-import type { MemoryStore, MemoryTable } from "../types/memory-store";
-import { getJoinName } from "../../../entity/utils/get-join-name";
+import type { IEntity } from "../../../../interfaces/index.js";
+import type { MetaRelation } from "../../../entity/types/metadata.js";
+import type { JoinTableOps } from "../../../types/join-table-ops.js";
+import type { MemoryStore, MemoryTable } from "../types/memory-store.js";
+import { getJoinName } from "../../../entity/utils/get-join-name.js";
 
 const resolveJoinTable = (
   store: MemoryStore,

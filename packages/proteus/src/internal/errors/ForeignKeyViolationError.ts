@@ -1,1 +1,1 @@
-export { ForeignKeyViolationError } from "../../errors/ForeignKeyViolationError";
+export { ForeignKeyViolationError } from "../../errors/ForeignKeyViolationError.js";

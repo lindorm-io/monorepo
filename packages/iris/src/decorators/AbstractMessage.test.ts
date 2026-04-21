@@ -1,4 +1,4 @@
-import { AbstractMessage } from "./AbstractMessage";
+import { AbstractMessage } from "./AbstractMessage.js";
 import { describe, expect, it } from "vitest";
 
 describe("AbstractMessage", () => {

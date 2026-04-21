@@ -1,4 +1,4 @@
-import { ProteusError } from "./ProteusError";
+import { ProteusError } from "./ProteusError.js";
 
 /**
  * Thrown when an operation is not supported by the current driver or configuration.

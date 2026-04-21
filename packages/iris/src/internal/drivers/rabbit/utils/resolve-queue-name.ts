@@ -1,5 +1,5 @@
-import type { QueueNameOptions } from "../types/rabbit-types";
-import { sanitizeRoutingKey } from "./sanitize-routing-key";
+import type { QueueNameOptions } from "../types/rabbit-types.js";
+import { sanitizeRoutingKey } from "./sanitize-routing-key.js";
 
 export type { QueueNameOptions };
 

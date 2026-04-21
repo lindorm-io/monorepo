@@ -1,7 +1,7 @@
-import { PostgresMigrationError } from "../../errors/PostgresMigrationError";
-import type { PostgresQueryClient } from "../../types/postgres-query-client";
-import type { MigrationRecord, MigrationTableOptions } from "../../types/migration";
-import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier";
+import { PostgresMigrationError } from "../../errors/PostgresMigrationError.js";
+import type { PostgresQueryClient } from "../../types/postgres-query-client.js";
+import type { MigrationRecord, MigrationTableOptions } from "../../types/migration.js";
+import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier.js";
 
 const getQualifiedTable = (options?: MigrationTableOptions): string =>
   quoteQualifiedName(options?.schema ?? "public", options?.table ?? "proteus_migrations");

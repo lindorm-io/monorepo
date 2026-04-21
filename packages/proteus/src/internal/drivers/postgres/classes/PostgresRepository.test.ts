@@ -1,12 +1,12 @@
 import type { ILogger } from "@lindorm/logger";
-import { makeField } from "../../../__fixtures__/make-field";
-import type { EntityMetadata } from "../../../entity/types/metadata";
-import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor";
-import type { PostgresQueryClient } from "../types/postgres-query-client";
-import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError";
-import { DuplicateKeyError } from "../../../errors/DuplicateKeyError";
-import { PostgresRepository } from "./PostgresRepository";
-import type { IEntity } from "../../../../interfaces";
+import { makeField } from "../../../__fixtures__/make-field.js";
+import type { EntityMetadata } from "../../../entity/types/metadata.js";
+import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor.js";
+import type { PostgresQueryClient } from "../types/postgres-query-client.js";
+import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError.js";
+import { DuplicateKeyError } from "../../../errors/DuplicateKeyError.js";
+import { PostgresRepository } from "./PostgresRepository.js";
+import type { IEntity } from "../../../../interfaces/index.js";
 import type { Constructor } from "@lindorm/types";
 import {
   beforeEach,
@@ -21,18 +21,18 @@ import {
 
 // ─── Module Mocks ────────────────────────────────────────────────────────────
 
-vi.mock("../../../entity/classes/EntityManager", async () => ({
+vi.mock("../../../entity/classes/EntityManager.js", async () => ({
   EntityManager: vi.fn(),
 }));
 
-vi.mock("../../../entity/metadata/get-entity-metadata", () => ({
+vi.mock("../../../entity/metadata/get-entity-metadata.js", () => ({
   getEntityMetadata: vi.fn(),
 }));
 
 const mockSaveOwning = vi.fn();
 const mockSaveInverse = vi.fn();
 const mockDestroy = vi.fn();
-vi.mock("../../../utils/repository/RelationPersister", () => ({
+vi.mock("../../../utils/repository/RelationPersister.js", () => ({
   RelationPersister: vi.fn(function () {
     return {
       saveOwning: mockSaveOwning,
@@ -42,11 +42,11 @@ vi.mock("../../../utils/repository/RelationPersister", () => ({
   }),
 }));
 
-vi.mock("../../../utils/repository/build-pk-predicate", () => ({
+vi.mock("../../../utils/repository/build-pk-predicate.js", () => ({
   buildPrimaryKeyPredicate: vi.fn(),
 }));
 
-vi.mock("../../../utils/repository/repository-guards", () => ({
+vi.mock("../../../utils/repository/repository-guards.js", () => ({
   guardAppendOnly: vi.fn(),
   guardDeleteDateField: vi.fn(),
   guardExpiryDateField: vi.fn(),
@@ -55,11 +55,11 @@ vi.mock("../../../utils/repository/repository-guards", () => ({
   validateRelationNames: vi.fn(),
 }));
 
-vi.mock("../utils/repository/wrap-pg-error", () => ({
+vi.mock("../utils/repository/wrap-pg-error.js", () => ({
   wrapPgError: vi.fn(),
 }));
 
-vi.mock("../../../errors/DuplicateKeyError", async () => {
+vi.mock("../../../errors/DuplicateKeyError.js", async () => {
   const { ProteusRepositoryError } = await vi.importActual<
     typeof import("../../../../errors/ProteusRepositoryError")
   >("../../../../errors/ProteusRepositoryError");
@@ -67,50 +67,50 @@ vi.mock("../../../errors/DuplicateKeyError", async () => {
   return { DuplicateKeyError };
 });
 
-vi.mock("../utils/query/compile-upsert", async () => ({
+vi.mock("../utils/query/compile-upsert.js", async () => ({
   compileUpsert: vi.fn(),
 }));
 
-vi.mock("../utils/query/compile-insert", () => ({
+vi.mock("../utils/query/compile-insert.js", () => ({
   compileInsertBulk: vi.fn(),
 }));
 
-vi.mock("../utils/query/compile-aggregate", () => ({
+vi.mock("../utils/query/compile-aggregate.js", () => ({
   compileAggregate: vi.fn(),
 }));
 
-vi.mock("../utils/query/compile-query", () => ({
+vi.mock("../utils/query/compile-query.js", () => ({
   compileQuery: vi.fn(),
 }));
 
-vi.mock("../utils/query/hydrate-returning", () => ({
+vi.mock("../utils/query/hydrate-returning.js", () => ({
   hydrateReturning: vi.fn(),
 }));
 
-vi.mock("./PostgresCursor", () => ({
+vi.mock("./PostgresCursor.js", () => ({
   PostgresCursor: vi.fn(),
 }));
 
 // ─── Import mocks after vi.mock ────────────────────────────────────────────
 
-import { EntityManager } from "../../../entity/classes/EntityManager";
-import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata";
-import { RelationPersister } from "../../../utils/repository/RelationPersister";
-import { buildPrimaryKeyPredicate } from "../../../utils/repository/build-pk-predicate";
+import { EntityManager } from "../../../entity/classes/EntityManager.js";
+import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata.js";
+import { RelationPersister } from "../../../utils/repository/RelationPersister.js";
+import { buildPrimaryKeyPredicate } from "../../../utils/repository/build-pk-predicate.js";
 import {
   guardDeleteDateField,
   guardExpiryDateField,
   guardVersionFields,
   guardUpsertBlocked,
   validateRelationNames as _validateRelationNames,
-} from "../../../utils/repository/repository-guards";
-import { wrapPgError } from "../utils/repository/wrap-pg-error";
-import { compileUpsert } from "../utils/query/compile-upsert";
-import { compileInsertBulk } from "../utils/query/compile-insert";
-import { compileAggregate } from "../utils/query/compile-aggregate";
-import { compileQuery } from "../utils/query/compile-query";
-import { hydrateReturning } from "../utils/query/hydrate-returning";
-import { PostgresCursor } from "./PostgresCursor";
+} from "../../../utils/repository/repository-guards.js";
+import { wrapPgError } from "../utils/repository/wrap-pg-error.js";
+import { compileUpsert } from "../utils/query/compile-upsert.js";
+import { compileInsertBulk } from "../utils/query/compile-insert.js";
+import { compileAggregate } from "../utils/query/compile-aggregate.js";
+import { compileQuery } from "../utils/query/compile-query.js";
+import { hydrateReturning } from "../utils/query/hydrate-returning.js";
+import { PostgresCursor } from "./PostgresCursor.js";
 
 const validateRelationNames = _validateRelationNames as unknown as Mock;
 

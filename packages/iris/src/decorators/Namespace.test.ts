@@ -1,5 +1,5 @@
-import { IrisMetadataError } from "../errors";
-import { Namespace } from "./Namespace";
+import { IrisMetadataError } from "../errors/index.js";
+import { Namespace } from "./Namespace.js";
 import { describe, expect, it } from "vitest";
 
 describe("Namespace", () => {

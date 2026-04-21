@@ -1,4 +1,4 @@
-import type { ConsumerNameOptions } from "../types/nats-types";
+import type { ConsumerNameOptions } from "../types/nats-types.js";
 
 export type { ConsumerNameOptions };
 

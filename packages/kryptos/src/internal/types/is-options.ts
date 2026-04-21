@@ -1,5 +1,5 @@
-import { KryptosCurve } from "../../types/curve";
-import { KryptosType } from "../../types/types";
+import type { KryptosCurve } from "../../types/curve.js";
+import type { KryptosType } from "../../types/types.js";
 
 export type IsBufferFormatOptions = {
   curve?: KryptosCurve | null;

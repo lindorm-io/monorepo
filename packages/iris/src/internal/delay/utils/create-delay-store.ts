@@ -1,7 +1,7 @@
-import type { IrisPersistenceDelayConfig } from "../../../types/source-options";
-import type { IDelayStore } from "../../../interfaces/IrisDelayStore";
-import { MemoryDelayStore } from "../MemoryDelayStore";
-import { RedisDelayStore } from "../RedisDelayStore";
+import type { IrisPersistenceDelayConfig } from "../../../types/source-options.js";
+import type { IDelayStore } from "../../../interfaces/IrisDelayStore.js";
+import { MemoryDelayStore } from "../MemoryDelayStore.js";
+import { RedisDelayStore } from "../RedisDelayStore.js";
 
 export const createDelayStore = async (
   config?: IrisPersistenceDelayConfig,

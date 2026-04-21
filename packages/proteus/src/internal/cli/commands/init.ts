@@ -1,5 +1,5 @@
-import { PROTEUS_ALL_DRIVERS } from "../../../utils/generate-source";
-import { writeSource } from "../../../utils/write-source";
+import { PROTEUS_ALL_DRIVERS } from "../../../utils/generate-source.js";
+import { writeSource } from "../../../utils/write-source.js";
 
 type InitOptions = {
   driver?: string;

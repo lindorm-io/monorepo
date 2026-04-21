@@ -5,7 +5,7 @@ import fastSafeStringify from "fast-safe-stringify";
 import { get, set } from "object-path";
 import { blue, green, red, yellow } from "picocolors";
 import winston, { Logger as WinstonLogger } from "winston";
-import { ILogger, ILoggerTimer } from "../interfaces";
+import type { ILogger, ILoggerTimer } from "../interfaces/index.js";
 import type {
   FilterCallback,
   Log,
@@ -15,17 +15,17 @@ import type {
   LogLevel,
   LogScope,
   LoggerOptions,
-} from "../types";
-import { StdLogger } from "../types";
+} from "../types/index.js";
+import type { StdLogger } from "../types/index.js";
 import type {
   FilterEntriesRef,
   FromLogger,
   KeyFilterRef,
-} from "../internal/types/from-logger";
-import type { InternalLog } from "../internal/types/internal-log";
-import { defaultFilterCallback } from "../internal/utils/default-filter-callback";
-import { readableFormat } from "../internal/utils/readable-format";
-import { LoggerTimer } from "./LoggerTimer";
+} from "../internal/types/from-logger.js";
+import type { InternalLog } from "../internal/types/internal-log.js";
+import { defaultFilterCallback } from "../internal/utils/default-filter-callback.js";
+import { readableFormat } from "../internal/utils/readable-format.js";
+import { LoggerTimer } from "./LoggerTimer.js";
 
 export class Logger implements ILogger {
   public readonly __instanceof = "Logger";

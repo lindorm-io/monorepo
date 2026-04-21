@@ -1,5 +1,5 @@
-import { IKryptosOkp } from "../interfaces";
-import { KryptosKit } from "../classes";
+import type { IKryptosOkp } from "../interfaces/index.js";
+import { KryptosKit } from "../classes/index.js";
 
 export const KRYPTOS_OKP_SIG_ED25519 = KryptosKit.from.b64({
   id: "96cc6942-bfde-4c7d-8ee4-4357208c9db8",

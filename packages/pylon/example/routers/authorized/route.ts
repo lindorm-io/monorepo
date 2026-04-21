@@ -1,4 +1,4 @@
-import { PylonRouter, useHandler } from "../../../src";
+import { PylonRouter, useHandler } from "../../../src/index.js";
 
 export const router = new PylonRouter();
 

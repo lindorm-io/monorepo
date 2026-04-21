@@ -1,5 +1,5 @@
-import type { SetOperationEntry } from "../../../../types/query";
-import { compileSetOperations } from "./compile-set-operation";
+import type { SetOperationEntry } from "../../../../types/query.js";
+import { compileSetOperations } from "./compile-set-operation.js";
 import { describe, expect, test } from "vitest";
 
 describe("compileSetOperations", () => {

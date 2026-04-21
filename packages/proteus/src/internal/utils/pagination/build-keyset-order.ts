@@ -1,5 +1,5 @@
-import type { IEntity } from "../../../interfaces";
-import type { EntityMetadata } from "../../entity/types/metadata";
+import type { IEntity } from "../../../interfaces/index.js";
+import type { EntityMetadata } from "../../entity/types/metadata.js";
 
 export type KeysetOrderEntry = {
   /** Property key on the entity (e.g. "createdAt") */

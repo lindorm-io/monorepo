@@ -1,6 +1,6 @@
 import type { IAmphora } from "@lindorm/amphora";
 import { AesKit, parseAes } from "@lindorm/aes";
-import { ProteusError } from "../../../errors";
+import { ProteusError } from "../../../errors/index.js";
 
 export const decryptFieldValue = (
   cipher: string,

@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { buildSchema } from "./build-schema";
-import type { MetaField } from "../types/metadata";
-import type { MessageMetadata } from "../types/metadata";
+import { buildSchema } from "./build-schema.js";
+import type { MetaField } from "../types/metadata.js";
+import type { MessageMetadata } from "../types/metadata.js";
 import { describe, expect, it } from "vitest";
 
 const makeField = (overrides: Partial<MetaField> = {}): MetaField => ({

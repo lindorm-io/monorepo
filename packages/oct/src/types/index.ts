@@ -1,1 +1,1 @@
-export * from "./oct-kit";
+export * from "./oct-kit.js";

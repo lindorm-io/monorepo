@@ -1,8 +1,8 @@
 import { isObjectLike } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
-import type { IEntity } from "../../../interfaces";
-import type { EntityMetadata, MetaRelation, QueryScope } from "../types/metadata";
-import { getSnapshot, storeSnapshot } from "./snapshot-store";
+import type { IEntity } from "../../../interfaces/index.js";
+import type { EntityMetadata, MetaRelation, QueryScope } from "../types/metadata.js";
+import { getSnapshot, storeSnapshot } from "./snapshot-store.js";
 
 /**
  * Populate relation properties on an already-hydrated entity based on load strategy.

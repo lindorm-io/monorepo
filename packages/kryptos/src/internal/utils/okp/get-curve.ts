@@ -1,6 +1,11 @@
-import { KryptosError } from "../../../errors";
-import { KryptosAlgorithm, KryptosCurve, OkpAlgorithm, OkpCurve } from "../../../types";
-import { isOkpCurve } from "./is-okp-curve";
+import { KryptosError } from "../../../errors/index.js";
+import type {
+  KryptosAlgorithm,
+  KryptosCurve,
+  OkpAlgorithm,
+  OkpCurve,
+} from "../../../types/index.js";
+import { isOkpCurve } from "./is-okp-curve.js";
 
 type Options = {
   algorithm: KryptosAlgorithm;

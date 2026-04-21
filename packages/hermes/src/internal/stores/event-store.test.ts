@@ -1,4 +1,4 @@
-import { findEvents, insertEvents, countEvents } from "./event-store";
+import { findEvents, insertEvents, countEvents } from "./event-store.js";
 import { describe, expect, it, vi } from "vitest";
 
 const createMockRepo = () => ({

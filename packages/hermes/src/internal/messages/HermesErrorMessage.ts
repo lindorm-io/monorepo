@@ -9,7 +9,7 @@ import {
 } from "@lindorm/iris";
 import type { IMessage } from "@lindorm/iris";
 import type { Dict } from "@lindorm/types";
-import type { AggregateIdentifier } from "../../types/aggregate-identifier";
+import type { AggregateIdentifier } from "../../types/aggregate-identifier.js";
 
 @Message({ name: "error" })
 export class HermesErrorMessage implements IMessage {

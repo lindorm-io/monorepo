@@ -1,4 +1,4 @@
-import { PylonHandlerResult } from "../../types";
+import type { PylonHandlerResult } from "../../types/index.js";
 
 export const getStatus = (response: PylonHandlerResult): number => {
   const { body, file, location, redirect, stream, status } = response;

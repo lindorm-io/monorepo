@@ -1,4 +1,4 @@
-import { getHermesMetadata } from "./get-hermes-metadata";
+import { getHermesMetadata } from "./get-hermes-metadata.js";
 import { describe, expect, it } from "vitest";
 
 describe("getHermesMetadata", () => {

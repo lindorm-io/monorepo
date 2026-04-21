@@ -1,10 +1,10 @@
 import { B64 } from "@lindorm/b64";
 import { ShaKit } from "@lindorm/sha";
 import MockDate from "mockdate";
-import { TEST_RSA_KEY_SIG } from "../../__fixtures__/keys";
-import { JwtError } from "../../errors";
-import { createJoseSignature } from "./jose-signature";
-import { verifyDpopProof } from "./verify-dpop-proof";
+import { TEST_RSA_KEY_SIG } from "../../__fixtures__/keys.js";
+import { JwtError } from "../../errors/index.js";
+import { createJoseSignature } from "./jose-signature.js";
+import { verifyDpopProof } from "./verify-dpop-proof.js";
 import { describe, expect, test } from "vitest";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");

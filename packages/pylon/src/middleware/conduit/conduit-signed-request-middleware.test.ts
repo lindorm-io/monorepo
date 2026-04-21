@@ -1,6 +1,6 @@
 import { KryptosKit } from "@lindorm/kryptos";
 import MockDate from "mockdate";
-import { conduitSignedRequestMiddleware } from "./conduit-signed-request-middleware";
+import { conduitSignedRequestMiddleware } from "./conduit-signed-request-middleware.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");

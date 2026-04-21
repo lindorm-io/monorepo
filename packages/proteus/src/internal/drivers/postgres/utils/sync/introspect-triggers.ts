@@ -1,4 +1,4 @@
-import type { PostgresQueryClient } from "../../types/postgres-query-client";
+import type { PostgresQueryClient } from "../../types/postgres-query-client.js";
 
 export type TriggerRow = {
   schema: string;

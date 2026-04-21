@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, type Mock } from "vitest";
-import { PostgresMigrationError } from "../../errors/PostgresMigrationError";
-import type { PostgresQueryClient } from "../../types/postgres-query-client";
+import { PostgresMigrationError } from "../../errors/PostgresMigrationError.js";
+import type { PostgresQueryClient } from "../../types/postgres-query-client.js";
 import {
   ensureMigrationTable,
   getAppliedMigrations,
@@ -8,7 +8,7 @@ import {
   insertMigrationRecord,
   markMigrationFinished,
   markMigrationRolledBack,
-} from "./migration-table";
+} from "./migration-table.js";
 
 const createMockClient = (
   defaultRowCount = 0,

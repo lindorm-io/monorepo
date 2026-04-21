@@ -6,38 +6,42 @@ import EventEmitter from "events";
 import { ms } from "@lindorm/date";
 import { LindormError } from "@lindorm/errors";
 import { randomUUID } from "@lindorm/random";
-import { HermesViewEntity } from "../entities/HermesViewEntity";
-import { ChecksumError, HandlerNotRegisteredError } from "../errors";
-import type { IHermes } from "../interfaces/IHermes";
-import type { HermesEventName } from "../types/hermes-event-name";
-import type { AggregateIdentifier } from "../types/aggregate-identifier";
-import type { AggregateState } from "../types/aggregate-state";
-import type { ChecksumMode, HermesOptions } from "../types/hermes-options";
-import type { HermesStatus } from "../types/hermes-status";
-import type { ReplayHandle, ReplayOptions, ReplayProgress } from "../types/replay-types";
-import type { SagaState } from "../types/saga-state";
+import { HermesViewEntity } from "../entities/HermesViewEntity.js";
+import { ChecksumError, HandlerNotRegisteredError } from "../errors/index.js";
+import type { IHermes } from "../interfaces/IHermes.js";
+import type { HermesEventName } from "../types/hermes-event-name.js";
+import type { AggregateIdentifier } from "../types/aggregate-identifier.js";
+import type { AggregateState } from "../types/aggregate-state.js";
+import type { ChecksumMode, HermesOptions } from "../types/hermes-options.js";
+import type { HermesStatus } from "../types/hermes-status.js";
+import type {
+  ReplayHandle,
+  ReplayOptions,
+  ReplayProgress,
+} from "../types/replay-types.js";
+import type { SagaState } from "../types/saga-state.js";
 import {
   AggregateDomain,
   ChecksumDomain,
   SagaDomain,
   ViewDomain,
-} from "../internal/domains";
+} from "../internal/domains/index.js";
 import {
   CausationRecord,
   ChecksumRecord,
   EncryptionRecord,
   EventRecord,
   SagaRecord,
-} from "../internal/entities";
+} from "../internal/entities/index.js";
 import {
   HermesCommandMessage,
   HermesErrorMessage,
   HermesEventMessage,
   HermesTimeoutMessage,
-} from "../internal/messages";
-import { HermesRegistry, HermesScanner } from "../internal/registry";
-import { assertChecksum, extractDto } from "../internal/utils";
-import { HermesSession } from "./HermesSession";
+} from "../internal/messages/index.js";
+import { HermesRegistry, HermesScanner } from "../internal/registry/index.js";
+import { assertChecksum, extractDto } from "../internal/utils/index.js";
+import { HermesSession } from "./HermesSession.js";
 
 const DEFAULT_NAMESPACE = "hermes";
 

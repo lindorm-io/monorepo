@@ -1,1 +1,1 @@
-export * from "./nats-types";
+export * from "./nats-types.js";

@@ -8,29 +8,32 @@ import type {
   MysqlDesiredTable,
   MysqlDesiredTrigger,
   MysqlDesiredUnique,
-} from "../../types/desired-schema";
-import type { RelationChange, RelationDestroy } from "../../../../entity/types/metadata";
+} from "../../types/desired-schema.js";
+import type {
+  RelationChange,
+  RelationDestroy,
+} from "../../../../entity/types/metadata.js";
 import type {
   EntityMetadata,
   MetaField,
   MetaGenerated,
-} from "../../../../entity/types/metadata";
-import type { NamespaceOptions } from "../../../../types/types";
-import { getEntityName } from "../../../../entity/utils/get-entity-name";
-import { getJoinName } from "../../../../entity/utils/get-join-name";
-import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata";
-import { extractEnumValues } from "../../../../utils/extract-enum-values";
-import { generateAppendOnlyDDL } from "../ddl/generate-append-only-ddl";
-import { hashIdentifier } from "../hash-identifier";
-import { mapFieldTypeMysql } from "../map-field-type-mysql";
+} from "../../../../entity/types/metadata.js";
+import type { NamespaceOptions } from "../../../../types/types.js";
+import { getEntityName } from "../../../../entity/utils/get-entity-name.js";
+import { getJoinName } from "../../../../entity/utils/get-join-name.js";
+import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata.js";
+import { extractEnumValues } from "../../../../utils/extract-enum-values.js";
+import { generateAppendOnlyDDL } from "../ddl/generate-append-only-ddl.js";
+import { hashIdentifier } from "../hash-identifier.js";
+import { mapFieldTypeMysql } from "../map-field-type-mysql.js";
 import {
   INDEX_PREFIX_LENGTH,
   MYSQL_IDENTIFIER_LIMIT,
-} from "../../constants/mysql-constants";
-import { MySqlSyncError } from "../../errors/MySqlSyncError";
-import { requiresIndexPrefix } from "../requires-index-prefix";
-import { resolveColumnNameSafe } from "../resolve-column-name";
-import { resolveFkColumnType } from "../resolve-fk-column-type";
+} from "../../constants/mysql-constants.js";
+import { MySqlSyncError } from "../../errors/MySqlSyncError.js";
+import { requiresIndexPrefix } from "../requires-index-prefix.js";
+import { resolveColumnNameSafe } from "../resolve-column-name.js";
+import { resolveFkColumnType } from "../resolve-fk-column-type.js";
 
 const mapOnDeleteAction = (onDestroy: RelationDestroy): string => {
   switch (onDestroy) {

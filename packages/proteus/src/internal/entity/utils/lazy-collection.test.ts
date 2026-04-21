@@ -1,4 +1,4 @@
-import { LazyCollection, isLazyCollection, LAZY_COLLECTION } from "./lazy-collection";
+import { LazyCollection, isLazyCollection, LAZY_COLLECTION } from "./lazy-collection.js";
 import { describe, expect, it, vi } from "vitest";
 
 describe("LazyCollection", () => {

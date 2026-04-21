@@ -11,11 +11,11 @@ import {
   PrimaryKeyField,
   UpdateDateField,
   VersionField,
-} from "../../../../decorators";
-import { ProteusSource } from "../../../../classes/ProteusSource";
-import { MemoryDuplicateKeyError } from "../errors/MemoryDuplicateKeyError";
-import { MemoryCursor } from "./MemoryCursor";
-import type { IProteusRepository } from "../../../../interfaces";
+} from "../../../../decorators/index.js";
+import { ProteusSource } from "../../../../classes/ProteusSource.js";
+import { MemoryDuplicateKeyError } from "../errors/MemoryDuplicateKeyError.js";
+import { MemoryCursor } from "./MemoryCursor.js";
+import type { IProteusRepository } from "../../../../interfaces/index.js";
 
 // ─── Entities ─────────────────────────────────────────────────────────────────
 

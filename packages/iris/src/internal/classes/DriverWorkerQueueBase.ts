@@ -1,7 +1,11 @@
-import type { IIrisWorkerQueue, IMessage } from "../../interfaces";
-import type { ConsumeEnvelope, ConsumeOptions, PublishOptions } from "../../types";
-import { DriverBase } from "./DriverBase";
-import type { DriverBaseOptions } from "./DriverBase";
+import type { IIrisWorkerQueue, IMessage } from "../../interfaces/index.js";
+import type {
+  ConsumeEnvelope,
+  ConsumeOptions,
+  PublishOptions,
+} from "../../types/index.js";
+import { DriverBase } from "./DriverBase.js";
+import type { DriverBaseOptions } from "./DriverBase.js";
 
 export type DriverWorkerQueueBaseOptions<M extends IMessage> = DriverBaseOptions<M>;
 

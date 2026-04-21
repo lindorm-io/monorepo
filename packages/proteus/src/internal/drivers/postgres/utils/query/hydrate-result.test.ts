@@ -1,7 +1,7 @@
-import { makeField } from "../../../../__fixtures__/make-field";
-import type { EntityMetadata, MetaRelation } from "../../../../entity/types/metadata";
-import type { AliasMap } from "./compile-select";
-import type { IncludeSpec } from "../../../../types/query";
+import { makeField } from "../../../../__fixtures__/make-field.js";
+import type { EntityMetadata, MetaRelation } from "../../../../entity/types/metadata.js";
+import type { AliasMap } from "./compile-select.js";
+import type { IncludeSpec } from "../../../../types/query.js";
 import {
   beforeEach,
   describe,
@@ -13,10 +13,10 @@ import {
 } from "vitest";
 
 // Mock get-relation-metadata so includes tests do not require a real decorator-registered entity.
-vi.mock("./get-relation-metadata");
+vi.mock("./get-relation-metadata.js");
 
-import { getRelationMetadata } from "./get-relation-metadata";
-import { hydrateRows } from "./hydrate-result";
+import { getRelationMetadata } from "./get-relation-metadata.js";
+import { hydrateRows } from "./hydrate-result.js";
 
 const mockGetRelationMetadata = getRelationMetadata as MockedFunction<
   typeof getRelationMetadata

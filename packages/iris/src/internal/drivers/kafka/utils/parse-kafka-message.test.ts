@@ -1,5 +1,5 @@
-import type { KafkaEachMessagePayload } from "../types/kafka-types";
-import { parseKafkaMessage } from "./parse-kafka-message";
+import type { KafkaEachMessagePayload } from "../types/kafka-types.js";
+import { parseKafkaMessage } from "./parse-kafka-message.js";
 import { describe, expect, it, vi } from "vitest";
 
 const createHeaders = (

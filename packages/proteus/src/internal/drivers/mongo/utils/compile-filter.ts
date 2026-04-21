@@ -1,10 +1,10 @@
 import type { Filter, Document } from "mongodb";
 import type { Dict, Predicate } from "@lindorm/types";
-import type { EntityMetadata, MetaField } from "../../../entity/types/metadata";
-import type { FilterRegistry } from "../../../utils/query/filter-registry";
-import { generateAutoFilters } from "../../../entity/metadata/auto-filters";
-import { resolveFilters } from "../../../utils/query/resolve-filters";
-import { mergeSystemFilterOverrides } from "../../../utils/query/merge-system-filter-overrides";
+import type { EntityMetadata, MetaField } from "../../../entity/types/metadata.js";
+import type { FilterRegistry } from "../../../utils/query/filter-registry.js";
+import { generateAutoFilters } from "../../../entity/metadata/auto-filters.js";
+import { resolveFilters } from "../../../utils/query/resolve-filters.js";
+import { mergeSystemFilterOverrides } from "../../../utils/query/merge-system-filter-overrides.js";
 
 /**
  * Resolve the MongoDB field name for a given entity field key.

@@ -1,4 +1,4 @@
-import { Field } from "./Field";
+import { Field } from "./Field.js";
 import { describe, expect, it } from "vitest";
 
 describe("Field", () => {

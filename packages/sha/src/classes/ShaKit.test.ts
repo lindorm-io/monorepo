@@ -1,5 +1,5 @@
-import { ShaError } from "../errors";
-import { ShaKit } from "./ShaKit";
+import { ShaError } from "../errors/index.js";
+import { ShaKit } from "./ShaKit.js";
 import { beforeEach, describe, expect, test } from "vitest";
 
 describe("ShaKit", () => {

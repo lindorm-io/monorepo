@@ -1,5 +1,5 @@
 import type { ConsumeMessage } from "amqplib";
-import type { ParsedAmqpMessage } from "../types/rabbit-types";
+import type { ParsedAmqpMessage } from "../types/rabbit-types.js";
 
 export type { ParsedAmqpMessage };
 

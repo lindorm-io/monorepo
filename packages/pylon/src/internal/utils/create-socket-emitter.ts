@@ -1,7 +1,10 @@
-import { PylonSocketEmitter, PylonSocketEmitterWithBroadcast } from "../../types";
-import { IoServer } from "../../types/socket";
-import { PylonSocket } from "../../types/pylon-socket";
-import { buildPylonEnvelope } from "./build-pylon-envelope";
+import type {
+  PylonSocketEmitter,
+  PylonSocketEmitterWithBroadcast,
+} from "../../types/index.js";
+import type { IoServer } from "../../types/socket.js";
+import type { PylonSocket } from "../../types/pylon-socket.js";
+import { buildPylonEnvelope } from "./build-pylon-envelope.js";
 
 type CreateHttpSocketEmitterOptions = {
   io: IoServer;

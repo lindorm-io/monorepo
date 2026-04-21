@@ -9,7 +9,7 @@ import type {
   MetaValidation,
   MetaView,
   StagedMetadata,
-} from "./types";
+} from "./types.js";
 
 const ensureOwnArray = <K extends keyof StagedMetadata>(
   metadata: DecoratorMetadataObject,

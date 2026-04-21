@@ -1,21 +1,21 @@
-import { parseAes } from "./parse-aes";
-import { AesError } from "../errors";
-import {
+import { parseAes } from "./parse-aes.js";
+import { AesError } from "../errors/index.js";
+import type {
   AesDecryptionRecord,
   ParsedAesDecryptionRecord,
   SerialisedAesDecryption,
-} from "../types";
-import { createTestAesDecryptionRecord } from "./__fixtures__/aes-decryption-record";
-import { isAesBufferData, isAesSerialisedData, isAesTokenised } from "./is-aes";
-import { parseEncodedAesString } from "../internal/utils/encoded-aes";
-import { parseSerialisedAesRecord } from "../internal/utils/serialised-aes";
-import { parseTokenisedAesString } from "../internal/utils/tokenised-aes";
+} from "../types/index.js";
+import { createTestAesDecryptionRecord } from "./__fixtures__/aes-decryption-record.js";
+import { isAesBufferData, isAesSerialisedData, isAesTokenised } from "./is-aes.js";
+import { parseEncodedAesString } from "../internal/utils/encoded-aes.js";
+import { parseSerialisedAesRecord } from "../internal/utils/serialised-aes.js";
+import { parseTokenisedAesString } from "../internal/utils/tokenised-aes.js";
 import { beforeEach, describe, expect, test, vi, type MockedFunction } from "vitest";
 
-vi.mock("./is-aes");
-vi.mock("../internal/utils/encoded-aes");
-vi.mock("../internal/utils/serialised-aes");
-vi.mock("../internal/utils/tokenised-aes");
+vi.mock("./is-aes.js");
+vi.mock("../internal/utils/encoded-aes.js");
+vi.mock("../internal/utils/serialised-aes.js");
+vi.mock("../internal/utils/tokenised-aes.js");
 
 const mockIsAesBufferData = isAesBufferData as MockedFunction<typeof isAesBufferData>;
 const mockIsAesSerialisedData = isAesSerialisedData as MockedFunction<

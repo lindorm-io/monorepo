@@ -1,8 +1,8 @@
 import type { Pool, PoolConnection } from "mysql2/promise";
-import type { IsolationLevel } from "../../../../../types/transaction-options";
-import { MySqlTransactionError } from "../../errors/MySqlTransactionError";
-import type { MysqlQueryClient } from "../../types/mysql-query-client";
-import type { MysqlTransactionHandle } from "../../types/mysql-transaction-handle";
+import type { IsolationLevel } from "../../../../../types/transaction-options.js";
+import { MySqlTransactionError } from "../../errors/MySqlTransactionError.js";
+import type { MysqlQueryClient } from "../../types/mysql-query-client.js";
+import type { MysqlTransactionHandle } from "../../types/mysql-transaction-handle.js";
 
 const SET_ISOLATION_SQL: Record<IsolationLevel, string> = {
   "READ COMMITTED": "SET TRANSACTION ISOLATION LEVEL READ COMMITTED",

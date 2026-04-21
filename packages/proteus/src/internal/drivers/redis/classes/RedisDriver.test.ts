@@ -1,11 +1,11 @@
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import type { ILogger } from "@lindorm/logger";
-import type { EntityMetadata } from "../../../entity/types/metadata";
-import type { ProteusRedisOptions } from "../../../../types";
-import type { MetadataResolver } from "../../../interfaces/ProteusDriver";
-import { NotSupportedError } from "../../../../errors/NotSupportedError";
-import { RedisDriverError } from "../errors/RedisDriverError";
-import { RedisDriver } from "./RedisDriver";
+import type { EntityMetadata } from "../../../entity/types/metadata.js";
+import type { ProteusRedisOptions } from "../../../../types/index.js";
+import type { MetadataResolver } from "../../../interfaces/ProteusDriver.js";
+import { NotSupportedError } from "../../../../errors/NotSupportedError.js";
+import { RedisDriverError } from "../errors/RedisDriverError.js";
+import { RedisDriver } from "./RedisDriver.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────

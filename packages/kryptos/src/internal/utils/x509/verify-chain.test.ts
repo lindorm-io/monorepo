@@ -7,9 +7,9 @@ import {
   TEST_X509_INTERMEDIATE_PEM,
   TEST_X509_LEAF_PEM,
   TEST_X509_ROOT_PEM,
-} from "../../../__fixtures__/x509";
-import { parseX509 } from "./parse-x509";
-import { verifyX509Chain } from "./verify-chain";
+} from "../../../__fixtures__/x509.js";
+import { parseX509 } from "./parse-x509.js";
+import { verifyX509Chain } from "./verify-chain.js";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 
 describe("verifyX509Chain", () => {

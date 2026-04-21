@@ -1,4 +1,4 @@
-import { initialisePylonSocketData } from "./initialise-pylon-socket-data";
+import { initialisePylonSocketData } from "./initialise-pylon-socket-data.js";
 import { describe, expect, test } from "vitest";
 
 describe("initialisePylonSocketData", () => {

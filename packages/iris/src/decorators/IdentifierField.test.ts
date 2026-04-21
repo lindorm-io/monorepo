@@ -1,4 +1,4 @@
-import { IdentifierField } from "./IdentifierField";
+import { IdentifierField } from "./IdentifierField.js";
 import { describe, expect, it } from "vitest";
 
 describe("IdentifierField", () => {

@@ -1,5 +1,5 @@
-import { IrisMetadataError } from "../errors/IrisMetadataError";
-import { stageDelay } from "../internal/message/metadata/stage-metadata";
+import { IrisMetadataError } from "../errors/IrisMetadataError.js";
+import { stageDelay } from "../internal/message/metadata/stage-metadata.js";
 
 export const Delay =
   (ms: number) =>

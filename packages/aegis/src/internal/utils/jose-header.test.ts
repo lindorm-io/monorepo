@@ -1,5 +1,5 @@
 import { B64 } from "@lindorm/b64";
-import { decodeJoseHeader } from "./jose-header";
+import { decodeJoseHeader } from "./jose-header.js";
 import { describe, expect, test } from "vitest";
 
 const encode = (obj: Record<string, unknown>): string =>

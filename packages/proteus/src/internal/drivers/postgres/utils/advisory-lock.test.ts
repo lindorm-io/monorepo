@@ -1,5 +1,5 @@
-import type { PostgresQueryClient } from "../types/postgres-query-client";
-import { withAdvisoryLock } from "./advisory-lock";
+import type { PostgresQueryClient } from "../types/postgres-query-client.js";
+import { withAdvisoryLock } from "./advisory-lock.js";
 import { describe, expect, it, vi } from "vitest";
 
 const KEY_1 = 0x50524f54; // "PROT"

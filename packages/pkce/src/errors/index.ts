@@ -1,1 +1,1 @@
-export * from "./PkceError";
+export * from "./PkceError.js";

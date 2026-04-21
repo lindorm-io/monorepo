@@ -1,15 +1,15 @@
-import { MongoMigrationManager } from "../drivers/mongo/classes/MongoMigrationManager";
-import { MySqlMigrationManager } from "../drivers/mysql/classes/MySqlMigrationManager";
-import type { MysqlQueryClient } from "../drivers/mysql/types/mysql-query-client";
-import { MigrationManager } from "../drivers/postgres/classes/MigrationManager";
-import type { PostgresQueryClient } from "../drivers/postgres/types/postgres-query-client";
-import { SqliteMigrationManager } from "../drivers/sqlite/classes/SqliteMigrationManager";
-import type { SqliteQueryClient } from "../drivers/sqlite/types/sqlite-query-client";
-import type { IMigrationManager } from "../interfaces/MigrationManager";
-import type { MigrationTableOptions } from "../types/migration";
+import { MongoMigrationManager } from "../drivers/mongo/classes/MongoMigrationManager.js";
+import { MySqlMigrationManager } from "../drivers/mysql/classes/MySqlMigrationManager.js";
+import type { MysqlQueryClient } from "../drivers/mysql/types/mysql-query-client.js";
+import { MigrationManager } from "../drivers/postgres/classes/MigrationManager.js";
+import type { PostgresQueryClient } from "../drivers/postgres/types/postgres-query-client.js";
+import { SqliteMigrationManager } from "../drivers/sqlite/classes/SqliteMigrationManager.js";
+import type { SqliteQueryClient } from "../drivers/sqlite/types/sqlite-query-client.js";
+import type { IMigrationManager } from "../interfaces/MigrationManager.js";
+import type { MigrationTableOptions } from "../types/migration.js";
 import type { PoolClient } from "pg";
-import { ProteusSource } from "../../classes/ProteusSource";
-import { ProteusError } from "../../errors/ProteusError";
+import { ProteusSource } from "../../classes/ProteusSource.js";
+import { ProteusError } from "../../errors/ProteusError.js";
 
 export type MigrationManagerContext = {
   source: ProteusSource;

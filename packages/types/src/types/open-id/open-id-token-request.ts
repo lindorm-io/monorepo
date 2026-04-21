@@ -2,7 +2,7 @@
 // https://www.rfc-editor.org/rfc/rfc8693
 // https://www.rfc-editor.org/rfc/rfc6749
 
-import { OpenIdGrantType } from "./open-id-grant-type";
+import type { OpenIdGrantType } from "./open-id-grant-type.js";
 
 export type OpenIdTokenRequest = {
   /**

@@ -1,5 +1,5 @@
-import { RawAxiosRequestConfig } from "axios";
-import { HttpMethod } from "@lindorm/types";
+import type { RawAxiosRequestConfig } from "axios";
+import type { HttpMethod } from "@lindorm/types";
 
 type RawAxiosRequestConfigOptions = Omit<
   RawAxiosRequestConfig,

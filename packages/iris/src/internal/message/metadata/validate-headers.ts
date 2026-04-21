@@ -1,5 +1,5 @@
-import { IrisMetadataError } from "../../../errors/IrisMetadataError";
-import type { MetaField, MetaHeader } from "../types/metadata";
+import { IrisMetadataError } from "../../../errors/IrisMetadataError.js";
+import type { MetaField, MetaHeader } from "../types/metadata.js";
 
 const RESERVED_TRANSPORT_HEADERS = new Set([
   "content-type",

@@ -1,3 +1,3 @@
-export type { IHermes } from "./IHermes";
-export type { IHermesProvider } from "./IHermesProvider";
-export type { IHermesSession } from "./IHermesSession";
+export type { IHermes } from "./IHermes.js";
+export type { IHermesProvider } from "./IHermesProvider.js";
+export type { IHermesSession } from "./IHermesSession.js";

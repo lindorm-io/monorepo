@@ -1,7 +1,7 @@
-import { makeField } from "../../../../__fixtures__/make-field";
-import type { EntityMetadata, MetaRelation } from "../../../../entity/types/metadata";
-import type { IncludeSpec } from "../../../../types/query";
-import type { RelationQueryContext } from "./compile-relation-query";
+import { makeField } from "../../../../__fixtures__/make-field.js";
+import type { EntityMetadata, MetaRelation } from "../../../../entity/types/metadata.js";
+import type { IncludeSpec } from "../../../../types/query.js";
+import type { RelationQueryContext } from "./compile-relation-query.js";
 import {
   beforeEach,
   describe,
@@ -13,10 +13,10 @@ import {
 } from "vitest";
 
 // Mock the two helpers that call getEntityMetadata under the hood
-vi.mock("./get-relation-metadata");
+vi.mock("./get-relation-metadata.js");
 
-import { findRelationByKey, getRelationMetadata } from "./get-relation-metadata";
-import { compileRelationQuery } from "./compile-relation-query";
+import { findRelationByKey, getRelationMetadata } from "./get-relation-metadata.js";
+import { compileRelationQuery } from "./compile-relation-query.js";
 
 const mockFindRelationByKey = findRelationByKey as MockedFunction<
   typeof findRelationByKey

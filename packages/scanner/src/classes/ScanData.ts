@@ -1,4 +1,4 @@
-import { IScanData } from "../interfaces";
+import type { IScanData } from "../interfaces/index.js";
 
 export class ScanData implements IScanData {
   public readonly baseName: string;

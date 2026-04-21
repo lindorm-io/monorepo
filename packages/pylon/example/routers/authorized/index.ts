@@ -1,4 +1,4 @@
-import { PylonRouter, createHttpBearerTokenMiddleware } from "../../../src";
+import { PylonRouter, createHttpBearerTokenMiddleware } from "../../../src/index.js";
 
 export const router = new PylonRouter();
 

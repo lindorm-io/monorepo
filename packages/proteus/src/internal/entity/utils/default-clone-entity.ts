@@ -1,12 +1,12 @@
 import { isFunction } from "@lindorm/is";
 import type { Constructor, Dict } from "@lindorm/types";
-import { IEntity } from "../../../interfaces";
-import type { MetaFieldDecorator } from "../types/metadata";
-import { createEntity } from "./default-create-entity";
-import { getEntityMetadata } from "../metadata/get-entity-metadata";
-import { isLazyRelation } from "./lazy-relation";
-import { isLazyCollection } from "./lazy-collection";
-import { parseField } from "./parse-field";
+import type { IEntity } from "../../../interfaces/index.js";
+import type { MetaFieldDecorator } from "../types/metadata.js";
+import { createEntity } from "./default-create-entity.js";
+import { getEntityMetadata } from "../metadata/get-entity-metadata.js";
+import { isLazyRelation } from "./lazy-relation.js";
+import { isLazyCollection } from "./lazy-collection.js";
+import { parseField } from "./parse-field.js";
 
 const reset: Array<MetaFieldDecorator> = [
   "CreateDate",

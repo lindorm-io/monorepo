@@ -7,8 +7,8 @@ import {
   Unique,
   UpdateDateField,
   VersionField,
-} from "../../src";
-import { Post } from "./Post";
+} from "../../src/index.js";
+import { Post } from "./Post.js";
 
 @Entity()
 export class User {

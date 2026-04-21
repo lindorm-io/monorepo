@@ -1,7 +1,7 @@
-import { JwtKit, ValidateJwtOptions } from "@lindorm/aegis";
+import { JwtKit, type ValidateJwtOptions } from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
 import { get } from "object-path";
-import { PylonMiddleware } from "../../types";
+import type { PylonMiddleware } from "../../types/index.js";
 
 export const useValidation = (
   tokenPath: string,

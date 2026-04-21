@@ -1,18 +1,18 @@
 import type { IAmphora } from "@lindorm/amphora";
 import type { Dict } from "@lindorm/types";
-import type { IEntity } from "../../../../../interfaces";
-import type { EntityMetadata } from "../../../../entity/types/metadata";
-import { encryptFieldValue } from "../../../../entity/utils/encrypt-field-value";
-import { getEntityName } from "../../../../entity/utils/get-entity-name";
-import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier";
-import { coerceWriteValue } from "./coerce-value";
-import type { CompiledSql } from "./compiled-sql";
-import { partitionJoinedFields } from "./partition-joined-fields";
-import { resolveTableName } from "./resolve-table-name";
+import type { IEntity } from "../../../../../interfaces/index.js";
+import type { EntityMetadata } from "../../../../entity/types/metadata.js";
+import { encryptFieldValue } from "../../../../entity/utils/encrypt-field-value.js";
+import { getEntityName } from "../../../../entity/utils/get-entity-name.js";
+import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier.js";
+import { coerceWriteValue } from "./coerce-value.js";
+import type { CompiledSql } from "./compiled-sql.js";
+import { partitionJoinedFields } from "./partition-joined-fields.js";
+import { resolveTableName } from "./resolve-table-name.js";
 import {
   buildDiscriminatorPredicateUnqualified,
   getDiscriminatorColumnName,
-} from "./compile-helpers";
+} from "./compile-helpers.js";
 
 export type JoinedPartialUpdateSql = {
   /** Always present -- either an UPDATE with changed root columns or a SELECT to retrieve root values. */

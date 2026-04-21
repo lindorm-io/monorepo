@@ -1,4 +1,4 @@
-import { createMockZephyr } from "./vitest";
+import { createMockZephyr } from "./vitest.js";
 import { describe, expect, test } from "vitest";
 
 describe("createMockZephyr", () => {

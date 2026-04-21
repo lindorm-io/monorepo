@@ -1,10 +1,13 @@
 import { isBuffer, isString } from "@lindorm/is";
 import { createSign, createVerify } from "crypto";
-import { EcError } from "../errors";
-import { CreateEcSignatureOptions, VerifyEcSignatureOptions } from "../types/ec-kit";
-import { getSignKey, getVerifyKey } from "./get-key";
-import { mapEcAlgorithm } from "./map-algorithm";
-import { derToRaw, rawToDer } from "./raw";
+import { EcError } from "../errors/index.js";
+import type {
+  CreateEcSignatureOptions,
+  VerifyEcSignatureOptions,
+} from "../types/ec-kit.js";
+import { getSignKey, getVerifyKey } from "./get-key.js";
+import { mapEcAlgorithm } from "./map-algorithm.js";
+import { derToRaw, rawToDer } from "./raw.js";
 
 export const createEcSignature = ({
   data,

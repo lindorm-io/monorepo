@@ -1,4 +1,4 @@
-import { writeEntity } from "../../../utils/write-entity";
+import { writeEntity } from "../../../utils/write-entity.js";
 
 type GenerateEntityOptions = {
   directory?: string;

@@ -1,5 +1,5 @@
 import type { AmphoraPredicate } from "@lindorm/amphora";
-import { stageEncrypted } from "../internal/message/metadata/stage-metadata";
+import { stageEncrypted } from "../internal/message/metadata/stage-metadata.js";
 
 export const Encrypted =
   (predicate: AmphoraPredicate = {}) =>

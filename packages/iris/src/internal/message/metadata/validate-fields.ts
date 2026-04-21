@@ -1,6 +1,6 @@
-import { IrisMetadataError } from "../../../errors/IrisMetadataError";
-import type { MetaField } from "../types/metadata";
-import type { MetaFieldDecorator } from "../types/types";
+import { IrisMetadataError } from "../../../errors/IrisMetadataError.js";
+import type { MetaField } from "../types/metadata.js";
+import type { MetaFieldDecorator } from "../types/types.js";
 
 const UNIQUE_DECORATORS: Array<MetaFieldDecorator> = [
   "IdentifierField",

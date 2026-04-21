@@ -1,19 +1,23 @@
-import { assertDpopHttpRequestMatch } from "../../internal/utils/dpop/assert-dpop-http-request-match";
-import { DEFAULT_AUTH_WARNING_MS } from "../../internal/constants/auth";
-import { isInExpiryWarningWindow } from "../../internal/utils/auth-state/is-in-expiry-warning-window";
-import { isTokenExpired } from "../../internal/utils/auth-state/is-token-expired";
-import { markAuthExpiredEmitted } from "../../internal/utils/auth-state/mark-auth-expired-emitted";
-import { shouldEmitAuthExpired } from "../../internal/utils/auth-state/should-emit-auth-expired";
+import { assertDpopHttpRequestMatch } from "../../internal/utils/dpop/assert-dpop-http-request-match.js";
+import { DEFAULT_AUTH_WARNING_MS } from "../../internal/constants/auth.js";
+import { isInExpiryWarningWindow } from "../../internal/utils/auth-state/is-in-expiry-warning-window.js";
+import { isTokenExpired } from "../../internal/utils/auth-state/is-token-expired.js";
+import { markAuthExpiredEmitted } from "../../internal/utils/auth-state/mark-auth-expired-emitted.js";
+import { shouldEmitAuthExpired } from "../../internal/utils/auth-state/should-emit-auth-expired.js";
 import {
   isHttpContext,
   isSocketEventContext,
   isSocketHandshakeContext,
-} from "../../internal/utils/is-context";
-import { extractTokenFromSession } from "../../internal/utils/tokens/extract-token-from-session";
-import { resolveHttpTokenSource } from "../../internal/utils/tokens/resolve-http-token-source";
-import { VerifyJwtOptions } from "@lindorm/aegis";
+} from "../../internal/utils/is-context.js";
+import { extractTokenFromSession } from "../../internal/utils/tokens/extract-token-from-session.js";
+import { resolveHttpTokenSource } from "../../internal/utils/tokens/resolve-http-token-source.js";
+import type { VerifyJwtOptions } from "@lindorm/aegis";
 import { ClientError, ServerError } from "@lindorm/errors";
-import { PylonContext, PylonHttpContext, PylonMiddleware } from "../../types";
+import type {
+  PylonContext,
+  PylonHttpContext,
+  PylonMiddleware,
+} from "../../types/index.js";
 
 type Options = Omit<VerifyJwtOptions, "issuer"> & {
   issuer: string;

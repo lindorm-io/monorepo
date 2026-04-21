@@ -1,8 +1,8 @@
 import { isEqual } from "@lindorm/is";
-import type { DbIndex } from "../../types/db-snapshot";
-import type { DesiredIndex } from "../../types/desired-schema";
-import type { SyncOperation } from "../../types/sync-plan";
-import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier";
+import type { DbIndex } from "../../types/db-snapshot.js";
+import type { DesiredIndex } from "../../types/desired-schema.js";
+import type { SyncOperation } from "../../types/sync-plan.js";
+import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier.js";
 
 // Normalize WHERE predicates for comparison.
 // PG canonical form adds outer parens, type casts, and parens around identifiers:

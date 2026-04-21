@@ -1,6 +1,6 @@
 import { createHash } from "crypto";
-import { ShaError } from "../errors";
-import { CreateShaHashOptions, VerifyShaHashOptions } from "../types";
+import { ShaError } from "../errors/index.js";
+import type { CreateShaHashOptions, VerifyShaHashOptions } from "../types/index.js";
 
 export const createShaHash = ({
   algorithm = "SHA256",

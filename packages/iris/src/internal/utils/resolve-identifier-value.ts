@@ -1,4 +1,4 @@
-import type { MessageMetadata } from "../message/types/metadata";
+import type { MessageMetadata } from "../message/types/metadata.js";
 
 export const resolveIdentifierValue = (
   message: any,

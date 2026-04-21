@@ -1,4 +1,4 @@
-import { getSocketAuthorization } from "./get-socket-authorization";
+import { getSocketAuthorization } from "./get-socket-authorization.js";
 import { describe, expect, test } from "vitest";
 
 describe("getSocketAuthorization", () => {

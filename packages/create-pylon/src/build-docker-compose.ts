@@ -1,4 +1,4 @@
-import type { Answers, IrisDriver, ProteusDriver } from "./types";
+import type { Answers, IrisDriver, ProteusDriver } from "./types.js";
 
 type ServiceBlock = { name: string; lines: Array<string> };
 

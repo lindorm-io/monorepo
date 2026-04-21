@@ -1,5 +1,5 @@
-import type { MessageMetadata, MetaField } from "../message/types/metadata";
-import { resolveIdentifierValue } from "./resolve-identifier-value";
+import type { MessageMetadata, MetaField } from "../message/types/metadata.js";
+import { resolveIdentifierValue } from "./resolve-identifier-value.js";
 import { describe, expect, it } from "vitest";
 
 const makeField = (overrides: Partial<MetaField>): MetaField => ({

@@ -1,4 +1,4 @@
-import { Topic } from "./Topic";
+import { Topic } from "./Topic.js";
 import { describe, expect, it } from "vitest";
 
 describe("Topic", () => {

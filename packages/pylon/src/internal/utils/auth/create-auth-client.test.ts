@@ -1,9 +1,9 @@
 import { Aegis } from "@lindorm/aegis";
 import { Conduit } from "@lindorm/conduit";
-import { createAuthClient } from "./create-auth-client";
-import { getOpenIdConfiguration as _getOpenIdConfiguration } from "./get-open-id-configuration";
-import { IntrospectionEndpointFailed } from "../../../errors/IntrospectionEndpointFailed";
-import { UserinfoEndpointFailed } from "../../../errors/UserinfoEndpointFailed";
+import { createAuthClient } from "./create-auth-client.js";
+import { getOpenIdConfiguration as _getOpenIdConfiguration } from "./get-open-id-configuration.js";
+import { IntrospectionEndpointFailed } from "../../../errors/IntrospectionEndpointFailed.js";
+import { UserinfoEndpointFailed } from "../../../errors/UserinfoEndpointFailed.js";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 vi.mock("@lindorm/conduit", async () => ({
@@ -16,7 +16,7 @@ vi.mock("@lindorm/conduit", async () => ({
   }),
 }));
 
-vi.mock("./get-open-id-configuration");
+vi.mock("./get-open-id-configuration.js");
 
 const getOpenIdConfiguration = _getOpenIdConfiguration as Mock;
 

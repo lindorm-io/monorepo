@@ -1,5 +1,5 @@
-import type { CteSpec } from "../../types/query";
-import type { SqlDialect } from "./sql-dialect";
+import type { CteSpec } from "../../types/query.js";
+import type { SqlDialect } from "./sql-dialect.js";
 
 export const compileCtes = (
   ctes: Array<CteSpec>,

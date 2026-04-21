@@ -1,7 +1,7 @@
-import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata";
-import { BeforeSoftDestroy } from "./BeforeSoftDestroy";
-import { Entity } from "./Entity";
-import { PrimaryKeyField } from "./PrimaryKeyField";
+import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata.js";
+import { BeforeSoftDestroy } from "./BeforeSoftDestroy.js";
+import { Entity } from "./Entity.js";
+import { PrimaryKeyField } from "./PrimaryKeyField.js";
 import { describe, expect, test, vi } from "vitest";
 
 const beforeSoftDestroyCallback = vi.fn();

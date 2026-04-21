@@ -26,7 +26,7 @@ import {
   runIrisInit,
   runProteusGenerateSampleEntity,
   runProteusInit,
-} from "./drivers";
+} from "./drivers.js";
 
 const mockedProteusWriteSource = proteusWriteSource as Mock;
 const mockedProteusWriteEntity = proteusWriteEntity as Mock;

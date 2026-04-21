@@ -1,4 +1,4 @@
-import { KryptosFromString, KryptosKit } from "@lindorm/kryptos";
+import { type KryptosFromString, KryptosKit } from "@lindorm/kryptos";
 
 const defaults = {
   notBefore: new Date("2023-01-01T01:00:00.000Z"),

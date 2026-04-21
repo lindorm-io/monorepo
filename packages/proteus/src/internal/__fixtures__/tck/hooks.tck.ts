@@ -4,8 +4,8 @@
 // save→BeforeSave/AfterSave (not Insert/Update hooks).
 
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
-import type { TckDriverHandle } from "./types";
-import type { TckEntities } from "./create-tck-entities";
+import type { TckDriverHandle } from "./types.js";
+import type { TckEntities } from "./create-tck-entities.js";
 
 export const hooksSuite = (
   getHandle: () => TckDriverHandle,

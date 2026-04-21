@@ -1,4 +1,4 @@
-import { removeEmpty } from "./remove-empty";
+import { removeEmpty } from "./remove-empty.js";
 import { describe, expect, test } from "vitest";
 
 describe("removeEmpty", () => {

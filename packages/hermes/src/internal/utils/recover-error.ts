@@ -8,8 +8,8 @@ import {
   ChecksumError,
   CommandSchemaValidationError,
   DomainError,
-} from "../../errors";
-import type { HermesErrorMessage } from "../messages";
+} from "../../errors/index.js";
+import type { HermesErrorMessage } from "../messages/index.js";
 
 type ErrorData = {
   error: { message: string; [key: string]: unknown };

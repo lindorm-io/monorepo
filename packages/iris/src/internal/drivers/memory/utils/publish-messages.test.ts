@@ -1,10 +1,10 @@
-import type { IMessage } from "../../../../interfaces";
-import type { MessageMetadata } from "../../../message/types/metadata";
-import type { OutboundPayload } from "../../../message/utils/prepare-outbound";
-import type { DelayManager } from "../../../delay/DelayManager";
-import type { MemorySharedState } from "../types/memory-store";
-import { createStore } from "./create-store";
-import { publishMessages, type PublishDriver } from "./publish-messages";
+import type { IMessage } from "../../../../interfaces/index.js";
+import type { MessageMetadata } from "../../../message/types/metadata.js";
+import type { OutboundPayload } from "../../../message/utils/prepare-outbound.js";
+import type { DelayManager } from "../../../delay/DelayManager.js";
+import type { MemorySharedState } from "../types/memory-store.js";
+import { createStore } from "./create-store.js";
+import { publishMessages, type PublishDriver } from "./publish-messages.js";
 import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 const makeMetadata = (name: string): MessageMetadata =>

@@ -3,13 +3,13 @@ import {
   TEST_OCT_KEY_HS256,
   TEST_OCT_KEY_HS384,
   TEST_OCT_KEY_HS512,
-} from "../__fixtures__/keys";
-import { OctError } from "../errors";
+} from "../__fixtures__/keys.js";
+import { OctError } from "../errors/index.js";
 import {
   assertOctSignature,
   createOctSignature,
   verifyOctSignature,
-} from "./oct-signature";
+} from "./oct-signature.js";
 import { beforeEach, describe, expect, test } from "vitest";
 
 describe("oct-signature", () => {

@@ -1,7 +1,7 @@
 import { existsSync } from "fs";
 import { isAbsolute, resolve } from "path";
 import { Scanner } from "@lindorm/scanner";
-import { ProteusSource } from "../../classes/ProteusSource";
+import { ProteusSource } from "../../classes/ProteusSource.js";
 
 const PROTEUS_SOURCE_BRAND = Symbol.for("ProteusSource");
 

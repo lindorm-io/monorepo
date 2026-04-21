@@ -1,5 +1,5 @@
 import { ClientError } from "@lindorm/errors";
-import { useAccess } from "./use-access";
+import { useAccess } from "./use-access.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("useAccess", () => {

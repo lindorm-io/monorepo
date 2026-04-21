@@ -1,5 +1,5 @@
-import { makeField } from "../../__fixtures__/make-field";
-import { validatePrimaryKeys, validateVersionKeys } from "./validate-primary-keys";
+import { makeField } from "../../__fixtures__/make-field.js";
+import { validatePrimaryKeys, validateVersionKeys } from "./validate-primary-keys.js";
 import { describe, expect, test } from "vitest";
 
 describe("validatePrimaryKeys", () => {

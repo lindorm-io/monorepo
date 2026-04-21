@@ -1,6 +1,9 @@
-import type { EntityMetadata, MetaRelation } from "../../../../entity/types/metadata";
-import type { PostgresQueryClient } from "../../types/postgres-query-client";
-import { loadRelationCounts, LoadRelationCountsContext } from "./load-relation-counts";
+import type { EntityMetadata, MetaRelation } from "../../../../entity/types/metadata.js";
+import type { PostgresQueryClient } from "../../types/postgres-query-client.js";
+import {
+  loadRelationCounts,
+  type LoadRelationCountsContext,
+} from "./load-relation-counts.js";
 import {
   beforeEach,
   describe,
@@ -11,11 +14,11 @@ import {
   type MockedFunction,
 } from "vitest";
 
-vi.mock("../../../../entity/metadata/get-entity-metadata", async () => ({
+vi.mock("../../../../entity/metadata/get-entity-metadata.js", async () => ({
   getEntityMetadata: vi.fn(),
 }));
 
-import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata";
+import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata.js";
 
 const mockGetEntityMetadata = getEntityMetadata as MockedFunction<
   typeof getEntityMetadata

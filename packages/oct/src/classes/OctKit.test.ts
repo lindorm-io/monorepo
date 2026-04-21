@@ -1,7 +1,7 @@
 import { KRYPTOS_OCT_ENC, KRYPTOS_OCT_SIG_HS256 } from "@lindorm/kryptos/fixtures";
 import { randomBytes } from "crypto";
-import { OctError } from "../errors";
-import { OctKit } from "./OctKit";
+import { OctError } from "../errors/index.js";
+import { OctKit } from "./OctKit.js";
 import { beforeEach, describe, expect, test } from "vitest";
 
 describe("OctKit", () => {

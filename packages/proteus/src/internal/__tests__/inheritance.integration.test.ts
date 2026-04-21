@@ -10,7 +10,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 import { randomBytes } from "crypto";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { Client } from "pg";
-import { ProteusSource } from "../../classes/ProteusSource";
+import { ProteusSource } from "../../classes/ProteusSource.js";
 import {
   Discriminator,
   DiscriminatorValue,
@@ -19,7 +19,7 @@ import {
   Inheritance,
   Nullable,
   PrimaryKeyField,
-} from "../../decorators";
+} from "../../decorators/index.js";
 
 vi.setConfig({ testTimeout: 60_000 });
 

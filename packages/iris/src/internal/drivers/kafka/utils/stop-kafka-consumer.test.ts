@@ -2,12 +2,12 @@ import type {
   KafkaSharedState,
   KafkaConsumerHandle,
   KafkaConsumer,
-} from "../types/kafka-types";
+} from "../types/kafka-types.js";
 import {
   stopKafkaConsumer,
   stopAllKafkaConsumers,
   releasePooledConsumer,
-} from "./stop-kafka-consumer";
+} from "./stop-kafka-consumer.js";
 import { describe, expect, it, vi, type Mock } from "vitest";
 
 const createMockConsumer = (): KafkaConsumer => ({

@@ -1,21 +1,21 @@
 import { Command } from "commander";
-import { registerMigrateCommands } from "./migrate";
-import { migrateGenerate } from "./migrate-generate";
-import { migrateRun } from "./migrate-run";
-import { migrateRollback } from "./migrate-rollback";
-import { migrateStatus } from "./migrate-status";
-import { migrateBaseline } from "./migrate-baseline";
-import { migrateCreate } from "./migrate-create";
-import { migrateResolve } from "./migrate-resolve";
+import { registerMigrateCommands } from "./migrate.js";
+import { migrateGenerate } from "./migrate-generate.js";
+import { migrateRun } from "./migrate-run.js";
+import { migrateRollback } from "./migrate-rollback.js";
+import { migrateStatus } from "./migrate-status.js";
+import { migrateBaseline } from "./migrate-baseline.js";
+import { migrateCreate } from "./migrate-create.js";
+import { migrateResolve } from "./migrate-resolve.js";
 import { beforeEach, describe, expect, it, vi, type MockedFunction } from "vitest";
 
-vi.mock("./migrate-generate", async () => ({ migrateGenerate: vi.fn() }));
-vi.mock("./migrate-run", () => ({ migrateRun: vi.fn() }));
-vi.mock("./migrate-rollback", () => ({ migrateRollback: vi.fn() }));
-vi.mock("./migrate-status", () => ({ migrateStatus: vi.fn() }));
-vi.mock("./migrate-baseline", () => ({ migrateBaseline: vi.fn() }));
-vi.mock("./migrate-create", () => ({ migrateCreate: vi.fn() }));
-vi.mock("./migrate-resolve", () => ({ migrateResolve: vi.fn() }));
+vi.mock("./migrate-generate.js", async () => ({ migrateGenerate: vi.fn() }));
+vi.mock("./migrate-run.js", () => ({ migrateRun: vi.fn() }));
+vi.mock("./migrate-rollback.js", () => ({ migrateRollback: vi.fn() }));
+vi.mock("./migrate-status.js", () => ({ migrateStatus: vi.fn() }));
+vi.mock("./migrate-baseline.js", () => ({ migrateBaseline: vi.fn() }));
+vi.mock("./migrate-create.js", () => ({ migrateCreate: vi.fn() }));
+vi.mock("./migrate-resolve.js", () => ({ migrateResolve: vi.fn() }));
 
 const mockMigrateGenerate = migrateGenerate as MockedFunction<typeof migrateGenerate>;
 const mockMigrateRun = migrateRun as MockedFunction<typeof migrateRun>;

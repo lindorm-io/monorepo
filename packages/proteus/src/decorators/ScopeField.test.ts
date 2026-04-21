@@ -1,8 +1,8 @@
-import { SCOPE_FILTER_NAME } from "../internal/entity/metadata/auto-filters";
-import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata";
-import { Entity } from "./Entity";
-import { PrimaryKeyField } from "./PrimaryKeyField";
-import { ScopeField } from "./ScopeField";
+import { SCOPE_FILTER_NAME } from "../internal/entity/metadata/auto-filters.js";
+import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata.js";
+import { Entity } from "./Entity.js";
+import { PrimaryKeyField } from "./PrimaryKeyField.js";
+import { ScopeField } from "./ScopeField.js";
 import { describe, expect, test } from "vitest";
 
 @Entity({ name: "ScopeFieldDecorated" })

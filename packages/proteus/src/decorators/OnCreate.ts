@@ -1,6 +1,6 @@
 import type { Constructor } from "@lindorm/types";
-import { stageHook } from "../internal/entity/metadata/stage-metadata";
-import type { SyncHookCallback } from "../types";
+import { stageHook } from "../internal/entity/metadata/stage-metadata.js";
+import type { SyncHookCallback } from "../types/index.js";
 
 /**
  * Register a synchronous callback that fires when `repository.create()` builds a new entity instance.

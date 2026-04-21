@@ -1,7 +1,7 @@
 import type { ILogger } from "@lindorm/logger";
-import type { IrisEnvelope } from "../types/iris-envelope";
-import { DelayManager } from "./DelayManager";
-import { MemoryDelayStore } from "./MemoryDelayStore";
+import type { IrisEnvelope } from "../types/iris-envelope.js";
+import { DelayManager } from "./DelayManager.js";
+import { MemoryDelayStore } from "./MemoryDelayStore.js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const createLogger = (): ILogger =>

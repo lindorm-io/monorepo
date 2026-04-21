@@ -1,5 +1,5 @@
-import { TEST_FIXTURES } from "../__fixtures__/test-fixtures";
-import { isFinite } from "./is-finite";
+import { TEST_FIXTURES } from "../__fixtures__/test-fixtures.js";
+import { isFinite } from "./is-finite.js";
 import { describe, expect, test } from "vitest";
 
 describe("isFinite", () => {

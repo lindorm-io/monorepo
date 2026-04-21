@@ -1,18 +1,18 @@
 import type { IAmphora } from "@lindorm/amphora";
 import type { Dict } from "@lindorm/types";
-import type { IEntity } from "../../../../../interfaces";
-import type { EntityMetadata } from "../../../../entity/types/metadata";
-import type { IncludeSpec } from "../../../../types/query";
-import type { PostgresQueryClient } from "../../types/postgres-query-client";
-import { defaultHydrateEntity } from "../../../../entity/utils/default-hydrate-entity";
-import { resolvePolymorphicMetadata } from "../../../../entity/utils/resolve-polymorphic-metadata";
-import { resolveColumnNameSafe } from "../resolve-column-name";
+import type { IEntity } from "../../../../../interfaces/index.js";
+import type { EntityMetadata } from "../../../../entity/types/metadata.js";
+import type { IncludeSpec } from "../../../../types/query.js";
+import type { PostgresQueryClient } from "../../types/postgres-query-client.js";
+import { defaultHydrateEntity } from "../../../../entity/utils/default-hydrate-entity.js";
+import { resolvePolymorphicMetadata } from "../../../../entity/utils/resolve-polymorphic-metadata.js";
+import { resolveColumnNameSafe } from "../resolve-column-name.js";
 import {
   compileRelationQuery,
   type RelationQueryContext,
-} from "./compile-relation-query";
-import { extractFieldDictFromReturning } from "./extract-field-dict";
-import { findRelationByKey, getRelationMetadata } from "./get-relation-metadata";
+} from "./compile-relation-query.js";
+import { extractFieldDictFromReturning } from "./extract-field-dict.js";
+import { findRelationByKey, getRelationMetadata } from "./get-relation-metadata.js";
 
 export type ExecuteQueryIncludesOptions = {
   rootMetadata: EntityMetadata;
@@ -84,8 +84,8 @@ const executeOwningInclude = async <E extends IEntity>(
 ): Promise<void> => {
   // joinKeys: { localFKField: foreignPKField }
   // Extract the FK values from root entities to query the foreign table
-  const localFkKeys = Object.keys(relation.joinKeys!);
-  const foreignPkKeys = Object.values(relation.joinKeys!);
+  const localFkKeys = Object.keys(relation.joinKeys);
+  const foreignPkKeys = Object.values(relation.joinKeys);
 
   const fkValues: Array<Array<unknown>> = [];
   const fkToEntities = new Map<string, Array<E>>();
@@ -152,8 +152,8 @@ const executeInverseInclude = async <E extends IEntity>(
   opts: ExecuteQueryIncludesOptions,
 ): Promise<void> => {
   // findKeys: { foreignFKField: localPKField }
-  const localPkKeys = Object.values(relation.findKeys!);
-  const foreignFkKeys = Object.keys(relation.findKeys!);
+  const localPkKeys = Object.values(relation.findKeys);
+  const foreignFkKeys = Object.keys(relation.findKeys);
 
   const pkValues: Array<Array<unknown>> = [];
   const pkToEntities = new Map<string, Array<E>>();

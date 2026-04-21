@@ -1,5 +1,5 @@
-import type { MetaHook } from "../types/metadata";
-import { runHooksAsync } from "./run-hooks-async";
+import type { MetaHook } from "../types/metadata.js";
+import { runHooksAsync } from "./run-hooks-async.js";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 describe("runHooksAsync", () => {

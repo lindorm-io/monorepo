@@ -1,4 +1,4 @@
-import { fileType } from "./file-type";
+import { fileType } from "./file-type.js";
 import { describe, expect, test } from "vitest";
 
 describe("fileType", () => {

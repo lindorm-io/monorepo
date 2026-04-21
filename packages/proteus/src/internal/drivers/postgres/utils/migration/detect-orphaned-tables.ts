@@ -1,5 +1,5 @@
-import type { DbSnapshot } from "../../types/db-snapshot";
-import type { DesiredSchema } from "../../types/desired-schema";
+import type { DbSnapshot } from "../../types/db-snapshot.js";
+import type { DesiredSchema } from "../../types/desired-schema.js";
 
 export type OrphanedTable = {
   schema: string;

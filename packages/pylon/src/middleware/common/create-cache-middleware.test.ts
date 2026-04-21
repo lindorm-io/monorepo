@@ -1,10 +1,10 @@
 import { ServerError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
-import { createCacheMiddleware } from "./create-cache-middleware";
+import { createCacheMiddleware } from "./create-cache-middleware.js";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
-vi.mock("../../internal/utils/resolve-proteus");
-import { resolveProteus } from "../../internal/utils/resolve-proteus";
+vi.mock("../../internal/utils/resolve-proteus.js");
+import { resolveProteus } from "../../internal/utils/resolve-proteus.js";
 
 class Session {}
 class TokenEntity {}

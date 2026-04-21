@@ -1,5 +1,5 @@
-import { serializeNatsMessage } from "./serialize-nats-message";
-import type { IrisEnvelope } from "../../../types/iris-envelope";
+import { serializeNatsMessage } from "./serialize-nats-message.js";
+import type { IrisEnvelope } from "../../../types/iris-envelope.js";
 import { describe, expect, it } from "vitest";
 
 const createEnvelope = (overrides?: Partial<IrisEnvelope>): IrisEnvelope => ({

@@ -8,24 +8,24 @@ import {
   Namespace,
   RequireCreated,
   RequireNotCreated,
-} from "../../../decorators";
-import { DomainError } from "../../../errors";
+} from "../../../decorators/index.js";
+import { DomainError } from "../../../errors/index.js";
 import type {
   SagaEventCtx,
   SagaIdCtx,
   SagaTimeoutCtx,
   SagaErrorCtx,
-} from "../../../types";
+} from "../../../types/index.js";
 
-import { AccountAggregate } from "../aggregates/AccountAggregate";
-import { FlagAccount } from "../commands/FlagAccount";
+import { AccountAggregate } from "../aggregates/AccountAggregate.js";
+import { FlagAccount } from "../commands/FlagAccount.js";
 
-import { AccountOpened } from "../events/AccountOpened";
-import { FundsDeposited_V2 } from "../events/FundsDeposited_V2";
-import { FundsWithdrawn } from "../events/FundsWithdrawn";
-import { AccountClosed } from "../events/AccountClosed";
+import { AccountOpened } from "../events/AccountOpened.js";
+import { FundsDeposited_V2 } from "../events/FundsDeposited_V2.js";
+import { FundsWithdrawn } from "../events/FundsWithdrawn.js";
+import { AccountClosed } from "../events/AccountClosed.js";
 
-import { InactivityTimeout } from "../timeouts/InactivityTimeout";
+import { InactivityTimeout } from "../timeouts/InactivityTimeout.js";
 
 export type OverdraftProtectionState = {
   ownerName: string;

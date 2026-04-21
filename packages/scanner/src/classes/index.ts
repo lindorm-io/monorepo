@@ -1,1 +1,1 @@
-export * from "./Scanner";
+export * from "./Scanner.js";

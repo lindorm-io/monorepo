@@ -1,4 +1,4 @@
-import { normalizeHtu } from "./normalize-htu";
+import { normalizeHtu } from "./normalize-htu.js";
 import { describe, expect, test } from "vitest";
 
 describe("normalizeHtu", () => {

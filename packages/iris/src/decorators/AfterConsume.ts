@@ -1,6 +1,6 @@
 import type { Constructor } from "@lindorm/types";
-import type { HookCallback } from "../types";
-import { stageHook } from "../internal/message/metadata/stage-metadata";
+import type { HookCallback } from "../types/index.js";
+import { stageHook } from "../internal/message/metadata/stage-metadata.js";
 
 export const AfterConsume =
   <T extends Constructor>(callback: HookCallback) =>

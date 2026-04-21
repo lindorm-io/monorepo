@@ -1,12 +1,12 @@
 import { B64 } from "@lindorm/b64";
-import { AesError } from "../../errors";
+import { AesError } from "../../errors/index.js";
 import {
   buildAesHeader,
   computeAad,
   decodeAesHeader,
   encodeAesHeader,
   headerToDecryptionParams,
-} from "./aes-header";
+} from "./aes-header.js";
 import { describe, expect, test } from "vitest";
 
 describe("aes-header", () => {

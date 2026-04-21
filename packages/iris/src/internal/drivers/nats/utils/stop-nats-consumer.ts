@@ -1,4 +1,4 @@
-import type { NatsSharedState } from "../types/nats-types";
+import type { NatsSharedState } from "../types/nats-types.js";
 
 export const stopNatsConsumer = async (
   state: NatsSharedState,

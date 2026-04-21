@@ -1,11 +1,11 @@
 import { EventEmitter } from "events";
 import { spawn } from "child_process";
-import { spawnCommand } from "./spawn-command";
-import { forwardSignals } from "./forward-signals";
+import { spawnCommand } from "./spawn-command.js";
+import { forwardSignals } from "./forward-signals.js";
 import { beforeEach, describe, expect, test, vi, type MockedFunction } from "vitest";
 
 vi.mock("child_process");
-vi.mock("./forward-signals");
+vi.mock("./forward-signals.js");
 
 const mockSpawn = spawn as MockedFunction<typeof spawn>;
 const mockForwardSignals = forwardSignals as MockedFunction<typeof forwardSignals>;

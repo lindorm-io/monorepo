@@ -1,6 +1,6 @@
-import { makeField } from "../../../../__fixtures__/make-field";
-import type { EntityMetadata } from "../../../../entity/types/metadata";
-import { dehydrateEntity } from "./dehydrate-entity";
+import { makeField } from "../../../../__fixtures__/make-field.js";
+import type { EntityMetadata } from "../../../../entity/types/metadata.js";
+import { dehydrateEntity } from "./dehydrate-entity.js";
 import { describe, expect, test } from "vitest";
 
 const baseMetadata = {

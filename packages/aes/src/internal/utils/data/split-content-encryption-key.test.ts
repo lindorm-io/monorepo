@@ -1,6 +1,6 @@
-import { KryptosEncryption } from "@lindorm/kryptos";
-import { AesError } from "../../../errors";
-import { splitContentEncryptionKey } from "./split-content-encryption-key";
+import type { KryptosEncryption } from "@lindorm/kryptos";
+import { AesError } from "../../../errors/index.js";
+import { splitContentEncryptionKey } from "./split-content-encryption-key.js";
 import { describe, expect, test } from "vitest";
 
 describe("splitContentEncryptionKey", () => {

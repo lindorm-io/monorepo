@@ -1,15 +1,15 @@
 import { KryptosKit } from "@lindorm/kryptos";
 import { RSA_PKCS1_OAEP_PADDING } from "constants";
 import { privateDecrypt, publicEncrypt, randomBytes } from "crypto";
-import { AesError } from "../../../errors";
-import {
+import { AesError } from "../../../errors/index.js";
+import type {
   CreateCekOptions,
   CreateCekResult,
   DecryptCekOptions,
   DecryptCekResult,
-} from "../../types/content-encryption-key";
-import { calculateContentEncryptionKeySize } from "../calculate/calculate-content-encryption-key-size";
-import { calculateRsaOaepHash } from "../calculate/calculate-rsa-oaep-hash";
+} from "../../types/content-encryption-key.js";
+import { calculateContentEncryptionKeySize } from "../calculate/calculate-content-encryption-key-size.js";
+import { calculateRsaOaepHash } from "../calculate/calculate-rsa-oaep-hash.js";
 
 export const getRsaEncryptionKey = ({
   encryption,

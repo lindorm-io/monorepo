@@ -1,6 +1,6 @@
-import type { IProteusSource } from "../interfaces/ProteusSource";
-import { _createMockProteusSession } from "./create-mock-proteus-session";
-import { _createMockRepository } from "./create-mock-repository";
+import type { IProteusSource } from "../interfaces/ProteusSource.js";
+import { _createMockProteusSession } from "./create-mock-proteus-session.js";
+import { _createMockRepository } from "./create-mock-repository.js";
 
 export const _createMockProteusSource = (mockFn: () => any): IProteusSource => {
   const impl = (fn: any) => {

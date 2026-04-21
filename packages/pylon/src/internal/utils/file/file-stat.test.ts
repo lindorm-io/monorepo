@@ -1,7 +1,7 @@
 import { ServerError } from "@lindorm/errors";
 import { Stats } from "fs";
 import { stat } from "fs/promises";
-import { fileStat } from "./file-stat";
+import { fileStat } from "./file-stat.js";
 import { beforeEach, describe, expect, test, vi, type MockedFunction } from "vitest";
 
 vi.mock("fs/promises");

@@ -1,19 +1,19 @@
-import type { IMessage } from "../../../../interfaces";
-import { Field } from "../../../../decorators/Field";
-import { Message } from "../../../../decorators/Message";
-import { clearRegistry } from "../../../message/metadata/registry";
-import type { NatsSharedState, NatsConsumerLoop } from "../types/nats-types";
-import { NatsWorkerQueue } from "./NatsWorkerQueue";
+import type { IMessage } from "../../../../interfaces/index.js";
+import { Field } from "../../../../decorators/Field.js";
+import { Message } from "../../../../decorators/Message.js";
+import { clearRegistry } from "../../../message/metadata/registry.js";
+import type { NatsSharedState, NatsConsumerLoop } from "../types/nats-types.js";
+import { NatsWorkerQueue } from "./NatsWorkerQueue.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // --- Mocks ---
 const mockPublishNatsMessages = vi.fn().mockResolvedValue(undefined);
-vi.mock("../utils/publish-nats-messages", async () => ({
+vi.mock("../utils/publish-nats-messages.js", async () => ({
   publishNatsMessages: (...args: Array<unknown>) => mockPublishNatsMessages(...args),
 }));
 
 const mockWrapNatsConsumer = vi.fn().mockReturnValue(vi.fn());
-vi.mock("../utils/wrap-nats-consumer", () => ({
+vi.mock("../utils/wrap-nats-consumer.js", () => ({
   wrapNatsConsumer: (...args: Array<unknown>) => mockWrapNatsConsumer(...args),
 }));
 
@@ -21,12 +21,12 @@ let mockCreateNatsConsumerResult: Partial<NatsConsumerLoop>;
 const mockCreateNatsConsumer = vi
   .fn()
   .mockImplementation(async () => mockCreateNatsConsumerResult);
-vi.mock("../utils/create-nats-consumer", () => ({
+vi.mock("../utils/create-nats-consumer.js", () => ({
   createNatsConsumer: (...args: Array<unknown>) => mockCreateNatsConsumer(...args),
 }));
 
 const mockStopNatsConsumer = vi.fn().mockResolvedValue(undefined);
-vi.mock("../utils/stop-nats-consumer", () => ({
+vi.mock("../utils/stop-nats-consumer.js", () => ({
   stopNatsConsumer: (...args: Array<unknown>) => mockStopNatsConsumer(...args),
 }));
 

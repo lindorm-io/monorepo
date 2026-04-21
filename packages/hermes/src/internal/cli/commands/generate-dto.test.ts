@@ -1,7 +1,7 @@
 import { resolve, join } from "path";
 import { mkdir as _mkdir, writeFile as _writeFile } from "fs/promises";
 import { Logger as _Logger } from "@lindorm/logger";
-import { generateDto } from "./generate-dto";
+import { generateDto } from "./generate-dto.js";
 import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 vi.mock("fs/promises", async () => ({
@@ -311,7 +311,7 @@ describe("generateDto", () => {
       vi.doMock("@inquirer/prompts", () => ({ input: mockInput }));
 
       vi.resetModules();
-      const { generateDto: freshGenerateDto } = await import("./generate-dto");
+      const { generateDto: freshGenerateDto } = await import("./generate-dto.js");
       const freshGenerate = freshGenerateDto("command");
 
       vi.doMock("fs/promises", () => ({

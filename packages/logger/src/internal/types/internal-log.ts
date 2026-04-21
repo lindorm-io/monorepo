@@ -1,5 +1,5 @@
-import { Dict } from "@lindorm/types";
-import { LogContent, LogCorrelation, LogLevel } from "../../types";
+import type { Dict } from "@lindorm/types";
+import type { LogContent, LogCorrelation, LogLevel } from "../../types/index.js";
 
 export type InternalLog = {
   context: Dict | Error;

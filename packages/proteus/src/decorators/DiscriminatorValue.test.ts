@@ -1,4 +1,4 @@
-import { DiscriminatorValue } from "./DiscriminatorValue";
+import { DiscriminatorValue } from "./DiscriminatorValue.js";
 import { describe, expect, test } from "vitest";
 
 // ─────────────────────────────────────────────────────────────────────────────

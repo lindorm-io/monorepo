@@ -1,7 +1,7 @@
 import type { Dict } from "@lindorm/types";
-import type { EntityMetadata, MetaFieldDecorator } from "../types/metadata";
-import { getEntityMetadata } from "./get-entity-metadata";
-import { findEntityByName } from "./registry";
+import type { EntityMetadata, MetaFieldDecorator } from "../types/metadata.js";
+import { getEntityMetadata } from "./get-entity-metadata.js";
+import { findEntityByName } from "./registry.js";
 
 export const findEntityMetadata = <
   TExtra extends Dict = Dict,

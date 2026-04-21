@@ -1,7 +1,7 @@
 import { mkdir as _mkdir, writeFile as _writeFile } from "fs/promises";
 import { Logger as _Logger } from "@lindorm/logger";
 import { resolve, join } from "path";
-import { generateRoute } from "./generate-route";
+import { generateRoute } from "./generate-route.js";
 import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 vi.mock("fs/promises", async () => ({
@@ -169,7 +169,7 @@ describe("generateRoute", () => {
     vi.doMock("@inquirer/prompts", () => ({ input: mockInput }));
 
     vi.resetModules();
-    const { generateRoute: freshGenerate } = await import("./generate-route");
+    const { generateRoute: freshGenerate } = await import("./generate-route.js");
 
     vi.doMock("fs/promises", () => ({
       mkdir: vi.fn().mockResolvedValue(undefined),

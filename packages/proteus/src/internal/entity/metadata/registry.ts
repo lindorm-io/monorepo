@@ -1,4 +1,4 @@
-import type { EntityMetadata } from "../types/metadata";
+import type { EntityMetadata } from "../types/metadata.js";
 
 const entityRegistry = new Map<string, Function>();
 const targetToName = new Map<Function, string>();

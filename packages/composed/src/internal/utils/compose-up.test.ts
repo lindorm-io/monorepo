@@ -1,6 +1,6 @@
 import { EventEmitter } from "events";
 import { spawn } from "child_process";
-import { composeUp } from "./compose-up";
+import { composeUp } from "./compose-up.js";
 import { beforeEach, describe, expect, test, vi, type MockedFunction } from "vitest";
 
 vi.mock("child_process");

@@ -1,2 +1,2 @@
-export * from "./buffer-utils";
-export * from "./jwe-adapter";
+export * from "./buffer-utils.js";
+export * from "./jwe-adapter.js";

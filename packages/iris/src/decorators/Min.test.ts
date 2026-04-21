@@ -1,4 +1,4 @@
-import { Min } from "./Min";
+import { Min } from "./Min.js";
 import { describe, expect, it } from "vitest";
 
 describe("Min", () => {

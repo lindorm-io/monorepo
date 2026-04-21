@@ -7,27 +7,30 @@ import type {
   DesiredSchema,
   DesiredTable,
   DesiredTrigger,
-} from "../../types/desired-schema";
-import type { RelationChange, RelationDestroy } from "../../../../entity/types/metadata";
+} from "../../types/desired-schema.js";
+import type {
+  RelationChange,
+  RelationDestroy,
+} from "../../../../entity/types/metadata.js";
 import type {
   EntityMetadata,
   MetaField,
   MetaGenerated,
-} from "../../../../entity/types/metadata";
-import type { NamespaceOptions } from "../../../../types/types";
-import { getEntityName } from "../../../../entity/utils/get-entity-name";
-import { getJoinName } from "../../../../entity/utils/get-join-name";
-import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata";
-import { generateAppendOnlyDDL } from "../ddl/generate-append-only-ddl";
-import { extractEnumValues } from "../extract-enum-values";
-import { getEnumTypeName } from "../get-enum-type-name";
-import { hashIdentifier } from "../hash-identifier";
-import { mapFieldType } from "../map-field-type";
-import { PG_IDENTIFIER_LIMIT } from "../../constants/postgres-constants";
-import { PostgresSyncError } from "../../errors/PostgresSyncError";
-import { quoteIdentifier } from "../quote-identifier";
-import { resolveColumnNameSafe } from "../resolve-column-name";
-import { resolveFkColumnType } from "../resolve-fk-column-type";
+} from "../../../../entity/types/metadata.js";
+import type { NamespaceOptions } from "../../../../types/types.js";
+import { getEntityName } from "../../../../entity/utils/get-entity-name.js";
+import { getJoinName } from "../../../../entity/utils/get-join-name.js";
+import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata.js";
+import { generateAppendOnlyDDL } from "../ddl/generate-append-only-ddl.js";
+import { extractEnumValues } from "../extract-enum-values.js";
+import { getEnumTypeName } from "../get-enum-type-name.js";
+import { hashIdentifier } from "../hash-identifier.js";
+import { mapFieldType } from "../map-field-type.js";
+import { PG_IDENTIFIER_LIMIT } from "../../constants/postgres-constants.js";
+import { PostgresSyncError } from "../../errors/PostgresSyncError.js";
+import { quoteIdentifier } from "../quote-identifier.js";
+import { resolveColumnNameSafe } from "../resolve-column-name.js";
+import { resolveFkColumnType } from "../resolve-fk-column-type.js";
 
 const mapOnDeleteAction = (onDestroy: RelationDestroy): string => {
   switch (onDestroy) {

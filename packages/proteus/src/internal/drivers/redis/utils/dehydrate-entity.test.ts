@@ -3,16 +3,16 @@ import type {
   EntityMetadata,
   MetaField,
   MetaRelation,
-} from "../../../entity/types/metadata";
-import { dehydrateToRow } from "./dehydrate-entity";
+} from "../../../entity/types/metadata.js";
+import { dehydrateToRow } from "./dehydrate-entity.js";
 
 // ─── Module Mocks ────────────────────────────────────────────────────────────
 
-vi.mock("../../../entity/utils/resolve-join-key-value", () => ({
+vi.mock("../../../entity/utils/resolve-join-key-value.js", () => ({
   resolveJoinKeyValue: vi.fn(),
 }));
 
-import { resolveJoinKeyValue } from "../../../entity/utils/resolve-join-key-value";
+import { resolveJoinKeyValue } from "../../../entity/utils/resolve-join-key-value.js";
 
 const mockResolveJoinKeyValue = resolveJoinKeyValue as MockedFunction<
   typeof resolveJoinKeyValue

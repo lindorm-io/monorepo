@@ -1,6 +1,6 @@
-import { ParsedJwtPayload } from "@lindorm/aegis";
+import type { ParsedJwtPayload } from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
-import { PylonContext, PylonMiddleware } from "../../types";
+import type { PylonContext, PylonMiddleware } from "../../types/index.js";
 
 type TokenOption = { token?: string };
 

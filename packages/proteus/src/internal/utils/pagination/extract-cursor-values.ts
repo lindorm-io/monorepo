@@ -1,5 +1,5 @@
-import type { IEntity } from "../../../interfaces";
-import type { KeysetOrderEntry } from "./build-keyset-order";
+import type { IEntity } from "../../../interfaces/index.js";
+import type { KeysetOrderEntry } from "./build-keyset-order.js";
 
 /**
  * Extract cursor column values from an entity, aligned with keyset order entries.

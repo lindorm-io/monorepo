@@ -1,8 +1,8 @@
 import { isEqual } from "@lindorm/is";
-import type { DbConstraint } from "../../types/db-snapshot";
-import type { DesiredConstraint } from "../../types/desired-schema";
-import type { SyncOperation } from "../../types/sync-plan";
-import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier";
+import type { DbConstraint } from "../../types/db-snapshot.js";
+import type { DesiredConstraint } from "../../types/desired-schema.js";
+import type { SyncOperation } from "../../types/sync-plan.js";
+import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier.js";
 
 const constraintMatches = (db: DbConstraint, desired: DesiredConstraint): boolean => {
   if (db.type !== desired.type) return false;

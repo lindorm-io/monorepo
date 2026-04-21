@@ -1,4 +1,4 @@
-import { stageFieldModifier } from "../internal/entity/metadata/stage-metadata";
+import { stageFieldModifier } from "../internal/entity/metadata/stage-metadata.js";
 
 /**
  * Set the maximum allowed value for a numeric field, or maximum length for a string field.

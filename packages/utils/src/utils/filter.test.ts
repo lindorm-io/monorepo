@@ -1,5 +1,5 @@
-import { TEST_PEOPLE } from "../__fixtures__/test-people";
-import { filter } from "./filter";
+import { TEST_PEOPLE } from "../__fixtures__/test-people.js";
+import { filter } from "./filter.js";
 import { describe, expect, test } from "vitest";
 
 describe("filter", () => {

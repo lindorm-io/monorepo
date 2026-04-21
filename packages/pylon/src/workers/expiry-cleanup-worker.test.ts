@@ -1,6 +1,6 @@
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { LindormWorker } from "@lindorm/worker";
-import { createExpiryCleanupWorker } from "./expiry-cleanup-worker";
+import { createExpiryCleanupWorker } from "./expiry-cleanup-worker.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("createExpiryCleanupWorker", () => {

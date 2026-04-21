@@ -1,5 +1,5 @@
-import type { IAmphora } from "../interfaces";
-import { _createMockAmphora } from "./create-mock-amphora";
+import type { IAmphora } from "../interfaces/index.js";
+import { _createMockAmphora } from "./create-mock-amphora.js";
 
 type MockAmphora = jest.Mocked<IAmphora>;
 

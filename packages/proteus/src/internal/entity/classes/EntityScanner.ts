@@ -1,8 +1,8 @@
 import { isObject, isString } from "@lindorm/is";
-import { IScanData, Scanner } from "@lindorm/scanner";
-import { Constructor, Dict } from "@lindorm/types";
-import type { EntityScannerInput } from "../../../types";
-import { EntityScannerError } from "../errors/EntityScannerError";
+import { type IScanData, Scanner } from "@lindorm/scanner";
+import type { Constructor, Dict } from "@lindorm/types";
+import type { EntityScannerInput } from "../../../types/index.js";
+import { EntityScannerError } from "../errors/EntityScannerError.js";
 
 export class EntityScanner {
   public static async scan<T extends Dict = Dict>(

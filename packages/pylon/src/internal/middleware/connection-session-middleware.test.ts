@@ -3,9 +3,9 @@ import {
   createMockProteusSource,
   createMockRepository,
 } from "@lindorm/proteus/mocks/vitest";
-import { Next } from "@lindorm/middleware";
-import { PylonSessionOptions } from "../../types";
-import { createConnectionSessionMiddleware } from "./connection-session-middleware";
+import type { Next } from "@lindorm/middleware";
+import type { PylonSessionOptions } from "../../types/index.js";
+import { createConnectionSessionMiddleware } from "./connection-session-middleware.js";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 const SESSION_ID = "cad4002a-bd04-52f1-9733-58866f421686";

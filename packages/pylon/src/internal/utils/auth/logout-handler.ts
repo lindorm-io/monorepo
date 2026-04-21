@@ -1,11 +1,11 @@
 import { ClientError } from "@lindorm/errors";
 import { z } from "zod";
-import {
+import type {
   PylonAuthRouterConfig,
   PylonHttpContext,
   PylonHttpMiddleware,
   PylonLogoutCookie,
-} from "../../../types";
+} from "../../../types/index.js";
 
 export const logoutSchema = z.object({
   idTokenHint: z.string().optional(),

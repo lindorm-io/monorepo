@@ -1,16 +1,16 @@
-import { AbstractMessage } from "../decorators/AbstractMessage";
-import { Default } from "../decorators/Default";
-import { Encrypted } from "../decorators/Encrypted";
-import { Field } from "../decorators/Field";
-import { IdentifierField } from "../decorators/IdentifierField";
-import { Message } from "../decorators/Message";
-import { IrisNotSupportedError } from "../errors/IrisNotSupportedError";
-import { IrisSourceError } from "../errors/IrisSourceError";
-import type { IMessageSubscriber } from "../interfaces";
-import type { IIrisDriver } from "../interfaces/IrisDriver";
-import type { IrisSourceOptions, IrisSourceOptionsBase } from "../types";
-import { clearRegistry } from "../internal/message/metadata/registry";
-import { IrisSource } from "./IrisSource";
+import { AbstractMessage } from "../decorators/AbstractMessage.js";
+import { Default } from "../decorators/Default.js";
+import { Encrypted } from "../decorators/Encrypted.js";
+import { Field } from "../decorators/Field.js";
+import { IdentifierField } from "../decorators/IdentifierField.js";
+import { Message } from "../decorators/Message.js";
+import { IrisNotSupportedError } from "../errors/IrisNotSupportedError.js";
+import { IrisSourceError } from "../errors/IrisSourceError.js";
+import type { IMessageSubscriber } from "../interfaces/index.js";
+import type { IIrisDriver } from "../interfaces/IrisDriver.js";
+import type { IrisSourceOptions, IrisSourceOptionsBase } from "../types/index.js";
+import { clearRegistry } from "../internal/message/metadata/registry.js";
+import { IrisSource } from "./IrisSource.js";
 import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 // --- Test message classes ---

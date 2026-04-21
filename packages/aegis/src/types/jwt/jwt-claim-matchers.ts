@@ -1,4 +1,4 @@
-import { PredicateOperator } from "@lindorm/types";
+import type { PredicateOperator } from "@lindorm/types";
 
 export type JwtClaimMatchers = {
   accessToken?: string;

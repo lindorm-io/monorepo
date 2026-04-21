@@ -1,9 +1,9 @@
-import type { IMessage } from "../../../../interfaces";
-import { Field } from "../../../../decorators/Field";
-import { Message } from "../../../../decorators/Message";
-import { clearRegistry } from "../../../message/metadata/registry";
-import type { NatsSharedState, NatsConsumerLoop } from "../types/nats-types";
-import { NatsStreamPipeline } from "./NatsStreamPipeline";
+import type { IMessage } from "../../../../interfaces/index.js";
+import { Field } from "../../../../decorators/Field.js";
+import { Message } from "../../../../decorators/Message.js";
+import { clearRegistry } from "../../../message/metadata/registry.js";
+import type { NatsSharedState, NatsConsumerLoop } from "../types/nats-types.js";
+import { NatsStreamPipeline } from "./NatsStreamPipeline.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // --- Mocks ---
@@ -11,21 +11,21 @@ let mockCreateNatsConsumerResult: Partial<NatsConsumerLoop>;
 const mockCreateNatsConsumer = vi
   .fn()
   .mockImplementation(async () => mockCreateNatsConsumerResult);
-vi.mock("../utils/create-nats-consumer", async () => ({
+vi.mock("../utils/create-nats-consumer.js", async () => ({
   createNatsConsumer: (...args: Array<unknown>) => mockCreateNatsConsumer(...args),
 }));
 
 const mockStopNatsConsumer = vi.fn().mockResolvedValue(undefined);
-vi.mock("../utils/stop-nats-consumer", () => ({
+vi.mock("../utils/stop-nats-consumer.js", () => ({
   stopNatsConsumer: (...args: Array<unknown>) => mockStopNatsConsumer(...args),
   stopAllNatsConsumers: vi.fn().mockResolvedValue(undefined),
 }));
 
-vi.mock("../utils/serialize-nats-message", () => ({
+vi.mock("../utils/serialize-nats-message.js", () => ({
   serializeNatsMessage: vi.fn().mockReturnValue({ data: new Uint8Array([1, 2, 3]) }),
 }));
 
-vi.mock("../utils/parse-nats-message", () => ({
+vi.mock("../utils/parse-nats-message.js", () => ({
   parseNatsMessage: vi.fn().mockReturnValue({
     payload: Buffer.from("{}"),
     headers: {},

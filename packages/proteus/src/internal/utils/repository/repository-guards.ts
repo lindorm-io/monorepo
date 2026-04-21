@@ -1,5 +1,5 @@
-import { ProteusRepositoryError } from "../../../errors/ProteusRepositoryError";
-import type { EntityMetadata } from "../../entity/types/metadata";
+import { ProteusRepositoryError } from "../../../errors/ProteusRepositoryError.js";
+import type { EntityMetadata } from "../../entity/types/metadata.js";
 
 export const guardDeleteDateField = (metadata: EntityMetadata, method: string): void => {
   const field = metadata.fields.find((f) => f.decorator === "DeleteDate");

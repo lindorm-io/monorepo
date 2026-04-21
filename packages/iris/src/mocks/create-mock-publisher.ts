@@ -1,5 +1,5 @@
-import type { IIrisPublisher } from "../interfaces/IrisPublisher";
-import type { IMessage } from "../interfaces/Message";
+import type { IIrisPublisher } from "../interfaces/IrisPublisher.js";
+import type { IMessage } from "../interfaces/Message.js";
 
 export type PublisherExtras<M extends IMessage> = {
   published: Array<M>;

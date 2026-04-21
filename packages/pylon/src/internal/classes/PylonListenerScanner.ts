@@ -1,10 +1,10 @@
-import { ILogger } from "@lindorm/logger";
+import type { ILogger } from "@lindorm/logger";
 import { uniq } from "@lindorm/utils";
-import { PylonListener } from "../../classes/PylonListener";
-import { PylonError } from "../../errors";
-import { PylonSocketContext, PylonSocketMiddleware } from "../../types";
-import { EventMatcher, EventSegment } from "./EventMatcher";
-import { PylonScannerBase, ScannedFile } from "./PylonScannerBase";
+import { PylonListener } from "../../classes/PylonListener.js";
+import { PylonError } from "../../errors/index.js";
+import type { PylonSocketContext, PylonSocketMiddleware } from "../../types/index.js";
+import { EventMatcher, type EventSegment } from "./EventMatcher.js";
+import { PylonScannerBase, type ScannedFile } from "./PylonScannerBase.js";
 
 const LISTENER_METHODS = ["ON", "ONCE"] as const;
 type ListenerMethod = (typeof LISTENER_METHODS)[number];

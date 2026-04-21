@@ -1,18 +1,18 @@
 import { camelCase, snakeCase } from "@lindorm/case";
 import { isArray, isObject, isString, isTrue } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
-import { EntityMetadataError } from "../errors/EntityMetadataError";
-import type { EntityMetadata, MetaRelation } from "../types/metadata";
+import { EntityMetadataError } from "../errors/EntityMetadataError.js";
+import type { EntityMetadata, MetaRelation } from "../types/metadata.js";
 import type {
   StagedJoinField,
   StagedJoinTable,
   StagedRelation,
   StagedRelationModifier,
-} from "../types/staged";
-import { calculateJoinKeys } from "../utils/calculate-join-keys";
-import { reverseDictValues } from "../utils/reverse-dict-values";
-import { buildPrimaryMetadata } from "./build-primary";
-import { collectAll } from "./collect";
+} from "../types/staged.js";
+import { calculateJoinKeys } from "../utils/calculate-join-keys.js";
+import { reverseDictValues } from "../utils/reverse-dict-values.js";
+import { buildPrimaryMetadata } from "./build-primary.js";
+import { collectAll } from "./collect.js";
 
 const mergeJoinFields = (
   targetName: string,

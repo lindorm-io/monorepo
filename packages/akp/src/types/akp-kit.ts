@@ -1,5 +1,5 @@
-import { IKryptos, IKryptosAkp } from "@lindorm/kryptos";
-import { KeyData } from "@lindorm/types";
+import type { IKryptos, IKryptosAkp } from "@lindorm/kryptos";
+import type { KeyData } from "@lindorm/types";
 
 export type CreateAkpSignatureOptions = {
   data: KeyData;

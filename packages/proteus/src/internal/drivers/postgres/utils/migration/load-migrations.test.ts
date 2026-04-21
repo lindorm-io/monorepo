@@ -2,8 +2,8 @@ import type { ILogger } from "@lindorm/logger";
 import { mkdtemp, rm, writeFile } from "fs/promises";
 import { tmpdir } from "os";
 import { join } from "path";
-import { mockScannerImport } from "../../../../../__fixtures__/mock-scanner-import";
-import { loadMigrations } from "./load-migrations";
+import { mockScannerImport } from "../../../../../__fixtures__/mock-scanner-import.js";
+import { loadMigrations } from "./load-migrations.js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 mockScannerImport();

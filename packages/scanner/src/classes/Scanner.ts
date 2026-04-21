@@ -1,10 +1,10 @@
 import { isArray, isObjectLike, isString } from "@lindorm/is";
 import { readdirSync, statSync } from "fs";
 import { basename, extname, join, relative, sep } from "path";
-import { ScannerError } from "../errors";
-import { IScanData, IScanner } from "../interfaces";
-import { StructureScannerOptions } from "../types";
-import { ScanData } from "./ScanData";
+import { ScannerError } from "../errors/index.js";
+import type { IScanData, IScanner } from "../interfaces/index.js";
+import type { StructureScannerOptions } from "../types/index.js";
+import { ScanData } from "./ScanData.js";
 
 export class Scanner implements IScanner {
   private readonly deniedDirectories: Array<RegExp>;

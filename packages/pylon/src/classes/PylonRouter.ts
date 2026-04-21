@@ -1,7 +1,7 @@
-import { DefaultState } from "koa";
-import Router, { IRouterOptions } from "koa-router";
-import { httpParamsParserMiddleware } from "../internal/middleware/http-params-parser-middleware";
-import { PylonHttpContext, PylonHttpMiddleware } from "../types";
+import type { DefaultState } from "koa";
+import Router, { type IRouterOptions } from "koa-router";
+import { httpParamsParserMiddleware } from "../internal/middleware/http-params-parser-middleware.js";
+import type { PylonHttpContext, PylonHttpMiddleware } from "../types/index.js";
 
 export class PylonRouter<C extends PylonHttpContext = PylonHttpContext> {
   private readonly _router: Router<DefaultState, C>;

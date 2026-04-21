@@ -1,5 +1,5 @@
-import { compileLimitOffset as shared } from "../../../../utils/sql/compile-limit-offset";
-import { sqliteDialect } from "../sqlite-dialect";
+import { compileLimitOffset as shared } from "../../../../utils/sql/compile-limit-offset.js";
+import { sqliteDialect } from "../sqlite-dialect.js";
 
 export const compileLimitOffset = (
   skip: number | null,

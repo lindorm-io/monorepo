@@ -1,5 +1,5 @@
-import type { StagedMetadata } from "../internal/metadata";
-import { Timeout } from "./Timeout";
+import type { StagedMetadata } from "../internal/metadata/index.js";
+import { Timeout } from "./Timeout.js";
 import { describe, expect, test } from "vitest";
 
 const createMockContext = (metadata: DecoratorMetadataObject): ClassDecoratorContext =>

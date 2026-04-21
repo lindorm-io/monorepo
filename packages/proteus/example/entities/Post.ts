@@ -1,5 +1,11 @@
-import { CreateDateField, Entity, Field, ManyToOne, PrimaryKeyField } from "../../src";
-import { User } from "./User";
+import {
+  CreateDateField,
+  Entity,
+  Field,
+  ManyToOne,
+  PrimaryKeyField,
+} from "../../src/index.js";
+import { User } from "./User.js";
 
 @Entity()
 export class Post {

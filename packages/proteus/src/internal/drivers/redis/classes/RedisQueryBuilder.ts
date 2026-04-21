@@ -8,41 +8,41 @@ import type {
   IInsertQueryBuilder,
   IProteusQueryBuilder,
   IUpdateQueryBuilder,
-} from "../../../../interfaces";
-import type { WriteResult } from "../../../../interfaces/InsertQueryBuilder";
-import type { LockMode } from "../../../../types/find-options";
-import type { EntityMetadata } from "../../../entity/types/metadata";
-import type { FilterRegistry } from "../../../utils/query/filter-registry";
-import { QueryBuilder } from "../../../../classes/QueryBuilder";
-import { NotSupportedError } from "../../../../errors/NotSupportedError";
-import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError";
+} from "../../../../interfaces/index.js";
+import type { WriteResult } from "../../../../interfaces/InsertQueryBuilder.js";
+import type { LockMode } from "../../../../types/find-options.js";
+import type { EntityMetadata } from "../../../entity/types/metadata.js";
+import type { FilterRegistry } from "../../../utils/query/filter-registry.js";
+import { QueryBuilder } from "../../../../classes/QueryBuilder.js";
+import { NotSupportedError } from "../../../../errors/NotSupportedError.js";
+import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError.js";
 import { Predicated } from "@lindorm/utils";
-import { defaultHydrateEntity } from "../../../entity/utils/default-hydrate-entity";
-import { generateAutoFilters } from "../../../entity/metadata/auto-filters";
-import { resolveFilters } from "../../../utils/query/resolve-filters";
-import { mergeSystemFilterOverrides } from "../../../utils/query/merge-system-filter-overrides";
-import { buildEntityKey, buildEntityKeyFromRow } from "../utils/build-entity-key";
-import { buildScanPattern } from "../utils/build-scan-pattern";
+import { defaultHydrateEntity } from "../../../entity/utils/default-hydrate-entity.js";
+import { generateAutoFilters } from "../../../entity/metadata/auto-filters.js";
+import { resolveFilters } from "../../../utils/query/resolve-filters.js";
+import { mergeSystemFilterOverrides } from "../../../utils/query/merge-system-filter-overrides.js";
+import { buildEntityKey, buildEntityKeyFromRow } from "../utils/build-entity-key.js";
+import { buildScanPattern } from "../utils/build-scan-pattern.js";
 // deserializeHash parses array/json/object fields from JSON strings to native JS
 // types via JSON.parse before criteria matching — complex predicates ($all, $has,
 // $overlap etc.) work correctly on deserialized values.
-import { deserializeHash } from "../utils/deserialize-hash";
-import { serializeHash } from "../utils/serialize-hash";
-import { extractExactPk } from "../utils/is-pk-exact";
-import { scanEntityKeys } from "../utils/scan-entity-keys";
-import { applyRedisAutoIncrement } from "../utils/redis-auto-increment";
-import { resolveInheritanceRoot } from "../../../entity/utils/resolve-inheritance-root";
-import { resolvePolymorphicMetadata } from "../../../entity/utils/resolve-polymorphic-metadata";
-import { RedisDriverError } from "../errors/RedisDriverError";
-import { RedisDuplicateKeyError } from "../errors/RedisDuplicateKeyError";
-import { encryptFieldValue } from "../../../entity/utils/encrypt-field-value";
-import { flattenEmbeddedCriteria } from "../../../utils/query/flatten-embedded-criteria";
-import { applyOrdering } from "../../../utils/query/apply-ordering";
+import { deserializeHash } from "../utils/deserialize-hash.js";
+import { serializeHash } from "../utils/serialize-hash.js";
+import { extractExactPk } from "../utils/is-pk-exact.js";
+import { scanEntityKeys } from "../utils/scan-entity-keys.js";
+import { applyRedisAutoIncrement } from "../utils/redis-auto-increment.js";
+import { resolveInheritanceRoot } from "../../../entity/utils/resolve-inheritance-root.js";
+import { resolvePolymorphicMetadata } from "../../../entity/utils/resolve-polymorphic-metadata.js";
+import { RedisDriverError } from "../errors/RedisDriverError.js";
+import { RedisDuplicateKeyError } from "../errors/RedisDuplicateKeyError.js";
+import { encryptFieldValue } from "../../../entity/utils/encrypt-field-value.js";
+import { flattenEmbeddedCriteria } from "../../../utils/query/flatten-embedded-criteria.js";
+import { applyOrdering } from "../../../utils/query/apply-ordering.js";
 import {
   computeAggregateFromValues,
   extractNumericValues,
-} from "../../../utils/query/compute-in-memory-aggregate";
-import { scanAllRows as scanAllRowsShared } from "../utils/scan-all-rows";
+} from "../../../utils/query/compute-in-memory-aggregate.js";
+import { scanAllRows as scanAllRowsShared } from "../utils/scan-all-rows.js";
 
 // ─── Lock mode guard ──────────────────────────────────────────────────────────
 

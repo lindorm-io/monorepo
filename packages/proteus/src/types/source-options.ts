@@ -1,11 +1,11 @@
 import type { IAmphora } from "@lindorm/amphora";
 import type { CircuitBreakerOptions } from "@lindorm/breaker";
 import type { ReadableTime } from "@lindorm/date";
-import { ILogger } from "@lindorm/logger";
-import { ConnectionOptions } from "node:tls";
-import { IEntity } from "../interfaces";
-import type { ICacheAdapter } from "../interfaces/CacheAdapter";
-import { EntityScannerInput } from "./scanner";
+import type { ILogger } from "@lindorm/logger";
+import type { ConnectionOptions } from "node:tls";
+import type { IEntity } from "../interfaces/index.js";
+import type { ICacheAdapter } from "../interfaces/CacheAdapter.js";
+import type { EntityScannerInput } from "./scanner.js";
 
 /**
  * Circuit breaker configuration for ProteusSource.

@@ -1,5 +1,5 @@
 import type { Command } from "commander";
-import { generateDto } from "./generate-dto";
+import { generateDto } from "./generate-dto.js";
 
 export const registerGenerateCommands = (program: Command): void => {
   const generate = program

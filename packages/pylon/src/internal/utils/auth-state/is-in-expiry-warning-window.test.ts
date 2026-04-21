@@ -1,4 +1,4 @@
-import { isInExpiryWarningWindow } from "./is-in-expiry-warning-window";
+import { isInExpiryWarningWindow } from "./is-in-expiry-warning-window.js";
 import { describe, expect, test } from "vitest";
 
 describe("isInExpiryWarningWindow", () => {

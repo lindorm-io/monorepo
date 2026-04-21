@@ -1,10 +1,10 @@
-import type { EntityMetadata } from "../../../entity/types/metadata";
-import { applyRedisAutoIncrement } from "./redis-auto-increment";
+import type { EntityMetadata } from "../../../entity/types/metadata.js";
+import { applyRedisAutoIncrement } from "./redis-auto-increment.js";
 import { describe, expect, test, vi, type Mock } from "vitest";
 
 // ─── Module Mocks ────────────────────────────────────────────────────────────
 
-vi.mock("./build-increment-key", async () => ({
+vi.mock("./build-increment-key.js", async () => ({
   buildIncrementKey: vi.fn((_target, fieldName, namespace) =>
     namespace ? `${namespace}:seq:test:${fieldName}` : `seq:test:${fieldName}`,
   ),

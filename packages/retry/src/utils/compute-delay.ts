@@ -1,4 +1,4 @@
-import { DelayOptions } from "../types";
+import type { DelayOptions } from "../types/index.js";
 
 export const computeDelay = (attempt: number, options: DelayOptions = {}): number => {
   const {

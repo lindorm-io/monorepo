@@ -1,23 +1,29 @@
 import {
-  AesContent,
-  AesDecryptionRecord,
-  AesEncryptionRecord,
+  type AesContent,
+  type AesDecryptionRecord,
+  type AesEncryptionRecord,
   AesKit,
-  SerialisedAesDecryption,
-  SerialisedAesEncryption,
+  type SerialisedAesDecryption,
+  type SerialisedAesEncryption,
 } from "@lindorm/aes";
-import { AmphoraPredicate, IAmphora } from "@lindorm/amphora";
-import {
+import type { AmphoraPredicate, IAmphora } from "@lindorm/amphora";
+import type {
   IKryptos,
   KryptosEncAlgorithm,
   KryptosEncryption,
   KryptosSigAlgorithm,
 } from "@lindorm/kryptos";
-import { ILogger } from "@lindorm/logger";
-import { Dict } from "@lindorm/types";
-import { AegisError } from "../errors";
-import { IAegis, IAegisAes, IAegisJwe, IAegisJws, IAegisJwt } from "../interfaces";
-import {
+import type { ILogger } from "@lindorm/logger";
+import type { Dict } from "@lindorm/types";
+import { AegisError } from "../errors/index.js";
+import type {
+  IAegis,
+  IAegisAes,
+  IAegisJwe,
+  IAegisJws,
+  IAegisJwt,
+} from "../interfaces/index.js";
+import type {
   AegisIntrospection,
   AegisOptions,
   AegisPredicate,
@@ -40,18 +46,21 @@ import {
   TokenHeaderClaims,
   ValidateJwtOptions,
   VerifyJwtOptions,
-} from "../types";
-import { createJwtValidate } from "../internal/utils/jwt-validate";
-import { validate as validateClaims } from "../internal/utils/validate";
-import { decodeJoseHeader } from "../internal/utils/jose-header";
+} from "../types/index.js";
+import { createJwtValidate } from "../internal/utils/jwt-validate.js";
+import { validate as validateClaims } from "../internal/utils/validate.js";
+import { decodeJoseHeader } from "../internal/utils/jose-header.js";
 import {
-  IntrospectClaimsInput,
+  type IntrospectClaimsInput,
   parseIntrospection,
-} from "../internal/utils/parse-introspection";
-import { parseUserinfo, UserinfoClaimsInput } from "../internal/utils/parse-userinfo";
-import { JweKit } from "./JweKit";
-import { JwsKit } from "./JwsKit";
-import { JwtKit } from "./JwtKit";
+} from "../internal/utils/parse-introspection.js";
+import {
+  parseUserinfo,
+  type UserinfoClaimsInput,
+} from "../internal/utils/parse-userinfo.js";
+import { JweKit } from "./JweKit.js";
+import { JwsKit } from "./JwsKit.js";
+import { JwtKit } from "./JwtKit.js";
 
 type PredicateOptions = {
   predicate?: AegisPredicate;

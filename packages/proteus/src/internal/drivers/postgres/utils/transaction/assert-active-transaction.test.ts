@@ -1,6 +1,6 @@
-import { PostgresTransactionError } from "../../errors/PostgresTransactionError";
-import type { PostgresTransactionHandle } from "../../types/postgres-transaction-handle";
-import { assertActiveTransaction } from "./assert-active-transaction";
+import { PostgresTransactionError } from "../../errors/PostgresTransactionError.js";
+import type { PostgresTransactionHandle } from "../../types/postgres-transaction-handle.js";
+import { assertActiveTransaction } from "./assert-active-transaction.js";
 import { describe, expect, it, vi } from "vitest";
 
 const makeHandle = (

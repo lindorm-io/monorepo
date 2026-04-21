@@ -1,7 +1,7 @@
 import { ClientError } from "@lindorm/errors";
 import type { Socket } from "socket.io";
-import { reconstructHandshakeHtu } from "../handshake/reconstruct-handshake-htu";
-import { assertDpopMatch, DpopProofClaims } from "./assert-dpop-match";
+import { reconstructHandshakeHtu } from "../handshake/reconstruct-handshake-htu.js";
+import { assertDpopMatch, type DpopProofClaims } from "./assert-dpop-match.js";
 
 type Handshake = Socket["handshake"];
 

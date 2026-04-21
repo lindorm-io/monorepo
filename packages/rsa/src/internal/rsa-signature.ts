@@ -1,9 +1,12 @@
 import { isString } from "@lindorm/is";
 import { createSign, createVerify } from "crypto";
-import { RsaError } from "../errors";
-import { CreateRsaSignatureOptions, VerifyRsaSignatureOptions } from "../types";
-import { getSignKey, getVerifyKey } from "./get-key";
-import { mapRsaAlgorithm } from "./map-algorithm";
+import { RsaError } from "../errors/index.js";
+import type {
+  CreateRsaSignatureOptions,
+  VerifyRsaSignatureOptions,
+} from "../types/index.js";
+import { getSignKey, getVerifyKey } from "./get-key.js";
+import { mapRsaAlgorithm } from "./map-algorithm.js";
 
 export const createRsaSignature = ({
   data,

@@ -1,5 +1,5 @@
-import { IKryptosOct } from "@lindorm/kryptos";
-import { OctError } from "../errors";
+import type { IKryptosOct } from "@lindorm/kryptos";
+import { OctError } from "../errors/index.js";
 
 export const getPrivateKey = (kryptos: IKryptosOct): Buffer => {
   const { privateKey } = kryptos.export("der");

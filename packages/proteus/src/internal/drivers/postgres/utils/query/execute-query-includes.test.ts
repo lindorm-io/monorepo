@@ -1,7 +1,7 @@
-import { makeField } from "../../../../__fixtures__/make-field";
-import type { EntityMetadata, MetaRelation } from "../../../../entity/types/metadata";
-import type { IncludeSpec } from "../../../../types/query";
-import type { ExecuteQueryIncludesOptions } from "./execute-query-includes";
+import { makeField } from "../../../../__fixtures__/make-field.js";
+import type { EntityMetadata, MetaRelation } from "../../../../entity/types/metadata.js";
+import type { IncludeSpec } from "../../../../types/query.js";
+import type { ExecuteQueryIncludesOptions } from "./execute-query-includes.js";
 import {
   beforeEach,
   describe,
@@ -13,12 +13,12 @@ import {
 } from "vitest";
 
 // Mock the helpers that access the metadata registry and compile SQL
-vi.mock("./get-relation-metadata");
-vi.mock("./compile-relation-query");
+vi.mock("./get-relation-metadata.js");
+vi.mock("./compile-relation-query.js");
 
-import { findRelationByKey, getRelationMetadata } from "./get-relation-metadata";
-import { compileRelationQuery } from "./compile-relation-query";
-import { executeQueryIncludes } from "./execute-query-includes";
+import { findRelationByKey, getRelationMetadata } from "./get-relation-metadata.js";
+import { compileRelationQuery } from "./compile-relation-query.js";
+import { executeQueryIncludes } from "./execute-query-includes.js";
 
 const mockFindRelationByKey = findRelationByKey as MockedFunction<
   typeof findRelationByKey

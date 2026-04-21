@@ -1,7 +1,7 @@
-import { DeadlockError } from "../../../../errors/DeadlockError";
-import { SerializationError } from "../../../../errors/SerializationError";
-import { PostgresTransactionError } from "../../errors/PostgresTransactionError";
-import { isRetryableTransactionError } from "./is-retryable-transaction-error";
+import { DeadlockError } from "../../../../errors/DeadlockError.js";
+import { SerializationError } from "../../../../errors/SerializationError.js";
+import { PostgresTransactionError } from "../../errors/PostgresTransactionError.js";
+import { isRetryableTransactionError } from "./is-retryable-transaction-error.js";
 import { describe, expect, it } from "vitest";
 
 describe("isRetryableTransactionError", () => {

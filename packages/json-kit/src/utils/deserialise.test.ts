@@ -1,5 +1,5 @@
-import { Primitive } from "../classes/Primitive";
-import { deserialise } from "./deserialise";
+import { Primitive } from "../classes/Primitive.js";
+import { deserialise } from "./deserialise.js";
 import { describe, expect, test } from "vitest";
 
 describe("deserialise", () => {

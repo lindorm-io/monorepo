@@ -1,4 +1,4 @@
-import { RetryConfig } from "@lindorm/retry";
+import type { RetryConfig } from "@lindorm/retry";
 
 export const RETRY_CONFIG: RetryConfig = {
   maxAttempts: 10,

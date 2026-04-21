@@ -1,6 +1,6 @@
-import { buildDpopProof } from "../internal/build-dpop-proof";
-import { DpopSigner } from "@lindorm/types";
-import { ConduitMiddleware } from "../types";
+import { buildDpopProof } from "../internal/build-dpop-proof.js";
+import type { DpopSigner } from "@lindorm/types";
+import type { ConduitMiddleware } from "../types/index.js";
 
 export type ConduitDpopAuthOptions = {
   nonce?: string;

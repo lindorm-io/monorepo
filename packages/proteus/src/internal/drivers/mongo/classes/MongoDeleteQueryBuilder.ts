@@ -1,14 +1,14 @@
 import type { ClientSession, Db, Document, Filter } from "mongodb";
 import type { Predicate } from "@lindorm/types";
-import type { IEntity } from "../../../../interfaces";
-import type { IDeleteQueryBuilder } from "../../../../interfaces/DeleteQueryBuilder";
-import type { WriteResult } from "../../../../interfaces/InsertQueryBuilder";
-import type { EntityMetadata } from "../../../entity/types/metadata";
-import { NotSupportedError } from "../../../../errors/NotSupportedError";
-import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError";
-import { compilePredicatesToFilter } from "../utils/compile-aggregation-pipeline";
-import { flattenEmbeddedCriteria } from "../../../utils/query/flatten-embedded-criteria";
-import { resolveCollectionName } from "../utils/resolve-collection-name";
+import type { IEntity } from "../../../../interfaces/index.js";
+import type { IDeleteQueryBuilder } from "../../../../interfaces/DeleteQueryBuilder.js";
+import type { WriteResult } from "../../../../interfaces/InsertQueryBuilder.js";
+import type { EntityMetadata } from "../../../entity/types/metadata.js";
+import { NotSupportedError } from "../../../../errors/NotSupportedError.js";
+import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError.js";
+import { compilePredicatesToFilter } from "../utils/compile-aggregation-pipeline.js";
+import { flattenEmbeddedCriteria } from "../../../utils/query/flatten-embedded-criteria.js";
+import { resolveCollectionName } from "../utils/resolve-collection-name.js";
 
 /**
  * MongoDB DELETE / soft-DELETE query builder.

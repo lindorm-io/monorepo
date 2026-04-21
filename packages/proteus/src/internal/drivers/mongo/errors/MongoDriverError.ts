@@ -1,3 +1,3 @@
-import { DriverError } from "../../../../errors/DriverError";
+import { DriverError } from "../../../../errors/DriverError.js";
 
 export class MongoDriverError extends DriverError {}

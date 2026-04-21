@@ -1,9 +1,13 @@
 import { ClientError } from "@lindorm/errors";
 import CoBody from "co-body";
-import { Files } from "formidable";
-import { BodyType, ParseBodyConfig, PylonHttpContext } from "../../../types";
-import { getContentEncoding } from "./get-content-encoding";
-import { parseWithFormidable } from "./parse-with-formidable";
+import type { Files } from "formidable";
+import type {
+  BodyType,
+  ParseBodyConfig,
+  PylonHttpContext,
+} from "../../../types/index.js";
+import { getContentEncoding } from "./get-content-encoding.js";
+import { parseWithFormidable } from "./parse-with-formidable.js";
 
 type Result = {
   files?: Files;

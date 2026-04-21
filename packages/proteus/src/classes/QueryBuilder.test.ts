@@ -1,9 +1,9 @@
-import { ProteusError } from "../errors";
-import type { IEntity } from "../interfaces";
-import type { EntityMetadata } from "../internal/entity/types/metadata";
-import type { QueryState } from "../internal/types/query";
-import { makeField } from "../internal/__fixtures__/make-field";
-import { QueryBuilder } from "./QueryBuilder";
+import { ProteusError } from "../errors/index.js";
+import type { IEntity } from "../interfaces/index.js";
+import type { EntityMetadata } from "../internal/entity/types/metadata.js";
+import type { QueryState } from "../internal/types/query.js";
+import { makeField } from "../internal/__fixtures__/make-field.js";
+import { QueryBuilder } from "./QueryBuilder.js";
 import { beforeEach, describe, expect, test } from "vitest";
 
 // Concrete test implementation

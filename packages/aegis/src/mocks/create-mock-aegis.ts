@@ -1,5 +1,5 @@
 import type { IAesKit } from "@lindorm/aes";
-import { IAegis } from "../interfaces";
+import type { IAegis } from "../interfaces/index.js";
 
 export const _createMockAegis = (mockFn: () => any, aesKit: IAesKit): IAegis => {
   const impl = (fn: any) => {

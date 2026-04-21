@@ -3,8 +3,8 @@ import type {
   MetaField,
   MetaFieldType,
   MetaRelation,
-} from "../../../entity/types/metadata";
-import { RedisDriverError } from "../errors/RedisDriverError";
+} from "../../../entity/types/metadata.js";
+import { RedisDriverError } from "../errors/RedisDriverError.js";
 
 /**
  * Deserialize a Redis HASH (Record<string, string>) back into an entity Dict.

@@ -1,14 +1,14 @@
 import { isObject, isString } from "@lindorm/is";
-import { AesError } from "../errors";
-import {
+import { AesError } from "../errors/index.js";
+import type {
   AesDecryptionRecord,
   ParsedAesDecryptionRecord,
   SerialisedAesDecryption,
-} from "../types";
-import { isAesBufferData, isAesSerialisedData, isAesTokenised } from "./is-aes";
-import { parseEncodedAesString } from "../internal/utils/encoded-aes";
-import { parseSerialisedAesRecord } from "../internal/utils/serialised-aes";
-import { parseTokenisedAesString } from "../internal/utils/tokenised-aes";
+} from "../types/index.js";
+import { isAesBufferData, isAesSerialisedData, isAesTokenised } from "./is-aes.js";
+import { parseEncodedAesString } from "../internal/utils/encoded-aes.js";
+import { parseSerialisedAesRecord } from "../internal/utils/serialised-aes.js";
+import { parseTokenisedAesString } from "../internal/utils/tokenised-aes.js";
 
 type ParseAes = {
   (data: string): ParsedAesDecryptionRecord;

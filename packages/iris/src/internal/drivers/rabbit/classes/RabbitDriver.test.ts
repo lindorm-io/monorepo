@@ -1,6 +1,6 @@
 import { EventEmitter } from "events";
-import { RabbitDriver, type RabbitDriverOptions } from "./RabbitDriver";
-import type { IrisConnectionState } from "../../../../types";
+import { RabbitDriver, type RabbitDriverOptions } from "./RabbitDriver.js";
+import type { IrisConnectionState } from "../../../../types/index.js";
 import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 // ─── Mock amqplib ────────────────────────────────────────────────────────────

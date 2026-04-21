@@ -1,5 +1,5 @@
-import { TEST_FIXTURES } from "../__fixtures__/test-fixtures";
-import { isJwe } from "./is-jwe";
+import { TEST_FIXTURES } from "../__fixtures__/test-fixtures.js";
+import { isJwe } from "./is-jwe.js";
 import { describe, expect, test } from "vitest";
 
 describe("isJwe", () => {

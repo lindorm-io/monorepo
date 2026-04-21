@@ -1,9 +1,9 @@
 import { ServerError } from "@lindorm/errors";
-import { Middleware } from "@lindorm/middleware";
-import { Dict, Priority } from "@lindorm/types";
-import { Job } from "../../messages";
-import { PylonContext, PylonQueueOptions } from "../../types";
-import { resolveIris } from "../utils/resolve-iris";
+import type { Middleware } from "@lindorm/middleware";
+import type { Dict, Priority } from "@lindorm/types";
+import { Job } from "../../messages/index.js";
+import type { PylonContext, PylonQueueOptions } from "../../types/index.js";
+import { resolveIris } from "../utils/resolve-iris.js";
 
 const PRIORITY_MAP: Record<Priority, number> = {
   background: 0,

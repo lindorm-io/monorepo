@@ -1,8 +1,8 @@
 import type { Constructor } from "@lindorm/types";
-import { IEntity } from "../../../interfaces";
-import type { SaveStrategy } from "../../types/types";
-import { EntityManagerError } from "../errors/EntityManagerError";
-import { getEntityMetadata } from "../metadata/get-entity-metadata";
+import type { IEntity } from "../../../interfaces/index.js";
+import type { SaveStrategy } from "../../types/types.js";
+import { EntityManagerError } from "../errors/EntityManagerError.js";
+import { getEntityMetadata } from "../metadata/get-entity-metadata.js";
 
 export const getSaveStrategy = <E extends IEntity>(
   target: Constructor<E>,

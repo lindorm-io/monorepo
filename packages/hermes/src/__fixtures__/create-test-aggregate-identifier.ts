@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import type { AggregateIdentifier } from "../types";
+import type { AggregateIdentifier } from "../types/index.js";
 
 export const createTestAggregateIdentifier = (
   overrides: Partial<AggregateIdentifier> = {},

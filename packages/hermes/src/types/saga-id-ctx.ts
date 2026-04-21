@@ -1,5 +1,5 @@
 import type { ILogger } from "@lindorm/logger";
-import type { AggregateIdentifier } from "./aggregate-identifier";
+import type { AggregateIdentifier } from "./aggregate-identifier.js";
 
 export type SagaIdCtx<E> = {
   event: E;

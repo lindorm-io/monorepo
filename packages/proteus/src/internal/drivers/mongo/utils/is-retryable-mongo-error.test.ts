@@ -1,4 +1,4 @@
-import { isRetryableMongoError } from "./is-retryable-mongo-error";
+import { isRetryableMongoError } from "./is-retryable-mongo-error.js";
 import { describe, expect, test } from "vitest";
 
 describe("isRetryableMongoError", () => {

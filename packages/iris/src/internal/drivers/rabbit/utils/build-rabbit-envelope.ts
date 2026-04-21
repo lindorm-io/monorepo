@@ -1,6 +1,6 @@
-import type { MessageMetadata } from "../../../message/types/metadata";
-import type { IrisEnvelope } from "../../../types/iris-envelope";
-import type { ParsedAmqpMessage } from "./parse-amqp-headers";
+import type { MessageMetadata } from "../../../message/types/metadata.js";
+import type { IrisEnvelope } from "../../../types/iris-envelope.js";
+import type { ParsedAmqpMessage } from "./parse-amqp-headers.js";
 
 export const buildRabbitEnvelope = (
   parsed: ParsedAmqpMessage,

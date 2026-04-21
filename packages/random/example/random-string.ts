@@ -1,4 +1,4 @@
-import { randomString } from "../src";
+import { randomString } from "../src/index.js";
 
 console.log("random string (4)  > ", randomString(4));
 console.log("random string (6)  > ", randomString(6));

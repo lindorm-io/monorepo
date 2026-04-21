@@ -1,9 +1,9 @@
-import type { EntityMetadata } from "../../../../entity/types/metadata";
-import type { PostgresQueryClient } from "../../types/postgres-query-client";
-import type { DbSnapshot } from "../../types/db-snapshot";
-import type { DesiredSchema } from "../../types/desired-schema";
-import type { SyncPlan, SyncOperation } from "../../types/sync-plan";
-import type { SerializedMigration } from "./serialize-migration";
+import type { EntityMetadata } from "../../../../entity/types/metadata.js";
+import type { PostgresQueryClient } from "../../types/postgres-query-client.js";
+import type { DbSnapshot } from "../../types/db-snapshot.js";
+import type { DesiredSchema } from "../../types/desired-schema.js";
+import type { SyncPlan, SyncOperation } from "../../types/sync-plan.js";
+import type { SerializedMigration } from "./serialize-migration.js";
 import {
   beforeEach,
   describe,
@@ -16,27 +16,27 @@ import {
 
 // --- Mock all external dependencies ---
 
-vi.mock("../sync/introspect-schema", async () => ({
+vi.mock("../sync/introspect-schema.js", async () => ({
   introspectSchema: vi.fn(),
 }));
 
-vi.mock("../sync/project-desired-schema", () => ({
+vi.mock("../sync/project-desired-schema.js", () => ({
   projectDesiredSchema: vi.fn(),
 }));
 
-vi.mock("../sync/diff-schema", () => ({
+vi.mock("../sync/diff-schema.js", () => ({
   diffSchema: vi.fn(),
 }));
 
-vi.mock("./serialize-migration", () => ({
+vi.mock("./serialize-migration.js", () => ({
   serializeMigration: vi.fn(),
 }));
 
-vi.mock("./write-migration-file", () => ({
+vi.mock("./write-migration-file.js", () => ({
   writeMigrationFile: vi.fn(),
 }));
 
-vi.mock("./migration-table", () => ({
+vi.mock("./migration-table.js", () => ({
   ensureMigrationTable: vi.fn(),
   insertMigrationRecord: vi.fn(),
   markMigrationFinished: vi.fn(),
@@ -47,17 +47,17 @@ vi.mock("crypto", async () => ({
   randomUUID: vi.fn(() => "00000000-0000-0000-0000-000000000001"),
 }));
 
-import { introspectSchema } from "../sync/introspect-schema";
-import { projectDesiredSchema } from "../sync/project-desired-schema";
-import { diffSchema } from "../sync/diff-schema";
-import { serializeMigration } from "./serialize-migration";
-import { writeMigrationFile } from "./write-migration-file";
+import { introspectSchema } from "../sync/introspect-schema.js";
+import { projectDesiredSchema } from "../sync/project-desired-schema.js";
+import { diffSchema } from "../sync/diff-schema.js";
+import { serializeMigration } from "./serialize-migration.js";
+import { writeMigrationFile } from "./write-migration-file.js";
 import {
   ensureMigrationTable,
   insertMigrationRecord,
   markMigrationFinished,
-} from "./migration-table";
-import { generateBaselineMigration } from "./generate-baseline-migration";
+} from "./migration-table.js";
+import { generateBaselineMigration } from "./generate-baseline-migration.js";
 
 const mockIntrospect = introspectSchema as MockedFunction<typeof introspectSchema>;
 const mockProject = projectDesiredSchema as MockedFunction<typeof projectDesiredSchema>;

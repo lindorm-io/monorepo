@@ -1,14 +1,14 @@
 import { randomUUID as _randomUUID } from "crypto";
 import MockDate from "mockdate";
-import { getAuthorization as _getAuthorization } from "../utils/get-authorization";
-import { createHttpStateMiddleware } from "./http-state-middleware";
+import { getAuthorization as _getAuthorization } from "../utils/get-authorization.js";
+import { createHttpStateMiddleware } from "./http-state-middleware.js";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate);
 
 vi.mock("crypto");
-vi.mock("../utils/get-authorization");
+vi.mock("../utils/get-authorization.js");
 
 const randomUUID = _randomUUID as Mock;
 const getAuthorization = _getAuthorization as Mock;

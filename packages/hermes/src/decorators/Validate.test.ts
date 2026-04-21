@@ -1,6 +1,6 @@
-import type { StagedMetadata } from "../internal/metadata";
+import type { StagedMetadata } from "../internal/metadata/index.js";
 import { z } from "zod";
-import { Validate } from "./Validate";
+import { Validate } from "./Validate.js";
 import { describe, expect, test } from "vitest";
 
 const createMockMethodContext = (

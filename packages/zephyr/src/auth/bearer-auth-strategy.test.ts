@@ -1,6 +1,6 @@
 import type { Socket } from "socket.io-client";
-import { ZephyrError } from "../errors/ZephyrError";
-import { createBearerAuthStrategy } from "./bearer-auth-strategy";
+import { ZephyrError } from "../errors/ZephyrError.js";
+import { createBearerAuthStrategy } from "./bearer-auth-strategy.js";
 import { describe, expect, it, vi, type Mock } from "vitest";
 
 const createMockSocket = (emitWithAck: Mock): { socket: Socket; timeout: Mock } => {

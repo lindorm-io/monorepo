@@ -7,31 +7,31 @@ import type {
   IEntity,
   IProteusQueryBuilder,
   IProteusRepository,
-} from "../../../../interfaces";
+} from "../../../../interfaces/index.js";
 import type {
   FilterRegistryGetter,
   IProteusDriver,
   MetadataResolver,
   TransactionHandle,
-} from "../../../interfaces/ProteusDriver";
-import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor";
+} from "../../../interfaces/ProteusDriver.js";
+import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor.js";
 import type {
   ProteusRedisOptions,
   TransactionCallback,
   TransactionOptions,
-} from "../../../../types";
-import type { EntityEmitFn } from "../../../../types/event-map";
-import type { RepositoryFactory } from "../../../types/repository-factory";
-import type { FilterRegistry } from "../../../utils/query/filter-registry";
-import type { RedisTransactionHandle } from "../types/redis-types";
-import { BreakerExecutor } from "../../../classes/BreakerExecutor";
-import { RedisDriverError } from "../errors/RedisDriverError";
-import { validateConnectionMutualExclusivity } from "../../../utils/validate-connection-options";
-import { RedisExecutor } from "./RedisExecutor";
-import { RedisQueryBuilder } from "./RedisQueryBuilder";
-import { RedisRepository } from "./RedisRepository";
-import { RedisTransactionContext } from "./RedisTransactionContext";
-import { validateRedisEntity } from "../utils/validate-redis-entity";
+} from "../../../../types/index.js";
+import type { EntityEmitFn } from "../../../../types/event-map.js";
+import type { RepositoryFactory } from "../../../types/repository-factory.js";
+import type { FilterRegistry } from "../../../utils/query/filter-registry.js";
+import type { RedisTransactionHandle } from "../types/redis-types.js";
+import { BreakerExecutor } from "../../../classes/BreakerExecutor.js";
+import { RedisDriverError } from "../errors/RedisDriverError.js";
+import { validateConnectionMutualExclusivity } from "../../../utils/validate-connection-options.js";
+import { RedisExecutor } from "./RedisExecutor.js";
+import { RedisQueryBuilder } from "./RedisQueryBuilder.js";
+import { RedisRepository } from "./RedisRepository.js";
+import { RedisTransactionContext } from "./RedisTransactionContext.js";
+import { validateRedisEntity } from "../utils/validate-redis-entity.js";
 
 export class RedisDriver implements IProteusDriver {
   private readonly logger: ILogger;

@@ -1,11 +1,11 @@
 import type { IAmphora } from "@lindorm/amphora";
-import type { IEntity } from "../../../../../interfaces";
-import type { EntityMetadata } from "../../../../entity/types/metadata";
-import { applyDiscriminatorColumn } from "../../../../utils/sql/apply-discriminator-column";
-import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier";
-import type { CompiledSql } from "./compiled-sql";
-import { dehydrateEntity } from "./dehydrate-entity";
-import { resolveTableName } from "./resolve-table-name";
+import type { IEntity } from "../../../../../interfaces/index.js";
+import type { EntityMetadata } from "../../../../entity/types/metadata.js";
+import { applyDiscriminatorColumn } from "../../../../utils/sql/apply-discriminator-column.js";
+import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier.js";
+import type { CompiledSql } from "./compiled-sql.js";
+import { dehydrateEntity } from "./dehydrate-entity.js";
+import { resolveTableName } from "./resolve-table-name.js";
 
 export { applyDiscriminatorColumn };
 

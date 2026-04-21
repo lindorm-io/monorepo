@@ -1,4 +1,4 @@
-import { createUrl } from "./create-url";
+import { createUrl } from "./create-url.js";
 import { describe, expect, test } from "vitest";
 
 describe("createUrl", () => {

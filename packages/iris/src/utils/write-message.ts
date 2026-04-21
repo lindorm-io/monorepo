@@ -1,7 +1,7 @@
 import { mkdir, writeFile } from "fs/promises";
 import { dirname, join, resolve } from "path";
 import { Logger } from "@lindorm/logger";
-import { generateMessageSource, IRIS_MESSAGE_NAME_PATTERN } from "./generate-message";
+import { generateMessageSource, IRIS_MESSAGE_NAME_PATTERN } from "./generate-message.js";
 
 export type WriteMessageOptions = {
   name: string;

@@ -1,6 +1,6 @@
 import { isString } from "@lindorm/is";
-import { IPylonSession } from "../../../interfaces";
-import { PylonHttpContext } from "../../../types";
+import type { IPylonSession } from "../../../interfaces/index.js";
+import type { PylonHttpContext } from "../../../types/index.js";
 
 export type HttpTokenSource =
   | { kind: "bearer"; token: string }

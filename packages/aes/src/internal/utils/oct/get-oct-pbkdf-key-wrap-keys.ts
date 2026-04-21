@@ -1,17 +1,17 @@
 import { KryptosKit } from "@lindorm/kryptos";
 import { randomBytes } from "crypto";
-import { AesError } from "../../../errors";
-import {
+import { AesError } from "../../../errors/index.js";
+import type {
   CreateCekOptions,
   CreateCekResult,
   DecryptCekOptions,
   DecryptCekResult,
-} from "../../types/content-encryption-key";
-import { calculateContentEncryptionKeySize } from "../calculate/calculate-content-encryption-key-size";
-import { calculateKeyWrapSize } from "../calculate/calculate-key-wrap-size";
-import { calculatePbkdfAlgorithm } from "../calculate/calculate-pbkdf-hash";
-import { pbkdf } from "../key-derivation/pbkdf";
-import { ecbKeyUnwrap, ecbKeyWrap } from "../key-wrap/ecb-key-wrap";
+} from "../../types/content-encryption-key.js";
+import { calculateContentEncryptionKeySize } from "../calculate/calculate-content-encryption-key-size.js";
+import { calculateKeyWrapSize } from "../calculate/calculate-key-wrap-size.js";
+import { calculatePbkdfAlgorithm } from "../calculate/calculate-pbkdf-hash.js";
+import { pbkdf } from "../key-derivation/pbkdf.js";
+import { ecbKeyUnwrap, ecbKeyWrap } from "../key-wrap/ecb-key-wrap.js";
 
 export const getOctPbkdfKeyWrapEncryptionKey = ({
   encryption,

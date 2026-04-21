@@ -1,5 +1,5 @@
-import type { StagedMetadata } from "../internal/metadata";
-import { RequireNotCreated } from "./RequireNotCreated";
+import type { StagedMetadata } from "../internal/metadata/index.js";
+import { RequireNotCreated } from "./RequireNotCreated.js";
 import { describe, expect, test } from "vitest";
 
 const createMockMethodContext = (

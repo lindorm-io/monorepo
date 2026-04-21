@@ -1,4 +1,4 @@
-import type { IHermesSession } from "../interfaces/IHermesSession";
+import type { IHermesSession } from "../interfaces/IHermesSession.js";
 
 export const _createMockHermesSession = (mockFn: () => any): IHermesSession => {
   const resolves = (value: any) => {

@@ -1,8 +1,8 @@
-import { ProteusError } from "../../../../../errors";
-import type { MetaCheck } from "../../../../entity/types/metadata";
-import { PG_IDENTIFIER_LIMIT } from "../../constants/postgres-constants";
-import { hashIdentifier } from "../hash-identifier";
-import { quoteIdentifier } from "../quote-identifier";
+import { ProteusError } from "../../../../../errors/index.js";
+import type { MetaCheck } from "../../../../entity/types/metadata.js";
+import { PG_IDENTIFIER_LIMIT } from "../../constants/postgres-constants.js";
+import { hashIdentifier } from "../hash-identifier.js";
+import { quoteIdentifier } from "../quote-identifier.js";
 
 /**
  * Generates inline `CONSTRAINT ... CHECK (expr)` clauses for use inside `CREATE TABLE`.

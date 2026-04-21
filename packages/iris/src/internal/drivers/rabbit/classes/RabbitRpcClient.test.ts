@@ -1,14 +1,14 @@
 import { EventEmitter } from "events";
-import type { IMessage } from "../../../../interfaces";
-import { Field } from "../../../../decorators/Field";
-import { Message } from "../../../../decorators/Message";
-import { clearRegistry } from "../../../message/metadata/registry";
-import type { RabbitSharedState } from "../types/rabbit-types";
-import { RabbitRpcClient } from "./RabbitRpcClient";
+import type { IMessage } from "../../../../interfaces/index.js";
+import { Field } from "../../../../decorators/Field.js";
+import { Message } from "../../../../decorators/Message.js";
+import { clearRegistry } from "../../../message/metadata/registry.js";
+import type { RabbitSharedState } from "../types/rabbit-types.js";
+import { RabbitRpcClient } from "./RabbitRpcClient.js";
 import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 // --- Mocks ---
-vi.mock("../utils/build-amqp-headers", async () => ({
+vi.mock("../utils/build-amqp-headers.js", async () => ({
   buildAmqpHeaders: vi.fn().mockReturnValue({
     properties: {
       headers: {},
@@ -18,7 +18,7 @@ vi.mock("../utils/build-amqp-headers", async () => ({
   }),
 }));
 
-vi.mock("../utils/parse-amqp-headers", () => ({
+vi.mock("../utils/parse-amqp-headers.js", () => ({
   parseAmqpHeaders: vi.fn().mockReturnValue({
     payload: Buffer.from("{}"),
     headers: {},

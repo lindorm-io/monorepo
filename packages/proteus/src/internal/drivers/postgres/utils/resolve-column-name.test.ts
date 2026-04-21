@@ -1,7 +1,7 @@
-import { makeField } from "../../../__fixtures__/make-field";
-import type { MetaRelation } from "../../../entity/types/metadata";
-import { ProteusError } from "../../../../errors";
-import { resolveColumnName, resolveColumnNameSafe } from "./resolve-column-name";
+import { makeField } from "../../../__fixtures__/make-field.js";
+import type { MetaRelation } from "../../../entity/types/metadata.js";
+import { ProteusError } from "../../../../errors/index.js";
+import { resolveColumnName, resolveColumnNameSafe } from "./resolve-column-name.js";
 import { describe, expect, test } from "vitest";
 
 const fields = [

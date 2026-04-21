@@ -1,7 +1,7 @@
 import { JwtKit } from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
-import { useValidation } from "./use-validation";
+import { useValidation } from "./use-validation.js";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 describe("useValidation", () => {

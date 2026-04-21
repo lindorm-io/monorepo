@@ -1,4 +1,4 @@
-import { httpQueryParserMiddleware } from "./http-query-parser-middleware";
+import { httpQueryParserMiddleware } from "./http-query-parser-middleware.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("httpQueryParserMiddleware", () => {

@@ -1,4 +1,4 @@
-import { stageNamespace } from "../internal/entity/metadata/stage-metadata";
+import { stageNamespace } from "../internal/entity/metadata/stage-metadata.js";
 
 /**
  * Place the entity in a specific namespace (schema/database).

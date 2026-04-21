@@ -1,5 +1,5 @@
-import type { IIrisMessageBus } from "../interfaces/IrisMessageBus";
-import type { IMessage } from "../interfaces/Message";
+import type { IIrisMessageBus } from "../interfaces/IrisMessageBus.js";
+import type { IMessage } from "../interfaces/Message.js";
 
 export type MessageBusExtras<M extends IMessage> = {
   published: Array<M>;

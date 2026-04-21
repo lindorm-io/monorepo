@@ -2,9 +2,9 @@ import { test, expect, beforeEach } from "vitest";
 // TCK: Cursor Suite
 // Tests cursor-based iteration.
 
-import type { TckDriverHandle } from "./types";
-import type { TckEntities } from "./create-tck-entities";
-import { ProteusError } from "../../../errors/ProteusError";
+import type { TckDriverHandle } from "./types.js";
+import type { TckEntities } from "./create-tck-entities.js";
+import { ProteusError } from "../../../errors/ProteusError.js";
 
 export const cursorSuite = (getHandle: () => TckDriverHandle, entities: TckEntities) => {
   const { TckSimpleUser } = entities;

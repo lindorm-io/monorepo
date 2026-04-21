@@ -13,44 +13,44 @@ import type {
   IEntity,
   IProteusQueryBuilder,
   IProteusRepository,
-} from "../../../../interfaces";
+} from "../../../../interfaces/index.js";
 import type {
   FilterRegistryGetter,
   IProteusDriver,
   MetadataResolver,
   TransactionHandle,
-} from "../../../interfaces/ProteusDriver";
-import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor";
+} from "../../../interfaces/ProteusDriver.js";
+import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor.js";
 import type {
   ProteusMongoOptions,
   TransactionCallback,
   TransactionOptions,
-} from "../../../../types";
-import type { RepositoryFactory } from "../../../types/repository-factory";
-import type { FilterRegistry } from "../../../utils/query/filter-registry";
-import type { EntityEmitFn } from "../../../../types/event-map";
-import type { MongoTransactionHandle } from "../types/mongo-types";
-import { detectReplicaSet } from "../utils/detect-replica-set";
-import { createMongoJoinTableOps } from "../utils/mongo-join-table-ops";
-import { mapIsolationLevel } from "../utils/map-isolation-level";
-import { isRetryableMongoError } from "../utils/is-retryable-mongo-error";
-import { withRetry } from "../../../utils/transaction/with-retry";
-import { validateConnectionMutualExclusivity } from "../../../utils/validate-connection-options";
-import { MongoDriverError } from "../errors/MongoDriverError";
-import { MongoMigrationError } from "../errors/MongoMigrationError";
-import { MongoExecutor } from "./MongoExecutor";
-import { BreakerExecutor } from "../../../classes/BreakerExecutor";
-import { MongoMigrationManager } from "./MongoMigrationManager";
-import { MongoQueryBuilder } from "./MongoQueryBuilder";
-import { MongoRepository } from "./MongoRepository";
-import { MongoTransactionContext } from "./MongoTransactionContext";
-import { NotSupportedError } from "../../../../errors/NotSupportedError";
-import { resolveCollectionName } from "../utils/resolve-collection-name";
-import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata";
-import { diffIndexes } from "../utils/sync/diff-indexes";
-import { executeSync } from "../utils/sync/execute-sync";
-import { introspectIndexes } from "../utils/sync/introspect-indexes";
-import { projectDesiredIndexes } from "../utils/sync/project-desired-indexes";
+} from "../../../../types/index.js";
+import type { RepositoryFactory } from "../../../types/repository-factory.js";
+import type { FilterRegistry } from "../../../utils/query/filter-registry.js";
+import type { EntityEmitFn } from "../../../../types/event-map.js";
+import type { MongoTransactionHandle } from "../types/mongo-types.js";
+import { detectReplicaSet } from "../utils/detect-replica-set.js";
+import { createMongoJoinTableOps } from "../utils/mongo-join-table-ops.js";
+import { mapIsolationLevel } from "../utils/map-isolation-level.js";
+import { isRetryableMongoError } from "../utils/is-retryable-mongo-error.js";
+import { withRetry } from "../../../utils/transaction/with-retry.js";
+import { validateConnectionMutualExclusivity } from "../../../utils/validate-connection-options.js";
+import { MongoDriverError } from "../errors/MongoDriverError.js";
+import { MongoMigrationError } from "../errors/MongoMigrationError.js";
+import { MongoExecutor } from "./MongoExecutor.js";
+import { BreakerExecutor } from "../../../classes/BreakerExecutor.js";
+import { MongoMigrationManager } from "./MongoMigrationManager.js";
+import { MongoQueryBuilder } from "./MongoQueryBuilder.js";
+import { MongoRepository } from "./MongoRepository.js";
+import { MongoTransactionContext } from "./MongoTransactionContext.js";
+import { NotSupportedError } from "../../../../errors/NotSupportedError.js";
+import { resolveCollectionName } from "../utils/resolve-collection-name.js";
+import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata.js";
+import { diffIndexes } from "../utils/sync/diff-indexes.js";
+import { executeSync } from "../utils/sync/execute-sync.js";
+import { introspectIndexes } from "../utils/sync/introspect-indexes.js";
+import { projectDesiredIndexes } from "../utils/sync/project-desired-indexes.js";
 
 export class MongoDriver implements IProteusDriver {
   private readonly options: ProteusMongoOptions;

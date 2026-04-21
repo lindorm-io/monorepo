@@ -4,11 +4,11 @@ import type {
   IProteusQueryBuilder,
   IProteusRepository,
   ITransactionContext,
-} from "../../../../interfaces";
-import type { RepositoryFactory } from "../../../types/repository-factory";
-import type { MongoTransactionHandle } from "../types/mongo-types";
-import type { MongoDriver } from "./MongoDriver";
-import { MongoDriverError } from "../errors/MongoDriverError";
+} from "../../../../interfaces/index.js";
+import type { RepositoryFactory } from "../../../types/repository-factory.js";
+import type { MongoTransactionHandle } from "../types/mongo-types.js";
+import type { MongoDriver } from "./MongoDriver.js";
+import { MongoDriverError } from "../errors/MongoDriverError.js";
 
 /**
  * Transaction context for MongoDB.

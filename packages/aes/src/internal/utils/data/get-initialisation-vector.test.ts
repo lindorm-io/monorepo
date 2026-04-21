@@ -1,6 +1,6 @@
-import { KryptosEncryption } from "@lindorm/kryptos";
-import { AesError } from "../../../errors";
-import { getInitialisationVector } from "./get-initialisation-vector";
+import type { KryptosEncryption } from "@lindorm/kryptos";
+import { AesError } from "../../../errors/index.js";
+import { getInitialisationVector } from "./get-initialisation-vector.js";
 import { describe, expect, test } from "vitest";
 
 describe("getInitialisationVector", () => {

@@ -1,8 +1,8 @@
 import { B64 } from "@lindorm/b64";
 import { ClientError } from "@lindorm/errors";
 import { isArray, isFunction } from "@lindorm/is";
-import { PylonError } from "../../errors";
-import { Credentials, PylonMiddleware } from "../../types";
+import { PylonError } from "../../errors/index.js";
+import type { Credentials, PylonMiddleware } from "../../types/index.js";
 
 type VerifyCredentialsFn = (username: string, password: string) => Promise<void>;
 

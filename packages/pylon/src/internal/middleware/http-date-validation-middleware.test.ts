@@ -1,6 +1,6 @@
 import { ClientError } from "@lindorm/errors";
 import MockDate from "mockdate";
-import { createHttpDateValidationMiddleware } from "./http-date-validation-middleware";
+import { createHttpDateValidationMiddleware } from "./http-date-validation-middleware.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");

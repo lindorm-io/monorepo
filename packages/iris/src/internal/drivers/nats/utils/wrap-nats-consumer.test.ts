@@ -1,10 +1,10 @@
-import type { IMessage } from "../../../../interfaces";
-import type { ConsumeEnvelope } from "../../../../types";
-import type { MessageMetadata } from "../../../message/types/metadata";
-import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager";
-import type { NatsJsMsg, NatsSharedState } from "../types/nats-types";
-import { parseNatsMessage as _parseNatsMessage } from "./parse-nats-message";
-import { wrapNatsConsumer, type NatsConsumerCallbackHost } from "./wrap-nats-consumer";
+import type { IMessage } from "../../../../interfaces/index.js";
+import type { ConsumeEnvelope } from "../../../../types/index.js";
+import type { MessageMetadata } from "../../../message/types/metadata.js";
+import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
+import type { NatsJsMsg, NatsSharedState } from "../types/nats-types.js";
+import { parseNatsMessage as _parseNatsMessage } from "./parse-nats-message.js";
+import { wrapNatsConsumer, type NatsConsumerCallbackHost } from "./wrap-nats-consumer.js";
 import { describe, expect, it, vi, type Mock } from "vitest";
 
 const parseNatsMessage = _parseNatsMessage as unknown as Mock;
@@ -83,7 +83,7 @@ const createState = (overrides?: Partial<NatsSharedState>): NatsSharedState => (
 });
 
 // Mock parseNatsMessage to return an IrisEnvelope
-vi.mock("./parse-nats-message", async () => ({
+vi.mock("./parse-nats-message.js", async () => ({
   parseNatsMessage: vi.fn().mockReturnValue({
     topic: "test-topic",
     payload: Buffer.from('{"data":"test"}'),

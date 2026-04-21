@@ -1,5 +1,5 @@
-import { IrisSerializationError } from "../../../errors/IrisSerializationError";
-import { compress, decompress } from "./compress";
+import { IrisSerializationError } from "../../../errors/IrisSerializationError.js";
+import { compress, decompress } from "./compress.js";
 import { describe, expect, it } from "vitest";
 
 describe("compress / decompress", () => {

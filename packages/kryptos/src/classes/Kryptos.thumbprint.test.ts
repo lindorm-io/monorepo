@@ -1,10 +1,10 @@
-import { TEST_AKP_KEY_B64 } from "../__fixtures__/akp-keys";
-import { TEST_EC_KEY_B64 } from "../__fixtures__/ec-keys";
-import { TEST_OCT_KEY_B64 } from "../__fixtures__/oct-keys";
-import { TEST_OKP_KEY_B64 } from "../__fixtures__/okp-keys";
-import { TEST_RSA_KEY_B64 } from "../__fixtures__/rsa-keys";
-import { KryptosError } from "../errors";
-import { KryptosKit } from "./KryptosKit";
+import { TEST_AKP_KEY_B64 } from "../__fixtures__/akp-keys.js";
+import { TEST_EC_KEY_B64 } from "../__fixtures__/ec-keys.js";
+import { TEST_OCT_KEY_B64 } from "../__fixtures__/oct-keys.js";
+import { TEST_OKP_KEY_B64 } from "../__fixtures__/okp-keys.js";
+import { TEST_RSA_KEY_B64 } from "../__fixtures__/rsa-keys.js";
+import { KryptosError } from "../errors/index.js";
+import { KryptosKit } from "./KryptosKit.js";
 import { describe, expect, test } from "vitest";
 
 describe("Kryptos.thumbprint", () => {

@@ -1,12 +1,12 @@
-import type { IMessage } from "../../../../interfaces";
-import type { PublishOptions } from "../../../../types";
+import type { IMessage } from "../../../../interfaces/index.js";
+import type { PublishOptions } from "../../../../types/index.js";
 import {
   preparePublishBatch,
   type PublishDriverLike,
-} from "../../../utils/prepare-publish-batch";
-import type { MemorySharedState, PublishMessagesOptions } from "../types/memory-store";
-import { dispatchToConsumers } from "./dispatch-to-consumers";
-import { dispatchToSubscribers } from "./dispatch-to-subscribers";
+} from "../../../utils/prepare-publish-batch.js";
+import type { MemorySharedState, PublishMessagesOptions } from "../types/memory-store.js";
+import { dispatchToConsumers } from "./dispatch-to-consumers.js";
+import { dispatchToSubscribers } from "./dispatch-to-subscribers.js";
 
 export type PublishDriver<M extends IMessage> = PublishDriverLike<M>;
 

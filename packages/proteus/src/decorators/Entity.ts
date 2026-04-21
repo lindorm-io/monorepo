@@ -1,6 +1,6 @@
-import type { EntityDecoratorOptions } from "../internal/entity/types/decorators";
-import { registerEntity } from "../internal/entity/metadata/registry";
-import { stageEntity } from "../internal/entity/metadata/stage-metadata";
+import type { EntityDecoratorOptions } from "../internal/entity/types/decorators.js";
+import { registerEntity } from "../internal/entity/metadata/registry.js";
+import { stageEntity } from "../internal/entity/metadata/stage-metadata.js";
 
 /**
  * Mark a class as a Proteus entity.

@@ -1,10 +1,10 @@
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
-import { ProteusSession } from "./ProteusSession";
-import { ProteusSource } from "./ProteusSource";
-import { Entity } from "../decorators/Entity";
-import { Field } from "../decorators/Field";
-import { PrimaryKeyField } from "../decorators/PrimaryKeyField";
-import { Filter } from "../decorators/Filter";
+import { ProteusSession } from "./ProteusSession.js";
+import { ProteusSource } from "./ProteusSource.js";
+import { Entity } from "../decorators/Entity.js";
+import { Field } from "../decorators/Field.js";
+import { PrimaryKeyField } from "../decorators/PrimaryKeyField.js";
+import { Filter } from "../decorators/Filter.js";
 import { describe, expect, test, vi } from "vitest";
 
 @Entity({ name: "SessionEntity" })

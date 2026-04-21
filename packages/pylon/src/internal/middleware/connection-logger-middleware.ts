@@ -1,4 +1,4 @@
-import { PylonConnectionMiddleware } from "../../types";
+import type { PylonConnectionMiddleware } from "../../types/index.js";
 
 export const connectionLoggerMiddleware: PylonConnectionMiddleware = async (
   ctx,

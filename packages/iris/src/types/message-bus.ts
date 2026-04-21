@@ -1,5 +1,5 @@
-import type { IMessage } from "../interfaces";
-import type { ConsumeEnvelope } from "./consume-envelope";
+import type { IMessage } from "../interfaces/index.js";
+import type { ConsumeEnvelope } from "./consume-envelope.js";
 
 export type SubscribeOptions<M extends IMessage = IMessage> = {
   topic: string;

@@ -4,9 +4,9 @@ import { join } from "path";
 import {
   conduitBasicAuthMiddleware,
   conduitChangeRequestQueryMiddleware,
-} from "../middleware";
-import { ConduitMiddleware } from "../types";
-import { Conduit } from "./Conduit";
+} from "../middleware/index.js";
+import type { ConduitMiddleware } from "../types/index.js";
+import { Conduit } from "./Conduit.js";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("Conduit", () => {

@@ -1,7 +1,7 @@
 import { isNumber } from "@lindorm/is";
-import { IEntity } from "../../../interfaces";
-import { EntityManagerError } from "../errors/EntityManagerError";
-import type { EntityMetadata, MetaField } from "../types/metadata";
+import type { IEntity } from "../../../interfaces/index.js";
+import { EntityManagerError } from "../errors/EntityManagerError.js";
+import type { EntityMetadata, MetaField } from "../types/metadata.js";
 
 export class VersionManager<E extends IEntity = IEntity> {
   public static readonly INITIAL_VERSION = 0;

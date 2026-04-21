@@ -2,23 +2,23 @@ import { B64 } from "@lindorm/b64";
 import { snakeKeys } from "@lindorm/case";
 import { expires, getUnixTime } from "@lindorm/date";
 import { isArray, isDate, isFinite, isObject, isString, isUrlLike } from "@lindorm/is";
-import { KryptosAlgorithm } from "@lindorm/kryptos";
-import { Dict } from "@lindorm/types";
+import type { KryptosAlgorithm } from "@lindorm/kryptos";
+import type { Dict } from "@lindorm/types";
 import { removeUndefined } from "@lindorm/utils";
-import { B64U } from "../constants/format";
-import { JwtError } from "../../errors";
-import {
+import { B64U } from "../constants/format.js";
+import { JwtError } from "../../errors/index.js";
+import type {
   ActClaim,
   ActClaimWire,
   JwtClaims,
   ParsedJwtPayload,
   SignJwtContent,
   SignJwtOptions,
-} from "../../types";
-import { createAccessTokenHash, createCodeHash, createStateHash } from "./create-hash";
-import { extractAegisProfile } from "./extract-aegis-profile";
-import { extractDomainClaims } from "./extract-claims";
-import { generateTokenId } from "./generate-token-id";
+} from "../../types/index.js";
+import { createAccessTokenHash, createCodeHash, createStateHash } from "./create-hash.js";
+import { extractAegisProfile } from "./extract-aegis-profile.js";
+import { extractDomainClaims } from "./extract-claims.js";
+import { generateTokenId } from "./generate-token-id.js";
 
 type Config = {
   algorithm: KryptosAlgorithm;

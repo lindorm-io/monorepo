@@ -1,8 +1,8 @@
 import { Logger } from "@lindorm/logger";
-import { ProteusSource } from "../src";
-import { User } from "./entities/User";
-import { Post } from "./entities/Post";
-import { Tag } from "./entities/Tag";
+import { ProteusSource } from "../src/index.js";
+import { User } from "./entities/User.js";
+import { Post } from "./entities/Post.js";
+import { Tag } from "./entities/Tag.js";
 
 export const source = new ProteusSource({
   driver: "postgres",

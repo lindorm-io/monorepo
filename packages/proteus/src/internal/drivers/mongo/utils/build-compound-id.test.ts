@@ -1,4 +1,4 @@
-import { buildCompoundId, buildIdFilter } from "./build-compound-id";
+import { buildCompoundId, buildIdFilter } from "./build-compound-id.js";
 import { describe, expect, test } from "vitest";
 
 describe("buildCompoundId", () => {

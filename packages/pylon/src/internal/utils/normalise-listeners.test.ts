@@ -1,5 +1,5 @@
-import { PylonListener } from "../../classes/PylonListener";
-import { normaliseListeners } from "./normalise-listeners";
+import { PylonListener } from "../../classes/PylonListener.js";
+import { normaliseListeners } from "./normalise-listeners.js";
 import { describe, expect, test } from "vitest";
 
 describe("normaliseListeners", () => {

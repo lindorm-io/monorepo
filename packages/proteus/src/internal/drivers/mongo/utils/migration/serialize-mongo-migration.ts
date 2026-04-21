@@ -2,10 +2,10 @@ import {
   formatTimestamp,
   kebabToPascal,
   sanitizeName,
-} from "../../../../cli/utils/migration-naming";
+} from "../../../../cli/utils/migration-naming.js";
 import { ShaKit } from "@lindorm/sha";
 import { randomUUID } from "crypto";
-import type { MongoSyncPlan, DesiredMongoIndex } from "../sync/types";
+import type { MongoSyncPlan, DesiredMongoIndex } from "../sync/types.js";
 
 export type SerializedMongoMigration = {
   filename: string;

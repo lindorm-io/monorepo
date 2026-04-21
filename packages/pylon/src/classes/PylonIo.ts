@@ -1,34 +1,34 @@
-import { PylonListenerScanner } from "../internal/classes/PylonListenerScanner";
-import { createCommonContextInitialisationMiddleware } from "../internal/middleware/common-context-initialisation-middleware";
-import { createQueueMiddleware } from "../internal/middleware/common-queue-middleware";
-import { createDependenciesMiddleware } from "../internal/middleware/common-dependencies-middleware";
-import { createWebhookMiddleware } from "../internal/middleware/common-webhook-middleware";
-import { createConnectionContextInitialisationMiddleware } from "../internal/middleware/connection-context-initialisation-middleware";
-import { createConnectionCorsMiddleware } from "../internal/middleware/connection-cors-middleware";
-import { createConnectionSessionMiddleware } from "../internal/middleware/connection-session-middleware";
-import { connectionErrorHandlerMiddleware } from "../internal/middleware/connection-error-handler-middleware";
-import { connectionLoggerMiddleware } from "../internal/middleware/connection-logger-middleware";
-import { assertSameSiteForSockets } from "../internal/utils/config/assert-same-site-for-sockets";
-import { assertSessionCookieSafeForSockets } from "../internal/utils/config/assert-session-cookie-safe-for-sockets";
-import { createSocketContextInitialisationMiddleware } from "../internal/middleware/socket-context-initialisation-middleware";
-import { socketErrorHandlerMiddleware } from "../internal/middleware/socket-error-handler-middleware";
-import { socketLoggerMiddleware } from "../internal/middleware/socket-logger-middleware";
-import { composePylonHandshakeContext } from "../internal/utils/handshake/compose-pylon-handshake-context";
-import { registerAuthRefreshListener } from "../internal/utils/refresh/register-auth-refresh-listener";
-import { initialisePylonSocketData } from "../internal/utils/initialise-pylon-socket-data";
-import { composePylonSocketContextBase } from "../internal/utils/compose-pylon-socket-context";
-import { createBuiltInRoomListeners } from "../internal/utils/create-built-in-room-listeners";
-import { loadPylonListeners } from "../internal/utils/load-pylon-listener";
-import { normaliseListeners } from "../internal/utils/normalise-listeners";
+import { PylonListenerScanner } from "../internal/classes/PylonListenerScanner.js";
+import { createCommonContextInitialisationMiddleware } from "../internal/middleware/common-context-initialisation-middleware.js";
+import { createQueueMiddleware } from "../internal/middleware/common-queue-middleware.js";
+import { createDependenciesMiddleware } from "../internal/middleware/common-dependencies-middleware.js";
+import { createWebhookMiddleware } from "../internal/middleware/common-webhook-middleware.js";
+import { createConnectionContextInitialisationMiddleware } from "../internal/middleware/connection-context-initialisation-middleware.js";
+import { createConnectionCorsMiddleware } from "../internal/middleware/connection-cors-middleware.js";
+import { createConnectionSessionMiddleware } from "../internal/middleware/connection-session-middleware.js";
+import { connectionErrorHandlerMiddleware } from "../internal/middleware/connection-error-handler-middleware.js";
+import { connectionLoggerMiddleware } from "../internal/middleware/connection-logger-middleware.js";
+import { assertSameSiteForSockets } from "../internal/utils/config/assert-same-site-for-sockets.js";
+import { assertSessionCookieSafeForSockets } from "../internal/utils/config/assert-session-cookie-safe-for-sockets.js";
+import { createSocketContextInitialisationMiddleware } from "../internal/middleware/socket-context-initialisation-middleware.js";
+import { socketErrorHandlerMiddleware } from "../internal/middleware/socket-error-handler-middleware.js";
+import { socketLoggerMiddleware } from "../internal/middleware/socket-logger-middleware.js";
+import { composePylonHandshakeContext } from "../internal/utils/handshake/compose-pylon-handshake-context.js";
+import { registerAuthRefreshListener } from "../internal/utils/refresh/register-auth-refresh-listener.js";
+import { initialisePylonSocketData } from "../internal/utils/initialise-pylon-socket-data.js";
+import { composePylonSocketContextBase } from "../internal/utils/compose-pylon-socket-context.js";
+import { createBuiltInRoomListeners } from "../internal/utils/create-built-in-room-listeners.js";
+import { loadPylonListeners } from "../internal/utils/load-pylon-listener.js";
+import { normaliseListeners } from "../internal/utils/normalise-listeners.js";
 import { composeMiddleware } from "@lindorm/middleware";
 import { isString } from "@lindorm/is";
-import { ILogger } from "@lindorm/logger";
+import type { ILogger } from "@lindorm/logger";
 import { uniq } from "@lindorm/utils";
-import { useRateLimit } from "../middleware/common/use-rate-limit";
+import { useRateLimit } from "../middleware/common/use-rate-limit.js";
 import { createAdapter } from "@socket.io/redis-adapter";
 import { Server } from "http";
 import { Server as SocketIoServer } from "socket.io";
-import {
+import type {
   IoServer,
   IoSocket,
   PylonConnectionMiddleware,
@@ -36,8 +36,8 @@ import {
   PylonSocket,
   PylonSocketContext,
   PylonSocketMiddleware,
-} from "../types";
-import { PylonListener } from "./PylonListener";
+} from "../types/index.js";
+import { PylonListener } from "./PylonListener.js";
 
 export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
   private readonly logger: ILogger;

@@ -9,7 +9,7 @@ import {
   isString,
   isUndefined,
 } from "@lindorm/is";
-import { Dict, Predicate, PredicateOperator } from "@lindorm/types";
+import type { Dict, Predicate, PredicateOperator } from "@lindorm/types";
 import { isRegExp } from "util/types";
 
 const PREDICATE_OPERATORS = [

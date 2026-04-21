@@ -1,6 +1,6 @@
-import { IrisError } from "../../../errors/IrisError";
-import { runHooksSync, runHooksAsync } from "./run-hooks";
-import type { MetaHook } from "../types/metadata";
+import { IrisError } from "../../../errors/IrisError.js";
+import { runHooksSync, runHooksAsync } from "./run-hooks.js";
+import type { MetaHook } from "../types/metadata.js";
 import { describe, expect, it, vi } from "vitest";
 
 const makeHook = (

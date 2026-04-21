@@ -1,9 +1,9 @@
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { join } from "path";
-import { PylonListener } from "../../classes/PylonListener";
-import { PylonListenerScanner } from "./PylonListenerScanner";
-import { listenerRootMiddleware } from "../../__fixtures__/listeners/_middleware";
-import { chatMiddleware } from "../../__fixtures__/listeners/chat/_middleware";
+import { PylonListener } from "../../classes/PylonListener.js";
+import { PylonListenerScanner } from "./PylonListenerScanner.js";
+import { listenerRootMiddleware } from "../../__fixtures__/listeners/_middleware.js";
+import { chatMiddleware } from "../../__fixtures__/listeners/chat/_middleware.js";
 import { beforeAll, describe, expect, test } from "vitest";
 
 describe("PylonListenerScanner", () => {

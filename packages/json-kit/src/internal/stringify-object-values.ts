@@ -8,8 +8,8 @@ import {
   isString,
   isUndefined,
 } from "@lindorm/is";
-import { Dict } from "@lindorm/types";
-import { stringifyArrayValues } from "./stringify-array-values";
+import type { Dict } from "@lindorm/types";
+import { stringifyArrayValues } from "./stringify-array-values.js";
 
 export const stringifyObjectValues = (dict: Dict): Dict => {
   const result: Dict = {};

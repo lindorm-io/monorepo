@@ -1,8 +1,8 @@
-import { IIrisSource } from "@lindorm/iris";
-import { ILogger } from "@lindorm/logger";
-import { IEntity, IProteusSource } from "@lindorm/proteus";
-import { Constructor } from "@lindorm/types";
-import { DataAuditChange } from "../../messages";
+import type { IIrisSource } from "@lindorm/iris";
+import type { ILogger } from "@lindorm/logger";
+import type { IEntity, IProteusSource } from "@lindorm/proteus";
+import type { Constructor } from "@lindorm/types";
+import { DataAuditChange } from "../../messages/index.js";
 
 type AuditAction = "insert" | "update" | "destroy" | "soft_destroy";
 

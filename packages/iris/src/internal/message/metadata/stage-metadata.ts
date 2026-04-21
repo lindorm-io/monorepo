@@ -1,4 +1,4 @@
-import { IrisMetadataError } from "../../../errors/IrisMetadataError";
+import { IrisMetadataError } from "../../../errors/IrisMetadataError.js";
 import type {
   MetaCompressed,
   MetaEncrypted,
@@ -10,9 +10,9 @@ import type {
   MetaRetry,
   MetaStagedTransform,
   MetaTopic,
-} from "../types/metadata";
-import type { StagedFieldModifier, StagedMetadata } from "../types/staged";
-import { ABSTRACT_MESSAGE_KEY } from "./abstract-message";
+} from "../types/metadata.js";
+import type { StagedFieldModifier, StagedMetadata } from "../types/staged.js";
+import { ABSTRACT_MESSAGE_KEY } from "./abstract-message.js";
 
 const ensureOwnArray = <K extends keyof StagedMetadata>(
   metadata: DecoratorMetadataObject,

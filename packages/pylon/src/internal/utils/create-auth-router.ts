@@ -1,17 +1,17 @@
 import { merge } from "@lindorm/utils";
-import { PylonRouter } from "../../classes";
-import { PylonAuthConfig, PylonHttpContext } from "../../types";
-import { backchannelLogoutHandler } from "./auth/backchannel-logout-handler";
-import { errorHandler } from "./auth/error-handler";
-import { createIntrospectHandler } from "./auth/introspect-handler";
-import { createLoginCallbackHandler } from "./auth/login-callback-handler";
-import { createLoginHandler, loginSchema } from "./auth/login-handler";
-import { createLogoutCallbackHandler } from "./auth/logout-callback-handler";
-import { createLogoutHandler, logoutSchema } from "./auth/logout-handler";
-import { createRefreshMiddleware } from "./auth/refresh-middleware";
-import { createUserinfoHandler } from "./auth/userinfo-handler";
-import { noopHandler } from "./noop-handler";
-import { useSchema } from "../../middleware";
+import { PylonRouter } from "../../classes/index.js";
+import type { PylonAuthConfig, PylonHttpContext } from "../../types/index.js";
+import { backchannelLogoutHandler } from "./auth/backchannel-logout-handler.js";
+import { errorHandler } from "./auth/error-handler.js";
+import { createIntrospectHandler } from "./auth/introspect-handler.js";
+import { createLoginCallbackHandler } from "./auth/login-callback-handler.js";
+import { createLoginHandler, loginSchema } from "./auth/login-handler.js";
+import { createLogoutCallbackHandler } from "./auth/logout-callback-handler.js";
+import { createLogoutHandler, logoutSchema } from "./auth/logout-handler.js";
+import { createRefreshMiddleware } from "./auth/refresh-middleware.js";
+import { createUserinfoHandler } from "./auth/userinfo-handler.js";
+import { noopHandler } from "./noop-handler.js";
+import { useSchema } from "../../middleware/index.js";
 
 export const createAuthRouter = <C extends PylonHttpContext>(
   config: PylonAuthConfig,

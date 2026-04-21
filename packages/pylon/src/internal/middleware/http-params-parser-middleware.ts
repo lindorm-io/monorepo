@@ -2,7 +2,7 @@ import { changeKeys } from "@lindorm/case";
 import { ClientError } from "@lindorm/errors";
 import { isObject } from "@lindorm/is";
 import { parseStringRecord } from "@lindorm/utils";
-import { PylonHttpMiddleware } from "../../types";
+import type { PylonHttpMiddleware } from "../../types/index.js";
 
 export const httpParamsParserMiddleware: PylonHttpMiddleware = async (ctx, next) => {
   if (!isObject(ctx.params)) {

@@ -1,10 +1,10 @@
-import type { IMessage } from "../../../../interfaces";
-import { Field } from "../../../../decorators/Field";
-import { Message } from "../../../../decorators/Message";
-import { clearRegistry } from "../../../message/metadata/registry";
-import type { NatsSharedState } from "../types/nats-types";
-import { NatsStreamProcessor } from "./NatsStreamProcessor";
-import { NatsStreamPipeline } from "./NatsStreamPipeline";
+import type { IMessage } from "../../../../interfaces/index.js";
+import { Field } from "../../../../decorators/Field.js";
+import { Message } from "../../../../decorators/Message.js";
+import { clearRegistry } from "../../../message/metadata/registry.js";
+import type { NatsSharedState } from "../types/nats-types.js";
+import { NatsStreamProcessor } from "./NatsStreamProcessor.js";
+import { NatsStreamPipeline } from "./NatsStreamPipeline.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // --- Test messages ---

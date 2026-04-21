@@ -1,5 +1,5 @@
-import type { EntityMetadata } from "../../../../entity/types/metadata";
-import { buildSimpleIn } from "./build-simple-in";
+import type { EntityMetadata } from "../../../../entity/types/metadata.js";
+import { buildSimpleIn } from "./build-simple-in.js";
 import { describe, expect, it } from "vitest";
 
 // --- helpers ---

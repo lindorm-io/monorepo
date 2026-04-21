@@ -1,13 +1,16 @@
-import type { IMessage } from "../../../../interfaces";
-import type { MessageMetadata } from "../../../message/types/metadata";
-import type { OutboundPayload } from "../../../message/utils/prepare-outbound";
-import type { DelayManager } from "../../../delay/DelayManager";
-import type { KafkaSharedState } from "../types/kafka-types";
-import { IrisPublishError } from "../../../../errors/IrisPublishError";
-import { publishKafkaMessages, type KafkaPublishDriver } from "./publish-kafka-messages";
+import type { IMessage } from "../../../../interfaces/index.js";
+import type { MessageMetadata } from "../../../message/types/metadata.js";
+import type { OutboundPayload } from "../../../message/utils/prepare-outbound.js";
+import type { DelayManager } from "../../../delay/DelayManager.js";
+import type { KafkaSharedState } from "../types/kafka-types.js";
+import { IrisPublishError } from "../../../../errors/IrisPublishError.js";
+import {
+  publishKafkaMessages,
+  type KafkaPublishDriver,
+} from "./publish-kafka-messages.js";
 import { describe, expect, it, vi, type Mock } from "vitest";
 
-vi.mock("./ensure-kafka-topic", async () => ({
+vi.mock("./ensure-kafka-topic.js", async () => ({
   ensureKafkaTopicFromState: vi.fn().mockResolvedValue(undefined),
 }));
 

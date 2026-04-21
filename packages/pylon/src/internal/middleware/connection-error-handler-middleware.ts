@@ -1,5 +1,5 @@
 import { ServerError } from "@lindorm/errors";
-import { PylonConnectionMiddleware } from "../../types";
+import type { PylonConnectionMiddleware } from "../../types/index.js";
 
 export const connectionErrorHandlerMiddleware: PylonConnectionMiddleware = async (
   ctx,

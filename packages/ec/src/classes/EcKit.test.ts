@@ -1,7 +1,7 @@
 import { KRYPTOS_EC_ENC, KRYPTOS_EC_SIG_ES512 } from "@lindorm/kryptos/fixtures";
 import { randomBytes } from "crypto";
-import { EcError } from "../errors";
-import { EcKit } from "./EcKit";
+import { EcError } from "../errors/index.js";
+import { EcKit } from "./EcKit.js";
 import { beforeEach, describe, expect, test } from "vitest";
 
 describe("EcKit", () => {

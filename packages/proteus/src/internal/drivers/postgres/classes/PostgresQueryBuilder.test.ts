@@ -1,8 +1,8 @@
-import { ProteusError } from "../../../../errors";
-import { makeField } from "../../../__fixtures__/make-field";
-import type { EntityMetadata } from "../../../entity/types/metadata";
-import type { PostgresQueryClient } from "../types/postgres-query-client";
-import { PostgresQueryBuilder } from "./PostgresQueryBuilder";
+import { ProteusError } from "../../../../errors/index.js";
+import { makeField } from "../../../__fixtures__/make-field.js";
+import type { EntityMetadata } from "../../../entity/types/metadata.js";
+import type { PostgresQueryClient } from "../types/postgres-query-client.js";
+import { PostgresQueryBuilder } from "./PostgresQueryBuilder.js";
 import { describe, expect, test, vi } from "vitest";
 
 const metadata = {

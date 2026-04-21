@@ -1,7 +1,11 @@
 import { ms } from "@lindorm/date";
 import { ClientError, ServerError } from "@lindorm/errors";
-import { PylonAuthConfig, PylonHttpContext, PylonHttpMiddleware } from "../../../types";
-import { parseTokenData } from "./parse-token-data";
+import type {
+  PylonAuthConfig,
+  PylonHttpContext,
+  PylonHttpMiddleware,
+} from "../../../types/index.js";
+import { parseTokenData } from "./parse-token-data.js";
 
 const getAutoRefresh = (ctx: PylonHttpContext, config: PylonAuthConfig): number => {
   switch (config.refresh.mode) {

@@ -1,1 +1,1 @@
-export { NotNullViolationError } from "../../errors/NotNullViolationError";
+export { NotNullViolationError } from "../../errors/NotNullViolationError.js";

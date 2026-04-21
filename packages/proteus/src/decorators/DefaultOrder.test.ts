@@ -1,9 +1,9 @@
-import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata";
-import { DefaultOrder } from "./DefaultOrder";
-import { Entity } from "./Entity";
-import { PrimaryKeyField } from "./PrimaryKeyField";
-import { Field } from "./Field";
-import { CreateDateField } from "./CreateDateField";
+import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata.js";
+import { DefaultOrder } from "./DefaultOrder.js";
+import { Entity } from "./Entity.js";
+import { PrimaryKeyField } from "./PrimaryKeyField.js";
+import { Field } from "./Field.js";
+import { CreateDateField } from "./CreateDateField.js";
 import { describe, expect, test } from "vitest";
 
 @Entity({ name: "DefaultOrderSingle" })

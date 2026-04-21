@@ -1,5 +1,5 @@
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
-import { createHttpContextInitialisationMiddleware } from "./http-context-initialisation-middleware";
+import { createHttpContextInitialisationMiddleware } from "./http-context-initialisation-middleware.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("createHttpContextInitialisationMiddleware", () => {

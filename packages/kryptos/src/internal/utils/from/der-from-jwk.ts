@@ -1,6 +1,6 @@
 import { randomUUID } from "crypto";
-import { KryptosError } from "../../../errors";
-import {
+import { KryptosError } from "../../../errors/index.js";
+import type {
   AkpJwk,
   EcJwk,
   KryptosBuffer,
@@ -8,12 +8,12 @@ import {
   OctJwk,
   OkpJwk,
   RsaJwk,
-} from "../../../types";
-import { createAkpDerFromJwk } from "../akp/der-from-jwk";
-import { createEcDerFromJwk } from "../ec/der-from-jwk";
-import { createOctDerFromJwk } from "../oct/der-from-jwk";
-import { createOkpDerFromJwk } from "../okp/der-from-jwk";
-import { createRsaDerFromJwk } from "../rsa/der-from-jwk";
+} from "../../../types/index.js";
+import { createAkpDerFromJwk } from "../akp/der-from-jwk.js";
+import { createEcDerFromJwk } from "../ec/der-from-jwk.js";
+import { createOctDerFromJwk } from "../oct/der-from-jwk.js";
+import { createOkpDerFromJwk } from "../okp/der-from-jwk.js";
+import { createRsaDerFromJwk } from "../rsa/der-from-jwk.js";
 
 export const createDerFromJwk = (options: KryptosFromJwk): KryptosBuffer => {
   switch (options.kty) {

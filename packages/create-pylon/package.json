@@ -17,7 +17,7 @@
   "engines": {
     "node": ">=24.13.0"
   },
-  "main": "dist/index.js",
+  "type": "module",
   "typings": "dist/index.d.ts",
   "files": [
     "dist",
@@ -49,5 +49,11 @@
   },
   "devDependencies": {
     "@types/cross-spawn": "^6.0.6"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   }
 }

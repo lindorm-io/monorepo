@@ -1,5 +1,5 @@
-import { TEST_FIXTURES } from "../__fixtures__/test-fixtures";
-import { isBigInt } from "./is-bigint";
+import { TEST_FIXTURES } from "../__fixtures__/test-fixtures.js";
+import { isBigInt } from "./is-bigint.js";
 import { describe, expect, test } from "vitest";
 
 describe("isBigInt", () => {

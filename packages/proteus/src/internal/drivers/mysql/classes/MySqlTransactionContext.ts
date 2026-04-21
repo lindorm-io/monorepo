@@ -5,15 +5,15 @@ import type {
   IProteusQueryBuilder,
   IProteusRepository,
   ITransactionContext,
-} from "../../../../interfaces";
-import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata";
-import type { RepositoryFactory } from "../../../types/repository-factory";
-import { MySqlTransactionError } from "../errors/MySqlTransactionError";
-import type { MysqlTransactionHandle } from "../types/mysql-transaction-handle";
-import { commitTransaction } from "../utils/transaction/commit-transaction";
-import { rollbackTransaction } from "../utils/transaction/rollback-transaction";
-import { withSavepoint } from "../utils/transaction/with-savepoint";
-import { MySqlQueryBuilder } from "./MySqlQueryBuilder";
+} from "../../../../interfaces/index.js";
+import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata.js";
+import type { RepositoryFactory } from "../../../types/repository-factory.js";
+import { MySqlTransactionError } from "../errors/MySqlTransactionError.js";
+import type { MysqlTransactionHandle } from "../types/mysql-transaction-handle.js";
+import { commitTransaction } from "../utils/transaction/commit-transaction.js";
+import { rollbackTransaction } from "../utils/transaction/rollback-transaction.js";
+import { withSavepoint } from "../utils/transaction/with-savepoint.js";
+import { MySqlQueryBuilder } from "./MySqlQueryBuilder.js";
 
 export class MySqlTransactionContext implements ITransactionContext {
   private readonly handle: MysqlTransactionHandle;

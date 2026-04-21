@@ -1,10 +1,10 @@
 import { ServerError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
-import { createWorkerQueueMiddleware } from "./create-worker-queue-middleware";
+import { createWorkerQueueMiddleware } from "./create-worker-queue-middleware.js";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
-vi.mock("../../internal/utils/resolve-iris");
-import { resolveIris } from "../../internal/utils/resolve-iris";
+vi.mock("../../internal/utils/resolve-iris.js");
+import { resolveIris } from "../../internal/utils/resolve-iris.js";
 
 class OrderCreatedEvent {}
 class UserUpdatedEvent {}

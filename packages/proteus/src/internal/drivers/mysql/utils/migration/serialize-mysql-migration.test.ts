@@ -1,6 +1,6 @@
-import type { MysqlDbSnapshot } from "../../types/db-snapshot";
-import type { MysqlSyncPlan } from "../../types/sync-plan";
-import { serializeMysqlMigration } from "./serialize-mysql-migration";
+import type { MysqlDbSnapshot } from "../../types/db-snapshot.js";
+import type { MysqlSyncPlan } from "../../types/sync-plan.js";
+import { serializeMysqlMigration } from "./serialize-mysql-migration.js";
 import { describe, expect, it, vi } from "vitest";
 
 // Stable UUID for deterministic snapshots

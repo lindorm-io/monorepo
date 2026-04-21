@@ -1,5 +1,5 @@
-import { InternalLog } from "../types/internal-log";
-import { readableFormat } from "./readable-format";
+import type { InternalLog } from "../types/internal-log.js";
+import { readableFormat } from "./readable-format.js";
 import { describe, expect, test, vi } from "vitest";
 
 const makeLog = (overrides: Partial<InternalLog> = {}): InternalLog => ({

@@ -1,18 +1,18 @@
 import {
-  CipherGCM,
-  DecipherGCM,
+  type CipherGCM,
+  type DecipherGCM,
   createCipheriv,
   createDecipheriv,
   randomBytes,
 } from "crypto";
-import { AesError } from "../../../errors";
-import {
+import { AesError } from "../../../errors/index.js";
+import type {
   KeyUnwrapOptions,
   KeyUnwrapResult,
   KeyWrapOptions,
   KeyWrapResult,
-} from "../../types/key-wrap";
-import { calculateKeyWrapEncryption } from "../calculate/calculate-key-wrap-encryption";
+} from "../../types/key-wrap.js";
+import { calculateKeyWrapEncryption } from "../calculate/calculate-key-wrap-encryption.js";
 
 export const gcmKeyWrap = ({
   contentEncryptionKey,

@@ -2,15 +2,15 @@ import { IrisSource } from "@lindorm/iris";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { ProteusSource } from "@lindorm/proteus";
 import { randomUUID } from "crypto";
-import { createChecksum } from "../internal/utils";
+import { createChecksum } from "../internal/utils/index.js";
 import {
   createTestIrisSource,
   createTestProteusSource,
-} from "../__fixtures__/create-test-sources";
+} from "../__fixtures__/create-test-sources.js";
 import {
   TestAggregate,
   TestForgettableAggregate,
-} from "../__fixtures__/modules/aggregates";
+} from "../__fixtures__/modules/aggregates/index.js";
 import {
   TestCommandCreate,
   TestCommandDestroy,
@@ -21,7 +21,7 @@ import {
   TestCommandSetState,
   TestCommandThrows,
   TestCommandTimeout,
-} from "../__fixtures__/modules/commands";
+} from "../__fixtures__/modules/commands/index.js";
 import {
   TestEventCreate,
   TestEventDestroy,
@@ -32,12 +32,12 @@ import {
   TestEventSetState,
   TestEventThrows,
   TestEventTimeout,
-} from "../__fixtures__/modules/events";
-import { TestTimeoutReminder } from "../__fixtures__/modules/timeouts";
-import { TestViewQuery } from "../__fixtures__/modules/queries";
-import { TestSaga } from "../__fixtures__/modules/sagas";
-import { TestView, TestViewEntity } from "../__fixtures__/modules/views";
-import { Hermes } from "./Hermes";
+} from "../__fixtures__/modules/events/index.js";
+import { TestTimeoutReminder } from "../__fixtures__/modules/timeouts/index.js";
+import { TestViewQuery } from "../__fixtures__/modules/queries/index.js";
+import { TestSaga } from "../__fixtures__/modules/sagas/index.js";
+import { TestView, TestViewEntity } from "../__fixtures__/modules/views/index.js";
+import { Hermes } from "./Hermes.js";
 import { afterAll, beforeAll, describe, expect, it, vi, type Mock } from "vitest";
 
 const ALL_MODULES = [
@@ -388,7 +388,7 @@ describe("Hermes", () => {
       aggregateId: string,
       events: Array<{ name: string; data: Record<string, unknown>; checksum?: string }>,
     ): Promise<void> => {
-      const { EventRecord } = await import("../internal/entities");
+      const { EventRecord } = await import("../internal/entities/index.js");
       const repo = proteus.repository(EventRecord);
 
       for (let i = 0; i < events.length; i++) {
@@ -648,7 +648,7 @@ describe("Hermes", () => {
 
       // Seed events interleaved by timestamp across two aggregate instances.
       // aggId1 create at T=0, aggId2 create at T=1, aggId1 merge at T=2
-      const { EventRecord: ER } = await import("../internal/entities");
+      const { EventRecord: ER } = await import("../internal/entities/index.js");
       const repo = proteus.repository(ER);
 
       const baseTime = new Date("2025-01-01T00:00:00Z");
@@ -909,7 +909,7 @@ describe("Hermes", () => {
       aggregateId: string,
       events: Array<{ name: string; data: Record<string, unknown>; checksum?: string }>,
     ): Promise<void> => {
-      const { EventRecord } = await import("../internal/entities");
+      const { EventRecord } = await import("../internal/entities/index.js");
       const repo = proteus.repository(EventRecord);
 
       for (let i = 0; i < events.length; i++) {

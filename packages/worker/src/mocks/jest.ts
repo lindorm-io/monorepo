@@ -1,5 +1,5 @@
-import type { ILindormWorker } from "../interfaces/LindormWorker";
-import { _createMockWorker } from "./create-mock-worker";
+import type { ILindormWorker } from "../interfaces/LindormWorker.js";
+import { _createMockWorker } from "./create-mock-worker.js";
 
 type MockWorker = jest.Mocked<ILindormWorker>;
 

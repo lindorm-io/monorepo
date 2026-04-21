@@ -1,12 +1,12 @@
-import { composeAxiosConfig as _composeAxiosConfig } from "../utils/compose-axios-config";
-import { requestWithRetry as _requestWithRetry } from "../utils/request-with-retry";
-import { useAxios as _useAxios } from "../utils/use-axios";
-import { axiosRequestHandler } from "./axios-request-handler";
+import { composeAxiosConfig as _composeAxiosConfig } from "../utils/compose-axios-config.js";
+import { requestWithRetry as _requestWithRetry } from "../utils/request-with-retry.js";
+import { useAxios as _useAxios } from "../utils/use-axios.js";
+import { axiosRequestHandler } from "./axios-request-handler.js";
 import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
-vi.mock("../utils/compose-axios-config");
-vi.mock("../utils/request-with-retry");
-vi.mock("../utils/use-axios");
+vi.mock("../utils/compose-axios-config.js");
+vi.mock("../utils/request-with-retry.js");
+vi.mock("../utils/use-axios.js");
 
 const composeAxiosConfig = _composeAxiosConfig as Mock;
 const requestWithRetry = _requestWithRetry as Mock;

@@ -1,6 +1,6 @@
-import type { ZephyrError } from "../errors/ZephyrError";
-import type { EventIncoming, EventOutgoing, ZephyrEventMap } from "../types/event-map";
-import type { IZephyrRoom } from "./ZephyrRoom";
+import type { ZephyrError } from "../errors/ZephyrError.js";
+import type { EventIncoming, EventOutgoing, ZephyrEventMap } from "../types/event-map.js";
+import type { IZephyrRoom } from "./ZephyrRoom.js";
 
 export type AuthExpiredEvent = {
   expiresAt?: number;

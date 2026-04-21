@@ -1,4 +1,4 @@
-import { computeDelay } from "./compute-delay";
+import { computeDelay } from "./compute-delay.js";
 import { describe, expect, test } from "vitest";
 
 describe("computeDelay", () => {

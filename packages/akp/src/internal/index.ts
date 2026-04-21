@@ -1,2 +1,2 @@
-export * from "./akp-signature";
-export * from "./get-key";
+export * from "./akp-signature.js";
+export * from "./get-key.js";

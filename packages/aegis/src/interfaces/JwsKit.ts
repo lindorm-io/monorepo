@@ -1,4 +1,4 @@
-import { JwsContent, ParsedJws, SignJwsOptions, SignedJws } from "../types";
+import type { JwsContent, ParsedJws, SignJwsOptions, SignedJws } from "../types/index.js";
 
 export interface IJwsKit {
   sign<T extends JwsContent>(data: T, options?: SignJwsOptions): SignedJws;

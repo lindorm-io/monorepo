@@ -1,8 +1,8 @@
-import { KryptosEncryption } from "@lindorm/kryptos";
-import { CipherGCM, DecipherGCM } from "crypto";
+import type { KryptosEncryption } from "@lindorm/kryptos";
+import type { CipherGCM, DecipherGCM } from "crypto";
 import { randomBytes } from "crypto";
-import { AesError } from "../../../errors";
-import { assertAuthTag, createAuthTag } from "./auth-tag";
+import { AesError } from "../../../errors/index.js";
+import { assertAuthTag, createAuthTag } from "./auth-tag.js";
 import { describe, expect, test, vi } from "vitest";
 
 describe("createAuthTag", () => {

@@ -1,6 +1,6 @@
-import { makeField } from "../../../../__fixtures__/make-field";
-import type { EntityMetadata, MetaField } from "../../../../entity/types/metadata";
-import { generateCommentDDL } from "./generate-comment-ddl";
+import { makeField } from "../../../../__fixtures__/make-field.js";
+import type { EntityMetadata, MetaField } from "../../../../entity/types/metadata.js";
+import { generateCommentDDL } from "./generate-comment-ddl.js";
 import { describe, expect, test } from "vitest";
 
 // ---------------------------------------------------------------------------

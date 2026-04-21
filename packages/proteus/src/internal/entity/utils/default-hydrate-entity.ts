@@ -1,11 +1,11 @@
 import type { IAmphora } from "@lindorm/amphora";
 import type { Dict } from "@lindorm/types";
-import type { IEntity } from "../../../interfaces";
-import type { EntityMetadata } from "../types/metadata";
-import { decryptFieldValue } from "./decrypt-field-value";
-import { deserialise } from "./deserialise";
-import { runHooksSync } from "./run-hooks-sync";
-import { storeSnapshot } from "./snapshot-store";
+import type { IEntity } from "../../../interfaces/index.js";
+import type { EntityMetadata } from "../types/metadata.js";
+import { decryptFieldValue } from "./decrypt-field-value.js";
+import { deserialise } from "./deserialise.js";
+import { runHooksSync } from "./run-hooks-sync.js";
+import { storeSnapshot } from "./snapshot-store.js";
 
 export type HydrateOptions = {
   snapshot?: boolean;

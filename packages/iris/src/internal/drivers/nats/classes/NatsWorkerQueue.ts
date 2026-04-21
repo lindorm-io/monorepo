@@ -1,18 +1,22 @@
 import { randomUUID } from "@lindorm/random";
-import type { IMessage } from "../../../../interfaces";
-import type { ConsumeEnvelope, ConsumeOptions, PublishOptions } from "../../../../types";
-import type { DriverBaseOptions } from "../../../classes/DriverBase";
-import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager";
-import type { DelayManager } from "../../../delay/DelayManager";
-import type { NatsSharedState } from "../types/nats-types";
-import { IrisDriverError } from "../../../../errors/IrisDriverError";
-import { DriverWorkerQueueBase } from "../../../classes/DriverWorkerQueueBase";
-import { publishNatsMessages } from "../utils/publish-nats-messages";
-import { wrapNatsConsumer } from "../utils/wrap-nats-consumer";
-import { createNatsConsumer } from "../utils/create-nats-consumer";
-import { resolveSubject } from "../utils/resolve-subject";
-import { resolveConsumerName } from "../utils/resolve-consumer-name";
-import { stopNatsConsumer } from "../utils/stop-nats-consumer";
+import type { IMessage } from "../../../../interfaces/index.js";
+import type {
+  ConsumeEnvelope,
+  ConsumeOptions,
+  PublishOptions,
+} from "../../../../types/index.js";
+import type { DriverBaseOptions } from "../../../classes/DriverBase.js";
+import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
+import type { DelayManager } from "../../../delay/DelayManager.js";
+import type { NatsSharedState } from "../types/nats-types.js";
+import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
+import { DriverWorkerQueueBase } from "../../../classes/DriverWorkerQueueBase.js";
+import { publishNatsMessages } from "../utils/publish-nats-messages.js";
+import { wrapNatsConsumer } from "../utils/wrap-nats-consumer.js";
+import { createNatsConsumer } from "../utils/create-nats-consumer.js";
+import { resolveSubject } from "../utils/resolve-subject.js";
+import { resolveConsumerName } from "../utils/resolve-consumer-name.js";
+import { stopNatsConsumer } from "../utils/stop-nats-consumer.js";
 
 export type NatsWorkerQueueOptions<M extends IMessage> = DriverBaseOptions<M> & {
   state: NatsSharedState;

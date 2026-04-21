@@ -1,5 +1,5 @@
-import type { PublishOptions } from "../../../types";
-import type { MessageMetadata } from "../types/metadata";
+import type { PublishOptions } from "../../../types/index.js";
+import type { MessageMetadata } from "../types/metadata.js";
 
 export const resolveExpiry = (
   options: PublishOptions | undefined,

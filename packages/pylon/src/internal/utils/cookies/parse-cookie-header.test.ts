@@ -1,4 +1,4 @@
-import { parseCookieHeader } from "./parse-cookie-header";
+import { parseCookieHeader } from "./parse-cookie-header.js";
 import { describe, expect, test } from "vitest";
 
 describe("parseCookieHeader", () => {

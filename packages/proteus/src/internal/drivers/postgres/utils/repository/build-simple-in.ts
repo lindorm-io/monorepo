@@ -1,6 +1,6 @@
-import type { EntityMetadata } from "../../../../entity/types/metadata";
-import { quoteIdentifier } from "../quote-identifier";
-import { resolveColumnNameSafe } from "../resolve-column-name";
+import type { EntityMetadata } from "../../../../entity/types/metadata.js";
+import { quoteIdentifier } from "../quote-identifier.js";
+import { resolveColumnNameSafe } from "../resolve-column-name.js";
 
 export const buildSimpleIn = (
   metadata: EntityMetadata | null,

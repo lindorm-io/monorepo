@@ -1,6 +1,6 @@
-import { ProteusError } from "../../../errors";
-import type { IEntity } from "../../../interfaces";
-import type { EntityMetadata } from "../../entity/types/metadata";
+import { ProteusError } from "../../../errors/index.js";
+import type { IEntity } from "../../../interfaces/index.js";
+import type { EntityMetadata } from "../../entity/types/metadata.js";
 import type {
   CteSpec,
   IncludeSpec,
@@ -9,10 +9,10 @@ import type {
   RawWhereEntry,
   SetOperationEntry,
   WindowSpec,
-} from "../../types/query";
-import type { QueryState } from "../../types/query";
-import type { SqlDialect } from "./sql-dialect";
-import type { AliasMap, InheritanceAliasMap } from "./types";
+} from "../../types/query.js";
+import type { QueryState } from "../../types/query.js";
+import type { SqlDialect } from "./sql-dialect.js";
+import type { AliasMap, InheritanceAliasMap } from "./types.js";
 
 export type CompileQueryResult = {
   text: string;

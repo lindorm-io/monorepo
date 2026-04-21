@@ -1,8 +1,8 @@
 import type { Constructor, Dict } from "@lindorm/types";
-import type { IEntity } from "../../../../interfaces";
-import type { EntityMetadata } from "../../../entity/types/metadata";
-import { getEntityName } from "../../../entity/utils/get-entity-name";
-import { encodePkSegment } from "./encode-pk-segment";
+import type { IEntity } from "../../../../interfaces/index.js";
+import type { EntityMetadata } from "../../../entity/types/metadata.js";
+import { getEntityName } from "../../../entity/utils/get-entity-name.js";
+import { encodePkSegment } from "./encode-pk-segment.js";
 
 /**
  * Build a Redis key from namespace, entity name, and PK values.

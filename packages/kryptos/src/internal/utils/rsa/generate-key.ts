@@ -1,7 +1,7 @@
 import { generateKeyPair, generateKeyPairSync } from "crypto";
 import { promisify } from "util";
-import { KryptosAlgorithm, RsaModulus } from "../../../types";
-import { getRsaModulus } from "./get-modulus";
+import type { KryptosAlgorithm, RsaModulus } from "../../../types/index.js";
+import { getRsaModulus } from "./get-modulus.js";
 
 const generateKeyPairAsync = promisify(generateKeyPair);
 

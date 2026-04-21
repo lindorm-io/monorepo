@@ -1,4 +1,4 @@
-import { ProteusError } from "../../../../errors/ProteusError";
+import { ProteusError } from "../../../../errors/ProteusError.js";
 
 /**
  * Quotes a MySQL identifier using backtick quoting.

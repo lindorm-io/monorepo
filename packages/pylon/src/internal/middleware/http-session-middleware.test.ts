@@ -3,10 +3,10 @@ import {
   createMockProteusSource,
   createMockRepository,
 } from "@lindorm/proteus/mocks/vitest";
-import { Next } from "@lindorm/middleware";
+import type { Next } from "@lindorm/middleware";
 import MockDate from "mockdate";
-import { PylonSessionOptions } from "../../types";
-import { createHttpSessionMiddleware } from "./http-session-middleware";
+import type { PylonSessionOptions } from "../../types/index.js";
+import { createHttpSessionMiddleware } from "./http-session-middleware.js";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");

@@ -1,5 +1,5 @@
-import { IKryptosEc } from "../interfaces";
-import { KryptosKit } from "../classes";
+import type { IKryptosEc } from "../interfaces/index.js";
+import { KryptosKit } from "../classes/index.js";
 
 export const KRYPTOS_EC_SIG_ES256 = KryptosKit.from.b64({
   id: "b3b62d67-9c48-4e3c-9efd-81f82f6b6551",

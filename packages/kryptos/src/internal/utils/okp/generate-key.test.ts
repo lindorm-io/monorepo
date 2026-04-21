@@ -1,4 +1,4 @@
-import { generateOkpKey } from "./generate-key";
+import { generateOkpKey } from "./generate-key.js";
 import { describe, expect, test } from "vitest";
 
 describe("generateEcKey", () => {

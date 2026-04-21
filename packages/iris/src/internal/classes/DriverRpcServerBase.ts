@@ -1,16 +1,16 @@
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
-import { IrisDriverError } from "../../errors/IrisDriverError";
-import type { IIrisRpcServer, IMessage } from "../../interfaces";
-import type { MessageMetadata } from "../message/types/metadata";
+import { IrisDriverError } from "../../errors/IrisDriverError.js";
+import type { IIrisRpcServer, IMessage } from "../../interfaces/index.js";
+import type { MessageMetadata } from "../message/types/metadata.js";
 import type { IAmphora } from "@lindorm/amphora";
-import { MessageManager } from "../message/classes/MessageManager";
-import { getMessageMetadata } from "../message/metadata/get-message-metadata";
-import { prepareOutbound } from "../message/utils/prepare-outbound";
-import { prepareInbound } from "../message/utils/prepare-inbound";
-import { resolveDefaultTopic } from "../message/utils/resolve-default-topic";
-import type { IrisEnvelope } from "../types/iris-envelope";
-import { createDefaultEnvelope } from "../utils/create-default-envelope";
+import { MessageManager } from "../message/classes/MessageManager.js";
+import { getMessageMetadata } from "../message/metadata/get-message-metadata.js";
+import { prepareOutbound } from "../message/utils/prepare-outbound.js";
+import { prepareInbound } from "../message/utils/prepare-inbound.js";
+import { resolveDefaultTopic } from "../message/utils/resolve-default-topic.js";
+import type { IrisEnvelope } from "../types/iris-envelope.js";
+import { createDefaultEnvelope } from "../utils/create-default-envelope.js";
 
 export type DriverRpcServerBaseOptions<Req extends IMessage, Res extends IMessage> = {
   logger: ILogger;

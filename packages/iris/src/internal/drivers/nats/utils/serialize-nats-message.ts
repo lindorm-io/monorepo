@@ -1,5 +1,5 @@
-import type { IrisEnvelope } from "../../../types/iris-envelope";
-import type { NatsMsgHeaders, SerializedNatsMessage } from "../types/nats-types";
+import type { IrisEnvelope } from "../../../types/iris-envelope.js";
+import type { NatsMsgHeaders, SerializedNatsMessage } from "../types/nats-types.js";
 
 export type { SerializedNatsMessage };
 

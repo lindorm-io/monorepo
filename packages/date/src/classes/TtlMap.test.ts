@@ -1,4 +1,4 @@
-import { TtlMap } from "./TtlMap";
+import { TtlMap } from "./TtlMap.js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 describe("TtlMap", () => {

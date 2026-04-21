@@ -1,4 +1,4 @@
-import { createMockRpcClient } from "./vitest";
+import { createMockRpcClient } from "./vitest.js";
 import { beforeEach, describe, expect, it } from "vitest";
 
 type TestReq = { id: string; query: string };

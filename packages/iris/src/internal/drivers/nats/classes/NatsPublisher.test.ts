@@ -1,14 +1,14 @@
-import type { IMessage, IMessageSubscriber } from "../../../../interfaces";
-import { Field } from "../../../../decorators/Field";
-import { Message } from "../../../../decorators/Message";
-import { clearRegistry } from "../../../message/metadata/registry";
-import type { NatsSharedState } from "../types/nats-types";
-import { NatsPublisher } from "./NatsPublisher";
+import type { IMessage, IMessageSubscriber } from "../../../../interfaces/index.js";
+import { Field } from "../../../../decorators/Field.js";
+import { Message } from "../../../../decorators/Message.js";
+import { clearRegistry } from "../../../message/metadata/registry.js";
+import type { NatsSharedState } from "../types/nats-types.js";
+import { NatsPublisher } from "./NatsPublisher.js";
 import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 // --- Mock publish-nats-messages ---
 const mockPublishNatsMessages = vi.fn().mockResolvedValue(undefined);
-vi.mock("../utils/publish-nats-messages", async () => ({
+vi.mock("../utils/publish-nats-messages.js", async () => ({
   publishNatsMessages: (...args: Array<unknown>) => mockPublishNatsMessages(...args),
 }));
 

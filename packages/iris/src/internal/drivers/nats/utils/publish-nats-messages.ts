@@ -1,14 +1,14 @@
 import type { ILogger } from "@lindorm/logger";
-import type { IMessage } from "../../../../interfaces";
-import type { PublishOptions } from "../../../../types";
-import type { NatsSharedState, PublishNatsMessagesOptions } from "../types/nats-types";
-import { IrisPublishError } from "../../../../errors/IrisPublishError";
+import type { IMessage } from "../../../../interfaces/index.js";
+import type { PublishOptions } from "../../../../types/index.js";
+import type { NatsSharedState, PublishNatsMessagesOptions } from "../types/nats-types.js";
+import { IrisPublishError } from "../../../../errors/IrisPublishError.js";
 import {
   preparePublishBatch,
   type PublishDriverLike,
-} from "../../../utils/prepare-publish-batch";
-import { resolveSubject } from "./resolve-subject";
-import { serializeNatsMessage } from "./serialize-nats-message";
+} from "../../../utils/prepare-publish-batch.js";
+import { resolveSubject } from "./resolve-subject.js";
+import { serializeNatsMessage } from "./serialize-nats-message.js";
 
 export type NatsPublishDriver<M extends IMessage> = PublishDriverLike<M>;
 

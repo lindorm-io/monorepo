@@ -1,1 +1,1 @@
-export * from "./composed-options";
+export * from "./composed-options.js";

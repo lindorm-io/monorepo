@@ -1,4 +1,4 @@
-import { calculateRetry } from "./calculate-retry";
+import { calculateRetry } from "./calculate-retry.js";
 import { describe, expect, test } from "vitest";
 
 describe("calculateRetry", () => {

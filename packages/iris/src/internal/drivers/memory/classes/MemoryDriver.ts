@@ -1,7 +1,7 @@
 import { EventEmitter } from "node:events";
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
-import type { IIrisDriver } from "../../../../interfaces/IrisDriver";
+import type { IIrisDriver } from "../../../../interfaces/IrisDriver.js";
 import type {
   IIrisMessageBus,
   IIrisPublisher,
@@ -9,23 +9,23 @@ import type {
   IIrisWorkerQueue,
   IMessage,
   IMessageSubscriber,
-} from "../../../../interfaces";
-import type { IrisConnectionState, IrisEvents } from "../../../../types";
-import { IrisTransportError } from "../../../../errors/IrisTransportError";
-import type { DeadLetterEntry } from "../../../../types/dead-letter";
-import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager";
-import type { DelayManager } from "../../../delay/DelayManager";
+} from "../../../../interfaces/index.js";
+import type { IrisConnectionState, IrisEvents } from "../../../../types/index.js";
+import { IrisTransportError } from "../../../../errors/IrisTransportError.js";
+import type { DeadLetterEntry } from "../../../../types/dead-letter.js";
+import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
+import type { DelayManager } from "../../../delay/DelayManager.js";
 import type { IAmphora } from "@lindorm/amphora";
-import type { MemorySharedState } from "../types/memory-store";
-import { createStore } from "../utils/create-store";
-import { dispatchToConsumers } from "../utils/dispatch-to-consumers";
-import { dispatchToSubscribers } from "../utils/dispatch-to-subscribers";
-import { MemoryMessageBus } from "./MemoryMessageBus";
-import { MemoryPublisher } from "./MemoryPublisher";
-import { MemoryRpcClient } from "./MemoryRpcClient";
-import { MemoryRpcServer } from "./MemoryRpcServer";
-import { MemoryStreamProcessor } from "./MemoryStreamProcessor";
-import { MemoryWorkerQueue } from "./MemoryWorkerQueue";
+import type { MemorySharedState } from "../types/memory-store.js";
+import { createStore } from "../utils/create-store.js";
+import { dispatchToConsumers } from "../utils/dispatch-to-consumers.js";
+import { dispatchToSubscribers } from "../utils/dispatch-to-subscribers.js";
+import { MemoryMessageBus } from "./MemoryMessageBus.js";
+import { MemoryPublisher } from "./MemoryPublisher.js";
+import { MemoryRpcClient } from "./MemoryRpcClient.js";
+import { MemoryRpcServer } from "./MemoryRpcServer.js";
+import { MemoryStreamProcessor } from "./MemoryStreamProcessor.js";
+import { MemoryWorkerQueue } from "./MemoryWorkerQueue.js";
 
 export type MemoryDriverOptions = {
   logger: ILogger;

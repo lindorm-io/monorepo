@@ -1,4 +1,4 @@
-import { calculateSubscriptions } from "./calculate-subscriptions";
+import { calculateSubscriptions } from "./calculate-subscriptions.js";
 import { describe, expect, test } from "vitest";
 
 describe("calculateSubscriptions", () => {

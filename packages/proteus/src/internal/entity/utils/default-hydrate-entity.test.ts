@@ -1,7 +1,7 @@
-import { makeField } from "../../__fixtures__/make-field";
-import type { EntityMetadata } from "../types/metadata";
-import { defaultHydrateEntity } from "./default-hydrate-entity";
-import { getSnapshot } from "./snapshot-store";
+import { makeField } from "../../__fixtures__/make-field.js";
+import type { EntityMetadata } from "../types/metadata.js";
+import { defaultHydrateEntity } from "./default-hydrate-entity.js";
+import { getSnapshot } from "./snapshot-store.js";
 import { describe, expect, test, vi } from "vitest";
 
 // ─── Embedded Fixtures ──────────────────────────────────────────────────────

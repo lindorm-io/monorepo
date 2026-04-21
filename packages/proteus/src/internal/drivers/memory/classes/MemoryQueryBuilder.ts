@@ -7,30 +7,30 @@ import type {
   IInsertQueryBuilder,
   IProteusQueryBuilder,
   IUpdateQueryBuilder,
-} from "../../../../interfaces";
-import type { WriteResult } from "../../../../interfaces/InsertQueryBuilder";
-import type { LockMode } from "../../../../types/find-options";
-import type { EntityMetadata } from "../../../entity/types/metadata";
-import type { MemoryStore, MemoryTable } from "../types/memory-store";
-import { QueryBuilder } from "../../../../classes/QueryBuilder";
-import { NotSupportedError } from "../../../../errors/NotSupportedError";
-import { guardMemoryLockMode } from "../utils/guard-memory-lock-mode";
-import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError";
+} from "../../../../interfaces/index.js";
+import type { WriteResult } from "../../../../interfaces/InsertQueryBuilder.js";
+import type { LockMode } from "../../../../types/find-options.js";
+import type { EntityMetadata } from "../../../entity/types/metadata.js";
+import type { MemoryStore, MemoryTable } from "../types/memory-store.js";
+import { QueryBuilder } from "../../../../classes/QueryBuilder.js";
+import { NotSupportedError } from "../../../../errors/NotSupportedError.js";
+import { guardMemoryLockMode } from "../utils/guard-memory-lock-mode.js";
+import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError.js";
 import { Predicated } from "@lindorm/utils";
-import { defaultHydrateEntity } from "../../../entity/utils/default-hydrate-entity";
-import { resolvePolymorphicMetadata } from "../../../entity/utils/resolve-polymorphic-metadata";
-import { generateAutoFilters } from "../../../entity/metadata/auto-filters";
-import { flattenEmbeddedCriteria } from "../../../utils/query/flatten-embedded-criteria";
-import { applyOrdering } from "../../../utils/query/apply-ordering";
+import { defaultHydrateEntity } from "../../../entity/utils/default-hydrate-entity.js";
+import { resolvePolymorphicMetadata } from "../../../entity/utils/resolve-polymorphic-metadata.js";
+import { generateAutoFilters } from "../../../entity/metadata/auto-filters.js";
+import { flattenEmbeddedCriteria } from "../../../utils/query/flatten-embedded-criteria.js";
+import { applyOrdering } from "../../../utils/query/apply-ordering.js";
 import {
   computeAggregateFromValues,
   extractNumericValues,
-} from "../../../utils/query/compute-in-memory-aggregate";
-import { resolveFilters } from "../../../utils/query/resolve-filters";
-import { mergeSystemFilterOverrides } from "../../../utils/query/merge-system-filter-overrides";
-import { MemoryDuplicateKeyError } from "../errors/MemoryDuplicateKeyError";
-import { applyAutoIncrement } from "../utils/memory-auto-increment";
-import { checkUniqueConstraints } from "../utils/memory-unique-check";
+} from "../../../utils/query/compute-in-memory-aggregate.js";
+import { resolveFilters } from "../../../utils/query/resolve-filters.js";
+import { mergeSystemFilterOverrides } from "../../../utils/query/merge-system-filter-overrides.js";
+import { MemoryDuplicateKeyError } from "../errors/MemoryDuplicateKeyError.js";
+import { applyAutoIncrement } from "../utils/memory-auto-increment.js";
+import { checkUniqueConstraints } from "../utils/memory-unique-check.js";
 
 export class MemoryQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   private readonly getTable: () => MemoryTable;

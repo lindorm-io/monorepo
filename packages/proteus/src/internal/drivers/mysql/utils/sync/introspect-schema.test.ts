@@ -1,5 +1,8 @@
-import type { MysqlQueryClient, MysqlQueryResult } from "../../types/mysql-query-client";
-import { introspectSchema } from "./introspect-schema";
+import type {
+  MysqlQueryClient,
+  MysqlQueryResult,
+} from "../../types/mysql-query-client.js";
+import { introspectSchema } from "./introspect-schema.js";
 import { describe, expect, test, vi } from "vitest";
 
 const createMockClient = (

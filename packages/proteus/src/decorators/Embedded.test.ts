@@ -1,16 +1,16 @@
-import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata";
-import { defaultCreateEntity } from "../internal/entity/utils/default-create-entity";
-import { defaultCloneEntity } from "../internal/entity/utils/default-clone-entity";
-import { defaultDehydrateEntity } from "../internal/entity/utils/default-dehydrate-entity";
-import { defaultHydrateEntity } from "../internal/entity/utils/default-hydrate-entity";
-import { defaultValidateEntity } from "../internal/entity/utils/default-validate-entity";
-import { Embeddable } from "./Embeddable";
-import { Embedded } from "./Embedded";
-import { Entity } from "./Entity";
-import { Field } from "./Field";
-import { Nullable } from "./Nullable";
-import { PrimaryKeyField } from "./PrimaryKeyField";
-import { Generated } from "./Generated";
+import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata.js";
+import { defaultCreateEntity } from "../internal/entity/utils/default-create-entity.js";
+import { defaultCloneEntity } from "../internal/entity/utils/default-clone-entity.js";
+import { defaultDehydrateEntity } from "../internal/entity/utils/default-dehydrate-entity.js";
+import { defaultHydrateEntity } from "../internal/entity/utils/default-hydrate-entity.js";
+import { defaultValidateEntity } from "../internal/entity/utils/default-validate-entity.js";
+import { Embeddable } from "./Embeddable.js";
+import { Embedded } from "./Embedded.js";
+import { Entity } from "./Entity.js";
+import { Field } from "./Field.js";
+import { Nullable } from "./Nullable.js";
+import { PrimaryKeyField } from "./PrimaryKeyField.js";
+import { Generated } from "./Generated.js";
 import { describe, expect, test } from "vitest";
 
 @Embeddable()

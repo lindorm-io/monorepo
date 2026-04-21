@@ -1,5 +1,10 @@
-import { KryptosError } from "../../../errors";
-import { ASN1_TAG_SEQUENCE, decodeTime, readSequenceChildren, readTlv } from "../asn1";
+import { KryptosError } from "../../../errors/index.js";
+import {
+  ASN1_TAG_SEQUENCE,
+  decodeTime,
+  readSequenceChildren,
+  readTlv,
+} from "../asn1/index.js";
 
 export const parseX509Validity = (der: Buffer): { notBefore: Date; notAfter: Date } => {
   const tlv = readTlv(der, 0);

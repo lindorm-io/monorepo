@@ -1,5 +1,5 @@
-import { ChangeCase, changeKeys } from "@lindorm/case";
-import { ConduitMiddleware } from "../types";
+import { type ChangeCase, changeKeys } from "@lindorm/case";
+import type { ConduitMiddleware } from "../types/index.js";
 
 export const conduitChangeRequestHeadersMiddleware = (
   mode: ChangeCase = "header",

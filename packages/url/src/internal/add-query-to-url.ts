@@ -1,6 +1,6 @@
-import { ChangeCase, changeCase } from "@lindorm/case";
+import { type ChangeCase, changeCase } from "@lindorm/case";
 import { isArray, isFunction, isObject } from "@lindorm/is";
-import { Dict, Query } from "@lindorm/types";
+import type { Dict, Query } from "@lindorm/types";
 
 export const addQueryToURL = <Q = Dict<Query>>(
   url: URL,

@@ -1,5 +1,5 @@
-import { ErrorClassification } from "@lindorm/breaker";
-import { ConduitError } from "../../errors";
+import type { ErrorClassification } from "@lindorm/breaker";
+import { ConduitError } from "../../errors/index.js";
 
 const UNRECOVERABLE_STATUS = new Set([501, 505, 506, 510, 511]);
 

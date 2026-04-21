@@ -1,4 +1,4 @@
-import { LindormError, LindormErrorOptions } from "./LindormError";
+import { LindormError, type LindormErrorOptions } from "./LindormError.js";
 
 enum Status {
   BadRequest = 400,

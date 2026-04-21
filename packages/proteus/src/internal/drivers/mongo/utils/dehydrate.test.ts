@@ -3,9 +3,9 @@ import type {
   EntityMetadata,
   MetaField,
   MetaRelation,
-} from "../../../entity/types/metadata";
-import type { IEntity } from "../../../../interfaces";
-import { dehydrateEntity, dehydrateToRow } from "./dehydrate";
+} from "../../../entity/types/metadata.js";
+import type { IEntity } from "../../../../interfaces/index.js";
+import { dehydrateEntity, dehydrateToRow } from "./dehydrate.js";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

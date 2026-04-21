@@ -1,5 +1,5 @@
-import { ConduitMiddleware } from "../types";
-import { createConduitDeduplicationMiddleware } from "./conduit-deduplication-middleware";
+import type { ConduitMiddleware } from "../types/index.js";
+import { createConduitDeduplicationMiddleware } from "./conduit-deduplication-middleware.js";
 import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 describe("conduitDeduplicationMiddleware", () => {

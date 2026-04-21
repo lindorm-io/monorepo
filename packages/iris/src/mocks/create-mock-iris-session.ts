@@ -1,8 +1,8 @@
-import type { IIrisSession } from "../interfaces";
-import { _createMockMessageBus } from "./create-mock-message-bus";
-import { _createMockPublisher } from "./create-mock-publisher";
-import { _createMockRpcClient } from "./create-mock-rpc-client";
-import { _createMockWorkerQueue } from "./create-mock-worker-queue";
+import type { IIrisSession } from "../interfaces/index.js";
+import { _createMockMessageBus } from "./create-mock-message-bus.js";
+import { _createMockPublisher } from "./create-mock-publisher.js";
+import { _createMockRpcClient } from "./create-mock-rpc-client.js";
+import { _createMockWorkerQueue } from "./create-mock-worker-queue.js";
 
 export const _createMockIrisSession = (mockFn: () => any): IIrisSession => {
   const impl = (fn: any) => {

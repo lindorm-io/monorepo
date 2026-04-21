@@ -1,5 +1,5 @@
 import type { Predicate } from "@lindorm/types";
-import type { IEntity } from "../interfaces/Entity";
+import type { IEntity } from "../interfaces/Entity.js";
 
 /**
  * Configure a server-side cursor for streaming large result sets.

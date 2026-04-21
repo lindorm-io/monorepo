@@ -1,12 +1,12 @@
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
-import type { IMessage, IMessageSubscriber } from "../../interfaces";
-import type { MessageMetadata } from "../message/types/metadata";
-import { MessageManager } from "../message/classes/MessageManager";
-import { getMessageMetadata } from "../message/metadata/get-message-metadata";
-import { prepareOutbound } from "../message/utils/prepare-outbound";
-import type { OutboundPayload } from "../message/utils/prepare-outbound";
-import { prepareInbound } from "../message/utils/prepare-inbound";
+import type { IMessage, IMessageSubscriber } from "../../interfaces/index.js";
+import type { MessageMetadata } from "../message/types/metadata.js";
+import { MessageManager } from "../message/classes/MessageManager.js";
+import { getMessageMetadata } from "../message/metadata/get-message-metadata.js";
+import { prepareOutbound } from "../message/utils/prepare-outbound.js";
+import type { OutboundPayload } from "../message/utils/prepare-outbound.js";
+import { prepareInbound } from "../message/utils/prepare-inbound.js";
 import type { IAmphora } from "@lindorm/amphora";
 
 export type DriverBaseOptions<M extends IMessage> = {

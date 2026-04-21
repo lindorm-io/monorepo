@@ -1,5 +1,5 @@
-import type { IHermes } from "../interfaces/IHermes";
-import { _createMockHermesSession } from "./create-mock-hermes-session";
+import type { IHermes } from "../interfaces/IHermes.js";
+import { _createMockHermesSession } from "./create-mock-hermes-session.js";
 
 export const _createMockHermes = (mockFn: () => any): IHermes => {
   const impl = (fn: any) => {

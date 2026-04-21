@@ -1,5 +1,5 @@
-import type { EntityMetadata } from "../../entity/types/metadata";
-import { validatePaginateOptions } from "./validate-paginate-options";
+import type { EntityMetadata } from "../../entity/types/metadata.js";
+import { validatePaginateOptions } from "./validate-paginate-options.js";
 import { describe, expect, it } from "vitest";
 
 const createMockMetadata = (fieldKeys: Array<string>): EntityMetadata =>

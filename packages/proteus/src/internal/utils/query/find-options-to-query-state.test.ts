@@ -1,5 +1,5 @@
-import type { EntityMetadata, MetaRelation } from "../../entity/types/metadata";
-import { findOptionsToQueryState } from "./find-options-to-query-state";
+import type { EntityMetadata, MetaRelation } from "../../entity/types/metadata.js";
+import { findOptionsToQueryState } from "./find-options-to-query-state.js";
 import { describe, expect, test } from "vitest";
 
 const metadataWithDefaultOrder = {

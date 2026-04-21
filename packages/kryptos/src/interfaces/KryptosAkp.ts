@@ -1,5 +1,5 @@
-import { AkpAlgorithm, AkpBuffer, AkpJwk, AkpString } from "../types";
-import { IKryptos } from "./Kryptos";
+import type { AkpAlgorithm, AkpBuffer, AkpJwk, AkpString } from "../types/index.js";
+import type { IKryptos } from "./Kryptos.js";
 
 export interface IKryptosAkp extends IKryptos {
   algorithm: AkpAlgorithm;

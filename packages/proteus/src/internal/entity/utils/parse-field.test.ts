@@ -1,5 +1,5 @@
-import { makeField } from "../../__fixtures__/make-field";
-import { parseField } from "./parse-field";
+import { makeField } from "../../__fixtures__/make-field.js";
+import { parseField } from "./parse-field.js";
 import { describe, expect, test, vi } from "vitest";
 
 describe("parseField", () => {

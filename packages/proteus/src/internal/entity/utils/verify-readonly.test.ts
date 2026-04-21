@@ -1,9 +1,9 @@
-import { verifyReadonly } from "./verify-readonly";
-import { Entity } from "../../../decorators/Entity";
-import { Field } from "../../../decorators/Field";
-import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField";
-import { ReadOnly } from "../../../decorators/ReadOnly";
-import { VersionField } from "../../../decorators/VersionField";
+import { verifyReadonly } from "./verify-readonly.js";
+import { Entity } from "../../../decorators/Entity.js";
+import { Field } from "../../../decorators/Field.js";
+import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField.js";
+import { ReadOnly } from "../../../decorators/ReadOnly.js";
+import { VersionField } from "../../../decorators/VersionField.js";
 import { describe, expect, test } from "vitest";
 
 @Entity({ name: "VerifyReadonlyEntity" })

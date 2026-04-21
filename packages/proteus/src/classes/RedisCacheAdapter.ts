@@ -1,5 +1,5 @@
 import type Redis from "ioredis";
-import type { ICacheAdapter } from "../interfaces/CacheAdapter";
+import type { ICacheAdapter } from "../interfaces/CacheAdapter.js";
 
 /**
  * Options when providing a pre-existing ioredis client.

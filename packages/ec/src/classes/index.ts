@@ -1,1 +1,1 @@
-export * from "./EcKit";
+export * from "./EcKit.js";

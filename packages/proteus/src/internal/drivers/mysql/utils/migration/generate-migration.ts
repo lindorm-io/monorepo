@@ -1,13 +1,13 @@
-import type { EntityMetadata } from "../../../../entity/types/metadata";
-import type { GenerateMigrationResult } from "../../../../interfaces/MigrationManager";
-import type { NamespaceOptions } from "../../../../types/types";
-import { writeMigrationFile } from "../../../../utils/migration/write-migration-file";
-import type { MysqlQueryClient } from "../../types/mysql-query-client";
-import { diffSchema } from "../sync/diff-schema";
-import { introspectSchema } from "../sync/introspect-schema";
-import { projectDesiredSchemaMysql } from "../sync/project-desired-schema-mysql";
-import type { SerializeMysqlMigrationOptions } from "./serialize-mysql-migration";
-import { serializeMysqlMigration } from "./serialize-mysql-migration";
+import type { EntityMetadata } from "../../../../entity/types/metadata.js";
+import type { GenerateMigrationResult } from "../../../../interfaces/MigrationManager.js";
+import type { NamespaceOptions } from "../../../../types/types.js";
+import { writeMigrationFile } from "../../../../utils/migration/write-migration-file.js";
+import type { MysqlQueryClient } from "../../types/mysql-query-client.js";
+import { diffSchema } from "../sync/diff-schema.js";
+import { introspectSchema } from "../sync/introspect-schema.js";
+import { projectDesiredSchemaMysql } from "../sync/project-desired-schema-mysql.js";
+import type { SerializeMysqlMigrationOptions } from "./serialize-mysql-migration.js";
+import { serializeMysqlMigration } from "./serialize-mysql-migration.js";
 
 export type GenerateMysqlMigrationOptions = {
   name?: string;

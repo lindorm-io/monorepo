@@ -2,8 +2,8 @@ import {
   KRYPTOS_AKP_SIG_ML_DSA_65,
   KRYPTOS_OKP_SIG_ED25519,
 } from "@lindorm/kryptos/fixtures";
-import { AkpError } from "../errors";
-import { AkpKit } from "./AkpKit";
+import { AkpError } from "../errors/index.js";
+import { AkpKit } from "./AkpKit.js";
 import { beforeEach, describe, expect, test } from "vitest";
 
 describe("AkpKit", () => {

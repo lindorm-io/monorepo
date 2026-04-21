@@ -1,18 +1,18 @@
 import type { Constructor } from "@lindorm/types";
-import { Default } from "../../decorators/Default";
-import { Field } from "../../decorators/Field";
-import { IdentifierField } from "../../decorators/IdentifierField";
-import { Message } from "../../decorators/Message";
-import { IrisTimeoutError } from "../../errors/IrisTimeoutError";
-import { IrisTransportError } from "../../errors/IrisTransportError";
-import type { IMessage } from "../../interfaces";
-import { clearRegistry } from "../message/metadata/registry";
-import { prepareOutbound } from "../message/utils/prepare-outbound";
-import { getMessageMetadata } from "../message/metadata/get-message-metadata";
+import { Default } from "../../decorators/Default.js";
+import { Field } from "../../decorators/Field.js";
+import { IdentifierField } from "../../decorators/IdentifierField.js";
+import { Message } from "../../decorators/Message.js";
+import { IrisTimeoutError } from "../../errors/IrisTimeoutError.js";
+import { IrisTransportError } from "../../errors/IrisTransportError.js";
+import type { IMessage } from "../../interfaces/index.js";
+import { clearRegistry } from "../message/metadata/registry.js";
+import { prepareOutbound } from "../message/utils/prepare-outbound.js";
+import { getMessageMetadata } from "../message/metadata/get-message-metadata.js";
 import {
   DriverRpcClientBase,
   type DriverRpcClientBaseOptions,
-} from "./DriverRpcClientBase";
+} from "./DriverRpcClientBase.js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // --- Test message classes ---

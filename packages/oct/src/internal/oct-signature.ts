@@ -1,10 +1,13 @@
 import { isString } from "@lindorm/is";
 import { createHmac, timingSafeEqual } from "crypto";
-import { OctError } from "../errors";
-import { CreateOctSignatureOptions, VerifyOctSignatureOptions } from "../types";
-import { assertKeySize } from "./assert-key-size";
-import { getPrivateKey } from "./get-key";
-import { mapOctAlgorithm } from "./map-algorithm";
+import { OctError } from "../errors/index.js";
+import type {
+  CreateOctSignatureOptions,
+  VerifyOctSignatureOptions,
+} from "../types/index.js";
+import { assertKeySize } from "./assert-key-size.js";
+import { getPrivateKey } from "./get-key.js";
+import { mapOctAlgorithm } from "./map-algorithm.js";
 
 export const createOctSignature = ({
   data,

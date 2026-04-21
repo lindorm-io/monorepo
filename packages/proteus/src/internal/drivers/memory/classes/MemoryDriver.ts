@@ -5,35 +5,35 @@ import type {
   IEntity,
   IProteusQueryBuilder,
   IProteusRepository,
-} from "../../../../interfaces";
+} from "../../../../interfaces/index.js";
 import type {
   FilterRegistryGetter,
   IProteusDriver,
   MetadataResolver,
   TransactionHandle,
-} from "../../../interfaces/ProteusDriver";
-import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor";
+} from "../../../interfaces/ProteusDriver.js";
+import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor.js";
 import type {
   ProteusMemoryOptions,
   TransactionCallback,
   TransactionOptions,
-} from "../../../../types";
-import type { EntityEmitFn } from "../../../../types/event-map";
-import type { RepositoryFactory } from "../../../types/repository-factory";
-import type { FilterRegistry } from "../../../utils/query/filter-registry";
+} from "../../../../types/index.js";
+import type { EntityEmitFn } from "../../../../types/event-map.js";
+import type { RepositoryFactory } from "../../../types/repository-factory.js";
+import type { FilterRegistry } from "../../../utils/query/filter-registry.js";
 import type {
   MemoryStore,
   MemoryTable,
   MemoryTransactionHandle,
-} from "../types/memory-store";
-import { getEntityName } from "../../../entity/utils/get-entity-name";
-import { getJoinName } from "../../../entity/utils/get-join-name";
-import { resolveInheritanceRoot } from "../../../entity/utils/resolve-inheritance-root";
-import { MemoryDriverError } from "../errors/MemoryDriverError";
-import { MemoryExecutor } from "./MemoryExecutor";
-import { MemoryRepository, type WithImplicitTransaction } from "./MemoryRepository";
-import { MemoryQueryBuilder } from "./MemoryQueryBuilder";
-import { MemoryTransactionContext } from "./MemoryTransactionContext";
+} from "../types/memory-store.js";
+import { getEntityName } from "../../../entity/utils/get-entity-name.js";
+import { getJoinName } from "../../../entity/utils/get-join-name.js";
+import { resolveInheritanceRoot } from "../../../entity/utils/resolve-inheritance-root.js";
+import { MemoryDriverError } from "../errors/MemoryDriverError.js";
+import { MemoryExecutor } from "./MemoryExecutor.js";
+import { MemoryRepository, type WithImplicitTransaction } from "./MemoryRepository.js";
+import { MemoryQueryBuilder } from "./MemoryQueryBuilder.js";
+import { MemoryTransactionContext } from "./MemoryTransactionContext.js";
 
 const createEmptyStore = (): MemoryStore => ({
   tables: new Map(),

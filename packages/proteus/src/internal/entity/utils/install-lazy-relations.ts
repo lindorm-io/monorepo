@@ -1,7 +1,7 @@
-import type { IEntity } from "../../../interfaces";
-import type { EntityMetadata, MetaRelation, QueryScope } from "../types/metadata";
-import { LazyRelation } from "./lazy-relation";
-import { LazyCollection } from "./lazy-collection";
+import type { IEntity } from "../../../interfaces/index.js";
+import type { EntityMetadata, MetaRelation, QueryScope } from "../types/metadata.js";
+import { LazyRelation } from "./lazy-relation.js";
+import { LazyCollection } from "./lazy-collection.js";
 
 export type LazyRelationLoader = (
   entity: IEntity,

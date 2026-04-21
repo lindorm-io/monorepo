@@ -3,7 +3,7 @@ import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
 import { randomBytes } from "crypto";
 import { hostname } from "os";
-import type { IIrisDriver } from "../../../../interfaces/IrisDriver";
+import type { IIrisDriver } from "../../../../interfaces/IrisDriver.js";
 import type {
   IIrisMessageBus,
   IIrisPublisher,
@@ -11,27 +11,27 @@ import type {
   IIrisWorkerQueue,
   IMessage,
   IMessageSubscriber,
-} from "../../../../interfaces";
+} from "../../../../interfaces/index.js";
 import type {
   IrisConnectionState,
   IrisEvents,
   RedisConnectionOptions,
-} from "../../../../types";
-import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager";
-import type { DelayManager } from "../../../delay/DelayManager";
+} from "../../../../types/index.js";
+import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
+import type { DelayManager } from "../../../delay/DelayManager.js";
 import type { IAmphora } from "@lindorm/amphora";
-import type { RedisSharedState } from "../types/redis-types";
-import { createConsumerLoop } from "../utils/create-consumer-loop";
-import { resolveStreamKey } from "../utils/resolve-stream-key";
-import { serializeStreamFields } from "../utils/serialize-stream-fields";
-import { stopAllConsumerLoops } from "../utils/stop-consumer-loop";
-import { xaddToStream } from "../utils/xadd-to-stream";
-import { RedisMessageBus } from "./RedisMessageBus";
-import { RedisPublisher } from "./RedisPublisher";
-import { RedisRpcClient } from "./RedisRpcClient";
-import { RedisRpcServer } from "./RedisRpcServer";
-import { RedisStreamProcessor } from "./RedisStreamProcessor";
-import { RedisWorkerQueue } from "./RedisWorkerQueue";
+import type { RedisSharedState } from "../types/redis-types.js";
+import { createConsumerLoop } from "../utils/create-consumer-loop.js";
+import { resolveStreamKey } from "../utils/resolve-stream-key.js";
+import { serializeStreamFields } from "../utils/serialize-stream-fields.js";
+import { stopAllConsumerLoops } from "../utils/stop-consumer-loop.js";
+import { xaddToStream } from "../utils/xadd-to-stream.js";
+import { RedisMessageBus } from "./RedisMessageBus.js";
+import { RedisPublisher } from "./RedisPublisher.js";
+import { RedisRpcClient } from "./RedisRpcClient.js";
+import { RedisRpcServer } from "./RedisRpcServer.js";
+import { RedisStreamProcessor } from "./RedisStreamProcessor.js";
+import { RedisWorkerQueue } from "./RedisWorkerQueue.js";
 
 const DEFAULT_PREFETCH = 10;
 const DEFAULT_BLOCK_MS = 5000;
@@ -142,7 +142,7 @@ export class RedisDriver implements IIrisDriver {
       if ((redis as any).status !== "ready") {
         await new Promise<void>((resolve, reject) => {
           redis.once("ready", () => resolve());
-          redis.once("error", (err) => reject(err));
+          redis.once("error", (err) => reject(err as Error));
         });
       }
 

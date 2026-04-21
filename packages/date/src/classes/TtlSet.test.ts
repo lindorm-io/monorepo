@@ -1,4 +1,4 @@
-import { TtlSet } from "./TtlSet";
+import { TtlSet } from "./TtlSet.js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 describe("TtlSet", () => {

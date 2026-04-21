@@ -1,7 +1,7 @@
 import { AegisError } from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
-import { PylonSocketAuth } from "../../../types";
-import { createSessionRefreshHandler } from "./create-session-refresh-handler";
+import type { PylonSocketAuth } from "../../../types/index.js";
+import { createSessionRefreshHandler } from "./create-session-refresh-handler.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("createSessionRefreshHandler", () => {

@@ -1,5 +1,5 @@
-import { makeField } from "../../__fixtures__/make-field";
-import { generateAutoIndexes } from "./auto-indexes";
+import { makeField } from "../../__fixtures__/make-field.js";
+import { generateAutoIndexes } from "./auto-indexes.js";
 import { describe, expect, test } from "vitest";
 
 describe("generateAutoIndexes", () => {

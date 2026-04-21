@@ -1,6 +1,6 @@
-import { PkceMethod } from "@lindorm/types";
-import { PkceResult } from "../types";
-import { assertPkce, createPkce, verifyPkce } from "../internal/index";
+import type { PkceMethod } from "@lindorm/types";
+import type { PkceResult } from "../types/index.js";
+import { assertPkce, createPkce, verifyPkce } from "../internal/index.js";
 
 export class PKCE {
   public static create(method: PkceMethod = "S256", length = 43): PkceResult {

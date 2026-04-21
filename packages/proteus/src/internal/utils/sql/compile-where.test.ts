@@ -1,11 +1,11 @@
-import { makeField } from "../../__fixtures__/make-field";
-import type { EntityMetadata } from "../../entity/types/metadata";
-import type { PredicateEntry } from "../../types/query";
-import { postgresDialect } from "../../drivers/postgres/utils/postgres-dialect";
-import { mysqlDialect } from "../../drivers/mysql/utils/mysql-dialect";
-import { sqliteDialect } from "../../drivers/sqlite/utils/sqlite-dialect";
-import type { SqlDialect } from "./sql-dialect";
-import { compileWhere, compilePredicate } from "./compile-where";
+import { makeField } from "../../__fixtures__/make-field.js";
+import type { EntityMetadata } from "../../entity/types/metadata.js";
+import type { PredicateEntry } from "../../types/query.js";
+import { postgresDialect } from "../../drivers/postgres/utils/postgres-dialect.js";
+import { mysqlDialect } from "../../drivers/mysql/utils/mysql-dialect.js";
+import { sqliteDialect } from "../../drivers/sqlite/utils/sqlite-dialect.js";
+import type { SqlDialect } from "./sql-dialect.js";
+import { compileWhere, compilePredicate } from "./compile-where.js";
 import { describe, expect, test } from "vitest";
 
 const dialects: Array<[string, SqlDialect]> = [

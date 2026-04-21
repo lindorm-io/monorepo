@@ -1,6 +1,6 @@
 import type { Constructor } from "@lindorm/types";
-import type { IEntity } from "../../../interfaces";
-import type { EntityMetadata, MetaRelation } from "../../entity/types/metadata";
+import type { IEntity } from "../../../interfaces/index.js";
+import type { EntityMetadata, MetaRelation } from "../../entity/types/metadata.js";
 
 export const isOwningRelation = (relation: MetaRelation): boolean =>
   relation.type === "ManyToOne" || (relation.type === "OneToOne" && !!relation.joinKeys);

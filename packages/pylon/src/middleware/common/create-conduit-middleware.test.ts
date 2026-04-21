@@ -1,6 +1,6 @@
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { ServerError } from "@lindorm/errors";
-import { createConduitMiddleware } from "./create-conduit-middleware";
+import { createConduitMiddleware } from "./create-conduit-middleware.js";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 vi.mock("@lindorm/conduit", async () => ({

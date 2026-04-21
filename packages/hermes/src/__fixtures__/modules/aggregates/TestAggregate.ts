@@ -8,31 +8,31 @@ import {
   RequireCreated,
   RequireNotCreated,
   Validate,
-} from "../../../decorators";
-import { DomainError } from "../../../errors";
+} from "../../../decorators/index.js";
+import { DomainError } from "../../../errors/index.js";
 import type {
   AggregateCommandCtx,
   AggregateErrorCtx,
   AggregateEventCtx,
-} from "../../../types";
-import { TestCommandCreate } from "../commands/TestCommandCreate";
-import { TestCommandDestroy } from "../commands/TestCommandDestroy";
-import { TestCommandDestroyNext } from "../commands/TestCommandDestroyNext";
-import { TestCommandDispatch } from "../commands/TestCommandDispatch";
-import { TestCommandEncrypt } from "../commands/TestCommandEncrypt";
-import { TestCommandMergeState } from "../commands/TestCommandMergeState";
-import { TestCommandSetState } from "../commands/TestCommandSetState";
-import { TestCommandThrows } from "../commands/TestCommandThrows";
-import { TestCommandTimeout } from "../commands/TestCommandTimeout";
-import { TestEventCreate } from "../events/TestEventCreate";
-import { TestEventDestroy } from "../events/TestEventDestroy";
-import { TestEventDestroyNext } from "../events/TestEventDestroyNext";
-import { TestEventDispatch } from "../events/TestEventDispatch";
-import { TestEventEncrypt } from "../events/TestEventEncrypt";
-import { TestEventMergeState } from "../events/TestEventMergeState";
-import { TestEventSetState } from "../events/TestEventSetState";
-import { TestEventThrows } from "../events/TestEventThrows";
-import { TestEventTimeout } from "../events/TestEventTimeout";
+} from "../../../types/index.js";
+import { TestCommandCreate } from "../commands/TestCommandCreate.js";
+import { TestCommandDestroy } from "../commands/TestCommandDestroy.js";
+import { TestCommandDestroyNext } from "../commands/TestCommandDestroyNext.js";
+import { TestCommandDispatch } from "../commands/TestCommandDispatch.js";
+import { TestCommandEncrypt } from "../commands/TestCommandEncrypt.js";
+import { TestCommandMergeState } from "../commands/TestCommandMergeState.js";
+import { TestCommandSetState } from "../commands/TestCommandSetState.js";
+import { TestCommandThrows } from "../commands/TestCommandThrows.js";
+import { TestCommandTimeout } from "../commands/TestCommandTimeout.js";
+import { TestEventCreate } from "../events/TestEventCreate.js";
+import { TestEventDestroy } from "../events/TestEventDestroy.js";
+import { TestEventDestroyNext } from "../events/TestEventDestroyNext.js";
+import { TestEventDispatch } from "../events/TestEventDispatch.js";
+import { TestEventEncrypt } from "../events/TestEventEncrypt.js";
+import { TestEventMergeState } from "../events/TestEventMergeState.js";
+import { TestEventSetState } from "../events/TestEventSetState.js";
+import { TestEventThrows } from "../events/TestEventThrows.js";
+import { TestEventTimeout } from "../events/TestEventTimeout.js";
 
 export type TestAggregateState = Dict;
 

@@ -1,9 +1,9 @@
-import { ProteusError } from "../../../../../errors";
-import type { MetaField, MetaUnique } from "../../../../entity/types/metadata";
-import { SQLITE_IDENTIFIER_LIMIT } from "../../constants/sqlite-constants";
-import { hashIdentifier } from "../hash-identifier";
-import { quoteIdentifier } from "../quote-identifier";
-import { resolveColumnNameSafe } from "../resolve-column-name";
+import { ProteusError } from "../../../../../errors/index.js";
+import type { MetaField, MetaUnique } from "../../../../entity/types/metadata.js";
+import { SQLITE_IDENTIFIER_LIMIT } from "../../constants/sqlite-constants.js";
+import { hashIdentifier } from "../hash-identifier.js";
+import { quoteIdentifier } from "../quote-identifier.js";
+import { resolveColumnNameSafe } from "../resolve-column-name.js";
 
 /**
  * Generates inline `CONSTRAINT ... UNIQUE (...)` clauses for use inside `CREATE TABLE`.

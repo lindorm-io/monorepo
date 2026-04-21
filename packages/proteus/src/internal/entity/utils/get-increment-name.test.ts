@@ -1,7 +1,7 @@
-import { getIncrementName } from "./get-increment-name";
-import { Entity } from "../../../decorators/Entity";
-import { Namespace } from "../../../decorators/Namespace";
-import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField";
+import { getIncrementName } from "./get-increment-name.js";
+import { Entity } from "../../../decorators/Entity.js";
+import { Namespace } from "../../../decorators/Namespace.js";
+import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField.js";
 import { describe, expect, test } from "vitest";
 
 @Entity({ name: "GetIncrementSimple" })

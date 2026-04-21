@@ -1,4 +1,4 @@
-import { connectionLoggerMiddleware } from "./connection-logger-middleware";
+import { connectionLoggerMiddleware } from "./connection-logger-middleware.js";
 import { describe, expect, test, vi } from "vitest";
 
 describe("connectionLoggerMiddleware", () => {

@@ -1,5 +1,5 @@
-import { Dict } from "@lindorm/types";
-import { RESTRICTED_NAMES_REGEXP } from "../../constants/regexp";
+import type { Dict } from "@lindorm/types";
+import { RESTRICTED_NAMES_REGEXP } from "../../constants/regexp.js";
 
 export type ParsedCookie = {
   name: string;

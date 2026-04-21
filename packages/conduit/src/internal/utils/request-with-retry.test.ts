@@ -1,10 +1,10 @@
 import { calculateRetry as _calculateRetry } from "@lindorm/retry";
-import { requestWithRetry } from "./request-with-retry";
-import { sleep as __sleep } from "./sleep";
+import { requestWithRetry } from "./request-with-retry.js";
+import { sleep as __sleep } from "./sleep.js";
 import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 vi.mock("@lindorm/retry");
-vi.mock("./sleep");
+vi.mock("./sleep.js");
 
 const calculateRetry = _calculateRetry as Mock;
 const sleep = __sleep as Mock;

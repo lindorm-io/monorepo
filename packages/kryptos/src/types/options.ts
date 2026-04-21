@@ -1,6 +1,6 @@
-import { Optional } from "@lindorm/types";
-import { KryptosAttributes } from "./attributes";
-import { RsaModulus } from "./key-types";
+import type { Optional } from "@lindorm/types";
+import type { KryptosAttributes } from "./attributes.js";
+import type { RsaModulus } from "./key-types/index.js";
 
 type StdOptions = Optional<
   Omit<KryptosAttributes, "certificateChain">,

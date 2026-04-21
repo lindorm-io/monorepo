@@ -1,5 +1,5 @@
 import { isArray, isString } from "@lindorm/is";
-import { CaseCallback } from "../types";
+import type { CaseCallback } from "../types/index.js";
 
 export const convertArray = (
   input: Array<string>,

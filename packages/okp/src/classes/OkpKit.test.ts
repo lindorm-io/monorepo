@@ -3,8 +3,8 @@ import {
   KRYPTOS_OKP_ENC_X448,
   KRYPTOS_OKP_SIG_ED25519,
 } from "@lindorm/kryptos/fixtures";
-import { OkpError } from "../errors";
-import { OkpKit } from "./OkpKit";
+import { OkpError } from "../errors/index.js";
+import { OkpKit } from "./OkpKit.js";
 import { beforeEach, describe, expect, test } from "vitest";
 
 describe("OkpKit", () => {

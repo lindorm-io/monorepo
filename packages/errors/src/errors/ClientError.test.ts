@@ -1,5 +1,5 @@
-import { ClientError } from "./ClientError";
-import { LindormError } from "./LindormError";
+import { ClientError } from "./ClientError.js";
+import { LindormError } from "./LindormError.js";
 import { describe, expect, test } from "vitest";
 
 describe("ClientError", () => {

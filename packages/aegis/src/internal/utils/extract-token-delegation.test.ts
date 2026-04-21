@@ -1,4 +1,4 @@
-import { extractTokenDelegation } from "./extract-token-delegation";
+import { extractTokenDelegation } from "./extract-token-delegation.js";
 import { describe, expect, test } from "vitest";
 
 describe("extractTokenDelegation", () => {

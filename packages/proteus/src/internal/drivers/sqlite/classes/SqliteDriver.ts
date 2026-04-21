@@ -1,43 +1,43 @@
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
-import type { IEntity, IProteusQueryBuilder } from "../../../../interfaces";
+import type { IEntity, IProteusQueryBuilder } from "../../../../interfaces/index.js";
 import type {
   IProteusDriver,
   TransactionHandle,
-} from "../../../interfaces/ProteusDriver";
-import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor";
+} from "../../../interfaces/ProteusDriver.js";
+import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor.js";
 import type {
   ProteusSqliteOptions,
   TransactionCallback,
   TransactionOptions,
-} from "../../../../types";
-import type { ProteusResult } from "../../../types/proteus-result";
+} from "../../../../types/index.js";
+import type { ProteusResult } from "../../../types/proteus-result.js";
 import type { IAmphora } from "@lindorm/amphora";
 import type {
   FilterRegistryGetter,
   MetadataResolver,
-} from "../../../interfaces/ProteusDriver";
-import { SqliteDriverError } from "../errors/SqliteDriverError";
-import { SqliteMigrationError } from "../errors/SqliteMigrationError";
-import type { SqliteQueryClient } from "../types/sqlite-query-client";
-import type { SqliteTransactionHandle } from "../types/sqlite-transaction-handle";
-import { diffSchema } from "../utils/sync/diff-schema";
-import { generateAppendOnlyDDL } from "../utils/ddl/generate-append-only-ddl";
-import { SyncPlanExecutor } from "../utils/sync/execute-sync-plan";
-import { introspectSchema } from "../utils/sync/introspect-schema";
-import { projectDesiredSchemaSqlite as projectDesiredSchema } from "../utils/sync/project-desired-schema-sqlite";
-import { quoteIdentifier } from "../utils/quote-identifier";
-import { beginTransaction } from "../utils/transaction/begin-transaction";
-import { commitTransaction } from "../utils/transaction/commit-transaction";
-import { rollbackTransaction } from "../utils/transaction/rollback-transaction";
-import { SqliteMigrationManager } from "./SqliteMigrationManager";
-import { SqliteExecutor } from "./SqliteExecutor";
-import { SqliteQueryBuilder } from "./SqliteQueryBuilder";
-import type { RepositoryFactory } from "../../../types/repository-factory";
-import type { FilterRegistry } from "../../../utils/query/filter-registry";
-import type { EntityEmitFn } from "../../../../types/event-map";
-import { SqliteRepository, type WithImplicitTransaction } from "./SqliteRepository";
-import { SqliteTransactionContext } from "./SqliteTransactionContext";
+} from "../../../interfaces/ProteusDriver.js";
+import { SqliteDriverError } from "../errors/SqliteDriverError.js";
+import { SqliteMigrationError } from "../errors/SqliteMigrationError.js";
+import type { SqliteQueryClient } from "../types/sqlite-query-client.js";
+import type { SqliteTransactionHandle } from "../types/sqlite-transaction-handle.js";
+import { diffSchema } from "../utils/sync/diff-schema.js";
+import { generateAppendOnlyDDL } from "../utils/ddl/generate-append-only-ddl.js";
+import { SyncPlanExecutor } from "../utils/sync/execute-sync-plan.js";
+import { introspectSchema } from "../utils/sync/introspect-schema.js";
+import { projectDesiredSchemaSqlite as projectDesiredSchema } from "../utils/sync/project-desired-schema-sqlite.js";
+import { quoteIdentifier } from "../utils/quote-identifier.js";
+import { beginTransaction } from "../utils/transaction/begin-transaction.js";
+import { commitTransaction } from "../utils/transaction/commit-transaction.js";
+import { rollbackTransaction } from "../utils/transaction/rollback-transaction.js";
+import { SqliteMigrationManager } from "./SqliteMigrationManager.js";
+import { SqliteExecutor } from "./SqliteExecutor.js";
+import { SqliteQueryBuilder } from "./SqliteQueryBuilder.js";
+import type { RepositoryFactory } from "../../../types/repository-factory.js";
+import type { FilterRegistry } from "../../../utils/query/filter-registry.js";
+import type { EntityEmitFn } from "../../../../types/event-map.js";
+import { SqliteRepository, type WithImplicitTransaction } from "./SqliteRepository.js";
+import { SqliteTransactionContext } from "./SqliteTransactionContext.js";
 
 export class SqliteDriver implements IProteusDriver {
   private readonly options: ProteusSqliteOptions;

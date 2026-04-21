@@ -1,5 +1,5 @@
-import { EntityScanner } from "./EntityScanner";
-import { EntityScannerError } from "../errors/EntityScannerError";
+import { EntityScanner } from "./EntityScanner.js";
+import { EntityScannerError } from "../errors/EntityScannerError.js";
 import type { IScanData } from "@lindorm/scanner";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 

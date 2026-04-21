@@ -1,5 +1,5 @@
-import { RetryOptions } from "../types";
-import { computeDelay } from "./compute-delay";
+import type { RetryOptions } from "../types/index.js";
+import { computeDelay } from "./compute-delay.js";
 
 export const calculateRetry = (
   attempt: number,

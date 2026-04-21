@@ -1,22 +1,22 @@
-import { AbstractMessage } from "../../../decorators/AbstractMessage";
-import { Default } from "../../../decorators/Default";
-import { Enum } from "../../../decorators/Enum";
-import { Field } from "../../../decorators/Field";
-import { Generated } from "../../../decorators/Generated";
-import { IdentifierField } from "../../../decorators/IdentifierField";
-import { Max } from "../../../decorators/Max";
-import { Message } from "../../../decorators/Message";
-import { Min } from "../../../decorators/Min";
-import { Namespace } from "../../../decorators/Namespace";
-import { Nullable } from "../../../decorators/Nullable";
-import { OnCreate } from "../../../decorators/OnCreate";
-import { OnHydrate } from "../../../decorators/OnHydrate";
-import { OnValidate } from "../../../decorators/OnValidate";
-import { Schema } from "../../../decorators/Schema";
-import { TimestampField } from "../../../decorators/TimestampField";
-import { Transform } from "../../../decorators/Transform";
-import { IrisError } from "../../../errors/IrisError";
-import { MessageManager } from "./MessageManager";
+import { AbstractMessage } from "../../../decorators/AbstractMessage.js";
+import { Default } from "../../../decorators/Default.js";
+import { Enum } from "../../../decorators/Enum.js";
+import { Field } from "../../../decorators/Field.js";
+import { Generated } from "../../../decorators/Generated.js";
+import { IdentifierField } from "../../../decorators/IdentifierField.js";
+import { Max } from "../../../decorators/Max.js";
+import { Message } from "../../../decorators/Message.js";
+import { Min } from "../../../decorators/Min.js";
+import { Namespace } from "../../../decorators/Namespace.js";
+import { Nullable } from "../../../decorators/Nullable.js";
+import { OnCreate } from "../../../decorators/OnCreate.js";
+import { OnHydrate } from "../../../decorators/OnHydrate.js";
+import { OnValidate } from "../../../decorators/OnValidate.js";
+import { Schema } from "../../../decorators/Schema.js";
+import { TimestampField } from "../../../decorators/TimestampField.js";
+import { Transform } from "../../../decorators/Transform.js";
+import { IrisError } from "../../../errors/IrisError.js";
+import { MessageManager } from "./MessageManager.js";
 import { z } from "zod";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -741,7 +741,7 @@ describe("MessageManager", () => {
     it("should fire beforePublish", async () => {
       const spy = vi.fn();
 
-      const { BeforePublish } = await import("../../../decorators/BeforePublish");
+      const { BeforePublish } = await import("../../../decorators/BeforePublish.js");
 
       @BeforePublish(spy)
       @Namespace("test")
@@ -762,7 +762,7 @@ describe("MessageManager", () => {
     it("should fire afterConsume", async () => {
       const spy = vi.fn();
 
-      const { AfterConsume } = await import("../../../decorators/AfterConsume");
+      const { AfterConsume } = await import("../../../decorators/AfterConsume.js");
 
       @AfterConsume(spy)
       @Namespace("test")
@@ -864,7 +864,7 @@ describe("MessageManager", () => {
 
   describe("async hook error propagation", () => {
     it("should propagate errors from async hooks", async () => {
-      const { BeforePublish } = await import("../../../decorators/BeforePublish");
+      const { BeforePublish } = await import("../../../decorators/BeforePublish.js");
 
       @BeforePublish(() => {
         throw new Error("hook failed");

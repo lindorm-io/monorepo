@@ -1,7 +1,7 @@
 import MockDate from "mockdate";
-import { ConduitError } from "../errors";
-import { ConduitMiddleware } from "../types";
-import { createConduitRateLimitMiddleware } from "./conduit-rate-limit-middleware";
+import { ConduitError } from "../errors/index.js";
+import type { ConduitMiddleware } from "../types/index.js";
+import { createConduitRateLimitMiddleware } from "./conduit-rate-limit-middleware.js";
 import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");

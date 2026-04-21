@@ -1,19 +1,19 @@
-import type { IMessage } from "../../../../interfaces";
-import { Field } from "../../../../decorators/Field";
-import { Message } from "../../../../decorators/Message";
-import { clearRegistry } from "../../../message/metadata/registry";
-import type { RabbitSharedState } from "../types/rabbit-types";
-import { RabbitWorkerQueue } from "./RabbitWorkerQueue";
+import type { IMessage } from "../../../../interfaces/index.js";
+import { Field } from "../../../../decorators/Field.js";
+import { Message } from "../../../../decorators/Message.js";
+import { clearRegistry } from "../../../message/metadata/registry.js";
+import type { RabbitSharedState } from "../types/rabbit-types.js";
+import { RabbitWorkerQueue } from "./RabbitWorkerQueue.js";
 import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 // --- Mocks ---
 const mockPublishRabbitMessages = vi.fn().mockResolvedValue(undefined);
-vi.mock("../utils/publish-messages", async () => ({
+vi.mock("../utils/publish-messages.js", async () => ({
   publishRabbitMessages: (...args: Array<unknown>) => mockPublishRabbitMessages(...args),
 }));
 
 const mockWrapRabbitConsumer = vi.fn().mockReturnValue(vi.fn());
-vi.mock("../utils/wrap-rabbit-consumer", () => ({
+vi.mock("../utils/wrap-rabbit-consumer.js", () => ({
   wrapRabbitConsumer: (...args: Array<unknown>) => mockWrapRabbitConsumer(...args),
 }));
 

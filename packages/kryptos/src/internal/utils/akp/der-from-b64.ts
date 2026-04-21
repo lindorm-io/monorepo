@@ -1,6 +1,6 @@
-import { KryptosError } from "../../../errors";
-import { AkpBuffer, KryptosFromString } from "../../../types";
-import { createAkpDerFromDer } from "./der-from-der";
+import { KryptosError } from "../../../errors/index.js";
+import type { AkpBuffer, KryptosFromString } from "../../../types/index.js";
+import { createAkpDerFromDer } from "./der-from-der.js";
 
 type Options = Omit<KryptosFromString, "id" | "algorithm" | "type" | "use">;
 

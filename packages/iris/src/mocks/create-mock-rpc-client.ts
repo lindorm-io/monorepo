@@ -1,5 +1,5 @@
-import type { IIrisRpcClient } from "../interfaces/IrisRpcClient";
-import type { IMessage } from "../interfaces/Message";
+import type { IIrisRpcClient } from "../interfaces/IrisRpcClient.js";
+import type { IMessage } from "../interfaces/Message.js";
 
 export type RpcClientExtras<Req extends IMessage> = {
   requests: Array<Req>;

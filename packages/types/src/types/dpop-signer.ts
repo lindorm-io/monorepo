@@ -1,5 +1,5 @@
-import { Jwks } from "./jwks";
-import { JwksAlgorithm } from "./jwks/jwks-algorithm";
+import type { Jwks } from "./jwks/index.js";
+import type { JwksAlgorithm } from "./jwks/jwks-algorithm.js";
 
 // Abstract signer used to mint RFC 9449 DPoP proof JWTs. Consumers
 // (e.g. conduit's DPoP auth middleware) build proofs by asking the

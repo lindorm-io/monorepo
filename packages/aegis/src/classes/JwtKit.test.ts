@@ -1,6 +1,6 @@
 import { B64 } from "@lindorm/b64";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
-import { ILogger } from "@lindorm/logger";
+import type { ILogger } from "@lindorm/logger";
 import { ShaKit } from "@lindorm/sha";
 import * as jsonwebtoken from "jsonwebtoken";
 import MockDate from "mockdate";
@@ -10,10 +10,10 @@ import {
   TEST_OCT_KEY_SIG,
   TEST_OKP_KEY_SIG,
   TEST_RSA_KEY_SIG,
-} from "../__fixtures__/keys";
-import { createJoseSignature } from "../internal/utils/jose-signature";
-import { SignJwtContent } from "../types";
-import { JwtKit } from "./JwtKit";
+} from "../__fixtures__/keys.js";
+import { createJoseSignature } from "../internal/utils/jose-signature.js";
+import type { SignJwtContent } from "../types/index.js";
+import { JwtKit } from "./JwtKit.js";
 import { beforeEach, describe, expect, test } from "vitest";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");

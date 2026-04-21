@@ -1,4 +1,4 @@
-import { LazyRelation, isLazyRelation, LAZY_RELATION } from "./lazy-relation";
+import { LazyRelation, isLazyRelation, LAZY_RELATION } from "./lazy-relation.js";
 import { describe, expect, it, vi } from "vitest";
 
 describe("LazyRelation", () => {

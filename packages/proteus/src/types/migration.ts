@@ -10,4 +10,4 @@ export type {
   // Backwards compatibility aliases
   SqlMigrationContext as MigrationQueryContext,
   SqlMigrationRunner as MigrationQueryRunner,
-} from "../internal/types/migration";
+} from "../internal/types/migration.js";

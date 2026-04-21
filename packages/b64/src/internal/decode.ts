@@ -1,4 +1,4 @@
-import { Base64Encoding } from "../types";
+import type { Base64Encoding } from "../types/index.js";
 
 export const decode = (input: string, encoding?: Base64Encoding): Buffer => {
   if (encoding === "base64") {

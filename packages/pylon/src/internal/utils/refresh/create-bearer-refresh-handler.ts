@@ -1,9 +1,9 @@
-import { IAegis, VerifyJwtOptions } from "@lindorm/aegis";
+import type { IAegis, VerifyJwtOptions } from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
 import { isNumber, isObject, isString } from "@lindorm/is";
-import { PylonSocket } from "../../../types";
-import { assertJktUnchanged } from "./assert-jkt-unchanged";
-import { assertSubjectUnchanged } from "./assert-subject-unchanged";
+import type { PylonSocket } from "../../../types/index.js";
+import { assertJktUnchanged } from "./assert-jkt-unchanged.js";
+import { assertSubjectUnchanged } from "./assert-subject-unchanged.js";
 
 type CreateBearerRefreshHandlerOptions = {
   aegis: IAegis;

@@ -1,6 +1,6 @@
 import type { Socket } from "socket.io-client";
-import { ZephyrError } from "../errors/ZephyrError";
-import { createDpopBearerAuthStrategy } from "./dpop-bearer-auth-strategy";
+import { ZephyrError } from "../errors/ZephyrError.js";
+import { createDpopBearerAuthStrategy } from "./dpop-bearer-auth-strategy.js";
 import { beforeAll, describe, expect, it, vi, type Mock } from "vitest";
 
 type MockManager = {

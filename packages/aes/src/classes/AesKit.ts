@@ -1,8 +1,8 @@
 import { isEqual } from "@lindorm/is";
-import { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
-import { AesError } from "../errors";
-import { AesOperationOptions, IAesKit } from "../interfaces";
-import {
+import type { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
+import { AesError } from "../errors/index.js";
+import type { AesOperationOptions, IAesKit } from "../interfaces/index.js";
+import type {
   AesContent,
   AesContentType,
   AesDecryptionRecord,
@@ -12,15 +12,15 @@ import {
   ParsedAesDecryptionRecord,
   SerialisedAesDecryption,
   SerialisedAesEncryption,
-} from "../types";
-import { PreparedEncryption } from "../internal/types/prepared-encryption";
-import { isAesTokenised, parseAes } from "../utils";
-import { decryptAes, encryptAes } from "../internal/utils/encryption";
-import { prepareAesEncryption } from "../internal/utils/prepare-encryption";
-import { calculateContentType } from "../internal/utils/content";
-import { encryptEncoded } from "../internal/utils/encrypt-encoded";
-import { encryptSerialised } from "../internal/utils/encrypt-serialised";
-import { encryptTokenised } from "../internal/utils/encrypt-tokenised";
+} from "../types/index.js";
+import type { PreparedEncryption } from "../internal/types/prepared-encryption.js";
+import { isAesTokenised, parseAes } from "../utils/index.js";
+import { decryptAes, encryptAes } from "../internal/utils/encryption.js";
+import { prepareAesEncryption } from "../internal/utils/prepare-encryption.js";
+import { calculateContentType } from "../internal/utils/content.js";
+import { encryptEncoded } from "../internal/utils/encrypt-encoded.js";
+import { encryptSerialised } from "../internal/utils/encrypt-serialised.js";
+import { encryptTokenised } from "../internal/utils/encrypt-tokenised.js";
 
 export class AesKit implements IAesKit {
   private readonly encryption: KryptosEncryption;

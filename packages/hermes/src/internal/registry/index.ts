@@ -1,5 +1,5 @@
-export { HermesRegistry } from "./hermes-registry";
-export { HermesScanner } from "./HermesScanner";
+export { HermesRegistry } from "./hermes-registry.js";
+export { HermesScanner } from "./HermesScanner.js";
 export type {
   HandlerConditions,
   HandlerRegistration,
@@ -10,4 +10,4 @@ export type {
   RegisteredUpcaster,
   RegisteredView,
   ScannedModules,
-} from "./types";
+} from "./types.js";

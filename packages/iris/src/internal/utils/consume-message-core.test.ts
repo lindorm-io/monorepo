@@ -1,12 +1,12 @@
-import type { IMessage } from "../../interfaces";
-import type { MessageMetadata } from "../message/types/metadata";
-import type { IrisEnvelope } from "../types/iris-envelope";
+import type { IMessage } from "../../interfaces/index.js";
+import type { MessageMetadata } from "../message/types/metadata.js";
+import type { IrisEnvelope } from "../types/iris-envelope.js";
 import {
   consumeMessageCore,
   type ConsumerCallbackHost,
   type ConsumeStrategies,
   type ConsumeMessageCoreOptions,
-} from "./consume-message-core";
+} from "./consume-message-core.js";
 import { describe, expect, it, vi, type Mock } from "vitest";
 
 const createMockLogger = () => ({

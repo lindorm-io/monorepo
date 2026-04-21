@@ -1,6 +1,6 @@
-import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager";
-import type { DelayManager } from "../../../delay/DelayManager";
-import type { IrisEnvelope } from "../../../types/iris-envelope";
+import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
+import type { DelayManager } from "../../../delay/DelayManager.js";
+import type { IrisEnvelope } from "../../../types/iris-envelope.js";
 
 export type PublishMessagesOptions = {
   delayManager?: DelayManager;

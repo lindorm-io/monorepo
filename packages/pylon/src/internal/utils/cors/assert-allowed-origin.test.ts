@@ -1,5 +1,5 @@
 import { ClientError } from "@lindorm/errors";
-import { assertAllowedOrigin } from "./assert-allowed-origin";
+import { assertAllowedOrigin } from "./assert-allowed-origin.js";
 import { describe, expect, test } from "vitest";
 
 describe("assertAllowedOrigin", () => {

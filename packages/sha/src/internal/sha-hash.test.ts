@@ -1,5 +1,5 @@
-import { ShaError } from "../errors";
-import { assertShaHash, createShaHash, verifyShaHash } from "./sha-hash";
+import { ShaError } from "../errors/index.js";
+import { assertShaHash, createShaHash, verifyShaHash } from "./sha-hash.js";
 import { describe, expect, test } from "vitest";
 
 describe("sha-hash", () => {

@@ -1,6 +1,6 @@
 import { ClientError, ServerError } from "@lindorm/errors";
 import { z } from "zod";
-import { useSchema } from "./use-schema";
+import { useSchema } from "./use-schema.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("useSchema", () => {

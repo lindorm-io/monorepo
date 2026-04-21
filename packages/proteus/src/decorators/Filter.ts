@@ -1,5 +1,5 @@
 import type { Dict, Predicate } from "@lindorm/types";
-import { stageFilter } from "../internal/entity/metadata/stage-metadata";
+import { stageFilter } from "../internal/entity/metadata/stage-metadata.js";
 
 /**
  * Options for the @Filter decorator.

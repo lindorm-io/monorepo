@@ -1,17 +1,23 @@
-import { AesError } from "../../../errors";
-import {
+import { AesError } from "../../../errors/index.js";
+import type {
   KeyUnwrapOptions,
   KeyUnwrapResult,
   KeyWrapOptions,
   KeyWrapResult,
-} from "../../types/key-wrap";
-import { ecbKeyUnwrap as _ecbKeyUnwrap, ecbKeyWrap as _ecbKeyWrap } from "./ecb-key-wrap";
-import { gcmKeyUnwrap as _gcmKeyUnwrap, gcmKeyWrap as _gcmKeyWrap } from "./gcm-key-wrap";
-import { keyUnwrap, keyWrap } from "./key-wrap";
+} from "../../types/key-wrap.js";
+import {
+  ecbKeyUnwrap as _ecbKeyUnwrap,
+  ecbKeyWrap as _ecbKeyWrap,
+} from "./ecb-key-wrap.js";
+import {
+  gcmKeyUnwrap as _gcmKeyUnwrap,
+  gcmKeyWrap as _gcmKeyWrap,
+} from "./gcm-key-wrap.js";
+import { keyUnwrap, keyWrap } from "./key-wrap.js";
 import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
-vi.mock("./ecb-key-wrap");
-vi.mock("./gcm-key-wrap");
+vi.mock("./ecb-key-wrap.js");
+vi.mock("./gcm-key-wrap.js");
 
 const ecbKeyUnwrap = _ecbKeyUnwrap as Mock;
 const ecbKeyWrap = _ecbKeyWrap as Mock;

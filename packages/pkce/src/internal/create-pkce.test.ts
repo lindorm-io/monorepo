@@ -1,11 +1,11 @@
-import { PkceMethod } from "@lindorm/types";
-import { createBaseHash as _createBaseHash } from "./create-base-hash";
-import { createPkce } from "./create-pkce";
-import { randomBaseString as _randomBaseString } from "./random-base-string";
+import type { PkceMethod } from "@lindorm/types";
+import { createBaseHash as _createBaseHash } from "./create-base-hash.js";
+import { createPkce } from "./create-pkce.js";
+import { randomBaseString as _randomBaseString } from "./random-base-string.js";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
-vi.mock("./random-base-string");
-vi.mock("./create-base-hash");
+vi.mock("./random-base-string.js");
+vi.mock("./create-base-hash.js");
 
 const createBaseHash = _createBaseHash as Mock;
 const randomBaseString = _randomBaseString as Mock;

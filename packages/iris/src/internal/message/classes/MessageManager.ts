@@ -1,16 +1,16 @@
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
 import type { z } from "zod";
-import { IrisError } from "../../../errors/IrisError";
-import { IrisSerializationError } from "../../../errors/IrisSerializationError";
-import type { IMessage } from "../../../interfaces";
-import { getMessageMetadata } from "../metadata/get-message-metadata";
-import type { MessageMetadata } from "../types/metadata";
-import { buildSchema } from "../utils/build-schema";
-import { deserialise } from "../utils/deserialise";
-import { generateFields } from "../utils/generate-fields";
-import { parseField } from "../utils/parse-field";
-import { runHooksAsync, runHooksSync } from "../utils/run-hooks";
+import { IrisError } from "../../../errors/IrisError.js";
+import { IrisSerializationError } from "../../../errors/IrisSerializationError.js";
+import type { IMessage } from "../../../interfaces/index.js";
+import { getMessageMetadata } from "../metadata/get-message-metadata.js";
+import type { MessageMetadata } from "../types/metadata.js";
+import { buildSchema } from "../utils/build-schema.js";
+import { deserialise } from "../utils/deserialise.js";
+import { generateFields } from "../utils/generate-fields.js";
+import { parseField } from "../utils/parse-field.js";
+import { runHooksAsync, runHooksSync } from "../utils/run-hooks.js";
 
 const IDENTITY_DECORATORS = new Set(["IdentifierField", "TimestampField"]);
 

@@ -1,6 +1,6 @@
-import type { MetaField, MetaRelation } from "../../../entity/types/metadata";
-import { serializeHash } from "./serialize-hash";
-import { deserializeHash } from "./deserialize-hash";
+import type { MetaField, MetaRelation } from "../../../entity/types/metadata.js";
+import { serializeHash } from "./serialize-hash.js";
+import { deserializeHash } from "./deserialize-hash.js";
 import { describe, expect, test } from "vitest";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────

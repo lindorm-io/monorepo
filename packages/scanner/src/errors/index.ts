@@ -1,1 +1,1 @@
-export * from "./ScannerError";
+export * from "./ScannerError.js";

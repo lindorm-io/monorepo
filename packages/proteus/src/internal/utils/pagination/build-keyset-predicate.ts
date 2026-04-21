@@ -1,6 +1,6 @@
 import type { Predicate } from "@lindorm/types";
-import type { IEntity } from "../../../interfaces";
-import type { KeysetOrderEntry } from "./build-keyset-order";
+import type { IEntity } from "../../../interfaces/index.js";
+import type { KeysetOrderEntry } from "./build-keyset-order.js";
 
 /**
  * Build a Predicate implementing keyset (seek) pagination using boolean

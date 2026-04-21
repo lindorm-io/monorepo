@@ -1,9 +1,9 @@
-import { KryptosAlgorithm } from "./algorithm";
-import { KryptosCurve } from "./curve";
-import { KryptosEncryption } from "./encryption";
-import { RsaModulus } from "./key-types";
-import { KryptosOperation } from "./operation";
-import { KryptosType, KryptosUse } from "./types";
+import type { KryptosAlgorithm } from "./algorithm.js";
+import type { KryptosCurve } from "./curve.js";
+import type { KryptosEncryption } from "./encryption.js";
+import type { RsaModulus } from "./key-types/index.js";
+import type { KryptosOperation } from "./operation.js";
+import type { KryptosType, KryptosUse } from "./types.js";
 
 export type KryptosAttributes = {
   id: string;

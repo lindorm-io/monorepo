@@ -1,4 +1,4 @@
-import { httpSocketIoMiddleware } from "./http-socket-io-middleware";
+import { httpSocketIoMiddleware } from "./http-socket-io-middleware.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("createHttpSocketIoMiddleware", () => {

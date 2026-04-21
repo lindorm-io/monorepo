@@ -1,6 +1,6 @@
 import type { Db, CreateIndexesOptions, IndexSpecification } from "mongodb";
 import type { ILogger } from "@lindorm/logger";
-import type { MongoSyncPlan, DesiredMongoIndex } from "./types";
+import type { MongoSyncPlan, DesiredMongoIndex } from "./types.js";
 
 /**
  * Build MongoDB createIndex options from a desired index spec.

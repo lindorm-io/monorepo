@@ -1,4 +1,4 @@
-import { randomString } from "./random-string";
+import { randomString } from "./random-string.js";
 import { describe, expect, test } from "vitest";
 
 describe("randomString", () => {

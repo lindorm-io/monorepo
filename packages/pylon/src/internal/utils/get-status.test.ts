@@ -1,4 +1,4 @@
-import { getStatus } from "./get-status";
+import { getStatus } from "./get-status.js";
 import { describe, expect, test } from "vitest";
 
 describe("getStatus", () => {

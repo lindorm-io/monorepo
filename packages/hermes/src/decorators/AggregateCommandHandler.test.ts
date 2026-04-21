@@ -1,5 +1,5 @@
-import type { StagedMetadata } from "../internal/metadata";
-import { AggregateCommandHandler } from "./AggregateCommandHandler";
+import type { StagedMetadata } from "../internal/metadata/index.js";
+import { AggregateCommandHandler } from "./AggregateCommandHandler.js";
 import { describe, expect, test } from "vitest";
 
 const createMockMethodContext = (

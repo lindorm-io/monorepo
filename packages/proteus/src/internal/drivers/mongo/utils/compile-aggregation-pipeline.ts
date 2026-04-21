@@ -1,9 +1,9 @@
 import type { Document } from "mongodb";
-import type { IEntity } from "../../../../interfaces";
-import type { EntityMetadata } from "../../../entity/types/metadata";
-import type { PredicateEntry } from "../../../types/query";
-import { compileFilter } from "./compile-filter";
-import { compileSort } from "./compile-sort";
+import type { IEntity } from "../../../../interfaces/index.js";
+import type { EntityMetadata } from "../../../entity/types/metadata.js";
+import type { PredicateEntry } from "../../../types/query.js";
+import { compileFilter } from "./compile-filter.js";
+import { compileSort } from "./compile-sort.js";
 
 /**
  * Parsed aggregate selection: "SUM(amount)" -> { fn: "$sum", field: "amount" }

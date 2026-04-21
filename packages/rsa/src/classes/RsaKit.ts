@@ -1,17 +1,17 @@
 import {
-  IKryptosRsa,
+  type IKryptosRsa,
   KryptosKit,
   RSA_SIG_ALGORITHMS,
-  RsaSigAlgorithm,
+  type RsaSigAlgorithm,
 } from "@lindorm/kryptos";
-import { DsaEncoding, IKeyKit, KeyData } from "@lindorm/types";
-import { RsaError } from "../errors";
-import { RsaKitOptions } from "../types";
+import type { DsaEncoding, IKeyKit, KeyData } from "@lindorm/types";
+import { RsaError } from "../errors/index.js";
+import type { RsaKitOptions } from "../types/index.js";
 import {
   assertRsaSignature,
   createRsaSignature,
   verifyRsaSignature,
-} from "../internal/index";
+} from "../internal/index.js";
 
 export class RsaKit implements IKeyKit {
   private readonly dsa: DsaEncoding;

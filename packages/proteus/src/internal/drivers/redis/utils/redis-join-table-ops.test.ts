@@ -1,5 +1,5 @@
-import type { MetaRelation } from "../../../entity/types/metadata";
-import type { ScopedName } from "../../../types/types";
+import type { MetaRelation } from "../../../entity/types/metadata.js";
+import type { ScopedName } from "../../../types/types.js";
 import {
   beforeEach,
   describe,
@@ -12,22 +12,22 @@ import {
 
 // ─── Module Mocks ────────────────────────────────────────────────────────────
 
-vi.mock("../../../entity/utils/get-join-name", async () => ({
+vi.mock("../../../entity/utils/get-join-name.js", async () => ({
   getJoinName: vi.fn(),
 }));
 
-vi.mock("./scan-entity-keys", () => ({
+vi.mock("./scan-entity-keys.js", () => ({
   scanEntityKeys: vi.fn(),
 }));
 
-vi.mock("../../../entity/metadata/get-entity-metadata", () => ({
+vi.mock("../../../entity/metadata/get-entity-metadata.js", () => ({
   getEntityMetadata: vi.fn(),
 }));
 
-import { getJoinName } from "../../../entity/utils/get-join-name";
-import { scanEntityKeys } from "./scan-entity-keys";
-import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata";
-import { createRedisJoinTableOps } from "./redis-join-table-ops";
+import { getJoinName } from "../../../entity/utils/get-join-name.js";
+import { scanEntityKeys } from "./scan-entity-keys.js";
+import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata.js";
+import { createRedisJoinTableOps } from "./redis-join-table-ops.js";
 
 const mockGetJoinName = getJoinName as MockedFunction<typeof getJoinName>;
 const mockScanEntityKeys = scanEntityKeys as MockedFunction<typeof scanEntityKeys>;
@@ -342,7 +342,7 @@ describe("createRedisJoinTableOps", () => {
 
       const ops = createRedisJoinTableOps(client, null);
 
-      const { RedisDriverError } = await import("../errors/RedisDriverError");
+      const { RedisDriverError } = await import("../errors/RedisDriverError.js");
 
       await expect(
         ops.delete({ id: "post-1" } as any, makeRelation(), null),

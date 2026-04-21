@@ -1,5 +1,5 @@
-import type { RedisSharedState, RedisConsumerLoop } from "../types/redis-types";
-import { stopConsumerLoop, stopAllConsumerLoops } from "./stop-consumer-loop";
+import type { RedisSharedState, RedisConsumerLoop } from "../types/redis-types.js";
+import { stopConsumerLoop, stopAllConsumerLoops } from "./stop-consumer-loop.js";
 import { describe, expect, it, vi, type Mock } from "vitest";
 
 const createMockLoop = (
