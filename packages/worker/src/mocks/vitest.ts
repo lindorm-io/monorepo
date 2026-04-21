@@ -4,5 +4,4 @@ import { _createMockWorker } from "./create-mock-worker.js";
 
 type MockWorker = Mocked<ILindormWorker>;
 
-export const createMockWorker = (): MockWorker =>
-  _createMockWorker(vi.fn) as MockWorker;
+export const createMockWorker = (): MockWorker => _createMockWorker(vi.fn) as MockWorker;

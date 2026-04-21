@@ -12,14 +12,8 @@ import {
 } from "./create-mock-message-bus.js";
 import { _createMockIrisSession } from "./create-mock-iris-session.js";
 import { _createMockIrisSource } from "./create-mock-iris-source.js";
-import {
-  _createMockPublisher,
-  type PublisherExtras,
-} from "./create-mock-publisher.js";
-import {
-  _createMockRpcClient,
-  type RpcClientExtras,
-} from "./create-mock-rpc-client.js";
+import { _createMockPublisher, type PublisherExtras } from "./create-mock-publisher.js";
+import { _createMockRpcClient, type RpcClientExtras } from "./create-mock-rpc-client.js";
 import {
   _createMockWorkerQueue,
   type WorkerQueueExtras,
@@ -29,8 +23,7 @@ type MockIrisSource = Mocked<IIrisSource>;
 type MockIrisSession = Mocked<IIrisSession>;
 type MockMessageBus<M extends IMessage> = Mocked<IIrisMessageBus<M>> &
   MessageBusExtras<M>;
-type MockPublisher<M extends IMessage> = Mocked<IIrisPublisher<M>> &
-  PublisherExtras<M>;
+type MockPublisher<M extends IMessage> = Mocked<IIrisPublisher<M>> & PublisherExtras<M>;
 type MockWorkerQueue<M extends IMessage> = Mocked<IIrisWorkerQueue<M>> &
   WorkerQueueExtras<M>;
 type MockRpcClient<Req extends IMessage, Res extends IMessage> = Mocked<
@@ -44,16 +37,16 @@ export const createMockIrisSource = (): MockIrisSource =>
 export const createMockIrisSession = (): MockIrisSession =>
   _createMockIrisSession(vi.fn) as MockIrisSession;
 
-export const createMockMessageBus = <M extends IMessage = IMessage>(): MockMessageBus<M> =>
-  _createMockMessageBus<M>(vi.fn) as MockMessageBus<M>;
+export const createMockMessageBus = <
+  M extends IMessage = IMessage,
+>(): MockMessageBus<M> => _createMockMessageBus<M>(vi.fn) as MockMessageBus<M>;
 
 export const createMockPublisher = <M extends IMessage = IMessage>(): MockPublisher<M> =>
   _createMockPublisher<M>(vi.fn) as MockPublisher<M>;
 
 export const createMockWorkerQueue = <
   M extends IMessage = IMessage,
->(): MockWorkerQueue<M> =>
-  _createMockWorkerQueue<M>(vi.fn) as MockWorkerQueue<M>;
+>(): MockWorkerQueue<M> => _createMockWorkerQueue<M>(vi.fn) as MockWorkerQueue<M>;
 
 export const createMockRpcClient = <
   Req extends IMessage = IMessage,
