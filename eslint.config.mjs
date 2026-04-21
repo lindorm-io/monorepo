@@ -9,6 +9,7 @@ export default defineConfig(
   {
     ignores: [
       ".scripts/**",
+      "scripts/**",
       "**/dist/**",
       "**/node_modules/**",
       "**/__fixtures__/**",
