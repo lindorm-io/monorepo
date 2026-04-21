@@ -1,13 +1,10 @@
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { join } from "path";
 import { LindormWorkerScannerError } from "../errors";
-import { mockScannerImport } from "../__fixtures__/mock-scanner-import";
 import { ILindormWorker } from "../interfaces";
 import { LindormWorker } from "./LindormWorker";
 import { LindormWorkerScanner } from "./LindormWorkerScanner";
-import { beforeAll, describe, expect, test } from "vitest";
-
-beforeAll(() => mockScannerImport());
+import { describe, expect, test } from "vitest";
 
 describe("LindormWorkerScanner", () => {
   const logger = createMockLogger();
