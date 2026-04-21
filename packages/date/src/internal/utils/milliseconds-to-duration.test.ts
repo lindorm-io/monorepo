@@ -1,5 +1,6 @@
 import { millisecondsToDuration } from "./milliseconds-to-duration";
 import { readableToMilliseconds } from "./readable-to-milliseconds";
+import { describe, expect, test } from "vitest";
 
 describe("millisecondsToDuration", () => {
   test("should return predictable duration", () => {

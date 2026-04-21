@@ -6,6 +6,7 @@ import {
   TEST_DICT_STRING,
 } from "../__fixtures__/test-data";
 import { Primitive } from "./Primitive";
+import { beforeAll, describe, expect, test } from "vitest";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate);

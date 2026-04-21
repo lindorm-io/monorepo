@@ -1,4 +1,5 @@
 import { randomId } from "./random-id";
+import { describe, expect, test } from "vitest";
 
 describe("randomId", () => {
   test("should resolve default", () => {

@@ -1,6 +1,7 @@
 import { TEST_STRINGS } from "../../__fixtures__/strings";
 import { ChangeCase } from "../../types";
 import { changeCase } from "./change-case";
+import { describe, expect, test } from "vitest";
 
 describe.each([
   "camel",

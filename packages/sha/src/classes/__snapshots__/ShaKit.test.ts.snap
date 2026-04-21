@@ -1,4 +1,12 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`ShaKit > static hashes > should hash Buffer input with S1 1`] = `"oXyaqmHoChv3HQ2FCvTluqmAC70"`;
+
+exports[`ShaKit > static hashes > should hash Buffer input with S256 1`] = `"Om6weQ85rIfJTzhWst0sXREOaBFgImGpqSPTuyOtyLc"`;
+
+exports[`ShaKit > static hashes > should hash Buffer input with S384 1`] = `"IDng8LknKEmfuI4j68PP0FVLKEALDte3UwVciLWGXDwqpyxqGprgp1XYeQCkpv9B"`;
+
+exports[`ShaKit > static hashes > should hash Buffer input with S512 1`] = `"d8fOml2GuzhtRDu5Y5D6oSBjMVhpnIhEwwsTqwv5J2C35EFq6jl9uRtKwOXdVrjvfksGYWKrH9wIgxnObe_Idg"`;
 
 exports[`ShaKit static hashes should hash Buffer input with S1 1`] = `"oXyaqmHoChv3HQ2FCvTluqmAC70"`;
 

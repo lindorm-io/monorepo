@@ -5,6 +5,7 @@ import {
 } from "../__fixtures__/test-data";
 import { JsonKit } from "./JsonKit";
 import { Primitive } from "./Primitive";
+import { describe, expect, test } from "vitest";
 
 describe("JsonKit", () => {
   test("should create a primitive buffer from json data", () => {

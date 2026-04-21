@@ -1,6 +1,7 @@
 import { ReadableTime } from "../types";
 import { duration } from "./duration";
 import { ms } from "./ms";
+import { describe, expect, test } from "vitest";
 
 const inputs: Array<ReadableTime> = [
   "1ms",

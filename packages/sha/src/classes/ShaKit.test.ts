@@ -1,5 +1,6 @@
 import { ShaError } from "../errors";
 import { ShaKit } from "./ShaKit";
+import { beforeEach, describe, expect, test } from "vitest";
 
 describe("ShaKit", () => {
   let kit: ShaKit;

@@ -1,4 +1,5 @@
 import { ms } from "./ms";
+import { describe, expect, test } from "vitest";
 
 describe("ms", () => {
   test("should resolve milliseconds", () => {

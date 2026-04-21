@@ -13,6 +13,7 @@ import {
   snakeCase,
   split,
 } from "./index";
+import { describe, expect, test } from "vitest";
 
 type Result = {
   camelCase: string;

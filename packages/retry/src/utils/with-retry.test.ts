@@ -1,8 +1,9 @@
 import { withRetry } from "./with-retry";
+import { describe, expect, test, vi } from "vitest";
 
 describe("withRetry", () => {
   test("should return result on first success", async () => {
-    const fn = jest.fn().mockResolvedValue("ok");
+    const fn = vi.fn().mockResolvedValue("ok");
 
     const result = await withRetry(fn);
 
@@ -11,10 +12,7 @@ describe("withRetry", () => {
   });
 
   test("should retry on failure and succeed", async () => {
-    const fn = jest
-      .fn()
-      .mockRejectedValueOnce(new Error("fail1"))
-      .mockResolvedValue("ok");
+    const fn = vi.fn().mockRejectedValueOnce(new Error("fail1")).mockResolvedValue("ok");
 
     const result = await withRetry(fn, { delay: 1, jitter: false });
 
@@ -24,7 +22,7 @@ describe("withRetry", () => {
 
   test("should throw after maxAttempts exhausted", async () => {
     const error = new Error("persistent failure");
-    const fn = jest.fn().mockRejectedValue(error);
+    const fn = vi.fn().mockRejectedValue(error);
 
     await expect(
       withRetry(fn, { maxAttempts: 3, delay: 1, jitter: false }),
@@ -34,7 +32,7 @@ describe("withRetry", () => {
 
   test("should throw immediately when isRetryable returns false", async () => {
     const error = new Error("not retryable");
-    const fn = jest.fn().mockRejectedValue(error);
+    const fn = vi.fn().mockRejectedValue(error);
 
     await expect(
       withRetry(fn, {
@@ -50,13 +48,13 @@ describe("withRetry", () => {
   test("should call onRetry callback with attempt and error", async () => {
     const error1 = new Error("fail1");
     const error2 = new Error("fail2");
-    const fn = jest
+    const fn = vi
       .fn()
       .mockRejectedValueOnce(error1)
       .mockRejectedValueOnce(error2)
       .mockResolvedValue("ok");
 
-    const onRetry = jest.fn();
+    const onRetry = vi.fn();
 
     await withRetry(fn, { delay: 1, jitter: false, onRetry });
 
@@ -68,7 +66,7 @@ describe("withRetry", () => {
   test("should respect isRetryable predicate selectively", async () => {
     const retryableError = new Error("retryable");
     const fatalError = new Error("fatal");
-    const fn = jest
+    const fn = vi
       .fn()
       .mockRejectedValueOnce(retryableError)
       .mockRejectedValueOnce(fatalError);
@@ -85,14 +83,14 @@ describe("withRetry", () => {
   });
 
   test("should work with maxAttempts of 1", async () => {
-    const fn = jest.fn().mockRejectedValue(new Error("fail"));
+    const fn = vi.fn().mockRejectedValue(new Error("fail"));
 
     await expect(withRetry(fn, { maxAttempts: 1, delay: 1 })).rejects.toThrow("fail");
     expect(fn).toHaveBeenCalledTimes(1);
   });
 
   test("should pass through strategy and delay options to computeDelay", async () => {
-    const fn = jest.fn().mockRejectedValueOnce(new Error("fail")).mockResolvedValue("ok");
+    const fn = vi.fn().mockRejectedValueOnce(new Error("fail")).mockResolvedValue("ok");
 
     const result = await withRetry(fn, {
       strategy: "constant",
@@ -105,9 +103,9 @@ describe("withRetry", () => {
   });
 
   test("should handle non-Error thrown values", async () => {
-    const fn = jest.fn().mockRejectedValueOnce("string error").mockResolvedValue("ok");
+    const fn = vi.fn().mockRejectedValueOnce("string error").mockResolvedValue("ok");
 
-    const onRetry = jest.fn();
+    const onRetry = vi.fn();
     const result = await withRetry(fn, { delay: 1, jitter: false, onRetry });
 
     expect(result).toBe("ok");

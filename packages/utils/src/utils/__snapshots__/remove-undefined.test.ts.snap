@@ -1,4 +1,86 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`removeUndefined > should remove empty from array 1`] = `
+[
+  1,
+  2,
+  3,
+  4,
+  null,
+  "",
+  {},
+  {
+    "a": 1,
+    "b": 2,
+    "c": null,
+    "e": "",
+    "f": {},
+    "g": {
+      "a": 1,
+      "b": {},
+      "c": null,
+      "f": "",
+      "h": [],
+    },
+  },
+  [
+    1,
+    2,
+    3,
+    4,
+    null,
+    "",
+    {},
+    {
+      "a": 1,
+      "b": {},
+    },
+  ],
+]
+`;
+
+exports[`removeUndefined > should remove empty from object 1`] = `
+{
+  "a": 1,
+  "b": 2,
+  "c": null,
+  "e": "",
+  "f": {},
+  "g": {
+    "a": 1,
+    "b": {},
+  },
+  "h": [
+    1,
+    2,
+    3,
+    4,
+    null,
+    "",
+    {},
+    {
+      "a": 1,
+      "b": {},
+    },
+    [
+      1,
+      2,
+      3,
+      4,
+      null,
+      "",
+      {},
+      {
+        "a": 1,
+        "b": {},
+        "c": null,
+        "f": "",
+        "h": [],
+      },
+    ],
+  ],
+}
+`;
 
 exports[`removeUndefined should remove empty from array 1`] = `
 [

@@ -1,4 +1,5 @@
 import { randomNumber } from "./random-number";
+import { describe, expect, test } from "vitest";
 
 describe("randomNumber", () => {
   test("should return a random number", () => {

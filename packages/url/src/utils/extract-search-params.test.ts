@@ -1,4 +1,5 @@
 import { extractSearchParams } from "./extract-search-params";
+import { describe, expect, test } from "vitest";
 
 describe("extractSearchParams", () => {
   test("should resolve", () => {

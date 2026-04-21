@@ -2,6 +2,7 @@ import { readFileSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
 import { typewriter } from "./typewriter";
+import { describe, expect, test } from "vitest";
 
 describe("typewriter", () => {
   test("should generate types from JSON input", async () => {

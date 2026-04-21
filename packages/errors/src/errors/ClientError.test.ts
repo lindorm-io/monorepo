@@ -1,5 +1,6 @@
 import { ClientError } from "./ClientError";
 import { LindormError } from "./LindormError";
+import { describe, expect, test } from "vitest";
 
 describe("ClientError", () => {
   describe("instanceOf", () => {

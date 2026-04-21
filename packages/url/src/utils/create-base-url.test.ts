@@ -1,4 +1,5 @@
 import { createBaseUrl } from "./create-base-url";
+import { describe, expect, test } from "vitest";
 
 describe("createBaseUrl", () => {
   test("should resolve with host URL", () => {

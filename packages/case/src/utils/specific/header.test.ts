@@ -1,6 +1,7 @@
 import { TEST_ARRAY_WITH_OBJECTS, TEST_OBJECT } from "../../__fixtures__/objects";
 import { INVALID_INPUT, TEST_STRINGS } from "../../__fixtures__/strings";
 import { headerArray, headerCase, headerKeys } from "./header";
+import { describe, expect, test } from "vitest";
 
 describe("headerCase", () => {
   test.each(TEST_STRINGS)("should convert %s", (input) => {
