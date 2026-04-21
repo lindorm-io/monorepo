@@ -436,6 +436,12 @@ export const rewriteSource = (
           warnings,
         );
       }
+    } else if (ts.isImportTypeNode(node)) {
+      // --- type-position import("./foo").X ---------------------------------
+      const arg = node.argument;
+      if (ts.isLiteralTypeNode(arg) && ts.isStringLiteral(arg.literal)) {
+        handleSpecifierNode(arg.literal, sourceFile, opts, edits, warnings);
+      }
     } else if (ts.isCallExpression(node)) {
       // --- dynamic import() -----------------------------------------------
       if (node.expression.kind === ts.SyntaxKind.ImportKeyword) {
