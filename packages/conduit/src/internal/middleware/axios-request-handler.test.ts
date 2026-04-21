@@ -12,7 +12,7 @@ const composeAxiosConfig = _composeAxiosConfig as Mock;
 const requestWithRetry = _requestWithRetry as Mock;
 const useAxios = _useAxios as Mock;
 
-describe("axiosRequestHandler", () => {
+describe("axiosRequestHandler", async () => {
   let ctx: any;
 
   beforeEach(() => {

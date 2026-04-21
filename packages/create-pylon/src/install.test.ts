@@ -1,7 +1,7 @@
 import { EventEmitter } from "events";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
-vi.mock("cross-spawn", () => ({
+vi.mock("cross-spawn", async () => ({
   __esModule: true,
   default: vi.fn(),
 }));

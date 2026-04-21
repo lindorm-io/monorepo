@@ -10,7 +10,7 @@ import {
   type MockInstance,
 } from "vitest";
 
-vi.mock("cross-spawn", () => ({
+vi.mock("cross-spawn", async () => ({
   __esModule: true,
   default: vi.fn(),
 }));
